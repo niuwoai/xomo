@@ -499,6 +499,31 @@ struct ImageEditorSelectionFillCoverageTests {
         #expect(viewModel.undoStack.count == originalUndoCount)
         #expect(viewModel.document.layers.first { $0.id == primaryID }?.image.qingtuPNGData() == originalPrimaryData)
         #expect(viewModel.document.layers.first { $0.id == secondLayer.id }?.image.qingtuPNGData() == originalSecondData)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.operationFailed"))
+    }
+
+    @Test func copyingSelectionToNewLayerRejectsGroupWithOperationFailure() {
+        let size = CGSize(width: 48, height: 32)
+        let viewModel = ImageEditorViewModel(
+            sourceName: "group-copy.png",
+            image: .transparent(size: size)
+        ) { _ in }
+        let group = ImageEditorLayer.group(name: "Group", size: size)
+        viewModel.document.layers = [group]
+        viewModel.document.selectedLayerID = group.id
+        viewModel.document.selectedLayerIDs = [group.id]
+        viewModel.selectAll()
+        let originalHistoryCount = viewModel.document.history.count
+        let originalUndoCount = viewModel.undoStack.count
+
+        #expect(!viewModel.canCopySelectionToNewLayer)
+        viewModel.copySelectionToNewLayer()
+
+        #expect(viewModel.document.layers.count == 1)
+        #expect(viewModel.document.selectedLayerID == group.id)
+        #expect(viewModel.document.history.count == originalHistoryCount)
+        #expect(viewModel.undoStack.count == originalUndoCount)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.operationFailed"))
     }
 
     private func clippingMaskViewModel(sourceName: String) -> ImageEditorViewModel {

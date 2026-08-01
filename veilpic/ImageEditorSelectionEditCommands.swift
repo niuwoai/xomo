@@ -315,8 +315,11 @@ extension ImageEditorViewModel {
             statusText = L10n.text("imageEditor.status.noSelection")
             return
         }
-        guard canCopySelectionToNewLayer,
-              let index = document.selectedLayerIndex,
+        guard canCopySelectionToNewLayer else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return
+        }
+        guard let index = document.selectedLayerIndex,
               let clippedImage = document.layers[index].visibleImage.copied(
                 selection: selection,
                 layerFrame: document.layers[index].frame,
@@ -402,8 +405,11 @@ extension ImageEditorViewModel {
             statusText = L10n.text("imageEditor.status.noSelection")
             return
         }
-        guard canCutSelectionToNewLayer,
-              let index = document.selectedLayerIndex,
+        guard canCutSelectionToNewLayer else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return
+        }
+        guard let index = document.selectedLayerIndex,
               let clippedImage = document.layers[index].visibleImage.copied(
                 selection: selection,
                 layerFrame: document.layers[index].frame,
