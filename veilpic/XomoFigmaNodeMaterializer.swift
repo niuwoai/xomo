@@ -492,6 +492,14 @@ enum XomoFigmaNodeMaterializer {
             fontFamilyName: text.fontFamily ?? ImageEditorTextContent.systemFontFamilyName,
             point: CGPoint(x: padding, y: padding),
             isBold: (text.fontWeight ?? 400) >= 600,
+            isItalic: text.isItalic,
+            isUnderlined: text.decoration == "UNDERLINE",
+            isStruckThrough: text.decoration == "STRIKETHROUGH",
+            characterSpacing: CGFloat(text.letterSpacing ?? 0) * scale,
+            lineSpacing: max(
+                0,
+                CGFloat((text.lineHeight ?? text.fontSize ?? 0) - (text.fontSize ?? 0)) * scale
+            ),
             boxWidth: max(1, frame.width - padding * 2),
             boxHeight: max(1, frame.height - padding * 2),
             alignment: textAlignment(text.horizontalAlignment)

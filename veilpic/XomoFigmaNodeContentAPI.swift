@@ -352,7 +352,11 @@ enum XomoFigmaNodeImportMapper {
                     fontFamily: node.style?.fontFamily,
                     fontSize: node.style?.fontSize,
                     fontWeight: node.style?.fontWeight,
-                    horizontalAlignment: node.style?.textAlignHorizontal
+                    horizontalAlignment: node.style?.textAlignHorizontal,
+                    letterSpacing: node.style?.letterSpacing.flatMap { $0.isFinite ? $0 : nil },
+                    lineHeight: node.style?.lineHeightPx.flatMap { $0.isFinite ? $0 : nil },
+                    isItalic: node.style?.italic == true,
+                    decoration: node.style?.textDecoration
                 )
             },
             vectorPaths: geometryPaths(node).map(\.path),
@@ -1230,6 +1234,10 @@ struct XomoFigmaTypeStyle: Decodable {
     var fontSize: Double?
     var fontWeight: Double?
     var textAlignHorizontal: String?
+    var letterSpacing: Double?
+    var lineHeightPx: Double?
+    var italic: Bool?
+    var textDecoration: String?
 }
 
 struct XomoFigmaPaint: Decodable {

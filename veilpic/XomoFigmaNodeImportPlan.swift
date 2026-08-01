@@ -172,6 +172,10 @@ struct XomoFigmaPlanText: Equatable, Sendable {
     var fontSize: Double?
     var fontWeight: Double?
     var horizontalAlignment: String?
+    var letterSpacing: Double? = nil
+    var lineHeight: Double? = nil
+    var isItalic: Bool = false
+    var decoration: String? = nil
 }
 
 struct XomoFigmaImageAsset: Equatable, Sendable {

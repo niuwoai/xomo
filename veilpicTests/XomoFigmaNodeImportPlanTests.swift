@@ -1822,6 +1822,11 @@ struct XomoFigmaNodeImportPlanTests {
             #expect(content.fontFamilyName == "Inter")
             #expect(content.fontSize == 16)
             #expect(content.isBold)
+            #expect(content.isItalic)
+            #expect(content.isUnderlined)
+            #expect(!content.isStruckThrough)
+            #expect(content.characterSpacing == -1.5)
+            #expect(content.lineSpacing == 6)
             #expect(content.alignment == .center)
         } else {
             Issue.record("Figma text should materialize as editable text")
@@ -2021,7 +2026,7 @@ struct XomoFigmaNodeImportPlanTests {
                         "layoutGrow": 1,
                         "layoutAlign": "STRETCH",
                         "characters": "继续",
-                        "style": {"fontFamily": "Inter", "fontSize": 16, "fontWeight": 600, "textAlignHorizontal": "CENTER"},
+                        "style": {"fontFamily": "Inter", "fontSize": 16, "fontWeight": 600, "textAlignHorizontal": "CENTER", "letterSpacing": -1.5, "lineHeightPx": 22, "italic": true, "textDecoration": "UNDERLINE"},
                         "fills": [{"type": "SOLID", "color": {"r": 1, "g": 1, "b": 1, "a": 1}}],
                         "absoluteBoundingBox": {"x": 130, "y": 260, "width": 64, "height": 24}
                       }
