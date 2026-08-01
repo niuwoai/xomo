@@ -257,4 +257,54 @@ struct ImageEditorSelectionFillCoverageTests {
         #expect(viewModel.undoStack.count == undoCount)
         #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionEmpty"))
     }
+
+    @Test func copyingSelectionPreservesBlendIfThresholds() throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "blend-if-copy.png",
+            image: NSImage(size: CGSize(width: 48, height: 32), flipped: false) { rect in
+                NSColor.systemPink.setFill()
+                rect.fill()
+                return true
+            }
+        ) { _ in }
+        let sourceIndex = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[sourceIndex].blendIfSourceBlack = 0.18
+        viewModel.document.layers[sourceIndex].blendIfSourceWhite = 0.82
+        viewModel.document.layers[sourceIndex].blendIfUnderlyingBlack = 0.27
+        viewModel.document.layers[sourceIndex].blendIfUnderlyingWhite = 0.73
+        viewModel.selectAll()
+
+        viewModel.copySelectionToNewLayer()
+
+        let copiedLayer = try #require(viewModel.document.selectedLayer)
+        #expect(copiedLayer.blendIfSourceBlack == 0.18)
+        #expect(copiedLayer.blendIfSourceWhite == 0.82)
+        #expect(copiedLayer.blendIfUnderlyingBlack == 0.27)
+        #expect(copiedLayer.blendIfUnderlyingWhite == 0.73)
+    }
+
+    @Test func cuttingSelectionPreservesBlendIfThresholds() throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "blend-if-cut.png",
+            image: NSImage(size: CGSize(width: 48, height: 32), flipped: false) { rect in
+                NSColor.systemBlue.setFill()
+                rect.fill()
+                return true
+            }
+        ) { _ in }
+        let sourceIndex = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[sourceIndex].blendIfSourceBlack = 0.14
+        viewModel.document.layers[sourceIndex].blendIfSourceWhite = 0.86
+        viewModel.document.layers[sourceIndex].blendIfUnderlyingBlack = 0.31
+        viewModel.document.layers[sourceIndex].blendIfUnderlyingWhite = 0.69
+        viewModel.selectAll()
+
+        viewModel.cutSelectionToNewLayer()
+
+        let cutLayer = try #require(viewModel.document.selectedLayer)
+        #expect(cutLayer.blendIfSourceBlack == 0.14)
+        #expect(cutLayer.blendIfSourceWhite == 0.86)
+        #expect(cutLayer.blendIfUnderlyingBlack == 0.31)
+        #expect(cutLayer.blendIfUnderlyingWhite == 0.69)
+    }
 }

@@ -341,6 +341,10 @@ extension ImageEditorViewModel {
         layer.opacity = sourceLayer.opacity
         layer.fillOpacity = sourceLayer.fillOpacity
         layer.blendMode = sourceLayer.blendMode
+        layer.blendIfSourceBlack = sourceLayer.blendIfSourceBlack
+        layer.blendIfSourceWhite = sourceLayer.blendIfSourceWhite
+        layer.blendIfUnderlyingBlack = sourceLayer.blendIfUnderlyingBlack
+        layer.blendIfUnderlyingWhite = sourceLayer.blendIfUnderlyingWhite
         layer.groupID = sourceLayer.groupID
         document.layers.insert(layer, at: index + 1)
         document.selectedLayerID = layer.id
@@ -425,6 +429,10 @@ extension ImageEditorViewModel {
         layer.opacity = sourceLayer.opacity
         layer.fillOpacity = sourceLayer.fillOpacity
         layer.blendMode = sourceLayer.blendMode
+        layer.blendIfSourceBlack = sourceLayer.blendIfSourceBlack
+        layer.blendIfSourceWhite = sourceLayer.blendIfSourceWhite
+        layer.blendIfUnderlyingBlack = sourceLayer.blendIfUnderlyingBlack
+        layer.blendIfUnderlyingWhite = sourceLayer.blendIfUnderlyingWhite
         layer.groupID = sourceLayer.groupID
         document.layers.insert(layer, at: index + 1)
         document.selectedLayerID = layer.id
