@@ -1034,16 +1034,20 @@ struct ImageEditorScopeTests {
             rect.fill()
         })
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        let backgroundID = try #require(viewModel.document.layers.first?.id)
+        viewModel.selectLayer(backgroundID)
         viewModel.convertBackgroundToLayer()
         viewModel.document.selection = ImageEditorSelection.rectangle(CGRect(x: 10, y: 10, width: 20, height: 20))
 
+        #expect(viewModel.canRemoveSelectionPixels)
         viewModel.clearSelectionPixels()
 
         let clearedColor = viewModel.document.selectedLayer?.image.color(at: CGPoint(x: 15, y: 15))
         let retainedColor = viewModel.document.selectedLayer?.image.color(at: CGPoint(x: 2, y: 2))
         #expect((clearedColor?.alphaComponent ?? 1) < 0.05)
         #expect((retainedColor?.alphaComponent ?? 0) > 0.95)
-        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.selectionClearPixelsSelected"))
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.selectionClearPixels"))
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionPixelsCleared"))
     }
 
     @MainActor
