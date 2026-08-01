@@ -526,6 +526,34 @@ struct ImageEditorSelectionFillCoverageTests {
         #expect(viewModel.statusText == L10n.text("imageEditor.status.operationFailed"))
     }
 
+    @Test func copyingSelectionWhileEditingLayerMaskDoesNotReadLayerPixelsOrExitMaskMode() throws {
+        let size = CGSize(width: 48, height: 32)
+        let image = NSImage(size: size, flipped: false) { rect in
+            NSColor.systemGreen.setFill()
+            rect.fill()
+            return true
+        }
+        let viewModel = ImageEditorViewModel(sourceName: "mask-copy.png", image: image) { _ in }
+        viewModel.addLayerMask()
+        viewModel.selectAll()
+        let sourceID = try #require(viewModel.document.selectedLayerID)
+        let originalLayerCount = viewModel.document.layers.count
+        let originalHistoryCount = viewModel.document.history.count
+        let originalUndoCount = viewModel.undoStack.count
+
+        #expect(viewModel.isEditingLayerMask)
+        #expect(!viewModel.canCopySelectionToNewLayer)
+        #expect(!viewModel.canCopySelectionToClipboard)
+        viewModel.copySelectionToNewLayer()
+
+        #expect(viewModel.document.layers.count == originalLayerCount)
+        #expect(viewModel.document.selectedLayerID == sourceID)
+        #expect(viewModel.document.history.count == originalHistoryCount)
+        #expect(viewModel.undoStack.count == originalUndoCount)
+        #expect(viewModel.isEditingLayerMask)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.operationFailed"))
+    }
+
     private func clippingMaskViewModel(sourceName: String) -> ImageEditorViewModel {
         let size = CGSize(width: 48, height: 32)
         let baseImage = NSImage(size: size, flipped: false) { rect in

@@ -23,6 +23,7 @@ extension ImageEditorViewModel {
     var canCopySelectionToNewLayer: Bool {
         guard selectedLayerCount == 1,
               hasSelection,
+              !isEditingLayerMask,
               let layer = document.selectedLayer
         else { return false }
         return !layer.isGroup
