@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.12.0-rc637 - 2026-08-02
+
+### Fixed
+
+- Figma 文本行高在缺少 `lineHeightPx` 时，现在可从 `lineHeightPercentFontSize` 或明确的 `FONT_SIZE_%` 单位换算，避免百分比行高导入后退回默认紧密排版。
+- 像素行高优先于百分比字段；无法准确换算的 `INTRINSIC_%` 不会被错误解释为字号百分比。
+
 ## 2.12.0-rc636 - 2026-08-02
 
 ### Fixed

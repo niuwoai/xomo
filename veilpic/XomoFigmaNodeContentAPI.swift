@@ -358,7 +358,7 @@ enum XomoFigmaNodeImportMapper {
                     fontWeight: node.style?.fontWeight,
                     horizontalAlignment: node.style?.textAlignHorizontal,
                     letterSpacing: node.style?.letterSpacing.flatMap { $0.isFinite ? $0 : nil },
-                    lineHeight: node.style?.lineHeightPx.flatMap { $0.isFinite ? $0 : nil },
+                    lineHeight: lineHeight(for: node.style),
                     isItalic: node.style?.italic == true,
                     decoration: node.style?.textDecoration,
                     paragraphIndent: node.style?.paragraphIndent.flatMap { $0.isFinite ? max(0, $0) : nil }
@@ -987,6 +987,25 @@ enum XomoFigmaNodeImportMapper {
         }
     }
 
+    static func lineHeight(for style: XomoFigmaTypeStyle?) -> Double? {
+        guard let style else { return nil }
+        if let pixels = style.lineHeightPx,
+           pixels.isFinite,
+           pixels >= 0 {
+            return pixels
+        }
+        guard let fontSize = style.fontSize,
+              fontSize.isFinite,
+              fontSize > 0
+        else { return nil }
+        let percent = style.lineHeightPercentFontSize.flatMap {
+            $0.isFinite && $0 >= 0 ? $0 : nil
+        } ?? (style.lineHeightUnit == "FONT_SIZE_%"
+            ? style.lineHeightPercent.flatMap { $0.isFinite && $0 >= 0 ? $0 : nil }
+            : nil)
+        return percent.map { fontSize * $0 / 100 }
+    }
+
     private static func hasUnsupportedCornerStyle(_ node: XomoFigmaNode) -> Bool {
         let radii = node.rectangleCornerRadii ?? []
         let hasInvalidIndependentRadii = !radii.isEmpty
@@ -1254,6 +1273,9 @@ struct XomoFigmaTypeStyle: Decodable {
     var textAlignHorizontal: String?
     var letterSpacing: Double?
     var lineHeightPx: Double?
+    var lineHeightPercent: Double?
+    var lineHeightPercentFontSize: Double?
+    var lineHeightUnit: String?
     var italic: Bool?
     var textDecoration: String?
     var paragraphIndent: Double?

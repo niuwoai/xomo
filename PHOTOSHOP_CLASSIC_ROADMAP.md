@@ -1,6 +1,8 @@
 # Xomo 经典 Photoshop 能力路线图
 
-> 最后更新：2026-08-02 ｜ 当前版本：v2.12.0-rc636 ｜ 目标：以经典 Photoshop 能力作为现代混合编辑器的可靠像素与图层底座
+> 最后更新：2026-08-02 ｜ 当前版本：v2.12.0-rc637 ｜ 目标：以经典 Photoshop 能力作为现代混合编辑器的可靠像素与图层底座
+
+- `v2.12.0-rc637`：Figma 文本行高增加像素优先、字号百分比回退的规范化映射，支持 `lineHeightPercentFontSize` 与明确 `FONT_SIZE_%`，并拒绝误解 `INTRINSIC_%`；下一次周期性完整 Release、冒烟和 `/Applications` 覆盖安装为 rc640。
 
 - `v2.12.0-rc636`：Figma `UPPER`、`LOWER` 与 `TITLE` 文字大小写会烘焙进可编辑文字以保证画布视觉一致，同时以三语 `textCaseFlattened` 问题明确报告动态样式降级；下一次周期性完整 Release、冒烟和 `/Applications` 覆盖安装为 rc640。
 

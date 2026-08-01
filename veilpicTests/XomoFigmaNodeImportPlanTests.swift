@@ -21,6 +21,31 @@ struct XomoFigmaNodeImportPlanTests {
         #expect(XomoFigmaNodeImportMapper.characters("Hello", applying: "SMALL_CAPS") == "Hello")
     }
 
+    @Test func figmaLineHeightUsesPixelsBeforeFontSizePercentageFallback() throws {
+        let decoder = JSONDecoder()
+        let pixels = try decoder.decode(
+            XomoFigmaTypeStyle.self,
+            from: Data(#"{"fontSize":16,"lineHeightPx":22,"lineHeightPercentFontSize":150}"#.utf8)
+        )
+        let percent = try decoder.decode(
+            XomoFigmaTypeStyle.self,
+            from: Data(#"{"fontSize":16,"lineHeightPercentFontSize":137.5}"#.utf8)
+        )
+        let unitFallback = try decoder.decode(
+            XomoFigmaTypeStyle.self,
+            from: Data(#"{"fontSize":20,"lineHeightPercent":120,"lineHeightUnit":"FONT_SIZE_%"}"#.utf8)
+        )
+        let intrinsic = try decoder.decode(
+            XomoFigmaTypeStyle.self,
+            from: Data(#"{"fontSize":20,"lineHeightPercent":120,"lineHeightUnit":"INTRINSIC_%"}"#.utf8)
+        )
+
+        #expect(XomoFigmaNodeImportMapper.lineHeight(for: pixels) == 22)
+        #expect(XomoFigmaNodeImportMapper.lineHeight(for: percent) == 22)
+        #expect(XomoFigmaNodeImportMapper.lineHeight(for: unitFallback) == 24)
+        #expect(XomoFigmaNodeImportMapper.lineHeight(for: intrinsic) == nil)
+    }
+
     @Test func figmaSliceBecomesNativeFireworksSliceAndExportsWithoutCreatingLayer() throws {
         let response = try JSONDecoder().decode(
             XomoFigmaNodeResponse.self,
@@ -2039,7 +2064,7 @@ struct XomoFigmaNodeImportPlanTests {
                         "layoutGrow": 1,
                         "layoutAlign": "STRETCH",
                         "characters": "Continue 继续",
-                        "style": {"fontFamily": "Inter", "fontSize": 16, "fontWeight": 600, "textAlignHorizontal": "CENTER", "letterSpacing": -1.5, "lineHeightPx": 22, "italic": true, "textDecoration": "UNDERLINE", "paragraphIndent": 12, "textCase": "UPPER"},
+                        "style": {"fontFamily": "Inter", "fontSize": 16, "fontWeight": 600, "textAlignHorizontal": "CENTER", "letterSpacing": -1.5, "lineHeightPercentFontSize": 137.5, "lineHeightUnit": "FONT_SIZE_%", "italic": true, "textDecoration": "UNDERLINE", "paragraphIndent": 12, "textCase": "UPPER"},
                         "fills": [{"type": "SOLID", "color": {"r": 1, "g": 1, "b": 1, "a": 1}}],
                         "absoluteBoundingBox": {"x": 130, "y": 260, "width": 64, "height": 24}
                       }
