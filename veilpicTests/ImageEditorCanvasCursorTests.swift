@@ -381,6 +381,33 @@ struct ImageEditorCanvasCursorTests {
         #expect(componentDrag !== NSCursor.closedHand)
     }
 
+    @Test func componentLibraryUsesArrowExceptForAnActualTransformControl() {
+        let ordinary = ImageEditorCanvasCursor.cursor(
+            for: .components,
+            selectedTool: .brush,
+            brushDiameter: 72,
+            isPointerOverMovableContent: true
+        )
+        let resize = ImageEditorCanvasCursor.cursor(
+            for: .components,
+            selectedTool: .brush,
+            brushDiameter: 72,
+            isPointerOverMovableContent: true,
+            layerTransformTarget: .resize(.right)
+        )
+        let rotate = ImageEditorCanvasCursor.cursor(
+            for: .components,
+            selectedTool: .brush,
+            brushDiameter: 72,
+            layerTransformTarget: .rotate
+        )
+
+        #expect(ordinary === NSCursor.arrow)
+        #expect(resize === NSCursor.resizeLeftRight)
+        #expect(rotate !== NSCursor.arrow)
+        #expect(rotate !== NSCursor.crosshair)
+    }
+
     @Test func componentLibraryNeverLeaksAnyPreviousToolOrHoverCursor() {
         let staleModifiers: NSEvent.ModifierFlags = [.command, .option, .shift, .control, .capsLock]
 
