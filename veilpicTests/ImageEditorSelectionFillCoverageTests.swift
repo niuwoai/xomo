@@ -307,4 +307,53 @@ struct ImageEditorSelectionFillCoverageTests {
         #expect(cutLayer.blendIfUnderlyingBlack == 0.31)
         #expect(cutLayer.blendIfUnderlyingWhite == 0.69)
     }
+
+    @Test func copyingSelectionPreservesClippingMaskAppearance() throws {
+        let viewModel = clippingMaskViewModel(sourceName: "clipping-copy.png")
+        let before = viewModel.document.compositedImage
+
+        viewModel.copySelectionToNewLayer()
+
+        let copiedLayer = try #require(viewModel.document.selectedLayer)
+        #expect(copiedLayer.isClippingMask)
+        #expect(imageEditorMaximumPixelDifference(viewModel.document.compositedImage, before) <= 1)
+    }
+
+    @Test func cuttingSelectionPreservesClippingMaskAppearance() throws {
+        let viewModel = clippingMaskViewModel(sourceName: "clipping-cut.png")
+        let before = viewModel.document.compositedImage
+
+        viewModel.cutSelectionToNewLayer()
+
+        let cutLayer = try #require(viewModel.document.selectedLayer)
+        #expect(cutLayer.isClippingMask)
+        #expect(imageEditorMaximumPixelDifference(viewModel.document.compositedImage, before) <= 1)
+    }
+
+    private func clippingMaskViewModel(sourceName: String) -> ImageEditorViewModel {
+        let size = CGSize(width: 48, height: 32)
+        let baseImage = NSImage(size: size, flipped: false) { rect in
+            NSColor.clear.setFill()
+            rect.fill()
+            NSColor.systemPink.setFill()
+            CGRect(x: 0, y: 0, width: rect.width / 2, height: rect.height).fill()
+            return true
+        }
+        let sourceImage = NSImage(size: size, flipped: false) { rect in
+            NSColor.systemBlue.setFill()
+            rect.fill()
+            return true
+        }
+        let viewModel = ImageEditorViewModel(sourceName: sourceName, image: baseImage) { _ in }
+        viewModel.addLayer()
+        viewModel.replaceSelectedLayerImageForTesting(
+            sourceImage,
+            historyTitle: L10n.text("imageEditor.history.brush")
+        )
+        if let sourceIndex = viewModel.document.selectedLayerIndex {
+            viewModel.document.layers[sourceIndex].isClippingMask = true
+        }
+        viewModel.selectAll()
+        return viewModel
+    }
 }
