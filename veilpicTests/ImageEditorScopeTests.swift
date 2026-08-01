@@ -1431,6 +1431,10 @@ struct ImageEditorScopeTests {
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),
             encoding: .utf8
         )
+        let viewSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
         let layerMenuStart = try #require(source.range(of: "private var layerMenu: some View"))
         let nextMenuStart = try #require(
             source[layerMenuStart.upperBound...].range(of: "private var layerSelectAttributeMenu: some View")
@@ -1442,8 +1446,9 @@ struct ImageEditorScopeTests {
         #expect(layerMenuSource.contains("viewModel.canCopySelectionToNewLayer"))
         #expect(layerMenuSource.contains("imageEditor.action.selectionCutLayer"))
         #expect(layerMenuSource.contains("viewModel.cutSelectionToNewLayer()"))
-        #expect(layerMenuSource.contains(".keyboardShortcut(\"j\", modifiers: [.command, .shift])"))
         #expect(layerMenuSource.contains("viewModel.canCutSelectionToNewLayer"))
+        #expect(viewSource.contains("if key == \"j\", relevantFlags == [.command, .shift] { return .cutSelectionToLayer }"))
+        #expect(viewSource.contains("case .cutSelectionToLayer: viewModel.cutSelectionToNewLayer()"))
     }
 
     @Test func clearSelectionControlsUseRemovalPermissionInsteadOfGeneralPixelEditing() throws {
@@ -1472,6 +1477,10 @@ struct ImageEditorScopeTests {
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),
             encoding: .utf8
         )
+        let viewSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
         let layerMenuStart = try #require(source.range(of: "private var layerMenu: some View"))
         let nextMenuStart = try #require(
             source[layerMenuStart.upperBound...].range(of: "private var layerSelectAttributeMenu: some View")
@@ -1481,8 +1490,9 @@ struct ImageEditorScopeTests {
         #expect(layerMenuSource.contains("viewModel.addLayer()"))
         #expect(layerMenuSource.contains(".keyboardShortcut(\"n\", modifiers: [.command, .shift])"))
         #expect(layerMenuSource.contains("viewModel.duplicateSelectionOrSelectedLayer()"))
-        #expect(layerMenuSource.contains(".keyboardShortcut(\"j\", modifiers: [.command])"))
         #expect(layerMenuSource.contains("viewModel.canDuplicateSelectionOrSelectedLayer"))
+        #expect(viewSource.contains("if key == \"j\", relevantFlags == [.command] { return .duplicateSelectionOrLayer }"))
+        #expect(viewSource.contains("case .duplicateSelectionOrLayer: viewModel.duplicateSelectionOrSelectedLayer()"))
         #expect(layerMenuSource.contains("viewModel.groupSelectedLayer()"))
         #expect(layerMenuSource.contains(".keyboardShortcut(\"g\", modifiers: [.command])"))
         #expect(layerMenuSource.contains("viewModel.ungroupSelectedLayers()"))
