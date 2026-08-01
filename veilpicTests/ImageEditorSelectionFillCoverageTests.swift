@@ -396,6 +396,30 @@ struct ImageEditorSelectionFillCoverageTests {
         }
     }
 
+    @Test func copyingSelectionPreservesHiddenLayerVisibility() throws {
+        let viewModel = hiddenLayerViewModel(sourceName: "hidden-copy.png")
+        let before = viewModel.document.compositedImage
+
+        viewModel.copySelectionToNewLayer()
+
+        let copiedLayer = try #require(viewModel.document.selectedLayer)
+        #expect(!copiedLayer.isVisible)
+        #expect(copiedLayer.image.nonTransparentPixelBounds() != nil)
+        #expect(imageEditorMaximumPixelDifference(viewModel.document.compositedImage, before) <= 1)
+    }
+
+    @Test func cuttingSelectionPreservesHiddenLayerVisibility() throws {
+        let viewModel = hiddenLayerViewModel(sourceName: "hidden-cut.png")
+        let before = viewModel.document.compositedImage
+
+        viewModel.cutSelectionToNewLayer()
+
+        let cutLayer = try #require(viewModel.document.selectedLayer)
+        #expect(!cutLayer.isVisible)
+        #expect(cutLayer.image.nonTransparentPixelBounds() != nil)
+        #expect(imageEditorMaximumPixelDifference(viewModel.document.compositedImage, before) <= 1)
+    }
+
     private func clippingMaskViewModel(sourceName: String) -> ImageEditorViewModel {
         let size = CGSize(width: 48, height: 32)
         let baseImage = NSImage(size: size, flipped: false) { rect in
@@ -441,6 +465,28 @@ struct ImageEditorSelectionFillCoverageTests {
             viewModel.document.layers[sourceIndex].style.shadowOpacity = 0.6
             viewModel.document.layers[sourceIndex].style.shadowBlur = 3
             viewModel.document.layers[sourceIndex].style.shadowOffset = CGSize(width: 2, height: -2)
+        }
+        viewModel.selectAll()
+        return viewModel
+    }
+
+    private func hiddenLayerViewModel(sourceName: String) -> ImageEditorViewModel {
+        let size = CGSize(width: 48, height: 32)
+        let image = NSImage(size: size, flipped: false) { rect in
+            NSColor.systemBlue.setFill()
+            rect.fill()
+            return true
+        }
+        let viewModel = ImageEditorViewModel(
+            sourceName: sourceName,
+            image: .transparent(size: size)
+        ) { _ in }
+        viewModel.replaceSelectedLayerImageForTesting(
+            image,
+            historyTitle: L10n.text("imageEditor.history.brush")
+        )
+        if let sourceIndex = viewModel.document.selectedLayerIndex {
+            viewModel.document.layers[sourceIndex].isVisible = false
         }
         viewModel.selectAll()
         return viewModel

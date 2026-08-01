@@ -337,6 +337,7 @@ extension ImageEditorViewModel {
         )
         layer.image = clippedImage.normalizedBitmapImage()
         layer.frame = sourceLayer.frame
+        layer.isVisible = sourceLayer.isVisible
         layer.opacity = sourceLayer.opacity
         layer.fillOpacity = sourceLayer.fillOpacity
         layer.blendMode = sourceLayer.blendMode
@@ -427,6 +428,7 @@ extension ImageEditorViewModel {
         )
         layer.image = clippedImage.normalizedBitmapImage()
         layer.frame = sourceLayer.frame
+        layer.isVisible = sourceLayer.isVisible
         layer.opacity = sourceLayer.opacity
         layer.fillOpacity = sourceLayer.fillOpacity
         layer.blendMode = sourceLayer.blendMode
