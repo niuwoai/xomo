@@ -570,6 +570,50 @@ struct ImageEditorSelectionFillCoverageTests {
         #expect(viewModel.statusText == L10n.text("imageEditor.status.operationFailed"))
     }
 
+    @Test func transparencyLockPreventsSelectionClearAndCutWithoutBlockingCopy() throws {
+        let size = CGSize(width: 48, height: 32)
+        let image = NSImage(size: size, flipped: false) { rect in
+            NSColor.systemRed.setFill()
+            rect.fill()
+            return true
+        }
+        let viewModel = ImageEditorViewModel(
+            sourceName: "alpha-locked-cut.png",
+            image: .transparent(size: size)
+        ) { _ in }
+        viewModel.replaceSelectedLayerImageForTesting(
+            image,
+            historyTitle: L10n.text("imageEditor.history.brush")
+        )
+        let sourceIndex = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[sourceIndex].locksTransparentPixels = true
+        let sourceID = viewModel.document.layers[sourceIndex].id
+        viewModel.selectAll()
+        let originalData = try #require(viewModel.document.layers[sourceIndex].image.qingtuPNGData())
+        let originalLayerCount = viewModel.document.layers.count
+        let originalHistoryCount = viewModel.document.history.count
+        let originalUndoCount = viewModel.undoStack.count
+
+        #expect(viewModel.canCopySelectionToNewLayer)
+        #expect(viewModel.canCopySelectionToClipboard)
+        #expect(!viewModel.canCutSelectionToNewLayer)
+        #expect(!viewModel.canCutSelectionToClipboard)
+
+        viewModel.clearSelectionPixels()
+        #expect(viewModel.document.layers.first { $0.id == sourceID }?.image.qingtuPNGData() == originalData)
+        #expect(viewModel.document.history.count == originalHistoryCount)
+        #expect(viewModel.undoStack.count == originalUndoCount)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.operationFailed"))
+
+        viewModel.cutSelectionToNewLayer()
+        viewModel.cutSelectionToClipboard()
+        #expect(viewModel.document.layers.count == originalLayerCount)
+        #expect(viewModel.document.layers.first { $0.id == sourceID }?.image.qingtuPNGData() == originalData)
+        #expect(viewModel.document.history.count == originalHistoryCount)
+        #expect(viewModel.undoStack.count == originalUndoCount)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.operationFailed"))
+    }
+
     private func clippingMaskViewModel(sourceName: String) -> ImageEditorViewModel {
         let size = CGSize(width: 48, height: 32)
         let baseImage = NSImage(size: size, flipped: false) { rect in

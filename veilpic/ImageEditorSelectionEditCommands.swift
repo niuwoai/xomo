@@ -32,7 +32,7 @@ extension ImageEditorViewModel {
     }
 
     var canCutSelectionToNewLayer: Bool {
-        selectedLayerCount == 1 && canEditSelectionPixels
+        selectedLayerCount == 1 && !removableSelectionPixelLayerIndices().isEmpty
     }
 
     var canCopySelectionToClipboard: Bool {
@@ -42,7 +42,7 @@ extension ImageEditorViewModel {
     }
 
     var canCutSelectionToClipboard: Bool {
-        canCopySelectionToClipboard && canEditSelectionPixels
+        canCopySelectionToClipboard && canCutSelectionToNewLayer
     }
 
     var canCopyMergedToClipboard: Bool {
@@ -368,7 +368,7 @@ extension ImageEditorViewModel {
             statusText = L10n.text("imageEditor.status.noSelection")
             return
         }
-        let editableIndices = editableSelectionPixelLayerIndices()
+        let editableIndices = removableSelectionPixelLayerIndices()
         guard !editableIndices.isEmpty else {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return
@@ -388,6 +388,7 @@ extension ImageEditorViewModel {
             statusKey: "imageEditor.status.selectionPixelsCleared",
             selectedStatusKey: "imageEditor.status.selectionPixelsClearedSelected"
         ) { layer in
+            guard !document.isEffectivelyTransparencyLocked(layer) else { return nil }
             guard selection.mayAffect(
                 layerFrame: layer.frame,
                 expansion: feather
@@ -662,6 +663,12 @@ extension ImageEditorViewModel {
             return selectedIDs.contains(layer.id)
                 && layer.kind.isPixel
                 && !document.isEffectivelyPixelsLocked(layer)
+        }
+    }
+
+    private func removableSelectionPixelLayerIndices() -> [Int] {
+        editableSelectionPixelLayerIndices().filter { index in
+            !document.isEffectivelyTransparencyLocked(document.layers[index])
         }
     }
 
