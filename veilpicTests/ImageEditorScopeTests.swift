@@ -1002,7 +1002,7 @@ struct ImageEditorScopeTests {
         #expect(viewModel.statusText == L10n.text("imageEditor.status.colorScreenSampledBackground"))
     }
 
-    @Test func compactToolRailExposesPreviewAndScreenColorControls() throws {
+    @Test func compactToolRailExposesPreviewAndVisibleColorControls() throws {
         let viewSource = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
             encoding: .utf8
@@ -1012,11 +1012,15 @@ struct ImageEditorScopeTests {
             encoding: .utf8
         )
 
-        #expect(viewSource.contains("GridItem(.fixed(30), spacing: 2)"))
-        #expect(viewSource.contains(".frame(width: 80)"))
-        #expect(viewSource.contains("viewModel.sampleScreenColorForForeground"))
-        #expect(viewSource.contains("viewModel.sampleScreenColorForBackground"))
+        #expect(viewSource.contains(".fixed(imageEditorToolButtonHitSize)"))
+        #expect(viewSource.contains("count: imageEditorToolGridColumnCount"))
+        #expect(viewSource.contains(".frame(width: imageEditorToolRailWidth)"))
+        #expect(viewSource.contains("ImageEditorColorWell("))
+        #expect(viewSource.contains("image-editor-foreground-color-well"))
+        #expect(viewSource.contains("image-editor-background-color-well"))
         #expect(viewSource.contains("image-editor-color-swap"))
+        #expect(!viewSource.contains("viewModel.sampleScreenColorForForeground"))
+        #expect(!viewSource.contains("viewModel.sampleScreenColorForBackground"))
         #expect(viewSource.contains(".onHover { isHovered = $0 }"))
         #expect(viewSource.contains(".focusable(false)"))
         #expect(menuSource.contains("Button(L10n.text(\"imageEditor.action.preview\"))"))
