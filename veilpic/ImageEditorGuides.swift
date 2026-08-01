@@ -394,7 +394,7 @@ extension ImageEditorViewModel {
             for position in positions {
                 let correction = position - candidate
                 let distance = abs(correction)
-                if distance <= bestDistance {
+                if (bestAlignment == nil && distance <= threshold) || distance < bestDistance {
                     bestDistance = distance
                     bestAlignment = ImageEditorMoveAlignment(position: position, correction: correction)
                 }
@@ -504,7 +504,7 @@ extension ImageEditorViewModel {
             for guide in guides {
                 let correction = guide - candidate.1
                 let distance = abs(correction)
-                if distance <= bestDistance {
+                if (bestSnap == nil && distance <= threshold) || distance < bestDistance {
                     bestDistance = distance
                     bestSnap = ImageEditorGuideSnap(
                         anchor: candidate.0,

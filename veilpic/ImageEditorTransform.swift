@@ -521,7 +521,7 @@ extension ImageEditorViewModel {
         guard resizingLayerIDs.isEmpty else { return }
         let indices = editableTransformLayerIndices()
         guard !indices.isEmpty,
-              let transformFrame = transformFrame(for: indices)
+              let transformFrame = selectedXomoObjectFrame ?? transformFrame(for: indices)
         else {
             statusText = L10n.text("imageEditor.status.layerLocked")
             return

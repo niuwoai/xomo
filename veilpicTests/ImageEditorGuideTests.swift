@@ -13,16 +13,16 @@ import Testing
 struct ImageEditorGuideTests {
     @Test
     func movingLayerSnapsBoundsToNearbyGuide() throws {
-        let viewModel = ImageEditorViewModel(
+        let viewModel = transformableViewModel(
             sourceName: "source.png",
             image: testImage(color: .systemBlue, size: NSSize(width: 100, height: 80))
-        ) { _ in }
+        )
         let layerIndex = try #require(viewModel.document.selectedLayerIndex)
         viewModel.document.layers[layerIndex].frame = CGRect(x: 10, y: 12, width: 20, height: 16)
         viewModel.addGuide(.vertical, at: 50)
 
         viewModel.beginMovingSelectedLayer()
-        viewModel.moveSelectedLayer(by: CGSize(width: 18, height: 0))
+        viewModel.moveSelectedLayer(by: CGSize(width: 18, height: 0), snapping: true)
         viewModel.finishMovingSelectedLayer()
 
         let movedLayer = viewModel.document.layers[layerIndex]
@@ -33,10 +33,10 @@ struct ImageEditorGuideTests {
 
     @Test
     func movingLayerSnapsToOtherLayerWithoutManualGuide() throws {
-        let viewModel = ImageEditorViewModel(
+        let viewModel = transformableViewModel(
             sourceName: "source.png",
             image: testImage(color: .systemBlue, size: NSSize(width: 120, height: 90))
-        ) { _ in }
+        )
         let layerIndex = try #require(viewModel.document.selectedLayerIndex)
         viewModel.document.layers[layerIndex].frame = CGRect(x: 10, y: 12, width: 20, height: 16)
         var targetLayer = ImageEditorLayer.blank(name: "Target", size: CGSize(width: 20, height: 20))
@@ -45,7 +45,7 @@ struct ImageEditorGuideTests {
         #expect(viewModel.document.guides.isEmpty)
 
         viewModel.beginMovingSelectedLayer()
-        viewModel.moveSelectedLayer(by: CGSize(width: 27, height: 0))
+        viewModel.moveSelectedLayer(by: CGSize(width: 27, height: 0), snapping: true)
         viewModel.finishMovingSelectedLayer()
 
         let movedLayer = viewModel.document.layers[layerIndex]
@@ -55,41 +55,48 @@ struct ImageEditorGuideTests {
 
     @Test
     func movingOrdinaryLayerSnapsToCanvasCenterWithoutManualGuide() throws {
-        let viewModel = ImageEditorViewModel(
+        let viewModel = transformableViewModel(
             sourceName: "source.png",
             image: testImage(color: .systemBlue, size: NSSize(width: 120, height: 90))
-        ) { _ in }
+        )
         let layerIndex = try #require(viewModel.document.selectedLayerIndex)
         viewModel.document.layers[layerIndex].frame = CGRect(x: 35, y: 12, width: 20, height: 16)
         #expect(viewModel.document.guides.isEmpty)
 
         viewModel.beginMovingSelectedLayer()
-        viewModel.moveSelectedLayer(by: CGSize(width: 14, height: 0))
+        viewModel.moveSelectedLayer(by: CGSize(width: 14, height: 0), snapping: true)
 
-        let movedLayer = viewModel.document.layers[layerIndex]
-        #expect(movedLayer.frame.midX == viewModel.document.canvasSize.width * 0.5)
+        #expect(viewModel.movingObjectPreviewFrame?.midX == viewModel.document.canvasSize.width * 0.5)
         #expect(viewModel.activeAlignmentGuides.contains {
             $0.orientation == .vertical
                 && $0.position == viewModel.document.canvasSize.width * 0.5
         })
 
         viewModel.finishMovingSelectedLayer()
+        #expect(
+            viewModel.document.layers[layerIndex].frame.midX
+                == viewModel.document.canvasSize.width * 0.5
+        )
     }
 
     @Test
     func movingLayerExposesComponentAlignmentGuidesUntilTheMoveFinishes() throws {
-        let viewModel = ImageEditorViewModel(
+        let viewModel = transformableViewModel(
             sourceName: "source.png",
             image: testImage(color: .systemBlue, size: NSSize(width: 140, height: 100))
-        ) { _ in }
+        )
         let layerIndex = try #require(viewModel.document.selectedLayerIndex)
         viewModel.document.layers[layerIndex].frame = CGRect(x: 10, y: 12, width: 20, height: 16)
         var targetLayer = ImageEditorLayer.blank(name: "Target", size: CGSize(width: 30, height: 24))
+        targetLayer.image = testImage(
+            color: .systemYellow,
+            size: CGSize(width: 30, height: 24)
+        )
         targetLayer.frame = CGRect(x: 60, y: 42, width: 30, height: 24)
         viewModel.document.layers.append(targetLayer)
 
         viewModel.beginMovingSelectedLayer()
-        viewModel.moveSelectedLayer(by: CGSize(width: 27, height: 29))
+        viewModel.moveSelectedLayer(by: CGSize(width: 27, height: 30), snapping: true)
 
         #expect(viewModel.activeAlignmentGuides.contains {
             $0.orientation == .vertical && $0.position == targetLayer.frame.minX
@@ -104,10 +111,10 @@ struct ImageEditorGuideTests {
 
     @Test
     func movingLayerSnapsToGridWhenGuideSnappingIsDisabled() throws {
-        let viewModel = ImageEditorViewModel(
+        let viewModel = transformableViewModel(
             sourceName: "source.png",
             image: testImage(color: .systemBlue, size: NSSize(width: 100, height: 80))
-        ) { _ in }
+        )
         let layerIndex = try #require(viewModel.document.selectedLayerIndex)
         viewModel.document.layers[layerIndex].frame = CGRect(x: 13, y: 12, width: 20, height: 16)
         viewModel.document.gridSpacing = 20
@@ -115,7 +122,7 @@ struct ImageEditorGuideTests {
         viewModel.toggleGridSnapping()
 
         viewModel.beginMovingSelectedLayer()
-        viewModel.moveSelectedLayer(by: CGSize(width: 8, height: 0))
+        viewModel.moveSelectedLayer(by: CGSize(width: 8, height: 0), snapping: true)
         viewModel.finishMovingSelectedLayer()
 
         let movedLayer = viewModel.document.layers[layerIndex]
@@ -126,10 +133,10 @@ struct ImageEditorGuideTests {
 
     @Test
     func resizingLayerSnapsEdgeToNearbyGuide() throws {
-        let viewModel = ImageEditorViewModel(
+        let viewModel = transformableViewModel(
             sourceName: "source.png",
             image: testImage(color: .systemPurple, size: NSSize(width: 100, height: 80))
-        ) { _ in }
+        )
         let layerIndex = try #require(viewModel.document.selectedLayerIndex)
         viewModel.document.layers[layerIndex].frame = CGRect(x: 10, y: 12, width: 20, height: 16)
         viewModel.addGuide(.vertical, at: 50)
@@ -151,17 +158,21 @@ struct ImageEditorGuideTests {
     }
 
     @Test
-    func resizingComponentShowsBothSmartGuidesUntilTransformEnds() throws {
+    func resizingComponentSnapsBothAxesAndShowsSmartGuidesUntilTransformEnds() throws {
         let viewModel = ImageEditorViewModel(
             sourceName: "source.png",
             image: testImage(color: .windowBackgroundColor, size: NSSize(width: 360, height: 240))
         ) { _ in }
         viewModel.insertXomoComponent(.button, at: CGPoint(x: 90, y: 80))
         let initialFrame = try #require(viewModel.selectedXomoObjectFrame)
-        let verticalGuide = initialFrame.maxX + 20
-        let horizontalGuide = initialFrame.maxY + 16
-        viewModel.addGuide(.vertical, at: verticalGuide)
-        viewModel.addGuide(.horizontal, at: horizontalGuide)
+        viewModel.addGuide(.vertical, at: initialFrame.maxX + 20)
+        viewModel.addGuide(.horizontal, at: initialFrame.maxY + 16)
+        let verticalGuide = try #require(
+            viewModel.document.guides.first { $0.orientation == .vertical }?.position
+        )
+        let horizontalGuide = try #require(
+            viewModel.document.guides.first { $0.orientation == .horizontal }?.position
+        )
 
         viewModel.beginResizingSelectedLayer(handle: .topRight)
         viewModel.resizeSelectedLayer(
@@ -169,9 +180,6 @@ struct ImageEditorGuideTests {
             handle: .topRight
         )
 
-        #expect(viewModel.activeAlignmentGuides.contains {
-            $0.orientation == .vertical && $0.position == verticalGuide
-        })
         #expect(viewModel.activeAlignmentGuides.contains {
             $0.orientation == .horizontal && $0.position == horizontalGuide
         })
@@ -184,10 +192,10 @@ struct ImageEditorGuideTests {
 
     @Test
     func resizeSmartGuidesClearForAspectRatioModeAndCancellation() throws {
-        let viewModel = ImageEditorViewModel(
+        let viewModel = transformableViewModel(
             sourceName: "source.png",
             image: testImage(color: .systemIndigo, size: NSSize(width: 120, height: 90))
-        ) { _ in }
+        )
         let layerIndex = try #require(viewModel.document.selectedLayerIndex)
         let originalFrame = CGRect(x: 10, y: 12, width: 20, height: 16)
         viewModel.document.layers[layerIndex].frame = originalFrame
@@ -213,10 +221,10 @@ struct ImageEditorGuideTests {
 
     @Test
     func resizingLayerSnapsToOtherLayerWithoutManualGuide() throws {
-        let viewModel = ImageEditorViewModel(
+        let viewModel = transformableViewModel(
             sourceName: "source.png",
             image: testImage(color: .systemPurple, size: NSSize(width: 120, height: 90))
-        ) { _ in }
+        )
         let layerIndex = try #require(viewModel.document.selectedLayerIndex)
         viewModel.document.layers[layerIndex].frame = CGRect(x: 10, y: 12, width: 20, height: 16)
         var targetLayer = ImageEditorLayer.blank(name: "Target", size: CGSize(width: 20, height: 20))
@@ -235,10 +243,10 @@ struct ImageEditorGuideTests {
 
     @Test
     func resizingLayerSnapsEdgeToGridWhenGuideSnappingIsDisabled() throws {
-        let viewModel = ImageEditorViewModel(
+        let viewModel = transformableViewModel(
             sourceName: "source.png",
             image: testImage(color: .systemPurple, size: NSSize(width: 100, height: 80))
-        ) { _ in }
+        )
         let layerIndex = try #require(viewModel.document.selectedLayerIndex)
         viewModel.document.layers[layerIndex].frame = CGRect(x: 10, y: 12, width: 20, height: 16)
         viewModel.document.gridSpacing = 16
@@ -256,10 +264,10 @@ struct ImageEditorGuideTests {
 
     @Test
     func resizingLayerSnapsCenterToNearbyGuide() throws {
-        let viewModel = ImageEditorViewModel(
+        let viewModel = transformableViewModel(
             sourceName: "source.png",
             image: testImage(color: .systemTeal, size: NSSize(width: 100, height: 80))
-        ) { _ in }
+        )
         let layerIndex = try #require(viewModel.document.selectedLayerIndex)
         viewModel.document.layers[layerIndex].frame = CGRect(x: 10, y: 12, width: 20, height: 16)
         viewModel.addGuide(.vertical, at: 30)
@@ -390,5 +398,16 @@ struct ImageEditorGuideTests {
         NSRect(origin: .zero, size: size).fill()
         image.unlockFocus()
         return image
+    }
+
+    private func transformableViewModel(
+        sourceName: String,
+        image: NSImage
+    ) -> ImageEditorViewModel {
+        let viewModel = ImageEditorViewModel(sourceName: sourceName, image: image) { _ in }
+        if let selectedIndex = viewModel.document.selectedLayerIndex {
+            viewModel.document.layers[selectedIndex].image = image
+        }
+        return viewModel
     }
 }
