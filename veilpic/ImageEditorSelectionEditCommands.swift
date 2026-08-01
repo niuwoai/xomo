@@ -20,6 +20,10 @@ extension ImageEditorViewModel {
         !editableSelectionPixelLayerIndices().isEmpty
     }
 
+    var canRemoveSelectionPixels: Bool {
+        !removableSelectionPixelLayerIndices().isEmpty
+    }
+
     var canCopySelectionToNewLayer: Bool {
         guard selectedLayerCount == 1,
               hasSelection,
@@ -32,7 +36,7 @@ extension ImageEditorViewModel {
     }
 
     var canCutSelectionToNewLayer: Bool {
-        selectedLayerCount == 1 && !removableSelectionPixelLayerIndices().isEmpty
+        selectedLayerCount == 1 && canRemoveSelectionPixels
     }
 
     var canCopySelectionToClipboard: Bool {

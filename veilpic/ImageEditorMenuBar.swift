@@ -284,7 +284,7 @@ extension ImageEditorView {
             viewModel.clearSelectionPixels()
         }
         .keyboardShortcut(.delete, modifiers: [])
-        .disabled(!viewModel.canEditSelectionPixels)
+        .disabled(!viewModel.canRemoveSelectionPixels)
     }
 
     @ViewBuilder

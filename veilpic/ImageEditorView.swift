@@ -7520,7 +7520,7 @@ struct ImageEditorView: View {
                                 viewModel.clearSelectionPixels()
                             }
                             .buttonStyle(EditorTextButtonStyle())
-                            .disabled(!viewModel.canEditSelectionPixels)
+                            .disabled(!viewModel.canRemoveSelectionPixels)
                         }
                     }
                     HStack {

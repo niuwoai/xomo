@@ -1392,6 +1392,27 @@ struct ImageEditorScopeTests {
         #expect(layerMenuSource.contains("viewModel.canCutSelectionToNewLayer"))
     }
 
+    @Test func clearSelectionControlsUseRemovalPermissionInsteadOfGeneralPixelEditing() throws {
+        let menuSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),
+            encoding: .utf8
+        )
+        let viewSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+
+        for source in [menuSource, viewSource] {
+            let actionRange = try #require(source.range(
+                of: "viewModel.clearSelectionPixels()",
+                options: .backwards
+            ))
+            let tail = source[actionRange.lowerBound...]
+            let disabledRange = try #require(tail.range(of: ".disabled(!viewModel.canRemoveSelectionPixels)"))
+            #expect(tail.distance(from: tail.startIndex, to: disabledRange.lowerBound) < 240)
+        }
+    }
+
     @Test func layerMenuExposesClassicLayerShortcuts() throws {
         let source = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),

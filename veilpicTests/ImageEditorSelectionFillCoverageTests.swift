@@ -596,6 +596,8 @@ struct ImageEditorSelectionFillCoverageTests {
 
         #expect(viewModel.canCopySelectionToNewLayer)
         #expect(viewModel.canCopySelectionToClipboard)
+        #expect(viewModel.canEditSelectionPixels)
+        #expect(!viewModel.canRemoveSelectionPixels)
         #expect(!viewModel.canCutSelectionToNewLayer)
         #expect(!viewModel.canCutSelectionToClipboard)
 
