@@ -180,9 +180,10 @@ struct ImageEditorGuideTests {
             handle: .topRight
         )
 
-        #expect(viewModel.activeAlignmentGuides.contains {
-            $0.orientation == .horizontal && $0.position == horizontalGuide
-        })
+        #expect(viewModel.activeAlignmentGuides == [
+            ImageEditorAlignmentGuide(orientation: .vertical, position: verticalGuide),
+            ImageEditorAlignmentGuide(orientation: .horizontal, position: horizontalGuide)
+        ])
         #expect(viewModel.selectedXomoObjectFrame?.maxX == verticalGuide)
         #expect(viewModel.selectedXomoObjectFrame?.maxY == horizontalGuide)
 
