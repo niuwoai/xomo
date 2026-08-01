@@ -464,6 +464,43 @@ struct ImageEditorSelectionFillCoverageTests {
         #expect(cutLayer.isStackLayoutExcluded)
     }
 
+    @Test func cuttingSelectionToNewLayerRejectsMultipleSelectedLayersWithoutPartialMutation() throws {
+        let size = CGSize(width: 48, height: 32)
+        let image = NSImage(size: size, flipped: false) { rect in
+            NSColor.systemPink.setFill()
+            rect.fill()
+            return true
+        }
+        let viewModel = ImageEditorViewModel(sourceName: "multi-cut.png", image: image) { _ in }
+        let primaryIndex = try #require(viewModel.document.selectedLayerIndex)
+        var secondLayer = ImageEditorLayer.blank(name: "Second", size: size)
+        secondLayer.image = image
+        secondLayer.frame = CGRect(origin: .zero, size: size)
+        viewModel.document.layers.insert(secondLayer, at: primaryIndex + 1)
+        let primaryID = viewModel.document.layers[primaryIndex].id
+        viewModel.document.selectedLayerID = primaryID
+        viewModel.document.selectedLayerIDs = [primaryID, secondLayer.id]
+        viewModel.selectAll()
+        let originalLayerCount = viewModel.document.layers.count
+        let originalHistoryCount = viewModel.document.history.count
+        let originalUndoCount = viewModel.undoStack.count
+        let originalPrimaryData = try #require(
+            viewModel.document.layers.first { $0.id == primaryID }?.image.qingtuPNGData()
+        )
+        let originalSecondData = try #require(
+            viewModel.document.layers.first { $0.id == secondLayer.id }?.image.qingtuPNGData()
+        )
+
+        #expect(!viewModel.canCutSelectionToNewLayer)
+        viewModel.cutSelectionToNewLayer()
+
+        #expect(viewModel.document.layers.count == originalLayerCount)
+        #expect(viewModel.document.history.count == originalHistoryCount)
+        #expect(viewModel.undoStack.count == originalUndoCount)
+        #expect(viewModel.document.layers.first { $0.id == primaryID }?.image.qingtuPNGData() == originalPrimaryData)
+        #expect(viewModel.document.layers.first { $0.id == secondLayer.id }?.image.qingtuPNGData() == originalSecondData)
+    }
+
     private func clippingMaskViewModel(sourceName: String) -> ImageEditorViewModel {
         let size = CGSize(width: 48, height: 32)
         let baseImage = NSImage(size: size, flipped: false) { rect in

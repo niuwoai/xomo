@@ -31,7 +31,7 @@ extension ImageEditorViewModel {
     }
 
     var canCutSelectionToNewLayer: Bool {
-        canEditSelectionPixels
+        selectedLayerCount == 1 && canEditSelectionPixels
     }
 
     var canCopySelectionToClipboard: Bool {
