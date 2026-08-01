@@ -2462,11 +2462,10 @@ struct ImageEditorView: View {
                         refreshCanvasCursor(in: geometry.size)
                     }
                 }
-                .onChange(of: viewModel.document.selectedLayerID) { _ in
-                    // Selection identity, rather than component kind, is the
-                    // authoritative change signal. Moving from one button to
-                    // another button must refresh the cursor even though both
-                    // objects have the same kind.
+                .onChange(of: viewModel.document.selectedLayerIDs) { _ in
+                    // The full selection set is the authoritative change
+                    // signal. Shift-adding or removing a peer can change the
+                    // transform bounds while the primary selection stays put.
                     if viewModel.selectedLeftSidebarTab == .components {
                         NSCursor.arrow.set()
                     }
