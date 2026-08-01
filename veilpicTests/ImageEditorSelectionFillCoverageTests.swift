@@ -133,4 +133,40 @@ struct ImageEditorSelectionFillCoverageTests {
         #expect(viewModel.undoStack.count == undoCount)
         #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionEmpty"))
     }
+
+    @Test func clearOutsideEveryEditableLayerDoesNotCreateUndoOrHistory() throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "empty-clear.png",
+            image: .transparent(size: CGSize(width: 36, height: 24))
+        ) { _ in }
+        let layerIndex = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[layerIndex].frame = CGRect(x: 70, y: 50, width: 36, height: 24)
+        viewModel.createRectSelection(from: CGPoint(x: 5, y: 5), to: CGPoint(x: 25, y: 25))
+        let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
+
+        viewModel.clearSelectionPixels()
+
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.undoStack.count == undoCount)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionEmpty"))
+    }
+
+    @Test func contentAwareFillOutsideEveryEditableLayerDoesNotCreateUndoOrHistory() throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "empty-content-aware.png",
+            image: .transparent(size: CGSize(width: 32, height: 28))
+        ) { _ in }
+        let layerIndex = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[layerIndex].frame = CGRect(x: 72, y: 52, width: 32, height: 28)
+        viewModel.createRectSelection(from: CGPoint(x: 4, y: 4), to: CGPoint(x: 24, y: 24))
+        let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
+
+        viewModel.contentAwareFillSelection()
+
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.undoStack.count == undoCount)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionEmpty"))
+    }
 }

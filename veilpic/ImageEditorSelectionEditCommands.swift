@@ -170,12 +170,30 @@ extension ImageEditorViewModel {
             statusText = L10n.text("imageEditor.status.noSelection")
             return
         }
+        let editableIndices = editableSelectionPixelLayerIndices()
+        guard !editableIndices.isEmpty else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return
+        }
+        guard editableIndices.contains(where: { index in
+            selection.mayAffect(
+                layerFrame: document.layers[index].frame,
+                expansion: feather
+            )
+        }) else {
+            statusText = L10n.text("imageEditor.status.selectionEmpty")
+            return
+        }
         applySelectionPixelEdit(
             historyKey: "imageEditor.history.selectionContentAwareFill",
             selectedHistoryKey: "imageEditor.history.selectionContentAwareFillSelected",
             statusKey: "imageEditor.status.selectionContentAwareFilled",
             selectedStatusKey: "imageEditor.status.selectionContentAwareFilledSelected"
         ) { layer in
+            guard selection.mayAffect(
+                layerFrame: layer.frame,
+                expansion: feather
+            ) else { return nil }
             guard let output = layer.image.contentAwareFilled(
                 selection: selection,
                 layerFrame: layer.frame,
@@ -336,13 +354,31 @@ extension ImageEditorViewModel {
             statusText = L10n.text("imageEditor.status.noSelection")
             return
         }
+        let editableIndices = editableSelectionPixelLayerIndices()
+        guard !editableIndices.isEmpty else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return
+        }
+        guard editableIndices.contains(where: { index in
+            selection.mayAffect(
+                layerFrame: document.layers[index].frame,
+                expansion: feather
+            )
+        }) else {
+            statusText = L10n.text("imageEditor.status.selectionEmpty")
+            return
+        }
         applySelectionPixelEdit(
             historyKey: "imageEditor.history.selectionClearPixels",
             selectedHistoryKey: "imageEditor.history.selectionClearPixelsSelected",
             statusKey: "imageEditor.status.selectionPixelsCleared",
             selectedStatusKey: "imageEditor.status.selectionPixelsClearedSelected"
         ) { layer in
-            layer.image.cleared(
+            guard selection.mayAffect(
+                layerFrame: layer.frame,
+                expansion: feather
+            ) else { return nil }
+            return layer.image.cleared(
                 selection: selection,
                 layerFrame: layer.frame,
                 canvasSize: document.canvasSize,
