@@ -4551,6 +4551,7 @@ struct ImageEditorView: View {
         VStack(alignment: .leading, spacing: 10) {
             ImageEditorDarkFilterPicker(selection: $viewModel.selectedFilter)
             .frame(maxWidth: .infinity, minHeight: 24)
+            .focusable(false)
             .accessibilityIdentifier("image-editor-filter-picker")
 
             HStack(spacing: 8) {

@@ -152,7 +152,6 @@ struct ImageEditorScopeTests {
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
             encoding: .utf8
         )
-
         #expect(source.contains("private var selectedToolIcon: some View"))
         #expect(source.contains("if viewModel.selectedTool == .paintBucket"))
         #expect(source.contains("ImageEditorPaintBucketSymbol()"))
@@ -842,6 +841,10 @@ struct ImageEditorScopeTests {
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
             encoding: .utf8
         )
+        let controlSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorDarkPanelControls.swift"),
+            encoding: .utf8
+        )
         let filterStart = try #require(source.range(of: "private var filtersQuickPanel: some View"))
         let filterEnd = try #require(source[filterStart.upperBound...].range(of: "private func historySnapshotRow"))
         let filterSource = source[filterStart.lowerBound..<filterEnd.lowerBound]
@@ -853,6 +856,9 @@ struct ImageEditorScopeTests {
         #expect(filterSource.contains("image-editor-filter-layer-new"))
         #expect(filterSource.contains("image-editor-filter-smart-add"))
         #expect(filterSource.components(separatedBy: ".focusable(false)").count - 1 == 5)
+        #expect(controlSource.contains("final class ImageEditorFilterPopUpButton: NSPopUpButton"))
+        #expect(controlSource.contains("final class ImageEditorFilterPickerHost: NSView"))
+        #expect(controlSource.components(separatedBy: "override var acceptsFirstResponder: Bool { false }").count - 1 >= 3)
     }
 
     @MainActor
