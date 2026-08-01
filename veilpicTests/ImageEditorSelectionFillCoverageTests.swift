@@ -203,4 +203,58 @@ struct ImageEditorSelectionFillCoverageTests {
         #expect(viewModel.undoStack.count == undoCount)
         #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionEmpty"))
     }
+
+    @Test func copyingTransparentSelectionDoesNotCreateBlankLayer() throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "transparent-copy.png",
+            image: .transparent(size: CGSize(width: 48, height: 32))
+        ) { _ in }
+        viewModel.createRectSelection(from: CGPoint(x: 6, y: 5), to: CGPoint(x: 30, y: 24))
+        let layerCount = viewModel.document.layers.count
+        let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
+
+        viewModel.copySelectionToNewLayer()
+
+        #expect(viewModel.document.layers.count == layerCount)
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.undoStack.count == undoCount)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionEmpty"))
+    }
+
+    @Test func cuttingTransparentSelectionDoesNotCreateBlankLayer() throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "transparent-cut.png",
+            image: .transparent(size: CGSize(width: 48, height: 32))
+        ) { _ in }
+        viewModel.createRectSelection(from: CGPoint(x: 6, y: 5), to: CGPoint(x: 30, y: 24))
+        let layerCount = viewModel.document.layers.count
+        let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
+
+        viewModel.cutSelectionToNewLayer()
+
+        #expect(viewModel.document.layers.count == layerCount)
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.undoStack.count == undoCount)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionEmpty"))
+    }
+
+    @Test func copyingTransparentMergedSelectionDoesNotCreateBlankLayer() throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "transparent-merged-copy.png",
+            image: .transparent(size: CGSize(width: 48, height: 32))
+        ) { _ in }
+        viewModel.createRectSelection(from: CGPoint(x: 6, y: 5), to: CGPoint(x: 30, y: 24))
+        let layerCount = viewModel.document.layers.count
+        let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
+
+        viewModel.copyMergedToNewLayer()
+
+        #expect(viewModel.document.layers.count == layerCount)
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.undoStack.count == undoCount)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionEmpty"))
+    }
 }

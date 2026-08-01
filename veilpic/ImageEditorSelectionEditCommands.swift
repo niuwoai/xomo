@@ -323,9 +323,10 @@ extension ImageEditorViewModel {
                 layerFrame: document.layers[index].frame,
                 canvasSize: document.canvasSize,
                 feather: feather
-              )
+              ),
+              clippedImage.nonTransparentPixelBounds() != nil
         else {
-            statusText = L10n.text("imageEditor.status.operationFailed")
+            statusText = L10n.text("imageEditor.status.selectionEmpty")
             return
         }
 
@@ -400,6 +401,7 @@ extension ImageEditorViewModel {
                 canvasSize: document.canvasSize,
                 feather: feather
               ),
+              clippedImage.nonTransparentPixelBounds() != nil,
               let clearedImage = document.layers[index].image.cleared(
                 selection: selection,
                 layerFrame: document.layers[index].frame,
@@ -407,7 +409,7 @@ extension ImageEditorViewModel {
                 feather: feather
               )
         else {
-            statusText = L10n.text("imageEditor.status.operationFailed")
+            statusText = L10n.text("imageEditor.status.selectionEmpty")
             return
         }
 
@@ -449,9 +451,10 @@ extension ImageEditorViewModel {
                 layerFrame: layer.frame,
                 canvasSize: document.canvasSize,
                 feather: feather
-              )
+              ),
+              clippedImage.nonTransparentPixelBounds() != nil
         else {
-            statusText = L10n.text("imageEditor.status.selectionCopyToClipboardFailed")
+            statusText = L10n.text("imageEditor.status.selectionEmpty")
             return
         }
 
@@ -476,9 +479,10 @@ extension ImageEditorViewModel {
                 layerFrame: document.layers[index].frame,
                 canvasSize: document.canvasSize,
                 feather: feather
-              )
+              ),
+              clippedImage.nonTransparentPixelBounds() != nil
         else {
-            statusText = L10n.text("imageEditor.status.selectionCopyToClipboardFailed")
+            statusText = L10n.text("imageEditor.status.selectionEmpty")
             return
         }
 
@@ -518,8 +522,8 @@ extension ImageEditorViewModel {
                 layerFrame: CGRect(origin: .zero, size: document.canvasSize),
                 canvasSize: document.canvasSize,
                 feather: feather
-            ) else {
-                statusText = L10n.text("imageEditor.status.copyMergedToClipboardFailed")
+            ), clippedImage.nonTransparentPixelBounds() != nil else {
+                statusText = L10n.text("imageEditor.status.selectionEmpty")
                 return
             }
             mergedImage = clippedImage
@@ -585,8 +589,8 @@ extension ImageEditorViewModel {
                 layerFrame: CGRect(origin: .zero, size: document.canvasSize),
                 canvasSize: document.canvasSize,
                 feather: feather
-            ) else {
-                statusText = L10n.text("imageEditor.status.operationFailed")
+            ), clippedImage.nonTransparentPixelBounds() != nil else {
+                statusText = L10n.text("imageEditor.status.selectionEmpty")
                 return
             }
             mergedImage = clippedImage
