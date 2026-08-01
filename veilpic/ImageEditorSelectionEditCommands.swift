@@ -347,6 +347,8 @@ extension ImageEditorViewModel {
         layer.blendIfUnderlyingWhite = sourceLayer.blendIfUnderlyingWhite
         layer.style = sourceLayer.style
         layer.groupID = sourceLayer.groupID
+        layer.stackChildLayout = sourceLayer.stackChildLayout
+        layer.isStackLayoutExcluded = sourceLayer.isStackLayoutExcluded
         layer.isClippingMask = sourceLayer.isClippingMask
         layer.labelColor = sourceLayer.labelColor
         document.layers.insert(layer, at: index + 1)
@@ -439,6 +441,8 @@ extension ImageEditorViewModel {
         layer.blendIfUnderlyingWhite = sourceLayer.blendIfUnderlyingWhite
         layer.style = sourceLayer.style
         layer.groupID = sourceLayer.groupID
+        layer.stackChildLayout = sourceLayer.stackChildLayout
+        layer.isStackLayoutExcluded = sourceLayer.isStackLayoutExcluded
         layer.isClippingMask = sourceLayer.isClippingMask
         layer.labelColor = sourceLayer.labelColor
         document.layers.insert(layer, at: index + 1)

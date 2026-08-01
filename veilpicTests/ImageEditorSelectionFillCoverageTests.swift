@@ -438,6 +438,32 @@ struct ImageEditorSelectionFillCoverageTests {
         #expect(cutLayer.labelColor == .orange)
     }
 
+    @Test func copyingSelectionPreservesAutoLayoutChildSemantics() throws {
+        let viewModel = autoLayoutChildViewModel(sourceName: "layout-copy.png")
+
+        viewModel.copySelectionToNewLayer()
+
+        let copiedLayer = try #require(viewModel.document.selectedLayer)
+        #expect(copiedLayer.stackChildLayout == ImageEditorStackChildLayout(
+            grow: 2,
+            stretchesCrossAxis: true
+        ))
+        #expect(copiedLayer.isStackLayoutExcluded)
+    }
+
+    @Test func cuttingSelectionPreservesAutoLayoutChildSemantics() throws {
+        let viewModel = autoLayoutChildViewModel(sourceName: "layout-cut.png")
+
+        viewModel.cutSelectionToNewLayer()
+
+        let cutLayer = try #require(viewModel.document.selectedLayer)
+        #expect(cutLayer.stackChildLayout == ImageEditorStackChildLayout(
+            grow: 2,
+            stretchesCrossAxis: true
+        ))
+        #expect(cutLayer.isStackLayoutExcluded)
+    }
+
     private func clippingMaskViewModel(sourceName: String) -> ImageEditorViewModel {
         let size = CGSize(width: 48, height: 32)
         let baseImage = NSImage(size: size, flipped: false) { rect in
@@ -523,6 +549,25 @@ struct ImageEditorSelectionFillCoverageTests {
         let viewModel = ImageEditorViewModel(sourceName: sourceName, image: image) { _ in }
         if let sourceIndex = viewModel.document.selectedLayerIndex {
             viewModel.document.layers[sourceIndex].labelColor = labelColor
+        }
+        viewModel.selectAll()
+        return viewModel
+    }
+
+    private func autoLayoutChildViewModel(sourceName: String) -> ImageEditorViewModel {
+        let size = CGSize(width: 48, height: 32)
+        let image = NSImage(size: size, flipped: false) { rect in
+            NSColor.systemIndigo.setFill()
+            rect.fill()
+            return true
+        }
+        let viewModel = ImageEditorViewModel(sourceName: sourceName, image: image) { _ in }
+        if let sourceIndex = viewModel.document.selectedLayerIndex {
+            viewModel.document.layers[sourceIndex].stackChildLayout = ImageEditorStackChildLayout(
+                grow: 2,
+                stretchesCrossAxis: true
+            )
+            viewModel.document.layers[sourceIndex].isStackLayoutExcluded = true
         }
         viewModel.selectAll()
         return viewModel
