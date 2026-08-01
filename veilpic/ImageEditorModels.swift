@@ -1002,7 +1002,7 @@ struct ImageEditorSolidColorFillContent: Equatable, Codable {
 
     var color: NSColor {
         let content = normalized()
-        return NSColor(calibratedRed: content.red, green: content.green, blue: content.blue, alpha: 1)
+        return NSColor(deviceRed: content.red, green: content.green, blue: content.blue, alpha: 1)
     }
 
     func renderedImage(size: CGSize) -> NSImage {

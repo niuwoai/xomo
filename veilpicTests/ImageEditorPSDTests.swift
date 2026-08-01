@@ -116,6 +116,8 @@ struct ImageEditorPSDTests {
         document.layers = [layer]
 
         let data = try ImageEditorPSDCodec.encode(document: document)
+        #expect(data.range(of: Data("AnglUntF#Ang".utf8)) != nil)
+        #expect(data.range(of: Data("AnglUntFAngl".utf8)) == nil)
         let restored = try ImageEditorPSDCodec.decode(data, sourceName: "native-gradient.psd")
         let restoredLayer = try #require(restored.layers.first)
         let restoredContent = try #require(restoredLayer.gradientFillContent?.normalized())

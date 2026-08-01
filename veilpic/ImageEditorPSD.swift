@@ -1302,7 +1302,6 @@ enum ImageEditorPSDCodec {
               shape.kind == .path,
               shape.fillGradient == nil,
               shape.fillOpacity >= 0.999,
-              shape.strokeOpacity <= 0.001,
               let color = shape.fillColor.usingColorSpace(.deviceRGB)
         else { return nil }
         return ImageEditorSolidColorFillContent(
@@ -1894,7 +1893,7 @@ enum ImageEditorPSDCodec {
            let blue = object["Bl  "]?.numericValue,
            red.isFinite, green.isFinite, blue.isFinite {
             return NSColor(
-                calibratedRed: CGFloat(max(0, min(255, red)) / 255),
+                deviceRed: CGFloat(max(0, min(255, red)) / 255),
                 green: CGFloat(max(0, min(255, green)) / 255),
                 blue: CGFloat(max(0, min(255, blue)) / 255),
                 alpha: 1
@@ -3329,7 +3328,7 @@ private extension Data {
             Data.descriptorItem(
                 key: "Angl",
                 type: "UntF",
-                payload: Data(unit: "Angl", value: Double(normalized.angle))
+                payload: Data(unit: "#Ang", value: Double(normalized.angle))
             ),
             Data.descriptorItem(
                 key: "Scl ",
