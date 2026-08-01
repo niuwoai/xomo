@@ -540,15 +540,27 @@ struct ImageEditorScopeTests {
     }
 
     @Test func canvasWorkspaceWiresMagnifyGestureToViewModel() throws {
-        let source = try String(
+        let viewSource = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
             encoding: .utf8
         )
-        #expect(source.contains("MagnifyGesture()"))
-        #expect(source.contains("viewModel.magnifyCanvas("))
-        #expect(source.contains("at: value.startLocation"))
-        #expect(source.contains("viewportSize: geometry.size"))
-        #expect(source.contains("viewModel.endCanvasMagnify()"))
+        let compatibilitySource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/Theme.swift"),
+            encoding: .utf8
+        )
+        #expect(viewSource.contains(".xomoCanvasPlatformInteractions("))
+        #expect(viewSource.contains("onMagnifyChanged: { magnification, location in"))
+        #expect(viewSource.contains("viewModel.magnifyCanvas("))
+        #expect(viewSource.contains("at: location ?? CGPoint("))
+        #expect(viewSource.contains("viewportSize: geometry.size"))
+        #expect(viewSource.contains("viewModel.endCanvasMagnify()"))
+        #expect(compatibilitySource.contains("if #available(macOS 14.0, *)"))
+        #expect(compatibilitySource.contains("MagnifyGesture()"))
+        #expect(compatibilitySource.contains("onMagnifyChanged(value.magnification, value.startLocation)"))
+        #expect(compatibilitySource.contains("} else if #available(macOS 13.0, *)"))
+        #expect(compatibilitySource.contains("MagnificationGesture()"))
+        #expect(compatibilitySource.contains("onMagnifyChanged(value, nil)"))
+        #expect(compatibilitySource.contains("onMagnifyEnded()"))
     }
 
     @Test func canvasPublishesItsAutomationIdentifierAsAnAccessibilityContainer() throws {
