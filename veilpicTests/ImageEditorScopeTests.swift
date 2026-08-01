@@ -382,13 +382,14 @@ struct ImageEditorScopeTests {
         )
         let panelSource = source[panelStart.lowerBound..<panelEnd.lowerBound]
         let partitionCount = panelSource.components(
-            separatedBy: "\n                Group {\n"
+            separatedBy: "\n                AnyView(Group {\n"
         ).count - 1
 
         // Keep each opaque SwiftUI metadata subtree comfortably below the
         // runtime recursion limit. Layer-style controls continue to grow, so
         // this is deliberately a lower bound rather than a frozen count.
         #expect(partitionCount >= 9)
+        #expect(panelSource.contains("AnyView(Group {"))
         #expect(source.contains("private var adjustmentValueControls: AnyView"))
         #expect(panelSource.contains("selectedLayerTransformControls"))
         #expect(panelSource.contains("image-editor-layer-style-global-light-angle"))
