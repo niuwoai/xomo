@@ -408,6 +408,29 @@ struct ImageEditorCanvasCursorTests {
         #expect(rotate !== NSCursor.crosshair)
     }
 
+    @Test func transformCursorHitTestingMatchesVisibleControlRules() {
+        #expect(ImageEditorLayerTransformControlLayout.showsControls(
+            areExtrasVisible: true,
+            areTransformControlsVisible: true,
+            hasSelectedXomoObject: false
+        ))
+        #expect(!ImageEditorLayerTransformControlLayout.showsControls(
+            areExtrasVisible: false,
+            areTransformControlsVisible: true,
+            hasSelectedXomoObject: false
+        ))
+        #expect(ImageEditorLayerTransformControlLayout.showsControls(
+            areExtrasVisible: false,
+            areTransformControlsVisible: true,
+            hasSelectedXomoObject: true
+        ))
+        #expect(!ImageEditorLayerTransformControlLayout.showsControls(
+            areExtrasVisible: true,
+            areTransformControlsVisible: false,
+            hasSelectedXomoObject: true
+        ))
+    }
+
     @Test func componentLibraryNeverLeaksAnyPreviousToolOrHoverCursor() {
         let staleModifiers: NSEvent.ModifierFlags = [.command, .option, .shift, .control, .capsLock]
 

@@ -616,6 +616,8 @@ struct XomoLeftSidebarTests {
         #expect(source.contains(".onChange(of: viewModel.selectedLeftSidebarTab)"))
         #expect(source.contains(".onChange(of: viewModel.document.selectedLayerIDs)"))
         #expect(!source.contains(".onChange(of: viewModel.document.selectedLayerID)"))
+        #expect(source.contains(".onChange(of: viewModel.document.areTransformControlsVisible)"))
+        #expect(source.contains(".onChange(of: viewModel.document.areExtrasVisible)"))
         #expect(!source.contains(".onChange(of: viewModel.selectedXomoObjectKind)"))
         #expect(source.contains("switch canvasInteractionTool"))
         #expect(source.contains(".simultaneousGesture(canvasGesture(in: geometry.size))"))

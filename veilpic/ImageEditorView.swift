@@ -2471,6 +2471,12 @@ struct ImageEditorView: View {
                     }
                     refreshCanvasCursor(in: geometry.size)
                 }
+                .onChange(of: viewModel.document.areTransformControlsVisible) { _ in
+                    refreshCanvasCursor(in: geometry.size)
+                }
+                .onChange(of: viewModel.document.areExtrasVisible) { _ in
+                    refreshCanvasCursor(in: geometry.size)
+                }
                 .onChange(of: viewModel.brushSize) { _ in
                     refreshCanvasCursor(in: geometry.size)
                 }
@@ -3867,7 +3873,11 @@ struct ImageEditorView: View {
     ) -> ImageEditorLayerTransformCursorTarget? {
         var hoveredTarget: ImageEditorLayerTransformCursorTarget?
         if canvasInteractionTool == .move,
-           viewModel.document.areTransformControlsVisible,
+           ImageEditorLayerTransformControlLayout.showsControls(
+               areExtrasVisible: viewModel.document.areExtrasVisible,
+               areTransformControlsVisible: viewModel.document.areTransformControlsVisible,
+               hasSelectedXomoObject: viewModel.hasSelectedXomoObject
+           ),
            let layerFrame = viewModel.selectedLayerTransformFrame {
             hoveredTarget = ImageEditorCanvasCursor.transformTarget(
                 at: viewPoint,
@@ -6145,7 +6155,11 @@ struct ImageEditorView: View {
             }
 
             if canvasInteractionTool == .move,
-               viewModel.document.areTransformControlsVisible,
+               ImageEditorLayerTransformControlLayout.showsControls(
+                   areExtrasVisible: viewModel.document.areExtrasVisible,
+                   areTransformControlsVisible: viewModel.document.areTransformControlsVisible,
+                   hasSelectedXomoObject: viewModel.hasSelectedXomoObject
+               ),
                viewModel.canResizeSelectedLayer {
                 ForEach(ImageEditorLayerTransformControlLayout.visibleResizeHandles(in: rect)) { handle in
                     resizeHandleView(handle: handle, in: rect, canvasSize: size)
@@ -6153,7 +6167,11 @@ struct ImageEditorView: View {
             }
 
             if canvasInteractionTool == .move,
-               viewModel.document.areTransformControlsVisible,
+               ImageEditorLayerTransformControlLayout.showsControls(
+                   areExtrasVisible: viewModel.document.areExtrasVisible,
+                   areTransformControlsVisible: viewModel.document.areTransformControlsVisible,
+                   hasSelectedXomoObject: viewModel.hasSelectedXomoObject
+               ),
                viewModel.canRotateSelectedLayer {
                 if ImageEditorLayerTransformControlLayout.showsReferencePoint(in: rect) {
                     transformReferencePointView(in: size)
@@ -10065,6 +10083,14 @@ enum ImageEditorLayerTransformControlLayout {
     /// control.  Keep a body-sized move target by reducing compact selections
     /// to their four familiar corner handles.
     static let compactDimensionThreshold: CGFloat = 44
+
+    static func showsControls(
+        areExtrasVisible: Bool,
+        areTransformControlsVisible: Bool,
+        hasSelectedXomoObject: Bool
+    ) -> Bool {
+        areTransformControlsVisible && (areExtrasVisible || hasSelectedXomoObject)
+    }
 
     static func visibleResizeHandles(in frame: CGRect) -> [ImageEditorLayerResizeHandle] {
         guard frame.width >= compactDimensionThreshold,
