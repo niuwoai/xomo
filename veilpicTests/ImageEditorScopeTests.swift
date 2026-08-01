@@ -567,12 +567,21 @@ struct ImageEditorScopeTests {
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
             encoding: .utf8
         )
-        let identifier = try #require(
-            source.range(of: ".accessibilityIdentifier(\"image-editor-canvas\")")
+        let canvasStart = try #require(
+            source.range(of: ".coordinateSpace(name: \"image-editor-canvas-space\")")
         )
-        let prefix = source[..<identifier.lowerBound].suffix(240)
+        let canvasEnd = try #require(
+            source[canvasStart.upperBound...].range(of: ".xomoCanvasPlatformInteractions(")
+        )
+        let canvasSemantics = source[canvasStart.lowerBound..<canvasEnd.lowerBound]
 
-        #expect(prefix.contains(".accessibilityElement(children: .contain)"))
+        let container = try #require(canvasSemantics.range(of: ".accessibilityElement(children: .contain)"))
+        let label = try #require(canvasSemantics.range(of: ".accessibilityLabel(L10n.text(\"imageEditor.accessibility.canvas\"))"))
+        let value = try #require(canvasSemantics.range(of: ".accessibilityValue(L10n.format("))
+        let identifier = try #require(canvasSemantics.range(of: ".accessibilityIdentifier(\"image-editor-canvas\")"))
+        #expect(container.lowerBound < label.lowerBound)
+        #expect(label.lowerBound < value.lowerBound)
+        #expect(value.lowerBound < identifier.lowerBound)
     }
 
     @Test func workspaceDoesNotOverrideChildAutomationIdentifiers() throws {
