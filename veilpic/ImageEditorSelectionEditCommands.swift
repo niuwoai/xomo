@@ -637,11 +637,17 @@ extension ImageEditorViewModel {
         render: (ImageEditorLayer) -> NSImage?
     ) {
         let edits = editableSelectionPixelLayerIndices().compactMap { index -> (Int, NSImage)? in
-            guard let output = render(document.layers[index]) else { return nil }
-            return (index, output.normalizedBitmapImage())
+            let source = document.layers[index].image.normalizedBitmapImage()
+            guard let output = render(document.layers[index])?.normalizedBitmapImage() else { return nil }
+            if let outputData = output.qingtuPNGData(),
+               let sourceData = source.qingtuPNGData(),
+               outputData == sourceData {
+                return nil
+            }
+            return (index, output)
         }
         guard !edits.isEmpty else {
-            statusText = L10n.text("imageEditor.status.operationFailed")
+            statusText = L10n.text("imageEditor.status.selectionEmpty")
             return
         }
 

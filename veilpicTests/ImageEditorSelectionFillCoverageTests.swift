@@ -169,4 +169,38 @@ struct ImageEditorSelectionFillCoverageTests {
         #expect(viewModel.undoStack.count == undoCount)
         #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionEmpty"))
     }
+
+    @Test func clearingAlreadyTransparentPixelsDoesNotCreateUndoOrHistory() throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "transparent-clear.png",
+            image: .transparent(size: CGSize(width: 40, height: 30))
+        ) { _ in }
+        viewModel.selectAll()
+        let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
+
+        viewModel.clearSelectionPixels()
+
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.undoStack.count == undoCount)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionEmpty"))
+    }
+
+    @Test func zeroOpacityFillDoesNotCreateUndoOrHistory() throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "zero-opacity-fill.png",
+            image: .transparent(size: CGSize(width: 40, height: 30))
+        ) { _ in }
+        viewModel.selectAll()
+        viewModel.foregroundColor = .systemPink
+        viewModel.opacity = 0
+        let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
+
+        viewModel.fillSelection()
+
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.undoStack.count == undoCount)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionEmpty"))
+    }
 }
