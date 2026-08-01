@@ -209,7 +209,7 @@ def gradient_fill_descriptor
     items: [
       descriptor_item(key: "Grad", type: "Objc", payload: gradient),
       descriptor_item(key: "Type", type: "enum", payload: descriptor_enum_payload(enum_type: "GrdT", value: "Lnr ")),
-      descriptor_item(key: "Angl", type: "UntF", payload: "Angl" + f64(0)),
+      descriptor_item(key: "Angl", type: "UntF", payload: "#Ang" + f64(0)),
       descriptor_item(key: "Scl ", type: "UntF", payload: "#Prc" + f64(100)),
       descriptor_item(key: "Rvrs", type: "bool", payload: [0].pack("C"))
     ]
@@ -217,6 +217,7 @@ def gradient_fill_descriptor
 end
 
 def vector_stroke_descriptor
+  dash_set = u32(2) + [6.0, 3.0].map { |value| "UntF" + "#Pnt" + f64(value) }.join
   color = descriptor_body(
     name: "RGB Color",
     class_id: "RGBC",
@@ -234,6 +235,8 @@ def vector_stroke_descriptor
       descriptor_item(key: "strokeEnabled", type: "bool", payload: [1].pack("C")),
       descriptor_item(key: "fillEnabled", type: "bool", payload: [1].pack("C")),
       descriptor_item(key: "strokeStyleLineWidth", type: "UntF", payload: "#Pxl" + f64(2.0)),
+      descriptor_item(key: "strokeStyleLineDashOffset", type: "UntF", payload: "#Pnt" + f64(0)),
+      descriptor_item(key: "strokeStyleLineDashSet", type: "VlLs", payload: dash_set),
       descriptor_item(
         key: "strokeStyleLineAlignment",
         type: "enum",
@@ -689,7 +692,7 @@ expectations = {
   "solid-color-fill.psd" => %w[editable_solid_color_fill rgb_descriptor],
   "solid-vector-shape.psd" => %w[editable_vector_shape solid_fill vector_mask],
   "gradient-vector-shape.psd" => %w[editable_vector_shape gradient_fill vector_mask],
-  "stroked-vector-shape.psd" => %w[editable_vector_shape solid_fill vector_mask vector_stroke],
+  "stroked-vector-shape.psd" => %w[editable_vector_shape solid_fill vector_mask vector_stroke dash_pattern],
   "gradient-fill.psd" => %w[editable_gradient_fill linear_color_stops],
   "vector-mask.psd" => %w[editable_vector_mask closed_path bezier_points],
   "vector-mask-multi.psd" => %w[editable_vector_mask multiple_subpaths even_odd_hole],

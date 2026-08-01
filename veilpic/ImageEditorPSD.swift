@@ -1869,6 +1869,17 @@ enum ImageEditorPSDCodec {
                 let width = descriptor["strokeStyleLineWidth"]?.numericValue ?? 1
                 let opacity = (descriptor["strokeStyleOpacity"]?.numericValue ?? 100) / 100
                 let enabled = descriptor["strokeEnabled"]?.booleanValue ?? true
+                let dashValues = descriptor["strokeStyleLineDashSet"]?.listValue ?? []
+                let parsedDashPattern = dashValues.compactMap(\.numericValue)
+                let dashPattern: [CGFloat]
+                if parsedDashPattern.count == dashValues.count,
+                   parsedDashPattern.count >= 2,
+                   parsedDashPattern.count <= 16,
+                   parsedDashPattern.allSatisfy({ $0.isFinite && $0 > 0 }) {
+                    dashPattern = parsedDashPattern.map { CGFloat(min(2_048, $0)) }
+                } else {
+                    dashPattern = []
+                }
                 guard width.isFinite, opacity.isFinite, enabled else { continue }
                 return PSDVectorStrokeInfo(
                     width: CGFloat(max(1, min(96, width))),
@@ -1876,7 +1887,8 @@ enum ImageEditorPSDCodec {
                     position: ImageEditorStrokePosition(psdValue: descriptor["strokeStyleLineAlignment"]?.enumValue),
                     cap: ImageEditorStrokeCap(psdValue: descriptor["strokeStyleLineCapType"]?.enumValue),
                     join: ImageEditorStrokeJoin(psdValue: descriptor["strokeStyleLineJoinType"]?.enumValue),
-                    color: descriptorColor(descriptor["strokeStyleContent"])
+                    color: descriptorColor(descriptor["strokeStyleContent"]),
+                    dashPattern: dashPattern
                 )
             } catch {
                 continue
@@ -2346,6 +2358,7 @@ enum ImageEditorPSDCodec {
         shape.strokePosition = stroke.position
         shape.strokeCap = stroke.cap
         shape.strokeJoin = stroke.join
+        shape.strokeDashPattern = stroke.dashPattern
         if let color = stroke.color { shape.strokeColor = color }
     }
 
@@ -2832,6 +2845,7 @@ private struct PSDVectorStrokeInfo {
     let cap: ImageEditorStrokeCap
     let join: ImageEditorStrokeJoin
     let color: NSColor?
+    let dashPattern: [CGFloat]
 }
 
 private extension ImageEditorStrokePosition {
@@ -3219,13 +3233,21 @@ private extension Data {
             color.descriptorItem(key: "Grn ", type: "doub", payload: stroke.color.green * 255),
             color.descriptorItem(key: "Bl  ", type: "doub", payload: stroke.color.blue * 255)
         ])
-        var descriptor = Data()
-        descriptor.appendUInt32(16)
-        descriptor.appendDescriptorBlock(name: "", classID: "vstk", items: [
+        let dashPattern = stroke.dashPattern
+            .filter { $0.isFinite && $0 > 0 }
+            .prefix(16)
+        var dashList = Data()
+        dashList.appendUInt32(UInt32(dashPattern.count))
+        for value in dashPattern {
+            dashList.appendASCII("UntF")
+            dashList.append(Data(unit: "#Pnt", value: Double(Swift.min(2_048, value))))
+        }
+        var items = [
             descriptorItem(key: "strokeStyleVersion", type: "long", payload: Data(intPayload: 2)),
             descriptorItem(key: "strokeEnabled", type: "bool", payload: Data(boolean: true)),
             descriptorItem(key: "fillEnabled", type: "bool", payload: Data(boolean: true)),
             descriptorItem(key: "strokeStyleLineWidth", type: "UntF", payload: Data(unit: "#Pxl", value: stroke.width)),
+            descriptorItem(key: "strokeStyleLineDashOffset", type: "UntF", payload: Data(unit: "#Pnt", value: 0)),
             descriptorItem(key: "strokeStyleLineAlignment", type: "enum", payload: Data.descriptorEnumPayload(enumType: "strokeStyleLineAlignment", value: stroke.position.psdValue)),
             descriptorItem(key: "strokeStyleLineCapType", type: "enum", payload: Data.descriptorEnumPayload(enumType: "strokeStyleLineCapType", value: stroke.cap.psdValue)),
             descriptorItem(key: "strokeStyleLineJoinType", type: "enum", payload: Data.descriptorEnumPayload(enumType: "strokeStyleLineJoinType", value: stroke.join.psdValue)),
@@ -3236,7 +3258,16 @@ private extension Data {
             descriptorItem(key: "strokeStyleOpacity", type: "UntF", payload: Data(unit: "#Prc", value: stroke.opacity * 100)),
             descriptorItem(key: "strokeStyleContent", type: "Objc", payload: color),
             descriptorItem(key: "strokeStyleResolution", type: "doub", payload: Data(doublePayload: 72))
-        ])
+        ]
+        if dashPattern.count >= 2 {
+            items.insert(
+                descriptorItem(key: "strokeStyleLineDashSet", type: "VlLs", payload: dashList),
+                at: 5
+            )
+        }
+        var descriptor = Data()
+        descriptor.appendUInt32(16)
+        descriptor.appendDescriptorBlock(name: "", classID: "vstk", items: items)
         appendASCII("8BIM")
         appendASCII("vstk")
         appendUInt32(UInt32(descriptor.count))

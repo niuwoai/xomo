@@ -69,7 +69,7 @@
     },
     {
       "file": "gradient-vector-shape.psd",
-      "sha256": "209e67830d2c32231ae016bce6f3e12250aa4d591011c12dc8b6c5a6f7863b12",
+      "sha256": "cc69f3ffe72e19876b429c1f066f526f828fe7b824d36d46094edede2252bcb1",
       "expected": [
         "editable_vector_shape",
         "gradient_fill",
@@ -78,17 +78,18 @@
     },
     {
       "file": "stroked-vector-shape.psd",
-      "sha256": "d9f5144f612b6bdf0a62384c92a8711658667860f8546ad1990779634ccc06da",
+      "sha256": "72c821059ecae6b2f21b858a3dd319d77e4e929e3ec50f93398677805c82f93e",
       "expected": [
         "editable_vector_shape",
         "solid_fill",
         "vector_mask",
-        "vector_stroke"
+        "vector_stroke",
+        "dash_pattern"
       ]
     },
     {
       "file": "gradient-fill.psd",
-      "sha256": "7a4728765f8922a611e18dc6a1c897b4be663b68d1f6744e4ecb48b584e43ae9",
+      "sha256": "b11943b066c30558098ab40bcbcc26578203ab569031ca2e71713d53863c8a4c",
       "expected": [
         "editable_gradient_fill",
         "linear_color_stops"

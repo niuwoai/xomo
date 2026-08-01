@@ -677,6 +677,7 @@ struct ImageEditorPSDTests {
         #expect(shape.strokePosition == .center)
         #expect(shape.strokeCap == .round)
         #expect(shape.strokeJoin == .bevel)
+        #expect(shape.strokeDashPattern == [6, 3])
         #expect(abs(shape.strokeWidth - 2) < 0.01)
         #expect(abs(shape.strokeOpacity - 0.75) < 0.01)
         #expect(abs(strokeColor.redComponent - 240.0 / 255.0) < 0.01)
@@ -690,6 +691,7 @@ struct ImageEditorPSDTests {
         let restoredShape = try #require(reimported.layers.first?.shapeContent)
         #expect(restoredShape.strokePosition == .center)
         #expect(restoredShape.strokeJoin == .bevel)
+        #expect(restoredShape.strokeDashPattern == [6, 3])
         #expect(abs(restoredShape.strokeWidth - 2) < 0.01)
         #expect(abs(restoredShape.strokeOpacity - 0.75) < 0.01)
     }

@@ -1,6 +1,8 @@
 # Xomo 经典 Photoshop 能力路线图
 
-> 最后更新：2026-08-02 ｜ 当前版本：v2.12.0-rc631 ｜ 目标：以经典 Photoshop 能力作为现代混合编辑器的可靠像素与图层底座
+> 最后更新：2026-08-02 ｜ 当前版本：v2.12.0-rc632 ｜ 目标：以经典 Photoshop 能力作为现代混合编辑器的可靠像素与图层底座
+
+- `v2.12.0-rc632`：补齐 PSD `vstk` 的 `strokeStyleLineDashSet` 虚线数组双向交换，独立外部夹具验证 6/3 点虚线导入及重新导出后仍为可编辑虚线 Shape，下一次周期性完整 Release、冒烟和 `/Applications` 覆盖安装为 rc640。
 
 - `v2.12.0-rc631`：修正 PSD 线性 `GdFl` 的标准 `#Ang` 角度单位、实色/描边 RGB 数值漂移，以及带描边实色矢量形状漏写 `SoCo` 后退化为像素层的问题；外部 PSD 夹具验证颜色和可编辑 Shape 往返，下一次周期性完整 Release、冒烟和 `/Applications` 覆盖安装为 rc640。
 

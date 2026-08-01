@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.12.0-rc632 - 2026-08-02
+
+### Fixed
+
+- PSD `vstk` 简单矢量描边现在双向保留 `strokeStyleLineDashSet` 虚线数组，并写入标准的零值 `strokeStyleLineDashOffset`；Xomo 虚线 Shape 导出 PSD 后不再静默变为实线。
+- 独立 Ruby PSD 夹具生成器增加 6/3 点虚线描边，并把渐变角度夹具同步为标准 `#Ang` 单位；外部夹具验证虚线导入和再次导出后的可编辑往返。
+
 ## 2.12.0-rc631 - 2026-08-02
 
 ### Fixed
