@@ -284,6 +284,10 @@ enum XomoFigmaNodeImportMapper {
         if transformFlattened {
             issues.append(.transformFlattened)
         }
+        if let textCase = node.style?.textCase,
+           textCase != "ORIGINAL" {
+            issues.append(.textCaseFlattened)
+        }
         let exportPresetMapping = mappedExportPresets(
             node.exportSettings,
             frame: node.absoluteBoundingBox
@@ -348,7 +352,7 @@ enum XomoFigmaNodeImportMapper {
             cornerSmoothing: validCornerSmoothing(node),
             text: node.characters.map {
                 XomoFigmaPlanText(
-                    characters: $0,
+                    characters: characters($0, applying: node.style?.textCase),
                     fontFamily: node.style?.fontFamily,
                     fontSize: node.style?.fontSize,
                     fontWeight: node.style?.fontWeight,
@@ -970,6 +974,19 @@ enum XomoFigmaNodeImportMapper {
         return smoothing
     }
 
+    static func characters(_ characters: String, applying textCase: String?) -> String {
+        switch textCase {
+        case "UPPER":
+            characters.uppercased()
+        case "LOWER":
+            characters.lowercased()
+        case "TITLE":
+            characters.capitalized
+        default:
+            characters
+        }
+    }
+
     private static func hasUnsupportedCornerStyle(_ node: XomoFigmaNode) -> Bool {
         let radii = node.rectangleCornerRadii ?? []
         let hasInvalidIndependentRadii = !radii.isEmpty
@@ -1240,6 +1257,7 @@ struct XomoFigmaTypeStyle: Decodable {
     var italic: Bool?
     var textDecoration: String?
     var paragraphIndent: Double?
+    var textCase: String?
 }
 
 struct XomoFigmaPaint: Decodable {

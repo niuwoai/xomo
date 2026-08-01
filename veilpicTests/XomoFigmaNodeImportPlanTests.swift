@@ -13,6 +13,14 @@ import Testing
 
 @MainActor
 struct XomoFigmaNodeImportPlanTests {
+    @Test func supportedTextCaseStylesBakeIntoEditableCharacters() {
+        #expect(XomoFigmaNodeImportMapper.characters("Hello 世界", applying: "UPPER") == "HELLO 世界")
+        #expect(XomoFigmaNodeImportMapper.characters("Hello 世界", applying: "LOWER") == "hello 世界")
+        #expect(XomoFigmaNodeImportMapper.characters("hello world", applying: "TITLE") == "Hello World")
+        #expect(XomoFigmaNodeImportMapper.characters("Hello", applying: "ORIGINAL") == "Hello")
+        #expect(XomoFigmaNodeImportMapper.characters("Hello", applying: "SMALL_CAPS") == "Hello")
+    }
+
     @Test func figmaSliceBecomesNativeFireworksSliceAndExportsWithoutCreatingLayer() throws {
         let response = try JSONDecoder().decode(
             XomoFigmaNodeResponse.self,
@@ -1787,6 +1795,10 @@ struct XomoFigmaNodeImportPlanTests {
 
     @Test func materializerCreatesEditableHierarchyAtCenteredScaleAndHonestPlaceholder() throws {
         let plan = try Self.decodedPlan()
+        let textPlan = try #require(plan.items.first { $0.sourceName == "Continue Label" })
+        #expect(textPlan.text?.characters == "CONTINUE 继续")
+        #expect(textPlan.fidelity == .partial)
+        #expect(textPlan.issues.contains(.textCaseFlattened))
         let result = XomoFigmaNodeMaterializer.materialize(
             plan: plan,
             canvasSize: CGSize(width: 600, height: 1_000)
@@ -1818,7 +1830,7 @@ struct XomoFigmaNodeImportPlanTests {
         ))
         #expect(text.frame.origin == CGPoint(x: 135, y: 138))
         if case let .text(content) = text.kind {
-            #expect(content.text == "继续")
+            #expect(content.text == "CONTINUE 继续")
             #expect(content.fontFamilyName == "Inter")
             #expect(content.fontSize == 16)
             #expect(content.isBold)
@@ -2026,8 +2038,8 @@ struct XomoFigmaNodeImportPlanTests {
                         "type": "TEXT",
                         "layoutGrow": 1,
                         "layoutAlign": "STRETCH",
-                        "characters": "继续",
-                        "style": {"fontFamily": "Inter", "fontSize": 16, "fontWeight": 600, "textAlignHorizontal": "CENTER", "letterSpacing": -1.5, "lineHeightPx": 22, "italic": true, "textDecoration": "UNDERLINE", "paragraphIndent": 12},
+                        "characters": "Continue 继续",
+                        "style": {"fontFamily": "Inter", "fontSize": 16, "fontWeight": 600, "textAlignHorizontal": "CENTER", "letterSpacing": -1.5, "lineHeightPx": 22, "italic": true, "textDecoration": "UNDERLINE", "paragraphIndent": 12, "textCase": "UPPER"},
                         "fills": [{"type": "SOLID", "color": {"r": 1, "g": 1, "b": 1, "a": 1}}],
                         "absoluteBoundingBox": {"x": 130, "y": 260, "width": 64, "height": 24}
                       }
