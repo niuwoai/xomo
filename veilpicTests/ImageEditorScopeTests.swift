@@ -3481,15 +3481,9 @@ struct ImageEditorScopeTests {
         #expect(layerMenuSource.contains("imageEditor.action.layerFlatten"))
         #expect(layerMenuSource.contains("viewModel.flattenImage()"))
         #expect(layerMenuSource.contains("viewModel.canFlattenImage"))
-        #expect(layerMenuSource.contains("imageEditor.action.layerSmartObjectReplace"))
-        #expect(layerMenuSource.contains("viewModel.chooseSmartObjectReplacementFile()"))
-        #expect(layerMenuSource.contains("viewModel.canReplaceSelectedSmartObjectContents"))
-        #expect(layerMenuSource.contains("imageEditor.action.layerSmartObjectMakeUnique"))
-        #expect(layerMenuSource.contains("viewModel.makeSelectedSmartObjectUnique()"))
-        #expect(layerMenuSource.contains("viewModel.canMakeSelectedSmartObjectUnique"))
-        #expect(layerMenuSource.contains("imageEditor.action.layerSmartObjectResetTransform"))
-        #expect(layerMenuSource.contains("viewModel.resetSelectedSmartObjectTransform()"))
-        #expect(layerMenuSource.contains("viewModel.canResetSelectedSmartObjectTransform"))
+        #expect(!layerMenuSource.contains("imageEditor.action.layerSmartObjectReplace"))
+        #expect(!layerMenuSource.contains("imageEditor.action.layerSmartObjectMakeUnique"))
+        #expect(!layerMenuSource.contains("imageEditor.action.layerSmartObjectResetTransform"))
     }
 
     @Test func layerPanelExposesSmartObjectContentActions() throws {
