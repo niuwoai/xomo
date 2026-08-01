@@ -552,6 +552,22 @@ struct ImageEditorSelectionFillCoverageTests {
         #expect(viewModel.undoStack.count == originalUndoCount)
         #expect(viewModel.isEditingLayerMask)
         #expect(viewModel.statusText == L10n.text("imageEditor.status.operationFailed"))
+
+        viewModel.copySelectionToClipboard()
+        #expect(viewModel.document.layers.count == originalLayerCount)
+        #expect(viewModel.document.selectedLayerID == sourceID)
+        #expect(viewModel.document.history.count == originalHistoryCount)
+        #expect(viewModel.undoStack.count == originalUndoCount)
+        #expect(viewModel.isEditingLayerMask)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.operationFailed"))
+
+        viewModel.cutSelectionToClipboard()
+        #expect(viewModel.document.layers.count == originalLayerCount)
+        #expect(viewModel.document.selectedLayerID == sourceID)
+        #expect(viewModel.document.history.count == originalHistoryCount)
+        #expect(viewModel.undoStack.count == originalUndoCount)
+        #expect(viewModel.isEditingLayerMask)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.operationFailed"))
     }
 
     private func clippingMaskViewModel(sourceName: String) -> ImageEditorViewModel {

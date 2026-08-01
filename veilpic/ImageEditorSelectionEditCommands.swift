@@ -470,8 +470,11 @@ extension ImageEditorViewModel {
             statusText = L10n.text("imageEditor.status.noSelection")
             return
         }
-        guard canCopySelectionToClipboard,
-              let layer = document.selectedLayer,
+        guard canCopySelectionToClipboard else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return
+        }
+        guard let layer = document.selectedLayer,
               let clippedImage = layer.visibleImage.copied(
                 selection: selection,
                 layerFrame: layer.frame,
@@ -498,8 +501,11 @@ extension ImageEditorViewModel {
             statusText = L10n.text("imageEditor.status.noSelection")
             return
         }
-        guard canCutSelectionToClipboard,
-              let index = document.selectedLayerIndex,
+        guard canCutSelectionToClipboard else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return
+        }
+        guard let index = document.selectedLayerIndex,
               let clippedImage = document.layers[index].visibleImage.copied(
                 selection: selection,
                 layerFrame: document.layers[index].frame,
