@@ -348,6 +348,7 @@ extension ImageEditorViewModel {
         layer.style = sourceLayer.style
         layer.groupID = sourceLayer.groupID
         layer.isClippingMask = sourceLayer.isClippingMask
+        layer.labelColor = sourceLayer.labelColor
         document.layers.insert(layer, at: index + 1)
         document.selectedLayerID = layer.id
         document.selectedLayerIDs = [layer.id]
@@ -439,6 +440,7 @@ extension ImageEditorViewModel {
         layer.style = sourceLayer.style
         layer.groupID = sourceLayer.groupID
         layer.isClippingMask = sourceLayer.isClippingMask
+        layer.labelColor = sourceLayer.labelColor
         document.layers.insert(layer, at: index + 1)
         document.selectedLayerID = layer.id
         document.selectedLayerIDs = [layer.id]

@@ -420,6 +420,24 @@ struct ImageEditorSelectionFillCoverageTests {
         #expect(imageEditorMaximumPixelDifference(viewModel.document.compositedImage, before) <= 1)
     }
 
+    @Test func copyingSelectionPreservesLayerLabelColor() throws {
+        let viewModel = labeledLayerViewModel(sourceName: "labeled-copy.png", labelColor: .purple)
+
+        viewModel.copySelectionToNewLayer()
+
+        let copiedLayer = try #require(viewModel.document.selectedLayer)
+        #expect(copiedLayer.labelColor == .purple)
+    }
+
+    @Test func cuttingSelectionPreservesLayerLabelColor() throws {
+        let viewModel = labeledLayerViewModel(sourceName: "labeled-cut.png", labelColor: .orange)
+
+        viewModel.cutSelectionToNewLayer()
+
+        let cutLayer = try #require(viewModel.document.selectedLayer)
+        #expect(cutLayer.labelColor == .orange)
+    }
+
     private func clippingMaskViewModel(sourceName: String) -> ImageEditorViewModel {
         let size = CGSize(width: 48, height: 32)
         let baseImage = NSImage(size: size, flipped: false) { rect in
@@ -487,6 +505,24 @@ struct ImageEditorSelectionFillCoverageTests {
         )
         if let sourceIndex = viewModel.document.selectedLayerIndex {
             viewModel.document.layers[sourceIndex].isVisible = false
+        }
+        viewModel.selectAll()
+        return viewModel
+    }
+
+    private func labeledLayerViewModel(
+        sourceName: String,
+        labelColor: ImageEditorLayerLabelColor
+    ) -> ImageEditorViewModel {
+        let size = CGSize(width: 48, height: 32)
+        let image = NSImage(size: size, flipped: false) { rect in
+            NSColor.systemTeal.setFill()
+            rect.fill()
+            return true
+        }
+        let viewModel = ImageEditorViewModel(sourceName: sourceName, image: image) { _ in }
+        if let sourceIndex = viewModel.document.selectedLayerIndex {
+            viewModel.document.layers[sourceIndex].labelColor = labelColor
         }
         viewModel.selectAll()
         return viewModel
