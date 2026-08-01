@@ -67,4 +67,70 @@ struct ImageEditorSelectionFillCoverageTests {
         #expect(viewModel.undoStack.count == undoCount)
         #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionEmpty"))
     }
+
+    @Test func strokeOnlyCommitsLayersReachedByItsOuterEdge() throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "stroke-coverage.png",
+            image: .transparent(size: CGSize(width: 120, height: 90))
+        ) { _ in }
+        viewModel.addLayer()
+        let reachedID = try #require(viewModel.document.selectedLayerID)
+        let reachedIndex = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[reachedIndex].frame = CGRect(x: 30, y: 10, width: 30, height: 30)
+
+        viewModel.addLayer()
+        let untouchedID = try #require(viewModel.document.selectedLayerID)
+        let untouchedIndex = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[untouchedIndex].frame = CGRect(x: 75, y: 55, width: 30, height: 25)
+        viewModel.document.selectedLayerID = reachedID
+        viewModel.document.selectedLayerIDs = [reachedID, untouchedID]
+        viewModel.createRectSelection(from: CGPoint(x: 10, y: 15), to: CGPoint(x: 28, y: 35))
+        viewModel.brushSize = 6
+        viewModel.foregroundColor = .systemBlue
+        viewModel.opacity = 1
+        let resolvedReachedIndex = try #require(
+            viewModel.document.layers.firstIndex { $0.id == reachedID }
+        )
+        let resolvedUntouchedIndex = try #require(
+            viewModel.document.layers.firstIndex { $0.id == untouchedID }
+        )
+        let reachedBefore = try #require(
+            viewModel.document.layers[resolvedReachedIndex].image.qingtuPNGData()
+        )
+        let untouchedBefore = try #require(
+            viewModel.document.layers[resolvedUntouchedIndex].image.qingtuPNGData()
+        )
+
+        viewModel.strokeSelection()
+
+        let reachedAfter = try #require(
+            viewModel.document.layers[resolvedReachedIndex].image.qingtuPNGData()
+        )
+        let untouchedAfter = try #require(
+            viewModel.document.layers[resolvedUntouchedIndex].image.qingtuPNGData()
+        )
+        #expect(reachedAfter != reachedBefore)
+        #expect(untouchedAfter == untouchedBefore)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.selectionStroke"))
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionStroked"))
+    }
+
+    @Test func strokeOutsideEveryEditableLayerDoesNotCreateUndoOrHistory() throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "empty-stroke.png",
+            image: .transparent(size: CGSize(width: 120, height: 90))
+        ) { _ in }
+        let layerIndex = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[layerIndex].frame = CGRect(x: 75, y: 55, width: 35, height: 25)
+        viewModel.createRectSelection(from: CGPoint(x: 5, y: 5), to: CGPoint(x: 25, y: 25))
+        viewModel.brushSize = 8
+        let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
+
+        viewModel.strokeSelection()
+
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.undoStack.count == undoCount)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionEmpty"))
+    }
 }

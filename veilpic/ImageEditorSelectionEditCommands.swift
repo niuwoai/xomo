@@ -125,12 +125,31 @@ extension ImageEditorViewModel {
             statusText = L10n.text("imageEditor.status.noSelection")
             return
         }
+        let strokeExpansion = max(1, brushSize) / 2 + max(0, feather)
+        let editableIndices = editableSelectionPixelLayerIndices()
+        guard !editableIndices.isEmpty else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return
+        }
+        guard editableIndices.contains(where: { index in
+            selection.mayAffect(
+                layerFrame: document.layers[index].frame,
+                expansion: strokeExpansion
+            )
+        }) else {
+            statusText = L10n.text("imageEditor.status.selectionEmpty")
+            return
+        }
         applySelectionPixelEdit(
             historyKey: "imageEditor.history.selectionStroke",
             selectedHistoryKey: "imageEditor.history.selectionStrokeSelected",
             statusKey: "imageEditor.status.selectionStroked",
             selectedStatusKey: "imageEditor.status.selectionStrokedSelected"
         ) { layer in
+            guard selection.mayAffect(
+                layerFrame: layer.frame,
+                expansion: strokeExpansion
+            ) else { return nil }
             guard let output = layer.image.stroked(
                 selection: selection,
                 layerFrame: layer.frame,
