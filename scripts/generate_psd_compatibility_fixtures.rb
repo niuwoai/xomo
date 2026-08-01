@@ -545,7 +545,8 @@ def gradient_vector_shape_fixture
     channels: channels,
     blocks: [
       tagged_block("GdFl", gradient_fill_descriptor),
-      tagged_block("vmsk", vector_mask_payload)
+      tagged_block("vmsk", vector_mask_payload),
+      tagged_block("vstk", vector_stroke_descriptor)
     ]
   )
   layer_info = i16(1) + record + channels.values.join
@@ -691,7 +692,7 @@ expectations = {
   "editable-text.psd" => %w[editable_text font_size color alignment],
   "solid-color-fill.psd" => %w[editable_solid_color_fill rgb_descriptor],
   "solid-vector-shape.psd" => %w[editable_vector_shape solid_fill vector_mask],
-  "gradient-vector-shape.psd" => %w[editable_vector_shape gradient_fill vector_mask],
+  "gradient-vector-shape.psd" => %w[editable_vector_shape gradient_fill vector_mask vector_stroke dash_pattern],
   "stroked-vector-shape.psd" => %w[editable_vector_shape solid_fill vector_mask vector_stroke dash_pattern],
   "gradient-fill.psd" => %w[editable_gradient_fill linear_color_stops],
   "vector-mask.psd" => %w[editable_vector_mask closed_path bezier_points],

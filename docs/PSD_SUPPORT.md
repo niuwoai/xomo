@@ -1,6 +1,6 @@
 # 象墨 PSD 支持说明
 
-> 最后更新：2026-08-02 ｜ 对应版本：v2.12.0-rc632
+> 最后更新：2026-08-02 ｜ 对应版本：v2.12.0-rc633
 
 ## 1. 结论
 
@@ -10,7 +10,7 @@ rc195 为 PSD 导出增加 ZIP Prediction（逐行左邻差分 + zlib）自动�
 
 这还不是“完整 Photoshop 语义兼容”。复杂文字变换、逐字符样式、原生 `vscg`/`vogk` 形状描述符、智能对象内部源、调整层、图层效果和复杂填充层等 Photoshop 专有对象，仍不能完整保留为同类可编辑对象；简单 `SoCo` 纯色填充、`SoCo`/`GdFl` + 有效闭合 `vmsk` 路径形状，以及 `vstk` 简单描边现在可以往返。含 `SoLd`/`PlLd` 标记的智能对象会把 PSD 的渲染结果包装为 Xomo 原生智能对象栅格回退，因此可以继续做非破坏变换和智能滤镜；兼容性报告仍明确列出嵌入源结构已降级。打开 PSD 后，象墨会生成兼容性报告，明确列出文件中被栅格化、忽略或降级的内容。
 
-rc632 在 `vstk` 中双向保留 `strokeStyleLineDashSet` 点值数组，并写入零值 `strokeStyleLineDashOffset`；简单虚线描边随 PSD 往返继续可编辑。rc258 在 `vstk` 与有效闭合 `vmsk` 同时存在时，把简单描边路径导入为 Xomo 可编辑描边；宽度、透明度、对齐、端点、连接和颜色随 PSD 往返保留。rc257 在 `GdFl` 与有效闭合 `vmsk` 同时存在时，把简单线性渐变矢量形状导入为 Xomo 可编辑路径形状；rc256 在 `SoCo` 与有效闭合 `vmsk` 同时存在时，把简单纯色矢量形状导入为 Xomo 可编辑路径形状。Photoshop 原生 `vscg`/`vogk` 完整形状描述符、布尔运算和复杂描边仍不伪称为完整支持。rc254 在 rc253 的 `SoCo` 基础上增加简单线性渐变填充的 `GdFl` 描述符：色标、角度、缩放和反向状态随 PSD 往返恢复为可编辑渐变；非线性渐变和复杂效果继续按视觉结果安全栅格化。rc253 为 PSD 导出增加简单纯色填充的 `SoCo` 描述符：没有图层效果的 Xomo 原生纯色填充导出后，重新打开 PSD 仍恢复为可编辑纯色填充层；有复杂效果的填充继续按视觉结果安全栅格化。
+rc633 允许同一简单路径 Shape 联合写入 `GdFl + vmsk + vstk`，带描边的线性渐变不再因省略渐变描述符而退化。rc632 在 `vstk` 中双向保留 `strokeStyleLineDashSet` 点值数组，并写入零值 `strokeStyleLineDashOffset`；简单虚线描边随 PSD 往返继续可编辑。rc258 在 `vstk` 与有效闭合 `vmsk` 同时存在时，把简单描边路径导入为 Xomo 可编辑描边；宽度、透明度、对齐、端点、连接和颜色随 PSD 往返保留。rc257 在 `GdFl` 与有效闭合 `vmsk` 同时存在时，把简单线性渐变矢量形状导入为 Xomo 可编辑路径形状；rc256 在 `SoCo` 与有效闭合 `vmsk` 同时存在时，把简单纯色矢量形状导入为 Xomo 可编辑路径形状。Photoshop 原生 `vscg`/`vogk` 完整形状描述符、布尔运算和复杂描边仍不伪称为完整支持。rc254 在 rc253 的 `SoCo` 基础上增加简单线性渐变填充的 `GdFl` 描述符：色标、角度、缩放和反向状态随 PSD 往返恢复为可编辑渐变；非线性渐变和复杂效果继续按视觉结果安全栅格化。rc253 为 PSD 导出增加简单纯色填充的 `SoCo` 描述符：没有图层效果的 Xomo 原生纯色填充导出后，重新打开 PSD 仍恢复为可编辑纯色填充层；有复杂效果的填充继续按视觉结果安全栅格化。
 
 建议把象墨原生项目格式作为持续编辑的主文件，把 PSD 作为与 Photoshop 或其他设计软件交换的格式。
 
@@ -88,7 +88,7 @@ rc240 完成 20 个版本质量门禁：PSD 专项 25/25，外部纯色与线性
 
 ## 6. 测试证据
 
-rc632 更新外部 `stroked-vector-shape.psd` 夹具，加入 6/3 点虚线数组并验证导入、导出往返。rc258 首次新增该夹具；当时 PSD 专项独立进程回归 30/30 通过，报告见 [`test-reports/rc258-psd-vector-stroke/report.md`](../test-reports/rc258-psd-vector-stroke/report.md)。rc257 新增外部 `gradient-vector-shape.psd` 夹具并通过 29/29；rc256 新增外部 `solid-vector-shape.psd` 夹具。
+rc633 更新外部 `gradient-vector-shape.psd`，联合覆盖 `GdFl + vmsk + vstk` 和 6/3 点虚线；rc632 更新 `stroked-vector-shape.psd` 夹具，加入同一虚线数组并验证导入、导出往返。rc258 首次新增描边夹具；当时 PSD 专项独立进程回归 30/30 通过，报告见 [`test-reports/rc258-psd-vector-stroke/report.md`](../test-reports/rc258-psd-vector-stroke/report.md)。rc257 首次新增渐变形状夹具并通过 29/29；rc256 新增外部 `solid-vector-shape.psd` 夹具。
 
 rc166 的专色通道定向回归通过；完整套件仍有既有文字、矢量路径与外部 fixture 回归，详见 [`test-reports/rc166-psd-spot/report.md`](../test-reports/rc166-psd-spot/report.md)。
 
@@ -103,7 +103,7 @@ rc168 修复 Path Resource 记录对齐；闭合/开放命名路径导出与外�
 - `unsupported-features.psd`：文字、矢量、智能对象、调整层、效果、填充层、ICC、额外通道和未知数据的报告分类。
 - `editable-text.psd`：独立生成的 TySh/EngineData 段落文字层，验证纯文本、Helvetica、24pt、颜色、居中对齐、基础字符/段落样式、文本框边界、溢出状态及项目格式保存重开。
 - `solid-vector-shape.psd`：独立生成的 SoCo + vmsk 简单纯色矢量形状，验证路径形状导入、项目往返与 PSD 再导入。
-- `gradient-vector-shape.psd`：独立生成的 GdFl + vmsk 简单线性渐变矢量形状，验证色标、路径形状导入、项目往返与 PSD 再导入。
+- `gradient-vector-shape.psd`：独立生成的 `GdFl + vmsk + vstk` 简单线性渐变矢量形状，验证色标、路径、描边、虚线、项目往返与 PSD 再导入。
 - `vector-mask.psd`：独立生成的 vmsk 三点闭合路径，验证 Bézier 锚点、控制柄、矢量蒙版和项目格式保存重开。
 - `vector-mask-multi.psd`：独立生成的 vmsk 双闭合子路径，验证 `pathSubpaths`、偶数奇数填充的孔洞和项目格式保存重开。
 - `path-resources.psd`：独立生成的 Image Resources 路径资源，验证命名闭合路径、开放路径和项目格式保存重开。

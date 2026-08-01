@@ -623,6 +623,10 @@ struct ImageEditorPSDTests {
         #expect(shape.kind == .path)
         #expect(shape.isPathClosed)
         #expect(gradient.style == .linear)
+        #expect(shape.strokePosition == .center)
+        #expect(shape.strokeCap == .round)
+        #expect(shape.strokeJoin == .bevel)
+        #expect(shape.strokeDashPattern == [6, 3])
         #expect(stops.count == 2)
         #expect(abs(stops[0].red - 32.0 / 255.0) < 0.01)
         #expect(abs(stops[1].blue - 40.0 / 255.0) < 0.01)
@@ -641,6 +645,9 @@ struct ImageEditorPSDTests {
         let reimportedShape = try #require(reimported.layers.first?.shapeContent)
         #expect(reimportedShape.kind == .path)
         #expect(reimportedShape.fillGradient?.normalized() == gradient)
+        #expect(reimportedShape.strokePosition == .center)
+        #expect(reimportedShape.strokeJoin == .bevel)
+        #expect(reimportedShape.strokeDashPattern == [6, 3])
     }
 
     @Test func externalGradientFillFixtureBecomesNativeEditableGradientLayer() throws {

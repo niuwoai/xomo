@@ -69,11 +69,13 @@
     },
     {
       "file": "gradient-vector-shape.psd",
-      "sha256": "cc69f3ffe72e19876b429c1f066f526f828fe7b824d36d46094edede2252bcb1",
+      "sha256": "bea9c662e6c404aa6b37a7d282a89b3990b31970711639007cc46c9582be1ad3",
       "expected": [
         "editable_vector_shape",
         "gradient_fill",
-        "vector_mask"
+        "vector_mask",
+        "vector_stroke",
+        "dash_pattern"
       ]
     },
     {
