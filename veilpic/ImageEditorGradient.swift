@@ -37,6 +37,13 @@ extension ImageEditorViewModel {
             statusText = L10n.text("imageEditor.status.layerLocked")
             return
         }
+        guard document.selection?.gradientMayAffect(
+            layerFrame: layer.frame,
+            feather: feather
+        ) != false else {
+            statusText = L10n.text("imageEditor.status.selectionEmpty")
+            return
+        }
         guard let output = layer.image.withLinearGradient(
             from: startPoint,
             to: endPoint,
@@ -79,6 +86,13 @@ extension ImageEditorViewModel {
         guard let mask = document.layers[index].mask else {
             statusText = L10n.text("imageEditor.status.noLayerMask")
             isEditingLayerMask = false
+            return
+        }
+        guard document.selection?.gradientMayAffect(
+            layerFrame: document.layers[index].frame,
+            feather: feather
+        ) != false else {
+            statusText = L10n.text("imageEditor.status.selectionEmpty")
             return
         }
         guard let output = mask.withLinearGradient(
@@ -211,6 +225,14 @@ private extension NSColor {
 }
 
 private extension ImageEditorSelection {
+    func gradientMayAffect(layerFrame: CGRect, feather: CGFloat) -> Bool {
+        guard !isInverted else { return true }
+        let featherRadius = max(0, feather)
+        return bounds.standardized
+            .insetBy(dx: -featherRadius, dy: -featherRadius)
+            .intersects(layerFrame.standardized)
+    }
+
     func gradientLayerMask(layerFrame: CGRect, layerSize: CGSize, canvasSize: CGSize, feather: CGFloat) -> NSImage? {
         guard layerSize.width > 0,
               layerSize.height > 0,
