@@ -82,12 +82,30 @@ extension ImageEditorViewModel {
             statusText = L10n.text("imageEditor.status.noSelection")
             return
         }
+        let editableIndices = editableSelectionPixelLayerIndices()
+        guard !editableIndices.isEmpty else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return
+        }
+        guard editableIndices.contains(where: { index in
+            selection.mayAffect(
+                layerFrame: document.layers[index].frame,
+                expansion: feather
+            )
+        }) else {
+            statusText = L10n.text("imageEditor.status.selectionEmpty")
+            return
+        }
         applySelectionPixelEdit(
             historyKey: "imageEditor.history.selectionFill",
             selectedHistoryKey: "imageEditor.history.selectionFillSelected",
             statusKey: "imageEditor.status.selectionFilled",
             selectedStatusKey: "imageEditor.status.selectionFilledSelected"
         ) { layer in
+            guard selection.mayAffect(
+                layerFrame: layer.frame,
+                expansion: feather
+            ) else { return nil }
             guard let output = layer.image.filled(
                 selection: selection,
                 layerFrame: layer.frame,
@@ -980,7 +998,12 @@ private extension ImageEditorSelection {
         return NSImage.rendered(size: layerSize) { _ in
             canvasMask.draw(
                 in: CGRect(origin: .zero, size: layerSize),
-                from: layerFrame,
+                from: CGRect(
+                    x: layerFrame.minX,
+                    y: canvasSize.height - layerFrame.maxY,
+                    width: layerFrame.width,
+                    height: layerFrame.height
+                ),
                 operation: .copy,
                 fraction: 1
             )
@@ -1006,7 +1029,12 @@ private extension ImageEditorSelection {
         return NSImage.rendered(size: layerSize) { _ in
             canvasStroke.draw(
                 in: CGRect(origin: .zero, size: layerSize),
-                from: layerFrame,
+                from: CGRect(
+                    x: layerFrame.minX,
+                    y: canvasSize.height - layerFrame.maxY,
+                    width: layerFrame.width,
+                    height: layerFrame.height
+                ),
                 operation: .copy,
                 fraction: 1
             )

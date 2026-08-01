@@ -802,6 +802,18 @@ struct ImageEditorSelection: Equatable, Codable {
         }
         return bounds.contains(point)
     }
+
+    /// A conservative canvas-space coverage check used to avoid creating
+    /// history entries for pixel edits that cannot touch a layer. Inverted
+    /// selections always cover the area outside their path, while expansion
+    /// preserves feathered or stroked edges that can reach a nearby layer.
+    func mayAffect(layerFrame: CGRect, expansion: CGFloat = 0) -> Bool {
+        guard !isInverted else { return true }
+        let radius = max(0, expansion)
+        return bounds.standardized
+            .insetBy(dx: -radius, dy: -radius)
+            .intersects(layerFrame.standardized)
+    }
 }
 
 enum ImageEditorAdjustment: String, CaseIterable, Identifiable {

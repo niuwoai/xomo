@@ -37,9 +37,9 @@ extension ImageEditorViewModel {
             statusText = L10n.text("imageEditor.status.layerLocked")
             return
         }
-        guard document.selection?.gradientMayAffect(
+        guard document.selection?.mayAffect(
             layerFrame: layer.frame,
-            feather: feather
+            expansion: feather
         ) != false else {
             statusText = L10n.text("imageEditor.status.selectionEmpty")
             return
@@ -88,9 +88,9 @@ extension ImageEditorViewModel {
             isEditingLayerMask = false
             return
         }
-        guard document.selection?.gradientMayAffect(
+        guard document.selection?.mayAffect(
             layerFrame: document.layers[index].frame,
-            feather: feather
+            expansion: feather
         ) != false else {
             statusText = L10n.text("imageEditor.status.selectionEmpty")
             return
@@ -225,14 +225,6 @@ private extension NSColor {
 }
 
 private extension ImageEditorSelection {
-    func gradientMayAffect(layerFrame: CGRect, feather: CGFloat) -> Bool {
-        guard !isInverted else { return true }
-        let featherRadius = max(0, feather)
-        return bounds.standardized
-            .insetBy(dx: -featherRadius, dy: -featherRadius)
-            .intersects(layerFrame.standardized)
-    }
-
     func gradientLayerMask(layerFrame: CGRect, layerSize: CGSize, canvasSize: CGSize, feather: CGFloat) -> NSImage? {
         guard layerSize.width > 0,
               layerSize.height > 0,
@@ -244,7 +236,12 @@ private extension ImageEditorSelection {
         return NSImage.rendered(size: layerSize) { _ in
             canvasMask.draw(
                 in: CGRect(origin: .zero, size: layerSize),
-                from: layerFrame,
+                from: CGRect(
+                    x: layerFrame.minX,
+                    y: canvasSize.height - layerFrame.maxY,
+                    width: layerFrame.width,
+                    height: layerFrame.height
+                ),
                 operation: .copy,
                 fraction: 1
             )
