@@ -354,6 +354,48 @@ struct ImageEditorSelectionFillCoverageTests {
         #expect(imageEditorMaximumPixelDifference(viewModel.document.compositedImage, before) <= 1)
     }
 
+    @Test func copyingSelectionReadsLockedLayersWithoutEnablingCut() throws {
+        for useFullLock in [false, true] {
+            let size = CGSize(width: 48, height: 32)
+            let image = NSImage(size: size, flipped: false) { rect in
+                NSColor.systemPink.setFill()
+                rect.fill()
+                return true
+            }
+            let viewModel = ImageEditorViewModel(
+                sourceName: useFullLock ? "fully-locked-copy.png" : "pixel-locked-copy.png",
+                image: image
+            ) { _ in }
+            viewModel.replaceSelectedLayerImageForTesting(
+                image,
+                historyTitle: L10n.text("imageEditor.history.brush")
+            )
+            let sourceIndex = try #require(viewModel.document.selectedLayerIndex)
+            if useFullLock {
+                viewModel.document.layers[sourceIndex].isLocked = true
+            } else {
+                viewModel.document.layers[sourceIndex].isLocked = false
+                viewModel.document.layers[sourceIndex].locksPixels = true
+            }
+            let sourceID = viewModel.document.layers[sourceIndex].id
+            let sourceData = try #require(viewModel.document.layers[sourceIndex].image.qingtuPNGData())
+            let layerCountBeforeCopy = viewModel.document.layers.count
+            viewModel.selectAll()
+
+            #expect(viewModel.canCopySelectionToNewLayer)
+            #expect(viewModel.canCopySelectionToClipboard)
+            #expect(!viewModel.canCutSelectionToNewLayer)
+            #expect(!viewModel.canCutSelectionToClipboard)
+
+            viewModel.copySelectionToNewLayer()
+
+            #expect(viewModel.document.layers.count == layerCountBeforeCopy + 1)
+            #expect(viewModel.document.selectedLayerID != sourceID)
+            let unchangedSource = try #require(viewModel.document.layers.first { $0.id == sourceID })
+            #expect(unchangedSource.image.qingtuPNGData() == sourceData)
+        }
+    }
+
     private func clippingMaskViewModel(sourceName: String) -> ImageEditorViewModel {
         let size = CGSize(width: 48, height: 32)
         let baseImage = NSImage(size: size, flipped: false) { rect in

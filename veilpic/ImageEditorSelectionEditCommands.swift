@@ -28,7 +28,6 @@ extension ImageEditorViewModel {
         return !layer.isGroup
             && !layer.isAdjustment
             && !layer.isFilter
-            && !document.isEffectivelyPixelsLocked(layer)
     }
 
     var canCutSelectionToNewLayer: Bool {
