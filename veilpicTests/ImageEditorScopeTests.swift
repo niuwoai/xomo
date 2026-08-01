@@ -1011,19 +1011,25 @@ struct ImageEditorScopeTests {
     }
 
     @MainActor
-    @Test func classicArrowNudgeShortcutsMoveSelectedLayerWithoutSelection() {
-        let image = NSImage(size: NSSize(width: 80, height: 60))
+    @Test func classicArrowNudgeShortcutsMoveSelectedLayerWithoutSelection() throws {
+        let image = try #require(NSImage.rendered(size: NSSize(width: 80, height: 60)) { rect in
+            NSColor.systemBlue.setFill()
+            rect.fill()
+        })
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
-        viewModel.addLayer()
+        let backgroundID = try #require(viewModel.document.layers.first?.id)
+        viewModel.selectLayer(backgroundID)
+        viewModel.convertBackgroundToLayer()
 
         let selectedLayerID = viewModel.document.selectedLayerID
-        let originalFrame = try? #require(viewModel.document.layers.first { $0.id == selectedLayerID }?.frame)
+        let originalFrame = try #require(viewModel.document.layers.first { $0.id == selectedLayerID }?.frame)
 
         viewModel.nudgeSelectionOrSelectedLayer(by: CGSize(width: -10, height: 0))
         let movedFrame = viewModel.document.layers.first { $0.id == selectedLayerID }?.frame
 
-        #expect(movedFrame?.origin.x == (originalFrame?.origin.x ?? 0) - 10)
-        #expect(movedFrame?.origin.y == originalFrame?.origin.y)
+        #expect(movedFrame?.origin.x == originalFrame.origin.x - 10)
+        #expect(movedFrame?.origin.y == originalFrame.origin.y)
+        #expect(viewModel.document.selection == nil)
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerTranslate"))
     }
 
