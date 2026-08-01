@@ -586,6 +586,30 @@ struct XomoLeftSidebarTests {
         #expect(viewModel.document.selectedLayerID == componentID)
     }
 
+    @Test func hidingSelectedComponentRemovesAndRestoresTransformPresentation() throws {
+        let image = NSImage.transparent(size: CGSize(width: 640, height: 480))
+        let viewModel = ImageEditorViewModel(sourceName: "source", image: image) { _ in }
+        viewModel.insertXomoComponent(.button, at: CGPoint(x: 60, y: 70))
+        let componentID = try #require(viewModel.document.selectedLayerID)
+        let visibleFrame = try #require(viewModel.selectedLayerTransformFrame)
+
+        viewModel.toggleLayerVisibility(componentID)
+
+        #expect(viewModel.document.selectedLayerID == componentID)
+        #expect(viewModel.selectedLayerTransformFrame == nil)
+        #expect(!viewModel.hasSelectedXomoObject)
+        #expect(!viewModel.canResizeSelectedLayer)
+        #expect(!viewModel.canRotateSelectedLayer)
+
+        viewModel.toggleLayerVisibility(componentID)
+
+        #expect(viewModel.document.selectedLayerID == componentID)
+        #expect(viewModel.selectedLayerTransformFrame == visibleFrame)
+        #expect(viewModel.hasSelectedXomoObject)
+        #expect(viewModel.canResizeSelectedLayer)
+        #expect(viewModel.canRotateSelectedLayer)
+    }
+
     @Test func componentWorkspaceOwnsItsOptionBarAndHintPresentation() throws {
         let repositoryRoot = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()
