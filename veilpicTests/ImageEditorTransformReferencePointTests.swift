@@ -138,12 +138,18 @@ struct ImageEditorTransformReferencePointTests {
     }
 
     private func makeViewModel(size: CGSize = CGSize(width: 120, height: 80)) -> ImageEditorViewModel {
-        let image = NSImage(size: size)
-        image.lockFocus()
-        NSColor.systemBlue.setFill()
-        NSRect(origin: .zero, size: size).fill()
-        image.unlockFocus()
-        return ImageEditorViewModel(sourceName: "transform-reference-point", image: image) { _ in }
+        let image = NSImage.rendered(size: size) { rect in
+            NSColor.systemBlue.setFill()
+            rect.fill()
+        } ?? NSImage.transparent(size: size)
+        let viewModel = ImageEditorViewModel(
+            sourceName: "transform-reference-point",
+            image: image
+        ) { _ in }
+        if let selectedIndex = viewModel.document.selectedLayerIndex {
+            viewModel.document.layers[selectedIndex].image = image
+        }
+        return viewModel
     }
 }
 

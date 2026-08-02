@@ -16,7 +16,8 @@ struct ImageEditorToolCoordinateTests {
 
     @Test func everyToolIsIncludedInTheCoordinateAudit() {
         let canvasGeometryTools: Set<ImageEditorTool> = [
-            .move, .marquee, .lasso, .crop, .text, .rectangle, .ellipse, .pen, .hand, .zoom,
+            .move, .marquee, .lasso, .crop, .text, .rectangle, .ellipse, .pen,
+            .pathSelection, .directSelection, .hand, .zoom,
         ]
         let rasterStrokeTools: Set<ImageEditorTool> = [
             .quickSelection, .brush, .eraser, .cloneStamp, .dodge, .burn, .sponge,

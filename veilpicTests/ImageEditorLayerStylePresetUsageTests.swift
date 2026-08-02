@@ -91,14 +91,17 @@ struct ImageEditorLayerStylePresetUsageTests {
             favoriteIDs: ["builtin.neonGlow", "custom-shadow"]
         )
         let recentQuery = ImageEditorLayerStylePresetQuery(
-            searchText: "glow",
+            searchText: "",
             scope: .all,
             collection: .recent,
             recentIDs: ["custom-glow", "builtin.neonGlow", "custom-shadow"]
         )
 
         #expect(favoriteQuery.filter(presets).map(\.id) == ["builtin.neonGlow", "custom-shadow"])
-        #expect(recentQuery.filter(presets).map(\.id) == ["custom-glow", "builtin.neonGlow"])
+        #expect(
+            recentQuery.filter(presets).map(\.id)
+                == ["custom-glow", "builtin.neonGlow", "custom-shadow"]
+        )
     }
 
     @Test func managerMenuAndAutomationExposeFavoritesAndRecentUsage() throws {

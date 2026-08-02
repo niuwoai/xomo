@@ -62,6 +62,13 @@ struct ImageEditorTransformHUDTests {
             sourceName: "rotation-hud",
             image: NSImage.transparent(size: CGSize(width: 120, height: 80))
         ) { _ in }
+        let selectedIndex = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[selectedIndex].image = NSImage.rendered(
+            size: CGSize(width: 120, height: 80)
+        ) { rect in
+            NSColor.systemBlue.setFill()
+            rect.fill()
+        } ?? NSImage.transparent(size: CGSize(width: 120, height: 80))
         let frame = try #require(viewModel.selectedLayerTransformFrame)
         let radius: CGFloat = 60
         let start = CGPoint(x: frame.midX, y: frame.midY + radius)
