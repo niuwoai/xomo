@@ -68,7 +68,7 @@ struct XomoFigmaLinkImportTests {
         #expect(menu.contains("isFigmaLinkImportPresented = true"))
         #expect(menu.contains(".keyboardShortcut(\"f\", modifiers: [.command, .option])"))
         #expect(editor.contains(".sheet(isPresented: $isFigmaLinkImportPresented)"))
-        #expect(editor.contains("XomoFigmaLinkImportSheet()"))
+        #expect(editor.contains("XomoFigmaLinkImportSheet(viewModel: viewModel)"))
         #expect(editor.contains("case .openFigmaLinkImport: isFigmaLinkImportPresented = true"))
         #expect(sheet.contains("xomo-figma-link-input"))
         #expect(sheet.contains("xomo-figma-copy-canonical-link"))

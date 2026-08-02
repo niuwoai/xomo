@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.12.0-rc651 - 2026-08-02
+
+### Fixed
+
+- Figma 链接导入的 UI 源码回归改为验证当前 `XomoFigmaLinkImportSheet(viewModel: viewModel)` 构造式，避免旧的无参字符串断言将完整入口误报为缺失。
+
 ## 2.12.0-rc650 - 2026-08-02
 
 ### Fixed
