@@ -188,7 +188,10 @@ extension ImageEditorViewModel {
     }
 
     func sampleColorRangeColor(at point: CGPoint) {
-        guard let color = currentImage.color(at: point)?.usingColorSpace(.deviceRGB) else { return }
+        guard let color = currentImage.color(
+            at: point,
+            coordinateSize: document.canvasSize
+        )?.usingColorSpace(.deviceRGB) else { return }
         colorRangeColor = color
         switch colorRangeSampleMode {
         case .replace:
@@ -642,7 +645,10 @@ extension ImageEditorViewModel {
                     x: (CGFloat(x) + 0.5) / CGFloat(mask.width) * document.canvasSize.width,
                     y: (CGFloat(y) + 0.5) / CGFloat(mask.height) * document.canvasSize.height
                 )
-                guard let color = currentImage.color(at: point)?.usingColorSpace(.deviceRGB) else { continue }
+                guard let color = currentImage.color(
+                    at: point,
+                    coordinateSize: document.canvasSize
+                )?.usingColorSpace(.deviceRGB) else { continue }
                 colors.appendUniqueColorRangeSample(color)
                 if colors.count >= maxSamples {
                     return colors
@@ -718,8 +724,8 @@ extension NSImage {
               let cgImage = cgImage(forProposedRect: nil, context: nil, hints: nil)
         else { return nil }
 
-        let width = max(1, cgImage.width)
-        let height = max(1, cgImage.height)
+        let width = max(1, Int(canvasSize.width.rounded()))
+        let height = max(1, Int(canvasSize.height.rounded()))
         let bytesPerPixel = 4
         let bytesPerRow = width * bytesPerPixel
         var pixels = [UInt8](repeating: 0, count: bytesPerRow * height)
@@ -966,13 +972,14 @@ extension NSImage {
                 guard selectedIndex % interval == 0 else { continue }
                 let pixelOffset = y * bytesPerRow + x * 4
                 guard pixels[pixelOffset + 3] > 8 else { continue }
+                let components = [
+                    CGFloat(pixels[pixelOffset]) / 255,
+                    CGFloat(pixels[pixelOffset + 1]) / 255,
+                    CGFloat(pixels[pixelOffset + 2]) / 255,
+                    CGFloat(1)
+                ]
                 colors.appendUniqueColorRangeSample(
-                    NSColor(
-                        calibratedRed: CGFloat(pixels[pixelOffset]) / 255,
-                        green: CGFloat(pixels[pixelOffset + 1]) / 255,
-                        blue: CGFloat(pixels[pixelOffset + 2]) / 255,
-                        alpha: 1
-                    )
+                    NSColor(colorSpace: .deviceRGB, components: components, count: components.count)
                 )
                 if colors.count >= maxSamples {
                     return colors
@@ -1131,9 +1138,13 @@ extension NSImage {
             for x in 0..<width {
                 let alphaValue = alpha[y * width + x]
                 let offset = y * bytesPerRow + x * bytesPerPixel
-                pixels[offset] = UInt8.max
-                pixels[offset + 1] = UInt8.max
-                pixels[offset + 2] = UInt8.max
+                // The CGImage is declared premultiplied RGBA, so white must be
+                // multiplied by the mask alpha. Supplying 255 RGB with zero or
+                // partial alpha is invalid premultiplied data and CoreGraphics
+                // may normalize it differently while resizing or round-tripping.
+                pixels[offset] = alphaValue
+                pixels[offset + 1] = alphaValue
+                pixels[offset + 2] = alphaValue
                 pixels[offset + 3] = alphaValue
             }
         }

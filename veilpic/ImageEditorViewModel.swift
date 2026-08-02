@@ -8957,10 +8957,11 @@ extension NSImage {
         }
     }
 
-    func color(at point: CGPoint) -> NSColor? {
+    func color(at point: CGPoint, coordinateSize: CGSize? = nil) -> NSColor? {
         guard let cgImage = cgImage(forProposedRect: nil, context: nil, hints: nil) else { return nil }
-        let x = max(0, min(cgImage.width - 1, Int((point.x / max(size.width, 1)) * CGFloat(cgImage.width))))
-        let y = max(0, min(cgImage.height - 1, Int((point.y / max(size.height, 1)) * CGFloat(cgImage.height))))
+        let logicalSize = coordinateSize ?? size
+        let x = max(0, min(cgImage.width - 1, Int((point.x / max(logicalSize.width, 1)) * CGFloat(cgImage.width))))
+        let y = max(0, min(cgImage.height - 1, Int((point.y / max(logicalSize.height, 1)) * CGFloat(cgImage.height))))
         let bytesPerPixel = 4
         let bytesPerRow = cgImage.width * bytesPerPixel
         var pixels = [UInt8](repeating: 0, count: bytesPerRow * cgImage.height)
@@ -8978,12 +8979,13 @@ extension NSImage {
         context.draw(cgImage, in: CGRect(x: 0, y: 0, width: cgImage.width, height: cgImage.height))
 
         let offset = y * bytesPerRow + x * bytesPerPixel
-        return NSColor(
-            calibratedRed: CGFloat(pixels[offset]) / 255,
-            green: CGFloat(pixels[offset + 1]) / 255,
-            blue: CGFloat(pixels[offset + 2]) / 255,
-            alpha: CGFloat(pixels[offset + 3]) / 255
-        )
+        let components = [
+            CGFloat(pixels[offset]) / 255,
+            CGFloat(pixels[offset + 1]) / 255,
+            CGFloat(pixels[offset + 2]) / 255,
+            CGFloat(pixels[offset + 3]) / 255
+        ]
+        return NSColor(colorSpace: .deviceRGB, components: components, count: components.count)
     }
 
     static func rendered(size outputSize: CGSize, actions: (CGRect) -> Void) -> NSImage? {

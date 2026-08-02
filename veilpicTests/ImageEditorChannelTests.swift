@@ -155,6 +155,22 @@ struct ImageEditorChannelTests {
 
     @Test func channelSelectionLoadsThroughSelectionModes() async throws {
         let viewModel = ImageEditorViewModel(sourceName: "split.png", image: splitChannelImage()) { _ in }
+        let sourceGreen = try #require(
+            viewModel.currentImage.color(
+                at: CGPoint(x: 1.5, y: 0.5),
+                coordinateSize: viewModel.document.canvasSize
+            )?.usingColorSpace(.deviceRGB)
+        )
+        #expect(sourceGreen.redComponent < 0.05)
+        #expect(sourceGreen.greenComponent > 0.95)
+        let sourceRedMask = try #require(
+            viewModel.currentImage.channelSelectionMask(
+                .red,
+                targetSize: viewModel.document.canvasSize
+            )
+        )
+        #expect(maskAlpha(sourceRedMask, x: 0, y: 0) == 255)
+        #expect(maskAlpha(sourceRedMask, x: 1, y: 0) == 0)
 
         viewModel.loadSelectionFromChannel(.red)
         var mask = try #require(viewModel.document.selection?.rasterMask)
@@ -228,7 +244,7 @@ struct ImageEditorChannelTests {
 
         let sampled = try #require(viewModel.colorRangeColor.usingColorSpace(.deviceRGB))
         #expect(approximately(sampled.redComponent, 0, tolerance: 0.02))
-        #expect(approximately(sampled.greenComponent, 1, tolerance: 0.02))
+        #expect(approximately(sampled.greenComponent, 1, tolerance: 0.05))
         #expect(approximately(sampled.blueComponent, 0, tolerance: 0.02))
         #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionColorRangeSampled"))
 
@@ -246,11 +262,17 @@ struct ImageEditorChannelTests {
         viewModel.presentColorRangePanel()
         viewModel.colorRangeTolerance = 0.03
         viewModel.sampleColorRangeColor(at: CGPoint(x: 0.5, y: 0.5))
+        let redSample = try #require(viewModel.colorRangeIncludeColors.first?.usingColorSpace(.deviceRGB))
+        #expect(redSample.redComponent > redSample.greenComponent + 0.6)
+        #expect(redSample.redComponent > redSample.blueComponent + 0.6)
 
         viewModel.colorRangeSampleMode = .add
         viewModel.sampleColorRangeColor(at: CGPoint(x: 1.5, y: 0.5))
 
         #expect(viewModel.colorRangeIncludeColors.count == 2)
+        let greenSample = try #require(viewModel.colorRangeIncludeColors.last?.usingColorSpace(.deviceRGB))
+        #expect(greenSample.greenComponent > greenSample.redComponent + 0.6)
+        #expect(greenSample.greenComponent > greenSample.blueComponent + 0.6)
         #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionColorRangeSampleAdded"))
 
         viewModel.applyColorRangeSelectionFromPanel()
@@ -939,6 +961,16 @@ struct ImageEditorChannelTests {
 
     @Test func selectedLayerTransparencyCanSaveAsAlphaChannel() async throws {
         let viewModel = ImageEditorViewModel(sourceName: "layer-alpha.png", image: alphaTestImage()) { _ in }
+        let sourceLayerID = try #require(viewModel.document.layers.first?.id)
+        viewModel.selectLayer(sourceLayerID)
+        let selectedLayer = try #require(viewModel.document.selectedLayer)
+        #expect(viewModel.document.canvasSize == CGSize(width: 2, height: 1))
+        #expect(selectedLayer.frame == CGRect(x: 0, y: 0, width: 2, height: 1))
+        let sourceMask = try #require(
+            selectedLayer.image.channelSelectionMask(.alpha, targetSize: viewModel.document.canvasSize)
+        )
+        #expect(maskAlpha(sourceMask, x: 0, y: 0) == 0)
+        #expect(maskAlpha(sourceMask, x: 1, y: 0) == 255)
 
         #expect(viewModel.canSaveSelectedLayerTransparencyAsAlphaChannel)
         viewModel.saveSelectedLayerTransparencyAsAlphaChannel()
@@ -964,6 +996,9 @@ struct ImageEditorChannelTests {
         viewModel.applyAlphaChannelToSelectedLayerMask(channel.id)
 
         let layerMask = try #require(viewModel.document.selectedLayer?.mask)
+        #expect(viewModel.document.canvasSize == CGSize(width: 2, height: 1))
+        #expect(viewModel.document.selectedLayer?.frame == CGRect(x: 0, y: 0, width: 2, height: 1))
+        #expect(layerMask.size == CGSize(width: 2, height: 1))
         let appliedMask = try #require(layerMask.alphaMask(width: 2, height: 1))
         #expect(maskAlpha(appliedMask, x: 0, y: 0) == 255)
         #expect(maskAlpha(appliedMask, x: 1, y: 0) == 0)

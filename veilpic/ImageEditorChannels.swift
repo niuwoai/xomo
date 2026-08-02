@@ -341,7 +341,10 @@ extension ImageEditorViewModel {
     }
 
     func saveChannelAsAlphaChannel(_ channelPreview: ImageEditorChannelPreview) {
-        guard let mask = currentImage.channelSelectionMask(channelPreview),
+        guard let mask = currentImage.channelSelectionMask(
+            channelPreview,
+            targetSize: document.canvasSize
+        ),
               mask.selectedBounds(in: document.canvasSize) != nil
         else {
             statusText = L10n.format("imageEditor.status.channelSelectionEmpty", channelPreview.title)
@@ -1111,6 +1114,12 @@ extension ImageEditorViewModel {
             return canvasMask
         }
 
+        let canvasRect = CGRect(origin: .zero, size: document.canvasSize)
+        if layer.frame.standardized == canvasRect,
+           layer.image.size == document.canvasSize {
+            return canvasMask
+        }
+
         guard layer.image.size.width > 0,
               layer.image.size.height > 0,
               layer.frame.width > 0,
@@ -1130,6 +1139,15 @@ extension ImageEditorViewModel {
     private func alphaChannelMaskFromLayerTransparency(at index: Int) -> ImageEditorSelectionMask? {
         guard document.layers.indices.contains(index) else { return nil }
         let layer = document.layers[index]
+        let canvasRect = CGRect(origin: .zero, size: document.canvasSize)
+
+        if !layer.isClippingMask {
+            let compositingImage = layer.renderedCompositingImage(globalLightAngle: document.globalLightAngle)
+            if layer.renderedCompositingFrame(globalLightAngle: document.globalLightAngle).standardized == canvasRect {
+                return compositingImage.channelSelectionMask(.alpha, targetSize: document.canvasSize)
+            }
+        }
+
         guard let image = NSImage.rendered(size: document.canvasSize, actions: { _ in
             if layer.isClippingMask,
                let clippedImage = document.clippedCompositingImage(forLayerAt: index) {
@@ -1150,13 +1168,17 @@ extension ImageEditorViewModel {
             }
         }) else { return nil }
 
-        return image.alphaMask(
-            width: max(1, Int(document.canvasSize.width.rounded())),
-            height: max(1, Int(document.canvasSize.height.rounded()))
-        )
+        return image.channelSelectionMask(.alpha, targetSize: document.canvasSize)
     }
 
     private func alphaChannelMask(fromLayerMask mask: NSImage, layer: ImageEditorLayer) -> ImageEditorSelectionMask? {
+        let canvasRect = CGRect(origin: .zero, size: document.canvasSize)
+        if !layer.isGroup,
+           layer.frame.standardized == canvasRect,
+           mask.size == document.canvasSize {
+            return mask.channelSelectionMask(.alpha, targetSize: document.canvasSize)
+        }
+
         let canvasMask: NSImage?
         if layer.isGroup {
             canvasMask = mask.resized(to: document.canvasSize)
@@ -1172,7 +1194,7 @@ extension ImageEditorViewModel {
                 )
             }
         }
-        return canvasMask?.alphaMask(width: max(1, Int(document.canvasSize.width.rounded())), height: max(1, Int(document.canvasSize.height.rounded())))
+        return canvasMask?.channelSelectionMask(.alpha, targetSize: document.canvasSize)
     }
 }
 
@@ -1249,17 +1271,25 @@ extension NSImage {
     }
 
     func channelSelection(_ channel: ImageEditorChannelPreview, canvasSize: CGSize) -> ImageEditorSelection? {
-        guard let mask = channelSelectionMask(channel),
+        guard let mask = channelSelectionMask(channel, targetSize: canvasSize),
               let bounds = mask.selectedBounds(in: canvasSize)
         else { return nil }
         return .raster(mask: mask, bounds: bounds)
     }
 
-    func channelSelectionMask(_ channel: ImageEditorChannelPreview) -> ImageEditorSelectionMask? {
+    func channelSelectionMask(
+        _ channel: ImageEditorChannelPreview,
+        targetSize: CGSize? = nil
+    ) -> ImageEditorSelectionMask? {
         guard let cgImage = cgImage(forProposedRect: nil, context: nil, hints: nil) else { return nil }
 
-        let width = max(1, cgImage.width)
-        let height = max(1, cgImage.height)
+        // `NSImage.lockFocus()` may produce a Retina backing CGImage whose pixel
+        // dimensions are larger than the editor's logical canvas. Channel masks
+        // belong to canvas coordinates, so normalize while drawing instead of
+        // leaking the backing scale into selection geometry.
+        let logicalSize = targetSize ?? size
+        let width = max(1, Int(logicalSize.width.rounded()))
+        let height = max(1, Int(logicalSize.height.rounded()))
         let bytesPerPixel = 4
         let bytesPerRow = width * bytesPerPixel
         var pixels = [UInt8](repeating: 0, count: bytesPerRow * height)
@@ -1295,7 +1325,7 @@ extension NSImage {
                 case .alpha:
                     value = pixels[offset + 3]
                 }
-                alpha[y * width + x] = value
+                alpha[y * width + x] = Self.normalizedChannelByte(value)
             }
         }
 
@@ -1305,6 +1335,17 @@ extension NSImage {
     private static func luminance(red: UInt8, green: UInt8, blue: UInt8) -> UInt8 {
         let value = 0.299 * Double(red) + 0.587 * Double(green) + 0.114 * Double(blue)
         return UInt8(max(0, min(255, value.rounded())))
+    }
+
+    private static func normalizedChannelByte(_ value: UInt8) -> UInt8 {
+        switch value {
+        case 0...1:
+            return 0
+        case 254...255:
+            return 255
+        default:
+            return value
+        }
     }
 }
 

@@ -268,11 +268,20 @@ extension ImageEditorViewModel {
             let candidates: [(ImageEditorGuideSnapAnchor, CGFloat)] = leftHandle
                 ? [(.minimum, snappedFrame.minX)]
                 : [(.maximum, snappedFrame.maxX)]
-            let resolvedCandidates = resizingFromCenter
-                ? candidates
-                : candidates + [(.middle, snappedFrame.midX)]
+            let edgeSnap = bestGuideSnap(
+                candidates: candidates,
+                guides: snapGuides.vertical,
+                threshold: threshold
+            )
+            let centerSnap = resizingFromCenter
+                ? nil
+                : bestGuideSnap(
+                    candidates: [(.middle, snappedFrame.midX)],
+                    guides: snapGuides.vertical,
+                    threshold: threshold
+                )
 
-            if let snap = bestGuideSnap(candidates: resolvedCandidates, guides: snapGuides.vertical, threshold: threshold) {
+            if let snap = edgeSnap ?? centerSnap {
                 snappedFrame = resizeFrame(
                     snappedFrame,
                     applying: snap,
@@ -292,11 +301,20 @@ extension ImageEditorViewModel {
             let candidates: [(ImageEditorGuideSnapAnchor, CGFloat)] = bottomHandle
                 ? [(.minimum, snappedFrame.minY)]
                 : [(.maximum, snappedFrame.maxY)]
-            let resolvedCandidates = resizingFromCenter
-                ? candidates
-                : candidates + [(.middle, snappedFrame.midY)]
+            let edgeSnap = bestGuideSnap(
+                candidates: candidates,
+                guides: snapGuides.horizontal,
+                threshold: threshold
+            )
+            let centerSnap = resizingFromCenter
+                ? nil
+                : bestGuideSnap(
+                    candidates: [(.middle, snappedFrame.midY)],
+                    guides: snapGuides.horizontal,
+                    threshold: threshold
+                )
 
-            if let snap = bestGuideSnap(candidates: resolvedCandidates, guides: snapGuides.horizontal, threshold: threshold) {
+            if let snap = edgeSnap ?? centerSnap {
                 snappedFrame = resizeFrame(
                     snappedFrame,
                     applying: snap,

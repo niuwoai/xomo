@@ -141,7 +141,8 @@ struct ImageEditorHistoryTests {
 
         viewModel.historyQuery = "clean"
         #expect(viewModel.filteredHistorySnapshots.map(\.id) == originalSnapshotIDs)
-        #expect(viewModel.filteredHistoryEntries.count == viewModel.document.history.count)
+        #expect(viewModel.filteredHistoryEntries.isEmpty)
+        #expect(viewModel.document.history.count == 1)
 
         viewModel.historyQuery = "missing"
         #expect(viewModel.filteredHistorySnapshots.isEmpty)
