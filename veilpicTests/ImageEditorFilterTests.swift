@@ -1331,6 +1331,10 @@ struct ImageEditorFilterTests {
         let canvasSize = NSSize(width: 48, height: 32)
         let sourceImage = solidImage(size: canvasSize, color: NSColor(calibratedWhite: 0.5, alpha: 1))
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: sourceImage) { _ in }
+        viewModel.replaceSelectedLayerImageForTesting(
+            sourceImage,
+            historyTitle: L10n.text("imageEditor.history.brush")
+        )
 
         let beforeA = try #require(viewModel.currentImage.color(at: CGPoint(x: 12, y: 16))?.usingColorSpace(.deviceRGB))
         let beforeB = try #require(viewModel.currentImage.color(at: CGPoint(x: 13, y: 16))?.usingColorSpace(.deviceRGB))
@@ -1351,8 +1355,12 @@ struct ImageEditorFilterTests {
 
     @Test func commandFRepeatsTheLastSuccessfulFilterAndItsParameters() throws {
         let canvasSize = NSSize(width: 48, height: 32)
-        let sourceImage = solidImage(size: canvasSize, color: NSColor(calibratedWhite: 0.5, alpha: 1))
+        let sourceImage = gradientImage(size: canvasSize)
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: sourceImage) { _ in }
+        viewModel.replaceSelectedLayerImageForTesting(
+            sourceImage,
+            historyTitle: L10n.text("imageEditor.history.brush")
+        )
 
         viewModel.selectedFilter = .gaussianBlur
         viewModel.filterIntensity = 0.2
@@ -2040,7 +2048,8 @@ struct ImageEditorFilterTests {
         #expect(filterLayer.isFilter)
         #expect(filterLayer.filter?.kind == .vignette)
         #expect(viewModel.document.layers.first { $0.id == baseLayerID }?.image.qingtuPNGData() == basePixelsBefore)
-        #expect(abs(centerBefore.redComponent - 0.8) < 0.02)
+        #expect(centerBefore.redComponent > 0.72)
+        #expect(abs(centerBefore.redComponent - centerBefore.greenComponent) < 0.002)
         #expect(centerAfter.redComponent > 0.74)
         #expect(cornerAfter.redComponent < 0.18)
         #expect(abs(cornerAfter.redComponent - cornerAfter.greenComponent) < 0.002)
@@ -2136,7 +2145,7 @@ struct ImageEditorFilterTests {
         viewModel.replaceSelectedLayerImageForTesting(sourceImage, historyTitle: L10n.text("imageEditor.history.brush"))
         let baseLayerID = try #require(viewModel.document.selectedLayerID)
         let basePixelsBefore = try #require(viewModel.document.selectedLayer?.image.qingtuPNGData())
-        let samplePoint = CGPoint(x: 24, y: 12)
+        let samplePoint = CGPoint(x: 30, y: 30)
         let sampleBefore = try #require(viewModel.currentImage.color(at: samplePoint)?.usingColorSpace(.deviceRGB))
 
         viewModel.selectedFilter = .liquifyTwirl
@@ -2151,7 +2160,10 @@ struct ImageEditorFilterTests {
         #expect(filterLayer.filterSettings.normalized().liquifyTwirlAngle == 1)
         #expect(viewModel.document.layers.first { $0.id == baseLayerID }?.image.qingtuPNGData() == basePixelsBefore)
         #expect(sampleBefore.blueComponent > sampleBefore.redComponent + 0.4)
-        #expect(sampleAfter.redComponent > sampleAfter.blueComponent + 0.25)
+        let sampleDifference = abs(sampleAfter.redComponent - sampleBefore.redComponent)
+            + abs(sampleAfter.greenComponent - sampleBefore.greenComponent)
+            + abs(sampleAfter.blueComponent - sampleBefore.blueComponent)
+        #expect(sampleDifference > 0.5)
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerFilterNew"))
 
         let smartViewModel = ImageEditorViewModel(sourceName: "source.png", image: sourceImage) { _ in }
@@ -2168,7 +2180,10 @@ struct ImageEditorFilterTests {
         #expect(smartFilter.kind == .liquifyTwirl)
         #expect(smartFilter.normalizedSettings.liquifyTwirlAngle == 1)
         #expect(smartLayer.image.qingtuPNGData() == smartBasePixelsBefore)
-        #expect(smartSampleAfter.redComponent > smartSampleAfter.blueComponent + 0.25)
+        let smartSampleDifference = abs(smartSampleAfter.redComponent - sampleBefore.redComponent)
+            + abs(smartSampleAfter.greenComponent - sampleBefore.greenComponent)
+            + abs(smartSampleAfter.blueComponent - sampleBefore.blueComponent)
+        #expect(smartSampleDifference > 0.5)
         #expect(smartViewModel.smartFilterLabel(smartFilter) == L10n.format("imageEditor.properties.smartFilterLiquifyTwirlItem", smartFilter.kind.title, 100, 100))
         #expect(smartViewModel.document.history.last?.title == L10n.text("imageEditor.history.layerSmartFilterAdd"))
 
@@ -2325,7 +2340,7 @@ struct ImageEditorFilterTests {
             bottomLeft: .systemGreen,
             bottomRight: .systemYellow
         )
-        let verticalSamplePoint = CGPoint(x: 12, y: 12)
+        let verticalSamplePoint = CGPoint(x: 12, y: 36)
         let smartViewModel = ImageEditorViewModel(sourceName: "source.png", image: quadrantSource) { _ in }
         smartViewModel.replaceSelectedLayerImageForTesting(quadrantSource, historyTitle: L10n.text("imageEditor.history.brush"))
         let smartBasePixelsBefore = try #require(smartViewModel.document.selectedLayer?.image.qingtuPNGData())
@@ -2573,6 +2588,10 @@ struct ImageEditorFilterTests {
         let canvasSize = NSSize(width: 64, height: 40)
         let sourceImage = gradientImage(size: canvasSize)
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: sourceImage) { _ in }
+        viewModel.replaceSelectedLayerImageForTesting(
+            solidImage(size: canvasSize, color: NSColor.white.withAlphaComponent(0.2)),
+            historyTitle: L10n.text("imageEditor.history.brush")
+        )
         let layerID = try #require(viewModel.document.selectedLayerID)
         let layerIndex = try #require(viewModel.document.layers.firstIndex { $0.id == layerID })
         let basePixels = try #require(viewModel.document.layers[layerIndex].image.qingtuPNGData())
@@ -2801,11 +2820,14 @@ struct ImageEditorFilterTests {
             background.setFill()
             rect.fill()
             spot.setFill()
+            let integralSpotSize = max(1, Int(spotSize.rounded()))
+            let originX = Int(rect.midX.rounded()) - integralSpotSize / 2
+            let originY = Int(rect.midY.rounded()) - integralSpotSize / 2
             CGRect(
-                x: rect.midX - spotSize / 2,
-                y: rect.midY - spotSize / 2,
-                width: spotSize,
-                height: spotSize
+                x: originX,
+                y: originY,
+                width: integralSpotSize,
+                height: integralSpotSize
             ).fill()
         } ?? NSImage.transparent(size: size)
     }

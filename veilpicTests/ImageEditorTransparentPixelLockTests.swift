@@ -14,7 +14,14 @@ import Testing
 struct ImageEditorTransparentPixelLockTests {
     @Test func selectionFillPreservesTransparentPixelsWhenLocked() async throws {
         let canvasSize = NSSize(width: 80, height: 50)
-        let viewModel = ImageEditorViewModel(sourceName: "alpha.png", image: alphaSplitImage(size: canvasSize)) { _ in }
+        let viewModel = ImageEditorViewModel(
+            sourceName: "alpha.png",
+            image: NSImage.transparent(size: canvasSize)
+        ) { _ in }
+        viewModel.replaceSelectedLayerImageForTesting(
+            alphaSplitImage(size: canvasSize),
+            historyTitle: L10n.text("imageEditor.history.brush")
+        )
         let selectedID = try #require(viewModel.document.selectedLayerID)
         let layerIndex = try #require(viewModel.document.layers.firstIndex { $0.id == selectedID })
         viewModel.document.layers[layerIndex].isLocked = false

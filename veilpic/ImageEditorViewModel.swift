@@ -8666,11 +8666,14 @@ final class ImageEditorViewModel: ObservableObject {
 extension NSImage {
     func normalizedBitmapImage() -> NSImage {
         let targetSize = size.width > 0 && size.height > 0 ? size : CGSize(width: 1, height: 1)
-        let image = NSImage(size: targetSize)
-        image.lockFocus()
-        draw(in: CGRect(origin: .zero, size: targetSize), from: CGRect(origin: .zero, size: size), operation: .copy, fraction: 1)
-        image.unlockFocus()
-        return image
+        return Self.rendered(size: targetSize) { _ in
+            draw(
+                in: CGRect(origin: .zero, size: targetSize),
+                from: CGRect(origin: .zero, size: size),
+                operation: .copy,
+                fraction: 1
+            )
+        } ?? self
     }
 
     func rotatedClockwise() -> NSImage? {
@@ -8990,16 +8993,37 @@ extension NSImage {
 
     static func rendered(size outputSize: CGSize, actions: (CGRect) -> Void) -> NSImage? {
         guard outputSize.width > 0, outputSize.height > 0 else { return nil }
-        let image = NSImage(size: outputSize)
-        image.lockFocus()
+        let pixelWidth = max(1, Int(outputSize.width.rounded()))
+        let pixelHeight = max(1, Int(outputSize.height.rounded()))
+        guard let bitmap = NSBitmapImageRep(
+            bitmapDataPlanes: nil,
+            pixelsWide: pixelWidth,
+            pixelsHigh: pixelHeight,
+            bitsPerSample: 8,
+            samplesPerPixel: 4,
+            hasAlpha: true,
+            isPlanar: false,
+            colorSpaceName: .deviceRGB,
+            bytesPerRow: pixelWidth * 4,
+            bitsPerPixel: 32
+        ),
+              let context = NSGraphicsContext(bitmapImageRep: bitmap)
+        else { return nil }
+
+        bitmap.size = outputSize
+        let previousContext = NSGraphicsContext.current
+        NSGraphicsContext.current = context
+        defer { NSGraphicsContext.current = previousContext }
+
         let rect = CGRect(origin: .zero, size: outputSize)
-        let context = NSGraphicsContext.current
-        context?.saveGraphicsState()
+        context.saveGraphicsState()
+        defer { context.restoreGraphicsState() }
         NSColor.clear.setFill()
         rect.fill()
         actions(rect)
-        context?.restoreGraphicsState()
-        image.unlockFocus()
+
+        let image = NSImage(size: outputSize)
+        image.addRepresentation(bitmap)
         return image
     }
 

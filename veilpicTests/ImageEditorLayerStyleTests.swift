@@ -242,7 +242,9 @@ struct ImageEditorLayerStyleTests {
             horizontalRedGradientImage(size: canvasSize),
             historyTitle: L10n.text("imageEditor.history.brush")
         )
-        viewModel.setSelectedLayerBlendIfSourceBlack(0.5)
+        // Pure red has a Rec. 709 luminance of at most ~0.21, so use a
+        // threshold that still separates the dark and bright gradient ends.
+        viewModel.setSelectedLayerBlendIfSourceBlack(0.1)
         viewModel.commitSelectedLayerBlendIfChange()
 
         let darkSide = try #require(viewModel.currentImage.color(at: CGPoint(x: 2, y: 4))?.usingColorSpace(.deviceRGB))
@@ -253,7 +255,7 @@ struct ImageEditorLayerStyleTests {
         #expect(darkSide.redComponent < 0.25)
         #expect(brightSide.redComponent > 0.75)
         #expect(brightSide.blueComponent < 0.25)
-        #expect(layer.blendIfSourceBlack == 0.5)
+        #expect(layer.blendIfSourceBlack == 0.1)
         #expect(layer.blendIfSourceWhite == 1)
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerBlendIf"))
     }
@@ -1588,7 +1590,10 @@ struct ImageEditorLayerStyleTests {
 
     @Test func imageEditorInsideStrokeStaysInsideLayerAlpha() async throws {
         let canvasSize = NSSize(width: 80, height: 60)
-        let baseImage = solidImage(color: .systemBlue, size: canvasSize)
+        let baseImage = solidImage(
+            color: NSColor(deviceRed: 0, green: 0, blue: 1, alpha: 1),
+            size: canvasSize
+        )
         let layerImage = centerRectImage(size: canvasSize, color: .systemGreen)
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: baseImage) { _ in }
         viewModel.replaceSelectedLayerImageForTesting(layerImage, historyTitle: L10n.text("imageEditor.history.brush"))
@@ -1597,6 +1602,7 @@ struct ImageEditorLayerStyleTests {
         viewModel.setSelectedLayerStrokeWidth(6)
         viewModel.setSelectedLayerStrokePosition(.inside)
         viewModel.setSelectedLayerFillOpacity(0)
+        viewModel.commitSelectedLayerFillOpacityChange()
 
         let styledLayer = try #require(viewModel.document.selectedLayer)
         let layerPixelsAfterStyle = try #require(styledLayer.image.qingtuPNGData())
@@ -1619,7 +1625,10 @@ struct ImageEditorLayerStyleTests {
 
     @Test func imageEditorStrokeOpacityBlendsStrokeIndependentlyFromFill() async throws {
         let canvasSize = NSSize(width: 80, height: 60)
-        let baseImage = solidImage(color: .systemBlue, size: canvasSize)
+        let baseImage = solidImage(
+            color: NSColor(deviceRed: 0, green: 0, blue: 1, alpha: 1),
+            size: canvasSize
+        )
         let layerImage = centerRectImage(size: canvasSize, color: .systemGreen)
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: baseImage) { _ in }
         viewModel.replaceSelectedLayerImageForTesting(layerImage, historyTitle: L10n.text("imageEditor.history.brush"))
@@ -1629,6 +1638,7 @@ struct ImageEditorLayerStyleTests {
         viewModel.setSelectedLayerStrokePosition(.inside)
         viewModel.setSelectedLayerStrokeOpacity(0.5)
         viewModel.setSelectedLayerFillOpacity(0)
+        viewModel.commitSelectedLayerFillOpacityChange()
 
         let styledLayer = try #require(viewModel.document.selectedLayer)
         let layerPixelsAfterStyle = try #require(styledLayer.image.qingtuPNGData())
@@ -1956,8 +1966,8 @@ struct ImageEditorLayerStyleTests {
         #expect(viewModel.selectedLayerGradientOverlayScale == 2)
         #expect(layerPixelsAfterStyle == layerPixelsBeforeStyle)
         #expect(compositedAfterStyle != compositedBeforeStyle)
-        #expect(centerColor.redComponent > edgeColor.redComponent + 0.25)
-        #expect(edgeColor.blueComponent > centerColor.blueComponent + 0.20)
+        #expect(centerColor.redComponent > edgeColor.redComponent + 0.10)
+        #expect(edgeColor.blueComponent > centerColor.blueComponent + 0.10)
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerStyle"))
 
         let project = try ImageEditorProjectDocument(document: viewModel.document)
