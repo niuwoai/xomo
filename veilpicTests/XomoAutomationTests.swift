@@ -2091,12 +2091,13 @@ struct XomoAutomationTests {
         let registry = XomoAutomationRegistry.shared
         registry.register(viewModel)
         let layerID = try #require(viewModel.document.selectedLayerID)
-        viewModel.document.layers[0].xomoFigmaComponentProperties = [
+        let layerIndex = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[layerIndex].xomoFigmaComponentProperties = [
             "Label": XomoFigmaComponentProperty(type: "TEXT", value: "Continue"),
             "Enabled": XomoFigmaComponentProperty(type: "BOOLEAN", value: "true")
         ]
-        viewModel.document.layers[0].xomoFigmaComponentPropertyDefaults =
-            viewModel.document.layers[0].xomoFigmaComponentProperties
+        viewModel.document.layers[layerIndex].xomoFigmaComponentPropertyDefaults =
+            viewModel.document.layers[layerIndex].xomoFigmaComponentProperties
 
         let listed = registry.execute(request(
             operation: "call",
