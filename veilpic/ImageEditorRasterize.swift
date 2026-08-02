@@ -251,7 +251,23 @@ extension ImageEditorViewModel {
             return path
         }
 
-        let inset = normalized.strokeWidth / 2
+        // The generated mask must contain every pixel that the editable shape
+        // rendered before rasterization. A fill follows the inset path, while
+        // an enabled stroke can extend as far as the shape's outer edge (or
+        // beyond it for centered/outside strokes).
+        let inset: CGFloat
+        if normalized.strokeOpacity > 0 {
+            switch normalized.strokePosition {
+            case .inside:
+                inset = 0
+            case .center:
+                inset = -normalized.strokeWidth / 2
+            case .outside:
+                inset = -normalized.strokeWidth
+            }
+        } else {
+            inset = normalized.strokeWidth / 2
+        }
         let bounds = CGRect(origin: .zero, size: size).insetBy(dx: inset, dy: inset)
         let points: [CGPoint]
         if normalized.kind == .ellipse {
