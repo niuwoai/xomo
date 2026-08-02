@@ -590,7 +590,7 @@ struct XomoFigmaNodeImportPlanTests {
             grow: 1,
             stretchesCrossAxis: true
         ))
-        #expect(text.text?.characters == "继续")
+        #expect(text.text?.characters == "CONTINUE 继续")
         #expect(text.text?.fontFamily == "Inter")
         #expect(text.text?.fontSize == 16)
         #expect(text.frame == XomoFigmaPlanRect(x: 30, y: 60, width: 64, height: 24))
@@ -1998,7 +1998,7 @@ struct XomoFigmaNodeImportPlanTests {
             grow: 1,
             stretchesCrossAxis: true
         ))
-        #expect(text.textContent?.text == "继续")
+        #expect(text.textContent?.text == "CONTINUE 继续")
         #expect(primary.shapeContent?.cornerRadius == 8)
         #expect(vector.shapeContent?.kind == .path)
         #expect(vector.shapeContent?.editablePathAnchors.count == 3)
