@@ -293,11 +293,9 @@ struct ImageEditorView: View {
                 isRightDockMounted = true
             }
         }
-        .onChange(of: viewModel.document.selectedLayerID) { _ in
+        .onChange(of: viewModel.document.selectedLayerIDs) { _ in
             syncLayerNameDraft()
             syncFigmaComponentPropertyDrafts()
-        }
-        .onChange(of: viewModel.document.selectedLayerIDs) { _ in
             viewModel.finishSelectedLayerTransformReferencePointDrag()
             viewModel.clearSelectedLayerTransformReferencePoint()
             isMovingTransformReferencePoint = false
