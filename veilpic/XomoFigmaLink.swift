@@ -302,6 +302,12 @@ enum XomoFigmaLinkParser {
         components.host = "www.figma.com"
         components.path = "/\(identity.resourceType.rawValue)/\(identity.fileKey)/\(identity.fileSlug)"
         components.queryItems = canonicalQueryItems(selectors)
+        if let percentEncodedQuery = components.percentEncodedQuery {
+            components.percentEncodedQuery = percentEncodedQuery.replacingOccurrences(
+                of: ";",
+                with: "%3B"
+            )
+        }
         guard let url = components.url else { throw XomoFigmaLinkParserError.malformedURL }
         return url
     }
