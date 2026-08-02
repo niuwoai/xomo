@@ -808,6 +808,10 @@ struct veilpicTests {
         func setFrame(_ frame: CGRect) throws {
             let index = try #require(viewModel.document.layers.firstIndex { $0.id == layerID })
             viewModel.document.layers[index].frame = frame
+            viewModel.document.layers[index].image = testImage(
+                color: .systemGreen,
+                size: NSSize(width: frame.width, height: frame.height)
+            )
             viewModel.selectLayer(layerID)
         }
 
@@ -871,6 +875,10 @@ struct veilpicTests {
         viewModel.addLayer()
         let secondID = try #require(viewModel.document.selectedLayerID)
         let secondIndex = try #require(viewModel.document.layers.firstIndex { $0.id == secondID })
+        viewModel.document.layers[secondIndex].image = testImage(
+            color: .systemYellow,
+            size: NSSize(width: 20, height: 10)
+        )
         viewModel.document.layers[secondIndex].frame = CGRect(x: 70, y: 20, width: 20, height: 10)
         viewModel.selectLayer(firstID)
         viewModel.selectLayer(secondID, extendingSelection: true)

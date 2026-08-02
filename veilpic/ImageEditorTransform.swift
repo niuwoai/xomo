@@ -1077,8 +1077,8 @@ extension ImageEditorViewModel {
             return
         }
 
-        statusText = status
         appendHistory(historyTitle)
+        statusText = status
     }
 
     private func applyFlip(
@@ -1164,8 +1164,8 @@ extension ImageEditorViewModel {
             return
         }
 
-        statusText = status
         appendHistory(historyTitle)
+        statusText = status
     }
 
     private func selectionTargetBounds() -> CGRect? {
