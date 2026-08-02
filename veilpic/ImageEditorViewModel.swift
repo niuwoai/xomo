@@ -8965,30 +8965,9 @@ extension NSImage {
         let logicalSize = coordinateSize ?? size
         let x = max(0, min(cgImage.width - 1, Int((point.x / max(logicalSize.width, 1)) * CGFloat(cgImage.width))))
         let y = max(0, min(cgImage.height - 1, Int((point.y / max(logicalSize.height, 1)) * CGFloat(cgImage.height))))
-        let bytesPerPixel = 4
-        let bytesPerRow = cgImage.width * bytesPerPixel
-        var pixels = [UInt8](repeating: 0, count: bytesPerRow * cgImage.height)
-        guard let context = CGContext(
-            data: &pixels,
-            width: cgImage.width,
-            height: cgImage.height,
-            bitsPerComponent: 8,
-            bytesPerRow: bytesPerRow,
-            space: CGColorSpaceCreateDeviceRGB(),
-            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
-        ) else { return nil }
-
-        context.interpolationQuality = .none
-        context.draw(cgImage, in: CGRect(x: 0, y: 0, width: cgImage.width, height: cgImage.height))
-
-        let offset = y * bytesPerRow + x * bytesPerPixel
-        let components = [
-            CGFloat(pixels[offset]) / 255,
-            CGFloat(pixels[offset + 1]) / 255,
-            CGFloat(pixels[offset + 2]) / 255,
-            CGFloat(pixels[offset + 3]) / 255
-        ]
-        return NSColor(colorSpace: .deviceRGB, components: components, count: components.count)
+        let bitmap = NSBitmapImageRep(cgImage: cgImage)
+        guard let color = bitmap.colorAt(x: x, y: y) else { return nil }
+        return color.usingColorSpace(.deviceRGB) ?? color
     }
 
     static func rendered(size outputSize: CGSize, actions: (CGRect) -> Void) -> NSImage? {

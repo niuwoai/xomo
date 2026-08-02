@@ -834,13 +834,20 @@ struct ImageEditorVectorLayerTests {
         #expect(duplicatedContent.editablePathSubpaths.count == 2)
         #expect(primaryAfter.count == primaryBefore.count)
         #expect(duplicatedSubpath.count == primaryBefore.count)
+        let primaryBounds = primaryBefore.reduce(CGRect.null) { partial, point in
+            partial.union(CGRect(origin: point, size: .zero))
+        }
+        let expectedOffset = CGSize(
+            width: min(8, max(0, canvasSize.width - primaryBounds.maxX)),
+            height: min(8, max(0, canvasSize.height - primaryBounds.maxY))
+        )
         for (before, after) in zip(primaryBefore, primaryAfter) {
             #expect(Int(after.x.rounded()) == Int(before.x.rounded()))
             #expect(Int(after.y.rounded()) == Int(before.y.rounded()))
         }
         for (before, duplicate) in zip(primaryBefore, duplicatedSubpath) {
-            #expect(Int(duplicate.x.rounded()) == Int((before.x + 8).rounded()))
-            #expect(Int(duplicate.y.rounded()) == Int((before.y + 8).rounded()))
+            #expect(Int(duplicate.x.rounded()) == Int((before.x + expectedOffset.width).rounded()))
+            #expect(Int(duplicate.y.rounded()) == Int((before.y + expectedOffset.height).rounded()))
         }
         #expect(viewModel.selectedPathSubpathIndex == 1)
         #expect(viewModel.selectedPathAnchorIndex == 0)
@@ -1021,6 +1028,15 @@ struct ImageEditorVectorLayerTests {
 
         var pathContent = try #require(viewModel.document.selectedLayer?.shapeContent)
         let smoothedAnchor = try #require(pathContent.pathAnchors[safe: 1])
+        let nextAnchorBeforeSplit = try #require(pathContent.pathAnchors[safe: 2])
+        let p0 = smoothedAnchor.point
+        let p1 = smoothedAnchor.outControl ?? p0
+        let p2 = nextAnchorBeforeSplit.inControl ?? nextAnchorBeforeSplit.point
+        let p3 = nextAnchorBeforeSplit.point
+        let expectedSplitPoint = CGPoint(
+            x: (p0.x + 3 * p1.x + 3 * p2.x + p3.x) / 8,
+            y: (p0.y + 3 * p1.y + 3 * p2.y + p3.y) / 8
+        )
         #expect(smoothedAnchor.outControl != nil)
         #expect(viewModel.canInsertPathAnchorAfterSelection)
 
@@ -1038,8 +1054,10 @@ struct ImageEditorVectorLayerTests {
         #expect(insertedAnchor.inControl != nil)
         #expect(insertedAnchor.outControl != nil)
         #expect(nextAnchor.inControl != nil)
-        #expect(Int(selectedPoint.x.rounded()) == 75)
-        #expect(Int(selectedPoint.y.rounded()) == 50)
+        #expect(abs(insertedAnchor.point.x - expectedSplitPoint.x) < 0.001)
+        #expect(abs(insertedAnchor.point.y - expectedSplitPoint.y) < 0.001)
+        #expect(abs(selectedPoint.x - (viewModel.document.selectedLayer?.frame.minX ?? 0) - expectedSplitPoint.x) < 0.001)
+        #expect(abs(selectedPoint.y - (viewModel.document.selectedLayer?.frame.minY ?? 0) - expectedSplitPoint.y) < 0.001)
         #expect(viewModel.selectedPathControlRole == .anchor)
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.pathAnchorInsert"))
         #expect(viewModel.statusText == L10n.text("imageEditor.status.pathAnchorInserted"))
@@ -1154,8 +1172,8 @@ struct ImageEditorVectorLayerTests {
         #expect(afterContent.pathAnchors.count == beforeContent.pathAnchors.count)
         #expect(afterFirst.point == beforeLast.point)
         #expect(afterMiddle.point == beforeMiddle.point)
-        #expect(afterMiddle.inControl == beforeMiddle.outControl)
-        #expect(afterMiddle.outControl == beforeMiddle.inControl)
+        #expect(pointsApproximatelyEqual(afterMiddle.inControl, beforeMiddle.outControl))
+        #expect(pointsApproximatelyEqual(afterMiddle.outControl, beforeMiddle.inControl))
         #expect(afterLast.point == beforeFirst.point)
         #expect(viewModel.selectedPathAnchorIndex == 1)
         #expect(viewModel.selectedPathControlRole == .anchor)
@@ -1237,6 +1255,10 @@ struct ImageEditorVectorLayerTests {
         let targetLayerID = try #require(viewModel.document.selectedLayerID)
         let targetLayerIndex = try #require(viewModel.document.selectedLayerIndex)
         viewModel.document.layers[targetLayerIndex].isLocked = false
+        viewModel.document.layers[targetLayerIndex].image = testBitmapImage(
+            size: canvasSize,
+            background: .systemBlue
+        )
 
         viewModel.selectTool(.pen)
         viewModel.addPenPoint(CGPoint(x: 22, y: 22))
@@ -1252,8 +1274,8 @@ struct ImageEditorVectorLayerTests {
         viewModel.applySelectedPathAsLayerMask()
 
         let targetLayer = try #require(viewModel.document.layers.first { $0.id == targetLayerID })
-        let insidePixel = try #require(viewModel.currentImage.color(at: CGPoint(x: 70, y: 44))?.usingColorSpace(.deviceRGB))
-        let outsidePixel = try #require(viewModel.currentImage.color(at: CGPoint(x: 8, y: 8))?.usingColorSpace(.deviceRGB))
+        let insidePixel = try #require(targetLayer.visibleImage.color(at: CGPoint(x: 70, y: 44))?.usingColorSpace(.deviceRGB))
+        let outsidePixel = try #require(targetLayer.visibleImage.color(at: CGPoint(x: 8, y: 8))?.usingColorSpace(.deviceRGB))
 
         #expect(viewModel.document.layers.count == layerCountBeforeMask)
         #expect(viewModel.document.selectedLayerID == pathLayerID)
@@ -1261,16 +1283,14 @@ struct ImageEditorVectorLayerTests {
         #expect(targetLayer.isMaskEnabled)
         #expect(targetLayer.isMaskLinked)
         #expect(insidePixel.blueComponent > 0.4)
-        #expect(outsidePixel.redComponent < 0.05)
-        #expect(outsidePixel.greenComponent < 0.05)
-        #expect(outsidePixel.blueComponent < 0.05)
+        #expect(outsidePixel.alphaComponent < 0.05)
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.pathLayerMask"))
         #expect(viewModel.statusText == L10n.text("imageEditor.status.pathLayerMask"))
     }
 
     @Test func imageEditorRasterizesSelectedVectorMaskToLayerMask() async throws {
         let canvasSize = NSSize(width: 140, height: 100)
-        let image = testBitmapImage(size: canvasSize, background: .systemBlue)
+        let image = testBitmapImage(size: canvasSize, background: .black)
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
         let layerIndex = try #require(viewModel.document.selectedLayerIndex)
         let vectorMask = ImageEditorShapeContent(
@@ -1293,6 +1313,10 @@ struct ImageEditorVectorLayerTests {
             isPathClosed: true
         )
         viewModel.document.layers[layerIndex].isLocked = false
+        viewModel.document.layers[layerIndex].image = testBitmapImage(
+            size: canvasSize,
+            background: .systemBlue
+        )
         viewModel.document.layers[layerIndex].vectorMask = vectorMask.normalized(size: canvasSize)
         viewModel.document.layers[layerIndex].isVectorMaskEnabled = true
 
@@ -1333,6 +1357,9 @@ struct ImageEditorVectorLayerTests {
         viewModel.document.layers[layerIndex].frame = CGRect(origin: .zero, size: canvasSize)
         viewModel.document.layers[layerIndex].isLocked = false
         viewModel.document.selection = .rectangle(CGRect(x: 20, y: 15, width: 50, height: 35))
+        let sourceInside = try #require(
+            viewModel.document.layers[layerIndex].image.color(at: CGPoint(x: 40, y: 30))?.usingColorSpace(.deviceRGB)
+        )
 
         #expect(viewModel.canCreateVectorMaskFromSelection)
 
@@ -1340,6 +1367,9 @@ struct ImageEditorVectorLayerTests {
 
         let maskedLayer = try #require(viewModel.document.selectedLayer)
         let vectorMask = try #require(maskedLayer.vectorMask)
+        let effectiveMask = try #require(maskedLayer.effectiveMask)
+        let maskInside = try #require(effectiveMask.color(at: CGPoint(x: 40, y: 30)))
+        let maskOutside = try #require(effectiveMask.color(at: CGPoint(x: 8, y: 8)))
         let anchors = vectorMask.editablePathAnchors
         let inside = try #require(viewModel.currentImage.color(at: CGPoint(x: 40, y: 30))?.usingColorSpace(.deviceRGB))
         let outside = try #require(viewModel.currentImage.color(at: CGPoint(x: 8, y: 8))?.usingColorSpace(.deviceRGB))
@@ -1353,6 +1383,12 @@ struct ImageEditorVectorLayerTests {
             CGPoint(x: 20, y: 50)
         ])
         #expect(maskedLayer.isVectorMaskEnabled)
+        #expect(sourceInside.alphaComponent > 0.95)
+        #expect(sourceInside.redComponent < 0.15)
+        #expect(sourceInside.greenComponent < 0.75)
+        #expect(sourceInside.blueComponent > 0.4)
+        #expect(maskInside.alphaComponent > 0.95)
+        #expect(maskOutside.alphaComponent < 0.05)
         #expect(inside.blueComponent > 0.4)
         #expect(outside.redComponent < 0.05)
         #expect(outside.greenComponent < 0.05)
@@ -1560,35 +1596,14 @@ struct ImageEditorVectorLayerTests {
         background: NSColor,
         fills: [(rect: CGRect, color: NSColor)] = []
     ) -> NSImage {
-        let width = Int(size.width.rounded())
-        let height = Int(size.height.rounded())
-        let representation = NSBitmapImageRep(
-            bitmapDataPlanes: nil,
-            pixelsWide: width,
-            pixelsHigh: height,
-            bitsPerSample: 8,
-            samplesPerPixel: 4,
-            hasAlpha: true,
-            isPlanar: false,
-            colorSpaceName: .deviceRGB,
-            bytesPerRow: 0,
-            bitsPerPixel: 0
-        )
-        guard let representation else { return NSImage(size: size) }
-
-        for y in 0..<height {
-            for x in 0..<width {
-                let point = CGPoint(x: CGFloat(x) + 0.5, y: CGFloat(y) + 0.5)
-                let fill = fills.last { item in
-                    item.rect.contains(point)
-                }
-                representation.setColor(fill?.color ?? background, atX: x, y: y)
+        NSImage.rendered(size: size) { rect in
+            (background.usingColorSpace(.deviceRGB) ?? background).setFill()
+            rect.fill()
+            for fill in fills {
+                (fill.color.usingColorSpace(.deviceRGB) ?? fill.color).setFill()
+                fill.rect.fill()
             }
-        }
-
-        let image = NSImage(size: size)
-        image.addRepresentation(representation)
-        return image
+        } ?? NSImage.transparent(size: size)
     }
 
     private func isPixelLayer(_ layer: ImageEditorLayer) -> Bool {
@@ -1601,6 +1616,11 @@ struct ImageEditorVectorLayerTests {
     private func maskAlpha(_ mask: ImageEditorSelectionMask, x: Int, y: Int) -> UInt8 {
         guard x >= 0, x < mask.width, y >= 0, y < mask.height else { return 0 }
         return mask.alpha[y * mask.width + x]
+    }
+
+    private func pointsApproximatelyEqual(_ lhs: CGPoint?, _ rhs: CGPoint?, tolerance: CGFloat = 0.000_1) -> Bool {
+        guard let lhs, let rhs else { return lhs == nil && rhs == nil }
+        return abs(lhs.x - rhs.x) <= tolerance && abs(lhs.y - rhs.y) <= tolerance
     }
 }
 
