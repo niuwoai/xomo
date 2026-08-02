@@ -262,6 +262,7 @@ enum XomoFigmaNodeImportMapper {
             issues.append(.maskFlattened)
         }
         let childMaskFrame = simpleMaskFrame(in: node.children, rootOrigin: rootOrigin)
+        let childMaskShape = simpleMaskShape(in: node.children)
         if (node.children ?? []).contains(where: { $0.isMask == true }),
            childMaskFrame == nil {
             issues.append(.maskFlattened)
@@ -379,7 +380,7 @@ enum XomoFigmaNodeImportMapper {
             clipsContent: node.clipsContent == true && mapping.target == .group && node.absoluteBoundingBox != nil,
             isMask: node.isMask == true,
             maskFrame: childMaskFrame,
-            maskShape: supportedMaskShape(node) ?? .rectangle,
+            maskShape: childMaskShape ?? supportedMaskShape(node) ?? .rectangle,
             siblingMaskFrame: siblingMaskFrame,
             siblingMaskShape: siblingMaskShape,
             imageReference: imagePaint?.imageRef,
