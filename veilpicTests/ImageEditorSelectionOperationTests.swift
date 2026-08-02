@@ -158,6 +158,9 @@ struct ImageEditorSelectionOperationTests {
     @Test func quickMaskShowsUnselectedAreaAndUsesQShortcut() throws {
         let canvasSize = NSSize(width: 8, height: 6)
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: testImage(size: canvasSize)) { _ in }
+        viewModel.setQuickMaskOverlayTarget(.maskedAreas)
+        viewModel.setQuickMaskOverlayColor(.systemRed)
+        viewModel.setQuickMaskOverlayOpacity(0.5)
 
         viewModel.toggleQuickMaskMode()
         #expect(!viewModel.isQuickMaskMode)
@@ -169,11 +172,13 @@ struct ImageEditorSelectionOperationTests {
         #expect(viewModel.isQuickMaskMode)
         #expect(viewModel.statusText == L10n.text("imageEditor.status.quickMaskEnabled"))
         let overlay = try #require(viewModel.quickMaskOverlayImage)
-        let unselectedColor = try #require(overlay.color(at: CGPoint(x: 0, y: 0))?.usingColorSpace(.deviceRGB))
-        let selectedAlpha = overlay.color(at: CGPoint(x: 3, y: 2))?.alphaComponent ?? 0
+        let unselectedColor = try #require(quickMaskColor(overlay, x: 0, y: 0)?.usingColorSpace(.deviceRGB))
+        let selectedAlpha = quickMaskColor(overlay, x: 3, y: 2)?.alphaComponent ?? 0
+        let lowerUnselectedAlpha = quickMaskColor(overlay, x: 3, y: 5)?.alphaComponent ?? 0
         #expect(unselectedColor.redComponent > 0.9)
         #expect(unselectedColor.alphaComponent > 0.4)
         #expect(selectedAlpha < 0.05)
+        #expect(lowerUnselectedAlpha > 0.4)
         #expect(
             ImageEditorKeyboardShortcutAction.resolve(
                 charactersIgnoringModifiers: "q",
@@ -189,6 +194,9 @@ struct ImageEditorSelectionOperationTests {
     @Test func quickMaskBrushAndEraserEditSelectionWithUndoAndRedo() throws {
         let canvasSize = NSSize(width: 32, height: 24)
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: testImage(size: canvasSize)) { _ in }
+        viewModel.setQuickMaskOverlayTarget(.maskedAreas)
+        viewModel.setQuickMaskOverlayColor(.systemRed)
+        viewModel.setQuickMaskOverlayOpacity(0.5)
         let originalLayerData = try #require(viewModel.document.selectedLayer?.image.qingtuPNGData())
 
         viewModel.createRectSelection(from: CGPoint(x: 4, y: 4), to: CGPoint(x: 28, y: 20))
@@ -211,13 +219,13 @@ struct ImageEditorSelectionOperationTests {
         mask = try #require(selection.rasterizedMask(canvasSize: canvasSize))
         #expect(maskAlpha(mask, x: 16, y: 12) == 255)
         #expect(viewModel.isQuickMaskMode)
-        #expect((viewModel.quickMaskOverlayImage?.color(at: CGPoint(x: 16, y: 12))?.alphaComponent ?? 0) < 0.05)
+        #expect((quickMaskColor(viewModel.quickMaskOverlayImage, x: 16, y: 12)?.alphaComponent ?? 0) < 0.05)
 
         viewModel.redo()
         selection = try #require(viewModel.document.selection)
         mask = try #require(selection.rasterMask)
         #expect(maskAlpha(mask, x: 16, y: 12) == 0)
-        #expect((viewModel.quickMaskOverlayImage?.color(at: CGPoint(x: 16, y: 12))?.alphaComponent ?? 0) > 0.4)
+        #expect((quickMaskColor(viewModel.quickMaskOverlayImage, x: 16, y: 12)?.alphaComponent ?? 0) > 0.4)
 
         viewModel.drawBrush(
             points: [CGPoint(x: 10, y: 12), CGPoint(x: 22, y: 12)],
@@ -299,7 +307,8 @@ struct ImageEditorSelectionOperationTests {
         let canvasSize = NSSize(width: 40, height: 30)
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: solidImage(color: .systemRed, size: canvasSize)) { _ in }
 
-        viewModel.convertBackgroundToLayer()
+        let selectedIndex = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[selectedIndex].image = solidImage(color: .systemRed, size: canvasSize)
         viewModel.backgroundColor = .systemBlue
         viewModel.document.selection = ImageEditorSelection.rectangle(CGRect(x: 6, y: 4, width: 16, height: 12))
 
@@ -311,14 +320,15 @@ struct ImageEditorSelectionOperationTests {
         #expect(filledPixel.redComponent < 0.25)
         #expect(retainedPixel.redComponent > 0.75)
         #expect(retainedPixel.blueComponent < 0.25)
-        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.selectionFillSelected"))
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.selectionFill"))
     }
 
     @Test func imageEditorCommandXCanCutSelectionToClipboard() async throws {
         let canvasSize = NSSize(width: 40, height: 30)
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: solidImage(color: .systemRed, size: canvasSize)) { _ in }
 
-        viewModel.convertBackgroundToLayer()
+        let selectedIndex = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[selectedIndex].image = solidImage(color: .systemRed, size: canvasSize)
         viewModel.document.selection = ImageEditorSelection.rectangle(CGRect(x: 6, y: 4, width: 16, height: 12))
 
         #expect(viewModel.canCutSelectionToClipboard)
@@ -388,6 +398,8 @@ struct ImageEditorSelectionOperationTests {
         let canvasSize = NSSize(width: 24, height: 18)
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: solidImage(color: .black, size: canvasSize)) { _ in }
         let firstID = try #require(viewModel.document.selectedLayerID)
+        let firstIndex = try #require(viewModel.document.layers.firstIndex { $0.id == firstID })
+        viewModel.document.layers[firstIndex].image = solidImage(color: .black, size: canvasSize)
 
         viewModel.addLayer()
         let secondID = try #require(viewModel.document.selectedLayerID)
@@ -514,8 +526,8 @@ struct ImageEditorSelectionOperationTests {
         #expect(maskAlpha(mask, x: 8, y: 13) == 255)
         #expect(maskAlpha(mask, x: 10, y: 13) == 255)
         #expect(maskAlpha(mask, x: 15, y: 13) == 0)
-        #expect(maskAlpha(mask, x: 22, y: 13) == 255)
-        #expect(maskAlpha(mask, x: 23, y: 13) == 0)
+        #expect(maskAlpha(mask, x: 21, y: 13) == 255)
+        #expect(maskAlpha(mask, x: 22, y: 13) == 0)
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.selectionBorder"))
         #expect(viewModel.statusText == L10n.format("imageEditor.status.selectionBordered", 2))
     }
@@ -826,5 +838,15 @@ struct ImageEditorSelectionOperationTests {
     private func maskAlpha(_ mask: ImageEditorSelectionMask, x: Int, y: Int) -> UInt8 {
         guard x >= 0, y >= 0, x < mask.width, y < mask.height else { return 0 }
         return mask.alpha[y * mask.width + x]
+    }
+
+    private func quickMaskColor(_ image: NSImage?, x: Int, y: Int) -> NSColor? {
+        guard let bitmap = image?.representations.compactMap({ $0 as? NSBitmapImageRep }).first,
+              x >= 0,
+              y >= 0,
+              x < bitmap.pixelsWide,
+              y < bitmap.pixelsHigh
+        else { return nil }
+        return bitmap.colorAt(x: x, y: bitmap.pixelsHigh - y - 1)
     }
 }

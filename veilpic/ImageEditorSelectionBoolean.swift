@@ -82,41 +82,41 @@ extension ImageEditorSelection {
         else { return nil }
 
         let clampedOpacity = max(0, min(1, opacity))
-        let bytesPerPixel = 4
-        let bytesPerRow = mask.width * bytesPerPixel
-        var pixels = [UInt8](repeating: 0, count: bytesPerRow * mask.height)
+        guard let bitmap = NSBitmapImageRep(
+            bitmapDataPlanes: nil,
+            pixelsWide: mask.width,
+            pixelsHigh: mask.height,
+            bitsPerSample: 8,
+            samplesPerPixel: 4,
+            hasAlpha: true,
+            isPlanar: false,
+            colorSpaceName: .deviceRGB,
+            bitmapFormat: .alphaNonpremultiplied,
+            bytesPerRow: mask.width * 4,
+            bitsPerPixel: 32
+        ), let pixels = bitmap.bitmapData else { return nil }
 
-        for index in mask.alpha.indices {
-            let sourceAlpha = target == .maskedAreas
-                ? UInt8.max - mask.alpha[index]
-                : mask.alpha[index]
-            let overlayAlpha = CGFloat(sourceAlpha) / CGFloat(UInt8.max) * clampedOpacity
-            let alphaByte = UInt8((overlayAlpha * CGFloat(UInt8.max)).rounded())
-            let offset = index * bytesPerPixel
-            pixels[offset] = UInt8((rgb.redComponent * CGFloat(alphaByte)).rounded())
-            pixels[offset + 1] = UInt8((rgb.greenComponent * CGFloat(alphaByte)).rounded())
-            pixels[offset + 2] = UInt8((rgb.blueComponent * CGFloat(alphaByte)).rounded())
-            pixels[offset + 3] = alphaByte
+        let red = UInt8((rgb.redComponent * CGFloat(UInt8.max)).rounded())
+        let green = UInt8((rgb.greenComponent * CGFloat(UInt8.max)).rounded())
+        let blue = UInt8((rgb.blueComponent * CGFloat(UInt8.max)).rounded())
+        for row in 0..<mask.height {
+            let imageY = mask.height - row - 1
+            for x in 0..<mask.width {
+                let sourceAlpha = target == .maskedAreas
+                    ? UInt8.max - mask.alpha[row * mask.width + x]
+                    : mask.alpha[row * mask.width + x]
+                let destination = (imageY * mask.width + x) * 4
+                pixels[destination] = red
+                pixels[destination + 1] = green
+                pixels[destination + 2] = blue
+                pixels[destination + 3] = UInt8(
+                    (CGFloat(sourceAlpha) * clampedOpacity).rounded()
+                )
+            }
         }
 
-        guard let provider = CGDataProvider(data: Data(pixels) as CFData),
-              let cgImage = CGImage(
-                width: mask.width,
-                height: mask.height,
-                bitsPerComponent: 8,
-                bitsPerPixel: 32,
-                bytesPerRow: bytesPerRow,
-                space: CGColorSpaceCreateDeviceRGB(),
-                bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.premultipliedLast.rawValue),
-                provider: provider,
-                decode: nil,
-                shouldInterpolate: false,
-                intent: .defaultIntent
-              )
-        else { return nil }
-
         let image = NSImage(size: canvasSize)
-        image.addRepresentation(NSBitmapImageRep(cgImage: cgImage))
+        image.addRepresentation(bitmap)
         return image
     }
 
@@ -423,10 +423,10 @@ extension ImageEditorSelectionMask {
 
     func smoothed(by radius: Int) -> ImageEditorSelectionMask? {
         let radius = max(1, min(16, radius))
-        guard let opened = contracted(by: radius)?.expanded(by: radius),
-              let closed = opened.expanded(by: radius)?.contracted(by: radius)
+        guard let closed = expanded(by: radius)?.contracted(by: radius),
+              let opened = closed.contracted(by: radius)?.expanded(by: radius)
         else { return nil }
-        return closed
+        return opened
     }
 
     func filledHoles() -> ImageEditorSelectionMask? {
