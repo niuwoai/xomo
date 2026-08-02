@@ -768,8 +768,8 @@ extension ImageEditorViewModel {
         if shouldPreserveReferencePoint {
             setSelectedLayerTransformReferencePoint(referencePoint)
         }
-        statusText = L10n.text("imageEditor.status.layerRotated")
         appendHistory(L10n.text("imageEditor.history.layerRotate"))
+        statusText = L10n.text("imageEditor.status.layerRotated")
     }
 
     func rotateSelectedLayerLeft90() {
