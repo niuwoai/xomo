@@ -4,18 +4,16 @@ import Testing
 
 @Suite(.serialized)
 struct ClipboardImageWriterTests {
-    @Test func clipboardFilesUseLocalCachesInsteadOfDownloads() throws {
+    @Test func clipboardFilesUseWritableTemporaryStorageInsteadOfDownloads() {
         let fileManager = FileManager.default
         let cacheDirectory = ClipboardImageWriter.clipboardCacheDirectory(fileManager: fileManager)
             .standardizedFileURL
-        let userCachesDirectory = try #require(
-            fileManager.urls(for: .cachesDirectory, in: .userDomainMask).first?.standardizedFileURL
-        )
+        let temporaryDirectory = fileManager.temporaryDirectory.standardizedFileURL
         let downloadsDirectory = fileManager.urls(for: .downloadsDirectory, in: .userDomainMask)
             .first?
             .standardizedFileURL
 
-        #expect(cacheDirectory.path.hasPrefix(userCachesDirectory.path + "/"))
+        #expect(cacheDirectory.path.hasPrefix(temporaryDirectory.path + "/"))
         #expect(cacheDirectory.path.hasSuffix(ClipboardImageWriter.clipboardCacheFolderName))
         #expect(downloadsDirectory.map { !cacheDirectory.path.hasPrefix($0.path + "/") } ?? true)
     }

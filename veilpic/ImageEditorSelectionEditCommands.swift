@@ -591,10 +591,18 @@ extension ImageEditorViewModel {
             return
         }
 
-        let image = renderedImage.nonTransparentPixelBounds()
+        let bitmapContentBounds = renderedImage.nonTransparentPixelBounds()
+        let image = bitmapContentBounds
             .flatMap { renderedImage.cropped(to: $0) }
             ?? renderedImage
-        let contentBounds = renderedImage.nonTransparentPixelBounds()
+        let contentBounds = bitmapContentBounds.map { bitmapBounds in
+            CGRect(
+                x: bitmapBounds.minX,
+                y: renderedImage.size.height - bitmapBounds.maxY,
+                width: bitmapBounds.width,
+                height: bitmapBounds.height
+            )
+        }
         let clipboardData = image.qingtuPNGData() ?? pngData
 
         let baseName = (document.sourceName as NSString).deletingPathExtension

@@ -113,8 +113,7 @@ enum ClipboardImageWriter {
     }
 
     static func clipboardCacheDirectory(fileManager: FileManager = .default) -> URL {
-        let base = fileManager.urls(for: .cachesDirectory, in: .userDomainMask).first
-            ?? fileManager.temporaryDirectory
+        let base = fileManager.temporaryDirectory
         return base.appendingPathComponent(clipboardCacheFolderName, isDirectory: true)
     }
 
