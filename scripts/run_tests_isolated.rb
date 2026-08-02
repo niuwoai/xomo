@@ -131,6 +131,16 @@ def build_for_testing
   puts '==> 构建完成。'
 end
 
+def terminate_process_group(wait_thread)
+  Process.kill('TERM', -wait_thread.pid)
+  unless wait_thread.join(5)
+    Process.kill('KILL', -wait_thread.pid)
+    wait_thread.join
+  end
+rescue Errno::ESRCH, Errno::ECHILD
+  wait_thread.join
+end
+
 def capture_with_timeout(args, timeout_seconds)
   output = +''
   status = nil
@@ -143,14 +153,11 @@ def capture_with_timeout(args, timeout_seconds)
       Timeout.timeout(timeout_seconds) { status = wait_thread.value }
     rescue Timeout::Error
       timed_out = true
-      Process.kill('TERM', -wait_thread.pid)
-      unless wait_thread.join(5)
-        Process.kill('KILL', -wait_thread.pid)
-        wait_thread.join
-      end
+      terminate_process_group(wait_thread)
       status = wait_thread.value
       output << "\nXOMO_TEST_INFRASTRUCTURE_TIMEOUT: exceeded #{timeout_seconds}s\n"
     ensure
+      terminate_process_group(wait_thread) if wait_thread.alive?
       reader.join
     end
   end

@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.12.0-rc642 - 2026-08-02
+
+### Fixed
+
+- 剪贴板 PNG 临时文件从可能受 iCloud/File Provider 管理的“下载”目录迁移到本地用户 Caches，避免复制或 `Command+X` 在同步清理缓存时阻塞主线程。
+- 增加剪贴板缓存路径回归，明确验证路径位于用户 Caches 且不落入 Downloads。
+- 独立测试运行器在 `Ctrl-C`、异常和其他提前退出路径也会回收整个 Xcode 进程组，不再遗留后台 `xcodebuild`。
+
 ## 2.12.0-rc641 - 2026-08-02
 
 ### Fixed

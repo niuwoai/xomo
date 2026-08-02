@@ -58,6 +58,8 @@ enum XomoClipboardLayerPayload {
 }
 
 enum ClipboardImageWriter {
+    static let clipboardCacheFolderName = "im.some.xomo/Clipboard"
+
     static func copy(_ image: NSImage, preferredFileName: String, optimizeLosslessly: Bool = false) -> Bool {
         let pngData = image.qingtuPNGData().map { data in
             optimizeLosslessly
@@ -110,10 +112,10 @@ enum ClipboardImageWriter {
         }
     }
 
-    private static func clipboardCacheDirectory() -> URL {
-        let base = FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask).first
-            ?? FileManager.default.temporaryDirectory
-        return base.appendingPathComponent(".musepicClipboard", isDirectory: true)
+    static func clipboardCacheDirectory(fileManager: FileManager = .default) -> URL {
+        let base = fileManager.urls(for: .cachesDirectory, in: .userDomainMask).first
+            ?? fileManager.temporaryDirectory
+        return base.appendingPathComponent(clipboardCacheFolderName, isDirectory: true)
     }
 
     private static func sanitizedFileName(_ preferredFileName: String) -> String {
