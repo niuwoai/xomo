@@ -531,12 +531,13 @@ struct ImageEditorToolSmokeTests {
         hardBlur.hardness = 1
         hardSharpen.hardness = 1
         let points = [CGPoint(x: 10, y: 14), CGPoint(x: 30, y: 14)]
-        let edgePoint = CGPoint(x: 19, y: 18)
+        let blurEdgePoint = CGPoint(x: 19, y: 18)
+        let sharpenEdgePoint = CGPoint(x: 18, y: 18)
         let blurOriginal = try #require(
-            hardEdge.color(at: edgePoint)?.usingColorSpace(.deviceRGB)
+            hardEdge.color(at: blurEdgePoint)?.usingColorSpace(.deviceRGB)
         )
         let sharpenOriginal = try #require(
-            softenedEdge.color(at: edgePoint)?.usingColorSpace(.deviceRGB)
+            softenedEdge.color(at: sharpenEdgePoint)?.usingColorSpace(.deviceRGB)
         )
 
         softBlur.blurBrush(points: points)
@@ -545,16 +546,16 @@ struct ImageEditorToolSmokeTests {
         hardSharpen.sharpenBrush(points: points)
 
         let softBlurEdge = try #require(
-            softBlur.document.selectedLayer?.image.color(at: edgePoint)?.usingColorSpace(.deviceRGB)
+            softBlur.document.selectedLayer?.image.color(at: blurEdgePoint)?.usingColorSpace(.deviceRGB)
         )
         let hardBlurEdge = try #require(
-            hardBlur.document.selectedLayer?.image.color(at: edgePoint)?.usingColorSpace(.deviceRGB)
+            hardBlur.document.selectedLayer?.image.color(at: blurEdgePoint)?.usingColorSpace(.deviceRGB)
         )
         let softSharpenEdge = try #require(
-            softSharpen.document.selectedLayer?.image.color(at: edgePoint)?.usingColorSpace(.deviceRGB)
+            softSharpen.document.selectedLayer?.image.color(at: sharpenEdgePoint)?.usingColorSpace(.deviceRGB)
         )
         let hardSharpenEdge = try #require(
-            hardSharpen.document.selectedLayer?.image.color(at: edgePoint)?.usingColorSpace(.deviceRGB)
+            hardSharpen.document.selectedLayer?.image.color(at: sharpenEdgePoint)?.usingColorSpace(.deviceRGB)
         )
         let softBlurDelta = abs(softBlurEdge.redComponent - blurOriginal.redComponent)
         let hardBlurDelta = abs(hardBlurEdge.redComponent - blurOriginal.redComponent)
