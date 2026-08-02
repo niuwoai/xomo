@@ -1180,7 +1180,8 @@ struct XomoFigmaNodeImportPlanTests {
 
         #expect(frame.fidelity == .partial)
         #expect(frame.issues.contains(.transformFlattened))
-        #expect(frame.issues.contains(.clippingFlattened))
+        #expect(frame.clipsContent)
+        #expect(!frame.issues.contains(.clippingFlattened))
         #expect(line.targetKind == .vector)
         #expect(line.vectorPaths == ["M 0 0 L 40 0"])
         #expect(line.issues.contains(.transformFlattened))
