@@ -1,6 +1,8 @@
 # Xomo 经典 Photoshop 能力路线图
 
-> 最后更新：2026-08-02 ｜ 当前版本：v2.12.0-rc638 ｜ 目标：以经典 Photoshop 能力作为现代混合编辑器的可靠像素与图层底座
+> 最后更新：2026-08-02 ｜ 当前版本：v2.12.0-rc639 ｜ 目标：以经典 Photoshop 能力作为现代混合编辑器的可靠像素与图层底座
+
+- `v2.12.0-rc639`：非零 Figma `paragraphSpacing` 现在以三语 `textParagraphSpacingFlattened` 明确降为部分保真，不再静默丢失段间距后误报 exact；下一版本 rc640 执行完整 Release、全量测试、真实冒烟和 `/Applications` 覆盖安装。
 
 - `v2.12.0-rc638`：无法准确换算的 Figma 行高单位现在以三语 `textLineHeightFlattened` 明确降为部分保真，避免导入排版退回默认值却仍误报 exact；下一次周期性完整 Release、冒烟和 `/Applications` 覆盖安装为 rc640。
 

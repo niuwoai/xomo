@@ -291,6 +291,10 @@ enum XomoFigmaNodeImportMapper {
         if hasUnmappedLineHeight(node.style) {
             issues.append(.textLineHeightFlattened)
         }
+        if let paragraphSpacing = node.style?.paragraphSpacing,
+           !paragraphSpacing.isFinite || abs(paragraphSpacing) > 0.000_001 {
+            issues.append(.textParagraphSpacingFlattened)
+        }
         let exportPresetMapping = mappedExportPresets(
             node.exportSettings,
             frame: node.absoluteBoundingBox
@@ -1291,6 +1295,7 @@ struct XomoFigmaTypeStyle: Decodable {
     var italic: Bool?
     var textDecoration: String?
     var paragraphIndent: Double?
+    var paragraphSpacing: Double?
     var textCase: String?
 }
 

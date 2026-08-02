@@ -3278,6 +3278,7 @@
 "xomo.figma.node.issue.transformFlattened" = "Rotation, reflection, or skew is flattened to axis-aligned bounds";
 "xomo.figma.node.issue.textCaseFlattened" = "Text case is baked into editable characters instead of retained as a live style";
 "xomo.figma.node.issue.textLineHeightFlattened" = "This Figma line-height unit cannot be represented accurately and uses Xomo's default line height";
+"xomo.figma.node.issue.textParagraphSpacingFlattened" = "Figma paragraph spacing is not yet editable in Xomo and uses the default paragraph spacing";
 "xomo.figma.node.issue.variableBindingPreserved" = "Figma variable binding is preserved by ID; its live value is resolved when Variables access is available";
 "xomo.figma.node.issue.exportSettingsPartiallyPreserved" = "Some Figma export settings are unsupported; compatible PNG and JPG presets are retained";
 "xomo.figma.node.error.nodeSelectionRequired" = "Paste a Figma node link that includes node-id first.";

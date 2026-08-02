@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.12.0-rc639 - 2026-08-02
+
+### Fixed
+
+- 非零 Figma `paragraphSpacing` 不再静默丢失后仍报告完全保真；导入计划会明确标记 `textParagraphSpacingFlattened` 并降为部分保真。
+- 中、英、日导入报告会说明当前使用默认段间距，为后续原生段间距模型保留清晰边界。
+
 ## 2.12.0-rc638 - 2026-08-02
 
 ### Fixed

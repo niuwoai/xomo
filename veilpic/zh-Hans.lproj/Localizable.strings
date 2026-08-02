@@ -3278,6 +3278,7 @@
 "xomo.figma.node.issue.transformFlattened" = "旋转、镜像或倾斜变换暂按轴对齐边界处理";
 "xomo.figma.node.issue.textCaseFlattened" = "文字大小写会写入可编辑文本内容，而不是保留为动态样式";
 "xomo.figma.node.issue.textLineHeightFlattened" = "该 Figma 行高单位无法准确换算，将使用 Xomo 默认行高";
+"xomo.figma.node.issue.textParagraphSpacingFlattened" = "Figma 段间距暂不能在 Xomo 中编辑，将使用默认段间距";
 "xomo.figma.node.issue.variableBindingPreserved" = "已保留 Figma 变量绑定 ID；具备 Variables 权限时会解析实时值";
 "xomo.figma.node.issue.exportSettingsPartiallyPreserved" = "部分 Figma 导出设置暂不支持；兼容的 PNG 与 JPG 预设会继续保留";
 "xomo.figma.node.error.nodeSelectionRequired" = "请先粘贴包含 node-id 的 Figma 节点链接。";
