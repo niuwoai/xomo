@@ -882,8 +882,8 @@ extension ImageEditorViewModel {
 
         pushUndo()
         document.layers[index] = trimmedLayer
-        statusText = L10n.text("imageEditor.status.layerTrimTransparentPixels")
         appendHistory(L10n.text("imageEditor.history.layerTrimTransparentPixels"))
+        statusText = L10n.text("imageEditor.status.layerTrimTransparentPixels")
     }
 
     var selectedTransformableLayerIndices: [Int] {

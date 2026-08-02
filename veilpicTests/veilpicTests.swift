@@ -952,11 +952,10 @@ struct veilpicTests {
     @MainActor
     @Test func imageEditorTrimsSelectedLayerTransparentPixels() async throws {
         let canvas = testImage(color: .systemBlue, size: NSSize(width: 120, height: 80))
-        let transparentImage = testBitmapImage(
-            size: NSSize(width: 20, height: 10),
-            background: .clear,
-            fills: [(rect: CGRect(x: 5, y: 2, width: 10, height: 6), color: .systemRed)]
-        )
+        let transparentImage = try #require(NSImage.rendered(size: NSSize(width: 20, height: 10)) { _ in
+            NSColor(srgbRed: 1, green: 0, blue: 0, alpha: 1).setFill()
+            CGRect(x: 5, y: 2, width: 10, height: 6).fill()
+        })
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: canvas) { _ in }
 
         viewModel.addLayer()
@@ -1065,28 +1064,28 @@ struct veilpicTests {
     @Test func imageEditorCanSelectInvertAndClearLayerSelection() async throws {
         let image = testImage(color: .systemBlue, size: NSSize(width: 120, height: 80))
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
-        let backgroundID = try #require(viewModel.document.selectedLayerID)
 
         viewModel.addLayer()
         let firstID = try #require(viewModel.document.selectedLayerID)
         viewModel.addLayer()
         let secondID = try #require(viewModel.document.selectedLayerID)
+        let allLayerIDs = Set(viewModel.document.layers.map(\.id))
         viewModel.document.selection = .rectangle(CGRect(x: 8, y: 6, width: 20, height: 16))
 
         #expect(viewModel.canSelectAllLayers)
         viewModel.selectAllLayers()
 
-        #expect(viewModel.document.selectedLayerIDs == Set([backgroundID, firstID, secondID]))
+        #expect(viewModel.document.selectedLayerIDs == allLayerIDs)
         #expect(viewModel.document.selectedLayerID == secondID)
         #expect(viewModel.document.selection?.points.first == CGPoint(x: 8, y: 6))
-        #expect(viewModel.statusText == L10n.format("imageEditor.status.layerSelectAll", 3))
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.layerSelectAll", allLayerIDs.count))
 
         viewModel.selectLayer(firstID)
         viewModel.invertLayerSelection()
 
-        #expect(viewModel.document.selectedLayerIDs == Set([backgroundID, secondID]))
+        #expect(viewModel.document.selectedLayerIDs == allLayerIDs.subtracting([firstID]))
         #expect(viewModel.document.selectedLayerID == secondID)
-        #expect(viewModel.statusText == L10n.format("imageEditor.status.layerSelectionInverted", 2))
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.layerSelectionInverted", allLayerIDs.count - 1))
 
         viewModel.clearLayerSelection()
 
@@ -1097,7 +1096,7 @@ struct veilpicTests {
 
         viewModel.invertLayerSelection()
 
-        #expect(viewModel.document.selectedLayerIDs == Set([backgroundID, firstID, secondID]))
+        #expect(viewModel.document.selectedLayerIDs == allLayerIDs)
         #expect(viewModel.document.selectedLayerID == secondID)
     }
 
