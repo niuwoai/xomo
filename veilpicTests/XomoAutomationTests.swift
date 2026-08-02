@@ -10156,9 +10156,9 @@ struct XomoAutomationTests {
         #expect(viewModel.document.selection?.rasterMask != nil)
         viewModel.document.selection = nil
 
-        let targetLayerID = try #require(viewModel.document.layers.first { $0.id != sourceLayerID }?.id)
-        viewModel.document.selectedLayerID = targetLayerID
-        viewModel.document.selectedLayerIDs = [targetLayerID]
+        viewModel.addLayer()
+        let targetLayerID = try #require(viewModel.document.selectedLayerID)
+        #expect(targetLayerID != sourceLayerID)
         viewModel.foregroundColor = .white
         viewModel.opacity = 1
         let fill = registry.execute(request(
