@@ -1008,6 +1008,7 @@ struct XomoFigmaNodeImportPlanTests {
         )
 
         let plan = try await client.fetchPlan(for: preview, credential: token)
+        let text = try #require(plan.items.first { $0.sourceID == "2:2" })
         let image = try #require(plan.items.first { $0.sourceID == "2:6" })
         let component = try #require(plan.items.first { $0.sourceID == "2:7" })
         let unsupported = try #require(plan.items.first { $0.sourceID == "2:8" })
@@ -1045,8 +1046,10 @@ struct XomoFigmaNodeImportPlanTests {
         #expect(unsupported.targetKind == nil)
         #expect(unsupported.fidelity == .unsupported)
         #expect(unsupported.issues == [.unsupportedNodeType])
-        #expect(plan.exactCount == 6)
-        #expect(plan.partialCount == 2)
+        #expect(text.fidelity == .partial)
+        #expect(text.issues.contains(.textCaseFlattened))
+        #expect(plan.exactCount == 5)
+        #expect(plan.partialCount == 3)
         #expect(plan.unsupportedCount == 1)
     }
 
