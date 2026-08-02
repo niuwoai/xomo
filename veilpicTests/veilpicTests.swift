@@ -381,6 +381,7 @@ struct veilpicTests {
     @Test func imageEditorVisibleLayerRowsCanFilterByNameKindLabelStateAndAttribute() async throws {
         let image = testImage(color: .systemTeal, size: NSSize(width: 96, height: 72))
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        let initialVisibleLayerIDs = Set(viewModel.document.layers.map(\.id))
         var pixelLayer = ImageEditorLayer.blank(name: "Retouch Pixel", size: image.size)
         pixelLayer.labelColor = .blue
         pixelLayer.mask = testImage(color: .white, size: image.size)
@@ -471,9 +472,16 @@ struct veilpicTests {
 
         #expect(viewModel.canSelectVisibleLayers)
         viewModel.selectVisibleLayers()
-        #expect(viewModel.document.selectedLayerIDs == Set([pixelLayer.id, shapeLayer.id, adjustmentLayer.id, clippedFilterLayer.id, smartObjectLayer.id]))
+        let expectedVisibleLayerIDs = initialVisibleLayerIDs.union([
+            pixelLayer.id,
+            shapeLayer.id,
+            adjustmentLayer.id,
+            clippedFilterLayer.id,
+            smartObjectLayer.id,
+        ])
+        #expect(viewModel.document.selectedLayerIDs == expectedVisibleLayerIDs)
         #expect(viewModel.document.selectedLayerID == smartObjectLayer.id)
-        #expect(viewModel.statusText == L10n.format("imageEditor.status.layerSelectVisible", 5))
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.layerSelectVisible", expectedVisibleLayerIDs.count))
 
         #expect(viewModel.canSelectHiddenLayers)
         viewModel.selectHiddenLayers()
