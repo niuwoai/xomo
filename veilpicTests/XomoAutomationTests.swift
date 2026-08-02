@@ -968,7 +968,8 @@ struct XomoAutomationTests {
         let mask = try #require(selection.rasterizedMask(canvasSize: viewModel.document.canvasSize))
         #expect(maskAlpha(mask, x: 8, y: 13) == 255)
         #expect(maskAlpha(mask, x: 15, y: 13) == 0)
-        #expect(maskAlpha(mask, x: 22, y: 13) == 255)
+        #expect(maskAlpha(mask, x: 21, y: 13) == 255)
+        #expect(maskAlpha(mask, x: 22, y: 13) == 0)
         #expect(viewModel.statusText == L10n.format("imageEditor.status.selectionBordered", 2))
     }
 
