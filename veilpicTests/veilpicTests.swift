@@ -136,13 +136,21 @@ struct veilpicTests {
         viewModel.addLayer()
         let layerID = try #require(viewModel.document.selectedLayerID)
         let layerIndex = try #require(viewModel.document.layers.firstIndex { $0.id == layerID })
-        viewModel.document.layers[layerIndex].image = testBitmapImage(
-            size: NSSize(width: 20, height: 10),
-            background: .clear,
-            fills: [(rect: CGRect(x: 0, y: 0, width: 10, height: 10), color: .systemRed)]
+        viewModel.document.layers[layerIndex].image = try #require(
+            NSImage.rendered(size: NSSize(width: 20, height: 10)) { _ in
+                NSColor(srgbRed: 1, green: 0, blue: 0, alpha: 1).setFill()
+                CGRect(x: 0, y: 0, width: 10, height: 10).fill()
+            }
         )
         viewModel.document.layers[layerIndex].frame = CGRect(x: 10, y: 15, width: 20, height: 10)
         viewModel.backgroundColor = .white
+        let sourceRedPixel = try #require(
+            viewModel.document.layers[layerIndex].image
+                .color(at: CGPoint(x: 2, y: 2))?
+                .usingColorSpace(.deviceRGB)
+        )
+        #expect(sourceRedPixel.redComponent > sourceRedPixel.greenComponent + 0.35)
+        #expect(sourceRedPixel.redComponent > sourceRedPixel.blueComponent + 0.35)
 
         #expect(viewModel.canConvertSelectedLayerToBackground)
         viewModel.convertSelectedLayerToBackground()
@@ -153,10 +161,31 @@ struct veilpicTests {
         #expect(convertedBackground.isLocked)
         #expect(convertedBackground.frame == CGRect(origin: .zero, size: canvas.size))
         #expect(viewModel.document.selectedLayerID == layerID)
-        let filledPixel = try #require(convertedBackground.image.color(at: CGPoint(x: 2, y: 2))?.usingColorSpace(.deviceRGB))
-        let redPixel = try #require(convertedBackground.image.color(at: CGPoint(x: 12, y: 20))?.usingColorSpace(.deviceRGB))
+        let filledPixel = try #require(convertedBackground.image.color(at: CGPoint(x: 2, y: 2))?.usingColorSpace(.sRGB))
         #expect(filledPixel.redComponent > 0.9 && filledPixel.greenComponent > 0.9 && filledPixel.blueComponent > 0.9)
-        #expect(redPixel.redComponent > 0.8 && redPixel.greenComponent < 0.3)
+        var redPixels: [CGPoint] = []
+        for y in 0..<Int(canvas.size.height) {
+            for x in 0..<Int(canvas.size.width) {
+                guard let color = convertedBackground.image
+                    .color(at: CGPoint(x: x, y: y))?
+                    .usingColorSpace(.deviceRGB),
+                      color.redComponent > color.greenComponent + 0.35,
+                      color.redComponent > color.blueComponent + 0.35
+                else { continue }
+                redPixels.append(CGPoint(x: x, y: y))
+            }
+        }
+        let minRedX = try #require(redPixels.map(\.x).min())
+        let maxRedX = try #require(redPixels.map(\.x).max())
+        let minRedY = try #require(redPixels.map(\.y).min())
+        let maxRedY = try #require(redPixels.map(\.y).max())
+        let redBounds = CGRect(
+            x: minRedX,
+            y: minRedY,
+            width: maxRedX - minRedX + 1,
+            height: maxRedY - minRedY + 1
+        )
+        #expect(redBounds == CGRect(x: 10, y: 15, width: 10, height: 10))
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.backgroundFromLayer"))
         #expect(viewModel.statusText == L10n.text("imageEditor.status.backgroundFromLayer"))
     }

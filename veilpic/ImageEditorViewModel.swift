@@ -4035,8 +4035,8 @@ final class ImageEditorViewModel: ObservableObject {
         document.selectedLayerID = document.layers[index].id
         document.selectedLayerIDs = [document.layers[index].id]
         isEditingLayerMask = false
-        statusText = L10n.text("imageEditor.status.layerFromBackground")
         appendHistory(L10n.text("imageEditor.history.layerFromBackground"))
+        statusText = L10n.text("imageEditor.status.layerFromBackground")
     }
 
     func convertSelectedLayerToBackground() {
@@ -4064,8 +4064,8 @@ final class ImageEditorViewModel: ObservableObject {
         document.selectedLayerID = backgroundLayer.id
         document.selectedLayerIDs = [backgroundLayer.id]
         isEditingLayerMask = false
-        statusText = L10n.text("imageEditor.status.backgroundFromLayer")
         appendHistory(L10n.text("imageEditor.history.backgroundFromLayer"))
+        statusText = L10n.text("imageEditor.status.backgroundFromLayer")
     }
 
     func addLayerGroup() {
