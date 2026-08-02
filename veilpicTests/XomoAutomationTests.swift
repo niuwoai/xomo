@@ -974,9 +974,12 @@ struct XomoAutomationTests {
     }
 
     @Test func registryAppliesExplicitLayerTransparencyThreshold() throws {
-        let viewModel = makeViewModel()
-        let layerIndex = try #require(viewModel.document.selectedLayerIndex)
         let size = CGSize(width: 20, height: 10)
+        let viewModel = ImageEditorViewModel(
+            sourceName: "automation",
+            image: NSImage.transparent(size: size)
+        ) { _ in }
+        let layerIndex = try #require(viewModel.document.selectedLayerIndex)
         let image = try #require(NSImage.rendered(size: size) { _ in
             NSColor(calibratedWhite: 1, alpha: 0.25).setFill()
             CGRect(x: 0, y: 0, width: 10, height: 10).fill()
