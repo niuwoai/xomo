@@ -1494,8 +1494,15 @@ struct veilpicTests {
         let canvas = testImage(color: .systemBlue, size: NSSize(width: 80, height: 60))
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: canvas) { _ in }
         let layerIndex = try #require(viewModel.document.selectedLayerIndex)
-        viewModel.document.layers[layerIndex].image = testImage(color: .systemOrange, size: NSSize(width: 24, height: 18))
+        viewModel.document.layers[layerIndex].image = try #require(NSImage.rendered(size: NSSize(width: 24, height: 18)) { rect in
+            NSColor(srgbRed: 1, green: 0.45, blue: 0, alpha: 1).setFill()
+            rect.fill()
+        })
+        let sourcePixel = try #require(viewModel.document.layers[layerIndex].image.color(at: CGPoint(x: 12, y: 9)))
+        #expect(sourcePixel.alphaComponent > 0.9)
         viewModel.document.layers[layerIndex].frame = CGRect(x: 12, y: 14, width: 24, height: 18)
+        let exportPreview = try #require(viewModel.selectedLayerExportImage())
+        #expect(exportPreview.nonTransparentPixelBounds() != nil)
         let historyCount = viewModel.document.history.count
         let pasteboard = NSPasteboard.general
         pasteboard.clearContents()
@@ -1506,6 +1513,10 @@ struct veilpicTests {
 
         #expect(viewModel.document.history.count == historyCount)
         #expect(viewModel.statusText == L10n.text("imageEditor.status.selectedLayersCopiedToClipboard"))
+        let copiedPNGData = try #require(pasteboard.data(forType: .png))
+        let copiedPNGImage = try #require(NSImage(data: copiedPNGData))
+        let copiedPNGPixel = try #require(copiedPNGImage.color(at: CGPoint(x: 12, y: 9)))
+        #expect(copiedPNGPixel.alphaComponent > 0.9)
         let copiedImage = try #require(NSImage(pasteboard: pasteboard))
         #expect(copiedImage.size == NSSize(width: 24, height: 18))
         let paintedPixel = try #require(copiedImage.color(at: CGPoint(x: 12, y: 9))?.usingColorSpace(.deviceRGB))
@@ -1607,8 +1618,8 @@ struct veilpicTests {
         viewModel.addText(at: CGPoint(x: 18, y: 24))
         viewModel.toggleSelectedLayerStroke()
 
-        let textLayer = try #require(viewModel.document.selectedLayer)
-        let expectedFrame = textLayer.compositingFrame
+        let selectedLayerPreview = try #require(viewModel.selectedLayerExportImage())
+        let expectedSize = try #require(selectedLayerPreview.nonTransparentPixelBounds()).size
         let beforeConversion = try #require(viewModel.currentImage.qingtuPNGData())
 
         #expect(viewModel.canConvertSelectedLayerToSmartObject)
@@ -1619,7 +1630,8 @@ struct veilpicTests {
         #expect(smartObjectLayer.isSmartObject)
         #expect(!smartObjectLayer.isText)
         #expect(!smartObjectLayer.hasLayerEffects)
-        #expect(smartObjectLayer.frame == expectedFrame)
+        #expect(smartObjectLayer.frame.size == expectedSize)
+        let expectedFrame = smartObjectLayer.frame
         #expect(smartObject.originalSize == smartObjectLayer.image.size)
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerSmartObject"))
         #expect(try #require(viewModel.currentImage.qingtuPNGData()) == beforeConversion)

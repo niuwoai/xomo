@@ -7490,7 +7490,7 @@ final class ImageEditorViewModel: ObservableObject {
         let cropBounds = normalizedSmartObjectBounds(contentBounds ?? fallbackBounds, canvasBounds: canvasBounds)
         guard cropBounds.width > 0,
               cropBounds.height > 0,
-              let smartSource = sourceCanvas.cropped(to: cropBounds)?.normalizedBitmapImage()
+              let smartSource = sourceCanvas.croppedUsingImagePixelCoordinates(to: cropBounds)?.normalizedBitmapImage()
         else { return nil }
 
         var replacement = ImageEditorLayer.blank(

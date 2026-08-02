@@ -593,7 +593,7 @@ extension ImageEditorViewModel {
 
         let bitmapContentBounds = renderedImage.nonTransparentPixelBounds()
         let image = bitmapContentBounds
-            .flatMap { renderedImage.cropped(to: $0) }
+            .flatMap { renderedImage.croppedUsingImagePixelCoordinates(to: $0) }
             ?? renderedImage
         let contentBounds = bitmapContentBounds.map { bitmapBounds in
             CGRect(
@@ -714,6 +714,36 @@ extension ImageEditorViewModel {
         statusText = edits.count == 1
             ? L10n.text(statusKey)
             : L10n.format(selectedStatusKey, edits.count)
+    }
+}
+
+extension NSImage {
+    /// `nonTransparentPixelBounds()` scans rows in the CGImage's native pixel
+    /// order. Crop that same CGImage directly so AppKit's bottom-left drawing
+    /// coordinates cannot mirror the requested transparent-content bounds.
+    func croppedUsingImagePixelCoordinates(to bounds: CGRect) -> NSImage? {
+        guard let source = cgImage(forProposedRect: nil, context: nil, hints: nil),
+              size.width > 0,
+              size.height > 0
+        else { return nil }
+
+        let scaleX = CGFloat(source.width) / size.width
+        let scaleY = CGFloat(source.height) / size.height
+        let pixelBounds = CGRect(
+            x: bounds.minX * scaleX,
+            y: bounds.minY * scaleY,
+            width: bounds.width * scaleX,
+            height: bounds.height * scaleY
+        ).integral.intersection(CGRect(x: 0, y: 0, width: source.width, height: source.height))
+        guard pixelBounds.width > 0,
+              pixelBounds.height > 0,
+              let cropped = source.cropping(to: pixelBounds)
+        else { return nil }
+
+        return NSImage(
+            cgImage: cropped,
+            size: NSSize(width: pixelBounds.width / scaleX, height: pixelBounds.height / scaleY)
+        )
     }
 }
 
