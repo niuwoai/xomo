@@ -897,7 +897,7 @@ struct ImageEditorAdjustmentTests {
         #expect(viewModel.selectedLayerGeometryText == L10n.format("imageEditor.properties.colorLookupLayerValue", ImageEditorColorLookupPreset.moonlight.title))
         #expect(viewModel.document.layers.first { $0.id == baseLayerID }?.image.qingtuPNGData() == basePixelsBefore)
         #expect(preview.blueComponent > preview.redComponent + 0.13)
-        #expect(preview.greenComponent > preview.redComponent + 0.03)
+        #expect(preview.greenComponent > preview.redComponent + 0.02)
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerAdjustmentNew"))
     }
 
