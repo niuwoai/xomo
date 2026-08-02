@@ -28,8 +28,8 @@ struct ImageEditorQuickMaskPreferencesTests {
                 target: .maskedAreas
             )
         )
-        #expect((maskedOverlay.color(at: CGPoint(x: 0, y: 0))?.alphaComponent ?? 0) < 0.05)
-        #expect((maskedOverlay.color(at: CGPoint(x: 1, y: 0))?.alphaComponent ?? 0) > 0.2)
+        #expect((quickMaskColor(maskedOverlay, x: 0, y: 0)?.alphaComponent ?? 0) < 0.05)
+        #expect((quickMaskColor(maskedOverlay, x: 1, y: 0)?.alphaComponent ?? 0) > 0.2)
 
         let selectedOverlay = try #require(
             selection.quickMaskOverlayImage(
@@ -40,11 +40,11 @@ struct ImageEditorQuickMaskPreferencesTests {
             )
         )
         let selectedColor = try #require(
-            selectedOverlay.color(at: CGPoint(x: 0, y: 0))?.usingColorSpace(.deviceRGB)
+            quickMaskColor(selectedOverlay, x: 0, y: 0)?.usingColorSpace(.deviceRGB)
         )
         #expect(selectedColor.blueComponent > 0.9)
         #expect(selectedColor.alphaComponent > 0.7)
-        #expect((selectedOverlay.color(at: CGPoint(x: 1, y: 0))?.alphaComponent ?? 0) < 0.05)
+        #expect((quickMaskColor(selectedOverlay, x: 1, y: 0)?.alphaComponent ?? 0) < 0.05)
     }
 
     @Test func preferencesRoundTripAndClampOpacity() throws {
@@ -70,14 +70,14 @@ struct ImageEditorQuickMaskPreferencesTests {
     @Test func viewModelPersistsOptionsAndRefreshesActiveOverlay() throws {
         let (defaults, suiteName) = temporaryDefaults()
         defer { defaults.removePersistentDomain(forName: suiteName) }
-        let image = NSImage.transparent(size: CGSize(width: 4, height: 2))
+        let image = NSImage.transparent(size: CGSize(width: 8, height: 6))
         let firstViewModel = ImageEditorViewModel(
             sourceName: "source.png",
             image: image,
             preferencesDefaults: defaults
         ) { _ in }
 
-        firstViewModel.createRectSelection(from: .zero, to: CGPoint(x: 2, y: 2))
+        firstViewModel.createRectSelection(from: CGPoint(x: 1, y: 1), to: CGPoint(x: 5, y: 4))
         firstViewModel.toggleQuickMaskMode()
         firstViewModel.setQuickMaskOverlayTarget(.selectedAreas)
         firstViewModel.setQuickMaskOverlayColor(.systemBlue)
@@ -85,11 +85,11 @@ struct ImageEditorQuickMaskPreferencesTests {
 
         let overlay = try #require(firstViewModel.quickMaskOverlayImage)
         let selectedColor = try #require(
-            overlay.color(at: CGPoint(x: 1, y: 1))?.usingColorSpace(.deviceRGB)
+            quickMaskColor(overlay, x: 2, y: 2)?.usingColorSpace(.deviceRGB)
         )
         #expect(selectedColor.blueComponent > 0.9)
         #expect(selectedColor.alphaComponent > 0.2)
-        #expect((overlay.color(at: CGPoint(x: 3, y: 1))?.alphaComponent ?? 0) < 0.05)
+        #expect((quickMaskColor(overlay, x: 7, y: 2)?.alphaComponent ?? 0) < 0.05)
 
         let restoredViewModel = ImageEditorViewModel(
             sourceName: "restored.png",
@@ -107,5 +107,15 @@ struct ImageEditorQuickMaskPreferencesTests {
     private func temporaryDefaults() -> (UserDefaults, String) {
         let suiteName = "ImageEditorQuickMaskPreferencesTests.\(UUID().uuidString)"
         return (UserDefaults(suiteName: suiteName) ?? .standard, suiteName)
+    }
+
+    private func quickMaskColor(_ image: NSImage, x: Int, y: Int) -> NSColor? {
+        guard let bitmap = image.representations.compactMap({ $0 as? NSBitmapImageRep }).first,
+              x >= 0,
+              y >= 0,
+              x < bitmap.pixelsWide,
+              y < bitmap.pixelsHigh
+        else { return nil }
+        return bitmap.colorAt(x: x, y: bitmap.pixelsHigh - y - 1)
     }
 }
