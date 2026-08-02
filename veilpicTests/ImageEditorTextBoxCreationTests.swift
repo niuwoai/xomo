@@ -194,7 +194,7 @@ struct ImageEditorTextBoxCreationTests {
         viewModel.finishResizingSelectedLayer()
 
         let resizedFrame = try #require(viewModel.selectedLayerTransformFrame)
-        #expect(resizedFrame.width == originalFrame.width + 30)
+        #expect(abs(resizedFrame.width - (originalFrame.width + 30)) < 0.001)
         #expect(abs(resizedFrame.width / resizedFrame.height - originalFrame.width / originalFrame.height) < 0.001)
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerResize"))
         #expect(viewModel.document.selectedLayer?.textContent?.layoutMode == .point)
