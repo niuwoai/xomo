@@ -876,7 +876,7 @@ enum XomoFigmaNodeMaterializer {
     private static func nsColor(_ color: XomoFigmaPlanColor?, fallback: NSColor) -> NSColor {
         guard let color else { return fallback }
         return NSColor(
-            calibratedRed: CGFloat(color.red),
+            srgbRed: CGFloat(color.red),
             green: CGFloat(color.green),
             blue: CGFloat(color.blue),
             alpha: CGFloat(color.alpha)

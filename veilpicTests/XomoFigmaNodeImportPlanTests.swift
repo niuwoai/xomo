@@ -431,8 +431,8 @@ struct XomoFigmaNodeImportPlanTests {
         )
         let shape = try #require(materialized.layers.first { $0.name == "Layered Solid" }?.shapeContent)
         #expect(abs(shape.fillOpacity - 0.75) < 0.001)
-        #expect(abs((shape.fillColor.usingColorSpace(.deviceRGB)?.redComponent ?? 0) - (1.0 / 3.0)) < 0.001)
-        #expect(abs((shape.fillColor.usingColorSpace(.deviceRGB)?.blueComponent ?? 0) - (2.0 / 3.0)) < 0.001)
+        #expect(abs((shape.fillColor.usingColorSpace(.sRGB)?.redComponent ?? 0) - (1.0 / 3.0)) < 0.001)
+        #expect(abs((shape.fillColor.usingColorSpace(.sRGB)?.blueComponent ?? 0) - (2.0 / 3.0)) < 0.001)
     }
 
     @Test func circularRadialGradientsMapWhileEllipticalAxesDegrade() throws {
