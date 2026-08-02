@@ -1333,9 +1333,15 @@ struct veilpicTests {
             second: CGRect = CGRect(x: 60, y: 50, width: 30, height: 20),
             third: CGRect = CGRect(x: 150, y: 130, width: 10, height: 30)
         ) throws {
-            viewModel.document.layers[try #require(viewModel.document.layers.firstIndex { $0.id == firstID })].frame = first
-            viewModel.document.layers[try #require(viewModel.document.layers.firstIndex { $0.id == secondID })].frame = second
-            viewModel.document.layers[try #require(viewModel.document.layers.firstIndex { $0.id == thirdID })].frame = third
+            let firstIndex = try #require(viewModel.document.layers.firstIndex { $0.id == firstID })
+            let secondIndex = try #require(viewModel.document.layers.firstIndex { $0.id == secondID })
+            let thirdIndex = try #require(viewModel.document.layers.firstIndex { $0.id == thirdID })
+            viewModel.document.layers[firstIndex].image = testImage(color: .systemRed, size: first.size)
+            viewModel.document.layers[secondIndex].image = testImage(color: .systemGreen, size: second.size)
+            viewModel.document.layers[thirdIndex].image = testImage(color: .systemBlue, size: third.size)
+            viewModel.document.layers[firstIndex].frame = first
+            viewModel.document.layers[secondIndex].frame = second
+            viewModel.document.layers[thirdIndex].frame = third
         }
 
         try setFrames()
