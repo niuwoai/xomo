@@ -159,7 +159,7 @@ struct XomoFigmaLinkImportTests {
             encoding: .utf8
         )
 
-        #expect(source.contains("selectedLayerFigmaVariableBindings"))
+        #expect(source.contains("selectedLayersFigmaVariableBindings"))
         #expect(source.contains("image-editor-copy-figma-variables"))
         #expect(source.contains("image-editor-copy-figma-variable-\\(binding.id)"))
         #expect(source.contains("imageEditor.properties.figmaVariables"))

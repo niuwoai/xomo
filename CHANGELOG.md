@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.12.0-rc652 - 2026-08-02
+
+### Fixed
+
+- Figma 变量属性面板回归从旧的单层 `selectedLayerFigmaVariableBindings` 更新为当前多选 `selectedLayersFigmaVariableBindings`，不再将批量去重展示误报为面板缺失。
+
 ## 2.12.0-rc651 - 2026-08-02
 
 ### Fixed

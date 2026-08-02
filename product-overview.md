@@ -1,6 +1,8 @@
 # 像界（Xomo）产品概览
 
-> 最后更新：2026-08-02 | 当前版本：v2.12.0-rc651
+> 最后更新：2026-08-02 | 当前版本：v2.12.0-rc652
+
+v2.12.0-rc652 跟进 Figma 变量绑定属性面板的多选语义：UI 契约现在验证 `selectedLayersFigmaVariableBindings`，保留批量去重展示、单项/全部复制和按钮不抢键盘焦点。
 
 v2.12.0-rc651 更新 Figma 链接导入的 UI 源码契约：预览面板现在明确验证通过 `XomoFigmaLinkImportSheet(viewModel: viewModel)` 注入当前编辑文档，不再匹配已过时的无参构造式。
 
