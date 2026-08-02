@@ -1035,7 +1035,12 @@ v1.457.0-rc15 让图层列表成为右侧图层页首屏主体，搜索、选层
 ```
 ruby scripts/run_tests_isolated.rb            # 串行，最稳（默认）
 ruby scripts/run_tests_isolated.rb --jobs 4   # 多个独立进程并行加速（各进程仍只跑一个测试，安全）
+ruby scripts/run_tests_isolated.rb --list     # 仅列出测试，不启动 Xcode
+ruby scripts/run_tests_isolated.rb --skip-build --fail-fast \
+  --start-after 'SuiteName/testName'           # 修复期间从已验证断点之后续跑
 ```
+
+`--start-after` 只用于完整门禁修复过程中的断点续跑，避免外部构建占用或 fail-fast 后重复执行已验证区段；正式发布结论仍必须由不带断点参数、从第 1 项开始的完整报告证明。
 
 后续如要恢复「直接 `xcodebuild test` 整套并行也全绿」，需要把产品与测试两侧的渲染 / 取色统一迁移到显式 `sRGB/deviceRGB` 的 `CGColorSpace` + `CGContext`，弃用 `NSColor` calibrated/named 颜色与 `lockFocus`，属于较大改造，暂列为待办。
 

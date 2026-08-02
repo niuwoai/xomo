@@ -22,6 +22,8 @@
 #   ruby scripts/run_tests_isolated.rb --jobs 4        # 4 个独立进程并行（更快）
 #   ruby scripts/run_tests_isolated.rb --group-by-suite # 每个测试套件一个独立进程
 #   ruby scripts/run_tests_isolated.rb --filter Filter # 只跑名字含 Filter 的测试
+#   ruby scripts/run_tests_isolated.rb --start-after Suite/test # 从已通过断点之后续跑
+#   ruby scripts/run_tests_isolated.rb --list            # 只列出将运行的测试，不启动 Xcode
 #   ruby scripts/run_tests_isolated.rb --skip-build    # 复用上次 build-for-testing 产物
 #   XOMO_DERIVED_DATA_PATH=/tmp/xomo-tests ruby scripts/run_tests_isolated.rb --skip-build
 #
@@ -52,12 +54,16 @@ options = {
   skip_build: false,
   stop_on_first_failure: false,
   group_by_suite: false,
+  start_after: nil,
+  list_only: false,
 }
 
 OptionParser.new do |o|
   o.banner = 'Usage: ruby scripts/run_tests_isolated.rb [options]'
   o.on('--jobs N', Integer, '并行独立进程数（默认 1 = 串行，最稳）') { |v| options[:jobs] = [v, 1].max }
   o.on('--filter SUBSTR', '只运行标识符包含该子串的测试') { |v| options[:filter] = v }
+  o.on('--start-after IDENTIFIER', '跳过指定测试及之前的测试，从下一项继续') { |v| options[:start_after] = v }
+  o.on('--list', '只列出筛选和断点处理后的测试标识符，不构建或运行') { options[:list_only] = true }
   o.on('--out DIR', '报告输出目录（默认 test-reports/）') { |v| options[:out_dir] = v }
   o.on('--skip-build', '跳过 build-for-testing，复用已有产物') { options[:skip_build] = true }
   o.on('--group-by-suite', '每个测试套件一个独立进程，兼顾隔离与完整门禁速度') {
@@ -183,8 +189,24 @@ end
 tests = enumerate_tests(TESTS_DIR)
 tests.select! { |t| "#{t[:suite]}/#{t[:method]}".include?(options[:filter]) } if options[:filter]
 
+if options[:start_after]
+  anchor_index = tests.index do |test|
+    short_identifier = "#{test[:suite]}/#{test[:method]}"
+    full_identifier = "#{TEST_TARGET}/#{short_identifier}()"
+    options[:start_after] == short_identifier || options[:start_after] == full_identifier
+  end
+  abort "找不到 --start-after 指定的测试：#{options[:start_after]}" unless anchor_index
+
+  tests = tests.drop(anchor_index + 1)
+end
+
 if tests.empty?
   abort '没有匹配到任何测试。请检查 --filter 或测试源码。'
+end
+
+if options[:list_only]
+  tests.each { |test| puts "#{TEST_TARGET}/#{test[:suite]}/#{test[:method]}()" }
+  exit 0
 end
 
 work_items = if options[:group_by_suite]
