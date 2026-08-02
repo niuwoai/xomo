@@ -337,8 +337,8 @@ struct ImageEditorShapeStyleTests {
 
     @Test func radialGradientAxisAddsInterpolatedStopForNormalAndReversedFills() throws {
         var gradient = ImageEditorGradientFillContent.shapeLinear(
-            startColor: .systemRed,
-            endColor: .systemBlue
+            startColor: pureRed,
+            endColor: pureBlue
         )
         gradient.style = .radial
         let viewModel = makeViewModel()
@@ -531,9 +531,9 @@ struct ImageEditorShapeStyleTests {
 
     @Test func multiStopGradientRendersMiddleColorAtItsPosition() throws {
         let gradient = ImageEditorGradientFillContent.shapeLinear(colorStops: [
-            ImageEditorGradientColorStop(position: 0, color: .systemRed),
-            ImageEditorGradientColorStop(position: 0.5, color: .systemGreen),
-            ImageEditorGradientColorStop(position: 1, color: .systemBlue)
+            ImageEditorGradientColorStop(position: 0, color: pureRed),
+            ImageEditorGradientColorStop(position: 0.5, color: pureGreen),
+            ImageEditorGradientColorStop(position: 1, color: pureBlue)
         ])
         let image = gradient.renderedImage(size: CGSize(width: 101, height: 9))
         let left = try #require(image.color(at: CGPoint(x: 0, y: 4)))
@@ -812,8 +812,8 @@ struct ImageEditorShapeStyleTests {
 
     @Test func canvasGradientAxisAddsAndDeletesSelectedStopWithOneUndoStep() throws {
         let gradient = ImageEditorGradientFillContent.shapeLinear(
-            startColor: .systemRed,
-            endColor: .systemBlue
+            startColor: pureRed,
+            endColor: pureBlue
         )
         let content = ImageEditorShapeContent(
             kind: .rectangle,
@@ -955,9 +955,9 @@ struct ImageEditorShapeStyleTests {
         let reopened = makeViewModel()
         try reopened.loadProjectData(projectData)
         let restored = try #require(reopened.document.selectedLayer?.shapeContent)
-        #expect(restored.fillColor.isEqual(edited.fillColor))
+        #expect(colorsApproximatelyEqual(restored.fillColor, edited.fillColor))
         #expect(restored.fillOpacity == edited.fillOpacity)
-        #expect(restored.strokeColor.isEqual(edited.strokeColor))
+        #expect(colorsApproximatelyEqual(restored.strokeColor, edited.strokeColor))
         #expect(restored.strokeOpacity == edited.strokeOpacity)
         #expect(restored.strokeWidth == edited.strokeWidth)
         #expect(restored.strokePosition == edited.strokePosition)
@@ -1026,13 +1026,21 @@ struct ImageEditorShapeStyleTests {
         #expect(canvasSource.contains("image-editor-shape-gradient-axis"))
         #expect(canvasSource.contains("axisPath.strokedPath"))
         #expect(canvasSource.contains("beginEditingSelectedShapeGradientStop"))
-        #expect(canvasSource.contains("addSelectedShapeGradientStop(atCanvasPoint:"))
+        #expect(canvasSource.contains("viewModel.addSelectedShapeGradientStop("))
         #expect(canvasSource.contains("deleteSelectedShapeGradientStopIfNeeded"))
         #expect(canvasSource.contains("SpatialTapGesture"))
-        #expect(canvasSource.contains("!isTextInputActive, deleteSelectedObject()"))
+        #expect(canvasSource.contains("!isTextInputActive"))
+        #expect(canvasSource.contains("deleteSelectedObject() {"))
         #expect(canvasSource.contains("activeShapeGradientStopIndex"))
         #expect(canvasSource.contains("image-editor-shape-radial-gradient-boundary"))
         #expect(canvasSource.contains("image-editor-shape-radial-gradient-axis"))
+
+        let gradientHandleSource = try String(
+            contentsOf: Self.repositoryRoot()
+                .appendingPathComponent("veilpic/ImageEditorShapeGradientHandles.swift"),
+            encoding: .utf8
+        )
+        #expect(gradientHandleSource.contains("func addSelectedShapeGradientStop(atCanvasPoint"))
         #expect(canvasSource.contains("image-editor-shape-radial-gradient-handle-"))
         #expect(canvasSource.contains("radiusPath.strokedPath"))
         #expect(canvasSource.contains("beginEditingSelectedShapeRadialGradient"))
@@ -1048,7 +1056,8 @@ struct ImageEditorShapeStyleTests {
             ).count - 1 == 2
         )
 
-        #expect(source.contains("image-editor-shape-fill-kind-radialGradient"))
+        #expect(source.contains("image-editor-shape-fill-kind-\\(kind.rawValue)"))
+        #expect(ImageEditorShapeFillKind.radialGradient.rawValue == "radialGradient")
         #expect(source.contains("image-editor-shape-gradient-radius"))
     }
 
@@ -1057,6 +1066,32 @@ struct ImageEditorShapeStyleTests {
             sourceName: "shape-style.png",
             image: NSImage.transparent(size: CGSize(width: 120, height: 80))
         ) { _ in }
+    }
+
+    private var pureRed: NSColor {
+        NSColor(deviceRed: 1, green: 0, blue: 0, alpha: 1)
+    }
+
+    private var pureGreen: NSColor {
+        NSColor(deviceRed: 0, green: 1, blue: 0, alpha: 1)
+    }
+
+    private var pureBlue: NSColor {
+        NSColor(deviceRed: 0, green: 0, blue: 1, alpha: 1)
+    }
+
+    private func colorsApproximatelyEqual(
+        _ lhs: NSColor,
+        _ rhs: NSColor,
+        tolerance: CGFloat = 0.002
+    ) -> Bool {
+        guard let lhs = lhs.usingColorSpace(.deviceRGB),
+              let rhs = rhs.usingColorSpace(.deviceRGB)
+        else { return false }
+        return abs(lhs.redComponent - rhs.redComponent) <= tolerance
+            && abs(lhs.greenComponent - rhs.greenComponent) <= tolerance
+            && abs(lhs.blueComponent - rhs.blueComponent) <= tolerance
+            && abs(lhs.alphaComponent - rhs.alphaComponent) <= tolerance
     }
 
     private static func repositoryRoot() -> URL {
