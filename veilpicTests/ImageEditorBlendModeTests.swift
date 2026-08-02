@@ -91,18 +91,18 @@ struct ImageEditorBlendModeTests {
         let size = NSSize(width: 12, height: 12)
         let base = solidImage(
             size: size,
-            color: NSColor(calibratedRed: 0.20, green: 0.50, blue: 0.90, alpha: 1)
+            color: NSColor(deviceRed: 0.20, green: 0.50, blue: 0.90, alpha: 1)
         )
         let overlay = solidImage(
             size: size,
-            color: NSColor(calibratedRed: 0.50, green: 0.25, blue: 0.30, alpha: 1)
+            color: NSColor(deviceRed: 0.50, green: 0.25, blue: 0.30, alpha: 1)
         )
         let samplePoint = CGPoint(x: 6, y: 6)
-        let sampledBase = try #require(base.color(at: samplePoint))
-        let sampledOverlay = try #require(overlay.color(at: samplePoint))
+        let sampledBase = try #require(base.color(at: samplePoint)?.usingColorSpace(.deviceRGB))
+        let sampledOverlay = try #require(overlay.color(at: samplePoint)?.usingColorSpace(.deviceRGB))
 
         let divideImage = try #require(base.blended(with: overlay, mode: .divide, opacity: 1))
-        let divide = try #require(divideImage.color(at: samplePoint))
+        let divide = try #require(divideImage.color(at: samplePoint)?.usingColorSpace(.deviceRGB))
         let expectedDivide = ImageEditorBlendMode.divide.blend(
             baseRed: sampledBase.redComponent,
             baseGreen: sampledBase.greenComponent,
@@ -116,7 +116,7 @@ struct ImageEditorBlendModeTests {
         #expect(abs(divide.blueComponent - expectedDivide.blue) < 0.02)
 
         let subtractImage = try #require(base.blended(with: overlay, mode: .subtract, opacity: 1))
-        let subtract = try #require(subtractImage.color(at: samplePoint))
+        let subtract = try #require(subtractImage.color(at: samplePoint)?.usingColorSpace(.deviceRGB))
         let expectedSubtract = ImageEditorBlendMode.subtract.blend(
             baseRed: sampledBase.redComponent,
             baseGreen: sampledBase.greenComponent,
@@ -193,11 +193,9 @@ struct ImageEditorBlendModeTests {
     }
 
     private func solidImage(size: NSSize, color: NSColor) -> NSImage {
-        let image = NSImage(size: size)
-        image.lockFocus()
-        color.setFill()
-        NSRect(origin: .zero, size: size).fill()
-        image.unlockFocus()
-        return image
+        NSImage.rendered(size: size) { rect in
+            color.setFill()
+            rect.fill()
+        } ?? NSImage.transparent(size: size)
     }
 }
