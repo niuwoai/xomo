@@ -38,6 +38,7 @@ require 'optparse'
 require 'fileutils'
 require 'open3'
 require 'thread'
+require 'timeout'
 
 PROJECT     = 'veilpic.xcodeproj'
 SCHEME      = 'veilpic'
@@ -46,6 +47,7 @@ TEST_TARGET = 'veilpicTests'
 TESTS_DIR   = File.join(__dir__, '..', TEST_TARGET)
 DERIVED_DATA_PATH = ENV.fetch('XOMO_DERIVED_DATA_PATH', '/tmp/veilpic-isolated-tests')
 INFRASTRUCTURE_RETRY_LIMIT = 2
+DEFAULT_TEST_TIMEOUT_SECONDS = 180
 
 options = {
   jobs: 1,
@@ -56,6 +58,7 @@ options = {
   group_by_suite: false,
   start_after: nil,
   list_only: false,
+  test_timeout: DEFAULT_TEST_TIMEOUT_SECONDS,
 }
 
 OptionParser.new do |o|
@@ -70,6 +73,9 @@ OptionParser.new do |o|
     options[:group_by_suite] = true
   }
   o.on('--fail-fast', '出现第一个失败即停止') { options[:stop_on_first_failure] = true }
+  o.on('--test-timeout SECONDS', Integer, "单个执行组超时（默认 #{DEFAULT_TEST_TIMEOUT_SECONDS} 秒）") do |v|
+    options[:test_timeout] = [v, 1].max
+  end
   o.on('-h', '--help', '显示帮助') { puts o; exit 0 }
 end.parse!
 
@@ -125,8 +131,35 @@ def build_for_testing
   puts '==> 构建完成。'
 end
 
+def capture_with_timeout(args, timeout_seconds)
+  output = +''
+  status = nil
+  timed_out = false
+
+  Open3.popen2e(*args, pgroup: true) do |stdin, stream, wait_thread|
+    stdin.close
+    reader = Thread.new { stream.each_line { |line| output << line } }
+    begin
+      Timeout.timeout(timeout_seconds) { status = wait_thread.value }
+    rescue Timeout::Error
+      timed_out = true
+      Process.kill('TERM', -wait_thread.pid)
+      unless wait_thread.join(5)
+        Process.kill('KILL', -wait_thread.pid)
+        wait_thread.join
+      end
+      status = wait_thread.value
+      output << "\nXOMO_TEST_INFRASTRUCTURE_TIMEOUT: exceeded #{timeout_seconds}s\n"
+    ensure
+      reader.join
+    end
+  end
+
+  [output, status, timed_out]
+end
+
 # 运行单个测试；返回 result Hash
-def run_one(test, logs_dir)
+def run_one(test, logs_dir, timeout_seconds)
   test_selector = test[:method] ? "#{test[:method]}()" : nil
   identifier = [TEST_TARGET, test[:suite], test_selector].compact.join('/')
   log_stem = [test[:suite], test[:method]].compact.join('.')
@@ -143,9 +176,9 @@ def run_one(test, logs_dir)
   status = nil
   loop do
     FileUtils.rm_rf(result_bundle_path)
-    out, status = Open3.capture2e(*args)
+    out, status, timed_out = capture_with_timeout(args, timeout_seconds)
     output_chunks << out
-    break if status.success?
+    break if status.success? && !timed_out
     break unless attempts < INFRASTRUCTURE_RETRY_LIMIT && transient_xcode_failure?(out, result_bundle_path)
 
     attempts += 1
@@ -176,6 +209,7 @@ def run_one(test, logs_dir)
 end
 
 def transient_xcode_failure?(output, result_bundle_path)
+  return true if output.include?('XOMO_TEST_INFRASTRUCTURE_TIMEOUT')
   return false if File.exist?(result_bundle_path)
 
   output.include?('DVTAssertions: ASSERTION FAILURE') ||
@@ -246,7 +280,7 @@ workers = Array.new(options[:jobs]) do
       end
       break if stop
       idx, test = item
-      res = run_one(test, logs_dir)
+      res = run_one(test, logs_dir, options[:test_timeout])
       results_mutex.synchronize do
         results << res
         done_count += 1

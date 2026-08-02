@@ -36,4 +36,17 @@ _stdout, invalid_stderr, invalid_status = Open3.capture3(
 assert(!invalid_status.success?, '不存在的断点必须返回失败')
 assert(invalid_stderr.include?('找不到 --start-after 指定的测试'), '不存在断点应返回可诊断错误')
 
+help_stdout, help_stderr, help_status = Open3.capture3(
+  RbConfig.ruby,
+  RUNNER,
+  '--help',
+  chdir: ROOT
+)
+assert(help_status.success?, "读取运行器帮助失败：#{help_stderr}")
+assert(help_stdout.include?('--test-timeout SECONDS'), '运行器必须暴露单测试超时选项')
+
+runner_source = File.read(RUNNER, encoding: 'UTF-8')
+assert(runner_source.include?("Process.kill('TERM', -wait_thread.pid)"), '超时后必须终止整个 Xcode 进程组')
+assert(runner_source.include?('XOMO_TEST_INFRASTRUCTURE_TIMEOUT'), '超时必须被归类为可重试的基础设施错误')
+
 puts 'run_tests_isolated contract: PASS'
