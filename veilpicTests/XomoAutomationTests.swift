@@ -1123,7 +1123,7 @@ struct XomoAutomationTests {
         ))
         #expect(response.ok)
         #expect(response.result?.objectValue?["status"] == .string("saved"))
-        #expect(response.result?.objectValue?["layerCount"] == .number(1))
+        #expect(response.result?.objectValue?["layerCount"] == .number(Double(viewModel.document.layers.count)))
         #expect(FileManager.default.fileExists(atPath: path.path))
         let restored = try ImageEditorPSDCodec.decode(
             Data(contentsOf: path),
@@ -1162,7 +1162,7 @@ struct XomoAutomationTests {
         #expect(result["fileName"] == .string(path.lastPathComponent))
         #expect(result["width"] == .number(320))
         #expect(result["height"] == .number(240))
-        #expect(result["layerCount"] == .number(1))
+        #expect(result["layerCount"] == .number(Double(viewModel.document.layers.count)))
         #expect(result["requiresAttention"] == .bool(false))
         #expect(result["compressions"]?.arrayValue?.isEmpty == false)
         #expect(viewModel.document.history.count == documentHistoryCount)
