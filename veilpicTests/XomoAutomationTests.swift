@@ -4348,6 +4348,104 @@ struct XomoAutomationTests {
         #expect(viewModel.document.selectedLayer?.textContent?.textCase == .uppercase)
     }
 
+    @Test func registryControlsFixedTextVerticalAlignmentAtomically() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+
+        let toolsResponse = registry.execute(request(operation: "tools"))
+        guard case .array(let tools) = toolsResponse.result else {
+            Issue.record("Expected tool catalog")
+            return
+        }
+        let expectedValues = ImageEditorTextVerticalAlignment.allCases.map {
+            XomoJSONValue.string($0.rawValue)
+        }
+        for toolName in ["xomo.text.create", "xomo.text.update"] {
+            let tool = try #require(tools.compactMap(\.objectValue).first {
+                $0["name"] == .string(toolName)
+            })
+            #expect(
+                tool["inputSchema"]?.objectValue?["properties"]?.objectValue?["verticalAlignment"]?
+                    .objectValue?["enum"] == .array(expectedValues)
+            )
+        }
+
+        #expect(registry.execute(request(
+            operation: "call",
+            name: "xomo.text.create",
+            arguments: [
+                "text": .string("Aligned"),
+                "boxWidth": .number(120),
+                "boxHeight": .number(80),
+                "verticalAlignment": .string("bottom")
+            ]
+        )).ok)
+        #expect(viewModel.document.selectedLayer?.textContent?.verticalAlignment == .bottom)
+
+        var response = registry.execute(request(operation: "call", name: "xomo.text.get"))
+        guard case .object(let createdResult) = response.result else {
+            Issue.record("Expected text inspection result")
+            return
+        }
+        #expect(createdResult["verticalAlignment"] == .string("bottom"))
+
+        #expect(registry.execute(request(
+            operation: "call",
+            name: "xomo.text.update",
+            arguments: ["verticalAlignment": .string("center")]
+        )).ok)
+        #expect(viewModel.document.selectedLayer?.textContent?.verticalAlignment == .center)
+        viewModel.undo()
+        #expect(viewModel.document.selectedLayer?.textContent?.verticalAlignment == .bottom)
+
+        let historyCount = viewModel.document.history.count
+        response = registry.execute(request(
+            operation: "call",
+            name: "xomo.text.update",
+            arguments: [
+                "autoHeight": .bool(true),
+                "verticalAlignment": .string("bottom")
+            ]
+        ))
+        #expect(!response.ok)
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.document.selectedLayer?.textContent?.boxHeight == 80)
+        #expect(viewModel.document.selectedLayer?.textContent?.verticalAlignment == .bottom)
+
+        #expect(registry.execute(request(
+            operation: "call",
+            name: "xomo.text.update",
+            arguments: ["autoHeight": .bool(true)]
+        )).ok)
+        #expect(viewModel.document.selectedLayer?.textContent?.boxHeight == 0)
+        #expect(viewModel.document.selectedLayer?.textContent?.verticalAlignment == .top)
+        viewModel.undo()
+
+        let layerCount = viewModel.document.layers.count
+        response = registry.execute(request(
+            operation: "call",
+            name: "xomo.text.create",
+            arguments: [
+                "text": .string("Point"),
+                "verticalAlignment": .string("center")
+            ]
+        ))
+        #expect(!response.ok)
+        #expect(viewModel.document.layers.count == layerCount)
+
+        let invalidUpdateHistoryCount = viewModel.document.history.count
+        response = registry.execute(request(
+            operation: "call",
+            name: "xomo.text.update",
+            arguments: ["verticalAlignment": .string("diagonal")]
+        ))
+        #expect(!response.ok)
+        #expect(viewModel.document.layers.count == layerCount)
+        #expect(viewModel.document.history.count == invalidUpdateHistoryCount)
+        #expect(viewModel.document.selectedLayer?.textContent?.verticalAlignment == .bottom)
+    }
+
     @Test func registryConfiguresCloneStampSamplingOptions() {
         let viewModel = makeViewModel()
         let registry = XomoAutomationRegistry.shared

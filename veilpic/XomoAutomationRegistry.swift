@@ -525,6 +525,12 @@ final class XomoAutomationRegistry {
                 boxWidth: boxWidth,
                 boxHeight: boxHeight
             )
+            let verticalAlignment = try resolvedTextVerticalAlignment(
+                arguments["verticalAlignment"]?.stringValue,
+                fallback: .top,
+                boxWidth: boxWidth,
+                boxHeight: boxHeight
+            )
             viewModel.textValue = try requiredString("text", in: arguments)
             if let fontSize = arguments["fontSize"]?.doubleValue { viewModel.textSize = fontSize }
             viewModel.textParagraphSpacing = arguments["paragraphSpacing"]?.doubleValue ?? 0
@@ -532,6 +538,7 @@ final class XomoAutomationRegistry {
             viewModel.textBoxWidth = boxWidth
             viewModel.textBoxHeight = boxHeight
             viewModel.textTruncatesOverflow = truncateOverflow
+            viewModel.selectedTextVerticalAlignment = verticalAlignment
             viewModel.addText(at: optionalPoint(arguments))
         case "xomo.text.get":
             return textResult(viewModel)
@@ -1713,6 +1720,7 @@ final class XomoAutomationRegistry {
             "requiredBoxHeight": .number(content.requiredParagraphHeight),
             "hasOverflow": .bool(content.hasOverflow),
             "truncateOverflow": .bool(content.truncatesOverflow),
+            "verticalAlignment": .string(content.verticalAlignment.rawValue),
             "layoutMode": .string(content.layoutMode.rawValue),
             "alignment": .string(content.alignment.rawValue),
             "leftIndent": .number(content.leftIndent),
@@ -1746,6 +1754,12 @@ final class XomoAutomationRegistry {
             boxWidth: boxWidth,
             boxHeight: boxHeight
         )
+        let verticalAlignment = try resolvedTextVerticalAlignment(
+            arguments["verticalAlignment"]?.stringValue,
+            fallback: content.verticalAlignment,
+            boxWidth: boxWidth,
+            boxHeight: boxHeight
+        )
         viewModel.textValue = arguments["text"]?.stringValue ?? content.text
         viewModel.textSize = arguments["fontSize"]?.doubleValue ?? content.fontSize
         viewModel.textBold = arguments["bold"]?.boolValue ?? content.isBold
@@ -1759,6 +1773,7 @@ final class XomoAutomationRegistry {
         viewModel.textBoxWidth = boxWidth
         viewModel.textBoxHeight = boxHeight
         viewModel.textTruncatesOverflow = truncateOverflow
+        viewModel.selectedTextVerticalAlignment = verticalAlignment
         viewModel.textLeftIndent = arguments["leftIndent"]?.doubleValue ?? content.leftIndent
         viewModel.textRightIndent = arguments["rightIndent"]?.doubleValue ?? content.rightIndent
         viewModel.textFirstLineIndent = arguments["firstLineIndent"]?.doubleValue ?? content.firstLineIndent
@@ -1796,6 +1811,28 @@ final class XomoAutomationRegistry {
             )
         }
         return true
+    }
+
+    private func resolvedTextVerticalAlignment(
+        _ rawValue: String?,
+        fallback: ImageEditorTextVerticalAlignment,
+        boxWidth: Double,
+        boxHeight: Double
+    ) throws -> ImageEditorTextVerticalAlignment {
+        guard let rawValue else {
+            return boxWidth > 0 && boxHeight > 0 ? fallback : .top
+        }
+        guard let alignment = ImageEditorTextVerticalAlignment(rawValue: rawValue) else {
+            throw XomoAutomationCallError.invalidArgument(
+                "Unknown text vertical alignment: \(rawValue)"
+            )
+        }
+        guard boxWidth > 0, boxHeight > 0 else {
+            throw XomoAutomationCallError.invalidArgument(
+                "verticalAlignment requires a fixed-height paragraph text box"
+            )
+        }
+        return alignment
     }
 
     private func resolvedCreatedTextBoxHeight(
@@ -5764,6 +5801,7 @@ private extension XomoAutomationRegistry {
             "boxHeight": XomoAutomationSchema.number(description: "Optional fixed paragraph text box height"),
             "autoHeight": XomoAutomationSchema.boolean(description: "Use content-driven height for a paragraph text box; do not combine true with boxHeight"),
             "truncateOverflow": XomoAutomationSchema.boolean(description: "Show an ellipsis on the last visible line of a fixed-height paragraph text box"),
+            "verticalAlignment": XomoAutomationSchema.string(description: "Vertical alignment inside a fixed-height paragraph text box", values: ImageEditorTextVerticalAlignment.allCases.map(\.rawValue)),
             "x": XomoAutomationSchema.number(description: "Optional canvas x position"),
             "y": XomoAutomationSchema.number(description: "Optional canvas y position")
         ], required: ["text"]),
@@ -5783,6 +5821,7 @@ private extension XomoAutomationRegistry {
             "boxHeight": XomoAutomationSchema.number(description: "Fixed text box height, zero for auto"),
             "autoHeight": XomoAutomationSchema.boolean(description: "Enable content-driven paragraph height; false fixes the current required height unless boxHeight is supplied"),
             "truncateOverflow": XomoAutomationSchema.boolean(description: "Show an ellipsis on overflow; requires a fixed-height paragraph text box"),
+            "verticalAlignment": XomoAutomationSchema.string(description: "Vertical alignment inside a fixed-height paragraph text box", values: ImageEditorTextVerticalAlignment.allCases.map(\.rawValue)),
             "alignment": XomoAutomationSchema.string(description: "Paragraph alignment", values: ImageEditorTextAlignment.allCases.map(\.rawValue)),
             "leftIndent": XomoAutomationSchema.number(description: "Paragraph left indent"),
             "rightIndent": XomoAutomationSchema.number(description: "Paragraph right indent"),
