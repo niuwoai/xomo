@@ -961,6 +961,7 @@
 "imageEditor.properties.textBoxHeightValue" = "Text Box Height: %d px";
 "imageEditor.properties.textBoxAutoHeight" = "Auto Height";
 "imageEditor.properties.textBoxOverflow" = "Text exceeds the text box";
+"imageEditor.properties.textBoxTruncateOverflow" = "Show ellipsis on overflow";
 "imageEditor.properties.textLeftIndentValue" = "Left Indent: %d px";
 "imageEditor.properties.textRightIndentValue" = "Right Indent: %d px";
 "imageEditor.properties.textFirstLineIndentValue" = "First-Line Indent: %d px";
@@ -1509,6 +1510,8 @@
 "imageEditor.history.textBoxFitContent" = "Fit Text Box to Content";
 "imageEditor.history.textBoxExpandHeight" = "Expand Text Box Height";
 "imageEditor.history.textBoxAutoHeightEnable" = "Enable Text Box Auto Height";
+"imageEditor.history.textBoxTruncationEnable" = "Enable Text Box Overflow Ellipsis";
+"imageEditor.history.textBoxTruncationDisable" = "Disable Text Box Overflow Ellipsis";
 "imageEditor.history.textBoxAutoHeightDisable" = "Disable Text Box Auto Height";
 "imageEditor.history.layerRotate" = "Rotate Layer";
 "imageEditor.history.layerFlipHorizontal" = "Flip Layer Horizontal";
@@ -2147,6 +2150,8 @@
 "imageEditor.status.textBoxFitContent" = "Fitted %d text box(es) to their content";
 "imageEditor.status.textBoxExpandHeight" = "Expanded %d overflowing text box(es)";
 "imageEditor.status.textBoxAutoHeightEnabled" = "Enabled auto height for %d text box(es)";
+"imageEditor.status.textBoxTruncationEnabled" = "Enabled overflow ellipsis for %d text box(es)";
+"imageEditor.status.textBoxTruncationDisabled" = "Disabled overflow ellipsis for %d text box(es)";
 "imageEditor.status.textBoxAutoHeightDisabled" = "Disabled auto height for %d text box(es)";
 "imageEditor.status.layerRotated" = "Selected layer rotated";
 "imageEditor.status.layerFlipHorizontal" = "Selected layer flipped horizontally";

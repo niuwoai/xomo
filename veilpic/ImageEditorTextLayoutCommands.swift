@@ -72,6 +72,17 @@ extension ImageEditorViewModel {
         }
     }
 
+    var canSetSelectedTextBoxTruncation: Bool {
+        !fixedHeightTextBoxIndices().isEmpty
+    }
+
+    var selectedTextBoxTruncatesOverflow: Bool {
+        let indices = fixedHeightTextBoxIndices()
+        return !indices.isEmpty && indices.allSatisfy {
+            document.layers[$0].textContent?.truncatesOverflow == true
+        }
+    }
+
     func convertSelectedTextLayers(to layoutMode: ImageEditorTextLayoutMode) {
         let indices = convertibleSelectedTextLayerIndices(to: layoutMode)
         guard !indices.isEmpty else {
@@ -84,6 +95,7 @@ extension ImageEditorViewModel {
             guard var content = document.layers[index].textContent else { continue }
             content.boxWidth = layoutMode == .paragraph ? content.widthForParagraphConversion() : 0
             content.boxHeight = 0
+            content.truncatesOverflow = false
             resizeTextLayer(at: index, for: content)
         }
         if let content = document.selectedLayer?.textContent {
@@ -131,6 +143,9 @@ extension ImageEditorViewModel {
             content.boxHeight = enabled
                 ? 0
                 : min(ImageEditorTextContent.maximumBoxDimension, max(1, content.requiredParagraphHeight))
+            if enabled {
+                content.truncatesOverflow = false
+            }
             resizeTextLayer(at: index, for: content)
         }
         if let content = document.selectedLayer?.textContent {
@@ -143,6 +158,30 @@ extension ImageEditorViewModel {
             enabled
                 ? "imageEditor.status.textBoxAutoHeightEnabled"
                 : "imageEditor.status.textBoxAutoHeightDisabled",
+            indices.count
+        )
+    }
+
+    func setSelectedTextBoxesTruncateOverflow(_ enabled: Bool) {
+        textTruncatesOverflow = enabled
+        let indices = fixedHeightTextBoxIndices().filter { index in
+            document.layers[index].textContent?.truncatesOverflow != enabled
+        }
+        guard !indices.isEmpty else { return }
+
+        pushUndo()
+        for index in indices {
+            guard var content = document.layers[index].textContent else { continue }
+            content.truncatesOverflow = enabled
+            resizeTextLayer(at: index, for: content)
+        }
+        appendHistory(L10n.text(enabled
+            ? "imageEditor.history.textBoxTruncationEnable"
+            : "imageEditor.history.textBoxTruncationDisable"))
+        statusText = L10n.format(
+            enabled
+                ? "imageEditor.status.textBoxTruncationEnabled"
+                : "imageEditor.status.textBoxTruncationDisabled",
             indices.count
         )
     }
@@ -190,6 +229,12 @@ extension ImageEditorViewModel {
                   let content = layer.textContent
             else { return false }
             return content.layoutMode == .paragraph && !document.isEffectivelyPixelsLocked(layer)
+        }
+    }
+
+    private func fixedHeightTextBoxIndices() -> [Int] {
+        autoHeightTextBoxIndices().filter { index in
+            (document.layers[index].textContent?.boxHeight ?? 0) > 0
         }
     }
 

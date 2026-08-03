@@ -7889,6 +7889,17 @@ struct ImageEditorView: View {
                 .focusable(false)
                 .disabled(!viewModel.canSetSelectedTextBoxAutoHeight)
                 .accessibilityIdentifier("image-editor-text-box-auto-height")
+                Toggle(
+                    L10n.text("imageEditor.properties.textBoxTruncateOverflow"),
+                    isOn: Binding(
+                        get: { viewModel.selectedTextBoxTruncatesOverflow },
+                        set: { viewModel.setSelectedTextBoxesTruncateOverflow($0) }
+                    )
+                )
+                .toggleStyle(.checkbox)
+                .focusable(false)
+                .disabled(!viewModel.canSetSelectedTextBoxTruncation)
+                .accessibilityIdentifier("image-editor-text-box-truncate-overflow")
                 if viewModel.selectedTextBoxHasOverflow {
                     Label(
                         L10n.text("imageEditor.properties.textBoxOverflow"),

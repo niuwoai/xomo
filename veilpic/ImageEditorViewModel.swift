@@ -201,6 +201,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var textBoxHeight: Double = 0
     @Published var selectedTextAlignment: ImageEditorTextAlignment = .left
     @Published var selectedTextCase: ImageEditorTextCase = .original
+    @Published var textTruncatesOverflow: Bool = false
     @Published var textLeftIndent: Double = 0
     @Published var textRightIndent: Double = 0
     @Published var textFirstLineIndent: Double = 0
@@ -5183,7 +5184,8 @@ final class ImageEditorViewModel: ObservableObject {
             rightIndent: CGFloat(clampedTextIndent(textRightIndent)),
             firstLineIndent: CGFloat(clampedTextFirstLineIndent(textFirstLineIndent)),
             paragraphSpacing: CGFloat(clampedTextParagraphSpacing(textParagraphSpacing)),
-            textCase: selectedTextCase
+            textCase: selectedTextCase,
+            truncatesOverflow: boxWidth > 0 && textBoxHeight > 0 && textTruncatesOverflow
         )
         pushUndo()
         var layer = ImageEditorLayer.text(
@@ -5247,6 +5249,7 @@ final class ImageEditorViewModel: ObservableObject {
             content.firstLineIndent = firstLineIndent
             content.paragraphSpacing = paragraphSpacing
             content.textCase = selectedTextCase
+            content.truncatesOverflow = boxWidth > 0 && boxHeight > 0 && textTruncatesOverflow
             let layerSize = content.layerSize()
             if let mask = document.layers[index].mask, mask.size != layerSize {
                 document.layers[index].mask = mask.resized(to: layerSize)
@@ -8474,6 +8477,7 @@ final class ImageEditorViewModel: ObservableObject {
         textBoxHeight = Double(content.boxHeight)
         selectedTextAlignment = content.alignment
         selectedTextCase = content.textCase
+        textTruncatesOverflow = content.truncatesOverflow
         textLeftIndent = Double(content.leftIndent)
         textRightIndent = Double(content.rightIndent)
         textFirstLineIndent = Double(content.firstLineIndent)

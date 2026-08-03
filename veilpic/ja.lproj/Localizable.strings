@@ -961,6 +961,7 @@
 "imageEditor.properties.textBoxHeightValue" = "テキスト枠の高さ：%d px";
 "imageEditor.properties.textBoxAutoHeight" = "高さを自動調整";
 "imageEditor.properties.textBoxOverflow" = "テキストがテキスト枠からあふれています";
+"imageEditor.properties.textBoxTruncateOverflow" = "オーバーフロー時に省略記号を表示";
 "imageEditor.properties.textLeftIndentValue" = "左インデント：%d px";
 "imageEditor.properties.textRightIndentValue" = "右インデント：%d px";
 "imageEditor.properties.textFirstLineIndentValue" = "最初の行のインデント：%d px";
@@ -1509,6 +1510,8 @@
 "imageEditor.history.textBoxFitContent" = "テキスト枠を内容に合わせる";
 "imageEditor.history.textBoxExpandHeight" = "テキスト枠の高さを拡張";
 "imageEditor.history.textBoxAutoHeightEnable" = "テキスト枠の高さ自動調整を有効化";
+"imageEditor.history.textBoxTruncationEnable" = "テキスト枠のオーバーフロー省略を有効化";
+"imageEditor.history.textBoxTruncationDisable" = "テキスト枠のオーバーフロー省略を無効化";
 "imageEditor.history.textBoxAutoHeightDisable" = "テキスト枠の高さ自動調整を無効化";
 "imageEditor.history.layerRotate" = "レイヤーを回転";
 "imageEditor.history.layerFlipHorizontal" = "レイヤーを左右反転";
@@ -2147,6 +2150,8 @@
 "imageEditor.status.textBoxFitContent" = "%d 個のテキスト枠を内容に合わせました";
 "imageEditor.status.textBoxExpandHeight" = "%d 個のあふれたテキスト枠を拡張しました";
 "imageEditor.status.textBoxAutoHeightEnabled" = "%d 個のテキスト枠で高さの自動調整を有効にしました";
+"imageEditor.status.textBoxTruncationEnabled" = "%d 個のテキスト枠でオーバーフロー省略を有効にしました";
+"imageEditor.status.textBoxTruncationDisabled" = "%d 個のテキスト枠でオーバーフロー省略を無効にしました";
 "imageEditor.status.textBoxAutoHeightDisabled" = "%d 個のテキスト枠で高さの自動調整を無効にしました";
 "imageEditor.status.layerRotated" = "選択中のレイヤーを回転しました";
 "imageEditor.status.layerFlipHorizontal" = "選択中のレイヤーを左右反転しました";

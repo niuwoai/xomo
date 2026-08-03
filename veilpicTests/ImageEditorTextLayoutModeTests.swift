@@ -249,6 +249,69 @@ struct ImageEditorTextLayoutModeTests {
         #expect(viewModel.document.selectedLayer?.textContent?.boxHeight == 140)
     }
 
+    @Test func overflowEllipsisSupportsCreationSelectionBatchLocksAndUndo() throws {
+        let viewModel = editor()
+        viewModel.textValue = "First paragraph with enough text to overflow its fixed box"
+        viewModel.textBoxWidth = 80
+        viewModel.textBoxHeight = 24
+        viewModel.textTruncatesOverflow = true
+        viewModel.addText(at: CGPoint(x: 10, y: 12))
+        let firstID = try #require(viewModel.document.selectedLayerID)
+        #expect(viewModel.document.selectedLayer?.textContent?.truncatesOverflow == true)
+        #expect(viewModel.canSetSelectedTextBoxTruncation)
+        #expect(viewModel.selectedTextBoxTruncatesOverflow)
+
+        viewModel.textValue = "Second paragraph"
+        viewModel.textTruncatesOverflow = false
+        viewModel.addText(at: CGPoint(x: 100, y: 20))
+        let secondID = try #require(viewModel.document.selectedLayerID)
+
+        viewModel.textValue = "Locked paragraph"
+        viewModel.addText(at: CGPoint(x: 160, y: 30))
+        let lockedID = try #require(viewModel.document.selectedLayerID)
+        let lockedIndex = try #require(viewModel.document.layers.firstIndex { $0.id == lockedID })
+        viewModel.document.layers[lockedIndex].locksPixels = true
+
+        viewModel.selectLayer(firstID)
+        #expect(viewModel.textTruncatesOverflow)
+        viewModel.selectLayer(secondID, extendingSelection: true)
+        viewModel.selectLayer(lockedID, extendingSelection: true)
+        let historyCount = viewModel.document.history.count
+
+        viewModel.setSelectedTextBoxesTruncateOverflow(true)
+
+        let updatedFirst = try #require(text(firstID, in: viewModel))
+        let updatedSecond = try #require(text(secondID, in: viewModel))
+        let unchangedLocked = try #require(text(lockedID, in: viewModel))
+        #expect(updatedFirst.truncatesOverflow)
+        #expect(updatedSecond.truncatesOverflow)
+        #expect(!unchangedLocked.truncatesOverflow)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.textBoxTruncationEnable"))
+
+        viewModel.undo()
+        let restoredFirst = try #require(text(firstID, in: viewModel))
+        let restoredSecond = try #require(text(secondID, in: viewModel))
+        #expect(restoredFirst.truncatesOverflow)
+        #expect(!restoredSecond.truncatesOverflow)
+    }
+
+    @Test func autoHeightClearsMeaninglessOverflowEllipsis() throws {
+        let viewModel = editor()
+        viewModel.textValue = "Fixed paragraph"
+        viewModel.textBoxWidth = 90
+        viewModel.textBoxHeight = 28
+        viewModel.textTruncatesOverflow = true
+        viewModel.addText(at: CGPoint(x: 12, y: 14))
+
+        viewModel.setSelectedTextBoxesAutoHeight(true)
+
+        let content = try #require(viewModel.document.selectedLayer?.textContent)
+        #expect(content.boxHeight == 0)
+        #expect(!content.truncatesOverflow)
+        #expect(!viewModel.canSetSelectedTextBoxTruncation)
+    }
+
     private func editor() -> ImageEditorViewModel {
         ImageEditorViewModel(
             sourceName: "text-layout-mode.png",
