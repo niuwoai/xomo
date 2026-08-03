@@ -1283,6 +1283,7 @@ enum ImageEditorPSDCodec {
         return PSDExportVectorStroke(
             width: Double(content.strokeWidth),
             opacity: Double(content.strokeOpacity),
+            fillEnabled: content.fillOpacity > 0.001,
             position: content.strokePosition,
             cap: content.strokeCap,
             join: content.strokeJoin,
@@ -1305,7 +1306,7 @@ enum ImageEditorPSDCodec {
         guard let shape = layer.shapeContent,
               shape.kind == .path,
               shape.fillGradient == nil,
-              shape.fillOpacity >= 0.999,
+              shape.fillOpacity <= 0.001 || shape.fillOpacity >= 0.999,
               let color = shape.fillColor.usingColorSpace(.deviceRGB)
         else { return nil }
         return ImageEditorSolidColorFillContent(
@@ -1872,6 +1873,7 @@ enum ImageEditorPSDCodec {
                 let width = descriptor["strokeStyleLineWidth"]?.numericValue ?? 1
                 let opacity = (descriptor["strokeStyleOpacity"]?.numericValue ?? 100) / 100
                 let enabled = descriptor["strokeEnabled"]?.booleanValue ?? true
+                let fillEnabled = descriptor["fillEnabled"]?.booleanValue ?? true
                 let dashValues = descriptor["strokeStyleLineDashSet"]?.listValue ?? []
                 let parsedDashPattern = dashValues.compactMap(\.numericValue)
                 let dashPattern: [CGFloat]
@@ -1883,10 +1885,11 @@ enum ImageEditorPSDCodec {
                 } else {
                     dashPattern = []
                 }
-                guard width.isFinite, opacity.isFinite, enabled else { continue }
+                guard width.isFinite, opacity.isFinite else { continue }
                 return PSDVectorStrokeInfo(
                     width: CGFloat(max(1, min(96, width))),
-                    opacity: CGFloat(max(0, min(1, opacity))),
+                    opacity: enabled ? CGFloat(max(0, min(1, opacity))) : 0,
+                    fillEnabled: fillEnabled,
                     position: ImageEditorStrokePosition(psdValue: descriptor["strokeStyleLineAlignment"]?.enumValue),
                     cap: ImageEditorStrokeCap(psdValue: descriptor["strokeStyleLineCapType"]?.enumValue),
                     join: ImageEditorStrokeJoin(psdValue: descriptor["strokeStyleLineJoinType"]?.enumValue),
@@ -2356,6 +2359,7 @@ enum ImageEditorPSDCodec {
         to shape: inout ImageEditorShapeContent
     ) {
         guard let stroke = record.vectorStrokeInfo else { return }
+        if !stroke.fillEnabled { shape.fillOpacity = 0 }
         shape.strokeWidth = stroke.width
         shape.strokeOpacity = stroke.opacity
         shape.strokePosition = stroke.position
@@ -2711,6 +2715,7 @@ private struct PSDExportVectorMask {
 private struct PSDExportVectorStroke {
     let width: Double
     let opacity: Double
+    let fillEnabled: Bool
     let position: ImageEditorStrokePosition
     let cap: ImageEditorStrokeCap
     let join: ImageEditorStrokeJoin
@@ -2844,6 +2849,7 @@ private struct PSDVectorMaskInfo {
 private struct PSDVectorStrokeInfo {
     let width: CGFloat
     let opacity: CGFloat
+    let fillEnabled: Bool
     let position: ImageEditorStrokePosition
     let cap: ImageEditorStrokeCap
     let join: ImageEditorStrokeJoin
@@ -3248,7 +3254,7 @@ private extension Data {
         var items = [
             descriptorItem(key: "strokeStyleVersion", type: "long", payload: Data(intPayload: 2)),
             descriptorItem(key: "strokeEnabled", type: "bool", payload: Data(boolean: true)),
-            descriptorItem(key: "fillEnabled", type: "bool", payload: Data(boolean: true)),
+            descriptorItem(key: "fillEnabled", type: "bool", payload: Data(boolean: stroke.fillEnabled)),
             descriptorItem(key: "strokeStyleLineWidth", type: "UntF", payload: Data(unit: "#Pxl", value: stroke.width)),
             descriptorItem(key: "strokeStyleLineDashOffset", type: "UntF", payload: Data(unit: "#Pnt", value: 0)),
             descriptorItem(key: "strokeStyleLineAlignment", type: "enum", payload: Data.descriptorEnumPayload(enumType: "strokeStyleLineAlignment", value: stroke.position.psdValue)),

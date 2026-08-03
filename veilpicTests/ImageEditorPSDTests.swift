@@ -719,6 +719,26 @@ struct ImageEditorPSDTests {
         #expect(abs(restoredShape.strokeOpacity - 0.75) < 0.01)
     }
 
+    @Test func externalUnfilledVectorShapePreservesEditableFillStateAndRoundTrips() throws {
+        var data = try psdFixtureData("stroked-vector-shape.psd")
+        let keyRange = try #require(data.range(of: Data("fillEnabled".utf8)))
+        let booleanOffset = keyRange.upperBound + 4
+        #expect(data[booleanOffset] == 1)
+        data[booleanOffset] = 0
+
+        let document = try ImageEditorPSDCodec.decode(data, sourceName: "unfilled-vector-shape.psd")
+        let shape = try #require(document.layers.first?.shapeContent)
+        #expect(shape.fillOpacity == 0)
+        #expect(abs(shape.strokeOpacity - 0.75) < 0.01)
+
+        let exported = try ImageEditorPSDCodec.encode(document: document)
+        let reimported = try ImageEditorPSDCodec.decode(exported, sourceName: "unfilled-vector-shape-roundtrip.psd")
+        let restoredShape = try #require(reimported.layers.first?.shapeContent)
+        #expect(restoredShape.kind == .path)
+        #expect(restoredShape.fillOpacity == 0)
+        #expect(abs(restoredShape.strokeOpacity - 0.75) < 0.01)
+    }
+
     @Test func externalSmartObjectFixtureUsesNativeRasterFallback() throws {
         let data = try psdFixtureData("unsupported-features.psd")
         let document = try ImageEditorPSDCodec.decode(data, sourceName: "unsupported-features.psd")
