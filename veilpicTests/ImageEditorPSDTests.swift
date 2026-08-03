@@ -627,6 +627,27 @@ struct ImageEditorPSDTests {
         #expect(reimportedShape.editablePathAnchors.count == 3)
     }
 
+    @Test func externalUnlinkedVectorMaskStaysEditableAndRoundTrips() throws {
+        var data = try psdFixtureData("solid-vector-shape.psd")
+        let keyRange = try #require(data.range(of: Data("vmsk".utf8)))
+        let flagsOffset = keyRange.upperBound + 8
+        #expect(data[flagsOffset + 3] == 0)
+        data[flagsOffset + 3] = 2
+
+        let document = try ImageEditorPSDCodec.decode(data, sourceName: "unlinked-vector-shape.psd")
+        let layer = try #require(document.layers.first)
+        #expect(layer.isShape)
+        #expect(!layer.isMaskLinked)
+        #expect(layer.shapeContent?.editablePathAnchors.count == 3)
+
+        let exported = try ImageEditorPSDCodec.encode(document: document)
+        let reimported = try ImageEditorPSDCodec.decode(exported, sourceName: "unlinked-vector-shape-roundtrip.psd")
+        let restoredLayer = try #require(reimported.layers.first)
+        #expect(restoredLayer.isShape)
+        #expect(!restoredLayer.isMaskLinked)
+        #expect(restoredLayer.shapeContent?.editablePathAnchors.count == 3)
+    }
+
     @Test func externalGradientVectorShapeFixtureBecomesEditableShapeAndRoundTrips() throws {
         let data = try psdFixtureData("gradient-vector-shape.psd")
         let document = try ImageEditorPSDCodec.decode(data, sourceName: "gradient-vector-shape.psd")

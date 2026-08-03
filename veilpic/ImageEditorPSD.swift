@@ -1253,7 +1253,9 @@ enum ImageEditorPSDCodec {
         else { return nil }
         var payload = Data()
         payload.appendUInt32(3)
-        payload.appendUInt32(layer.isVectorMaskEnabled ? 0 : 4)
+        var flags: UInt32 = layer.isMaskLinked ? 0 : 2
+        if !layer.isVectorMaskEnabled { flags |= 4 }
+        payload.appendUInt32(flags)
         payload.appendUInt16(6)
         payload.append(Data(repeating: 0, count: 24))
         for anchors in subpaths {
@@ -2203,6 +2205,7 @@ enum ImageEditorPSDCodec {
             applyProtection(record: record, to: &layer)
             layer.isClippingMask = record.clipping != 0
             layer.blendMode = ImageEditorBlendMode(psdKey: record.blendKey)
+            layer.isMaskLinked = record.vectorMaskInfo?.isLinked ?? true
             applyMask(record: record, channels: channels, to: &layer)
             return layer
         }
@@ -2229,6 +2232,7 @@ enum ImageEditorPSDCodec {
             applyProtection(record: record, to: &layer)
             layer.isClippingMask = record.clipping != 0
             layer.blendMode = ImageEditorBlendMode(psdKey: record.blendKey)
+            layer.isMaskLinked = record.vectorMaskInfo?.isLinked ?? true
             applyMask(record: record, channels: channels, to: &layer)
             return layer
         }
@@ -2319,6 +2323,7 @@ enum ImageEditorPSDCodec {
         else { return }
         layer.vectorMask = content
         layer.isVectorMaskEnabled = info.isEnabled
+        layer.isMaskLinked = info.isLinked
     }
 
     private static func vectorMaskContent(
@@ -2374,7 +2379,7 @@ enum ImageEditorPSDCodec {
             var reader = PSDReader(data: data)
             guard try reader.uint32() == 3 else { return nil }
             let flags = try reader.uint32()
-            guard flags & 0b011 == 0 else { return nil }
+            guard flags & 0b001 == 0 else { return nil }
             var expectedKnotCount: Int?
             var currentSubpath: [ImageEditorPathAnchor] = []
             var subpaths: [[ImageEditorPathAnchor]] = []
@@ -2420,7 +2425,8 @@ enum ImageEditorPSDCodec {
             else { return nil }
             return PSDVectorMaskInfo(
                 subpaths: subpaths,
-                isEnabled: flags & 0b100 == 0
+                isEnabled: flags & 0b100 == 0,
+                isLinked: flags & 0b010 == 0
             )
         } catch {
             return nil
@@ -2844,6 +2850,7 @@ private struct PSDTextLayerInfo {
 private struct PSDVectorMaskInfo {
     let subpaths: [[ImageEditorPathAnchor]]
     let isEnabled: Bool
+    let isLinked: Bool
 }
 
 private struct PSDVectorStrokeInfo {
