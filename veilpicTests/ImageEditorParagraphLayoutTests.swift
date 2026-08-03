@@ -29,6 +29,19 @@ struct ImageEditorParagraphLayoutTests {
         #expect(ImageEditorTextAlignment.allCases.count == 4)
     }
 
+    @Test func paragraphSpacingAffectsNativeLayoutWithoutMasqueradingAsLineSpacing() {
+        var content = textContent()
+        content.text = "First paragraph\nSecond paragraph"
+        content.boxWidth = 180
+        let baselineHeight = content.requiredParagraphHeight
+
+        content.paragraphSpacing = 14
+
+        #expect(content.paragraphStyle.paragraphSpacing == 14)
+        #expect(content.paragraphStyle.lineSpacing == 0)
+        #expect(content.requiredParagraphHeight >= baselineHeight + 13)
+    }
+
     @Test func justificationAndIndentsChangeWrappedParagraphRendering() throws {
         var plain = textContent()
         plain.text = "Classic paragraph layout wraps several words across multiple lines."
@@ -122,6 +135,7 @@ struct ImageEditorParagraphLayoutTests {
         content.leftIndent = 18
         content.rightIndent = 14
         content.firstLineIndent = -4
+        content.paragraphSpacing = 18
         let encoded = try JSONEncoder().encode(ImageEditorProjectTextContent(content: content))
         let restored = try JSONDecoder().decode(ImageEditorProjectTextContent.self, from: encoded).textContent
 
@@ -129,17 +143,20 @@ struct ImageEditorParagraphLayoutTests {
         #expect(restored.leftIndent == 18)
         #expect(restored.rightIndent == 14)
         #expect(restored.firstLineIndent == -4)
+        #expect(restored.paragraphSpacing == 18)
 
         var legacyObject = try #require(JSONSerialization.jsonObject(with: encoded) as? [String: Any])
         legacyObject.removeValue(forKey: "leftIndent")
         legacyObject.removeValue(forKey: "rightIndent")
         legacyObject.removeValue(forKey: "firstLineIndent")
+        legacyObject.removeValue(forKey: "paragraphSpacing")
         let legacyData = try JSONSerialization.data(withJSONObject: legacyObject)
         let legacy = try JSONDecoder().decode(ImageEditorProjectTextContent.self, from: legacyData).textContent
 
         #expect(legacy.leftIndent == 0)
         #expect(legacy.rightIndent == 0)
         #expect(legacy.firstLineIndent == 0)
+        #expect(legacy.paragraphSpacing == 0)
     }
 
     @Test func justifiedParagraphRemainsAvailableToEditableSVGExport() throws {

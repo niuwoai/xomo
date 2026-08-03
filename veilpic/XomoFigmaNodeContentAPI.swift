@@ -293,7 +293,7 @@ enum XomoFigmaNodeImportMapper {
             issues.append(.textLineHeightFlattened)
         }
         if let paragraphSpacing = node.style?.paragraphSpacing,
-           !paragraphSpacing.isFinite || abs(paragraphSpacing) > 0.000_001 {
+           !paragraphSpacing.isFinite || paragraphSpacing < 0 {
             issues.append(.textParagraphSpacingFlattened)
         }
         if let textAutoResize = node.style?.textAutoResize,
@@ -378,7 +378,10 @@ enum XomoFigmaNodeImportMapper {
                     decoration: node.style?.textDecoration,
                     paragraphIndent: node.style?.paragraphIndent.flatMap { $0.isFinite ? max(0, $0) : nil },
                     usesAutoWidthAndHeight: node.style?.textAutoResize == "WIDTH_AND_HEIGHT",
-                    usesAutoHeight: node.style?.textAutoResize == "HEIGHT"
+                    usesAutoHeight: node.style?.textAutoResize == "HEIGHT",
+                    paragraphSpacing: node.style?.paragraphSpacing.flatMap {
+                        $0.isFinite && $0 >= 0 ? $0 : nil
+                    }
                 )
             },
             vectorPaths: geometryPaths(node).map(\.path),

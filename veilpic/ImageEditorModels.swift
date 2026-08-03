@@ -2823,6 +2823,7 @@ struct ImageEditorTextContent {
     var leftIndent: CGFloat = 0
     var rightIndent: CGFloat = 0
     var firstLineIndent: CGFloat = 0
+    var paragraphSpacing: CGFloat = 0
 
     var font: NSFont {
         let size = max(6, fontSize)
@@ -2850,6 +2851,7 @@ struct ImageEditorTextContent {
         style.headIndent = max(0, leftIndent)
         style.firstLineHeadIndent = max(0, leftIndent + firstLineIndent)
         style.tailIndent = rightIndent > 0 ? -rightIndent : 0
+        style.paragraphSpacing = max(0, paragraphSpacing)
         return style
     }
 
@@ -2899,6 +2901,7 @@ struct ImageEditorTextContent {
             let width = lineSizes.map(\.width).max() ?? 1
             let height = lineSizes.reduce(CGFloat(0)) { partial, size in partial + size.height }
                 + max(0, CGFloat(max(0, lines.count - 1)) * lineSpacing)
+                + max(0, CGFloat(max(0, lines.count - 1)) * paragraphSpacing)
             measured = CGSize(width: ceil(width), height: ceil(height))
         }
         return CGSize(

@@ -670,6 +670,7 @@ struct ImageEditorProjectTextContent: Equatable, Codable {
     var leftIndent: CGFloat?
     var rightIndent: CGFloat?
     var firstLineIndent: CGFloat?
+    var paragraphSpacing: CGFloat?
 
     init(content: ImageEditorTextContent) {
         text = content.text
@@ -689,6 +690,7 @@ struct ImageEditorProjectTextContent: Equatable, Codable {
         leftIndent = content.leftIndent
         rightIndent = content.rightIndent
         firstLineIndent = content.firstLineIndent
+        paragraphSpacing = content.paragraphSpacing
     }
 
     var textContent: ImageEditorTextContent {
@@ -709,7 +711,8 @@ struct ImageEditorProjectTextContent: Equatable, Codable {
             alignment: alignment,
             leftIndent: leftIndent ?? 0,
             rightIndent: rightIndent ?? 0,
-            firstLineIndent: firstLineIndent ?? 0
+            firstLineIndent: firstLineIndent ?? 0,
+            paragraphSpacing: paragraphSpacing ?? 0
         )
     }
 }

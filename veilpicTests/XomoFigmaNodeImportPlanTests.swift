@@ -61,7 +61,7 @@ struct XomoFigmaNodeImportPlanTests {
         #expect(item.issues.contains(.textLineHeightFlattened))
     }
 
-    @Test func nonzeroParagraphSpacingIsReportedInsteadOfSilentlyClaimingExactImport() throws {
+    @Test func figmaParagraphSpacingRemainsEditableAndSurvivesProjectRoundTrip() throws {
         let response = try JSONDecoder().decode(
             XomoFigmaNodeResponse.self,
             from: Data(
@@ -72,6 +72,38 @@ struct XomoFigmaNodeImportPlanTests {
         let plan = try XomoFigmaNodeImportMapper.makePlan(response: response, requestedNodeID: "1:2")
         let item = try #require(plan.items.first)
         #expect(item.text?.characters == "One\nTwo")
+        #expect(item.text?.paragraphSpacing == 12)
+        #expect(item.fidelity == .exact)
+        #expect(!item.issues.contains(.textParagraphSpacingFlattened))
+
+        let result = XomoFigmaNodeMaterializer.materialize(
+            plan: plan,
+            canvasSize: CGSize(width: 320, height: 240)
+        )
+        let layer = try #require(result.layers.first)
+        guard case let .text(content) = layer.kind else {
+            Issue.record("Figma paragraph spacing should remain editable text")
+            return
+        }
+        #expect(content.paragraphSpacing == 12)
+
+        let data = try JSONEncoder().encode(ImageEditorProjectTextContent(content: content))
+        let restored = try JSONDecoder().decode(ImageEditorProjectTextContent.self, from: data).textContent
+        #expect(restored.paragraphSpacing == 12)
+        #expect(restored.requiredParagraphHeight == content.requiredParagraphHeight)
+    }
+
+    @Test func invalidFigmaParagraphSpacingIsReportedAsPartial() throws {
+        let response = try JSONDecoder().decode(
+            XomoFigmaNodeResponse.self,
+            from: Data(
+                #"{"name":"Typography","nodes":{"1:6":{"document":{"id":"1:6","name":"Body","type":"TEXT","characters":"One\nTwo","style":{"fontSize":16,"paragraphSpacing":-4},"fills":[{"type":"SOLID","color":{"r":0,"g":0,"b":0,"a":1}}],"absoluteBoundingBox":{"x":0,"y":0,"width":120,"height":48}}}}}"#.utf8
+            )
+        )
+
+        let plan = try XomoFigmaNodeImportMapper.makePlan(response: response, requestedNodeID: "1:6")
+        let item = try #require(plan.items.first)
+        #expect(item.text?.paragraphSpacing == nil)
         #expect(item.fidelity == .partial)
         #expect(item.issues.contains(.textParagraphSpacingFlattened))
     }
