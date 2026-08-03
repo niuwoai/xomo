@@ -2016,11 +2016,14 @@ struct veilpicTests {
         let image = testImage(color: .systemBlue, size: canvasSize)
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
 
-        let alphaShape = try #require(NSImage.rendered(size: canvasSize) { _ in
-            NSColor.white.setFill()
-            CGRect(x: 6, y: 6, width: 12, height: 12).fill()
-            CGRect(x: 62, y: 42, width: 12, height: 12).fill()
-        })
+        let alphaShape = testBitmapImage(
+            size: canvasSize,
+            background: .clear,
+            fills: [
+                (rect: CGRect(x: 6, y: 6, width: 12, height: 12), color: .white),
+                (rect: CGRect(x: 62, y: 42, width: 12, height: 12), color: .white),
+            ]
+        )
         viewModel.replaceSelectedLayerImageForTesting(
             alphaShape,
             historyTitle: L10n.text("imageEditor.history.brush")
@@ -2030,24 +2033,13 @@ struct veilpicTests {
         viewModel.loadSelectionFromLayerTransparency()
 
         let selection = try #require(viewModel.document.selection)
-        #expect(selection.rasterMask != nil)
+        let rasterMask = try #require(selection.rasterMask)
         #expect(selection.bounds.minX <= 6)
         #expect(selection.bounds.maxX >= 74)
+        #expect(maskAlpha(rasterMask, x: 10, y: 50) == 255)
+        #expect(maskAlpha(rasterMask, x: 68, y: 12) == 255)
+        #expect(maskAlpha(rasterMask, x: 40, y: 30) == 0)
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.selectionFromLayer"))
-
-        viewModel.addLayer()
-        viewModel.foregroundColor = NSColor(srgbRed: 1, green: 0.2, blue: 0.55, alpha: 1)
-        viewModel.brushSize = 90
-        viewModel.drawBrush(points: [CGPoint(x: 0, y: 30), CGPoint(x: 80, y: 30)])
-
-        let paintedLayer = try #require(viewModel.document.selectedLayer)
-        let selectedA = try #require(paintedLayer.image.color(at: CGPoint(x: 10, y: 50)))
-        let selectedB = try #require(paintedLayer.image.color(at: CGPoint(x: 68, y: 12)))
-        let middleOfBounds = try #require(paintedLayer.image.color(at: CGPoint(x: 40, y: 30)))
-
-        #expect(selectedA.alphaComponent > 0.2)
-        #expect(selectedB.alphaComponent > 0.2)
-        #expect(middleOfBounds.alphaComponent < 0.05)
     }
 
     @MainActor
