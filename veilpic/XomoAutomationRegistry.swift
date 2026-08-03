@@ -509,11 +509,18 @@ final class XomoAutomationRegistry {
         case "xomo.shape.update":
             try updateShape(arguments, viewModel: viewModel)
         case "xomo.text.create":
+            let boxWidth = arguments["boxWidth"]?.doubleValue ?? 0
+            let requestedBoxHeight = arguments["boxHeight"]?.doubleValue
+            let boxHeight = try resolvedCreatedTextBoxHeight(
+                autoHeight: arguments["autoHeight"]?.boolValue,
+                boxWidth: boxWidth,
+                requestedBoxHeight: requestedBoxHeight
+            )
             viewModel.textValue = try requiredString("text", in: arguments)
             if let fontSize = arguments["fontSize"]?.doubleValue { viewModel.textSize = fontSize }
             viewModel.textParagraphSpacing = arguments["paragraphSpacing"]?.doubleValue ?? 0
-            viewModel.textBoxWidth = arguments["boxWidth"]?.doubleValue ?? 0
-            viewModel.textBoxHeight = arguments["boxHeight"]?.doubleValue ?? 0
+            viewModel.textBoxWidth = boxWidth
+            viewModel.textBoxHeight = boxHeight
             viewModel.addText(at: optionalPoint(arguments))
         case "xomo.text.get":
             return textResult(viewModel)
@@ -1689,6 +1696,7 @@ final class XomoAutomationRegistry {
             "paragraphSpacing": .number(content.paragraphSpacing),
             "boxWidth": .number(content.boxWidth),
             "boxHeight": .number(content.boxHeight),
+            "autoHeight": .bool(content.layoutMode == .paragraph && content.boxHeight == 0),
             "requiredBoxHeight": .number(content.requiredParagraphHeight),
             "hasOverflow": .bool(content.hasOverflow),
             "layoutMode": .string(content.layoutMode.rawValue),
@@ -1707,6 +1715,13 @@ final class XomoAutomationRegistry {
         guard let content = viewModel.document.selectedLayer?.textContent else {
             throw XomoAutomationCallError.operationFailed("No selected text layer")
         }
+        let boxWidth = arguments["boxWidth"]?.doubleValue ?? content.boxWidth
+        let boxHeight = try resolvedUpdatedTextBoxHeight(
+            autoHeight: arguments["autoHeight"]?.boolValue,
+            boxWidth: boxWidth,
+            requestedBoxHeight: arguments["boxHeight"]?.doubleValue,
+            content: content
+        )
         viewModel.textValue = arguments["text"]?.stringValue ?? content.text
         viewModel.textSize = arguments["fontSize"]?.doubleValue ?? content.fontSize
         viewModel.textBold = arguments["bold"]?.boolValue ?? content.isBold
@@ -1716,8 +1731,8 @@ final class XomoAutomationRegistry {
         viewModel.textCharacterSpacing = arguments["characterSpacing"]?.doubleValue ?? content.characterSpacing
         viewModel.textLineSpacing = arguments["lineSpacing"]?.doubleValue ?? content.lineSpacing
         viewModel.textParagraphSpacing = arguments["paragraphSpacing"]?.doubleValue ?? content.paragraphSpacing
-        viewModel.textBoxWidth = arguments["boxWidth"]?.doubleValue ?? content.boxWidth
-        viewModel.textBoxHeight = arguments["boxHeight"]?.doubleValue ?? content.boxHeight
+        viewModel.textBoxWidth = boxWidth
+        viewModel.textBoxHeight = boxHeight
         viewModel.textLeftIndent = arguments["leftIndent"]?.doubleValue ?? content.leftIndent
         viewModel.textRightIndent = arguments["rightIndent"]?.doubleValue ?? content.rightIndent
         viewModel.textFirstLineIndent = arguments["firstLineIndent"]?.doubleValue ?? content.firstLineIndent
@@ -1730,6 +1745,54 @@ final class XomoAutomationRegistry {
             viewModel.selectedTextAlignment = content.alignment
         }
         viewModel.updateSelectedTextLayer()
+    }
+
+    private func resolvedCreatedTextBoxHeight(
+        autoHeight: Bool?,
+        boxWidth: Double,
+        requestedBoxHeight: Double?
+    ) throws -> Double {
+        guard let autoHeight else { return requestedBoxHeight ?? 0 }
+        guard boxWidth > 0 else {
+            throw XomoAutomationCallError.invalidArgument("autoHeight requires a paragraph text box width")
+        }
+        if autoHeight {
+            guard requestedBoxHeight == nil else {
+                throw XomoAutomationCallError.invalidArgument("autoHeight cannot be combined with boxHeight")
+            }
+            return 0
+        }
+        guard let requestedBoxHeight, requestedBoxHeight > 0 else {
+            throw XomoAutomationCallError.invalidArgument("Fixed-height text requires a positive boxHeight")
+        }
+        return requestedBoxHeight
+    }
+
+    private func resolvedUpdatedTextBoxHeight(
+        autoHeight: Bool?,
+        boxWidth: Double,
+        requestedBoxHeight: Double?,
+        content: ImageEditorTextContent
+    ) throws -> Double {
+        guard let autoHeight else { return requestedBoxHeight ?? content.boxHeight }
+        guard boxWidth > 0 else {
+            throw XomoAutomationCallError.invalidArgument("autoHeight requires a paragraph text box width")
+        }
+        if autoHeight {
+            guard requestedBoxHeight == nil else {
+                throw XomoAutomationCallError.invalidArgument("autoHeight cannot be combined with boxHeight")
+            }
+            return 0
+        }
+        if let requestedBoxHeight {
+            guard requestedBoxHeight > 0 else {
+                throw XomoAutomationCallError.invalidArgument("Fixed-height text requires a positive boxHeight")
+            }
+            return requestedBoxHeight
+        }
+        return Double(content.boxHeight > 0
+            ? content.boxHeight
+            : min(ImageEditorTextContent.maximumBoxDimension, max(1, content.requiredParagraphHeight)))
     }
 
     private func shapeResult(_ viewModel: ImageEditorViewModel) -> XomoJSONValue {
@@ -5647,6 +5710,7 @@ private extension XomoAutomationRegistry {
             "paragraphSpacing": XomoAutomationSchema.number(description: "Paragraph spacing from 0 to 400 pixels"),
             "boxWidth": XomoAutomationSchema.number(description: "Optional paragraph text box width"),
             "boxHeight": XomoAutomationSchema.number(description: "Optional fixed paragraph text box height"),
+            "autoHeight": XomoAutomationSchema.boolean(description: "Use content-driven height for a paragraph text box; do not combine true with boxHeight"),
             "x": XomoAutomationSchema.number(description: "Optional canvas x position"),
             "y": XomoAutomationSchema.number(description: "Optional canvas y position")
         ], required: ["text"]),
@@ -5663,6 +5727,7 @@ private extension XomoAutomationRegistry {
             "paragraphSpacing": XomoAutomationSchema.number(description: "Paragraph spacing from 0 to 400 pixels"),
             "boxWidth": XomoAutomationSchema.number(description: "Text box width, zero for auto"),
             "boxHeight": XomoAutomationSchema.number(description: "Fixed text box height, zero for auto"),
+            "autoHeight": XomoAutomationSchema.boolean(description: "Enable content-driven paragraph height; false fixes the current required height unless boxHeight is supplied"),
             "alignment": XomoAutomationSchema.string(description: "Paragraph alignment", values: ImageEditorTextAlignment.allCases.map(\.rawValue)),
             "leftIndent": XomoAutomationSchema.number(description: "Paragraph left indent"),
             "rightIndent": XomoAutomationSchema.number(description: "Paragraph right indent"),

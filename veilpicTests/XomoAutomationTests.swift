@@ -4062,6 +4062,7 @@ struct XomoAutomationTests {
         #expect(inspectedText["requiredBoxHeight"] != nil)
         #expect(inspectedText["hasOverflow"] != nil)
         #expect(inspectedText["paragraphSpacing"] == .number(26))
+        #expect(inspectedText["autoHeight"] == .bool(false))
 
         #expect(registry.execute(request(
             operation: "call",
@@ -4114,6 +4115,78 @@ struct XomoAutomationTests {
             return
         }
         #expect(result["paragraphSpacing"] == .number(12))
+    }
+
+    @Test func registryControlsTextAutoHeightWithExplicitAutomationSemantics() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+
+        let toolsResponse = registry.execute(request(operation: "tools"))
+        guard case .array(let tools) = toolsResponse.result else {
+            Issue.record("Expected tool catalog")
+            return
+        }
+        for toolName in ["xomo.text.create", "xomo.text.update"] {
+            let tool = try #require(tools.compactMap(\.objectValue).first {
+                $0["name"] == .string(toolName)
+            })
+            #expect(
+                tool["inputSchema"]?.objectValue?["properties"]?.objectValue?["autoHeight"]?
+                    .objectValue?["type"] == .string("boolean")
+            )
+        }
+
+        #expect(registry.execute(request(
+            operation: "call",
+            name: "xomo.text.create",
+            arguments: [
+                "text": .string("First\nSecond"),
+                "boxWidth": .number(160),
+                "autoHeight": .bool(true)
+            ]
+        )).ok)
+        #expect(viewModel.document.selectedLayer?.textContent?.boxHeight == 0)
+
+        var response = registry.execute(request(operation: "call", name: "xomo.text.get"))
+        guard case .object(let autoResult) = response.result else {
+            Issue.record("Expected auto-height text inspection result")
+            return
+        }
+        #expect(autoResult["autoHeight"] == .bool(true))
+
+        #expect(registry.execute(request(
+            operation: "call",
+            name: "xomo.text.update",
+            arguments: ["autoHeight": .bool(false)]
+        )).ok)
+        let fixedHeight = try #require(viewModel.document.selectedLayer?.textContent?.boxHeight)
+        #expect(fixedHeight > 0)
+
+        viewModel.undo()
+        #expect(viewModel.document.selectedLayer?.textContent?.boxHeight == 0)
+
+        #expect(registry.execute(request(
+            operation: "call",
+            name: "xomo.text.update",
+            arguments: ["autoHeight": .bool(false), "boxHeight": .number(120)]
+        )).ok)
+        #expect(viewModel.document.selectedLayer?.textContent?.boxHeight == 120)
+
+        response = registry.execute(request(
+            operation: "call",
+            name: "xomo.text.update",
+            arguments: ["autoHeight": .bool(true), "boxHeight": .number(80)]
+        ))
+        #expect(!response.ok)
+        #expect(viewModel.document.selectedLayer?.textContent?.boxHeight == 120)
+
+        response = registry.execute(request(
+            operation: "call",
+            name: "xomo.text.create",
+            arguments: ["text": .string("Point"), "autoHeight": .bool(true)]
+        ))
+        #expect(!response.ok)
     }
 
     @Test func registryConfiguresCloneStampSamplingOptions() {
