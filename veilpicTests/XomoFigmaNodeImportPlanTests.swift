@@ -104,7 +104,7 @@ struct XomoFigmaNodeImportPlanTests {
         #expect(content.boxHeight == 0)
     }
 
-    @Test func unsupportedFigmaTextAutoResizeModeIsReportedAsPartial() throws {
+    @Test func figmaAutoHeightTextRemainsEditableAndSurvivesProjectRoundTrip() throws {
         let response = try JSONDecoder().decode(
             XomoFigmaNodeResponse.self,
             from: Data(
@@ -115,6 +115,46 @@ struct XomoFigmaNodeImportPlanTests {
         let plan = try XomoFigmaNodeImportMapper.makePlan(response: response, requestedNodeID: "1:4")
         let item = try #require(plan.items.first)
         #expect(item.text?.usesAutoWidthAndHeight == false)
+        #expect(item.text?.usesAutoHeight == true)
+        #expect(item.fidelity == .exact)
+        #expect(!item.issues.contains(.textAutoResizeFlattened))
+
+        let result = XomoFigmaNodeMaterializer.materialize(
+            plan: plan,
+            canvasSize: CGSize(width: 320, height: 240)
+        )
+        let layer = try #require(result.layers.first)
+        guard case let .text(content) = layer.kind else {
+            Issue.record("Figma auto-height text should remain editable text")
+            return
+        }
+        #expect(content.layoutMode == .paragraph)
+        #expect(content.boxWidth > 0)
+        #expect(content.boxHeight == 0)
+
+        var expanded = content
+        expanded.text = "One\nTwo\nThree\nFour"
+        #expect(expanded.layerSize().height > content.layerSize().height)
+
+        let data = try JSONEncoder().encode(ImageEditorProjectTextContent(content: expanded))
+        let restored = try JSONDecoder().decode(ImageEditorProjectTextContent.self, from: data).textContent
+        #expect(restored.boxWidth == expanded.boxWidth)
+        #expect(restored.boxHeight == 0)
+        #expect(restored.layerSize() == expanded.layerSize())
+    }
+
+    @Test func unsupportedFigmaTextTruncationIsReportedAsPartial() throws {
+        let response = try JSONDecoder().decode(
+            XomoFigmaNodeResponse.self,
+            from: Data(
+                #"{"name":"Typography","nodes":{"1:5":{"document":{"id":"1:5","name":"Clamped Body","type":"TEXT","characters":"One\nTwo","style":{"fontSize":16,"textAutoResize":"TRUNCATE"},"fills":[{"type":"SOLID","color":{"r":0,"g":0,"b":0,"a":1}}],"absoluteBoundingBox":{"x":0,"y":0,"width":120,"height":48}}}}}"#.utf8
+            )
+        )
+
+        let plan = try XomoFigmaNodeImportMapper.makePlan(response: response, requestedNodeID: "1:5")
+        let item = try #require(plan.items.first)
+        #expect(item.text?.usesAutoWidthAndHeight == false)
+        #expect(item.text?.usesAutoHeight == false)
         #expect(item.fidelity == .partial)
         #expect(item.issues.contains(.textAutoResizeFlattened))
     }

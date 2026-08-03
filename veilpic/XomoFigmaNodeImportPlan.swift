@@ -182,6 +182,7 @@ struct XomoFigmaPlanText: Equatable, Sendable {
     var decoration: String? = nil
     var paragraphIndent: Double? = nil
     var usesAutoWidthAndHeight: Bool = false
+    var usesAutoHeight: Bool = false
 }
 
 struct XomoFigmaImageAsset: Equatable, Sendable {
