@@ -4189,6 +4189,78 @@ struct XomoAutomationTests {
         #expect(!response.ok)
     }
 
+    @Test func registryCreatesReadsAndUpdatesNativeTextCaseAtomically() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+
+        let toolsResponse = registry.execute(request(operation: "tools"))
+        guard case .array(let tools) = toolsResponse.result else {
+            Issue.record("Expected tool catalog")
+            return
+        }
+        let expectedCases = ImageEditorTextCase.allCases.map { XomoJSONValue.string($0.rawValue) }
+        for toolName in ["xomo.text.create", "xomo.text.update"] {
+            let tool = try #require(tools.compactMap(\.objectValue).first {
+                $0["name"] == .string(toolName)
+            })
+            #expect(
+                tool["inputSchema"]?.objectValue?["properties"]?.objectValue?["textCase"]?
+                    .objectValue?["enum"] == .array(expectedCases)
+            )
+        }
+
+        #expect(registry.execute(request(
+            operation: "call",
+            name: "xomo.text.create",
+            arguments: [
+                "text": .string("Continue 继续"),
+                "textCase": .string("uppercase")
+            ]
+        )).ok)
+        var content = try #require(viewModel.document.selectedLayer?.textContent)
+        #expect(content.text == "Continue 继续")
+        #expect(content.textCase == .uppercase)
+        #expect(content.displayText == "CONTINUE 继续")
+
+        var response = registry.execute(request(operation: "call", name: "xomo.text.get"))
+        guard case .object(let result) = response.result else {
+            Issue.record("Expected text inspection result")
+            return
+        }
+        #expect(result["text"] == .string("Continue 继续"))
+        #expect(result["textCase"] == .string("uppercase"))
+        #expect(result["displayText"] == .string("CONTINUE 继续"))
+
+        #expect(registry.execute(request(
+            operation: "call",
+            name: "xomo.text.update",
+            arguments: [
+                "text": .string("hello world"),
+                "textCase": .string("titleCase")
+            ]
+        )).ok)
+        content = try #require(viewModel.document.selectedLayer?.textContent)
+        #expect(content.text == "hello world")
+        #expect(content.textCase == .titleCase)
+        #expect(content.displayText == "Hello World")
+
+        viewModel.undo()
+        content = try #require(viewModel.document.selectedLayer?.textContent)
+        #expect(content.text == "Continue 继续")
+        #expect(content.textCase == .uppercase)
+
+        let historyCount = viewModel.document.history.count
+        response = registry.execute(request(
+            operation: "call",
+            name: "xomo.text.update",
+            arguments: ["textCase": .string("smallCaps")]
+        ))
+        #expect(!response.ok)
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.document.selectedLayer?.textContent?.textCase == .uppercase)
+    }
+
     @Test func registryConfiguresCloneStampSamplingOptions() {
         let viewModel = makeViewModel()
         let registry = XomoAutomationRegistry.shared

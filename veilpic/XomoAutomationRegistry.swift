@@ -511,6 +511,10 @@ final class XomoAutomationRegistry {
         case "xomo.text.create":
             let boxWidth = arguments["boxWidth"]?.doubleValue ?? 0
             let requestedBoxHeight = arguments["boxHeight"]?.doubleValue
+            let textCase = try resolvedTextCase(
+                arguments["textCase"]?.stringValue,
+                fallback: .original
+            )
             let boxHeight = try resolvedCreatedTextBoxHeight(
                 autoHeight: arguments["autoHeight"]?.boolValue,
                 boxWidth: boxWidth,
@@ -519,6 +523,7 @@ final class XomoAutomationRegistry {
             viewModel.textValue = try requiredString("text", in: arguments)
             if let fontSize = arguments["fontSize"]?.doubleValue { viewModel.textSize = fontSize }
             viewModel.textParagraphSpacing = arguments["paragraphSpacing"]?.doubleValue ?? 0
+            viewModel.selectedTextCase = textCase
             viewModel.textBoxWidth = boxWidth
             viewModel.textBoxHeight = boxHeight
             viewModel.addText(at: optionalPoint(arguments))
@@ -1686,6 +1691,8 @@ final class XomoAutomationRegistry {
             "active": .bool(true),
             "layerId": .string(layer.id.uuidString),
             "text": .string(content.text),
+            "textCase": .string(content.textCase.rawValue),
+            "displayText": .string(content.displayText),
             "fontSize": .number(content.fontSize),
             "bold": .bool(content.isBold),
             "italic": .bool(content.isItalic),
@@ -1722,6 +1729,10 @@ final class XomoAutomationRegistry {
             requestedBoxHeight: arguments["boxHeight"]?.doubleValue,
             content: content
         )
+        let textCase = try resolvedTextCase(
+            arguments["textCase"]?.stringValue,
+            fallback: content.textCase
+        )
         viewModel.textValue = arguments["text"]?.stringValue ?? content.text
         viewModel.textSize = arguments["fontSize"]?.doubleValue ?? content.fontSize
         viewModel.textBold = arguments["bold"]?.boolValue ?? content.isBold
@@ -1731,6 +1742,7 @@ final class XomoAutomationRegistry {
         viewModel.textCharacterSpacing = arguments["characterSpacing"]?.doubleValue ?? content.characterSpacing
         viewModel.textLineSpacing = arguments["lineSpacing"]?.doubleValue ?? content.lineSpacing
         viewModel.textParagraphSpacing = arguments["paragraphSpacing"]?.doubleValue ?? content.paragraphSpacing
+        viewModel.selectedTextCase = textCase
         viewModel.textBoxWidth = boxWidth
         viewModel.textBoxHeight = boxHeight
         viewModel.textLeftIndent = arguments["leftIndent"]?.doubleValue ?? content.leftIndent
@@ -1745,6 +1757,17 @@ final class XomoAutomationRegistry {
             viewModel.selectedTextAlignment = content.alignment
         }
         viewModel.updateSelectedTextLayer()
+    }
+
+    private func resolvedTextCase(
+        _ rawValue: String?,
+        fallback: ImageEditorTextCase
+    ) throws -> ImageEditorTextCase {
+        guard let rawValue else { return fallback }
+        guard let textCase = ImageEditorTextCase(rawValue: rawValue) else {
+            throw XomoAutomationCallError.invalidArgument("Unknown text case: \(rawValue)")
+        }
+        return textCase
     }
 
     private func resolvedCreatedTextBoxHeight(
@@ -5707,6 +5730,7 @@ private extension XomoAutomationRegistry {
         tool("xomo.text.create", "Create an editable text layer.", [
             "text": XomoAutomationSchema.string(description: "Text content"),
             "fontSize": XomoAutomationSchema.number(description: "Font size in points"),
+            "textCase": XomoAutomationSchema.string(description: "Editable letter-case style", values: ImageEditorTextCase.allCases.map(\.rawValue)),
             "paragraphSpacing": XomoAutomationSchema.number(description: "Paragraph spacing from 0 to 400 pixels"),
             "boxWidth": XomoAutomationSchema.number(description: "Optional paragraph text box width"),
             "boxHeight": XomoAutomationSchema.number(description: "Optional fixed paragraph text box height"),
@@ -5718,6 +5742,7 @@ private extension XomoAutomationRegistry {
         tool("xomo.text.update", "Update selected text content and typography.", [
             "text": XomoAutomationSchema.string(description: "Text content"),
             "fontSize": XomoAutomationSchema.number(description: "Font size"),
+            "textCase": XomoAutomationSchema.string(description: "Editable letter-case style", values: ImageEditorTextCase.allCases.map(\.rawValue)),
             "bold": XomoAutomationSchema.boolean(description: "Bold style"),
             "italic": XomoAutomationSchema.boolean(description: "Italic style"),
             "underline": XomoAutomationSchema.boolean(description: "Underline style"),

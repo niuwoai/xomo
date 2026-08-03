@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.12.0-rc690 - 2026-08-03
+
+### Added
+- MCP 与 `xomo-cli` 的文字创建、读取和更新开放原生大小写样式；读取同时返回未改写的 `text` 与实际渲染的 `displayText`，自动化无需自行破坏原文。
+
+### Changed
+- `textCase` schema 明确限制为 `original`、`uppercase`、`lowercase`、`titleCase`；未知枚举在修改工具状态或画布前原子拒绝，并保留 History/Undo。
+
 ## 2.12.0-rc689 - 2026-08-03
 
 ### Added
