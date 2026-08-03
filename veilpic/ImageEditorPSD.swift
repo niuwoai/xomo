@@ -556,7 +556,10 @@ enum ImageEditorPSDCodec {
             colorMode: colorMode,
             layerCount: records.filter { $0.sectionType != 3 }.count,
             groupCount: records.filter { $0.sectionType == 1 || $0.sectionType == 2 }.count,
-            maskCount: records.filter { $0.mask != nil }.count,
+            maskCount: records.reduce(into: 0) { count, record in
+                if record.mask != nil { count += 1 }
+                if record.vectorMaskInfo != nil { count += 1 }
+            },
             compressions: compressions,
             issueCounts: issueCounts
         )

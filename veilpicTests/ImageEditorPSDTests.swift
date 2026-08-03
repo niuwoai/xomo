@@ -267,6 +267,7 @@ struct ImageEditorPSDTests {
         #expect(!restored.layers[0].isVectorMaskEnabled)
         #expect(abs(restoredMask.editablePathAnchors[1].point.x - 28) < 0.01)
         let report = try ImageEditorPSDCodec.compatibilityReport(data)
+        #expect(report.maskCount == 1)
         #expect(!report.issues.contains { $0.kind == .vectorRasterized })
     }
 
