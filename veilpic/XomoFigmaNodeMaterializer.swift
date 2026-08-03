@@ -494,8 +494,8 @@ enum XomoFigmaNodeMaterializer {
             point: CGPoint(x: padding, y: padding),
             isBold: (text.fontWeight ?? 400) >= 600,
             isItalic: text.isItalic,
-            isUnderlined: text.decoration == "UNDERLINE",
-            isStruckThrough: text.decoration == "STRIKETHROUGH",
+            isUnderlined: text.decoration == .underline,
+            isStruckThrough: text.decoration == .strikethrough,
             characterSpacing: CGFloat(text.letterSpacing ?? 0) * scale,
             lineSpacing: max(
                 0,

@@ -86,12 +86,19 @@ enum XomoFigmaNodeMappingIssue: String, CaseIterable, Sendable {
     case textParagraphSpacingFlattened
     case textAutoResizeFlattened
     case textVerticalAlignmentFlattened
+    case textDecorationFlattened
     case variableBindingPreserved
     case exportSettingsPartiallyPreserved
 
     var localizationKey: String {
         "xomo.figma.node.issue.\(rawValue)"
     }
+}
+
+enum XomoFigmaPlanTextDecoration: String, Equatable, Sendable {
+    case none
+    case underline
+    case strikethrough
 }
 
 struct XomoFigmaVariableBinding: Codable, Equatable, Hashable, Sendable, Identifiable {
@@ -180,7 +187,7 @@ struct XomoFigmaPlanText: Equatable, Sendable {
     var letterSpacing: Double? = nil
     var lineHeight: Double? = nil
     var isItalic: Bool = false
-    var decoration: String? = nil
+    var decoration: XomoFigmaPlanTextDecoration = .none
     var paragraphIndent: Double? = nil
     var usesAutoWidthAndHeight: Bool = false
     var usesAutoHeight: Bool = false

@@ -307,6 +307,10 @@ enum XomoFigmaNodeImportMapper {
            mappedTextVerticalAlignment(verticalAlignment) == nil {
             issues.append(.textVerticalAlignmentFlattened)
         }
+        if let decoration = node.style?.textDecoration,
+           mappedTextDecoration(decoration) == nil {
+            issues.append(.textDecorationFlattened)
+        }
         let exportPresetMapping = mappedExportPresets(
             node.exportSettings,
             frame: node.absoluteBoundingBox
@@ -380,7 +384,7 @@ enum XomoFigmaNodeImportMapper {
                     letterSpacing: node.style?.letterSpacing.flatMap { $0.isFinite ? $0 : nil },
                     lineHeight: lineHeight(for: node.style),
                     isItalic: node.style?.italic == true,
-                    decoration: node.style?.textDecoration,
+                    decoration: mappedTextDecoration(node.style?.textDecoration) ?? .none,
                     paragraphIndent: node.style?.paragraphIndent.flatMap { $0.isFinite ? max(0, $0) : nil },
                     usesAutoWidthAndHeight: node.style?.textAutoResize == "WIDTH_AND_HEIGHT",
                     usesAutoHeight: node.style?.textAutoResize == "HEIGHT",
@@ -1028,6 +1032,15 @@ enum XomoFigmaNodeImportMapper {
         case nil, "TOP": .top
         case "CENTER": .center
         case "BOTTOM": .bottom
+        default: nil
+        }
+    }
+
+    static func mappedTextDecoration(_ decoration: String?) -> XomoFigmaPlanTextDecoration? {
+        switch decoration {
+        case nil, "NONE": XomoFigmaPlanTextDecoration.none
+        case "UNDERLINE": .underline
+        case "STRIKETHROUGH": .strikethrough
         default: nil
         }
     }

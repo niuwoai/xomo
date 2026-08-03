@@ -327,6 +327,49 @@ struct XomoFigmaNodeImportPlanTests {
         #expect(unknownItem.issues.contains(.textVerticalAlignmentFlattened))
     }
 
+    @Test func figmaTextDecorationUsesTypedNativeMappingAndReportsUnknownValues() throws {
+        #expect(XomoFigmaNodeImportMapper.mappedTextDecoration(nil) == .none)
+        #expect(XomoFigmaNodeImportMapper.mappedTextDecoration("NONE") == .none)
+        #expect(XomoFigmaNodeImportMapper.mappedTextDecoration("UNDERLINE") == .underline)
+        #expect(XomoFigmaNodeImportMapper.mappedTextDecoration("STRIKETHROUGH") == .strikethrough)
+        #expect(XomoFigmaNodeImportMapper.mappedTextDecoration("WAVY") == nil)
+
+        let response = try JSONDecoder().decode(
+            XomoFigmaNodeResponse.self,
+            from: Data(
+                #"{"name":"Typography","nodes":{"1:8":{"document":{"id":"1:8","name":"Underlined Label","type":"TEXT","characters":"Underlined","style":{"fontSize":16,"textDecoration":"UNDERLINE"},"fills":[{"type":"SOLID","color":{"r":0,"g":0,"b":0,"a":1}}],"absoluteBoundingBox":{"x":0,"y":0,"width":120,"height":40}}}}}"#.utf8
+            )
+        )
+        let plan = try XomoFigmaNodeImportMapper.makePlan(response: response, requestedNodeID: "1:8")
+        let item = try #require(plan.items.first)
+        #expect(item.text?.decoration == .underline)
+        #expect(item.fidelity == .exact)
+        #expect(!item.issues.contains(.textDecorationFlattened))
+
+        let result = XomoFigmaNodeMaterializer.materialize(
+            plan: plan,
+            canvasSize: CGSize(width: 320, height: 240)
+        )
+        let content = try #require(result.layers.first?.textContent)
+        #expect(content.isUnderlined)
+        #expect(!content.isStruckThrough)
+
+        let unknownResponse = try JSONDecoder().decode(
+            XomoFigmaNodeResponse.self,
+            from: Data(
+                #"{"name":"Typography","nodes":{"1:9":{"document":{"id":"1:9","name":"Unknown Decoration","type":"TEXT","characters":"Unknown","style":{"fontSize":16,"textDecoration":"WAVY"},"fills":[{"type":"SOLID","color":{"r":0,"g":0,"b":0,"a":1}}],"absoluteBoundingBox":{"x":0,"y":0,"width":120,"height":40}}}}}"#.utf8
+            )
+        )
+        let unknownPlan = try XomoFigmaNodeImportMapper.makePlan(
+            response: unknownResponse,
+            requestedNodeID: "1:9"
+        )
+        let unknownItem = try #require(unknownPlan.items.first)
+        #expect(unknownItem.text?.decoration == .none)
+        #expect(unknownItem.fidelity == .partial)
+        #expect(unknownItem.issues.contains(.textDecorationFlattened))
+    }
+
     @Test func figmaSliceBecomesNativeFireworksSliceAndExportsWithoutCreatingLayer() throws {
         let response = try JSONDecoder().decode(
             XomoFigmaNodeResponse.self,
