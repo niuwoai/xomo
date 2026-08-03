@@ -3300,7 +3300,8 @@
 "xomo.figma.node.issue.cornerRadiusFlattened" = "Corner smoothing uses an editable superellipse approximation";
 "xomo.figma.node.issue.transformFlattened" = "Rotation, reflection, or skew is flattened to axis-aligned bounds";
 "xomo.figma.node.issue.textCaseFlattened" = "Text case is baked into editable characters instead of retained as a live style";
-"xomo.figma.node.issue.textLineHeightFlattened" = "This Figma line-height unit cannot be represented accurately and uses Xomo's default line height";
+"xomo.figma.node.issue.textLineHeightFlattened" = "This Figma line height cannot be represented exactly and uses the closest native line spacing";
+"xomo.figma.node.issue.textParagraphIndentFlattened" = "This Figma paragraph indent is invalid and imports as 0 px";
 "xomo.figma.node.issue.textParagraphSpacingFlattened" = "Figma paragraph spacing is not yet editable in Xomo and uses the default paragraph spacing";
 "xomo.figma.node.issue.textAutoResizeFlattened" = "This Figma text auto-resize mode is not yet editable in Xomo and uses a fixed text box";
 "xomo.figma.node.issue.textHorizontalAlignmentFlattened" = "This Figma horizontal text alignment is unsupported and imports left-aligned";

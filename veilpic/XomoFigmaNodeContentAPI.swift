@@ -295,6 +295,10 @@ enum XomoFigmaNodeImportMapper {
         if hasUnmappedLineHeight(node.style) {
             issues.append(.textLineHeightFlattened)
         }
+        if let paragraphIndent = node.style?.paragraphIndent,
+           !paragraphIndent.isFinite || paragraphIndent < 0 {
+            issues.append(.textParagraphIndentFlattened)
+        }
         if let paragraphSpacing = node.style?.paragraphSpacing,
            !paragraphSpacing.isFinite || paragraphSpacing < 0 {
             issues.append(.textParagraphSpacingFlattened)
