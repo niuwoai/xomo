@@ -649,6 +649,18 @@ struct ImageEditorPSDTests {
         #expect(restoredLayer.shapeContent?.editablePathAnchors.count == 3)
     }
 
+    @Test func compatibilityReportCountsUnsupportedVectorMaskStructure() throws {
+        var data = try psdFixtureData("solid-vector-shape.psd")
+        let keyRange = try #require(data.range(of: Data("vmsk".utf8)))
+        let flagsOffset = keyRange.upperBound + 8
+        #expect(data[flagsOffset + 3] == 0)
+        data[flagsOffset + 3] = 1
+
+        let report = try ImageEditorPSDCodec.compatibilityReport(data)
+        #expect(report.maskCount == 1)
+        #expect(report.issues.contains { $0.kind == .vectorRasterized })
+    }
+
     @Test func externalGradientVectorShapeFixtureBecomesEditableShapeAndRoundTrips() throws {
         let data = try psdFixtureData("gradient-vector-shape.psd")
         let document = try ImageEditorPSDCodec.decode(data, sourceName: "gradient-vector-shape.psd")
