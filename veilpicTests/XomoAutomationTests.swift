@@ -4189,6 +4189,93 @@ struct XomoAutomationTests {
         #expect(!response.ok)
     }
 
+    @Test func registryControlsFixedTextOverflowEllipsisAtomically() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+
+        let toolsResponse = registry.execute(request(operation: "tools"))
+        guard case .array(let tools) = toolsResponse.result else {
+            Issue.record("Expected tool catalog")
+            return
+        }
+        for toolName in ["xomo.text.create", "xomo.text.update"] {
+            let tool = try #require(tools.compactMap(\.objectValue).first {
+                $0["name"] == .string(toolName)
+            })
+            #expect(
+                tool["inputSchema"]?.objectValue?["properties"]?.objectValue?["truncateOverflow"]?
+                    .objectValue?["type"] == .string("boolean")
+            )
+        }
+
+        #expect(registry.execute(request(
+            operation: "call",
+            name: "xomo.text.create",
+            arguments: [
+                "text": .string("One two three four five six"),
+                "boxWidth": .number(80),
+                "boxHeight": .number(24),
+                "truncateOverflow": .bool(true)
+            ]
+        )).ok)
+        #expect(viewModel.document.selectedLayer?.textContent?.truncatesOverflow == true)
+
+        var response = registry.execute(request(operation: "call", name: "xomo.text.get"))
+        guard case .object(let fixedResult) = response.result else {
+            Issue.record("Expected fixed-height text inspection result")
+            return
+        }
+        #expect(fixedResult["truncateOverflow"] == .bool(true))
+
+        let historyCount = viewModel.document.history.count
+        response = registry.execute(request(
+            operation: "call",
+            name: "xomo.text.update",
+            arguments: [
+                "autoHeight": .bool(true),
+                "truncateOverflow": .bool(true)
+            ]
+        ))
+        #expect(!response.ok)
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.document.selectedLayer?.textContent?.boxHeight == 24)
+        #expect(viewModel.document.selectedLayer?.textContent?.truncatesOverflow == true)
+
+        #expect(registry.execute(request(
+            operation: "call",
+            name: "xomo.text.update",
+            arguments: ["autoHeight": .bool(true)]
+        )).ok)
+        #expect(viewModel.document.selectedLayer?.textContent?.boxHeight == 0)
+        #expect(viewModel.document.selectedLayer?.textContent?.truncatesOverflow == false)
+
+        viewModel.undo()
+        #expect(viewModel.document.selectedLayer?.textContent?.boxHeight == 24)
+        #expect(viewModel.document.selectedLayer?.textContent?.truncatesOverflow == true)
+
+        #expect(registry.execute(request(
+            operation: "call",
+            name: "xomo.text.update",
+            arguments: ["boxWidth": .number(0)]
+        )).ok)
+        #expect(viewModel.document.selectedLayer?.textContent?.layoutMode == .point)
+        #expect(viewModel.document.selectedLayer?.textContent?.truncatesOverflow == false)
+        viewModel.undo()
+
+        let layerCount = viewModel.document.layers.count
+        response = registry.execute(request(
+            operation: "call",
+            name: "xomo.text.create",
+            arguments: [
+                "text": .string("Point"),
+                "truncateOverflow": .bool(true)
+            ]
+        ))
+        #expect(!response.ok)
+        #expect(viewModel.document.layers.count == layerCount)
+    }
+
     @Test func registryCreatesReadsAndUpdatesNativeTextCaseAtomically() throws {
         let viewModel = makeViewModel()
         let registry = XomoAutomationRegistry.shared

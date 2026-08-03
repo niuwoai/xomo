@@ -520,12 +520,18 @@ final class XomoAutomationRegistry {
                 boxWidth: boxWidth,
                 requestedBoxHeight: requestedBoxHeight
             )
+            let truncateOverflow = try resolvedTextOverflowTruncation(
+                arguments["truncateOverflow"]?.boolValue ?? false,
+                boxWidth: boxWidth,
+                boxHeight: boxHeight
+            )
             viewModel.textValue = try requiredString("text", in: arguments)
             if let fontSize = arguments["fontSize"]?.doubleValue { viewModel.textSize = fontSize }
             viewModel.textParagraphSpacing = arguments["paragraphSpacing"]?.doubleValue ?? 0
             viewModel.selectedTextCase = textCase
             viewModel.textBoxWidth = boxWidth
             viewModel.textBoxHeight = boxHeight
+            viewModel.textTruncatesOverflow = truncateOverflow
             viewModel.addText(at: optionalPoint(arguments))
         case "xomo.text.get":
             return textResult(viewModel)
@@ -1706,6 +1712,7 @@ final class XomoAutomationRegistry {
             "autoHeight": .bool(content.layoutMode == .paragraph && content.boxHeight == 0),
             "requiredBoxHeight": .number(content.requiredParagraphHeight),
             "hasOverflow": .bool(content.hasOverflow),
+            "truncateOverflow": .bool(content.truncatesOverflow),
             "layoutMode": .string(content.layoutMode.rawValue),
             "alignment": .string(content.alignment.rawValue),
             "leftIndent": .number(content.leftIndent),
@@ -1733,6 +1740,12 @@ final class XomoAutomationRegistry {
             arguments["textCase"]?.stringValue,
             fallback: content.textCase
         )
+        let truncateOverflow = try resolvedTextOverflowTruncation(
+            arguments["truncateOverflow"]?.boolValue
+                ?? (boxWidth > 0 && boxHeight > 0 ? content.truncatesOverflow : false),
+            boxWidth: boxWidth,
+            boxHeight: boxHeight
+        )
         viewModel.textValue = arguments["text"]?.stringValue ?? content.text
         viewModel.textSize = arguments["fontSize"]?.doubleValue ?? content.fontSize
         viewModel.textBold = arguments["bold"]?.boolValue ?? content.isBold
@@ -1745,6 +1758,7 @@ final class XomoAutomationRegistry {
         viewModel.selectedTextCase = textCase
         viewModel.textBoxWidth = boxWidth
         viewModel.textBoxHeight = boxHeight
+        viewModel.textTruncatesOverflow = truncateOverflow
         viewModel.textLeftIndent = arguments["leftIndent"]?.doubleValue ?? content.leftIndent
         viewModel.textRightIndent = arguments["rightIndent"]?.doubleValue ?? content.rightIndent
         viewModel.textFirstLineIndent = arguments["firstLineIndent"]?.doubleValue ?? content.firstLineIndent
@@ -1768,6 +1782,20 @@ final class XomoAutomationRegistry {
             throw XomoAutomationCallError.invalidArgument("Unknown text case: \(rawValue)")
         }
         return textCase
+    }
+
+    private func resolvedTextOverflowTruncation(
+        _ enabled: Bool,
+        boxWidth: Double,
+        boxHeight: Double
+    ) throws -> Bool {
+        guard enabled else { return false }
+        guard boxWidth > 0, boxHeight > 0 else {
+            throw XomoAutomationCallError.invalidArgument(
+                "truncateOverflow requires a fixed-height paragraph text box"
+            )
+        }
+        return true
     }
 
     private func resolvedCreatedTextBoxHeight(
@@ -5735,6 +5763,7 @@ private extension XomoAutomationRegistry {
             "boxWidth": XomoAutomationSchema.number(description: "Optional paragraph text box width"),
             "boxHeight": XomoAutomationSchema.number(description: "Optional fixed paragraph text box height"),
             "autoHeight": XomoAutomationSchema.boolean(description: "Use content-driven height for a paragraph text box; do not combine true with boxHeight"),
+            "truncateOverflow": XomoAutomationSchema.boolean(description: "Show an ellipsis on the last visible line of a fixed-height paragraph text box"),
             "x": XomoAutomationSchema.number(description: "Optional canvas x position"),
             "y": XomoAutomationSchema.number(description: "Optional canvas y position")
         ], required: ["text"]),
@@ -5753,6 +5782,7 @@ private extension XomoAutomationRegistry {
             "boxWidth": XomoAutomationSchema.number(description: "Text box width, zero for auto"),
             "boxHeight": XomoAutomationSchema.number(description: "Fixed text box height, zero for auto"),
             "autoHeight": XomoAutomationSchema.boolean(description: "Enable content-driven paragraph height; false fixes the current required height unless boxHeight is supplied"),
+            "truncateOverflow": XomoAutomationSchema.boolean(description: "Show an ellipsis on overflow; requires a fixed-height paragraph text box"),
             "alignment": XomoAutomationSchema.string(description: "Paragraph alignment", values: ImageEditorTextAlignment.allCases.map(\.rawValue)),
             "leftIndent": XomoAutomationSchema.number(description: "Paragraph left indent"),
             "rightIndent": XomoAutomationSchema.number(description: "Paragraph right indent"),
