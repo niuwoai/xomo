@@ -891,12 +891,7 @@ enum XomoFigmaNodeMaterializer {
     }
 
     private static func textAlignment(_ rawValue: String?) -> ImageEditorTextAlignment {
-        switch rawValue {
-        case "CENTER": .center
-        case "RIGHT": .right
-        case "JUSTIFIED": .justified
-        default: .left
-        }
+        ImageEditorTextAlignment(rawValue: rawValue ?? "") ?? .left
     }
 
     private static func cgRect(_ rect: XomoFigmaPlanRect) -> CGRect {

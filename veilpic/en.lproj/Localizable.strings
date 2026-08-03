@@ -3303,6 +3303,7 @@
 "xomo.figma.node.issue.textLineHeightFlattened" = "This Figma line-height unit cannot be represented accurately and uses Xomo's default line height";
 "xomo.figma.node.issue.textParagraphSpacingFlattened" = "Figma paragraph spacing is not yet editable in Xomo and uses the default paragraph spacing";
 "xomo.figma.node.issue.textAutoResizeFlattened" = "This Figma text auto-resize mode is not yet editable in Xomo and uses a fixed text box";
+"xomo.figma.node.issue.textHorizontalAlignmentFlattened" = "This Figma horizontal text alignment is unsupported and imports left-aligned";
 "xomo.figma.node.issue.textVerticalAlignmentFlattened" = "This Figma text vertical alignment is not recognized and uses top alignment";
 "xomo.figma.node.issue.textDecorationFlattened" = "This Figma text decoration is not recognized and imports without decoration";
 "xomo.figma.node.issue.textFontWeightFlattened" = "This Figma font weight cannot be represented exactly by regular or bold and uses the closest native weight";

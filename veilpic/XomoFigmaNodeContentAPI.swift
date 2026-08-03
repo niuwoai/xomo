@@ -306,6 +306,10 @@ enum XomoFigmaNodeImportMapper {
            textAutoResize != "TRUNCATE" {
             issues.append(.textAutoResizeFlattened)
         }
+        if let horizontalAlignment = node.style?.textAlignHorizontal,
+           mappedTextHorizontalAlignment(horizontalAlignment) == nil {
+            issues.append(.textHorizontalAlignmentFlattened)
+        }
         if let verticalAlignment = node.style?.textAlignVertical,
            mappedTextVerticalAlignment(verticalAlignment) == nil {
             issues.append(.textVerticalAlignmentFlattened)
@@ -387,7 +391,7 @@ enum XomoFigmaNodeImportMapper {
                     fontFamily: node.style?.fontFamily,
                     fontSize: node.style?.fontSize,
                     fontWeight: node.style?.fontWeight,
-                    horizontalAlignment: node.style?.textAlignHorizontal,
+                    horizontalAlignment: mappedTextHorizontalAlignment(node.style?.textAlignHorizontal)?.rawValue,
                     letterSpacing: node.style?.letterSpacing.flatMap { $0.isFinite ? $0 : nil },
                     lineHeight: lineHeight(for: node.style),
                     isItalic: node.style?.italic == true,
@@ -1039,6 +1043,16 @@ enum XomoFigmaNodeImportMapper {
         case nil, "TOP": .top
         case "CENTER": .center
         case "BOTTOM": .bottom
+        default: nil
+        }
+    }
+
+    static func mappedTextHorizontalAlignment(_ alignment: String?) -> ImageEditorTextAlignment? {
+        switch alignment {
+        case nil, "LEFT": .left
+        case "CENTER": .center
+        case "RIGHT": .right
+        case "JUSTIFIED": .justified
         default: nil
         }
     }

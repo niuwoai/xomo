@@ -285,6 +285,53 @@ struct XomoFigmaNodeImportPlanTests {
         #expect(restored.boxHeight == content.boxHeight)
     }
 
+    @Test func figmaHorizontalAlignmentUsesNativeValuesAndReportsUnknownValues() throws {
+        #expect(XomoFigmaNodeImportMapper.mappedTextHorizontalAlignment(nil) == .left)
+        #expect(XomoFigmaNodeImportMapper.mappedTextHorizontalAlignment("LEFT") == .left)
+        #expect(XomoFigmaNodeImportMapper.mappedTextHorizontalAlignment("CENTER") == .center)
+        #expect(XomoFigmaNodeImportMapper.mappedTextHorizontalAlignment("RIGHT") == .right)
+        #expect(XomoFigmaNodeImportMapper.mappedTextHorizontalAlignment("JUSTIFIED") == .justified)
+        #expect(XomoFigmaNodeImportMapper.mappedTextHorizontalAlignment("DISTRIBUTED") == nil)
+
+        let response = try JSONDecoder().decode(
+            XomoFigmaNodeResponse.self,
+            from: Data(
+                #"{"name":"Typography","nodes":{"1:6":{"document":{"id":"1:6","name":"Centered Label","type":"TEXT","characters":"Centered","style":{"fontSize":16,"textAlignHorizontal":"CENTER"},"fills":[{"type":"SOLID","color":{"r":0,"g":0,"b":0,"a":1}}],"absoluteBoundingBox":{"x":0,"y":0,"width":120,"height":40}}}}}"#.utf8
+            )
+        )
+        let plan = try XomoFigmaNodeImportMapper.makePlan(response: response, requestedNodeID: "1:6")
+        let item = try #require(plan.items.first)
+        #expect(item.text?.horizontalAlignment == ImageEditorTextAlignment.center.rawValue)
+        #expect(item.fidelity == .exact)
+        #expect(!item.issues.contains(.textHorizontalAlignmentFlattened))
+
+        let result = XomoFigmaNodeMaterializer.materialize(
+            plan: plan,
+            canvasSize: CGSize(width: 320, height: 240)
+        )
+        #expect(result.layers.first?.textContent?.alignment == .center)
+
+        let unknownResponse = try JSONDecoder().decode(
+            XomoFigmaNodeResponse.self,
+            from: Data(
+                #"{"name":"Typography","nodes":{"1:7":{"document":{"id":"1:7","name":"Unknown Alignment","type":"TEXT","characters":"Unknown","style":{"fontSize":16,"textAlignHorizontal":"DISTRIBUTED"},"fills":[{"type":"SOLID","color":{"r":0,"g":0,"b":0,"a":1}}],"absoluteBoundingBox":{"x":0,"y":0,"width":120,"height":40}}}}}"#.utf8
+            )
+        )
+        let unknownPlan = try XomoFigmaNodeImportMapper.makePlan(
+            response: unknownResponse,
+            requestedNodeID: "1:7"
+        )
+        let unknownItem = try #require(unknownPlan.items.first)
+        #expect(unknownItem.text?.horizontalAlignment == nil)
+        #expect(unknownItem.fidelity == .partial)
+        #expect(unknownItem.issues.contains(.textHorizontalAlignmentFlattened))
+        let unknownResult = XomoFigmaNodeMaterializer.materialize(
+            plan: unknownPlan,
+            canvasSize: CGSize(width: 320, height: 240)
+        )
+        #expect(unknownResult.layers.first?.textContent?.alignment == .left)
+    }
+
     @Test func figmaFixedTextVerticalAlignmentRemainsNativeAndRoundTrips() throws {
         let response = try JSONDecoder().decode(
             XomoFigmaNodeResponse.self,

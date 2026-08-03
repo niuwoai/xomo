@@ -3303,6 +3303,7 @@
 "xomo.figma.node.issue.textLineHeightFlattened" = "この Figma 行高単位は正確に変換できないため、Xomo の既定行高を使用します";
 "xomo.figma.node.issue.textParagraphSpacingFlattened" = "Figma の段落間隔はまだ Xomo で編集できないため、既定の段落間隔を使用します";
 "xomo.figma.node.issue.textAutoResizeFlattened" = "この Figma テキスト自動サイズモードはまだ Xomo で編集できないため、固定テキスト枠を使用します";
+"xomo.figma.node.issue.textHorizontalAlignmentFlattened" = "この Figma の横方向テキスト配置には未対応のため、左揃えで読み込みます";
 "xomo.figma.node.issue.textVerticalAlignmentFlattened" = "この Figma テキストの垂直揃えは認識できないため、上揃えを使用します";
 "xomo.figma.node.issue.textDecorationFlattened" = "この Figma テキスト装飾は認識できないため、装飾なしで読み込みます";
 "xomo.figma.node.issue.textFontWeightFlattened" = "この Figma フォントウェイトは標準または太字で正確に表現できないため、最も近いネイティブウェイトを使用します";
