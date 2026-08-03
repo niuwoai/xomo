@@ -502,6 +502,27 @@ struct XomoFigmaNodeImportPlanTests {
         #expect(!exactItem.issues.contains(.textFontWeightFlattened))
     }
 
+    @Test func figmaFontSizeBelowNativeMinimumReportsClampInsteadOfClaimingExactImport() throws {
+        let response = try JSONDecoder().decode(
+            XomoFigmaNodeResponse.self,
+            from: Data(
+                #"{"name":"Typography","nodes":{"1:12":{"document":{"id":"1:12","name":"Micro Label","type":"TEXT","characters":"Micro","style":{"fontSize":4},"fills":[{"type":"SOLID","color":{"r":0,"g":0,"b":0,"a":1}}],"absoluteBoundingBox":{"x":0,"y":0,"width":60,"height":12}}}}}"#.utf8
+            )
+        )
+
+        let plan = try XomoFigmaNodeImportMapper.makePlan(response: response, requestedNodeID: "1:12")
+        let item = try #require(plan.items.first)
+        #expect(item.text?.fontSize == 4)
+        #expect(item.fidelity == .partial)
+        #expect(item.issues.contains(.textFontSizeFlattened))
+
+        let result = XomoFigmaNodeMaterializer.materialize(
+            plan: plan,
+            canvasSize: CGSize(width: 320, height: 240)
+        )
+        #expect(result.layers.first?.textContent?.fontSize == 6)
+    }
+
     @Test func figmaSliceBecomesNativeFireworksSliceAndExportsWithoutCreatingLayer() throws {
         let response = try JSONDecoder().decode(
             XomoFigmaNodeResponse.self,

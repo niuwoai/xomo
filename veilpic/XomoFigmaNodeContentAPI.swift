@@ -322,6 +322,10 @@ enum XomoFigmaNodeImportMapper {
            mappedTextDecoration(decoration) == nil {
             issues.append(.textDecorationFlattened)
         }
+        if let fontSize = node.style?.fontSize,
+           !fontSize.isFinite || fontSize < 6 {
+            issues.append(.textFontSizeFlattened)
+        }
         if let fontWeight = node.style?.fontWeight,
            mappedTextBold(fontWeight) == nil {
             issues.append(.textFontWeightFlattened)
