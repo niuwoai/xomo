@@ -341,6 +341,7 @@ struct XomoFigmaNodeImportItem: Equatable, Identifiable, Sendable {
     var frame: XomoFigmaPlanRect?
     var opacity: Double
     var isVisible: Bool
+    var isLocked: Bool = false
     /// Canonical Xomo blend-mode raw value when Figma exposes a supported mode.
     var blendMode: String? = nil
     var solidFill: XomoFigmaPlanColor?

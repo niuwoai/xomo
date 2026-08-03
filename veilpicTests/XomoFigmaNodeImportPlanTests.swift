@@ -600,6 +600,7 @@ struct XomoFigmaNodeImportPlanTests {
         #expect(rectangle.cornerRadius == 8)
         #expect(rectangle.solidFill == XomoFigmaPlanColor(red: 0.1, green: 0.4, blue: 0.9, alpha: 1))
         #expect(rectangle.opacity == 0.8)
+        #expect(rectangle.isLocked)
         #expect(ellipse.targetKind == .ellipse)
         #expect(vector.targetKind == .vector)
         #expect(vector.vectorPaths == ["M 0 0 L 20 0 L 10 20 Z"])
@@ -1905,6 +1906,7 @@ struct XomoFigmaNodeImportPlanTests {
         }
         #expect(rectangle.frame == CGRect(x: 125, y: 218, width: 200, height: 44))
         #expect(rectangle.opacity == 0.8)
+        #expect(rectangle.isLocked)
         if case let .shape(content) = rectangle.kind {
             #expect(content.fillOpacity == 1)
             #expect(content.cornerRadius == 8)
@@ -2109,6 +2111,7 @@ struct XomoFigmaNodeImportPlanTests {
                     "name": "Primary",
                     "type": "RECTANGLE",
                     "opacity": 0.8,
+                    "locked": true,
                     "fills": [{"type": "SOLID", "color": {"r": 0.1, "g": 0.4, "b": 0.9, "a": 1}}],
                     "cornerRadius": 8,
                     "absoluteBoundingBox": {"x": 120, "y": 340, "width": 200, "height": 44}

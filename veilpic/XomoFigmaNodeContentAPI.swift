@@ -341,6 +341,7 @@ enum XomoFigmaNodeImportMapper {
             },
             opacity: min(max(node.opacity ?? 1, 0), 1),
             isVisible: node.visible ?? true,
+            isLocked: node.locked ?? false,
             blendMode: mappedBlendMode(node.blendMode)?.rawValue,
             solidFill: solidColor(in: node.fills),
             linearGradientFill: supportsGradientFill(node.type)
@@ -1173,6 +1174,7 @@ struct XomoFigmaNode: Decodable {
     var type: String
     var visible: Bool?
     var opacity: Double?
+    var locked: Bool?
     var children: [XomoFigmaNode]?
     var absoluteBoundingBox: XomoFigmaRectangle?
     var characters: String?
