@@ -1325,7 +1325,7 @@ enum ImageEditorPSDCodec {
         }
         guard let shape = layer.shapeContent,
               shape.kind == .path,
-              shape.fillOpacity >= 0.999,
+              shape.fillOpacity <= 0.001 || shape.fillOpacity >= 0.999,
               let content = shape.fillGradient?.normalized(),
               content.style == .linear
         else { return nil }

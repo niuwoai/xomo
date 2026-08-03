@@ -739,6 +739,26 @@ struct ImageEditorPSDTests {
         #expect(abs(restoredShape.strokeOpacity - 0.75) < 0.01)
     }
 
+    @Test func externalUnfilledGradientShapePreservesEditableGradientAndRoundTrips() throws {
+        var data = try psdFixtureData("gradient-vector-shape.psd")
+        let keyRange = try #require(data.range(of: Data("fillEnabled".utf8)))
+        let booleanOffset = keyRange.upperBound + 4
+        #expect(data[booleanOffset] == 1)
+        data[booleanOffset] = 0
+
+        let document = try ImageEditorPSDCodec.decode(data, sourceName: "unfilled-gradient-shape.psd")
+        let shape = try #require(document.layers.first?.shapeContent)
+        let gradient = try #require(shape.fillGradient?.normalized())
+        #expect(shape.fillOpacity == 0)
+
+        let exported = try ImageEditorPSDCodec.encode(document: document)
+        let reimported = try ImageEditorPSDCodec.decode(exported, sourceName: "unfilled-gradient-shape-roundtrip.psd")
+        let restoredShape = try #require(reimported.layers.first?.shapeContent)
+        #expect(restoredShape.kind == .path)
+        #expect(restoredShape.fillOpacity == 0)
+        #expect(restoredShape.fillGradient?.normalized() == gradient)
+    }
+
     @Test func externalSmartObjectFixtureUsesNativeRasterFallback() throws {
         let data = try psdFixtureData("unsupported-features.psd")
         let document = try ImageEditorPSDCodec.decode(data, sourceName: "unsupported-features.psd")
