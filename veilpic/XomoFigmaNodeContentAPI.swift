@@ -154,6 +154,9 @@ struct XomoFigmaNodeContentAPIClient: XomoFigmaNodePlanFetching {
 }
 
 enum XomoFigmaNodeImportMapper {
+    private static let regularFontWeight = 400.0
+    private static let boldFontWeight = 700.0
+    private static let approximateBoldThreshold = 600.0
     static let maximumNodeCount = 2_000
 
     static func makePlan(
@@ -310,6 +313,10 @@ enum XomoFigmaNodeImportMapper {
         if let decoration = node.style?.textDecoration,
            mappedTextDecoration(decoration) == nil {
             issues.append(.textDecorationFlattened)
+        }
+        if let fontWeight = node.style?.fontWeight,
+           mappedTextBold(fontWeight) == nil {
+            issues.append(.textFontWeightFlattened)
         }
         let exportPresetMapping = mappedExportPresets(
             node.exportSettings,
@@ -1043,6 +1050,18 @@ enum XomoFigmaNodeImportMapper {
         case "STRIKETHROUGH": .strikethrough
         default: nil
         }
+    }
+
+    static func mappedTextBold(_ fontWeight: Double?) -> Bool? {
+        guard let fontWeight else { return false }
+        guard fontWeight.isFinite else { return nil }
+        if fontWeight == regularFontWeight { return false }
+        if fontWeight == boldFontWeight { return true }
+        return nil
+    }
+
+    static func approximatedTextBold(_ fontWeight: Double?) -> Bool {
+        mappedTextBold(fontWeight) ?? ((fontWeight ?? regularFontWeight) >= approximateBoldThreshold)
     }
 
     static func lineHeight(for style: XomoFigmaTypeStyle?) -> Double? {

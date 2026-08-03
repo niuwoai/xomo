@@ -370,6 +370,47 @@ struct XomoFigmaNodeImportPlanTests {
         #expect(unknownItem.issues.contains(.textDecorationFlattened))
     }
 
+    @Test func figmaFontWeightReportsApproximationWithoutLosingClosestVisualWeight() throws {
+        #expect(XomoFigmaNodeImportMapper.mappedTextBold(nil) == false)
+        #expect(XomoFigmaNodeImportMapper.mappedTextBold(400) == false)
+        #expect(XomoFigmaNodeImportMapper.mappedTextBold(700) == true)
+        #expect(XomoFigmaNodeImportMapper.mappedTextBold(300) == nil)
+        #expect(XomoFigmaNodeImportMapper.mappedTextBold(600) == nil)
+        #expect(!XomoFigmaNodeImportMapper.approximatedTextBold(500))
+        #expect(XomoFigmaNodeImportMapper.approximatedTextBold(600))
+
+        let response = try JSONDecoder().decode(
+            XomoFigmaNodeResponse.self,
+            from: Data(
+                #"{"name":"Typography","nodes":{"1:10":{"document":{"id":"1:10","name":"Semibold Label","type":"TEXT","characters":"Semibold","style":{"fontSize":16,"fontWeight":600},"fills":[{"type":"SOLID","color":{"r":0,"g":0,"b":0,"a":1}}],"absoluteBoundingBox":{"x":0,"y":0,"width":120,"height":40}}}}}"#.utf8
+            )
+        )
+        let plan = try XomoFigmaNodeImportMapper.makePlan(response: response, requestedNodeID: "1:10")
+        let item = try #require(plan.items.first)
+        #expect(item.fidelity == .partial)
+        #expect(item.issues.contains(.textFontWeightFlattened))
+
+        let result = XomoFigmaNodeMaterializer.materialize(
+            plan: plan,
+            canvasSize: CGSize(width: 320, height: 240)
+        )
+        #expect(result.layers.first?.textContent?.isBold == true)
+
+        let exactResponse = try JSONDecoder().decode(
+            XomoFigmaNodeResponse.self,
+            from: Data(
+                #"{"name":"Typography","nodes":{"1:11":{"document":{"id":"1:11","name":"Bold Label","type":"TEXT","characters":"Bold","style":{"fontSize":16,"fontWeight":700},"fills":[{"type":"SOLID","color":{"r":0,"g":0,"b":0,"a":1}}],"absoluteBoundingBox":{"x":0,"y":0,"width":120,"height":40}}}}}"#.utf8
+            )
+        )
+        let exactPlan = try XomoFigmaNodeImportMapper.makePlan(
+            response: exactResponse,
+            requestedNodeID: "1:11"
+        )
+        let exactItem = try #require(exactPlan.items.first)
+        #expect(exactItem.fidelity == .exact)
+        #expect(!exactItem.issues.contains(.textFontWeightFlattened))
+    }
+
     @Test func figmaSliceBecomesNativeFireworksSliceAndExportsWithoutCreatingLayer() throws {
         let response = try JSONDecoder().decode(
             XomoFigmaNodeResponse.self,

@@ -492,7 +492,7 @@ enum XomoFigmaNodeMaterializer {
             fontSize: max(6, CGFloat(text.fontSize ?? 12) * scale),
             fontFamilyName: text.fontFamily ?? ImageEditorTextContent.systemFontFamilyName,
             point: CGPoint(x: padding, y: padding),
-            isBold: (text.fontWeight ?? 400) >= 600,
+            isBold: XomoFigmaNodeImportMapper.approximatedTextBold(text.fontWeight),
             isItalic: text.isItalic,
             isUnderlined: text.decoration == .underline,
             isStruckThrough: text.decoration == .strikethrough,

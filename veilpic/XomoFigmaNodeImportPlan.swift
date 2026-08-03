@@ -87,6 +87,7 @@ enum XomoFigmaNodeMappingIssue: String, CaseIterable, Sendable {
     case textAutoResizeFlattened
     case textVerticalAlignmentFlattened
     case textDecorationFlattened
+    case textFontWeightFlattened
     case variableBindingPreserved
     case exportSettingsPartiallyPreserved
 
