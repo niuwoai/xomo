@@ -957,6 +957,7 @@
 "imageEditor.properties.textLineSpacingValue" = "Leading: %d px";
 "imageEditor.properties.textBoxWidthValue" = "Text Box: %d px";
 "imageEditor.properties.textBoxHeightValue" = "Text Box Height: %d px";
+"imageEditor.properties.textBoxAutoHeight" = "Auto Height";
 "imageEditor.properties.textBoxOverflow" = "Text exceeds the text box";
 "imageEditor.properties.textLeftIndentValue" = "Left Indent: %d px";
 "imageEditor.properties.textRightIndentValue" = "Right Indent: %d px";
@@ -1500,6 +1501,8 @@
 "imageEditor.history.textBoxResize" = "Resize Text Box";
 "imageEditor.history.textBoxFitContent" = "Fit Text Box to Content";
 "imageEditor.history.textBoxExpandHeight" = "Expand Text Box Height";
+"imageEditor.history.textBoxAutoHeightEnable" = "Enable Text Box Auto Height";
+"imageEditor.history.textBoxAutoHeightDisable" = "Disable Text Box Auto Height";
 "imageEditor.history.layerRotate" = "Rotate Layer";
 "imageEditor.history.layerFlipHorizontal" = "Flip Layer Horizontal";
 "imageEditor.history.layerFlipVertical" = "Flip Layer Vertical";
@@ -2136,6 +2139,8 @@
 "imageEditor.status.textBoxResized" = "Text box resized without scaling the type";
 "imageEditor.status.textBoxFitContent" = "Fitted %d text box(es) to their content";
 "imageEditor.status.textBoxExpandHeight" = "Expanded %d overflowing text box(es)";
+"imageEditor.status.textBoxAutoHeightEnabled" = "Enabled auto height for %d text box(es)";
+"imageEditor.status.textBoxAutoHeightDisabled" = "Disabled auto height for %d text box(es)";
 "imageEditor.status.layerRotated" = "Selected layer rotated";
 "imageEditor.status.layerFlipHorizontal" = "Selected layer flipped horizontally";
 "imageEditor.status.layerFlipVertical" = "Selected layer flipped vertically";

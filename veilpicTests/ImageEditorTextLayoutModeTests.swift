@@ -216,6 +216,39 @@ struct ImageEditorTextLayoutModeTests {
         #expect(viewModel.document.history.count == historyCount + 1)
     }
 
+    @Test func autoHeightToggleResizesParagraphAndUndoRestoresFixedHeight() throws {
+        let viewModel = editor()
+        viewModel.textValue = "One two three four five six seven eight"
+        viewModel.textBoxWidth = 80
+        viewModel.textBoxHeight = 140
+        viewModel.addText(at: CGPoint(x: 16, y: 20))
+
+        let before = try #require(viewModel.document.selectedLayer)
+        #expect(viewModel.canSetSelectedTextBoxAutoHeight)
+        #expect(!viewModel.selectedTextBoxUsesAutoHeight)
+
+        viewModel.setSelectedTextBoxesAutoHeight(true)
+
+        let automatic = try #require(viewModel.document.selectedLayer)
+        let automaticContent = try #require(automatic.textContent)
+        #expect(automaticContent.boxHeight == 0)
+        #expect(viewModel.selectedTextBoxUsesAutoHeight)
+        #expect(automatic.frame.height == automaticContent.requiredParagraphHeight + ImageEditorTextContent.drawingPadding * 2)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.textBoxAutoHeightEnable"))
+
+        viewModel.setSelectedTextBoxesAutoHeight(false)
+
+        let fixed = try #require(viewModel.document.selectedLayer?.textContent)
+        #expect(fixed.boxHeight == fixed.requiredParagraphHeight)
+        #expect(!viewModel.selectedTextBoxUsesAutoHeight)
+
+        viewModel.undo()
+        #expect(viewModel.document.selectedLayer?.textContent?.boxHeight == 0)
+        viewModel.undo()
+        #expect(viewModel.document.selectedLayer?.frame == before.frame)
+        #expect(viewModel.document.selectedLayer?.textContent?.boxHeight == 140)
+    }
+
     private func editor() -> ImageEditorViewModel {
         ImageEditorViewModel(
             sourceName: "text-layout-mode.png",

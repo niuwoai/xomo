@@ -957,6 +957,7 @@
 "imageEditor.properties.textLineSpacingValue" = "行距：%d px";
 "imageEditor.properties.textBoxWidthValue" = "文本框：%d px";
 "imageEditor.properties.textBoxHeightValue" = "文本框高度：%d px";
+"imageEditor.properties.textBoxAutoHeight" = "自动高度";
 "imageEditor.properties.textBoxOverflow" = "文字内容超出文本框";
 "imageEditor.properties.textLeftIndentValue" = "左缩进：%d px";
 "imageEditor.properties.textRightIndentValue" = "右缩进：%d px";
@@ -1500,6 +1501,8 @@
 "imageEditor.history.textBoxResize" = "调整文本框";
 "imageEditor.history.textBoxFitContent" = "文本框适合内容";
 "imageEditor.history.textBoxExpandHeight" = "扩高文本框";
+"imageEditor.history.textBoxAutoHeightEnable" = "启用文本框自动高度";
+"imageEditor.history.textBoxAutoHeightDisable" = "停用文本框自动高度";
 "imageEditor.history.layerRotate" = "旋转图层";
 "imageEditor.history.layerFlipHorizontal" = "水平翻转图层";
 "imageEditor.history.layerFlipVertical" = "垂直翻转图层";
@@ -2136,6 +2139,8 @@
 "imageEditor.status.textBoxResized" = "已调整文本框，字号保持不变";
 "imageEditor.status.textBoxFitContent" = "已让 %d 个文本框适合内容";
 "imageEditor.status.textBoxExpandHeight" = "已扩高 %d 个溢出的文本框";
+"imageEditor.status.textBoxAutoHeightEnabled" = "已为 %d 个文本框启用自动高度";
+"imageEditor.status.textBoxAutoHeightDisabled" = "已为 %d 个文本框停用自动高度";
 "imageEditor.status.layerRotated" = "已旋转当前图层";
 "imageEditor.status.layerFlipHorizontal" = "已水平翻转当前图层";
 "imageEditor.status.layerFlipVertical" = "已垂直翻转当前图层";

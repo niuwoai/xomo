@@ -7860,6 +7860,17 @@ struct ImageEditorView: View {
                     in: 0...Double(ImageEditorTextContent.maximumBoxDimension),
                     step: 8
                 )
+                Toggle(
+                    L10n.text("imageEditor.properties.textBoxAutoHeight"),
+                    isOn: Binding(
+                        get: { viewModel.selectedTextBoxUsesAutoHeight },
+                        set: { viewModel.setSelectedTextBoxesAutoHeight($0) }
+                    )
+                )
+                .toggleStyle(.checkbox)
+                .focusable(false)
+                .disabled(!viewModel.canSetSelectedTextBoxAutoHeight)
+                .accessibilityIdentifier("image-editor-text-box-auto-height")
                 if viewModel.selectedTextBoxHasOverflow {
                     Label(
                         L10n.text("imageEditor.properties.textBoxOverflow"),

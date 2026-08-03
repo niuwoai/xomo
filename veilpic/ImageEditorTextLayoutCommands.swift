@@ -61,6 +61,17 @@ extension ImageEditorViewModel {
         !textBoxFitLayerIndices(for: .expandHeight).isEmpty
     }
 
+    var canSetSelectedTextBoxAutoHeight: Bool {
+        !autoHeightTextBoxIndices().isEmpty
+    }
+
+    var selectedTextBoxUsesAutoHeight: Bool {
+        let indices = autoHeightTextBoxIndices()
+        return !indices.isEmpty && indices.allSatisfy {
+            document.layers[$0].textContent?.boxHeight == 0
+        }
+    }
+
     func convertSelectedTextLayers(to layoutMode: ImageEditorTextLayoutMode) {
         let indices = convertibleSelectedTextLayerIndices(to: layoutMode)
         guard !indices.isEmpty else {
@@ -107,6 +118,35 @@ extension ImageEditorViewModel {
         statusText = L10n.format(statusKey(for: mode), indices.count)
     }
 
+    func setSelectedTextBoxesAutoHeight(_ enabled: Bool) {
+        let indices = autoHeightTextBoxIndices().filter { index in
+            guard let content = document.layers[index].textContent else { return false }
+            return enabled ? content.boxHeight > 0 : content.boxHeight == 0
+        }
+        guard !indices.isEmpty else { return }
+
+        pushUndo()
+        for index in indices {
+            guard var content = document.layers[index].textContent else { continue }
+            content.boxHeight = enabled
+                ? 0
+                : min(ImageEditorTextContent.maximumBoxDimension, max(1, content.requiredParagraphHeight))
+            resizeTextLayer(at: index, for: content)
+        }
+        if let content = document.selectedLayer?.textContent {
+            textBoxHeight = Double(content.boxHeight)
+        }
+        appendHistory(L10n.text(enabled
+            ? "imageEditor.history.textBoxAutoHeightEnable"
+            : "imageEditor.history.textBoxAutoHeightDisable"))
+        statusText = L10n.format(
+            enabled
+                ? "imageEditor.status.textBoxAutoHeightEnabled"
+                : "imageEditor.status.textBoxAutoHeightDisabled",
+            indices.count
+        )
+    }
+
     private func canConvertSelectedText(to layoutMode: ImageEditorTextLayoutMode) -> Bool {
         !convertibleSelectedTextLayerIndices(to: layoutMode).isEmpty
     }
@@ -140,6 +180,16 @@ extension ImageEditorViewModel {
             case .expandHeight:
                 return requiredHeight > content.boxHeight + 0.5
             }
+        }
+    }
+
+    private func autoHeightTextBoxIndices() -> [Int] {
+        document.layers.indices.filter { index in
+            let layer = document.layers[index]
+            guard document.selectedLayerIDs.contains(layer.id),
+                  let content = layer.textContent
+            else { return false }
+            return content.layoutMode == .paragraph && !document.isEffectivelyPixelsLocked(layer)
         }
     }
 
