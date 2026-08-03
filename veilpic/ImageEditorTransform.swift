@@ -930,7 +930,7 @@ extension ImageEditorViewModel {
 
     private func transformContentFrame(forLayerAt index: Int) -> CGRect? {
         let layer = document.layers[index]
-        if layer.textContent?.layoutMode == .paragraph {
+        if layer.textContent != nil {
             return layer.frame.standardized
         }
         if let cached = cachedLayerTransformContentFrames[layer.id] {

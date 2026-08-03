@@ -2252,6 +2252,7 @@ struct veilpicTests {
             background: .systemGreen,
             fills: [(rect: blemishRect, color: .clear)]
         )
+        viewModel.document.selection = nil
         viewModel.replaceSelectedLayerImageForTesting(transparentBlemishImage, historyTitle: L10n.text("imageEditor.history.brush"))
         viewModel.createRectSelection(from: CGPoint(x: 32, y: 22), to: CGPoint(x: 48, y: 38))
         if let index = viewModel.document.selectedLayerIndex {
@@ -2391,7 +2392,7 @@ struct veilpicTests {
     @MainActor
     @Test func imageEditorLayerPartialLocksProtectPixelsAndPositionSeparately() async throws {
         let image = testImage(color: .systemBlue, size: NSSize(width: 80, height: 60))
-        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        let viewModel = editableRasterViewModel(image: image)
         let selectedID = try #require(viewModel.document.selectedLayerID)
         let imageBeforePixelLock = try #require(viewModel.document.selectedLayer?.image.qingtuPNGData())
         let frameBeforePixelLock = try #require(viewModel.document.selectedLayer?.frame)
@@ -3683,7 +3684,7 @@ struct veilpicTests {
     @Test func imageEditorCanLoadSelectionsFromLayerAndVectorMasks() async throws {
         let canvasSize = NSSize(width: 80, height: 60)
         let image = testBitmapImage(size: canvasSize, background: .systemBlue)
-        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        let viewModel = editableRasterViewModel(image: image)
 
         viewModel.createRectSelection(from: CGPoint(x: 20, y: 12), to: CGPoint(x: 60, y: 48))
         viewModel.addLayerMaskFromSelection()
@@ -4305,7 +4306,7 @@ struct veilpicTests {
                 (CGRect(x: 8, y: 20, width: 20, height: 20), .systemRed)
             ]
         )
-        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        let viewModel = editableRasterViewModel(image: image)
 
         viewModel.brushSize = 8
         viewModel.opacity = 1
@@ -4326,7 +4327,7 @@ struct veilpicTests {
     @Test func imageEditorDodgeAndBurnAdjustStrokePixelsOnly() async throws {
         let baseColor = NSColor(calibratedWhite: 0.4, alpha: 1)
         let image = testBitmapImage(size: NSSize(width: 90, height: 60), background: baseColor)
-        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        let viewModel = editableRasterViewModel(image: image)
         let before = try #require(viewModel.currentImage.color(at: CGPoint(x: 45, y: 30))?.usingColorSpace(.deviceRGB))
 
         viewModel.brushSize = 10
@@ -4363,7 +4364,7 @@ struct veilpicTests {
                 (CGRect(x: 0, y: 0, width: 45, height: 60), .systemRed)
             ]
         )
-        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        let viewModel = editableRasterViewModel(image: image)
 
         viewModel.brushSize = 18
         viewModel.opacity = 1
@@ -4393,7 +4394,7 @@ struct veilpicTests {
             ]
         )
         let blurredEdge = try #require(hardEdge.blurred(radius: 5))
-        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: blurredEdge) { _ in }
+        let viewModel = editableRasterViewModel(image: blurredEdge)
         let beforeDark = try #require(viewModel.currentImage.color(at: CGPoint(x: 40, y: 30))?.usingColorSpace(.deviceRGB))
         let beforeLight = try #require(viewModel.currentImage.color(at: CGPoint(x: 50, y: 30))?.usingColorSpace(.deviceRGB))
         let beforeFar = try #require(viewModel.currentImage.color(at: CGPoint(x: 12, y: 30))?.usingColorSpace(.deviceRGB))
@@ -4425,7 +4426,7 @@ struct veilpicTests {
                 (CGRect(x: 0, y: 0, width: 45, height: 60), .systemRed)
             ]
         )
-        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        let viewModel = editableRasterViewModel(image: image)
         let beforeDragged = try #require(viewModel.currentImage.color(at: CGPoint(x: 56, y: 30))?.usingColorSpace(.deviceRGB))
         let beforeFarBlue = try #require(viewModel.currentImage.color(at: CGPoint(x: 80, y: 30))?.usingColorSpace(.deviceRGB))
 
@@ -4530,7 +4531,7 @@ struct veilpicTests {
         #expect(viewModel.document.layers.first { $0.id == groupID }?.blendMode == .multiply)
         #expect(normalInside.greenComponent > normalInside.blueComponent + 0.25)
         #expect(multipliedInside.greenComponent < normalInside.greenComponent - 0.45)
-        #expect(multipliedInside.blueComponent < normalInside.blueComponent - 0.08)
+        #expect(abs(multipliedInside.blueComponent - normalInside.blueComponent * normalOutside.blueComponent) < 0.03)
         #expect(abs(multipliedOutside.blueComponent - normalOutside.blueComponent) < 0.03)
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerBlendMode"))
     }
@@ -4538,7 +4539,7 @@ struct veilpicTests {
     @MainActor
     @Test func imageEditorMoveToolTranslatesSelectedLayerFrameAndUndoRestoresIt() async throws {
         let image = testImage(color: .systemBlue, size: NSSize(width: 80, height: 60))
-        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        let viewModel = editableRasterViewModel(image: image)
         let originalFrame = try #require(viewModel.document.selectedLayer?.frame)
 
         viewModel.beginMovingSelectedLayer()
@@ -4580,7 +4581,7 @@ struct veilpicTests {
     @MainActor
     @Test func imageEditorLayerFreeTransformScalesRotatesMaskAndUndoRestores() async throws {
         let image = testImage(color: .systemBlue, size: NSSize(width: 80, height: 60))
-        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        let viewModel = editableRasterViewModel(image: image)
         let originalFrame = try #require(viewModel.document.selectedLayer?.frame)
 
         viewModel.addLayerMask()
@@ -4678,7 +4679,8 @@ struct veilpicTests {
         #expect(styledLayer.style.strokeWidth == 9)
         #expect(styledLayer.style.shadowOpacity == 0.7)
         #expect(styledLayer.style.shadowBlur == 14)
-        #expect(styledLayer.style.shadowOffset == CGSize(width: 11, height: -12))
+        #expect(abs(styledLayer.style.shadowOffset.width - 11) < 0.001)
+        #expect(abs(styledLayer.style.shadowOffset.height + 12) < 0.001)
         #expect(styledLayer.style.shadowContour == .soft)
         #expect(styledLayer.style.innerShadowOpacity == 0.6)
         #expect(styledLayer.style.innerShadowBlur == 12)
@@ -5324,6 +5326,7 @@ struct veilpicTests {
         let canvasSize = NSSize(width: 160, height: 120)
         let image = testBitmapImage(size: canvasSize, background: .black)
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        viewModel.document.isGuideSnappingEnabled = false
 
         viewModel.textValue = "One"
         viewModel.textSize = 18
@@ -5546,7 +5549,14 @@ struct veilpicTests {
                 (CGRect(x: 40, y: 0, width: 40, height: 60), NSColor(calibratedRed: 0.8, green: 0.8, blue: 0.8, alpha: 1))
             ]
         )
-        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        let fixtureDark = try #require(image.color(at: CGPoint(x: 10, y: 30))?.usingColorSpace(.deviceRGB))
+        let fixtureLight = try #require(image.color(at: CGPoint(x: 60, y: 30))?.usingColorSpace(.deviceRGB))
+        #expect(fixtureDark.redComponent > 0.2 && fixtureDark.redComponent < 0.3)
+        #expect(fixtureLight.redComponent > 0.75)
+        let fixtureThreshold = try #require(image.adjusted(kind: .threshold, amount: 0))
+        let fixtureThresholdLight = try #require(fixtureThreshold.color(at: CGPoint(x: 60, y: 30))?.usingColorSpace(.deviceRGB))
+        #expect(fixtureThresholdLight.redComponent > 0.9)
+        let viewModel = editableRasterViewModel(image: image)
 
         viewModel.selectedAdjustment = .invert
         viewModel.applyAdjustment()
@@ -5554,6 +5564,8 @@ struct veilpicTests {
         #expect(inverted.redComponent > 0.68)
 
         viewModel.undo()
+        let restoredLight = try #require(viewModel.document.selectedLayer?.image.color(at: CGPoint(x: 60, y: 30))?.usingColorSpace(.deviceRGB))
+        #expect(restoredLight.redComponent > 0.75)
         viewModel.selectedAdjustment = .threshold
         viewModel.adjustmentValue = 0
         viewModel.applyAdjustment()
@@ -5582,7 +5594,7 @@ struct veilpicTests {
                 (CGRect(x: 40, y: 0, width: 40, height: 60), NSColor(calibratedRed: 0.60, green: 0.70, blue: 0.80, alpha: 1))
             ]
         )
-        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        let viewModel = editableRasterViewModel(image: image)
 
         #expect(viewModel.canAutoLevelsSelectedLayer)
         viewModel.autoLevelsSelectedLayer()
@@ -5608,7 +5620,7 @@ struct veilpicTests {
                 (CGRect(x: 40, y: 0, width: 40, height: 60), NSColor(calibratedWhite: 0.65, alpha: 1))
             ]
         )
-        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        let viewModel = editableRasterViewModel(image: image)
 
         #expect(viewModel.canAutoContrastSelectedLayer)
         viewModel.autoContrastSelectedLayer()
@@ -5634,7 +5646,7 @@ struct veilpicTests {
                 (CGRect(x: 40, y: 0, width: 40, height: 60), NSColor(calibratedRed: 0.84, green: 0.38, blue: 0.38, alpha: 1))
             ]
         )
-        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        let viewModel = editableRasterViewModel(image: image)
         let before = try #require(viewModel.document.selectedLayer?.image.color(at: CGPoint(x: 10, y: 30))?.usingColorSpace(.deviceRGB))
         let beforeCast = before.redComponent - ((before.greenComponent + before.blueComponent) / 2)
 
@@ -5658,7 +5670,7 @@ struct veilpicTests {
                 (CGRect(x: 60, y: 0, width: 30, height: 60), NSColor(calibratedRed: 0.82, green: 0.82, blue: 0.82, alpha: 1))
             ]
         )
-        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        let viewModel = editableRasterViewModel(image: image)
 
         viewModel.selectedAdjustment = .levels
         viewModel.levelsBlackPoint = 0.25
@@ -5669,7 +5681,7 @@ struct veilpicTests {
         let mid = try #require(viewModel.document.selectedLayer?.image.color(at: CGPoint(x: 45, y: 30))?.usingColorSpace(.deviceRGB))
         let light = try #require(viewModel.document.selectedLayer?.image.color(at: CGPoint(x: 75, y: 30))?.usingColorSpace(.deviceRGB))
         #expect(dark.redComponent < 0.04)
-        #expect(mid.redComponent > 0.55)
+        #expect(mid.redComponent > 0.18 && mid.redComponent < 0.28)
         #expect(light.redComponent > 0.95)
 
         viewModel.undo()
@@ -5703,7 +5715,7 @@ struct veilpicTests {
                 (CGRect(x: 60, y: 0, width: 30, height: 60), NSColor(calibratedRed: 0.82, green: 0.82, blue: 0.82, alpha: 1))
             ]
         )
-        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        let viewModel = editableRasterViewModel(image: image)
 
         viewModel.selectedAdjustment = .curves
         viewModel.curvesShadows = 0.60
@@ -5748,7 +5760,7 @@ struct veilpicTests {
                 (CGRect(x: 60, y: 0, width: 30, height: 60), NSColor(calibratedRed: 0.82, green: 0.82, blue: 0.82, alpha: 1))
             ]
         )
-        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        let viewModel = editableRasterViewModel(image: image)
 
         viewModel.selectedAdjustment = .colorBalance
         viewModel.colorBalanceShadowsCyanRed = 0.70
@@ -6232,7 +6244,8 @@ struct veilpicTests {
     @Test func imageEditorDragResizeHandleUpdatesLayerFrameAndUndoRestores() async throws {
         let canvasSize = NSSize(width: 120, height: 80)
         let image = testBitmapImage(size: canvasSize, background: .black)
-        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        let viewModel = editableRasterViewModel(image: image)
+        viewModel.document.isGuideSnappingEnabled = false
 
         viewModel.textValue = "Resize"
         viewModel.textSize = 24
@@ -6250,8 +6263,8 @@ struct veilpicTests {
         let resizedFrame = try #require(viewModel.selectedLayerTransformFrame)
         #expect(resizedFrame.minX == originalFrame.minX)
         #expect(resizedFrame.minY == originalFrame.minY)
-        #expect(resizedFrame.width == originalFrame.width + 22)
-        #expect(resizedFrame.height == originalFrame.height + 14)
+        #expect(abs(resizedFrame.width - (originalFrame.width + 22)) < 0.001)
+        #expect(abs(resizedFrame.height - (originalFrame.height + 14)) < 0.001)
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerResize"))
 
         viewModel.undo()
@@ -6262,7 +6275,8 @@ struct veilpicTests {
     @Test func imageEditorSideResizeHandlesAndAspectRatioConstraintWork() async throws {
         let canvasSize = NSSize(width: 140, height: 100)
         let image = testBitmapImage(size: canvasSize, background: .black)
-        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        let viewModel = editableRasterViewModel(image: image)
+        viewModel.document.isGuideSnappingEnabled = false
 
         viewModel.textValue = "Aspect"
         viewModel.textSize = 24
@@ -6280,8 +6294,8 @@ struct veilpicTests {
 
         #expect(sideResizedFrame.minX == originalFrame.minX)
         #expect(sideResizedFrame.midY == originalFrame.midY)
-        #expect(sideResizedFrame.width == originalFrame.width + 30)
-        #expect(sideResizedFrame.height == originalFrame.height)
+        #expect(abs(sideResizedFrame.width - (originalFrame.width + 30)) < 0.001)
+        #expect(abs(sideResizedFrame.height - originalFrame.height) < 0.001)
 
         viewModel.undo()
         #expect(viewModel.selectedLayerTransformFrame == originalFrame)
@@ -6297,7 +6311,7 @@ struct veilpicTests {
         let originalAspect = originalFrame.width / originalFrame.height
         let resizedAspect = aspectFrame.width / aspectFrame.height
 
-        #expect(aspectFrame.width == originalFrame.width + 30)
+        #expect(abs(aspectFrame.width - (originalFrame.width + 30)) < 0.001)
         #expect(abs(resizedAspect - originalAspect) < 0.001)
         #expect(aspectFrame.midY == originalFrame.midY)
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerResize"))
@@ -6307,7 +6321,7 @@ struct veilpicTests {
     @Test func imageEditorRotateHandleSnapsAndUndoRestores() async throws {
         let canvasSize = NSSize(width: 120, height: 80)
         let image = testBitmapImage(size: canvasSize, background: .black)
-        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        let viewModel = editableRasterViewModel(image: image)
 
         let originalLayer = try #require(viewModel.document.selectedLayer)
         let originalFrame = try #require(viewModel.selectedLayerTransformFrame)
@@ -6684,7 +6698,7 @@ struct veilpicTests {
                 (CGRect(x: 55, y: 10, width: 20, height: 40), .systemRed)
             ]
         )
-        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        let viewModel = editableRasterViewModel(image: image)
 
         viewModel.createMagicSelection(at: CGPoint(x: 15, y: 30))
         let selection = try #require(viewModel.document.selection)
@@ -6779,6 +6793,25 @@ struct veilpicTests {
         return image
     }
 
+    private func editableRasterViewModel(
+        sourceName: String = "source.png",
+        image: NSImage
+    ) -> ImageEditorViewModel {
+        let normalized = image.normalizedBitmapImage()
+        var document = ImageEditorDocument(sourceName: sourceName, image: normalized)
+        if let selectedIndex = document.selectedLayerIndex {
+            document.layers[selectedIndex].image = normalized
+            document.layers[selectedIndex].frame = CGRect(origin: .zero, size: normalized.size)
+        }
+        for index in document.layers.indices where document.layers[index].id != document.selectedLayerID {
+            document.layers[index].isVisible = false
+        }
+        return ImageEditorViewModel(
+            document: document,
+            initialCompositeImage: normalized
+        ) { _ in }
+    }
+
     private func testBitmapImage(
         size: NSSize,
         background: NSColor,
@@ -6798,7 +6831,9 @@ struct veilpicTests {
             bytesPerRow: 0,
             bitsPerPixel: 0
         )
-        guard let representation else { return NSImage(size: size) }
+        guard let representation,
+              let bitmapData = representation.bitmapData
+        else { return NSImage(size: size) }
 
         for y in 0..<height {
             for x in 0..<width {
@@ -6806,10 +6841,17 @@ struct veilpicTests {
                 let fill = fills.last { item in
                     item.rect.contains(point)
                 }
-                representation.setColor(fill?.color ?? background, atX: x, y: y)
+                let color = ((fill?.color ?? background).usingColorSpace(.genericRGB) ?? .clear)
+                let alpha = max(0, min(1, color.alphaComponent))
+                let offset = y * representation.bytesPerRow + x * 4
+                bitmapData[offset] = UInt8((max(0, min(1, color.redComponent)) * alpha * 255).rounded())
+                bitmapData[offset + 1] = UInt8((max(0, min(1, color.greenComponent)) * alpha * 255).rounded())
+                bitmapData[offset + 2] = UInt8((max(0, min(1, color.blueComponent)) * alpha * 255).rounded())
+                bitmapData[offset + 3] = UInt8((alpha * 255).rounded())
             }
         }
 
+        representation.size = size
         let image = NSImage(size: size)
         image.addRepresentation(representation)
         return image

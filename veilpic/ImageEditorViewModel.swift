@@ -4995,8 +4995,8 @@ final class ImageEditorViewModel: ObservableObject {
         document.selectedLayerID = layer.id
         document.selectedLayerIDs = [layer.id]
         isEditingLayerMask = false
-        statusText = L10n.text("imageEditor.status.layerStampSelected")
         appendHistory(L10n.text("imageEditor.history.layerStampSelected"))
+        statusText = L10n.text("imageEditor.status.layerStampSelected")
     }
 
     func addLayerMask() {
@@ -7838,7 +7838,7 @@ final class ImageEditorViewModel: ObservableObject {
         syncControlsFromLayerSelection()
     }
 
-    private func isBackgroundLayer(at index: Int) -> Bool {
+    func isBackgroundLayer(at index: Int) -> Bool {
         guard document.layers.indices.contains(index) else { return false }
         let layer = document.layers[index]
         return index == 0

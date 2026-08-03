@@ -569,22 +569,24 @@ extension ImageEditorViewModel {
         }
 
         guard let image = NSImage.rendered(size: document.canvasSize, actions: { _ in
-            if layer.isClippingMask,
-               let clippedImage = document.clippedCompositingImage(forLayerAt: index) {
-                clippedImage.draw(
-                    in: CGRect(origin: .zero, size: document.canvasSize),
-                    from: CGRect(origin: .zero, size: document.canvasSize),
-                    operation: .sourceOver,
-                    fraction: 1
-                )
-            } else {
-                let compositingImage = layer.renderedCompositingImage(globalLightAngle: document.globalLightAngle)
-                compositingImage.draw(
-                    in: layer.renderedCompositingFrame(globalLightAngle: document.globalLightAngle),
-                    from: CGRect(origin: .zero, size: compositingImage.size),
-                    operation: .sourceOver,
-                    fraction: 1
-                )
+            NSGraphicsContext.current?.withImageEditorTopLeftCoordinates(height: document.canvasSize.height) {
+                if layer.isClippingMask,
+                   let clippedImage = document.clippedCompositingImage(forLayerAt: index) {
+                    clippedImage.draw(
+                        in: CGRect(origin: .zero, size: document.canvasSize),
+                        from: CGRect(origin: .zero, size: document.canvasSize),
+                        operation: .sourceOver,
+                        fraction: 1
+                    )
+                } else {
+                    let compositingImage = layer.renderedCompositingImage(globalLightAngle: document.globalLightAngle)
+                    compositingImage.draw(
+                        in: layer.renderedCompositingFrame(globalLightAngle: document.globalLightAngle),
+                        from: CGRect(origin: .zero, size: compositingImage.size),
+                        operation: .sourceOver,
+                        fraction: 1
+                    )
+                }
             }
         }) else { return nil }
         return image.alphaSelection(

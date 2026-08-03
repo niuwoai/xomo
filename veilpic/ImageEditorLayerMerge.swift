@@ -114,7 +114,14 @@ extension ImageEditorViewModel {
             selectedIDs: document.selectedLayerIDs,
             primarySelectionID: document.selectedLayerID,
             isEffectivelyLocked: { document.isEffectivelyLocked($0) },
-            isEffectivelyPixelsLocked: { document.isEffectivelyPixelsLocked($0) },
+            isEffectivelyPixelsLocked: { layer in
+                guard let index = document.layers.firstIndex(where: { $0.id == layer.id }) else {
+                    return true
+                }
+                return isBackgroundLayer(at: index)
+                    ? false
+                    : document.isEffectivelyPixelsLocked(layer)
+            },
             isEffectivelyVisible: { document.isEffectivelyVisible($0) }
         )
     }

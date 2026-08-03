@@ -1400,7 +1400,9 @@ struct ImageEditorAdjustmentTests {
             bytesPerRow: 0,
             bitsPerPixel: 0
         )
-        guard let representation else { return NSImage(size: size) }
+        guard let representation,
+              let bitmapData = representation.bitmapData
+        else { return NSImage(size: size) }
 
         for y in 0..<height {
             for x in 0..<width {
@@ -1408,10 +1410,17 @@ struct ImageEditorAdjustmentTests {
                 let fill = fills.last { item in
                     item.rect.contains(point)
                 }
-                representation.setColor(fill?.color ?? background, atX: x, y: y)
+                let color = ((fill?.color ?? background).usingColorSpace(.genericRGB) ?? .clear)
+                let alpha = max(0, min(1, color.alphaComponent))
+                let offset = y * representation.bytesPerRow + x * 4
+                bitmapData[offset] = UInt8((max(0, min(1, color.redComponent)) * alpha * 255).rounded())
+                bitmapData[offset + 1] = UInt8((max(0, min(1, color.greenComponent)) * alpha * 255).rounded())
+                bitmapData[offset + 2] = UInt8((max(0, min(1, color.blueComponent)) * alpha * 255).rounded())
+                bitmapData[offset + 3] = UInt8((alpha * 255).rounded())
             }
         }
 
+        representation.size = size
         let image = NSImage(size: size)
         image.addRepresentation(representation)
         return image
