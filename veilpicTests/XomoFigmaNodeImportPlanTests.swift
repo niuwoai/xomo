@@ -76,6 +76,49 @@ struct XomoFigmaNodeImportPlanTests {
         #expect(item.issues.contains(.textParagraphSpacingFlattened))
     }
 
+    @Test func figmaAutoWidthAndHeightTextMaterializesAsEditablePointText() throws {
+        let response = try JSONDecoder().decode(
+            XomoFigmaNodeResponse.self,
+            from: Data(
+                #"{"name":"Typography","nodes":{"1:3":{"document":{"id":"1:3","name":"Button Label","type":"TEXT","characters":"Continue","style":{"fontSize":16,"textAutoResize":"WIDTH_AND_HEIGHT"},"fills":[{"type":"SOLID","color":{"r":0,"g":0,"b":0,"a":1}}],"absoluteBoundingBox":{"x":10,"y":20,"width":72,"height":20}}}}}"#.utf8
+            )
+        )
+
+        let plan = try XomoFigmaNodeImportMapper.makePlan(response: response, requestedNodeID: "1:3")
+        let item = try #require(plan.items.first)
+        #expect(item.text?.usesAutoWidthAndHeight == true)
+        #expect(item.fidelity == .exact)
+        #expect(!item.issues.contains(.textAutoResizeFlattened))
+
+        let result = XomoFigmaNodeMaterializer.materialize(
+            plan: plan,
+            canvasSize: CGSize(width: 320, height: 240)
+        )
+        let layer = try #require(result.layers.first)
+        guard case let .text(content) = layer.kind else {
+            Issue.record("Figma auto-size text should remain editable text")
+            return
+        }
+        #expect(content.layoutMode == .point)
+        #expect(content.boxWidth == 0)
+        #expect(content.boxHeight == 0)
+    }
+
+    @Test func unsupportedFigmaTextAutoResizeModeIsReportedAsPartial() throws {
+        let response = try JSONDecoder().decode(
+            XomoFigmaNodeResponse.self,
+            from: Data(
+                #"{"name":"Typography","nodes":{"1:4":{"document":{"id":"1:4","name":"Body","type":"TEXT","characters":"One\nTwo","style":{"fontSize":16,"textAutoResize":"HEIGHT"},"fills":[{"type":"SOLID","color":{"r":0,"g":0,"b":0,"a":1}}],"absoluteBoundingBox":{"x":0,"y":0,"width":120,"height":48}}}}}"#.utf8
+            )
+        )
+
+        let plan = try XomoFigmaNodeImportMapper.makePlan(response: response, requestedNodeID: "1:4")
+        let item = try #require(plan.items.first)
+        #expect(item.text?.usesAutoWidthAndHeight == false)
+        #expect(item.fidelity == .partial)
+        #expect(item.issues.contains(.textAutoResizeFlattened))
+    }
+
     @Test func figmaSliceBecomesNativeFireworksSliceAndExportsWithoutCreatingLayer() throws {
         let response = try JSONDecoder().decode(
             XomoFigmaNodeResponse.self,

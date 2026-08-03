@@ -296,6 +296,11 @@ enum XomoFigmaNodeImportMapper {
            !paragraphSpacing.isFinite || abs(paragraphSpacing) > 0.000_001 {
             issues.append(.textParagraphSpacingFlattened)
         }
+        if let textAutoResize = node.style?.textAutoResize,
+           textAutoResize != "NONE",
+           textAutoResize != "WIDTH_AND_HEIGHT" {
+            issues.append(.textAutoResizeFlattened)
+        }
         let exportPresetMapping = mappedExportPresets(
             node.exportSettings,
             frame: node.absoluteBoundingBox
@@ -370,7 +375,8 @@ enum XomoFigmaNodeImportMapper {
                     lineHeight: lineHeight(for: node.style),
                     isItalic: node.style?.italic == true,
                     decoration: node.style?.textDecoration,
-                    paragraphIndent: node.style?.paragraphIndent.flatMap { $0.isFinite ? max(0, $0) : nil }
+                    paragraphIndent: node.style?.paragraphIndent.flatMap { $0.isFinite ? max(0, $0) : nil },
+                    usesAutoWidthAndHeight: node.style?.textAutoResize == "WIDTH_AND_HEIGHT"
                 )
             },
             vectorPaths: geometryPaths(node).map(\.path),
@@ -1298,6 +1304,7 @@ struct XomoFigmaTypeStyle: Decodable {
     var italic: Bool?
     var textDecoration: String?
     var paragraphIndent: Double?
+    var textAutoResize: String?
     var paragraphSpacing: Double?
     var textCase: String?
 }

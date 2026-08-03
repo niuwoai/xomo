@@ -501,8 +501,8 @@ enum XomoFigmaNodeMaterializer {
                 0,
                 CGFloat((text.lineHeight ?? text.fontSize ?? 0) - (text.fontSize ?? 0)) * scale
             ),
-            boxWidth: max(1, frame.width - padding * 2),
-            boxHeight: max(1, frame.height - padding * 2),
+            boxWidth: text.usesAutoWidthAndHeight ? 0 : max(1, frame.width - padding * 2),
+            boxHeight: text.usesAutoWidthAndHeight ? 0 : max(1, frame.height - padding * 2),
             alignment: textAlignment(text.horizontalAlignment),
             firstLineIndent: CGFloat(text.paragraphIndent ?? 0) * scale
         )

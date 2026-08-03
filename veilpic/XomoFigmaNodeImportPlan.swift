@@ -84,6 +84,7 @@ enum XomoFigmaNodeMappingIssue: String, CaseIterable, Sendable {
     case textCaseFlattened
     case textLineHeightFlattened
     case textParagraphSpacingFlattened
+    case textAutoResizeFlattened
     case variableBindingPreserved
     case exportSettingsPartiallyPreserved
 
@@ -180,6 +181,7 @@ struct XomoFigmaPlanText: Equatable, Sendable {
     var isItalic: Bool = false
     var decoration: String? = nil
     var paragraphIndent: Double? = nil
+    var usesAutoWidthAndHeight: Bool = false
 }
 
 struct XomoFigmaImageAsset: Equatable, Sendable {
