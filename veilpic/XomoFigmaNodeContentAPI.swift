@@ -299,7 +299,8 @@ enum XomoFigmaNodeImportMapper {
         if let textAutoResize = node.style?.textAutoResize,
            textAutoResize != "NONE",
            textAutoResize != "WIDTH_AND_HEIGHT",
-           textAutoResize != "HEIGHT" {
+           textAutoResize != "HEIGHT",
+           textAutoResize != "TRUNCATE" {
             issues.append(.textAutoResizeFlattened)
         }
         let exportPresetMapping = mappedExportPresets(
@@ -379,6 +380,7 @@ enum XomoFigmaNodeImportMapper {
                     paragraphIndent: node.style?.paragraphIndent.flatMap { $0.isFinite ? max(0, $0) : nil },
                     usesAutoWidthAndHeight: node.style?.textAutoResize == "WIDTH_AND_HEIGHT",
                     usesAutoHeight: node.style?.textAutoResize == "HEIGHT",
+                    truncatesOverflow: node.style?.textAutoResize == "TRUNCATE",
                     paragraphSpacing: node.style?.paragraphSpacing.flatMap {
                         $0.isFinite && $0 >= 0 ? $0 : nil
                     },

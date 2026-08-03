@@ -2855,6 +2855,7 @@ struct ImageEditorTextContent {
     var firstLineIndent: CGFloat = 0
     var paragraphSpacing: CGFloat = 0
     var textCase: ImageEditorTextCase = .original
+    var truncatesOverflow = false
 
     var displayText: String {
         textCase.applying(to: text)
@@ -2888,6 +2889,14 @@ struct ImageEditorTextContent {
         style.tailIndent = rightIndent > 0 ? -rightIndent : 0
         style.paragraphSpacing = max(0, paragraphSpacing)
         return style
+    }
+
+    var drawingOptions: NSString.DrawingOptions {
+        var options: NSString.DrawingOptions = [.usesLineFragmentOrigin, .usesFontLeading]
+        if truncatesOverflow {
+            options.insert(.truncatesLastVisibleLine)
+        }
+        return options
     }
 
     var attributes: [NSAttributedString.Key: Any] {
@@ -3787,7 +3796,7 @@ struct ImageEditorLayer: Identifiable {
                 )
                 textContent.attributedString.draw(
                     with: appKitDrawingRect,
-                    options: [.usesLineFragmentOrigin, .usesFontLeading]
+                    options: textContent.drawingOptions
                 )
             } ?? image
         } else if let solidColorFillContent {

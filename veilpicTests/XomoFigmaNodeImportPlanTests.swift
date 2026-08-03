@@ -249,7 +249,7 @@ struct XomoFigmaNodeImportPlanTests {
         #expect(restored.layerSize() == expanded.layerSize())
     }
 
-    @Test func unsupportedFigmaTextTruncationIsReportedAsPartial() throws {
+    @Test func figmaTextTruncationRemainsEditableAndSurvivesProjectRoundTrip() throws {
         let response = try JSONDecoder().decode(
             XomoFigmaNodeResponse.self,
             from: Data(
@@ -261,8 +261,28 @@ struct XomoFigmaNodeImportPlanTests {
         let item = try #require(plan.items.first)
         #expect(item.text?.usesAutoWidthAndHeight == false)
         #expect(item.text?.usesAutoHeight == false)
-        #expect(item.fidelity == .partial)
-        #expect(item.issues.contains(.textAutoResizeFlattened))
+        #expect(item.text?.truncatesOverflow == true)
+        #expect(item.fidelity == .exact)
+        #expect(!item.issues.contains(.textAutoResizeFlattened))
+
+        let result = XomoFigmaNodeMaterializer.materialize(
+            plan: plan,
+            canvasSize: CGSize(width: 320, height: 240)
+        )
+        let content = try #require(result.layers.first?.textContent)
+        #expect(content.layoutMode == .paragraph)
+        #expect(content.boxWidth > 0)
+        #expect(content.boxHeight > 0)
+        #expect(content.truncatesOverflow)
+        #expect(content.paragraphStyle.lineBreakMode == .byWordWrapping)
+        #expect(content.drawingOptions.contains(.truncatesLastVisibleLine))
+
+        let data = try JSONEncoder().encode(ImageEditorProjectTextContent(content: content))
+        let restored = try JSONDecoder().decode(ImageEditorProjectTextContent.self, from: data).textContent
+        #expect(restored.text == "One\nTwo")
+        #expect(restored.truncatesOverflow)
+        #expect(restored.boxWidth == content.boxWidth)
+        #expect(restored.boxHeight == content.boxHeight)
     }
 
     @Test func figmaSliceBecomesNativeFireworksSliceAndExportsWithoutCreatingLayer() throws {

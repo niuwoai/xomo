@@ -183,6 +183,7 @@ struct XomoFigmaPlanText: Equatable, Sendable {
     var paragraphIndent: Double? = nil
     var usesAutoWidthAndHeight: Bool = false
     var usesAutoHeight: Bool = false
+    var truncatesOverflow: Bool = false
     var paragraphSpacing: Double? = nil
     var textCase: ImageEditorTextCase = .original
 }
