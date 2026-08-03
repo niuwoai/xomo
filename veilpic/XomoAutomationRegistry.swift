@@ -511,6 +511,7 @@ final class XomoAutomationRegistry {
         case "xomo.text.create":
             viewModel.textValue = try requiredString("text", in: arguments)
             if let fontSize = arguments["fontSize"]?.doubleValue { viewModel.textSize = fontSize }
+            viewModel.textParagraphSpacing = arguments["paragraphSpacing"]?.doubleValue ?? 0
             viewModel.textBoxWidth = arguments["boxWidth"]?.doubleValue ?? 0
             viewModel.textBoxHeight = arguments["boxHeight"]?.doubleValue ?? 0
             viewModel.addText(at: optionalPoint(arguments))
@@ -1685,6 +1686,7 @@ final class XomoAutomationRegistry {
             "strikethrough": .bool(content.isStruckThrough),
             "characterSpacing": .number(content.characterSpacing),
             "lineSpacing": .number(content.lineSpacing),
+            "paragraphSpacing": .number(content.paragraphSpacing),
             "boxWidth": .number(content.boxWidth),
             "boxHeight": .number(content.boxHeight),
             "requiredBoxHeight": .number(content.requiredParagraphHeight),
@@ -1713,6 +1715,7 @@ final class XomoAutomationRegistry {
         viewModel.textStruckThrough = arguments["strikethrough"]?.boolValue ?? content.isStruckThrough
         viewModel.textCharacterSpacing = arguments["characterSpacing"]?.doubleValue ?? content.characterSpacing
         viewModel.textLineSpacing = arguments["lineSpacing"]?.doubleValue ?? content.lineSpacing
+        viewModel.textParagraphSpacing = arguments["paragraphSpacing"]?.doubleValue ?? content.paragraphSpacing
         viewModel.textBoxWidth = arguments["boxWidth"]?.doubleValue ?? content.boxWidth
         viewModel.textBoxHeight = arguments["boxHeight"]?.doubleValue ?? content.boxHeight
         viewModel.textLeftIndent = arguments["leftIndent"]?.doubleValue ?? content.leftIndent
@@ -5641,6 +5644,7 @@ private extension XomoAutomationRegistry {
         tool("xomo.text.create", "Create an editable text layer.", [
             "text": XomoAutomationSchema.string(description: "Text content"),
             "fontSize": XomoAutomationSchema.number(description: "Font size in points"),
+            "paragraphSpacing": XomoAutomationSchema.number(description: "Paragraph spacing from 0 to 400 pixels"),
             "boxWidth": XomoAutomationSchema.number(description: "Optional paragraph text box width"),
             "boxHeight": XomoAutomationSchema.number(description: "Optional fixed paragraph text box height"),
             "x": XomoAutomationSchema.number(description: "Optional canvas x position"),
@@ -5656,6 +5660,7 @@ private extension XomoAutomationRegistry {
             "strikethrough": XomoAutomationSchema.boolean(description: "Strikethrough style"),
             "characterSpacing": XomoAutomationSchema.number(description: "Character spacing"),
             "lineSpacing": XomoAutomationSchema.number(description: "Line spacing"),
+            "paragraphSpacing": XomoAutomationSchema.number(description: "Paragraph spacing from 0 to 400 pixels"),
             "boxWidth": XomoAutomationSchema.number(description: "Text box width, zero for auto"),
             "boxHeight": XomoAutomationSchema.number(description: "Fixed text box height, zero for auto"),
             "alignment": XomoAutomationSchema.string(description: "Paragraph alignment", values: ImageEditorTextAlignment.allCases.map(\.rawValue)),

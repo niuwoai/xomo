@@ -4011,12 +4011,14 @@ struct XomoAutomationTests {
             arguments: [
                 "text": .string("Hello"),
                 "fontSize": .number(24),
+                "paragraphSpacing": .number(18),
                 "boxWidth": .number(180),
                 "boxHeight": .number(96)
             ]
         )).ok)
         #expect(viewModel.document.selectedLayer?.textContent?.boxWidth == 180)
         #expect(viewModel.document.selectedLayer?.textContent?.boxHeight == 96)
+        #expect(viewModel.document.selectedLayer?.textContent?.paragraphSpacing == 18)
         #expect(registry.execute(request(
             operation: "call",
             name: "xomo.text.update",
@@ -4029,6 +4031,7 @@ struct XomoAutomationTests {
                 "leftIndent": .number(24),
                 "rightIndent": .number(16),
                 "firstLineIndent": .number(12),
+                "paragraphSpacing": .number(26),
                 "boxHeight": .number(112)
             ]
         )).ok)
@@ -4040,6 +4043,7 @@ struct XomoAutomationTests {
         #expect(viewModel.document.selectedLayer?.textContent?.leftIndent == 24)
         #expect(viewModel.document.selectedLayer?.textContent?.rightIndent == 16)
         #expect(viewModel.document.selectedLayer?.textContent?.firstLineIndent == 12)
+        #expect(viewModel.document.selectedLayer?.textContent?.paragraphSpacing == 26)
         #expect(viewModel.document.selectedLayer?.textContent?.boxHeight == 112)
         #expect(registry.execute(request(
             operation: "call",
@@ -4057,6 +4061,7 @@ struct XomoAutomationTests {
         #expect(inspectedText["boxHeight"] == .number(112))
         #expect(inspectedText["requiredBoxHeight"] != nil)
         #expect(inspectedText["hasOverflow"] != nil)
+        #expect(inspectedText["paragraphSpacing"] == .number(26))
 
         #expect(registry.execute(request(
             operation: "call",
@@ -4075,6 +4080,40 @@ struct XomoAutomationTests {
         )).ok)
         #expect(viewModel.document.selectedLayer?.textContent?.hasOverflow == false)
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.textBoxExpandHeight"))
+    }
+
+    @Test func registryClampsParagraphSpacingAndUndoRestoresPreviousValue() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+
+        #expect(registry.execute(request(
+            operation: "call",
+            name: "xomo.text.create",
+            arguments: [
+                "text": .string("First\nSecond"),
+                "boxWidth": .number(160),
+                "paragraphSpacing": .number(12)
+            ]
+        )).ok)
+        #expect(viewModel.document.selectedLayer?.textContent?.paragraphSpacing == 12)
+
+        #expect(registry.execute(request(
+            operation: "call",
+            name: "xomo.text.update",
+            arguments: ["paragraphSpacing": .number(999)]
+        )).ok)
+        #expect(viewModel.document.selectedLayer?.textContent?.paragraphSpacing == 400)
+
+        viewModel.undo()
+        #expect(viewModel.document.selectedLayer?.textContent?.paragraphSpacing == 12)
+
+        let response = registry.execute(request(operation: "call", name: "xomo.text.get"))
+        guard case .object(let result) = response.result else {
+            Issue.record("Expected text inspection result")
+            return
+        }
+        #expect(result["paragraphSpacing"] == .number(12))
     }
 
     @Test func registryConfiguresCloneStampSamplingOptions() {
