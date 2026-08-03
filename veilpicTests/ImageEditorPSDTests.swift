@@ -497,6 +497,22 @@ struct ImageEditorPSDTests {
         #expect(!report.issues.contains { $0.kind == .additionalChannels })
     }
 
+    @Test func compatibilityReportRejectsStructurallyInvalidHeader() throws {
+        let original = try psdFixtureData("extra-alpha.psd")
+
+        var noChannels = original
+        noChannels.replaceSubrange(12..<14, with: [0, 0])
+        #expect(throws: ImageEditorPSDCodecError.invalidFile) {
+            try ImageEditorPSDCodec.compatibilityReport(noChannels)
+        }
+
+        var zeroWidth = original
+        zeroWidth.replaceSubrange(18..<22, with: [0, 0, 0, 0])
+        #expect(throws: ImageEditorPSDCodecError.invalidFile) {
+            try ImageEditorPSDCodec.compatibilityReport(zeroWidth)
+        }
+    }
+
     @Test func compatibilityReportNamesUnsupportedSemanticFeatures() throws {
         let data = try psdFixtureData("unsupported-features.psd")
         let report = try ImageEditorPSDCodec.compatibilityReport(data)

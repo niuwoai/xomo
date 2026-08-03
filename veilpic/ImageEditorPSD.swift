@@ -433,6 +433,10 @@ enum ImageEditorPSDCodec {
         let depth = Int(try reader.uint16())
         let colorMode = Int(try reader.uint16())
 
+        guard (3...56).contains(channelCount), width > 0, height > 0 else {
+            throw ImageEditorPSDCodecError.invalidFile
+        }
+
         var issueCounts: [ImageEditorPSDCompatibilityIssueKind: Int] = [:]
         func addIssue(_ kind: ImageEditorPSDCompatibilityIssueKind, count: Int = 1) {
             issueCounts[kind, default: 0] += count
