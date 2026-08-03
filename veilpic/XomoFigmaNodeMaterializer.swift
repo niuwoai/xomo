@@ -509,7 +509,8 @@ enum XomoFigmaNodeMaterializer {
             firstLineIndent: CGFloat(text.paragraphIndent ?? 0) * scale,
             paragraphSpacing: CGFloat(text.paragraphSpacing ?? 0) * scale,
             textCase: text.textCase,
-            truncatesOverflow: text.truncatesOverflow
+            truncatesOverflow: text.truncatesOverflow,
+            verticalAlignment: text.verticalAlignment
         )
         return ImageEditorLayer.text(name: item.sourceName, origin: frame.origin, content: content)
     }

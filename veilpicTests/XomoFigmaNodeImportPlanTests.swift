@@ -285,6 +285,48 @@ struct XomoFigmaNodeImportPlanTests {
         #expect(restored.boxHeight == content.boxHeight)
     }
 
+    @Test func figmaFixedTextVerticalAlignmentRemainsNativeAndRoundTrips() throws {
+        let response = try JSONDecoder().decode(
+            XomoFigmaNodeResponse.self,
+            from: Data(
+                #"{"name":"Typography","nodes":{"1:6":{"document":{"id":"1:6","name":"Centered Label","type":"TEXT","characters":"Centered","style":{"fontSize":16,"textAlignVertical":"CENTER"},"fills":[{"type":"SOLID","color":{"r":0,"g":0,"b":0,"a":1}}],"absoluteBoundingBox":{"x":0,"y":0,"width":120,"height":80}}}}}"#.utf8
+            )
+        )
+
+        let plan = try XomoFigmaNodeImportMapper.makePlan(response: response, requestedNodeID: "1:6")
+        let item = try #require(plan.items.first)
+        #expect(item.text?.verticalAlignment == .center)
+        #expect(item.fidelity == .exact)
+        #expect(!item.issues.contains(.textVerticalAlignmentFlattened))
+
+        let result = XomoFigmaNodeMaterializer.materialize(
+            plan: plan,
+            canvasSize: CGSize(width: 320, height: 240)
+        )
+        let content = try #require(result.layers.first?.textContent)
+        #expect(content.verticalAlignment == .center)
+        #expect(content.drawingRect(in: content.layerSize()).minY > content.point.y)
+
+        let data = try JSONEncoder().encode(ImageEditorProjectTextContent(content: content))
+        let restored = try JSONDecoder().decode(ImageEditorProjectTextContent.self, from: data).textContent
+        #expect(restored.verticalAlignment == .center)
+
+        let unknownResponse = try JSONDecoder().decode(
+            XomoFigmaNodeResponse.self,
+            from: Data(
+                #"{"name":"Typography","nodes":{"1:7":{"document":{"id":"1:7","name":"Unknown Alignment","type":"TEXT","characters":"Unknown","style":{"fontSize":16,"textAlignVertical":"JUSTIFIED"},"fills":[{"type":"SOLID","color":{"r":0,"g":0,"b":0,"a":1}}],"absoluteBoundingBox":{"x":0,"y":0,"width":120,"height":80}}}}}"#.utf8
+            )
+        )
+        let unknownPlan = try XomoFigmaNodeImportMapper.makePlan(
+            response: unknownResponse,
+            requestedNodeID: "1:7"
+        )
+        let unknownItem = try #require(unknownPlan.items.first)
+        #expect(unknownItem.text?.verticalAlignment == .top)
+        #expect(unknownItem.fidelity == .partial)
+        #expect(unknownItem.issues.contains(.textVerticalAlignmentFlattened))
+    }
+
     @Test func figmaSliceBecomesNativeFireworksSliceAndExportsWithoutCreatingLayer() throws {
         let response = try JSONDecoder().decode(
             XomoFigmaNodeResponse.self,

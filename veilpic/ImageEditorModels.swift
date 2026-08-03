@@ -2830,6 +2830,14 @@ enum ImageEditorTextCase: String, CaseIterable, Codable, Sendable, Identifiable 
     }
 }
 
+enum ImageEditorTextVerticalAlignment: String, CaseIterable, Codable, Sendable, Identifiable {
+    case top
+    case center
+    case bottom
+
+    var id: String { rawValue }
+}
+
 struct ImageEditorTextContent {
     static let drawingPadding: CGFloat = 4
     static let maximumBoxDimension: CGFloat = 12_000
@@ -2856,6 +2864,7 @@ struct ImageEditorTextContent {
     var paragraphSpacing: CGFloat = 0
     var textCase: ImageEditorTextCase = .original
     var truncatesOverflow = false
+    var verticalAlignment: ImageEditorTextVerticalAlignment = .top
 
     var displayText: String {
         textCase.applying(to: text)
@@ -2968,11 +2977,30 @@ struct ImageEditorTextContent {
     }
 
     func drawingRect(in size: CGSize) -> CGRect {
-        CGRect(
+        let availableHeight = max(1, size.height - point.y - Self.drawingPadding)
+        let verticalOffset: CGFloat
+        guard boxWidth > 0, boxHeight > 0 else {
+            return CGRect(
+                x: point.x,
+                y: point.y,
+                width: max(1, size.width - point.x - Self.drawingPadding),
+                height: availableHeight
+            )
+        }
+        let remainingHeight = max(0, boxHeight - requiredParagraphHeight)
+        switch verticalAlignment {
+        case .top:
+            verticalOffset = 0
+        case .center:
+            verticalOffset = remainingHeight / 2
+        case .bottom:
+            verticalOffset = remainingHeight
+        }
+        return CGRect(
             x: point.x,
-            y: point.y,
+            y: point.y + verticalOffset,
             width: max(1, size.width - point.x - Self.drawingPadding),
-            height: max(1, size.height - point.y - Self.drawingPadding)
+            height: max(1, availableHeight - verticalOffset)
         )
     }
 }

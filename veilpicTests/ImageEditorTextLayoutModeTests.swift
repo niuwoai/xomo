@@ -312,6 +312,27 @@ struct ImageEditorTextLayoutModeTests {
         #expect(!viewModel.canSetSelectedTextBoxTruncation)
     }
 
+    @Test func fixedTextBoxVerticalAlignmentOffsetsOnlyContentThatFits() {
+        var content = textContent("Aligned")
+        content.boxWidth = 140
+        content.boxHeight = 100
+        let layerSize = content.layerSize()
+        let topRect = content.drawingRect(in: layerSize)
+        let remainingHeight = content.boxHeight - content.requiredParagraphHeight
+
+        content.verticalAlignment = .center
+        let centerRect = content.drawingRect(in: layerSize)
+        #expect(abs(centerRect.minY - topRect.minY - remainingHeight / 2) < 0.001)
+
+        content.verticalAlignment = .bottom
+        let bottomRect = content.drawingRect(in: layerSize)
+        #expect(abs(bottomRect.minY - topRect.minY - remainingHeight) < 0.001)
+
+        content.text = Array(repeating: "Overflowing paragraph", count: 20).joined(separator: " ")
+        #expect(content.hasOverflow)
+        #expect(content.drawingRect(in: layerSize).minY == topRect.minY)
+    }
+
     private func editor() -> ImageEditorViewModel {
         ImageEditorViewModel(
             sourceName: "text-layout-mode.png",

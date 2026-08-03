@@ -303,6 +303,10 @@ enum XomoFigmaNodeImportMapper {
            textAutoResize != "TRUNCATE" {
             issues.append(.textAutoResizeFlattened)
         }
+        if let verticalAlignment = node.style?.textAlignVertical,
+           mappedTextVerticalAlignment(verticalAlignment) == nil {
+            issues.append(.textVerticalAlignmentFlattened)
+        }
         let exportPresetMapping = mappedExportPresets(
             node.exportSettings,
             frame: node.absoluteBoundingBox
@@ -384,7 +388,8 @@ enum XomoFigmaNodeImportMapper {
                     paragraphSpacing: node.style?.paragraphSpacing.flatMap {
                         $0.isFinite && $0 >= 0 ? $0 : nil
                     },
-                    textCase: mappedTextCase(node.style?.textCase) ?? .original
+                    textCase: mappedTextCase(node.style?.textCase) ?? .original,
+                    verticalAlignment: mappedTextVerticalAlignment(node.style?.textAlignVertical) ?? .top
                 )
             },
             vectorPaths: geometryPaths(node).map(\.path),
@@ -1018,6 +1023,15 @@ enum XomoFigmaNodeImportMapper {
         }
     }
 
+    static func mappedTextVerticalAlignment(_ alignment: String?) -> ImageEditorTextVerticalAlignment? {
+        switch alignment {
+        case nil, "TOP": .top
+        case "CENTER": .center
+        case "BOTTOM": .bottom
+        default: nil
+        }
+    }
+
     static func lineHeight(for style: XomoFigmaTypeStyle?) -> Double? {
         guard let style else { return nil }
         if let pixels = style.lineHeightPx,
@@ -1312,6 +1326,7 @@ struct XomoFigmaTypeStyle: Decodable {
     var fontSize: Double?
     var fontWeight: Double?
     var textAlignHorizontal: String?
+    var textAlignVertical: String?
     var letterSpacing: Double?
     var lineHeightPx: Double?
     var lineHeightPercent: Double?

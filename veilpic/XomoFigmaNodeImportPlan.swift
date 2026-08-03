@@ -85,6 +85,7 @@ enum XomoFigmaNodeMappingIssue: String, CaseIterable, Sendable {
     case textLineHeightFlattened
     case textParagraphSpacingFlattened
     case textAutoResizeFlattened
+    case textVerticalAlignmentFlattened
     case variableBindingPreserved
     case exportSettingsPartiallyPreserved
 
@@ -186,6 +187,7 @@ struct XomoFigmaPlanText: Equatable, Sendable {
     var truncatesOverflow: Bool = false
     var paragraphSpacing: Double? = nil
     var textCase: ImageEditorTextCase = .original
+    var verticalAlignment: ImageEditorTextVerticalAlignment = .top
 }
 
 struct XomoFigmaImageAsset: Equatable, Sendable {

@@ -673,6 +673,7 @@ struct ImageEditorProjectTextContent: Equatable, Codable {
     var paragraphSpacing: CGFloat?
     var textCase: ImageEditorTextCase? = nil
     var truncatesOverflow: Bool? = nil
+    var verticalAlignment: ImageEditorTextVerticalAlignment? = nil
 
     init(content: ImageEditorTextContent) {
         text = content.text
@@ -695,6 +696,7 @@ struct ImageEditorProjectTextContent: Equatable, Codable {
         paragraphSpacing = content.paragraphSpacing
         textCase = content.textCase
         truncatesOverflow = content.truncatesOverflow
+        verticalAlignment = content.verticalAlignment
     }
 
     var textContent: ImageEditorTextContent {
@@ -718,7 +720,8 @@ struct ImageEditorProjectTextContent: Equatable, Codable {
             firstLineIndent: firstLineIndent ?? 0,
             paragraphSpacing: paragraphSpacing ?? 0,
             textCase: textCase ?? .original,
-            truncatesOverflow: truncatesOverflow ?? false
+            truncatesOverflow: truncatesOverflow ?? false,
+            verticalAlignment: verticalAlignment ?? .top
         )
     }
 }

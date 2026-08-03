@@ -143,13 +143,16 @@ struct ImageEditorProjectDocumentTests {
         let restored = try JSONDecoder().decode(ImageEditorProjectTextContent.self, from: encoded)
         #expect(restored.textContent.fontFamilyName == "Helvetica")
         #expect(!restored.textContent.truncatesOverflow)
+        #expect(restored.textContent.verticalAlignment == .top)
 
         var legacyObject = try #require(JSONSerialization.jsonObject(with: encoded) as? [String: Any])
         legacyObject.removeValue(forKey: "fontFamilyName")
         legacyObject.removeValue(forKey: "truncatesOverflow")
+        legacyObject.removeValue(forKey: "verticalAlignment")
         let legacy = try JSONSerialization.data(withJSONObject: legacyObject)
         let legacyContent = try JSONDecoder().decode(ImageEditorProjectTextContent.self, from: legacy)
         #expect(legacyContent.textContent.fontFamilyName == ImageEditorTextContent.systemFontFamilyName)
+        #expect(legacyContent.textContent.verticalAlignment == .top)
     }
 
     @Test
