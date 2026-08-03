@@ -7849,6 +7849,16 @@ struct ImageEditorView: View {
                     )
                 }
                 Stepper(
+                    L10n.format(
+                        "imageEditor.properties.textParagraphSpacingValue",
+                        Int(viewModel.textParagraphSpacing.rounded())
+                    ),
+                    value: $viewModel.textParagraphSpacing,
+                    in: 0...400,
+                    step: 1
+                )
+                .focusable(false)
+                Stepper(
                     L10n.format("imageEditor.properties.textBoxWidthValue", Int(viewModel.textBoxWidth.rounded())),
                     value: $viewModel.textBoxWidth,
                     in: 0...Double(ImageEditorTextContent.maximumBoxDimension),

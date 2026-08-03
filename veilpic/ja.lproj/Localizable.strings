@@ -955,6 +955,7 @@
 "imageEditor.properties.textStrikethrough" = "取り消し線";
 "imageEditor.properties.textCharacterSpacingValue" = "字間：%d px";
 "imageEditor.properties.textLineSpacingValue" = "行間：%d px";
+"imageEditor.properties.textParagraphSpacingValue" = "段落間隔：%d px";
 "imageEditor.properties.textBoxWidthValue" = "テキスト枠：%d px";
 "imageEditor.properties.textBoxHeightValue" = "テキスト枠の高さ：%d px";
 "imageEditor.properties.textBoxAutoHeight" = "高さを自動調整";

@@ -955,6 +955,7 @@
 "imageEditor.properties.textStrikethrough" = "删除线";
 "imageEditor.properties.textCharacterSpacingValue" = "字距：%d px";
 "imageEditor.properties.textLineSpacingValue" = "行距：%d px";
+"imageEditor.properties.textParagraphSpacingValue" = "段落间距：%d px";
 "imageEditor.properties.textBoxWidthValue" = "文本框：%d px";
 "imageEditor.properties.textBoxHeightValue" = "文本框高度：%d px";
 "imageEditor.properties.textBoxAutoHeight" = "自动高度";

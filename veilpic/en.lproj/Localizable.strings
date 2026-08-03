@@ -955,6 +955,7 @@
 "imageEditor.properties.textStrikethrough" = "Strikethrough";
 "imageEditor.properties.textCharacterSpacingValue" = "Tracking: %d px";
 "imageEditor.properties.textLineSpacingValue" = "Leading: %d px";
+"imageEditor.properties.textParagraphSpacingValue" = "Paragraph Spacing: %d px";
 "imageEditor.properties.textBoxWidthValue" = "Text Box: %d px";
 "imageEditor.properties.textBoxHeightValue" = "Text Box Height: %d px";
 "imageEditor.properties.textBoxAutoHeight" = "Auto Height";

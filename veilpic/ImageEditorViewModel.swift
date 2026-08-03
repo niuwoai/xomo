@@ -196,6 +196,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var textStruckThrough: Bool = false
     @Published var textCharacterSpacing: Double = 0
     @Published var textLineSpacing: Double = 0
+    @Published var textParagraphSpacing: Double = 0
     @Published var textBoxWidth: Double = 0
     @Published var textBoxHeight: Double = 0
     @Published var selectedTextAlignment: ImageEditorTextAlignment = .left
@@ -5179,7 +5180,8 @@ final class ImageEditorViewModel: ObservableObject {
             alignment: selectedTextAlignment,
             leftIndent: CGFloat(clampedTextIndent(textLeftIndent)),
             rightIndent: CGFloat(clampedTextIndent(textRightIndent)),
-            firstLineIndent: CGFloat(clampedTextFirstLineIndent(textFirstLineIndent))
+            firstLineIndent: CGFloat(clampedTextFirstLineIndent(textFirstLineIndent)),
+            paragraphSpacing: CGFloat(clampedTextParagraphSpacing(textParagraphSpacing))
         )
         pushUndo()
         var layer = ImageEditorLayer.text(
@@ -5212,6 +5214,7 @@ final class ImageEditorViewModel: ObservableObject {
         let fontSize = CGFloat(clampedTextSize(textSize))
         let characterSpacing = CGFloat(clampedTextCharacterSpacing(textCharacterSpacing))
         let lineSpacing = CGFloat(clampedTextLineSpacing(textLineSpacing))
+        let paragraphSpacing = CGFloat(clampedTextParagraphSpacing(textParagraphSpacing))
         let boxWidth = CGFloat(clampedTextBoxWidth(textBoxWidth))
         let boxHeight = boxWidth > 0 ? CGFloat(clampedTextBoxHeight(textBoxHeight)) : 0
         let alignment = selectedTextAlignment
@@ -5240,6 +5243,7 @@ final class ImageEditorViewModel: ObservableObject {
             content.leftIndent = leftIndent
             content.rightIndent = rightIndent
             content.firstLineIndent = firstLineIndent
+            content.paragraphSpacing = paragraphSpacing
             let layerSize = content.layerSize()
             if let mask = document.layers[index].mask, mask.size != layerSize {
                 document.layers[index].mask = mask.resized(to: layerSize)
@@ -8462,6 +8466,7 @@ final class ImageEditorViewModel: ObservableObject {
         textStruckThrough = content.isStruckThrough
         textCharacterSpacing = Double(content.characterSpacing)
         textLineSpacing = Double(content.lineSpacing)
+        textParagraphSpacing = Double(content.paragraphSpacing)
         textBoxWidth = Double(content.boxWidth)
         textBoxHeight = Double(content.boxHeight)
         selectedTextAlignment = content.alignment
@@ -8606,6 +8611,10 @@ final class ImageEditorViewModel: ObservableObject {
 
     private func clampedTextLineSpacing(_ spacing: Double) -> Double {
         max(0, min(96, spacing))
+    }
+
+    private func clampedTextParagraphSpacing(_ spacing: Double) -> Double {
+        max(0, min(400, spacing))
     }
 
     private func clampedTextBoxWidth(_ width: Double) -> Double {

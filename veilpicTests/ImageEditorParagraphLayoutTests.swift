@@ -65,6 +65,7 @@ struct ImageEditorParagraphLayoutTests {
         viewModel.textLeftIndent = 16
         viewModel.textRightIndent = 12
         viewModel.textFirstLineIndent = 8
+        viewModel.textParagraphSpacing = 14
         viewModel.addText(at: CGPoint(x: 8, y: 10))
 
         let created = try #require(viewModel.document.selectedLayer?.textContent)
@@ -72,11 +73,13 @@ struct ImageEditorParagraphLayoutTests {
         #expect(created.leftIndent == 16)
         #expect(created.rightIndent == 12)
         #expect(created.firstLineIndent == 8)
+        #expect(created.paragraphSpacing == 14)
 
         viewModel.selectedTextAlignment = .right
         viewModel.textLeftIndent = 24
         viewModel.textRightIndent = 20
         viewModel.textFirstLineIndent = -6
+        viewModel.textParagraphSpacing = 22
         viewModel.updateSelectedTextLayer()
 
         let updated = try #require(viewModel.document.selectedLayer?.textContent)
@@ -84,6 +87,7 @@ struct ImageEditorParagraphLayoutTests {
         #expect(updated.leftIndent == 24)
         #expect(updated.rightIndent == 20)
         #expect(updated.firstLineIndent == -6)
+        #expect(updated.paragraphSpacing == 22)
 
         viewModel.undo()
 
@@ -92,6 +96,7 @@ struct ImageEditorParagraphLayoutTests {
         #expect(restored.leftIndent == 16)
         #expect(restored.rightIndent == 12)
         #expect(restored.firstLineIndent == 8)
+        #expect(restored.paragraphSpacing == 14)
     }
 
     @Test func batchParagraphUpdateAppliesToEditableTextAndSkipsLockedLayer() throws {
@@ -116,6 +121,7 @@ struct ImageEditorParagraphLayoutTests {
         viewModel.textLeftIndent = 28
         viewModel.textRightIndent = 20
         viewModel.textFirstLineIndent = 12
+        viewModel.textParagraphSpacing = 24
         viewModel.updateSelectedTextLayer()
 
         let first = try #require(text(firstID, in: viewModel))
@@ -124,8 +130,10 @@ struct ImageEditorParagraphLayoutTests {
         #expect(first.alignment == .justified && second.alignment == .justified)
         #expect(first.leftIndent == 28 && second.rightIndent == 20)
         #expect(first.firstLineIndent == 12 && second.firstLineIndent == 12)
+        #expect(first.paragraphSpacing == 24 && second.paragraphSpacing == 24)
         #expect(locked.alignment == .left)
         #expect(locked.leftIndent == 0 && locked.rightIndent == 0 && locked.firstLineIndent == 0)
+        #expect(locked.paragraphSpacing == 0)
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerTextUpdateSelected"))
     }
 
