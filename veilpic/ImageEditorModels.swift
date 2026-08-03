@@ -2806,6 +2806,7 @@ enum ImageEditorTextCase: String, CaseIterable, Codable, Sendable, Identifiable 
     case uppercase
     case lowercase
     case titleCase
+    case smallCaps
 
     var id: String { rawValue }
 
@@ -2823,6 +2824,8 @@ enum ImageEditorTextCase: String, CaseIterable, Codable, Sendable, Identifiable 
             text.lowercased()
         case .titleCase:
             text.capitalized
+        case .smallCaps:
+            text.uppercased()
         }
     }
 }
@@ -2830,6 +2833,7 @@ enum ImageEditorTextCase: String, CaseIterable, Codable, Sendable, Identifiable 
 struct ImageEditorTextContent {
     static let drawingPadding: CGFloat = 4
     static let maximumBoxDimension: CGFloat = 12_000
+    static let smallCapsScale: CGFloat = 0.8
     static let systemFontFamilyName = NSFont.systemFont(ofSize: NSFont.systemFontSize).familyName ?? "System"
 
     var text: String
@@ -2903,7 +2907,20 @@ struct ImageEditorTextContent {
     }
 
     var attributedString: NSAttributedString {
-        NSAttributedString(string: displayText, attributes: attributes)
+        guard textCase == .smallCaps else {
+            return NSAttributedString(string: displayText, attributes: attributes)
+        }
+        let result = NSMutableAttributedString()
+        for character in text {
+            let source = String(character)
+            let displayed = source.uppercased()
+            var characterAttributes = attributes
+            if source != displayed, source == source.lowercased() {
+                characterAttributes[.font] = font.withSize(max(6, font.pointSize * Self.smallCapsScale))
+            }
+            result.append(NSAttributedString(string: displayed, attributes: characterAttributes))
+        }
+        return result
     }
 
     var requiredParagraphHeight: CGFloat {

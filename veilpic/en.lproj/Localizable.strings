@@ -1002,6 +1002,7 @@
 "imageEditor.textCase.uppercase" = "UPPERCASE";
 "imageEditor.textCase.lowercase" = "lowercase";
 "imageEditor.textCase.titleCase" = "Title Case";
+"imageEditor.textCase.smallCaps" = "Small Caps";
 "imageEditor.textLayoutMode.point" = "Point Text";
 "imageEditor.textLayoutMode.paragraph" = "Paragraph Text";
 "imageEditor.levels.blackPoint" = "Black point";

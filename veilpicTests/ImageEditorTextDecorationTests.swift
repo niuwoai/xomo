@@ -144,6 +144,16 @@ struct ImageEditorTextDecorationTests {
         viewModel.undo()
         #expect(viewModel.document.selectedLayer?.textContent?.textCase == .uppercase)
         #expect(viewModel.document.selectedLayer?.textContent?.attributedString.string == "CONTINUE 继续")
+
+        viewModel.selectedTextCase = .smallCaps
+        viewModel.updateSelectedTextLayer()
+        let smallCaps = try #require(viewModel.document.selectedLayer?.textContent)
+        #expect(smallCaps.text == "Continue 继续")
+        #expect(smallCaps.displayText == "CONTINUE 继续")
+        let capitalFont = try #require(smallCaps.attributedString.attribute(.font, at: 0, effectiveRange: nil) as? NSFont)
+        let reducedFont = try #require(smallCaps.attributedString.attribute(.font, at: 1, effectiveRange: nil) as? NSFont)
+        #expect(capitalFont.pointSize == smallCaps.font.pointSize)
+        #expect(abs(reducedFont.pointSize - smallCaps.font.pointSize * ImageEditorTextContent.smallCapsScale) < 0.001)
     }
 
     @Test func batchTextCaseUpdateSkipsLockedLayer() throws {

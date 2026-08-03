@@ -1002,6 +1002,7 @@
 "imageEditor.textCase.uppercase" = "全大写";
 "imageEditor.textCase.lowercase" = "全小写";
 "imageEditor.textCase.titleCase" = "标题大小写";
+"imageEditor.textCase.smallCaps" = "小型大写字母";
 "imageEditor.textLayoutMode.point" = "点文字";
 "imageEditor.textLayoutMode.paragraph" = "段落文字";
 "imageEditor.levels.blackPoint" = "黑场";

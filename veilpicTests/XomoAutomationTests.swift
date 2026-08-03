@@ -4254,7 +4254,7 @@ struct XomoAutomationTests {
         response = registry.execute(request(
             operation: "call",
             name: "xomo.text.update",
-            arguments: ["textCase": .string("smallCaps")]
+            arguments: ["textCase": .string("alternatingCaps")]
         ))
         #expect(!response.ok)
         #expect(viewModel.document.history.count == historyCount)

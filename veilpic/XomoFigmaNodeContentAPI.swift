@@ -1009,6 +1009,8 @@ enum XomoFigmaNodeImportMapper {
             .lowercase
         case "TITLE":
             .titleCase
+        case "SMALL_CAPS":
+            .smallCaps
         default:
             nil
         }

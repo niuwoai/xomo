@@ -1002,6 +1002,7 @@
 "imageEditor.textCase.uppercase" = "すべて大文字";
 "imageEditor.textCase.lowercase" = "すべて小文字";
 "imageEditor.textCase.titleCase" = "タイトルケース";
+"imageEditor.textCase.smallCaps" = "スモールキャップ";
 "imageEditor.textLayoutMode.point" = "ポイントテキスト";
 "imageEditor.textLayoutMode.paragraph" = "段落テキスト";
 "imageEditor.levels.blackPoint" = "黒点";

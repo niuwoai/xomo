@@ -18,12 +18,12 @@ struct XomoFigmaNodeImportPlanTests {
         #expect(XomoFigmaNodeImportMapper.characters("Hello 世界", applying: "LOWER") == "hello 世界")
         #expect(XomoFigmaNodeImportMapper.characters("hello world", applying: "TITLE") == "Hello World")
         #expect(XomoFigmaNodeImportMapper.characters("Hello", applying: "ORIGINAL") == "Hello")
-        #expect(XomoFigmaNodeImportMapper.characters("Hello", applying: "SMALL_CAPS") == "Hello")
+        #expect(XomoFigmaNodeImportMapper.characters("Hello", applying: "SMALL_CAPS") == "HELLO")
         #expect(XomoFigmaNodeImportMapper.mappedTextCase("UPPER") == .uppercase)
         #expect(XomoFigmaNodeImportMapper.mappedTextCase("LOWER") == .lowercase)
         #expect(XomoFigmaNodeImportMapper.mappedTextCase("TITLE") == .titleCase)
         #expect(XomoFigmaNodeImportMapper.mappedTextCase("ORIGINAL") == .original)
-        #expect(XomoFigmaNodeImportMapper.mappedTextCase("SMALL_CAPS") == nil)
+        #expect(XomoFigmaNodeImportMapper.mappedTextCase("SMALL_CAPS") == .smallCaps)
     }
 
     @Test func figmaTextCaseRemainsEditableAndSurvivesProjectRoundTrip() throws {
@@ -61,7 +61,7 @@ struct XomoFigmaNodeImportPlanTests {
         #expect(restored.attributedString.string == "CONTINUE 继续")
     }
 
-    @Test func unsupportedFigmaSmallCapsRemainsHonestlyReported() throws {
+    @Test func figmaSmallCapsRemainsNativeEditableTypography() throws {
         let response = try JSONDecoder().decode(
             XomoFigmaNodeResponse.self,
             from: Data(
@@ -71,9 +71,28 @@ struct XomoFigmaNodeImportPlanTests {
 
         let plan = try XomoFigmaNodeImportMapper.makePlan(response: response, requestedNodeID: "1:8")
         let item = try #require(plan.items.first)
-        #expect(item.text?.textCase == .original)
-        #expect(item.fidelity == .partial)
-        #expect(item.issues.contains(.textCaseFlattened))
+        #expect(item.text?.textCase == .smallCaps)
+        #expect(item.fidelity == .exact)
+        #expect(!item.issues.contains(.textCaseFlattened))
+
+        let result = XomoFigmaNodeMaterializer.materialize(
+            plan: plan,
+            canvasSize: CGSize(width: 320, height: 240)
+        )
+        let content = try #require(result.layers.first?.textContent)
+        #expect(content.text == "Caption")
+        #expect(content.displayText == "CAPTION")
+        #expect(content.attributedString.string == "CAPTION")
+        let leadingFont = try #require(content.attributedString.attribute(.font, at: 0, effectiveRange: nil) as? NSFont)
+        let smallCapsFont = try #require(content.attributedString.attribute(.font, at: 1, effectiveRange: nil) as? NSFont)
+        #expect(leadingFont.pointSize == 16)
+        #expect(abs(smallCapsFont.pointSize - 12.8) < 0.001)
+
+        let data = try JSONEncoder().encode(ImageEditorProjectTextContent(content: content))
+        let restored = try JSONDecoder().decode(ImageEditorProjectTextContent.self, from: data).textContent
+        #expect(restored.text == "Caption")
+        #expect(restored.textCase == .smallCaps)
+        #expect(restored.attributedString.string == "CAPTION")
     }
 
     @Test func figmaLineHeightUsesPixelsBeforeFontSizePercentageFallback() throws {
