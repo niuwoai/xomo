@@ -962,6 +962,7 @@
 "imageEditor.properties.textBoxAutoHeight" = "Auto Height";
 "imageEditor.properties.textBoxOverflow" = "Text exceeds the text box";
 "imageEditor.properties.textBoxTruncateOverflow" = "Show ellipsis on overflow";
+"imageEditor.properties.textVerticalAlignment" = "Vertical alignment";
 "imageEditor.properties.textLeftIndentValue" = "Left Indent: %d px";
 "imageEditor.properties.textRightIndentValue" = "Right Indent: %d px";
 "imageEditor.properties.textFirstLineIndentValue" = "First-Line Indent: %d px";
@@ -1004,6 +1005,9 @@
 "imageEditor.textCase.lowercase" = "lowercase";
 "imageEditor.textCase.titleCase" = "Title Case";
 "imageEditor.textCase.smallCaps" = "Small Caps";
+"imageEditor.textVerticalAlignment.top" = "Top";
+"imageEditor.textVerticalAlignment.center" = "Center";
+"imageEditor.textVerticalAlignment.bottom" = "Bottom";
 "imageEditor.textLayoutMode.point" = "Point Text";
 "imageEditor.textLayoutMode.paragraph" = "Paragraph Text";
 "imageEditor.levels.blackPoint" = "Black point";
@@ -1513,6 +1517,7 @@
 "imageEditor.history.textBoxTruncationEnable" = "Enable Text Box Overflow Ellipsis";
 "imageEditor.history.textBoxTruncationDisable" = "Disable Text Box Overflow Ellipsis";
 "imageEditor.history.textBoxAutoHeightDisable" = "Disable Text Box Auto Height";
+"imageEditor.history.textBoxVerticalAlignment" = "Change Text Vertical Alignment";
 "imageEditor.history.layerRotate" = "Rotate Layer";
 "imageEditor.history.layerFlipHorizontal" = "Flip Layer Horizontal";
 "imageEditor.history.layerFlipVertical" = "Flip Layer Vertical";
@@ -2153,6 +2158,7 @@
 "imageEditor.status.textBoxTruncationEnabled" = "Enabled overflow ellipsis for %d text box(es)";
 "imageEditor.status.textBoxTruncationDisabled" = "Disabled overflow ellipsis for %d text box(es)";
 "imageEditor.status.textBoxAutoHeightDisabled" = "Disabled auto height for %d text box(es)";
+"imageEditor.status.textBoxVerticalAlignment" = "Set %d text box(es) to %@ alignment";
 "imageEditor.status.layerRotated" = "Selected layer rotated";
 "imageEditor.status.layerFlipHorizontal" = "Selected layer flipped horizontally";
 "imageEditor.status.layerFlipVertical" = "Selected layer flipped vertically";

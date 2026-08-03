@@ -962,6 +962,7 @@
 "imageEditor.properties.textBoxAutoHeight" = "高さを自動調整";
 "imageEditor.properties.textBoxOverflow" = "テキストがテキスト枠からあふれています";
 "imageEditor.properties.textBoxTruncateOverflow" = "オーバーフロー時に省略記号を表示";
+"imageEditor.properties.textVerticalAlignment" = "垂直揃え";
 "imageEditor.properties.textLeftIndentValue" = "左インデント：%d px";
 "imageEditor.properties.textRightIndentValue" = "右インデント：%d px";
 "imageEditor.properties.textFirstLineIndentValue" = "最初の行のインデント：%d px";
@@ -1004,6 +1005,9 @@
 "imageEditor.textCase.lowercase" = "すべて小文字";
 "imageEditor.textCase.titleCase" = "タイトルケース";
 "imageEditor.textCase.smallCaps" = "スモールキャップ";
+"imageEditor.textVerticalAlignment.top" = "上";
+"imageEditor.textVerticalAlignment.center" = "中央";
+"imageEditor.textVerticalAlignment.bottom" = "下";
 "imageEditor.textLayoutMode.point" = "ポイントテキスト";
 "imageEditor.textLayoutMode.paragraph" = "段落テキスト";
 "imageEditor.levels.blackPoint" = "黒点";
@@ -1513,6 +1517,7 @@
 "imageEditor.history.textBoxTruncationEnable" = "テキスト枠のオーバーフロー省略を有効化";
 "imageEditor.history.textBoxTruncationDisable" = "テキスト枠のオーバーフロー省略を無効化";
 "imageEditor.history.textBoxAutoHeightDisable" = "テキスト枠の高さ自動調整を無効化";
+"imageEditor.history.textBoxVerticalAlignment" = "テキストの垂直揃えを変更";
 "imageEditor.history.layerRotate" = "レイヤーを回転";
 "imageEditor.history.layerFlipHorizontal" = "レイヤーを左右反転";
 "imageEditor.history.layerFlipVertical" = "レイヤーを上下反転";
@@ -2153,6 +2158,7 @@
 "imageEditor.status.textBoxTruncationEnabled" = "%d 個のテキスト枠でオーバーフロー省略を有効にしました";
 "imageEditor.status.textBoxTruncationDisabled" = "%d 個のテキスト枠でオーバーフロー省略を無効にしました";
 "imageEditor.status.textBoxAutoHeightDisabled" = "%d 個のテキスト枠で高さの自動調整を無効にしました";
+"imageEditor.status.textBoxVerticalAlignment" = "%d 個のテキスト枠を%@揃えにしました";
 "imageEditor.status.layerRotated" = "選択中のレイヤーを回転しました";
 "imageEditor.status.layerFlipHorizontal" = "選択中のレイヤーを左右反転しました";
 "imageEditor.status.layerFlipVertical" = "選択中のレイヤーを上下反転しました";

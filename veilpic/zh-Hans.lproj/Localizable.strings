@@ -962,6 +962,7 @@
 "imageEditor.properties.textBoxAutoHeight" = "自动高度";
 "imageEditor.properties.textBoxOverflow" = "文字内容超出文本框";
 "imageEditor.properties.textBoxTruncateOverflow" = "溢出时显示省略号";
+"imageEditor.properties.textVerticalAlignment" = "垂直对齐";
 "imageEditor.properties.textLeftIndentValue" = "左缩进：%d px";
 "imageEditor.properties.textRightIndentValue" = "右缩进：%d px";
 "imageEditor.properties.textFirstLineIndentValue" = "首行缩进：%d px";
@@ -1004,6 +1005,9 @@
 "imageEditor.textCase.lowercase" = "全小写";
 "imageEditor.textCase.titleCase" = "标题大小写";
 "imageEditor.textCase.smallCaps" = "小型大写字母";
+"imageEditor.textVerticalAlignment.top" = "顶部";
+"imageEditor.textVerticalAlignment.center" = "居中";
+"imageEditor.textVerticalAlignment.bottom" = "底部";
 "imageEditor.textLayoutMode.point" = "点文字";
 "imageEditor.textLayoutMode.paragraph" = "段落文字";
 "imageEditor.levels.blackPoint" = "黑场";
@@ -1513,6 +1517,7 @@
 "imageEditor.history.textBoxTruncationEnable" = "启用文本框溢出省略";
 "imageEditor.history.textBoxTruncationDisable" = "停用文本框溢出省略";
 "imageEditor.history.textBoxAutoHeightDisable" = "停用文本框自动高度";
+"imageEditor.history.textBoxVerticalAlignment" = "调整文字垂直对齐";
 "imageEditor.history.layerRotate" = "旋转图层";
 "imageEditor.history.layerFlipHorizontal" = "水平翻转图层";
 "imageEditor.history.layerFlipVertical" = "垂直翻转图层";
@@ -2153,6 +2158,7 @@
 "imageEditor.status.textBoxTruncationEnabled" = "已为 %d 个文本框启用溢出省略";
 "imageEditor.status.textBoxTruncationDisabled" = "已为 %d 个文本框停用溢出省略";
 "imageEditor.status.textBoxAutoHeightDisabled" = "已为 %d 个文本框停用自动高度";
+"imageEditor.status.textBoxVerticalAlignment" = "已将 %d 个文本框设为%@对齐";
 "imageEditor.status.layerRotated" = "已旋转当前图层";
 "imageEditor.status.layerFlipHorizontal" = "已水平翻转当前图层";
 "imageEditor.status.layerFlipVertical" = "已垂直翻转当前图层";

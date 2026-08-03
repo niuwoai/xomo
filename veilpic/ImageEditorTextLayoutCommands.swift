@@ -83,6 +83,37 @@ extension ImageEditorViewModel {
         }
     }
 
+    var canSetSelectedTextBoxVerticalAlignment: Bool {
+        if !fixedHeightTextBoxIndices().isEmpty {
+            return true
+        }
+        let selectedTextLayerExists = document.layers.contains { layer in
+            document.selectedLayerIDs.contains(layer.id) && layer.isText
+        }
+        return !selectedTextLayerExists && textBoxWidth > 0 && textBoxHeight > 0
+    }
+
+    func setSelectedTextBoxesVerticalAlignment(_ alignment: ImageEditorTextVerticalAlignment) {
+        selectedTextVerticalAlignment = alignment
+        let indices = fixedHeightTextBoxIndices().filter { index in
+            document.layers[index].textContent?.verticalAlignment != alignment
+        }
+        guard !indices.isEmpty else { return }
+
+        pushUndo()
+        for index in indices {
+            guard var content = document.layers[index].textContent else { continue }
+            content.verticalAlignment = alignment
+            resizeTextLayer(at: index, for: content)
+        }
+        appendHistory(L10n.text("imageEditor.history.textBoxVerticalAlignment"))
+        statusText = L10n.format(
+            "imageEditor.status.textBoxVerticalAlignment",
+            indices.count,
+            alignment.title
+        )
+    }
+
     func convertSelectedTextLayers(to layoutMode: ImageEditorTextLayoutMode) {
         let indices = convertibleSelectedTextLayerIndices(to: layoutMode)
         guard !indices.isEmpty else {

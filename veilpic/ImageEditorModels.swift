@@ -2836,6 +2836,10 @@ enum ImageEditorTextVerticalAlignment: String, CaseIterable, Codable, Sendable, 
     case bottom
 
     var id: String { rawValue }
+
+    var title: String {
+        L10n.text("imageEditor.textVerticalAlignment.\(rawValue)")
+    }
 }
 
 struct ImageEditorTextContent {

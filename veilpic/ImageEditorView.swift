@@ -7900,6 +7900,21 @@ struct ImageEditorView: View {
                 .focusable(false)
                 .disabled(!viewModel.canSetSelectedTextBoxTruncation)
                 .accessibilityIdentifier("image-editor-text-box-truncate-overflow")
+                Picker(
+                    L10n.text("imageEditor.properties.textVerticalAlignment"),
+                    selection: Binding(
+                        get: { viewModel.selectedTextVerticalAlignment },
+                        set: { viewModel.setSelectedTextBoxesVerticalAlignment($0) }
+                    )
+                ) {
+                    ForEach(ImageEditorTextVerticalAlignment.allCases) { alignment in
+                        Text(alignment.title).tag(alignment)
+                    }
+                }
+                .pickerStyle(.segmented)
+                .focusable(false)
+                .disabled(!viewModel.canSetSelectedTextBoxVerticalAlignment)
+                .accessibilityIdentifier("image-editor-text-box-vertical-alignment")
                 if viewModel.selectedTextBoxHasOverflow {
                     Label(
                         L10n.text("imageEditor.properties.textBoxOverflow"),

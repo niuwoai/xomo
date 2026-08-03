@@ -333,6 +333,52 @@ struct ImageEditorTextLayoutModeTests {
         #expect(content.drawingRect(in: layerSize).minY == topRect.minY)
     }
 
+    @Test func verticalAlignmentSupportsCreationSelectionBatchLocksAndUndo() throws {
+        let viewModel = editor()
+        viewModel.textBoxWidth = 120
+        viewModel.textBoxHeight = 80
+        #expect(viewModel.canSetSelectedTextBoxVerticalAlignment)
+
+        viewModel.textValue = "Top"
+        viewModel.selectedTextVerticalAlignment = .top
+        viewModel.addText(at: CGPoint(x: 10, y: 10))
+        let topID = try #require(viewModel.document.selectedLayerID)
+
+        viewModel.textValue = "Bottom"
+        viewModel.selectedTextVerticalAlignment = .bottom
+        viewModel.addText(at: CGPoint(x: 40, y: 30))
+        let bottomID = try #require(viewModel.document.selectedLayerID)
+        #expect(viewModel.document.selectedLayer?.textContent?.verticalAlignment == .bottom)
+
+        viewModel.textValue = "Locked"
+        viewModel.selectedTextVerticalAlignment = .top
+        viewModel.addText(at: CGPoint(x: 80, y: 50))
+        let lockedID = try #require(viewModel.document.selectedLayerID)
+        let lockedIndex = try #require(viewModel.document.layers.firstIndex { $0.id == lockedID })
+        viewModel.document.layers[lockedIndex].locksPixels = true
+
+        viewModel.selectLayer(bottomID)
+        #expect(viewModel.selectedTextVerticalAlignment == .bottom)
+        viewModel.selectLayer(topID, extendingSelection: true)
+        viewModel.selectLayer(lockedID, extendingSelection: true)
+        #expect(viewModel.canSetSelectedTextBoxVerticalAlignment)
+        let historyCount = viewModel.document.history.count
+
+        viewModel.setSelectedTextBoxesVerticalAlignment(.center)
+
+        #expect(text(topID, in: viewModel)?.verticalAlignment == .center)
+        #expect(text(bottomID, in: viewModel)?.verticalAlignment == .center)
+        #expect(text(lockedID, in: viewModel)?.verticalAlignment == .top)
+        #expect(viewModel.selectedTextVerticalAlignment == .center)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.textBoxVerticalAlignment"))
+
+        viewModel.undo()
+        #expect(text(topID, in: viewModel)?.verticalAlignment == .top)
+        #expect(text(bottomID, in: viewModel)?.verticalAlignment == .bottom)
+        #expect(text(lockedID, in: viewModel)?.verticalAlignment == .top)
+    }
+
     private func editor() -> ImageEditorViewModel {
         ImageEditorViewModel(
             sourceName: "text-layout-mode.png",

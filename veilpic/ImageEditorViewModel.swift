@@ -202,6 +202,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var selectedTextAlignment: ImageEditorTextAlignment = .left
     @Published var selectedTextCase: ImageEditorTextCase = .original
     @Published var textTruncatesOverflow: Bool = false
+    @Published var selectedTextVerticalAlignment: ImageEditorTextVerticalAlignment = .top
     @Published var textLeftIndent: Double = 0
     @Published var textRightIndent: Double = 0
     @Published var textFirstLineIndent: Double = 0
@@ -5185,7 +5186,8 @@ final class ImageEditorViewModel: ObservableObject {
             firstLineIndent: CGFloat(clampedTextFirstLineIndent(textFirstLineIndent)),
             paragraphSpacing: CGFloat(clampedTextParagraphSpacing(textParagraphSpacing)),
             textCase: selectedTextCase,
-            truncatesOverflow: boxWidth > 0 && textBoxHeight > 0 && textTruncatesOverflow
+            truncatesOverflow: boxWidth > 0 && textBoxHeight > 0 && textTruncatesOverflow,
+            verticalAlignment: selectedTextVerticalAlignment
         )
         pushUndo()
         var layer = ImageEditorLayer.text(
@@ -5250,6 +5252,7 @@ final class ImageEditorViewModel: ObservableObject {
             content.paragraphSpacing = paragraphSpacing
             content.textCase = selectedTextCase
             content.truncatesOverflow = boxWidth > 0 && boxHeight > 0 && textTruncatesOverflow
+            content.verticalAlignment = selectedTextVerticalAlignment
             let layerSize = content.layerSize()
             if let mask = document.layers[index].mask, mask.size != layerSize {
                 document.layers[index].mask = mask.resized(to: layerSize)
@@ -8478,6 +8481,7 @@ final class ImageEditorViewModel: ObservableObject {
         selectedTextAlignment = content.alignment
         selectedTextCase = content.textCase
         textTruncatesOverflow = content.truncatesOverflow
+        selectedTextVerticalAlignment = content.verticalAlignment
         textLeftIndent = Double(content.leftIndent)
         textRightIndent = Double(content.rightIndent)
         textFirstLineIndent = Double(content.firstLineIndent)
