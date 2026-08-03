@@ -1103,7 +1103,13 @@ enum XomoFigmaNodeImportMapper {
             || style.lineHeightPercentFontSize != nil
             || style.lineHeightPercent != nil
             || style.lineHeightUnit != nil
-        return exposesLineHeight && lineHeight(for: style) == nil
+        guard exposesLineHeight else { return false }
+        guard let mappedLineHeight = lineHeight(for: style) else { return true }
+        guard let fontSize = style.fontSize,
+              fontSize.isFinite,
+              fontSize > 0
+        else { return false }
+        return mappedLineHeight < fontSize
     }
 
     private static func hasUnsupportedCornerStyle(_ node: XomoFigmaNode) -> Bool {

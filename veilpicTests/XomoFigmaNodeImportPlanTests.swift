@@ -135,6 +135,29 @@ struct XomoFigmaNodeImportPlanTests {
         #expect(item.issues.contains(.textLineHeightFlattened))
     }
 
+    @Test func compressedFigmaLineHeightReportsNativeClampInsteadOfClaimingExactImport() throws {
+        let response = try JSONDecoder().decode(
+            XomoFigmaNodeResponse.self,
+            from: Data(
+                #"{"name":"Typography","nodes":{"1:2":{"document":{"id":"1:2","name":"Tight Label","type":"TEXT","characters":"One\nTwo","style":{"fontSize":16,"lineHeightPercentFontSize":80},"fills":[{"type":"SOLID","color":{"r":0,"g":0,"b":0,"a":1}}],"absoluteBoundingBox":{"x":0,"y":0,"width":120,"height":32}}}}}"#.utf8
+            )
+        )
+
+        let plan = try XomoFigmaNodeImportMapper.makePlan(response: response, requestedNodeID: "1:2")
+        let item = try #require(plan.items.first)
+        #expect(item.text?.lineHeight == 12.8)
+        #expect(item.fidelity == .partial)
+        #expect(item.issues.contains(.textLineHeightFlattened))
+
+        let result = XomoFigmaNodeMaterializer.materialize(
+            plan: plan,
+            canvasSize: CGSize(width: 320, height: 240)
+        )
+        let content = try #require(result.layers.first?.textContent)
+        #expect(content.fontSize == 16)
+        #expect(content.lineSpacing == 0)
+    }
+
     @Test func figmaParagraphSpacingRemainsEditableAndSurvivesProjectRoundTrip() throws {
         let response = try JSONDecoder().decode(
             XomoFigmaNodeResponse.self,
