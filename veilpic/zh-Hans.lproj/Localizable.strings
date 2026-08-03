@@ -949,6 +949,7 @@
 "imageEditor.fontFamily.system" = "系统字体";
 "imageEditor.properties.textSizeValue" = "文字字号：%d px";
 "imageEditor.properties.textAlignment" = "文字对齐";
+"imageEditor.properties.textCase" = "字母大小写";
 "imageEditor.properties.textBold" = "粗体";
 "imageEditor.properties.textItalic" = "斜体";
 "imageEditor.properties.textUnderline" = "下划线";
@@ -997,6 +998,10 @@
 "imageEditor.textAlignment.center" = "中";
 "imageEditor.textAlignment.right" = "右";
 "imageEditor.textAlignment.justified" = "两端";
+"imageEditor.textCase.original" = "原文";
+"imageEditor.textCase.uppercase" = "全大写";
+"imageEditor.textCase.lowercase" = "全小写";
+"imageEditor.textCase.titleCase" = "标题大小写";
 "imageEditor.textLayoutMode.point" = "点文字";
 "imageEditor.textLayoutMode.paragraph" = "段落文字";
 "imageEditor.levels.blackPoint" = "黑场";

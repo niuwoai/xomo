@@ -7814,6 +7814,14 @@ struct ImageEditorView: View {
                     }
                 }
                 .pickerStyle(.segmented)
+                Picker(L10n.text("imageEditor.properties.textCase"), selection: $viewModel.selectedTextCase) {
+                    ForEach(ImageEditorTextCase.allCases) { textCase in
+                        Text(textCase.title).tag(textCase)
+                    }
+                }
+                .pickerStyle(.menu)
+                .focusable(false)
+                .accessibilityIdentifier("image-editor-text-case")
                 VStack(alignment: .leading, spacing: 4) {
                     HStack {
                         Toggle(L10n.text("imageEditor.properties.textBold"), isOn: $viewModel.textBold)

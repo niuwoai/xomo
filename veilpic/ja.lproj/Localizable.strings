@@ -949,6 +949,7 @@
 "imageEditor.fontFamily.system" = "システムフォント";
 "imageEditor.properties.textSizeValue" = "文字サイズ：%d px";
 "imageEditor.properties.textAlignment" = "文字揃え";
+"imageEditor.properties.textCase" = "大文字・小文字";
 "imageEditor.properties.textBold" = "太字";
 "imageEditor.properties.textItalic" = "斜体";
 "imageEditor.properties.textUnderline" = "下線";
@@ -997,6 +998,10 @@
 "imageEditor.textAlignment.center" = "中央";
 "imageEditor.textAlignment.right" = "右";
 "imageEditor.textAlignment.justified" = "両端";
+"imageEditor.textCase.original" = "元の表記";
+"imageEditor.textCase.uppercase" = "すべて大文字";
+"imageEditor.textCase.lowercase" = "すべて小文字";
+"imageEditor.textCase.titleCase" = "タイトルケース";
 "imageEditor.textLayoutMode.point" = "ポイントテキスト";
 "imageEditor.textLayoutMode.paragraph" = "段落テキスト";
 "imageEditor.levels.blackPoint" = "黒点";

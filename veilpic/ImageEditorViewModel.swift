@@ -200,6 +200,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var textBoxWidth: Double = 0
     @Published var textBoxHeight: Double = 0
     @Published var selectedTextAlignment: ImageEditorTextAlignment = .left
+    @Published var selectedTextCase: ImageEditorTextCase = .original
     @Published var textLeftIndent: Double = 0
     @Published var textRightIndent: Double = 0
     @Published var textFirstLineIndent: Double = 0
@@ -5181,7 +5182,8 @@ final class ImageEditorViewModel: ObservableObject {
             leftIndent: CGFloat(clampedTextIndent(textLeftIndent)),
             rightIndent: CGFloat(clampedTextIndent(textRightIndent)),
             firstLineIndent: CGFloat(clampedTextFirstLineIndent(textFirstLineIndent)),
-            paragraphSpacing: CGFloat(clampedTextParagraphSpacing(textParagraphSpacing))
+            paragraphSpacing: CGFloat(clampedTextParagraphSpacing(textParagraphSpacing)),
+            textCase: selectedTextCase
         )
         pushUndo()
         var layer = ImageEditorLayer.text(
@@ -5244,6 +5246,7 @@ final class ImageEditorViewModel: ObservableObject {
             content.rightIndent = rightIndent
             content.firstLineIndent = firstLineIndent
             content.paragraphSpacing = paragraphSpacing
+            content.textCase = selectedTextCase
             let layerSize = content.layerSize()
             if let mask = document.layers[index].mask, mask.size != layerSize {
                 document.layers[index].mask = mask.resized(to: layerSize)
@@ -8470,6 +8473,7 @@ final class ImageEditorViewModel: ObservableObject {
         textBoxWidth = Double(content.boxWidth)
         textBoxHeight = Double(content.boxHeight)
         selectedTextAlignment = content.alignment
+        selectedTextCase = content.textCase
         textLeftIndent = Double(content.leftIndent)
         textRightIndent = Double(content.rightIndent)
         textFirstLineIndent = Double(content.firstLineIndent)

@@ -119,6 +119,61 @@ struct ImageEditorTextDecorationTests {
         #expect(!legacy.isStruckThrough)
     }
 
+    @Test func textCaseControlsCreateSelectionSyncUpdateAndUndo() throws {
+        let viewModel = editor()
+        viewModel.textValue = "Continue 继续"
+        viewModel.selectedTextCase = .uppercase
+        viewModel.addText(at: CGPoint(x: 8, y: 10))
+        let uppercaseID = try #require(viewModel.document.selectedLayerID)
+        let created = try #require(viewModel.document.selectedLayer?.textContent)
+        #expect(created.text == "Continue 继续")
+        #expect(created.textCase == .uppercase)
+        #expect(created.attributedString.string == "CONTINUE 继续")
+
+        viewModel.textValue = "Second Label"
+        viewModel.selectedTextCase = .original
+        viewModel.addText(at: CGPoint(x: 40, y: 24))
+        viewModel.selectLayer(uppercaseID)
+        #expect(viewModel.selectedTextCase == .uppercase)
+
+        viewModel.selectedTextCase = .lowercase
+        viewModel.updateSelectedTextLayer()
+        #expect(viewModel.document.selectedLayer?.textContent?.textCase == .lowercase)
+        #expect(viewModel.document.selectedLayer?.textContent?.attributedString.string == "continue 继续")
+
+        viewModel.undo()
+        #expect(viewModel.document.selectedLayer?.textContent?.textCase == .uppercase)
+        #expect(viewModel.document.selectedLayer?.textContent?.attributedString.string == "CONTINUE 继续")
+    }
+
+    @Test func batchTextCaseUpdateSkipsLockedLayer() throws {
+        let viewModel = editor()
+        viewModel.textValue = "First"
+        viewModel.addText(at: CGPoint(x: 8, y: 8))
+        let firstID = try #require(viewModel.document.selectedLayerID)
+
+        viewModel.textValue = "Second"
+        viewModel.addText(at: CGPoint(x: 36, y: 24))
+        let secondID = try #require(viewModel.document.selectedLayerID)
+
+        viewModel.textValue = "Locked"
+        viewModel.addText(at: CGPoint(x: 64, y: 40))
+        let lockedID = try #require(viewModel.document.selectedLayerID)
+        let lockedIndex = try #require(viewModel.document.layers.firstIndex { $0.id == lockedID })
+        viewModel.document.layers[lockedIndex].locksPixels = true
+
+        viewModel.selectLayer(firstID)
+        viewModel.selectLayer(secondID, extendingSelection: true)
+        viewModel.selectLayer(lockedID, extendingSelection: true)
+        viewModel.selectedTextCase = .titleCase
+        viewModel.updateSelectedTextLayer()
+
+        #expect(try #require(text(firstID, in: viewModel)).textCase == .titleCase)
+        #expect(try #require(text(secondID, in: viewModel)).textCase == .titleCase)
+        #expect(try #require(text(lockedID, in: viewModel)).textCase == .original)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerTextUpdateSelected"))
+    }
+
     private func editor() -> ImageEditorViewModel {
         ImageEditorViewModel(
             sourceName: "text-decoration.png",

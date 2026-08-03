@@ -2801,11 +2801,17 @@ enum ImageEditorTextAlignment: String, CaseIterable, Identifiable {
     }
 }
 
-enum ImageEditorTextCase: String, CaseIterable, Codable, Sendable {
+enum ImageEditorTextCase: String, CaseIterable, Codable, Sendable, Identifiable {
     case original
     case uppercase
     case lowercase
     case titleCase
+
+    var id: String { rawValue }
+
+    var title: String {
+        L10n.text("imageEditor.textCase.\(rawValue)")
+    }
 
     func applying(to text: String) -> String {
         switch self {

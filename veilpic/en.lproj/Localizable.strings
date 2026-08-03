@@ -949,6 +949,7 @@
 "imageEditor.fontFamily.system" = "System Font";
 "imageEditor.properties.textSizeValue" = "Text Size: %d px";
 "imageEditor.properties.textAlignment" = "Text Alignment";
+"imageEditor.properties.textCase" = "Letter Case";
 "imageEditor.properties.textBold" = "Bold";
 "imageEditor.properties.textItalic" = "Italic";
 "imageEditor.properties.textUnderline" = "Underline";
@@ -997,6 +998,10 @@
 "imageEditor.textAlignment.center" = "Center";
 "imageEditor.textAlignment.right" = "Right";
 "imageEditor.textAlignment.justified" = "Justify";
+"imageEditor.textCase.original" = "Original";
+"imageEditor.textCase.uppercase" = "UPPERCASE";
+"imageEditor.textCase.lowercase" = "lowercase";
+"imageEditor.textCase.titleCase" = "Title Case";
 "imageEditor.textLayoutMode.point" = "Point Text";
 "imageEditor.textLayoutMode.paragraph" = "Paragraph Text";
 "imageEditor.levels.blackPoint" = "Black point";
