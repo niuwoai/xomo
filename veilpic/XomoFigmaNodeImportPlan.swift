@@ -184,6 +184,7 @@ struct XomoFigmaPlanText: Equatable, Sendable {
     var usesAutoWidthAndHeight: Bool = false
     var usesAutoHeight: Bool = false
     var paragraphSpacing: Double? = nil
+    var textCase: ImageEditorTextCase = .original
 }
 
 struct XomoFigmaImageAsset: Equatable, Sendable {

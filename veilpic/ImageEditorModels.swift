@@ -2801,6 +2801,26 @@ enum ImageEditorTextAlignment: String, CaseIterable, Identifiable {
     }
 }
 
+enum ImageEditorTextCase: String, CaseIterable, Codable, Sendable {
+    case original
+    case uppercase
+    case lowercase
+    case titleCase
+
+    func applying(to text: String) -> String {
+        switch self {
+        case .original:
+            text
+        case .uppercase:
+            text.uppercased()
+        case .lowercase:
+            text.lowercased()
+        case .titleCase:
+            text.capitalized
+        }
+    }
+}
+
 struct ImageEditorTextContent {
     static let drawingPadding: CGFloat = 4
     static let maximumBoxDimension: CGFloat = 12_000
@@ -2824,6 +2844,11 @@ struct ImageEditorTextContent {
     var rightIndent: CGFloat = 0
     var firstLineIndent: CGFloat = 0
     var paragraphSpacing: CGFloat = 0
+    var textCase: ImageEditorTextCase = .original
+
+    var displayText: String {
+        textCase.applying(to: text)
+    }
 
     var font: NSFont {
         let size = max(6, fontSize)
@@ -2872,7 +2897,7 @@ struct ImageEditorTextContent {
     }
 
     var attributedString: NSAttributedString {
-        NSAttributedString(string: text, attributes: attributes)
+        NSAttributedString(string: displayText, attributes: attributes)
     }
 
     var requiredParagraphHeight: CGFloat {
@@ -2896,7 +2921,7 @@ struct ImageEditorTextContent {
                 height: boxHeight > 0 ? boxHeight : requiredParagraphHeight
             )
         } else {
-            let lines = text.components(separatedBy: .newlines)
+            let lines = displayText.components(separatedBy: .newlines)
             let lineSizes = lines.map { (($0.isEmpty ? " " : $0) as NSString).size(withAttributes: attributes) }
             let width = lineSizes.map(\.width).max() ?? 1
             let height = lineSizes.reduce(CGFloat(0)) { partial, size in partial + size.height }

@@ -1101,10 +1101,11 @@ enum ImageEditorPSDCodec {
         size: CGSize
     ) -> PSDExportText? {
         guard !content.text.isEmpty else { return nil }
+        let exportedText = content.displayText
         var engine = Data()
         engine.appendASCII("<<\n/EngineDict <<\n/Editor <<\n/Text ")
-        appendEngineUnicodeString(content.text, to: &engine)
-        engine.appendASCII("\n>>\n/StyleRun <<\n/RunLengthArray [ \(content.text.utf16.count) ]\n")
+        appendEngineUnicodeString(exportedText, to: &engine)
+        engine.appendASCII("\n>>\n/StyleRun <<\n/RunLengthArray [ \(exportedText.utf16.count) ]\n")
         engine.appendASCII("/RunArray [ << /StyleSheet << /StyleSheetData << /Font 0 /FontSize \(content.fontSize) ")
         let fauxBold = content.isBold ? "true" : "false"
         let fauxItalic = content.isItalic ? "true" : "false"
@@ -1123,7 +1124,7 @@ enum ImageEditorPSDCodec {
         case .center: justification = 2
         case .justified: justification = 3
         }
-        engine.appendASCII("/ParagraphRun << /RunLengthArray [ \(content.text.utf16.count) ] /RunArray [ << /ParagraphSheet << /Properties << /Justification \(justification) >> >> >> ] >>\n")
+        engine.appendASCII("/ParagraphRun << /RunLengthArray [ \(exportedText.utf16.count) ] /RunArray [ << /ParagraphSheet << /Properties << /Justification \(justification) >> >> >> ] >>\n")
         engine.appendASCII("/Rendered << /Shapes << /Children [ << /Cookie << /Photoshop << /ShapeType \(content.boxWidth > 0 ? 1 : 0) >> >> >> ] >> >>\n>>\n/ResourceDict << /FontSet [ << /Name ")
         appendEngineUnicodeString(content.fontFamilyName, to: &engine)
         engine.appendASCII(" /FontFamily ")
@@ -1133,7 +1134,7 @@ enum ImageEditorPSDCodec {
         engine.appendASCII(" >> ] >>\n>>")
 
         var descriptorItems = Data()
-        descriptorItems.append(descriptorItem(key: "Txt ", type: "TEXT", payload: descriptorUnicodeString(content.text)))
+        descriptorItems.append(descriptorItem(key: "Txt ", type: "TEXT", payload: descriptorUnicodeString(exportedText)))
         descriptorItems.append(descriptorItem(key: "EngineData", type: "tdta", payload: lengthPrefixedData(engine)))
         var tysh = Data()
         tysh.appendUInt16(1)

@@ -286,7 +286,7 @@ enum XomoFigmaNodeImportMapper {
             issues.append(.transformFlattened)
         }
         if let textCase = node.style?.textCase,
-           textCase != "ORIGINAL" {
+           mappedTextCase(textCase) == nil {
             issues.append(.textCaseFlattened)
         }
         if hasUnmappedLineHeight(node.style) {
@@ -367,7 +367,7 @@ enum XomoFigmaNodeImportMapper {
             cornerSmoothing: validCornerSmoothing(node),
             text: node.characters.map {
                 XomoFigmaPlanText(
-                    characters: characters($0, applying: node.style?.textCase),
+                    characters: $0,
                     fontFamily: node.style?.fontFamily,
                     fontSize: node.style?.fontSize,
                     fontWeight: node.style?.fontWeight,
@@ -381,7 +381,8 @@ enum XomoFigmaNodeImportMapper {
                     usesAutoHeight: node.style?.textAutoResize == "HEIGHT",
                     paragraphSpacing: node.style?.paragraphSpacing.flatMap {
                         $0.isFinite && $0 >= 0 ? $0 : nil
-                    }
+                    },
+                    textCase: mappedTextCase(node.style?.textCase) ?? .original
                 )
             },
             vectorPaths: geometryPaths(node).map(\.path),
@@ -995,15 +996,21 @@ enum XomoFigmaNodeImportMapper {
     }
 
     static func characters(_ characters: String, applying textCase: String?) -> String {
+        (mappedTextCase(textCase) ?? .original).applying(to: characters)
+    }
+
+    static func mappedTextCase(_ textCase: String?) -> ImageEditorTextCase? {
         switch textCase {
+        case nil, "ORIGINAL":
+            .original
         case "UPPER":
-            characters.uppercased()
+            .uppercase
         case "LOWER":
-            characters.lowercased()
+            .lowercase
         case "TITLE":
-            characters.capitalized
+            .titleCase
         default:
-            characters
+            nil
         }
     }
 

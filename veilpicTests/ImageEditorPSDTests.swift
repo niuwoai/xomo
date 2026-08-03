@@ -390,6 +390,34 @@ struct ImageEditorPSDTests {
         #expect(!report.issues.contains { $0.kind == .textRasterized })
     }
 
+    @Test func psdExportBakesNativeTextCaseWithoutLosingVisualText() throws {
+        let canvasSize = CGSize(width: 240, height: 120)
+        var document = ImageEditorDocument(
+            sourceName: "text-case.png",
+            image: psdSolidImage(color: .white, size: canvasSize)
+        )
+        let content = ImageEditorTextContent(
+            text: "Continue 继续",
+            color: .black,
+            fontSize: 20,
+            point: .zero,
+            textCase: .uppercase
+        )
+        document.layers = [ImageEditorLayer.text(
+            name: "Button Label",
+            origin: CGPoint(x: 20, y: 24),
+            content: content
+        )]
+
+        let data = try ImageEditorPSDCodec.encode(document: document)
+        let restored = try ImageEditorPSDCodec.decode(data, sourceName: "text-case.psd")
+        let restoredContent = try #require(restored.layers.first?.textContent)
+
+        #expect(restoredContent.text == "CONTINUE 继续")
+        #expect(restoredContent.textCase == .original)
+        #expect(restoredContent.attributedString.string == content.attributedString.string)
+    }
+
     @Test func psdRejectsUnsupportedBitDepth() throws {
         let document = ImageEditorDocument(
             sourceName: "tiny.png",

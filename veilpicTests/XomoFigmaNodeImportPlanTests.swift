@@ -13,12 +13,67 @@ import Testing
 
 @MainActor
 struct XomoFigmaNodeImportPlanTests {
-    @Test func supportedTextCaseStylesBakeIntoEditableCharacters() {
+    @Test func supportedTextCaseStylesMapToNativeEditableSemantics() {
         #expect(XomoFigmaNodeImportMapper.characters("Hello 世界", applying: "UPPER") == "HELLO 世界")
         #expect(XomoFigmaNodeImportMapper.characters("Hello 世界", applying: "LOWER") == "hello 世界")
         #expect(XomoFigmaNodeImportMapper.characters("hello world", applying: "TITLE") == "Hello World")
         #expect(XomoFigmaNodeImportMapper.characters("Hello", applying: "ORIGINAL") == "Hello")
         #expect(XomoFigmaNodeImportMapper.characters("Hello", applying: "SMALL_CAPS") == "Hello")
+        #expect(XomoFigmaNodeImportMapper.mappedTextCase("UPPER") == .uppercase)
+        #expect(XomoFigmaNodeImportMapper.mappedTextCase("LOWER") == .lowercase)
+        #expect(XomoFigmaNodeImportMapper.mappedTextCase("TITLE") == .titleCase)
+        #expect(XomoFigmaNodeImportMapper.mappedTextCase("ORIGINAL") == .original)
+        #expect(XomoFigmaNodeImportMapper.mappedTextCase("SMALL_CAPS") == nil)
+    }
+
+    @Test func figmaTextCaseRemainsEditableAndSurvivesProjectRoundTrip() throws {
+        let response = try JSONDecoder().decode(
+            XomoFigmaNodeResponse.self,
+            from: Data(
+                #"{"name":"Typography","nodes":{"1:7":{"document":{"id":"1:7","name":"Label","type":"TEXT","characters":"Continue 继续","style":{"fontSize":16,"textCase":"UPPER"},"fills":[{"type":"SOLID","color":{"r":0,"g":0,"b":0,"a":1}}],"absoluteBoundingBox":{"x":0,"y":0,"width":120,"height":24}}}}}"#.utf8
+            )
+        )
+
+        let plan = try XomoFigmaNodeImportMapper.makePlan(response: response, requestedNodeID: "1:7")
+        let item = try #require(plan.items.first)
+        #expect(item.text?.characters == "Continue 继续")
+        #expect(item.text?.textCase == .uppercase)
+        #expect(item.fidelity == .exact)
+        #expect(!item.issues.contains(.textCaseFlattened))
+
+        let result = XomoFigmaNodeMaterializer.materialize(
+            plan: plan,
+            canvasSize: CGSize(width: 320, height: 240)
+        )
+        let layer = try #require(result.layers.first)
+        guard case let .text(content) = layer.kind else {
+            Issue.record("Figma text case should remain editable text")
+            return
+        }
+        #expect(content.text == "Continue 继续")
+        #expect(content.textCase == .uppercase)
+        #expect(content.attributedString.string == "CONTINUE 继续")
+
+        let data = try JSONEncoder().encode(ImageEditorProjectTextContent(content: content))
+        let restored = try JSONDecoder().decode(ImageEditorProjectTextContent.self, from: data).textContent
+        #expect(restored.text == "Continue 继续")
+        #expect(restored.textCase == .uppercase)
+        #expect(restored.attributedString.string == "CONTINUE 继续")
+    }
+
+    @Test func unsupportedFigmaSmallCapsRemainsHonestlyReported() throws {
+        let response = try JSONDecoder().decode(
+            XomoFigmaNodeResponse.self,
+            from: Data(
+                #"{"name":"Typography","nodes":{"1:8":{"document":{"id":"1:8","name":"Label","type":"TEXT","characters":"Caption","style":{"fontSize":16,"textCase":"SMALL_CAPS"},"fills":[{"type":"SOLID","color":{"r":0,"g":0,"b":0,"a":1}}],"absoluteBoundingBox":{"x":0,"y":0,"width":120,"height":24}}}}}"#.utf8
+            )
+        )
+
+        let plan = try XomoFigmaNodeImportMapper.makePlan(response: response, requestedNodeID: "1:8")
+        let item = try #require(plan.items.first)
+        #expect(item.text?.textCase == .original)
+        #expect(item.fidelity == .partial)
+        #expect(item.issues.contains(.textCaseFlattened))
     }
 
     @Test func figmaLineHeightUsesPixelsBeforeFontSizePercentageFallback() throws {
@@ -705,7 +760,8 @@ struct XomoFigmaNodeImportPlanTests {
             grow: 1,
             stretchesCrossAxis: true
         ))
-        #expect(text.text?.characters == "CONTINUE 继续")
+        #expect(text.text?.characters == "Continue 继续")
+        #expect(text.text?.textCase == .uppercase)
         #expect(text.text?.fontFamily == "Inter")
         #expect(text.text?.fontSize == 16)
         #expect(text.frame == XomoFigmaPlanRect(x: 30, y: 60, width: 64, height: 24))
@@ -1162,10 +1218,10 @@ struct XomoFigmaNodeImportPlanTests {
         #expect(unsupported.targetKind == nil)
         #expect(unsupported.fidelity == .unsupported)
         #expect(unsupported.issues == [.unsupportedNodeType])
-        #expect(text.fidelity == .partial)
-        #expect(text.issues.contains(.textCaseFlattened))
-        #expect(plan.exactCount == 5)
-        #expect(plan.partialCount == 3)
+        #expect(text.fidelity == .exact)
+        #expect(!text.issues.contains(.textCaseFlattened))
+        #expect(plan.exactCount == 6)
+        #expect(plan.partialCount == 2)
         #expect(plan.unsupportedCount == 1)
     }
 
@@ -1971,9 +2027,10 @@ struct XomoFigmaNodeImportPlanTests {
     @Test func materializerCreatesEditableHierarchyAtCenteredScaleAndHonestPlaceholder() throws {
         let plan = try Self.decodedPlan()
         let textPlan = try #require(plan.items.first { $0.sourceName == "Continue Label" })
-        #expect(textPlan.text?.characters == "CONTINUE 继续")
-        #expect(textPlan.fidelity == .partial)
-        #expect(textPlan.issues.contains(.textCaseFlattened))
+        #expect(textPlan.text?.characters == "Continue 继续")
+        #expect(textPlan.text?.textCase == .uppercase)
+        #expect(textPlan.fidelity == .exact)
+        #expect(!textPlan.issues.contains(.textCaseFlattened))
         let result = XomoFigmaNodeMaterializer.materialize(
             plan: plan,
             canvasSize: CGSize(width: 600, height: 1_000)
@@ -2005,7 +2062,9 @@ struct XomoFigmaNodeImportPlanTests {
         ))
         #expect(text.frame.origin == CGPoint(x: 135, y: 138))
         if case let .text(content) = text.kind {
-            #expect(content.text == "CONTINUE 继续")
+            #expect(content.text == "Continue 继续")
+            #expect(content.textCase == .uppercase)
+            #expect(content.attributedString.string == "CONTINUE 继续")
             #expect(content.fontFamilyName == "Inter")
             #expect(content.fontSize == 16)
             #expect(content.isBold)
@@ -2119,7 +2178,9 @@ struct XomoFigmaNodeImportPlanTests {
             grow: 1,
             stretchesCrossAxis: true
         ))
-        #expect(text.textContent?.text == "CONTINUE 继续")
+        #expect(text.textContent?.text == "Continue 继续")
+        #expect(text.textContent?.textCase == .uppercase)
+        #expect(text.textContent?.attributedString.string == "CONTINUE 继续")
         #expect(primary.shapeContent?.cornerRadius == 8)
         #expect(vector.shapeContent?.kind == .path)
         #expect(vector.shapeContent?.editablePathAnchors.count == 3)
