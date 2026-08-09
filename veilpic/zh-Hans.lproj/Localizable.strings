@@ -3303,7 +3303,7 @@
 "xomo.figma.node.issue.textCaseFlattened" = "文字大小写会写入可编辑文本内容，而不是保留为动态样式";
 "xomo.figma.node.issue.textLineHeightFlattened" = "该 Figma 行高无法精确表达，将使用最接近的原生行距";
 "xomo.figma.node.issue.textParagraphIndentFlattened" = "该 Figma 段首缩进无效，将按 0 px 导入";
-"xomo.figma.node.issue.textParagraphSpacingFlattened" = "Figma 段间距暂不能在 Xomo 中编辑，将使用默认段间距";
+"xomo.figma.node.issue.textParagraphSpacingFlattened" = "Figma 段间距超出 Xomo 可编辑的 0–400 px 范围，已调整到受支持范围";
 "xomo.figma.node.issue.textAutoResizeFlattened" = "该 Figma 文本自动调整模式暂不能在 Xomo 中编辑，将使用固定文本框";
 "xomo.figma.node.issue.textHorizontalAlignmentFlattened" = "该 Figma 横向文字对齐方式暂不支持，将按左对齐导入";
 "xomo.figma.node.issue.textVerticalAlignmentFlattened" = "该 Figma 文字垂直对齐方式无法识别，将使用顶部对齐";

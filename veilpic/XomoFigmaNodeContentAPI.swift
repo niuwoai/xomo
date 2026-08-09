@@ -305,7 +305,9 @@ enum XomoFigmaNodeImportMapper {
             issues.append(.textParagraphIndentFlattened)
         }
         if let paragraphSpacing = node.style?.paragraphSpacing,
-           !paragraphSpacing.isFinite || paragraphSpacing < 0 {
+           !paragraphSpacing.isFinite
+            || paragraphSpacing < 0
+            || paragraphSpacing > Double(ImageEditorTextContent.maximumParagraphSpacing) {
             issues.append(.textParagraphSpacingFlattened)
         }
         if let textAutoResize = node.style?.textAutoResize,
@@ -414,7 +416,9 @@ enum XomoFigmaNodeImportMapper {
                     usesAutoHeight: node.style?.textAutoResize == "HEIGHT",
                     truncatesOverflow: node.style?.textAutoResize == "TRUNCATE",
                     paragraphSpacing: node.style?.paragraphSpacing.flatMap {
-                        $0.isFinite && $0 >= 0 ? $0 : nil
+                        $0.isFinite && $0 >= 0
+                            ? min($0, Double(ImageEditorTextContent.maximumParagraphSpacing))
+                            : nil
                     },
                     textCase: mappedTextCase(node.style?.textCase) ?? .original,
                     verticalAlignment: mappedTextVerticalAlignment(node.style?.textAlignVertical) ?? .top

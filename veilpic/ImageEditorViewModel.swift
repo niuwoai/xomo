@@ -8626,7 +8626,7 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     private func clampedTextParagraphSpacing(_ spacing: Double) -> Double {
-        max(0, min(400, spacing))
+        max(0, min(Double(ImageEditorTextContent.maximumParagraphSpacing), spacing))
     }
 
     private func clampedTextBoxWidth(_ width: Double) -> Double {
