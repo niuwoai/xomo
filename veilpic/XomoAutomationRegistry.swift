@@ -5746,8 +5746,16 @@ private extension XomoAutomationRegistry {
             "preset": XomoAutomationSchema.string(description: "Optional gradient-fill preset", values: ImageEditorGradientFillPreset.allCases.map(\.rawValue)),
             "style": XomoAutomationSchema.string(description: "Optional gradient-fill style", values: ImageEditorGradientFillStyle.allCases.map(\.rawValue)),
             "reverse": XomoAutomationSchema.boolean(description: "Optional gradient-fill reverse direction"),
-            "angle": XomoAutomationSchema.number(description: "Optional gradient-fill angle from -180 to 180 degrees"),
-            "scale": XomoAutomationSchema.number(description: "Optional gradient-fill span scale from 0.25 to 4"),
+            "angle": shapeBoundedNumberSchema(
+                description: "Optional gradient-fill angle in degrees",
+                minimum: -180,
+                maximum: 180
+            ),
+            "scale": shapeBoundedNumberSchema(
+                description: "Optional gradient-fill span scale",
+                minimum: 0.25,
+                maximum: 4
+            ),
             "startColor": gradientFillColorSchema,
             "endColor": gradientFillColorSchema,
             "stops": gradientFillStopsSchema
@@ -5781,8 +5789,16 @@ private extension XomoAutomationRegistry {
             "preset": XomoAutomationSchema.string(description: "Gradient preset", values: ImageEditorGradientFillPreset.allCases.map(\.rawValue)),
             "style": XomoAutomationSchema.string(description: "Gradient style", values: ImageEditorGradientFillStyle.allCases.map(\.rawValue)),
             "reverse": XomoAutomationSchema.boolean(description: "Reverse the gradient direction"),
-            "angle": XomoAutomationSchema.number(description: "Gradient angle from -180 to 180 degrees"),
-            "scale": XomoAutomationSchema.number(description: "Gradient span scale from 0.25 to 4"),
+            "angle": shapeBoundedNumberSchema(
+                description: "Gradient angle in degrees",
+                minimum: -180,
+                maximum: 180
+            ),
+            "scale": shapeBoundedNumberSchema(
+                description: "Gradient span scale",
+                minimum: 0.25,
+                maximum: 4
+            ),
             "startColor": gradientFillColorSchema,
             "endColor": gradientFillColorSchema,
             "stops": gradientFillStopsSchema
@@ -6421,7 +6437,7 @@ private extension XomoAutomationRegistry {
         "description": .string("Optional ordered 2 to 16 color stops spanning positions 0 through 1"),
         "items": XomoAutomationSchema.object(
             properties: [
-                "position": XomoAutomationSchema.number(description: "Normalized position from 0 to 1"),
+                "position": shapeUnitIntervalSchema(description: "Normalized position"),
                 "color": gradientFillColorSchema
             ],
             required: ["position", "color"]

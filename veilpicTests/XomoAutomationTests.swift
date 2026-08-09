@@ -5435,6 +5435,81 @@ struct XomoAutomationTests {
             .objectValue?["alpha"]?.objectValue?["maximum"] == .number(1))
     }
 
+    @Test func gradientFillGeometrySchemasMatchAtomicRuntimeBounds() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        let color: XomoJSONValue = .object([
+            "red": .number(1), "green": .number(0), "blue": .number(0)
+        ])
+        let baseArguments: [String: XomoJSONValue] = [
+            "kind": .string("gradientFill"),
+            "preset": .string(ImageEditorGradientFillPreset.custom.rawValue),
+            "style": .string(ImageEditorGradientFillStyle.linear.rawValue),
+            "reverse": .bool(false),
+            "angle": .number(0),
+            "scale": .number(1),
+            "startColor": color,
+            "endColor": color,
+            "stops": .array([
+                .object(["position": .number(0), "color": color]),
+                .object(["position": .number(1), "color": color])
+            ])
+        ]
+        let stableLayerCount = viewModel.document.layers.count
+        let stableHistoryCount = viewModel.document.history.count
+        let invalidOverrides: [(String, XomoJSONValue, String)] = [
+            ("angle", .number(181), "angle must be between -180 and 180"),
+            ("scale", .number(0.24), "scale must be between 0.25 and 4"),
+            ("angle", .string("0"), "Missing or invalid number argument: angle")
+        ]
+        for (key, value, expectedError) in invalidOverrides {
+            var invalidArguments = baseArguments
+            invalidArguments[key] = value
+            let response = registry.execute(request(
+                operation: "call",
+                name: "xomo.layer.create",
+                arguments: invalidArguments
+            ))
+            #expect(!response.ok)
+            #expect(response.error?.contains(expectedError) == true)
+            #expect(viewModel.document.layers.count == stableLayerCount)
+            #expect(viewModel.document.history.count == stableHistoryCount)
+        }
+
+        var invalidStopArguments = baseArguments
+        invalidStopArguments["stops"] = .array([
+            .object(["position": .number(-0.01), "color": color]),
+            .object(["position": .number(1), "color": color])
+        ])
+        let invalidStop = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.create",
+            arguments: invalidStopArguments
+        ))
+        #expect(!invalidStop.ok)
+        #expect(invalidStop.error?.contains("stops[0].position must be between 0 and 1") == true)
+        #expect(viewModel.document.layers.count == stableLayerCount)
+        #expect(viewModel.document.history.count == stableHistoryCount)
+
+        let toolsResponse = registry.execute(request(operation: "tools"))
+        let tools = try #require(toolsResponse.result?.arrayValue)
+        for toolName in ["xomo.layer.create", "xomo.layer.gradient_fill_settings"] {
+            let tool = try #require(tools.compactMap(\.objectValue).first {
+                $0["name"] == .string(toolName)
+            })
+            let properties = tool["inputSchema"]?.objectValue?["properties"]?.objectValue
+            #expect(properties?["angle"]?.objectValue?["minimum"] == .number(-180))
+            #expect(properties?["angle"]?.objectValue?["maximum"] == .number(180))
+            #expect(properties?["scale"]?.objectValue?["minimum"] == .number(0.25))
+            #expect(properties?["scale"]?.objectValue?["maximum"] == .number(4))
+            let positionSchema = properties?["stops"]?.objectValue?["items"]?
+                .objectValue?["properties"]?.objectValue?["position"]?.objectValue
+            #expect(positionSchema?["minimum"] == .number(0))
+            #expect(positionSchema?["maximum"] == .number(1))
+        }
+    }
+
     @Test func registryCreatesAndListsLayerComps() throws {
         let viewModel = makeViewModel()
         let registry = XomoAutomationRegistry.shared
