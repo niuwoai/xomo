@@ -149,10 +149,17 @@ extension ImageEditorViewModel {
         return String(format: "%.1f", locale: Locale.current, Double(value))
     }
 
-    var canResizeSelectedLayer: Bool {
+    var canMoveSelectedLayer: Bool {
         let indices = selectedTransformableLayerIndices
         guard !indices.isEmpty, selectedLayerTransformFrame != nil else { return false }
         return indices.allSatisfy { !document.isEffectivelyPositionLocked(document.layers[$0]) }
+    }
+
+    var canResizeSelectedLayer: Bool {
+        guard canMoveSelectedLayer else { return false }
+        return selectedTransformableLayerIndices.allSatisfy {
+            !document.isEffectivelyPixelsLocked(document.layers[$0])
+        }
     }
 
     var selectedLayerTransformX: Double {

@@ -2357,7 +2357,7 @@ struct ImageEditorView: View {
                                   let imagePoint = imagePoint(from: location, in: geometry.size)
                             else { return false }
                             guard viewModel.prepareXomoObjectMove(at: imagePoint),
-                                  viewModel.canResizeSelectedLayer
+                                  viewModel.canMoveSelectedLayer
                             else { return false }
                             return true
                         },

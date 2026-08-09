@@ -363,6 +363,27 @@ struct XomoCanvasObjectTests {
         #expect(viewModel.document.selectedLayerIDs == selectionBeforeMove)
     }
 
+    @Test func pixelLockedComponentCanMoveWithoutAllowingContentResampling() throws {
+        let viewModel = makeViewModel()
+        viewModel.insertXomoComponent(.button, at: CGPoint(x: 80, y: 90))
+        let groupID = try #require(viewModel.document.selectedLayerID)
+        viewModel.document.layers = viewModel.document.layers.map { layer in
+            guard layer.id == groupID else { return layer }
+            var pixelLocked = layer
+            pixelLocked.locksPixels = true
+            return pixelLocked
+        }
+        let initialFrame = try #require(viewModel.selectedXomoObjectFrame)
+
+        #expect(viewModel.canMoveSelectedLayer)
+        #expect(!viewModel.canResizeSelectedLayer)
+        #expect(!viewModel.canRotateSelectedLayer)
+        #expect(viewModel.beginMovingSelectedLayer())
+        viewModel.moveSelectedLayer(by: CGSize(width: 12, height: 8), snapping: false)
+        viewModel.finishMovingSelectedLayer()
+        #expect(viewModel.selectedXomoObjectFrame == initialFrame.offsetBy(dx: 12, dy: 8))
+    }
+
     @Test func switchingObjectsUpdatesKindAndBoundsImmediately() throws {
         let viewModel = makeViewModel()
         viewModel.insertXomoComponent(.button, at: CGPoint(x: 40, y: 60))
