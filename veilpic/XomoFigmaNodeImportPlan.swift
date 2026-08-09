@@ -352,6 +352,13 @@ struct XomoFigmaPlanCornerRadii: Equatable, Sendable {
 /// before its native layout engine can enforce them, so future editing does
 /// not lose the source design intent.
 struct XomoFigmaSizeConstraints: Codable, Equatable, Sendable {
+    static let empty = XomoFigmaSizeConstraints(
+        minWidth: nil,
+        maxWidth: nil,
+        minHeight: nil,
+        maxHeight: nil
+    )
+
     var minWidth: Double?
     var maxWidth: Double?
     var minHeight: Double?

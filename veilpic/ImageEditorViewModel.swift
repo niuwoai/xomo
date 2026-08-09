@@ -1342,6 +1342,10 @@ final class ImageEditorViewModel: ObservableObject {
         document.selectedLayer?.xomoFigmaSizeConstraints
     }
 
+    var selectedLayerFigmaSizeConstraintDefaults: XomoFigmaSizeConstraints? {
+        document.selectedLayer?.xomoFigmaSizeConstraintDefaults
+    }
+
     var selectedLayerFigmaComponentRole: XomoFigmaComponentRole? {
         document.selectedLayer?.xomoFigmaComponentRole
     }

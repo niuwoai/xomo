@@ -3498,6 +3498,8 @@ struct XomoFigmaNodeImportPlanTests {
         )
         #expect(materialized.layers.first { $0.xomoFigmaSourceID == "1:140" }?.xomoFigmaSizeConstraints == parent.sizeConstraints)
         #expect(materialized.layers.first { $0.xomoFigmaSourceID == "2:140" }?.xomoFigmaSizeConstraints == child.sizeConstraints)
+        #expect(materialized.layers.first { $0.xomoFigmaSourceID == "1:140" }?.xomoFigmaSizeConstraintDefaults == parent.sizeConstraints)
+        #expect(materialized.layers.first { $0.xomoFigmaSourceID == "2:140" }?.xomoFigmaSizeConstraintDefaults == child.sizeConstraints)
     }
 
     private static let validNodeResponse = Data(

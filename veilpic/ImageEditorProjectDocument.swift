@@ -316,6 +316,7 @@ struct ImageEditorProjectLayer: Codable {
     var isXomoThemeOverride: Bool?
     var xomoFigmaVariableBindings: [XomoFigmaVariableBinding]?
     var xomoFigmaSizeConstraints: XomoFigmaSizeConstraints?
+    var xomoFigmaSizeConstraintDefaults: XomoFigmaSizeConstraints?
     var xomoFigmaSourceID: String?
     var xomoFigmaNodeType: String?
     var xomoFigmaComponentRole: XomoFigmaComponentRole?
@@ -386,6 +387,7 @@ struct ImageEditorProjectLayer: Codable {
             ? nil
             : layer.xomoFigmaVariableBindings
         xomoFigmaSizeConstraints = layer.xomoFigmaSizeConstraints
+        xomoFigmaSizeConstraintDefaults = layer.xomoFigmaSizeConstraintDefaults
         xomoFigmaSourceID = layer.xomoFigmaSourceID
         xomoFigmaNodeType = layer.xomoFigmaNodeType
         xomoFigmaComponentRole = layer.xomoFigmaComponentRole
@@ -451,6 +453,7 @@ struct ImageEditorProjectLayer: Codable {
         layer.isXomoThemeOverride = isXomoThemeOverride ?? false
         layer.xomoFigmaVariableBindings = xomoFigmaVariableBindings ?? []
         layer.xomoFigmaSizeConstraints = xomoFigmaSizeConstraints
+        layer.xomoFigmaSizeConstraintDefaults = xomoFigmaSizeConstraintDefaults
         layer.xomoFigmaSourceID = xomoFigmaSourceID
         layer.xomoFigmaNodeType = xomoFigmaNodeType
         layer.xomoFigmaComponentRole = xomoFigmaComponentRole

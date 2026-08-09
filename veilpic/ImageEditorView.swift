@@ -1994,10 +1994,13 @@ struct ImageEditorView: View {
             } label: {
                 Image(systemName: "arrow.left.arrow.right")
                     .font(.system(size: 10, weight: .bold))
+                    .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
                     .frame(width: 18, height: 18)
+                    .contentShape(Rectangle())
             }
-            .buttonStyle(EditorIconButtonStyle(isSelected: false))
+            .buttonStyle(.plain)
             .focusable(false)
+            .xomoFocusEffectDisabled()
             .help(L10n.text("imageEditor.action.colorSwapForegroundBackground"))
             .accessibilityIdentifier("image-editor-color-swap")
             .accessibilityLabel(L10n.text("imageEditor.action.colorSwapForegroundBackground"))

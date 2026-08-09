@@ -996,12 +996,7 @@ extension ImageEditorViewModel {
             min(Double(ImageEditorTextContent.maximumBoxDimension), max(1, $0))
         }
         var constraints = document.layers[layerIndex].xomoFigmaSizeConstraints
-            ?? XomoFigmaSizeConstraints(
-                minWidth: nil,
-                maxWidth: nil,
-                minHeight: nil,
-                maxHeight: nil
-            )
+            ?? .empty
         guard field.value(in: constraints) != normalizedValue else { return }
 
         let reflowTarget = stackReflowTarget(for: document.layers[layerIndex])
@@ -1011,6 +1006,9 @@ extension ImageEditorViewModel {
         }
 
         pushUndo()
+        if document.layers[layerIndex].xomoFigmaSizeConstraintDefaults == nil {
+            document.layers[layerIndex].xomoFigmaSizeConstraintDefaults = constraints
+        }
         field.set(normalizedValue, in: &constraints)
         document.layers[layerIndex].xomoFigmaSizeConstraints = constraints.isEmpty ? nil : constraints
         if let reflowTarget {
@@ -1024,6 +1022,19 @@ extension ImageEditorViewModel {
             "imageEditor.status.figmaSizeConstraintUpdated",
             L10n.text(field.localizationKey)
         )
+    }
+
+    func resetSelectedFigmaSizeConstraint(_ field: XomoFigmaSizeConstraintField) {
+        guard let defaults = selectedLayerFigmaSizeConstraintDefaults else { return }
+        setSelectedFigmaSizeConstraint(field, value: field.value(in: defaults))
+    }
+
+    func hasSelectedFigmaSizeConstraintOverride(
+        _ field: XomoFigmaSizeConstraintField
+    ) -> Bool {
+        guard let defaults = selectedLayerFigmaSizeConstraintDefaults else { return false }
+        return field.value(in: selectedLayerFigmaSizeConstraints ?? .empty)
+            != field.value(in: defaults)
     }
 
     private func updateSelectedStackLayout(

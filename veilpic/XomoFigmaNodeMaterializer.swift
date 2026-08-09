@@ -222,6 +222,7 @@ enum XomoFigmaNodeMaterializer {
         }
         layer.xomoFigmaVariableBindings = item.variableBindings
         layer.xomoFigmaSizeConstraints = item.sizeConstraints
+        layer.xomoFigmaSizeConstraintDefaults = item.sizeConstraints ?? .empty
         layer.xomoFigmaSourceID = item.sourceID
         layer.xomoFigmaNodeType = item.sourceType
         layer.xomoFigmaComponentRole = item.componentRole

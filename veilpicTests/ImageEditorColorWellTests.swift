@@ -89,6 +89,7 @@ struct ImageEditorColorWellTests {
         #expect(colorChipSource.contains(".buttonStyle(.plain)"))
         #expect(colorChipSource.contains(".focusable(false)"))
         #expect(colorChipSource.contains(".xomoFocusEffectDisabled()"))
+        #expect(!colorChipSource.contains("EditorIconButtonStyle"))
         #expect(!colorChipSource.contains(".strokeBorder("))
         #expect(!colorChipSource.contains("NSColorWell"))
         #expect(!colorChipSource.contains("sampleScreenColorForForeground"))

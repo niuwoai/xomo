@@ -16,6 +16,7 @@ struct ImageEditorFigmaProvenanceTests {
             minHeight: 44,
             maxHeight: 88
         )
+        layer.xomoFigmaSizeConstraintDefaults = layer.xomoFigmaSizeConstraints
         layer.xomoFigmaComponentRole = .instance
         layer.xomoFigmaComponentProperties = [
             "Size": XomoFigmaComponentProperty(
@@ -45,6 +46,7 @@ struct ImageEditorFigmaProvenanceTests {
         #expect(viewModel.selectedLayerFigmaSourceID == "1:60")
         #expect(viewModel.selectedLayerFigmaNodeType == "BOOLEAN_OPERATION")
         #expect(viewModel.selectedLayerFigmaSizeConstraints == layer.xomoFigmaSizeConstraints)
+        #expect(viewModel.selectedLayerFigmaSizeConstraintDefaults == layer.xomoFigmaSizeConstraintDefaults)
         #expect(viewModel.selectedLayerFigmaComponentRole == .instance)
         #expect(viewModel.selectedLayerFigmaComponentProperties["Size"]?.value == "Large")
         #expect(viewModel.selectedLayerFigmaImageFill?.imageReference == "img-ref-hero")
@@ -72,6 +74,7 @@ struct ImageEditorFigmaProvenanceTests {
         #expect(restored.layers.first?.xomoFigmaComponentProperties == layer.xomoFigmaComponentProperties)
         #expect(restored.layers.first?.xomoFigmaImageFill == layer.xomoFigmaImageFill)
         #expect(restored.layers.first?.xomoFigmaSizeConstraints == layer.xomoFigmaSizeConstraints)
+        #expect(restored.layers.first?.xomoFigmaSizeConstraintDefaults == layer.xomoFigmaSizeConstraintDefaults)
     }
 
     @Test func componentPropertyLocalOverrideUsesUndoAndRedo() throws {

@@ -488,6 +488,8 @@ struct ImageEditorStackLayoutTests {
         fixture.viewModel.setSelectedFigmaSizeConstraint(.minWidth, value: 80)
 
         #expect(fixture.layer(named: "First").xomoFigmaSizeConstraints?.minWidth == 80)
+        #expect(fixture.layer(named: "First").xomoFigmaSizeConstraintDefaults == .empty)
+        #expect(fixture.viewModel.hasSelectedFigmaSizeConstraintOverride(.minWidth))
         #expect(fixture.layer(named: "First").frame == CGRect(x: 70, y: 30, width: 80, height: 20))
         #expect(fixture.viewModel.document.history.last?.title == L10n.format(
             "imageEditor.history.figmaSizeConstraintChanged",
@@ -496,10 +498,12 @@ struct ImageEditorStackLayoutTests {
 
         fixture.viewModel.undo()
         #expect(fixture.layer(named: "First").xomoFigmaSizeConstraints == nil)
+        #expect(fixture.layer(named: "First").xomoFigmaSizeConstraintDefaults == nil)
         #expect(fixture.layer(named: "First").frame == CGRect(x: 30, y: 40, width: 30, height: 20))
 
         fixture.viewModel.redo()
         #expect(fixture.layer(named: "First").xomoFigmaSizeConstraints?.minWidth == 80)
+        #expect(fixture.layer(named: "First").xomoFigmaSizeConstraintDefaults == .empty)
         #expect(fixture.layer(named: "First").frame == CGRect(x: 70, y: 30, width: 80, height: 20))
 
         fixture.viewModel.setSelectedFigmaSizeConstraint(.maxHeight, value: 0)
@@ -515,6 +519,11 @@ struct ImageEditorStackLayoutTests {
         fixture.viewModel.setSelectedFigmaSizeConstraint(.maxHeight, value: nil)
         #expect(fixture.layer(named: "First").xomoFigmaSizeConstraints?.maxHeight == nil)
         #expect(fixture.layer(named: "First").xomoFigmaSizeConstraints?.minWidth == 80)
+
+        fixture.viewModel.resetSelectedFigmaSizeConstraint(.minWidth)
+        #expect(fixture.layer(named: "First").xomoFigmaSizeConstraints == nil)
+        #expect(fixture.layer(named: "First").xomoFigmaSizeConstraintDefaults == .empty)
+        #expect(!fixture.viewModel.hasSelectedFigmaSizeConstraintOverride(.minWidth))
     }
 
     @Test func localFigmaConstraintEditsRespectLockedAutoLayout() {
