@@ -7265,6 +7265,18 @@ struct ImageEditorView: View {
                             ForEach(XomoFigmaSizeConstraintField.allCases, id: \.self) { field in
                                 figmaSizeConstraintEditorRow(field)
                             }
+                            ForEach(viewModel.selectedLayerFigmaSizeConstraintConflicts, id: \.self) { conflict in
+                                Label(
+                                    L10n.text(conflict.localizationKey),
+                                    systemImage: "exclamationmark.triangle.fill"
+                                )
+                                .font(.system(size: 9))
+                                .foregroundStyle(Color.orange.opacity(0.92))
+                                .fixedSize(horizontal: false, vertical: true)
+                                .accessibilityIdentifier(
+                                    "image-editor-figma-size-constraint-conflict-\(conflict.rawValue)"
+                                )
+                            }
                             Text(L10n.text("imageEditor.properties.figmaSizeConstraintsActive"))
                                 .font(.system(size: 9))
                                 .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))

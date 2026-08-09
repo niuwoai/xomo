@@ -367,6 +367,28 @@ struct XomoFigmaSizeConstraints: Codable, Equatable, Sendable {
     var isEmpty: Bool {
         minWidth == nil && maxWidth == nil && minHeight == nil && maxHeight == nil
     }
+
+    var conflicts: [XomoFigmaSizeConstraintConflict] {
+        var result: [XomoFigmaSizeConstraintConflict] = []
+        if let minWidth, let maxWidth,
+           minWidth.isFinite, maxWidth.isFinite, minWidth > maxWidth {
+            result.append(.width)
+        }
+        if let minHeight, let maxHeight,
+           minHeight.isFinite, maxHeight.isFinite, minHeight > maxHeight {
+            result.append(.height)
+        }
+        return result
+    }
+}
+
+enum XomoFigmaSizeConstraintConflict: String, CaseIterable, Hashable, Sendable {
+    case width
+    case height
+
+    var localizationKey: String {
+        "imageEditor.properties.figmaSizeConstraintConflict.\(rawValue)"
+    }
 }
 
 enum XomoFigmaSizeConstraintField: String, CaseIterable, Hashable, Sendable {

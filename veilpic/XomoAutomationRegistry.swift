@@ -1456,13 +1456,16 @@ final class XomoAutomationRegistry {
                     ))
                 }
             )
+            let conflicts = (currentLayer.xomoFigmaSizeConstraints ?? .empty).conflicts
             return .object([
                 "layerId": .string(currentLayer.id.uuidString),
                 "current": constraintsJSON(currentLayer.xomoFigmaSizeConstraints),
                 "importedDefaults": constraintsJSON(currentLayer.xomoFigmaSizeConstraintDefaults),
                 "hasImportedDefaults": .bool(currentLayer.xomoFigmaSizeConstraintDefaults != nil),
                 "hasOverrides": .bool(viewModel.hasSelectedFigmaSizeConstraintOverrides),
-                "overrides": .object(overrides)
+                "overrides": .object(overrides),
+                "hasConflicts": .bool(!conflicts.isEmpty),
+                "conflicts": .array(conflicts.map { .string($0.rawValue) })
             ])
         }
 

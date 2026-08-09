@@ -3459,6 +3459,25 @@ struct XomoFigmaNodeImportPlanTests {
         #expect(unknown.fidelity == .partial)
     }
 
+    @Test func figmaSizeConstraintConflictsReportEachAxisWithoutChangingSourceValues() {
+        let constraints = XomoFigmaSizeConstraints(
+            minWidth: 240,
+            maxWidth: 200,
+            minHeight: 90,
+            maxHeight: 60
+        )
+
+        #expect(constraints.conflicts == [.width, .height])
+        #expect(constraints.minWidth == 240)
+        #expect(constraints.maxWidth == 200)
+        #expect(XomoFigmaSizeConstraints(
+            minWidth: 40,
+            maxWidth: 200,
+            minHeight: nil,
+            maxHeight: 120
+        ).conflicts.isEmpty)
+    }
+
     @Test func figmaAutoLayoutSizeConstraintsAreReportedInsteadOfSilentlyClaimingExactFidelity() throws {
         let response = try JSONDecoder().decode(
             XomoFigmaNodeResponse.self,

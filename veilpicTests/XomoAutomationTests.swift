@@ -2189,12 +2189,14 @@ struct XomoAutomationTests {
             arguments: [
                 "action": .string("set"),
                 "field": .string("minWidth"),
-                "value": .number(80)
+                "value": .number(240)
             ]
         ))
         #expect(set.ok)
-        #expect(set.result?.objectValue?["current"]?.objectValue?["minWidth"] == .number(80))
+        #expect(set.result?.objectValue?["current"]?.objectValue?["minWidth"] == .number(240))
         #expect(set.result?.objectValue?["overrides"]?.objectValue?["minWidth"] == .bool(true))
+        #expect(set.result?.objectValue?["hasConflicts"] == .bool(true))
+        #expect(set.result?.objectValue?["conflicts"] == .array([.string("width")]))
 
         let cleared = registry.execute(request(
             operation: "call",
@@ -2206,6 +2208,7 @@ struct XomoAutomationTests {
         ))
         #expect(cleared.ok)
         #expect(cleared.result?.objectValue?["current"]?.objectValue?["maxWidth"] == .null)
+        #expect(cleared.result?.objectValue?["hasConflicts"] == .bool(false))
 
         let reset = registry.execute(request(
             operation: "call",
