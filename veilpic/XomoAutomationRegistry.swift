@@ -507,7 +507,10 @@ final class XomoAutomationRegistry {
         case "xomo.shape.get":
             return shapeResult(viewModel)
         case "xomo.shape.update":
-            try updateShape(arguments, viewModel: viewModel)
+            let updatedLayerCount = try updateShape(arguments, viewModel: viewModel)
+            return .object([
+                "updatedLayerCount": .number(Double(updatedLayerCount))
+            ])
         case "xomo.text.create":
             let boxWidth = arguments["boxWidth"]?.doubleValue ?? 0
             let requestedBoxHeight = arguments["boxHeight"]?.doubleValue
@@ -1900,6 +1903,7 @@ final class XomoAutomationRegistry {
             "strokeColor": colorJSON(content.strokeColor),
             "strokeOpacity": .number(content.strokeOpacity),
             "strokeWidth": .number(content.strokeWidth),
+            "strokeMiterLimit": .number(content.strokeMiterLimit),
             "cornerRadius": .number(content.cornerRadius),
             "cornerRadii": cornerRadiiJSON(content.effectiveCornerRadii),
             "cornerSmoothing": .number(content.cornerSmoothing),
@@ -1910,7 +1914,7 @@ final class XomoAutomationRegistry {
     private func updateShape(
         _ arguments: [String: XomoJSONValue],
         viewModel: ImageEditorViewModel
-    ) throws {
+    ) throws -> Int {
         guard viewModel.document.selectedLayer?.shapeContent != nil else {
             throw XomoAutomationCallError.operationFailed("No selected shape layer")
         }
@@ -1940,7 +1944,7 @@ final class XomoAutomationRegistry {
             resolvedGradient?.style = .radial
         }
         let legacyOpacity = arguments["opacity"]?.doubleValue
-        viewModel.updateSelectedShapeProperties(
+        let updatedLayerCount = viewModel.updateSelectedShapeProperties(
             fillColor: try optionalColor("fillColor", in: arguments),
             fillGradient: resolvedGradient,
             fillGradientCenter: fillGradientCenter,
@@ -1949,10 +1953,15 @@ final class XomoAutomationRegistry {
             strokeColor: try optionalColor("strokeColor", in: arguments),
             strokeOpacity: arguments["strokeOpacity"]?.doubleValue ?? legacyOpacity,
             strokeWidth: arguments["strokeWidth"]?.doubleValue,
+            strokeMiterLimit: arguments["strokeMiterLimit"]?.doubleValue,
             cornerRadius: arguments["cornerRadius"]?.doubleValue,
             cornerRadii: cornerRadii,
             cornerSmoothing: arguments["cornerSmoothing"]?.doubleValue
         )
+        guard updatedLayerCount > 0 else {
+            throw XomoAutomationCallError.operationFailed("Shape update made no changes")
+        }
+        return updatedLayerCount
     }
 
     private func optionalShapeGradient(
@@ -5788,6 +5797,7 @@ private extension XomoAutomationRegistry {
             "strokeColor": shapeColorSchema,
             "strokeOpacity": XomoAutomationSchema.number(description: "Independent stroke opacity from 0 to 1"),
             "strokeWidth": XomoAutomationSchema.number(description: "Stroke width in pixels"),
+            "strokeMiterLimit": XomoAutomationSchema.number(description: "Miter join limit from 1 to 1000"),
             "cornerRadius": XomoAutomationSchema.number(description: "Uniform rectangle corner radius in pixels"),
             "cornerRadii": rectangleCornerRadiiSchema,
             "cornerSmoothing": XomoAutomationSchema.number(description: "Editable superellipse smoothing from 0 to 1")

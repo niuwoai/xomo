@@ -408,6 +408,7 @@ extension ImageEditorViewModel {
         updateSelectedShapeProperties(strokeDashPattern: preset.pattern)
     }
 
+    @discardableResult
     func updateSelectedShapeProperties(
         fillColor: NSColor? = nil,
         fillGradient: ImageEditorGradientFillContent? = nil,
@@ -425,7 +426,7 @@ extension ImageEditorViewModel {
         cornerRadius: Double? = nil,
         cornerRadii: ImageEditorRectangleCornerRadii? = nil,
         cornerSmoothing: Double? = nil
-    ) {
+    ) -> Int {
         let selectedIDs: Set<UUID>
         if document.selectedLayerIDs.isEmpty,
            let selectedLayerID = document.selectedLayerID {
@@ -439,7 +440,7 @@ extension ImageEditorViewModel {
                 && layer.isShape
                 && !document.isEffectivelyPixelsLocked(layer)
         }
-        guard !indices.isEmpty else { return }
+        guard !indices.isEmpty else { return 0 }
 
         var updates: [(index: Int, content: ImageEditorShapeContent)] = []
         for index in indices {
@@ -497,7 +498,7 @@ extension ImageEditorViewModel {
             guard !shapeAppearanceEqual(previous, content) else { continue }
             updates.append((index, content))
         }
-        guard !updates.isEmpty else { return }
+        guard !updates.isEmpty else { return 0 }
 
         pushUndo()
         for update in updates {
@@ -505,6 +506,7 @@ extension ImageEditorViewModel {
         }
         appendHistory(L10n.text("imageEditor.history.shapeStyle"))
         statusText = L10n.format("imageEditor.status.shapeStyle", updates.count)
+        return updates.count
     }
 
     private func shapeAppearanceEqual(

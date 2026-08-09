@@ -3606,6 +3606,7 @@ struct XomoAutomationTests {
         #expect(inspectedShape["fillOpacity"] == .number(0.6))
         #expect(inspectedShape["strokeOpacity"] == .number(0.8))
         #expect(inspectedShape["strokeWidth"] == .number(7))
+        #expect(inspectedShape["strokeMiterLimit"] == .number(10))
 
         let historyCountBeforeUpdate = viewModel.document.history.count
         let updateResponse = registry.execute(request(
@@ -3620,6 +3621,7 @@ struct XomoAutomationTests {
             ]
         ))
         #expect(updateResponse.ok)
+        #expect(updateResponse.result == .object(["updatedLayerCount": .number(1)]))
         let updated = try #require(viewModel.document.selectedLayer?.shapeContent)
         let updatedStroke = try #require(updated.strokeColor.usingColorSpace(.deviceRGB))
         let unchangedFill = try #require(updated.fillColor.usingColorSpace(.deviceRGB))
@@ -3699,6 +3701,64 @@ struct XomoAutomationTests {
         ))
         #expect(!conflictingUpdate.ok)
         #expect(viewModel.document.selectedLayer?.shapeContent?.cornerRadii?.bottomLeft == 16)
+    }
+
+    @Test func shapeMiterLimitAutomationUpdatesOnlyChangedShapesAndReportsCount() throws {
+        let viewModel = makeViewModel()
+        viewModel.drawShape(
+            from: CGPoint(x: 8, y: 8),
+            to: CGPoint(x: 48, y: 38),
+            ellipse: false
+        )
+        let firstID = try #require(viewModel.document.selectedLayerID)
+        viewModel.drawShape(
+            from: CGPoint(x: 58, y: 18),
+            to: CGPoint(x: 108, y: 68),
+            ellipse: false
+        )
+        let secondID = try #require(viewModel.document.selectedLayerID)
+        let secondIndex = try #require(viewModel.document.layers.firstIndex { $0.id == secondID })
+        var secondContent = try #require(viewModel.document.layers[secondIndex].shapeContent)
+        secondContent.strokeMiterLimit = 4
+        viewModel.document.layers[secondIndex].kind = .shape(secondContent)
+        viewModel.document.selectedLayerIDs = [firstID, secondID]
+        viewModel.document.selectedLayerID = secondID
+
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        let historyCount = viewModel.document.history.count
+        let updated = registry.execute(request(
+            operation: "call",
+            name: "xomo.shape.update",
+            arguments: ["strokeMiterLimit": .number(4)]
+        ))
+        #expect(updated.ok)
+        #expect(updated.result == .object(["updatedLayerCount": .number(1)]))
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.layers.first { $0.id == firstID }?.shapeContent?.strokeMiterLimit == 4)
+        #expect(viewModel.document.layers.first { $0.id == secondID }?.shapeContent?.strokeMiterLimit == 4)
+
+        let inspected = registry.execute(request(operation: "call", name: "xomo.shape.get"))
+        #expect(inspected.result?.objectValue?["strokeMiterLimit"] == .number(4))
+
+        let repeatedHistoryCount = viewModel.document.history.count
+        let repeated = registry.execute(request(
+            operation: "call",
+            name: "xomo.shape.update",
+            arguments: ["strokeMiterLimit": .number(4)]
+        ))
+        #expect(!repeated.ok)
+        #expect(viewModel.document.history.count == repeatedHistoryCount)
+
+        let toolsResponse = registry.execute(request(operation: "tools"))
+        let tools = try #require(toolsResponse.result?.arrayValue)
+        let updateTool = try #require(tools.compactMap(\.objectValue).first {
+            $0["name"] == .string("xomo.shape.update")
+        })
+        #expect(
+            updateTool["inputSchema"]?.objectValue?["properties"]?
+                .objectValue?["strokeMiterLimit"]?.objectValue?["type"] == .string("number")
+        )
     }
 
     @Test func registryCreatesInspectsUpdatesAndClearsShapeLinearGradient() throws {

@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.12.0-rc735 - 2026-08-09
+
+### Added
+- MCP/CLI 的 `xomo.shape.get` 返回当前形状 `strokeMiterLimit`，`xomo.shape.update` 可对所选可编辑形状批量设置该值，工具 Schema 同步公开 `1...1000` 数值参数。
+
+### Changed
+- 形状属性更新事务现在返回真实修改图层数；`xomo.shape.update` 通过 `updatedLayerCount` 报告结果，相同值、锁定层和不适用层不会虚报修改。
+- 自动化零变化更新明确失败且不创建 Undo/History；界面调用继续保持原有静默无副作用行为。
+
+### Tests
+- 新增混合值多选只修改差异目标、结果计数、查询、Schema 和重复更新无历史回归；既有形状创建/查询/更新及渐变更新回归同步通过，3/3 成功。
+
 ## 2.12.0-rc734 - 2026-08-09
 
 ### Added
