@@ -3299,6 +3299,7 @@
 "xomo.figma.node.issue.blendModeFlattened" = "Blend mode is not preserved yet";
 "xomo.figma.node.issue.cornerRadiusFlattened" = "Figma corner smoothing or radius dimensions were approximated to Xomo's editable geometry";
 "xomo.figma.node.issue.strokeWeightFlattened" = "Figma stroke width exceeds Xomo's editable range or this shape's geometry limit and was adjusted to the supported range";
+"xomo.figma.node.issue.strokeStyleFlattened" = "Figma stroke alignment, cap, join, or dash style contains unsupported values and was mapped to an editable fallback";
 "xomo.figma.node.issue.transformFlattened" = "Rotation, reflection, or skew is flattened to axis-aligned bounds";
 "xomo.figma.node.issue.textCaseFlattened" = "Text case is baked into editable characters instead of retained as a live style";
 "xomo.figma.node.issue.textLineHeightFlattened" = "This Figma line height cannot be represented exactly and was adjusted to Xomo's native 0–96 px line-spacing range";

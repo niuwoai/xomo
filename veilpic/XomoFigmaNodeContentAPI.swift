@@ -292,6 +292,10 @@ enum XomoFigmaNodeImportMapper {
             || strokeWeight > maximumNativeStrokeWidth(for: node, target: mapping.target)) {
             issues.append(.strokeWeightFlattened)
         }
+        if solidColor(in: node.strokes) != nil,
+           hasUnsupportedStrokeStyle(node) {
+            issues.append(.strokeStyleFlattened)
+        }
         if transformFlattened {
             issues.append(.transformFlattened)
         }
@@ -1203,6 +1207,30 @@ enum XomoFigmaNodeImportMapper {
             Double(ImageEditorShapeContent.minimumStrokeWidth),
             min(editorMaximum, geometryMaximum)
         )
+    }
+
+    private static func hasUnsupportedStrokeStyle(_ node: XomoFigmaNode) -> Bool {
+        let supportedAlignments = ["INSIDE", "CENTER", "OUTSIDE"]
+        let supportedCaps = ["NONE", "ROUND", "SQUARE"]
+        let supportedJoins = ["MITER", "ROUND", "BEVEL"]
+        if let alignment = node.strokeAlign?.uppercased(),
+           !supportedAlignments.contains(alignment) {
+            return true
+        }
+        if let cap = node.strokeCap?.uppercased(),
+           !supportedCaps.contains(cap) {
+            return true
+        }
+        if let join = node.strokeJoin?.uppercased(),
+           !supportedJoins.contains(join) {
+            return true
+        }
+        if let dashes = node.strokeDashes,
+           !dashes.isEmpty,
+           dashes.count < 2 || dashes.contains(where: { !$0.isFinite || $0 <= 0 }) {
+            return true
+        }
+        return false
     }
 
     private static func supportedMaskShape(_ node: XomoFigmaNode) -> XomoFigmaPlanMaskShape? {

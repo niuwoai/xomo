@@ -1889,6 +1889,7 @@ struct XomoFigmaNodeImportPlanTests {
         #expect(item.strokeJoin == "BEVEL")
         #expect(item.strokeDashes == [6, 3])
         #expect(item.strokeAlign == "OUTSIDE")
+        #expect(!item.issues.contains(.strokeStyleFlattened))
 
         let materialized = XomoFigmaNodeMaterializer.materialize(
             plan: plan,
@@ -1913,6 +1914,34 @@ struct XomoFigmaNodeImportPlanTests {
             canvasSize: CGSize(width: 320, height: 240)
         ).layers.first
         #expect(noneLayer?.shapeContent?.strokeCap == .butt)
+    }
+
+    @Test func unsupportedFigmaStrokeStylesReportEditableFallbacks() throws {
+        let response = try JSONDecoder().decode(
+            XomoFigmaNodeResponse.self,
+            from: Data(
+                #"{"name":"Stroke Fallbacks","nodes":{"1:24":{"document":{"id":"1:24","name":"Stroke Fallbacks","type":"FRAME","absoluteBoundingBox":{"x":0,"y":0,"width":240,"height":120},"children":[{"id":"2:25","name":"Unknown Stroke","type":"RECTANGLE","fills":[],"strokes":[{"type":"SOLID","color":{"r":0,"g":0,"b":0,"a":1}}],"strokeWeight":4,"strokeAlign":"FUTURE","strokeCap":"TRIANGLE","strokeJoin":"ARCS","absoluteBoundingBox":{"x":0,"y":0,"width":80,"height":40}},{"id":"2:26","name":"Invalid Dash","type":"RECTANGLE","fills":[],"strokes":[{"type":"SOLID","color":{"r":0,"g":0,"b":0,"a":1}}],"strokeWeight":4,"strokeDashes":[8],"absoluteBoundingBox":{"x":100,"y":0,"width":80,"height":40}}]}}}}"#.utf8
+            )
+        )
+
+        let plan = try XomoFigmaNodeImportMapper.makePlan(response: response, requestedNodeID: "1:24")
+        let unknown = try #require(plan.items.first { $0.sourceID == "2:25" })
+        let invalidDash = try #require(plan.items.first { $0.sourceID == "2:26" })
+        for item in [unknown, invalidDash] {
+            #expect(item.fidelity == .partial)
+            #expect(item.issues.contains(.strokeStyleFlattened))
+        }
+
+        let result = XomoFigmaNodeMaterializer.materialize(
+            plan: plan,
+            canvasSize: CGSize(width: 320, height: 240)
+        )
+        let unknownLayer = try #require(result.layers.first { $0.name == "Unknown Stroke" })
+        let dashLayer = try #require(result.layers.first { $0.name == "Invalid Dash" })
+        #expect(unknownLayer.shapeContent?.strokePosition == .inside)
+        #expect(unknownLayer.shapeContent?.strokeCap == .round)
+        #expect(unknownLayer.shapeContent?.strokeJoin == .round)
+        #expect(dashLayer.shapeContent?.strokeDashPattern.isEmpty == true)
     }
 
     @Test func mapperImportsHorizontalWrapAndCounterSpacingWithFillChildSemantics() throws {
