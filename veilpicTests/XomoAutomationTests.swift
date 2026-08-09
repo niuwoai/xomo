@@ -3610,6 +3610,7 @@ struct XomoAutomationTests {
         #expect(inspectedShape["strokeCap"] == .string("round"))
         #expect(inspectedShape["strokeJoin"] == .string("round"))
         #expect(inspectedShape["strokeMiterLimit"] == .number(10))
+        #expect(inspectedShape["strokeDashPattern"] == .array([]))
 
         let historyCountBeforeUpdate = viewModel.document.history.count
         let updateResponse = registry.execute(request(
@@ -3771,6 +3772,92 @@ struct XomoAutomationTests {
                 .objectValue?["strokePosition"]?.objectValue?["enum"]?.arrayValue
                 == ImageEditorStrokePosition.allCases.map { .string($0.rawValue) }
         )
+    }
+
+    @Test func shapeStrokeDashAutomationUpdatesOnlyChangedShapesAndRejectsInvalidPatterns() throws {
+        let viewModel = makeViewModel()
+        viewModel.drawShape(
+            from: CGPoint(x: 8, y: 8),
+            to: CGPoint(x: 48, y: 38),
+            ellipse: false
+        )
+        let firstID = try #require(viewModel.document.selectedLayerID)
+        viewModel.drawShape(
+            from: CGPoint(x: 58, y: 18),
+            to: CGPoint(x: 108, y: 68),
+            ellipse: false
+        )
+        let secondID = try #require(viewModel.document.selectedLayerID)
+        let secondIndex = try #require(viewModel.document.layers.firstIndex { $0.id == secondID })
+        var secondContent = try #require(viewModel.document.layers[secondIndex].shapeContent)
+        secondContent.strokeDashPattern = [8, 4]
+        viewModel.document.layers[secondIndex].kind = .shape(secondContent)
+        viewModel.document.selectedLayerIDs = [firstID, secondID]
+        viewModel.document.selectedLayerID = secondID
+
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        let historyCount = viewModel.document.history.count
+        let updated = registry.execute(request(
+            operation: "call",
+            name: "xomo.shape.update",
+            arguments: ["strokeDashPattern": .array([.number(8), .number(4)])]
+        ))
+        #expect(updated.ok)
+        #expect(updated.result == .object(["updatedLayerCount": .number(1)]))
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.layers.first { $0.id == firstID }?.shapeContent?.strokeDashPattern == [8, 4])
+        #expect(viewModel.document.layers.first { $0.id == secondID }?.shapeContent?.strokeDashPattern == [8, 4])
+
+        let inspected = registry.execute(request(operation: "call", name: "xomo.shape.get"))
+        #expect(inspected.result?.objectValue?["strokeDashPattern"] == .array([.number(8), .number(4)]))
+
+        let repeatedHistoryCount = viewModel.document.history.count
+        let repeated = registry.execute(request(
+            operation: "call",
+            name: "xomo.shape.update",
+            arguments: ["strokeDashPattern": .array([.number(8), .number(4)])]
+        ))
+        #expect(!repeated.ok)
+        #expect(viewModel.document.history.count == repeatedHistoryCount)
+
+        for invalidPattern: XomoJSONValue in [
+            .array([.number(4)]),
+            .array([.number(6), .number(-1)]),
+            .string("6,3")
+        ] {
+            let invalid = registry.execute(request(
+                operation: "call",
+                name: "xomo.shape.update",
+                arguments: ["strokeDashPattern": invalidPattern]
+            ))
+            #expect(!invalid.ok)
+            #expect(viewModel.document.history.count == repeatedHistoryCount)
+            #expect(viewModel.document.layers.first { $0.id == firstID }?.shapeContent?.strokeDashPattern == [8, 4])
+        }
+
+        let cleared = registry.execute(request(
+            operation: "call",
+            name: "xomo.shape.update",
+            arguments: ["strokeDashPattern": .array([])]
+        ))
+        #expect(cleared.ok)
+        #expect(cleared.result == .object(["updatedLayerCount": .number(2)]))
+        #expect(viewModel.document.layers.first { $0.id == firstID }?.shapeContent?.strokeDashPattern.isEmpty == true)
+        #expect(viewModel.document.layers.first { $0.id == secondID }?.shapeContent?.strokeDashPattern.isEmpty == true)
+
+        let toolsResponse = registry.execute(request(operation: "tools"))
+        let tools = try #require(toolsResponse.result?.arrayValue)
+        let updateTool = try #require(tools.compactMap(\.objectValue).first {
+            $0["name"] == .string("xomo.shape.update")
+        })
+        let dashSchema = try #require(
+            updateTool["inputSchema"]?.objectValue?["properties"]?
+                .objectValue?["strokeDashPattern"]?.objectValue
+        )
+        #expect(dashSchema["type"] == .string("array"))
+        #expect(dashSchema["maxItems"] == .number(16))
+        #expect(dashSchema["items"]?.objectValue?["type"] == .string("number"))
     }
 
     @Test func shapeMiterLimitAutomationUpdatesOnlyChangedShapesAndReportsCount() throws {

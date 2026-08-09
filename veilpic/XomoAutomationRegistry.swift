@@ -1907,6 +1907,9 @@ final class XomoAutomationRegistry {
             "strokeCap": .string(content.strokeCap.rawValue),
             "strokeJoin": .string(content.strokeJoin.rawValue),
             "strokeMiterLimit": .number(content.strokeMiterLimit),
+            "strokeDashPattern": .array(content.strokeDashPattern.map {
+                .number(Double($0))
+            }),
             "cornerRadius": .number(content.cornerRadius),
             "cornerRadii": cornerRadiiJSON(content.effectiveCornerRadii),
             "cornerSmoothing": .number(content.cornerSmoothing),
@@ -1930,6 +1933,7 @@ final class XomoAutomationRegistry {
         let strokePosition = try optionalShapeStrokePosition(arguments["strokePosition"]?.stringValue)
         let strokeCap = try optionalShapeStrokeCap(arguments["strokeCap"]?.stringValue)
         let strokeJoin = try optionalShapeStrokeJoin(arguments["strokeJoin"]?.stringValue)
+        let strokeDashPattern = try optionalShapeStrokeDashPattern(arguments["strokeDashPattern"])
         let selectedContent = viewModel.document.selectedLayer?.shapeContent
         var resolvedGradient: ImageEditorGradientFillContent?
         if (fillKind == "linearGradient" || fillKind == "radialGradient"),
@@ -1963,6 +1967,7 @@ final class XomoAutomationRegistry {
             strokeCap: strokeCap,
             strokeJoin: strokeJoin,
             strokeMiterLimit: arguments["strokeMiterLimit"]?.doubleValue,
+            strokeDashPattern: strokeDashPattern,
             cornerRadius: arguments["cornerRadius"]?.doubleValue,
             cornerRadii: cornerRadii,
             cornerSmoothing: arguments["cornerSmoothing"]?.doubleValue
@@ -2003,6 +2008,34 @@ final class XomoAutomationRegistry {
             )
         }
         return join
+    }
+
+    private func optionalShapeStrokeDashPattern(
+        _ value: XomoJSONValue?
+    ) throws -> [CGFloat]? {
+        guard let value else { return nil }
+        guard let items = value.arrayValue else {
+            throw XomoAutomationCallError.invalidArgument(
+                "strokeDashPattern must be an array"
+            )
+        }
+        guard items.isEmpty || (2...16).contains(items.count) else {
+            throw XomoAutomationCallError.invalidArgument(
+                "strokeDashPattern must be empty or contain 2 to 16 lengths"
+            )
+        }
+        return try items.enumerated().map { index, item in
+            guard let length = item.doubleValue,
+                  length.isFinite,
+                  length > 0,
+                  length <= 2_048
+            else {
+                throw XomoAutomationCallError.invalidArgument(
+                    "strokeDashPattern[\(index)] must be greater than 0 and at most 2048"
+                )
+            }
+            return CGFloat(length)
+        }
     }
 
     private func optionalShapeGradient(
@@ -5851,6 +5884,12 @@ private extension XomoAutomationRegistry {
                 values: ImageEditorStrokeJoin.allCases.map(\.rawValue)
             ),
             "strokeMiterLimit": XomoAutomationSchema.number(description: "Miter join limit from 1 to 1000"),
+            "strokeDashPattern": .object([
+                "type": .string("array"),
+                "description": .string("Empty for a solid stroke, or 2 to 16 alternating dash and gap lengths from greater than 0 through 2048 pixels"),
+                "items": XomoAutomationSchema.number(description: "Dash or gap length in pixels"),
+                "maxItems": .number(16)
+            ]),
             "cornerRadius": XomoAutomationSchema.number(description: "Uniform rectangle corner radius in pixels"),
             "cornerRadii": rectangleCornerRadiiSchema,
             "cornerSmoothing": XomoAutomationSchema.number(description: "Editable superellipse smoothing from 0 to 1")
