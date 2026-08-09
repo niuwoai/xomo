@@ -996,6 +996,28 @@ struct ImageEditorShapeStyleTests {
         )
     }
 
+    @Test func opacityEditsClampAtInterfaceBoundariesAndRemainUndoable() throws {
+        let viewModel = makeViewModel()
+        viewModel.drawShape(
+            from: CGPoint(x: 10, y: 10),
+            to: CGPoint(x: 70, y: 50),
+            ellipse: false
+        )
+        let original = try #require(viewModel.document.selectedLayer?.shapeContent)
+        let historyCount = viewModel.document.history.count
+
+        viewModel.updateSelectedShapeProperties(fillOpacity: -0.5, strokeOpacity: 1.5)
+        let clamped = try #require(viewModel.document.selectedLayer?.shapeContent)
+        #expect(clamped.fillOpacity == 0)
+        #expect(clamped.strokeOpacity == 1)
+        #expect(viewModel.document.history.count == historyCount + 1)
+
+        viewModel.undo()
+        let restored = try #require(viewModel.document.selectedLayer?.shapeContent)
+        #expect(restored.fillOpacity == original.fillOpacity)
+        #expect(restored.strokeOpacity == original.strokeOpacity)
+    }
+
     @Test func miterLimitBatchEditClampsAndIsOneUndoableChange() throws {
         let viewModel = makeViewModel()
         viewModel.drawShape(

@@ -492,7 +492,9 @@ final class XomoAutomationRegistry {
                 fillGradient?.style = .radial
             }
             let fillColor = try optionalColor("fillColor", in: arguments)
+            let fillOpacity = try optionalUnitInterval("fillOpacity", in: arguments)
             let strokeColor = try optionalColor("strokeColor", in: arguments)
+            let strokeOpacity = try optionalUnitInterval("strokeOpacity", in: arguments)
             let strokePosition = try optionalShapeStrokePosition(arguments["strokePosition"]?.stringValue)
             let strokeCap = try optionalShapeStrokeCap(arguments["strokeCap"]?.stringValue)
             let strokeJoin = try optionalShapeStrokeJoin(arguments["strokeJoin"]?.stringValue)
@@ -521,9 +523,9 @@ final class XomoAutomationRegistry {
                 fillColor: fillColor,
                 fillGradient: fillGradient,
                 fillGradientCenter: fillGradientCenter,
-                fillOpacity: arguments["fillOpacity"]?.doubleValue,
+                fillOpacity: fillOpacity,
                 strokeColor: strokeColor,
-                strokeOpacity: arguments["strokeOpacity"]?.doubleValue,
+                strokeOpacity: strokeOpacity,
                 strokeWidth: strokeWidth,
                 strokePosition: strokePosition,
                 strokeCap: strokeCap,
@@ -1985,6 +1987,9 @@ final class XomoAutomationRegistry {
         let strokeWidth = try optionalShapeStrokeWidth(arguments["strokeWidth"])
         let strokeMiterLimit = try optionalShapeStrokeMiterLimit(arguments["strokeMiterLimit"])
         let strokeDashPattern = try optionalShapeStrokeDashPattern(arguments["strokeDashPattern"])
+        let legacyOpacity = try optionalUnitInterval("opacity", in: arguments)
+        let fillOpacity = try optionalUnitInterval("fillOpacity", in: arguments) ?? legacyOpacity
+        let strokeOpacity = try optionalUnitInterval("strokeOpacity", in: arguments) ?? legacyOpacity
         let selectedContent = viewModel.document.selectedLayer?.shapeContent
         var resolvedGradient: ImageEditorGradientFillContent?
         if (fillKind == "linearGradient" || fillKind == "radialGradient"),
@@ -2004,15 +2009,14 @@ final class XomoAutomationRegistry {
         } else if selectedContent?.fillGradient?.style == .radial {
             resolvedGradient?.style = .radial
         }
-        let legacyOpacity = arguments["opacity"]?.doubleValue
         let updatedLayerCount = viewModel.updateSelectedShapeProperties(
             fillColor: try optionalColor("fillColor", in: arguments),
             fillGradient: resolvedGradient,
             fillGradientCenter: fillGradientCenter,
             clearsFillGradient: fillKind == "solid",
-            fillOpacity: arguments["fillOpacity"]?.doubleValue ?? legacyOpacity,
+            fillOpacity: fillOpacity,
             strokeColor: try optionalColor("strokeColor", in: arguments),
-            strokeOpacity: arguments["strokeOpacity"]?.doubleValue ?? legacyOpacity,
+            strokeOpacity: strokeOpacity,
             strokeWidth: strokeWidth,
             strokePosition: strokePosition,
             strokeCap: strokeCap,
@@ -2089,6 +2093,22 @@ final class XomoAutomationRegistry {
             )
         }
         return width
+    }
+
+    private func optionalUnitInterval(
+        _ key: String,
+        in arguments: [String: XomoJSONValue]
+    ) throws -> Double? {
+        guard let value = arguments[key] else { return nil }
+        guard let number = value.doubleValue,
+              number.isFinite,
+              (0...1).contains(number)
+        else {
+            throw XomoAutomationCallError.invalidArgument(
+                "\(key) must be a number from 0 through 1"
+            )
+        }
+        return number
     }
 
     private func optionalShapeStrokeDashPattern(
@@ -5934,9 +5954,9 @@ private extension XomoAutomationRegistry {
             "fillKind": XomoAutomationSchema.string(description: "Shape fill type", values: ["solid", "linearGradient", "radialGradient"]),
             "fillColor": shapeColorSchema,
             "fillGradient": shapeGradientSchema,
-            "fillOpacity": XomoAutomationSchema.number(description: "Independent fill opacity from 0 to 1"),
+            "fillOpacity": shapeOpacitySchema(description: "Independent fill opacity"),
             "strokeColor": shapeColorSchema,
-            "strokeOpacity": XomoAutomationSchema.number(description: "Independent stroke opacity from 0 to 1"),
+            "strokeOpacity": shapeOpacitySchema(description: "Independent stroke opacity"),
             "strokeWidth": shapeStrokeWidthSchema,
             "strokePosition": XomoAutomationSchema.string(
                 description: "Stroke alignment relative to the shape boundary",
@@ -5963,13 +5983,13 @@ private extension XomoAutomationRegistry {
         ], required: ["kind", "x", "y", "width", "height"]),
         tool("xomo.shape.get", "Inspect the selected editable shape layer."),
         tool("xomo.shape.update", "Update only the specified fill, stroke, and rectangle corner properties of selected editable shapes.", [
-            "opacity": XomoAutomationSchema.number(description: "Legacy shared fill and stroke opacity"),
+            "opacity": shapeOpacitySchema(description: "Legacy shared fill and stroke opacity"),
             "fillKind": XomoAutomationSchema.string(description: "Shape fill type", values: ["solid", "linearGradient", "radialGradient"]),
             "fillColor": shapeColorSchema,
             "fillGradient": shapeGradientSchema,
-            "fillOpacity": XomoAutomationSchema.number(description: "Independent fill opacity from 0 to 1"),
+            "fillOpacity": shapeOpacitySchema(description: "Independent fill opacity"),
             "strokeColor": shapeColorSchema,
-            "strokeOpacity": XomoAutomationSchema.number(description: "Independent stroke opacity from 0 to 1"),
+            "strokeOpacity": shapeOpacitySchema(description: "Independent stroke opacity"),
             "strokeWidth": shapeStrokeWidthSchema,
             "strokePosition": XomoAutomationSchema.string(
                 description: "Stroke alignment relative to the shape boundary",
@@ -6190,6 +6210,15 @@ private extension XomoAutomationRegistry {
         "minimum": .number(Double(ImageEditorShapeContent.minimumStrokeWidth)),
         "maximum": .number(Double(ImageEditorShapeContent.maximumStrokeWidth))
     ])
+
+    static func shapeOpacitySchema(description: String) -> XomoJSONValue {
+        .object([
+            "type": .string("number"),
+            "description": .string("\(description) from 0 through 1"),
+            "minimum": .number(0),
+            "maximum": .number(1)
+        ])
+    }
     static let shapeColorSchema = XomoAutomationSchema.object(
         properties: [
             "red": XomoAutomationSchema.number(description: "Red component from 0 to 1"),

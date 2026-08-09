@@ -3822,6 +3822,27 @@ struct XomoAutomationTests {
             #expect(viewModel.document.history.count == historyCountBeforeInvalidCreate)
         }
 
+        for (key, value): (String, XomoJSONValue) in [
+            ("fillOpacity", .number(-0.01)),
+            ("fillOpacity", .string("0.5")),
+            ("strokeOpacity", .number(1.01)),
+            ("strokeOpacity", .bool(true))
+        ] {
+            let invalidOpacityCreate = registry.execute(request(
+                operation: "call",
+                name: "xomo.shape.create",
+                arguments: [
+                    "kind": .string("rectangle"),
+                    "x": .number(0), "y": .number(0),
+                    "width": .number(40), "height": .number(20),
+                    key: value
+                ]
+            ))
+            #expect(!invalidOpacityCreate.ok)
+            #expect(viewModel.document.layers.count == layerCountBeforeInvalidCreate)
+            #expect(viewModel.document.history.count == historyCountBeforeInvalidCreate)
+        }
+
         let toolsResponse = registry.execute(request(operation: "tools"))
         let tools = try #require(toolsResponse.result?.arrayValue)
         let createTool = try #require(tools.compactMap(\.objectValue).first {
@@ -3845,6 +3866,10 @@ struct XomoAutomationTests {
         #expect(createProperties["strokeMiterLimit"]?.objectValue?["type"] == .string("number"))
         #expect(createProperties["strokeWidth"]?.objectValue?["minimum"] == .number(0.1))
         #expect(createProperties["strokeWidth"]?.objectValue?["maximum"] == .number(96))
+        #expect(createProperties["fillOpacity"]?.objectValue?["minimum"] == .number(0))
+        #expect(createProperties["fillOpacity"]?.objectValue?["maximum"] == .number(1))
+        #expect(createProperties["strokeOpacity"]?.objectValue?["minimum"] == .number(0))
+        #expect(createProperties["strokeOpacity"]?.objectValue?["maximum"] == .number(1))
         #expect(createProperties["strokeDashPattern"]?.objectValue?["type"] == .string("array"))
     }
 
@@ -3921,6 +3946,83 @@ struct XomoAutomationTests {
             .objectValue?["strokeWidth"]?.objectValue
         #expect(schema?["minimum"] == .number(0.1))
         #expect(schema?["maximum"] == .number(96))
+    }
+
+    @Test func shapeOpacityAutomationValidatesIndependentAndLegacyValuesAtomically() throws {
+        let viewModel = makeViewModel()
+        viewModel.drawShape(
+            from: CGPoint(x: 8, y: 8),
+            to: CGPoint(x: 88, y: 48),
+            ellipse: false
+        )
+        let firstID = try #require(viewModel.document.selectedLayerID)
+        viewModel.drawShape(
+            from: CGPoint(x: 98, y: 18),
+            to: CGPoint(x: 178, y: 58),
+            ellipse: true
+        )
+        let secondID = try #require(viewModel.document.selectedLayerID)
+        viewModel.document.selectedLayerIDs = [firstID, secondID]
+        viewModel.document.selectedLayerID = secondID
+
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        let historyCount = viewModel.document.history.count
+        let updated = registry.execute(request(
+            operation: "call",
+            name: "xomo.shape.update",
+            arguments: [
+                "opacity": .number(0.4),
+                "fillOpacity": .number(0.7)
+            ]
+        ))
+        #expect(updated.ok)
+        #expect(updated.result == .object(["updatedLayerCount": .number(2)]))
+        #expect(viewModel.document.history.count == historyCount + 1)
+        for layerID in [firstID, secondID] {
+            let content = viewModel.document.layers.first { $0.id == layerID }?.shapeContent
+            #expect(content?.fillOpacity == 0.7)
+            #expect(content?.strokeOpacity == 0.4)
+        }
+
+        let stableHistoryCount = viewModel.document.history.count
+        for (key, value): (String, XomoJSONValue) in [
+            ("opacity", .number(-0.01)),
+            ("opacity", .string("0.5")),
+            ("fillOpacity", .number(1.01)),
+            ("fillOpacity", .bool(true)),
+            ("strokeOpacity", .number(-1)),
+            ("strokeOpacity", .string("0.5"))
+        ] {
+            let invalid = registry.execute(request(
+                operation: "call",
+                name: "xomo.shape.update",
+                arguments: [key: value, "strokeWidth": .number(12)]
+            ))
+            #expect(!invalid.ok)
+            #expect(viewModel.document.history.count == stableHistoryCount)
+            for layerID in [firstID, secondID] {
+                let content = viewModel.document.layers.first { $0.id == layerID }?.shapeContent
+                #expect(content?.fillOpacity == 0.7)
+                #expect(content?.strokeOpacity == 0.4)
+                #expect(content?.strokeWidth != 12)
+            }
+        }
+
+        let inspected = registry.execute(request(operation: "call", name: "xomo.shape.get"))
+        #expect(inspected.result?.objectValue?["fillOpacity"] == .number(0.7))
+        #expect(inspected.result?.objectValue?["strokeOpacity"] == .number(0.4))
+
+        let toolsResponse = registry.execute(request(operation: "tools"))
+        let tools = try #require(toolsResponse.result?.arrayValue)
+        let updateTool = try #require(tools.compactMap(\.objectValue).first {
+            $0["name"] == .string("xomo.shape.update")
+        })
+        let properties = updateTool["inputSchema"]?.objectValue?["properties"]?.objectValue
+        for key in ["opacity", "fillOpacity", "strokeOpacity"] {
+            #expect(properties?[key]?.objectValue?["minimum"] == .number(0))
+            #expect(properties?[key]?.objectValue?["maximum"] == .number(1))
+        }
     }
 
     @Test func shapeStrokePositionAutomationUpdatesOnlyChangedShapesAndRejectsUnknownValues() throws {
