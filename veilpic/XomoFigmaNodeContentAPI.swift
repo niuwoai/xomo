@@ -807,6 +807,9 @@ enum XomoFigmaNodeImportMapper {
             ["GRADIENT_LINEAR", "GRADIENT_RADIAL"].contains(paint.type)
                 && !hasSupportedGradientStopPositions(paint)
         }
+        let hasUnsupportedGradientCenter = visiblePaints.contains { paint in
+            paint.type == "GRADIENT_LINEAR" && !hasSupportedLinearGradientCenter(paint)
+        }
         let hasUnsupportedFill = visiblePaints.contains { paint in
             if paint.type == "SOLID" { return false }
             guard allowsGradientFill else { return true }
@@ -824,6 +827,7 @@ enum XomoFigmaNodeImportMapper {
             || hasUnsupportedPaintBlendMode
             || hasUnsupportedGradientColor
             || hasUnsupportedGradientStopPosition
+            || hasUnsupportedGradientCenter
             || hasUnsupportedFill
             || visibleStrokes.count > 1
             || visibleStrokes.contains(where: { $0.type != "SOLID" }) {
@@ -862,6 +866,17 @@ enum XomoFigmaNodeImportMapper {
         return zip(stops, stops.dropFirst()).allSatisfy { pair in
             pair.0.position <= pair.1.position
         }
+    }
+
+    private static func hasSupportedLinearGradientCenter(_ paint: XomoFigmaPaint) -> Bool {
+        guard let handles = paint.gradientHandlePositions,
+              handles.count == 3,
+              handles[0].isFinite,
+              handles[1].isFinite
+        else { return false }
+        let centerX = (handles[0].x + handles[1].x) / 2
+        let centerY = (handles[0].y + handles[1].y) / 2
+        return gradientCenterRange.contains(centerX) && gradientCenterRange.contains(centerY)
     }
 
     private static func solidColor(in paints: [XomoFigmaPaint]?) -> XomoFigmaPlanColor? {
@@ -945,8 +960,8 @@ enum XomoFigmaNodeImportMapper {
             endColor: resolvedStops.endColor,
             angle: angle,
             scale: scale,
-            centerX: (startHandle.x + endHandle.x) / 2,
-            centerY: (startHandle.y + endHandle.y) / 2,
+            centerX: normalizedGradientCenter((startHandle.x + endHandle.x) / 2),
+            centerY: normalizedGradientCenter((startHandle.y + endHandle.y) / 2),
             opacity: resolvedStops.opacity,
             colorStops: resolvedStops.colorStops
         )
@@ -989,8 +1004,8 @@ enum XomoFigmaNodeImportMapper {
               abs(firstLength - secondLength) <= maximumLength * circularGradientTolerance,
               abs(firstAxis.x * secondAxis.x + firstAxis.y * secondAxis.y)
                 <= firstLength * secondLength * circularGradientTolerance,
-              (-4...5).contains(center.x),
-              (-4...5).contains(center.y)
+              gradientCenterRange.contains(center.x),
+              gradientCenterRange.contains(center.y)
         else { return nil }
 
         let referenceRadius = hypot(bounds.width / 2, bounds.height / 2)
@@ -1011,6 +1026,11 @@ enum XomoFigmaNodeImportMapper {
 
     private static let minimumGradientAxisLength = 0.001
     private static let circularGradientTolerance = 0.001
+    private static let gradientCenterRange = -4.0...5.0
+
+    private static func normalizedGradientCenter(_ value: Double) -> Double {
+        min(max(value, gradientCenterRange.lowerBound), gradientCenterRange.upperBound)
+    }
 
     private static func resolvedGradientStops(
         _ paint: XomoFigmaPaint
