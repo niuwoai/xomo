@@ -3801,6 +3801,27 @@ struct XomoAutomationTests {
             #expect(viewModel.document.history.count == historyCountBeforeInvalidCreate)
         }
 
+        for invalidStrokeWidth: XomoJSONValue in [
+            .number(0),
+            .number(96.1),
+            .string("12"),
+            .bool(true)
+        ] {
+            let invalidStrokeCreate = registry.execute(request(
+                operation: "call",
+                name: "xomo.shape.create",
+                arguments: [
+                    "kind": .string("rectangle"),
+                    "x": .number(0), "y": .number(0),
+                    "width": .number(40), "height": .number(20),
+                    "strokeWidth": invalidStrokeWidth
+                ]
+            ))
+            #expect(!invalidStrokeCreate.ok)
+            #expect(viewModel.document.layers.count == layerCountBeforeInvalidCreate)
+            #expect(viewModel.document.history.count == historyCountBeforeInvalidCreate)
+        }
+
         let toolsResponse = registry.execute(request(operation: "tools"))
         let tools = try #require(toolsResponse.result?.arrayValue)
         let createTool = try #require(tools.compactMap(\.objectValue).first {
@@ -3822,7 +3843,84 @@ struct XomoAutomationTests {
                 == ImageEditorStrokeJoin.allCases.map { .string($0.rawValue) }
         )
         #expect(createProperties["strokeMiterLimit"]?.objectValue?["type"] == .string("number"))
+        #expect(createProperties["strokeWidth"]?.objectValue?["minimum"] == .number(0.1))
+        #expect(createProperties["strokeWidth"]?.objectValue?["maximum"] == .number(96))
         #expect(createProperties["strokeDashPattern"]?.objectValue?["type"] == .string("array"))
+    }
+
+    @Test func shapeStrokeWidthAutomationRejectsInvalidValuesAtomically() throws {
+        let viewModel = makeViewModel()
+        viewModel.drawShape(
+            from: CGPoint(x: 8, y: 8),
+            to: CGPoint(x: 88, y: 48),
+            ellipse: false
+        )
+        let firstID = try #require(viewModel.document.selectedLayerID)
+        viewModel.drawShape(
+            from: CGPoint(x: 98, y: 18),
+            to: CGPoint(x: 178, y: 58),
+            ellipse: true
+        )
+        let secondID = try #require(viewModel.document.selectedLayerID)
+        viewModel.document.selectedLayerIDs = [firstID, secondID]
+        viewModel.document.selectedLayerID = secondID
+
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        let historyCount = viewModel.document.history.count
+        let updated = registry.execute(request(
+            operation: "call",
+            name: "xomo.shape.update",
+            arguments: [
+                "strokeWidth": .number(12),
+                "strokeCap": .string("square")
+            ]
+        ))
+        #expect(updated.ok)
+        #expect(updated.result == .object(["updatedLayerCount": .number(2)]))
+        #expect(viewModel.document.history.count == historyCount + 1)
+        for layerID in [firstID, secondID] {
+            let content = viewModel.document.layers.first { $0.id == layerID }?.shapeContent
+            #expect(content?.strokeWidth == 12)
+            #expect(content?.strokeCap == .square)
+        }
+
+        let stableHistoryCount = viewModel.document.history.count
+        for invalidStrokeWidth: XomoJSONValue in [
+            .number(0),
+            .number(96.1),
+            .string("12"),
+            .bool(true)
+        ] {
+            let invalid = registry.execute(request(
+                operation: "call",
+                name: "xomo.shape.update",
+                arguments: [
+                    "strokeWidth": invalidStrokeWidth,
+                    "strokeCap": .string("round")
+                ]
+            ))
+            #expect(!invalid.ok)
+            #expect(viewModel.document.history.count == stableHistoryCount)
+            for layerID in [firstID, secondID] {
+                let content = viewModel.document.layers.first { $0.id == layerID }?.shapeContent
+                #expect(content?.strokeWidth == 12)
+                #expect(content?.strokeCap == .square)
+            }
+        }
+
+        let inspected = registry.execute(request(operation: "call", name: "xomo.shape.get"))
+        #expect(inspected.result?.objectValue?["strokeWidth"] == .number(12))
+
+        let toolsResponse = registry.execute(request(operation: "tools"))
+        let tools = try #require(toolsResponse.result?.arrayValue)
+        let updateTool = try #require(tools.compactMap(\.objectValue).first {
+            $0["name"] == .string("xomo.shape.update")
+        })
+        let schema = updateTool["inputSchema"]?.objectValue?["properties"]?
+            .objectValue?["strokeWidth"]?.objectValue
+        #expect(schema?["minimum"] == .number(0.1))
+        #expect(schema?["maximum"] == .number(96))
     }
 
     @Test func shapeStrokePositionAutomationUpdatesOnlyChangedShapesAndRejectsUnknownValues() throws {

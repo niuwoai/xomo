@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.12.0-rc744 - 2026-08-09
+
+### Fixed
+- `xomo.shape.create` 与 `xomo.shape.update` 共用严格的 `strokeWidth` 解析，仅接受 0.1–96 px 范围内的有限数字；错误 JSON 类型不再被当作未提供。
+- 非法描边宽度会在创建图层或修改任一已选形状前原子失败；工具 Schema 同步发布机器可读的 `minimum` 与 `maximum`。
+
+### Tests
+- 扩展形状创建并新增多选更新回归，覆盖合法批量更新、上下越界、错误 JSON 类型、混合参数原子性、零图层/History 副作用和 Schema 边界；界面亚像素描边持久化邻接回归同步通过，3/3 成功。
+
 ## 2.12.0-rc743 - 2026-08-09
 
 ### Fixed
