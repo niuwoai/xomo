@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.12.0-rc751 - 2026-08-09
+
+### Fixed
+- `xomo.shape.create` 与 `xomo.shape.update` 不再允许 `fillGradient.stops` 和旧式 `startColor/endColor` 同时出现，避免成功响应掩盖其中一套颜色被静默丢弃。
+- 冲突颜色表达在创建图层或批量修改任何形状属性前原子失败；纯色标数组与纯双端颜色两种合法表达保持可用。
+- 形状渐变 Schema 明确标注 `stops` 不可与 `startColor/endColor` 组合，便于 MCP/CLI 客户端在调用前校验。
+
+### Tests
+- 新增渐变颜色表达互斥回归，覆盖 `startColor`、`endColor` 两类冲突、创建/更新零副作用、混合参数不部分写入、合法色标更新和 Schema 提示；线性与径向渐变邻接回归同步通过，3/3 成功。
+
 ## 2.12.0-rc750 - 2026-08-09
 
 ### Fixed

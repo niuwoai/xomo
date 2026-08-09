@@ -4953,6 +4953,102 @@ struct XomoAutomationTests {
         #expect(viewModel.document.selectedLayer?.shapeContent?.fillGradient?.angle == 15)
     }
 
+    @Test func shapeGradientStopsRejectLegacyColorConflictsAtomically() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        let stops: XomoJSONValue = .array([
+            .object([
+                "position": .number(0),
+                "color": .object([
+                    "red": .number(1), "green": .number(0), "blue": .number(0)
+                ])
+            ]),
+            .object([
+                "position": .number(1),
+                "color": .object([
+                    "red": .number(0), "green": .number(0), "blue": .number(1)
+                ])
+            ])
+        ])
+        let created = registry.execute(request(
+            operation: "call",
+            name: "xomo.shape.create",
+            arguments: [
+                "kind": .string("rectangle"),
+                "x": .number(10), "y": .number(12),
+                "width": .number(90), "height": .number(70),
+                "fillKind": .string("linearGradient"),
+                "fillGradient": .object(["stops": stops])
+            ]
+        ))
+        #expect(created.ok)
+        let stableLayerID = try #require(viewModel.document.selectedLayerID)
+        let stableLayerCount = viewModel.document.layers.count
+        let stableHistoryCount = viewModel.document.history.count
+        let stableStrokeWidth = viewModel.document.selectedLayer?.shapeContent?.strokeWidth
+
+        for conflictingKey in ["startColor", "endColor"] {
+            let conflictingGradient: [String: XomoJSONValue] = [
+                "stops": stops,
+                conflictingKey: .object([
+                    "red": .number(0), "green": .number(1), "blue": .number(0)
+                ])
+            ]
+            let invalidUpdate = registry.execute(request(
+                operation: "call",
+                name: "xomo.shape.update",
+                arguments: [
+                    "fillGradient": .object(conflictingGradient),
+                    "strokeWidth": .number(12)
+                ]
+            ))
+            #expect(!invalidUpdate.ok)
+            #expect(invalidUpdate.error?.contains("cannot be combined") == true)
+            #expect(viewModel.document.history.count == stableHistoryCount)
+            #expect(viewModel.document.selectedLayer?.shapeContent?.strokeWidth == stableStrokeWidth)
+
+            let invalidCreate = registry.execute(request(
+                operation: "call",
+                name: "xomo.shape.create",
+                arguments: [
+                    "kind": .string("ellipse"),
+                    "x": .number(120), "y": .number(12),
+                    "width": .number(40), "height": .number(40),
+                    "fillGradient": .object(conflictingGradient)
+                ]
+            ))
+            #expect(!invalidCreate.ok)
+            #expect(viewModel.document.layers.count == stableLayerCount)
+            #expect(viewModel.document.history.count == stableHistoryCount)
+            #expect(viewModel.document.selectedLayerID == stableLayerID)
+        }
+
+        let validStopsUpdate = registry.execute(request(
+            operation: "call",
+            name: "xomo.shape.update",
+            arguments: [
+                "fillGradient": .object([
+                    "stops": stops,
+                    "angle": .number(20)
+                ])
+            ]
+        ))
+        #expect(validStopsUpdate.ok)
+        #expect(viewModel.document.selectedLayer?.shapeContent?.fillGradient?.angle == 20)
+        #expect(viewModel.document.selectedLayer?.shapeContent?.fillGradient?.shapeColorStops.count == 2)
+
+        let toolsResponse = registry.execute(request(operation: "tools"))
+        let tools = try #require(toolsResponse.result?.arrayValue)
+        let createTool = try #require(tools.compactMap(\.objectValue).first {
+            $0["name"] == .string("xomo.shape.create")
+        })
+        let stopsDescription = createTool["inputSchema"]?.objectValue?["properties"]?
+            .objectValue?["fillGradient"]?.objectValue?["properties"]?
+            .objectValue?["stops"]?.objectValue?["description"]?.stringValue
+        #expect(stopsDescription?.contains("do not combine with startColor or endColor") == true)
+    }
+
     @Test func registryCreatesAndListsLayerComps() throws {
         let viewModel = makeViewModel()
         let registry = XomoAutomationRegistry.shared

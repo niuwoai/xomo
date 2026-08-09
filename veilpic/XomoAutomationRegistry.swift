@@ -2186,6 +2186,11 @@ final class XomoAutomationRegistry {
             range: 0.25...4
         ) ?? 1
         if let stopsValue = object["stops"] {
+            guard object["startColor"] == nil, object["endColor"] == nil else {
+                throw XomoAutomationCallError.invalidArgument(
+                    "fillGradient.stops cannot be combined with startColor or endColor"
+                )
+            }
             guard let values = stopsValue.arrayValue else {
                 throw XomoAutomationCallError.invalidArgument(
                     "fillGradient.stops must be an array"
@@ -6335,7 +6340,10 @@ private extension XomoAutomationRegistry {
             "endColor": shapeColorSchema,
             "stops": .object([
                 "type": .string("array"),
-                "description": .string("Ordered 2 to 16 color stops spanning positions 0 through 1"),
+                "description": .string(
+                    "Ordered 2 to 16 color stops spanning positions 0 through 1; "
+                        + "do not combine with startColor or endColor"
+                ),
                 "items": XomoAutomationSchema.object(
                     properties: [
                         "position": shapeUnitIntervalSchema(description: "Normalized position"),
