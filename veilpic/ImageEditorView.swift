@@ -2462,7 +2462,7 @@ struct ImageEditorView: View {
                         resetColorSamplerGesture()
                     }
                     if tool != .text {
-                        cancelCanvasTextEditing()
+                        commitCanvasTextEditingIfNeeded()
                     }
                     refreshCanvasCursor(in: geometry.size)
                 }
@@ -2473,7 +2473,7 @@ struct ImageEditorView: View {
                         pendingCropRect = nil
                         endPendingCropInteraction()
                         resetColorSamplerGesture()
-                        cancelCanvasTextEditing()
+                        commitCanvasTextEditingIfNeeded()
                         // Changing sidebar mode must immediately clear the
                         // previous tool cursor, even before the next hover
                         // event arrives from the canvas.
@@ -3735,6 +3735,9 @@ struct ImageEditorView: View {
                             .stroke(Color.gray.opacity(0.78), style: StrokeStyle(lineWidth: 1, dash: [4, 3]))
                     }
                     .focused($isCanvasTextEditorFocused)
+                    .onExitCommand {
+                        cancelCanvasTextEditing()
+                    }
                     .accessibilityIdentifier("image-editor-canvas-text-editor")
 
                 HStack(spacing: 4) {
@@ -3804,6 +3807,11 @@ struct ImageEditorView: View {
         canvasTextEditingLayerID = nil
         canvasTextEditingFrame = nil
         isCanvasTextEditorFocused = false
+    }
+
+    private func commitCanvasTextEditingIfNeeded() {
+        guard canvasTextEditingOrigin != nil else { return }
+        commitCanvasTextEditing()
     }
 
     private func cancelCanvasTextEditing() {

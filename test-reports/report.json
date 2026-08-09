@@ -1,60 +1,36 @@
 {
-  "generated_at": "2026-08-10 02:26:02 +0800",
-  "total": 4,
-  "passed": 4,
+  "generated_at": "2026-08-10 02:31:52 +0800",
+  "total": 2,
+  "passed": 2,
   "failed": 0,
-  "total_tests": 4,
-  "passed_tests": 4,
+  "total_tests": 2,
+  "passed_tests": 2,
   "failed_tests_in_failed_groups": 0,
   "jobs": 1,
   "results": [
     {
-      "suite": "ImageEditorColorWellTests",
-      "method": "colorWellIsKeyboardNeutralAndPublishesContinuousColorChanges",
-      "identifier": "veilpicTests/ImageEditorColorWellTests/colorWellIsKeyboardNeutralAndPublishesContinuousColorChanges()",
-      "file": "ImageEditorColorWellTests.swift",
+      "suite": "ImageEditorTextEditingLifecycleTests",
+      "method": "conditionalCommitCannotCreateTextWithoutAnActiveCanvasEditor",
+      "identifier": "veilpicTests/ImageEditorTextEditingLifecycleTests/conditionalCommitCannotCreateTextWithoutAnActiveCanvasEditor()",
+      "file": "ImageEditorTextEditingLifecycleTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 4.531,
+      "duration": 2.812,
       "infrastructure_retries": 0,
       "issues": [],
-      "log": "ImageEditorColorWellTests.colorWellIsKeyboardNeutralAndPublishesContinuousColorChanges.log"
+      "log": "ImageEditorTextEditingLifecycleTests.conditionalCommitCannotCreateTextWithoutAnActiveCanvasEditor.log"
     },
     {
-      "suite": "ImageEditorColorWellTests",
-      "method": "colorWellRendersAFullSquareSwatchWithoutNativePillCorners",
-      "identifier": "veilpicTests/ImageEditorColorWellTests/colorWellRendersAFullSquareSwatchWithoutNativePillCorners()",
-      "file": "ImageEditorColorWellTests.swift",
+      "suite": "ImageEditorTextEditingLifecycleTests",
+      "method": "escapeCancelsCanvasTextEditingWhileContextChangesCommitIt",
+      "identifier": "veilpicTests/ImageEditorTextEditingLifecycleTests/escapeCancelsCanvasTextEditingWhileContextChangesCommitIt()",
+      "file": "ImageEditorTextEditingLifecycleTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 2.782,
+      "duration": 2.831,
       "infrastructure_retries": 0,
       "issues": [],
-      "log": "ImageEditorColorWellTests.colorWellRendersAFullSquareSwatchWithoutNativePillCorners.log"
-    },
-    {
-      "suite": "ImageEditorColorWellTests",
-      "method": "editorUsesColorWellsInsteadOfInvisibleScreenSamplerButtons",
-      "identifier": "veilpicTests/ImageEditorColorWellTests/editorUsesColorWellsInsteadOfInvisibleScreenSamplerButtons()",
-      "file": "ImageEditorColorWellTests.swift",
-      "test_count": 1,
-      "passed": true,
-      "duration": 2.772,
-      "infrastructure_retries": 0,
-      "issues": [],
-      "log": "ImageEditorColorWellTests.editorUsesColorWellsInsteadOfInvisibleScreenSamplerButtons.log"
-    },
-    {
-      "suite": "ImageEditorColorWellTests",
-      "method": "mouseEquivalentAndAccessibilityActivationShareTheColorPanelAction",
-      "identifier": "veilpicTests/ImageEditorColorWellTests/mouseEquivalentAndAccessibilityActivationShareTheColorPanelAction()",
-      "file": "ImageEditorColorWellTests.swift",
-      "test_count": 1,
-      "passed": true,
-      "duration": 2.758,
-      "infrastructure_retries": 0,
-      "issues": [],
-      "log": "ImageEditorColorWellTests.mouseEquivalentAndAccessibilityActivationShareTheColorPanelAction.log"
+      "log": "ImageEditorTextEditingLifecycleTests.escapeCancelsCanvasTextEditingWhileContextChangesCommitIt.log"
     }
   ]
 }
