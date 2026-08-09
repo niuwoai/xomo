@@ -2225,14 +2225,17 @@ final class XomoAutomationRegistry {
                         "fillGradient.stops[\(index)].color is required"
                     )
                 }
-                guard colorValue.objectValue != nil else {
+                guard let colorObject = colorValue.objectValue else {
                     throw XomoAutomationCallError.invalidArgument(
                         "fillGradient.stops[\(index)].color must be an object"
                     )
                 }
                 return ImageEditorGradientColorStop(
                     position: position,
-                    color: try requiredOpaqueColor("color", in: stop)
+                    color: try requiredShapeGradientStopColor(
+                        colorObject,
+                        stopIndex: index
+                    )
                 )
             }
             guard abs((stops.first?.position ?? 1)) <= 0.000_1,
@@ -2341,6 +2344,56 @@ final class XomoAutomationRegistry {
             )
         }
         return color
+    }
+
+    private func requiredShapeGradientStopColor(
+        _ object: [String: XomoJSONValue],
+        stopIndex: Int
+    ) throws -> NSColor {
+        let red = try requiredShapeGradientStopColorComponent(
+            "red", in: object, stopIndex: stopIndex
+        )
+        let green = try requiredShapeGradientStopColorComponent(
+            "green", in: object, stopIndex: stopIndex
+        )
+        let blue = try requiredShapeGradientStopColorComponent(
+            "blue", in: object, stopIndex: stopIndex
+        )
+        let alpha = try object["alpha"] == nil
+            ? 1
+            : requiredShapeGradientStopColorComponent(
+                "alpha", in: object, stopIndex: stopIndex
+            )
+        guard abs(alpha - 1) <= 0.000_1 else {
+            throw XomoAutomationCallError.invalidArgument(
+                "fillGradient.stops[\(stopIndex)].color.alpha must be 1; "
+                    + "use fillOpacity for the shared gradient opacity"
+            )
+        }
+        return NSColor(
+            deviceRed: CGFloat(red),
+            green: CGFloat(green),
+            blue: CGFloat(blue),
+            alpha: CGFloat(alpha)
+        )
+    }
+
+    private func requiredShapeGradientStopColorComponent(
+        _ component: String,
+        in object: [String: XomoJSONValue],
+        stopIndex: Int
+    ) throws -> Double {
+        let path = "fillGradient.stops[\(stopIndex)].color.\(component)"
+        guard let value = object[component] else {
+            throw XomoAutomationCallError.invalidArgument("\(path) is required")
+        }
+        guard let number = value.doubleValue, number.isFinite else {
+            throw XomoAutomationCallError.invalidArgument("\(path) must be a number")
+        }
+        guard (0...1).contains(number) else {
+            throw XomoAutomationCallError.invalidArgument("\(path) must be between 0 and 1")
+        }
+        return number
     }
 
     private func shapeGradientJSON(
