@@ -3129,6 +3129,13 @@
 "imageEditor.status.figmaVariablesCopied" = "Figma 変数 ID をコピーしました";
 "imageEditor.properties.figmaSource" = "Figma ソースノード";
 "imageEditor.properties.figmaSourceType" = "ノードタイプ";
+"imageEditor.properties.figmaSizeConstraints" = "サイズ制約";
+"imageEditor.properties.figmaMinWidth" = "最小幅";
+"imageEditor.properties.figmaMaxWidth" = "最大幅";
+"imageEditor.properties.figmaMinHeight" = "最小高さ";
+"imageEditor.properties.figmaMaxHeight" = "最大高さ";
+"imageEditor.properties.figmaSizeConstraintValue" = "%.1f px";
+"imageEditor.properties.figmaSizeConstraintsActive" = "自動レイアウトの再配置時に適用";
 "imageEditor.properties.figmaComponentRole" = "コンポーネントの役割";
 "imageEditor.action.copyFigmaSource" = "ソース参照をコピー";
 "imageEditor.action.copyFigmaSourceURL" = "Figma リンクをコピー";

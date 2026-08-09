@@ -6950,6 +6950,23 @@ struct ImageEditorView: View {
         }
     }
 
+    private func figmaSizeConstraintRow(
+        titleKey: String,
+        value: Double,
+        identifier: String
+    ) -> some View {
+        HStack(spacing: 7) {
+            Text(L10n.text(titleKey))
+                .font(.system(size: 10, weight: .medium))
+                .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
+            Spacer(minLength: 4)
+            Text(L10n.format("imageEditor.properties.figmaSizeConstraintValue", value))
+                .font(.system(size: 10, design: .monospaced))
+                .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+        }
+        .accessibilityIdentifier("image-editor-figma-size-constraint-\(identifier)")
+    }
+
     private var adjustmentValueControls: AnyView {
         switch viewModel.selectedAdjustment {
         case .levels:
@@ -7105,6 +7122,47 @@ struct ImageEditorView: View {
                             .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
                             .lineLimit(1)
                             .truncationMode(.middle)
+
+                        if let constraints = viewModel.selectedLayerFigmaSizeConstraints {
+                            VStack(alignment: .leading, spacing: 5) {
+                                Text(L10n.text("imageEditor.properties.figmaSizeConstraints"))
+                                    .font(.system(size: 10, weight: .semibold))
+                                    .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
+                                if let value = constraints.minWidth {
+                                    figmaSizeConstraintRow(
+                                        titleKey: "imageEditor.properties.figmaMinWidth",
+                                        value: value,
+                                        identifier: "min-width"
+                                    )
+                                }
+                                if let value = constraints.maxWidth {
+                                    figmaSizeConstraintRow(
+                                        titleKey: "imageEditor.properties.figmaMaxWidth",
+                                        value: value,
+                                        identifier: "max-width"
+                                    )
+                                }
+                                if let value = constraints.minHeight {
+                                    figmaSizeConstraintRow(
+                                        titleKey: "imageEditor.properties.figmaMinHeight",
+                                        value: value,
+                                        identifier: "min-height"
+                                    )
+                                }
+                                if let value = constraints.maxHeight {
+                                    figmaSizeConstraintRow(
+                                        titleKey: "imageEditor.properties.figmaMaxHeight",
+                                        value: value,
+                                        identifier: "max-height"
+                                    )
+                                }
+                                Text(L10n.text("imageEditor.properties.figmaSizeConstraintsActive"))
+                                    .font(.system(size: 9))
+                                    .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                                    .fixedSize(horizontal: false, vertical: true)
+                            }
+                            .accessibilityIdentifier("image-editor-figma-size-constraints")
+                        }
                     }
 
                     Divider().overlay(editorBorder)

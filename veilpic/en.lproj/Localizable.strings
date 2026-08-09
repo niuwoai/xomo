@@ -3129,6 +3129,13 @@
 "imageEditor.status.figmaVariablesCopied" = "Copied Figma variable IDs";
 "imageEditor.properties.figmaSource" = "Figma source node";
 "imageEditor.properties.figmaSourceType" = "Node type";
+"imageEditor.properties.figmaSizeConstraints" = "Size constraints";
+"imageEditor.properties.figmaMinWidth" = "Minimum width";
+"imageEditor.properties.figmaMaxWidth" = "Maximum width";
+"imageEditor.properties.figmaMinHeight" = "Minimum height";
+"imageEditor.properties.figmaMaxHeight" = "Maximum height";
+"imageEditor.properties.figmaSizeConstraintValue" = "%.1f px";
+"imageEditor.properties.figmaSizeConstraintsActive" = "Applied during Auto Layout reflow";
 "imageEditor.properties.figmaComponentRole" = "Component role";
 "imageEditor.action.copyFigmaSource" = "Copy source reference";
 "imageEditor.action.copyFigmaSourceURL" = "Copy Figma link";

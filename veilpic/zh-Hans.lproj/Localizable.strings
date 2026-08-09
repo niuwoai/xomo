@@ -3129,6 +3129,13 @@
 "imageEditor.status.figmaVariablesCopied" = "已复制 Figma 变量 ID";
 "imageEditor.properties.figmaSource" = "Figma 源节点";
 "imageEditor.properties.figmaSourceType" = "节点类型";
+"imageEditor.properties.figmaSizeConstraints" = "尺寸约束";
+"imageEditor.properties.figmaMinWidth" = "最小宽度";
+"imageEditor.properties.figmaMaxWidth" = "最大宽度";
+"imageEditor.properties.figmaMinHeight" = "最小高度";
+"imageEditor.properties.figmaMaxHeight" = "最大高度";
+"imageEditor.properties.figmaSizeConstraintValue" = "%.1f px";
+"imageEditor.properties.figmaSizeConstraintsActive" = "在自动布局重排时生效";
 "imageEditor.properties.figmaComponentRole" = "组件语义";
 "imageEditor.action.copyFigmaSource" = "复制源节点引用";
 "imageEditor.action.copyFigmaSourceURL" = "复制 Figma 链接";

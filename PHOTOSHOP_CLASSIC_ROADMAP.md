@@ -1,6 +1,8 @@
 # Xomo 经典 Photoshop 能力路线图
 
-> 最后更新：2026-08-10 ｜ 当前版本：v2.12.0-rc786 ｜ 目标：以经典 Photoshop 能力作为现代混合编辑器的可靠像素与图层底座
+> 最后更新：2026-08-10 ｜ 当前版本：v2.12.0-rc787 ｜ 目标：以经典 Photoshop 能力作为现代混合编辑器的可靠像素与图层底座
+
+- `v2.12.0-rc787`：Figma 来源属性新增只读尺寸约束检查器，展示 min/max 宽高及 Auto Layout 生效说明，三语言与辅助功能契约齐备。下一次周期完整门禁与 `/Applications` 覆盖安装为 rc800。
 
 - `v2.12.0-rc786`：Figma Auto Layout 容器 min/max 进入 Fixed/Hug 重排，子项和背景统一基于最终容器边界。下一次周期完整门禁与 `/Applications` 覆盖安装为 rc800。
 

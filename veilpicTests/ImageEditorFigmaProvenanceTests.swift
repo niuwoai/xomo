@@ -44,6 +44,7 @@ struct ImageEditorFigmaProvenanceTests {
         let viewModel = ImageEditorViewModel(document: document) { _ in }
         #expect(viewModel.selectedLayerFigmaSourceID == "1:60")
         #expect(viewModel.selectedLayerFigmaNodeType == "BOOLEAN_OPERATION")
+        #expect(viewModel.selectedLayerFigmaSizeConstraints == layer.xomoFigmaSizeConstraints)
         #expect(viewModel.selectedLayerFigmaComponentRole == .instance)
         #expect(viewModel.selectedLayerFigmaComponentProperties["Size"]?.value == "Large")
         #expect(viewModel.selectedLayerFigmaImageFill?.imageReference == "img-ref-hero")
@@ -299,6 +300,26 @@ struct ImageEditorFigmaProvenanceTests {
         let project = try ImageEditorProjectDocument(document: viewModel.document)
         let restored = try project.restoredDocument()
         #expect(restored.layers.first?.xomoFigmaComponentPropertyDefaults["Label"]?.value == "Continue")
+    }
+
+    @Test func figmaSizeConstraintInspectorIsVisibleLocalizedAndReadOnly() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(source.contains("viewModel.selectedLayerFigmaSizeConstraints"))
+        #expect(source.contains("image-editor-figma-size-constraints"))
+        #expect(source.contains("image-editor-figma-size-constraint-\\(identifier)"))
+        #expect(source.contains("identifier: \"min-width\""))
+        #expect(source.contains("identifier: \"max-width\""))
+        #expect(source.contains("identifier: \"min-height\""))
+        #expect(source.contains("identifier: \"max-height\""))
+        #expect(source.contains("imageEditor.properties.figmaSizeConstraintsActive"))
+        #expect(!source.contains("updateSelectedFigmaSizeConstraint"))
     }
 
     private func request(
