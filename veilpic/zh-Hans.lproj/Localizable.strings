@@ -866,7 +866,7 @@
 "imageEditor.properties.shapeFillOpacityValue" = "填充不透明度：%d%%";
 "imageEditor.properties.shapeStrokeColor" = "描边颜色";
 "imageEditor.properties.shapeStrokeOpacityValue" = "描边不透明度：%d%%";
-"imageEditor.properties.shapeStrokeWidthValue" = "描边宽度：%d px";
+"imageEditor.properties.shapeStrokeWidthValue" = "描边宽度：%.1f px";
 "imageEditor.properties.shapeStrokeCap" = "端点";
 "imageEditor.properties.shapeStrokeCap.butt" = "平端";
 "imageEditor.properties.shapeStrokeCap.round" = "圆端";
@@ -3298,7 +3298,7 @@
 "xomo.figma.node.issue.effectsFlattened" = "效果尚未保留";
 "xomo.figma.node.issue.blendModeFlattened" = "混合模式尚未保留";
 "xomo.figma.node.issue.cornerRadiusFlattened" = "圆角平滑使用可编辑的超椭圆曲线近似";
-"xomo.figma.node.issue.strokeWeightFlattened" = "该 Figma 描边小于 Xomo 的 1 px 原生下限，将按 1 px 导入";
+"xomo.figma.node.issue.strokeWeightFlattened" = "该 Figma 描边小于 Xomo 的 0.1 px 原生下限，将按 0.1 px 导入";
 "xomo.figma.node.issue.transformFlattened" = "旋转、镜像或倾斜变换暂按轴对齐边界处理";
 "xomo.figma.node.issue.textCaseFlattened" = "文字大小写会写入可编辑文本内容，而不是保留为动态样式";
 "xomo.figma.node.issue.textLineHeightFlattened" = "该 Figma 行高无法精确表达，将使用最接近的原生行距";

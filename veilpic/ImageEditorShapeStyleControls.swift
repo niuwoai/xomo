@@ -134,11 +134,11 @@ extension ImageEditorView {
             Stepper(
                 L10n.format(
                     "imageEditor.properties.shapeStrokeWidthValue",
-                    Int(viewModel.selectedShapeStrokeWidth.rounded())
+                    viewModel.selectedShapeStrokeWidth
                 ),
                 value: selectedShapeStrokeWidthBinding,
-                in: 1...96,
-                step: 1
+                in: Double(ImageEditorShapeContent.minimumStrokeWidth)...96,
+                step: 0.1
             )
             .focusable(false)
             .accessibilityIdentifier("image-editor-shape-stroke-width")

@@ -419,8 +419,8 @@ struct XomoFigmaNodeImportPlanTests {
     }
 
     @Test func figmaTextDecorationUsesTypedNativeMappingAndReportsUnknownValues() throws {
-        #expect(XomoFigmaNodeImportMapper.mappedTextDecoration(nil) == .none)
-        #expect(XomoFigmaNodeImportMapper.mappedTextDecoration("NONE") == .none)
+        #expect(XomoFigmaNodeImportMapper.mappedTextDecoration(nil) == XomoFigmaPlanTextDecoration.none)
+        #expect(XomoFigmaNodeImportMapper.mappedTextDecoration("NONE") == XomoFigmaPlanTextDecoration.none)
         #expect(XomoFigmaNodeImportMapper.mappedTextDecoration("UNDERLINE") == .underline)
         #expect(XomoFigmaNodeImportMapper.mappedTextDecoration("STRIKETHROUGH") == .strikethrough)
         #expect(XomoFigmaNodeImportMapper.mappedTextDecoration("WAVY") == nil)
@@ -456,7 +456,7 @@ struct XomoFigmaNodeImportPlanTests {
             requestedNodeID: "1:9"
         )
         let unknownItem = try #require(unknownPlan.items.first)
-        #expect(unknownItem.text?.decoration == .none)
+        #expect(unknownItem.text?.decoration == XomoFigmaPlanTextDecoration.none)
         #expect(unknownItem.fidelity == .partial)
         #expect(unknownItem.issues.contains(.textDecorationFlattened))
     }
@@ -1057,7 +1057,7 @@ struct XomoFigmaNodeImportPlanTests {
         #expect(vector.strokeWeight == 2)
     }
 
-    @Test func figmaSubpixelStrokeReportsNativeMinimumClamp() throws {
+    @Test func figmaSubpixelStrokeRemainsNativeAndEditable() throws {
         let response = try JSONDecoder().decode(
             XomoFigmaNodeResponse.self,
             from: Data(
@@ -1068,14 +1068,14 @@ struct XomoFigmaNodeImportPlanTests {
         let plan = try XomoFigmaNodeImportMapper.makePlan(response: response, requestedNodeID: "1:20")
         let item = try #require(plan.items.first)
         #expect(item.strokeWeight == 0.5)
-        #expect(item.fidelity == .partial)
-        #expect(item.issues.contains(.strokeWeightFlattened))
+        #expect(item.fidelity == .exact)
+        #expect(!item.issues.contains(.strokeWeightFlattened))
 
         let result = XomoFigmaNodeMaterializer.materialize(
             plan: plan,
             canvasSize: CGSize(width: 320, height: 240)
         )
-        #expect(result.layers.first?.shapeContent?.strokeWidth == 1)
+        #expect(result.layers.first?.shapeContent?.strokeWidth == 0.5)
     }
 
     @Test func mapperImportsSectionAsEditableGroupAndPreservesGradientBackground() throws {
@@ -1516,10 +1516,11 @@ struct XomoFigmaNodeImportPlanTests {
         #expect(unsupported.targetKind == nil)
         #expect(unsupported.fidelity == .unsupported)
         #expect(unsupported.issues == [.unsupportedNodeType])
-        #expect(text.fidelity == .exact)
+        #expect(text.fidelity == .partial)
+        #expect(text.issues.contains(.textFontWeightFlattened))
         #expect(!text.issues.contains(.textCaseFlattened))
-        #expect(plan.exactCount == 6)
-        #expect(plan.partialCount == 2)
+        #expect(plan.exactCount == 5)
+        #expect(plan.partialCount == 3)
         #expect(plan.unsupportedCount == 1)
     }
 
@@ -2327,7 +2328,8 @@ struct XomoFigmaNodeImportPlanTests {
         let textPlan = try #require(plan.items.first { $0.sourceName == "Continue Label" })
         #expect(textPlan.text?.characters == "Continue 继续")
         #expect(textPlan.text?.textCase == .uppercase)
-        #expect(textPlan.fidelity == .exact)
+        #expect(textPlan.fidelity == .partial)
+        #expect(textPlan.issues.contains(.textFontWeightFlattened))
         #expect(!textPlan.issues.contains(.textCaseFlattened))
         let result = XomoFigmaNodeMaterializer.materialize(
             plan: plan,

@@ -966,6 +966,31 @@ struct ImageEditorShapeStyleTests {
         #expect(restored.strokeDashPattern == edited.strokeDashPattern)
     }
 
+    @Test func subpixelStrokeWidthEditsNormalizeAndPersist() throws {
+        let viewModel = makeViewModel()
+        viewModel.drawShape(
+            from: CGPoint(x: 10, y: 10),
+            to: CGPoint(x: 70, y: 50),
+            ellipse: false
+        )
+
+        viewModel.setSelectedShapeStrokeWidth(0.5)
+        let edited = try #require(viewModel.document.selectedLayer?.shapeContent)
+        #expect(edited.strokeWidth == 0.5)
+        #expect(edited.normalized(size: CGSize(width: 60, height: 40)).strokeWidth == 0.5)
+
+        let projectData = try viewModel.projectData()
+        let reopened = makeViewModel()
+        try reopened.loadProjectData(projectData)
+        #expect(reopened.document.selectedLayer?.shapeContent?.strokeWidth == 0.5)
+
+        reopened.setSelectedShapeStrokeWidth(0.01)
+        #expect(
+            reopened.document.selectedLayer?.shapeContent?.strokeWidth
+                == ImageEditorShapeContent.minimumStrokeWidth
+        )
+    }
+
     @Test func lockedShapeRejectsAppearanceChanges() throws {
         let viewModel = makeViewModel()
         viewModel.drawShape(

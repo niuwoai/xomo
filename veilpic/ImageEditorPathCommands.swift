@@ -1495,7 +1495,7 @@ extension ImageEditorViewModel {
             fillColor: foregroundColor,
             fillOpacity: 0.18,
             strokeColor: foregroundColor,
-            strokeWidth: max(1, min(96, strokeWidth)),
+            strokeWidth: max(ImageEditorShapeContent.minimumStrokeWidth, min(96, strokeWidth)),
             strokeOpacity: 1,
             pathPoints: localAnchors.map(\.point),
             pathAnchors: localAnchors,

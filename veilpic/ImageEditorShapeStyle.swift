@@ -453,7 +453,7 @@ extension ImageEditorViewModel {
                 content.strokeOpacity = CGFloat(max(0, min(1, strokeOpacity)))
             }
             if let strokeWidth, strokeWidth.isFinite {
-                content.strokeWidth = CGFloat(max(1, min(96, strokeWidth)))
+                content.strokeWidth = CGFloat(max(Double(ImageEditorShapeContent.minimumStrokeWidth), min(96, strokeWidth)))
             }
             if let strokePosition { content.strokePosition = strokePosition }
             if let strokeCap { content.strokeCap = strokeCap }

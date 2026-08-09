@@ -866,7 +866,7 @@
 "imageEditor.properties.shapeFillOpacityValue" = "Fill opacity: %d%%";
 "imageEditor.properties.shapeStrokeColor" = "Stroke color";
 "imageEditor.properties.shapeStrokeOpacityValue" = "Stroke opacity: %d%%";
-"imageEditor.properties.shapeStrokeWidthValue" = "Stroke width: %d px";
+"imageEditor.properties.shapeStrokeWidthValue" = "Stroke width: %.1f px";
 "imageEditor.properties.shapeStrokeCap" = "Stroke cap";
 "imageEditor.properties.shapeStrokeCap.butt" = "Butt";
 "imageEditor.properties.shapeStrokeCap.round" = "Round";
@@ -3298,7 +3298,7 @@
 "xomo.figma.node.issue.effectsFlattened" = "Effects are not preserved yet";
 "xomo.figma.node.issue.blendModeFlattened" = "Blend mode is not preserved yet";
 "xomo.figma.node.issue.cornerRadiusFlattened" = "Corner smoothing uses an editable superellipse approximation";
-"xomo.figma.node.issue.strokeWeightFlattened" = "This Figma stroke is below Xomo's native 1 px minimum and imports as 1 px";
+"xomo.figma.node.issue.strokeWeightFlattened" = "This Figma stroke is below Xomo's native 0.1 px minimum and imports as 0.1 px";
 "xomo.figma.node.issue.transformFlattened" = "Rotation, reflection, or skew is flattened to axis-aligned bounds";
 "xomo.figma.node.issue.textCaseFlattened" = "Text case is baked into editable characters instead of retained as a live style";
 "xomo.figma.node.issue.textLineHeightFlattened" = "This Figma line height cannot be represented exactly and uses the closest native line spacing";

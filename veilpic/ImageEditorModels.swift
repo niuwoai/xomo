@@ -3095,7 +3095,7 @@ private extension CGPoint {
 }
 
 struct ImageEditorShapeContent {
-    static let minimumStrokeWidth: CGFloat = 1
+    static let minimumStrokeWidth: CGFloat = 0.1
 
     var kind: ImageEditorShapeKind
     var fillColor: NSColor
