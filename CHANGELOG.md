@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.12.0-rc766 - 2026-08-10
+
+### Fixed
+- 旧版 Figma `primaryAxisSizingMode` / `counterAxisSizingMode` 出现未知枚举时，继续使用安全 Fixed 回退并明确报告自动布局部分降级，不再误标为精确导入。
+- 现代 `layoutSizingHorizontal` / `layoutSizingVertical` 具有逐轴优先级；对应现代字段存在时会覆盖旧字段，旧字段中的无效遗留值不会制造错误降级。
+
+### Tests
+- 新增现代/旧版尺寸优先级回归 1/1 通过；现代自动布局尺寸相邻回归 3/3 通过，覆盖 Hug/Fixed、Fill 子项、物理轴转换与旧字段覆盖。
+
 ## 2.12.0-rc765 - 2026-08-10
 
 ### Fixed

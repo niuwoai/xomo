@@ -3354,6 +3354,30 @@ struct XomoFigmaNodeImportPlanTests {
         #expect(unknown.fidelity == .partial)
     }
 
+    @Test func modernFigmaSizingOverridesUnknownLegacyValuesWhileBareUnknownLegacyDegrades() throws {
+        let response = try JSONDecoder().decode(
+            XomoFigmaNodeResponse.self,
+            from: Data(
+                #"{"name":"Sizing precedence","nodes":{"1:100":{"document":{"id":"1:100","name":"Root","type":"FRAME","absoluteBoundingBox":{"x":0,"y":0,"width":700,"height":300},"children":[{"id":"2:100","name":"Modern Wins","type":"FRAME","layoutMode":"VERTICAL","layoutSizingHorizontal":"FIXED","layoutSizingVertical":"HUG","primaryAxisSizingMode":"UNKNOWN_PRIMARY","counterAxisSizingMode":"UNKNOWN_CROSS","absoluteBoundingBox":{"x":0,"y":0,"width":300,"height":120}},{"id":"2:101","name":"Legacy Unknown","type":"FRAME","layoutMode":"VERTICAL","primaryAxisSizingMode":"UNKNOWN_PRIMARY","counterAxisSizingMode":"FIXED","absoluteBoundingBox":{"x":340,"y":0,"width":300,"height":120}}]}}}}"#.utf8
+            )
+        )
+        let plan = try XomoFigmaNodeImportMapper.makePlan(
+            response: response,
+            requestedNodeID: "1:100"
+        )
+        let modern = try #require(plan.items.first { $0.sourceID == "2:100" })
+        let legacyUnknown = try #require(plan.items.first { $0.sourceID == "2:101" })
+
+        #expect(modern.stackLayout?.primarySizingMode == .hug)
+        #expect(modern.stackLayout?.crossSizingMode == .fixed)
+        #expect(!modern.issues.contains(.autoLayoutFlattened))
+        #expect(modern.fidelity == .exact)
+        #expect(legacyUnknown.stackLayout?.primarySizingMode == .fixed)
+        #expect(legacyUnknown.stackLayout?.crossSizingMode == .fixed)
+        #expect(legacyUnknown.issues.contains(.autoLayoutFlattened))
+        #expect(legacyUnknown.fidelity == .partial)
+    }
+
     private static let validNodeResponse = Data(
         """
         {

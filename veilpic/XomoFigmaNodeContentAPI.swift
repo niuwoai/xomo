@@ -898,6 +898,7 @@ enum XomoFigmaNodeImportMapper {
                     && $0 != "HUG"
                     && !($0 == "FILL" && parentStackAxis != nil)
             }
+        let usesUnsupportedLegacySizing = hasUnsupportedLegacyStackSizing(node)
         let supportsSpaceBetweenTracks = node.layoutMode == "HORIZONTAL"
             && node.layoutWrap == "WRAP"
             && node.counterAxisAlignContent == "SPACE_BETWEEN"
@@ -908,10 +909,34 @@ enum XomoFigmaNodeImportMapper {
             && node.layoutMode != "HORIZONTAL"
         return usesUnsupportedWrap
             || usesUnsupportedModernSizing
+            || usesUnsupportedLegacySizing
             || usesUnsupportedTrackDistribution
             || usesUnsupportedBaseline
             || hasUnsupportedStackAlignment(node)
             || hasUnsupportedStackGeometry(node)
+    }
+
+    private static func hasUnsupportedLegacyStackSizing(_ node: XomoFigmaNode) -> Bool {
+        guard let axis = stackAxis(node) else { return false }
+        let modernPrimary = axis == .horizontal
+            ? node.layoutSizingHorizontal
+            : node.layoutSizingVertical
+        let modernCross = axis == .horizontal
+            ? node.layoutSizingVertical
+            : node.layoutSizingHorizontal
+        if modernPrimary == nil,
+           let legacyPrimary = node.primaryAxisSizingMode,
+           legacyPrimary != "FIXED",
+           legacyPrimary != "AUTO" {
+            return true
+        }
+        if modernCross == nil,
+           let legacyCross = node.counterAxisSizingMode,
+           legacyCross != "FIXED",
+           legacyCross != "AUTO" {
+            return true
+        }
+        return false
     }
 
     private static func hasUnsupportedStackAlignment(_ node: XomoFigmaNode) -> Bool {
