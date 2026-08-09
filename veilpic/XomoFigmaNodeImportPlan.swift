@@ -362,6 +362,35 @@ struct XomoFigmaSizeConstraints: Codable, Equatable, Sendable {
     }
 }
 
+enum XomoFigmaSizeConstraintField: String, CaseIterable, Sendable {
+    case minWidth
+    case maxWidth
+    case minHeight
+    case maxHeight
+
+    var localizationKey: String {
+        "imageEditor.properties.figma\(rawValue.prefix(1).uppercased())\(rawValue.dropFirst())"
+    }
+
+    func value(in constraints: XomoFigmaSizeConstraints) -> Double? {
+        switch self {
+        case .minWidth: constraints.minWidth
+        case .maxWidth: constraints.maxWidth
+        case .minHeight: constraints.minHeight
+        case .maxHeight: constraints.maxHeight
+        }
+    }
+
+    func set(_ value: Double?, in constraints: inout XomoFigmaSizeConstraints) {
+        switch self {
+        case .minWidth: constraints.minWidth = value
+        case .maxWidth: constraints.maxWidth = value
+        case .minHeight: constraints.minHeight = value
+        case .maxHeight: constraints.maxHeight = value
+        }
+    }
+}
+
 struct XomoFigmaNodeImportItem: Equatable, Identifiable, Sendable {
     var id: String { sourceID }
     var sourceID: String

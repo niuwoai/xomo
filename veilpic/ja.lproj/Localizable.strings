@@ -3136,6 +3136,8 @@
 "imageEditor.properties.figmaMaxHeight" = "最大高さ";
 "imageEditor.properties.figmaSizeConstraintValue" = "%.1f px";
 "imageEditor.properties.figmaSizeConstraintsActive" = "自動レイアウトの再配置時に適用";
+"imageEditor.history.figmaSizeConstraintChanged" = "Figma %@制約を変更";
+"imageEditor.status.figmaSizeConstraintUpdated" = "Figma %@制約を更新しました";
 "imageEditor.properties.figmaComponentRole" = "コンポーネントの役割";
 "imageEditor.action.copyFigmaSource" = "ソース参照をコピー";
 "imageEditor.action.copyFigmaSourceURL" = "Figma リンクをコピー";

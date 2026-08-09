@@ -481,6 +481,54 @@ struct ImageEditorStackLayoutTests {
         #expect(fixture.layer(named: "Nested").frame == CGRect(x: 85, y: 55, width: 50, height: 30))
     }
 
+    @Test func localFigmaConstraintEditsReflowAndSupportUndoRedo() {
+        let fixture = makeFixture()
+        fixture.selectLayer(named: "First")
+
+        fixture.viewModel.setSelectedFigmaSizeConstraint(.minWidth, value: 80)
+
+        #expect(fixture.layer(named: "First").xomoFigmaSizeConstraints?.minWidth == 80)
+        #expect(fixture.layer(named: "First").frame == CGRect(x: 70, y: 30, width: 80, height: 20))
+        #expect(fixture.viewModel.document.history.last?.title == L10n.format(
+            "imageEditor.history.figmaSizeConstraintChanged",
+            L10n.text("imageEditor.properties.figmaMinWidth")
+        ))
+
+        fixture.viewModel.undo()
+        #expect(fixture.layer(named: "First").xomoFigmaSizeConstraints == nil)
+        #expect(fixture.layer(named: "First").frame == CGRect(x: 30, y: 40, width: 30, height: 20))
+
+        fixture.viewModel.redo()
+        #expect(fixture.layer(named: "First").xomoFigmaSizeConstraints?.minWidth == 80)
+        #expect(fixture.layer(named: "First").frame == CGRect(x: 70, y: 30, width: 80, height: 20))
+
+        fixture.viewModel.setSelectedFigmaSizeConstraint(.maxHeight, value: 0)
+        #expect(fixture.layer(named: "First").xomoFigmaSizeConstraints?.maxHeight == 1)
+        #expect(fixture.layer(named: "First").frame == CGRect(x: 70, y: 30, width: 80, height: 1))
+        #expect(fixture.layer(named: "Nested").frame == CGRect(x: 85, y: 41, width: 50, height: 30))
+
+        let historyCount = fixture.viewModel.document.history.count
+        fixture.viewModel.setSelectedFigmaSizeConstraint(.maxHeight, value: .infinity)
+        #expect(fixture.viewModel.document.history.count == historyCount)
+        #expect(fixture.layer(named: "First").xomoFigmaSizeConstraints?.maxHeight == 1)
+
+        fixture.viewModel.setSelectedFigmaSizeConstraint(.maxHeight, value: nil)
+        #expect(fixture.layer(named: "First").xomoFigmaSizeConstraints?.maxHeight == nil)
+        #expect(fixture.layer(named: "First").xomoFigmaSizeConstraints?.minWidth == 80)
+    }
+
+    @Test func localFigmaConstraintEditsRespectLockedAutoLayout() {
+        let fixture = makeFixture()
+        fixture.updateLayer(named: "Root") { $0.locksPosition = true }
+        fixture.selectLayer(named: "First")
+
+        fixture.viewModel.setSelectedFigmaSizeConstraint(.minWidth, value: 80)
+
+        #expect(fixture.layer(named: "First").xomoFigmaSizeConstraints == nil)
+        #expect(fixture.layer(named: "First").frame == CGRect(x: 30, y: 40, width: 30, height: 20))
+        #expect(fixture.viewModel.statusText == L10n.text("imageEditor.status.stackLayoutLocked"))
+    }
+
     @Test func reflowExecutesImportedFigmaContainerConstraintsAndResizesBackground() {
         let fixture = makeFixture()
         fixture.updateLayer(named: "Root") {

@@ -3136,6 +3136,8 @@
 "imageEditor.properties.figmaMaxHeight" = "最大高度";
 "imageEditor.properties.figmaSizeConstraintValue" = "%.1f px";
 "imageEditor.properties.figmaSizeConstraintsActive" = "在自动布局重排时生效";
+"imageEditor.history.figmaSizeConstraintChanged" = "修改 Figma %@约束";
+"imageEditor.status.figmaSizeConstraintUpdated" = "已更新 Figma %@约束";
 "imageEditor.properties.figmaComponentRole" = "组件语义";
 "imageEditor.action.copyFigmaSource" = "复制源节点引用";
 "imageEditor.action.copyFigmaSourceURL" = "复制 Figma 链接";

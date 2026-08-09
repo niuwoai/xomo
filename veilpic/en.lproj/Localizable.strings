@@ -3136,6 +3136,8 @@
 "imageEditor.properties.figmaMaxHeight" = "Maximum height";
 "imageEditor.properties.figmaSizeConstraintValue" = "%.1f px";
 "imageEditor.properties.figmaSizeConstraintsActive" = "Applied during Auto Layout reflow";
+"imageEditor.history.figmaSizeConstraintChanged" = "Change Figma %@ constraint";
+"imageEditor.status.figmaSizeConstraintUpdated" = "Updated Figma %@ constraint";
 "imageEditor.properties.figmaComponentRole" = "Component role";
 "imageEditor.action.copyFigmaSource" = "Copy source reference";
 "imageEditor.action.copyFigmaSourceURL" = "Copy Figma link";

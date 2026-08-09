@@ -986,6 +986,46 @@ extension ImageEditorViewModel {
         updateSelectedStackLayout(forceReflow: true) { _ in }
     }
 
+    func setSelectedFigmaSizeConstraint(
+        _ field: XomoFigmaSizeConstraintField,
+        value: Double?
+    ) {
+        guard value == nil || value?.isFinite == true,
+              let layerIndex = document.selectedLayerIndex else { return }
+        let normalizedValue = value.map {
+            min(Double(ImageEditorTextContent.maximumBoxDimension), max(1, $0))
+        }
+        var constraints = document.layers[layerIndex].xomoFigmaSizeConstraints
+            ?? XomoFigmaSizeConstraints(
+                minWidth: nil,
+                maxWidth: nil,
+                minHeight: nil,
+                maxHeight: nil
+            )
+        guard field.value(in: constraints) != normalizedValue else { return }
+
+        let reflowTarget = stackReflowTarget(for: document.layers[layerIndex])
+        if let reflowTarget, !canEditStackLayout(groupID: reflowTarget.groupID) {
+            statusText = L10n.text("imageEditor.status.stackLayoutLocked")
+            return
+        }
+
+        pushUndo()
+        field.set(normalizedValue, in: &constraints)
+        document.layers[layerIndex].xomoFigmaSizeConstraints = constraints.isEmpty ? nil : constraints
+        if let reflowTarget {
+            applyStackLayout(groupID: reflowTarget.groupID, layout: reflowTarget.layout)
+        }
+        appendHistory(L10n.format(
+            "imageEditor.history.figmaSizeConstraintChanged",
+            L10n.text(field.localizationKey)
+        ))
+        statusText = L10n.format(
+            "imageEditor.status.figmaSizeConstraintUpdated",
+            L10n.text(field.localizationKey)
+        )
+    }
+
     private func updateSelectedStackLayout(
         forceReflow: Bool = false,
         update: (inout ImageEditorStackLayout) -> Void
@@ -1086,6 +1126,19 @@ extension ImageEditorViewModel {
                 applyStackLayout(groupID: participant.id, layout: nestedLayout)
             }
         }
+    }
+
+    private func stackReflowTarget(
+        for layer: ImageEditorLayer
+    ) -> (groupID: UUID, layout: ImageEditorStackLayout)? {
+        if let groupID = layer.groupID,
+           let layout = document.layers.first(where: { $0.id == groupID })?.stackLayout {
+            return (groupID, layout)
+        }
+        if let layout = layer.stackLayout {
+            return (layer.id, layout)
+        }
+        return nil
     }
 
     private func stackParticipantIndices(groupID: UUID) -> [Int] {
