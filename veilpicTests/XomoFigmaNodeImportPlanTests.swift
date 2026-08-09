@@ -3459,6 +3459,28 @@ struct XomoFigmaNodeImportPlanTests {
         #expect(unknown.fidelity == .partial)
     }
 
+    @Test func figmaAutoLayoutSizeConstraintsAreReportedInsteadOfSilentlyClaimingExactFidelity() throws {
+        let response = try JSONDecoder().decode(
+            XomoFigmaNodeResponse.self,
+            from: Data(
+                #"{"name":"Constraints","nodes":{"1:140":{"document":{"id":"1:140","name":"Constrained Parent","type":"FRAME","layoutMode":"HORIZONTAL","minWidth":240,"maxWidth":640,"absoluteBoundingBox":{"x":0,"y":0,"width":420,"height":180},"children":[{"id":"2:140","name":"Constrained Child","type":"RECTANGLE","minHeight":48,"maxHeight":96,"absoluteBoundingBox":{"x":20,"y":20,"width":160,"height":64}}]}}}}"#.utf8
+            )
+        )
+        let plan = try XomoFigmaNodeImportMapper.makePlan(
+            response: response,
+            requestedNodeID: "1:140"
+        )
+        let parent = try #require(plan.items.first { $0.sourceID == "1:140" })
+        let child = try #require(plan.items.first { $0.sourceID == "2:140" })
+
+        #expect(parent.stackLayout?.axis == .horizontal)
+        #expect(parent.issues.contains(.autoLayoutFlattened))
+        #expect(parent.fidelity == .partial)
+        #expect(child.issues.contains(.autoLayoutFlattened))
+        #expect(child.fidelity == .partial)
+        #expect(child.frame?.height == 64)
+    }
+
     private static let validNodeResponse = Data(
         """
         {

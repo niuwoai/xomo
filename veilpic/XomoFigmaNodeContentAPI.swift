@@ -256,6 +256,9 @@ enum XomoFigmaNodeImportMapper {
         if !variableBindings.isEmpty {
             issues.append(.variableBindingPreserved)
         }
+        if hasUnpreservedStackConstraints(node) {
+            issues.append(.autoLayoutFlattened)
+        }
         let nativeStackLayout = stackLayout(node)
         if node.absoluteBoundingBox == nil {
             issues.append(.missingBounds)
@@ -1023,6 +1026,11 @@ enum XomoFigmaNodeImportMapper {
                     || $0 < 0
                     || $0 > Double(ImageEditorStackLayout.maximumPadding)
             }
+    }
+
+    private static func hasUnpreservedStackConstraints(_ node: XomoFigmaNode) -> Bool {
+        [node.minWidth, node.maxWidth, node.minHeight, node.maxHeight]
+            .contains { $0 != nil }
     }
 
     private static func targetMapping(
@@ -1881,6 +1889,10 @@ struct XomoFigmaNode: Decodable {
     var layoutPositioning: String?
     var layoutGrow: Double?
     var layoutAlign: String?
+    var minWidth: Double?
+    var maxWidth: Double?
+    var minHeight: Double?
+    var maxHeight: Double?
     var size: XomoFigmaSize?
     var relativeTransform: [[Double]]?
     var fillGeometry: [XomoFigmaPath]?

@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.12.0-rc782 - 2026-08-10
+
+### Fixed
+- Figma 节点导入现在识别 `minWidth`、`maxWidth`、`minHeight` 与 `maxHeight`；在 Xomo 约束引擎尚未承载这些属性时，导入计划明确标为 Auto Layout 部分保真，不再静默宣称 Exact。
+- 容器与 Auto Layout 子节点的尺寸约束都会进入保真问题清单，同时继续按 Figma 当前绝对边界生成可见初始布局。
+
+### Tests
+- 新增 Figma 尺寸约束导入回归，覆盖父容器和子节点约束的解码、部分保真标记以及初始几何保留。
+
 ## 2.12.0-rc781 - 2026-08-10
 
 ### Fixed
