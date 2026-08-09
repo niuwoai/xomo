@@ -931,16 +931,33 @@ final class XomoAutomationRegistry {
         _ arguments: [String: XomoJSONValue],
         viewModel: ImageEditorViewModel
     ) throws -> XomoJSONValue {
-        let filter = arguments["figmaBindings"]?.stringValue ?? "all"
-        guard ["all", "bound", "unbound"].contains(filter) else {
+        let bindingFilter = arguments["figmaBindings"]?.stringValue ?? "all"
+        guard ["all", "bound", "unbound"].contains(bindingFilter) else {
             throw XomoAutomationCallError.invalidArgument(
-                "Unknown Figma variable binding filter: \(filter)"
+                "Unknown Figma variable binding filter: \(bindingFilter)"
+            )
+        }
+        let constraintFilter = arguments["figmaConstraints"]?.stringValue ?? "all"
+        guard ["all", "constrained", "overridden", "conflicted"].contains(constraintFilter) else {
+            throw XomoAutomationCallError.invalidArgument(
+                "Unknown Figma size constraint filter: \(constraintFilter)"
             )
         }
         let layers = viewModel.document.layers.reversed().filter { layer in
-            switch filter {
-            case "bound": return !layer.xomoFigmaVariableBindings.isEmpty
-            case "unbound": return layer.xomoFigmaVariableBindings.isEmpty
+            let matchesBindings: Bool
+            switch bindingFilter {
+            case "bound": matchesBindings = !layer.xomoFigmaVariableBindings.isEmpty
+            case "unbound": matchesBindings = layer.xomoFigmaVariableBindings.isEmpty
+            default: matchesBindings = true
+            }
+            guard matchesBindings else { return false }
+
+            let current = layer.xomoFigmaSizeConstraints ?? .empty
+            switch constraintFilter {
+            case "constrained": return !current.isEmpty
+            case "overridden":
+                return layer.xomoFigmaSizeConstraintDefaults.map { current != $0 } ?? false
+            case "conflicted": return !current.conflicts.isEmpty
             default: return true
             }
         }
@@ -967,9 +984,35 @@ final class XomoAutomationRegistry {
                         "variableId": .string(binding.variableID)
                     ])
                 }),
-                "figmaImageFill": figmaImageFillJSON(layer.xomoFigmaImageFill)
+                "figmaImageFill": figmaImageFillJSON(layer.xomoFigmaImageFill),
+                "figmaSizeConstraints": figmaSizeConstraintSummaryJSON(layer)
             ])
         })
+    }
+
+    private func figmaSizeConstraintSummaryJSON(_ layer: ImageEditorLayer) -> XomoJSONValue {
+        let current = layer.xomoFigmaSizeConstraints ?? .empty
+        guard !current.isEmpty || layer.xomoFigmaSizeConstraintDefaults != nil else { return .null }
+
+        func values(_ constraints: XomoFigmaSizeConstraints) -> XomoJSONValue {
+            .object(Dictionary(uniqueKeysWithValues:
+                XomoFigmaSizeConstraintField.allCases.map { field in
+                    (field.rawValue, field.value(in: constraints).map(XomoJSONValue.number) ?? .null)
+                }
+            ))
+        }
+
+        let conflicts = current.conflicts
+        return .object([
+            "current": values(current),
+            "importedDefaults": layer.xomoFigmaSizeConstraintDefaults.map(values) ?? .null,
+            "hasImportedDefaults": .bool(layer.xomoFigmaSizeConstraintDefaults != nil),
+            "hasOverrides": .bool(
+                layer.xomoFigmaSizeConstraintDefaults.map { current != $0 } ?? false
+            ),
+            "hasConflicts": .bool(!conflicts.isEmpty),
+            "conflicts": .array(conflicts.map { .string($0.rawValue) })
+        ])
     }
 
     private func selectObjectAtPoint(
@@ -5799,8 +5842,9 @@ private extension XomoAutomationRegistry {
         tool("xomo.tool.select", "Select the active editor tool.", [
             "tool": XomoAutomationSchema.string(description: "Tool identifier", values: ImageEditorTool.allCases.map(\.rawValue))
         ], required: ["tool"]),
-        tool("xomo.layer.list", "List layers with hierarchy, bounds, visibility, locks, opacity, blend mode, preserved Figma variable bindings, and optional binding filters.", [
-            "figmaBindings": XomoAutomationSchema.string(description: "Filter by preserved Figma variable bindings", values: ["all", "bound", "unbound"])
+        tool("xomo.layer.list", "List layers with hierarchy, bounds, visibility, locks, opacity, blend mode, and preserved Figma bindings and size constraints, with optional filters.", [
+            "figmaBindings": XomoAutomationSchema.string(description: "Filter by preserved Figma variable bindings", values: ["all", "bound", "unbound"]),
+            "figmaConstraints": XomoAutomationSchema.string(description: "Filter by effective Figma size constraints", values: ["all", "constrained", "overridden", "conflicted"])
         ]),
         tool("xomo.layer.selection_bounds", "Inspect selected object bounds, transform reference point, and live move, resize, or rotate preview context, including original bounds, movement, size, scale, and rotation deltas."),
         tool("xomo.layer.transform_reference", "Set or reset the transform reference point for the current transformable layer selection without changing document history.", [

@@ -12,6 +12,16 @@ enum XomoToolCatalog {
                     "additionalProperties": true
                 ]
             ]
+            if name == "xomo.layer.list" {
+                tool["inputSchema"] = [
+                    "type": "object",
+                    "properties": [
+                        "figmaBindings": ["type": "string", "enum": ["all", "bound", "unbound"]],
+                        "figmaConstraints": ["type": "string", "enum": ["all", "constrained", "overridden", "conflicted"]]
+                    ],
+                    "additionalProperties": true
+                ]
+            }
             if name == "xomo.clipboard.action" {
                 tool["description"] = "Copy, cut, and paste through the system clipboard, including Xomo in-place layer paste."
                 tool["inputSchema"] = [
@@ -191,7 +201,7 @@ enum XomoToolCatalog {
         ("xomo.psd.save", "Save the current layered Xomo document as a PSD file."),
         ("xomo.tool.list", "List all image editor tools."),
         ("xomo.tool.select", "Select the active editor tool."),
-        ("xomo.layer.list", "List layers, hierarchy, bounds, visibility, locks, opacity, blend mode, preserved Figma variable bindings, and optional binding filters."),
+        ("xomo.layer.list", "List layers, hierarchy, bounds, visibility, locks, opacity, blend mode, and preserved Figma bindings and size constraints, with optional filters."),
         ("xomo.layer.selection_bounds", "Inspect selected object bounds, transform reference point, and live move, resize, or rotate preview context, including original bounds, movement, size, scale, and rotation deltas."),
         ("xomo.layer.transform_reference", "Set or reset the transform reference point for the current transformable layer selection without changing document history."),
         ("xomo.object.select_at", "Select the frontmost visible canvas object at a point using Xomo's alpha-aware component and layer hit testing."),

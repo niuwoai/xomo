@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-10 05:02:30 +0800",
+  "generated_at": "2026-08-10 05:09:12 +0800",
   "total": 1,
   "passed": 1,
   "failed": 0,
@@ -9,16 +9,16 @@
   "jobs": 1,
   "results": [
     {
-      "suite": "LocalizationResourceTests",
-      "method": "supportedLocalizationTablesKeepMatchingKeys",
-      "identifier": "veilpicTests/LocalizationResourceTests/supportedLocalizationTablesKeepMatchingKeys()",
-      "file": "LocalizationResourceTests.swift",
+      "suite": "XomoAutomationTests",
+      "method": "registryAdvertisesBroadEditorCapabilities",
+      "identifier": "veilpicTests/XomoAutomationTests/registryAdvertisesBroadEditorCapabilities()",
+      "file": "XomoAutomationTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 2.816,
+      "duration": 2.798,
       "infrastructure_retries": 0,
       "issues": [],
-      "log": "LocalizationResourceTests.supportedLocalizationTablesKeepMatchingKeys.log"
+      "log": "XomoAutomationTests.registryAdvertisesBroadEditorCapabilities.log"
     }
   ]
 }

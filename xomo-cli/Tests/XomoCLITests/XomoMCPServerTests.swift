@@ -28,7 +28,13 @@ struct XomoMCPServerTests {
         let result = try #require(response["result"] as? [String: Any])
         let tools = try #require(result["tools"] as? [[String: Any]])
         #expect(tools.count == 127)
-        #expect(tools.contains { $0["name"] as? String == "xomo.layer.list" })
+        let layerListTool = try #require(tools.first { $0["name"] as? String == "xomo.layer.list" })
+        let layerListSchema = try #require(layerListTool["inputSchema"] as? [String: Any])
+        let layerListProperties = try #require(layerListSchema["properties"] as? [String: Any])
+        let figmaConstraintFilter = try #require(layerListProperties["figmaConstraints"] as? [String: Any])
+        #expect(figmaConstraintFilter["enum"] as? [String] == [
+            "all", "constrained", "overridden", "conflicted"
+        ])
         #expect(tools.contains { $0["name"] as? String == "xomo.layer.selection_bounds" })
         let transformReferenceTool = try #require(tools.first {
             $0["name"] as? String == "xomo.layer.transform_reference"

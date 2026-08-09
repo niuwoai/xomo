@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.12.0-rc798 - 2026-08-10
+
+### Added
+- `xomo.layer.list` 为每个相关图层返回 Figma 尺寸约束摘要，包括当前值、导入默认值、默认快照状态、本地覆盖以及逐轴冲突。
+- 新增 `figmaConstraints=all|constrained|overridden|conflicted` 过滤器，可与原有变量绑定过滤组合取交集，便于批量定位约束图层和问题图层。
+- 无约束且无来源快照的图层明确返回 `figmaSizeConstraints: null`，App MCP 与 CLI 离线 fallback schema 保持一致。
+
+### Tests
+- layer.list 约束摘要、四种过滤、组合语义和非法参数回归 1/1，App 工具目录 schema 1/1、CLI MCP 工具目录 2/2 通过。
+
 ## 2.12.0-rc797 - 2026-08-10
 
 ### Added
