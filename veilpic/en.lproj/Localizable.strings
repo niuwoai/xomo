@@ -3139,6 +3139,7 @@
 "imageEditor.properties.pixelUnit" = "px";
 "imageEditor.properties.figmaSizeConstraintsActive" = "Applied during Auto Layout reflow";
 "imageEditor.action.clearFigmaSizeConstraint" = "Clear size constraint";
+"imageEditor.action.resetFigmaSizeConstraint" = "Restore imported size constraint";
 "imageEditor.history.figmaSizeConstraintChanged" = "Change Figma %@ constraint";
 "imageEditor.status.figmaSizeConstraintUpdated" = "Updated Figma %@ constraint";
 "imageEditor.properties.figmaComponentRole" = "Component role";

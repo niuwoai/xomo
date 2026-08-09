@@ -1,84 +1,24 @@
 {
-  "generated_at": "2026-08-10 04:11:34 +0800",
-  "total": 6,
-  "passed": 6,
+  "generated_at": "2026-08-10 04:15:54 +0800",
+  "total": 1,
+  "passed": 1,
   "failed": 0,
-  "total_tests": 6,
-  "passed_tests": 6,
+  "total_tests": 1,
+  "passed_tests": 1,
   "failed_tests_in_failed_groups": 0,
   "jobs": 1,
   "results": [
     {
-      "suite": "ImageEditorFigmaProvenanceTests",
-      "method": "automationEditsSelectedFigmaImageFillAndUsesUndoableViewModelPath",
-      "identifier": "veilpicTests/ImageEditorFigmaProvenanceTests/automationEditsSelectedFigmaImageFillAndUsesUndoableViewModelPath()",
-      "file": "ImageEditorFigmaProvenanceTests.swift",
+      "suite": "LocalizationResourceTests",
+      "method": "supportedLocalizationTablesKeepMatchingKeys",
+      "identifier": "veilpicTests/LocalizationResourceTests/supportedLocalizationTablesKeepMatchingKeys()",
+      "file": "LocalizationResourceTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 2.789,
+      "duration": 2.765,
       "infrastructure_retries": 0,
       "issues": [],
-      "log": "ImageEditorFigmaProvenanceTests.automationEditsSelectedFigmaImageFillAndUsesUndoableViewModelPath.log"
-    },
-    {
-      "suite": "ImageEditorFigmaProvenanceTests",
-      "method": "componentPropertyLocalOverrideUsesUndoAndRedo",
-      "identifier": "veilpicTests/ImageEditorFigmaProvenanceTests/componentPropertyLocalOverrideUsesUndoAndRedo()",
-      "file": "ImageEditorFigmaProvenanceTests.swift",
-      "test_count": 1,
-      "passed": true,
-      "duration": 2.792,
-      "infrastructure_retries": 0,
-      "issues": [],
-      "log": "ImageEditorFigmaProvenanceTests.componentPropertyLocalOverrideUsesUndoAndRedo.log"
-    },
-    {
-      "suite": "ImageEditorFigmaProvenanceTests",
-      "method": "componentTextOverrideUpdatesMatchingEditableDescendantAndUndoRestoresIt",
-      "identifier": "veilpicTests/ImageEditorFigmaProvenanceTests/componentTextOverrideUpdatesMatchingEditableDescendantAndUndoRestoresIt()",
-      "file": "ImageEditorFigmaProvenanceTests.swift",
-      "test_count": 1,
-      "passed": true,
-      "duration": 2.791,
-      "infrastructure_retries": 0,
-      "issues": [],
-      "log": "ImageEditorFigmaProvenanceTests.componentTextOverrideUpdatesMatchingEditableDescendantAndUndoRestoresIt.log"
-    },
-    {
-      "suite": "ImageEditorFigmaProvenanceTests",
-      "method": "editableFigmaImageFillParametersUseUndoAndRemainProjectCodable",
-      "identifier": "veilpicTests/ImageEditorFigmaProvenanceTests/editableFigmaImageFillParametersUseUndoAndRemainProjectCodable()",
-      "file": "ImageEditorFigmaProvenanceTests.swift",
-      "test_count": 1,
-      "passed": true,
-      "duration": 2.789,
-      "infrastructure_retries": 0,
-      "issues": [],
-      "log": "ImageEditorFigmaProvenanceTests.editableFigmaImageFillParametersUseUndoAndRemainProjectCodable.log"
-    },
-    {
-      "suite": "ImageEditorFigmaProvenanceTests",
-      "method": "figmaSizeConstraintInspectorUsesDraftedLocalizedEditors",
-      "identifier": "veilpicTests/ImageEditorFigmaProvenanceTests/figmaSizeConstraintInspectorUsesDraftedLocalizedEditors()",
-      "file": "ImageEditorFigmaProvenanceTests.swift",
-      "test_count": 1,
-      "passed": true,
-      "duration": 2.863,
-      "infrastructure_retries": 0,
-      "issues": [],
-      "log": "ImageEditorFigmaProvenanceTests.figmaSizeConstraintInspectorUsesDraftedLocalizedEditors.log"
-    },
-    {
-      "suite": "ImageEditorFigmaProvenanceTests",
-      "method": "selectedLayerExposesAndCopiesFigmaSourceReference",
-      "identifier": "veilpicTests/ImageEditorFigmaProvenanceTests/selectedLayerExposesAndCopiesFigmaSourceReference()",
-      "file": "ImageEditorFigmaProvenanceTests.swift",
-      "test_count": 1,
-      "passed": true,
-      "duration": 4.527,
-      "infrastructure_retries": 0,
-      "issues": [],
-      "log": "ImageEditorFigmaProvenanceTests.selectedLayerExposesAndCopiesFigmaSourceReference.log"
+      "log": "LocalizationResourceTests.supportedLocalizationTablesKeepMatchingKeys.log"
     }
   ]
 }

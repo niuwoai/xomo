@@ -7012,11 +7012,20 @@ struct ImageEditorView: View {
     private func figmaSizeConstraintEditorRow(
         _ field: XomoFigmaSizeConstraintField
     ) -> some View {
-        HStack(spacing: 7) {
-            Text(L10n.text(field.localizationKey))
-                .font(.system(size: 10, weight: .medium))
-                .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
-                .frame(minWidth: 76, alignment: .leading)
+        let hasLocalOverride = viewModel.hasSelectedFigmaSizeConstraintOverride(field)
+        return HStack(spacing: 7) {
+            HStack(spacing: 4) {
+                Text(L10n.text(field.localizationKey))
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
+                if hasLocalOverride {
+                    Circle()
+                        .fill(Color(nsColor: ImageEditorTheme.selected))
+                        .frame(width: 5, height: 5)
+                        .accessibilityHidden(true)
+                }
+            }
+            .frame(minWidth: 76, alignment: .leading)
             Spacer(minLength: 4)
             TextField(
                 L10n.text("imageEditor.properties.figmaSizeConstraintUnset"),
@@ -7035,6 +7044,15 @@ struct ImageEditorView: View {
                     commitFigmaSizeConstraintDraft(field)
                 }
             }
+            .overlay(
+                RoundedRectangle(cornerRadius: 4)
+                    .stroke(
+                        hasLocalOverride
+                            ? Color(nsColor: ImageEditorTheme.selected).opacity(0.75)
+                            : Color.clear,
+                        lineWidth: 1
+                    )
+            )
             .accessibilityIdentifier("image-editor-figma-size-constraint-\(field.rawValue)-field")
 
             Text(L10n.text("imageEditor.properties.pixelUnit"))
@@ -7053,6 +7071,21 @@ struct ImageEditorView: View {
             .help(L10n.text("imageEditor.action.clearFigmaSizeConstraint"))
             .accessibilityLabel(L10n.text("imageEditor.action.clearFigmaSizeConstraint"))
             .accessibilityIdentifier("image-editor-figma-size-constraint-\(field.rawValue)-clear")
+
+            if hasLocalOverride {
+                Button {
+                    focusedFigmaSizeConstraintField = nil
+                    viewModel.resetSelectedFigmaSizeConstraint(field)
+                    syncFigmaSizeConstraintDraft(field)
+                } label: {
+                    Image(systemName: "arrow.uturn.backward.circle")
+                }
+                .buttonStyle(EditorIconButtonStyle(isSelected: false))
+                .focusable(false)
+                .help(L10n.text("imageEditor.action.resetFigmaSizeConstraint"))
+                .accessibilityLabel(L10n.text("imageEditor.action.resetFigmaSizeConstraint"))
+                .accessibilityIdentifier("image-editor-figma-size-constraint-\(field.rawValue)-reset")
+            }
         }
     }
 

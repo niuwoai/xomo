@@ -3139,6 +3139,7 @@
 "imageEditor.properties.pixelUnit" = "px";
 "imageEditor.properties.figmaSizeConstraintsActive" = "自動レイアウトの再配置時に適用";
 "imageEditor.action.clearFigmaSizeConstraint" = "サイズ制約をクリア";
+"imageEditor.action.resetFigmaSizeConstraint" = "読み込んだサイズ制約に戻す";
 "imageEditor.history.figmaSizeConstraintChanged" = "Figma %@制約を変更";
 "imageEditor.status.figmaSizeConstraintUpdated" = "Figma %@制約を更新しました";
 "imageEditor.properties.figmaComponentRole" = "コンポーネントの役割";
