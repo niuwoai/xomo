@@ -2817,6 +2817,38 @@ struct XomoFigmaNodeImportPlanTests {
         #expect(abs(layer.style.shadowAngle - layer.style.innerShadowAngle) < 0.001)
     }
 
+    @Test func duplicateFigmaEffectKindsKeepDeterministicEditableFallback() throws {
+        let response = try JSONDecoder().decode(
+            XomoFigmaNodeResponse.self,
+            from: Data(
+                #"{"name":"Duplicate Effects","nodes":{"1:44":{"document":{"id":"1:44","name":"Two Shadows","type":"RECTANGLE","effects":[{"type":"DROP_SHADOW","radius":4,"spread":1,"offset":{"x":2,"y":3},"color":{"r":1,"g":0,"b":0,"a":0.3}},{"type":"DROP_SHADOW","radius":12,"spread":4,"offset":{"x":6,"y":8},"color":{"r":0,"g":0,"b":1,"a":0.7}}],"absoluteBoundingBox":{"x":0,"y":0,"width":120,"height":80}}}}}"#.utf8
+            )
+        )
+
+        let plan = try XomoFigmaNodeImportMapper.makePlan(response: response, requestedNodeID: "1:44")
+        let item = try #require(plan.items.first)
+        #expect(item.fidelity == .partial)
+        #expect(item.issues.contains(.effectsFlattened))
+        #expect(item.effects.count == 1)
+        let shadow = try #require(item.effects.first)
+        #expect(shadow.kind == .dropShadow)
+        #expect(shadow.radius == 12)
+        #expect(shadow.spread == 4)
+        #expect(shadow.offsetX == 6)
+        #expect(shadow.offsetY == 8)
+        #expect(shadow.color == XomoFigmaPlanColor(red: 0, green: 0, blue: 1, alpha: 0.7))
+
+        let result = XomoFigmaNodeMaterializer.materialize(
+            plan: plan,
+            canvasSize: CGSize(width: 240, height: 180)
+        )
+        let layer = try #require(result.layers.first)
+        #expect(layer.style.shadowBlur == 12)
+        #expect(layer.style.shadowSpread == 4)
+        #expect(layer.style.shadowOffset == CGSize(width: 6, height: 8))
+        #expect(layer.style.shadowOpacity == 0.7)
+    }
+
     @Test func materializerCreatesEditableHierarchyAtCenteredScaleAndHonestPlaceholder() throws {
         let plan = try Self.decodedPlan()
         let textPlan = try #require(plan.items.first { $0.sourceName == "Continue Label" })

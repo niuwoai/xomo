@@ -275,7 +275,8 @@ enum XomoFigmaNodeImportMapper {
             issues.append(.clippingFlattened)
         }
         let effects = mappedEffects(node.effects)
-        if (node.effects ?? []).contains(where: { !isSupportedEffect($0) }) {
+        if (node.effects ?? []).contains(where: { !isSupportedEffect($0) })
+            || hasDuplicateMappableEffectKinds(node.effects) {
             issues.append(.effectsFlattened)
         }
         if let blendMode = node.blendMode,
@@ -642,7 +643,7 @@ enum XomoFigmaNodeImportMapper {
     }
 
     private static func mappedEffects(_ effects: [XomoFigmaEffect]?) -> [XomoFigmaPlanEffect] {
-        (effects ?? []).compactMap { effect -> XomoFigmaPlanEffect? in
+        let mapped = (effects ?? []).compactMap { effect -> XomoFigmaPlanEffect? in
             guard effect.visible ?? true,
                   isMappableEffect(effect),
                   let type = effect.type,
@@ -673,6 +674,39 @@ enum XomoFigmaNodeImportMapper {
                 radius: min(radius, type == "INNER_SHADOW" ? maximumInnerShadowBlur : maximumDropShadowBlur),
                 spread: min(max(0, effect.spread ?? 0), maximumShadowSpread)
             )
+        }
+        var retainedKinds = Set<String>()
+        return Array(
+            mapped.reversed().filter { effect in
+                retainedKinds.insert(effect.kind.rawValue).inserted
+            }.reversed()
+        )
+    }
+
+    private static func hasDuplicateMappableEffectKinds(
+        _ effects: [XomoFigmaEffect]?
+    ) -> Bool {
+        var seenKinds = Set<String>()
+        for effect in effects ?? [] {
+            guard effect.visible ?? true,
+                  isMappableEffect(effect),
+                  let type = effect.type,
+                  let kind = mappedEffectKind(for: type)
+            else { continue }
+            if !seenKinds.insert(kind.rawValue).inserted {
+                return true
+            }
+        }
+        return false
+    }
+
+    private static func mappedEffectKind(for type: String) -> XomoFigmaPlanEffectKind? {
+        switch type {
+        case "DROP_SHADOW": return .dropShadow
+        case "INNER_SHADOW": return .innerShadow
+        case "LAYER_BLUR": return .layerBlur
+        case "BACKGROUND_BLUR": return .backgroundBlur
+        default: return nil
         }
     }
 
