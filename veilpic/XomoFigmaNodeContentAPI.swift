@@ -793,6 +793,9 @@ enum XomoFigmaNodeImportMapper {
     ) {
         let visiblePaints = (node.fills ?? []).filter { $0.visible ?? true }
         let visibleStrokes = (node.strokes ?? []).filter { $0.visible ?? true }
+        let hasUnsupportedSolidPaint = (visiblePaints + visibleStrokes).contains {
+            $0.type == "SOLID" && !isSupportedSolidPaint($0)
+        }
         let hasUnsupportedFill = visiblePaints.contains { paint in
             if paint.type == "SOLID" { return false }
             guard allowsGradientFill else { return true }
@@ -806,11 +809,18 @@ enum XomoFigmaNodeImportMapper {
             }
         }
         if visiblePaints.count > 1
+            || hasUnsupportedSolidPaint
             || hasUnsupportedFill
             || visibleStrokes.count > 1
             || visibleStrokes.contains(where: { $0.type != "SOLID" }) {
             issues.append(.unsupportedPaint)
         }
+    }
+
+    private static func isSupportedSolidPaint(_ paint: XomoFigmaPaint) -> Bool {
+        guard let color = paint.color else { return false }
+        let components = [color.r, color.g, color.b, color.a ?? 1, paint.opacity ?? 1]
+        return components.allSatisfy { $0.isFinite && (0...1).contains($0) }
     }
 
     private static func solidColor(in paints: [XomoFigmaPaint]?) -> XomoFigmaPlanColor? {
@@ -827,15 +837,16 @@ enum XomoFigmaNodeImportMapper {
             XomoFigmaPlanColor(red: 0, green: 0, blue: 0, alpha: 0)
         ) { destination, paint in
             guard let color = paint.color else { return destination }
-            let sourceAlpha = min(max((color.a ?? 1) * (paint.opacity ?? 1), 0), 1)
-            let destinationAlpha = min(max(destination.alpha, 0), 1)
+            let sourceAlpha = normalizedColorComponent(color.a ?? 1, fallback: 1)
+                * normalizedColorComponent(paint.opacity ?? 1, fallback: 1)
+            let destinationAlpha = normalizedColorComponent(destination.alpha, fallback: 0)
             let outputAlpha = sourceAlpha + destinationAlpha * (1 - sourceAlpha)
             guard outputAlpha > 0 else {
                 return XomoFigmaPlanColor(red: 0, green: 0, blue: 0, alpha: 0)
             }
-            let sourceRed = min(max(color.r, 0), 1)
-            let sourceGreen = min(max(color.g, 0), 1)
-            let sourceBlue = min(max(color.b, 0), 1)
+            let sourceRed = normalizedColorComponent(color.r, fallback: 0)
+            let sourceGreen = normalizedColorComponent(color.g, fallback: 0)
+            let sourceBlue = normalizedColorComponent(color.b, fallback: 0)
             let destinationWeight = destinationAlpha * (1 - sourceAlpha)
             return XomoFigmaPlanColor(
                 red: (sourceRed * sourceAlpha + destination.red * destinationWeight) / outputAlpha,
@@ -844,6 +855,11 @@ enum XomoFigmaNodeImportMapper {
                 alpha: outputAlpha
             )
         }
+    }
+
+    private static func normalizedColorComponent(_ value: Double, fallback: Double) -> Double {
+        guard value.isFinite else { return fallback }
+        return min(max(value, 0), 1)
     }
 
     private struct ResolvedGradientStops {

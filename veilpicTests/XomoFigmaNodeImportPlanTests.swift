@@ -871,6 +871,33 @@ struct XomoFigmaNodeImportPlanTests {
         #expect((multiStopShape.fillGradient?.shapeColorStops[1].green ?? 0) > 0.95)
     }
 
+    @Test func outOfRangeFigmaSolidPaintReportsAndUsesSafeEditableColor() throws {
+        let response = try JSONDecoder().decode(
+            XomoFigmaNodeResponse.self,
+            from: Data(
+                #"{"name":"Paint Bounds","nodes":{"1:30":{"document":{"id":"1:30","name":"Paint Bounds","type":"RECTANGLE","fills":[{"type":"SOLID","opacity":0.5,"color":{"r":1.4,"g":-0.2,"b":0.5,"a":1.2}}],"strokes":[{"type":"SOLID"}],"strokeWeight":2,"absoluteBoundingBox":{"x":0,"y":0,"width":100,"height":60}}}}}"#.utf8
+            )
+        )
+
+        let plan = try XomoFigmaNodeImportMapper.makePlan(response: response, requestedNodeID: "1:30")
+        let item = try #require(plan.items.first)
+        #expect(item.fidelity == .partial)
+        #expect(item.issues.contains(.unsupportedPaint))
+        #expect(item.solidFill == XomoFigmaPlanColor(red: 1, green: 0, blue: 0.5, alpha: 0.5))
+        #expect(item.solidStroke == nil)
+
+        let result = XomoFigmaNodeMaterializer.materialize(
+            plan: plan,
+            canvasSize: CGSize(width: 240, height: 180)
+        )
+        let shape = try #require(result.layers.first?.shapeContent)
+        let color = try #require(shape.fillColor.usingColorSpace(.sRGB))
+        #expect(abs(color.redComponent - 1) < 0.001)
+        #expect(abs(color.greenComponent) < 0.001)
+        #expect(abs(color.blueComponent - 0.5) < 0.001)
+        #expect(abs(shape.fillOpacity - 0.5) < 0.001)
+    }
+
     @Test func outOfRangeFigmaNodeOpacityReportsAndUsesEditableBounds() throws {
         let response = try JSONDecoder().decode(
             XomoFigmaNodeResponse.self,
