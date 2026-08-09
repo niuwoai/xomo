@@ -771,7 +771,10 @@ enum XomoFigmaNodeMaterializer {
             strokeColor: stroke,
             strokeWidth: max(
                 ImageEditorShapeContent.minimumStrokeWidth,
-                CGFloat(item.strokeWeight ?? 1) * scale
+                min(
+                    ImageEditorShapeContent.maximumStrokeWidth,
+                    CGFloat(item.strokeWeight ?? 1) * scale
+                )
             ),
             strokeOpacity: item.solidStroke.map { CGFloat($0.alpha) } ?? 0,
             strokePosition: ImageEditorStrokePosition(figmaValue: item.strokeAlign),

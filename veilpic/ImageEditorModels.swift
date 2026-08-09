@@ -3103,6 +3103,7 @@ private extension CGPoint {
 
 struct ImageEditorShapeContent {
     static let minimumStrokeWidth: CGFloat = 0.1
+    static let maximumStrokeWidth: CGFloat = 96
 
     var kind: ImageEditorShapeKind
     var fillColor: NSColor
@@ -3145,9 +3146,12 @@ struct ImageEditorShapeContent {
             content.strokeDashPattern = []
         }
         if kind == .path {
-            content.strokeWidth = max(Self.minimumStrokeWidth, min(96, strokeWidth))
+            content.strokeWidth = max(Self.minimumStrokeWidth, min(Self.maximumStrokeWidth, strokeWidth))
         } else {
-            content.strokeWidth = max(Self.minimumStrokeWidth, min(min(size.width, size.height) / 2, strokeWidth))
+            content.strokeWidth = max(
+                Self.minimumStrokeWidth,
+                min(Self.maximumStrokeWidth, min(min(size.width, size.height) / 2, strokeWidth))
+            )
         }
         if kind == .rectangle {
             content.cornerRadius = max(0, min(min(size.width, size.height) / 2, cornerRadius))

@@ -137,7 +137,7 @@ extension ImageEditorView {
                     viewModel.selectedShapeStrokeWidth
                 ),
                 value: selectedShapeStrokeWidthBinding,
-                in: Double(ImageEditorShapeContent.minimumStrokeWidth)...96,
+                in: Double(ImageEditorShapeContent.minimumStrokeWidth)...Double(ImageEditorShapeContent.maximumStrokeWidth),
                 step: 0.1
             )
             .focusable(false)

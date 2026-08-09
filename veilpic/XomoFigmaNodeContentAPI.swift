@@ -287,7 +287,9 @@ enum XomoFigmaNodeImportMapper {
         }
         if let strokeWeight = node.strokeWeight,
            solidColor(in: node.strokes) != nil,
-           (!strokeWeight.isFinite || strokeWeight < Double(ImageEditorShapeContent.minimumStrokeWidth)) {
+           (!strokeWeight.isFinite
+            || strokeWeight < Double(ImageEditorShapeContent.minimumStrokeWidth)
+            || strokeWeight > Double(ImageEditorShapeContent.maximumStrokeWidth)) {
             issues.append(.strokeWeightFlattened)
         }
         if transformFlattened {

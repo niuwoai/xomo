@@ -8610,7 +8610,10 @@ final class ImageEditorViewModel: ObservableObject {
 
     private func clampedShapeStrokeWidth(_ value: Double?) -> Double {
         let resolved = value?.isFinite == true ? value ?? 1 : brushSize * 0.35
-        return max(Double(ImageEditorShapeContent.minimumStrokeWidth), min(96, resolved))
+        return max(
+            Double(ImageEditorShapeContent.minimumStrokeWidth),
+            min(Double(ImageEditorShapeContent.maximumStrokeWidth), resolved)
+        )
     }
 
     private func clampedTextSize(_ size: Double) -> Double {

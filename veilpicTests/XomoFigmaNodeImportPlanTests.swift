@@ -1196,6 +1196,28 @@ struct XomoFigmaNodeImportPlanTests {
         #expect(result.layers.first?.shapeContent?.strokeWidth == 0.5)
     }
 
+    @Test func oversizedFigmaStrokeClampsToEditableNativeMaximum() throws {
+        let response = try JSONDecoder().decode(
+            XomoFigmaNodeResponse.self,
+            from: Data(
+                #"{"name":"Heavy Stroke","nodes":{"1:21":{"document":{"id":"1:21","name":"Heavy Card","type":"RECTANGLE","fills":[{"type":"SOLID","color":{"r":1,"g":1,"b":1,"a":1}}],"strokes":[{"type":"SOLID","color":{"r":0,"g":0,"b":0,"a":1}}],"strokeWeight":120,"absoluteBoundingBox":{"x":0,"y":0,"width":400,"height":400}}}}}"#.utf8
+            )
+        )
+
+        let plan = try XomoFigmaNodeImportMapper.makePlan(response: response, requestedNodeID: "1:21")
+        let item = try #require(plan.items.first)
+        #expect(item.strokeWeight == 120)
+        #expect(item.fidelity == .partial)
+        #expect(item.issues.contains(.strokeWeightFlattened))
+
+        let result = XomoFigmaNodeMaterializer.materialize(
+            plan: plan,
+            canvasSize: CGSize(width: 500, height: 500)
+        )
+        let shape = try #require(result.layers.first?.shapeContent)
+        #expect(shape.strokeWidth == ImageEditorShapeContent.maximumStrokeWidth)
+    }
+
     @Test func mapperImportsSectionAsEditableGroupAndPreservesGradientBackground() throws {
         let response = try JSONDecoder().decode(
             XomoFigmaNodeResponse.self,
