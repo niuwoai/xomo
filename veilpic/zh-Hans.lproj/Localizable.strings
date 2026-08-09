@@ -3135,7 +3135,10 @@
 "imageEditor.properties.figmaMinHeight" = "最小高度";
 "imageEditor.properties.figmaMaxHeight" = "最大高度";
 "imageEditor.properties.figmaSizeConstraintValue" = "%.1f px";
+"imageEditor.properties.figmaSizeConstraintUnset" = "未设置";
+"imageEditor.properties.pixelUnit" = "px";
 "imageEditor.properties.figmaSizeConstraintsActive" = "在自动布局重排时生效";
+"imageEditor.action.clearFigmaSizeConstraint" = "清除尺寸约束";
 "imageEditor.history.figmaSizeConstraintChanged" = "修改 Figma %@约束";
 "imageEditor.status.figmaSizeConstraintUpdated" = "已更新 Figma %@约束";
 "imageEditor.properties.figmaComponentRole" = "组件语义";

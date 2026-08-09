@@ -302,7 +302,7 @@ struct ImageEditorFigmaProvenanceTests {
         #expect(restored.layers.first?.xomoFigmaComponentPropertyDefaults["Label"]?.value == "Continue")
     }
 
-    @Test func figmaSizeConstraintInspectorIsVisibleLocalizedAndReadOnly() throws {
+    @Test func figmaSizeConstraintInspectorUsesDraftedLocalizedEditors() throws {
         let repositoryRoot = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()
             .deletingLastPathComponent()
@@ -313,13 +313,16 @@ struct ImageEditorFigmaProvenanceTests {
 
         #expect(source.contains("viewModel.selectedLayerFigmaSizeConstraints"))
         #expect(source.contains("image-editor-figma-size-constraints"))
-        #expect(source.contains("image-editor-figma-size-constraint-\\(identifier)"))
-        #expect(source.contains("identifier: \"min-width\""))
-        #expect(source.contains("identifier: \"max-width\""))
-        #expect(source.contains("identifier: \"min-height\""))
-        #expect(source.contains("identifier: \"max-height\""))
+        #expect(source.contains("ForEach(XomoFigmaSizeConstraintField.allCases"))
+        #expect(source.contains("figmaSizeConstraintEditorRow(field)"))
+        #expect(source.contains("figmaSizeConstraintDraftBinding(field)"))
+        #expect(source.contains("commitFigmaSizeConstraintDraft(field)"))
+        #expect(source.contains("viewModel.setSelectedFigmaSizeConstraint(field, value: nil)"))
+        #expect(source.contains("image-editor-figma-size-constraint-\\(field.rawValue)-field"))
+        #expect(source.contains("image-editor-figma-size-constraint-\\(field.rawValue)-clear"))
+        #expect(source.contains("focusedFigmaSizeConstraintField"))
         #expect(source.contains("imageEditor.properties.figmaSizeConstraintsActive"))
-        #expect(!source.contains("updateSelectedFigmaSizeConstraint"))
+        #expect(source.contains(".focusable(false)"))
     }
 
     private func request(

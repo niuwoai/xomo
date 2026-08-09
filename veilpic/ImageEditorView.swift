@@ -106,6 +106,7 @@ struct ImageEditorView: View {
     @State private var activeGuideDrag: ImageEditorGuideDrag?
     @State private var layerNameDraft = ""
     @State private var figmaComponentPropertyDrafts: [String: String] = [:]
+    @State private var figmaSizeConstraintDrafts: [XomoFigmaSizeConstraintField: String] = [:]
     @State var layerSearchQuery = ""
     @State var selectedLayerKindFilter: ImageEditorLayerKindFilter = .all
     @State var selectedLayerLabelFilter: ImageEditorLayerLabelColor?
@@ -145,6 +146,7 @@ struct ImageEditorView: View {
     @State private var canvasTextEditingLayerID: UUID?
     @State private var canvasTextEditingFrame: CGRect?
     @FocusState private var isCanvasTextEditorFocused: Bool
+    @FocusState private var focusedFigmaSizeConstraintField: XomoFigmaSizeConstraintField?
     @State private var isTransformAspectRatioLocked = false
 
     init(sourceName: String, image: NSImage, onApply: @escaping (NSImage) -> Void) {
@@ -287,6 +289,7 @@ struct ImageEditorView: View {
         .onAppear {
             syncLayerNameDraft()
             syncFigmaComponentPropertyDrafts()
+            syncFigmaSizeConstraintDrafts()
             viewModel.syncSizeControlsFromDocument()
             guard !isRightDockMounted else { return }
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) {
@@ -296,6 +299,7 @@ struct ImageEditorView: View {
         .onChange(of: viewModel.document.selectedLayerIDs) { _ in
             syncLayerNameDraft()
             syncFigmaComponentPropertyDrafts()
+            syncFigmaSizeConstraintDrafts()
             viewModel.finishSelectedLayerTransformReferencePointDrag()
             viewModel.clearSelectedLayerTransformReferencePoint()
             isMovingTransformReferencePoint = false
@@ -303,6 +307,9 @@ struct ImageEditorView: View {
         }
         .onChange(of: viewModel.selectedLayerFigmaComponentProperties) { _ in
             syncFigmaComponentPropertyDrafts()
+        }
+        .onChange(of: viewModel.selectedLayerFigmaSizeConstraints) { _ in
+            syncFigmaSizeConstraintDrafts()
         }
         .onChange(of: viewModel.selectedLayerName) { _ in
             syncLayerNameDraft()
@@ -4760,6 +4767,55 @@ struct ImageEditorView: View {
         )
     }
 
+    private func selectedFigmaSizeConstraintValue(
+        _ field: XomoFigmaSizeConstraintField
+    ) -> Double? {
+        viewModel.selectedLayerFigmaSizeConstraints.flatMap { field.value(in: $0) }
+    }
+
+    private func syncFigmaSizeConstraintDrafts() {
+        for field in XomoFigmaSizeConstraintField.allCases {
+            syncFigmaSizeConstraintDraft(field)
+        }
+    }
+
+    private func syncFigmaSizeConstraintDraft(_ field: XomoFigmaSizeConstraintField) {
+        figmaSizeConstraintDrafts[field] = selectedFigmaSizeConstraintValue(field).map {
+            figmaSizeConstraintFormatter.string(from: NSNumber(value: $0)) ?? String($0)
+        } ?? ""
+    }
+
+    private func figmaSizeConstraintDraftBinding(
+        _ field: XomoFigmaSizeConstraintField
+    ) -> Binding<String> {
+        Binding(
+            get: { figmaSizeConstraintDrafts[field] ?? "" },
+            set: { figmaSizeConstraintDrafts[field] = $0 }
+        )
+    }
+
+    private func commitFigmaSizeConstraintDraft(_ field: XomoFigmaSizeConstraintField) {
+        let draft = (figmaSizeConstraintDrafts[field] ?? "")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        if draft.isEmpty {
+            viewModel.setSelectedFigmaSizeConstraint(field, value: nil)
+        } else if let value = figmaSizeConstraintFormatter.number(from: draft)?.doubleValue {
+            viewModel.setSelectedFigmaSizeConstraint(field, value: value)
+        }
+        syncFigmaSizeConstraintDraft(field)
+    }
+
+    private var figmaSizeConstraintFormatter: NumberFormatter {
+        let formatter = NumberFormatter()
+        formatter.locale = .current
+        formatter.numberStyle = .decimal
+        formatter.usesGroupingSeparator = false
+        formatter.minimumFractionDigits = 0
+        formatter.maximumFractionDigits = 2
+        formatter.isLenient = false
+        return formatter
+    }
+
     private var documentSizeControls: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(L10n.text("imageEditor.properties.documentSize"))
@@ -6950,21 +7006,51 @@ struct ImageEditorView: View {
         }
     }
 
-    private func figmaSizeConstraintRow(
-        titleKey: String,
-        value: Double,
-        identifier: String
+    private func figmaSizeConstraintEditorRow(
+        _ field: XomoFigmaSizeConstraintField
     ) -> some View {
         HStack(spacing: 7) {
-            Text(L10n.text(titleKey))
+            Text(L10n.text(field.localizationKey))
                 .font(.system(size: 10, weight: .medium))
                 .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
+                .frame(minWidth: 76, alignment: .leading)
             Spacer(minLength: 4)
-            Text(L10n.format("imageEditor.properties.figmaSizeConstraintValue", value))
-                .font(.system(size: 10, design: .monospaced))
+            TextField(
+                L10n.text("imageEditor.properties.figmaSizeConstraintUnset"),
+                text: figmaSizeConstraintDraftBinding(field)
+            )
+            .textFieldStyle(.roundedBorder)
+            .font(.system(size: 10, design: .monospaced))
+            .frame(width: 88)
+            .focused($focusedFigmaSizeConstraintField, equals: field)
+            .onSubmit {
+                commitFigmaSizeConstraintDraft(field)
+                focusedFigmaSizeConstraintField = nil
+            }
+            .onChange(of: focusedFigmaSizeConstraintField) { focusedField in
+                if focusedField != field {
+                    commitFigmaSizeConstraintDraft(field)
+                }
+            }
+            .accessibilityIdentifier("image-editor-figma-size-constraint-\(field.rawValue)-field")
+
+            Text(L10n.text("imageEditor.properties.pixelUnit"))
+                .font(.system(size: 9, design: .monospaced))
                 .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+
+            Button {
+                viewModel.setSelectedFigmaSizeConstraint(field, value: nil)
+                syncFigmaSizeConstraintDraft(field)
+            } label: {
+                Image(systemName: "xmark.circle")
+            }
+            .buttonStyle(EditorIconButtonStyle(isSelected: false))
+            .focusable(false)
+            .disabled(selectedFigmaSizeConstraintValue(field) == nil)
+            .help(L10n.text("imageEditor.action.clearFigmaSizeConstraint"))
+            .accessibilityLabel(L10n.text("imageEditor.action.clearFigmaSizeConstraint"))
+            .accessibilityIdentifier("image-editor-figma-size-constraint-\(field.rawValue)-clear")
         }
-        .accessibilityIdentifier("image-editor-figma-size-constraint-\(identifier)")
     }
 
     private var adjustmentValueControls: AnyView {
@@ -7123,46 +7209,19 @@ struct ImageEditorView: View {
                             .lineLimit(1)
                             .truncationMode(.middle)
 
-                        if let constraints = viewModel.selectedLayerFigmaSizeConstraints {
-                            VStack(alignment: .leading, spacing: 5) {
-                                Text(L10n.text("imageEditor.properties.figmaSizeConstraints"))
-                                    .font(.system(size: 10, weight: .semibold))
-                                    .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
-                                if let value = constraints.minWidth {
-                                    figmaSizeConstraintRow(
-                                        titleKey: "imageEditor.properties.figmaMinWidth",
-                                        value: value,
-                                        identifier: "min-width"
-                                    )
-                                }
-                                if let value = constraints.maxWidth {
-                                    figmaSizeConstraintRow(
-                                        titleKey: "imageEditor.properties.figmaMaxWidth",
-                                        value: value,
-                                        identifier: "max-width"
-                                    )
-                                }
-                                if let value = constraints.minHeight {
-                                    figmaSizeConstraintRow(
-                                        titleKey: "imageEditor.properties.figmaMinHeight",
-                                        value: value,
-                                        identifier: "min-height"
-                                    )
-                                }
-                                if let value = constraints.maxHeight {
-                                    figmaSizeConstraintRow(
-                                        titleKey: "imageEditor.properties.figmaMaxHeight",
-                                        value: value,
-                                        identifier: "max-height"
-                                    )
-                                }
-                                Text(L10n.text("imageEditor.properties.figmaSizeConstraintsActive"))
-                                    .font(.system(size: 9))
-                                    .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
-                                    .fixedSize(horizontal: false, vertical: true)
+                        VStack(alignment: .leading, spacing: 5) {
+                            Text(L10n.text("imageEditor.properties.figmaSizeConstraints"))
+                                .font(.system(size: 10, weight: .semibold))
+                                .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
+                            ForEach(XomoFigmaSizeConstraintField.allCases, id: \.self) { field in
+                                figmaSizeConstraintEditorRow(field)
                             }
-                            .accessibilityIdentifier("image-editor-figma-size-constraints")
+                            Text(L10n.text("imageEditor.properties.figmaSizeConstraintsActive"))
+                                .font(.system(size: 9))
+                                .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                                .fixedSize(horizontal: false, vertical: true)
                         }
+                        .accessibilityIdentifier("image-editor-figma-size-constraints")
                     }
 
                     Divider().overlay(editorBorder)

@@ -362,7 +362,7 @@ struct XomoFigmaSizeConstraints: Codable, Equatable, Sendable {
     }
 }
 
-enum XomoFigmaSizeConstraintField: String, CaseIterable, Sendable {
+enum XomoFigmaSizeConstraintField: String, CaseIterable, Hashable, Sendable {
     case minWidth
     case maxWidth
     case minHeight

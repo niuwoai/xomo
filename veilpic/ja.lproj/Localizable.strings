@@ -3135,7 +3135,10 @@
 "imageEditor.properties.figmaMinHeight" = "最小高さ";
 "imageEditor.properties.figmaMaxHeight" = "最大高さ";
 "imageEditor.properties.figmaSizeConstraintValue" = "%.1f px";
+"imageEditor.properties.figmaSizeConstraintUnset" = "未設定";
+"imageEditor.properties.pixelUnit" = "px";
 "imageEditor.properties.figmaSizeConstraintsActive" = "自動レイアウトの再配置時に適用";
+"imageEditor.action.clearFigmaSizeConstraint" = "サイズ制約をクリア";
 "imageEditor.history.figmaSizeConstraintChanged" = "Figma %@制約を変更";
 "imageEditor.status.figmaSizeConstraintUpdated" = "Figma %@制約を更新しました";
 "imageEditor.properties.figmaComponentRole" = "コンポーネントの役割";
