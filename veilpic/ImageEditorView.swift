@@ -1957,6 +1957,32 @@ struct ImageEditorView: View {
             )
 
             Button {
+                viewModel.resetForegroundBackgroundColors()
+            } label: {
+                ZStack(alignment: .topLeading) {
+                    Rectangle()
+                        .fill(Color.white)
+                        .overlay(Rectangle().stroke(Color.gray, lineWidth: 1))
+                        .frame(width: 8, height: 8)
+                        .offset(x: 4, y: 4)
+                    Rectangle()
+                        .fill(Color.black)
+                        .overlay(Rectangle().stroke(Color.white.opacity(0.9), lineWidth: 1))
+                        .frame(width: 8, height: 8)
+                }
+                .frame(width: 14, height: 14)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .frame(width: 18, height: 18)
+            .focusable(false)
+            .xomoFocusEffectDisabled()
+            .help(L10n.text("imageEditor.action.colorDefaultForegroundBackground"))
+            .accessibilityIdentifier("image-editor-color-default")
+            .accessibilityLabel(L10n.text("imageEditor.action.colorDefaultForegroundBackground"))
+            .offset(x: 0, y: 27)
+
+            Button {
                 viewModel.swapForegroundBackgroundColors()
             } label: {
                 Image(systemName: "arrow.left.arrow.right")
@@ -1970,7 +1996,7 @@ struct ImageEditorView: View {
             .accessibilityLabel(L10n.text("imageEditor.action.colorSwapForegroundBackground"))
             .offset(x: 29, y: -2)
         }
-        .frame(width: 50, height: 42)
+        .frame(width: 50, height: 46)
         .padding(.bottom, 2)
     }
 
