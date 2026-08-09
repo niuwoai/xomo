@@ -2961,6 +2961,50 @@ struct XomoFigmaNodeImportPlanTests {
         #expect(shape.strokeOpacity == 0)
     }
 
+    @Test func individualFigmaStrokeWeightsUseEditableAverageAndReportPartialFidelity() throws {
+        let response = try JSONDecoder().decode(
+            XomoFigmaNodeResponse.self,
+            from: Data(
+                #"{"name":"Individual Strokes","nodes":{"1:49":{"document":{"id":"1:49","name":"Uneven Border","type":"RECTANGLE","strokes":[{"type":"SOLID","color":{"r":0.2,"g":0.4,"b":0.8,"a":1}}],"strokeWeight":2,"individualStrokeWeights":{"top":2,"right":4,"bottom":6,"left":8},"absoluteBoundingBox":{"x":0,"y":0,"width":120,"height":80}}}}}"#.utf8
+            )
+        )
+
+        let plan = try XomoFigmaNodeImportMapper.makePlan(response: response, requestedNodeID: "1:49")
+        let item = try #require(plan.items.first)
+        #expect(item.fidelity == .partial)
+        #expect(item.issues.contains(.strokeWeightFlattened))
+        #expect(item.strokeWeight == 5)
+
+        let result = XomoFigmaNodeMaterializer.materialize(
+            plan: plan,
+            canvasSize: CGSize(width: 240, height: 180)
+        )
+        let shape = try #require(result.layers.first?.shapeContent)
+        #expect(shape.strokeWidth == 5)
+        #expect(shape.strokeOpacity == 1)
+    }
+
+    @Test func uniformFigmaIndividualStrokeWeightsRemainExact() throws {
+        let response = try JSONDecoder().decode(
+            XomoFigmaNodeResponse.self,
+            from: Data(
+                #"{"name":"Uniform Stroke","nodes":{"1:50":{"document":{"id":"1:50","name":"Uniform Border","type":"RECTANGLE","strokes":[{"type":"SOLID","color":{"r":0.2,"g":0.4,"b":0.8,"a":1}}],"strokeWeight":1,"individualStrokeWeights":{"top":3,"right":3,"bottom":3,"left":3},"absoluteBoundingBox":{"x":0,"y":0,"width":120,"height":80}}}}}"#.utf8
+            )
+        )
+
+        let plan = try XomoFigmaNodeImportMapper.makePlan(response: response, requestedNodeID: "1:50")
+        let item = try #require(plan.items.first)
+        #expect(item.fidelity == .exact)
+        #expect(!item.issues.contains(.strokeWeightFlattened))
+        #expect(item.strokeWeight == 3)
+
+        let result = XomoFigmaNodeMaterializer.materialize(
+            plan: plan,
+            canvasSize: CGSize(width: 240, height: 180)
+        )
+        #expect(result.layers.first?.shapeContent?.strokeWidth == 3)
+    }
+
     @Test func materializerCreatesEditableHierarchyAtCenteredScaleAndHonestPlaceholder() throws {
         let plan = try Self.decodedPlan()
         let textPlan = try #require(plan.items.first { $0.sourceName == "Continue Label" })

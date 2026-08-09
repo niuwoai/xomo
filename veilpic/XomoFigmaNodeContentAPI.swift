@@ -290,12 +290,15 @@ enum XomoFigmaNodeImportMapper {
         if hasUnsupportedCornerStyle(node, target: mapping.target) {
             issues.append(.cornerRadiusFlattened)
         }
-        if let strokeWeight = node.strokeWeight,
-           solidColor(in: node.strokes) != nil,
-           (!strokeWeight.isFinite
-            || strokeWeight < Double(ImageEditorShapeContent.minimumStrokeWidth)
-            || strokeWeight > maximumNativeStrokeWidth(for: node, target: mapping.target)) {
-            issues.append(.strokeWeightFlattened)
+        if solidColor(in: node.strokes) != nil {
+            let strokeWeight = resolvedStrokeWeight(node)
+            if hasUnsupportedIndividualStrokeWeights(node)
+                || strokeWeight == nil
+                || !(strokeWeight?.isFinite ?? false)
+                || (strokeWeight ?? 0) < Double(ImageEditorShapeContent.minimumStrokeWidth)
+                || (strokeWeight ?? 0) > maximumNativeStrokeWidth(for: node, target: mapping.target) {
+                issues.append(.strokeWeightFlattened)
+            }
         }
         if solidColor(in: node.strokes) != nil,
            hasUnsupportedStrokeStyle(node) {
@@ -413,7 +416,7 @@ enum XomoFigmaNodeImportMapper {
                 ? radialGradient(in: node.fills, bounds: node.absoluteBoundingBox)
                 : nil,
             solidStroke: solidColor(in: node.strokes),
-            strokeWeight: node.strokeWeight,
+            strokeWeight: resolvedStrokeWeight(node),
             strokeAlign: node.strokeAlign,
             strokeCap: node.strokeCap,
             strokeJoin: node.strokeJoin,
@@ -771,6 +774,23 @@ enum XomoFigmaNodeImportMapper {
                 wrapMode: node.layoutWrap == "WRAP" ? .wrap : .noWrap
             )
         )
+    }
+
+    private static func resolvedStrokeWeight(_ node: XomoFigmaNode) -> Double? {
+        guard let weights = node.individualStrokeWeights else { return node.strokeWeight }
+        let values = [weights.top, weights.right, weights.bottom, weights.left]
+        guard values.allSatisfy({ $0.isFinite && $0 >= 0 }) else { return node.strokeWeight }
+        return values.reduce(0, +) / Double(values.count)
+    }
+
+    private static func hasUnsupportedIndividualStrokeWeights(_ node: XomoFigmaNode) -> Bool {
+        guard let weights = node.individualStrokeWeights else { return false }
+        let values = [weights.top, weights.right, weights.bottom, weights.left]
+        guard values.allSatisfy({ $0.isFinite && $0 >= 0 }),
+              let minimum = values.min(),
+              let maximum = values.max()
+        else { return true }
+        return maximum - minimum > 0.001
     }
 
     private static func sizingMode(_ value: String?) -> ImageEditorStackSizingMode {
@@ -1626,6 +1646,7 @@ struct XomoFigmaNode: Decodable {
     var fills: [XomoFigmaPaint]?
     var strokes: [XomoFigmaPaint]?
     var strokeWeight: Double?
+    var individualStrokeWeights: XomoFigmaIndividualStrokeWeights?
     var strokeAlign: String?
     var strokeCap: String?
     var strokeJoin: String?
@@ -1660,6 +1681,13 @@ struct XomoFigmaNode: Decodable {
     var boundVariables: XomoFigmaBoundVariables?
     var componentProperties: [String: XomoFigmaComponentProperty]?
     var exportSettings: [XomoFigmaExportSetting]?
+}
+
+struct XomoFigmaIndividualStrokeWeights: Decodable {
+    var top: Double
+    var right: Double
+    var bottom: Double
+    var left: Double
 }
 
 struct XomoFigmaExportSetting: Decodable {
