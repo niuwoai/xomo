@@ -3580,6 +3580,11 @@ struct XomoAutomationTests {
                 ]),
                 "strokeOpacity": .number(0.8),
                 "strokeWidth": .number(7),
+                "strokePosition": .string("outside"),
+                "strokeCap": .string("square"),
+                "strokeJoin": .string("miter"),
+                "strokeMiterLimit": .number(4),
+                "strokeDashPattern": .array([.number(8), .number(4)]),
                 "cornerRadius": .number(40),
                 "cornerSmoothing": .number(0.5)
             ]
@@ -3590,6 +3595,11 @@ struct XomoAutomationTests {
         #expect(viewModel.document.selectedLayer?.shapeContent?.fillOpacity == 0.6)
         #expect(viewModel.document.selectedLayer?.shapeContent?.strokeOpacity == 0.8)
         #expect(viewModel.document.selectedLayer?.shapeContent?.strokeWidth == 7)
+        #expect(viewModel.document.selectedLayer?.shapeContent?.strokePosition == .outside)
+        #expect(viewModel.document.selectedLayer?.shapeContent?.strokeCap == .square)
+        #expect(viewModel.document.selectedLayer?.shapeContent?.strokeJoin == .miter)
+        #expect(viewModel.document.selectedLayer?.shapeContent?.strokeMiterLimit == 4)
+        #expect(viewModel.document.selectedLayer?.shapeContent?.strokeDashPattern == [8, 4])
         #expect(viewModel.document.history.count == historyCountBeforeCreate + 1)
 
         let inspectResponse = registry.execute(request(
@@ -3606,11 +3616,11 @@ struct XomoAutomationTests {
         #expect(inspectedShape["fillOpacity"] == .number(0.6))
         #expect(inspectedShape["strokeOpacity"] == .number(0.8))
         #expect(inspectedShape["strokeWidth"] == .number(7))
-        #expect(inspectedShape["strokePosition"] == .string("inside"))
-        #expect(inspectedShape["strokeCap"] == .string("round"))
-        #expect(inspectedShape["strokeJoin"] == .string("round"))
-        #expect(inspectedShape["strokeMiterLimit"] == .number(10))
-        #expect(inspectedShape["strokeDashPattern"] == .array([]))
+        #expect(inspectedShape["strokePosition"] == .string("outside"))
+        #expect(inspectedShape["strokeCap"] == .string("square"))
+        #expect(inspectedShape["strokeJoin"] == .string("miter"))
+        #expect(inspectedShape["strokeMiterLimit"] == .number(4))
+        #expect(inspectedShape["strokeDashPattern"] == .array([.number(8), .number(4)]))
 
         let historyCountBeforeUpdate = viewModel.document.history.count
         let updateResponse = registry.execute(request(
@@ -3705,6 +3715,46 @@ struct XomoAutomationTests {
         ))
         #expect(!conflictingUpdate.ok)
         #expect(viewModel.document.selectedLayer?.shapeContent?.cornerRadii?.bottomLeft == 16)
+
+        let layerCountBeforeInvalidCreate = viewModel.document.layers.count
+        let historyCountBeforeInvalidCreate = viewModel.document.history.count
+        let invalidCreate = registry.execute(request(
+            operation: "call",
+            name: "xomo.shape.create",
+            arguments: [
+                "kind": .string("rectangle"),
+                "x": .number(0), "y": .number(0),
+                "width": .number(40), "height": .number(30),
+                "strokePosition": .string("overlay"),
+                "strokeDashPattern": .array([.number(4)])
+            ]
+        ))
+        #expect(!invalidCreate.ok)
+        #expect(viewModel.document.layers.count == layerCountBeforeInvalidCreate)
+        #expect(viewModel.document.history.count == historyCountBeforeInvalidCreate)
+
+        let toolsResponse = registry.execute(request(operation: "tools"))
+        let tools = try #require(toolsResponse.result?.arrayValue)
+        let createTool = try #require(tools.compactMap(\.objectValue).first {
+            $0["name"] == .string("xomo.shape.create")
+        })
+        let createProperties = try #require(
+            createTool["inputSchema"]?.objectValue?["properties"]?.objectValue
+        )
+        #expect(
+            createProperties["strokePosition"]?.objectValue?["enum"]?.arrayValue
+                == ImageEditorStrokePosition.allCases.map { .string($0.rawValue) }
+        )
+        #expect(
+            createProperties["strokeCap"]?.objectValue?["enum"]?.arrayValue
+                == ImageEditorStrokeCap.allCases.map { .string($0.rawValue) }
+        )
+        #expect(
+            createProperties["strokeJoin"]?.objectValue?["enum"]?.arrayValue
+                == ImageEditorStrokeJoin.allCases.map { .string($0.rawValue) }
+        )
+        #expect(createProperties["strokeMiterLimit"]?.objectValue?["type"] == .string("number"))
+        #expect(createProperties["strokeDashPattern"]?.objectValue?["type"] == .string("array"))
     }
 
     @Test func shapeStrokePositionAutomationUpdatesOnlyChangedShapesAndRejectsUnknownValues() throws {

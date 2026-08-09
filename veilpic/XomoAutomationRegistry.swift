@@ -485,6 +485,10 @@ final class XomoAutomationRegistry {
             }
             let fillColor = try optionalColor("fillColor", in: arguments)
             let strokeColor = try optionalColor("strokeColor", in: arguments)
+            let strokePosition = try optionalShapeStrokePosition(arguments["strokePosition"]?.stringValue)
+            let strokeCap = try optionalShapeStrokeCap(arguments["strokeCap"]?.stringValue)
+            let strokeJoin = try optionalShapeStrokeJoin(arguments["strokeJoin"]?.stringValue)
+            let strokeDashPattern = try optionalShapeStrokeDashPattern(arguments["strokeDashPattern"])
             let end = CGPoint(
                 x: origin.x + (try requiredNumber("width", in: arguments)),
                 y: origin.y + (try requiredNumber("height", in: arguments))
@@ -502,7 +506,12 @@ final class XomoAutomationRegistry {
                 fillOpacity: arguments["fillOpacity"]?.doubleValue,
                 strokeColor: strokeColor,
                 strokeOpacity: arguments["strokeOpacity"]?.doubleValue,
-                strokeWidth: arguments["strokeWidth"]?.doubleValue
+                strokeWidth: arguments["strokeWidth"]?.doubleValue,
+                strokePosition: strokePosition,
+                strokeCap: strokeCap,
+                strokeJoin: strokeJoin,
+                strokeMiterLimit: arguments["strokeMiterLimit"]?.doubleValue,
+                strokeDashPattern: strokeDashPattern
             )
         case "xomo.shape.get":
             return shapeResult(viewModel)
@@ -5857,6 +5866,25 @@ private extension XomoAutomationRegistry {
             "strokeColor": shapeColorSchema,
             "strokeOpacity": XomoAutomationSchema.number(description: "Independent stroke opacity from 0 to 1"),
             "strokeWidth": XomoAutomationSchema.number(description: "Stroke width in pixels"),
+            "strokePosition": XomoAutomationSchema.string(
+                description: "Stroke alignment relative to the shape boundary",
+                values: ImageEditorStrokePosition.allCases.map(\.rawValue)
+            ),
+            "strokeCap": XomoAutomationSchema.string(
+                description: "Stroke endpoint cap",
+                values: ImageEditorStrokeCap.allCases.map(\.rawValue)
+            ),
+            "strokeJoin": XomoAutomationSchema.string(
+                description: "Stroke corner join",
+                values: ImageEditorStrokeJoin.allCases.map(\.rawValue)
+            ),
+            "strokeMiterLimit": XomoAutomationSchema.number(description: "Miter join limit from 1 to 1000"),
+            "strokeDashPattern": .object([
+                "type": .string("array"),
+                "description": .string("Empty for a solid stroke, or 2 to 16 alternating dash and gap lengths from greater than 0 through 2048 pixels"),
+                "items": XomoAutomationSchema.number(description: "Dash or gap length in pixels"),
+                "maxItems": .number(16)
+            ]),
             "cornerRadius": XomoAutomationSchema.number(description: "Optional uniform rectangle corner radius in pixels"),
             "cornerRadii": rectangleCornerRadiiSchema,
             "cornerSmoothing": XomoAutomationSchema.number(description: "Editable superellipse smoothing from 0 to 1")
