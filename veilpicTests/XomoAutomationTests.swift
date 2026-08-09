@@ -3562,6 +3562,7 @@ struct XomoAutomationTests {
         registry.register(viewModel)
 
         let historyCountBeforeCreate = viewModel.document.history.count
+        let selectedLayerIDBeforeCreate = viewModel.document.selectedLayerID
         let createResponse = registry.execute(request(
             operation: "call",
             name: "xomo.shape.create",
@@ -3590,6 +3591,19 @@ struct XomoAutomationTests {
             ]
         ))
         #expect(createResponse.ok)
+        let createdResult = try #require(createResponse.result?.objectValue)
+        let createdLayerID = try #require(viewModel.document.selectedLayerID)
+        #expect(createdLayerID != selectedLayerIDBeforeCreate)
+        #expect(createdResult["created"] == .bool(true))
+        #expect(createdResult["layerId"] == .string(createdLayerID.uuidString))
+        #expect(createdResult["selectedLayerId"] == .string(createdLayerID.uuidString))
+        #expect(createdResult["x"] == .number(20))
+        #expect(createdResult["y"] == .number(30))
+        #expect(createdResult["width"] == .number(80))
+        #expect(createdResult["height"] == .number(40))
+        #expect(createdResult["strokePosition"] == .string("outside"))
+        #expect(createdResult["strokeDashPattern"] == .array([.number(8), .number(4)]))
+        #expect(createdResult["historyCount"] == .number(Double(historyCountBeforeCreate + 1)))
         #expect(viewModel.document.selectedLayer?.shapeContent?.cornerRadius == 20)
         #expect(viewModel.document.selectedLayer?.shapeContent?.cornerSmoothing == 0.5)
         #expect(viewModel.document.selectedLayer?.shapeContent?.fillOpacity == 0.6)
@@ -3730,6 +3744,19 @@ struct XomoAutomationTests {
             ]
         ))
         #expect(!invalidCreate.ok)
+        #expect(viewModel.document.layers.count == layerCountBeforeInvalidCreate)
+        #expect(viewModel.document.history.count == historyCountBeforeInvalidCreate)
+
+        let undersizedCreate = registry.execute(request(
+            operation: "call",
+            name: "xomo.shape.create",
+            arguments: [
+                "kind": .string("rectangle"),
+                "x": .number(0), "y": .number(0),
+                "width": .number(3), "height": .number(20)
+            ]
+        ))
+        #expect(!undersizedCreate.ok)
         #expect(viewModel.document.layers.count == layerCountBeforeInvalidCreate)
         #expect(viewModel.document.history.count == historyCountBeforeInvalidCreate)
 

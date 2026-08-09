@@ -489,10 +489,18 @@ final class XomoAutomationRegistry {
             let strokeCap = try optionalShapeStrokeCap(arguments["strokeCap"]?.stringValue)
             let strokeJoin = try optionalShapeStrokeJoin(arguments["strokeJoin"]?.stringValue)
             let strokeDashPattern = try optionalShapeStrokeDashPattern(arguments["strokeDashPattern"])
+            let width = try requiredNumber("width", in: arguments)
+            let height = try requiredNumber("height", in: arguments)
+            guard width > 3, height > 3 else {
+                throw XomoAutomationCallError.invalidArgument(
+                    "Shape width and height must both be greater than 3"
+                )
+            }
             let end = CGPoint(
-                x: origin.x + (try requiredNumber("width", in: arguments)),
-                y: origin.y + (try requiredNumber("height", in: arguments))
+                x: origin.x + width,
+                y: origin.y + height
             )
+            let layerCountBeforeCreate = viewModel.document.layers.count
             viewModel.drawShape(
                 from: origin,
                 to: end,
@@ -513,6 +521,12 @@ final class XomoAutomationRegistry {
                 strokeMiterLimit: arguments["strokeMiterLimit"]?.doubleValue,
                 strokeDashPattern: strokeDashPattern
             )
+            guard viewModel.document.layers.count == layerCountBeforeCreate + 1,
+                  viewModel.document.selectedLayer?.shapeContent != nil
+            else {
+                throw XomoAutomationCallError.operationFailed("Shape creation failed")
+            }
+            return shapeCreationResult(viewModel)
         case "xomo.shape.get":
             return shapeResult(viewModel)
         case "xomo.shape.update":
@@ -1902,6 +1916,11 @@ final class XomoAutomationRegistry {
         return .object([
             "active": .bool(true),
             "layerId": .string(layer.id.uuidString),
+            "name": .string(layer.name),
+            "x": .number(layer.frame.minX),
+            "y": .number(layer.frame.minY),
+            "width": .number(layer.frame.width),
+            "height": .number(layer.frame.height),
             "kind": .string(content.kind.rawValue),
             "fillKind": .string(shapeFillKind(content.fillGradient)),
             "fillColor": colorJSON(content.fillColor),
@@ -1924,6 +1943,17 @@ final class XomoAutomationRegistry {
             "cornerSmoothing": .number(content.cornerSmoothing),
             "usesIndependentCornerRadii": .bool(content.cornerRadii != nil)
         ])
+    }
+
+    private func shapeCreationResult(_ viewModel: ImageEditorViewModel) -> XomoJSONValue {
+        guard var result = shapeResult(viewModel).objectValue,
+              let layerID = viewModel.document.selectedLayerID
+        else { return actionResult(viewModel) }
+        result["created"] = .bool(true)
+        result["selectedLayerId"] = .string(layerID.uuidString)
+        result["historyCount"] = .number(Double(viewModel.document.history.count))
+        result["status"] = .string(viewModel.statusText)
+        return .object(result)
     }
 
     private func updateShape(
@@ -5853,7 +5883,7 @@ private extension XomoAutomationRegistry {
             "aligned": XomoAutomationSchema.boolean(description: "Keep the clone or healing source offset aligned across strokes"),
             "sampleSource": XomoAutomationSchema.string(description: "Clone or healing sampling layer range", values: ["currentLayer", "currentAndBelow", "allVisible"])
         ], required: ["action"]),
-        tool("xomo.shape.create", "Create an editable rectangle or ellipse shape layer.", [
+        tool("xomo.shape.create", "Create an editable rectangle or ellipse and return its final layer ID, geometry, and normalized style.", [
             "kind": XomoAutomationSchema.string(description: "Shape kind", values: ["rectangle", "ellipse"]),
             "x": XomoAutomationSchema.number(description: "Left coordinate"),
             "y": XomoAutomationSchema.number(description: "Top coordinate"),
