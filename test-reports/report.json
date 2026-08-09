@@ -1,13 +1,25 @@
 {
-  "generated_at": "2026-08-10 02:31:52 +0800",
-  "total": 2,
-  "passed": 2,
+  "generated_at": "2026-08-10 02:35:34 +0800",
+  "total": 3,
+  "passed": 3,
   "failed": 0,
-  "total_tests": 2,
-  "passed_tests": 2,
+  "total_tests": 3,
+  "passed_tests": 3,
   "failed_tests_in_failed_groups": 0,
   "jobs": 1,
   "results": [
+    {
+      "suite": "ImageEditorTextEditingLifecycleTests",
+      "method": "commandReturnCommitsWithoutMakingOverlayButtonsFocusable",
+      "identifier": "veilpicTests/ImageEditorTextEditingLifecycleTests/commandReturnCommitsWithoutMakingOverlayButtonsFocusable()",
+      "file": "ImageEditorTextEditingLifecycleTests.swift",
+      "test_count": 1,
+      "passed": true,
+      "duration": 2.776,
+      "infrastructure_retries": 0,
+      "issues": [],
+      "log": "ImageEditorTextEditingLifecycleTests.commandReturnCommitsWithoutMakingOverlayButtonsFocusable.log"
+    },
     {
       "suite": "ImageEditorTextEditingLifecycleTests",
       "method": "conditionalCommitCannotCreateTextWithoutAnActiveCanvasEditor",
@@ -15,7 +27,7 @@
       "file": "ImageEditorTextEditingLifecycleTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 2.812,
+      "duration": 2.775,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorTextEditingLifecycleTests.conditionalCommitCannotCreateTextWithoutAnActiveCanvasEditor.log"
@@ -27,7 +39,7 @@
       "file": "ImageEditorTextEditingLifecycleTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 2.831,
+      "duration": 4.427,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorTextEditingLifecycleTests.escapeCancelsCanvasTextEditingWhileContextChangesCommitIt.log"

@@ -3744,9 +3744,12 @@ struct ImageEditorView: View {
                     Button { cancelCanvasTextEditing() } label: {
                         Image(systemName: "xmark")
                     }
+                    .focusable(false)
                     Button { commitCanvasTextEditing() } label: {
                         Image(systemName: "checkmark")
                     }
+                    .keyboardShortcut(.return, modifiers: [.command])
+                    .focusable(false)
                 }
                 .buttonStyle(.bordered)
                 .controlSize(.mini)

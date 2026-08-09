@@ -50,4 +50,25 @@ struct ImageEditorTextEditingLifecycleTests {
         #expect(helperSource.contains("guard canvasTextEditingOrigin != nil else { return }"))
         #expect(helperSource.contains("commitCanvasTextEditing()"))
     }
+
+    @Test
+    func commandReturnCommitsWithoutMakingOverlayButtonsFocusable() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let overlayStart = try #require(source.range(of: "private func canvasTextEditingOverlay"))
+        let beginStart = try #require(
+            source[overlayStart.upperBound...].range(of: "private func beginCanvasTextEditing")
+        )
+        let overlaySource = source[overlayStart.lowerBound..<beginStart.lowerBound]
+
+        #expect(overlaySource.contains("Button { commitCanvasTextEditing() }"))
+        #expect(overlaySource.contains(".keyboardShortcut(.return, modifiers: [.command])"))
+        #expect(overlaySource.components(separatedBy: ".focusable(false)").count == 3)
+        #expect(!overlaySource.contains(".keyboardShortcut(.return, modifiers: [])"))
+    }
 }
