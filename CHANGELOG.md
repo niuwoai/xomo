@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.12.0-rc737 - 2026-08-09
+
+### Added
+- MCP/CLI 的 `xomo.shape.get` 返回当前形状 `strokeCap`，`xomo.shape.update` 支持 `butt`、`round`、`square` 三种原生描边端点。
+- 工具 Schema 公开端点枚举；非法值在任何图层修改前原子拒绝，多选继续只统计实际变化的可编辑形状。
+
+### Tests
+- 新增混合端点多选更新、真实计数、查询、Schema、重复值零历史与非法枚举原子失败回归；既有形状查询同步验证默认圆形端点，并复用构建完成矩形属性、斜接限制邻接回归，3/3 成功。
+
+### Release
+- macOS 13 双架构 Release 构建成功；本机预览包完成 ad-hoc 深度签名，安装后版本、构建号、Bundle ID、双架构和严格签名均通过核验，并已覆盖安装到 `/Applications/Xomo.app` 后成功启动。
+
 ## 2.12.0-rc736 - 2026-08-09
 
 ### Added

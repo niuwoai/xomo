@@ -1,6 +1,8 @@
 # Xomo 经典 Photoshop 能力路线图
 
-> 最后更新：2026-08-09 ｜ 当前版本：v2.12.0-rc736 ｜ 目标：以经典 Photoshop 能力作为现代混合编辑器的可靠像素与图层底座
+> 最后更新：2026-08-09 ｜ 当前版本：v2.12.0-rc737 ｜ 目标：以经典 Photoshop 能力作为现代混合编辑器的可靠像素与图层底座
+
+- `v2.12.0-rc737`：MCP/CLI 的形状查询与更新支持 `strokeCap=butt|round|square`；Schema、混合多选真实计数、重复值零历史和非法枚举原子失败，以及矩形属性、斜接限制邻接回归 3/3 通过。macOS 13 双架构本机预览 Release 已严格验签、覆盖安装并成功启动。
 
 - `v2.12.0-rc736`：MCP/CLI 的形状查询与更新支持 `strokeJoin=miter|round|bevel`，可和 `strokeMiterLimit` 原子批量设置；Schema、查询、真实计数、重复值、非法枚举及界面事务回归 3/3 通过。
 

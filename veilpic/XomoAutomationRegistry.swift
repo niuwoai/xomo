@@ -1903,6 +1903,7 @@ final class XomoAutomationRegistry {
             "strokeColor": colorJSON(content.strokeColor),
             "strokeOpacity": .number(content.strokeOpacity),
             "strokeWidth": .number(content.strokeWidth),
+            "strokeCap": .string(content.strokeCap.rawValue),
             "strokeJoin": .string(content.strokeJoin.rawValue),
             "strokeMiterLimit": .number(content.strokeMiterLimit),
             "cornerRadius": .number(content.cornerRadius),
@@ -1925,6 +1926,7 @@ final class XomoAutomationRegistry {
         let fillGradientCenter = try optionalShapeGradientCenter(arguments)
         try validateShapeFillArguments(arguments, fillGradient: fillGradient)
         let fillKind = arguments["fillKind"]?.stringValue
+        let strokeCap = try optionalShapeStrokeCap(arguments["strokeCap"]?.stringValue)
         let strokeJoin = try optionalShapeStrokeJoin(arguments["strokeJoin"]?.stringValue)
         let selectedContent = viewModel.document.selectedLayer?.shapeContent
         var resolvedGradient: ImageEditorGradientFillContent?
@@ -1955,6 +1957,7 @@ final class XomoAutomationRegistry {
             strokeColor: try optionalColor("strokeColor", in: arguments),
             strokeOpacity: arguments["strokeOpacity"]?.doubleValue ?? legacyOpacity,
             strokeWidth: arguments["strokeWidth"]?.doubleValue,
+            strokeCap: strokeCap,
             strokeJoin: strokeJoin,
             strokeMiterLimit: arguments["strokeMiterLimit"]?.doubleValue,
             cornerRadius: arguments["cornerRadius"]?.doubleValue,
@@ -1965,6 +1968,16 @@ final class XomoAutomationRegistry {
             throw XomoAutomationCallError.operationFailed("Shape update made no changes")
         }
         return updatedLayerCount
+    }
+
+    private func optionalShapeStrokeCap(_ value: String?) throws -> ImageEditorStrokeCap? {
+        guard let value else { return nil }
+        guard let cap = ImageEditorStrokeCap(rawValue: value) else {
+            throw XomoAutomationCallError.invalidArgument(
+                "strokeCap must be butt, round, or square"
+            )
+        }
+        return cap
     }
 
     private func optionalShapeStrokeJoin(_ value: String?) throws -> ImageEditorStrokeJoin? {
@@ -5810,6 +5823,10 @@ private extension XomoAutomationRegistry {
             "strokeColor": shapeColorSchema,
             "strokeOpacity": XomoAutomationSchema.number(description: "Independent stroke opacity from 0 to 1"),
             "strokeWidth": XomoAutomationSchema.number(description: "Stroke width in pixels"),
+            "strokeCap": XomoAutomationSchema.string(
+                description: "Stroke endpoint cap",
+                values: ImageEditorStrokeCap.allCases.map(\.rawValue)
+            ),
             "strokeJoin": XomoAutomationSchema.string(
                 description: "Stroke corner join",
                 values: ImageEditorStrokeJoin.allCases.map(\.rawValue)
