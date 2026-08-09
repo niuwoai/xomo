@@ -5748,8 +5748,8 @@ private extension XomoAutomationRegistry {
             "reverse": XomoAutomationSchema.boolean(description: "Optional gradient-fill reverse direction"),
             "angle": XomoAutomationSchema.number(description: "Optional gradient-fill angle from -180 to 180 degrees"),
             "scale": XomoAutomationSchema.number(description: "Optional gradient-fill span scale from 0.25 to 4"),
-            "startColor": shapeColorSchema,
-            "endColor": shapeColorSchema,
+            "startColor": gradientFillColorSchema,
+            "endColor": gradientFillColorSchema,
             "stops": gradientFillStopsSchema
         ]),
         tool("xomo.layer.solid_color_fill_settings", "Read or replace the RGB color of selected solid-color-fill layers, skipping locked and ineligible layers and reporting the actual updated count.", [
@@ -5783,8 +5783,8 @@ private extension XomoAutomationRegistry {
             "reverse": XomoAutomationSchema.boolean(description: "Reverse the gradient direction"),
             "angle": XomoAutomationSchema.number(description: "Gradient angle from -180 to 180 degrees"),
             "scale": XomoAutomationSchema.number(description: "Gradient span scale from 0.25 to 4"),
-            "startColor": shapeColorSchema,
-            "endColor": shapeColorSchema,
+            "startColor": gradientFillColorSchema,
+            "endColor": gradientFillColorSchema,
             "stops": gradientFillStopsSchema
         ], required: ["action"]),
         tool("xomo.layer.pattern_fill_settings", "Read or replace the complete settings of selected pattern-fill layers, skipping locked and ineligible layers and reporting the actual updated count.", [
@@ -6395,13 +6395,34 @@ private extension XomoAutomationRegistry {
         ],
         required: ["red", "green", "blue"]
     )
+    static let shapeOpaqueColorSchema = XomoAutomationSchema.object(
+        properties: [
+            "red": shapeUnitIntervalSchema(description: "Red component"),
+            "green": shapeUnitIntervalSchema(description: "Green component"),
+            "blue": shapeUnitIntervalSchema(description: "Blue component"),
+            "alpha": shapeBoundedNumberSchema(
+                description: "Optional alpha component fixed at 1; use fillOpacity for transparency",
+                minimum: 1,
+                maximum: 1
+            )
+        ],
+        required: ["red", "green", "blue"]
+    )
+    static let gradientFillColorSchema = XomoAutomationSchema.object(
+        properties: [
+            "red": shapeUnitIntervalSchema(description: "Red component"),
+            "green": shapeUnitIntervalSchema(description: "Green component"),
+            "blue": shapeUnitIntervalSchema(description: "Blue component")
+        ],
+        required: ["red", "green", "blue"]
+    )
     static let gradientFillStopsSchema: XomoJSONValue = .object([
         "type": .string("array"),
         "description": .string("Optional ordered 2 to 16 color stops spanning positions 0 through 1"),
         "items": XomoAutomationSchema.object(
             properties: [
                 "position": XomoAutomationSchema.number(description: "Normalized position from 0 to 1"),
-                "color": shapeColorSchema
+                "color": gradientFillColorSchema
             ],
             required: ["position", "color"]
         ),
@@ -6410,8 +6431,8 @@ private extension XomoAutomationRegistry {
     ])
     static let shapeGradientSchema = XomoAutomationSchema.object(
         properties: [
-            "startColor": shapeColorSchema,
-            "endColor": shapeColorSchema,
+            "startColor": shapeOpaqueColorSchema,
+            "endColor": shapeOpaqueColorSchema,
             "stops": .object([
                 "type": .string("array"),
                 "description": .string(
@@ -6421,7 +6442,7 @@ private extension XomoAutomationRegistry {
                 "items": XomoAutomationSchema.object(
                     properties: [
                         "position": shapeUnitIntervalSchema(description: "Normalized position"),
-                        "color": shapeColorSchema
+                        "color": shapeOpaqueColorSchema
                     ],
                     required: ["position", "color"]
                 ),

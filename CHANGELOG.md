@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.12.0-rc755 - 2026-08-09
+
+### Fixed
+- 渐变颜色 Schema 按真实模型拆分：形状渐变使用不透明 RGBA（可省略 alpha，显式值固定为 1），渐变填充图层使用严格 RGB；普通形状填充与描边仍支持 0–1 alpha。
+- `xomo.layer.create` 与 `xomo.layer.gradient_fill_settings` 不再静默忽略端点或色标颜色中的 `alpha`，而是返回准确颜色路径并明确说明渐变填充图层仅支持 RGB。
+- 非法 alpha 在创建渐变填充图层前失败，图层和 History 保持不变；形状渐变继续通过共享 `fillOpacity` 表达整体透明度。
+
+### Tests
+- 新增渐变颜色 Schema/运行时一致性回归，覆盖端点 alpha、带索引色标 alpha、创建零副作用、形状不透明 alpha 边界、填充图层 RGB 限制和普通形状 alpha 范围；渐变填充图层多色标与形状线性渐变邻接回归同步通过，3/3 成功。
+
 ## 2.12.0-rc754 - 2026-08-09
 
 ### Fixed

@@ -5345,6 +5345,96 @@ struct XomoAutomationTests {
         #expect(viewModel.document.selectedLayer?.shapeContent?.fillGradient?.shapeColorStops.count == 2)
     }
 
+    @Test func gradientColorSchemasMatchShapeAndFillLayerAlphaSemantics() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        let rgb: [String: XomoJSONValue] = [
+            "red": .number(1), "green": .number(0), "blue": .number(0)
+        ]
+        let baseArguments: [String: XomoJSONValue] = [
+            "kind": .string("gradientFill"),
+            "preset": .string(ImageEditorGradientFillPreset.custom.rawValue),
+            "style": .string(ImageEditorGradientFillStyle.linear.rawValue),
+            "reverse": .bool(false),
+            "angle": .number(0),
+            "scale": .number(1),
+            "startColor": .object(rgb),
+            "endColor": .object(rgb)
+        ]
+        let stableLayerCount = viewModel.document.layers.count
+        let stableHistoryCount = viewModel.document.history.count
+
+        var alphaStartArguments = baseArguments
+        var alphaStart = rgb
+        alphaStart["alpha"] = .number(1)
+        alphaStartArguments["startColor"] = .object(alphaStart)
+        let invalidStart = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.create",
+            arguments: alphaStartArguments
+        ))
+        #expect(!invalidStart.ok)
+        #expect(invalidStart.error?.contains("startColor.alpha is unsupported") == true)
+        #expect(viewModel.document.layers.count == stableLayerCount)
+        #expect(viewModel.document.history.count == stableHistoryCount)
+
+        var alphaStopArguments = baseArguments
+        alphaStopArguments["stops"] = .array([
+            .object([
+                "position": .number(0),
+                "color": .object(alphaStart)
+            ]),
+            .object([
+                "position": .number(1),
+                "color": .object(rgb)
+            ])
+        ])
+        let invalidStop = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.create",
+            arguments: alphaStopArguments
+        ))
+        #expect(!invalidStop.ok)
+        #expect(invalidStop.error?.contains("stops[0].color.alpha is unsupported") == true)
+        #expect(viewModel.document.layers.count == stableLayerCount)
+        #expect(viewModel.document.history.count == stableHistoryCount)
+
+        let toolsResponse = registry.execute(request(operation: "tools"))
+        let tools = try #require(toolsResponse.result?.arrayValue)
+        let shapeCreate = try #require(tools.compactMap(\.objectValue).first {
+            $0["name"] == .string("xomo.shape.create")
+        })
+        let layerCreate = try #require(tools.compactMap(\.objectValue).first {
+            $0["name"] == .string("xomo.layer.create")
+        })
+        let shapeProperties = shapeCreate["inputSchema"]?.objectValue?["properties"]?.objectValue
+        let shapeGradientProperties = shapeProperties?["fillGradient"]?.objectValue?["properties"]?
+            .objectValue
+        let shapeStartAlpha = shapeGradientProperties?["startColor"]?.objectValue?["properties"]?
+            .objectValue?["alpha"]?.objectValue
+        let shapeStopAlpha = shapeGradientProperties?["stops"]?.objectValue?["items"]?
+            .objectValue?["properties"]?.objectValue?["color"]?.objectValue?["properties"]?
+            .objectValue?["alpha"]?.objectValue
+        #expect(shapeStartAlpha?["minimum"] == .number(1))
+        #expect(shapeStartAlpha?["maximum"] == .number(1))
+        #expect(shapeStopAlpha?["minimum"] == .number(1))
+        #expect(shapeStopAlpha?["maximum"] == .number(1))
+
+        let layerProperties = layerCreate["inputSchema"]?.objectValue?["properties"]?.objectValue
+        let layerStartColorProperties = layerProperties?["startColor"]?.objectValue?["properties"]?
+            .objectValue
+        let layerStopColorProperties = layerProperties?["stops"]?.objectValue?["items"]?
+            .objectValue?["properties"]?.objectValue?["color"]?.objectValue?["properties"]?
+            .objectValue
+        #expect(layerStartColorProperties?["alpha"] == nil)
+        #expect(layerStopColorProperties?["alpha"] == nil)
+        #expect(shapeProperties?["fillColor"]?.objectValue?["properties"]?
+            .objectValue?["alpha"]?.objectValue?["minimum"] == .number(0))
+        #expect(shapeProperties?["fillColor"]?.objectValue?["properties"]?
+            .objectValue?["alpha"]?.objectValue?["maximum"] == .number(1))
+    }
+
     @Test func registryCreatesAndListsLayerComps() throws {
         let viewModel = makeViewModel()
         let registry = XomoAutomationRegistry.shared

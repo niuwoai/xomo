@@ -257,7 +257,11 @@ extension XomoAutomationRegistry {
                     "stops[\(index)].position must be between 0 and 1"
                 )
             }
-            let color = try gradientColor("color", in: stop)
+            let color = try gradientColor(
+                "color",
+                in: stop,
+                path: "stops[\(index)].color"
+            )
             return ImageEditorGradientColorStop(
                 position: position,
                 red: color.red,
@@ -328,15 +332,22 @@ extension XomoAutomationRegistry {
 
     private func gradientColor(
         _ key: String,
-        in arguments: [String: XomoJSONValue]
+        in arguments: [String: XomoJSONValue],
+        path: String? = nil
     ) throws -> (red: Double, green: Double, blue: Double) {
         guard let object = arguments[key]?.objectValue else {
             throw XomoAutomationCallError.invalidArgument("\(key) must be an object")
         }
+        let colorPath = path ?? key
+        guard object["alpha"] == nil else {
+            throw XomoAutomationCallError.invalidArgument(
+                "\(colorPath).alpha is unsupported; gradient fill colors use RGB channels"
+            )
+        }
         return (
-            try unitNumber("red", in: object, path: key),
-            try unitNumber("green", in: object, path: key),
-            try unitNumber("blue", in: object, path: key)
+            try unitNumber("red", in: object, path: colorPath),
+            try unitNumber("green", in: object, path: colorPath),
+            try unitNumber("blue", in: object, path: colorPath)
         )
     }
 
