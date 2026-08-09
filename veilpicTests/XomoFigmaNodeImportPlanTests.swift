@@ -898,6 +898,34 @@ struct XomoFigmaNodeImportPlanTests {
         #expect(abs(shape.fillOpacity - 0.5) < 0.001)
     }
 
+    @Test func nonNormalFigmaPaintBlendModeReportsEditableFallback() throws {
+        let response = try JSONDecoder().decode(
+            XomoFigmaNodeResponse.self,
+            from: Data(
+                #"{"name":"Paint Blend","nodes":{"1:31":{"document":{"id":"1:31","name":"Paint Blend","type":"FRAME","absoluteBoundingBox":{"x":0,"y":0,"width":220,"height":80},"children":[{"id":"2:31","name":"Normal Paint","type":"RECTANGLE","fills":[{"type":"SOLID","blendMode":"NORMAL","color":{"r":0.2,"g":0.4,"b":0.6}}],"absoluteBoundingBox":{"x":0,"y":0,"width":100,"height":60}},{"id":"2:32","name":"Multiply Paint","type":"RECTANGLE","fills":[{"type":"SOLID","blendMode":"MULTIPLY","color":{"r":0.8,"g":0.3,"b":0.1}}],"absoluteBoundingBox":{"x":120,"y":0,"width":100,"height":60}}]}}}}"#.utf8
+            )
+        )
+
+        let plan = try XomoFigmaNodeImportMapper.makePlan(response: response, requestedNodeID: "1:31")
+        let normal = try #require(plan.items.first { $0.sourceID == "2:31" })
+        let multiply = try #require(plan.items.first { $0.sourceID == "2:32" })
+        #expect(normal.fidelity == .exact)
+        #expect(!normal.issues.contains(.unsupportedPaint))
+        #expect(multiply.fidelity == .partial)
+        #expect(multiply.issues.contains(.unsupportedPaint))
+        #expect(multiply.solidFill == XomoFigmaPlanColor(red: 0.8, green: 0.3, blue: 0.1, alpha: 1))
+
+        let result = XomoFigmaNodeMaterializer.materialize(
+            plan: plan,
+            canvasSize: CGSize(width: 320, height: 180)
+        )
+        let shape = try #require(result.layers.first { $0.name == "Multiply Paint" }?.shapeContent)
+        let color = try #require(shape.fillColor.usingColorSpace(.sRGB))
+        #expect(abs(color.redComponent - 0.8) < 0.001)
+        #expect(abs(color.greenComponent - 0.3) < 0.001)
+        #expect(abs(color.blueComponent - 0.1) < 0.001)
+    }
+
     @Test func outOfRangeFigmaNodeOpacityReportsAndUsesEditableBounds() throws {
         let response = try JSONDecoder().decode(
             XomoFigmaNodeResponse.self,

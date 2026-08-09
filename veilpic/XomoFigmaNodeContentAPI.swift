@@ -796,6 +796,9 @@ enum XomoFigmaNodeImportMapper {
         let hasUnsupportedSolidPaint = (visiblePaints + visibleStrokes).contains {
             $0.type == "SOLID" && !isSupportedSolidPaint($0)
         }
+        let hasUnsupportedPaintBlendMode = (visiblePaints + visibleStrokes).contains {
+            !isSupportedPaintBlendMode($0.blendMode)
+        }
         let hasUnsupportedFill = visiblePaints.contains { paint in
             if paint.type == "SOLID" { return false }
             guard allowsGradientFill else { return true }
@@ -810,6 +813,7 @@ enum XomoFigmaNodeImportMapper {
         }
         if visiblePaints.count > 1
             || hasUnsupportedSolidPaint
+            || hasUnsupportedPaintBlendMode
             || hasUnsupportedFill
             || visibleStrokes.count > 1
             || visibleStrokes.contains(where: { $0.type != "SOLID" }) {
@@ -821,6 +825,10 @@ enum XomoFigmaNodeImportMapper {
         guard let color = paint.color else { return false }
         let components = [color.r, color.g, color.b, color.a ?? 1, paint.opacity ?? 1]
         return components.allSatisfy { $0.isFinite && (0...1).contains($0) }
+    }
+
+    private static func isSupportedPaintBlendMode(_ blendMode: String?) -> Bool {
+        blendMode == nil || blendMode == "NORMAL"
     }
 
     private static func solidColor(in paints: [XomoFigmaPaint]?) -> XomoFigmaPlanColor? {
@@ -1523,6 +1531,7 @@ struct XomoFigmaPaint: Decodable {
     var type: String
     var visible: Bool?
     var opacity: Double?
+    var blendMode: String?
     var color: XomoFigmaColor?
     var gradientHandlePositions: [XomoFigmaVector]?
     var gradientStops: [XomoFigmaGradientStop]?
