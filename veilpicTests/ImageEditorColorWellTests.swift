@@ -14,12 +14,8 @@ struct ImageEditorColorWellTests {
         colorWell.color = .systemOrange
 
         #expect(!colorWell.acceptsFirstResponder)
-        #expect(colorWell.isContinuous)
-        #expect(colorWell.focusRingType == .none)
         #expect(colorWell.isAccessibilityElement())
         #expect(colorWell.accessibilityRole() == .colorWell)
-        #expect(colorWell.target === colorWell)
-        #expect(colorWell.action != nil)
         #expect(ImageEditorColorWellControl.swatchBorderWidth == 1)
         colorWell.onColorChange?(.systemOrange)
         #expect(selectedColor == .systemOrange)
@@ -31,6 +27,8 @@ struct ImageEditorColorWellTests {
             contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorColorWell.swift"),
             encoding: .utf8
         )
+        #expect(controlSource.contains("final class ImageEditorColorWellControl: NSView"))
+        #expect(!controlSource.contains("final class ImageEditorColorWellControl: NSControl"))
         let targetBinding = try #require(controlSource.range(of: "panel.setTarget(self)"))
         let colorAssignment = try #require(controlSource.range(of: "panel.color = color"))
         #expect(targetBinding.lowerBound < colorAssignment.lowerBound)

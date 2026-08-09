@@ -5,7 +5,7 @@ import SwiftUI
 /// focus chain. It uses the system color panel without inheriting NSColorWell's
 /// native rounded/pill drawing, which would otherwise overlap our swatch.
 @MainActor
-final class ImageEditorColorWellControl: NSControl {
+final class ImageEditorColorWellControl: NSView {
     static let swatchBorderWidth: CGFloat = 1
 
     var onColorChange: ((NSColor) -> Void)?
@@ -27,12 +27,8 @@ final class ImageEditorColorWellControl: NSControl {
     }
 
     private func configure() {
-        isContinuous = true
-        focusRingType = .none
         setAccessibilityElement(true)
         setAccessibilityRole(.colorWell)
-        target = self
-        action = #selector(controlActivated(_:))
     }
 
     override func draw(_ dirtyRect: NSRect) {
@@ -50,7 +46,7 @@ final class ImageEditorColorWellControl: NSControl {
         activateColorPanel()
     }
 
-    override func performClick(_ sender: Any?) {
+    func performClick(_ sender: Any?) {
         activateColorPanel()
     }
 
@@ -70,11 +66,6 @@ final class ImageEditorColorWellControl: NSControl {
         panel.isContinuous = true
         panel.color = color
         panel.makeKeyAndOrderFront(nil)
-    }
-
-    @objc
-    private func controlActivated(_ sender: NSControl) {
-        activateColorPanel()
     }
 
     @objc
