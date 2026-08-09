@@ -602,7 +602,6 @@ enum XomoFigmaNodeImportMapper {
 
     private static func isSupportedEffect(_ effect: XomoFigmaEffect) -> Bool {
         guard isMappableEffect(effect) else { return false }
-        guard effect.visible ?? true else { return true }
         guard let type = effect.type,
               let radius = effect.radius,
               let maximumRadius = maximumEffectRadius(for: type),
@@ -624,7 +623,7 @@ enum XomoFigmaNodeImportMapper {
     }
 
     private static func isMappableEffect(_ effect: XomoFigmaEffect) -> Bool {
-        guard effect.visible ?? true else { return true }
+        guard effect.visible ?? true else { return false }
         guard let type = effect.type,
               maximumEffectRadius(for: type) != nil,
               let radius = effect.radius,

@@ -2910,6 +2910,30 @@ struct XomoFigmaNodeImportPlanTests {
         #expect(layer.style.shadowOpacity == 0.55)
     }
 
+    @Test func disabledFigmaEffectReportsLostEditableSemanticsWithoutRendering() throws {
+        let response = try JSONDecoder().decode(
+            XomoFigmaNodeResponse.self,
+            from: Data(
+                #"{"name":"Disabled Effect","nodes":{"1:47":{"document":{"id":"1:47","name":"Disabled Shadow","type":"RECTANGLE","effects":[{"type":"DROP_SHADOW","visible":false,"radius":9,"spread":2,"offset":{"x":5,"y":7},"color":{"r":0.1,"g":0.2,"b":0.3,"a":0.55}}],"absoluteBoundingBox":{"x":0,"y":0,"width":120,"height":80}}}}}"#.utf8
+            )
+        )
+
+        let plan = try XomoFigmaNodeImportMapper.makePlan(response: response, requestedNodeID: "1:47")
+        let item = try #require(plan.items.first)
+        #expect(item.fidelity == .partial)
+        #expect(item.issues.contains(.effectsFlattened))
+        #expect(item.effects.isEmpty)
+
+        let result = XomoFigmaNodeMaterializer.materialize(
+            plan: plan,
+            canvasSize: CGSize(width: 240, height: 180)
+        )
+        let layer = try #require(result.layers.first)
+        #expect(!layer.style.shadowEnabled)
+        #expect(!layer.style.innerShadowEnabled)
+        #expect(layer.smartFilters.isEmpty)
+    }
+
     @Test func materializerCreatesEditableHierarchyAtCenteredScaleAndHonestPlaceholder() throws {
         let plan = try Self.decodedPlan()
         let textPlan = try #require(plan.items.first { $0.sourceName == "Continue Label" })
