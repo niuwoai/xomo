@@ -247,14 +247,34 @@ extension XomoAutomationRegistry {
             throw XomoAutomationCallError.invalidArgument("stops must contain 2 to 16 items")
         }
         let stops = try values.enumerated().map { index, value in
-            guard
-                let stop = value.objectValue,
-                let position = stop["position"]?.doubleValue,
-                position.isFinite,
-                (0...1).contains(position)
-            else {
+            guard let stop = value.objectValue else {
+                throw XomoAutomationCallError.invalidArgument(
+                    "stops[\(index)] must be an object"
+                )
+            }
+            guard let positionValue = stop["position"] else {
+                throw XomoAutomationCallError.invalidArgument(
+                    "stops[\(index)].position is required"
+                )
+            }
+            guard let position = positionValue.doubleValue, position.isFinite else {
+                throw XomoAutomationCallError.invalidArgument(
+                    "stops[\(index)].position must be a number"
+                )
+            }
+            guard (0...1).contains(position) else {
                 throw XomoAutomationCallError.invalidArgument(
                     "stops[\(index)].position must be between 0 and 1"
+                )
+            }
+            guard let colorValue = stop["color"] else {
+                throw XomoAutomationCallError.invalidArgument(
+                    "stops[\(index)].color is required"
+                )
+            }
+            guard colorValue.objectValue != nil else {
+                throw XomoAutomationCallError.invalidArgument(
+                    "stops[\(index)].color must be an object"
                 )
             }
             let color = try gradientColor(
