@@ -4771,6 +4771,109 @@ struct XomoAutomationTests {
         #expect(viewModel.document.selectedLayer?.shapeContent?.fillGradient?.style == .radial)
     }
 
+    @Test func shapeGradientNumericFieldsRejectInvalidValuesAtomically() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        let baseGradient: [String: XomoJSONValue] = [
+            "startColor": .object([
+                "red": .number(1), "green": .number(0), "blue": .number(0)
+            ]),
+            "endColor": .object([
+                "red": .number(0), "green": .number(0), "blue": .number(1)
+            ])
+        ]
+        var initialGradient = baseGradient
+        initialGradient["angle"] = .number(30)
+        initialGradient["scale"] = .number(1.5)
+        initialGradient["centerX"] = .number(0.35)
+        initialGradient["centerY"] = .number(0.65)
+        let created = registry.execute(request(
+            operation: "call",
+            name: "xomo.shape.create",
+            arguments: [
+                "kind": .string("rectangle"),
+                "x": .number(10), "y": .number(12),
+                "width": .number(90), "height": .number(70),
+                "fillKind": .string("linearGradient"),
+                "fillGradient": .object(initialGradient)
+            ]
+        ))
+        #expect(created.ok)
+        let stableLayerID = try #require(viewModel.document.selectedLayerID)
+        let stableLayerCount = viewModel.document.layers.count
+        let stableHistoryCount = viewModel.document.history.count
+
+        for (key, value): (String, XomoJSONValue) in [
+            ("angle", .string("30")),
+            ("angle", .number(181)),
+            ("scale", .bool(true)),
+            ("scale", .number(0.24)),
+            ("centerX", .string("0.5")),
+            ("centerX", .number(-4.01)),
+            ("centerY", .bool(false)),
+            ("centerY", .number(5.01))
+        ] {
+            var invalidGradient = baseGradient
+            invalidGradient[key] = value
+            let invalidUpdate = registry.execute(request(
+                operation: "call",
+                name: "xomo.shape.update",
+                arguments: [
+                    "fillGradient": .object(invalidGradient),
+                    "strokeWidth": .number(12)
+                ]
+            ))
+            #expect(!invalidUpdate.ok)
+            #expect(viewModel.document.history.count == stableHistoryCount)
+            #expect(viewModel.document.selectedLayer?.shapeContent?.strokeWidth != 12)
+            #expect(viewModel.document.selectedLayer?.shapeContent?.fillGradient?.angle == 30)
+
+            let invalidCreate = registry.execute(request(
+                operation: "call",
+                name: "xomo.shape.create",
+                arguments: [
+                    "kind": .string("rectangle"),
+                    "x": .number(120), "y": .number(12),
+                    "width": .number(40), "height": .number(40),
+                    "fillGradient": .object(invalidGradient)
+                ]
+            ))
+            #expect(!invalidCreate.ok)
+            #expect(viewModel.document.layers.count == stableLayerCount)
+            #expect(viewModel.document.history.count == stableHistoryCount)
+            #expect(viewModel.document.selectedLayerID == stableLayerID)
+        }
+
+        var partialCenterGradient = baseGradient
+        partialCenterGradient["centerX"] = .number(0.2)
+        let partialCenter = registry.execute(request(
+            operation: "call",
+            name: "xomo.shape.update",
+            arguments: ["fillGradient": .object(partialCenterGradient)]
+        ))
+        #expect(partialCenter.ok)
+        #expect(viewModel.document.selectedLayer?.shapeContent?.fillGradientCenter == CGPoint(x: 0.2, y: 0.5))
+
+        let toolsResponse = registry.execute(request(operation: "tools"))
+        let tools = try #require(toolsResponse.result?.arrayValue)
+        let createTool = try #require(tools.compactMap(\.objectValue).first {
+            $0["name"] == .string("xomo.shape.create")
+        })
+        let gradientProperties = createTool["inputSchema"]?.objectValue?["properties"]?
+            .objectValue?["fillGradient"]?.objectValue?["properties"]?.objectValue
+        let expectedBounds: [String: (Double, Double)] = [
+            "angle": (-180, 180),
+            "scale": (0.25, 4),
+            "centerX": (-4, 5),
+            "centerY": (-4, 5)
+        ]
+        for (key, bounds) in expectedBounds {
+            #expect(gradientProperties?[key]?.objectValue?["minimum"] == .number(bounds.0))
+            #expect(gradientProperties?[key]?.objectValue?["maximum"] == .number(bounds.1))
+        }
+    }
+
     @Test func registryCreatesAndListsLayerComps() throws {
         let viewModel = makeViewModel()
         let registry = XomoAutomationRegistry.shared

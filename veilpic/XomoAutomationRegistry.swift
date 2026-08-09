@@ -2175,14 +2175,16 @@ final class XomoAutomationRegistry {
         guard let object = value.objectValue else {
             throw XomoAutomationCallError.invalidArgument("fillGradient must be an object")
         }
-        let angle = object["angle"]?.doubleValue ?? 0
-        let scale = object["scale"]?.doubleValue ?? 1
-        guard angle.isFinite, (-180...180).contains(angle) else {
-            throw XomoAutomationCallError.invalidArgument("fillGradient.angle must be between -180 and 180")
-        }
-        guard scale.isFinite, (0.25...4).contains(scale) else {
-            throw XomoAutomationCallError.invalidArgument("fillGradient.scale must be between 0.25 and 4")
-        }
+        let angle = try optionalShapeGradientNumber(
+            "angle",
+            in: object,
+            range: -180...180
+        ) ?? 0
+        let scale = try optionalShapeGradientNumber(
+            "scale",
+            in: object,
+            range: 0.25...4
+        ) ?? 1
         if let values = object["stops"]?.arrayValue {
             guard (2...ImageEditorGradientFillContent.maximumColorStopCount).contains(values.count) else {
                 throw XomoAutomationCallError.invalidArgument("fillGradient.stops must contain 2 to 16 items")
@@ -2237,17 +2239,35 @@ final class XomoAutomationRegistry {
         _ arguments: [String: XomoJSONValue]
     ) throws -> CGPoint? {
         guard let object = arguments["fillGradient"]?.objectValue else { return nil }
-        let centerX = object["centerX"]?.doubleValue
-        let centerY = object["centerY"]?.doubleValue
+        let centerX = try optionalShapeGradientNumber(
+            "centerX",
+            in: object,
+            range: -4...5
+        )
+        let centerY = try optionalShapeGradientNumber(
+            "centerY",
+            in: object,
+            range: -4...5
+        )
         guard centerX != nil || centerY != nil else { return nil }
         let x = centerX ?? 0.5
         let y = centerY ?? 0.5
-        guard x.isFinite, y.isFinite, (-4...5).contains(x), (-4...5).contains(y) else {
+        return CGPoint(x: x, y: y)
+    }
+
+    private func optionalShapeGradientNumber(
+        _ key: String,
+        in object: [String: XomoJSONValue],
+        range: ClosedRange<Double>
+    ) throws -> Double? {
+        guard object[key] != nil else { return nil }
+        let number = try requiredNumber(key, in: object)
+        guard range.contains(number) else {
             throw XomoAutomationCallError.invalidArgument(
-                "fillGradient.centerX and centerY must be between -4 and 5"
+                "fillGradient.\(key) must be between \(range.lowerBound) and \(range.upperBound)"
             )
         }
-        return CGPoint(x: x, y: y)
+        return number
     }
 
     private func validateShapeFillArguments(
@@ -6268,6 +6288,20 @@ private extension XomoAutomationRegistry {
             "minimum": .number(0)
         ])
     }
+
+    static func shapeBoundedNumberSchema(
+        description: String,
+        minimum: Double,
+        maximum: Double
+    ) -> XomoJSONValue {
+        .object([
+            "type": .string("number"),
+            "description": .string("\(description) from \(minimum) through \(maximum)"),
+            "minimum": .number(minimum),
+            "maximum": .number(maximum)
+        ])
+    }
+
     static let shapeColorSchema = XomoAutomationSchema.object(
         properties: [
             "red": XomoAutomationSchema.number(description: "Red component from 0 to 1"),
@@ -6299,7 +6333,7 @@ private extension XomoAutomationRegistry {
                 "description": .string("Ordered 2 to 16 color stops spanning positions 0 through 1"),
                 "items": XomoAutomationSchema.object(
                     properties: [
-                        "position": XomoAutomationSchema.number(description: "Normalized position from 0 to 1"),
+                        "position": shapeUnitIntervalSchema(description: "Normalized position"),
                         "color": shapeColorSchema
                     ],
                     required: ["position", "color"]
@@ -6307,10 +6341,26 @@ private extension XomoAutomationRegistry {
                 "minItems": .number(2),
                 "maxItems": .number(16)
             ]),
-            "angle": XomoAutomationSchema.number(description: "Linear gradient angle from -180 to 180 degrees"),
-            "scale": XomoAutomationSchema.number(description: "Linear gradient span scale from 0.25 to 4"),
-            "centerX": XomoAutomationSchema.number(description: "Normalized horizontal gradient center from -4 to 5"),
-            "centerY": XomoAutomationSchema.number(description: "Normalized vertical gradient center from -4 to 5")
+            "angle": shapeBoundedNumberSchema(
+                description: "Linear gradient angle in degrees",
+                minimum: -180,
+                maximum: 180
+            ),
+            "scale": shapeBoundedNumberSchema(
+                description: "Linear gradient span scale",
+                minimum: 0.25,
+                maximum: 4
+            ),
+            "centerX": shapeBoundedNumberSchema(
+                description: "Normalized horizontal gradient center",
+                minimum: -4,
+                maximum: 5
+            ),
+            "centerY": shapeBoundedNumberSchema(
+                description: "Normalized vertical gradient center",
+                minimum: -4,
+                maximum: 5
+            )
         ],
         required: []
     )
