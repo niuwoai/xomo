@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.12.0-rc738 - 2026-08-09
+
+### Added
+- MCP/CLI 的 `xomo.shape.get` 返回当前形状 `strokePosition`，`xomo.shape.update` 支持 `outside`、`center`、`inside` 三种原生描边位置。
+- 工具 Schema 公开稳定枚举；批量更新只统计实际变化的可编辑形状，非法值在文档修改前原子拒绝。
+
+### Tests
+- 新增混合描边位置多选更新、真实计数、查询、Schema、重复值零历史与非法枚举原子失败回归；既有形状查询同步验证默认内侧描边，并复用构建完成端点和矩形属性邻接回归，3/3 成功。
+
 ## 2.12.0-rc737 - 2026-08-09
 
 ### Added
