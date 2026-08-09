@@ -129,17 +129,27 @@ extension ImageEditorViewModel {
     }
 
     func selectXomoObject(at point: CGPoint, extendingSelection: Bool = false) -> Bool {
-        guard let object = xomoCanvasObjects()
-            .sorted(by: { $0.frontIndex > $1.frontIndex })
-            .first(where: { object in
-                object.frame.contains(point) && !isXomoObjectOccluded(object, at: point)
-            })
-        else { return false }
+        guard let object = topmostXomoObject(at: point) else { return false }
 
         selectLayer(object.groupID, extendingSelection: extendingSelection)
         statusText = extendingSelection
             ? L10n.format("imageEditor.status.layerRangeSelected", document.selectedLayerIDs.count)
             : L10n.format("xomo.object.status.selected", object.kind.title)
+        return true
+    }
+
+    /// Resolves the frontmost component again when a drag begins. Merely
+    /// landing inside the old selection bounds is insufficient: another
+    /// component or an ordinary layer may now be in front. Existing
+    /// multi-selection is preserved when the resolved object is already part
+    /// of it, matching Sketch/Figma group-drag behavior.
+    func prepareXomoObjectMove(at point: CGPoint) -> Bool {
+        guard let object = topmostXomoObject(at: point) else { return false }
+        if document.selectedLayerIDs.contains(object.groupID), selectedXomoObjectFrame != nil {
+            return true
+        }
+        selectLayer(object.groupID)
+        statusText = L10n.format("xomo.object.status.selected", object.kind.title)
         return true
     }
 
@@ -155,9 +165,7 @@ extension ImageEditorViewModel {
     /// selection state. Canvas gesture arbitration uses this fast query to
     /// keep component drags out of the ordinary move fallback.
     func hasXomoObject(at point: CGPoint) -> Bool {
-        xomoCanvasObjects().contains { object in
-            object.frame.contains(point) && !isXomoObjectOccluded(object, at: point)
-        }
+        topmostXomoObject(at: point) != nil
     }
 
     /// Move-tool hit testing for ordinary Photoshop-style layers. Component
@@ -281,6 +289,14 @@ extension ImageEditorViewModel {
                 frontIndex: max(group.index, frontIndexByGroupID[groupID] ?? group.index)
             )
         }
+    }
+
+    private func topmostXomoObject(at point: CGPoint) -> XomoCanvasObject? {
+        xomoCanvasObjects()
+            .sorted(by: { $0.frontIndex > $1.frontIndex })
+            .first { object in
+                object.frame.contains(point) && !isXomoObjectOccluded(object, at: point)
+            }
     }
 
     private func isXomoObjectOccluded(_ object: XomoCanvasObject, at point: CGPoint) -> Bool {

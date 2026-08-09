@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-10 02:46:06 +0800",
+  "generated_at": "2026-08-10 02:50:10 +0800",
   "total": 2,
   "passed": 2,
   "failed": 0,
@@ -10,27 +10,27 @@
   "results": [
     {
       "suite": "XomoCanvasObjectTests",
-      "method": "sharedMoveTargetFallbackSelectsAComponentBeforeItsChildren",
-      "identifier": "veilpicTests/XomoCanvasObjectTests/sharedMoveTargetFallbackSelectsAComponentBeforeItsChildren()",
+      "method": "componentMovePreparationPreservesAnExistingMultiSelection",
+      "identifier": "veilpicTests/XomoCanvasObjectTests/componentMovePreparationPreservesAnExistingMultiSelection()",
       "file": "XomoCanvasObjectTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 4.462,
+      "duration": 3.31,
       "infrastructure_retries": 0,
       "issues": [],
-      "log": "XomoCanvasObjectTests.sharedMoveTargetFallbackSelectsAComponentBeforeItsChildren.log"
+      "log": "XomoCanvasObjectTests.componentMovePreparationPreservesAnExistingMultiSelection.log"
     },
     {
       "suite": "XomoCanvasObjectTests",
-      "method": "sharedMoveTargetFallbackStillSelectsOrdinaryVisibleLayers",
-      "identifier": "veilpicTests/XomoCanvasObjectTests/sharedMoveTargetFallbackStillSelectsOrdinaryVisibleLayers()",
+      "method": "componentMovePreparationSwitchesFromSelectedBackObjectToFrontObject",
+      "identifier": "veilpicTests/XomoCanvasObjectTests/componentMovePreparationSwitchesFromSelectedBackObjectToFrontObject()",
       "file": "XomoCanvasObjectTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 2.771,
+      "duration": 4.663,
       "infrastructure_retries": 0,
       "issues": [],
-      "log": "XomoCanvasObjectTests.sharedMoveTargetFallbackStillSelectsOrdinaryVisibleLayers.log"
+      "log": "XomoCanvasObjectTests.componentMovePreparationSwitchesFromSelectedBackObjectToFrontObject.log"
     }
   ]
 }

@@ -2356,11 +2356,9 @@ struct ImageEditorView: View {
                                   ),
                                   let imagePoint = imagePoint(from: location, in: geometry.size)
                             else { return false }
-                            let selectedFrame = viewModel.selectedXomoObjectFrame
-                            let isInsideSelectedObject = selectedFrame?.contains(imagePoint) == true
-                            let didSelectObject = isInsideSelectedObject
-                                || viewModel.selectXomoObject(at: imagePoint)
-                            guard didSelectObject, viewModel.canResizeSelectedLayer else { return false }
+                            guard viewModel.prepareXomoObjectMove(at: imagePoint),
+                                  viewModel.canResizeSelectedLayer
+                            else { return false }
                             return true
                         },
                         onObjectMoveActivated: {

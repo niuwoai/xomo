@@ -332,6 +332,37 @@ struct XomoCanvasObjectTests {
         #expect(viewModel.document.selectedLayerID != firstObject.id)
     }
 
+    @Test func componentMovePreparationSwitchesFromSelectedBackObjectToFrontObject() throws {
+        let viewModel = makeViewModel()
+        let origin = CGPoint(x: 80, y: 90)
+        viewModel.insertXomoComponent(.button, at: origin)
+        let backObject = try #require(viewModel.document.selectedLayer)
+        viewModel.insertXomoComponent(.secondaryButton, at: origin)
+        let frontObject = try #require(viewModel.document.selectedLayer)
+        viewModel.selectLayer(backObject.id)
+
+        #expect(viewModel.prepareXomoObjectMove(at: CGPoint(x: 160, y: 112)))
+        #expect(viewModel.document.selectedLayerID == frontObject.id)
+        #expect(viewModel.document.selectedLayerID != backObject.id)
+    }
+
+    @Test func componentMovePreparationPreservesAnExistingMultiSelection() throws {
+        let viewModel = makeViewModel()
+        viewModel.insertXomoComponent(.button, at: CGPoint(x: 80, y: 90))
+        let firstObject = try #require(viewModel.document.selectedLayer)
+        viewModel.insertXomoComponent(.avatar, at: CGPoint(x: 420, y: 260))
+        let secondObject = try #require(viewModel.document.selectedLayer)
+        #expect(viewModel.selectXomoObject(
+            at: CGPoint(x: 160, y: 112),
+            extendingSelection: true
+        ))
+        let selectionBeforeMove = viewModel.document.selectedLayerIDs
+        #expect(selectionBeforeMove == [firstObject.id, secondObject.id])
+
+        #expect(viewModel.prepareXomoObjectMove(at: CGPoint(x: 468, y: 308)))
+        #expect(viewModel.document.selectedLayerIDs == selectionBeforeMove)
+    }
+
     @Test func switchingObjectsUpdatesKindAndBoundsImmediately() throws {
         let viewModel = makeViewModel()
         viewModel.insertXomoComponent(.button, at: CGPoint(x: 40, y: 60))
