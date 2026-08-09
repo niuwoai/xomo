@@ -1,6 +1,8 @@
 # Xomo 经典 Photoshop 能力路线图
 
-> 最后更新：2026-08-09 ｜ 当前版本：v2.12.0-rc735 ｜ 目标：以经典 Photoshop 能力作为现代混合编辑器的可靠像素与图层底座
+> 最后更新：2026-08-09 ｜ 当前版本：v2.12.0-rc736 ｜ 目标：以经典 Photoshop 能力作为现代混合编辑器的可靠像素与图层底座
+
+- `v2.12.0-rc736`：MCP/CLI 的形状查询与更新支持 `strokeJoin=miter|round|bevel`，可和 `strokeMiterLimit` 原子批量设置；Schema、查询、真实计数、重复值、非法枚举及界面事务回归 3/3 通过。
 
 - `v2.12.0-rc735`：MCP/CLI 的形状查询与更新支持 `strokeMiterLimit`，批量写入返回真实 `updatedLayerCount`；重复值不制造 Undo/History，Schema 同步公开参数，定向与既有形状更新回归 3/3 通过。
 

@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.12.0-rc736 - 2026-08-09
+
+### Added
+- MCP/CLI 的 `xomo.shape.get` 返回当前形状 `strokeJoin`，`xomo.shape.update` 支持 `miter`、`round`、`bevel` 三种原生描边连接，可与 rc735 的 `strokeMiterLimit` 一次原子设置。
+- 工具 Schema 公开稳定枚举；非法连接值会在修改文档前拒绝，不产生 Undo/History。
+
+### Tests
+- 扩展多选斜接自动化回归，覆盖连接类型与限制联合更新、查询、Schema、重复值零历史和非法枚举原子失败；既有形状自动化与界面多选事务回归同步通过，3/3 成功。
+
 ## 2.12.0-rc735 - 2026-08-09
 
 ### Added

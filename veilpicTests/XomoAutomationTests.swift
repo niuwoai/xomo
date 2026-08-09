@@ -3606,6 +3606,7 @@ struct XomoAutomationTests {
         #expect(inspectedShape["fillOpacity"] == .number(0.6))
         #expect(inspectedShape["strokeOpacity"] == .number(0.8))
         #expect(inspectedShape["strokeWidth"] == .number(7))
+        #expect(inspectedShape["strokeJoin"] == .string("round"))
         #expect(inspectedShape["strokeMiterLimit"] == .number(10))
 
         let historyCountBeforeUpdate = viewModel.document.history.count
@@ -3719,6 +3720,7 @@ struct XomoAutomationTests {
         let secondID = try #require(viewModel.document.selectedLayerID)
         let secondIndex = try #require(viewModel.document.layers.firstIndex { $0.id == secondID })
         var secondContent = try #require(viewModel.document.layers[secondIndex].shapeContent)
+        secondContent.strokeJoin = .miter
         secondContent.strokeMiterLimit = 4
         viewModel.document.layers[secondIndex].kind = .shape(secondContent)
         viewModel.document.selectedLayerIDs = [firstID, secondID]
@@ -3730,24 +3732,41 @@ struct XomoAutomationTests {
         let updated = registry.execute(request(
             operation: "call",
             name: "xomo.shape.update",
-            arguments: ["strokeMiterLimit": .number(4)]
+            arguments: [
+                "strokeJoin": .string("miter"),
+                "strokeMiterLimit": .number(4)
+            ]
         ))
         #expect(updated.ok)
         #expect(updated.result == .object(["updatedLayerCount": .number(1)]))
         #expect(viewModel.document.history.count == historyCount + 1)
         #expect(viewModel.document.layers.first { $0.id == firstID }?.shapeContent?.strokeMiterLimit == 4)
         #expect(viewModel.document.layers.first { $0.id == secondID }?.shapeContent?.strokeMiterLimit == 4)
+        #expect(viewModel.document.layers.first { $0.id == firstID }?.shapeContent?.strokeJoin == .miter)
+        #expect(viewModel.document.layers.first { $0.id == secondID }?.shapeContent?.strokeJoin == .miter)
 
         let inspected = registry.execute(request(operation: "call", name: "xomo.shape.get"))
+        #expect(inspected.result?.objectValue?["strokeJoin"] == .string("miter"))
         #expect(inspected.result?.objectValue?["strokeMiterLimit"] == .number(4))
 
         let repeatedHistoryCount = viewModel.document.history.count
         let repeated = registry.execute(request(
             operation: "call",
             name: "xomo.shape.update",
-            arguments: ["strokeMiterLimit": .number(4)]
+            arguments: [
+                "strokeJoin": .string("miter"),
+                "strokeMiterLimit": .number(4)
+            ]
         ))
         #expect(!repeated.ok)
+        #expect(viewModel.document.history.count == repeatedHistoryCount)
+
+        let invalid = registry.execute(request(
+            operation: "call",
+            name: "xomo.shape.update",
+            arguments: ["strokeJoin": .string("future")]
+        ))
+        #expect(!invalid.ok)
         #expect(viewModel.document.history.count == repeatedHistoryCount)
 
         let toolsResponse = registry.execute(request(operation: "tools"))
@@ -3758,6 +3777,11 @@ struct XomoAutomationTests {
         #expect(
             updateTool["inputSchema"]?.objectValue?["properties"]?
                 .objectValue?["strokeMiterLimit"]?.objectValue?["type"] == .string("number")
+        )
+        #expect(
+            updateTool["inputSchema"]?.objectValue?["properties"]?
+                .objectValue?["strokeJoin"]?.objectValue?["enum"]?.arrayValue
+                == ImageEditorStrokeJoin.allCases.map { .string($0.rawValue) }
         )
     }
 

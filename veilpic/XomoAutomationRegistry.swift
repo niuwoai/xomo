@@ -1903,6 +1903,7 @@ final class XomoAutomationRegistry {
             "strokeColor": colorJSON(content.strokeColor),
             "strokeOpacity": .number(content.strokeOpacity),
             "strokeWidth": .number(content.strokeWidth),
+            "strokeJoin": .string(content.strokeJoin.rawValue),
             "strokeMiterLimit": .number(content.strokeMiterLimit),
             "cornerRadius": .number(content.cornerRadius),
             "cornerRadii": cornerRadiiJSON(content.effectiveCornerRadii),
@@ -1924,6 +1925,7 @@ final class XomoAutomationRegistry {
         let fillGradientCenter = try optionalShapeGradientCenter(arguments)
         try validateShapeFillArguments(arguments, fillGradient: fillGradient)
         let fillKind = arguments["fillKind"]?.stringValue
+        let strokeJoin = try optionalShapeStrokeJoin(arguments["strokeJoin"]?.stringValue)
         let selectedContent = viewModel.document.selectedLayer?.shapeContent
         var resolvedGradient: ImageEditorGradientFillContent?
         if (fillKind == "linearGradient" || fillKind == "radialGradient"),
@@ -1953,6 +1955,7 @@ final class XomoAutomationRegistry {
             strokeColor: try optionalColor("strokeColor", in: arguments),
             strokeOpacity: arguments["strokeOpacity"]?.doubleValue ?? legacyOpacity,
             strokeWidth: arguments["strokeWidth"]?.doubleValue,
+            strokeJoin: strokeJoin,
             strokeMiterLimit: arguments["strokeMiterLimit"]?.doubleValue,
             cornerRadius: arguments["cornerRadius"]?.doubleValue,
             cornerRadii: cornerRadii,
@@ -1962,6 +1965,16 @@ final class XomoAutomationRegistry {
             throw XomoAutomationCallError.operationFailed("Shape update made no changes")
         }
         return updatedLayerCount
+    }
+
+    private func optionalShapeStrokeJoin(_ value: String?) throws -> ImageEditorStrokeJoin? {
+        guard let value else { return nil }
+        guard let join = ImageEditorStrokeJoin(rawValue: value) else {
+            throw XomoAutomationCallError.invalidArgument(
+                "strokeJoin must be miter, round, or bevel"
+            )
+        }
+        return join
     }
 
     private func optionalShapeGradient(
@@ -5797,6 +5810,10 @@ private extension XomoAutomationRegistry {
             "strokeColor": shapeColorSchema,
             "strokeOpacity": XomoAutomationSchema.number(description: "Independent stroke opacity from 0 to 1"),
             "strokeWidth": XomoAutomationSchema.number(description: "Stroke width in pixels"),
+            "strokeJoin": XomoAutomationSchema.string(
+                description: "Stroke corner join",
+                values: ImageEditorStrokeJoin.allCases.map(\.rawValue)
+            ),
             "strokeMiterLimit": XomoAutomationSchema.number(description: "Miter join limit from 1 to 1000"),
             "cornerRadius": XomoAutomationSchema.number(description: "Uniform rectangle corner radius in pixels"),
             "cornerRadii": rectangleCornerRadiiSchema,
