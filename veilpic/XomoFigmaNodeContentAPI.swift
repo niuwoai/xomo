@@ -420,6 +420,7 @@ enum XomoFigmaNodeImportMapper {
             strokeAlign: node.strokeAlign,
             strokeCap: node.strokeCap,
             strokeJoin: node.strokeJoin,
+            strokeMiterLimit: mappedStrokeMiterLimit(node),
             strokeDashes: node.strokeDashes,
             cornerRadius: uniformCornerRadius(node),
             cornerRadii: independentCornerRadii(node),
@@ -1501,7 +1502,8 @@ enum XomoFigmaNodeImportMapper {
             return true
         }
         if node.strokeJoin?.uppercased() == "MITER",
-           node.strokeMiterAngle != nil {
+           node.strokeMiterAngle != nil,
+           mappedStrokeMiterLimit(node) == nil {
             return true
         }
         if let dashes = node.strokeDashes,
@@ -1510,6 +1512,21 @@ enum XomoFigmaNodeImportMapper {
             return true
         }
         return false
+    }
+
+    private static func mappedStrokeMiterLimit(_ node: XomoFigmaNode) -> Double? {
+        guard node.strokeJoin?.uppercased() == "MITER",
+              let angle = node.strokeMiterAngle,
+              angle.isFinite,
+              angle > 0,
+              angle <= 180
+        else { return nil }
+        let limit = 1 / sin(angle * .pi / 360)
+        guard limit.isFinite,
+              limit >= Double(ImageEditorShapeContent.minimumStrokeMiterLimit),
+              limit <= Double(ImageEditorShapeContent.maximumStrokeMiterLimit)
+        else { return nil }
+        return limit
     }
 
     private static func supportedMaskShape(_ node: XomoFigmaNode) -> XomoFigmaPlanMaskShape? {

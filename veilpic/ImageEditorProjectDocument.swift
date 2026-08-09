@@ -738,6 +738,7 @@ struct ImageEditorProjectShapeContent: Equatable, Codable {
     var strokePosition: ImageEditorStrokePosition = .inside
     var strokeCap: ImageEditorStrokeCap = .round
     var strokeJoin: ImageEditorStrokeJoin = .round
+    var strokeMiterLimit: CGFloat = ImageEditorShapeContent.defaultStrokeMiterLimit
     var strokeDashPattern: [CGFloat] = []
     var cornerRadius: CGFloat?
     var cornerRadii: ImageEditorRectangleCornerRadii?
@@ -749,7 +750,7 @@ struct ImageEditorProjectShapeContent: Equatable, Codable {
 
     enum CodingKeys: String, CodingKey {
         case kind, fillColor, fillGradient, fillGradientCenter, fillOpacity
-        case strokeColor, strokeWidth, strokeOpacity, strokePosition, strokeCap, strokeJoin, strokeDashPattern
+        case strokeColor, strokeWidth, strokeOpacity, strokePosition, strokeCap, strokeJoin, strokeMiterLimit, strokeDashPattern
         case cornerRadius, cornerRadii, cornerSmoothing, pathPoints, pathAnchors
         case pathSubpaths, isPathClosed
     }
@@ -767,6 +768,8 @@ struct ImageEditorProjectShapeContent: Equatable, Codable {
         strokePosition = try container.decodeIfPresent(ImageEditorStrokePosition.self, forKey: .strokePosition) ?? .inside
         strokeCap = try container.decodeIfPresent(ImageEditorStrokeCap.self, forKey: .strokeCap) ?? .round
         strokeJoin = try container.decodeIfPresent(ImageEditorStrokeJoin.self, forKey: .strokeJoin) ?? .round
+        strokeMiterLimit = try container.decodeIfPresent(CGFloat.self, forKey: .strokeMiterLimit)
+            ?? ImageEditorShapeContent.defaultStrokeMiterLimit
         strokeDashPattern = try container.decodeIfPresent([CGFloat].self, forKey: .strokeDashPattern) ?? []
         cornerRadius = try container.decodeIfPresent(CGFloat.self, forKey: .cornerRadius)
         cornerRadii = try container.decodeIfPresent(ImageEditorRectangleCornerRadii.self, forKey: .cornerRadii)
@@ -789,6 +792,7 @@ struct ImageEditorProjectShapeContent: Equatable, Codable {
         strokePosition = content.strokePosition
         strokeCap = content.strokeCap
         strokeJoin = content.strokeJoin
+        strokeMiterLimit = content.strokeMiterLimit
         strokeDashPattern = content.strokeDashPattern
         cornerRadius = content.cornerRadius
         cornerRadii = content.cornerRadii
@@ -812,6 +816,7 @@ struct ImageEditorProjectShapeContent: Equatable, Codable {
             strokePosition: strokePosition,
             strokeCap: strokeCap,
             strokeJoin: strokeJoin,
+            strokeMiterLimit: strokeMiterLimit,
             strokeDashPattern: strokeDashPattern,
             cornerRadius: cornerRadius ?? 0,
             cornerRadii: cornerRadii,

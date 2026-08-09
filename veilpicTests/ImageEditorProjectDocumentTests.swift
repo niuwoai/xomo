@@ -155,6 +155,29 @@ struct ImageEditorProjectDocumentTests {
         #expect(legacyContent.textContent.verticalAlignment == .top)
     }
 
+    @Test func shapeMiterLimitRoundTripsAndLegacyPayloadUsesNativeDefault() throws {
+        let content = ImageEditorShapeContent(
+            kind: .path,
+            fillColor: .clear,
+            fillOpacity: 0,
+            strokeColor: .black,
+            strokeWidth: 4,
+            strokeOpacity: 1,
+            strokeJoin: .miter,
+            strokeMiterLimit: 4,
+            pathPoints: [CGPoint(x: 0, y: 10), CGPoint(x: 10, y: 0), CGPoint(x: 20, y: 10)]
+        )
+        let encoded = try JSONEncoder().encode(ImageEditorProjectShapeContent(content: content))
+        let restored = try JSONDecoder().decode(ImageEditorProjectShapeContent.self, from: encoded)
+        #expect(restored.content.strokeMiterLimit == 4)
+
+        var legacyObject = try #require(JSONSerialization.jsonObject(with: encoded) as? [String: Any])
+        legacyObject.removeValue(forKey: "strokeMiterLimit")
+        let legacyData = try JSONSerialization.data(withJSONObject: legacyObject)
+        let legacy = try JSONDecoder().decode(ImageEditorProjectShapeContent.self, from: legacyData)
+        #expect(legacy.content.strokeMiterLimit == ImageEditorShapeContent.defaultStrokeMiterLimit)
+    }
+
     @Test
     func adjustmentSettingsDecodeLegacyPayloadWithMissingNewFields() throws {
         let legacyPayload = Data(
@@ -322,6 +345,7 @@ struct ImageEditorProjectDocumentTests {
             strokeOpacity: 0.8,
             strokeCap: .square,
             strokeJoin: .bevel,
+            strokeMiterLimit: 4,
             strokeDashPattern: [6, 3]
         )
         let shapeLayer = ImageEditorLayer.shape(
@@ -456,6 +480,7 @@ struct ImageEditorProjectDocumentTests {
         #expect(restoredShapeContent.fillOpacity == 0.45)
         #expect(restoredShapeContent.strokeCap == .square)
         #expect(restoredShapeContent.strokeJoin == .bevel)
+        #expect(restoredShapeContent.strokeMiterLimit == 4)
         #expect(restoredShapeContent.strokeDashPattern == [6, 3])
 
         let restoredSmartObject = try #require(restoredViewModel.document.layers.first { $0.id == smartObjectLayer.id })

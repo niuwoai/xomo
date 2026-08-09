@@ -501,6 +501,7 @@ extension ImageEditorViewModel {
             && lhs.strokePosition == rhs.strokePosition
             && lhs.strokeCap == rhs.strokeCap
             && lhs.strokeJoin == rhs.strokeJoin
+            && abs(lhs.strokeMiterLimit - rhs.strokeMiterLimit) <= 0.000_1
             && lhs.strokeDashPattern == rhs.strokeDashPattern
             && abs(lhs.cornerRadius - rhs.cornerRadius) <= 0.000_1
             && lhs.cornerRadii == rhs.cornerRadii

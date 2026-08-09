@@ -3104,6 +3104,9 @@ private extension CGPoint {
 struct ImageEditorShapeContent {
     static let minimumStrokeWidth: CGFloat = 0.1
     static let maximumStrokeWidth: CGFloat = 96
+    static let defaultStrokeMiterLimit: CGFloat = 10
+    static let minimumStrokeMiterLimit: CGFloat = 1
+    static let maximumStrokeMiterLimit: CGFloat = 1_000
 
     var kind: ImageEditorShapeKind
     var fillColor: NSColor
@@ -3116,6 +3119,7 @@ struct ImageEditorShapeContent {
     var strokePosition: ImageEditorStrokePosition = .inside
     var strokeCap: ImageEditorStrokeCap = .round
     var strokeJoin: ImageEditorStrokeJoin = .round
+    var strokeMiterLimit: CGFloat = Self.defaultStrokeMiterLimit
     var strokeDashPattern: [CGFloat] = []
     var cornerRadius: CGFloat = 0
     var cornerRadii: ImageEditorRectangleCornerRadii? = nil
@@ -3139,6 +3143,13 @@ struct ImageEditorShapeContent {
         )
         content.fillOpacity = max(0, min(1, fillOpacity))
         content.strokeOpacity = max(0, min(1, strokeOpacity))
+        content.strokeMiterLimit = max(
+            Self.minimumStrokeMiterLimit,
+            min(
+                Self.maximumStrokeMiterLimit,
+                strokeMiterLimit.isFinite ? strokeMiterLimit : Self.defaultStrokeMiterLimit
+            )
+        )
         content.strokeDashPattern = strokeDashPattern
             .filter { $0.isFinite && $0 > 0 }
             .map { min(2_048, $0) }
@@ -3253,6 +3264,7 @@ struct ImageEditorShapeContent {
                         : normalized.rectangleBezierPath(in: strokeRect)
                 }
                 strokePath.lineJoinStyle = normalized.strokeJoin.nsStyle
+                strokePath.miterLimit = normalized.strokeMiterLimit
                 strokePath.lineCapStyle = normalized.strokeCap.nsStyle
                 if normalized.strokeDashPattern.isEmpty {
                     strokePath.setLineDash(nil, count: 0, phase: 0)

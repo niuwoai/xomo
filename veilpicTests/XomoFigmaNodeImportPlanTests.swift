@@ -3005,29 +3005,33 @@ struct XomoFigmaNodeImportPlanTests {
         #expect(result.layers.first?.shapeContent?.strokeWidth == 3)
     }
 
-    @Test func customFigmaMiterAngleReportsFallbackWhileDefaultMiterRemainsExact() throws {
+    @Test func customFigmaMiterAngleMapsToNativeLimitWhileDefaultMiterRemainsExact() throws {
         let response = try JSONDecoder().decode(
             XomoFigmaNodeResponse.self,
             from: Data(
-                #"{"name":"Miter Angles","nodes":{"1:51":{"document":{"id":"1:51","name":"Miter Angles","type":"FRAME","absoluteBoundingBox":{"x":0,"y":0,"width":220,"height":80},"children":[{"id":"2:51","name":"Custom Miter","type":"RECTANGLE","strokes":[{"type":"SOLID","color":{"r":0.2,"g":0.4,"b":0.8,"a":1}}],"strokeWeight":4,"strokeJoin":"MITER","strokeMiterAngle":15,"absoluteBoundingBox":{"x":0,"y":0,"width":100,"height":80}},{"id":"2:52","name":"Default Miter","type":"RECTANGLE","strokes":[{"type":"SOLID","color":{"r":0.2,"g":0.4,"b":0.8,"a":1}}],"strokeWeight":4,"strokeJoin":"MITER","absoluteBoundingBox":{"x":120,"y":0,"width":100,"height":80}}]}}}}"#.utf8
+                #"{"name":"Miter Angles","nodes":{"1:51":{"document":{"id":"1:51","name":"Miter Angles","type":"FRAME","absoluteBoundingBox":{"x":0,"y":0,"width":220,"height":80},"children":[{"id":"2:51","name":"Custom Miter","type":"RECTANGLE","strokes":[{"type":"SOLID","color":{"r":0.2,"g":0.4,"b":0.8,"a":1}}],"strokeWeight":4,"strokeJoin":"MITER","strokeMiterAngle":30,"absoluteBoundingBox":{"x":0,"y":0,"width":100,"height":80}},{"id":"2:52","name":"Default Miter","type":"RECTANGLE","strokes":[{"type":"SOLID","color":{"r":0.2,"g":0.4,"b":0.8,"a":1}}],"strokeWeight":4,"strokeJoin":"MITER","absoluteBoundingBox":{"x":120,"y":0,"width":100,"height":80}}]}}}}"#.utf8
             )
         )
 
         let plan = try XomoFigmaNodeImportMapper.makePlan(response: response, requestedNodeID: "1:51")
         let custom = try #require(plan.items.first { $0.sourceID == "2:51" })
         let standard = try #require(plan.items.first { $0.sourceID == "2:52" })
-        #expect(custom.fidelity == .partial)
-        #expect(custom.issues.contains(.strokeStyleFlattened))
+        #expect(custom.fidelity == .exact)
+        #expect(!custom.issues.contains(.strokeStyleFlattened))
         #expect(custom.strokeJoin == "MITER")
+        #expect(abs((custom.strokeMiterLimit ?? 0) - 3.863_703_305) < 0.000_001)
         #expect(standard.fidelity == .exact)
         #expect(!standard.issues.contains(.strokeStyleFlattened))
+        #expect(standard.strokeMiterLimit == nil)
 
         let result = XomoFigmaNodeMaterializer.materialize(
             plan: plan,
             canvasSize: CGSize(width: 320, height: 180)
         )
         #expect(result.layers.first { $0.name == "Custom Miter" }?.shapeContent?.strokeJoin == .miter)
+        #expect(abs((result.layers.first { $0.name == "Custom Miter" }?.shapeContent?.strokeMiterLimit ?? 0) - 3.863_703_305) < 0.000_001)
         #expect(result.layers.first { $0.name == "Default Miter" }?.shapeContent?.strokeJoin == .miter)
+        #expect(result.layers.first { $0.name == "Default Miter" }?.shapeContent?.strokeMiterLimit == 10)
     }
 
     @Test func materializerCreatesEditableHierarchyAtCenteredScaleAndHonestPlaceholder() throws {

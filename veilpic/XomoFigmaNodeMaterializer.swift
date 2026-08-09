@@ -780,6 +780,9 @@ enum XomoFigmaNodeMaterializer {
             strokePosition: ImageEditorStrokePosition(figmaValue: item.strokeAlign),
             strokeCap: ImageEditorStrokeCap(figmaValue: item.strokeCap),
             strokeJoin: ImageEditorStrokeJoin(figmaValue: item.strokeJoin),
+            strokeMiterLimit: CGFloat(
+                item.strokeMiterLimit ?? Double(ImageEditorShapeContent.defaultStrokeMiterLimit)
+            ),
             strokeDashPattern: item.strokeDashes?.map { max(0, CGFloat($0) * scale) } ?? [],
             cornerRadius: max(0, CGFloat(item.cornerRadius ?? 0) * scale),
             cornerRadii: item.cornerRadii?.scaled(by: scale),
