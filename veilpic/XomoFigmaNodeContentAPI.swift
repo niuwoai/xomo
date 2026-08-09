@@ -282,6 +282,10 @@ enum XomoFigmaNodeImportMapper {
            mappedBlendMode(blendMode) == nil {
             issues.append(.blendModeFlattened)
         }
+        if let opacity = node.opacity,
+           !opacity.isFinite || !(0...1).contains(opacity) {
+            issues.append(.nodeOpacityFlattened)
+        }
         if hasUnsupportedCornerStyle(node, target: mapping.target) {
             issues.append(.cornerRadiusFlattened)
         }
@@ -396,7 +400,7 @@ enum XomoFigmaNodeImportMapper {
                     height: max(0, $0.height)
                 )
             },
-            opacity: min(max(node.opacity ?? 1, 0), 1),
+            opacity: normalizedNodeOpacity(node.opacity),
             isVisible: node.visible ?? true,
             isLocked: node.locked ?? false,
             blendMode: mappedBlendMode(node.blendMode)?.rawValue,
@@ -1207,6 +1211,12 @@ enum XomoFigmaNodeImportMapper {
             Double(ImageEditorShapeContent.minimumStrokeWidth),
             min(editorMaximum, geometryMaximum)
         )
+    }
+
+    private static func normalizedNodeOpacity(_ opacity: Double?) -> Double {
+        guard let opacity else { return 1 }
+        guard opacity.isFinite else { return 1 }
+        return min(max(opacity, 0), 1)
     }
 
     private static func hasUnsupportedStrokeStyle(_ node: XomoFigmaNode) -> Bool {

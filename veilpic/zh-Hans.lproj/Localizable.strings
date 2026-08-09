@@ -3297,6 +3297,7 @@
 "xomo.figma.node.issue.clippingFlattened" = "Frame 的内容裁切边界尚未保留";
 "xomo.figma.node.issue.effectsFlattened" = "效果尚未保留";
 "xomo.figma.node.issue.blendModeFlattened" = "混合模式尚未保留";
+"xomo.figma.node.issue.nodeOpacityFlattened" = "Figma 节点透明度超出 Xomo 的可编辑范围，已调整到 0–100%";
 "xomo.figma.node.issue.cornerRadiusFlattened" = "Figma 圆角平滑或圆角尺寸已按 Xomo 的可编辑几何能力近似";
 "xomo.figma.node.issue.strokeWeightFlattened" = "Figma 描边宽度超出 Xomo 可编辑范围或当前形状的几何上限，已调整到受支持范围";
 "xomo.figma.node.issue.strokeStyleFlattened" = "Figma 描边位置、端点、连接或虚线样式包含不支持的值，已回退到可编辑样式";

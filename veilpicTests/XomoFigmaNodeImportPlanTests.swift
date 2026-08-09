@@ -871,6 +871,37 @@ struct XomoFigmaNodeImportPlanTests {
         #expect((multiStopShape.fillGradient?.shapeColorStops[1].green ?? 0) > 0.95)
     }
 
+    @Test func outOfRangeFigmaNodeOpacityReportsAndUsesEditableBounds() throws {
+        let response = try JSONDecoder().decode(
+            XomoFigmaNodeResponse.self,
+            from: Data(
+                #"{"name":"Opacity","nodes":{"1:27":{"document":{"id":"1:27","name":"Opacity","type":"FRAME","absoluteBoundingBox":{"x":0,"y":0,"width":300,"height":120},"children":[{"id":"2:27","name":"Too Opaque","type":"RECTANGLE","opacity":1.4,"absoluteBoundingBox":{"x":0,"y":0,"width":80,"height":40}},{"id":"2:28","name":"Negative","type":"RECTANGLE","opacity":-0.2,"absoluteBoundingBox":{"x":100,"y":0,"width":80,"height":40}},{"id":"2:29","name":"Native","type":"RECTANGLE","opacity":0.4,"absoluteBoundingBox":{"x":200,"y":0,"width":80,"height":40}}]}}}}"#.utf8
+            )
+        )
+
+        let plan = try XomoFigmaNodeImportMapper.makePlan(response: response, requestedNodeID: "1:27")
+        let tooOpaque = try #require(plan.items.first { $0.sourceID == "2:27" })
+        let negative = try #require(plan.items.first { $0.sourceID == "2:28" })
+        let native = try #require(plan.items.first { $0.sourceID == "2:29" })
+        #expect(tooOpaque.opacity == 1)
+        #expect(negative.opacity == 0)
+        for item in [tooOpaque, negative] {
+            #expect(item.fidelity == .partial)
+            #expect(item.issues.contains(.nodeOpacityFlattened))
+        }
+        #expect(native.opacity == 0.4)
+        #expect(native.fidelity == .exact)
+        #expect(!native.issues.contains(.nodeOpacityFlattened))
+
+        let result = XomoFigmaNodeMaterializer.materialize(
+            plan: plan,
+            canvasSize: CGSize(width: 400, height: 240)
+        )
+        #expect(result.layers.first { $0.name == "Too Opaque" }?.opacity == 1)
+        #expect(result.layers.first { $0.name == "Negative" }?.opacity == 0)
+        #expect(result.layers.first { $0.name == "Native" }?.opacity == 0.4)
+    }
+
     @Test func supportedFigmaBlendModesRemainEditableAndUnknownModesStayExplicitlyPartial() throws {
         let response = try JSONDecoder().decode(
             XomoFigmaNodeResponse.self,

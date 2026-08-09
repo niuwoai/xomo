@@ -79,6 +79,7 @@ enum XomoFigmaNodeMappingIssue: String, CaseIterable, Sendable {
     case clippingFlattened
     case effectsFlattened
     case blendModeFlattened
+    case nodeOpacityFlattened
     case cornerRadiusFlattened
     case strokeWeightFlattened
     case strokeStyleFlattened

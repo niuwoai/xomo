@@ -3297,6 +3297,7 @@
 "xomo.figma.node.issue.clippingFlattened" = "Frame content clipping is not preserved yet";
 "xomo.figma.node.issue.effectsFlattened" = "Effects are not preserved yet";
 "xomo.figma.node.issue.blendModeFlattened" = "Blend mode is not preserved yet";
+"xomo.figma.node.issue.nodeOpacityFlattened" = "Figma node opacity is outside Xomo's editable range and was adjusted to 0–100%";
 "xomo.figma.node.issue.cornerRadiusFlattened" = "Figma corner smoothing or radius dimensions were approximated to Xomo's editable geometry";
 "xomo.figma.node.issue.strokeWeightFlattened" = "Figma stroke width exceeds Xomo's editable range or this shape's geometry limit and was adjusted to the supported range";
 "xomo.figma.node.issue.strokeStyleFlattened" = "Figma stroke alignment, cap, join, or dash style contains unsupported values and was mapped to an editable fallback";
