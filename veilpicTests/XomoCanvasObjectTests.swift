@@ -81,6 +81,32 @@ struct XomoCanvasObjectTests {
         #expect(viewModel.document.selectedLayerID == group.id)
     }
 
+    @Test func sharedMoveTargetFallbackSelectsAComponentBeforeItsChildren() throws {
+        let viewModel = makeViewModel()
+        viewModel.insertXomoComponent(.button, at: CGPoint(x: 80, y: 90))
+        let group = try #require(viewModel.document.selectedLayer)
+        let backgroundID = try #require(viewModel.document.layers.first?.id)
+        viewModel.selectLayer(backgroundID)
+
+        #expect(viewModel.selectMovableCanvasTarget(at: CGPoint(x: 160, y: 112)))
+        #expect(viewModel.document.selectedLayerID == group.id)
+        #expect(viewModel.document.selectedLayerIDs == [group.id])
+    }
+
+    @Test func sharedMoveTargetFallbackStillSelectsOrdinaryVisibleLayers() throws {
+        let viewModel = makeViewModel()
+        var layer = ImageEditorLayer.solidColorFill(
+            name: "Ordinary layer",
+            size: CGSize(width: 120, height: 80),
+            content: ImageEditorSolidColorFillContent(red: 0.2, green: 0.5, blue: 0.8)
+        )
+        layer.frame.origin = CGPoint(x: 140, y: 120)
+        viewModel.document.layers.append(layer)
+
+        #expect(viewModel.selectMovableCanvasTarget(at: CGPoint(x: 180, y: 150)))
+        #expect(viewModel.document.selectedLayerID == layer.id)
+    }
+
     @Test func componentObjectNudgeWinsOverStalePixelSelectionInComponentsMode() throws {
         let viewModel = makeViewModel()
         viewModel.insertXomoComponent(.button, at: CGPoint(x: 80, y: 90))

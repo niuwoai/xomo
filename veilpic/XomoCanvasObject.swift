@@ -143,6 +143,14 @@ extension ImageEditorViewModel {
         return true
     }
 
+    /// Shared move-target selection for both the transparent object hit target
+    /// and the canvas gesture fallback used by macOS 13. Component instances
+    /// must win before ordinary layers so their children never steal a drag.
+    func selectMovableCanvasTarget(at point: CGPoint, extendingSelection: Bool = false) -> Bool {
+        selectXomoObject(at: point, extendingSelection: extendingSelection)
+            || selectVisibleLayer(at: point, extendingSelection: extendingSelection)
+    }
+
     /// Returns whether a component object owns the point without changing
     /// selection state. Canvas gesture arbitration uses this fast query to
     /// keep component drags out of the ordinary move fallback.

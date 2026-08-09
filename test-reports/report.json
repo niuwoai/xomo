@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-10 02:41:41 +0800",
+  "generated_at": "2026-08-10 02:46:06 +0800",
   "total": 2,
   "passed": 2,
   "failed": 0,
@@ -9,28 +9,28 @@
   "jobs": 1,
   "results": [
     {
-      "suite": "ImageEditorTextHitTestingTests",
-      "method": "canvasTolerancePreservesFourScreenPixelsAcrossZoomLevels",
-      "identifier": "veilpicTests/ImageEditorTextHitTestingTests/canvasTolerancePreservesFourScreenPixelsAcrossZoomLevels()",
-      "file": "ImageEditorTextHitTestingTests.swift",
+      "suite": "XomoCanvasObjectTests",
+      "method": "sharedMoveTargetFallbackSelectsAComponentBeforeItsChildren",
+      "identifier": "veilpicTests/XomoCanvasObjectTests/sharedMoveTargetFallbackSelectsAComponentBeforeItsChildren()",
+      "file": "XomoCanvasObjectTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 4.706,
+      "duration": 4.462,
       "infrastructure_retries": 0,
       "issues": [],
-      "log": "ImageEditorTextHitTestingTests.canvasTolerancePreservesFourScreenPixelsAcrossZoomLevels.log"
+      "log": "XomoCanvasObjectTests.sharedMoveTargetFallbackSelectsAComponentBeforeItsChildren.log"
     },
     {
-      "suite": "ImageEditorTextHitTestingTests",
-      "method": "editableTextHitTestingUsesTheSuppliedCanvasTolerance",
-      "identifier": "veilpicTests/ImageEditorTextHitTestingTests/editableTextHitTestingUsesTheSuppliedCanvasTolerance()",
-      "file": "ImageEditorTextHitTestingTests.swift",
+      "suite": "XomoCanvasObjectTests",
+      "method": "sharedMoveTargetFallbackStillSelectsOrdinaryVisibleLayers",
+      "identifier": "veilpicTests/XomoCanvasObjectTests/sharedMoveTargetFallbackStillSelectsOrdinaryVisibleLayers()",
+      "file": "XomoCanvasObjectTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 2.763,
+      "duration": 2.771,
       "infrastructure_retries": 0,
       "issues": [],
-      "log": "ImageEditorTextHitTestingTests.editableTextHitTestingUsesTheSuppliedCanvasTolerance.log"
+      "log": "XomoCanvasObjectTests.sharedMoveTargetFallbackStillSelectsOrdinaryVisibleLayers.log"
     }
   ]
 }

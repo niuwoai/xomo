@@ -3161,8 +3161,7 @@ struct ImageEditorView: View {
                        !isObjectMoveGestureActive {
                         let pressedImagePoint = imagePoint(from: value.startLocation, in: size)
                         if let pressedImagePoint,
-                           viewModel.selectXomoObject(at: pressedImagePoint)
-                                || viewModel.selectVisibleLayer(at: pressedImagePoint) {
+                           viewModel.selectMovableCanvasTarget(at: pressedImagePoint) {
                             isCanvasCloneGestureActive = true
                             if viewModel.beginDuplicatingSelectedLayerForMove() {
                                 resetObjectMoveTracking()
@@ -3196,8 +3195,10 @@ struct ImageEditorView: View {
                        !isObjectMoveGestureActive {
                         let pressedImagePoint = imagePoint(from: value.startLocation, in: size)
                         if let pressedImagePoint,
-                           viewModel.selectXomoObject(at: pressedImagePoint, extendingSelection: true)
-                                || viewModel.selectVisibleLayer(at: pressedImagePoint, extendingSelection: true) {
+                           viewModel.selectMovableCanvasTarget(
+                            at: pressedImagePoint,
+                            extendingSelection: true
+                           ) {
                             // Shift-click is a selection gesture, not a move.
                             // Keep it stable while DragGesture emits repeated updates.
                             isCanvasSelectionGestureActive = true
@@ -3209,7 +3210,7 @@ struct ImageEditorView: View {
                     if !isObjectMoveGestureActive {
                         let pressedImagePoint = imagePoint(from: value.startLocation, in: size)
                         guard let pressedImagePoint,
-                              viewModel.selectVisibleLayer(at: pressedImagePoint)
+                              viewModel.selectMovableCanvasTarget(at: pressedImagePoint)
                         else {
                             isCanvasPanGestureActive = true
                             updateCanvasPan(translation: value.translation)
