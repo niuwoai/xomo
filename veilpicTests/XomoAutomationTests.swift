@@ -4874,6 +4874,85 @@ struct XomoAutomationTests {
         }
     }
 
+    @Test func shapeGradientStopsRejectNonArrayValuesAtomically() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        let colorPair: [String: XomoJSONValue] = [
+            "startColor": .object([
+                "red": .number(1), "green": .number(0), "blue": .number(0)
+            ]),
+            "endColor": .object([
+                "red": .number(0), "green": .number(0), "blue": .number(1)
+            ])
+        ]
+        let created = registry.execute(request(
+            operation: "call",
+            name: "xomo.shape.create",
+            arguments: [
+                "kind": .string("rectangle"),
+                "x": .number(10), "y": .number(12),
+                "width": .number(90), "height": .number(70),
+                "fillKind": .string("linearGradient"),
+                "fillGradient": .object(colorPair)
+            ]
+        ))
+        #expect(created.ok)
+        let stableLayerID = try #require(viewModel.document.selectedLayerID)
+        let stableLayerCount = viewModel.document.layers.count
+        let stableHistoryCount = viewModel.document.history.count
+        let stableStrokeWidth = viewModel.document.selectedLayer?.shapeContent?.strokeWidth
+
+        for invalidStops: XomoJSONValue in [
+            .object([:]),
+            .string("0,1"),
+            .number(2),
+            .bool(false),
+            .null
+        ] {
+            var invalidGradient = colorPair
+            invalidGradient["stops"] = invalidStops
+            let invalidUpdate = registry.execute(request(
+                operation: "call",
+                name: "xomo.shape.update",
+                arguments: [
+                    "fillGradient": .object(invalidGradient),
+                    "strokeWidth": .number(12)
+                ]
+            ))
+            #expect(!invalidUpdate.ok)
+            #expect(invalidUpdate.error?.contains("fillGradient.stops must be an array") == true)
+            #expect(viewModel.document.history.count == stableHistoryCount)
+            #expect(viewModel.document.selectedLayer?.shapeContent?.strokeWidth == stableStrokeWidth)
+
+            let invalidCreate = registry.execute(request(
+                operation: "call",
+                name: "xomo.shape.create",
+                arguments: [
+                    "kind": .string("rectangle"),
+                    "x": .number(120), "y": .number(12),
+                    "width": .number(40), "height": .number(40),
+                    "fillGradient": .object(invalidGradient)
+                ]
+            ))
+            #expect(!invalidCreate.ok)
+            #expect(viewModel.document.layers.count == stableLayerCount)
+            #expect(viewModel.document.history.count == stableHistoryCount)
+            #expect(viewModel.document.selectedLayerID == stableLayerID)
+        }
+
+        var changedColorPair = colorPair
+        changedColorPair["angle"] = .number(15)
+        let legacyColorPair = registry.execute(request(
+            operation: "call",
+            name: "xomo.shape.update",
+            arguments: ["fillGradient": .object(changedColorPair)]
+        ))
+        #expect(legacyColorPair.ok)
+        #expect(viewModel.document.selectedLayer?.shapeContent?.fillGradient?.shapeColorStops.count == 2)
+        #expect(viewModel.document.selectedLayer?.shapeContent?.fillGradient?.angle == 15)
+    }
+
     @Test func registryCreatesAndListsLayerComps() throws {
         let viewModel = makeViewModel()
         let registry = XomoAutomationRegistry.shared

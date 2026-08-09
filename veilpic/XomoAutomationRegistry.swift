@@ -2185,7 +2185,12 @@ final class XomoAutomationRegistry {
             in: object,
             range: 0.25...4
         ) ?? 1
-        if let values = object["stops"]?.arrayValue {
+        if let stopsValue = object["stops"] {
+            guard let values = stopsValue.arrayValue else {
+                throw XomoAutomationCallError.invalidArgument(
+                    "fillGradient.stops must be an array"
+                )
+            }
             guard (2...ImageEditorGradientFillContent.maximumColorStopCount).contains(values.count) else {
                 throw XomoAutomationCallError.invalidArgument("fillGradient.stops must contain 2 to 16 items")
             }
