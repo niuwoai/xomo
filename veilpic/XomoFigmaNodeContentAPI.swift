@@ -799,6 +799,10 @@ enum XomoFigmaNodeImportMapper {
         let hasUnsupportedPaintBlendMode = (visiblePaints + visibleStrokes).contains {
             !isSupportedPaintBlendMode($0.blendMode)
         }
+        let hasUnsupportedGradientColor = visiblePaints.contains { paint in
+            ["GRADIENT_LINEAR", "GRADIENT_RADIAL"].contains(paint.type)
+                && !hasSupportedGradientColorComponents(paint)
+        }
         let hasUnsupportedFill = visiblePaints.contains { paint in
             if paint.type == "SOLID" { return false }
             guard allowsGradientFill else { return true }
@@ -814,6 +818,7 @@ enum XomoFigmaNodeImportMapper {
         if visiblePaints.count > 1
             || hasUnsupportedSolidPaint
             || hasUnsupportedPaintBlendMode
+            || hasUnsupportedGradientColor
             || hasUnsupportedFill
             || visibleStrokes.count > 1
             || visibleStrokes.contains(where: { $0.type != "SOLID" }) {
@@ -829,6 +834,17 @@ enum XomoFigmaNodeImportMapper {
 
     private static func isSupportedPaintBlendMode(_ blendMode: String?) -> Bool {
         blendMode == nil || blendMode == "NORMAL"
+    }
+
+    private static func hasSupportedGradientColorComponents(_ paint: XomoFigmaPaint) -> Bool {
+        guard validUnitValue(paint.opacity ?? 1) != nil,
+              let stops = paint.gradientStops
+        else { return false }
+        return stops.allSatisfy { stop in
+            [stop.color.r, stop.color.g, stop.color.b, stop.color.a ?? 1].allSatisfy {
+                validUnitValue($0) != nil
+            }
+        }
     }
 
     private static func solidColor(in paints: [XomoFigmaPaint]?) -> XomoFigmaPlanColor? {
@@ -865,7 +881,7 @@ enum XomoFigmaNodeImportMapper {
         }
     }
 
-    private static func normalizedColorComponent(_ value: Double, fallback: Double) -> Double {
+    nonisolated private static func normalizedColorComponent(_ value: Double, fallback: Double) -> Double {
         guard value.isFinite else { return fallback }
         return min(max(value, 0), 1)
     }
@@ -985,11 +1001,11 @@ enum XomoFigmaNodeImportMapper {
         guard let stops = paint.gradientStops,
               (2...ImageEditorGradientFillContent.maximumColorStopCount).contains(stops.count),
               abs(stops[0].position) <= 0.001,
-              abs((stops.last?.position ?? 0) - 1) <= 0.001,
-              let paintOpacity = validUnitValue(paint.opacity ?? 1)
+              abs((stops.last?.position ?? 0) - 1) <= 0.001
         else { return nil }
 
-        let colors = stops.compactMap(resolveGradientStopColor)
+        let paintOpacity = normalizedColorComponent(paint.opacity ?? 1, fallback: 1)
+        let colors = stops.compactMap(normalizedGradientStopColor)
         guard colors.count == stops.count,
               zip(stops, stops.dropFirst()).allSatisfy({ pair in
                   pair.0.position <= pair.1.position
@@ -1027,6 +1043,18 @@ enum XomoFigmaNodeImportMapper {
               let alpha = validUnitValue(stop.color.a ?? 1)
         else { return nil }
         return XomoFigmaPlanColor(red: red, green: green, blue: blue, alpha: alpha)
+    }
+
+    nonisolated private static func normalizedGradientStopColor(
+        _ stop: XomoFigmaGradientStop
+    ) -> XomoFigmaPlanColor? {
+        guard stop.position.isFinite else { return nil }
+        return XomoFigmaPlanColor(
+            red: normalizedColorComponent(stop.color.r, fallback: 0),
+            green: normalizedColorComponent(stop.color.g, fallback: 0),
+            blue: normalizedColorComponent(stop.color.b, fallback: 0),
+            alpha: normalizedColorComponent(stop.color.a ?? 1, fallback: 1)
+        )
     }
 
     nonisolated private static func validUnitValue(_ value: Double) -> Double? {

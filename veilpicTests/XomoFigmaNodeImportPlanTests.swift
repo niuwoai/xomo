@@ -926,6 +926,37 @@ struct XomoFigmaNodeImportPlanTests {
         #expect(abs(color.blueComponent - 0.1) < 0.001)
     }
 
+    @Test func outOfRangeFigmaGradientColorUsesSafeEditableFallback() throws {
+        let response = try JSONDecoder().decode(
+            XomoFigmaNodeResponse.self,
+            from: Data(
+                #"{"name":"Gradient Bounds","nodes":{"1:32":{"document":{"id":"1:32","name":"Gradient Bounds","type":"RECTANGLE","fills":[{"type":"GRADIENT_LINEAR","opacity":1.4,"gradientHandlePositions":[{"x":0,"y":0.5},{"x":1,"y":0.5},{"x":0,"y":0}],"gradientStops":[{"position":0,"color":{"r":1.3,"g":-0.2,"b":0.4,"a":1.2}},{"position":1,"color":{"r":0.2,"g":0.6,"b":1.5,"a":1.2}}]}],"absoluteBoundingBox":{"x":0,"y":0,"width":120,"height":60}}}}}"#.utf8
+            )
+        )
+
+        let plan = try XomoFigmaNodeImportMapper.makePlan(response: response, requestedNodeID: "1:32")
+        let item = try #require(plan.items.first)
+        let gradient = try #require(item.linearGradientFill)
+        #expect(item.fidelity == .partial)
+        #expect(item.issues.contains(.unsupportedPaint))
+        #expect(gradient.opacity == 1)
+        #expect(gradient.startColor == XomoFigmaPlanColor(red: 1, green: 0, blue: 0.4, alpha: 1))
+        #expect(gradient.endColor == XomoFigmaPlanColor(red: 0.2, green: 0.6, blue: 1, alpha: 1))
+
+        let result = XomoFigmaNodeMaterializer.materialize(
+            plan: plan,
+            canvasSize: CGSize(width: 240, height: 160)
+        )
+        let shape = try #require(result.layers.first?.shapeContent)
+        let materializedGradient = try #require(shape.fillGradient)
+        let startColor = try #require(materializedGradient.shapeStartColor.usingColorSpace(.sRGB))
+        let endColor = try #require(materializedGradient.shapeEndColor.usingColorSpace(.sRGB))
+        #expect(abs(startColor.redComponent - 1) < 0.001)
+        #expect(abs(startColor.greenComponent) < 0.001)
+        #expect(abs(endColor.blueComponent - 1) < 0.001)
+        #expect(abs(shape.fillOpacity - 1) < 0.001)
+    }
+
     @Test func outOfRangeFigmaNodeOpacityReportsAndUsesEditableBounds() throws {
         let response = try JSONDecoder().decode(
             XomoFigmaNodeResponse.self,
