@@ -243,6 +243,7 @@ struct XomoAutomationTests {
             .string("height")
         ]))
         #expect(sizeConstraintsTool["inputSchema"]?.objectValue?["properties"]?.objectValue?["action"]?.objectValue?["enum"]?.arrayValue?.contains(.string("resolve")) == true)
+        #expect(sizeConstraintsTool["inputSchema"]?.objectValue?["properties"]?.objectValue?["action"]?.objectValue?["enum"]?.arrayValue?.contains(.string("resolveAll")) == true)
         guard let imageFillTool = tools.compactMap({ tool -> [String: XomoJSONValue]? in
             guard case .object(let value) = tool else { return nil }
             return value
@@ -2225,6 +2226,39 @@ struct XomoAutomationTests {
             ]
         ))
         #expect(conflictedAgain.result?.objectValue?["hasConflicts"] == .bool(true))
+
+        let heightConflict = registry.execute(request(
+            operation: "call",
+            name: "xomo.figma.size_constraints",
+            arguments: [
+                "action": .string("set"),
+                "field": .string("minHeight"),
+                "value": .number(160)
+            ]
+        ))
+        #expect(heightConflict.result?.objectValue?["conflicts"] == .array([
+            .string("width"), .string("height")
+        ]))
+
+        let resolvedAll = registry.execute(request(
+            operation: "call",
+            name: "xomo.figma.size_constraints",
+            arguments: ["action": .string("resolveAll")]
+        ))
+        #expect(resolvedAll.ok)
+        #expect(resolvedAll.result?.objectValue?["current"]?.objectValue?["maxWidth"] == .number(240))
+        #expect(resolvedAll.result?.objectValue?["current"]?.objectValue?["maxHeight"] == .number(160))
+        #expect(resolvedAll.result?.objectValue?["hasConflicts"] == .bool(false))
+
+        _ = registry.execute(request(
+            operation: "call",
+            name: "xomo.figma.size_constraints",
+            arguments: [
+                "action": .string("set"),
+                "field": .string("maxWidth"),
+                "value": .number(200)
+            ]
+        ))
 
         let cleared = registry.execute(request(
             operation: "call",

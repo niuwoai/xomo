@@ -7265,6 +7265,21 @@ struct ImageEditorView: View {
                             ForEach(XomoFigmaSizeConstraintField.allCases, id: \.self) { field in
                                 figmaSizeConstraintEditorRow(field)
                             }
+                            if viewModel.selectedLayerFigmaSizeConstraintConflicts.count > 1 {
+                                HStack {
+                                    Spacer(minLength: 0)
+                                    Button(L10n.text("imageEditor.action.resolveAllFigmaSizeConstraintConflicts")) {
+                                        focusedFigmaSizeConstraintField = nil
+                                        viewModel.resolveAllSelectedFigmaSizeConstraintConflicts()
+                                        syncFigmaSizeConstraintDrafts()
+                                    }
+                                    .buttonStyle(EditorTextButtonStyle())
+                                    .focusable(false)
+                                    .accessibilityIdentifier(
+                                        "image-editor-figma-size-constraint-conflicts-resolve-all"
+                                    )
+                                }
+                            }
                             ForEach(viewModel.selectedLayerFigmaSizeConstraintConflicts, id: \.self) { conflict in
                                 HStack(alignment: .firstTextBaseline, spacing: 6) {
                                     Label(

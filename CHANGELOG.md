@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.12.0-rc797 - 2026-08-10
+
+### Added
+- 当宽度与高度同时存在 Figma min/max 冲突时，属性面板显示“修复全部冲突”，一次将每个冲突轴的最大值对齐最小值。
+- 批量修复只创建一个 Undo/Redo 步骤、一次 History 和一次 Auto Layout 重排；缺少来源默认快照的旧图层会在修改前保存当前约束。
+- `xomo.figma.size_constraints` 与 CLI fallback schema 新增 `resolveAll`，自动化可复用相同的原子批量事务。
+
+### Tests
+- 双轴批量修复与单步 Undo/Redo 1/1、MCP resolveAll 行为 1/1、属性面板契约 1/1、三语言资源键一致性 1/1、CLI MCP 工具目录 2/2 通过。
+
 ## 2.12.0-rc796 - 2026-08-10
 
 ### Added

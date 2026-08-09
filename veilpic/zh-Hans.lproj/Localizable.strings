@@ -3141,6 +3141,7 @@
 "imageEditor.properties.figmaSizeConstraintConflict.width" = "宽度最小值大于最大值；布局优先满足最小值";
 "imageEditor.properties.figmaSizeConstraintConflict.height" = "高度最小值大于最大值；布局优先满足最小值";
 "imageEditor.action.resolveFigmaSizeConstraintConflict" = "按最小值修复";
+"imageEditor.action.resolveAllFigmaSizeConstraintConflicts" = "修复全部冲突";
 "imageEditor.action.clearFigmaSizeConstraint" = "清除尺寸约束";
 "imageEditor.action.resetFigmaSizeConstraint" = "恢复导入的尺寸约束";
 "imageEditor.action.resetAllFigmaSizeConstraints" = "全部恢复";
@@ -3148,6 +3149,8 @@
 "imageEditor.history.figmaSizeConstraintsReset" = "恢复全部 Figma 尺寸约束";
 "imageEditor.status.figmaSizeConstraintUpdated" = "已更新 Figma %@约束";
 "imageEditor.status.figmaSizeConstraintsReset" = "已恢复全部 Figma 尺寸约束";
+"imageEditor.history.figmaSizeConstraintConflictsResolved" = "修复全部 Figma 尺寸约束冲突";
+"imageEditor.status.figmaSizeConstraintConflictsResolved" = "已修复全部 Figma 尺寸约束冲突";
 "imageEditor.properties.figmaComponentRole" = "组件语义";
 "imageEditor.action.copyFigmaSource" = "复制源节点引用";
 "imageEditor.action.copyFigmaSourceURL" = "复制 Figma 链接";

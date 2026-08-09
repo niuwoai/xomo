@@ -1060,6 +1060,31 @@ extension ImageEditorViewModel {
         setSelectedFigmaSizeConstraint(conflict.maximumField, value: minimum)
     }
 
+    func resolveAllSelectedFigmaSizeConstraintConflicts() {
+        guard let layerIndex = document.selectedLayerIndex,
+              let constraints = document.layers[layerIndex].xomoFigmaSizeConstraints,
+              !constraints.conflicts.isEmpty
+        else { return }
+
+        let reflowTarget = stackReflowTarget(for: document.layers[layerIndex])
+        if let reflowTarget, !canEditStackLayout(groupID: reflowTarget.groupID) {
+            statusText = L10n.text("imageEditor.status.stackLayoutLocked")
+            return
+        }
+
+        pushUndo()
+        if document.layers[layerIndex].xomoFigmaSizeConstraintDefaults == nil {
+            document.layers[layerIndex].xomoFigmaSizeConstraintDefaults = constraints
+        }
+        document.layers[layerIndex].xomoFigmaSizeConstraints =
+            constraints.resolvingConflictsPreferringMinimum()
+        if let reflowTarget {
+            applyStackLayout(groupID: reflowTarget.groupID, layout: reflowTarget.layout)
+        }
+        appendHistory(L10n.text("imageEditor.history.figmaSizeConstraintConflictsResolved"))
+        statusText = L10n.text("imageEditor.status.figmaSizeConstraintConflictsResolved")
+    }
+
     var hasSelectedFigmaSizeConstraintOverrides: Bool {
         XomoFigmaSizeConstraintField.allCases.contains {
             hasSelectedFigmaSizeConstraintOverride($0)

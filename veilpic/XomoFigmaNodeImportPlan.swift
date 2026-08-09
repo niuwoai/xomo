@@ -380,6 +380,15 @@ struct XomoFigmaSizeConstraints: Codable, Equatable, Sendable {
         }
         return result
     }
+
+    func resolvingConflictsPreferringMinimum() -> Self {
+        var result = self
+        for conflict in conflicts {
+            guard let minimum = conflict.minimumField.value(in: self) else { continue }
+            conflict.maximumField.set(minimum, in: &result)
+        }
+        return result
+    }
 }
 
 enum XomoFigmaSizeConstraintConflict: String, CaseIterable, Hashable, Sendable {

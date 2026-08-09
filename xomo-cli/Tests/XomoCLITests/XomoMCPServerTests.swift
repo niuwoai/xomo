@@ -71,6 +71,7 @@ struct XomoMCPServerTests {
             sizeConstraintsProperties["action"] as? [String: Any]
         )
         #expect((sizeConstraintAction["enum"] as? [String])?.contains("resolve") == true)
+        #expect((sizeConstraintAction["enum"] as? [String])?.contains("resolveAll") == true)
         let sizeConstraintAxis = try #require(
             sizeConstraintsProperties["axis"] as? [String: Any]
         )

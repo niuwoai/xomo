@@ -613,6 +613,43 @@ struct ImageEditorStackLayoutTests {
         #expect(fixture.viewModel.selectedLayerFigmaSizeConstraintConflicts.isEmpty)
     }
 
+    @Test func resolveAllFigmaConstraintConflictsUsesOneUndoAndOneReflow() {
+        let fixture = makeFixture()
+        let imported = XomoFigmaSizeConstraints(
+            minWidth: 80,
+            maxWidth: 40,
+            minHeight: 30,
+            maxHeight: 10
+        )
+        fixture.updateLayer(named: "First") {
+            $0.xomoFigmaSizeConstraints = imported
+            $0.xomoFigmaSizeConstraintDefaults = imported
+        }
+        fixture.selectLayer(named: "First")
+
+        fixture.viewModel.resolveAllSelectedFigmaSizeConstraintConflicts()
+
+        #expect(fixture.layer(named: "First").xomoFigmaSizeConstraints == XomoFigmaSizeConstraints(
+            minWidth: 80,
+            maxWidth: 80,
+            minHeight: 30,
+            maxHeight: 30
+        ))
+        #expect(fixture.viewModel.selectedLayerFigmaSizeConstraintConflicts.isEmpty)
+        #expect(fixture.layer(named: "First").frame == CGRect(x: 70, y: 30, width: 80, height: 30))
+        #expect(fixture.viewModel.document.history.last?.title == L10n.text(
+            "imageEditor.history.figmaSizeConstraintConflictsResolved"
+        ))
+
+        fixture.viewModel.undo()
+        #expect(fixture.layer(named: "First").xomoFigmaSizeConstraints == imported)
+        #expect(fixture.viewModel.selectedLayerFigmaSizeConstraintConflicts == [.width, .height])
+        #expect(fixture.layer(named: "First").frame == CGRect(x: 30, y: 40, width: 30, height: 20))
+
+        fixture.viewModel.redo()
+        #expect(fixture.viewModel.selectedLayerFigmaSizeConstraintConflicts.isEmpty)
+    }
+
     @Test func reflowExecutesImportedFigmaContainerConstraintsAndResizesBackground() {
         let fixture = makeFixture()
         fixture.updateLayer(named: "Root") {

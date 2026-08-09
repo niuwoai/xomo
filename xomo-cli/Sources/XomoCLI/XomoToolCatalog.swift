@@ -52,7 +52,7 @@ enum XomoToolCatalog {
                 tool["inputSchema"] = [
                     "type": "object",
                     "properties": [
-                        "action": ["type": "string", "enum": ["list", "set", "clear", "reset", "resetAll", "resolve"]],
+                        "action": ["type": "string", "enum": ["list", "set", "clear", "reset", "resetAll", "resolve", "resolveAll"]],
                         "field": ["type": "string", "enum": ["minWidth", "maxWidth", "minHeight", "maxHeight"]],
                         "axis": ["type": "string", "enum": ["width", "height"]],
                         "value": ["type": "number"]

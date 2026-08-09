@@ -3141,6 +3141,7 @@
 "imageEditor.properties.figmaSizeConstraintConflict.width" = "Minimum width exceeds maximum; layout prioritizes the minimum";
 "imageEditor.properties.figmaSizeConstraintConflict.height" = "Minimum height exceeds maximum; layout prioritizes the minimum";
 "imageEditor.action.resolveFigmaSizeConstraintConflict" = "Use minimum";
+"imageEditor.action.resolveAllFigmaSizeConstraintConflicts" = "Resolve all conflicts";
 "imageEditor.action.clearFigmaSizeConstraint" = "Clear size constraint";
 "imageEditor.action.resetFigmaSizeConstraint" = "Restore imported size constraint";
 "imageEditor.action.resetAllFigmaSizeConstraints" = "Restore all";
@@ -3148,6 +3149,8 @@
 "imageEditor.history.figmaSizeConstraintsReset" = "Restore all Figma size constraints";
 "imageEditor.status.figmaSizeConstraintUpdated" = "Updated Figma %@ constraint";
 "imageEditor.status.figmaSizeConstraintsReset" = "Restored all Figma size constraints";
+"imageEditor.history.figmaSizeConstraintConflictsResolved" = "Resolve all Figma size constraint conflicts";
+"imageEditor.status.figmaSizeConstraintConflictsResolved" = "Resolved all Figma size constraint conflicts";
 "imageEditor.properties.figmaComponentRole" = "Component role";
 "imageEditor.action.copyFigmaSource" = "Copy source reference";
 "imageEditor.action.copyFigmaSourceURL" = "Copy Figma link";

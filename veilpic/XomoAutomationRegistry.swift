@@ -1510,6 +1510,9 @@ final class XomoAutomationRegistry {
         case "resolve":
             viewModel.resolveSelectedFigmaSizeConstraintConflict(try conflict(from: arguments))
             return result()
+        case "resolveAll":
+            viewModel.resolveAllSelectedFigmaSizeConstraintConflicts()
+            return result()
         default:
             throw XomoAutomationCallError.invalidArgument(
                 "Unknown Figma size constraint action"
@@ -5824,7 +5827,7 @@ private extension XomoAutomationRegistry {
             "value": XomoAutomationSchema.string(description: "New local property value")
         ], required: ["action"]),
         tool("xomo.figma.size_constraints", "List current and imported Figma min/max size constraints, locally set, clear or reset fields, or explicitly resolve a conflicting axis by using its minimum.", [
-            "action": XomoAutomationSchema.string(description: "Size constraint action", values: ["list", "set", "clear", "reset", "resetAll", "resolve"]),
+            "action": XomoAutomationSchema.string(description: "Size constraint action", values: ["list", "set", "clear", "reset", "resetAll", "resolve", "resolveAll"]),
             "field": XomoAutomationSchema.string(description: "Figma size constraint field", values: XomoFigmaSizeConstraintField.allCases.map(\.rawValue)),
             "axis": XomoAutomationSchema.string(description: "Conflicting axis required by resolve", values: XomoFigmaSizeConstraintConflict.allCases.map(\.rawValue)),
             "value": XomoAutomationSchema.number(description: "New local constraint value in pixels")
