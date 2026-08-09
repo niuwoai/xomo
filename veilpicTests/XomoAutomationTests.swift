@@ -5591,6 +5591,106 @@ struct XomoAutomationTests {
         }
     }
 
+    @Test func gradientFillColorComponentsReportFullAtomicPaths() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        let color: XomoJSONValue = .object([
+            "red": .number(1), "green": .number(0), "blue": .number(0)
+        ])
+        let baseArguments: [String: XomoJSONValue] = [
+            "kind": .string("gradientFill"),
+            "preset": .string(ImageEditorGradientFillPreset.custom.rawValue),
+            "style": .string(ImageEditorGradientFillStyle.linear.rawValue),
+            "reverse": .bool(false),
+            "angle": .number(0),
+            "scale": .number(1),
+            "startColor": color,
+            "endColor": color,
+            "stops": .array([
+                .object(["position": .number(0), "color": color]),
+                .object(["position": .number(1), "color": color])
+            ])
+        ]
+        let created = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.create",
+            arguments: baseArguments
+        ))
+        #expect(created.ok)
+        let stableLayerID = try #require(viewModel.document.selectedLayerID)
+        let stableLayerCount = viewModel.document.layers.count
+        let stableHistoryCount = viewModel.document.history.count
+        let stableContent = viewModel.document.selectedLayer?.gradientFillContent?.normalized()
+        let invalidColors: [(String, XomoJSONValue, String)] = [
+            (
+                "startColor",
+                .object(["green": .number(0), "blue": .number(0)]),
+                "startColor.red is required"
+            ),
+            (
+                "startColor",
+                .object([
+                    "red": .number(1), "green": .string("0"), "blue": .number(0)
+                ]),
+                "startColor.green must be a number"
+            ),
+            (
+                "endColor",
+                .object([
+                    "red": .number(1), "green": .number(0), "blue": .number(1.01)
+                ]),
+                "endColor.blue must be between 0 and 1"
+            )
+        ]
+
+        for (key, invalidColor, expectedError) in invalidColors {
+            var invalidCreateArguments = baseArguments
+            invalidCreateArguments[key] = invalidColor
+            let invalidCreate = registry.execute(request(
+                operation: "call",
+                name: "xomo.layer.create",
+                arguments: invalidCreateArguments
+            ))
+            #expect(!invalidCreate.ok)
+            #expect(invalidCreate.error?.contains(expectedError) == true)
+            #expect(viewModel.document.layers.count == stableLayerCount)
+            #expect(viewModel.document.history.count == stableHistoryCount)
+
+            var invalidSetArguments = invalidCreateArguments
+            invalidSetArguments.removeValue(forKey: "kind")
+            invalidSetArguments["action"] = .string("set")
+            let invalidSet = registry.execute(request(
+                operation: "call",
+                name: "xomo.layer.gradient_fill_settings",
+                arguments: invalidSetArguments
+            ))
+            #expect(!invalidSet.ok)
+            #expect(invalidSet.error?.contains(expectedError) == true)
+            #expect(viewModel.document.history.count == stableHistoryCount)
+            #expect(viewModel.document.selectedLayerID == stableLayerID)
+            #expect(viewModel.document.selectedLayer?.gradientFillContent?.normalized() == stableContent)
+        }
+
+        let invalidStopColor: XomoJSONValue = .object([
+            "green": .number(0), "blue": .number(0)
+        ])
+        var invalidStopArguments = baseArguments
+        invalidStopArguments["stops"] = .array([
+            .object(["position": .number(0), "color": invalidStopColor]),
+            .object(["position": .number(1), "color": color])
+        ])
+        let invalidStop = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.create",
+            arguments: invalidStopArguments
+        ))
+        #expect(!invalidStop.ok)
+        #expect(invalidStop.error?.contains("stops[0].color.red is required") == true)
+        #expect(viewModel.document.layers.count == stableLayerCount)
+        #expect(viewModel.document.history.count == stableHistoryCount)
+    }
+
     @Test func registryCreatesAndListsLayerComps() throws {
         let viewModel = makeViewModel()
         let registry = XomoAutomationRegistry.shared

@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.12.0-rc758 - 2026-08-09
+
+### Fixed
+- 渐变填充图层的端点与色标 RGB 通道错误返回完整路径，区分缺失通道、错误 JSON 类型和 0–1 越界值，例如 `startColor.red` 与 `stops[0].color.green`。
+- `xomo.layer.create` 与 `xomo.layer.gradient_fill_settings` 共用路径感知的通道解析，不再退回无上下文的“参数 red/green/blue 错误”。
+- 坏通道在创建或设置前原子失败，图层数量、选择、History 和当前渐变填充内容保持不变。
+
+### Tests
+- 新增渐变填充 RGB 完整路径回归，覆盖端点缺失、类型、范围、色标通道及创建/设置零副作用；多色标创建与设置邻接回归同步通过，3/3 成功。
+
 ## 2.12.0-rc757 - 2026-08-09
 
 ### Fixed

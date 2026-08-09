@@ -388,10 +388,20 @@ extension XomoAutomationRegistry {
         in arguments: [String: XomoJSONValue],
         path: String
     ) throws -> Double {
-        let value = try finiteNumber(key, in: arguments)
+        let componentPath = "\(path).\(key)"
+        guard let rawValue = arguments[key] else {
+            throw XomoAutomationCallError.invalidArgument(
+                "\(componentPath) is required"
+            )
+        }
+        guard let value = rawValue.doubleValue, value.isFinite else {
+            throw XomoAutomationCallError.invalidArgument(
+                "\(componentPath) must be a number"
+            )
+        }
         guard (0...1).contains(value) else {
             throw XomoAutomationCallError.invalidArgument(
-                "\(path).\(key) must be between 0 and 1"
+                "\(componentPath) must be between 0 and 1"
             )
         }
         return value
