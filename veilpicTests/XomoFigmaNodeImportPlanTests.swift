@@ -158,6 +158,29 @@ struct XomoFigmaNodeImportPlanTests {
         #expect(content.lineSpacing == 0)
     }
 
+    @Test func oversizedFigmaLineHeightReportsAndUsesEditableNativeMaximum() throws {
+        let response = try JSONDecoder().decode(
+            XomoFigmaNodeResponse.self,
+            from: Data(
+                #"{"name":"Typography","nodes":{"1:16":{"document":{"id":"1:16","name":"Loose Label","type":"TEXT","characters":"One\nTwo","style":{"fontSize":16,"lineHeightPx":200},"fills":[{"type":"SOLID","color":{"r":0,"g":0,"b":0,"a":1}}],"absoluteBoundingBox":{"x":0,"y":0,"width":120,"height":240}}}}}"#.utf8
+            )
+        )
+
+        let plan = try XomoFigmaNodeImportMapper.makePlan(response: response, requestedNodeID: "1:16")
+        let item = try #require(plan.items.first)
+        #expect(item.text?.lineHeight == 200)
+        #expect(item.fidelity == .partial)
+        #expect(item.issues.contains(.textLineHeightFlattened))
+
+        let result = XomoFigmaNodeMaterializer.materialize(
+            plan: plan,
+            canvasSize: CGSize(width: 320, height: 320)
+        )
+        let content = try #require(result.layers.first?.textContent)
+        #expect(content.fontSize == 16)
+        #expect(content.lineSpacing == ImageEditorTextContent.maximumLineSpacing)
+    }
+
     @Test func figmaParagraphSpacingRemainsEditableAndSurvivesProjectRoundTrip() throws {
         let response = try JSONDecoder().decode(
             XomoFigmaNodeResponse.self,

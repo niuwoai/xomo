@@ -505,7 +505,10 @@ enum XomoFigmaNodeMaterializer {
             ),
             lineSpacing: max(
                 0,
-                CGFloat((text.lineHeight ?? text.fontSize ?? 0) - (text.fontSize ?? 0)) * scale
+                min(
+                    ImageEditorTextContent.maximumLineSpacing,
+                    CGFloat((text.lineHeight ?? text.fontSize ?? 0) - (text.fontSize ?? 0)) * scale
+                )
             ),
             boxWidth: text.usesAutoWidthAndHeight ? 0 : max(1, frame.width - padding * 2),
             boxHeight: text.usesAutoWidthAndHeight || text.usesAutoHeight

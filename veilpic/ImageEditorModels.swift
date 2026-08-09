@@ -2847,6 +2847,7 @@ struct ImageEditorTextContent {
     static let maximumBoxDimension: CGFloat = 12_000
     static let minimumCharacterSpacing: CGFloat = -8
     static let maximumCharacterSpacing: CGFloat = 48
+    static let maximumLineSpacing: CGFloat = 96
     static let maximumFirstLineIndent: CGFloat = 800
     static let maximumParagraphSpacing: CGFloat = 400
     static let smallCapsScale: CGFloat = 0.8

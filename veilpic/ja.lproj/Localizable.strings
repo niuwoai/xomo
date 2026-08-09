@@ -3301,7 +3301,7 @@
 "xomo.figma.node.issue.strokeWeightFlattened" = "この Figma ストロークは Xomo のネイティブ最小値 0.1 px 未満のため、0.1 px で読み込みます";
 "xomo.figma.node.issue.transformFlattened" = "回転、反転、傾斜は軸に沿った境界へ縮退します";
 "xomo.figma.node.issue.textCaseFlattened" = "文字ケースはライブスタイルではなく編集可能な文字列へ反映されます";
-"xomo.figma.node.issue.textLineHeightFlattened" = "この Figma の行高は正確に表現できないため、最も近いネイティブ行間を使用します";
+"xomo.figma.node.issue.textLineHeightFlattened" = "この Figma の行高は正確に表現できないため、Xomo のネイティブ行間隔 0〜96 px に調整しました";
 "xomo.figma.node.issue.textParagraphIndentFlattened" = "Figma の段落インデントが Xomo で編集可能な 0〜800 px の範囲外のため、対応範囲に調整しました";
 "xomo.figma.node.issue.textParagraphSpacingFlattened" = "Figma の段落間隔が Xomo で編集可能な 0〜400 px の範囲外のため、対応範囲に調整しました";
 "xomo.figma.node.issue.textAutoResizeFlattened" = "この Figma テキスト自動サイズモードはまだ Xomo で編集できないため、固定テキスト枠を使用します";

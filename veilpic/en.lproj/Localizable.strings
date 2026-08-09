@@ -3301,7 +3301,7 @@
 "xomo.figma.node.issue.strokeWeightFlattened" = "This Figma stroke is below Xomo's native 0.1 px minimum and imports as 0.1 px";
 "xomo.figma.node.issue.transformFlattened" = "Rotation, reflection, or skew is flattened to axis-aligned bounds";
 "xomo.figma.node.issue.textCaseFlattened" = "Text case is baked into editable characters instead of retained as a live style";
-"xomo.figma.node.issue.textLineHeightFlattened" = "This Figma line height cannot be represented exactly and uses the closest native line spacing";
+"xomo.figma.node.issue.textLineHeightFlattened" = "This Figma line height cannot be represented exactly and was adjusted to Xomo's native 0–96 px line-spacing range";
 "xomo.figma.node.issue.textParagraphIndentFlattened" = "Figma paragraph indent is outside Xomo's editable 0–800 px range and was adjusted to the supported range";
 "xomo.figma.node.issue.textParagraphSpacingFlattened" = "Figma paragraph spacing is outside Xomo's editable 0–400 px range and was adjusted to the supported range";
 "xomo.figma.node.issue.textAutoResizeFlattened" = "This Figma text auto-resize mode is not yet editable in Xomo and uses a fixed text box";

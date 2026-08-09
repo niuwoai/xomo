@@ -1147,7 +1147,9 @@ enum XomoFigmaNodeImportMapper {
               fontSize.isFinite,
               fontSize > 0
         else { return false }
-        return mappedLineHeight < fontSize
+        let lineSpacing = mappedLineHeight - fontSize
+        return lineSpacing < 0
+            || lineSpacing > Double(ImageEditorTextContent.maximumLineSpacing)
     }
 
     private static func hasUnsupportedCornerStyle(_ node: XomoFigmaNode) -> Bool {
