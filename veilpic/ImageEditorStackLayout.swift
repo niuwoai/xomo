@@ -253,11 +253,17 @@ enum ImageEditorStackLayoutEngine {
         in container: CGRect,
         itemFrames: [CGRect],
         itemLayouts: [ImageEditorStackChildLayout] = [],
+        itemSizeConstraints: [XomoFigmaSizeConstraints?] = [],
         itemBaselineOffsets: [CGFloat?] = [],
         layout: ImageEditorStackLayout
     ) -> ImageEditorStackLayoutResult {
         let layout = layout.normalized()
-        var sizes = itemFrames.map(\.size)
+        let resolvedItemSizeConstraints = itemFrames.indices.map { index in
+            itemSizeConstraints.indices.contains(index) ? itemSizeConstraints[index] : nil
+        }
+        var sizes = itemFrames.indices.map { index in
+            constrainedSize(itemFrames[index].size, by: resolvedItemSizeConstraints[index])
+        }
         let resolvedItemLayouts = itemFrames.indices.map { index in
             itemLayouts.indices.contains(index) ? itemLayouts[index] : ImageEditorStackChildLayout()
         }
@@ -292,6 +298,7 @@ enum ImageEditorStackLayoutEngine {
                 in: resolvedContainer,
                 sizes: sizes,
                 itemLayouts: resolvedItemLayouts,
+                itemSizeConstraints: resolvedItemSizeConstraints,
                 itemBaselineOffsets: resolvedItemBaselineOffsets,
                 layout: layout
             )
@@ -327,6 +334,9 @@ enum ImageEditorStackLayoutEngine {
             for index in sizes.indices where resolvedItemLayouts[index].stretchesCrossAxis {
                 setCrossSize(max(1, availableCross), axis: layout.axis, size: &sizes[index])
             }
+        }
+        for index in sizes.indices {
+            sizes[index] = constrainedSize(sizes[index], by: resolvedItemSizeConstraints[index])
         }
         let totalItemMain = sizes.reduce(0) { partial, size in
             partial + mainSize(size, axis: layout.axis)
@@ -387,6 +397,7 @@ enum ImageEditorStackLayoutEngine {
         in container: CGRect,
         itemFrames: [CGRect],
         itemLayouts: [ImageEditorStackChildLayout] = [],
+        itemSizeConstraints: [XomoFigmaSizeConstraints?] = [],
         itemBaselineOffsets: [CGFloat?] = [],
         layout: ImageEditorStackLayout
     ) -> [CGRect] {
@@ -394,6 +405,7 @@ enum ImageEditorStackLayoutEngine {
             in: container,
             itemFrames: itemFrames,
             itemLayouts: itemLayouts,
+            itemSizeConstraints: itemSizeConstraints,
             itemBaselineOffsets: itemBaselineOffsets,
             layout: layout
         ).itemFrames
@@ -403,6 +415,7 @@ enum ImageEditorStackLayoutEngine {
         in container: CGRect,
         sizes originalSizes: [CGSize],
         itemLayouts: [ImageEditorStackChildLayout],
+        itemSizeConstraints: [XomoFigmaSizeConstraints?],
         itemBaselineOffsets: [CGFloat?],
         layout: ImageEditorStackLayout
     ) -> ImageEditorStackLayoutResult {
@@ -423,6 +436,7 @@ enum ImageEditorStackLayoutEngine {
                     row: row,
                     sizes: &sizes,
                     itemLayouts: itemLayouts,
+                    itemSizeConstraints: itemSizeConstraints,
                     availableMain: availableMain,
                     spacing: layout.spacing
                 )
@@ -461,6 +475,7 @@ enum ImageEditorStackLayoutEngine {
             rowHeights: rowHeights,
             sizes: sizes,
             itemLayouts: itemLayouts,
+            itemSizeConstraints: itemSizeConstraints,
             itemBaselineOffsets: itemBaselineOffsets,
             container: resolvedContainer,
             availableMain: availableMain,
@@ -499,6 +514,7 @@ enum ImageEditorStackLayoutEngine {
         row: [Int],
         sizes: inout [CGSize],
         itemLayouts: [ImageEditorStackChildLayout],
+        itemSizeConstraints: [XomoFigmaSizeConstraints?],
         availableMain: CGFloat,
         spacing: CGFloat
     ) {
@@ -510,6 +526,7 @@ enum ImageEditorStackLayoutEngine {
         let distributable = max(0, availableMain - fixedMain - spacing * CGFloat(max(0, row.count - 1)))
         for index in row where itemLayouts[index].grow > 0 {
             sizes[index].width = max(1, distributable * itemLayouts[index].grow / totalGrow)
+            sizes[index] = constrainedSize(sizes[index], by: itemSizeConstraints[index])
         }
     }
 
@@ -518,6 +535,7 @@ enum ImageEditorStackLayoutEngine {
         rowHeights: [CGFloat],
         sizes: [CGSize],
         itemLayouts: [ImageEditorStackChildLayout],
+        itemSizeConstraints: [XomoFigmaSizeConstraints?],
         itemBaselineOffsets: [CGFloat?],
         container: CGRect,
         availableMain: CGFloat,
@@ -565,6 +583,7 @@ enum ImageEditorStackLayoutEngine {
                 if itemLayouts[index].stretchesCrossAxis {
                     size.height = max(1, rowHeight)
                 }
+                size = constrainedSize(size, by: itemSizeConstraints[index])
                 let y: CGFloat
                 if layout.crossAlignment == .baseline,
                    !itemLayouts[index].stretchesCrossAxis {
@@ -698,6 +717,36 @@ enum ImageEditorStackLayoutEngine {
         } else {
             frame.size.height = value
         }
+    }
+
+    private static func constrainedSize(
+        _ size: CGSize,
+        by constraints: XomoFigmaSizeConstraints?
+    ) -> CGSize {
+        guard let constraints else { return size }
+        return CGSize(
+            width: constrainedDimension(
+                size.width,
+                minimum: constraints.minWidth,
+                maximum: constraints.maxWidth
+            ),
+            height: constrainedDimension(
+                size.height,
+                minimum: constraints.minHeight,
+                maximum: constraints.maxHeight
+            )
+        )
+    }
+
+    private static func constrainedDimension(
+        _ value: CGFloat,
+        minimum: Double?,
+        maximum: Double?
+    ) -> CGFloat {
+        let lower = minimum.flatMap { $0.isFinite ? max(1, CGFloat($0)) : nil } ?? 1
+        let requestedUpper = maximum.flatMap { $0.isFinite ? max(1, CGFloat($0)) : nil }
+        let upper = max(lower, requestedUpper ?? .greatestFiniteMagnitude)
+        return min(max(value.isFinite ? value : lower, lower), upper)
     }
 
     private static func setCrossSize(
@@ -915,6 +964,9 @@ extension ImageEditorViewModel {
             itemFrames: participantIndices.map { document.layers[$0].frame.standardized },
             itemLayouts: participantIndices.map {
                 document.layers[$0].stackChildLayout ?? ImageEditorStackChildLayout()
+            },
+            itemSizeConstraints: participantIndices.map {
+                document.layers[$0].xomoFigmaSizeConstraints
             },
             itemBaselineOffsets: participantIndices.map {
                 document.layers[$0].stackBaselineOffset

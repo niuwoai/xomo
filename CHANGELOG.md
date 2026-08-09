@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.12.0-rc784 - 2026-08-10
+
+### Added
+- Auto Layout 重排开始执行 Figma 子项的 `minWidth`、`maxWidth`、`minHeight` 与 `maxHeight`，普通尺寸、Fill 主轴分配和 Stretch 交叉轴拉伸都会服从约束。
+- 冲突约束采用最小尺寸优先的安全规则，非有限值不参与计算；来源原值仍完整保留，便于后续检查和同步。
+
+### Tests
+- Stack Layout 全套 26 条定向回归通过，新增 Fill/Stretch 钳制、冲突约束规范化及真实图层重排接线覆盖。
+
 ## 2.12.0-rc783 - 2026-08-10
 
 ### Fixed
