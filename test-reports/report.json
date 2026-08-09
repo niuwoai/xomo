@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-10 03:04:50 +0800",
+  "generated_at": "2026-08-10 03:12:31 +0800",
   "total": 1,
   "passed": 1,
   "failed": 0,
@@ -9,16 +9,16 @@
   "jobs": 1,
   "results": [
     {
-      "suite": "XomoFigmaNodeImportPlanTests",
-      "method": "figmaAutoLayoutSizeConstraintsAreReportedInsteadOfSilentlyClaimingExactFidelity",
-      "identifier": "veilpicTests/XomoFigmaNodeImportPlanTests/figmaAutoLayoutSizeConstraintsAreReportedInsteadOfSilentlyClaimingExactFidelity()",
-      "file": "XomoFigmaNodeImportPlanTests.swift",
+      "suite": "ImageEditorFigmaProvenanceTests",
+      "method": "selectedLayerExposesAndCopiesFigmaSourceReference",
+      "identifier": "veilpicTests/ImageEditorFigmaProvenanceTests/selectedLayerExposesAndCopiesFigmaSourceReference()",
+      "file": "ImageEditorFigmaProvenanceTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 4.372,
+      "duration": 2.795,
       "infrastructure_retries": 0,
       "issues": [],
-      "log": "XomoFigmaNodeImportPlanTests.figmaAutoLayoutSizeConstraintsAreReportedInsteadOfSilentlyClaimingExactFidelity.log"
+      "log": "ImageEditorFigmaProvenanceTests.selectedLayerExposesAndCopiesFigmaSourceReference.log"
     }
   ]
 }

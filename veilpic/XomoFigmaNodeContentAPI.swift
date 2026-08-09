@@ -412,6 +412,7 @@ enum XomoFigmaNodeImportMapper {
             fidelity: fidelity,
             issues: issues,
             variableBindings: variableBindings,
+            sizeConstraints: sizeConstraints(node),
             frame: node.absoluteBoundingBox.map {
                 XomoFigmaPlanRect(
                     x: $0.x - rootOrigin.x,
@@ -1031,6 +1032,16 @@ enum XomoFigmaNodeImportMapper {
     private static func hasUnpreservedStackConstraints(_ node: XomoFigmaNode) -> Bool {
         [node.minWidth, node.maxWidth, node.minHeight, node.maxHeight]
             .contains { $0 != nil }
+    }
+
+    private static func sizeConstraints(_ node: XomoFigmaNode) -> XomoFigmaSizeConstraints? {
+        let constraints = XomoFigmaSizeConstraints(
+            minWidth: node.minWidth,
+            maxWidth: node.maxWidth,
+            minHeight: node.minHeight,
+            maxHeight: node.maxHeight
+        )
+        return constraints.isEmpty ? nil : constraints
     }
 
     private static func targetMapping(

@@ -221,6 +221,7 @@ enum XomoFigmaNodeMaterializer {
             applyFigmaEffects(item.effects, to: &layer, scale: transform.scale)
         }
         layer.xomoFigmaVariableBindings = item.variableBindings
+        layer.xomoFigmaSizeConstraints = item.sizeConstraints
         layer.xomoFigmaSourceID = item.sourceID
         layer.xomoFigmaNodeType = item.sourceType
         layer.xomoFigmaComponentRole = item.componentRole

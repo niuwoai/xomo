@@ -3474,11 +3474,30 @@ struct XomoFigmaNodeImportPlanTests {
         let child = try #require(plan.items.first { $0.sourceID == "2:140" })
 
         #expect(parent.stackLayout?.axis == .horizontal)
+        #expect(parent.sizeConstraints == XomoFigmaSizeConstraints(
+            minWidth: 240,
+            maxWidth: 640,
+            minHeight: nil,
+            maxHeight: nil
+        ))
         #expect(parent.issues.contains(.autoLayoutFlattened))
         #expect(parent.fidelity == .partial)
         #expect(child.issues.contains(.autoLayoutFlattened))
         #expect(child.fidelity == .partial)
+        #expect(child.sizeConstraints == XomoFigmaSizeConstraints(
+            minWidth: nil,
+            maxWidth: nil,
+            minHeight: 48,
+            maxHeight: 96
+        ))
         #expect(child.frame?.height == 64)
+
+        let materialized = XomoFigmaNodeMaterializer.materialize(
+            plan: plan,
+            canvasSize: CGSize(width: 800, height: 500)
+        )
+        #expect(materialized.layers.first { $0.xomoFigmaSourceID == "1:140" }?.xomoFigmaSizeConstraints == parent.sizeConstraints)
+        #expect(materialized.layers.first { $0.xomoFigmaSourceID == "2:140" }?.xomoFigmaSizeConstraints == child.sizeConstraints)
     }
 
     private static let validNodeResponse = Data(

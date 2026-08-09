@@ -348,6 +348,20 @@ struct XomoFigmaPlanCornerRadii: Equatable, Sendable {
     }
 }
 
+/// Original Figma min/max sizing metadata. Xomo preserves these values even
+/// before its native layout engine can enforce them, so future editing does
+/// not lose the source design intent.
+struct XomoFigmaSizeConstraints: Codable, Equatable, Sendable {
+    var minWidth: Double?
+    var maxWidth: Double?
+    var minHeight: Double?
+    var maxHeight: Double?
+
+    var isEmpty: Bool {
+        minWidth == nil && maxWidth == nil && minHeight == nil && maxHeight == nil
+    }
+}
+
 struct XomoFigmaNodeImportItem: Equatable, Identifiable, Sendable {
     var id: String { sourceID }
     var sourceID: String
@@ -361,6 +375,7 @@ struct XomoFigmaNodeImportItem: Equatable, Identifiable, Sendable {
     var fidelity: XomoFigmaNodeMappingFidelity
     var issues: [XomoFigmaNodeMappingIssue]
     var variableBindings: [XomoFigmaVariableBinding] = []
+    var sizeConstraints: XomoFigmaSizeConstraints? = nil
     var frame: XomoFigmaPlanRect?
     var opacity: Double
     var isVisible: Bool

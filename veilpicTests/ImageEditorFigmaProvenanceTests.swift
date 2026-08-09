@@ -10,6 +10,12 @@ struct ImageEditorFigmaProvenanceTests {
         var layer = document.layers[0]
         layer.xomoFigmaSourceID = "1:60"
         layer.xomoFigmaNodeType = "BOOLEAN_OPERATION"
+        layer.xomoFigmaSizeConstraints = XomoFigmaSizeConstraints(
+            minWidth: 120,
+            maxWidth: 360,
+            minHeight: 44,
+            maxHeight: 88
+        )
         layer.xomoFigmaComponentRole = .instance
         layer.xomoFigmaComponentProperties = [
             "Size": XomoFigmaComponentProperty(
@@ -64,6 +70,7 @@ struct ImageEditorFigmaProvenanceTests {
         let restored = try project.restoredDocument()
         #expect(restored.layers.first?.xomoFigmaComponentProperties == layer.xomoFigmaComponentProperties)
         #expect(restored.layers.first?.xomoFigmaImageFill == layer.xomoFigmaImageFill)
+        #expect(restored.layers.first?.xomoFigmaSizeConstraints == layer.xomoFigmaSizeConstraints)
     }
 
     @Test func componentPropertyLocalOverrideUsesUndoAndRedo() throws {

@@ -3392,6 +3392,8 @@ struct ImageEditorLayer: Identifiable {
     var xomoComponentInstance: XomoComponentInstance?
     var isXomoThemeOverride = false
     var xomoFigmaVariableBindings: [XomoFigmaVariableBinding] = []
+    /// Original Figma min/max dimensions retained until native constraints can enforce them.
+    var xomoFigmaSizeConstraints: XomoFigmaSizeConstraints?
     /// Original Figma node identity retained for inspectable, traceable imports.
     var xomoFigmaSourceID: String?
     var xomoFigmaNodeType: String?
