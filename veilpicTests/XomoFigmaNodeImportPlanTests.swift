@@ -248,6 +248,30 @@ struct XomoFigmaNodeImportPlanTests {
         #expect(result.layers.first?.textContent?.firstLineIndent == 0)
     }
 
+    @Test func oversizedFigmaParagraphIndentClampsToEditableNativeMaximum() throws {
+        let response = try JSONDecoder().decode(
+            XomoFigmaNodeResponse.self,
+            from: Data(
+                #"{"name":"Typography","nodes":{"1:13":{"document":{"id":"1:13","name":"Body","type":"TEXT","characters":"Indented","style":{"fontSize":16,"paragraphIndent":1200},"fills":[{"type":"SOLID","color":{"r":0,"g":0,"b":0,"a":1}}],"absoluteBoundingBox":{"x":0,"y":0,"width":120,"height":48}}}}}"#.utf8
+            )
+        )
+
+        let plan = try XomoFigmaNodeImportMapper.makePlan(response: response, requestedNodeID: "1:13")
+        let item = try #require(plan.items.first)
+        #expect(item.text?.paragraphIndent == Double(ImageEditorTextContent.maximumFirstLineIndent))
+        #expect(item.fidelity == .partial)
+        #expect(item.issues.contains(.textParagraphIndentFlattened))
+
+        let result = XomoFigmaNodeMaterializer.materialize(
+            plan: plan,
+            canvasSize: CGSize(width: 320, height: 240)
+        )
+        #expect(
+            result.layers.first?.textContent?.firstLineIndent
+                == ImageEditorTextContent.maximumFirstLineIndent
+        )
+    }
+
     @Test func figmaAutoWidthAndHeightTextMaterializesAsEditablePointText() throws {
         let response = try JSONDecoder().decode(
             XomoFigmaNodeResponse.self,

@@ -8642,7 +8642,8 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     private func clampedTextFirstLineIndent(_ indent: Double) -> Double {
-        max(-800, min(800, indent))
+        let limit = Double(ImageEditorTextContent.maximumFirstLineIndent)
+        return max(-limit, min(limit, indent))
     }
 
     private func textLayerNameFragment(_ text: String) -> String {

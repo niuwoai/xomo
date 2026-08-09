@@ -506,7 +506,10 @@ enum XomoFigmaNodeMaterializer {
                 ? 0
                 : max(1, frame.height - padding * 2),
             alignment: textAlignment(text.horizontalAlignment),
-            firstLineIndent: CGFloat(text.paragraphIndent ?? 0) * scale,
+            firstLineIndent: min(
+                ImageEditorTextContent.maximumFirstLineIndent,
+                max(0, CGFloat(text.paragraphIndent ?? 0) * scale)
+            ),
             paragraphSpacing: min(
                 ImageEditorTextContent.maximumParagraphSpacing,
                 max(0, CGFloat(text.paragraphSpacing ?? 0) * scale)
