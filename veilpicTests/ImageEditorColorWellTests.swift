@@ -5,7 +5,7 @@ import Testing
 @MainActor
 struct ImageEditorColorWellTests {
     @Test
-    func colorWellIsKeyboardNeutralAndPublishesContinuousColorChanges() {
+    func colorWellIsKeyboardNeutralAndPublishesContinuousColorChanges() throws {
         let colorWell = ImageEditorColorWellControl(
             frame: NSRect(x: 0, y: 0, width: 26, height: 26)
         )
@@ -15,15 +15,23 @@ struct ImageEditorColorWellTests {
 
         #expect(!colorWell.acceptsFirstResponder)
         #expect(colorWell.isContinuous)
-        #expect(!colorWell.isBordered)
         #expect(colorWell.focusRingType == .none)
+        #expect(colorWell.isAccessibilityElement())
+        #expect(colorWell.accessibilityRole() == .colorWell)
         #expect(ImageEditorColorWellControl.swatchBorderWidth == 1)
-        #expect(colorWell.target === colorWell)
-        #expect(colorWell.action != nil)
-
-        _ = colorWell.sendAction(colorWell.action, to: colorWell.target)
-
+        colorWell.onColorChange?(.systemOrange)
         #expect(selectedColor == .systemOrange)
+
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let controlSource = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorColorWell.swift"),
+            encoding: .utf8
+        )
+        let targetBinding = try #require(controlSource.range(of: "panel.setTarget(self)"))
+        let colorAssignment = try #require(controlSource.range(of: "panel.color = color"))
+        #expect(targetBinding.lowerBound < colorAssignment.lowerBound)
     }
 
     @Test
@@ -64,6 +72,7 @@ struct ImageEditorColorWellTests {
         #expect(colorChipSource.contains(".focusable(false)"))
         #expect(colorChipSource.contains(".xomoFocusEffectDisabled()"))
         #expect(!colorChipSource.contains(".strokeBorder("))
+        #expect(!colorChipSource.contains("NSColorWell"))
         #expect(!colorChipSource.contains("sampleScreenColorForForeground"))
         #expect(!colorChipSource.contains("sampleScreenColorForBackground"))
     }

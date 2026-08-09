@@ -1,14 +1,17 @@
 import AppKit
 import SwiftUI
 
-/// A standard macOS color well that deliberately stays out of the editor's
-/// keyboard focus chain. Clicking it opens the system color panel; changing
-/// the panel updates the bound editor color continuously.
+/// A square editor color swatch that deliberately stays out of the keyboard
+/// focus chain. It uses the system color panel without inheriting NSColorWell's
+/// native rounded/pill drawing, which would otherwise overlap our swatch.
 @MainActor
-final class ImageEditorColorWellControl: NSColorWell {
+final class ImageEditorColorWellControl: NSControl {
     static let swatchBorderWidth: CGFloat = 1
 
     var onColorChange: ((NSColor) -> Void)?
+    var color: NSColor = .black {
+        didSet { needsDisplay = true }
+    }
 
     override var acceptsFirstResponder: Bool { false }
 
@@ -23,11 +26,10 @@ final class ImageEditorColorWellControl: NSColorWell {
     }
 
     private func configure() {
-        isBordered = false
         isContinuous = true
         focusRingType = .none
-        target = self
-        action = #selector(colorDidChange(_:))
+        setAccessibilityElement(true)
+        setAccessibilityRole(.colorWell)
     }
 
     override func draw(_ dirtyRect: NSRect) {
@@ -41,10 +43,19 @@ final class ImageEditorColorWellControl: NSColorWell {
         path.stroke()
     }
 
+    override func mouseDown(with event: NSEvent) {
+        let panel = NSColorPanel.shared
+        panel.setTarget(self)
+        panel.setAction(#selector(colorPanelDidChange(_:)))
+        panel.isContinuous = true
+        panel.color = color
+        panel.orderFront(nil)
+    }
+
     @objc
-    private func colorDidChange(_ sender: NSColorWell) {
-        needsDisplay = true
-        onColorChange?(sender.color)
+    private func colorPanelDidChange(_ sender: NSColorPanel) {
+        color = sender.color
+        onColorChange?(color)
     }
 }
 
