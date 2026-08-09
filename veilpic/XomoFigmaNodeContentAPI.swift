@@ -808,7 +808,8 @@ enum XomoFigmaNodeImportMapper {
                 && !hasSupportedGradientStopPositions(paint)
         }
         let hasUnsupportedGradientCenter = visiblePaints.contains { paint in
-            paint.type == "GRADIENT_LINEAR" && !hasSupportedLinearGradientCenter(paint)
+            ["GRADIENT_LINEAR", "GRADIENT_RADIAL"].contains(paint.type)
+                && !hasSupportedGradientCenter(paint)
         }
         let hasUnsupportedGradientScale = visiblePaints.contains { paint in
             guard ["GRADIENT_LINEAR", "GRADIENT_RADIAL"].contains(paint.type),
@@ -875,14 +876,20 @@ enum XomoFigmaNodeImportMapper {
         }
     }
 
-    private static func hasSupportedLinearGradientCenter(_ paint: XomoFigmaPaint) -> Bool {
+    private static func hasSupportedGradientCenter(_ paint: XomoFigmaPaint) -> Bool {
         guard let handles = paint.gradientHandlePositions,
               handles.count == 3,
-              handles[0].isFinite,
-              handles[1].isFinite
+              handles.allSatisfy(\.isFinite)
         else { return false }
-        let centerX = (handles[0].x + handles[1].x) / 2
-        let centerY = (handles[0].y + handles[1].y) / 2
+        let centerX: Double
+        let centerY: Double
+        if paint.type == "GRADIENT_RADIAL" {
+            centerX = handles[0].x
+            centerY = handles[0].y
+        } else {
+            centerX = (handles[0].x + handles[1].x) / 2
+            centerY = (handles[0].y + handles[1].y) / 2
+        }
         return gradientCenterRange.contains(centerX) && gradientCenterRange.contains(centerY)
     }
 
@@ -1010,9 +1017,7 @@ enum XomoFigmaNodeImportMapper {
               secondLength >= minimumGradientAxisLength,
               abs(firstLength - secondLength) <= maximumLength * circularGradientTolerance,
               abs(firstAxis.x * secondAxis.x + firstAxis.y * secondAxis.y)
-                <= firstLength * secondLength * circularGradientTolerance,
-              gradientCenterRange.contains(center.x),
-              gradientCenterRange.contains(center.y)
+                <= firstLength * secondLength * circularGradientTolerance
         else { return nil }
 
         let referenceRadius = hypot(bounds.width / 2, bounds.height / 2)
@@ -1024,8 +1029,8 @@ enum XomoFigmaNodeImportMapper {
             startColor: resolvedStops.startColor,
             endColor: resolvedStops.endColor,
             scale: normalizedGradientScale(scale),
-            centerX: center.x,
-            centerY: center.y,
+            centerX: normalizedGradientCenter(center.x),
+            centerY: normalizedGradientCenter(center.y),
             opacity: resolvedStops.opacity,
             colorStops: resolvedStops.colorStops
         )

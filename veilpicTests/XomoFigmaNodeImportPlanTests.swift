@@ -1030,6 +1030,31 @@ struct XomoFigmaNodeImportPlanTests {
         #expect(result.layers.first { $0.name == "Tight Radial" }?.shapeContent?.fillGradient?.scale == 0.25)
     }
 
+    @Test func outOfRangeRadialGradientCenterUsesEditableBoundaryAndReportsPartialFidelity() throws {
+        let response = try JSONDecoder().decode(
+            XomoFigmaNodeResponse.self,
+            from: Data(
+                #"{"name":"Radial Center","nodes":{"1:37":{"document":{"id":"1:37","name":"Far Radial","type":"ELLIPSE","fills":[{"type":"GRADIENT_RADIAL","gradientHandlePositions":[{"x":5.5,"y":0.5},{"x":6,"y":0.5},{"x":5.5,"y":1}],"gradientStops":[{"position":0,"color":{"r":1,"g":1,"b":1}},{"position":1,"color":{"r":0,"g":0,"b":0}}]}],"absoluteBoundingBox":{"x":0,"y":0,"width":100,"height":100}}}}}"#.utf8
+            )
+        )
+
+        let plan = try XomoFigmaNodeImportMapper.makePlan(response: response, requestedNodeID: "1:37")
+        let item = try #require(plan.items.first)
+        let gradient = try #require(item.radialGradientFill)
+        #expect(item.fidelity == .partial)
+        #expect(item.issues.contains(.unsupportedPaint))
+        #expect(gradient.centerX == 5)
+        #expect(gradient.centerY == 0.5)
+
+        let result = XomoFigmaNodeMaterializer.materialize(
+            plan: plan,
+            canvasSize: CGSize(width: 240, height: 180)
+        )
+        let shape = try #require(result.layers.first?.shapeContent)
+        #expect(shape.fillGradient?.style == .radial)
+        #expect(shape.fillGradientCenter == CGPoint(x: 5, y: 0.5))
+    }
+
     @Test func outOfRangeFigmaNodeOpacityReportsAndUsesEditableBounds() throws {
         let response = try JSONDecoder().decode(
             XomoFigmaNodeResponse.self,
