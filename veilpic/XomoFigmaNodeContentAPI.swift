@@ -613,7 +613,9 @@ enum XomoFigmaNodeImportMapper {
         guard let color = effect.color,
               [color.r, color.g, color.b, color.a ?? 1].allSatisfy({
                   $0.isFinite && (0...1).contains($0)
-              })
+              }),
+              let offset = effect.offset,
+              hypot(offset.x, offset.y) <= maximumShadowDistance(for: type)
         else { return false }
         return (0...maximumShadowSpread).contains(effect.spread ?? 0)
     }
@@ -640,7 +642,7 @@ enum XomoFigmaNodeImportMapper {
     }
 
     private static func mappedEffects(_ effects: [XomoFigmaEffect]?) -> [XomoFigmaPlanEffect] {
-        (effects ?? []).compactMap { effect in
+        (effects ?? []).compactMap { effect -> XomoFigmaPlanEffect? in
             guard effect.visible ?? true,
                   isMappableEffect(effect),
                   let type = effect.type,
@@ -657,6 +659,7 @@ enum XomoFigmaNodeImportMapper {
                 )
             }
             guard let color = effect.color, let offset = effect.offset else { return nil }
+            let normalizedOffset = normalizedShadowOffset(offset, type: type)
             return XomoFigmaPlanEffect(
                 kind: type == "INNER_SHADOW" ? .innerShadow : .dropShadow,
                 color: XomoFigmaPlanColor(
@@ -665,8 +668,8 @@ enum XomoFigmaNodeImportMapper {
                     blue: min(max(color.b, 0), 1),
                     alpha: min(max(color.a ?? 1, 0), 1)
                 ),
-                offsetX: offset.x,
-                offsetY: offset.y,
+                offsetX: normalizedOffset.x,
+                offsetY: normalizedOffset.y,
                 radius: min(radius, type == "INNER_SHADOW" ? maximumInnerShadowBlur : maximumDropShadowBlur),
                 spread: min(max(0, effect.spread ?? 0), maximumShadowSpread)
             )
@@ -677,6 +680,8 @@ enum XomoFigmaNodeImportMapper {
     private static let maximumInnerShadowBlur = 40.0
     private static let maximumShadowSpread = 24.0
     private static let maximumBlurRadius = 256.0
+    private static let maximumDropShadowDistance = 80.0
+    private static let maximumInnerShadowDistance = 48.0
 
     private static func maximumEffectRadius(for type: String) -> Double? {
         switch type {
@@ -685,6 +690,21 @@ enum XomoFigmaNodeImportMapper {
         case "LAYER_BLUR", "BACKGROUND_BLUR": return maximumBlurRadius
         default: return nil
         }
+    }
+
+    private static func maximumShadowDistance(for type: String) -> Double {
+        type == "INNER_SHADOW" ? maximumInnerShadowDistance : maximumDropShadowDistance
+    }
+
+    private static func normalizedShadowOffset(
+        _ offset: XomoFigmaEffectOffset,
+        type: String
+    ) -> XomoFigmaEffectOffset {
+        let distance = hypot(offset.x, offset.y)
+        let maximumDistance = maximumShadowDistance(for: type)
+        guard distance > maximumDistance, distance > 0 else { return offset }
+        let scale = maximumDistance / distance
+        return XomoFigmaEffectOffset(x: offset.x * scale, y: offset.y * scale)
     }
 
     private static func stackLayout(_ node: XomoFigmaNode) -> ImageEditorStackLayout? {

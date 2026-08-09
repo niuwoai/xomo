@@ -2786,6 +2786,37 @@ struct XomoFigmaNodeImportPlanTests {
         #expect(layer.smartFilters.first?.normalizedSettings.gaussianBlurRadius == 256)
     }
 
+    @Test func outOfRangeFigmaShadowOffsetsPreserveDirectionAtEditableDistances() throws {
+        let response = try JSONDecoder().decode(
+            XomoFigmaNodeResponse.self,
+            from: Data(
+                #"{"name":"Shadow Distance","nodes":{"1:43":{"document":{"id":"1:43","name":"Far Shadows","type":"RECTANGLE","effects":[{"type":"DROP_SHADOW","radius":8,"spread":2,"offset":{"x":60,"y":80},"color":{"r":0,"g":0,"b":0,"a":0.5}},{"type":"INNER_SHADOW","radius":6,"spread":1,"offset":{"x":60,"y":80},"color":{"r":0,"g":0,"b":0,"a":0.4}}],"absoluteBoundingBox":{"x":0,"y":0,"width":120,"height":80}}}}}"#.utf8
+            )
+        )
+
+        let plan = try XomoFigmaNodeImportMapper.makePlan(response: response, requestedNodeID: "1:43")
+        let item = try #require(plan.items.first)
+        #expect(item.fidelity == .partial)
+        #expect(item.issues.contains(.effectsFlattened))
+        let drop = try #require(item.effects.first { $0.kind == .dropShadow })
+        let inner = try #require(item.effects.first { $0.kind == .innerShadow })
+        #expect(abs(drop.offsetX - 48) < 0.001)
+        #expect(abs(drop.offsetY - 64) < 0.001)
+        #expect(abs(hypot(drop.offsetX, drop.offsetY) - 80) < 0.001)
+        #expect(abs(inner.offsetX - 28.8) < 0.001)
+        #expect(abs(inner.offsetY - 38.4) < 0.001)
+        #expect(abs(hypot(inner.offsetX, inner.offsetY) - 48) < 0.001)
+
+        let result = XomoFigmaNodeMaterializer.materialize(
+            plan: plan,
+            canvasSize: CGSize(width: 240, height: 180)
+        )
+        let layer = try #require(result.layers.first)
+        #expect(abs(layer.style.shadowDistance - 80) < 0.001)
+        #expect(abs(layer.style.innerShadowDistance - 48) < 0.001)
+        #expect(abs(layer.style.shadowAngle - layer.style.innerShadowAngle) < 0.001)
+    }
+
     @Test func materializerCreatesEditableHierarchyAtCenteredScaleAndHonestPlaceholder() throws {
         let plan = try Self.decodedPlan()
         let textPlan = try #require(plan.items.first { $0.sourceName == "Continue Label" })
