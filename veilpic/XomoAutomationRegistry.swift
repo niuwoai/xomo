@@ -2186,14 +2186,14 @@ final class XomoAutomationRegistry {
             range: 0.25...4
         ) ?? 1
         if let stopsValue = object["stops"] {
-            guard object["startColor"] == nil, object["endColor"] == nil else {
-                throw XomoAutomationCallError.invalidArgument(
-                    "fillGradient.stops cannot be combined with startColor or endColor"
-                )
-            }
             guard let values = stopsValue.arrayValue else {
                 throw XomoAutomationCallError.invalidArgument(
                     "fillGradient.stops must be an array"
+                )
+            }
+            guard object["startColor"] == nil, object["endColor"] == nil else {
+                throw XomoAutomationCallError.invalidArgument(
+                    "fillGradient.stops cannot be combined with startColor or endColor"
                 )
             }
             guard (2...ImageEditorGradientFillContent.maximumColorStopCount).contains(values.count) else {

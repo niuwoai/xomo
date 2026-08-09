@@ -5220,12 +5220,16 @@ struct XomoAutomationTests {
         let stopColorProperties = properties?["fillGradient"]?.objectValue?["properties"]?
             .objectValue?["stops"]?.objectValue?["items"]?.objectValue?["properties"]?
             .objectValue?["color"]?.objectValue?["properties"]?.objectValue
-        for component in ["red", "green", "blue", "alpha"] {
+        for component in ["red", "green", "blue"] {
             #expect(fillColorProperties?[component]?.objectValue?["minimum"] == .number(0))
             #expect(fillColorProperties?[component]?.objectValue?["maximum"] == .number(1))
             #expect(stopColorProperties?[component]?.objectValue?["minimum"] == .number(0))
             #expect(stopColorProperties?[component]?.objectValue?["maximum"] == .number(1))
         }
+        #expect(fillColorProperties?["alpha"]?.objectValue?["minimum"] == .number(0))
+        #expect(fillColorProperties?["alpha"]?.objectValue?["maximum"] == .number(1))
+        #expect(stopColorProperties?["alpha"]?.objectValue?["minimum"] == .number(1))
+        #expect(stopColorProperties?["alpha"]?.objectValue?["maximum"] == .number(1))
     }
 
     @Test func shapeGradientStopColorComponentsReportIndexedAtomicErrors() throws {

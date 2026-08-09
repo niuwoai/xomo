@@ -18,6 +18,8 @@ struct ImageEditorColorWellTests {
         #expect(colorWell.focusRingType == .none)
         #expect(colorWell.isAccessibilityElement())
         #expect(colorWell.accessibilityRole() == .colorWell)
+        #expect(colorWell.target === colorWell)
+        #expect(colorWell.action != nil)
         #expect(ImageEditorColorWellControl.swatchBorderWidth == 1)
         colorWell.onColorChange?(.systemOrange)
         #expect(selectedColor == .systemOrange)
@@ -49,6 +51,20 @@ struct ImageEditorColorWellTests {
         #expect(nearCorner.greenComponent > 0.25)
         #expect(center.redComponent > 0.8)
         #expect(center.greenComponent > 0.25)
+    }
+
+    @Test
+    func mouseEquivalentAndAccessibilityActivationShareTheColorPanelAction() {
+        let colorWell = ImageEditorColorWellControl(
+            frame: NSRect(x: 0, y: 0, width: 26, height: 26)
+        )
+        var activationCount = 0
+        colorWell.colorPanelActivationHandler = { activationCount += 1 }
+
+        colorWell.performClick(nil)
+        #expect(activationCount == 1)
+        #expect(colorWell.accessibilityPerformPress())
+        #expect(activationCount == 2)
     }
 
     @Test

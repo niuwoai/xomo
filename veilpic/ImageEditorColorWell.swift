@@ -9,6 +9,7 @@ final class ImageEditorColorWellControl: NSControl {
     static let swatchBorderWidth: CGFloat = 1
 
     var onColorChange: ((NSColor) -> Void)?
+    var colorPanelActivationHandler: (() -> Void)?
     var color: NSColor = .black {
         didSet { needsDisplay = true }
     }
@@ -30,6 +31,8 @@ final class ImageEditorColorWellControl: NSControl {
         focusRingType = .none
         setAccessibilityElement(true)
         setAccessibilityRole(.colorWell)
+        target = self
+        action = #selector(controlActivated(_:))
     }
 
     override func draw(_ dirtyRect: NSRect) {
@@ -44,12 +47,34 @@ final class ImageEditorColorWellControl: NSControl {
     }
 
     override func mouseDown(with event: NSEvent) {
+        activateColorPanel()
+    }
+
+    override func performClick(_ sender: Any?) {
+        activateColorPanel()
+    }
+
+    override func accessibilityPerformPress() -> Bool {
+        activateColorPanel()
+        return true
+    }
+
+    private func activateColorPanel() {
+        if let colorPanelActivationHandler {
+            colorPanelActivationHandler()
+            return
+        }
         let panel = NSColorPanel.shared
         panel.setTarget(self)
         panel.setAction(#selector(colorPanelDidChange(_:)))
         panel.isContinuous = true
         panel.color = color
-        panel.orderFront(nil)
+        panel.makeKeyAndOrderFront(nil)
+    }
+
+    @objc
+    private func controlActivated(_ sender: NSControl) {
+        activateColorPanel()
     }
 
     @objc
