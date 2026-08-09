@@ -570,7 +570,7 @@ struct ImageEditorView: View {
                 Stepper(
                     L10n.format("imageEditor.properties.textSizeValue", Int(viewModel.textSize.rounded())),
                     value: $viewModel.textSize,
-                    in: 6...240,
+                    in: Double(ImageEditorTextContent.minimumFontSize)...Double(ImageEditorTextContent.maximumFontSize),
                     step: 1
                 )
                 .fixedSize()
@@ -7805,7 +7805,7 @@ struct ImageEditorView: View {
                 Stepper(
                     L10n.format("imageEditor.properties.textSizeValue", Int(viewModel.textSize.rounded())),
                     value: $viewModel.textSize,
-                    in: 6...240,
+                    in: Double(ImageEditorTextContent.minimumFontSize)...Double(ImageEditorTextContent.maximumFontSize),
                     step: 1
                 )
                 Picker(L10n.text("imageEditor.properties.textAlignment"), selection: $viewModel.selectedTextAlignment) {

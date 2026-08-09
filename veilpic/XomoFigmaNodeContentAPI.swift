@@ -338,7 +338,9 @@ enum XomoFigmaNodeImportMapper {
             issues.append(.textLetterSpacingFlattened)
         }
         if let fontSize = node.style?.fontSize,
-           !fontSize.isFinite || fontSize < 6 {
+           !fontSize.isFinite
+            || fontSize < Double(ImageEditorTextContent.minimumFontSize)
+            || fontSize > Double(ImageEditorTextContent.maximumFontSize) {
             issues.append(.textFontSizeFlattened)
         }
         if let fontWeight = node.style?.fontWeight,

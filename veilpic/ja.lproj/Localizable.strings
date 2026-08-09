@@ -3310,7 +3310,7 @@
 "xomo.figma.node.issue.textDecorationFlattened" = "この Figma テキスト装飾は認識できないため、装飾なしで読み込みます";
 "xomo.figma.node.issue.textLetterSpacingFlattened" = "Figma の文字間隔が Xomo で編集可能な -8〜48 px の範囲外のため、対応範囲に調整しました";
 "xomo.figma.node.issue.textFontWeightFlattened" = "この Figma フォントウェイトは標準または太字で正確に表現できないため、最も近いネイティブウェイトを使用します";
-"xomo.figma.node.issue.textFontSizeFlattened" = "この Figma フォントサイズは Xomo のネイティブ最小値 6 px 未満のため、6 px で読み込みます";
+"xomo.figma.node.issue.textFontSizeFlattened" = "Figma のフォントサイズが Xomo で編集可能な 6〜240 px の範囲外のため、対応範囲に調整しました";
 "xomo.figma.node.issue.variableBindingPreserved" = "Figma 変数のバインディング ID を保持し、Variables 権限があればライブ値を解決します";
 "xomo.figma.node.issue.exportSettingsPartiallyPreserved" = "一部の Figma 書き出し設定は未対応です。互換性のある PNG と JPG プリセットは保持されます";
 "xomo.figma.node.error.nodeSelectionRequired" = "先に node-id を含む Figma ノードリンクを貼り付けてください。";

@@ -617,7 +617,28 @@ struct XomoFigmaNodeImportPlanTests {
             plan: plan,
             canvasSize: CGSize(width: 320, height: 240)
         )
-        #expect(result.layers.first?.textContent?.fontSize == 6)
+        #expect(result.layers.first?.textContent?.fontSize == ImageEditorTextContent.minimumFontSize)
+    }
+
+    @Test func figmaFontSizeAboveNativeMaximumReportsClampInsteadOfClaimingExactImport() throws {
+        let response = try JSONDecoder().decode(
+            XomoFigmaNodeResponse.self,
+            from: Data(
+                #"{"name":"Typography","nodes":{"1:17":{"document":{"id":"1:17","name":"Display","type":"TEXT","characters":"Huge","style":{"fontSize":300},"fills":[{"type":"SOLID","color":{"r":0,"g":0,"b":0,"a":1}}],"absoluteBoundingBox":{"x":0,"y":0,"width":310,"height":310}}}}}"#.utf8
+            )
+        )
+
+        let plan = try XomoFigmaNodeImportMapper.makePlan(response: response, requestedNodeID: "1:17")
+        let item = try #require(plan.items.first)
+        #expect(item.text?.fontSize == 300)
+        #expect(item.fidelity == .partial)
+        #expect(item.issues.contains(.textFontSizeFlattened))
+
+        let result = XomoFigmaNodeMaterializer.materialize(
+            plan: plan,
+            canvasSize: CGSize(width: 400, height: 400)
+        )
+        #expect(result.layers.first?.textContent?.fontSize == ImageEditorTextContent.maximumFontSize)
     }
 
     @Test func figmaSliceBecomesNativeFireworksSliceAndExportsWithoutCreatingLayer() throws {

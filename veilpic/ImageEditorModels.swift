@@ -2845,6 +2845,8 @@ enum ImageEditorTextVerticalAlignment: String, CaseIterable, Codable, Sendable, 
 struct ImageEditorTextContent {
     static let drawingPadding: CGFloat = 4
     static let maximumBoxDimension: CGFloat = 12_000
+    static let minimumFontSize: CGFloat = 6
+    static let maximumFontSize: CGFloat = 240
     static let minimumCharacterSpacing: CGFloat = -8
     static let maximumCharacterSpacing: CGFloat = 48
     static let maximumLineSpacing: CGFloat = 96
@@ -2880,7 +2882,7 @@ struct ImageEditorTextContent {
     }
 
     var font: NSFont {
-        let size = max(6, fontSize)
+        let size = max(Self.minimumFontSize, min(Self.maximumFontSize, fontSize))
         var traits: NSFontTraitMask = []
         if isBold { traits.insert(.boldFontMask) }
         if isItalic { traits.insert(.italicFontMask) }

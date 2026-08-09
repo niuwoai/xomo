@@ -489,7 +489,13 @@ enum XomoFigmaNodeMaterializer {
         let content = ImageEditorTextContent(
             text: text.characters,
             color: nsColor(item.solidFill, fallback: .black),
-            fontSize: max(6, CGFloat(text.fontSize ?? 12) * scale),
+            fontSize: min(
+                ImageEditorTextContent.maximumFontSize,
+                max(
+                    ImageEditorTextContent.minimumFontSize,
+                    CGFloat(text.fontSize ?? 12) * scale
+                )
+            ),
             fontFamilyName: text.fontFamily ?? ImageEditorTextContent.systemFontFamilyName,
             point: CGPoint(x: padding, y: padding),
             isBold: XomoFigmaNodeImportMapper.approximatedTextBold(text.fontWeight),
