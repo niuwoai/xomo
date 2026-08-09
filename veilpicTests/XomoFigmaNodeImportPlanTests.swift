@@ -3306,6 +3306,30 @@ struct XomoFigmaNodeImportPlanTests {
         #expect(!fillVerticalMain.issues.contains(.autoLayoutFlattened))
     }
 
+    @Test func figmaAutoLayoutGeometryUsesNativeBoundsAndReportsOnlyLossyClamps() throws {
+        let response = try JSONDecoder().decode(
+            XomoFigmaNodeResponse.self,
+            from: Data(
+                #"{"name":"Layout geometry","nodes":{"1:80":{"document":{"id":"1:80","name":"Root","type":"FRAME","absoluteBoundingBox":{"x":0,"y":0,"width":700,"height":300},"children":[{"id":"2:80","name":"Overlap","type":"FRAME","layoutMode":"HORIZONTAL","itemSpacing":-24,"paddingLeft":16,"paddingRight":16,"paddingTop":12,"paddingBottom":12,"absoluteBoundingBox":{"x":0,"y":0,"width":300,"height":120}},{"id":"2:81","name":"Clamped","type":"FRAME","layoutMode":"HORIZONTAL","layoutWrap":"WRAP","itemSpacing":5000,"counterAxisSpacing":-8,"paddingLeft":-20,"paddingRight":5000,"absoluteBoundingBox":{"x":340,"y":0,"width":300,"height":120}}]}}}}"#.utf8
+            )
+        )
+        let plan = try XomoFigmaNodeImportMapper.makePlan(
+            response: response,
+            requestedNodeID: "1:80"
+        )
+        let overlap = try #require(plan.items.first { $0.sourceID == "2:80" })
+        let clamped = try #require(plan.items.first { $0.sourceID == "2:81" })
+
+        #expect(overlap.stackLayout?.spacing == -24)
+        #expect(overlap.stackLayout?.paddingLeft == 16)
+        #expect(!overlap.issues.contains(.autoLayoutFlattened))
+        #expect(clamped.stackLayout?.spacing == ImageEditorStackLayout.maximumSpacing)
+        #expect(clamped.stackLayout?.counterSpacing == 0)
+        #expect(clamped.stackLayout?.paddingLeft == 0)
+        #expect(clamped.stackLayout?.paddingRight == ImageEditorStackLayout.maximumPadding)
+        #expect(clamped.issues.contains(.autoLayoutFlattened))
+    }
+
     private static let validNodeResponse = Data(
         """
         {

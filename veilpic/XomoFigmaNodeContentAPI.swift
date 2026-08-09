@@ -910,6 +910,29 @@ enum XomoFigmaNodeImportMapper {
             || usesUnsupportedModernSizing
             || usesUnsupportedTrackDistribution
             || usesUnsupportedBaseline
+            || hasUnsupportedStackGeometry(node)
+    }
+
+    private static func hasUnsupportedStackGeometry(_ node: XomoFigmaNode) -> Bool {
+        if let spacing = node.itemSpacing,
+           !spacing.isFinite
+            || spacing < Double(ImageEditorStackLayout.minimumSpacing)
+            || spacing > Double(ImageEditorStackLayout.maximumSpacing) {
+            return true
+        }
+        if let counterSpacing = node.counterAxisSpacing,
+           !counterSpacing.isFinite
+            || counterSpacing < 0
+            || counterSpacing > Double(ImageEditorStackLayout.maximumSpacing) {
+            return true
+        }
+        return [node.paddingTop, node.paddingRight, node.paddingBottom, node.paddingLeft]
+            .compactMap { $0 }
+            .contains {
+                !$0.isFinite
+                    || $0 < 0
+                    || $0 > Double(ImageEditorStackLayout.maximumPadding)
+            }
     }
 
     private static func targetMapping(
