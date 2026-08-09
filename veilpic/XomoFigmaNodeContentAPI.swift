@@ -615,6 +615,7 @@ enum XomoFigmaNodeImportMapper {
               [color.r, color.g, color.b, color.a ?? 1].allSatisfy({
                   $0.isFinite && (0...1).contains($0)
               }),
+              isSupportedPaintBlendMode(effect.blendMode),
               let offset = effect.offset,
               hypot(offset.x, offset.y) <= maximumShadowDistance(for: type)
         else { return false }
@@ -1799,6 +1800,7 @@ struct XomoFigmaSize: Decodable {
 
 struct XomoFigmaEffect: Decodable {
     var type: String?
+    var blendMode: String?
     var color: XomoFigmaColor?
     var offset: XomoFigmaEffectOffset?
     var radius: Double?
