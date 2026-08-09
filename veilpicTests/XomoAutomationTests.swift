@@ -3760,6 +3760,26 @@ struct XomoAutomationTests {
         #expect(viewModel.document.layers.count == layerCountBeforeInvalidCreate)
         #expect(viewModel.document.history.count == historyCountBeforeInvalidCreate)
 
+        for invalidKind: XomoJSONValue in [
+            .string("triangle"),
+            .string("path"),
+            .string("Rectangle"),
+            .number(1)
+        ] {
+            let invalidKindCreate = registry.execute(request(
+                operation: "call",
+                name: "xomo.shape.create",
+                arguments: [
+                    "kind": invalidKind,
+                    "x": .number(0), "y": .number(0),
+                    "width": .number(40), "height": .number(20)
+                ]
+            ))
+            #expect(!invalidKindCreate.ok)
+            #expect(viewModel.document.layers.count == layerCountBeforeInvalidCreate)
+            #expect(viewModel.document.history.count == historyCountBeforeInvalidCreate)
+        }
+
         let toolsResponse = registry.execute(request(operation: "tools"))
         let tools = try #require(toolsResponse.result?.arrayValue)
         let createTool = try #require(tools.compactMap(\.objectValue).first {

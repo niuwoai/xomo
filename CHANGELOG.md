@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.12.0-rc742 - 2026-08-09
+
+### Fixed
+- `xomo.shape.create` 运行时严格接受 `rectangle` 或 `ellipse`，未知值不再静默创建成矩形。
+- `path`、大小写错误、拼写错误和非字符串类型均在读取坐标、落层和写 History 前原子拒绝，工具 Schema 与真实执行行为保持一致。
+
+### Tests
+- 扩展形状创建回归，覆盖合法矩形以及 `triangle`、`path`、`Rectangle`、数字类型等非法 kind 的零图层、零 History 副作用；合法椭圆径向渐变和自定义虚线邻接回归同步通过，3/3 成功。
+
 ## 2.12.0-rc741 - 2026-08-09
 
 ### Added

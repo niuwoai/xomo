@@ -467,6 +467,14 @@ final class XomoAutomationRegistry {
         case "xomo.paint.special":
             try specialPaint(arguments, viewModel: viewModel)
         case "xomo.shape.create":
+            let shapeKindRawValue = try requiredString("kind", in: arguments)
+            guard let shapeKind = ImageEditorShapeKind(rawValue: shapeKindRawValue),
+                  shapeKind == .rectangle || shapeKind == .ellipse
+            else {
+                throw XomoAutomationCallError.invalidArgument(
+                    "Shape kind must be rectangle or ellipse"
+                )
+            }
             let origin = try requiredPoint(arguments)
             let cornerRadii = try optionalCornerRadii(arguments)
             try validateExclusiveCornerArguments(arguments)
@@ -504,7 +512,7 @@ final class XomoAutomationRegistry {
             viewModel.drawShape(
                 from: origin,
                 to: end,
-                ellipse: arguments["kind"]?.stringValue == "ellipse",
+                ellipse: shapeKind == .ellipse,
                 cornerRadius: arguments["cornerRadius"]?.doubleValue,
                 cornerRadii: cornerRadii,
                 cornerSmoothing: arguments["cornerSmoothing"]?.doubleValue,
