@@ -810,6 +810,12 @@ enum XomoFigmaNodeImportMapper {
         let hasUnsupportedGradientCenter = visiblePaints.contains { paint in
             paint.type == "GRADIENT_LINEAR" && !hasSupportedLinearGradientCenter(paint)
         }
+        let hasUnsupportedGradientScale = visiblePaints.contains { paint in
+            guard ["GRADIENT_LINEAR", "GRADIENT_RADIAL"].contains(paint.type),
+                  let scale = rawGradientScale(paint, bounds: node.absoluteBoundingBox)
+            else { return false }
+            return !gradientScaleRange.contains(scale)
+        }
         let hasUnsupportedFill = visiblePaints.contains { paint in
             if paint.type == "SOLID" { return false }
             guard allowsGradientFill else { return true }
@@ -828,6 +834,7 @@ enum XomoFigmaNodeImportMapper {
             || hasUnsupportedGradientColor
             || hasUnsupportedGradientStopPosition
             || hasUnsupportedGradientCenter
+            || hasUnsupportedGradientScale
             || hasUnsupportedFill
             || visibleStrokes.count > 1
             || visibleStrokes.contains(where: { $0.type != "SOLID" }) {
@@ -953,13 +960,13 @@ enum XomoFigmaNodeImportMapper {
         let radians = angle * .pi / 180
         let span = abs(cos(radians)) * bounds.width + abs(sin(radians)) * bounds.height
         let scale = length / span
-        guard angle.isFinite, scale.isFinite, (0.25...4).contains(scale) else { return nil }
+        guard angle.isFinite, scale.isFinite else { return nil }
 
         return XomoFigmaPlanLinearGradient(
             startColor: resolvedStops.startColor,
             endColor: resolvedStops.endColor,
             angle: angle,
-            scale: scale,
+            scale: normalizedGradientScale(scale),
             centerX: normalizedGradientCenter((startHandle.x + endHandle.x) / 2),
             centerY: normalizedGradientCenter((startHandle.y + endHandle.y) / 2),
             opacity: resolvedStops.opacity,
@@ -1011,12 +1018,12 @@ enum XomoFigmaNodeImportMapper {
         let referenceRadius = hypot(bounds.width / 2, bounds.height / 2)
         let radius = (firstLength + secondLength) / 2
         let scale = radius / referenceRadius
-        guard scale.isFinite, (0.25...4).contains(scale) else { return nil }
+        guard scale.isFinite else { return nil }
 
         return XomoFigmaPlanRadialGradient(
             startColor: resolvedStops.startColor,
             endColor: resolvedStops.endColor,
-            scale: scale,
+            scale: normalizedGradientScale(scale),
             centerX: center.x,
             centerY: center.y,
             opacity: resolvedStops.opacity,
@@ -1027,9 +1034,55 @@ enum XomoFigmaNodeImportMapper {
     private static let minimumGradientAxisLength = 0.001
     private static let circularGradientTolerance = 0.001
     private static let gradientCenterRange = -4.0...5.0
+    private static let gradientScaleRange = 0.25...4.0
 
     private static func normalizedGradientCenter(_ value: Double) -> Double {
         min(max(value, gradientCenterRange.lowerBound), gradientCenterRange.upperBound)
+    }
+
+    private static func normalizedGradientScale(_ value: Double) -> Double {
+        min(max(value, gradientScaleRange.lowerBound), gradientScaleRange.upperBound)
+    }
+
+    private static func rawGradientScale(
+        _ paint: XomoFigmaPaint,
+        bounds: XomoFigmaRectangle?
+    ) -> Double? {
+        guard let bounds,
+              bounds.width.isFinite,
+              bounds.height.isFinite,
+              bounds.width > 0,
+              bounds.height > 0,
+              let handles = paint.gradientHandlePositions,
+              handles.count == 3,
+              handles.allSatisfy(\.isFinite)
+        else { return nil }
+
+        let center = handles[0]
+        let firstX = (handles[1].x - center.x) * bounds.width
+        let firstY = (handles[1].y - center.y) * bounds.height
+        let firstLength = hypot(firstX, firstY)
+        guard firstLength.isFinite else { return nil }
+
+        if paint.type == "GRADIENT_LINEAR" {
+            guard firstLength > minimumGradientAxisLength else { return nil }
+            let angle = atan2(firstY, firstX)
+            let span = abs(cos(angle)) * bounds.width + abs(sin(angle)) * bounds.height
+            let scale = firstLength / span
+            return scale.isFinite ? scale : nil
+        }
+
+        guard paint.type == "GRADIENT_RADIAL" else { return nil }
+        let secondX = (handles[2].x - center.x) * bounds.width
+        let secondY = (handles[2].y - center.y) * bounds.height
+        let secondLength = hypot(secondX, secondY)
+        guard secondLength.isFinite,
+              firstLength >= minimumGradientAxisLength,
+              secondLength >= minimumGradientAxisLength
+        else { return nil }
+        let referenceRadius = hypot(bounds.width / 2, bounds.height / 2)
+        let scale = ((firstLength + secondLength) / 2) / referenceRadius
+        return scale.isFinite ? scale : nil
     }
 
     private static func resolvedGradientStops(

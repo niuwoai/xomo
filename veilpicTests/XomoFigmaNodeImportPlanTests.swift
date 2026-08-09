@@ -1004,6 +1004,32 @@ struct XomoFigmaNodeImportPlanTests {
         #expect(shape.fillGradientCenter == CGPoint(x: 5, y: 0.5))
     }
 
+    @Test func outOfRangeGradientScaleUsesEditableBoundariesAndReportsPartialFidelity() throws {
+        let response = try JSONDecoder().decode(
+            XomoFigmaNodeResponse.self,
+            from: Data(
+                #"{"name":"Gradient Scale","nodes":{"1:35":{"document":{"id":"1:35","name":"Gradient Scale","type":"FRAME","absoluteBoundingBox":{"x":0,"y":0,"width":220,"height":100},"children":[{"id":"2:35","name":"Wide Linear","type":"RECTANGLE","fills":[{"type":"GRADIENT_LINEAR","gradientHandlePositions":[{"x":0,"y":0.5},{"x":5,"y":0.5},{"x":0,"y":0}],"gradientStops":[{"position":0,"color":{"r":1,"g":0,"b":0}},{"position":1,"color":{"r":0,"g":0,"b":1}}]}],"absoluteBoundingBox":{"x":0,"y":0,"width":100,"height":100}},{"id":"2:36","name":"Tight Radial","type":"ELLIPSE","fills":[{"type":"GRADIENT_RADIAL","gradientHandlePositions":[{"x":0.5,"y":0.5},{"x":0.55,"y":0.5},{"x":0.5,"y":0.55}],"gradientStops":[{"position":0,"color":{"r":1,"g":1,"b":1}},{"position":1,"color":{"r":0,"g":0,"b":0}}]}],"absoluteBoundingBox":{"x":120,"y":0,"width":100,"height":100}}]}}}}"#.utf8
+            )
+        )
+
+        let plan = try XomoFigmaNodeImportMapper.makePlan(response: response, requestedNodeID: "1:35")
+        let linear = try #require(plan.items.first { $0.sourceID == "2:35" })
+        let radial = try #require(plan.items.first { $0.sourceID == "2:36" })
+        #expect(linear.fidelity == .partial)
+        #expect(linear.issues.contains(.unsupportedPaint))
+        #expect(linear.linearGradientFill?.scale == 4)
+        #expect(radial.fidelity == .partial)
+        #expect(radial.issues.contains(.unsupportedPaint))
+        #expect(radial.radialGradientFill?.scale == 0.25)
+
+        let result = XomoFigmaNodeMaterializer.materialize(
+            plan: plan,
+            canvasSize: CGSize(width: 320, height: 200)
+        )
+        #expect(result.layers.first { $0.name == "Wide Linear" }?.shapeContent?.fillGradient?.scale == 4)
+        #expect(result.layers.first { $0.name == "Tight Radial" }?.shapeContent?.fillGradient?.scale == 0.25)
+    }
+
     @Test func outOfRangeFigmaNodeOpacityReportsAndUsesEditableBounds() throws {
         let response = try JSONDecoder().decode(
             XomoFigmaNodeResponse.self,
