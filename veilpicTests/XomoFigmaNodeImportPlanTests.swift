@@ -1773,6 +1773,34 @@ struct XomoFigmaNodeImportPlanTests {
         #expect(smoothedLayer.shapeContent?.cornerSmoothing == 0.6)
     }
 
+    @Test func oversizedFigmaCornerRadiiReportGeometryClamp() throws {
+        let response = try JSONDecoder().decode(
+            XomoFigmaNodeResponse.self,
+            from: Data(
+                #"{"name":"Corners","nodes":{"1:23":{"document":{"id":"1:23","name":"Corners","type":"FRAME","absoluteBoundingBox":{"x":0,"y":0,"width":240,"height":120},"children":[{"id":"2:23","name":"Uniform","type":"RECTANGLE","cornerRadius":40,"absoluteBoundingBox":{"x":0,"y":0,"width":100,"height":40}},{"id":"2:24","name":"Independent","type":"RECTANGLE","rectangleCornerRadii":[8,30,12,4],"absoluteBoundingBox":{"x":120,"y":0,"width":80,"height":40}}]}}}}"#.utf8
+            )
+        )
+
+        let plan = try XomoFigmaNodeImportMapper.makePlan(response: response, requestedNodeID: "1:23")
+        let uniform = try #require(plan.items.first { $0.sourceID == "2:23" })
+        let independent = try #require(plan.items.first { $0.sourceID == "2:24" })
+        for item in [uniform, independent] {
+            #expect(item.fidelity == .partial)
+            #expect(item.issues.contains(.cornerRadiusFlattened))
+        }
+
+        let result = XomoFigmaNodeMaterializer.materialize(
+            plan: plan,
+            canvasSize: CGSize(width: 320, height: 240)
+        )
+        let uniformLayer = try #require(result.layers.first { $0.name == "Uniform" })
+        let independentLayer = try #require(result.layers.first { $0.name == "Independent" })
+        let uniformScale = uniformLayer.frame.width / 100
+        let independentScale = independentLayer.frame.width / 80
+        #expect(uniformLayer.shapeContent?.cornerRadius == 20 * uniformScale)
+        #expect(independentLayer.shapeContent?.cornerRadii?.topRight == 20 * independentScale)
+    }
+
     @Test func mapperUsesStrokeGeometryAndReportsInheritedRotatedTransform() throws {
         let response = try JSONDecoder().decode(
             XomoFigmaNodeResponse.self,

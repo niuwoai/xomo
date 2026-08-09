@@ -282,7 +282,7 @@ enum XomoFigmaNodeImportMapper {
            mappedBlendMode(blendMode) == nil {
             issues.append(.blendModeFlattened)
         }
-        if hasUnsupportedCornerStyle(node) {
+        if hasUnsupportedCornerStyle(node, target: mapping.target) {
             issues.append(.cornerRadiusFlattened)
         }
         if let strokeWeight = node.strokeWeight,
@@ -1156,7 +1156,10 @@ enum XomoFigmaNodeImportMapper {
             || lineSpacing > Double(ImageEditorTextContent.maximumLineSpacing)
     }
 
-    private static func hasUnsupportedCornerStyle(_ node: XomoFigmaNode) -> Bool {
+    private static func hasUnsupportedCornerStyle(
+        _ node: XomoFigmaNode,
+        target: XomoFigmaNodeTargetKind?
+    ) -> Bool {
         let radii = node.rectangleCornerRadii ?? []
         let hasInvalidIndependentRadii = !radii.isEmpty
             && validRectangleCornerRadii(node) == nil
@@ -1170,10 +1173,19 @@ enum XomoFigmaNodeImportMapper {
         } ?? false
         let hasApproximatedCornerSmoothing = (validCornerSmoothing(node) ?? 0) > 0
             && hasRoundedCorner
+        let geometryMaximum = node.absoluteBoundingBox.map {
+            max(0, min($0.width, $0.height) / 2)
+        }
+        let exceedsGeometryMaximum = target == .rectangle
+            && geometryMaximum.map { maximum in
+                (uniformCornerRadius(node) ?? 0) > maximum
+                    || radii.contains(where: { $0.isFinite && $0 > maximum })
+            } ?? false
         return hasInvalidIndependentRadii
             || hasInvalidUniformRadius
             || hasInvalidCornerSmoothing
             || hasApproximatedCornerSmoothing
+            || exceedsGeometryMaximum
     }
 
     private static func maximumNativeStrokeWidth(

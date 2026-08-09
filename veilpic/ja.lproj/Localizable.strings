@@ -3297,7 +3297,7 @@
 "xomo.figma.node.issue.clippingFlattened" = "Frame の内容クリッピングはまだ保持されません";
 "xomo.figma.node.issue.effectsFlattened" = "エフェクトはまだ保持されません";
 "xomo.figma.node.issue.blendModeFlattened" = "描画モードはまだ保持されません";
-"xomo.figma.node.issue.cornerRadiusFlattened" = "コーナースムージングは編集可能なスーパー楕円で近似されます";
+"xomo.figma.node.issue.cornerRadiusFlattened" = "Figma のコーナースムージングまたは半径寸法を Xomo の編集可能な形状に近似しました";
 "xomo.figma.node.issue.strokeWeightFlattened" = "Figma のストローク幅が Xomo の編集可能範囲または現在のシェイプの幾何学的上限を超えたため、対応範囲に調整しました";
 "xomo.figma.node.issue.transformFlattened" = "回転、反転、傾斜は軸に沿った境界へ縮退します";
 "xomo.figma.node.issue.textCaseFlattened" = "文字ケースはライブスタイルではなく編集可能な文字列へ反映されます";
