@@ -875,6 +875,7 @@
 "imageEditor.properties.shapeStrokeJoin.miter" = "尖角";
 "imageEditor.properties.shapeStrokeJoin.round" = "圆角";
 "imageEditor.properties.shapeStrokeJoin.bevel" = "斜角";
+"imageEditor.properties.shapeStrokeMiterLimitValue" = "尖角限制：%.1f";
 "imageEditor.properties.shapeStrokeDash" = "虚线";
 "imageEditor.properties.shapeStrokeDash.solid" = "实线";
 "imageEditor.properties.shapeStrokeDash.dash" = "短划线";

@@ -191,6 +191,20 @@ extension ImageEditorView {
                 .accessibilityIdentifier("image-editor-shape-stroke-join")
             }
 
+            if viewModel.selectedShapeStrokeJoin == .miter {
+                Stepper(
+                    L10n.format(
+                        "imageEditor.properties.shapeStrokeMiterLimitValue",
+                        viewModel.selectedShapeStrokeMiterLimit
+                    ),
+                    value: selectedShapeStrokeMiterLimitBinding,
+                    in: Double(ImageEditorShapeContent.minimumStrokeMiterLimit)...Double(ImageEditorShapeContent.maximumStrokeMiterLimit),
+                    step: 0.5
+                )
+                .focusable(false)
+                .accessibilityIdentifier("image-editor-shape-stroke-miter-limit")
+            }
+
             HStack(spacing: 8) {
                 Text(L10n.text("imageEditor.properties.shapeStrokeDash"))
                     .font(.system(size: 10, weight: .medium))
@@ -454,6 +468,14 @@ extension ImageEditorView {
             viewModel.selectedShapeStrokeJoin
         } set: { join in
             viewModel.setSelectedShapeStrokeJoin(join)
+        }
+    }
+
+    private var selectedShapeStrokeMiterLimitBinding: Binding<Double> {
+        Binding {
+            viewModel.selectedShapeStrokeMiterLimit
+        } set: { limit in
+            viewModel.setSelectedShapeStrokeMiterLimit(limit)
         }
     }
 

@@ -875,6 +875,7 @@
 "imageEditor.properties.shapeStrokeJoin.miter" = "Miter";
 "imageEditor.properties.shapeStrokeJoin.round" = "Round";
 "imageEditor.properties.shapeStrokeJoin.bevel" = "Bevel";
+"imageEditor.properties.shapeStrokeMiterLimitValue" = "Miter limit: %.1f";
 "imageEditor.properties.shapeStrokeDash" = "Stroke dash";
 "imageEditor.properties.shapeStrokeDash.solid" = "Solid";
 "imageEditor.properties.shapeStrokeDash.dash" = "Dash";

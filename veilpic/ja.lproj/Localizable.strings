@@ -875,6 +875,7 @@
 "imageEditor.properties.shapeStrokeJoin.miter" = "マイター";
 "imageEditor.properties.shapeStrokeJoin.round" = "ラウンド";
 "imageEditor.properties.shapeStrokeJoin.bevel" = "ベベル";
+"imageEditor.properties.shapeStrokeMiterLimitValue" = "マイター制限：%.1f";
 "imageEditor.properties.shapeStrokeDash" = "破線";
 "imageEditor.properties.shapeStrokeDash.solid" = "実線";
 "imageEditor.properties.shapeStrokeDash.dash" = "短い破線";

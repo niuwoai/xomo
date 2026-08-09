@@ -913,6 +913,7 @@ struct ImageEditorShapeStyleTests {
             strokePosition: .outside,
             strokeCap: .square,
             strokeJoin: .bevel,
+            strokeMiterLimit: 4,
             strokeDashPattern: [12, 4]
         )
 
@@ -925,6 +926,7 @@ struct ImageEditorShapeStyleTests {
         #expect(edited.strokePosition == .outside)
         #expect(edited.strokeCap == .square)
         #expect(edited.strokeJoin == .bevel)
+        #expect(edited.strokeMiterLimit == 4)
         #expect(edited.strokeDashPattern == [12, 4])
         #expect(viewModel.document.history.count == historyCount + 1)
 
@@ -938,6 +940,7 @@ struct ImageEditorShapeStyleTests {
         #expect(undone.strokePosition == original.strokePosition)
         #expect(undone.strokeCap == original.strokeCap)
         #expect(undone.strokeJoin == original.strokeJoin)
+        #expect(undone.strokeMiterLimit == original.strokeMiterLimit)
         #expect(undone.strokeDashPattern == original.strokeDashPattern)
         viewModel.redo()
         let redone = try #require(viewModel.document.selectedLayer?.shapeContent)
@@ -949,6 +952,7 @@ struct ImageEditorShapeStyleTests {
         #expect(redone.strokePosition == edited.strokePosition)
         #expect(redone.strokeCap == edited.strokeCap)
         #expect(redone.strokeJoin == edited.strokeJoin)
+        #expect(redone.strokeMiterLimit == edited.strokeMiterLimit)
         #expect(redone.strokeDashPattern == edited.strokeDashPattern)
 
         let projectData = try viewModel.projectData()
@@ -963,6 +967,7 @@ struct ImageEditorShapeStyleTests {
         #expect(restored.strokePosition == edited.strokePosition)
         #expect(restored.strokeCap == edited.strokeCap)
         #expect(restored.strokeJoin == edited.strokeJoin)
+        #expect(restored.strokeMiterLimit == edited.strokeMiterLimit)
         #expect(restored.strokeDashPattern == edited.strokeDashPattern)
     }
 
@@ -989,6 +994,42 @@ struct ImageEditorShapeStyleTests {
             reopened.document.selectedLayer?.shapeContent?.strokeWidth
                 == ImageEditorShapeContent.minimumStrokeWidth
         )
+    }
+
+    @Test func miterLimitBatchEditClampsAndIsOneUndoableChange() throws {
+        let viewModel = makeViewModel()
+        viewModel.drawShape(
+            from: CGPoint(x: 8, y: 8),
+            to: CGPoint(x: 48, y: 38),
+            ellipse: false
+        )
+        let firstID = try #require(viewModel.document.selectedLayerID)
+        viewModel.drawShape(
+            from: CGPoint(x: 58, y: 18),
+            to: CGPoint(x: 108, y: 68),
+            ellipse: false
+        )
+        let secondID = try #require(viewModel.document.selectedLayerID)
+        viewModel.document.selectedLayerIDs = [firstID, secondID]
+        viewModel.document.selectedLayerID = secondID
+        let historyCount = viewModel.document.history.count
+
+        viewModel.setSelectedShapeStrokeMiterLimit(0.5)
+
+        for id in [firstID, secondID] {
+            let content = try #require(viewModel.document.layers.first { $0.id == id }?.shapeContent)
+            #expect(content.strokeMiterLimit == ImageEditorShapeContent.minimumStrokeMiterLimit)
+        }
+        #expect(viewModel.document.history.count == historyCount + 1)
+
+        viewModel.undo()
+        for id in [firstID, secondID] {
+            let content = try #require(viewModel.document.layers.first { $0.id == id }?.shapeContent)
+            #expect(content.strokeMiterLimit == ImageEditorShapeContent.defaultStrokeMiterLimit)
+        }
+        viewModel.redo()
+        #expect(viewModel.document.layers.first { $0.id == firstID }?.shapeContent?.strokeMiterLimit == 1)
+        #expect(viewModel.document.layers.first { $0.id == secondID }?.shapeContent?.strokeMiterLimit == 1)
     }
 
     @Test func lockedShapeRejectsAppearanceChanges() throws {
@@ -1037,11 +1078,14 @@ struct ImageEditorShapeStyleTests {
             "image-editor-shape-stroke-position",
             "image-editor-shape-stroke-cap",
             "image-editor-shape-stroke-join",
+            "image-editor-shape-stroke-miter-limit",
             "image-editor-shape-stroke-dash"
         ] {
             #expect(source.contains(identifier))
         }
         #expect(source.components(separatedBy: ".focusable(false)").count - 1 >= 10)
+        #expect(source.contains("if viewModel.selectedShapeStrokeJoin == .miter"))
+        #expect(source.contains("viewModel.setSelectedShapeStrokeMiterLimit(limit)"))
 
         let canvasSource = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),

@@ -237,6 +237,13 @@ extension ImageEditorViewModel {
         document.selectedLayer?.shapeContent?.strokeJoin ?? .round
     }
 
+    var selectedShapeStrokeMiterLimit: Double {
+        Double(
+            document.selectedLayer?.shapeContent?.strokeMiterLimit
+                ?? ImageEditorShapeContent.defaultStrokeMiterLimit
+        )
+    }
+
     var selectedShapeStrokeDashPreset: ImageEditorStrokeDashPreset {
         let pattern = document.selectedLayer?.shapeContent?.strokeDashPattern ?? []
         for preset in ImageEditorStrokeDashPreset.allCases where preset != .custom {
@@ -392,6 +399,10 @@ extension ImageEditorViewModel {
         updateSelectedShapeProperties(strokeJoin: join)
     }
 
+    func setSelectedShapeStrokeMiterLimit(_ limit: Double) {
+        updateSelectedShapeProperties(strokeMiterLimit: limit)
+    }
+
     func setSelectedShapeStrokeDashPreset(_ preset: ImageEditorStrokeDashPreset) {
         guard preset != .custom else { return }
         updateSelectedShapeProperties(strokeDashPattern: preset.pattern)
@@ -409,6 +420,7 @@ extension ImageEditorViewModel {
         strokePosition: ImageEditorStrokePosition? = nil,
         strokeCap: ImageEditorStrokeCap? = nil,
         strokeJoin: ImageEditorStrokeJoin? = nil,
+        strokeMiterLimit: Double? = nil,
         strokeDashPattern: [CGFloat]? = nil,
         cornerRadius: Double? = nil,
         cornerRadii: ImageEditorRectangleCornerRadii? = nil,
@@ -458,6 +470,14 @@ extension ImageEditorViewModel {
             if let strokePosition { content.strokePosition = strokePosition }
             if let strokeCap { content.strokeCap = strokeCap }
             if let strokeJoin { content.strokeJoin = strokeJoin }
+            if let strokeMiterLimit, strokeMiterLimit.isFinite {
+                content.strokeMiterLimit = CGFloat(
+                    max(
+                        Double(ImageEditorShapeContent.minimumStrokeMiterLimit),
+                        min(Double(ImageEditorShapeContent.maximumStrokeMiterLimit), strokeMiterLimit)
+                    )
+                )
+            }
             if let strokeDashPattern { content.strokeDashPattern = strokeDashPattern }
             if content.kind == .rectangle,
                let cornerRadius,
