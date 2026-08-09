@@ -3330,6 +3330,30 @@ struct XomoFigmaNodeImportPlanTests {
         #expect(clamped.issues.contains(.autoLayoutFlattened))
     }
 
+    @Test func figmaAutoLayoutAlignmentReportsUnknownValuesWithoutMislabelingNativeCases() throws {
+        let response = try JSONDecoder().decode(
+            XomoFigmaNodeResponse.self,
+            from: Data(
+                #"{"name":"Alignment fidelity","nodes":{"1:90":{"document":{"id":"1:90","name":"Root","type":"FRAME","absoluteBoundingBox":{"x":0,"y":0,"width":700,"height":300},"children":[{"id":"2:90","name":"Native","type":"FRAME","layoutMode":"HORIZONTAL","primaryAxisAlignItems":"SPACE_BETWEEN","counterAxisAlignItems":"MAX","absoluteBoundingBox":{"x":0,"y":0,"width":300,"height":120}},{"id":"2:91","name":"Unknown","type":"FRAME","layoutMode":"HORIZONTAL","primaryAxisAlignItems":"SPACE_AROUND","counterAxisAlignItems":"STRETCH","absoluteBoundingBox":{"x":340,"y":0,"width":300,"height":120}}]}}}}"#.utf8
+            )
+        )
+        let plan = try XomoFigmaNodeImportMapper.makePlan(
+            response: response,
+            requestedNodeID: "1:90"
+        )
+        let native = try #require(plan.items.first { $0.sourceID == "2:90" })
+        let unknown = try #require(plan.items.first { $0.sourceID == "2:91" })
+
+        #expect(native.stackLayout?.primaryAlignment == .spaceBetween)
+        #expect(native.stackLayout?.crossAlignment == .end)
+        #expect(!native.issues.contains(.autoLayoutFlattened))
+        #expect(native.fidelity == .exact)
+        #expect(unknown.stackLayout?.primaryAlignment == .start)
+        #expect(unknown.stackLayout?.crossAlignment == .start)
+        #expect(unknown.issues.contains(.autoLayoutFlattened))
+        #expect(unknown.fidelity == .partial)
+    }
+
     private static let validNodeResponse = Data(
         """
         {

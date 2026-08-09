@@ -910,7 +910,20 @@ enum XomoFigmaNodeImportMapper {
             || usesUnsupportedModernSizing
             || usesUnsupportedTrackDistribution
             || usesUnsupportedBaseline
+            || hasUnsupportedStackAlignment(node)
             || hasUnsupportedStackGeometry(node)
+    }
+
+    private static func hasUnsupportedStackAlignment(_ node: XomoFigmaNode) -> Bool {
+        if let primary = node.primaryAxisAlignItems,
+           !["MIN", "CENTER", "MAX", "SPACE_BETWEEN"].contains(primary) {
+            return true
+        }
+        if let cross = node.counterAxisAlignItems,
+           !["MIN", "CENTER", "MAX", "BASELINE"].contains(cross) {
+            return true
+        }
+        return false
     }
 
     private static func hasUnsupportedStackGeometry(_ node: XomoFigmaNode) -> Bool {
