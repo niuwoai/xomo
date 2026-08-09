@@ -1500,6 +1500,10 @@ enum XomoFigmaNodeImportMapper {
            !supportedJoins.contains(join) {
             return true
         }
+        if node.strokeJoin?.uppercased() == "MITER",
+           node.strokeMiterAngle != nil {
+            return true
+        }
         if let dashes = node.strokeDashes,
            !dashes.isEmpty,
            dashes.count < 2 || dashes.contains(where: { !$0.isFinite || $0 <= 0 }) {
@@ -1650,6 +1654,7 @@ struct XomoFigmaNode: Decodable {
     var strokeAlign: String?
     var strokeCap: String?
     var strokeJoin: String?
+    var strokeMiterAngle: Double?
     var strokeDashes: [Double]?
     var effects: [XomoFigmaEffect]?
     var blendMode: String?
