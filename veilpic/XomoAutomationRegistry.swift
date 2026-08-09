@@ -1436,6 +1436,16 @@ final class XomoAutomationRegistry {
             return field
         }
 
+        func conflict(from arguments: [String: XomoJSONValue]) throws -> XomoFigmaSizeConstraintConflict {
+            let rawValue = try requiredString("axis", in: arguments)
+            guard let conflict = XomoFigmaSizeConstraintConflict(rawValue: rawValue) else {
+                throw XomoAutomationCallError.invalidArgument(
+                    "Unknown Figma size constraint axis: \(rawValue)"
+                )
+            }
+            return conflict
+        }
+
         func constraintsJSON(_ constraints: XomoFigmaSizeConstraints?) -> XomoJSONValue {
             let resolved = constraints ?? .empty
             return .object(Dictionary(uniqueKeysWithValues:
@@ -1496,6 +1506,9 @@ final class XomoAutomationRegistry {
                 )
             }
             viewModel.resetAllSelectedFigmaSizeConstraints()
+            return result()
+        case "resolve":
+            viewModel.resolveSelectedFigmaSizeConstraintConflict(try conflict(from: arguments))
             return result()
         default:
             throw XomoAutomationCallError.invalidArgument(
@@ -5810,9 +5823,10 @@ private extension XomoAutomationRegistry {
             "key": XomoAutomationSchema.string(description: "Figma component property name"),
             "value": XomoAutomationSchema.string(description: "New local property value")
         ], required: ["action"]),
-        tool("xomo.figma.size_constraints", "List current and imported Figma min/max size constraints, or locally set, clear, reset, and reset all fields on the selected Figma layer.", [
-            "action": XomoAutomationSchema.string(description: "Size constraint action", values: ["list", "set", "clear", "reset", "resetAll"]),
+        tool("xomo.figma.size_constraints", "List current and imported Figma min/max size constraints, locally set, clear or reset fields, or explicitly resolve a conflicting axis by using its minimum.", [
+            "action": XomoAutomationSchema.string(description: "Size constraint action", values: ["list", "set", "clear", "reset", "resetAll", "resolve"]),
             "field": XomoAutomationSchema.string(description: "Figma size constraint field", values: XomoFigmaSizeConstraintField.allCases.map(\.rawValue)),
+            "axis": XomoAutomationSchema.string(description: "Conflicting axis required by resolve", values: XomoFigmaSizeConstraintConflict.allCases.map(\.rawValue)),
             "value": XomoAutomationSchema.number(description: "New local constraint value in pixels")
         ], required: ["action"]),
         tool("xomo.figma.image_fill", "List or edit the retained source, transform, and filter controls of the selected Figma image fill.", [

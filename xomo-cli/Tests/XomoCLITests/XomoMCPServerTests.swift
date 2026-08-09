@@ -67,6 +67,14 @@ struct XomoMCPServerTests {
         #expect(sizeConstraintField["enum"] as? [String] == [
             "minWidth", "maxWidth", "minHeight", "maxHeight"
         ])
+        let sizeConstraintAction = try #require(
+            sizeConstraintsProperties["action"] as? [String: Any]
+        )
+        #expect((sizeConstraintAction["enum"] as? [String])?.contains("resolve") == true)
+        let sizeConstraintAxis = try #require(
+            sizeConstraintsProperties["axis"] as? [String: Any]
+        )
+        #expect(sizeConstraintAxis["enum"] as? [String] == ["width", "height"])
         #expect(tools.contains { $0["name"] as? String == "xomo.figma.image_fill" })
         #expect(tools.contains { $0["name"] as? String == "xomo.figma.link" })
         #expect(tools.contains { $0["name"] as? String == "xomo.component.instance" })

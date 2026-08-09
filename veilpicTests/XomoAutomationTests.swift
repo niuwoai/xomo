@@ -238,6 +238,11 @@ struct XomoAutomationTests {
             .string("minHeight"),
             .string("maxHeight")
         ]))
+        #expect(sizeConstraintsTool["inputSchema"]?.objectValue?["properties"]?.objectValue?["axis"]?.objectValue?["enum"] == .array([
+            .string("width"),
+            .string("height")
+        ]))
+        #expect(sizeConstraintsTool["inputSchema"]?.objectValue?["properties"]?.objectValue?["action"]?.objectValue?["enum"]?.arrayValue?.contains(.string("resolve")) == true)
         guard let imageFillTool = tools.compactMap({ tool -> [String: XomoJSONValue]? in
             guard case .object(let value) = tool else { return nil }
             return value
@@ -2197,6 +2202,29 @@ struct XomoAutomationTests {
         #expect(set.result?.objectValue?["overrides"]?.objectValue?["minWidth"] == .bool(true))
         #expect(set.result?.objectValue?["hasConflicts"] == .bool(true))
         #expect(set.result?.objectValue?["conflicts"] == .array([.string("width")]))
+
+        let resolved = registry.execute(request(
+            operation: "call",
+            name: "xomo.figma.size_constraints",
+            arguments: [
+                "action": .string("resolve"),
+                "axis": .string("width")
+            ]
+        ))
+        #expect(resolved.ok)
+        #expect(resolved.result?.objectValue?["current"]?.objectValue?["maxWidth"] == .number(240))
+        #expect(resolved.result?.objectValue?["hasConflicts"] == .bool(false))
+
+        let conflictedAgain = registry.execute(request(
+            operation: "call",
+            name: "xomo.figma.size_constraints",
+            arguments: [
+                "action": .string("set"),
+                "field": .string("maxWidth"),
+                "value": .number(200)
+            ]
+        ))
+        #expect(conflictedAgain.result?.objectValue?["hasConflicts"] == .bool(true))
 
         let cleared = registry.execute(request(
             operation: "call",

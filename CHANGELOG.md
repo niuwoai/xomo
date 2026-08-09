@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.12.0-rc796 - 2026-08-10
+
+### Added
+- `xomo.figma.size_constraints` 新增 `resolve` 动作，通过 `axis=width|height` 显式按最小值修复指定轴的冲突。
+- resolve 复用属性面板相同的单字段事务，只在指定轴当前确有冲突时修改最大值，并继续支持锁定保护、单步 Undo/Redo、History 与 Auto Layout 重排。
+- App MCP 工具 schema 与 Xomo CLI 离线 fallback schema 同步新增 `resolve` 和 `axis` 枚举。
+
+### Tests
+- MCP resolve 行为 1/1、App 工具目录 schema 1/1、CLI MCP 工具目录 2/2 通过。
+
 ## 2.12.0-rc795 - 2026-08-10
 
 ### Added

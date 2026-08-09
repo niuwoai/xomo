@@ -1,6 +1,8 @@
 # Xomo 经典 Photoshop 能力路线图
 
-> 最后更新：2026-08-10 ｜ 当前版本：v2.12.0-rc795 ｜ 目标：以经典 Photoshop 能力作为现代混合编辑器的可靠像素与图层底座
+> 最后更新：2026-08-10 ｜ 当前版本：v2.12.0-rc796 ｜ 目标：以经典 Photoshop 能力作为现代混合编辑器的可靠像素与图层底座
+
+- `v2.12.0-rc796`：`xomo.figma.size_constraints` 新增按 width/height 显式 resolve 冲突，App 与 CLI schema 同步并复用 UI 的单步 Undo 修复事务。下一次周期完整门禁与 `/Applications` 覆盖安装为 rc800。
 
 - `v2.12.0-rc795`：Figma 尺寸约束冲突警告支持用户显式按最小值修复，以单步 Undo 对齐对应最大值，并继续保留来源恢复语义。下一次周期完整门禁与 `/Applications` 覆盖安装为 rc800。
 
