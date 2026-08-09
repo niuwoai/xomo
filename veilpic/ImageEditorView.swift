@@ -1985,11 +1985,8 @@ struct ImageEditorView: View {
             accessibilityLabel: L10n.text(accessibilityLabelKey)
         )
         .frame(width: 26, height: 26)
-        .overlay {
-            Rectangle()
-                .strokeBorder(Color.white.opacity(0.92), lineWidth: 1)
-                .allowsHitTesting(false)
-        }
+        .focusable(false)
+        .xomoFocusEffectDisabled()
         .help(L10n.text(accessibilityLabelKey))
     }
 

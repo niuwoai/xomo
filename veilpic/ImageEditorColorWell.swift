@@ -6,6 +6,8 @@ import SwiftUI
 /// the panel updates the bound editor color continuously.
 @MainActor
 final class ImageEditorColorWellControl: NSColorWell {
+    static let swatchBorderWidth: CGFloat = 1
+
     var onColorChange: ((NSColor) -> Void)?
 
     override var acceptsFirstResponder: Bool { false }
@@ -23,12 +25,25 @@ final class ImageEditorColorWellControl: NSColorWell {
     private func configure() {
         isBordered = false
         isContinuous = true
+        focusRingType = .none
         target = self
         action = #selector(colorDidChange(_:))
     }
 
+    override func draw(_ dirtyRect: NSRect) {
+        let borderWidth = Self.swatchBorderWidth
+        let swatchRect = bounds.insetBy(dx: borderWidth / 2, dy: borderWidth / 2)
+        let path = NSBezierPath(rect: swatchRect)
+        (color.usingColorSpace(.deviceRGB) ?? color).setFill()
+        path.fill()
+        NSColor.white.withAlphaComponent(0.92).setStroke()
+        path.lineWidth = borderWidth
+        path.stroke()
+    }
+
     @objc
     private func colorDidChange(_ sender: NSColorWell) {
+        needsDisplay = true
         onColorChange?(sender.color)
     }
 }
