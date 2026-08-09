@@ -12207,7 +12207,15 @@ enum ImageEditorKeyboardShortcutAction: Equatable {
 
     var isBlockedByTextInput: Bool {
         switch self {
-        case .toggleQuickMask, .toneRange, .spongeMode:
+        case .cutSelectionClipboard,
+             .copySelectionClipboard,
+             .pasteClipboardLayer,
+             .selectAll,
+             .undo,
+             .redo,
+             .toggleQuickMask,
+             .toneRange,
+             .spongeMode:
             true
         default:
             false
