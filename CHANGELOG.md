@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.12.0-rc743 - 2026-08-09
+
+### Fixed
+- `xomo.shape.create` 与 `xomo.shape.update` 共用严格的 `strokeMiterLimit` 解析，仅接受 1–1000 范围内的有限数字。
+- 字符串、布尔值、0 和 1001 不再被静默忽略或钳制后成功；非法输入在创建图层或写入 Undo/History 前原子拒绝，工具 Schema 与运行时一致。
+
+### Tests
+- 扩展形状创建和多选斜接限制回归，覆盖合法值、上下越界、错误 JSON 类型、零图层副作用、零 History 副作用与原值保持；界面钳制和单步 Undo 邻接回归同步通过，3/3 成功。
+
 ## 2.12.0-rc742 - 2026-08-09
 
 ### Fixed

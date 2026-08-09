@@ -3780,6 +3780,27 @@ struct XomoAutomationTests {
             #expect(viewModel.document.history.count == historyCountBeforeInvalidCreate)
         }
 
+        for invalidMiterLimit: XomoJSONValue in [
+            .number(0),
+            .number(1_001),
+            .string("4"),
+            .bool(true)
+        ] {
+            let invalidMiterCreate = registry.execute(request(
+                operation: "call",
+                name: "xomo.shape.create",
+                arguments: [
+                    "kind": .string("rectangle"),
+                    "x": .number(0), "y": .number(0),
+                    "width": .number(40), "height": .number(20),
+                    "strokeMiterLimit": invalidMiterLimit
+                ]
+            ))
+            #expect(!invalidMiterCreate.ok)
+            #expect(viewModel.document.layers.count == layerCountBeforeInvalidCreate)
+            #expect(viewModel.document.history.count == historyCountBeforeInvalidCreate)
+        }
+
         let toolsResponse = registry.execute(request(operation: "tools"))
         let tools = try #require(toolsResponse.result?.arrayValue)
         let createTool = try #require(tools.compactMap(\.objectValue).first {
@@ -4021,6 +4042,23 @@ struct XomoAutomationTests {
         ))
         #expect(!invalid.ok)
         #expect(viewModel.document.history.count == repeatedHistoryCount)
+
+        for invalidMiterLimit: XomoJSONValue in [
+            .number(0),
+            .number(1_001),
+            .string("4"),
+            .bool(true)
+        ] {
+            let invalidMiter = registry.execute(request(
+                operation: "call",
+                name: "xomo.shape.update",
+                arguments: ["strokeMiterLimit": invalidMiterLimit]
+            ))
+            #expect(!invalidMiter.ok)
+            #expect(viewModel.document.history.count == repeatedHistoryCount)
+            #expect(viewModel.document.layers.first { $0.id == firstID }?.shapeContent?.strokeMiterLimit == 4)
+            #expect(viewModel.document.layers.first { $0.id == secondID }?.shapeContent?.strokeMiterLimit == 4)
+        }
 
         let toolsResponse = registry.execute(request(operation: "tools"))
         let tools = try #require(toolsResponse.result?.arrayValue)

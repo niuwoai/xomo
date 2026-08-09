@@ -496,6 +496,7 @@ final class XomoAutomationRegistry {
             let strokePosition = try optionalShapeStrokePosition(arguments["strokePosition"]?.stringValue)
             let strokeCap = try optionalShapeStrokeCap(arguments["strokeCap"]?.stringValue)
             let strokeJoin = try optionalShapeStrokeJoin(arguments["strokeJoin"]?.stringValue)
+            let strokeMiterLimit = try optionalShapeStrokeMiterLimit(arguments["strokeMiterLimit"])
             let strokeDashPattern = try optionalShapeStrokeDashPattern(arguments["strokeDashPattern"])
             let width = try requiredNumber("width", in: arguments)
             let height = try requiredNumber("height", in: arguments)
@@ -526,7 +527,7 @@ final class XomoAutomationRegistry {
                 strokePosition: strokePosition,
                 strokeCap: strokeCap,
                 strokeJoin: strokeJoin,
-                strokeMiterLimit: arguments["strokeMiterLimit"]?.doubleValue,
+                strokeMiterLimit: strokeMiterLimit,
                 strokeDashPattern: strokeDashPattern
             )
             guard viewModel.document.layers.count == layerCountBeforeCreate + 1,
@@ -1980,6 +1981,7 @@ final class XomoAutomationRegistry {
         let strokePosition = try optionalShapeStrokePosition(arguments["strokePosition"]?.stringValue)
         let strokeCap = try optionalShapeStrokeCap(arguments["strokeCap"]?.stringValue)
         let strokeJoin = try optionalShapeStrokeJoin(arguments["strokeJoin"]?.stringValue)
+        let strokeMiterLimit = try optionalShapeStrokeMiterLimit(arguments["strokeMiterLimit"])
         let strokeDashPattern = try optionalShapeStrokeDashPattern(arguments["strokeDashPattern"])
         let selectedContent = viewModel.document.selectedLayer?.shapeContent
         var resolvedGradient: ImageEditorGradientFillContent?
@@ -2013,7 +2015,7 @@ final class XomoAutomationRegistry {
             strokePosition: strokePosition,
             strokeCap: strokeCap,
             strokeJoin: strokeJoin,
-            strokeMiterLimit: arguments["strokeMiterLimit"]?.doubleValue,
+            strokeMiterLimit: strokeMiterLimit,
             strokeDashPattern: strokeDashPattern,
             cornerRadius: arguments["cornerRadius"]?.doubleValue,
             cornerRadii: cornerRadii,
@@ -2055,6 +2057,22 @@ final class XomoAutomationRegistry {
             )
         }
         return join
+    }
+
+    private func optionalShapeStrokeMiterLimit(
+        _ value: XomoJSONValue?
+    ) throws -> Double? {
+        guard let value else { return nil }
+        guard let limit = value.doubleValue,
+              limit.isFinite,
+              limit >= Double(ImageEditorShapeContent.minimumStrokeMiterLimit),
+              limit <= Double(ImageEditorShapeContent.maximumStrokeMiterLimit)
+        else {
+            throw XomoAutomationCallError.invalidArgument(
+                "strokeMiterLimit must be a number from 1 through 1000"
+            )
+        }
+        return limit
     }
 
     private func optionalShapeStrokeDashPattern(
