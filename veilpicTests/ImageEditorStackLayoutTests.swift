@@ -538,6 +538,49 @@ struct ImageEditorStackLayoutTests {
         #expect(fixture.viewModel.statusText == L10n.text("imageEditor.status.stackLayoutLocked"))
     }
 
+    @Test func resetAllFigmaConstraintOverridesUsesOneUndoAndOneReflow() {
+        let fixture = makeFixture()
+        let imported = XomoFigmaSizeConstraints(
+            minWidth: 40,
+            maxWidth: nil,
+            minHeight: nil,
+            maxHeight: 15
+        )
+        fixture.updateLayer(named: "First") {
+            $0.xomoFigmaSizeConstraints = imported
+            $0.xomoFigmaSizeConstraintDefaults = imported
+        }
+        fixture.selectLayer(named: "First")
+        fixture.viewModel.reflowSelectedStackLayout()
+        fixture.viewModel.setSelectedFigmaSizeConstraint(.minWidth, value: 80)
+        fixture.viewModel.setSelectedFigmaSizeConstraint(.maxHeight, value: 10)
+        #expect(fixture.viewModel.hasSelectedFigmaSizeConstraintOverrides)
+        #expect(fixture.layer(named: "First").frame == CGRect(x: 70, y: 30, width: 80, height: 10))
+
+        fixture.viewModel.resetAllSelectedFigmaSizeConstraints()
+
+        #expect(fixture.layer(named: "First").xomoFigmaSizeConstraints == imported)
+        #expect(fixture.layer(named: "First").xomoFigmaSizeConstraintDefaults == imported)
+        #expect(!fixture.viewModel.hasSelectedFigmaSizeConstraintOverrides)
+        // Restoring min/max metadata must not invent an imported preferred size.
+        // The current 80×10 frame remains valid inside the restored bounds.
+        #expect(fixture.layer(named: "First").frame == CGRect(x: 70, y: 30, width: 80, height: 10))
+        #expect(fixture.viewModel.document.history.last?.title == L10n.text(
+            "imageEditor.history.figmaSizeConstraintsReset"
+        ))
+
+        fixture.viewModel.undo()
+        #expect(fixture.layer(named: "First").xomoFigmaSizeConstraints?.minWidth == 80)
+        #expect(fixture.layer(named: "First").xomoFigmaSizeConstraints?.maxHeight == 10)
+        #expect(fixture.layer(named: "First").frame == CGRect(x: 70, y: 30, width: 80, height: 10))
+
+        fixture.viewModel.redo()
+        #expect(fixture.layer(named: "First").xomoFigmaSizeConstraints == imported)
+        let historyCount = fixture.viewModel.document.history.count
+        fixture.viewModel.resetAllSelectedFigmaSizeConstraints()
+        #expect(fixture.viewModel.document.history.count == historyCount)
+    }
+
     @Test func reflowExecutesImportedFigmaContainerConstraintsAndResizesBackground() {
         let fixture = makeFixture()
         fixture.updateLayer(named: "Root") {

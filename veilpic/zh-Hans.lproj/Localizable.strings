@@ -3140,8 +3140,11 @@
 "imageEditor.properties.figmaSizeConstraintsActive" = "在自动布局重排时生效";
 "imageEditor.action.clearFigmaSizeConstraint" = "清除尺寸约束";
 "imageEditor.action.resetFigmaSizeConstraint" = "恢复导入的尺寸约束";
+"imageEditor.action.resetAllFigmaSizeConstraints" = "全部恢复";
 "imageEditor.history.figmaSizeConstraintChanged" = "修改 Figma %@约束";
+"imageEditor.history.figmaSizeConstraintsReset" = "恢复全部 Figma 尺寸约束";
 "imageEditor.status.figmaSizeConstraintUpdated" = "已更新 Figma %@约束";
+"imageEditor.status.figmaSizeConstraintsReset" = "已恢复全部 Figma 尺寸约束";
 "imageEditor.properties.figmaComponentRole" = "组件语义";
 "imageEditor.action.copyFigmaSource" = "复制源节点引用";
 "imageEditor.action.copyFigmaSourceURL" = "复制 Figma 链接";

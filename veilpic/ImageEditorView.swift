@@ -7246,9 +7246,22 @@ struct ImageEditorView: View {
                             .truncationMode(.middle)
 
                         VStack(alignment: .leading, spacing: 5) {
-                            Text(L10n.text("imageEditor.properties.figmaSizeConstraints"))
-                                .font(.system(size: 10, weight: .semibold))
-                                .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
+                            HStack(spacing: 6) {
+                                Text(L10n.text("imageEditor.properties.figmaSizeConstraints"))
+                                    .font(.system(size: 10, weight: .semibold))
+                                    .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
+                                Spacer(minLength: 4)
+                                if viewModel.hasSelectedFigmaSizeConstraintOverrides {
+                                    Button(L10n.text("imageEditor.action.resetAllFigmaSizeConstraints")) {
+                                        focusedFigmaSizeConstraintField = nil
+                                        viewModel.resetAllSelectedFigmaSizeConstraints()
+                                        syncFigmaSizeConstraintDrafts()
+                                    }
+                                    .buttonStyle(EditorTextButtonStyle())
+                                    .focusable(false)
+                                    .accessibilityIdentifier("image-editor-figma-size-constraints-reset-all")
+                                }
+                            }
                             ForEach(XomoFigmaSizeConstraintField.allCases, id: \.self) { field in
                                 figmaSizeConstraintEditorRow(field)
                             }

@@ -1029,6 +1029,33 @@ extension ImageEditorViewModel {
         setSelectedFigmaSizeConstraint(field, value: field.value(in: defaults))
     }
 
+    func resetAllSelectedFigmaSizeConstraints() {
+        guard let layerIndex = document.selectedLayerIndex,
+              let defaults = document.layers[layerIndex].xomoFigmaSizeConstraintDefaults,
+              (document.layers[layerIndex].xomoFigmaSizeConstraints ?? .empty) != defaults
+        else { return }
+
+        let reflowTarget = stackReflowTarget(for: document.layers[layerIndex])
+        if let reflowTarget, !canEditStackLayout(groupID: reflowTarget.groupID) {
+            statusText = L10n.text("imageEditor.status.stackLayoutLocked")
+            return
+        }
+
+        pushUndo()
+        document.layers[layerIndex].xomoFigmaSizeConstraints = defaults.isEmpty ? nil : defaults
+        if let reflowTarget {
+            applyStackLayout(groupID: reflowTarget.groupID, layout: reflowTarget.layout)
+        }
+        appendHistory(L10n.text("imageEditor.history.figmaSizeConstraintsReset"))
+        statusText = L10n.text("imageEditor.status.figmaSizeConstraintsReset")
+    }
+
+    var hasSelectedFigmaSizeConstraintOverrides: Bool {
+        XomoFigmaSizeConstraintField.allCases.contains {
+            hasSelectedFigmaSizeConstraintOverride($0)
+        }
+    }
+
     func hasSelectedFigmaSizeConstraintOverride(
         _ field: XomoFigmaSizeConstraintField
     ) -> Bool {
