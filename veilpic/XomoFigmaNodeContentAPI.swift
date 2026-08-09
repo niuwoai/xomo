@@ -289,7 +289,7 @@ enum XomoFigmaNodeImportMapper {
            solidColor(in: node.strokes) != nil,
            (!strokeWeight.isFinite
             || strokeWeight < Double(ImageEditorShapeContent.minimumStrokeWidth)
-            || strokeWeight > Double(ImageEditorShapeContent.maximumStrokeWidth)) {
+            || strokeWeight > maximumNativeStrokeWidth(for: node, target: mapping.target)) {
             issues.append(.strokeWeightFlattened)
         }
         if transformFlattened {
@@ -1174,6 +1174,23 @@ enum XomoFigmaNodeImportMapper {
             || hasInvalidUniformRadius
             || hasInvalidCornerSmoothing
             || hasApproximatedCornerSmoothing
+    }
+
+    private static func maximumNativeStrokeWidth(
+        for node: XomoFigmaNode,
+        target: XomoFigmaNodeTargetKind?
+    ) -> Double {
+        let editorMaximum = Double(ImageEditorShapeContent.maximumStrokeWidth)
+        guard target == .rectangle || target == .ellipse,
+              let bounds = node.absoluteBoundingBox,
+              bounds.width.isFinite,
+              bounds.height.isFinite
+        else { return editorMaximum }
+        let geometryMaximum = min(bounds.width, bounds.height) / 2
+        return max(
+            Double(ImageEditorShapeContent.minimumStrokeWidth),
+            min(editorMaximum, geometryMaximum)
+        )
     }
 
     private static func supportedMaskShape(_ node: XomoFigmaNode) -> XomoFigmaPlanMaskShape? {
