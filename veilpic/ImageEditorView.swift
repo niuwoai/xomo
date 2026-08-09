@@ -2300,7 +2300,7 @@ struct ImageEditorView: View {
                                 ) {
                                     beginCanvasParagraphTextEditing(in: paragraphRect)
                                 } else {
-                                    beginCanvasTextEditing(at: endImagePoint)
+                                    beginCanvasTextEditing(at: endImagePoint, in: geometry.size)
                                 }
                             default:
                                 break
@@ -3554,7 +3554,7 @@ struct ImageEditorView: View {
                     ) {
                         beginCanvasParagraphTextEditing(in: paragraphRect)
                     } else {
-                        beginCanvasTextEditing(at: endImagePoint)
+                        beginCanvasTextEditing(at: endImagePoint, in: size)
                     }
                 case .eyedropper:
                     if let endImagePoint {
@@ -3759,14 +3759,20 @@ struct ImageEditorView: View {
         }
     }
 
-    private func beginCanvasTextEditing(at point: CGPoint?) {
+    private func beginCanvasTextEditing(at point: CGPoint?, in size: CGSize) {
         guard let point else { return }
         var excludedLayerID: UUID?
         if canvasTextEditingOrigin != nil {
             commitCanvasTextEditing()
             excludedLayerID = viewModel.document.selectedLayerID
         }
-        startCanvasTextEditing(at: point, excluding: excludedLayerID)
+        let imageRect = fittedImageRect(in: size)
+        let displayScale = imageRect.width / max(viewModel.document.canvasSize.width, 1)
+        startCanvasTextEditing(
+            at: point,
+            excluding: excludedLayerID,
+            hitTolerance: ImageEditorTextHitTesting.canvasTolerance(displayScale: displayScale)
+        )
     }
 
     private func beginCanvasParagraphTextEditing(in frame: CGRect) {
@@ -3783,8 +3789,16 @@ struct ImageEditorView: View {
         DispatchQueue.main.async { isCanvasTextEditorFocused = true }
     }
 
-    private func startCanvasTextEditing(at point: CGPoint, excluding excludedLayerID: UUID? = nil) {
-        if viewModel.selectEditableTextLayer(at: point, excluding: excludedLayerID),
+    private func startCanvasTextEditing(
+        at point: CGPoint,
+        excluding excludedLayerID: UUID? = nil,
+        hitTolerance: CGFloat = ImageEditorTextHitTesting.viewTolerance
+    ) {
+        if viewModel.selectEditableTextLayer(
+            at: point,
+            excluding: excludedLayerID,
+            hitTolerance: hitTolerance
+        ),
            let layer = viewModel.document.selectedLayer {
             canvasTextEditingLayerID = layer.id
             canvasTextEditingOrigin = layer.frame.origin

@@ -1,48 +1,36 @@
 {
-  "generated_at": "2026-08-10 02:35:34 +0800",
-  "total": 3,
-  "passed": 3,
+  "generated_at": "2026-08-10 02:41:41 +0800",
+  "total": 2,
+  "passed": 2,
   "failed": 0,
-  "total_tests": 3,
-  "passed_tests": 3,
+  "total_tests": 2,
+  "passed_tests": 2,
   "failed_tests_in_failed_groups": 0,
   "jobs": 1,
   "results": [
     {
-      "suite": "ImageEditorTextEditingLifecycleTests",
-      "method": "commandReturnCommitsWithoutMakingOverlayButtonsFocusable",
-      "identifier": "veilpicTests/ImageEditorTextEditingLifecycleTests/commandReturnCommitsWithoutMakingOverlayButtonsFocusable()",
-      "file": "ImageEditorTextEditingLifecycleTests.swift",
+      "suite": "ImageEditorTextHitTestingTests",
+      "method": "canvasTolerancePreservesFourScreenPixelsAcrossZoomLevels",
+      "identifier": "veilpicTests/ImageEditorTextHitTestingTests/canvasTolerancePreservesFourScreenPixelsAcrossZoomLevels()",
+      "file": "ImageEditorTextHitTestingTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 2.776,
+      "duration": 4.706,
       "infrastructure_retries": 0,
       "issues": [],
-      "log": "ImageEditorTextEditingLifecycleTests.commandReturnCommitsWithoutMakingOverlayButtonsFocusable.log"
+      "log": "ImageEditorTextHitTestingTests.canvasTolerancePreservesFourScreenPixelsAcrossZoomLevels.log"
     },
     {
-      "suite": "ImageEditorTextEditingLifecycleTests",
-      "method": "conditionalCommitCannotCreateTextWithoutAnActiveCanvasEditor",
-      "identifier": "veilpicTests/ImageEditorTextEditingLifecycleTests/conditionalCommitCannotCreateTextWithoutAnActiveCanvasEditor()",
-      "file": "ImageEditorTextEditingLifecycleTests.swift",
+      "suite": "ImageEditorTextHitTestingTests",
+      "method": "editableTextHitTestingUsesTheSuppliedCanvasTolerance",
+      "identifier": "veilpicTests/ImageEditorTextHitTestingTests/editableTextHitTestingUsesTheSuppliedCanvasTolerance()",
+      "file": "ImageEditorTextHitTestingTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 2.775,
+      "duration": 2.763,
       "infrastructure_retries": 0,
       "issues": [],
-      "log": "ImageEditorTextEditingLifecycleTests.conditionalCommitCannotCreateTextWithoutAnActiveCanvasEditor.log"
-    },
-    {
-      "suite": "ImageEditorTextEditingLifecycleTests",
-      "method": "escapeCancelsCanvasTextEditingWhileContextChangesCommitIt",
-      "identifier": "veilpicTests/ImageEditorTextEditingLifecycleTests/escapeCancelsCanvasTextEditingWhileContextChangesCommitIt()",
-      "file": "ImageEditorTextEditingLifecycleTests.swift",
-      "test_count": 1,
-      "passed": true,
-      "duration": 4.427,
-      "infrastructure_retries": 0,
-      "issues": [],
-      "log": "ImageEditorTextEditingLifecycleTests.escapeCancelsCanvasTextEditingWhileContextChangesCommitIt.log"
+      "log": "ImageEditorTextHitTestingTests.editableTextHitTestingUsesTheSuppliedCanvasTolerance.log"
     }
   ]
 }
