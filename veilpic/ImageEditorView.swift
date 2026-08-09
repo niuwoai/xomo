@@ -12213,6 +12213,13 @@ enum ImageEditorKeyboardShortcutAction: Equatable {
              .selectAll,
              .undo,
              .redo,
+             .colorBalance,
+             .invertPixels,
+             .hueSaturation,
+             .applyLastFilter,
+             .toggleTransformControls,
+             .curves,
+             .levels,
              .toggleQuickMask,
              .toneRange,
              .spongeMode:
