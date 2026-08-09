@@ -2879,6 +2879,37 @@ struct XomoFigmaNodeImportPlanTests {
         #expect(layer.style.shadowOpacity == 0.6)
     }
 
+    @Test func hiddenBehindNodeFigmaShadowReportsEditableFallback() throws {
+        let response = try JSONDecoder().decode(
+            XomoFigmaNodeResponse.self,
+            from: Data(
+                #"{"name":"Shadow Visibility","nodes":{"1:46":{"document":{"id":"1:46","name":"Outside Only Shadow","type":"RECTANGLE","effects":[{"type":"DROP_SHADOW","showShadowBehindNode":false,"radius":9,"spread":2,"offset":{"x":5,"y":7},"color":{"r":0.1,"g":0.2,"b":0.3,"a":0.55}}],"absoluteBoundingBox":{"x":0,"y":0,"width":120,"height":80}}}}}"#.utf8
+            )
+        )
+
+        let plan = try XomoFigmaNodeImportMapper.makePlan(response: response, requestedNodeID: "1:46")
+        let item = try #require(plan.items.first)
+        #expect(item.fidelity == .partial)
+        #expect(item.issues.contains(.effectsFlattened))
+        let shadow = try #require(item.effects.first)
+        #expect(shadow.kind == .dropShadow)
+        #expect(shadow.radius == 9)
+        #expect(shadow.spread == 2)
+        #expect(shadow.offsetX == 5)
+        #expect(shadow.offsetY == 7)
+
+        let result = XomoFigmaNodeMaterializer.materialize(
+            plan: plan,
+            canvasSize: CGSize(width: 240, height: 180)
+        )
+        let layer = try #require(result.layers.first)
+        #expect(layer.style.shadowEnabled)
+        #expect(layer.style.shadowBlur == 9)
+        #expect(layer.style.shadowSpread == 2)
+        #expect(layer.style.shadowOffset == CGSize(width: 5, height: 7))
+        #expect(layer.style.shadowOpacity == 0.55)
+    }
+
     @Test func materializerCreatesEditableHierarchyAtCenteredScaleAndHonestPlaceholder() throws {
         let plan = try Self.decodedPlan()
         let textPlan = try #require(plan.items.first { $0.sourceName == "Continue Label" })
