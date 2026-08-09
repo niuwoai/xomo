@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.12.0-rc799 - 2026-08-10
+
+### Added
+- `xomo.layer.list` 为每个图层返回 `figmaSource` 来源摘要，包含节点 ID、原始链接、节点类型和组件角色；本地图层明确返回 `null`。
+- 新增 `figmaSource=all|imported|local` 过滤器，可与变量绑定及尺寸约束过滤组合取交集，从问题图层直接追溯 Figma 来源。
+- App MCP 与 Xomo CLI 离线 fallback schema 同步公开来源过滤参数。
+
+### Tests
+- layer.list 来源摘要、组合过滤和非法参数回归 1/1，App 工具目录 schema 1/1、CLI MCP 工具目录 2/2 通过。
+
 ## 2.12.0-rc798 - 2026-08-10
 
 ### Added

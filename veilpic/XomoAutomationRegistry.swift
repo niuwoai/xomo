@@ -943,6 +943,12 @@ final class XomoAutomationRegistry {
                 "Unknown Figma size constraint filter: \(constraintFilter)"
             )
         }
+        let sourceFilter = arguments["figmaSource"]?.stringValue ?? "all"
+        guard ["all", "imported", "local"].contains(sourceFilter) else {
+            throw XomoAutomationCallError.invalidArgument(
+                "Unknown Figma source filter: \(sourceFilter)"
+            )
+        }
         let layers = viewModel.document.layers.reversed().filter { layer in
             let matchesBindings: Bool
             switch bindingFilter {
@@ -951,6 +957,14 @@ final class XomoAutomationRegistry {
             default: matchesBindings = true
             }
             guard matchesBindings else { return false }
+
+            let matchesSource: Bool
+            switch sourceFilter {
+            case "imported": matchesSource = layer.xomoFigmaSourceID != nil
+            case "local": matchesSource = layer.xomoFigmaSourceID == nil
+            default: matchesSource = true
+            }
+            guard matchesSource else { return false }
 
             let current = layer.xomoFigmaSizeConstraints ?? .empty
             switch constraintFilter {
@@ -985,9 +999,22 @@ final class XomoAutomationRegistry {
                     ])
                 }),
                 "figmaImageFill": figmaImageFillJSON(layer.xomoFigmaImageFill),
-                "figmaSizeConstraints": figmaSizeConstraintSummaryJSON(layer)
+                "figmaSizeConstraints": figmaSizeConstraintSummaryJSON(layer),
+                "figmaSource": figmaSourceSummaryJSON(layer)
             ])
         })
+    }
+
+    private func figmaSourceSummaryJSON(_ layer: ImageEditorLayer) -> XomoJSONValue {
+        guard let sourceID = layer.xomoFigmaSourceID else { return .null }
+        return .object([
+            "id": .string(sourceID),
+            "url": layer.xomoFigmaSourceURL.map { .string($0.absoluteString) } ?? .null,
+            "nodeType": layer.xomoFigmaNodeType.map(XomoJSONValue.string) ?? .null,
+            "componentRole": layer.xomoFigmaComponentRole.map {
+                .string($0.rawValue)
+            } ?? .null
+        ])
     }
 
     private func figmaSizeConstraintSummaryJSON(_ layer: ImageEditorLayer) -> XomoJSONValue {
@@ -5842,9 +5869,10 @@ private extension XomoAutomationRegistry {
         tool("xomo.tool.select", "Select the active editor tool.", [
             "tool": XomoAutomationSchema.string(description: "Tool identifier", values: ImageEditorTool.allCases.map(\.rawValue))
         ], required: ["tool"]),
-        tool("xomo.layer.list", "List layers with hierarchy, bounds, visibility, locks, opacity, blend mode, and preserved Figma bindings and size constraints, with optional filters.", [
+        tool("xomo.layer.list", "List layers with hierarchy, bounds, visibility, locks, opacity, blend mode, and preserved Figma source, bindings, and size constraints, with optional filters.", [
             "figmaBindings": XomoAutomationSchema.string(description: "Filter by preserved Figma variable bindings", values: ["all", "bound", "unbound"]),
-            "figmaConstraints": XomoAutomationSchema.string(description: "Filter by effective Figma size constraints", values: ["all", "constrained", "overridden", "conflicted"])
+            "figmaConstraints": XomoAutomationSchema.string(description: "Filter by effective Figma size constraints", values: ["all", "constrained", "overridden", "conflicted"]),
+            "figmaSource": XomoAutomationSchema.string(description: "Filter by retained Figma source identity", values: ["all", "imported", "local"])
         ]),
         tool("xomo.layer.selection_bounds", "Inspect selected object bounds, transform reference point, and live move, resize, or rotate preview context, including original bounds, movement, size, scale, and rotation deltas."),
         tool("xomo.layer.transform_reference", "Set or reset the transform reference point for the current transformable layer selection without changing document history.", [

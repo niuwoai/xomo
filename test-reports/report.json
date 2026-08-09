@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-10 05:09:12 +0800",
+  "generated_at": "2026-08-10 05:16:22 +0800",
   "total": 1,
   "passed": 1,
   "failed": 0,
@@ -15,7 +15,7 @@
       "file": "XomoAutomationTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 2.798,
+      "duration": 2.932,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "XomoAutomationTests.registryAdvertisesBroadEditorCapabilities.log"

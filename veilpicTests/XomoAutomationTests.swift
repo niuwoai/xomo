@@ -223,6 +223,11 @@ struct XomoAutomationTests {
             .string("overridden"),
             .string("conflicted")
         ]))
+        #expect(layerListTool["inputSchema"]?.objectValue?["properties"]?.objectValue?["figmaSource"]?.objectValue?["enum"] == .array([
+            .string("all"),
+            .string("imported"),
+            .string("local")
+        ]))
         #expect(tools.contains { tool in
             guard case .object(let value) = tool else { return false }
             return value["name"] == .string("xomo.figma.bindings")
@@ -2017,6 +2022,11 @@ struct XomoAutomationTests {
             filters: XomoFigmaPlanImageFilters(exposure: 0.25)
         )
         viewModel.document.layers[layerIndex].xomoFigmaSourceID = "12:34"
+        viewModel.document.layers[layerIndex].xomoFigmaSourceURL = URL(
+            string: "https://www.figma.com/design/abc123/Checkout?node-id=12-34"
+        )
+        viewModel.document.layers[layerIndex].xomoFigmaNodeType = "TEXT"
+        viewModel.document.layers[layerIndex].xomoFigmaComponentRole = .instance
         viewModel.document.layers[layerIndex].xomoFigmaSizeConstraints = XomoFigmaSizeConstraints(
             minWidth: 240,
             maxWidth: 200,
@@ -2063,6 +2073,12 @@ struct XomoAutomationTests {
         #expect(layer["figmaSizeConstraints"]?.objectValue?["hasOverrides"] == .bool(true))
         #expect(layer["figmaSizeConstraints"]?.objectValue?["hasConflicts"] == .bool(true))
         #expect(layer["figmaSizeConstraints"]?.objectValue?["conflicts"] == .array([.string("width")]))
+        #expect(layer["figmaSource"]?.objectValue?["id"] == .string("12:34"))
+        #expect(layer["figmaSource"]?.objectValue?["url"] == .string(
+            "https://www.figma.com/design/abc123/Checkout?node-id=12-34"
+        ))
+        #expect(layer["figmaSource"]?.objectValue?["nodeType"] == .string("TEXT"))
+        #expect(layer["figmaSource"]?.objectValue?["componentRole"] == .string("INSTANCE"))
 
         let bound = registry.execute(request(
             operation: "call",
@@ -2094,6 +2110,28 @@ struct XomoAutomationTests {
             #expect(filtered.result?.arrayValue?.first?.objectValue?["id"] == .string(layerID.uuidString))
         }
 
+        let imported = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.list",
+            arguments: [
+                "figmaSource": .string("imported"),
+                "figmaConstraints": .string("conflicted")
+            ]
+        ))
+        #expect(imported.ok)
+        #expect(imported.result?.arrayValue?.count == 1)
+        #expect(imported.result?.arrayValue?.first?.objectValue?["id"] == .string(layerID.uuidString))
+
+        let local = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.list",
+            arguments: ["figmaSource": .string("local")]
+        ))
+        #expect(local.ok)
+        #expect(local.result?.arrayValue?.contains {
+            $0.objectValue?["id"] == .string(layerID.uuidString)
+        } == false)
+
         let invalid = registry.execute(request(
             operation: "call",
             name: "xomo.layer.list",
@@ -2106,6 +2144,12 @@ struct XomoAutomationTests {
             arguments: ["figmaConstraints": .string("invalid")]
         ))
         #expect(!invalidConstraints.ok)
+        let invalidSource = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.list",
+            arguments: ["figmaSource": .string("remote")]
+        ))
+        #expect(!invalidSource.ok)
     }
 
     @Test func registryListsAndCopiesFigmaBindingsFromSelectedLayers() throws {

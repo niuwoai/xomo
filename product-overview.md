@@ -1,6 +1,8 @@
 # 像界（Xomo）产品概览
 
-> 最后更新：2026-08-10 | 当前版本：v2.12.0-rc798
+> 最后更新：2026-08-10 | 当前版本：v2.12.0-rc799
+
+v2.12.0-rc799 让 `xomo.layer.list` 返回可追溯的 Figma 节点来源，并支持按 imported/local 过滤，与变量绑定及约束问题筛选组合使用。
 
 v2.12.0-rc798 让 `xomo.layer.list` 输出逐层 Figma 尺寸约束、来源覆盖与冲突摘要，并可按 constrained、overridden、conflicted 批量过滤整份文档。
 

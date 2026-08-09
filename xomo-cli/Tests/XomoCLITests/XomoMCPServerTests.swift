@@ -35,6 +35,8 @@ struct XomoMCPServerTests {
         #expect(figmaConstraintFilter["enum"] as? [String] == [
             "all", "constrained", "overridden", "conflicted"
         ])
+        let figmaSourceFilter = try #require(layerListProperties["figmaSource"] as? [String: Any])
+        #expect(figmaSourceFilter["enum"] as? [String] == ["all", "imported", "local"])
         #expect(tools.contains { $0["name"] as? String == "xomo.layer.selection_bounds" })
         let transformReferenceTool = try #require(tools.first {
             $0["name"] as? String == "xomo.layer.transform_reference"

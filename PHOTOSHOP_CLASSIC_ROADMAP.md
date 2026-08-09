@@ -1,6 +1,8 @@
 # Xomo 经典 Photoshop 能力路线图
 
-> 最后更新：2026-08-10 ｜ 当前版本：v2.12.0-rc798 ｜ 目标：以经典 Photoshop 能力作为现代混合编辑器的可靠像素与图层底座
+> 最后更新：2026-08-10 ｜ 当前版本：v2.12.0-rc799 ｜ 目标：以经典 Photoshop 能力作为现代混合编辑器的可靠像素与图层底座
+
+- `v2.12.0-rc799`：`xomo.layer.list` 输出 Figma 节点 ID、原始链接、节点类型和组件角色，并新增 imported/local 文档级过滤，可与绑定及约束过滤组合。下一版本 rc800 执行完整门禁与 `/Applications` 覆盖安装。
 
 - `v2.12.0-rc798`：`xomo.layer.list` 输出逐层 Figma 当前/来源尺寸约束、覆盖与冲突，并新增 constrained/overridden/conflicted 文档级过滤，App 与 CLI schema 同步。下一次周期完整门禁与 `/Applications` 覆盖安装为 rc800。
 
