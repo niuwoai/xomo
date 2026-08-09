@@ -2934,6 +2934,33 @@ struct XomoFigmaNodeImportPlanTests {
         #expect(layer.smartFilters.isEmpty)
     }
 
+    @Test func disabledFigmaPaintReportsLostEditableSemanticsWithoutRendering() throws {
+        let response = try JSONDecoder().decode(
+            XomoFigmaNodeResponse.self,
+            from: Data(
+                #"{"name":"Disabled Paint","nodes":{"1:48":{"document":{"id":"1:48","name":"Visible Blue","type":"RECTANGLE","fills":[{"type":"SOLID","visible":true,"color":{"r":0.1,"g":0.2,"b":0.8,"a":1}},{"type":"SOLID","visible":false,"color":{"r":1,"g":0,"b":0,"a":1}}],"strokes":[{"type":"SOLID","visible":false,"color":{"r":0,"g":1,"b":0,"a":1}}],"strokeWeight":4,"absoluteBoundingBox":{"x":0,"y":0,"width":120,"height":80}}}}}"#.utf8
+            )
+        )
+
+        let plan = try XomoFigmaNodeImportMapper.makePlan(response: response, requestedNodeID: "1:48")
+        let item = try #require(plan.items.first)
+        #expect(item.fidelity == .partial)
+        #expect(item.issues.contains(.unsupportedPaint))
+        #expect(item.solidFill == XomoFigmaPlanColor(red: 0.1, green: 0.2, blue: 0.8, alpha: 1))
+        #expect(item.solidStroke == nil)
+
+        let result = XomoFigmaNodeMaterializer.materialize(
+            plan: plan,
+            canvasSize: CGSize(width: 240, height: 180)
+        )
+        let shape = try #require(result.layers.first?.shapeContent)
+        let fill = try #require(shape.fillColor.usingColorSpace(.sRGB))
+        #expect(abs(fill.redComponent - 0.1) < 0.001)
+        #expect(abs(fill.greenComponent - 0.2) < 0.001)
+        #expect(abs(fill.blueComponent - 0.8) < 0.001)
+        #expect(shape.strokeOpacity == 0)
+    }
+
     @Test func materializerCreatesEditableHierarchyAtCenteredScaleAndHonestPlaceholder() throws {
         let plan = try Self.decodedPlan()
         let textPlan = try #require(plan.items.first { $0.sourceName == "Continue Label" })

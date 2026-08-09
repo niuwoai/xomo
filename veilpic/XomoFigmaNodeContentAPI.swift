@@ -882,6 +882,9 @@ enum XomoFigmaNodeImportMapper {
     ) {
         let visiblePaints = (node.fills ?? []).filter { $0.visible ?? true }
         let visibleStrokes = (node.strokes ?? []).filter { $0.visible ?? true }
+        let hasDisabledPaint = ((node.fills ?? []) + (node.strokes ?? [])).contains {
+            $0.visible == false
+        }
         let hasUnsupportedSolidPaint = (visiblePaints + visibleStrokes).contains {
             $0.type == "SOLID" && !isSupportedSolidPaint($0)
         }
@@ -918,7 +921,8 @@ enum XomoFigmaNodeImportMapper {
                 return true
             }
         }
-        if visiblePaints.count > 1
+        if hasDisabledPaint
+            || visiblePaints.count > 1
             || hasUnsupportedSolidPaint
             || hasUnsupportedPaintBlendMode
             || hasUnsupportedGradientColor
