@@ -71,4 +71,22 @@ struct ImageEditorTextInputShortcutTests {
             #expect(action?.isBlockedByTextInput == true)
         }
     }
+
+    @Test func textIndentationKeysCannotReorderDocumentLayers() {
+        let protectedActions: [(String, NSEvent.ModifierFlags, ImageEditorKeyboardShortcutAction)] = [
+            ("]", [.command], .layerUp),
+            ("]", [.command, .shift], .layerTop),
+            ("[", [.command], .layerDown),
+            ("[", [.command, .shift], .layerBottom)
+        ]
+
+        for (key, modifiers, expected) in protectedActions {
+            let action = ImageEditorKeyboardShortcutAction.resolve(
+                charactersIgnoringModifiers: key,
+                modifierFlags: modifiers
+            )
+            #expect(action == expected)
+            #expect(action?.isBlockedByTextInput == true)
+        }
+    }
 }

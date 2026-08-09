@@ -12226,6 +12226,10 @@ enum ImageEditorKeyboardShortcutAction: Equatable {
              .cutSelectionToLayer,
              .mergeDown,
              .toggleRulers,
+             .layerTop,
+             .layerUp,
+             .layerDown,
+             .layerBottom,
              .toggleQuickMask,
              .toneRange,
              .spongeMode:
