@@ -3280,6 +3280,32 @@ struct XomoFigmaNodeImportPlanTests {
         #expect(fill.issues.contains(.autoLayoutFlattened))
     }
 
+    @Test func modernFigmaFillChildrenMapToEditableStackChildSizingByParentAxis() throws {
+        let response = try JSONDecoder().decode(
+            XomoFigmaNodeResponse.self,
+            from: Data(
+                #"{"name":"Modern child sizing","nodes":{"1:70":{"document":{"id":"1:70","name":"Root","type":"FRAME","absoluteBoundingBox":{"x":0,"y":0,"width":500,"height":300},"children":[{"id":"2:70","name":"Horizontal Parent","type":"FRAME","layoutMode":"HORIZONTAL","layoutSizingHorizontal":"FIXED","layoutSizingVertical":"FIXED","absoluteBoundingBox":{"x":0,"y":0,"width":240,"height":100},"children":[{"id":"3:70","name":"Fill Both","type":"RECTANGLE","layoutSizingHorizontal":"FILL","layoutSizingVertical":"FILL","absoluteBoundingBox":{"x":0,"y":0,"width":100,"height":60}}]},{"id":"2:71","name":"Vertical Parent","type":"FRAME","layoutMode":"VERTICAL","layoutSizingHorizontal":"FIXED","layoutSizingVertical":"FIXED","absoluteBoundingBox":{"x":260,"y":0,"width":200,"height":240},"children":[{"id":"3:71","name":"Fill Main","type":"RECTANGLE","layoutSizingHorizontal":"HUG","layoutSizingVertical":"FILL","absoluteBoundingBox":{"x":260,"y":0,"width":80,"height":100}}]}]}}}}"#.utf8
+            )
+        )
+        let plan = try XomoFigmaNodeImportMapper.makePlan(
+            response: response,
+            requestedNodeID: "1:70"
+        )
+        let fillBoth = try #require(plan.items.first { $0.sourceID == "3:70" })
+        let fillVerticalMain = try #require(plan.items.first { $0.sourceID == "3:71" })
+
+        #expect(fillBoth.stackChildLayout == ImageEditorStackChildLayout(
+            grow: 1,
+            stretchesCrossAxis: true
+        ))
+        #expect(!fillBoth.issues.contains(.autoLayoutFlattened))
+        #expect(fillVerticalMain.stackChildLayout == ImageEditorStackChildLayout(
+            grow: 1,
+            stretchesCrossAxis: false
+        ))
+        #expect(!fillVerticalMain.issues.contains(.autoLayoutFlattened))
+    }
+
     private static let validNodeResponse = Data(
         """
         {

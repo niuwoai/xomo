@@ -175,6 +175,7 @@ enum XomoFigmaNodeImportMapper {
         try append(
             node: root,
             parentSourceID: nil,
+            parentStackAxis: nil,
             depth: 0,
             rootOrigin: origin,
             ancestorTransformFlattened: false,
@@ -194,6 +195,7 @@ enum XomoFigmaNodeImportMapper {
     private static func append(
         node: XomoFigmaNode,
         parentSourceID: String?,
+        parentStackAxis: ImageEditorStackAxis?,
         depth: Int,
         rootOrigin: (x: Double, y: Double),
         ancestorTransformFlattened: Bool,
@@ -215,6 +217,7 @@ enum XomoFigmaNodeImportMapper {
         items.append(makeItem(
             node: node,
             parentSourceID: parentSourceID,
+            parentStackAxis: parentStackAxis,
             depth: depth,
             rootOrigin: rootOrigin,
             transformFlattened: transformFlattened,
@@ -225,6 +228,7 @@ enum XomoFigmaNodeImportMapper {
             try append(
                 node: child,
                 parentSourceID: node.id,
+                parentStackAxis: stackAxis(node),
                 depth: depth + 1,
                 rootOrigin: rootOrigin,
                 ancestorTransformFlattened: transformFlattened,
@@ -238,6 +242,7 @@ enum XomoFigmaNodeImportMapper {
     private static func makeItem(
         node: XomoFigmaNode,
         parentSourceID: String?,
+        parentStackAxis: ImageEditorStackAxis?,
         depth: Int,
         rootOrigin: (x: Double, y: Double),
         transformFlattened: Bool,
@@ -257,7 +262,11 @@ enum XomoFigmaNodeImportMapper {
         }
         if node.layoutMode != nil,
            node.layoutMode != "NONE",
-           (nativeStackLayout == nil || hasUnsupportedAutoLayout(node)) {
+           (nativeStackLayout == nil || hasUnsupportedAutoLayout(node, parentStackAxis: parentStackAxis)) {
+            issues.append(.autoLayoutFlattened)
+        }
+        if parentStackAxis != nil,
+           hasUnsupportedStackChildSizing(node) {
             issues.append(.autoLayoutFlattened)
         }
         if node.isMask == true,
@@ -494,7 +503,7 @@ enum XomoFigmaNodeImportMapper {
             effects: effects,
             exportPresets: exportPresetMapping.presets,
             stackLayout: nativeStackLayout,
-            stackChildLayout: stackChildLayout(node),
+            stackChildLayout: stackChildLayout(node, parentAxis: parentStackAxis),
             isStackLayoutExcluded: node.layoutPositioning == "ABSOLUTE"
         )
     }
@@ -594,14 +603,37 @@ enum XomoFigmaNodeImportMapper {
         }
     }
 
-    private static func stackChildLayout(_ node: XomoFigmaNode) -> ImageEditorStackChildLayout? {
-        let grow = CGFloat(node.layoutGrow ?? 0)
-        let stretchesCrossAxis = node.layoutAlign == "STRETCH"
+    private static func stackChildLayout(
+        _ node: XomoFigmaNode,
+        parentAxis: ImageEditorStackAxis?
+    ) -> ImageEditorStackChildLayout? {
+        var grow = CGFloat(node.layoutGrow ?? 0)
+        var stretchesCrossAxis = node.layoutAlign == "STRETCH"
+        if let parentAxis {
+            let primarySizing = parentAxis == .horizontal
+                ? node.layoutSizingHorizontal
+                : node.layoutSizingVertical
+            let crossSizing = parentAxis == .horizontal
+                ? node.layoutSizingVertical
+                : node.layoutSizingHorizontal
+            if primarySizing == "FILL" {
+                grow = max(1, grow)
+            }
+            if crossSizing == "FILL" {
+                stretchesCrossAxis = true
+            }
+        }
         guard grow > 0 || stretchesCrossAxis else { return nil }
         return ImageEditorStackChildLayout(
             grow: grow,
             stretchesCrossAxis: stretchesCrossAxis
         )
+    }
+
+    private static func hasUnsupportedStackChildSizing(_ node: XomoFigmaNode) -> Bool {
+        [node.layoutSizingHorizontal, node.layoutSizingVertical]
+            .compactMap { $0 }
+            .contains { $0 != "FIXED" && $0 != "HUG" && $0 != "FILL" }
     }
 
     private static func isSupportedEffect(_ effect: XomoFigmaEffect) -> Bool {
@@ -746,16 +778,19 @@ enum XomoFigmaNodeImportMapper {
         return XomoFigmaEffectOffset(x: offset.x * scale, y: offset.y * scale)
     }
 
-    private static func stackLayout(_ node: XomoFigmaNode) -> ImageEditorStackLayout? {
-        let axis: ImageEditorStackAxis
+    private static func stackAxis(_ node: XomoFigmaNode) -> ImageEditorStackAxis? {
         switch node.layoutMode {
         case "HORIZONTAL":
-            axis = .horizontal
+            return .horizontal
         case "VERTICAL":
-            axis = .vertical
+            return .vertical
         default:
             return nil
         }
+    }
+
+    private static func stackLayout(_ node: XomoFigmaNode) -> ImageEditorStackLayout? {
+        guard let axis = stackAxis(node) else { return nil }
         return ImageEditorStackLayout(
             axis: axis,
             spacing: CGFloat(node.itemSpacing ?? 0),
@@ -848,14 +883,21 @@ enum XomoFigmaNodeImportMapper {
         }
     }
 
-    private static func hasUnsupportedAutoLayout(_ node: XomoFigmaNode) -> Bool {
+    private static func hasUnsupportedAutoLayout(
+        _ node: XomoFigmaNode,
+        parentStackAxis: ImageEditorStackAxis?
+    ) -> Bool {
         let usesUnsupportedWrap = node.layoutWrap == "WRAP" && node.layoutMode != "HORIZONTAL"
         let usesUnsupportedModernSizing = [
             node.layoutSizingHorizontal,
             node.layoutSizingVertical
         ]
             .compactMap { $0 }
-            .contains { $0 != "FIXED" && $0 != "HUG" }
+            .contains {
+                $0 != "FIXED"
+                    && $0 != "HUG"
+                    && !($0 == "FILL" && parentStackAxis != nil)
+            }
         let supportsSpaceBetweenTracks = node.layoutMode == "HORIZONTAL"
             && node.layoutWrap == "WRAP"
             && node.counterAxisAlignContent == "SPACE_BETWEEN"

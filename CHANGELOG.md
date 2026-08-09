@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.12.0-rc763 - 2026-08-10
+
+### Added
+- Figma 现代 `layoutSizingHorizontal` / `layoutSizingVertical` 的 Fill 子项语义按父自动布局方向映射为 Xomo 可编辑的主轴 grow 与交叉轴 stretch。
+- 水平和垂直父容器均使用物理轴正确换算；旧版 `layoutGrow` / `layoutAlign` 继续兼容，未知尺寸值仍会明确报告自动布局降级。
+
+### Tests
+- 新增现代 Fill 子项映射回归并与 rc762 容器 Hug/Fixed 用例联合验证，2/2 通过；覆盖水平双轴 Fill、垂直主轴 Fill、无错误降级和根级无父容器 Fill 的诚实回退。
+- 旧版 Fill 子项与可编辑层级映射邻接回归 2/2 通过，确认现代字段支持没有破坏 `layoutGrow` / `layoutAlign` 兼容路径。
+
 ## 2.12.0-rc762 - 2026-08-10
 
 ### Added
