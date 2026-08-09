@@ -27,7 +27,7 @@ struct XomoMCPServerTests {
         ]))
         let result = try #require(response["result"] as? [String: Any])
         let tools = try #require(result["tools"] as? [[String: Any]])
-        #expect(tools.count == 126)
+        #expect(tools.count == 127)
         #expect(tools.contains { $0["name"] as? String == "xomo.layer.list" })
         #expect(tools.contains { $0["name"] as? String == "xomo.layer.selection_bounds" })
         let transformReferenceTool = try #require(tools.first {
@@ -52,6 +52,21 @@ struct XomoMCPServerTests {
         #expect(objectSelectMode["enum"] as? [String] == ["auto", "component", "deep"])
         #expect(tools.contains { $0["name"] as? String == "xomo.figma.bindings" })
         #expect(tools.contains { $0["name"] as? String == "xomo.figma.component_properties" })
+        let sizeConstraintsTool = try #require(tools.first {
+            $0["name"] as? String == "xomo.figma.size_constraints"
+        })
+        let sizeConstraintsSchema = try #require(
+            sizeConstraintsTool["inputSchema"] as? [String: Any]
+        )
+        let sizeConstraintsProperties = try #require(
+            sizeConstraintsSchema["properties"] as? [String: Any]
+        )
+        let sizeConstraintField = try #require(
+            sizeConstraintsProperties["field"] as? [String: Any]
+        )
+        #expect(sizeConstraintField["enum"] as? [String] == [
+            "minWidth", "maxWidth", "minHeight", "maxHeight"
+        ])
         #expect(tools.contains { $0["name"] as? String == "xomo.figma.image_fill" })
         #expect(tools.contains { $0["name"] as? String == "xomo.figma.link" })
         #expect(tools.contains { $0["name"] as? String == "xomo.component.instance" })

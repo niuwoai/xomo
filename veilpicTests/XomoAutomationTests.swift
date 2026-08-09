@@ -42,7 +42,7 @@ struct XomoAutomationTests {
             Issue.record("Expected tool array")
             return
         }
-        #expect(tools.count == 145)
+        #expect(tools.count == 146)
         #expect(tools.contains { tool in
             guard case .object(let value) = tool else { return false }
             return value["name"] == .string("xomo.layer.list")
@@ -225,6 +225,19 @@ struct XomoAutomationTests {
             guard case .object(let value) = tool else { return false }
             return value["name"] == .string("xomo.figma.component_properties")
         })
+        guard let sizeConstraintsTool = tools.compactMap({ tool -> [String: XomoJSONValue]? in
+            guard case .object(let value) = tool else { return nil }
+            return value
+        }).first(where: { $0["name"] == .string("xomo.figma.size_constraints") }) else {
+            Issue.record("Expected xomo.figma.size_constraints tool schema")
+            return
+        }
+        #expect(sizeConstraintsTool["inputSchema"]?.objectValue?["properties"]?.objectValue?["field"]?.objectValue?["enum"] == .array([
+            .string("minWidth"),
+            .string("maxWidth"),
+            .string("minHeight"),
+            .string("maxHeight")
+        ]))
         guard let imageFillTool = tools.compactMap({ tool -> [String: XomoJSONValue]? in
             guard case .object(let value) = tool else { return nil }
             return value
@@ -2141,6 +2154,81 @@ struct XomoAutomationTests {
         #expect(reset.ok)
         #expect(viewModel.document.selectedLayer?.xomoFigmaComponentProperties["Label"]?.value == "Continue")
         #expect(viewModel.document.history.last?.title == L10n.format("imageEditor.history.figmaComponentPropertyChanged", "Label"))
+    }
+
+    @Test func registryListsEditsAndRestoresFigmaSizeConstraints() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        let layerID = try #require(viewModel.document.selectedLayerID)
+        let layerIndex = try #require(viewModel.document.selectedLayerIndex)
+        let imported = XomoFigmaSizeConstraints(
+            minWidth: 40,
+            maxWidth: 200,
+            minHeight: nil,
+            maxHeight: 120
+        )
+        viewModel.document.layers[layerIndex].xomoFigmaSourceID = "12:34"
+        viewModel.document.layers[layerIndex].xomoFigmaSizeConstraints = imported
+        viewModel.document.layers[layerIndex].xomoFigmaSizeConstraintDefaults = imported
+
+        let listed = registry.execute(request(
+            operation: "call",
+            name: "xomo.figma.size_constraints",
+            arguments: ["action": .string("list")]
+        ))
+        #expect(listed.ok)
+        #expect(listed.result?.objectValue?["layerId"] == .string(layerID.uuidString))
+        #expect(listed.result?.objectValue?["current"]?.objectValue?["minWidth"] == .number(40))
+        #expect(listed.result?.objectValue?["importedDefaults"]?.objectValue?["maxWidth"] == .number(200))
+        #expect(listed.result?.objectValue?["hasOverrides"] == .bool(false))
+
+        let set = registry.execute(request(
+            operation: "call",
+            name: "xomo.figma.size_constraints",
+            arguments: [
+                "action": .string("set"),
+                "field": .string("minWidth"),
+                "value": .number(80)
+            ]
+        ))
+        #expect(set.ok)
+        #expect(set.result?.objectValue?["current"]?.objectValue?["minWidth"] == .number(80))
+        #expect(set.result?.objectValue?["overrides"]?.objectValue?["minWidth"] == .bool(true))
+
+        let cleared = registry.execute(request(
+            operation: "call",
+            name: "xomo.figma.size_constraints",
+            arguments: [
+                "action": .string("clear"),
+                "field": .string("maxWidth")
+            ]
+        ))
+        #expect(cleared.ok)
+        #expect(cleared.result?.objectValue?["current"]?.objectValue?["maxWidth"] == .null)
+
+        let reset = registry.execute(request(
+            operation: "call",
+            name: "xomo.figma.size_constraints",
+            arguments: [
+                "action": .string("reset"),
+                "field": .string("maxWidth")
+            ]
+        ))
+        #expect(reset.ok)
+        #expect(reset.result?.objectValue?["current"]?.objectValue?["maxWidth"] == .number(200))
+
+        let resetAll = registry.execute(request(
+            operation: "call",
+            name: "xomo.figma.size_constraints",
+            arguments: ["action": .string("resetAll")]
+        ))
+        #expect(resetAll.ok)
+        #expect(resetAll.result?.objectValue?["current"]?.objectValue?["minWidth"] == .number(40))
+        #expect(resetAll.result?.objectValue?["hasOverrides"] == .bool(false))
+        #expect(viewModel.document.history.last?.title == L10n.text(
+            "imageEditor.history.figmaSizeConstraintsReset"
+        ))
     }
 
     @Test func registryManagesComponentMastersAndInstances() throws {

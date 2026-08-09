@@ -48,6 +48,18 @@ enum XomoToolCatalog {
                     "additionalProperties": true
                 ]
             }
+            if name == "xomo.figma.size_constraints" {
+                tool["inputSchema"] = [
+                    "type": "object",
+                    "properties": [
+                        "action": ["type": "string", "enum": ["list", "set", "clear", "reset", "resetAll"]],
+                        "field": ["type": "string", "enum": ["minWidth", "maxWidth", "minHeight", "maxHeight"]],
+                        "value": ["type": "number"]
+                    ],
+                    "required": ["action"],
+                    "additionalProperties": true
+                ]
+            }
             if name == "xomo.object.select_at" {
                 tool["inputSchema"] = [
                     "type": "object",
@@ -185,6 +197,7 @@ enum XomoToolCatalog {
         ("xomo.figma.bindings", "List or copy the deduplicated Figma variable bindings from the current layer selection."),
         ("xomo.figma.link", "Validate and canonicalize a Figma link without network access or credential storage."),
         ("xomo.figma.component_properties", "List, locally override, or reset preserved Figma component properties on the selected layer."),
+        ("xomo.figma.size_constraints", "List current and imported Figma min/max size constraints, or locally set, clear, reset, and reset all fields on the selected Figma layer."),
         ("xomo.figma.image_fill", "List or edit the retained source, transform, and filter controls of the selected Figma image fill."),
         ("xomo.layer.select", "Select a layer by UUID."),
         ("xomo.layer.create", "Create a pixel, group, text, adjustment, filter, or fill layer."),

@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.12.0-rc793 - 2026-08-10
+
+### Added
+- 新增 `xomo.figma.size_constraints` MCP/CLI 工具，可读取当前值、导入默认值、整体及逐字段覆盖状态，并支持 `set`、`clear`、`reset` 与 `resetAll`。
+- 自动化修改复用属性面板相同的 ViewModel 命令，继续遵守锁定、数值规范化、Undo/Redo、History 与 Auto Layout 重排规则。
+- Xomo CLI 离线 fallback 工具目录同步发布完整 action、field 和 value schema，App 未运行时也能正确发现工具。
+
+### Tests
+- MCP 尺寸约束行为 1/1、App 工具目录 schema 1/1、CLI MCP 工具目录 2/2 通过；工具总数契约同步更新为 App 146、CLI fallback 127。
+
 ## 2.12.0-rc792 - 2026-08-10
 
 ### Added

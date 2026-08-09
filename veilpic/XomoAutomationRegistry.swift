@@ -107,6 +107,8 @@ final class XomoAutomationRegistry {
             return try figmaLinkResult(arguments)
         case "xomo.figma.component_properties":
             return try figmaComponentPropertiesAction(arguments, viewModel: viewModel)
+        case "xomo.figma.size_constraints":
+            return try figmaSizeConstraintsAction(arguments, viewModel: viewModel)
         case "xomo.figma.image_fill":
             return try figmaImageFillAction(arguments, viewModel: viewModel)
         case "xomo.layer.select":
@@ -1407,6 +1409,94 @@ final class XomoAutomationRegistry {
         default:
             throw XomoAutomationCallError.invalidArgument(
                 "Unknown Figma component property action"
+            )
+        }
+    }
+
+    private func figmaSizeConstraintsAction(
+        _ arguments: [String: XomoJSONValue],
+        viewModel: ImageEditorViewModel
+    ) throws -> XomoJSONValue {
+        let action = try requiredString("action", in: arguments)
+        guard let layer = viewModel.document.selectedLayer,
+              layer.xomoFigmaSourceID != nil
+        else {
+            throw XomoAutomationCallError.invalidArgument(
+                "No selected Figma source layer"
+            )
+        }
+
+        func field(from arguments: [String: XomoJSONValue]) throws -> XomoFigmaSizeConstraintField {
+            let rawValue = try requiredString("field", in: arguments)
+            guard let field = XomoFigmaSizeConstraintField(rawValue: rawValue) else {
+                throw XomoAutomationCallError.invalidArgument(
+                    "Unknown Figma size constraint field: \(rawValue)"
+                )
+            }
+            return field
+        }
+
+        func constraintsJSON(_ constraints: XomoFigmaSizeConstraints?) -> XomoJSONValue {
+            let resolved = constraints ?? .empty
+            return .object(Dictionary(uniqueKeysWithValues:
+                XomoFigmaSizeConstraintField.allCases.map { field in
+                    (field.rawValue, field.value(in: resolved).map(XomoJSONValue.number) ?? .null)
+                }
+            ))
+        }
+
+        func result() -> XomoJSONValue {
+            guard let currentLayer = viewModel.document.selectedLayer else {
+                return .object([:])
+            }
+            let overrides = Dictionary(uniqueKeysWithValues:
+                XomoFigmaSizeConstraintField.allCases.map { field in
+                    (field.rawValue, XomoJSONValue.bool(
+                        viewModel.hasSelectedFigmaSizeConstraintOverride(field)
+                    ))
+                }
+            )
+            return .object([
+                "layerId": .string(currentLayer.id.uuidString),
+                "current": constraintsJSON(currentLayer.xomoFigmaSizeConstraints),
+                "importedDefaults": constraintsJSON(currentLayer.xomoFigmaSizeConstraintDefaults),
+                "hasImportedDefaults": .bool(currentLayer.xomoFigmaSizeConstraintDefaults != nil),
+                "hasOverrides": .bool(viewModel.hasSelectedFigmaSizeConstraintOverrides),
+                "overrides": .object(overrides)
+            ])
+        }
+
+        switch action {
+        case "list":
+            return result()
+        case "set":
+            viewModel.setSelectedFigmaSizeConstraint(
+                try field(from: arguments),
+                value: try requiredNumber("value", in: arguments)
+            )
+            return result()
+        case "clear":
+            viewModel.setSelectedFigmaSizeConstraint(try field(from: arguments), value: nil)
+            return result()
+        case "reset":
+            guard layer.xomoFigmaSizeConstraintDefaults != nil else {
+                throw XomoAutomationCallError.operationFailed(
+                    "Selected Figma layer has no imported size constraint defaults"
+                )
+            }
+            viewModel.resetSelectedFigmaSizeConstraint(try field(from: arguments))
+            return result()
+        case "resetAll":
+            guard layer.xomoFigmaSizeConstraintDefaults != nil else {
+                throw XomoAutomationCallError.operationFailed(
+                    "Selected Figma layer has no imported size constraint defaults"
+                )
+            }
+            viewModel.resetAllSelectedFigmaSizeConstraints()
+            return result()
+        default:
+            throw XomoAutomationCallError.invalidArgument(
+                "Unknown Figma size constraint action"
             )
         }
     }
@@ -5716,6 +5806,11 @@ private extension XomoAutomationRegistry {
             "action": XomoAutomationSchema.string(description: "Component property action", values: ["list", "set", "reset"]),
             "key": XomoAutomationSchema.string(description: "Figma component property name"),
             "value": XomoAutomationSchema.string(description: "New local property value")
+        ], required: ["action"]),
+        tool("xomo.figma.size_constraints", "List current and imported Figma min/max size constraints, or locally set, clear, reset, and reset all fields on the selected Figma layer.", [
+            "action": XomoAutomationSchema.string(description: "Size constraint action", values: ["list", "set", "clear", "reset", "resetAll"]),
+            "field": XomoAutomationSchema.string(description: "Figma size constraint field", values: XomoFigmaSizeConstraintField.allCases.map(\.rawValue)),
+            "value": XomoAutomationSchema.number(description: "New local constraint value in pixels")
         ], required: ["action"]),
         tool("xomo.figma.image_fill", "List or edit the retained source, transform, and filter controls of the selected Figma image fill.", [
             "action": XomoAutomationSchema.string(description: "Image fill action", values: ["list", "set"]),
