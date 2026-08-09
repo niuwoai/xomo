@@ -266,7 +266,7 @@ enum XomoFigmaNodeImportMapper {
             issues.append(.autoLayoutFlattened)
         }
         if parentStackAxis != nil,
-           hasUnsupportedStackChildSizing(node) {
+           hasUnsupportedStackChildSizing(node, parentAxis: parentStackAxis) {
             issues.append(.autoLayoutFlattened)
         }
         if node.isMask == true,
@@ -616,11 +616,21 @@ enum XomoFigmaNodeImportMapper {
             let crossSizing = parentAxis == .horizontal
                 ? node.layoutSizingVertical
                 : node.layoutSizingHorizontal
-            if primarySizing == "FILL" {
+            switch primarySizing {
+            case "FILL":
                 grow = max(1, grow)
+            case "FIXED", "HUG":
+                grow = 0
+            default:
+                break
             }
-            if crossSizing == "FILL" {
+            switch crossSizing {
+            case "FILL":
                 stretchesCrossAxis = true
+            case "FIXED", "HUG":
+                stretchesCrossAxis = false
+            default:
+                break
             }
         }
         guard grow > 0 || stretchesCrossAxis else { return nil }
@@ -630,10 +640,35 @@ enum XomoFigmaNodeImportMapper {
         )
     }
 
-    private static func hasUnsupportedStackChildSizing(_ node: XomoFigmaNode) -> Bool {
-        [node.layoutSizingHorizontal, node.layoutSizingVertical]
+    private static func hasUnsupportedStackChildSizing(
+        _ node: XomoFigmaNode,
+        parentAxis: ImageEditorStackAxis?
+    ) -> Bool {
+        let hasUnknownModernSizing = [node.layoutSizingHorizontal, node.layoutSizingVertical]
             .compactMap { $0 }
             .contains { $0 != "FIXED" && $0 != "HUG" && $0 != "FILL" }
+        if hasUnknownModernSizing {
+            return true
+        }
+        guard let parentAxis else { return false }
+        let modernPrimary = parentAxis == .horizontal
+            ? node.layoutSizingHorizontal
+            : node.layoutSizingVertical
+        let modernCross = parentAxis == .horizontal
+            ? node.layoutSizingVertical
+            : node.layoutSizingHorizontal
+        if modernPrimary == nil,
+           let grow = node.layoutGrow,
+           !grow.isFinite || grow < 0 || grow > Double(ImageEditorStackChildLayout.maximumGrow) {
+            return true
+        }
+        if modernCross == nil,
+           let align = node.layoutAlign,
+           align != "INHERIT",
+           align != "STRETCH" {
+            return true
+        }
+        return false
     }
 
     private static func isSupportedEffect(_ effect: XomoFigmaEffect) -> Bool {

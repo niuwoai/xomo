@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.12.0-rc767 - 2026-08-10
+
+### Fixed
+- Figma 自动布局子项的现代 Fixed/Hug 尺寸现在会逐轴清除旧版 `layoutGrow` / `layoutAlign=STRETCH` 残留，避免现代固定尺寸被过期字段错误拉伸。
+- 现代 Fill 继续映射为 grow/stretch；只有未被现代字段覆盖的非法旧 grow 或 align 才会触发安全规范化和部分保真报告。
+
+### Tests
+- 新增子项现代/旧版尺寸覆盖回归 1/1 通过；现代 Fill 与覆盖优先级相邻回归 2/2 通过，覆盖 Fixed/Hug 清除、Fill 保留、grow 上限及未知 align 降级。
+
 ## 2.12.0-rc766 - 2026-08-10
 
 ### Fixed

@@ -3378,6 +3378,31 @@ struct XomoFigmaNodeImportPlanTests {
         #expect(legacyUnknown.fidelity == .partial)
     }
 
+    @Test func modernChildSizingClearsLegacyFillWhileInvalidBareLegacyChildValuesDegrade() throws {
+        let response = try JSONDecoder().decode(
+            XomoFigmaNodeResponse.self,
+            from: Data(
+                #"{"name":"Child sizing precedence","nodes":{"1:110":{"document":{"id":"1:110","name":"Parent","type":"FRAME","layoutMode":"HORIZONTAL","absoluteBoundingBox":{"x":0,"y":0,"width":700,"height":300},"children":[{"id":"2:110","name":"Modern Fixed","type":"RECTANGLE","layoutSizingHorizontal":"FIXED","layoutSizingVertical":"HUG","layoutGrow":5,"layoutAlign":"STRETCH","absoluteBoundingBox":{"x":0,"y":0,"width":200,"height":100}},{"id":"2:111","name":"Invalid Legacy","type":"RECTANGLE","layoutGrow":5000,"layoutAlign":"UNKNOWN_ALIGN","absoluteBoundingBox":{"x":240,"y":0,"width":200,"height":100}}]}}}}"#.utf8
+            )
+        )
+        let plan = try XomoFigmaNodeImportMapper.makePlan(
+            response: response,
+            requestedNodeID: "1:110"
+        )
+        let modern = try #require(plan.items.first { $0.sourceID == "2:110" })
+        let invalidLegacy = try #require(plan.items.first { $0.sourceID == "2:111" })
+
+        #expect(modern.stackChildLayout == nil)
+        #expect(!modern.issues.contains(.autoLayoutFlattened))
+        #expect(modern.fidelity == .exact)
+        #expect(invalidLegacy.stackChildLayout == ImageEditorStackChildLayout(
+            grow: ImageEditorStackChildLayout.maximumGrow,
+            stretchesCrossAxis: false
+        ))
+        #expect(invalidLegacy.issues.contains(.autoLayoutFlattened))
+        #expect(invalidLegacy.fidelity == .partial)
+    }
+
     private static let validNodeResponse = Data(
         """
         {
