@@ -931,7 +931,7 @@ enum XomoFigmaNodeImportMapper {
         _ node: XomoFigmaNode,
         parentStackAxis: ImageEditorStackAxis?
     ) -> Bool {
-        let usesUnsupportedWrap = node.layoutWrap == "WRAP" && node.layoutMode != "HORIZONTAL"
+        let usesUnsupportedWrap = hasUnsupportedStackWrap(node)
         let usesUnsupportedModernSizing = [
             node.layoutSizingHorizontal,
             node.layoutSizingVertical
@@ -958,6 +958,14 @@ enum XomoFigmaNodeImportMapper {
             || usesUnsupportedBaseline
             || hasUnsupportedStackAlignment(node)
             || hasUnsupportedStackGeometry(node)
+    }
+
+    private static func hasUnsupportedStackWrap(_ node: XomoFigmaNode) -> Bool {
+        guard let wrap = node.layoutWrap else { return false }
+        if wrap == "WRAP" {
+            return node.layoutMode != "HORIZONTAL"
+        }
+        return wrap != "NO_WRAP"
     }
 
     private static func hasUnsupportedLegacyStackSizing(_ node: XomoFigmaNode) -> Bool {

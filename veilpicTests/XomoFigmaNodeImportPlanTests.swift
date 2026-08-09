@@ -3435,6 +3435,30 @@ struct XomoFigmaNodeImportPlanTests {
         #expect(materialized.layers.first { $0.name == "Unknown" }?.isStackLayoutExcluded == false)
     }
 
+    @Test func figmaAutoLayoutWrapPreservesNativeModesAndReportsUnknownValues() throws {
+        let response = try JSONDecoder().decode(
+            XomoFigmaNodeResponse.self,
+            from: Data(
+                #"{"name":"Wrap fidelity","nodes":{"1:130":{"document":{"id":"1:130","name":"Root","type":"FRAME","absoluteBoundingBox":{"x":0,"y":0,"width":700,"height":420},"children":[{"id":"2:130","name":"No Wrap","type":"FRAME","layoutMode":"HORIZONTAL","layoutWrap":"NO_WRAP","absoluteBoundingBox":{"x":0,"y":0,"width":300,"height":100}},{"id":"2:131","name":"Wrap","type":"FRAME","layoutMode":"HORIZONTAL","layoutWrap":"WRAP","absoluteBoundingBox":{"x":340,"y":0,"width":300,"height":180}},{"id":"2:132","name":"Unknown","type":"FRAME","layoutMode":"HORIZONTAL","layoutWrap":"BALANCED","absoluteBoundingBox":{"x":0,"y":220,"width":300,"height":100}}]}}}}"#.utf8
+            )
+        )
+        let plan = try XomoFigmaNodeImportMapper.makePlan(
+            response: response,
+            requestedNodeID: "1:130"
+        )
+        let noWrap = try #require(plan.items.first { $0.sourceID == "2:130" })
+        let wrap = try #require(plan.items.first { $0.sourceID == "2:131" })
+        let unknown = try #require(plan.items.first { $0.sourceID == "2:132" })
+
+        #expect(noWrap.stackLayout?.wrapMode == .noWrap)
+        #expect(noWrap.fidelity == .exact)
+        #expect(wrap.stackLayout?.wrapMode == .wrap)
+        #expect(wrap.fidelity == .exact)
+        #expect(unknown.stackLayout?.wrapMode == .noWrap)
+        #expect(unknown.issues.contains(.autoLayoutFlattened))
+        #expect(unknown.fidelity == .partial)
+    }
+
     private static let validNodeResponse = Data(
         """
         {
