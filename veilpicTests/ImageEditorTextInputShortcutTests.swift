@@ -51,4 +51,24 @@ struct ImageEditorTextInputShortcutTests {
             #expect(action?.isBlockedByTextInput == true)
         }
     }
+
+    @Test func textFindNavigationAndParagraphKeysCannotMutateLayersOrViewState() {
+        let protectedActions: [(String, NSEvent.ModifierFlags, ImageEditorKeyboardShortcutAction)] = [
+            ("g", [.command], .groupSelectedLayer),
+            ("g", [.command, .shift], .ungroupSelectedLayers),
+            ("j", [.command], .duplicateSelectionOrLayer),
+            ("j", [.command, .shift], .cutSelectionToLayer),
+            ("e", [.command], .mergeDown),
+            ("r", [.command], .toggleRulers)
+        ]
+
+        for (key, modifiers, expected) in protectedActions {
+            let action = ImageEditorKeyboardShortcutAction.resolve(
+                charactersIgnoringModifiers: key,
+                modifierFlags: modifiers
+            )
+            #expect(action == expected)
+            #expect(action?.isBlockedByTextInput == true)
+        }
+    }
 }

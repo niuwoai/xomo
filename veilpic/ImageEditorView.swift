@@ -12220,6 +12220,12 @@ enum ImageEditorKeyboardShortcutAction: Equatable {
              .toggleTransformControls,
              .curves,
              .levels,
+             .groupSelectedLayer,
+             .ungroupSelectedLayers,
+             .duplicateSelectionOrLayer,
+             .cutSelectionToLayer,
+             .mergeDown,
+             .toggleRulers,
              .toggleQuickMask,
              .toneRange,
              .spongeMode:
