@@ -1057,6 +1057,27 @@ struct XomoFigmaNodeImportPlanTests {
         #expect(vector.strokeWeight == 2)
     }
 
+    @Test func figmaSubpixelStrokeReportsNativeMinimumClamp() throws {
+        let response = try JSONDecoder().decode(
+            XomoFigmaNodeResponse.self,
+            from: Data(
+                #"{"name":"Hairline","nodes":{"1:20":{"document":{"id":"1:20","name":"Hairline Card","type":"RECTANGLE","fills":[{"type":"SOLID","color":{"r":1,"g":1,"b":1,"a":1}}],"strokes":[{"type":"SOLID","color":{"r":0,"g":0,"b":0,"a":1}}],"strokeWeight":0.5,"absoluteBoundingBox":{"x":0,"y":0,"width":100,"height":50}}}}}"#.utf8
+            )
+        )
+
+        let plan = try XomoFigmaNodeImportMapper.makePlan(response: response, requestedNodeID: "1:20")
+        let item = try #require(plan.items.first)
+        #expect(item.strokeWeight == 0.5)
+        #expect(item.fidelity == .partial)
+        #expect(item.issues.contains(.strokeWeightFlattened))
+
+        let result = XomoFigmaNodeMaterializer.materialize(
+            plan: plan,
+            canvasSize: CGSize(width: 320, height: 240)
+        )
+        #expect(result.layers.first?.shapeContent?.strokeWidth == 1)
+    }
+
     @Test func mapperImportsSectionAsEditableGroupAndPreservesGradientBackground() throws {
         let response = try JSONDecoder().decode(
             XomoFigmaNodeResponse.self,

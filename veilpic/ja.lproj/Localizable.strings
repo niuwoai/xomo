@@ -3298,6 +3298,7 @@
 "xomo.figma.node.issue.effectsFlattened" = "エフェクトはまだ保持されません";
 "xomo.figma.node.issue.blendModeFlattened" = "描画モードはまだ保持されません";
 "xomo.figma.node.issue.cornerRadiusFlattened" = "コーナースムージングは編集可能なスーパー楕円で近似されます";
+"xomo.figma.node.issue.strokeWeightFlattened" = "この Figma ストロークは Xomo のネイティブ最小値 1 px 未満のため、1 px で読み込みます";
 "xomo.figma.node.issue.transformFlattened" = "回転、反転、傾斜は軸に沿った境界へ縮退します";
 "xomo.figma.node.issue.textCaseFlattened" = "文字ケースはライブスタイルではなく編集可能な文字列へ反映されます";
 "xomo.figma.node.issue.textLineHeightFlattened" = "この Figma の行高は正確に表現できないため、最も近いネイティブ行間を使用します";

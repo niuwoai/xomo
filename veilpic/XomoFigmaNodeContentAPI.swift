@@ -285,6 +285,11 @@ enum XomoFigmaNodeImportMapper {
         if hasUnsupportedCornerStyle(node) {
             issues.append(.cornerRadiusFlattened)
         }
+        if let strokeWeight = node.strokeWeight,
+           solidColor(in: node.strokes) != nil,
+           (!strokeWeight.isFinite || strokeWeight < 1) {
+            issues.append(.strokeWeightFlattened)
+        }
         if transformFlattened {
             issues.append(.transformFlattened)
         }
