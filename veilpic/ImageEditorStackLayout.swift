@@ -252,6 +252,7 @@ enum ImageEditorStackLayoutEngine {
     static func layout(
         in container: CGRect,
         itemFrames: [CGRect],
+        containerSizeConstraints: XomoFigmaSizeConstraints? = nil,
         itemLayouts: [ImageEditorStackChildLayout] = [],
         itemSizeConstraints: [XomoFigmaSizeConstraints?] = [],
         itemBaselineOffsets: [CGFloat?] = [],
@@ -289,9 +290,13 @@ enum ImageEditorStackLayoutEngine {
         let gapCount = CGFloat(max(0, itemFrames.count - 1))
         let requiredMain = originalItemMain + layout.spacing * gapCount + mainPadding(layout)
         let requiredCross = maximumItemCross + crossPadding(layout)
-        var resolvedContainer = container.standardized
+        var resolvedContainer = constrainedFrame(
+            container.standardized,
+            by: containerSizeConstraints
+        )
         if layout.primarySizingMode == .hug {
             setMainSize(max(1, requiredMain), axis: layout.axis, frame: &resolvedContainer)
+            resolvedContainer = constrainedFrame(resolvedContainer, by: containerSizeConstraints)
         }
         if layout.wrapMode == .wrap, layout.axis == .horizontal {
             return wrappedHorizontalLayout(
@@ -300,11 +305,13 @@ enum ImageEditorStackLayoutEngine {
                 itemLayouts: resolvedItemLayouts,
                 itemSizeConstraints: resolvedItemSizeConstraints,
                 itemBaselineOffsets: resolvedItemBaselineOffsets,
+                containerSizeConstraints: containerSizeConstraints,
                 layout: layout
             )
         }
         if layout.crossSizingMode == .hug {
             setCrossSize(max(1, requiredCross), axis: layout.axis, frame: &resolvedContainer)
+            resolvedContainer = constrainedFrame(resolvedContainer, by: containerSizeConstraints)
         }
         guard !itemFrames.isEmpty else {
             return ImageEditorStackLayoutResult(containerFrame: resolvedContainer, itemFrames: [])
@@ -400,6 +407,7 @@ enum ImageEditorStackLayoutEngine {
     static func frames(
         in container: CGRect,
         itemFrames: [CGRect],
+        containerSizeConstraints: XomoFigmaSizeConstraints? = nil,
         itemLayouts: [ImageEditorStackChildLayout] = [],
         itemSizeConstraints: [XomoFigmaSizeConstraints?] = [],
         itemBaselineOffsets: [CGFloat?] = [],
@@ -408,6 +416,7 @@ enum ImageEditorStackLayoutEngine {
         self.layout(
             in: container,
             itemFrames: itemFrames,
+            containerSizeConstraints: containerSizeConstraints,
             itemLayouts: itemLayouts,
             itemSizeConstraints: itemSizeConstraints,
             itemBaselineOffsets: itemBaselineOffsets,
@@ -421,6 +430,7 @@ enum ImageEditorStackLayoutEngine {
         itemLayouts: [ImageEditorStackChildLayout],
         itemSizeConstraints: [XomoFigmaSizeConstraints?],
         itemBaselineOffsets: [CGFloat?],
+        containerSizeConstraints: XomoFigmaSizeConstraints?,
         layout: ImageEditorStackLayout
     ) -> ImageEditorStackLayoutResult {
         guard !originalSizes.isEmpty else {
@@ -428,7 +438,10 @@ enum ImageEditorStackLayoutEngine {
             if layout.crossSizingMode == .hug {
                 emptyContainer.size.height = max(1, layout.paddingTop + layout.paddingBottom)
             }
-            return ImageEditorStackLayoutResult(containerFrame: emptyContainer, itemFrames: [])
+            return ImageEditorStackLayoutResult(
+                containerFrame: constrainedFrame(emptyContainer, by: containerSizeConstraints),
+                itemFrames: []
+            )
         }
 
         let availableMain = max(0, container.width - layout.paddingLeft - layout.paddingRight)
@@ -464,6 +477,7 @@ enum ImageEditorStackLayoutEngine {
         var resolvedContainer = container
         if layout.crossSizingMode == .hug {
             resolvedContainer.size.height = max(1, contentCross + layout.paddingTop + layout.paddingBottom)
+            resolvedContainer = constrainedFrame(resolvedContainer, by: containerSizeConstraints)
         } else if itemLayouts.allSatisfy({ $0.stretchesCrossAxis }) && !usesSpaceBetweenTracks {
             let availableCross = max(
                 0,
@@ -743,6 +757,15 @@ enum ImageEditorStackLayoutEngine {
                 maximum: constraints.maxHeight
             )
         )
+    }
+
+    private static func constrainedFrame(
+        _ frame: CGRect,
+        by constraints: XomoFigmaSizeConstraints?
+    ) -> CGRect {
+        var result = frame
+        result.size = constrainedSize(result.size, by: constraints)
+        return result
     }
 
     private static func constrainedDimension(
@@ -1026,6 +1049,7 @@ extension ImageEditorViewModel {
         let result = ImageEditorStackLayoutEngine.layout(
             in: group.frame.standardized,
             itemFrames: participantIndices.map { document.layers[$0].frame.standardized },
+            containerSizeConstraints: group.xomoFigmaSizeConstraints,
             itemLayouts: participantIndices.map {
                 document.layers[$0].stackChildLayout ?? ImageEditorStackChildLayout()
             },

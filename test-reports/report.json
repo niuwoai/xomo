@@ -1,10 +1,10 @@
 {
-  "generated_at": "2026-08-10 03:25:00 +0800",
-  "total": 27,
-  "passed": 27,
+  "generated_at": "2026-08-10 03:30:38 +0800",
+  "total": 29,
+  "passed": 29,
   "failed": 0,
-  "total_tests": 27,
-  "passed_tests": 27,
+  "total_tests": 29,
+  "passed_tests": 29,
   "failed_tests_in_failed_groups": 0,
   "jobs": 1,
   "results": [
@@ -15,7 +15,7 @@
       "file": "ImageEditorStackLayoutTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 2.789,
+      "duration": 2.804,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorStackLayoutTests.allStretchChildrenExpandWrappedTracksAcrossFixedCrossAxis.log"
@@ -27,7 +27,7 @@
       "file": "ImageEditorStackLayoutTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 2.841,
+      "duration": 2.823,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorStackLayoutTests.baselineFallsBackToBottomEdgeAndStretchedChildrenKeepTrackOrigin.log"
@@ -39,7 +39,7 @@
       "file": "ImageEditorStackLayoutTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 2.795,
+      "duration": 2.769,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorStackLayoutTests.baselineNormalizationKeepsOfficialHorizontalOnlyBoundary.log"
@@ -51,7 +51,7 @@
       "file": "ImageEditorStackLayoutTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 2.779,
+      "duration": 2.84,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorStackLayoutTests.childSizingControlsReflowParentAndSupportUndoRedo.log"
@@ -63,10 +63,22 @@
       "file": "ImageEditorStackLayoutTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 2.775,
+      "duration": 2.759,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorStackLayoutTests.conflictingFigmaSizeConstraintsPreferTheMinimum.log"
+    },
+    {
+      "suite": "ImageEditorStackLayoutTests",
+      "method": "figmaContainerSizeConstraintsApplyToFixedAndHugLayouts",
+      "identifier": "veilpicTests/ImageEditorStackLayoutTests/figmaContainerSizeConstraintsApplyToFixedAndHugLayouts()",
+      "file": "ImageEditorStackLayoutTests.swift",
+      "test_count": 1,
+      "passed": true,
+      "duration": 2.716,
+      "infrastructure_retries": 0,
+      "issues": [],
+      "log": "ImageEditorStackLayoutTests.figmaContainerSizeConstraintsApplyToFixedAndHugLayouts.log"
     },
     {
       "suite": "ImageEditorStackLayoutTests",
@@ -75,7 +87,7 @@
       "file": "ImageEditorStackLayoutTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 2.771,
+      "duration": 2.773,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorStackLayoutTests.figmaSizeConstraintsRedistributeFillAfterAChildReachesItsMaximum.log"
@@ -87,7 +99,7 @@
       "file": "ImageEditorStackLayoutTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 2.793,
+      "duration": 2.768,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorStackLayoutTests.fillChildrenSharePrimarySpaceByWeightAndStretchCrossAxis.log"
@@ -99,7 +111,7 @@
       "file": "ImageEditorStackLayoutTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 2.757,
+      "duration": 2.758,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorStackLayoutTests.horizontalBaselineAlignmentUsesFontMetricsAndHugEnvelope.log"
@@ -111,7 +123,7 @@
       "file": "ImageEditorStackLayoutTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 2.771,
+      "duration": 2.77,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorStackLayoutTests.horizontalLayoutSupportsSpaceBetweenAndEndAlignment.log"
@@ -123,7 +135,7 @@
       "file": "ImageEditorStackLayoutTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 2.769,
+      "duration": 2.782,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorStackLayoutTests.horizontalWrapCreatesRowsWithIndependentCrossAlignmentAndSpacing.log"
@@ -135,7 +147,7 @@
       "file": "ImageEditorStackLayoutTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 2.758,
+      "duration": 2.863,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorStackLayoutTests.hugReflowResizesGroupAndBackgroundWithUndoRedo.log"
@@ -147,7 +159,7 @@
       "file": "ImageEditorStackLayoutTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 2.786,
+      "duration": 2.788,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorStackLayoutTests.hugSizingRecomputesBothContainerAxesFromContents.log"
@@ -159,7 +171,7 @@
       "file": "ImageEditorStackLayoutTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 2.768,
+      "duration": 2.852,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorStackLayoutTests.legacyStackLayoutWithoutSizingModesDefaultsToFixed.log"
@@ -171,7 +183,7 @@
       "file": "ImageEditorStackLayoutTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 2.784,
+      "duration": 2.78,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorStackLayoutTests.propertyPanelAndLayerTabsKeepExplicitInteractionAndLightTextContracts.log"
@@ -183,7 +195,7 @@
       "file": "ImageEditorStackLayoutTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 2.774,
+      "duration": 2.775,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorStackLayoutTests.reflowDerivesLiveBaselinesFromTextLayerFontMetrics.log"
@@ -195,10 +207,22 @@
       "file": "ImageEditorStackLayoutTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 2.781,
+      "duration": 2.796,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorStackLayoutTests.reflowExecutesImportedFigmaChildSizeConstraints.log"
+    },
+    {
+      "suite": "ImageEditorStackLayoutTests",
+      "method": "reflowExecutesImportedFigmaContainerConstraintsAndResizesBackground",
+      "identifier": "veilpicTests/ImageEditorStackLayoutTests/reflowExecutesImportedFigmaContainerConstraintsAndResizesBackground()",
+      "file": "ImageEditorStackLayoutTests.swift",
+      "test_count": 1,
+      "passed": true,
+      "duration": 2.835,
+      "infrastructure_retries": 0,
+      "issues": [],
+      "log": "ImageEditorStackLayoutTests.reflowExecutesImportedFigmaContainerConstraintsAndResizesBackground.log"
     },
     {
       "suite": "ImageEditorStackLayoutTests",
@@ -207,7 +231,7 @@
       "file": "ImageEditorStackLayoutTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 2.773,
+      "duration": 2.797,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorStackLayoutTests.reflowMovesDirectChildrenAndNestedSubtreeButNotExcludedBackground.log"
@@ -219,7 +243,7 @@
       "file": "ImageEditorStackLayoutTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 2.777,
+      "duration": 2.789,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorStackLayoutTests.stackLayoutAndExclusionSurviveProjectRoundTrip.log"
@@ -231,7 +255,7 @@
       "file": "ImageEditorStackLayoutTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 2.784,
+      "duration": 2.818,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorStackLayoutTests.textBaselineOffsetScalesWithTransformedLayerHeight.log"
@@ -243,7 +267,7 @@
       "file": "ImageEditorStackLayoutTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 4.237,
+      "duration": 4.336,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorStackLayoutTests.verticalLayoutHonorsPaddingSpacingAndCrossAlignment.log"
@@ -267,7 +291,7 @@
       "file": "ImageEditorStackLayoutTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 2.81,
+      "duration": 2.755,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorStackLayoutTests.wrapNormalizationKeepsOfficialHorizontalBoundaryAndSafeSpacing.log"
@@ -279,7 +303,7 @@
       "file": "ImageEditorStackLayoutTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 2.754,
+      "duration": 2.78,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorStackLayoutTests.wrapSettingsSurviveProjectRoundTrip.log"
@@ -291,7 +315,7 @@
       "file": "ImageEditorStackLayoutTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 2.791,
+      "duration": 2.797,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorStackLayoutTests.wrappedHugReflowResizesGroupAndBackgroundWithUndo.log"
@@ -303,7 +327,7 @@
       "file": "ImageEditorStackLayoutTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 2.776,
+      "duration": 2.802,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorStackLayoutTests.wrappedRowsComputeIndependentBaselineEnvelopes.log"
@@ -315,7 +339,7 @@
       "file": "ImageEditorStackLayoutTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 2.765,
+      "duration": 2.852,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorStackLayoutTests.wrappedRowsDistributeSpaceBetweenTracksAcrossFixedCrossAxis.log"
@@ -327,7 +351,7 @@
       "file": "ImageEditorStackLayoutTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 2.803,
+      "duration": 2.764,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorStackLayoutTests.wrappedRowsResizeHugCrossAxisAndDistributeGrowPerRow.log"

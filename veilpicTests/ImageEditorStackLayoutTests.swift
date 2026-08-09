@@ -172,6 +172,34 @@ struct ImageEditorStackLayoutTests {
         ])
     }
 
+    @Test func figmaContainerSizeConstraintsApplyToFixedAndHugLayouts() {
+        let constraints = XomoFigmaSizeConstraints(
+            minWidth: 150,
+            maxWidth: 220,
+            minHeight: nil,
+            maxHeight: 60
+        )
+        let fixed = ImageEditorStackLayoutEngine.layout(
+            in: CGRect(x: 10, y: 20, width: 500, height: 200),
+            itemFrames: [CGRect(x: 0, y: 0, width: 40, height: 20)],
+            containerSizeConstraints: constraints,
+            layout: ImageEditorStackLayout(axis: .horizontal)
+        )
+        let hug = ImageEditorStackLayoutEngine.layout(
+            in: CGRect(x: 10, y: 20, width: 500, height: 200),
+            itemFrames: [CGRect(x: 0, y: 0, width: 100, height: 100)],
+            containerSizeConstraints: constraints,
+            layout: ImageEditorStackLayout(
+                axis: .horizontal,
+                primarySizingMode: .hug,
+                crossSizingMode: .hug
+            )
+        )
+
+        #expect(fixed.containerFrame == CGRect(x: 10, y: 20, width: 220, height: 60))
+        #expect(hug.containerFrame == CGRect(x: 10, y: 20, width: 150, height: 60))
+    }
+
     @Test func fillChildrenSharePrimarySpaceByWeightAndStretchCrossAxis() {
         let frames = ImageEditorStackLayoutEngine.frames(
             in: CGRect(x: 0, y: 0, width: 300, height: 100),
@@ -451,6 +479,25 @@ struct ImageEditorStackLayoutTests {
 
         #expect(fixture.layer(named: "First").frame == CGRect(x: 70, y: 30, width: 80, height: 15))
         #expect(fixture.layer(named: "Nested").frame == CGRect(x: 85, y: 55, width: 50, height: 30))
+    }
+
+    @Test func reflowExecutesImportedFigmaContainerConstraintsAndResizesBackground() {
+        let fixture = makeFixture()
+        fixture.updateLayer(named: "Root") {
+            $0.xomoFigmaSizeConstraints = XomoFigmaSizeConstraints(
+                minWidth: nil,
+                maxWidth: 120,
+                minHeight: nil,
+                maxHeight: 100
+            )
+        }
+
+        fixture.viewModel.reflowSelectedStackLayout()
+
+        #expect(fixture.layer(named: "Root").frame == CGRect(x: 10, y: 20, width: 120, height: 100))
+        #expect(fixture.layer(named: "Background").frame == CGRect(x: 10, y: 20, width: 120, height: 100))
+        #expect(fixture.layer(named: "First").frame == CGRect(x: 55, y: 30, width: 30, height: 20))
+        #expect(fixture.layer(named: "Nested").frame == CGRect(x: 45, y: 60, width: 50, height: 30))
     }
 
     @Test func reflowDerivesLiveBaselinesFromTextLayerFontMetrics() throws {
