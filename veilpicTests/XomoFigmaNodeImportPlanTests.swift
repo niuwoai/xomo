@@ -272,6 +272,34 @@ struct XomoFigmaNodeImportPlanTests {
         )
     }
 
+    @Test func outOfRangeFigmaLetterSpacingClampsAndReportsPartialFidelity() throws {
+        let cases: [(nodeID: String, source: Double, expected: CGFloat)] = [
+            ("1:14", 72, ImageEditorTextContent.maximumCharacterSpacing),
+            ("1:15", -12, ImageEditorTextContent.minimumCharacterSpacing)
+        ]
+
+        for testCase in cases {
+            let json = """
+            {"name":"Typography","nodes":{"\(testCase.nodeID)":{"document":{"id":"\(testCase.nodeID)","name":"Tracked","type":"TEXT","characters":"Tracking","style":{"fontSize":16,"letterSpacing":\(testCase.source)},"fills":[{"type":"SOLID","color":{"r":0,"g":0,"b":0,"a":1}}],"absoluteBoundingBox":{"x":0,"y":0,"width":120,"height":48}}}}}
+            """
+            let response = try JSONDecoder().decode(XomoFigmaNodeResponse.self, from: Data(json.utf8))
+            let plan = try XomoFigmaNodeImportMapper.makePlan(
+                response: response,
+                requestedNodeID: testCase.nodeID
+            )
+            let item = try #require(plan.items.first)
+            #expect(item.text?.letterSpacing == Double(testCase.expected))
+            #expect(item.fidelity == .partial)
+            #expect(item.issues.contains(.textLetterSpacingFlattened))
+
+            let result = XomoFigmaNodeMaterializer.materialize(
+                plan: plan,
+                canvasSize: CGSize(width: 320, height: 240)
+            )
+            #expect(result.layers.first?.textContent?.characterSpacing == testCase.expected)
+        }
+    }
+
     @Test func figmaAutoWidthAndHeightTextMaterializesAsEditablePointText() throws {
         let response = try JSONDecoder().decode(
             XomoFigmaNodeResponse.self,

@@ -8618,7 +8618,10 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     private func clampedTextCharacterSpacing(_ spacing: Double) -> Double {
-        max(-8, min(48, spacing))
+        max(
+            Double(ImageEditorTextContent.minimumCharacterSpacing),
+            min(Double(ImageEditorTextContent.maximumCharacterSpacing), spacing)
+        )
     }
 
     private func clampedTextLineSpacing(_ spacing: Double) -> Double {

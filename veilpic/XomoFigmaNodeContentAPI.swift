@@ -331,6 +331,12 @@ enum XomoFigmaNodeImportMapper {
            mappedTextDecoration(decoration) == nil {
             issues.append(.textDecorationFlattened)
         }
+        if let letterSpacing = node.style?.letterSpacing,
+           !letterSpacing.isFinite
+            || letterSpacing < Double(ImageEditorTextContent.minimumCharacterSpacing)
+            || letterSpacing > Double(ImageEditorTextContent.maximumCharacterSpacing) {
+            issues.append(.textLetterSpacingFlattened)
+        }
         if let fontSize = node.style?.fontSize,
            !fontSize.isFinite || fontSize < 6 {
             issues.append(.textFontSizeFlattened)
@@ -409,7 +415,13 @@ enum XomoFigmaNodeImportMapper {
                     fontSize: node.style?.fontSize,
                     fontWeight: node.style?.fontWeight,
                     horizontalAlignment: mappedTextHorizontalAlignment(node.style?.textAlignHorizontal)?.rawValue,
-                    letterSpacing: node.style?.letterSpacing.flatMap { $0.isFinite ? $0 : nil },
+                    letterSpacing: node.style?.letterSpacing.flatMap {
+                        guard $0.isFinite else { return nil }
+                        return min(
+                            Double(ImageEditorTextContent.maximumCharacterSpacing),
+                            max(Double(ImageEditorTextContent.minimumCharacterSpacing), $0)
+                        )
+                    },
                     lineHeight: lineHeight(for: node.style),
                     isItalic: node.style?.italic == true,
                     decoration: mappedTextDecoration(node.style?.textDecoration) ?? .none,

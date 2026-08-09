@@ -496,7 +496,13 @@ enum XomoFigmaNodeMaterializer {
             isItalic: text.isItalic,
             isUnderlined: text.decoration == .underline,
             isStruckThrough: text.decoration == .strikethrough,
-            characterSpacing: CGFloat(text.letterSpacing ?? 0) * scale,
+            characterSpacing: min(
+                ImageEditorTextContent.maximumCharacterSpacing,
+                max(
+                    ImageEditorTextContent.minimumCharacterSpacing,
+                    CGFloat(text.letterSpacing ?? 0) * scale
+                )
+            ),
             lineSpacing: max(
                 0,
                 CGFloat((text.lineHeight ?? text.fontSize ?? 0) - (text.fontSize ?? 0)) * scale

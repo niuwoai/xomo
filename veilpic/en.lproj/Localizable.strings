@@ -3308,6 +3308,7 @@
 "xomo.figma.node.issue.textHorizontalAlignmentFlattened" = "This Figma horizontal text alignment is unsupported and imports left-aligned";
 "xomo.figma.node.issue.textVerticalAlignmentFlattened" = "This Figma text vertical alignment is not recognized and uses top alignment";
 "xomo.figma.node.issue.textDecorationFlattened" = "This Figma text decoration is not recognized and imports without decoration";
+"xomo.figma.node.issue.textLetterSpacingFlattened" = "Figma letter spacing is outside Xomo's editable -8–48 px range and was adjusted to the supported range";
 "xomo.figma.node.issue.textFontWeightFlattened" = "This Figma font weight cannot be represented exactly by regular or bold and uses the closest native weight";
 "xomo.figma.node.issue.textFontSizeFlattened" = "This Figma font size is below Xomo's native 6 px minimum and imports as 6 px";
 "xomo.figma.node.issue.variableBindingPreserved" = "Figma variable binding is preserved by ID; its live value is resolved when Variables access is available";
