@@ -475,6 +475,7 @@ final class XomoAutomationRegistry {
                     "Shape kind must be rectangle or ellipse"
                 )
             }
+            try validateShapeCreationCornerArguments(arguments, kind: shapeKind)
             let origin = try requiredPoint(arguments)
             let cornerRadius = try optionalNonnegativeNumber("cornerRadius", in: arguments)
             let cornerRadii = try optionalCornerRadii(arguments)
@@ -2371,6 +2372,18 @@ final class XomoAutomationRegistry {
         else { return }
         throw XomoAutomationCallError.invalidArgument(
             "Use either cornerRadius or cornerRadii, not both"
+        )
+    }
+
+    private func validateShapeCreationCornerArguments(
+        _ arguments: [String: XomoJSONValue],
+        kind: ImageEditorShapeKind
+    ) throws {
+        guard kind == .ellipse else { return }
+        let rectangleOnlyKeys = ["cornerRadius", "cornerRadii", "cornerSmoothing"]
+        guard let key = rectangleOnlyKeys.first(where: { arguments[$0] != nil }) else { return }
+        throw XomoAutomationCallError.invalidArgument(
+            "\(key) is only supported when kind is rectangle"
         )
     }
 
@@ -6005,9 +6018,9 @@ private extension XomoAutomationRegistry {
                 "items": XomoAutomationSchema.number(description: "Dash or gap length in pixels"),
                 "maxItems": .number(16)
             ]),
-            "cornerRadius": shapeNonnegativeNumberSchema(description: "Optional uniform rectangle corner radius in pixels"),
+            "cornerRadius": shapeNonnegativeNumberSchema(description: "Rectangle-only uniform corner radius in pixels"),
             "cornerRadii": rectangleCornerRadiiSchema,
-            "cornerSmoothing": shapeUnitIntervalSchema(description: "Editable superellipse smoothing")
+            "cornerSmoothing": shapeUnitIntervalSchema(description: "Rectangle-only editable superellipse smoothing")
         ], required: ["kind", "x", "y", "width", "height"]),
         tool("xomo.shape.get", "Inspect the selected editable shape layer."),
         tool("xomo.shape.update", "Update only the specified fill, stroke, and rectangle corner properties of selected editable shapes.", [

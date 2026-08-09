@@ -3925,6 +3925,55 @@ struct XomoAutomationTests {
         #expect(createProperties["strokeDashPattern"]?.objectValue?["type"] == .string("array"))
     }
 
+    @Test func ellipseCreationRejectsRectangleOnlyCornerArgumentsAtomically() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        let layerCount = viewModel.document.layers.count
+        let historyCount = viewModel.document.history.count
+        let selectedLayerID = viewModel.document.selectedLayerID
+
+        for (key, value): (String, XomoJSONValue) in [
+            ("cornerRadius", .number(0)),
+            ("cornerRadii", .object([
+                "topLeft": .number(0), "topRight": .number(0),
+                "bottomRight": .number(0), "bottomLeft": .number(0)
+            ])),
+            ("cornerSmoothing", .number(0))
+        ] {
+            let response = registry.execute(request(
+                operation: "call",
+                name: "xomo.shape.create",
+                arguments: [
+                    "kind": .string("ellipse"),
+                    "x": .number(10), "y": .number(12),
+                    "width": .number(90), "height": .number(70),
+                    key: value
+                ]
+            ))
+            #expect(!response.ok)
+            #expect(response.error?.contains("only supported when kind is rectangle") == true)
+            #expect(viewModel.document.layers.count == layerCount)
+            #expect(viewModel.document.history.count == historyCount)
+            #expect(viewModel.document.selectedLayerID == selectedLayerID)
+        }
+
+        let toolsResponse = registry.execute(request(operation: "tools"))
+        let tools = try #require(toolsResponse.result?.arrayValue)
+        let createTool = try #require(tools.compactMap(\.objectValue).first {
+            $0["name"] == .string("xomo.shape.create")
+        })
+        let properties = createTool["inputSchema"]?.objectValue?["properties"]?.objectValue
+        #expect(
+            properties?["cornerRadius"]?.objectValue?["description"]
+                == .string("Rectangle-only uniform corner radius in pixels")
+        )
+        #expect(
+            properties?["cornerSmoothing"]?.objectValue?["description"]
+                == .string("Rectangle-only editable superellipse smoothing from 0 through 1")
+        )
+    }
+
     @Test func shapeStrokeWidthAutomationRejectsInvalidValuesAtomically() throws {
         let viewModel = makeViewModel()
         viewModel.drawShape(
