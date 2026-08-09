@@ -765,8 +765,18 @@ enum XomoFigmaNodeImportMapper {
             paddingLeft: CGFloat(node.paddingLeft ?? 0),
             primaryAlignment: primaryAlignment(node.primaryAxisAlignItems),
             crossAlignment: crossAlignment(node.counterAxisAlignItems),
-            primarySizingMode: sizingMode(node.primaryAxisSizingMode),
-            crossSizingMode: sizingMode(node.counterAxisSizingMode),
+            primarySizingMode: stackSizingMode(
+                modern: axis == .horizontal
+                    ? node.layoutSizingHorizontal
+                    : node.layoutSizingVertical,
+                legacy: node.primaryAxisSizingMode
+            ),
+            crossSizingMode: stackSizingMode(
+                modern: axis == .horizontal
+                    ? node.layoutSizingVertical
+                    : node.layoutSizingHorizontal,
+                legacy: node.counterAxisSizingMode
+            ),
             wrapMode: node.layoutWrap == "WRAP" ? .wrap : .noWrap,
             counterSpacing: CGFloat(node.counterAxisSpacing ?? 0),
             crossTrackAlignment: crossTrackAlignment(
@@ -796,6 +806,17 @@ enum XomoFigmaNodeImportMapper {
 
     private static func sizingMode(_ value: String?) -> ImageEditorStackSizingMode {
         value == "AUTO" ? .hug : .fixed
+    }
+
+    private static func stackSizingMode(
+        modern: String?,
+        legacy: String?
+    ) -> ImageEditorStackSizingMode {
+        switch modern {
+        case "HUG": return .hug
+        case "FIXED": return .fixed
+        default: return sizingMode(legacy)
+        }
     }
 
     private static func primaryAlignment(_ value: String?) -> ImageEditorStackPrimaryAlignment {
@@ -829,6 +850,12 @@ enum XomoFigmaNodeImportMapper {
 
     private static func hasUnsupportedAutoLayout(_ node: XomoFigmaNode) -> Bool {
         let usesUnsupportedWrap = node.layoutWrap == "WRAP" && node.layoutMode != "HORIZONTAL"
+        let usesUnsupportedModernSizing = [
+            node.layoutSizingHorizontal,
+            node.layoutSizingVertical
+        ]
+            .compactMap { $0 }
+            .contains { $0 != "FIXED" && $0 != "HUG" }
         let supportsSpaceBetweenTracks = node.layoutMode == "HORIZONTAL"
             && node.layoutWrap == "WRAP"
             && node.counterAxisAlignContent == "SPACE_BETWEEN"
@@ -838,6 +865,7 @@ enum XomoFigmaNodeImportMapper {
         let usesUnsupportedBaseline = node.counterAxisAlignItems == "BASELINE"
             && node.layoutMode != "HORIZONTAL"
         return usesUnsupportedWrap
+            || usesUnsupportedModernSizing
             || usesUnsupportedTrackDistribution
             || usesUnsupportedBaseline
     }
@@ -1693,6 +1721,8 @@ struct XomoFigmaNode: Decodable {
     var layoutWrap: String?
     var primaryAxisSizingMode: String?
     var counterAxisSizingMode: String?
+    var layoutSizingHorizontal: String?
+    var layoutSizingVertical: String?
     var layoutPositioning: String?
     var layoutGrow: Double?
     var layoutAlign: String?

@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.12.0-rc762 - 2026-08-10
+
+### Added
+- Figma 节点导入支持现代 `layoutSizingHorizontal` / `layoutSizingVertical` 自动布局尺寸字段，并按水平、垂直容器的真实物理轴映射为可编辑的主轴与交叉轴 Hug/Fixed 语义。
+- 继续兼容旧版 `primaryAxisSizingMode` / `counterAxisSizingMode`；当前模型无法原生表达的容器 Fill 会保持固定尺寸并明确报告自动布局降级，不冒充无损导入。
+
+### Tests
+- 新增现代自动布局尺寸映射回归；完整 Figma 节点导入测试组 84/84 通过，覆盖水平/垂直轴转换、Hug/Fixed 原生映射、Fill 降级提示与旧字段兼容。
+
 ## 2.12.0-rc761 - 2026-08-10
 
 ### Added

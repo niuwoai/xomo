@@ -3255,6 +3255,31 @@ struct XomoFigmaNodeImportPlanTests {
         return try XomoFigmaNodeImportMapper.makePlan(response: response, requestedNodeID: "1:3")
     }
 
+    @Test func modernFigmaAutoLayoutSizingMapsByPhysicalAxisAndReportsFillFallback() throws {
+        let response = try JSONDecoder().decode(
+            XomoFigmaNodeResponse.self,
+            from: Data(
+                #"{"name":"Modern sizing","nodes":{"1:60":{"document":{"id":"1:60","name":"Root","type":"FRAME","absoluteBoundingBox":{"x":0,"y":0,"width":500,"height":300},"children":[{"id":"2:60","name":"Horizontal Hug","type":"FRAME","layoutMode":"HORIZONTAL","layoutSizingHorizontal":"HUG","layoutSizingVertical":"FIXED","absoluteBoundingBox":{"x":0,"y":0,"width":160,"height":60}},{"id":"2:61","name":"Vertical Hug Width","type":"FRAME","layoutMode":"VERTICAL","layoutSizingHorizontal":"HUG","layoutSizingVertical":"FIXED","absoluteBoundingBox":{"x":180,"y":0,"width":160,"height":60}},{"id":"2:62","name":"Nested Fill","type":"FRAME","layoutMode":"HORIZONTAL","layoutSizingHorizontal":"FILL","layoutSizingVertical":"FIXED","absoluteBoundingBox":{"x":0,"y":100,"width":340,"height":60}}]}}}}"#.utf8
+            )
+        )
+        let plan = try XomoFigmaNodeImportMapper.makePlan(
+            response: response,
+            requestedNodeID: "1:60"
+        )
+        let horizontal = try #require(plan.items.first { $0.sourceID == "2:60" })
+        let vertical = try #require(plan.items.first { $0.sourceID == "2:61" })
+        let fill = try #require(plan.items.first { $0.sourceID == "2:62" })
+
+        #expect(horizontal.stackLayout?.primarySizingMode == .hug)
+        #expect(horizontal.stackLayout?.crossSizingMode == .fixed)
+        #expect(!horizontal.issues.contains(.autoLayoutFlattened))
+        #expect(vertical.stackLayout?.primarySizingMode == .fixed)
+        #expect(vertical.stackLayout?.crossSizingMode == .hug)
+        #expect(!vertical.issues.contains(.autoLayoutFlattened))
+        #expect(fill.stackLayout?.primarySizingMode == .fixed)
+        #expect(fill.issues.contains(.autoLayoutFlattened))
+    }
+
     private static let validNodeResponse = Data(
         """
         {
