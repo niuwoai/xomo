@@ -2220,6 +2220,16 @@ final class XomoAutomationRegistry {
                         "fillGradient.stops[\(index)].position must be between 0 and 1"
                     )
                 }
+                guard let colorValue = stop["color"] else {
+                    throw XomoAutomationCallError.invalidArgument(
+                        "fillGradient.stops[\(index)].color is required"
+                    )
+                }
+                guard colorValue.objectValue != nil else {
+                    throw XomoAutomationCallError.invalidArgument(
+                        "fillGradient.stops[\(index)].color must be an object"
+                    )
+                }
                 return ImageEditorGradientColorStop(
                     position: position,
                     color: try requiredOpaqueColor("color", in: stop)
@@ -6325,10 +6335,10 @@ private extension XomoAutomationRegistry {
 
     static let shapeColorSchema = XomoAutomationSchema.object(
         properties: [
-            "red": XomoAutomationSchema.number(description: "Red component from 0 to 1"),
-            "green": XomoAutomationSchema.number(description: "Green component from 0 to 1"),
-            "blue": XomoAutomationSchema.number(description: "Blue component from 0 to 1"),
-            "alpha": XomoAutomationSchema.number(description: "Optional alpha component from 0 to 1")
+            "red": shapeUnitIntervalSchema(description: "Red component"),
+            "green": shapeUnitIntervalSchema(description: "Green component"),
+            "blue": shapeUnitIntervalSchema(description: "Blue component"),
+            "alpha": shapeUnitIntervalSchema(description: "Optional alpha component")
         ],
         required: ["red", "green", "blue"]
     )

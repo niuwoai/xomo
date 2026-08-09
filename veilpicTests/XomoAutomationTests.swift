@@ -5129,6 +5129,105 @@ struct XomoAutomationTests {
         }
     }
 
+    @Test func shapeGradientStopColorsReportPreciseErrorsAndSchemaBounds() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        let validColor: XomoJSONValue = .object([
+            "red": .number(1), "green": .number(0), "blue": .number(0)
+        ])
+        let terminalStop: XomoJSONValue = .object([
+            "position": .number(1),
+            "color": validColor
+        ])
+        let created = registry.execute(request(
+            operation: "call",
+            name: "xomo.shape.create",
+            arguments: [
+                "kind": .string("rectangle"),
+                "x": .number(10), "y": .number(12),
+                "width": .number(90), "height": .number(70),
+                "fillKind": .string("linearGradient"),
+                "fillGradient": .object([
+                    "stops": .array([
+                        .object(["position": .number(0), "color": validColor]),
+                        terminalStop
+                    ])
+                ])
+            ]
+        ))
+        #expect(created.ok)
+        let stableLayerID = try #require(viewModel.document.selectedLayerID)
+        let stableLayerCount = viewModel.document.layers.count
+        let stableHistoryCount = viewModel.document.history.count
+        let stableStrokeWidth = viewModel.document.selectedLayer?.shapeContent?.strokeWidth
+        let invalidEntries: [(XomoJSONValue, String)] = [
+            (
+                .object(["position": .number(0)]),
+                "fillGradient.stops[0].color is required"
+            ),
+            (
+                .object(["position": .number(0), "color": .string("red")]),
+                "fillGradient.stops[0].color must be an object"
+            ),
+            (
+                .object(["position": .number(0), "color": .null]),
+                "fillGradient.stops[0].color must be an object"
+            )
+        ]
+
+        for (invalidEntry, expectedError) in invalidEntries {
+            let invalidGradient: XomoJSONValue = .object([
+                "stops": .array([invalidEntry, terminalStop])
+            ])
+            let invalidUpdate = registry.execute(request(
+                operation: "call",
+                name: "xomo.shape.update",
+                arguments: [
+                    "fillGradient": invalidGradient,
+                    "strokeWidth": .number(12)
+                ]
+            ))
+            #expect(!invalidUpdate.ok)
+            #expect(invalidUpdate.error?.contains(expectedError) == true)
+            #expect(viewModel.document.history.count == stableHistoryCount)
+            #expect(viewModel.document.selectedLayer?.shapeContent?.strokeWidth == stableStrokeWidth)
+
+            let invalidCreate = registry.execute(request(
+                operation: "call",
+                name: "xomo.shape.create",
+                arguments: [
+                    "kind": .string("ellipse"),
+                    "x": .number(120), "y": .number(12),
+                    "width": .number(40), "height": .number(40),
+                    "fillGradient": invalidGradient
+                ]
+            ))
+            #expect(!invalidCreate.ok)
+            #expect(invalidCreate.error?.contains(expectedError) == true)
+            #expect(viewModel.document.layers.count == stableLayerCount)
+            #expect(viewModel.document.history.count == stableHistoryCount)
+            #expect(viewModel.document.selectedLayerID == stableLayerID)
+        }
+
+        let toolsResponse = registry.execute(request(operation: "tools"))
+        let tools = try #require(toolsResponse.result?.arrayValue)
+        let createTool = try #require(tools.compactMap(\.objectValue).first {
+            $0["name"] == .string("xomo.shape.create")
+        })
+        let properties = createTool["inputSchema"]?.objectValue?["properties"]?.objectValue
+        let fillColorProperties = properties?["fillColor"]?.objectValue?["properties"]?.objectValue
+        let stopColorProperties = properties?["fillGradient"]?.objectValue?["properties"]?
+            .objectValue?["stops"]?.objectValue?["items"]?.objectValue?["properties"]?
+            .objectValue?["color"]?.objectValue?["properties"]?.objectValue
+        for component in ["red", "green", "blue", "alpha"] {
+            #expect(fillColorProperties?[component]?.objectValue?["minimum"] == .number(0))
+            #expect(fillColorProperties?[component]?.objectValue?["maximum"] == .number(1))
+            #expect(stopColorProperties?[component]?.objectValue?["minimum"] == .number(0))
+            #expect(stopColorProperties?[component]?.objectValue?["maximum"] == .number(1))
+        }
+    }
+
     @Test func registryCreatesAndListsLayerComps() throws {
         let viewModel = makeViewModel()
         let registry = XomoAutomationRegistry.shared

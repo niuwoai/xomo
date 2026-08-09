@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.12.0-rc753 - 2026-08-09
+
+### Fixed
+- 形状渐变色标缺少 `color` 或使用非对象颜色时，`xomo.shape.create/update` 返回准确的 `fillGradient.stops[index].color` 错误路径，不再丢失坏色标索引。
+- RGBA Schema 为 `red/green/blue/alpha` 全部发布机器可读的 `minimum: 0` 与 `maximum: 1`，覆盖形状填充、描边和渐变色标颜色。
+- 坏色标颜色在创建或批量修改前原子失败，图层、选择、History 与同批形状属性保持不变。
+
+### Tests
+- 新增色标颜色错误与 Schema 边界回归，覆盖缺失、字符串、`null`、创建/更新零副作用及四通道边界，专属隔离回归 1/1 通过。
+
 ## 2.12.0-rc752 - 2026-08-09
 
 ### Fixed
