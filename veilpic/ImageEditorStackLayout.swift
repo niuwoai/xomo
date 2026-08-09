@@ -317,18 +317,22 @@ enum ImageEditorStackLayoutEngine {
         )
         let availableMain = layout.axis == .horizontal ? inner.width : inner.height
         let availableCross = layout.axis == .horizontal ? inner.height : inner.width
-        let totalGrow = resolvedItemLayouts.reduce(0) { $0 + $1.grow }
-        let usesPrimaryFill = totalGrow > 0 && layout.primarySizingMode == .fixed
+        let usesPrimaryFill = resolvedItemLayouts.contains { $0.grow > 0 }
+            && layout.primarySizingMode == .fixed
         if usesPrimaryFill {
             let fixedMain = sizes.indices.reduce(0) { partial, index in
                 guard resolvedItemLayouts[index].grow <= 0 else { return partial }
                 return partial + mainSize(sizes[index], axis: layout.axis)
             }
             let distributableMain = max(0, availableMain - fixedMain - layout.spacing * gapCount)
-            for index in sizes.indices where resolvedItemLayouts[index].grow > 0 {
-                let share = distributableMain * resolvedItemLayouts[index].grow / totalGrow
-                setMainSize(max(1, share), axis: layout.axis, size: &sizes[index])
-            }
+            distributeMainSpace(
+                indices: Array(sizes.indices),
+                sizes: &sizes,
+                itemLayouts: resolvedItemLayouts,
+                itemSizeConstraints: resolvedItemSizeConstraints,
+                distributableMain: distributableMain,
+                axis: layout.axis
+            )
         }
         if layout.crossSizingMode == .fixed {
             for index in sizes.indices where resolvedItemLayouts[index].stretchesCrossAxis {
@@ -518,16 +522,19 @@ enum ImageEditorStackLayoutEngine {
         availableMain: CGFloat,
         spacing: CGFloat
     ) {
-        let totalGrow = row.reduce(CGFloat.zero) { $0 + itemLayouts[$1].grow }
-        guard totalGrow > 0 else { return }
+        guard row.contains(where: { itemLayouts[$0].grow > 0 }) else { return }
         let fixedMain = row.reduce(CGFloat.zero) { partial, index in
             itemLayouts[index].grow > 0 ? partial : partial + sizes[index].width
         }
         let distributable = max(0, availableMain - fixedMain - spacing * CGFloat(max(0, row.count - 1)))
-        for index in row where itemLayouts[index].grow > 0 {
-            sizes[index].width = max(1, distributable * itemLayouts[index].grow / totalGrow)
-            sizes[index] = constrainedSize(sizes[index], by: itemSizeConstraints[index])
-        }
+        distributeMainSpace(
+            indices: row,
+            sizes: &sizes,
+            itemLayouts: itemLayouts,
+            itemSizeConstraints: itemSizeConstraints,
+            distributableMain: distributable,
+            axis: .horizontal
+        )
     }
 
     private static func wrappedFrames(
@@ -743,10 +750,67 @@ enum ImageEditorStackLayoutEngine {
         minimum: Double?,
         maximum: Double?
     ) -> CGFloat {
+        let bounds = dimensionBounds(minimum: minimum, maximum: maximum)
+        return min(max(value.isFinite ? value : bounds.lower, bounds.lower), bounds.upper)
+    }
+
+    private static func distributeMainSpace(
+        indices: [Int],
+        sizes: inout [CGSize],
+        itemLayouts: [ImageEditorStackChildLayout],
+        itemSizeConstraints: [XomoFigmaSizeConstraints?],
+        distributableMain: CGFloat,
+        axis: ImageEditorStackAxis
+    ) {
+        var active = indices.filter { itemLayouts[$0].grow > 0 }
+        var remaining = max(0, distributableMain)
+        while !active.isEmpty {
+            let totalWeight = active.reduce(CGFloat.zero) { $0 + itemLayouts[$1].grow }
+            guard totalWeight > 0 else { return }
+            let iterationRemaining = remaining
+            var locked: [(index: Int, value: CGFloat)] = []
+            for index in active {
+                let share = iterationRemaining * itemLayouts[index].grow / totalWeight
+                let bounds = mainDimensionBounds(itemSizeConstraints[index], axis: axis)
+                if share < bounds.lower {
+                    locked.append((index, bounds.lower))
+                } else if share > bounds.upper {
+                    locked.append((index, bounds.upper))
+                }
+            }
+            if locked.isEmpty {
+                for index in active {
+                    let share = remaining * itemLayouts[index].grow / totalWeight
+                    setMainSize(max(1, share), axis: axis, size: &sizes[index])
+                }
+                return
+            }
+            for item in locked {
+                setMainSize(item.value, axis: axis, size: &sizes[item.index])
+            }
+            remaining = max(0, remaining - locked.reduce(CGFloat.zero) { $0 + $1.value })
+            let lockedSet = Set(locked.map(\.index))
+            active.removeAll { lockedSet.contains($0) }
+        }
+    }
+
+    private static func mainDimensionBounds(
+        _ constraints: XomoFigmaSizeConstraints?,
+        axis: ImageEditorStackAxis
+    ) -> (lower: CGFloat, upper: CGFloat) {
+        guard let constraints else { return (1, .greatestFiniteMagnitude) }
+        return axis == .horizontal
+            ? dimensionBounds(minimum: constraints.minWidth, maximum: constraints.maxWidth)
+            : dimensionBounds(minimum: constraints.minHeight, maximum: constraints.maxHeight)
+    }
+
+    private static func dimensionBounds(
+        minimum: Double?,
+        maximum: Double?
+    ) -> (lower: CGFloat, upper: CGFloat) {
         let lower = minimum.flatMap { $0.isFinite ? max(1, CGFloat($0)) : nil } ?? 1
         let requestedUpper = maximum.flatMap { $0.isFinite ? max(1, CGFloat($0)) : nil }
-        let upper = max(lower, requestedUpper ?? .greatestFiniteMagnitude)
-        return min(max(value.isFinite ? value : lower, lower), upper)
+        return (lower, max(lower, requestedUpper ?? .greatestFiniteMagnitude))
     }
 
     private static func setCrossSize(

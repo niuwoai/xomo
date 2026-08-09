@@ -202,38 +202,56 @@ struct ImageEditorStackLayoutTests {
         ])
     }
 
-    @Test func figmaSizeConstraintsClampFillAndStretchResults() {
+    @Test func figmaSizeConstraintsRedistributeFillAfterAChildReachesItsMaximum() {
+        for wrapMode in [ImageEditorStackWrapMode.noWrap, .wrap] {
+            let frames = ImageEditorStackLayoutEngine.frames(
+                in: CGRect(x: 0, y: 0, width: 300, height: 100),
+                itemFrames: [
+                    CGRect(x: 0, y: 0, width: 20, height: 20),
+                    CGRect(x: 0, y: 0, width: 20, height: 20)
+                ],
+                itemLayouts: [
+                    ImageEditorStackChildLayout(grow: 1, stretchesCrossAxis: true),
+                    ImageEditorStackChildLayout(grow: 1, stretchesCrossAxis: true)
+                ],
+                itemSizeConstraints: [
+                    XomoFigmaSizeConstraints(
+                        minWidth: nil,
+                        maxWidth: 80,
+                        minHeight: 30,
+                        maxHeight: 50
+                    ),
+                    XomoFigmaSizeConstraints(
+                        minWidth: 140,
+                        maxWidth: nil,
+                        minHeight: nil,
+                        maxHeight: nil
+                    )
+                ],
+                layout: ImageEditorStackLayout(axis: .horizontal, wrapMode: wrapMode)
+            )
+
+            #expect(frames == [
+                CGRect(x: 0, y: 0, width: 80, height: 50),
+                CGRect(x: 80, y: 0, width: 220, height: 100)
+            ])
+        }
+    }
+
+    @Test func conflictingFigmaSizeConstraintsPreferTheMinimum() {
         let frames = ImageEditorStackLayoutEngine.frames(
-            in: CGRect(x: 0, y: 0, width: 200, height: 100),
-            itemFrames: [
-                CGRect(x: 0, y: 0, width: 20, height: 20),
-                CGRect(x: 0, y: 0, width: 20, height: 20)
-            ],
-            itemLayouts: [
-                ImageEditorStackChildLayout(grow: 1, stretchesCrossAxis: true),
-                ImageEditorStackChildLayout(grow: 1, stretchesCrossAxis: true)
-            ],
-            itemSizeConstraints: [
-                XomoFigmaSizeConstraints(
-                    minWidth: nil,
-                    maxWidth: 80,
-                    minHeight: 30,
-                    maxHeight: 50
-                ),
-                XomoFigmaSizeConstraints(
-                    minWidth: 140,
-                    maxWidth: 120,
-                    minHeight: nil,
-                    maxHeight: nil
-                )
-            ],
+            in: CGRect(x: 0, y: 0, width: 100, height: 100),
+            itemFrames: [CGRect(x: 0, y: 0, width: 20, height: 20)],
+            itemSizeConstraints: [XomoFigmaSizeConstraints(
+                minWidth: 60,
+                maxWidth: 40,
+                minHeight: 70,
+                maxHeight: 50
+            )],
             layout: ImageEditorStackLayout(axis: .horizontal)
         )
 
-        #expect(frames == [
-            CGRect(x: 0, y: 0, width: 80, height: 50),
-            CGRect(x: 80, y: 0, width: 140, height: 100)
-        ])
+        #expect(frames == [CGRect(x: 0, y: 0, width: 60, height: 70)])
     }
 
     @Test func horizontalWrapCreatesRowsWithIndependentCrossAlignmentAndSpacing() {
