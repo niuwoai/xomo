@@ -2200,11 +2200,22 @@ final class XomoAutomationRegistry {
                 throw XomoAutomationCallError.invalidArgument("fillGradient.stops must contain 2 to 16 items")
             }
             let stops = try values.enumerated().map { index, value in
-                guard let stop = value.objectValue,
-                      let position = stop["position"]?.doubleValue,
-                      position.isFinite,
-                      (0...1).contains(position)
-                else {
+                guard let stop = value.objectValue else {
+                    throw XomoAutomationCallError.invalidArgument(
+                        "fillGradient.stops[\(index)] must be an object"
+                    )
+                }
+                guard let positionValue = stop["position"] else {
+                    throw XomoAutomationCallError.invalidArgument(
+                        "fillGradient.stops[\(index)].position is required"
+                    )
+                }
+                guard let position = positionValue.doubleValue else {
+                    throw XomoAutomationCallError.invalidArgument(
+                        "fillGradient.stops[\(index)].position must be a number"
+                    )
+                }
+                guard position.isFinite, (0...1).contains(position) else {
                     throw XomoAutomationCallError.invalidArgument(
                         "fillGradient.stops[\(index)].position must be between 0 and 1"
                     )
