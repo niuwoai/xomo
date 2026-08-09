@@ -389,6 +389,20 @@ enum XomoFigmaSizeConstraintConflict: String, CaseIterable, Hashable, Sendable {
     var localizationKey: String {
         "imageEditor.properties.figmaSizeConstraintConflict.\(rawValue)"
     }
+
+    var minimumField: XomoFigmaSizeConstraintField {
+        switch self {
+        case .width: .minWidth
+        case .height: .minHeight
+        }
+    }
+
+    var maximumField: XomoFigmaSizeConstraintField {
+        switch self {
+        case .width: .maxWidth
+        case .height: .maxHeight
+        }
+    }
 }
 
 enum XomoFigmaSizeConstraintField: String, CaseIterable, Hashable, Sendable {

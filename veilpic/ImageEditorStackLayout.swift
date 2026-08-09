@@ -1050,6 +1050,16 @@ extension ImageEditorViewModel {
         statusText = L10n.text("imageEditor.status.figmaSizeConstraintsReset")
     }
 
+    func resolveSelectedFigmaSizeConstraintConflict(
+        _ conflict: XomoFigmaSizeConstraintConflict
+    ) {
+        guard let constraints = selectedLayerFigmaSizeConstraints,
+              constraints.conflicts.contains(conflict),
+              let minimum = conflict.minimumField.value(in: constraints)
+        else { return }
+        setSelectedFigmaSizeConstraint(conflict.maximumField, value: minimum)
+    }
+
     var hasSelectedFigmaSizeConstraintOverrides: Bool {
         XomoFigmaSizeConstraintField.allCases.contains {
             hasSelectedFigmaSizeConstraintOverride($0)

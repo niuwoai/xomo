@@ -7266,13 +7266,26 @@ struct ImageEditorView: View {
                                 figmaSizeConstraintEditorRow(field)
                             }
                             ForEach(viewModel.selectedLayerFigmaSizeConstraintConflicts, id: \.self) { conflict in
-                                Label(
-                                    L10n.text(conflict.localizationKey),
-                                    systemImage: "exclamationmark.triangle.fill"
-                                )
-                                .font(.system(size: 9))
-                                .foregroundStyle(Color.orange.opacity(0.92))
-                                .fixedSize(horizontal: false, vertical: true)
+                                HStack(alignment: .firstTextBaseline, spacing: 6) {
+                                    Label(
+                                        L10n.text(conflict.localizationKey),
+                                        systemImage: "exclamationmark.triangle.fill"
+                                    )
+                                    .font(.system(size: 9))
+                                    .foregroundStyle(Color.orange.opacity(0.92))
+                                    .fixedSize(horizontal: false, vertical: true)
+                                    Spacer(minLength: 4)
+                                    Button(L10n.text("imageEditor.action.resolveFigmaSizeConstraintConflict")) {
+                                        focusedFigmaSizeConstraintField = nil
+                                        viewModel.resolveSelectedFigmaSizeConstraintConflict(conflict)
+                                        syncFigmaSizeConstraintDrafts()
+                                    }
+                                    .buttonStyle(EditorTextButtonStyle())
+                                    .focusable(false)
+                                    .accessibilityIdentifier(
+                                        "image-editor-figma-size-constraint-conflict-\(conflict.rawValue)-resolve"
+                                    )
+                                }
                                 .accessibilityIdentifier(
                                     "image-editor-figma-size-constraint-conflict-\(conflict.rawValue)"
                                 )

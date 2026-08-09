@@ -3140,6 +3140,7 @@
 "imageEditor.properties.figmaSizeConstraintsActive" = "自動レイアウトの再配置時に適用";
 "imageEditor.properties.figmaSizeConstraintConflict.width" = "最小幅が最大幅を超えています。レイアウトでは最小値を優先します";
 "imageEditor.properties.figmaSizeConstraintConflict.height" = "最小高さが最大高さを超えています。レイアウトでは最小値を優先します";
+"imageEditor.action.resolveFigmaSizeConstraintConflict" = "最小値に合わせる";
 "imageEditor.action.clearFigmaSizeConstraint" = "サイズ制約をクリア";
 "imageEditor.action.resetFigmaSizeConstraint" = "読み込んだサイズ制約に戻す";
 "imageEditor.action.resetAllFigmaSizeConstraints" = "すべて戻す";

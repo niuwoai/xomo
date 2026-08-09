@@ -3140,6 +3140,7 @@
 "imageEditor.properties.figmaSizeConstraintsActive" = "Applied during Auto Layout reflow";
 "imageEditor.properties.figmaSizeConstraintConflict.width" = "Minimum width exceeds maximum; layout prioritizes the minimum";
 "imageEditor.properties.figmaSizeConstraintConflict.height" = "Minimum height exceeds maximum; layout prioritizes the minimum";
+"imageEditor.action.resolveFigmaSizeConstraintConflict" = "Use minimum";
 "imageEditor.action.clearFigmaSizeConstraint" = "Clear size constraint";
 "imageEditor.action.resetFigmaSizeConstraint" = "Restore imported size constraint";
 "imageEditor.action.resetAllFigmaSizeConstraints" = "Restore all";

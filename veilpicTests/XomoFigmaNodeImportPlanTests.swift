@@ -3468,6 +3468,10 @@ struct XomoFigmaNodeImportPlanTests {
         )
 
         #expect(constraints.conflicts == [.width, .height])
+        #expect(XomoFigmaSizeConstraintConflict.width.minimumField == .minWidth)
+        #expect(XomoFigmaSizeConstraintConflict.width.maximumField == .maxWidth)
+        #expect(XomoFigmaSizeConstraintConflict.height.minimumField == .minHeight)
+        #expect(XomoFigmaSizeConstraintConflict.height.maximumField == .maxHeight)
         #expect(constraints.minWidth == 240)
         #expect(constraints.maxWidth == 200)
         #expect(XomoFigmaSizeConstraints(

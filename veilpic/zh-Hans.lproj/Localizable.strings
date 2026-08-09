@@ -3140,6 +3140,7 @@
 "imageEditor.properties.figmaSizeConstraintsActive" = "在自动布局重排时生效";
 "imageEditor.properties.figmaSizeConstraintConflict.width" = "宽度最小值大于最大值；布局优先满足最小值";
 "imageEditor.properties.figmaSizeConstraintConflict.height" = "高度最小值大于最大值；布局优先满足最小值";
+"imageEditor.action.resolveFigmaSizeConstraintConflict" = "按最小值修复";
 "imageEditor.action.clearFigmaSizeConstraint" = "清除尺寸约束";
 "imageEditor.action.resetFigmaSizeConstraint" = "恢复导入的尺寸约束";
 "imageEditor.action.resetAllFigmaSizeConstraints" = "全部恢复";
