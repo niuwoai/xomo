@@ -957,6 +957,29 @@ struct XomoFigmaNodeImportPlanTests {
         #expect(abs(shape.fillOpacity - 1) < 0.001)
     }
 
+    @Test func outOfRangeFigmaGradientStopsUseOrderedEditableFallback() throws {
+        let response = try JSONDecoder().decode(
+            XomoFigmaNodeResponse.self,
+            from: Data(
+                #"{"name":"Gradient Stop Bounds","nodes":{"1:33":{"document":{"id":"1:33","name":"Gradient Stop Bounds","type":"RECTANGLE","fills":[{"type":"GRADIENT_LINEAR","gradientHandlePositions":[{"x":0,"y":0.5},{"x":1,"y":0.5},{"x":0,"y":0}],"gradientStops":[{"position":-0.2,"color":{"r":1,"g":0,"b":0}},{"position":0.4,"color":{"r":0,"g":1,"b":0}},{"position":1.3,"color":{"r":0,"g":0,"b":1}}]}],"absoluteBoundingBox":{"x":0,"y":0,"width":120,"height":60}}}}}"#.utf8
+            )
+        )
+
+        let plan = try XomoFigmaNodeImportMapper.makePlan(response: response, requestedNodeID: "1:33")
+        let item = try #require(plan.items.first)
+        let gradient = try #require(item.linearGradientFill)
+        #expect(item.fidelity == .partial)
+        #expect(item.issues.contains(.unsupportedPaint))
+        #expect(gradient.colorStops.map(\.position) == [0, 0.4, 1])
+
+        let result = XomoFigmaNodeMaterializer.materialize(
+            plan: plan,
+            canvasSize: CGSize(width: 240, height: 160)
+        )
+        let shape = try #require(result.layers.first?.shapeContent)
+        #expect(shape.fillGradient?.shapeColorStops.map(\.position) == [0, 0.4, 1])
+    }
+
     @Test func outOfRangeFigmaNodeOpacityReportsAndUsesEditableBounds() throws {
         let response = try JSONDecoder().decode(
             XomoFigmaNodeResponse.self,

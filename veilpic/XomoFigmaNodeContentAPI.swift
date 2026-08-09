@@ -803,6 +803,10 @@ enum XomoFigmaNodeImportMapper {
             ["GRADIENT_LINEAR", "GRADIENT_RADIAL"].contains(paint.type)
                 && !hasSupportedGradientColorComponents(paint)
         }
+        let hasUnsupportedGradientStopPosition = visiblePaints.contains { paint in
+            ["GRADIENT_LINEAR", "GRADIENT_RADIAL"].contains(paint.type)
+                && !hasSupportedGradientStopPositions(paint)
+        }
         let hasUnsupportedFill = visiblePaints.contains { paint in
             if paint.type == "SOLID" { return false }
             guard allowsGradientFill else { return true }
@@ -819,6 +823,7 @@ enum XomoFigmaNodeImportMapper {
             || hasUnsupportedSolidPaint
             || hasUnsupportedPaintBlendMode
             || hasUnsupportedGradientColor
+            || hasUnsupportedGradientStopPosition
             || hasUnsupportedFill
             || visibleStrokes.count > 1
             || visibleStrokes.contains(where: { $0.type != "SOLID" }) {
@@ -844,6 +849,18 @@ enum XomoFigmaNodeImportMapper {
             [stop.color.r, stop.color.g, stop.color.b, stop.color.a ?? 1].allSatisfy {
                 validUnitValue($0) != nil
             }
+        }
+    }
+
+    private static func hasSupportedGradientStopPositions(_ paint: XomoFigmaPaint) -> Bool {
+        guard let stops = paint.gradientStops,
+              (2...ImageEditorGradientFillContent.maximumColorStopCount).contains(stops.count),
+              stops.allSatisfy({ $0.position.isFinite && (0...1).contains($0.position) }),
+              abs(stops[0].position) <= 0.001,
+              abs((stops.last?.position ?? 0) - 1) <= 0.001
+        else { return false }
+        return zip(stops, stops.dropFirst()).allSatisfy { pair in
+            pair.0.position <= pair.1.position
         }
     }
 
@@ -1000,29 +1017,34 @@ enum XomoFigmaNodeImportMapper {
     ) -> ResolvedGradientStops? {
         guard let stops = paint.gradientStops,
               (2...ImageEditorGradientFillContent.maximumColorStopCount).contains(stops.count),
-              abs(stops[0].position) <= 0.001,
-              abs((stops.last?.position ?? 0) - 1) <= 0.001
+              stops.allSatisfy({ $0.position.isFinite }),
+              zip(stops, stops.dropFirst()).allSatisfy({ pair in
+                  pair.0.position <= pair.1.position
+              })
         else { return nil }
 
         let paintOpacity = normalizedColorComponent(paint.opacity ?? 1, fallback: 1)
         let colors = stops.compactMap(normalizedGradientStopColor)
         guard colors.count == stops.count,
-              zip(stops, stops.dropFirst()).allSatisfy({ pair in
-                  pair.0.position <= pair.1.position
-              }),
               let first = colors.first,
               let last = colors.last,
               colors.allSatisfy({ abs($0.alpha - first.alpha) <= 0.001 })
         else { return nil }
+        let lastIndex = stops.index(before: stops.endIndex)
+        let normalizedPositions = stops.indices.map { index in
+            if index == stops.startIndex { return 0.0 }
+            if index == lastIndex { return 1.0 }
+            return normalizedColorComponent(stops[index].position, fallback: 0)
+        }
 
         return ResolvedGradientStops(
             startColor: opaqueColor(first),
             endColor: opaqueColor(last),
             opacity: first.alpha * paintOpacity,
-            colorStops: zip(stops, colors).map { pair in
-                let (stop, color) = pair
+            colorStops: zip(normalizedPositions, colors).map { pair in
+                let (position, color) = pair
                 return XomoFigmaPlanGradientStop(
-                    position: stop.position,
+                    position: position,
                     color: opaqueColor(color)
                 )
             }
