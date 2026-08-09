@@ -2756,6 +2756,36 @@ struct XomoFigmaNodeImportPlanTests {
         #expect(blurredLayer.smartFilters.last?.appliesToBackdrop == true)
     }
 
+    @Test func outOfRangeFigmaEffectsUseEditableBoundsAndReportPartialFidelity() throws {
+        let response = try JSONDecoder().decode(
+            XomoFigmaNodeResponse.self,
+            from: Data(
+                #"{"name":"Effect Bounds","nodes":{"1:42":{"document":{"id":"1:42","name":"Effect Bounds","type":"RECTANGLE","effects":[{"type":"DROP_SHADOW","radius":45,"spread":30,"offset":{"x":4,"y":6},"color":{"r":1.2,"g":-0.2,"b":0.4,"a":1.3}},{"type":"LAYER_BLUR","radius":300}],"absoluteBoundingBox":{"x":0,"y":0,"width":120,"height":80}}}}}"#.utf8
+            )
+        )
+
+        let plan = try XomoFigmaNodeImportMapper.makePlan(response: response, requestedNodeID: "1:42")
+        let item = try #require(plan.items.first)
+        #expect(item.fidelity == .partial)
+        #expect(item.issues.contains(.effectsFlattened))
+        #expect(item.effects.count == 2)
+        let shadow = try #require(item.effects.first { $0.kind == .dropShadow })
+        #expect(shadow.radius == 30)
+        #expect(shadow.spread == 24)
+        #expect(shadow.color == XomoFigmaPlanColor(red: 1, green: 0, blue: 0.4, alpha: 1))
+        #expect(item.effects.first { $0.kind == .layerBlur }?.radius == 256)
+
+        let result = XomoFigmaNodeMaterializer.materialize(
+            plan: plan,
+            canvasSize: CGSize(width: 240, height: 180)
+        )
+        let layer = try #require(result.layers.first)
+        #expect(layer.style.shadowBlur == 30)
+        #expect(layer.style.shadowSpread == 24)
+        #expect(layer.style.shadowOpacity == 1)
+        #expect(layer.smartFilters.first?.normalizedSettings.gaussianBlurRadius == 256)
+    }
+
     @Test func materializerCreatesEditableHierarchyAtCenteredScaleAndHonestPlaceholder() throws {
         let plan = try Self.decodedPlan()
         let textPlan = try #require(plan.items.first { $0.sourceName == "Continue Label" })

@@ -600,8 +600,28 @@ enum XomoFigmaNodeImportMapper {
     }
 
     private static func isSupportedEffect(_ effect: XomoFigmaEffect) -> Bool {
+        guard isMappableEffect(effect) else { return false }
         guard effect.visible ?? true else { return true }
         guard let type = effect.type,
+              let radius = effect.radius,
+              let maximumRadius = maximumEffectRadius(for: type),
+              radius <= maximumRadius
+        else { return false }
+        if type == "LAYER_BLUR" || type == "BACKGROUND_BLUR" {
+            return true
+        }
+        guard let color = effect.color,
+              [color.r, color.g, color.b, color.a ?? 1].allSatisfy({
+                  $0.isFinite && (0...1).contains($0)
+              })
+        else { return false }
+        return (0...maximumShadowSpread).contains(effect.spread ?? 0)
+    }
+
+    private static func isMappableEffect(_ effect: XomoFigmaEffect) -> Bool {
+        guard effect.visible ?? true else { return true }
+        guard let type = effect.type,
+              maximumEffectRadius(for: type) != nil,
               let radius = effect.radius,
               radius.isFinite,
               radius >= 0
@@ -609,20 +629,20 @@ enum XomoFigmaNodeImportMapper {
         if type == "LAYER_BLUR" || type == "BACKGROUND_BLUR" {
             return true
         }
-        guard type == "DROP_SHADOW" || type == "INNER_SHADOW",
-              let color = effect.color,
-              [color.r, color.g, color.b, color.a ?? 1].allSatisfy({ $0.isFinite }),
+        guard let color = effect.color,
+              [color.r, color.g, color.b, color.a ?? 1].allSatisfy(\.isFinite),
               let offset = effect.offset,
               offset.x.isFinite,
-              offset.y.isFinite
+              offset.y.isFinite,
+              (effect.spread ?? 0).isFinite
         else { return false }
-        return (effect.spread ?? 0).isFinite
+        return true
     }
 
     private static func mappedEffects(_ effects: [XomoFigmaEffect]?) -> [XomoFigmaPlanEffect] {
         (effects ?? []).compactMap { effect in
             guard effect.visible ?? true,
-                  isSupportedEffect(effect),
+                  isMappableEffect(effect),
                   let type = effect.type,
                   let radius = effect.radius
             else { return nil }
@@ -632,7 +652,7 @@ enum XomoFigmaNodeImportMapper {
                     color: XomoFigmaPlanColor(red: 0, green: 0, blue: 0, alpha: 0),
                     offsetX: 0,
                     offsetY: 0,
-                    radius: max(0, radius),
+                    radius: min(radius, maximumBlurRadius),
                     spread: 0
                 )
             }
@@ -647,9 +667,23 @@ enum XomoFigmaNodeImportMapper {
                 ),
                 offsetX: offset.x,
                 offsetY: offset.y,
-                radius: max(0, radius),
-                spread: max(0, effect.spread ?? 0)
+                radius: min(radius, type == "INNER_SHADOW" ? maximumInnerShadowBlur : maximumDropShadowBlur),
+                spread: min(max(0, effect.spread ?? 0), maximumShadowSpread)
             )
+        }
+    }
+
+    private static let maximumDropShadowBlur = 30.0
+    private static let maximumInnerShadowBlur = 40.0
+    private static let maximumShadowSpread = 24.0
+    private static let maximumBlurRadius = 256.0
+
+    private static func maximumEffectRadius(for type: String) -> Double? {
+        switch type {
+        case "DROP_SHADOW": return maximumDropShadowBlur
+        case "INNER_SHADOW": return maximumInnerShadowBlur
+        case "LAYER_BLUR", "BACKGROUND_BLUR": return maximumBlurRadius
+        default: return nil
         }
     }
 
