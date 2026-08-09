@@ -187,7 +187,8 @@ extension ImageEditorViewModel {
         height: Double? = nil,
         preservingAspectRatio: Bool = false
     ) {
-        guard canResizeSelectedLayer,
+        let changesSize = width != nil || height != nil
+        guard (changesSize ? canResizeSelectedLayer : canMoveSelectedLayer),
               let currentFrame = selectedLayerTransformFrame
         else { return }
 
@@ -525,7 +526,10 @@ extension ImageEditorViewModel {
     }
 
     func beginResizingSelectedLayer(handle: ImageEditorLayerResizeHandle) {
-        guard resizingLayerIDs.isEmpty else { return }
+        guard resizingLayerIDs.isEmpty, canResizeSelectedLayer else {
+            statusText = L10n.text("imageEditor.status.layerLocked")
+            return
+        }
         let indices = editableTransformLayerIndices()
         guard !indices.isEmpty,
               let transformFrame = selectedXomoObjectFrame ?? transformFrame(for: indices)
@@ -622,7 +626,10 @@ extension ImageEditorViewModel {
     }
 
     func beginRotatingSelectedLayer(from point: CGPoint) {
-        guard rotatingLayerIDs.isEmpty else { return }
+        guard rotatingLayerIDs.isEmpty, canRotateSelectedLayer else {
+            statusText = L10n.text("imageEditor.status.layerLocked")
+            return
+        }
         let indices = editableTransformLayerIndices()
         guard !indices.isEmpty,
               let transformFrame = transformFrame(for: indices)
@@ -716,6 +723,10 @@ extension ImageEditorViewModel {
 
     func scaleSelectedLayer(by factor: CGFloat) {
         guard factor > 0 else { return }
+        guard canResizeSelectedLayer else {
+            statusText = L10n.text("imageEditor.status.layerLocked")
+            return
+        }
         let indices = editableTransformLayerIndices()
         guard !indices.isEmpty,
               let transformFrame = transformFrame(for: indices)
@@ -753,6 +764,10 @@ extension ImageEditorViewModel {
 
     func rotateSelectedLayer(degrees: CGFloat) {
         guard abs(degrees) > 0.01 else { return }
+        guard canRotateSelectedLayer else {
+            statusText = L10n.text("imageEditor.status.layerLocked")
+            return
+        }
         let indices = editableTransformLayerIndices()
         guard !indices.isEmpty,
               let transformFrame = transformFrame(for: indices)
@@ -1066,6 +1081,10 @@ extension ImageEditorViewModel {
     }
 
     private func flipSelectedLayer(horizontal: Bool, historyTitle: String, status: String) {
+        guard canFlipSelectedLayer else {
+            statusText = L10n.text("imageEditor.status.layerLocked")
+            return
+        }
         let indices = editableTransformLayerIndices()
         guard !indices.isEmpty,
               let transformFrame = transformFrame(for: indices)
@@ -1141,6 +1160,10 @@ extension ImageEditorViewModel {
         historyTitle: String,
         status: String
     ) {
+        guard canResizeSelectedLayer else {
+            statusText = L10n.text("imageEditor.status.layerLocked")
+            return
+        }
         let indices = editableTransformLayerIndices()
         guard !indices.isEmpty,
               let transformFrame = transformFrame(for: indices)
