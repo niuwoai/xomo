@@ -3403,6 +3403,38 @@ struct XomoFigmaNodeImportPlanTests {
         #expect(invalidLegacy.fidelity == .partial)
     }
 
+    @Test func figmaAutoLayoutChildPositioningPreservesNativeModesAndReportsUnknownValues() throws {
+        let response = try JSONDecoder().decode(
+            XomoFigmaNodeResponse.self,
+            from: Data(
+                #"{"name":"Child positioning","nodes":{"1:120":{"document":{"id":"1:120","name":"Parent","type":"FRAME","layoutMode":"HORIZONTAL","absoluteBoundingBox":{"x":0,"y":0,"width":700,"height":300},"children":[{"id":"2:120","name":"Flow","type":"RECTANGLE","layoutPositioning":"AUTO","absoluteBoundingBox":{"x":0,"y":0,"width":120,"height":80}},{"id":"2:121","name":"Pinned","type":"RECTANGLE","layoutPositioning":"ABSOLUTE","absoluteBoundingBox":{"x":140,"y":0,"width":120,"height":80}},{"id":"2:122","name":"Unknown","type":"RECTANGLE","layoutPositioning":"FLOATING","absoluteBoundingBox":{"x":280,"y":0,"width":120,"height":80}}]}}}}"#.utf8
+            )
+        )
+        let plan = try XomoFigmaNodeImportMapper.makePlan(
+            response: response,
+            requestedNodeID: "1:120"
+        )
+        let flow = try #require(plan.items.first { $0.sourceID == "2:120" })
+        let pinned = try #require(plan.items.first { $0.sourceID == "2:121" })
+        let unknown = try #require(plan.items.first { $0.sourceID == "2:122" })
+
+        #expect(!flow.isStackLayoutExcluded)
+        #expect(flow.fidelity == .exact)
+        #expect(pinned.isStackLayoutExcluded)
+        #expect(pinned.fidelity == .exact)
+        #expect(!unknown.isStackLayoutExcluded)
+        #expect(unknown.issues.contains(.autoLayoutFlattened))
+        #expect(unknown.fidelity == .partial)
+
+        let materialized = XomoFigmaNodeMaterializer.materialize(
+            plan: plan,
+            canvasSize: CGSize(width: 800, height: 500)
+        )
+        #expect(materialized.layers.first { $0.name == "Flow" }?.isStackLayoutExcluded == false)
+        #expect(materialized.layers.first { $0.name == "Pinned" }?.isStackLayoutExcluded == true)
+        #expect(materialized.layers.first { $0.name == "Unknown" }?.isStackLayoutExcluded == false)
+    }
+
     private static let validNodeResponse = Data(
         """
         {

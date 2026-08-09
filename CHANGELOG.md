@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.12.0-rc768 - 2026-08-10
+
+### Fixed
+- Figma 自动布局子项的 `layoutPositioning=AUTO` 保持参与流式布局，`ABSOLUTE` 保持排除布局；未知定位值使用安全的流式回退并明确报告部分保真。
+- 定位语义从导入计划完整传递到实际可编辑图层，避免计划与画布状态不一致。
+
+### Tests
+- 新增子项定位保真回归 1/1 通过，覆盖 AUTO、ABSOLUTE、未知值的导入计划、fidelity 和最终图层 `isStackLayoutExcluded` 状态。
+
 ## 2.12.0-rc767 - 2026-08-10
 
 ### Fixed

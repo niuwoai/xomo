@@ -269,6 +269,10 @@ enum XomoFigmaNodeImportMapper {
            hasUnsupportedStackChildSizing(node, parentAxis: parentStackAxis) {
             issues.append(.autoLayoutFlattened)
         }
+        if parentStackAxis != nil,
+           hasUnsupportedStackChildPositioning(node) {
+            issues.append(.autoLayoutFlattened)
+        }
         if node.isMask == true,
            supportedMaskShape(node) == nil {
             issues.append(.maskFlattened)
@@ -669,6 +673,11 @@ enum XomoFigmaNodeImportMapper {
             return true
         }
         return false
+    }
+
+    private static func hasUnsupportedStackChildPositioning(_ node: XomoFigmaNode) -> Bool {
+        guard let positioning = node.layoutPositioning else { return false }
+        return positioning != "AUTO" && positioning != "ABSOLUTE"
     }
 
     private static func isSupportedEffect(_ effect: XomoFigmaEffect) -> Bool {
