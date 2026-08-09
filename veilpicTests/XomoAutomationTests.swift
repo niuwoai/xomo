@@ -3843,6 +3843,53 @@ struct XomoAutomationTests {
             #expect(viewModel.document.history.count == historyCountBeforeInvalidCreate)
         }
 
+        for (key, value): (String, XomoJSONValue) in [
+            ("cornerRadius", .number(-1)),
+            ("cornerRadius", .string("4")),
+            ("cornerSmoothing", .number(-0.01)),
+            ("cornerSmoothing", .number(1.01)),
+            ("cornerSmoothing", .bool(true))
+        ] {
+            let invalidCornerCreate = registry.execute(request(
+                operation: "call",
+                name: "xomo.shape.create",
+                arguments: [
+                    "kind": .string("rectangle"),
+                    "x": .number(0), "y": .number(0),
+                    "width": .number(40), "height": .number(20),
+                    key: value
+                ]
+            ))
+            #expect(!invalidCornerCreate.ok)
+            #expect(viewModel.document.layers.count == layerCountBeforeInvalidCreate)
+            #expect(viewModel.document.history.count == historyCountBeforeInvalidCreate)
+        }
+
+        for invalidCornerRadii: XomoJSONValue in [
+            .object([
+                "topLeft": .number(-1), "topRight": .number(2),
+                "bottomRight": .number(3), "bottomLeft": .number(4)
+            ]),
+            .object([
+                "topLeft": .string("1"), "topRight": .number(2),
+                "bottomRight": .number(3), "bottomLeft": .number(4)
+            ])
+        ] {
+            let invalidCornerCreate = registry.execute(request(
+                operation: "call",
+                name: "xomo.shape.create",
+                arguments: [
+                    "kind": .string("rectangle"),
+                    "x": .number(0), "y": .number(0),
+                    "width": .number(40), "height": .number(20),
+                    "cornerRadii": invalidCornerRadii
+                ]
+            ))
+            #expect(!invalidCornerCreate.ok)
+            #expect(viewModel.document.layers.count == layerCountBeforeInvalidCreate)
+            #expect(viewModel.document.history.count == historyCountBeforeInvalidCreate)
+        }
+
         let toolsResponse = registry.execute(request(operation: "tools"))
         let tools = try #require(toolsResponse.result?.arrayValue)
         let createTool = try #require(tools.compactMap(\.objectValue).first {
@@ -3870,6 +3917,11 @@ struct XomoAutomationTests {
         #expect(createProperties["fillOpacity"]?.objectValue?["maximum"] == .number(1))
         #expect(createProperties["strokeOpacity"]?.objectValue?["minimum"] == .number(0))
         #expect(createProperties["strokeOpacity"]?.objectValue?["maximum"] == .number(1))
+        #expect(createProperties["cornerRadius"]?.objectValue?["minimum"] == .number(0))
+        #expect(createProperties["cornerSmoothing"]?.objectValue?["minimum"] == .number(0))
+        #expect(createProperties["cornerSmoothing"]?.objectValue?["maximum"] == .number(1))
+        let cornerProperties = createProperties["cornerRadii"]?.objectValue?["properties"]?.objectValue
+        #expect(cornerProperties?["topLeft"]?.objectValue?["minimum"] == .number(0))
         #expect(createProperties["strokeDashPattern"]?.objectValue?["type"] == .string("array"))
     }
 
@@ -4022,6 +4074,93 @@ struct XomoAutomationTests {
         for key in ["opacity", "fillOpacity", "strokeOpacity"] {
             #expect(properties?[key]?.objectValue?["minimum"] == .number(0))
             #expect(properties?[key]?.objectValue?["maximum"] == .number(1))
+        }
+    }
+
+    @Test func shapeCornerAutomationRejectsInvalidGeometryAtomically() throws {
+        let viewModel = makeViewModel()
+        viewModel.drawShape(
+            from: CGPoint(x: 8, y: 8),
+            to: CGPoint(x: 88, y: 48),
+            ellipse: false
+        )
+        let firstID = try #require(viewModel.document.selectedLayerID)
+        viewModel.drawShape(
+            from: CGPoint(x: 98, y: 18),
+            to: CGPoint(x: 178, y: 58),
+            ellipse: false
+        )
+        let secondID = try #require(viewModel.document.selectedLayerID)
+        viewModel.document.selectedLayerIDs = [firstID, secondID]
+        viewModel.document.selectedLayerID = secondID
+
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        let historyCount = viewModel.document.history.count
+        let updated = registry.execute(request(
+            operation: "call",
+            name: "xomo.shape.update",
+            arguments: [
+                "cornerRadii": .object([
+                    "topLeft": .number(4), "topRight": .number(8),
+                    "bottomRight": .number(12), "bottomLeft": .number(16)
+                ]),
+                "cornerSmoothing": .number(0.75)
+            ]
+        ))
+        #expect(updated.ok)
+        #expect(updated.result == .object(["updatedLayerCount": .number(2)]))
+        #expect(viewModel.document.history.count == historyCount + 1)
+        for layerID in [firstID, secondID] {
+            let content = viewModel.document.layers.first { $0.id == layerID }?.shapeContent
+            #expect(content?.cornerRadii?.bottomLeft == 16)
+            #expect(content?.cornerSmoothing == 0.75)
+        }
+
+        let stableHistoryCount = viewModel.document.history.count
+        for arguments: [String: XomoJSONValue] in [
+            ["cornerRadius": .number(-1), "strokeWidth": .number(12)],
+            ["cornerRadius": .string("4"), "strokeWidth": .number(12)],
+            ["cornerSmoothing": .number(1.01), "strokeWidth": .number(12)],
+            ["cornerSmoothing": .bool(true), "strokeWidth": .number(12)],
+            [
+                "cornerRadii": .object([
+                    "topLeft": .number(4), "topRight": .number(-1),
+                    "bottomRight": .number(12), "bottomLeft": .number(16)
+                ]),
+                "strokeWidth": .number(12)
+            ]
+        ] {
+            let invalid = registry.execute(request(
+                operation: "call",
+                name: "xomo.shape.update",
+                arguments: arguments
+            ))
+            #expect(!invalid.ok)
+            #expect(viewModel.document.history.count == stableHistoryCount)
+            for layerID in [firstID, secondID] {
+                let content = viewModel.document.layers.first { $0.id == layerID }?.shapeContent
+                #expect(content?.cornerRadii?.bottomLeft == 16)
+                #expect(content?.cornerSmoothing == 0.75)
+                #expect(content?.strokeWidth != 12)
+            }
+        }
+
+        let inspected = registry.execute(request(operation: "call", name: "xomo.shape.get"))
+        #expect(inspected.result?.objectValue?["cornerSmoothing"] == .number(0.75))
+
+        let toolsResponse = registry.execute(request(operation: "tools"))
+        let tools = try #require(toolsResponse.result?.arrayValue)
+        let updateTool = try #require(tools.compactMap(\.objectValue).first {
+            $0["name"] == .string("xomo.shape.update")
+        })
+        let properties = updateTool["inputSchema"]?.objectValue?["properties"]?.objectValue
+        #expect(properties?["cornerRadius"]?.objectValue?["minimum"] == .number(0))
+        #expect(properties?["cornerSmoothing"]?.objectValue?["minimum"] == .number(0))
+        #expect(properties?["cornerSmoothing"]?.objectValue?["maximum"] == .number(1))
+        let radii = properties?["cornerRadii"]?.objectValue?["properties"]?.objectValue
+        for key in ["topLeft", "topRight", "bottomRight", "bottomLeft"] {
+            #expect(radii?[key]?.objectValue?["minimum"] == .number(0))
         }
     }
 

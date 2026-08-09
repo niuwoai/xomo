@@ -476,7 +476,9 @@ final class XomoAutomationRegistry {
                 )
             }
             let origin = try requiredPoint(arguments)
+            let cornerRadius = try optionalNonnegativeNumber("cornerRadius", in: arguments)
             let cornerRadii = try optionalCornerRadii(arguments)
+            let cornerSmoothing = try optionalUnitInterval("cornerSmoothing", in: arguments)
             try validateExclusiveCornerArguments(arguments)
             var fillGradient = try optionalShapeGradient(arguments)
             let fillGradientCenter = try optionalShapeGradientCenter(arguments)
@@ -517,9 +519,9 @@ final class XomoAutomationRegistry {
                 from: origin,
                 to: end,
                 ellipse: shapeKind == .ellipse,
-                cornerRadius: arguments["cornerRadius"]?.doubleValue,
+                cornerRadius: cornerRadius,
                 cornerRadii: cornerRadii,
-                cornerSmoothing: arguments["cornerSmoothing"]?.doubleValue,
+                cornerSmoothing: cornerSmoothing,
                 fillColor: fillColor,
                 fillGradient: fillGradient,
                 fillGradientCenter: fillGradientCenter,
@@ -1976,7 +1978,9 @@ final class XomoAutomationRegistry {
             throw XomoAutomationCallError.operationFailed("No selected shape layer")
         }
         try validateExclusiveCornerArguments(arguments)
+        let cornerRadius = try optionalNonnegativeNumber("cornerRadius", in: arguments)
         let cornerRadii = try optionalCornerRadii(arguments)
+        let cornerSmoothing = try optionalUnitInterval("cornerSmoothing", in: arguments)
         let fillGradient = try optionalShapeGradient(arguments)
         let fillGradientCenter = try optionalShapeGradientCenter(arguments)
         try validateShapeFillArguments(arguments, fillGradient: fillGradient)
@@ -2023,9 +2027,9 @@ final class XomoAutomationRegistry {
             strokeJoin: strokeJoin,
             strokeMiterLimit: strokeMiterLimit,
             strokeDashPattern: strokeDashPattern,
-            cornerRadius: arguments["cornerRadius"]?.doubleValue,
+            cornerRadius: cornerRadius,
             cornerRadii: cornerRadii,
-            cornerSmoothing: arguments["cornerSmoothing"]?.doubleValue
+            cornerSmoothing: cornerSmoothing
         )
         guard updatedLayerCount > 0 else {
             throw XomoAutomationCallError.operationFailed("Shape update made no changes")
@@ -2107,6 +2111,30 @@ final class XomoAutomationRegistry {
             throw XomoAutomationCallError.invalidArgument(
                 "\(key) must be a number from 0 through 1"
             )
+        }
+        return number
+    }
+
+    private func optionalNonnegativeNumber(
+        _ key: String,
+        in arguments: [String: XomoJSONValue]
+    ) throws -> Double? {
+        guard arguments[key] != nil else { return nil }
+        let number = try requiredNumber(key, in: arguments)
+        guard number >= 0 else {
+            throw XomoAutomationCallError.invalidArgument(
+                "\(key) must be a nonnegative number"
+            )
+        }
+        return number
+    }
+
+    private func requiredNonnegativeNumber(
+        _ key: String,
+        in arguments: [String: XomoJSONValue]
+    ) throws -> Double {
+        guard let number = try optionalNonnegativeNumber(key, in: arguments) else {
+            throw XomoAutomationCallError.invalidArgument("Missing number argument: \(key)")
         }
         return number
     }
@@ -2328,10 +2356,10 @@ final class XomoAutomationRegistry {
             throw XomoAutomationCallError.invalidArgument("cornerRadii must be an object")
         }
         return ImageEditorRectangleCornerRadii(
-            topLeft: CGFloat(try requiredNumber("topLeft", in: object)),
-            topRight: CGFloat(try requiredNumber("topRight", in: object)),
-            bottomRight: CGFloat(try requiredNumber("bottomRight", in: object)),
-            bottomLeft: CGFloat(try requiredNumber("bottomLeft", in: object))
+            topLeft: CGFloat(try requiredNonnegativeNumber("topLeft", in: object)),
+            topRight: CGFloat(try requiredNonnegativeNumber("topRight", in: object)),
+            bottomRight: CGFloat(try requiredNonnegativeNumber("bottomRight", in: object)),
+            bottomLeft: CGFloat(try requiredNonnegativeNumber("bottomLeft", in: object))
         )
     }
 
@@ -5954,9 +5982,9 @@ private extension XomoAutomationRegistry {
             "fillKind": XomoAutomationSchema.string(description: "Shape fill type", values: ["solid", "linearGradient", "radialGradient"]),
             "fillColor": shapeColorSchema,
             "fillGradient": shapeGradientSchema,
-            "fillOpacity": shapeOpacitySchema(description: "Independent fill opacity"),
+            "fillOpacity": shapeUnitIntervalSchema(description: "Independent fill opacity"),
             "strokeColor": shapeColorSchema,
-            "strokeOpacity": shapeOpacitySchema(description: "Independent stroke opacity"),
+            "strokeOpacity": shapeUnitIntervalSchema(description: "Independent stroke opacity"),
             "strokeWidth": shapeStrokeWidthSchema,
             "strokePosition": XomoAutomationSchema.string(
                 description: "Stroke alignment relative to the shape boundary",
@@ -5977,19 +6005,19 @@ private extension XomoAutomationRegistry {
                 "items": XomoAutomationSchema.number(description: "Dash or gap length in pixels"),
                 "maxItems": .number(16)
             ]),
-            "cornerRadius": XomoAutomationSchema.number(description: "Optional uniform rectangle corner radius in pixels"),
+            "cornerRadius": shapeNonnegativeNumberSchema(description: "Optional uniform rectangle corner radius in pixels"),
             "cornerRadii": rectangleCornerRadiiSchema,
-            "cornerSmoothing": XomoAutomationSchema.number(description: "Editable superellipse smoothing from 0 to 1")
+            "cornerSmoothing": shapeUnitIntervalSchema(description: "Editable superellipse smoothing")
         ], required: ["kind", "x", "y", "width", "height"]),
         tool("xomo.shape.get", "Inspect the selected editable shape layer."),
         tool("xomo.shape.update", "Update only the specified fill, stroke, and rectangle corner properties of selected editable shapes.", [
-            "opacity": shapeOpacitySchema(description: "Legacy shared fill and stroke opacity"),
+            "opacity": shapeUnitIntervalSchema(description: "Legacy shared fill and stroke opacity"),
             "fillKind": XomoAutomationSchema.string(description: "Shape fill type", values: ["solid", "linearGradient", "radialGradient"]),
             "fillColor": shapeColorSchema,
             "fillGradient": shapeGradientSchema,
-            "fillOpacity": shapeOpacitySchema(description: "Independent fill opacity"),
+            "fillOpacity": shapeUnitIntervalSchema(description: "Independent fill opacity"),
             "strokeColor": shapeColorSchema,
-            "strokeOpacity": shapeOpacitySchema(description: "Independent stroke opacity"),
+            "strokeOpacity": shapeUnitIntervalSchema(description: "Independent stroke opacity"),
             "strokeWidth": shapeStrokeWidthSchema,
             "strokePosition": XomoAutomationSchema.string(
                 description: "Stroke alignment relative to the shape boundary",
@@ -6010,9 +6038,9 @@ private extension XomoAutomationRegistry {
                 "items": XomoAutomationSchema.number(description: "Dash or gap length in pixels"),
                 "maxItems": .number(16)
             ]),
-            "cornerRadius": XomoAutomationSchema.number(description: "Uniform rectangle corner radius in pixels"),
+            "cornerRadius": shapeNonnegativeNumberSchema(description: "Uniform rectangle corner radius in pixels"),
             "cornerRadii": rectangleCornerRadiiSchema,
-            "cornerSmoothing": XomoAutomationSchema.number(description: "Editable superellipse smoothing from 0 to 1")
+            "cornerSmoothing": shapeUnitIntervalSchema(description: "Editable superellipse smoothing")
         ]),
         tool("xomo.text.create", "Create an editable text layer.", [
             "text": XomoAutomationSchema.string(description: "Text content"),
@@ -6196,10 +6224,10 @@ private extension XomoAutomationRegistry {
     ]
     static let rectangleCornerRadiiSchema = XomoAutomationSchema.object(
         properties: [
-            "topLeft": XomoAutomationSchema.number(description: "Top-left radius in pixels"),
-            "topRight": XomoAutomationSchema.number(description: "Top-right radius in pixels"),
-            "bottomRight": XomoAutomationSchema.number(description: "Bottom-right radius in pixels"),
-            "bottomLeft": XomoAutomationSchema.number(description: "Bottom-left radius in pixels")
+            "topLeft": shapeNonnegativeNumberSchema(description: "Top-left radius in pixels"),
+            "topRight": shapeNonnegativeNumberSchema(description: "Top-right radius in pixels"),
+            "bottomRight": shapeNonnegativeNumberSchema(description: "Bottom-right radius in pixels"),
+            "bottomLeft": shapeNonnegativeNumberSchema(description: "Bottom-left radius in pixels")
         ],
         required: ["topLeft", "topRight", "bottomRight", "bottomLeft"]
     )
@@ -6211,12 +6239,20 @@ private extension XomoAutomationRegistry {
         "maximum": .number(Double(ImageEditorShapeContent.maximumStrokeWidth))
     ])
 
-    static func shapeOpacitySchema(description: String) -> XomoJSONValue {
+    static func shapeUnitIntervalSchema(description: String) -> XomoJSONValue {
         .object([
             "type": .string("number"),
             "description": .string("\(description) from 0 through 1"),
             "minimum": .number(0),
             "maximum": .number(1)
+        ])
+    }
+
+    static func shapeNonnegativeNumberSchema(description: String) -> XomoJSONValue {
+        .object([
+            "type": .string("number"),
+            "description": .string(description),
+            "minimum": .number(0)
         ])
     }
     static let shapeColorSchema = XomoAutomationSchema.object(
