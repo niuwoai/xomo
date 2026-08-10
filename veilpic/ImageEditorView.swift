@@ -598,6 +598,16 @@ struct ImageEditorView: View {
                         displayMultiplier: amountOptionDisplayMultiplier
                     )
                 }
+                if viewModel.selectedTool == .gradient {
+                    Toggle(
+                        L10n.text("imageEditor.gradientFill.reverse"),
+                        isOn: $viewModel.isGradientReversed
+                    )
+                    .toggleStyle(.checkbox)
+                    .focusable(false)
+                    .fixedSize()
+                    .accessibilityIdentifier("image-editor-gradient-reverse")
+                }
                 if usesBrushDynamicsOptions {
                     brushPresetMenu
                     brushRoundnessMenu

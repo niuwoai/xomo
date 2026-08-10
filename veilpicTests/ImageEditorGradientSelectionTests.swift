@@ -4,6 +4,53 @@ import Testing
 
 @MainActor
 struct ImageEditorGradientSelectionTests {
+    @Test func reverseOptionSwapsPixelAndLayerMaskGradientEndpoints() throws {
+        let pixelViewModel = ImageEditorViewModel(
+            sourceName: "reversed-pixel-gradient.png",
+            image: .transparent(size: CGSize(width: 80, height: 30))
+        ) { _ in }
+        pixelViewModel.foregroundColor = .systemRed
+        pixelViewModel.backgroundColor = .systemBlue
+        pixelViewModel.opacity = 1
+        pixelViewModel.isGradientReversed = true
+
+        pixelViewModel.drawGradient(
+            from: CGPoint(x: 0, y: 15),
+            to: CGPoint(x: 80, y: 15)
+        )
+
+        let pixelImage = try #require(pixelViewModel.document.selectedLayer?.image)
+        let pixelStart = try #require(pixelImage.color(at: CGPoint(x: 3, y: 15)))
+        let pixelEnd = try #require(pixelImage.color(at: CGPoint(x: 77, y: 15)))
+        #expect(pixelStart.blueComponent > pixelStart.redComponent)
+        #expect(pixelEnd.redComponent > pixelEnd.blueComponent)
+        #expect(pixelViewModel.document.history.last?.title == L10n.text("imageEditor.history.gradient"))
+
+        let maskViewModel = ImageEditorViewModel(
+            sourceName: "reversed-mask-gradient.png",
+            image: NSImage(size: CGSize(width: 80, height: 30), flipped: false) { rect in
+                NSColor.systemGreen.setFill()
+                rect.fill()
+                return true
+            }
+        ) { _ in }
+        maskViewModel.opacity = 1
+        maskViewModel.isGradientReversed = true
+        maskViewModel.addLayerMask()
+
+        maskViewModel.drawGradient(
+            from: CGPoint(x: 0, y: 15),
+            to: CGPoint(x: 80, y: 15)
+        )
+
+        let mask = try #require(maskViewModel.document.selectedLayer?.mask)
+        let maskStart = try #require(mask.color(at: CGPoint(x: 3, y: 15)))
+        let maskEnd = try #require(mask.color(at: CGPoint(x: 77, y: 15)))
+        #expect(maskStart.alphaComponent < 0.2)
+        #expect(maskEnd.alphaComponent > 0.8)
+        #expect(maskViewModel.document.history.last?.title == L10n.text("imageEditor.history.layerMaskGradient"))
+    }
+
     @Test func shiftConstraintSnapsGradientToNearestFortyFiveDegrees() {
         let start = CGPoint(x: 10, y: 10)
         let current = CGPoint(x: 60, y: 32)

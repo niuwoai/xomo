@@ -50,6 +50,9 @@ struct ImageEditorOptionsBarStyleTests {
         #expect(source.contains("case .dodge, .burn:"))
         #expect(source.contains("usesPercentageAmountOption ? 0...1 : 0.05...1"))
         #expect(source.contains("displayMultiplier: amountOptionDisplayMultiplier"))
+        #expect(optionBarSource.contains("isOn: $viewModel.isGradientReversed"))
+        #expect(optionBarSource.contains(".accessibilityIdentifier(\"image-editor-gradient-reverse\")"))
+        #expect(optionBarSource.contains(".toggleStyle(.checkbox)\n                    .focusable(false)"))
 
         let explicitForegroundUses = source.components(
             separatedBy: "ImageEditorOptionsBarAppearance.foregroundColor"
