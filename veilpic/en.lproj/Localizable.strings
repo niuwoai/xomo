@@ -2154,6 +2154,7 @@
 "imageEditor.status.paintBucketOutsideLayer" = "Click inside the current layer to fill";
 "imageEditor.status.paintBucketOutsideSelection" = "Click inside the current selection to fill";
 "imageEditor.status.paintBucketUnchanged" = "Paint bucket did not change any pixels";
+"imageEditor.status.magicWandOutsideCanvas" = "Click inside the canvas to make a magic-wand selection";
 "imageEditor.status.editingLayer" = "Editing layer pixels";
 "imageEditor.status.editingMask" = "Editing layer mask: brush hides, eraser restores";
 "imageEditor.status.layerMoved" = "Selected layer moved";

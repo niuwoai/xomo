@@ -15,6 +15,11 @@ extension ImageEditorViewModel {
         tolerance: CGFloat? = nil,
         contiguous: Bool? = nil
     ) -> ImageEditorSelection? {
+        let canvasBounds = CGRect(origin: .zero, size: document.canvasSize)
+        guard point.x.isFinite,
+              point.y.isFinite,
+              canvasBounds.contains(point)
+        else { return nil }
         let effectiveTolerance = max(0, min(1, tolerance ?? self.tolerance))
         guard let selection = document.compositedImage.magicSelection(
             at: point,

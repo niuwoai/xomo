@@ -3700,8 +3700,16 @@ final class ImageEditorViewModel: ObservableObject {
         tolerance: CGFloat? = nil,
         contiguous: Bool? = nil
     ) {
-        guard let point,
-              let selection = magicSelection(
+        guard let point else { return }
+        let canvasBounds = CGRect(origin: .zero, size: document.canvasSize)
+        guard point.x.isFinite,
+              point.y.isFinite,
+              canvasBounds.contains(point)
+        else {
+            statusText = L10n.text("imageEditor.status.magicWandOutsideCanvas")
+            return
+        }
+        guard let selection = magicSelection(
                 at: point,
                 tolerance: tolerance,
                 contiguous: contiguous

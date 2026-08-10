@@ -6753,6 +6753,29 @@ struct veilpicTests {
     }
 
     @MainActor
+    @Test func imageEditorMagicWandRejectsOutsideCanvasWithoutHistory() throws {
+        let image = testBitmapImage(
+            size: NSSize(width: 80, height: 60),
+            background: .systemBlue,
+            fills: [(CGRect(x: 5, y: 10, width: 20, height: 40), .systemRed)]
+        )
+        let viewModel = editableRasterViewModel(image: image)
+        viewModel.createRectSelection(from: CGPoint(x: 10, y: 10), to: CGPoint(x: 30, y: 30))
+        let selectionBefore = viewModel.document.selection
+        let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
+
+        #expect(viewModel.magicSelection(at: CGPoint(x: -1, y: 20)) == nil)
+        #expect(viewModel.magicSelection(at: CGPoint(x: 80, y: 20)) == nil)
+        viewModel.createMagicSelection(at: CGPoint(x: -1, y: 20))
+
+        #expect(viewModel.document.selection == selectionBefore)
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.undoStack.count == undoCount)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.magicWandOutsideCanvas"))
+    }
+
+    @MainActor
     @Test func imageEditorSelectionBooleanModesProduceRasterMask() async throws {
         let viewModel = ImageEditorViewModel(
             sourceName: "source.png",

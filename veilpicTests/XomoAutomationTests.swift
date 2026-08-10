@@ -1134,6 +1134,32 @@ struct XomoAutomationTests {
         #expect(maskAlpha(mask, x: 25, y: 5) == 255)
     }
 
+    @Test func registryRejectsOutsideCanvasMagicWandWithoutHistory() {
+        let viewModel = makeViewModel()
+        viewModel.createRectSelection(from: CGPoint(x: 10, y: 10), to: CGPoint(x: 30, y: 30))
+        let selectionBefore = viewModel.document.selection
+        let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+
+        let response = registry.execute(request(
+            operation: "call",
+            name: "xomo.selection.magic",
+            arguments: [
+                "x": .number(-1),
+                "y": .number(20),
+                "tolerance": .number(0.05)
+            ]
+        ))
+
+        #expect(response.ok)
+        #expect(viewModel.document.selection == selectionBefore)
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.undoStack.count == undoCount)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.magicWandOutsideCanvas"))
+    }
+
     @Test func registryAppliesExplicitColorRangeTolerance() throws {
         let viewModel = makeViewModel()
         let layerIndex = try #require(viewModel.document.selectedLayerIndex)

@@ -2154,6 +2154,7 @@
 "imageEditor.status.paintBucketOutsideLayer" = "请在当前图层范围内点击填充";
 "imageEditor.status.paintBucketOutsideSelection" = "请在当前选区内点击填充";
 "imageEditor.status.paintBucketUnchanged" = "油漆桶没有改变任何像素";
+"imageEditor.status.magicWandOutsideCanvas" = "请在画布范围内点击使用魔棒";
 "imageEditor.status.editingLayer" = "正在编辑图层内容";
 "imageEditor.status.editingMask" = "正在编辑图层蒙版：画笔隐藏，橡皮恢复";
 "imageEditor.status.layerMoved" = "已移动当前图层";

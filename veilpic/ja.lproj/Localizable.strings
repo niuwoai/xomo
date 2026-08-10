@@ -2154,6 +2154,7 @@
 "imageEditor.status.paintBucketOutsideLayer" = "現在のレイヤー範囲内をクリックして塗りつぶしてください";
 "imageEditor.status.paintBucketOutsideSelection" = "現在の選択範囲内をクリックして塗りつぶしてください";
 "imageEditor.status.paintBucketUnchanged" = "塗りつぶしで変更されたピクセルはありません";
+"imageEditor.status.magicWandOutsideCanvas" = "カンバス内をクリックして自動選択してください";
 "imageEditor.status.editingLayer" = "レイヤー内容を編集中";
 "imageEditor.status.editingMask" = "レイヤーマスクを編集中：ブラシで隠し、消しゴムで戻します";
 "imageEditor.status.layerMoved" = "選択中のレイヤーを移動しました";
