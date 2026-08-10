@@ -1753,7 +1753,7 @@ struct ImageEditorView: View {
     private var brushShortcutButtons: some View {
         Group {
             Button {
-                viewModel.adjustBrushSizeShortcut(by: -1)
+                performDirectShortcut { viewModel.adjustBrushSizeShortcut(by: -1) }
             } label: {
                 EmptyView()
             }
@@ -1761,7 +1761,7 @@ struct ImageEditorView: View {
             .accessibilityHidden(true)
 
             Button {
-                viewModel.adjustBrushSizeShortcut(by: 1)
+                performDirectShortcut { viewModel.adjustBrushSizeShortcut(by: 1) }
             } label: {
                 EmptyView()
             }
@@ -1769,7 +1769,7 @@ struct ImageEditorView: View {
             .accessibilityHidden(true)
 
             Button {
-                viewModel.adjustBrushHardnessShortcut(by: -0.25)
+                performDirectShortcut { viewModel.adjustBrushHardnessShortcut(by: -0.25) }
             } label: {
                 EmptyView()
             }
@@ -1777,7 +1777,7 @@ struct ImageEditorView: View {
             .accessibilityHidden(true)
 
             Button {
-                viewModel.adjustBrushHardnessShortcut(by: 0.25)
+                performDirectShortcut { viewModel.adjustBrushHardnessShortcut(by: 0.25) }
             } label: {
                 EmptyView()
             }
@@ -1792,7 +1792,7 @@ struct ImageEditorView: View {
         Group {
             ForEach([1, 2, 3, 4, 5, 6, 7, 8, 9, 0], id: \.self) { digit in
                 Button {
-                    viewModel.applyOpacityShortcutDigit(digit)
+                    performDirectShortcut { viewModel.applyOpacityShortcutDigit(digit) }
                 } label: {
                     EmptyView()
                 }
@@ -1807,7 +1807,7 @@ struct ImageEditorView: View {
     private var colorShortcutButtons: some View {
         Group {
             Button {
-                viewModel.resetForegroundBackgroundColors()
+                performDirectShortcut { viewModel.resetForegroundBackgroundColors() }
             } label: {
                 EmptyView()
             }
@@ -1815,7 +1815,7 @@ struct ImageEditorView: View {
             .accessibilityHidden(true)
 
             Button {
-                viewModel.swapForegroundBackgroundColors()
+                performDirectShortcut { viewModel.swapForegroundBackgroundColors() }
             } label: {
                 EmptyView()
             }
@@ -1829,7 +1829,7 @@ struct ImageEditorView: View {
     private var alternateZoomShortcutButtons: some View {
         Group {
             Button {
-                viewModel.zoomOut()
+                performDirectShortcut { viewModel.zoomOut() }
             } label: {
                 EmptyView()
             }
@@ -1837,7 +1837,7 @@ struct ImageEditorView: View {
             .accessibilityHidden(true)
 
             Button {
-                viewModel.zoomIn()
+                performDirectShortcut { viewModel.zoomIn() }
             } label: {
                 EmptyView()
             }
@@ -1845,7 +1845,7 @@ struct ImageEditorView: View {
             .accessibilityHidden(true)
 
             Button {
-                viewModel.zoomIn()
+                performDirectShortcut { viewModel.zoomIn() }
             } label: {
                 EmptyView()
             }
@@ -1877,12 +1877,19 @@ struct ImageEditorView: View {
 
     private func nudgeShortcutButton(_ key: KeyEquivalent, delta: CGSize, modifiers: EventModifiers) -> some View {
         Button {
-            viewModel.nudgeSelectionOrSelectedLayer(by: delta)
+            performDirectShortcut { viewModel.nudgeSelectionOrSelectedLayer(by: delta) }
         } label: {
             EmptyView()
         }
         .keyboardShortcut(key, modifiers: modifiers)
         .accessibilityHidden(true)
+    }
+
+    private func performDirectShortcut(_ action: () -> Void) {
+        guard ImageEditorLiveMoveShortcutPolicy.allowsDirectShortcut(
+            hasActiveLayerMoveTransaction: viewModel.hasActiveLayerMoveTransaction
+        ) else { return }
+        action()
     }
 
     private func performKeyboardShortcut(_ action: ImageEditorKeyboardShortcutAction) {

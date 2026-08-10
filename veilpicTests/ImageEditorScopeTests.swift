@@ -195,6 +195,7 @@ struct ImageEditorScopeTests {
         #expect(brushShortcutSource.contains(".keyboardShortcut(\"[\", modifiers: [.shift])"))
         #expect(brushShortcutSource.contains("viewModel.adjustBrushHardnessShortcut(by: 0.25)"))
         #expect(brushShortcutSource.contains(".keyboardShortcut(\"]\", modifiers: [.shift])"))
+        #expect(brushShortcutSource.contains("performDirectShortcut"))
 
         let opacityShortcutStart = try #require(source.range(of: "private var opacityShortcutButtons: some View"))
         let opacityShortcutEnd = try #require(
@@ -205,6 +206,7 @@ struct ImageEditorScopeTests {
         #expect(opacityShortcutSource.contains("ForEach([1, 2, 3, 4, 5, 6, 7, 8, 9, 0], id: \\.self)"))
         #expect(opacityShortcutSource.contains("viewModel.applyOpacityShortcutDigit(digit)"))
         #expect(opacityShortcutSource.contains(".keyboardShortcut(KeyEquivalent(Character(String(digit))), modifiers: [])"))
+        #expect(opacityShortcutSource.contains("performDirectShortcut"))
 
         let colorShortcutStart = try #require(source.range(of: "private var colorShortcutButtons: some View"))
         let colorShortcutEnd = try #require(
@@ -216,6 +218,15 @@ struct ImageEditorScopeTests {
         #expect(colorShortcutSource.contains(".keyboardShortcut(\"d\", modifiers: [])"))
         #expect(colorShortcutSource.contains("viewModel.swapForegroundBackgroundColors()"))
         #expect(colorShortcutSource.contains(".keyboardShortcut(\"x\", modifiers: [])"))
+        #expect(colorShortcutSource.contains("performDirectShortcut"))
+
+        let alternateZoomStart = try #require(source.range(of: "private var alternateZoomShortcutButtons: some View"))
+        let alternateZoomEnd = try #require(
+            source[alternateZoomStart.upperBound...].range(of: "private var colorChips: some View")
+        )
+        let alternateZoomSource = source[alternateZoomStart.lowerBound..<alternateZoomEnd.lowerBound]
+        #expect(alternateZoomSource.contains("performDirectShortcut { viewModel.zoomOut() }"))
+        #expect(alternateZoomSource.components(separatedBy: "performDirectShortcut { viewModel.zoomIn() }").count - 1 == 2)
 
         let nudgeShortcutStart = try #require(source.range(of: "private var nudgeShortcutButtons: some View"))
         let nudgeShortcutEnd = try #require(
@@ -233,6 +244,8 @@ struct ImageEditorScopeTests {
         #expect(nudgeShortcutSource.contains("nudgeShortcutButton(.downArrow, delta: CGSize(width: 0, height: 5), modifiers: [.option])"))
         #expect(nudgeShortcutSource.contains("nudgeShortcutButton(.leftArrow, delta: CGSize(width: -10, height: 0), modifiers: [.shift])"))
         #expect(nudgeShortcutSource.contains("viewModel.nudgeSelectionOrSelectedLayer(by: delta)"))
+        #expect(nudgeShortcutSource.contains("performDirectShortcut"))
+        #expect(nudgeShortcutSource.contains("ImageEditorLiveMoveShortcutPolicy.allowsDirectShortcut"))
 
         let transformSource = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorTransform.swift"),
