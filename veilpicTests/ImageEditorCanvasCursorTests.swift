@@ -694,6 +694,20 @@ struct ImageEditorCanvasCursorTests {
         )
     }
 
+    @Test func applicationDeactivationCancelsTheNativeObjectMoveCapture() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorScrollZoom.swift"),
+            encoding: .utf8
+        )
+
+        #expect(source.contains("NSApplication.didResignActiveNotification"))
+        #expect(source.contains("self?.cancelStaleObjectMoveCapture()"))
+        #expect(source.contains("NotificationCenter.default.removeObserver(appDeactivateObserver)"))
+    }
+
     @Test func shiftCanBeginAConstrainedDragWhileReservedModifiersAndHandlesWin() {
         #expect(
             ImageEditorObjectDragEventPolicy.allowsCandidate(
