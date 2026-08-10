@@ -962,6 +962,12 @@ final class XomoAutomationRegistry {
         if arguments["figmaNodeId"] != nil, nodeIDFilter?.isEmpty != false {
             throw XomoAutomationCallError.invalidArgument("Figma node ID filter must be a non-empty string")
         }
+        let fileKeyFilter = arguments["figmaFileKey"]?.stringValue.map {
+            $0.trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+        if arguments["figmaFileKey"] != nil, fileKeyFilter?.isEmpty != false {
+            throw XomoAutomationCallError.invalidArgument("Figma file key filter must be a non-empty string")
+        }
         let componentRoleFilter: String
         if let componentRoleArgument = arguments["figmaComponentRole"] {
             guard let value = componentRoleArgument.stringValue else {
@@ -1003,6 +1009,11 @@ final class XomoAutomationRegistry {
 
             if let nodeIDFilter,
                layer.xomoFigmaSourceID != nodeIDFilter {
+                return false
+            }
+
+            if let fileKeyFilter,
+               figmaFileKey(for: layer) != fileKeyFilter {
                 return false
             }
 
@@ -1057,12 +1068,20 @@ final class XomoAutomationRegistry {
         guard let sourceID = layer.xomoFigmaSourceID else { return .null }
         return .object([
             "id": .string(sourceID),
+            "fileKey": figmaFileKey(for: layer).map(XomoJSONValue.string) ?? .null,
             "url": layer.xomoFigmaSourceURL.map { .string($0.absoluteString) } ?? .null,
             "nodeType": layer.xomoFigmaNodeType.map(XomoJSONValue.string) ?? .null,
             "componentRole": layer.xomoFigmaComponentRole.map {
                 .string($0.rawValue)
             } ?? .null
         ])
+    }
+
+    private func figmaFileKey(for layer: ImageEditorLayer) -> String? {
+        guard let sourceURL = layer.xomoFigmaSourceURL,
+              let preview = try? XomoFigmaLinkParser.parse(sourceURL.absoluteString)
+        else { return nil }
+        return preview.fileKey
     }
 
     private func figmaSizeConstraintSummaryJSON(_ layer: ImageEditorLayer) -> XomoJSONValue {
@@ -5921,6 +5940,7 @@ private extension XomoAutomationRegistry {
             "figmaBindings": XomoAutomationSchema.string(description: "Filter by preserved Figma variable bindings", values: ["all", "bound", "unbound"]),
             "figmaConstraints": XomoAutomationSchema.string(description: "Filter by effective Figma size constraints", values: ["all", "constrained", "overridden", "conflicted"]),
             "figmaSource": XomoAutomationSchema.string(description: "Filter by retained Figma source identity", values: ["all", "imported", "local"]),
+            "figmaFileKey": XomoAutomationSchema.string(description: "Filter by exact Figma file key parsed from the retained canonical source URL"),
             "figmaNodeId": XomoAutomationSchema.string(description: "Filter by exact retained Figma node ID; canonical colon and URL hyphen separators are accepted"),
             "figmaNodeType": XomoAutomationSchema.string(description: "Filter by exact retained Figma node type, case-insensitive"),
             "figmaComponentRole": XomoAutomationSchema.string(description: "Filter by retained Figma component role", values: ["all", "none"] + XomoFigmaComponentRole.allCases.map(\.rawValue))

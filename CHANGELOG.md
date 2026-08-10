@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.12.0-rc803 - 2026-08-10
+
+### Added
+- `xomo.layer.list` 新增 `figmaFileKey` 精确筛选，并在每层 `figmaSource` 摘要中直接返回解析后的 `fileKey`；与 `figmaNodeId` 组合后可在多 Figma 文件导入场景稳定消歧对象身份。
+- file key 从保留的规范来源 URL 通过现有安全链接解析器取得；筛选忽略首尾空白，空值和错误 JSON 类型明确失败。
+
+### Tests
+- file key 输出、组合命中/未命中与输入边界 1/1、App MCP Schema 1/1、CLI 2/2、发布契约 6/6（16 条断言）通过。
+
 ## 2.12.0-rc802 - 2026-08-10
 
 ### Added
