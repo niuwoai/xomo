@@ -949,6 +949,29 @@ final class XomoAutomationRegistry {
                 "Unknown Figma source filter: \(sourceFilter)"
             )
         }
+        let nodeTypeFilter = arguments["figmaNodeType"]?.stringValue.map {
+            $0.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
+        }
+        if arguments["figmaNodeType"] != nil, nodeTypeFilter?.isEmpty != false {
+            throw XomoAutomationCallError.invalidArgument("Figma node type filter must not be empty")
+        }
+        let componentRoleFilter: String
+        if let componentRoleArgument = arguments["figmaComponentRole"] {
+            guard let value = componentRoleArgument.stringValue else {
+                throw XomoAutomationCallError.invalidArgument(
+                    "Figma component role filter must be a string"
+                )
+            }
+            componentRoleFilter = value
+        } else {
+            componentRoleFilter = "all"
+        }
+        let componentRoleValues = ["all", "none"] + XomoFigmaComponentRole.allCases.map(\.rawValue)
+        guard componentRoleValues.contains(componentRoleFilter) else {
+            throw XomoAutomationCallError.invalidArgument(
+                "Unknown Figma component role filter: \(componentRoleFilter)"
+            )
+        }
         let layers = viewModel.document.layers.reversed().filter { layer in
             let matchesBindings: Bool
             switch bindingFilter {
@@ -965,6 +988,19 @@ final class XomoAutomationRegistry {
             default: matchesSource = true
             }
             guard matchesSource else { return false }
+
+            if let nodeTypeFilter,
+               layer.xomoFigmaNodeType?.uppercased() != nodeTypeFilter {
+                return false
+            }
+
+            let matchesComponentRole: Bool
+            switch componentRoleFilter {
+            case "none": matchesComponentRole = layer.xomoFigmaComponentRole == nil
+            case "all": matchesComponentRole = true
+            default: matchesComponentRole = layer.xomoFigmaComponentRole?.rawValue == componentRoleFilter
+            }
+            guard matchesComponentRole else { return false }
 
             let current = layer.xomoFigmaSizeConstraints ?? .empty
             switch constraintFilter {
@@ -5872,7 +5908,9 @@ private extension XomoAutomationRegistry {
         tool("xomo.layer.list", "List layers with hierarchy, bounds, visibility, locks, opacity, blend mode, and preserved Figma source, bindings, and size constraints, with optional filters.", [
             "figmaBindings": XomoAutomationSchema.string(description: "Filter by preserved Figma variable bindings", values: ["all", "bound", "unbound"]),
             "figmaConstraints": XomoAutomationSchema.string(description: "Filter by effective Figma size constraints", values: ["all", "constrained", "overridden", "conflicted"]),
-            "figmaSource": XomoAutomationSchema.string(description: "Filter by retained Figma source identity", values: ["all", "imported", "local"])
+            "figmaSource": XomoAutomationSchema.string(description: "Filter by retained Figma source identity", values: ["all", "imported", "local"]),
+            "figmaNodeType": XomoAutomationSchema.string(description: "Filter by exact retained Figma node type, case-insensitive"),
+            "figmaComponentRole": XomoAutomationSchema.string(description: "Filter by retained Figma component role", values: ["all", "none"] + XomoFigmaComponentRole.allCases.map(\.rawValue))
         ]),
         tool("xomo.layer.selection_bounds", "Inspect selected object bounds, transform reference point, and live move, resize, or rotate preview context, including original bounds, movement, size, scale, and rotation deltas."),
         tool("xomo.layer.transform_reference", "Set or reset the transform reference point for the current transformable layer selection without changing document history.", [

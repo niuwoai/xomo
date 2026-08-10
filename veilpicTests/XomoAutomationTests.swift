@@ -228,6 +228,14 @@ struct XomoAutomationTests {
             .string("imported"),
             .string("local")
         ]))
+        #expect(layerListTool["inputSchema"]?.objectValue?["properties"]?.objectValue?["figmaNodeType"]?.objectValue?["type"] == .string("string"))
+        #expect(layerListTool["inputSchema"]?.objectValue?["properties"]?.objectValue?["figmaComponentRole"]?.objectValue?["enum"] == .array([
+            .string("all"),
+            .string("none"),
+            .string("COMPONENT"),
+            .string("COMPONENT_SET"),
+            .string("INSTANCE")
+        ]))
         #expect(tools.contains { tool in
             guard case .object(let value) = tool else { return false }
             return value["name"] == .string("xomo.figma.bindings")
@@ -2122,6 +2130,38 @@ struct XomoAutomationTests {
         #expect(imported.result?.arrayValue?.count == 1)
         #expect(imported.result?.arrayValue?.first?.objectValue?["id"] == .string(layerID.uuidString))
 
+        let figmaTextInstance = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.list",
+            arguments: [
+                "figmaNodeType": .string(" text "),
+                "figmaComponentRole": .string("INSTANCE"),
+                "figmaSource": .string("imported"),
+                "figmaConstraints": .string("conflicted")
+            ]
+        ))
+        #expect(figmaTextInstance.ok)
+        #expect(figmaTextInstance.result?.arrayValue?.count == 1)
+        #expect(figmaTextInstance.result?.arrayValue?.first?.objectValue?["id"] == .string(layerID.uuidString))
+
+        let componentsOnly = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.list",
+            arguments: ["figmaComponentRole": .string("COMPONENT")]
+        ))
+        #expect(componentsOnly.ok)
+        #expect(componentsOnly.result?.arrayValue?.isEmpty == true)
+
+        let nonComponents = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.list",
+            arguments: ["figmaComponentRole": .string("none")]
+        ))
+        #expect(nonComponents.ok)
+        #expect(nonComponents.result?.arrayValue?.contains {
+            $0.objectValue?["id"] == .string(layerID.uuidString)
+        } == false)
+
         let local = registry.execute(request(
             operation: "call",
             name: "xomo.layer.list",
@@ -2150,6 +2190,24 @@ struct XomoAutomationTests {
             arguments: ["figmaSource": .string("remote")]
         ))
         #expect(!invalidSource.ok)
+        let invalidNodeType = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.list",
+            arguments: ["figmaNodeType": .string("  ")]
+        ))
+        #expect(!invalidNodeType.ok)
+        let invalidComponentRole = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.list",
+            arguments: ["figmaComponentRole": .string("FRAME")]
+        ))
+        #expect(!invalidComponentRole.ok)
+        let invalidComponentRoleType = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.list",
+            arguments: ["figmaComponentRole": .number(1)]
+        ))
+        #expect(!invalidComponentRoleType.ok)
     }
 
     @Test func registryListsAndCopiesFigmaBindingsFromSelectedLayers() throws {

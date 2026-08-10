@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.12.0-rc801 - 2026-08-10
+
+### Added
+- `xomo.layer.list` 新增 `figmaNodeType` 与 `figmaComponentRole` 筛选，可按保留的 Figma 节点类型及组件、组件集、实例或非组件角色定位图层，并与来源、变量绑定和尺寸约束筛选组合。
+- App MCP 与 CLI 离线工具目录共享组件角色枚举；节点类型匹配忽略大小写与首尾空白，空节点类型或未知组件角色会明确失败。
+
+### Tests
+- App 自动化过滤组合与错误边界 1/1、MCP Schema 1/1、CLI 全量 2/2、发布契约 6/6（16 条断言）通过。
+
 ## 2.12.0-rc800 - 2026-08-10
 
 ### Changed

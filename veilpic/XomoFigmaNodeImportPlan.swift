@@ -15,7 +15,7 @@ enum XomoFigmaNodeTargetKind: String, CaseIterable, Sendable {
     }
 }
 
-enum XomoFigmaComponentRole: String, Codable, Equatable, Sendable {
+enum XomoFigmaComponentRole: String, CaseIterable, Codable, Equatable, Sendable {
     case component = "COMPONENT"
     case componentSet = "COMPONENT_SET"
     case instance = "INSTANCE"
