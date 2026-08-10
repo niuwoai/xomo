@@ -735,9 +735,14 @@ struct ImageEditorCanvasCursorTests {
         #expect(!resize.shouldCancelActiveTransaction)
     }
 
-    @Test func spacebarPanResetStopsOnlyAnActiveTemporaryHand() {
-        #expect(ImageEditorSpacebarPanResetPolicy.shouldStop(isPanning: true))
-        #expect(!ImageEditorSpacebarPanResetPolicy.shouldStop(isPanning: false))
+    @Test func transientKeyboardResetAlwaysClearsModifiersAndStopsOnlyAnActiveTemporaryHand() {
+        let active = ImageEditorSpacebarPanResetPolicy.decision(isPanning: true)
+        #expect(active.shouldStopSpacebarPanning)
+        #expect(active.shouldClearCanvasModifierFlags)
+
+        let inactive = ImageEditorSpacebarPanResetPolicy.decision(isPanning: false)
+        #expect(!inactive.shouldStopSpacebarPanning)
+        #expect(inactive.shouldClearCanvasModifierFlags)
     }
 
     @Test func keyboardMonitorReleasesSpacebarPanWhenItsWindowDeactivatesOrDetaches() throws {
@@ -755,6 +760,21 @@ struct ImageEditorCanvasCursorTests {
         #expect(source.contains("NotificationCenter.default.removeObserver(windowResignKeyObserver)"))
         #expect(source.contains("setSpacebarPanning(false)"))
         #expect(source.contains("setCanvasModifierFlags([])"))
+    }
+
+    @Test func everyKeyboardDeactivationPathUsesTheAtomicTransientReset() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(source.components(separatedBy: "resetTransientKeyboardState()").count == 6)
+        #expect(source.contains("decision.shouldStopSpacebarPanning"))
+        #expect(source.contains("decision.shouldClearCanvasModifierFlags"))
+        #expect(!source.contains("stopSpacebarPanning()"))
     }
 
     @Test func applicationDeactivationCancelsTheNativeObjectMoveCapture() throws {

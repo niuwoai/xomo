@@ -12675,8 +12675,16 @@ enum ImageEditorLiveMoveShortcutPolicy {
 }
 
 enum ImageEditorSpacebarPanResetPolicy {
-    static func shouldStop(isPanning: Bool) -> Bool {
-        isPanning
+    struct Decision: Equatable {
+        let shouldStopSpacebarPanning: Bool
+        let shouldClearCanvasModifierFlags: Bool
+    }
+
+    static func decision(isPanning: Bool) -> Decision {
+        Decision(
+            shouldStopSpacebarPanning: isPanning,
+            shouldClearCanvasModifierFlags: true
+        )
     }
 }
 
@@ -12869,7 +12877,7 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
                 object: nil,
                 queue: .main
             ) { [weak self] _ in
-                self?.stopSpacebarPanning()
+                self?.resetTransientKeyboardState()
             }
             windowResignKeyObserver = NotificationCenter.default.addObserver(
                 forName: NSWindow.didResignKeyNotification,
@@ -12878,7 +12886,7 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
             ) { [weak self] notification in
                 guard let self,
                       notification.object as? NSWindow === self.window else { return }
-                self.stopSpacebarPanning()
+                self.resetTransientKeyboardState()
             }
         }
 
@@ -12896,7 +12904,7 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
 
         func attach(to newWindow: NSWindow?) {
             if window !== newWindow {
-                stopSpacebarPanning()
+                resetTransientKeyboardState()
             }
             if let window {
                 ImageEditorKeyboardShortcutWindowRegistry.unregister(coordinator: self, from: window)
@@ -12916,7 +12924,7 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
             let relevantFlags = event.modifierFlags.intersection([.command, .option, .shift, .control])
             if event.keyCode == 49, relevantFlags.isEmpty {
                 if event.type == .keyUp, isSpacebarPanning {
-                    stopSpacebarPanning()
+                    resetTransientKeyboardState()
                     return nil
                 }
                 if event.type == .keyDown, !isTextInputActive {
@@ -12982,13 +12990,17 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
             window?.firstResponder is NSTextView || window?.firstResponder is NSTextField
         }
 
-        private func stopSpacebarPanning() {
-            guard ImageEditorSpacebarPanResetPolicy.shouldStop(
+        private func resetTransientKeyboardState() {
+            let decision = ImageEditorSpacebarPanResetPolicy.decision(
                 isPanning: isSpacebarPanning
-            ) else { return }
-            isSpacebarPanning = false
-            setSpacebarPanning(false)
-            setCanvasModifierFlags([])
+            )
+            if decision.shouldStopSpacebarPanning {
+                isSpacebarPanning = false
+                setSpacebarPanning(false)
+            }
+            if decision.shouldClearCanvasModifierFlags {
+                setCanvasModifierFlags([])
+            }
         }
     }
 }
