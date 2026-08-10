@@ -2134,13 +2134,12 @@ struct veilpicTests {
         viewModel.copyMergedToNewLayer()
 
         let mergedCopyLayer = try #require(viewModel.document.selectedLayer)
-        let mergedInside = try #require(mergedCopyLayer.image.color(at: CGPoint(x: 40, y: 30))?.usingColorSpace(.deviceRGB))
-        let mergedOutside = try #require(mergedCopyLayer.image.color(at: CGPoint(x: 8, y: 8))?.usingColorSpace(.deviceRGB))
+        let mergedInside = try #require(mergedCopyLayer.image.color(at: CGPoint(x: 20, y: 18))?.usingColorSpace(.deviceRGB))
 
         #expect(viewModel.document.layers.count == layerCountBeforeMergedCopy + 1)
-        #expect(mergedCopyLayer.frame == CGRect(origin: .zero, size: canvasSize))
+        #expect(mergedCopyLayer.image.size == CGSize(width: 40, height: 36))
+        #expect(mergedCopyLayer.frame == CGRect(x: 20, y: 12, width: 40, height: 36))
         #expect(mergedInside.alphaComponent > 0.8)
-        #expect(mergedOutside.alphaComponent < 0.05)
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.selectionCopyMergedLayer"))
 
         viewModel.undo()

@@ -689,7 +689,7 @@ extension ImageEditorViewModel {
             return
         }
 
-        let mergedImage: NSImage
+        let mergedCopy: (image: NSImage, frame: CGRect)
         let layerNameKey: String
         if let selection = document.selection {
             guard let clippedImage = document.compositedImage.copied(
@@ -697,24 +697,31 @@ extension ImageEditorViewModel {
                 layerFrame: CGRect(origin: .zero, size: document.canvasSize),
                 canvasSize: document.canvasSize,
                 feather: feather
-            ), clippedImage.nonTransparentPixelBounds() != nil else {
+            ), let selectionCopy = selectionClipboardCopy(
+                clippedImage: clippedImage,
+                selection: selection,
+                layerFrame: CGRect(origin: .zero, size: document.canvasSize)
+            ) else {
                 statusText = L10n.text("imageEditor.status.selectionEmpty")
                 return
             }
-            mergedImage = clippedImage
+            mergedCopy = selectionCopy
             layerNameKey = "imageEditor.layer.mergedSelectionCopyName"
         } else {
-            mergedImage = document.compositedImage
+            mergedCopy = (
+                document.compositedImage.normalizedBitmapImage(),
+                CGRect(origin: .zero, size: document.canvasSize)
+            )
             layerNameKey = "imageEditor.layer.mergedCopyName"
         }
 
         pushUndo()
         var layer = ImageEditorLayer.blank(
             name: L10n.text(layerNameKey),
-            size: document.canvasSize
+            size: mergedCopy.image.size
         )
-        layer.image = mergedImage.normalizedBitmapImage()
-        layer.frame = CGRect(origin: .zero, size: document.canvasSize)
+        layer.image = mergedCopy.image
+        layer.frame = mergedCopy.frame
         layer.opacity = 1
         layer.fillOpacity = 1
         layer.blendMode = .normal

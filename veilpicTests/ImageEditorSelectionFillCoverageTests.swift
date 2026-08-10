@@ -352,6 +352,56 @@ struct ImageEditorSelectionFillCoverageTests {
         #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionEmpty"))
     }
 
+    @Test func copyingMergedSelectionToNewLayerUsesSelectionFrameAndCompositePixels() throws {
+        let canvasSize = CGSize(width: 120, height: 90)
+        let viewModel = ImageEditorViewModel(
+            sourceName: "merged-selection-layer.png",
+            image: NSImage(size: canvasSize, flipped: false) { rect in
+                NSColor.systemBlue.setFill()
+                rect.fill()
+                return true
+            }
+        ) { _ in }
+        var overlay = ImageEditorLayer.blank(name: "Overlay", size: CGSize(width: 40, height: 30))
+        overlay.image = NSImage(size: overlay.image.size, flipped: false) { rect in
+            NSColor.systemPink.setFill()
+            rect.fill()
+            return true
+        }
+        overlay.frame = CGRect(x: 18, y: 22, width: 40, height: 30)
+        viewModel.document.layers.append(overlay)
+        viewModel.document.selectedLayerID = overlay.id
+        viewModel.document.selectedLayerIDs = [overlay.id]
+        let selectionFrame = CGRect(x: 24, y: 27, width: 16, height: 12)
+        viewModel.document.selection = .rectangle(selectionFrame)
+        let expectedColor = try #require(
+            viewModel.document.compositedImage
+                .color(at: CGPoint(x: selectionFrame.midX, y: selectionFrame.midY))?
+                .usingColorSpace(.deviceRGB)
+        )
+        let originalLayerCount = viewModel.document.layers.count
+        let originalHistoryCount = viewModel.document.history.count
+        let originalUndoCount = viewModel.undoStack.count
+
+        viewModel.copyMergedToNewLayer()
+
+        let mergedLayer = try #require(viewModel.document.selectedLayer)
+        #expect(viewModel.document.layers.count == originalLayerCount + 1)
+        #expect(mergedLayer.image.size == selectionFrame.size)
+        #expect(mergedLayer.frame == selectionFrame)
+        let mergedColor = try #require(
+            mergedLayer.image.color(at: CGPoint(x: 8, y: 6))?.usingColorSpace(.deviceRGB)
+        )
+        #expect(abs(mergedColor.redComponent - expectedColor.redComponent) < 0.02)
+        #expect(abs(mergedColor.blueComponent - expectedColor.blueComponent) < 0.02)
+        #expect(mergedColor.alphaComponent > 0.95)
+        #expect(viewModel.document.history.count == originalHistoryCount + 1)
+        #expect(viewModel.undoStack.count == originalUndoCount + 1)
+
+        viewModel.undo()
+        #expect(viewModel.document.layers.count == originalLayerCount)
+    }
+
     @Test func copyingSelectionPreservesBlendIfThresholds() throws {
         let viewModel = ImageEditorViewModel(
             sourceName: "blend-if-copy.png",
