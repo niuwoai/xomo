@@ -2218,14 +2218,17 @@ struct ImageEditorView: View {
                             return true
                         },
                         onRangeToolDragChanged: { location in
-                            let imagePoint = canvasInteractionTool == .gradient
-                                ? gradientDragPoint(from: location, in: geometry.size)
-                                : imagePoint(from: location, in: geometry.size)
-                            viewModel.updatePointer(imagePoint)
                             if canvasInteractionTool == .marquee {
+                                let imagePoint = imagePoint(from: location, in: geometry.size)
+                                viewModel.updatePointer(imagePoint)
                                 dragEnd = boundedImagePoint(from: location, in: geometry.size)
-                            } else {
-                                dragEnd = imagePoint
+                            } else if canvasInteractionTool == .gradient {
+                                let rawGradientPoint = unboundedImagePoint(
+                                    from: location,
+                                    in: geometry.size
+                                )
+                                dragEnd = rawGradientPoint
+                                viewModel.updatePointer(constrainedGradientEndpoint(rawGradientPoint))
                             }
                         },
                         onRangeToolDragEnded: { location in
@@ -2799,7 +2802,10 @@ struct ImageEditorView: View {
 
         if let dragStart, let dragEnd, canvasInteractionTool == .gradient || canvasInteractionTool == .patchTool {
             let start = viewPoint(from: dragStart, in: size)
-            let end = viewPoint(from: dragEnd, in: size)
+            let displayedDragEnd = canvasInteractionTool == .gradient
+                ? constrainedGradientEndpoint(dragEnd)
+                : dragEnd
+            let end = viewPoint(from: displayedDragEnd, in: size)
             Canvas { context, _ in
                 var path = Path()
                 path.move(to: start)
@@ -3358,9 +3364,9 @@ struct ImageEditorView: View {
                         dragStart = imagePoint(from: value.startLocation, in: size)
                     }
                     if dragStart != nil {
-                        let gradientPoint = gradientDragPoint(from: value.location, in: size)
-                        dragEnd = gradientPoint
-                        viewModel.updatePointer(gradientPoint)
+                        let rawGradientPoint = unboundedImagePoint(from: value.location, in: size)
+                        dragEnd = rawGradientPoint
+                        viewModel.updatePointer(constrainedGradientEndpoint(rawGradientPoint))
                     }
                 case .text:
                     if dragStart == nil {
@@ -4080,7 +4086,10 @@ struct ImageEditorView: View {
     }
 
     private func gradientDragPoint(from viewPoint: CGPoint, in size: CGSize) -> CGPoint {
-        let current = unboundedImagePoint(from: viewPoint, in: size)
+        constrainedGradientEndpoint(unboundedImagePoint(from: viewPoint, in: size))
+    }
+
+    private func constrainedGradientEndpoint(_ current: CGPoint) -> CGPoint {
         guard let dragStart else { return current }
         return ImageEditorGradientDragGeometry.endpoint(
             from: dragStart,
