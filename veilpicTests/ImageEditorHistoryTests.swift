@@ -292,6 +292,46 @@ struct ImageEditorHistoryTests {
     }
 
     @Test
+    func livePointerMoveOwnsKeyboardCommandsUntilItEnds() {
+        #expect(
+            ImageEditorLiveMoveShortcutPolicy.disposition(
+                for: .saveProject,
+                hasActiveLayerMoveTransaction: true
+            ) == .ignore
+        )
+        #expect(
+            ImageEditorLiveMoveShortcutPolicy.disposition(
+                for: .pasteClipboardLayer,
+                hasActiveLayerMoveTransaction: true
+            ) == .ignore
+        )
+        #expect(
+            ImageEditorLiveMoveShortcutPolicy.disposition(
+                for: .zoomIn,
+                hasActiveLayerMoveTransaction: true
+            ) == .ignore
+        )
+        #expect(
+            ImageEditorLiveMoveShortcutPolicy.disposition(
+                for: .undo,
+                hasActiveLayerMoveTransaction: true
+            ) == .cancelMove
+        )
+        #expect(
+            ImageEditorLiveMoveShortcutPolicy.disposition(
+                for: .redo,
+                hasActiveLayerMoveTransaction: true
+            ) == .cancelMove
+        )
+        #expect(
+            ImageEditorLiveMoveShortcutPolicy.disposition(
+                for: .saveProject,
+                hasActiveLayerMoveTransaction: false
+            ) == .perform
+        )
+    }
+
+    @Test
     func keyboardShortcutWindowRegistryKeepsOneActiveCoordinatorPerWindow() {
         ImageEditorKeyboardShortcutWindowRegistry.reset()
         defer { ImageEditorKeyboardShortcutWindowRegistry.reset() }

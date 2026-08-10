@@ -1877,6 +1877,11 @@ struct ImageEditorView: View {
     }
 
     private func performKeyboardShortcut(_ action: ImageEditorKeyboardShortcutAction) {
+        guard ImageEditorLiveMoveShortcutPolicy.disposition(
+            for: action,
+            hasActiveLayerMoveTransaction: viewModel.hasActiveLayerMoveTransaction
+        ) != .ignore else { return }
+
         switch action {
         case .newCanvas: viewModel.isNewCanvasSheetPresented = true
         case .openProject: viewModel.openProjectDocument()
@@ -12604,6 +12609,27 @@ enum ImageEditorKeyboardShortcutAction: Equatable {
         if key == "1", relevantFlags == [.command] { return .actualPixels }
         if key == "0", relevantFlags == [.command] { return .fitOnScreen }
         return nil
+    }
+}
+
+enum ImageEditorLiveMoveShortcutPolicy {
+    enum Disposition: Equatable {
+        case perform
+        case cancelMove
+        case ignore
+    }
+
+    static func disposition(
+        for action: ImageEditorKeyboardShortcutAction,
+        hasActiveLayerMoveTransaction: Bool
+    ) -> Disposition {
+        guard hasActiveLayerMoveTransaction else { return .perform }
+        switch action {
+        case .undo, .redo:
+            return .cancelMove
+        default:
+            return .ignore
+        }
     }
 }
 
