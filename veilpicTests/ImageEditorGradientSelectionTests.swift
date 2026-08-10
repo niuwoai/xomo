@@ -4,6 +4,44 @@ import Testing
 
 @MainActor
 struct ImageEditorGradientSelectionTests {
+    @Test func gradientNoOpDoesNotCreateUndoOrHistory() throws {
+        let zeroOpacity = ImageEditorViewModel(
+            sourceName: "zero-opacity-gradient.png",
+            image: .transparent(size: CGSize(width: 80, height: 60))
+        ) { _ in }
+        zeroOpacity.opacity = 0
+        let zeroHistoryCount = zeroOpacity.document.history.count
+        let zeroUndoCount = zeroOpacity.undoStack.count
+
+        zeroOpacity.drawGradient(
+            from: CGPoint(x: 0, y: 30),
+            to: CGPoint(x: 80, y: 30)
+        )
+
+        #expect(zeroOpacity.document.history.count == zeroHistoryCount)
+        #expect(zeroOpacity.undoStack.count == zeroUndoCount)
+        #expect(zeroOpacity.statusText == L10n.text("imageEditor.status.gradientUnchanged"))
+
+        let transparencyLocked = ImageEditorViewModel(
+            sourceName: "locked-transparent-gradient.png",
+            image: .transparent(size: CGSize(width: 80, height: 60))
+        ) { _ in }
+        let layerIndex = try #require(transparencyLocked.document.selectedLayerIndex)
+        transparencyLocked.document.layers[layerIndex].locksTransparentPixels = true
+        transparencyLocked.opacity = 1
+        let lockedHistoryCount = transparencyLocked.document.history.count
+        let lockedUndoCount = transparencyLocked.undoStack.count
+
+        transparencyLocked.drawGradient(
+            from: CGPoint(x: 0, y: 30),
+            to: CGPoint(x: 80, y: 30)
+        )
+
+        #expect(transparencyLocked.document.history.count == lockedHistoryCount)
+        #expect(transparencyLocked.undoStack.count == lockedUndoCount)
+        #expect(transparencyLocked.statusText == L10n.text("imageEditor.status.gradientUnchanged"))
+    }
+
     @Test func gradientMapsCanvasSelectionIntoOffsetScaledLayer() throws {
         let viewModel = ImageEditorViewModel(
             sourceName: "offset-gradient.png",

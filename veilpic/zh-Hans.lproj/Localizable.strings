@@ -1910,6 +1910,7 @@
 "imageEditor.status.colorSamplerRemoved" = "已删除颜色取样点 %d";
 "imageEditor.status.colorSamplerCleared" = "已清除颜色取样点";
 "imageEditor.status.gradientApplied" = "已应用拖拽渐变";
+"imageEditor.status.gradientUnchanged" = "渐变没有改变任何像素";
 "imageEditor.status.adjustmentFailed" = "调整失败";
 "imageEditor.status.filter" = "已应用 %@";
 "imageEditor.status.filterFailed" = "滤镜失败";

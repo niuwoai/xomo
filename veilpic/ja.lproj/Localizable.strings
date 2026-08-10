@@ -1910,6 +1910,7 @@
 "imageEditor.status.colorSamplerRemoved" = "カラーサンプラー %d を削除しました";
 "imageEditor.status.colorSamplerCleared" = "カラーサンプラーを消去しました";
 "imageEditor.status.gradientApplied" = "ドラッグしたグラデを適用しました";
+"imageEditor.status.gradientUnchanged" = "グラデーションによるピクセルの変更はありません";
 "imageEditor.status.adjustmentFailed" = "調整に失敗しました";
 "imageEditor.status.filter" = "%@ を適用しました";
 "imageEditor.status.filterFailed" = "フィルターに失敗しました";

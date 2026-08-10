@@ -59,11 +59,17 @@ extension ImageEditorViewModel {
             return
         }
 
-        pushUndo()
         let protectedOutput = document.isEffectivelyTransparencyLocked(layer)
             ? (output.preservingAlpha(from: layer.image) ?? output)
             : output
-        document.layers[index].image = protectedOutput.normalizedBitmapImage()
+        let normalizedOutput = protectedOutput.normalizedBitmapImage()
+        guard !gradientPixelsEqual(normalizedOutput, layer.image) else {
+            statusText = L10n.text("imageEditor.status.gradientUnchanged")
+            return
+        }
+
+        pushUndo()
+        document.layers[index].image = normalizedOutput
         appendHistory(L10n.text("imageEditor.history.gradient"))
         statusText = L10n.text("imageEditor.status.gradientApplied")
     }
@@ -111,8 +117,14 @@ extension ImageEditorViewModel {
             return
         }
 
+        let normalizedOutput = output.normalizedBitmapImage()
+        guard !gradientPixelsEqual(normalizedOutput, mask) else {
+            statusText = L10n.text("imageEditor.status.gradientUnchanged")
+            return
+        }
+
         pushUndo()
-        document.layers[index].mask = output.normalizedBitmapImage()
+        document.layers[index].mask = normalizedOutput
         appendHistory(L10n.text("imageEditor.history.layerMaskGradient"))
         statusText = L10n.text("imageEditor.status.gradientApplied")
     }
@@ -122,6 +134,14 @@ extension ImageEditorViewModel {
             x: min(max(point.x, bounds.minX), bounds.maxX),
             y: min(max(point.y, bounds.minY), bounds.maxY)
         )
+    }
+
+    private func gradientPixelsEqual(_ lhs: NSImage, _ rhs: NSImage) -> Bool {
+        guard lhs.size == rhs.size,
+              let lhsData = lhs.qingtuPNGData(),
+              let rhsData = rhs.normalizedBitmapImage().qingtuPNGData()
+        else { return false }
+        return lhsData == rhsData
     }
 }
 

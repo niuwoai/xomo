@@ -1910,6 +1910,7 @@
 "imageEditor.status.colorSamplerRemoved" = "Color sampler %d removed";
 "imageEditor.status.colorSamplerCleared" = "Color samplers cleared";
 "imageEditor.status.gradientApplied" = "Gradient applied from drag";
+"imageEditor.status.gradientUnchanged" = "Gradient did not change any pixels";
 "imageEditor.status.adjustmentFailed" = "Adjustment failed";
 "imageEditor.status.filter" = "%@ applied";
 "imageEditor.status.filterFailed" = "Filter failed";
