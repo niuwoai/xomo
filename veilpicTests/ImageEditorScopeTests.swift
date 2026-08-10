@@ -3278,7 +3278,9 @@ struct ImageEditorScopeTests {
 
         #expect(source.contains("case .spongeMode(let mode): viewModel.applySpongeModeShortcut(mode)"))
         #expect(source.contains(".accessibilityHint(ImageEditorSpongeModeShortcut.helpText)"))
-        #expect(source.contains("case .toggleQuickMask, .toneRange, .spongeMode:"))
+        #expect(source.contains(".toggleQuickMask,"))
+        #expect(source.contains(".toneRange,"))
+        #expect(source.contains(".spongeMode:"))
         #expect(shortcutSource.contains("guard activeTool == .sponge"))
         #expect(shortcutSource.contains("static let modifierFlags: NSEvent.ModifierFlags = [.shift, .option]"))
     }

@@ -4577,6 +4577,8 @@ struct veilpicTests {
         let originalFrame = try #require(viewModel.document.selectedLayer?.frame)
 
         viewModel.addLayerMask()
+        let layerID = try #require(viewModel.document.selectedLayerID)
+        viewModel.selectLayer(layerID, editingMask: false)
         viewModel.scaleSelectedLayer(by: 0.5)
         let scaledFrame = try #require(viewModel.document.selectedLayer?.frame)
         #expect(scaledFrame.width == originalFrame.width * 0.5)
@@ -6794,6 +6796,10 @@ struct veilpicTests {
         if let selectedIndex = document.selectedLayerIndex {
             document.layers[selectedIndex].image = normalized
             document.layers[selectedIndex].frame = CGRect(origin: .zero, size: normalized.size)
+            document.layers[selectedIndex].isLocked = false
+            document.layers[selectedIndex].locksPixels = false
+            document.layers[selectedIndex].locksPosition = false
+            document.layers[selectedIndex].locksTransparentPixels = false
         }
         for index in document.layers.indices where document.layers[index].id != document.selectedLayerID {
             document.layers[index].isVisible = false
