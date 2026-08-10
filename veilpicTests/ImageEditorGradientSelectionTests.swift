@@ -4,6 +4,49 @@ import Testing
 
 @MainActor
 struct ImageEditorGradientSelectionTests {
+    @Test func onePixelGradientIsAppliedWhileZeroDistanceRemainsNoOp() throws {
+        let onePixel = ImageEditorViewModel(
+            sourceName: "one-pixel-gradient.png",
+            image: .transparent(size: CGSize(width: 40, height: 30))
+        ) { _ in }
+        onePixel.foregroundColor = .systemRed
+        onePixel.backgroundColor = .systemBlue
+        onePixel.opacity = 1
+        let historyCount = onePixel.document.history.count
+        let undoCount = onePixel.undoStack.count
+
+        onePixel.drawGradient(
+            from: CGPoint(x: 20, y: 15),
+            to: CGPoint(x: 21, y: 15)
+        )
+
+        let image = try #require(onePixel.document.selectedLayer?.image)
+        let beforeStart = try #require(image.color(at: CGPoint(x: 18, y: 15)))
+        let afterEnd = try #require(image.color(at: CGPoint(x: 23, y: 15)))
+        #expect(beforeStart.alphaComponent > 0.8)
+        #expect(beforeStart.redComponent > beforeStart.blueComponent)
+        #expect(afterEnd.alphaComponent > 0.8)
+        #expect(afterEnd.blueComponent > afterEnd.redComponent)
+        #expect(onePixel.document.history.count == historyCount + 1)
+        #expect(onePixel.undoStack.count == undoCount + 1)
+
+        let zeroDistance = ImageEditorViewModel(
+            sourceName: "zero-distance-gradient.png",
+            image: .transparent(size: CGSize(width: 40, height: 30))
+        ) { _ in }
+        let zeroHistoryCount = zeroDistance.document.history.count
+        let zeroUndoCount = zeroDistance.undoStack.count
+
+        zeroDistance.drawGradient(
+            from: CGPoint(x: 20, y: 15),
+            to: CGPoint(x: 20, y: 15)
+        )
+
+        #expect(zeroDistance.document.history.count == zeroHistoryCount)
+        #expect(zeroDistance.undoStack.count == zeroUndoCount)
+        #expect(zeroDistance.statusText == L10n.text("imageEditor.status.gradientUnchanged"))
+    }
+
     @Test func gradientNoOpDoesNotCreateUndoOrHistory() throws {
         let zeroOpacity = ImageEditorViewModel(
             sourceName: "zero-opacity-gradient.png",

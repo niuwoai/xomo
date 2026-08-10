@@ -14,7 +14,10 @@ extension ImageEditorViewModel {
         let canvasBounds = CGRect(origin: .zero, size: document.canvasSize)
         let startPoint = clampedGradientPoint(start ?? CGPoint(x: 0, y: document.canvasSize.height), in: canvasBounds)
         let endPoint = clampedGradientPoint(end ?? CGPoint(x: document.canvasSize.width, y: 0), in: canvasBounds)
-        guard startPoint.distance(to: endPoint) > 1 else { return }
+        guard startPoint.distance(to: endPoint) >= 1 else {
+            statusText = L10n.text("imageEditor.status.gradientUnchanged")
+            return
+        }
 
         if isEditingLayerMask {
             drawGradientOnSelectedLayerMask(from: startPoint, to: endPoint)
