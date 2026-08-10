@@ -668,7 +668,7 @@ struct ImageEditorCanvasCursorTests {
         )
     }
 
-    @Test func transformHandlesWinBeforeComponentMoveCapture() {
+    @Test func shiftCanBeginAConstrainedDragWhileReservedModifiersAndHandlesWin() {
         #expect(
             ImageEditorObjectDragEventPolicy.allowsCandidate(
                 modifierFlags: [],
@@ -682,11 +682,19 @@ struct ImageEditorCanvasCursorTests {
             )
         )
         #expect(
-            !ImageEditorObjectDragEventPolicy.allowsCandidate(
+            ImageEditorObjectDragEventPolicy.allowsCandidate(
                 modifierFlags: [.shift],
                 hasTransformTarget: false
             )
         )
+        for modifier: NSEvent.ModifierFlags in [.command, .option, .control] {
+            #expect(
+                !ImageEditorObjectDragEventPolicy.allowsCandidate(
+                    modifierFlags: modifier,
+                    hasTransformTarget: false
+                )
+            )
+        }
     }
 
     @Test func primaryDrawingToolsUseBalancedAppKitPointerCaptureOnlyInToolsMode() {

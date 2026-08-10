@@ -36,7 +36,10 @@ enum ImageEditorObjectDragEventPolicy {
         modifierFlags: NSEvent.ModifierFlags,
         hasTransformTarget: Bool
     ) -> Bool {
-        let relevantFlags = modifierFlags.intersection([.command, .option, .shift, .control])
+        // Shift is the conventional axis constraint and may already be held
+        // before mouse-down. Command, Option, and Control retain their deep
+        // selection, duplication, and contextual meanings.
+        let relevantFlags = modifierFlags.intersection([.command, .option, .control])
         return relevantFlags.isEmpty && !hasTransformTarget
     }
 
