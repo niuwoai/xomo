@@ -1372,6 +1372,7 @@ struct veilpicTests {
     @Test func imageEditorImportImageCreatesCenteredScaledLayerAndUndoRestores() async throws {
         let canvas = testImage(color: .systemBlue, size: NSSize(width: 80, height: 60))
         let imported = testImage(color: .systemPink, size: NSSize(width: 160, height: 120))
+        let importedPixelSize = imported.normalizedImportedBitmapImage().size
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: canvas) { _ in }
         let originalLayerCount = viewModel.document.layers.count
 
@@ -1381,8 +1382,13 @@ struct veilpicTests {
         let importedLayer = try #require(viewModel.document.selectedLayer)
         #expect(viewModel.document.layers.count == originalLayerCount + 1)
         #expect(importedLayer.name == L10n.format("imageEditor.layer.importedName", "poster.large"))
-        #expect(importedLayer.image.size == imported.size)
-        #expect(importedLayer.frame == CGRect(x: 0, y: 0, width: 80, height: 60))
+        #expect(importedLayer.image.size == importedPixelSize)
+        #expect(importedLayer.frame == CGRect(
+            x: (80 - importedPixelSize.width) / 2,
+            y: (60 - importedPixelSize.height) / 2,
+            width: importedPixelSize.width,
+            height: importedPixelSize.height
+        ))
         #expect(importedLayer.opacity == 1)
         #expect(importedLayer.blendMode == .normal)
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerImport"))
@@ -1427,8 +1433,14 @@ struct veilpicTests {
 
         let pastedIntoSelectionLayer = try #require(viewModel.document.selectedLayer)
         let pastedIntoSelectionMask = try #require(pastedIntoSelectionLayer.mask)
-        let leftMask = try #require(pastedIntoSelectionMask.color(at: CGPoint(x: 40, y: 60))?.usingColorSpace(.deviceRGB))
-        let rightMask = try #require(pastedIntoSelectionMask.color(at: CGPoint(x: 120, y: 60))?.usingColorSpace(.deviceRGB))
+        let leftMask = try #require(pastedIntoSelectionMask.color(at: CGPoint(
+            x: pastedIntoSelectionMask.size.width * 0.25,
+            y: pastedIntoSelectionMask.size.height * 0.5
+        ))?.usingColorSpace(.deviceRGB))
+        let rightMask = try #require(pastedIntoSelectionMask.color(at: CGPoint(
+            x: pastedIntoSelectionMask.size.width * 0.75,
+            y: pastedIntoSelectionMask.size.height * 0.5
+        ))?.usingColorSpace(.deviceRGB))
         let pastedLeft = try #require(viewModel.currentImage.color(at: CGPoint(x: 20, y: 30))?.usingColorSpace(.deviceRGB))
         let pastedRight = try #require(viewModel.currentImage.color(at: CGPoint(x: 60, y: 30))?.usingColorSpace(.deviceRGB))
 
@@ -1449,6 +1461,7 @@ struct veilpicTests {
     @Test func imageEditorPastesClipboardImageDataAsANewLayer() throws {
         let canvas = testImage(color: .systemBlue, size: NSSize(width: 80, height: 60))
         let clipboardImage = testImage(color: .systemOrange, size: NSSize(width: 32, height: 24))
+        let clipboardPixelSize = clipboardImage.normalizedImportedBitmapImage().size
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: canvas) { _ in }
         let originalLayerCount = viewModel.document.layers.count
         let pasteboard = NSPasteboard(name: NSPasteboard.Name("xomo-tests.clipboard-image"))
@@ -1458,7 +1471,7 @@ struct veilpicTests {
         viewModel.pasteClipboardAsLayer(from: pasteboard)
 
         #expect(viewModel.document.layers.count == originalLayerCount + 1)
-        #expect(viewModel.document.selectedLayer?.image.size == clipboardImage.size)
+        #expect(viewModel.document.selectedLayer?.image.size == clipboardPixelSize)
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.clipboardPasteLayer"))
         #expect(viewModel.statusText == L10n.text("imageEditor.status.clipboardPastedToLayer"))
         pasteboard.clearContents()
@@ -1468,6 +1481,7 @@ struct veilpicTests {
     @Test func imageEditorPastesFinderPNGFileAsANewLayer() throws {
         let canvas = testImage(color: .systemBlue, size: NSSize(width: 80, height: 60))
         let clipboardImage = testImage(color: .systemGreen, size: NSSize(width: 36, height: 28))
+        let clipboardPixelSize = clipboardImage.normalizedImportedBitmapImage().size
         let imageData = try #require(clipboardImage.qingtuPNGData())
         let imageURL = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString)
@@ -1484,7 +1498,7 @@ struct veilpicTests {
         viewModel.pasteClipboardAsLayer(from: pasteboard)
 
         #expect(viewModel.document.layers.count == originalLayerCount + 1)
-        #expect(viewModel.document.selectedLayer?.image.size == clipboardImage.size)
+        #expect(viewModel.document.selectedLayer?.image.size == clipboardPixelSize)
         #expect(viewModel.statusText == L10n.text("imageEditor.status.clipboardPastedToLayer"))
         pasteboard.clearContents()
     }
