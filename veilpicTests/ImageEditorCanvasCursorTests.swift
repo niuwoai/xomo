@@ -708,6 +708,21 @@ struct ImageEditorCanvasCursorTests {
         #expect(source.contains("NotificationCenter.default.removeObserver(appDeactivateObserver)"))
     }
 
+    @Test func editorWindowDeactivationCancelsOnlyItsNativeObjectMoveCapture() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorScrollZoom.swift"),
+            encoding: .utf8
+        )
+
+        #expect(source.contains("NSWindow.didResignKeyNotification"))
+        #expect(source.contains("notification.object as? NSWindow === self.window"))
+        #expect(source.contains("self.cancelStaleObjectMoveCapture()"))
+        #expect(source.contains("NotificationCenter.default.removeObserver(windowResignKeyObserver)"))
+    }
+
     @Test func shiftCanBeginAConstrainedDragWhileReservedModifiersAndHandlesWin() {
         #expect(
             ImageEditorObjectDragEventPolicy.allowsCandidate(

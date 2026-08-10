@@ -395,6 +395,7 @@ final class ScrollWheelZoomNSView: NSView {
     private var middleMouseMonitor: Any?
     private var mouseMovedMonitor: Any?
     private var appDeactivateObserver: Any?
+    private var windowResignKeyObserver: Any?
     private var isMiddleMousePanning = false
     private var lastMiddleMousePoint: CGPoint?
     private var isObjectMoving = false
@@ -538,6 +539,17 @@ final class ScrollWheelZoomNSView: NSView {
                 self?.cancelStaleObjectMoveCapture()
             }
         }
+        if windowResignKeyObserver == nil {
+            windowResignKeyObserver = NotificationCenter.default.addObserver(
+                forName: NSWindow.didResignKeyNotification,
+                object: nil,
+                queue: .main
+            ) { [weak self] notification in
+                guard let self,
+                      notification.object as? NSWindow === self.window else { return }
+                self.cancelStaleObjectMoveCapture()
+            }
+        }
     }
 
     func teardownMonitor() {
@@ -557,6 +569,10 @@ final class ScrollWheelZoomNSView: NSView {
             NotificationCenter.default.removeObserver(appDeactivateObserver)
         }
         appDeactivateObserver = nil
+        if let windowResignKeyObserver {
+            NotificationCenter.default.removeObserver(windowResignKeyObserver)
+        }
+        windowResignKeyObserver = nil
         let resetDecision = ImageEditorObjectDragEventPolicy.resetDecision(
             isObjectMoving: isObjectMoving
         )
