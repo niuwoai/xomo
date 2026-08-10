@@ -955,6 +955,13 @@ final class XomoAutomationRegistry {
         if arguments["figmaNodeType"] != nil, nodeTypeFilter?.isEmpty != false {
             throw XomoAutomationCallError.invalidArgument("Figma node type filter must not be empty")
         }
+        let nodeIDFilter = arguments["figmaNodeId"]?.stringValue.map {
+            $0.trimmingCharacters(in: .whitespacesAndNewlines)
+                .replacingOccurrences(of: "-", with: ":")
+        }
+        if arguments["figmaNodeId"] != nil, nodeIDFilter?.isEmpty != false {
+            throw XomoAutomationCallError.invalidArgument("Figma node ID filter must be a non-empty string")
+        }
         let componentRoleFilter: String
         if let componentRoleArgument = arguments["figmaComponentRole"] {
             guard let value = componentRoleArgument.stringValue else {
@@ -991,6 +998,11 @@ final class XomoAutomationRegistry {
 
             if let nodeTypeFilter,
                layer.xomoFigmaNodeType?.uppercased() != nodeTypeFilter {
+                return false
+            }
+
+            if let nodeIDFilter,
+               layer.xomoFigmaSourceID != nodeIDFilter {
                 return false
             }
 
@@ -5909,6 +5921,7 @@ private extension XomoAutomationRegistry {
             "figmaBindings": XomoAutomationSchema.string(description: "Filter by preserved Figma variable bindings", values: ["all", "bound", "unbound"]),
             "figmaConstraints": XomoAutomationSchema.string(description: "Filter by effective Figma size constraints", values: ["all", "constrained", "overridden", "conflicted"]),
             "figmaSource": XomoAutomationSchema.string(description: "Filter by retained Figma source identity", values: ["all", "imported", "local"]),
+            "figmaNodeId": XomoAutomationSchema.string(description: "Filter by exact retained Figma node ID; canonical colon and URL hyphen separators are accepted"),
             "figmaNodeType": XomoAutomationSchema.string(description: "Filter by exact retained Figma node type, case-insensitive"),
             "figmaComponentRole": XomoAutomationSchema.string(description: "Filter by retained Figma component role", values: ["all", "none"] + XomoFigmaComponentRole.allCases.map(\.rawValue))
         ]),

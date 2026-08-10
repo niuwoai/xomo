@@ -19,6 +19,7 @@ enum XomoToolCatalog {
                         "figmaBindings": ["type": "string", "enum": ["all", "bound", "unbound"]],
                         "figmaConstraints": ["type": "string", "enum": ["all", "constrained", "overridden", "conflicted"]],
                         "figmaSource": ["type": "string", "enum": ["all", "imported", "local"]],
+                        "figmaNodeId": ["type": "string"],
                         "figmaNodeType": ["type": "string"],
                         "figmaComponentRole": ["type": "string", "enum": ["all", "none", "COMPONENT", "COMPONENT_SET", "INSTANCE"]]
                     ],

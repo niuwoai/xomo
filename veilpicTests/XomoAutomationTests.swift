@@ -229,6 +229,7 @@ struct XomoAutomationTests {
             .string("local")
         ]))
         #expect(layerListTool["inputSchema"]?.objectValue?["properties"]?.objectValue?["figmaNodeType"]?.objectValue?["type"] == .string("string"))
+        #expect(layerListTool["inputSchema"]?.objectValue?["properties"]?.objectValue?["figmaNodeId"]?.objectValue?["type"] == .string("string"))
         #expect(layerListTool["inputSchema"]?.objectValue?["properties"]?.objectValue?["figmaComponentRole"]?.objectValue?["enum"] == .array([
             .string("all"),
             .string("none"),
@@ -2135,6 +2136,7 @@ struct XomoAutomationTests {
             name: "xomo.layer.list",
             arguments: [
                 "figmaNodeType": .string(" text "),
+                "figmaNodeId": .string(" 12-34 "),
                 "figmaComponentRole": .string("INSTANCE"),
                 "figmaSource": .string("imported"),
                 "figmaConstraints": .string("conflicted")
@@ -2143,6 +2145,14 @@ struct XomoAutomationTests {
         #expect(figmaTextInstance.ok)
         #expect(figmaTextInstance.result?.arrayValue?.count == 1)
         #expect(figmaTextInstance.result?.arrayValue?.first?.objectValue?["id"] == .string(layerID.uuidString))
+
+        let missingNodeID = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.list",
+            arguments: ["figmaNodeId": .string("12:35")]
+        ))
+        #expect(missingNodeID.ok)
+        #expect(missingNodeID.result?.arrayValue?.isEmpty == true)
 
         let componentsOnly = registry.execute(request(
             operation: "call",
@@ -2196,6 +2206,18 @@ struct XomoAutomationTests {
             arguments: ["figmaNodeType": .string("  ")]
         ))
         #expect(!invalidNodeType.ok)
+        let invalidNodeID = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.list",
+            arguments: ["figmaNodeId": .string("  ")]
+        ))
+        #expect(!invalidNodeID.ok)
+        let invalidNodeIDType = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.list",
+            arguments: ["figmaNodeId": .number(12)]
+        ))
+        #expect(!invalidNodeIDType.ok)
         let invalidComponentRole = registry.execute(request(
             operation: "call",
             name: "xomo.layer.list",
