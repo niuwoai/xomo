@@ -2218,7 +2218,9 @@ struct ImageEditorView: View {
                             return true
                         },
                         onRangeToolDragChanged: { location in
-                            let imagePoint = imagePoint(from: location, in: geometry.size)
+                            let imagePoint = canvasInteractionTool == .gradient
+                                ? unboundedImagePoint(from: location, in: geometry.size)
+                                : imagePoint(from: location, in: geometry.size)
                             viewModel.updatePointer(imagePoint)
                             if canvasInteractionTool == .marquee {
                                 dragEnd = boundedImagePoint(from: location, in: geometry.size)
@@ -2235,7 +2237,7 @@ struct ImageEditorView: View {
                             } else if canvasInteractionTool == .gradient {
                                 viewModel.drawGradient(
                                     from: dragStart,
-                                    to: imagePoint(from: location, in: geometry.size)
+                                    to: unboundedImagePoint(from: location, in: geometry.size)
                                 )
                             }
                             dragStart = nil
@@ -3343,7 +3345,7 @@ struct ImageEditorView: View {
                     if dragStart != nil {
                         dragEnd = boundedImagePoint(from: value.location, in: size)
                     }
-                case .crop, .rectangle, .ellipse, .gradient:
+                case .crop, .rectangle, .ellipse:
                     if canvasInteractionTool == .crop, dragStart == nil {
                         pendingCropRect = nil
                     }
@@ -3351,6 +3353,15 @@ struct ImageEditorView: View {
                         dragStart = pointerImagePoint
                     }
                     dragEnd = pointerImagePoint
+                case .gradient:
+                    if dragStart == nil {
+                        dragStart = imagePoint(from: value.startLocation, in: size)
+                    }
+                    if dragStart != nil {
+                        let gradientPoint = unboundedImagePoint(from: value.location, in: size)
+                        dragEnd = gradientPoint
+                        viewModel.updatePointer(gradientPoint)
+                    }
                 case .text:
                     if dragStart == nil {
                         dragStart = imagePoint(from: value.startLocation, in: size)
@@ -3652,7 +3663,12 @@ struct ImageEditorView: View {
                         viewModel.addColorSampler(at: endImagePoint)
                     }
                 case .gradient:
-                    viewModel.drawGradient(from: dragStart, to: endImagePoint)
+                    if let dragStart {
+                        viewModel.drawGradient(
+                            from: dragStart,
+                            to: unboundedImagePoint(from: value.location, in: size)
+                        )
+                    }
                 case .zoom:
                     switch ImageEditorZoomDirection.from(modifierFlags: canvasModifierFlags) {
                     case .zoomIn:

@@ -31,6 +31,13 @@ struct ImageEditorCanvasGeometryTests {
         ))
         assertEqual(imagePoint, CGPoint(x: 40, y: 20))
 
+        let outsidePoint = ImageEditorCanvasGeometry.unboundedImagePoint(
+            from: CGPoint(x: 76, y: 86.5),
+            imageRect: imageRect,
+            canvasSize: canvasSize
+        )
+        assertEqual(outsidePoint, CGPoint(x: -40, y: -10))
+
         let viewRect = ImageEditorCanvasGeometry.viewRect(
             from: CGRect(x: 40, y: 20, width: 120, height: 60),
             imageRect: imageRect,
