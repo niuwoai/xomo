@@ -11,9 +11,16 @@ import Foundation
 @MainActor
 extension ImageEditorViewModel {
     func drawGradient(from start: CGPoint?, to end: CGPoint?) {
-        let canvasBounds = CGRect(origin: .zero, size: document.canvasSize)
-        let startPoint = clampedGradientPoint(start ?? CGPoint(x: 0, y: document.canvasSize.height), in: canvasBounds)
-        let endPoint = clampedGradientPoint(end ?? CGPoint(x: document.canvasSize.width, y: 0), in: canvasBounds)
+        let startPoint = start ?? CGPoint(x: 0, y: document.canvasSize.height)
+        let endPoint = end ?? CGPoint(x: document.canvasSize.width, y: 0)
+        guard startPoint.x.isFinite,
+              startPoint.y.isFinite,
+              endPoint.x.isFinite,
+              endPoint.y.isFinite
+        else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return
+        }
         guard startPoint.distance(to: endPoint) >= 1 else {
             statusText = L10n.text("imageEditor.status.gradientUnchanged")
             return
@@ -130,13 +137,6 @@ extension ImageEditorViewModel {
         document.layers[index].mask = normalizedOutput
         appendHistory(L10n.text("imageEditor.history.layerMaskGradient"))
         statusText = L10n.text("imageEditor.status.gradientApplied")
-    }
-
-    private func clampedGradientPoint(_ point: CGPoint, in bounds: CGRect) -> CGPoint {
-        CGPoint(
-            x: min(max(point.x, bounds.minX), bounds.maxX),
-            y: min(max(point.y, bounds.minY), bounds.maxY)
-        )
     }
 
     private func gradientPixelsEqual(_ lhs: NSImage, _ rhs: NSImage) -> Bool {

@@ -4,6 +4,29 @@ import Testing
 
 @MainActor
 struct ImageEditorGradientSelectionTests {
+    @Test func gradientEndpointsOutsideCanvasPreserveTheFullDragSpan() throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "outside-canvas-gradient.png",
+            image: .transparent(size: CGSize(width: 100, height: 20))
+        ) { _ in }
+        viewModel.foregroundColor = .systemRed
+        viewModel.backgroundColor = .systemBlue
+        viewModel.opacity = 1
+
+        viewModel.drawGradient(
+            from: CGPoint(x: -50, y: 10),
+            to: CGPoint(x: 150, y: 10)
+        )
+
+        let image = try #require(viewModel.document.selectedLayer?.image)
+        let leftEdge = try #require(image.color(at: CGPoint(x: 0, y: 10)))
+        let rightEdge = try #require(image.color(at: CGPoint(x: 99, y: 10)))
+        #expect(leftEdge.redComponent > leftEdge.blueComponent)
+        #expect(leftEdge.blueComponent > 0.15)
+        #expect(rightEdge.blueComponent > rightEdge.redComponent)
+        #expect(rightEdge.redComponent > 0.15)
+    }
+
     @Test func onePixelGradientIsAppliedWhileZeroDistanceRemainsNoOp() throws {
         let onePixel = ImageEditorViewModel(
             sourceName: "one-pixel-gradient.png",
