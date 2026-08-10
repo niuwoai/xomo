@@ -626,6 +626,7 @@ struct ImageEditorCanvasCursorTests {
             isObjectMoving: true
         )
         #expect(activeMove.shouldFinishMove)
+        #expect(!activeMove.shouldCommitClick)
         #expect(activeMove.shouldConsumeEvent)
 
         let candidateOnly = ImageEditorObjectDragEventPolicy.releaseDecision(
@@ -634,6 +635,7 @@ struct ImageEditorCanvasCursorTests {
             isObjectMoving: false
         )
         #expect(!candidateOnly.shouldFinishMove)
+        #expect(candidateOnly.shouldCommitClick)
         #expect(candidateOnly.shouldConsumeEvent)
 
         let unrelatedDrag = ImageEditorObjectDragEventPolicy.releaseDecision(
@@ -642,6 +644,7 @@ struct ImageEditorCanvasCursorTests {
             isObjectMoving: true
         )
         #expect(!unrelatedDrag.shouldFinishMove)
+        #expect(!unrelatedDrag.shouldCommitClick)
         #expect(!unrelatedDrag.shouldConsumeEvent)
     }
 

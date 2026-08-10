@@ -383,6 +383,27 @@ struct XomoCanvasObjectTests {
         #expect(viewModel.document.selectedLayerIDs == selectionBeforeMove)
     }
 
+    @Test func shiftClickTogglesAComponentWithoutCollapsingTheExistingSelection() throws {
+        let viewModel = makeViewModel()
+        viewModel.insertXomoComponent(.button, at: CGPoint(x: 80, y: 90))
+        let firstObject = try #require(viewModel.document.selectedLayer)
+        viewModel.insertXomoComponent(.avatar, at: CGPoint(x: 420, y: 260))
+        let secondObject = try #require(viewModel.document.selectedLayer)
+
+        #expect(viewModel.selectXomoObject(
+            at: CGPoint(x: 160, y: 112),
+            extendingSelection: true
+        ))
+        #expect(viewModel.document.selectedLayerIDs == [firstObject.id, secondObject.id])
+
+        #expect(viewModel.selectXomoObject(
+            at: CGPoint(x: 468, y: 308),
+            extendingSelection: true
+        ))
+        #expect(viewModel.document.selectedLayerIDs == [firstObject.id])
+        #expect(viewModel.document.selectedLayerID == firstObject.id)
+    }
+
     @Test func pixelLockedComponentCanMoveWithoutAllowingContentResampling() throws {
         let viewModel = makeViewModel()
         viewModel.insertXomoComponent(.button, at: CGPoint(x: 80, y: 90))

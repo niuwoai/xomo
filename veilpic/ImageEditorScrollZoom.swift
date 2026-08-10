@@ -23,6 +23,7 @@ enum ImageEditorObjectDragEventPolicy {
 
     struct ReleaseDecision: Equatable {
         let shouldFinishMove: Bool
+        let shouldCommitClick: Bool
         let shouldConsumeEvent: Bool
     }
 
@@ -66,6 +67,7 @@ enum ImageEditorObjectDragEventPolicy {
               hasObjectMoveCandidate || isObjectMoving else {
             return ReleaseDecision(
                 shouldFinishMove: false,
+                shouldCommitClick: false,
                 shouldConsumeEvent: false
             )
         }
@@ -77,6 +79,7 @@ enum ImageEditorObjectDragEventPolicy {
         // release even when the pointer never crosses the drag threshold.
         return ReleaseDecision(
             shouldFinishMove: isObjectMoving,
+            shouldCommitClick: hasObjectMoveCandidate && !isObjectMoving,
             shouldConsumeEvent: true
         )
     }
@@ -195,11 +198,13 @@ struct ScrollWheelZoomView: NSViewRepresentable {
     let onLayerResizeBegan: (_ location: CGPoint) -> Bool
     let onLayerResizeChanged: (_ location: CGPoint) -> Void
     let onLayerResizeEnded: (_ location: CGPoint) -> Void
-    /// Mouse-down only selects and records a draggable component candidate.
+    /// Mouse-down only records a draggable component candidate.
     /// The actual transform transaction starts after a familiar small drag
-    /// threshold, so an ordinary click stays cheap and responsive.
+    /// threshold; mouse-up commits an ordinary click without first collapsing
+    /// a Shift multi-selection.
     let onObjectMoveCandidateBegan: (_ location: CGPoint, _ modifierFlags: NSEvent.ModifierFlags) -> Bool
-    let onObjectMoveActivated: () -> Bool
+    let onObjectMoveActivated: (_ location: CGPoint, _ modifierFlags: NSEvent.ModifierFlags) -> Bool
+    let onObjectMoveClicked: (_ location: CGPoint, _ modifierFlags: NSEvent.ModifierFlags) -> Void
     let onObjectMoveChanged: (_ translation: CGSize) -> Void
     let onObjectMoveEnded: () -> Void
 
@@ -225,6 +230,7 @@ struct ScrollWheelZoomView: NSViewRepresentable {
         view.onLayerResizeEnded = onLayerResizeEnded
         view.onObjectMoveCandidateBegan = onObjectMoveCandidateBegan
         view.onObjectMoveActivated = onObjectMoveActivated
+        view.onObjectMoveClicked = onObjectMoveClicked
         view.onObjectMoveChanged = onObjectMoveChanged
         view.onObjectMoveEnded = onObjectMoveEnded
         view.markAsCurrentPointerHost()
@@ -252,6 +258,7 @@ struct ScrollWheelZoomView: NSViewRepresentable {
         nsView.onLayerResizeEnded = onLayerResizeEnded
         nsView.onObjectMoveCandidateBegan = onObjectMoveCandidateBegan
         nsView.onObjectMoveActivated = onObjectMoveActivated
+        nsView.onObjectMoveClicked = onObjectMoveClicked
         nsView.onObjectMoveChanged = onObjectMoveChanged
         nsView.onObjectMoveEnded = onObjectMoveEnded
         nsView.markAsCurrentPointerHost()
@@ -365,7 +372,8 @@ final class ScrollWheelZoomNSView: NSView {
     var onLayerResizeChanged: ((_ location: CGPoint) -> Void)?
     var onLayerResizeEnded: ((_ location: CGPoint) -> Void)?
     var onObjectMoveCandidateBegan: ((_ location: CGPoint, _ modifierFlags: NSEvent.ModifierFlags) -> Bool)?
-    var onObjectMoveActivated: (() -> Bool)?
+    var onObjectMoveActivated: ((_ location: CGPoint, _ modifierFlags: NSEvent.ModifierFlags) -> Bool)?
+    var onObjectMoveClicked: ((_ location: CGPoint, _ modifierFlags: NSEvent.ModifierFlags) -> Void)?
     var onObjectMoveChanged: ((_ translation: CGSize) -> Void)?
     var onObjectMoveEnded: (() -> Void)?
     private var monitor: Any?
@@ -378,6 +386,7 @@ final class ScrollWheelZoomNSView: NSView {
     private var hasObjectMoveCandidate = false
     private var isObjectMoveCaptureRejected = false
     private var objectMoveStartPoint: CGPoint?
+    private var objectMoveCandidateModifierFlags: NSEvent.ModifierFlags = []
     private var lastReportedStylusProximity: ImageEditorStylusProximity?
     private lazy var primaryPointerGestureRecognizer: ImageEditorCanvasPointerGestureRecognizer = {
         let recognizer = ImageEditorCanvasPointerGestureRecognizer()
@@ -526,6 +535,7 @@ final class ScrollWheelZoomNSView: NSView {
         hasObjectMoveCandidate = false
         isObjectMoveCaptureRejected = false
         objectMoveStartPoint = nil
+        objectMoveCandidateModifierFlags = []
         if isMiddleMousePanning {
             onMiddleMousePanEnded?()
         }
@@ -692,6 +702,7 @@ final class ScrollWheelZoomNSView: NSView {
             hasObjectMoveCandidate = true
             isObjectMoveCaptureRejected = false
             objectMoveStartPoint = location
+            objectMoveCandidateModifierFlags = flags
             return true
         case .dragged:
             if let transaction = Self.activePointerTransaction {
@@ -765,7 +776,10 @@ final class ScrollWheelZoomNSView: NSView {
                     from: objectMoveStartPoint,
                     to: location
                 ) else { return true }
-                guard onObjectMoveActivated?() == true else {
+                guard onObjectMoveActivated?(
+                    objectMoveStartPoint,
+                    objectMoveCandidateModifierFlags
+                ) == true else {
                     // Mouse-down was already consumed. Keep ownership through
                     // mouse-up even if the model rejects activation, otherwise
                     // SwiftUI receives an orphaned release event.
@@ -862,10 +876,18 @@ final class ScrollWheelZoomNSView: NSView {
             if releaseDecision.shouldFinishMove {
                 onObjectMoveEnded?()
             }
+            if releaseDecision.shouldCommitClick,
+               let objectMoveStartPoint {
+                onObjectMoveClicked?(
+                    objectMoveStartPoint,
+                    objectMoveCandidateModifierFlags
+                )
+            }
             isObjectMoving = false
             hasObjectMoveCandidate = false
             isObjectMoveCaptureRejected = false
             objectMoveStartPoint = nil
+            objectMoveCandidateModifierFlags = []
             return releaseDecision.shouldConsumeEvent
         case .none:
             return false
@@ -880,6 +902,7 @@ final class ScrollWheelZoomNSView: NSView {
         hasObjectMoveCandidate = false
         isObjectMoveCaptureRejected = false
         objectMoveStartPoint = nil
+        objectMoveCandidateModifierFlags = []
     }
 
     private static func continueActivePointerTransaction(

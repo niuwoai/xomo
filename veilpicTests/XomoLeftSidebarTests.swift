@@ -674,6 +674,8 @@ struct XomoLeftSidebarTests {
         #expect(source.contains("viewModel.selectDeepestVisibleLayer("))
         #expect(source.contains("viewModel.selectMovableCanvasTarget(at: pressedImagePoint)"))
         #expect(source.contains("viewModel.beginMovingSelectedLayer()"))
+        #expect(source.contains("onObjectMoveClicked:"))
+        #expect(source.contains("extendingSelection: modifierFlags.contains(.shift)"))
         #expect(source.contains("viewModel.cancelMovingSelectedLayer()"))
         #expect(source.contains("viewModel.cancelTransformingSelectedLayer()"))
         #expect(source.contains("transformHUDOverlay("))

@@ -2366,17 +2366,28 @@ struct ImageEditorView: View {
                                   ),
                                   let imagePoint = imagePoint(from: location, in: geometry.size)
                             else { return false }
-                            guard viewModel.prepareXomoObjectMove(at: imagePoint),
+                            return viewModel.hasXomoObject(at: imagePoint)
+                                && viewModel.canvasContentHit(at: imagePoint) == .movable
+                        },
+                        onObjectMoveActivated: { location, _ in
+                            resetObjectMoveTracking()
+                            guard let imagePoint = imagePoint(from: location, in: geometry.size),
+                                  viewModel.prepareXomoObjectMove(at: imagePoint),
                                   viewModel.canMoveSelectedLayer
                             else { return false }
-                            return true
-                        },
-                        onObjectMoveActivated: {
-                            resetObjectMoveTracking()
                             guard viewModel.beginMovingSelectedLayer() else { return false }
                             isSelectedObjectMoveGestureActive = true
                             ImageEditorCanvasCursor.objectMoveCursor().set()
                             return true
+                        },
+                        onObjectMoveClicked: { location, modifierFlags in
+                            guard let imagePoint = imagePoint(from: location, in: geometry.size) else {
+                                return
+                            }
+                            _ = viewModel.selectXomoObject(
+                                at: imagePoint,
+                                extendingSelection: modifierFlags.contains(.shift)
+                            )
                         },
                         onObjectMoveChanged: { translation in
                             guard isSelectedObjectMoveGestureActive else { return }
