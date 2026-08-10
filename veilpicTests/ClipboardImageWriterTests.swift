@@ -43,13 +43,14 @@ struct ClipboardImageWriterTests {
         #expect(viewModel.document.selectedLayer?.frame == selectionFrame)
     }
 
-    @Test func copyingMergedPixelsPreservesCanvasFrameForPasteInPlace() throws {
+    @Test func copyingMergedSelectionCropsToSelectionFrameForPasteInPlace() throws {
         let canvasSize = CGSize(width: 96, height: 64)
         let viewModel = ImageEditorViewModel(
             sourceName: "merged-copy.png",
             image: solidImage(color: .systemBlue, size: canvasSize)
         ) { _ in }
-        viewModel.document.selection = .rectangle(CGRect(x: 11, y: 9, width: 30, height: 24))
+        let selectionFrame = CGRect(x: 11, y: 9, width: 30, height: 24)
+        viewModel.document.selection = .rectangle(selectionFrame)
         let pasteboard = NSPasteboard.general
         pasteboard.clearContents()
         defer { pasteboard.clearContents() }
@@ -57,10 +58,11 @@ struct ClipboardImageWriterTests {
         viewModel.copyMergedToClipboard()
 
         #expect(viewModel.canPasteClipboardImageInPlace)
-        #expect(
-            XomoClipboardLayerPayload.frame(from: pasteboard)
-                == CGRect(origin: .zero, size: canvasSize)
-        )
+        let copiedImage = try #require(NSImage(pasteboard: pasteboard))
+        #expect(copiedImage.size == selectionFrame.size)
+        #expect(XomoClipboardLayerPayload.frame(from: pasteboard) == selectionFrame)
+        viewModel.pasteClipboardInPlaceAsLayer()
+        #expect(viewModel.document.selectedLayer?.frame == selectionFrame)
     }
 
     @Test func cuttingSelectionCropsToSelectionFrameForPasteInPlace() throws {

@@ -597,30 +597,35 @@ extension ImageEditorViewModel {
             return
         }
 
-        let mergedImage: NSImage
+        let clipboardCopy: (image: NSImage, frame: CGRect)
         if let selection = document.selection {
             guard let clippedImage = document.compositedImage.copied(
                 selection: selection,
                 layerFrame: CGRect(origin: .zero, size: document.canvasSize),
                 canvasSize: document.canvasSize,
                 feather: feather
-            ), clippedImage.nonTransparentPixelBounds() != nil else {
+            ), let selectionCopy = selectionClipboardCopy(
+                clippedImage: clippedImage,
+                selection: selection,
+                layerFrame: CGRect(origin: .zero, size: document.canvasSize)
+            ) else {
                 statusText = L10n.text("imageEditor.status.selectionEmpty")
                 return
             }
-            mergedImage = clippedImage
+            clipboardCopy = selectionCopy
         } else {
-            mergedImage = document.compositedImage
+            clipboardCopy = (
+                document.compositedImage.normalizedBitmapImage(),
+                CGRect(origin: .zero, size: document.canvasSize)
+            )
         }
 
         let didCopy = ClipboardImageWriter.copy(
-            mergedImage.normalizedBitmapImage(),
+            clipboardCopy.image,
             preferredFileName: "\(document.sourceName)-merged.png"
         )
         if didCopy {
-            XomoClipboardLayerPayload.write(
-                frame: CGRect(origin: .zero, size: document.canvasSize)
-            )
+            XomoClipboardLayerPayload.write(frame: clipboardCopy.frame)
         }
         statusText = didCopy
             ? L10n.text("imageEditor.status.copyMergedToClipboard")
