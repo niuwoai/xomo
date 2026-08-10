@@ -821,6 +821,22 @@ struct ImageEditorSelectionOperationTests {
         #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionRotated180"))
     }
 
+    @Test func symmetricSelectionRotationDoesNotCreateUndoOrHistory() throws {
+        let canvasSize = NSSize(width: 8, height: 6)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: testImage(size: canvasSize)) { _ in }
+        viewModel.document.selection = ImageEditorSelection.rectangle(
+            CGRect(x: 2, y: 1, width: 3, height: 3)
+        )
+        let historyCountBeforeRotation = viewModel.document.history.count
+
+        viewModel.rotateSelectionClockwise()
+        viewModel.rotateSelection180()
+
+        #expect(viewModel.document.history.count == historyCountBeforeRotation)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionUnchanged"))
+        #expect(viewModel.document.selection?.bounds == CGRect(x: 2, y: 1, width: 3, height: 3))
+    }
+
     @Test func imageEditorRotatesSelectionMaskCounterclockwise() async throws {
         let canvasSize = NSSize(width: 7, height: 6)
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: testImage(size: canvasSize)) { _ in }

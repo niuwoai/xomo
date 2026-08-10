@@ -517,6 +517,10 @@ extension ImageEditorViewModel {
             statusText = L10n.text("imageEditor.status.selectionEmpty")
             return
         }
+        guard !selectionsAreEquivalent(selection, modified) else {
+            statusText = L10n.text("imageEditor.status.selectionUnchanged")
+            return
+        }
 
         let normalizedTurns = ((clockwiseTurns % 4) + 4) % 4
         let historyKey: String
