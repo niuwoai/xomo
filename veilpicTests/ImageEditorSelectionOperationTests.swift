@@ -899,6 +899,14 @@ struct ImageEditorSelectionOperationTests {
         #expect(maskAlpha(mask, x: 4, y: 3) == 255)
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.selectionFitCanvas"))
         #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionFitCanvas"))
+
+        let historyCountAfterFirstFit = viewModel.document.history.count
+        viewModel.fitSelectionToCanvas()
+
+        #expect(viewModel.document.history.count == historyCountAfterFirstFit)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionUnchanged"))
+        viewModel.undo()
+        #expect(viewModel.document.selection?.bounds == CGRect(x: 3, y: 2, width: 1, height: 1))
     }
 
     private func testImage(size: NSSize) -> NSImage {
