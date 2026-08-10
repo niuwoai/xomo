@@ -912,6 +912,19 @@ struct ImageEditorSelectionOperationTests {
         #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionScaledDown"))
     }
 
+    @Test func equivalentSelectionScaleDoesNotCreateUndoOrHistory() throws {
+        let canvasSize = NSSize(width: 8, height: 8)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: testImage(size: canvasSize)) { _ in }
+        viewModel.document.selection = .fullCanvas(size: canvasSize)
+        let historyCountBeforeScale = viewModel.document.history.count
+
+        viewModel.scaleSelectionUp()
+
+        #expect(viewModel.document.history.count == historyCountBeforeScale)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionUnchanged"))
+        #expect(viewModel.document.selection?.bounds == CGRect(origin: .zero, size: canvasSize))
+    }
+
     @Test func imageEditorFitsSelectionMaskToCanvas() async throws {
         let canvasSize = NSSize(width: 5, height: 4)
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: testImage(size: canvasSize)) { _ in }
