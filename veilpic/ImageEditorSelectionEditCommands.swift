@@ -543,6 +543,7 @@ extension ImageEditorViewModel {
             return
         }
 
+        XomoClipboardLayerPayload.write(frame: sourceLayer.frame)
         pushUndo()
         document.layers[index].image = output.normalizedBitmapImage()
         appendHistory(L10n.text("imageEditor.history.selectionCutClipboard"))
