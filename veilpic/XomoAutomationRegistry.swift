@@ -255,9 +255,13 @@ final class XomoAutomationRegistry {
         case "xomo.selection.lasso":
             viewModel.createLassoSelection(points: try requiredPoints("points", in: arguments))
         case "xomo.selection.magic":
+            if let contiguous = arguments["contiguous"]?.boolValue {
+                viewModel.isMagicWandContiguous = contiguous
+            }
             viewModel.createMagicSelection(
                 at: try requiredPoint(arguments),
-                tolerance: selectionTolerance(arguments["tolerance"])
+                tolerance: selectionTolerance(arguments["tolerance"]),
+                contiguous: arguments["contiguous"]?.boolValue
             )
         case "xomo.selection.quick":
             viewModel.createQuickSelection(
@@ -6234,7 +6238,7 @@ private extension XomoAutomationRegistry {
         tool("xomo.selection.rectangle", "Create a rectangular canvas selection.", rectProperties, required: ["x", "y", "width", "height"]),
         tool("xomo.selection.ellipse", "Create an elliptical canvas selection.", rectProperties, required: ["x", "y", "width", "height"]),
         tool("xomo.selection.lasso", "Create a polygonal lasso selection from canvas points.", ["points": pointsSchema], required: ["points"]),
-        tool("xomo.selection.magic", "Create a contiguous magic-wand selection at a canvas point.", magicPointProperties, required: ["x", "y"]),
+        tool("xomo.selection.magic", "Create a magic-wand selection at a canvas point.", magicPointProperties, required: ["x", "y"]),
         tool("xomo.selection.quick", "Create a quick selection from sampled canvas points.", ["points": pointsSchema, "tolerance": XomoAutomationSchema.number(description: "Color-distance tolerance from 0 to 1")], required: ["points"]),
         tool("xomo.selection.clear", "Deselect the current selection."),
         tool("xomo.selection.invert", "Invert the current selection."),
@@ -6635,7 +6639,8 @@ private extension XomoAutomationRegistry {
         "tiltY": XomoAutomationSchema.number(description: "Optional vertical stylus tilt from -1 to 1; requires tiltX")
     ]
     static let magicPointProperties = pointProperties.merging([
-        "tolerance": XomoAutomationSchema.number(description: "Color-distance tolerance from 0 to 1")
+        "tolerance": XomoAutomationSchema.number(description: "Color-distance tolerance from 0 to 1"),
+        "contiguous": XomoAutomationSchema.boolean(description: "Restrict selection to the connected region containing the seed")
     ]) { current, _ in current }
     static let pointsSchema: XomoJSONValue = .object([
         "type": .string("array"),

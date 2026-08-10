@@ -128,6 +128,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var selectionModifyAmount: CGFloat = 4
     @Published var tolerance: CGFloat = 0.22
     @Published var isPaintBucketContiguous = true
+    @Published var isMagicWandContiguous = true
     @Published var selectionMode: ImageEditorSelectionMode = .replace
     @Published var isQuickMaskMode = false
     @Published private(set) var quickMaskOverlayImage: NSImage?
@@ -3694,9 +3695,17 @@ final class ImageEditorViewModel: ObservableObject {
         applySelectionCandidate(selection, replaceHistoryKey: "imageEditor.history.selection")
     }
 
-    func createMagicSelection(at point: CGPoint?, tolerance: CGFloat? = nil) {
+    func createMagicSelection(
+        at point: CGPoint?,
+        tolerance: CGFloat? = nil,
+        contiguous: Bool? = nil
+    ) {
         guard let point,
-              let selection = magicSelection(at: point, tolerance: tolerance)
+              let selection = magicSelection(
+                at: point,
+                tolerance: tolerance,
+                contiguous: contiguous
+              )
         else { return }
         applySelectionCandidate(selection, replaceHistoryKey: "imageEditor.history.magicSelection")
     }
@@ -3717,7 +3726,11 @@ final class ImageEditorViewModel: ObservableObject {
 
         var combinedSelection: ImageEditorSelection?
         for point in sampledPoints {
-            guard let candidate = magicSelection(at: point, tolerance: tolerance) else { continue }
+            guard let candidate = magicSelection(
+                at: point,
+                tolerance: tolerance,
+                contiguous: true
+            ) else { continue }
             combinedSelection = ImageEditorSelection.combined(
                 current: combinedSelection,
                 candidate: candidate,

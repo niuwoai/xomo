@@ -6720,6 +6720,39 @@ struct veilpicTests {
     }
 
     @MainActor
+    @Test func imageEditorMagicWandSelectsSeparatedMatchesWhenContiguousIsDisabled() throws {
+        let image = testBitmapImage(
+            size: NSSize(width: 80, height: 60),
+            background: .systemBlue,
+            fills: [
+                (CGRect(x: 5, y: 10, width: 20, height: 40), .systemRed),
+                (CGRect(x: 55, y: 10, width: 20, height: 40), .systemRed)
+            ]
+        )
+        let viewModel = editableRasterViewModel(image: image)
+        #expect(viewModel.isMagicWandContiguous)
+        viewModel.isMagicWandContiguous = false
+
+        viewModel.createMagicSelection(at: CGPoint(x: 15, y: 30))
+
+        let selection = try #require(viewModel.document.selection)
+        let mask = try #require(selection.rasterMask)
+        #expect(maskAlpha(mask, x: 15, y: 30) == 255)
+        #expect(maskAlpha(mask, x: 35, y: 30) == 0)
+        #expect(maskAlpha(mask, x: 65, y: 30) == 255)
+        #expect(selection.bounds.minX < 6)
+        #expect(selection.bounds.maxX > 74)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.magicSelection"))
+
+        viewModel.clearSelection()
+        viewModel.createQuickSelection(points: [CGPoint(x: 15, y: 30)], tolerance: 0.05)
+
+        let quickMask = try #require(viewModel.document.selection?.rasterMask)
+        #expect(maskAlpha(quickMask, x: 15, y: 30) == 255)
+        #expect(maskAlpha(quickMask, x: 65, y: 30) == 0)
+    }
+
+    @MainActor
     @Test func imageEditorSelectionBooleanModesProduceRasterMask() async throws {
         let viewModel = ImageEditorViewModel(
             sourceName: "source.png",

@@ -179,6 +179,7 @@ struct XomoAutomationTests {
             return
         }
         #expect(magicTool["inputSchema"]?.objectValue?["properties"]?.objectValue?["tolerance"]?.objectValue?["type"] == .string("number"))
+        #expect(magicTool["inputSchema"]?.objectValue?["properties"]?.objectValue?["contiguous"]?.objectValue?["type"] == .string("boolean"))
         #expect(selectionModifyTool["inputSchema"]?.objectValue?["properties"]?.objectValue?["tolerance"]?.objectValue?["type"] == .string("number"))
         #expect(selectionModifyTool["inputSchema"]?.objectValue?["properties"]?.objectValue?["threshold"]?.objectValue?["type"] == .string("number"))
         #expect(tools.contains { tool in
@@ -1094,6 +1095,43 @@ struct XomoAutomationTests {
         ))
         #expect(broadResponse.ok)
         #expect(try #require(viewModel.document.selection).bounds.width == 20)
+    }
+
+    @Test func registrySelectsSeparatedMagicWandMatchesWhenContiguousIsDisabled() throws {
+        let viewModel = makeViewModel()
+        let layerIndex = try #require(viewModel.document.selectedLayerIndex)
+        let canvasSize = CGSize(width: 30, height: 10)
+        let image = try #require(NSImage.rendered(size: canvasSize) { _ in
+            NSColor(deviceRed: 1, green: 0, blue: 0, alpha: 1).setFill()
+            CGRect(x: 0, y: 0, width: 10, height: 10).fill()
+            NSColor(deviceRed: 0, green: 0, blue: 1, alpha: 1).setFill()
+            CGRect(x: 10, y: 0, width: 10, height: 10).fill()
+            NSColor(deviceRed: 1, green: 0, blue: 0, alpha: 1).setFill()
+            CGRect(x: 20, y: 0, width: 10, height: 10).fill()
+        })
+        viewModel.document.canvasSize = canvasSize
+        viewModel.document.layers[layerIndex].image = image
+        viewModel.document.layers[layerIndex].frame = CGRect(origin: .zero, size: canvasSize)
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+
+        let response = registry.execute(request(
+            operation: "call",
+            name: "xomo.selection.magic",
+            arguments: [
+                "x": .number(3),
+                "y": .number(5),
+                "tolerance": .number(0.02),
+                "contiguous": .bool(false)
+            ]
+        ))
+
+        #expect(response.ok)
+        #expect(!viewModel.isMagicWandContiguous)
+        let mask = try #require(viewModel.document.selection?.rasterMask)
+        #expect(maskAlpha(mask, x: 5, y: 5) == 255)
+        #expect(maskAlpha(mask, x: 15, y: 5) == 0)
+        #expect(maskAlpha(mask, x: 25, y: 5) == 255)
     }
 
     @Test func registryAppliesExplicitColorRangeTolerance() throws {

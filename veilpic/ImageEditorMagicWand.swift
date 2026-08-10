@@ -10,12 +10,17 @@ import Foundation
 
 @MainActor
 extension ImageEditorViewModel {
-    func magicSelection(at point: CGPoint, tolerance: CGFloat? = nil) -> ImageEditorSelection? {
+    func magicSelection(
+        at point: CGPoint,
+        tolerance: CGFloat? = nil,
+        contiguous: Bool? = nil
+    ) -> ImageEditorSelection? {
         let effectiveTolerance = max(0, min(1, tolerance ?? self.tolerance))
-        guard let selection = document.compositedImage.contiguousMagicSelection(
+        guard let selection = document.compositedImage.magicSelection(
             at: point,
             canvasSize: document.canvasSize,
-            threshold: effectiveTolerance
+            threshold: effectiveTolerance,
+            contiguous: contiguous ?? isMagicWandContiguous
         ) else {
             return fallbackMagicSelection(at: point)
         }
@@ -50,7 +55,12 @@ private struct MagicWandPixel: Equatable {
 }
 
 private extension NSImage {
-    func contiguousMagicSelection(at point: CGPoint, canvasSize: CGSize, threshold: CGFloat) -> ImageEditorSelection? {
+    func magicSelection(
+        at point: CGPoint,
+        canvasSize: CGSize,
+        threshold: CGFloat,
+        contiguous: Bool
+    ) -> ImageEditorSelection? {
         guard let bitmap = rgbaBitmap() else { return nil }
         let seedX = max(0, min(bitmap.width - 1, Int((point.x / max(size.width, 1)) * CGFloat(bitmap.width))))
         let seedY = max(0, min(bitmap.height - 1, Int((point.y / max(size.height, 1)) * CGFloat(bitmap.height))))
@@ -58,27 +68,14 @@ private extension NSImage {
         let seedPixel = bitmap.pixel(at: seedIndex)
         let clampedThreshold = max(0, min(1, threshold))
 
-        var visited = [Bool](repeating: false, count: bitmap.width * bitmap.height)
         var alpha = [UInt8](repeating: 0, count: bitmap.width * bitmap.height)
-        var queue = [Int]()
-        queue.reserveCapacity(min(bitmap.width * bitmap.height, 65_536))
-        queue.append(seedIndex)
-        visited[seedIndex] = true
-
-        var cursor = 0
         var minX = seedX
         var maxX = seedX
         var minY = seedY
         var maxY = seedY
         var selectedCount = 0
 
-        while cursor < queue.count {
-            let index = queue[cursor]
-            cursor += 1
-
-            let pixel = bitmap.pixel(at: index)
-            guard pixel.distance(to: seedPixel) <= clampedThreshold else { continue }
-
+        func select(_ index: Int) {
             alpha[index] = 255
             selectedCount += 1
             let x = index % bitmap.width
@@ -87,11 +84,34 @@ private extension NSImage {
             maxX = max(maxX, x)
             minY = min(minY, y)
             maxY = max(maxY, y)
+        }
 
-            enqueueMagicNeighbor(x: x - 1, y: y, bitmap: bitmap, visited: &visited, queue: &queue)
-            enqueueMagicNeighbor(x: x + 1, y: y, bitmap: bitmap, visited: &visited, queue: &queue)
-            enqueueMagicNeighbor(x: x, y: y - 1, bitmap: bitmap, visited: &visited, queue: &queue)
-            enqueueMagicNeighbor(x: x, y: y + 1, bitmap: bitmap, visited: &visited, queue: &queue)
+        if contiguous {
+            var visited = [Bool](repeating: false, count: bitmap.width * bitmap.height)
+            var queue = [Int]()
+            queue.reserveCapacity(min(bitmap.width * bitmap.height, 65_536))
+            queue.append(seedIndex)
+            visited[seedIndex] = true
+
+            var cursor = 0
+            while cursor < queue.count {
+                let index = queue[cursor]
+                cursor += 1
+                guard bitmap.pixel(at: index).distance(to: seedPixel) <= clampedThreshold else { continue }
+                select(index)
+
+                let x = index % bitmap.width
+                let y = index / bitmap.width
+                enqueueMagicNeighbor(x: x - 1, y: y, bitmap: bitmap, visited: &visited, queue: &queue)
+                enqueueMagicNeighbor(x: x + 1, y: y, bitmap: bitmap, visited: &visited, queue: &queue)
+                enqueueMagicNeighbor(x: x, y: y - 1, bitmap: bitmap, visited: &visited, queue: &queue)
+                enqueueMagicNeighbor(x: x, y: y + 1, bitmap: bitmap, visited: &visited, queue: &queue)
+            }
+        } else {
+            for index in 0..<(bitmap.width * bitmap.height)
+            where bitmap.pixel(at: index).distance(to: seedPixel) <= clampedThreshold {
+                select(index)
+            }
         }
 
         guard selectedCount > 0 else { return nil }

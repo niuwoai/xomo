@@ -56,6 +56,10 @@ struct ImageEditorOptionsBarStyleTests {
         #expect(optionBarSource.contains(
             ".accessibilityIdentifier(\"image-editor-paint-bucket-contiguous\")"
         ))
+        #expect(optionBarSource.contains("isOn: $viewModel.isMagicWandContiguous"))
+        #expect(optionBarSource.contains(
+            ".accessibilityIdentifier(\"image-editor-magic-wand-contiguous\")"
+        ))
         #expect(optionBarSource.contains(".toggleStyle(.checkbox)\n                    .focusable(false)"))
 
         let explicitForegroundUses = source.components(

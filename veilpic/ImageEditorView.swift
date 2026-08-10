@@ -636,6 +636,16 @@ struct ImageEditorView: View {
                 .fixedSize()
                 .accessibilityIdentifier("image-editor-paint-bucket-contiguous")
             }
+            if viewModel.selectedTool == .magicWand {
+                Toggle(
+                    L10n.text("imageEditor.option.contiguous"),
+                    isOn: $viewModel.isMagicWandContiguous
+                )
+                .toggleStyle(.checkbox)
+                .focusable(false)
+                .fixedSize()
+                .accessibilityIdentifier("image-editor-magic-wand-contiguous")
+            }
 
             if viewModel.selectedTool == .cloneStamp {
                 sampledBrushOptions(
