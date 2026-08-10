@@ -169,7 +169,7 @@ extension ImageEditorViewModel {
             size: normalized.size
         )
         layer.image = normalized
-        layer.frame = frameOverride ?? fittedImportFrame(for: normalized.size)
+        layer.frame = frameOverride ?? centeredImportFrame(for: normalized.size)
         layer.opacity = 1
         layer.blendMode = .normal
         layer.groupID = nil
@@ -286,15 +286,12 @@ extension ImageEditorViewModel {
         return trimmed.isEmpty ? L10n.text("imageEditor.layer.importedFallbackName") : trimmed
     }
 
-    private func fittedImportFrame(for imageSize: CGSize) -> CGRect {
+    private func centeredImportFrame(for imageSize: CGSize) -> CGRect {
         let safeCanvasWidth = max(document.canvasSize.width, 1)
         let safeCanvasHeight = max(document.canvasSize.height, 1)
-        let widthScale = safeCanvasWidth / max(imageSize.width, 1)
-        let heightScale = safeCanvasHeight / max(imageSize.height, 1)
-        let scale = min(1, widthScale, heightScale)
         let outputSize = CGSize(
-            width: max(1, imageSize.width * scale),
-            height: max(1, imageSize.height * scale)
+            width: max(1, imageSize.width),
+            height: max(1, imageSize.height)
         )
         return CGRect(
             x: (safeCanvasWidth - outputSize.width) / 2,

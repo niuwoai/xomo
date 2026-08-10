@@ -86,6 +86,27 @@ struct ClipboardImageWriterTests {
         #expect(viewModel.document.selectedLayer?.frame == sourceFrame)
     }
 
+    @Test func ordinaryPasteKeepsNativeSizeWhenClipboardImageExceedsCanvas() throws {
+        let canvasSize = CGSize(width: 80, height: 60)
+        let clipboardSize = CGSize(width: 140, height: 100)
+        let viewModel = ImageEditorViewModel(
+            sourceName: "large-paste.png",
+            image: solidImage(color: .white, size: canvasSize)
+        ) { _ in }
+        let pasteboard = NSPasteboard(name: NSPasteboard.Name("xomo-tests.large-native-paste"))
+        pasteboard.clearContents()
+        defer { pasteboard.clearContents() }
+        #expect(pasteboard.writeObjects([solidImage(color: .systemPurple, size: clipboardSize)]))
+
+        viewModel.pasteClipboardAsLayer(from: pasteboard)
+
+        #expect(viewModel.document.selectedLayer?.image.size == clipboardSize)
+        #expect(
+            viewModel.document.selectedLayer?.frame
+                == CGRect(x: -30, y: -20, width: 140, height: 100)
+        )
+    }
+
     private func solidImage(color: NSColor, size: CGSize) -> NSImage {
         NSImage(size: size, flipped: false) { rect in
             color.setFill()
