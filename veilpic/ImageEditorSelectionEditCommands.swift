@@ -496,6 +496,9 @@ extension ImageEditorViewModel {
             clippedImage.normalizedBitmapImage(),
             preferredFileName: "\(layer.name)-selection.png"
         )
+        if didCopy {
+            XomoClipboardLayerPayload.write(frame: layer.frame)
+        }
         statusText = didCopy
             ? L10n.text("imageEditor.status.selectionCopiedToClipboard")
             : L10n.text("imageEditor.status.selectionCopyToClipboardFailed")
@@ -572,6 +575,11 @@ extension ImageEditorViewModel {
             mergedImage.normalizedBitmapImage(),
             preferredFileName: "\(document.sourceName)-merged.png"
         )
+        if didCopy {
+            XomoClipboardLayerPayload.write(
+                frame: CGRect(origin: .zero, size: document.canvasSize)
+            )
+        }
         statusText = didCopy
             ? L10n.text("imageEditor.status.copyMergedToClipboard")
             : L10n.text("imageEditor.status.copyMergedToClipboardFailed")
@@ -612,8 +620,8 @@ extension ImageEditorViewModel {
             image: image,
             preferredFileName: preferredFileName
         )
-        if didCopy, let contentBounds, let payload = XomoClipboardLayerPayload.data(for: contentBounds) {
-            NSPasteboard.general.setData(payload, forType: XomoClipboardLayerPayload.pasteboardType)
+        if didCopy, let contentBounds {
+            XomoClipboardLayerPayload.write(frame: contentBounds)
         }
         statusText = didCopy
             ? L10n.text("imageEditor.status.selectedLayersCopiedToClipboard")

@@ -55,6 +55,12 @@ enum XomoClipboardLayerPayload {
         else { return nil }
         return normalized
     }
+
+    @discardableResult
+    static func write(frame: CGRect, to pasteboard: NSPasteboard = .general) -> Bool {
+        guard let payload = data(for: frame) else { return false }
+        return pasteboard.setData(payload, forType: pasteboardType)
+    }
 }
 
 enum ClipboardImageWriter {
