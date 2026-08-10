@@ -732,6 +732,21 @@ struct ImageEditorSelectionOperationTests {
         #expect(viewModel.statusText == L10n.format("imageEditor.status.selectionSpecklesRemoved", 2))
     }
 
+    @Test func speckleFreeSelectionCleanupDoesNotCreateUndoOrHistory() throws {
+        let canvasSize = NSSize(width: 10, height: 10)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: testImage(size: canvasSize)) { _ in }
+        viewModel.document.selection = ImageEditorSelection.rectangle(
+            CGRect(x: 2, y: 2, width: 5, height: 4)
+        )
+        let historyCountBeforeCleanup = viewModel.document.history.count
+
+        viewModel.removeSelectionSpeckles(maximumArea: 3)
+
+        #expect(viewModel.document.history.count == historyCountBeforeCleanup)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionUnchanged"))
+        #expect(viewModel.document.selection?.bounds == CGRect(x: 2, y: 2, width: 5, height: 4))
+    }
+
     @Test func imageEditorMovesSelectionMaskWithoutMovingPixels() async throws {
         let canvasSize = NSSize(width: 8, height: 6)
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: testImage(size: canvasSize)) { _ in }
