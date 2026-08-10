@@ -39,8 +39,14 @@ extension ImageEditorViewModel {
     }
 
     func selectAll() {
+        let fullCanvasSelection = ImageEditorSelection.fullCanvas(size: document.canvasSize)
+        guard !selectionsAreEquivalent(document.selection, fullCanvasSelection) else {
+            statusText = L10n.text("imageEditor.status.selectionUnchanged")
+            return
+        }
+
         pushUndo()
-        document.selection = .fullCanvas(size: document.canvasSize)
+        document.selection = fullCanvasSelection
         appendHistory(L10n.text("imageEditor.history.selectionAll"))
         statusText = L10n.text("imageEditor.status.selectionAll")
     }

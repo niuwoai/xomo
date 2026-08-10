@@ -155,6 +155,21 @@ struct ImageEditorSelectionOperationTests {
         #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionAll"))
     }
 
+    @Test func repeatedSelectAllDoesNotCreateDuplicateUndoOrHistory() throws {
+        let canvasSize = NSSize(width: 40, height: 30)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: testImage(size: canvasSize)) { _ in }
+
+        viewModel.selectAll()
+        let historyCountAfterFirstSelection = viewModel.document.history.count
+        viewModel.selectAll()
+
+        #expect(viewModel.document.history.count == historyCountAfterFirstSelection)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionUnchanged"))
+
+        viewModel.undo()
+        #expect(viewModel.document.selection == nil)
+    }
+
     @Test func quickMaskShowsUnselectedAreaAndUsesQShortcut() throws {
         let canvasSize = NSSize(width: 8, height: 6)
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: testImage(size: canvasSize)) { _ in }

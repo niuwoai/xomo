@@ -3780,7 +3780,7 @@ final class ImageEditorViewModel: ObservableObject {
             : L10n.text("imageEditor.status.selectionCreated")
     }
 
-    private func selectionsAreEquivalent(
+    func selectionsAreEquivalent(
         _ lhs: ImageEditorSelection?,
         _ rhs: ImageEditorSelection?
     ) -> Bool {

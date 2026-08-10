@@ -1097,6 +1097,22 @@ struct XomoAutomationTests {
         #expect(try #require(viewModel.document.selection).bounds.width == 20)
     }
 
+    @Test func registryRepeatedSelectAllDoesNotCreateDuplicateHistory() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        let selectAllRequest = request(operation: "call", name: "xomo.selection.all")
+
+        #expect(registry.execute(selectAllRequest).ok)
+        let historyCountAfterFirstSelection = viewModel.document.history.count
+        #expect(registry.execute(selectAllRequest).ok)
+
+        #expect(viewModel.document.history.count == historyCountAfterFirstSelection)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionUnchanged"))
+        viewModel.undo()
+        #expect(viewModel.document.selection == nil)
+    }
+
     @Test func registrySelectsSeparatedMagicWandMatchesWhenContiguousIsDisabled() throws {
         let viewModel = makeViewModel()
         let layerIndex = try #require(viewModel.document.selectedLayerIndex)
