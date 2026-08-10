@@ -652,6 +652,31 @@ struct XomoCanvasObjectTests {
         #expect(viewModel.selectedLayerTransformFrame == initialFrame)
     }
 
+    @Test func undoAndRedoFirstCancelAnActivePointerMove() throws {
+        for performHistoryCommand in [
+            { (viewModel: ImageEditorViewModel) in viewModel.undo() },
+            { (viewModel: ImageEditorViewModel) in viewModel.redo() }
+        ] {
+            let viewModel = makeViewModel()
+            viewModel.insertXomoComponent(.button, at: CGPoint(x: 80, y: 90))
+            let initialFrame = try #require(viewModel.selectedLayerTransformFrame)
+            let initialHistoryCount = viewModel.document.history.count
+            let initialUndoCount = viewModel.undoStack.count
+
+            #expect(viewModel.beginMovingSelectedLayer())
+            viewModel.moveSelectedLayer(by: CGSize(width: 20, height: 10), snapping: false)
+            #expect(viewModel.hasActiveLayerMoveTransaction)
+
+            performHistoryCommand(viewModel)
+
+            #expect(!viewModel.hasActiveLayerMoveTransaction)
+            #expect(viewModel.movingObjectPreviewFrame == nil)
+            #expect(viewModel.selectedLayerTransformFrame == initialFrame)
+            #expect(viewModel.document.history.count == initialHistoryCount)
+            #expect(viewModel.undoStack.count == initialUndoCount)
+        }
+    }
+
     @Test func cancellingAnOptionDragRemovesThePendingDuplicate() throws {
         let viewModel = makeViewModel()
         viewModel.insertXomoComponent(.button, at: CGPoint(x: 80, y: 90))

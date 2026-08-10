@@ -3205,6 +3205,11 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     func undo() {
+        // A live pointer move owns the top snapshot until mouse-up. Undoing
+        // that snapshot as ordinary history would restore the document while
+        // leaving the transform transaction active. The first history command
+        // therefore cancels the preview; a subsequent command reaches history.
+        guard !cancelMovingSelectedLayer() else { return }
         guard let previous = undoStack.popLast() else { return }
         clearSelectedLayerTransformReferencePoint()
         let previousThemeState = undoXomoThemeStates.popLast() ?? currentXomoThemeUndoState
@@ -3223,6 +3228,9 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     func redo() {
+        // Redo follows the same transaction boundary as Undo: an unfinished
+        // pointer move is cancelled before either history stack can change.
+        guard !cancelMovingSelectedLayer() else { return }
         guard let next = redoStack.popLast() else { return }
         clearSelectedLayerTransformReferencePoint()
         let nextThemeState = redoXomoThemeStates.popLast() ?? currentXomoThemeUndoState
