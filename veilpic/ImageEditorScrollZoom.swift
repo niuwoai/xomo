@@ -43,6 +43,11 @@ enum ImageEditorObjectDragEventPolicy {
         return relevantFlags.isEmpty && !hasTransformTarget
     }
 
+    static func allowsCloneDrag(modifierFlags: NSEvent.ModifierFlags) -> Bool {
+        let relevantFlags = modifierFlags.intersection([.command, .option, .shift, .control])
+        return relevantFlags == [.option] || relevantFlags == [.option, .shift]
+    }
+
     static func releaseDecision(
         eventType: NSEvent.EventType,
         hasObjectMoveCandidate: Bool,

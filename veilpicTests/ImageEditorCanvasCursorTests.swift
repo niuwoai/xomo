@@ -697,6 +697,20 @@ struct ImageEditorCanvasCursorTests {
         }
     }
 
+    @Test func optionCloneDragAcceptsShiftConstraintButRejectsConflictingModifiers() {
+        #expect(ImageEditorObjectDragEventPolicy.allowsCloneDrag(modifierFlags: [.option]))
+        #expect(ImageEditorObjectDragEventPolicy.allowsCloneDrag(
+            modifierFlags: [.option, .shift]
+        ))
+        #expect(!ImageEditorObjectDragEventPolicy.allowsCloneDrag(modifierFlags: [.shift]))
+        #expect(!ImageEditorObjectDragEventPolicy.allowsCloneDrag(
+            modifierFlags: [.option, .command]
+        ))
+        #expect(!ImageEditorObjectDragEventPolicy.allowsCloneDrag(
+            modifierFlags: [.option, .control]
+        ))
+    }
+
     @Test func primaryDrawingToolsUseBalancedAppKitPointerCaptureOnlyInToolsMode() {
         for tool in [ImageEditorTool.brush, .eraser, .rectangle, .ellipse, .text] {
             #expect(

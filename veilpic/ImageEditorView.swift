@@ -3162,8 +3162,9 @@ struct ImageEditorView: View {
                         updateDeliveryObjectMove(translation: value.translation, in: size)
                         break
                     }
-                    let cloneModifiers = NSEvent.modifierFlags.intersection([.command, .control, .option, .shift])
-                    if cloneModifiers == [.option],
+                    if ImageEditorObjectDragEventPolicy.allowsCloneDrag(
+                        modifierFlags: NSEvent.modifierFlags
+                    ),
                        !isCanvasCloneGestureActive,
                        !isCanvasSelectionGestureActive,
                        !isObjectMoveGestureActive {
