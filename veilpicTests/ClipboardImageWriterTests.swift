@@ -63,14 +63,15 @@ struct ClipboardImageWriterTests {
         )
     }
 
-    @Test func cuttingSelectionPreservesLayerFrameForPasteInPlace() throws {
+    @Test func cuttingSelectionCropsToSelectionFrameForPasteInPlace() throws {
         let canvas = solidImage(color: .clear, size: CGSize(width: 120, height: 90))
         let viewModel = ImageEditorViewModel(sourceName: "selection-cut.png", image: canvas) { _ in }
         let sourceIndex = try #require(viewModel.document.selectedLayerIndex)
         let sourceFrame = CGRect(x: 21, y: 17, width: 30, height: 24)
         viewModel.document.layers[sourceIndex].image = solidImage(color: .systemPink, size: sourceFrame.size)
         viewModel.document.layers[sourceIndex].frame = sourceFrame
-        viewModel.document.selection = .rectangle(CGRect(x: 25, y: 21, width: 12, height: 10))
+        let selectionFrame = CGRect(x: 25, y: 21, width: 12, height: 10)
+        viewModel.document.selection = .rectangle(selectionFrame)
         let pasteboard = NSPasteboard.general
         pasteboard.clearContents()
         defer { pasteboard.clearContents() }
@@ -84,9 +85,11 @@ struct ClipboardImageWriterTests {
         )
         #expect(clearedPixel.alphaComponent < 0.05)
         #expect(viewModel.canPasteClipboardImageInPlace)
-        #expect(XomoClipboardLayerPayload.frame(from: pasteboard) == sourceFrame)
+        let cutImage = try #require(NSImage(pasteboard: pasteboard))
+        #expect(cutImage.size == selectionFrame.size)
+        #expect(XomoClipboardLayerPayload.frame(from: pasteboard) == selectionFrame)
         viewModel.pasteClipboardInPlaceAsLayer()
-        #expect(viewModel.document.selectedLayer?.frame == sourceFrame)
+        #expect(viewModel.document.selectedLayer?.frame == selectionFrame)
     }
 
     @Test func ordinaryPasteKeepsNativeSizeWhenClipboardImageExceedsCanvas() throws {

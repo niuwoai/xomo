@@ -557,7 +557,11 @@ extension ImageEditorViewModel {
                 canvasSize: document.canvasSize,
                 feather: feather
               ),
-              clippedImage.nonTransparentPixelBounds() != nil
+              let clipboardCopy = selectionClipboardCopy(
+                clippedImage: clippedImage,
+                selection: selection,
+                layerFrame: document.layers[index].frame
+              )
         else {
             statusText = L10n.text("imageEditor.status.selectionEmpty")
             return
@@ -565,7 +569,7 @@ extension ImageEditorViewModel {
 
         let sourceLayer = document.layers[index]
         let didCopy = ClipboardImageWriter.copy(
-            clippedImage.normalizedBitmapImage(),
+            clipboardCopy.image,
             preferredFileName: "\(sourceLayer.name)-selection.png"
         )
         guard didCopy,
@@ -580,7 +584,7 @@ extension ImageEditorViewModel {
             return
         }
 
-        XomoClipboardLayerPayload.write(frame: sourceLayer.frame)
+        XomoClipboardLayerPayload.write(frame: clipboardCopy.frame)
         pushUndo()
         document.layers[index].image = output.normalizedBitmapImage()
         appendHistory(L10n.text("imageEditor.history.selectionCutClipboard"))
