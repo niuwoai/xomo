@@ -1190,6 +1190,24 @@ struct XomoAutomationTests {
         #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionUnchanged"))
     }
 
+    @Test func registrySymmetricSelectionFlipDoesNotCreateHistory() throws {
+        let viewModel = makeViewModel()
+        viewModel.document.selection = .fullCanvas(size: viewModel.document.canvasSize)
+        let historyCountBeforeFlip = viewModel.document.history.count
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+
+        let response = registry.execute(request(
+            operation: "call",
+            name: "xomo.selection.modify",
+            arguments: ["action": .string("flipHorizontal")]
+        ))
+
+        #expect(response.ok)
+        #expect(viewModel.document.history.count == historyCountBeforeFlip)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionUnchanged"))
+    }
+
     @Test func registrySelectsSeparatedMagicWandMatchesWhenContiguousIsDisabled() throws {
         let viewModel = makeViewModel()
         let layerIndex = try #require(viewModel.document.selectedLayerIndex)

@@ -766,6 +766,22 @@ struct ImageEditorSelectionOperationTests {
         #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionFlippedVertical"))
     }
 
+    @Test func symmetricSelectionFlipDoesNotCreateUndoOrHistory() throws {
+        let canvasSize = NSSize(width: 8, height: 6)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: testImage(size: canvasSize)) { _ in }
+        viewModel.document.selection = ImageEditorSelection.rectangle(
+            CGRect(x: 2, y: 1, width: 4, height: 3)
+        )
+        let historyCountBeforeFlip = viewModel.document.history.count
+
+        viewModel.flipSelectionHorizontal()
+        viewModel.flipSelectionVertical()
+
+        #expect(viewModel.document.history.count == historyCountBeforeFlip)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionUnchanged"))
+        #expect(viewModel.document.selection?.bounds == CGRect(x: 2, y: 1, width: 4, height: 3))
+    }
+
     @Test func imageEditorRotatesSelectionMaskAroundItsOwnBounds() async throws {
         let canvasSize = NSSize(width: 7, height: 6)
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: testImage(size: canvasSize)) { _ in }

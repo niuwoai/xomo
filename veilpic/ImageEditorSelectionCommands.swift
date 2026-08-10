@@ -494,6 +494,10 @@ extension ImageEditorViewModel {
             statusText = L10n.text("imageEditor.status.selectionEmpty")
             return
         }
+        guard !selectionsAreEquivalent(selection, modified) else {
+            statusText = L10n.text("imageEditor.status.selectionUnchanged")
+            return
+        }
 
         pushUndo()
         document.selection = modified
