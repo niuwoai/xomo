@@ -6776,6 +6776,47 @@ struct veilpicTests {
     }
 
     @MainActor
+    @Test func repeatedMagicWandSelectionDoesNotCreateNoOpHistory() throws {
+        let image = testBitmapImage(
+            size: NSSize(width: 80, height: 60),
+            background: .systemBlue,
+            fills: [(CGRect(x: 5, y: 10, width: 20, height: 40), .systemRed)]
+        )
+        let viewModel = editableRasterViewModel(image: image)
+        viewModel.createMagicSelection(at: CGPoint(x: 15, y: 30))
+        let selectionBefore = try #require(viewModel.document.selection)
+        let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
+
+        viewModel.createMagicSelection(at: CGPoint(x: 15, y: 30))
+
+        #expect(viewModel.document.selection == selectionBefore)
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.undoStack.count == undoCount)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionUnchanged"))
+    }
+
+    @MainActor
+    @Test func addingSelectionAlreadyInsideCurrentSelectionDoesNotCreateHistory() throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "selection-no-op.png",
+            image: testImage(color: .white, size: NSSize(width: 80, height: 60))
+        ) { _ in }
+        viewModel.createRectSelection(from: CGPoint(x: 5, y: 5), to: CGPoint(x: 60, y: 50))
+        let selectionBefore = try #require(viewModel.document.selection)
+        let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
+        viewModel.selectionMode = .add
+
+        viewModel.createRectSelection(from: CGPoint(x: 20, y: 20), to: CGPoint(x: 40, y: 40))
+
+        #expect(viewModel.document.selection == selectionBefore)
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.undoStack.count == undoCount)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionUnchanged"))
+    }
+
+    @MainActor
     @Test func imageEditorSelectionBooleanModesProduceRasterMask() async throws {
         let viewModel = ImageEditorViewModel(
             sourceName: "source.png",

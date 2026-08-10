@@ -2011,6 +2011,7 @@
 "imageEditor.status.selectionFillHoles" = "Selection holes filled";
 "imageEditor.status.selectionSpecklesRemoved" = "Selection speckles up to %d px removed";
 "imageEditor.status.selectionEmpty" = "Selection result is empty";
+"imageEditor.status.selectionUnchanged" = "Selection did not change";
 "imageEditor.status.selectionFromLayer" = "Selection loaded from current layer transparency";
 "imageEditor.status.selectionFromSelectedLayers" = "Selection loaded from %d layer transparencies";
 "imageEditor.status.selectionFromLayerFailed" = "The current layer has no transparency selection to load";

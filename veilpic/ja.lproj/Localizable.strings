@@ -2011,6 +2011,7 @@
 "imageEditor.status.selectionFillHoles" = "選択範囲内の穴を埋めました";
 "imageEditor.status.selectionSpecklesRemoved" = "%d px 以下の選択範囲ノイズを削除しました";
 "imageEditor.status.selectionEmpty" = "選択結果は空です";
+"imageEditor.status.selectionUnchanged" = "選択範囲は変更されませんでした";
 "imageEditor.status.selectionFromLayer" = "現在のレイヤーの透明度から選択範囲を読み込みました";
 "imageEditor.status.selectionFromSelectedLayers" = "%d個のレイヤー透明度から選択範囲を読み込みました";
 "imageEditor.status.selectionFromLayerFailed" = "現在のレイヤーには読み込める透明度選択範囲がありません";

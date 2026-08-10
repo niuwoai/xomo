@@ -3764,6 +3764,10 @@ final class ImageEditorViewModel: ObservableObject {
             mode: selectionMode,
             canvasSize: document.canvasSize
         )
+        guard !selectionsAreEquivalent(nextSelection, existingSelection) else {
+            statusText = L10n.text("imageEditor.status.selectionUnchanged")
+            return
+        }
 
         pushUndo()
         mutateDocumentWithoutInvalidatingRenderedImageCaches { document in
@@ -3774,6 +3778,19 @@ final class ImageEditorViewModel: ObservableObject {
         statusText = nextSelection == nil
             ? L10n.text("imageEditor.status.selectionEmpty")
             : L10n.text("imageEditor.status.selectionCreated")
+    }
+
+    private func selectionsAreEquivalent(
+        _ lhs: ImageEditorSelection?,
+        _ rhs: ImageEditorSelection?
+    ) -> Bool {
+        if lhs == rhs { return true }
+        guard let lhs,
+              let rhs,
+              let lhsMask = lhs.rasterizedMask(canvasSize: document.canvasSize),
+              let rhsMask = rhs.rasterizedMask(canvasSize: document.canvasSize)
+        else { return false }
+        return lhsMask == rhsMask
     }
 
     func isLayerSelected(_ id: UUID) -> Bool {

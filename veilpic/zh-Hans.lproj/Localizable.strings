@@ -2011,6 +2011,7 @@
 "imageEditor.status.selectionFillHoles" = "已填充选区内部孔洞";
 "imageEditor.status.selectionSpecklesRemoved" = "已删除不超过 %d px 的选区噪点";
 "imageEditor.status.selectionEmpty" = "选区结果为空";
+"imageEditor.status.selectionUnchanged" = "选区没有变化";
 "imageEditor.status.selectionFromLayer" = "已从当前图层透明度载入选区";
 "imageEditor.status.selectionFromSelectedLayers" = "已从 %d 个图层透明度载入选区";
 "imageEditor.status.selectionFromLayerFailed" = "当前图层没有可载入的透明度选区";
