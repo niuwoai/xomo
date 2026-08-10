@@ -318,6 +318,32 @@ struct ImageEditorSelectionOperationTests {
         #expect(viewModel.canReselectSelection)
     }
 
+    @Test func repeatedReselectAndEquivalentSavedRestoreDoNotCreateDuplicateHistory() throws {
+        let canvasSize = NSSize(width: 40, height: 30)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: testImage(size: canvasSize)) { _ in }
+
+        viewModel.createRectSelection(from: CGPoint(x: 6, y: 4), to: CGPoint(x: 24, y: 18))
+        let originalSelection = try #require(viewModel.document.selection)
+        viewModel.clearSelection()
+        viewModel.reselectSelection()
+        let historyCountAfterReselect = viewModel.document.history.count
+
+        viewModel.reselectSelection()
+
+        #expect(viewModel.document.history.count == historyCountAfterReselect)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionUnchanged"))
+        viewModel.undo()
+        #expect(viewModel.document.selection == nil)
+
+        viewModel.document.savedSelection = originalSelection
+        viewModel.document.selection = originalSelection
+        let historyCountBeforeRestore = viewModel.document.history.count
+        viewModel.restoreSavedSelection()
+
+        #expect(viewModel.document.history.count == historyCountBeforeRestore)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionUnchanged"))
+    }
+
     @Test func imageEditorCanFillSelectionWithBackgroundColorShortcutCommand() async throws {
         let canvasSize = NSSize(width: 40, height: 30)
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: solidImage(color: .systemRed, size: canvasSize)) { _ in }

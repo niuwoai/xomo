@@ -84,6 +84,10 @@ extension ImageEditorViewModel {
             statusText = L10n.text("imageEditor.status.noReselectSelection")
             return
         }
+        guard !selectionsAreEquivalent(document.selection, selection) else {
+            statusText = L10n.text("imageEditor.status.selectionUnchanged")
+            return
+        }
 
         pushUndo()
         document.selection = selection
@@ -94,6 +98,10 @@ extension ImageEditorViewModel {
     func restoreSavedSelection() {
         guard let selection = document.savedSelection else {
             statusText = L10n.text("imageEditor.status.noSavedSelection")
+            return
+        }
+        guard !selectionsAreEquivalent(document.selection, selection) else {
+            statusText = L10n.text("imageEditor.status.selectionUnchanged")
             return
         }
 

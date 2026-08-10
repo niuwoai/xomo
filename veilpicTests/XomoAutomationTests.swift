@@ -1113,6 +1113,26 @@ struct XomoAutomationTests {
         #expect(viewModel.document.selection == nil)
     }
 
+    @Test func registryEquivalentSavedSelectionRestoreDoesNotCreateDuplicateHistory() throws {
+        let viewModel = makeViewModel()
+        let selection = ImageEditorSelection.rectangle(CGRect(x: 2, y: 2, width: 8, height: 5))
+        viewModel.document.selection = selection
+        viewModel.document.savedSelection = selection
+        let historyCountBeforeRestore = viewModel.document.history.count
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+
+        let response = registry.execute(request(
+            operation: "call",
+            name: "xomo.selection.modify",
+            arguments: ["action": .string("restoreSaved")]
+        ))
+
+        #expect(response.ok)
+        #expect(viewModel.document.history.count == historyCountBeforeRestore)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionUnchanged"))
+    }
+
     @Test func registrySelectsSeparatedMagicWandMatchesWhenContiguousIsDisabled() throws {
         let viewModel = makeViewModel()
         let layerIndex = try #require(viewModel.document.selectedLayerIndex)
