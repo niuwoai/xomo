@@ -1,6 +1,8 @@
 # Xomo 经典 Photoshop 能力路线图
 
-> 最后更新：2026-08-10 ｜ 当前版本：v2.12.0-rc804 ｜ 目标：以经典 Photoshop 能力作为现代混合编辑器的可靠像素与图层底座
+> 最后更新：2026-08-10 ｜ 当前版本：v2.12.0-rc805 ｜ 目标：以经典 Photoshop 能力作为现代混合编辑器的可靠像素与图层底座
+
+- `v2.12.0-rc805`：Figma 来源摘要输出统一导入范围，`xomo.layer.list` 可筛选完整设计文档、FigJam 画板或仅预览资源，客户端无需重复维护资源类型能力表。导入范围输出、组合筛选及错误边界 1/1、App MCP Schema 1/1、CLI 2/2、发布契约 6/6（16 条断言）通过。下一次周期完整门禁与 `/Applications` 覆盖安装为 rc840。
 
 - `v2.12.0-rc804`：Figma 来源摘要输出资源类型，`xomo.layer.list` 可按 design/proto/board/slides 等官方链接资源筛选，继续复用安全 canonical URL 解析并与 file key、节点身份组合。资源类型与边界 1/1、App MCP Schema 1/1、CLI 2/2、发布契约 6/6（16 条断言）通过。下一次周期完整门禁与 `/Applications` 覆盖安装为 rc840。
 

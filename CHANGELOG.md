@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.12.0-rc805 - 2026-08-10
+
+### Added
+- Figma 来源摘要新增 `importScope`，`xomo.layer.list` 新增 `figmaImportScope` 筛选，直接公开 designDocument、figJamBoard 与 previewOnly 三种既有导入能力判断。
+- 导入范围由资源类型的统一模型推导，可与 resource type、file key、节点身份和其它 Figma 条件组合；未知枚举及错误 JSON 类型明确失败。
+
+### Tests
+- 导入范围输出、组合命中/未命中与错误边界 1/1、App MCP Schema 1/1、CLI 2/2、发布契约 6/6（16 条断言）通过。
+
 ## 2.12.0-rc804 - 2026-08-10
 
 ### Added

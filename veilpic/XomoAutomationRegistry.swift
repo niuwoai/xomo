@@ -975,6 +975,13 @@ final class XomoAutomationRegistry {
                 "Unknown Figma resource type filter: \(resourceTypeFilter ?? "non-string")"
             )
         }
+        let importScopeFilter = arguments["figmaImportScope"]?.stringValue
+        if arguments["figmaImportScope"] != nil,
+           importScopeFilter.flatMap(XomoFigmaPlannedImportScope.init(rawValue:)) == nil {
+            throw XomoAutomationCallError.invalidArgument(
+                "Unknown Figma import scope filter: \(importScopeFilter ?? "non-string")"
+            )
+        }
         let componentRoleFilter: String
         if let componentRoleArgument = arguments["figmaComponentRole"] {
             guard let value = componentRoleArgument.stringValue else {
@@ -1019,7 +1026,7 @@ final class XomoAutomationRegistry {
                 return false
             }
 
-            let sourcePreview = fileKeyFilter != nil || resourceTypeFilter != nil
+            let sourcePreview = fileKeyFilter != nil || resourceTypeFilter != nil || importScopeFilter != nil
                 ? figmaSourcePreview(for: layer)
                 : nil
             if let fileKeyFilter,
@@ -1029,6 +1036,11 @@ final class XomoAutomationRegistry {
 
             if let resourceTypeFilter,
                sourcePreview?.resourceType.rawValue != resourceTypeFilter {
+                return false
+            }
+
+            if let importScopeFilter,
+               sourcePreview?.plannedImportScope.rawValue != importScopeFilter {
                 return false
             }
 
@@ -1086,6 +1098,7 @@ final class XomoAutomationRegistry {
             "id": .string(sourceID),
             "fileKey": sourcePreview.map { .string($0.fileKey) } ?? .null,
             "resourceType": sourcePreview.map { .string($0.resourceType.rawValue) } ?? .null,
+            "importScope": sourcePreview.map { .string($0.plannedImportScope.rawValue) } ?? .null,
             "url": layer.xomoFigmaSourceURL.map { .string($0.absoluteString) } ?? .null,
             "nodeType": layer.xomoFigmaNodeType.map(XomoJSONValue.string) ?? .null,
             "componentRole": layer.xomoFigmaComponentRole.map {
@@ -5959,6 +5972,7 @@ private extension XomoAutomationRegistry {
             "figmaSource": XomoAutomationSchema.string(description: "Filter by retained Figma source identity", values: ["all", "imported", "local"]),
             "figmaFileKey": XomoAutomationSchema.string(description: "Filter by exact Figma file key parsed from the retained canonical source URL"),
             "figmaResourceType": XomoAutomationSchema.string(description: "Filter by Figma resource path type parsed from the retained canonical source URL", values: XomoFigmaResourceType.allCases.map(\.rawValue)),
+            "figmaImportScope": XomoAutomationSchema.string(description: "Filter by Xomo's planned import scope for the retained Figma resource", values: XomoFigmaPlannedImportScope.allCases.map(\.rawValue)),
             "figmaNodeId": XomoAutomationSchema.string(description: "Filter by exact retained Figma node ID; canonical colon and URL hyphen separators are accepted"),
             "figmaNodeType": XomoAutomationSchema.string(description: "Filter by exact retained Figma node type, case-insensitive"),
             "figmaComponentRole": XomoAutomationSchema.string(description: "Filter by retained Figma component role", values: ["all", "none"] + XomoFigmaComponentRole.allCases.map(\.rawValue))

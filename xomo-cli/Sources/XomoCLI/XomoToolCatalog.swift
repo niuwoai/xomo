@@ -21,6 +21,7 @@ enum XomoToolCatalog {
                         "figmaSource": ["type": "string", "enum": ["all", "imported", "local"]],
                         "figmaFileKey": ["type": "string"],
                         "figmaResourceType": ["type": "string", "enum": ["design", "file", "proto", "board", "slides", "deck", "site", "buzz", "make"]],
+                        "figmaImportScope": ["type": "string", "enum": ["designDocument", "figJamBoard", "previewOnly"]],
                         "figmaNodeId": ["type": "string"],
                         "figmaNodeType": ["type": "string"],
                         "figmaComponentRole": ["type": "string", "enum": ["all", "none", "COMPONENT", "COMPONENT_SET", "INSTANCE"]]

@@ -235,6 +235,9 @@ struct XomoAutomationTests {
             .string("design"), .string("file"), .string("proto"), .string("board"),
             .string("slides"), .string("deck"), .string("site"), .string("buzz"), .string("make")
         ]))
+        #expect(layerListTool["inputSchema"]?.objectValue?["properties"]?.objectValue?["figmaImportScope"]?.objectValue?["enum"] == .array([
+            .string("designDocument"), .string("figJamBoard"), .string("previewOnly")
+        ]))
         #expect(layerListTool["inputSchema"]?.objectValue?["properties"]?.objectValue?["figmaComponentRole"]?.objectValue?["enum"] == .array([
             .string("all"),
             .string("none"),
@@ -2090,6 +2093,7 @@ struct XomoAutomationTests {
         #expect(layer["figmaSource"]?.objectValue?["id"] == .string("12:34"))
         #expect(layer["figmaSource"]?.objectValue?["fileKey"] == .string("abc123"))
         #expect(layer["figmaSource"]?.objectValue?["resourceType"] == .string("design"))
+        #expect(layer["figmaSource"]?.objectValue?["importScope"] == .string("designDocument"))
         #expect(layer["figmaSource"]?.objectValue?["url"] == .string(
             "https://www.figma.com/design/abc123/Checkout?node-id=12-34"
         ))
@@ -2146,6 +2150,7 @@ struct XomoAutomationTests {
                 "figmaNodeId": .string(" 12-34 "),
                 "figmaFileKey": .string(" abc123 "),
                 "figmaResourceType": .string("design"),
+                "figmaImportScope": .string("designDocument"),
                 "figmaComponentRole": .string("INSTANCE"),
                 "figmaSource": .string("imported"),
                 "figmaConstraints": .string("conflicted")
@@ -2184,6 +2189,17 @@ struct XomoAutomationTests {
         ))
         #expect(wrongResourceType.ok)
         #expect(wrongResourceType.result?.arrayValue?.isEmpty == true)
+
+        let wrongImportScope = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.list",
+            arguments: [
+                "figmaImportScope": .string("figJamBoard"),
+                "figmaResourceType": .string("design")
+            ]
+        ))
+        #expect(wrongImportScope.ok)
+        #expect(wrongImportScope.result?.arrayValue?.isEmpty == true)
 
         let componentsOnly = registry.execute(request(
             operation: "call",
@@ -2273,6 +2289,18 @@ struct XomoAutomationTests {
             arguments: ["figmaResourceType": .number(1)]
         ))
         #expect(!invalidResourceTypeValue.ok)
+        let invalidImportScope = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.list",
+            arguments: ["figmaImportScope": .string("editable")]
+        ))
+        #expect(!invalidImportScope.ok)
+        let invalidImportScopeValue = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.list",
+            arguments: ["figmaImportScope": .bool(false)]
+        ))
+        #expect(!invalidImportScopeValue.ok)
         let invalidComponentRole = registry.execute(request(
             operation: "call",
             name: "xomo.layer.list",

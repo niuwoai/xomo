@@ -47,6 +47,10 @@ struct XomoMCPServerTests {
         #expect(figmaResourceTypeFilter["enum"] as? [String] == [
             "design", "file", "proto", "board", "slides", "deck", "site", "buzz", "make"
         ])
+        let figmaImportScopeFilter = try #require(layerListProperties["figmaImportScope"] as? [String: Any])
+        #expect(figmaImportScopeFilter["enum"] as? [String] == [
+            "designDocument", "figJamBoard", "previewOnly"
+        ])
         let figmaComponentRoleFilter = try #require(layerListProperties["figmaComponentRole"] as? [String: Any])
         #expect(figmaComponentRoleFilter["enum"] as? [String] == [
             "all", "none", "COMPONENT", "COMPONENT_SET", "INSTANCE"

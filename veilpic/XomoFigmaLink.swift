@@ -46,7 +46,7 @@ enum XomoFigmaResourceType: String, CaseIterable, Codable, Sendable {
     }
 }
 
-enum XomoFigmaPlannedImportScope: String, Codable, Sendable {
+enum XomoFigmaPlannedImportScope: String, CaseIterable, Codable, Sendable {
     case designDocument
     case figJamBoard
     case previewOnly
