@@ -2242,6 +2242,11 @@ struct ImageEditorView: View {
                             dragEnd = nil
                             refreshCanvasCursor(in: geometry.size)
                         },
+                        onRangeToolDragCancelled: {
+                            dragStart = nil
+                            dragEnd = nil
+                            refreshCanvasCursor(in: geometry.size)
+                        },
                         onPrimaryToolDragBegan: { location in
                             guard ImageEditorPrimaryToolPointerCapture.shouldCapture(
                                     sidebarTab: viewModel.selectedLeftSidebarTab,
@@ -2345,6 +2350,15 @@ struct ImageEditorView: View {
                             primaryToolViewStart = nil
                             refreshCanvasCursor(in: geometry.size)
                         },
+                        onPrimaryToolDragCancelled: {
+                            brushStrokeSamples = []
+                            activeBrushPressure = nil
+                            activeBrushTilt = nil
+                            dragStart = nil
+                            dragEnd = nil
+                            primaryToolViewStart = nil
+                            refreshCanvasCursor(in: geometry.size)
+                        },
                         onLayerResizeBegan: { location in
                             guard case let .resize(handle) = layerTransformCursorTarget(
                                 at: location,
@@ -2374,6 +2388,11 @@ struct ImageEditorView: View {
                                 )
                                 viewModel.finishResizingSelectedLayer()
                             }
+                            activeResizeHandle = nil
+                            refreshCanvasCursor(in: geometry.size)
+                        },
+                        onLayerResizeCancelled: {
+                            _ = viewModel.cancelTransformingSelectedLayer()
                             activeResizeHandle = nil
                             refreshCanvasCursor(in: geometry.size)
                         },

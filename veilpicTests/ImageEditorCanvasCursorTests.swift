@@ -707,6 +707,34 @@ struct ImageEditorCanvasCursorTests {
         )
     }
 
+    @Test func interruptedPrimaryPointerCaptureCancelsExactlyItsActiveTransaction() {
+        let activeTransaction = ImageEditorPrimaryPointerResetPolicy.decision(
+            hasActiveTransaction: true,
+            activeKind: .primaryTool,
+            isLayerResizing: false
+        )
+        #expect(activeTransaction.shouldCancelActiveTransaction)
+        #expect(!activeTransaction.shouldCancelPrimaryTool)
+        #expect(!activeTransaction.shouldCancelRangeTool)
+        #expect(!activeTransaction.shouldCancelLayerResize)
+
+        let rangeFallback = ImageEditorPrimaryPointerResetPolicy.decision(
+            hasActiveTransaction: false,
+            activeKind: .rangeTool,
+            isLayerResizing: false
+        )
+        #expect(rangeFallback.shouldCancelRangeTool)
+        #expect(!rangeFallback.shouldCancelPrimaryTool)
+
+        let resize = ImageEditorPrimaryPointerResetPolicy.decision(
+            hasActiveTransaction: false,
+            activeKind: .none,
+            isLayerResizing: true
+        )
+        #expect(resize.shouldCancelLayerResize)
+        #expect(!resize.shouldCancelActiveTransaction)
+    }
+
     @Test func applicationDeactivationCancelsTheNativeObjectMoveCapture() throws {
         let repositoryRoot = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()
@@ -749,6 +777,30 @@ struct ImageEditorCanvasCursorTests {
         #expect(source.contains("self.cancelStaleMiddleMousePanCapture()"))
         #expect(source.contains("onMiddleMousePanEnded?()"))
         #expect(source.contains("lastMiddleMousePoint = nil"))
+    }
+
+    @Test func appAndWindowDeactivationCancelUncommittedCanvasPointerWork() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let monitorSource = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorScrollZoom.swift"),
+            encoding: .utf8
+        )
+        let viewSource = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(monitorSource.contains("cancelStalePrimaryPointerCapture()"))
+        #expect(monitorSource.contains("transaction.onCancelled?()"))
+        #expect(monitorSource.contains("onRangeToolDragCancelled?()"))
+        #expect(monitorSource.contains("onPrimaryToolDragCancelled?()"))
+        #expect(monitorSource.contains("onLayerResizeCancelled?()"))
+        #expect(viewSource.contains("onRangeToolDragCancelled:"))
+        #expect(viewSource.contains("onPrimaryToolDragCancelled:"))
+        #expect(viewSource.contains("onLayerResizeCancelled:"))
+        #expect(viewSource.contains("viewModel.cancelTransformingSelectedLayer()"))
     }
 
     @Test func shiftCanBeginAConstrainedDragWhileReservedModifiersAndHandlesWin() {
