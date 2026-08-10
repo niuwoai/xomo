@@ -94,6 +94,55 @@ struct ClipboardImageWriterTests {
         #expect(viewModel.document.selectedLayer?.frame == selectionFrame)
     }
 
+    @Test func copyingSeparatedSelectedLayersPreservesUnionFrameForPasteInPlace() throws {
+        let canvasSize = CGSize(width: 120, height: 100)
+        let viewModel = ImageEditorViewModel(
+            sourceName: "selected-layers-copy.png",
+            image: .transparent(size: canvasSize)
+        ) { _ in }
+        let firstIndex = try #require(viewModel.document.selectedLayerIndex)
+        let firstFrame = CGRect(x: 10, y: 8, width: 20, height: 12)
+        viewModel.document.layers[firstIndex].image = solidImage(
+            color: .systemOrange,
+            size: firstFrame.size
+        )
+        viewModel.document.layers[firstIndex].frame = firstFrame
+        let firstID = viewModel.document.layers[firstIndex].id
+
+        let secondFrame = CGRect(x: 50, y: 60, width: 15, height: 10)
+        var secondLayer = ImageEditorLayer.blank(name: "Second", size: secondFrame.size)
+        secondLayer.image = solidImage(color: .systemBlue, size: secondFrame.size)
+        secondLayer.frame = secondFrame
+        viewModel.document.layers.append(secondLayer)
+        viewModel.document.selectedLayerID = secondLayer.id
+        viewModel.document.selectedLayerIDs = [firstID, secondLayer.id]
+        let expectedFrame = CGRect(x: 10, y: 8, width: 55, height: 62)
+        let pasteboard = NSPasteboard.general
+        pasteboard.clearContents()
+        defer { pasteboard.clearContents() }
+
+        viewModel.copySelectedLayersToClipboard()
+
+        let copiedImage = try #require(NSImage(pasteboard: pasteboard))
+        #expect(copiedImage.size == expectedFrame.size)
+        #expect(XomoClipboardLayerPayload.frame(from: pasteboard) == expectedFrame)
+        let firstPixel = try #require(
+            copiedImage.color(at: CGPoint(x: 10, y: 6))?.usingColorSpace(.deviceRGB)
+        )
+        let gapPixel = try #require(
+            copiedImage.color(at: CGPoint(x: 30, y: 30))?.usingColorSpace(.deviceRGB)
+        )
+        let secondPixel = try #require(
+            copiedImage.color(at: CGPoint(x: 47, y: 57))?.usingColorSpace(.deviceRGB)
+        )
+        #expect(firstPixel.alphaComponent > 0.95)
+        #expect(gapPixel.alphaComponent < 0.05)
+        #expect(secondPixel.alphaComponent > 0.95)
+
+        viewModel.pasteClipboardInPlaceAsLayer()
+        #expect(viewModel.document.selectedLayer?.frame == expectedFrame)
+    }
+
     @Test func ordinaryPasteKeepsNativeSizeWhenClipboardImageExceedsCanvas() throws {
         let canvasSize = CGSize(width: 80, height: 60)
         let clipboardSize = CGSize(width: 140, height: 100)

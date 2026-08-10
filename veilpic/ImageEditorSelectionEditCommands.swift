@@ -661,32 +661,27 @@ extension ImageEditorViewModel {
     }
 
     func copySelectedLayersToClipboard() {
-        guard let scope = selectedLayersExportScope else {
+        guard selectedLayersExportScope != nil else {
             statusText = L10n.text("imageEditor.status.selectedLayersCopyToClipboardFailed")
             return
         }
 
-        let settings = ImageEditorExportSettings(format: .png, scope: scope)
-        guard let pngData = exportData(settings: settings),
-              let renderedImage = NSImage(data: pngData)
+        let renderedImage = document.compositedImage(
+            includingOnly: document.selectedLayerIDs
+        )
+        guard let bitmapContentBounds = renderedImage.nonTransparentPixelBounds(),
+              let image = renderedImage.croppedUsingImagePixelCoordinates(
+                to: bitmapContentBounds
+              )
         else {
             statusText = L10n.text("imageEditor.status.selectedLayersCopyToClipboardFailed")
             return
         }
 
-        let bitmapContentBounds = renderedImage.nonTransparentPixelBounds()
-        let image = bitmapContentBounds
-            .flatMap { renderedImage.croppedUsingImagePixelCoordinates(to: $0) }
-            ?? renderedImage
-        let contentBounds = bitmapContentBounds.map { bitmapBounds in
-            CGRect(
-                x: bitmapBounds.minX,
-                y: renderedImage.size.height - bitmapBounds.maxY,
-                width: bitmapBounds.width,
-                height: bitmapBounds.height
-            )
+        guard let clipboardData = image.qingtuPNGData() else {
+            statusText = L10n.text("imageEditor.status.selectedLayersCopyToClipboardFailed")
+            return
         }
-        let clipboardData = image.qingtuPNGData() ?? pngData
 
         let baseName = (document.sourceName as NSString).deletingPathExtension
         let preferredFileName = "\(baseName.isEmpty ? "image" : baseName)-selected-layers.png"
@@ -695,8 +690,8 @@ extension ImageEditorViewModel {
             image: image,
             preferredFileName: preferredFileName
         )
-        if didCopy, let contentBounds {
-            XomoClipboardLayerPayload.write(frame: contentBounds)
+        if didCopy {
+            XomoClipboardLayerPayload.write(frame: bitmapContentBounds)
         }
         statusText = didCopy
             ? L10n.text("imageEditor.status.selectedLayersCopiedToClipboard")
