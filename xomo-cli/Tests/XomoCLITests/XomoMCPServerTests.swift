@@ -43,6 +43,10 @@ struct XomoMCPServerTests {
         #expect(figmaNodeIDFilter["type"] as? String == "string")
         let figmaFileKeyFilter = try #require(layerListProperties["figmaFileKey"] as? [String: Any])
         #expect(figmaFileKeyFilter["type"] as? String == "string")
+        let figmaResourceTypeFilter = try #require(layerListProperties["figmaResourceType"] as? [String: Any])
+        #expect(figmaResourceTypeFilter["enum"] as? [String] == [
+            "design", "file", "proto", "board", "slides", "deck", "site", "buzz", "make"
+        ])
         let figmaComponentRoleFilter = try #require(layerListProperties["figmaComponentRole"] as? [String: Any])
         #expect(figmaComponentRoleFilter["enum"] as? [String] == [
             "all", "none", "COMPONENT", "COMPONENT_SET", "INSTANCE"

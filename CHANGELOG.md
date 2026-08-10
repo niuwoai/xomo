@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.12.0-rc804 - 2026-08-10
+
+### Added
+- `xomo.layer.list` 的 `figmaSource` 摘要新增 `resourceType`，并支持 `figmaResourceType` 筛选，覆盖 design、legacy file、prototype、FigJam board、slides/deck、site、buzz 和 make。
+- 资源类型与 file key 共用保留 canonical URL 的安全解析结果，可继续和节点 ID、节点类型、组件角色、绑定及约束组合；未知枚举和错误 JSON 类型明确失败。
+
+### Tests
+- 资源类型输出、组合命中/未命中与错误边界 1/1、App MCP Schema 1/1、CLI 2/2、发布契约 6/6（16 条断言）通过。
+
 ## 2.12.0-rc803 - 2026-08-10
 
 ### Added

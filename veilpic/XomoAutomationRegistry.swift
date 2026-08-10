@@ -968,6 +968,13 @@ final class XomoAutomationRegistry {
         if arguments["figmaFileKey"] != nil, fileKeyFilter?.isEmpty != false {
             throw XomoAutomationCallError.invalidArgument("Figma file key filter must be a non-empty string")
         }
+        let resourceTypeFilter = arguments["figmaResourceType"]?.stringValue
+        if arguments["figmaResourceType"] != nil,
+           resourceTypeFilter.flatMap(XomoFigmaResourceType.init(rawValue:)) == nil {
+            throw XomoAutomationCallError.invalidArgument(
+                "Unknown Figma resource type filter: \(resourceTypeFilter ?? "non-string")"
+            )
+        }
         let componentRoleFilter: String
         if let componentRoleArgument = arguments["figmaComponentRole"] {
             guard let value = componentRoleArgument.stringValue else {
@@ -1012,8 +1019,16 @@ final class XomoAutomationRegistry {
                 return false
             }
 
+            let sourcePreview = fileKeyFilter != nil || resourceTypeFilter != nil
+                ? figmaSourcePreview(for: layer)
+                : nil
             if let fileKeyFilter,
-               figmaFileKey(for: layer) != fileKeyFilter {
+               sourcePreview?.fileKey != fileKeyFilter {
+                return false
+            }
+
+            if let resourceTypeFilter,
+               sourcePreview?.resourceType.rawValue != resourceTypeFilter {
                 return false
             }
 
@@ -1066,9 +1081,11 @@ final class XomoAutomationRegistry {
 
     private func figmaSourceSummaryJSON(_ layer: ImageEditorLayer) -> XomoJSONValue {
         guard let sourceID = layer.xomoFigmaSourceID else { return .null }
+        let sourcePreview = figmaSourcePreview(for: layer)
         return .object([
             "id": .string(sourceID),
-            "fileKey": figmaFileKey(for: layer).map(XomoJSONValue.string) ?? .null,
+            "fileKey": sourcePreview.map { .string($0.fileKey) } ?? .null,
+            "resourceType": sourcePreview.map { .string($0.resourceType.rawValue) } ?? .null,
             "url": layer.xomoFigmaSourceURL.map { .string($0.absoluteString) } ?? .null,
             "nodeType": layer.xomoFigmaNodeType.map(XomoJSONValue.string) ?? .null,
             "componentRole": layer.xomoFigmaComponentRole.map {
@@ -1077,11 +1094,11 @@ final class XomoAutomationRegistry {
         ])
     }
 
-    private func figmaFileKey(for layer: ImageEditorLayer) -> String? {
+    private func figmaSourcePreview(for layer: ImageEditorLayer) -> XomoFigmaLinkPreview? {
         guard let sourceURL = layer.xomoFigmaSourceURL,
               let preview = try? XomoFigmaLinkParser.parse(sourceURL.absoluteString)
         else { return nil }
-        return preview.fileKey
+        return preview
     }
 
     private func figmaSizeConstraintSummaryJSON(_ layer: ImageEditorLayer) -> XomoJSONValue {
@@ -5941,6 +5958,7 @@ private extension XomoAutomationRegistry {
             "figmaConstraints": XomoAutomationSchema.string(description: "Filter by effective Figma size constraints", values: ["all", "constrained", "overridden", "conflicted"]),
             "figmaSource": XomoAutomationSchema.string(description: "Filter by retained Figma source identity", values: ["all", "imported", "local"]),
             "figmaFileKey": XomoAutomationSchema.string(description: "Filter by exact Figma file key parsed from the retained canonical source URL"),
+            "figmaResourceType": XomoAutomationSchema.string(description: "Filter by Figma resource path type parsed from the retained canonical source URL", values: XomoFigmaResourceType.allCases.map(\.rawValue)),
             "figmaNodeId": XomoAutomationSchema.string(description: "Filter by exact retained Figma node ID; canonical colon and URL hyphen separators are accepted"),
             "figmaNodeType": XomoAutomationSchema.string(description: "Filter by exact retained Figma node type, case-insensitive"),
             "figmaComponentRole": XomoAutomationSchema.string(description: "Filter by retained Figma component role", values: ["all", "none"] + XomoFigmaComponentRole.allCases.map(\.rawValue))

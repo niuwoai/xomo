@@ -231,6 +231,10 @@ struct XomoAutomationTests {
         #expect(layerListTool["inputSchema"]?.objectValue?["properties"]?.objectValue?["figmaNodeType"]?.objectValue?["type"] == .string("string"))
         #expect(layerListTool["inputSchema"]?.objectValue?["properties"]?.objectValue?["figmaNodeId"]?.objectValue?["type"] == .string("string"))
         #expect(layerListTool["inputSchema"]?.objectValue?["properties"]?.objectValue?["figmaFileKey"]?.objectValue?["type"] == .string("string"))
+        #expect(layerListTool["inputSchema"]?.objectValue?["properties"]?.objectValue?["figmaResourceType"]?.objectValue?["enum"] == .array([
+            .string("design"), .string("file"), .string("proto"), .string("board"),
+            .string("slides"), .string("deck"), .string("site"), .string("buzz"), .string("make")
+        ]))
         #expect(layerListTool["inputSchema"]?.objectValue?["properties"]?.objectValue?["figmaComponentRole"]?.objectValue?["enum"] == .array([
             .string("all"),
             .string("none"),
@@ -2085,6 +2089,7 @@ struct XomoAutomationTests {
         #expect(layer["figmaSizeConstraints"]?.objectValue?["conflicts"] == .array([.string("width")]))
         #expect(layer["figmaSource"]?.objectValue?["id"] == .string("12:34"))
         #expect(layer["figmaSource"]?.objectValue?["fileKey"] == .string("abc123"))
+        #expect(layer["figmaSource"]?.objectValue?["resourceType"] == .string("design"))
         #expect(layer["figmaSource"]?.objectValue?["url"] == .string(
             "https://www.figma.com/design/abc123/Checkout?node-id=12-34"
         ))
@@ -2140,6 +2145,7 @@ struct XomoAutomationTests {
                 "figmaNodeType": .string(" text "),
                 "figmaNodeId": .string(" 12-34 "),
                 "figmaFileKey": .string(" abc123 "),
+                "figmaResourceType": .string("design"),
                 "figmaComponentRole": .string("INSTANCE"),
                 "figmaSource": .string("imported"),
                 "figmaConstraints": .string("conflicted")
@@ -2167,6 +2173,17 @@ struct XomoAutomationTests {
         ))
         #expect(missingFileKey.ok)
         #expect(missingFileKey.result?.arrayValue?.isEmpty == true)
+
+        let wrongResourceType = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.list",
+            arguments: [
+                "figmaResourceType": .string("board"),
+                "figmaFileKey": .string("abc123")
+            ]
+        ))
+        #expect(wrongResourceType.ok)
+        #expect(wrongResourceType.result?.arrayValue?.isEmpty == true)
 
         let componentsOnly = registry.execute(request(
             operation: "call",
@@ -2244,6 +2261,18 @@ struct XomoAutomationTests {
             arguments: ["figmaFileKey": .bool(true)]
         ))
         #expect(!invalidFileKeyType.ok)
+        let invalidResourceType = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.list",
+            arguments: ["figmaResourceType": .string("canvas")]
+        ))
+        #expect(!invalidResourceType.ok)
+        let invalidResourceTypeValue = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.list",
+            arguments: ["figmaResourceType": .number(1)]
+        ))
+        #expect(!invalidResourceTypeValue.ok)
         let invalidComponentRole = registry.execute(request(
             operation: "call",
             name: "xomo.layer.list",
