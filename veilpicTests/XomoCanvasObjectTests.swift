@@ -610,6 +610,27 @@ struct XomoCanvasObjectTests {
         #expect(viewModel.cancelMovingSelectedLayer() == false)
     }
 
+    @Test func keyboardNudgeDoesNotCommitAnActivePointerMove() throws {
+        let viewModel = makeViewModel()
+        viewModel.insertXomoComponent(.button, at: CGPoint(x: 80, y: 90))
+        let initialFrame = try #require(viewModel.selectedLayerTransformFrame)
+        let initialHistoryCount = viewModel.document.history.count
+        let initialUndoCount = viewModel.undoStack.count
+
+        #expect(viewModel.beginMovingSelectedLayer())
+        viewModel.moveSelectedLayer(by: CGSize(width: 24, height: 12), snapping: false)
+        let pointerPreview = try #require(viewModel.movingObjectPreviewFrame)
+
+        viewModel.nudgeSelectionOrSelectedLayer(by: CGSize(width: 5, height: 0))
+
+        #expect(viewModel.movingObjectPreviewFrame == pointerPreview)
+        #expect(viewModel.selectedLayerTransformFrame == initialFrame)
+        #expect(viewModel.document.history.count == initialHistoryCount)
+        #expect(viewModel.undoStack.count == initialUndoCount + 1)
+        #expect(viewModel.cancelMovingSelectedLayer())
+        #expect(viewModel.selectedLayerTransformFrame == initialFrame)
+    }
+
     @Test func cancellingAnOptionDragRemovesThePendingDuplicate() throws {
         let viewModel = makeViewModel()
         viewModel.insertXomoComponent(.button, at: CGPoint(x: 80, y: 90))

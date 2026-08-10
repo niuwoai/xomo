@@ -422,6 +422,12 @@ extension ImageEditorViewModel {
     }
 
     func nudgeSelectionOrSelectedLayer(by delta: CGSize) {
+        // A pointer drag already owns the transform transaction. Letting an
+        // arrow-key nudge reuse it would finish the mouse drag immediately,
+        // leaving later pointer samples attached to a transaction that no
+        // longer exists. The next nudge after mouse-up remains available.
+        guard movingLayerIDs.isEmpty else { return }
+
         // The component library is an object-editing mode. When a component
         // is selected there, arrow keys must move the object even if an old
         // pixel selection is still present in the document.
