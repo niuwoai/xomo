@@ -178,6 +178,8 @@ struct ImageEditorScopeTests {
         #expect(shortcutButtonsSource.contains(".keyboardShortcut(KeyEquivalent(group.key), modifiers: [])"))
         #expect(shortcutButtonsSource.contains("viewModel.cycleClassicToolShortcut(group.key)"))
         #expect(shortcutButtonsSource.contains(".keyboardShortcut(KeyEquivalent(group.key), modifiers: [.shift])"))
+        #expect(shortcutButtonsSource.contains("ImageEditorLiveMoveShortcutPolicy.allowsDirectShortcut"))
+        #expect(shortcutButtonsSource.contains("viewModel.hasActiveLayerMoveTransaction"))
 
         let brushShortcutStart = try #require(source.range(of: "private var brushShortcutButtons: some View"))
         let brushShortcutEnd = try #require(

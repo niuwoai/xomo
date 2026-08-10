@@ -1710,6 +1710,9 @@ struct ImageEditorView: View {
     private var toolShortcutButtons: some View {
         Group {
             Button {
+                guard ImageEditorLiveMoveShortcutPolicy.allowsDirectShortcut(
+                    hasActiveLayerMoveTransaction: viewModel.hasActiveLayerMoveTransaction
+                ) else { return }
                 viewModel.clearColorSamplers()
             } label: {
                 EmptyView()
@@ -1719,6 +1722,9 @@ struct ImageEditorView: View {
 
             ForEach(ImageEditorTool.classicShortcutGroups) { group in
                 Button {
+                    guard ImageEditorLiveMoveShortcutPolicy.allowsDirectShortcut(
+                        hasActiveLayerMoveTransaction: viewModel.hasActiveLayerMoveTransaction
+                    ) else { return }
                     viewModel.selectClassicToolShortcut(group.key)
                 } label: {
                     EmptyView()
@@ -1728,6 +1734,9 @@ struct ImageEditorView: View {
 
                 if group.tools.count > 1 {
                     Button {
+                        guard ImageEditorLiveMoveShortcutPolicy.allowsDirectShortcut(
+                            hasActiveLayerMoveTransaction: viewModel.hasActiveLayerMoveTransaction
+                        ) else { return }
                         viewModel.cycleClassicToolShortcut(group.key)
                     } label: {
                         EmptyView()
@@ -12630,6 +12639,12 @@ enum ImageEditorLiveMoveShortcutPolicy {
         default:
             return .ignore
         }
+    }
+
+    static func allowsDirectShortcut(
+        hasActiveLayerMoveTransaction: Bool
+    ) -> Bool {
+        !hasActiveLayerMoveTransaction
     }
 }
 

@@ -329,6 +329,16 @@ struct ImageEditorHistoryTests {
                 hasActiveLayerMoveTransaction: false
             ) == .perform
         )
+        #expect(
+            !ImageEditorLiveMoveShortcutPolicy.allowsDirectShortcut(
+                hasActiveLayerMoveTransaction: true
+            )
+        )
+        #expect(
+            ImageEditorLiveMoveShortcutPolicy.allowsDirectShortcut(
+                hasActiveLayerMoveTransaction: false
+            )
+        )
     }
 
     @Test
