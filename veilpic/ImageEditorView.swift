@@ -12674,6 +12674,12 @@ enum ImageEditorLiveMoveShortcutPolicy {
     }
 }
 
+enum ImageEditorSpacebarPanResetPolicy {
+    static func shouldStop(isPanning: Bool) -> Bool {
+        isPanning
+    }
+}
+
 struct ImageEditorKeyboardShortcutEventSignature: Equatable {
     let windowNumber: Int
     let eventNumber: Int
@@ -12832,6 +12838,7 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
         var setCanvasModifierFlags: (NSEvent.ModifierFlags) -> Void
         private var eventMonitor: Any?
         private var appDeactivateObserver: Any?
+        private var windowResignKeyObserver: Any?
         private var isSpacebarPanning = false
 
         init(
@@ -12864,6 +12871,15 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
             ) { [weak self] _ in
                 self?.stopSpacebarPanning()
             }
+            windowResignKeyObserver = NotificationCenter.default.addObserver(
+                forName: NSWindow.didResignKeyNotification,
+                object: nil,
+                queue: .main
+            ) { [weak self] notification in
+                guard let self,
+                      notification.object as? NSWindow === self.window else { return }
+                self.stopSpacebarPanning()
+            }
         }
 
         deinit {
@@ -12873,9 +12889,15 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
             if let appDeactivateObserver {
                 NotificationCenter.default.removeObserver(appDeactivateObserver)
             }
+            if let windowResignKeyObserver {
+                NotificationCenter.default.removeObserver(windowResignKeyObserver)
+            }
         }
 
         func attach(to newWindow: NSWindow?) {
+            if window !== newWindow {
+                stopSpacebarPanning()
+            }
             if let window {
                 ImageEditorKeyboardShortcutWindowRegistry.unregister(coordinator: self, from: window)
             }
@@ -12961,7 +12983,9 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
         }
 
         private func stopSpacebarPanning() {
-            guard isSpacebarPanning else { return }
+            guard ImageEditorSpacebarPanResetPolicy.shouldStop(
+                isPanning: isSpacebarPanning
+            ) else { return }
             isSpacebarPanning = false
             setSpacebarPanning(false)
             setCanvasModifierFlags([])

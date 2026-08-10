@@ -735,6 +735,28 @@ struct ImageEditorCanvasCursorTests {
         #expect(!resize.shouldCancelActiveTransaction)
     }
 
+    @Test func spacebarPanResetStopsOnlyAnActiveTemporaryHand() {
+        #expect(ImageEditorSpacebarPanResetPolicy.shouldStop(isPanning: true))
+        #expect(!ImageEditorSpacebarPanResetPolicy.shouldStop(isPanning: false))
+    }
+
+    @Test func keyboardMonitorReleasesSpacebarPanWhenItsWindowDeactivatesOrDetaches() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(source.contains("NSWindow.didResignKeyNotification"))
+        #expect(source.contains("notification.object as? NSWindow === self.window"))
+        #expect(source.contains("if window !== newWindow"))
+        #expect(source.contains("NotificationCenter.default.removeObserver(windowResignKeyObserver)"))
+        #expect(source.contains("setSpacebarPanning(false)"))
+        #expect(source.contains("setCanvasModifierFlags([])"))
+    }
+
     @Test func applicationDeactivationCancelsTheNativeObjectMoveCapture() throws {
         let repositoryRoot = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()
