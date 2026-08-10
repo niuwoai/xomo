@@ -14,6 +14,13 @@ private struct ImageEditorPatchEditResult {
     let resultingSelection: ImageEditorSelection
 }
 
+private enum ImageEditorSelectionCropMetrics {
+    /// Core Image's Gaussian blur has a visible tail beyond the nominal
+    /// radius. Three radii retain the feather while keeping clipboard and
+    /// generated-layer bounds finite and predictable.
+    static let gaussianFeatherExtentMultiplier: CGFloat = 3
+}
+
 @MainActor
 extension ImageEditorViewModel {
     var canEditSelectionPixels: Bool {
@@ -334,7 +341,8 @@ extension ImageEditorViewModel {
               let selectionCopy = selectionClipboardCopy(
                 clippedImage: clippedImage,
                 selection: selection,
-                layerFrame: document.layers[index].frame
+                layerFrame: document.layers[index].frame,
+                feather: feather
               )
         else {
             statusText = L10n.text("imageEditor.status.selectionEmpty")
@@ -429,7 +437,8 @@ extension ImageEditorViewModel {
               let selectionCopy = selectionClipboardCopy(
                 clippedImage: clippedImage,
                 selection: selection,
-                layerFrame: document.layers[index].frame
+                layerFrame: document.layers[index].frame,
+                feather: feather
               ),
               let clearedImage = document.layers[index].image.cleared(
                 selection: selection,
@@ -497,7 +506,8 @@ extension ImageEditorViewModel {
               let clipboardCopy = selectionClipboardCopy(
                 clippedImage: clippedImage,
                 selection: selection,
-                layerFrame: layer.frame
+                layerFrame: layer.frame,
+                feather: feather
               )
         else {
             statusText = L10n.text("imageEditor.status.selectionEmpty")
@@ -519,12 +529,19 @@ extension ImageEditorViewModel {
     private func selectionClipboardCopy(
         clippedImage: NSImage,
         selection: ImageEditorSelection,
-        layerFrame: CGRect
+        layerFrame: CGRect,
+        feather: CGFloat
     ) -> (image: NSImage, frame: CGRect)? {
         let canvasBounds = CGRect(origin: .zero, size: document.canvasSize)
+        let featherExtent = ceil(
+            max(0, feather)
+                * ImageEditorSelectionCropMetrics.gaussianFeatherExtentMultiplier
+        )
         let candidateFrame = selection.isInverted
             ? canvasBounds
-            : selection.bounds.standardized.integral
+            : selection.bounds.standardized
+                .insetBy(dx: -featherExtent, dy: -featherExtent)
+                .integral
         let clipboardFrame = candidateFrame.intersection(canvasBounds)
         guard !clipboardFrame.isNull, !clipboardFrame.isEmpty else { return nil }
 
@@ -568,7 +585,8 @@ extension ImageEditorViewModel {
               let clipboardCopy = selectionClipboardCopy(
                 clippedImage: clippedImage,
                 selection: selection,
-                layerFrame: document.layers[index].frame
+                layerFrame: document.layers[index].frame,
+                feather: feather
               )
         else {
             statusText = L10n.text("imageEditor.status.selectionEmpty")
@@ -615,7 +633,8 @@ extension ImageEditorViewModel {
             ), let selectionCopy = selectionClipboardCopy(
                 clippedImage: clippedImage,
                 selection: selection,
-                layerFrame: CGRect(origin: .zero, size: document.canvasSize)
+                layerFrame: CGRect(origin: .zero, size: document.canvasSize),
+                feather: feather
             ) else {
                 statusText = L10n.text("imageEditor.status.selectionEmpty")
                 return
@@ -700,7 +719,8 @@ extension ImageEditorViewModel {
             ), let selectionCopy = selectionClipboardCopy(
                 clippedImage: clippedImage,
                 selection: selection,
-                layerFrame: CGRect(origin: .zero, size: document.canvasSize)
+                layerFrame: CGRect(origin: .zero, size: document.canvasSize),
+                feather: feather
             ) else {
                 statusText = L10n.text("imageEditor.status.selectionEmpty")
                 return

@@ -260,6 +260,49 @@ struct ImageEditorSelectionFillCoverageTests {
         #expect(viewModel.undoStack.count == originalUndoCount + 1)
     }
 
+    @Test func copyingFeatheredSelectionRetainsFalloffOutsideHardBounds() throws {
+        let canvasSize = CGSize(width: 120, height: 90)
+        let viewModel = ImageEditorViewModel(
+            sourceName: "feathered-selection-copy.png",
+            image: .transparent(size: canvasSize)
+        ) { _ in }
+        let sourceIndex = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[sourceIndex].image = NSImage(
+            size: canvasSize,
+            flipped: false
+        ) { rect in
+            NSColor.systemOrange.setFill()
+            rect.fill()
+            return true
+        }
+        viewModel.document.layers[sourceIndex].frame = CGRect(origin: .zero, size: canvasSize)
+        let selectionFrame = CGRect(x: 40, y: 30, width: 20, height: 16)
+        let feather: CGFloat = 4
+        let featherExtent = feather * 3
+        let expectedFrame = selectionFrame.insetBy(dx: -featherExtent, dy: -featherExtent)
+        viewModel.document.selection = .rectangle(selectionFrame)
+        viewModel.feather = feather
+
+        viewModel.copySelectionToNewLayer()
+
+        let copiedLayer = try #require(viewModel.document.selectedLayer)
+        #expect(copiedLayer.frame == expectedFrame)
+        #expect(copiedLayer.image.size == expectedFrame.size)
+        let outsideFalloff = try #require(
+            copiedLayer.image.color(
+                at: CGPoint(x: featherExtent - 1, y: expectedFrame.height / 2)
+            )?.usingColorSpace(.deviceRGB)
+        )
+        let center = try #require(
+            copiedLayer.image.color(
+                at: CGPoint(x: expectedFrame.width / 2, y: expectedFrame.height / 2)
+            )?.usingColorSpace(.deviceRGB)
+        )
+        #expect(outsideFalloff.alphaComponent > 0.01)
+        #expect(outsideFalloff.alphaComponent < center.alphaComponent)
+        #expect(center.alphaComponent > 0.9)
+    }
+
     @Test func cuttingTransparentSelectionDoesNotCreateBlankLayer() throws {
         let viewModel = ImageEditorViewModel(
             sourceName: "transparent-cut.png",
