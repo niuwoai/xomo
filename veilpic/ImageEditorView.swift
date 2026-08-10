@@ -2400,6 +2400,13 @@ struct ImageEditorView: View {
                             isSelectedObjectMoveGestureActive = false
                             resetObjectMoveTracking()
                             refreshCanvasCursor(in: geometry.size)
+                        },
+                        onObjectMoveCancelled: {
+                            guard isSelectedObjectMoveGestureActive else { return }
+                            _ = viewModel.cancelMovingSelectedLayer()
+                            isSelectedObjectMoveGestureActive = false
+                            resetObjectMoveTracking()
+                            NSCursor.arrow.set()
                         }
                     )
                     .allowsHitTesting(

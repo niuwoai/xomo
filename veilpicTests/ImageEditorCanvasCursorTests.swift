@@ -681,6 +681,19 @@ struct ImageEditorCanvasCursorTests {
         )
     }
 
+    @Test func interruptedObjectCaptureCancelsOnlyAnActiveMove() {
+        #expect(
+            ImageEditorObjectDragEventPolicy.resetDecision(
+                isObjectMoving: true
+            ).shouldCancelMove
+        )
+        #expect(
+            !ImageEditorObjectDragEventPolicy.resetDecision(
+                isObjectMoving: false
+            ).shouldCancelMove
+        )
+    }
+
     @Test func shiftCanBeginAConstrainedDragWhileReservedModifiersAndHandlesWin() {
         #expect(
             ImageEditorObjectDragEventPolicy.allowsCandidate(

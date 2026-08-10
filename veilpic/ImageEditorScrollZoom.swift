@@ -27,10 +27,18 @@ enum ImageEditorObjectDragEventPolicy {
         let shouldConsumeEvent: Bool
     }
 
+    struct ResetDecision: Equatable {
+        let shouldCancelMove: Bool
+    }
+
     static func shouldActivate(from start: CGPoint, to current: CGPoint) -> Bool {
         let deltaX = current.x - start.x
         let deltaY = current.y - start.y
         return hypot(deltaX, deltaY) >= activationDistance
+    }
+
+    static func resetDecision(isObjectMoving: Bool) -> ResetDecision {
+        ResetDecision(shouldCancelMove: isObjectMoving)
     }
 
     static func allowsCandidate(
@@ -210,6 +218,7 @@ struct ScrollWheelZoomView: NSViewRepresentable {
     let onObjectMoveClicked: (_ location: CGPoint, _ modifierFlags: NSEvent.ModifierFlags) -> Void
     let onObjectMoveChanged: (_ translation: CGSize) -> Void
     let onObjectMoveEnded: () -> Void
+    let onObjectMoveCancelled: () -> Void
 
     func makeNSView(context: Context) -> ScrollWheelZoomNSView {
         let view = ScrollWheelZoomNSView()
@@ -236,6 +245,7 @@ struct ScrollWheelZoomView: NSViewRepresentable {
         view.onObjectMoveClicked = onObjectMoveClicked
         view.onObjectMoveChanged = onObjectMoveChanged
         view.onObjectMoveEnded = onObjectMoveEnded
+        view.onObjectMoveCancelled = onObjectMoveCancelled
         view.markAsCurrentPointerHost()
         return view
     }
@@ -264,6 +274,7 @@ struct ScrollWheelZoomView: NSViewRepresentable {
         nsView.onObjectMoveClicked = onObjectMoveClicked
         nsView.onObjectMoveChanged = onObjectMoveChanged
         nsView.onObjectMoveEnded = onObjectMoveEnded
+        nsView.onObjectMoveCancelled = onObjectMoveCancelled
         nsView.markAsCurrentPointerHost()
     }
 
@@ -379,6 +390,7 @@ final class ScrollWheelZoomNSView: NSView {
     var onObjectMoveClicked: ((_ location: CGPoint, _ modifierFlags: NSEvent.ModifierFlags) -> Void)?
     var onObjectMoveChanged: ((_ translation: CGSize) -> Void)?
     var onObjectMoveEnded: (() -> Void)?
+    var onObjectMoveCancelled: (() -> Void)?
     private var monitor: Any?
     private var middleMouseMonitor: Any?
     private var mouseMovedMonitor: Any?
@@ -531,8 +543,11 @@ final class ScrollWheelZoomNSView: NSView {
             NSEvent.removeMonitor(mouseMovedMonitor)
         }
         mouseMovedMonitor = nil
-        if isObjectMoving {
-            onObjectMoveEnded?()
+        let resetDecision = ImageEditorObjectDragEventPolicy.resetDecision(
+            isObjectMoving: isObjectMoving
+        )
+        if resetDecision.shouldCancelMove {
+            onObjectMoveCancelled?()
         }
         isObjectMoving = false
         hasObjectMoveCandidate = false
@@ -899,8 +914,11 @@ final class ScrollWheelZoomNSView: NSView {
     }
 
     private func cancelStaleObjectMoveCapture() {
-        if isObjectMoving {
-            onObjectMoveEnded?()
+        let resetDecision = ImageEditorObjectDragEventPolicy.resetDecision(
+            isObjectMoving: isObjectMoving
+        )
+        if resetDecision.shouldCancelMove {
+            onObjectMoveCancelled?()
         }
         isObjectMoving = false
         hasObjectMoveCandidate = false
