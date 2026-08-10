@@ -711,6 +711,24 @@ struct ImageEditorCanvasCursorTests {
         ))
     }
 
+    @Test func commandShiftExtendsDeepSelectionWithoutClaimingOtherCombinations() {
+        #expect(ImageEditorObjectDragEventPolicy.deepSelectionExtendsSelection(
+            modifierFlags: [.command]
+        ) == false)
+        #expect(ImageEditorObjectDragEventPolicy.deepSelectionExtendsSelection(
+            modifierFlags: [.command, .shift]
+        ) == true)
+        #expect(ImageEditorObjectDragEventPolicy.deepSelectionExtendsSelection(
+            modifierFlags: [.shift]
+        ) == nil)
+        #expect(ImageEditorObjectDragEventPolicy.deepSelectionExtendsSelection(
+            modifierFlags: [.command, .option]
+        ) == nil)
+        #expect(ImageEditorObjectDragEventPolicy.deepSelectionExtendsSelection(
+            modifierFlags: [.command, .control]
+        ) == nil)
+    }
+
     @Test func primaryDrawingToolsUseBalancedAppKitPointerCaptureOnlyInToolsMode() {
         for tool in [ImageEditorTool.brush, .eraser, .rectangle, .ellipse, .text] {
             #expect(

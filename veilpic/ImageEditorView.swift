@@ -3184,13 +3184,18 @@ struct ImageEditorView: View {
                         }
                         break
                     }
-                    let deepSelectionModifiers = NSEvent.modifierFlags.intersection([.command, .control, .option, .shift])
-                    if deepSelectionModifiers == [.command],
+                    if let extendsDeepSelection = ImageEditorObjectDragEventPolicy
+                        .deepSelectionExtendsSelection(
+                            modifierFlags: NSEvent.modifierFlags
+                        ),
                        !isCanvasSelectionGestureActive,
                        !isObjectMoveGestureActive {
                         let pressedImagePoint = imagePoint(from: value.startLocation, in: size)
                         if let pressedImagePoint,
-                           viewModel.selectDeepestVisibleLayer(at: pressedImagePoint) {
+                           viewModel.selectDeepestVisibleLayer(
+                            at: pressedImagePoint,
+                            extendingSelection: extendsDeepSelection
+                           ) {
                             // Command-click is a deep-selection gesture, not
                             // a move. Keep the selected child stable until end.
                             isCanvasSelectionGestureActive = true

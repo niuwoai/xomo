@@ -48,6 +48,15 @@ enum ImageEditorObjectDragEventPolicy {
         return relevantFlags == [.option] || relevantFlags == [.option, .shift]
     }
 
+    static func deepSelectionExtendsSelection(
+        modifierFlags: NSEvent.ModifierFlags
+    ) -> Bool? {
+        let relevantFlags = modifierFlags.intersection([.command, .option, .shift, .control])
+        if relevantFlags == [.command] { return false }
+        if relevantFlags == [.command, .shift] { return true }
+        return nil
+    }
+
     static func releaseDecision(
         eventType: NSEvent.EventType,
         hasObjectMoveCandidate: Bool,
