@@ -344,6 +344,22 @@ struct ImageEditorSelectionOperationTests {
         #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionUnchanged"))
     }
 
+    @Test func repeatedEquivalentSelectionSaveDoesNotCreateDuplicateUndoOrHistory() throws {
+        let canvasSize = NSSize(width: 40, height: 30)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: testImage(size: canvasSize)) { _ in }
+        viewModel.createRectSelection(from: CGPoint(x: 6, y: 4), to: CGPoint(x: 24, y: 18))
+
+        viewModel.saveCurrentSelection()
+        let historyCountAfterFirstSave = viewModel.document.history.count
+        viewModel.saveCurrentSelection()
+
+        #expect(viewModel.document.history.count == historyCountAfterFirstSave)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionUnchanged"))
+        viewModel.undo()
+        #expect(!viewModel.hasSavedSelection)
+        #expect(viewModel.document.selection != nil)
+    }
+
     @Test func imageEditorCanFillSelectionWithBackgroundColorShortcutCommand() async throws {
         let canvasSize = NSSize(width: 40, height: 30)
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: solidImage(color: .systemRed, size: canvasSize)) { _ in }
