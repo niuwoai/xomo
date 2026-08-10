@@ -360,6 +360,26 @@ struct ImageEditorSelectionOperationTests {
         #expect(viewModel.document.selection != nil)
     }
 
+    @Test func repeatedSelectionCenterDoesNotCreateDuplicateUndoOrHistory() throws {
+        let canvasSize = NSSize(width: 40, height: 30)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: testImage(size: canvasSize)) { _ in }
+        viewModel.document.selection = ImageEditorSelection.rectangle(
+            CGRect(x: 2, y: 3, width: 10, height: 8)
+        )
+
+        viewModel.centerSelectionInCanvas()
+        let centeredSelection = try #require(viewModel.document.selection)
+        let historyCountAfterFirstCenter = viewModel.document.history.count
+        #expect(centeredSelection.bounds == CGRect(x: 15, y: 11, width: 10, height: 8))
+
+        viewModel.centerSelectionInCanvas()
+
+        #expect(viewModel.document.history.count == historyCountAfterFirstCenter)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionUnchanged"))
+        viewModel.undo()
+        #expect(viewModel.document.selection?.bounds == CGRect(x: 2, y: 3, width: 10, height: 8))
+    }
+
     @Test func imageEditorCanFillSelectionWithBackgroundColorShortcutCommand() async throws {
         let canvasSize = NSSize(width: 40, height: 30)
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: solidImage(color: .systemRed, size: canvasSize)) { _ in }
