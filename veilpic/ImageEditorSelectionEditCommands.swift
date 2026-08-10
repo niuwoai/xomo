@@ -537,14 +537,6 @@ extension ImageEditorViewModel {
             max(0, feather)
                 * ImageEditorSelectionCropMetrics.gaussianFeatherExtentMultiplier
         )
-        let candidateFrame = selection.isInverted
-            ? canvasBounds
-            : selection.bounds.standardized
-                .insetBy(dx: -featherExtent, dy: -featherExtent)
-                .integral
-        let clipboardFrame = candidateFrame.intersection(canvasBounds)
-        guard !clipboardFrame.isNull, !clipboardFrame.isEmpty else { return nil }
-
         let appKitLayerFrame = CGRect(
             x: layerFrame.minX,
             y: document.canvasSize.height - layerFrame.maxY,
@@ -558,7 +550,16 @@ extension ImageEditorViewModel {
                 operation: .copy,
                 fraction: 1
             )
-        }),
+        }), let contentBounds = canvasImage.nonTransparentPixelBounds() else { return nil }
+
+        let candidateFrame = selection.isInverted
+            ? contentBounds.integral
+            : selection.bounds.standardized
+                .insetBy(dx: -featherExtent, dy: -featherExtent)
+                .integral
+        let clipboardFrame = candidateFrame.intersection(canvasBounds)
+        guard !clipboardFrame.isNull,
+              !clipboardFrame.isEmpty,
               let croppedImage = canvasImage.croppedUsingImagePixelCoordinates(to: clipboardFrame),
               croppedImage.nonTransparentPixelBounds() != nil
         else { return nil }

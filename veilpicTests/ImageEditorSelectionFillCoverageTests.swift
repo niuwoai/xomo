@@ -303,6 +303,44 @@ struct ImageEditorSelectionFillCoverageTests {
         #expect(center.alphaComponent > 0.9)
     }
 
+    @Test func copyingInvertedSelectionTrimsCanvasPaddingAndPreservesHole() throws {
+        let canvasSize = CGSize(width: 120, height: 90)
+        let viewModel = ImageEditorViewModel(
+            sourceName: "inverted-selection-copy.png",
+            image: .transparent(size: canvasSize)
+        ) { _ in }
+        let sourceIndex = try #require(viewModel.document.selectedLayerIndex)
+        let sourceFrame = CGRect(x: 20, y: 15, width: 30, height: 24)
+        viewModel.document.layers[sourceIndex].image = NSImage(
+            size: sourceFrame.size,
+            flipped: false
+        ) { rect in
+            NSColor.systemGreen.setFill()
+            rect.fill()
+            return true
+        }
+        viewModel.document.layers[sourceIndex].frame = sourceFrame
+        var selection = ImageEditorSelection.rectangle(
+            CGRect(x: 27, y: 21, width: 10, height: 8)
+        )
+        selection.isInverted = true
+        viewModel.document.selection = selection
+
+        viewModel.copySelectionToNewLayer()
+
+        let copiedLayer = try #require(viewModel.document.selectedLayer)
+        #expect(copiedLayer.frame == sourceFrame)
+        #expect(copiedLayer.image.size == sourceFrame.size)
+        let retainedCorner = try #require(
+            copiedLayer.image.color(at: CGPoint(x: 2, y: 2))?.usingColorSpace(.deviceRGB)
+        )
+        let excludedCenter = try #require(
+            copiedLayer.image.color(at: CGPoint(x: 12, y: 10))?.usingColorSpace(.deviceRGB)
+        )
+        #expect(retainedCorner.alphaComponent > 0.95)
+        #expect(excludedCenter.alphaComponent < 0.05)
+    }
+
     @Test func cuttingTransparentSelectionDoesNotCreateBlankLayer() throws {
         let viewModel = ImageEditorViewModel(
             sourceName: "transparent-cut.png",
