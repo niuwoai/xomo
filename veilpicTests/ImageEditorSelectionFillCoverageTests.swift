@@ -222,6 +222,44 @@ struct ImageEditorSelectionFillCoverageTests {
         #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionEmpty"))
     }
 
+    @Test func copyingSelectionToNewLayerUsesSelectionSizeAndCanvasFrame() throws {
+        let canvasSize = CGSize(width: 120, height: 90)
+        let viewModel = ImageEditorViewModel(
+            sourceName: "selection-layer-copy.png",
+            image: .transparent(size: canvasSize)
+        ) { _ in }
+        let sourceIndex = try #require(viewModel.document.selectedLayerIndex)
+        let sourceFrame = CGRect(x: 18, y: 22, width: 40, height: 30)
+        viewModel.document.layers[sourceIndex].image = NSImage(
+            size: sourceFrame.size,
+            flipped: false
+        ) { rect in
+            NSColor.systemOrange.setFill()
+            rect.fill()
+            return true
+        }
+        viewModel.document.layers[sourceIndex].frame = sourceFrame
+        let sourceID = viewModel.document.layers[sourceIndex].id
+        let selectionFrame = CGRect(x: 24, y: 27, width: 16, height: 12)
+        viewModel.document.selection = .rectangle(selectionFrame)
+        let originalHistoryCount = viewModel.document.history.count
+        let originalUndoCount = viewModel.undoStack.count
+
+        viewModel.copySelectionToNewLayer()
+
+        let copiedLayer = try #require(viewModel.document.selectedLayer)
+        #expect(copiedLayer.id != sourceID)
+        #expect(copiedLayer.image.size == selectionFrame.size)
+        #expect(copiedLayer.frame == selectionFrame)
+        let copiedCenter = try #require(
+            copiedLayer.image.color(at: CGPoint(x: 8, y: 6))?.usingColorSpace(.deviceRGB)
+        )
+        #expect(copiedCenter.alphaComponent > 0.95)
+        #expect(copiedCenter.redComponent > 0.8)
+        #expect(viewModel.document.history.count == originalHistoryCount + 1)
+        #expect(viewModel.undoStack.count == originalUndoCount + 1)
+    }
+
     @Test func cuttingTransparentSelectionDoesNotCreateBlankLayer() throws {
         let viewModel = ImageEditorViewModel(
             sourceName: "transparent-cut.png",

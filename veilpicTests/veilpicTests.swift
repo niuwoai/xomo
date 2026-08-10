@@ -2116,14 +2116,14 @@ struct veilpicTests {
         viewModel.copySelectionToNewLayer()
 
         let copiedLayer = try #require(viewModel.document.selectedLayer)
-        let copiedInside = try #require(copiedLayer.image.color(at: CGPoint(x: 40, y: 30))?.usingColorSpace(.deviceRGB))
-        let copiedOutside = try #require(copiedLayer.image.color(at: CGPoint(x: 8, y: 8))?.usingColorSpace(.deviceRGB))
+        let copiedInside = try #require(copiedLayer.image.color(at: CGPoint(x: 20, y: 18))?.usingColorSpace(.deviceRGB))
 
         #expect(viewModel.document.layers.count == layerCountBeforeCopy + 1)
         #expect(copiedLayer.id != sourceLayerID)
+        #expect(copiedLayer.image.size == CGSize(width: 40, height: 36))
+        #expect(copiedLayer.frame == CGRect(x: 20, y: 12, width: 40, height: 36))
         #expect(copiedInside.redComponent > 0.8)
         #expect(copiedInside.alphaComponent > 0.8)
-        #expect(copiedOutside.alphaComponent < 0.05)
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.selectionCopyLayer"))
 
         viewModel.undo()
