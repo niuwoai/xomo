@@ -20,14 +20,15 @@ struct ClipboardImageWriterTests {
         #expect(downloadsDirectory.map { !cacheDirectory.path.hasPrefix($0.path + "/") } ?? true)
     }
 
-    @Test func copyingSelectionPreservesLayerFrameForPasteInPlace() throws {
+    @Test func copyingSelectionCropsToSelectionFrameForPasteInPlace() throws {
         let canvas = solidImage(color: .black, size: CGSize(width: 120, height: 90))
         let viewModel = ImageEditorViewModel(sourceName: "selection-copy.png", image: canvas) { _ in }
         let sourceIndex = try #require(viewModel.document.selectedLayerIndex)
         let sourceFrame = CGRect(x: 18, y: 22, width: 24, height: 18)
         viewModel.document.layers[sourceIndex].image = solidImage(color: .systemOrange, size: sourceFrame.size)
         viewModel.document.layers[sourceIndex].frame = sourceFrame
-        viewModel.document.selection = .rectangle(CGRect(x: 20, y: 24, width: 10, height: 8))
+        let selectionFrame = CGRect(x: 20, y: 24, width: 10, height: 8)
+        viewModel.document.selection = .rectangle(selectionFrame)
         let pasteboard = NSPasteboard.general
         pasteboard.clearContents()
         defer { pasteboard.clearContents() }
@@ -35,9 +36,11 @@ struct ClipboardImageWriterTests {
         viewModel.copySelectionToClipboard()
 
         #expect(viewModel.canPasteClipboardImageInPlace)
-        #expect(XomoClipboardLayerPayload.frame(from: pasteboard) == sourceFrame)
+        let copiedImage = try #require(NSImage(pasteboard: pasteboard))
+        #expect(copiedImage.size == selectionFrame.size)
+        #expect(XomoClipboardLayerPayload.frame(from: pasteboard) == selectionFrame)
         viewModel.pasteClipboardInPlaceAsLayer()
-        #expect(viewModel.document.selectedLayer?.frame == sourceFrame)
+        #expect(viewModel.document.selectedLayer?.frame == selectionFrame)
     }
 
     @Test func copyingMergedPixelsPreservesCanvasFrameForPasteInPlace() throws {

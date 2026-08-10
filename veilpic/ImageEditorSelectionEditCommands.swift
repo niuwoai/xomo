@@ -486,22 +486,59 @@ extension ImageEditorViewModel {
                 canvasSize: document.canvasSize,
                 feather: feather
               ),
-              clippedImage.nonTransparentPixelBounds() != nil
+              let clipboardCopy = selectionClipboardCopy(
+                clippedImage: clippedImage,
+                selection: selection,
+                layerFrame: layer.frame
+              )
         else {
             statusText = L10n.text("imageEditor.status.selectionEmpty")
             return
         }
 
         let didCopy = ClipboardImageWriter.copy(
-            clippedImage.normalizedBitmapImage(),
+            clipboardCopy.image,
             preferredFileName: "\(layer.name)-selection.png"
         )
         if didCopy {
-            XomoClipboardLayerPayload.write(frame: layer.frame)
+            XomoClipboardLayerPayload.write(frame: clipboardCopy.frame)
         }
         statusText = didCopy
             ? L10n.text("imageEditor.status.selectionCopiedToClipboard")
             : L10n.text("imageEditor.status.selectionCopyToClipboardFailed")
+    }
+
+    private func selectionClipboardCopy(
+        clippedImage: NSImage,
+        selection: ImageEditorSelection,
+        layerFrame: CGRect
+    ) -> (image: NSImage, frame: CGRect)? {
+        let canvasBounds = CGRect(origin: .zero, size: document.canvasSize)
+        let candidateFrame = selection.isInverted
+            ? canvasBounds
+            : selection.bounds.standardized.integral
+        let clipboardFrame = candidateFrame.intersection(canvasBounds)
+        guard !clipboardFrame.isNull, !clipboardFrame.isEmpty else { return nil }
+
+        let appKitLayerFrame = CGRect(
+            x: layerFrame.minX,
+            y: document.canvasSize.height - layerFrame.maxY,
+            width: layerFrame.width,
+            height: layerFrame.height
+        )
+        guard let canvasImage = NSImage.rendered(size: document.canvasSize, actions: { _ in
+            clippedImage.draw(
+                in: appKitLayerFrame,
+                from: CGRect(origin: .zero, size: clippedImage.size),
+                operation: .copy,
+                fraction: 1
+            )
+        }),
+              let croppedImage = canvasImage.croppedUsingImagePixelCoordinates(to: clipboardFrame),
+              croppedImage.nonTransparentPixelBounds() != nil
+        else { return nil }
+
+        return (croppedImage.normalizedBitmapImage(), clipboardFrame)
     }
 
     func cutSelectionToClipboard() {
