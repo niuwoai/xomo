@@ -604,7 +604,7 @@ final class ImageEditorViewModel: ObservableObject {
             return
         }
 
-        let normalized = image.normalizedBitmapImage()
+        let normalized = image.normalizedImportedBitmapImage()
         guard normalized.size.width > 0, normalized.size.height > 0 else {
             statusText = L10n.text("imageEditor.status.layerImportFailed")
             return

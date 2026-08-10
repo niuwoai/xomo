@@ -157,7 +157,7 @@ extension ImageEditorViewModel {
         importedStatus: String? = nil,
         frameOverride: CGRect? = nil
     ) {
-        let normalized = image.normalizedBitmapImage()
+        let normalized = image.normalizedImportedBitmapImage()
         guard normalized.size.width > 0, normalized.size.height > 0 else {
             statusText = L10n.text("imageEditor.status.layerImportFailed")
             return
@@ -193,7 +193,7 @@ extension ImageEditorViewModel {
             return
         }
 
-        let normalized = image.normalizedBitmapImage()
+        let normalized = image.normalizedImportedBitmapImage()
         guard normalized.size.width > 0, normalized.size.height > 0 else {
             statusText = L10n.text("imageEditor.status.layerImportFailed")
             return
@@ -247,7 +247,7 @@ extension ImageEditorViewModel {
             return
         }
 
-        let normalized = image.normalizedBitmapImage()
+        let normalized = image.normalizedImportedBitmapImage()
         guard normalized.size.width > 0, normalized.size.height > 0 else {
             statusText = L10n.text("imageEditor.status.layerSmartObjectReplaceFailed")
             return

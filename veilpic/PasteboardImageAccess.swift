@@ -32,3 +32,15 @@ extension NSPasteboard {
         return type == .png || type == .jpeg
     }
 }
+
+extension NSImage {
+    func normalizedImportedBitmapImage() -> NSImage {
+        guard let source = cgImage(forProposedRect: nil, context: nil, hints: nil),
+              source.width > 0,
+              source.height > 0
+        else { return normalizedBitmapImage() }
+
+        let pixelSize = CGSize(width: source.width, height: source.height)
+        return NSImage(cgImage: source, size: pixelSize).normalizedBitmapImage()
+    }
+}
