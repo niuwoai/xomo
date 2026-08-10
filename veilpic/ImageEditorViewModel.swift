@@ -5868,6 +5868,10 @@ final class ImageEditorViewModel: ObservableObject {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return
         }
+        guard !paintBucketPixelsEqual(output, sourceImage) else {
+            statusText = L10n.text("imageEditor.status.paintBucketUnchanged")
+            return
+        }
 
         replaceSelectedLayerPixels(
             output,
@@ -5875,6 +5879,35 @@ final class ImageEditorViewModel: ObservableObject {
             resetFrame: false
         )
         statusText = L10n.text("imageEditor.status.paintBucketFilled")
+    }
+
+    private func paintBucketPixelsEqual(_ lhs: NSImage, _ rhs: NSImage) -> Bool {
+        guard lhs.size == rhs.size,
+              let lhsPixels = paintBucketPixelBytes(lhs),
+              let rhsPixels = paintBucketPixelBytes(rhs)
+        else { return false }
+        return lhsPixels == rhsPixels
+    }
+
+    private func paintBucketPixelBytes(_ image: NSImage) -> [UInt8]? {
+        let normalized = image.normalizedBitmapImage()
+        guard let cgImage = normalized.cgImage(forProposedRect: nil, context: nil, hints: nil) else { return nil }
+        let width = cgImage.width
+        let height = cgImage.height
+        let bytesPerRow = width * 4
+        var pixels = [UInt8](repeating: 0, count: bytesPerRow * height)
+        guard let context = CGContext(
+            data: &pixels,
+            width: width,
+            height: height,
+            bitsPerComponent: 8,
+            bytesPerRow: bytesPerRow,
+            space: CGColorSpaceCreateDeviceRGB(),
+            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        ) else { return nil }
+        context.interpolationQuality = .none
+        context.draw(cgImage, in: CGRect(x: 0, y: 0, width: width, height: height))
+        return pixels
     }
 
     private func selectionAllowsPaintBucketSeed(at point: CGPoint) -> Bool {

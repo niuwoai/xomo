@@ -22,24 +22,8 @@ extension NSImage {
         let seedPixel = bitmap.pixel(at: seedIndex)
         let mask = bitmap.contiguousMask(seedIndex: seedIndex, seedPixel: seedPixel, tolerance: tolerance)
 
-        guard mask.alpha.contains(where: { $0 > 0 }),
-              let maskImage = NSImage.selectionMaskImage(mask, inverted: false, targetSize: size)
-        else { return nil }
-
-        return NSImage.rendered(size: size) { rect in
-            draw(in: rect, from: CGRect(origin: .zero, size: size), operation: .copy, fraction: 1)
-            let fillImage = NSImage.rendered(size: size) { fillRect in
-                color.withAlphaComponent(max(0, min(1, opacity))).setFill()
-                fillRect.fill()
-                maskImage.draw(
-                    in: fillRect,
-                    from: CGRect(origin: .zero, size: maskImage.size),
-                    operation: .destinationIn,
-                    fraction: 1
-                )
-            }
-            fillImage?.draw(in: rect, from: CGRect(origin: .zero, size: size), operation: .sourceOver, fraction: 1)
-        }
+        guard mask.alpha.contains(where: { $0 > 0 }) else { return nil }
+        return bitmap.filledImage(mask: mask, color: color, opacity: opacity, size: size)
     }
 
     private func paintBucketBitmap() -> PaintBucketBitmap? {
@@ -122,6 +106,59 @@ private struct PaintBucketBitmap {
         }
 
         return ImageEditorSelectionMask(width: width, height: height, alpha: alpha)
+    }
+
+    func filledImage(
+        mask: ImageEditorSelectionMask,
+        color: NSColor,
+        opacity: CGFloat,
+        size: CGSize
+    ) -> NSImage? {
+        guard mask.width == width,
+              mask.height == height,
+              mask.alpha.count == width * height,
+              let rgb = color.usingColorSpace(.deviceRGB)
+        else { return nil }
+
+        let fillAlpha = max(0, min(1, opacity)) * rgb.alphaComponent
+        let inverseFillAlpha = 1 - fillAlpha
+        let fillRed = rgb.redComponent * fillAlpha
+        let fillGreen = rgb.greenComponent * fillAlpha
+        let fillBlue = rgb.blueComponent * fillAlpha
+        var output = pixels
+
+        for index in mask.alpha.indices where mask.alpha[index] > 0 {
+            let offset = index * 4
+            let sourceRed = CGFloat(pixels[offset]) / 255
+            let sourceGreen = CGFloat(pixels[offset + 1]) / 255
+            let sourceBlue = CGFloat(pixels[offset + 2]) / 255
+            let sourceAlpha = CGFloat(pixels[offset + 3]) / 255
+            output[offset] = byte(fillRed + sourceRed * inverseFillAlpha)
+            output[offset + 1] = byte(fillGreen + sourceGreen * inverseFillAlpha)
+            output[offset + 2] = byte(fillBlue + sourceBlue * inverseFillAlpha)
+            output[offset + 3] = byte(fillAlpha + sourceAlpha * inverseFillAlpha)
+        }
+
+        guard let provider = CGDataProvider(data: Data(output) as CFData),
+              let cgImage = CGImage(
+                width: width,
+                height: height,
+                bitsPerComponent: 8,
+                bitsPerPixel: 32,
+                bytesPerRow: width * 4,
+                space: CGColorSpaceCreateDeviceRGB(),
+                bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.premultipliedLast.rawValue),
+                provider: provider,
+                decode: nil,
+                shouldInterpolate: false,
+                intent: .defaultIntent
+              )
+        else { return nil }
+        return NSImage(cgImage: cgImage, size: size)
+    }
+
+    private func byte(_ value: CGFloat) -> UInt8 {
+        UInt8(max(0, min(255, Int((value * 255).rounded()))))
     }
 
     private func enqueueNeighbor(x: Int, y: Int, visited: inout [Bool], queue: inout [Int]) {

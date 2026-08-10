@@ -19,14 +19,21 @@ struct ImageEditorPaintBucketTests {
         viewModel.foregroundColor = .systemGreen
         viewModel.opacity = 1
         viewModel.tolerance = 0.05
+        let boundaryBefore = try #require(
+            viewModel.document.selectedLayer?.image.color(at: CGPoint(x: 40, y: 25))?.usingColorSpace(.deviceRGB)
+        )
 
         viewModel.paintBucketFill(at: CGPoint(x: 10, y: 25))
 
         let layer = try #require(viewModel.document.selectedLayer)
         let filled = try #require(layer.image.color(at: CGPoint(x: 10, y: 25))?.usingColorSpace(.deviceRGB))
+        let hardBoundary = try #require(layer.image.color(at: CGPoint(x: 40, y: 25))?.usingColorSpace(.deviceRGB))
         let untouched = try #require(layer.image.color(at: CGPoint(x: 65, y: 25))?.usingColorSpace(.deviceRGB))
         #expect(filled.greenComponent > 0.75)
         #expect(filled.redComponent < 0.25)
+        #expect(abs(hardBoundary.redComponent - boundaryBefore.redComponent) < 0.01)
+        #expect(abs(hardBoundary.greenComponent - boundaryBefore.greenComponent) < 0.01)
+        #expect(abs(hardBoundary.blueComponent - boundaryBefore.blueComponent) < 0.01)
         #expect(untouched.blueComponent > 0.75)
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.paintBucket"))
     }
@@ -139,6 +146,33 @@ struct ImageEditorPaintBucketTests {
         #expect(filled.greenComponent > filled.blueComponent + 0.35)
         #expect(viewModel.document.history.count == historyCount + 1)
         #expect(viewModel.undoStack.count == undoCount + 1)
+    }
+
+    @Test func paintBucketZeroOpacityDoesNotCreateNoOpHistory() throws {
+        let canvasSize = NSSize(width: 80, height: 50)
+        let viewModel = ImageEditorViewModel(
+            sourceName: "matching-fill.png",
+            image: splitImage(size: canvasSize)
+        ) { _ in }
+        viewModel.foregroundColor = .systemGreen
+        viewModel.opacity = 0
+        viewModel.tolerance = 0.05
+        let layerIndex = try #require(viewModel.document.selectedLayerIndex)
+        let originalPixels = try #require(
+            viewModel.document.layers[layerIndex].image.normalizedBitmapImage().qingtuPNGData()
+        )
+        let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
+
+        viewModel.paintBucketFill(at: CGPoint(x: 10, y: 25))
+
+        let pixelsAfterClick = try #require(
+            viewModel.document.layers[layerIndex].image.normalizedBitmapImage().qingtuPNGData()
+        )
+        #expect(pixelsAfterClick == originalPixels)
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.undoStack.count == undoCount)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.paintBucketUnchanged"))
     }
 
     private func splitImage(size: NSSize) -> NSImage {
