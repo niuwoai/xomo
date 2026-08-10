@@ -176,14 +176,21 @@ private extension NSImage {
             _ = rect
         }) else { return nil }
 
+        let selectionMask: NSImage?
+        if let selection {
+            guard let mask = selection.gradientLayerMask(
+                layerFrame: layerFrame,
+                layerSize: size,
+                canvasSize: canvasSize,
+                feather: feather
+            ) else { return nil }
+            selectionMask = mask
+        } else {
+            selectionMask = nil
+        }
+
         let constrainedGradient: NSImage
-        if let selection,
-           let selectionMask = selection.gradientLayerMask(
-            layerFrame: layerFrame,
-            layerSize: size,
-            canvasSize: canvasSize,
-            feather: feather
-           ),
+        if let selectionMask,
            let maskedGradient = NSImage.rendered(size: size, actions: { rect in
             gradientImage.draw(in: rect, from: CGRect(origin: .zero, size: gradientImage.size), operation: .copy, fraction: 1)
             selectionMask.draw(in: rect, from: CGRect(origin: .zero, size: selectionMask.size), operation: .destinationIn, fraction: 1)
@@ -194,12 +201,7 @@ private extension NSImage {
         }
 
         if replacesExistingPixels {
-            guard let selectionMask = selection?.gradientLayerMask(
-                layerFrame: layerFrame,
-                layerSize: size,
-                canvasSize: canvasSize,
-                feather: feather
-            ) else {
+            guard let selectionMask else {
                 return constrainedGradient
             }
             return NSImage.rendered(size: size) { rect in
@@ -249,8 +251,12 @@ private extension ImageEditorSelection {
     }
 
     func gradientCanvasMask(size: CGSize, feather: CGFloat) -> NSImage? {
-        if let rasterMask,
-           let image = NSImage.selectionMaskImage(rasterMask, inverted: isInverted, targetSize: size) {
+        if let rasterMask {
+            guard let image = NSImage.selectionMaskImage(
+                rasterMask,
+                inverted: isInverted,
+                targetSize: size
+            ) else { return nil }
             guard feather > 0 else { return image }
             return image.blurred(radius: feather) ?? image
         }

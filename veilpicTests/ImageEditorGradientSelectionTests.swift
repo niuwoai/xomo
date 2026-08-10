@@ -4,6 +4,70 @@ import Testing
 
 @MainActor
 struct ImageEditorGradientSelectionTests {
+    @Test func gradientMapsCanvasSelectionIntoOffsetScaledLayer() throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "offset-gradient.png",
+            image: .transparent(size: CGSize(width: 120, height: 90))
+        ) { _ in }
+        let layerIndex = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[layerIndex].frame = CGRect(x: 20, y: 15, width: 60, height: 45)
+        viewModel.createRectSelection(
+            from: CGPoint(x: 30, y: 25),
+            to: CGPoint(x: 60, y: 45)
+        )
+        viewModel.foregroundColor = .systemRed
+        viewModel.backgroundColor = .systemBlue
+        viewModel.opacity = 1
+
+        viewModel.drawGradient(
+            from: CGPoint(x: 30, y: 35),
+            to: CGPoint(x: 60, y: 35)
+        )
+
+        let layerID = viewModel.document.layers[layerIndex].id
+        let composited = viewModel.document.compositedImage(includingOnly: [layerID])
+        let selectedLeft = try #require(composited.color(at: CGPoint(x: 32, y: 35)))
+        let selectedRight = try #require(composited.color(at: CGPoint(x: 58, y: 35)))
+        let outsideLeft = try #require(composited.color(at: CGPoint(x: 24, y: 35)))
+        let outsideBottom = try #require(composited.color(at: CGPoint(x: 45, y: 52)))
+        #expect(selectedLeft.alphaComponent > 0.8)
+        #expect(selectedLeft.redComponent > selectedLeft.blueComponent)
+        #expect(selectedRight.alphaComponent > 0.8)
+        #expect(selectedRight.blueComponent > selectedRight.redComponent)
+        #expect(outsideLeft.alphaComponent < 0.1)
+        #expect(outsideBottom.alphaComponent < 0.1)
+    }
+
+    @Test func invalidRasterSelectionCannotEscapeMaskAndPaintWholeLayer() throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "invalid-mask-gradient.png",
+            image: .transparent(size: CGSize(width: 80, height: 60))
+        ) { _ in }
+        viewModel.document.selection = .raster(
+            mask: ImageEditorSelectionMask(width: 80, height: 60, alpha: []),
+            bounds: CGRect(x: 10, y: 10, width: 30, height: 20)
+        )
+        viewModel.foregroundColor = .systemRed
+        viewModel.backgroundColor = .systemBlue
+        viewModel.opacity = 1
+        let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
+
+        viewModel.drawGradient(
+            from: CGPoint(x: 10, y: 20),
+            to: CGPoint(x: 40, y: 20)
+        )
+
+        let image = try #require(viewModel.document.selectedLayer?.image)
+        let inside = try #require(image.color(at: CGPoint(x: 20, y: 20)))
+        let outside = try #require(image.color(at: CGPoint(x: 65, y: 45)))
+        #expect(inside.alphaComponent < 0.1)
+        #expect(outside.alphaComponent < 0.1)
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.undoStack.count == undoCount)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.operationFailed"))
+    }
+
     @Test func gradientOutsideSelectedLayerDoesNotCreateHistory() throws {
         let viewModel = ImageEditorViewModel(
             sourceName: "gradient-selection.png",
