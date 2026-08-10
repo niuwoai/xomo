@@ -684,6 +684,21 @@ struct ImageEditorSelectionOperationTests {
         #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionFillHoles"))
     }
 
+    @Test func holeFreeSelectionFillHolesDoesNotCreateUndoOrHistory() throws {
+        let canvasSize = NSSize(width: 10, height: 10)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: testImage(size: canvasSize)) { _ in }
+        viewModel.document.selection = ImageEditorSelection.rectangle(
+            CGRect(x: 2, y: 2, width: 5, height: 4)
+        )
+        let historyCountBeforeFill = viewModel.document.history.count
+
+        viewModel.fillSelectionHoles()
+
+        #expect(viewModel.document.history.count == historyCountBeforeFill)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionUnchanged"))
+        #expect(viewModel.document.selection?.bounds == CGRect(x: 2, y: 2, width: 5, height: 4))
+    }
+
     @Test func imageEditorRemovesSmallSelectionSpecklesWithoutShrinkingMainIsland() async throws {
         let canvasSize = NSSize(width: 10, height: 10)
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: testImage(size: canvasSize)) { _ in }
