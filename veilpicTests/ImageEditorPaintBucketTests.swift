@@ -51,6 +51,36 @@ struct ImageEditorPaintBucketTests {
         #expect(untouchedBlue.blueComponent > 0.75)
     }
 
+    @Test func paintBucketOutsideOffsetLayerDoesNotClampToEdgeOrCreateHistory() throws {
+        let canvasSize = NSSize(width: 100, height: 80)
+        let layerImage = splitImage(size: NSSize(width: 80, height: 60))
+        let viewModel = ImageEditorViewModel(
+            sourceName: "offset-layer.png",
+            image: layerImage
+        ) { _ in }
+        let layerIndex = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.canvasSize = canvasSize
+        viewModel.document.layers[layerIndex].frame = CGRect(x: 30, y: 20, width: 40, height: 30)
+        viewModel.foregroundColor = .systemGreen
+        viewModel.opacity = 1
+        viewModel.tolerance = 0.05
+        let originalPixels = try #require(
+            viewModel.document.layers[layerIndex].image.normalizedBitmapImage().qingtuPNGData()
+        )
+        let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
+
+        viewModel.paintBucketFill(at: CGPoint(x: 12, y: 12))
+
+        let pixelsAfterClick = try #require(
+            viewModel.document.layers[layerIndex].image.normalizedBitmapImage().qingtuPNGData()
+        )
+        #expect(pixelsAfterClick == originalPixels)
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.undoStack.count == undoCount)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.paintBucketOutsideLayer"))
+    }
+
     private func splitImage(size: NSSize) -> NSImage {
         NSImage.rendered(size: size) { rect in
             NSColor.systemRed.setFill()

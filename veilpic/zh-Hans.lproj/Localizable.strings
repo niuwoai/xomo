@@ -2149,6 +2149,7 @@
 "imageEditor.status.smudgeApplied" = "已应用涂抹";
 "imageEditor.status.healingApplied" = "已应用修复画笔";
 "imageEditor.status.paintBucketFilled" = "已填充连续颜色区域";
+"imageEditor.status.paintBucketOutsideLayer" = "请在当前图层范围内点击填充";
 "imageEditor.status.editingLayer" = "正在编辑图层内容";
 "imageEditor.status.editingMask" = "正在编辑图层蒙版：画笔隐藏，橡皮恢复";
 "imageEditor.status.layerMoved" = "已移动当前图层";

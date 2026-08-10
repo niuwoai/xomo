@@ -5850,6 +5850,10 @@ final class ImageEditorViewModel: ObservableObject {
             statusText = L10n.text("imageEditor.status.layerLocked")
             return
         }
+        guard layer.frame.standardized.contains(point) else {
+            statusText = L10n.text("imageEditor.status.paintBucketOutsideLayer")
+            return
+        }
         let sourceImage = layer.image.normalizedBitmapImage()
         guard let output = sourceImage.withPaintBucketFill(
             at: rasterLocalPoint(point, layer: layer),
