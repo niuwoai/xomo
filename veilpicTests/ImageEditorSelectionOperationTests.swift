@@ -575,6 +575,19 @@ struct ImageEditorSelectionOperationTests {
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.selectionContract"))
     }
 
+    @Test func fullCanvasSelectionExpansionDoesNotCreateUndoOrHistory() throws {
+        let canvasSize = NSSize(width: 8, height: 8)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: testImage(size: canvasSize)) { _ in }
+        viewModel.document.selection = .fullCanvas(size: canvasSize)
+        let historyCountBeforeExpansion = viewModel.document.history.count
+
+        viewModel.expandSelection(radius: 4)
+
+        #expect(viewModel.document.history.count == historyCountBeforeExpansion)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionUnchanged"))
+        #expect(viewModel.document.selection?.bounds == CGRect(origin: .zero, size: canvasSize))
+    }
+
     @Test func imageEditorFeathersSelectionMask() async throws {
         let canvasSize = NSSize(width: 40, height: 30)
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: testImage(size: canvasSize)) { _ in }

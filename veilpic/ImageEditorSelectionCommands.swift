@@ -574,6 +574,10 @@ extension ImageEditorViewModel {
         let modified = expanding
             ? selection.expanded(by: effectiveRadius, canvasSize: document.canvasSize)
             : selection.contracted(by: effectiveRadius, canvasSize: document.canvasSize)
+        guard !selectionsAreEquivalent(selection, modified) else {
+            statusText = L10n.text("imageEditor.status.selectionUnchanged")
+            return
+        }
 
         pushUndo()
         document.selection = modified
