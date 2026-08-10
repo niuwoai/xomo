@@ -426,7 +426,11 @@ extension ImageEditorViewModel {
                 canvasSize: document.canvasSize,
                 feather: feather
               ),
-              clippedImage.nonTransparentPixelBounds() != nil,
+              let selectionCopy = selectionClipboardCopy(
+                clippedImage: clippedImage,
+                selection: selection,
+                layerFrame: document.layers[index].frame
+              ),
               let clearedImage = document.layers[index].image.cleared(
                 selection: selection,
                 layerFrame: document.layers[index].frame,
@@ -443,10 +447,10 @@ extension ImageEditorViewModel {
         let sourceLayer = document.layers[index]
         var layer = ImageEditorLayer.blank(
             name: L10n.format("imageEditor.layer.selectionCutName", sourceLayer.name),
-            size: clippedImage.size
+            size: selectionCopy.image.size
         )
-        layer.image = clippedImage.normalizedBitmapImage()
-        layer.frame = sourceLayer.frame
+        layer.image = selectionCopy.image
+        layer.frame = selectionCopy.frame
         layer.isVisible = sourceLayer.isVisible
         layer.opacity = sourceLayer.opacity
         layer.fillOpacity = sourceLayer.fillOpacity

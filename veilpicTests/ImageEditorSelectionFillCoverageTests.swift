@@ -278,6 +278,62 @@ struct ImageEditorSelectionFillCoverageTests {
         #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionEmpty"))
     }
 
+    @Test func cuttingSelectionToNewLayerUsesSelectionFrameAndClearsSource() throws {
+        let canvasSize = CGSize(width: 120, height: 90)
+        let viewModel = ImageEditorViewModel(
+            sourceName: "selection-layer-cut.png",
+            image: .transparent(size: canvasSize)
+        ) { _ in }
+        let sourceIndex = try #require(viewModel.document.selectedLayerIndex)
+        let sourceFrame = CGRect(x: 18, y: 22, width: 40, height: 30)
+        viewModel.document.layers[sourceIndex].image = NSImage(
+            size: sourceFrame.size,
+            flipped: false
+        ) { rect in
+            NSColor.systemPink.setFill()
+            rect.fill()
+            return true
+        }
+        viewModel.document.layers[sourceIndex].frame = sourceFrame
+        let sourceID = viewModel.document.layers[sourceIndex].id
+        let selectionFrame = CGRect(x: 24, y: 27, width: 16, height: 12)
+        viewModel.document.selection = .rectangle(selectionFrame)
+        let originalLayerCount = viewModel.document.layers.count
+        let originalHistoryCount = viewModel.document.history.count
+        let originalUndoCount = viewModel.undoStack.count
+
+        viewModel.cutSelectionToNewLayer()
+
+        let cutLayer = try #require(viewModel.document.selectedLayer)
+        let sourceLayer = try #require(viewModel.document.layers.first { $0.id == sourceID })
+        #expect(viewModel.document.layers.count == originalLayerCount + 1)
+        #expect(cutLayer.id != sourceID)
+        #expect(cutLayer.image.size == selectionFrame.size)
+        #expect(cutLayer.frame == selectionFrame)
+        let cutCenter = try #require(
+            cutLayer.image.color(at: CGPoint(x: 8, y: 6))?.usingColorSpace(.deviceRGB)
+        )
+        let clearedCenter = try #require(
+            sourceLayer.image.color(at: CGPoint(x: 14, y: 11))?.usingColorSpace(.deviceRGB)
+        )
+        let retainedCorner = try #require(
+            sourceLayer.image.color(at: CGPoint(x: 2, y: 2))?.usingColorSpace(.deviceRGB)
+        )
+        #expect(cutCenter.alphaComponent > 0.95)
+        #expect(clearedCenter.alphaComponent < 0.05)
+        #expect(retainedCorner.alphaComponent > 0.95)
+        #expect(viewModel.document.history.count == originalHistoryCount + 1)
+        #expect(viewModel.undoStack.count == originalUndoCount + 1)
+
+        viewModel.undo()
+        #expect(viewModel.document.layers.count == originalLayerCount)
+        let restoredSource = try #require(viewModel.document.layers.first { $0.id == sourceID })
+        let restoredCenter = try #require(
+            restoredSource.image.color(at: CGPoint(x: 14, y: 11))?.usingColorSpace(.deviceRGB)
+        )
+        #expect(restoredCenter.alphaComponent > 0.95)
+    }
+
     @Test func copyingTransparentMergedSelectionDoesNotCreateBlankLayer() throws {
         let viewModel = ImageEditorViewModel(
             sourceName: "transparent-merged-copy.png",
