@@ -638,6 +638,16 @@ struct ImageEditorCanvasCursorTests {
         #expect(candidateOnly.shouldCommitClick)
         #expect(candidateOnly.shouldConsumeEvent)
 
+        let rejectedMove = ImageEditorObjectDragEventPolicy.releaseDecision(
+            eventType: .leftMouseUp,
+            hasObjectMoveCandidate: true,
+            isObjectMoving: false,
+            isObjectMoveCaptureRejected: true
+        )
+        #expect(!rejectedMove.shouldFinishMove)
+        #expect(!rejectedMove.shouldCommitClick)
+        #expect(rejectedMove.shouldConsumeEvent)
+
         let unrelatedDrag = ImageEditorObjectDragEventPolicy.releaseDecision(
             eventType: .leftMouseDragged,
             hasObjectMoveCandidate: true,

@@ -61,7 +61,8 @@ enum ImageEditorObjectDragEventPolicy {
     static func releaseDecision(
         eventType: NSEvent.EventType,
         hasObjectMoveCandidate: Bool,
-        isObjectMoving: Bool
+        isObjectMoving: Bool,
+        isObjectMoveCaptureRejected: Bool = false
     ) -> ReleaseDecision {
         guard eventType == .leftMouseUp,
               hasObjectMoveCandidate || isObjectMoving else {
@@ -79,7 +80,9 @@ enum ImageEditorObjectDragEventPolicy {
         // release even when the pointer never crosses the drag threshold.
         return ReleaseDecision(
             shouldFinishMove: isObjectMoving,
-            shouldCommitClick: hasObjectMoveCandidate && !isObjectMoving,
+            shouldCommitClick: hasObjectMoveCandidate
+                && !isObjectMoving
+                && !isObjectMoveCaptureRejected,
             shouldConsumeEvent: true
         )
     }
@@ -871,7 +874,8 @@ final class ScrollWheelZoomNSView: NSView {
             let releaseDecision = ImageEditorObjectDragEventPolicy.releaseDecision(
                 eventType: event.type,
                 hasObjectMoveCandidate: hasObjectMoveCandidate,
-                isObjectMoving: isObjectMoving
+                isObjectMoving: isObjectMoving,
+                isObjectMoveCaptureRejected: isObjectMoveCaptureRejected
             )
             if releaseDecision.shouldFinishMove {
                 onObjectMoveEnded?()
