@@ -694,6 +694,19 @@ struct ImageEditorCanvasCursorTests {
         )
     }
 
+    @Test func interruptedMiddleMouseCaptureEndsOnlyAnActivePan() {
+        #expect(
+            ImageEditorMiddleMousePanEventPolicy.resetDecision(
+                isPanning: true
+            ).shouldEndPan
+        )
+        #expect(
+            !ImageEditorMiddleMousePanEventPolicy.resetDecision(
+                isPanning: false
+            ).shouldEndPan
+        )
+    }
+
     @Test func applicationDeactivationCancelsTheNativeObjectMoveCapture() throws {
         let repositoryRoot = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()
@@ -721,6 +734,21 @@ struct ImageEditorCanvasCursorTests {
         #expect(source.contains("notification.object as? NSWindow === self.window"))
         #expect(source.contains("self.cancelStaleObjectMoveCapture()"))
         #expect(source.contains("NotificationCenter.default.removeObserver(windowResignKeyObserver)"))
+    }
+
+    @Test func appAndWindowDeactivationEndNativeMiddleMousePanning() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorScrollZoom.swift"),
+            encoding: .utf8
+        )
+
+        #expect(source.components(separatedBy: "self?.cancelStaleMiddleMousePanCapture()").count == 2)
+        #expect(source.contains("self.cancelStaleMiddleMousePanCapture()"))
+        #expect(source.contains("onMiddleMousePanEnded?()"))
+        #expect(source.contains("lastMiddleMousePoint = nil"))
     }
 
     @Test func shiftCanBeginAConstrainedDragWhileReservedModifiersAndHandlesWin() {

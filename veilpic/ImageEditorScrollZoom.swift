@@ -18,6 +18,16 @@ enum ImageEditorCanvasMiddleMousePanGeometry {
     }
 }
 
+enum ImageEditorMiddleMousePanEventPolicy {
+    struct ResetDecision: Equatable {
+        let shouldEndPan: Bool
+    }
+
+    static func resetDecision(isPanning: Bool) -> ResetDecision {
+        ResetDecision(shouldEndPan: isPanning)
+    }
+}
+
 enum ImageEditorObjectDragEventPolicy {
     static let activationDistance: CGFloat = 3
 
@@ -537,6 +547,7 @@ final class ScrollWheelZoomNSView: NSView {
                 queue: .main
             ) { [weak self] _ in
                 self?.cancelStaleObjectMoveCapture()
+                self?.cancelStaleMiddleMousePanCapture()
             }
         }
         if windowResignKeyObserver == nil {
@@ -548,6 +559,7 @@ final class ScrollWheelZoomNSView: NSView {
                 guard let self,
                       notification.object as? NSWindow === self.window else { return }
                 self.cancelStaleObjectMoveCapture()
+                self.cancelStaleMiddleMousePanCapture()
             }
         }
     }
@@ -584,11 +596,7 @@ final class ScrollWheelZoomNSView: NSView {
         isObjectMoveCaptureRejected = false
         objectMoveStartPoint = nil
         objectMoveCandidateModifierFlags = []
-        if isMiddleMousePanning {
-            onMiddleMousePanEnded?()
-        }
-        isMiddleMousePanning = false
-        lastMiddleMousePoint = nil
+        cancelStaleMiddleMousePanCapture()
     }
 
     deinit {
@@ -955,6 +963,17 @@ final class ScrollWheelZoomNSView: NSView {
         isObjectMoveCaptureRejected = false
         objectMoveStartPoint = nil
         objectMoveCandidateModifierFlags = []
+    }
+
+    private func cancelStaleMiddleMousePanCapture() {
+        let resetDecision = ImageEditorMiddleMousePanEventPolicy.resetDecision(
+            isPanning: isMiddleMousePanning
+        )
+        if resetDecision.shouldEndPan {
+            onMiddleMousePanEnded?()
+        }
+        isMiddleMousePanning = false
+        lastMiddleMousePoint = nil
     }
 
     private static func continueActivePointerTransaction(
