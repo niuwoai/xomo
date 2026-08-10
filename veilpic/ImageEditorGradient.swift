@@ -8,6 +8,28 @@
 import AppKit
 import Foundation
 
+enum ImageEditorGradientDragGeometry {
+    private static let angleIncrement = CGFloat.pi / 4
+
+    static func endpoint(
+        from start: CGPoint,
+        toward current: CGPoint,
+        constrainedToAngleIncrement: Bool
+    ) -> CGPoint {
+        guard constrainedToAngleIncrement else { return current }
+        let deltaX = current.x - start.x
+        let deltaY = current.y - start.y
+        let length = hypot(deltaX, deltaY)
+        guard length.isFinite, length > 0 else { return start }
+        let angle = atan2(deltaY, deltaX)
+        let snappedAngle = (angle / angleIncrement).rounded() * angleIncrement
+        return CGPoint(
+            x: start.x + cos(snappedAngle) * length,
+            y: start.y + sin(snappedAngle) * length
+        )
+    }
+}
+
 @MainActor
 extension ImageEditorViewModel {
     func drawGradient(from start: CGPoint?, to end: CGPoint?) {

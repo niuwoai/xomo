@@ -4,6 +4,39 @@ import Testing
 
 @MainActor
 struct ImageEditorGradientSelectionTests {
+    @Test func shiftConstraintSnapsGradientToNearestFortyFiveDegrees() {
+        let start = CGPoint(x: 10, y: 10)
+        let current = CGPoint(x: 60, y: 32)
+        let unconstrained = ImageEditorGradientDragGeometry.endpoint(
+            from: start,
+            toward: current,
+            constrainedToAngleIncrement: false
+        )
+        #expect(unconstrained == current)
+
+        let constrained = ImageEditorGradientDragGeometry.endpoint(
+            from: start,
+            toward: current,
+            constrainedToAngleIncrement: true
+        )
+        let constrainedDeltaX = constrained.x - start.x
+        let constrainedDeltaY = constrained.y - start.y
+        #expect(abs(constrainedDeltaX - constrainedDeltaY) < 0.001)
+        #expect(
+            abs(
+                hypot(constrainedDeltaX, constrainedDeltaY)
+                    - hypot(current.x - start.x, current.y - start.y)
+            ) < 0.001
+        )
+
+        let stationary = ImageEditorGradientDragGeometry.endpoint(
+            from: start,
+            toward: start,
+            constrainedToAngleIncrement: true
+        )
+        #expect(stationary == start)
+    }
+
     @Test func gradientEndpointsOutsideCanvasPreserveTheFullDragSpan() throws {
         let viewModel = ImageEditorViewModel(
             sourceName: "outside-canvas-gradient.png",
