@@ -5854,6 +5854,10 @@ final class ImageEditorViewModel: ObservableObject {
             statusText = L10n.text("imageEditor.status.paintBucketOutsideLayer")
             return
         }
+        guard selectionAllowsPaintBucketSeed(at: point) else {
+            statusText = L10n.text("imageEditor.status.paintBucketOutsideSelection")
+            return
+        }
         let sourceImage = layer.image.normalizedBitmapImage()
         guard let output = sourceImage.withPaintBucketFill(
             at: rasterLocalPoint(point, layer: layer),
@@ -5871,6 +5875,23 @@ final class ImageEditorViewModel: ObservableObject {
             resetFrame: false
         )
         statusText = L10n.text("imageEditor.status.paintBucketFilled")
+    }
+
+    private func selectionAllowsPaintBucketSeed(at point: CGPoint) -> Bool {
+        guard let selection = document.selection else { return true }
+        let canvasSize = document.canvasSize
+        guard point.x >= 0,
+              point.y >= 0,
+              point.x < canvasSize.width,
+              point.y < canvasSize.height,
+              let mask = selection.rasterizedMask(canvasSize: canvasSize),
+              mask.width > 0,
+              mask.height > 0,
+              mask.alpha.count == mask.width * mask.height
+        else { return false }
+        let x = min(mask.width - 1, Int(point.x / max(canvasSize.width, 1) * CGFloat(mask.width)))
+        let y = min(mask.height - 1, Int(point.y / max(canvasSize.height, 1) * CGFloat(mask.height)))
+        return mask.alpha[y * mask.width + x] > 0
     }
 
     func drawShape(

@@ -81,6 +81,66 @@ struct ImageEditorPaintBucketTests {
         #expect(viewModel.statusText == L10n.text("imageEditor.status.paintBucketOutsideLayer"))
     }
 
+    @Test func paintBucketOutsideActiveSelectionDoesNotCreateNoOpHistory() throws {
+        let canvasSize = NSSize(width: 80, height: 50)
+        let viewModel = ImageEditorViewModel(
+            sourceName: "selection.png",
+            image: splitImage(size: canvasSize)
+        ) { _ in }
+        viewModel.createRectSelection(from: CGPoint(x: 0, y: 0), to: CGPoint(x: 20, y: 50))
+        viewModel.foregroundColor = .systemGreen
+        viewModel.opacity = 1
+        viewModel.tolerance = 0.05
+        let layerIndex = try #require(viewModel.document.selectedLayerIndex)
+        let originalPixels = try #require(
+            viewModel.document.layers[layerIndex].image.normalizedBitmapImage().qingtuPNGData()
+        )
+        let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
+
+        viewModel.paintBucketFill(at: CGPoint(x: 65, y: 25))
+
+        let pixelsAfterClick = try #require(
+            viewModel.document.layers[layerIndex].image.normalizedBitmapImage().qingtuPNGData()
+        )
+        #expect(pixelsAfterClick == originalPixels)
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.undoStack.count == undoCount)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.paintBucketOutsideSelection"))
+    }
+
+    @Test func paintBucketHonorsInvertedSelectionMask() throws {
+        let canvasSize = NSSize(width: 80, height: 50)
+        let viewModel = ImageEditorViewModel(
+            sourceName: "inverted-selection.png",
+            image: splitImage(size: canvasSize)
+        ) { _ in }
+        viewModel.createRectSelection(from: CGPoint(x: 0, y: 0), to: CGPoint(x: 20, y: 50))
+        viewModel.invertSelection()
+        viewModel.foregroundColor = .systemGreen
+        viewModel.opacity = 1
+        viewModel.tolerance = 0.05
+        let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
+
+        viewModel.paintBucketFill(at: CGPoint(x: 10, y: 25))
+
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.undoStack.count == undoCount)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.paintBucketOutsideSelection"))
+
+        viewModel.paintBucketFill(at: CGPoint(x: 65, y: 25))
+
+        let layer = try #require(viewModel.document.selectedLayer)
+        let filled = try #require(
+            layer.image.color(at: CGPoint(x: 65, y: 25))?.usingColorSpace(.deviceRGB)
+        )
+        #expect(filled.greenComponent > 0.75)
+        #expect(filled.greenComponent > filled.blueComponent + 0.35)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.undoStack.count == undoCount + 1)
+    }
+
     private func splitImage(size: NSSize) -> NSImage {
         NSImage.rendered(size: size) { rect in
             NSColor.systemRed.setFill()
