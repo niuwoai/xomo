@@ -554,6 +554,27 @@ struct XomoCanvasObjectTests {
         #expect(!viewModel.document.layers.contains { childIDs.contains($0.id) })
     }
 
+    @Test func deleteWaitsForAnActivePointerMoveToFinishOrCancel() throws {
+        let viewModel = makeViewModel()
+        viewModel.insertXomoComponent(.button, at: CGPoint(x: 80, y: 90))
+        let group = try #require(viewModel.document.selectedLayer)
+        let initialHistoryCount = viewModel.document.history.count
+        let initialUndoCount = viewModel.undoStack.count
+
+        #expect(viewModel.beginMovingSelectedLayer())
+        viewModel.moveSelectedLayer(by: CGSize(width: 16, height: 8), snapping: false)
+        #expect(viewModel.hasActiveLayerMoveTransaction)
+        #expect(!viewModel.deleteSelectedXomoObjectIfNeeded())
+        #expect(viewModel.document.layers.contains { $0.id == group.id })
+        #expect(viewModel.document.history.count == initialHistoryCount)
+        #expect(viewModel.undoStack.count == initialUndoCount + 1)
+
+        #expect(viewModel.cancelMovingSelectedLayer())
+        #expect(!viewModel.hasActiveLayerMoveTransaction)
+        #expect(viewModel.deleteSelectedXomoObjectIfNeeded())
+        #expect(!viewModel.document.layers.contains { $0.id == group.id })
+    }
+
     @Test func movingAnObjectPublishesAndClearsItsDashedPreviewFrame() throws {
         let viewModel = makeViewModel()
         viewModel.insertXomoComponent(.button, at: CGPoint(x: 80, y: 90))

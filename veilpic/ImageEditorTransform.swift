@@ -352,6 +352,10 @@ extension ImageEditorViewModel {
         return true
     }
 
+    var hasActiveLayerMoveTransaction: Bool {
+        !movingLayerIDs.isEmpty
+    }
+
     /// Starts an Option-drag as one undoable duplicate-and-move transaction.
     /// The duplication snapshot is captured before the clone is inserted so
     /// undo removes both the movement and the newly created layer tree.

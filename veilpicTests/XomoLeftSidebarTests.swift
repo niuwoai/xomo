@@ -677,6 +677,7 @@ struct XomoLeftSidebarTests {
         #expect(source.contains("onObjectMoveClicked:"))
         #expect(source.contains("onObjectMoveCancelled:"))
         #expect(source.contains("viewModel.cancelMovingSelectedLayer()"))
+        #expect(source.contains("guard !viewModel.hasActiveLayerMoveTransaction else { return false }"))
         #expect(source.contains("extendingSelection: modifierFlags.contains(.shift)"))
         #expect(source.contains("viewModel.cancelMovingSelectedLayer()"))
         #expect(source.contains("viewModel.cancelTransformingSelectedLayer()"))

@@ -239,7 +239,8 @@ extension ImageEditorViewModel {
     }
 
     func deleteSelectedXomoObjectIfNeeded() -> Bool {
-        guard let selected = document.selectedLayer,
+        guard !hasActiveLayerMoveTransaction,
+              let selected = document.selectedLayer,
               selected.isGroup,
               let kind = selected.xomoComponentInstance?.kind,
               canDeleteLayer

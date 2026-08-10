@@ -216,6 +216,7 @@ struct ImageEditorView: View {
                     }
                 },
                 deleteSelectedObject: {
+                    guard !viewModel.hasActiveLayerMoveTransaction else { return false }
                     if deleteSelectedShapeGradientStopIfNeeded() {
                         return true
                     }
