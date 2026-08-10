@@ -16,7 +16,7 @@ struct ImageEditorPaintBucketTests {
         let canvasSize = NSSize(width: 80, height: 50)
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: splitImage(size: canvasSize)) { _ in }
         viewModel.replaceSelectedLayerImageForTesting(splitImage(size: canvasSize), historyTitle: L10n.text("imageEditor.history.brush"))
-        viewModel.foregroundColor = .systemGreen
+        viewModel.foregroundColor = NSColor(deviceRed: 0, green: 1, blue: 0, alpha: 1)
         viewModel.opacity = 1
         viewModel.tolerance = 0.05
         let boundaryBefore = try #require(
@@ -175,12 +175,56 @@ struct ImageEditorPaintBucketTests {
         #expect(viewModel.statusText == L10n.text("imageEditor.status.paintBucketUnchanged"))
     }
 
+    @Test func disablingContiguousFillsSeparatedMatchingRegions() throws {
+        let canvasSize = NSSize(width: 80, height: 50)
+        let viewModel = ImageEditorViewModel(
+            sourceName: "separated-regions.png",
+            image: separatedRedRegionsImage(size: canvasSize)
+        ) { _ in }
+        viewModel.replaceSelectedLayerImageForTesting(
+            separatedRedRegionsImage(size: canvasSize),
+            historyTitle: L10n.text("imageEditor.history.brush")
+        )
+        #expect(viewModel.isPaintBucketContiguous)
+        viewModel.isPaintBucketContiguous = false
+        viewModel.foregroundColor = NSColor(deviceRed: 0, green: 1, blue: 0, alpha: 1)
+        viewModel.opacity = 1
+        viewModel.tolerance = 0.05
+        let separatorBefore = try #require(
+            viewModel.document.selectedLayer?.image.color(at: CGPoint(x: 40, y: 25))?.usingColorSpace(.deviceRGB)
+        )
+        #expect(separatorBefore.blueComponent > 0.75)
+
+        viewModel.paintBucketFill(at: CGPoint(x: 10, y: 25))
+
+        let layer = try #require(viewModel.document.selectedLayer)
+        let left = try #require(layer.image.color(at: CGPoint(x: 10, y: 25))?.usingColorSpace(.deviceRGB))
+        let separator = try #require(layer.image.color(at: CGPoint(x: 40, y: 25))?.usingColorSpace(.deviceRGB))
+        let right = try #require(layer.image.color(at: CGPoint(x: 70, y: 25))?.usingColorSpace(.deviceRGB))
+        #expect(left.greenComponent > 0.75)
+        #expect(right.greenComponent > 0.75)
+        #expect(separator.blueComponent > 0.75)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.paintBucketMatched"))
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.paintBucket"))
+    }
+
     private func splitImage(size: NSSize) -> NSImage {
         NSImage.rendered(size: size) { rect in
-            NSColor.systemRed.setFill()
+            NSColor(deviceRed: 1, green: 0, blue: 0, alpha: 1).setFill()
             CGRect(x: rect.minX, y: rect.minY, width: rect.width / 2, height: rect.height).fill()
-            NSColor.systemBlue.setFill()
+            NSColor(deviceRed: 0, green: 0, blue: 1, alpha: 1).setFill()
             CGRect(x: rect.midX, y: rect.minY, width: rect.width / 2, height: rect.height).fill()
+        } ?? NSImage.transparent(size: size)
+    }
+
+    private func separatedRedRegionsImage(size: NSSize) -> NSImage {
+        NSImage.rendered(size: size) { rect in
+            NSColor(deviceRed: 1, green: 0, blue: 0, alpha: 1).setFill()
+            CGRect(x: rect.minX, y: rect.minY, width: 20, height: rect.height).fill()
+            NSColor(deviceRed: 0, green: 0, blue: 1, alpha: 1).setFill()
+            CGRect(x: 20, y: rect.minY, width: 40, height: rect.height).fill()
+            NSColor(deviceRed: 1, green: 0, blue: 0, alpha: 1).setFill()
+            CGRect(x: 60, y: rect.minY, width: 20, height: rect.height).fill()
         } ?? NSImage.transparent(size: size)
     }
 }

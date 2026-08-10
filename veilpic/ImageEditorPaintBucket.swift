@@ -13,14 +13,17 @@ extension NSImage {
         at point: CGPoint,
         color: NSColor,
         opacity: CGFloat,
-        tolerance: CGFloat
+        tolerance: CGFloat,
+        contiguous: Bool
     ) -> NSImage? {
         guard let bitmap = paintBucketBitmap() else { return nil }
         let seedX = max(0, min(bitmap.width - 1, Int((point.x / max(size.width, 1)) * CGFloat(bitmap.width))))
         let seedY = max(0, min(bitmap.height - 1, Int((point.y / max(size.height, 1)) * CGFloat(bitmap.height))))
         let seedIndex = seedY * bitmap.width + seedX
         let seedPixel = bitmap.pixel(at: seedIndex)
-        let mask = bitmap.contiguousMask(seedIndex: seedIndex, seedPixel: seedPixel, tolerance: tolerance)
+        let mask = contiguous
+            ? bitmap.contiguousMask(seedIndex: seedIndex, seedPixel: seedPixel, tolerance: tolerance)
+            : bitmap.matchingMask(seedPixel: seedPixel, tolerance: tolerance)
 
         guard mask.alpha.contains(where: { $0 > 0 }) else { return nil }
         return bitmap.filledImage(mask: mask, color: color, opacity: opacity, size: size)
@@ -105,6 +108,14 @@ private struct PaintBucketBitmap {
             enqueueNeighbor(x: x, y: y + 1, visited: &visited, queue: &queue)
         }
 
+        return ImageEditorSelectionMask(width: width, height: height, alpha: alpha)
+    }
+
+    func matchingMask(seedPixel: PaintBucketPixel, tolerance: CGFloat) -> ImageEditorSelectionMask {
+        let clampedTolerance = max(0, min(1, tolerance))
+        let alpha = (0..<(width * height)).map { index in
+            pixel(at: index).distance(to: seedPixel) <= clampedTolerance ? UInt8.max : 0
+        }
         return ImageEditorSelectionMask(width: width, height: height, alpha: alpha)
     }
 

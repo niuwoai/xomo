@@ -624,6 +624,7 @@
 "imageEditor.action.brushPresetDelete" = "Delete Current Custom Preset";
 "imageEditor.option.feather" = "Feather";
 "imageEditor.option.tolerance" = "Tolerance";
+"imageEditor.option.contiguous" = "Contiguous";
 "imageEditor.option.selectionModifyAmount" = "Grow/Shrink";
 "imageEditor.option.selectionMode" = "Selection Mode";
 "imageEditor.option.posterizeLevels" = "Levels";
@@ -2149,6 +2150,7 @@
 "imageEditor.status.smudgeApplied" = "Smudge applied";
 "imageEditor.status.healingApplied" = "Healing brush applied";
 "imageEditor.status.paintBucketFilled" = "Contiguous color area filled";
+"imageEditor.status.paintBucketMatched" = "All matching color areas filled";
 "imageEditor.status.paintBucketOutsideLayer" = "Click inside the current layer to fill";
 "imageEditor.status.paintBucketOutsideSelection" = "Click inside the current selection to fill";
 "imageEditor.status.paintBucketUnchanged" = "Paint bucket did not change any pixels";

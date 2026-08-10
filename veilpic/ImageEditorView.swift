@@ -626,6 +626,16 @@ struct ImageEditorView: View {
             if viewModel.selectedTool.supportsTolerance {
                 optionSlider(titleKey: "imageEditor.option.tolerance", value: $viewModel.tolerance, range: 0...1, step: 0.02, suffix: "")
             }
+            if viewModel.selectedTool == .paintBucket {
+                Toggle(
+                    L10n.text("imageEditor.option.contiguous"),
+                    isOn: $viewModel.isPaintBucketContiguous
+                )
+                .toggleStyle(.checkbox)
+                .focusable(false)
+                .fixedSize()
+                .accessibilityIdentifier("image-editor-paint-bucket-contiguous")
+            }
 
             if viewModel.selectedTool == .cloneStamp {
                 sampledBrushOptions(

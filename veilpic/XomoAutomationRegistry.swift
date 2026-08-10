@@ -4992,6 +4992,12 @@ final class XomoAutomationRegistry {
             viewModel.setRetouchPressureSensitivity(CGFloat(pressureSensitivity))
         }
         if action == "paintBucket" {
+            if let tolerance = arguments["tolerance"]?.doubleValue {
+                viewModel.tolerance = max(0, min(1, tolerance))
+            }
+            if let contiguous = arguments["contiguous"]?.boolValue {
+                viewModel.isPaintBucketContiguous = contiguous
+            }
             viewModel.paintBucketFill(at: try requiredPoint(arguments))
             return
         }
@@ -6384,6 +6390,8 @@ private extension XomoAutomationRegistry {
             "airbrush": XomoAutomationSchema.boolean(description: "Enable gradual dodge or burn airbrush buildup"),
             "airbrushPulses": XomoAutomationSchema.integer(description: "Deterministic dodge or burn dwell pulses from 0 to 80; implies airbrush when airbrush is omitted"),
             "hardness": XomoAutomationSchema.number(description: "Brush edge hardness from 0 to 1"),
+            "tolerance": XomoAutomationSchema.number(description: "Paint-bucket color-distance tolerance from 0 to 1"),
+            "contiguous": XomoAutomationSchema.boolean(description: "Restrict paint-bucket fill to the connected region containing the seed"),
             "feather": XomoAutomationSchema.number(description: "Patch selection feather radius"),
             "mode": XomoAutomationSchema.string(description: "Patch mode", values: ["source", "destination"]),
             "healingMode": XomoAutomationSchema.string(description: "Healing mode", values: ["source", "spot"]),

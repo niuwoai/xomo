@@ -127,6 +127,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var feather: CGFloat = 0
     @Published var selectionModifyAmount: CGFloat = 4
     @Published var tolerance: CGFloat = 0.22
+    @Published var isPaintBucketContiguous = true
     @Published var selectionMode: ImageEditorSelectionMode = .replace
     @Published var isQuickMaskMode = false
     @Published private(set) var quickMaskOverlayImage: NSImage?
@@ -5863,7 +5864,8 @@ final class ImageEditorViewModel: ObservableObject {
             at: rasterLocalPoint(point, layer: layer),
             color: foregroundColor,
             opacity: opacity,
-            tolerance: tolerance
+            tolerance: tolerance,
+            contiguous: isPaintBucketContiguous
         ) else {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return
@@ -5878,7 +5880,11 @@ final class ImageEditorViewModel: ObservableObject {
             historyTitle: L10n.text("imageEditor.history.paintBucket"),
             resetFrame: false
         )
-        statusText = L10n.text("imageEditor.status.paintBucketFilled")
+        statusText = L10n.text(
+            isPaintBucketContiguous
+                ? "imageEditor.status.paintBucketFilled"
+                : "imageEditor.status.paintBucketMatched"
+        )
     }
 
     private func paintBucketPixelsEqual(_ lhs: NSImage, _ rhs: NSImage) -> Bool {

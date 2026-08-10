@@ -624,6 +624,7 @@
 "imageEditor.action.brushPresetDelete" = "現在のカスタムプリセットを削除";
 "imageEditor.option.feather" = "ぼかし";
 "imageEditor.option.tolerance" = "許容値";
+"imageEditor.option.contiguous" = "隣接";
 "imageEditor.option.selectionModifyAmount" = "拡張/縮小";
 "imageEditor.option.selectionMode" = "選択モード";
 "imageEditor.option.posterizeLevels" = "階調数";
@@ -2149,6 +2150,7 @@
 "imageEditor.status.smudgeApplied" = "指先ツールを適用しました";
 "imageEditor.status.healingApplied" = "修復ブラシを適用しました";
 "imageEditor.status.paintBucketFilled" = "連続した色領域を塗りつぶしました";
+"imageEditor.status.paintBucketMatched" = "一致するすべての色領域を塗りつぶしました";
 "imageEditor.status.paintBucketOutsideLayer" = "現在のレイヤー範囲内をクリックして塗りつぶしてください";
 "imageEditor.status.paintBucketOutsideSelection" = "現在の選択範囲内をクリックして塗りつぶしてください";
 "imageEditor.status.paintBucketUnchanged" = "塗りつぶしで変更されたピクセルはありません";

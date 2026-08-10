@@ -624,6 +624,7 @@
 "imageEditor.action.brushPresetDelete" = "删除当前自定义预设";
 "imageEditor.option.feather" = "羽化";
 "imageEditor.option.tolerance" = "容差";
+"imageEditor.option.contiguous" = "连续";
 "imageEditor.option.selectionModifyAmount" = "扩缩";
 "imageEditor.option.selectionMode" = "选区模式";
 "imageEditor.option.posterizeLevels" = "色阶数";
@@ -2149,6 +2150,7 @@
 "imageEditor.status.smudgeApplied" = "已应用涂抹";
 "imageEditor.status.healingApplied" = "已应用修复画笔";
 "imageEditor.status.paintBucketFilled" = "已填充连续颜色区域";
+"imageEditor.status.paintBucketMatched" = "已填充所有匹配颜色区域";
 "imageEditor.status.paintBucketOutsideLayer" = "请在当前图层范围内点击填充";
 "imageEditor.status.paintBucketOutsideSelection" = "请在当前选区内点击填充";
 "imageEditor.status.paintBucketUnchanged" = "油漆桶没有改变任何像素";

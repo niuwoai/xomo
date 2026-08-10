@@ -52,6 +52,10 @@ struct ImageEditorOptionsBarStyleTests {
         #expect(source.contains("displayMultiplier: amountOptionDisplayMultiplier"))
         #expect(optionBarSource.contains("isOn: $viewModel.isGradientReversed"))
         #expect(optionBarSource.contains(".accessibilityIdentifier(\"image-editor-gradient-reverse\")"))
+        #expect(optionBarSource.contains("isOn: $viewModel.isPaintBucketContiguous"))
+        #expect(optionBarSource.contains(
+            ".accessibilityIdentifier(\"image-editor-paint-bucket-contiguous\")"
+        ))
         #expect(optionBarSource.contains(".toggleStyle(.checkbox)\n                    .focusable(false)"))
 
         let explicitForegroundUses = source.components(

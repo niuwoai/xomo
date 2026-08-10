@@ -13152,6 +13152,30 @@ struct XomoAutomationTests {
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.selectionPatch"))
     }
 
+    @Test func registryConfiguresNoncontiguousPaintBucket() {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+
+        let response = registry.execute(request(
+            operation: "call",
+            name: "xomo.paint.special",
+            arguments: [
+                "action": .string("paintBucket"),
+                "x": .number(10),
+                "y": .number(10),
+                "opacity": .number(1),
+                "tolerance": .number(0.07),
+                "contiguous": .bool(false)
+            ]
+        ))
+
+        #expect(response.ok)
+        #expect(viewModel.tolerance == 0.07)
+        #expect(!viewModel.isPaintBucketContiguous)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.paintBucket"))
+    }
+
     private func request(
         operation: String,
         name: String? = nil,
