@@ -711,6 +711,17 @@ struct ImageEditorChannelTests {
         #expect((0..<3).allSatisfy { y in (0..<3).allSatisfy { x in maskAlpha(smoothedChannel.mask, x: x, y: y) == 0 } })
         #expect(viewModel.statusText == L10n.format("imageEditor.status.alphaChannelSmoothed", "Noise", 1))
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.alphaChannelSmooth"))
+
+        let historyCountAfterSmoothing = viewModel.document.history.count
+        viewModel.selectedAlphaChannelID = nil
+        viewModel.smoothAlphaChannel(channel.id, radius: 1)
+        #expect(viewModel.selectedAlphaChannelID == channel.id)
+        #expect(viewModel.document.history.count == historyCountAfterSmoothing)
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.alphaChannelUnchanged", "Noise"))
+
+        viewModel.undo()
+        let restoredChannel = try #require(viewModel.document.alphaChannels.first)
+        #expect(restoredChannel.mask == noisyMask)
     }
 
     @Test func alphaChannelsCanFillMaskHoles() async throws {
