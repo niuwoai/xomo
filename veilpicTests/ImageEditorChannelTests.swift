@@ -636,6 +636,25 @@ struct ImageEditorChannelTests {
         #expect(viewModel.previewedAlphaChannelID == channel.id)
     }
 
+    @Test func alphaChannelsDoNotRecordEquivalentFeather() async throws {
+        let viewModel = ImageEditorViewModel(sourceName: "split.png", image: splitChannelImage()) { _ in }
+        let mask = ImageEditorSelectionMask(
+            width: 3,
+            height: 3,
+            alpha: Array(repeating: 0, count: 9)
+        )
+        let channel = ImageEditorAlphaChannel(name: "Empty", mask: mask)
+        viewModel.document.alphaChannels = [channel]
+        let historyCountBeforeFeather = viewModel.document.history.count
+
+        viewModel.featherAlphaChannel(channel.id, radius: 1)
+
+        #expect(viewModel.selectedAlphaChannelID == channel.id)
+        #expect(viewModel.document.alphaChannels.first?.mask == mask)
+        #expect(viewModel.document.history.count == historyCountBeforeFeather)
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.alphaChannelUnchanged", channel.name))
+    }
+
     @Test func alphaChannelsCanExpandAndContractMasks() async throws {
         let viewModel = ImageEditorViewModel(sourceName: "split.png", image: splitChannelImage()) { _ in }
         let dotMask = ImageEditorSelectionMask(
