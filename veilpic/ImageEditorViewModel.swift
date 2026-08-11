@@ -66,6 +66,18 @@ private struct ImageEditorXomoThemeUndoState {
     var tokenSnapshot: XomoComponentThemeTokenSnapshot?
 }
 
+private enum ImageEditorLayerMaskPropertyEditKind {
+    case density
+    case feather
+
+    var historyKey: String {
+        switch self {
+        case .density: "imageEditor.history.layerMaskDensity"
+        case .feather: "imageEditor.history.layerMaskFeather"
+        }
+    }
+}
+
 @MainActor
 final class ImageEditorViewModel: ObservableObject {
     static let minimumZoom: CGFloat = 0.08
@@ -409,6 +421,10 @@ final class ImageEditorViewModel: ObservableObject {
     private var undoXomoThemeStates: [ImageEditorXomoThemeUndoState] = []
     private var redoXomoThemeStates: [ImageEditorXomoThemeUndoState] = []
     var historySnapshots: [UUID: ImageEditorDocument] = [:]
+    private var activeLayerMaskPropertyEdit: ImageEditorLayerMaskPropertyEditKind?
+    private var activeLayerMaskPropertyTargetIDs = Set<UUID>()
+    private var activeLayerMaskPropertyRedoStack: [ImageEditorDocument] = []
+    private var activeLayerMaskPropertyRedoThemeStates: [ImageEditorXomoThemeUndoState] = []
     var movingLayerIDs = Set<UUID>()
     var movingLayerDidChange = false
     var movingLayerWasDuplicated = false
@@ -4855,7 +4871,9 @@ final class ImageEditorViewModel: ObservableObject {
 
     func setSelectedLayerMaskDensity(_ density: Double) {
         let normalizedDensity = max(0, min(1, density))
-        let indices = selectedLayerMaskPropertyTargetIndices().filter { document.layers[$0].maskDensity != normalizedDensity }
+        let indices = layerMaskPropertyTargetIndices(for: .density).filter {
+            document.layers[$0].maskDensity != normalizedDensity
+        }
         guard !indices.isEmpty else { return }
         for index in indices {
             document.layers[index].maskDensity = normalizedDensity
@@ -4865,7 +4883,9 @@ final class ImageEditorViewModel: ObservableObject {
 
     func setSelectedLayerMaskFeather(_ feather: Double) {
         let normalizedFeather = max(0, min(80, feather))
-        let indices = selectedLayerMaskPropertyTargetIndices().filter { document.layers[$0].maskFeather != normalizedFeather }
+        let indices = layerMaskPropertyTargetIndices(for: .feather).filter {
+            document.layers[$0].maskFeather != normalizedFeather
+        }
         guard !indices.isEmpty else { return }
         for index in indices {
             document.layers[index].maskFeather = normalizedFeather
@@ -4895,12 +4915,92 @@ final class ImageEditorViewModel: ObservableObject {
         appendHistory(L10n.text("imageEditor.history.layerBlendIf"))
     }
 
+    func beginSelectedLayerMaskDensityChange() {
+        beginSelectedLayerMaskPropertyChange(.density)
+    }
+
     func commitSelectedLayerMaskDensityChange() {
-        appendHistory(L10n.text("imageEditor.history.layerMaskDensity"))
+        finishSelectedLayerMaskPropertyChange(.density)
+    }
+
+    func beginSelectedLayerMaskFeatherChange() {
+        beginSelectedLayerMaskPropertyChange(.feather)
     }
 
     func commitSelectedLayerMaskFeatherChange() {
-        appendHistory(L10n.text("imageEditor.history.layerMaskFeather"))
+        finishSelectedLayerMaskPropertyChange(.feather)
+    }
+
+    private func beginSelectedLayerMaskPropertyChange(_ kind: ImageEditorLayerMaskPropertyEditKind) {
+        if activeLayerMaskPropertyEdit == kind { return }
+        finishActiveLayerMaskPropertyChange()
+
+        let indices = selectedLayerMaskPropertyTargetIndices()
+        guard !indices.isEmpty else { return }
+        activeLayerMaskPropertyRedoStack = redoStack
+        activeLayerMaskPropertyRedoThemeStates = redoXomoThemeStates
+        pushUndo()
+        activeLayerMaskPropertyEdit = kind
+        activeLayerMaskPropertyTargetIDs = Set(indices.map { document.layers[$0].id })
+    }
+
+    private func finishSelectedLayerMaskPropertyChange(_ kind: ImageEditorLayerMaskPropertyEditKind) {
+        guard activeLayerMaskPropertyEdit == kind else { return }
+        finishActiveLayerMaskPropertyChange()
+    }
+
+    private func finishActiveLayerMaskPropertyChange() {
+        guard let kind = activeLayerMaskPropertyEdit else { return }
+        let targetIDs = activeLayerMaskPropertyTargetIDs
+        let snapshot = undoStack.last
+        let didChange = snapshot.map {
+            layerMaskPropertyValuesDiffer(kind, targetIDs: targetIDs, from: $0)
+        } ?? false
+
+        activeLayerMaskPropertyEdit = nil
+        activeLayerMaskPropertyTargetIDs = []
+        if didChange {
+            appendHistory(L10n.text(kind.historyKey))
+        } else {
+            _ = discardLastUndoSnapshot()
+            redoStack = activeLayerMaskPropertyRedoStack
+            redoXomoThemeStates = activeLayerMaskPropertyRedoThemeStates
+            updateStatus()
+        }
+        activeLayerMaskPropertyRedoStack = []
+        activeLayerMaskPropertyRedoThemeStates = []
+    }
+
+    private func layerMaskPropertyTargetIndices(
+        for kind: ImageEditorLayerMaskPropertyEditKind
+    ) -> [Int] {
+        guard activeLayerMaskPropertyEdit == kind else {
+            return selectedLayerMaskPropertyTargetIndices()
+        }
+        return document.layers.indices.filter {
+            activeLayerMaskPropertyTargetIDs.contains(document.layers[$0].id)
+                && !document.isEffectivelyLocked(document.layers[$0])
+                && document.layers[$0].mask != nil
+        }
+    }
+
+    private func layerMaskPropertyValuesDiffer(
+        _ kind: ImageEditorLayerMaskPropertyEditKind,
+        targetIDs: Set<UUID>,
+        from snapshot: ImageEditorDocument
+    ) -> Bool {
+        for id in targetIDs {
+            guard let current = document.layers.first(where: { $0.id == id }),
+                  let previous = snapshot.layers.first(where: { $0.id == id })
+            else { return true }
+            switch kind {
+            case .density:
+                if current.maskDensity != previous.maskDensity { return true }
+            case .feather:
+                if current.maskFeather != previous.maskFeather { return true }
+            }
+        }
+        return false
     }
 
     func toggleSelectedLayerClippingMask() {

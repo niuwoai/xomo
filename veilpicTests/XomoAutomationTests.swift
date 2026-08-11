@@ -1195,6 +1195,56 @@ struct XomoAutomationTests {
         #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionUnchanged"))
     }
 
+    @Test func registryMakesMaskDensityAndFeatherChangesUndoableWithoutNoOpHistory() throws {
+        let viewModel = makeViewModel()
+        viewModel.createRectSelection(from: CGPoint(x: 20, y: 16), to: CGPoint(x: 80, y: 64))
+        viewModel.addLayerMaskFromSelection()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+
+        let densityArguments: [String: XomoJSONValue] = [
+            "property": .string("maskDensity"),
+            "value": .number(0.4)
+        ]
+        let firstDensityResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.properties",
+            arguments: densityArguments
+        ))
+        #expect(firstDensityResponse.ok)
+        #expect(viewModel.document.selectedLayer?.maskDensity == 0.4)
+        let historyCountAfterDensity = viewModel.document.history.count
+        let undoCountAfterDensity = viewModel.undoStack.count
+
+        let repeatedDensityResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.properties",
+            arguments: densityArguments
+        ))
+        #expect(repeatedDensityResponse.ok)
+        #expect(viewModel.document.history.count == historyCountAfterDensity)
+        #expect(viewModel.undoStack.count == undoCountAfterDensity)
+
+        viewModel.undo()
+        #expect(viewModel.document.selectedLayer?.maskDensity == 1)
+
+        let featherResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.properties",
+            arguments: [
+                "property": .string("maskFeather"),
+                "value": .number(12)
+            ]
+        ))
+        #expect(featherResponse.ok)
+        #expect(viewModel.document.selectedLayer?.maskFeather == 12)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerMaskFeather"))
+
+        viewModel.undo()
+        #expect(viewModel.document.selectedLayer?.maskDensity == 1)
+        #expect(viewModel.document.selectedLayer?.maskFeather == 0)
+    }
+
     @Test func registryDoesNotRecordRepeatedAlphaChannelFillOrClear() throws {
         let viewModel = makeViewModel()
         viewModel.createBlankAlphaChannel()

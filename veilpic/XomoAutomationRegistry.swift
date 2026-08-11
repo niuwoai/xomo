@@ -4485,9 +4485,11 @@ final class XomoAutomationRegistry {
             viewModel.setSelectedLayerBlendIfUnderlyingWhite(try requiredNumber("value", in: arguments))
             viewModel.commitSelectedLayerBlendIfChange()
         case "maskDensity":
+            viewModel.beginSelectedLayerMaskDensityChange()
             viewModel.setSelectedLayerMaskDensity(try requiredNumber("value", in: arguments))
             viewModel.commitSelectedLayerMaskDensityChange()
         case "maskFeather":
+            viewModel.beginSelectedLayerMaskFeatherChange()
             viewModel.setSelectedLayerMaskFeather(try requiredNumber("value", in: arguments))
             viewModel.commitSelectedLayerMaskFeatherChange()
         case "clippingMask": viewModel.toggleSelectedLayerClippingMask()

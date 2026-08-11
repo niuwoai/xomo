@@ -1516,7 +1516,9 @@ extension ImageEditorView {
                 } maximumValueLabel: {
                     Text("100")
                 } onEditingChanged: { editing in
-                    if !editing {
+                    if editing {
+                        viewModel.beginSelectedLayerMaskDensityChange()
+                    } else {
                         viewModel.commitSelectedLayerMaskDensityChange()
                     }
                 }
@@ -1538,7 +1540,9 @@ extension ImageEditorView {
                 } maximumValueLabel: {
                     Text("80")
                 } onEditingChanged: { editing in
-                    if !editing {
+                    if editing {
+                        viewModel.beginSelectedLayerMaskFeatherChange()
+                    } else {
                         viewModel.commitSelectedLayerMaskFeatherChange()
                     }
                 }

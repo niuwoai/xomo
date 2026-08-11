@@ -4217,6 +4217,7 @@ struct veilpicTests {
         let outsideHard = try #require(viewModel.currentImage.color(at: CGPoint(x: 8, y: 30))?.usingColorSpace(.deviceRGB))
         #expect(outsideHard.blueComponent > outsideHard.redComponent)
 
+        viewModel.beginSelectedLayerMaskDensityChange()
         viewModel.setSelectedLayerMaskDensity(0.5)
         viewModel.commitSelectedLayerMaskDensityChange()
         let outsideDense = try #require(viewModel.currentImage.color(at: CGPoint(x: 8, y: 30))?.usingColorSpace(.deviceRGB))
@@ -4225,6 +4226,7 @@ struct veilpicTests {
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerMaskDensity"))
 
         viewModel.setSelectedLayerMaskDensity(1)
+        viewModel.beginSelectedLayerMaskFeatherChange()
         viewModel.setSelectedLayerMaskFeather(8)
         viewModel.commitSelectedLayerMaskFeatherChange()
         let featheredEdge = try #require(viewModel.currentImage.color(at: CGPoint(x: 18, y: 30))?.usingColorSpace(.deviceRGB))

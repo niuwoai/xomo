@@ -12,6 +12,55 @@ import AppKit
 @MainActor
 @Suite(.serialized)
 struct ImageEditorLayerBatchAppearanceTests {
+    @Test func maskPropertyTransactionsCoalesceAndDiscardNoOpEdits() async throws {
+        let image = solidImage(color: .systemBlue, size: NSSize(width: 96, height: 72))
+        let mask = solidImage(color: .white, size: NSSize(width: 96, height: 72))
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        viewModel.addLayer()
+        let layerID = try #require(viewModel.document.selectedLayerID)
+        try setMask(mask, for: layerID, in: viewModel)
+
+        let initialUndoCount = viewModel.undoStack.count
+        let initialHistoryCount = viewModel.document.history.count
+        viewModel.beginSelectedLayerMaskDensityChange()
+        viewModel.setSelectedLayerMaskDensity(0.8)
+        viewModel.setSelectedLayerMaskDensity(0.55)
+        viewModel.setSelectedLayerMaskDensity(0.35)
+        viewModel.commitSelectedLayerMaskDensityChange()
+
+        #expect(try #require(layer(layerID, in: viewModel)).maskDensity == 0.35)
+        #expect(viewModel.undoStack.count == initialUndoCount + 1)
+        #expect(viewModel.document.history.count == initialHistoryCount + 1)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerMaskDensity"))
+
+        viewModel.undo()
+        #expect(try #require(layer(layerID, in: viewModel)).maskDensity == 1)
+        let undoCountBeforeNoOp = viewModel.undoStack.count
+        let historyCountBeforeNoOp = viewModel.document.history.count
+        let redoCountBeforeNoOp = viewModel.redoStack.count
+
+        viewModel.beginSelectedLayerMaskDensityChange()
+        viewModel.setSelectedLayerMaskDensity(1)
+        viewModel.commitSelectedLayerMaskDensityChange()
+
+        #expect(viewModel.undoStack.count == undoCountBeforeNoOp)
+        #expect(viewModel.document.history.count == historyCountBeforeNoOp)
+        #expect(viewModel.redoStack.count == redoCountBeforeNoOp)
+        viewModel.redo()
+        #expect(try #require(layer(layerID, in: viewModel)).maskDensity == 0.35)
+
+        viewModel.beginSelectedLayerMaskFeatherChange()
+        viewModel.setSelectedLayerMaskFeather(4)
+        viewModel.setSelectedLayerMaskFeather(12)
+        viewModel.commitSelectedLayerMaskFeatherChange()
+        #expect(try #require(layer(layerID, in: viewModel)).maskFeather == 12)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerMaskFeather"))
+
+        viewModel.undo()
+        #expect(try #require(layer(layerID, in: viewModel)).maskDensity == 0.35)
+        #expect(try #require(layer(layerID, in: viewModel)).maskFeather == 0)
+    }
+
     @Test func selectedLayersApplyBatchMaskDensityAndFeather() async throws {
         let image = solidImage(color: .systemBlue, size: NSSize(width: 96, height: 72))
         let mask = solidImage(color: .white, size: NSSize(width: 96, height: 72))
@@ -39,8 +88,10 @@ struct ImageEditorLayerBatchAppearanceTests {
         #expect(viewModel.selectedLayerHasMask)
         #expect(viewModel.canEditSelectedLayerMaskProperties)
 
+        viewModel.beginSelectedLayerMaskDensityChange()
         viewModel.setSelectedLayerMaskDensity(0.35)
         viewModel.commitSelectedLayerMaskDensityChange()
+        viewModel.beginSelectedLayerMaskFeatherChange()
         viewModel.setSelectedLayerMaskFeather(12)
         viewModel.commitSelectedLayerMaskFeatherChange()
 
@@ -58,6 +109,18 @@ struct ImageEditorLayerBatchAppearanceTests {
         #expect(unmasked.maskDensity == 1)
         #expect(unmasked.maskFeather == 0)
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerMaskFeather"))
+
+        viewModel.undo()
+        #expect(try #require(layer(firstID, in: viewModel)).maskDensity == 0.35)
+        #expect(try #require(layer(firstID, in: viewModel)).maskFeather == 0)
+        #expect(try #require(layer(secondID, in: viewModel)).maskDensity == 0.35)
+        #expect(try #require(layer(secondID, in: viewModel)).maskFeather == 0)
+
+        viewModel.undo()
+        #expect(try #require(layer(firstID, in: viewModel)).maskDensity == 1)
+        #expect(try #require(layer(secondID, in: viewModel)).maskDensity == 1)
+        #expect(try #require(layer(lockedID, in: viewModel)).maskDensity == 1)
+        #expect(try #require(layer(unmaskedID, in: viewModel)).maskDensity == 1)
 
         viewModel.selectLayer(unmaskedID)
         #expect(!viewModel.selectedLayerHasMask)
