@@ -177,6 +177,12 @@ struct ImageEditorChannelTests {
         #expect(maskAlpha(mask, x: 0, y: 0) == 255)
         #expect(maskAlpha(mask, x: 1, y: 0) == 0)
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.selectionFromChannel"))
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.channelSelection", ImageEditorChannelPreview.red.title))
+
+        let historyCountAfterFirstLoad = viewModel.document.history.count
+        viewModel.loadSelectionFromChannel(.red)
+        #expect(viewModel.document.history.count == historyCountAfterFirstLoad)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionUnchanged"))
 
         viewModel.selectionMode = .add
         viewModel.loadSelectionFromChannel(.green)

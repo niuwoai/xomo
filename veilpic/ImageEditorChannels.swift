@@ -243,8 +243,11 @@ extension ImageEditorViewModel {
             return
         }
 
-        applySelectionCandidate(selection, replaceHistoryKey: "imageEditor.history.selectionFromChannel")
-        if document.selection != nil {
+        let didChangeSelection = applySelectionCandidate(
+            selection,
+            replaceHistoryKey: "imageEditor.history.selectionFromChannel"
+        )
+        if didChangeSelection, document.selection != nil {
             statusText = L10n.format("imageEditor.status.channelSelection", channel.title)
         }
     }
