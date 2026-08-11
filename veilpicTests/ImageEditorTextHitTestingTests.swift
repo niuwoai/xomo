@@ -26,4 +26,26 @@ struct ImageEditorTextHitTestingTests {
         #expect(!viewModel.selectEditableTextLayer(at: pointOutsideByEight, hitTolerance: 4))
         #expect(viewModel.selectEditableTextLayer(at: pointOutsideByEight, hitTolerance: 16))
     }
+
+    @Test @MainActor
+    func editableTextHitTestingDefaultsToFourCanvasPixels() throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "default-text-hit-testing",
+            image: NSImage.transparent(size: CGSize(width: 640, height: 480))
+        ) { _ in }
+        viewModel.textValue = "Default target"
+        viewModel.addText(at: CGPoint(x: 100, y: 100))
+        let layer = try #require(viewModel.document.selectedLayer)
+
+        #expect(
+            viewModel.selectEditableTextLayer(
+                at: CGPoint(x: layer.frame.minX - 3, y: layer.frame.midY)
+            )
+        )
+        #expect(
+            !viewModel.selectEditableTextLayer(
+                at: CGPoint(x: layer.frame.minX - 5, y: layer.frame.midY)
+            )
+        )
+    }
 }

@@ -7,9 +7,9 @@ import AppKit
 import Foundation
 
 enum ImageEditorTextHitTesting {
-    static let viewTolerance: CGFloat = 4
+    nonisolated static let viewTolerance: CGFloat = 4
 
-    static func canvasTolerance(displayScale: CGFloat) -> CGFloat {
+    nonisolated static func canvasTolerance(displayScale: CGFloat) -> CGFloat {
         guard displayScale.isFinite, displayScale > 0 else { return viewTolerance }
         return viewTolerance / displayScale
     }
