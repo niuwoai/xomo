@@ -4620,6 +4620,7 @@ final class XomoAutomationRegistry {
         case "expand": viewModel.expandSelection(radius: selectionRadius(arguments["amount"]))
         case "contract": viewModel.contractSelection(radius: selectionRadius(arguments["amount"]))
         case "border": viewModel.borderSelection(radius: selectionRadius(arguments["amount"]))
+        case "smooth": viewModel.smoothSelection(radius: selectionRadius(arguments["amount"]))
         case "fillHoles": viewModel.fillSelectionHoles()
         case "removeSpeckles": viewModel.removeSelectionSpeckles(maximumArea: selectionRadius(arguments["amount"]))
         case "centerHorizontal": viewModel.centerSelectionHorizontally()
@@ -6248,7 +6249,7 @@ private extension XomoAutomationRegistry {
             "action": XomoAutomationSchema.string(description: "Selection edit action", values: ["fillForeground", "fillBackground", "stroke", "contentAwareFill", "clearPixels", "copyToLayer", "cutToLayer", "copyMergedToLayer", "duplicate"])
         ], required: ["action"]),
         tool("xomo.selection.modify", "Save, restore, transform, clean, color-match, or nudge the pixel selection.", [
-            "action": XomoAutomationSchema.string(description: "Selection modification", values: ["loadTransparency", "save", "reselect", "restoreSaved", "colorRange", "similarColors", "growColor", "expand", "contract", "border", "fillHoles", "removeSpeckles", "centerHorizontal", "centerVertical", "centerCanvas", "flipHorizontal", "flipVertical", "rotateClockwise", "rotateCounterclockwise", "rotate180", "scaleUp", "scaleDown", "fitCanvas", "nudge"]),
+            "action": XomoAutomationSchema.string(description: "Selection modification", values: ["loadTransparency", "save", "reselect", "restoreSaved", "colorRange", "similarColors", "growColor", "expand", "contract", "border", "smooth", "fillHoles", "removeSpeckles", "centerHorizontal", "centerVertical", "centerCanvas", "flipHorizontal", "flipVertical", "rotateClockwise", "rotateCounterclockwise", "rotate180", "scaleUp", "scaleDown", "fitCanvas", "nudge"]),
             "amount": XomoAutomationSchema.number(description: "Selection modification amount in pixels"),
             "tolerance": XomoAutomationSchema.number(description: "Color-distance tolerance from 0 to 1"),
             "threshold": XomoAutomationSchema.number(description: "Layer alpha threshold from 0 to 255 for loadTransparency"),

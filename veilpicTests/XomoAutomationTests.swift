@@ -171,6 +171,7 @@ struct XomoAutomationTests {
             return
         }
         #expect(selectionModifyTool["inputSchema"]?.objectValue?["properties"]?.objectValue?["amount"]?.objectValue?["type"] == .string("number"))
+        #expect(selectionModifyTool["inputSchema"]?.objectValue?["properties"]?.objectValue?["action"]?.objectValue?["enum"]?.arrayValue?.contains(.string("smooth")) == true)
         guard let magicTool = tools.compactMap({ tool -> [String: XomoJSONValue]? in
             guard case .object(let value) = tool else { return nil }
             return value
@@ -1295,6 +1296,26 @@ struct XomoAutomationTests {
 
         #expect(response.ok)
         #expect(viewModel.document.history.count == historyCountBeforeCleanup)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionUnchanged"))
+    }
+
+    @Test func registryAlreadySmoothSelectionDoesNotCreateHistory() throws {
+        let viewModel = makeViewModel()
+        viewModel.document.selection = ImageEditorSelection.rectangle(
+            CGRect(x: 4, y: 2, width: 10, height: 5)
+        )
+        let historyCountBeforeSmoothing = viewModel.document.history.count
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+
+        let response = registry.execute(request(
+            operation: "call",
+            name: "xomo.selection.modify",
+            arguments: ["action": .string("smooth"), "amount": .number(1)]
+        ))
+
+        #expect(response.ok)
+        #expect(viewModel.document.history.count == historyCountBeforeSmoothing)
         #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionUnchanged"))
     }
 

@@ -654,6 +654,21 @@ struct ImageEditorSelectionOperationTests {
         #expect(viewModel.statusText == L10n.format("imageEditor.status.selectionSmoothed", 1))
     }
 
+    @Test func alreadySmoothSelectionDoesNotCreateUndoOrHistory() throws {
+        let canvasSize = NSSize(width: 20, height: 20)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: testImage(size: canvasSize)) { _ in }
+        viewModel.document.selection = ImageEditorSelection.rectangle(
+            CGRect(x: 5, y: 5, width: 10, height: 10)
+        )
+        let historyCountBeforeSmoothing = viewModel.document.history.count
+
+        viewModel.smoothSelection(radius: 1)
+
+        #expect(viewModel.document.history.count == historyCountBeforeSmoothing)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionUnchanged"))
+        #expect(viewModel.document.selection?.bounds == CGRect(x: 5, y: 5, width: 10, height: 10))
+    }
+
     @Test func imageEditorFillsSelectionHolesWithoutSelectingOutsideBackground() async throws {
         let canvasSize = NSSize(width: 8, height: 8)
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: testImage(size: canvasSize)) { _ in }

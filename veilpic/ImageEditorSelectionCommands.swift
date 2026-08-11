@@ -293,6 +293,10 @@ extension ImageEditorViewModel {
         }
         let effectiveRadius = effectiveSelectionRadius(radius, maximum: 16)
         let modified = selection.smoothed(by: effectiveRadius, canvasSize: document.canvasSize)
+        guard !selectionsAreEquivalent(selection, modified) else {
+            statusText = L10n.text("imageEditor.status.selectionUnchanged")
+            return
+        }
 
         pushUndo()
         document.selection = modified
