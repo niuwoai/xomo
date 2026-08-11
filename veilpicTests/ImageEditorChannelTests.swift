@@ -1161,6 +1161,37 @@ struct ImageEditorChannelTests {
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.alphaChannelMove"))
     }
 
+    @Test func alphaChannelsDoNotRecordEquivalentMoves() async throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "move-no-op.png",
+            image: NSImage.transparent(size: CGSize(width: 8, height: 8))
+        ) { _ in }
+        let emptyMask = ImageEditorSelectionMask(
+            width: 8,
+            height: 8,
+            alpha: Array(repeating: 0, count: 64)
+        )
+        let emptyChannel = ImageEditorAlphaChannel(name: "Empty", mask: emptyMask)
+        let subpixelMask = ImageEditorSelectionMask(width: 1, height: 1, alpha: [255])
+        let subpixelChannel = ImageEditorAlphaChannel(name: "Subpixel", mask: subpixelMask)
+        viewModel.document.alphaChannels = [emptyChannel, subpixelChannel]
+        viewModel.selectionModifyAmount = 1
+        let historyCountBeforeMove = viewModel.document.history.count
+
+        viewModel.moveAlphaChannelRight(emptyChannel.id)
+        #expect(viewModel.selectedAlphaChannelID == emptyChannel.id)
+        #expect(viewModel.document.alphaChannels[0].mask == emptyMask)
+        #expect(viewModel.document.history.count == historyCountBeforeMove)
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.alphaChannelUnchanged", emptyChannel.name))
+
+        viewModel.selectedAlphaChannelID = nil
+        viewModel.moveAlphaChannelRight(subpixelChannel.id)
+        #expect(viewModel.selectedAlphaChannelID == subpixelChannel.id)
+        #expect(viewModel.document.alphaChannels[1].mask == subpixelMask)
+        #expect(viewModel.document.history.count == historyCountBeforeMove)
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.alphaChannelUnchanged", subpixelChannel.name))
+    }
+
     @Test func alphaChannelCanCreateGrayscalePixelLayer() async throws {
         let viewModel = ImageEditorViewModel(sourceName: "alpha-layer.png", image: splitChannelImage()) { _ in }
         let layerCount = viewModel.document.layers.count

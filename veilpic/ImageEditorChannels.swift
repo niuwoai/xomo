@@ -948,8 +948,17 @@ extension ImageEditorViewModel {
 
     private func moveAlphaChannel(_ id: UUID, by delta: CGSize) {
         guard let index = document.alphaChannels.firstIndex(where: { $0.id == id }) else { return }
-        guard let movedMask = document.alphaChannels[index].mask.translated(by: delta, canvasSize: document.canvasSize) else {
+        let originalMask = document.alphaChannels[index].mask
+        guard let movedMask = originalMask.translated(by: delta, canvasSize: document.canvasSize) else {
             statusText = L10n.text("imageEditor.status.operationFailed")
+            return
+        }
+        guard movedMask != originalMask else {
+            selectedAlphaChannelID = id
+            statusText = L10n.format(
+                "imageEditor.status.alphaChannelUnchanged",
+                document.alphaChannels[index].name
+            )
             return
         }
 
