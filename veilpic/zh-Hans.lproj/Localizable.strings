@@ -2680,6 +2680,7 @@
 "imageEditor.status.alphaChannelInverted" = "已反相 %@";
 "imageEditor.status.alphaChannelFilledWhite" = "已用白色填满 %@";
 "imageEditor.status.alphaChannelCleared" = "已清空 %@ 为黑色";
+"imageEditor.status.alphaChannelUnchanged" = "Alpha 通道 %@ 没有变化";
 "imageEditor.status.alphaChannelThresholded" = "已阈值化 %@";
 "imageEditor.status.alphaChannelFeathered" = "已羽化 %@（%d px）";
 "imageEditor.status.alphaChannelExpanded" = "已扩展 %@（%d px）";

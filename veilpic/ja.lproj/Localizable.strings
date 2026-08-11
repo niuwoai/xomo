@@ -2680,6 +2680,7 @@
 "imageEditor.status.alphaChannelInverted" = "%@ を反転しました";
 "imageEditor.status.alphaChannelFilledWhite" = "%@ を白で塗りつぶしました";
 "imageEditor.status.alphaChannelCleared" = "%@ を黒にクリアしました";
+"imageEditor.status.alphaChannelUnchanged" = "アルファチャンネル %@ は変更されていません";
 "imageEditor.status.alphaChannelThresholded" = "%@ をしきい値化しました";
 "imageEditor.status.alphaChannelFeathered" = "%@ を羽化しました（%d px）";
 "imageEditor.status.alphaChannelExpanded" = "%@ を拡張しました（%d px）";

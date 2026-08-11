@@ -2680,6 +2680,7 @@
 "imageEditor.status.alphaChannelInverted" = "Inverted %@";
 "imageEditor.status.alphaChannelFilledWhite" = "Filled %@ with white";
 "imageEditor.status.alphaChannelCleared" = "Cleared %@ to black";
+"imageEditor.status.alphaChannelUnchanged" = "Alpha channel %@ is unchanged";
 "imageEditor.status.alphaChannelThresholded" = "Thresholded %@";
 "imageEditor.status.alphaChannelFeathered" = "Feathered %@ (%d px)";
 "imageEditor.status.alphaChannelExpanded" = "Expanded %@ (%d px)";

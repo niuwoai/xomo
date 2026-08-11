@@ -946,9 +946,18 @@ extension ImageEditorViewModel {
         guard let index = document.alphaChannels.firstIndex(where: { $0.id == id }) else { return }
         let mask = document.alphaChannels[index].mask
         let count = max(0, mask.width * mask.height)
+        let replacementAlpha = [UInt8](repeating: value, count: count)
+        guard mask.alpha != replacementAlpha else {
+            selectedAlphaChannelID = id
+            statusText = L10n.format(
+                "imageEditor.status.alphaChannelUnchanged",
+                document.alphaChannels[index].name
+            )
+            return
+        }
 
         pushUndo()
-        document.alphaChannels[index].mask.alpha = [UInt8](repeating: value, count: count)
+        document.alphaChannels[index].mask.alpha = replacementAlpha
         selectedAlphaChannelID = id
         appendHistory(L10n.text(historyKey))
         statusText = L10n.format(statusKey, document.alphaChannels[index].name)

@@ -1140,6 +1140,54 @@ struct XomoAutomationTests {
         #expect(viewModel.document.selection == nil)
     }
 
+    @Test func registryDoesNotRecordRepeatedAlphaChannelFillOrClear() throws {
+        let viewModel = makeViewModel()
+        viewModel.createBlankAlphaChannel()
+        let channel = try #require(viewModel.document.alphaChannels.first)
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+
+        let fillArguments: [String: XomoJSONValue] = [
+            "id": .string(channel.id.uuidString),
+            "action": .string("fillWhite")
+        ]
+        #expect(registry.execute(request(
+            operation: "call",
+            name: "xomo.channel.action",
+            arguments: fillArguments
+        )).ok)
+        let historyCountAfterFill = viewModel.document.history.count
+        #expect(registry.execute(request(
+            operation: "call",
+            name: "xomo.channel.action",
+            arguments: fillArguments
+        )).ok)
+        #expect(viewModel.document.history.count == historyCountAfterFill)
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.alphaChannelUnchanged", channel.name))
+
+        let clearArguments: [String: XomoJSONValue] = [
+            "id": .string(channel.id.uuidString),
+            "action": .string("clear")
+        ]
+        #expect(registry.execute(request(
+            operation: "call",
+            name: "xomo.channel.action",
+            arguments: clearArguments
+        )).ok)
+        let historyCountAfterClear = viewModel.document.history.count
+        #expect(registry.execute(request(
+            operation: "call",
+            name: "xomo.channel.action",
+            arguments: clearArguments
+        )).ok)
+        #expect(viewModel.document.history.count == historyCountAfterClear)
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.alphaChannelUnchanged", channel.name))
+
+        viewModel.undo()
+        let restoredChannel = try #require(viewModel.document.alphaChannels.first)
+        #expect(restoredChannel.mask.alpha.allSatisfy { $0 == UInt8.max })
+    }
+
     @Test func registryAppliesExplicitMagicWandTolerance() throws {
         let viewModel = makeViewModel()
         let layerIndex = try #require(viewModel.document.selectedLayerIndex)
