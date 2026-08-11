@@ -857,8 +857,25 @@ extension ImageEditorViewModel {
 
     func fitAlphaChannelToCanvas(_ id: UUID) {
         guard let index = document.alphaChannels.firstIndex(where: { $0.id == id }) else { return }
-        guard let fittedMask = document.alphaChannels[index].mask.fittedToCanvas() else {
+        let originalMask = document.alphaChannels[index].mask
+        guard originalMask.alpha.contains(where: { $0 > 0 }) else {
+            selectedAlphaChannelID = id
+            statusText = L10n.format(
+                "imageEditor.status.alphaChannelUnchanged",
+                document.alphaChannels[index].name
+            )
+            return
+        }
+        guard let fittedMask = originalMask.fittedToCanvas() else {
             statusText = L10n.text("imageEditor.status.operationFailed")
+            return
+        }
+        guard fittedMask != originalMask else {
+            selectedAlphaChannelID = id
+            statusText = L10n.format(
+                "imageEditor.status.alphaChannelUnchanged",
+                document.alphaChannels[index].name
+            )
             return
         }
 

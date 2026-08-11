@@ -1096,6 +1096,37 @@ struct ImageEditorChannelTests {
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.alphaChannelFitCanvas"))
     }
 
+    @Test func alphaChannelsDoNotRecordEquivalentCanvasFits() async throws {
+        let viewModel = ImageEditorViewModel(sourceName: "fit-no-op.png", image: splitChannelImage()) { _ in }
+        let fullMask = ImageEditorSelectionMask(
+            width: 8,
+            height: 8,
+            alpha: Array(repeating: 255, count: 64)
+        )
+        let fullChannel = ImageEditorAlphaChannel(name: "Full", mask: fullMask)
+        let emptyMask = ImageEditorSelectionMask(
+            width: 8,
+            height: 8,
+            alpha: Array(repeating: 0, count: 64)
+        )
+        let emptyChannel = ImageEditorAlphaChannel(name: "Empty", mask: emptyMask)
+        viewModel.document.alphaChannels = [fullChannel, emptyChannel]
+        let historyCountBeforeFit = viewModel.document.history.count
+
+        viewModel.fitAlphaChannelToCanvas(fullChannel.id)
+        #expect(viewModel.selectedAlphaChannelID == fullChannel.id)
+        #expect(viewModel.document.alphaChannels[0].mask == fullMask)
+        #expect(viewModel.document.history.count == historyCountBeforeFit)
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.alphaChannelUnchanged", fullChannel.name))
+
+        viewModel.selectedAlphaChannelID = nil
+        viewModel.fitAlphaChannelToCanvas(emptyChannel.id)
+        #expect(viewModel.selectedAlphaChannelID == emptyChannel.id)
+        #expect(viewModel.document.alphaChannels[1].mask == emptyMask)
+        #expect(viewModel.document.history.count == historyCountBeforeFit)
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.alphaChannelUnchanged", emptyChannel.name))
+    }
+
     @Test func alphaChannelsCanMoveMasksByModifyAmount() async throws {
         let canvasSize = NSSize(width: 8, height: 6)
         let image = NSImage.rendered(size: canvasSize) { rect in
