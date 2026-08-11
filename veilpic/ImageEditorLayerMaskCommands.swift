@@ -459,8 +459,8 @@ extension ImageEditorViewModel {
         let historyKey = selections.count == 1
             ? "imageEditor.history.selectionFromLayerMask"
             : "imageEditor.history.selectionFromSelectedLayerMasks"
-        applyMaskSelection(selection, historyKey: historyKey)
-        if document.selection != nil {
+        let didApplySelection = applySelectionCandidate(selection, replaceHistoryKey: historyKey)
+        if didApplySelection, document.selection != nil {
             statusText = selections.count == 1
                 ? L10n.text("imageEditor.status.layerMaskSelection")
                 : L10n.format("imageEditor.status.layerMaskSelectionSelected", selections.count)
@@ -477,8 +477,8 @@ extension ImageEditorViewModel {
         let historyKey = selections.count == 1
             ? "imageEditor.history.selectionFromVectorMask"
             : "imageEditor.history.selectionFromSelectedVectorMasks"
-        applyMaskSelection(selection, historyKey: historyKey)
-        if document.selection != nil {
+        let didApplySelection = applySelectionCandidate(selection, replaceHistoryKey: historyKey)
+        if didApplySelection, document.selection != nil {
             statusText = selections.count == 1
                 ? L10n.text("imageEditor.status.vectorMaskSelection")
                 : L10n.format("imageEditor.status.vectorMaskSelectionSelected", selections.count)
@@ -982,27 +982,6 @@ extension ImageEditorViewModel {
             x: (point.x - layer.frame.minX) / layer.frame.width * layer.image.size.width,
             y: (point.y - layer.frame.minY) / layer.frame.height * layer.image.size.height
         )
-    }
-
-    private func applyMaskSelection(_ selection: ImageEditorSelection, historyKey: String) {
-        let nextSelection = ImageEditorSelection.combined(
-            current: document.selection,
-            candidate: selection,
-            mode: selectionMode,
-            canvasSize: document.canvasSize
-        )
-        guard document.selection != nil || selectionMode == .replace || selectionMode == .add else {
-            statusText = L10n.text("imageEditor.status.noSelection")
-            return
-        }
-
-        pushUndo()
-        document.selection = nextSelection
-        let appliedHistoryKey = selectionMode == .replace ? historyKey : selectionMode.historyKey
-        appendHistory(L10n.text(appliedHistoryKey))
-        if nextSelection == nil {
-            statusText = L10n.text("imageEditor.status.selectionEmpty")
-        }
     }
 
     private func layerMaskCopyTargetIndices(sourceID: UUID) -> [Int] {

@@ -3721,6 +3721,31 @@ struct veilpicTests {
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.selectionFromLayerMask"))
         #expect(viewModel.statusText == L10n.text("imageEditor.status.layerMaskSelection"))
 
+        let historyCountAfterLayerMaskSelection = viewModel.document.history.count
+        viewModel.loadSelectionFromLayerMask()
+        #expect(viewModel.document.history.count == historyCountAfterLayerMaskSelection)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionUnchanged"))
+
+        viewModel.selectionMode = .add
+        viewModel.loadSelectionFromLayerMask()
+        #expect(viewModel.document.history.count == historyCountAfterLayerMaskSelection)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionUnchanged"))
+
+        viewModel.selectionMode = .intersect
+        viewModel.loadSelectionFromLayerMask()
+        #expect(viewModel.document.history.count == historyCountAfterLayerMaskSelection)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionUnchanged"))
+
+        viewModel.selectionMode = .subtract
+        viewModel.loadSelectionFromLayerMask()
+        #expect(viewModel.document.selection == nil)
+        #expect(viewModel.document.history.count == historyCountAfterLayerMaskSelection + 1)
+        #expect(viewModel.document.history.last?.title == L10n.text(ImageEditorSelectionMode.subtract.historyKey))
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionEmpty"))
+        viewModel.undo()
+        _ = try #require(viewModel.document.selection)
+        viewModel.selectionMode = .replace
+
         let maskedLayerID = try #require(viewModel.document.selectedLayerID)
         viewModel.addLayer()
         let transparentLayerID = try #require(viewModel.document.selectedLayerID)
@@ -3792,6 +3817,21 @@ struct veilpicTests {
         #expect(abs(vectorBounds.maxY - 28) < 1)
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.selectionFromVectorMask"))
         #expect(viewModel.statusText == L10n.text("imageEditor.status.vectorMaskSelection"))
+
+        let historyCountAfterVectorMaskSelection = viewModel.document.history.count
+        viewModel.loadSelectionFromVectorMask()
+        #expect(viewModel.document.history.count == historyCountAfterVectorMaskSelection)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionUnchanged"))
+
+        viewModel.selectionMode = .subtract
+        viewModel.loadSelectionFromVectorMask()
+        #expect(viewModel.document.selection == nil)
+        #expect(viewModel.document.history.count == historyCountAfterVectorMaskSelection + 1)
+        #expect(viewModel.document.history.last?.title == L10n.text(ImageEditorSelectionMode.subtract.historyKey))
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionEmpty"))
+        viewModel.undo()
+        _ = try #require(viewModel.document.selection)
+        viewModel.selectionMode = .replace
     }
 
     @MainActor
@@ -3829,6 +3869,11 @@ struct veilpicTests {
         #expect(maskAlpha(mask, x: 70, y: 30) == 255)
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.selectionFromSelectedLayerMasks"))
         #expect(viewModel.statusText == L10n.format("imageEditor.status.layerMaskSelectionSelected", 2))
+
+        let historyCountAfterCombinedLayerMaskSelection = viewModel.document.history.count
+        viewModel.loadSelectionFromLayerMask()
+        #expect(viewModel.document.history.count == historyCountAfterCombinedLayerMaskSelection)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionUnchanged"))
 
         viewModel.undo()
         #expect(viewModel.document.selection == nil)
@@ -3878,6 +3923,11 @@ struct veilpicTests {
         #expect(maskAlpha(mask, x: 70, y: 30) == 255)
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.selectionFromSelectedVectorMasks"))
         #expect(viewModel.statusText == L10n.format("imageEditor.status.vectorMaskSelectionSelected", 2))
+
+        let historyCountAfterCombinedVectorMaskSelection = viewModel.document.history.count
+        viewModel.loadSelectionFromVectorMask()
+        #expect(viewModel.document.history.count == historyCountAfterCombinedVectorMaskSelection)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionUnchanged"))
 
         viewModel.undo()
         #expect(viewModel.document.selection == nil)

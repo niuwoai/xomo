@@ -1140,6 +1140,61 @@ struct XomoAutomationTests {
         #expect(viewModel.document.selection == nil)
     }
 
+    @Test func registryDoesNotRecordRepeatedRasterOrVectorMaskSelectionLoad() throws {
+        let viewModel = makeViewModel()
+        viewModel.createRectSelection(from: CGPoint(x: 20, y: 16), to: CGPoint(x: 80, y: 64))
+        viewModel.addLayerMaskFromSelection()
+        viewModel.addVectorMaskFromSelection()
+        viewModel.clearSelection()
+        let maskedLayer = try #require(viewModel.document.selectedLayer)
+        _ = try #require(maskedLayer.mask)
+        _ = try #require(maskedLayer.vectorMask)
+        #expect(viewModel.document.selection == nil)
+
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        let rasterArguments: [String: XomoJSONValue] = [
+            "action": .string("loadSelection")
+        ]
+        let firstRasterResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.mask.action",
+            arguments: rasterArguments
+        ))
+        #expect(firstRasterResponse.ok)
+        let historyCountAfterRasterLoad = viewModel.document.history.count
+
+        let repeatedRasterResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.mask.action",
+            arguments: rasterArguments
+        ))
+        #expect(repeatedRasterResponse.ok)
+        #expect(viewModel.document.history.count == historyCountAfterRasterLoad)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionUnchanged"))
+
+        viewModel.clearSelection()
+        let vectorArguments: [String: XomoJSONValue] = [
+            "action": .string("loadVectorSelection")
+        ]
+        let firstVectorResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.mask.action",
+            arguments: vectorArguments
+        ))
+        #expect(firstVectorResponse.ok)
+        let historyCountAfterVectorLoad = viewModel.document.history.count
+
+        let repeatedVectorResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.mask.action",
+            arguments: vectorArguments
+        ))
+        #expect(repeatedVectorResponse.ok)
+        #expect(viewModel.document.history.count == historyCountAfterVectorLoad)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionUnchanged"))
+    }
+
     @Test func registryDoesNotRecordRepeatedAlphaChannelFillOrClear() throws {
         let viewModel = makeViewModel()
         viewModel.createBlankAlphaChannel()
