@@ -2693,8 +2693,8 @@
 "imageEditor.status.alphaChannelRotatedCounterclockwise" = "Rotated %@ 90° counterclockwise";
 "imageEditor.status.alphaChannelRotatedClockwise" = "Rotated %@ 90° clockwise";
 "imageEditor.status.alphaChannelRotated180" = "Rotated %@ 180°";
-"imageEditor.status.alphaChannelScaledUp" = "Scaled %@ to 200%";
-"imageEditor.status.alphaChannelScaledDown" = "Scaled %@ to 50%";
+"imageEditor.status.alphaChannelScaledUp" = "Scaled %@ to 200%%";
+"imageEditor.status.alphaChannelScaledDown" = "Scaled %@ to 50%%";
 "imageEditor.status.alphaChannelFitCanvas" = "Fit %@ to canvas";
 "imageEditor.status.alphaChannelMoved" = "Moved %@ X:%d Y:%d px";
 "imageEditor.status.alphaChannelRenamed" = "Renamed alpha channel";

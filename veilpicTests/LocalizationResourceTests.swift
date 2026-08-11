@@ -688,6 +688,35 @@ struct LocalizationResourceTests {
         }
     }
 
+    @Test func alphaChannelScaleStatusEscapesLiteralPercentInEverySupportedLanguage() throws {
+        let paths = try Self.repositoryPaths()
+        let expectedFormats = [
+            "zh-Hans": ["已放大 %@ 到 200%%", "已缩小 %@ 到 50%%"],
+            "en": ["Scaled %@ to 200%%", "Scaled %@ to 50%%"],
+            "ja": ["%@ を 200%% に拡大しました", "%@ を 50%% に縮小しました"]
+        ]
+        let expectedOutput = [
+            "zh-Hans": ["已放大 Mask 到 200%", "已缩小 Mask 到 50%"],
+            "en": ["Scaled Mask to 200%", "Scaled Mask to 50%"],
+            "ja": ["Mask を 200% に拡大しました", "Mask を 50% に縮小しました"]
+        ]
+        let keys = [
+            "imageEditor.status.alphaChannelScaledUp",
+            "imageEditor.status.alphaChannelScaledDown"
+        ]
+
+        for localizationID in Self.supportedLocalizationIDs {
+            let strings = try Self.stringTable(
+                tableName: "Localizable",
+                localizationID: localizationID,
+                appDirectory: paths.appDirectory
+            )
+            let formats = keys.compactMap { strings[$0] }
+            #expect(formats == expectedFormats[localizationID])
+            #expect(formats.map { String(format: $0, "Mask") } == expectedOutput[localizationID])
+        }
+    }
+
     private static func knownRegions(in projectText: String) -> Set<String> {
         guard let start = projectText.range(of: "knownRegions = (") else { return [] }
         let remaining = projectText[start.upperBound...]

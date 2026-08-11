@@ -2693,8 +2693,8 @@
 "imageEditor.status.alphaChannelRotatedCounterclockwise" = "已逆时针旋转 %@ 90°";
 "imageEditor.status.alphaChannelRotatedClockwise" = "已顺时针旋转 %@ 90°";
 "imageEditor.status.alphaChannelRotated180" = "已旋转 %@ 180°";
-"imageEditor.status.alphaChannelScaledUp" = "已放大 %@ 到 200%";
-"imageEditor.status.alphaChannelScaledDown" = "已缩小 %@ 到 50%";
+"imageEditor.status.alphaChannelScaledUp" = "已放大 %@ 到 200%%";
+"imageEditor.status.alphaChannelScaledDown" = "已缩小 %@ 到 50%%";
 "imageEditor.status.alphaChannelFitCanvas" = "已适配 %@ 到画布";
 "imageEditor.status.alphaChannelMoved" = "已移动 %@ X:%d Y:%d px";
 "imageEditor.status.alphaChannelRenamed" = "已重命名 Alpha 通道";

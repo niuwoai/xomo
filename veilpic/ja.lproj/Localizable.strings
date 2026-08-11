@@ -2693,8 +2693,8 @@
 "imageEditor.status.alphaChannelRotatedCounterclockwise" = "%@ を反時計回りに 90° 回転しました";
 "imageEditor.status.alphaChannelRotatedClockwise" = "%@ を時計回りに 90° 回転しました";
 "imageEditor.status.alphaChannelRotated180" = "%@ を 180° 回転しました";
-"imageEditor.status.alphaChannelScaledUp" = "%@ を 200% に拡大しました";
-"imageEditor.status.alphaChannelScaledDown" = "%@ を 50% に縮小しました";
+"imageEditor.status.alphaChannelScaledUp" = "%@ を 200%% に拡大しました";
+"imageEditor.status.alphaChannelScaledDown" = "%@ を 50%% に縮小しました";
 "imageEditor.status.alphaChannelFitCanvas" = "%@ をキャンバスに合わせました";
 "imageEditor.status.alphaChannelMoved" = "%@ を移動しました X:%d Y:%d px";
 "imageEditor.status.alphaChannelRenamed" = "Alpha チャンネル名を変更しました";
