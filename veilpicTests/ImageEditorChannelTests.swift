@@ -790,6 +790,17 @@ struct ImageEditorChannelTests {
         #expect(maskAlpha(cleanedChannel.mask, x: 3, y: 3) == 255)
         #expect(viewModel.statusText == L10n.format("imageEditor.status.alphaChannelSpecklesRemoved", "Speckles", 1))
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.alphaChannelRemoveSpeckles"))
+
+        let historyCountAfterCleanup = viewModel.document.history.count
+        viewModel.selectedAlphaChannelID = nil
+        viewModel.removeSpecklesAlphaChannel(channel.id, maximumArea: 1)
+        #expect(viewModel.selectedAlphaChannelID == channel.id)
+        #expect(viewModel.document.history.count == historyCountAfterCleanup)
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.alphaChannelUnchanged", "Speckles"))
+
+        viewModel.undo()
+        let restoredChannel = try #require(viewModel.document.alphaChannels.first)
+        #expect(restoredChannel.mask == speckledMask)
     }
 
     @Test func alphaChannelsCanFlipMaskHorizontalAndVertical() async throws {

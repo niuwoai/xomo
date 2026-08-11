@@ -726,6 +726,14 @@ extension ImageEditorViewModel {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return
         }
+        guard cleanedMask != document.alphaChannels[index].mask else {
+            selectedAlphaChannelID = id
+            statusText = L10n.format(
+                "imageEditor.status.alphaChannelUnchanged",
+                document.alphaChannels[index].name
+            )
+            return
+        }
 
         pushUndo()
         document.alphaChannels[index].mask = cleanedMask
