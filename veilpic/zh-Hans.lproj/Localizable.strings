@@ -1997,6 +1997,7 @@
 "imageEditor.status.layerFromBackground" = "已将背景解锁为普通图层";
 "imageEditor.status.backgroundFromLayer" = "已将当前图层设为背景";
 "imageEditor.status.layerMaskCopied" = "已将图层蒙版复制到 %d 个图层";
+"imageEditor.status.layerMaskCopyUnchanged" = "所选图层的蒙版已经一致";
 "imageEditor.status.layerIsolateSelected" = "已隔离显示 %d 个所选图层";
 "imageEditor.status.layerShowSelected" = "已显示 %d 个所选图层";
 "imageEditor.status.layerHideSelected" = "已隐藏 %d 个所选图层";

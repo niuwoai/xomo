@@ -1997,6 +1997,7 @@
 "imageEditor.status.layerFromBackground" = "Background unlocked as a normal layer";
 "imageEditor.status.backgroundFromLayer" = "Selected layer converted to background";
 "imageEditor.status.layerMaskCopied" = "Layer mask copied to %d layers";
+"imageEditor.status.layerMaskCopyUnchanged" = "Selected layer masks already match";
 "imageEditor.status.layerIsolateSelected" = "Isolated %d selected layers";
 "imageEditor.status.layerShowSelected" = "Shown %d selected layers";
 "imageEditor.status.layerHideSelected" = "Hidden %d selected layers";

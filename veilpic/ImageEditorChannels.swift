@@ -1131,13 +1131,7 @@ extension ImageEditorViewModel {
         }
 
         let layer = document.layers[layerIndex]
-        let maskIsEquivalent = layer.mask.map { existingMask in
-            guard existingMask.size == mask.size else { return false }
-            let width = max(1, Int(mask.size.width.rounded()))
-            let height = max(1, Int(mask.size.height.rounded()))
-            return existingMask.alphaMask(width: width, height: height)
-                == mask.alphaMask(width: width, height: height)
-        } ?? false
+        let maskIsEquivalent = layer.mask?.hasEquivalentAlphaMask(to: mask) ?? false
         guard !(maskIsEquivalent
                 && layer.isMaskEnabled
                 && layer.isMaskLinked
@@ -1614,6 +1608,16 @@ extension ImageEditorSelectionMask {
 }
 
 extension NSImage {
+    func hasEquivalentAlphaMask(to other: NSImage) -> Bool {
+        guard size == other.size else { return false }
+        let width = max(1, Int(size.width.rounded()))
+        let height = max(1, Int(size.height.rounded()))
+        guard let lhsMask = alphaMask(width: width, height: height),
+              let rhsMask = other.alphaMask(width: width, height: height)
+        else { return false }
+        return lhsMask == rhsMask
+    }
+
     func alphaMask(width: Int, height: Int) -> ImageEditorSelectionMask? {
         guard width > 0,
               height > 0,

@@ -265,10 +265,27 @@ extension ImageEditorViewModel {
         }
 
         let sourceLayer = document.layers[sourceIndex]
+        let operations: [(index: Int, mask: NSImage)] = targetIndices.compactMap { index in
+            let targetLayer = document.layers[index]
+            let targetSize = maskSize(for: targetLayer)
+            let targetMask = (sourceMask.resized(to: targetSize) ?? sourceMask).normalizedBitmapImage()
+            let isEquivalent = targetLayer.mask?.hasEquivalentAlphaMask(to: targetMask) == true
+                && targetLayer.isMaskEnabled == sourceLayer.isMaskEnabled
+                && targetLayer.isMaskLinked == sourceLayer.isMaskLinked
+                && targetLayer.maskDensity == sourceLayer.maskDensity
+                && targetLayer.maskFeather == sourceLayer.maskFeather
+            return isEquivalent ? nil : (index, targetMask)
+        }
+        guard !operations.isEmpty else {
+            isEditingLayerMask = false
+            statusText = L10n.text("imageEditor.status.layerMaskCopyUnchanged")
+            return
+        }
+
         pushUndo()
-        for index in targetIndices {
-            let targetSize = maskSize(for: document.layers[index])
-            document.layers[index].mask = (sourceMask.resized(to: targetSize) ?? sourceMask).normalizedBitmapImage()
+        for operation in operations {
+            let index = operation.index
+            document.layers[index].mask = operation.mask
             document.layers[index].isMaskEnabled = sourceLayer.isMaskEnabled
             document.layers[index].isMaskLinked = sourceLayer.isMaskLinked
             document.layers[index].maskDensity = sourceLayer.maskDensity
@@ -276,7 +293,7 @@ extension ImageEditorViewModel {
         }
         isEditingLayerMask = false
         appendHistory(L10n.text("imageEditor.history.layerMaskCopy"))
-        statusText = L10n.format("imageEditor.status.layerMaskCopied", targetIndices.count)
+        statusText = L10n.format("imageEditor.status.layerMaskCopied", operations.count)
     }
 
     func copyVectorMaskToSelectedLayers() {

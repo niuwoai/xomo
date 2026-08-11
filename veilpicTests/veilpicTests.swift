@@ -3683,6 +3683,11 @@ struct veilpicTests {
         #expect(targetLayer.maskFeather == 3)
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerMaskCopy"))
         #expect(viewModel.statusText == L10n.format("imageEditor.status.layerMaskCopied", 1))
+
+        let historyCountAfterFirstCopy = viewModel.document.history.count
+        viewModel.copyLayerMaskToSelectedLayers()
+        #expect(viewModel.document.history.count == historyCountAfterFirstCopy)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.layerMaskCopyUnchanged"))
     }
 
     @MainActor
