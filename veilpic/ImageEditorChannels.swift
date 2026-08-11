@@ -1130,6 +1130,26 @@ extension ImageEditorViewModel {
             return
         }
 
+        let layer = document.layers[layerIndex]
+        let maskIsEquivalent = layer.mask.map { existingMask in
+            guard existingMask.size == mask.size else { return false }
+            let width = max(1, Int(mask.size.width.rounded()))
+            let height = max(1, Int(mask.size.height.rounded()))
+            return existingMask.alphaMask(width: width, height: height)
+                == mask.alphaMask(width: width, height: height)
+        } ?? false
+        guard !(maskIsEquivalent
+                && layer.isMaskEnabled
+                && layer.isMaskLinked
+                && layer.maskDensity == 1
+                && layer.maskFeather == 0)
+        else {
+            isEditingLayerMask = true
+            selectedAlphaChannelID = id
+            statusText = L10n.format("imageEditor.status.alphaChannelUnchanged", channel.name)
+            return
+        }
+
         pushUndo()
         document.layers[layerIndex].mask = mask
         document.layers[layerIndex].isMaskEnabled = true

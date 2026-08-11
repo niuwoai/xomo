@@ -1340,6 +1340,26 @@ struct ImageEditorChannelTests {
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.alphaChannelFromMask"))
     }
 
+    @Test func alphaChannelsDoNotRecordEquivalentLayerMaskApplications() async throws {
+        let viewModel = ImageEditorViewModel(sourceName: "apply-mask-no-op.png", image: splitChannelImage()) { _ in }
+        let channel = ImageEditorAlphaChannel(
+            name: "Existing Mask",
+            mask: ImageEditorSelectionMask(width: 2, height: 1, alpha: [255, 0])
+        )
+        viewModel.document.alphaChannels = [channel]
+
+        viewModel.applyAlphaChannelToSelectedLayerMask(channel.id)
+        let historyCountAfterFirstApplication = viewModel.document.history.count
+        viewModel.isEditingLayerMask = false
+
+        viewModel.applyAlphaChannelToSelectedLayerMask(channel.id)
+
+        #expect(viewModel.selectedAlphaChannelID == channel.id)
+        #expect(viewModel.isEditingLayerMask)
+        #expect(viewModel.document.history.count == historyCountAfterFirstApplication)
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.alphaChannelUnchanged", channel.name))
+    }
+
     @Test func histogramSummaryReportsBinsAndAverageColor() async throws {
         let image = grayscaleHistogramImage()
         let summary = image.histogramSummary(binCount: 4, maximumSampleEdge: 8)
