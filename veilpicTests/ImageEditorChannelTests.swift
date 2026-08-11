@@ -750,6 +750,17 @@ struct ImageEditorChannelTests {
         #expect(maskAlpha(filledChannel.mask, x: 4, y: 4) == 0)
         #expect(viewModel.statusText == L10n.format("imageEditor.status.alphaChannelFilledHoles", "Ring"))
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.alphaChannelFillHoles"))
+
+        let historyCountAfterFill = viewModel.document.history.count
+        viewModel.selectedAlphaChannelID = nil
+        viewModel.fillHolesAlphaChannel(channel.id)
+        #expect(viewModel.selectedAlphaChannelID == channel.id)
+        #expect(viewModel.document.history.count == historyCountAfterFill)
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.alphaChannelUnchanged", "Ring"))
+
+        viewModel.undo()
+        let restoredChannel = try #require(viewModel.document.alphaChannels.first)
+        #expect(restoredChannel.mask == holedMask)
     }
 
     @Test func alphaChannelsCanRemoveMaskSpeckles() async throws {
