@@ -1224,6 +1224,35 @@ struct XomoAutomationTests {
         #expect(viewModel.document.alphaChannels.first?.mask.alpha == [0, 127, 128])
     }
 
+    @Test func registryDoesNotRecordFullAlphaChannelExpansion() throws {
+        let viewModel = makeViewModel()
+        let mask = ImageEditorSelectionMask(
+            width: 3,
+            height: 3,
+            alpha: Array(repeating: UInt8.max, count: 9)
+        )
+        let channel = ImageEditorAlphaChannel(name: "Full", mask: mask)
+        viewModel.document.alphaChannels = [channel]
+        let historyCountBeforeExpansion = viewModel.document.history.count
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+
+        let response = registry.execute(request(
+            operation: "call",
+            name: "xomo.channel.action",
+            arguments: [
+                "id": .string(channel.id.uuidString),
+                "action": .string("expand")
+            ]
+        ))
+
+        #expect(response.ok)
+        #expect(viewModel.selectedAlphaChannelID == channel.id)
+        #expect(viewModel.document.alphaChannels.first?.mask == mask)
+        #expect(viewModel.document.history.count == historyCountBeforeExpansion)
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.alphaChannelUnchanged", channel.name))
+    }
+
     @Test func registryAppliesExplicitMagicWandTolerance() throws {
         let viewModel = makeViewModel()
         let layerIndex = try #require(viewModel.document.selectedLayerIndex)

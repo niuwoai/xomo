@@ -660,6 +660,17 @@ struct ImageEditorChannelTests {
         #expect(viewModel.statusText == L10n.format("imageEditor.status.alphaChannelExpanded", "Dot", 1))
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.alphaChannelExpand"))
 
+        let historyCountAfterExpansion = viewModel.document.history.count
+        viewModel.selectedAlphaChannelID = nil
+        viewModel.expandAlphaChannel(dotChannel.id, radius: 1)
+        #expect(viewModel.selectedAlphaChannelID == dotChannel.id)
+        #expect(viewModel.document.history.count == historyCountAfterExpansion)
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.alphaChannelUnchanged", "Dot"))
+
+        viewModel.undo()
+        let restoredDotChannel = try #require(viewModel.document.alphaChannels.first)
+        #expect(restoredDotChannel.mask == dotMask)
+
         let fullMask = ImageEditorSelectionMask(width: 5, height: 5, alpha: Array(repeating: UInt8.max, count: 25))
         let fullChannel = ImageEditorAlphaChannel(name: "Full", mask: fullMask)
         viewModel.document.alphaChannels = [fullChannel]
