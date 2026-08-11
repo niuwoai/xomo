@@ -198,6 +198,10 @@ extension ImageEditorViewModel {
             statusText = L10n.text("imageEditor.status.selectionSimilarSampleEmpty")
             return
         }
+        guard !selectionsAreEquivalent(sourceSelection, selection) else {
+            statusText = L10n.text("imageEditor.status.selectionUnchanged")
+            return
+        }
 
         pushUndo()
         document.selection = selection

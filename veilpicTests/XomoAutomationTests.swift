@@ -996,6 +996,37 @@ struct XomoAutomationTests {
         #expect(viewModel.statusText == L10n.format("imageEditor.status.selectionFeathered", 3))
     }
 
+    @Test func registryDoesNotRecordUnchangedGrowColorSelection() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        if let selectedLayerIndex = viewModel.document.selectedLayerIndex {
+            viewModel.document.layers[selectedLayerIndex].image = NSImage.rendered(
+                size: viewModel.document.canvasSize
+            ) { rect in
+                NSColor.systemRed.setFill()
+                rect.fill()
+            } ?? viewModel.document.layers[selectedLayerIndex].image
+        }
+        viewModel.document.selection = .fullCanvas(size: viewModel.document.canvasSize)
+        let historyCountBeforeGrowth = viewModel.document.history.count
+        #expect(!viewModel.canUndo)
+
+        let response = registry.execute(request(
+            operation: "call",
+            name: "xomo.selection.modify",
+            arguments: [
+                "action": .string("growColor"),
+                "tolerance": .number(0.08)
+            ]
+        ))
+
+        #expect(response.ok)
+        #expect(viewModel.document.history.count == historyCountBeforeGrowth)
+        #expect(!viewModel.canUndo)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionUnchanged"))
+    }
+
     @Test func registryAppliesExplicitSelectionModifyAmount() throws {
         let viewModel = makeViewModel()
         let registry = XomoAutomationRegistry.shared

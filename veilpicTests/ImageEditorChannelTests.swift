@@ -333,6 +333,24 @@ struct ImageEditorChannelTests {
         #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionGrown"))
     }
 
+    @Test func alreadyGrownColorSelectionDoesNotCreateUndoOrHistory() {
+        let image = NSImage.rendered(size: NSSize(width: 5, height: 1)) { rect in
+            NSColor.systemRed.setFill()
+            rect.fill()
+        } ?? NSImage(size: NSSize(width: 5, height: 1))
+        let viewModel = ImageEditorViewModel(sourceName: "grown.png", image: image) { _ in }
+        viewModel.document.selection = .fullCanvas(size: image.size)
+        let historyCountBeforeGrowth = viewModel.document.history.count
+        #expect(!viewModel.canUndo)
+
+        viewModel.growColorSelection(tolerance: 0.08)
+
+        #expect(viewModel.document.history.count == historyCountBeforeGrowth)
+        #expect(!viewModel.canUndo)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionUnchanged"))
+        #expect(viewModel.document.selection?.bounds == CGRect(origin: .zero, size: image.size))
+    }
+
     @Test func alphaChannelSelectionUsesCompositeTransparency() async throws {
         let viewModel = ImageEditorViewModel(sourceName: "alpha.png", image: alphaTestImage()) { _ in }
 
