@@ -550,7 +550,14 @@ extension ImageEditorViewModel {
             statusText = L10n.text("imageEditor.status.alphaChannelNameInvalid")
             return
         }
-        guard document.alphaChannels[index].name != trimmedName else { return }
+        guard document.alphaChannels[index].name != trimmedName else {
+            selectedAlphaChannelID = id
+            statusText = L10n.format(
+                "imageEditor.status.alphaChannelUnchanged",
+                document.alphaChannels[index].name
+            )
+            return
+        }
 
         pushUndo()
         document.alphaChannels[index].name = trimmedName

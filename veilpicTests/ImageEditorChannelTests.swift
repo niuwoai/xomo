@@ -474,6 +474,23 @@ struct ImageEditorChannelTests {
         #expect(viewModel.statusText == L10n.format("imageEditor.status.alphaChannelUnchanged", channel.name))
     }
 
+    @Test func alphaChannelsDoNotRecordEquivalentRenames() async throws {
+        let viewModel = ImageEditorViewModel(sourceName: "rename-no-op.png", image: splitChannelImage()) { _ in }
+        let channel = ImageEditorAlphaChannel(
+            name: "Existing Name",
+            mask: ImageEditorSelectionMask(width: 2, height: 1, alpha: [255, 0])
+        )
+        viewModel.document.alphaChannels = [channel]
+        let historyCountBeforeRename = viewModel.document.history.count
+
+        viewModel.renameAlphaChannel(channel.id, to: "  Existing Name  ")
+
+        #expect(viewModel.selectedAlphaChannelID == channel.id)
+        #expect(viewModel.document.alphaChannels.first?.name == channel.name)
+        #expect(viewModel.document.history.count == historyCountBeforeRename)
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.alphaChannelUnchanged", channel.name))
+    }
+
     @Test func alphaChannelsCanCombineCurrentSelectionWithSavedMask() async throws {
         let canvasSize = NSSize(width: 4, height: 1)
         let image = NSImage.rendered(size: canvasSize) { rect in
