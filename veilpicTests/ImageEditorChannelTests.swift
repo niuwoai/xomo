@@ -533,18 +533,37 @@ struct ImageEditorChannelTests {
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.alphaChannelSelectionSubtract"))
 
         viewModel.document.selection = ImageEditorSelection.raster(
-            mask: ImageEditorSelectionMask(width: 4, height: 1, alpha: [0, 255, 255, 0]),
-            bounds: CGRect(x: 1, y: 0, width: 2, height: 1)
+            mask: ImageEditorSelectionMask(width: 4, height: 1, alpha: [0, 0, 255, 0]),
+            bounds: CGRect(x: 2, y: 0, width: 1, height: 1)
         )
         #expect(viewModel.canIntersectSelectionWithSelectedAlphaChannel)
         viewModel.intersectSelectionWithSelectedAlphaChannel()
 
         combinedMask = try #require(viewModel.selectedAlphaChannel?.mask)
         #expect(maskAlpha(combinedMask, x: 0, y: 0) == 0)
-        #expect(maskAlpha(combinedMask, x: 1, y: 0) == 255)
+        #expect(maskAlpha(combinedMask, x: 1, y: 0) == 0)
         #expect(maskAlpha(combinedMask, x: 2, y: 0) == 0)
         #expect(viewModel.statusText == L10n.format("imageEditor.status.alphaChannelSelectionIntersected", "Combine Alpha"))
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.alphaChannelSelectionIntersect"))
+    }
+
+    @Test func alphaChannelsDoNotRecordEquivalentSelectionCombinations() async throws {
+        let viewModel = ImageEditorViewModel(sourceName: "combine-no-op.png", image: splitChannelImage()) { _ in }
+        let mask = ImageEditorSelectionMask(width: 2, height: 1, alpha: [255, 0])
+        let channel = ImageEditorAlphaChannel(name: "Stable Alpha", mask: mask)
+        viewModel.document.alphaChannels = [channel]
+        viewModel.document.selection = ImageEditorSelection.raster(
+            mask: mask,
+            bounds: CGRect(x: 0, y: 0, width: 1, height: 1)
+        )
+        let historyCountBeforeCombination = viewModel.document.history.count
+
+        viewModel.addSelectionToAlphaChannel(channel.id)
+
+        #expect(viewModel.selectedAlphaChannelID == channel.id)
+        #expect(viewModel.document.alphaChannels.first?.mask == mask)
+        #expect(viewModel.document.history.count == historyCountBeforeCombination)
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.alphaChannelUnchanged", channel.name))
     }
 
     @Test func selectedAlphaChannelDrivesMenuStyleCommands() async throws {
