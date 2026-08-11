@@ -1232,10 +1232,15 @@ extension ImageEditorViewModel {
         guard let group = document.layers.first(where: {
             $0.id == groupID && $0.isGroup && $0.stackLayout != nil
         }), !document.isEffectivelyPositionLocked(group) else { return false }
-        let affectedIndices = stackParticipantIndices(groupID: groupID)
-            + stackBackgroundIndices(groupID: groupID)
-        return affectedIndices.allSatisfy {
-            !document.isEffectivelyPositionLocked(document.layers[$0])
+        let participantIndices = stackParticipantIndices(groupID: groupID)
+        var affectedLayerIDs = Set(stackBackgroundIndices(groupID: groupID).map {
+            document.layers[$0].id
+        })
+        for index in participantIndices {
+            affectedLayerIDs.formUnion(stackMovedLayerIDs(document.layers[index]))
+        }
+        return document.layers.allSatisfy { layer in
+            !affectedLayerIDs.contains(layer.id) || !document.isEffectivelyPositionLocked(layer)
         }
     }
 

@@ -538,6 +538,22 @@ struct ImageEditorStackLayoutTests {
         #expect(fixture.viewModel.statusText == L10n.text("imageEditor.status.stackLayoutLocked"))
     }
 
+    @Test func nestedPositionLockPreventsAncestorStackLayoutFromMovingTheSubtree() {
+        let fixture = makeFixture()
+        fixture.updateLayer(named: "Nested Child") { $0.locksPosition = true }
+        let framesBefore = Dictionary(uniqueKeysWithValues: fixture.viewModel.document.layers.map {
+            ($0.id, $0.frame)
+        })
+        let historyCount = fixture.viewModel.document.history.count
+
+        fixture.viewModel.setSelectedStackSpacing(24)
+
+        #expect(fixture.layer(named: "Root").stackLayout?.spacing == 10)
+        #expect(fixture.viewModel.document.layers.allSatisfy { framesBefore[$0.id] == $0.frame })
+        #expect(fixture.viewModel.document.history.count == historyCount)
+        #expect(fixture.viewModel.statusText == L10n.text("imageEditor.status.stackLayoutLocked"))
+    }
+
     @Test func resetAllFigmaConstraintOverridesUsesOneUndoAndOneReflow() {
         let fixture = makeFixture()
         let imported = XomoFigmaSizeConstraints(
