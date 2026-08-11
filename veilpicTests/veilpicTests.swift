@@ -4873,6 +4873,7 @@ struct veilpicTests {
             historyTitle: L10n.text("imageEditor.history.brush")
         )
         viewModel.setSelectedLayerStrokeWidth(6)
+        viewModel.beginSelectedLayerFillOpacityChange()
         viewModel.setSelectedLayerFillOpacity(0)
         viewModel.commitSelectedLayerFillOpacityChange()
 

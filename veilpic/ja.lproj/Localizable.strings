@@ -1,4 +1,4 @@
-"app.name" = "軽図";
+"app.name" = "Xomo";
 "app.version" = "バージョン %@";
 "someim.update.check" = "アップデートを確認…";
 "annotation.tool.ellipse" = "楕円";
@@ -53,7 +53,7 @@
 "feedback.screenshot.copied.title" = "スクリーンショットをコピーしました";
 "feedback.screenshot.copyFailed.message" = "スクリーンショットはワークベンチに入りましたが、システムクリップボードへ書き込めませんでした。あとで「画像をコピー」をお試しください。";
 "feedback.screenshot.copyFailed.title" = "スクリーンショットのコピーに失敗しました";
-"feedback.screenshot.permission.message" = "システム設定で軽図に画面収録を許可してから再試行してください。";
+"feedback.screenshot.permission.message" = "システム設定で Xomo に画面収録を許可してから再試行してください。";
 "feedback.screenshot.permission.title" = "画面収録の権限が必要です";
 "feedback.screenshot.region.planned.message" = "範囲スクリーンショットはワークベンチに入り、注釈、後処理、保存、アップロード、コピーを続けられます。";
 "feedback.screenshot.region.planned.title" = "範囲キャプチャを利用できます";
@@ -145,7 +145,7 @@
 "onboarding.step.config.done" = "接続情報は完了しています。アップロードを開始できます。";
 "onboarding.step.config.missing" = "必須項目を入力：%@。";
 "onboarding.step.config.title" = "設定を入力";
-"onboarding.step.menubar.message" = "以後はメニューバーの軽図アイコンをクリックし、画像をドロップするかクリップボードを読み取ってアップロードできます。";
+"onboarding.step.menubar.message" = "以後はメニューバーの Xomo アイコンをクリックし、画像をドロップするかクリップボードを読み取ってアップロードできます。";
 "onboarding.step.menubar.title" = "メニューバーへ戻る";
 "onboarding.step.storage.message" = "OSS、S3、または互換サービスを選び、bucket、endpoint、アクセスキーを用意します。";
 "onboarding.step.storage.title" = "ストレージを準備";
@@ -190,10 +190,10 @@
 "settings.autoCopy.note" = "初期設定では、アップロード成功後に圧縮画像 URL をコピーします。自動コピーをオフにしたり、別のバリアントを選ぶこともできます。";
 "settings.autoCopy.title" = "アップロード後に URL を自動コピー";
 "settings.autoCopy.variant" = "自動コピーするバリアント";
-"settings.dockVisibility.note" = "初期設定でオン。軽図は主にメニューバーで使うアプリのため、Dock アイコンを隠すと Dock がすっきりします。オフにすると Dock に表示され、Dock からメイン画面を呼び出せます。";
+"settings.dockVisibility.note" = "初期設定でオン。Xomo は主にメニューバーで使うアプリのため、Dock アイコンを隠すと Dock がすっきりします。オフにすると Dock に表示され、Dock からメイン画面を呼び出せます。";
 "settings.dockVisibility.title" = "Dock アイコンを隠す";
 "settings.launchAtLogin.error" = "ログイン時起動を更新できません：%@";
-"settings.launchAtLogin.note" = "有効にすると、macOS へのログイン後に軽図が自動起動し、メニューバーに常駐します。";
+"settings.launchAtLogin.note" = "有効にすると、macOS へのログイン後に Xomo が自動起動し、メニューバーに常駐します。";
 "settings.launchAtLogin.title" = "ログイン時に起動";
 "settings.provider" = "ストレージバックエンド";
 "settings.screenshotBehavior" = "スクリーンショット動作";
@@ -206,10 +206,10 @@
 "settings.shortcut.region" = "範囲スクリーンショット";
 "settings.shortcut.reset" = "既定に戻す";
 "settings.subtitle" = "OSS / S3 などのオブジェクトストレージを設定し、メニューバーから素早く画像をアップロードします。";
-"settings.title" = "軽図設定";
-"settings.title.onboarding" = "軽図を始める";
+"settings.title" = "Xomo 設定";
+"settings.title.onboarding" = "Xomo を始める";
 "settings.uploadBehavior" = "アップロード動作";
-"settings.usage.message" = "設定後、軽図はメニューバーに常駐します。アイコンをクリックして画像をドロップし、クリップボードを読み取り、アップロードリンクをコピーできます。";
+"settings.usage.message" = "設定後、Xomo はメニューバーに常駐します。アイコンをクリックして画像をドロップし、クリップボードを読み取り、アップロードリンクをコピーできます。";
 "settings.usage.title" = "使い方";
 "source.clipboard" = "クリップボード";
 "source.drop" = "ドロップ画像";
@@ -2855,12 +2855,12 @@
 "feedback.imageEditorUnavailable.message" = "先に画像を追加し、後処理プレビューの生成を待ってください。";
 "feedback.imageEditorApplied.title" = "編集を適用しました";
 "feedback.imageEditorApplied.message" = "編集後の画像が新しい作業台の原画になりました。保存、コピー、アップロードに使われます。";
-"about.menuItem" = "軽図について";
+"about.menuItem" = "Xomo について";
 "about.windowTitle" = "%@ について";
 "about.versionFormat" = "バージョン %@";
-"about.summary" = "スクリーンショット、画像編集、アップロード共有を軽図にまとめました。";
+"about.summary" = "スクリーンショット、画像編集、アップロード共有を Xomo にまとめました。";
 "about.authorHomepage" = "作者ホームページ · 83d.me";
-"about.productPage" = "軽図の製品ページ";
+"about.productPage" = "Xomo の製品ページ";
 "about.unknownVersion" = "不明なバージョン";
 "about.copyright" = "© %d rocky.x";
 "imageEditor.properties.shadowContour" = "ドロップシャドウの輪郭";

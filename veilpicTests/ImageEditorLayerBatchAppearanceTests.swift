@@ -12,6 +12,53 @@ import AppKit
 @MainActor
 @Suite(.serialized)
 struct ImageEditorLayerBatchAppearanceTests {
+    @Test func opacityTransactionsCoalesceAndDiscardNoOpEdits() async throws {
+        let image = solidImage(color: .systemBlue, size: NSSize(width: 96, height: 72))
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        viewModel.addLayer()
+        let layerID = try #require(viewModel.document.selectedLayerID)
+
+        let initialUndoCount = viewModel.undoStack.count
+        let initialHistoryCount = viewModel.document.history.count
+        viewModel.beginSelectedLayerOpacityChange()
+        viewModel.setSelectedLayerOpacity(0.8)
+        viewModel.setSelectedLayerOpacity(0.55)
+        viewModel.setSelectedLayerOpacity(0.3)
+        viewModel.commitSelectedLayerOpacityChange()
+
+        #expect(try #require(layer(layerID, in: viewModel)).opacity == 0.3)
+        #expect(viewModel.undoStack.count == initialUndoCount + 1)
+        #expect(viewModel.document.history.count == initialHistoryCount + 1)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerOpacity"))
+
+        viewModel.undo()
+        #expect(try #require(layer(layerID, in: viewModel)).opacity == 1)
+        let undoCountBeforeNoOp = viewModel.undoStack.count
+        let historyCountBeforeNoOp = viewModel.document.history.count
+        let redoCountBeforeNoOp = viewModel.redoStack.count
+
+        viewModel.beginSelectedLayerOpacityChange()
+        viewModel.setSelectedLayerOpacity(1)
+        viewModel.commitSelectedLayerOpacityChange()
+
+        #expect(viewModel.undoStack.count == undoCountBeforeNoOp)
+        #expect(viewModel.document.history.count == historyCountBeforeNoOp)
+        #expect(viewModel.redoStack.count == redoCountBeforeNoOp)
+        viewModel.redo()
+        #expect(try #require(layer(layerID, in: viewModel)).opacity == 0.3)
+
+        viewModel.beginSelectedLayerFillOpacityChange()
+        viewModel.setSelectedLayerFillOpacity(0.7)
+        viewModel.setSelectedLayerFillOpacity(0.4)
+        viewModel.commitSelectedLayerFillOpacityChange()
+        #expect(try #require(layer(layerID, in: viewModel)).fillOpacity == 0.4)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerFillOpacity"))
+
+        viewModel.undo()
+        #expect(try #require(layer(layerID, in: viewModel)).opacity == 0.3)
+        #expect(try #require(layer(layerID, in: viewModel)).fillOpacity == 1)
+    }
+
     @Test func maskPropertyTransactionsCoalesceAndDiscardNoOpEdits() async throws {
         let image = solidImage(color: .systemBlue, size: NSSize(width: 96, height: 72))
         let mask = solidImage(color: .white, size: NSSize(width: 96, height: 72))
@@ -188,6 +235,7 @@ struct ImageEditorLayerBatchAppearanceTests {
         viewModel.toggleLayerLock(secondID)
         viewModel.selectLayer(firstID)
         viewModel.selectLayer(secondID, extendingSelection: true)
+        viewModel.beginSelectedLayerOpacityChange()
         viewModel.setSelectedLayerOpacity(0.35)
         viewModel.commitSelectedLayerOpacityChange()
 
@@ -199,6 +247,7 @@ struct ImageEditorLayerBatchAppearanceTests {
         viewModel.selectLayer(firstID)
         viewModel.selectLayer(secondID, extendingSelection: true)
         #expect(viewModel.canEditSelectedLayerFillOpacity)
+        viewModel.beginSelectedLayerFillOpacityChange()
         viewModel.setSelectedLayerFillOpacity(0.45)
         viewModel.commitSelectedLayerFillOpacityChange()
 

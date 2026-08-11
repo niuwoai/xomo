@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # =============================================================================
-# release.sh — 像界 (Xomo / veilpic) Developer ID 打包 + 公证 + DMG 一键脚本
+# release.sh — 象墨 (Xomo / veilpic) Developer ID 打包 + 公证 + DMG 一键脚本
 #
 # 流程：
 #   1. xcodebuild archive（Release + Developer ID 签名）

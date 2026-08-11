@@ -2085,7 +2085,7 @@
 "imageEditor.status.clipboardPastedToLayer" = "已从剪贴板粘贴为新图层";
 "imageEditor.status.clipboardPastedIntoSelection" = "已将剪贴板图像粘贴到选区并生成蒙版图层";
 "imageEditor.status.clipboardPastedInPlace" = "已将剪贴板图层原位粘贴";
-"imageEditor.status.clipboardLayerPositionMissing" = "该剪贴板图像没有像界图层位置信息";
+"imageEditor.status.clipboardLayerPositionMissing" = "该剪贴板图像没有象墨图层位置信息";
 "imageEditor.status.clipboardCanvasCreated" = "已从剪贴板新建 %d × %d 画布";
 "imageEditor.status.selectionPixelsCleared" = "已清除当前选区内像素";
 "imageEditor.status.selectionPixelsClearedSelected" = "已清除 %d 个图层中的选区像素";

@@ -1245,6 +1245,44 @@ struct XomoAutomationTests {
         #expect(viewModel.document.selectedLayer?.maskFeather == 0)
     }
 
+    @Test func registryMakesOpacityChangesUndoableWithoutNoOpHistory() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+
+        let opacityRequest = request(
+            operation: "call",
+            name: "xomo.layer.set_opacity",
+            arguments: ["opacity": .number(0.4)]
+        )
+        #expect(registry.execute(opacityRequest).ok)
+        #expect(viewModel.document.selectedLayer?.opacity == 0.4)
+        let historyCountAfterOpacity = viewModel.document.history.count
+        let undoCountAfterOpacity = viewModel.undoStack.count
+        #expect(registry.execute(opacityRequest).ok)
+        #expect(viewModel.document.history.count == historyCountAfterOpacity)
+        #expect(viewModel.undoStack.count == undoCountAfterOpacity)
+
+        viewModel.undo()
+        #expect(viewModel.document.selectedLayer?.opacity == 1)
+
+        let fillRequest = request(
+            operation: "call",
+            name: "xomo.layer.properties",
+            arguments: [
+                "property": .string("fillOpacity"),
+                "value": .number(0.6)
+            ]
+        )
+        #expect(registry.execute(fillRequest).ok)
+        #expect(viewModel.document.selectedLayer?.fillOpacity == 0.6)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerFillOpacity"))
+
+        viewModel.undo()
+        #expect(viewModel.document.selectedLayer?.opacity == 1)
+        #expect(viewModel.document.selectedLayer?.fillOpacity == 1)
+    }
+
     @Test func registryDoesNotRecordRepeatedAlphaChannelFillOrClear() throws {
         let viewModel = makeViewModel()
         viewModel.createBlankAlphaChannel()

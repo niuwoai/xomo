@@ -78,6 +78,18 @@ private enum ImageEditorLayerMaskPropertyEditKind {
     }
 }
 
+private enum ImageEditorLayerOpacityEditKind {
+    case opacity
+    case fillOpacity
+
+    var historyKey: String {
+        switch self {
+        case .opacity: "imageEditor.history.layerOpacity"
+        case .fillOpacity: "imageEditor.history.layerFillOpacity"
+        }
+    }
+}
+
 @MainActor
 final class ImageEditorViewModel: ObservableObject {
     static let minimumZoom: CGFloat = 0.08
@@ -425,6 +437,10 @@ final class ImageEditorViewModel: ObservableObject {
     private var activeLayerMaskPropertyTargetIDs = Set<UUID>()
     private var activeLayerMaskPropertyRedoStack: [ImageEditorDocument] = []
     private var activeLayerMaskPropertyRedoThemeStates: [ImageEditorXomoThemeUndoState] = []
+    private var activeLayerOpacityEdit: ImageEditorLayerOpacityEditKind?
+    private var activeLayerOpacityTargetIDs = Set<UUID>()
+    private var activeLayerOpacityRedoStack: [ImageEditorDocument] = []
+    private var activeLayerOpacityRedoThemeStates: [ImageEditorXomoThemeUndoState] = []
     var movingLayerIDs = Set<UUID>()
     var movingLayerDidChange = false
     var movingLayerWasDuplicated = false
@@ -4785,7 +4801,9 @@ final class ImageEditorViewModel: ObservableObject {
 
     func setSelectedLayerOpacity(_ opacity: Double) {
         let normalizedOpacity = max(0, min(1, opacity))
-        let indices = selectedLayerOpacityTargetIndices().filter { document.layers[$0].opacity != normalizedOpacity }
+        let indices = layerOpacityTargetIndices(for: .opacity).filter {
+            document.layers[$0].opacity != normalizedOpacity
+        }
         guard !indices.isEmpty else { return }
         for index in indices {
             document.layers[index].opacity = normalizedOpacity
@@ -4796,7 +4814,9 @@ final class ImageEditorViewModel: ObservableObject {
 
     func setSelectedLayerFillOpacity(_ fillOpacity: Double) {
         let normalizedOpacity = max(0, min(1, fillOpacity))
-        let indices = selectedLayerFillOpacityTargetIndices().filter { document.layers[$0].fillOpacity != normalizedOpacity }
+        let indices = layerOpacityTargetIndices(for: .fillOpacity).filter {
+            document.layers[$0].fillOpacity != normalizedOpacity
+        }
         guard !indices.isEmpty else { return }
         for index in indices {
             document.layers[index].fillOpacity = normalizedOpacity
@@ -4903,16 +4923,98 @@ final class ImageEditorViewModel: ObservableObject {
         appendHistory(L10n.text("imageEditor.history.layerBlendMode"))
     }
 
+    func beginSelectedLayerOpacityChange() {
+        beginSelectedLayerOpacityPropertyChange(.opacity)
+    }
+
     func commitSelectedLayerOpacityChange() {
-        appendHistory(L10n.text("imageEditor.history.layerOpacity"))
+        finishSelectedLayerOpacityPropertyChange(.opacity)
+    }
+
+    func beginSelectedLayerFillOpacityChange() {
+        beginSelectedLayerOpacityPropertyChange(.fillOpacity)
     }
 
     func commitSelectedLayerFillOpacityChange() {
-        appendHistory(L10n.text("imageEditor.history.layerFillOpacity"))
+        finishSelectedLayerOpacityPropertyChange(.fillOpacity)
     }
 
     func commitSelectedLayerBlendIfChange() {
         appendHistory(L10n.text("imageEditor.history.layerBlendIf"))
+    }
+
+    private func beginSelectedLayerOpacityPropertyChange(_ kind: ImageEditorLayerOpacityEditKind) {
+        if activeLayerOpacityEdit == kind { return }
+        finishActiveLayerOpacityPropertyChange()
+
+        let indices = kind == .opacity
+            ? selectedLayerOpacityTargetIndices()
+            : selectedLayerFillOpacityTargetIndices()
+        guard !indices.isEmpty else { return }
+        activeLayerOpacityRedoStack = redoStack
+        activeLayerOpacityRedoThemeStates = redoXomoThemeStates
+        pushUndo()
+        activeLayerOpacityEdit = kind
+        activeLayerOpacityTargetIDs = Set(indices.map { document.layers[$0].id })
+    }
+
+    private func finishSelectedLayerOpacityPropertyChange(_ kind: ImageEditorLayerOpacityEditKind) {
+        guard activeLayerOpacityEdit == kind else { return }
+        finishActiveLayerOpacityPropertyChange()
+    }
+
+    private func finishActiveLayerOpacityPropertyChange() {
+        guard let kind = activeLayerOpacityEdit else { return }
+        let targetIDs = activeLayerOpacityTargetIDs
+        let snapshot = undoStack.last
+        let didChange = snapshot.map {
+            layerOpacityValuesDiffer(kind, targetIDs: targetIDs, from: $0)
+        } ?? false
+
+        activeLayerOpacityEdit = nil
+        activeLayerOpacityTargetIDs = []
+        if didChange {
+            appendHistory(L10n.text(kind.historyKey))
+        } else {
+            _ = discardLastUndoSnapshot()
+            redoStack = activeLayerOpacityRedoStack
+            redoXomoThemeStates = activeLayerOpacityRedoThemeStates
+            updateStatus()
+        }
+        activeLayerOpacityRedoStack = []
+        activeLayerOpacityRedoThemeStates = []
+    }
+
+    private func layerOpacityTargetIndices(for kind: ImageEditorLayerOpacityEditKind) -> [Int] {
+        guard activeLayerOpacityEdit == kind else {
+            return kind == .opacity
+                ? selectedLayerOpacityTargetIndices()
+                : selectedLayerFillOpacityTargetIndices()
+        }
+        return document.layers.indices.filter {
+            activeLayerOpacityTargetIDs.contains(document.layers[$0].id)
+                && !document.isEffectivelyLocked(document.layers[$0])
+                && (kind == .opacity || !document.layers[$0].isGroup)
+        }
+    }
+
+    private func layerOpacityValuesDiffer(
+        _ kind: ImageEditorLayerOpacityEditKind,
+        targetIDs: Set<UUID>,
+        from snapshot: ImageEditorDocument
+    ) -> Bool {
+        for id in targetIDs {
+            guard let current = document.layers.first(where: { $0.id == id }),
+                  let previous = snapshot.layers.first(where: { $0.id == id })
+            else { return true }
+            switch kind {
+            case .opacity:
+                if current.opacity != previous.opacity { return true }
+            case .fillOpacity:
+                if current.fillOpacity != previous.fillOpacity { return true }
+            }
+        }
+        return false
     }
 
     func beginSelectedLayerMaskDensityChange() {

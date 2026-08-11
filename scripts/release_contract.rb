@@ -5,6 +5,7 @@ require "rubygems"
 
 module XomoReleaseContract
   EXPECTED_BUNDLE_ID = "im.some.xomo"
+  EXPECTED_CHINESE_BRAND = "象墨"
   MINIMUM_MACOS_VERSION = Gem::Version.new("13.0")
 
   module_function
@@ -17,6 +18,8 @@ module XomoReleaseContract
     release = read(root, "scripts/release.sh")
     isolated_tests = read(root, "scripts/run_tests_isolated.rb")
     release_entitlements = read(root, "veilpic/Release.entitlements")
+    chinese_info = read(root, "veilpic/zh-Hans.lproj/InfoPlist.strings")
+    chinese_strings = read(root, "veilpic/zh-Hans.lproj/Localizable.strings")
 
     app_version = app_source[/static let current = "([^"]+)"/, 1]
     cli_version = cli_source[/xomoCLIVersion = "([^"]+)"/, 1]
@@ -34,6 +37,11 @@ module XomoReleaseContract
       "project_versions_match" => !project_versions.empty? && project_versions == [app_version],
       "build_version_matches_prerelease" => !expected_build_version.nil? && build_versions == [expected_build_version],
       "main_bundle_id" => bundle_ids.include?(EXPECTED_BUNDLE_ID),
+      "chinese_bundle_name_is_xiangmo" =>
+        chinese_info.include?(%Q{"CFBundleDisplayName" = "#{EXPECTED_CHINESE_BRAND}";}) &&
+        chinese_info.include?(%Q{"CFBundleName" = "#{EXPECTED_CHINESE_BRAND}";}),
+      "chinese_app_name_is_xiangmo" =>
+        chinese_strings.include?(%Q{"app.name" = "#{EXPECTED_CHINESE_BRAND}";}),
       "test_bundle_ids" => bundle_ids.include?("#{EXPECTED_BUNDLE_ID}Tests") && bundle_ids.include?("#{EXPECTED_BUNDLE_ID}UITests"),
       "minimum_macos_13" => !deployment_targets.empty? && deployment_targets.all? { |value| Gem::Version.new(value) >= MINIMUM_MACOS_VERSION },
       "cli_release_is_universal" => cli_release.include?("--arch arm64") && cli_release.include?("--arch x86_64"),

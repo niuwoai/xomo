@@ -1387,7 +1387,9 @@ extension ImageEditorView {
             } maximumValueLabel: {
                 Text("100")
             } onEditingChanged: { editing in
-                if !editing {
+                if editing {
+                    viewModel.beginSelectedLayerOpacityChange()
+                } else {
                     viewModel.commitSelectedLayerOpacityChange()
                 }
             }
@@ -1408,7 +1410,9 @@ extension ImageEditorView {
             } maximumValueLabel: {
                 Text("100")
             } onEditingChanged: { editing in
-                if !editing {
+                if editing {
+                    viewModel.beginSelectedLayerFillOpacityChange()
+                } else {
                     viewModel.commitSelectedLayerFillOpacityChange()
                 }
             }

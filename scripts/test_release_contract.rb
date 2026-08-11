@@ -11,11 +11,13 @@ class ReleaseContractTest < Minitest::Test
     result = XomoReleaseContract.collect(File.expand_path("..", __dir__))
 
     assert result["passed"], result.inspect
-    assert_equal "2.12.0-rc894", result["version"]
-    assert_equal ["2.12.0-rc894"], result["project_versions"]
-    assert_equal ["894"], result["build_versions"]
+    assert_equal "2.12.0-rc895", result["version"]
+    assert_equal ["2.12.0-rc895"], result["project_versions"]
+    assert_equal ["895"], result["build_versions"]
     assert result["checks"]["release_signing_requests_secure_timestamp"]
     assert result["checks"]["release_entitlements_are_hardened"]
+    assert result["checks"]["chinese_bundle_name_is_xiangmo"]
+    assert result["checks"]["chinese_app_name_is_xiangmo"]
   end
 
   def test_version_drift_fails_the_contract
@@ -73,6 +75,18 @@ class ReleaseContractTest < Minitest::Test
     end
   end
 
+  def test_legacy_chinese_brand_fails_the_contract
+    with_fixture do |root|
+      write_fixture(root, chinese_brand: "像界")
+
+      result = XomoReleaseContract.collect(root)
+
+      refute result["passed"]
+      refute result["checks"]["chinese_bundle_name_is_xiangmo"]
+      refute result["checks"]["chinese_app_name_is_xiangmo"]
+    end
+  end
+
   private
 
   def with_fixture
@@ -86,10 +100,12 @@ class ReleaseContractTest < Minitest::Test
     deployment_target: "13.0",
     build_version: version[/-rc(\d+)\z/, 1],
     release_debuggable: false,
-    secure_timestamp: true
+    secure_timestamp: true,
+    chinese_brand: "象墨"
   )
     FileUtils.mkdir_p(File.join(root, "veilpic.xcodeproj"))
     FileUtils.mkdir_p(File.join(root, "veilpic"))
+    FileUtils.mkdir_p(File.join(root, "veilpic/zh-Hans.lproj"))
     FileUtils.mkdir_p(File.join(root, "xomo-cli/Sources/XomoCLI"))
     FileUtils.mkdir_p(File.join(root, "scripts"))
 
@@ -110,6 +126,14 @@ class ReleaseContractTest < Minitest::Test
     File.write(File.join(root, "scripts/build_xomo_cli_release.sh"), "swift build --arch arm64 --arch x86_64\n")
     File.write(File.join(root, "scripts/release.sh"), "xcodebuild archive\nxcodebuild -exportArchive\n")
     File.write(File.join(root, "scripts/run_tests_isolated.rb"), "build-for-testing\ntest-without-building\n")
+    File.write(
+      File.join(root, "veilpic/zh-Hans.lproj/InfoPlist.strings"),
+      %Q{"CFBundleDisplayName" = "#{chinese_brand}";\n"CFBundleName" = "#{chinese_brand}";\n}
+    )
+    File.write(
+      File.join(root, "veilpic/zh-Hans.lproj/Localizable.strings"),
+      %Q{"app.name" = "#{chinese_brand}";\n}
+    )
     debug_entitlement = release_debuggable ? "<key>com.apple.security.get-task-allow</key><true/>" : ""
     File.write(File.join(root, "veilpic/Release.entitlements"), <<~PLIST)
       <plist><dict>

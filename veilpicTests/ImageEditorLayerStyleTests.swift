@@ -447,6 +447,7 @@ struct ImageEditorLayerStyleTests {
         viewModel.setSelectedLayerShadowSpread(0)
         viewModel.setSelectedLayerShadowDistance(12)
         viewModel.setSelectedLayerShadowAngle(0)
+        viewModel.beginSelectedLayerFillOpacityChange()
         viewModel.setSelectedLayerFillOpacity(0)
         viewModel.commitSelectedLayerFillOpacityChange()
 
@@ -1601,6 +1602,7 @@ struct ImageEditorLayerStyleTests {
 
         viewModel.setSelectedLayerStrokeWidth(6)
         viewModel.setSelectedLayerStrokePosition(.inside)
+        viewModel.beginSelectedLayerFillOpacityChange()
         viewModel.setSelectedLayerFillOpacity(0)
         viewModel.commitSelectedLayerFillOpacityChange()
 
@@ -1637,6 +1639,7 @@ struct ImageEditorLayerStyleTests {
         viewModel.setSelectedLayerStrokeWidth(6)
         viewModel.setSelectedLayerStrokePosition(.inside)
         viewModel.setSelectedLayerStrokeOpacity(0.5)
+        viewModel.beginSelectedLayerFillOpacityChange()
         viewModel.setSelectedLayerFillOpacity(0)
         viewModel.commitSelectedLayerFillOpacityChange()
 
