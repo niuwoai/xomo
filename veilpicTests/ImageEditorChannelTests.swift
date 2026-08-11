@@ -1043,6 +1043,31 @@ struct ImageEditorChannelTests {
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.alphaChannelScaleDown"))
     }
 
+    @Test func alphaChannelsDoNotRecordEquivalentScales() async throws {
+        let viewModel = ImageEditorViewModel(sourceName: "split.png", image: splitChannelImage()) { _ in }
+        let emptyMask = ImageEditorSelectionMask(
+            width: 8,
+            height: 8,
+            alpha: Array(repeating: 0, count: 64)
+        )
+        let channel = ImageEditorAlphaChannel(name: "Empty", mask: emptyMask)
+        viewModel.document.alphaChannels = [channel]
+        let historyCountBeforeScale = viewModel.document.history.count
+
+        viewModel.scaleAlphaChannelUp(channel.id)
+        #expect(viewModel.selectedAlphaChannelID == channel.id)
+        #expect(viewModel.document.alphaChannels.first?.mask == emptyMask)
+        #expect(viewModel.document.history.count == historyCountBeforeScale)
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.alphaChannelUnchanged", channel.name))
+
+        viewModel.selectedAlphaChannelID = nil
+        viewModel.scaleAlphaChannelDown(channel.id)
+        #expect(viewModel.selectedAlphaChannelID == channel.id)
+        #expect(viewModel.document.alphaChannels.first?.mask == emptyMask)
+        #expect(viewModel.document.history.count == historyCountBeforeScale)
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.alphaChannelUnchanged", channel.name))
+    }
+
     @Test func alphaChannelsCanFitMasksToCanvas() async throws {
         let canvasSize = NSSize(width: 5, height: 4)
         let image = NSImage.rendered(size: canvasSize) { rect in

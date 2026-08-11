@@ -896,8 +896,25 @@ extension ImageEditorViewModel {
 
     private func scaleAlphaChannel(_ id: UUID, factor: CGFloat, historyKey: String, statusKey: String) {
         guard let index = document.alphaChannels.firstIndex(where: { $0.id == id }) else { return }
-        guard let scaledMask = document.alphaChannels[index].mask.scaled(by: factor) else {
+        let originalMask = document.alphaChannels[index].mask
+        guard originalMask.alpha.contains(where: { $0 > 0 }) else {
+            selectedAlphaChannelID = id
+            statusText = L10n.format(
+                "imageEditor.status.alphaChannelUnchanged",
+                document.alphaChannels[index].name
+            )
+            return
+        }
+        guard let scaledMask = originalMask.scaled(by: factor) else {
             statusText = L10n.text("imageEditor.status.operationFailed")
+            return
+        }
+        guard scaledMask != originalMask else {
+            selectedAlphaChannelID = id
+            statusText = L10n.format(
+                "imageEditor.status.alphaChannelUnchanged",
+                document.alphaChannels[index].name
+            )
             return
         }
 
