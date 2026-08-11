@@ -3381,6 +3381,11 @@ struct veilpicTests {
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerMaskRevealSelection"))
         #expect(viewModel.statusText == L10n.text("imageEditor.status.layerMaskRevealSelection"))
 
+        let historyCountAfterFirstReveal = viewModel.document.history.count
+        viewModel.revealSelectionOnLayerMask()
+        #expect(viewModel.document.history.count == historyCountAfterFirstReveal)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.layerMaskSelectionUnchanged"))
+
         viewModel.createRectSelection(from: CGPoint(x: 0, y: 0), to: CGPoint(x: 15, y: 30))
         viewModel.hideSelectionOnLayerMask()
 

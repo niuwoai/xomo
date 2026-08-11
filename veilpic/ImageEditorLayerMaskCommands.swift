@@ -774,18 +774,27 @@ extension ImageEditorViewModel {
             return
         }
 
+        let changedOperations = operations.filter { operation in
+            document.layers[operation.index].mask?.hasEquivalentAlphaMask(to: operation.mask) != true
+        }
+        guard !changedOperations.isEmpty else {
+            isEditingLayerMask = true
+            statusText = L10n.text("imageEditor.status.layerMaskSelectionUnchanged")
+            return
+        }
+
         pushUndo()
-        for operation in operations {
+        for operation in changedOperations {
             document.layers[operation.index].mask = operation.mask
         }
         isEditingLayerMask = true
 
-        if operations.count == 1 {
+        if changedOperations.count == 1 {
             appendHistory(L10n.text(combination.historyKey))
             statusText = L10n.text(combination.statusKey)
         } else {
             appendHistory(L10n.text(combination.selectedHistoryKey))
-            statusText = L10n.format(combination.selectedStatusKey, operations.count)
+            statusText = L10n.format(combination.selectedStatusKey, changedOperations.count)
         }
     }
 

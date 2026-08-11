@@ -1999,6 +1999,7 @@
 "imageEditor.status.layerMaskCopied" = "已将图层蒙版复制到 %d 个图层";
 "imageEditor.status.layerMaskCopyUnchanged" = "所选图层的蒙版已经一致";
 "imageEditor.status.vectorMaskCopyUnchanged" = "所选图层的矢量蒙版已经一致";
+"imageEditor.status.layerMaskSelectionUnchanged" = "图层蒙版没有变化";
 "imageEditor.status.layerIsolateSelected" = "已隔离显示 %d 个所选图层";
 "imageEditor.status.layerShowSelected" = "已显示 %d 个所选图层";
 "imageEditor.status.layerHideSelected" = "已隐藏 %d 个所选图层";
