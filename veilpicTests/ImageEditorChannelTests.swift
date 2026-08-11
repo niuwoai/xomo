@@ -962,6 +962,42 @@ struct ImageEditorChannelTests {
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.alphaChannelRotate180"))
     }
 
+    @Test func alphaChannelsDoNotRecordSymmetricRotations() async throws {
+        let viewModel = ImageEditorViewModel(sourceName: "split.png", image: splitChannelImage()) { _ in }
+        let symmetricMask = ImageEditorSelectionMask(
+            width: 3,
+            height: 3,
+            alpha: [
+                0, 255, 0,
+                255, 255, 255,
+                0, 255, 0
+            ]
+        )
+        let channel = ImageEditorAlphaChannel(name: "Symmetric", mask: symmetricMask)
+        viewModel.document.alphaChannels = [channel]
+        let historyCountBeforeRotation = viewModel.document.history.count
+
+        viewModel.rotateAlphaChannelClockwise(channel.id)
+        #expect(viewModel.selectedAlphaChannelID == channel.id)
+        #expect(viewModel.document.alphaChannels.first?.mask == symmetricMask)
+        #expect(viewModel.document.history.count == historyCountBeforeRotation)
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.alphaChannelUnchanged", channel.name))
+
+        viewModel.selectedAlphaChannelID = nil
+        viewModel.rotateAlphaChannelCounterclockwise(channel.id)
+        #expect(viewModel.selectedAlphaChannelID == channel.id)
+        #expect(viewModel.document.alphaChannels.first?.mask == symmetricMask)
+        #expect(viewModel.document.history.count == historyCountBeforeRotation)
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.alphaChannelUnchanged", channel.name))
+
+        viewModel.selectedAlphaChannelID = nil
+        viewModel.rotateAlphaChannel180(channel.id)
+        #expect(viewModel.selectedAlphaChannelID == channel.id)
+        #expect(viewModel.document.alphaChannels.first?.mask == symmetricMask)
+        #expect(viewModel.document.history.count == historyCountBeforeRotation)
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.alphaChannelUnchanged", channel.name))
+    }
+
     @Test func alphaChannelsCanScaleMasksUpAndDown() async throws {
         let viewModel = ImageEditorViewModel(sourceName: "split.png", image: splitChannelImage()) { _ in }
         var alpha = [UInt8](repeating: 0, count: 64)
