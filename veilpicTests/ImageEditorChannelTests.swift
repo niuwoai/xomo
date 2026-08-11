@@ -455,6 +455,25 @@ struct ImageEditorChannelTests {
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.alphaChannelUpdate"))
     }
 
+    @Test func alphaChannelsDoNotRecordEquivalentSelectionUpdates() async throws {
+        let viewModel = ImageEditorViewModel(sourceName: "update-no-op.png", image: splitChannelImage()) { _ in }
+        let mask = ImageEditorSelectionMask(width: 2, height: 1, alpha: [255, 0])
+        let channel = ImageEditorAlphaChannel(name: "Same Selection", mask: mask)
+        viewModel.document.alphaChannels = [channel]
+        viewModel.document.selection = ImageEditorSelection.raster(
+            mask: mask,
+            bounds: CGRect(x: 0, y: 0, width: 1, height: 1)
+        )
+        let historyCountBeforeUpdate = viewModel.document.history.count
+
+        viewModel.updateAlphaChannelFromSelection(channel.id)
+
+        #expect(viewModel.selectedAlphaChannelID == channel.id)
+        #expect(viewModel.document.alphaChannels.first?.mask == mask)
+        #expect(viewModel.document.history.count == historyCountBeforeUpdate)
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.alphaChannelUnchanged", channel.name))
+    }
+
     @Test func alphaChannelsCanCombineCurrentSelectionWithSavedMask() async throws {
         let canvasSize = NSSize(width: 4, height: 1)
         let image = NSImage.rendered(size: canvasSize) { rect in
@@ -557,11 +576,13 @@ struct ImageEditorChannelTests {
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.alphaChannelLoad"))
 
         viewModel.loadSelectionFromChannel(.red)
+        let historyCountBeforeEquivalentUpdate = viewModel.document.history.count
         viewModel.updateSelectedAlphaChannelFromSelection()
         let updatedChannel = try #require(viewModel.selectedAlphaChannel)
         #expect(maskAlpha(updatedChannel.mask, x: 0, y: 0) == 255)
         #expect(maskAlpha(updatedChannel.mask, x: 1, y: 0) == 0)
-        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.alphaChannelUpdate"))
+        #expect(viewModel.document.history.count == historyCountBeforeEquivalentUpdate)
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.alphaChannelUnchanged", updatedChannel.name))
 
         #expect(viewModel.canApplySelectedAlphaChannelToLayerMask)
         viewModel.applySelectedAlphaChannelToSelectedLayerMask()
