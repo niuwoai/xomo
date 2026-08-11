@@ -1032,10 +1032,15 @@ extension ImageEditorViewModel {
         }
 
         let selection = ImageEditorSelection.raster(mask: channel.mask, bounds: bounds)
-        applySelectionCandidate(selection, replaceHistoryKey: "imageEditor.history.alphaChannelLoad")
+        let didChangeSelection = applySelectionCandidate(
+            selection,
+            replaceHistoryKey: "imageEditor.history.alphaChannelLoad"
+        )
         if document.selection != nil {
             selectedAlphaChannelID = id
-            statusText = L10n.format("imageEditor.status.alphaChannelLoaded", channel.name)
+            if didChangeSelection {
+                statusText = L10n.format("imageEditor.status.alphaChannelLoaded", channel.name)
+            }
         }
     }
 

@@ -1104,6 +1104,42 @@ struct XomoAutomationTests {
         #expect(viewModel.document.selection == nil)
     }
 
+    @Test func registryDoesNotRecordRepeatedAlphaChannelSelectionLoad() throws {
+        let viewModel = makeViewModel()
+        viewModel.createRectSelection(from: CGPoint(x: 20, y: 16), to: CGPoint(x: 80, y: 64))
+        viewModel.saveSelectionAsAlphaChannel()
+        let channel = try #require(viewModel.document.alphaChannels.first)
+        viewModel.clearSelection()
+
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        let arguments: [String: XomoJSONValue] = [
+            "id": .string(channel.id.uuidString),
+            "action": .string("loadSelection")
+        ]
+        let firstResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.channel.action",
+            arguments: arguments
+        ))
+        #expect(firstResponse.ok)
+        let historyCountAfterFirstLoad = viewModel.document.history.count
+
+        viewModel.selectedAlphaChannelID = nil
+        let repeatedResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.channel.action",
+            arguments: arguments
+        ))
+        #expect(repeatedResponse.ok)
+        #expect(viewModel.selectedAlphaChannelID == channel.id)
+        #expect(viewModel.document.history.count == historyCountAfterFirstLoad)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionUnchanged"))
+
+        viewModel.undo()
+        #expect(viewModel.document.selection == nil)
+    }
+
     @Test func registryAppliesExplicitMagicWandTolerance() throws {
         let viewModel = makeViewModel()
         let layerIndex = try #require(viewModel.document.selectedLayerIndex)

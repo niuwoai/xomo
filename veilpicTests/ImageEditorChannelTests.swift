@@ -404,6 +404,13 @@ struct ImageEditorChannelTests {
         #expect(maskAlpha(restoredMask, x: 1, y: 0) == 0)
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.alphaChannelLoad"))
 
+        let historyCountAfterFirstLoad = viewModel.document.history.count
+        viewModel.selectedAlphaChannelID = nil
+        viewModel.loadSelectionFromAlphaChannel(channel.id)
+        #expect(viewModel.selectedAlphaChannelID == channel.id)
+        #expect(viewModel.document.history.count == historyCountAfterFirstLoad)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionUnchanged"))
+
         viewModel.deleteAlphaChannel(channel.id)
 
         #expect(viewModel.document.alphaChannels.isEmpty)
