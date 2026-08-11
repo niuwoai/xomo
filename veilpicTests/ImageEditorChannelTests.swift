@@ -865,6 +865,35 @@ struct ImageEditorChannelTests {
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.alphaChannelFlipVertical"))
     }
 
+    @Test func alphaChannelsDoNotRecordSymmetricFlips() async throws {
+        let viewModel = ImageEditorViewModel(sourceName: "split.png", image: splitChannelImage()) { _ in }
+        let symmetricMask = ImageEditorSelectionMask(
+            width: 3,
+            height: 3,
+            alpha: [
+                0, 255, 0,
+                255, 255, 255,
+                0, 255, 0
+            ]
+        )
+        let channel = ImageEditorAlphaChannel(name: "Symmetric", mask: symmetricMask)
+        viewModel.document.alphaChannels = [channel]
+        let historyCountBeforeFlip = viewModel.document.history.count
+
+        viewModel.flipAlphaChannelHorizontal(channel.id)
+        #expect(viewModel.selectedAlphaChannelID == channel.id)
+        #expect(viewModel.document.alphaChannels.first?.mask == symmetricMask)
+        #expect(viewModel.document.history.count == historyCountBeforeFlip)
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.alphaChannelUnchanged", channel.name))
+
+        viewModel.selectedAlphaChannelID = nil
+        viewModel.flipAlphaChannelVertical(channel.id)
+        #expect(viewModel.selectedAlphaChannelID == channel.id)
+        #expect(viewModel.document.alphaChannels.first?.mask == symmetricMask)
+        #expect(viewModel.document.history.count == historyCountBeforeFlip)
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.alphaChannelUnchanged", channel.name))
+    }
+
     @Test func alphaChannelsCanRotateMaskClockwiseAndCounterclockwise() async throws {
         let viewModel = ImageEditorViewModel(sourceName: "split.png", image: splitChannelImage()) { _ in }
         var alpha = [UInt8](repeating: 0, count: 42)
