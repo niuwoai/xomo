@@ -203,7 +203,6 @@ extension ImageEditorViewModel {
             document.layers[index].mask = NSImage.transparent(size: maskSize(for: document.layers[index]))
             document.layers[index].isMaskEnabled = true
             document.layers[index].isMaskLinked = true
-            document.layers[index].isVectorMaskEnabled = true
             document.layers[index].maskDensity = 1
             document.layers[index].maskFeather = 0
         }

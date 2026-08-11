@@ -3480,6 +3480,7 @@ struct veilpicTests {
             pathPoints: [CGPoint(x: 20, y: 12), CGPoint(x: 60, y: 12), CGPoint(x: 20, y: 48)],
             isPathClosed: true
         )
+        vectorLayer.isVectorMaskEnabled = false
         var lockedLayer = ImageEditorLayer.blank(name: "Locked Layer", size: canvasSize)
         lockedLayer.isLocked = true
 
@@ -3516,12 +3517,14 @@ struct veilpicTests {
         #expect(maskAlpha(hiddenFirstMask, x: 10, y: 10) == 0)
         #expect(maskAlpha(hiddenVectorMask, x: 10, y: 10) == 0)
         #expect(hiddenVector.vectorMask != nil)
+        #expect(!hiddenVector.isVectorMaskEnabled)
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerMaskHideAllSelected"))
         #expect(viewModel.statusText == L10n.format("imageEditor.status.layerMaskHideAllSelected", 2))
 
         viewModel.undo()
         #expect(viewModel.document.layers.first { $0.id == firstLayerID }?.mask == nil)
         #expect(viewModel.document.layers.first { $0.id == vectorLayerID }?.mask == nil)
+        #expect(viewModel.document.layers.first { $0.id == vectorLayerID }?.isVectorMaskEnabled == false)
     }
 
     @MainActor
