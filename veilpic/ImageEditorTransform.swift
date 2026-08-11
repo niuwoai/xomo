@@ -919,8 +919,9 @@ extension ImageEditorViewModel {
     }
 
     var selectedTransformableLayerIndices: [Int] {
-        let baseLayerIDs = layerIDsExpandingGroups(document.selectedLayerIDs)
-        let transformLayerIDs = linkedTransformLayerIDs(startingFrom: baseLayerIDs)
+        let transformLayerIDs = transformLayerIDsExpandingLinkedGroups(
+            startingFrom: document.selectedLayerIDs
+        )
         return document.layers.indices.filter { index in
             let layer = document.layers[index]
             return transformLayerIDs.contains(layer.id)
@@ -928,6 +929,18 @@ extension ImageEditorViewModel {
                 && !layer.isAdjustment
                 && !layer.isFilter
                 && document.isEffectivelyVisible(layer)
+        }
+    }
+
+    private func transformLayerIDsExpandingLinkedGroups(
+        startingFrom selectedIDs: Set<UUID>
+    ) -> Set<UUID> {
+        var expandedIDs = layerIDsExpandingGroups(selectedIDs)
+        while true {
+            let linkedIDs = linkedTransformLayerIDs(startingFrom: expandedIDs)
+            let nextIDs = layerIDsExpandingGroups(linkedIDs)
+            guard nextIDs != expandedIDs else { return nextIDs }
+            expandedIDs = nextIDs
         }
     }
 
