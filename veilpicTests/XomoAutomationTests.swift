@@ -1086,6 +1086,22 @@ struct XomoAutomationTests {
         #expect(maskAlpha(mask, x: 5, y: 5) == 0)
         #expect(maskAlpha(mask, x: 15, y: 5) == 255)
         #expect(selection.bounds.minX >= 10)
+
+        let historyCountAfterFirstLoad = viewModel.document.history.count
+        let repeatedResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.selection.modify",
+            arguments: [
+                "action": .string("loadTransparency"),
+                "threshold": .number(200)
+            ]
+        ))
+        #expect(repeatedResponse.ok)
+        #expect(viewModel.document.history.count == historyCountAfterFirstLoad)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionUnchanged"))
+
+        viewModel.undo()
+        #expect(viewModel.document.selection == nil)
     }
 
     @Test func registryAppliesExplicitMagicWandTolerance() throws {

@@ -3751,11 +3751,12 @@ final class ImageEditorViewModel: ObservableObject {
         applySelectionCandidate(combinedSelection, replaceHistoryKey: "imageEditor.history.quickSelection")
     }
 
-    func applySelectionCandidate(_ selection: ImageEditorSelection, replaceHistoryKey: String) {
+    @discardableResult
+    func applySelectionCandidate(_ selection: ImageEditorSelection, replaceHistoryKey: String) -> Bool {
         let existingSelection = document.selection
         guard existingSelection != nil || selectionMode == .replace || selectionMode == .add else {
             statusText = L10n.text("imageEditor.status.noSelection")
-            return
+            return false
         }
 
         let nextSelection = ImageEditorSelection.combined(
@@ -3766,7 +3767,7 @@ final class ImageEditorViewModel: ObservableObject {
         )
         guard !selectionsAreEquivalent(nextSelection, existingSelection) else {
             statusText = L10n.text("imageEditor.status.selectionUnchanged")
-            return
+            return false
         }
 
         pushUndo()
@@ -3778,6 +3779,7 @@ final class ImageEditorViewModel: ObservableObject {
         statusText = nextSelection == nil
             ? L10n.text("imageEditor.status.selectionEmpty")
             : L10n.text("imageEditor.status.selectionCreated")
+        return true
     }
 
     func selectionsAreEquivalent(

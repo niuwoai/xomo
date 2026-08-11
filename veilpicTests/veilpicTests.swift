@@ -3906,6 +3906,11 @@ struct veilpicTests {
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.selectionFromSelectedLayers"))
         #expect(viewModel.statusText == L10n.format("imageEditor.status.selectionFromSelectedLayers", 2))
 
+        let historyCountAfterFirstLoad = viewModel.document.history.count
+        viewModel.loadSelectionFromLayerTransparency()
+        #expect(viewModel.document.history.count == historyCountAfterFirstLoad)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionUnchanged"))
+
         viewModel.undo()
         #expect(viewModel.document.selection == nil)
     }

@@ -61,8 +61,8 @@ extension ImageEditorViewModel {
         let historyKey = selections.count == 1
             ? "imageEditor.history.selectionFromLayer"
             : "imageEditor.history.selectionFromSelectedLayers"
-        applySelectionCandidate(selection, replaceHistoryKey: historyKey)
-        if document.selection != nil, selections.count > 1 {
+        let didChangeSelection = applySelectionCandidate(selection, replaceHistoryKey: historyKey)
+        if didChangeSelection, document.selection != nil, selections.count > 1 {
             statusText = L10n.format("imageEditor.status.selectionFromSelectedLayers", selections.count)
         }
     }
