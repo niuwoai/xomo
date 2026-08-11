@@ -594,6 +594,18 @@ struct ImageEditorChannelTests {
         #expect(viewModel.statusText == L10n.format("imageEditor.status.alphaChannelThresholded", "Soft"))
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.alphaChannelThreshold"))
         #expect(viewModel.previewedAlphaChannelID == channel.id)
+
+        let historyCountAfterThreshold = viewModel.document.history.count
+        viewModel.selectedAlphaChannelID = nil
+        viewModel.thresholdAlphaChannel(channel.id)
+
+        #expect(viewModel.selectedAlphaChannelID == channel.id)
+        #expect(viewModel.document.history.count == historyCountAfterThreshold)
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.alphaChannelUnchanged", "Soft"))
+
+        viewModel.undo()
+        let restoredChannel = try #require(viewModel.document.alphaChannels.first)
+        #expect(restoredChannel.mask.alpha == [0, 127, 128])
     }
 
     @Test func alphaChannelsCanFeatherHardMasks() async throws {

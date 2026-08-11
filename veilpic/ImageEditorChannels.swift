@@ -607,10 +607,20 @@ extension ImageEditorViewModel {
     func thresholdAlphaChannel(_ id: UUID, cutoff: UInt8 = 127) {
         guard let index = document.alphaChannels.firstIndex(where: { $0.id == id }) else { return }
 
-        pushUndo()
-        document.alphaChannels[index].mask.alpha = document.alphaChannels[index].mask.alpha.map {
+        let thresholdedAlpha = document.alphaChannels[index].mask.alpha.map {
             $0 > cutoff ? UInt8.max : 0
         }
+        guard thresholdedAlpha != document.alphaChannels[index].mask.alpha else {
+            selectedAlphaChannelID = id
+            statusText = L10n.format(
+                "imageEditor.status.alphaChannelUnchanged",
+                document.alphaChannels[index].name
+            )
+            return
+        }
+
+        pushUndo()
+        document.alphaChannels[index].mask.alpha = thresholdedAlpha
         selectedAlphaChannelID = id
         appendHistory(L10n.text("imageEditor.history.alphaChannelThreshold"))
         statusText = L10n.format("imageEditor.status.alphaChannelThresholded", document.alphaChannels[index].name)

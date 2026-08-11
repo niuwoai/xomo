@@ -1188,6 +1188,42 @@ struct XomoAutomationTests {
         #expect(restoredChannel.mask.alpha.allSatisfy { $0 == UInt8.max })
     }
 
+    @Test func registryDoesNotRecordRepeatedAlphaChannelThreshold() throws {
+        let viewModel = makeViewModel()
+        let channel = ImageEditorAlphaChannel(
+            name: "Soft",
+            mask: ImageEditorSelectionMask(width: 3, height: 1, alpha: [0, 127, 128])
+        )
+        viewModel.document.alphaChannels = [channel]
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        let arguments: [String: XomoJSONValue] = [
+            "id": .string(channel.id.uuidString),
+            "action": .string("threshold")
+        ]
+
+        #expect(registry.execute(request(
+            operation: "call",
+            name: "xomo.channel.action",
+            arguments: arguments
+        )).ok)
+        #expect(viewModel.document.alphaChannels.first?.mask.alpha == [0, 0, 255])
+        let historyCountAfterThreshold = viewModel.document.history.count
+
+        viewModel.selectedAlphaChannelID = nil
+        #expect(registry.execute(request(
+            operation: "call",
+            name: "xomo.channel.action",
+            arguments: arguments
+        )).ok)
+        #expect(viewModel.selectedAlphaChannelID == channel.id)
+        #expect(viewModel.document.history.count == historyCountAfterThreshold)
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.alphaChannelUnchanged", channel.name))
+
+        viewModel.undo()
+        #expect(viewModel.document.alphaChannels.first?.mask.alpha == [0, 127, 128])
+    }
+
     @Test func registryAppliesExplicitMagicWandTolerance() throws {
         let viewModel = makeViewModel()
         let layerIndex = try #require(viewModel.document.selectedLayerIndex)
