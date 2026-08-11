@@ -1530,6 +1530,11 @@ struct ImageEditorVectorLayerTests {
         #expect(copiedLayer.isMaskLinked == false)
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.vectorMaskCopy"))
         #expect(viewModel.statusText == L10n.format("imageEditor.status.vectorMaskCopied", 1))
+
+        let historyCountAfterFirstCopy = viewModel.document.history.count
+        viewModel.copyVectorMaskToSelectedLayers()
+        #expect(viewModel.document.history.count == historyCountAfterFirstCopy)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.vectorMaskCopyUnchanged"))
     }
 
     @Test func imageEditorVectorMaskCanRoundTripThroughEditablePathLayer() async throws {

@@ -1998,6 +1998,7 @@
 "imageEditor.status.backgroundFromLayer" = "選択中のレイヤーを背景に変換しました";
 "imageEditor.status.layerMaskCopied" = "レイヤーマスクを %d 個のレイヤーにコピーしました";
 "imageEditor.status.layerMaskCopyUnchanged" = "選択したレイヤーのマスクはすでに一致しています";
+"imageEditor.status.vectorMaskCopyUnchanged" = "選択したレイヤーのベクトルマスクはすでに一致しています";
 "imageEditor.status.layerIsolateSelected" = "%d 個の選択レイヤーを単独表示しました";
 "imageEditor.status.layerShowSelected" = "%d 個の選択レイヤーを表示しました";
 "imageEditor.status.layerHideSelected" = "%d 個の選択レイヤーを非表示にしました";

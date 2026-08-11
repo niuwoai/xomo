@@ -314,16 +314,33 @@ extension ImageEditorViewModel {
             return
         }
 
+        let operations: [(index: Int, mask: ImageEditorShapeContent)] = targetIndices.compactMap { index in
+            let targetLayer = document.layers[index]
+            let targetSize = maskSize(for: targetLayer)
+            let targetMask = scaledVectorMask(sourceMask, from: sourceSize, to: targetSize)
+            let isEquivalent = targetLayer.vectorMask.map {
+                ImageEditorProjectShapeContent(content: $0) == ImageEditorProjectShapeContent(content: targetMask)
+            } == true
+                && targetLayer.isVectorMaskEnabled == sourceLayer.isVectorMaskEnabled
+                && targetLayer.isMaskLinked == sourceLayer.isMaskLinked
+            return isEquivalent ? nil : (index, targetMask)
+        }
+        guard !operations.isEmpty else {
+            isEditingLayerMask = false
+            statusText = L10n.text("imageEditor.status.vectorMaskCopyUnchanged")
+            return
+        }
+
         pushUndo()
-        for index in targetIndices {
-            let targetSize = maskSize(for: document.layers[index])
-            document.layers[index].vectorMask = scaledVectorMask(sourceMask, from: sourceSize, to: targetSize)
+        for operation in operations {
+            let index = operation.index
+            document.layers[index].vectorMask = operation.mask
             document.layers[index].isVectorMaskEnabled = sourceLayer.isVectorMaskEnabled
             document.layers[index].isMaskLinked = sourceLayer.isMaskLinked
         }
         isEditingLayerMask = false
         appendHistory(L10n.text("imageEditor.history.vectorMaskCopy"))
-        statusText = L10n.format("imageEditor.status.vectorMaskCopied", targetIndices.count)
+        statusText = L10n.format("imageEditor.status.vectorMaskCopied", operations.count)
     }
 
     func rasterizeSelectedVectorMask() {
