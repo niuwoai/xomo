@@ -1438,7 +1438,9 @@ extension ImageEditorView {
             } maximumValueLabel: {
                 Text("")
             } onEditingChanged: { editing in
-                if !editing {
+                if editing {
+                    viewModel.beginSelectedLayerBlendIfSourceBlackChange()
+                } else {
                     viewModel.commitSelectedLayerBlendIfChange()
                 }
             }
@@ -1452,7 +1454,9 @@ extension ImageEditorView {
             } maximumValueLabel: {
                 Text(L10n.text("imageEditor.option.blendIfWhiteShort"))
             } onEditingChanged: { editing in
-                if !editing {
+                if editing {
+                    viewModel.beginSelectedLayerBlendIfSourceWhiteChange()
+                } else {
                     viewModel.commitSelectedLayerBlendIfChange()
                 }
             }
@@ -1478,7 +1482,9 @@ extension ImageEditorView {
             } maximumValueLabel: {
                 Text("")
             } onEditingChanged: { editing in
-                if !editing {
+                if editing {
+                    viewModel.beginSelectedLayerBlendIfUnderlyingBlackChange()
+                } else {
                     viewModel.commitSelectedLayerBlendIfChange()
                 }
             }
@@ -1492,7 +1498,9 @@ extension ImageEditorView {
             } maximumValueLabel: {
                 Text(L10n.text("imageEditor.option.blendIfWhiteShort"))
             } onEditingChanged: { editing in
-                if !editing {
+                if editing {
+                    viewModel.beginSelectedLayerBlendIfUnderlyingWhiteChange()
+                } else {
                     viewModel.commitSelectedLayerBlendIfChange()
                 }
             }

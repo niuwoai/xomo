@@ -212,6 +212,7 @@ struct ImageEditorLayerStyleTests {
             solidImage(color: .systemRed, size: canvasSize),
             historyTitle: L10n.text("imageEditor.history.brush")
         )
+        viewModel.beginSelectedLayerBlendIfUnderlyingBlackChange()
         viewModel.setSelectedLayerBlendIfUnderlyingBlack(0.5)
         viewModel.commitSelectedLayerBlendIfChange()
 
@@ -244,6 +245,7 @@ struct ImageEditorLayerStyleTests {
         )
         // Pure red has a Rec. 709 luminance of at most ~0.21, so use a
         // threshold that still separates the dark and bright gradient ends.
+        viewModel.beginSelectedLayerBlendIfSourceBlackChange()
         viewModel.setSelectedLayerBlendIfSourceBlack(0.1)
         viewModel.commitSelectedLayerBlendIfChange()
 

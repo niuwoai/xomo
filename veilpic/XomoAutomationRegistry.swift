@@ -4475,15 +4475,19 @@ final class XomoAutomationRegistry {
             viewModel.setSelectedLayerFillOpacity(try requiredNumber("value", in: arguments))
             viewModel.commitSelectedLayerFillOpacityChange()
         case "blendIfSourceBlack":
+            viewModel.beginSelectedLayerBlendIfSourceBlackChange()
             viewModel.setSelectedLayerBlendIfSourceBlack(try requiredNumber("value", in: arguments))
             viewModel.commitSelectedLayerBlendIfChange()
         case "blendIfSourceWhite":
+            viewModel.beginSelectedLayerBlendIfSourceWhiteChange()
             viewModel.setSelectedLayerBlendIfSourceWhite(try requiredNumber("value", in: arguments))
             viewModel.commitSelectedLayerBlendIfChange()
         case "blendIfUnderlyingBlack":
+            viewModel.beginSelectedLayerBlendIfUnderlyingBlackChange()
             viewModel.setSelectedLayerBlendIfUnderlyingBlack(try requiredNumber("value", in: arguments))
             viewModel.commitSelectedLayerBlendIfChange()
         case "blendIfUnderlyingWhite":
+            viewModel.beginSelectedLayerBlendIfUnderlyingWhiteChange()
             viewModel.setSelectedLayerBlendIfUnderlyingWhite(try requiredNumber("value", in: arguments))
             viewModel.commitSelectedLayerBlendIfChange()
         case "maskDensity":

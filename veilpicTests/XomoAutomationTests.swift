@@ -1283,6 +1283,45 @@ struct XomoAutomationTests {
         #expect(viewModel.document.selectedLayer?.fillOpacity == 1)
     }
 
+    @Test func registryMakesBlendIfChangesUndoableWithoutNoOpHistory() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+
+        let sourceBlackRequest = request(
+            operation: "call",
+            name: "xomo.layer.properties",
+            arguments: [
+                "property": .string("blendIfSourceBlack"),
+                "value": .number(0.35)
+            ]
+        )
+        #expect(registry.execute(sourceBlackRequest).ok)
+        #expect(viewModel.document.selectedLayer?.blendIfSourceBlack == 0.35)
+        let historyCountAfterChange = viewModel.document.history.count
+        let undoCountAfterChange = viewModel.undoStack.count
+        #expect(registry.execute(sourceBlackRequest).ok)
+        #expect(viewModel.document.history.count == historyCountAfterChange)
+        #expect(viewModel.undoStack.count == undoCountAfterChange)
+        viewModel.undo()
+        #expect(viewModel.document.selectedLayer?.blendIfSourceBlack == 0)
+
+        let underlyingWhiteRequest = request(
+            operation: "call",
+            name: "xomo.layer.properties",
+            arguments: [
+                "property": .string("blendIfUnderlyingWhite"),
+                "value": .number(0.75)
+            ]
+        )
+        #expect(registry.execute(underlyingWhiteRequest).ok)
+        #expect(viewModel.document.selectedLayer?.blendIfUnderlyingWhite == 0.75)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerBlendIf"))
+        viewModel.undo()
+        #expect(viewModel.document.selectedLayer?.blendIfSourceBlack == 0)
+        #expect(viewModel.document.selectedLayer?.blendIfUnderlyingWhite == 1)
+    }
+
     @Test func registryDoesNotRecordRepeatedAlphaChannelFillOrClear() throws {
         let viewModel = makeViewModel()
         viewModel.createBlankAlphaChannel()

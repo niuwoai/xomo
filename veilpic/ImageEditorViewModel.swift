@@ -90,6 +90,13 @@ private enum ImageEditorLayerOpacityEditKind {
     }
 }
 
+private enum ImageEditorLayerBlendIfEditKind {
+    case sourceBlack
+    case sourceWhite
+    case underlyingBlack
+    case underlyingWhite
+}
+
 @MainActor
 final class ImageEditorViewModel: ObservableObject {
     static let minimumZoom: CGFloat = 0.08
@@ -441,6 +448,10 @@ final class ImageEditorViewModel: ObservableObject {
     private var activeLayerOpacityTargetIDs = Set<UUID>()
     private var activeLayerOpacityRedoStack: [ImageEditorDocument] = []
     private var activeLayerOpacityRedoThemeStates: [ImageEditorXomoThemeUndoState] = []
+    private var activeLayerBlendIfEdit: ImageEditorLayerBlendIfEditKind?
+    private var activeLayerBlendIfTargetIDs = Set<UUID>()
+    private var activeLayerBlendIfRedoStack: [ImageEditorDocument] = []
+    private var activeLayerBlendIfRedoThemeStates: [ImageEditorXomoThemeUndoState] = []
     var movingLayerIDs = Set<UUID>()
     var movingLayerDidChange = false
     var movingLayerWasDuplicated = false
@@ -4826,7 +4837,7 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     func setSelectedLayerBlendIfSourceBlack(_ value: Double) {
-        let indices = selectedLayerBlendIfTargetIndices()
+        let indices = layerBlendIfTargetIndices(for: .sourceBlack)
         guard !indices.isEmpty else { return }
         var didChange = false
         for index in indices {
@@ -4842,7 +4853,7 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     func setSelectedLayerBlendIfSourceWhite(_ value: Double) {
-        let indices = selectedLayerBlendIfTargetIndices()
+        let indices = layerBlendIfTargetIndices(for: .sourceWhite)
         guard !indices.isEmpty else { return }
         var didChange = false
         for index in indices {
@@ -4858,7 +4869,7 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     func setSelectedLayerBlendIfUnderlyingBlack(_ value: Double) {
-        let indices = selectedLayerBlendIfTargetIndices()
+        let indices = layerBlendIfTargetIndices(for: .underlyingBlack)
         guard !indices.isEmpty else { return }
         var didChange = false
         for index in indices {
@@ -4874,7 +4885,7 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     func setSelectedLayerBlendIfUnderlyingWhite(_ value: Double) {
-        let indices = selectedLayerBlendIfTargetIndices()
+        let indices = layerBlendIfTargetIndices(for: .underlyingWhite)
         guard !indices.isEmpty else { return }
         var didChange = false
         for index in indices {
@@ -4939,8 +4950,93 @@ final class ImageEditorViewModel: ObservableObject {
         finishSelectedLayerOpacityPropertyChange(.fillOpacity)
     }
 
+    func beginSelectedLayerBlendIfSourceBlackChange() {
+        beginSelectedLayerBlendIfChange(.sourceBlack)
+    }
+
+    func beginSelectedLayerBlendIfSourceWhiteChange() {
+        beginSelectedLayerBlendIfChange(.sourceWhite)
+    }
+
+    func beginSelectedLayerBlendIfUnderlyingBlackChange() {
+        beginSelectedLayerBlendIfChange(.underlyingBlack)
+    }
+
+    func beginSelectedLayerBlendIfUnderlyingWhiteChange() {
+        beginSelectedLayerBlendIfChange(.underlyingWhite)
+    }
+
     func commitSelectedLayerBlendIfChange() {
-        appendHistory(L10n.text("imageEditor.history.layerBlendIf"))
+        finishActiveLayerBlendIfChange()
+    }
+
+    private func beginSelectedLayerBlendIfChange(_ kind: ImageEditorLayerBlendIfEditKind) {
+        if activeLayerBlendIfEdit == kind { return }
+        finishActiveLayerBlendIfChange()
+
+        let indices = selectedLayerBlendIfTargetIndices()
+        guard !indices.isEmpty else { return }
+        activeLayerBlendIfRedoStack = redoStack
+        activeLayerBlendIfRedoThemeStates = redoXomoThemeStates
+        pushUndo()
+        activeLayerBlendIfEdit = kind
+        activeLayerBlendIfTargetIDs = Set(indices.map { document.layers[$0].id })
+    }
+
+    private func finishActiveLayerBlendIfChange() {
+        guard let kind = activeLayerBlendIfEdit else { return }
+        let targetIDs = activeLayerBlendIfTargetIDs
+        let snapshot = undoStack.last
+        let didChange = snapshot.map {
+            layerBlendIfValuesDiffer(kind, targetIDs: targetIDs, from: $0)
+        } ?? false
+
+        activeLayerBlendIfEdit = nil
+        activeLayerBlendIfTargetIDs = []
+        if didChange {
+            appendHistory(L10n.text("imageEditor.history.layerBlendIf"))
+        } else {
+            _ = discardLastUndoSnapshot()
+            redoStack = activeLayerBlendIfRedoStack
+            redoXomoThemeStates = activeLayerBlendIfRedoThemeStates
+            updateStatus()
+        }
+        activeLayerBlendIfRedoStack = []
+        activeLayerBlendIfRedoThemeStates = []
+    }
+
+    private func layerBlendIfTargetIndices(for kind: ImageEditorLayerBlendIfEditKind) -> [Int] {
+        guard activeLayerBlendIfEdit == kind else {
+            return selectedLayerBlendIfTargetIndices()
+        }
+        return document.layers.indices.filter {
+            activeLayerBlendIfTargetIDs.contains(document.layers[$0].id)
+                && !document.isEffectivelyLocked(document.layers[$0])
+                && !document.layers[$0].isGroup
+        }
+    }
+
+    private func layerBlendIfValuesDiffer(
+        _ kind: ImageEditorLayerBlendIfEditKind,
+        targetIDs: Set<UUID>,
+        from snapshot: ImageEditorDocument
+    ) -> Bool {
+        for id in targetIDs {
+            guard let current = document.layers.first(where: { $0.id == id }),
+                  let previous = snapshot.layers.first(where: { $0.id == id })
+            else { return true }
+            switch kind {
+            case .sourceBlack:
+                if current.blendIfSourceBlack != previous.blendIfSourceBlack { return true }
+            case .sourceWhite:
+                if current.blendIfSourceWhite != previous.blendIfSourceWhite { return true }
+            case .underlyingBlack:
+                if current.blendIfUnderlyingBlack != previous.blendIfUnderlyingBlack { return true }
+            case .underlyingWhite:
+                if current.blendIfUnderlyingWhite != previous.blendIfUnderlyingWhite { return true }
+            }
+        }
+        return false
     }
 
     private func beginSelectedLayerOpacityPropertyChange(_ kind: ImageEditorLayerOpacityEditKind) {

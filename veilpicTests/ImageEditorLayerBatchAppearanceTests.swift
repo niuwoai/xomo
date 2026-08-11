@@ -12,6 +12,60 @@ import AppKit
 @MainActor
 @Suite(.serialized)
 struct ImageEditorLayerBatchAppearanceTests {
+    @Test func blendIfTransactionsCoalesceAndDiscardNoOpEdits() async throws {
+        let image = solidImage(color: .systemBlue, size: NSSize(width: 96, height: 72))
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        viewModel.addLayer()
+        let layerID = try #require(viewModel.document.selectedLayerID)
+
+        let initialUndoCount = viewModel.undoStack.count
+        let initialHistoryCount = viewModel.document.history.count
+        viewModel.beginSelectedLayerBlendIfSourceBlackChange()
+        viewModel.setSelectedLayerBlendIfSourceBlack(0.2)
+        viewModel.setSelectedLayerBlendIfSourceBlack(0.4)
+        viewModel.commitSelectedLayerBlendIfChange()
+
+        #expect(try #require(layer(layerID, in: viewModel)).blendIfSourceBlack == 0.4)
+        #expect(viewModel.undoStack.count == initialUndoCount + 1)
+        #expect(viewModel.document.history.count == initialHistoryCount + 1)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerBlendIf"))
+
+        viewModel.undo()
+        #expect(try #require(layer(layerID, in: viewModel)).blendIfSourceBlack == 0)
+        let undoCountBeforeNoOp = viewModel.undoStack.count
+        let historyCountBeforeNoOp = viewModel.document.history.count
+        let redoCountBeforeNoOp = viewModel.redoStack.count
+        viewModel.beginSelectedLayerBlendIfSourceBlackChange()
+        viewModel.setSelectedLayerBlendIfSourceBlack(0)
+        viewModel.commitSelectedLayerBlendIfChange()
+        #expect(viewModel.undoStack.count == undoCountBeforeNoOp)
+        #expect(viewModel.document.history.count == historyCountBeforeNoOp)
+        #expect(viewModel.redoStack.count == redoCountBeforeNoOp)
+        viewModel.redo()
+        #expect(try #require(layer(layerID, in: viewModel)).blendIfSourceBlack == 0.4)
+
+        viewModel.beginSelectedLayerBlendIfSourceWhiteChange()
+        viewModel.setSelectedLayerBlendIfSourceWhite(0.8)
+        viewModel.setSelectedLayerBlendIfSourceWhite(0.7)
+        viewModel.commitSelectedLayerBlendIfChange()
+        #expect(try #require(layer(layerID, in: viewModel)).blendIfSourceWhite == 0.7)
+        viewModel.undo()
+        #expect(try #require(layer(layerID, in: viewModel)).blendIfSourceWhite == 1)
+
+        viewModel.beginSelectedLayerBlendIfUnderlyingBlackChange()
+        viewModel.setSelectedLayerBlendIfUnderlyingBlack(0.3)
+        viewModel.commitSelectedLayerBlendIfChange()
+        viewModel.beginSelectedLayerBlendIfUnderlyingWhiteChange()
+        viewModel.setSelectedLayerBlendIfUnderlyingWhite(0.8)
+        viewModel.commitSelectedLayerBlendIfChange()
+        #expect(try #require(layer(layerID, in: viewModel)).blendIfUnderlyingBlack == 0.3)
+        #expect(try #require(layer(layerID, in: viewModel)).blendIfUnderlyingWhite == 0.8)
+        viewModel.undo()
+        #expect(try #require(layer(layerID, in: viewModel)).blendIfUnderlyingWhite == 1)
+        viewModel.undo()
+        #expect(try #require(layer(layerID, in: viewModel)).blendIfUnderlyingBlack == 0)
+    }
+
     @Test func opacityTransactionsCoalesceAndDiscardNoOpEdits() async throws {
         let image = solidImage(color: .systemBlue, size: NSSize(width: 96, height: 72))
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
@@ -194,9 +248,16 @@ struct ImageEditorLayerBatchAppearanceTests {
         viewModel.selectLayer(groupID, extendingSelection: true)
 
         #expect(viewModel.canEditSelectedLayerBlendIf)
+        viewModel.beginSelectedLayerBlendIfSourceBlackChange()
         viewModel.setSelectedLayerBlendIfSourceBlack(0.4)
+        viewModel.commitSelectedLayerBlendIfChange()
+        viewModel.beginSelectedLayerBlendIfSourceWhiteChange()
         viewModel.setSelectedLayerBlendIfSourceWhite(0.3)
+        viewModel.commitSelectedLayerBlendIfChange()
+        viewModel.beginSelectedLayerBlendIfUnderlyingWhiteChange()
         viewModel.setSelectedLayerBlendIfUnderlyingWhite(0.7)
+        viewModel.commitSelectedLayerBlendIfChange()
+        viewModel.beginSelectedLayerBlendIfUnderlyingBlackChange()
         viewModel.setSelectedLayerBlendIfUnderlyingBlack(0.8)
         viewModel.commitSelectedLayerBlendIfChange()
 
