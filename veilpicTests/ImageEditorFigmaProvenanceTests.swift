@@ -136,6 +136,7 @@ struct ImageEditorFigmaProvenanceTests {
             importScale: 1
         )
         layer.xomoFigmaImageFillSourceImage = image
+        layer.isLocked = false
         document.layers = [layer]
         document.selectedLayerID = layer.id
         document.selectedLayerIDs = [layer.id]
@@ -188,6 +189,61 @@ struct ImageEditorFigmaProvenanceTests {
         #expect(restored.layers.first?.xomoFigmaImageFillSourceImage != nil)
     }
 
+    @Test func pixelAndAncestorLocksBlockEveryEditableFigmaImageFillControl() throws {
+        let image = NSImage.transparent(size: CGSize(width: 40, height: 20))
+        var document = ImageEditorDocument(sourceName: "locked-figma-fill.png", image: image)
+        var group = ImageEditorLayer.group(name: "Locked Group", size: image.size)
+        group.locksPixels = true
+        var layer = document.layers[0]
+        layer.groupID = group.id
+        layer.xomoFigmaImageFill = XomoFigmaImageFillMetadata(
+            imageReference: "img-ref-locked",
+            scaleMode: "CROP",
+            imageTransform: nil,
+            scalingFactor: 1,
+            rotation: 0,
+            filters: XomoFigmaPlanImageFilters(),
+            sourcePixelSize: XomoFigmaPlanSize(width: 40, height: 20),
+            importScale: 1
+        )
+        layer.xomoFigmaImageFillSourceImage = image
+        document.layers = [layer, group]
+        document.selectedLayerID = layer.id
+        document.selectedLayerIDs = [layer.id]
+
+        let viewModel = ImageEditorViewModel(document: document) { _ in }
+        let historyCount = viewModel.document.history.count
+        #expect(!viewModel.canEditSelectedFigmaImageFill)
+
+        viewModel.updateSelectedFigmaImageFillScaleMode("TILE")
+        viewModel.updateSelectedFigmaImageFillScalingFactor(2)
+        viewModel.updateSelectedFigmaImageFillRotation(45)
+        viewModel.updateSelectedFigmaImageFillOffsetX(0.25)
+        viewModel.updateSelectedFigmaImageFillOffsetY(-0.15)
+        viewModel.updateSelectedFigmaImageFillMatrixM11(0.8)
+        viewModel.updateSelectedFigmaImageFillMatrixM12(0.25)
+        viewModel.updateSelectedFigmaImageFillMatrixM21(-0.1)
+        viewModel.updateSelectedFigmaImageFillMatrixM22(0.9)
+        viewModel.setSelectedFigmaImageFillFiltersEnabled(false)
+
+        let lockedFill = try #require(viewModel.selectedLayerFigmaImageFill)
+        #expect(lockedFill.scaleMode == "CROP")
+        #expect(lockedFill.scalingFactor == 1)
+        #expect(lockedFill.rotation == 0)
+        #expect(lockedFill.imageTransform == nil)
+        #expect(viewModel.selectedLayerFigmaImageFillFiltersEnabled)
+        #expect(viewModel.document.history.count == historyCount)
+
+        let groupIndex = try #require(viewModel.document.layers.firstIndex { $0.id == group.id })
+        let layerIndex = try #require(viewModel.document.layers.firstIndex { $0.id == layer.id })
+        viewModel.document.layers[groupIndex].locksPixels = false
+        viewModel.document.layers[layerIndex].isLocked = true
+        #expect(!viewModel.canEditSelectedFigmaImageFill)
+        viewModel.updateSelectedFigmaImageFillScaleMode("FIT")
+        #expect(viewModel.selectedLayerFigmaImageFill?.scaleMode == "CROP")
+        #expect(viewModel.document.history.count == historyCount)
+    }
+
     @Test func automationEditsSelectedFigmaImageFillAndUsesUndoableViewModelPath() throws {
         let viewModel = makeViewModel()
         let registry = XomoAutomationRegistry.shared
@@ -205,6 +261,7 @@ struct ImageEditorFigmaProvenanceTests {
         )
         viewModel.document.layers[layerIndex].xomoFigmaImageFillSourceImage =
             NSImage.transparent(size: CGSize(width: 40, height: 20))
+        viewModel.document.layers[layerIndex].isLocked = false
 
         let listed = registry.execute(request(
             operation: "call",
@@ -255,6 +312,29 @@ struct ImageEditorFigmaProvenanceTests {
         #expect((viewModel.selectedLayerFigmaImageFill?.imageTransform?.m11 ?? 1) == 1)
         viewModel.undo()
         #expect(viewModel.selectedLayerFigmaImageFill?.scaleMode == "CROP")
+
+        viewModel.document.layers[layerIndex].locksPixels = true
+        let historyCount = viewModel.document.history.count
+        let lockedList = registry.execute(request(
+            operation: "call",
+            name: "xomo.figma.image_fill",
+            arguments: ["action": .string("list")]
+        ))
+        #expect(lockedList.ok)
+        #expect(lockedList.result?.objectValue?["editable"] == .bool(false))
+        let lockedUpdate = registry.execute(request(
+            operation: "call",
+            name: "xomo.figma.image_fill",
+            arguments: [
+                "action": .string("set"),
+                "property": .string("scaleMode"),
+                "scaleMode": .string("FIT")
+            ]
+        ))
+        #expect(!lockedUpdate.ok)
+        #expect(lockedUpdate.error?.contains("locked") == true)
+        #expect(viewModel.selectedLayerFigmaImageFill?.scaleMode == "CROP")
+        #expect(viewModel.document.history.count == historyCount)
     }
 
     @Test func componentTextOverrideUpdatesMatchingEditableDescendantAndUndoRestoresIt() throws {

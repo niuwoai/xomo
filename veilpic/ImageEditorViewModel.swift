@@ -1441,8 +1441,10 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     var canEditSelectedFigmaImageFill: Bool {
-        document.selectedLayer?.xomoFigmaImageFill != nil
-            && document.selectedLayer?.xomoFigmaImageFillSourceImage != nil
+        guard let layer = document.selectedLayer else { return false }
+        return layer.xomoFigmaImageFill != nil
+            && layer.xomoFigmaImageFillSourceImage != nil
+            && !document.isEffectivelyPixelsLocked(layer)
     }
 
     var selectedLayerFigmaImageFillFiltersEnabled: Bool {
@@ -1573,7 +1575,8 @@ final class ImageEditorViewModel: ObservableObject {
 
     func updateSelectedFigmaImageFillScaleMode(_ scaleMode: String) {
         let normalizedMode = scaleMode.uppercased()
-        guard Self.figmaImageFillScaleModes.contains(normalizedMode),
+        guard canEditSelectedFigmaImageFill,
+              Self.figmaImageFillScaleModes.contains(normalizedMode),
               let index = document.selectedLayerIndex,
               var metadata = document.layers[index].xomoFigmaImageFill,
               document.layers[index].xomoFigmaImageFillSourceImage != nil,
@@ -1588,7 +1591,8 @@ final class ImageEditorViewModel: ObservableObject {
 
     func updateSelectedFigmaImageFillScalingFactor(_ scalingFactor: Double) {
         let normalizedFactor = min(max(scalingFactor.isFinite ? scalingFactor : 1, 0.01), 100)
-        guard let index = document.selectedLayerIndex,
+        guard canEditSelectedFigmaImageFill,
+              let index = document.selectedLayerIndex,
               var metadata = document.layers[index].xomoFigmaImageFill,
               document.layers[index].xomoFigmaImageFillSourceImage != nil,
               abs((metadata.scalingFactor ?? 1) - normalizedFactor) > 0.0001
@@ -1602,7 +1606,8 @@ final class ImageEditorViewModel: ObservableObject {
 
     func updateSelectedFigmaImageFillRotation(_ rotation: Double) {
         let normalizedRotation = rotation.isFinite ? rotation : 0
-        guard let index = document.selectedLayerIndex,
+        guard canEditSelectedFigmaImageFill,
+              let index = document.selectedLayerIndex,
               var metadata = document.layers[index].xomoFigmaImageFill,
               document.layers[index].xomoFigmaImageFillSourceImage != nil,
               abs((metadata.rotation ?? 0) - normalizedRotation) > 0.0001
@@ -1680,7 +1685,8 @@ final class ImageEditorViewModel: ObservableObject {
         value: Double
     ) {
         let normalizedValue = min(max(value.isFinite ? value : 0, -10), 10)
-        guard let index = document.selectedLayerIndex,
+        guard canEditSelectedFigmaImageFill,
+              let index = document.selectedLayerIndex,
               var metadata = document.layers[index].xomoFigmaImageFill,
               document.layers[index].xomoFigmaImageFillSourceImage != nil
         else { return }
@@ -1724,7 +1730,8 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     func setSelectedFigmaImageFillFiltersEnabled(_ isEnabled: Bool) {
-        guard let index = document.selectedLayerIndex,
+        guard canEditSelectedFigmaImageFill,
+              let index = document.selectedLayerIndex,
               document.layers[index].xomoFigmaImageFill != nil,
               document.layers[index].xomoFigmaImageFillFiltersEnabled != isEnabled
         else { return }

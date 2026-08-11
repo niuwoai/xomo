@@ -1428,7 +1428,7 @@ final class XomoAutomationRegistry {
         case "set":
             guard viewModel.canEditSelectedFigmaImageFill else {
                 throw XomoAutomationCallError.operationFailed(
-                    "Selected Figma image fill has no retained source image"
+                    "Selected Figma image fill is locked or has no retained source image"
                 )
             }
             switch try requiredString("property", in: arguments) {
