@@ -2196,11 +2196,13 @@ struct ImageEditorView: View {
                         pointerCaptureState: viewModel.canvasPointerCaptureState,
                         pointerCaptureKind: ImageEditorPrimaryToolPointerCapture.captureKind(
                             sidebarTab: viewModel.selectedLeftSidebarTab,
-                            tool: canvasInteractionTool
+                            tool: canvasInteractionTool,
+                            isCanvasTextEditing: canvasTextEditingOrigin != nil
                         ),
                         capturesPrimaryPointer: ImageEditorPrimaryToolPointerCapture.usesDirectCanvasHitTarget(
                             sidebarTab: viewModel.selectedLeftSidebarTab,
-                            tool: canvasInteractionTool
+                            tool: canvasInteractionTool,
+                            isCanvasTextEditing: canvasTextEditingOrigin != nil
                         ),
                         onZoom: { factor, location, viewportSize in
                             // 每个离散滚轮 tick 独立锚定当前状态：复用捏合缩放的锚定数学，
@@ -2285,7 +2287,8 @@ struct ImageEditorView: View {
                         onPrimaryToolDragBegan: { location in
                             guard ImageEditorPrimaryToolPointerCapture.shouldCapture(
                                     sidebarTab: viewModel.selectedLeftSidebarTab,
-                                    tool: canvasInteractionTool
+                                    tool: canvasInteractionTool,
+                                    isCanvasTextEditing: canvasTextEditingOrigin != nil
                                   ),
                                   let imagePoint = imagePoint(from: location, in: geometry.size)
                             else { return false }
@@ -2488,7 +2491,8 @@ struct ImageEditorView: View {
                     .allowsHitTesting(
                         ImageEditorPrimaryToolPointerCapture.usesDirectCanvasHitTarget(
                             sidebarTab: viewModel.selectedLeftSidebarTab,
-                            tool: canvasInteractionTool
+                            tool: canvasInteractionTool,
+                            isCanvasTextEditing: canvasTextEditingOrigin != nil
                         )
                     )
                 )

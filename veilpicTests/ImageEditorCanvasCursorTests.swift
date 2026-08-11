@@ -922,6 +922,28 @@ struct ImageEditorCanvasCursorTests {
             )
         }
 
+        #expect(
+            !ImageEditorPrimaryToolPointerCapture.shouldCapture(
+                sidebarTab: .tools,
+                tool: .text,
+                isCanvasTextEditing: true
+            )
+        )
+        #expect(
+            !ImageEditorPrimaryToolPointerCapture.usesDirectCanvasHitTarget(
+                sidebarTab: .tools,
+                tool: .text,
+                isCanvasTextEditing: true
+            )
+        )
+        #expect(
+            ImageEditorPrimaryToolPointerCapture.captureKind(
+                sidebarTab: .tools,
+                tool: .text,
+                isCanvasTextEditing: true
+            ) == .none
+        )
+
         for tool in [ImageEditorTool.move, .marquee, .gradient, .hand, .zoom] {
             #expect(
                 !ImageEditorPrimaryToolPointerCapture.shouldCapture(

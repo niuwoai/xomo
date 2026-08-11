@@ -137,9 +137,10 @@ enum ImageEditorPrimaryToolPointerCapture {
 
     static func shouldCapture(
         sidebarTab: XomoLeftSidebarTab,
-        tool: ImageEditorTool
+        tool: ImageEditorTool,
+        isCanvasTextEditing: Bool = false
     ) -> Bool {
-        guard sidebarTab == .tools else { return false }
+        guard sidebarTab == .tools, !isCanvasTextEditing else { return false }
         return switch tool {
         case .brush, .eraser, .rectangle, .ellipse, .text:
             true
@@ -150,16 +151,22 @@ enum ImageEditorPrimaryToolPointerCapture {
 
     static func usesDirectCanvasHitTarget(
         sidebarTab: XomoLeftSidebarTab,
-        tool: ImageEditorTool
+        tool: ImageEditorTool,
+        isCanvasTextEditing: Bool = false
     ) -> Bool {
-        captureKind(sidebarTab: sidebarTab, tool: tool) != .none
+        captureKind(
+            sidebarTab: sidebarTab,
+            tool: tool,
+            isCanvasTextEditing: isCanvasTextEditing
+        ) != .none
     }
 
     static func captureKind(
         sidebarTab: XomoLeftSidebarTab,
-        tool: ImageEditorTool
+        tool: ImageEditorTool,
+        isCanvasTextEditing: Bool = false
     ) -> Kind {
-        guard sidebarTab == .tools else { return .none }
+        guard sidebarTab == .tools, !isCanvasTextEditing else { return .none }
         if shouldCapture(sidebarTab: sidebarTab, tool: tool) {
             return .primaryTool
         }
