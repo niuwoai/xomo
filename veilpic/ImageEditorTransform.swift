@@ -928,7 +928,6 @@ extension ImageEditorViewModel {
                 && !layer.isGroup
                 && !layer.isAdjustment
                 && !layer.isFilter
-                && document.isEffectivelyVisible(layer)
         }
     }
 

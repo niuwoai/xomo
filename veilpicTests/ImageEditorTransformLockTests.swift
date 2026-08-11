@@ -69,6 +69,35 @@ struct ImageEditorTransformLockTests {
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerTranslate"))
     }
 
+    @Test
+    func hiddenLinkedGroupDescendantsRemainInTransformAndLockClosure() throws {
+        let viewModel = makeLinkedGroupFixture()
+        let groupIndex = try #require(viewModel.document.layers.firstIndex { $0.name == "Group" })
+        let childIndex = try #require(viewModel.document.layers.firstIndex { $0.name == "Child" })
+        let childID = viewModel.document.layers[childIndex].id
+        let framesBefore = Dictionary(uniqueKeysWithValues: viewModel.document.layers.map { ($0.id, $0.frame) })
+        let historyCount = viewModel.document.history.count
+        viewModel.document.layers[groupIndex].isVisible = false
+        viewModel.document.layers[childIndex].locksPosition = true
+
+        #expect(!viewModel.document.isEffectivelyVisible(viewModel.document.layers[childIndex]))
+        #expect(!viewModel.beginMovingSelectedLayer())
+        #expect(viewModel.document.layers.allSatisfy { framesBefore[$0.id] == $0.frame })
+        #expect(viewModel.document.history.count == historyCount)
+
+        viewModel.document.layers[childIndex].locksPosition = false
+        #expect(viewModel.beginMovingSelectedLayer())
+        viewModel.moveSelectedLayer(by: CGSize(width: 9, height: -6))
+        viewModel.finishMovingSelectedLayer()
+
+        let movedPeer = try #require(viewModel.document.layers.first { $0.name == "Peer" })
+        let movedChild = try #require(viewModel.document.layers.first { $0.id == childID })
+        #expect(movedPeer.frame == framesBefore[movedPeer.id]?.offsetBy(dx: 9, dy: -6))
+        #expect(movedChild.frame == framesBefore[childID]?.offsetBy(dx: 9, dy: -6))
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerTranslate"))
+    }
+
     private func makePixelLockedComponent() -> ImageEditorViewModel {
         let viewModel = ImageEditorViewModel(
             sourceName: "transform-locks",
