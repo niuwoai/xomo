@@ -9,7 +9,8 @@
 - 隐藏当前选中的组件组时不再回退显示其通用图层变换框；重新显示后仍恢复原组件边界与缩放、旋转能力。
 
 ### Verification
-- 全量隔离测试 102/102 套件、1932/1932 项，CLI/MCP 2/2、发布契约 7/7（21 项断言）通过；Universal Release、签名/公证、安装版真实冒烟与 `/Applications/Xomo.app` 覆盖进入发布阶段。
+- 全量隔离测试 102/102 套件、1932/1932 项，CLI/MCP 2/2、发布契约 7/7（21 项断言）通过；arm64+x86_64 Universal Release 归档、Developer ID App/DMG 签名验证及 `/Applications/Xomo.app` 覆盖完成，安装版启动、工具/组件切换、组件插入和隐藏/恢复变换框真实冒烟通过。
+- 本轮未获授权向外部发布制品，因此没有执行 Apple 公证上传、OSS/latest、Sparkle appcast 或 GitHub Release 资产发布；Git 代码与 `v2.12.0-rc920` 标签已推送。
 
 ## 2.12.0-rc919 - 2026-08-13
 
