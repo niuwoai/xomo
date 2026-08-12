@@ -2155,6 +2155,7 @@ struct ImageEditorView: View {
                             component,
                             at: viewModel.xomoComponentDropOrigin(component, centeredAt: canvasPoint)
                         )
+                        XomoComponentLibraryCursorPolicy.restoreArrow(for: .dropCompleted)
                         return true
                     },
                     onMagnifyChanged: { magnification, location in
@@ -2583,7 +2584,7 @@ struct ImageEditorView: View {
                         // Changing sidebar mode must immediately clear the
                         // previous tool cursor, even before the next hover
                         // event arrives from the canvas.
-                        NSCursor.arrow.set()
+                        XomoComponentLibraryCursorPolicy.restoreArrow(for: .modeActivated)
                     }
                     if isPointerInsideCanvas {
                         refreshCanvasCursor(in: geometry.size)
@@ -2594,7 +2595,7 @@ struct ImageEditorView: View {
                     // signal. Shift-adding or removing a peer can change the
                     // transform bounds while the primary selection stays put.
                     if viewModel.selectedLeftSidebarTab == .components {
-                        NSCursor.arrow.set()
+                        XomoComponentLibraryCursorPolicy.restoreArrow(for: .componentSelected)
                     }
                     refreshCanvasCursor(in: geometry.size)
                 }
@@ -12437,7 +12438,7 @@ struct ImageEditorCursorRectView: NSViewRepresentable {
     }
 }
 
-final class CursorRectNSView: NSView {
+class CursorRectNSView: NSView {
     var cursor: NSCursor {
         didSet {
             guard cursor !== oldValue else { return }
@@ -12461,7 +12462,11 @@ final class CursorRectNSView: NSView {
     }
 
     override func resetCursorRects() {
-        addCursorRect(bounds, cursor: cursor)
+        registerCursorRect(bounds, cursor: cursor)
+    }
+
+    func registerCursorRect(_ rect: NSRect, cursor: NSCursor) {
+        addCursorRect(rect, cursor: cursor)
     }
 
     override func hitTest(_ point: NSPoint) -> NSView? {

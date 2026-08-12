@@ -44,6 +44,27 @@ enum XomoWorkspaceInputMode: Equatable {
     }
 }
 
+enum XomoComponentLibraryCursorEvent: CaseIterable {
+    case modeActivated
+    case pointerEntered
+    case componentSelected
+    case dragBegan
+    case dropCompleted
+}
+
+enum XomoComponentLibraryCursorPolicy {
+    /// Component browsing and placement use the ordinary system pointer.
+    /// Contextual canvas cursors such as resize and rotate remain owned by the
+    /// canvas resolver; every component-library lifecycle boundary returns to
+    /// the arrow so an earlier drawing-tool cursor cannot leak across modes.
+    static func restoreArrow(
+        for _: XomoComponentLibraryCursorEvent,
+        setCursor: (NSCursor) -> Void = { $0.set() }
+    ) {
+        setCursor(.arrow)
+    }
+}
+
 private struct XomoComponentLibraryPreviewItem: Identifiable {
     let id: String
     let titleKey: String
@@ -461,6 +482,14 @@ struct XomoComponentLibraryPanel: View {
             }
             .padding(12)
         }
+        .overlay {
+            ImageEditorCursorRectView(cursor: .arrow)
+                .allowsHitTesting(false)
+        }
+        .onHover { isInside in
+            guard isInside else { return }
+            XomoComponentLibraryCursorPolicy.restoreArrow(for: .pointerEntered)
+        }
         .accessibilityIdentifier("xomo-component-library")
     }
 
@@ -477,12 +506,21 @@ struct XomoComponentLibraryPanel: View {
                 .onTapGesture {
                     insertComponent(component)
                 }
-                .xomoDraggable(component.rawValue) {
+                .xomoDraggable(
+                    component.rawValue,
+                    onDragBegan: {
+                        XomoComponentLibraryCursorPolicy.restoreArrow(for: .dragBegan)
+                    }
+                ) {
                     XomoComponentDragPreview(
                         kind: component,
                         tokens: viewModel.activeXomoComponentTokens,
                         displaySize: viewModel.xomoComponentDragPreviewSize(component)
                     )
+                }
+                .onHover { isInside in
+                    guard isInside else { return }
+                    XomoComponentLibraryCursorPolicy.restoreArrow(for: .pointerEntered)
                 }
                 .focusable(false)
                 .accessibilityElement(children: .combine)
@@ -501,9 +539,9 @@ struct XomoComponentLibraryPanel: View {
     }
 
     private func insertComponent(_ component: XomoComponentKind) {
-        NSCursor.arrow.set()
+        XomoComponentLibraryCursorPolicy.restoreArrow(for: .componentSelected)
         viewModel.insertXomoComponent(component)
-        NSCursor.arrow.set()
+        XomoComponentLibraryCursorPolicy.restoreArrow(for: .componentSelected)
     }
 
     private func componentPreviewLabel(_ item: XomoComponentLibraryPreviewItem, isAvailable: Bool) -> some View {

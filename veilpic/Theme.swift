@@ -104,11 +104,13 @@ extension View {
     @ViewBuilder
     func xomoDraggable<Preview: View>(
         _ payload: String,
+        onDragBegan: @escaping () -> Void = {},
         @ViewBuilder preview: () -> Preview
     ) -> some View {
         if #available(macOS 13.0, *) {
             onDrag {
-                NSItemProvider(object: payload as NSString)
+                onDragBegan()
+                return NSItemProvider(object: payload as NSString)
             } preview: {
                 preview()
             }

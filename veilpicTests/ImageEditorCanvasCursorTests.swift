@@ -1110,9 +1110,76 @@ struct ImageEditorCanvasCursorTests {
 
         #expect(previewSource.contains("componentPreviewLabel(item, isAvailable: true)"))
         #expect(previewSource.contains(".onTapGesture"))
-        #expect(previewSource.contains(".xomoDraggable(component.rawValue)"))
+        #expect(previewSource.contains(".xomoDraggable("))
+        #expect(previewSource.contains("onDragBegan:"))
         #expect(previewSource.contains(".accessibilityAction"))
         #expect(!previewSource.contains("Button {"))
+    }
+
+    @Test func componentLibraryLifecycleAlwaysRestoresSystemArrow() {
+        var recordedCursors: [NSCursor] = []
+
+        for event in XomoComponentLibraryCursorEvent.allCases {
+            XomoComponentLibraryCursorPolicy.restoreArrow(for: event) { cursor in
+                recordedCursors.append(cursor)
+            }
+        }
+
+        #expect(recordedCursors.count == XomoComponentLibraryCursorEvent.allCases.count)
+        #expect(recordedCursors.allSatisfy { $0 === NSCursor.arrow })
+    }
+
+    @Test func componentLibraryCursorRectOwnsAnArrowAndTracksCursorUpdates() {
+        final class CursorRectSpy: CursorRectNSView {
+            var registrations: [(NSRect, NSCursor)] = []
+
+            override func registerCursorRect(_ rect: NSRect, cursor: NSCursor) {
+                registrations.append((rect, cursor))
+            }
+        }
+
+        let cursorView = CursorRectSpy(cursor: .arrow)
+        cursorView.frame = NSRect(x: 0, y: 0, width: 180, height: 320)
+
+        #expect(cursorView.cursor === NSCursor.arrow)
+        cursorView.resetCursorRects()
+        #expect(cursorView.registrations.count == 1)
+        #expect(cursorView.registrations[0].0 == cursorView.bounds)
+        #expect(cursorView.registrations[0].1 === NSCursor.arrow)
+        cursorView.cursor = .crosshair
+        #expect(cursorView.cursor === NSCursor.crosshair)
+        cursorView.resetCursorRects()
+        #expect(cursorView.registrations.last?.1 === NSCursor.crosshair)
+        cursorView.cursor = .arrow
+        #expect(cursorView.cursor === NSCursor.arrow)
+        #expect(cursorView.hitTest(.zero) == nil)
+    }
+
+    @Test func componentLibraryCursorLifecycleIsWiredToProductionEvents() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let sidebarSource = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/XomoLeftSidebar.swift"),
+            encoding: .utf8
+        )
+        let editorSource = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let themeSource = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/Theme.swift"),
+            encoding: .utf8
+        )
+
+        #expect(sidebarSource.contains("ImageEditorCursorRectView(cursor: .arrow)"))
+        #expect(sidebarSource.contains("restoreArrow(for: .pointerEntered)"))
+        #expect(sidebarSource.contains("restoreArrow(for: .componentSelected)"))
+        #expect(sidebarSource.contains("restoreArrow(for: .dragBegan)"))
+        #expect(editorSource.contains("restoreArrow(for: .modeActivated)"))
+        #expect(editorSource.contains("restoreArrow(for: .dropCompleted)"))
+        #expect(themeSource.contains("onDragBegan()"))
+        #expect(themeSource.contains("return NSItemProvider(object: payload as NSString)"))
     }
 
     @Test func moveToolShowsCopyBadgeOnlyAfterAnOptionDragStarts() {
