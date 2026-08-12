@@ -290,6 +290,10 @@ extension ImageEditorViewModel {
     /// Keyboard nudges move the selected anchor with the same one-step
     /// History semantics as dragging it on the canvas.
     func nudgeSelectedPathAnchor(by delta: CGSize) {
+        if hasActivePathAnchorMoveTransaction {
+            _ = cancelMovingPathAnchor()
+            return
+        }
         guard let point = selectedPathAnchorCanvasPoint else { return }
         setSelectedPathAnchorPosition(
             CGPoint(x: point.x + delta.width, y: point.y + delta.height)
@@ -858,6 +862,10 @@ extension ImageEditorViewModel {
     }
 
     func deleteSelectedPathAnchor() {
+        if hasActivePathAnchorMoveTransaction {
+            _ = cancelMovingPathAnchor()
+            return
+        }
         guard canDeleteSelectedPathAnchor,
               let index = selectedPathAnchorIndex,
               let layerIndex = document.selectedLayerIndex,

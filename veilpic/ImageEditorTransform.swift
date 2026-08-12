@@ -431,6 +431,10 @@ extension ImageEditorViewModel {
         // leaving later pointer samples attached to a transaction that no
         // longer exists. The next nudge after mouse-up remains available.
         guard movingLayerIDs.isEmpty else { return }
+        if hasActivePathAnchorMoveTransaction {
+            _ = cancelMovingPathAnchor()
+            return
+        }
 
         // The component library is an object-editing mode. When a component
         // is selected there, arrow keys must move the object even if an old

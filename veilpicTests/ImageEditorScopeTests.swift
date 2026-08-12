@@ -2093,6 +2093,59 @@ struct ImageEditorScopeTests {
         #expect(staleCancel.lowerBound < selection.lowerBound)
     }
 
+    @Test func nudgeAndDeleteKeysLatchPathDragCancellationBeforeDiscreteCommands() throws {
+        let viewSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let pathSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorPathCommands.swift"),
+            encoding: .utf8
+        )
+        let transformSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorTransform.swift"),
+            encoding: .utf8
+        )
+
+        let monitorStart = try #require(viewSource.range(of: "ImageEditorKeyboardShortcutMonitor("))
+        let monitorEnd = try #require(viewSource[monitorStart.upperBound...].range(of: ".allowsHitTesting(false)"))
+        let monitorSource = viewSource[monitorStart.lowerBound..<monitorEnd.lowerBound]
+        for commandLabel in ["nudgeSelected: { delta in", "deleteSelectedObject: {"] {
+            let commandStart = try #require(monitorSource.range(of: commandLabel))
+            let commandSource = monitorSource[commandStart.lowerBound...]
+            let cancel = try #require(commandSource.range(of: "cancelPathAnchorDragForKeyboardCommand()"))
+            let nextCommand = try #require(commandSource.range(of: commandLabel.hasPrefix("nudge")
+                ? "viewModel.nudgeSelectionOrSelectedLayer(by: delta)"
+                : "viewModel.deleteSelectedPathAnchor()"))
+            #expect(cancel.lowerBound < nextCommand.lowerBound)
+        }
+
+        let helperStart = try #require(
+            viewSource.range(of: "private func cancelPathAnchorDragForKeyboardCommand() -> Bool")
+        )
+        let helperEnd = try #require(viewSource[helperStart.upperBound...].range(of: "private var colorChips"))
+        let helperSource = viewSource[helperStart.lowerBound..<helperEnd.lowerBound]
+        let latch = try #require(helperSource.range(of: "isPathAnchorDragCancelled = true"))
+        let cancel = try #require(helperSource.range(of: "viewModel.cancelMovingPathAnchor()"))
+        #expect(helperSource.contains("ImageEditorPathAnchorDragLifecyclePolicy.shouldCancel"))
+        #expect(latch.lowerBound < cancel.lowerBound)
+
+        for commandName in ["nudgeSelectedPathAnchor", "deleteSelectedPathAnchor"] {
+            let commandStart = try #require(pathSource.range(of: "func \(commandName)"))
+            let commandSource = pathSource[commandStart.lowerBound...]
+            let activeCheck = try #require(commandSource.range(of: "hasActivePathAnchorMoveTransaction"))
+            let modelCancel = try #require(commandSource.range(of: "cancelMovingPathAnchor()"))
+            #expect(activeCheck.lowerBound < modelCancel.lowerBound)
+        }
+        let generalNudgeStart = try #require(
+            transformSource.range(of: "func nudgeSelectionOrSelectedLayer(by delta: CGSize)")
+        )
+        let generalNudgeSource = transformSource[generalNudgeStart.lowerBound...]
+        let activeCheck = try #require(generalNudgeSource.range(of: "hasActivePathAnchorMoveTransaction"))
+        let modelCancel = try #require(generalNudgeSource.range(of: "cancelMovingPathAnchor()"))
+        #expect(activeCheck.lowerBound < modelCancel.lowerBound)
+    }
+
     @Test func layerRowsExposeTheSameSelectedLayerExportAction() throws {
         let source = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorLayerPanel.swift"),

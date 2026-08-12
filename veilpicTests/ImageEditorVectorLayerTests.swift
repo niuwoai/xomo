@@ -1437,6 +1437,39 @@ struct ImageEditorVectorLayerTests {
         #expect(restoredLayer?.frame == fixture.originalFrame)
     }
 
+    @Test func arrowNudgeDuringPathDragCancelsPreviewBeforeNextNudgeEdits() async throws {
+        let fixture = try makeActivePathDragFixture()
+
+        fixture.viewModel.nudgeSelectionOrSelectedLayer(by: CGSize(width: 1, height: 0))
+
+        expectCancelledPathDragRestored(fixture)
+        fixture.viewModel.nudgeSelectionOrSelectedLayer(by: CGSize(width: 1, height: 0))
+        #expect(fixture.viewModel.selectedPathAnchorCanvasPoint == CGPoint(
+            x: fixture.anchorPoint.x + 1,
+            y: fixture.anchorPoint.y
+        ))
+        #expect(fixture.viewModel.document.history.count == fixture.historyCount + 1)
+        #expect(fixture.viewModel.undoStack.count == fixture.undoCount + 1)
+        #expect(fixture.viewModel.redoStack.isEmpty)
+    }
+
+    @Test func deleteDuringPathDragCancelsPreviewBeforeNextDeleteEdits() async throws {
+        let fixture = try makeActivePathDragFixture()
+        let originalAnchorCount = fixture.originalContent.editablePathAnchors.count
+
+        fixture.viewModel.deleteSelectedPathAnchor()
+
+        expectCancelledPathDragRestored(fixture)
+        fixture.viewModel.deleteSelectedPathAnchor()
+        let editedContent = try #require(
+            fixture.viewModel.document.layers.first { $0.id == fixture.pathLayerID }?.shapeContent
+        )
+        #expect(editedContent.editablePathAnchors.count == originalAnchorCount - 1)
+        #expect(fixture.viewModel.document.history.count == fixture.historyCount + 1)
+        #expect(fixture.viewModel.undoStack.count == fixture.undoCount + 1)
+        #expect(fixture.viewModel.redoStack.isEmpty)
+    }
+
     @Test func undoDuringPathAnchorDragCancelsPreviewBeforeReachingHistory() async throws {
         let canvasSize = NSSize(width: 140, height: 100)
         let image = testBitmapImage(size: canvasSize, background: .black)

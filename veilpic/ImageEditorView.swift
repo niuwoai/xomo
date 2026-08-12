@@ -213,11 +213,17 @@ struct ImageEditorView: View {
                 perform: performKeyboardShortcut,
                 activeTool: viewModel.canvasInteractionTool,
                 nudgeSelected: { delta in
+                    if cancelPathAnchorDragForKeyboardCommand() {
+                        return
+                    }
                     if !viewModel.nudgeSelectedDeliveryObject(by: delta) {
                         viewModel.nudgeSelectionOrSelectedLayer(by: delta)
                     }
                 },
                 deleteSelectedObject: {
+                    if cancelPathAnchorDragForKeyboardCommand() {
+                        return true
+                    }
                     guard !viewModel.hasActiveLayerMoveTransaction else { return false }
                     if deleteSelectedShapeGradientStopIfNeeded() {
                         return true
@@ -2051,6 +2057,17 @@ struct ImageEditorView: View {
         ) else { return }
         isPathAnchorDragCancelled = false
         isMovingPathAnchor = false
+    }
+
+    @discardableResult
+    private func cancelPathAnchorDragForKeyboardCommand() -> Bool {
+        guard ImageEditorPathAnchorDragLifecyclePolicy.shouldCancel(
+            isMovingPathAnchor: isMovingPathAnchor,
+            hasActiveTransaction: viewModel.hasActivePathAnchorMoveTransaction
+        ) else { return false }
+        isPathAnchorDragCancelled = true
+        _ = viewModel.cancelMovingPathAnchor()
+        return true
     }
 
     private var colorChips: some View {
