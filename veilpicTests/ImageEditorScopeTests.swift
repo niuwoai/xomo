@@ -1955,6 +1955,51 @@ struct ImageEditorScopeTests {
         #expect(source.contains("isPathAnchorDragCancelled = false"))
     }
 
+    @Test func historyCommandsCancelPathAnchorDragAndLatchRemainingGestureEvents() throws {
+        let source = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+
+        for helperName in ["performUndo", "performRedo"] {
+            let helperStart = try #require(source.range(of: "private func \(helperName)()"))
+            let helperEnd = try #require(
+                source[helperStart.upperBound...].range(of: "\n    }")
+            )
+            let helperSource = source[helperStart.lowerBound..<helperEnd.upperBound]
+            let activeCheck = try #require(helperSource.range(of: "viewModel.hasActivePathAnchorMoveTransaction"))
+            let latch = try #require(helperSource.range(of: "isPathAnchorDragCancelled = true"))
+            let modelCall = try #require(
+                helperSource.range(of: helperName == "performUndo" ? "viewModel.undo()" : "viewModel.redo()")
+            )
+            #expect(activeCheck.lowerBound < latch.lowerBound)
+            #expect(latch.lowerBound < modelCall.lowerBound)
+        }
+
+        let historyButtonsStart = try #require(source.range(of: "private var optionHistoryButtons"))
+        let historyButtonsEnd = try #require(
+            source[historyButtonsStart.upperBound...].range(of: "private var usesBrushOptions")
+        )
+        let historyButtonsSource = source[historyButtonsStart.lowerBound..<historyButtonsEnd.lowerBound]
+        #expect(historyButtonsSource.contains("performUndo()"))
+        #expect(historyButtonsSource.contains("performRedo()"))
+
+        let activeChangeStart = try #require(
+            source.range(of: ".onChange(of: viewModel.hasActivePathAnchorMoveTransaction)")
+        )
+        let activeChangeEnd = try #require(
+            source[activeChangeStart.upperBound...].range(of: ".onChange(of: viewModel.selectedLayerFigmaSizeConstraints)")
+        )
+        let activeChangeSource = source[activeChangeStart.lowerBound..<activeChangeEnd.lowerBound]
+        #expect(activeChangeSource.contains("if !isActive, isMovingPathAnchor"))
+        #expect(activeChangeSource.contains("isPathAnchorDragCancelled = true"))
+
+        #expect(source.contains("hasActivePathAnchorMoveTransaction: viewModel.hasActivePathAnchorMoveTransaction"))
+        #expect(source.contains("case .undo: performUndo()"))
+        #expect(source.contains("case .redo: performRedo()"))
+        #expect(source.contains("if isPathAnchorDragCancelled {\n                    return\n                }"))
+    }
+
     @Test func layerRowsExposeTheSameSelectedLayerExportAction() throws {
         let source = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorLayerPanel.swift"),

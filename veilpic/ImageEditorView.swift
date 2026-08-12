@@ -318,6 +318,11 @@ struct ImageEditorView: View {
         .onChange(of: viewModel.selectedLayerFigmaComponentProperties) { _ in
             syncFigmaComponentPropertyDrafts()
         }
+        .onChange(of: viewModel.hasActivePathAnchorMoveTransaction) { isActive in
+            if !isActive, isMovingPathAnchor {
+                isPathAnchorDragCancelled = true
+            }
+        }
         .onChange(of: viewModel.selectedLayerFigmaSizeConstraints) { _ in
             syncFigmaSizeConstraintDrafts()
         }
@@ -756,7 +761,7 @@ struct ImageEditorView: View {
         Spacer()
 
         Button {
-            viewModel.undo()
+            performUndo()
         } label: {
             Image(systemName: "arrow.uturn.backward")
         }
@@ -766,7 +771,7 @@ struct ImageEditorView: View {
         .help(L10n.text("imageEditor.action.undo"))
 
         Button {
-            viewModel.redo()
+            performRedo()
         } label: {
             Image(systemName: "arrow.uturn.forward")
         }
@@ -1751,7 +1756,8 @@ struct ImageEditorView: View {
         Group {
             Button {
                 guard ImageEditorLiveMoveShortcutPolicy.allowsDirectShortcut(
-                    hasActiveLayerMoveTransaction: viewModel.hasActiveLayerMoveTransaction
+                    hasActiveLayerMoveTransaction: viewModel.hasActiveLayerMoveTransaction,
+                    hasActivePathAnchorMoveTransaction: viewModel.hasActivePathAnchorMoveTransaction
                 ) else { return }
                 viewModel.clearColorSamplers()
             } label: {
@@ -1763,7 +1769,8 @@ struct ImageEditorView: View {
             ForEach(ImageEditorTool.classicShortcutGroups) { group in
                 Button {
                     guard ImageEditorLiveMoveShortcutPolicy.allowsDirectShortcut(
-                        hasActiveLayerMoveTransaction: viewModel.hasActiveLayerMoveTransaction
+                        hasActiveLayerMoveTransaction: viewModel.hasActiveLayerMoveTransaction,
+                        hasActivePathAnchorMoveTransaction: viewModel.hasActivePathAnchorMoveTransaction
                     ) else { return }
                     viewModel.selectClassicToolShortcut(group.key)
                 } label: {
@@ -1775,7 +1782,8 @@ struct ImageEditorView: View {
                 if group.tools.count > 1 {
                     Button {
                         guard ImageEditorLiveMoveShortcutPolicy.allowsDirectShortcut(
-                            hasActiveLayerMoveTransaction: viewModel.hasActiveLayerMoveTransaction
+                            hasActiveLayerMoveTransaction: viewModel.hasActiveLayerMoveTransaction,
+                            hasActivePathAnchorMoveTransaction: viewModel.hasActivePathAnchorMoveTransaction
                         ) else { return }
                         viewModel.cycleClassicToolShortcut(group.key)
                     } label: {
@@ -1927,7 +1935,8 @@ struct ImageEditorView: View {
 
     private func performDirectShortcut(_ action: () -> Void) {
         guard ImageEditorLiveMoveShortcutPolicy.allowsDirectShortcut(
-            hasActiveLayerMoveTransaction: viewModel.hasActiveLayerMoveTransaction
+            hasActiveLayerMoveTransaction: viewModel.hasActiveLayerMoveTransaction,
+            hasActivePathAnchorMoveTransaction: viewModel.hasActivePathAnchorMoveTransaction
         ) else { return }
         action()
     }
@@ -1935,7 +1944,8 @@ struct ImageEditorView: View {
     private func performKeyboardShortcut(_ action: ImageEditorKeyboardShortcutAction) {
         guard ImageEditorLiveMoveShortcutPolicy.disposition(
             for: action,
-            hasActiveLayerMoveTransaction: viewModel.hasActiveLayerMoveTransaction
+            hasActiveLayerMoveTransaction: viewModel.hasActiveLayerMoveTransaction,
+            hasActivePathAnchorMoveTransaction: viewModel.hasActivePathAnchorMoveTransaction
         ) != .ignore else { return }
 
         switch action {
@@ -1944,8 +1954,8 @@ struct ImageEditorView: View {
         case .saveProject: viewModel.saveProjectDocument()
         case .export: viewModel.openExportPanel()
         case .openFigmaLinkImport: isFigmaLinkImportPresented = true
-        case .undo: viewModel.undo()
-        case .redo: viewModel.redo()
+        case .undo: performUndo()
+        case .redo: performRedo()
         case .cutSelectionClipboard: viewModel.cutSelectionToClipboard()
         case .copySelectionClipboard: viewModel.copySelectionToClipboard()
         case .copyMergedClipboard: viewModel.copyMergedToClipboard()
@@ -2008,6 +2018,20 @@ struct ImageEditorView: View {
             viewModel.isLayersPanelVisible = true
             selectedLayerPanelTab = .layers
         }
+    }
+
+    private func performUndo() {
+        if viewModel.hasActivePathAnchorMoveTransaction {
+            isPathAnchorDragCancelled = true
+        }
+        viewModel.undo()
+    }
+
+    private func performRedo() {
+        if viewModel.hasActivePathAnchorMoveTransaction {
+            isPathAnchorDragCancelled = true
+        }
+        viewModel.redo()
     }
 
     private var colorChips: some View {
@@ -12857,9 +12881,12 @@ enum ImageEditorLiveMoveShortcutPolicy {
 
     static func disposition(
         for action: ImageEditorKeyboardShortcutAction,
-        hasActiveLayerMoveTransaction: Bool
+        hasActiveLayerMoveTransaction: Bool,
+        hasActivePathAnchorMoveTransaction: Bool = false
     ) -> Disposition {
-        guard hasActiveLayerMoveTransaction else { return .perform }
+        guard hasActiveLayerMoveTransaction || hasActivePathAnchorMoveTransaction else {
+            return .perform
+        }
         switch action {
         case .undo, .redo:
             return .cancelMove
@@ -12869,9 +12896,10 @@ enum ImageEditorLiveMoveShortcutPolicy {
     }
 
     static func allowsDirectShortcut(
-        hasActiveLayerMoveTransaction: Bool
+        hasActiveLayerMoveTransaction: Bool,
+        hasActivePathAnchorMoveTransaction: Bool = false
     ) -> Bool {
-        !hasActiveLayerMoveTransaction
+        !hasActiveLayerMoveTransaction && !hasActivePathAnchorMoveTransaction
     }
 }
 

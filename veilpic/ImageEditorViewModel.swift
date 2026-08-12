@@ -744,7 +744,11 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     var canRedo: Bool {
-        !redoStack.isEmpty
+        !redoStack.isEmpty || hasActivePathAnchorMoveTransaction
+    }
+
+    var hasActivePathAnchorMoveTransaction: Bool {
+        isPathAnchorMoveUndoTransactionActive
     }
 
     var historyStateSummary: String {
@@ -3267,6 +3271,7 @@ final class ImageEditorViewModel: ObservableObject {
         // that snapshot as ordinary history would restore the document while
         // leaving the transform transaction active. The first history command
         // therefore cancels the preview; a subsequent command reaches history.
+        guard !cancelMovingPathAnchor() else { return }
         guard !cancelMovingSelectedLayer() else { return }
         guard let previous = undoStack.popLast() else { return }
         clearSelectedLayerTransformReferencePoint()
@@ -3288,6 +3293,7 @@ final class ImageEditorViewModel: ObservableObject {
     func redo() {
         // Redo follows the same transaction boundary as Undo: an unfinished
         // pointer move is cancelled before either history stack can change.
+        guard !cancelMovingPathAnchor() else { return }
         guard !cancelMovingSelectedLayer() else { return }
         guard let next = redoStack.popLast() else { return }
         clearSelectedLayerTransformReferencePoint()

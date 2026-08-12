@@ -326,7 +326,29 @@ struct ImageEditorHistoryTests {
         #expect(
             ImageEditorLiveMoveShortcutPolicy.disposition(
                 for: .saveProject,
-                hasActiveLayerMoveTransaction: false
+                hasActiveLayerMoveTransaction: false,
+                hasActivePathAnchorMoveTransaction: true
+            ) == .ignore
+        )
+        #expect(
+            ImageEditorLiveMoveShortcutPolicy.disposition(
+                for: .undo,
+                hasActiveLayerMoveTransaction: false,
+                hasActivePathAnchorMoveTransaction: true
+            ) == .cancelMove
+        )
+        #expect(
+            ImageEditorLiveMoveShortcutPolicy.disposition(
+                for: .redo,
+                hasActiveLayerMoveTransaction: false,
+                hasActivePathAnchorMoveTransaction: true
+            ) == .cancelMove
+        )
+        #expect(
+            ImageEditorLiveMoveShortcutPolicy.disposition(
+                for: .saveProject,
+                hasActiveLayerMoveTransaction: false,
+                hasActivePathAnchorMoveTransaction: false
             ) == .perform
         )
         #expect(
@@ -335,8 +357,15 @@ struct ImageEditorHistoryTests {
             )
         )
         #expect(
+            !ImageEditorLiveMoveShortcutPolicy.allowsDirectShortcut(
+                hasActiveLayerMoveTransaction: false,
+                hasActivePathAnchorMoveTransaction: true
+            )
+        )
+        #expect(
             ImageEditorLiveMoveShortcutPolicy.allowsDirectShortcut(
-                hasActiveLayerMoveTransaction: false
+                hasActiveLayerMoveTransaction: false,
+                hasActivePathAnchorMoveTransaction: false
             )
         )
     }
