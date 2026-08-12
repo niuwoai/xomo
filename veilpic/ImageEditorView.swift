@@ -110,6 +110,7 @@ struct ImageEditorView: View {
     @State private var isPenAnchorConversionGestureActive = false
     @State private var penAnchorConversionAction: ImageEditorPenAnchorConversionAction?
     @State private var isPenAnchorConversionGestureBlocked = false
+    @State private var penAnchorDeletionGestureState: ImageEditorPenAnchorDeletionState = .none
     @State private var activeGuideDrag: ImageEditorGuideDrag?
     @State private var layerNameDraft = ""
     @State private var figmaComponentPropertyDrafts: [String: String] = [:]
@@ -382,6 +383,7 @@ struct ImageEditorView: View {
         }
         .onChange(of: viewModel.selectedTool) { _ in
             _ = cancelPenAnchorConversionGesture()
+            penAnchorDeletionGestureState = .none
             if viewModel.selectedTool != .marquee {
                 isMarqueeShapeMenuPresented = false
             }
@@ -2116,6 +2118,7 @@ struct ImageEditorView: View {
         isPenPointerSequenceActive = canvasInteractionTool == .pen
         pendingPenCreationAction = nil
         resetPenAnchorConversionGesture()
+        penAnchorDeletionGestureState = .none
         guard ImageEditorPathAnchorDragLifecyclePolicy.shouldReleaseCancellationLatch(
             isCancelled: isPathAnchorDragCancelled,
             hasActiveTransaction: viewModel.hasActivePathAnchorMoveTransaction
@@ -2128,6 +2131,18 @@ struct ImageEditorView: View {
         isPenAnchorConversionGestureActive = false
         penAnchorConversionAction = nil
         isPenAnchorConversionGestureBlocked = false
+    }
+
+    private func resolvedPenAnchorDeletionState(
+        at canvasPoint: CGPoint?
+    ) -> ImageEditorPenAnchorDeletionState {
+        guard canvasInteractionTool == .pen,
+              !canvasModifierFlags.contains(.option)
+        else { return .none }
+        if isMovingPathAnchor {
+            return penAnchorDeletionGestureState
+        }
+        return viewModel.penAnchorDeletionState(at: canvasPoint)
     }
 
     @discardableResult
@@ -2675,6 +2690,7 @@ struct ImageEditorView: View {
                     let penSegmentInsertionState = canvasInteractionTool == .pen
                         ? viewModel.penPathSegmentInsertionState(at: canvasPoint)
                         : .none
+                    let penAnchorDeletionState = resolvedPenAnchorDeletionState(at: canvasPoint)
                     let displayedBrushDiameter = ImageEditorCanvasCursor.pressureAdjustedBrushDiameter(
                         baseDiameter: viewModel.brushSize * displayScale,
                         tool: canvasInteractionTool,
@@ -2717,6 +2733,8 @@ struct ImageEditorView: View {
                                     && viewModel.isPenCornerConversionBlocked(at: canvasPoint)),
                             penIsAddingAnchor: penSegmentInsertionState != .none,
                             penAdditionIsBlocked: penSegmentInsertionState == .blocked,
+                            penIsDeletingAnchor: penAnchorDeletionState == .available,
+                            penAnchorDeletionIsBlocked: penAnchorDeletionState == .blocked,
                             pathHandleIsBreaking: isBreakingSmoothPathHandle(
                                 at: canvasPoint,
                                 modifierFlags: canvasModifierFlags
@@ -2816,6 +2834,7 @@ struct ImageEditorView: View {
                     cancelPathAnchorDragForCanvasLifecycle()
                     pendingPenCreationAction = nil
                     resetPenAnchorConversionGesture()
+                    penAnchorDeletionGestureState = .none
                     isPointerInsideCanvas = false
                     activeBrushPressure = nil
                     activeBrushTilt = nil
@@ -3804,20 +3823,30 @@ struct ImageEditorView: View {
                         )
                         updateCanvasCursor(at: value.location, in: size)
                     } else if isMovingPathAnchor {
-                        viewModel.moveSelectedPathAnchor(
-                            to: pointerImagePoint,
-                            constrainedToAngleIncrement: ImageEditorPathAnchorDragConstraint
-                                .shouldConstrain(
-                                    modifierFlags: NSEvent.modifierFlags,
-                                    viewTranslation: value.translation
-                                ),
-                            preservingSmoothness: !NSEvent.modifierFlags.contains(.option)
-                        )
+                        if penAnchorDeletionGestureState == .available,
+                           !ImageEditorPenAnchorAutoDeletePolicy.shouldDelete(
+                            viewTranslation: value.translation
+                           ) {
+                            penAnchorDeletionGestureState = .selectionOnly
+                        }
+                        if penAnchorDeletionGestureState != .blocked {
+                            viewModel.moveSelectedPathAnchor(
+                                to: pointerImagePoint,
+                                constrainedToAngleIncrement: ImageEditorPathAnchorDragConstraint
+                                    .shouldConstrain(
+                                        modifierFlags: NSEvent.modifierFlags,
+                                        viewTranslation: value.translation
+                                    ),
+                                preservingSmoothness: !NSEvent.modifierFlags.contains(.option)
+                            )
+                        }
+                        updateCanvasCursor(at: value.location, in: size)
                     } else if pendingPenCreationAction == nil,
                               viewModel.pendingPenPathPoints.isEmpty,
                               viewModel.canEditSelectedPathAnchors,
+                              let pointerStart = imagePoint(from: value.startLocation, in: size),
                               viewModel.beginMovingPathAnchor(
-                                at: pointerImagePoint,
+                                at: pointerStart,
                                 constrainedToAngleIncrement: ImageEditorPathAnchorDragConstraint
                                     .shouldConstrain(
                                         modifierFlags: NSEvent.modifierFlags,
@@ -3826,6 +3855,27 @@ struct ImageEditorView: View {
                                 preservingSmoothness: !NSEvent.modifierFlags.contains(.option)
                               ) {
                         isMovingPathAnchor = true
+                        penAnchorDeletionGestureState = viewModel.penAnchorDeletionState(
+                            at: pointerStart
+                        )
+                        if penAnchorDeletionGestureState == .available,
+                           !ImageEditorPenAnchorAutoDeletePolicy.shouldDelete(
+                            viewTranslation: value.translation
+                           ) {
+                            penAnchorDeletionGestureState = .selectionOnly
+                        }
+                        if penAnchorDeletionGestureState != .blocked {
+                            viewModel.moveSelectedPathAnchor(
+                                to: pointerImagePoint,
+                                constrainedToAngleIncrement: ImageEditorPathAnchorDragConstraint
+                                    .shouldConstrain(
+                                        modifierFlags: NSEvent.modifierFlags,
+                                        viewTranslation: value.translation
+                                    ),
+                                preservingSmoothness: !NSEvent.modifierFlags.contains(.option)
+                            )
+                        }
+                        updateCanvasCursor(at: value.location, in: size)
                     } else if !isPathAnchorDragCancelled {
                         pendingPenCreationAction = ImageEditorPendingPenGesturePolicy.resolve(
                             startImagePoint: imagePoint(from: value.startLocation, in: size),
@@ -4065,7 +4115,12 @@ struct ImageEditorView: View {
                             )
                         }
                     } else if isMovingPathAnchor, !isPathAnchorDragCancelled {
-                        viewModel.finishMovingPathAnchor()
+                        viewModel.finishPenAnchorInteraction(
+                            deletionState: penAnchorDeletionGestureState,
+                            shouldDelete: ImageEditorPenAnchorAutoDeletePolicy.shouldDelete(
+                                viewTranslation: value.translation
+                            )
+                        )
                     } else if !isPathAnchorDragCancelled,
                               viewModel.insertPathAnchor(
                                 at: imagePoint(from: value.startLocation, in: size)
@@ -4185,6 +4240,7 @@ struct ImageEditorView: View {
                 isPenPointerSequenceActive = false
                 pendingPenCreationAction = nil
                 resetPenAnchorConversionGesture()
+                penAnchorDeletionGestureState = .none
                 activeResizeHandle = nil
                 refreshCanvasCursor(in: size)
             }
@@ -4429,6 +4485,7 @@ struct ImageEditorView: View {
         let penSegmentInsertionState = canvasInteractionTool == .pen
             ? viewModel.penPathSegmentInsertionState(at: canvasPoint)
             : .none
+        let penAnchorDeletionState = resolvedPenAnchorDeletionState(at: canvasPoint)
         viewModel.updatePointer(canvasPoint)
         let imageRect = fittedImageRect(in: size)
         let displayScale = imageRect.width / max(viewModel.document.canvasSize.width, 1)
@@ -4468,6 +4525,8 @@ struct ImageEditorView: View {
                     && viewModel.isPenCornerConversionBlocked(at: canvasPoint)),
             penIsAddingAnchor: penSegmentInsertionState != .none,
             penAdditionIsBlocked: penSegmentInsertionState == .blocked,
+            penIsDeletingAnchor: penAnchorDeletionState == .available,
+            penAnchorDeletionIsBlocked: penAnchorDeletionState == .blocked,
             pathHandleIsBreaking: isBreakingSmoothPathHandle(
                 at: canvasPoint,
                 modifierFlags: NSEvent.modifierFlags
@@ -11228,6 +11287,8 @@ enum ImageEditorCanvasCursor {
         penConversionIsBlocked: Bool = false,
         penIsAddingAnchor: Bool = false,
         penAdditionIsBlocked: Bool = false,
+        penIsDeletingAnchor: Bool = false,
+        penAnchorDeletionIsBlocked: Bool = false,
         pathHandleIsBreaking: Bool = false,
         handIsDragging: Bool = false,
         isObjectMoveGestureActive: Bool = false,
@@ -11309,6 +11370,8 @@ enum ImageEditorCanvasCursor {
                 penConversionIsBlocked: penConversionIsBlocked,
                 penIsAddingAnchor: penIsAddingAnchor,
                 penAdditionIsBlocked: penAdditionIsBlocked,
+                penIsDeletingAnchor: penIsDeletingAnchor,
+                penAnchorDeletionIsBlocked: penAnchorDeletionIsBlocked,
                 pathHandleIsBreaking: pathHandleIsBreaking,
                 handIsDragging: handIsDragging,
                 isPickingSampledBrushSource: isPickingSampledBrushSource,
@@ -11751,6 +11814,8 @@ enum ImageEditorCanvasCursor {
         penConversionIsBlocked: Bool = false,
         penIsAddingAnchor: Bool = false,
         penAdditionIsBlocked: Bool = false,
+        penIsDeletingAnchor: Bool = false,
+        penAnchorDeletionIsBlocked: Bool = false,
         pathHandleIsBreaking: Bool = false,
         handIsDragging: Bool = false,
         isPickingSampledBrushSource: Bool = false,
@@ -11832,13 +11897,14 @@ enum ImageEditorCanvasCursor {
         case .samplingScope:
             return .crosshair
         case .vectorPen:
-            if penConversionIsBlocked || penAdditionIsBlocked {
+            if penConversionIsBlocked || penAdditionIsBlocked || penAnchorDeletionIsBlocked {
                 return .operationNotAllowed
             }
             return penCursor(
                 isClosing: penIsClosing,
                 isConverting: penIsConverting || pathHandleIsBreaking,
                 isAddingAnchor: penIsAddingAnchor,
+                isDeletingAnchor: penIsDeletingAnchor,
                 isConstrained: modifierFlags.contains(.shift)
             )
         case .zoomMagnifier:
@@ -12917,9 +12983,10 @@ enum ImageEditorCanvasCursor {
         isClosing: Bool,
         isConverting: Bool,
         isAddingAnchor: Bool,
+        isDeletingAnchor: Bool,
         isConstrained: Bool
     ) -> NSCursor {
-        let cacheKey = "pen:\(isClosing):\(isConverting):\(isAddingAnchor):\(isConstrained)"
+        let cacheKey = "pen:\(isClosing):\(isConverting):\(isAddingAnchor):\(isDeletingAnchor):\(isConstrained)"
         if let cachedCursor = cursorCache[cacheKey] {
             return cachedCursor
         }
@@ -12968,7 +13035,7 @@ enum ImageEditorCanvasCursor {
             NSColor.systemOrange.setStroke()
             corner.lineWidth = 1.4
             corner.stroke()
-        } else if isAddingAnchor {
+        } else if isAddingAnchor || isDeletingAnchor {
             let badge = NSBezierPath(ovalIn: NSRect(x: 0.5, y: 23.5, width: 12, height: 12))
             NSColor.black.withAlphaComponent(0.94).setFill()
             badge.fill()
@@ -12979,9 +13046,11 @@ enum ImageEditorCanvasCursor {
             let plus = NSBezierPath()
             plus.move(to: NSPoint(x: 3.5, y: 29.5))
             plus.line(to: NSPoint(x: 9.5, y: 29.5))
-            plus.move(to: NSPoint(x: 6.5, y: 26.5))
-            plus.line(to: NSPoint(x: 6.5, y: 32.5))
-            NSColor.systemGreen.setStroke()
+            if isAddingAnchor {
+                plus.move(to: NSPoint(x: 6.5, y: 26.5))
+                plus.line(to: NSPoint(x: 6.5, y: 32.5))
+            }
+            (isAddingAnchor ? NSColor.systemGreen : NSColor.systemRed).setStroke()
             plus.lineWidth = 1.5
             plus.stroke()
         } else if isConstrained {
@@ -13410,6 +13479,13 @@ enum ImageEditorPathAnchorDragConstraint {
         modifierFlags.contains(.shift)
             && hypot(viewTranslation.width, viewTranslation.height)
                 > ImageEditorPendingPenGesturePolicy.minimumSmoothDragDistance
+    }
+}
+
+enum ImageEditorPenAnchorAutoDeletePolicy {
+    static func shouldDelete(viewTranslation: CGSize) -> Bool {
+        hypot(viewTranslation.width, viewTranslation.height)
+            <= ImageEditorPendingPenGesturePolicy.minimumSmoothDragDistance
     }
 }
 

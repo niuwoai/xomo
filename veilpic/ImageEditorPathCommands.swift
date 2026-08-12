@@ -22,6 +22,13 @@ enum ImageEditorPenPathSegmentInsertionState: Equatable {
     case blocked
 }
 
+enum ImageEditorPenAnchorDeletionState: Equatable {
+    case none
+    case selectionOnly
+    case available
+    case blocked
+}
+
 extension ImageEditorViewModel {
     /// Photoshop's Path Selection tool selects an editable path by its
     /// rendered geometry, rather than by the layer's rectangular bounds.
@@ -784,6 +791,45 @@ extension ImageEditorViewModel {
 
     func isPenCornerConversionCandidate(at point: CGPoint?) -> Bool {
         penCornerConversionAnchorPoint(at: point) != nil
+    }
+
+    func penAnchorDeletionState(at point: CGPoint?) -> ImageEditorPenAnchorDeletionState {
+        guard pendingPenPathAnchors.isEmpty,
+              let point,
+              let layer = document.selectedLayer,
+              let content = layer.shapeContent,
+              content.kind == .path
+        else { return .none }
+        let nearest = pathControlCandidates(for: content, layer: layer)
+            .map { candidate in
+                (candidate: candidate, distance: distance(from: point, to: candidate.point))
+            }
+            .min { lhs, rhs in lhs.distance < rhs.distance }
+        guard let nearest,
+              nearest.distance <= pathAnchorHitDistance,
+              nearest.candidate.role == .anchor,
+              content.allEditablePathSubpaths.indices.contains(nearest.candidate.subpathIndex)
+        else { return .none }
+        if document.isEffectivelyPixelsLocked(layer) {
+            return .blocked
+        }
+        let count = content.allEditablePathSubpaths[nearest.candidate.subpathIndex].count
+        let canDelete = content.isPathClosed ? count >= 3 : count > 2
+        return canDelete ? .available : .selectionOnly
+    }
+
+    func finishPenAnchorInteraction(
+        deletionState: ImageEditorPenAnchorDeletionState,
+        shouldDelete: Bool
+    ) {
+        if deletionState == .available, shouldDelete {
+            _ = cancelMovingPathAnchor()
+            deleteSelectedPathAnchor()
+        } else if deletionState == .blocked {
+            _ = cancelMovingPathAnchor()
+        } else {
+            finishMovingPathAnchor()
+        }
     }
 
     func isPenPathSegmentInsertionCandidate(at point: CGPoint?) -> Bool {

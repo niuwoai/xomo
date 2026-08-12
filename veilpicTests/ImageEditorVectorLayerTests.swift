@@ -1930,6 +1930,84 @@ struct ImageEditorVectorLayerTests {
         #expect(viewModel.statusText == L10n.text("imageEditor.status.operationFailed"))
     }
 
+    @Test func penShortClickAnchorDeletesAsOneUndoableHistoryStep() async throws {
+        let canvasSize = NSSize(width: 140, height: 100)
+        let image = testBitmapImage(size: canvasSize, background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+
+        viewModel.selectTool(.pen)
+        viewModel.addPenPoint(CGPoint(x: 20, y: 20))
+        viewModel.addPenPoint(CGPoint(x: 120, y: 20))
+        viewModel.addPenPoint(CGPoint(x: 120, y: 80))
+        viewModel.addPenPoint(CGPoint(x: 20, y: 80))
+        viewModel.finishPenPath(closed: true)
+        let anchor = try #require(viewModel.selectedPathAnchorCanvasPoint)
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.penAnchorDeletionState(at: anchor) == .available)
+        #expect(viewModel.beginMovingPathAnchor(at: anchor))
+        viewModel.moveSelectedPathAnchor(to: CGPoint(x: anchor.x + 1, y: anchor.y + 1))
+        viewModel.finishPenAnchorInteraction(deletionState: .available, shouldDelete: true)
+
+        #expect(viewModel.document.selectedLayer?.shapeContent?.pathAnchors.count == 3)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.pathAnchorDelete"))
+        #expect(!viewModel.hasActivePathAnchorMoveTransaction)
+
+        viewModel.undo()
+        #expect(viewModel.document.selectedLayer?.shapeContent?.pathAnchors.count == 4)
+    }
+
+    @Test func penAnchorDragMovesWithoutAutoDeletingAndHandlesRemainSelectionOnly() async throws {
+        let canvasSize = NSSize(width: 140, height: 100)
+        let image = testBitmapImage(size: canvasSize, background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+
+        viewModel.selectTool(.pen)
+        viewModel.addPenPoint(CGPoint(x: 20, y: 20))
+        viewModel.addPenPoint(CGPoint(x: 120, y: 20))
+        viewModel.addPenPoint(CGPoint(x: 70, y: 80))
+        viewModel.finishPenPath(closed: true)
+        viewModel.smoothSelectedPathAnchor()
+        let anchor = try #require(viewModel.selectedPathAnchorCanvasPoint)
+        let handle = try #require(viewModel.selectedPathOutControlCanvasPoint)
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.penAnchorDeletionState(at: anchor) == .available)
+        #expect(viewModel.penAnchorDeletionState(at: handle) == .none)
+        #expect(viewModel.beginMovingPathAnchor(at: anchor))
+        viewModel.moveSelectedPathAnchor(to: CGPoint(x: anchor.x + 12, y: anchor.y + 4))
+        viewModel.finishPenAnchorInteraction(deletionState: .selectionOnly, shouldDelete: false)
+
+        #expect(viewModel.document.selectedLayer?.shapeContent?.pathAnchors.count == 3)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.pathAnchorMove"))
+    }
+
+    @Test func penAnchorAutoDeleteRespectsMinimumCountAndLockedPaths() async throws {
+        let canvasSize = NSSize(width: 140, height: 100)
+        let image = testBitmapImage(size: canvasSize, background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+
+        viewModel.selectTool(.pen)
+        viewModel.addPenPoint(CGPoint(x: 20, y: 30))
+        viewModel.addPenPoint(CGPoint(x: 120, y: 30))
+        viewModel.finishPenPath(closed: false)
+        viewModel.selectNextPathAnchor()
+        let anchor = try #require(viewModel.selectedPathAnchorCanvasPoint)
+        #expect(viewModel.penAnchorDeletionState(at: anchor) == .selectionOnly)
+
+        let layerIndex = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[layerIndex].locksPixels = true
+        let historyCount = viewModel.document.history.count
+        #expect(viewModel.penAnchorDeletionState(at: anchor) == .blocked)
+        #expect(viewModel.beginMovingPathAnchor(at: anchor))
+        viewModel.finishPenAnchorInteraction(deletionState: .blocked, shouldDelete: true)
+        #expect(viewModel.document.selectedLayer?.shapeContent?.pathAnchors.count == 2)
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(!viewModel.hasActivePathAnchorMoveTransaction)
+    }
+
     private func distance(_ point: CGPoint?, _ expected: CGPoint) -> CGFloat {
         guard let point else { return .greatestFiniteMagnitude }
         return hypot(point.x - expected.x, point.y - expected.y)

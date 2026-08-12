@@ -1977,6 +1977,15 @@ struct ImageEditorCanvasCursorTests {
         ).count == 3)
         #expect(source.components(separatedBy: "penSegmentInsertionState != .none").count == 3)
         #expect(source.components(separatedBy: "penSegmentInsertionState == .blocked").count == 3)
+        #expect(source.components(
+            separatedBy: "resolvedPenAnchorDeletionState(at: canvasPoint)"
+        ).count == 3)
+        #expect(source.components(separatedBy: "penAnchorDeletionState == .available").count == 3)
+        #expect(source.components(separatedBy: "penAnchorDeletionState == .blocked").count == 3)
+        #expect(source.contains("viewModel.finishPenAnchorInteraction("))
+        #expect(source.components(
+            separatedBy: "ImageEditorPenAnchorAutoDeletePolicy.shouldDelete("
+        ).count == 4)
         let insertion = try #require(source.range(of: "viewModel.insertPathAnchor("))
         let newPoint = try #require(source.range(
             of: "viewModel.addPenPoint(",
@@ -1988,6 +1997,46 @@ struct ImageEditorCanvasCursorTests {
         #expect(source.contains("else if isConverting"))
         #expect(source.contains("else if isAddingAnchor"))
         #expect(source.contains("else if isConstrained"))
+    }
+
+    @Test func penAnchorAutoDeletePolicySeparatesShortClickFromCommittedDrag() {
+        #expect(ImageEditorPenAnchorAutoDeletePolicy.shouldDelete(viewTranslation: .zero))
+        #expect(ImageEditorPenAnchorAutoDeletePolicy.shouldDelete(
+            viewTranslation: CGSize(width: 2, height: 2)
+        ))
+        #expect(!ImageEditorPenAnchorAutoDeletePolicy.shouldDelete(
+            viewTranslation: CGSize(width: 4, height: 0)
+        ))
+    }
+
+    @Test func penAnchorDeletionCursorUsesMinusAndHonorsBlockedAndComponentModes() {
+        let ordinary = ImageEditorCanvasCursor.cursor(for: .pen, brushDiameter: 18)
+        let insertion = ImageEditorCanvasCursor.cursor(
+            for: .pen,
+            brushDiameter: 18,
+            penIsAddingAnchor: true
+        )
+        let deletion = ImageEditorCanvasCursor.cursor(
+            for: .pen,
+            brushDiameter: 18,
+            penIsDeletingAnchor: true
+        )
+
+        #expect(ordinary.image.tiffRepresentation != deletion.image.tiffRepresentation)
+        #expect(insertion.image.tiffRepresentation != deletion.image.tiffRepresentation)
+        #expect(ImageEditorCanvasCursor.cursor(
+            for: .pen,
+            brushDiameter: 18,
+            penIsDeletingAnchor: true,
+            penAnchorDeletionIsBlocked: true
+        ) === NSCursor.operationNotAllowed)
+        #expect(ImageEditorCanvasCursor.cursor(
+            for: .components,
+            selectedTool: .pen,
+            brushDiameter: 18,
+            penIsDeletingAnchor: true,
+            penAnchorDeletionIsBlocked: true
+        ) === NSCursor.arrow)
     }
 
     @Test func penSegmentInsertionCursorUsesAddBadgeAndHonorsBlockedAndComponentModes() {
