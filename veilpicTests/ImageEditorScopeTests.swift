@@ -11,6 +11,25 @@ import Foundation
 @testable import musepic
 
 struct ImageEditorScopeTests {
+    @Test func penEndpointDragUsesTheCrossLayerContinuationTarget() throws {
+        let source = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let branchStart = try #require(
+            source.range(of: "viewModel.penPathContinuationState(at: pointerStart) != .none")
+        )
+        let branchEnd = try #require(
+            source[branchStart.upperBound...].range(
+                of: "viewModel.canEditSelectedPathAnchors"
+            )
+        )
+        let branch = source[branchStart.lowerBound..<branchEnd.lowerBound]
+
+        #expect(branch.contains("viewModel.beginMovingPenPathContinuationAnchor("))
+        #expect(!branch.contains("viewModel.beginMovingPathAnchor("))
+    }
+
     @Test func imageEditorKeepsCurrentLightweightCapabilitySurfaceStable() {
         #expect(
             Set(ImageEditorTool.allCases.map(\.rawValue)) == [

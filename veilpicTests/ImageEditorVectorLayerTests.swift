@@ -2036,6 +2036,37 @@ struct ImageEditorVectorLayerTests {
         #expect(viewModel.document.selectedLayer?.shapeContent?.pathAnchors.count == 4)
     }
 
+    @Test func penDragSelectsAndMovesAnUnselectedOpenPathEndpoint() async throws {
+        let image = testBitmapImage(size: NSSize(width: 170, height: 120), background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        let sourceLayerID = try #require(viewModel.document.selectedLayerID)
+        viewModel.selectTool(.pen)
+        viewModel.addPenPoint(CGPoint(x: 25, y: 35))
+        viewModel.addPenPoint(CGPoint(x: 95, y: 40))
+        viewModel.addPenPoint(CGPoint(x: 135, y: 75))
+        viewModel.finishPenPath(closed: false)
+        let pathLayer = try #require(viewModel.document.selectedLayer)
+        let endpoint = try #require(pathLayer.shapeContent?.pathAnchors.last).point.applying(
+            CGAffineTransform(translationX: pathLayer.frame.minX, y: pathLayer.frame.minY)
+        )
+        let destination = CGPoint(x: 150, y: 92)
+        let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
+        viewModel.selectLayer(sourceLayerID)
+
+        #expect(viewModel.beginMovingPenPathContinuationAnchor(at: endpoint))
+        #expect(viewModel.document.selectedLayerID == pathLayer.id)
+        #expect(viewModel.hasActivePathAnchorMoveTransaction)
+        viewModel.moveSelectedPathAnchor(to: destination)
+        viewModel.finishMovingPathAnchor()
+
+        #expect(viewModel.selectedPathAnchorCanvasPoint == destination)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.undoStack.count == undoCount + 1)
+        viewModel.undo()
+        #expect(viewModel.selectedPathAnchorCanvasPoint == endpoint)
+    }
+
     @Test func hiddenTopOpenPathEndpointDoesNotStealContinuationHit() async throws {
         let image = testBitmapImage(size: NSSize(width: 170, height: 120), background: .black)
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
@@ -2076,6 +2107,7 @@ struct ImageEditorVectorLayerTests {
 
         #expect(viewModel.penPathContinuationState(at: CGPoint(x: 25, y: 35)) == .blocked)
         #expect(!viewModel.beginPenPathContinuation(at: CGPoint(x: 25, y: 35)))
+        #expect(!viewModel.beginMovingPenPathContinuationAnchor(at: CGPoint(x: 25, y: 35)))
         #expect(viewModel.document.selectedLayerID == sourceLayerID)
         #expect(viewModel.document.selectedLayerID != lowerPathID)
         #expect(viewModel.document.selectedLayerID != upperPathID)

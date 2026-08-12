@@ -3872,7 +3872,7 @@ struct ImageEditorView: View {
                            !ImageEditorPenAnchorAutoDeletePolicy.shouldDelete(
                             viewTranslation: value.translation
                            ),
-                           viewModel.beginMovingPathAnchor(
+                           viewModel.beginMovingPenPathContinuationAnchor(
                             at: pointerStart,
                             constrainedToAngleIncrement: ImageEditorPathAnchorDragConstraint
                                 .shouldConstrain(

@@ -262,6 +262,31 @@ extension ImageEditorViewModel {
         return true
     }
 
+    /// Starts a drag from the same topmost visible open-path endpoint that
+    /// owns Pen continuation. This keeps press-drag consistent with a short
+    /// continuation click even when another layer was selected beforehand.
+    @discardableResult
+    func beginMovingPenPathContinuationAnchor(
+        at point: CGPoint?,
+        constrainedToAngleIncrement: Bool = false,
+        preservingSmoothness: Bool = false
+    ) -> Bool {
+        guard let hit = penPathContinuationHit(at: point),
+              let layer = document.layers.first(where: { $0.id == hit.layerID }),
+              !document.isEffectivelyPixelsLocked(layer),
+              !document.isEffectivelyPositionLocked(layer)
+        else { return false }
+        selectLayer(hit.layerID)
+        selectedPathSubpathIndex = hit.subpathIndex
+        selectedPathAnchorIndex = hit.anchorIndex
+        selectedPathControlRole = .anchor
+        return beginMovingPathAnchor(
+            at: point,
+            constrainedToAngleIncrement: constrainedToAngleIncrement,
+            preservingSmoothness: preservingSmoothness
+        )
+    }
+
     func addPenPoint(_ point: CGPoint?) {
         addPenPoint(
             point,
