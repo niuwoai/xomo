@@ -1269,6 +1269,102 @@ struct ImageEditorCanvasCursorTests {
         #expect(ImageEditorCanvasCursor.cursor(for: .healingBrush, brushDiameter: 18) !== NSCursor.crosshair)
     }
 
+    @Test func sampledBrushSourcePickingUsesPrecisionCursorWithoutChangingPaintFootprints() {
+        let clonePainting = ImageEditorCanvasCursor.cursor(for: .cloneStamp, brushDiameter: 18)
+        let healingPainting = ImageEditorCanvasCursor.cursor(for: .healingBrush, brushDiameter: 18)
+        let clonePicking = ImageEditorCanvasCursor.cursor(
+            for: .cloneStamp,
+            brushDiameter: 18,
+            isPickingSampledBrushSource: true
+        )
+        let healingPicking = ImageEditorCanvasCursor.cursor(
+            for: .healingBrush,
+            brushDiameter: 18,
+            isPickingSampledBrushSource: true
+        )
+
+        #expect(clonePainting !== NSCursor.crosshair)
+        #expect(healingPainting !== NSCursor.crosshair)
+        #expect(clonePicking === NSCursor.crosshair)
+        #expect(healingPicking === NSCursor.crosshair)
+        #expect(clonePainting.image.tiffRepresentation == healingPainting.image.tiffRepresentation)
+    }
+
+    @Test func sampledBrushSourcePickingCannotOverrideHigherPriorityCanvasModes() {
+        #expect(ImageEditorCanvasCursor.cursor(
+            for: .components,
+            selectedTool: .cloneStamp,
+            brushDiameter: 18,
+            isPickingSampledBrushSource: true
+        ) === NSCursor.arrow)
+        #expect(ImageEditorCanvasCursor.cursor(
+            for: .tools,
+            selectedTool: .healingBrush,
+            brushDiameter: 18,
+            isSpacebarPanning: true,
+            isPickingSampledBrushSource: true
+        ) === NSCursor.openHand)
+    }
+
+    @Test func sampledBrushSourcePolicyKeepsSpotHealingInPaintMode() {
+        #expect(ImageEditorSampledBrushCursorPolicy.isPickingSource(
+            tool: .cloneStamp,
+            healingMode: .spot,
+            isSettingCloneSource: false,
+            isSettingHealingSource: false,
+            modifierFlags: [.option]
+        ))
+        #expect(ImageEditorSampledBrushCursorPolicy.isPickingSource(
+            tool: .healingBrush,
+            healingMode: .source,
+            isSettingCloneSource: false,
+            isSettingHealingSource: false,
+            modifierFlags: [.option]
+        ))
+        #expect(ImageEditorSampledBrushCursorPolicy.isPickingSource(
+            tool: .cloneStamp,
+            healingMode: .spot,
+            isSettingCloneSource: true,
+            isSettingHealingSource: false,
+            modifierFlags: []
+        ))
+        #expect(ImageEditorSampledBrushCursorPolicy.isPickingSource(
+            tool: .healingBrush,
+            healingMode: .source,
+            isSettingCloneSource: false,
+            isSettingHealingSource: true,
+            modifierFlags: []
+        ))
+        #expect(!ImageEditorSampledBrushCursorPolicy.isPickingSource(
+            tool: .healingBrush,
+            healingMode: .spot,
+            isSettingCloneSource: false,
+            isSettingHealingSource: true,
+            modifierFlags: [.option]
+        ))
+    }
+
+    @Test func sampledBrushCursorRefreshIsWiredToModifierAndExplicitSourceChanges() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(source.contains("matching: [.keyDown, .keyUp, .flagsChanged]"))
+        #expect(source.contains(".onChange(of: canvasModifierFlags)"))
+        #expect(source.contains(".onChange(of: viewModel.isSettingCloneSource)"))
+        #expect(source.contains(".onChange(of: viewModel.isSettingHealingSource)"))
+        #expect(source.contains(".onChange(of: viewModel.healingBrushMode)"))
+        #expect(
+            source.components(
+                separatedBy: "isPickingSampledBrushSource: isSettingSampledBrushSourceGesture"
+            ).count == 4
+        )
+    }
+
     @Test func zoomCursorReflectsOptionZoomOutMode() {
         let zoomIn = ImageEditorCanvasCursor.cursor(for: .zoom, brushDiameter: 18)
         let zoomOut = ImageEditorCanvasCursor.cursor(

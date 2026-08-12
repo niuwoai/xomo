@@ -2552,6 +2552,7 @@ struct ImageEditorView: View {
                             isColorSamplerMoveGestureActive: colorSamplerDrag != nil,
                             isSpacebarPanning: isSpacebarPanning,
                             isCanvasPanGestureActive: isCanvasPanGestureActive,
+                            isPickingSampledBrushSource: isSettingSampledBrushSourceGesture,
                             modifierFlags: canvasModifierFlags,
                             marqueeShape: viewModel.marqueeShape,
                             cropHandle: cropHandle,
@@ -2621,6 +2622,15 @@ struct ImageEditorView: View {
                     refreshCanvasCursor(in: geometry.size)
                 }
                 .onChange(of: canvasModifierFlags) { _ in
+                    refreshCanvasCursor(in: geometry.size)
+                }
+                .onChange(of: viewModel.isSettingCloneSource) { _ in
+                    refreshCanvasCursor(in: geometry.size)
+                }
+                .onChange(of: viewModel.isSettingHealingSource) { _ in
+                    refreshCanvasCursor(in: geometry.size)
+                }
+                .onChange(of: viewModel.healingBrushMode) { _ in
                     refreshCanvasCursor(in: geometry.size)
                 }
                 .onChange(of: viewModel.zoom) { _ in
@@ -3191,15 +3201,13 @@ struct ImageEditorView: View {
     }
 
     private var isSettingSampledBrushSourceGesture: Bool {
-        switch canvasInteractionTool {
-        case .cloneStamp:
-            return viewModel.isSettingCloneSource || canvasModifierFlags.contains(.option)
-        case .healingBrush:
-            return viewModel.healingBrushMode == .source
-                && (viewModel.isSettingHealingSource || canvasModifierFlags.contains(.option))
-        default:
-            return false
-        }
+        ImageEditorSampledBrushCursorPolicy.isPickingSource(
+            tool: canvasInteractionTool,
+            healingMode: viewModel.healingBrushMode,
+            isSettingCloneSource: viewModel.isSettingCloneSource,
+            isSettingHealingSource: viewModel.isSettingHealingSource,
+            modifierFlags: canvasModifierFlags
+        )
     }
 
     private func canvasGesture(in size: CGSize) -> some Gesture {
@@ -4014,6 +4022,7 @@ struct ImageEditorView: View {
             isColorSamplerMoveGestureActive: colorSamplerDrag != nil,
             isSpacebarPanning: isSpacebarPanning,
             isCanvasPanGestureActive: isCanvasPanGestureActive,
+            isPickingSampledBrushSource: isSettingSampledBrushSourceGesture,
             modifierFlags: NSEvent.modifierFlags,
             marqueeShape: viewModel.marqueeShape,
             cropHandle: cropInteractionHandle(at: viewPoint, in: size),
@@ -4043,6 +4052,7 @@ struct ImageEditorView: View {
             isColorSamplerMoveGestureActive: colorSamplerDrag != nil,
             isSpacebarPanning: isSpacebarPanning,
             isCanvasPanGestureActive: isCanvasPanGestureActive,
+            isPickingSampledBrushSource: isSettingSampledBrushSourceGesture,
             modifierFlags: canvasModifierFlags,
             marqueeShape: viewModel.marqueeShape,
             cropHandle: nil,
@@ -10618,6 +10628,26 @@ enum ImageEditorZoomDirection: Equatable {
     }
 }
 
+enum ImageEditorSampledBrushCursorPolicy {
+    static func isPickingSource(
+        tool: ImageEditorTool,
+        healingMode: ImageEditorHealingBrushMode,
+        isSettingCloneSource: Bool,
+        isSettingHealingSource: Bool,
+        modifierFlags: NSEvent.ModifierFlags
+    ) -> Bool {
+        switch tool {
+        case .cloneStamp:
+            return isSettingCloneSource || modifierFlags.contains(.option)
+        case .healingBrush:
+            return healingMode == .source
+                && (isSettingHealingSource || modifierFlags.contains(.option))
+        default:
+            return false
+        }
+    }
+}
+
 enum ImageEditorCanvasCursor {
     private static var cursorCache: [String: NSCursor] = [:]
 
@@ -10685,6 +10715,7 @@ enum ImageEditorCanvasCursor {
         isColorSamplerMoveGestureActive: Bool = false,
         isSpacebarPanning: Bool = false,
         isCanvasPanGestureActive: Bool = false,
+        isPickingSampledBrushSource: Bool = false,
         modifierFlags: NSEvent.ModifierFlags = [],
         marqueeShape: ImageEditorMarqueeShape = .rectangle,
         cropHandle: ImageEditorCropHandle? = nil,
@@ -10755,6 +10786,7 @@ enum ImageEditorCanvasCursor {
                 brushTipAngleDegrees: brushTipAngleDegrees,
                 penIsClosing: penIsClosing,
                 handIsDragging: handIsDragging,
+                isPickingSampledBrushSource: isPickingSampledBrushSource,
                 modifierFlags: modifierFlags,
                 marqueeShape: marqueeShape,
                 cropHandle: cropHandle
@@ -11172,6 +11204,7 @@ enum ImageEditorCanvasCursor {
         brushTipAngleDegrees: CGFloat = 0,
         penIsClosing: Bool = false,
         handIsDragging: Bool = false,
+        isPickingSampledBrushSource: Bool = false,
         modifierFlags: NSEvent.ModifierFlags = [],
         marqueeShape: ImageEditorMarqueeShape = .rectangle,
         cropHandle: ImageEditorCropHandle? = nil
@@ -11199,11 +11232,11 @@ enum ImageEditorCanvasCursor {
         case .quickSelection:
             return quickSelectionCursor(mode: selectionMode)
         case .cloneStamp:
-            return modifierFlags.contains(.capsLock)
+            return modifierFlags.contains(.capsLock) || isPickingSampledBrushSource
                 ? .crosshair
                 : familiarBrushCursor(diameter: brushDiameter)
         case .healingBrush:
-            return modifierFlags.contains(.capsLock)
+            return modifierFlags.contains(.capsLock) || isPickingSampledBrushSource
                 ? .crosshair
                 : familiarBrushCursor(diameter: brushDiameter)
         case .brushTool, .eraserTool:
@@ -12943,7 +12976,9 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
             self.deleteSelectedHistory = deleteSelectedHistory
             self.setSpacebarPanning = setSpacebarPanning
             self.setCanvasModifierFlags = setCanvasModifierFlags
-            eventMonitor = NSEvent.addLocalMonitorForEvents(matching: [.keyDown, .keyUp]) { [weak self] event in
+            eventMonitor = NSEvent.addLocalMonitorForEvents(
+                matching: [.keyDown, .keyUp, .flagsChanged]
+            ) { [weak self] event in
                 self?.handle(event) ?? event
             }
             appDeactivateObserver = NotificationCenter.default.addObserver(
