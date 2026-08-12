@@ -16,7 +16,7 @@ extension ImageEditorViewModel {
 
     var selectedLayerTransformFrame: CGRect? {
         guard !isEditingLayerMask else { return nil }
-        if let selectedXomoObjectFrame {
+        if selectedXomoObjectKind != nil {
             return selectedXomoObjectFrame
         }
         return transformFrame(for: selectedTransformableLayerIndices)

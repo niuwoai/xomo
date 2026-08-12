@@ -1675,9 +1675,9 @@ struct ImageEditorScopeTests {
         )
         let editMenuSource = source[editMenuStart.lowerBound..<nextMenuStart.lowerBound]
 
-        #expect(editMenuSource.contains("viewModel.undo()"))
+        #expect(editMenuSource.contains("performUndo()"))
         #expect(editMenuSource.contains(".keyboardShortcut(\"z\", modifiers: [.command])"))
-        #expect(editMenuSource.contains("viewModel.redo()"))
+        #expect(editMenuSource.contains("performRedo()"))
         #expect(editMenuSource.contains(".keyboardShortcut(\"z\", modifiers: [.command, .shift])"))
         #expect(editMenuSource.contains("viewModel.copySelectionToClipboard()"))
         #expect(editMenuSource.contains(".keyboardShortcut(\"c\", modifiers: [.command])"))
@@ -2545,10 +2545,12 @@ struct ImageEditorScopeTests {
             penEndSource[policy.upperBound...].range(of: "viewModel.finishPenPath(closed: false)")
         )
         let addPoint = try #require(
-            penEndSource[finish.upperBound...].range(of: "viewModel.addPenPoint(endImagePoint)")
+            penEndSource[finish.upperBound...].range(of: "viewModel.addPenPoint(")
         )
         #expect(policy.lowerBound < finish.lowerBound)
         #expect(finish.lowerBound < addPoint.lowerBound)
+        #expect(penEndSource[addPoint.lowerBound...].contains("endImagePoint,"))
+        #expect(penEndSource[addPoint.lowerBound...].contains("constrainedToAngleIncrement:"))
         #expect(penEndSource.contains("hasPendingPath: viewModel.hasPendingPenPathTransaction"))
         #expect(penEndSource.contains("modifierFlags: NSEvent.modifierFlags"))
 
@@ -3347,7 +3349,7 @@ struct ImageEditorScopeTests {
         #expect(pickerSource.contains("ForEach(ImageEditorPatchMode.allCases)"))
         #expect(pickerSource.contains(".focusable(false)"))
         #expect(pickerSource.contains("image-editor-patch-mode"))
-        #expect(source.contains("viewModel.canBeginPatch(at: pointerImagePoint)"))
+        #expect(source.contains("viewModel.canBeginPatch(at: startImagePoint)"))
         #expect(source.contains("viewModel.createPatchSelection(points: dragPoints)"))
         #expect(source.contains("patchPreviewImage = viewModel.patchPreviewImage("))
         #expect(source.contains("if canvasInteractionTool == .patchTool, let patchPreviewImage"))
