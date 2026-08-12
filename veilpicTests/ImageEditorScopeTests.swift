@@ -2158,7 +2158,9 @@ struct ImageEditorScopeTests {
         let layerMutation = try #require(layerSource.range(of: "document.selectedLayerID = id"))
         #expect(layerCancel.lowerBound < layerMutation.lowerBound)
 
-        let beginStart = try #require(pathSource.range(of: "func beginMovingPathAnchor(at point: CGPoint?)"))
+        let beginStart = try #require(
+            pathSource.range(of: "func beginMovingPathAnchor(\n        at point: CGPoint?,")
+        )
         let beginEnd = try #require(pathSource[beginStart.upperBound...].range(of: "func moveSelectedPathAnchor"))
         let beginSource = pathSource[beginStart.lowerBound..<beginEnd.lowerBound]
         let staleCheck = try #require(beginSource.range(of: "hasActivePathAnchorMoveTransaction"))
@@ -2732,6 +2734,25 @@ struct ImageEditorScopeTests {
         let overlaySource = viewSource[overlayStart.lowerBound..<overlayEnd.lowerBound]
         #expect(overlaySource.contains("ImageEditorPenPointGeometry.symmetricControls("))
         #expect(overlaySource.contains("Color.orange"))
+    }
+
+    @Test func shiftConstraintIsWiredToExistingPenAndDirectSelectionDrags() throws {
+        let viewSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let pathSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorPathCommands.swift"),
+            encoding: .utf8
+        )
+
+        #expect(viewSource.components(
+            separatedBy: "constrainedToAngleIncrement: ImageEditorPathAnchorDragConstraint"
+        ).count == 5)
+        #expect(viewSource.contains("modifierFlags.contains(.shift)\n            && hypot(viewTranslation.width, viewTranslation.height)"))
+        #expect(pathSource.contains("movingPathAnchorOriginalCanvasSubpaths[selectedPathSubpathIndex][index].point"))
+        #expect(pathSource.contains("case .inHandle, .outHandle:\n                return canvasAnchors[index].point"))
+        #expect(pathSource.contains("ImageEditorPenPointGeometry.constrainedPoint("))
     }
 
     @Test func viewMenuExposesClassicZoomShortcuts() throws {

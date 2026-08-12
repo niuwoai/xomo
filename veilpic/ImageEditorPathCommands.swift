@@ -39,7 +39,10 @@ extension ImageEditorViewModel {
     /// nearest visible path anchor or control handle, switching to its path
     /// layer before the existing anchor transaction begins.
     @discardableResult
-    func beginDirectPathAnchorMove(at point: CGPoint?) -> Bool {
+    func beginDirectPathAnchorMove(
+        at point: CGPoint?,
+        constrainedToAngleIncrement: Bool = false
+    ) -> Bool {
         guard let point, point.x.isFinite, point.y.isFinite else { return false }
         for layer in document.layers.reversed() {
             guard !layer.isGroup,
@@ -65,7 +68,10 @@ extension ImageEditorViewModel {
                 "imageEditor.status.pathAnchorSelected",
                 nearest.candidate.index + 1
             )
-            return beginMovingPathAnchor(at: point)
+            return beginMovingPathAnchor(
+                at: point,
+                constrainedToAngleIncrement: constrainedToAngleIncrement
+            )
         }
         return false
     }
@@ -280,7 +286,10 @@ extension ImageEditorViewModel {
     }
 
     @discardableResult
-    func beginMovingPathAnchor(at point: CGPoint?) -> Bool {
+    func beginMovingPathAnchor(
+        at point: CGPoint?,
+        constrainedToAngleIncrement: Bool = false
+    ) -> Bool {
         guard let point else { return false }
         if hasActivePathAnchorMoveTransaction {
             _ = cancelMovingPathAnchor()
@@ -296,11 +305,17 @@ extension ImageEditorViewModel {
         }
         movingPathAnchorOriginalFrame = layer.frame
         beginPathAnchorMoveUndoTransaction()
-        moveSelectedPathAnchor(to: point)
+        moveSelectedPathAnchor(
+            to: point,
+            constrainedToAngleIncrement: constrainedToAngleIncrement
+        )
         return true
     }
 
-    func moveSelectedPathAnchor(to point: CGPoint?) {
+    func moveSelectedPathAnchor(
+        to point: CGPoint?,
+        constrainedToAngleIncrement: Bool = false
+    ) {
         guard let point,
               let index = selectedPathAnchorIndex,
               let layerIndex = document.selectedLayerIndex,
@@ -316,9 +331,28 @@ extension ImageEditorViewModel {
             for: shapeContent.allEditablePathSubpaths[selectedPathSubpathIndex],
             layer: layer
         )
+        let constraintOrigin: CGPoint = {
+            guard constrainedToAngleIncrement else { return point }
+            switch selectedPathControlRole {
+            case .anchor:
+                guard movingPathAnchorOriginalCanvasSubpaths.indices.contains(selectedPathSubpathIndex),
+                      movingPathAnchorOriginalCanvasSubpaths[selectedPathSubpathIndex].indices.contains(index)
+                else { return canvasAnchors[index].point }
+                return movingPathAnchorOriginalCanvasSubpaths[selectedPathSubpathIndex][index].point
+            case .inHandle, .outHandle:
+                return canvasAnchors[index].point
+            }
+        }()
+        let proposedPoint = constrainedToAngleIncrement
+            ? ImageEditorPenPointGeometry.constrainedPoint(
+                from: constraintOrigin,
+                toward: point,
+                canvasSize: document.canvasSize
+            )
+            : point
         let boundedPoint = CGPoint(
-            x: max(0, min(document.canvasSize.width, point.x)),
-            y: max(0, min(document.canvasSize.height, point.y))
+            x: max(0, min(document.canvasSize.width, proposedPoint.x)),
+            y: max(0, min(document.canvasSize.height, proposedPoint.y))
         )
         switch selectedPathControlRole {
         case .anchor:

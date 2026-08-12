@@ -986,6 +986,89 @@ struct ImageEditorVectorLayerTests {
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.pathAnchorDelete"))
     }
 
+    @Test func shiftDragConstrainsExistingPathAnchorFromTransactionOrigin() throws {
+        #expect(!ImageEditorPathAnchorDragConstraint.shouldConstrain(
+            modifierFlags: [.shift],
+            viewTranslation: CGSize(width: 2, height: 1)
+        ))
+        #expect(ImageEditorPathAnchorDragConstraint.shouldConstrain(
+            modifierFlags: [.shift],
+            viewTranslation: CGSize(width: 8, height: 3)
+        ))
+        #expect(!ImageEditorPathAnchorDragConstraint.shouldConstrain(
+            modifierFlags: [],
+            viewTranslation: CGSize(width: 8, height: 3)
+        ))
+        let canvasSize = NSSize(width: 140, height: 100)
+        let image = testBitmapImage(size: canvasSize, background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        let originalPoint = CGPoint(x: 30, y: 30)
+        viewModel.addPenPoint(originalPoint)
+        viewModel.addPenPoint(CGPoint(x: 100, y: 70))
+        viewModel.finishPenPath(closed: false)
+        viewModel.selectTool(.directSelection)
+        let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
+
+        #expect(viewModel.beginDirectPathAnchorMove(
+            at: originalPoint,
+            constrainedToAngleIncrement: true
+        ))
+        viewModel.moveSelectedPathAnchor(
+            to: CGPoint(x: 55, y: 39),
+            constrainedToAngleIncrement: true
+        )
+        viewModel.finishMovingPathAnchor()
+
+        let movedPoint = try #require(viewModel.selectedPathAnchorCanvasPoint)
+        #expect(abs(movedPoint.y - originalPoint.y) < 0.000_001)
+        #expect(movedPoint.x > originalPoint.x)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.undoStack.count == undoCount + 1)
+
+        viewModel.undo()
+        let restoredPoint = try #require(viewModel.selectedPathAnchorCanvasPoint)
+        #expect(abs(restoredPoint.x - originalPoint.x) < 0.000_001)
+        #expect(abs(restoredPoint.y - originalPoint.y) < 0.000_001)
+    }
+
+    @Test func shiftDragConstrainsExistingBezierHandleAroundItsAnchor() throws {
+        let canvasSize = NSSize(width: 140, height: 100)
+        let image = testBitmapImage(size: canvasSize, background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        let anchorPoint = CGPoint(x: 80, y: 50)
+        viewModel.addPenPoint(CGPoint(x: 20, y: 50))
+        viewModel.addPenPoint(
+            anchorPoint,
+            symmetricControlDrag: CGSize(width: 12, height: 18),
+            constrainedToAngleIncrement: false
+        )
+        viewModel.finishPenPath(closed: false)
+        viewModel.selectTool(.directSelection)
+        let outHandle = CGPoint(x: anchorPoint.x + 12, y: anchorPoint.y + 18)
+        let originalInHandle = CGPoint(x: anchorPoint.x - 12, y: anchorPoint.y - 18)
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.beginDirectPathAnchorMove(
+            at: outHandle,
+            constrainedToAngleIncrement: true
+        ))
+        viewModel.moveSelectedPathAnchor(
+            to: CGPoint(x: anchorPoint.x + 25, y: anchorPoint.y + 7),
+            constrainedToAngleIncrement: true
+        )
+        viewModel.finishMovingPathAnchor()
+
+        let constrainedHandle = try #require(viewModel.selectedPathOutControlCanvasPoint)
+        let unchangedInHandle = try #require(viewModel.selectedPathInControlCanvasPoint)
+        #expect(viewModel.selectedPathControlRole == .outHandle)
+        #expect(abs(constrainedHandle.y - anchorPoint.y) < 0.000_001)
+        #expect(constrainedHandle.x > anchorPoint.x)
+        #expect(abs(unchangedInHandle.x - originalInHandle.x) < 0.000_001)
+        #expect(abs(unchangedInHandle.y - originalInHandle.y) < 0.000_001)
+        #expect(viewModel.document.history.count == historyCount + 1)
+    }
+
     @Test func imageEditorCreatesEditablePathLayerFromCurrentSelection() async throws {
         let canvasSize = NSSize(width: 140, height: 100)
         let image = testBitmapImage(size: canvasSize, background: .black)

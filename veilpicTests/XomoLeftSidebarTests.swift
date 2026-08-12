@@ -698,7 +698,7 @@ struct XomoLeftSidebarTests {
         #expect(source.contains("case .pathSelection:"))
         #expect(source.contains("viewModel.selectPathLayer(at: pressedImagePoint)"))
         #expect(source.contains("case .directSelection:"))
-        #expect(source.contains("viewModel.beginDirectPathAnchorMove(at: pointerImagePoint)"))
+        #expect(source.contains("viewModel.beginDirectPathAnchorMove("))
         #expect(source.contains("single authoritative component"))
         #expect(!source.contains("func selectedXomoObjectCanvasMoveGesture"))
         #expect(!source.contains("func selectedXomoObjectInteractionOverlay"))

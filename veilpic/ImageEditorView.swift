@@ -3795,11 +3795,25 @@ struct ImageEditorView: View {
                         )
                         updateCanvasCursor(at: value.location, in: size)
                     } else if isMovingPathAnchor {
-                        viewModel.moveSelectedPathAnchor(to: pointerImagePoint)
+                        viewModel.moveSelectedPathAnchor(
+                            to: pointerImagePoint,
+                            constrainedToAngleIncrement: ImageEditorPathAnchorDragConstraint
+                                .shouldConstrain(
+                                    modifierFlags: NSEvent.modifierFlags,
+                                    viewTranslation: value.translation
+                                )
+                        )
                     } else if pendingPenCreationAction == nil,
                               viewModel.pendingPenPathPoints.isEmpty,
                               viewModel.canEditSelectedPathAnchors,
-                              viewModel.beginMovingPathAnchor(at: pointerImagePoint) {
+                              viewModel.beginMovingPathAnchor(
+                                at: pointerImagePoint,
+                                constrainedToAngleIncrement: ImageEditorPathAnchorDragConstraint
+                                    .shouldConstrain(
+                                        modifierFlags: NSEvent.modifierFlags,
+                                        viewTranslation: value.translation
+                                    )
+                              ) {
                         isMovingPathAnchor = true
                     } else if !isPathAnchorDragCancelled {
                         pendingPenCreationAction = ImageEditorPendingPenGesturePolicy.resolve(
@@ -3822,9 +3836,23 @@ struct ImageEditorView: View {
                     }
                 case .directSelection:
                     if !isMovingPathAnchor {
-                        isMovingPathAnchor = viewModel.beginDirectPathAnchorMove(at: pointerImagePoint)
+                        isMovingPathAnchor = viewModel.beginDirectPathAnchorMove(
+                            at: pointerImagePoint,
+                            constrainedToAngleIncrement: ImageEditorPathAnchorDragConstraint
+                                .shouldConstrain(
+                                    modifierFlags: NSEvent.modifierFlags,
+                                    viewTranslation: value.translation
+                                )
+                        )
                     } else {
-                        viewModel.moveSelectedPathAnchor(to: pointerImagePoint)
+                        viewModel.moveSelectedPathAnchor(
+                            to: pointerImagePoint,
+                            constrainedToAngleIncrement: ImageEditorPathAnchorDragConstraint
+                                .shouldConstrain(
+                                    modifierFlags: NSEvent.modifierFlags,
+                                    viewTranslation: value.translation
+                                )
+                        )
                     }
                 case .lasso:
                     if dragPoints.isEmpty {
@@ -13284,6 +13312,17 @@ enum ImageEditorPendingPenPointerPolicy {
 struct ImageEditorPendingPenGestureAction: Equatable {
     let anchorPoint: CGPoint
     let symmetricControlDrag: CGSize?
+}
+
+enum ImageEditorPathAnchorDragConstraint {
+    static func shouldConstrain(
+        modifierFlags: NSEvent.ModifierFlags,
+        viewTranslation: CGSize
+    ) -> Bool {
+        modifierFlags.contains(.shift)
+            && hypot(viewTranslation.width, viewTranslation.height)
+                > ImageEditorPendingPenGesturePolicy.minimumSmoothDragDistance
+    }
 }
 
 struct ImageEditorPenAnchorConversionAction: Equatable {
