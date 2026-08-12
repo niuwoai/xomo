@@ -803,6 +803,36 @@ struct ImageEditorSelection: Equatable, Codable {
         return bounds.contains(point)
     }
 
+    /// Fast canvas-space hit testing for pointer feedback. Raster selections
+    /// already store a complete mask, so sampling it directly avoids
+    /// re-rendering the entire canvas for every mouse-move event.
+    func contains(_ point: CGPoint, canvasSize: CGSize) -> Bool {
+        guard point.x >= 0,
+              point.y >= 0,
+              point.x < canvasSize.width,
+              point.y < canvasSize.height
+        else { return false }
+
+        let containsPoint: Bool
+        if let rasterMask,
+           rasterMask.width > 0,
+           rasterMask.height > 0,
+           rasterMask.alpha.count == rasterMask.width * rasterMask.height {
+            let x = min(
+                rasterMask.width - 1,
+                Int(point.x / max(canvasSize.width, 1) * CGFloat(rasterMask.width))
+            )
+            let y = min(
+                rasterMask.height - 1,
+                Int(point.y / max(canvasSize.height, 1) * CGFloat(rasterMask.height))
+            )
+            containsPoint = rasterMask.alpha[y * rasterMask.width + x] > 0
+        } else {
+            containsPoint = contains(point)
+        }
+        return isInverted ? !containsPoint : containsPoint
+    }
+
     /// A conservative canvas-space coverage check used to avoid creating
     /// history entries for pixel edits that cannot touch a layer. Inverted
     /// selections always cover the area outside their path, while expansion

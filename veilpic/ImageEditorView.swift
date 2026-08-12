@@ -75,6 +75,7 @@ struct ImageEditorView: View {
     @State private var primaryToolViewStart: CGPoint?
     @State private var patchPreviewImage: NSImage?
     @State private var isDrawingPatchSelection = false
+    @State private var isPatchGestureBlocked = false
     @State private var lastPatchPreviewUpdateTime: TimeInterval = 0
     @State private var pendingCropRect: CGRect?
     @State private var activeCropHandle: ImageEditorCropHandle?
@@ -324,6 +325,7 @@ struct ImageEditorView: View {
             }
             patchPreviewImage = nil
             isDrawingPatchSelection = false
+            isPatchGestureBlocked = false
             lastPatchPreviewUpdateTime = 0
             dragStart = nil
             dragEnd = nil
@@ -2553,6 +2555,7 @@ struct ImageEditorView: View {
                             isSpacebarPanning: isSpacebarPanning,
                             isCanvasPanGestureActive: isCanvasPanGestureActive,
                             isPickingSampledBrushSource: isSettingSampledBrushSourceGesture,
+                            patchPhase: patchCursorPhase(at: canvasPoint),
                             modifierFlags: canvasModifierFlags,
                             marqueeShape: viewModel.marqueeShape,
                             cropHandle: cropHandle,
@@ -2640,6 +2643,7 @@ struct ImageEditorView: View {
                     isPointerInsideCanvas = false
                     activeBrushPressure = nil
                     activeBrushTilt = nil
+                    isPatchGestureBlocked = false
                     endPendingCropInteraction()
                     resetColorSamplerGesture()
                     NSCursor.arrow.set()
@@ -3210,6 +3214,17 @@ struct ImageEditorView: View {
         )
     }
 
+    private func patchCursorPhase(at canvasPoint: CGPoint?) -> ImageEditorPatchCursorPhase {
+        guard canvasInteractionTool == .patchTool else { return .drawingSelection }
+        return ImageEditorPatchCursorPhase.resolve(
+            isPointerOverSelection: viewModel.canBeginPatch(at: canvasPoint),
+            isDrawingSelection: isDrawingPatchSelection,
+            isDraggingSelection: dragStart != nil && !isDrawingPatchSelection,
+            canEditSelectionPixels: viewModel.canEditSelectionPixels,
+            isBlockedGestureActive: isPatchGestureBlocked
+        )
+    }
+
     private func canvasGesture(in size: CGSize) -> some Gesture {
         DragGesture(minimumDistance: 0)
             .onChanged { value in
@@ -3420,14 +3435,22 @@ struct ImageEditorView: View {
                     }
                 case .patchTool:
                     let boundedPoint = boundedImagePoint(from: value.location, in: size)
-                    if dragStart == nil, dragPoints.isEmpty {
-                        if viewModel.canBeginPatch(at: pointerImagePoint) {
-                            dragStart = pointerImagePoint
+                    if dragStart == nil, dragPoints.isEmpty, !isPatchGestureBlocked {
+                        let startImagePoint = imagePoint(from: value.startLocation, in: size)
+                        switch ImageEditorPatchGestureStartAction.resolve(
+                            isPointerOverSelection: viewModel.canBeginPatch(at: startImagePoint),
+                            canEditSelectionPixels: viewModel.canEditSelectionPixels
+                        ) {
+                        case .dragSelection:
+                            dragStart = startImagePoint
                             dragEnd = pointerImagePoint
                             isDrawingPatchSelection = false
-                        } else {
+                        case .drawSelection:
                             isDrawingPatchSelection = true
                             dragPoints = [boundedPoint]
+                        case .blocked:
+                            isDrawingPatchSelection = false
+                            isPatchGestureBlocked = true
                         }
                     }
                     if isDrawingPatchSelection {
@@ -3443,6 +3466,7 @@ struct ImageEditorView: View {
                             lastPatchPreviewUpdateTime = updateTime
                         }
                     }
+                    updateCanvasCursor(at: value.location, in: size)
                 case .pen:
                     guard viewModel.pendingPenPathPoints.isEmpty,
                           viewModel.canEditSelectedPathAnchors
@@ -3737,6 +3761,7 @@ struct ImageEditorView: View {
                 dragEnd = nil
                 patchPreviewImage = nil
                 isDrawingPatchSelection = false
+                isPatchGestureBlocked = false
                 lastPatchPreviewUpdateTime = 0
                 lastPanTranslation = .zero
                 resetObjectMoveTracking()
@@ -4023,6 +4048,7 @@ struct ImageEditorView: View {
             isSpacebarPanning: isSpacebarPanning,
             isCanvasPanGestureActive: isCanvasPanGestureActive,
             isPickingSampledBrushSource: isSettingSampledBrushSourceGesture,
+            patchPhase: patchCursorPhase(at: canvasPoint),
             modifierFlags: NSEvent.modifierFlags,
             marqueeShape: viewModel.marqueeShape,
             cropHandle: cropInteractionHandle(at: viewPoint, in: size),
@@ -4053,6 +4079,7 @@ struct ImageEditorView: View {
             isSpacebarPanning: isSpacebarPanning,
             isCanvasPanGestureActive: isCanvasPanGestureActive,
             isPickingSampledBrushSource: isSettingSampledBrushSourceGesture,
+            patchPhase: patchCursorPhase(at: nil),
             modifierFlags: canvasModifierFlags,
             marqueeShape: viewModel.marqueeShape,
             cropHandle: nil,
@@ -10648,6 +10675,47 @@ enum ImageEditorSampledBrushCursorPolicy {
     }
 }
 
+enum ImageEditorPatchCursorPhase: Equatable {
+    case drawingSelection
+    case readyToDrag
+    case draggingSelection
+    case blocked
+
+    static func resolve(
+        isPointerOverSelection: Bool,
+        isDrawingSelection: Bool,
+        isDraggingSelection: Bool,
+        canEditSelectionPixels: Bool,
+        isBlockedGestureActive: Bool = false
+    ) -> Self {
+        if isBlockedGestureActive {
+            return .blocked
+        }
+        if isDraggingSelection {
+            return .draggingSelection
+        }
+        if isDrawingSelection {
+            return .drawingSelection
+        }
+        guard isPointerOverSelection else { return .drawingSelection }
+        return canEditSelectionPixels ? .readyToDrag : .blocked
+    }
+}
+
+enum ImageEditorPatchGestureStartAction: Equatable {
+    case drawSelection
+    case dragSelection
+    case blocked
+
+    static func resolve(
+        isPointerOverSelection: Bool,
+        canEditSelectionPixels: Bool
+    ) -> Self {
+        guard isPointerOverSelection else { return .drawSelection }
+        return canEditSelectionPixels ? .dragSelection : .blocked
+    }
+}
+
 enum ImageEditorCanvasCursor {
     private static var cursorCache: [String: NSCursor] = [:]
 
@@ -10716,6 +10784,7 @@ enum ImageEditorCanvasCursor {
         isSpacebarPanning: Bool = false,
         isCanvasPanGestureActive: Bool = false,
         isPickingSampledBrushSource: Bool = false,
+        patchPhase: ImageEditorPatchCursorPhase = .drawingSelection,
         modifierFlags: NSEvent.ModifierFlags = [],
         marqueeShape: ImageEditorMarqueeShape = .rectangle,
         cropHandle: ImageEditorCropHandle? = nil,
@@ -10787,6 +10856,7 @@ enum ImageEditorCanvasCursor {
                 penIsClosing: penIsClosing,
                 handIsDragging: handIsDragging,
                 isPickingSampledBrushSource: isPickingSampledBrushSource,
+                patchPhase: patchPhase,
                 modifierFlags: modifierFlags,
                 marqueeShape: marqueeShape,
                 cropHandle: cropHandle
@@ -11205,6 +11275,7 @@ enum ImageEditorCanvasCursor {
         penIsClosing: Bool = false,
         handIsDragging: Bool = false,
         isPickingSampledBrushSource: Bool = false,
+        patchPhase: ImageEditorPatchCursorPhase = .drawingSelection,
         modifierFlags: NSEvent.ModifierFlags = [],
         marqueeShape: ImageEditorMarqueeShape = .rectangle,
         cropHandle: ImageEditorCropHandle? = nil
@@ -11259,7 +11330,16 @@ enum ImageEditorCanvasCursor {
             }
             return .crosshair
         case .patch:
-            return patchCursor()
+            switch patchPhase {
+            case .drawingSelection:
+                return lassoCursor(mode: .replace)
+            case .readyToDrag:
+                return .arrow
+            case .draggingSelection:
+                return objectMoveCursor()
+            case .blocked:
+                return .operationNotAllowed
+            }
         case .gradient:
             return .crosshair
         case .rectangleOutline, .ellipseOutline:

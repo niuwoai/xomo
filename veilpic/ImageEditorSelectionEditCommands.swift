@@ -229,19 +229,8 @@ extension ImageEditorViewModel {
     }
 
     func canBeginPatch(at point: CGPoint?) -> Bool {
-        guard let point,
-              point.x >= 0,
-              point.y >= 0,
-              point.x < document.canvasSize.width,
-              point.y < document.canvasSize.height,
-              let mask = document.selection?.rasterizedMask(canvasSize: document.canvasSize),
-              mask.width > 0,
-              mask.height > 0,
-              mask.alpha.count == mask.width * mask.height
-        else { return false }
-        let x = min(mask.width - 1, max(0, Int(point.x / max(document.canvasSize.width, 1) * CGFloat(mask.width))))
-        let y = min(mask.height - 1, max(0, Int(point.y / max(document.canvasSize.height, 1) * CGFloat(mask.height))))
-        return mask.alpha[y * mask.width + x] > 0
+        guard let point, let selection = document.selection else { return false }
+        return selection.contains(point, canvasSize: document.canvasSize)
     }
 
     func patchPreviewImage(from start: CGPoint?, to end: CGPoint?) -> NSImage? {

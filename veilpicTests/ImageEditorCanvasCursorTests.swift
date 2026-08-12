@@ -1365,6 +1365,132 @@ struct ImageEditorCanvasCursorTests {
         )
     }
 
+    @Test func patchCursorPhaseLocksTheActiveGestureAndRejectsBlockedEdits() {
+        #expect(ImageEditorPatchCursorPhase.resolve(
+            isPointerOverSelection: false,
+            isDrawingSelection: false,
+            isDraggingSelection: false,
+            canEditSelectionPixels: true
+        ) == .drawingSelection)
+        #expect(ImageEditorPatchCursorPhase.resolve(
+            isPointerOverSelection: true,
+            isDrawingSelection: false,
+            isDraggingSelection: false,
+            canEditSelectionPixels: true
+        ) == .readyToDrag)
+        #expect(ImageEditorPatchCursorPhase.resolve(
+            isPointerOverSelection: true,
+            isDrawingSelection: true,
+            isDraggingSelection: false,
+            canEditSelectionPixels: true
+        ) == .drawingSelection)
+        #expect(ImageEditorPatchCursorPhase.resolve(
+            isPointerOverSelection: false,
+            isDrawingSelection: false,
+            isDraggingSelection: true,
+            canEditSelectionPixels: true
+        ) == .draggingSelection)
+        #expect(ImageEditorPatchCursorPhase.resolve(
+            isPointerOverSelection: true,
+            isDrawingSelection: false,
+            isDraggingSelection: false,
+            canEditSelectionPixels: false
+        ) == .blocked)
+        #expect(ImageEditorPatchCursorPhase.resolve(
+            isPointerOverSelection: false,
+            isDrawingSelection: false,
+            isDraggingSelection: false,
+            canEditSelectionPixels: true,
+            isBlockedGestureActive: true
+        ) == .blocked)
+    }
+
+    @Test func patchGestureStartRejectsBlockedSelectionsButStillAllowsReplacementLasso() {
+        #expect(ImageEditorPatchGestureStartAction.resolve(
+            isPointerOverSelection: true,
+            canEditSelectionPixels: true
+        ) == .dragSelection)
+        #expect(ImageEditorPatchGestureStartAction.resolve(
+            isPointerOverSelection: true,
+            canEditSelectionPixels: false
+        ) == .blocked)
+        #expect(ImageEditorPatchGestureStartAction.resolve(
+            isPointerOverSelection: false,
+            canEditSelectionPixels: false
+        ) == .drawSelection)
+    }
+
+    @Test func patchCursorUsesLassoArrowMoveAndForbiddenActionSemantics() {
+        let drawing = ImageEditorCanvasCursor.cursor(for: .patchTool, brushDiameter: 18)
+        let lasso = ImageEditorCanvasCursor.cursor(for: .lasso, brushDiameter: 18)
+        let ready = ImageEditorCanvasCursor.cursor(
+            for: .patchTool,
+            brushDiameter: 18,
+            patchPhase: .readyToDrag
+        )
+        let dragging = ImageEditorCanvasCursor.cursor(
+            for: .patchTool,
+            brushDiameter: 18,
+            patchPhase: .draggingSelection
+        )
+        let blocked = ImageEditorCanvasCursor.cursor(
+            for: .patchTool,
+            brushDiameter: 18,
+            patchPhase: .blocked
+        )
+
+        #expect(drawing.image.tiffRepresentation == lasso.image.tiffRepresentation)
+        #expect(ready === NSCursor.arrow)
+        #expect(dragging.image.tiffRepresentation == ImageEditorCanvasCursor.objectMoveCursor().image.tiffRepresentation)
+        #expect(blocked === NSCursor.operationNotAllowed)
+    }
+
+    @Test func patchCursorCannotOverrideCanvasBoundsComponentsOrPan() {
+        #expect(ImageEditorCanvasCursor.cursor(
+            for: .components,
+            selectedTool: .patchTool,
+            brushDiameter: 18,
+            patchPhase: .draggingSelection
+        ) === NSCursor.arrow)
+        #expect(ImageEditorCanvasCursor.cursor(
+            for: .tools,
+            selectedTool: .patchTool,
+            brushDiameter: 18,
+            isPointerOverCanvas: false,
+            patchPhase: .draggingSelection
+        ) === NSCursor.arrow)
+        #expect(ImageEditorCanvasCursor.cursor(
+            for: .tools,
+            selectedTool: .patchTool,
+            brushDiameter: 18,
+            handIsDragging: true,
+            isCanvasPanGestureActive: true,
+            patchPhase: .draggingSelection
+        ) === NSCursor.closedHand)
+    }
+
+    @Test func patchCursorPhaseIsWiredToEveryCanvasCursorPath() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(source.components(separatedBy: "patchPhase: patchCursorPhase(at:").count == 4)
+        #expect(source.contains("isDrawingSelection: isDrawingPatchSelection"))
+        #expect(source.contains("canEditSelectionPixels: viewModel.canEditSelectionPixels"))
+        #expect(source.contains("switch ImageEditorPatchGestureStartAction.resolve("))
+        #expect(source.contains("imagePoint(from: value.startLocation, in: size)"))
+        #expect(source.contains("!isPatchGestureBlocked"))
+        #expect(source.contains("isPatchGestureBlocked = true"))
+        #expect(source.components(separatedBy: "isPatchGestureBlocked = false").count >= 3)
+        #expect(source.contains("case .blocked:"))
+        #expect(source.contains("case .patchTool:"))
+        #expect(source.contains("updateCanvasCursor(at: value.location, in: size)"))
+    }
+
     @Test func zoomCursorReflectsOptionZoomOutMode() {
         let zoomIn = ImageEditorCanvasCursor.cursor(for: .zoom, brushDiameter: 18)
         let zoomOut = ImageEditorCanvasCursor.cursor(

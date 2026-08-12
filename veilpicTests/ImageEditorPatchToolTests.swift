@@ -96,6 +96,31 @@ struct ImageEditorPatchToolTests {
         #expect(viewModel.statusText == L10n.text("imageEditor.status.patchSelectionReady"))
     }
 
+    @Test func patchHoverHitTestingHandlesGeometryRasterMasksAndInversionWithoutRendering() throws {
+        let canvasSize = CGSize(width: 40, height: 40)
+        var rectangle = ImageEditorSelection.rectangle(
+            CGRect(x: 10, y: 10, width: 10, height: 10)
+        )
+        #expect(rectangle.contains(CGPoint(x: 15, y: 15), canvasSize: canvasSize))
+        #expect(!rectangle.contains(CGPoint(x: 5, y: 5), canvasSize: canvasSize))
+        rectangle.isInverted = true
+        #expect(!rectangle.contains(CGPoint(x: 15, y: 15), canvasSize: canvasSize))
+        #expect(rectangle.contains(CGPoint(x: 5, y: 5), canvasSize: canvasSize))
+        #expect(!rectangle.contains(CGPoint(x: 41, y: 5), canvasSize: canvasSize))
+
+        var alpha = [UInt8](repeating: 0, count: 16)
+        alpha[2 * 4 + 1] = .max
+        var raster = ImageEditorSelection.raster(
+            mask: ImageEditorSelectionMask(width: 4, height: 4, alpha: alpha),
+            bounds: CGRect(x: 10, y: 20, width: 10, height: 10)
+        )
+        #expect(raster.contains(CGPoint(x: 15, y: 25), canvasSize: canvasSize))
+        #expect(!raster.contains(CGPoint(x: 25, y: 25), canvasSize: canvasSize))
+        raster.isInverted = true
+        #expect(!raster.contains(CGPoint(x: 15, y: 25), canvasSize: canvasSize))
+        #expect(raster.contains(CGPoint(x: 25, y: 25), canvasSize: canvasSize))
+    }
+
     @Test func patchCommitHonorsTransparentPixelLock() throws {
         let canvasSize = NSSize(width: 80, height: 60)
         let sampleRect = CGRect(x: 12, y: 22, width: 16, height: 16)
