@@ -188,9 +188,11 @@ extension ImageEditorViewModel {
 
     @discardableResult
     func beginMovingPathAnchor(at point: CGPoint?) -> Bool {
-        guard let point,
-              selectNearestPathAnchor(at: point)
-        else { return false }
+        guard let point else { return false }
+        if hasActivePathAnchorMoveTransaction {
+            _ = cancelMovingPathAnchor()
+        }
+        guard selectNearestPathAnchor(at: point) else { return false }
         guard let layer = document.selectedLayer,
               let content = layer.shapeContent,
               content.kind == .path

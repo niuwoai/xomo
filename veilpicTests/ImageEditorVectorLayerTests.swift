@@ -1363,6 +1363,80 @@ struct ImageEditorVectorLayerTests {
         #expect(viewModel.redoStack.isEmpty)
     }
 
+    @Test func switchingToolsCancelsPathDragBeforeChangingInputContext() async throws {
+        let fixture = try makeActivePathDragFixture()
+
+        fixture.viewModel.selectTool(.brush)
+
+        #expect(fixture.viewModel.selectedTool == .brush)
+        expectCancelledPathDragRestored(fixture)
+        fixture.viewModel.selectTool(.directSelection)
+        #expect(fixture.viewModel.beginMovingPathAnchor(at: fixture.anchorPoint))
+        fixture.viewModel.moveSelectedPathAnchor(
+            to: CGPoint(x: fixture.anchorPoint.x + 6, y: fixture.anchorPoint.y + 4)
+        )
+        fixture.viewModel.finishMovingPathAnchor()
+        #expect(fixture.viewModel.document.history.count == fixture.historyCount + 1)
+        #expect(fixture.viewModel.undoStack.count == fixture.undoCount + 1)
+        #expect(fixture.viewModel.redoStack.isEmpty)
+    }
+
+    @Test func enteringComponentLibraryCancelsPathDragAndKeepsNextGestureUsable() async throws {
+        let fixture = try makeActivePathDragFixture()
+
+        fixture.viewModel.selectLeftSidebarTab(.components)
+
+        #expect(fixture.viewModel.selectedLeftSidebarTab == .components)
+        expectCancelledPathDragRestored(fixture)
+        fixture.viewModel.selectLeftSidebarTab(.tools)
+        #expect(fixture.viewModel.beginMovingPathAnchor(at: fixture.anchorPoint))
+        fixture.viewModel.moveSelectedPathAnchor(
+            to: CGPoint(x: fixture.anchorPoint.x - 5, y: fixture.anchorPoint.y + 7)
+        )
+        fixture.viewModel.finishMovingPathAnchor()
+        #expect(fixture.viewModel.document.history.count == fixture.historyCount + 1)
+        #expect(fixture.viewModel.undoStack.count == fixture.undoCount + 1)
+        #expect(fixture.viewModel.redoStack.isEmpty)
+    }
+
+    @Test func selectingAnotherLayerCancelsPathDragBeforeChangingEditingObject() async throws {
+        let fixture = try makeActivePathDragFixture(includingAlternateLayer: true)
+        let alternateLayerID = try #require(fixture.alternateLayerID)
+
+        fixture.viewModel.selectLayer(alternateLayerID)
+
+        #expect(fixture.viewModel.document.selectedLayerID == alternateLayerID)
+        expectCancelledPathDragRestored(fixture)
+        fixture.viewModel.selectLayer(fixture.pathLayerID)
+        #expect(fixture.viewModel.beginMovingPathAnchor(at: fixture.anchorPoint))
+        fixture.viewModel.moveSelectedPathAnchor(
+            to: CGPoint(x: fixture.anchorPoint.x + 8, y: fixture.anchorPoint.y - 3)
+        )
+        fixture.viewModel.finishMovingPathAnchor()
+        #expect(fixture.viewModel.document.history.count == fixture.historyCount + 1)
+        #expect(fixture.viewModel.undoStack.count == fixture.undoCount + 1)
+        #expect(fixture.viewModel.redoStack.isEmpty)
+    }
+
+    @Test func startingFreshAnchorMoveCancelsAnyStaleTransactionBeforeBeginning() async throws {
+        let fixture = try makeActivePathDragFixture()
+
+        #expect(fixture.viewModel.beginMovingPathAnchor(at: fixture.anchorPoint))
+        fixture.viewModel.moveSelectedPathAnchor(
+            to: CGPoint(x: fixture.anchorPoint.x - 7, y: fixture.anchorPoint.y - 6)
+        )
+        fixture.viewModel.finishMovingPathAnchor()
+
+        #expect(!fixture.viewModel.hasActivePathAnchorMoveTransaction)
+        #expect(fixture.viewModel.document.history.count == fixture.historyCount + 1)
+        #expect(fixture.viewModel.undoStack.count == fixture.undoCount + 1)
+        #expect(fixture.viewModel.redoStack.isEmpty)
+        fixture.viewModel.undo()
+        let restoredLayer = fixture.viewModel.document.layers.first { $0.id == fixture.pathLayerID }
+        #expect(restoredLayer?.shapeContent?.allEditablePathSubpaths == fixture.originalContent.allEditablePathSubpaths)
+        #expect(restoredLayer?.frame == fixture.originalFrame)
+    }
+
     @Test func undoDuringPathAnchorDragCancelsPreviewBeforeReachingHistory() async throws {
         let canvasSize = NSSize(width: 140, height: 100)
         let image = testBitmapImage(size: canvasSize, background: .black)
@@ -1948,6 +2022,72 @@ struct ImageEditorVectorLayerTests {
                 fill.rect.fill()
             }
         } ?? NSImage.transparent(size: size)
+    }
+
+    private struct ActivePathDragFixture {
+        let viewModel: ImageEditorViewModel
+        let pathLayerID: UUID
+        let alternateLayerID: UUID?
+        let anchorPoint: CGPoint
+        let originalContent: ImageEditorShapeContent
+        let originalFrame: CGRect
+        let historyCount: Int
+        let undoCount: Int
+        let redoCount: Int
+    }
+
+    private func makeActivePathDragFixture(
+        includingAlternateLayer: Bool = false
+    ) throws -> ActivePathDragFixture {
+        let canvasSize = NSSize(width: 140, height: 100)
+        let image = testBitmapImage(size: canvasSize, background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        viewModel.selectTool(.pen)
+        viewModel.addPenPoint(CGPoint(x: 20, y: 20))
+        viewModel.addPenPoint(CGPoint(x: 104, y: 28))
+        viewModel.addPenPoint(CGPoint(x: 70, y: 78))
+        viewModel.finishPenPath(closed: true)
+        let pathLayerID = try #require(viewModel.document.selectedLayerID)
+        var alternateLayerID: UUID?
+        if includingAlternateLayer {
+            viewModel.addLayer()
+            alternateLayerID = try #require(viewModel.document.selectedLayerID)
+            viewModel.selectLayer(pathLayerID)
+        }
+        viewModel.selectNextPathAnchor()
+        let anchorPoint = try #require(viewModel.selectedPathAnchorCanvasPoint)
+        viewModel.nudgeSelectedPathAnchor(by: CGSize(width: 1, height: 0))
+        viewModel.undo()
+        let originalContent = try #require(viewModel.document.selectedLayer?.shapeContent)
+        let originalFrame = try #require(viewModel.document.selectedLayer?.frame)
+        let fixture = ActivePathDragFixture(
+            viewModel: viewModel,
+            pathLayerID: pathLayerID,
+            alternateLayerID: alternateLayerID,
+            anchorPoint: anchorPoint,
+            originalContent: originalContent,
+            originalFrame: originalFrame,
+            historyCount: viewModel.document.history.count,
+            undoCount: viewModel.undoStack.count,
+            redoCount: viewModel.redoStack.count
+        )
+        #expect(viewModel.beginMovingPathAnchor(at: anchorPoint))
+        viewModel.moveSelectedPathAnchor(
+            to: CGPoint(x: anchorPoint.x + 15, y: anchorPoint.y - 8)
+        )
+        #expect(viewModel.hasActivePathAnchorMoveTransaction)
+        return fixture
+    }
+
+    private func expectCancelledPathDragRestored(_ fixture: ActivePathDragFixture) {
+        let pathLayer = fixture.viewModel.document.layers.first { $0.id == fixture.pathLayerID }
+        #expect(!fixture.viewModel.hasActivePathAnchorMoveTransaction)
+        #expect(pathLayer?.shapeContent?.allEditablePathSubpaths == fixture.originalContent.allEditablePathSubpaths)
+        #expect(pathLayer?.frame == fixture.originalFrame)
+        #expect(fixture.viewModel.document.history.count == fixture.historyCount)
+        #expect(fixture.viewModel.undoStack.count == fixture.undoCount)
+        #expect(fixture.viewModel.redoStack.count == fixture.redoCount)
+        #expect(!fixture.viewModel.cancelMovingPathAnchor())
     }
 
     private func isPixelLayer(_ layer: ImageEditorLayer) -> Bool {

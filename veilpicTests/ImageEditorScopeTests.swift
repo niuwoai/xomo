@@ -2042,6 +2042,57 @@ struct ImageEditorScopeTests {
         #expect(bridgeSource.contains("let shouldNotifyBridgeDetached = ownsCanvasLifecycle"))
     }
 
+    @Test func toolSidebarAndLayerContextSwitchesCancelPathDragBeforeMutation() throws {
+        let viewModelSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorViewModel.swift"),
+            encoding: .utf8
+        )
+        let pathSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorPathCommands.swift"),
+            encoding: .utf8
+        )
+
+        let toolStart = try #require(viewModelSource.range(of: "func selectTool(_ tool: ImageEditorTool)"))
+        let toolEnd = try #require(viewModelSource[toolStart.upperBound...].range(of: "var canvasInteractionTool"))
+        let toolSource = viewModelSource[toolStart.lowerBound..<toolEnd.lowerBound]
+        let toolCancel = try #require(toolSource.range(of: "cancelMovingPathAnchor()"))
+        let toolMutation = try #require(toolSource.range(of: "selectedTool = tool"))
+        #expect(toolSource.contains("if selectedTool != tool"))
+        #expect(toolCancel.lowerBound < toolMutation.lowerBound)
+
+        let sidebarStart = try #require(
+            viewModelSource.range(of: "func selectLeftSidebarTab(_ tab: XomoLeftSidebarTab)")
+        )
+        let sidebarEnd = try #require(
+            viewModelSource[sidebarStart.upperBound...].range(of: "func selectClassicToolShortcut")
+        )
+        let sidebarSource = viewModelSource[sidebarStart.lowerBound..<sidebarEnd.lowerBound]
+        let sidebarCancel = try #require(sidebarSource.range(of: "cancelMovingPathAnchor()"))
+        let sidebarMutation = try #require(sidebarSource.range(of: "selectedLeftSidebarTab = tab"))
+        #expect(sidebarSource.contains("if selectedLeftSidebarTab != tab"))
+        #expect(sidebarCancel.lowerBound < sidebarMutation.lowerBound)
+
+        let layerStart = try #require(
+            viewModelSource.range(of: "func selectLayer(_ id: UUID, editingMask: Bool = false, extendingSelection: Bool = false)")
+        )
+        let layerEnd = try #require(
+            viewModelSource[layerStart.upperBound...].range(of: "func syncLayerSelectionAnchorToPrimarySelection")
+        )
+        let layerSource = viewModelSource[layerStart.lowerBound..<layerEnd.lowerBound]
+        let layerCancel = try #require(layerSource.range(of: "cancelMovingPathAnchor()"))
+        let layerMutation = try #require(layerSource.range(of: "document.selectedLayerID = id"))
+        #expect(layerCancel.lowerBound < layerMutation.lowerBound)
+
+        let beginStart = try #require(pathSource.range(of: "func beginMovingPathAnchor(at point: CGPoint?)"))
+        let beginEnd = try #require(pathSource[beginStart.upperBound...].range(of: "func moveSelectedPathAnchor"))
+        let beginSource = pathSource[beginStart.lowerBound..<beginEnd.lowerBound]
+        let staleCheck = try #require(beginSource.range(of: "hasActivePathAnchorMoveTransaction"))
+        let staleCancel = try #require(beginSource.range(of: "cancelMovingPathAnchor()"))
+        let selection = try #require(beginSource.range(of: "selectNearestPathAnchor(at: point)"))
+        #expect(staleCheck.lowerBound < staleCancel.lowerBound)
+        #expect(staleCancel.lowerBound < selection.lowerBound)
+    }
+
     @Test func layerRowsExposeTheSameSelectedLayerExportAction() throws {
         let source = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorLayerPanel.swift"),

@@ -3050,6 +3050,9 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     func selectTool(_ tool: ImageEditorTool) {
+        if selectedTool != tool {
+            _ = cancelMovingPathAnchor()
+        }
         selectedTool = tool
         if tool == .pen, pendingPenPathPoints.isEmpty {
             statusText = L10n.text("imageEditor.status.penReady")
@@ -3071,6 +3074,9 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     func selectLeftSidebarTab(_ tab: XomoLeftSidebarTab) {
+        if selectedLeftSidebarTab != tab {
+            _ = cancelMovingPathAnchor()
+        }
         selectedLeftSidebarTab = tab
     }
 
@@ -3873,6 +3879,7 @@ final class ImageEditorViewModel: ObservableObject {
            isEditingLayerMask == shouldEditMask {
             return
         }
+        _ = cancelMovingPathAnchor()
         let selectedLayer = document.layers.first { $0.id == id }
         let isXomoComponentGroup = selectedLayer?.isGroup == true
             && selectedLayer?.xomoComponentInstance != nil
