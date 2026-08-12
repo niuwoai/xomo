@@ -5546,7 +5546,6 @@ struct ImageEditorDocument {
                 && !candidate.isFilter
                 && !candidate.isClippingMask
                 && candidate.groupID == layer.groupID
-                && isEffectivelyVisible(candidate)
         }
     }
 
@@ -5558,7 +5557,6 @@ struct ImageEditorDocument {
                 && !candidate.isFilter
                 && !candidate.isClippingMask
                 && candidate.groupID == groupID
-                && isEffectivelyVisible(candidate)
         }
     }
 

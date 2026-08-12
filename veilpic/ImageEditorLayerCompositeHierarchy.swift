@@ -275,7 +275,7 @@ enum ImageEditorLayerCompositeHierarchy {
     private static func clippingBaseIndex(
         forLayerAt index: Int,
         in layers: [ImageEditorLayer],
-        isEffectivelyVisible: (ImageEditorLayer) -> Bool
+        isEffectivelyVisible _: (ImageEditorLayer) -> Bool
     ) -> Int? {
         guard layers.indices.contains(index), layers[index].isClippingMask else { return nil }
         let layer = layers[index]
@@ -286,7 +286,6 @@ enum ImageEditorLayerCompositeHierarchy {
                 && !candidate.isFilter
                 && !candidate.isClippingMask
                 && candidate.groupID == layer.groupID
-                && isEffectivelyVisible(candidate)
         }
     }
 

@@ -177,6 +177,45 @@ struct ImageEditorLayerMergeHierarchyTests {
         #expect(viewModel.document.clippingBase(forLayerAt: mergedIndex)?.id == base.id)
     }
 
+    @Test func mergingSelectedClippingLayersKeepsTheirHiddenExternalBase() throws {
+        let viewModel = makeViewModel()
+        var hiddenBase = layer("Hidden Base", in: viewModel)
+        var firstClip = layer("First Clip", in: viewModel)
+        var secondClip = layer("Second Clip", in: viewModel)
+        hiddenBase.isVisible = false
+        firstClip.isClippingMask = true
+        secondClip.isClippingMask = true
+        viewModel.document.layers = [hiddenBase, firstClip, secondClip]
+        select([firstClip.id, secondClip.id], primary: secondClip.id, in: viewModel)
+
+        #expect(viewModel.canMergeSelectedLayers)
+        viewModel.mergeSelectedLayers()
+
+        let merged = try #require(viewModel.document.selectedLayer)
+        let mergedIndex = try #require(viewModel.document.layers.firstIndex { $0.id == merged.id })
+        #expect(merged.isClippingMask)
+        #expect(viewModel.document.clippingBase(forLayerAt: mergedIndex)?.id == hiddenBase.id)
+    }
+
+    @Test func mergeDownKeepsHiddenExternalClippingBase() throws {
+        let viewModel = makeViewModel()
+        var hiddenBase = layer("Hidden Base", in: viewModel)
+        var lowerClip = layer("Lower Clip", in: viewModel)
+        let upper = layer("Upper", in: viewModel)
+        hiddenBase.isVisible = false
+        lowerClip.isClippingMask = true
+        viewModel.document.layers = [hiddenBase, lowerClip, upper]
+        select([upper.id], primary: upper.id, in: viewModel)
+
+        #expect(viewModel.canMergeSelectedLayerDown)
+        viewModel.mergeSelectedLayerDown()
+
+        let merged = try #require(viewModel.document.selectedLayer)
+        let mergedIndex = try #require(viewModel.document.layers.firstIndex { $0.id == merged.id })
+        #expect(merged.isClippingMask)
+        #expect(viewModel.document.clippingBase(forLayerAt: mergedIndex)?.id == hiddenBase.id)
+    }
+
     private func makeViewModel() -> ImageEditorViewModel {
         ImageEditorViewModel(
             sourceName: "merge-hierarchy.png",

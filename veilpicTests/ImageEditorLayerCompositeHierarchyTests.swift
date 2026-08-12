@@ -85,6 +85,36 @@ struct ImageEditorLayerCompositeHierarchyTests {
         #expect(viewModel.document.clippingBase(forLayerAt: clipIndex)?.id == merged.id)
     }
 
+    @Test func mergeVisibleKeepsHiddenNearestBaseInsideSurvivingGroup() throws {
+        let viewModel = makeViewModel()
+        var visibleFallback = layer("Visible Fallback", color: .systemBlue, in: viewModel)
+        var hiddenBase = layer("Hidden Base", color: .systemRed, in: viewModel)
+        var hiddenClip = layer("Hidden Clip", color: .systemGreen, in: viewModel)
+        let group = ImageEditorLayer.group(name: "Surviving Group", size: viewModel.document.canvasSize)
+        let visibleRoot = layer("Visible Root", color: .systemYellow, in: viewModel)
+        visibleFallback.groupID = group.id
+        hiddenBase.groupID = group.id
+        hiddenBase.isVisible = false
+        hiddenClip.groupID = group.id
+        hiddenClip.isVisible = false
+        hiddenClip.isClippingMask = true
+        viewModel.document.layers = [visibleFallback, hiddenBase, hiddenClip, group, visibleRoot]
+        select([visibleRoot.id], primary: visibleRoot.id, in: viewModel)
+
+        let clipIndexBefore = try #require(viewModel.document.layers.firstIndex { $0.id == hiddenClip.id })
+        #expect(viewModel.document.clippingBase(forLayerAt: clipIndexBefore)?.id == hiddenBase.id)
+
+        viewModel.mergeVisibleLayers()
+
+        let survivingClip = try #require(viewModel.document.layers.first { $0.id == hiddenClip.id })
+        let clipIndex = try #require(viewModel.document.layers.firstIndex { $0.id == hiddenClip.id })
+        #expect(viewModel.document.layers.contains { $0.id == group.id })
+        #expect(viewModel.document.layers.contains { $0.id == hiddenBase.id })
+        #expect(!viewModel.document.layers.contains { $0.id == visibleFallback.id })
+        #expect(survivingClip.isClippingMask)
+        #expect(viewModel.document.clippingBase(forLayerAt: clipIndex)?.id == hiddenBase.id)
+    }
+
     @Test func stampVisibleUsesASafeRootBoundaryAndLeavesSourceRelationsUntouched() throws {
         let viewModel = makeViewModel()
         var root = layer("Root", color: .systemBlue, in: viewModel)

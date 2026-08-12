@@ -84,12 +84,13 @@ struct ImageEditorLayerDeletionTests {
     @Test func deletingClippingBaseClearsSurvivingChainInsteadOfRebindingIt() throws {
         let viewModel = makeViewModel()
         let fallbackBase = layer("Fallback Base", in: viewModel)
-        let deletedBase = layer("Deleted Base", in: viewModel)
+        var deletedBase = layer("Deleted Base", in: viewModel)
         var firstClip = layer("First Clip", in: viewModel)
         var secondClip = layer("Second Clip", in: viewModel)
         let ceiling = layer("Ceiling", in: viewModel)
         firstClip.isClippingMask = true
         secondClip.isClippingMask = true
+        deletedBase.isVisible = false
         viewModel.document.layers = [fallbackBase, deletedBase, firstClip, secondClip, ceiling]
         select([deletedBase.id], primary: deletedBase.id, in: viewModel)
 

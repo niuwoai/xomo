@@ -129,7 +129,7 @@ enum ImageEditorLayerHierarchyDeletion {
 
     private static func clippingBaseIDs(
         in layers: [ImageEditorLayer],
-        isEffectivelyVisible: (ImageEditorLayer) -> Bool
+        isEffectivelyVisible _: (ImageEditorLayer) -> Bool
     ) -> [UUID: UUID] {
         var result: [UUID: UUID] = [:]
         for index in layers.indices where layers[index].isClippingMask {
@@ -141,7 +141,6 @@ enum ImageEditorLayerHierarchyDeletion {
                     && !candidate.isFilter
                     && !candidate.isClippingMask
                     && candidate.groupID == layer.groupID
-                    && isEffectivelyVisible(candidate)
             }) else { continue }
             result[layer.id] = layers[baseIndex].id
         }

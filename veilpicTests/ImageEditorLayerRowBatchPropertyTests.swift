@@ -180,6 +180,37 @@ struct ImageEditorLayerRowBatchPropertyTests {
         #expect(viewModel.selectedLayersClippingMaskState == .on)
     }
 
+    @Test func hiddenStructuralBaseAllowsSingleAndBatchClippingCreation() throws {
+        let singleFixture = makeFixture()
+        let singleViewModel = singleFixture.viewModel
+        let singleBaseID = singleFixture.layers[0].id
+        let singleClipID = singleFixture.layers[1].id
+        singleViewModel.document.layers[0].isVisible = false
+        select([singleClipID], primary: singleClipID, in: singleViewModel)
+
+        #expect(singleViewModel.canToggleSelectedLayerClippingMask)
+        singleViewModel.toggleSelectedLayerClippingMask()
+        let singleIndex = try #require(singleViewModel.document.layers.firstIndex { $0.id == singleClipID })
+        #expect(try layer(singleClipID, in: singleViewModel).isClippingMask)
+        #expect(singleViewModel.document.clippingBase(forLayerAt: singleIndex)?.id == singleBaseID)
+
+        let batchFixture = makeFixture()
+        let batchViewModel = batchFixture.viewModel
+        let batchBaseID = batchFixture.layers[0].id
+        let firstClipID = batchFixture.layers[1].id
+        let secondClipID = batchFixture.layers[2].id
+        batchViewModel.document.layers[0].isVisible = false
+        select([firstClipID, secondClipID], primary: secondClipID, in: batchViewModel)
+
+        #expect(batchViewModel.canCreateClippingMasksForSelectedLayers)
+        batchViewModel.createClippingMasksForSelectedLayers()
+        for clipID in [firstClipID, secondClipID] {
+            let index = try #require(batchViewModel.document.layers.firstIndex { $0.id == clipID })
+            #expect(try layer(clipID, in: batchViewModel).isClippingMask)
+            #expect(batchViewModel.document.clippingBase(forLayerAt: index)?.id == batchBaseID)
+        }
+    }
+
     @Test func clippingToolbarUsesBatchActionAndExposesMixedState() throws {
         let repositoryRoot = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()

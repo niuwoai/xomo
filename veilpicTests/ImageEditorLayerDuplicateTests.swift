@@ -268,6 +268,44 @@ struct ImageEditorLayerDuplicateTests {
         #expect(orphan.isClippingMask)
     }
 
+    @Test func duplicatingGroupKeepsClippingChainBoundToHiddenNearestBase() throws {
+        let viewModel = makeViewModel()
+        var fallbackBase = namedLayer("Fallback Base", in: viewModel)
+        var hiddenBase = namedLayer("Hidden Base", in: viewModel)
+        var clip = namedLayer("Clip", in: viewModel)
+        var group = ImageEditorLayer.group(name: "Hidden Chain", size: viewModel.document.canvasSize)
+        fallbackBase.groupID = group.id
+        hiddenBase.groupID = group.id
+        hiddenBase.isVisible = false
+        clip.groupID = group.id
+        clip.isClippingMask = true
+        group.isVisible = false
+        viewModel.document.layers = [fallbackBase, hiddenBase, clip, group]
+        select([group.id], primary: group.id, in: viewModel)
+
+        let originalClipIndex = try #require(viewModel.document.layers.firstIndex { $0.id == clip.id })
+        #expect(viewModel.document.clippingBase(forLayerAt: originalClipIndex)?.id == hiddenBase.id)
+
+        viewModel.duplicateSelectedLayer()
+
+        let groupCopy = try #require(copy(of: group, in: viewModel))
+        let fallbackCopy = try #require(viewModel.document.layers.first {
+            $0.groupID == groupCopy.id && $0.name == fallbackBase.name
+        })
+        let hiddenBaseCopy = try #require(viewModel.document.layers.first {
+            $0.groupID == groupCopy.id && $0.name == hiddenBase.name
+        })
+        let clipCopy = try #require(viewModel.document.layers.first {
+            $0.groupID == groupCopy.id && $0.name == clip.name
+        })
+        let clipCopyIndex = try #require(viewModel.document.layers.firstIndex { $0.id == clipCopy.id })
+        #expect(!groupCopy.isVisible)
+        #expect(!hiddenBaseCopy.isVisible)
+        #expect(clipCopy.isClippingMask)
+        #expect(viewModel.document.clippingBase(forLayerAt: clipCopyIndex)?.id == hiddenBaseCopy.id)
+        #expect(viewModel.document.clippingBase(forLayerAt: clipCopyIndex)?.id != fallbackCopy.id)
+    }
+
     private func layer(_ id: UUID, in viewModel: ImageEditorViewModel) -> ImageEditorLayer? {
         viewModel.document.layers.first { $0.id == id }
     }
