@@ -2439,6 +2439,49 @@ struct ImageEditorScopeTests {
         }
     }
 
+    @Test func deleteKeysPrioritizePendingPenPathBeforeDocumentObjects() throws {
+        let viewSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let pathSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorPathCommands.swift"),
+            encoding: .utf8
+        )
+
+        let deleteStart = try #require(viewSource.range(of: "deleteSelectedObject: {"))
+        let deleteEnd = try #require(
+            viewSource[deleteStart.upperBound...].range(of: "cancelSelectedObject: {")
+        )
+        let deleteSource = viewSource[deleteStart.lowerBound..<deleteEnd.lowerBound]
+        let dragCancel = try #require(deleteSource.range(of: "cancelPathAnchorDragForKeyboardCommand()"))
+        let pointerPolicy = try #require(deleteSource.range(of: "ImageEditorPendingPenPointerPolicy"))
+        let pointerLatch = try #require(
+            deleteSource[pointerPolicy.upperBound...].range(of: "isPathAnchorDragCancelled = true")
+        )
+        let pendingDelete = try #require(deleteSource.range(of: "viewModel.deletePendingPenPointIfNeeded()"))
+        let documentDelete = try #require(deleteSource.range(of: "viewModel.deleteSelectedPathAnchor()"))
+        let layerDelete = try #require(deleteSource.range(of: "viewModel.deleteSelectedXomoObjectIfNeeded()"))
+        #expect(dragCancel.lowerBound < pointerPolicy.lowerBound)
+        #expect(pointerPolicy.lowerBound < pointerLatch.lowerBound)
+        #expect(pointerLatch.lowerBound < pendingDelete.lowerBound)
+        #expect(pendingDelete.lowerBound < documentDelete.lowerBound)
+        #expect(documentDelete.lowerBound < layerDelete.lowerBound)
+
+        let commandStart = try #require(pathSource.range(of: "func deletePendingPenPointIfNeeded()"))
+        let commandEnd = try #require(
+            pathSource[commandStart.upperBound...].range(of: "func beginMovingPathAnchor")
+        )
+        let commandSource = pathSource[commandStart.lowerBound..<commandEnd.lowerBound]
+        let ownership = try #require(commandSource.range(of: "hasPendingPenPathTransaction"))
+        let transientDelete = try #require(commandSource.range(of: "undoPendingPenPoint()"))
+        #expect(ownership.lowerBound < transientDelete.lowerBound)
+        #expect(commandSource.contains("return true"))
+
+        #expect(viewSource.contains("let isDelete = event.keyCode == 51 || event.keyCode == 117"))
+        #expect(viewSource.contains("deleteSelectedObject()"))
+    }
+
     @Test func viewMenuExposesClassicZoomShortcuts() throws {
         let source = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),

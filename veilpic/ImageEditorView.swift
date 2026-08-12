@@ -225,6 +225,17 @@ struct ImageEditorView: View {
                     if cancelPathAnchorDragForKeyboardCommand() {
                         return true
                     }
+                    if ImageEditorPendingPenPointerPolicy.ownsUncommittedPoint(
+                        tool: canvasInteractionTool,
+                        isPointerSequenceActive: isPenPointerSequenceActive,
+                        isMovingPathAnchor: isMovingPathAnchor
+                    ) {
+                        isPathAnchorDragCancelled = true
+                        return true
+                    }
+                    if viewModel.deletePendingPenPointIfNeeded() {
+                        return true
+                    }
                     guard !viewModel.hasActiveLayerMoveTransaction else { return false }
                     if deleteSelectedShapeGradientStopIfNeeded() {
                         return true

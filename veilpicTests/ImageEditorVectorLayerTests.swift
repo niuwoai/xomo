@@ -557,6 +557,48 @@ struct ImageEditorVectorLayerTests {
         #expect(viewModel.undoStack.count == undoCount + 1)
     }
 
+    @Test func deleteKeyRemovesPendingPenPointsWithoutReachingDocumentObjects() async throws {
+        let canvasSize = NSSize(width: 140, height: 100)
+        let image = testBitmapImage(size: canvasSize, background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        viewModel.addLayer()
+        viewModel.undo()
+        let originalImageData = try #require(viewModel.currentImage.qingtuPNGData())
+        let originalLayerIDs = viewModel.document.layers.map(\.id)
+        let originalHistory = viewModel.document.history
+        let undoCount = viewModel.undoStack.count
+        let redoCount = viewModel.redoStack.count
+        let points = [
+            CGPoint(x: 20, y: 20),
+            CGPoint(x: 104, y: 28),
+            CGPoint(x: 70, y: 78)
+        ]
+        viewModel.selectTool(.pen)
+        points.forEach(viewModel.addPenPoint)
+
+        for expectedCount in stride(from: points.count - 1, through: 0, by: -1) {
+            #expect(viewModel.deletePendingPenPointIfNeeded())
+            #expect(viewModel.pendingPenPathPoints.count == expectedCount)
+        }
+        #expect(viewModel.undonePendingPenPathPoints == Array(points.reversed()))
+
+        // The transient branch still owns Delete after its visible points are
+        // exhausted, so another key press cannot reach a selected path/layer.
+        #expect(viewModel.deletePendingPenPointIfNeeded())
+        #expect(viewModel.pendingPenPathPoints.isEmpty)
+        #expect(viewModel.undonePendingPenPathPoints == Array(points.reversed()))
+        #expect(viewModel.currentImage.qingtuPNGData() == originalImageData)
+        #expect(viewModel.document.layers.map(\.id) == originalLayerIDs)
+        #expect(viewModel.document.history == originalHistory)
+        #expect(viewModel.undoStack.count == undoCount)
+        #expect(viewModel.redoStack.count == redoCount)
+
+        #expect(viewModel.cancelPenPath())
+        #expect(!viewModel.deletePendingPenPointIfNeeded())
+        #expect(!viewModel.hasPendingPenPathTransaction)
+        #expect(viewModel.canRedo)
+    }
+
     @Test func pathSelectionHitsClosedPathGeometryAndMovesWholeLayer() async throws {
         let canvasSize = NSSize(width: 140, height: 100)
         let image = testBitmapImage(size: canvasSize, background: .black)

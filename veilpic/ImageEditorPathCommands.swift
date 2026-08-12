@@ -206,6 +206,13 @@ extension ImageEditorViewModel {
     }
 
     @discardableResult
+    func deletePendingPenPointIfNeeded() -> Bool {
+        guard hasPendingPenPathTransaction else { return false }
+        _ = undoPendingPenPoint()
+        return true
+    }
+
+    @discardableResult
     func beginMovingPathAnchor(at point: CGPoint?) -> Bool {
         guard let point else { return false }
         if hasActivePathAnchorMoveTransaction {
