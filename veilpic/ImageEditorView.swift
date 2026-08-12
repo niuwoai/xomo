@@ -3819,7 +3819,10 @@ struct ImageEditorView: View {
                         viewModel.finishPenPath(closed: false)
                     } else {
                         if !isPathAnchorDragCancelled {
-                            viewModel.addPenPoint(endImagePoint)
+                            viewModel.addPenPoint(
+                                endImagePoint,
+                                constrainedToAngleIncrement: canvasModifierFlags.contains(.shift)
+                            )
                         }
                     }
                 case .pathSelection:

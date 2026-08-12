@@ -12,6 +12,31 @@ import Testing
 @MainActor
 @Suite(.serialized)
 struct ImageEditorHistoryTests {
+    @Test func penPointConstraintUsesNearestFortyFiveDegreeDirectionAndCanvasBoundary() {
+        let horizontal = ImageEditorPenPointGeometry.constrainedPoint(
+            from: CGPoint(x: 50, y: 50),
+            toward: CGPoint(x: 90, y: 60),
+            canvasSize: CGSize(width: 100, height: 100)
+        )
+        #expect(abs(horizontal.y - 50) < 0.000_001)
+        #expect(abs(hypot(horizontal.x - 50, horizontal.y - 50) - hypot(40, 10)) < 0.000_001)
+
+        let diagonalAtBoundary = ImageEditorPenPointGeometry.constrainedPoint(
+            from: CGPoint(x: 90, y: 90),
+            toward: CGPoint(x: 130, y: 110),
+            canvasSize: CGSize(width: 100, height: 100)
+        )
+        #expect(abs(diagonalAtBoundary.x - 100) < 0.000_001)
+        #expect(abs(diagonalAtBoundary.y - 100) < 0.000_001)
+
+        let unchanged = ImageEditorPenPointGeometry.constrainedPoint(
+            from: CGPoint(x: 24, y: 36),
+            toward: CGPoint(x: 24, y: 36),
+            canvasSize: CGSize(width: 100, height: 100)
+        )
+        #expect(unchanged == CGPoint(x: 24, y: 36))
+    }
+
     @Test func commandClickFinishesOnlyAnExistingPendingPenPath() {
         #expect(ImageEditorPendingPenPointerFinishPolicy.shouldFinishOpenPath(
             hasPendingPath: true,

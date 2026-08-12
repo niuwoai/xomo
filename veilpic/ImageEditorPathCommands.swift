@@ -177,13 +177,30 @@ extension ImageEditorViewModel {
     }
 
     func addPenPoint(_ point: CGPoint?) {
+        addPenPoint(point, constrainedToAngleIncrement: false)
+    }
+
+    func addPenPoint(
+        _ point: CGPoint?,
+        constrainedToAngleIncrement: Bool
+    ) {
         guard let point else { return }
         if isPenCloseCandidate(at: point) {
             finishPenPath(closed: true)
             return
         }
+        let resolvedPoint: CGPoint
+        if constrainedToAngleIncrement, let previousPoint = pendingPenPathPoints.last {
+            resolvedPoint = ImageEditorPenPointGeometry.constrainedPoint(
+                from: previousPoint,
+                toward: point,
+                canvasSize: document.canvasSize
+            )
+        } else {
+            resolvedPoint = point
+        }
         undonePendingPenPathPoints = []
-        pendingPenPathPoints.append(point)
+        pendingPenPathPoints.append(resolvedPoint)
         statusText = L10n.format("imageEditor.status.penPointAdded", pendingPenPathPoints.count)
     }
 
@@ -2256,6 +2273,54 @@ extension ImageEditorViewModel {
             let bounds = mask.selectedBounds(in: document.canvasSize)
         else { return nil }
         return .raster(mask: mask, bounds: bounds)
+    }
+}
+
+enum ImageEditorPenPointGeometry {
+    private static let angleIncrement = CGFloat.pi / 4
+
+    static func constrainedPoint(
+        from origin: CGPoint,
+        toward proposedPoint: CGPoint,
+        canvasSize: CGSize
+    ) -> CGPoint {
+        let delta = CGVector(
+            dx: proposedPoint.x - origin.x,
+            dy: proposedPoint.y - origin.y
+        )
+        let length = hypot(delta.dx, delta.dy)
+        guard length > 0.000_001 else { return origin }
+
+        let rawAngle = atan2(delta.dy, delta.dx)
+        let angle = (rawAngle / angleIncrement).rounded() * angleIncrement
+        let direction = CGVector(dx: cos(angle), dy: sin(angle))
+        let horizontalLimit = availableDistance(
+            from: origin.x,
+            direction: direction.dx,
+            upperBound: canvasSize.width
+        )
+        let verticalLimit = availableDistance(
+            from: origin.y,
+            direction: direction.dy,
+            upperBound: canvasSize.height
+        )
+        let boundedLength = min(length, min(horizontalLimit, verticalLimit))
+        return CGPoint(
+            x: min(max(0, origin.x + direction.dx * boundedLength), canvasSize.width),
+            y: min(max(0, origin.y + direction.dy * boundedLength), canvasSize.height)
+        )
+    }
+
+    private static func availableDistance(
+        from origin: CGFloat,
+        direction: CGFloat,
+        upperBound: CGFloat
+    ) -> CGFloat {
+        guard abs(direction) > 0.000_001 else { return .greatestFiniteMagnitude }
+        if direction > 0 {
+            return max(0, upperBound - origin) / direction
+        }
+        return max(0, origin) / -direction
     }
 }
 

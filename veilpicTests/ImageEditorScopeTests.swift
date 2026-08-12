@@ -2562,6 +2562,42 @@ struct ImageEditorScopeTests {
         #expect(policySource.contains("hasPendingPath && relevantFlags == [.command]"))
     }
 
+    @Test func penShiftClickConstrainsNewAnchorBeforeAddingIt() throws {
+        let viewSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let pathSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorPathCommands.swift"),
+            encoding: .utf8
+        )
+
+        let penEndStart = try #require(
+            viewSource.range(of: "case .pen:\n                    if isMovingPathAnchor, !isPathAnchorDragCancelled")
+        )
+        let penEnd = try #require(
+            viewSource[penEndStart.upperBound...].range(of: "case .pathSelection:")
+        )
+        let penEndSource = viewSource[penEndStart.lowerBound..<penEnd.lowerBound]
+        #expect(penEndSource.contains("viewModel.addPenPoint("))
+        #expect(penEndSource.contains("constrainedToAngleIncrement: canvasModifierFlags.contains(.shift)"))
+
+        let addStart = try #require(pathSource.range(of: "func addPenPoint(\n        _ point: CGPoint?,"))
+        let addEnd = try #require(pathSource[addStart.upperBound...].range(of: "func undoPendingPenPoint"))
+        let addSource = pathSource[addStart.lowerBound..<addEnd.lowerBound]
+        let closeCheck = try #require(addSource.range(of: "isPenCloseCandidate(at: point)"))
+        let constraint = try #require(
+            addSource.range(of: "ImageEditorPenPointGeometry.constrainedPoint(")
+        )
+        let append = try #require(addSource.range(of: "pendingPenPathPoints.append(resolvedPoint)"))
+        #expect(closeCheck.lowerBound < constraint.lowerBound)
+        #expect(constraint.lowerBound < append.lowerBound)
+        #expect(addSource.contains("let previousPoint = pendingPenPathPoints.last"))
+        #expect(pathSource.contains(
+            "func addPenPoint(_ point: CGPoint?) {\n        addPenPoint(point, constrainedToAngleIncrement: false)"
+        ))
+    }
+
     @Test func viewMenuExposesClassicZoomShortcuts() throws {
         let source = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),

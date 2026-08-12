@@ -628,6 +628,44 @@ struct ImageEditorVectorLayerTests {
         #expect(viewModel.undoStack.count == originalUndoCount + 1)
     }
 
+    @Test func shiftClickConstrainsPendingPenPointWithoutWritingDocumentHistory() throws {
+        let canvasSize = NSSize(width: 140, height: 100)
+        let image = testBitmapImage(size: canvasSize, background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        let originalLayerIDs = viewModel.document.layers.map(\.id)
+        let originalHistory = viewModel.document.history
+        let originalUndoCount = viewModel.undoStack.count
+
+        let firstPoint = CGPoint(x: 20, y: 20)
+        let proposedPoint = CGPoint(x: 80, y: 35)
+        viewModel.addPenPoint(firstPoint, constrainedToAngleIncrement: true)
+        viewModel.addPenPoint(proposedPoint, constrainedToAngleIncrement: true)
+
+        #expect(viewModel.pendingPenPathPoints.count == 2)
+        #expect(viewModel.pendingPenPathPoints[0] == firstPoint)
+        let constrainedPoint = viewModel.pendingPenPathPoints[1]
+        #expect(abs(constrainedPoint.y - firstPoint.y) < 0.000_001)
+        #expect(abs(
+            hypot(constrainedPoint.x - firstPoint.x, constrainedPoint.y - firstPoint.y)
+                - hypot(proposedPoint.x - firstPoint.x, proposedPoint.y - firstPoint.y)
+        ) < 0.000_001)
+        #expect(viewModel.document.layers.map(\.id) == originalLayerIDs)
+        #expect(viewModel.document.history == originalHistory)
+        #expect(viewModel.undoStack.count == originalUndoCount)
+
+        viewModel.addPenPoint(
+            CGPoint(x: 90, y: 70),
+            constrainedToAngleIncrement: true
+        )
+        viewModel.addPenPoint(
+            CGPoint(x: firstPoint.x + 1, y: firstPoint.y + 1),
+            constrainedToAngleIncrement: true
+        )
+        let closedContent = try #require(viewModel.document.selectedLayer?.shapeContent)
+        #expect(closedContent.isPathClosed)
+        #expect(closedContent.editablePathAnchors.count == 3)
+    }
+
     @Test func pathSelectionHitsClosedPathGeometryAndMovesWholeLayer() async throws {
         let canvasSize = NSSize(width: 140, height: 100)
         let image = testBitmapImage(size: canvasSize, background: .black)
