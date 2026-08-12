@@ -8,6 +8,20 @@
 import AppKit
 import CoreGraphics
 
+private struct ImageEditorPathSegmentHit {
+    let subpathIndex: Int
+    let startAnchorIndex: Int
+    let endAnchorIndex: Int
+    let parameter: CGFloat
+    let distance: CGFloat
+}
+
+enum ImageEditorPenPathSegmentInsertionState: Equatable {
+    case none
+    case available
+    case blocked
+}
+
 extension ImageEditorViewModel {
     /// Photoshop's Path Selection tool selects an editable path by its
     /// rendered geometry, rather than by the layer's rectangular bounds.
@@ -770,6 +784,76 @@ extension ImageEditorViewModel {
 
     func isPenCornerConversionCandidate(at point: CGPoint?) -> Bool {
         penCornerConversionAnchorPoint(at: point) != nil
+    }
+
+    func isPenPathSegmentInsertionCandidate(at point: CGPoint?) -> Bool {
+        penPathSegmentInsertionState(at: point) != .none
+    }
+
+    func isPenPathSegmentInsertionBlocked(at point: CGPoint?) -> Bool {
+        penPathSegmentInsertionState(at: point) == .blocked
+    }
+
+    func penPathSegmentInsertionState(
+        at point: CGPoint?
+    ) -> ImageEditorPenPathSegmentInsertionState {
+        guard penPathSegmentHit(at: point) != nil,
+              let layer = document.selectedLayer
+        else { return .none }
+        return document.isEffectivelyPixelsLocked(layer) ? .blocked : .available
+    }
+
+    /// Inserts an anchor at the pointer's actual position on the nearest
+    /// selected path segment. Returning true means the segment consumed the
+    /// click, including a locked segment, so Pen cannot accidentally begin a
+    /// new path on top of an existing one.
+    @discardableResult
+    func insertPathAnchor(at point: CGPoint?) -> Bool {
+        guard let hit = penPathSegmentHit(at: point),
+              let layerIndex = document.selectedLayerIndex,
+              let shapeContent = document.layers[layerIndex].shapeContent,
+              shapeContent.kind == .path,
+              shapeContent.allEditablePathSubpaths.indices.contains(hit.subpathIndex)
+        else { return false }
+
+        selectedPathSubpathIndex = hit.subpathIndex
+        selectedPathAnchorIndex = hit.startAnchorIndex
+        selectedPathControlRole = .anchor
+        guard !document.isEffectivelyPixelsLocked(document.layers[layerIndex]) else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return true
+        }
+        guard !cancelPathAnchorDragBeforeDiscreteCommand() else { return true }
+
+        var canvasAnchors = canvasAnchors(
+            for: shapeContent.allEditablePathSubpaths[hit.subpathIndex],
+            layer: document.layers[layerIndex]
+        )
+        guard canvasAnchors.indices.contains(hit.startAnchorIndex),
+              canvasAnchors.indices.contains(hit.endAnchorIndex)
+        else { return true }
+        let split = splitPathSegment(
+            from: canvasAnchors[hit.startAnchorIndex],
+            to: canvasAnchors[hit.endAnchorIndex],
+            at: hit.parameter
+        )
+        canvasAnchors[hit.startAnchorIndex] = split.start
+        canvasAnchors[hit.endAnchorIndex] = split.end
+        let insertionIndex = hit.startAnchorIndex + 1
+        canvasAnchors.insert(split.inserted, at: insertionIndex)
+
+        pushUndo()
+        updatePathLayer(
+            at: layerIndex,
+            shapeContent: shapeContent,
+            canvasAnchors: canvasAnchors,
+            editingSubpathIndex: hit.subpathIndex
+        )
+        selectedPathAnchorIndex = insertionIndex
+        selectedPathControlRole = .anchor
+        appendHistory(L10n.text("imageEditor.history.pathAnchorInsert"))
+        statusText = L10n.text("imageEditor.status.pathAnchorInserted")
+        return true
     }
 
     func penCornerConversionAnchorPoint(at point: CGPoint?) -> CGPoint? {
@@ -1664,6 +1748,132 @@ extension ImageEditorViewModel {
         )
     }
 
+    private func penPathSegmentHit(at point: CGPoint?) -> ImageEditorPathSegmentHit? {
+        guard pendingPenPathAnchors.isEmpty,
+              let point,
+              point.x.isFinite,
+              point.y.isFinite,
+              selectedLayerCount == 1,
+              let layer = document.selectedLayer,
+              let content = layer.shapeContent,
+              content.kind == .path
+        else { return nil }
+
+        let nearestControlDistance = pathControlCandidates(for: content, layer: layer)
+            .map { distance(from: point, to: $0.point) }
+            .min() ?? .greatestFiniteMagnitude
+        guard nearestControlDistance > pathAnchorHitDistance else { return nil }
+
+        var nearest: ImageEditorPathSegmentHit?
+        for (subpathIndex, localAnchors) in content.allEditablePathSubpaths.enumerated()
+            where localAnchors.count >= 2 {
+            let anchors = canvasAnchors(for: localAnchors, layer: layer)
+            let segmentCount = content.isPathClosed ? anchors.count : anchors.count - 1
+            for startIndex in 0..<segmentCount {
+                let endIndex = (startIndex + 1) % anchors.count
+                let candidate = nearestPointOnCubicPath(
+                    from: anchors[startIndex],
+                    to: anchors[endIndex],
+                    point: point
+                )
+                guard candidate.parameter > 0.02,
+                      candidate.parameter < 0.98,
+                      candidate.distance <= pathAnchorHitDistance
+                else { continue }
+                if candidate.distance < (nearest?.distance ?? .greatestFiniteMagnitude) {
+                    nearest = ImageEditorPathSegmentHit(
+                        subpathIndex: subpathIndex,
+                        startAnchorIndex: startIndex,
+                        endAnchorIndex: endIndex,
+                        parameter: candidate.parameter,
+                        distance: candidate.distance
+                    )
+                }
+            }
+        }
+        return nearest
+    }
+
+    private func nearestPointOnCubicPath(
+        from start: ImageEditorPathAnchor,
+        to end: ImageEditorPathAnchor,
+        point: CGPoint
+    ) -> (parameter: CGFloat, point: CGPoint, distance: CGFloat) {
+        if start.outControl == nil, end.inControl == nil {
+            let vector = CGVector(
+                dx: end.point.x - start.point.x,
+                dy: end.point.y - start.point.y
+            )
+            let lengthSquared = vector.dx * vector.dx + vector.dy * vector.dy
+            guard lengthSquared > 0.000_001 else {
+                return (0, start.point, distance(from: point, to: start.point))
+            }
+            let projection = (
+                (point.x - start.point.x) * vector.dx
+                    + (point.y - start.point.y) * vector.dy
+            ) / lengthSquared
+            let parameter = min(1, max(0, projection))
+            let nearestPoint = interpolatedPoint(start.point, end.point, at: parameter)
+            return (parameter, nearestPoint, distance(from: point, to: nearestPoint))
+        }
+
+        let sampleCount = 48
+        var bestParameter: CGFloat = 0
+        var bestDistance = CGFloat.greatestFiniteMagnitude
+        for step in 0...sampleCount {
+            let parameter = CGFloat(step) / CGFloat(sampleCount)
+            let candidate = cubicPoint(from: start, to: end, parameter: parameter)
+            let candidateDistance = distance(from: point, to: candidate)
+            if candidateDistance < bestDistance {
+                bestParameter = parameter
+                bestDistance = candidateDistance
+            }
+        }
+
+        var lower = max(0, bestParameter - 1 / CGFloat(sampleCount))
+        var upper = min(1, bestParameter + 1 / CGFloat(sampleCount))
+        for _ in 0..<12 {
+            let first = lower + (upper - lower) / 3
+            let second = upper - (upper - lower) / 3
+            let firstDistance = distance(
+                from: point,
+                to: cubicPoint(from: start, to: end, parameter: first)
+            )
+            let secondDistance = distance(
+                from: point,
+                to: cubicPoint(from: start, to: end, parameter: second)
+            )
+            if firstDistance <= secondDistance {
+                upper = second
+            } else {
+                lower = first
+            }
+        }
+        let parameter = (lower + upper) / 2
+        let nearestPoint = cubicPoint(from: start, to: end, parameter: parameter)
+        return (parameter, nearestPoint, distance(from: point, to: nearestPoint))
+    }
+
+    private func cubicPoint(
+        from start: ImageEditorPathAnchor,
+        to end: ImageEditorPathAnchor,
+        parameter: CGFloat
+    ) -> CGPoint {
+        let inverse = 1 - parameter
+        let control1 = start.outControl ?? start.point
+        let control2 = end.inControl ?? end.point
+        return CGPoint(
+            x: inverse * inverse * inverse * start.point.x
+                + 3 * inverse * inverse * parameter * control1.x
+                + 3 * inverse * parameter * parameter * control2.x
+                + parameter * parameter * parameter * end.point.x,
+            y: inverse * inverse * inverse * start.point.y
+                + 3 * inverse * inverse * parameter * control1.y
+                + 3 * inverse * parameter * parameter * control2.y
+                + parameter * parameter * parameter * end.point.y
+        )
+    }
+
     private func setSelectedPathAnchorPosition(_ point: CGPoint) {
         let boundedPoint = clampedCanvasPoint(point)
         guard !pathPointsMatch(selectedPathAnchorCanvasPoint, boundedPoint) else { return }
@@ -2337,15 +2547,17 @@ extension ImageEditorViewModel {
 
     private func splitPathSegment(
         from start: ImageEditorPathAnchor,
-        to end: ImageEditorPathAnchor
+        to end: ImageEditorPathAnchor,
+        at parameter: CGFloat = 0.5
     ) -> (start: ImageEditorPathAnchor, inserted: ImageEditorPathAnchor, end: ImageEditorPathAnchor) {
         var updatedStart = start
         var updatedEnd = end
+        let parameter = min(1, max(0, parameter))
         let segmentHasCurve = start.outControl != nil || end.inControl != nil
         guard segmentHasCurve else {
             return (
                 updatedStart,
-                ImageEditorPathAnchor(point: midpoint(start.point, end.point)),
+                ImageEditorPathAnchor(point: interpolatedPoint(start.point, end.point, at: parameter)),
                 updatedEnd
             )
         }
@@ -2354,12 +2566,12 @@ extension ImageEditorViewModel {
         let p1 = start.outControl ?? p0
         let p2 = end.inControl ?? end.point
         let p3 = end.point
-        let q0 = midpoint(p0, p1)
-        let q1 = midpoint(p1, p2)
-        let q2 = midpoint(p2, p3)
-        let r0 = midpoint(q0, q1)
-        let r1 = midpoint(q1, q2)
-        let splitPoint = midpoint(r0, r1)
+        let q0 = interpolatedPoint(p0, p1, at: parameter)
+        let q1 = interpolatedPoint(p1, p2, at: parameter)
+        let q2 = interpolatedPoint(p2, p3, at: parameter)
+        let r0 = interpolatedPoint(q0, q1, at: parameter)
+        let r1 = interpolatedPoint(q1, q2, at: parameter)
+        let splitPoint = interpolatedPoint(r0, r1, at: parameter)
 
         updatedStart.outControl = q0
         updatedEnd.inControl = q2
@@ -2371,8 +2583,11 @@ extension ImageEditorViewModel {
         return (updatedStart, inserted, updatedEnd)
     }
 
-    private func midpoint(_ first: CGPoint, _ second: CGPoint) -> CGPoint {
-        CGPoint(x: (first.x + second.x) / 2, y: (first.y + second.y) / 2)
+    private func interpolatedPoint(_ first: CGPoint, _ second: CGPoint, at parameter: CGFloat) -> CGPoint {
+        CGPoint(
+            x: first.x + (second.x - first.x) * parameter,
+            y: first.y + (second.y - first.y) * parameter
+        )
     }
 
     private func symmetricHandleVector(

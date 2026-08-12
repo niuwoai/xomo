@@ -2672,6 +2672,9 @@ struct ImageEditorView: View {
                         at: hoverViewPoint,
                         in: geometry.size
                     )
+                    let penSegmentInsertionState = canvasInteractionTool == .pen
+                        ? viewModel.penPathSegmentInsertionState(at: canvasPoint)
+                        : .none
                     let displayedBrushDiameter = ImageEditorCanvasCursor.pressureAdjustedBrushDiameter(
                         baseDiameter: viewModel.brushSize * displayScale,
                         tool: canvasInteractionTool,
@@ -2712,6 +2715,8 @@ struct ImageEditorView: View {
                                 || (canvasInteractionTool == .pen
                                     && canvasModifierFlags.contains(.option)
                                     && viewModel.isPenCornerConversionBlocked(at: canvasPoint)),
+                            penIsAddingAnchor: penSegmentInsertionState != .none,
+                            penAdditionIsBlocked: penSegmentInsertionState == .blocked,
                             pathHandleIsBreaking: isBreakingSmoothPathHandle(
                                 at: canvasPoint,
                                 modifierFlags: canvasModifierFlags
@@ -4062,6 +4067,11 @@ struct ImageEditorView: View {
                     } else if isMovingPathAnchor, !isPathAnchorDragCancelled {
                         viewModel.finishMovingPathAnchor()
                     } else if !isPathAnchorDragCancelled,
+                              viewModel.insertPathAnchor(
+                                at: imagePoint(from: value.startLocation, in: size)
+                              ) {
+                        break
+                    } else if !isPathAnchorDragCancelled,
                               ImageEditorPendingPenPointerFinishPolicy.shouldFinishOpenPath(
                                 hasPendingPath: viewModel.hasPendingPenPathTransaction,
                                 modifierFlags: NSEvent.modifierFlags
@@ -4416,6 +4426,9 @@ struct ImageEditorView: View {
 
     private func updateCanvasCursor(at viewPoint: CGPoint, in size: CGSize) {
         let canvasPoint = imagePoint(from: viewPoint, in: size)
+        let penSegmentInsertionState = canvasInteractionTool == .pen
+            ? viewModel.penPathSegmentInsertionState(at: canvasPoint)
+            : .none
         viewModel.updatePointer(canvasPoint)
         let imageRect = fittedImageRect(in: size)
         let displayScale = imageRect.width / max(viewModel.document.canvasSize.width, 1)
@@ -4453,6 +4466,8 @@ struct ImageEditorView: View {
                 || (canvasInteractionTool == .pen
                     && NSEvent.modifierFlags.contains(.option)
                     && viewModel.isPenCornerConversionBlocked(at: canvasPoint)),
+            penIsAddingAnchor: penSegmentInsertionState != .none,
+            penAdditionIsBlocked: penSegmentInsertionState == .blocked,
             pathHandleIsBreaking: isBreakingSmoothPathHandle(
                 at: canvasPoint,
                 modifierFlags: NSEvent.modifierFlags
@@ -11211,6 +11226,8 @@ enum ImageEditorCanvasCursor {
         penIsClosing: Bool = false,
         penIsConverting: Bool = false,
         penConversionIsBlocked: Bool = false,
+        penIsAddingAnchor: Bool = false,
+        penAdditionIsBlocked: Bool = false,
         pathHandleIsBreaking: Bool = false,
         handIsDragging: Bool = false,
         isObjectMoveGestureActive: Bool = false,
@@ -11290,6 +11307,8 @@ enum ImageEditorCanvasCursor {
                 penIsClosing: penIsClosing,
                 penIsConverting: penIsConverting,
                 penConversionIsBlocked: penConversionIsBlocked,
+                penIsAddingAnchor: penIsAddingAnchor,
+                penAdditionIsBlocked: penAdditionIsBlocked,
                 pathHandleIsBreaking: pathHandleIsBreaking,
                 handIsDragging: handIsDragging,
                 isPickingSampledBrushSource: isPickingSampledBrushSource,
@@ -11730,6 +11749,8 @@ enum ImageEditorCanvasCursor {
         penIsClosing: Bool = false,
         penIsConverting: Bool = false,
         penConversionIsBlocked: Bool = false,
+        penIsAddingAnchor: Bool = false,
+        penAdditionIsBlocked: Bool = false,
         pathHandleIsBreaking: Bool = false,
         handIsDragging: Bool = false,
         isPickingSampledBrushSource: Bool = false,
@@ -11811,12 +11832,13 @@ enum ImageEditorCanvasCursor {
         case .samplingScope:
             return .crosshair
         case .vectorPen:
-            if penConversionIsBlocked {
+            if penConversionIsBlocked || penAdditionIsBlocked {
                 return .operationNotAllowed
             }
             return penCursor(
                 isClosing: penIsClosing,
                 isConverting: penIsConverting || pathHandleIsBreaking,
+                isAddingAnchor: penIsAddingAnchor,
                 isConstrained: modifierFlags.contains(.shift)
             )
         case .zoomMagnifier:
@@ -12894,9 +12916,10 @@ enum ImageEditorCanvasCursor {
     private static func penCursor(
         isClosing: Bool,
         isConverting: Bool,
+        isAddingAnchor: Bool,
         isConstrained: Bool
     ) -> NSCursor {
-        let cacheKey = "pen:\(isClosing):\(isConverting):\(isConstrained)"
+        let cacheKey = "pen:\(isClosing):\(isConverting):\(isAddingAnchor):\(isConstrained)"
         if let cachedCursor = cursorCache[cacheKey] {
             return cachedCursor
         }
@@ -12945,6 +12968,22 @@ enum ImageEditorCanvasCursor {
             NSColor.systemOrange.setStroke()
             corner.lineWidth = 1.4
             corner.stroke()
+        } else if isAddingAnchor {
+            let badge = NSBezierPath(ovalIn: NSRect(x: 0.5, y: 23.5, width: 12, height: 12))
+            NSColor.black.withAlphaComponent(0.94).setFill()
+            badge.fill()
+            NSColor.white.withAlphaComponent(0.96).setStroke()
+            badge.lineWidth = 1
+            badge.stroke()
+
+            let plus = NSBezierPath()
+            plus.move(to: NSPoint(x: 3.5, y: 29.5))
+            plus.line(to: NSPoint(x: 9.5, y: 29.5))
+            plus.move(to: NSPoint(x: 6.5, y: 26.5))
+            plus.line(to: NSPoint(x: 6.5, y: 32.5))
+            NSColor.systemGreen.setStroke()
+            plus.lineWidth = 1.5
+            plus.stroke()
         } else if isConstrained {
             let badgeRect = NSRect(x: 0.5, y: 23.5, width: 12, height: 12)
             let badge = NSBezierPath(ovalIn: badgeRect)

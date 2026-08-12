@@ -1972,10 +1972,46 @@ struct ImageEditorCanvasCursorTests {
         ).count == 3)
         #expect(source.contains("viewModel.isPenCornerConversionCandidate(at: canvasPoint)"))
         #expect(source.contains("viewModel.isPenCornerConversionBlocked(at: canvasPoint)"))
+        #expect(source.components(
+            separatedBy: "viewModel.penPathSegmentInsertionState(at: canvasPoint)"
+        ).count == 3)
+        #expect(source.components(separatedBy: "penSegmentInsertionState != .none").count == 3)
+        #expect(source.components(separatedBy: "penSegmentInsertionState == .blocked").count == 3)
+        let insertion = try #require(source.range(of: "viewModel.insertPathAnchor("))
+        let newPoint = try #require(source.range(
+            of: "viewModel.addPenPoint(",
+            range: insertion.upperBound..<source.endIndex
+        ))
+        #expect(insertion.lowerBound < newPoint.lowerBound)
         #expect(source.contains("isConstrained: modifierFlags.contains(.shift)"))
         #expect(source.contains("if isClosing"))
         #expect(source.contains("else if isConverting"))
+        #expect(source.contains("else if isAddingAnchor"))
         #expect(source.contains("else if isConstrained"))
+    }
+
+    @Test func penSegmentInsertionCursorUsesAddBadgeAndHonorsBlockedAndComponentModes() {
+        let ordinary = ImageEditorCanvasCursor.cursor(for: .pen, brushDiameter: 18)
+        let insertion = ImageEditorCanvasCursor.cursor(
+            for: .pen,
+            brushDiameter: 18,
+            penIsAddingAnchor: true
+        )
+
+        #expect(ordinary.image.tiffRepresentation != insertion.image.tiffRepresentation)
+        #expect(ImageEditorCanvasCursor.cursor(
+            for: .pen,
+            brushDiameter: 18,
+            penIsAddingAnchor: true,
+            penAdditionIsBlocked: true
+        ) === NSCursor.operationNotAllowed)
+        #expect(ImageEditorCanvasCursor.cursor(
+            for: .components,
+            selectedTool: .pen,
+            brushDiameter: 18,
+            penIsAddingAnchor: true,
+            penAdditionIsBlocked: true
+        ) === NSCursor.arrow)
     }
 
     @Test func optionBreakHandleCursorAppearsOnlyForPathToolsAndNeverComponents() {

@@ -1773,6 +1773,168 @@ struct ImageEditorVectorLayerTests {
         #expect(viewModel.statusText == L10n.text("imageEditor.status.pathAnchorInserted"))
     }
 
+    @Test func penClickInsertsAnchorAtActualStraightSegmentPositionWithSingleUndo() async throws {
+        let canvasSize = NSSize(width: 140, height: 100)
+        let image = testBitmapImage(size: canvasSize, background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+
+        viewModel.selectTool(.pen)
+        viewModel.addPenPoint(CGPoint(x: 20, y: 30))
+        viewModel.addPenPoint(CGPoint(x: 120, y: 30))
+        viewModel.finishPenPath(closed: false)
+        let historyCount = viewModel.document.history.count
+        let insertionPoint = CGPoint(x: 47, y: 30)
+
+        #expect(viewModel.isPenPathSegmentInsertionCandidate(at: insertionPoint))
+        #expect(viewModel.insertPathAnchor(at: insertionPoint))
+
+        let content = try #require(viewModel.document.selectedLayer?.shapeContent)
+        let selectedPoint = try #require(viewModel.selectedPathAnchorCanvasPoint)
+        #expect(content.pathAnchors.count == 3)
+        #expect(abs(selectedPoint.x - insertionPoint.x) < 0.01)
+        #expect(abs(selectedPoint.y - insertionPoint.y) < 0.01)
+        #expect(viewModel.selectedPathAnchorIndex == 1)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.pathAnchorInsert"))
+
+        viewModel.undo()
+        #expect(viewModel.document.selectedLayer?.shapeContent?.pathAnchors.count == 2)
+    }
+
+    @Test func penClickSplitsCurvedSegmentAtPointerWithoutChangingItsGeometry() async throws {
+        let canvasSize = NSSize(width: 160, height: 120)
+        let image = testBitmapImage(size: canvasSize, background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+
+        viewModel.selectTool(.pen)
+        viewModel.addPenPoint(
+            CGPoint(x: 25, y: 70),
+            symmetricControlDrag: CGSize(width: 28, height: -32),
+            constrainedToAngleIncrement: false
+        )
+        viewModel.addPenPoint(
+            CGPoint(x: 135, y: 70),
+            symmetricControlDrag: CGSize(width: 24, height: 30),
+            constrainedToAngleIncrement: false
+        )
+        viewModel.finishPenPath(closed: false)
+
+        let beforeLayer = try #require(viewModel.document.selectedLayer)
+        let beforeContent = try #require(beforeLayer.shapeContent)
+        let start = try #require(beforeContent.pathAnchors.first)
+        let end = try #require(beforeContent.pathAnchors.last)
+        let canvasPoint: (CGPoint) -> CGPoint = {
+            CGPoint(x: $0.x + beforeLayer.frame.minX, y: $0.y + beforeLayer.frame.minY)
+        }
+        let p0 = canvasPoint(start.point)
+        let p1 = canvasPoint(start.outControl ?? start.point)
+        let p2 = canvasPoint(end.inControl ?? end.point)
+        let p3 = canvasPoint(end.point)
+        let parameter: CGFloat = 0.31
+        let inverse = 1 - parameter
+        let insertionPoint = CGPoint(
+            x: inverse * inverse * inverse * p0.x
+                + 3 * inverse * inverse * parameter * p1.x
+                + 3 * inverse * parameter * parameter * p2.x
+                + parameter * parameter * parameter * p3.x,
+            y: inverse * inverse * inverse * p0.y
+                + 3 * inverse * inverse * parameter * p1.y
+                + 3 * inverse * parameter * parameter * p2.y
+                + parameter * parameter * parameter * p3.y
+        )
+
+        #expect(viewModel.insertPathAnchor(at: insertionPoint))
+
+        let afterLayer = try #require(viewModel.document.selectedLayer)
+        let afterContent = try #require(afterLayer.shapeContent)
+        let canvasAnchor: (ImageEditorPathAnchor) -> ImageEditorPathAnchor = { anchor in
+            ImageEditorPathAnchor(
+                point: CGPoint(x: anchor.point.x + afterLayer.frame.minX, y: anchor.point.y + afterLayer.frame.minY),
+                inControl: anchor.inControl.map {
+                    CGPoint(x: $0.x + afterLayer.frame.minX, y: $0.y + afterLayer.frame.minY)
+                },
+                outControl: anchor.outControl.map {
+                    CGPoint(x: $0.x + afterLayer.frame.minX, y: $0.y + afterLayer.frame.minY)
+                }
+            )
+        }
+        let anchors = afterContent.pathAnchors.map(canvasAnchor)
+        let interpolate: (CGPoint, CGPoint) -> CGPoint = { first, second in
+            CGPoint(
+                x: first.x + (second.x - first.x) * parameter,
+                y: first.y + (second.y - first.y) * parameter
+            )
+        }
+        let q0 = interpolate(p0, p1)
+        let q1 = interpolate(p1, p2)
+        let q2 = interpolate(p2, p3)
+        let r0 = interpolate(q0, q1)
+        let r1 = interpolate(q1, q2)
+        #expect(anchors.count == 3)
+        #expect(abs(anchors[1].point.x - insertionPoint.x) < 0.02)
+        #expect(abs(anchors[1].point.y - insertionPoint.y) < 0.02)
+        #expect(distance(anchors[0].outControl, q0) < 0.05)
+        #expect(distance(anchors[1].inControl, r0) < 0.05)
+        #expect(distance(anchors[1].outControl, r1) < 0.05)
+        #expect(distance(anchors[2].inControl, q2) < 0.05)
+    }
+
+    @Test func penClickInsertsAnchorOnClosedPathWraparoundSegment() async throws {
+        let canvasSize = NSSize(width: 150, height: 110)
+        let image = testBitmapImage(size: canvasSize, background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+
+        viewModel.selectTool(.pen)
+        viewModel.addPenPoint(CGPoint(x: 20, y: 20))
+        viewModel.addPenPoint(CGPoint(x: 125, y: 20))
+        viewModel.addPenPoint(CGPoint(x: 125, y: 90))
+        viewModel.finishPenPath(closed: true)
+        let point = CGPoint(x: 72.5, y: 55)
+
+        #expect(viewModel.isPenPathSegmentInsertionCandidate(at: point))
+        #expect(viewModel.insertPathAnchor(at: point))
+
+        let content = try #require(viewModel.document.selectedLayer?.shapeContent)
+        let selectedPoint = try #require(viewModel.selectedPathAnchorCanvasPoint)
+        #expect(content.isPathClosed)
+        #expect(content.pathAnchors.count == 4)
+        #expect(viewModel.selectedPathAnchorIndex == 3)
+        #expect(abs(selectedPoint.x - point.x) < 0.01)
+        #expect(abs(selectedPoint.y - point.y) < 0.01)
+    }
+
+    @Test func lockedPathSegmentConsumesPenClickWithoutMutation() async throws {
+        let canvasSize = NSSize(width: 140, height: 100)
+        let image = testBitmapImage(size: canvasSize, background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+
+        viewModel.selectTool(.pen)
+        viewModel.addPenPoint(CGPoint(x: 20, y: 30))
+        viewModel.addPenPoint(CGPoint(x: 120, y: 30))
+        viewModel.finishPenPath(closed: false)
+        let layerIndex = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[layerIndex].locksPixels = true
+        let beforeAnchors = viewModel.document.layers[layerIndex]
+            .shapeContent?.allEditablePathSubpaths
+        let beforeFrame = viewModel.document.layers[layerIndex].frame
+        let historyCount = viewModel.document.history.count
+        let point = CGPoint(x: 65, y: 30)
+
+        #expect(viewModel.isPenPathSegmentInsertionCandidate(at: point))
+        #expect(viewModel.isPenPathSegmentInsertionBlocked(at: point))
+        #expect(viewModel.insertPathAnchor(at: point))
+        #expect(viewModel.document.layers[layerIndex]
+            .shapeContent?.allEditablePathSubpaths == beforeAnchors)
+        #expect(viewModel.document.layers[layerIndex].frame == beforeFrame)
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.operationFailed"))
+    }
+
+    private func distance(_ point: CGPoint?, _ expected: CGPoint) -> CGFloat {
+        guard let point else { return .greatestFiniteMagnitude }
+        return hypot(point.x - expected.x, point.y - expected.y)
+    }
+
     @Test func imageEditorTogglesOpenPathClosedAndBackToOpen() async throws {
         let canvasSize = NSSize(width: 140, height: 100)
         let image = testBitmapImage(size: canvasSize, background: .black)
