@@ -1985,12 +1985,19 @@ struct ImageEditorCanvasCursorTests {
         #expect(source.contains("viewModel.finishPenAnchorInteraction("))
         #expect(source.components(
             separatedBy: "ImageEditorPenAnchorAutoDeletePolicy.shouldDelete("
-        ).count == 4)
+        ).count == 6)
+        #expect(source.components(
+            separatedBy: "resolvedPenPathContinuationState(at: canvasPoint)"
+        ).count == 3)
+        #expect(source.components(separatedBy: "penIsContinuingPath:").count >= 5)
+        #expect(source.components(separatedBy: "penContinuationIsBlocked:").count >= 5)
+        let continuation = try #require(source.range(of: "viewModel.beginPenPathContinuation("))
         let insertion = try #require(source.range(of: "viewModel.insertPathAnchor("))
         let newPoint = try #require(source.range(
             of: "viewModel.addPenPoint(",
             range: insertion.upperBound..<source.endIndex
         ))
+        #expect(continuation.lowerBound < insertion.lowerBound)
         #expect(insertion.lowerBound < newPoint.lowerBound)
         #expect(source.contains("isConstrained: modifierFlags.contains(.shift)"))
         #expect(source.contains("if isClosing"))
@@ -2036,6 +2043,36 @@ struct ImageEditorCanvasCursorTests {
             brushDiameter: 18,
             penIsDeletingAnchor: true,
             penAnchorDeletionIsBlocked: true
+        ) === NSCursor.arrow)
+    }
+
+    @Test func penContinuationCursorUsesConnectorAndHonorsBlockedAndComponentModes() {
+        let ordinary = ImageEditorCanvasCursor.cursor(for: .pen, brushDiameter: 18)
+        let deletion = ImageEditorCanvasCursor.cursor(
+            for: .pen,
+            brushDiameter: 18,
+            penIsDeletingAnchor: true
+        )
+        let continuation = ImageEditorCanvasCursor.cursor(
+            for: .pen,
+            brushDiameter: 18,
+            penIsContinuingPath: true
+        )
+
+        #expect(ordinary.image.tiffRepresentation != continuation.image.tiffRepresentation)
+        #expect(deletion.image.tiffRepresentation != continuation.image.tiffRepresentation)
+        #expect(ImageEditorCanvasCursor.cursor(
+            for: .pen,
+            brushDiameter: 18,
+            penIsContinuingPath: true,
+            penContinuationIsBlocked: true
+        ) === NSCursor.operationNotAllowed)
+        #expect(ImageEditorCanvasCursor.cursor(
+            for: .components,
+            selectedTool: .pen,
+            brushDiameter: 18,
+            penIsContinuingPath: true,
+            penContinuationIsBlocked: true
         ) === NSCursor.arrow)
     }
 

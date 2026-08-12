@@ -389,6 +389,9 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var isEditingLayerMask: Bool = false
     @Published var pendingPenPathAnchors: [ImageEditorPathAnchor] = []
     @Published var undonePendingPenPathAnchors: [ImageEditorPathAnchor] = []
+    var pendingPenContinuationLayerID: UUID?
+    var pendingPenContinuationSubpathIndex: Int?
+    var pendingPenContinuationInitialAnchorCount = 0
     var pendingPenPathPoints: [CGPoint] {
         get { pendingPenPathAnchors.map(\.point) }
         set { pendingPenPathAnchors = newValue.map { ImageEditorPathAnchor(point: $0) } }
@@ -750,7 +753,7 @@ final class ImageEditorViewModel: ObservableObject {
 
     var canUndo: Bool {
         if hasPendingPenPathTransaction {
-            return !pendingPenPathPoints.isEmpty
+            return pendingPenPathAnchors.count > pendingPenContinuationInitialAnchorCount
         }
         return !undoStack.isEmpty
     }
@@ -1978,6 +1981,7 @@ final class ImageEditorViewModel: ObservableObject {
 
     var canFinishPenPath: Bool {
         pendingPenPathAnchors.count >= 2
+            && pendingPenPathAnchors.count > pendingPenContinuationInitialAnchorCount
     }
 
     var canEditSelectedPathAnchors: Bool {

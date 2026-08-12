@@ -16,6 +16,12 @@ private struct ImageEditorPathSegmentHit {
     let distance: CGFloat
 }
 
+private struct ImageEditorPenPathContinuationHit {
+    let layerID: UUID
+    let subpathIndex: Int
+    let anchorIndex: Int
+}
+
 enum ImageEditorPenPathSegmentInsertionState: Equatable {
     case none
     case available
@@ -25,6 +31,12 @@ enum ImageEditorPenPathSegmentInsertionState: Equatable {
 enum ImageEditorPenAnchorDeletionState: Equatable {
     case none
     case selectionOnly
+    case available
+    case blocked
+}
+
+enum ImageEditorPenPathContinuationState: Equatable {
+    case none
     case available
     case blocked
 }
@@ -205,6 +217,46 @@ extension ImageEditorViewModel {
         return distance(from: point, to: first) <= penCloseDistance
     }
 
+    func penPathContinuationState(at point: CGPoint?) -> ImageEditorPenPathContinuationState {
+        guard pendingPenPathAnchors.isEmpty,
+              let hit = penPathContinuationHit(at: point),
+              let layer = document.layers.first(where: { $0.id == hit.layerID })
+        else { return .none }
+        return document.isEffectivelyPixelsLocked(layer) ? .blocked : .available
+    }
+
+    @discardableResult
+    func beginPenPathContinuation(at point: CGPoint?) -> Bool {
+        guard let hit = penPathContinuationHit(at: point),
+              let layerIndex = document.layers.firstIndex(where: { $0.id == hit.layerID }),
+              !document.isEffectivelyPixelsLocked(document.layers[layerIndex]),
+              let content = document.layers[layerIndex].shapeContent,
+              content.allEditablePathSubpaths.indices.contains(hit.subpathIndex)
+        else { return false }
+        var anchors = canvasAnchors(
+            for: content.allEditablePathSubpaths[hit.subpathIndex],
+            layer: document.layers[layerIndex]
+        )
+        if hit.anchorIndex == 0 {
+            anchors = anchors.reversed().map { anchor in
+                ImageEditorPathAnchor(
+                    point: anchor.point,
+                    inControl: anchor.outControl,
+                    outControl: anchor.inControl
+                )
+            }
+        }
+        pendingPenContinuationLayerID = hit.layerID
+        pendingPenContinuationSubpathIndex = hit.subpathIndex
+        pendingPenContinuationInitialAnchorCount = anchors.count
+        pendingPenPathAnchors = anchors
+        undonePendingPenPathAnchors = []
+        selectedPathSubpathIndex = hit.subpathIndex
+        selectedPathAnchorIndex = nil
+        statusText = L10n.format("imageEditor.status.penPointAdded", anchors.count)
+        return true
+    }
+
     func addPenPoint(_ point: CGPoint?) {
         addPenPoint(
             point,
@@ -278,7 +330,9 @@ extension ImageEditorViewModel {
 
     @discardableResult
     func undoPendingPenPoint() -> Bool {
-        guard let anchor = pendingPenPathAnchors.popLast() else { return false }
+        guard pendingPenPathAnchors.count > pendingPenContinuationInitialAnchorCount,
+              let anchor = pendingPenPathAnchors.popLast()
+        else { return false }
         undonePendingPenPathAnchors.append(anchor)
         statusText = pendingPenPathAnchors.isEmpty
             ? L10n.text("imageEditor.status.penReady")
@@ -800,6 +854,9 @@ extension ImageEditorViewModel {
               let content = layer.shapeContent,
               content.kind == .path
         else { return .none }
+        if penPathContinuationHit(at: point) != nil {
+            return .none
+        }
         let nearest = pathControlCandidates(for: content, layer: layer)
             .map { candidate in
                 (candidate: candidate, distance: distance(from: point, to: candidate.point))
@@ -1595,18 +1652,63 @@ extension ImageEditorViewModel {
             return
         }
         let anchors = pendingPenPathAnchors
-        pendingPenPathAnchors = []
-        undonePendingPenPathAnchors = []
+        if pendingPenContinuationLayerID != nil {
+            guard finishPenPathContinuation(anchors: anchors, closed: closed) else {
+                statusText = L10n.text("imageEditor.status.operationFailed")
+                return
+            }
+            clearPendingPenPath()
+            return
+        }
+        clearPendingPenPath()
         addPathLayer(anchors: anchors, closed: closed)
     }
 
     @discardableResult
     func cancelPenPath() -> Bool {
         guard hasPendingPenPathTransaction else { return false }
-        pendingPenPathAnchors = []
-        undonePendingPenPathAnchors = []
+        clearPendingPenPath()
         statusText = L10n.text("imageEditor.status.penCancelled")
         return true
+    }
+
+    private func finishPenPathContinuation(
+        anchors: [ImageEditorPathAnchor],
+        closed: Bool
+    ) -> Bool {
+        guard let layerID = pendingPenContinuationLayerID,
+              let subpathIndex = pendingPenContinuationSubpathIndex,
+              anchors.count > pendingPenContinuationInitialAnchorCount,
+              let layerIndex = document.layers.firstIndex(where: { $0.id == layerID }),
+              var content = document.layers[layerIndex].shapeContent,
+              content.kind == .path
+        else { return false }
+        pushUndo()
+        content.isPathClosed = closed
+        updatePathLayer(
+            at: layerIndex,
+            shapeContent: content,
+            canvasAnchors: anchors,
+            editingSubpathIndex: subpathIndex
+        )
+        document.selectedLayerID = layerID
+        document.selectedLayerIDs = [layerID]
+        selectedPathSubpathIndex = subpathIndex
+        selectedPathAnchorIndex = closed ? 0 : anchors.count - 1
+        selectedPathControlRole = .anchor
+        appendHistory(L10n.text("imageEditor.history.pathAnchorInsert"))
+        statusText = closed
+            ? L10n.text("imageEditor.status.penClosed")
+            : L10n.text("imageEditor.status.penOpen")
+        return true
+    }
+
+    private func clearPendingPenPath() {
+        pendingPenPathAnchors = []
+        undonePendingPenPathAnchors = []
+        pendingPenContinuationLayerID = nil
+        pendingPenContinuationSubpathIndex = nil
+        pendingPenContinuationInitialAnchorCount = 0
     }
 
     private func addPathLayer(anchors: [ImageEditorPathAnchor], closed: Bool) {
@@ -1735,6 +1837,31 @@ extension ImageEditorViewModel {
 
     private var pathAnchorHitDistance: CGFloat {
         max(8, min(22, brushSize * 0.45))
+    }
+
+    private func penPathContinuationHit(
+        at point: CGPoint?
+    ) -> ImageEditorPenPathContinuationHit? {
+        guard let point,
+              let layer = document.selectedLayer,
+              let content = layer.shapeContent,
+              content.kind == .path,
+              !content.isPathClosed,
+              content.allEditablePathSubpaths.count == 1,
+              let anchors = content.allEditablePathSubpaths.first,
+              anchors.count >= 2
+        else { return nil }
+        let canvas = canvasAnchors(for: anchors, layer: layer)
+        let endpoints = [(0, canvas[0].point), (canvas.count - 1, canvas[canvas.count - 1].point)]
+        guard let nearest = endpoints.min(by: {
+            distance(from: point, to: $0.1) < distance(from: point, to: $1.1)
+        }), distance(from: point, to: nearest.1) <= pathAnchorHitDistance
+        else { return nil }
+        return ImageEditorPenPathContinuationHit(
+            layerID: layer.id,
+            subpathIndex: 0,
+            anchorIndex: nearest.0
+        )
     }
 
     private func duplicatePathSubpathOffset(for anchors: [ImageEditorPathAnchor]) -> CGSize {
