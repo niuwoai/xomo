@@ -809,6 +809,10 @@ struct ImageEditorVectorLayerTests {
 
         #expect(viewModel.isPenCornerConversionBlocked(at: point))
         #expect(viewModel.convertPathAnchorToCorner(at: point))
+        #expect(viewModel.convertPathAnchor(
+            at: point,
+            symmetricControlDrag: CGSize(width: 18, height: 9)
+        ))
         #expect(
             viewModel.document.layers[selectedIndex].shapeContent?.allEditablePathSubpaths
                 == originalSubpaths
@@ -817,6 +821,63 @@ struct ImageEditorVectorLayerTests {
         #expect(viewModel.document.history.count == historyCount)
         #expect(viewModel.undoStack.count == undoCount)
         #expect(viewModel.statusText == L10n.text("imageEditor.status.operationFailed"))
+    }
+
+    @Test func optionDragConvertsCornerAnchorToSmoothAsOneUndoableEdit() throws {
+        let click = ImageEditorPenAnchorConversionGesturePolicy.resolve(
+            anchorPoint: CGPoint(x: 80, y: 50),
+            pointerEnd: CGPoint(x: 81, y: 52),
+            viewTranslation: CGSize(width: 2, height: 1)
+        )
+        #expect(click.symmetricControlDrag == nil)
+        let drag = ImageEditorPenAnchorConversionGesturePolicy.resolve(
+            anchorPoint: CGPoint(x: 80, y: 50),
+            pointerEnd: CGPoint(x: 94, y: 60),
+            viewTranslation: CGSize(width: 15, height: 9)
+        )
+        #expect(drag.anchorPoint == CGPoint(x: 80, y: 50))
+        #expect(drag.symmetricControlDrag == CGSize(width: 14, height: 10))
+
+        let canvasSize = NSSize(width: 140, height: 100)
+        let image = testBitmapImage(size: canvasSize, background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        let convertedPoint = CGPoint(x: 80, y: 50)
+        viewModel.addPenPoint(CGPoint(x: 20, y: 50))
+        viewModel.addPenPoint(convertedPoint)
+        viewModel.finishPenPath(closed: false)
+        let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
+
+        #expect(viewModel.convertPathAnchor(
+            at: convertedPoint,
+            symmetricControlDrag: drag.symmetricControlDrag
+        ))
+        let smoothAnchor = try #require(
+            viewModel.document.selectedLayer?.shapeContent?.editablePathAnchors.last
+        )
+        let inControl = try #require(smoothAnchor.inControl)
+        let outControl = try #require(smoothAnchor.outControl)
+        #expect(abs((inControl.x - smoothAnchor.point.x) + (outControl.x - smoothAnchor.point.x)) < 0.000_001)
+        #expect(abs((inControl.y - smoothAnchor.point.y) + (outControl.y - smoothAnchor.point.y)) < 0.000_001)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.undoStack.count == undoCount + 1)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.pathHandlesSmoothed"))
+
+        let noOpHistoryCount = viewModel.document.history.count
+        let noOpUndoCount = viewModel.undoStack.count
+        #expect(viewModel.convertPathAnchor(
+            at: convertedPoint,
+            symmetricControlDrag: drag.symmetricControlDrag
+        ))
+        #expect(viewModel.document.history.count == noOpHistoryCount)
+        #expect(viewModel.undoStack.count == noOpUndoCount)
+
+        viewModel.undo()
+        let restoredCorner = try #require(
+            viewModel.document.selectedLayer?.shapeContent?.editablePathAnchors.last
+        )
+        #expect(restoredCorner.inControl == nil)
+        #expect(restoredCorner.outControl == nil)
     }
 
     @Test func pendingPenPreviewMatchesConstrainedCommitAndCloseTarget() {

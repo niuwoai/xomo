@@ -108,6 +108,8 @@ struct ImageEditorView: View {
     @State private var isPenPointerSequenceActive = false
     @State private var pendingPenCreationAction: ImageEditorPendingPenGestureAction?
     @State private var isPenAnchorConversionGestureActive = false
+    @State private var penAnchorConversionAction: ImageEditorPenAnchorConversionAction?
+    @State private var isPenAnchorConversionGestureBlocked = false
     @State private var activeGuideDrag: ImageEditorGuideDrag?
     @State private var layerNameDraft = ""
     @State private var figmaComponentPropertyDrafts: [String: String] = [:]
@@ -282,7 +284,7 @@ struct ImageEditorView: View {
                     if viewModel.cancelPenPath() || isUncommittedPenPointerSequence {
                         isPathAnchorDragCancelled = true
                         pendingPenCreationAction = nil
-                        isPenAnchorConversionGestureActive = false
+                        resetPenAnchorConversionGesture()
                         NSCursor.arrow.set()
                         return true
                     }
@@ -379,6 +381,7 @@ struct ImageEditorView: View {
             isFiltersDockExpanded = true
         }
         .onChange(of: viewModel.selectedTool) { _ in
+            _ = cancelPenAnchorConversionGesture()
             if viewModel.selectedTool != .marquee {
                 isMarqueeShapeMenuPresented = false
             }
@@ -2097,6 +2100,9 @@ struct ImageEditorView: View {
     }
 
     private func cancelPathAnchorDragForCanvasLifecycle() {
+        if cancelPenAnchorConversionGesture() {
+            NSCursor.arrow.set()
+        }
         guard ImageEditorPathAnchorDragLifecyclePolicy.shouldCancel(
             isMovingPathAnchor: isMovingPathAnchor,
             hasActiveTransaction: viewModel.hasActivePathAnchorMoveTransaction
@@ -2109,13 +2115,27 @@ struct ImageEditorView: View {
     private func beginCanvasPointerSequence() {
         isPenPointerSequenceActive = canvasInteractionTool == .pen
         pendingPenCreationAction = nil
-        isPenAnchorConversionGestureActive = false
+        resetPenAnchorConversionGesture()
         guard ImageEditorPathAnchorDragLifecyclePolicy.shouldReleaseCancellationLatch(
             isCancelled: isPathAnchorDragCancelled,
             hasActiveTransaction: viewModel.hasActivePathAnchorMoveTransaction
         ) else { return }
         isPathAnchorDragCancelled = false
         isMovingPathAnchor = false
+    }
+
+    private func resetPenAnchorConversionGesture() {
+        isPenAnchorConversionGestureActive = false
+        penAnchorConversionAction = nil
+        isPenAnchorConversionGestureBlocked = false
+    }
+
+    @discardableResult
+    private func cancelPenAnchorConversionGesture() -> Bool {
+        guard isPenAnchorConversionGestureActive else { return false }
+        isPathAnchorDragCancelled = true
+        resetPenAnchorConversionGesture()
+        return true
     }
 
     @discardableResult
@@ -2684,12 +2704,14 @@ struct ImageEditorView: View {
                                     } == true,
                             penIsClosing: canvasInteractionTool == .pen
                                 && viewModel.isPenCloseCandidate(at: canvasPoint),
-                            penIsConverting: canvasInteractionTool == .pen
-                                && canvasModifierFlags.contains(.option)
-                                && viewModel.isPenCornerConversionCandidate(at: canvasPoint),
-                            penConversionIsBlocked: canvasInteractionTool == .pen
-                                && canvasModifierFlags.contains(.option)
-                                && viewModel.isPenCornerConversionBlocked(at: canvasPoint),
+                            penIsConverting: isPenAnchorConversionGestureActive
+                                || (canvasInteractionTool == .pen
+                                    && canvasModifierFlags.contains(.option)
+                                    && viewModel.isPenCornerConversionCandidate(at: canvasPoint)),
+                            penConversionIsBlocked: isPenAnchorConversionGestureBlocked
+                                || (canvasInteractionTool == .pen
+                                    && canvasModifierFlags.contains(.option)
+                                    && viewModel.isPenCornerConversionBlocked(at: canvasPoint)),
                             handIsDragging: isCanvasPanGestureActive,
                             isObjectMoveGestureActive: objectMoveIsActive,
                             isColorSamplerMoveGestureActive: colorSamplerDrag != nil,
@@ -2721,6 +2743,7 @@ struct ImageEditorView: View {
                 .onChange(of: viewModel.selectedLeftSidebarTab) { tab in
                     activeBrushPressure = nil
                     activeBrushTilt = nil
+                    _ = cancelPenAnchorConversionGesture()
                     if tab == .components {
                         pendingCropRect = nil
                         endPendingCropInteraction()
@@ -2783,7 +2806,7 @@ struct ImageEditorView: View {
                 .onDisappear {
                     cancelPathAnchorDragForCanvasLifecycle()
                     pendingPenCreationAction = nil
-                    isPenAnchorConversionGestureActive = false
+                    resetPenAnchorConversionGesture()
                     isPointerInsideCanvas = false
                     activeBrushPressure = nil
                     activeBrushTilt = nil
@@ -3032,6 +3055,35 @@ struct ImageEditorView: View {
                         lineWidth: 1
                     )
                 }
+            }
+            .allowsHitTesting(false)
+        }
+
+        if !isPenAnchorConversionGestureBlocked,
+           let action = penAnchorConversionAction,
+           let drag = action.symmetricControlDrag,
+           let controls = ImageEditorPenPointGeometry.symmetricControls(
+            anchor: action.anchorPoint,
+            drag: drag,
+            canvasSize: viewModel.document.canvasSize
+           ) {
+            let anchor = viewPoint(from: action.anchorPoint, in: size)
+            let inControl = viewPoint(from: controls.inControl, in: size)
+            let outControl = viewPoint(from: controls.outControl, in: size)
+            Canvas { context, _ in
+                var handleLine = Path()
+                handleLine.move(to: inControl)
+                handleLine.addLine(to: outControl)
+                context.stroke(handleLine, with: .color(Color.white.opacity(0.9)), lineWidth: 3)
+                context.stroke(handleLine, with: .color(Color.orange.opacity(0.95)), lineWidth: 1.25)
+                for handle in [inControl, outControl] {
+                    let rect = CGRect(x: handle.x - 4, y: handle.y - 4, width: 8, height: 8)
+                    context.fill(Path(rect), with: .color(Color.orange.opacity(0.92)))
+                    context.stroke(Path(rect), with: .color(Color.white.opacity(0.95)), lineWidth: 1)
+                }
+                let anchorRect = CGRect(x: anchor.x - 4.5, y: anchor.y - 4.5, width: 9, height: 9)
+                context.fill(Path(ellipseIn: anchorRect), with: .color(Color.white.opacity(0.96)))
+                context.stroke(Path(ellipseIn: anchorRect), with: .color(Color.orange), lineWidth: 1.5)
             }
             .allowsHitTesting(false)
         }
@@ -3720,14 +3772,27 @@ struct ImageEditorView: View {
                     updateCanvasCursor(at: value.location, in: size)
                 case .pen:
                     if isPenAnchorConversionGestureActive {
-                        break
+                        if let anchorPoint = penAnchorConversionAction?.anchorPoint {
+                            penAnchorConversionAction = ImageEditorPenAnchorConversionGesturePolicy.resolve(
+                                anchorPoint: anchorPoint,
+                                pointerEnd: unboundedImagePoint(from: value.location, in: size),
+                                viewTranslation: value.translation
+                            )
+                            updateCanvasCursor(at: value.location, in: size)
+                        }
                     } else if pendingPenCreationAction == nil,
                               !isMovingPathAnchor,
                               NSEvent.modifierFlags.contains(.option),
-                              viewModel.convertPathAnchorToCorner(
-                                at: imagePoint(from: value.startLocation, in: size)
-                              ) {
+                              let pointerStart = imagePoint(from: value.startLocation, in: size),
+                              let anchorPoint = viewModel.penCornerConversionAnchorPoint(at: pointerStart) {
                         isPenAnchorConversionGestureActive = true
+                        isPenAnchorConversionGestureBlocked = viewModel
+                            .isPenCornerConversionBlocked(at: anchorPoint)
+                        penAnchorConversionAction = ImageEditorPenAnchorConversionGesturePolicy.resolve(
+                            anchorPoint: anchorPoint,
+                            pointerEnd: unboundedImagePoint(from: value.location, in: size),
+                            viewTranslation: value.translation
+                        )
                         updateCanvasCursor(at: value.location, in: size)
                     } else if isMovingPathAnchor {
                         viewModel.moveSelectedPathAnchor(to: pointerImagePoint)
@@ -3946,7 +4011,18 @@ struct ImageEditorView: View {
                     }
                 case .pen:
                     if isPenAnchorConversionGestureActive {
-                        break
+                        if !isPathAnchorDragCancelled,
+                           let anchorPoint = penAnchorConversionAction?.anchorPoint {
+                            let action = ImageEditorPenAnchorConversionGesturePolicy.resolve(
+                                anchorPoint: anchorPoint,
+                                pointerEnd: unboundedImagePoint(from: value.location, in: size),
+                                viewTranslation: value.translation
+                            )
+                            viewModel.convertPathAnchor(
+                                at: action.anchorPoint,
+                                symmetricControlDrag: action.symmetricControlDrag
+                            )
+                        }
                     } else if isMovingPathAnchor, !isPathAnchorDragCancelled {
                         viewModel.finishMovingPathAnchor()
                     } else if !isPathAnchorDragCancelled,
@@ -4062,7 +4138,7 @@ struct ImageEditorView: View {
                 isPathAnchorDragCancelled = false
                 isPenPointerSequenceActive = false
                 pendingPenCreationAction = nil
-                isPenAnchorConversionGestureActive = false
+                resetPenAnchorConversionGesture()
                 activeResizeHandle = nil
                 refreshCanvasCursor(in: size)
             }
@@ -4333,12 +4409,14 @@ struct ImageEditorView: View {
                 canvasInteractionTool == .colorSampler
                     && colorSamplerPointID(at: viewPoint, in: size) != nil,
             penIsClosing: canvasInteractionTool == .pen && viewModel.isPenCloseCandidate(at: canvasPoint),
-            penIsConverting: canvasInteractionTool == .pen
-                && NSEvent.modifierFlags.contains(.option)
-                && viewModel.isPenCornerConversionCandidate(at: canvasPoint),
-            penConversionIsBlocked: canvasInteractionTool == .pen
-                && NSEvent.modifierFlags.contains(.option)
-                && viewModel.isPenCornerConversionBlocked(at: canvasPoint),
+            penIsConverting: isPenAnchorConversionGestureActive
+                || (canvasInteractionTool == .pen
+                    && NSEvent.modifierFlags.contains(.option)
+                    && viewModel.isPenCornerConversionCandidate(at: canvasPoint)),
+            penConversionIsBlocked: isPenAnchorConversionGestureBlocked
+                || (canvasInteractionTool == .pen
+                    && NSEvent.modifierFlags.contains(.option)
+                    && viewModel.isPenCornerConversionBlocked(at: canvasPoint)),
             handIsDragging: isCanvasPanGestureActive,
             isObjectMoveGestureActive: isSelectedObjectMoveGestureActive || isObjectMoveGestureActive,
             isColorSamplerMoveGestureActive: colorSamplerDrag != nil,
@@ -13206,6 +13284,38 @@ enum ImageEditorPendingPenPointerPolicy {
 struct ImageEditorPendingPenGestureAction: Equatable {
     let anchorPoint: CGPoint
     let symmetricControlDrag: CGSize?
+}
+
+struct ImageEditorPenAnchorConversionAction: Equatable {
+    let anchorPoint: CGPoint
+    let symmetricControlDrag: CGSize?
+}
+
+enum ImageEditorPenAnchorConversionGesturePolicy {
+    static let minimumSmoothDragDistance = ImageEditorPendingPenGesturePolicy
+        .minimumSmoothDragDistance
+
+    static func resolve(
+        anchorPoint: CGPoint,
+        pointerEnd: CGPoint?,
+        viewTranslation: CGSize
+    ) -> ImageEditorPenAnchorConversionAction {
+        guard hypot(viewTranslation.width, viewTranslation.height) > minimumSmoothDragDistance,
+              let pointerEnd
+        else {
+            return ImageEditorPenAnchorConversionAction(
+                anchorPoint: anchorPoint,
+                symmetricControlDrag: nil
+            )
+        }
+        return ImageEditorPenAnchorConversionAction(
+            anchorPoint: anchorPoint,
+            symmetricControlDrag: CGSize(
+                width: pointerEnd.x - anchorPoint.x,
+                height: pointerEnd.y - anchorPoint.y
+            )
+        )
+    }
 }
 
 enum ImageEditorPendingPenGesturePolicy {

@@ -1965,7 +1965,10 @@ struct ImageEditorCanvasCursorTests {
             separatedBy: "penIsClosing: canvasInteractionTool == .pen"
         ).count == 3)
         #expect(source.components(
-            separatedBy: "penIsConverting: canvasInteractionTool == .pen"
+            separatedBy: "penIsConverting: isPenAnchorConversionGestureActive"
+        ).count == 3)
+        #expect(source.components(
+            separatedBy: "penConversionIsBlocked: isPenAnchorConversionGestureBlocked"
         ).count == 3)
         #expect(source.contains("viewModel.isPenCornerConversionCandidate(at: canvasPoint)"))
         #expect(source.contains("viewModel.isPenCornerConversionBlocked(at: canvasPoint)"))

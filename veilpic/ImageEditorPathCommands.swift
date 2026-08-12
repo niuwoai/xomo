@@ -690,13 +690,23 @@ extension ImageEditorViewModel {
     }
 
     func isPenCornerConversionCandidate(at point: CGPoint?) -> Bool {
+        penCornerConversionAnchorPoint(at: point) != nil
+    }
+
+    func penCornerConversionAnchorPoint(at point: CGPoint?) -> CGPoint? {
         guard pendingPenPathAnchors.isEmpty,
               let point,
               let layer = document.selectedLayer,
               let content = layer.shapeContent,
-              content.kind == .path
-        else { return false }
-        return nearestPathAnchorReference(at: point, content: content, layer: layer) != nil
+              content.kind == .path,
+              let reference = nearestPathAnchorReference(at: point, content: content, layer: layer),
+              content.allEditablePathSubpaths.indices.contains(reference.subpathIndex),
+              content.allEditablePathSubpaths[reference.subpathIndex].indices.contains(reference.anchorIndex)
+        else { return nil }
+        return canvasPoint(
+            content.allEditablePathSubpaths[reference.subpathIndex][reference.anchorIndex].point,
+            layer: layer
+        )
     }
 
     func isPenCornerConversionBlocked(at point: CGPoint?) -> Bool {
@@ -712,6 +722,17 @@ extension ImageEditorViewModel {
     /// click can never fall through and append a new path point.
     @discardableResult
     func convertPathAnchorToCorner(at point: CGPoint?) -> Bool {
+        convertPathAnchor(at: point, symmetricControlDrag: nil)
+    }
+
+    /// A short Option-click clears both handles; an Option-drag supplies a
+    /// new equal-and-opposite vector and turns the same anchor into a smooth
+    /// point. Both forms remain one atomic path-history command.
+    @discardableResult
+    func convertPathAnchor(
+        at point: CGPoint?,
+        symmetricControlDrag: CGSize?
+    ) -> Bool {
         guard pendingPenPathAnchors.isEmpty,
               let point,
               let layerIndex = document.selectedLayerIndex,
@@ -737,17 +758,30 @@ extension ImageEditorViewModel {
             for: shapeContent.allEditablePathSubpaths[reference.subpathIndex],
             layer: document.layers[layerIndex]
         )
-        guard canvasAnchors[reference.anchorIndex].inControl != nil
-                || canvasAnchors[reference.anchorIndex].outControl != nil
-        else {
+        let targetControls = symmetricControlDrag.flatMap {
+            ImageEditorPenPointGeometry.symmetricControls(
+                anchor: canvasAnchors[reference.anchorIndex].point,
+                drag: $0,
+                canvasSize: document.canvasSize
+            )
+        }
+        let targetInControl = targetControls?.inControl
+        let targetOutControl = targetControls?.outControl
+        guard !pathPointsMatch(
+            canvasAnchors[reference.anchorIndex].inControl,
+            targetInControl
+        ) || !pathPointsMatch(
+            canvasAnchors[reference.anchorIndex].outControl,
+            targetOutControl
+        ) else {
             statusText = L10n.format(
                 "imageEditor.status.pathAnchorSelected",
                 reference.anchorIndex + 1
             )
             return true
         }
-        canvasAnchors[reference.anchorIndex].inControl = nil
-        canvasAnchors[reference.anchorIndex].outControl = nil
+        canvasAnchors[reference.anchorIndex].inControl = targetInControl
+        canvasAnchors[reference.anchorIndex].outControl = targetOutControl
 
         pushUndo()
         updatePathLayer(
@@ -757,7 +791,11 @@ extension ImageEditorViewModel {
             editingSubpathIndex: reference.subpathIndex
         )
         appendHistory(L10n.text("imageEditor.history.pathHandlesUpdate"))
-        statusText = L10n.text("imageEditor.status.pathHandlesCleared")
+        statusText = L10n.text(
+            targetControls == nil
+                ? "imageEditor.status.pathHandlesCleared"
+                : "imageEditor.status.pathHandlesSmoothed"
+        )
         return true
     }
 

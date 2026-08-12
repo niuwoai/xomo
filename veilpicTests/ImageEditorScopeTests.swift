@@ -2658,7 +2658,7 @@ struct ImageEditorScopeTests {
         #expect(changedSource.contains("viewTranslation: value.translation"))
 
         let endedStart = try #require(
-            viewSource.range(of: "case .pen:\n                    if isPenAnchorConversionGestureActive {\n                        break\n                    } else if isMovingPathAnchor, !isPathAnchorDragCancelled")
+            viewSource.range(of: "case .pen:\n                    if isPenAnchorConversionGestureActive {\n                        if !isPathAnchorDragCancelled")
         )
         let endedEnd = try #require(
             viewSource[endedStart.upperBound...].range(of: "case .pathSelection:")
@@ -2666,11 +2666,11 @@ struct ImageEditorScopeTests {
         let endedSource = viewSource[endedStart.lowerBound..<endedEnd.lowerBound]
         #expect(endedSource.contains("let action = pendingPenCreationAction"))
         #expect(endedSource.contains("symmetricControlDrag: action?.symmetricControlDrag"))
-        #expect(viewSource.contains("pendingPenCreationAction = nil\n                isPenAnchorConversionGestureActive = false"))
+        #expect(viewSource.contains("pendingPenCreationAction = nil\n                resetPenAnchorConversionGesture()"))
         #expect(viewSource.contains(".onDisappear {\n                    cancelPathAnchorDragForCanvasLifecycle()\n                    pendingPenCreationAction = nil"))
     }
 
-    @Test func optionClickCornerConversionConsumesTheWholePenGesture() throws {
+    @Test func optionClickAndDragConversionCommitOnlyAtPenMouseUp() throws {
         let viewSource = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
             encoding: .utf8
@@ -2687,21 +2687,51 @@ struct ImageEditorScopeTests {
         )
         let changedSource = viewSource[changedStart.lowerBound..<changedEnd.lowerBound]
         let modifier = try #require(changedSource.range(of: "NSEvent.modifierFlags.contains(.option)"))
-        let conversion = try #require(changedSource.range(of: "viewModel.convertPathAnchorToCorner("))
+        let anchorHit = try #require(changedSource.range(of: "viewModel.penCornerConversionAnchorPoint("))
         let latch = try #require(changedSource.range(of: "isPenAnchorConversionGestureActive = true"))
+        let preview = try #require(
+            changedSource[latch.upperBound...].range(
+                of: "penAnchorConversionAction = ImageEditorPenAnchorConversionGesturePolicy.resolve("
+            )
+        )
         let creation = try #require(
             changedSource.range(of: "pendingPenCreationAction = ImageEditorPendingPenGesturePolicy.resolve(")
         )
-        #expect(modifier.lowerBound < conversion.lowerBound)
-        #expect(conversion.lowerBound < latch.lowerBound)
-        #expect(latch.lowerBound < creation.lowerBound)
+        #expect(modifier.lowerBound < anchorHit.lowerBound)
+        #expect(anchorHit.lowerBound < latch.lowerBound)
+        #expect(latch.lowerBound < preview.lowerBound)
+        #expect(preview.lowerBound < creation.lowerBound)
+        #expect(!changedSource.contains("viewModel.convertPathAnchor("))
 
-        #expect(viewSource.contains("if isPenAnchorConversionGestureActive {\n                        break\n                    } else if isMovingPathAnchor"))
-        #expect(viewSource.contains("isPenAnchorConversionGestureActive = false\n                activeResizeHandle = nil"))
+        let endedStart = try #require(
+            viewSource.range(of: "case .pen:\n                    if isPenAnchorConversionGestureActive {\n                        if !isPathAnchorDragCancelled")
+        )
+        let endedEnd = try #require(
+            viewSource[endedStart.upperBound...].range(of: "case .pathSelection:")
+        )
+        let endedSource = viewSource[endedStart.lowerBound..<endedEnd.lowerBound]
+        #expect(endedSource.contains("ImageEditorPenAnchorConversionGesturePolicy.resolve("))
+        #expect(endedSource.contains("viewModel.convertPathAnchor("))
+        #expect(endedSource.contains("symmetricControlDrag: action.symmetricControlDrag"))
+        #expect(viewSource.contains("resetPenAnchorConversionGesture()\n                activeResizeHandle = nil"))
+        #expect(viewSource.contains("private func cancelPenAnchorConversionGesture() -> Bool"))
+        #expect(viewSource.contains("guard isPenAnchorConversionGestureActive else { return false }\n        isPathAnchorDragCancelled = true\n        resetPenAnchorConversionGesture()"))
+        #expect(viewSource.contains("private func cancelPathAnchorDragForCanvasLifecycle() {\n        if cancelPenAnchorConversionGesture()"))
+        #expect(viewSource.contains(".onChange(of: viewModel.selectedTool) { _ in\n            _ = cancelPenAnchorConversionGesture()"))
+        #expect(viewSource.contains(".onChange(of: viewModel.selectedLeftSidebarTab) { tab in\n                    activeBrushPressure = nil\n                    activeBrushTilt = nil\n                    _ = cancelPenAnchorConversionGesture()"))
         #expect(pathSource.contains("Returning true means the existing anchor consumed the pointer"))
-        #expect(pathSource.contains("guard canvasAnchors[reference.anchorIndex].inControl != nil"))
-        #expect(pathSource.contains("canvasAnchors[reference.anchorIndex].inControl = nil"))
-        #expect(pathSource.contains("canvasAnchors[reference.anchorIndex].outControl = nil"))
+        #expect(pathSource.contains("let targetControls = symmetricControlDrag.flatMap"))
+        #expect(pathSource.contains("canvasAnchors[reference.anchorIndex].inControl = targetInControl"))
+        #expect(pathSource.contains("canvasAnchors[reference.anchorIndex].outControl = targetOutControl"))
+        let overlayStart = try #require(
+            viewSource.range(of: "if !isPenAnchorConversionGestureBlocked,\n           let action = penAnchorConversionAction")
+        )
+        let overlayEnd = try #require(
+            viewSource[overlayStart.upperBound...].range(of: "if let anchorPoints = selectedPathAnchorOverlayPoints")
+        )
+        let overlaySource = viewSource[overlayStart.lowerBound..<overlayEnd.lowerBound]
+        #expect(overlaySource.contains("ImageEditorPenPointGeometry.symmetricControls("))
+        #expect(overlaySource.contains("Color.orange"))
     }
 
     @Test func viewMenuExposesClassicZoomShortcuts() throws {
