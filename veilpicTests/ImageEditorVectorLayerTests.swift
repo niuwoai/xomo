@@ -1013,6 +1013,32 @@ struct ImageEditorVectorLayerTests {
         #expect(viewModel.selectedPathAnchorCanvasPoint == originalPoint)
     }
 
+    @Test func equivalentPathAnchorPositionEditsPreserveHistoryAndRedo() async throws {
+        let canvasSize = NSSize(width: 120, height: 90)
+        let image = testBitmapImage(size: canvasSize, background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+
+        viewModel.selectTool(.pen)
+        viewModel.addPenPoint(CGPoint(x: 20, y: 20))
+        viewModel.addPenPoint(CGPoint(x: 92, y: 24))
+        viewModel.addPenPoint(CGPoint(x: 54, y: 70))
+        viewModel.finishPenPath(closed: true)
+
+        let originalPoint = try #require(viewModel.selectedPathAnchorCanvasPoint)
+        viewModel.nudgeSelectedPathAnchor(by: CGSize(width: 4, height: 0))
+        viewModel.undo()
+        #expect(viewModel.canRedo)
+        let historyCount = viewModel.document.history.count
+
+        viewModel.setSelectedPathAnchorX(originalPoint.x)
+        viewModel.setSelectedPathAnchorY(originalPoint.y)
+        viewModel.nudgeSelectedPathAnchor(by: .zero)
+
+        #expect(viewModel.selectedPathAnchorCanvasPoint == originalPoint)
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.canRedo)
+    }
+
     @Test func imageEditorInsertsPathAnchorAndPreservesCurvedSegmentHandles() async throws {
         let canvasSize = NSSize(width: 140, height: 100)
         let image = testBitmapImage(size: canvasSize, background: .black)
@@ -1138,6 +1164,89 @@ struct ImageEditorVectorLayerTests {
         #expect(viewModel.selectedPathControlRole == .outHandle)
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.pathHandlesSymmetric"))
         #expect(viewModel.statusText == L10n.text("imageEditor.status.pathHandlesSymmetric"))
+    }
+
+    @Test func repeatedPathHandleNormalizationPreservesHistoryAndRedo() async throws {
+        let canvasSize = NSSize(width: 140, height: 100)
+        let image = testBitmapImage(size: canvasSize, background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+
+        viewModel.selectTool(.pen)
+        viewModel.addPenPoint(CGPoint(x: 20, y: 20))
+        viewModel.addPenPoint(CGPoint(x: 104, y: 28))
+        viewModel.addPenPoint(CGPoint(x: 70, y: 78))
+        viewModel.finishPenPath(closed: true)
+        viewModel.selectNextPathAnchor()
+        viewModel.smoothSelectedPathAnchor()
+
+        let smoothContent = try #require(viewModel.document.selectedLayer?.shapeContent)
+        let smoothFrame = try #require(viewModel.document.selectedLayer?.frame)
+        let smoothHistoryCount = viewModel.document.history.count
+        viewModel.smoothSelectedPathAnchor()
+        #expect(viewModel.document.selectedLayer?.shapeContent?.allEditablePathSubpaths == smoothContent.allEditablePathSubpaths)
+        #expect(viewModel.document.selectedLayer?.frame == smoothFrame)
+        #expect(viewModel.document.history.count == smoothHistoryCount)
+
+        let originalOutHandle = try #require(viewModel.selectedPathOutControlCanvasPoint)
+        #expect(viewModel.beginMovingPathAnchor(at: originalOutHandle))
+        viewModel.moveSelectedPathAnchor(to: CGPoint(x: originalOutHandle.x + 18, y: originalOutHandle.y - 7))
+        viewModel.finishMovingPathAnchor()
+        viewModel.symmetrizeSelectedPathAnchorHandles()
+        let symmetricContent = try #require(viewModel.document.selectedLayer?.shapeContent)
+        let symmetricFrame = try #require(viewModel.document.selectedLayer?.frame)
+
+        viewModel.nudgeSelectedPathAnchor(by: CGSize(width: 1, height: 0))
+        viewModel.undo()
+        #expect(viewModel.canRedo)
+        let historyCountAfterUndo = viewModel.document.history.count
+        viewModel.symmetrizeSelectedPathAnchorHandles()
+
+        #expect(viewModel.document.selectedLayer?.shapeContent?.allEditablePathSubpaths == symmetricContent.allEditablePathSubpaths)
+        #expect(viewModel.document.selectedLayer?.frame == symmetricFrame)
+        #expect(viewModel.document.history.count == historyCountAfterUndo)
+        #expect(viewModel.canRedo)
+    }
+
+    @Test func edgeConstrainedHandleSymmetryConvergesWithoutClearingRedo() async throws {
+        let canvasSize = NSSize(width: 140, height: 100)
+        let image = testBitmapImage(size: canvasSize, background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+
+        viewModel.selectTool(.pen)
+        viewModel.addPenPoint(CGPoint(x: 20, y: 50))
+        viewModel.addPenPoint(CGPoint(x: 130, y: 50))
+        viewModel.addPenPoint(CGPoint(x: 70, y: 80))
+        viewModel.finishPenPath(closed: true)
+        viewModel.selectNextPathAnchor()
+        viewModel.smoothSelectedPathAnchor()
+
+        let anchorPoint = try #require(viewModel.selectedPathAnchorCanvasPoint)
+        let originalInHandle = try #require(viewModel.selectedPathInControlCanvasPoint)
+        #expect(viewModel.beginMovingPathAnchor(at: originalInHandle))
+        viewModel.moveSelectedPathAnchor(to: CGPoint(x: 90, y: anchorPoint.y))
+        viewModel.finishMovingPathAnchor()
+        #expect(viewModel.selectedPathControlRole == .inHandle)
+
+        viewModel.symmetrizeSelectedPathAnchorHandles()
+        let inHandle = try #require(viewModel.selectedPathInControlCanvasPoint)
+        let outHandle = try #require(viewModel.selectedPathOutControlCanvasPoint)
+        #expect(abs((anchorPoint.x - inHandle.x) - (outHandle.x - anchorPoint.x)) < 0.000_001)
+        #expect(abs((anchorPoint.y - inHandle.y) - (outHandle.y - anchorPoint.y)) < 0.000_001)
+        #expect(outHandle.x <= canvasSize.width)
+
+        let symmetricContent = try #require(viewModel.document.selectedLayer?.shapeContent)
+        let symmetricFrame = try #require(viewModel.document.selectedLayer?.frame)
+        viewModel.nudgeSelectedPathAnchor(by: CGSize(width: -1, height: 0))
+        viewModel.undo()
+        #expect(viewModel.canRedo)
+        let historyCount = viewModel.document.history.count
+
+        viewModel.symmetrizeSelectedPathAnchorHandles()
+
+        #expect(viewModel.document.selectedLayer?.shapeContent?.allEditablePathSubpaths == symmetricContent.allEditablePathSubpaths)
+        #expect(viewModel.document.selectedLayer?.frame == symmetricFrame)
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.canRedo)
     }
 
     @Test func imageEditorReversesPathDirectionAndSwapsControlHandles() async throws {
@@ -1396,6 +1505,8 @@ struct ImageEditorVectorLayerTests {
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.vectorMaskFromSelection"))
         #expect(viewModel.statusText == L10n.text("imageEditor.status.vectorMaskFromSelection"))
 
+        viewModel.clearSelection()
+        #expect(viewModel.document.selection == nil)
         #expect(viewModel.canLoadSelectionFromVectorMask)
         viewModel.loadSelectionFromVectorMask()
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.selectionFromVectorMask"))
@@ -1454,6 +1565,8 @@ struct ImageEditorVectorLayerTests {
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.vectorMaskFromSelection"))
         #expect(viewModel.statusText == L10n.text("imageEditor.status.vectorMaskFromSelection"))
 
+        viewModel.clearSelection()
+        #expect(viewModel.document.selection == nil)
         #expect(viewModel.canLoadSelectionFromVectorMask)
         viewModel.loadSelectionFromVectorMask()
         let loadedSelection = try #require(viewModel.document.selection)

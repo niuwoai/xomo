@@ -339,12 +339,17 @@ extension ImageEditorViewModel {
         let vector = CGSize(width: nextPoint.x - previousPoint.x, height: nextPoint.y - previousPoint.y)
         guard hypot(vector.width, vector.height) > 1 else { return }
         let scale: CGFloat = 1 / 6
-        canvasAnchors[index].inControl = clampedCanvasPoint(
+        let nextInControl = clampedCanvasPoint(
             CGPoint(x: anchor.x - vector.width * scale, y: anchor.y - vector.height * scale)
         )
-        canvasAnchors[index].outControl = clampedCanvasPoint(
+        let nextOutControl = clampedCanvasPoint(
             CGPoint(x: anchor.x + vector.width * scale, y: anchor.y + vector.height * scale)
         )
+        guard !pathPointsMatch(canvasAnchors[index].inControl, nextInControl)
+                || !pathPointsMatch(canvasAnchors[index].outControl, nextOutControl)
+        else { return }
+        canvasAnchors[index].inControl = nextInControl
+        canvasAnchors[index].outControl = nextOutControl
 
         pushUndo()
         updatePathLayer(
@@ -396,21 +401,17 @@ extension ImageEditorViewModel {
             for: shapeContent.allEditablePathSubpaths[selectedPathSubpathIndex],
             layer: document.layers[layerIndex]
         )
-        let anchorPoint = canvasAnchors[index].point
-        guard let primaryVector = symmetricHandleVector(
-            for: canvasAnchors[index],
-            selectedRole: selectedPathControlRole,
-            previousPoint: neighboringPathPoint(before: index, in: canvasAnchors, closed: shapeContent.isPathClosed),
-            nextPoint: neighboringPathPoint(after: index, in: canvasAnchors, closed: shapeContent.isPathClosed)
-        )
+        guard let target = symmetricPathControls(
+            at: index,
+            in: canvasAnchors,
+            closed: shapeContent.isPathClosed,
+            selectedRole: selectedPathControlRole
+        ) else { return }
+        guard !pathPointsMatch(canvasAnchors[index].inControl, target.inControl)
+                || !pathPointsMatch(canvasAnchors[index].outControl, target.outControl)
         else { return }
-
-        canvasAnchors[index].inControl = clampedCanvasPoint(
-            CGPoint(x: anchorPoint.x - primaryVector.width, y: anchorPoint.y - primaryVector.height)
-        )
-        canvasAnchors[index].outControl = clampedCanvasPoint(
-            CGPoint(x: anchorPoint.x + primaryVector.width, y: anchorPoint.y + primaryVector.height)
-        )
+        canvasAnchors[index].inControl = target.inControl
+        canvasAnchors[index].outControl = target.outControl
 
         pushUndo()
         updatePathLayer(
@@ -1271,9 +1272,11 @@ extension ImageEditorViewModel {
     }
 
     private func setSelectedPathAnchorPosition(_ point: CGPoint) {
+        let boundedPoint = clampedCanvasPoint(point)
+        guard !pathPointsMatch(selectedPathAnchorCanvasPoint, boundedPoint) else { return }
         pushUndo()
         selectedPathControlRole = .anchor
-        moveSelectedPathAnchor(to: point)
+        moveSelectedPathAnchor(to: boundedPoint)
         appendHistory(L10n.text("imageEditor.history.pathAnchorMove"))
         statusText = L10n.text("imageEditor.status.pathAnchorMoved")
     }
@@ -2010,6 +2013,63 @@ extension ImageEditorViewModel {
         let direction = vector(from: previousPoint, to: nextPoint)
         guard hypot(direction.width, direction.height) > 1 else { return nil }
         return CGSize(width: direction.width / 6, height: direction.height / 6)
+    }
+
+    private func symmetricPathControls(
+        at index: Int,
+        in anchors: [ImageEditorPathAnchor],
+        closed: Bool,
+        selectedRole: ImageEditorPathControlRole
+    ) -> (inControl: CGPoint, outControl: CGPoint)? {
+        guard anchors.indices.contains(index) else { return nil }
+        let anchor = anchors[index]
+        guard let vector = symmetricHandleVector(
+            for: anchor,
+            selectedRole: selectedRole,
+            previousPoint: neighboringPathPoint(before: index, in: anchors, closed: closed),
+            nextPoint: neighboringPathPoint(after: index, in: anchors, closed: closed)
+        ) else { return nil }
+        let scale = symmetricHandleScale(anchor: anchor.point, vector: vector)
+        let boundedVector = CGSize(width: vector.width * scale, height: vector.height * scale)
+        return (
+            inControl: clampedCanvasPoint(
+                CGPoint(x: anchor.point.x - boundedVector.width, y: anchor.point.y - boundedVector.height)
+            ),
+            outControl: clampedCanvasPoint(
+                CGPoint(x: anchor.point.x + boundedVector.width, y: anchor.point.y + boundedVector.height)
+            )
+        )
+    }
+
+    private func symmetricHandleScale(anchor: CGPoint, vector: CGSize) -> CGFloat {
+        var scale: CGFloat = 1
+
+        func constrain(origin: CGFloat, delta: CGFloat, upperBound: CGFloat) {
+            let magnitude = abs(delta)
+            guard magnitude > 0 else { return }
+            let positiveDistance = delta > 0 ? upperBound - origin : origin
+            let negativeDistance = delta > 0 ? origin : upperBound - origin
+            scale = min(
+                scale,
+                max(0, positiveDistance / magnitude),
+                max(0, negativeDistance / magnitude)
+            )
+        }
+
+        constrain(origin: anchor.x, delta: vector.width, upperBound: document.canvasSize.width)
+        constrain(origin: anchor.y, delta: vector.height, upperBound: document.canvasSize.height)
+        return scale
+    }
+
+    private func pathPointsMatch(_ lhs: CGPoint?, _ rhs: CGPoint?, epsilon: CGFloat = 0.000_001) -> Bool {
+        switch (lhs, rhs) {
+        case (nil, nil):
+            return true
+        case let (lhs?, rhs?):
+            return abs(lhs.x - rhs.x) <= epsilon && abs(lhs.y - rhs.y) <= epsilon
+        default:
+            return false
+        }
     }
 
     private func vector(from start: CGPoint, to end: CGPoint) -> CGSize {
