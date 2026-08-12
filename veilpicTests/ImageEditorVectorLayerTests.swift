@@ -1470,6 +1470,44 @@ struct ImageEditorVectorLayerTests {
         #expect(fixture.viewModel.redoStack.isEmpty)
     }
 
+    @Test func anchorNavigationDuringPathDragCancelsPreviewBeforeChangingSelection() async throws {
+        let fixture = try makeActivePathDragFixture()
+        let originalSelection = fixture.viewModel.selectedPathAnchorIndex
+
+        fixture.viewModel.selectNextPathAnchor()
+
+        expectCancelledPathDragRestored(fixture)
+        #expect(fixture.viewModel.selectedPathAnchorIndex == originalSelection)
+        fixture.viewModel.selectNextPathAnchor()
+        #expect(fixture.viewModel.selectedPathAnchorIndex != originalSelection)
+        #expect(fixture.viewModel.document.history.count == fixture.historyCount)
+        #expect(fixture.viewModel.undoStack.count == fixture.undoCount)
+        #expect(fixture.viewModel.redoStack.count == fixture.redoCount)
+    }
+
+    @Test func handleCommandDuringPathDragCancelsPreviewBeforeNextCommandEdits() async throws {
+        let fixture = try makeActivePathDragFixture()
+
+        fixture.viewModel.smoothSelectedPathAnchor()
+
+        expectCancelledPathDragRestored(fixture)
+        let restoredAnchor = try #require(
+            fixture.viewModel.document.selectedLayer?.shapeContent?.editablePathAnchors[safe: 1]
+        )
+        #expect(restoredAnchor.inControl == nil)
+        #expect(restoredAnchor.outControl == nil)
+
+        fixture.viewModel.smoothSelectedPathAnchor()
+        let editedAnchor = try #require(
+            fixture.viewModel.document.selectedLayer?.shapeContent?.editablePathAnchors[safe: 1]
+        )
+        #expect(editedAnchor.inControl != nil)
+        #expect(editedAnchor.outControl != nil)
+        #expect(fixture.viewModel.document.history.count == fixture.historyCount + 1)
+        #expect(fixture.viewModel.undoStack.count == fixture.undoCount + 1)
+        #expect(fixture.viewModel.redoStack.isEmpty)
+    }
+
     @Test func undoDuringPathAnchorDragCancelsPreviewBeforeReachingHistory() async throws {
         let canvasSize = NSSize(width: 140, height: 100)
         let image = testBitmapImage(size: canvasSize, background: .black)

@@ -2793,6 +2793,9 @@ final class XomoAutomationRegistry {
             guard points.count >= 2 else {
                 throw XomoAutomationCallError.invalidArgument("A path needs at least two points")
             }
+            if viewModel.cancelPathAnchorDragBeforeDiscreteCommand() {
+                return
+            }
             viewModel.cancelPenPath()
             points.forEach(viewModel.addPenPoint)
             viewModel.finishPenPath(closed: arguments["closed"]?.boolValue ?? false)
@@ -2807,14 +2810,19 @@ final class XomoAutomationRegistry {
             guard content.allEditablePathSubpaths.indices.contains(subpath),
                   content.allEditablePathSubpaths[subpath].indices.contains(anchor)
             else { throw XomoAutomationCallError.invalidArgument("Path anchor index is out of range") }
-            viewModel.selectedPathSubpathIndex = subpath
-            viewModel.selectedPathAnchorIndex = anchor
+            let role: ImageEditorPathControlRole
             switch arguments["role"]?.stringValue ?? "anchor" {
-            case "anchor": viewModel.selectedPathControlRole = .anchor
-            case "inHandle": viewModel.selectedPathControlRole = .inHandle
-            case "outHandle": viewModel.selectedPathControlRole = .outHandle
+            case "anchor": role = .anchor
+            case "inHandle": role = .inHandle
+            case "outHandle": role = .outHandle
             default: throw XomoAutomationCallError.invalidArgument("Unknown path control role")
             }
+            if viewModel.cancelPathAnchorDragBeforeDiscreteCommand() {
+                return
+            }
+            viewModel.selectedPathSubpathIndex = subpath
+            viewModel.selectedPathAnchorIndex = anchor
+            viewModel.selectedPathControlRole = role
             return
         }
         switch action {

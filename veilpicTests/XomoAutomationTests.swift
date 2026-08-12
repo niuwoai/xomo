@@ -4832,6 +4832,73 @@ struct XomoAutomationTests {
         #expect(path["closed"] == .bool(true))
     }
 
+    @Test func pathAutomationCancelsActiveAnchorDragBeforeExecutingNextCommand() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        defer { registry.unregister(viewModel) }
+
+        viewModel.selectTool(.pen)
+        viewModel.addPenPoint(CGPoint(x: 20, y: 20))
+        viewModel.addPenPoint(CGPoint(x: 120, y: 20))
+        viewModel.addPenPoint(CGPoint(x: 70, y: 100))
+        viewModel.finishPenPath(closed: true)
+        viewModel.selectNextPathAnchor()
+        let selectedAnchor = viewModel.selectedPathAnchorIndex
+        let anchorPoint = try #require(viewModel.selectedPathAnchorCanvasPoint)
+        viewModel.nudgeSelectedPathAnchor(by: CGSize(width: 1, height: 0))
+        viewModel.undo()
+        let originalContent = try #require(viewModel.document.selectedLayer?.shapeContent)
+        let originalFrame = try #require(viewModel.document.selectedLayer?.frame)
+        let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
+        let redoCount = viewModel.redoStack.count
+
+        #expect(viewModel.beginMovingPathAnchor(at: anchorPoint))
+        viewModel.moveSelectedPathAnchor(to: CGPoint(x: anchorPoint.x + 18, y: anchorPoint.y + 7))
+        #expect(viewModel.hasActivePathAnchorMoveTransaction)
+
+        let cancelled = registry.execute(request(
+            operation: "call",
+            name: "xomo.path.action",
+            arguments: ["action": .string("nextAnchor")]
+        ))
+
+        #expect(cancelled.ok)
+        #expect(!viewModel.hasActivePathAnchorMoveTransaction)
+        #expect(viewModel.selectedPathAnchorIndex == selectedAnchor)
+        #expect(viewModel.document.selectedLayer?.shapeContent?.allEditablePathSubpaths == originalContent.allEditablePathSubpaths)
+        #expect(viewModel.document.selectedLayer?.frame == originalFrame)
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.undoStack.count == undoCount)
+        #expect(viewModel.redoStack.count == redoCount)
+
+        let navigated = registry.execute(request(
+            operation: "call",
+            name: "xomo.path.action",
+            arguments: ["action": .string("nextAnchor")]
+        ))
+        #expect(navigated.ok)
+        #expect(viewModel.selectedPathAnchorIndex != selectedAnchor)
+
+        let nextAnchorPoint = try #require(viewModel.selectedPathAnchorCanvasPoint)
+        #expect(viewModel.beginMovingPathAnchor(at: nextAnchorPoint))
+        viewModel.moveSelectedPathAnchor(to: CGPoint(x: nextAnchorPoint.x - 9, y: nextAnchorPoint.y + 5))
+        let invalid = registry.execute(request(
+            operation: "call",
+            name: "xomo.path.action",
+            arguments: [
+                "action": .string("select"),
+                "subpath": .number(0),
+                "anchor": .number(0),
+                "role": .string("sidewaysHandle")
+            ]
+        ))
+        #expect(!invalid.ok)
+        #expect(viewModel.hasActivePathAnchorMoveTransaction)
+        #expect(viewModel.cancelMovingPathAnchor())
+    }
+
     @Test func registryCreatesInspectsAndUpdatesRectangleCornerRadius() throws {
         let viewModel = makeViewModel()
         let registry = XomoAutomationRegistry.shared

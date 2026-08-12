@@ -277,12 +277,23 @@ extension ImageEditorViewModel {
         return true
     }
 
+    /// A discrete inspector or automation command must not inherit the
+    /// temporary geometry and private Undo snapshot owned by a pointer drag.
+    /// The first command cancels that drag; a later command can then edit the
+    /// restored path as an independent transaction.
+    @discardableResult
+    func cancelPathAnchorDragBeforeDiscreteCommand() -> Bool {
+        cancelMovingPathAnchor()
+    }
+
     func setSelectedPathAnchorX(_ x: CGFloat) {
+        guard !cancelPathAnchorDragBeforeDiscreteCommand() else { return }
         guard let point = selectedPathAnchorCanvasPoint else { return }
         setSelectedPathAnchorPosition(CGPoint(x: x, y: point.y))
     }
 
     func setSelectedPathAnchorY(_ y: CGFloat) {
+        guard !cancelPathAnchorDragBeforeDiscreteCommand() else { return }
         guard let point = selectedPathAnchorCanvasPoint else { return }
         setSelectedPathAnchorPosition(CGPoint(x: point.x, y: y))
     }
@@ -290,10 +301,7 @@ extension ImageEditorViewModel {
     /// Keyboard nudges move the selected anchor with the same one-step
     /// History semantics as dragging it on the canvas.
     func nudgeSelectedPathAnchor(by delta: CGSize) {
-        if hasActivePathAnchorMoveTransaction {
-            _ = cancelMovingPathAnchor()
-            return
-        }
+        guard !cancelPathAnchorDragBeforeDiscreteCommand() else { return }
         guard let point = selectedPathAnchorCanvasPoint else { return }
         setSelectedPathAnchorPosition(
             CGPoint(x: point.x + delta.width, y: point.y + delta.height)
@@ -301,6 +309,7 @@ extension ImageEditorViewModel {
     }
 
     func selectNextPathAnchor() {
+        guard !cancelPathAnchorDragBeforeDiscreteCommand() else { return }
         guard let layer = document.selectedLayer,
               let content = layer.shapeContent,
               content.kind == .path,
@@ -315,6 +324,7 @@ extension ImageEditorViewModel {
     }
 
     func selectPreviousPathAnchor() {
+        guard !cancelPathAnchorDragBeforeDiscreteCommand() else { return }
         guard let layer = document.selectedLayer,
               let content = layer.shapeContent,
               content.kind == .path,
@@ -337,14 +347,17 @@ extension ImageEditorViewModel {
     }
 
     func selectNextPathSubpath() {
+        guard !cancelPathAnchorDragBeforeDiscreteCommand() else { return }
         selectAdjacentPathSubpath(offset: 1)
     }
 
     func selectPreviousPathSubpath() {
+        guard !cancelPathAnchorDragBeforeDiscreteCommand() else { return }
         selectAdjacentPathSubpath(offset: -1)
     }
 
     func smoothSelectedPathAnchor() {
+        guard !cancelPathAnchorDragBeforeDiscreteCommand() else { return }
         guard let index = selectedPathAnchorIndex,
               let layerIndex = document.selectedLayerIndex,
               let shapeContent = document.layers[layerIndex].shapeContent,
@@ -407,6 +420,7 @@ extension ImageEditorViewModel {
     }
 
     func symmetrizeSelectedPathAnchorHandles() {
+        guard !cancelPathAnchorDragBeforeDiscreteCommand() else { return }
         guard canSymmetrizeSelectedPathAnchorHandles,
               let index = selectedPathAnchorIndex,
               let layerIndex = document.selectedLayerIndex,
@@ -478,6 +492,7 @@ extension ImageEditorViewModel {
     }
 
     func moveSelectedPathSubpath(by delta: CGSize) {
+        guard !cancelPathAnchorDragBeforeDiscreteCommand() else { return }
         guard canMoveSelectedPathSubpath,
               delta != .zero,
               let layerIndex = document.selectedLayerIndex,
@@ -514,6 +529,7 @@ extension ImageEditorViewModel {
     }
 
     func duplicateSelectedPathSubpath() {
+        guard !cancelPathAnchorDragBeforeDiscreteCommand() else { return }
         guard canDuplicateSelectedPathSubpath,
               let layerIndex = document.selectedLayerIndex,
               let shapeContent = document.layers[layerIndex].shapeContent,
@@ -551,6 +567,7 @@ extension ImageEditorViewModel {
     }
 
     func clearSelectedPathAnchorHandles() {
+        guard !cancelPathAnchorDragBeforeDiscreteCommand() else { return }
         guard let index = selectedPathAnchorIndex,
               let layerIndex = document.selectedLayerIndex,
               let shapeContent = document.layers[layerIndex].shapeContent,
@@ -862,10 +879,7 @@ extension ImageEditorViewModel {
     }
 
     func deleteSelectedPathAnchor() {
-        if hasActivePathAnchorMoveTransaction {
-            _ = cancelMovingPathAnchor()
-            return
-        }
+        guard !cancelPathAnchorDragBeforeDiscreteCommand() else { return }
         guard canDeleteSelectedPathAnchor,
               let index = selectedPathAnchorIndex,
               let layerIndex = document.selectedLayerIndex,
@@ -906,6 +920,7 @@ extension ImageEditorViewModel {
     }
 
     func deleteSelectedPathSubpath() {
+        guard !cancelPathAnchorDragBeforeDiscreteCommand() else { return }
         guard canDeleteSelectedPathSubpath,
               let layerIndex = document.selectedLayerIndex,
               let shapeContent = document.layers[layerIndex].shapeContent,
@@ -941,6 +956,7 @@ extension ImageEditorViewModel {
     }
 
     func insertPathAnchorAfterSelection() {
+        guard !cancelPathAnchorDragBeforeDiscreteCommand() else { return }
         guard canInsertPathAnchorAfterSelection,
               let index = selectedPathAnchorIndex,
               let layerIndex = document.selectedLayerIndex,
@@ -982,6 +998,7 @@ extension ImageEditorViewModel {
     }
 
     func toggleSelectedPathClosed() {
+        guard !cancelPathAnchorDragBeforeDiscreteCommand() else { return }
         guard canToggleSelectedPathClosed,
               let layerIndex = document.selectedLayerIndex,
               var shapeContent = document.layers[layerIndex].shapeContent,
@@ -1014,6 +1031,7 @@ extension ImageEditorViewModel {
     }
 
     func reverseSelectedPathDirection() {
+        guard !cancelPathAnchorDragBeforeDiscreteCommand() else { return }
         guard canReverseSelectedPathDirection,
               let layerIndex = document.selectedLayerIndex,
               let shapeContent = document.layers[layerIndex].shapeContent,

@@ -2132,11 +2132,19 @@ struct ImageEditorScopeTests {
 
         for commandName in ["nudgeSelectedPathAnchor", "deleteSelectedPathAnchor"] {
             let commandStart = try #require(pathSource.range(of: "func \(commandName)"))
-            let commandSource = pathSource[commandStart.lowerBound...]
-            let activeCheck = try #require(commandSource.range(of: "hasActivePathAnchorMoveTransaction"))
-            let modelCancel = try #require(commandSource.range(of: "cancelMovingPathAnchor()"))
-            #expect(activeCheck.lowerBound < modelCancel.lowerBound)
+            let sourceAfterStart = pathSource[commandStart.lowerBound...]
+            let commandEnd = sourceAfterStart.dropFirst().range(of: "\n    func ")
+                ?? sourceAfterStart.dropFirst().range(of: "\n    var ")
+            let commandSource = commandEnd.map { sourceAfterStart[..<$0.lowerBound] } ?? sourceAfterStart
+            #expect(commandSource.contains(
+                "guard !cancelPathAnchorDragBeforeDiscreteCommand() else { return }"
+            ))
         }
+        let sharedBoundaryStart = try #require(
+            pathSource.range(of: "func cancelPathAnchorDragBeforeDiscreteCommand() -> Bool")
+        )
+        let sharedBoundarySource = pathSource[sharedBoundaryStart.lowerBound...]
+        #expect(sharedBoundarySource.contains("cancelMovingPathAnchor()"))
         let generalNudgeStart = try #require(
             transformSource.range(of: "func nudgeSelectionOrSelectedLayer(by delta: CGSize)")
         )
@@ -2144,6 +2152,61 @@ struct ImageEditorScopeTests {
         let activeCheck = try #require(generalNudgeSource.range(of: "hasActivePathAnchorMoveTransaction"))
         let modelCancel = try #require(generalNudgeSource.range(of: "cancelMovingPathAnchor()"))
         #expect(activeCheck.lowerBound < modelCancel.lowerBound)
+    }
+
+    @Test func discretePathGeometryCommandsShareActiveDragCancellationBoundary() throws {
+        let pathSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorPathCommands.swift"),
+            encoding: .utf8
+        )
+        let automationSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/XomoAutomationRegistry.swift"),
+            encoding: .utf8
+        )
+        let guardedCommands = [
+            "setSelectedPathAnchorX", "setSelectedPathAnchorY", "nudgeSelectedPathAnchor",
+            "selectNextPathAnchor", "selectPreviousPathAnchor", "selectNextPathSubpath",
+            "selectPreviousPathSubpath", "smoothSelectedPathAnchor",
+            "symmetrizeSelectedPathAnchorHandles", "moveSelectedPathSubpath",
+            "duplicateSelectedPathSubpath", "clearSelectedPathAnchorHandles",
+            "deleteSelectedPathAnchor", "deleteSelectedPathSubpath",
+            "insertPathAnchorAfterSelection", "toggleSelectedPathClosed",
+            "reverseSelectedPathDirection"
+        ]
+        for command in guardedCommands {
+            let start = try #require(pathSource.range(of: "func \(command)"))
+            let sourceAfterStart = pathSource[start.lowerBound...]
+            let end = sourceAfterStart.dropFirst().range(of: "\n    func ")
+                ?? sourceAfterStart.dropFirst().range(of: "\n    var ")
+            let commandSource = end.map { sourceAfterStart[..<$0.lowerBound] } ?? sourceAfterStart
+            #expect(commandSource.contains(
+                "guard !cancelPathAnchorDragBeforeDiscreteCommand() else { return }"
+            ))
+        }
+
+        let actionStart = try #require(automationSource.range(of: "private func pathAction("))
+        let actionEnd = try #require(
+            automationSource[actionStart.upperBound...].range(of: "private func savedPathAction(")
+        )
+        let actionSource = automationSource[actionStart.lowerBound..<actionEnd.lowerBound]
+        let actionRead = try #require(actionSource.range(of: "let action = try requiredString"))
+        let createBranch = try #require(actionSource.range(of: "if action == \"create\""))
+        let selectBranch = try #require(actionSource.range(of: "if action == \"select\""))
+        let createSource = actionSource[createBranch.lowerBound..<selectBranch.lowerBound]
+        let createValidation = try #require(createSource.range(of: "guard points.count >= 2"))
+        let createCancel = try #require(
+            createSource.range(of: "viewModel.cancelPathAnchorDragBeforeDiscreteCommand()")
+        )
+        let selectSource = actionSource[selectBranch.lowerBound...]
+        let roleValidation = try #require(selectSource.range(of: "let role: ImageEditorPathControlRole"))
+        let selectCancel = try #require(
+            selectSource.range(of: "viewModel.cancelPathAnchorDragBeforeDiscreteCommand()")
+        )
+        let selectMutation = try #require(selectSource.range(of: "viewModel.selectedPathSubpathIndex = subpath"))
+        #expect(actionRead.lowerBound < createBranch.lowerBound)
+        #expect(createValidation.lowerBound < createCancel.lowerBound)
+        #expect(roleValidation.lowerBound < selectCancel.lowerBound)
+        #expect(selectCancel.lowerBound < selectMutation.lowerBound)
     }
 
     @Test func layerRowsExposeTheSameSelectedLayerExportAction() throws {
