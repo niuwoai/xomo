@@ -2482,6 +2482,49 @@ struct ImageEditorScopeTests {
         #expect(viewSource.contains("deleteSelectedObject()"))
     }
 
+    @Test func returnAndKeypadEnterFinishPendingPenPathBeforeWindowDefaults() throws {
+        let viewSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let pathSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorPathCommands.swift"),
+            encoding: .utf8
+        )
+
+        let monitorStart = try #require(viewSource.range(of: "ImageEditorKeyboardShortcutMonitor("))
+        let monitorEnd = try #require(viewSource[monitorStart.upperBound...].range(of: ".allowsHitTesting(false)"))
+        let monitorSource = viewSource[monitorStart.lowerBound..<monitorEnd.lowerBound]
+        let finishCallback = try #require(monitorSource.range(of: "finishPendingPenPath: {"))
+        let pointerPolicy = try #require(
+            monitorSource[finishCallback.upperBound...].range(of: "ImageEditorPendingPenPointerPolicy")
+        )
+        let pointerLatch = try #require(
+            monitorSource[pointerPolicy.upperBound...].range(of: "isPathAnchorDragCancelled = true")
+        )
+        let finishCommand = try #require(
+            monitorSource[pointerLatch.upperBound...].range(of: "viewModel.finishPendingPenPathFromKeyboard()")
+        )
+        #expect(finishCallback.lowerBound < pointerPolicy.lowerBound)
+        #expect(pointerPolicy.lowerBound < pointerLatch.lowerBound)
+        #expect(pointerLatch.lowerBound < finishCommand.lowerBound)
+
+        let modelStart = try #require(pathSource.range(of: "func finishPendingPenPathFromKeyboard()"))
+        let modelEnd = try #require(pathSource[modelStart.upperBound...].range(of: "func beginMovingPathAnchor"))
+        let modelSource = pathSource[modelStart.lowerBound..<modelEnd.lowerBound]
+        let ownership = try #require(modelSource.range(of: "hasPendingPenPathTransaction"))
+        let openFinish = try #require(modelSource.range(of: "finishPenPath(closed: false)"))
+        #expect(ownership.lowerBound < openFinish.lowerBound)
+        #expect(modelSource.contains("return true"))
+
+        #expect(viewSource.contains("let finishPendingPenPath: () -> Bool"))
+        #expect(viewSource.contains("context.coordinator.finishPendingPenPath = finishPendingPenPath"))
+        #expect(viewSource.contains("self.finishPendingPenPath = finishPendingPenPath"))
+        #expect(viewSource.contains("ImageEditorPendingPenFinishKeyPolicy.matches("))
+        #expect(viewSource.contains("finishPendingPenPath()"))
+        #expect(viewSource.contains("!isTextInputActive"))
+    }
+
     @Test func viewMenuExposesClassicZoomShortcuts() throws {
         let source = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),

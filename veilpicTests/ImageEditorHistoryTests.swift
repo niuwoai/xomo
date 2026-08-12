@@ -12,6 +12,27 @@ import Testing
 @MainActor
 @Suite(.serialized)
 struct ImageEditorHistoryTests {
+    @Test func returnAndKeypadEnterFinishOnlyUnmodifiedPendingPenPaths() {
+        for keyCode: UInt16 in [36, 76] {
+            #expect(ImageEditorPendingPenFinishKeyPolicy.matches(
+                keyCode: keyCode,
+                modifierFlags: []
+            ))
+            #expect(!ImageEditorPendingPenFinishKeyPolicy.matches(
+                keyCode: keyCode,
+                modifierFlags: .shift
+            ))
+            #expect(!ImageEditorPendingPenFinishKeyPolicy.matches(
+                keyCode: keyCode,
+                modifierFlags: .command
+            ))
+        }
+        #expect(!ImageEditorPendingPenFinishKeyPolicy.matches(
+            keyCode: 53,
+            modifierFlags: []
+        ))
+    }
+
     @Test func unfinishedPenPointerSequenceOwnsHistoryUntilMouseUp() {
         #expect(ImageEditorPendingPenPointerPolicy.ownsUncommittedPoint(
             tool: .pen,

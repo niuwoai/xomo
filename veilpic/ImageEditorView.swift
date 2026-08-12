@@ -250,6 +250,19 @@ struct ImageEditorView: View {
                     }
                     return viewModel.deleteSelectedXomoObjectIfNeeded()
                 },
+                finishPendingPenPath: {
+                    let isUncommittedPenPointerSequence = ImageEditorPendingPenPointerPolicy
+                        .ownsUncommittedPoint(
+                            tool: canvasInteractionTool,
+                            isPointerSequenceActive: isPenPointerSequenceActive,
+                            isMovingPathAnchor: isMovingPathAnchor
+                        )
+                    if isUncommittedPenPointerSequence {
+                        isPathAnchorDragCancelled = true
+                    }
+                    return viewModel.finishPendingPenPathFromKeyboard()
+                        || isUncommittedPenPointerSequence
+                },
                 cancelSelectedObject: {
                     if isMovingPathAnchor {
                         isPathAnchorDragCancelled = true
@@ -13131,11 +13144,22 @@ enum ImageEditorEscapeCancelDispatcher {
     }
 }
 
+enum ImageEditorPendingPenFinishKeyPolicy {
+    static func matches(
+        keyCode: UInt16,
+        modifierFlags: NSEvent.ModifierFlags
+    ) -> Bool {
+        let relevantFlags = modifierFlags.intersection([.command, .option, .shift, .control])
+        return (keyCode == 36 || keyCode == 76) && relevantFlags.isEmpty
+    }
+}
+
 struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
     let perform: (ImageEditorKeyboardShortcutAction) -> Void
     let activeTool: ImageEditorTool
     let nudgeSelected: (CGSize) -> Void
     let deleteSelectedObject: () -> Bool
+    let finishPendingPenPath: () -> Bool
     let cancelSelectedObject: () -> Bool
     let discardPendingSmartFilterChanges: () -> Bool
     let deleteSelectedHistory: () -> Bool
@@ -13148,6 +13172,7 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
             activeTool: activeTool,
             nudgeSelected: nudgeSelected,
             deleteSelectedObject: deleteSelectedObject,
+            finishPendingPenPath: finishPendingPenPath,
             cancelSelectedObject: cancelSelectedObject,
             discardPendingSmartFilterChanges: discardPendingSmartFilterChanges,
             deleteSelectedHistory: deleteSelectedHistory,
@@ -13165,6 +13190,7 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
         context.coordinator.activeTool = activeTool
         context.coordinator.nudgeSelected = nudgeSelected
         context.coordinator.deleteSelectedObject = deleteSelectedObject
+        context.coordinator.finishPendingPenPath = finishPendingPenPath
         context.coordinator.cancelSelectedObject = cancelSelectedObject
         context.coordinator.discardPendingSmartFilterChanges = discardPendingSmartFilterChanges
         context.coordinator.deleteSelectedHistory = deleteSelectedHistory
@@ -13178,6 +13204,7 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
         var activeTool: ImageEditorTool
         var nudgeSelected: (CGSize) -> Void
         var deleteSelectedObject: () -> Bool
+        var finishPendingPenPath: () -> Bool
         var cancelSelectedObject: () -> Bool
         var discardPendingSmartFilterChanges: () -> Bool
         var deleteSelectedHistory: () -> Bool
@@ -13193,6 +13220,7 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
             activeTool: ImageEditorTool,
             nudgeSelected: @escaping (CGSize) -> Void,
             deleteSelectedObject: @escaping () -> Bool,
+            finishPendingPenPath: @escaping () -> Bool,
             cancelSelectedObject: @escaping () -> Bool,
             discardPendingSmartFilterChanges: @escaping () -> Bool,
             deleteSelectedHistory: @escaping () -> Bool,
@@ -13203,6 +13231,7 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
             self.activeTool = activeTool
             self.nudgeSelected = nudgeSelected
             self.deleteSelectedObject = deleteSelectedObject
+            self.finishPendingPenPath = finishPendingPenPath
             self.cancelSelectedObject = cancelSelectedObject
             self.discardPendingSmartFilterChanges = discardPendingSmartFilterChanges
             self.deleteSelectedHistory = deleteSelectedHistory
@@ -13285,6 +13314,15 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
                 ) {
                     return nil
                 }
+            }
+            if event.type == .keyDown,
+               !isTextInputActive,
+               ImageEditorPendingPenFinishKeyPolicy.matches(
+                keyCode: event.keyCode,
+                modifierFlags: event.modifierFlags
+               ),
+               finishPendingPenPath() {
+                return nil
             }
             if event.type == .keyDown,
                isDelete,

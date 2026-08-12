@@ -213,6 +213,13 @@ extension ImageEditorViewModel {
     }
 
     @discardableResult
+    func finishPendingPenPathFromKeyboard() -> Bool {
+        guard hasPendingPenPathTransaction else { return false }
+        finishPenPath(closed: false)
+        return true
+    }
+
+    @discardableResult
     func beginMovingPathAnchor(at point: CGPoint?) -> Bool {
         guard let point else { return false }
         if hasActivePathAnchorMoveTransaction {

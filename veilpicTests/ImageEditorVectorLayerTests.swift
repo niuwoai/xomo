@@ -599,6 +599,35 @@ struct ImageEditorVectorLayerTests {
         #expect(viewModel.canRedo)
     }
 
+    @Test func returnKeyFinishesOpenPenPathAndConsumesIncompleteTransientBranch() async throws {
+        let canvasSize = NSSize(width: 140, height: 100)
+        let image = testBitmapImage(size: canvasSize, background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        let originalLayerCount = viewModel.document.layers.count
+        let originalHistoryCount = viewModel.document.history.count
+        let originalUndoCount = viewModel.undoStack.count
+
+        #expect(!viewModel.finishPendingPenPathFromKeyboard())
+        viewModel.addPenPoint(CGPoint(x: 20, y: 20))
+        #expect(viewModel.finishPendingPenPathFromKeyboard())
+        #expect(viewModel.document.layers.count == originalLayerCount)
+        #expect(viewModel.document.history.count == originalHistoryCount)
+        #expect(viewModel.undoStack.count == originalUndoCount)
+        #expect(viewModel.pendingPenPathPoints == [CGPoint(x: 20, y: 20)])
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.penNeedsPoints"))
+
+        viewModel.addPenPoint(CGPoint(x: 104, y: 28))
+        #expect(viewModel.finishPendingPenPathFromKeyboard())
+        let content = try #require(viewModel.document.selectedLayer?.shapeContent)
+        #expect(content.kind == .path)
+        #expect(!content.isPathClosed)
+        #expect(content.editablePathAnchors.map(\.point).count == 2)
+        #expect(!viewModel.hasPendingPenPathTransaction)
+        #expect(viewModel.document.layers.count == originalLayerCount + 1)
+        #expect(viewModel.document.history.count == originalHistoryCount + 1)
+        #expect(viewModel.undoStack.count == originalUndoCount + 1)
+    }
+
     @Test func pathSelectionHitsClosedPathGeometryAndMovesWholeLayer() async throws {
         let canvasSize = NSSize(width: 140, height: 100)
         let image = testBitmapImage(size: canvasSize, background: .black)
