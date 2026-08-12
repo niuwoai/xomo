@@ -2000,6 +2000,48 @@ struct ImageEditorScopeTests {
         #expect(source.contains("if isPathAnchorDragCancelled {\n                    return\n                }"))
     }
 
+    @Test func canvasLifecycleInterruptionsCancelPathDragAndFreshMouseDownReleasesLatch() throws {
+        let viewSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let bridgeSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorScrollZoom.swift"),
+            encoding: .utf8
+        )
+
+        let cancelStart = try #require(
+            viewSource.range(of: "private func cancelPathAnchorDragForCanvasLifecycle()")
+        )
+        let beginStart = try #require(
+            viewSource[cancelStart.upperBound...].range(of: "private func beginCanvasPointerSequence()")
+        )
+        let cancelSource = viewSource[cancelStart.lowerBound..<beginStart.lowerBound]
+        #expect(cancelSource.contains("ImageEditorPathAnchorDragLifecyclePolicy.shouldCancel"))
+        let latch = try #require(cancelSource.range(of: "isPathAnchorDragCancelled = true"))
+        let modelCancel = try #require(cancelSource.range(of: "viewModel.cancelMovingPathAnchor()"))
+        #expect(latch.lowerBound < modelCancel.lowerBound)
+
+        let beginEnd = try #require(
+            viewSource[beginStart.upperBound...].range(of: "private var colorChips")
+        )
+        let beginSource = viewSource[beginStart.lowerBound..<beginEnd.lowerBound]
+        #expect(beginSource.contains("shouldReleaseCancellationLatch"))
+        #expect(beginSource.contains("isPathAnchorDragCancelled = false"))
+        #expect(beginSource.contains("isMovingPathAnchor = false"))
+
+        #expect(viewSource.contains("onCanvasPointerSequenceBegan: {\n                            beginCanvasPointerSequence()"))
+        #expect(viewSource.contains("onCanvasLifecycleInterrupted: { _ in\n                            cancelPathAnchorDragForCanvasLifecycle()"))
+        #expect(viewSource.contains(".onDisappear {\n                    cancelPathAnchorDragForCanvasLifecycle()"))
+
+        #expect(bridgeSource.contains("interruptCanvasLifecycle(.applicationDeactivated)"))
+        #expect(bridgeSource.contains("notification.object as? NSWindow === self.window"))
+        #expect(bridgeSource.contains("interruptCanvasLifecycle(.windowDeactivated)"))
+        #expect(bridgeSource.contains("onCanvasLifecycleInterrupted?(.bridgeDetached)"))
+        #expect(bridgeSource.contains("onCanvasPointerSequenceBegan?()"))
+        #expect(bridgeSource.contains("let shouldNotifyBridgeDetached = ownsCanvasLifecycle"))
+    }
+
     @Test func layerRowsExposeTheSameSelectedLayerExportAction() throws {
         let source = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorLayerPanel.swift"),

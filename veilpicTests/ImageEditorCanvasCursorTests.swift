@@ -787,7 +787,9 @@ struct ImageEditorCanvasCursorTests {
         )
 
         #expect(source.contains("NSApplication.didResignActiveNotification"))
-        #expect(source.contains("self?.cancelStaleObjectMoveCapture()"))
+        #expect(source.contains("self?.interruptCanvasLifecycle(.applicationDeactivated)"))
+        #expect(source.contains("private func interruptCanvasLifecycle("))
+        #expect(source.contains("cancelStaleObjectMoveCapture()"))
         #expect(source.contains("NotificationCenter.default.removeObserver(appDeactivateObserver)"))
     }
 
@@ -802,8 +804,84 @@ struct ImageEditorCanvasCursorTests {
 
         #expect(source.contains("NSWindow.didResignKeyNotification"))
         #expect(source.contains("notification.object as? NSWindow === self.window"))
-        #expect(source.contains("self.cancelStaleObjectMoveCapture()"))
+        #expect(source.contains("self.interruptCanvasLifecycle(.windowDeactivated)"))
+        #expect(source.contains("private func interruptCanvasLifecycle("))
+        #expect(source.contains("cancelStaleObjectMoveCapture()"))
         #expect(source.contains("NotificationCenter.default.removeObserver(windowResignKeyObserver)"))
+    }
+
+    @Test func pathAnchorLifecycleCancellationReleasesOnlyForAFreshPointerSequence() {
+        #expect(ImageEditorPathAnchorDragLifecyclePolicy.shouldCancel(
+            isMovingPathAnchor: true,
+            hasActiveTransaction: false
+        ))
+        #expect(ImageEditorPathAnchorDragLifecyclePolicy.shouldCancel(
+            isMovingPathAnchor: false,
+            hasActiveTransaction: true
+        ))
+        #expect(!ImageEditorPathAnchorDragLifecyclePolicy.shouldCancel(
+            isMovingPathAnchor: false,
+            hasActiveTransaction: false
+        ))
+        #expect(ImageEditorPathAnchorDragLifecyclePolicy.shouldReleaseCancellationLatch(
+            isCancelled: true,
+            hasActiveTransaction: false
+        ))
+        #expect(!ImageEditorPathAnchorDragLifecyclePolicy.shouldReleaseCancellationLatch(
+            isCancelled: true,
+            hasActiveTransaction: true
+        ))
+        #expect(!ImageEditorPathAnchorDragLifecyclePolicy.shouldReleaseCancellationLatch(
+            isCancelled: false,
+            hasActiveTransaction: false
+        ))
+    }
+
+    @Test func canvasBridgeReportsOnlyOwnedWindowAppAndSingleDetachInterruptions() {
+        let host = ScrollWheelZoomNSView(frame: NSRect(x: 0, y: 0, width: 320, height: 240))
+        let ownedWindow = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 320, height: 240),
+            styleMask: [.borderless],
+            backing: .buffered,
+            defer: false
+        )
+        let otherWindow = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 100, height: 100),
+            styleMask: [.borderless],
+            backing: .buffered,
+            defer: false
+        )
+        var interruptions: [ImageEditorCanvasLifecycleInterruption] = []
+        host.onCanvasLifecycleInterrupted = { interruptions.append($0) }
+        ownedWindow.contentView = host
+        #expect(host.window === ownedWindow)
+
+        NotificationCenter.default.post(
+            name: NSWindow.didResignKeyNotification,
+            object: otherWindow
+        )
+        #expect(interruptions.isEmpty)
+
+        NotificationCenter.default.post(
+            name: NSWindow.didResignKeyNotification,
+            object: ownedWindow
+        )
+        #expect(interruptions == [.windowDeactivated])
+
+        NotificationCenter.default.post(
+            name: NSApplication.didResignActiveNotification,
+            object: nil
+        )
+        #expect(interruptions == [.windowDeactivated, .applicationDeactivated])
+
+        host.teardownMonitor()
+        #expect(interruptions == [
+            .windowDeactivated,
+            .applicationDeactivated,
+            .bridgeDetached,
+        ])
+        host.teardownMonitor()
+        #expect(interruptions.count == 3)
     }
 
     @Test func appAndWindowDeactivationEndNativeMiddleMousePanning() throws {
@@ -815,8 +893,10 @@ struct ImageEditorCanvasCursorTests {
             encoding: .utf8
         )
 
-        #expect(source.components(separatedBy: "self?.cancelStaleMiddleMousePanCapture()").count == 2)
-        #expect(source.contains("self.cancelStaleMiddleMousePanCapture()"))
+        #expect(source.contains("interruptCanvasLifecycle(.applicationDeactivated)"))
+        #expect(source.contains("interruptCanvasLifecycle(.windowDeactivated)"))
+        #expect(source.contains("private func interruptCanvasLifecycle("))
+        #expect(source.contains("cancelStaleMiddleMousePanCapture()"))
         #expect(source.contains("onMiddleMousePanEnded?()"))
         #expect(source.contains("lastMiddleMousePoint = nil"))
     }

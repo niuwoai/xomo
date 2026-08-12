@@ -2034,6 +2034,25 @@ struct ImageEditorView: View {
         viewModel.redo()
     }
 
+    private func cancelPathAnchorDragForCanvasLifecycle() {
+        guard ImageEditorPathAnchorDragLifecyclePolicy.shouldCancel(
+            isMovingPathAnchor: isMovingPathAnchor,
+            hasActiveTransaction: viewModel.hasActivePathAnchorMoveTransaction
+        ) else { return }
+        isPathAnchorDragCancelled = true
+        _ = viewModel.cancelMovingPathAnchor()
+        NSCursor.arrow.set()
+    }
+
+    private func beginCanvasPointerSequence() {
+        guard ImageEditorPathAnchorDragLifecyclePolicy.shouldReleaseCancellationLatch(
+            isCancelled: isPathAnchorDragCancelled,
+            hasActiveTransaction: viewModel.hasActivePathAnchorMoveTransaction
+        ) else { return }
+        isPathAnchorDragCancelled = false
+        isMovingPathAnchor = false
+    }
+
     private var colorChips: some View {
         ZStack(alignment: .topLeading) {
             colorChip(
@@ -2239,6 +2258,12 @@ struct ImageEditorView: View {
                             tool: canvasInteractionTool,
                             isCanvasTextEditing: canvasTextEditingOrigin != nil
                         ),
+                        onCanvasPointerSequenceBegan: {
+                            beginCanvasPointerSequence()
+                        },
+                        onCanvasLifecycleInterrupted: { _ in
+                            cancelPathAnchorDragForCanvasLifecycle()
+                        },
                         onZoom: { factor, location, viewportSize in
                             // 每个离散滚轮 tick 独立锚定当前状态：复用捏合缩放的锚定数学，
                             // 立即结束一次缩放会话，避免下一次滚动沿用上一次的基准而叠加错位。
@@ -2672,6 +2697,7 @@ struct ImageEditorView: View {
                     refreshCanvasCursor(in: geometry.size)
                 }
                 .onDisappear {
+                    cancelPathAnchorDragForCanvasLifecycle()
                     isPointerInsideCanvas = false
                     activeBrushPressure = nil
                     activeBrushTilt = nil
@@ -12869,6 +12895,22 @@ enum ImageEditorKeyboardShortcutAction: Equatable {
         if key == "1", relevantFlags == [.command] { return .actualPixels }
         if key == "0", relevantFlags == [.command] { return .fitOnScreen }
         return nil
+    }
+}
+
+enum ImageEditorPathAnchorDragLifecyclePolicy {
+    static func shouldCancel(
+        isMovingPathAnchor: Bool,
+        hasActiveTransaction: Bool
+    ) -> Bool {
+        isMovingPathAnchor || hasActiveTransaction
+    }
+
+    static func shouldReleaseCancellationLatch(
+        isCancelled: Bool,
+        hasActiveTransaction: Bool
+    ) -> Bool {
+        isCancelled && !hasActiveTransaction
     }
 }
 

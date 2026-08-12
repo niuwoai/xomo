@@ -1318,7 +1318,7 @@ struct ImageEditorVectorLayerTests {
         #expect(viewModel.canRedo)
     }
 
-    @Test func cancellingPathHandleDragRestoresDocumentAndRedo() async throws {
+    @Test func cancellingPathHandleDragRestoresDocumentRedoAndAllowsNextGesture() async throws {
         let canvasSize = NSSize(width: 140, height: 100)
         let image = testBitmapImage(size: canvasSize, background: .black)
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
@@ -1353,6 +1353,14 @@ struct ImageEditorVectorLayerTests {
         #expect(viewModel.redoStack.count == redoCount)
         #expect(viewModel.canRedo)
         #expect(!viewModel.cancelMovingPathAnchor())
+
+        #expect(viewModel.beginMovingPathAnchor(at: outHandle))
+        viewModel.moveSelectedPathAnchor(to: CGPoint(x: outHandle.x + 7, y: outHandle.y - 5))
+        viewModel.finishMovingPathAnchor()
+        #expect(viewModel.document.selectedLayer?.shapeContent?.allEditablePathSubpaths != originalContent.allEditablePathSubpaths)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.undoStack.count == undoCount + 1)
+        #expect(viewModel.redoStack.isEmpty)
     }
 
     @Test func undoDuringPathAnchorDragCancelsPreviewBeforeReachingHistory() async throws {

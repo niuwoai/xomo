@@ -50,6 +50,12 @@ enum ImageEditorPrimaryPointerResetPolicy {
     }
 }
 
+enum ImageEditorCanvasLifecycleInterruption: Equatable {
+    case applicationDeactivated
+    case windowDeactivated
+    case bridgeDetached
+}
+
 enum ImageEditorObjectDragEventPolicy {
     static let activationDistance: CGFloat = 3
 
@@ -211,6 +217,13 @@ struct ScrollWheelZoomView: NSViewRepresentable {
     let pointerCaptureState: ImageEditorCanvasPointerCaptureState
     let pointerCaptureKind: ImageEditorPrimaryToolPointerCapture.Kind
     let capturesPrimaryPointer: Bool
+    /// A physical mouse-down starts a fresh pointer generation. SwiftUI uses
+    /// this boundary to release cancellation latches left behind when the
+    /// matching mouse-up was swallowed by an app/window transition.
+    let onCanvasPointerSequenceBegan: () -> Void
+    /// Path editing remains a SwiftUI gesture, so the AppKit bridge forwards
+    /// lifecycle interruptions even when it has no native pointer capture.
+    let onCanvasLifecycleInterrupted: (ImageEditorCanvasLifecycleInterruption) -> Void
     /// 回调参数：本次缩放乘法系数、光标在视口内的坐标（左上原点 y-down）、视口尺寸。
     let onZoom: (_ factor: CGFloat, _ location: CGPoint, _ viewportSize: CGSize) -> Void
     /// macOS 13 的 SwiftUI onHover 不提供坐标；由透明 AppKit 承载层补发
@@ -267,6 +280,8 @@ struct ScrollWheelZoomView: NSViewRepresentable {
         view.pointerCaptureState = pointerCaptureState
         view.pointerCaptureKind = pointerCaptureKind
         view.capturesPrimaryPointer = capturesPrimaryPointer
+        view.onCanvasPointerSequenceBegan = onCanvasPointerSequenceBegan
+        view.onCanvasLifecycleInterrupted = onCanvasLifecycleInterrupted
         view.onZoom = onZoom
         view.onMouseMoved = onMouseMoved
         view.onStylusProximityChanged = onStylusProximityChanged
@@ -299,6 +314,8 @@ struct ScrollWheelZoomView: NSViewRepresentable {
         nsView.pointerCaptureState = pointerCaptureState
         nsView.pointerCaptureKind = pointerCaptureKind
         nsView.capturesPrimaryPointer = capturesPrimaryPointer
+        nsView.onCanvasPointerSequenceBegan = onCanvasPointerSequenceBegan
+        nsView.onCanvasLifecycleInterrupted = onCanvasLifecycleInterrupted
         nsView.onZoom = onZoom
         nsView.onMouseMoved = onMouseMoved
         nsView.onStylusProximityChanged = onStylusProximityChanged
@@ -414,6 +431,8 @@ final class ScrollWheelZoomNSView: NSView {
     var pointerCaptureState = ImageEditorCanvasPointerCaptureState()
     var pointerCaptureKind: ImageEditorPrimaryToolPointerCapture.Kind = .none
     var capturesPrimaryPointer = false
+    var onCanvasPointerSequenceBegan: (() -> Void)?
+    var onCanvasLifecycleInterrupted: ((ImageEditorCanvasLifecycleInterruption) -> Void)?
     var onZoom: ((CGFloat, CGPoint, CGSize) -> Void)?
     var onMouseMoved: ((CGPoint, ImageEditorStylusEventSample) -> Void)?
     var onStylusProximityChanged: ((ImageEditorStylusProximity) -> Void)?
@@ -450,6 +469,7 @@ final class ScrollWheelZoomNSView: NSView {
     private var mouseMovedMonitor: Any?
     private var appDeactivateObserver: Any?
     private var windowResignKeyObserver: Any?
+    private var ownsCanvasLifecycle = false
     private var isMiddleMousePanning = false
     private var lastMiddleMousePoint: CGPoint?
     private var isObjectMoving = false
@@ -562,6 +582,7 @@ final class ScrollWheelZoomNSView: NSView {
     }
 
     private func installMonitor() {
+        ownsCanvasLifecycle = true
         if monitor == nil {
             monitor = NSEvent.addLocalMonitorForEvents(matching: .scrollWheel) { [weak self] event in
                 guard let self else { return event }
@@ -590,9 +611,7 @@ final class ScrollWheelZoomNSView: NSView {
                 object: nil,
                 queue: .main
             ) { [weak self] _ in
-                self?.cancelStaleObjectMoveCapture()
-                self?.cancelStaleMiddleMousePanCapture()
-                self?.cancelStalePrimaryPointerCapture()
+                self?.interruptCanvasLifecycle(.applicationDeactivated)
             }
         }
         if windowResignKeyObserver == nil {
@@ -603,14 +622,14 @@ final class ScrollWheelZoomNSView: NSView {
             ) { [weak self] notification in
                 guard let self,
                       notification.object as? NSWindow === self.window else { return }
-                self.cancelStaleObjectMoveCapture()
-                self.cancelStaleMiddleMousePanCapture()
-                self.cancelStalePrimaryPointerCapture()
+                self.interruptCanvasLifecycle(.windowDeactivated)
             }
         }
     }
 
     func teardownMonitor() {
+        let shouldNotifyBridgeDetached = ownsCanvasLifecycle
+        ownsCanvasLifecycle = false
         if let monitor {
             NSEvent.removeMonitor(monitor)
         }
@@ -644,6 +663,9 @@ final class ScrollWheelZoomNSView: NSView {
         objectMoveCandidateModifierFlags = []
         cancelStaleMiddleMousePanCapture()
         cancelStalePrimaryPointerCapture()
+        if shouldNotifyBridgeDetached {
+            onCanvasLifecycleInterrupted?(.bridgeDetached)
+        }
     }
 
     deinit {
@@ -751,6 +773,7 @@ final class ScrollWheelZoomNSView: NSView {
             guard bounds.contains(location) else {
                 return false
             }
+            onCanvasPointerSequenceBegan?()
             // Remote desktops, accessibility clients and pointer warps can
             // deliver mouse-down at a new location without a preceding
             // mouseMoved event. Refresh the semantic pointer state before
@@ -1018,6 +1041,15 @@ final class ScrollWheelZoomNSView: NSView {
         isObjectMoveCaptureRejected = false
         objectMoveStartPoint = nil
         objectMoveCandidateModifierFlags = []
+    }
+
+    private func interruptCanvasLifecycle(
+        _ interruption: ImageEditorCanvasLifecycleInterruption
+    ) {
+        cancelStaleObjectMoveCapture()
+        cancelStaleMiddleMousePanCapture()
+        cancelStalePrimaryPointerCapture()
+        onCanvasLifecycleInterrupted?(interruption)
     }
 
     private func cancelStaleMiddleMousePanCapture() {
