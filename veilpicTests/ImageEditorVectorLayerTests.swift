@@ -2009,6 +2009,78 @@ struct ImageEditorVectorLayerTests {
         #expect(!viewModel.hasActivePathAnchorMoveTransaction)
     }
 
+    @Test func penSelectsAndContinuesAnUnselectedVisibleOpenPathEndpoint() async throws {
+        let image = testBitmapImage(size: NSSize(width: 170, height: 120), background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        let sourceLayerID = try #require(viewModel.document.selectedLayerID)
+        viewModel.selectTool(.pen)
+        viewModel.addPenPoint(CGPoint(x: 25, y: 35))
+        viewModel.addPenPoint(CGPoint(x: 95, y: 40))
+        viewModel.addPenPoint(CGPoint(x: 135, y: 75))
+        viewModel.finishPenPath(closed: false)
+        let pathLayer = try #require(viewModel.document.selectedLayer)
+        let endpoint = try #require(pathLayer.shapeContent?.pathAnchors.last).point.applying(
+            CGAffineTransform(translationX: pathLayer.frame.minX, y: pathLayer.frame.minY)
+        )
+        let layerCount = viewModel.document.layers.count
+        viewModel.selectLayer(sourceLayerID)
+
+        #expect(viewModel.penPathContinuationState(at: endpoint) == .available)
+        #expect(viewModel.beginPenPathContinuation(at: endpoint))
+        #expect(viewModel.document.selectedLayerID == pathLayer.id)
+        viewModel.addPenPoint(CGPoint(x: 155, y: 98))
+        viewModel.finishPenPath(closed: false)
+
+        #expect(viewModel.document.layers.count == layerCount)
+        #expect(viewModel.document.selectedLayerID == pathLayer.id)
+        #expect(viewModel.document.selectedLayer?.shapeContent?.pathAnchors.count == 4)
+    }
+
+    @Test func hiddenTopOpenPathEndpointDoesNotStealContinuationHit() async throws {
+        let image = testBitmapImage(size: NSSize(width: 170, height: 120), background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        let sourceLayerID = try #require(viewModel.document.selectedLayerID)
+        viewModel.selectTool(.pen)
+        viewModel.addPenPoint(CGPoint(x: 25, y: 35))
+        viewModel.addPenPoint(CGPoint(x: 110, y: 45))
+        viewModel.finishPenPath(closed: false)
+        let lowerPathID = try #require(viewModel.document.selectedLayerID)
+        viewModel.addPenPoint(CGPoint(x: 25, y: 35))
+        viewModel.addPenPoint(CGPoint(x: 135, y: 80))
+        viewModel.finishPenPath(closed: false)
+        let upperPathIndex = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[upperPathIndex].isVisible = false
+        viewModel.selectLayer(sourceLayerID)
+
+        #expect(viewModel.penPathContinuationState(at: CGPoint(x: 25, y: 35)) == .available)
+        #expect(viewModel.beginPenPathContinuation(at: CGPoint(x: 25, y: 35)))
+        #expect(viewModel.document.selectedLayerID == lowerPathID)
+    }
+
+    @Test func lockedTopOpenPathEndpointBlocksLowerContinuationTarget() async throws {
+        let image = testBitmapImage(size: NSSize(width: 170, height: 120), background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        let sourceLayerID = try #require(viewModel.document.selectedLayerID)
+        viewModel.selectTool(.pen)
+        viewModel.addPenPoint(CGPoint(x: 25, y: 35))
+        viewModel.addPenPoint(CGPoint(x: 110, y: 45))
+        viewModel.finishPenPath(closed: false)
+        let lowerPathID = try #require(viewModel.document.selectedLayerID)
+        viewModel.addPenPoint(CGPoint(x: 25, y: 35))
+        viewModel.addPenPoint(CGPoint(x: 135, y: 80))
+        viewModel.finishPenPath(closed: false)
+        let upperPathIndex = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[upperPathIndex].locksPosition = true
+        let upperPathID = viewModel.document.layers[upperPathIndex].id
+        viewModel.selectLayer(sourceLayerID)
+
+        #expect(viewModel.penPathContinuationState(at: CGPoint(x: 25, y: 35)) == .blocked)
+        #expect(!viewModel.beginPenPathContinuation(at: CGPoint(x: 25, y: 35)))
+        #expect(viewModel.document.selectedLayerID == sourceLayerID)
+        #expect(viewModel.document.selectedLayerID != lowerPathID)
+        #expect(viewModel.document.selectedLayerID != upperPathID)
+    }
+
     @Test func penContinuesOpenPathFromLastEndpointInPlaceWithOneUndo() async throws {
         let image = testBitmapImage(size: NSSize(width: 160, height: 110), background: .black)
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }

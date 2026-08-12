@@ -222,7 +222,10 @@ extension ImageEditorViewModel {
               let hit = penPathContinuationHit(at: point),
               let layer = document.layers.first(where: { $0.id == hit.layerID })
         else { return .none }
-        return document.isEffectivelyPixelsLocked(layer) ? .blocked : .available
+        return document.isEffectivelyPixelsLocked(layer)
+            || document.isEffectivelyPositionLocked(layer)
+            ? .blocked
+            : .available
     }
 
     @discardableResult
@@ -230,6 +233,7 @@ extension ImageEditorViewModel {
         guard let hit = penPathContinuationHit(at: point),
               let layerIndex = document.layers.firstIndex(where: { $0.id == hit.layerID }),
               !document.isEffectivelyPixelsLocked(document.layers[layerIndex]),
+              !document.isEffectivelyPositionLocked(document.layers[layerIndex]),
               let content = document.layers[layerIndex].shapeContent,
               content.allEditablePathSubpaths.indices.contains(hit.subpathIndex)
         else { return false }
@@ -246,6 +250,7 @@ extension ImageEditorViewModel {
                 )
             }
         }
+        selectLayer(hit.layerID)
         pendingPenContinuationLayerID = hit.layerID
         pendingPenContinuationSubpathIndex = hit.subpathIndex
         pendingPenContinuationInitialAnchorCount = anchors.count
@@ -1842,26 +1847,33 @@ extension ImageEditorViewModel {
     private func penPathContinuationHit(
         at point: CGPoint?
     ) -> ImageEditorPenPathContinuationHit? {
-        guard let point,
-              let layer = document.selectedLayer,
-              let content = layer.shapeContent,
-              content.kind == .path,
-              !content.isPathClosed,
-              content.allEditablePathSubpaths.count == 1,
-              let anchors = content.allEditablePathSubpaths.first,
-              anchors.count >= 2
-        else { return nil }
-        let canvas = canvasAnchors(for: anchors, layer: layer)
-        let endpoints = [(0, canvas[0].point), (canvas.count - 1, canvas[canvas.count - 1].point)]
-        guard let nearest = endpoints.min(by: {
-            distance(from: point, to: $0.1) < distance(from: point, to: $1.1)
-        }), distance(from: point, to: nearest.1) <= pathAnchorHitDistance
-        else { return nil }
-        return ImageEditorPenPathContinuationHit(
-            layerID: layer.id,
-            subpathIndex: 0,
-            anchorIndex: nearest.0
-        )
+        guard let point, point.x.isFinite, point.y.isFinite else { return nil }
+        for layer in document.layers.reversed() {
+            guard !layer.isGroup,
+                  document.isEffectivelyVisible(layer),
+                  let content = layer.shapeContent,
+                  content.kind == .path,
+                  !content.isPathClosed,
+                  content.allEditablePathSubpaths.count == 1,
+                  let anchors = content.allEditablePathSubpaths.first,
+                  anchors.count >= 2
+            else { continue }
+            let canvas = canvasAnchors(for: anchors, layer: layer)
+            let endpoints = [
+                (0, canvas[0].point),
+                (canvas.count - 1, canvas[canvas.count - 1].point)
+            ]
+            guard let nearest = endpoints.min(by: {
+                distance(from: point, to: $0.1) < distance(from: point, to: $1.1)
+            }), distance(from: point, to: nearest.1) <= pathAnchorHitDistance
+            else { continue }
+            return ImageEditorPenPathContinuationHit(
+                layerID: layer.id,
+                subpathIndex: 0,
+                anchorIndex: nearest.0
+            )
+        }
+        return nil
     }
 
     private func duplicatePathSubpathOffset(for anchors: [ImageEditorPathAnchor]) -> CGSize {
