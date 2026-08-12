@@ -21,13 +21,27 @@ struct ImageEditorScopeTests {
         )
         let branchEnd = try #require(
             source[branchStart.upperBound...].range(
-                of: "viewModel.canEditSelectedPathAnchors"
+                of: "viewModel.beginMovingPenPathAnchor("
             )
         )
         let branch = source[branchStart.lowerBound..<branchEnd.lowerBound]
 
         #expect(branch.contains("viewModel.beginMovingPenPathContinuationAnchor("))
         #expect(!branch.contains("viewModel.beginMovingPathAnchor("))
+
+        let anchorBranchStart = try #require(
+            source[..<branchEnd.lowerBound].range(
+                of: "} else if pendingPenCreationAction == nil,",
+                options: .backwards
+            )
+        )
+        let anchorBranchEnd = try #require(
+            source[branchEnd.upperBound...].range(of: "pendingPenCreationAction =")
+        )
+        let anchorBranch = source[anchorBranchStart.lowerBound..<anchorBranchEnd.lowerBound]
+        #expect(anchorBranch.contains("viewModel.pendingPenPathPoints.isEmpty"))
+        #expect(anchorBranch.contains("viewModel.beginMovingPenPathAnchor("))
+        #expect(!anchorBranch.contains("viewModel.canEditSelectedPathAnchors"))
     }
 
     @Test func imageEditorKeepsCurrentLightweightCapabilitySurfaceStable() {

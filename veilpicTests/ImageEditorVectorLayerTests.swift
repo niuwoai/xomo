@@ -2014,6 +2014,37 @@ struct ImageEditorVectorLayerTests {
         #expect(!viewModel.hasPendingPenPathTransaction)
     }
 
+    @Test func invisibleHandleOnUnselectedPathDoesNotBlockVisibleLowerSegment() async throws {
+        let image = testBitmapImage(size: NSSize(width: 180, height: 200), background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        let sourceLayerID = try #require(viewModel.document.selectedLayerID)
+        viewModel.selectTool(.pen)
+        viewModel.addPenPoint(CGPoint(x: 20, y: 30))
+        viewModel.addPenPoint(CGPoint(x: 160, y: 30))
+        viewModel.finishPenPath(closed: false)
+        let lowerPathID = try #require(viewModel.document.selectedLayerID)
+        viewModel.addPenPoint(
+            CGPoint(x: 80, y: 100),
+            symmetricControlDrag: CGSize(width: 0, height: -70),
+            constrainedToAngleIncrement: false
+        )
+        viewModel.addPenPoint(CGPoint(x: 155, y: 125))
+        viewModel.finishPenPath(closed: false)
+        let upperLayer = try #require(viewModel.document.selectedLayer)
+        let upperFirst = try #require(upperLayer.shapeContent?.pathAnchors.first)
+        let upperOut = try #require(upperFirst.outControl).applying(
+            CGAffineTransform(translationX: upperLayer.frame.minX, y: upperLayer.frame.minY)
+        )
+        #expect(abs(upperOut.x - 80) < 0.01)
+        #expect(abs(upperOut.y - 30) < 0.01)
+        viewModel.selectLayer(sourceLayerID)
+
+        #expect(viewModel.penPathSegmentInsertionState(at: upperOut) == .available)
+        #expect(viewModel.insertPathAnchor(at: upperOut))
+        #expect(viewModel.document.selectedLayerID == lowerPathID)
+        #expect(viewModel.document.selectedLayer?.shapeContent?.pathAnchors.count == 3)
+    }
+
     @Test func lockedPathSegmentConsumesPenClickWithoutMutation() async throws {
         let canvasSize = NSSize(width: 140, height: 100)
         let image = testBitmapImage(size: canvasSize, background: .black)
@@ -2067,6 +2098,152 @@ struct ImageEditorVectorLayerTests {
 
         viewModel.undo()
         #expect(viewModel.document.selectedLayer?.shapeContent?.pathAnchors.count == 4)
+    }
+
+    @Test func penShortClickSelectsAndDeletesAnUnselectedInteriorAnchor() async throws {
+        let image = testBitmapImage(size: NSSize(width: 160, height: 110), background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        let sourceLayerID = try #require(viewModel.document.selectedLayerID)
+        viewModel.selectTool(.pen)
+        viewModel.addPenPoint(CGPoint(x: 20, y: 30))
+        viewModel.addPenPoint(CGPoint(x: 75, y: 70))
+        viewModel.addPenPoint(CGPoint(x: 135, y: 30))
+        viewModel.finishPenPath(closed: false)
+        let pathLayerID = try #require(viewModel.document.selectedLayerID)
+        let anchor = CGPoint(x: 75, y: 70)
+        let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
+        viewModel.selectLayer(sourceLayerID)
+
+        #expect(viewModel.penAnchorDeletionState(at: anchor) == .available)
+        #expect(viewModel.beginMovingPenPathAnchor(at: anchor))
+        #expect(viewModel.document.selectedLayerID == pathLayerID)
+        viewModel.finishPenAnchorInteraction(deletionState: .available, shouldDelete: true)
+
+        #expect(viewModel.document.selectedLayer?.shapeContent?.pathAnchors.count == 2)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.undoStack.count == undoCount + 1)
+        viewModel.undo()
+        #expect(viewModel.document.selectedLayer?.shapeContent?.pathAnchors.count == 3)
+    }
+
+    @Test func penDragSelectsAndMovesAnUnselectedInteriorAnchor() async throws {
+        let image = testBitmapImage(size: NSSize(width: 160, height: 110), background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        let sourceLayerID = try #require(viewModel.document.selectedLayerID)
+        viewModel.selectTool(.pen)
+        viewModel.addPenPoint(CGPoint(x: 20, y: 30))
+        viewModel.addPenPoint(CGPoint(x: 75, y: 70))
+        viewModel.addPenPoint(CGPoint(x: 135, y: 30))
+        viewModel.finishPenPath(closed: false)
+        let pathLayerID = try #require(viewModel.document.selectedLayerID)
+        let anchor = CGPoint(x: 75, y: 70)
+        let destination = CGPoint(x: 88, y: 82)
+        let historyCount = viewModel.document.history.count
+        viewModel.selectLayer(sourceLayerID)
+
+        #expect(viewModel.beginMovingPenPathAnchor(at: anchor))
+        #expect(viewModel.document.selectedLayerID == pathLayerID)
+        viewModel.moveSelectedPathAnchor(to: destination)
+        viewModel.finishPenAnchorInteraction(deletionState: .selectionOnly, shouldDelete: false)
+
+        #expect(viewModel.selectedPathAnchorCanvasPoint == destination)
+        #expect(viewModel.document.selectedLayer?.shapeContent?.pathAnchors.count == 3)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        viewModel.undo()
+        #expect(viewModel.selectedPathAnchorCanvasPoint == anchor)
+    }
+
+    @Test func hiddenTopAnchorDoesNotStealDeletionFromVisiblePath() async throws {
+        let image = testBitmapImage(size: NSSize(width: 160, height: 110), background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        let sourceLayerID = try #require(viewModel.document.selectedLayerID)
+        viewModel.selectTool(.pen)
+        for point in [CGPoint(x: 20, y: 30), CGPoint(x: 75, y: 70), CGPoint(x: 135, y: 30)] {
+            viewModel.addPenPoint(point)
+        }
+        viewModel.finishPenPath(closed: false)
+        let lowerPathID = try #require(viewModel.document.selectedLayerID)
+        for point in [CGPoint(x: 20, y: 30), CGPoint(x: 75, y: 70), CGPoint(x: 135, y: 30)] {
+            viewModel.addPenPoint(point)
+        }
+        viewModel.finishPenPath(closed: false)
+        let upperPathIndex = try #require(viewModel.document.selectedLayerIndex)
+        let upperPathID = viewModel.document.layers[upperPathIndex].id
+        viewModel.document.layers[upperPathIndex].isVisible = false
+        viewModel.selectLayer(sourceLayerID)
+        let anchor = CGPoint(x: 75, y: 70)
+
+        #expect(viewModel.penAnchorDeletionState(at: anchor) == .available)
+        #expect(viewModel.beginMovingPenPathAnchor(at: anchor))
+        #expect(viewModel.document.selectedLayerID == lowerPathID)
+        viewModel.finishPenAnchorInteraction(deletionState: .available, shouldDelete: true)
+        #expect(viewModel.document.layers.first(where: { $0.id == lowerPathID })?
+            .shapeContent?.pathAnchors.count == 2)
+        #expect(viewModel.document.layers.first(where: { $0.id == upperPathID })?
+            .shapeContent?.pathAnchors.count == 3)
+    }
+
+    @Test func lockedTopAnchorBlocksEditingThroughToLowerPath() async throws {
+        let image = testBitmapImage(size: NSSize(width: 160, height: 110), background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        let sourceLayerID = try #require(viewModel.document.selectedLayerID)
+        viewModel.selectTool(.pen)
+        for point in [CGPoint(x: 20, y: 30), CGPoint(x: 75, y: 70), CGPoint(x: 135, y: 30)] {
+            viewModel.addPenPoint(point)
+        }
+        viewModel.finishPenPath(closed: false)
+        let lowerPathID = try #require(viewModel.document.selectedLayerID)
+        for point in [CGPoint(x: 20, y: 30), CGPoint(x: 75, y: 70), CGPoint(x: 135, y: 30)] {
+            viewModel.addPenPoint(point)
+        }
+        viewModel.finishPenPath(closed: false)
+        let upperPathIndex = try #require(viewModel.document.selectedLayerIndex)
+        let upperPathID = viewModel.document.layers[upperPathIndex].id
+        viewModel.document.layers[upperPathIndex].locksPosition = true
+        let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
+        viewModel.selectLayer(sourceLayerID)
+        let anchor = CGPoint(x: 75, y: 70)
+
+        #expect(viewModel.penAnchorDeletionState(at: anchor) == .blocked)
+        #expect(!viewModel.beginMovingPenPathAnchor(at: anchor))
+        #expect(viewModel.insertPathAnchor(at: anchor))
+        #expect(viewModel.document.selectedLayerID == sourceLayerID)
+        #expect(viewModel.document.layers.first(where: { $0.id == lowerPathID })?
+            .shapeContent?.pathAnchors.count == 3)
+        #expect(viewModel.document.layers.first(where: { $0.id == upperPathID })?
+            .shapeContent?.pathAnchors.count == 3)
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.undoStack.count == undoCount)
+    }
+
+    @Test func topInteriorAnchorOwnsHitBeforeALowerContinuationEndpoint() async throws {
+        let image = testBitmapImage(size: NSSize(width: 160, height: 110), background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        let sourceLayerID = try #require(viewModel.document.selectedLayerID)
+        viewModel.selectTool(.pen)
+        viewModel.addPenPoint(CGPoint(x: 20, y: 70))
+        viewModel.addPenPoint(CGPoint(x: 75, y: 70))
+        viewModel.finishPenPath(closed: false)
+        let lowerPathID = try #require(viewModel.document.selectedLayerID)
+        viewModel.addPenPoint(CGPoint(x: 25, y: 25))
+        viewModel.addPenPoint(CGPoint(x: 75, y: 70))
+        viewModel.addPenPoint(CGPoint(x: 135, y: 25))
+        viewModel.finishPenPath(closed: false)
+        let upperPathID = try #require(viewModel.document.selectedLayerID)
+        viewModel.selectLayer(sourceLayerID)
+        let overlap = CGPoint(x: 75, y: 70)
+
+        #expect(viewModel.penPathContinuationState(at: overlap) == .none)
+        #expect(viewModel.penAnchorDeletionState(at: overlap) == .available)
+        #expect(viewModel.beginMovingPenPathAnchor(at: overlap))
+        #expect(viewModel.document.selectedLayerID == upperPathID)
+        viewModel.finishPenAnchorInteraction(deletionState: .available, shouldDelete: true)
+        #expect(viewModel.document.layers.first(where: { $0.id == upperPathID })?
+            .shapeContent?.pathAnchors.count == 2)
+        #expect(viewModel.document.layers.first(where: { $0.id == lowerPathID })?
+            .shapeContent?.pathAnchors.count == 2)
     }
 
     @Test func penAnchorDragMovesWithoutAutoDeletingAndHandlesRemainSelectionOnly() async throws {

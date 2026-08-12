@@ -3897,9 +3897,8 @@ struct ImageEditorView: View {
                         updateCanvasCursor(at: value.location, in: size)
                     } else if pendingPenCreationAction == nil,
                               viewModel.pendingPenPathPoints.isEmpty,
-                              viewModel.canEditSelectedPathAnchors,
                               let pointerStart = imagePoint(from: value.startLocation, in: size),
-                              viewModel.beginMovingPathAnchor(
+                              viewModel.beginMovingPenPathAnchor(
                                 at: pointerStart,
                                 constrainedToAngleIncrement: ImageEditorPathAnchorDragConstraint
                                     .shouldConstrain(
