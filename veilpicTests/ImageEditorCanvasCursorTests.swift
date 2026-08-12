@@ -1889,6 +1889,54 @@ struct ImageEditorCanvasCursorTests {
         #expect(ImageEditorCanvasCursor.cursor(for: .pen, brushDiameter: 18) !== NSCursor.crosshair)
     }
 
+    @Test func penCursorDistinguishesConstrainedPlacementAndCloseTarget() {
+        let ordinary = ImageEditorCanvasCursor.cursor(for: .pen, brushDiameter: 18)
+        let constrained = ImageEditorCanvasCursor.cursor(
+            for: .pen,
+            brushDiameter: 18,
+            modifierFlags: [.shift]
+        )
+        let closing = ImageEditorCanvasCursor.cursor(
+            for: .pen,
+            brushDiameter: 18,
+            penIsClosing: true
+        )
+        let constrainedClosing = ImageEditorCanvasCursor.cursor(
+            for: .pen,
+            brushDiameter: 18,
+            penIsClosing: true,
+            modifierFlags: [.shift]
+        )
+
+        #expect(ordinary.image.tiffRepresentation != constrained.image.tiffRepresentation)
+        #expect(constrained.image.tiffRepresentation != closing.image.tiffRepresentation)
+        #expect(constrainedClosing.image.tiffRepresentation == closing.image.tiffRepresentation)
+        #expect(ImageEditorCanvasCursor.cursor(
+            for: .components,
+            selectedTool: .pen,
+            brushDiameter: 18,
+            penIsClosing: true,
+            modifierFlags: [.shift]
+        ) === NSCursor.arrow)
+    }
+
+    @Test func penActionCursorStateIsWiredToCursorRectAndImmediateUpdates() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(source.components(
+            separatedBy: "penIsClosing: canvasInteractionTool == .pen"
+        ).count == 3)
+        #expect(source.contains("isConstrained: modifierFlags.contains(.shift)"))
+        #expect(source.contains("if isClosing"))
+        #expect(source.contains("else if isConstrained"))
+    }
+
     @Test func colorSamplerCursorDistinguishesPlacementMoveAndOptionRemoval() {
         let placement = ImageEditorCanvasCursor.cursor(
             for: .tools,

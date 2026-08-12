@@ -2676,6 +2676,8 @@ struct ImageEditorView: View {
                                             in: geometry.size
                                         ) != nil
                                     } == true,
+                            penIsClosing: canvasInteractionTool == .pen
+                                && viewModel.isPenCloseCandidate(at: canvasPoint),
                             handIsDragging: isCanvasPanGestureActive,
                             isObjectMoveGestureActive: objectMoveIsActive,
                             isColorSamplerMoveGestureActive: colorSamplerDrag != nil,
@@ -11537,7 +11539,10 @@ enum ImageEditorCanvasCursor {
         case .samplingScope:
             return .crosshair
         case .vectorPen:
-            return penCursor(isClosing: penIsClosing)
+            return penCursor(
+                isClosing: penIsClosing,
+                isConstrained: modifierFlags.contains(.shift)
+            )
         case .zoomMagnifier:
             return zoomCursor(isZoomingOut: modifierFlags.contains(.option))
         }
@@ -12610,8 +12615,8 @@ enum ImageEditorCanvasCursor {
         )
     }
 
-    private static func penCursor(isClosing: Bool) -> NSCursor {
-        let cacheKey = "pen:\(isClosing)"
+    private static func penCursor(isClosing: Bool, isConstrained: Bool) -> NSCursor {
+        let cacheKey = "pen:\(isClosing):\(isConstrained)"
         if let cachedCursor = cursorCache[cacheKey] {
             return cachedCursor
         }
@@ -12649,6 +12654,24 @@ enum ImageEditorCanvasCursor {
             NSColor.white.setStroke()
             closeRing.lineWidth = 1.75
             closeRing.stroke()
+        } else if isConstrained {
+            let badgeRect = NSRect(x: 0.5, y: 23.5, width: 12, height: 12)
+            let badge = NSBezierPath(ovalIn: badgeRect)
+            NSColor.black.withAlphaComponent(0.94).setFill()
+            badge.fill()
+            NSColor.white.withAlphaComponent(0.96).setStroke()
+            badge.lineWidth = 1
+            badge.stroke()
+
+            let angleGuide = NSBezierPath()
+            angleGuide.move(to: NSPoint(x: 3.5, y: 27))
+            angleGuide.line(to: NSPoint(x: 3.5, y: 32.5))
+            angleGuide.line(to: NSPoint(x: 9, y: 32.5))
+            angleGuide.move(to: NSPoint(x: 3.5, y: 27))
+            angleGuide.line(to: NSPoint(x: 9, y: 32.5))
+            NSColor.systemBlue.setStroke()
+            angleGuide.lineWidth = 1.25
+            angleGuide.stroke()
         }
 
         image.unlockFocus()
