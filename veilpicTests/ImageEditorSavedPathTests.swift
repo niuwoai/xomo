@@ -139,6 +139,66 @@ struct ImageEditorSavedPathTests {
         #expect(viewModel.document.savedPaths == [saved])
     }
 
+    @Test func equivalentSavedPathSelectionPreservesHistoryUndoAndRedo() throws {
+        let viewModel = makeViewModel()
+        createPath(
+            points: [CGPoint(x: 12, y: 10), CGPoint(x: 70, y: 14), CGPoint(x: 48, y: 52)],
+            closed: true,
+            viewModel: viewModel
+        )
+        let saved = try #require(viewModel.saveCurrentPath(name: "Stable Selection"))
+        viewModel.selectionMode = .replace
+        #expect(viewModel.loadSelectionFromSavedPath(saved.id))
+
+        viewModel.nudgeSelectedPathAnchor(by: CGSize(width: 1, height: 0))
+        viewModel.undo()
+        #expect(viewModel.canRedo)
+        let selectionMask = try #require(viewModel.document.selection?.rasterizedMask(canvasSize: viewModel.document.canvasSize))
+        let historyIDs = viewModel.document.history.map(\.id)
+        let undoCount = viewModel.undoStack.count
+        let redoCount = viewModel.redoStack.count
+
+        #expect(!viewModel.loadSelectionFromSavedPath(saved.id))
+
+        #expect(viewModel.document.selection?.rasterizedMask(canvasSize: viewModel.document.canvasSize) == selectionMask)
+        #expect(viewModel.document.history.map(\.id) == historyIDs)
+        #expect(viewModel.undoStack.count == undoCount)
+        #expect(viewModel.redoStack.count == redoCount)
+        #expect(viewModel.canRedo)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionUnchanged"))
+    }
+
+    @Test func pathSelectionCombinationModesSkipOnlyEquivalentResults() throws {
+        let viewModel = makeViewModel()
+        let containingSelection = ImageEditorSelection.rectangle(CGRect(x: 10, y: 10, width: 60, height: 50))
+        let containedCandidate = ImageEditorSelection.rectangle(CGRect(x: 20, y: 20, width: 20, height: 16))
+        viewModel.document.selection = containingSelection
+        viewModel.selectionMode = .add
+        let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
+
+        #expect(!viewModel.applyPathSelection(
+            containedCandidate,
+            replaceHistoryKey: "imageEditor.history.selectionFromSavedPath",
+            successStatus: "candidate applied"
+        ))
+        #expect(viewModel.document.selection == containingSelection)
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.undoStack.count == undoCount)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionUnchanged"))
+
+        viewModel.selectionMode = .subtract
+        #expect(viewModel.applyPathSelection(
+            ImageEditorSelection.rectangle(CGRect(x: 10, y: 10, width: 30, height: 50)),
+            replaceHistoryKey: "imageEditor.history.selectionFromSavedPath",
+            successStatus: "candidate applied"
+        ))
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.selectionSubtract"))
+        #expect(viewModel.statusText == "candidate applied")
+        viewModel.undo()
+        #expect(viewModel.document.selection == containingSelection)
+    }
+
     @Test func openSavedPathCannotLoadSelectionOrCreateHistory() throws {
         let viewModel = makeViewModel()
         createPath(

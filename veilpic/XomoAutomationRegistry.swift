@@ -2926,9 +2926,13 @@ final class XomoAutomationRegistry {
             }
         case "selection":
             let id = try requiredUUID("id", in: arguments)
-            guard viewModel.loadSelectionFromSavedPath(id) else {
-                throw XomoAutomationCallError.operationFailed("The saved path does not exist or is not closed")
+            guard let savedPath = viewModel.document.savedPaths.first(where: { $0.id == id }) else {
+                throw XomoAutomationCallError.notFound("Saved path \(id.uuidString)")
             }
+            guard savedPath.isClosed else {
+                throw XomoAutomationCallError.operationFailed("Selection requires a closed saved path")
+            }
+            _ = viewModel.loadSelectionFromSavedPath(id)
         case "fill":
             let id = try requiredUUID("id", in: arguments)
             guard viewModel.fillSavedPathToSelectedPixelLayer(id) else {

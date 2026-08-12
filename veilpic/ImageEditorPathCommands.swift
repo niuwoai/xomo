@@ -820,25 +820,14 @@ extension ImageEditorViewModel {
         replaceHistoryKey: String,
         successStatus: String
     ) -> Bool {
-        let nextSelection = ImageEditorSelection.combined(
-            current: document.selection,
-            candidate: selection,
-            mode: selectionMode,
-            canvasSize: document.canvasSize
+        let didChange = applySelectionCandidate(
+            selection,
+            replaceHistoryKey: replaceHistoryKey
         )
-        guard document.selection != nil || selectionMode == .replace || selectionMode == .add else {
-            statusText = L10n.text("imageEditor.status.noSelection")
-            return false
+        if didChange, document.selection != nil {
+            statusText = successStatus
         }
-
-        pushUndo()
-        document.selection = nextSelection
-        let historyKey = selectionMode == .replace ? replaceHistoryKey : selectionMode.historyKey
-        appendHistory(L10n.text(historyKey))
-        statusText = nextSelection == nil
-            ? L10n.text("imageEditor.status.selectionEmpty")
-            : successStatus
-        return true
+        return didChange
     }
 
     func createPathFromSelection() {

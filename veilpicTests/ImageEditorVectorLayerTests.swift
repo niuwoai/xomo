@@ -565,18 +565,45 @@ struct ImageEditorVectorLayerTests {
 
         #expect(viewModel.canLoadSelectionFromSelectedPath)
         viewModel.selectionMode = .replace
+        let selectionBeforeReload = try #require(viewModel.document.selection)
+        let historyCountBeforeReload = viewModel.document.history.count
+        let undoCountBeforeReload = viewModel.undoStack.count
         viewModel.loadSelectionFromSelectedPath()
 
         let loadedSelection = try #require(viewModel.document.selection)
-        let loadedMask = try #require(loadedSelection.rasterMask)
 
+        #expect(loadedSelection == selectionBeforeReload)
         #expect(Int(loadedSelection.bounds.minX.rounded()) == 24)
         #expect(Int(loadedSelection.bounds.minY.rounded()) == 18)
         #expect(Int(loadedSelection.bounds.width.rounded()) == 64)
         #expect(Int(loadedSelection.bounds.height.rounded()) == 42)
-        #expect(loadedMask.alpha.contains(UInt8.max))
-        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.selectionFromPath"))
-        #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionFromPath"))
+        #expect(viewModel.document.history.count == historyCountBeforeReload)
+        #expect(viewModel.undoStack.count == undoCountBeforeReload)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionUnchanged"))
+    }
+
+    @Test func equivalentSelectedPathSelectionDoesNotCreateAnEmptyTransaction() async throws {
+        let canvasSize = NSSize(width: 120, height: 90)
+        let image = testBitmapImage(size: canvasSize, background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+
+        viewModel.selectTool(.pen)
+        viewModel.addPenPoint(CGPoint(x: 20, y: 18))
+        viewModel.addPenPoint(CGPoint(x: 96, y: 24))
+        viewModel.addPenPoint(CGPoint(x: 58, y: 72))
+        viewModel.finishPenPath(closed: true)
+        viewModel.selectionMode = .replace
+        viewModel.loadSelectionFromSelectedPath()
+        let selectionMask = try #require(viewModel.document.selection?.rasterizedMask(canvasSize: canvasSize))
+        let historyIDs = viewModel.document.history.map(\.id)
+        let undoCount = viewModel.undoStack.count
+
+        viewModel.loadSelectionFromSelectedPath()
+
+        #expect(viewModel.document.selection?.rasterizedMask(canvasSize: canvasSize) == selectionMask)
+        #expect(viewModel.document.history.map(\.id) == historyIDs)
+        #expect(viewModel.undoStack.count == undoCount)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionUnchanged"))
     }
 
     @Test func imageEditorCreatesEditablePathLayerFromRasterSelectionOutline() async throws {
@@ -618,6 +645,8 @@ struct ImageEditorVectorLayerTests {
 
         #expect(viewModel.canLoadSelectionFromSelectedPath)
         viewModel.selectionMode = .replace
+        let historyCountBeforeReload = viewModel.document.history.count
+        let undoCountBeforeReload = viewModel.undoStack.count
         viewModel.loadSelectionFromSelectedPath()
 
         let loadedSelection = try #require(viewModel.document.selection)
@@ -626,8 +655,9 @@ struct ImageEditorVectorLayerTests {
         #expect(maskAlpha(loadedMask, x: 3, y: 4) == UInt8.max)
         #expect(maskAlpha(loadedMask, x: 10, y: 10) == UInt8.max)
         #expect(maskAlpha(loadedMask, x: 10, y: 4) == 0)
-        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.selectionFromPath"))
-        #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionFromPath"))
+        #expect(viewModel.document.history.count == historyCountBeforeReload)
+        #expect(viewModel.undoStack.count == undoCountBeforeReload)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionUnchanged"))
     }
 
     @Test func imageEditorCreatesCompoundPathLayerFromRasterSelectionIslands() async throws {
@@ -668,6 +698,8 @@ struct ImageEditorVectorLayerTests {
 
         #expect(viewModel.canLoadSelectionFromSelectedPath)
         viewModel.selectionMode = .replace
+        let historyCountBeforeReload = viewModel.document.history.count
+        let undoCountBeforeReload = viewModel.undoStack.count
         viewModel.loadSelectionFromSelectedPath()
 
         let loadedSelection = try #require(viewModel.document.selection)
@@ -676,7 +708,9 @@ struct ImageEditorVectorLayerTests {
         #expect(maskAlpha(loadedMask, x: 4, y: 4) == UInt8.max)
         #expect(maskAlpha(loadedMask, x: 18, y: 11) == UInt8.max)
         #expect(maskAlpha(loadedMask, x: 10, y: 8) == 0)
-        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.selectionFromPath"))
+        #expect(viewModel.document.history.count == historyCountBeforeReload)
+        #expect(viewModel.undoStack.count == undoCountBeforeReload)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionUnchanged"))
     }
 
     @Test func imageEditorMovesCompoundPathSubpathAnchorWithoutChangingPrimaryPath() async throws {

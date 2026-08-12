@@ -13553,6 +13553,60 @@ struct XomoAutomationTests {
         ))
         #expect(selection.ok)
         #expect(viewModel.document.selection?.rasterMask != nil)
+        let selectionHistoryCount = viewModel.document.history.count
+        let repeatedSelection = registry.execute(request(
+            operation: "call",
+            name: "xomo.path.saved",
+            arguments: ["action": .string("selection"), "id": .string(savedID)]
+        ))
+        #expect(repeatedSelection.ok)
+        #expect(viewModel.document.history.count == selectionHistoryCount)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionUnchanged"))
+
+        let savedPathsBeforeMissingSelection = viewModel.document.savedPaths
+        let selectionBeforeMissingSelection = viewModel.document.selection
+        let historyIDsBeforeMissingSelection = viewModel.document.history.map(\.id)
+        let undoCountBeforeMissingSelection = viewModel.undoStack.count
+        let redoCountBeforeMissingSelection = viewModel.redoStack.count
+        let missingSelection = registry.execute(request(
+            operation: "call",
+            name: "xomo.path.saved",
+            arguments: ["action": .string("selection"), "id": .string(UUID().uuidString)]
+        ))
+        #expect(!missingSelection.ok)
+        #expect(missingSelection.error?.hasPrefix("Not found: Saved path ") == true)
+        #expect(viewModel.document.savedPaths == savedPathsBeforeMissingSelection)
+        #expect(viewModel.document.selection == selectionBeforeMissingSelection)
+        #expect(viewModel.document.history.map(\.id) == historyIDsBeforeMissingSelection)
+        #expect(viewModel.undoStack.count == undoCountBeforeMissingSelection)
+        #expect(viewModel.redoStack.count == redoCountBeforeMissingSelection)
+
+        var openPath = try #require(viewModel.document.savedPaths.first(where: { $0.id.uuidString == savedID }))
+        openPath.id = UUID()
+        openPath.isClosed = false
+        viewModel.document.savedPaths.append(openPath)
+        let historyCountBeforeOpenSelection = viewModel.document.history.count
+        let selectionBeforeOpenSelection = viewModel.document.selection
+        let undoCountBeforeOpenSelection = viewModel.undoStack.count
+        let redoCountBeforeOpenSelection = viewModel.redoStack.count
+        let openSelection = registry.execute(request(
+            operation: "call",
+            name: "xomo.path.saved",
+            arguments: ["action": .string("selection"), "id": .string(openPath.id.uuidString)]
+        ))
+        #expect(!openSelection.ok)
+        #expect(openSelection.error == "Selection requires a closed saved path")
+        #expect(viewModel.document.selection == selectionBeforeOpenSelection)
+        #expect(viewModel.document.history.count == historyCountBeforeOpenSelection)
+        #expect(viewModel.undoStack.count == undoCountBeforeOpenSelection)
+        #expect(viewModel.redoStack.count == redoCountBeforeOpenSelection)
+        let deleteOpenPath = registry.execute(request(
+            operation: "call",
+            name: "xomo.path.saved",
+            arguments: ["action": .string("delete"), "id": .string(openPath.id.uuidString)]
+        ))
+        #expect(deleteOpenPath.ok)
+        #expect(!viewModel.document.savedPaths.contains(where: { $0.id == openPath.id }))
         viewModel.document.selection = nil
 
         viewModel.addLayer()
