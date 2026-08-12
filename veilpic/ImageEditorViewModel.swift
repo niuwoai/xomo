@@ -452,6 +452,9 @@ final class ImageEditorViewModel: ObservableObject {
     private var activeLayerBlendIfTargetIDs = Set<UUID>()
     private var activeLayerBlendIfRedoStack: [ImageEditorDocument] = []
     private var activeLayerBlendIfRedoThemeStates: [ImageEditorXomoThemeUndoState] = []
+    private var activePathAnchorMoveRedoStack: [ImageEditorDocument] = []
+    private var activePathAnchorMoveRedoThemeStates: [ImageEditorXomoThemeUndoState] = []
+    private var isPathAnchorMoveUndoTransactionActive = false
     var movingLayerIDs = Set<UUID>()
     var movingLayerDidChange = false
     var movingLayerWasDuplicated = false
@@ -460,7 +463,9 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var activeAlignmentGuides: [ImageEditorAlignmentGuide] = []
     var movingGuideID: UUID?
     var movingGuideDidChange = false
-    var movingPathAnchorDidChange = false
+    var movingPathAnchorOriginalLayerID: UUID?
+    var movingPathAnchorOriginalCanvasSubpaths: [[ImageEditorPathAnchor]] = []
+    var movingPathAnchorOriginalFrame: CGRect?
     var resizingLayerIDs = Set<UUID>()
     var resizingOriginalFrames: [UUID: CGRect] = [:]
     var resizingOriginalParagraphTextContents: [UUID: ImageEditorTextContent] = [:]
@@ -8662,6 +8667,42 @@ final class ImageEditorViewModel: ObservableObject {
         undoXomoThemeStates.append(currentXomoThemeUndoState)
         redoStack.removeAll()
         redoXomoThemeStates.removeAll()
+    }
+
+    func beginPathAnchorMoveUndoTransaction() {
+        guard !isPathAnchorMoveUndoTransactionActive else { return }
+        activePathAnchorMoveRedoStack = redoStack
+        activePathAnchorMoveRedoThemeStates = redoXomoThemeStates
+        pushUndo()
+        isPathAnchorMoveUndoTransactionActive = true
+    }
+
+    func finishPathAnchorMoveUndoTransaction(didChange: Bool) {
+        guard isPathAnchorMoveUndoTransactionActive else { return }
+        if !didChange {
+            _ = discardLastUndoSnapshot()
+            redoStack = activePathAnchorMoveRedoStack
+            redoXomoThemeStates = activePathAnchorMoveRedoThemeStates
+        }
+        clearPathAnchorMoveUndoTransaction()
+    }
+
+    @discardableResult
+    func cancelPathAnchorMoveUndoTransaction() -> Bool {
+        guard isPathAnchorMoveUndoTransactionActive,
+              let originalDocument = discardLastUndoSnapshot()
+        else { return false }
+        document = originalDocument
+        redoStack = activePathAnchorMoveRedoStack
+        redoXomoThemeStates = activePathAnchorMoveRedoThemeStates
+        clearPathAnchorMoveUndoTransaction()
+        return true
+    }
+
+    private func clearPathAnchorMoveUndoTransaction() {
+        isPathAnchorMoveUndoTransactionActive = false
+        activePathAnchorMoveRedoStack = []
+        activePathAnchorMoveRedoThemeStates = []
     }
 
     @discardableResult

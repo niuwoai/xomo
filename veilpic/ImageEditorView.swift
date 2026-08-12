@@ -104,6 +104,7 @@ struct ImageEditorView: View {
     @State private var isMovingTransformReferencePoint = false
     @State private var isTransformReferencePointDragCancelled = false
     @State private var isMovingPathAnchor = false
+    @State private var isPathAnchorDragCancelled = false
     @State private var activeGuideDrag: ImageEditorGuideDrag?
     @State private var layerNameDraft = ""
     @State private var figmaComponentPropertyDrafts: [String: String] = [:]
@@ -232,6 +233,13 @@ struct ImageEditorView: View {
                     return viewModel.deleteSelectedXomoObjectIfNeeded()
                 },
                 cancelSelectedObject: {
+                    if isMovingPathAnchor {
+                        isPathAnchorDragCancelled = true
+                        if viewModel.cancelMovingPathAnchor() {
+                            NSCursor.arrow.set()
+                            return true
+                        }
+                    }
                     if isMovingTransformReferencePoint {
                         isTransformReferencePointDragCancelled = true
                         _ = viewModel.cancelSelectedLayerTransformReferencePointDrag()
@@ -3228,6 +3236,9 @@ struct ImageEditorView: View {
     private func canvasGesture(in size: CGSize) -> some Gesture {
         DragGesture(minimumDistance: 0)
             .onChanged { value in
+                if isPathAnchorDragCancelled {
+                    return
+                }
                 // The selected-object gesture is the fast path, but macOS 13
                 // can still route a drag through the drop host instead of the
                 // transparent object hit target. Keep the normal canvas move
@@ -3678,10 +3689,12 @@ struct ImageEditorView: View {
                         viewModel.drawShape(from: dragStart, to: endImagePoint, ellipse: true)
                     }
                 case .pen:
-                    if isMovingPathAnchor {
+                    if isMovingPathAnchor, !isPathAnchorDragCancelled {
                         viewModel.finishMovingPathAnchor()
                     } else {
-                        viewModel.addPenPoint(endImagePoint)
+                        if !isPathAnchorDragCancelled {
+                            viewModel.addPenPoint(endImagePoint)
+                        }
                     }
                 case .pathSelection:
                     if isObjectMoveGestureActive {
@@ -3689,7 +3702,7 @@ struct ImageEditorView: View {
                         viewModel.finishMovingSelectedLayer()
                     }
                 case .directSelection:
-                    if isMovingPathAnchor {
+                    if isMovingPathAnchor, !isPathAnchorDragCancelled {
                         viewModel.finishMovingPathAnchor()
                     }
                 case .crop:
@@ -3772,6 +3785,7 @@ struct ImageEditorView: View {
                 deliveryDrag = nil
                 resetColorSamplerGesture()
                 isMovingPathAnchor = false
+                isPathAnchorDragCancelled = false
                 activeResizeHandle = nil
                 refreshCanvasCursor(in: size)
             }

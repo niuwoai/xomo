@@ -1249,6 +1249,108 @@ struct ImageEditorVectorLayerTests {
         #expect(viewModel.canRedo)
     }
 
+    @Test func pathAnchorRoundTripDragPreservesHistoryUndoAndRedo() async throws {
+        let canvasSize = NSSize(width: 140, height: 100)
+        let image = testBitmapImage(size: canvasSize, background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+
+        viewModel.selectTool(.pen)
+        viewModel.addPenPoint(CGPoint(x: 20, y: 20))
+        viewModel.addPenPoint(CGPoint(x: 104, y: 28))
+        viewModel.addPenPoint(CGPoint(x: 70, y: 78))
+        viewModel.finishPenPath(closed: true)
+        viewModel.selectNextPathAnchor()
+        let anchorPoint = try #require(viewModel.selectedPathAnchorCanvasPoint)
+
+        viewModel.nudgeSelectedPathAnchor(by: CGSize(width: 1, height: 0))
+        viewModel.undo()
+        #expect(viewModel.canRedo)
+        let originalContent = try #require(viewModel.document.selectedLayer?.shapeContent)
+        let originalFrame = try #require(viewModel.document.selectedLayer?.frame)
+        let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
+        let redoCount = viewModel.redoStack.count
+
+        #expect(viewModel.beginMovingPathAnchor(at: anchorPoint))
+        viewModel.moveSelectedPathAnchor(to: CGPoint(x: anchorPoint.x + 16, y: anchorPoint.y - 9))
+        viewModel.moveSelectedPathAnchor(to: anchorPoint)
+        viewModel.finishMovingPathAnchor()
+
+        #expect(viewModel.document.selectedLayer?.shapeContent?.allEditablePathSubpaths == originalContent.allEditablePathSubpaths)
+        #expect(viewModel.document.selectedLayer?.frame == originalFrame)
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.undoStack.count == undoCount)
+        #expect(viewModel.redoStack.count == redoCount)
+        #expect(viewModel.canRedo)
+    }
+
+    @Test func cancellingPathHandleDragRestoresDocumentAndRedo() async throws {
+        let canvasSize = NSSize(width: 140, height: 100)
+        let image = testBitmapImage(size: canvasSize, background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+
+        viewModel.selectTool(.pen)
+        viewModel.addPenPoint(CGPoint(x: 20, y: 20))
+        viewModel.addPenPoint(CGPoint(x: 104, y: 28))
+        viewModel.addPenPoint(CGPoint(x: 70, y: 78))
+        viewModel.finishPenPath(closed: true)
+        viewModel.selectNextPathAnchor()
+        viewModel.smoothSelectedPathAnchor()
+        let outHandle = try #require(viewModel.selectedPathOutControlCanvasPoint)
+
+        viewModel.nudgeSelectedPathAnchor(by: CGSize(width: 1, height: 0))
+        viewModel.undo()
+        #expect(viewModel.canRedo)
+        let originalContent = try #require(viewModel.document.selectedLayer?.shapeContent)
+        let originalFrame = try #require(viewModel.document.selectedLayer?.frame)
+        let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
+        let redoCount = viewModel.redoStack.count
+
+        #expect(viewModel.beginMovingPathAnchor(at: outHandle))
+        viewModel.moveSelectedPathAnchor(to: CGPoint(x: outHandle.x + 18, y: outHandle.y + 11))
+        #expect(viewModel.document.selectedLayer?.shapeContent?.allEditablePathSubpaths != originalContent.allEditablePathSubpaths)
+        #expect(viewModel.cancelMovingPathAnchor())
+
+        #expect(viewModel.document.selectedLayer?.shapeContent?.allEditablePathSubpaths == originalContent.allEditablePathSubpaths)
+        #expect(viewModel.document.selectedLayer?.frame == originalFrame)
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.undoStack.count == undoCount)
+        #expect(viewModel.redoStack.count == redoCount)
+        #expect(viewModel.canRedo)
+        #expect(!viewModel.cancelMovingPathAnchor())
+    }
+
+    @Test func realPathAnchorDragCommitsOneUndoAndClearsRedo() async throws {
+        let canvasSize = NSSize(width: 140, height: 100)
+        let image = testBitmapImage(size: canvasSize, background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+
+        viewModel.selectTool(.pen)
+        viewModel.addPenPoint(CGPoint(x: 20, y: 20))
+        viewModel.addPenPoint(CGPoint(x: 104, y: 28))
+        viewModel.addPenPoint(CGPoint(x: 70, y: 78))
+        viewModel.finishPenPath(closed: true)
+        viewModel.selectNextPathAnchor()
+        let originalPoint = try #require(viewModel.selectedPathAnchorCanvasPoint)
+
+        viewModel.nudgeSelectedPathAnchor(by: CGSize(width: 1, height: 0))
+        viewModel.undo()
+        #expect(viewModel.canRedo)
+        let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
+
+        #expect(viewModel.beginMovingPathAnchor(at: originalPoint))
+        viewModel.moveSelectedPathAnchor(to: CGPoint(x: originalPoint.x + 12, y: originalPoint.y + 7))
+        viewModel.finishMovingPathAnchor()
+
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.undoStack.count == undoCount + 1)
+        #expect(!viewModel.canRedo)
+        viewModel.undo()
+        #expect(viewModel.selectedPathAnchorCanvasPoint == originalPoint)
+    }
+
     @Test func imageEditorReversesPathDirectionAndSwapsControlHandles() async throws {
         let canvasSize = NSSize(width: 140, height: 100)
         let image = testBitmapImage(size: canvasSize, background: .black)

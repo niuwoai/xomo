@@ -191,8 +191,16 @@ extension ImageEditorViewModel {
         guard let point,
               selectNearestPathAnchor(at: point)
         else { return false }
-        pushUndo()
-        movingPathAnchorDidChange = false
+        guard let layer = document.selectedLayer,
+              let content = layer.shapeContent,
+              content.kind == .path
+        else { return false }
+        movingPathAnchorOriginalLayerID = layer.id
+        movingPathAnchorOriginalCanvasSubpaths = content.allEditablePathSubpaths.map {
+            canvasAnchors(for: $0, layer: layer)
+        }
+        movingPathAnchorOriginalFrame = layer.frame
+        beginPathAnchorMoveUndoTransaction()
         moveSelectedPathAnchor(to: point)
         return true
     }
@@ -242,19 +250,29 @@ extension ImageEditorViewModel {
             canvasAnchors: canvasAnchors,
             editingSubpathIndex: selectedPathSubpathIndex
         )
-        movingPathAnchorDidChange = true
     }
 
     func finishMovingPathAnchor() {
-        guard movingPathAnchorDidChange else {
-            movingPathAnchorDidChange = false
-            _ = discardLastUndoSnapshot()
+        guard movingPathAnchorOriginalLayerID != nil else { return }
+        let didChange = movingPathAnchorTransactionHasFinalChange
+        finishPathAnchorMoveUndoTransaction(didChange: didChange)
+        resetMovingPathAnchorTransaction()
+        guard didChange else {
             updateStatus()
             return
         }
-        movingPathAnchorDidChange = false
         appendHistory(L10n.text("imageEditor.history.pathAnchorMove"))
         statusText = L10n.text("imageEditor.status.pathAnchorMoved")
+    }
+
+    @discardableResult
+    func cancelMovingPathAnchor() -> Bool {
+        guard movingPathAnchorOriginalLayerID != nil,
+              cancelPathAnchorMoveUndoTransaction()
+        else { return false }
+        resetMovingPathAnchorTransaction()
+        updateStatus()
+        return true
     }
 
     func setSelectedPathAnchorX(_ x: CGFloat) {
@@ -2070,6 +2088,48 @@ extension ImageEditorViewModel {
         default:
             return false
         }
+    }
+
+    private var movingPathAnchorTransactionHasFinalChange: Bool {
+        guard let layerID = movingPathAnchorOriginalLayerID,
+              let layer = document.layers.first(where: { $0.id == layerID }),
+              let content = layer.shapeContent,
+              content.kind == .path,
+              pathRectsMatch(layer.frame, movingPathAnchorOriginalFrame)
+        else { return true }
+        let currentSubpaths = content.allEditablePathSubpaths.map {
+            canvasAnchors(for: $0, layer: layer)
+        }
+        return !pathSubpathsMatch(currentSubpaths, movingPathAnchorOriginalCanvasSubpaths)
+    }
+
+    private func pathSubpathsMatch(
+        _ lhs: [[ImageEditorPathAnchor]],
+        _ rhs: [[ImageEditorPathAnchor]]
+    ) -> Bool {
+        guard lhs.count == rhs.count else { return false }
+        return zip(lhs, rhs).allSatisfy { lhsSubpath, rhsSubpath in
+            guard lhsSubpath.count == rhsSubpath.count else { return false }
+            return zip(lhsSubpath, rhsSubpath).allSatisfy { lhsAnchor, rhsAnchor in
+                pathPointsMatch(lhsAnchor.point, rhsAnchor.point)
+                    && pathPointsMatch(lhsAnchor.inControl, rhsAnchor.inControl)
+                    && pathPointsMatch(lhsAnchor.outControl, rhsAnchor.outControl)
+            }
+        }
+    }
+
+    private func pathRectsMatch(_ lhs: CGRect, _ rhs: CGRect?, epsilon: CGFloat = 0.000_001) -> Bool {
+        guard let rhs else { return false }
+        return abs(lhs.minX - rhs.minX) <= epsilon
+            && abs(lhs.minY - rhs.minY) <= epsilon
+            && abs(lhs.width - rhs.width) <= epsilon
+            && abs(lhs.height - rhs.height) <= epsilon
+    }
+
+    private func resetMovingPathAnchorTransaction() {
+        movingPathAnchorOriginalLayerID = nil
+        movingPathAnchorOriginalCanvasSubpaths = []
+        movingPathAnchorOriginalFrame = nil
     }
 
     private func vector(from start: CGPoint, to end: CGPoint) -> CGSize {

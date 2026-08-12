@@ -1935,6 +1935,26 @@ struct ImageEditorScopeTests {
         #expect(calls == ["object", "filter"])
     }
 
+    @Test func escapeCancelsPathAnchorDragAndLatchesRemainingGestureEvents() throws {
+        let source = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+
+        let cancelStart = try #require(source.range(of: "cancelSelectedObject: {"))
+        let cancelEnd = try #require(
+            source[cancelStart.upperBound...].range(of: "if isMovingTransformReferencePoint")
+        )
+        let cancelSource = source[cancelStart.lowerBound..<cancelEnd.lowerBound]
+        #expect(cancelSource.contains("if isMovingPathAnchor"))
+        #expect(cancelSource.contains("isPathAnchorDragCancelled = true"))
+        #expect(cancelSource.contains("viewModel.cancelMovingPathAnchor()"))
+
+        #expect(source.contains("if isPathAnchorDragCancelled {\n                    return\n                }"))
+        #expect(source.contains("if isMovingPathAnchor, !isPathAnchorDragCancelled"))
+        #expect(source.contains("isPathAnchorDragCancelled = false"))
+    }
+
     @Test func layerRowsExposeTheSameSelectedLayerExportAction() throws {
         let source = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorLayerPanel.swift"),
