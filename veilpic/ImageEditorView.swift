@@ -3811,6 +3811,12 @@ struct ImageEditorView: View {
                 case .pen:
                     if isMovingPathAnchor, !isPathAnchorDragCancelled {
                         viewModel.finishMovingPathAnchor()
+                    } else if !isPathAnchorDragCancelled,
+                              ImageEditorPendingPenPointerFinishPolicy.shouldFinishOpenPath(
+                                hasPendingPath: viewModel.hasPendingPenPathTransaction,
+                                modifierFlags: NSEvent.modifierFlags
+                              ) {
+                        viewModel.finishPenPath(closed: false)
                     } else {
                         if !isPathAnchorDragCancelled {
                             viewModel.addPenPoint(endImagePoint)
@@ -13151,6 +13157,16 @@ enum ImageEditorPendingPenFinishKeyPolicy {
     ) -> Bool {
         let relevantFlags = modifierFlags.intersection([.command, .option, .shift, .control])
         return (keyCode == 36 || keyCode == 76) && relevantFlags.isEmpty
+    }
+}
+
+enum ImageEditorPendingPenPointerFinishPolicy {
+    static func shouldFinishOpenPath(
+        hasPendingPath: Bool,
+        modifierFlags: NSEvent.ModifierFlags
+    ) -> Bool {
+        let relevantFlags = modifierFlags.intersection([.command, .option, .shift, .control])
+        return hasPendingPath && relevantFlags == [.command]
     }
 }
 

@@ -2525,6 +2525,43 @@ struct ImageEditorScopeTests {
         #expect(viewSource.contains("!isTextInputActive"))
     }
 
+    @Test func commandClickFinishesPendingPenPathWithoutAddingAnotherAnchor() throws {
+        let source = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+
+        let penEndStart = try #require(
+            source.range(of: "case .pen:\n                    if isMovingPathAnchor, !isPathAnchorDragCancelled")
+        )
+        let penEnd = try #require(
+            source[penEndStart.upperBound...].range(of: "case .pathSelection:")
+        )
+        let penEndSource = source[penEndStart.lowerBound..<penEnd.lowerBound]
+        let policy = try #require(
+            penEndSource.range(of: "ImageEditorPendingPenPointerFinishPolicy.shouldFinishOpenPath(")
+        )
+        let finish = try #require(
+            penEndSource[policy.upperBound...].range(of: "viewModel.finishPenPath(closed: false)")
+        )
+        let addPoint = try #require(
+            penEndSource[finish.upperBound...].range(of: "viewModel.addPenPoint(endImagePoint)")
+        )
+        #expect(policy.lowerBound < finish.lowerBound)
+        #expect(finish.lowerBound < addPoint.lowerBound)
+        #expect(penEndSource.contains("hasPendingPath: viewModel.hasPendingPenPathTransaction"))
+        #expect(penEndSource.contains("modifierFlags: NSEvent.modifierFlags"))
+
+        let policyStart = try #require(
+            source.range(of: "enum ImageEditorPendingPenPointerFinishPolicy")
+        )
+        let policyEnd = try #require(
+            source[policyStart.upperBound...].range(of: "struct ImageEditorKeyboardShortcutMonitor")
+        )
+        let policySource = source[policyStart.lowerBound..<policyEnd.lowerBound]
+        #expect(policySource.contains("hasPendingPath && relevantFlags == [.command]"))
+    }
+
     @Test func viewMenuExposesClassicZoomShortcuts() throws {
         let source = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),

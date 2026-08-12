@@ -12,6 +12,28 @@ import Testing
 @MainActor
 @Suite(.serialized)
 struct ImageEditorHistoryTests {
+    @Test func commandClickFinishesOnlyAnExistingPendingPenPath() {
+        #expect(ImageEditorPendingPenPointerFinishPolicy.shouldFinishOpenPath(
+            hasPendingPath: true,
+            modifierFlags: .command
+        ))
+        #expect(!ImageEditorPendingPenPointerFinishPolicy.shouldFinishOpenPath(
+            hasPendingPath: false,
+            modifierFlags: .command
+        ))
+        for modifierFlags: NSEvent.ModifierFlags in [
+            [],
+            [.command, .shift],
+            [.command, .option],
+            [.command, .control]
+        ] {
+            #expect(!ImageEditorPendingPenPointerFinishPolicy.shouldFinishOpenPath(
+                hasPendingPath: true,
+                modifierFlags: modifierFlags
+            ))
+        }
+    }
+
     @Test func returnAndKeypadEnterFinishOnlyUnmodifiedPendingPenPaths() {
         for keyCode: UInt16 in [36, 76] {
             #expect(ImageEditorPendingPenFinishKeyPolicy.matches(

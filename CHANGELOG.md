@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.12.0-rc916 - 2026-08-13
+
+### Added
+- 未完成钢笔路径现在可用纯 `Command` 点击画布直接完成为开放路径，复用经典 Photoshop 的快速结束手势，并且不会把结束点击追加为重复锚点。
+
+### Fixed
+- Command-click 只在已有钢笔临时分支且没有 Shift、Option 或 Control 时接管；点数不足时保持临时路径并显示既有提示，不创建空图层或正式 History。
+
+### Verification
+- Command-click 策略、开放路径事务与生产接线专项 5/5、CLI/MCP 2/2、发布契约 7/7（21 项断言）通过；下一次周期完整门禁为 rc920，本版不覆盖 `/Applications` 安装。
+
 ## 2.12.0-rc915 - 2026-08-13
 
 ### Added
