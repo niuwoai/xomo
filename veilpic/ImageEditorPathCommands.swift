@@ -9,11 +9,17 @@ import AppKit
 import CoreGraphics
 
 private struct ImageEditorPathSegmentHit {
+    let layerID: UUID
     let subpathIndex: Int
     let startAnchorIndex: Int
     let endAnchorIndex: Int
     let parameter: CGFloat
     let distance: CGFloat
+}
+
+private enum ImageEditorPenPathInsertionHit {
+    case control
+    case segment(ImageEditorPathSegmentHit)
 }
 
 private struct ImageEditorPenPathContinuationHit {
@@ -930,33 +936,40 @@ extension ImageEditorViewModel {
     func penPathSegmentInsertionState(
         at point: CGPoint?
     ) -> ImageEditorPenPathSegmentInsertionState {
-        guard penPathSegmentHit(at: point) != nil,
-              let layer = document.selectedLayer
+        guard let hit = penPathSegmentHit(at: point),
+              let layer = document.layers.first(where: { $0.id == hit.layerID })
         else { return .none }
-        return document.isEffectivelyPixelsLocked(layer) ? .blocked : .available
+        return document.isEffectivelyPixelsLocked(layer)
+            || document.isEffectivelyPositionLocked(layer)
+            ? .blocked
+            : .available
     }
 
     /// Inserts an anchor at the pointer's actual position on the nearest
-    /// selected path segment. Returning true means the segment consumed the
-    /// click, including a locked segment, so Pen cannot accidentally begin a
-    /// new path on top of an existing one.
+    /// topmost visible path segment. Returning true means that path consumed
+    /// the click, including its controls and locked segments, so Pen cannot
+    /// accidentally edit through it or begin a new path on top of it.
     @discardableResult
     func insertPathAnchor(at point: CGPoint?) -> Bool {
-        guard let hit = penPathSegmentHit(at: point),
-              let layerIndex = document.selectedLayerIndex,
+        guard let target = penPathInsertionHit(at: point) else { return false }
+        guard case .segment(let hit) = target else { return true }
+        guard let layerIndex = document.layers.firstIndex(where: { $0.id == hit.layerID }),
               let shapeContent = document.layers[layerIndex].shapeContent,
               shapeContent.kind == .path,
               shapeContent.allEditablePathSubpaths.indices.contains(hit.subpathIndex)
         else { return false }
 
-        selectedPathSubpathIndex = hit.subpathIndex
-        selectedPathAnchorIndex = hit.startAnchorIndex
-        selectedPathControlRole = .anchor
-        guard !document.isEffectivelyPixelsLocked(document.layers[layerIndex]) else {
+        guard !document.isEffectivelyPixelsLocked(document.layers[layerIndex]),
+              !document.isEffectivelyPositionLocked(document.layers[layerIndex])
+        else {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return true
         }
         guard !cancelPathAnchorDragBeforeDiscreteCommand() else { return true }
+        selectLayer(hit.layerID)
+        selectedPathSubpathIndex = hit.subpathIndex
+        selectedPathAnchorIndex = hit.startAnchorIndex
+        selectedPathControlRole = .anchor
 
         var canvasAnchors = canvasAnchors(
             for: shapeContent.allEditablePathSubpaths[hit.subpathIndex],
@@ -1959,49 +1972,64 @@ extension ImageEditorViewModel {
     }
 
     private func penPathSegmentHit(at point: CGPoint?) -> ImageEditorPathSegmentHit? {
+        guard case .segment(let hit) = penPathInsertionHit(at: point) else { return nil }
+        return hit
+    }
+
+    private func penPathInsertionHit(at point: CGPoint?) -> ImageEditorPenPathInsertionHit? {
         guard pendingPenPathAnchors.isEmpty,
               let point,
               point.x.isFinite,
-              point.y.isFinite,
-              selectedLayerCount == 1,
-              let layer = document.selectedLayer,
-              let content = layer.shapeContent,
-              content.kind == .path
+              point.y.isFinite
         else { return nil }
 
-        let nearestControlDistance = pathControlCandidates(for: content, layer: layer)
-            .map { distance(from: point, to: $0.point) }
-            .min() ?? .greatestFiniteMagnitude
-        guard nearestControlDistance > pathAnchorHitDistance else { return nil }
+        for layer in document.layers.reversed() {
+            guard !layer.isGroup,
+                  document.isEffectivelyVisible(layer),
+                  let content = layer.shapeContent,
+                  content.kind == .path
+            else { continue }
 
-        var nearest: ImageEditorPathSegmentHit?
-        for (subpathIndex, localAnchors) in content.allEditablePathSubpaths.enumerated()
-            where localAnchors.count >= 2 {
-            let anchors = canvasAnchors(for: localAnchors, layer: layer)
-            let segmentCount = content.isPathClosed ? anchors.count : anchors.count - 1
-            for startIndex in 0..<segmentCount {
-                let endIndex = (startIndex + 1) % anchors.count
-                let candidate = nearestPointOnCubicPath(
-                    from: anchors[startIndex],
-                    to: anchors[endIndex],
-                    point: point
-                )
-                guard candidate.parameter > 0.02,
-                      candidate.parameter < 0.98,
-                      candidate.distance <= pathAnchorHitDistance
-                else { continue }
-                if candidate.distance < (nearest?.distance ?? .greatestFiniteMagnitude) {
-                    nearest = ImageEditorPathSegmentHit(
-                        subpathIndex: subpathIndex,
-                        startAnchorIndex: startIndex,
-                        endAnchorIndex: endIndex,
-                        parameter: candidate.parameter,
-                        distance: candidate.distance
+            let nearestControlDistance = pathControlCandidates(for: content, layer: layer)
+                .map { distance(from: point, to: $0.point) }
+                .min() ?? .greatestFiniteMagnitude
+            if nearestControlDistance <= pathAnchorHitDistance {
+                return .control
+            }
+
+            var nearest: ImageEditorPathSegmentHit?
+            for (subpathIndex, localAnchors) in content.allEditablePathSubpaths.enumerated()
+                where localAnchors.count >= 2 {
+                let anchors = canvasAnchors(for: localAnchors, layer: layer)
+                let segmentCount = content.isPathClosed ? anchors.count : anchors.count - 1
+                for startIndex in 0..<segmentCount {
+                    let endIndex = (startIndex + 1) % anchors.count
+                    let candidate = nearestPointOnCubicPath(
+                        from: anchors[startIndex],
+                        to: anchors[endIndex],
+                        point: point
                     )
+                    guard candidate.parameter > 0.02,
+                          candidate.parameter < 0.98,
+                          candidate.distance <= pathAnchorHitDistance
+                    else { continue }
+                    if candidate.distance < (nearest?.distance ?? .greatestFiniteMagnitude) {
+                        nearest = ImageEditorPathSegmentHit(
+                            layerID: layer.id,
+                            subpathIndex: subpathIndex,
+                            startAnchorIndex: startIndex,
+                            endAnchorIndex: endIndex,
+                            parameter: candidate.parameter,
+                            distance: candidate.distance
+                        )
+                    }
                 }
             }
+            if let nearest {
+                return .segment(nearest)
+            }
         }
-        return nearest
+        return nil
     }
 
     private func nearestPointOnCubicPath(

@@ -1903,6 +1903,117 @@ struct ImageEditorVectorLayerTests {
         #expect(abs(selectedPoint.y - point.y) < 0.01)
     }
 
+    @Test func penSelectsAndInsertsOnAnUnselectedVisiblePathSegment() async throws {
+        let image = testBitmapImage(size: NSSize(width: 160, height: 110), background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        let sourceLayerID = try #require(viewModel.document.selectedLayerID)
+        viewModel.selectTool(.pen)
+        viewModel.addPenPoint(CGPoint(x: 20, y: 40))
+        viewModel.addPenPoint(CGPoint(x: 135, y: 40))
+        viewModel.finishPenPath(closed: false)
+        let pathLayerID = try #require(viewModel.document.selectedLayerID)
+        let layerCount = viewModel.document.layers.count
+        let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
+        let insertionPoint = CGPoint(x: 75, y: 40)
+        viewModel.selectLayer(sourceLayerID)
+
+        #expect(viewModel.penPathSegmentInsertionState(at: insertionPoint) == .available)
+        #expect(viewModel.insertPathAnchor(at: insertionPoint))
+        #expect(viewModel.document.selectedLayerID == pathLayerID)
+        #expect(viewModel.document.layers.count == layerCount)
+        #expect(viewModel.document.selectedLayer?.shapeContent?.pathAnchors.count == 3)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.undoStack.count == undoCount + 1)
+        viewModel.undo()
+        #expect(viewModel.document.selectedLayer?.shapeContent?.pathAnchors.count == 2)
+    }
+
+    @Test func hiddenTopPathSegmentDoesNotStealInsertionFromVisiblePath() async throws {
+        let image = testBitmapImage(size: NSSize(width: 160, height: 110), background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        let sourceLayerID = try #require(viewModel.document.selectedLayerID)
+        viewModel.selectTool(.pen)
+        viewModel.addPenPoint(CGPoint(x: 20, y: 40))
+        viewModel.addPenPoint(CGPoint(x: 135, y: 40))
+        viewModel.finishPenPath(closed: false)
+        let lowerPathID = try #require(viewModel.document.selectedLayerID)
+        viewModel.addPenPoint(CGPoint(x: 20, y: 40))
+        viewModel.addPenPoint(CGPoint(x: 135, y: 40))
+        viewModel.finishPenPath(closed: false)
+        let upperPathIndex = try #require(viewModel.document.selectedLayerIndex)
+        let upperPathID = viewModel.document.layers[upperPathIndex].id
+        viewModel.document.layers[upperPathIndex].isVisible = false
+        viewModel.selectLayer(sourceLayerID)
+
+        #expect(viewModel.insertPathAnchor(at: CGPoint(x: 75, y: 40)))
+        #expect(viewModel.document.selectedLayerID == lowerPathID)
+        #expect(viewModel.document.layers.first(where: { $0.id == lowerPathID })?
+            .shapeContent?.pathAnchors.count == 3)
+        #expect(viewModel.document.layers.first(where: { $0.id == upperPathID })?
+            .shapeContent?.pathAnchors.count == 2)
+    }
+
+    @Test func lockedTopPathSegmentBlocksInsertionThroughToLowerPath() async throws {
+        let image = testBitmapImage(size: NSSize(width: 160, height: 110), background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        let sourceLayerID = try #require(viewModel.document.selectedLayerID)
+        viewModel.selectTool(.pen)
+        viewModel.addPenPoint(CGPoint(x: 20, y: 40))
+        viewModel.addPenPoint(CGPoint(x: 135, y: 40))
+        viewModel.finishPenPath(closed: false)
+        let lowerPathID = try #require(viewModel.document.selectedLayerID)
+        viewModel.addPenPoint(CGPoint(x: 20, y: 40))
+        viewModel.addPenPoint(CGPoint(x: 135, y: 40))
+        viewModel.finishPenPath(closed: false)
+        let upperPathIndex = try #require(viewModel.document.selectedLayerIndex)
+        let upperPathID = viewModel.document.layers[upperPathIndex].id
+        viewModel.document.layers[upperPathIndex].locksPosition = true
+        let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
+        viewModel.selectLayer(sourceLayerID)
+        let insertionPoint = CGPoint(x: 75, y: 40)
+
+        #expect(viewModel.penPathSegmentInsertionState(at: insertionPoint) == .blocked)
+        #expect(viewModel.insertPathAnchor(at: insertionPoint))
+        #expect(viewModel.document.selectedLayerID == sourceLayerID)
+        #expect(viewModel.document.layers.first(where: { $0.id == lowerPathID })?
+            .shapeContent?.pathAnchors.count == 2)
+        #expect(viewModel.document.layers.first(where: { $0.id == upperPathID })?
+            .shapeContent?.pathAnchors.count == 2)
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.undoStack.count == undoCount)
+        #expect(!viewModel.hasPendingPenPathTransaction)
+    }
+
+    @Test func topPathControlConsumesClickBeforeAnOverlappingLowerSegment() async throws {
+        let image = testBitmapImage(size: NSSize(width: 160, height: 110), background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        let sourceLayerID = try #require(viewModel.document.selectedLayerID)
+        viewModel.selectTool(.pen)
+        viewModel.addPenPoint(CGPoint(x: 20, y: 40))
+        viewModel.addPenPoint(CGPoint(x: 135, y: 40))
+        viewModel.finishPenPath(closed: false)
+        let lowerPathID = try #require(viewModel.document.selectedLayerID)
+        viewModel.addPenPoint(CGPoint(x: 75, y: 40))
+        viewModel.addPenPoint(CGPoint(x: 75, y: 85))
+        viewModel.finishPenPath(closed: false)
+        let upperPathID = try #require(viewModel.document.selectedLayerID)
+        let historyCount = viewModel.document.history.count
+        viewModel.selectLayer(sourceLayerID)
+        let controlPoint = CGPoint(x: 75, y: 40)
+
+        #expect(viewModel.penPathSegmentInsertionState(at: controlPoint) == .none)
+        #expect(viewModel.insertPathAnchor(at: controlPoint))
+        #expect(viewModel.document.selectedLayerID == sourceLayerID)
+        #expect(viewModel.document.layers.first(where: { $0.id == lowerPathID })?
+            .shapeContent?.pathAnchors.count == 2)
+        #expect(viewModel.document.layers.first(where: { $0.id == upperPathID })?
+            .shapeContent?.pathAnchors.count == 2)
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(!viewModel.hasPendingPenPathTransaction)
+    }
+
     @Test func lockedPathSegmentConsumesPenClickWithoutMutation() async throws {
         let canvasSize = NSSize(width: 140, height: 100)
         let image = testBitmapImage(size: canvasSize, background: .black)
