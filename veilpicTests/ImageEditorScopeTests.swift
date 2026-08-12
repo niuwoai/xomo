@@ -2598,6 +2598,43 @@ struct ImageEditorScopeTests {
         ))
     }
 
+    @Test func pendingPenOverlayUsesTheSameConstrainedPointAsCommit() throws {
+        let viewSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let pathSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorPathCommands.swift"),
+            encoding: .utf8
+        )
+
+        let overlayStart = try #require(viewSource.range(of: "private func dragOverlay(in size: CGSize)"))
+        let overlayEnd = try #require(
+            viewSource[overlayStart.upperBound...].range(of: "private var shouldShowDragRect")
+        )
+        let overlaySource = viewSource[overlayStart.lowerBound..<overlayEnd.lowerBound]
+        #expect(overlaySource.contains("let previewPoint = pendingPenPreviewViewPoint(in: size)"))
+        #expect(overlaySource.contains("previewPath.move(to: last)"))
+        #expect(overlaySource.contains("previewPath.addLine(to: previewPoint)"))
+        #expect(overlaySource.contains("isPointerInsideCanvas"))
+        #expect(overlaySource.contains("canvasInteractionTool == .pen"))
+        #expect(overlaySource.contains("viewModel.pendingPenPreviewPoint("))
+        #expect(overlaySource.contains("constrainedToAngleIncrement: canvasModifierFlags.contains(.shift)"))
+
+        let previewStart = try #require(pathSource.range(of: "func pendingPenPreviewPoint("))
+        let previewEnd = try #require(
+            pathSource[previewStart.upperBound...].range(of: "func undoPendingPenPoint")
+        )
+        let previewSource = pathSource[previewStart.lowerBound..<previewEnd.lowerBound]
+        let closeCheck = try #require(previewSource.range(of: "isPenCloseCandidate(at: point)"))
+        let firstPoint = try #require(previewSource.range(of: "return pendingPenPathPoints.first"))
+        let constraint = try #require(
+            previewSource.range(of: "ImageEditorPenPointGeometry.constrainedPoint(")
+        )
+        #expect(closeCheck.lowerBound < firstPoint.lowerBound)
+        #expect(firstPoint.lowerBound < constraint.lowerBound)
+    }
+
     @Test func viewMenuExposesClassicZoomShortcuts() throws {
         let source = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),

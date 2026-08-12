@@ -204,6 +204,22 @@ extension ImageEditorViewModel {
         statusText = L10n.format("imageEditor.status.penPointAdded", pendingPenPathPoints.count)
     }
 
+    func pendingPenPreviewPoint(
+        at point: CGPoint?,
+        constrainedToAngleIncrement: Bool
+    ) -> CGPoint? {
+        guard let point, let previousPoint = pendingPenPathPoints.last else { return nil }
+        if isPenCloseCandidate(at: point) {
+            return pendingPenPathPoints.first
+        }
+        guard constrainedToAngleIncrement else { return point }
+        return ImageEditorPenPointGeometry.constrainedPoint(
+            from: previousPoint,
+            toward: point,
+            canvasSize: document.canvasSize
+        )
+    }
+
     @discardableResult
     func undoPendingPenPoint() -> Bool {
         guard let point = pendingPenPathPoints.popLast() else { return false }

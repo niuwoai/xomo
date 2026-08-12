@@ -2910,6 +2910,7 @@ struct ImageEditorView: View {
     private func dragOverlay(in size: CGSize) -> some View {
         if !viewModel.pendingPenPathPoints.isEmpty {
             let points = viewModel.pendingPenPathPoints.map { viewPoint(from: $0, in: size) }
+            let previewPoint = pendingPenPreviewViewPoint(in: size)
             Canvas { context, _ in
                 guard let first = points.first else { return }
                 var path = Path()
@@ -2924,6 +2925,32 @@ struct ImageEditorView: View {
                     let rect = CGRect(x: point.x - radius, y: point.y - radius, width: radius * 2, height: radius * 2)
                     context.fill(Path(ellipseIn: rect), with: .color(index == 0 ? Color.white : Color(nsColor: ImageEditorTheme.selected)))
                     context.stroke(Path(ellipseIn: rect), with: .color(Color.black.opacity(0.45)), lineWidth: 1)
+                }
+                if let last = points.last, let previewPoint {
+                    var previewPath = Path()
+                    previewPath.move(to: last)
+                    previewPath.addLine(to: previewPoint)
+                    context.stroke(
+                        previewPath,
+                        with: .color(Color.white.opacity(0.82)),
+                        style: StrokeStyle(lineWidth: 1.5, dash: [4, 3])
+                    )
+                    let radius: CGFloat = 3.5
+                    let previewRect = CGRect(
+                        x: previewPoint.x - radius,
+                        y: previewPoint.y - radius,
+                        width: radius * 2,
+                        height: radius * 2
+                    )
+                    context.fill(
+                        Path(ellipseIn: previewRect),
+                        with: .color(Color(nsColor: ImageEditorTheme.selected).opacity(0.72))
+                    )
+                    context.stroke(
+                        Path(ellipseIn: previewRect),
+                        with: .color(Color.white.opacity(0.92)),
+                        lineWidth: 1
+                    )
                 }
             }
             .allowsHitTesting(false)
@@ -3067,6 +3094,19 @@ struct ImageEditorView: View {
             .position(x: rect.midX, y: rect.midY)
             .allowsHitTesting(false)
         }
+    }
+
+    private func pendingPenPreviewViewPoint(in size: CGSize) -> CGPoint? {
+        guard canvasInteractionTool == .pen,
+              isPointerInsideCanvas,
+              let hoverViewPoint,
+              let pointerImagePoint = imagePoint(from: hoverViewPoint, in: size),
+              let previewImagePoint = viewModel.pendingPenPreviewPoint(
+                at: pointerImagePoint,
+                constrainedToAngleIncrement: canvasModifierFlags.contains(.shift)
+              )
+        else { return nil }
+        return viewPoint(from: previewImagePoint, in: size)
     }
 
     private var shouldShowDragRect: Bool {

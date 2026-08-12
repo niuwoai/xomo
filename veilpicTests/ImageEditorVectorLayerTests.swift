@@ -666,6 +666,39 @@ struct ImageEditorVectorLayerTests {
         #expect(closedContent.editablePathAnchors.count == 3)
     }
 
+    @Test func pendingPenPreviewMatchesConstrainedCommitAndCloseTarget() {
+        let canvasSize = NSSize(width: 140, height: 100)
+        let image = testBitmapImage(size: canvasSize, background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        let firstPoint = CGPoint(x: 20, y: 20)
+        let proposedPoint = CGPoint(x: 80, y: 35)
+
+        #expect(viewModel.pendingPenPreviewPoint(
+            at: proposedPoint,
+            constrainedToAngleIncrement: true
+        ) == nil)
+        viewModel.addPenPoint(firstPoint)
+        let constrainedPreview = viewModel.pendingPenPreviewPoint(
+            at: proposedPoint,
+            constrainedToAngleIncrement: true
+        )
+        viewModel.addPenPoint(proposedPoint, constrainedToAngleIncrement: true)
+        #expect(constrainedPreview == viewModel.pendingPenPathPoints.last)
+
+        viewModel.addPenPoint(CGPoint(x: 88, y: 74))
+        let closePreview = viewModel.pendingPenPreviewPoint(
+            at: CGPoint(x: firstPoint.x + 1, y: firstPoint.y + 1),
+            constrainedToAngleIncrement: true
+        )
+        #expect(closePreview == firstPoint)
+
+        let freePreview = viewModel.pendingPenPreviewPoint(
+            at: CGPoint(x: 56, y: 67),
+            constrainedToAngleIncrement: false
+        )
+        #expect(freePreview == CGPoint(x: 56, y: 67))
+    }
+
     @Test func pathSelectionHitsClosedPathGeometryAndMovesWholeLayer() async throws {
         let canvasSize = NSSize(width: 140, height: 100)
         let image = testBitmapImage(size: canvasSize, background: .black)
