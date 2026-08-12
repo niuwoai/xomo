@@ -107,6 +107,7 @@ struct ImageEditorView: View {
     @State private var isPathAnchorDragCancelled = false
     @State private var isPenPointerSequenceActive = false
     @State private var pendingPenCreationAction: ImageEditorPendingPenGestureAction?
+    @State private var isPenAnchorConversionGestureActive = false
     @State private var activeGuideDrag: ImageEditorGuideDrag?
     @State private var layerNameDraft = ""
     @State private var figmaComponentPropertyDrafts: [String: String] = [:]
@@ -281,6 +282,7 @@ struct ImageEditorView: View {
                     if viewModel.cancelPenPath() || isUncommittedPenPointerSequence {
                         isPathAnchorDragCancelled = true
                         pendingPenCreationAction = nil
+                        isPenAnchorConversionGestureActive = false
                         NSCursor.arrow.set()
                         return true
                     }
@@ -2107,6 +2109,7 @@ struct ImageEditorView: View {
     private func beginCanvasPointerSequence() {
         isPenPointerSequenceActive = canvasInteractionTool == .pen
         pendingPenCreationAction = nil
+        isPenAnchorConversionGestureActive = false
         guard ImageEditorPathAnchorDragLifecyclePolicy.shouldReleaseCancellationLatch(
             isCancelled: isPathAnchorDragCancelled,
             hasActiveTransaction: viewModel.hasActivePathAnchorMoveTransaction
@@ -2681,6 +2684,12 @@ struct ImageEditorView: View {
                                     } == true,
                             penIsClosing: canvasInteractionTool == .pen
                                 && viewModel.isPenCloseCandidate(at: canvasPoint),
+                            penIsConverting: canvasInteractionTool == .pen
+                                && canvasModifierFlags.contains(.option)
+                                && viewModel.isPenCornerConversionCandidate(at: canvasPoint),
+                            penConversionIsBlocked: canvasInteractionTool == .pen
+                                && canvasModifierFlags.contains(.option)
+                                && viewModel.isPenCornerConversionBlocked(at: canvasPoint),
                             handIsDragging: isCanvasPanGestureActive,
                             isObjectMoveGestureActive: objectMoveIsActive,
                             isColorSamplerMoveGestureActive: colorSamplerDrag != nil,
@@ -2774,6 +2783,7 @@ struct ImageEditorView: View {
                 .onDisappear {
                     cancelPathAnchorDragForCanvasLifecycle()
                     pendingPenCreationAction = nil
+                    isPenAnchorConversionGestureActive = false
                     isPointerInsideCanvas = false
                     activeBrushPressure = nil
                     activeBrushTilt = nil
@@ -3709,7 +3719,17 @@ struct ImageEditorView: View {
                     }
                     updateCanvasCursor(at: value.location, in: size)
                 case .pen:
-                    if isMovingPathAnchor {
+                    if isPenAnchorConversionGestureActive {
+                        break
+                    } else if pendingPenCreationAction == nil,
+                              !isMovingPathAnchor,
+                              NSEvent.modifierFlags.contains(.option),
+                              viewModel.convertPathAnchorToCorner(
+                                at: imagePoint(from: value.startLocation, in: size)
+                              ) {
+                        isPenAnchorConversionGestureActive = true
+                        updateCanvasCursor(at: value.location, in: size)
+                    } else if isMovingPathAnchor {
                         viewModel.moveSelectedPathAnchor(to: pointerImagePoint)
                     } else if pendingPenCreationAction == nil,
                               viewModel.pendingPenPathPoints.isEmpty,
@@ -3925,7 +3945,9 @@ struct ImageEditorView: View {
                         viewModel.drawShape(from: dragStart, to: endImagePoint, ellipse: true)
                     }
                 case .pen:
-                    if isMovingPathAnchor, !isPathAnchorDragCancelled {
+                    if isPenAnchorConversionGestureActive {
+                        break
+                    } else if isMovingPathAnchor, !isPathAnchorDragCancelled {
                         viewModel.finishMovingPathAnchor()
                     } else if !isPathAnchorDragCancelled,
                               ImageEditorPendingPenPointerFinishPolicy.shouldFinishOpenPath(
@@ -4040,6 +4062,7 @@ struct ImageEditorView: View {
                 isPathAnchorDragCancelled = false
                 isPenPointerSequenceActive = false
                 pendingPenCreationAction = nil
+                isPenAnchorConversionGestureActive = false
                 activeResizeHandle = nil
                 refreshCanvasCursor(in: size)
             }
@@ -4310,6 +4333,12 @@ struct ImageEditorView: View {
                 canvasInteractionTool == .colorSampler
                     && colorSamplerPointID(at: viewPoint, in: size) != nil,
             penIsClosing: canvasInteractionTool == .pen && viewModel.isPenCloseCandidate(at: canvasPoint),
+            penIsConverting: canvasInteractionTool == .pen
+                && NSEvent.modifierFlags.contains(.option)
+                && viewModel.isPenCornerConversionCandidate(at: canvasPoint),
+            penConversionIsBlocked: canvasInteractionTool == .pen
+                && NSEvent.modifierFlags.contains(.option)
+                && viewModel.isPenCornerConversionBlocked(at: canvasPoint),
             handIsDragging: isCanvasPanGestureActive,
             isObjectMoveGestureActive: isSelectedObjectMoveGestureActive || isObjectMoveGestureActive,
             isColorSamplerMoveGestureActive: colorSamplerDrag != nil,
@@ -11046,6 +11075,8 @@ enum ImageEditorCanvasCursor {
         isPointerOverBlockedContent: Bool = false,
         isPointerOverColorSamplerPoint: Bool = false,
         penIsClosing: Bool = false,
+        penIsConverting: Bool = false,
+        penConversionIsBlocked: Bool = false,
         handIsDragging: Bool = false,
         isObjectMoveGestureActive: Bool = false,
         isColorSamplerMoveGestureActive: Bool = false,
@@ -11122,6 +11153,8 @@ enum ImageEditorCanvasCursor {
                 brushTipRoundness: brushTipRoundness,
                 brushTipAngleDegrees: brushTipAngleDegrees,
                 penIsClosing: penIsClosing,
+                penIsConverting: penIsConverting,
+                penConversionIsBlocked: penConversionIsBlocked,
                 handIsDragging: handIsDragging,
                 isPickingSampledBrushSource: isPickingSampledBrushSource,
                 patchPhase: patchPhase,
@@ -11541,6 +11574,8 @@ enum ImageEditorCanvasCursor {
         brushTipRoundness: CGFloat = 1,
         brushTipAngleDegrees: CGFloat = 0,
         penIsClosing: Bool = false,
+        penIsConverting: Bool = false,
+        penConversionIsBlocked: Bool = false,
         handIsDragging: Bool = false,
         isPickingSampledBrushSource: Bool = false,
         patchPhase: ImageEditorPatchCursorPhase = .drawingSelection,
@@ -11621,8 +11656,12 @@ enum ImageEditorCanvasCursor {
         case .samplingScope:
             return .crosshair
         case .vectorPen:
+            if penConversionIsBlocked {
+                return .operationNotAllowed
+            }
             return penCursor(
                 isClosing: penIsClosing,
+                isConverting: penIsConverting,
                 isConstrained: modifierFlags.contains(.shift)
             )
         case .zoomMagnifier:
@@ -12697,8 +12736,12 @@ enum ImageEditorCanvasCursor {
         )
     }
 
-    private static func penCursor(isClosing: Bool, isConstrained: Bool) -> NSCursor {
-        let cacheKey = "pen:\(isClosing):\(isConstrained)"
+    private static func penCursor(
+        isClosing: Bool,
+        isConverting: Bool,
+        isConstrained: Bool
+    ) -> NSCursor {
+        let cacheKey = "pen:\(isClosing):\(isConverting):\(isConstrained)"
         if let cachedCursor = cursorCache[cacheKey] {
             return cachedCursor
         }
@@ -12736,6 +12779,17 @@ enum ImageEditorCanvasCursor {
             NSColor.white.setStroke()
             closeRing.lineWidth = 1.75
             closeRing.stroke()
+        } else if isConverting {
+            let corner = NSBezierPath()
+            corner.move(to: NSPoint(x: 1.5, y: 32.5))
+            corner.line(to: NSPoint(x: 7, y: 25.5))
+            corner.line(to: NSPoint(x: 12.5, y: 32.5))
+            NSColor.black.withAlphaComponent(0.95).setStroke()
+            corner.lineWidth = 3.5
+            corner.stroke()
+            NSColor.systemOrange.setStroke()
+            corner.lineWidth = 1.4
+            corner.stroke()
         } else if isConstrained {
             let badgeRect = NSRect(x: 0.5, y: 23.5, width: 12, height: 12)
             let badge = NSBezierPath(ovalIn: badgeRect)

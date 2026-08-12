@@ -689,6 +689,78 @@ extension ImageEditorViewModel {
         statusText = L10n.text("imageEditor.status.pathHandlesCleared")
     }
 
+    func isPenCornerConversionCandidate(at point: CGPoint?) -> Bool {
+        guard pendingPenPathAnchors.isEmpty,
+              let point,
+              let layer = document.selectedLayer,
+              let content = layer.shapeContent,
+              content.kind == .path
+        else { return false }
+        return nearestPathAnchorReference(at: point, content: content, layer: layer) != nil
+    }
+
+    func isPenCornerConversionBlocked(at point: CGPoint?) -> Bool {
+        guard isPenCornerConversionCandidate(at: point),
+              let layer = document.selectedLayer
+        else { return false }
+        return document.isEffectivelyPixelsLocked(layer)
+    }
+
+    /// Option-click temporarily turns the Pen into Photoshop's Convert Point
+    /// action. Returning true means the existing anchor consumed the pointer
+    /// sequence, including an already-corner or locked anchor, so the same
+    /// click can never fall through and append a new path point.
+    @discardableResult
+    func convertPathAnchorToCorner(at point: CGPoint?) -> Bool {
+        guard pendingPenPathAnchors.isEmpty,
+              let point,
+              let layerIndex = document.selectedLayerIndex,
+              let shapeContent = document.layers[layerIndex].shapeContent,
+              shapeContent.kind == .path,
+              let reference = nearestPathAnchorReference(
+                at: point,
+                content: shapeContent,
+                layer: document.layers[layerIndex]
+              )
+        else { return false }
+
+        selectedPathSubpathIndex = reference.subpathIndex
+        selectedPathAnchorIndex = reference.anchorIndex
+        selectedPathControlRole = .anchor
+        guard !document.isEffectivelyPixelsLocked(document.layers[layerIndex]) else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return true
+        }
+        guard !cancelPathAnchorDragBeforeDiscreteCommand() else { return true }
+
+        var canvasAnchors = canvasAnchors(
+            for: shapeContent.allEditablePathSubpaths[reference.subpathIndex],
+            layer: document.layers[layerIndex]
+        )
+        guard canvasAnchors[reference.anchorIndex].inControl != nil
+                || canvasAnchors[reference.anchorIndex].outControl != nil
+        else {
+            statusText = L10n.format(
+                "imageEditor.status.pathAnchorSelected",
+                reference.anchorIndex + 1
+            )
+            return true
+        }
+        canvasAnchors[reference.anchorIndex].inControl = nil
+        canvasAnchors[reference.anchorIndex].outControl = nil
+
+        pushUndo()
+        updatePathLayer(
+            at: layerIndex,
+            shapeContent: shapeContent,
+            canvasAnchors: canvasAnchors,
+            editingSubpathIndex: reference.subpathIndex
+        )
+        appendHistory(L10n.text("imageEditor.history.pathHandlesUpdate"))
+        statusText = L10n.text("imageEditor.status.pathHandlesCleared")
+        return true
+    }
+
     var canLoadSelectionFromSelectedPath: Bool {
         guard selectedLayerCount == 1,
               let content = document.selectedLayer?.shapeContent,
@@ -1409,6 +1481,24 @@ extension ImageEditorViewModel {
         selectedPathControlRole = nearest.candidate.role
         statusText = L10n.format("imageEditor.status.pathAnchorSelected", nearest.candidate.index + 1)
         return true
+    }
+
+    private func nearestPathAnchorReference(
+        at point: CGPoint,
+        content: ImageEditorShapeContent,
+        layer: ImageEditorLayer
+    ) -> (subpathIndex: Int, anchorIndex: Int)? {
+        let nearest = pathControlCandidates(for: content, layer: layer)
+            .filter { $0.role == .anchor }
+            .map { candidate in
+                (candidate: candidate, distance: distance(from: point, to: candidate.point))
+            }
+            .min { lhs, rhs in lhs.distance < rhs.distance }
+        guard let nearest, nearest.distance <= pathAnchorHitDistance else { return nil }
+        return (
+            subpathIndex: nearest.candidate.subpathIndex,
+            anchorIndex: nearest.candidate.index
+        )
     }
 
     private func setSelectedPathAnchorPosition(_ point: CGPoint) {

@@ -738,6 +738,87 @@ struct ImageEditorVectorLayerTests {
         }
     }
 
+    @Test func optionClickConvertsSmoothPenAnchorToCornerWithoutEmptyHistory() throws {
+        let canvasSize = NSSize(width: 140, height: 100)
+        let image = testBitmapImage(size: canvasSize, background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        let convertedPoint = CGPoint(x: 80, y: 50)
+        viewModel.addPenPoint(CGPoint(x: 20, y: 50))
+        viewModel.addPenPoint(
+            convertedPoint,
+            symmetricControlDrag: CGSize(width: 12, height: 18),
+            constrainedToAngleIncrement: false
+        )
+        viewModel.finishPenPath(closed: false)
+        let smoothAnchor = try #require(
+            viewModel.document.selectedLayer?.shapeContent?.editablePathAnchors.last
+        )
+        #expect(smoothAnchor.inControl != nil)
+        #expect(smoothAnchor.outControl != nil)
+        #expect(viewModel.isPenCornerConversionCandidate(at: convertedPoint))
+
+        let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
+        #expect(viewModel.convertPathAnchorToCorner(at: convertedPoint))
+
+        let cornerAnchor = try #require(
+            viewModel.document.selectedLayer?.shapeContent?.editablePathAnchors.last
+        )
+        #expect(cornerAnchor.inControl == nil)
+        #expect(cornerAnchor.outControl == nil)
+        #expect(viewModel.selectedPathAnchorIndex == 1)
+        #expect(viewModel.selectedPathControlRole == .anchor)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.undoStack.count == undoCount + 1)
+
+        viewModel.undo()
+        let restoredAnchor = try #require(
+            viewModel.document.selectedLayer?.shapeContent?.editablePathAnchors.last
+        )
+        #expect(restoredAnchor.inControl != nil)
+        #expect(restoredAnchor.outControl != nil)
+        viewModel.redo()
+
+        let noOpHistoryCount = viewModel.document.history.count
+        let noOpUndoCount = viewModel.undoStack.count
+        #expect(viewModel.convertPathAnchorToCorner(at: convertedPoint))
+        #expect(viewModel.document.history.count == noOpHistoryCount)
+        #expect(viewModel.undoStack.count == noOpUndoCount)
+        #expect(!viewModel.convertPathAnchorToCorner(at: CGPoint(x: 130, y: 90)))
+    }
+
+    @Test func optionClickConsumesLockedSmoothAnchorWithoutChangingIt() throws {
+        let canvasSize = NSSize(width: 140, height: 100)
+        let image = testBitmapImage(size: canvasSize, background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        let point = CGPoint(x: 80, y: 50)
+        viewModel.addPenPoint(CGPoint(x: 20, y: 50))
+        viewModel.addPenPoint(
+            point,
+            symmetricControlDrag: CGSize(width: 12, height: 18),
+            constrainedToAngleIncrement: false
+        )
+        viewModel.finishPenPath(closed: false)
+        let selectedIndex = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[selectedIndex].isLocked = true
+        let originalSubpaths = viewModel.document.layers[selectedIndex]
+            .shapeContent?.allEditablePathSubpaths
+        let originalFrame = viewModel.document.layers[selectedIndex].frame
+        let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
+
+        #expect(viewModel.isPenCornerConversionBlocked(at: point))
+        #expect(viewModel.convertPathAnchorToCorner(at: point))
+        #expect(
+            viewModel.document.layers[selectedIndex].shapeContent?.allEditablePathSubpaths
+                == originalSubpaths
+        )
+        #expect(viewModel.document.layers[selectedIndex].frame == originalFrame)
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.undoStack.count == undoCount)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.operationFailed"))
+    }
+
     @Test func pendingPenPreviewMatchesConstrainedCommitAndCloseTarget() {
         let canvasSize = NSSize(width: 140, height: 100)
         let image = testBitmapImage(size: canvasSize, background: .black)

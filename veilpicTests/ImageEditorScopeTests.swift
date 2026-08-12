@@ -2576,7 +2576,7 @@ struct ImageEditorScopeTests {
         )
 
         let penEndStart = try #require(
-            viewSource.range(of: "case .pen:\n                    if isMovingPathAnchor, !isPathAnchorDragCancelled")
+            viewSource.range(of: "case .pen:\n                    if isPenAnchorConversionGestureActive {\n                        break\n                    } else if isMovingPathAnchor, !isPathAnchorDragCancelled")
         )
         let penEnd = try #require(
             viewSource[penEndStart.upperBound...].range(of: "case .pathSelection:")
@@ -2647,7 +2647,7 @@ struct ImageEditorScopeTests {
             encoding: .utf8
         )
         let changedStart = try #require(
-            viewSource.range(of: "case .pen:\n                    if isMovingPathAnchor {")
+            viewSource.range(of: "case .pen:\n                    if isPenAnchorConversionGestureActive {")
         )
         let changedEnd = try #require(
             viewSource[changedStart.upperBound...].range(of: "case .pathSelection:")
@@ -2658,7 +2658,7 @@ struct ImageEditorScopeTests {
         #expect(changedSource.contains("viewTranslation: value.translation"))
 
         let endedStart = try #require(
-            viewSource.range(of: "case .pen:\n                    if isMovingPathAnchor, !isPathAnchorDragCancelled")
+            viewSource.range(of: "case .pen:\n                    if isPenAnchorConversionGestureActive {\n                        break\n                    } else if isMovingPathAnchor, !isPathAnchorDragCancelled")
         )
         let endedEnd = try #require(
             viewSource[endedStart.upperBound...].range(of: "case .pathSelection:")
@@ -2666,8 +2666,42 @@ struct ImageEditorScopeTests {
         let endedSource = viewSource[endedStart.lowerBound..<endedEnd.lowerBound]
         #expect(endedSource.contains("let action = pendingPenCreationAction"))
         #expect(endedSource.contains("symmetricControlDrag: action?.symmetricControlDrag"))
-        #expect(viewSource.contains("pendingPenCreationAction = nil\n                activeResizeHandle = nil"))
+        #expect(viewSource.contains("pendingPenCreationAction = nil\n                isPenAnchorConversionGestureActive = false"))
         #expect(viewSource.contains(".onDisappear {\n                    cancelPathAnchorDragForCanvasLifecycle()\n                    pendingPenCreationAction = nil"))
+    }
+
+    @Test func optionClickCornerConversionConsumesTheWholePenGesture() throws {
+        let viewSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let pathSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorPathCommands.swift"),
+            encoding: .utf8
+        )
+        let changedStart = try #require(
+            viewSource.range(of: "case .pen:\n                    if isPenAnchorConversionGestureActive {")
+        )
+        let changedEnd = try #require(
+            viewSource[changedStart.upperBound...].range(of: "case .pathSelection:")
+        )
+        let changedSource = viewSource[changedStart.lowerBound..<changedEnd.lowerBound]
+        let modifier = try #require(changedSource.range(of: "NSEvent.modifierFlags.contains(.option)"))
+        let conversion = try #require(changedSource.range(of: "viewModel.convertPathAnchorToCorner("))
+        let latch = try #require(changedSource.range(of: "isPenAnchorConversionGestureActive = true"))
+        let creation = try #require(
+            changedSource.range(of: "pendingPenCreationAction = ImageEditorPendingPenGesturePolicy.resolve(")
+        )
+        #expect(modifier.lowerBound < conversion.lowerBound)
+        #expect(conversion.lowerBound < latch.lowerBound)
+        #expect(latch.lowerBound < creation.lowerBound)
+
+        #expect(viewSource.contains("if isPenAnchorConversionGestureActive {\n                        break\n                    } else if isMovingPathAnchor"))
+        #expect(viewSource.contains("isPenAnchorConversionGestureActive = false\n                activeResizeHandle = nil"))
+        #expect(pathSource.contains("Returning true means the existing anchor consumed the pointer"))
+        #expect(pathSource.contains("guard canvasAnchors[reference.anchorIndex].inControl != nil"))
+        #expect(pathSource.contains("canvasAnchors[reference.anchorIndex].inControl = nil"))
+        #expect(pathSource.contains("canvasAnchors[reference.anchorIndex].outControl = nil"))
     }
 
     @Test func viewMenuExposesClassicZoomShortcuts() throws {

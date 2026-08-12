@@ -1901,6 +1901,26 @@ struct ImageEditorCanvasCursorTests {
             brushDiameter: 18,
             penIsClosing: true
         )
+        let converting = ImageEditorCanvasCursor.cursor(
+            for: .pen,
+            brushDiameter: 18,
+            penIsConverting: true,
+            modifierFlags: [.option]
+        )
+        let convertingClosing = ImageEditorCanvasCursor.cursor(
+            for: .pen,
+            brushDiameter: 18,
+            penIsClosing: true,
+            penIsConverting: true,
+            modifierFlags: [.option, .shift]
+        )
+        let blockedConversion = ImageEditorCanvasCursor.cursor(
+            for: .pen,
+            brushDiameter: 18,
+            penIsConverting: true,
+            penConversionIsBlocked: true,
+            modifierFlags: [.option]
+        )
         let constrainedClosing = ImageEditorCanvasCursor.cursor(
             for: .pen,
             brushDiameter: 18,
@@ -1909,14 +1929,26 @@ struct ImageEditorCanvasCursorTests {
         )
 
         #expect(ordinary.image.tiffRepresentation != constrained.image.tiffRepresentation)
+        #expect(ordinary.image.tiffRepresentation != converting.image.tiffRepresentation)
+        #expect(constrained.image.tiffRepresentation != converting.image.tiffRepresentation)
         #expect(constrained.image.tiffRepresentation != closing.image.tiffRepresentation)
         #expect(constrainedClosing.image.tiffRepresentation == closing.image.tiffRepresentation)
+        #expect(convertingClosing.image.tiffRepresentation == closing.image.tiffRepresentation)
+        #expect(blockedConversion === NSCursor.operationNotAllowed)
         #expect(ImageEditorCanvasCursor.cursor(
             for: .components,
             selectedTool: .pen,
             brushDiameter: 18,
             penIsClosing: true,
             modifierFlags: [.shift]
+        ) === NSCursor.arrow)
+        #expect(ImageEditorCanvasCursor.cursor(
+            for: .components,
+            selectedTool: .pen,
+            brushDiameter: 18,
+            penIsConverting: true,
+            penConversionIsBlocked: true,
+            modifierFlags: [.option]
         ) === NSCursor.arrow)
     }
 
@@ -1932,8 +1964,14 @@ struct ImageEditorCanvasCursorTests {
         #expect(source.components(
             separatedBy: "penIsClosing: canvasInteractionTool == .pen"
         ).count == 3)
+        #expect(source.components(
+            separatedBy: "penIsConverting: canvasInteractionTool == .pen"
+        ).count == 3)
+        #expect(source.contains("viewModel.isPenCornerConversionCandidate(at: canvasPoint)"))
+        #expect(source.contains("viewModel.isPenCornerConversionBlocked(at: canvasPoint)"))
         #expect(source.contains("isConstrained: modifierFlags.contains(.shift)"))
         #expect(source.contains("if isClosing"))
+        #expect(source.contains("else if isConverting"))
         #expect(source.contains("else if isConstrained"))
     }
 
