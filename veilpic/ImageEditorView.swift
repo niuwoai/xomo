@@ -105,6 +105,7 @@ struct ImageEditorView: View {
     @State private var isTransformReferencePointDragCancelled = false
     @State private var isMovingPathAnchor = false
     @State private var isPathAnchorDragCancelled = false
+    @State private var isPenPointerSequenceActive = false
     @State private var activeGuideDrag: ImageEditorGuideDrag?
     @State private var layerNameDraft = ""
     @State private var figmaComponentPropertyDrafts: [String: String] = [:]
@@ -245,6 +246,17 @@ struct ImageEditorView: View {
                             NSCursor.arrow.set()
                             return true
                         }
+                    }
+                    let isUncommittedPenPointerSequence = ImageEditorPendingPenPointerPolicy
+                        .ownsUncommittedPoint(
+                            tool: canvasInteractionTool,
+                            isPointerSequenceActive: isPenPointerSequenceActive,
+                            isMovingPathAnchor: isMovingPathAnchor
+                        )
+                    if viewModel.cancelPenPath() || isUncommittedPenPointerSequence {
+                        isPathAnchorDragCancelled = true
+                        NSCursor.arrow.set()
+                        return true
                     }
                     if isMovingTransformReferencePoint {
                         isTransformReferencePointDragCancelled = true
@@ -2026,15 +2038,31 @@ struct ImageEditorView: View {
         }
     }
 
-    private func performUndo() {
-        if viewModel.hasActivePathAnchorMoveTransaction {
+    func performUndo() {
+        if ImageEditorPendingPenPointerPolicy.ownsUncommittedPoint(
+            tool: canvasInteractionTool,
+            isPointerSequenceActive: isPenPointerSequenceActive,
+            isMovingPathAnchor: isMovingPathAnchor
+        ) {
+            isPathAnchorDragCancelled = true
+            return
+        }
+        if viewModel.hasActivePathAnchorMoveTransaction || viewModel.hasPendingPenPathTransaction {
             isPathAnchorDragCancelled = true
         }
         viewModel.undo()
     }
 
-    private func performRedo() {
-        if viewModel.hasActivePathAnchorMoveTransaction {
+    func performRedo() {
+        if ImageEditorPendingPenPointerPolicy.ownsUncommittedPoint(
+            tool: canvasInteractionTool,
+            isPointerSequenceActive: isPenPointerSequenceActive,
+            isMovingPathAnchor: isMovingPathAnchor
+        ) {
+            isPathAnchorDragCancelled = true
+            return
+        }
+        if viewModel.hasActivePathAnchorMoveTransaction || viewModel.hasPendingPenPathTransaction {
             isPathAnchorDragCancelled = true
         }
         viewModel.redo()
@@ -2051,6 +2079,7 @@ struct ImageEditorView: View {
     }
 
     private func beginCanvasPointerSequence() {
+        isPenPointerSequenceActive = canvasInteractionTool == .pen
         guard ImageEditorPathAnchorDragLifecyclePolicy.shouldReleaseCancellationLatch(
             isCancelled: isPathAnchorDragCancelled,
             hasActiveTransaction: viewModel.hasActivePathAnchorMoveTransaction
@@ -3853,6 +3882,7 @@ struct ImageEditorView: View {
                 resetColorSamplerGesture()
                 isMovingPathAnchor = false
                 isPathAnchorDragCancelled = false
+                isPenPointerSequenceActive = false
                 activeResizeHandle = nil
                 refreshCanvasCursor(in: size)
             }
@@ -8652,7 +8682,7 @@ struct ImageEditorView: View {
 
                 AnyView(Group {
 
-                if viewModel.selectedTool == .pen || !viewModel.pendingPenPathPoints.isEmpty {
+                if viewModel.selectedTool == .pen || viewModel.hasPendingPenPathTransaction {
                     HStack {
                         Button(L10n.text("imageEditor.action.penFinishOpen")) {
                             viewModel.finishPenPath(closed: false)
@@ -8670,7 +8700,7 @@ struct ImageEditorView: View {
                             viewModel.cancelPenPath()
                         }
                         .buttonStyle(EditorTextButtonStyle())
-                        .disabled(viewModel.pendingPenPathPoints.isEmpty)
+                        .disabled(!viewModel.hasPendingPenPathTransaction)
                     }
                 }
                 HStack {
@@ -12928,6 +12958,16 @@ enum ImageEditorPathAnchorDragLifecyclePolicy {
         hasActiveTransaction: Bool
     ) -> Bool {
         isCancelled && !hasActiveTransaction
+    }
+}
+
+enum ImageEditorPendingPenPointerPolicy {
+    static func ownsUncommittedPoint(
+        tool: ImageEditorTool,
+        isPointerSequenceActive: Bool,
+        isMovingPathAnchor: Bool
+    ) -> Bool {
+        tool == .pen && isPointerSequenceActive && !isMovingPathAnchor
     }
 }
 

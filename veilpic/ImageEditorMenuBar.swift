@@ -195,12 +195,12 @@ extension ImageEditorView {
     @ViewBuilder
     private var editMenu: some View {
         Button(L10n.text("imageEditor.action.undo")) {
-            viewModel.undo()
+            performUndo()
         }
         .keyboardShortcut("z", modifiers: [.command])
         .disabled(!viewModel.canUndo)
         Button(L10n.text("imageEditor.action.redo")) {
-            viewModel.redo()
+            performRedo()
         }
         .keyboardShortcut("z", modifiers: [.command, .shift])
         .disabled(!viewModel.canRedo)

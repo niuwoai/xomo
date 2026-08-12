@@ -12,6 +12,29 @@ import Testing
 @MainActor
 @Suite(.serialized)
 struct ImageEditorHistoryTests {
+    @Test func unfinishedPenPointerSequenceOwnsHistoryUntilMouseUp() {
+        #expect(ImageEditorPendingPenPointerPolicy.ownsUncommittedPoint(
+            tool: .pen,
+            isPointerSequenceActive: true,
+            isMovingPathAnchor: false
+        ))
+        #expect(!ImageEditorPendingPenPointerPolicy.ownsUncommittedPoint(
+            tool: .pen,
+            isPointerSequenceActive: false,
+            isMovingPathAnchor: false
+        ))
+        #expect(!ImageEditorPendingPenPointerPolicy.ownsUncommittedPoint(
+            tool: .pen,
+            isPointerSequenceActive: true,
+            isMovingPathAnchor: true
+        ))
+        #expect(!ImageEditorPendingPenPointerPolicy.ownsUncommittedPoint(
+            tool: .brush,
+            isPointerSequenceActive: true,
+            isMovingPathAnchor: false
+        ))
+    }
+
     @Test
     func clearHistoryKeepsCurrentStateAndDropsUndoRedoSnapshots() throws {
         let image = testImage(color: .systemBlue, size: NSSize(width: 80, height: 60))

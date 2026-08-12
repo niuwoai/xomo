@@ -182,8 +182,27 @@ extension ImageEditorViewModel {
             finishPenPath(closed: true)
             return
         }
+        undonePendingPenPathPoints = []
         pendingPenPathPoints.append(point)
         statusText = L10n.format("imageEditor.status.penPointAdded", pendingPenPathPoints.count)
+    }
+
+    @discardableResult
+    func undoPendingPenPoint() -> Bool {
+        guard let point = pendingPenPathPoints.popLast() else { return false }
+        undonePendingPenPathPoints.append(point)
+        statusText = pendingPenPathPoints.isEmpty
+            ? L10n.text("imageEditor.status.penReady")
+            : L10n.format("imageEditor.status.penPointAdded", pendingPenPathPoints.count)
+        return true
+    }
+
+    @discardableResult
+    func redoPendingPenPoint() -> Bool {
+        guard let point = undonePendingPenPathPoints.popLast() else { return false }
+        pendingPenPathPoints.append(point)
+        statusText = L10n.format("imageEditor.status.penPointAdded", pendingPenPathPoints.count)
+        return true
     }
 
     @discardableResult
@@ -1138,13 +1157,17 @@ extension ImageEditorViewModel {
         }
         let points = pendingPenPathPoints
         pendingPenPathPoints = []
+        undonePendingPenPathPoints = []
         addPathLayer(points: points, closed: closed)
     }
 
-    func cancelPenPath() {
-        guard !pendingPenPathPoints.isEmpty else { return }
+    @discardableResult
+    func cancelPenPath() -> Bool {
+        guard hasPendingPenPathTransaction else { return false }
         pendingPenPathPoints = []
+        undonePendingPenPathPoints = []
         statusText = L10n.text("imageEditor.status.penCancelled")
+        return true
     }
 
     private func addPathLayer(points: [CGPoint], closed: Bool) {

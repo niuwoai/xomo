@@ -388,6 +388,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var previewedAlphaChannelID: UUID?
     @Published var isEditingLayerMask: Bool = false
     @Published var pendingPenPathPoints: [CGPoint] = []
+    @Published var undonePendingPenPathPoints: [CGPoint] = []
     @Published var selectedPathSubpathIndex: Int = 0
     @Published var selectedPathAnchorIndex: Int?
     @Published var selectedPathControlRole: ImageEditorPathControlRole = .anchor
@@ -740,15 +741,28 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     var canUndo: Bool {
-        !undoStack.isEmpty
+        if hasPendingPenPathTransaction {
+            return !pendingPenPathPoints.isEmpty
+        }
+        return !undoStack.isEmpty
     }
 
     var canRedo: Bool {
-        !redoStack.isEmpty || hasActivePathAnchorMoveTransaction
+        if hasActivePathAnchorMoveTransaction {
+            return true
+        }
+        if hasPendingPenPathTransaction {
+            return !undonePendingPenPathPoints.isEmpty
+        }
+        return !redoStack.isEmpty
     }
 
     var hasActivePathAnchorMoveTransaction: Bool {
         isPathAnchorMoveUndoTransactionActive
+    }
+
+    var hasPendingPenPathTransaction: Bool {
+        !pendingPenPathPoints.isEmpty || !undonePendingPenPathPoints.isEmpty
     }
 
     var historyStateSummary: String {
@@ -3278,6 +3292,10 @@ final class ImageEditorViewModel: ObservableObject {
         // leaving the transform transaction active. The first history command
         // therefore cancels the preview; a subsequent command reaches history.
         guard !cancelMovingPathAnchor() else { return }
+        if hasPendingPenPathTransaction {
+            _ = undoPendingPenPoint()
+            return
+        }
         guard !cancelMovingSelectedLayer() else { return }
         guard let previous = undoStack.popLast() else { return }
         clearSelectedLayerTransformReferencePoint()
@@ -3300,6 +3318,10 @@ final class ImageEditorViewModel: ObservableObject {
         // Redo follows the same transaction boundary as Undo: an unfinished
         // pointer move is cancelled before either history stack can change.
         guard !cancelMovingPathAnchor() else { return }
+        if hasPendingPenPathTransaction {
+            _ = redoPendingPenPoint()
+            return
+        }
         guard !cancelMovingSelectedLayer() else { return }
         guard let next = redoStack.popLast() else { return }
         clearSelectedLayerTransformReferencePoint()

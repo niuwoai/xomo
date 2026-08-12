@@ -459,6 +459,104 @@ struct ImageEditorVectorLayerTests {
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.vectorMaskDelete"))
     }
 
+    @Test func pendingPenPathUndoRedoNeverCrossesIntoDocumentHistory() async throws {
+        let canvasSize = NSSize(width: 140, height: 100)
+        let image = testBitmapImage(size: canvasSize, background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        viewModel.addLayer()
+        viewModel.undo()
+        #expect(viewModel.canRedo)
+        let originalImageData = try #require(viewModel.currentImage.qingtuPNGData())
+        let originalLayerIDs = viewModel.document.layers.map(\.id)
+        let originalSelectedLayerIDs = viewModel.document.selectedLayerIDs
+        let originalHistory = viewModel.document.history
+        let undoCount = viewModel.undoStack.count
+        let redoCount = viewModel.redoStack.count
+        let points = [
+            CGPoint(x: 20, y: 20),
+            CGPoint(x: 104, y: 28),
+            CGPoint(x: 70, y: 78)
+        ]
+
+        viewModel.selectTool(.pen)
+        viewModel.addPenPoint(points[0])
+        #expect(viewModel.hasPendingPenPathTransaction)
+        #expect(viewModel.canUndo)
+        #expect(!viewModel.canRedo)
+
+        viewModel.undo()
+        #expect(viewModel.pendingPenPathPoints.isEmpty)
+        #expect(viewModel.undonePendingPenPathPoints == [points[0]])
+        #expect(!viewModel.canUndo)
+        #expect(viewModel.canRedo)
+        viewModel.undo()
+        #expect(viewModel.currentImage.qingtuPNGData() == originalImageData)
+        #expect(viewModel.document.layers.map(\.id) == originalLayerIDs)
+        #expect(viewModel.document.selectedLayerIDs == originalSelectedLayerIDs)
+        #expect(viewModel.document.history == originalHistory)
+        #expect(viewModel.undoStack.count == undoCount)
+        #expect(viewModel.redoStack.count == redoCount)
+
+        viewModel.redo()
+        #expect(viewModel.pendingPenPathPoints == [points[0]])
+        #expect(viewModel.undonePendingPenPathPoints.isEmpty)
+        points.dropFirst().forEach(viewModel.addPenPoint)
+        viewModel.undo()
+        #expect(viewModel.pendingPenPathPoints == Array(points.prefix(2)))
+        #expect(viewModel.undonePendingPenPathPoints == [points[2]])
+
+        let replacement = CGPoint(x: 82, y: 64)
+        viewModel.addPenPoint(replacement)
+        #expect(viewModel.pendingPenPathPoints == [points[0], points[1], replacement])
+        #expect(viewModel.undonePendingPenPathPoints.isEmpty)
+        #expect(!viewModel.canRedo)
+        #expect(viewModel.currentImage.qingtuPNGData() == originalImageData)
+        #expect(viewModel.document.layers.map(\.id) == originalLayerIDs)
+        #expect(viewModel.document.selectedLayerIDs == originalSelectedLayerIDs)
+        #expect(viewModel.document.history == originalHistory)
+        #expect(viewModel.undoStack.count == undoCount)
+        #expect(viewModel.redoStack.count == redoCount)
+
+        #expect(viewModel.cancelPenPath())
+        #expect(!viewModel.cancelPenPath())
+        #expect(!viewModel.hasPendingPenPathTransaction)
+        #expect(viewModel.pendingPenPathPoints.isEmpty)
+        #expect(viewModel.undonePendingPenPathPoints.isEmpty)
+        #expect(viewModel.canRedo)
+        #expect(viewModel.currentImage.qingtuPNGData() == originalImageData)
+        #expect(viewModel.document.layers.map(\.id) == originalLayerIDs)
+        #expect(viewModel.document.selectedLayerIDs == originalSelectedLayerIDs)
+        #expect(viewModel.document.history == originalHistory)
+    }
+
+    @Test func finishingPendingPenPathCommitsOnlyTheCurrentTransientBranch() async throws {
+        let canvasSize = NSSize(width: 140, height: 100)
+        let image = testBitmapImage(size: canvasSize, background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        let points = [
+            CGPoint(x: 20, y: 20),
+            CGPoint(x: 104, y: 28),
+            CGPoint(x: 70, y: 78)
+        ]
+        viewModel.selectTool(.pen)
+        points.forEach(viewModel.addPenPoint)
+        viewModel.undo()
+        let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
+
+        viewModel.finishPenPath(closed: false)
+
+        let content = try #require(viewModel.document.selectedLayer?.shapeContent)
+        #expect(content.kind == .path)
+        #expect(content.editablePathAnchors.map(\.point).count == 2)
+        #expect(!content.isPathClosed)
+        #expect(!viewModel.hasPendingPenPathTransaction)
+        #expect(viewModel.pendingPenPathPoints.isEmpty)
+        #expect(viewModel.undonePendingPenPathPoints.isEmpty)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.undoStack.count == undoCount + 1)
+    }
+
     @Test func pathSelectionHitsClosedPathGeometryAndMovesWholeLayer() async throws {
         let canvasSize = NSSize(width: 140, height: 100)
         let image = testBitmapImage(size: canvasSize, background: .black)

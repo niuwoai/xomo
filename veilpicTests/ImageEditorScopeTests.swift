@@ -1962,13 +1962,15 @@ struct ImageEditorScopeTests {
         )
 
         for helperName in ["performUndo", "performRedo"] {
-            let helperStart = try #require(source.range(of: "private func \(helperName)()"))
+            let helperStart = try #require(source.range(of: "func \(helperName)()"))
             let helperEnd = try #require(
                 source[helperStart.upperBound...].range(of: "\n    }")
             )
             let helperSource = source[helperStart.lowerBound..<helperEnd.upperBound]
             let activeCheck = try #require(helperSource.range(of: "viewModel.hasActivePathAnchorMoveTransaction"))
-            let latch = try #require(helperSource.range(of: "isPathAnchorDragCancelled = true"))
+            let latch = try #require(
+                helperSource[activeCheck.upperBound...].range(of: "isPathAnchorDragCancelled = true")
+            )
             let modelCall = try #require(
                 helperSource.range(of: helperName == "performUndo" ? "viewModel.undo()" : "viewModel.redo()")
             )
@@ -1998,6 +2000,78 @@ struct ImageEditorScopeTests {
         #expect(source.contains("case .undo: performUndo()"))
         #expect(source.contains("case .redo: performRedo()"))
         #expect(source.contains("if isPathAnchorDragCancelled {\n                    return\n                }"))
+    }
+
+    @Test func pendingPenHistoryAndEscapeOwnTheTransientPointerSequence() throws {
+        let viewSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let modelSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorViewModel.swift"),
+            encoding: .utf8
+        )
+        let menuSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),
+            encoding: .utf8
+        )
+
+        let cancelStart = try #require(viewSource.range(of: "cancelSelectedObject: {"))
+        let cancelEnd = try #require(
+            viewSource[cancelStart.upperBound...].range(of: "if isMovingTransformReferencePoint")
+        )
+        let cancelSource = viewSource[cancelStart.lowerBound..<cancelEnd.lowerBound]
+        let pendingCancel = try #require(cancelSource.range(of: "viewModel.cancelPenPath()"))
+        let pendingLatch = try #require(
+            cancelSource[pendingCancel.upperBound...].range(of: "isPathAnchorDragCancelled = true")
+        )
+        #expect(pendingCancel.lowerBound < pendingLatch.lowerBound)
+
+        for helperName in ["performUndo", "performRedo"] {
+            let start = try #require(viewSource.range(of: "func \(helperName)()"))
+            let end = try #require(viewSource[start.upperBound...].range(of: "\n    }"))
+            let source = viewSource[start.lowerBound..<end.upperBound]
+            let pointerGuard = try #require(source.range(of: "isPenPointerSequenceActive"))
+            let pendingCheck = try #require(source.range(of: "viewModel.hasPendingPenPathTransaction"))
+            let pointerLatch = try #require(
+                source[pointerGuard.upperBound...].range(of: "isPathAnchorDragCancelled = true")
+            )
+            let pendingLatch = try #require(
+                source[pendingCheck.upperBound...].range(of: "isPathAnchorDragCancelled = true")
+            )
+            let modelCall = try #require(
+                source.range(of: helperName == "performUndo" ? "viewModel.undo()" : "viewModel.redo()")
+            )
+            #expect(pointerGuard.lowerBound < pointerLatch.lowerBound)
+            #expect(pointerLatch.lowerBound < pendingCheck.lowerBound)
+            #expect(pendingCheck.lowerBound < pendingLatch.lowerBound)
+            #expect(pendingLatch.lowerBound < modelCall.lowerBound)
+        }
+
+        for commandName in ["undo", "redo"] {
+            let start = try #require(modelSource.range(of: "func \(commandName)()"))
+            let sourceAfterStart = modelSource[start.lowerBound...]
+            let end = try #require(sourceAfterStart.dropFirst().range(of: "\n    func "))
+            let source = sourceAfterStart[..<end.lowerBound]
+            let pendingCheck = try #require(source.range(of: "hasPendingPenPathTransaction"))
+            let transientCommand = try #require(
+                source.range(of: commandName == "undo" ? "undoPendingPenPoint()" : "redoPendingPenPoint()")
+            )
+            let documentStack = try #require(
+                source.range(of: commandName == "undo" ? "undoStack.popLast()" : "redoStack.popLast()")
+            )
+            #expect(pendingCheck.lowerBound < transientCommand.lowerBound)
+            #expect(transientCommand.lowerBound < documentStack.lowerBound)
+        }
+
+        #expect(viewSource.contains("if !isPathAnchorDragCancelled {\n                            viewModel.addPenPoint"))
+        #expect(viewSource.contains("isPenPointerSequenceActive = canvasInteractionTool == .pen"))
+        #expect(viewSource.contains("isPenPointerSequenceActive = false"))
+        #expect(viewSource.contains("beginCanvasPointerSequence()"))
+        #expect(viewSource.contains("viewModel.selectedTool == .pen || viewModel.hasPendingPenPathTransaction"))
+        #expect(viewSource.contains(".disabled(!viewModel.hasPendingPenPathTransaction)"))
+        #expect(menuSource.contains("Button(L10n.text(\"imageEditor.action.undo\")) {\n            performUndo()"))
+        #expect(menuSource.contains("Button(L10n.text(\"imageEditor.action.redo\")) {\n            performRedo()"))
     }
 
     @Test func canvasLifecycleInterruptionsCancelPathDragAndFreshMouseDownReleasesLatch() throws {
