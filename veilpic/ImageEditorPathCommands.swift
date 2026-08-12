@@ -41,7 +41,8 @@ extension ImageEditorViewModel {
     @discardableResult
     func beginDirectPathAnchorMove(
         at point: CGPoint?,
-        constrainedToAngleIncrement: Bool = false
+        constrainedToAngleIncrement: Bool = false,
+        preservingSmoothness: Bool = false
     ) -> Bool {
         guard let point, point.x.isFinite, point.y.isFinite else { return false }
         for layer in document.layers.reversed() {
@@ -70,7 +71,8 @@ extension ImageEditorViewModel {
             )
             return beginMovingPathAnchor(
                 at: point,
-                constrainedToAngleIncrement: constrainedToAngleIncrement
+                constrainedToAngleIncrement: constrainedToAngleIncrement,
+                preservingSmoothness: preservingSmoothness
             )
         }
         return false
@@ -288,7 +290,8 @@ extension ImageEditorViewModel {
     @discardableResult
     func beginMovingPathAnchor(
         at point: CGPoint?,
-        constrainedToAngleIncrement: Bool = false
+        constrainedToAngleIncrement: Bool = false,
+        preservingSmoothness: Bool = false
     ) -> Bool {
         guard let point else { return false }
         if hasActivePathAnchorMoveTransaction {
@@ -307,14 +310,16 @@ extension ImageEditorViewModel {
         beginPathAnchorMoveUndoTransaction()
         moveSelectedPathAnchor(
             to: point,
-            constrainedToAngleIncrement: constrainedToAngleIncrement
+            constrainedToAngleIncrement: constrainedToAngleIncrement,
+            preservingSmoothness: preservingSmoothness
         )
         return true
     }
 
     func moveSelectedPathAnchor(
         to point: CGPoint?,
-        constrainedToAngleIncrement: Bool = false
+        constrainedToAngleIncrement: Bool = false,
+        preservingSmoothness: Bool = false
     ) {
         guard let point,
               let index = selectedPathAnchorIndex,
@@ -354,6 +359,14 @@ extension ImageEditorViewModel {
             x: max(0, min(document.canvasSize.width, proposedPoint.x)),
             y: max(0, min(document.canvasSize.height, proposedPoint.y))
         )
+        let originalAnchor: ImageEditorPathAnchor? = {
+            guard movingPathAnchorOriginalCanvasSubpaths.indices.contains(selectedPathSubpathIndex),
+                  movingPathAnchorOriginalCanvasSubpaths[selectedPathSubpathIndex].indices.contains(index)
+            else { return nil }
+            return movingPathAnchorOriginalCanvasSubpaths[selectedPathSubpathIndex][index]
+        }()
+        let shouldPreserveSmoothness = preservingSmoothness
+            && originalAnchor.map(ImageEditorPenPointGeometry.isSmoothAnchor) == true
         switch selectedPathControlRole {
         case .anchor:
             let current = canvasAnchors[index].point
@@ -367,11 +380,43 @@ extension ImageEditorViewModel {
                 canvasAnchors[index].outControl = CGPoint(x: outControl.x + delta.width, y: outControl.y + delta.height)
             }
         case .inHandle:
-            guard canvasAnchors[index].inControl != boundedPoint else { return }
-            canvasAnchors[index].inControl = boundedPoint
+            var updatedAnchor = canvasAnchors[index]
+            updatedAnchor.inControl = boundedPoint
+            if shouldPreserveSmoothness,
+               let originalOutControl = originalAnchor?.outControl {
+                updatedAnchor.outControl = ImageEditorPenPointGeometry.oppositeControl(
+                    anchor: updatedAnchor.point,
+                    movedControl: boundedPoint,
+                    preferredLength: hypot(
+                        originalOutControl.x - updatedAnchor.point.x,
+                        originalOutControl.y - updatedAnchor.point.y
+                    ),
+                    canvasSize: document.canvasSize
+                )
+            }
+            guard !pathPointsMatch(canvasAnchors[index].inControl, updatedAnchor.inControl)
+                    || !pathPointsMatch(canvasAnchors[index].outControl, updatedAnchor.outControl)
+            else { return }
+            canvasAnchors[index] = updatedAnchor
         case .outHandle:
-            guard canvasAnchors[index].outControl != boundedPoint else { return }
-            canvasAnchors[index].outControl = boundedPoint
+            var updatedAnchor = canvasAnchors[index]
+            updatedAnchor.outControl = boundedPoint
+            if shouldPreserveSmoothness,
+               let originalInControl = originalAnchor?.inControl {
+                updatedAnchor.inControl = ImageEditorPenPointGeometry.oppositeControl(
+                    anchor: updatedAnchor.point,
+                    movedControl: boundedPoint,
+                    preferredLength: hypot(
+                        originalInControl.x - updatedAnchor.point.x,
+                        originalInControl.y - updatedAnchor.point.y
+                    ),
+                    canvasSize: document.canvasSize
+                )
+            }
+            guard !pathPointsMatch(canvasAnchors[index].inControl, updatedAnchor.inControl)
+                    || !pathPointsMatch(canvasAnchors[index].outControl, updatedAnchor.outControl)
+            else { return }
+            canvasAnchors[index] = updatedAnchor
         }
         updatePathLayer(
             at: layerIndex,
@@ -2555,6 +2600,57 @@ enum ImageEditorPenPointGeometry {
                 x: anchor.x + boundedDrag.width,
                 y: anchor.y + boundedDrag.height
             )
+        )
+    }
+
+    static func isSmoothAnchor(_ anchor: ImageEditorPathAnchor) -> Bool {
+        guard let inControl = anchor.inControl,
+              let outControl = anchor.outControl
+        else { return false }
+        let incoming = CGVector(
+            dx: inControl.x - anchor.point.x,
+            dy: inControl.y - anchor.point.y
+        )
+        let outgoing = CGVector(
+            dx: outControl.x - anchor.point.x,
+            dy: outControl.y - anchor.point.y
+        )
+        let incomingLength = hypot(incoming.dx, incoming.dy)
+        let outgoingLength = hypot(outgoing.dx, outgoing.dy)
+        guard incomingLength > 0.000_001, outgoingLength > 0.000_001 else { return false }
+        let normalizedCross = abs(incoming.dx * outgoing.dy - incoming.dy * outgoing.dx)
+            / (incomingLength * outgoingLength)
+        let dot = incoming.dx * outgoing.dx + incoming.dy * outgoing.dy
+        return normalizedCross <= 0.001 && dot < 0
+    }
+
+    static func oppositeControl(
+        anchor: CGPoint,
+        movedControl: CGPoint,
+        preferredLength: CGFloat,
+        canvasSize: CGSize
+    ) -> CGPoint? {
+        let vector = CGVector(
+            dx: anchor.x - movedControl.x,
+            dy: anchor.y - movedControl.y
+        )
+        let length = hypot(vector.dx, vector.dy)
+        guard length > 0.000_001, preferredLength > 0.000_001 else { return nil }
+        let direction = CGVector(dx: vector.dx / length, dy: vector.dy / length)
+        let horizontalLimit = availableDistance(
+            from: anchor.x,
+            direction: direction.dx,
+            upperBound: canvasSize.width
+        )
+        let verticalLimit = availableDistance(
+            from: anchor.y,
+            direction: direction.dy,
+            upperBound: canvasSize.height
+        )
+        let boundedLength = min(preferredLength, horizontalLimit, verticalLimit)
+        return CGPoint(
+            x: min(max(0, anchor.x + direction.dx * boundedLength), canvasSize.width),
+            y: min(max(0, anchor.y + direction.dy * boundedLength), canvasSize.height)
         )
     }
 

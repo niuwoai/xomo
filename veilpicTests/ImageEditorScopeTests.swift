@@ -2755,6 +2755,25 @@ struct ImageEditorScopeTests {
         #expect(pathSource.contains("ImageEditorPenPointGeometry.constrainedPoint("))
     }
 
+    @Test func optionBreaksOnlySmoothHandleCouplingAcrossBothPathTools() throws {
+        let viewSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let pathSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorPathCommands.swift"),
+            encoding: .utf8
+        )
+
+        #expect(viewSource.components(
+            separatedBy: "preservingSmoothness: !NSEvent.modifierFlags.contains(.option)"
+        ).count == 5)
+        #expect(pathSource.contains("originalAnchor.map(ImageEditorPenPointGeometry.isSmoothAnchor) == true"))
+        #expect(pathSource.contains("preferredLength: hypot("))
+        #expect(pathSource.contains("updatedAnchor.outControl = ImageEditorPenPointGeometry.oppositeControl("))
+        #expect(pathSource.contains("updatedAnchor.inControl = ImageEditorPenPointGeometry.oppositeControl("))
+    }
+
     @Test func viewMenuExposesClassicZoomShortcuts() throws {
         let source = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),

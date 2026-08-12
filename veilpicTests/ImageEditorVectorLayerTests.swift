@@ -1069,6 +1069,104 @@ struct ImageEditorVectorLayerTests {
         #expect(viewModel.document.history.count == historyCount + 1)
     }
 
+    @Test func smoothHandleDragKeepsOppositeHandleCollinearUntilOptionBreaksIt() throws {
+        let canvasSize = NSSize(width: 140, height: 100)
+        let image = testBitmapImage(size: canvasSize, background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        let anchorPoint = CGPoint(x: 80, y: 50)
+        let originalDrag = CGSize(width: 12, height: 18)
+        viewModel.addPenPoint(CGPoint(x: 20, y: 50))
+        viewModel.addPenPoint(
+            anchorPoint,
+            symmetricControlDrag: originalDrag,
+            constrainedToAngleIncrement: false
+        )
+        viewModel.finishPenPath(closed: false)
+        viewModel.selectTool(.directSelection)
+        let originalOut = CGPoint(
+            x: anchorPoint.x + originalDrag.width,
+            y: anchorPoint.y + originalDrag.height
+        )
+        let originalOppositeLength = hypot(originalDrag.width, originalDrag.height)
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.beginDirectPathAnchorMove(
+            at: originalOut,
+            preservingSmoothness: true
+        ))
+        let movedOut = CGPoint(x: anchorPoint.x + 25, y: anchorPoint.y + 7)
+        viewModel.moveSelectedPathAnchor(to: movedOut, preservingSmoothness: true)
+        let coupledIn = try #require(viewModel.selectedPathInControlCanvasPoint)
+        let coupledOut = try #require(viewModel.selectedPathOutControlCanvasPoint)
+        let coupledInVector = CGVector(
+            dx: coupledIn.x - anchorPoint.x,
+            dy: coupledIn.y - anchorPoint.y
+        )
+        let coupledOutVector = CGVector(
+            dx: coupledOut.x - anchorPoint.x,
+            dy: coupledOut.y - anchorPoint.y
+        )
+        #expect(abs(
+            coupledInVector.dx * coupledOutVector.dy
+                - coupledInVector.dy * coupledOutVector.dx
+        ) < 0.000_001)
+        #expect(coupledInVector.dx * coupledOutVector.dx
+            + coupledInVector.dy * coupledOutVector.dy < 0)
+        #expect(abs(hypot(coupledInVector.dx, coupledInVector.dy) - originalOppositeLength) < 0.000_001)
+
+        viewModel.moveSelectedPathAnchor(to: movedOut, preservingSmoothness: false)
+        let optionBrokenIn = try #require(viewModel.selectedPathInControlCanvasPoint)
+        #expect(optionBrokenIn == coupledIn)
+        let optionMovedOut = CGPoint(x: anchorPoint.x + 18, y: anchorPoint.y + 21)
+        viewModel.moveSelectedPathAnchor(to: optionMovedOut, preservingSmoothness: false)
+        #expect(viewModel.selectedPathInControlCanvasPoint == optionBrokenIn)
+
+        viewModel.moveSelectedPathAnchor(to: optionMovedOut, preservingSmoothness: true)
+        let restoredIn = try #require(viewModel.selectedPathInControlCanvasPoint)
+        let restoredOut = try #require(viewModel.selectedPathOutControlCanvasPoint)
+        #expect(restoredIn != optionBrokenIn)
+        #expect(ImageEditorPenPointGeometry.isSmoothAnchor(ImageEditorPathAnchor(
+            point: anchorPoint,
+            inControl: restoredIn,
+            outControl: restoredOut
+        )))
+        viewModel.finishMovingPathAnchor()
+        #expect(viewModel.document.history.count == historyCount + 1)
+    }
+
+    @Test func cornerHandleDragRemainsIndependentWithoutOption() throws {
+        let canvasSize = NSSize(width: 140, height: 100)
+        let image = testBitmapImage(size: canvasSize, background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        let anchorPoint = CGPoint(x: 80, y: 50)
+        viewModel.addPenPoint(CGPoint(x: 20, y: 50))
+        viewModel.addPenPoint(
+            anchorPoint,
+            symmetricControlDrag: CGSize(width: 12, height: 18),
+            constrainedToAngleIncrement: false
+        )
+        viewModel.finishPenPath(closed: false)
+        viewModel.selectTool(.directSelection)
+        let originalOut = CGPoint(x: 92, y: 68)
+
+        #expect(viewModel.beginDirectPathAnchorMove(at: originalOut))
+        let cornerOut = CGPoint(x: 105, y: 57)
+        viewModel.moveSelectedPathAnchor(to: cornerOut, preservingSmoothness: false)
+        viewModel.finishMovingPathAnchor()
+        let cornerIn = try #require(viewModel.selectedPathInControlCanvasPoint)
+
+        #expect(viewModel.beginDirectPathAnchorMove(
+            at: cornerOut,
+            preservingSmoothness: true
+        ))
+        viewModel.moveSelectedPathAnchor(
+            to: CGPoint(x: 102, y: 72),
+            preservingSmoothness: true
+        )
+        viewModel.finishMovingPathAnchor()
+        #expect(viewModel.selectedPathInControlCanvasPoint == cornerIn)
+    }
+
     @Test func imageEditorCreatesEditablePathLayerFromCurrentSelection() async throws {
         let canvasSize = NSSize(width: 140, height: 100)
         let image = testBitmapImage(size: canvasSize, background: .black)

@@ -3801,7 +3801,8 @@ struct ImageEditorView: View {
                                 .shouldConstrain(
                                     modifierFlags: NSEvent.modifierFlags,
                                     viewTranslation: value.translation
-                                )
+                                ),
+                            preservingSmoothness: !NSEvent.modifierFlags.contains(.option)
                         )
                     } else if pendingPenCreationAction == nil,
                               viewModel.pendingPenPathPoints.isEmpty,
@@ -3812,7 +3813,8 @@ struct ImageEditorView: View {
                                     .shouldConstrain(
                                         modifierFlags: NSEvent.modifierFlags,
                                         viewTranslation: value.translation
-                                    )
+                                    ),
+                                preservingSmoothness: !NSEvent.modifierFlags.contains(.option)
                               ) {
                         isMovingPathAnchor = true
                     } else if !isPathAnchorDragCancelled {
@@ -3842,7 +3844,8 @@ struct ImageEditorView: View {
                                 .shouldConstrain(
                                     modifierFlags: NSEvent.modifierFlags,
                                     viewTranslation: value.translation
-                                )
+                                ),
+                            preservingSmoothness: !NSEvent.modifierFlags.contains(.option)
                         )
                     } else {
                         viewModel.moveSelectedPathAnchor(
@@ -3851,7 +3854,8 @@ struct ImageEditorView: View {
                                 .shouldConstrain(
                                     modifierFlags: NSEvent.modifierFlags,
                                     viewTranslation: value.translation
-                                )
+                                ),
+                            preservingSmoothness: !NSEvent.modifierFlags.contains(.option)
                         )
                     }
                 case .lasso:
