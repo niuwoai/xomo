@@ -2712,6 +2712,10 @@ struct ImageEditorView: View {
                                 || (canvasInteractionTool == .pen
                                     && canvasModifierFlags.contains(.option)
                                     && viewModel.isPenCornerConversionBlocked(at: canvasPoint)),
+                            pathHandleIsBreaking: isBreakingSmoothPathHandle(
+                                at: canvasPoint,
+                                modifierFlags: canvasModifierFlags
+                            ),
                             handIsDragging: isCanvasPanGestureActive,
                             isObjectMoveGestureActive: objectMoveIsActive,
                             isColorSamplerMoveGestureActive: colorSamplerDrag != nil,
@@ -4449,6 +4453,10 @@ struct ImageEditorView: View {
                 || (canvasInteractionTool == .pen
                     && NSEvent.modifierFlags.contains(.option)
                     && viewModel.isPenCornerConversionBlocked(at: canvasPoint)),
+            pathHandleIsBreaking: isBreakingSmoothPathHandle(
+                at: canvasPoint,
+                modifierFlags: NSEvent.modifierFlags
+            ),
             handIsDragging: isCanvasPanGestureActive,
             isObjectMoveGestureActive: isSelectedObjectMoveGestureActive || isObjectMoveGestureActive,
             isColorSamplerMoveGestureActive: colorSamplerDrag != nil,
@@ -4461,6 +4469,22 @@ struct ImageEditorView: View {
             cropHandle: cropInteractionHandle(at: viewPoint, in: size),
             layerTransformTarget: layerTransformCursorTarget(at: viewPoint, in: size)
         ).set()
+    }
+
+    private func isBreakingSmoothPathHandle(
+        at canvasPoint: CGPoint?,
+        modifierFlags: NSEvent.ModifierFlags
+    ) -> Bool {
+        guard modifierFlags.contains(.option),
+              canvasInteractionTool == .pen || canvasInteractionTool == .directSelection
+        else { return false }
+        if isMovingPathAnchor {
+            return viewModel.isMovingSmoothPathControlHandle
+        }
+        return viewModel.isSmoothPathControlHandle(
+            at: canvasPoint,
+            includingUnselectedPaths: canvasInteractionTool == .directSelection
+        )
     }
 
     private func refreshCanvasCursor(in size: CGSize) {
@@ -11187,6 +11211,7 @@ enum ImageEditorCanvasCursor {
         penIsClosing: Bool = false,
         penIsConverting: Bool = false,
         penConversionIsBlocked: Bool = false,
+        pathHandleIsBreaking: Bool = false,
         handIsDragging: Bool = false,
         isObjectMoveGestureActive: Bool = false,
         isColorSamplerMoveGestureActive: Bool = false,
@@ -11265,6 +11290,7 @@ enum ImageEditorCanvasCursor {
                 penIsClosing: penIsClosing,
                 penIsConverting: penIsConverting,
                 penConversionIsBlocked: penConversionIsBlocked,
+                pathHandleIsBreaking: pathHandleIsBreaking,
                 handIsDragging: handIsDragging,
                 isPickingSampledBrushSource: isPickingSampledBrushSource,
                 patchPhase: patchPhase,
@@ -11562,8 +11588,8 @@ enum ImageEditorCanvasCursor {
     /// Photoshop's Direct Selection tool uses a white node-editing arrow,
     /// while Path Selection keeps the native black pointer. Keeping that
     /// distinction visible makes the two tools understandable at a glance.
-    private static func directSelectionCursor() -> NSCursor {
-        let cacheKey = "direct-selection"
+    private static func directSelectionCursor(isBreakingSmoothHandle: Bool = false) -> NSCursor {
+        let cacheKey = "direct-selection:\(isBreakingSmoothHandle)"
         if let cachedCursor = cursorCache[cacheKey] {
             return cachedCursor
         }
@@ -11590,6 +11616,24 @@ enum ImageEditorCanvasCursor {
         NSColor.black.withAlphaComponent(0.95).setStroke()
         pointer.lineWidth = 1
         pointer.stroke()
+
+        if isBreakingSmoothHandle {
+            let badgeRect = NSRect(x: 23, y: 2, width: 11, height: 11)
+            let badge = NSBezierPath(ovalIn: badgeRect)
+            NSColor.black.withAlphaComponent(0.96).setFill()
+            badge.fill()
+            NSColor.white.withAlphaComponent(0.98).setStroke()
+            badge.lineWidth = 1
+            badge.stroke()
+
+            let brokenTangent = NSBezierPath()
+            brokenTangent.move(to: NSPoint(x: badgeRect.minX + 2.5, y: badgeRect.midY + 2.5))
+            brokenTangent.line(to: NSPoint(x: badgeRect.midX, y: badgeRect.midY))
+            brokenTangent.line(to: NSPoint(x: badgeRect.maxX - 2.5, y: badgeRect.midY + 1))
+            NSColor.white.setStroke()
+            brokenTangent.lineWidth = 1.4
+            brokenTangent.stroke()
+        }
 
         image.unlockFocus()
         return cache(
@@ -11686,6 +11730,7 @@ enum ImageEditorCanvasCursor {
         penIsClosing: Bool = false,
         penIsConverting: Bool = false,
         penConversionIsBlocked: Bool = false,
+        pathHandleIsBreaking: Bool = false,
         handIsDragging: Bool = false,
         isPickingSampledBrushSource: Bool = false,
         patchPhase: ImageEditorPatchCursorPhase = .drawingSelection,
@@ -11698,7 +11743,7 @@ enum ImageEditorCanvasCursor {
         case .systemArrow:
             return .arrow
         case .directSelection:
-            return directSelectionCursor()
+            return directSelectionCursor(isBreakingSmoothHandle: pathHandleIsBreaking)
         case .moveTool:
             return .arrow
         case .grab:
@@ -11771,7 +11816,7 @@ enum ImageEditorCanvasCursor {
             }
             return penCursor(
                 isClosing: penIsClosing,
-                isConverting: penIsConverting,
+                isConverting: penIsConverting || pathHandleIsBreaking,
                 isConstrained: modifierFlags.contains(.shift)
             )
         case .zoomMagnifier:

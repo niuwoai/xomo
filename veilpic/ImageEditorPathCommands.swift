@@ -795,6 +795,52 @@ extension ImageEditorViewModel {
         return document.isEffectivelyPixelsLocked(layer)
     }
 
+    var isMovingSmoothPathControlHandle: Bool {
+        guard selectedPathControlRole != .anchor,
+              movingPathAnchorOriginalCanvasSubpaths.indices.contains(selectedPathSubpathIndex),
+              let index = selectedPathAnchorIndex,
+              movingPathAnchorOriginalCanvasSubpaths[selectedPathSubpathIndex].indices.contains(index)
+        else { return false }
+        return ImageEditorPenPointGeometry.isSmoothAnchor(
+            movingPathAnchorOriginalCanvasSubpaths[selectedPathSubpathIndex][index]
+        )
+    }
+
+    func isSmoothPathControlHandle(
+        at point: CGPoint?,
+        includingUnselectedPaths: Bool
+    ) -> Bool {
+        guard let point else { return false }
+        let layers = includingUnselectedPaths
+            ? Array(document.layers.reversed())
+            : document.selectedLayer.map { [$0] } ?? []
+        for layer in layers {
+            guard !layer.isGroup,
+                  document.isEffectivelyVisible(layer),
+                  !document.isEffectivelyPixelsLocked(layer),
+                  !document.isEffectivelyPositionLocked(layer),
+                  let content = layer.shapeContent,
+                  content.kind == .path
+            else { continue }
+            let nearest = pathControlCandidates(for: content, layer: layer)
+                .map { candidate in
+                    (candidate: candidate, distance: distance(from: point, to: candidate.point))
+                }
+                .min { lhs, rhs in lhs.distance < rhs.distance }
+            guard let nearest, nearest.distance <= pathAnchorHitDistance else { continue }
+            guard nearest.candidate.role != .anchor,
+                  content.allEditablePathSubpaths.indices.contains(nearest.candidate.subpathIndex),
+                  content.allEditablePathSubpaths[nearest.candidate.subpathIndex].indices.contains(
+                    nearest.candidate.index
+                  )
+            else { return false }
+            return ImageEditorPenPointGeometry.isSmoothAnchor(
+                content.allEditablePathSubpaths[nearest.candidate.subpathIndex][nearest.candidate.index]
+            )
+        }
+        return false
+    }
+
     /// Option-click temporarily turns the Pen into Photoshop's Convert Point
     /// action. Returning true means the existing anchor consumed the pointer
     /// sequence, including an already-corner or locked anchor, so the same

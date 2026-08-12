@@ -2774,6 +2774,27 @@ struct ImageEditorScopeTests {
         #expect(pathSource.contains("updatedAnchor.inControl = ImageEditorPenPointGeometry.oppositeControl("))
     }
 
+    @Test func smoothHandleBreakCursorUsesExactHoverAndActiveTransactionState() throws {
+        let viewSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let pathSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorPathCommands.swift"),
+            encoding: .utf8
+        )
+
+        #expect(viewSource.components(
+            separatedBy: "pathHandleIsBreaking: isBreakingSmoothPathHandle("
+        ).count == 3)
+        #expect(viewSource.contains("if isMovingPathAnchor {\n            return viewModel.isMovingSmoothPathControlHandle"))
+        #expect(viewSource.contains("includingUnselectedPaths: canvasInteractionTool == .directSelection"))
+        #expect(pathSource.contains("guard nearest.candidate.role != .anchor"))
+        #expect(pathSource.contains("nearest.distance <= pathAnchorHitDistance"))
+        #expect(viewSource.contains("directSelectionCursor(isBreakingSmoothHandle: pathHandleIsBreaking)"))
+        #expect(viewSource.contains("isConverting: penIsConverting || pathHandleIsBreaking"))
+    }
+
     @Test func viewMenuExposesClassicZoomShortcuts() throws {
         let source = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),

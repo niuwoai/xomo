@@ -1090,10 +1090,19 @@ struct ImageEditorVectorLayerTests {
         let originalOppositeLength = hypot(originalDrag.width, originalDrag.height)
         let historyCount = viewModel.document.history.count
 
+        #expect(viewModel.isSmoothPathControlHandle(
+            at: originalOut,
+            includingUnselectedPaths: true
+        ))
+        #expect(!viewModel.isSmoothPathControlHandle(
+            at: anchorPoint,
+            includingUnselectedPaths: true
+        ))
         #expect(viewModel.beginDirectPathAnchorMove(
             at: originalOut,
             preservingSmoothness: true
         ))
+        #expect(viewModel.isMovingSmoothPathControlHandle)
         let movedOut = CGPoint(x: anchorPoint.x + 25, y: anchorPoint.y + 7)
         viewModel.moveSelectedPathAnchor(to: movedOut, preservingSmoothness: true)
         let coupledIn = try #require(viewModel.selectedPathInControlCanvasPoint)
@@ -1131,6 +1140,7 @@ struct ImageEditorVectorLayerTests {
             outControl: restoredOut
         )))
         viewModel.finishMovingPathAnchor()
+        #expect(!viewModel.isMovingSmoothPathControlHandle)
         #expect(viewModel.document.history.count == historyCount + 1)
     }
 
@@ -1154,11 +1164,16 @@ struct ImageEditorVectorLayerTests {
         viewModel.moveSelectedPathAnchor(to: cornerOut, preservingSmoothness: false)
         viewModel.finishMovingPathAnchor()
         let cornerIn = try #require(viewModel.selectedPathInControlCanvasPoint)
+        #expect(!viewModel.isSmoothPathControlHandle(
+            at: cornerOut,
+            includingUnselectedPaths: true
+        ))
 
         #expect(viewModel.beginDirectPathAnchorMove(
             at: cornerOut,
             preservingSmoothness: true
         ))
+        #expect(!viewModel.isMovingSmoothPathControlHandle)
         viewModel.moveSelectedPathAnchor(
             to: CGPoint(x: 102, y: 72),
             preservingSmoothness: true

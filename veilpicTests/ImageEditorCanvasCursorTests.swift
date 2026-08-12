@@ -1978,6 +1978,36 @@ struct ImageEditorCanvasCursorTests {
         #expect(source.contains("else if isConstrained"))
     }
 
+    @Test func optionBreakHandleCursorAppearsOnlyForPathToolsAndNeverComponents() {
+        let directOrdinary = ImageEditorCanvasCursor.cursor(
+            for: .directSelection,
+            brushDiameter: 18
+        )
+        let directBreaking = ImageEditorCanvasCursor.cursor(
+            for: .directSelection,
+            brushDiameter: 18,
+            pathHandleIsBreaking: true,
+            modifierFlags: [.option]
+        )
+        let penOrdinary = ImageEditorCanvasCursor.cursor(for: .pen, brushDiameter: 18)
+        let penBreaking = ImageEditorCanvasCursor.cursor(
+            for: .pen,
+            brushDiameter: 18,
+            pathHandleIsBreaking: true,
+            modifierFlags: [.option]
+        )
+
+        #expect(directOrdinary.image.tiffRepresentation != directBreaking.image.tiffRepresentation)
+        #expect(penOrdinary.image.tiffRepresentation != penBreaking.image.tiffRepresentation)
+        #expect(ImageEditorCanvasCursor.cursor(
+            for: .components,
+            selectedTool: .directSelection,
+            brushDiameter: 18,
+            pathHandleIsBreaking: true,
+            modifierFlags: [.option]
+        ) === NSCursor.arrow)
+    }
+
     @Test func colorSamplerCursorDistinguishesPlacementMoveAndOptionRemoval() {
         let placement = ImageEditorCanvasCursor.cursor(
             for: .tools,
