@@ -106,6 +106,7 @@ struct ImageEditorView: View {
     @State private var isMovingPathAnchor = false
     @State private var isPathAnchorDragCancelled = false
     @State private var isPenPointerSequenceActive = false
+    @State private var pendingPenCreationAction: ImageEditorPendingPenGestureAction?
     @State private var activeGuideDrag: ImageEditorGuideDrag?
     @State private var layerNameDraft = ""
     @State private var figmaComponentPropertyDrafts: [String: String] = [:]
@@ -279,6 +280,7 @@ struct ImageEditorView: View {
                         )
                     if viewModel.cancelPenPath() || isUncommittedPenPointerSequence {
                         isPathAnchorDragCancelled = true
+                        pendingPenCreationAction = nil
                         NSCursor.arrow.set()
                         return true
                     }
@@ -2104,6 +2106,7 @@ struct ImageEditorView: View {
 
     private func beginCanvasPointerSequence() {
         isPenPointerSequenceActive = canvasInteractionTool == .pen
+        pendingPenCreationAction = nil
         guard ImageEditorPathAnchorDragLifecyclePolicy.shouldReleaseCancellationLatch(
             isCancelled: isPathAnchorDragCancelled,
             hasActiveTransaction: viewModel.hasActivePathAnchorMoveTransaction
@@ -2770,6 +2773,7 @@ struct ImageEditorView: View {
                 }
                 .onDisappear {
                     cancelPathAnchorDragForCanvasLifecycle()
+                    pendingPenCreationAction = nil
                     isPointerInsideCanvas = false
                     activeBrushPressure = nil
                     activeBrushTilt = nil
@@ -2910,28 +2914,92 @@ struct ImageEditorView: View {
 
     @ViewBuilder
     private func dragOverlay(in size: CGSize) -> some View {
-        if !viewModel.pendingPenPathPoints.isEmpty {
-            let points = viewModel.pendingPenPathPoints.map { viewPoint(from: $0, in: size) }
+        if !viewModel.pendingPenPathAnchors.isEmpty || pendingPenCreationAction != nil {
+            let anchors = viewModel.pendingPenPathAnchors.map { anchor in
+                ImageEditorPathAnchor(
+                    point: viewPoint(from: anchor.point, in: size),
+                    inControl: anchor.inControl.map { viewPoint(from: $0, in: size) },
+                    outControl: anchor.outControl.map { viewPoint(from: $0, in: size) }
+                )
+            }
+            let activeAnchor = pendingPenCreationAction.map { action in
+                let controls = action.symmetricControlDrag.flatMap {
+                    ImageEditorPenPointGeometry.symmetricControls(
+                        anchor: action.anchorPoint,
+                        drag: $0,
+                        canvasSize: viewModel.document.canvasSize
+                    )
+                }
+                return ImageEditorPathAnchor(
+                    point: viewPoint(from: action.anchorPoint, in: size),
+                    inControl: controls.map { viewPoint(from: $0.inControl, in: size) },
+                    outControl: controls.map { viewPoint(from: $0.outControl, in: size) }
+                )
+            }
             let previewPoint = pendingPenPreviewViewPoint(in: size)
             Canvas { context, _ in
-                guard let first = points.first else { return }
-                var path = Path()
-                path.move(to: first)
-                for point in points.dropFirst() {
-                    path.addLine(to: point)
+                if let first = anchors.first {
+                    var path = Path()
+                    path.move(to: first.point)
+                    for index in anchors.indices.dropFirst() {
+                        let previous = anchors[index - 1]
+                        let current = anchors[index]
+                        if previous.outControl != nil || current.inControl != nil {
+                            path.addCurve(
+                                to: current.point,
+                                control1: previous.outControl ?? previous.point,
+                                control2: current.inControl ?? current.point
+                            )
+                        } else {
+                            path.addLine(to: current.point)
+                        }
+                    }
+                    context.stroke(path, with: .color(Color.white.opacity(0.88)), style: StrokeStyle(lineWidth: 2, dash: [6, 4]))
+                    context.stroke(path, with: .color(Color(nsColor: ImageEditorTheme.selected).opacity(0.95)), style: StrokeStyle(lineWidth: 2, dash: [6, 4], dashPhase: 5))
                 }
-                context.stroke(path, with: .color(Color.white.opacity(0.88)), style: StrokeStyle(lineWidth: 2, dash: [6, 4]))
-                context.stroke(path, with: .color(Color(nsColor: ImageEditorTheme.selected).opacity(0.95)), style: StrokeStyle(lineWidth: 2, dash: [6, 4], dashPhase: 5))
-                for (index, point) in points.enumerated() {
+
+                let displayedAnchors = anchors + [activeAnchor].compactMap { $0 }
+                for (index, anchor) in displayedAnchors.enumerated() {
+                    for handle in [anchor.inControl, anchor.outControl].compactMap({ $0 }) {
+                        var handleLine = Path()
+                        handleLine.move(to: anchor.point)
+                        handleLine.addLine(to: handle)
+                        context.stroke(handleLine, with: .color(Color.white.opacity(0.68)), lineWidth: 1)
+                        let handleRect = CGRect(x: handle.x - 3.5, y: handle.y - 3.5, width: 7, height: 7)
+                        context.fill(Path(handleRect), with: .color(Color(nsColor: ImageEditorTheme.selected).opacity(0.82)))
+                        context.stroke(Path(handleRect), with: .color(Color.white.opacity(0.9)), lineWidth: 1)
+                    }
                     let radius: CGFloat = index == 0 ? 5 : 4
-                    let rect = CGRect(x: point.x - radius, y: point.y - radius, width: radius * 2, height: radius * 2)
+                    let rect = CGRect(x: anchor.point.x - radius, y: anchor.point.y - radius, width: radius * 2, height: radius * 2)
                     context.fill(Path(ellipseIn: rect), with: .color(index == 0 ? Color.white : Color(nsColor: ImageEditorTheme.selected)))
                     context.stroke(Path(ellipseIn: rect), with: .color(Color.black.opacity(0.45)), lineWidth: 1)
                 }
-                if let last = points.last, let previewPoint {
+
+                if let last = anchors.last, let activeAnchor {
                     var previewPath = Path()
-                    previewPath.move(to: last)
-                    previewPath.addLine(to: previewPoint)
+                    previewPath.move(to: last.point)
+                    previewPath.addCurve(
+                        to: activeAnchor.point,
+                        control1: last.outControl ?? last.point,
+                        control2: activeAnchor.inControl ?? activeAnchor.point
+                    )
+                    context.stroke(
+                        previewPath,
+                        with: .color(Color.white.opacity(0.82)),
+                        style: StrokeStyle(lineWidth: 1.5, dash: [4, 3])
+                    )
+                } else if let last = anchors.last, let previewPoint {
+                    var previewPath = Path()
+                    previewPath.move(to: last.point)
+                    if let outControl = last.outControl {
+                        previewPath.addCurve(
+                            to: previewPoint,
+                            control1: outControl,
+                            control2: previewPoint
+                        )
+                    } else {
+                        previewPath.addLine(to: previewPoint)
+                    }
                     context.stroke(
                         previewPath,
                         with: .color(Color.white.opacity(0.82)),
@@ -3641,13 +3709,19 @@ struct ImageEditorView: View {
                     }
                     updateCanvasCursor(at: value.location, in: size)
                 case .pen:
-                    guard viewModel.pendingPenPathPoints.isEmpty,
-                          viewModel.canEditSelectedPathAnchors
-                    else { break }
                     if isMovingPathAnchor {
                         viewModel.moveSelectedPathAnchor(to: pointerImagePoint)
-                    } else {
-                        isMovingPathAnchor = viewModel.beginMovingPathAnchor(at: pointerImagePoint)
+                    } else if pendingPenCreationAction == nil,
+                              viewModel.pendingPenPathPoints.isEmpty,
+                              viewModel.canEditSelectedPathAnchors,
+                              viewModel.beginMovingPathAnchor(at: pointerImagePoint) {
+                        isMovingPathAnchor = true
+                    } else if !isPathAnchorDragCancelled {
+                        pendingPenCreationAction = ImageEditorPendingPenGesturePolicy.resolve(
+                            startImagePoint: imagePoint(from: value.startLocation, in: size),
+                            endImagePoint: pointerImagePoint,
+                            viewTranslation: value.translation
+                        )
                     }
                 case .pathSelection:
                     if !isObjectMoveGestureActive,
@@ -3861,8 +3935,15 @@ struct ImageEditorView: View {
                         viewModel.finishPenPath(closed: false)
                     } else {
                         if !isPathAnchorDragCancelled {
+                            let action = pendingPenCreationAction
+                                ?? ImageEditorPendingPenGesturePolicy.resolve(
+                                    startImagePoint: imagePoint(from: value.startLocation, in: size),
+                                    endImagePoint: endImagePoint,
+                                    viewTranslation: value.translation
+                                )
                             viewModel.addPenPoint(
-                                endImagePoint,
+                                action?.anchorPoint,
+                                symmetricControlDrag: action?.symmetricControlDrag,
                                 constrainedToAngleIncrement: canvasModifierFlags.contains(.shift)
                             )
                         }
@@ -3958,6 +4039,7 @@ struct ImageEditorView: View {
                 isMovingPathAnchor = false
                 isPathAnchorDragCancelled = false
                 isPenPointerSequenceActive = false
+                pendingPenCreationAction = nil
                 activeResizeHandle = nil
                 refreshCanvasCursor(in: size)
             }
@@ -13064,6 +13146,38 @@ enum ImageEditorPendingPenPointerPolicy {
         isMovingPathAnchor: Bool
     ) -> Bool {
         tool == .pen && isPointerSequenceActive && !isMovingPathAnchor
+    }
+}
+
+struct ImageEditorPendingPenGestureAction: Equatable {
+    let anchorPoint: CGPoint
+    let symmetricControlDrag: CGSize?
+}
+
+enum ImageEditorPendingPenGesturePolicy {
+    static let minimumSmoothDragDistance: CGFloat = 3
+
+    static func resolve(
+        startImagePoint: CGPoint?,
+        endImagePoint: CGPoint?,
+        viewTranslation: CGSize
+    ) -> ImageEditorPendingPenGestureAction? {
+        guard let endImagePoint else { return nil }
+        guard hypot(viewTranslation.width, viewTranslation.height) > minimumSmoothDragDistance,
+              let startImagePoint
+        else {
+            return ImageEditorPendingPenGestureAction(
+                anchorPoint: endImagePoint,
+                symmetricControlDrag: nil
+            )
+        }
+        return ImageEditorPendingPenGestureAction(
+            anchorPoint: startImagePoint,
+            symmetricControlDrag: CGSize(
+                width: endImagePoint.x - startImagePoint.x,
+                height: endImagePoint.y - startImagePoint.y
+            )
+        )
     }
 }
 

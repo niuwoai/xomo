@@ -387,8 +387,16 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var selectedAlphaChannelID: UUID?
     @Published var previewedAlphaChannelID: UUID?
     @Published var isEditingLayerMask: Bool = false
-    @Published var pendingPenPathPoints: [CGPoint] = []
-    @Published var undonePendingPenPathPoints: [CGPoint] = []
+    @Published var pendingPenPathAnchors: [ImageEditorPathAnchor] = []
+    @Published var undonePendingPenPathAnchors: [ImageEditorPathAnchor] = []
+    var pendingPenPathPoints: [CGPoint] {
+        get { pendingPenPathAnchors.map(\.point) }
+        set { pendingPenPathAnchors = newValue.map { ImageEditorPathAnchor(point: $0) } }
+    }
+    var undonePendingPenPathPoints: [CGPoint] {
+        get { undonePendingPenPathAnchors.map(\.point) }
+        set { undonePendingPenPathAnchors = newValue.map { ImageEditorPathAnchor(point: $0) } }
+    }
     @Published var selectedPathSubpathIndex: Int = 0
     @Published var selectedPathAnchorIndex: Int?
     @Published var selectedPathControlRole: ImageEditorPathControlRole = .anchor
@@ -762,7 +770,7 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     var hasPendingPenPathTransaction: Bool {
-        !pendingPenPathPoints.isEmpty || !undonePendingPenPathPoints.isEmpty
+        !pendingPenPathAnchors.isEmpty || !undonePendingPenPathAnchors.isEmpty
     }
 
     var historyStateSummary: String {
@@ -1969,7 +1977,7 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     var canFinishPenPath: Bool {
-        pendingPenPathPoints.count >= 2
+        pendingPenPathAnchors.count >= 2
     }
 
     var canEditSelectedPathAnchors: Bool {

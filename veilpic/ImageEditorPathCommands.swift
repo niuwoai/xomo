@@ -177,11 +177,27 @@ extension ImageEditorViewModel {
     }
 
     func addPenPoint(_ point: CGPoint?) {
-        addPenPoint(point, constrainedToAngleIncrement: false)
+        addPenPoint(
+            point,
+            symmetricControlDrag: nil,
+            constrainedToAngleIncrement: false
+        )
     }
 
     func addPenPoint(
         _ point: CGPoint?,
+        constrainedToAngleIncrement: Bool
+    ) {
+        addPenPoint(
+            point,
+            symmetricControlDrag: nil,
+            constrainedToAngleIncrement: constrainedToAngleIncrement
+        )
+    }
+
+    func addPenPoint(
+        _ point: CGPoint?,
+        symmetricControlDrag: CGSize?,
         constrainedToAngleIncrement: Bool
     ) {
         guard let point else { return }
@@ -199,9 +215,20 @@ extension ImageEditorViewModel {
         } else {
             resolvedPoint = point
         }
-        undonePendingPenPathPoints = []
-        pendingPenPathPoints.append(resolvedPoint)
-        statusText = L10n.format("imageEditor.status.penPointAdded", pendingPenPathPoints.count)
+        let controls = symmetricControlDrag.flatMap {
+            ImageEditorPenPointGeometry.symmetricControls(
+                anchor: resolvedPoint,
+                drag: $0,
+                canvasSize: document.canvasSize
+            )
+        }
+        undonePendingPenPathAnchors = []
+        pendingPenPathAnchors.append(ImageEditorPathAnchor(
+            point: resolvedPoint,
+            inControl: controls?.inControl,
+            outControl: controls?.outControl
+        ))
+        statusText = L10n.format("imageEditor.status.penPointAdded", pendingPenPathAnchors.count)
     }
 
     func pendingPenPreviewPoint(
@@ -222,19 +249,19 @@ extension ImageEditorViewModel {
 
     @discardableResult
     func undoPendingPenPoint() -> Bool {
-        guard let point = pendingPenPathPoints.popLast() else { return false }
-        undonePendingPenPathPoints.append(point)
-        statusText = pendingPenPathPoints.isEmpty
+        guard let anchor = pendingPenPathAnchors.popLast() else { return false }
+        undonePendingPenPathAnchors.append(anchor)
+        statusText = pendingPenPathAnchors.isEmpty
             ? L10n.text("imageEditor.status.penReady")
-            : L10n.format("imageEditor.status.penPointAdded", pendingPenPathPoints.count)
+            : L10n.format("imageEditor.status.penPointAdded", pendingPenPathAnchors.count)
         return true
     }
 
     @discardableResult
     func redoPendingPenPoint() -> Bool {
-        guard let point = undonePendingPenPathPoints.popLast() else { return false }
-        pendingPenPathPoints.append(point)
-        statusText = L10n.format("imageEditor.status.penPointAdded", pendingPenPathPoints.count)
+        guard let anchor = undonePendingPenPathAnchors.popLast() else { return false }
+        pendingPenPathAnchors.append(anchor)
+        statusText = L10n.format("imageEditor.status.penPointAdded", pendingPenPathAnchors.count)
         return true
     }
 
@@ -1202,25 +1229,25 @@ extension ImageEditorViewModel {
             statusText = L10n.text("imageEditor.status.penNeedsPoints")
             return
         }
-        let points = pendingPenPathPoints
-        pendingPenPathPoints = []
-        undonePendingPenPathPoints = []
-        addPathLayer(points: points, closed: closed)
+        let anchors = pendingPenPathAnchors
+        pendingPenPathAnchors = []
+        undonePendingPenPathAnchors = []
+        addPathLayer(anchors: anchors, closed: closed)
     }
 
     @discardableResult
     func cancelPenPath() -> Bool {
         guard hasPendingPenPathTransaction else { return false }
-        pendingPenPathPoints = []
-        undonePendingPenPathPoints = []
+        pendingPenPathAnchors = []
+        undonePendingPenPathAnchors = []
         statusText = L10n.text("imageEditor.status.penCancelled")
         return true
     }
 
-    private func addPathLayer(points: [CGPoint], closed: Bool) {
-        guard points.count >= 2 else { return }
+    private func addPathLayer(anchors: [ImageEditorPathAnchor], closed: Bool) {
+        guard anchors.count >= 2 else { return }
         let strokeWidth = max(1, min(96, brushSize * 0.35))
-        let bounds = pointsBoundingRect(points)
+        let bounds = pathBounds(anchors)
         let padding = ceil(strokeWidth / 2 + 3)
         let frame = CGRect(
             x: bounds.minX - padding,
@@ -1228,10 +1255,18 @@ extension ImageEditorViewModel {
             width: max(1, bounds.width + padding * 2),
             height: max(1, bounds.height + padding * 2)
         )
-        let localPoints = points.map { point in
-            CGPoint(x: point.x - frame.minX, y: point.y - frame.minY)
+        let localAnchors = anchors.map { anchor in
+            ImageEditorPathAnchor(
+                point: CGPoint(x: anchor.point.x - frame.minX, y: anchor.point.y - frame.minY),
+                inControl: anchor.inControl.map {
+                    CGPoint(x: $0.x - frame.minX, y: $0.y - frame.minY)
+                },
+                outControl: anchor.outControl.map {
+                    CGPoint(x: $0.x - frame.minX, y: $0.y - frame.minY)
+                }
+            )
         }
-        let localAnchors = localPoints.map { ImageEditorPathAnchor(point: $0) }
+        let localPoints = localAnchors.map(\.point)
         let content = ImageEditorShapeContent(
             kind: .path,
             fillColor: foregroundColor,
@@ -2324,6 +2359,40 @@ enum ImageEditorPenPointGeometry {
         return CGPoint(
             x: min(max(0, origin.x + direction.dx * boundedLength), canvasSize.width),
             y: min(max(0, origin.y + direction.dy * boundedLength), canvasSize.height)
+        )
+    }
+
+    static func symmetricControls(
+        anchor: CGPoint,
+        drag: CGSize,
+        canvasSize: CGSize
+    ) -> (inControl: CGPoint, outControl: CGPoint)? {
+        guard hypot(drag.width, drag.height) > 0.000_001 else { return nil }
+        var scale: CGFloat = 1
+        if abs(drag.width) > 0.000_001 {
+            scale = min(
+                scale,
+                anchor.x / abs(drag.width),
+                max(0, canvasSize.width - anchor.x) / abs(drag.width)
+            )
+        }
+        if abs(drag.height) > 0.000_001 {
+            scale = min(
+                scale,
+                anchor.y / abs(drag.height),
+                max(0, canvasSize.height - anchor.y) / abs(drag.height)
+            )
+        }
+        let boundedDrag = CGSize(width: drag.width * scale, height: drag.height * scale)
+        return (
+            inControl: CGPoint(
+                x: anchor.x - boundedDrag.width,
+                y: anchor.y - boundedDrag.height
+            ),
+            outControl: CGPoint(
+                x: anchor.x + boundedDrag.width,
+                y: anchor.y + boundedDrag.height
+            )
         )
     }
 

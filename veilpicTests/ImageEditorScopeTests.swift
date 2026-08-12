@@ -2064,7 +2064,8 @@ struct ImageEditorScopeTests {
             #expect(transientCommand.lowerBound < documentStack.lowerBound)
         }
 
-        #expect(viewSource.contains("if !isPathAnchorDragCancelled {\n                            viewModel.addPenPoint"))
+        #expect(viewSource.contains("if !isPathAnchorDragCancelled {\n                            let action = pendingPenCreationAction"))
+        #expect(viewSource.contains("viewModel.addPenPoint(\n                                action?.anchorPoint,"))
         #expect(viewSource.contains("isPenPointerSequenceActive = canvasInteractionTool == .pen"))
         #expect(viewSource.contains("isPenPointerSequenceActive = false"))
         #expect(viewSource.contains("beginCanvasPointerSequence()"))
@@ -2591,12 +2592,12 @@ struct ImageEditorScopeTests {
         let constraint = try #require(
             addSource.range(of: "ImageEditorPenPointGeometry.constrainedPoint(")
         )
-        let append = try #require(addSource.range(of: "pendingPenPathPoints.append(resolvedPoint)"))
+        let append = try #require(addSource.range(of: "pendingPenPathAnchors.append(ImageEditorPathAnchor("))
         #expect(closeCheck.lowerBound < constraint.lowerBound)
         #expect(constraint.lowerBound < append.lowerBound)
         #expect(addSource.contains("let previousPoint = pendingPenPathPoints.last"))
         #expect(pathSource.contains(
-            "func addPenPoint(_ point: CGPoint?) {\n        addPenPoint(point, constrainedToAngleIncrement: false)"
+            "func addPenPoint(_ point: CGPoint?) {\n        addPenPoint(\n            point,\n            symmetricControlDrag: nil,"
         ))
     }
 
@@ -2616,8 +2617,11 @@ struct ImageEditorScopeTests {
         )
         let overlaySource = viewSource[overlayStart.lowerBound..<overlayEnd.lowerBound]
         #expect(overlaySource.contains("let previewPoint = pendingPenPreviewViewPoint(in: size)"))
-        #expect(overlaySource.contains("previewPath.move(to: last)"))
+        #expect(overlaySource.contains("previewPath.move(to: last.point)"))
         #expect(overlaySource.contains("previewPath.addLine(to: previewPoint)"))
+        #expect(overlaySource.contains("viewModel.pendingPenPathAnchors.map"))
+        #expect(overlaySource.contains("previewPath.addCurve("))
+        #expect(overlaySource.contains("pendingPenCreationAction.map"))
         #expect(overlaySource.contains("isPointerInsideCanvas"))
         #expect(overlaySource.contains("canvasInteractionTool == .pen"))
         #expect(overlaySource.contains("viewModel.pendingPenPreviewPoint("))
@@ -2635,6 +2639,35 @@ struct ImageEditorScopeTests {
         )
         #expect(closeCheck.lowerBound < firstPoint.lowerBound)
         #expect(firstPoint.lowerBound < constraint.lowerBound)
+    }
+
+    @Test func penClickDragWiresLiveSmoothActionThroughCommitAndCleanup() throws {
+        let viewSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let changedStart = try #require(
+            viewSource.range(of: "case .pen:\n                    if isMovingPathAnchor {")
+        )
+        let changedEnd = try #require(
+            viewSource[changedStart.upperBound...].range(of: "case .pathSelection:")
+        )
+        let changedSource = viewSource[changedStart.lowerBound..<changedEnd.lowerBound]
+        #expect(changedSource.contains("pendingPenCreationAction = ImageEditorPendingPenGesturePolicy.resolve("))
+        #expect(changedSource.contains("startImagePoint: imagePoint(from: value.startLocation, in: size)"))
+        #expect(changedSource.contains("viewTranslation: value.translation"))
+
+        let endedStart = try #require(
+            viewSource.range(of: "case .pen:\n                    if isMovingPathAnchor, !isPathAnchorDragCancelled")
+        )
+        let endedEnd = try #require(
+            viewSource[endedStart.upperBound...].range(of: "case .pathSelection:")
+        )
+        let endedSource = viewSource[endedStart.lowerBound..<endedEnd.lowerBound]
+        #expect(endedSource.contains("let action = pendingPenCreationAction"))
+        #expect(endedSource.contains("symmetricControlDrag: action?.symmetricControlDrag"))
+        #expect(viewSource.contains("pendingPenCreationAction = nil\n                activeResizeHandle = nil"))
+        #expect(viewSource.contains(".onDisappear {\n                    cancelPathAnchorDragForCanvasLifecycle()\n                    pendingPenCreationAction = nil"))
     }
 
     @Test func viewMenuExposesClassicZoomShortcuts() throws {

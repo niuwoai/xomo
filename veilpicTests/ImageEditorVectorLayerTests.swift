@@ -666,6 +666,78 @@ struct ImageEditorVectorLayerTests {
         #expect(closedContent.editablePathAnchors.count == 3)
     }
 
+    @Test func penPointerGestureDistinguishesCornerClicksFromSmoothDrags() throws {
+        let click = try #require(ImageEditorPendingPenGesturePolicy.resolve(
+            startImagePoint: CGPoint(x: 20, y: 20),
+            endImagePoint: CGPoint(x: 21, y: 21),
+            viewTranslation: CGSize(width: 2, height: 1)
+        ))
+        #expect(click.anchorPoint == CGPoint(x: 21, y: 21))
+        #expect(click.symmetricControlDrag == nil)
+
+        let drag = try #require(ImageEditorPendingPenGesturePolicy.resolve(
+            startImagePoint: CGPoint(x: 20, y: 20),
+            endImagePoint: CGPoint(x: 34, y: 27),
+            viewTranslation: CGSize(width: 14, height: 7)
+        ))
+        #expect(drag.anchorPoint == CGPoint(x: 20, y: 20))
+        #expect(drag.symmetricControlDrag == CGSize(width: 14, height: 7))
+    }
+
+    @Test func clickDragPenAnchorsCommitSymmetricBezierControls() throws {
+        let canvasSize = NSSize(width: 140, height: 100)
+        let image = testBitmapImage(size: canvasSize, background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
+
+        viewModel.addPenPoint(CGPoint(x: 20, y: 50))
+        viewModel.addPenPoint(
+            CGPoint(x: 80, y: 50),
+            symmetricControlDrag: CGSize(width: 12, height: 18),
+            constrainedToAngleIncrement: false
+        )
+        let pendingSmoothAnchor = try #require(viewModel.pendingPenPathAnchors.last)
+        viewModel.undoPendingPenPoint()
+        #expect(viewModel.undonePendingPenPathAnchors == [pendingSmoothAnchor])
+        viewModel.redoPendingPenPoint()
+        #expect(viewModel.pendingPenPathAnchors.last == pendingSmoothAnchor)
+
+        viewModel.finishPenPath(closed: false)
+
+        let content = try #require(viewModel.document.selectedLayer?.shapeContent)
+        let anchor = try #require(content.editablePathAnchors.last)
+        let inControl = try #require(anchor.inControl)
+        let outControl = try #require(anchor.outControl)
+        #expect(abs((inControl.x - anchor.point.x) + (outControl.x - anchor.point.x)) < 0.000_001)
+        #expect(abs((inControl.y - anchor.point.y) + (outControl.y - anchor.point.y)) < 0.000_001)
+        #expect(hypot(outControl.x - anchor.point.x, outControl.y - anchor.point.y) > 1)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.undoStack.count == undoCount + 1)
+    }
+
+    @Test func smoothPenControlsUseOneScaleNearCanvasEdges() throws {
+        let controls = try #require(ImageEditorPenPointGeometry.symmetricControls(
+            anchor: CGPoint(x: 135, y: 12),
+            drag: CGSize(width: 30, height: -18),
+            canvasSize: CGSize(width: 140, height: 100)
+        ))
+        let inward = CGSize(
+            width: controls.inControl.x - 135,
+            height: controls.inControl.y - 12
+        )
+        let outward = CGSize(
+            width: controls.outControl.x - 135,
+            height: controls.outControl.y - 12
+        )
+        #expect(abs(inward.width + outward.width) < 0.000_001)
+        #expect(abs(inward.height + outward.height) < 0.000_001)
+        for point in [controls.inControl, controls.outControl] {
+            #expect(point.x >= 0 && point.x <= 140)
+            #expect(point.y >= 0 && point.y <= 100)
+        }
+    }
+
     @Test func pendingPenPreviewMatchesConstrainedCommitAndCloseTarget() {
         let canvasSize = NSSize(width: 140, height: 100)
         let image = testBitmapImage(size: canvasSize, background: .black)
