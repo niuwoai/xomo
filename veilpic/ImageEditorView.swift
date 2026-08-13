@@ -2158,6 +2158,9 @@ struct ImageEditorView: View {
         if penPathContinuationGestureState != .none {
             return penPathContinuationGestureState
         }
+        if viewModel.hasPendingPenPathTransaction {
+            return viewModel.penPathJoinState(at: canvasPoint)
+        }
         if isMovingPathAnchor {
             return .none
         }

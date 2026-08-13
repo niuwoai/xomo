@@ -2632,6 +2632,183 @@ struct ImageEditorVectorLayerTests {
         #expect(updatedCanvasPoints.last == CGPoint(x: 12, y: 92))
     }
 
+    @Test func penContinuationJoinsAnotherOpenPathAsOneUndoableLayer() throws {
+        let image = testBitmapImage(size: NSSize(width: 180, height: 120), background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        viewModel.selectTool(.pen)
+        viewModel.addPenPoint(CGPoint(x: 20, y: 30))
+        viewModel.addPenPoint(CGPoint(x: 60, y: 30))
+        viewModel.finishPenPath(closed: false)
+        let sourceLayerID = try #require(viewModel.document.selectedLayerID)
+        viewModel.addPenPoint(CGPoint(x: 105, y: 65))
+        viewModel.addPenPoint(CGPoint(x: 155, y: 80))
+        viewModel.finishPenPath(closed: false)
+        let targetLayerID = try #require(viewModel.document.selectedLayerID)
+        let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
+        let layerCount = viewModel.document.layers.count
+
+        #expect(viewModel.beginPenPathContinuation(at: CGPoint(x: 60, y: 30)))
+        viewModel.addPenPoint(CGPoint(x: 82, y: 46))
+        #expect(viewModel.penPathJoinState(at: CGPoint(x: 105, y: 65)) == .available)
+        #expect(viewModel.pendingPenPreviewPoint(
+            at: CGPoint(x: 108, y: 66),
+            constrainedToAngleIncrement: false
+        ) == CGPoint(x: 105, y: 65))
+        viewModel.addPenPoint(CGPoint(x: 105, y: 65))
+
+        #expect(!viewModel.hasPendingPenPathTransaction)
+        #expect(viewModel.document.selectedLayerID == sourceLayerID)
+        #expect(viewModel.document.layers.count == layerCount - 1)
+        #expect(!viewModel.document.layers.contains(where: { $0.id == targetLayerID }))
+        #expect(viewModel.document.selectedLayer?.shapeContent?.pathAnchors.count == 5)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.pathJoin"))
+        #expect(viewModel.undoStack.count == undoCount + 1)
+
+        viewModel.undo()
+        #expect(viewModel.document.layers.count == layerCount)
+        #expect(viewModel.document.layers.contains(where: { $0.id == targetLayerID }))
+        #expect(viewModel.document.layers.first(where: { $0.id == sourceLayerID })?
+            .shapeContent?.pathAnchors.count == 2)
+        viewModel.redo()
+        #expect(viewModel.document.layers.count == layerCount - 1)
+        #expect(!viewModel.document.layers.contains(where: { $0.id == targetLayerID }))
+        #expect(viewModel.document.layers.first(where: { $0.id == sourceLayerID })?
+            .shapeContent?.pathAnchors.count == 5)
+    }
+
+    @Test func penJoinFromTargetLastEndpointReversesPathAndControlDirections() throws {
+        let image = testBitmapImage(size: NSSize(width: 180, height: 130), background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        viewModel.selectTool(.pen)
+        viewModel.addPenPoint(CGPoint(x: 20, y: 30))
+        viewModel.addPenPoint(CGPoint(x: 60, y: 35))
+        viewModel.finishPenPath(closed: false)
+        let sourceLayerID = try #require(viewModel.document.selectedLayerID)
+        viewModel.addPenPoint(CGPoint(x: 100, y: 85))
+        viewModel.addPenPoint(
+            CGPoint(x: 150, y: 70),
+            symmetricControlDrag: CGSize(width: 14, height: -9),
+            constrainedToAngleIncrement: false
+        )
+        viewModel.finishPenPath(closed: false)
+        let targetLayer = try #require(viewModel.document.selectedLayer)
+        let targetLast = try #require(targetLayer.shapeContent?.pathAnchors.last)
+        let canvasPoint: (CGPoint) -> CGPoint = {
+            CGPoint(x: $0.x + targetLayer.frame.minX, y: $0.y + targetLayer.frame.minY)
+        }
+        let targetEndpoint = canvasPoint(targetLast.point)
+        let originalIn = try #require(targetLast.inControl.map(canvasPoint))
+        let originalOut = try #require(targetLast.outControl.map(canvasPoint))
+
+        #expect(viewModel.beginPenPathContinuation(at: CGPoint(x: 60, y: 35)))
+        viewModel.addPenPoint(targetEndpoint)
+
+        let joinedLayer = try #require(viewModel.document.layers.first(where: { $0.id == sourceLayerID }))
+        let joined = try #require(joinedLayer.shapeContent)
+        let joinedCanvas: (ImageEditorPathAnchor) -> ImageEditorPathAnchor = { anchor in
+            ImageEditorPathAnchor(
+                point: CGPoint(x: anchor.point.x + joinedLayer.frame.minX, y: anchor.point.y + joinedLayer.frame.minY),
+                inControl: anchor.inControl.map {
+                    CGPoint(x: $0.x + joinedLayer.frame.minX, y: $0.y + joinedLayer.frame.minY)
+                },
+                outControl: anchor.outControl.map {
+                    CGPoint(x: $0.x + joinedLayer.frame.minX, y: $0.y + joinedLayer.frame.minY)
+                }
+            )
+        }
+        let anchors = joined.pathAnchors.map(joinedCanvas)
+        #expect(anchors.map(\.point) == [
+            CGPoint(x: 20, y: 30),
+            CGPoint(x: 60, y: 35),
+            CGPoint(x: 150, y: 70),
+            CGPoint(x: 100, y: 85)
+        ])
+        #expect(anchors[2].inControl == originalOut)
+        #expect(anchors[2].outControl == originalIn)
+    }
+
+    @Test func lockedJoinEndpointConsumesClickWithoutAddingOrMerging() throws {
+        let image = testBitmapImage(size: NSSize(width: 180, height: 120), background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        viewModel.selectTool(.pen)
+        viewModel.addPenPoint(CGPoint(x: 20, y: 30))
+        viewModel.addPenPoint(CGPoint(x: 60, y: 30))
+        viewModel.finishPenPath(closed: false)
+        viewModel.addPenPoint(CGPoint(x: 105, y: 65))
+        viewModel.addPenPoint(CGPoint(x: 155, y: 80))
+        viewModel.finishPenPath(closed: false)
+        let targetIndex = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[targetIndex].locksPosition = true
+        let historyCount = viewModel.document.history.count
+        let layerCount = viewModel.document.layers.count
+
+        #expect(viewModel.beginPenPathContinuation(at: CGPoint(x: 60, y: 30)))
+        let pendingCount = viewModel.pendingPenPathAnchors.count
+        #expect(viewModel.penPathJoinState(at: CGPoint(x: 105, y: 65)) == .blocked)
+        viewModel.addPenPoint(CGPoint(x: 105, y: 65))
+
+        #expect(viewModel.pendingPenPathAnchors.count == pendingCount)
+        #expect(viewModel.document.layers.count == layerCount)
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.operationFailed"))
+    }
+
+    @Test func hiddenTopJoinEndpointYieldsToVisibleOpenPathBelow() throws {
+        let image = testBitmapImage(size: NSSize(width: 180, height: 120), background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        viewModel.selectTool(.pen)
+        viewModel.addPenPoint(CGPoint(x: 20, y: 30))
+        viewModel.addPenPoint(CGPoint(x: 60, y: 30))
+        viewModel.finishPenPath(closed: false)
+        let sourceLayerID = try #require(viewModel.document.selectedLayerID)
+        for endpoint in [CGPoint(x: 150, y: 80), CGPoint(x: 145, y: 95)] {
+            viewModel.addPenPoint(CGPoint(x: 105, y: 65))
+            viewModel.addPenPoint(endpoint)
+            viewModel.finishPenPath(closed: false)
+        }
+        let hiddenIndex = try #require(viewModel.document.selectedLayerIndex)
+        let hiddenLayerID = viewModel.document.layers[hiddenIndex].id
+        viewModel.document.layers[hiddenIndex].isVisible = false
+        let visibleTargetID = try #require(viewModel.document.layers.first(where: {
+            $0.id != sourceLayerID && $0.id != hiddenLayerID && $0.shapeContent?.kind == .path
+        })?.id)
+
+        #expect(viewModel.beginPenPathContinuation(at: CGPoint(x: 60, y: 30)))
+        #expect(viewModel.penPathJoinTarget(at: CGPoint(x: 105, y: 65))?.layerID == visibleTargetID)
+        viewModel.addPenPoint(CGPoint(x: 105, y: 65))
+        #expect(viewModel.document.selectedLayerID == sourceLayerID)
+        #expect(!viewModel.document.layers.contains(where: { $0.id == visibleTargetID }))
+        #expect(viewModel.document.layers.contains(where: { $0.id == hiddenLayerID }))
+    }
+
+    @Test func topPathSegmentPreventsJoiningThroughToLowerEndpoint() throws {
+        let image = testBitmapImage(size: NSSize(width: 180, height: 120), background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        viewModel.selectTool(.pen)
+        viewModel.addPenPoint(CGPoint(x: 20, y: 30))
+        viewModel.addPenPoint(CGPoint(x: 60, y: 30))
+        viewModel.finishPenPath(closed: false)
+        viewModel.addPenPoint(CGPoint(x: 105, y: 65))
+        viewModel.addPenPoint(CGPoint(x: 155, y: 80))
+        viewModel.finishPenPath(closed: false)
+        let lowerTargetID = try #require(viewModel.document.selectedLayerID)
+        viewModel.addPenPoint(CGPoint(x: 80, y: 65))
+        viewModel.addPenPoint(CGPoint(x: 130, y: 65))
+        viewModel.finishPenPath(closed: false)
+        let layerCount = viewModel.document.layers.count
+
+        #expect(viewModel.beginPenPathContinuation(at: CGPoint(x: 60, y: 30)))
+        let pendingCount = viewModel.pendingPenPathAnchors.count
+        #expect(viewModel.penPathJoinState(at: CGPoint(x: 105, y: 65)) == .none)
+        viewModel.addPenPoint(CGPoint(x: 105, y: 65))
+
+        #expect(viewModel.pendingPenPathAnchors.count == pendingCount + 1)
+        #expect(viewModel.document.layers.count == layerCount)
+        #expect(viewModel.document.layers.contains(where: { $0.id == lowerTargetID }))
+    }
+
     @Test func cancellingPenContinuationPreservesDocumentHistoryAndRedo() async throws {
         let image = testBitmapImage(size: NSSize(width: 150, height: 100), background: .black)
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }

@@ -1662,6 +1662,7 @@
 "imageEditor.history.layerShapeUpdateSelected" = "更新所选形状图层";
 "imageEditor.history.pathAnchorMove" = "移动路径锚点";
 "imageEditor.history.pathAnchorInsert" = "插入路径锚点";
+"imageEditor.history.pathJoin" = "连接开放路径";
 "imageEditor.history.pathAnchorDelete" = "删除路径锚点";
 "imageEditor.history.pathSubpathMove" = "移动路径子轮廓";
 "imageEditor.history.pathSubpathDuplicate" = "复制路径子轮廓";
@@ -1857,6 +1858,7 @@
 "imageEditor.status.pathSelected" = "已选择路径：%d 个图层";
 "imageEditor.status.pathAnchorMoved" = "已移动路径锚点";
 "imageEditor.status.pathAnchorInserted" = "已插入路径锚点";
+"imageEditor.status.pathJoined" = "已连接开放路径";
 "imageEditor.status.pathAnchorDeleted" = "已删除路径锚点";
 "imageEditor.status.pathSubpathSelected" = "已选择路径子轮廓：%d / %d";
 "imageEditor.status.pathSubpathMoved" = "已移动路径子轮廓";

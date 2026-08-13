@@ -1662,6 +1662,7 @@
 "imageEditor.history.layerShapeUpdateSelected" = "Update Selected Shape Layers";
 "imageEditor.history.pathAnchorMove" = "Move Path Anchor";
 "imageEditor.history.pathAnchorInsert" = "Insert Path Anchor";
+"imageEditor.history.pathJoin" = "Join Open Paths";
 "imageEditor.history.pathAnchorDelete" = "Delete Path Anchor";
 "imageEditor.history.pathSubpathMove" = "Move Path Subpath";
 "imageEditor.history.pathSubpathDuplicate" = "Duplicate Path Subpath";
@@ -1857,6 +1858,7 @@
 "imageEditor.status.pathSelected" = "Path selected: %d layer(s)";
 "imageEditor.status.pathAnchorMoved" = "Path anchor moved";
 "imageEditor.status.pathAnchorInserted" = "Path anchor inserted";
+"imageEditor.status.pathJoined" = "Open paths joined";
 "imageEditor.status.pathAnchorDeleted" = "Path anchor deleted";
 "imageEditor.status.pathSubpathSelected" = "Path subpath selected: %d / %d";
 "imageEditor.status.pathSubpathMoved" = "Path subpath moved";

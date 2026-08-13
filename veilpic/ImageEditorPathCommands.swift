@@ -43,6 +43,13 @@ private struct ImageEditorPenPathContinuationHit {
     let anchorIndex: Int
 }
 
+struct ImageEditorPenPathJoinTarget: Equatable {
+    let layerID: UUID
+    let endpointIndex: Int
+    let anchorPoint: CGPoint
+    let isBlocked: Bool
+}
+
 enum ImageEditorPenPathSegmentInsertionState: Equatable {
     case none
     case available
@@ -249,6 +256,29 @@ extension ImageEditorViewModel {
             : .available
     }
 
+    func penPathJoinState(at point: CGPoint?) -> ImageEditorPenPathContinuationState {
+        guard let target = penPathJoinTarget(at: point) else { return .none }
+        return target.isBlocked ? .blocked : .available
+    }
+
+    func penPathJoinTarget(at point: CGPoint?) -> ImageEditorPenPathJoinTarget? {
+        guard pendingPenContinuationLayerID != nil,
+              !pendingPenPathAnchors.isEmpty,
+              let hit = penPathJoinEndpointHit(at: point),
+              let layer = document.layers.first(where: { $0.id == hit.layerID }),
+              let content = layer.shapeContent,
+              let anchors = content.allEditablePathSubpaths.first,
+              anchors.indices.contains(hit.anchorIndex)
+        else { return nil }
+        return ImageEditorPenPathJoinTarget(
+            layerID: hit.layerID,
+            endpointIndex: hit.anchorIndex,
+            anchorPoint: canvasPoint(anchors[hit.anchorIndex].point, layer: layer),
+            isBlocked: document.isEffectivelyPixelsLocked(layer)
+                || document.isEffectivelyPositionLocked(layer)
+        )
+    }
+
     @discardableResult
     func beginPenPathContinuation(at point: CGPoint?) -> Bool {
         guard let hit = penPathContinuationHit(at: point),
@@ -362,6 +392,9 @@ extension ImageEditorViewModel {
             finishPenPath(closed: true)
             return
         }
+        if joinPendingPenPath(at: point, symmetricControlDrag: symmetricControlDrag) {
+            return
+        }
         let resolvedPoint: CGPoint
         if constrainedToAngleIncrement, let previousPoint = pendingPenPathPoints.last {
             resolvedPoint = ImageEditorPenPointGeometry.constrainedPoint(
@@ -395,6 +428,9 @@ extension ImageEditorViewModel {
         guard let point, let previousPoint = pendingPenPathPoints.last else { return nil }
         if isPenCloseCandidate(at: point) {
             return pendingPenPathPoints.first
+        }
+        if let joinTarget = penPathJoinTarget(at: point) {
+            return joinTarget.anchorPoint
         }
         guard constrainedToAngleIncrement else { return point }
         return ImageEditorPenPointGeometry.constrainedPoint(
@@ -1799,12 +1835,116 @@ extension ImageEditorViewModel {
         return true
     }
 
+    @discardableResult
+    private func joinPendingPenPath(
+        at point: CGPoint,
+        symmetricControlDrag: CGSize?
+    ) -> Bool {
+        guard let target = penPathJoinTarget(at: point) else { return false }
+        guard !target.isBlocked else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return true
+        }
+        guard let sourceLayerID = pendingPenContinuationLayerID,
+              sourceLayerID != target.layerID,
+              let sourceIndex = document.layers.firstIndex(where: { $0.id == sourceLayerID }),
+              let targetIndex = document.layers.firstIndex(where: { $0.id == target.layerID }),
+              var sourceContent = document.layers[sourceIndex].shapeContent,
+              let targetContent = document.layers[targetIndex].shapeContent,
+              sourceContent.kind == .path,
+              targetContent.kind == .path,
+              !sourceContent.isPathClosed,
+              !targetContent.isPathClosed,
+              targetContent.allEditablePathSubpaths.count == 1,
+              let targetLocalAnchors = targetContent.allEditablePathSubpaths.first,
+              targetLocalAnchors.count >= 2,
+              target.endpointIndex == 0 || target.endpointIndex == targetLocalAnchors.count - 1
+        else { return false }
+
+        var targetAnchors = canvasAnchors(
+            for: targetLocalAnchors,
+            layer: document.layers[targetIndex]
+        )
+        if target.endpointIndex == targetAnchors.count - 1 {
+            targetAnchors = targetAnchors.reversed().map(reversedPathAnchor)
+        }
+        if let controls = symmetricControlDrag.flatMap({
+            ImageEditorPenPointGeometry.symmetricControls(
+                anchor: targetAnchors[0].point,
+                drag: $0,
+                canvasSize: document.canvasSize
+            )
+        }) {
+            targetAnchors[0].inControl = controls.inControl
+            targetAnchors[0].outControl = controls.outControl
+        }
+
+        var joinedAnchors = pendingPenPathAnchors
+        let joinsAtSamePoint = joinedAnchors.last.map {
+            distance(from: $0.point, to: targetAnchors[0].point) <= 0.000_001
+        } ?? false
+        let selectedAnchorIndex: Int
+        if joinsAtSamePoint, let sourceEndpoint = joinedAnchors.popLast() {
+            joinedAnchors.append(ImageEditorPathAnchor(
+                point: targetAnchors[0].point,
+                inControl: targetAnchors[0].inControl ?? sourceEndpoint.inControl,
+                outControl: targetAnchors[0].outControl ?? sourceEndpoint.outControl
+            ))
+            joinedAnchors.append(contentsOf: targetAnchors.dropFirst())
+            selectedAnchorIndex = max(0, pendingPenPathAnchors.count - 1)
+        } else {
+            selectedAnchorIndex = joinedAnchors.count
+            joinedAnchors.append(contentsOf: targetAnchors)
+        }
+
+        let targetLinkedIDs = document.layers[targetIndex].linkedLayerIDs
+        pushUndo()
+        document.layers.remove(at: targetIndex)
+        for index in document.layers.indices {
+            if document.layers[index].linkedLayerIDs.remove(target.layerID) != nil,
+               document.layers[index].id != sourceLayerID {
+                document.layers[index].linkedLayerIDs.insert(sourceLayerID)
+            }
+        }
+        guard let updatedSourceIndex = document.layers.firstIndex(where: { $0.id == sourceLayerID }) else {
+            return false
+        }
+        document.layers[updatedSourceIndex].linkedLayerIDs.formUnion(
+            targetLinkedIDs.subtracting([sourceLayerID, target.layerID])
+        )
+        sourceContent.isPathClosed = false
+        updatePathLayer(
+            at: updatedSourceIndex,
+            shapeContent: sourceContent,
+            canvasAnchors: joinedAnchors,
+            editingSubpathIndex: pendingPenContinuationSubpathIndex ?? 0
+        )
+        normalizeClippingMasks()
+        document.selectedLayerID = sourceLayerID
+        document.selectedLayerIDs = [sourceLayerID]
+        selectedPathSubpathIndex = pendingPenContinuationSubpathIndex ?? 0
+        selectedPathAnchorIndex = selectedAnchorIndex
+        selectedPathControlRole = .anchor
+        appendHistory(L10n.text("imageEditor.history.pathJoin"))
+        statusText = L10n.text("imageEditor.status.pathJoined")
+        clearPendingPenPath()
+        return true
+    }
+
     private func clearPendingPenPath() {
         pendingPenPathAnchors = []
         undonePendingPenPathAnchors = []
         pendingPenContinuationLayerID = nil
         pendingPenContinuationSubpathIndex = nil
         pendingPenContinuationInitialAnchorCount = 0
+    }
+
+    private func reversedPathAnchor(_ anchor: ImageEditorPathAnchor) -> ImageEditorPathAnchor {
+        ImageEditorPathAnchor(
+            point: anchor.point,
+            inControl: anchor.outControl,
+            outControl: anchor.inControl
+        )
     }
 
     private func addPathLayer(anchors: [ImageEditorPathAnchor], closed: Bool) {
@@ -1955,6 +2095,67 @@ extension ImageEditorViewModel {
             subpathIndex: hit.subpathIndex,
             anchorIndex: hit.anchorIndex
         )
+    }
+
+    private func penPathJoinEndpointHit(
+        at point: CGPoint?
+    ) -> ImageEditorPenPathContinuationHit? {
+        guard let sourceLayerID = pendingPenContinuationLayerID,
+              let point,
+              point.x.isFinite,
+              point.y.isFinite
+        else { return nil }
+
+        for layer in document.layers.reversed() {
+            guard !layer.isGroup,
+                  document.isEffectivelyVisible(layer),
+                  let content = layer.shapeContent,
+                  content.kind == .path
+            else { continue }
+
+            let controls = pathControlCandidates(for: content, layer: layer).filter {
+                layer.id == sourceLayerID || $0.role == .anchor
+            }
+            let nearestControl = controls.map { candidate in
+                (candidate: candidate, distance: distance(from: point, to: candidate.point))
+            }.min { lhs, rhs in lhs.distance < rhs.distance }
+            if let nearestControl, nearestControl.distance <= pathAnchorHitDistance {
+                guard layer.id != sourceLayerID,
+                      nearestControl.candidate.role == .anchor,
+                      !content.isPathClosed,
+                      content.allEditablePathSubpaths.count == 1,
+                      let anchors = content.allEditablePathSubpaths.first,
+                      anchors.count >= 2,
+                      nearestControl.candidate.subpathIndex == 0,
+                      (nearestControl.candidate.index == 0
+                        || nearestControl.candidate.index == anchors.count - 1)
+                else { return nil }
+                return ImageEditorPenPathContinuationHit(
+                    layerID: layer.id,
+                    subpathIndex: 0,
+                    anchorIndex: nearestControl.candidate.index
+                )
+            }
+
+            for localAnchors in content.allEditablePathSubpaths where localAnchors.count >= 2 {
+                let anchors = canvasAnchors(for: localAnchors, layer: layer)
+                let segmentCount = content.isPathClosed ? anchors.count : anchors.count - 1
+                for startIndex in 0..<segmentCount {
+                    let endIndex = (startIndex + 1) % anchors.count
+                    let candidate = nearestPointOnCubicPath(
+                        from: anchors[startIndex],
+                        to: anchors[endIndex],
+                        point: point
+                    )
+                    if candidate.parameter > 0.02,
+                       candidate.parameter < 0.98,
+                       candidate.distance <= pathAnchorHitDistance {
+                        return nil
+                    }
+                }
+            }
+        }
+        return nil
     }
 
     private func duplicatePathSubpathOffset(for anchors: [ImageEditorPathAnchor]) -> CGSize {

@@ -2778,6 +2778,42 @@ struct ImageEditorScopeTests {
         #expect(overlaySource.contains("Color.orange"))
     }
 
+    @Test func pendingPenContinuationWiresJoinHitPreviewAndCommit() throws {
+        let viewSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let pathSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent(
+                "veilpic/ImageEditorPathCommands.swift"
+            ),
+            encoding: .utf8
+        )
+        let resolverStart = try #require(
+            viewSource.range(of: "private func resolvedPenPathContinuationState(")
+        )
+        let resolverEnd = try #require(
+            viewSource[resolverStart.upperBound...].range(of: "@discardableResult")
+        )
+        let resolver = viewSource[resolverStart.lowerBound..<resolverEnd.lowerBound]
+        #expect(resolver.contains("if viewModel.hasPendingPenPathTransaction"))
+        #expect(resolver.contains("return viewModel.penPathJoinState(at: canvasPoint)"))
+
+        let addStart = try #require(pathSource.range(of: "func addPenPoint(\n        _ point: CGPoint?,\n        symmetricControlDrag:"))
+        let addEnd = try #require(pathSource[addStart.upperBound...].range(of: "func pendingPenPreviewPoint("))
+        let addSource = pathSource[addStart.lowerBound..<addEnd.lowerBound]
+        #expect(addSource.contains("if joinPendingPenPath(at: point"))
+        #expect(addSource.contains("symmetricControlDrag: symmetricControlDrag"))
+
+        let previewStart = try #require(pathSource.range(of: "func pendingPenPreviewPoint("))
+        let previewEnd = try #require(pathSource[previewStart.upperBound...].range(of: "func undoPendingPenPoint("))
+        let previewSource = pathSource[previewStart.lowerBound..<previewEnd.lowerBound]
+        #expect(previewSource.contains("if let joinTarget = penPathJoinTarget(at: point)"))
+        #expect(previewSource.contains("return joinTarget.anchorPoint"))
+        #expect(pathSource.contains("appendHistory(L10n.text(\"imageEditor.history.pathJoin\"))"))
+        #expect(pathSource.contains("statusText = L10n.text(\"imageEditor.status.pathJoined\")"))
+    }
+
     @Test func shiftConstraintIsWiredToExistingPenAndDirectSelectionDrags() throws {
         let viewSource = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
