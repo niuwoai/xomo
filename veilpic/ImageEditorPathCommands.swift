@@ -29,6 +29,14 @@ private struct ImageEditorPenPathControlHit {
     let role: ImageEditorPathControlRole
 }
 
+struct ImageEditorPenAnchorConversionTarget: Equatable {
+    let layerID: UUID
+    let subpathIndex: Int
+    let anchorIndex: Int
+    let anchorPoint: CGPoint
+    let isBlocked: Bool
+}
+
 private struct ImageEditorPenPathContinuationHit {
     let layerID: UUID
     let subpathIndex: Int
@@ -1032,26 +1040,35 @@ extension ImageEditorViewModel {
     }
 
     func penCornerConversionAnchorPoint(at point: CGPoint?) -> CGPoint? {
-        guard pendingPenPathAnchors.isEmpty,
-              let point,
-              let layer = document.selectedLayer,
-              let content = layer.shapeContent,
-              content.kind == .path,
-              let reference = nearestPathAnchorReference(at: point, content: content, layer: layer),
-              content.allEditablePathSubpaths.indices.contains(reference.subpathIndex),
-              content.allEditablePathSubpaths[reference.subpathIndex].indices.contains(reference.anchorIndex)
-        else { return nil }
-        return canvasPoint(
-            content.allEditablePathSubpaths[reference.subpathIndex][reference.anchorIndex].point,
-            layer: layer
-        )
+        penAnchorConversionTarget(at: point)?.anchorPoint
     }
 
     func isPenCornerConversionBlocked(at point: CGPoint?) -> Bool {
-        guard isPenCornerConversionCandidate(at: point),
-              let layer = document.selectedLayer
-        else { return false }
-        return document.isEffectivelyPixelsLocked(layer)
+        penAnchorConversionTarget(at: point)?.isBlocked == true
+    }
+
+    func penAnchorConversionTarget(
+        at point: CGPoint?
+    ) -> ImageEditorPenAnchorConversionTarget? {
+        guard pendingPenPathAnchors.isEmpty,
+              let hit = penPathControlHit(at: point),
+              hit.role == .anchor,
+              let layer = document.layers.first(where: { $0.id == hit.layerID }),
+              let content = layer.shapeContent,
+              content.kind == .path,
+              content.allEditablePathSubpaths.indices.contains(hit.subpathIndex),
+              content.allEditablePathSubpaths[hit.subpathIndex].indices.contains(hit.anchorIndex)
+        else { return nil }
+        return ImageEditorPenAnchorConversionTarget(
+            layerID: hit.layerID,
+            subpathIndex: hit.subpathIndex,
+            anchorIndex: hit.anchorIndex,
+            anchorPoint: canvasPoint(
+                content.allEditablePathSubpaths[hit.subpathIndex][hit.anchorIndex].point,
+                layer: layer
+            ),
+            isBlocked: document.isEffectivelyPixelsLocked(layer)
+        )
     }
 
     var isMovingSmoothPathControlHandle: Bool {
@@ -1117,34 +1134,41 @@ extension ImageEditorViewModel {
         at point: CGPoint?,
         symmetricControlDrag: CGSize?
     ) -> Bool {
+        guard let target = penAnchorConversionTarget(at: point) else { return false }
+        return convertPathAnchor(target: target, symmetricControlDrag: symmetricControlDrag)
+    }
+
+    @discardableResult
+    func convertPathAnchor(
+        target: ImageEditorPenAnchorConversionTarget,
+        symmetricControlDrag: CGSize?
+    ) -> Bool {
         guard pendingPenPathAnchors.isEmpty,
-              let point,
-              let layerIndex = document.selectedLayerIndex,
+              let layerIndex = document.layers.firstIndex(where: { $0.id == target.layerID }),
               let shapeContent = document.layers[layerIndex].shapeContent,
               shapeContent.kind == .path,
-              let reference = nearestPathAnchorReference(
-                at: point,
-                content: shapeContent,
-                layer: document.layers[layerIndex]
+              shapeContent.allEditablePathSubpaths.indices.contains(target.subpathIndex),
+              shapeContent.allEditablePathSubpaths[target.subpathIndex].indices.contains(
+                target.anchorIndex
               )
         else { return false }
-
-        selectedPathSubpathIndex = reference.subpathIndex
-        selectedPathAnchorIndex = reference.anchorIndex
-        selectedPathControlRole = .anchor
         guard !document.isEffectivelyPixelsLocked(document.layers[layerIndex]) else {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return true
         }
         guard !cancelPathAnchorDragBeforeDiscreteCommand() else { return true }
+        selectLayer(target.layerID)
+        selectedPathSubpathIndex = target.subpathIndex
+        selectedPathAnchorIndex = target.anchorIndex
+        selectedPathControlRole = .anchor
 
         var canvasAnchors = canvasAnchors(
-            for: shapeContent.allEditablePathSubpaths[reference.subpathIndex],
+            for: shapeContent.allEditablePathSubpaths[target.subpathIndex],
             layer: document.layers[layerIndex]
         )
         let targetControls = symmetricControlDrag.flatMap {
             ImageEditorPenPointGeometry.symmetricControls(
-                anchor: canvasAnchors[reference.anchorIndex].point,
+                anchor: canvasAnchors[target.anchorIndex].point,
                 drag: $0,
                 canvasSize: document.canvasSize
             )
@@ -1152,27 +1176,27 @@ extension ImageEditorViewModel {
         let targetInControl = targetControls?.inControl
         let targetOutControl = targetControls?.outControl
         guard !pathPointsMatch(
-            canvasAnchors[reference.anchorIndex].inControl,
+            canvasAnchors[target.anchorIndex].inControl,
             targetInControl
         ) || !pathPointsMatch(
-            canvasAnchors[reference.anchorIndex].outControl,
+            canvasAnchors[target.anchorIndex].outControl,
             targetOutControl
         ) else {
             statusText = L10n.format(
                 "imageEditor.status.pathAnchorSelected",
-                reference.anchorIndex + 1
+                target.anchorIndex + 1
             )
             return true
         }
-        canvasAnchors[reference.anchorIndex].inControl = targetInControl
-        canvasAnchors[reference.anchorIndex].outControl = targetOutControl
+        canvasAnchors[target.anchorIndex].inControl = targetInControl
+        canvasAnchors[target.anchorIndex].outControl = targetOutControl
 
         pushUndo()
         updatePathLayer(
             at: layerIndex,
             shapeContent: shapeContent,
             canvasAnchors: canvasAnchors,
-            editingSubpathIndex: reference.subpathIndex
+            editingSubpathIndex: target.subpathIndex
         )
         appendHistory(L10n.text("imageEditor.history.pathHandlesUpdate"))
         statusText = L10n.text(

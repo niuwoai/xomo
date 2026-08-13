@@ -880,6 +880,160 @@ struct ImageEditorVectorLayerTests {
         #expect(restoredCorner.outControl == nil)
     }
 
+    @Test func optionClickSelectsAndConvertsAnUnselectedVisibleAnchor() throws {
+        let image = testBitmapImage(size: NSSize(width: 160, height: 110), background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        let sourceLayerID = try #require(viewModel.document.selectedLayerID)
+        let anchorPoint = CGPoint(x: 80, y: 55)
+        viewModel.selectTool(.pen)
+        viewModel.addPenPoint(CGPoint(x: 20, y: 35))
+        viewModel.addPenPoint(
+            anchorPoint,
+            symmetricControlDrag: CGSize(width: 16, height: 12),
+            constrainedToAngleIncrement: false
+        )
+        viewModel.finishPenPath(closed: false)
+        let pathLayerID = try #require(viewModel.document.selectedLayerID)
+        let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
+        viewModel.selectLayer(sourceLayerID)
+
+        let target = try #require(viewModel.penAnchorConversionTarget(at: anchorPoint))
+        #expect(target.layerID == pathLayerID)
+        #expect(target.anchorIndex == 1)
+        #expect(!target.isBlocked)
+        #expect(viewModel.convertPathAnchor(target: target, symmetricControlDrag: nil))
+
+        let converted = try #require(viewModel.document.selectedLayer?.shapeContent?.pathAnchors.last)
+        #expect(viewModel.document.selectedLayerID == pathLayerID)
+        #expect(converted.inControl == nil)
+        #expect(converted.outControl == nil)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.undoStack.count == undoCount + 1)
+    }
+
+    @Test func optionDragSelectsAndSmoothsAnUnselectedVisibleAnchor() throws {
+        let image = testBitmapImage(size: NSSize(width: 160, height: 110), background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        let sourceLayerID = try #require(viewModel.document.selectedLayerID)
+        let anchorPoint = CGPoint(x: 80, y: 55)
+        viewModel.selectTool(.pen)
+        viewModel.addPenPoint(CGPoint(x: 20, y: 35))
+        viewModel.addPenPoint(anchorPoint)
+        viewModel.finishPenPath(closed: false)
+        let pathLayerID = try #require(viewModel.document.selectedLayerID)
+        viewModel.selectLayer(sourceLayerID)
+
+        let target = try #require(viewModel.penAnchorConversionTarget(at: anchorPoint))
+        #expect(viewModel.convertPathAnchor(
+            target: target,
+            symmetricControlDrag: CGSize(width: 18, height: 10)
+        ))
+
+        let converted = try #require(viewModel.document.selectedLayer?.shapeContent?.pathAnchors.last)
+        let inControl = try #require(converted.inControl)
+        let outControl = try #require(converted.outControl)
+        #expect(viewModel.document.selectedLayerID == pathLayerID)
+        #expect(abs((inControl.x - converted.point.x) + (outControl.x - converted.point.x)) < 0.000_001)
+        #expect(abs((inControl.y - converted.point.y) + (outControl.y - converted.point.y)) < 0.000_001)
+    }
+
+    @Test func hiddenTopAnchorDoesNotStealPenConversionFromVisiblePath() throws {
+        let image = testBitmapImage(size: NSSize(width: 160, height: 110), background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        let sourceLayerID = try #require(viewModel.document.selectedLayerID)
+        let anchorPoint = CGPoint(x: 80, y: 55)
+        viewModel.selectTool(.pen)
+        for _ in 0..<2 {
+            viewModel.addPenPoint(CGPoint(x: 20, y: 35))
+            viewModel.addPenPoint(
+                anchorPoint,
+                symmetricControlDrag: CGSize(width: 16, height: 12),
+                constrainedToAngleIncrement: false
+            )
+            viewModel.finishPenPath(closed: false)
+        }
+        let upperIndex = try #require(viewModel.document.selectedLayerIndex)
+        let upperPathID = viewModel.document.layers[upperIndex].id
+        viewModel.document.layers[upperIndex].isVisible = false
+        let lowerPathID = try #require(
+            viewModel.document.layers.first(where: {
+                $0.shapeContent?.kind == .path && $0.id != upperPathID
+            })?.id
+        )
+        viewModel.selectLayer(sourceLayerID)
+
+        let target = try #require(viewModel.penAnchorConversionTarget(at: anchorPoint))
+        #expect(target.layerID == lowerPathID)
+        #expect(viewModel.convertPathAnchor(target: target, symmetricControlDrag: nil))
+        #expect(viewModel.document.selectedLayerID == lowerPathID)
+        #expect(viewModel.document.selectedLayer?.shapeContent?.pathAnchors.last?.inControl == nil)
+        #expect(viewModel.document.layers.first(where: { $0.id == upperPathID })?
+            .shapeContent?.pathAnchors.last?.inControl != nil)
+    }
+
+    @Test func lockedTopAnchorBlocksPenConversionThroughToLowerPath() throws {
+        let image = testBitmapImage(size: NSSize(width: 160, height: 110), background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        let sourceLayerID = try #require(viewModel.document.selectedLayerID)
+        let anchorPoint = CGPoint(x: 80, y: 55)
+        viewModel.selectTool(.pen)
+        for _ in 0..<2 {
+            viewModel.addPenPoint(CGPoint(x: 20, y: 35))
+            viewModel.addPenPoint(
+                anchorPoint,
+                symmetricControlDrag: CGSize(width: 16, height: 12),
+                constrainedToAngleIncrement: false
+            )
+            viewModel.finishPenPath(closed: false)
+        }
+        let upperIndex = try #require(viewModel.document.selectedLayerIndex)
+        let upperPathID = viewModel.document.layers[upperIndex].id
+        viewModel.document.layers[upperIndex].locksPixels = true
+        let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
+        viewModel.selectLayer(sourceLayerID)
+
+        let target = try #require(viewModel.penAnchorConversionTarget(at: anchorPoint))
+        #expect(target.layerID == upperPathID)
+        #expect(target.isBlocked)
+        #expect(viewModel.convertPathAnchor(target: target, symmetricControlDrag: nil))
+        #expect(viewModel.document.selectedLayerID == sourceLayerID)
+        #expect(viewModel.document.layers.first(where: { $0.id == upperPathID })?
+            .shapeContent?.pathAnchors.last?.inControl != nil)
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.undoStack.count == undoCount)
+    }
+
+    @Test func topPathSegmentBlocksPenConversionThroughToLowerAnchor() throws {
+        let image = testBitmapImage(size: NSSize(width: 160, height: 110), background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        let sourceLayerID = try #require(viewModel.document.selectedLayerID)
+        let overlap = CGPoint(x: 80, y: 55)
+        viewModel.selectTool(.pen)
+        viewModel.addPenPoint(CGPoint(x: 20, y: 35))
+        viewModel.addPenPoint(
+            overlap,
+            symmetricControlDrag: CGSize(width: 16, height: 12),
+            constrainedToAngleIncrement: false
+        )
+        viewModel.finishPenPath(closed: false)
+        let lowerPathID = try #require(viewModel.document.selectedLayerID)
+        viewModel.addPenPoint(CGPoint(x: 20, y: 55))
+        viewModel.addPenPoint(CGPoint(x: 140, y: 55))
+        viewModel.finishPenPath(closed: false)
+        let upperPathID = try #require(viewModel.document.selectedLayerID)
+        viewModel.selectLayer(sourceLayerID)
+
+        #expect(viewModel.penAnchorConversionTarget(at: overlap) == nil)
+        #expect(!viewModel.convertPathAnchorToCorner(at: overlap))
+        #expect(viewModel.document.selectedLayerID == sourceLayerID)
+        #expect(viewModel.document.layers.first(where: { $0.id == lowerPathID })?
+            .shapeContent?.pathAnchors.last?.inControl != nil)
+        #expect(viewModel.document.layers.first(where: { $0.id == upperPathID })?
+            .shapeContent?.pathAnchors.count == 2)
+    }
+
     @Test func pendingPenPreviewMatchesConstrainedCommitAndCloseTarget() {
         let canvasSize = NSSize(width: 140, height: 100)
         let image = testBitmapImage(size: canvasSize, background: .black)

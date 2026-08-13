@@ -109,6 +109,7 @@ struct ImageEditorView: View {
     @State private var pendingPenCreationAction: ImageEditorPendingPenGestureAction?
     @State private var isPenAnchorConversionGestureActive = false
     @State private var penAnchorConversionAction: ImageEditorPenAnchorConversionAction?
+    @State private var penAnchorConversionTarget: ImageEditorPenAnchorConversionTarget?
     @State private var isPenAnchorConversionGestureBlocked = false
     @State private var penAnchorDeletionGestureState: ImageEditorPenAnchorDeletionState = .none
     @State private var penPathContinuationGestureState: ImageEditorPenPathContinuationState = .none
@@ -2132,6 +2133,7 @@ struct ImageEditorView: View {
     private func resetPenAnchorConversionGesture() {
         isPenAnchorConversionGestureActive = false
         penAnchorConversionAction = nil
+        penAnchorConversionTarget = nil
         isPenAnchorConversionGestureBlocked = false
     }
 
@@ -3832,12 +3834,12 @@ struct ImageEditorView: View {
                               !isMovingPathAnchor,
                               NSEvent.modifierFlags.contains(.option),
                               let pointerStart = imagePoint(from: value.startLocation, in: size),
-                              let anchorPoint = viewModel.penCornerConversionAnchorPoint(at: pointerStart) {
+                              let target = viewModel.penAnchorConversionTarget(at: pointerStart) {
                         isPenAnchorConversionGestureActive = true
-                        isPenAnchorConversionGestureBlocked = viewModel
-                            .isPenCornerConversionBlocked(at: anchorPoint)
+                        penAnchorConversionTarget = target
+                        isPenAnchorConversionGestureBlocked = target.isBlocked
                         penAnchorConversionAction = ImageEditorPenAnchorConversionGesturePolicy.resolve(
-                            anchorPoint: anchorPoint,
+                            anchorPoint: target.anchorPoint,
                             pointerEnd: unboundedImagePoint(from: value.location, in: size),
                             viewTranslation: value.translation
                         )
@@ -4156,6 +4158,7 @@ struct ImageEditorView: View {
                 case .pen:
                     if isPenAnchorConversionGestureActive {
                         if !isPathAnchorDragCancelled,
+                           let target = penAnchorConversionTarget,
                            let anchorPoint = penAnchorConversionAction?.anchorPoint {
                             let action = ImageEditorPenAnchorConversionGesturePolicy.resolve(
                                 anchorPoint: anchorPoint,
@@ -4163,7 +4166,7 @@ struct ImageEditorView: View {
                                 viewTranslation: value.translation
                             )
                             viewModel.convertPathAnchor(
-                                at: action.anchorPoint,
+                                target: target,
                                 symmetricControlDrag: action.symmetricControlDrag
                             )
                         }
