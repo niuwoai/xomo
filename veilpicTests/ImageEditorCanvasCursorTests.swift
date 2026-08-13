@@ -2185,6 +2185,36 @@ struct ImageEditorCanvasCursorTests {
         #expect(ImageEditorTool.classicShortcutGroup(for: "a")?.tools.contains(.directSelection) == true)
     }
 
+    @Test func blockedDirectSelectionUsesForbiddenCursorWithoutOverridingHigherModes() {
+        #expect(ImageEditorCanvasCursor.cursor(
+            for: .tools,
+            selectedTool: .directSelection,
+            brushDiameter: 18,
+            directSelectionIsBlocked: true
+        ) === NSCursor.operationNotAllowed)
+        #expect(ImageEditorCanvasCursor.cursor(
+            for: .components,
+            selectedTool: .directSelection,
+            brushDiameter: 18,
+            directSelectionIsBlocked: true
+        ) === NSCursor.arrow)
+        #expect(ImageEditorCanvasCursor.cursor(
+            for: .tools,
+            selectedTool: .directSelection,
+            brushDiameter: 18,
+            isPointerOverCanvas: false,
+            directSelectionIsBlocked: true
+        ) === NSCursor.arrow)
+        #expect(ImageEditorCanvasCursor.cursor(
+            for: .tools,
+            selectedTool: .directSelection,
+            brushDiameter: 18,
+            directSelectionIsBlocked: true,
+            handIsDragging: true,
+            isCanvasPanGestureActive: true
+        ) === NSCursor.closedHand)
+    }
+
     @Test func selectionToolsUseRecognizablePointersInsteadOfOneGenericShape() {
         let marquee = ImageEditorCanvasCursor.cursor(for: .marquee, brushDiameter: 18)
         let lasso = ImageEditorCanvasCursor.cursor(for: .lasso, brushDiameter: 18)

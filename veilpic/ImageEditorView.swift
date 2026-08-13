@@ -105,6 +105,7 @@ struct ImageEditorView: View {
     @State private var isTransformReferencePointDragCancelled = false
     @State private var isMovingPathAnchor = false
     @State private var isPathAnchorDragCancelled = false
+    @State private var isDirectPathGestureResolved = false
     @State private var isPenPointerSequenceActive = false
     @State private var pendingPenCreationAction: ImageEditorPendingPenGestureAction?
     @State private var isPenAnchorConversionGestureActive = false
@@ -2118,6 +2119,7 @@ struct ImageEditorView: View {
 
     private func beginCanvasPointerSequence() {
         isPenPointerSequenceActive = canvasInteractionTool == .pen
+        isDirectPathGestureResolved = false
         pendingPenCreationAction = nil
         resetPenAnchorConversionGesture()
         penAnchorDeletionGestureState = .none
@@ -2760,6 +2762,8 @@ struct ImageEditorView: View {
                             penAnchorDeletionIsBlocked: penAnchorDeletionState == .blocked,
                             penIsContinuingPath: penPathContinuationState == .available,
                             penContinuationIsBlocked: penPathContinuationState == .blocked,
+                            directSelectionIsBlocked: canvasInteractionTool == .directSelection
+                                && viewModel.directPathAnchorState(at: canvasPoint) == .blocked,
                             pathHandleIsBreaking: isBreakingSmoothPathHandle(
                                 at: canvasPoint,
                                 modifierFlags: canvasModifierFlags
@@ -3954,17 +3958,21 @@ struct ImageEditorView: View {
                         updateObjectMove(translation: value.translation, in: size)
                     }
                 case .directSelection:
-                    if !isMovingPathAnchor {
-                        isMovingPathAnchor = viewModel.beginDirectPathAnchorMove(
-                            at: pointerImagePoint,
-                            constrainedToAngleIncrement: ImageEditorPathAnchorDragConstraint
-                                .shouldConstrain(
-                                    modifierFlags: NSEvent.modifierFlags,
-                                    viewTranslation: value.translation
-                                ),
-                            preservingSmoothness: !NSEvent.modifierFlags.contains(.option)
-                        )
-                    } else {
+                    if !isDirectPathGestureResolved {
+                        isDirectPathGestureResolved = true
+                        let pointerStart = imagePoint(from: value.startLocation, in: size)
+                        if viewModel.directPathAnchorState(at: pointerStart) == .available {
+                            isMovingPathAnchor = viewModel.beginDirectPathAnchorMove(
+                                at: pointerStart,
+                                constrainedToAngleIncrement: ImageEditorPathAnchorDragConstraint
+                                    .shouldConstrain(
+                                        modifierFlags: NSEvent.modifierFlags,
+                                        viewTranslation: value.translation
+                                    ),
+                                preservingSmoothness: !NSEvent.modifierFlags.contains(.option)
+                            )
+                        }
+                    } else if isMovingPathAnchor {
                         viewModel.moveSelectedPathAnchor(
                             to: pointerImagePoint,
                             constrainedToAngleIncrement: ImageEditorPathAnchorDragConstraint
@@ -4305,6 +4313,7 @@ struct ImageEditorView: View {
                 resetColorSamplerGesture()
                 isMovingPathAnchor = false
                 isPathAnchorDragCancelled = false
+                isDirectPathGestureResolved = false
                 isPenPointerSequenceActive = false
                 pendingPenCreationAction = nil
                 resetPenAnchorConversionGesture()
@@ -4599,6 +4608,8 @@ struct ImageEditorView: View {
             penAnchorDeletionIsBlocked: penAnchorDeletionState == .blocked,
             penIsContinuingPath: penPathContinuationState == .available,
             penContinuationIsBlocked: penPathContinuationState == .blocked,
+            directSelectionIsBlocked: canvasInteractionTool == .directSelection
+                && viewModel.directPathAnchorState(at: canvasPoint) == .blocked,
             pathHandleIsBreaking: isBreakingSmoothPathHandle(
                 at: canvasPoint,
                 modifierFlags: NSEvent.modifierFlags
@@ -11363,6 +11374,7 @@ enum ImageEditorCanvasCursor {
         penAnchorDeletionIsBlocked: Bool = false,
         penIsContinuingPath: Bool = false,
         penContinuationIsBlocked: Bool = false,
+        directSelectionIsBlocked: Bool = false,
         pathHandleIsBreaking: Bool = false,
         handIsDragging: Bool = false,
         isObjectMoveGestureActive: Bool = false,
@@ -11421,6 +11433,9 @@ enum ImageEditorCanvasCursor {
                     : objectMoveCursor()
             }
             if selectedTool == .move, isPointerOverBlockedContent {
+                return .operationNotAllowed
+            }
+            if selectedTool == .directSelection, directSelectionIsBlocked {
                 return .operationNotAllowed
             }
             if selectedTool == .move, !isPointerOverMovableContent {

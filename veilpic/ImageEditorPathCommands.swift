@@ -69,6 +69,13 @@ enum ImageEditorPenPathContinuationState: Equatable {
     case blocked
 }
 
+enum ImageEditorDirectPathAnchorState: Equatable {
+    case none
+    case available
+    case blocked
+    case occluded
+}
+
 extension ImageEditorViewModel {
     /// Photoshop's Path Selection tool selects an editable path by its
     /// rendered geometry, rather than by the layer's rectangular bounds.
@@ -99,44 +106,54 @@ extension ImageEditorViewModel {
     /// Starts an Illustrator/Photoshop-style direct-selection drag on the
     /// nearest visible path anchor or control handle, switching to its path
     /// layer before the existing anchor transaction begins.
+    func directPathAnchorState(at point: CGPoint?) -> ImageEditorDirectPathAnchorState {
+        guard let hit = penPathInsertionHit(at: point) else { return .none }
+        switch hit {
+        case .control(let control):
+            guard let layer = document.layers.first(where: { $0.id == control.layerID }) else {
+                return .none
+            }
+            return document.isEffectivelyPixelsLocked(layer)
+                || document.isEffectivelyPositionLocked(layer)
+                ? .blocked
+                : .available
+        case .segment(let segment):
+            guard let layer = document.layers.first(where: { $0.id == segment.layerID }) else {
+                return .none
+            }
+            return document.isEffectivelyPixelsLocked(layer)
+                || document.isEffectivelyPositionLocked(layer)
+                ? .blocked
+                : .occluded
+        }
+    }
+
     @discardableResult
     func beginDirectPathAnchorMove(
         at point: CGPoint?,
         constrainedToAngleIncrement: Bool = false,
         preservingSmoothness: Bool = false
     ) -> Bool {
-        guard let point, point.x.isFinite, point.y.isFinite else { return false }
-        for layer in document.layers.reversed() {
-            guard !layer.isGroup,
-                  document.isEffectivelyVisible(layer),
-                  !document.isEffectivelyPixelsLocked(layer),
-                  !document.isEffectivelyPositionLocked(layer),
-                  let content = layer.shapeContent,
-                  content.kind == .path
-            else { continue }
+        guard let point,
+              case .control(let hit) = penPathInsertionHit(at: point),
+              let layer = document.layers.first(where: { $0.id == hit.layerID }),
+              !document.isEffectivelyPixelsLocked(layer),
+              !document.isEffectivelyPositionLocked(layer)
+        else { return false }
 
-            let nearest = pathControlCandidates(for: content, layer: layer)
-                .map { candidate in
-                    (candidate: candidate, distance: distance(from: point, to: candidate.point))
-                }
-                .min { lhs, rhs in lhs.distance < rhs.distance }
-            guard let nearest, nearest.distance <= pathAnchorHitDistance else { continue }
-
-            selectLayer(layer.id)
-            selectedPathSubpathIndex = nearest.candidate.subpathIndex
-            selectedPathAnchorIndex = nearest.candidate.index
-            selectedPathControlRole = nearest.candidate.role
-            statusText = L10n.format(
-                "imageEditor.status.pathAnchorSelected",
-                nearest.candidate.index + 1
-            )
-            return beginMovingPathAnchor(
-                at: point,
-                constrainedToAngleIncrement: constrainedToAngleIncrement,
-                preservingSmoothness: preservingSmoothness
-            )
-        }
-        return false
+        selectLayer(layer.id)
+        selectedPathSubpathIndex = hit.subpathIndex
+        selectedPathAnchorIndex = hit.anchorIndex
+        selectedPathControlRole = hit.role
+        statusText = L10n.format(
+            "imageEditor.status.pathAnchorSelected",
+            hit.anchorIndex + 1
+        )
+        return beginMovingPathAnchor(
+            at: point,
+            constrainedToAngleIncrement: constrainedToAngleIncrement,
+            preservingSmoothness: preservingSmoothness
+        )
     }
 
     private func pathLayerContains(

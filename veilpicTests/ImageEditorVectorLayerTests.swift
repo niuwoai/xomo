@@ -1156,6 +1156,99 @@ struct ImageEditorVectorLayerTests {
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.pathAnchorDelete"))
     }
 
+    @Test func lockedTopAnchorBlocksDirectSelectionFromReachingLowerPath() throws {
+        let image = testBitmapImage(size: NSSize(width: 160, height: 110), background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        let backgroundID = try #require(viewModel.document.selectedLayerID)
+        let overlap = CGPoint(x: 75, y: 70)
+        viewModel.selectTool(.pen)
+        for point in [CGPoint(x: 20, y: 30), overlap, CGPoint(x: 135, y: 30)] {
+            viewModel.addPenPoint(point)
+        }
+        viewModel.finishPenPath(closed: false)
+        let lowerPathID = try #require(viewModel.document.selectedLayerID)
+        let lowerPathIndex = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[lowerPathIndex].isVisible = false
+        for point in [CGPoint(x: 20, y: 30), overlap, CGPoint(x: 135, y: 30)] {
+            viewModel.addPenPoint(point)
+        }
+        viewModel.finishPenPath(closed: false)
+        viewModel.document.layers[lowerPathIndex].isVisible = true
+        let upperPathIndex = try #require(viewModel.document.selectedLayerIndex)
+        let upperPathID = viewModel.document.layers[upperPathIndex].id
+        viewModel.document.layers[upperPathIndex].locksPosition = true
+        viewModel.selectLayer(backgroundID)
+
+        #expect(viewModel.directPathAnchorState(at: overlap) == .blocked)
+        #expect(!viewModel.beginDirectPathAnchorMove(at: overlap))
+        #expect(viewModel.document.selectedLayerID == backgroundID)
+        #expect(!viewModel.hasActivePathAnchorMoveTransaction)
+
+        viewModel.document.layers[upperPathIndex].isVisible = false
+        #expect(viewModel.directPathAnchorState(at: overlap) == .available)
+        #expect(viewModel.beginDirectPathAnchorMove(at: overlap))
+        #expect(viewModel.document.selectedLayerID == lowerPathID)
+        #expect(viewModel.document.selectedLayerID != upperPathID)
+        viewModel.finishMovingPathAnchor()
+    }
+
+    @Test func topPathSegmentOccludesLowerAnchorForDirectSelection() throws {
+        let image = testBitmapImage(size: NSSize(width: 160, height: 110), background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        let backgroundID = try #require(viewModel.document.selectedLayerID)
+        let overlap = CGPoint(x: 75, y: 55)
+        viewModel.selectTool(.pen)
+        viewModel.addPenPoint(CGPoint(x: 25, y: 25))
+        viewModel.addPenPoint(overlap)
+        viewModel.addPenPoint(CGPoint(x: 130, y: 25))
+        viewModel.finishPenPath(closed: false)
+        let lowerPathID = try #require(viewModel.document.selectedLayerID)
+        let lowerPathIndex = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[lowerPathIndex].isVisible = false
+        viewModel.addPenPoint(CGPoint(x: 20, y: 55))
+        viewModel.addPenPoint(CGPoint(x: 140, y: 55))
+        viewModel.finishPenPath(closed: false)
+        viewModel.document.layers[lowerPathIndex].isVisible = true
+        viewModel.selectLayer(backgroundID)
+
+        #expect(viewModel.directPathAnchorState(at: overlap) == .occluded)
+        #expect(!viewModel.beginDirectPathAnchorMove(at: overlap))
+        #expect(viewModel.document.selectedLayerID == backgroundID)
+        #expect(viewModel.document.selectedLayerID != lowerPathID)
+        #expect(!viewModel.hasActivePathAnchorMoveTransaction)
+    }
+
+    @Test func invisibleHandleOnUnselectedPathDoesNotBlockDirectSelectionAnchor() throws {
+        let image = testBitmapImage(size: NSSize(width: 180, height: 200), background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        let backgroundID = try #require(viewModel.document.selectedLayerID)
+        viewModel.selectTool(.pen)
+        viewModel.addPenPoint(CGPoint(x: 20, y: 30))
+        viewModel.addPenPoint(CGPoint(x: 80, y: 30))
+        viewModel.finishPenPath(closed: false)
+        let lowerPathID = try #require(viewModel.document.selectedLayerID)
+        viewModel.addPenPoint(
+            CGPoint(x: 80, y: 100),
+            symmetricControlDrag: CGSize(width: 0, height: -70),
+            constrainedToAngleIncrement: false
+        )
+        viewModel.addPenPoint(CGPoint(x: 155, y: 125))
+        viewModel.finishPenPath(closed: false)
+        let upperLayer = try #require(viewModel.document.selectedLayer)
+        let upperFirst = try #require(upperLayer.shapeContent?.pathAnchors.first)
+        let invisibleHandle = try #require(upperFirst.outControl).applying(
+            CGAffineTransform(translationX: upperLayer.frame.minX, y: upperLayer.frame.minY)
+        )
+        viewModel.selectLayer(backgroundID)
+
+        #expect(invisibleHandle == CGPoint(x: 80, y: 30))
+        #expect(viewModel.directPathAnchorState(at: invisibleHandle) == .available)
+        #expect(viewModel.beginDirectPathAnchorMove(at: invisibleHandle))
+        #expect(viewModel.document.selectedLayerID == lowerPathID)
+        #expect(viewModel.selectedPathControlRole == .anchor)
+        viewModel.finishMovingPathAnchor()
+    }
+
     @Test func shiftDragConstrainsExistingPathAnchorFromTransactionOrigin() throws {
         #expect(!ImageEditorPathAnchorDragConstraint.shouldConstrain(
             modifierFlags: [.shift],

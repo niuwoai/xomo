@@ -2838,6 +2838,47 @@ struct ImageEditorScopeTests {
         #expect(pathSource.contains("statusText = L10n.text(\"imageEditor.status.pathJoined\")"))
     }
 
+    @Test func directSelectionLocksTopmostHitAndPointerSequenceToMouseDown() throws {
+        let viewSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let pathSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent(
+                "veilpic/ImageEditorPathCommands.swift"
+            ),
+            encoding: .utf8
+        )
+
+        let directStart = try #require(viewSource.range(of: "case .directSelection:\n                    if !isDirectPathGestureResolved"))
+        let directEnd = try #require(viewSource[directStart.upperBound...].range(of: "case .lasso:"))
+        let directGesture = viewSource[directStart.lowerBound..<directEnd.lowerBound]
+        #expect(directGesture.contains("isDirectPathGestureResolved = true"))
+        #expect(directGesture.contains("imagePoint(from: value.startLocation, in: size)"))
+        #expect(directGesture.contains("directPathAnchorState(at: pointerStart) == .available"))
+        #expect(directGesture.contains("beginDirectPathAnchorMove(\n                                at: pointerStart"))
+        #expect(directGesture.contains("} else if isMovingPathAnchor {"))
+        #expect(viewSource.components(
+            separatedBy: "directSelectionIsBlocked: canvasInteractionTool == .directSelection"
+        ).count == 3)
+        #expect(viewSource.components(separatedBy: "isDirectPathGestureResolved = false").count >= 3)
+
+        let stateStart = try #require(pathSource.range(of: "func directPathAnchorState(at point: CGPoint?)"))
+        let stateEnd = try #require(pathSource[stateStart.upperBound...].range(of: "@discardableResult\n    func beginDirectPathAnchorMove"))
+        let stateSource = pathSource[stateStart.lowerBound..<stateEnd.lowerBound]
+        #expect(stateSource.contains("let hit = penPathInsertionHit(at: point)"))
+        #expect(stateSource.contains("case .control(let control):"))
+        #expect(stateSource.contains("case .segment(let segment):"))
+        #expect(stateSource.contains("? .blocked\n                : .occluded"))
+
+        let beginStart = try #require(pathSource.range(of: "func beginDirectPathAnchorMove("))
+        let beginEnd = try #require(pathSource[beginStart.upperBound...].range(of: "private func pathLayerContains("))
+        let beginSource = pathSource[beginStart.lowerBound..<beginEnd.lowerBound]
+        #expect(beginSource.contains("case .control(let hit) = penPathInsertionHit(at: point)"))
+        #expect(beginSource.contains("!document.isEffectivelyPixelsLocked(layer)"))
+        #expect(beginSource.contains("!document.isEffectivelyPositionLocked(layer)"))
+    }
+
     @Test func shiftConstraintIsWiredToExistingPenAndDirectSelectionDrags() throws {
         let viewSource = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
