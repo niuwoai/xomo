@@ -1116,6 +1116,92 @@ struct ImageEditorVectorLayerTests {
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerTranslate"))
     }
 
+    @Test func lockedTopPathBlocksPathSelectionUntilHidden() throws {
+        let image = testBitmapImage(size: NSSize(width: 170, height: 110), background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        let backgroundID = try #require(viewModel.document.selectedLayerID)
+        let hitPoint = CGPoint(x: 80, y: 55)
+        viewModel.selectTool(.pen)
+        viewModel.addPenPoint(CGPoint(x: 20, y: 55))
+        viewModel.addPenPoint(CGPoint(x: 140, y: 55))
+        viewModel.finishPenPath(closed: false)
+        let lowerPathID = try #require(viewModel.document.selectedLayerID)
+        let lowerPathIndex = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[lowerPathIndex].isVisible = false
+        viewModel.addPenPoint(CGPoint(x: 20, y: 55))
+        viewModel.addPenPoint(CGPoint(x: 140, y: 55))
+        viewModel.finishPenPath(closed: false)
+        viewModel.document.layers[lowerPathIndex].isVisible = true
+        let upperPathIndex = try #require(viewModel.document.selectedLayerIndex)
+        let upperPathID = viewModel.document.layers[upperPathIndex].id
+        viewModel.document.layers[upperPathIndex].locksPosition = true
+        viewModel.selectLayer(backgroundID)
+
+        #expect(viewModel.pathSelectionTarget(at: hitPoint) == ImageEditorPathSelectionTarget(
+            layerID: upperPathID,
+            isBlocked: true
+        ))
+        #expect(!viewModel.selectPathLayer(at: hitPoint))
+        #expect(viewModel.document.selectedLayerID == backgroundID)
+
+        viewModel.document.layers[upperPathIndex].isVisible = false
+        #expect(viewModel.pathSelectionTarget(at: hitPoint) == ImageEditorPathSelectionTarget(
+            layerID: lowerPathID,
+            isBlocked: false
+        ))
+        #expect(viewModel.selectPathLayer(at: hitPoint))
+        #expect(viewModel.document.selectedLayerID == lowerPathID)
+    }
+
+    @Test func shiftPathSelectionTogglesPathsAndMovesTheSelectedSetTogether() throws {
+        let image = testBitmapImage(size: NSSize(width: 180, height: 120), background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        let backgroundID = try #require(viewModel.document.selectedLayerID)
+        viewModel.selectTool(.pen)
+        viewModel.addPenPoint(CGPoint(x: 20, y: 30))
+        viewModel.addPenPoint(CGPoint(x: 65, y: 30))
+        viewModel.finishPenPath(closed: false)
+        let firstPathID = try #require(viewModel.document.selectedLayerID)
+        viewModel.addPenPoint(CGPoint(x: 105, y: 75))
+        viewModel.addPenPoint(CGPoint(x: 155, y: 75))
+        viewModel.finishPenPath(closed: false)
+        let secondPathID = try #require(viewModel.document.selectedLayerID)
+        viewModel.selectLayer(backgroundID)
+
+        #expect(viewModel.selectPathLayer(at: CGPoint(x: 40, y: 30)))
+        #expect(viewModel.document.selectedLayerIDs == [firstPathID])
+        #expect(viewModel.selectPathLayer(
+            at: CGPoint(x: 125, y: 75),
+            extendingSelection: true
+        ))
+        #expect(viewModel.document.selectedLayerIDs == [firstPathID, secondPathID])
+        #expect(viewModel.selectPathLayer(
+            at: CGPoint(x: 125, y: 75),
+            extendingSelection: true
+        ))
+        #expect(viewModel.document.selectedLayerIDs == [firstPathID])
+        #expect(viewModel.selectPathLayer(
+            at: CGPoint(x: 125, y: 75),
+            extendingSelection: true
+        ))
+
+        let firstFrame = try #require(viewModel.document.layers.first(where: { $0.id == firstPathID })?.frame)
+        let secondFrame = try #require(viewModel.document.layers.first(where: { $0.id == secondPathID })?.frame)
+        #expect(viewModel.beginMovingSelectedLayer())
+        viewModel.moveSelectedLayer(by: CGSize(width: 11, height: 7), snapping: false)
+        viewModel.finishMovingSelectedLayer()
+
+        #expect(viewModel.document.layers.first(where: { $0.id == firstPathID })?.frame.origin == CGPoint(
+            x: firstFrame.minX + 11,
+            y: firstFrame.minY + 7
+        ))
+        #expect(viewModel.document.layers.first(where: { $0.id == secondPathID })?.frame.origin == CGPoint(
+            x: secondFrame.minX + 11,
+            y: secondFrame.minY + 7
+        ))
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerTranslate"))
+    }
+
     @Test func directSelectionSwitchesToPathAnchorAndMovesOneNode() async throws {
         let canvasSize = NSSize(width: 140, height: 100)
         let image = testBitmapImage(size: canvasSize, background: .black)

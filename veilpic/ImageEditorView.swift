@@ -106,6 +106,7 @@ struct ImageEditorView: View {
     @State private var isMovingPathAnchor = false
     @State private var isPathAnchorDragCancelled = false
     @State private var isDirectPathGestureResolved = false
+    @State private var isPathSelectionGestureResolved = false
     @State private var isPenPointerSequenceActive = false
     @State private var pendingPenCreationAction: ImageEditorPendingPenGestureAction?
     @State private var isPenAnchorConversionGestureActive = false
@@ -2120,6 +2121,7 @@ struct ImageEditorView: View {
     private func beginCanvasPointerSequence() {
         isPenPointerSequenceActive = canvasInteractionTool == .pen
         isDirectPathGestureResolved = false
+        isPathSelectionGestureResolved = false
         pendingPenCreationAction = nil
         resetPenAnchorConversionGesture()
         penAnchorDeletionGestureState = .none
@@ -2764,6 +2766,8 @@ struct ImageEditorView: View {
                             penContinuationIsBlocked: penPathContinuationState == .blocked,
                             directSelectionIsBlocked: canvasInteractionTool == .directSelection
                                 && viewModel.directPathAnchorState(at: canvasPoint) == .blocked,
+                            pathSelectionIsBlocked: canvasInteractionTool == .pathSelection
+                                && viewModel.pathSelectionTarget(at: canvasPoint)?.isBlocked == true,
                             pathHandleIsBreaking: isBreakingSmoothPathHandle(
                                 at: canvasPoint,
                                 modifierFlags: canvasModifierFlags
@@ -3946,12 +3950,20 @@ struct ImageEditorView: View {
                         )
                     }
                 case .pathSelection:
-                    if !isObjectMoveGestureActive,
-                       let pressedImagePoint = imagePoint(from: value.startLocation, in: size),
-                       viewModel.selectPathLayer(at: pressedImagePoint) {
-                        if viewModel.beginMovingSelectedLayer() {
-                            resetObjectMoveTracking()
-                            isObjectMoveGestureActive = true
+                    if !isPathSelectionGestureResolved {
+                        isPathSelectionGestureResolved = true
+                        if let pointerStart = imagePoint(from: value.startLocation, in: size),
+                           let target = viewModel.pathSelectionTarget(at: pointerStart),
+                           !target.isBlocked,
+                           viewModel.selectPathLayer(
+                            at: pointerStart,
+                            extendingSelection: NSEvent.modifierFlags.contains(.shift)
+                           ),
+                           viewModel.document.selectedLayerIDs.contains(target.layerID) {
+                            if viewModel.beginMovingSelectedLayer() {
+                                resetObjectMoveTracking()
+                                isObjectMoveGestureActive = true
+                            }
                         }
                     }
                     if isObjectMoveGestureActive {
@@ -4314,6 +4326,7 @@ struct ImageEditorView: View {
                 isMovingPathAnchor = false
                 isPathAnchorDragCancelled = false
                 isDirectPathGestureResolved = false
+                isPathSelectionGestureResolved = false
                 isPenPointerSequenceActive = false
                 pendingPenCreationAction = nil
                 resetPenAnchorConversionGesture()
@@ -4610,6 +4623,8 @@ struct ImageEditorView: View {
             penContinuationIsBlocked: penPathContinuationState == .blocked,
             directSelectionIsBlocked: canvasInteractionTool == .directSelection
                 && viewModel.directPathAnchorState(at: canvasPoint) == .blocked,
+            pathSelectionIsBlocked: canvasInteractionTool == .pathSelection
+                && viewModel.pathSelectionTarget(at: canvasPoint)?.isBlocked == true,
             pathHandleIsBreaking: isBreakingSmoothPathHandle(
                 at: canvasPoint,
                 modifierFlags: NSEvent.modifierFlags
@@ -11375,6 +11390,7 @@ enum ImageEditorCanvasCursor {
         penIsContinuingPath: Bool = false,
         penContinuationIsBlocked: Bool = false,
         directSelectionIsBlocked: Bool = false,
+        pathSelectionIsBlocked: Bool = false,
         pathHandleIsBreaking: Bool = false,
         handIsDragging: Bool = false,
         isObjectMoveGestureActive: Bool = false,
@@ -11436,6 +11452,9 @@ enum ImageEditorCanvasCursor {
                 return .operationNotAllowed
             }
             if selectedTool == .directSelection, directSelectionIsBlocked {
+                return .operationNotAllowed
+            }
+            if selectedTool == .pathSelection, pathSelectionIsBlocked {
                 return .operationNotAllowed
             }
             if selectedTool == .move, !isPointerOverMovableContent {

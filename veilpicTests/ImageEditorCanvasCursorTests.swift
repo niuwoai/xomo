@@ -2175,6 +2175,27 @@ struct ImageEditorCanvasCursorTests {
         #expect(ImageEditorCanvasCursor.family(for: .pathSelection) == .systemArrow)
         #expect(ImageEditorCanvasCursor.cursor(for: .pathSelection, brushDiameter: 18) === NSCursor.arrow)
         #expect(ImageEditorTool.classicShortcutGroup(for: "a")?.primaryTool == .pathSelection)
+
+        #expect(ImageEditorCanvasCursor.cursor(
+            for: .tools,
+            selectedTool: .pathSelection,
+            brushDiameter: 18,
+            pathSelectionIsBlocked: true
+        ) === NSCursor.operationNotAllowed)
+        #expect(ImageEditorCanvasCursor.cursor(
+            for: .components,
+            selectedTool: .pathSelection,
+            brushDiameter: 18,
+            pathSelectionIsBlocked: true
+        ) === NSCursor.arrow)
+        #expect(ImageEditorCanvasCursor.cursor(
+            for: .tools,
+            selectedTool: .pathSelection,
+            brushDiameter: 18,
+            pathSelectionIsBlocked: true,
+            handIsDragging: true,
+            isCanvasPanGestureActive: true
+        ) === NSCursor.closedHand)
     }
 
     @Test func directSelectionUsesAWhiteEditingArrowAndSharesTheAGroup() {

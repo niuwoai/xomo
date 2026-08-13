@@ -76,31 +76,42 @@ enum ImageEditorDirectPathAnchorState: Equatable {
     case occluded
 }
 
+struct ImageEditorPathSelectionTarget: Equatable {
+    let layerID: UUID
+    let isBlocked: Bool
+}
+
 extension ImageEditorViewModel {
     /// Photoshop's Path Selection tool selects an editable path by its
     /// rendered geometry, rather than by the layer's rectangular bounds.
     /// Closed paths use their fill as the primary hit area; open paths and
     /// strokes use a small, canvas-space tolerance around sampled segments.
-    @discardableResult
-    func selectPathLayer(at point: CGPoint, extendingSelection: Bool = false) -> Bool {
-        guard point.x.isFinite, point.y.isFinite else { return false }
+    func pathSelectionTarget(at point: CGPoint?) -> ImageEditorPathSelectionTarget? {
+        guard let point, point.x.isFinite, point.y.isFinite else { return nil }
         for layer in document.layers.reversed() {
             guard !layer.isGroup,
                   document.isEffectivelyVisible(layer),
-                  !document.isEffectivelyPositionLocked(layer),
                   let content = layer.shapeContent,
                   content.kind == .path,
                   pathLayerContains(point: point, content: content, layer: layer)
             else { continue }
-
-            selectLayer(layer.id, extendingSelection: extendingSelection)
-            statusText = L10n.format(
-                "imageEditor.status.pathSelected",
-                document.selectedLayerIDs.count
+            return ImageEditorPathSelectionTarget(
+                layerID: layer.id,
+                isBlocked: document.isEffectivelyPositionLocked(layer)
             )
-            return true
         }
-        return false
+        return nil
+    }
+
+    @discardableResult
+    func selectPathLayer(at point: CGPoint, extendingSelection: Bool = false) -> Bool {
+        guard let target = pathSelectionTarget(at: point), !target.isBlocked else { return false }
+        selectLayer(target.layerID, extendingSelection: extendingSelection)
+        statusText = L10n.format(
+            "imageEditor.status.pathSelected",
+            document.selectedLayerIDs.count
+        )
+        return true
     }
 
     /// Starts an Illustrator/Photoshop-style direct-selection drag on the

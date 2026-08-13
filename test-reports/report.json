@@ -1,10 +1,10 @@
 {
-  "generated_at": "2026-08-13 11:32:02 +0800",
-  "total": 104,
-  "passed": 104,
+  "generated_at": "2026-08-13 11:57:48 +0800",
+  "total": 106,
+  "passed": 106,
   "failed": 0,
-  "total_tests": 104,
-  "passed_tests": 104,
+  "total_tests": 106,
+  "passed_tests": 106,
   "failed_tests_in_failed_groups": 0,
   "jobs": 1,
   "results": [
@@ -15,7 +15,7 @@
       "file": "ImageEditorVectorLayerTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.547,
+      "duration": 2.852,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorVectorLayerTests.anchorNavigationDuringPathDragCancelsPreviewBeforeChangingSelection.log"
@@ -27,7 +27,7 @@
       "file": "ImageEditorVectorLayerTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.962,
+      "duration": 2.85,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorVectorLayerTests.arrowNudgeDuringPathDragCancelsPreviewBeforeNextNudgeEdits.log"
@@ -39,7 +39,7 @@
       "file": "ImageEditorVectorLayerTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.641,
+      "duration": 2.788,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorVectorLayerTests.cancellingPathHandleDragRestoresDocumentRedoAndAllowsNextGesture.log"
@@ -51,7 +51,7 @@
       "file": "ImageEditorVectorLayerTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.59,
+      "duration": 2.771,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorVectorLayerTests.cancellingPenContinuationPreservesDocumentHistoryAndRedo.log"
@@ -63,7 +63,7 @@
       "file": "ImageEditorVectorLayerTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.416,
+      "duration": 3.139,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorVectorLayerTests.clickDragPenAnchorsCommitSymmetricBezierControls.log"
@@ -75,7 +75,7 @@
       "file": "ImageEditorVectorLayerTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.828,
+      "duration": 5.619,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorVectorLayerTests.cornerHandleDragRemainsIndependentWithoutOption.log"
@@ -87,7 +87,7 @@
       "file": "ImageEditorVectorLayerTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.541,
+      "duration": 2.825,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorVectorLayerTests.deleteDuringPathDragCancelsPreviewBeforeNextDeleteEdits.log"
@@ -99,7 +99,7 @@
       "file": "ImageEditorVectorLayerTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.436,
+      "duration": 4.031,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorVectorLayerTests.deleteKeyRemovesPendingPenPointsWithoutReachingDocumentObjects.log"
@@ -111,7 +111,7 @@
       "file": "ImageEditorVectorLayerTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.418,
+      "duration": 5.592,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorVectorLayerTests.directSelectionSwitchesToPathAnchorAndMovesOneNode.log"
@@ -123,7 +123,7 @@
       "file": "ImageEditorVectorLayerTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.835,
+      "duration": 2.943,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorVectorLayerTests.edgeConstrainedHandleSymmetryConvergesWithoutClearingRedo.log"
@@ -135,7 +135,7 @@
       "file": "ImageEditorVectorLayerTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.495,
+      "duration": 2.795,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorVectorLayerTests.enteringComponentLibraryCancelsPathDragAndKeepsNextGestureUsable.log"
@@ -147,7 +147,7 @@
       "file": "ImageEditorVectorLayerTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.325,
+      "duration": 3.301,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorVectorLayerTests.equivalentPathAnchorPositionEditsPreserveHistoryAndRedo.log"
@@ -159,7 +159,7 @@
       "file": "ImageEditorVectorLayerTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.214,
+      "duration": 5.413,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorVectorLayerTests.equivalentSelectedPathSelectionDoesNotCreateAnEmptyTransaction.log"
@@ -171,7 +171,7 @@
       "file": "ImageEditorVectorLayerTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.579,
+      "duration": 3.772,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorVectorLayerTests.finishingPendingPenPathCommitsOnlyTheCurrentTransientBranch.log"
@@ -183,7 +183,7 @@
       "file": "ImageEditorVectorLayerTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.538,
+      "duration": 2.808,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorVectorLayerTests.handleCommandDuringPathDragCancelsPreviewBeforeNextCommandEdits.log"
@@ -195,7 +195,7 @@
       "file": "ImageEditorVectorLayerTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.618,
+      "duration": 2.986,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorVectorLayerTests.hiddenTopAnchorDoesNotStealDeletionFromVisiblePath.log"
@@ -207,7 +207,7 @@
       "file": "ImageEditorVectorLayerTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.398,
+      "duration": 6.155,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorVectorLayerTests.hiddenTopAnchorDoesNotStealPenConversionFromVisiblePath.log"
@@ -219,7 +219,7 @@
       "file": "ImageEditorVectorLayerTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.556,
+      "duration": 2.855,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorVectorLayerTests.hiddenTopEndpointYieldsToVisibleJoinTargetForNewPenBranch.log"
@@ -231,7 +231,7 @@
       "file": "ImageEditorVectorLayerTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.459,
+      "duration": 2.801,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorVectorLayerTests.hiddenTopJoinEndpointYieldsToVisibleOpenPathBelow.log"
@@ -243,7 +243,7 @@
       "file": "ImageEditorVectorLayerTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 4.927,
+      "duration": 2.973,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorVectorLayerTests.hiddenTopOpenPathEndpointDoesNotStealContinuationHit.log"
@@ -255,7 +255,7 @@
       "file": "ImageEditorVectorLayerTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.491,
+      "duration": 2.902,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorVectorLayerTests.hiddenTopPathSegmentDoesNotStealInsertionFromVisiblePath.log"
@@ -267,7 +267,7 @@
       "file": "ImageEditorVectorLayerTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.651,
+      "duration": 2.872,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorVectorLayerTests.imageEditorAppliesSelectedPathAsLowerLayerMask.log"
@@ -279,7 +279,7 @@
       "file": "ImageEditorVectorLayerTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.528,
+      "duration": 3.907,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorVectorLayerTests.imageEditorBatchUpdatesSelectedShapeLayersAndSkipsLockedOrIneligibleLayers.log"
@@ -291,7 +291,7 @@
       "file": "ImageEditorVectorLayerTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.419,
+      "duration": 4.444,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorVectorLayerTests.imageEditorBatchUpdatesSelectedTextLayersAndSkipsLockedOrIneligibleLayers.log"
@@ -303,7 +303,7 @@
       "file": "ImageEditorVectorLayerTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 6.043,
+      "duration": 2.848,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorVectorLayerTests.imageEditorCopiesVectorMaskToSelectedLayersWithScaledPath.log"
@@ -315,7 +315,7 @@
       "file": "ImageEditorVectorLayerTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.281,
+      "duration": 3.6,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorVectorLayerTests.imageEditorCreatesCompoundPathLayerFromRasterSelectionIslands.log"
@@ -327,7 +327,7 @@
       "file": "ImageEditorVectorLayerTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.64,
+      "duration": 5.547,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorVectorLayerTests.imageEditorCreatesEditablePathLayerFromCurrentSelection.log"
@@ -339,7 +339,7 @@
       "file": "ImageEditorVectorLayerTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.377,
+      "duration": 5.015,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorVectorLayerTests.imageEditorCreatesEditablePathLayerFromRasterSelectionOutline.log"
@@ -351,7 +351,7 @@
       "file": "ImageEditorVectorLayerTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 5.803,
+      "duration": 2.855,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorVectorLayerTests.imageEditorCreatesVectorMaskFromCurrentSelection.log"
@@ -363,7 +363,7 @@
       "file": "ImageEditorVectorLayerTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 5.735,
+      "duration": 2.81,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorVectorLayerTests.imageEditorCreatesVectorMaskOnLayerGroupFromCurrentSelection.log"
@@ -375,7 +375,7 @@
       "file": "ImageEditorVectorLayerTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.805,
+      "duration": 3.188,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorVectorLayerTests.imageEditorCyclesCompoundPathSubpathSelection.log"
@@ -387,7 +387,7 @@
       "file": "ImageEditorVectorLayerTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.248,
+      "duration": 5.486,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorVectorLayerTests.imageEditorDeletesCompoundPathSubpathWithoutRemovingPrimaryPath.log"
@@ -399,7 +399,7 @@
       "file": "ImageEditorVectorLayerTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.542,
+      "duration": 3.251,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorVectorLayerTests.imageEditorDeletesSelectedPathAnchorAndOpensSmallClosedPath.log"
@@ -411,7 +411,7 @@
       "file": "ImageEditorVectorLayerTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.539,
+      "duration": 5.044,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorVectorLayerTests.imageEditorDuplicatesCompoundPathSubpathAndSelectsCopy.log"
@@ -423,7 +423,7 @@
       "file": "ImageEditorVectorLayerTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.581,
+      "duration": 2.81,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorVectorLayerTests.imageEditorFillsSelectedPathToLowerPixelLayer.log"
@@ -435,7 +435,7 @@
       "file": "ImageEditorVectorLayerTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.286,
+      "duration": 3.185,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorVectorLayerTests.imageEditorInsertsPathAnchorAndPreservesCurvedSegmentHandles.log"
@@ -447,7 +447,7 @@
       "file": "ImageEditorVectorLayerTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.411,
+      "duration": 6.31,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorVectorLayerTests.imageEditorMovesCompoundPathSubpathAnchorWithoutChangingPrimaryPath.log"
@@ -459,7 +459,7 @@
       "file": "ImageEditorVectorLayerTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.638,
+      "duration": 3.227,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorVectorLayerTests.imageEditorNudgesCompoundPathSubpathWithoutMovingPrimaryPath.log"
@@ -471,7 +471,7 @@
       "file": "ImageEditorVectorLayerTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 6.376,
+      "duration": 3.548,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorVectorLayerTests.imageEditorPenArrowNudgeMovesSelectedAnchorAsOneUndoableStep.log"
@@ -483,7 +483,7 @@
       "file": "ImageEditorVectorLayerTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.535,
+      "duration": 3.798,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorVectorLayerTests.imageEditorPenToolCreatesEditablePathShapeLayer.log"
@@ -495,7 +495,7 @@
       "file": "ImageEditorVectorLayerTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.479,
+      "duration": 2.98,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorVectorLayerTests.imageEditorRasterizesSelectedVectorMaskToLayerMask.log"
@@ -507,7 +507,7 @@
       "file": "ImageEditorVectorLayerTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.732,
+      "duration": 2.796,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorVectorLayerTests.imageEditorReversesPathDirectionAndSwapsControlHandles.log"
@@ -519,7 +519,7 @@
       "file": "ImageEditorVectorLayerTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.447,
+      "duration": 4.469,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorVectorLayerTests.imageEditorShapeLayerIsEditableAndRasterizesWithoutChangingComposite.log"
@@ -531,7 +531,7 @@
       "file": "ImageEditorVectorLayerTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.681,
+      "duration": 2.837,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorVectorLayerTests.imageEditorStrokesSelectedPathToLowerPixelLayer.log"
@@ -543,7 +543,7 @@
       "file": "ImageEditorVectorLayerTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.75,
+      "duration": 2.798,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorVectorLayerTests.imageEditorSymmetrizesSelectedPathAnchorHandles.log"
@@ -555,7 +555,7 @@
       "file": "ImageEditorVectorLayerTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.484,
+      "duration": 3.856,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorVectorLayerTests.imageEditorTextLayerIsEditableAndCanMergeDown.log"
@@ -567,7 +567,7 @@
       "file": "ImageEditorVectorLayerTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 5.073,
+      "duration": 4.029,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorVectorLayerTests.imageEditorTextLayerRendersUprightInAppKitCoordinates.log"
@@ -579,7 +579,7 @@
       "file": "ImageEditorVectorLayerTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.572,
+      "duration": 2.781,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorVectorLayerTests.imageEditorTogglesOpenPathClosedAndBackToOpen.log"
@@ -591,7 +591,7 @@
       "file": "ImageEditorVectorLayerTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.729,
+      "duration": 2.79,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorVectorLayerTests.imageEditorVectorMaskCanRoundTripThroughEditablePathLayer.log"
@@ -603,7 +603,7 @@
       "file": "ImageEditorVectorLayerTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.146,
+      "duration": 6.496,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorVectorLayerTests.invisibleHandleOnUnselectedPathDoesNotBlockDirectSelectionAnchor.log"
@@ -615,7 +615,7 @@
       "file": "ImageEditorVectorLayerTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 4.116,
+      "duration": 2.982,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorVectorLayerTests.invisibleHandleOnUnselectedPathDoesNotBlockVisibleLowerSegment.log"
@@ -627,7 +627,7 @@
       "file": "ImageEditorVectorLayerTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.488,
+      "duration": 2.826,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorVectorLayerTests.lockedEndpointConsumesNewPenBranchJoinWithoutAppendingPoint.log"
@@ -639,7 +639,7 @@
       "file": "ImageEditorVectorLayerTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.44,
+      "duration": 2.797,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorVectorLayerTests.lockedJoinEndpointConsumesClickWithoutAddingOrMerging.log"
@@ -651,7 +651,7 @@
       "file": "ImageEditorVectorLayerTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 5.573,
+      "duration": 2.957,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorVectorLayerTests.lockedPathSegmentConsumesPenClickWithoutMutation.log"
@@ -663,7 +663,7 @@
       "file": "ImageEditorVectorLayerTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.433,
+      "duration": 6.35,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorVectorLayerTests.lockedTopAnchorBlocksDirectSelectionFromReachingLowerPath.log"
@@ -675,7 +675,7 @@
       "file": "ImageEditorVectorLayerTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 4.858,
+      "duration": 3.921,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorVectorLayerTests.lockedTopAnchorBlocksEditingThroughToLowerPath.log"
@@ -687,7 +687,7 @@
       "file": "ImageEditorVectorLayerTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.645,
+      "duration": 6.73,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorVectorLayerTests.lockedTopAnchorBlocksPenConversionThroughToLowerPath.log"
@@ -699,10 +699,22 @@
       "file": "ImageEditorVectorLayerTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 4.009,
+      "duration": 3.114,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorVectorLayerTests.lockedTopOpenPathEndpointBlocksLowerContinuationTarget.log"
+    },
+    {
+      "suite": "ImageEditorVectorLayerTests",
+      "method": "lockedTopPathBlocksPathSelectionUntilHidden",
+      "identifier": "veilpicTests/ImageEditorVectorLayerTests/lockedTopPathBlocksPathSelectionUntilHidden()",
+      "file": "ImageEditorVectorLayerTests.swift",
+      "test_count": 1,
+      "passed": true,
+      "duration": 6.918,
+      "infrastructure_retries": 0,
+      "issues": [],
+      "log": "ImageEditorVectorLayerTests.lockedTopPathBlocksPathSelectionUntilHidden.log"
     },
     {
       "suite": "ImageEditorVectorLayerTests",
@@ -711,7 +723,7 @@
       "file": "ImageEditorVectorLayerTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.103,
+      "duration": 2.915,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorVectorLayerTests.lockedTopPathSegmentBlocksInsertionThroughToLowerPath.log"
@@ -723,7 +735,7 @@
       "file": "ImageEditorVectorLayerTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.675,
+      "duration": 2.804,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorVectorLayerTests.newPenBranchJoinsExistingOpenPathWithoutCreatingAnotherLayer.log"
@@ -735,7 +747,7 @@
       "file": "ImageEditorVectorLayerTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.687,
+      "duration": 2.924,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorVectorLayerTests.openPathEndpointsPreferContinuationAndHonorLocks.log"
@@ -747,7 +759,7 @@
       "file": "ImageEditorVectorLayerTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 4.021,
+      "duration": 6.12,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorVectorLayerTests.optionClickConsumesLockedSmoothAnchorWithoutChangingIt.log"
@@ -759,7 +771,7 @@
       "file": "ImageEditorVectorLayerTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.649,
+      "duration": 6.508,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorVectorLayerTests.optionClickConvertsSmoothPenAnchorToCornerWithoutEmptyHistory.log"
@@ -771,7 +783,7 @@
       "file": "ImageEditorVectorLayerTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.837,
+      "duration": 6.649,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorVectorLayerTests.optionClickSelectsAndConvertsAnUnselectedVisibleAnchor.log"
@@ -783,7 +795,7 @@
       "file": "ImageEditorVectorLayerTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.727,
+      "duration": 6.019,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorVectorLayerTests.optionDragConvertsCornerAnchorToSmoothAsOneUndoableEdit.log"
@@ -795,7 +807,7 @@
       "file": "ImageEditorVectorLayerTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.355,
+      "duration": 5.607,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorVectorLayerTests.optionDragSelectsAndSmoothsAnUnselectedVisibleAnchor.log"
@@ -807,7 +819,7 @@
       "file": "ImageEditorVectorLayerTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.444,
+      "duration": 2.863,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorVectorLayerTests.pathAnchorRoundTripDragPreservesHistoryUndoAndRedo.log"
@@ -819,7 +831,7 @@
       "file": "ImageEditorVectorLayerTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.367,
+      "duration": 6.888,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorVectorLayerTests.pathSelectionHitsClosedPathGeometryAndMovesWholeLayer.log"
@@ -831,7 +843,7 @@
       "file": "ImageEditorVectorLayerTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.896,
+      "duration": 2.972,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorVectorLayerTests.penAnchorDragMovesWithoutAutoDeletingAndHandlesRemainSelectionOnly.log"
@@ -843,7 +855,7 @@
       "file": "ImageEditorVectorLayerTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.369,
+      "duration": 3.179,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorVectorLayerTests.penClickInsertsAnchorAtActualStraightSegmentPositionWithSingleUndo.log"
@@ -855,7 +867,7 @@
       "file": "ImageEditorVectorLayerTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.297,
+      "duration": 2.844,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorVectorLayerTests.penClickInsertsAnchorOnClosedPathWraparoundSegment.log"
@@ -867,7 +879,7 @@
       "file": "ImageEditorVectorLayerTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.231,
+      "duration": 3.047,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorVectorLayerTests.penClickSplitsCurvedSegmentAtPointerWithoutChangingItsGeometry.log"
@@ -879,7 +891,7 @@
       "file": "ImageEditorVectorLayerTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.572,
+      "duration": 2.929,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorVectorLayerTests.penContinuationFromFirstEndpointReversesAnchorsAndSwapsControls.log"
@@ -891,7 +903,7 @@
       "file": "ImageEditorVectorLayerTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.521,
+      "duration": 2.836,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorVectorLayerTests.penContinuationJoinsAnotherOpenPathAsOneUndoableLayer.log"
@@ -903,7 +915,7 @@
       "file": "ImageEditorVectorLayerTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.914,
+      "duration": 2.909,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorVectorLayerTests.penContinuesOpenPathFromLastEndpointInPlaceWithOneUndo.log"
@@ -915,7 +927,7 @@
       "file": "ImageEditorVectorLayerTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.675,
+      "duration": 3.388,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorVectorLayerTests.penDragSelectsAndMovesAnUnselectedInteriorAnchor.log"
@@ -927,7 +939,7 @@
       "file": "ImageEditorVectorLayerTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 4.35,
+      "duration": 3.336,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorVectorLayerTests.penDragSelectsAndMovesAnUnselectedOpenPathEndpoint.log"
@@ -939,7 +951,7 @@
       "file": "ImageEditorVectorLayerTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.968,
+      "duration": 2.868,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorVectorLayerTests.penJoinFromTargetLastEndpointReversesPathAndControlDirections.log"
@@ -951,7 +963,7 @@
       "file": "ImageEditorVectorLayerTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.262,
+      "duration": 3.581,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorVectorLayerTests.penPointerGestureDistinguishesCornerClicksFromSmoothDrags.log"
@@ -963,7 +975,7 @@
       "file": "ImageEditorVectorLayerTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 4.019,
+      "duration": 3.125,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorVectorLayerTests.penSelectsAndContinuesAnUnselectedVisibleOpenPathEndpoint.log"
@@ -975,7 +987,7 @@
       "file": "ImageEditorVectorLayerTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.275,
+      "duration": 2.888,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorVectorLayerTests.penSelectsAndInsertsOnAnUnselectedVisiblePathSegment.log"
@@ -987,7 +999,7 @@
       "file": "ImageEditorVectorLayerTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.941,
+      "duration": 3.098,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorVectorLayerTests.penShortClickAnchorDeletesAsOneUndoableHistoryStep.log"
@@ -999,7 +1011,7 @@
       "file": "ImageEditorVectorLayerTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.704,
+      "duration": 3.39,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorVectorLayerTests.penShortClickSelectsAndDeletesAnUnselectedInteriorAnchor.log"
@@ -1011,7 +1023,7 @@
       "file": "ImageEditorVectorLayerTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.595,
+      "duration": 3.891,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorVectorLayerTests.pendingPenPathUndoRedoNeverCrossesIntoDocumentHistory.log"
@@ -1023,7 +1035,7 @@
       "file": "ImageEditorVectorLayerTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.754,
+      "duration": 6.373,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorVectorLayerTests.pendingPenPreviewMatchesConstrainedCommitAndCloseTarget.log"
@@ -1035,7 +1047,7 @@
       "file": "ImageEditorVectorLayerTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.382,
+      "duration": 2.859,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorVectorLayerTests.realPathAnchorDragCommitsOneUndoAndClearsRedo.log"
@@ -1047,7 +1059,7 @@
       "file": "ImageEditorVectorLayerTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.481,
+      "duration": 2.795,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorVectorLayerTests.redoDuringPathHandleDragCancelsPreviewBeforeApplyingExistingRedo.log"
@@ -1059,7 +1071,7 @@
       "file": "ImageEditorVectorLayerTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.421,
+      "duration": 2.787,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorVectorLayerTests.repeatedPathHandleNormalizationPreservesHistoryAndRedo.log"
@@ -1071,7 +1083,7 @@
       "file": "ImageEditorVectorLayerTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.624,
+      "duration": 7.731,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorVectorLayerTests.returnKeyFinishesOpenPenPathAndConsumesIncompleteTransientBranch.log"
@@ -1083,7 +1095,7 @@
       "file": "ImageEditorVectorLayerTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.378,
+      "duration": 2.905,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorVectorLayerTests.selectingAnotherLayerCancelsPathDragBeforeChangingEditingObject.log"
@@ -1095,7 +1107,7 @@
       "file": "ImageEditorVectorLayerTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.539,
+      "duration": 3.442,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorVectorLayerTests.shiftClickConstrainsPendingPenPointWithoutWritingDocumentHistory.log"
@@ -1107,7 +1119,7 @@
       "file": "ImageEditorVectorLayerTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.364,
+      "duration": 6.649,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorVectorLayerTests.shiftDragConstrainsExistingBezierHandleAroundItsAnchor.log"
@@ -1119,10 +1131,22 @@
       "file": "ImageEditorVectorLayerTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.447,
+      "duration": 6.68,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorVectorLayerTests.shiftDragConstrainsExistingPathAnchorFromTransactionOrigin.log"
+    },
+    {
+      "suite": "ImageEditorVectorLayerTests",
+      "method": "shiftPathSelectionTogglesPathsAndMovesTheSelectedSetTogether",
+      "identifier": "veilpicTests/ImageEditorVectorLayerTests/shiftPathSelectionTogglesPathsAndMovesTheSelectedSetTogether()",
+      "file": "ImageEditorVectorLayerTests.swift",
+      "test_count": 1,
+      "passed": true,
+      "duration": 6.277,
+      "infrastructure_retries": 0,
+      "issues": [],
+      "log": "ImageEditorVectorLayerTests.shiftPathSelectionTogglesPathsAndMovesTheSelectedSetTogether.log"
     },
     {
       "suite": "ImageEditorVectorLayerTests",
@@ -1131,7 +1155,7 @@
       "file": "ImageEditorVectorLayerTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.511,
+      "duration": 2.861,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorVectorLayerTests.singlePointPenBranchJoinsTargetLastAndReversesControlDirections.log"
@@ -1143,7 +1167,7 @@
       "file": "ImageEditorVectorLayerTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.634,
+      "duration": 6.735,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorVectorLayerTests.smoothHandleDragKeepsOppositeHandleCollinearUntilOptionBreaksIt.log"
@@ -1155,7 +1179,7 @@
       "file": "ImageEditorVectorLayerTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.246,
+      "duration": 6.765,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorVectorLayerTests.smoothPenControlsUseOneScaleNearCanvasEdges.log"
@@ -1167,7 +1191,7 @@
       "file": "ImageEditorVectorLayerTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.67,
+      "duration": 2.858,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorVectorLayerTests.startingFreshAnchorMoveCancelsAnyStaleTransactionBeforeBeginning.log"
@@ -1179,7 +1203,7 @@
       "file": "ImageEditorVectorLayerTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.575,
+      "duration": 2.801,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorVectorLayerTests.switchingToolsCancelsPathDragBeforeChangingInputContext.log"
@@ -1191,7 +1215,7 @@
       "file": "ImageEditorVectorLayerTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.87,
+      "duration": 2.97,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorVectorLayerTests.topInteriorAnchorOwnsHitBeforeALowerContinuationEndpoint.log"
@@ -1203,7 +1227,7 @@
       "file": "ImageEditorVectorLayerTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.159,
+      "duration": 2.893,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorVectorLayerTests.topPathControlConsumesClickBeforeAnOverlappingLowerSegment.log"
@@ -1215,7 +1239,7 @@
       "file": "ImageEditorVectorLayerTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.328,
+      "duration": 6.13,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorVectorLayerTests.topPathSegmentBlocksPenConversionThroughToLowerAnchor.log"
@@ -1227,7 +1251,7 @@
       "file": "ImageEditorVectorLayerTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.256,
+      "duration": 6.303,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorVectorLayerTests.topPathSegmentOccludesLowerAnchorForDirectSelection.log"
@@ -1239,7 +1263,7 @@
       "file": "ImageEditorVectorLayerTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 4.029,
+      "duration": 2.851,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorVectorLayerTests.topPathSegmentPreventsJoiningThroughToLowerEndpoint.log"
@@ -1251,7 +1275,7 @@
       "file": "ImageEditorVectorLayerTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.568,
+      "duration": 2.855,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorVectorLayerTests.undoDuringPathAnchorDragCancelsPreviewBeforeReachingHistory.log"

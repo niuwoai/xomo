@@ -2879,6 +2879,49 @@ struct ImageEditorScopeTests {
         #expect(beginSource.contains("!document.isEffectivelyPositionLocked(layer)"))
     }
 
+    @Test func pathSelectionLocksTopmostHitAndWiresShiftSetDragging() throws {
+        let viewSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let pathSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent(
+                "veilpic/ImageEditorPathCommands.swift"
+            ),
+            encoding: .utf8
+        )
+
+        let changedStart = try #require(
+            viewSource.range(of: "case .pathSelection:\n                    if !isPathSelectionGestureResolved")
+        )
+        let changedEnd = try #require(viewSource[changedStart.upperBound...].range(of: "case .directSelection:"))
+        let changedSource = viewSource[changedStart.lowerBound..<changedEnd.lowerBound]
+        #expect(changedSource.contains("isPathSelectionGestureResolved = true"))
+        #expect(changedSource.contains("imagePoint(from: value.startLocation, in: size)"))
+        #expect(changedSource.contains("let target = viewModel.pathSelectionTarget(at: pointerStart)"))
+        #expect(changedSource.contains("extendingSelection: NSEvent.modifierFlags.contains(.shift)"))
+        #expect(changedSource.contains("viewModel.document.selectedLayerIDs.contains(target.layerID)"))
+        #expect(changedSource.contains("viewModel.beginMovingSelectedLayer()"))
+        #expect(viewSource.components(
+            separatedBy: "pathSelectionIsBlocked: canvasInteractionTool == .pathSelection"
+        ).count == 3)
+        #expect(viewSource.components(separatedBy: "isPathSelectionGestureResolved = false").count >= 3)
+
+        let targetStart = try #require(pathSource.range(of: "func pathSelectionTarget(at point: CGPoint?)"))
+        let targetEnd = try #require(pathSource[targetStart.upperBound...].range(of: "@discardableResult\n    func selectPathLayer"))
+        let targetSource = pathSource[targetStart.lowerBound..<targetEnd.lowerBound]
+        #expect(targetSource.contains("for layer in document.layers.reversed()"))
+        #expect(targetSource.contains("document.isEffectivelyVisible(layer)"))
+        #expect(targetSource.contains("pathLayerContains(point: point, content: content, layer: layer)"))
+        #expect(targetSource.contains("isBlocked: document.isEffectivelyPositionLocked(layer)"))
+
+        let selectStart = try #require(pathSource.range(of: "func selectPathLayer(at point: CGPoint"))
+        let selectEnd = try #require(pathSource[selectStart.upperBound...].range(of: "func directPathAnchorState("))
+        let selectSource = pathSource[selectStart.lowerBound..<selectEnd.lowerBound]
+        #expect(selectSource.contains("let target = pathSelectionTarget(at: point), !target.isBlocked"))
+        #expect(selectSource.contains("selectLayer(target.layerID, extendingSelection: extendingSelection)"))
+    }
+
     @Test func shiftConstraintIsWiredToExistingPenAndDirectSelectionDrags() throws {
         let viewSource = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
