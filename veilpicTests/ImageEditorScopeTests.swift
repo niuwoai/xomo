@@ -2810,6 +2810,30 @@ struct ImageEditorScopeTests {
         let previewSource = pathSource[previewStart.lowerBound..<previewEnd.lowerBound]
         #expect(previewSource.contains("if let joinTarget = penPathJoinTarget(at: point)"))
         #expect(previewSource.contains("return joinTarget.anchorPoint"))
+
+        let targetStart = try #require(pathSource.range(of: "func penPathJoinTarget(at point: CGPoint?)"))
+        let targetEnd = try #require(
+            pathSource[targetStart.upperBound...].range(of: "@discardableResult\n    func beginPenPathContinuation")
+        )
+        let targetSource = pathSource[targetStart.lowerBound..<targetEnd.lowerBound]
+        #expect(targetSource.contains("guard !pendingPenPathAnchors.isEmpty"))
+        #expect(!targetSource.contains("pendingPenContinuationLayerID != nil"))
+
+        let joinStart = try #require(pathSource.range(of: "private func joinPendingPenPath("))
+        let joinEnd = try #require(pathSource[joinStart.upperBound...].range(of: "private func clearPendingPenPath()"))
+        let joinSource = pathSource[joinStart.lowerBound..<joinEnd.lowerBound]
+        let newBranchStart = try #require(
+            joinSource.range(of: "guard let sourceLayerID = pendingPenContinuationLayerID else {")
+        )
+        let existingSourceStart = try #require(
+            joinSource[newBranchStart.upperBound...].range(of: "guard sourceLayerID != target.layerID")
+        )
+        let newBranchSource = joinSource[newBranchStart.lowerBound..<existingSourceStart.lowerBound]
+        #expect(newBranchSource.contains("updatePathLayer(\n                at: targetIndex"))
+        #expect(newBranchSource.contains("document.selectedLayerID = target.layerID"))
+        #expect(newBranchSource.contains("document.selectedLayerIDs = [target.layerID]"))
+        #expect(!newBranchSource.contains("document.layers.remove"))
+        #expect(newBranchSource.contains("clearPendingPenPath()"))
         #expect(pathSource.contains("appendHistory(L10n.text(\"imageEditor.history.pathJoin\"))"))
         #expect(pathSource.contains("statusText = L10n.text(\"imageEditor.status.pathJoined\")"))
     }

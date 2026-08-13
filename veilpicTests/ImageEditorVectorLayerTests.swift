@@ -944,15 +944,23 @@ struct ImageEditorVectorLayerTests {
         let sourceLayerID = try #require(viewModel.document.selectedLayerID)
         let anchorPoint = CGPoint(x: 80, y: 55)
         viewModel.selectTool(.pen)
-        for _ in 0..<2 {
-            viewModel.addPenPoint(CGPoint(x: 20, y: 35))
-            viewModel.addPenPoint(
-                anchorPoint,
-                symmetricControlDrag: CGSize(width: 16, height: 12),
-                constrainedToAngleIncrement: false
-            )
-            viewModel.finishPenPath(closed: false)
-        }
+        viewModel.addPenPoint(CGPoint(x: 20, y: 35))
+        viewModel.addPenPoint(
+            anchorPoint,
+            symmetricControlDrag: CGSize(width: 16, height: 12),
+            constrainedToAngleIncrement: false
+        )
+        viewModel.finishPenPath(closed: false)
+        let lowerPathIndex = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[lowerPathIndex].isVisible = false
+        viewModel.addPenPoint(CGPoint(x: 20, y: 35))
+        viewModel.addPenPoint(
+            anchorPoint,
+            symmetricControlDrag: CGSize(width: 16, height: 12),
+            constrainedToAngleIncrement: false
+        )
+        viewModel.finishPenPath(closed: false)
+        viewModel.document.layers[lowerPathIndex].isVisible = true
         let upperIndex = try #require(viewModel.document.selectedLayerIndex)
         let upperPathID = viewModel.document.layers[upperIndex].id
         viewModel.document.layers[upperIndex].isVisible = false
@@ -978,15 +986,23 @@ struct ImageEditorVectorLayerTests {
         let sourceLayerID = try #require(viewModel.document.selectedLayerID)
         let anchorPoint = CGPoint(x: 80, y: 55)
         viewModel.selectTool(.pen)
-        for _ in 0..<2 {
-            viewModel.addPenPoint(CGPoint(x: 20, y: 35))
-            viewModel.addPenPoint(
-                anchorPoint,
-                symmetricControlDrag: CGSize(width: 16, height: 12),
-                constrainedToAngleIncrement: false
-            )
-            viewModel.finishPenPath(closed: false)
-        }
+        viewModel.addPenPoint(CGPoint(x: 20, y: 35))
+        viewModel.addPenPoint(
+            anchorPoint,
+            symmetricControlDrag: CGSize(width: 16, height: 12),
+            constrainedToAngleIncrement: false
+        )
+        viewModel.finishPenPath(closed: false)
+        let lowerPathIndex = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[lowerPathIndex].isVisible = false
+        viewModel.addPenPoint(CGPoint(x: 20, y: 35))
+        viewModel.addPenPoint(
+            anchorPoint,
+            symmetricControlDrag: CGSize(width: 16, height: 12),
+            constrainedToAngleIncrement: false
+        )
+        viewModel.finishPenPath(closed: false)
+        viewModel.document.layers[lowerPathIndex].isVisible = true
         let upperIndex = try #require(viewModel.document.selectedLayerIndex)
         let upperPathID = viewModel.document.layers[upperIndex].id
         viewModel.document.layers[upperIndex].locksPixels = true
@@ -2092,9 +2108,12 @@ struct ImageEditorVectorLayerTests {
         viewModel.addPenPoint(CGPoint(x: 135, y: 40))
         viewModel.finishPenPath(closed: false)
         let lowerPathID = try #require(viewModel.document.selectedLayerID)
+        let lowerPathIndex = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[lowerPathIndex].isVisible = false
         viewModel.addPenPoint(CGPoint(x: 20, y: 40))
         viewModel.addPenPoint(CGPoint(x: 135, y: 40))
         viewModel.finishPenPath(closed: false)
+        viewModel.document.layers[lowerPathIndex].isVisible = true
         let upperPathIndex = try #require(viewModel.document.selectedLayerIndex)
         let upperPathID = viewModel.document.layers[upperPathIndex].id
         viewModel.document.layers[upperPathIndex].isVisible = false
@@ -2117,9 +2136,12 @@ struct ImageEditorVectorLayerTests {
         viewModel.addPenPoint(CGPoint(x: 135, y: 40))
         viewModel.finishPenPath(closed: false)
         let lowerPathID = try #require(viewModel.document.selectedLayerID)
+        let lowerPathIndex = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[lowerPathIndex].isVisible = false
         viewModel.addPenPoint(CGPoint(x: 20, y: 40))
         viewModel.addPenPoint(CGPoint(x: 135, y: 40))
         viewModel.finishPenPath(closed: false)
+        viewModel.document.layers[lowerPathIndex].isVisible = true
         let upperPathIndex = try #require(viewModel.document.selectedLayerIndex)
         let upperPathID = viewModel.document.layers[upperPathIndex].id
         viewModel.document.layers[upperPathIndex].locksPosition = true
@@ -2318,10 +2340,13 @@ struct ImageEditorVectorLayerTests {
         }
         viewModel.finishPenPath(closed: false)
         let lowerPathID = try #require(viewModel.document.selectedLayerID)
+        let lowerPathIndex = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[lowerPathIndex].isVisible = false
         for point in [CGPoint(x: 20, y: 30), CGPoint(x: 75, y: 70), CGPoint(x: 135, y: 30)] {
             viewModel.addPenPoint(point)
         }
         viewModel.finishPenPath(closed: false)
+        viewModel.document.layers[lowerPathIndex].isVisible = true
         let upperPathIndex = try #require(viewModel.document.selectedLayerIndex)
         let upperPathID = viewModel.document.layers[upperPathIndex].id
         viewModel.document.layers[upperPathIndex].isVisible = false
@@ -2348,10 +2373,13 @@ struct ImageEditorVectorLayerTests {
         }
         viewModel.finishPenPath(closed: false)
         let lowerPathID = try #require(viewModel.document.selectedLayerID)
+        let lowerPathIndex = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[lowerPathIndex].isVisible = false
         for point in [CGPoint(x: 20, y: 30), CGPoint(x: 75, y: 70), CGPoint(x: 135, y: 30)] {
             viewModel.addPenPoint(point)
         }
         viewModel.finishPenPath(closed: false)
+        viewModel.document.layers[lowerPathIndex].isVisible = true
         let upperPathIndex = try #require(viewModel.document.selectedLayerIndex)
         let upperPathID = viewModel.document.layers[upperPathIndex].id
         viewModel.document.layers[upperPathIndex].locksPosition = true
@@ -2381,10 +2409,13 @@ struct ImageEditorVectorLayerTests {
         viewModel.addPenPoint(CGPoint(x: 75, y: 70))
         viewModel.finishPenPath(closed: false)
         let lowerPathID = try #require(viewModel.document.selectedLayerID)
+        let lowerPathIndex = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[lowerPathIndex].isVisible = false
         viewModel.addPenPoint(CGPoint(x: 25, y: 25))
         viewModel.addPenPoint(CGPoint(x: 75, y: 70))
         viewModel.addPenPoint(CGPoint(x: 135, y: 25))
         viewModel.finishPenPath(closed: false)
+        viewModel.document.layers[lowerPathIndex].isVisible = true
         let upperPathID = try #require(viewModel.document.selectedLayerID)
         viewModel.selectLayer(sourceLayerID)
         let overlap = CGPoint(x: 75, y: 70)
@@ -2727,6 +2758,156 @@ struct ImageEditorVectorLayerTests {
         ])
         #expect(anchors[2].inControl == originalOut)
         #expect(anchors[2].outControl == originalIn)
+    }
+
+    @Test func newPenBranchJoinsExistingOpenPathWithoutCreatingAnotherLayer() throws {
+        let image = testBitmapImage(size: NSSize(width: 180, height: 120), background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        viewModel.selectTool(.pen)
+        viewModel.addPenPoint(CGPoint(x: 105, y: 65))
+        viewModel.addPenPoint(CGPoint(x: 155, y: 80))
+        viewModel.finishPenPath(closed: false)
+        let targetIndex = try #require(viewModel.document.selectedLayerIndex)
+        let targetLayerID = viewModel.document.layers[targetIndex].id
+        viewModel.document.layers[targetIndex].name = "Existing open path"
+        let layerCount = viewModel.document.layers.count
+        let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
+
+        viewModel.addPenPoint(CGPoint(x: 20, y: 30))
+        viewModel.addPenPoint(CGPoint(x: 60, y: 35))
+        #expect(viewModel.penPathJoinState(at: CGPoint(x: 105, y: 65)) == .available)
+        #expect(viewModel.pendingPenPreviewPoint(
+            at: CGPoint(x: 108, y: 66),
+            constrainedToAngleIncrement: false
+        ) == CGPoint(x: 105, y: 65))
+        viewModel.addPenPoint(CGPoint(x: 105, y: 65))
+
+        let joinedLayer = try #require(viewModel.document.layers.first(where: { $0.id == targetLayerID }))
+        let joinedContent = try #require(joinedLayer.shapeContent)
+        let joinedPoints = joinedContent.pathAnchors.map {
+            CGPoint(x: $0.point.x + joinedLayer.frame.minX, y: $0.point.y + joinedLayer.frame.minY)
+        }
+        #expect(!viewModel.hasPendingPenPathTransaction)
+        #expect(viewModel.document.selectedLayerID == targetLayerID)
+        #expect(joinedLayer.name == "Existing open path")
+        #expect(viewModel.document.layers.count == layerCount)
+        #expect(joinedPoints == [
+            CGPoint(x: 20, y: 30),
+            CGPoint(x: 60, y: 35),
+            CGPoint(x: 105, y: 65),
+            CGPoint(x: 155, y: 80)
+        ])
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.pathJoin"))
+        #expect(viewModel.undoStack.count == undoCount + 1)
+
+        viewModel.undo()
+        #expect(viewModel.document.layers.count == layerCount)
+        #expect(viewModel.document.layers.first(where: { $0.id == targetLayerID })?
+            .shapeContent?.pathAnchors.count == 2)
+        viewModel.redo()
+        #expect(viewModel.document.layers.count == layerCount)
+        #expect(viewModel.document.layers.first(where: { $0.id == targetLayerID })?
+            .shapeContent?.pathAnchors.count == 4)
+    }
+
+    @Test func singlePointPenBranchJoinsTargetLastAndReversesControlDirections() throws {
+        let image = testBitmapImage(size: NSSize(width: 180, height: 130), background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        viewModel.selectTool(.pen)
+        viewModel.addPenPoint(CGPoint(x: 100, y: 85))
+        viewModel.addPenPoint(
+            CGPoint(x: 150, y: 70),
+            symmetricControlDrag: CGSize(width: 14, height: -9),
+            constrainedToAngleIncrement: false
+        )
+        viewModel.finishPenPath(closed: false)
+        let targetLayer = try #require(viewModel.document.selectedLayer)
+        let targetLast = try #require(targetLayer.shapeContent?.pathAnchors.last)
+        let canvasPoint: (CGPoint) -> CGPoint = {
+            CGPoint(x: $0.x + targetLayer.frame.minX, y: $0.y + targetLayer.frame.minY)
+        }
+        let targetEndpoint = canvasPoint(targetLast.point)
+        let originalIn = try #require(targetLast.inControl.map(canvasPoint))
+        let originalOut = try #require(targetLast.outControl.map(canvasPoint))
+
+        viewModel.addPenPoint(CGPoint(x: 35, y: 25))
+        viewModel.addPenPoint(targetEndpoint)
+
+        let joinedLayer = try #require(viewModel.document.selectedLayer)
+        let joinedContent = try #require(joinedLayer.shapeContent)
+        let anchors = joinedContent.pathAnchors.map { anchor in
+            ImageEditorPathAnchor(
+                point: CGPoint(x: anchor.point.x + joinedLayer.frame.minX, y: anchor.point.y + joinedLayer.frame.minY),
+                inControl: anchor.inControl.map {
+                    CGPoint(x: $0.x + joinedLayer.frame.minX, y: $0.y + joinedLayer.frame.minY)
+                },
+                outControl: anchor.outControl.map {
+                    CGPoint(x: $0.x + joinedLayer.frame.minX, y: $0.y + joinedLayer.frame.minY)
+                }
+            )
+        }
+        #expect(anchors.map(\.point) == [
+            CGPoint(x: 35, y: 25),
+            CGPoint(x: 150, y: 70),
+            CGPoint(x: 100, y: 85)
+        ])
+        #expect(anchors[1].inControl == originalOut)
+        #expect(anchors[1].outControl == originalIn)
+    }
+
+    @Test func lockedEndpointConsumesNewPenBranchJoinWithoutAppendingPoint() throws {
+        let image = testBitmapImage(size: NSSize(width: 180, height: 120), background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        viewModel.selectTool(.pen)
+        viewModel.addPenPoint(CGPoint(x: 105, y: 65))
+        viewModel.addPenPoint(CGPoint(x: 155, y: 80))
+        viewModel.finishPenPath(closed: false)
+        let targetIndex = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[targetIndex].locksPosition = true
+        let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
+        let layerCount = viewModel.document.layers.count
+
+        viewModel.addPenPoint(CGPoint(x: 20, y: 30))
+        let pendingCount = viewModel.pendingPenPathAnchors.count
+        #expect(viewModel.penPathJoinState(at: CGPoint(x: 105, y: 65)) == .blocked)
+        viewModel.addPenPoint(CGPoint(x: 105, y: 65))
+
+        #expect(viewModel.pendingPenPathAnchors.count == pendingCount)
+        #expect(viewModel.document.layers.count == layerCount)
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.undoStack.count == undoCount)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.operationFailed"))
+    }
+
+    @Test func hiddenTopEndpointYieldsToVisibleJoinTargetForNewPenBranch() throws {
+        let image = testBitmapImage(size: NSSize(width: 180, height: 120), background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        viewModel.selectTool(.pen)
+        for endpoint in [CGPoint(x: 150, y: 80), CGPoint(x: 145, y: 95)] {
+            viewModel.addPenPoint(CGPoint(x: 105, y: 65))
+            viewModel.addPenPoint(endpoint)
+            viewModel.finishPenPath(closed: false)
+        }
+        let hiddenIndex = try #require(viewModel.document.selectedLayerIndex)
+        let hiddenLayerID = viewModel.document.layers[hiddenIndex].id
+        viewModel.document.layers[hiddenIndex].isVisible = false
+        let visibleTargetID = try #require(viewModel.document.layers.first(where: {
+            $0.id != hiddenLayerID && $0.shapeContent?.kind == .path
+        })?.id)
+        let layerCount = viewModel.document.layers.count
+
+        viewModel.addPenPoint(CGPoint(x: 20, y: 30))
+        #expect(viewModel.penPathJoinTarget(at: CGPoint(x: 105, y: 65))?.layerID == visibleTargetID)
+        viewModel.addPenPoint(CGPoint(x: 105, y: 65))
+
+        #expect(viewModel.document.selectedLayerID == visibleTargetID)
+        #expect(viewModel.document.layers.count == layerCount)
+        #expect(viewModel.document.layers.contains(where: { $0.id == hiddenLayerID }))
+        #expect(viewModel.document.layers.first(where: { $0.id == visibleTargetID })?
+            .shapeContent?.pathAnchors.count == 3)
     }
 
     @Test func lockedJoinEndpointConsumesClickWithoutAddingOrMerging() throws {

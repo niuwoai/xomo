@@ -262,8 +262,7 @@ extension ImageEditorViewModel {
     }
 
     func penPathJoinTarget(at point: CGPoint?) -> ImageEditorPenPathJoinTarget? {
-        guard pendingPenContinuationLayerID != nil,
-              !pendingPenPathAnchors.isEmpty,
+        guard !pendingPenPathAnchors.isEmpty,
               let hit = penPathJoinEndpointHit(at: point),
               let layer = document.layers.first(where: { $0.id == hit.layerID }),
               let content = layer.shapeContent,
@@ -1845,15 +1844,9 @@ extension ImageEditorViewModel {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return true
         }
-        guard let sourceLayerID = pendingPenContinuationLayerID,
-              sourceLayerID != target.layerID,
-              let sourceIndex = document.layers.firstIndex(where: { $0.id == sourceLayerID }),
-              let targetIndex = document.layers.firstIndex(where: { $0.id == target.layerID }),
-              var sourceContent = document.layers[sourceIndex].shapeContent,
+        guard let targetIndex = document.layers.firstIndex(where: { $0.id == target.layerID }),
               let targetContent = document.layers[targetIndex].shapeContent,
-              sourceContent.kind == .path,
               targetContent.kind == .path,
-              !sourceContent.isPathClosed,
               !targetContent.isPathClosed,
               targetContent.allEditablePathSubpaths.count == 1,
               let targetLocalAnchors = targetContent.allEditablePathSubpaths.first,
@@ -1878,24 +1871,36 @@ extension ImageEditorViewModel {
             targetAnchors[0].inControl = controls.inControl
             targetAnchors[0].outControl = controls.outControl
         }
+        let joined = combinedPathAnchors(
+            pending: pendingPenPathAnchors,
+            target: targetAnchors
+        )
 
-        var joinedAnchors = pendingPenPathAnchors
-        let joinsAtSamePoint = joinedAnchors.last.map {
-            distance(from: $0.point, to: targetAnchors[0].point) <= 0.000_001
-        } ?? false
-        let selectedAnchorIndex: Int
-        if joinsAtSamePoint, let sourceEndpoint = joinedAnchors.popLast() {
-            joinedAnchors.append(ImageEditorPathAnchor(
-                point: targetAnchors[0].point,
-                inControl: targetAnchors[0].inControl ?? sourceEndpoint.inControl,
-                outControl: targetAnchors[0].outControl ?? sourceEndpoint.outControl
-            ))
-            joinedAnchors.append(contentsOf: targetAnchors.dropFirst())
-            selectedAnchorIndex = max(0, pendingPenPathAnchors.count - 1)
-        } else {
-            selectedAnchorIndex = joinedAnchors.count
-            joinedAnchors.append(contentsOf: targetAnchors)
+        guard let sourceLayerID = pendingPenContinuationLayerID else {
+            pushUndo()
+            updatePathLayer(
+                at: targetIndex,
+                shapeContent: targetContent,
+                canvasAnchors: joined.anchors,
+                editingSubpathIndex: 0
+            )
+            document.selectedLayerID = target.layerID
+            document.selectedLayerIDs = [target.layerID]
+            selectedPathSubpathIndex = 0
+            selectedPathAnchorIndex = joined.connectionIndex
+            selectedPathControlRole = .anchor
+            appendHistory(L10n.text("imageEditor.history.pathJoin"))
+            statusText = L10n.text("imageEditor.status.pathJoined")
+            clearPendingPenPath()
+            return true
         }
+
+        guard sourceLayerID != target.layerID,
+              let sourceIndex = document.layers.firstIndex(where: { $0.id == sourceLayerID }),
+              var sourceContent = document.layers[sourceIndex].shapeContent,
+              sourceContent.kind == .path,
+              !sourceContent.isPathClosed
+        else { return false }
 
         let targetLinkedIDs = document.layers[targetIndex].linkedLayerIDs
         pushUndo()
@@ -1916,14 +1921,14 @@ extension ImageEditorViewModel {
         updatePathLayer(
             at: updatedSourceIndex,
             shapeContent: sourceContent,
-            canvasAnchors: joinedAnchors,
+            canvasAnchors: joined.anchors,
             editingSubpathIndex: pendingPenContinuationSubpathIndex ?? 0
         )
         normalizeClippingMasks()
         document.selectedLayerID = sourceLayerID
         document.selectedLayerIDs = [sourceLayerID]
         selectedPathSubpathIndex = pendingPenContinuationSubpathIndex ?? 0
-        selectedPathAnchorIndex = selectedAnchorIndex
+        selectedPathAnchorIndex = joined.connectionIndex
         selectedPathControlRole = .anchor
         appendHistory(L10n.text("imageEditor.history.pathJoin"))
         statusText = L10n.text("imageEditor.status.pathJoined")
@@ -1945,6 +1950,28 @@ extension ImageEditorViewModel {
             inControl: anchor.outControl,
             outControl: anchor.inControl
         )
+    }
+
+    private func combinedPathAnchors(
+        pending: [ImageEditorPathAnchor],
+        target: [ImageEditorPathAnchor]
+    ) -> (anchors: [ImageEditorPathAnchor], connectionIndex: Int) {
+        var anchors = pending
+        let joinsAtSamePoint = anchors.last.map {
+            distance(from: $0.point, to: target[0].point) <= 0.000_001
+        } ?? false
+        if joinsAtSamePoint, let pendingEndpoint = anchors.popLast() {
+            anchors.append(ImageEditorPathAnchor(
+                point: target[0].point,
+                inControl: target[0].inControl ?? pendingEndpoint.inControl,
+                outControl: target[0].outControl ?? pendingEndpoint.outControl
+            ))
+            anchors.append(contentsOf: target.dropFirst())
+            return (anchors, max(0, pending.count - 1))
+        }
+        let connectionIndex = anchors.count
+        anchors.append(contentsOf: target)
+        return (anchors, connectionIndex)
     }
 
     private func addPathLayer(anchors: [ImageEditorPathAnchor], closed: Bool) {
@@ -2100,11 +2127,12 @@ extension ImageEditorViewModel {
     private func penPathJoinEndpointHit(
         at point: CGPoint?
     ) -> ImageEditorPenPathContinuationHit? {
-        guard let sourceLayerID = pendingPenContinuationLayerID,
+        guard !pendingPenPathAnchors.isEmpty,
               let point,
               point.x.isFinite,
               point.y.isFinite
         else { return nil }
+        let sourceLayerID = pendingPenContinuationLayerID
 
         for layer in document.layers.reversed() {
             guard !layer.isGroup,
