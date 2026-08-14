@@ -415,6 +415,9 @@
 "imageEditor.preview.background.checkerboard" = "Transparency";
 "imageEditor.preview.background.white" = "White";
 "imageEditor.preview.background.black" = "Black";
+"imageEditor.preview.zoom" = "Preview Zoom";
+"imageEditor.preview.zoom.fit" = "Fit";
+"imageEditor.preview.zoom.actualPixels" = "100%";
 "imageEditor.action.swatchesShowPanel" = "Show Swatches Panel";
 "imageEditor.action.brushesShowPanel" = "Show Brushes Panel";
 "imageEditor.action.characterShowPanel" = "Show Character Panel";

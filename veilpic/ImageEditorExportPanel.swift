@@ -43,6 +43,43 @@ enum ImageEditorPreviewBackdrop: String, CaseIterable, Identifiable, Hashable {
     }
 }
 
+enum ImageEditorPreviewZoomMode: String, CaseIterable, Identifiable, Hashable {
+    case fit
+    case actualPixels
+
+    var id: String { rawValue }
+
+    var title: String {
+        L10n.text("imageEditor.preview.zoom.\(rawValue)")
+    }
+
+    func displayedImageSize(canvasSize: CGSize, viewportSize: CGSize) -> CGSize {
+        guard canvasSize.width.isFinite,
+              canvasSize.height.isFinite,
+              viewportSize.width.isFinite,
+              viewportSize.height.isFinite,
+              canvasSize.width > 0,
+              canvasSize.height > 0,
+              viewportSize.width > 0,
+              viewportSize.height > 0
+        else { return .zero }
+
+        switch self {
+        case .fit:
+            let scale = min(
+                viewportSize.width / canvasSize.width,
+                viewportSize.height / canvasSize.height
+            )
+            return CGSize(
+                width: canvasSize.width * scale,
+                height: canvasSize.height * scale
+            )
+        case .actualPixels:
+            return canvasSize
+        }
+    }
+}
+
 private struct ImageEditorPreviewBackdropView: View {
     let backdrop: ImageEditorPreviewBackdrop
 
@@ -97,6 +134,19 @@ struct ImageEditorPreviewPanel: View {
                 .controlSize(.small)
                 .frame(width: 220)
                 .accessibilityIdentifier("image-editor-preview-background")
+                Picker(
+                    L10n.text("imageEditor.preview.zoom"),
+                    selection: $viewModel.previewZoomMode
+                ) {
+                    ForEach(ImageEditorPreviewZoomMode.allCases) { mode in
+                        Text(mode.title).tag(mode)
+                    }
+                }
+                .labelsHidden()
+                .pickerStyle(.segmented)
+                .controlSize(.small)
+                .frame(width: 150)
+                .accessibilityIdentifier("image-editor-preview-zoom")
                 Button {
                     viewModel.isPreviewSheetPresented = false
                 } label: {
@@ -111,17 +161,27 @@ struct ImageEditorPreviewPanel: View {
             Divider()
 
             GeometryReader { geometry in
-                ZStack {
-                    ImageEditorPreviewBackdropView(backdrop: viewModel.previewBackdrop)
-                    Image(nsImage: viewModel.previewImage)
-                        .resizable()
-                        .interpolation(.high)
-                        .scaledToFit()
+                let canvasSize = viewModel.document.canvasSize
+                let displayedSize = viewModel.previewZoomMode.displayedImageSize(
+                    canvasSize: canvasSize,
+                    viewportSize: geometry.size
+                )
+                if viewModel.previewZoomMode == .actualPixels {
+                    ScrollView([.horizontal, .vertical]) {
+                        ZStack {
+                            Color(nsColor: ImageEditorTheme.window)
+                            previewCanvas(size: displayedSize, interpolation: .none)
+                        }
                         .frame(
-                            width: geometry.size.width,
-                            height: geometry.size.height,
-                            alignment: .center
+                            width: max(displayedSize.width, geometry.size.width),
+                            height: max(displayedSize.height, geometry.size.height)
                         )
+                    }
+                } else {
+                    ZStack {
+                        ImageEditorPreviewBackdropView(backdrop: viewModel.previewBackdrop)
+                        previewImage(size: displayedSize, interpolation: .high)
+                    }
                 }
             }
             .accessibilityIdentifier("image-editor-preview-image")
@@ -130,6 +190,27 @@ struct ImageEditorPreviewPanel: View {
         .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
         .environment(\.colorScheme, .dark)
         .background(Color(nsColor: ImageEditorTheme.panel))
+    }
+
+    private func previewCanvas(
+        size: CGSize,
+        interpolation: Image.Interpolation
+    ) -> some View {
+        ZStack {
+            ImageEditorPreviewBackdropView(backdrop: viewModel.previewBackdrop)
+            previewImage(size: size, interpolation: interpolation)
+        }
+        .frame(width: size.width, height: size.height)
+    }
+
+    private func previewImage(
+        size: CGSize,
+        interpolation: Image.Interpolation
+    ) -> some View {
+        Image(nsImage: viewModel.previewImage)
+            .resizable()
+            .interpolation(interpolation)
+            .frame(width: size.width, height: size.height)
     }
 }
 

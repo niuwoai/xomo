@@ -65,6 +65,52 @@ struct ImageEditorExportFormatTests {
         #expect(viewModel.canUndo == originalCanUndo)
     }
 
+    @Test func previewZoomFitsViewportOrPreservesActualPixelDimensions() {
+        let canvasSize = CGSize(width: 800, height: 400)
+        let viewportSize = CGSize(width: 320, height: 240)
+
+        #expect(ImageEditorPreviewZoomMode.allCases.map(\.rawValue) == [
+            "fit", "actualPixels"
+        ])
+        #expect(
+            ImageEditorPreviewZoomMode.fit.displayedImageSize(
+                canvasSize: canvasSize,
+                viewportSize: viewportSize
+            ) == CGSize(width: 320, height: 160)
+        )
+        #expect(
+            ImageEditorPreviewZoomMode.actualPixels.displayedImageSize(
+                canvasSize: canvasSize,
+                viewportSize: viewportSize
+            ) == canvasSize
+        )
+        #expect(
+            ImageEditorPreviewZoomMode.fit.displayedImageSize(
+                canvasSize: canvasSize,
+                viewportSize: .zero
+            ) == .zero
+        )
+
+        let viewModel = ImageEditorViewModel(
+            sourceName: "preview-zoom",
+            image: NSImage.transparent(size: canvasSize)
+        ) { _ in }
+        let originalLayerIDs = viewModel.document.layers.map(\.id)
+        let originalHistory = viewModel.document.history
+        let originalCanUndo = viewModel.canUndo
+
+        #expect(viewModel.previewZoomMode == .fit)
+        viewModel.previewZoomMode = .actualPixels
+        viewModel.openPreviewPanel()
+        viewModel.isPreviewSheetPresented = false
+        viewModel.openPreviewPanel()
+
+        #expect(viewModel.previewZoomMode == .actualPixels)
+        #expect(viewModel.document.layers.map(\.id) == originalLayerIDs)
+        #expect(viewModel.document.history == originalHistory)
+        #expect(viewModel.canUndo == originalCanUndo)
+    }
+
     @Test func pureVectorCanvasExportsEditableSVG() throws {
         let viewModel = ImageEditorViewModel(
             sourceName: "vector-canvas",

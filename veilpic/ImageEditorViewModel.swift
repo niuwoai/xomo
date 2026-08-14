@@ -410,6 +410,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var selectedCanvasAnchor: ImageEditorCanvasAnchor = .center
     @Published var exportSettings = ImageEditorExportSettings()
     @Published var previewBackdrop: ImageEditorPreviewBackdrop = .checkerboard
+    @Published var previewZoomMode: ImageEditorPreviewZoomMode = .fit
     @Published var isPreviewSheetPresented = false
     @Published var isExportSheetPresented = false
     @Published var isNewCanvasSheetPresented = false

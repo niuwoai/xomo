@@ -415,6 +415,9 @@
 "imageEditor.preview.background.checkerboard" = "透明";
 "imageEditor.preview.background.white" = "白";
 "imageEditor.preview.background.black" = "黒";
+"imageEditor.preview.zoom" = "プレビュー倍率";
+"imageEditor.preview.zoom.fit" = "全体表示";
+"imageEditor.preview.zoom.actualPixels" = "100%";
 "imageEditor.action.swatchesShowPanel" = "スウォッチパネルを表示";
 "imageEditor.action.brushesShowPanel" = "ブラシパネルを表示";
 "imageEditor.action.characterShowPanel" = "文字パネルを表示";

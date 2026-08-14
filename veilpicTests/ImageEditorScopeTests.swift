@@ -1129,6 +1129,50 @@ struct ImageEditorScopeTests {
         }
     }
 
+    @Test func previewPanelWiresFitAndActualPixelZoomModes() throws {
+        let source = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent(
+                "veilpic/ImageEditorExportPanel.swift"
+            ),
+            encoding: .utf8
+        )
+        let viewModelSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent(
+                "veilpic/ImageEditorViewModel.swift"
+            ),
+            encoding: .utf8
+        )
+
+        let previewStart = try #require(source.range(of: "struct ImageEditorPreviewPanel: View"))
+        let previewEnd = try #require(
+            source[previewStart.upperBound...].range(of: "struct ImageEditorExportPanel: View")
+        )
+        let previewSource = source[previewStart.lowerBound..<previewEnd.lowerBound]
+        #expect(source.contains("case fit\n    case actualPixels"))
+        #expect(previewSource.contains("selection: $viewModel.previewZoomMode"))
+        #expect(previewSource.contains("ForEach(ImageEditorPreviewZoomMode.allCases)"))
+        #expect(previewSource.contains(".accessibilityIdentifier(\"image-editor-preview-zoom\")"))
+        #expect(previewSource.contains("ScrollView([.horizontal, .vertical])"))
+        #expect(previewSource.contains("interpolation: .none"))
+        #expect(previewSource.contains("interpolation: .high"))
+        #expect(previewSource.contains("viewModel.document.canvasSize"))
+        #expect(viewModelSource.contains(
+            "@Published var previewZoomMode: ImageEditorPreviewZoomMode = .fit"
+        ))
+
+        for locale in ["en", "ja", "zh-Hans"] {
+            let localization = try String(
+                contentsOf: Self.repositoryRoot().appendingPathComponent(
+                    "veilpic/\(locale).lproj/Localizable.strings"
+                ),
+                encoding: .utf8
+            )
+            #expect(localization.contains("\"imageEditor.preview.zoom\""))
+            #expect(localization.contains("\"imageEditor.preview.zoom.fit\""))
+            #expect(localization.contains("\"imageEditor.preview.zoom.actualPixels\""))
+        }
+    }
+
     @MainActor
     @Test func classicArrowNudgeShortcutsMoveSelectionBeforeLayer() {
         let image = NSImage(size: NSSize(width: 80, height: 60))
