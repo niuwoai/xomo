@@ -231,28 +231,16 @@ final class XomoAutomationRegistry {
         case "xomo.selection.all":
             viewModel.selectAll()
         case "xomo.selection.rectangle":
-            viewModel.createRectSelection(
-                from: CGPoint(
-                    x: try requiredNumber("x", in: arguments),
-                    y: try requiredNumber("y", in: arguments)
-                ),
-                to: CGPoint(
-                    x: try requiredNumber("x", in: arguments) + requiredNumber("width", in: arguments),
-                    y: try requiredNumber("y", in: arguments) + requiredNumber("height", in: arguments)
-                )
-            )
+            let rect = try requiredSelectionRect(arguments, canvasSize: viewModel.document.canvasSize)
+            guard viewModel.createRectSelection(from: rect.origin, to: CGPoint(x: rect.maxX, y: rect.maxY)) else {
+                throw XomoAutomationCallError.operationFailed("Rectangle selection failed")
+            }
         case "xomo.selection.ellipse":
+            let rect = try requiredSelectionRect(arguments, canvasSize: viewModel.document.canvasSize)
             viewModel.selectMarqueeShape(.ellipse)
-            viewModel.createMarqueeSelection(
-                from: CGPoint(
-                    x: try requiredNumber("x", in: arguments),
-                    y: try requiredNumber("y", in: arguments)
-                ),
-                to: CGPoint(
-                    x: try requiredNumber("x", in: arguments) + requiredNumber("width", in: arguments),
-                    y: try requiredNumber("y", in: arguments) + requiredNumber("height", in: arguments)
-                )
-            )
+            guard viewModel.createMarqueeSelection(from: rect.origin, to: CGPoint(x: rect.maxX, y: rect.maxY)) else {
+                throw XomoAutomationCallError.operationFailed("Ellipse selection failed")
+            }
         case "xomo.selection.lasso":
             viewModel.createLassoSelection(points: try requiredPoints("points", in: arguments))
         case "xomo.selection.magic":
@@ -5782,6 +5770,30 @@ final class XomoAutomationRegistry {
             throw XomoAutomationCallError.invalidArgument("Point array cannot be empty")
         }
         return points
+    }
+
+    private func requiredSelectionRect(
+        _ arguments: [String: XomoJSONValue],
+        canvasSize: CGSize
+    ) throws -> CGRect {
+        let rect = CGRect(
+            x: try requiredNumber("x", in: arguments),
+            y: try requiredNumber("y", in: arguments),
+            width: try requiredNumber("width", in: arguments),
+            height: try requiredNumber("height", in: arguments)
+        )
+        guard rect.width > 2,
+              rect.height > 2,
+              rect.minX >= 0,
+              rect.minY >= 0,
+              rect.maxX <= canvasSize.width,
+              rect.maxY <= canvasSize.height
+        else {
+            throw XomoAutomationCallError.invalidArgument(
+                "Selection rectangle must have positive dimensions above 2 pixels and remain inside the canvas"
+            )
+        }
+        return rect
     }
 
     private func requiredBrushSamples(

@@ -2028,6 +2028,68 @@ struct XomoAutomationTests {
         #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionUnchanged"))
     }
 
+    @Test func registryMarqueeSelectionAcceptsValidAndIdempotentEllipse() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        let ellipseRequest = request(
+            operation: "call",
+            name: "xomo.selection.ellipse",
+            arguments: [
+                "x": .number(10), "y": .number(12),
+                "width": .number(40), "height": .number(30)
+            ]
+        )
+
+        #expect(registry.execute(ellipseRequest).ok)
+        let selection = try #require(viewModel.document.selection)
+        #expect(selection.bounds == CGRect(x: 10, y: 12, width: 40, height: 30))
+        #expect(selection.isPolygon)
+        let historyCountAfterSelection = viewModel.document.history.count
+
+        #expect(registry.execute(ellipseRequest).ok)
+        #expect(viewModel.document.history.count == historyCountAfterSelection)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionUnchanged"))
+    }
+
+    @Test func registryRejectsInvalidMarqueeRectsBeforeChangingDocumentOrTool() {
+        let viewModel = makeViewModel()
+        viewModel.selectTool(.brush)
+        viewModel.createRectSelection(from: CGPoint(x: 20, y: 20), to: CGPoint(x: 60, y: 50))
+        let selectionBeforeRequests = viewModel.document.selection
+        let historyCountBeforeRequests = viewModel.document.history.count
+        let undoCountBeforeRequests = viewModel.undoStack.count
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        let invalidRequests = [
+            request(
+                operation: "call",
+                name: "xomo.selection.rectangle",
+                arguments: ["x": .number(10), "y": .number(10), "width": .number(0), "height": .number(20)]
+            ),
+            request(
+                operation: "call",
+                name: "xomo.selection.rectangle",
+                arguments: ["x": .number(10), "y": .number(10), "width": .number(-8), "height": .number(20)]
+            ),
+            request(
+                operation: "call",
+                name: "xomo.selection.ellipse",
+                arguments: ["x": .number(300), "y": .number(220), "width": .number(30), "height": .number(30)]
+            )
+        ]
+
+        for invalidRequest in invalidRequests {
+            let response = registry.execute(invalidRequest)
+            #expect(!response.ok)
+            #expect(response.error?.isEmpty == false)
+        }
+        #expect(viewModel.selectedTool == .brush)
+        #expect(viewModel.document.selection == selectionBeforeRequests)
+        #expect(viewModel.document.history.count == historyCountBeforeRequests)
+        #expect(viewModel.undoStack.count == undoCountBeforeRequests)
+    }
+
     @Test func registryRejectsQuickSelectionWhenAnyPointIsOutsideCanvas() {
         let viewModel = makeViewModel()
         let selectionBeforeRequest = viewModel.document.selection

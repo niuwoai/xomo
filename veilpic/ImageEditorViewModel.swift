@@ -3777,24 +3777,28 @@ final class ImageEditorViewModel: ObservableObject {
         ).intersection(CGRect(origin: .zero, size: document.canvasSize))
     }
 
-    func createMarqueeSelection(from start: CGPoint, to end: CGPoint) {
+    @discardableResult
+    func createMarqueeSelection(from start: CGPoint, to end: CGPoint) -> Bool {
         let rect = marqueeSelectionRect(from: start, to: end)
-        guard rect.width > 2, rect.height > 2 else { return }
+        guard rect.width > 2, rect.height > 2 else { return false }
         let selection: ImageEditorSelection?
         if marqueeShape.isEllipse {
             selection = ImageEditorSelection.ellipse(rect)
         } else {
             selection = .rectangle(rect)
         }
-        guard let selection else { return }
-        applySelectionCandidate(selection, replaceHistoryKey: "imageEditor.history.selection")
+        guard let selection else { return false }
+        _ = applySelectionCandidate(selection, replaceHistoryKey: "imageEditor.history.selection")
+        return true
     }
 
-    func createRectSelection(from start: CGPoint, to end: CGPoint) {
+    @discardableResult
+    func createRectSelection(from start: CGPoint, to end: CGPoint) -> Bool {
         let previousShape = marqueeShape
         marqueeShape = .rectangle
-        createMarqueeSelection(from: start, to: end)
+        let didResolveSelection = createMarqueeSelection(from: start, to: end)
         marqueeShape = previousShape
+        return didResolveSelection
     }
 
     func createLassoSelection(points: [CGPoint]) {
