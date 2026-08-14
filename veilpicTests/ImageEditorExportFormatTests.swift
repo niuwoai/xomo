@@ -1406,6 +1406,72 @@ struct ImageEditorExportFormatTests {
         #expect(viewModel.canUndo == originalCanUndo)
     }
 
+    @Test func reorderingSliceExportPresetsUpdatesDeliveryOrderAndHistorySelection() {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "delivery.png",
+            image: NSImage.transparent(size: CGSize(width: 80, height: 60))
+        ) { _ in }
+        let presets = [
+            ImageEditorSliceExportPreset(
+                suffix: "@2x",
+                format: .png,
+                constraint: .scale,
+                value: 2
+            ),
+            ImageEditorSliceExportPreset(
+                suffix: "@3x",
+                format: .jpeg,
+                constraint: .scale,
+                value: 3
+            ),
+            ImageEditorSliceExportPreset(
+                suffix: "-print",
+                format: .pdf,
+                constraint: .scale,
+                value: 1
+            )
+        ]
+        let slice = ImageEditorSlice(
+            name: "Hero",
+            frame: CGRect(x: 10, y: 10, width: 40, height: 30),
+            exportPresets: presets
+        )
+        viewModel.document.slices = [slice]
+        _ = viewModel.selectSlice(id: slice.id)
+        let historyCount = viewModel.document.history.count
+
+        #expect(!viewModel.moveSliceExportPreset(inSlice: slice.id, from: 0, direction: .up))
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.moveSliceExportPreset(inSlice: slice.id, from: 1, direction: .up))
+        #expect(viewModel.document.slices[0].exportPresets == [presets[1], presets[0], presets[2]])
+        #expect(viewModel.exportSettings.format == .jpeg)
+        #expect(viewModel.exportSettings.scale == 3)
+        #expect(viewModel.sliceExportPlan(settings: viewModel.exportSettings).map(\.filename) == [
+            "Hero@3x.jpg",
+            "Hero@2x.png",
+            "Hero-print.pdf"
+        ])
+        #expect(viewModel.document.history.count == historyCount + 1)
+
+        viewModel.undo()
+        #expect(viewModel.document.slices[0].exportPresets == presets)
+        #expect(viewModel.exportSettings.format == .png)
+        #expect(viewModel.exportSettings.scale == 2)
+        viewModel.redo()
+        #expect(viewModel.document.slices[0].exportPresets == [presets[1], presets[0], presets[2]])
+        #expect(viewModel.exportSettings.format == .jpeg)
+
+        #expect(viewModel.moveSliceExportPreset(inSlice: slice.id, from: 0, direction: .down))
+        #expect(viewModel.document.slices[0].exportPresets == presets)
+        #expect(viewModel.exportSettings.format == .png)
+
+        viewModel.exportSettings.scale = 3.5
+        viewModel.exportSettings.filenameSuffix = "@3.5x"
+        viewModel.syncExportSettingsAfterSliceHistoryChange(from: viewModel.document.slices)
+        #expect(viewModel.exportSettings.scale == 3.5)
+        #expect(viewModel.exportSettings.filenameSuffix == "@3.5x")
+    }
+
     @Test func exportingAllSlicesUsesPresetsFallbackScalesAndCollisionSafeNames() throws {
         let viewModel = ImageEditorViewModel(
             sourceName: "delivery.png",

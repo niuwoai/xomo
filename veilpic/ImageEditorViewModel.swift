@@ -3317,8 +3317,10 @@ final class ImageEditorViewModel: ObservableObject {
         let previousThemeState = undoXomoThemeStates.popLast() ?? currentXomoThemeUndoState
         redoStack.append(document)
         redoXomoThemeStates.append(currentXomoThemeUndoState)
+        let slicesBeforeRestore = document.slices
         document = previous
         applyXomoThemeUndoState(previousThemeState)
+        syncExportSettingsAfterSliceHistoryChange(from: slicesBeforeRestore)
         selectedHistoryEntryID = document.history.last?.id
         ensureSelectedLayer()
         syncAdjustmentControlsFromSelection()
@@ -3343,8 +3345,10 @@ final class ImageEditorViewModel: ObservableObject {
         let nextThemeState = redoXomoThemeStates.popLast() ?? currentXomoThemeUndoState
         undoStack.append(document)
         undoXomoThemeStates.append(currentXomoThemeUndoState)
+        let slicesBeforeRestore = document.slices
         document = next
         applyXomoThemeUndoState(nextThemeState)
+        syncExportSettingsAfterSliceHistoryChange(from: slicesBeforeRestore)
         selectedHistoryEntryID = document.history.last?.id
         ensureSelectedLayer()
         syncAdjustmentControlsFromSelection()
@@ -3360,7 +3364,9 @@ final class ImageEditorViewModel: ObservableObject {
               document.history.last?.id != id
         else { return }
         pushUndo()
+        let slicesBeforeRestore = document.slices
         document = snapshot
+        syncExportSettingsAfterSliceHistoryChange(from: slicesBeforeRestore)
         ensureSelectedLayer()
         syncAdjustmentControlsFromSelection()
         syncFilterControlsFromSelection()

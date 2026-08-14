@@ -3522,6 +3522,10 @@
 "imageEditor.status.sliceExportPresetRemoved" = "スライスから書き出しプリセットを削除しました：%@";
 "imageEditor.history.sliceExportPresetAdded" = "スライス書き出しプリセットを追加：%@";
 "imageEditor.history.sliceExportPresetRemoved" = "スライス書き出しプリセットを削除：%@";
+"imageEditor.slices.exportPreset.moveUp" = "書き出しプリセットを上へ移動";
+"imageEditor.slices.exportPreset.moveDown" = "書き出しプリセットを下へ移動";
+"imageEditor.status.sliceExportPresetMoved" = "スライスの書き出しプリセットを並べ替えました：%@";
+"imageEditor.history.sliceExportPresetMoved" = "スライス書き出しプリセットを並べ替え：%@";
 "imageEditor.status.slicesPanelShown" = "スライスパネルを表示しました";
 "imageEditor.status.slicesPanelHidden" = "スライスパネルを非表示にしました";
 "imageEditor.status.sliceSelected" = "スライスを選択しました：%@";

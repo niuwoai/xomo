@@ -234,6 +234,7 @@ struct ImageEditorSlicePanel: View {
                             onSave: { save($0, for: slice) },
                             onAddExportPreset: { addExportPreset(to: slice) },
                             onDeleteExportPreset: { deleteExportPreset(at: $0, from: slice) },
+                            onMoveExportPreset: { moveExportPreset(at: $0, in: slice, direction: $1) },
                             onDelete: { delete(slice) }
                         )
                     }
@@ -287,6 +288,18 @@ struct ImageEditorSlicePanel: View {
         _ = viewModel.removeSliceExportPreset(fromSlice: slice.id, at: index)
     }
 
+    private func moveExportPreset(
+        at index: Int,
+        in slice: ImageEditorSlice,
+        direction: ImageEditorSliceExportPresetMoveDirection
+    ) {
+        _ = viewModel.moveSliceExportPreset(
+            inSlice: slice.id,
+            from: index,
+            direction: direction
+        )
+    }
+
     private func syncDrafts() {
         let currentIDs = Set(viewModel.availableSlices.map(\.id))
         var next = drafts.filter { currentIDs.contains($0.key) }
@@ -309,6 +322,7 @@ private struct ImageEditorSlicePanelRow: View {
     let onSave: (ImageEditorSliceDraft) -> Void
     let onAddExportPreset: () -> Void
     let onDeleteExportPreset: (Int) -> Void
+    let onMoveExportPreset: (Int, ImageEditorSliceExportPresetMoveDirection) -> Void
     let onDelete: () -> Void
 
     var body: some View {
@@ -340,6 +354,24 @@ private struct ImageEditorSlicePanelRow: View {
                                 .foregroundColor(Color(nsColor: ImageEditorTheme.mutedText))
                                 .lineLimit(1)
                             Spacer(minLength: 0)
+                            Button {
+                                onMoveExportPreset(index, .up)
+                            } label: {
+                                Image(systemName: "chevron.up")
+                            }
+                            .buttonStyle(.borderless)
+                            .focusable(false)
+                            .disabled(index == presets.startIndex)
+                            .help(L10n.text("imageEditor.slices.exportPreset.moveUp"))
+                            Button {
+                                onMoveExportPreset(index, .down)
+                            } label: {
+                                Image(systemName: "chevron.down")
+                            }
+                            .buttonStyle(.borderless)
+                            .focusable(false)
+                            .disabled(index == presets.index(before: presets.endIndex))
+                            .help(L10n.text("imageEditor.slices.exportPreset.moveDown"))
                             Button {
                                 onDeleteExportPreset(index)
                             } label: {

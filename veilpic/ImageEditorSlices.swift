@@ -1,6 +1,20 @@
 import AppKit
 import UniformTypeIdentifiers
 
+enum ImageEditorSliceExportPresetMoveDirection {
+    case up
+    case down
+
+    func destinationIndex(from index: Int) -> Int {
+        switch self {
+        case .up:
+            index - 1
+        case .down:
+            index + 1
+        }
+    }
+}
+
 @MainActor
 extension ImageEditorViewModel {
     var canCreateSliceFromSelection: Bool {
@@ -157,6 +171,47 @@ extension ImageEditorViewModel {
         appendHistory(L10n.format("imageEditor.history.sliceExportPresetRemoved", updated.name))
         statusText = L10n.format("imageEditor.status.sliceExportPresetRemoved", updated.name)
         return true
+    }
+
+    @discardableResult
+    func moveSliceExportPreset(
+        inSlice id: UUID,
+        from presetIndex: Int,
+        direction: ImageEditorSliceExportPresetMoveDirection
+    ) -> Bool {
+        guard let sliceIndex = document.slices.firstIndex(where: { $0.id == id }),
+              var presets = document.slices[sliceIndex].exportPresets,
+              presets.indices.contains(presetIndex)
+        else { return false }
+        let destination = direction.destinationIndex(from: presetIndex)
+        guard presets.indices.contains(destination) else { return false }
+
+        pushUndo()
+        presets.swapAt(presetIndex, destination)
+        document.slices[sliceIndex].exportPresets = presets
+        let updated = document.slices[sliceIndex]
+        if exportSettings.sliceID == id {
+            applyPrimaryExportPreset(for: updated)
+        }
+        appendHistory(L10n.format("imageEditor.history.sliceExportPresetMoved", updated.name))
+        statusText = L10n.format("imageEditor.status.sliceExportPresetMoved", updated.name)
+        return true
+    }
+
+    func syncExportSettingsAfterSliceHistoryChange(from previousSlices: [ImageEditorSlice]) {
+        guard previousSlices != document.slices,
+              exportSettings.scope == .slice
+        else { return }
+        if let id = exportSettings.sliceID, let selected = slice(with: id) {
+            applyPrimaryExportPreset(for: selected)
+        } else if let first = document.slices.first {
+            exportSettings.sliceID = first.id
+            applyPrimaryExportPreset(for: first)
+        } else {
+            exportSettings.scope = .composited
+            exportSettings.sliceID = nil
+            exportSettings.filenameSuffix = ""
+        }
     }
 
     private var sliceBoundsFromSelection: CGRect? {

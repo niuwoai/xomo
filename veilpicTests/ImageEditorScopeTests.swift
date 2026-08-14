@@ -2252,6 +2252,50 @@ struct ImageEditorScopeTests {
         }
     }
 
+    @Test func slicePanelReordersPresetsAndHistoryResynchronizesThePrimarySetting() throws {
+        let panelSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent(
+                "veilpic/ImageEditorHotspotPanel.swift"
+            ),
+            encoding: .utf8
+        )
+        let sliceSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent(
+                "veilpic/ImageEditorSlices.swift"
+            ),
+            encoding: .utf8
+        )
+        let viewModelSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent(
+                "veilpic/ImageEditorViewModel.swift"
+            ),
+            encoding: .utf8
+        )
+
+        #expect(panelSource.contains("onMoveExportPreset(index, .up)"))
+        #expect(panelSource.contains("onMoveExportPreset(index, .down)"))
+        #expect(panelSource.contains(".disabled(index == presets.startIndex)"))
+        #expect(panelSource.contains(".disabled(index == presets.index(before: presets.endIndex))"))
+        #expect(sliceSource.contains("func moveSliceExportPreset("))
+        #expect(sliceSource.contains("presets.swapAt(presetIndex, destination)"))
+        #expect(sliceSource.contains("syncExportSettingsAfterSliceHistoryChange"))
+        #expect(viewModelSource.components(
+            separatedBy: "syncExportSettingsAfterSliceHistoryChange(from: slicesBeforeRestore)"
+        ).count == 4)
+
+        for locale in ["en", "ja", "zh-Hans"] {
+            let localization = try String(
+                contentsOf: Self.repositoryRoot().appendingPathComponent(
+                    "veilpic/\(locale).lproj/Localizable.strings"
+                ),
+                encoding: .utf8
+            )
+            #expect(localization.contains("\"imageEditor.slices.exportPreset.moveUp\""))
+            #expect(localization.contains("\"imageEditor.slices.exportPreset.moveDown\""))
+            #expect(localization.contains("\"imageEditor.history.sliceExportPresetMoved\""))
+        }
+    }
+
     @Test func exportPanelUsesSharedLabelGridAndSingleLineScopeSegments() throws {
         let source = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorExportPanel.swift"),

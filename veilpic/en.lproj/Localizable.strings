@@ -3522,6 +3522,10 @@
 "imageEditor.status.sliceExportPresetRemoved" = "Removed an export preset from slice: %@";
 "imageEditor.history.sliceExportPresetAdded" = "Add Slice Export Preset: %@";
 "imageEditor.history.sliceExportPresetRemoved" = "Remove Slice Export Preset: %@";
+"imageEditor.slices.exportPreset.moveUp" = "Move Export Preset Up";
+"imageEditor.slices.exportPreset.moveDown" = "Move Export Preset Down";
+"imageEditor.status.sliceExportPresetMoved" = "Reordered export presets for slice: %@";
+"imageEditor.history.sliceExportPresetMoved" = "Reorder Slice Export Presets: %@";
 "imageEditor.status.slicesPanelShown" = "Slices panel shown";
 "imageEditor.status.slicesPanelHidden" = "Slices panel hidden";
 "imageEditor.status.sliceSelected" = "Selected slice: %@";
