@@ -188,6 +188,7 @@ struct ImageEditorSliceDraft: Equatable {
     var y: String
     var width: String
     var height: String
+    var exportPresetSuffixes: [String]
 
     init(_ slice: ImageEditorSlice) {
         name = slice.name
@@ -195,6 +196,7 @@ struct ImageEditorSliceDraft: Equatable {
         y = Self.number(slice.frame.minY)
         width = Self.number(slice.frame.width)
         height = Self.number(slice.frame.height)
+        exportPresetSuffixes = (slice.exportPresets ?? []).map(\.suffix)
     }
 
     private static func number(_ value: CGFloat) -> String {
@@ -235,6 +237,9 @@ struct ImageEditorSlicePanel: View {
                             onAddExportPreset: { addExportPreset(to: slice) },
                             onDeleteExportPreset: { deleteExportPreset(at: $0, from: slice) },
                             onMoveExportPreset: { moveExportPreset(at: $0, in: slice, direction: $1) },
+                            onUpdateExportPresetSuffix: {
+                                updateExportPresetSuffix(at: $0, suffix: $1, in: slice)
+                            },
                             onDelete: { delete(slice) }
                         )
                     }
@@ -300,11 +305,25 @@ struct ImageEditorSlicePanel: View {
         )
     }
 
+    private func updateExportPresetSuffix(at index: Int, suffix: String, in slice: ImageEditorSlice) {
+        _ = viewModel.updateSliceExportPresetSuffix(
+            inSlice: slice.id,
+            at: index,
+            suffix: suffix
+        )
+        syncDrafts()
+    }
+
     private func syncDrafts() {
         let currentIDs = Set(viewModel.availableSlices.map(\.id))
         var next = drafts.filter { currentIDs.contains($0.key) }
-        for slice in viewModel.availableSlices where next[slice.id] == nil {
-            next[slice.id] = ImageEditorSliceDraft(slice)
+        for slice in viewModel.availableSlices {
+            if var existing = next[slice.id] {
+                existing.exportPresetSuffixes = (slice.exportPresets ?? []).map(\.suffix)
+                next[slice.id] = existing
+            } else {
+                next[slice.id] = ImageEditorSliceDraft(slice)
+            }
         }
         drafts = next
         if let selected = viewModel.exportSettings.sliceID,
@@ -323,6 +342,7 @@ private struct ImageEditorSlicePanelRow: View {
     let onAddExportPreset: () -> Void
     let onDeleteExportPreset: (Int) -> Void
     let onMoveExportPreset: (Int, ImageEditorSliceExportPresetMoveDirection) -> Void
+    let onUpdateExportPresetSuffix: (Int, String) -> Void
     let onDelete: () -> Void
 
     var body: some View {
@@ -381,6 +401,42 @@ private struct ImageEditorSlicePanelRow: View {
                             .focusable(false)
                             .help(L10n.text("imageEditor.slices.exportPreset.remove"))
                         }
+                        if isSelected {
+                            HStack(spacing: 4) {
+                                TextField(
+                                    L10n.text("imageEditor.slices.exportPreset.suffix"),
+                                    text: exportPresetSuffixBinding(
+                                        at: index,
+                                        fallback: presets[index].suffix
+                                    )
+                                )
+                                .textFieldStyle(.roundedBorder)
+                                .font(.system(size: 10))
+                                .onSubmit {
+                                    onUpdateExportPresetSuffix(
+                                        index,
+                                        exportPresetSuffix(
+                                            at: index,
+                                            fallback: presets[index].suffix
+                                        )
+                                    )
+                                }
+                                Button {
+                                    onUpdateExportPresetSuffix(
+                                        index,
+                                        exportPresetSuffix(
+                                            at: index,
+                                            fallback: presets[index].suffix
+                                        )
+                                    )
+                                } label: {
+                                    Image(systemName: "checkmark")
+                                }
+                                .buttonStyle(.borderless)
+                                .focusable(false)
+                                .help(L10n.text("imageEditor.slices.exportPreset.applySuffix"))
+                            }
+                        }
                     }
                 }
             }
@@ -438,6 +494,26 @@ private struct ImageEditorSlicePanelRow: View {
             return "\(preset.format.title) · \(constraint)"
         }
         return "\(preset.format.title) · \(constraint) · \(preset.suffix)"
+    }
+
+    private func exportPresetSuffixBinding(at index: Int, fallback: String) -> Binding<String> {
+        Binding(
+            get: {
+                draft.exportPresetSuffixes.indices.contains(index)
+                    ? draft.exportPresetSuffixes[index]
+                    : fallback
+            },
+            set: { value in
+                guard draft.exportPresetSuffixes.indices.contains(index) else { return }
+                draft.exportPresetSuffixes[index] = value
+            }
+        )
+    }
+
+    private func exportPresetSuffix(at index: Int, fallback: String) -> String {
+        draft.exportPresetSuffixes.indices.contains(index)
+            ? draft.exportPresetSuffixes[index]
+            : fallback
     }
 
     private func coordinateField(_ key: String, text: Binding<String>) -> some View {

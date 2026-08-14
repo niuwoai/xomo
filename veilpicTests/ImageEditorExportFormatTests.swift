@@ -1472,6 +1472,75 @@ struct ImageEditorExportFormatTests {
         #expect(viewModel.exportSettings.filenameSuffix == "@3.5x")
     }
 
+    @Test func editingSliceExportPresetSuffixSanitizesDeduplicatesAndRoundTripsHistory() {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "delivery.png",
+            image: NSImage.transparent(size: CGSize(width: 80, height: 60))
+        ) { _ in }
+        let presets = [
+            ImageEditorSliceExportPreset(
+                suffix: "@2x",
+                format: .png,
+                constraint: .scale,
+                value: 2
+            ),
+            ImageEditorSliceExportPreset(
+                suffix: "-alternate",
+                format: .png,
+                constraint: .scale,
+                value: 2
+            )
+        ]
+        let slice = ImageEditorSlice(
+            name: "Hero",
+            frame: CGRect(x: 10, y: 10, width: 40, height: 30),
+            exportPresets: presets
+        )
+        viewModel.document.slices = [slice]
+        _ = viewModel.selectSlice(id: slice.id)
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.updateSliceExportPresetSuffix(
+            inSlice: slice.id,
+            at: 0,
+            suffix: "/../dark"
+        ))
+        #expect(viewModel.document.slices[0].exportPresets?.first?.suffix == "-..-dark")
+        #expect(viewModel.exportSettings.filenameSuffix == "-..-dark")
+        #expect(viewModel.sliceExportPlan(settings: viewModel.exportSettings).first?.filename == "Hero-..-dark.png")
+        #expect(viewModel.document.history.count == historyCount + 1)
+
+        viewModel.undo()
+        #expect(viewModel.document.slices[0].exportPresets == presets)
+        #expect(viewModel.exportSettings.filenameSuffix == "@2x")
+        viewModel.redo()
+        #expect(viewModel.document.slices[0].exportPresets?.first?.suffix == "-..-dark")
+        #expect(viewModel.exportSettings.filenameSuffix == "-..-dark")
+
+        let historyAfterEdit = viewModel.document.history.count
+        #expect(!viewModel.updateSliceExportPresetSuffix(
+            inSlice: slice.id,
+            at: 0,
+            suffix: "/../dark"
+        ))
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.sliceExportPresetUnchanged"))
+        #expect(viewModel.document.history.count == historyAfterEdit)
+
+        #expect(!viewModel.updateSliceExportPresetSuffix(
+            inSlice: slice.id,
+            at: 1,
+            suffix: "-..-dark"
+        ))
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.sliceExportPresetDuplicate"))
+        #expect(viewModel.document.history.count == historyAfterEdit)
+        #expect(!viewModel.updateSliceExportPresetSuffix(
+            inSlice: slice.id,
+            at: 99,
+            suffix: "-missing"
+        ))
+        #expect(viewModel.document.history.count == historyAfterEdit)
+    }
+
     @Test func exportingAllSlicesUsesPresetsFallbackScalesAndCollisionSafeNames() throws {
         let viewModel = ImageEditorViewModel(
             sourceName: "delivery.png",

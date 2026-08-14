@@ -3526,6 +3526,11 @@
 "imageEditor.slices.exportPreset.moveDown" = "Move Export Preset Down";
 "imageEditor.status.sliceExportPresetMoved" = "Reordered export presets for slice: %@";
 "imageEditor.history.sliceExportPresetMoved" = "Reorder Slice Export Presets: %@";
+"imageEditor.slices.exportPreset.suffix" = "Filename suffix";
+"imageEditor.slices.exportPreset.applySuffix" = "Apply Filename Suffix";
+"imageEditor.status.sliceExportPresetDuplicate" = "An identical export preset already exists";
+"imageEditor.status.sliceExportPresetSuffixUpdated" = "Updated an export preset suffix for slice: %@";
+"imageEditor.history.sliceExportPresetSuffixUpdated" = "Update Slice Export Preset Suffix: %@";
 "imageEditor.status.slicesPanelShown" = "Slices panel shown";
 "imageEditor.status.slicesPanelHidden" = "Slices panel hidden";
 "imageEditor.status.sliceSelected" = "Selected slice: %@";

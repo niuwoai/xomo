@@ -3526,6 +3526,11 @@
 "imageEditor.slices.exportPreset.moveDown" = "下移导出预设";
 "imageEditor.status.sliceExportPresetMoved" = "已调整切片导出预设顺序：%@";
 "imageEditor.history.sliceExportPresetMoved" = "调整切片导出预设顺序：%@";
+"imageEditor.slices.exportPreset.suffix" = "文件名后缀";
+"imageEditor.slices.exportPreset.applySuffix" = "应用文件名后缀";
+"imageEditor.status.sliceExportPresetDuplicate" = "相同的导出预设已经存在";
+"imageEditor.status.sliceExportPresetSuffixUpdated" = "已更新切片导出预设后缀：%@";
+"imageEditor.history.sliceExportPresetSuffixUpdated" = "更新切片导出预设后缀：%@";
 "imageEditor.status.slicesPanelShown" = "已显示切片面板";
 "imageEditor.status.slicesPanelHidden" = "已隐藏切片面板";
 "imageEditor.status.sliceSelected" = "已选中切片：%@";

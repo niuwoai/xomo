@@ -198,6 +198,46 @@ extension ImageEditorViewModel {
         return true
     }
 
+    @discardableResult
+    func updateSliceExportPresetSuffix(
+        inSlice id: UUID,
+        at presetIndex: Int,
+        suffix: String
+    ) -> Bool {
+        guard let sliceIndex = document.slices.firstIndex(where: { $0.id == id }),
+              var presets = document.slices[sliceIndex].exportPresets,
+              presets.indices.contains(presetIndex)
+        else { return false }
+        let current = presets[presetIndex]
+        let updated = ImageEditorSliceExportPreset(
+            suffix: suffix,
+            format: current.format,
+            constraint: current.constraint,
+            value: current.value
+        )
+        guard updated != current else {
+            statusText = L10n.text("imageEditor.status.sliceExportPresetUnchanged")
+            return false
+        }
+        guard !presets.enumerated().contains(where: { index, preset in
+            index != presetIndex && preset == updated
+        }) else {
+            statusText = L10n.text("imageEditor.status.sliceExportPresetDuplicate")
+            return false
+        }
+
+        pushUndo()
+        presets[presetIndex] = updated
+        document.slices[sliceIndex].exportPresets = presets
+        let slice = document.slices[sliceIndex]
+        if exportSettings.sliceID == id && presetIndex == presets.startIndex {
+            applyPrimaryExportPreset(for: slice)
+        }
+        appendHistory(L10n.format("imageEditor.history.sliceExportPresetSuffixUpdated", slice.name))
+        statusText = L10n.format("imageEditor.status.sliceExportPresetSuffixUpdated", slice.name)
+        return true
+    }
+
     func syncExportSettingsAfterSliceHistoryChange(from previousSlices: [ImageEditorSlice]) {
         guard previousSlices != document.slices,
               exportSettings.scope == .slice

@@ -2296,6 +2296,44 @@ struct ImageEditorScopeTests {
         }
     }
 
+    @Test func slicePanelCommitsSanitizedPresetSuffixDraftsThroughTheModel() throws {
+        let panelSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent(
+                "veilpic/ImageEditorHotspotPanel.swift"
+            ),
+            encoding: .utf8
+        )
+        let sliceSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent(
+                "veilpic/ImageEditorSlices.swift"
+            ),
+            encoding: .utf8
+        )
+
+        #expect(panelSource.contains("var exportPresetSuffixes: [String]"))
+        #expect(panelSource.contains("existing.exportPresetSuffixes = (slice.exportPresets ?? []).map(\\.suffix)"))
+        #expect(panelSource.contains("imageEditor.slices.exportPreset.suffix"))
+        #expect(panelSource.contains("onUpdateExportPresetSuffix("))
+        #expect(panelSource.contains("viewModel.updateSliceExportPresetSuffix("))
+        #expect(sliceSource.contains("func updateSliceExportPresetSuffix("))
+        #expect(sliceSource.contains("suffix: suffix"))
+        #expect(sliceSource.contains("index != presetIndex && preset == updated"))
+        #expect(sliceSource.contains("presetIndex == presets.startIndex"))
+
+        for locale in ["en", "ja", "zh-Hans"] {
+            let localization = try String(
+                contentsOf: Self.repositoryRoot().appendingPathComponent(
+                    "veilpic/\(locale).lproj/Localizable.strings"
+                ),
+                encoding: .utf8
+            )
+            #expect(localization.contains("\"imageEditor.slices.exportPreset.suffix\""))
+            #expect(localization.contains("\"imageEditor.slices.exportPreset.applySuffix\""))
+            #expect(localization.contains("\"imageEditor.status.sliceExportPresetDuplicate\""))
+            #expect(localization.contains("\"imageEditor.history.sliceExportPresetSuffixUpdated\""))
+        }
+    }
+
     @Test func exportPanelUsesSharedLabelGridAndSingleLineScopeSegments() throws {
         let source = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorExportPanel.swift"),
