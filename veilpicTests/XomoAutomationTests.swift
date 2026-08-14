@@ -2040,6 +2040,144 @@ struct XomoAutomationTests {
         #expect(viewModel.document.layers.count == layerCountBeforeRequests + 2)
     }
 
+    @Test func registrySelectionPixelEditsRequireCompatibleLayerCapabilities() throws {
+        let size = CGSize(width: 32, height: 24)
+        let image = try #require(NSImage.rendered(size: size) { _ in
+            NSColor.systemRed.setFill()
+            CGRect(origin: .zero, size: size).fill()
+        })
+        let lockedViewModel = ImageEditorViewModel(
+            sourceName: "locked-selection-edit.png",
+            image: image
+        ) { _ in }
+        lockedViewModel.replaceSelectedLayerImageForTesting(
+            image,
+            historyTitle: L10n.text("imageEditor.history.brush")
+        )
+        lockedViewModel.selectAll()
+        let lockedIndex = try #require(lockedViewModel.document.selectedLayerIndex)
+        lockedViewModel.document.layers[lockedIndex].isLocked = true
+        let lockedLayerID = lockedViewModel.document.layers[lockedIndex].id
+        let lockedLayerCount = lockedViewModel.document.layers.count
+        let lockedHistoryCount = lockedViewModel.document.history.count
+        let lockedImageData = try #require(
+            lockedViewModel.document.layers[lockedIndex].image.qingtuPNGData()
+        )
+        let lockedUndoCount = lockedViewModel.undoStack.count
+        let lockedStatus = lockedViewModel.statusText
+        let registry = XomoAutomationRegistry.shared
+        registry.register(lockedViewModel)
+
+        for action in ["fillForeground", "fillBackground", "stroke", "contentAwareFill"] {
+            let response = registry.execute(request(
+                operation: "call",
+                name: "xomo.selection.edit",
+                arguments: ["action": .string(action)]
+            ))
+            #expect(!response.ok)
+            #expect(response.error?.contains("editable selected pixel layer") == true)
+        }
+        for action in ["clearPixels", "cutToLayer"] {
+            let response = registry.execute(request(
+                operation: "call",
+                name: "xomo.selection.edit",
+                arguments: ["action": .string(action)]
+            ))
+            #expect(!response.ok)
+            #expect(response.error?.contains("removable") == true)
+        }
+        #expect(lockedViewModel.document.layers.count == lockedLayerCount)
+        #expect(lockedViewModel.document.history.count == lockedHistoryCount)
+        #expect(lockedViewModel.document.selectedLayerID == lockedLayerID)
+        #expect(lockedViewModel.document.layers[lockedIndex].image.qingtuPNGData() == lockedImageData)
+        #expect(lockedViewModel.undoStack.count == lockedUndoCount)
+        #expect(lockedViewModel.statusText == lockedStatus)
+
+        let copyResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.selection.edit",
+            arguments: ["action": .string("copyToLayer")]
+        ))
+        #expect(copyResponse.ok)
+        #expect(lockedViewModel.document.layers.count == lockedLayerCount + 1)
+
+        let transparencyLockedViewModel = ImageEditorViewModel(
+            sourceName: "transparency-locked-selection-edit.png",
+            image: image
+        ) { _ in }
+        transparencyLockedViewModel.replaceSelectedLayerImageForTesting(
+            image,
+            historyTitle: L10n.text("imageEditor.history.brush")
+        )
+        transparencyLockedViewModel.selectAll()
+        let transparencyLockedIndex = try #require(
+            transparencyLockedViewModel.document.selectedLayerIndex
+        )
+        transparencyLockedViewModel.document.layers[transparencyLockedIndex].locksTransparentPixels = true
+        let transparencyLockedLayerCount = transparencyLockedViewModel.document.layers.count
+        let transparencyLockedHistoryCount = transparencyLockedViewModel.document.history.count
+        let transparencyLockedImageData = try #require(
+            transparencyLockedViewModel.document.layers[transparencyLockedIndex].image.qingtuPNGData()
+        )
+        let transparencyLockedUndoCount = transparencyLockedViewModel.undoStack.count
+        registry.register(transparencyLockedViewModel)
+
+        for action in ["clearPixels", "cutToLayer"] {
+            let response = registry.execute(request(
+                operation: "call",
+                name: "xomo.selection.edit",
+                arguments: ["action": .string(action)]
+            ))
+            #expect(!response.ok)
+            #expect(response.error?.contains("removable") == true)
+        }
+        #expect(transparencyLockedViewModel.document.layers.count == transparencyLockedLayerCount)
+        #expect(transparencyLockedViewModel.document.history.count == transparencyLockedHistoryCount)
+        #expect(
+            transparencyLockedViewModel.document.layers[transparencyLockedIndex].image.qingtuPNGData()
+                == transparencyLockedImageData
+        )
+        #expect(transparencyLockedViewModel.undoStack.count == transparencyLockedUndoCount)
+
+        transparencyLockedViewModel.foregroundColor = .systemBlue
+        let fillResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.selection.edit",
+            arguments: ["action": .string("fillForeground")]
+        ))
+        #expect(fillResponse.ok)
+        #expect(
+            transparencyLockedViewModel.document.history.count
+                == transparencyLockedHistoryCount + 1
+        )
+
+        let groupViewModel = ImageEditorViewModel(
+            sourceName: "group-selection-edit.png",
+            image: image
+        ) { _ in }
+        let group = ImageEditorLayer.group(name: "Group", size: size)
+        groupViewModel.document.layers = [group]
+        groupViewModel.document.selectedLayerID = group.id
+        groupViewModel.document.selectedLayerIDs = [group.id]
+        groupViewModel.selectAll()
+        let groupLayerCount = groupViewModel.document.layers.count
+        let groupHistoryCount = groupViewModel.document.history.count
+        let groupUndoCount = groupViewModel.undoStack.count
+        registry.register(groupViewModel)
+
+        let groupCopyResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.selection.edit",
+            arguments: ["action": .string("copyToLayer")]
+        ))
+        #expect(!groupCopyResponse.ok)
+        #expect(groupCopyResponse.error?.contains("copyable selected pixel layer") == true)
+        #expect(groupViewModel.document.layers.count == groupLayerCount)
+        #expect(groupViewModel.document.history.count == groupHistoryCount)
+        #expect(groupViewModel.document.selectedLayerID == group.id)
+        #expect(groupViewModel.undoStack.count == groupUndoCount)
+    }
+
     @Test func registryRepeatedEquivalentSelectionSaveDoesNotCreateDuplicateHistory() throws {
         let viewModel = makeViewModel()
         viewModel.document.selection = ImageEditorSelection.rectangle(

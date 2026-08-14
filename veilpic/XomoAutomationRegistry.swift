@@ -4661,6 +4661,7 @@ final class XomoAutomationRegistry {
         let action = try requiredString("action", in: arguments)
         if Self.selectionEditActionsRequiringActiveSelection.contains(action) {
             try requireActiveSelection(for: action, viewModel: viewModel)
+            try requireSelectionEditAvailability(for: action, viewModel: viewModel)
         }
         switch action {
         case "fillForeground": viewModel.fillSelection()
@@ -4740,6 +4741,30 @@ final class XomoAutomationRegistry {
         guard viewModel.hasSelection else {
             throw XomoAutomationCallError.operationFailed(
                 "Selection action \(action) requires an active selection"
+            )
+        }
+    }
+
+    private func requireSelectionEditAvailability(
+        for action: String,
+        viewModel: ImageEditorViewModel
+    ) throws {
+        let requirement: (isAvailable: Bool, description: String)
+        switch action {
+        case "fillForeground", "fillBackground", "stroke", "contentAwareFill":
+            requirement = (viewModel.canEditSelectionPixels, "an editable selected pixel layer")
+        case "clearPixels":
+            requirement = (viewModel.canRemoveSelectionPixels, "a removable selected pixel layer")
+        case "copyToLayer":
+            requirement = (viewModel.canCopySelectionToNewLayer, "a copyable selected pixel layer")
+        case "cutToLayer":
+            requirement = (viewModel.canCutSelectionToNewLayer, "a removable single selected pixel layer")
+        default:
+            return
+        }
+        guard requirement.isAvailable else {
+            throw XomoAutomationCallError.operationFailed(
+                "Selection edit action \(action) requires \(requirement.description)"
             )
         }
     }
