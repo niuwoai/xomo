@@ -112,17 +112,66 @@ enum ImageEditorPreviewPixelSampleSize: Int, CaseIterable, Identifiable, Hashabl
     var radius: Int { rawValue / 2 }
 }
 
+enum ImageEditorPreviewPixelReadoutMode: String, CaseIterable, Identifiable, Hashable {
+    case hexadecimalRGBA
+    case rgb
+    case hsb
+    case cmyk
+
+    var id: String { rawValue }
+
+    var title: String {
+        L10n.text("imageEditor.preview.readoutMode.\(rawValue)")
+    }
+
+    func valueText(for reading: ImageEditorColorSamplerReading) -> String {
+        switch self {
+        case .hexadecimalRGBA:
+            return reading.hexadecimalRGBA
+        case .rgb:
+            return L10n.format(
+                "imageEditor.preview.readout.rgb",
+                reading.red8,
+                reading.green8,
+                reading.blue8,
+                reading.alphaPercent
+            )
+        case .hsb:
+            return L10n.format(
+                "imageEditor.preview.readout.hsb",
+                reading.hueDegrees,
+                reading.saturationPercent,
+                reading.brightnessPercent,
+                reading.alphaPercent
+            )
+        case .cmyk:
+            return L10n.format(
+                "imageEditor.preview.readout.cmyk",
+                reading.cyanPercent,
+                reading.magentaPercent,
+                reading.yellowPercent,
+                reading.keyPercent,
+                reading.alphaPercent
+            )
+        }
+    }
+}
+
 struct ImageEditorPreviewPixelSample {
     let point: CGPoint
     let color: NSColor
 
     var text: String {
+        text(mode: .hexadecimalRGBA)
+    }
+
+    func text(mode: ImageEditorPreviewPixelReadoutMode) -> String {
         let reading = ImageEditorColorSamplerReading(color: color)
         return L10n.format(
             "imageEditor.preview.sample",
             Int(point.x),
             Int(point.y),
-            reading.hexadecimalRGBA
+            mode.valueText(for: reading)
         )
     }
 
@@ -283,6 +332,7 @@ struct ImageEditorPreviewPanel: View {
     @ObservedObject var viewModel: ImageEditorViewModel
     @State private var pixelSample: ImageEditorPreviewPixelSample?
     @State private var pixelSampleSize: ImageEditorPreviewPixelSampleSize = .point
+    @State private var pixelReadoutMode: ImageEditorPreviewPixelReadoutMode = .hexadecimalRGBA
 
     var body: some View {
         VStack(spacing: 0) {
@@ -384,6 +434,18 @@ struct ImageEditorPreviewPanel: View {
                 .controlSize(.small)
                 .fixedSize()
                 .accessibilityIdentifier("image-editor-preview-sample-size")
+                Picker(
+                    L10n.text("imageEditor.preview.readoutMode"),
+                    selection: $pixelReadoutMode
+                ) {
+                    ForEach(ImageEditorPreviewPixelReadoutMode.allCases) { mode in
+                        Text(mode.title).tag(mode)
+                    }
+                }
+                .pickerStyle(.menu)
+                .controlSize(.small)
+                .fixedSize()
+                .accessibilityIdentifier("image-editor-preview-readout-mode")
                 Spacer()
                 if let pixelSample {
                     RoundedRectangle(cornerRadius: 3)
@@ -393,7 +455,7 @@ struct ImageEditorPreviewPanel: View {
                                 .stroke(Color(nsColor: ImageEditorTheme.border), lineWidth: 1)
                         }
                         .frame(width: 18, height: 18)
-                    Text(pixelSample.text)
+                    Text(pixelSample.text(mode: pixelReadoutMode))
                         .monospacedDigit()
                         .accessibilityIdentifier("image-editor-preview-pixel-sample")
                 } else {

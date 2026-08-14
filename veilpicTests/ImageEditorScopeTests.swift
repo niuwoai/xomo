@@ -1190,17 +1190,25 @@ struct ImageEditorScopeTests {
 
         #expect(source.contains("struct ImageEditorPreviewPixelSample"))
         #expect(source.contains("enum ImageEditorPreviewPixelSampleSize"))
+        #expect(source.contains("enum ImageEditorPreviewPixelReadoutMode"))
         #expect(source.contains("static func canvasPoint("))
         #expect(source.contains("private static func sampledColor("))
         #expect(source.contains("let bitmap = NSBitmapImageRep(cgImage: cgImage)"))
         #expect(source.contains("image.color("))
         #expect(previewSource.contains("@State private var pixelSample"))
         #expect(previewSource.contains("@State private var pixelSampleSize"))
+        #expect(previewSource.contains("@State private var pixelReadoutMode"))
         #expect(previewSource.contains("selection: $pixelSampleSize"))
         #expect(previewSource.contains("ForEach(ImageEditorPreviewPixelSampleSize.allCases)"))
         #expect(previewSource.contains(
             ".accessibilityIdentifier(\"image-editor-preview-sample-size\")"
         ))
+        #expect(previewSource.contains("selection: $pixelReadoutMode"))
+        #expect(previewSource.contains("ForEach(ImageEditorPreviewPixelReadoutMode.allCases)"))
+        #expect(previewSource.contains(
+            ".accessibilityIdentifier(\"image-editor-preview-readout-mode\")"
+        ))
+        #expect(previewSource.contains("pixelSample.text(mode: pixelReadoutMode)"))
         #expect(previewSource.contains(".onContinuousHover"))
         #expect(previewSource.contains("ImageEditorPreviewPixelSample.sample("))
         #expect(previewSource.contains("sampleSize: pixelSampleSize"))
@@ -1222,6 +1230,14 @@ struct ImageEditorScopeTests {
             #expect(localization.contains("\"imageEditor.preview.sampleSize.point\""))
             #expect(localization.contains("\"imageEditor.preview.sampleSize.average3\""))
             #expect(localization.contains("\"imageEditor.preview.sampleSize.average5\""))
+            #expect(localization.contains("\"imageEditor.preview.readoutMode\""))
+            #expect(localization.contains("\"imageEditor.preview.readoutMode.hexadecimalRGBA\""))
+            #expect(localization.contains("\"imageEditor.preview.readoutMode.rgb\""))
+            #expect(localization.contains("\"imageEditor.preview.readoutMode.hsb\""))
+            #expect(localization.contains("\"imageEditor.preview.readoutMode.cmyk\""))
+            #expect(localization.contains("\"imageEditor.preview.readout.rgb\""))
+            #expect(localization.contains("\"imageEditor.preview.readout.hsb\""))
+            #expect(localization.contains("\"imageEditor.preview.readout.cmyk\""))
         }
     }
 

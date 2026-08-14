@@ -426,6 +426,14 @@
 "imageEditor.preview.sampleSize.point" = "ポイントサンプル";
 "imageEditor.preview.sampleSize.average3" = "3 × 3 の平均";
 "imageEditor.preview.sampleSize.average5" = "5 × 5 の平均";
+"imageEditor.preview.readoutMode" = "カラー表示";
+"imageEditor.preview.readoutMode.hexadecimalRGBA" = "16進 RGBA";
+"imageEditor.preview.readoutMode.rgb" = "RGB";
+"imageEditor.preview.readoutMode.hsb" = "HSB";
+"imageEditor.preview.readoutMode.cmyk" = "CMYK";
+"imageEditor.preview.readout.rgb" = "R %d  G %d  B %d  A %d%%";
+"imageEditor.preview.readout.hsb" = "H %d°  S %d%%  B %d%%  A %d%%";
+"imageEditor.preview.readout.cmyk" = "C %d%%  M %d%%  Y %d%%  K %d%%  A %d%%";
 "imageEditor.action.swatchesShowPanel" = "スウォッチパネルを表示";
 "imageEditor.action.brushesShowPanel" = "ブラシパネルを表示";
 "imageEditor.action.characterShowPanel" = "文字パネルを表示";

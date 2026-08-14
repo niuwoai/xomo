@@ -426,6 +426,14 @@
 "imageEditor.preview.sampleSize.point" = "单点取样";
 "imageEditor.preview.sampleSize.average3" = "3 × 3 平均";
 "imageEditor.preview.sampleSize.average5" = "5 × 5 平均";
+"imageEditor.preview.readoutMode" = "颜色读数";
+"imageEditor.preview.readoutMode.hexadecimalRGBA" = "十六进制 RGBA";
+"imageEditor.preview.readoutMode.rgb" = "RGB";
+"imageEditor.preview.readoutMode.hsb" = "HSB";
+"imageEditor.preview.readoutMode.cmyk" = "CMYK";
+"imageEditor.preview.readout.rgb" = "R %d  G %d  B %d  A %d%%";
+"imageEditor.preview.readout.hsb" = "H %d°  S %d%%  B %d%%  A %d%%";
+"imageEditor.preview.readout.cmyk" = "C %d%%  M %d%%  Y %d%%  K %d%%  A %d%%";
 "imageEditor.action.swatchesShowPanel" = "显示色板面板";
 "imageEditor.action.brushesShowPanel" = "显示画笔面板";
 "imageEditor.action.characterShowPanel" = "显示字符面板";

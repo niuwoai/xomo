@@ -426,6 +426,14 @@
 "imageEditor.preview.sampleSize.point" = "Point Sample";
 "imageEditor.preview.sampleSize.average3" = "3 × 3 Average";
 "imageEditor.preview.sampleSize.average5" = "5 × 5 Average";
+"imageEditor.preview.readoutMode" = "Color Readout";
+"imageEditor.preview.readoutMode.hexadecimalRGBA" = "Hex RGBA";
+"imageEditor.preview.readoutMode.rgb" = "RGB";
+"imageEditor.preview.readoutMode.hsb" = "HSB";
+"imageEditor.preview.readoutMode.cmyk" = "CMYK";
+"imageEditor.preview.readout.rgb" = "R %d  G %d  B %d  A %d%%";
+"imageEditor.preview.readout.hsb" = "H %d°  S %d%%  B %d%%  A %d%%";
+"imageEditor.preview.readout.cmyk" = "C %d%%  M %d%%  Y %d%%  K %d%%  A %d%%";
 "imageEditor.action.swatchesShowPanel" = "Show Swatches Panel";
 "imageEditor.action.brushesShowPanel" = "Show Brushes Panel";
 "imageEditor.action.characterShowPanel" = "Show Character Panel";

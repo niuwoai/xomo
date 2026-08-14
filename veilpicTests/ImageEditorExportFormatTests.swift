@@ -170,6 +170,25 @@ struct ImageEditorExportFormatTests {
         #expect(sample.text.contains("#FF800040"))
     }
 
+    @Test func previewPixelInspectionFormatsClassicColorReadoutModes() {
+        let sample = ImageEditorPreviewPixelSample(
+            point: CGPoint(x: 20, y: 10),
+            color: NSColor(deviceRed: 1, green: 0.5, blue: 0, alpha: 0.25)
+        )
+
+        #expect(ImageEditorPreviewPixelReadoutMode.allCases.map(\.rawValue) == [
+            "hexadecimalRGBA", "rgb", "hsb", "cmyk"
+        ])
+        #expect(sample.text(mode: .hexadecimalRGBA).contains("#FF800040"))
+        #expect(sample.text(mode: .rgb).contains("R 255  G 128  B 0  A 25%"))
+        #expect(sample.text(mode: .hsb).contains("H 30°  S 100%  B 100%  A 25%"))
+        #expect(sample.text(mode: .cmyk).contains("C 0%  M 50%  Y 100%  K 0%  A 25%"))
+        for mode in ImageEditorPreviewPixelReadoutMode.allCases {
+            #expect(sample.text(mode: mode).contains("X 20"))
+            #expect(sample.text(mode: mode).contains("Y 10"))
+        }
+    }
+
     @Test func previewPixelInspectionAveragesNeighborhoodAndClipsCanvasEdges() throws {
         let canvasSize = CGSize(width: 3, height: 1)
         let image = try #require(NSImage.rendered(size: canvasSize) { _ in
