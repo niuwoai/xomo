@@ -290,6 +290,76 @@ struct ImageEditorExportFormatTests {
         #expect(pinnedSamples.latest == nil)
     }
 
+    @Test func previewPinnedSampleMarkersResolveTheTopmostHitWithoutPinningAgain() {
+        var pinnedSamples = ImageEditorPreviewPinnedSamples()
+        let first = pinnedSamples.pin(
+            ImageEditorPreviewPixelSample(point: CGPoint(x: 2, y: 3), color: .red)
+        )
+        let overlapping = pinnedSamples.pin(
+            ImageEditorPreviewPixelSample(point: CGPoint(x: 2, y: 3), color: .green)
+        )
+        let separate = pinnedSamples.pin(
+            ImageEditorPreviewPixelSample(point: CGPoint(x: 8, y: 3), color: .blue)
+        )
+        #expect(first?.number == 1)
+        #expect(overlapping?.number == 2)
+        #expect(separate?.number == 3)
+
+        let displayedSize = CGSize(width: 100, height: 100)
+        let canvasSize = CGSize(width: 10, height: 10)
+        #expect(
+            pinnedSamples.markerNumber(
+                at: CGPoint(x: 25, y: 35),
+                displayedSize: displayedSize,
+                canvasSize: canvasSize
+            ) == 2
+        )
+        #expect(
+            pinnedSamples.markerNumber(
+                at: CGPoint(x: 85, y: 35),
+                displayedSize: displayedSize,
+                canvasSize: canvasSize
+            ) == 3
+        )
+        #expect(
+            pinnedSamples.markerNumber(
+                at: CGPoint(x: 37, y: 35),
+                displayedSize: displayedSize,
+                canvasSize: canvasSize
+            ) == 2
+        )
+        #expect(
+            pinnedSamples.markerNumber(
+                at: CGPoint(x: 38, y: 35),
+                displayedSize: displayedSize,
+                canvasSize: canvasSize
+            ) == nil
+        )
+        #expect(
+            pinnedSamples.markerNumber(
+                at: CGPoint(x: 25, y: 35),
+                displayedSize: displayedSize,
+                canvasSize: canvasSize,
+                hitRadius: 0
+            ) == nil
+        )
+        #expect(
+            pinnedSamples.markerNumber(
+                at: CGPoint(x: CGFloat.infinity, y: 35),
+                displayedSize: displayedSize,
+                canvasSize: canvasSize
+            ) == nil
+        )
+        #expect(
+            pinnedSamples.markerNumber(
+                at: CGPoint(x: 25, y: 35),
+                displayedSize: .zero,
+                canvasSize: canvasSize
+            ) == nil
+        )
+        #expect(pinnedSamples.entries.count == 3)
+    }
+
     @Test func previewPinnedSamplesKeepIndependentColorReadoutModes() {
         var pinnedSamples = ImageEditorPreviewPinnedSamples()
         let firstSample = ImageEditorPreviewPixelSample(
@@ -434,6 +504,58 @@ struct ImageEditorExportFormatTests {
         #expect(selection.fromNumber == nil)
         #expect(selection.toNumber == nil)
         #expect(selection.measurement(in: pinnedSamples) == nil)
+    }
+
+    @Test func previewMarkerClicksAdvanceMeasurementDestinationInVisualOrder() {
+        var pinnedSamples = ImageEditorPreviewPinnedSamples()
+        for offset in 0..<4 {
+            let pinned = pinnedSamples.pin(
+                ImageEditorPreviewPixelSample(
+                    point: CGPoint(x: offset, y: offset),
+                    color: .black
+                )
+            )
+            #expect(pinned != nil)
+        }
+
+        var selection = ImageEditorPreviewSampleMeasurementSelection()
+        let selectedLatest = selection.selectLatest(in: pinnedSamples)
+        #expect(selectedLatest)
+        #expect(selection.fromNumber == 3)
+        #expect(selection.toNumber == 4)
+
+        let selectedFirst = selection.selectDestination(1, in: pinnedSamples)
+        #expect(selectedFirst)
+        #expect(selection.fromNumber == 4)
+        #expect(selection.toNumber == 1)
+
+        let selectedSecond = selection.selectDestination(2, in: pinnedSamples)
+        #expect(selectedSecond)
+        #expect(selection.fromNumber == 1)
+        #expect(selection.toNumber == 2)
+
+        let reversedToFirst = selection.selectDestination(1, in: pinnedSamples)
+        #expect(reversedToFirst)
+        #expect(selection.fromNumber == 2)
+        #expect(selection.toNumber == 1)
+
+        let unchangedDestination = selection.selectDestination(1, in: pinnedSamples)
+        let rejectedMissing = selection.selectDestination(99, in: pinnedSamples)
+        #expect(!unchangedDestination)
+        #expect(!rejectedMissing)
+        #expect(selection.fromNumber == 2)
+        #expect(selection.toNumber == 1)
+
+        var singleSample = ImageEditorPreviewPinnedSamples()
+        let onlySample = singleSample.pin(
+            ImageEditorPreviewPixelSample(point: .zero, color: .black)
+        )
+        #expect(onlySample != nil)
+        var emptySelection = ImageEditorPreviewSampleMeasurementSelection()
+        let rejectedSingle = emptySelection.selectDestination(1, in: singleSample)
+        #expect(!rejectedSingle)
+        #expect(emptySelection.fromNumber == nil)
+        #expect(emptySelection.toNumber == nil)
     }
 
     @Test func previewSelectedMeasurementMapsGuideAcrossZoomLevels() throws {

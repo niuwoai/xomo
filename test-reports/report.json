@@ -1,10 +1,10 @@
 {
-  "generated_at": "2026-08-15 00:57:14 +0800",
-  "total": 22,
-  "passed": 22,
+  "generated_at": "2026-08-15 01:08:35 +0800",
+  "total": 24,
+  "passed": 24,
   "failed": 0,
-  "total_tests": 22,
-  "passed_tests": 22,
+  "total_tests": 24,
+  "passed_tests": 24,
   "failed_tests_in_failed_groups": 0,
   "jobs": 1,
   "results": [
@@ -15,7 +15,7 @@
       "file": "ImageEditorExportFormatTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.43,
+      "duration": 3.328,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorExportFormatTests.exportNamingRulesSupportBatchScaleVariants.log"
@@ -27,7 +27,7 @@
       "file": "ImageEditorExportFormatTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.752,
+      "duration": 3.731,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorExportFormatTests.exportScaleFormatterPreservesQuarterStepsWithoutTrailingZeros.log"
@@ -39,7 +39,7 @@
       "file": "ImageEditorExportFormatTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.409,
+      "duration": 3.193,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorExportFormatTests.hotspotHTMLExportEmbedsCanvasAndEscapesImageMapMetadata.log"
@@ -51,7 +51,7 @@
       "file": "ImageEditorExportFormatTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.391,
+      "duration": 3.152,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorExportFormatTests.mixedCanvasExportsPDFAndRejectsSVG.log"
@@ -63,7 +63,7 @@
       "file": "ImageEditorExportFormatTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.424,
+      "duration": 3.408,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorExportFormatTests.namedSliceScopeExportsTheNamedRectangularCanvasRegion.log"
@@ -75,7 +75,7 @@
       "file": "ImageEditorExportFormatTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.302,
+      "duration": 3.382,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorExportFormatTests.previewAndExportPanelsAreNonClosingAndMutuallyExclusive.log"
@@ -87,10 +87,22 @@
       "file": "ImageEditorExportFormatTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.393,
+      "duration": 3.924,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorExportFormatTests.previewBackdropInspectsTransparencyWithoutEditingTheDocument.log"
+    },
+    {
+      "suite": "ImageEditorExportFormatTests",
+      "method": "previewMarkerClicksAdvanceMeasurementDestinationInVisualOrder",
+      "identifier": "veilpicTests/ImageEditorExportFormatTests/previewMarkerClicksAdvanceMeasurementDestinationInVisualOrder()",
+      "file": "ImageEditorExportFormatTests.swift",
+      "test_count": 1,
+      "passed": true,
+      "duration": 3.217,
+      "infrastructure_retries": 0,
+      "issues": [],
+      "log": "ImageEditorExportFormatTests.previewMarkerClicksAdvanceMeasurementDestinationInVisualOrder.log"
     },
     {
       "suite": "ImageEditorExportFormatTests",
@@ -99,10 +111,22 @@
       "file": "ImageEditorExportFormatTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.469,
+      "duration": 3.243,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorExportFormatTests.previewMeasurementGuideAdaptsLabelsAndAxisAlignedPairs.log"
+    },
+    {
+      "suite": "ImageEditorExportFormatTests",
+      "method": "previewPinnedSampleMarkersResolveTheTopmostHitWithoutPinningAgain",
+      "identifier": "veilpicTests/ImageEditorExportFormatTests/previewPinnedSampleMarkersResolveTheTopmostHitWithoutPinningAgain()",
+      "file": "ImageEditorExportFormatTests.swift",
+      "test_count": 1,
+      "passed": true,
+      "duration": 3.288,
+      "infrastructure_retries": 0,
+      "issues": [],
+      "log": "ImageEditorExportFormatTests.previewPinnedSampleMarkersResolveTheTopmostHitWithoutPinningAgain.log"
     },
     {
       "suite": "ImageEditorExportFormatTests",
@@ -111,7 +135,7 @@
       "file": "ImageEditorExportFormatTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.344,
+      "duration": 3.202,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorExportFormatTests.previewPinnedSampleMeasurementSelectsAnyStablePair.log"
@@ -123,7 +147,7 @@
       "file": "ImageEditorExportFormatTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.306,
+      "duration": 3.237,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorExportFormatTests.previewPinnedSamplesKeepIndependentColorReadoutModes.log"
@@ -135,7 +159,7 @@
       "file": "ImageEditorExportFormatTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.33,
+      "duration": 3.215,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorExportFormatTests.previewPinnedSamplesMeasureTheLatestPairInCanvasPixels.log"
@@ -147,7 +171,7 @@
       "file": "ImageEditorExportFormatTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.402,
+      "duration": 3.161,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorExportFormatTests.previewPixelInspectionAveragesNeighborhoodAndClipsCanvasEdges.log"
@@ -159,7 +183,7 @@
       "file": "ImageEditorExportFormatTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.351,
+      "duration": 3.134,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorExportFormatTests.previewPixelInspectionFormatsClassicColorReadoutModes.log"
@@ -171,7 +195,7 @@
       "file": "ImageEditorExportFormatTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.354,
+      "duration": 3.101,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorExportFormatTests.previewPixelInspectionKeepsFourStableNumberedSamples.log"
@@ -183,7 +207,7 @@
       "file": "ImageEditorExportFormatTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.235,
+      "duration": 3.124,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorExportFormatTests.previewPixelInspectionMapsEveryZoomToCanvasCoordinates.log"
@@ -195,7 +219,7 @@
       "file": "ImageEditorExportFormatTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.335,
+      "duration": 3.108,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorExportFormatTests.previewPixelInspectionPinsFallbackAndMapsItsCanvasMarker.log"
@@ -207,7 +231,7 @@
       "file": "ImageEditorExportFormatTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.29,
+      "duration": 3.084,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorExportFormatTests.previewPixelReadoutCopiesToAnIsolatedPasteboard.log"
@@ -219,7 +243,7 @@
       "file": "ImageEditorExportFormatTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.355,
+      "duration": 3.077,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorExportFormatTests.previewSelectedMeasurementMapsGuideAcrossZoomLevels.log"
@@ -231,7 +255,7 @@
       "file": "ImageEditorExportFormatTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.316,
+      "duration": 4.158,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorExportFormatTests.previewZoomFitsViewportOrMagnifiesPixelDimensions.log"
@@ -243,7 +267,7 @@
       "file": "ImageEditorExportFormatTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.347,
+      "duration": 3.234,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorExportFormatTests.pureVectorCanvasExportsEditableSVG.log"
@@ -255,7 +279,7 @@
       "file": "ImageEditorExportFormatTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.395,
+      "duration": 3.425,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorExportFormatTests.selectedLayerExportScopeChoosesSingleLayerOrLayerSubtree.log"
@@ -267,7 +291,7 @@
       "file": "ImageEditorExportFormatTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.385,
+      "duration": 3.211,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorExportFormatTests.selectionScopeExportsASelectionSliceBoundedByTheSelectionAndPreservesTransparency.log"

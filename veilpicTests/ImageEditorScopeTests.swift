@@ -1197,6 +1197,8 @@ struct ImageEditorScopeTests {
         #expect(source.contains("struct ImageEditorPreviewSampleMeasurementSelection"))
         #expect(source.contains("struct ImageEditorPreviewSampleMeasurementGuide"))
         #expect(source.contains("static let maximumCount = 4"))
+        #expect(source.contains("func markerNumber("))
+        #expect(source.contains("mutating func selectDestination("))
         #expect(source.contains("var latestMeasurement: ImageEditorPreviewSampleMeasurement?"))
         #expect(source.contains("mutating func setReadoutMode("))
         #expect(source.contains("pasteboard.setString(value, forType: .string)"))
@@ -1224,6 +1226,9 @@ struct ImageEditorScopeTests {
         ))
         #expect(previewSource.contains("displayedPixelSample.text(mode: pixelReadoutMode)"))
         #expect(previewSource.contains("SpatialTapGesture().onEnded"))
+        #expect(previewSource.contains("if let markerNumber = pinnedPixelSamples.markerNumber("))
+        #expect(previewSource.contains("measurementSelection.selectDestination("))
+        #expect(previewSource.contains("isMeasurementDestination(pinnedSample.number)"))
         #expect(previewSource.contains(
             "pinnedPixelSamples.pin(sample, readoutMode: pixelReadoutMode)"
         ))
@@ -1288,6 +1293,16 @@ struct ImageEditorScopeTests {
         #expect(previewSource.contains("case .ended:\n                pixelSample = nil"))
         #expect(previewSource.contains(".accessibilityIdentifier(\"image-editor-preview-inspector\")"))
         #expect(previewSource.contains(".accessibilityIdentifier(\"image-editor-preview-pixel-sample\")"))
+
+        let markerTap = try #require(
+            previewSource.range(of: "if let markerNumber = pinnedPixelSamples.markerNumber(")
+        )
+        let sampleAfterMarkerTap = try #require(
+            previewSource[markerTap.upperBound...].range(
+                of: "let sample = ImageEditorPreviewPixelSample.sample("
+            )
+        )
+        #expect(markerTap.lowerBound < sampleAfterMarkerTap.lowerBound)
 
         for locale in ["en", "ja", "zh-Hans"] {
             let localization = try String(

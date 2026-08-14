@@ -473,6 +473,32 @@ struct ImageEditorPreviewPinnedSamples {
     mutating func removeAll() {
         entries.removeAll()
     }
+
+    func markerNumber(
+        at location: CGPoint,
+        displayedSize: CGSize,
+        canvasSize: CGSize,
+        hitRadius: CGFloat = 12
+    ) -> Int? {
+        guard location.x.isFinite,
+              location.y.isFinite,
+              hitRadius.isFinite,
+              hitRadius > 0
+        else { return nil }
+        let maximumDistanceSquared = hitRadius * hitRadius
+        for entry in entries.reversed() {
+            guard let center = entry.sample.displayedCenter(
+                displayedSize: displayedSize,
+                canvasSize: canvasSize
+            ) else { continue }
+            let deltaX = location.x - center.x
+            let deltaY = location.y - center.y
+            if deltaX * deltaX + deltaY * deltaY <= maximumDistanceSquared {
+                return entry.number
+            }
+        }
+        return nil
+    }
 }
 
 struct ImageEditorPreviewSampleMeasurementSelection {
@@ -536,6 +562,23 @@ struct ImageEditorPreviewSampleMeasurementSelection {
         if fromNumber == number {
             fromNumber = previousTo
         }
+        toNumber = number
+        return true
+    }
+
+    @discardableResult
+    mutating func selectDestination(
+        _ number: Int,
+        in samples: ImageEditorPreviewPinnedSamples
+    ) -> Bool {
+        guard samples.entries.count >= 2,
+              samples.entries.contains(where: { $0.number == number })
+        else { return false }
+        let didReconcile = reconcile(in: samples)
+        guard let currentDestination = toNumber,
+              currentDestination != number
+        else { return didReconcile }
+        fromNumber = currentDestination
         toNumber = number
         return true
     }
@@ -1177,12 +1220,18 @@ struct ImageEditorPreviewPanel: View {
                 ) {
                     ZStack {
                         Circle()
-                            .fill(.black.opacity(0.82))
+                            .fill(
+                                isMeasurementDestination(pinnedSample.number)
+                                    ? Color.accentColor.opacity(0.88)
+                                    : .black.opacity(0.82)
+                            )
                         Circle()
                             .stroke(
-                                isMeasurementEndpoint(pinnedSample.number)
-                                    ? Color.accentColor
-                                    : .white,
+                                isMeasurementDestination(pinnedSample.number)
+                                    ? .white
+                                    : isMeasurementEndpoint(pinnedSample.number)
+                                        ? Color.accentColor
+                                        : .white,
                                 lineWidth: isMeasurementEndpoint(pinnedSample.number) ? 2 : 1
                             )
                         Text("\(pinnedSample.number)")
@@ -1215,6 +1264,18 @@ struct ImageEditorPreviewPanel: View {
         }
         .simultaneousGesture(
             SpatialTapGesture().onEnded { value in
+                if let markerNumber = pinnedPixelSamples.markerNumber(
+                    at: value.location,
+                    displayedSize: size,
+                    canvasSize: viewModel.document.canvasSize
+                ) {
+                    measurementSelection.selectDestination(
+                        markerNumber,
+                        in: pinnedPixelSamples
+                    )
+                    resetCopyFeedback()
+                    return
+                }
                 let sample = ImageEditorPreviewPixelSample.sample(
                     image: viewModel.previewImage,
                     location: value.location,
@@ -1251,6 +1312,10 @@ struct ImageEditorPreviewPanel: View {
     private func isMeasurementEndpoint(_ number: Int) -> Bool {
         measurementSelection.fromNumber == number
             || measurementSelection.toNumber == number
+    }
+
+    private func isMeasurementDestination(_ number: Int) -> Bool {
+        measurementSelection.toNumber == number
     }
 }
 
