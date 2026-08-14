@@ -2083,6 +2083,34 @@ struct XomoAutomationTests {
         #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionUnchanged"))
     }
 
+    @Test func registryAcceptsSelfIntersectingLassoGeometry() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        let points: [XomoJSONValue] = [
+            .object(["x": .number(10), "y": .number(10)]),
+            .object(["x": .number(70), "y": .number(70)]),
+            .object(["x": .number(10), "y": .number(70)]),
+            .object(["x": .number(70), "y": .number(10)])
+        ]
+
+        let response = registry.execute(request(
+            operation: "call",
+            name: "xomo.selection.lasso",
+            arguments: ["points": .array(points)]
+        ))
+
+        #expect(response.ok)
+        let selection = try #require(viewModel.document.selection)
+        #expect(selection.points == [
+            CGPoint(x: 10, y: 10),
+            CGPoint(x: 70, y: 70),
+            CGPoint(x: 10, y: 70),
+            CGPoint(x: 70, y: 10)
+        ])
+        #expect(selection.isPolygon)
+    }
+
     @Test func registryRejectsInvalidLassoGeometryBeforeChangingDocument() {
         let viewModel = makeViewModel()
         viewModel.createRectSelection(from: CGPoint(x: 20, y: 20), to: CGPoint(x: 60, y: 50))

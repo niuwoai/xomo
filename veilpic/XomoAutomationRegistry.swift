@@ -5814,10 +5814,7 @@ final class XomoAutomationRegistry {
         }) else {
             throw XomoAutomationCallError.invalidArgument("Lasso points must all be inside the canvas")
         }
-        let doubledArea = zip(points, points.dropFirst() + [points[0]]).reduce(CGFloat.zero) { area, pair in
-            area + pair.0.x * pair.1.y - pair.1.x * pair.0.y
-        }
-        guard abs(doubledArea) > .ulpOfOne else {
+        guard ImageEditorSelection.polygon(points) != nil else {
             throw XomoAutomationCallError.invalidArgument("Lasso selection must enclose a nonzero area")
         }
         return points

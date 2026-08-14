@@ -203,6 +203,40 @@ struct ImageEditorSelectionEdgeTests {
         #expect(boundedPoint == CGPoint(x: 0, y: 200))
     }
 
+    @Test func lassoRejectsCollinearGeometryButKeepsSelfIntersectingRegions() throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "source.png",
+            image: NSImage.transparent(size: CGSize(width: 100, height: 100))
+        ) { _ in }
+        viewModel.createRectSelection(from: CGPoint(x: 5, y: 5), to: CGPoint(x: 20, y: 20))
+        let selectionBeforeInvalidLasso = viewModel.document.selection
+        let historyCountBeforeInvalidLasso = viewModel.document.history.count
+        let undoCountBeforeInvalidLasso = viewModel.undoStack.count
+
+        #expect(!viewModel.createLassoSelection(points: [
+            CGPoint(x: 10, y: 10),
+            CGPoint(x: 30, y: 30),
+            CGPoint(x: 50, y: 50),
+            CGPoint(x: 70, y: 70)
+        ]))
+        #expect(viewModel.document.selection == selectionBeforeInvalidLasso)
+        #expect(viewModel.document.history.count == historyCountBeforeInvalidLasso)
+        #expect(viewModel.undoStack.count == undoCountBeforeInvalidLasso)
+
+        let selfIntersectingPoints = [
+            CGPoint(x: 10, y: 10),
+            CGPoint(x: 70, y: 70),
+            CGPoint(x: 10, y: 70),
+            CGPoint(x: 70, y: 10)
+        ]
+        #expect(viewModel.createLassoSelection(points: selfIntersectingPoints))
+        let selection = try #require(viewModel.document.selection)
+        #expect(selection.points == selfIntersectingPoints)
+        #expect(selection.isPolygon)
+        #expect(viewModel.document.history.count == historyCountBeforeInvalidLasso + 1)
+        #expect(viewModel.undoStack.count == undoCountBeforeInvalidLasso + 1)
+    }
+
     @Test func everyStageASelectionSourceCanRoundTripThroughQuickMask() throws {
         let canvasSize = CGSize(width: 24, height: 24)
         let builders: [(ImageEditorViewModel) -> Void] = [

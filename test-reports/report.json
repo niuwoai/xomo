@@ -1,10 +1,10 @@
 {
-  "generated_at": "2026-08-15 06:22:51 +0800",
-  "total": 5,
-  "passed": 5,
+  "generated_at": "2026-08-15 06:34:21 +0800",
+  "total": 8,
+  "passed": 8,
   "failed": 0,
-  "total_tests": 5,
-  "passed_tests": 5,
+  "total_tests": 8,
+  "passed_tests": 8,
   "failed_tests_in_failed_groups": 0,
   "jobs": 1,
   "results": [
@@ -15,7 +15,7 @@
       "file": "ImageEditorCanvasCursorTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 2.97,
+      "duration": 3.014,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorCanvasCursorTests.patchCursorUsesLassoArrowMoveAndForbiddenActionSemantics.log"
@@ -27,7 +27,7 @@
       "file": "ImageEditorCanvasCursorTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 2.966,
+      "duration": 2.987,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorCanvasCursorTests.patchGestureStartRejectsBlockedSelectionsButStillAllowsReplacementLasso.log"
@@ -39,10 +39,46 @@
       "file": "ImageEditorPatchToolTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 2.937,
+      "duration": 2.948,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorPatchToolTests.patchToolCanCreateAReplacementLassoBeforeDragging.log"
+    },
+    {
+      "suite": "ImageEditorSelectionEdgeTests",
+      "method": "lassoRejectsCollinearGeometryButKeepsSelfIntersectingRegions",
+      "identifier": "veilpicTests/ImageEditorSelectionEdgeTests/lassoRejectsCollinearGeometryButKeepsSelfIntersectingRegions()",
+      "file": "ImageEditorSelectionEdgeTests.swift",
+      "test_count": 1,
+      "passed": true,
+      "duration": 2.957,
+      "infrastructure_retries": 0,
+      "issues": [],
+      "log": "ImageEditorSelectionEdgeTests.lassoRejectsCollinearGeometryButKeepsSelfIntersectingRegions.log"
+    },
+    {
+      "suite": "ImageEditorToolSmokeTests",
+      "method": "lassoCreatesAUsablePolygonSelection",
+      "identifier": "veilpicTests/ImageEditorToolSmokeTests/lassoCreatesAUsablePolygonSelection()",
+      "file": "ImageEditorToolSmokeTests.swift",
+      "test_count": 1,
+      "passed": true,
+      "duration": 3.025,
+      "infrastructure_retries": 0,
+      "issues": [],
+      "log": "ImageEditorToolSmokeTests.lassoCreatesAUsablePolygonSelection.log"
+    },
+    {
+      "suite": "XomoAutomationTests",
+      "method": "registryAcceptsSelfIntersectingLassoGeometry",
+      "identifier": "veilpicTests/XomoAutomationTests/registryAcceptsSelfIntersectingLassoGeometry()",
+      "file": "XomoAutomationTests.swift",
+      "test_count": 1,
+      "passed": true,
+      "duration": 2.99,
+      "infrastructure_retries": 0,
+      "issues": [],
+      "log": "XomoAutomationTests.registryAcceptsSelfIntersectingLassoGeometry.log"
     },
     {
       "suite": "XomoAutomationTests",
@@ -51,7 +87,7 @@
       "file": "XomoAutomationTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 2.989,
+      "duration": 2.961,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "XomoAutomationTests.registryLassoSelectionAcceptsValidAndIdempotentPointSets.log"
@@ -63,7 +99,7 @@
       "file": "XomoAutomationTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 2.98,
+      "duration": 2.996,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "XomoAutomationTests.registryRejectsInvalidLassoGeometryBeforeChangingDocument.log"

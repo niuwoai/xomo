@@ -730,6 +730,8 @@ nonisolated struct ImageEditorAlphaChannel: Identifiable, Equatable, Codable {
 }
 
 struct ImageEditorSelection: Equatable, Codable {
+    private static let polygonCollinearityTolerance: CGFloat = 0.000_001
+
     var points: [CGPoint]
     var isPolygon: Bool
     var isInverted = false
@@ -751,8 +753,30 @@ struct ImageEditorSelection: Equatable, Codable {
     }
 
     static func polygon(_ points: [CGPoint]) -> ImageEditorSelection? {
-        guard points.count >= 3 else { return nil }
+        guard points.count >= 3,
+              points.allSatisfy({ $0.x.isFinite && $0.y.isFinite }),
+              containsNoncollinearPoints(points)
+        else { return nil }
         return ImageEditorSelection(points: points, isPolygon: true, isInverted: false, rasterMask: nil)
+    }
+
+    private static func containsNoncollinearPoints(_ points: [CGPoint]) -> Bool {
+        guard let origin = points.first,
+              let directionPoint = points.dropFirst().first(where: { point in
+                  let deltaX = point.x - origin.x
+                  let deltaY = point.y - origin.y
+                  return deltaX * deltaX + deltaY * deltaY > polygonCollinearityTolerance
+              })
+        else { return false }
+
+        let directionX = directionPoint.x - origin.x
+        let directionY = directionPoint.y - origin.y
+        return points.dropFirst().contains { point in
+            let candidateX = point.x - origin.x
+            let candidateY = point.y - origin.y
+            let crossProduct = directionX * candidateY - directionY * candidateX
+            return abs(crossProduct) > polygonCollinearityTolerance
+        }
     }
 
     static func ellipse(_ rect: CGRect, segmentCount: Int = 64) -> ImageEditorSelection? {
