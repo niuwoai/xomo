@@ -20,6 +20,50 @@ enum ImageEditorExportScaleFormatter {
     }
 }
 
+struct ImageEditorPreviewPanel: View {
+    @ObservedObject var viewModel: ImageEditorViewModel
+
+    var body: some View {
+        VStack(spacing: 0) {
+            HStack {
+                Label(L10n.text("imageEditor.preview.title"), systemImage: "eye")
+                    .font(.system(size: 15, weight: .bold))
+                Spacer()
+                Button {
+                    viewModel.isPreviewSheetPresented = false
+                } label: {
+                    Image(systemName: "xmark")
+                }
+                .buttonStyle(.plain)
+                .help(L10n.text("imageEditor.action.cancel"))
+                .accessibilityIdentifier("image-editor-preview-close")
+            }
+            .padding(16)
+
+            Divider()
+
+            GeometryReader { geometry in
+                Image(nsImage: viewModel.previewImage)
+                    .resizable()
+                    .interpolation(.high)
+                    .scaledToFit()
+                    .frame(
+                        width: geometry.size.width,
+                        height: geometry.size.height,
+                        alignment: .center
+                    )
+                    .background(Color(nsColor: ImageEditorTheme.window))
+            }
+            .accessibilityIdentifier("image-editor-preview-image")
+        }
+        .frame(minWidth: 640, minHeight: 480)
+        .accessibilityIdentifier("image-editor-preview-panel")
+        .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
+        .environment(\.colorScheme, .dark)
+        .background(Color(nsColor: ImageEditorTheme.panel))
+    }
+}
+
 struct ImageEditorExportPanel: View {
     @ObservedObject var viewModel: ImageEditorViewModel
 
@@ -46,6 +90,7 @@ struct ImageEditorExportPanel: View {
                 }
                 .buttonStyle(.plain)
                 .help(L10n.text("imageEditor.action.cancel"))
+                .accessibilityIdentifier("image-editor-export-close")
             }
 
             VStack(alignment: .leading, spacing: 10) {
@@ -178,6 +223,7 @@ struct ImageEditorExportPanel: View {
         }
         .padding(18)
         .frame(width: Layout.panelWidth)
+        .accessibilityIdentifier("image-editor-export-panel")
         .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
         .environment(\.colorScheme, .dark)
         .background(Color(nsColor: ImageEditorTheme.panel))

@@ -11,6 +11,21 @@ struct ImageEditorExportFormatTests {
         #expect(ImageEditorExportScaleFormatter.string(from: 2.75) == "2.75")
     }
 
+    @Test func previewAndExportPanelsAreNonClosingAndMutuallyExclusive() {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "panel-routing",
+            image: NSImage.transparent(size: CGSize(width: 80, height: 60))
+        ) { _ in }
+
+        viewModel.openPreviewPanel()
+        #expect(viewModel.isPreviewSheetPresented)
+        #expect(!viewModel.isExportSheetPresented)
+
+        viewModel.openExportPanel()
+        #expect(!viewModel.isPreviewSheetPresented)
+        #expect(viewModel.isExportSheetPresented)
+    }
+
     @Test func pureVectorCanvasExportsEditableSVG() throws {
         let viewModel = ImageEditorViewModel(
             sourceName: "vector-canvas",

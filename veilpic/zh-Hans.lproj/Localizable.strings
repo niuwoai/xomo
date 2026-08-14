@@ -410,6 +410,7 @@
 "imageEditor.action.colorEditForeground" = "编辑前景色";
 "imageEditor.action.colorEditBackground" = "编辑背景色";
 "imageEditor.action.preview" = "预览";
+"imageEditor.preview.title" = "画布预览";
 "imageEditor.action.swatchesShowPanel" = "显示色板面板";
 "imageEditor.action.brushesShowPanel" = "显示画笔面板";
 "imageEditor.action.characterShowPanel" = "显示字符面板";

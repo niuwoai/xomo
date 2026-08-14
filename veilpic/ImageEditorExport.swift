@@ -158,6 +158,7 @@ extension ImageEditorViewModel {
     }
 
     func openExportPanel() {
+        isPreviewSheetPresented = false
         if exportSettings.format == .svg, !canExportSVG {
             exportSettings.format = .png
         }
@@ -185,6 +186,11 @@ extension ImageEditorViewModel {
             }
         }
         isExportSheetPresented = true
+    }
+
+    func openPreviewPanel() {
+        isExportSheetPresented = false
+        isPreviewSheetPresented = true
     }
 
     func exportCompositedImage() {

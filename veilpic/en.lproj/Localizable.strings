@@ -410,6 +410,7 @@
 "imageEditor.action.colorEditForeground" = "Edit Foreground Color";
 "imageEditor.action.colorEditBackground" = "Edit Background Color";
 "imageEditor.action.preview" = "Preview";
+"imageEditor.preview.title" = "Canvas Preview";
 "imageEditor.action.swatchesShowPanel" = "Show Swatches Panel";
 "imageEditor.action.brushesShowPanel" = "Show Brushes Panel";
 "imageEditor.action.characterShowPanel" = "Show Character Panel";

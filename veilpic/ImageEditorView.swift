@@ -411,6 +411,9 @@ struct ImageEditorView: View {
         .sheet(isPresented: $viewModel.isExportSheetPresented) {
             ImageEditorExportPanel(viewModel: viewModel)
         }
+        .sheet(isPresented: $viewModel.isPreviewSheetPresented) {
+            ImageEditorPreviewPanel(viewModel: viewModel)
+        }
         .sheet(isPresented: $viewModel.isColorRangeSheetPresented) {
             ImageEditorColorRangePanel(viewModel: viewModel)
         }

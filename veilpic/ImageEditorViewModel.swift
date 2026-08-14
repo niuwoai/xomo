@@ -409,6 +409,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var targetCanvasHeight: Double = 0
     @Published var selectedCanvasAnchor: ImageEditorCanvasAnchor = .center
     @Published var exportSettings = ImageEditorExportSettings()
+    @Published var isPreviewSheetPresented = false
     @Published var isExportSheetPresented = false
     @Published var isNewCanvasSheetPresented = false
     @Published var isLayerStylePresetManagerPresented = false

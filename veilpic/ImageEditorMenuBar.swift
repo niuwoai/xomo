@@ -84,14 +84,12 @@ extension ImageEditorView {
             .accessibilityIdentifier("image-editor-action-cancel")
 
             Button(L10n.text("imageEditor.action.preview")) {
-                viewModel.applyAndClose {
-                    closeWindow()
-                }
+                viewModel.openPreviewPanel()
             }
             .buttonStyle(EditorMenuPreviewButtonStyle())
             .focusable(false)
-            .accessibilityIdentifier("image-editor-action-apply")
-            .accessibilityLabel(L10n.text("imageEditor.action.apply"))
+            .accessibilityIdentifier("image-editor-action-preview")
+            .accessibilityLabel(L10n.text("imageEditor.action.preview"))
 
             Button(L10n.text("imageEditor.action.export")) {
                 viewModel.openExportPanel()

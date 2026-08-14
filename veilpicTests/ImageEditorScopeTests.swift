@@ -1080,7 +1080,10 @@ struct ImageEditorScopeTests {
         #expect(viewSource.contains(".onHover { isHovered = $0 }"))
         #expect(viewSource.contains(".focusable(false)"))
         #expect(menuSource.contains("Button(L10n.text(\"imageEditor.action.preview\"))"))
-        #expect(menuSource.contains(".accessibilityLabel(L10n.text(\"imageEditor.action.apply\"))"))
+        #expect(menuSource.contains("viewModel.openPreviewPanel()"))
+        #expect(menuSource.contains(".accessibilityIdentifier(\"image-editor-action-preview\")"))
+        #expect(menuSource.contains(".accessibilityLabel(L10n.text(\"imageEditor.action.preview\"))"))
+        #expect(!menuSource.contains("Button(L10n.text(\"imageEditor.action.preview\")) {\n                viewModel.applyAndClose"))
     }
 
     @MainActor
