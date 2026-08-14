@@ -4980,10 +4980,12 @@ struct ImageEditorGuide: Identifiable, Equatable, Codable {
 
 /// A named rectangular delivery region inspired by Fireworks slices.
 /// Slices are document metadata: they do not alter pixels or layer geometry.
-enum ImageEditorSliceExportConstraint: String, Codable, Equatable, Sendable {
+enum ImageEditorSliceExportConstraint: String, CaseIterable, Identifiable, Codable, Equatable, Sendable {
     case scale
     case width
     case height
+
+    var id: String { rawValue }
 }
 
 struct ImageEditorSliceExportPreset: Codable, Equatable, Sendable {

@@ -96,7 +96,7 @@ struct XomoFigmaExportPresetTests {
                           {
                             "suffix": "-vector",
                             "format": "SVG",
-                            "constraint": {"type": "SCALE", "value": 1}
+                            "constraint": {"type": "WIDTH", "value": 240}
                           },
                           {
                             "suffix": "-huge",
@@ -210,6 +210,8 @@ struct XomoFigmaExportPresetTests {
         let item = try #require(plan.items.first)
         #expect(item.exportPresets.count == 1)
         #expect(item.exportPresets.first?.format == .pdf)
+        #expect(item.exportPresets.first?.constraint == .scale)
+        #expect(item.exportPresets.first?.value == 1)
         #expect(item.issues.isEmpty)
 
         let viewModel = ImageEditorViewModel(

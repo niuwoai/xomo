@@ -549,8 +549,8 @@ enum XomoFigmaNodeImportMapper {
                 let preset = ImageEditorSliceExportPreset(
                     suffix: setting.suffix,
                     format: format,
-                    constraint: constraint,
-                    value: setting.constraint.value
+                    constraint: format == .pdf ? .scale : constraint,
+                    value: format == .pdf ? 1 : setting.constraint.value
                 )
                 guard let frame else { return nil }
                 let presetFrame = CGRect(

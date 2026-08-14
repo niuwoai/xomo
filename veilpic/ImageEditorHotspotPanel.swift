@@ -189,6 +189,7 @@ struct ImageEditorSliceDraft: Equatable {
     var width: String
     var height: String
     var exportPresetSuffixes: [String]
+    var exportPresetValues: [String]
 
     init(_ slice: ImageEditorSlice) {
         name = slice.name
@@ -197,6 +198,9 @@ struct ImageEditorSliceDraft: Equatable {
         width = Self.number(slice.frame.width)
         height = Self.number(slice.frame.height)
         exportPresetSuffixes = (slice.exportPresets ?? []).map(\.suffix)
+        exportPresetValues = (slice.exportPresets ?? []).map {
+            ImageEditorExportScaleFormatter.string(from: $0.value)
+        }
     }
 
     private static func number(_ value: CGFloat) -> String {
@@ -242,6 +246,12 @@ struct ImageEditorSlicePanel: View {
                             },
                             onUpdateExportPresetFormat: {
                                 updateExportPresetFormat(at: $0, format: $1, in: slice)
+                            },
+                            onChangeExportPresetConstraint: {
+                                changeExportPresetConstraint(at: $0, to: $1, in: slice)
+                            },
+                            onUpdateExportPresetValue: {
+                                updateExportPresetValue(at: $0, value: $1, in: slice)
                             },
                             onDelete: { delete(slice) }
                         )
@@ -329,12 +339,41 @@ struct ImageEditorSlicePanel: View {
         )
     }
 
+    private func changeExportPresetConstraint(
+        at index: Int,
+        to constraint: ImageEditorSliceExportConstraint,
+        in slice: ImageEditorSlice
+    ) {
+        _ = viewModel.changeSliceExportPresetConstraint(
+            inSlice: slice.id,
+            at: index,
+            to: constraint
+        )
+    }
+
+    private func updateExportPresetValue(at index: Int, value: String, in slice: ImageEditorSlice) {
+        guard let value = Double(value) else {
+            viewModel.statusText = L10n.text("imageEditor.status.sliceExportPresetInvalid")
+            syncDrafts()
+            return
+        }
+        _ = viewModel.updateSliceExportPresetValue(
+            inSlice: slice.id,
+            at: index,
+            value: value
+        )
+        syncDrafts()
+    }
+
     private func syncDrafts() {
         let currentIDs = Set(viewModel.availableSlices.map(\.id))
         var next = drafts.filter { currentIDs.contains($0.key) }
         for slice in viewModel.availableSlices {
             if var existing = next[slice.id] {
                 existing.exportPresetSuffixes = (slice.exportPresets ?? []).map(\.suffix)
+                existing.exportPresetValues = (slice.exportPresets ?? []).map {
+                    ImageEditorExportScaleFormatter.string(from: $0.value)
+                }
                 next[slice.id] = existing
             } else {
                 next[slice.id] = ImageEditorSliceDraft(slice)
@@ -359,6 +398,8 @@ private struct ImageEditorSlicePanelRow: View {
     let onMoveExportPreset: (Int, ImageEditorSliceExportPresetMoveDirection) -> Void
     let onUpdateExportPresetSuffix: (Int, String) -> Void
     let onUpdateExportPresetFormat: (Int, ImageEditorExportFormat) -> Void
+    let onChangeExportPresetConstraint: (Int, ImageEditorSliceExportConstraint) -> Void
+    let onUpdateExportPresetValue: (Int, String) -> Void
     let onDelete: () -> Void
 
     var body: some View {
@@ -434,6 +475,25 @@ private struct ImageEditorSlicePanelRow: View {
                                 .pickerStyle(.menu)
                                 .controlSize(.small)
                                 .help(L10n.text("imageEditor.slices.exportPreset.format"))
+                                Picker(
+                                    L10n.text("imageEditor.slices.exportPreset.constraint"),
+                                    selection: Binding(
+                                        get: { presets[index].constraint },
+                                        set: { onChangeExportPresetConstraint(index, $0) }
+                                    )
+                                ) {
+                                    ForEach(ImageEditorSliceExportConstraint.allCases) { constraint in
+                                        Text(L10n.text(
+                                            "imageEditor.slices.exportPreset.constraint.\(constraint.rawValue)"
+                                        ))
+                                        .tag(constraint)
+                                    }
+                                }
+                                .labelsHidden()
+                                .pickerStyle(.menu)
+                                .controlSize(.small)
+                                .disabled(presets[index].format == .pdf)
+                                .help(L10n.text("imageEditor.slices.exportPreset.constraint"))
                                 TextField(
                                     L10n.text("imageEditor.slices.exportPreset.suffix"),
                                     text: exportPresetSuffixBinding(
@@ -466,6 +526,36 @@ private struct ImageEditorSlicePanelRow: View {
                                 .buttonStyle(.borderless)
                                 .focusable(false)
                                 .help(L10n.text("imageEditor.slices.exportPreset.applySuffix"))
+                            }
+                            HStack(spacing: 4) {
+                                TextField(
+                                    L10n.text("imageEditor.slices.exportPreset.value"),
+                                    text: exportPresetValueBinding(
+                                        at: index,
+                                        fallback: presets[index].value
+                                    )
+                                )
+                                .textFieldStyle(.roundedBorder)
+                                .font(.system(size: 10))
+                                .disabled(presets[index].format == .pdf)
+                                .onSubmit {
+                                    onUpdateExportPresetValue(
+                                        index,
+                                        exportPresetValue(at: index, fallback: presets[index].value)
+                                    )
+                                }
+                                Button {
+                                    onUpdateExportPresetValue(
+                                        index,
+                                        exportPresetValue(at: index, fallback: presets[index].value)
+                                    )
+                                } label: {
+                                    Image(systemName: "checkmark")
+                                }
+                                .buttonStyle(.borderless)
+                                .focusable(false)
+                                .disabled(presets[index].format == .pdf)
+                                .help(L10n.text("imageEditor.slices.exportPreset.applyValue"))
                             }
                         }
                     }
@@ -558,5 +648,21 @@ private struct ImageEditorSlicePanelRow: View {
                 .onSubmit { onSave(draft) }
         }
         .frame(minWidth: 48)
+    }
+
+    private func exportPresetValueBinding(at index: Int, fallback: Double) -> Binding<String> {
+        Binding(
+            get: { exportPresetValue(at: index, fallback: fallback) },
+            set: { value in
+                guard draft.exportPresetValues.indices.contains(index) else { return }
+                draft.exportPresetValues[index] = value
+            }
+        )
+    }
+
+    private func exportPresetValue(at index: Int, fallback: Double) -> String {
+        draft.exportPresetValues.indices.contains(index)
+            ? draft.exportPresetValues[index]
+            : ImageEditorExportScaleFormatter.string(from: fallback)
     }
 }

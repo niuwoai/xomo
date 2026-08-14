@@ -2377,6 +2377,50 @@ struct ImageEditorScopeTests {
         }
     }
 
+    @Test func slicePanelEditsPresetConstraintsAndValuesThroughValidatedModelCommands() throws {
+        let panelSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent(
+                "veilpic/ImageEditorHotspotPanel.swift"
+            ),
+            encoding: .utf8
+        )
+        let sliceSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent(
+                "veilpic/ImageEditorSlices.swift"
+            ),
+            encoding: .utf8
+        )
+
+        #expect(panelSource.contains("var exportPresetValues: [String]"))
+        #expect(panelSource.contains("existing.exportPresetValues = (slice.exportPresets ?? []).map"))
+        #expect(panelSource.contains("ImageEditorSliceExportConstraint.allCases"))
+        #expect(panelSource.contains("onChangeExportPresetConstraint(index, $0)"))
+        #expect(panelSource.contains("onUpdateExportPresetValue("))
+        #expect(panelSource.contains("viewModel.changeSliceExportPresetConstraint("))
+        #expect(panelSource.contains("viewModel.updateSliceExportPresetValue("))
+        #expect(panelSource.contains(".disabled(presets[index].format == .pdf)"))
+        #expect(sliceSource.contains("func changeSliceExportPresetConstraint("))
+        #expect(sliceSource.contains("value = scale * Double(slice.frame.width)"))
+        #expect(sliceSource.contains("value = scale * Double(slice.frame.height)"))
+        #expect(sliceSource.contains("func updateSliceExportPresetValue("))
+        #expect(sliceSource.contains("current.format == .pdf ? .scale : constraint"))
+        #expect(sliceSource.contains("current.format == .pdf ? 1 : value"))
+
+        for locale in ["en", "ja", "zh-Hans"] {
+            let localization = try String(
+                contentsOf: Self.repositoryRoot().appendingPathComponent(
+                    "veilpic/\(locale).lproj/Localizable.strings"
+                ),
+                encoding: .utf8
+            )
+            #expect(localization.contains("\"imageEditor.slices.exportPreset.constraint\""))
+            #expect(localization.contains("\"imageEditor.slices.exportPreset.value\""))
+            #expect(localization.contains("\"imageEditor.slices.exportPreset.applyValue\""))
+            #expect(localization.contains("\"imageEditor.status.sliceExportPresetDeliveryUpdated\""))
+            #expect(localization.contains("\"imageEditor.history.sliceExportPresetDeliveryUpdated\""))
+        }
+    }
+
     @Test func exportPanelUsesSharedLabelGridAndSingleLineScopeSegments() throws {
         let source = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorExportPanel.swift"),

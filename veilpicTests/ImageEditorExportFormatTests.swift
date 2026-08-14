@@ -1630,6 +1630,125 @@ struct ImageEditorExportFormatTests {
         #expect(viewModel.document.history.count == historyAfterEdit)
     }
 
+    @Test func editingSliceExportPresetDeliveryPreservesScaleValidatesAndRoundTripsHistory() {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "delivery.png",
+            image: NSImage.transparent(size: CGSize(width: 160, height: 100))
+        ) { _ in }
+        let presets = [
+            ImageEditorSliceExportPreset(
+                suffix: "@2x",
+                format: .png,
+                constraint: .scale,
+                value: 2
+            ),
+            ImageEditorSliceExportPreset(
+                suffix: "@2x",
+                format: .png,
+                constraint: .width,
+                value: 300
+            ),
+            ImageEditorSliceExportPreset(
+                suffix: "-print",
+                format: .pdf,
+                constraint: .scale,
+                value: 1
+            )
+        ]
+        let slice = ImageEditorSlice(
+            name: "Hero",
+            frame: CGRect(x: 10, y: 10, width: 100, height: 50),
+            exportPresets: presets
+        )
+        viewModel.document.slices = [slice]
+        _ = viewModel.selectSlice(id: slice.id)
+        let historyCount = viewModel.document.history.count
+
+        #expect(ImageEditorSliceExportConstraint.allCases == [.scale, .width, .height])
+        #expect(viewModel.changeSliceExportPresetConstraint(
+            inSlice: slice.id,
+            at: 0,
+            to: .width
+        ))
+        var updated = viewModel.document.slices[0].exportPresets?[0]
+        #expect(updated?.constraint == .width)
+        #expect(updated?.value == 200)
+        #expect(viewModel.exportSettings.scale == 2)
+        #expect(viewModel.document.history.count == historyCount + 1)
+
+        let historyAfterConstraint = viewModel.document.history.count
+        #expect(!viewModel.changeSliceExportPresetConstraint(
+            inSlice: slice.id,
+            at: 0,
+            to: .width
+        ))
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.sliceExportPresetUnchanged"))
+        #expect(viewModel.document.history.count == historyAfterConstraint)
+        #expect(!viewModel.updateSliceExportPresetValue(
+            inSlice: slice.id,
+            at: 0,
+            value: 300
+        ))
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.sliceExportPresetDuplicate"))
+        #expect(viewModel.document.history.count == historyAfterConstraint)
+        #expect(!viewModel.updateSliceExportPresetValue(
+            inSlice: slice.id,
+            at: 0,
+            value: 1_000
+        ))
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.sliceExportPresetInvalid"))
+        #expect(viewModel.document.history.count == historyAfterConstraint)
+
+        #expect(viewModel.updateSliceExportPresetValue(
+            inSlice: slice.id,
+            at: 0,
+            value: 250
+        ))
+        updated = viewModel.document.slices[0].exportPresets?[0]
+        #expect(updated?.constraint == .width)
+        #expect(updated?.value == 250)
+        #expect(viewModel.exportSettings.scale == 2.5)
+        #expect(viewModel.document.history.count == historyAfterConstraint + 1)
+
+        viewModel.undo()
+        #expect(viewModel.document.slices[0].exportPresets?[0].value == 200)
+        #expect(viewModel.exportSettings.scale == 2)
+        viewModel.redo()
+        #expect(viewModel.document.slices[0].exportPresets?[0] == updated)
+        #expect(viewModel.exportSettings.scale == 2.5)
+
+        #expect(viewModel.changeSliceExportPresetConstraint(
+            inSlice: slice.id,
+            at: 0,
+            to: .height
+        ))
+        #expect(viewModel.document.slices[0].exportPresets?[0].constraint == .height)
+        #expect(viewModel.document.slices[0].exportPresets?[0].value == 125)
+        #expect(viewModel.exportSettings.scale == 2.5)
+
+        let historyAfterEdits = viewModel.document.history.count
+        #expect(!viewModel.changeSliceExportPresetConstraint(
+            inSlice: slice.id,
+            at: 2,
+            to: .height
+        ))
+        #expect(viewModel.document.slices[0].exportPresets?[2] == presets[2])
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.sliceExportPresetUnchanged"))
+        #expect(!viewModel.updateSliceExportPresetValue(
+            inSlice: slice.id,
+            at: 2,
+            value: 2
+        ))
+        #expect(viewModel.document.slices[0].exportPresets?[2] == presets[2])
+        #expect(viewModel.document.history.count == historyAfterEdits)
+        #expect(!viewModel.changeSliceExportPresetConstraint(
+            inSlice: slice.id,
+            at: 99,
+            to: .scale
+        ))
+        #expect(viewModel.document.history.count == historyAfterEdits)
+    }
+
     @Test func exportingAllSlicesUsesPresetsFallbackScalesAndCollisionSafeNames() throws {
         let viewModel = ImageEditorViewModel(
             sourceName: "delivery.png",

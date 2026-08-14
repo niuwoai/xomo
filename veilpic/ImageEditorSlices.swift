@@ -287,6 +287,99 @@ extension ImageEditorViewModel {
         return true
     }
 
+    @discardableResult
+    func changeSliceExportPresetConstraint(
+        inSlice id: UUID,
+        at presetIndex: Int,
+        to constraint: ImageEditorSliceExportConstraint
+    ) -> Bool {
+        guard let slice = slice(with: id),
+              let presets = slice.exportPresets,
+              presets.indices.contains(presetIndex),
+              let scale = presets[presetIndex].resolvedScale(for: slice.frame)
+        else {
+            statusText = L10n.text("imageEditor.status.sliceExportPresetInvalid")
+            return false
+        }
+        let value: Double
+        switch constraint {
+        case .scale:
+            value = scale
+        case .width:
+            value = scale * Double(slice.frame.width)
+        case .height:
+            value = scale * Double(slice.frame.height)
+        }
+        return updateSliceExportPresetDelivery(
+            inSlice: id,
+            at: presetIndex,
+            constraint: constraint,
+            value: value
+        )
+    }
+
+    @discardableResult
+    func updateSliceExportPresetValue(
+        inSlice id: UUID,
+        at presetIndex: Int,
+        value: Double
+    ) -> Bool {
+        guard let slice = slice(with: id),
+              let presets = slice.exportPresets,
+              presets.indices.contains(presetIndex)
+        else { return false }
+        return updateSliceExportPresetDelivery(
+            inSlice: id,
+            at: presetIndex,
+            constraint: presets[presetIndex].constraint,
+            value: value
+        )
+    }
+
+    private func updateSliceExportPresetDelivery(
+        inSlice id: UUID,
+        at presetIndex: Int,
+        constraint: ImageEditorSliceExportConstraint,
+        value: Double
+    ) -> Bool {
+        guard let sliceIndex = document.slices.firstIndex(where: { $0.id == id }),
+              var presets = document.slices[sliceIndex].exportPresets,
+              presets.indices.contains(presetIndex)
+        else { return false }
+        let current = presets[presetIndex]
+        let updated = ImageEditorSliceExportPreset(
+            suffix: current.suffix,
+            format: current.format,
+            constraint: current.format == .pdf ? .scale : constraint,
+            value: current.format == .pdf ? 1 : value
+        )
+        guard updated.resolvedScale(for: document.slices[sliceIndex].frame) != nil else {
+            statusText = L10n.text("imageEditor.status.sliceExportPresetInvalid")
+            return false
+        }
+        guard updated != current else {
+            statusText = L10n.text("imageEditor.status.sliceExportPresetUnchanged")
+            return false
+        }
+        guard !presets.enumerated().contains(where: { index, preset in
+            index != presetIndex && preset == updated
+        }) else {
+            statusText = L10n.text("imageEditor.status.sliceExportPresetDuplicate")
+            return false
+        }
+
+        pushUndo()
+        presets[presetIndex] = updated
+        document.slices[sliceIndex].exportPresets = presets
+        let slice = document.slices[sliceIndex]
+        if exportSettings.sliceID == id && presetIndex == presets.startIndex {
+            applyPrimaryExportPreset(for: slice)
+        }
+        appendHistory(L10n.format("imageEditor.history.sliceExportPresetDeliveryUpdated", slice.name))
+        statusText = L10n.format("imageEditor.status.sliceExportPresetDeliveryUpdated", slice.name)
+        return true
+    }
+
     func syncExportSettingsAfterSliceHistoryChange(from previousSlices: [ImageEditorSlice]) {
         guard previousSlices != document.slices,
               exportSettings.scope == .slice
