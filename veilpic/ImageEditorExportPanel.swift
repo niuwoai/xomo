@@ -335,6 +335,49 @@ struct ImageEditorPreviewPixelSample {
     }
 }
 
+struct ImageEditorPreviewPinnedSample: Identifiable {
+    let number: Int
+    let sample: ImageEditorPreviewPixelSample
+
+    var id: Int { number }
+}
+
+struct ImageEditorPreviewPinnedSamples {
+    static let maximumCount = 4
+
+    private(set) var entries: [ImageEditorPreviewPinnedSample] = []
+
+    var latest: ImageEditorPreviewPinnedSample? {
+        entries.last
+    }
+
+    @discardableResult
+    mutating func pin(
+        _ sample: ImageEditorPreviewPixelSample
+    ) -> ImageEditorPreviewPinnedSample? {
+        guard entries.count < Self.maximumCount else { return nil }
+        let usedNumbers = Set(entries.map(\.number))
+        guard let number = (1...Self.maximumCount).first(where: { !usedNumbers.contains($0) })
+        else { return nil }
+        let entry = ImageEditorPreviewPinnedSample(number: number, sample: sample)
+        entries.append(entry)
+        return entry
+    }
+
+    @discardableResult
+    mutating func remove(number: Int) -> Bool {
+        guard let index = entries.firstIndex(where: { $0.number == number }) else {
+            return false
+        }
+        entries.remove(at: index)
+        return true
+    }
+
+    mutating func removeAll() {
+        entries.removeAll()
+    }
+}
+
 private struct ImageEditorPreviewBackdropView: View {
     let backdrop: ImageEditorPreviewBackdrop
 
@@ -369,13 +412,17 @@ private struct ImageEditorPreviewBackdropView: View {
 struct ImageEditorPreviewPanel: View {
     @ObservedObject var viewModel: ImageEditorViewModel
     @State private var pixelSample: ImageEditorPreviewPixelSample?
-    @State private var pinnedPixelSample: ImageEditorPreviewPixelSample?
+    @State private var pinnedPixelSamples = ImageEditorPreviewPinnedSamples()
     @State private var pixelSampleSize: ImageEditorPreviewPixelSampleSize = .point
     @State private var pixelReadoutMode: ImageEditorPreviewPixelReadoutMode = .hexadecimalRGBA
+    @State private var copiedPinnedSampleNumber: Int?
     @State private var copiedPixelReadout: String?
 
     private var displayedPixelSample: ImageEditorPreviewPixelSample? {
-        ImageEditorPreviewPixelSample.resolved(live: pixelSample, pinned: pinnedPixelSample)
+        ImageEditorPreviewPixelSample.resolved(
+            live: pixelSample,
+            pinned: pinnedPixelSamples.latest?.sample
+        )
     }
 
     var body: some View {
@@ -506,42 +553,35 @@ struct ImageEditorPreviewPanel: View {
                     Text(L10n.text("imageEditor.preview.sample.empty"))
                         .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
                 }
-                if let pinnedSample = pinnedPixelSample {
+                if let pinnedSample = pinnedPixelSamples.latest {
                     Image(systemName: "pin.fill")
                         .foregroundStyle(Color(nsColor: ImageEditorTheme.exportAccent))
                         .help(L10n.text("imageEditor.preview.sample.pinned"))
                     Button {
-                        let value = pinnedSample.valueText(mode: pixelReadoutMode)
-                        if ImageEditorPreviewClipboard.copy(value) {
-                            copiedPixelReadout = value
-                        }
+                        copyReadout(for: pinnedSample)
                     } label: {
                         Image(
-                            systemName: copiedPixelReadout == pinnedSample.valueText(
-                                mode: pixelReadoutMode
-                            ) ? "checkmark" : "doc.on.doc"
+                            systemName: isCopied(pinnedSample) ? "checkmark" : "doc.on.doc"
                         )
                     }
                     .buttonStyle(.plain)
                     .help(
                         L10n.text(
-                            copiedPixelReadout == pinnedSample.valueText(
-                                mode: pixelReadoutMode
-                            )
+                            isCopied(pinnedSample)
                                 ? "imageEditor.preview.sample.copied"
                                 : "imageEditor.preview.sample.copy"
                         )
                     )
                     .accessibilityIdentifier("image-editor-preview-copy-pinned-sample")
                     Button {
-                        pinnedPixelSample = nil
+                        pinnedPixelSamples.removeAll()
                         pixelSample = nil
-                        copiedPixelReadout = nil
+                        resetCopyFeedback()
                     } label: {
                         Image(systemName: "xmark.circle.fill")
                     }
                     .buttonStyle(.plain)
-                    .help(L10n.text("imageEditor.preview.sample.clearPinned"))
+                    .help(L10n.text("imageEditor.preview.sample.clearAllPinned"))
                     .accessibilityIdentifier("image-editor-preview-clear-pinned-sample")
                 }
             }
@@ -549,6 +589,11 @@ struct ImageEditorPreviewPanel: View {
             .padding(.horizontal, 16)
             .padding(.vertical, 9)
             .accessibilityIdentifier("image-editor-preview-inspector")
+
+            if !pinnedPixelSamples.entries.isEmpty {
+                Divider()
+                pinnedSamplesStrip
+            }
         }
         .frame(minWidth: 640, minHeight: 480)
         .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
@@ -559,14 +604,99 @@ struct ImageEditorPreviewPanel: View {
         }
         .onChange(of: pixelSampleSize) { _ in
             pixelSample = nil
-            pinnedPixelSample = nil
-            copiedPixelReadout = nil
+            pinnedPixelSamples.removeAll()
+            resetCopyFeedback()
         }
         .onDisappear {
             pixelSample = nil
-            pinnedPixelSample = nil
-            copiedPixelReadout = nil
+            pinnedPixelSamples.removeAll()
+            resetCopyFeedback()
         }
+    }
+
+    private var pinnedSamplesStrip: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 8) {
+                ForEach(pinnedPixelSamples.entries) { pinnedSample in
+                    HStack(spacing: 6) {
+                        Text(L10n.format("imageEditor.preview.sample.number", pinnedSample.number))
+                            .fontWeight(.semibold)
+                        RoundedRectangle(cornerRadius: 2)
+                            .fill(Color(nsColor: pinnedSample.sample.color))
+                            .overlay {
+                                RoundedRectangle(cornerRadius: 2)
+                                    .stroke(
+                                        Color(nsColor: ImageEditorTheme.border),
+                                        lineWidth: 1
+                                    )
+                            }
+                            .frame(width: 14, height: 14)
+                        Text(pinnedSample.sample.text(mode: pixelReadoutMode))
+                            .monospacedDigit()
+                        Button {
+                            copyReadout(for: pinnedSample)
+                        } label: {
+                            Image(systemName: isCopied(pinnedSample) ? "checkmark" : "doc.on.doc")
+                        }
+                        .buttonStyle(.plain)
+                        .help(
+                            L10n.text(
+                                isCopied(pinnedSample)
+                                    ? "imageEditor.preview.sample.copied"
+                                    : "imageEditor.preview.sample.copy"
+                            )
+                        )
+                        .accessibilityIdentifier(
+                            "image-editor-preview-copy-pinned-sample-\(pinnedSample.number)"
+                        )
+                        Button {
+                            pinnedPixelSamples.remove(number: pinnedSample.number)
+                            if copiedPinnedSampleNumber == pinnedSample.number {
+                                resetCopyFeedback()
+                            }
+                        } label: {
+                            Image(systemName: "xmark")
+                        }
+                        .buttonStyle(.plain)
+                        .help(L10n.text("imageEditor.preview.sample.removePinned"))
+                        .accessibilityIdentifier(
+                            "image-editor-preview-remove-pinned-sample-\(pinnedSample.number)"
+                        )
+                    }
+                    .font(.system(size: 11))
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 6)
+                    .background(
+                        RoundedRectangle(cornerRadius: 5)
+                            .fill(Color(nsColor: ImageEditorTheme.window))
+                    )
+                    .accessibilityIdentifier(
+                        "image-editor-preview-pinned-sample-\(pinnedSample.number)"
+                    )
+                }
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 8)
+        }
+        .accessibilityIdentifier("image-editor-preview-pinned-samples")
+    }
+
+    private func isCopied(_ pinnedSample: ImageEditorPreviewPinnedSample) -> Bool {
+        copiedPinnedSampleNumber == pinnedSample.number
+            && copiedPixelReadout == pinnedSample.sample.valueText(mode: pixelReadoutMode)
+    }
+
+    private func copyReadout(for pinnedSample: ImageEditorPreviewPinnedSample) {
+        let value = pinnedSample.sample.valueText(mode: pixelReadoutMode)
+        if ImageEditorPreviewClipboard.copy(value) {
+            copiedPinnedSampleNumber = pinnedSample.number
+            copiedPixelReadout = value
+        }
+    }
+
+    private func resetCopyFeedback() {
+        copiedPinnedSampleNumber = nil
+        copiedPixelReadout = nil
     }
 
     private func previewCanvas(
@@ -589,17 +719,26 @@ struct ImageEditorPreviewPanel: View {
                 .resizable()
                 .interpolation(interpolation)
                 .frame(width: size.width, height: size.height)
-            if let markerCenter = pinnedPixelSample?.displayedCenter(
-                displayedSize: size,
-                canvasSize: viewModel.document.canvasSize
-            ) {
-                Image(systemName: "scope")
-                    .font(.system(size: 15, weight: .bold))
-                    .foregroundStyle(.white)
+            ForEach(pinnedPixelSamples.entries) { pinnedSample in
+                if let markerCenter = pinnedSample.sample.displayedCenter(
+                    displayedSize: size,
+                    canvasSize: viewModel.document.canvasSize
+                ) {
+                    ZStack {
+                        Circle()
+                            .fill(.black.opacity(0.82))
+                        Circle()
+                            .stroke(.white, lineWidth: 1)
+                        Text("\(pinnedSample.number)")
+                            .font(.system(size: 10, weight: .bold))
+                            .foregroundStyle(.white)
+                    }
+                    .frame(width: 18, height: 18)
                     .shadow(color: .black.opacity(0.9), radius: 1)
                     .position(markerCenter)
                     .allowsHitTesting(false)
                     .accessibilityHidden(true)
+                }
             }
         }
         .frame(width: size.width, height: size.height)
@@ -627,9 +766,11 @@ struct ImageEditorPreviewPanel: View {
                     canvasSize: viewModel.document.canvasSize,
                     sampleSize: pixelSampleSize
                 )
-                pinnedPixelSample = sample
+                if let sample {
+                    _ = pinnedPixelSamples.pin(sample)
+                }
                 pixelSample = sample
-                copiedPixelReadout = nil
+                resetCopyFeedback()
             }
         )
         .help(L10n.text("imageEditor.preview.sample.pinHelp"))

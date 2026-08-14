@@ -250,6 +250,46 @@ struct ImageEditorExportFormatTests {
         )
     }
 
+    @Test func previewPixelInspectionKeepsFourStableNumberedSamples() {
+        var pinnedSamples = ImageEditorPreviewPinnedSamples()
+        let samples = (0..<5).map { offset in
+            ImageEditorPreviewPixelSample(
+                point: CGPoint(x: offset, y: offset + 10),
+                color: NSColor(
+                    deviceRed: CGFloat(offset) / 5,
+                    green: 0.5,
+                    blue: 1,
+                    alpha: 1
+                )
+            )
+        }
+
+        for index in 0..<ImageEditorPreviewPinnedSamples.maximumCount {
+            let pinnedSample = pinnedSamples.pin(samples[index])
+            #expect(pinnedSample?.number == index + 1)
+        }
+        #expect(pinnedSamples.entries.map(\.number) == [1, 2, 3, 4])
+        #expect(pinnedSamples.latest?.sample.point == samples[3].point)
+
+        let overflowSample = pinnedSamples.pin(samples[4])
+        #expect(overflowSample == nil)
+        #expect(pinnedSamples.entries.count == ImageEditorPreviewPinnedSamples.maximumCount)
+        #expect(pinnedSamples.latest?.sample.point == samples[3].point)
+
+        let removedSample = pinnedSamples.remove(number: 2)
+        let removedMissingSample = pinnedSamples.remove(number: 2)
+        let reusedSample = pinnedSamples.pin(samples[4])
+        #expect(removedSample)
+        #expect(!removedMissingSample)
+        #expect(reusedSample?.number == 2)
+        #expect(pinnedSamples.entries.map(\.number) == [1, 3, 4, 2])
+        #expect(pinnedSamples.latest?.sample.point == samples[4].point)
+
+        pinnedSamples.removeAll()
+        #expect(pinnedSamples.entries.isEmpty)
+        #expect(pinnedSamples.latest == nil)
+    }
+
     @Test func previewPixelInspectionAveragesNeighborhoodAndClipsCanvasEdges() throws {
         let canvasSize = CGSize(width: 3, height: 1)
         let image = try #require(NSImage.rendered(size: canvasSize) { _ in

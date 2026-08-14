@@ -422,11 +422,14 @@
 "imageEditor.preview.dimensions" = "%d × %d px";
 "imageEditor.preview.sample" = "X %d  Y %d · %@";
 "imageEditor.preview.sample.empty" = "Move over the image to inspect; click to pin";
-"imageEditor.preview.sample.pinHelp" = "Click the image to pin this sample";
+"imageEditor.preview.sample.pinHelp" = "Click the image to pin up to four samples";
 "imageEditor.preview.sample.pinned" = "Pinned pixel sample";
+"imageEditor.preview.sample.number" = "#%d";
 "imageEditor.preview.sample.copy" = "Copy color readout";
 "imageEditor.preview.sample.copied" = "Color readout copied";
 "imageEditor.preview.sample.clearPinned" = "Clear pinned sample";
+"imageEditor.preview.sample.clearAllPinned" = "Clear all pinned samples";
+"imageEditor.preview.sample.removePinned" = "Remove this pinned sample";
 "imageEditor.preview.sampleSize" = "Sample Size";
 "imageEditor.preview.sampleSize.point" = "Point Sample";
 "imageEditor.preview.sampleSize.average3" = "3 × 3 Average";
