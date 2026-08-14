@@ -501,6 +501,23 @@ struct ImageEditorPreviewPinnedSamples {
     }
 }
 
+enum ImageEditorPreviewMarkerTapAction: Equatable {
+    case pinSample
+    case selectDestination(Int)
+    case remove(Int)
+
+    static func resolve(
+        markerNumber: Int?,
+        modifierFlags: NSEvent.ModifierFlags
+    ) -> Self {
+        guard let markerNumber else { return .pinSample }
+        if modifierFlags.contains(.option) {
+            return .remove(markerNumber)
+        }
+        return .selectDestination(markerNumber)
+    }
+}
+
 struct ImageEditorPreviewSampleMeasurementSelection {
     private(set) var fromNumber: Int?
     private(set) var toNumber: Int?
@@ -1013,12 +1030,7 @@ struct ImageEditorPreviewPanel: View {
                                 "image-editor-preview-copy-pinned-sample-\(pinnedSample.number)"
                             )
                             Button {
-                                if pinnedPixelSamples.remove(number: pinnedSample.number) {
-                                    measurementSelection.reconcile(in: pinnedPixelSamples)
-                                }
-                                if copiedPinnedSampleNumber == pinnedSample.number {
-                                    resetCopyFeedback()
-                                }
+                                removePinnedSample(number: pinnedSample.number)
                             } label: {
                                 Image(systemName: "xmark")
                             }
@@ -1156,6 +1168,15 @@ struct ImageEditorPreviewPanel: View {
         copiedPixelReadout = nil
     }
 
+    private func removePinnedSample(number: Int) {
+        if pinnedPixelSamples.remove(number: number) {
+            measurementSelection.reconcile(in: pinnedPixelSamples)
+        }
+        if copiedPinnedSampleNumber == number {
+            resetCopyFeedback()
+        }
+    }
+
     private func previewCanvas(
         size: CGSize,
         interpolation: Image.Interpolation
@@ -1264,17 +1285,27 @@ struct ImageEditorPreviewPanel: View {
         }
         .simultaneousGesture(
             SpatialTapGesture().onEnded { value in
-                if let markerNumber = pinnedPixelSamples.markerNumber(
+                let markerNumber = pinnedPixelSamples.markerNumber(
                     at: value.location,
                     displayedSize: size,
                     canvasSize: viewModel.document.canvasSize
+                )
+                switch ImageEditorPreviewMarkerTapAction.resolve(
+                    markerNumber: markerNumber,
+                    modifierFlags: NSEvent.modifierFlags
                 ) {
+                case let .selectDestination(markerNumber):
                     measurementSelection.selectDestination(
                         markerNumber,
                         in: pinnedPixelSamples
                     )
                     resetCopyFeedback()
                     return
+                case let .remove(markerNumber):
+                    removePinnedSample(number: markerNumber)
+                    return
+                case .pinSample:
+                    break
                 }
                 let sample = ImageEditorPreviewPixelSample.sample(
                     image: viewModel.previewImage,

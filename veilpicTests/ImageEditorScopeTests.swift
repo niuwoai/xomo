@@ -1193,6 +1193,7 @@ struct ImageEditorScopeTests {
         #expect(source.contains("enum ImageEditorPreviewPixelReadoutMode"))
         #expect(source.contains("enum ImageEditorPreviewClipboard"))
         #expect(source.contains("struct ImageEditorPreviewPinnedSamples"))
+        #expect(source.contains("enum ImageEditorPreviewMarkerTapAction: Equatable"))
         #expect(source.contains("struct ImageEditorPreviewSampleMeasurement"))
         #expect(source.contains("struct ImageEditorPreviewSampleMeasurementSelection"))
         #expect(source.contains("struct ImageEditorPreviewSampleMeasurementGuide"))
@@ -1226,8 +1227,15 @@ struct ImageEditorScopeTests {
         ))
         #expect(previewSource.contains("displayedPixelSample.text(mode: pixelReadoutMode)"))
         #expect(previewSource.contains("SpatialTapGesture().onEnded"))
-        #expect(previewSource.contains("if let markerNumber = pinnedPixelSamples.markerNumber("))
+        #expect(previewSource.contains("let markerNumber = pinnedPixelSamples.markerNumber("))
+        #expect(previewSource.contains("switch ImageEditorPreviewMarkerTapAction.resolve("))
+        #expect(previewSource.contains("modifierFlags: NSEvent.modifierFlags"))
+        #expect(previewSource.contains("case let .remove(markerNumber):"))
         #expect(previewSource.contains("measurementSelection.selectDestination("))
+        #expect(previewSource.contains("removePinnedSample(number: markerNumber)"))
+        #expect(
+            previewSource.components(separatedBy: "removePinnedSample(number:").count == 4
+        )
         #expect(previewSource.contains("isMeasurementDestination(pinnedSample.number)"))
         #expect(previewSource.contains(
             "pinnedPixelSamples.pin(sample, readoutMode: pixelReadoutMode)"
@@ -1295,7 +1303,7 @@ struct ImageEditorScopeTests {
         #expect(previewSource.contains(".accessibilityIdentifier(\"image-editor-preview-pixel-sample\")"))
 
         let markerTap = try #require(
-            previewSource.range(of: "if let markerNumber = pinnedPixelSamples.markerNumber(")
+            previewSource.range(of: "let markerNumber = pinnedPixelSamples.markerNumber(")
         )
         let sampleAfterMarkerTap = try #require(
             previewSource[markerTap.upperBound...].range(

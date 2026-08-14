@@ -422,7 +422,7 @@
 "imageEditor.preview.dimensions" = "%d × %d px";
 "imageEditor.preview.sample" = "X %d  Y %d · %@";
 "imageEditor.preview.sample.empty" = "Move over the image to inspect; click to pin";
-"imageEditor.preview.sample.pinHelp" = "Click the image to pin a sample; click a numbered marker to measure to it";
+"imageEditor.preview.sample.pinHelp" = "Click the image to pin; click a marker to measure; Option-click a marker to remove it";
 "imageEditor.preview.sample.pinned" = "Pinned pixel sample";
 "imageEditor.preview.sample.number" = "#%d";
 "imageEditor.preview.sample.measurement" = "#%d → #%d · ΔX %@ px · ΔY %@ px · D %@ px";

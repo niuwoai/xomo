@@ -360,6 +360,45 @@ struct ImageEditorExportFormatTests {
         #expect(pinnedSamples.entries.count == 3)
     }
 
+    @Test func previewMarkerTapActionSeparatesPinSelectAndOptionRemoval() {
+        #expect(
+            ImageEditorPreviewMarkerTapAction.resolve(
+                markerNumber: nil,
+                modifierFlags: []
+            ) == .pinSample
+        )
+        #expect(
+            ImageEditorPreviewMarkerTapAction.resolve(
+                markerNumber: nil,
+                modifierFlags: [.option]
+            ) == .pinSample
+        )
+        #expect(
+            ImageEditorPreviewMarkerTapAction.resolve(
+                markerNumber: 2,
+                modifierFlags: []
+            ) == .selectDestination(2)
+        )
+        #expect(
+            ImageEditorPreviewMarkerTapAction.resolve(
+                markerNumber: 3,
+                modifierFlags: [.shift]
+            ) == .selectDestination(3)
+        )
+        #expect(
+            ImageEditorPreviewMarkerTapAction.resolve(
+                markerNumber: 2,
+                modifierFlags: [.option]
+            ) == .remove(2)
+        )
+        #expect(
+            ImageEditorPreviewMarkerTapAction.resolve(
+                markerNumber: 4,
+                modifierFlags: [.option, .command]
+            ) == .remove(4)
+        )
+    }
+
     @Test func previewPinnedSamplesKeepIndependentColorReadoutModes() {
         var pinnedSamples = ImageEditorPreviewPinnedSamples()
         let firstSample = ImageEditorPreviewPixelSample(
