@@ -806,6 +806,30 @@ struct ImageEditorExportFormatTests {
         #expect(selection.measurement(in: pinnedSamples) == nil)
     }
 
+    @Test func previewMeasurementCopiesEndpointsAndValuesToClipboard() throws {
+        var pinnedSamples = ImageEditorPreviewPinnedSamples()
+        _ = pinnedSamples.pin(
+            ImageEditorPreviewPixelSample(point: CGPoint(x: 10, y: 20), color: .red)
+        )
+        _ = pinnedSamples.pin(
+            ImageEditorPreviewPixelSample(point: CGPoint(x: 13, y: 24), color: .blue)
+        )
+        let measurement = try #require(pinnedSamples.latestMeasurement)
+        let pasteboard = NSPasteboard(
+            name: NSPasteboard.Name("xomo-tests.preview-measurement-copy.\(UUID().uuidString)")
+        )
+
+        let copied = measurement.copy(to: pasteboard)
+
+        #expect(copied)
+        #expect(pasteboard.string(forType: .string) == measurement.text)
+        #expect(measurement.text.contains("#1"))
+        #expect(measurement.text.contains("#2"))
+        #expect(measurement.text.contains(measurement.deltaXText))
+        #expect(measurement.text.contains(measurement.deltaYText))
+        #expect(measurement.text.contains(measurement.distanceText))
+    }
+
     @Test func previewMarkerClicksAdvanceMeasurementDestinationInVisualOrder() {
         var pinnedSamples = ImageEditorPreviewPinnedSamples()
         for offset in 0..<4 {

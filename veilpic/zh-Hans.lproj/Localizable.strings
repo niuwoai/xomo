@@ -432,6 +432,8 @@
 "imageEditor.preview.sample.measurementDeltaY" = "ΔY %@ 像素";
 "imageEditor.preview.sample.measurementFrom" = "测量起点样本";
 "imageEditor.preview.sample.measurementTo" = "测量终点样本";
+"imageEditor.preview.sample.copyMeasurement" = "复制测量结果";
+"imageEditor.preview.sample.measurementCopied" = "测量结果已复制";
 "imageEditor.preview.sample.copy" = "复制颜色读数";
 "imageEditor.preview.sample.copied" = "颜色读数已复制";
 "imageEditor.preview.sample.clearPinned" = "清除固定样本";

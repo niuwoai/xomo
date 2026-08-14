@@ -1224,7 +1224,7 @@ struct ImageEditorScopeTests {
         #expect(previewSource.contains("@State private var measurementSelection"))
         #expect(previewSource.contains("@State private var pixelSampleSize"))
         #expect(previewSource.contains("@State private var pixelReadoutMode"))
-        #expect(previewSource.contains("@State private var copiedPixelReadout"))
+        #expect(previewSource.contains("@State private var copiedPreviewText"))
         #expect(previewSource.contains("selection: $pixelSampleSize"))
         #expect(previewSource.contains("ForEach(ImageEditorPreviewPixelSampleSize.allCases)"))
         #expect(previewSource.contains(
@@ -1301,6 +1301,13 @@ struct ImageEditorScopeTests {
         #expect(previewSource.contains("measurementSelection.selectLatest(in: pinnedPixelSamples)"))
         #expect(previewSource.contains("measurementSelection.reconcile(in: pinnedPixelSamples)"))
         #expect(previewSource.contains("Text(measurement.valuesText)"))
+        #expect(previewSource.contains("copyMeasurement(measurement)"))
+        #expect(previewSource.contains("isCopied(measurement)"))
+        #expect(previewSource.contains(
+            ".accessibilityIdentifier(\"image-editor-preview-copy-measurement\")"
+        ))
+        #expect(previewSource.contains("if measurementSelection.setFrom("))
+        #expect(previewSource.contains("if measurementSelection.setTo("))
         #expect(previewSource.contains("ImageEditorPreviewSampleMeasurementGuide("))
         #expect(previewSource.contains("path.move(to: guide.fromCenter)"))
         #expect(previewSource.contains("path.addLine(to: guide.toCenter)"))
@@ -1374,6 +1381,8 @@ struct ImageEditorScopeTests {
             #expect(localization.contains("\"imageEditor.preview.sample.measurementDeltaY\""))
             #expect(localization.contains("\"imageEditor.preview.sample.measurementFrom\""))
             #expect(localization.contains("\"imageEditor.preview.sample.measurementTo\""))
+            #expect(localization.contains("\"imageEditor.preview.sample.copyMeasurement\""))
+            #expect(localization.contains("\"imageEditor.preview.sample.measurementCopied\""))
             #expect(localization.contains("\"imageEditor.preview.sample.copy\""))
             #expect(localization.contains("\"imageEditor.preview.sample.copied\""))
             #expect(localization.contains("\"imageEditor.preview.sample.clearPinned\""))

@@ -432,6 +432,8 @@
 "imageEditor.preview.sample.measurementDeltaY" = "ΔY %@ px";
 "imageEditor.preview.sample.measurementFrom" = "Measure from sample";
 "imageEditor.preview.sample.measurementTo" = "Measure to sample";
+"imageEditor.preview.sample.copyMeasurement" = "Copy measurement";
+"imageEditor.preview.sample.measurementCopied" = "Measurement copied";
 "imageEditor.preview.sample.copy" = "Copy color readout";
 "imageEditor.preview.sample.copied" = "Color readout copied";
 "imageEditor.preview.sample.clearPinned" = "Clear pinned sample";

@@ -418,6 +418,11 @@ struct ImageEditorPreviewSampleMeasurement {
         )
     }
 
+    @discardableResult
+    func copy(to pasteboard: NSPasteboard = .general) -> Bool {
+        ImageEditorPreviewClipboard.copy(text, to: pasteboard)
+    }
+
     var deltaXText: String {
         Self.signedText(deltaX)
     }
@@ -1025,7 +1030,7 @@ struct ImageEditorPreviewPanel: View {
     @State private var pixelSampleSize: ImageEditorPreviewPixelSampleSize = .point
     @State private var pixelReadoutMode: ImageEditorPreviewPixelReadoutMode = .hexadecimalRGBA
     @State private var copiedPinnedSampleNumber: Int?
-    @State private var copiedPixelReadout: String?
+    @State private var copiedPreviewText: String?
 
     private var displayedPixelSample: ImageEditorPreviewPixelSample? {
         ImageEditorPreviewPixelSample.resolved(
@@ -1371,6 +1376,24 @@ struct ImageEditorPreviewPanel: View {
                     Text(measurement.valuesText)
                         .monospacedDigit()
                         .accessibilityLabel(measurement.text)
+                    Button {
+                        copyMeasurement(measurement)
+                    } label: {
+                        Image(
+                            systemName: isCopied(measurement)
+                                ? "checkmark"
+                                : "doc.on.doc"
+                        )
+                    }
+                    .buttonStyle(.plain)
+                    .help(
+                        L10n.text(
+                            isCopied(measurement)
+                                ? "imageEditor.preview.sample.measurementCopied"
+                                : "imageEditor.preview.sample.copyMeasurement"
+                        )
+                    )
+                    .accessibilityIdentifier("image-editor-preview-copy-measurement")
                     Spacer()
                 }
                 .font(.system(size: 11))
@@ -1389,7 +1412,15 @@ struct ImageEditorPreviewPanel: View {
     ) -> Bool {
         let readoutMode = mode ?? pinnedSample.readoutMode
         return copiedPinnedSampleNumber == pinnedSample.number
-            && copiedPixelReadout == pinnedSample.sample.valueText(mode: readoutMode)
+            && copiedPreviewText == pinnedSample.sample.valueText(mode: readoutMode)
+    }
+
+    private func isCopied(_ measurement: ImageEditorPreviewSampleMeasurement) -> Bool {
+        hasCopiedMeasurement && copiedPreviewText == measurement.text
+    }
+
+    private var hasCopiedMeasurement: Bool {
+        copiedPinnedSampleNumber == nil && copiedPreviewText != nil
     }
 
     private func copyReadout(
@@ -1399,7 +1430,14 @@ struct ImageEditorPreviewPanel: View {
         let value = pinnedSample.sample.valueText(mode: mode ?? pinnedSample.readoutMode)
         if ImageEditorPreviewClipboard.copy(value) {
             copiedPinnedSampleNumber = pinnedSample.number
-            copiedPixelReadout = value
+            copiedPreviewText = value
+        }
+    }
+
+    private func copyMeasurement(_ measurement: ImageEditorPreviewSampleMeasurement) {
+        if measurement.copy() {
+            copiedPinnedSampleNumber = nil
+            copiedPreviewText = measurement.text
         }
     }
 
@@ -1432,7 +1470,9 @@ struct ImageEditorPreviewPanel: View {
                     ?? 0
             },
             set: { number in
-                measurementSelection.setFrom(number, in: pinnedPixelSamples)
+                if measurementSelection.setFrom(number, in: pinnedPixelSamples) {
+                    resetCopyFeedback()
+                }
             }
         )
     }
@@ -1445,21 +1485,23 @@ struct ImageEditorPreviewPanel: View {
                     ?? 0
             },
             set: { number in
-                measurementSelection.setTo(number, in: pinnedPixelSamples)
+                if measurementSelection.setTo(number, in: pinnedPixelSamples) {
+                    resetCopyFeedback()
+                }
             }
         )
     }
 
     private func resetCopyFeedback() {
         copiedPinnedSampleNumber = nil
-        copiedPixelReadout = nil
+        copiedPreviewText = nil
     }
 
     private func removePinnedSample(number: Int) {
         if pinnedPixelSamples.remove(number: number) {
             measurementSelection.reconcile(in: pinnedPixelSamples)
         }
-        if copiedPinnedSampleNumber == number {
+        if copiedPinnedSampleNumber == number || hasCopiedMeasurement {
             resetCopyFeedback()
         }
         if hoveredPinnedSampleNumber == number {
@@ -1473,7 +1515,7 @@ struct ImageEditorPreviewPanel: View {
     ) {
         guard pinnedPixelSamples.move(number: number, to: sample) else { return }
         pixelSample = sample
-        if copiedPinnedSampleNumber == number {
+        if copiedPinnedSampleNumber == number || hasCopiedMeasurement {
             resetCopyFeedback()
         }
     }

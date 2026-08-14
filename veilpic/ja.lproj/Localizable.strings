@@ -432,6 +432,8 @@
 "imageEditor.preview.sample.measurementDeltaY" = "ΔY %@ px";
 "imageEditor.preview.sample.measurementFrom" = "測定元のサンプル";
 "imageEditor.preview.sample.measurementTo" = "測定先のサンプル";
+"imageEditor.preview.sample.copyMeasurement" = "測定結果をコピー";
+"imageEditor.preview.sample.measurementCopied" = "測定結果をコピーしました";
 "imageEditor.preview.sample.copy" = "カラー値をコピー";
 "imageEditor.preview.sample.copied" = "カラー値をコピーしました";
 "imageEditor.preview.sample.clearPinned" = "固定サンプルを解除";
