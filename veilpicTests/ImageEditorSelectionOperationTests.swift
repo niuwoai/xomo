@@ -816,6 +816,59 @@ struct ImageEditorSelectionOperationTests {
         #expect(viewModel.statusText == L10n.format("imageEditor.status.selectionMoved", 0, 1))
     }
 
+    @Test func movingSelectionFullyOutsideCanvasCommitsEmptyResultAndRoundTripsHistory() throws {
+        let canvasSize = NSSize(width: 4, height: 4)
+        let viewModel = ImageEditorViewModel(
+            sourceName: "source.png",
+            image: testImage(size: canvasSize)
+        ) { _ in }
+        let originalSelection = ImageEditorSelection.rectangle(
+            CGRect(x: 3, y: 1, width: 1, height: 1)
+        )
+        viewModel.document.selection = originalSelection
+        viewModel.selectionModifyAmount = 1
+        let historyCount = viewModel.document.history.count
+
+        viewModel.moveSelectionRight()
+
+        #expect(viewModel.document.selection == nil)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.selectionMove"))
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionEmpty"))
+
+        viewModel.undo()
+        #expect(viewModel.document.selection == originalSelection)
+        viewModel.redo()
+        #expect(viewModel.document.selection == nil)
+    }
+
+    @Test func zeroSelectionNudgePreservesHistoryAndExistingRedo() throws {
+        let canvasSize = NSSize(width: 8, height: 6)
+        let viewModel = ImageEditorViewModel(
+            sourceName: "source.png",
+            image: testImage(size: canvasSize)
+        ) { _ in }
+        viewModel.document.selection = ImageEditorSelection.rectangle(
+            CGRect(x: 2, y: 1, width: 3, height: 2)
+        )
+        viewModel.invertSelection()
+        viewModel.undo()
+        let selectionBeforeNudge = viewModel.document.selection
+        let historyCountBeforeNudge = viewModel.document.history.count
+        #expect(viewModel.canRedo)
+
+        viewModel.nudgeSelection(by: .zero)
+
+        #expect(viewModel.document.selection == selectionBeforeNudge)
+        #expect(viewModel.document.history.count == historyCountBeforeNudge)
+        #expect(viewModel.canRedo)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionUnchanged"))
+
+        viewModel.redo()
+        #expect(viewModel.document.selection?.isInverted == true)
+        #expect(!viewModel.canRedo)
+    }
+
     @Test func imageEditorFlipsSelectionMaskAroundItsOwnBounds() async throws {
         let canvasSize = NSSize(width: 6, height: 5)
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: testImage(size: canvasSize)) { _ in }

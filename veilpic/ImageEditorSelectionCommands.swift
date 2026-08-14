@@ -443,19 +443,22 @@ extension ImageEditorViewModel {
             statusText = L10n.text("imageEditor.status.noSelection")
             return
         }
-        guard let modified = selection.translated(by: delta, canvasSize: document.canvasSize) else {
-            statusText = L10n.text("imageEditor.status.selectionEmpty")
+        let modified = selection.translated(by: delta, canvasSize: document.canvasSize)
+        guard !selectionsAreEquivalent(selection, modified) else {
+            statusText = L10n.text("imageEditor.status.selectionUnchanged")
             return
         }
 
         pushUndo()
         document.selection = modified
         appendHistory(L10n.text("imageEditor.history.selectionMove"))
-        statusText = L10n.format(
-            "imageEditor.status.selectionMoved",
-            Int(delta.width.rounded()),
-            Int(delta.height.rounded())
-        )
+        statusText = modified == nil
+            ? L10n.text("imageEditor.status.selectionEmpty")
+            : L10n.format(
+                "imageEditor.status.selectionMoved",
+                Int(delta.width.rounded()),
+                Int(delta.height.rounded())
+            )
     }
 
     private func centerSelection(horizontal: Bool, vertical: Bool) {
