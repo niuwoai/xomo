@@ -28,6 +28,7 @@ struct ImageEditorPreviewPanel: View {
             HStack {
                 Label(L10n.text("imageEditor.preview.title"), systemImage: "eye")
                     .font(.system(size: 15, weight: .bold))
+                    .accessibilityIdentifier("image-editor-preview-panel")
                 Spacer()
                 Button {
                     viewModel.isPreviewSheetPresented = false
@@ -57,7 +58,6 @@ struct ImageEditorPreviewPanel: View {
             .accessibilityIdentifier("image-editor-preview-image")
         }
         .frame(minWidth: 640, minHeight: 480)
-        .accessibilityIdentifier("image-editor-preview-panel")
         .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
         .environment(\.colorScheme, .dark)
         .background(Color(nsColor: ImageEditorTheme.panel))
@@ -82,6 +82,7 @@ struct ImageEditorExportPanel: View {
             HStack {
                 Label(L10n.text("imageEditor.export.title"), systemImage: "square.and.arrow.up")
                     .font(.system(size: 15, weight: .bold))
+                    .accessibilityIdentifier("image-editor-export-panel")
                 Spacer()
                 Button {
                     viewModel.isExportSheetPresented = false
@@ -223,7 +224,6 @@ struct ImageEditorExportPanel: View {
         }
         .padding(18)
         .frame(width: Layout.panelWidth)
-        .accessibilityIdentifier("image-editor-export-panel")
         .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
         .environment(\.colorScheme, .dark)
         .background(Color(nsColor: ImageEditorTheme.panel))

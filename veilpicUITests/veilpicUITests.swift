@@ -185,6 +185,43 @@ final class veilpicUITests: XCTestCase {
     }
 
     @MainActor
+    func testPreviewAndExportButtonsKeepEditorAliveAndPresentCorrectPanels() throws {
+        let app = XCUIApplication()
+        app.launchArguments += ["-AppleLanguages", "(zh-Hans)", "-AppleLocale", "zh_CN"]
+        app.launch()
+
+        let canvas = app.descendants(matching: .any)
+            .matching(identifier: "image-editor-canvas")
+            .firstMatch
+        let previewButton = app.buttons["image-editor-action-preview"]
+        let exportButton = app.buttons["image-editor-action-export"]
+        XCTAssertTrue(canvas.waitForExistence(timeout: 8))
+        XCTAssertTrue(previewButton.waitForExistence(timeout: 5))
+        XCTAssertTrue(exportButton.waitForExistence(timeout: 5))
+
+        previewButton.click()
+        let previewPanel = app.descendants(matching: .any)
+            .matching(identifier: "image-editor-preview-panel")
+            .firstMatch
+        XCTAssertTrue(previewPanel.waitForExistence(timeout: 5))
+        XCTAssertEqual(app.state, .runningForeground)
+        XCTAssertTrue(canvas.exists, "预览打开后主编辑画布必须继续存在")
+        app.buttons["image-editor-preview-close"].click()
+        XCTAssertTrue(previewPanel.waitForNonExistence(timeout: 5))
+
+        exportButton.click()
+        let exportPanel = app.descendants(matching: .any)
+            .matching(identifier: "image-editor-export-panel")
+            .firstMatch
+        XCTAssertTrue(exportPanel.waitForExistence(timeout: 5))
+        XCTAssertEqual(app.state, .runningForeground)
+        XCTAssertTrue(canvas.exists, "导出面板打开后主编辑画布必须继续存在")
+        app.buttons["image-editor-export-close"].click()
+        XCTAssertTrue(exportPanel.waitForNonExistence(timeout: 5))
+        XCTAssertTrue(exportButton.isHittable, "关闭导出面板后编辑器必须仍可操作")
+    }
+
+    @MainActor
     func testLaunchPerformance() throws {
         // This measures how long it takes to launch your application.
         measure(metrics: [XCTApplicationLaunchMetric()]) {
