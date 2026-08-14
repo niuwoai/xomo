@@ -26,6 +26,45 @@ struct ImageEditorExportFormatTests {
         #expect(viewModel.isExportSheetPresented)
     }
 
+    @Test func previewBackdropInspectsTransparencyWithoutEditingTheDocument() throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "preview-backdrop",
+            image: NSImage.transparent(size: CGSize(width: 80, height: 60))
+        ) { _ in }
+        let originalLayerIDs = viewModel.document.layers.map(\.id)
+        let originalLayerCount = viewModel.document.layers.count
+        let originalHistory = viewModel.document.history
+        let originalCanUndo = viewModel.canUndo
+
+        #expect(ImageEditorPreviewBackdrop.allCases.map(\.rawValue) == [
+            "checkerboard", "white", "black"
+        ])
+        #expect(ImageEditorPreviewBackdrop.checkerboard.solidColor == nil)
+        let white = try #require(
+            ImageEditorPreviewBackdrop.white.solidColor?.usingColorSpace(.deviceRGB)
+        )
+        let black = try #require(
+            ImageEditorPreviewBackdrop.black.solidColor?.usingColorSpace(.deviceRGB)
+        )
+        #expect(white.redComponent == 1)
+        #expect(white.greenComponent == 1)
+        #expect(white.blueComponent == 1)
+        #expect(black.redComponent == 0)
+        #expect(black.greenComponent == 0)
+        #expect(black.blueComponent == 0)
+
+        viewModel.previewBackdrop = .black
+        viewModel.openPreviewPanel()
+        viewModel.isPreviewSheetPresented = false
+        viewModel.openPreviewPanel()
+
+        #expect(viewModel.previewBackdrop == .black)
+        #expect(viewModel.document.layers.map(\.id) == originalLayerIDs)
+        #expect(viewModel.document.layers.count == originalLayerCount)
+        #expect(viewModel.document.history == originalHistory)
+        #expect(viewModel.canUndo == originalCanUndo)
+    }
+
     @Test func pureVectorCanvasExportsEditableSVG() throws {
         let viewModel = ImageEditorViewModel(
             sourceName: "vector-canvas",

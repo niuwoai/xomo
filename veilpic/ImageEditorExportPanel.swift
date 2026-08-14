@@ -20,6 +20,60 @@ enum ImageEditorExportScaleFormatter {
     }
 }
 
+enum ImageEditorPreviewBackdrop: String, CaseIterable, Identifiable, Hashable {
+    case checkerboard
+    case white
+    case black
+
+    var id: String { rawValue }
+
+    var title: String {
+        L10n.text("imageEditor.preview.background.\(rawValue)")
+    }
+
+    var solidColor: NSColor? {
+        switch self {
+        case .checkerboard:
+            return nil
+        case .white:
+            return .white
+        case .black:
+            return .black
+        }
+    }
+}
+
+private struct ImageEditorPreviewBackdropView: View {
+    let backdrop: ImageEditorPreviewBackdrop
+
+    var body: some View {
+        if let solidColor = backdrop.solidColor {
+            Color(nsColor: solidColor)
+        } else {
+            Canvas { context, size in
+                let square: CGFloat = 12
+                let light = Color(nsColor: NSColor(calibratedWhite: 0.94, alpha: 1))
+                let dark = Color(nsColor: NSColor(calibratedWhite: 0.72, alpha: 1))
+                var y: CGFloat = 0
+                var row = 0
+                while y < size.height {
+                    var x: CGFloat = 0
+                    var column = 0
+                    while x < size.width {
+                        let rect = CGRect(x: x, y: y, width: square, height: square)
+                        let color = (row + column).isMultiple(of: 2) ? light : dark
+                        context.fill(Path(rect), with: .color(color))
+                        x += square
+                        column += 1
+                    }
+                    y += square
+                    row += 1
+                }
+            }
+        }
+    }
+}
+
 struct ImageEditorPreviewPanel: View {
     @ObservedObject var viewModel: ImageEditorViewModel
 
@@ -30,6 +84,19 @@ struct ImageEditorPreviewPanel: View {
                     .font(.system(size: 15, weight: .bold))
                     .accessibilityIdentifier("image-editor-preview-panel")
                 Spacer()
+                Picker(
+                    L10n.text("imageEditor.preview.background"),
+                    selection: $viewModel.previewBackdrop
+                ) {
+                    ForEach(ImageEditorPreviewBackdrop.allCases) { backdrop in
+                        Text(backdrop.title).tag(backdrop)
+                    }
+                }
+                .labelsHidden()
+                .pickerStyle(.segmented)
+                .controlSize(.small)
+                .frame(width: 220)
+                .accessibilityIdentifier("image-editor-preview-background")
                 Button {
                     viewModel.isPreviewSheetPresented = false
                 } label: {
@@ -44,16 +111,18 @@ struct ImageEditorPreviewPanel: View {
             Divider()
 
             GeometryReader { geometry in
-                Image(nsImage: viewModel.previewImage)
-                    .resizable()
-                    .interpolation(.high)
-                    .scaledToFit()
-                    .frame(
-                        width: geometry.size.width,
-                        height: geometry.size.height,
-                        alignment: .center
-                    )
-                    .background(Color(nsColor: ImageEditorTheme.window))
+                ZStack {
+                    ImageEditorPreviewBackdropView(backdrop: viewModel.previewBackdrop)
+                    Image(nsImage: viewModel.previewImage)
+                        .resizable()
+                        .interpolation(.high)
+                        .scaledToFit()
+                        .frame(
+                            width: geometry.size.width,
+                            height: geometry.size.height,
+                            alignment: .center
+                        )
+                }
             }
             .accessibilityIdentifier("image-editor-preview-image")
         }

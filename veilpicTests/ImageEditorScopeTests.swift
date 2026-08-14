@@ -1086,6 +1086,49 @@ struct ImageEditorScopeTests {
         #expect(!menuSource.contains("Button(L10n.text(\"imageEditor.action.preview\")) {\n                viewModel.applyAndClose"))
     }
 
+    @Test func previewPanelWiresThreeNonDestructiveBackdropModes() throws {
+        let source = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent(
+                "veilpic/ImageEditorExportPanel.swift"
+            ),
+            encoding: .utf8
+        )
+        let viewModelSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent(
+                "veilpic/ImageEditorViewModel.swift"
+            ),
+            encoding: .utf8
+        )
+
+        let previewStart = try #require(source.range(of: "struct ImageEditorPreviewPanel: View"))
+        let previewEnd = try #require(
+            source[previewStart.upperBound...].range(of: "struct ImageEditorExportPanel: View")
+        )
+        let previewSource = source[previewStart.lowerBound..<previewEnd.lowerBound]
+        #expect(source.contains("case checkerboard\n    case white\n    case black"))
+        #expect(source.contains("ImageEditorPreviewBackdropView(backdrop: viewModel.previewBackdrop)"))
+        #expect(previewSource.contains("selection: $viewModel.previewBackdrop"))
+        #expect(previewSource.contains("ForEach(ImageEditorPreviewBackdrop.allCases)"))
+        #expect(previewSource.contains(".accessibilityIdentifier(\"image-editor-preview-background\")"))
+        #expect(previewSource.contains("ZStack"))
+        #expect(viewModelSource.contains(
+            "@Published var previewBackdrop: ImageEditorPreviewBackdrop = .checkerboard"
+        ))
+
+        for locale in ["en", "ja", "zh-Hans"] {
+            let localization = try String(
+                contentsOf: Self.repositoryRoot().appendingPathComponent(
+                    "veilpic/\(locale).lproj/Localizable.strings"
+                ),
+                encoding: .utf8
+            )
+            #expect(localization.contains("\"imageEditor.preview.background\""))
+            #expect(localization.contains("\"imageEditor.preview.background.checkerboard\""))
+            #expect(localization.contains("\"imageEditor.preview.background.white\""))
+            #expect(localization.contains("\"imageEditor.preview.background.black\""))
+        }
+    }
+
     @MainActor
     @Test func classicArrowNudgeShortcutsMoveSelectionBeforeLayer() {
         let image = NSImage(size: NSSize(width: 80, height: 60))

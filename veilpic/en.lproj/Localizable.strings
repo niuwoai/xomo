@@ -411,6 +411,10 @@
 "imageEditor.action.colorEditBackground" = "Edit Background Color";
 "imageEditor.action.preview" = "Preview";
 "imageEditor.preview.title" = "Canvas Preview";
+"imageEditor.preview.background" = "Preview Background";
+"imageEditor.preview.background.checkerboard" = "Transparency";
+"imageEditor.preview.background.white" = "White";
+"imageEditor.preview.background.black" = "Black";
 "imageEditor.action.swatchesShowPanel" = "Show Swatches Panel";
 "imageEditor.action.brushesShowPanel" = "Show Brushes Panel";
 "imageEditor.action.characterShowPanel" = "Show Character Panel";

@@ -411,6 +411,10 @@
 "imageEditor.action.colorEditBackground" = "背景色を編集";
 "imageEditor.action.preview" = "プレビュー";
 "imageEditor.preview.title" = "キャンバスプレビュー";
+"imageEditor.preview.background" = "プレビュー背景";
+"imageEditor.preview.background.checkerboard" = "透明";
+"imageEditor.preview.background.white" = "白";
+"imageEditor.preview.background.black" = "黒";
 "imageEditor.action.swatchesShowPanel" = "スウォッチパネルを表示";
 "imageEditor.action.brushesShowPanel" = "ブラシパネルを表示";
 "imageEditor.action.characterShowPanel" = "文字パネルを表示";
