@@ -285,9 +285,13 @@ final class XomoAutomationRegistry {
         case "xomo.selection.invert":
             viewModel.invertSelection()
         case "xomo.selection.feather":
-            viewModel.featherSelection(radius: selectionRadius(arguments["radius"]))
+            viewModel.featherSelection(
+                radius: try selectionRadius(arguments["radius"], maximum: 64)
+            )
         case "xomo.selection.smooth":
-            viewModel.smoothSelection(radius: selectionRadius(arguments["radius"]))
+            viewModel.smoothSelection(
+                radius: try selectionRadius(arguments["radius"], maximum: 16)
+            )
         case "xomo.selection.edit":
             try selectionEdit(arguments, viewModel: viewModel)
         case "xomo.selection.modify":
@@ -4648,12 +4652,14 @@ final class XomoAutomationRegistry {
         case "colorRange": viewModel.selectColorRangeFromForeground(tolerance: try selectionTolerance(arguments["tolerance"]))
         case "similarColors": viewModel.selectSimilarColors(tolerance: try selectionTolerance(arguments["tolerance"]))
         case "growColor": viewModel.growColorSelection(tolerance: try selectionTolerance(arguments["tolerance"]))
-        case "expand": viewModel.expandSelection(radius: selectionRadius(arguments["amount"]))
-        case "contract": viewModel.contractSelection(radius: selectionRadius(arguments["amount"]))
-        case "border": viewModel.borderSelection(radius: selectionRadius(arguments["amount"]))
-        case "smooth": viewModel.smoothSelection(radius: selectionRadius(arguments["amount"]))
+        case "expand": viewModel.expandSelection(radius: try selectionRadius(arguments["amount"], maximum: 64))
+        case "contract": viewModel.contractSelection(radius: try selectionRadius(arguments["amount"], maximum: 64))
+        case "border": viewModel.borderSelection(radius: try selectionRadius(arguments["amount"], maximum: 64))
+        case "smooth": viewModel.smoothSelection(radius: try selectionRadius(arguments["amount"], maximum: 16))
         case "fillHoles": viewModel.fillSelectionHoles()
-        case "removeSpeckles": viewModel.removeSelectionSpeckles(maximumArea: selectionRadius(arguments["amount"]))
+        case "removeSpeckles": viewModel.removeSelectionSpeckles(
+            maximumArea: try selectionRadius(arguments["amount"], maximum: 64)
+        )
         case "centerHorizontal": viewModel.centerSelectionHorizontally()
         case "centerVertical": viewModel.centerSelectionVertically()
         case "centerCanvas": viewModel.centerSelectionInCanvas()
@@ -4674,9 +4680,18 @@ final class XomoAutomationRegistry {
         }
     }
 
-    private func selectionRadius(_ value: XomoJSONValue?) -> Int? {
-        guard let number = value?.doubleValue else { return nil }
-        return Int(number.rounded())
+    private func selectionRadius(_ value: XomoJSONValue?, maximum: Int) throws -> Int? {
+        guard let value else { return nil }
+        guard let number = value.doubleValue,
+              number.isFinite,
+              number.rounded() == number,
+              (1...Double(maximum)).contains(number)
+        else {
+            throw XomoAutomationCallError.invalidArgument(
+                "Selection radius must be an integer from 1 through \(maximum)"
+            )
+        }
+        return Int(number)
     }
 
     private func selectionTolerance(_ value: XomoJSONValue?) throws -> CGFloat? {
@@ -6340,14 +6355,30 @@ private extension XomoAutomationRegistry {
         ], required: ["points"]),
         tool("xomo.selection.clear", "Deselect the current selection."),
         tool("xomo.selection.invert", "Invert the current selection."),
-        tool("xomo.selection.feather", "Feather the current selection.", ["radius": XomoAutomationSchema.number(description: "Feather radius in pixels")]),
-        tool("xomo.selection.smooth", "Smooth the current selection boundary.", ["radius": XomoAutomationSchema.number(description: "Smoothing radius in pixels")]),
+        tool("xomo.selection.feather", "Feather the current selection.", [
+            "radius": XomoAutomationSchema.integer(
+                description: "Feather radius in pixels",
+                minimum: 1,
+                maximum: 64
+            )
+        ]),
+        tool("xomo.selection.smooth", "Smooth the current selection boundary.", [
+            "radius": XomoAutomationSchema.integer(
+                description: "Smoothing radius in pixels",
+                minimum: 1,
+                maximum: 16
+            )
+        ]),
         tool("xomo.selection.edit", "Fill, stroke, clear, duplicate, or move selected pixels into new layers.", [
             "action": XomoAutomationSchema.string(description: "Selection edit action", values: ["fillForeground", "fillBackground", "stroke", "contentAwareFill", "clearPixels", "copyToLayer", "cutToLayer", "copyMergedToLayer", "duplicate"])
         ], required: ["action"]),
         tool("xomo.selection.modify", "Save, restore, transform, clean, color-match, or nudge the pixel selection.", [
             "action": XomoAutomationSchema.string(description: "Selection modification", values: ["loadTransparency", "save", "reselect", "restoreSaved", "colorRange", "similarColors", "growColor", "expand", "contract", "border", "smooth", "fillHoles", "removeSpeckles", "centerHorizontal", "centerVertical", "centerCanvas", "flipHorizontal", "flipVertical", "rotateClockwise", "rotateCounterclockwise", "rotate180", "scaleUp", "scaleDown", "fitCanvas", "nudge"]),
-            "amount": XomoAutomationSchema.number(description: "Selection modification amount in pixels"),
+            "amount": XomoAutomationSchema.integer(
+                description: "Selection modification amount from 1 to 64 pixels; smooth accepts at most 16",
+                minimum: 1,
+                maximum: 64
+            ),
             "tolerance": XomoAutomationSchema.number(
                 description: "Color-distance tolerance from 0 to 1",
                 minimum: 0,

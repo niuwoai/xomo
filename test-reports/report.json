@@ -1,36 +1,24 @@
 {
-  "generated_at": "2026-08-15 06:51:11 +0800",
-  "total": 2,
-  "passed": 2,
+  "generated_at": "2026-08-15 07:03:24 +0800",
+  "total": 1,
+  "passed": 1,
   "failed": 0,
-  "total_tests": 2,
-  "passed_tests": 2,
+  "total_tests": 1,
+  "passed_tests": 1,
   "failed_tests_in_failed_groups": 0,
   "jobs": 1,
   "results": [
     {
       "suite": "XomoAutomationTests",
-      "method": "registryAppliesExplicitLayerTransparencyThreshold",
-      "identifier": "veilpicTests/XomoAutomationTests/registryAppliesExplicitLayerTransparencyThreshold()",
+      "method": "registryRejectsInvalidSelectionRadiiWithoutMutation",
+      "identifier": "veilpicTests/XomoAutomationTests/registryRejectsInvalidSelectionRadiiWithoutMutation()",
       "file": "XomoAutomationTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 2.941,
+      "duration": 2.988,
       "infrastructure_retries": 0,
       "issues": [],
-      "log": "XomoAutomationTests.registryAppliesExplicitLayerTransparencyThreshold.log"
-    },
-    {
-      "suite": "XomoAutomationTests",
-      "method": "registryRejectsInvalidLayerTransparencyThresholdsWithoutMutation",
-      "identifier": "veilpicTests/XomoAutomationTests/registryRejectsInvalidLayerTransparencyThresholdsWithoutMutation()",
-      "file": "XomoAutomationTests.swift",
-      "test_count": 1,
-      "passed": true,
-      "duration": 2.912,
-      "infrastructure_retries": 0,
-      "issues": [],
-      "log": "XomoAutomationTests.registryRejectsInvalidLayerTransparencyThresholdsWithoutMutation.log"
+      "log": "XomoAutomationTests.registryRejectsInvalidSelectionRadiiWithoutMutation.log"
     }
   ]
 }

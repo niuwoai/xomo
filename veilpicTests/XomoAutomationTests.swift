@@ -170,7 +170,7 @@ struct XomoAutomationTests {
             Issue.record("Expected xomo.selection.modify tool schema")
             return
         }
-        #expect(selectionModifyTool["inputSchema"]?.objectValue?["properties"]?.objectValue?["amount"]?.objectValue?["type"] == .string("number"))
+        #expect(selectionModifyTool["inputSchema"]?.objectValue?["properties"]?.objectValue?["amount"]?.objectValue?["type"] == .string("integer"))
         #expect(selectionModifyTool["inputSchema"]?.objectValue?["properties"]?.objectValue?["action"]?.objectValue?["enum"]?.arrayValue?.contains(.string("smooth")) == true)
         guard let magicTool = tools.compactMap({ tool -> [String: XomoJSONValue]? in
             guard case .object(let value) = tool else { return nil }
@@ -186,6 +186,14 @@ struct XomoAutomationTests {
             Issue.record("Expected xomo.selection.quick tool schema")
             return
         }
+        let selectionFeatherTool = try #require(tools.compactMap { tool -> [String: XomoJSONValue]? in
+            guard case .object(let value) = tool else { return nil }
+            return value
+        }.first { $0["name"] == .string("xomo.selection.feather") })
+        let selectionSmoothTool = try #require(tools.compactMap { tool -> [String: XomoJSONValue]? in
+            guard case .object(let value) = tool else { return nil }
+            return value
+        }.first { $0["name"] == .string("xomo.selection.smooth") })
         #expect(magicTool["inputSchema"]?.objectValue?["properties"]?.objectValue?["tolerance"]?.objectValue?["type"] == .string("number"))
         #expect(magicTool["inputSchema"]?.objectValue?["properties"]?.objectValue?["contiguous"]?.objectValue?["type"] == .string("boolean"))
         #expect(selectionModifyTool["inputSchema"]?.objectValue?["properties"]?.objectValue?["tolerance"]?.objectValue?["type"] == .string("number"))
@@ -202,6 +210,21 @@ struct XomoAutomationTests {
             #expect(schema["minimum"] == .number(0))
             #expect(schema["maximum"] == .number(1))
         }
+        let selectionAmountSchema = selectionModifyTool["inputSchema"]?.objectValue?["properties"]?
+            .objectValue?["amount"]?.objectValue
+        #expect(selectionAmountSchema?["type"] == .string("integer"))
+        #expect(selectionAmountSchema?["minimum"] == .number(1))
+        #expect(selectionAmountSchema?["maximum"] == .number(64))
+        let featherRadiusSchema = selectionFeatherTool["inputSchema"]?.objectValue?["properties"]?
+            .objectValue?["radius"]?.objectValue
+        #expect(featherRadiusSchema?["type"] == .string("integer"))
+        #expect(featherRadiusSchema?["minimum"] == .number(1))
+        #expect(featherRadiusSchema?["maximum"] == .number(64))
+        let smoothRadiusSchema = selectionSmoothTool["inputSchema"]?.objectValue?["properties"]?
+            .objectValue?["radius"]?.objectValue
+        #expect(smoothRadiusSchema?["type"] == .string("integer"))
+        #expect(smoothRadiusSchema?["minimum"] == .number(1))
+        #expect(smoothRadiusSchema?["maximum"] == .number(16))
         #expect(tools.contains { tool in
             guard case .object(let value) = tool else { return false }
             return value["name"] == .string("xomo.layer_comp.action")
@@ -1070,6 +1093,59 @@ struct XomoAutomationTests {
         #expect(maskAlpha(mask, x: 21, y: 13) == 255)
         #expect(maskAlpha(mask, x: 22, y: 13) == 0)
         #expect(viewModel.statusText == L10n.format("imageEditor.status.selectionBordered", 2))
+    }
+
+    @Test func registryRejectsInvalidSelectionRadiiWithoutMutation() {
+        let viewModel = makeViewModel()
+        viewModel.createRectSelection(from: CGPoint(x: 20, y: 20), to: CGPoint(x: 80, y: 70))
+        let selectionBeforeRequests = viewModel.document.selection
+        let historyCountBeforeRequests = viewModel.document.history.count
+        let undoCountBeforeRequests = viewModel.undoStack.count
+        let modifyAmountBeforeRequests = viewModel.selectionModifyAmount
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        let invalidRequests = [
+            request(
+                operation: "call",
+                name: "xomo.selection.feather",
+                arguments: ["radius": .number(0)]
+            ),
+            request(
+                operation: "call",
+                name: "xomo.selection.feather",
+                arguments: ["radius": .number(64.5)]
+            ),
+            request(
+                operation: "call",
+                name: "xomo.selection.smooth",
+                arguments: ["radius": .number(17)]
+            ),
+            request(
+                operation: "call",
+                name: "xomo.selection.modify",
+                arguments: ["action": .string("expand"), "amount": .number(65)]
+            ),
+            request(
+                operation: "call",
+                name: "xomo.selection.modify",
+                arguments: ["action": .string("smooth"), "amount": .number(17)]
+            ),
+            request(
+                operation: "call",
+                name: "xomo.selection.modify",
+                arguments: ["action": .string("removeSpeckles"), "amount": .string("small")]
+            )
+        ]
+
+        for invalidRequest in invalidRequests {
+            let response = registry.execute(invalidRequest)
+            #expect(!response.ok)
+            #expect(response.error?.contains("Selection radius must be an integer") == true)
+        }
+        #expect(viewModel.selectionModifyAmount == modifyAmountBeforeRequests)
+        #expect(viewModel.document.selection == selectionBeforeRequests)
+        #expect(viewModel.document.history.count == historyCountBeforeRequests)
+        #expect(viewModel.undoStack.count == undoCountBeforeRequests)
     }
 
     @Test func registryAppliesExplicitLayerTransparencyThreshold() throws {
