@@ -424,6 +424,8 @@
 "imageEditor.preview.sample.empty" = "画像上で確認し、クリックで固定";
 "imageEditor.preview.sample.pinHelp" = "画像をクリックしてサンプルを固定";
 "imageEditor.preview.sample.pinned" = "固定したピクセルサンプル";
+"imageEditor.preview.sample.copy" = "カラー値をコピー";
+"imageEditor.preview.sample.copied" = "カラー値をコピーしました";
 "imageEditor.preview.sample.clearPinned" = "固定サンプルを解除";
 "imageEditor.preview.sampleSize" = "サンプル範囲";
 "imageEditor.preview.sampleSize.point" = "ポイントサンプル";

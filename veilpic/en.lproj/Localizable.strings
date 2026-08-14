@@ -424,6 +424,8 @@
 "imageEditor.preview.sample.empty" = "Move over the image to inspect; click to pin";
 "imageEditor.preview.sample.pinHelp" = "Click the image to pin this sample";
 "imageEditor.preview.sample.pinned" = "Pinned pixel sample";
+"imageEditor.preview.sample.copy" = "Copy color readout";
+"imageEditor.preview.sample.copied" = "Color readout copied";
 "imageEditor.preview.sample.clearPinned" = "Clear pinned sample";
 "imageEditor.preview.sampleSize" = "Sample Size";
 "imageEditor.preview.sampleSize.point" = "Point Sample";

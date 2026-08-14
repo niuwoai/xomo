@@ -157,6 +157,15 @@ enum ImageEditorPreviewPixelReadoutMode: String, CaseIterable, Identifiable, Has
     }
 }
 
+enum ImageEditorPreviewClipboard {
+    @discardableResult
+    static func copy(_ value: String, to pasteboard: NSPasteboard = .general) -> Bool {
+        guard !value.isEmpty else { return false }
+        pasteboard.clearContents()
+        return pasteboard.setString(value, forType: .string)
+    }
+}
+
 struct ImageEditorPreviewPixelSample {
     let point: CGPoint
     let color: NSColor
@@ -166,13 +175,16 @@ struct ImageEditorPreviewPixelSample {
     }
 
     func text(mode: ImageEditorPreviewPixelReadoutMode) -> String {
-        let reading = ImageEditorColorSamplerReading(color: color)
         return L10n.format(
             "imageEditor.preview.sample",
             Int(point.x),
             Int(point.y),
-            mode.valueText(for: reading)
+            valueText(mode: mode)
         )
+    }
+
+    func valueText(mode: ImageEditorPreviewPixelReadoutMode) -> String {
+        mode.valueText(for: ImageEditorColorSamplerReading(color: color))
     }
 
     func displayedCenter(displayedSize: CGSize, canvasSize: CGSize) -> CGPoint? {
@@ -360,6 +372,7 @@ struct ImageEditorPreviewPanel: View {
     @State private var pinnedPixelSample: ImageEditorPreviewPixelSample?
     @State private var pixelSampleSize: ImageEditorPreviewPixelSampleSize = .point
     @State private var pixelReadoutMode: ImageEditorPreviewPixelReadoutMode = .hexadecimalRGBA
+    @State private var copiedPixelReadout: String?
 
     private var displayedPixelSample: ImageEditorPreviewPixelSample? {
         ImageEditorPreviewPixelSample.resolved(live: pixelSample, pinned: pinnedPixelSample)
@@ -493,13 +506,37 @@ struct ImageEditorPreviewPanel: View {
                     Text(L10n.text("imageEditor.preview.sample.empty"))
                         .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
                 }
-                if pinnedPixelSample != nil {
+                if let pinnedSample = pinnedPixelSample {
                     Image(systemName: "pin.fill")
                         .foregroundStyle(Color(nsColor: ImageEditorTheme.exportAccent))
                         .help(L10n.text("imageEditor.preview.sample.pinned"))
                     Button {
+                        let value = pinnedSample.valueText(mode: pixelReadoutMode)
+                        if ImageEditorPreviewClipboard.copy(value) {
+                            copiedPixelReadout = value
+                        }
+                    } label: {
+                        Image(
+                            systemName: copiedPixelReadout == pinnedSample.valueText(
+                                mode: pixelReadoutMode
+                            ) ? "checkmark" : "doc.on.doc"
+                        )
+                    }
+                    .buttonStyle(.plain)
+                    .help(
+                        L10n.text(
+                            copiedPixelReadout == pinnedSample.valueText(
+                                mode: pixelReadoutMode
+                            )
+                                ? "imageEditor.preview.sample.copied"
+                                : "imageEditor.preview.sample.copy"
+                        )
+                    )
+                    .accessibilityIdentifier("image-editor-preview-copy-pinned-sample")
+                    Button {
                         pinnedPixelSample = nil
                         pixelSample = nil
+                        copiedPixelReadout = nil
                     } label: {
                         Image(systemName: "xmark.circle.fill")
                     }
@@ -523,10 +560,12 @@ struct ImageEditorPreviewPanel: View {
         .onChange(of: pixelSampleSize) { _ in
             pixelSample = nil
             pinnedPixelSample = nil
+            copiedPixelReadout = nil
         }
         .onDisappear {
             pixelSample = nil
             pinnedPixelSample = nil
+            copiedPixelReadout = nil
         }
     }
 
@@ -590,6 +629,7 @@ struct ImageEditorPreviewPanel: View {
                 )
                 pinnedPixelSample = sample
                 pixelSample = sample
+                copiedPixelReadout = nil
             }
         )
         .help(L10n.text("imageEditor.preview.sample.pinHelp"))

@@ -1191,6 +1191,8 @@ struct ImageEditorScopeTests {
         #expect(source.contains("struct ImageEditorPreviewPixelSample"))
         #expect(source.contains("enum ImageEditorPreviewPixelSampleSize"))
         #expect(source.contains("enum ImageEditorPreviewPixelReadoutMode"))
+        #expect(source.contains("enum ImageEditorPreviewClipboard"))
+        #expect(source.contains("pasteboard.setString(value, forType: .string)"))
         #expect(source.contains("static func canvasPoint("))
         #expect(source.contains("func displayedCenter("))
         #expect(source.contains("static func resolved(live:"))
@@ -1201,6 +1203,7 @@ struct ImageEditorScopeTests {
         #expect(previewSource.contains("@State private var pinnedPixelSample"))
         #expect(previewSource.contains("@State private var pixelSampleSize"))
         #expect(previewSource.contains("@State private var pixelReadoutMode"))
+        #expect(previewSource.contains("@State private var copiedPixelReadout"))
         #expect(previewSource.contains("selection: $pixelSampleSize"))
         #expect(previewSource.contains("ForEach(ImageEditorPreviewPixelSampleSize.allCases)"))
         #expect(previewSource.contains(
@@ -1218,6 +1221,11 @@ struct ImageEditorScopeTests {
         #expect(previewSource.contains("Image(systemName: \"scope\")"))
         #expect(previewSource.contains(
             ".accessibilityIdentifier(\"image-editor-preview-clear-pinned-sample\")"
+        ))
+        #expect(previewSource.contains("ImageEditorPreviewClipboard.copy(value)"))
+        #expect(previewSource.contains("pinnedSample.valueText(mode: pixelReadoutMode)"))
+        #expect(previewSource.contains(
+            ".accessibilityIdentifier(\"image-editor-preview-copy-pinned-sample\")"
         ))
         #expect(previewSource.contains(".onContinuousHover"))
         #expect(previewSource.contains("ImageEditorPreviewPixelSample.sample("))
@@ -1238,6 +1246,8 @@ struct ImageEditorScopeTests {
             #expect(localization.contains("\"imageEditor.preview.sample.empty\""))
             #expect(localization.contains("\"imageEditor.preview.sample.pinHelp\""))
             #expect(localization.contains("\"imageEditor.preview.sample.pinned\""))
+            #expect(localization.contains("\"imageEditor.preview.sample.copy\""))
+            #expect(localization.contains("\"imageEditor.preview.sample.copied\""))
             #expect(localization.contains("\"imageEditor.preview.sample.clearPinned\""))
             #expect(localization.contains("\"imageEditor.preview.sampleSize\""))
             #expect(localization.contains("\"imageEditor.preview.sampleSize.point\""))

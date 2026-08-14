@@ -189,6 +189,30 @@ struct ImageEditorExportFormatTests {
         }
     }
 
+    @Test func previewPixelReadoutCopiesToAnIsolatedPasteboard() {
+        let pasteboard = NSPasteboard(
+            name: NSPasteboard.Name("xomo-tests.preview-pixel-copy.\(UUID().uuidString)")
+        )
+        defer { pasteboard.clearContents() }
+        pasteboard.clearContents()
+        pasteboard.setString("existing", forType: .string)
+
+        #expect(!ImageEditorPreviewClipboard.copy("", to: pasteboard))
+        #expect(pasteboard.string(forType: .string) == "existing")
+
+        let sample = ImageEditorPreviewPixelSample(
+            point: CGPoint(x: 20, y: 10),
+            color: NSColor(deviceRed: 1, green: 0.5, blue: 0, alpha: 0.25)
+        )
+        let hexadecimal = sample.valueText(mode: .hexadecimalRGBA)
+        #expect(ImageEditorPreviewClipboard.copy(hexadecimal, to: pasteboard))
+        #expect(pasteboard.string(forType: .string) == "#FF800040")
+
+        let rgb = sample.valueText(mode: .rgb)
+        #expect(ImageEditorPreviewClipboard.copy(rgb, to: pasteboard))
+        #expect(pasteboard.string(forType: .string) == "R 255  G 128  B 0  A 25%")
+    }
+
     @Test func previewPixelInspectionPinsFallbackAndMapsItsCanvasMarker() {
         let pinned = ImageEditorPreviewPixelSample(
             point: CGPoint(x: 20, y: 10),

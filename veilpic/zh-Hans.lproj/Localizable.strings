@@ -424,6 +424,8 @@
 "imageEditor.preview.sample.empty" = "移到图像上检查，点击即可固定";
 "imageEditor.preview.sample.pinHelp" = "点击图像固定当前样本";
 "imageEditor.preview.sample.pinned" = "已固定像素样本";
+"imageEditor.preview.sample.copy" = "复制颜色读数";
+"imageEditor.preview.sample.copied" = "颜色读数已复制";
 "imageEditor.preview.sample.clearPinned" = "清除固定样本";
 "imageEditor.preview.sampleSize" = "取样范围";
 "imageEditor.preview.sampleSize.point" = "单点取样";
