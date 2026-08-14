@@ -558,6 +558,53 @@ struct ImageEditorPreviewSampleMeasurementSelection {
     }
 }
 
+struct ImageEditorPreviewSampleMeasurementGuide {
+    let measurement: ImageEditorPreviewSampleMeasurement
+    let fromCenter: CGPoint
+    let toCenter: CGPoint
+
+    init?(
+        selection: ImageEditorPreviewSampleMeasurementSelection,
+        samples: ImageEditorPreviewPinnedSamples,
+        displayedSize: CGSize,
+        canvasSize: CGSize
+    ) {
+        guard let measurement = selection.measurement(in: samples),
+              let from = samples.entries.first(where: {
+                  $0.number == measurement.fromNumber
+              }),
+              let to = samples.entries.first(where: {
+                  $0.number == measurement.toNumber
+              }),
+              let fromCenter = from.sample.displayedCenter(
+                  displayedSize: displayedSize,
+                  canvasSize: canvasSize
+              ),
+              let toCenter = to.sample.displayedCenter(
+                  displayedSize: displayedSize,
+                  canvasSize: canvasSize
+              )
+        else { return nil }
+        self.measurement = measurement
+        self.fromCenter = fromCenter
+        self.toCenter = toCenter
+    }
+
+    var midpoint: CGPoint {
+        CGPoint(
+            x: (fromCenter.x + toCenter.x) / 2,
+            y: (fromCenter.y + toCenter.y) / 2
+        )
+    }
+
+    var distanceText: String {
+        L10n.format(
+            "imageEditor.preview.sample.measurementDistance",
+            measurement.distanceText
+        )
+    }
+}
+
 private struct ImageEditorPreviewBackdropView: View {
     let backdrop: ImageEditorPreviewBackdrop
 
@@ -1024,6 +1071,34 @@ struct ImageEditorPreviewPanel: View {
                 .resizable()
                 .interpolation(interpolation)
                 .frame(width: size.width, height: size.height)
+            if let guide = ImageEditorPreviewSampleMeasurementGuide(
+                selection: measurementSelection,
+                samples: pinnedPixelSamples,
+                displayedSize: size,
+                canvasSize: viewModel.document.canvasSize
+            ) {
+                Group {
+                    Path { path in
+                        path.move(to: guide.fromCenter)
+                        path.addLine(to: guide.toCenter)
+                    }
+                    .stroke(
+                        Color.accentColor,
+                        style: StrokeStyle(lineWidth: 1, dash: [4, 3])
+                    )
+                    Text(guide.distanceText)
+                        .font(.system(size: 10, weight: .semibold))
+                        .monospacedDigit()
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 5)
+                        .padding(.vertical, 2)
+                        .background(Capsule().fill(Color.accentColor))
+                        .position(guide.midpoint)
+                }
+                .allowsHitTesting(false)
+                .accessibilityHidden(true)
+                .accessibilityIdentifier("image-editor-preview-measurement-guide")
+            }
             ForEach(pinnedPixelSamples.entries) { pinnedSample in
                 if let markerCenter = pinnedSample.sample.displayedCenter(
                     displayedSize: size,
@@ -1033,7 +1108,12 @@ struct ImageEditorPreviewPanel: View {
                         Circle()
                             .fill(.black.opacity(0.82))
                         Circle()
-                            .stroke(.white, lineWidth: 1)
+                            .stroke(
+                                isMeasurementEndpoint(pinnedSample.number)
+                                    ? Color.accentColor
+                                    : .white,
+                                lineWidth: isMeasurementEndpoint(pinnedSample.number) ? 2 : 1
+                            )
                         Text("\(pinnedSample.number)")
                             .font(.system(size: 10, weight: .bold))
                             .foregroundStyle(.white)
@@ -1080,6 +1160,11 @@ struct ImageEditorPreviewPanel: View {
             }
         )
         .help(L10n.text("imageEditor.preview.sample.pinHelp"))
+    }
+
+    private func isMeasurementEndpoint(_ number: Int) -> Bool {
+        measurementSelection.fromNumber == number
+            || measurementSelection.toNumber == number
     }
 }
 

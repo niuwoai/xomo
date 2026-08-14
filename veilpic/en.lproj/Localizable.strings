@@ -427,6 +427,7 @@
 "imageEditor.preview.sample.number" = "#%d";
 "imageEditor.preview.sample.measurement" = "#%d → #%d · ΔX %@ px · ΔY %@ px · D %@ px";
 "imageEditor.preview.sample.measurementValues" = "ΔX %@ px · ΔY %@ px · D %@ px";
+"imageEditor.preview.sample.measurementDistance" = "%@ px";
 "imageEditor.preview.sample.measurementFrom" = "Measure from sample";
 "imageEditor.preview.sample.measurementTo" = "Measure to sample";
 "imageEditor.preview.sample.copy" = "Copy color readout";

@@ -436,6 +436,81 @@ struct ImageEditorExportFormatTests {
         #expect(selection.measurement(in: pinnedSamples) == nil)
     }
 
+    @Test func previewSelectedMeasurementMapsGuideAcrossZoomLevels() throws {
+        var pinnedSamples = ImageEditorPreviewPinnedSamples()
+        let firstPinned = pinnedSamples.pin(
+            ImageEditorPreviewPixelSample(point: CGPoint(x: 1, y: 2), color: .black)
+        )
+        let secondPinned = pinnedSamples.pin(
+            ImageEditorPreviewPixelSample(point: CGPoint(x: 4, y: 6), color: .white)
+        )
+        #expect(firstPinned != nil)
+        #expect(secondPinned != nil)
+
+        var selection = ImageEditorPreviewSampleMeasurementSelection()
+        let selectedLatest = selection.selectLatest(in: pinnedSamples)
+        #expect(selectedLatest)
+        let canvasSize = CGSize(width: 10, height: 10)
+        let fitGuide = try #require(
+            ImageEditorPreviewSampleMeasurementGuide(
+                selection: selection,
+                samples: pinnedSamples,
+                displayedSize: CGSize(width: 100, height: 200),
+                canvasSize: canvasSize
+            )
+        )
+        #expect(fitGuide.fromCenter == CGPoint(x: 15, y: 50))
+        #expect(fitGuide.toCenter == CGPoint(x: 45, y: 130))
+        #expect(fitGuide.midpoint == CGPoint(x: 30, y: 90))
+        #expect(fitGuide.measurement.distance == 5)
+
+        let doubleGuide = try #require(
+            ImageEditorPreviewSampleMeasurementGuide(
+                selection: selection,
+                samples: pinnedSamples,
+                displayedSize: CGSize(width: 200, height: 400),
+                canvasSize: canvasSize
+            )
+        )
+        #expect(doubleGuide.fromCenter == CGPoint(x: 30, y: 100))
+        #expect(doubleGuide.toCenter == CGPoint(x: 90, y: 260))
+        #expect(doubleGuide.midpoint == CGPoint(x: 60, y: 180))
+        #expect(doubleGuide.measurement.distance == 5)
+
+        let reversedSelection = selection.setFrom(2, in: pinnedSamples)
+        #expect(reversedSelection)
+        let reversedGuide = try #require(
+            ImageEditorPreviewSampleMeasurementGuide(
+                selection: selection,
+                samples: pinnedSamples,
+                displayedSize: CGSize(width: 100, height: 200),
+                canvasSize: canvasSize
+            )
+        )
+        #expect(reversedGuide.fromCenter == fitGuide.toCenter)
+        #expect(reversedGuide.toCenter == fitGuide.fromCenter)
+        #expect(reversedGuide.measurement.deltaX == -3)
+        #expect(reversedGuide.measurement.deltaY == -4)
+
+        #expect(
+            ImageEditorPreviewSampleMeasurementGuide(
+                selection: selection,
+                samples: pinnedSamples,
+                displayedSize: .zero,
+                canvasSize: canvasSize
+            ) == nil
+        )
+        selection.reset()
+        #expect(
+            ImageEditorPreviewSampleMeasurementGuide(
+                selection: selection,
+                samples: pinnedSamples,
+                displayedSize: CGSize(width: 100, height: 200),
+                canvasSize: canvasSize
+            ) == nil
+        )
+    }
+
     @Test func previewPixelInspectionAveragesNeighborhoodAndClipsCanvasEdges() throws {
         let canvasSize = CGSize(width: 3, height: 1)
         let image = try #require(NSImage.rendered(size: canvasSize) { _ in
