@@ -275,10 +275,19 @@ final class XomoAutomationRegistry {
                 throw XomoAutomationCallError.operationFailed("Magic-wand sampling failed")
             }
         case "xomo.selection.quick":
-            viewModel.createQuickSelection(
-                points: try requiredPoints("points", in: arguments),
+            let points = try requiredPoints("points", in: arguments)
+            let canvasBounds = CGRect(origin: .zero, size: viewModel.document.canvasSize)
+            guard points.allSatisfy({ point in
+                point.x.isFinite && point.y.isFinite && canvasBounds.contains(point)
+            }) else {
+                throw XomoAutomationCallError.invalidArgument("Quick-selection points must all be inside the canvas")
+            }
+            guard viewModel.createQuickSelection(
+                points: points,
                 tolerance: selectionTolerance(arguments["tolerance"])
-            )
+            ) else {
+                throw XomoAutomationCallError.operationFailed("Quick-selection sampling failed")
+            }
         case "xomo.selection.clear":
             viewModel.clearSelection()
         case "xomo.selection.invert":

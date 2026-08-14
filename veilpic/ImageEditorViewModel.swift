@@ -3835,7 +3835,8 @@ final class ImageEditorViewModel: ObservableObject {
         return true
     }
 
-    func createQuickSelection(points: [CGPoint], tolerance: CGFloat? = nil) {
+    @discardableResult
+    func createQuickSelection(points: [CGPoint], tolerance: CGFloat? = nil) -> Bool {
         let canvasBounds = CGRect(origin: .zero, size: document.canvasSize)
         let minimumDistance = max(8, brushSize * 0.65)
         let maximumSamples = 18
@@ -3847,7 +3848,7 @@ final class ImageEditorViewModel: ObservableObject {
             sampledPoints.append(point)
         }
 
-        guard !sampledPoints.isEmpty else { return }
+        guard !sampledPoints.isEmpty else { return false }
 
         var combinedSelection: ImageEditorSelection?
         for point in sampledPoints {
@@ -3864,8 +3865,9 @@ final class ImageEditorViewModel: ObservableObject {
             )
         }
 
-        guard let combinedSelection else { return }
-        applySelectionCandidate(combinedSelection, replaceHistoryKey: "imageEditor.history.quickSelection")
+        guard let combinedSelection else { return false }
+        _ = applySelectionCandidate(combinedSelection, replaceHistoryKey: "imageEditor.history.quickSelection")
+        return true
     }
 
     @discardableResult

@@ -1990,6 +1990,70 @@ struct XomoAutomationTests {
         #expect(viewModel.undoStack.count == undoCount)
     }
 
+    @Test func registryQuickSelectionAcceptsValidAndIdempotentPointSets() throws {
+        let viewModel = makeViewModel()
+        let layerIndex = try #require(viewModel.document.selectedLayerIndex)
+        let canvasSize = CGSize(width: 30, height: 10)
+        let image = try #require(NSImage.rendered(size: canvasSize) { _ in
+            NSColor(deviceRed: 1, green: 0, blue: 0, alpha: 1).setFill()
+            CGRect(x: 0, y: 0, width: 10, height: 10).fill()
+            NSColor(deviceRed: 0, green: 0, blue: 1, alpha: 1).setFill()
+            CGRect(x: 10, y: 0, width: 10, height: 10).fill()
+            NSColor(deviceRed: 1, green: 0, blue: 0, alpha: 1).setFill()
+            CGRect(x: 20, y: 0, width: 10, height: 10).fill()
+        })
+        viewModel.document.canvasSize = canvasSize
+        viewModel.document.layers[layerIndex].image = image
+        viewModel.document.layers[layerIndex].frame = CGRect(origin: .zero, size: canvasSize)
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        let quickRequest = request(
+            operation: "call",
+            name: "xomo.selection.quick",
+            arguments: [
+                "points": .array([.object(["x": .number(3), "y": .number(5)])]),
+                "tolerance": .number(0.02)
+            ]
+        )
+
+        #expect(registry.execute(quickRequest).ok)
+        let mask = try #require(viewModel.document.selection?.rasterMask)
+        #expect(maskAlpha(mask, x: 5, y: 5) == 255)
+        #expect(maskAlpha(mask, x: 15, y: 5) == 0)
+        #expect(maskAlpha(mask, x: 25, y: 5) == 0)
+        let historyCountAfterSelection = viewModel.document.history.count
+
+        #expect(registry.execute(quickRequest).ok)
+        #expect(viewModel.document.history.count == historyCountAfterSelection)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionUnchanged"))
+    }
+
+    @Test func registryRejectsQuickSelectionWhenAnyPointIsOutsideCanvas() {
+        let viewModel = makeViewModel()
+        let selectionBeforeRequest = viewModel.document.selection
+        let historyCountBeforeRequest = viewModel.document.history.count
+        let undoCountBeforeRequest = viewModel.undoStack.count
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+
+        let response = registry.execute(request(
+            operation: "call",
+            name: "xomo.selection.quick",
+            arguments: [
+                "points": .array([
+                    .object(["x": .number(3), "y": .number(5)]),
+                    .object(["x": .number(-1), "y": .number(5)])
+                ])
+            ]
+        ))
+
+        #expect(!response.ok)
+        #expect(response.error?.contains("must all be inside the canvas") == true)
+        #expect(viewModel.document.selection == selectionBeforeRequest)
+        #expect(viewModel.document.history.count == historyCountBeforeRequest)
+        #expect(viewModel.undoStack.count == undoCountBeforeRequest)
+    }
+
     @Test func registryAppliesExplicitColorRangeTolerance() throws {
         let viewModel = makeViewModel()
         let layerIndex = try #require(viewModel.document.selectedLayerIndex)
