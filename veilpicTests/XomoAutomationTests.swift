@@ -2052,6 +2052,76 @@ struct XomoAutomationTests {
         #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionUnchanged"))
     }
 
+    @Test func registryLassoSelectionAcceptsValidAndIdempotentPointSets() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        let lassoRequest = request(
+            operation: "call",
+            name: "xomo.selection.lasso",
+            arguments: [
+                "points": .array([
+                    .object(["x": .number(10), "y": .number(10)]),
+                    .object(["x": .number(70), "y": .number(15)]),
+                    .object(["x": .number(35), "y": .number(60)])
+                ])
+            ]
+        )
+
+        #expect(registry.execute(lassoRequest).ok)
+        let selection = try #require(viewModel.document.selection)
+        #expect(selection.points == [
+            CGPoint(x: 10, y: 10),
+            CGPoint(x: 70, y: 15),
+            CGPoint(x: 35, y: 60)
+        ])
+        #expect(selection.isPolygon)
+        let historyCountAfterSelection = viewModel.document.history.count
+
+        #expect(registry.execute(lassoRequest).ok)
+        #expect(viewModel.document.history.count == historyCountAfterSelection)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionUnchanged"))
+    }
+
+    @Test func registryRejectsInvalidLassoGeometryBeforeChangingDocument() {
+        let viewModel = makeViewModel()
+        viewModel.createRectSelection(from: CGPoint(x: 20, y: 20), to: CGPoint(x: 60, y: 50))
+        let selectionBeforeRequests = viewModel.document.selection
+        let historyCountBeforeRequests = viewModel.document.history.count
+        let undoCountBeforeRequests = viewModel.undoStack.count
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        let invalidPointSets: [[XomoJSONValue]] = [
+            [
+                .object(["x": .number(10), "y": .number(10)]),
+                .object(["x": .number(40), "y": .number(40)])
+            ],
+            [
+                .object(["x": .number(10), "y": .number(10)]),
+                .object(["x": .number(80), "y": .number(20)]),
+                .object(["x": .number(400), "y": .number(80)])
+            ],
+            [
+                .object(["x": .number(10), "y": .number(10)]),
+                .object(["x": .number(30), "y": .number(30)]),
+                .object(["x": .number(60), "y": .number(60)])
+            ]
+        ]
+
+        for points in invalidPointSets {
+            let response = registry.execute(request(
+                operation: "call",
+                name: "xomo.selection.lasso",
+                arguments: ["points": .array(points)]
+            ))
+            #expect(!response.ok)
+            #expect(response.error?.isEmpty == false)
+        }
+        #expect(viewModel.document.selection == selectionBeforeRequests)
+        #expect(viewModel.document.history.count == historyCountBeforeRequests)
+        #expect(viewModel.undoStack.count == undoCountBeforeRequests)
+    }
+
     @Test func registryRejectsInvalidMarqueeRectsBeforeChangingDocumentOrTool() {
         let viewModel = makeViewModel()
         viewModel.selectTool(.brush)

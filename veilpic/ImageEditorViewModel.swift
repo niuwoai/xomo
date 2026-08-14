@@ -3801,12 +3801,14 @@ final class ImageEditorViewModel: ObservableObject {
         return didResolveSelection
     }
 
-    func createLassoSelection(points: [CGPoint]) {
+    @discardableResult
+    func createLassoSelection(points: [CGPoint]) -> Bool {
         let boundedPoints = points.map { point in
             ImageEditorCanvasGeometry.boundedCanvasPoint(point, canvasSize: document.canvasSize)
         }
-        guard let selection = ImageEditorSelection.polygon(boundedPoints) else { return }
-        applySelectionCandidate(selection, replaceHistoryKey: "imageEditor.history.selection")
+        guard let selection = ImageEditorSelection.polygon(boundedPoints) else { return false }
+        _ = applySelectionCandidate(selection, replaceHistoryKey: "imageEditor.history.selection")
+        return true
     }
 
     @discardableResult

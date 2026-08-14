@@ -242,7 +242,10 @@ final class XomoAutomationRegistry {
                 throw XomoAutomationCallError.operationFailed("Ellipse selection failed")
             }
         case "xomo.selection.lasso":
-            viewModel.createLassoSelection(points: try requiredPoints("points", in: arguments))
+            let points = try requiredLassoPoints(arguments, canvasSize: viewModel.document.canvasSize)
+            guard viewModel.createLassoSelection(points: points) else {
+                throw XomoAutomationCallError.operationFailed("Lasso selection failed")
+            }
         case "xomo.selection.magic":
             let point = try requiredPoint(arguments)
             let canvasBounds = CGRect(origin: .zero, size: viewModel.document.canvasSize)
@@ -5794,6 +5797,30 @@ final class XomoAutomationRegistry {
             )
         }
         return rect
+    }
+
+    private func requiredLassoPoints(
+        _ arguments: [String: XomoJSONValue],
+        canvasSize: CGSize
+    ) throws -> [CGPoint] {
+        let points = try requiredPoints("points", in: arguments)
+        guard points.count >= 3 else {
+            throw XomoAutomationCallError.invalidArgument("Lasso selection needs at least three points")
+        }
+        guard points.allSatisfy({ point in
+            point.x.isFinite && point.y.isFinite &&
+                point.x >= 0 && point.y >= 0 &&
+                point.x <= canvasSize.width && point.y <= canvasSize.height
+        }) else {
+            throw XomoAutomationCallError.invalidArgument("Lasso points must all be inside the canvas")
+        }
+        let doubledArea = zip(points, points.dropFirst() + [points[0]]).reduce(CGFloat.zero) { area, pair in
+            area + pair.0.x * pair.1.y - pair.1.x * pair.0.y
+        }
+        guard abs(doubledArea) > .ulpOfOne else {
+            throw XomoAutomationCallError.invalidArgument("Lasso selection must enclose a nonzero area")
+        }
+        return points
     }
 
     private func requiredBrushSamples(
