@@ -238,6 +238,55 @@ extension ImageEditorViewModel {
         return true
     }
 
+    @discardableResult
+    func updateSliceExportPresetFormat(
+        inSlice id: UUID,
+        at presetIndex: Int,
+        format: ImageEditorExportFormat
+    ) -> Bool {
+        guard let sliceIndex = document.slices.firstIndex(where: { $0.id == id }),
+              var presets = document.slices[sliceIndex].exportPresets,
+              presets.indices.contains(presetIndex)
+        else { return false }
+        guard format.supportsSliceExportPreset else {
+            statusText = L10n.text("imageEditor.status.sliceExportPresetUnsupported")
+            return false
+        }
+
+        let current = presets[presetIndex]
+        let updated = ImageEditorSliceExportPreset(
+            suffix: current.suffix,
+            format: format,
+            constraint: format == .pdf ? .scale : current.constraint,
+            value: format == .pdf ? 1 : current.value
+        )
+        guard updated != current else {
+            statusText = L10n.text("imageEditor.status.sliceExportPresetUnchanged")
+            return false
+        }
+        guard updated.resolvedScale(for: document.slices[sliceIndex].frame) != nil else {
+            statusText = L10n.text("imageEditor.status.sliceExportPresetInvalid")
+            return false
+        }
+        guard !presets.enumerated().contains(where: { index, preset in
+            index != presetIndex && preset == updated
+        }) else {
+            statusText = L10n.text("imageEditor.status.sliceExportPresetDuplicate")
+            return false
+        }
+
+        pushUndo()
+        presets[presetIndex] = updated
+        document.slices[sliceIndex].exportPresets = presets
+        let slice = document.slices[sliceIndex]
+        if exportSettings.sliceID == id && presetIndex == presets.startIndex {
+            applyPrimaryExportPreset(for: slice)
+        }
+        appendHistory(L10n.format("imageEditor.history.sliceExportPresetFormatUpdated", slice.name))
+        statusText = L10n.format("imageEditor.status.sliceExportPresetFormatUpdated", slice.name)
+        return true
+    }
+
     func syncExportSettingsAfterSliceHistoryChange(from previousSlices: [ImageEditorSlice]) {
         guard previousSlices != document.slices,
               exportSettings.scope == .slice

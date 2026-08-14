@@ -240,6 +240,9 @@ struct ImageEditorSlicePanel: View {
                             onUpdateExportPresetSuffix: {
                                 updateExportPresetSuffix(at: $0, suffix: $1, in: slice)
                             },
+                            onUpdateExportPresetFormat: {
+                                updateExportPresetFormat(at: $0, format: $1, in: slice)
+                            },
                             onDelete: { delete(slice) }
                         )
                     }
@@ -314,6 +317,18 @@ struct ImageEditorSlicePanel: View {
         syncDrafts()
     }
 
+    private func updateExportPresetFormat(
+        at index: Int,
+        format: ImageEditorExportFormat,
+        in slice: ImageEditorSlice
+    ) {
+        _ = viewModel.updateSliceExportPresetFormat(
+            inSlice: slice.id,
+            at: index,
+            format: format
+        )
+    }
+
     private func syncDrafts() {
         let currentIDs = Set(viewModel.availableSlices.map(\.id))
         var next = drafts.filter { currentIDs.contains($0.key) }
@@ -343,6 +358,7 @@ private struct ImageEditorSlicePanelRow: View {
     let onDeleteExportPreset: (Int) -> Void
     let onMoveExportPreset: (Int, ImageEditorSliceExportPresetMoveDirection) -> Void
     let onUpdateExportPresetSuffix: (Int, String) -> Void
+    let onUpdateExportPresetFormat: (Int, ImageEditorExportFormat) -> Void
     let onDelete: () -> Void
 
     var body: some View {
@@ -403,6 +419,21 @@ private struct ImageEditorSlicePanelRow: View {
                         }
                         if isSelected {
                             HStack(spacing: 4) {
+                                Picker(
+                                    L10n.text("imageEditor.slices.exportPreset.format"),
+                                    selection: Binding(
+                                        get: { presets[index].format },
+                                        set: { onUpdateExportPresetFormat(index, $0) }
+                                    )
+                                ) {
+                                    ForEach(ImageEditorExportFormat.sliceExportPresetFormats) { format in
+                                        Text(format.title).tag(format)
+                                    }
+                                }
+                                .labelsHidden()
+                                .pickerStyle(.menu)
+                                .controlSize(.small)
+                                .help(L10n.text("imageEditor.slices.exportPreset.format"))
                                 TextField(
                                     L10n.text("imageEditor.slices.exportPreset.suffix"),
                                     text: exportPresetSuffixBinding(

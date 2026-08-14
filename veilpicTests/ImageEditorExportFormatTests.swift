@@ -1541,6 +1541,95 @@ struct ImageEditorExportFormatTests {
         #expect(viewModel.document.history.count == historyAfterEdit)
     }
 
+    @Test func editingSliceExportPresetFormatNormalizesPDFDeduplicatesAndRoundTripsHistory() {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "delivery.png",
+            image: NSImage.transparent(size: CGSize(width: 80, height: 60))
+        ) { _ in }
+        let presets = [
+            ImageEditorSliceExportPreset(
+                suffix: "@2x",
+                format: .png,
+                constraint: .scale,
+                value: 2
+            ),
+            ImageEditorSliceExportPreset(
+                suffix: "-web",
+                format: .jpeg,
+                constraint: .scale,
+                value: 3
+            ),
+            ImageEditorSliceExportPreset(
+                suffix: "-web",
+                format: .pdf,
+                constraint: .scale,
+                value: 1
+            )
+        ]
+        let slice = ImageEditorSlice(
+            name: "Hero",
+            frame: CGRect(x: 10, y: 10, width: 40, height: 30),
+            exportPresets: presets
+        )
+        viewModel.document.slices = [slice]
+        _ = viewModel.selectSlice(id: slice.id)
+        let historyCount = viewModel.document.history.count
+
+        #expect(ImageEditorExportFormat.sliceExportPresetFormats == [.png, .jpeg, .pdf])
+        #expect(viewModel.updateSliceExportPresetFormat(
+            inSlice: slice.id,
+            at: 0,
+            format: .pdf
+        ))
+        let updated = viewModel.document.slices[0].exportPresets?.first
+        #expect(updated?.format == .pdf)
+        #expect(updated?.constraint == .scale)
+        #expect(updated?.value == 1)
+        #expect(updated?.suffix == "@2x")
+        #expect(viewModel.exportSettings.format == .pdf)
+        #expect(viewModel.exportSettings.scale == 1)
+        #expect(viewModel.exportSettings.filenameSuffix == "@2x")
+        #expect(viewModel.sliceExportPlan(settings: viewModel.exportSettings).first?.filename == "Hero@2x.pdf")
+        #expect(viewModel.document.history.count == historyCount + 1)
+
+        viewModel.undo()
+        #expect(viewModel.document.slices[0].exportPresets == presets)
+        #expect(viewModel.exportSettings.format == .png)
+        #expect(viewModel.exportSettings.scale == 2)
+        viewModel.redo()
+        #expect(viewModel.document.slices[0].exportPresets?.first == updated)
+        #expect(viewModel.exportSettings.format == .pdf)
+
+        let historyAfterEdit = viewModel.document.history.count
+        #expect(!viewModel.updateSliceExportPresetFormat(
+            inSlice: slice.id,
+            at: 1,
+            format: .pdf
+        ))
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.sliceExportPresetDuplicate"))
+        #expect(viewModel.document.history.count == historyAfterEdit)
+        #expect(!viewModel.updateSliceExportPresetFormat(
+            inSlice: slice.id,
+            at: 0,
+            format: .webp
+        ))
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.sliceExportPresetUnsupported"))
+        #expect(viewModel.document.history.count == historyAfterEdit)
+        #expect(!viewModel.updateSliceExportPresetFormat(
+            inSlice: slice.id,
+            at: 0,
+            format: .pdf
+        ))
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.sliceExportPresetUnchanged"))
+        #expect(viewModel.document.history.count == historyAfterEdit)
+        #expect(!viewModel.updateSliceExportPresetFormat(
+            inSlice: slice.id,
+            at: 99,
+            format: .jpeg
+        ))
+        #expect(viewModel.document.history.count == historyAfterEdit)
+    }
+
     @Test func exportingAllSlicesUsesPresetsFallbackScalesAndCollisionSafeNames() throws {
         let viewModel = ImageEditorViewModel(
             sourceName: "delivery.png",

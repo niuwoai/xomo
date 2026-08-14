@@ -58,13 +58,10 @@ enum ImageEditorExportFormat: String, CaseIterable, Identifiable, Codable, Senda
     }
 
     var supportsSliceExportPreset: Bool {
-        switch self {
-        case .png, .jpeg, .pdf:
-            true
-        case .webp, .svg, .psd:
-            false
-        }
+        Self.sliceExportPresetFormats.contains(self)
     }
+
+    static let sliceExportPresetFormats: [Self] = [.png, .jpeg, .pdf]
 }
 
 enum ImageEditorExportScope: String, CaseIterable, Identifiable {
