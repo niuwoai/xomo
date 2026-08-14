@@ -1943,14 +1943,31 @@ struct XomoAutomationTests {
         #expect(maskAlpha(mask, x: 5, y: 5) == 255)
         #expect(maskAlpha(mask, x: 15, y: 5) == 0)
         #expect(maskAlpha(mask, x: 25, y: 5) == 255)
+
+        let historyCountAfterSelection = viewModel.document.history.count
+        let repeatedResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.selection.magic",
+            arguments: [
+                "x": .number(3),
+                "y": .number(5),
+                "tolerance": .number(0.02),
+                "contiguous": .bool(false)
+            ]
+        ))
+
+        #expect(repeatedResponse.ok)
+        #expect(viewModel.document.history.count == historyCountAfterSelection)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionUnchanged"))
     }
 
-    @Test func registryRejectsOutsideCanvasMagicWandWithoutHistory() {
+    @Test func registryRejectsOutsideCanvasMagicWandWithoutHistoryOrPreferenceMutation() {
         let viewModel = makeViewModel()
         viewModel.createRectSelection(from: CGPoint(x: 10, y: 10), to: CGPoint(x: 30, y: 30))
         let selectionBefore = viewModel.document.selection
         let historyCount = viewModel.document.history.count
         let undoCount = viewModel.undoStack.count
+        #expect(viewModel.isMagicWandContiguous)
         let registry = XomoAutomationRegistry.shared
         registry.register(viewModel)
 
@@ -1960,15 +1977,17 @@ struct XomoAutomationTests {
             arguments: [
                 "x": .number(-1),
                 "y": .number(20),
-                "tolerance": .number(0.05)
+                "tolerance": .number(0.05),
+                "contiguous": .bool(false)
             ]
         ))
 
-        #expect(response.ok)
+        #expect(!response.ok)
+        #expect(response.error?.contains("outside the canvas") == true)
+        #expect(viewModel.isMagicWandContiguous)
         #expect(viewModel.document.selection == selectionBefore)
         #expect(viewModel.document.history.count == historyCount)
         #expect(viewModel.undoStack.count == undoCount)
-        #expect(viewModel.statusText == L10n.text("imageEditor.status.magicWandOutsideCanvas"))
     }
 
     @Test func registryAppliesExplicitColorRangeTolerance() throws {

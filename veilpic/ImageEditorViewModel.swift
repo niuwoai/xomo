@@ -3805,20 +3805,21 @@ final class ImageEditorViewModel: ObservableObject {
         applySelectionCandidate(selection, replaceHistoryKey: "imageEditor.history.selection")
     }
 
+    @discardableResult
     func createMagicSelection(
         at point: CGPoint?,
         tolerance: CGFloat? = nil,
         contiguous: Bool? = nil,
         samplingImage: NSImage? = nil
-    ) {
-        guard let point else { return }
+    ) -> Bool {
+        guard let point else { return false }
         let canvasBounds = CGRect(origin: .zero, size: document.canvasSize)
         guard point.x.isFinite,
               point.y.isFinite,
               canvasBounds.contains(point)
         else {
             statusText = L10n.text("imageEditor.status.magicWandOutsideCanvas")
-            return
+            return false
         }
         guard let selection = magicSelection(
                 at: point,
@@ -3828,9 +3829,10 @@ final class ImageEditorViewModel: ObservableObject {
               )
         else {
             statusText = L10n.text("imageEditor.status.operationFailed")
-            return
+            return false
         }
-        applySelectionCandidate(selection, replaceHistoryKey: "imageEditor.history.magicSelection")
+        _ = applySelectionCandidate(selection, replaceHistoryKey: "imageEditor.history.magicSelection")
+        return true
     }
 
     func createQuickSelection(points: [CGPoint], tolerance: CGFloat? = nil) {

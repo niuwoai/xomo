@@ -256,14 +256,24 @@ final class XomoAutomationRegistry {
         case "xomo.selection.lasso":
             viewModel.createLassoSelection(points: try requiredPoints("points", in: arguments))
         case "xomo.selection.magic":
+            let point = try requiredPoint(arguments)
+            let canvasBounds = CGRect(origin: .zero, size: viewModel.document.canvasSize)
+            guard point.x.isFinite,
+                  point.y.isFinite,
+                  canvasBounds.contains(point)
+            else {
+                throw XomoAutomationCallError.invalidArgument("Magic-wand point is outside the canvas")
+            }
             if let contiguous = arguments["contiguous"]?.boolValue {
                 viewModel.isMagicWandContiguous = contiguous
             }
-            viewModel.createMagicSelection(
-                at: try requiredPoint(arguments),
+            guard viewModel.createMagicSelection(
+                at: point,
                 tolerance: selectionTolerance(arguments["tolerance"]),
                 contiguous: arguments["contiguous"]?.boolValue
-            )
+            ) else {
+                throw XomoAutomationCallError.operationFailed("Magic-wand sampling failed")
+            }
         case "xomo.selection.quick":
             viewModel.createQuickSelection(
                 points: try requiredPoints("points", in: arguments),
