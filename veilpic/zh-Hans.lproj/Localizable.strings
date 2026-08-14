@@ -425,6 +425,7 @@
 "imageEditor.preview.sample.pinHelp" = "点击图像，最多固定 4 个样本";
 "imageEditor.preview.sample.pinned" = "已固定像素样本";
 "imageEditor.preview.sample.number" = "#%d";
+"imageEditor.preview.sample.measurement" = "#%d → #%d · ΔX %@ 像素 · ΔY %@ 像素 · 距离 %@ 像素";
 "imageEditor.preview.sample.copy" = "复制颜色读数";
 "imageEditor.preview.sample.copied" = "颜色读数已复制";
 "imageEditor.preview.sample.clearPinned" = "清除固定样本";

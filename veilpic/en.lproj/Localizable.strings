@@ -425,6 +425,7 @@
 "imageEditor.preview.sample.pinHelp" = "Click the image to pin up to four samples";
 "imageEditor.preview.sample.pinned" = "Pinned pixel sample";
 "imageEditor.preview.sample.number" = "#%d";
+"imageEditor.preview.sample.measurement" = "#%d → #%d · ΔX %@ px · ΔY %@ px · D %@ px";
 "imageEditor.preview.sample.copy" = "Copy color readout";
 "imageEditor.preview.sample.copied" = "Color readout copied";
 "imageEditor.preview.sample.clearPinned" = "Clear pinned sample";

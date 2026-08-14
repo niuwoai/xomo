@@ -425,6 +425,7 @@
 "imageEditor.preview.sample.pinHelp" = "画像をクリックして最大4件のサンプルを固定";
 "imageEditor.preview.sample.pinned" = "固定したピクセルサンプル";
 "imageEditor.preview.sample.number" = "#%d";
+"imageEditor.preview.sample.measurement" = "#%d → #%d · ΔX %@ px · ΔY %@ px · 距離 %@ px";
 "imageEditor.preview.sample.copy" = "カラー値をコピー";
 "imageEditor.preview.sample.copied" = "カラー値をコピーしました";
 "imageEditor.preview.sample.clearPinned" = "固定サンプルを解除";

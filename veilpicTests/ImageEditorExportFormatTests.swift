@@ -326,6 +326,58 @@ struct ImageEditorExportFormatTests {
         #expect(pinnedSamples.entries.map(\.readoutMode) == [.cmyk, .hexadecimalRGBA])
     }
 
+    @Test func previewPinnedSamplesMeasureTheLatestPairInCanvasPixels() throws {
+        var pinnedSamples = ImageEditorPreviewPinnedSamples()
+        let firstSample = ImageEditorPreviewPixelSample(point: CGPoint(x: 10, y: 10), color: .red)
+        let secondSample = ImageEditorPreviewPixelSample(point: CGPoint(x: 13, y: 14), color: .green)
+        let thirdSample = ImageEditorPreviewPixelSample(point: CGPoint(x: 7, y: 10), color: .blue)
+
+        #expect(pinnedSamples.latestMeasurement == nil)
+        let firstPinned = pinnedSamples.pin(firstSample)
+        #expect(firstPinned?.number == 1)
+        #expect(pinnedSamples.latestMeasurement == nil)
+
+        let secondPinned = pinnedSamples.pin(secondSample)
+        #expect(secondPinned?.number == 2)
+        let firstMeasurement = try #require(pinnedSamples.latestMeasurement)
+        #expect(firstMeasurement.fromNumber == 1)
+        #expect(firstMeasurement.toNumber == 2)
+        #expect(firstMeasurement.deltaX == 3)
+        #expect(firstMeasurement.deltaY == 4)
+        #expect(firstMeasurement.distance == 5)
+        #expect(firstMeasurement.deltaXText == "+3")
+        #expect(firstMeasurement.deltaYText == "+4")
+        #expect(firstMeasurement.distanceText == "5")
+
+        let thirdPinned = pinnedSamples.pin(thirdSample)
+        #expect(thirdPinned?.number == 3)
+        let latestMeasurement = try #require(pinnedSamples.latestMeasurement)
+        #expect(latestMeasurement.fromNumber == 2)
+        #expect(latestMeasurement.toNumber == 3)
+        #expect(latestMeasurement.deltaXText == "-6")
+        #expect(latestMeasurement.deltaYText == "-4")
+        #expect(latestMeasurement.distanceText == "7.2")
+
+        let removedSecond = pinnedSamples.remove(number: 2)
+        #expect(removedSecond)
+        let measurementAfterRemoval = try #require(pinnedSamples.latestMeasurement)
+        #expect(measurementAfterRemoval.fromNumber == 1)
+        #expect(measurementAfterRemoval.toNumber == 3)
+        #expect(measurementAfterRemoval.deltaXText == "-3")
+        #expect(measurementAfterRemoval.deltaYText == "0")
+        #expect(measurementAfterRemoval.distanceText == "3")
+
+        let invalidSample = ImageEditorPreviewPinnedSample(
+            number: 4,
+            sample: ImageEditorPreviewPixelSample(
+                point: CGPoint(x: CGFloat.infinity, y: 1),
+                color: .black
+            ),
+            readoutMode: .rgb
+        )
+        #expect(ImageEditorPreviewSampleMeasurement(from: invalidSample, to: invalidSample) == nil)
+    }
+
     @Test func previewPixelInspectionAveragesNeighborhoodAndClipsCanvasEdges() throws {
         let canvasSize = CGSize(width: 3, height: 1)
         let image = try #require(NSImage.rendered(size: canvasSize) { _ in

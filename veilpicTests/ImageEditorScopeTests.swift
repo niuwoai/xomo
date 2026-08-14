@@ -1193,7 +1193,9 @@ struct ImageEditorScopeTests {
         #expect(source.contains("enum ImageEditorPreviewPixelReadoutMode"))
         #expect(source.contains("enum ImageEditorPreviewClipboard"))
         #expect(source.contains("struct ImageEditorPreviewPinnedSamples"))
+        #expect(source.contains("struct ImageEditorPreviewSampleMeasurement"))
         #expect(source.contains("static let maximumCount = 4"))
+        #expect(source.contains("var latestMeasurement: ImageEditorPreviewSampleMeasurement?"))
         #expect(source.contains("mutating func setReadoutMode("))
         #expect(source.contains("pasteboard.setString(value, forType: .string)"))
         #expect(source.contains("static func canvasPoint("))
@@ -1247,6 +1249,11 @@ struct ImageEditorScopeTests {
         #expect(previewSource.contains("selection: readoutModeBinding(for: pinnedSample.number)"))
         #expect(previewSource.contains("pinnedPixelSamples.setReadoutMode(readoutMode, for: number)"))
         #expect(previewSource.contains("image-editor-preview-pinned-sample-mode-"))
+        #expect(previewSource.contains("pinnedPixelSamples.latestMeasurement"))
+        #expect(previewSource.contains("Text(measurement.text)"))
+        #expect(previewSource.contains(
+            ".accessibilityIdentifier(\"image-editor-preview-pinned-sample-measurement\")"
+        ))
         #expect(previewSource.contains(
             ".accessibilityIdentifier(\"image-editor-preview-copy-pinned-sample\")"
         ))
@@ -1270,6 +1277,7 @@ struct ImageEditorScopeTests {
             #expect(localization.contains("\"imageEditor.preview.sample.pinHelp\""))
             #expect(localization.contains("\"imageEditor.preview.sample.pinned\""))
             #expect(localization.contains("\"imageEditor.preview.sample.number\""))
+            #expect(localization.contains("\"imageEditor.preview.sample.measurement\""))
             #expect(localization.contains("\"imageEditor.preview.sample.copy\""))
             #expect(localization.contains("\"imageEditor.preview.sample.copied\""))
             #expect(localization.contains("\"imageEditor.preview.sample.clearPinned\""))

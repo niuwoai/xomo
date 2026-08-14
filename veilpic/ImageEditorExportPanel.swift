@@ -343,6 +343,68 @@ struct ImageEditorPreviewPinnedSample: Identifiable {
     var id: Int { number }
 }
 
+struct ImageEditorPreviewSampleMeasurement {
+    let fromNumber: Int
+    let toNumber: Int
+    let deltaX: Int
+    let deltaY: Int
+    let distance: Double
+
+    init?(
+        from: ImageEditorPreviewPinnedSample,
+        to: ImageEditorPreviewPinnedSample
+    ) {
+        let rawDeltaX = to.sample.point.x - from.sample.point.x
+        let rawDeltaY = to.sample.point.y - from.sample.point.y
+        let roundedDeltaX = rawDeltaX.rounded()
+        let roundedDeltaY = rawDeltaY.rounded()
+        guard rawDeltaX.isFinite,
+              rawDeltaY.isFinite,
+              roundedDeltaX >= CGFloat(Int.min),
+              roundedDeltaX <= CGFloat(Int.max),
+              roundedDeltaY >= CGFloat(Int.min),
+              roundedDeltaY <= CGFloat(Int.max)
+        else { return nil }
+
+        fromNumber = from.number
+        toNumber = to.number
+        deltaX = Int(roundedDeltaX)
+        deltaY = Int(roundedDeltaY)
+        distance = hypot(Double(rawDeltaX), Double(rawDeltaY))
+    }
+
+    var text: String {
+        L10n.format(
+            "imageEditor.preview.sample.measurement",
+            fromNumber,
+            toNumber,
+            deltaXText,
+            deltaYText,
+            distanceText
+        )
+    }
+
+    var deltaXText: String {
+        Self.signedText(deltaX)
+    }
+
+    var deltaYText: String {
+        Self.signedText(deltaY)
+    }
+
+    var distanceText: String {
+        let rounded = (distance * 10).rounded() / 10
+        if rounded == rounded.rounded() {
+            return String(format: "%.0f", rounded)
+        }
+        return String(format: "%.1f", rounded)
+    }
+
+    private static func signedText(_ value: Int) -> String {
+        value > 0 ? "+\(value)" : "\(value)"
+    }
+}
+
 struct ImageEditorPreviewPinnedSamples {
     static let maximumCount = 4
 
@@ -350,6 +412,14 @@ struct ImageEditorPreviewPinnedSamples {
 
     var latest: ImageEditorPreviewPinnedSample? {
         entries.last
+    }
+
+    var latestMeasurement: ImageEditorPreviewSampleMeasurement? {
+        guard entries.count >= 2 else { return nil }
+        return ImageEditorPreviewSampleMeasurement(
+            from: entries[entries.count - 2],
+            to: entries[entries.count - 1]
+        )
     }
 
     @discardableResult
@@ -635,83 +705,107 @@ struct ImageEditorPreviewPanel: View {
     }
 
     private var pinnedSamplesStrip: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 8) {
-                ForEach(pinnedPixelSamples.entries) { pinnedSample in
-                    HStack(spacing: 6) {
-                        Text(L10n.format("imageEditor.preview.sample.number", pinnedSample.number))
-                            .fontWeight(.semibold)
-                        RoundedRectangle(cornerRadius: 2)
-                            .fill(Color(nsColor: pinnedSample.sample.color))
-                            .overlay {
-                                RoundedRectangle(cornerRadius: 2)
-                                    .stroke(
-                                        Color(nsColor: ImageEditorTheme.border),
-                                        lineWidth: 1
-                                    )
-                            }
-                            .frame(width: 14, height: 14)
-                        Picker(
-                            L10n.text("imageEditor.preview.readoutMode"),
-                            selection: readoutModeBinding(for: pinnedSample.number)
-                        ) {
-                            ForEach(ImageEditorPreviewPixelReadoutMode.allCases) { mode in
-                                Text(mode.title).tag(mode)
-                            }
-                        }
-                        .labelsHidden()
-                        .pickerStyle(.menu)
-                        .controlSize(.mini)
-                        .fixedSize()
-                        .accessibilityIdentifier(
-                            "image-editor-preview-pinned-sample-mode-\(pinnedSample.number)"
-                        )
-                        Text(pinnedSample.sample.text(mode: pinnedSample.readoutMode))
-                            .monospacedDigit()
-                        Button {
-                            copyReadout(for: pinnedSample)
-                        } label: {
-                            Image(systemName: isCopied(pinnedSample) ? "checkmark" : "doc.on.doc")
-                        }
-                        .buttonStyle(.plain)
-                        .help(
-                            L10n.text(
-                                isCopied(pinnedSample)
-                                    ? "imageEditor.preview.sample.copied"
-                                    : "imageEditor.preview.sample.copy"
+        VStack(spacing: 0) {
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    ForEach(pinnedPixelSamples.entries) { pinnedSample in
+                        HStack(spacing: 6) {
+                            Text(
+                                L10n.format(
+                                    "imageEditor.preview.sample.number",
+                                    pinnedSample.number
+                                )
                             )
-                        )
-                        .accessibilityIdentifier(
-                            "image-editor-preview-copy-pinned-sample-\(pinnedSample.number)"
-                        )
-                        Button {
-                            pinnedPixelSamples.remove(number: pinnedSample.number)
-                            if copiedPinnedSampleNumber == pinnedSample.number {
-                                resetCopyFeedback()
+                            .fontWeight(.semibold)
+                            RoundedRectangle(cornerRadius: 2)
+                                .fill(Color(nsColor: pinnedSample.sample.color))
+                                .overlay {
+                                    RoundedRectangle(cornerRadius: 2)
+                                        .stroke(
+                                            Color(nsColor: ImageEditorTheme.border),
+                                            lineWidth: 1
+                                        )
+                                }
+                                .frame(width: 14, height: 14)
+                            Picker(
+                                L10n.text("imageEditor.preview.readoutMode"),
+                                selection: readoutModeBinding(for: pinnedSample.number)
+                            ) {
+                                ForEach(ImageEditorPreviewPixelReadoutMode.allCases) { mode in
+                                    Text(mode.title).tag(mode)
+                                }
                             }
-                        } label: {
-                            Image(systemName: "xmark")
+                            .labelsHidden()
+                            .pickerStyle(.menu)
+                            .controlSize(.mini)
+                            .fixedSize()
+                            .accessibilityIdentifier(
+                                "image-editor-preview-pinned-sample-mode-\(pinnedSample.number)"
+                            )
+                            Text(pinnedSample.sample.text(mode: pinnedSample.readoutMode))
+                                .monospacedDigit()
+                            Button {
+                                copyReadout(for: pinnedSample)
+                            } label: {
+                                Image(
+                                    systemName: isCopied(pinnedSample)
+                                        ? "checkmark"
+                                        : "doc.on.doc"
+                                )
+                            }
+                            .buttonStyle(.plain)
+                            .help(
+                                L10n.text(
+                                    isCopied(pinnedSample)
+                                        ? "imageEditor.preview.sample.copied"
+                                        : "imageEditor.preview.sample.copy"
+                                )
+                            )
+                            .accessibilityIdentifier(
+                                "image-editor-preview-copy-pinned-sample-\(pinnedSample.number)"
+                            )
+                            Button {
+                                pinnedPixelSamples.remove(number: pinnedSample.number)
+                                if copiedPinnedSampleNumber == pinnedSample.number {
+                                    resetCopyFeedback()
+                                }
+                            } label: {
+                                Image(systemName: "xmark")
+                            }
+                            .buttonStyle(.plain)
+                            .help(L10n.text("imageEditor.preview.sample.removePinned"))
+                            .accessibilityIdentifier(
+                                "image-editor-preview-remove-pinned-sample-\(pinnedSample.number)"
+                            )
                         }
-                        .buttonStyle(.plain)
-                        .help(L10n.text("imageEditor.preview.sample.removePinned"))
+                        .font(.system(size: 11))
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 6)
+                        .background(
+                            RoundedRectangle(cornerRadius: 5)
+                                .fill(Color(nsColor: ImageEditorTheme.window))
+                        )
                         .accessibilityIdentifier(
-                            "image-editor-preview-remove-pinned-sample-\(pinnedSample.number)"
+                            "image-editor-preview-pinned-sample-\(pinnedSample.number)"
                         )
                     }
-                    .font(.system(size: 11))
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 6)
-                    .background(
-                        RoundedRectangle(cornerRadius: 5)
-                            .fill(Color(nsColor: ImageEditorTheme.window))
-                    )
-                    .accessibilityIdentifier(
-                        "image-editor-preview-pinned-sample-\(pinnedSample.number)"
-                    )
                 }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 8)
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 8)
+            if let measurement = pinnedPixelSamples.latestMeasurement {
+                HStack(spacing: 6) {
+                    Image(systemName: "ruler")
+                    Text(measurement.text)
+                        .monospacedDigit()
+                    Spacer()
+                }
+                .font(.system(size: 11))
+                .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                .padding(.horizontal, 16)
+                .padding(.bottom, 8)
+                .accessibilityIdentifier("image-editor-preview-pinned-sample-measurement")
+            }
         }
         .accessibilityIdentifier("image-editor-preview-pinned-samples")
     }
