@@ -337,7 +337,7 @@ struct ImageEditorPreviewPixelSample {
 
 struct ImageEditorPreviewPinnedSample: Identifiable {
     let number: Int
-    let sample: ImageEditorPreviewPixelSample
+    var sample: ImageEditorPreviewPixelSample
     var readoutMode: ImageEditorPreviewPixelReadoutMode
 
     var id: Int { number }
@@ -462,6 +462,18 @@ struct ImageEditorPreviewPinnedSamples {
     }
 
     @discardableResult
+    mutating func move(
+        number: Int,
+        to sample: ImageEditorPreviewPixelSample
+    ) -> Bool {
+        guard let index = entries.firstIndex(where: { $0.number == number }),
+              entries[index].sample.point != sample.point
+        else { return false }
+        entries[index].sample = sample
+        return true
+    }
+
+    @discardableResult
     mutating func remove(number: Int) -> Bool {
         guard let index = entries.firstIndex(where: { $0.number == number }) else {
             return false
@@ -498,6 +510,37 @@ struct ImageEditorPreviewPinnedSamples {
             }
         }
         return nil
+    }
+}
+
+struct ImageEditorPreviewMarkerDragTarget {
+    private(set) var number: Int?
+    private var didResolve = false
+    private var startLocation: CGPoint?
+
+    mutating func resolve(
+        startingAt location: CGPoint,
+        samples: ImageEditorPreviewPinnedSamples,
+        displayedSize: CGSize,
+        canvasSize: CGSize
+    ) -> Int? {
+        if didResolve, startLocation == location {
+            return number
+        }
+        didResolve = true
+        startLocation = location
+        number = samples.markerNumber(
+            at: location,
+            displayedSize: displayedSize,
+            canvasSize: canvasSize
+        )
+        return number
+    }
+
+    mutating func reset() {
+        number = nil
+        didResolve = false
+        startLocation = nil
     }
 }
 
@@ -759,9 +802,12 @@ private struct ImageEditorPreviewBackdropView: View {
 }
 
 struct ImageEditorPreviewPanel: View {
+    private static let markerDragMinimumDistance: CGFloat = 3
+
     @ObservedObject var viewModel: ImageEditorViewModel
     @State private var pixelSample: ImageEditorPreviewPixelSample?
     @State private var pinnedPixelSamples = ImageEditorPreviewPinnedSamples()
+    @State private var markerDragTarget = ImageEditorPreviewMarkerDragTarget()
     @State private var measurementSelection = ImageEditorPreviewSampleMeasurementSelection()
     @State private var pixelSampleSize: ImageEditorPreviewPixelSampleSize = .point
     @State private var pixelReadoutMode: ImageEditorPreviewPixelReadoutMode = .hexadecimalRGBA
@@ -954,17 +1000,20 @@ struct ImageEditorPreviewPanel: View {
         .background(Color(nsColor: ImageEditorTheme.panel))
         .onChange(of: viewModel.previewZoomMode) { _ in
             pixelSample = nil
+            markerDragTarget.reset()
         }
         .onChange(of: pixelSampleSize) { _ in
             pixelSample = nil
             pinnedPixelSamples.removeAll()
             measurementSelection.reset()
+            markerDragTarget.reset()
             resetCopyFeedback()
         }
         .onDisappear {
             pixelSample = nil
             pinnedPixelSamples.removeAll()
             measurementSelection.reset()
+            markerDragTarget.reset()
             resetCopyFeedback()
         }
     }
@@ -1177,6 +1226,17 @@ struct ImageEditorPreviewPanel: View {
         }
     }
 
+    private func movePinnedSample(
+        number: Int,
+        to sample: ImageEditorPreviewPixelSample
+    ) {
+        guard pinnedPixelSamples.move(number: number, to: sample) else { return }
+        pixelSample = sample
+        if copiedPinnedSampleNumber == number {
+            resetCopyFeedback()
+        }
+    }
+
     private func previewCanvas(
         size: CGSize,
         interpolation: Image.Interpolation
@@ -1283,6 +1343,32 @@ struct ImageEditorPreviewPanel: View {
                 pixelSample = nil
             }
         }
+        .simultaneousGesture(
+            DragGesture(
+                minimumDistance: Self.markerDragMinimumDistance,
+                coordinateSpace: .local
+            )
+            .onChanged { value in
+                guard let markerNumber = markerDragTarget.resolve(
+                    startingAt: value.startLocation,
+                    samples: pinnedPixelSamples,
+                    displayedSize: size,
+                    canvasSize: viewModel.document.canvasSize
+                ),
+                      let sample = ImageEditorPreviewPixelSample.sample(
+                        image: viewModel.previewImage,
+                        location: value.location,
+                        displayedSize: size,
+                        canvasSize: viewModel.document.canvasSize,
+                        sampleSize: pixelSampleSize
+                      )
+                else { return }
+                movePinnedSample(number: markerNumber, to: sample)
+            }
+            .onEnded { _ in
+                markerDragTarget.reset()
+            }
+        )
         .simultaneousGesture(
             SpatialTapGesture().onEnded { value in
                 let markerNumber = pinnedPixelSamples.markerNumber(

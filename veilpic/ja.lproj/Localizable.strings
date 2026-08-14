@@ -422,7 +422,7 @@
 "imageEditor.preview.dimensions" = "%d × %d px";
 "imageEditor.preview.sample" = "X %d  Y %d · %@";
 "imageEditor.preview.sample.empty" = "画像上で確認し、クリックで固定";
-"imageEditor.preview.sample.pinHelp" = "画像をクリックして固定、マーカーをクリックして測定、Optionクリックで削除";
+"imageEditor.preview.sample.pinHelp" = "画像をクリックして固定、マーカーをクリックして測定、ドラッグして再サンプル、Optionクリックで削除";
 "imageEditor.preview.sample.pinned" = "固定したピクセルサンプル";
 "imageEditor.preview.sample.number" = "#%d";
 "imageEditor.preview.sample.measurement" = "#%d → #%d · ΔX %@ px · ΔY %@ px · 距離 %@ px";

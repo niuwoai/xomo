@@ -290,6 +290,108 @@ struct ImageEditorExportFormatTests {
         #expect(pinnedSamples.latest == nil)
     }
 
+    @Test func previewPinnedSamplesMoveStableMarkerWithoutChangingItsIdentity() throws {
+        var pinnedSamples = ImageEditorPreviewPinnedSamples()
+        let first = ImageEditorPreviewPixelSample(
+            point: CGPoint(x: 2, y: 3),
+            color: .red
+        )
+        let second = ImageEditorPreviewPixelSample(
+            point: CGPoint(x: 6, y: 7),
+            color: .green
+        )
+        let third = ImageEditorPreviewPixelSample(
+            point: CGPoint(x: 10, y: 12),
+            color: .blue
+        )
+        _ = pinnedSamples.pin(first, readoutMode: .rgb)
+        _ = pinnedSamples.pin(second, readoutMode: .cmyk)
+        _ = pinnedSamples.pin(third, readoutMode: .hsb)
+
+        let missingMove = pinnedSamples.move(
+            number: 4,
+            to: ImageEditorPreviewPixelSample(point: CGPoint(x: 8, y: 9), color: .yellow)
+        )
+        let samePixelMove = pinnedSamples.move(
+            number: 2,
+            to: ImageEditorPreviewPixelSample(point: second.point, color: .yellow)
+        )
+        let moved = pinnedSamples.move(
+            number: 2,
+            to: ImageEditorPreviewPixelSample(point: CGPoint(x: 14, y: 15), color: .yellow)
+        )
+
+        #expect(!missingMove)
+        #expect(!samePixelMove)
+        #expect(moved)
+        #expect(pinnedSamples.entries.map(\.number) == [1, 2, 3])
+        #expect(pinnedSamples.entries.map(\.readoutMode) == [.rgb, .cmyk, .hsb])
+        let movedSample = try #require(
+            pinnedSamples.entries.first(where: { $0.number == 2 })
+        )
+        #expect(movedSample.sample.point == CGPoint(x: 14, y: 15))
+        #expect(movedSample.sample.color.isEqual(NSColor.yellow))
+        #expect(pinnedSamples.latest?.number == 3)
+        #expect(pinnedSamples.latest?.sample.point == third.point)
+
+        var selection = ImageEditorPreviewSampleMeasurementSelection()
+        selection.setFrom(1, in: pinnedSamples)
+        selection.setTo(2, in: pinnedSamples)
+        let measurement = try #require(selection.measurement(in: pinnedSamples))
+        #expect(measurement.deltaX == 12)
+        #expect(measurement.deltaY == 12)
+
+        var dragTarget = ImageEditorPreviewMarkerDragTarget()
+        let displayedSize = CGSize(width: 200, height: 200)
+        let canvasSize = CGSize(width: 20, height: 20)
+        let firstResolvedNumber = dragTarget.resolve(
+            startingAt: CGPoint(x: 145, y: 155),
+            samples: pinnedSamples,
+            displayedSize: displayedSize,
+            canvasSize: canvasSize
+        )
+        #expect(firstResolvedNumber == 2)
+        _ = pinnedSamples.move(
+            number: 2,
+            to: ImageEditorPreviewPixelSample(point: CGPoint(x: 1, y: 1), color: .orange)
+        )
+        let retainedNumber = dragTarget.resolve(
+            startingAt: CGPoint(x: 145, y: 155),
+            samples: pinnedSamples,
+            displayedSize: displayedSize,
+            canvasSize: canvasSize
+        )
+        #expect(retainedNumber == 2)
+
+        dragTarget.reset()
+        let blankStart = dragTarget.resolve(
+            startingAt: CGPoint(x: 195, y: 195),
+            samples: pinnedSamples,
+            displayedSize: displayedSize,
+            canvasSize: canvasSize
+        )
+        _ = pinnedSamples.move(
+            number: 2,
+            to: ImageEditorPreviewPixelSample(point: CGPoint(x: 19, y: 19), color: .purple)
+        )
+        let blankRemainsUnresolved = dragTarget.resolve(
+            startingAt: CGPoint(x: 195, y: 195),
+            samples: pinnedSamples,
+            displayedSize: displayedSize,
+            canvasSize: canvasSize
+        )
+        #expect(blankStart == nil)
+        #expect(blankRemainsUnresolved == nil)
+
+        let nextGestureResolvesItsOwnStart = dragTarget.resolve(
+            startingAt: CGPoint(x: 25, y: 35),
+            samples: pinnedSamples,
+            displayedSize: displayedSize,
+            canvasSize: canvasSize
+        )
+        #expect(nextGestureResolvesItsOwnStart == 1)
+    }
+
     @Test func previewPinnedSampleMarkersResolveTheTopmostHitWithoutPinningAgain() {
         var pinnedSamples = ImageEditorPreviewPinnedSamples()
         let first = pinnedSamples.pin(
