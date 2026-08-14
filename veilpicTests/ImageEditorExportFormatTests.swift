@@ -500,6 +500,44 @@ struct ImageEditorExportFormatTests {
         #expect(invalidGeometry == freeProposal)
     }
 
+    @Test func previewMarkerCursorExpressesMoveAndOptionRemovalActions() {
+        let move = ImageEditorCanvasCursor.objectMoveCursor()
+        let removal = ImageEditorCanvasCursor.colorSamplerRemovalCursor()
+
+        #expect(ImageEditorPreviewMarkerCursor.cursor(
+            hoveredMarkerNumber: nil,
+            draggedMarkerNumber: nil,
+            modifierFlags: [.option]
+        ) === NSCursor.arrow)
+        #expect(ImageEditorPreviewMarkerCursor.cursor(
+            hoveredMarkerNumber: 2,
+            draggedMarkerNumber: nil,
+            modifierFlags: []
+        ) === move)
+        #expect(ImageEditorPreviewMarkerCursor.cursor(
+            hoveredMarkerNumber: 2,
+            draggedMarkerNumber: nil,
+            modifierFlags: [.shift]
+        ) === move)
+        #expect(ImageEditorPreviewMarkerCursor.cursor(
+            hoveredMarkerNumber: 2,
+            draggedMarkerNumber: nil,
+            modifierFlags: [.option]
+        ) === removal)
+        #expect(ImageEditorPreviewMarkerCursor.cursor(
+            hoveredMarkerNumber: 2,
+            draggedMarkerNumber: 2,
+            modifierFlags: [.option]
+        ) === move)
+        #expect(ImageEditorPreviewMarkerCursor.cursor(
+            hoveredMarkerNumber: nil,
+            draggedMarkerNumber: 2,
+            modifierFlags: []
+        ) === move)
+        #expect(removal !== NSCursor.arrow)
+        #expect(removal !== move)
+    }
+
     @Test func previewPinnedSampleMarkersResolveTheTopmostHitWithoutPinningAgain() {
         var pinnedSamples = ImageEditorPreviewPinnedSamples()
         let first = pinnedSamples.pin(

@@ -601,6 +601,23 @@ enum ImageEditorPreviewMarkerTapAction: Equatable {
     }
 }
 
+enum ImageEditorPreviewMarkerCursor {
+    static func cursor(
+        hoveredMarkerNumber: Int?,
+        draggedMarkerNumber: Int?,
+        modifierFlags: NSEvent.ModifierFlags
+    ) -> NSCursor {
+        if draggedMarkerNumber != nil {
+            return ImageEditorCanvasCursor.objectMoveCursor()
+        }
+        guard hoveredMarkerNumber != nil else { return .arrow }
+        if modifierFlags.contains(.option) {
+            return ImageEditorCanvasCursor.colorSamplerRemovalCursor()
+        }
+        return ImageEditorCanvasCursor.objectMoveCursor()
+    }
+}
+
 struct ImageEditorPreviewSampleMeasurementSelection {
     private(set) var fromNumber: Int?
     private(set) var toNumber: Int?
@@ -848,6 +865,8 @@ struct ImageEditorPreviewPanel: View {
     @State private var pixelSample: ImageEditorPreviewPixelSample?
     @State private var pinnedPixelSamples = ImageEditorPreviewPinnedSamples()
     @State private var markerDragTarget = ImageEditorPreviewMarkerDragTarget()
+    @State private var hoveredPinnedSampleNumber: Int?
+    @State private var previewModifierFlags: NSEvent.ModifierFlags = []
     @State private var measurementSelection = ImageEditorPreviewSampleMeasurementSelection()
     @State private var pixelSampleSize: ImageEditorPreviewPixelSampleSize = .point
     @State private var pixelReadoutMode: ImageEditorPreviewPixelReadoutMode = .hexadecimalRGBA
@@ -858,6 +877,14 @@ struct ImageEditorPreviewPanel: View {
         ImageEditorPreviewPixelSample.resolved(
             live: pixelSample,
             pinned: pinnedPixelSamples.latest?.sample
+        )
+    }
+
+    private var previewMarkerCursor: NSCursor {
+        ImageEditorPreviewMarkerCursor.cursor(
+            hoveredMarkerNumber: hoveredPinnedSampleNumber,
+            draggedMarkerNumber: markerDragTarget.number,
+            modifierFlags: previewModifierFlags
         )
     }
 
@@ -1015,6 +1042,7 @@ struct ImageEditorPreviewPanel: View {
                         pinnedPixelSamples.removeAll()
                         measurementSelection.reset()
                         pixelSample = nil
+                        hoveredPinnedSampleNumber = nil
                         resetCopyFeedback()
                     } label: {
                         Image(systemName: "xmark.circle.fill")
@@ -1041,12 +1069,16 @@ struct ImageEditorPreviewPanel: View {
         .onChange(of: viewModel.previewZoomMode) { _ in
             pixelSample = nil
             markerDragTarget.reset()
+            hoveredPinnedSampleNumber = nil
+            previewModifierFlags = []
         }
         .onChange(of: pixelSampleSize) { _ in
             pixelSample = nil
             pinnedPixelSamples.removeAll()
             measurementSelection.reset()
             markerDragTarget.reset()
+            hoveredPinnedSampleNumber = nil
+            previewModifierFlags = []
             resetCopyFeedback()
         }
         .onDisappear {
@@ -1054,6 +1086,8 @@ struct ImageEditorPreviewPanel: View {
             pinnedPixelSamples.removeAll()
             measurementSelection.reset()
             markerDragTarget.reset()
+            hoveredPinnedSampleNumber = nil
+            previewModifierFlags = []
             resetCopyFeedback()
         }
     }
@@ -1264,6 +1298,9 @@ struct ImageEditorPreviewPanel: View {
         if copiedPinnedSampleNumber == number {
             resetCopyFeedback()
         }
+        if hoveredPinnedSampleNumber == number {
+            hoveredPinnedSampleNumber = nil
+        }
     }
 
     private func movePinnedSample(
@@ -1366,12 +1403,22 @@ struct ImageEditorPreviewPanel: View {
                     .accessibilityHidden(true)
                 }
             }
+            ImageEditorCursorRectView(cursor: previewMarkerCursor)
+                .frame(width: size.width, height: size.height)
+                .allowsHitTesting(false)
+                .accessibilityHidden(true)
         }
         .frame(width: size.width, height: size.height)
         .contentShape(Rectangle())
         .onContinuousHover { phase in
             switch phase {
             case let .active(location):
+                hoveredPinnedSampleNumber = pinnedPixelSamples.markerNumber(
+                    at: location,
+                    displayedSize: size,
+                    canvasSize: viewModel.document.canvasSize
+                )
+                previewModifierFlags = NSEvent.modifierFlags.intersection([.shift, .option])
                 pixelSample = ImageEditorPreviewPixelSample.sample(
                     image: viewModel.previewImage,
                     location: location,
@@ -1381,6 +1428,8 @@ struct ImageEditorPreviewPanel: View {
                 )
             case .ended:
                 pixelSample = nil
+                hoveredPinnedSampleNumber = nil
+                previewModifierFlags = []
             }
         }
         .simultaneousGesture(
@@ -1389,6 +1438,7 @@ struct ImageEditorPreviewPanel: View {
                 coordinateSpace: .local
             )
             .onChanged { value in
+                previewModifierFlags = NSEvent.modifierFlags.intersection([.shift, .option])
                 guard let markerNumber = markerDragTarget.resolve(
                     startingAt: value.startLocation,
                     samples: pinnedPixelSamples,
@@ -1413,8 +1463,14 @@ struct ImageEditorPreviewPanel: View {
                 ) else { return }
                 movePinnedSample(number: markerNumber, to: sample)
             }
-            .onEnded { _ in
+            .onEnded { value in
                 markerDragTarget.reset()
+                hoveredPinnedSampleNumber = pinnedPixelSamples.markerNumber(
+                    at: value.location,
+                    displayedSize: size,
+                    canvasSize: viewModel.document.canvasSize
+                )
+                previewModifierFlags = NSEvent.modifierFlags.intersection([.shift, .option])
             }
         )
         .simultaneousGesture(

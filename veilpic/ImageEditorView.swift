@@ -11719,7 +11719,7 @@ enum ImageEditorCanvasCursor {
     /// Photoshop exposes Option-click as the familiar way to remove an
     /// existing color sampler. Keep the precision crosshair and add a compact
     /// minus badge only while the pointer is over a real sampler point.
-    private static func colorSamplerRemovalCursor() -> NSCursor {
+    static func colorSamplerRemovalCursor() -> NSCursor {
         let cacheKey = "color-sampler:remove"
         if let cachedCursor = cursorCache[cacheKey] {
             return cachedCursor
