@@ -13,7 +13,8 @@ extension ImageEditorViewModel {
     func magicSelection(
         at point: CGPoint,
         tolerance: CGFloat? = nil,
-        contiguous: Bool? = nil
+        contiguous: Bool? = nil,
+        samplingImage: NSImage? = nil
     ) -> ImageEditorSelection? {
         let canvasBounds = CGRect(origin: .zero, size: document.canvasSize)
         guard point.x.isFinite,
@@ -21,26 +22,14 @@ extension ImageEditorViewModel {
               canvasBounds.contains(point)
         else { return nil }
         let effectiveTolerance = max(0, min(1, tolerance ?? self.tolerance))
-        guard let selection = document.compositedImage.magicSelection(
+        let image = samplingImage ?? document.compositedImage
+        guard let selection = image.magicSelection(
             at: point,
             canvasSize: document.canvasSize,
             threshold: effectiveTolerance,
             contiguous: contiguous ?? isMagicWandContiguous
-        ) else {
-            return fallbackMagicSelection(at: point)
-        }
+        ) else { return nil }
         return selection
-    }
-
-    private func fallbackMagicSelection(at point: CGPoint) -> ImageEditorSelection {
-        let side = max(24, min(document.canvasSize.width, document.canvasSize.height) * 0.18)
-        let rect = CGRect(
-            x: point.x - side / 2,
-            y: point.y - side / 2,
-            width: side,
-            height: side
-        ).intersection(CGRect(origin: .zero, size: document.canvasSize))
-        return .rectangle(rect)
     }
 }
 

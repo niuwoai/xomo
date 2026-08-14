@@ -6847,6 +6847,30 @@ struct veilpicTests {
     }
 
     @MainActor
+    @Test func magicWandRenderFailureDoesNotInventFallbackSelection() throws {
+        let image = testBitmapImage(
+            size: NSSize(width: 80, height: 60),
+            background: .systemBlue,
+            fills: [(CGRect(x: 5, y: 10, width: 20, height: 40), .systemRed)]
+        )
+        let viewModel = editableRasterViewModel(image: image)
+        viewModel.createRectSelection(from: CGPoint(x: 10, y: 10), to: CGPoint(x: 30, y: 30))
+        let selectionBeforeFailure = try #require(viewModel.document.selection)
+        let historyCountBeforeFailure = viewModel.document.history.count
+        let undoCountBeforeFailure = viewModel.undoStack.count
+
+        viewModel.createMagicSelection(
+            at: CGPoint(x: 15, y: 30),
+            samplingImage: NSImage(size: image.size)
+        )
+
+        #expect(viewModel.document.selection == selectionBeforeFailure)
+        #expect(viewModel.document.history.count == historyCountBeforeFailure)
+        #expect(viewModel.undoStack.count == undoCountBeforeFailure)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.operationFailed"))
+    }
+
+    @MainActor
     @Test func repeatedMagicWandSelectionDoesNotCreateNoOpHistory() throws {
         let image = testBitmapImage(
             size: NSSize(width: 80, height: 60),
