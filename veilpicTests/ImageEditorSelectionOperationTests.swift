@@ -789,6 +789,38 @@ struct ImageEditorSelectionOperationTests {
         #expect(viewModel.document.selection?.bounds == CGRect(x: 2, y: 2, width: 5, height: 4))
     }
 
+    @Test func removingOnlySelectionSpeckleCommitsEmptyResultAndRoundTripsHistory() throws {
+        let canvasSize = NSSize(width: 8, height: 8)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: testImage(size: canvasSize)) { _ in }
+        var alpha = [UInt8](repeating: 0, count: Int(canvasSize.width * canvasSize.height))
+        alpha[3 * Int(canvasSize.width) + 4] = 255
+        let originalSelection = ImageEditorSelection.raster(
+            mask: ImageEditorSelectionMask(width: 8, height: 8, alpha: alpha),
+            bounds: CGRect(x: 4, y: 3, width: 1, height: 1)
+        )
+        viewModel.document.selection = originalSelection
+        let historyCountBeforeCleanup = viewModel.document.history.count
+
+        viewModel.removeSelectionSpeckles(maximumArea: 1)
+
+        #expect(viewModel.document.selection == nil)
+        #expect(viewModel.document.history.count == historyCountBeforeCleanup + 1)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.selectionRemoveSpeckles"))
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionEmpty"))
+        #expect(viewModel.canUndo)
+
+        viewModel.undo()
+
+        #expect(viewModel.document.selection == originalSelection)
+        #expect(viewModel.document.history.count == historyCountBeforeCleanup)
+        #expect(viewModel.canRedo)
+
+        viewModel.redo()
+
+        #expect(viewModel.document.selection == nil)
+        #expect(viewModel.document.history.count == historyCountBeforeCleanup + 1)
+    }
+
     @Test func imageEditorMovesSelectionMaskWithoutMovingPixels() async throws {
         let canvasSize = NSSize(width: 8, height: 6)
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: testImage(size: canvasSize)) { _ in }

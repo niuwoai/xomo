@@ -336,13 +336,10 @@ extension ImageEditorViewModel {
             return
         }
         let effectiveMaximumArea = effectiveSelectionRadius(maximumArea, maximum: 64)
-        guard let modified = selection.removedSpeckles(
+        let modified = selection.removedSpeckles(
             maximumArea: effectiveMaximumArea,
             canvasSize: document.canvasSize
-        ) else {
-            statusText = L10n.text("imageEditor.status.selectionEmpty")
-            return
-        }
+        )
         guard !selectionsAreEquivalent(selection, modified) else {
             statusText = L10n.text("imageEditor.status.selectionUnchanged")
             return
@@ -351,7 +348,9 @@ extension ImageEditorViewModel {
         pushUndo()
         document.selection = modified
         appendHistory(L10n.text("imageEditor.history.selectionRemoveSpeckles"))
-        statusText = L10n.format("imageEditor.status.selectionSpecklesRemoved", effectiveMaximumArea)
+        statusText = modified == nil
+            ? L10n.text("imageEditor.status.selectionEmpty")
+            : L10n.format("imageEditor.status.selectionSpecklesRemoved", effectiveMaximumArea)
     }
 
     func moveSelectionLeft() {
