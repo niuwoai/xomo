@@ -378,6 +378,64 @@ struct ImageEditorExportFormatTests {
         #expect(ImageEditorPreviewSampleMeasurement(from: invalidSample, to: invalidSample) == nil)
     }
 
+    @Test func previewPinnedSampleMeasurementSelectsAnyStablePair() throws {
+        var pinnedSamples = ImageEditorPreviewPinnedSamples()
+        for point in [
+            CGPoint(x: 0, y: 0),
+            CGPoint(x: 3, y: 4),
+            CGPoint(x: 10, y: 10),
+            CGPoint(x: 12, y: 15)
+        ] {
+            let sample = ImageEditorPreviewPixelSample(point: point, color: .black)
+            let pinnedSample = pinnedSamples.pin(sample)
+            #expect(pinnedSample != nil)
+        }
+
+        var selection = ImageEditorPreviewSampleMeasurementSelection()
+        let selectedLatest = selection.selectLatest(in: pinnedSamples)
+        #expect(selectedLatest)
+        #expect(selection.fromNumber == 3)
+        #expect(selection.toNumber == 4)
+
+        let selectedFirst = selection.setFrom(1, in: pinnedSamples)
+        let selectedSecond = selection.setTo(2, in: pinnedSamples)
+        #expect(selectedFirst)
+        #expect(selectedSecond)
+        #expect(selection.fromNumber == 1)
+        #expect(selection.toNumber == 2)
+        let manualMeasurement = try #require(selection.measurement(in: pinnedSamples))
+        #expect(manualMeasurement.deltaX == 3)
+        #expect(manualMeasurement.deltaY == 4)
+        #expect(manualMeasurement.distance == 5)
+
+        let swappedEndpoints = selection.setFrom(2, in: pinnedSamples)
+        #expect(swappedEndpoints)
+        #expect(selection.fromNumber == 2)
+        #expect(selection.toNumber == 1)
+        let reversedMeasurement = try #require(selection.measurement(in: pinnedSamples))
+        #expect(reversedMeasurement.deltaX == -3)
+        #expect(reversedMeasurement.deltaY == -4)
+
+        let rejectedMissing = selection.setTo(99, in: pinnedSamples)
+        #expect(!rejectedMissing)
+        #expect(selection.fromNumber == 2)
+        #expect(selection.toNumber == 1)
+
+        let removedSelected = pinnedSamples.remove(number: 2)
+        let reconciled = selection.reconcile(in: pinnedSamples)
+        #expect(removedSelected)
+        #expect(reconciled)
+        #expect(selection.fromNumber == 3)
+        #expect(selection.toNumber == 4)
+
+        pinnedSamples.removeAll()
+        let clearedSelection = selection.reconcile(in: pinnedSamples)
+        #expect(clearedSelection)
+        #expect(selection.fromNumber == nil)
+        #expect(selection.toNumber == nil)
+        #expect(selection.measurement(in: pinnedSamples) == nil)
+    }
+
     @Test func previewPixelInspectionAveragesNeighborhoodAndClipsCanvasEdges() throws {
         let canvasSize = CGSize(width: 3, height: 1)
         let image = try #require(NSImage.rendered(size: canvasSize) { _ in

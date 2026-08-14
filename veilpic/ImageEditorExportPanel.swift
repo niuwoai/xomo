@@ -384,6 +384,15 @@ struct ImageEditorPreviewSampleMeasurement {
         )
     }
 
+    var valuesText: String {
+        L10n.format(
+            "imageEditor.preview.sample.measurementValues",
+            deltaXText,
+            deltaYText,
+            distanceText
+        )
+    }
+
     var deltaXText: String {
         Self.signedText(deltaX)
     }
@@ -466,6 +475,89 @@ struct ImageEditorPreviewPinnedSamples {
     }
 }
 
+struct ImageEditorPreviewSampleMeasurementSelection {
+    private(set) var fromNumber: Int?
+    private(set) var toNumber: Int?
+
+    @discardableResult
+    mutating func selectLatest(in samples: ImageEditorPreviewPinnedSamples) -> Bool {
+        let previous = (fromNumber, toNumber)
+        guard samples.entries.count >= 2 else {
+            reset()
+            return previous.0 != nil || previous.1 != nil
+        }
+        fromNumber = samples.entries[samples.entries.count - 2].number
+        toNumber = samples.entries[samples.entries.count - 1].number
+        return previous.0 != fromNumber || previous.1 != toNumber
+    }
+
+    @discardableResult
+    mutating func reconcile(in samples: ImageEditorPreviewPinnedSamples) -> Bool {
+        let numbers = Set(samples.entries.map(\.number))
+        if let fromNumber,
+           let toNumber,
+           fromNumber != toNumber,
+           numbers.contains(fromNumber),
+           numbers.contains(toNumber) {
+            return false
+        }
+        return selectLatest(in: samples)
+    }
+
+    @discardableResult
+    mutating func setFrom(
+        _ number: Int,
+        in samples: ImageEditorPreviewPinnedSamples
+    ) -> Bool {
+        guard samples.entries.count >= 2,
+              samples.entries.contains(where: { $0.number == number })
+        else { return false }
+        let didReconcile = reconcile(in: samples)
+        guard fromNumber != number else { return didReconcile }
+        let previousFrom = fromNumber
+        if toNumber == number {
+            toNumber = previousFrom
+        }
+        fromNumber = number
+        return true
+    }
+
+    @discardableResult
+    mutating func setTo(
+        _ number: Int,
+        in samples: ImageEditorPreviewPinnedSamples
+    ) -> Bool {
+        guard samples.entries.count >= 2,
+              samples.entries.contains(where: { $0.number == number })
+        else { return false }
+        let didReconcile = reconcile(in: samples)
+        guard toNumber != number else { return didReconcile }
+        let previousTo = toNumber
+        if fromNumber == number {
+            fromNumber = previousTo
+        }
+        toNumber = number
+        return true
+    }
+
+    func measurement(
+        in samples: ImageEditorPreviewPinnedSamples
+    ) -> ImageEditorPreviewSampleMeasurement? {
+        guard let fromNumber,
+              let toNumber,
+              fromNumber != toNumber,
+              let from = samples.entries.first(where: { $0.number == fromNumber }),
+              let to = samples.entries.first(where: { $0.number == toNumber })
+        else { return nil }
+        return ImageEditorPreviewSampleMeasurement(from: from, to: to)
+    }
+
+    mutating func reset() {
+        fromNumber = nil
+        toNumber = nil
+    }
+}
+
 private struct ImageEditorPreviewBackdropView: View {
     let backdrop: ImageEditorPreviewBackdrop
 
@@ -501,6 +593,7 @@ struct ImageEditorPreviewPanel: View {
     @ObservedObject var viewModel: ImageEditorViewModel
     @State private var pixelSample: ImageEditorPreviewPixelSample?
     @State private var pinnedPixelSamples = ImageEditorPreviewPinnedSamples()
+    @State private var measurementSelection = ImageEditorPreviewSampleMeasurementSelection()
     @State private var pixelSampleSize: ImageEditorPreviewPixelSampleSize = .point
     @State private var pixelReadoutMode: ImageEditorPreviewPixelReadoutMode = .hexadecimalRGBA
     @State private var copiedPinnedSampleNumber: Int?
@@ -665,6 +758,7 @@ struct ImageEditorPreviewPanel: View {
                     .accessibilityIdentifier("image-editor-preview-copy-pinned-sample")
                     Button {
                         pinnedPixelSamples.removeAll()
+                        measurementSelection.reset()
                         pixelSample = nil
                         resetCopyFeedback()
                     } label: {
@@ -695,11 +789,13 @@ struct ImageEditorPreviewPanel: View {
         .onChange(of: pixelSampleSize) { _ in
             pixelSample = nil
             pinnedPixelSamples.removeAll()
+            measurementSelection.reset()
             resetCopyFeedback()
         }
         .onDisappear {
             pixelSample = nil
             pinnedPixelSamples.removeAll()
+            measurementSelection.reset()
             resetCopyFeedback()
         }
     }
@@ -765,7 +861,9 @@ struct ImageEditorPreviewPanel: View {
                                 "image-editor-preview-copy-pinned-sample-\(pinnedSample.number)"
                             )
                             Button {
-                                pinnedPixelSamples.remove(number: pinnedSample.number)
+                                if pinnedPixelSamples.remove(number: pinnedSample.number) {
+                                    measurementSelection.reconcile(in: pinnedPixelSamples)
+                                }
                                 if copiedPinnedSampleNumber == pinnedSample.number {
                                     resetCopyFeedback()
                                 }
@@ -793,11 +891,35 @@ struct ImageEditorPreviewPanel: View {
                 .padding(.horizontal, 16)
                 .padding(.vertical, 8)
             }
-            if let measurement = pinnedPixelSamples.latestMeasurement {
+            if let measurement = measurementSelection.measurement(in: pinnedPixelSamples) {
                 HStack(spacing: 6) {
                     Image(systemName: "ruler")
-                    Text(measurement.text)
+                    Picker(
+                        L10n.text("imageEditor.preview.sample.measurementFrom"),
+                        selection: measurementFromBinding
+                    ) {
+                        measurementSampleOptions
+                    }
+                    .labelsHidden()
+                    .pickerStyle(.menu)
+                    .controlSize(.mini)
+                    .fixedSize()
+                    .accessibilityIdentifier("image-editor-preview-measurement-from")
+                    Text("→")
+                    Picker(
+                        L10n.text("imageEditor.preview.sample.measurementTo"),
+                        selection: measurementToBinding
+                    ) {
+                        measurementSampleOptions
+                    }
+                    .labelsHidden()
+                    .pickerStyle(.menu)
+                    .controlSize(.mini)
+                    .fixedSize()
+                    .accessibilityIdentifier("image-editor-preview-measurement-to")
+                    Text(measurement.valuesText)
                         .monospacedDigit()
+                        .accessibilityLabel(measurement.text)
                     Spacer()
                 }
                 .font(.system(size: 11))
@@ -840,6 +962,39 @@ struct ImageEditorPreviewPanel: View {
                 if pinnedPixelSamples.setReadoutMode(readoutMode, for: number) {
                     resetCopyFeedback()
                 }
+            }
+        )
+    }
+
+    private var measurementSampleOptions: some View {
+        ForEach(pinnedPixelSamples.entries) { pinnedSample in
+            Text(L10n.format("imageEditor.preview.sample.number", pinnedSample.number))
+                .tag(pinnedSample.number)
+        }
+    }
+
+    private var measurementFromBinding: Binding<Int> {
+        Binding(
+            get: {
+                measurementSelection.fromNumber
+                    ?? pinnedPixelSamples.entries.first?.number
+                    ?? 0
+            },
+            set: { number in
+                measurementSelection.setFrom(number, in: pinnedPixelSamples)
+            }
+        )
+    }
+
+    private var measurementToBinding: Binding<Int> {
+        Binding(
+            get: {
+                measurementSelection.toNumber
+                    ?? pinnedPixelSamples.entries.last?.number
+                    ?? 0
+            },
+            set: { number in
+                measurementSelection.setTo(number, in: pinnedPixelSamples)
             }
         )
     }
@@ -916,8 +1071,9 @@ struct ImageEditorPreviewPanel: View {
                     canvasSize: viewModel.document.canvasSize,
                     sampleSize: pixelSampleSize
                 )
-                if let sample {
-                    _ = pinnedPixelSamples.pin(sample, readoutMode: pixelReadoutMode)
+                if let sample,
+                   pinnedPixelSamples.pin(sample, readoutMode: pixelReadoutMode) != nil {
+                    measurementSelection.selectLatest(in: pinnedPixelSamples)
                 }
                 pixelSample = sample
                 resetCopyFeedback()

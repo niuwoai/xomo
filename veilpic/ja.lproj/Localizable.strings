@@ -426,6 +426,9 @@
 "imageEditor.preview.sample.pinned" = "固定したピクセルサンプル";
 "imageEditor.preview.sample.number" = "#%d";
 "imageEditor.preview.sample.measurement" = "#%d → #%d · ΔX %@ px · ΔY %@ px · 距離 %@ px";
+"imageEditor.preview.sample.measurementValues" = "ΔX %@ px · ΔY %@ px · 距離 %@ px";
+"imageEditor.preview.sample.measurementFrom" = "測定元のサンプル";
+"imageEditor.preview.sample.measurementTo" = "測定先のサンプル";
 "imageEditor.preview.sample.copy" = "カラー値をコピー";
 "imageEditor.preview.sample.copied" = "カラー値をコピーしました";
 "imageEditor.preview.sample.clearPinned" = "固定サンプルを解除";
