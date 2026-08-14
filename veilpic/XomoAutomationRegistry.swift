@@ -255,12 +255,13 @@ final class XomoAutomationRegistry {
             else {
                 throw XomoAutomationCallError.invalidArgument("Magic-wand point is outside the canvas")
             }
+            let tolerance = try selectionTolerance(arguments["tolerance"])
             if let contiguous = arguments["contiguous"]?.boolValue {
                 viewModel.isMagicWandContiguous = contiguous
             }
             guard viewModel.createMagicSelection(
                 at: point,
-                tolerance: selectionTolerance(arguments["tolerance"]),
+                tolerance: tolerance,
                 contiguous: arguments["contiguous"]?.boolValue
             ) else {
                 throw XomoAutomationCallError.operationFailed("Magic-wand sampling failed")
@@ -275,7 +276,7 @@ final class XomoAutomationRegistry {
             }
             guard viewModel.createQuickSelection(
                 points: points,
-                tolerance: selectionTolerance(arguments["tolerance"])
+                tolerance: try selectionTolerance(arguments["tolerance"])
             ) else {
                 throw XomoAutomationCallError.operationFailed("Quick-selection sampling failed")
             }
@@ -4644,9 +4645,9 @@ final class XomoAutomationRegistry {
         case "save": viewModel.saveCurrentSelection()
         case "reselect": viewModel.reselectSelection()
         case "restoreSaved": viewModel.restoreSavedSelection()
-        case "colorRange": viewModel.selectColorRangeFromForeground(tolerance: selectionTolerance(arguments["tolerance"]))
-        case "similarColors": viewModel.selectSimilarColors(tolerance: selectionTolerance(arguments["tolerance"]))
-        case "growColor": viewModel.growColorSelection(tolerance: selectionTolerance(arguments["tolerance"]))
+        case "colorRange": viewModel.selectColorRangeFromForeground(tolerance: try selectionTolerance(arguments["tolerance"]))
+        case "similarColors": viewModel.selectSimilarColors(tolerance: try selectionTolerance(arguments["tolerance"]))
+        case "growColor": viewModel.growColorSelection(tolerance: try selectionTolerance(arguments["tolerance"]))
         case "expand": viewModel.expandSelection(radius: selectionRadius(arguments["amount"]))
         case "contract": viewModel.contractSelection(radius: selectionRadius(arguments["amount"]))
         case "border": viewModel.borderSelection(radius: selectionRadius(arguments["amount"]))
@@ -4678,9 +4679,14 @@ final class XomoAutomationRegistry {
         return Int(number.rounded())
     }
 
-    private func selectionTolerance(_ value: XomoJSONValue?) -> CGFloat? {
-        guard let number = value?.doubleValue else { return nil }
-        guard number.isFinite else { return nil }
+    private func selectionTolerance(_ value: XomoJSONValue?) throws -> CGFloat? {
+        guard let value else { return nil }
+        guard let number = value.doubleValue,
+              number.isFinite,
+              (0...1).contains(number)
+        else {
+            throw XomoAutomationCallError.invalidArgument("Selection tolerance must be a number from 0 through 1")
+        }
         return CGFloat(number)
     }
 
@@ -6315,7 +6321,14 @@ private extension XomoAutomationRegistry {
         tool("xomo.selection.ellipse", "Create an elliptical canvas selection.", rectProperties, required: ["x", "y", "width", "height"]),
         tool("xomo.selection.lasso", "Create a polygonal lasso selection from canvas points.", ["points": pointsSchema], required: ["points"]),
         tool("xomo.selection.magic", "Create a magic-wand selection at a canvas point.", magicPointProperties, required: ["x", "y"]),
-        tool("xomo.selection.quick", "Create a quick selection from sampled canvas points.", ["points": pointsSchema, "tolerance": XomoAutomationSchema.number(description: "Color-distance tolerance from 0 to 1")], required: ["points"]),
+        tool("xomo.selection.quick", "Create a quick selection from sampled canvas points.", [
+            "points": pointsSchema,
+            "tolerance": XomoAutomationSchema.number(
+                description: "Color-distance tolerance from 0 to 1",
+                minimum: 0,
+                maximum: 1
+            )
+        ], required: ["points"]),
         tool("xomo.selection.clear", "Deselect the current selection."),
         tool("xomo.selection.invert", "Invert the current selection."),
         tool("xomo.selection.feather", "Feather the current selection.", ["radius": XomoAutomationSchema.number(description: "Feather radius in pixels")]),
@@ -6326,7 +6339,11 @@ private extension XomoAutomationRegistry {
         tool("xomo.selection.modify", "Save, restore, transform, clean, color-match, or nudge the pixel selection.", [
             "action": XomoAutomationSchema.string(description: "Selection modification", values: ["loadTransparency", "save", "reselect", "restoreSaved", "colorRange", "similarColors", "growColor", "expand", "contract", "border", "smooth", "fillHoles", "removeSpeckles", "centerHorizontal", "centerVertical", "centerCanvas", "flipHorizontal", "flipVertical", "rotateClockwise", "rotateCounterclockwise", "rotate180", "scaleUp", "scaleDown", "fitCanvas", "nudge"]),
             "amount": XomoAutomationSchema.number(description: "Selection modification amount in pixels"),
-            "tolerance": XomoAutomationSchema.number(description: "Color-distance tolerance from 0 to 1"),
+            "tolerance": XomoAutomationSchema.number(
+                description: "Color-distance tolerance from 0 to 1",
+                minimum: 0,
+                maximum: 1
+            ),
             "threshold": XomoAutomationSchema.number(description: "Layer alpha threshold from 0 to 255 for loadTransparency"),
             "dx": XomoAutomationSchema.number(description: "Horizontal selection delta"),
             "dy": XomoAutomationSchema.number(description: "Vertical selection delta")
@@ -6715,7 +6732,11 @@ private extension XomoAutomationRegistry {
         "tiltY": XomoAutomationSchema.number(description: "Optional vertical stylus tilt from -1 to 1; requires tiltX")
     ]
     static let magicPointProperties = pointProperties.merging([
-        "tolerance": XomoAutomationSchema.number(description: "Color-distance tolerance from 0 to 1"),
+        "tolerance": XomoAutomationSchema.number(
+            description: "Color-distance tolerance from 0 to 1",
+            minimum: 0,
+            maximum: 1
+        ),
         "contiguous": XomoAutomationSchema.boolean(description: "Restrict selection to the connected region containing the seed")
     ]) { current, _ in current }
     static let pointsSchema: XomoJSONValue = .object([

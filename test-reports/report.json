@@ -1,108 +1,84 @@
 {
-  "generated_at": "2026-08-15 06:34:21 +0800",
-  "total": 8,
-  "passed": 8,
+  "generated_at": "2026-08-15 06:44:05 +0800",
+  "total": 6,
+  "passed": 6,
   "failed": 0,
-  "total_tests": 8,
-  "passed_tests": 8,
+  "total_tests": 6,
+  "passed_tests": 6,
   "failed_tests_in_failed_groups": 0,
   "jobs": 1,
   "results": [
     {
       "suite": "ImageEditorCanvasCursorTests",
-      "method": "patchCursorUsesLassoArrowMoveAndForbiddenActionSemantics",
-      "identifier": "veilpicTests/ImageEditorCanvasCursorTests/patchCursorUsesLassoArrowMoveAndForbiddenActionSemantics()",
+      "method": "objectDragStartsOnlyAfterThePointerLeavesClickTolerance",
+      "identifier": "veilpicTests/ImageEditorCanvasCursorTests/objectDragStartsOnlyAfterThePointerLeavesClickTolerance()",
       "file": "ImageEditorCanvasCursorTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.014,
+      "duration": 2.975,
       "infrastructure_retries": 0,
       "issues": [],
-      "log": "ImageEditorCanvasCursorTests.patchCursorUsesLassoArrowMoveAndForbiddenActionSemantics.log"
+      "log": "ImageEditorCanvasCursorTests.objectDragStartsOnlyAfterThePointerLeavesClickTolerance.log"
     },
     {
-      "suite": "ImageEditorCanvasCursorTests",
-      "method": "patchGestureStartRejectsBlockedSelectionsButStillAllowsReplacementLasso",
-      "identifier": "veilpicTests/ImageEditorCanvasCursorTests/patchGestureStartRejectsBlockedSelectionsButStillAllowsReplacementLasso()",
-      "file": "ImageEditorCanvasCursorTests.swift",
+      "suite": "ImageEditorTextHitTestingTests",
+      "method": "canvasTolerancePreservesFourScreenPixelsAcrossZoomLevels",
+      "identifier": "veilpicTests/ImageEditorTextHitTestingTests/canvasTolerancePreservesFourScreenPixelsAcrossZoomLevels()",
+      "file": "ImageEditorTextHitTestingTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 2.987,
+      "duration": 2.983,
       "infrastructure_retries": 0,
       "issues": [],
-      "log": "ImageEditorCanvasCursorTests.patchGestureStartRejectsBlockedSelectionsButStillAllowsReplacementLasso.log"
+      "log": "ImageEditorTextHitTestingTests.canvasTolerancePreservesFourScreenPixelsAcrossZoomLevels.log"
     },
     {
-      "suite": "ImageEditorPatchToolTests",
-      "method": "patchToolCanCreateAReplacementLassoBeforeDragging",
-      "identifier": "veilpicTests/ImageEditorPatchToolTests/patchToolCanCreateAReplacementLassoBeforeDragging()",
-      "file": "ImageEditorPatchToolTests.swift",
+      "suite": "ImageEditorTextHitTestingTests",
+      "method": "editableTextHitTestingUsesTheSuppliedCanvasTolerance",
+      "identifier": "veilpicTests/ImageEditorTextHitTestingTests/editableTextHitTestingUsesTheSuppliedCanvasTolerance()",
+      "file": "ImageEditorTextHitTestingTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 2.948,
+      "duration": 3.007,
       "infrastructure_retries": 0,
       "issues": [],
-      "log": "ImageEditorPatchToolTests.patchToolCanCreateAReplacementLassoBeforeDragging.log"
-    },
-    {
-      "suite": "ImageEditorSelectionEdgeTests",
-      "method": "lassoRejectsCollinearGeometryButKeepsSelfIntersectingRegions",
-      "identifier": "veilpicTests/ImageEditorSelectionEdgeTests/lassoRejectsCollinearGeometryButKeepsSelfIntersectingRegions()",
-      "file": "ImageEditorSelectionEdgeTests.swift",
-      "test_count": 1,
-      "passed": true,
-      "duration": 2.957,
-      "infrastructure_retries": 0,
-      "issues": [],
-      "log": "ImageEditorSelectionEdgeTests.lassoRejectsCollinearGeometryButKeepsSelfIntersectingRegions.log"
-    },
-    {
-      "suite": "ImageEditorToolSmokeTests",
-      "method": "lassoCreatesAUsablePolygonSelection",
-      "identifier": "veilpicTests/ImageEditorToolSmokeTests/lassoCreatesAUsablePolygonSelection()",
-      "file": "ImageEditorToolSmokeTests.swift",
-      "test_count": 1,
-      "passed": true,
-      "duration": 3.025,
-      "infrastructure_retries": 0,
-      "issues": [],
-      "log": "ImageEditorToolSmokeTests.lassoCreatesAUsablePolygonSelection.log"
+      "log": "ImageEditorTextHitTestingTests.editableTextHitTestingUsesTheSuppliedCanvasTolerance.log"
     },
     {
       "suite": "XomoAutomationTests",
-      "method": "registryAcceptsSelfIntersectingLassoGeometry",
-      "identifier": "veilpicTests/XomoAutomationTests/registryAcceptsSelfIntersectingLassoGeometry()",
+      "method": "registryAppliesExplicitColorRangeTolerance",
+      "identifier": "veilpicTests/XomoAutomationTests/registryAppliesExplicitColorRangeTolerance()",
       "file": "XomoAutomationTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 2.99,
+      "duration": 3.006,
       "infrastructure_retries": 0,
       "issues": [],
-      "log": "XomoAutomationTests.registryAcceptsSelfIntersectingLassoGeometry.log"
+      "log": "XomoAutomationTests.registryAppliesExplicitColorRangeTolerance.log"
     },
     {
       "suite": "XomoAutomationTests",
-      "method": "registryLassoSelectionAcceptsValidAndIdempotentPointSets",
-      "identifier": "veilpicTests/XomoAutomationTests/registryLassoSelectionAcceptsValidAndIdempotentPointSets()",
+      "method": "registryAppliesExplicitMagicWandTolerance",
+      "identifier": "veilpicTests/XomoAutomationTests/registryAppliesExplicitMagicWandTolerance()",
       "file": "XomoAutomationTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 2.961,
+      "duration": 2.945,
       "infrastructure_retries": 0,
       "issues": [],
-      "log": "XomoAutomationTests.registryLassoSelectionAcceptsValidAndIdempotentPointSets.log"
+      "log": "XomoAutomationTests.registryAppliesExplicitMagicWandTolerance.log"
     },
     {
       "suite": "XomoAutomationTests",
-      "method": "registryRejectsInvalidLassoGeometryBeforeChangingDocument",
-      "identifier": "veilpicTests/XomoAutomationTests/registryRejectsInvalidLassoGeometryBeforeChangingDocument()",
+      "method": "registryRejectsInvalidSelectionTolerancesBeforeAnyMutation",
+      "identifier": "veilpicTests/XomoAutomationTests/registryRejectsInvalidSelectionTolerancesBeforeAnyMutation()",
       "file": "XomoAutomationTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 2.996,
+      "duration": 3.002,
       "infrastructure_retries": 0,
       "issues": [],
-      "log": "XomoAutomationTests.registryRejectsInvalidLassoGeometryBeforeChangingDocument.log"
+      "log": "XomoAutomationTests.registryRejectsInvalidSelectionTolerancesBeforeAnyMutation.log"
     }
   ]
 }

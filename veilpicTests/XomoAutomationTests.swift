@@ -179,10 +179,25 @@ struct XomoAutomationTests {
             Issue.record("Expected xomo.selection.magic tool schema")
             return
         }
+        guard let quickSelectionTool = tools.compactMap({ tool -> [String: XomoJSONValue]? in
+            guard case .object(let value) = tool else { return nil }
+            return value
+        }).first(where: { $0["name"] == .string("xomo.selection.quick") }) else {
+            Issue.record("Expected xomo.selection.quick tool schema")
+            return
+        }
         #expect(magicTool["inputSchema"]?.objectValue?["properties"]?.objectValue?["tolerance"]?.objectValue?["type"] == .string("number"))
         #expect(magicTool["inputSchema"]?.objectValue?["properties"]?.objectValue?["contiguous"]?.objectValue?["type"] == .string("boolean"))
         #expect(selectionModifyTool["inputSchema"]?.objectValue?["properties"]?.objectValue?["tolerance"]?.objectValue?["type"] == .string("number"))
         #expect(selectionModifyTool["inputSchema"]?.objectValue?["properties"]?.objectValue?["threshold"]?.objectValue?["type"] == .string("number"))
+        let selectionToleranceSchemas = [magicTool, quickSelectionTool, selectionModifyTool].compactMap {
+            $0["inputSchema"]?.objectValue?["properties"]?.objectValue?["tolerance"]?.objectValue
+        }
+        #expect(selectionToleranceSchemas.count == 3)
+        for schema in selectionToleranceSchemas {
+            #expect(schema["minimum"] == .number(0))
+            #expect(schema["maximum"] == .number(1))
+        }
         #expect(tools.contains { tool in
             guard case .object(let value) = tool else { return false }
             return value["name"] == .string("xomo.layer_comp.action")
@@ -2243,6 +2258,63 @@ struct XomoAutomationTests {
         #expect(response.ok)
         #expect(try #require(viewModel.document.selection).bounds.width == 20)
         #expect(viewModel.tolerance == 0.05)
+    }
+
+    @Test func registryRejectsInvalidSelectionTolerancesBeforeAnyMutation() {
+        let viewModel = makeViewModel()
+        viewModel.createRectSelection(from: CGPoint(x: 10, y: 10), to: CGPoint(x: 40, y: 40))
+        let selectionBeforeRequests = viewModel.document.selection
+        let historyCountBeforeRequests = viewModel.document.history.count
+        let undoCountBeforeRequests = viewModel.undoStack.count
+        let toleranceBeforeRequests = viewModel.tolerance
+        #expect(viewModel.isMagicWandContiguous)
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        let invalidRequests = [
+            request(
+                operation: "call",
+                name: "xomo.selection.magic",
+                arguments: [
+                    "x": .number(20), "y": .number(20),
+                    "tolerance": .number(-0.01),
+                    "contiguous": .bool(false)
+                ]
+            ),
+            request(
+                operation: "call",
+                name: "xomo.selection.quick",
+                arguments: [
+                    "points": .array([.object(["x": .number(20), "y": .number(20)])]),
+                    "tolerance": .number(1.01)
+                ]
+            ),
+            request(
+                operation: "call",
+                name: "xomo.selection.modify",
+                arguments: ["action": .string("colorRange"), "tolerance": .string("wide")]
+            ),
+            request(
+                operation: "call",
+                name: "xomo.selection.modify",
+                arguments: ["action": .string("similarColors"), "tolerance": .number(-1)]
+            ),
+            request(
+                operation: "call",
+                name: "xomo.selection.modify",
+                arguments: ["action": .string("growColor"), "tolerance": .number(2)]
+            )
+        ]
+
+        for invalidRequest in invalidRequests {
+            let response = registry.execute(invalidRequest)
+            #expect(!response.ok)
+            #expect(response.error?.contains("from 0 through 1") == true)
+        }
+        #expect(viewModel.isMagicWandContiguous)
+        #expect(viewModel.tolerance == toleranceBeforeRequests)
+        #expect(viewModel.document.selection == selectionBeforeRequests)
+        #expect(viewModel.document.history.count == historyCountBeforeRequests)
+        #expect(viewModel.undoStack.count == undoCountBeforeRequests)
     }
 
     @Test func registryQueuesPSDOpenThroughTheSharedCoordinator() throws {
