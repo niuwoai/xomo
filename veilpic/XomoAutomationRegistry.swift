@@ -4894,7 +4894,9 @@ final class XomoAutomationRegistry {
         _ arguments: [String: XomoJSONValue],
         viewModel: ImageEditorViewModel
     ) throws {
-        switch try requiredString("action", in: arguments) {
+        let action = try requiredString("action", in: arguments)
+        try requireClipboardActionAvailability(for: action, viewModel: viewModel)
+        switch action {
         case "pasteAsLayer": viewModel.pasteClipboardAsLayer()
         case "pasteIntoSelection": viewModel.pasteClipboardIntoSelectionAsLayer()
         case "pasteInPlace": viewModel.pasteClipboardInPlaceAsLayer()
@@ -4903,6 +4905,45 @@ final class XomoAutomationRegistry {
         case "copyMerged": viewModel.copyMergedToClipboard()
         case "copySelectedLayers": viewModel.copySelectedLayersToClipboard()
         default: throw XomoAutomationCallError.invalidArgument("Unknown clipboard action")
+        }
+    }
+
+    private func requireClipboardActionAvailability(
+        for action: String,
+        viewModel: ImageEditorViewModel
+    ) throws {
+        let requirement: (isAvailable: Bool, description: String)
+        switch action {
+        case "pasteAsLayer":
+            requirement = (viewModel.canPasteClipboardImage, "an image on the clipboard")
+        case "pasteIntoSelection":
+            requirement = (
+                viewModel.canPasteClipboardImageIntoSelection,
+                "an image on the clipboard and an active selection"
+            )
+        case "pasteInPlace":
+            requirement = (
+                viewModel.canPasteClipboardImageInPlace,
+                "an image with Xomo position metadata on the clipboard"
+            )
+        case "copySelection":
+            requirement = (
+                viewModel.canCopySelectionToClipboard,
+                "an active copyable selection or selected layers"
+            )
+        case "cutSelection":
+            requirement = (viewModel.canCutSelectionToClipboard, "a removable pixel selection")
+        case "copyMerged":
+            requirement = (viewModel.canCopyMergedToClipboard, "a non-empty canvas")
+        case "copySelectedLayers":
+            requirement = (viewModel.canCopySelectedLayersToClipboard, "copyable selected layers")
+        default:
+            return
+        }
+        guard requirement.isAvailable else {
+            throw XomoAutomationCallError.operationFailed(
+                "Clipboard action \(action) requires \(requirement.description)"
+            )
         }
     }
 

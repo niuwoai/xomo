@@ -1016,6 +1016,103 @@ struct XomoAutomationTests {
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.clipboardPasteLayer"))
     }
 
+    @Test func registryClipboardActionsRequireTheirOwnResourcesAndPreserveCopyFallbacks() throws {
+        let pasteboard = NSPasteboard.general
+        let originalItems = (pasteboard.pasteboardItems ?? []).map { item in
+            item.types.reduce(into: [NSPasteboard.PasteboardType: Data]()) { snapshot, type in
+                snapshot[type] = item.data(forType: type)
+            }
+        }
+        defer {
+            pasteboard.clearContents()
+            let restoredItems = originalItems.map { snapshot -> NSPasteboardItem in
+                let item = NSPasteboardItem()
+                for (type, data) in snapshot {
+                    item.setData(data, forType: type)
+                }
+                return item
+            }
+            if !restoredItems.isEmpty {
+                pasteboard.writeObjects(restoredItems)
+            }
+        }
+        pasteboard.clearContents()
+
+        let unavailableViewModel = makeViewModel()
+        unavailableViewModel.document.selectedLayerID = nil
+        unavailableViewModel.document.selectedLayerIDs = []
+        let unavailableLayerCount = unavailableViewModel.document.layers.count
+        let unavailableHistoryCount = unavailableViewModel.document.history.count
+        let unavailableUndoCount = unavailableViewModel.undoStack.count
+        let unavailableStatus = unavailableViewModel.statusText
+        let registry = XomoAutomationRegistry.shared
+        registry.register(unavailableViewModel)
+        let unavailableActions = [
+            "pasteAsLayer",
+            "pasteIntoSelection",
+            "pasteInPlace",
+            "copySelection",
+            "cutSelection",
+            "copySelectedLayers"
+        ]
+
+        for action in unavailableActions {
+            let response = registry.execute(request(
+                operation: "call",
+                name: "xomo.clipboard.action",
+                arguments: ["action": .string(action)]
+            ))
+            #expect(!response.ok)
+            #expect(response.error?.contains("Clipboard action \(action) requires") == true)
+        }
+        #expect(unavailableViewModel.document.layers.count == unavailableLayerCount)
+        #expect(unavailableViewModel.document.history.count == unavailableHistoryCount)
+        #expect(unavailableViewModel.undoStack.count == unavailableUndoCount)
+        #expect(unavailableViewModel.statusText == unavailableStatus)
+
+        let size = CGSize(width: 30, height: 20)
+        let image = try #require(NSImage.rendered(size: size) { rect in
+            NSColor.systemOrange.setFill()
+            rect.fill()
+        })
+        let fallbackViewModel = ImageEditorViewModel(
+            sourceName: "clipboard-fallback.png",
+            image: .transparent(size: size)
+        ) { _ in }
+        fallbackViewModel.replaceSelectedLayerImageForTesting(
+            image,
+            historyTitle: L10n.text("imageEditor.history.brush")
+        )
+        registry.register(fallbackViewModel)
+
+        let copyFallbackResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.clipboard.action",
+            arguments: ["action": .string("copySelection")]
+        ))
+        #expect(copyFallbackResponse.ok)
+        #expect(fallbackViewModel.document.selection == nil)
+        #expect(pasteboard.readImage() != nil)
+
+        let layerCountBeforeRejectedPaste = fallbackViewModel.document.layers.count
+        let pasteIntoSelectionResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.clipboard.action",
+            arguments: ["action": .string("pasteIntoSelection")]
+        ))
+        #expect(!pasteIntoSelectionResponse.ok)
+        #expect(pasteIntoSelectionResponse.error?.contains("active selection") == true)
+        #expect(fallbackViewModel.document.layers.count == layerCountBeforeRejectedPaste)
+
+        let pasteResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.clipboard.action",
+            arguments: ["action": .string("pasteAsLayer")]
+        ))
+        #expect(pasteResponse.ok)
+        #expect(fallbackViewModel.document.layers.count == layerCountBeforeRejectedPaste + 1)
+    }
+
     @Test func registryAppliesExplicitSelectionFeatherRadius() throws {
         let viewModel = makeViewModel()
         let registry = XomoAutomationRegistry.shared
