@@ -1175,6 +1175,42 @@ struct ImageEditorScopeTests {
         }
     }
 
+    @Test func previewPanelWiresNonDestructivePixelInspection() throws {
+        let source = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent(
+                "veilpic/ImageEditorExportPanel.swift"
+            ),
+            encoding: .utf8
+        )
+        let previewStart = try #require(source.range(of: "struct ImageEditorPreviewPanel: View"))
+        let previewEnd = try #require(
+            source[previewStart.upperBound...].range(of: "struct ImageEditorExportPanel: View")
+        )
+        let previewSource = source[previewStart.lowerBound..<previewEnd.lowerBound]
+
+        #expect(source.contains("struct ImageEditorPreviewPixelSample"))
+        #expect(source.contains("static func canvasPoint("))
+        #expect(source.contains("image.color("))
+        #expect(previewSource.contains("@State private var pixelSample"))
+        #expect(previewSource.contains(".onContinuousHover"))
+        #expect(previewSource.contains("ImageEditorPreviewPixelSample.sample("))
+        #expect(previewSource.contains("case .ended:\n                    pixelSample = nil"))
+        #expect(previewSource.contains(".accessibilityIdentifier(\"image-editor-preview-inspector\")"))
+        #expect(previewSource.contains(".accessibilityIdentifier(\"image-editor-preview-pixel-sample\")"))
+
+        for locale in ["en", "ja", "zh-Hans"] {
+            let localization = try String(
+                contentsOf: Self.repositoryRoot().appendingPathComponent(
+                    "veilpic/\(locale).lproj/Localizable.strings"
+                ),
+                encoding: .utf8
+            )
+            #expect(localization.contains("\"imageEditor.preview.dimensions\""))
+            #expect(localization.contains("\"imageEditor.preview.sample\""))
+            #expect(localization.contains("\"imageEditor.preview.sample.empty\""))
+        }
+    }
+
     @MainActor
     @Test func classicArrowNudgeShortcutsMoveSelectionBeforeLayer() {
         let image = NSImage(size: NSSize(width: 80, height: 60))

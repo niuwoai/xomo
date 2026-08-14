@@ -91,6 +91,73 @@ enum ImageEditorPreviewZoomMode: String, CaseIterable, Identifiable, Hashable {
     }
 }
 
+struct ImageEditorPreviewPixelSample {
+    let point: CGPoint
+    let color: NSColor
+
+    var text: String {
+        let reading = ImageEditorColorSamplerReading(color: color)
+        return L10n.format(
+            "imageEditor.preview.sample",
+            Int(point.x),
+            Int(point.y),
+            reading.hexadecimalRGBA
+        )
+    }
+
+    static func canvasPoint(
+        from location: CGPoint,
+        displayedSize: CGSize,
+        canvasSize: CGSize
+    ) -> CGPoint? {
+        guard location.x.isFinite,
+              location.y.isFinite,
+              displayedSize.width.isFinite,
+              displayedSize.height.isFinite,
+              canvasSize.width.isFinite,
+              canvasSize.height.isFinite,
+              displayedSize.width > 0,
+              displayedSize.height > 0,
+              canvasSize.width > 0,
+              canvasSize.height > 0,
+              location.x >= 0,
+              location.y >= 0,
+              location.x < displayedSize.width,
+              location.y < displayedSize.height
+        else { return nil }
+
+        return CGPoint(
+            x: min(
+                floor(location.x / displayedSize.width * canvasSize.width),
+                canvasSize.width - 1
+            ),
+            y: min(
+                floor(location.y / displayedSize.height * canvasSize.height),
+                canvasSize.height - 1
+            )
+        )
+    }
+
+    static func sample(
+        image: NSImage,
+        location: CGPoint,
+        displayedSize: CGSize,
+        canvasSize: CGSize
+    ) -> Self? {
+        guard let point = canvasPoint(
+            from: location,
+            displayedSize: displayedSize,
+            canvasSize: canvasSize
+        ),
+              let color = image.color(
+                at: CGPoint(x: point.x + 0.5, y: point.y + 0.5),
+                coordinateSize: canvasSize
+              )
+        else { return nil }
+        return Self(point: point, color: color)
+    }
+}
+
 private struct ImageEditorPreviewBackdropView: View {
     let backdrop: ImageEditorPreviewBackdrop
 
@@ -124,6 +191,7 @@ private struct ImageEditorPreviewBackdropView: View {
 
 struct ImageEditorPreviewPanel: View {
     @ObservedObject var viewModel: ImageEditorViewModel
+    @State private var pixelSample: ImageEditorPreviewPixelSample?
 
     var body: some View {
         VStack(spacing: 0) {
@@ -202,11 +270,49 @@ struct ImageEditorPreviewPanel: View {
                 }
             }
             .accessibilityIdentifier("image-editor-preview-image")
+
+            Divider()
+
+            HStack(spacing: 10) {
+                Text(
+                    L10n.format(
+                        "imageEditor.preview.dimensions",
+                        Int(viewModel.document.canvasSize.width.rounded()),
+                        Int(viewModel.document.canvasSize.height.rounded())
+                    )
+                )
+                Spacer()
+                if let pixelSample {
+                    RoundedRectangle(cornerRadius: 3)
+                        .fill(Color(nsColor: pixelSample.color))
+                        .overlay {
+                            RoundedRectangle(cornerRadius: 3)
+                                .stroke(Color(nsColor: ImageEditorTheme.border), lineWidth: 1)
+                        }
+                        .frame(width: 18, height: 18)
+                    Text(pixelSample.text)
+                        .monospacedDigit()
+                        .accessibilityIdentifier("image-editor-preview-pixel-sample")
+                } else {
+                    Text(L10n.text("imageEditor.preview.sample.empty"))
+                        .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                }
+            }
+            .font(.system(size: 11))
+            .padding(.horizontal, 16)
+            .padding(.vertical, 9)
+            .accessibilityIdentifier("image-editor-preview-inspector")
         }
         .frame(minWidth: 640, minHeight: 480)
         .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
         .environment(\.colorScheme, .dark)
         .background(Color(nsColor: ImageEditorTheme.panel))
+        .onChange(of: viewModel.previewZoomMode) { _ in
+            pixelSample = nil
+        }
+        .onDisappear {
+            pixelSample = nil
+        }
     }
 
     private func previewCanvas(
@@ -228,6 +334,20 @@ struct ImageEditorPreviewPanel: View {
             .resizable()
             .interpolation(interpolation)
             .frame(width: size.width, height: size.height)
+            .contentShape(Rectangle())
+            .onContinuousHover { phase in
+                switch phase {
+                case let .active(location):
+                    pixelSample = ImageEditorPreviewPixelSample.sample(
+                        image: viewModel.previewImage,
+                        location: location,
+                        displayedSize: size,
+                        canvasSize: viewModel.document.canvasSize
+                    )
+                case .ended:
+                    pixelSample = nil
+                }
+            }
     }
 }
 

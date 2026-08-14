@@ -120,6 +120,56 @@ struct ImageEditorExportFormatTests {
         #expect(viewModel.canUndo == originalCanUndo)
     }
 
+    @Test func previewPixelInspectionMapsEveryZoomToCanvasCoordinates() throws {
+        let canvasSize = CGSize(width: 80, height: 40)
+
+        #expect(
+            ImageEditorPreviewPixelSample.canvasPoint(
+                from: CGPoint(x: 82, y: 42),
+                displayedSize: CGSize(width: 320, height: 160),
+                canvasSize: canvasSize
+            ) == CGPoint(x: 20, y: 10)
+        )
+        #expect(
+            ImageEditorPreviewPixelSample.canvasPoint(
+                from: CGPoint(x: 41, y: 21),
+                displayedSize: CGSize(width: 160, height: 80),
+                canvasSize: canvasSize
+            ) == CGPoint(x: 20, y: 10)
+        )
+        #expect(
+            ImageEditorPreviewPixelSample.canvasPoint(
+                from: CGPoint(x: -1, y: 4),
+                displayedSize: canvasSize,
+                canvasSize: canvasSize
+            ) == nil
+        )
+        #expect(
+            ImageEditorPreviewPixelSample.canvasPoint(
+                from: CGPoint(x: canvasSize.width, y: 4),
+                displayedSize: canvasSize,
+                canvasSize: canvasSize
+            ) == nil
+        )
+
+        let image = try #require(NSImage.rendered(size: canvasSize) { rect in
+            NSColor(deviceRed: 1, green: 0.5, blue: 0, alpha: 0.25).setFill()
+            rect.fill()
+        })
+        let sample = try #require(
+            ImageEditorPreviewPixelSample.sample(
+                image: image,
+                location: CGPoint(x: 20.5, y: 10.5),
+                displayedSize: canvasSize,
+                canvasSize: canvasSize
+            )
+        )
+        #expect(sample.point == CGPoint(x: 20, y: 10))
+        #expect(sample.text.contains("X 20"))
+        #expect(sample.text.contains("Y 10"))
+        #expect(sample.text.contains("#FF800040"))
+    }
+
     @Test func pureVectorCanvasExportsEditableSVG() throws {
         let viewModel = ImageEditorViewModel(
             sourceName: "vector-canvas",

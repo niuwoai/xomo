@@ -419,6 +419,9 @@
 "imageEditor.preview.zoom.fit" = "Fit";
 "imageEditor.preview.zoom.actualPixels" = "100%";
 "imageEditor.preview.zoom.doublePixels" = "200%";
+"imageEditor.preview.dimensions" = "%d × %d px";
+"imageEditor.preview.sample" = "X %d  Y %d · %@";
+"imageEditor.preview.sample.empty" = "Move over the image to inspect a pixel";
 "imageEditor.action.swatchesShowPanel" = "Show Swatches Panel";
 "imageEditor.action.brushesShowPanel" = "Show Brushes Panel";
 "imageEditor.action.characterShowPanel" = "Show Character Panel";

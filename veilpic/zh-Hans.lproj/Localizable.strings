@@ -419,6 +419,9 @@
 "imageEditor.preview.zoom.fit" = "适合窗口";
 "imageEditor.preview.zoom.actualPixels" = "100%";
 "imageEditor.preview.zoom.doublePixels" = "200%";
+"imageEditor.preview.dimensions" = "%d × %d 像素";
+"imageEditor.preview.sample" = "X %d  Y %d · %@";
+"imageEditor.preview.sample.empty" = "将鼠标移到图像上检查像素";
 "imageEditor.action.swatchesShowPanel" = "显示色板面板";
 "imageEditor.action.brushesShowPanel" = "显示画笔面板";
 "imageEditor.action.characterShowPanel" = "显示字符面板";
