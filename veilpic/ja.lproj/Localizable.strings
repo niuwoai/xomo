@@ -418,6 +418,7 @@
 "imageEditor.preview.zoom" = "プレビュー倍率";
 "imageEditor.preview.zoom.fit" = "全体表示";
 "imageEditor.preview.zoom.actualPixels" = "100%";
+"imageEditor.preview.zoom.doublePixels" = "200%";
 "imageEditor.action.swatchesShowPanel" = "スウォッチパネルを表示";
 "imageEditor.action.brushesShowPanel" = "ブラシパネルを表示";
 "imageEditor.action.characterShowPanel" = "文字パネルを表示";

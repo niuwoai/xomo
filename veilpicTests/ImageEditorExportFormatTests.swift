@@ -65,12 +65,12 @@ struct ImageEditorExportFormatTests {
         #expect(viewModel.canUndo == originalCanUndo)
     }
 
-    @Test func previewZoomFitsViewportOrPreservesActualPixelDimensions() {
+    @Test func previewZoomFitsViewportOrMagnifiesPixelDimensions() {
         let canvasSize = CGSize(width: 800, height: 400)
         let viewportSize = CGSize(width: 320, height: 240)
 
         #expect(ImageEditorPreviewZoomMode.allCases.map(\.rawValue) == [
-            "fit", "actualPixels"
+            "fit", "actualPixels", "doublePixels"
         ])
         #expect(
             ImageEditorPreviewZoomMode.fit.displayedImageSize(
@@ -84,6 +84,15 @@ struct ImageEditorExportFormatTests {
                 viewportSize: viewportSize
             ) == canvasSize
         )
+        #expect(
+            ImageEditorPreviewZoomMode.doublePixels.displayedImageSize(
+                canvasSize: canvasSize,
+                viewportSize: viewportSize
+            ) == CGSize(width: 1_600, height: 800)
+        )
+        #expect(!ImageEditorPreviewZoomMode.fit.usesScrollablePixelCanvas)
+        #expect(ImageEditorPreviewZoomMode.actualPixels.usesScrollablePixelCanvas)
+        #expect(ImageEditorPreviewZoomMode.doublePixels.usesScrollablePixelCanvas)
         #expect(
             ImageEditorPreviewZoomMode.fit.displayedImageSize(
                 canvasSize: canvasSize,
@@ -100,12 +109,12 @@ struct ImageEditorExportFormatTests {
         let originalCanUndo = viewModel.canUndo
 
         #expect(viewModel.previewZoomMode == .fit)
-        viewModel.previewZoomMode = .actualPixels
+        viewModel.previewZoomMode = .doublePixels
         viewModel.openPreviewPanel()
         viewModel.isPreviewSheetPresented = false
         viewModel.openPreviewPanel()
 
-        #expect(viewModel.previewZoomMode == .actualPixels)
+        #expect(viewModel.previewZoomMode == .doublePixels)
         #expect(viewModel.document.layers.map(\.id) == originalLayerIDs)
         #expect(viewModel.document.history == originalHistory)
         #expect(viewModel.canUndo == originalCanUndo)

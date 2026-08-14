@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-14 17:41:01 +0800",
+  "generated_at": "2026-08-14 17:48:00 +0800",
   "total": 11,
   "passed": 11,
   "failed": 0,
@@ -15,7 +15,7 @@
       "file": "ImageEditorExportFormatTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.045,
+      "duration": 2.919,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorExportFormatTests.exportNamingRulesSupportBatchScaleVariants.log"
@@ -27,7 +27,7 @@
       "file": "ImageEditorExportFormatTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.204,
+      "duration": 3.049,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorExportFormatTests.exportScaleFormatterPreservesQuarterStepsWithoutTrailingZeros.log"
@@ -39,7 +39,7 @@
       "file": "ImageEditorExportFormatTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.032,
+      "duration": 3.825,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorExportFormatTests.hotspotHTMLExportEmbedsCanvasAndEscapesImageMapMetadata.log"
@@ -51,7 +51,7 @@
       "file": "ImageEditorExportFormatTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.152,
+      "duration": 2.928,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorExportFormatTests.mixedCanvasExportsPDFAndRejectsSVG.log"
@@ -63,7 +63,7 @@
       "file": "ImageEditorExportFormatTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.01,
+      "duration": 2.921,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorExportFormatTests.namedSliceScopeExportsTheNamedRectangularCanvasRegion.log"
@@ -75,7 +75,7 @@
       "file": "ImageEditorExportFormatTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.28,
+      "duration": 2.972,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorExportFormatTests.previewAndExportPanelsAreNonClosingAndMutuallyExclusive.log"
@@ -87,22 +87,22 @@
       "file": "ImageEditorExportFormatTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.153,
+      "duration": 2.931,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorExportFormatTests.previewBackdropInspectsTransparencyWithoutEditingTheDocument.log"
     },
     {
       "suite": "ImageEditorExportFormatTests",
-      "method": "previewZoomFitsViewportOrPreservesActualPixelDimensions",
-      "identifier": "veilpicTests/ImageEditorExportFormatTests/previewZoomFitsViewportOrPreservesActualPixelDimensions()",
+      "method": "previewZoomFitsViewportOrMagnifiesPixelDimensions",
+      "identifier": "veilpicTests/ImageEditorExportFormatTests/previewZoomFitsViewportOrMagnifiesPixelDimensions()",
       "file": "ImageEditorExportFormatTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.973,
+      "duration": 2.935,
       "infrastructure_retries": 0,
       "issues": [],
-      "log": "ImageEditorExportFormatTests.previewZoomFitsViewportOrPreservesActualPixelDimensions.log"
+      "log": "ImageEditorExportFormatTests.previewZoomFitsViewportOrMagnifiesPixelDimensions.log"
     },
     {
       "suite": "ImageEditorExportFormatTests",
@@ -111,7 +111,7 @@
       "file": "ImageEditorExportFormatTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.72,
+      "duration": 2.909,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorExportFormatTests.pureVectorCanvasExportsEditableSVG.log"
@@ -123,7 +123,7 @@
       "file": "ImageEditorExportFormatTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 2.919,
+      "duration": 3.012,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorExportFormatTests.selectedLayerExportScopeChoosesSingleLayerOrLayerSubtree.log"
@@ -135,7 +135,7 @@
       "file": "ImageEditorExportFormatTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 2.976,
+      "duration": 2.903,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorExportFormatTests.selectionScopeExportsASelectionSliceBoundedByTheSelectionAndPreservesTransparency.log"

@@ -1129,7 +1129,7 @@ struct ImageEditorScopeTests {
         }
     }
 
-    @Test func previewPanelWiresFitAndActualPixelZoomModes() throws {
+    @Test func previewPanelWiresFitAndPixelInspectionZoomModes() throws {
         let source = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent(
                 "veilpic/ImageEditorExportPanel.swift"
@@ -1148,13 +1148,14 @@ struct ImageEditorScopeTests {
             source[previewStart.upperBound...].range(of: "struct ImageEditorExportPanel: View")
         )
         let previewSource = source[previewStart.lowerBound..<previewEnd.lowerBound]
-        #expect(source.contains("case fit\n    case actualPixels"))
+        #expect(source.contains("case fit\n    case actualPixels\n    case doublePixels"))
         #expect(previewSource.contains("selection: $viewModel.previewZoomMode"))
         #expect(previewSource.contains("ForEach(ImageEditorPreviewZoomMode.allCases)"))
         #expect(previewSource.contains(".accessibilityIdentifier(\"image-editor-preview-zoom\")"))
         #expect(previewSource.contains("ScrollView([.horizontal, .vertical])"))
-        #expect(previewSource.contains("interpolation: .none"))
-        #expect(previewSource.contains("interpolation: .high"))
+        #expect(previewSource.contains("viewModel.previewZoomMode.usesScrollablePixelCanvas"))
+        #expect(previewSource.contains("viewModel.previewZoomMode.interpolation"))
+        #expect(source.contains("usesScrollablePixelCanvas ? .none : .high"))
         #expect(previewSource.contains("viewModel.document.canvasSize"))
         #expect(viewModelSource.contains(
             "@Published var previewZoomMode: ImageEditorPreviewZoomMode = .fit"
@@ -1170,6 +1171,7 @@ struct ImageEditorScopeTests {
             #expect(localization.contains("\"imageEditor.preview.zoom\""))
             #expect(localization.contains("\"imageEditor.preview.zoom.fit\""))
             #expect(localization.contains("\"imageEditor.preview.zoom.actualPixels\""))
+            #expect(localization.contains("\"imageEditor.preview.zoom.doublePixels\""))
         }
     }
 

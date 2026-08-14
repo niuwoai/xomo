@@ -46,11 +46,20 @@ enum ImageEditorPreviewBackdrop: String, CaseIterable, Identifiable, Hashable {
 enum ImageEditorPreviewZoomMode: String, CaseIterable, Identifiable, Hashable {
     case fit
     case actualPixels
+    case doublePixels
 
     var id: String { rawValue }
 
     var title: String {
         L10n.text("imageEditor.preview.zoom.\(rawValue)")
+    }
+
+    var usesScrollablePixelCanvas: Bool {
+        self != .fit
+    }
+
+    var interpolation: Image.Interpolation {
+        usesScrollablePixelCanvas ? .none : .high
     }
 
     func displayedImageSize(canvasSize: CGSize, viewportSize: CGSize) -> CGSize {
@@ -76,6 +85,8 @@ enum ImageEditorPreviewZoomMode: String, CaseIterable, Identifiable, Hashable {
             )
         case .actualPixels:
             return canvasSize
+        case .doublePixels:
+            return CGSize(width: canvasSize.width * 2, height: canvasSize.height * 2)
         }
     }
 }
@@ -166,11 +177,14 @@ struct ImageEditorPreviewPanel: View {
                     canvasSize: canvasSize,
                     viewportSize: geometry.size
                 )
-                if viewModel.previewZoomMode == .actualPixels {
+                if viewModel.previewZoomMode.usesScrollablePixelCanvas {
                     ScrollView([.horizontal, .vertical]) {
                         ZStack {
                             Color(nsColor: ImageEditorTheme.window)
-                            previewCanvas(size: displayedSize, interpolation: .none)
+                            previewCanvas(
+                                size: displayedSize,
+                                interpolation: viewModel.previewZoomMode.interpolation
+                            )
                         }
                         .frame(
                             width: max(displayedSize.width, geometry.size.width),
@@ -180,7 +194,10 @@ struct ImageEditorPreviewPanel: View {
                 } else {
                     ZStack {
                         ImageEditorPreviewBackdropView(backdrop: viewModel.previewBackdrop)
-                        previewImage(size: displayedSize, interpolation: .high)
+                        previewImage(
+                            size: displayedSize,
+                            interpolation: viewModel.previewZoomMode.interpolation
+                        )
                     }
                 }
             }
