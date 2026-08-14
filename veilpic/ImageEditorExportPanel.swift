@@ -175,6 +175,32 @@ struct ImageEditorPreviewPixelSample {
         )
     }
 
+    func displayedCenter(displayedSize: CGSize, canvasSize: CGSize) -> CGPoint? {
+        guard point.x.isFinite,
+              point.y.isFinite,
+              displayedSize.width.isFinite,
+              displayedSize.height.isFinite,
+              canvasSize.width.isFinite,
+              canvasSize.height.isFinite,
+              displayedSize.width > 0,
+              displayedSize.height > 0,
+              canvasSize.width > 0,
+              canvasSize.height > 0,
+              point.x >= 0,
+              point.y >= 0,
+              point.x < canvasSize.width,
+              point.y < canvasSize.height
+        else { return nil }
+        return CGPoint(
+            x: (floor(point.x) + 0.5) / canvasSize.width * displayedSize.width,
+            y: (floor(point.y) + 0.5) / canvasSize.height * displayedSize.height
+        )
+    }
+
+    static func resolved(live: Self?, pinned: Self?) -> Self? {
+        live ?? pinned
+    }
+
     static func canvasPoint(
         from location: CGPoint,
         displayedSize: CGSize,
@@ -331,8 +357,13 @@ private struct ImageEditorPreviewBackdropView: View {
 struct ImageEditorPreviewPanel: View {
     @ObservedObject var viewModel: ImageEditorViewModel
     @State private var pixelSample: ImageEditorPreviewPixelSample?
+    @State private var pinnedPixelSample: ImageEditorPreviewPixelSample?
     @State private var pixelSampleSize: ImageEditorPreviewPixelSampleSize = .point
     @State private var pixelReadoutMode: ImageEditorPreviewPixelReadoutMode = .hexadecimalRGBA
+
+    private var displayedPixelSample: ImageEditorPreviewPixelSample? {
+        ImageEditorPreviewPixelSample.resolved(live: pixelSample, pinned: pinnedPixelSample)
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -447,20 +478,34 @@ struct ImageEditorPreviewPanel: View {
                 .fixedSize()
                 .accessibilityIdentifier("image-editor-preview-readout-mode")
                 Spacer()
-                if let pixelSample {
+                if let displayedPixelSample {
                     RoundedRectangle(cornerRadius: 3)
-                        .fill(Color(nsColor: pixelSample.color))
+                        .fill(Color(nsColor: displayedPixelSample.color))
                         .overlay {
                             RoundedRectangle(cornerRadius: 3)
                                 .stroke(Color(nsColor: ImageEditorTheme.border), lineWidth: 1)
                         }
                         .frame(width: 18, height: 18)
-                    Text(pixelSample.text(mode: pixelReadoutMode))
+                    Text(displayedPixelSample.text(mode: pixelReadoutMode))
                         .monospacedDigit()
                         .accessibilityIdentifier("image-editor-preview-pixel-sample")
                 } else {
                     Text(L10n.text("imageEditor.preview.sample.empty"))
                         .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                }
+                if pinnedPixelSample != nil {
+                    Image(systemName: "pin.fill")
+                        .foregroundStyle(Color(nsColor: ImageEditorTheme.exportAccent))
+                        .help(L10n.text("imageEditor.preview.sample.pinned"))
+                    Button {
+                        pinnedPixelSample = nil
+                        pixelSample = nil
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                    }
+                    .buttonStyle(.plain)
+                    .help(L10n.text("imageEditor.preview.sample.clearPinned"))
+                    .accessibilityIdentifier("image-editor-preview-clear-pinned-sample")
                 }
             }
             .font(.system(size: 11))
@@ -477,9 +522,11 @@ struct ImageEditorPreviewPanel: View {
         }
         .onChange(of: pixelSampleSize) { _ in
             pixelSample = nil
+            pinnedPixelSample = nil
         }
         .onDisappear {
             pixelSample = nil
+            pinnedPixelSample = nil
         }
     }
 
@@ -498,25 +545,54 @@ struct ImageEditorPreviewPanel: View {
         size: CGSize,
         interpolation: Image.Interpolation
     ) -> some View {
-        Image(nsImage: viewModel.previewImage)
-            .resizable()
-            .interpolation(interpolation)
-            .frame(width: size.width, height: size.height)
-            .contentShape(Rectangle())
-            .onContinuousHover { phase in
-                switch phase {
-                case let .active(location):
-                    pixelSample = ImageEditorPreviewPixelSample.sample(
-                        image: viewModel.previewImage,
-                        location: location,
-                        displayedSize: size,
-                        canvasSize: viewModel.document.canvasSize,
-                        sampleSize: pixelSampleSize
-                    )
-                case .ended:
-                    pixelSample = nil
-                }
+        ZStack {
+            Image(nsImage: viewModel.previewImage)
+                .resizable()
+                .interpolation(interpolation)
+                .frame(width: size.width, height: size.height)
+            if let markerCenter = pinnedPixelSample?.displayedCenter(
+                displayedSize: size,
+                canvasSize: viewModel.document.canvasSize
+            ) {
+                Image(systemName: "scope")
+                    .font(.system(size: 15, weight: .bold))
+                    .foregroundStyle(.white)
+                    .shadow(color: .black.opacity(0.9), radius: 1)
+                    .position(markerCenter)
+                    .allowsHitTesting(false)
+                    .accessibilityHidden(true)
             }
+        }
+        .frame(width: size.width, height: size.height)
+        .contentShape(Rectangle())
+        .onContinuousHover { phase in
+            switch phase {
+            case let .active(location):
+                pixelSample = ImageEditorPreviewPixelSample.sample(
+                    image: viewModel.previewImage,
+                    location: location,
+                    displayedSize: size,
+                    canvasSize: viewModel.document.canvasSize,
+                    sampleSize: pixelSampleSize
+                )
+            case .ended:
+                pixelSample = nil
+            }
+        }
+        .simultaneousGesture(
+            SpatialTapGesture().onEnded { value in
+                let sample = ImageEditorPreviewPixelSample.sample(
+                    image: viewModel.previewImage,
+                    location: value.location,
+                    displayedSize: size,
+                    canvasSize: viewModel.document.canvasSize,
+                    sampleSize: pixelSampleSize
+                )
+                pinnedPixelSample = sample
+                pixelSample = sample
+            }
+        )
+        .help(L10n.text("imageEditor.preview.sample.pinHelp"))
     }
 }
 

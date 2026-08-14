@@ -189,6 +189,43 @@ struct ImageEditorExportFormatTests {
         }
     }
 
+    @Test func previewPixelInspectionPinsFallbackAndMapsItsCanvasMarker() {
+        let pinned = ImageEditorPreviewPixelSample(
+            point: CGPoint(x: 20, y: 10),
+            color: .systemOrange
+        )
+        let live = ImageEditorPreviewPixelSample(
+            point: CGPoint(x: 3, y: 4),
+            color: .systemBlue
+        )
+
+        #expect(
+            ImageEditorPreviewPixelSample.resolved(live: live, pinned: pinned)?.point == live.point
+        )
+        #expect(
+            ImageEditorPreviewPixelSample.resolved(live: nil, pinned: pinned)?.point == pinned.point
+        )
+        #expect(ImageEditorPreviewPixelSample.resolved(live: nil, pinned: nil) == nil)
+        #expect(
+            pinned.displayedCenter(
+                displayedSize: CGSize(width: 320, height: 160),
+                canvasSize: CGSize(width: 80, height: 40)
+            ) == CGPoint(x: 82, y: 42)
+        )
+        #expect(
+            pinned.displayedCenter(
+                displayedSize: CGSize(width: 160, height: 80),
+                canvasSize: CGSize(width: 80, height: 40)
+            ) == CGPoint(x: 41, y: 21)
+        )
+        #expect(
+            pinned.displayedCenter(
+                displayedSize: .zero,
+                canvasSize: CGSize(width: 80, height: 40)
+            ) == nil
+        )
+    }
+
     @Test func previewPixelInspectionAveragesNeighborhoodAndClipsCanvasEdges() throws {
         let canvasSize = CGSize(width: 3, height: 1)
         let image = try #require(NSImage.rendered(size: canvasSize) { _ in

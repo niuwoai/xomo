@@ -421,7 +421,10 @@
 "imageEditor.preview.zoom.doublePixels" = "200%";
 "imageEditor.preview.dimensions" = "%d × %d 像素";
 "imageEditor.preview.sample" = "X %d  Y %d · %@";
-"imageEditor.preview.sample.empty" = "将鼠标移到图像上检查像素";
+"imageEditor.preview.sample.empty" = "移到图像上检查，点击即可固定";
+"imageEditor.preview.sample.pinHelp" = "点击图像固定当前样本";
+"imageEditor.preview.sample.pinned" = "已固定像素样本";
+"imageEditor.preview.sample.clearPinned" = "清除固定样本";
 "imageEditor.preview.sampleSize" = "取样范围";
 "imageEditor.preview.sampleSize.point" = "单点取样";
 "imageEditor.preview.sampleSize.average3" = "3 × 3 平均";

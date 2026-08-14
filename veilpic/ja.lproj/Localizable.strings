@@ -421,7 +421,10 @@
 "imageEditor.preview.zoom.doublePixels" = "200%";
 "imageEditor.preview.dimensions" = "%d × %d px";
 "imageEditor.preview.sample" = "X %d  Y %d · %@";
-"imageEditor.preview.sample.empty" = "画像上でピクセルを確認";
+"imageEditor.preview.sample.empty" = "画像上で確認し、クリックで固定";
+"imageEditor.preview.sample.pinHelp" = "画像をクリックしてサンプルを固定";
+"imageEditor.preview.sample.pinned" = "固定したピクセルサンプル";
+"imageEditor.preview.sample.clearPinned" = "固定サンプルを解除";
 "imageEditor.preview.sampleSize" = "サンプル範囲";
 "imageEditor.preview.sampleSize.point" = "ポイントサンプル";
 "imageEditor.preview.sampleSize.average3" = "3 × 3 の平均";
