@@ -1932,6 +1932,66 @@ struct XomoAutomationTests {
         #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionUnchanged"))
     }
 
+    @Test func registryReselectAndRestoreSavedRequireTheirOwnSnapshots() throws {
+        let viewModel = makeViewModel()
+        let historyCountBeforeRequests = viewModel.document.history.count
+        let undoCountBeforeRequests = viewModel.undoStack.count
+        let statusBeforeRequests = viewModel.statusText
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+
+        let missingReselect = registry.execute(request(
+            operation: "call",
+            name: "xomo.selection.modify",
+            arguments: ["action": .string("reselect")]
+        ))
+        #expect(!missingReselect.ok)
+        #expect(missingReselect.error?.contains("cleared-selection snapshot") == true)
+
+        let missingSaved = registry.execute(request(
+            operation: "call",
+            name: "xomo.selection.modify",
+            arguments: ["action": .string("restoreSaved")]
+        ))
+        #expect(!missingSaved.ok)
+        #expect(missingSaved.error?.contains("available saved selection") == true)
+        #expect(viewModel.document.selection == nil)
+        #expect(viewModel.document.history.count == historyCountBeforeRequests)
+        #expect(viewModel.undoStack.count == undoCountBeforeRequests)
+        #expect(viewModel.statusText == statusBeforeRequests)
+
+        viewModel.createRectSelection(from: CGPoint(x: 10, y: 10), to: CGPoint(x: 40, y: 30))
+        let originalSelection = viewModel.document.selection
+        viewModel.clearSelection()
+        let historyCountBeforeReselect = viewModel.document.history.count
+        #expect(registry.execute(request(
+            operation: "call",
+            name: "xomo.selection.modify",
+            arguments: ["action": .string("reselect")]
+        )).ok)
+        #expect(viewModel.document.selection == originalSelection)
+        #expect(viewModel.document.history.count == historyCountBeforeReselect + 1)
+
+        let repeatedReselect = registry.execute(request(
+            operation: "call",
+            name: "xomo.selection.modify",
+            arguments: ["action": .string("reselect")]
+        ))
+        #expect(!repeatedReselect.ok)
+        #expect(repeatedReselect.error?.contains("no active selection") == true)
+
+        viewModel.saveCurrentSelection()
+        viewModel.clearSelection()
+        let historyCountBeforeRestore = viewModel.document.history.count
+        #expect(registry.execute(request(
+            operation: "call",
+            name: "xomo.selection.modify",
+            arguments: ["action": .string("restoreSaved")]
+        )).ok)
+        #expect(viewModel.document.selection == originalSelection)
+        #expect(viewModel.document.history.count == historyCountBeforeRestore + 1)
+    }
+
     @Test func registryRepeatedEquivalentSelectionSaveDoesNotCreateDuplicateHistory() throws {
         let viewModel = makeViewModel()
         viewModel.document.selection = ImageEditorSelection.rectangle(

@@ -4671,6 +4671,16 @@ final class XomoAutomationRegistry {
         if Self.actionsRequiringActiveSelection.contains(action) {
             try requireActiveSelection(for: action, viewModel: viewModel)
         }
+        if action == "reselect", !viewModel.canReselectSelection {
+            throw XomoAutomationCallError.operationFailed(
+                "Reselect requires no active selection and an available cleared-selection snapshot"
+            )
+        }
+        if action == "restoreSaved", !viewModel.hasSavedSelection {
+            throw XomoAutomationCallError.operationFailed(
+                "Restore saved selection requires an available saved selection"
+            )
+        }
         switch action {
         case "loadTransparency":
             viewModel.loadSelectionFromLayerTransparency(
