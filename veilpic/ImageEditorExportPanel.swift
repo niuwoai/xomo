@@ -559,6 +559,10 @@ struct ImageEditorPreviewSampleMeasurementSelection {
 }
 
 struct ImageEditorPreviewSampleMeasurementGuide {
+    private static let minimumDistanceLabelLength: CGFloat = 44
+    private static let minimumHorizontalLabelLength: CGFloat = 48
+    private static let minimumVerticalLabelLength: CGFloat = 28
+
     let measurement: ImageEditorPreviewSampleMeasurement
     let fromCenter: CGPoint
     let toCenter: CGPoint
@@ -597,10 +601,68 @@ struct ImageEditorPreviewSampleMeasurementGuide {
         )
     }
 
+    var orthogonalCorner: CGPoint {
+        CGPoint(x: toCenter.x, y: fromCenter.y)
+    }
+
+    var horizontalMidpoint: CGPoint {
+        CGPoint(
+            x: (fromCenter.x + orthogonalCorner.x) / 2,
+            y: fromCenter.y
+        )
+    }
+
+    var verticalMidpoint: CGPoint {
+        CGPoint(
+            x: toCenter.x,
+            y: (orthogonalCorner.y + toCenter.y) / 2
+        )
+    }
+
+    var showsOrthogonalComponents: Bool {
+        measurement.deltaX != 0 && measurement.deltaY != 0
+    }
+
+    var distanceLabelCenter: CGPoint? {
+        let displayedDistance = hypot(
+            toCenter.x - fromCenter.x,
+            toCenter.y - fromCenter.y
+        )
+        return displayedDistance >= Self.minimumDistanceLabelLength ? midpoint : nil
+    }
+
+    var horizontalLabelCenter: CGPoint? {
+        guard showsOrthogonalComponents,
+              abs(toCenter.x - fromCenter.x) >= Self.minimumHorizontalLabelLength
+        else { return nil }
+        return horizontalMidpoint
+    }
+
+    var verticalLabelCenter: CGPoint? {
+        guard showsOrthogonalComponents,
+              abs(toCenter.y - fromCenter.y) >= Self.minimumVerticalLabelLength
+        else { return nil }
+        return verticalMidpoint
+    }
+
     var distanceText: String {
         L10n.format(
             "imageEditor.preview.sample.measurementDistance",
             measurement.distanceText
+        )
+    }
+
+    var deltaXText: String {
+        L10n.format(
+            "imageEditor.preview.sample.measurementDeltaX",
+            measurement.deltaXText
+        )
+    }
+
+    var deltaYText: String {
+        L10n.format(
+            "imageEditor.preview.sample.measurementDeltaY",
+            measurement.deltaYText
         )
     }
 }
@@ -1086,14 +1148,23 @@ struct ImageEditorPreviewPanel: View {
                         Color.accentColor,
                         style: StrokeStyle(lineWidth: 1, dash: [4, 3])
                     )
-                    Text(guide.distanceText)
-                        .font(.system(size: 10, weight: .semibold))
-                        .monospacedDigit()
-                        .foregroundStyle(.white)
-                        .padding(.horizontal, 5)
-                        .padding(.vertical, 2)
-                        .background(Capsule().fill(Color.accentColor))
-                        .position(guide.midpoint)
+                    if guide.showsOrthogonalComponents {
+                        Path { path in
+                            path.move(to: guide.fromCenter)
+                            path.addLine(to: guide.orthogonalCorner)
+                            path.addLine(to: guide.toCenter)
+                        }
+                        .stroke(Color.accentColor.opacity(0.6), lineWidth: 1)
+                    }
+                    if let center = guide.distanceLabelCenter {
+                        measurementBadge(guide.distanceText, at: center, opacity: 1)
+                    }
+                    if let center = guide.horizontalLabelCenter {
+                        measurementBadge(guide.deltaXText, at: center, opacity: 0.82)
+                    }
+                    if let center = guide.verticalLabelCenter {
+                        measurementBadge(guide.deltaYText, at: center, opacity: 0.82)
+                    }
                 }
                 .allowsHitTesting(false)
                 .accessibilityHidden(true)
@@ -1160,6 +1231,21 @@ struct ImageEditorPreviewPanel: View {
             }
         )
         .help(L10n.text("imageEditor.preview.sample.pinHelp"))
+    }
+
+    private func measurementBadge(
+        _ text: String,
+        at position: CGPoint,
+        opacity: Double
+    ) -> some View {
+        Text(text)
+            .font(.system(size: 10, weight: .semibold))
+            .monospacedDigit()
+            .foregroundStyle(.white)
+            .padding(.horizontal, 5)
+            .padding(.vertical, 2)
+            .background(Capsule().fill(Color.accentColor.opacity(opacity)))
+            .position(position)
     }
 
     private func isMeasurementEndpoint(_ number: Int) -> Bool {

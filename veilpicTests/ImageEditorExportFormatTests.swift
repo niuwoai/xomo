@@ -462,6 +462,13 @@ struct ImageEditorExportFormatTests {
         #expect(fitGuide.fromCenter == CGPoint(x: 15, y: 50))
         #expect(fitGuide.toCenter == CGPoint(x: 45, y: 130))
         #expect(fitGuide.midpoint == CGPoint(x: 30, y: 90))
+        #expect(fitGuide.orthogonalCorner == CGPoint(x: 45, y: 50))
+        #expect(fitGuide.horizontalMidpoint == CGPoint(x: 30, y: 50))
+        #expect(fitGuide.verticalMidpoint == CGPoint(x: 45, y: 90))
+        #expect(fitGuide.showsOrthogonalComponents)
+        #expect(fitGuide.distanceLabelCenter == fitGuide.midpoint)
+        #expect(fitGuide.horizontalLabelCenter == nil)
+        #expect(fitGuide.verticalLabelCenter == fitGuide.verticalMidpoint)
         #expect(fitGuide.measurement.distance == 5)
 
         let doubleGuide = try #require(
@@ -475,6 +482,8 @@ struct ImageEditorExportFormatTests {
         #expect(doubleGuide.fromCenter == CGPoint(x: 30, y: 100))
         #expect(doubleGuide.toCenter == CGPoint(x: 90, y: 260))
         #expect(doubleGuide.midpoint == CGPoint(x: 60, y: 180))
+        #expect(doubleGuide.horizontalLabelCenter == CGPoint(x: 60, y: 100))
+        #expect(doubleGuide.verticalLabelCenter == CGPoint(x: 90, y: 180))
         #expect(doubleGuide.measurement.distance == 5)
 
         let reversedSelection = selection.setFrom(2, in: pinnedSamples)
@@ -509,6 +518,59 @@ struct ImageEditorExportFormatTests {
                 canvasSize: canvasSize
             ) == nil
         )
+    }
+
+    @Test func previewMeasurementGuideAdaptsLabelsAndAxisAlignedPairs() throws {
+        var diagonalSamples = ImageEditorPreviewPinnedSamples()
+        let diagonalFirst = diagonalSamples.pin(
+            ImageEditorPreviewPixelSample(point: CGPoint(x: 1, y: 2), color: .black)
+        )
+        let diagonalSecond = diagonalSamples.pin(
+            ImageEditorPreviewPixelSample(point: CGPoint(x: 4, y: 6), color: .white)
+        )
+        #expect(diagonalFirst != nil)
+        #expect(diagonalSecond != nil)
+        var diagonalSelection = ImageEditorPreviewSampleMeasurementSelection()
+        let selectedDiagonal = diagonalSelection.selectLatest(in: diagonalSamples)
+        #expect(selectedDiagonal)
+        let compactGuide = try #require(
+            ImageEditorPreviewSampleMeasurementGuide(
+                selection: diagonalSelection,
+                samples: diagonalSamples,
+                displayedSize: CGSize(width: 20, height: 40),
+                canvasSize: CGSize(width: 10, height: 10)
+            )
+        )
+        #expect(compactGuide.showsOrthogonalComponents)
+        #expect(compactGuide.distanceLabelCenter == nil)
+        #expect(compactGuide.horizontalLabelCenter == nil)
+        #expect(compactGuide.verticalLabelCenter == nil)
+
+        var axisSamples = ImageEditorPreviewPinnedSamples()
+        let axisFirst = axisSamples.pin(
+            ImageEditorPreviewPixelSample(point: CGPoint(x: 1, y: 2), color: .black)
+        )
+        let axisSecond = axisSamples.pin(
+            ImageEditorPreviewPixelSample(point: CGPoint(x: 4, y: 2), color: .white)
+        )
+        #expect(axisFirst != nil)
+        #expect(axisSecond != nil)
+        var axisSelection = ImageEditorPreviewSampleMeasurementSelection()
+        let selectedAxis = axisSelection.selectLatest(in: axisSamples)
+        #expect(selectedAxis)
+        let axisGuide = try #require(
+            ImageEditorPreviewSampleMeasurementGuide(
+                selection: axisSelection,
+                samples: axisSamples,
+                displayedSize: CGSize(width: 200, height: 200),
+                canvasSize: CGSize(width: 10, height: 10)
+            )
+        )
+        #expect(!axisGuide.showsOrthogonalComponents)
+        #expect(axisGuide.orthogonalCorner == axisGuide.toCenter)
+        #expect(axisGuide.distanceLabelCenter == axisGuide.midpoint)
+        #expect(axisGuide.horizontalLabelCenter == nil)
+        #expect(axisGuide.verticalLabelCenter == nil)
     }
 
     @Test func previewPixelInspectionAveragesNeighborhoodAndClipsCanvasEdges() throws {

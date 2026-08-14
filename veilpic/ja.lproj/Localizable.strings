@@ -428,6 +428,8 @@
 "imageEditor.preview.sample.measurement" = "#%d → #%d · ΔX %@ px · ΔY %@ px · 距離 %@ px";
 "imageEditor.preview.sample.measurementValues" = "ΔX %@ px · ΔY %@ px · 距離 %@ px";
 "imageEditor.preview.sample.measurementDistance" = "%@ px";
+"imageEditor.preview.sample.measurementDeltaX" = "ΔX %@ px";
+"imageEditor.preview.sample.measurementDeltaY" = "ΔY %@ px";
 "imageEditor.preview.sample.measurementFrom" = "測定元のサンプル";
 "imageEditor.preview.sample.measurementTo" = "測定先のサンプル";
 "imageEditor.preview.sample.copy" = "カラー値をコピー";
