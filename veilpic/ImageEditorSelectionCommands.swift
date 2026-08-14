@@ -265,13 +265,13 @@ extension ImageEditorViewModel {
         }
         let effectiveRadius = effectiveSelectionRadius(radius, maximum: 64)
         let modified = selection.feathered(by: effectiveRadius, canvasSize: document.canvasSize)
-
-        pushUndo()
-        document.selection = modified
-        appendHistory(L10n.text("imageEditor.history.selectionFeather"))
-        statusText = modified == nil
-            ? L10n.text("imageEditor.status.selectionEmpty")
-            : L10n.format("imageEditor.status.selectionFeathered", effectiveRadius)
+        commitSelectionBoundaryResult(
+            original: selection,
+            modified: modified,
+            radius: effectiveRadius,
+            historyKey: "imageEditor.history.selectionFeather",
+            statusKey: "imageEditor.status.selectionFeathered"
+        )
     }
 
     func borderSelection(radius: Int? = nil) {
@@ -281,13 +281,13 @@ extension ImageEditorViewModel {
         }
         let effectiveRadius = effectiveSelectionRadius(radius, maximum: 64)
         let modified = selection.bordered(by: effectiveRadius, canvasSize: document.canvasSize)
-
-        pushUndo()
-        document.selection = modified
-        appendHistory(L10n.text("imageEditor.history.selectionBorder"))
-        statusText = modified == nil
-            ? L10n.text("imageEditor.status.selectionEmpty")
-            : L10n.format("imageEditor.status.selectionBordered", effectiveRadius)
+        commitSelectionBoundaryResult(
+            original: selection,
+            modified: modified,
+            radius: effectiveRadius,
+            historyKey: "imageEditor.history.selectionBorder",
+            statusKey: "imageEditor.status.selectionBordered"
+        )
     }
 
     func smoothSelection(radius: Int? = nil) {
@@ -604,6 +604,26 @@ extension ImageEditorViewModel {
                 expanding ? "imageEditor.status.selectionExpanded" : "imageEditor.status.selectionContracted",
                 effectiveRadius
             )
+    }
+
+    private func commitSelectionBoundaryResult(
+        original: ImageEditorSelection,
+        modified: ImageEditorSelection?,
+        radius: Int,
+        historyKey: String,
+        statusKey: String
+    ) {
+        guard !selectionsAreEquivalent(original, modified) else {
+            statusText = L10n.text("imageEditor.status.selectionUnchanged")
+            return
+        }
+
+        pushUndo()
+        document.selection = modified
+        appendHistory(L10n.text(historyKey))
+        statusText = modified == nil
+            ? L10n.text("imageEditor.status.selectionEmpty")
+            : L10n.format(statusKey, radius)
     }
 
     private func effectiveSelectionRadius(_ requested: Int?, maximum: Int) -> Int {

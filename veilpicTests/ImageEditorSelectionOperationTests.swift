@@ -625,6 +625,33 @@ struct ImageEditorSelectionOperationTests {
         #expect(viewModel.statusText == L10n.format("imageEditor.status.selectionBordered", 2))
     }
 
+    @Test func equivalentSelectionBorderPreservesHistoryAndExistingRedo() throws {
+        let canvasSize = NSSize(width: 1, height: 1)
+        let viewModel = ImageEditorViewModel(
+            sourceName: "source.png",
+            image: testImage(size: canvasSize)
+        ) { _ in }
+        viewModel.document.selection = .fullCanvas(size: canvasSize)
+        viewModel.invertSelection()
+        viewModel.undo()
+        let selectionBeforeBorder = viewModel.document.selection
+        let historyCountBeforeBorder = viewModel.document.history.count
+        let canUndoBeforeBorder = viewModel.canUndo
+        #expect(viewModel.canRedo)
+
+        viewModel.borderSelection(radius: 1)
+
+        #expect(viewModel.document.selection == selectionBeforeBorder)
+        #expect(viewModel.document.history.count == historyCountBeforeBorder)
+        #expect(viewModel.canUndo == canUndoBeforeBorder)
+        #expect(viewModel.canRedo)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionUnchanged"))
+
+        viewModel.redo()
+        #expect(viewModel.document.selection?.isInverted == true)
+        #expect(!viewModel.canRedo)
+    }
+
     @Test func imageEditorSmoothsSelectionMask() async throws {
         let canvasSize = NSSize(width: 12, height: 12)
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: testImage(size: canvasSize)) { _ in }
