@@ -1832,6 +1832,86 @@ struct XomoAutomationTests {
         #expect(viewModel.document.selection == nil)
     }
 
+    @Test func registrySelectionDependentCommandsRequireAnActiveSelection() {
+        let viewModel = makeViewModel()
+        let historyCountBeforeRequests = viewModel.document.history.count
+        let undoCountBeforeRequests = viewModel.undoStack.count
+        let statusBeforeRequests = viewModel.statusText
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        let directRequests = [
+            request(operation: "call", name: "xomo.selection.invert"),
+            request(
+                operation: "call",
+                name: "xomo.selection.feather",
+                arguments: ["radius": .number(3)]
+            ),
+            request(
+                operation: "call",
+                name: "xomo.selection.smooth",
+                arguments: ["radius": .number(3)]
+            )
+        ]
+        let modifyActions = [
+            "save",
+            "similarColors",
+            "growColor",
+            "expand",
+            "contract",
+            "border",
+            "smooth",
+            "fillHoles",
+            "removeSpeckles",
+            "centerHorizontal",
+            "centerVertical",
+            "centerCanvas",
+            "flipHorizontal",
+            "flipVertical",
+            "rotateClockwise",
+            "rotateCounterclockwise",
+            "rotate180",
+            "scaleUp",
+            "scaleDown",
+            "fitCanvas",
+            "nudge"
+        ]
+        let modifyRequests = modifyActions.map { action in
+            var arguments: [String: XomoJSONValue] = ["action": .string(action)]
+            if ["similarColors", "growColor"].contains(action) {
+                arguments["tolerance"] = .number(0.1)
+            }
+            if ["expand", "contract", "border", "smooth", "removeSpeckles"].contains(action) {
+                arguments["amount"] = .number(2)
+            }
+            if action == "nudge" {
+                arguments["dx"] = .number(1)
+                arguments["dy"] = .number(0)
+            }
+            return request(
+                operation: "call",
+                name: "xomo.selection.modify",
+                arguments: arguments
+            )
+        }
+
+        for selectionRequest in directRequests + modifyRequests {
+            let response = registry.execute(selectionRequest)
+            #expect(!response.ok)
+            #expect(response.error?.contains("requires an active selection") == true)
+        }
+        #expect(viewModel.document.selection == nil)
+        #expect(viewModel.document.history.count == historyCountBeforeRequests)
+        #expect(viewModel.undoStack.count == undoCountBeforeRequests)
+        #expect(viewModel.statusText == statusBeforeRequests)
+
+        #expect(registry.execute(request(operation: "call", name: "xomo.selection.clear")).ok)
+        viewModel.createRectSelection(from: CGPoint(x: 10, y: 10), to: CGPoint(x: 40, y: 40))
+        let historyCountBeforeInvert = viewModel.document.history.count
+        #expect(registry.execute(request(operation: "call", name: "xomo.selection.invert")).ok)
+        #expect(viewModel.document.selection?.isInverted == true)
+        #expect(viewModel.document.history.count == historyCountBeforeInvert + 1)
+    }
+
     @Test func registryEquivalentSavedSelectionRestoreDoesNotCreateDuplicateHistory() throws {
         let viewModel = makeViewModel()
         let selection = ImageEditorSelection.rectangle(CGRect(x: 2, y: 2, width: 8, height: 5))

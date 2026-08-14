@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-15 07:03:24 +0800",
+  "generated_at": "2026-08-15 07:11:47 +0800",
   "total": 1,
   "passed": 1,
   "failed": 0,
@@ -10,15 +10,15 @@
   "results": [
     {
       "suite": "XomoAutomationTests",
-      "method": "registryRejectsInvalidSelectionRadiiWithoutMutation",
-      "identifier": "veilpicTests/XomoAutomationTests/registryRejectsInvalidSelectionRadiiWithoutMutation()",
+      "method": "registrySelectionDependentCommandsRequireAnActiveSelection",
+      "identifier": "veilpicTests/XomoAutomationTests/registrySelectionDependentCommandsRequireAnActiveSelection()",
       "file": "XomoAutomationTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 2.988,
+      "duration": 3.009,
       "infrastructure_retries": 0,
       "issues": [],
-      "log": "XomoAutomationTests.registryRejectsInvalidSelectionRadiiWithoutMutation.log"
+      "log": "XomoAutomationTests.registrySelectionDependentCommandsRequireAnActiveSelection.log"
     }
   ]
 }

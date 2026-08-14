@@ -11,6 +11,29 @@ import UniformTypeIdentifiers
 final class XomoAutomationRegistry {
     static let shared = XomoAutomationRegistry()
     private static let maximumPSDInspectionBytes = 512 * 1024 * 1024
+    private static let actionsRequiringActiveSelection: Set<String> = [
+        "save",
+        "similarColors",
+        "growColor",
+        "expand",
+        "contract",
+        "border",
+        "smooth",
+        "fillHoles",
+        "removeSpeckles",
+        "centerHorizontal",
+        "centerVertical",
+        "centerCanvas",
+        "flipHorizontal",
+        "flipVertical",
+        "rotateClockwise",
+        "rotateCounterclockwise",
+        "rotate180",
+        "scaleUp",
+        "scaleDown",
+        "fitCanvas",
+        "nudge"
+    ]
 
     private weak var activeViewModel: ImageEditorViewModel?
 
@@ -283,12 +306,15 @@ final class XomoAutomationRegistry {
         case "xomo.selection.clear":
             viewModel.clearSelection()
         case "xomo.selection.invert":
+            try requireActiveSelection(for: "invert", viewModel: viewModel)
             viewModel.invertSelection()
         case "xomo.selection.feather":
+            try requireActiveSelection(for: "feather", viewModel: viewModel)
             viewModel.featherSelection(
                 radius: try selectionRadius(arguments["radius"], maximum: 64)
             )
         case "xomo.selection.smooth":
+            try requireActiveSelection(for: "smooth", viewModel: viewModel)
             viewModel.smoothSelection(
                 radius: try selectionRadius(arguments["radius"], maximum: 16)
             )
@@ -4641,7 +4667,11 @@ final class XomoAutomationRegistry {
         _ arguments: [String: XomoJSONValue],
         viewModel: ImageEditorViewModel
     ) throws {
-        switch try requiredString("action", in: arguments) {
+        let action = try requiredString("action", in: arguments)
+        if Self.actionsRequiringActiveSelection.contains(action) {
+            try requireActiveSelection(for: action, viewModel: viewModel)
+        }
+        switch action {
         case "loadTransparency":
             viewModel.loadSelectionFromLayerTransparency(
                 threshold: try selectionAlphaThreshold(arguments["threshold"])
@@ -4677,6 +4707,17 @@ final class XomoAutomationRegistry {
                 height: try requiredNumber("dy", in: arguments)
             ))
         default: throw XomoAutomationCallError.invalidArgument("Unknown selection modify action")
+        }
+    }
+
+    private func requireActiveSelection(
+        for action: String,
+        viewModel: ImageEditorViewModel
+    ) throws {
+        guard viewModel.hasSelection else {
+            throw XomoAutomationCallError.operationFailed(
+                "Selection action \(action) requires an active selection"
+            )
         }
     }
 
