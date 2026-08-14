@@ -538,6 +538,19 @@ struct ImageEditorExportFormatTests {
         #expect(removal !== move)
     }
 
+    @Test func previewMarkerModifierTrackingKeepsOnlyCursorActionFlags() {
+        #expect(ImageEditorPreviewMarkerModifierFlags.tracked(from: []) == [])
+        #expect(ImageEditorPreviewMarkerModifierFlags.tracked(
+            from: [.command, .control, .capsLock]
+        ) == [])
+        #expect(ImageEditorPreviewMarkerModifierFlags.tracked(
+            from: [.option, .command, .capsLock]
+        ) == [.option])
+        #expect(ImageEditorPreviewMarkerModifierFlags.tracked(
+            from: [.shift, .option, .control]
+        ) == [.shift, .option])
+    }
+
     @Test func previewPinnedSampleMarkersResolveTheTopmostHitWithoutPinningAgain() {
         var pinnedSamples = ImageEditorPreviewPinnedSamples()
         let first = pinnedSamples.pin(

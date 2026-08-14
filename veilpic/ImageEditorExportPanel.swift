@@ -618,6 +618,12 @@ enum ImageEditorPreviewMarkerCursor {
     }
 }
 
+enum ImageEditorPreviewMarkerModifierFlags {
+    static func tracked(from modifierFlags: NSEvent.ModifierFlags) -> NSEvent.ModifierFlags {
+        modifierFlags.intersection([.shift, .option])
+    }
+}
+
 struct ImageEditorPreviewSampleMeasurementSelection {
     private(set) var fromNumber: Int?
     private(set) var toNumber: Int?
@@ -854,6 +860,109 @@ private struct ImageEditorPreviewBackdropView: View {
                     row += 1
                 }
             }
+        }
+    }
+}
+
+private struct ImageEditorPreviewModifierFlagsMonitor: NSViewRepresentable {
+    let onChange: (NSEvent.ModifierFlags) -> Void
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(onChange: onChange)
+    }
+
+    func makeNSView(context: Context) -> MonitorNSView {
+        MonitorNSView(coordinator: context.coordinator)
+    }
+
+    func updateNSView(_ nsView: MonitorNSView, context: Context) {
+        context.coordinator.onChange = onChange
+    }
+
+    static func dismantleNSView(_ nsView: MonitorNSView, coordinator: Coordinator) {
+        coordinator.attach(to: nil)
+    }
+
+    final class Coordinator {
+        weak var window: NSWindow?
+        var onChange: (NSEvent.ModifierFlags) -> Void
+        private var eventMonitor: Any?
+        private var appDeactivateObserver: Any?
+        private var windowResignKeyObserver: Any?
+
+        init(onChange: @escaping (NSEvent.ModifierFlags) -> Void) {
+            self.onChange = onChange
+            eventMonitor = NSEvent.addLocalMonitorForEvents(matching: .flagsChanged) {
+                [weak self] event in
+                self?.handle(event)
+                return event
+            }
+            appDeactivateObserver = NotificationCenter.default.addObserver(
+                forName: NSApplication.didResignActiveNotification,
+                object: nil,
+                queue: .main
+            ) { [weak self] _ in
+                self?.reset()
+            }
+            windowResignKeyObserver = NotificationCenter.default.addObserver(
+                forName: NSWindow.didResignKeyNotification,
+                object: nil,
+                queue: .main
+            ) { [weak self] notification in
+                guard let self,
+                      notification.object as? NSWindow === self.window else { return }
+                reset()
+            }
+        }
+
+        deinit {
+            if let eventMonitor {
+                NSEvent.removeMonitor(eventMonitor)
+            }
+            if let appDeactivateObserver {
+                NotificationCenter.default.removeObserver(appDeactivateObserver)
+            }
+            if let windowResignKeyObserver {
+                NotificationCenter.default.removeObserver(windowResignKeyObserver)
+            }
+        }
+
+        func attach(to newWindow: NSWindow?) {
+            guard window !== newWindow else { return }
+            window = newWindow
+            reset()
+        }
+
+        private func handle(_ event: NSEvent) {
+            guard let window, event.window === window else { return }
+            onChange(ImageEditorPreviewMarkerModifierFlags.tracked(from: event.modifierFlags))
+        }
+
+        private func reset() {
+            onChange([])
+        }
+    }
+
+    final class MonitorNSView: NSView {
+        private weak var coordinator: Coordinator?
+
+        init(coordinator: Coordinator) {
+            self.coordinator = coordinator
+            super.init(frame: .zero)
+        }
+
+        @available(*, unavailable)
+        required init?(coder: NSCoder) {
+            fatalError("init(coder:) has not been implemented")
+        }
+
+        override func viewDidMoveToWindow() {
+            super.viewDidMoveToWindow()
+            coordinator?.attach(to: window)
+        }
+
+        override func hitTest(_ point: NSPoint) -> NSView? {
+            nil
         }
     }
 }
@@ -1407,6 +1516,12 @@ struct ImageEditorPreviewPanel: View {
                 .frame(width: size.width, height: size.height)
                 .allowsHitTesting(false)
                 .accessibilityHidden(true)
+            ImageEditorPreviewModifierFlagsMonitor { modifierFlags in
+                previewModifierFlags = modifierFlags
+            }
+            .frame(width: size.width, height: size.height)
+            .allowsHitTesting(false)
+            .accessibilityHidden(true)
         }
         .frame(width: size.width, height: size.height)
         .contentShape(Rectangle())
@@ -1418,7 +1533,9 @@ struct ImageEditorPreviewPanel: View {
                     displayedSize: size,
                     canvasSize: viewModel.document.canvasSize
                 )
-                previewModifierFlags = NSEvent.modifierFlags.intersection([.shift, .option])
+                previewModifierFlags = ImageEditorPreviewMarkerModifierFlags.tracked(
+                    from: NSEvent.modifierFlags
+                )
                 pixelSample = ImageEditorPreviewPixelSample.sample(
                     image: viewModel.previewImage,
                     location: location,
@@ -1438,7 +1555,9 @@ struct ImageEditorPreviewPanel: View {
                 coordinateSpace: .local
             )
             .onChanged { value in
-                previewModifierFlags = NSEvent.modifierFlags.intersection([.shift, .option])
+                previewModifierFlags = ImageEditorPreviewMarkerModifierFlags.tracked(
+                    from: NSEvent.modifierFlags
+                )
                 guard let markerNumber = markerDragTarget.resolve(
                     startingAt: value.startLocation,
                     samples: pinnedPixelSamples,
@@ -1470,7 +1589,9 @@ struct ImageEditorPreviewPanel: View {
                     displayedSize: size,
                     canvasSize: viewModel.document.canvasSize
                 )
-                previewModifierFlags = NSEvent.modifierFlags.intersection([.shift, .option])
+                previewModifierFlags = ImageEditorPreviewMarkerModifierFlags.tracked(
+                    from: NSEvent.modifierFlags
+                )
             }
         )
         .simultaneousGesture(

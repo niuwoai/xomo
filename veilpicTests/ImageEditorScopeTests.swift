@@ -1197,6 +1197,8 @@ struct ImageEditorScopeTests {
         #expect(source.contains("enum ImageEditorPreviewMarkerDragConstraint"))
         #expect(source.contains("enum ImageEditorPreviewMarkerTapAction: Equatable"))
         #expect(source.contains("enum ImageEditorPreviewMarkerCursor"))
+        #expect(source.contains("enum ImageEditorPreviewMarkerModifierFlags"))
+        #expect(source.contains("private struct ImageEditorPreviewModifierFlagsMonitor"))
         #expect(source.contains("struct ImageEditorPreviewSampleMeasurement"))
         #expect(source.contains("struct ImageEditorPreviewSampleMeasurementSelection"))
         #expect(source.contains("struct ImageEditorPreviewSampleMeasurementGuide"))
@@ -1242,8 +1244,13 @@ struct ImageEditorScopeTests {
         #expect(previewSource.contains("modifierFlags: NSEvent.modifierFlags"))
         #expect(previewSource.contains("ImageEditorCursorRectView(cursor: previewMarkerCursor)"))
         #expect(previewSource.contains("hoveredPinnedSampleNumber = pinnedPixelSamples.markerNumber("))
-        #expect(previewSource.contains("previewModifierFlags = NSEvent.modifierFlags.intersection("))
+        #expect(previewSource.contains("ImageEditorPreviewMarkerModifierFlags.tracked("))
         #expect(previewSource.contains("draggedMarkerNumber: markerDragTarget.number"))
+        #expect(previewSource.contains("ImageEditorPreviewModifierFlagsMonitor { modifierFlags in"))
+        #expect(source.contains("NSEvent.addLocalMonitorForEvents(matching: .flagsChanged)"))
+        #expect(source.contains("guard let window, event.window === window else { return }"))
+        #expect(source.contains("forName: NSApplication.didResignActiveNotification"))
+        #expect(source.contains("forName: NSWindow.didResignKeyNotification"))
         #expect(previewSource.contains("location: location"))
         #expect(previewSource.contains("movePinnedSample(number: markerNumber, to: sample)"))
         #expect(previewSource.contains(".onEnded { value in\n                markerDragTarget.reset()"))
@@ -2857,7 +2864,9 @@ struct ImageEditorScopeTests {
         )
 
         let penEndStart = try #require(
-            source.range(of: "case .pen:\n                    if isMovingPathAnchor, !isPathAnchorDragCancelled")
+            source.range(
+                of: "case .pen:\n                    if isPenAnchorConversionGestureActive {\n                        if !isPathAnchorDragCancelled"
+            )
         )
         let penEnd = try #require(
             source[penEndStart.upperBound...].range(of: "case .pathSelection:")
@@ -2874,7 +2883,9 @@ struct ImageEditorScopeTests {
         )
         #expect(policy.lowerBound < finish.lowerBound)
         #expect(finish.lowerBound < addPoint.lowerBound)
-        #expect(penEndSource[addPoint.lowerBound...].contains("endImagePoint,"))
+        #expect(penEndSource.contains("let action = pendingPenCreationAction"))
+        #expect(penEndSource.contains("endImagePoint: endImagePoint"))
+        #expect(penEndSource[addPoint.lowerBound...].contains("action?.anchorPoint,"))
         #expect(penEndSource[addPoint.lowerBound...].contains("constrainedToAngleIncrement:"))
         #expect(penEndSource.contains("hasPendingPath: viewModel.hasPendingPenPathTransaction"))
         #expect(penEndSource.contains("modifierFlags: NSEvent.modifierFlags"))
@@ -2900,7 +2911,9 @@ struct ImageEditorScopeTests {
         )
 
         let penEndStart = try #require(
-            viewSource.range(of: "case .pen:\n                    if isPenAnchorConversionGestureActive {\n                        break\n                    } else if isMovingPathAnchor, !isPathAnchorDragCancelled")
+            viewSource.range(
+                of: "case .pen:\n                    if isPenAnchorConversionGestureActive {\n                        if !isPathAnchorDragCancelled"
+            )
         )
         let penEnd = try #require(
             viewSource[penEndStart.upperBound...].range(of: "case .pathSelection:")
@@ -3223,7 +3236,7 @@ struct ImageEditorScopeTests {
 
         #expect(viewSource.components(
             separatedBy: "constrainedToAngleIncrement: ImageEditorPathAnchorDragConstraint"
-        ).count == 5)
+        ).count == 8)
         #expect(viewSource.contains("modifierFlags.contains(.shift)\n            && hypot(viewTranslation.width, viewTranslation.height)"))
         #expect(pathSource.contains("movingPathAnchorOriginalCanvasSubpaths[selectedPathSubpathIndex][index].point"))
         #expect(pathSource.contains("case .inHandle, .outHandle:\n                return canvasAnchors[index].point"))
@@ -3242,7 +3255,7 @@ struct ImageEditorScopeTests {
 
         #expect(viewSource.components(
             separatedBy: "preservingSmoothness: !NSEvent.modifierFlags.contains(.option)"
-        ).count == 5)
+        ).count == 8)
         #expect(pathSource.contains("originalAnchor.map(ImageEditorPenPointGeometry.isSmoothAnchor) == true"))
         #expect(pathSource.contains("preferredLength: hypot("))
         #expect(pathSource.contains("updatedAnchor.outControl = ImageEditorPenPointGeometry.oppositeControl("))
