@@ -2187,6 +2187,34 @@ struct ImageEditorScopeTests {
         }
     }
 
+    @Test func slicesMenuOffersDirectAllSlicesDelivery() throws {
+        let source = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent(
+                "veilpic/ImageEditorMenuBar.swift"
+            ),
+            encoding: .utf8
+        )
+        let menuStart = try #require(source.range(of: "private var slicesActionsMenu"))
+        let menuEnd = try #require(
+            source[menuStart.upperBound...].range(of: "private var toolsActionsMenu")
+        )
+        let menuSource = source[menuStart.lowerBound..<menuEnd.lowerBound]
+
+        #expect(menuSource.contains("imageEditor.action.exportAllSlices"))
+        #expect(menuSource.contains("viewModel.runExportAllSlices()"))
+        #expect(menuSource.contains(".disabled(!viewModel.canExportNamedSlice)"))
+
+        for locale in ["en", "ja", "zh-Hans"] {
+            let localization = try String(
+                contentsOf: Self.repositoryRoot().appendingPathComponent(
+                    "veilpic/\(locale).lproj/Localizable.strings"
+                ),
+                encoding: .utf8
+            )
+            #expect(localization.contains("\"imageEditor.action.exportAllSlices\""))
+        }
+    }
+
     @Test func exportPanelUsesSharedLabelGridAndSingleLineScopeSegments() throws {
         let source = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorExportPanel.swift"),

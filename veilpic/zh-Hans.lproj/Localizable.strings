@@ -565,6 +565,7 @@
 "imageEditor.export.saveAs" = "另存为";
 "imageEditor.export.saveAllSlices" = "导出全部切片…";
 "imageEditor.export.chooseFolder" = "选择文件夹";
+"imageEditor.action.exportAllSlices" = "导出全部切片…";
 "imageEditor.action.applyAdjustment" = "应用调整";
 "imageEditor.action.applyFilter" = "应用滤镜";
 "imageEditor.action.lastFilter" = "上次滤镜";

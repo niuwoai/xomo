@@ -1813,6 +1813,10 @@ extension ImageEditorView {
                 viewModel.openExportPanel()
             }
             .disabled(!viewModel.canExportNamedSlice)
+            Button(L10n.text("imageEditor.action.exportAllSlices")) {
+                viewModel.runExportAllSlices()
+            }
+            .disabled(!viewModel.canExportNamedSlice)
         }
     }
 

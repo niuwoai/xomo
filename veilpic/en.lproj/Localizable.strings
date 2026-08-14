@@ -565,6 +565,7 @@
 "imageEditor.export.saveAs" = "Save As";
 "imageEditor.export.saveAllSlices" = "Export All Slices…";
 "imageEditor.export.chooseFolder" = "Choose Folder";
+"imageEditor.action.exportAllSlices" = "Export All Slices…";
 "imageEditor.action.applyAdjustment" = "Apply Adjustment";
 "imageEditor.action.applyFilter" = "Apply Filter";
 "imageEditor.action.lastFilter" = "Last Filter";

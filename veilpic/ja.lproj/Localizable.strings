@@ -565,6 +565,7 @@
 "imageEditor.export.saveAs" = "別名で保存";
 "imageEditor.export.saveAllSlices" = "すべてのスライスを書き出す…";
 "imageEditor.export.chooseFolder" = "フォルダを選択";
+"imageEditor.action.exportAllSlices" = "すべてのスライスを書き出す…";
 "imageEditor.action.applyAdjustment" = "調整を適用";
 "imageEditor.action.applyFilter" = "フィルターを適用";
 "imageEditor.action.lastFilter" = "最後のフィルター";
