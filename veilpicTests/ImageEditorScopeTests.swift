@@ -1208,6 +1208,7 @@ struct ImageEditorScopeTests {
         #expect(source.contains("mutating func selectDestination("))
         #expect(source.contains("var latestMeasurement: ImageEditorPreviewSampleMeasurement?"))
         #expect(source.contains("mutating func setReadoutMode("))
+        #expect(source.contains("mutating func resample("))
         #expect(source.contains("pasteboard.setString(value, forType: .string)"))
         #expect(source.contains("static func canvasPoint("))
         #expect(source.contains("func displayedCenter("))
@@ -1328,6 +1329,20 @@ struct ImageEditorScopeTests {
         #expect(previewSource.contains("case .ended:\n                pixelSample = nil"))
         #expect(previewSource.contains(".accessibilityIdentifier(\"image-editor-preview-inspector\")"))
         #expect(previewSource.contains(".accessibilityIdentifier(\"image-editor-preview-pixel-sample\")"))
+
+        let sampleSizeChangeStart = try #require(
+            previewSource.range(of: ".onChange(of: pixelSampleSize) { sampleSize in")
+        )
+        let sampleSizeChangeEnd = try #require(
+            previewSource[sampleSizeChangeStart.upperBound...].range(of: ".onDisappear {")
+        )
+        let sampleSizeChangeSource = previewSource[
+            sampleSizeChangeStart.lowerBound..<sampleSizeChangeEnd.lowerBound
+        ]
+        #expect(sampleSizeChangeSource.contains("canvasPoint: currentPoint"))
+        #expect(sampleSizeChangeSource.contains("pinnedPixelSamples.resample("))
+        #expect(!sampleSizeChangeSource.contains("pinnedPixelSamples.removeAll()"))
+        #expect(!sampleSizeChangeSource.contains("measurementSelection.reset()"))
 
         let markerTap = try #require(
             previewSource.range(of: "let markerNumber = pinnedPixelSamples.markerNumber(")

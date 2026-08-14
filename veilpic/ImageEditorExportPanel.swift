@@ -257,14 +257,39 @@ struct ImageEditorPreviewPixelSample {
             from: location,
             displayedSize: displayedSize,
             canvasSize: canvasSize
-        ),
-              let color = sampledColor(
-                image: image,
-                at: point,
-                canvasSize: canvasSize,
-                sampleSize: sampleSize
-              )
+        ) else { return nil }
+        return sample(
+            image: image,
+            canvasPoint: point,
+            canvasSize: canvasSize,
+            sampleSize: sampleSize
+        )
+    }
+
+    static func sample(
+        image: NSImage,
+        canvasPoint: CGPoint,
+        canvasSize: CGSize,
+        sampleSize: ImageEditorPreviewPixelSampleSize = .point
+    ) -> Self? {
+        guard canvasPoint.x.isFinite,
+              canvasPoint.y.isFinite,
+              canvasSize.width.isFinite,
+              canvasSize.height.isFinite,
+              canvasSize.width > 0,
+              canvasSize.height > 0,
+              canvasPoint.x >= 0,
+              canvasPoint.y >= 0,
+              canvasPoint.x < canvasSize.width,
+              canvasPoint.y < canvasSize.height
         else { return nil }
+        let point = CGPoint(x: floor(canvasPoint.x), y: floor(canvasPoint.y))
+        guard let color = sampledColor(
+            image: image,
+            at: point,
+            canvasSize: canvasSize,
+            sampleSize: sampleSize
+        ) else { return nil }
         return Self(point: point, color: color)
     }
 
@@ -484,6 +509,26 @@ struct ImageEditorPreviewPinnedSamples {
 
     mutating func removeAll() {
         entries.removeAll()
+    }
+
+    @discardableResult
+    mutating func resample(
+        image: NSImage,
+        canvasSize: CGSize,
+        sampleSize: ImageEditorPreviewPixelSampleSize
+    ) -> Int {
+        var updatedCount = 0
+        for index in entries.indices {
+            guard let sample = ImageEditorPreviewPixelSample.sample(
+                image: image,
+                canvasPoint: entries[index].sample.point,
+                canvasSize: canvasSize,
+                sampleSize: sampleSize
+            ) else { continue }
+            entries[index].sample = sample
+            updatedCount += 1
+        }
+        return updatedCount
     }
 
     func markerNumber(
@@ -1181,10 +1226,20 @@ struct ImageEditorPreviewPanel: View {
             hoveredPinnedSampleNumber = nil
             previewModifierFlags = []
         }
-        .onChange(of: pixelSampleSize) { _ in
-            pixelSample = nil
-            pinnedPixelSamples.removeAll()
-            measurementSelection.reset()
+        .onChange(of: pixelSampleSize) { sampleSize in
+            if let currentPoint = pixelSample?.point {
+                pixelSample = ImageEditorPreviewPixelSample.sample(
+                    image: viewModel.previewImage,
+                    canvasPoint: currentPoint,
+                    canvasSize: viewModel.document.canvasSize,
+                    sampleSize: sampleSize
+                )
+            }
+            pinnedPixelSamples.resample(
+                image: viewModel.previewImage,
+                canvasSize: viewModel.document.canvasSize,
+                sampleSize: sampleSize
+            )
             markerDragTarget.reset()
             hoveredPinnedSampleNumber = nil
             previewModifierFlags = []

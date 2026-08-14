@@ -1050,6 +1050,57 @@ struct ImageEditorExportFormatTests {
         #expect(ImageEditorPreviewPixelSampleSize.allCases.map(\.rawValue) == [1, 3, 5])
     }
 
+    @Test func changingPreviewSampleSizeResamplesWithoutLosingPinnedMeasurementState() throws {
+        let canvasSize = CGSize(width: 3, height: 1)
+        let image = try #require(NSImage.rendered(size: canvasSize) { _ in
+            NSColor(deviceRed: 1, green: 0, blue: 0, alpha: 1).setFill()
+            CGRect(x: 0, y: 0, width: 1, height: 1).fill()
+            NSColor(deviceRed: 0, green: 1, blue: 0, alpha: 1).setFill()
+            CGRect(x: 1, y: 0, width: 1, height: 1).fill()
+            NSColor(deviceRed: 0, green: 0, blue: 1, alpha: 1).setFill()
+            CGRect(x: 2, y: 0, width: 1, height: 1).fill()
+        })
+        let first = try #require(ImageEditorPreviewPixelSample.sample(
+            image: image,
+            canvasPoint: CGPoint(x: 0, y: 0),
+            canvasSize: canvasSize
+        ))
+        let second = try #require(ImageEditorPreviewPixelSample.sample(
+            image: image,
+            canvasPoint: CGPoint(x: 1, y: 0),
+            canvasSize: canvasSize
+        ))
+        var pinnedSamples = ImageEditorPreviewPinnedSamples()
+        _ = pinnedSamples.pin(first, readoutMode: .rgb)
+        _ = pinnedSamples.pin(second, readoutMode: .cmyk)
+        var measurementSelection = ImageEditorPreviewSampleMeasurementSelection()
+        let didSelectLatest = measurementSelection.selectLatest(in: pinnedSamples)
+        #expect(didSelectLatest)
+
+        let updatedCount = pinnedSamples.resample(
+            image: image,
+            canvasSize: canvasSize,
+            sampleSize: .average3
+        )
+
+        #expect(updatedCount == 2)
+        #expect(pinnedSamples.entries.map(\.number) == [1, 2])
+        #expect(pinnedSamples.entries.map(\.readoutMode) == [.rgb, .cmyk])
+        #expect(pinnedSamples.entries.map(\.sample.point) == [
+            CGPoint(x: 0, y: 0),
+            CGPoint(x: 1, y: 0)
+        ])
+        #expect(pinnedSamples.entries[0].sample.text.contains("#808000FF"))
+        #expect(pinnedSamples.entries[1].sample.text.contains("#555555FF"))
+        let measurement = try #require(
+            measurementSelection.measurement(in: pinnedSamples)
+        )
+        #expect(measurement.fromNumber == 1)
+        #expect(measurement.toNumber == 2)
+        #expect(measurement.deltaX == 1)
+        #expect(measurement.deltaY == 0)
+    }
+
     @Test func pureVectorCanvasExportsEditableSVG() throws {
         let viewModel = ImageEditorViewModel(
             sourceName: "vector-canvas",
