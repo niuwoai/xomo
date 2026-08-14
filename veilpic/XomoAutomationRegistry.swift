@@ -4640,7 +4640,7 @@ final class XomoAutomationRegistry {
         switch try requiredString("action", in: arguments) {
         case "loadTransparency":
             viewModel.loadSelectionFromLayerTransparency(
-                threshold: selectionAlphaThreshold(arguments["threshold"])
+                threshold: try selectionAlphaThreshold(arguments["threshold"])
             )
         case "save": viewModel.saveCurrentSelection()
         case "reselect": viewModel.reselectSelection()
@@ -4690,9 +4690,18 @@ final class XomoAutomationRegistry {
         return CGFloat(number)
     }
 
-    private func selectionAlphaThreshold(_ value: XomoJSONValue?) -> Int? {
-        guard let number = value?.doubleValue, number.isFinite else { return nil }
-        return Int(number.rounded())
+    private func selectionAlphaThreshold(_ value: XomoJSONValue?) throws -> Int? {
+        guard let value else { return nil }
+        guard let number = value.doubleValue,
+              number.isFinite,
+              number.rounded() == number,
+              (0...255).contains(number)
+        else {
+            throw XomoAutomationCallError.invalidArgument(
+                "Layer transparency threshold must be an integer from 0 through 255"
+            )
+        }
+        return Int(number)
     }
 
     private func quickMaskAction(
@@ -6344,7 +6353,11 @@ private extension XomoAutomationRegistry {
                 minimum: 0,
                 maximum: 1
             ),
-            "threshold": XomoAutomationSchema.number(description: "Layer alpha threshold from 0 to 255 for loadTransparency"),
+            "threshold": XomoAutomationSchema.integer(
+                description: "Layer alpha threshold from 0 to 255 for loadTransparency",
+                minimum: 0,
+                maximum: 255
+            ),
             "dx": XomoAutomationSchema.number(description: "Horizontal selection delta"),
             "dy": XomoAutomationSchema.number(description: "Vertical selection delta")
         ], required: ["action"]),

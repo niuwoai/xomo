@@ -189,7 +189,11 @@ struct XomoAutomationTests {
         #expect(magicTool["inputSchema"]?.objectValue?["properties"]?.objectValue?["tolerance"]?.objectValue?["type"] == .string("number"))
         #expect(magicTool["inputSchema"]?.objectValue?["properties"]?.objectValue?["contiguous"]?.objectValue?["type"] == .string("boolean"))
         #expect(selectionModifyTool["inputSchema"]?.objectValue?["properties"]?.objectValue?["tolerance"]?.objectValue?["type"] == .string("number"))
-        #expect(selectionModifyTool["inputSchema"]?.objectValue?["properties"]?.objectValue?["threshold"]?.objectValue?["type"] == .string("number"))
+        let transparencyThresholdSchema = selectionModifyTool["inputSchema"]?.objectValue?["properties"]?
+            .objectValue?["threshold"]?.objectValue
+        #expect(transparencyThresholdSchema?["type"] == .string("integer"))
+        #expect(transparencyThresholdSchema?["minimum"] == .number(0))
+        #expect(transparencyThresholdSchema?["maximum"] == .number(255))
         let selectionToleranceSchemas = [magicTool, quickSelectionTool, selectionModifyTool].compactMap {
             $0["inputSchema"]?.objectValue?["properties"]?.objectValue?["tolerance"]?.objectValue
         }
@@ -1117,6 +1121,40 @@ struct XomoAutomationTests {
 
         viewModel.undo()
         #expect(viewModel.document.selection == nil)
+    }
+
+    @Test func registryRejectsInvalidLayerTransparencyThresholdsWithoutMutation() {
+        let viewModel = makeViewModel()
+        viewModel.createRectSelection(from: CGPoint(x: 10, y: 10), to: CGPoint(x: 40, y: 40))
+        let selectionBeforeRequests = viewModel.document.selection
+        let historyCountBeforeRequests = viewModel.document.history.count
+        let undoCountBeforeRequests = viewModel.undoStack.count
+        let selectedLayerIDsBeforeRequests = viewModel.document.selectedLayerIDs
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        let invalidThresholds: [XomoJSONValue] = [
+            .number(-1),
+            .number(256),
+            .number(12.5),
+            .string("opaque")
+        ]
+
+        for threshold in invalidThresholds {
+            let response = registry.execute(request(
+                operation: "call",
+                name: "xomo.selection.modify",
+                arguments: [
+                    "action": .string("loadTransparency"),
+                    "threshold": threshold
+                ]
+            ))
+            #expect(!response.ok)
+            #expect(response.error?.contains("integer from 0 through 255") == true)
+        }
+        #expect(viewModel.document.selection == selectionBeforeRequests)
+        #expect(viewModel.document.history.count == historyCountBeforeRequests)
+        #expect(viewModel.undoStack.count == undoCountBeforeRequests)
+        #expect(viewModel.document.selectedLayerIDs == selectedLayerIDsBeforeRequests)
     }
 
     @Test func registryDoesNotRecordRepeatedAlphaChannelSelectionLoad() throws {

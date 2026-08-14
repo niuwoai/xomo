@@ -150,8 +150,22 @@ enum XomoAutomationSchema {
         return .object(schema)
     }
 
-    static func integer(description: String) -> XomoJSONValue {
-        .object(["type": .string("integer"), "description": .string(description)])
+    static func integer(
+        description: String,
+        minimum: Int? = nil,
+        maximum: Int? = nil
+    ) -> XomoJSONValue {
+        var schema: [String: XomoJSONValue] = [
+            "type": .string("integer"),
+            "description": .string(description)
+        ]
+        if let minimum {
+            schema["minimum"] = .number(Double(minimum))
+        }
+        if let maximum {
+            schema["maximum"] = .number(Double(maximum))
+        }
+        return .object(schema)
     }
 
     static func boolean(description: String) -> XomoJSONValue {
