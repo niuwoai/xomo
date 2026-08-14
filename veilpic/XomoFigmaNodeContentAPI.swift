@@ -530,6 +530,8 @@ enum XomoFigmaNodeImportMapper {
                     format = .png
                 case "JPG":
                     format = .jpeg
+                case "PDF":
+                    format = .pdf
                 default:
                     return nil
                 }

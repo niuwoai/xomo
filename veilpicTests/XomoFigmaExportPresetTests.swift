@@ -173,4 +173,66 @@ struct XomoFigmaExportPresetTests {
             "Banner-wide.jpg"
         ])
     }
+
+    @Test
+    func figmaPDFExportSettingCreatesSliceScopedPDFArtifact() throws {
+        let response = try JSONDecoder().decode(
+            XomoFigmaNodeResponse.self,
+            from: Data(
+                """
+                {
+                  "name": "Handoff",
+                  "nodes": {
+                    "4:20": {
+                      "document": {
+                        "id": "4:20",
+                        "name": "Spec Sheet",
+                        "type": "SLICE",
+                        "absoluteBoundingBox": {"x": 10, "y": 20, "width": 120, "height": 60},
+                        "exportSettings": [
+                          {
+                            "suffix": "-print",
+                            "format": "PDF",
+                            "constraint": {"type": "SCALE", "value": 1}
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+                """.utf8
+            )
+        )
+        let plan = try XomoFigmaNodeImportMapper.makePlan(
+            response: response,
+            requestedNodeID: "4:20"
+        )
+        let item = try #require(plan.items.first)
+        #expect(item.exportPresets.count == 1)
+        #expect(item.exportPresets.first?.format == .pdf)
+        #expect(item.issues.isEmpty)
+
+        let viewModel = ImageEditorViewModel(
+            sourceName: "handoff.xomoproject",
+            image: NSImage.rendered(size: CGSize(width: 200, height: 120)) { rect in
+                NSColor.systemPurple.setFill()
+                rect.fill()
+            }!
+        ) { _ in }
+        #expect(viewModel.importFigmaNodePlan(plan))
+
+        let variants = viewModel.sliceExportPlan(settings: viewModel.exportSettings)
+        let variant = try #require(variants.first)
+        #expect(variants.count == 1)
+        #expect(variant.filename == "Spec Sheet-print.pdf")
+        #expect(variant.settings.format == .pdf)
+        #expect(variant.settings.scope == .slice)
+        let artifacts = try #require(
+            viewModel.sliceExportArtifacts(settings: viewModel.exportSettings)
+        )
+        let artifact = try #require(artifacts.first)
+        #expect(artifacts.count == 1)
+        #expect(artifact.variant == variant)
+        #expect(String(decoding: artifact.data.prefix(4), as: UTF8.self) == "%PDF")
+    }
 }

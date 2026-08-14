@@ -5075,7 +5075,7 @@ struct ImageEditorSlice: Identifiable, Equatable, Codable {
         let normalizedPresets = (exportPresets ?? [])
             .prefix(Self.maximumExportPresetCount)
             .compactMap { preset -> ImageEditorSliceExportPreset? in
-                guard preset.format == .png || preset.format == .jpeg else { return nil }
+                guard preset.format.supportsSliceExportPreset else { return nil }
                 let normalized = ImageEditorSliceExportPreset(
                     suffix: preset.suffix,
                     format: preset.format,

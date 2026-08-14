@@ -56,6 +56,15 @@ enum ImageEditorExportFormat: String, CaseIterable, Identifiable, Codable, Senda
             ImageEditorPSDCodec.contentType
         }
     }
+
+    var supportsSliceExportPreset: Bool {
+        switch self {
+        case .png, .jpeg, .pdf:
+            true
+        case .webp, .svg, .psd:
+            false
+        }
+    }
 }
 
 enum ImageEditorExportScope: String, CaseIterable, Identifiable {
@@ -284,7 +293,7 @@ extension ImageEditorViewModel {
         defaults: ImageEditorExportSettings
     ) -> (settings: [ImageEditorExportSettings], usesPresets: Bool) {
         let presetSettings = (slice.exportPresets ?? []).compactMap { preset -> ImageEditorExportSettings? in
-            guard (preset.format == .png || preset.format == .jpeg),
+            guard preset.format.supportsSliceExportPreset,
                   let scale = preset.resolvedScale(for: slice.frame)
             else { return nil }
             var settings = defaults
