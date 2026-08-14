@@ -3512,6 +3512,16 @@
 "imageEditor.slices.exportPreset.scale" = "%@x";
 "imageEditor.slices.exportPreset.width" = "%@ px wide";
 "imageEditor.slices.exportPreset.height" = "%@ px high";
+"imageEditor.slices.exportPreset.addCurrent" = "Add Current Export Setting";
+"imageEditor.slices.exportPreset.remove" = "Remove Export Preset";
+"imageEditor.status.sliceExportPresetUnsupported" = "The current format cannot be used as a slice export preset";
+"imageEditor.status.sliceExportPresetLimitReached" = "This slice has reached the export preset limit";
+"imageEditor.status.sliceExportPresetInvalid" = "The current export scale is not valid for this slice";
+"imageEditor.status.sliceExportPresetUnchanged" = "That export preset already exists";
+"imageEditor.status.sliceExportPresetAdded" = "Added an export preset to slice: %@";
+"imageEditor.status.sliceExportPresetRemoved" = "Removed an export preset from slice: %@";
+"imageEditor.history.sliceExportPresetAdded" = "Add Slice Export Preset: %@";
+"imageEditor.history.sliceExportPresetRemoved" = "Remove Slice Export Preset: %@";
 "imageEditor.status.slicesPanelShown" = "Slices panel shown";
 "imageEditor.status.slicesPanelHidden" = "Slices panel hidden";
 "imageEditor.status.sliceSelected" = "Selected slice: %@";

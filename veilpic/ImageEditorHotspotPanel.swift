@@ -232,6 +232,8 @@ struct ImageEditorSlicePanel: View {
                             isSelected: viewModel.exportSettings.sliceID == slice.id,
                             onSelect: { select(slice) },
                             onSave: { save($0, for: slice) },
+                            onAddExportPreset: { addExportPreset(to: slice) },
+                            onDeleteExportPreset: { deleteExportPreset(at: $0, from: slice) },
                             onDelete: { delete(slice) }
                         )
                     }
@@ -277,6 +279,14 @@ struct ImageEditorSlicePanel: View {
         drafts.removeValue(forKey: slice.id)
     }
 
+    private func addExportPreset(to slice: ImageEditorSlice) {
+        _ = viewModel.addCurrentExportPreset(toSlice: slice.id)
+    }
+
+    private func deleteExportPreset(at index: Int, from slice: ImageEditorSlice) {
+        _ = viewModel.removeSliceExportPreset(fromSlice: slice.id, at: index)
+    }
+
     private func syncDrafts() {
         let currentIDs = Set(viewModel.availableSlices.map(\.id))
         var next = drafts.filter { currentIDs.contains($0.key) }
@@ -297,6 +307,8 @@ private struct ImageEditorSlicePanelRow: View {
     let isSelected: Bool
     let onSelect: () -> Void
     let onSave: (ImageEditorSliceDraft) -> Void
+    let onAddExportPreset: () -> Void
+    let onDeleteExportPreset: (Int) -> Void
     let onDelete: () -> Void
 
     var body: some View {
@@ -322,12 +334,32 @@ private struct ImageEditorSlicePanelRow: View {
             if let presets = slice.exportPresets, !presets.isEmpty {
                 VStack(alignment: .leading, spacing: 2) {
                     ForEach(presets.indices, id: \.self) { index in
-                        Text(exportPresetSummary(presets[index]))
-                            .font(.system(size: 10))
-                            .foregroundColor(Color(nsColor: ImageEditorTheme.mutedText))
-                            .lineLimit(1)
+                        HStack(spacing: 4) {
+                            Text(exportPresetSummary(presets[index]))
+                                .font(.system(size: 10))
+                                .foregroundColor(Color(nsColor: ImageEditorTheme.mutedText))
+                                .lineLimit(1)
+                            Spacer(minLength: 0)
+                            Button {
+                                onDeleteExportPreset(index)
+                            } label: {
+                                Image(systemName: "minus.circle")
+                            }
+                            .buttonStyle(.borderless)
+                            .focusable(false)
+                            .help(L10n.text("imageEditor.slices.exportPreset.remove"))
+                        }
                     }
                 }
+            }
+
+            if isSelected {
+                Button(L10n.text("imageEditor.slices.exportPreset.addCurrent")) {
+                    onAddExportPreset()
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.small)
+                .focusable(false)
             }
 
             TextField(L10n.text("imageEditor.slices.name"), text: $draft.name)

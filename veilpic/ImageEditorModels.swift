@@ -5041,6 +5041,19 @@ struct ImageEditorSliceExportPreset: Codable, Equatable, Sendable {
         return String(scalars)
             .trimmingCharacters(in: .whitespacesAndNewlines)
     }
+
+    static func defaultSuffix(forScale scale: Double) -> String {
+        guard scale.isFinite, scale != 1 else { return "" }
+        let label: String
+        if scale.rounded() == scale {
+            label = String(Int(scale))
+        } else if (scale * 10).rounded() == scale * 10 {
+            label = String(format: "%.1f", locale: Locale(identifier: "en_US_POSIX"), scale)
+        } else {
+            label = String(format: "%.2f", locale: Locale(identifier: "en_US_POSIX"), scale)
+        }
+        return "@\(label)x"
+    }
 }
 
 struct ImageEditorSlice: Identifiable, Equatable, Codable {

@@ -3512,6 +3512,16 @@
 "imageEditor.slices.exportPreset.scale" = "%@ 倍";
 "imageEditor.slices.exportPreset.width" = "幅 %@ px";
 "imageEditor.slices.exportPreset.height" = "高さ %@ px";
+"imageEditor.slices.exportPreset.addCurrent" = "現在の書き出し設定を追加";
+"imageEditor.slices.exportPreset.remove" = "書き出しプリセットを削除";
+"imageEditor.status.sliceExportPresetUnsupported" = "現在の形式はスライス書き出しプリセットに使用できません";
+"imageEditor.status.sliceExportPresetLimitReached" = "このスライスは書き出しプリセットの上限に達しています";
+"imageEditor.status.sliceExportPresetInvalid" = "現在の書き出し倍率はこのスライスでは無効です";
+"imageEditor.status.sliceExportPresetUnchanged" = "同じ書き出しプリセットが既にあります";
+"imageEditor.status.sliceExportPresetAdded" = "スライスに書き出しプリセットを追加しました：%@";
+"imageEditor.status.sliceExportPresetRemoved" = "スライスから書き出しプリセットを削除しました：%@";
+"imageEditor.history.sliceExportPresetAdded" = "スライス書き出しプリセットを追加：%@";
+"imageEditor.history.sliceExportPresetRemoved" = "スライス書き出しプリセットを削除：%@";
 "imageEditor.status.slicesPanelShown" = "スライスパネルを表示しました";
 "imageEditor.status.slicesPanelHidden" = "スライスパネルを非表示にしました";
 "imageEditor.status.sliceSelected" = "スライスを選択しました：%@";

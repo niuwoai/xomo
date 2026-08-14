@@ -3512,6 +3512,16 @@
 "imageEditor.slices.exportPreset.scale" = "%@ 倍";
 "imageEditor.slices.exportPreset.width" = "宽 %@ 像素";
 "imageEditor.slices.exportPreset.height" = "高 %@ 像素";
+"imageEditor.slices.exportPreset.addCurrent" = "添加当前导出设置";
+"imageEditor.slices.exportPreset.remove" = "移除导出预设";
+"imageEditor.status.sliceExportPresetUnsupported" = "当前格式不能用作切片导出预设";
+"imageEditor.status.sliceExportPresetLimitReached" = "当前切片已达到导出预设数量上限";
+"imageEditor.status.sliceExportPresetInvalid" = "当前导出倍率不适用于这个切片";
+"imageEditor.status.sliceExportPresetUnchanged" = "相同的导出预设已经存在";
+"imageEditor.status.sliceExportPresetAdded" = "已为切片添加导出预设：%@";
+"imageEditor.status.sliceExportPresetRemoved" = "已从切片移除导出预设：%@";
+"imageEditor.history.sliceExportPresetAdded" = "添加切片导出预设：%@";
+"imageEditor.history.sliceExportPresetRemoved" = "移除切片导出预设：%@";
 "imageEditor.status.slicesPanelShown" = "已显示切片面板";
 "imageEditor.status.slicesPanelHidden" = "已隐藏切片面板";
 "imageEditor.status.sliceSelected" = "已选中切片：%@";

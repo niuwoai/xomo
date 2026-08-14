@@ -9,6 +9,9 @@ struct ImageEditorExportFormatTests {
         #expect(ImageEditorExportScaleFormatter.string(from: 1.25) == "1.25")
         #expect(ImageEditorExportScaleFormatter.string(from: 1.5) == "1.5")
         #expect(ImageEditorExportScaleFormatter.string(from: 2.75) == "2.75")
+        #expect(ImageEditorSliceExportPreset.defaultSuffix(forScale: 1) == "")
+        #expect(ImageEditorSliceExportPreset.defaultSuffix(forScale: 1.5) == "@1.5x")
+        #expect(ImageEditorSliceExportPreset.defaultSuffix(forScale: 2.75) == "@2.75x")
     }
 
     @Test func previewAndExportPanelsAreNonClosingAndMutuallyExclusive() {
@@ -1273,6 +1276,134 @@ struct ImageEditorExportFormatTests {
         #expect(exported.size == CGSize(width: 40, height: 30))
         #expect(exported.color(at: CGPoint(x: 20, y: 15))?.alphaComponent ?? 0 > 0.8)
         #expect(viewModel.exportFilenames(settings: settings) == ["Hero.png"])
+    }
+
+    @Test func addingCurrentSliceExportPresetIsUndoableAndIdempotent() throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "delivery.png",
+            image: NSImage.transparent(size: CGSize(width: 80, height: 60))
+        ) { _ in }
+        let slice = ImageEditorSlice(
+            name: "Hero",
+            frame: CGRect(x: 10, y: 10, width: 40, height: 30)
+        )
+        viewModel.document.slices = [slice]
+        viewModel.exportSettings = ImageEditorExportSettings(
+            format: .png,
+            scope: .slice,
+            sliceID: slice.id,
+            scale: 2,
+            filenameSuffix: "-stale-imported-suffix"
+        )
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.addCurrentExportPreset(toSlice: slice.id))
+        #expect(viewModel.document.slices.first?.exportPresets == [
+            ImageEditorSliceExportPreset(
+                suffix: "@2x",
+                format: .png,
+                constraint: .scale,
+                value: 2
+            )
+        ])
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.canUndo)
+
+        let historyAfterAdd = viewModel.document.history.count
+        #expect(!viewModel.addCurrentExportPreset(toSlice: slice.id))
+        #expect(viewModel.document.history.count == historyAfterAdd)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.sliceExportPresetUnchanged"))
+
+        viewModel.undo()
+        #expect(viewModel.document.slices.first?.exportPresets == nil)
+        #expect(viewModel.canRedo)
+        viewModel.redo()
+        #expect(viewModel.document.slices.first?.exportPresets?.first?.suffix == "@2x")
+    }
+
+    @Test func removingSliceExportPresetUpdatesPrimarySettingAndIsUndoable() {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "delivery.png",
+            image: NSImage.transparent(size: CGSize(width: 80, height: 60))
+        ) { _ in }
+        let presets = [
+            ImageEditorSliceExportPreset(
+                suffix: "@2x",
+                format: .png,
+                constraint: .scale,
+                value: 2
+            ),
+            ImageEditorSliceExportPreset(
+                suffix: "-print",
+                format: .pdf,
+                constraint: .scale,
+                value: 1
+            )
+        ]
+        let slice = ImageEditorSlice(
+            name: "Hero",
+            frame: CGRect(x: 10, y: 10, width: 40, height: 30),
+            exportPresets: presets
+        )
+        viewModel.document.slices = [slice]
+        _ = viewModel.selectSlice(id: slice.id)
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.removeSliceExportPreset(fromSlice: slice.id, at: 0))
+        #expect(viewModel.document.slices.first?.exportPresets == [presets[1]])
+        #expect(viewModel.exportSettings.format == .pdf)
+        #expect(viewModel.exportSettings.filenameSuffix == "-print")
+        #expect(viewModel.document.history.count == historyCount + 1)
+
+        viewModel.undo()
+        #expect(viewModel.document.slices.first?.exportPresets == presets)
+        #expect(viewModel.canRedo)
+        viewModel.redo()
+        #expect(viewModel.document.slices.first?.exportPresets == [presets[1]])
+    }
+
+    @Test func sliceExportPresetBoundariesDoNotCreateTransactions() {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "delivery.png",
+            image: NSImage.transparent(size: CGSize(width: 80, height: 60))
+        ) { _ in }
+        let slice = ImageEditorSlice(
+            name: "Hero",
+            frame: CGRect(x: 10, y: 10, width: 40, height: 30)
+        )
+        viewModel.document.slices = [slice]
+        let originalHistory = viewModel.document.history
+        let originalCanUndo = viewModel.canUndo
+
+        viewModel.exportSettings.scope = .slice
+        viewModel.exportSettings.sliceID = slice.id
+        viewModel.exportSettings.format = .webp
+        #expect(!viewModel.addCurrentExportPreset(toSlice: slice.id))
+        #expect(viewModel.document.slices.first?.exportPresets == nil)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.sliceExportPresetUnsupported"))
+
+        viewModel.exportSettings.format = .png
+        viewModel.exportSettings.scale = 5
+        #expect(!viewModel.addCurrentExportPreset(toSlice: slice.id))
+        #expect(viewModel.document.slices.first?.exportPresets == nil)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.sliceExportPresetInvalid"))
+
+        viewModel.document.slices[0].exportPresets = (0..<ImageEditorSlice.maximumExportPresetCount).map { index in
+            ImageEditorSliceExportPreset(
+                suffix: "-\(index)",
+                format: .png,
+                constraint: .scale,
+                value: 1
+            )
+        }
+        viewModel.exportSettings.scale = 1
+        viewModel.exportSettings.filenameSuffix = "-extra"
+        let fullPresets = viewModel.document.slices[0].exportPresets
+        #expect(!viewModel.addCurrentExportPreset(toSlice: slice.id))
+        #expect(viewModel.document.slices[0].exportPresets == fullPresets)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.sliceExportPresetLimitReached"))
+        #expect(viewModel.document.history == originalHistory)
+        #expect(viewModel.canUndo == originalCanUndo)
     }
 
     @Test func exportingAllSlicesUsesPresetsFallbackScalesAndCollisionSafeNames() throws {

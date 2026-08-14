@@ -2215,6 +2215,43 @@ struct ImageEditorScopeTests {
         }
     }
 
+    @Test func slicePanelEditsNativeExportPresetsThroughSharedCommands() throws {
+        let panelSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent(
+                "veilpic/ImageEditorHotspotPanel.swift"
+            ),
+            encoding: .utf8
+        )
+        let commandSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent(
+                "veilpic/ImageEditorSlices.swift"
+            ),
+            encoding: .utf8
+        )
+
+        #expect(panelSource.contains("imageEditor.slices.exportPreset.addCurrent"))
+        #expect(panelSource.contains("viewModel.addCurrentExportPreset(toSlice: slice.id)"))
+        #expect(panelSource.contains("viewModel.removeSliceExportPreset(fromSlice: slice.id, at: index)"))
+        #expect(panelSource.contains("imageEditor.slices.exportPreset.remove"))
+        #expect(commandSource.contains("func addCurrentExportPreset(toSlice id: UUID)"))
+        #expect(commandSource.contains("func removeSliceExportPreset(fromSlice id: UUID"))
+        #expect(commandSource.contains("guard !existing.contains(preset)"))
+        #expect(commandSource.contains("pushUndo()"))
+
+        for locale in ["en", "ja", "zh-Hans"] {
+            let localization = try String(
+                contentsOf: Self.repositoryRoot().appendingPathComponent(
+                    "veilpic/\(locale).lproj/Localizable.strings"
+                ),
+                encoding: .utf8
+            )
+            #expect(localization.contains("\"imageEditor.slices.exportPreset.addCurrent\""))
+            #expect(localization.contains("\"imageEditor.slices.exportPreset.remove\""))
+            #expect(localization.contains("\"imageEditor.history.sliceExportPresetAdded\""))
+            #expect(localization.contains("\"imageEditor.history.sliceExportPresetRemoved\""))
+        }
+    }
+
     @Test func exportPanelUsesSharedLabelGridAndSingleLineScopeSegments() throws {
         let source = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorExportPanel.swift"),

@@ -103,6 +103,62 @@ extension ImageEditorViewModel {
         exportSettings.filenameSuffix = preset.suffix
     }
 
+    @discardableResult
+    func addCurrentExportPreset(toSlice id: UUID) -> Bool {
+        guard let index = document.slices.firstIndex(where: { $0.id == id }) else { return false }
+        guard exportSettings.format.supportsSliceExportPreset else {
+            statusText = L10n.text("imageEditor.status.sliceExportPresetUnsupported")
+            return false
+        }
+        let existing = document.slices[index].exportPresets ?? []
+        guard existing.count < ImageEditorSlice.maximumExportPresetCount else {
+            statusText = L10n.text("imageEditor.status.sliceExportPresetLimitReached")
+            return false
+        }
+        let scale = exportSettings.usesScale ? exportSettings.scale : 1
+        let suffix = ImageEditorSliceExportPreset.defaultSuffix(forScale: scale)
+        let preset = ImageEditorSliceExportPreset(
+            suffix: suffix,
+            format: exportSettings.format,
+            constraint: .scale,
+            value: scale
+        )
+        guard preset.resolvedScale(for: document.slices[index].frame) != nil else {
+            statusText = L10n.text("imageEditor.status.sliceExportPresetInvalid")
+            return false
+        }
+        guard !existing.contains(preset) else {
+            statusText = L10n.text("imageEditor.status.sliceExportPresetUnchanged")
+            return false
+        }
+
+        pushUndo()
+        document.slices[index].exportPresets = existing + [preset]
+        let name = document.slices[index].name
+        appendHistory(L10n.format("imageEditor.history.sliceExportPresetAdded", name))
+        statusText = L10n.format("imageEditor.status.sliceExportPresetAdded", name)
+        return true
+    }
+
+    @discardableResult
+    func removeSliceExportPreset(fromSlice id: UUID, at presetIndex: Int) -> Bool {
+        guard let sliceIndex = document.slices.firstIndex(where: { $0.id == id }),
+              var presets = document.slices[sliceIndex].exportPresets,
+              presets.indices.contains(presetIndex)
+        else { return false }
+
+        pushUndo()
+        presets.remove(at: presetIndex)
+        document.slices[sliceIndex].exportPresets = presets.isEmpty ? nil : presets
+        let updated = document.slices[sliceIndex]
+        if exportSettings.sliceID == id {
+            applyPrimaryExportPreset(for: updated)
+        }
+        appendHistory(L10n.format("imageEditor.history.sliceExportPresetRemoved", updated.name))
+        statusText = L10n.format("imageEditor.status.sliceExportPresetRemoved", updated.name)
+        return true
+    }
+
     private var sliceBoundsFromSelection: CGRect? {
         guard let selection = document.selection else { return nil }
         let canvasBounds = CGRect(origin: .zero, size: document.canvasSize)
