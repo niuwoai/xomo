@@ -422,6 +422,10 @@
 "imageEditor.preview.dimensions" = "%d × %d px";
 "imageEditor.preview.sample" = "X %d  Y %d · %@";
 "imageEditor.preview.sample.empty" = "画像上でピクセルを確認";
+"imageEditor.preview.sampleSize" = "サンプル範囲";
+"imageEditor.preview.sampleSize.point" = "ポイントサンプル";
+"imageEditor.preview.sampleSize.average3" = "3 × 3 の平均";
+"imageEditor.preview.sampleSize.average5" = "5 × 5 の平均";
 "imageEditor.action.swatchesShowPanel" = "スウォッチパネルを表示";
 "imageEditor.action.brushesShowPanel" = "ブラシパネルを表示";
 "imageEditor.action.characterShowPanel" = "文字パネルを表示";

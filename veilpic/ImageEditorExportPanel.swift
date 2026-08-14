@@ -91,6 +91,27 @@ enum ImageEditorPreviewZoomMode: String, CaseIterable, Identifiable, Hashable {
     }
 }
 
+enum ImageEditorPreviewPixelSampleSize: Int, CaseIterable, Identifiable, Hashable {
+    case point = 1
+    case average3 = 3
+    case average5 = 5
+
+    var id: Int { rawValue }
+
+    var title: String {
+        switch self {
+        case .point:
+            return L10n.text("imageEditor.preview.sampleSize.point")
+        case .average3:
+            return L10n.text("imageEditor.preview.sampleSize.average3")
+        case .average5:
+            return L10n.text("imageEditor.preview.sampleSize.average5")
+        }
+    }
+
+    var radius: Int { rawValue / 2 }
+}
+
 struct ImageEditorPreviewPixelSample {
     let point: CGPoint
     let color: NSColor
@@ -142,19 +163,88 @@ struct ImageEditorPreviewPixelSample {
         image: NSImage,
         location: CGPoint,
         displayedSize: CGSize,
-        canvasSize: CGSize
+        canvasSize: CGSize,
+        sampleSize: ImageEditorPreviewPixelSampleSize = .point
     ) -> Self? {
         guard let point = canvasPoint(
             from: location,
             displayedSize: displayedSize,
             canvasSize: canvasSize
         ),
-              let color = image.color(
-                at: CGPoint(x: point.x + 0.5, y: point.y + 0.5),
-                coordinateSize: canvasSize
+              let color = sampledColor(
+                image: image,
+                at: point,
+                canvasSize: canvasSize,
+                sampleSize: sampleSize
               )
         else { return nil }
         return Self(point: point, color: color)
+    }
+
+    private static func sampledColor(
+        image: NSImage,
+        at point: CGPoint,
+        canvasSize: CGSize,
+        sampleSize: ImageEditorPreviewPixelSampleSize
+    ) -> NSColor? {
+        if sampleSize == .point {
+            return image.color(
+                at: CGPoint(x: point.x + 0.5, y: point.y + 0.5),
+                coordinateSize: canvasSize
+            )
+        }
+
+        guard let cgImage = image.cgImage(
+            forProposedRect: nil,
+            context: nil,
+            hints: nil
+        ) else { return nil }
+        let bitmap = NSBitmapImageRep(cgImage: cgImage)
+        let canvasPixelWidth = max(1, Int(canvasSize.width.rounded()))
+        let canvasPixelHeight = max(1, Int(canvasSize.height.rounded()))
+        let centerX = max(0, min(canvasPixelWidth - 1, Int(point.x)))
+        let centerY = max(0, min(canvasPixelHeight - 1, Int(point.y)))
+        let xRange = max(0, centerX - sampleSize.radius)...min(
+            canvasPixelWidth - 1,
+            centerX + sampleSize.radius
+        )
+        let yRange = max(0, centerY - sampleSize.radius)...min(
+            canvasPixelHeight - 1,
+            centerY + sampleSize.radius
+        )
+
+        var red: CGFloat = 0
+        var green: CGFloat = 0
+        var blue: CGFloat = 0
+        var alpha: CGFloat = 0
+        var count: CGFloat = 0
+        for canvasY in yRange {
+            for canvasX in xRange {
+                let bitmapX = min(
+                    cgImage.width - 1,
+                    Int((CGFloat(canvasX) + 0.5) / canvasSize.width * CGFloat(cgImage.width))
+                )
+                let bitmapY = min(
+                    cgImage.height - 1,
+                    Int((CGFloat(canvasY) + 0.5) / canvasSize.height * CGFloat(cgImage.height))
+                )
+                guard let sampledColor = bitmap.colorAt(x: bitmapX, y: bitmapY),
+                      let color = sampledColor.usingColorSpace(.deviceRGB)
+                else { continue }
+                red += color.redComponent
+                green += color.greenComponent
+                blue += color.blueComponent
+                alpha += color.alphaComponent
+                count += 1
+            }
+        }
+        guard count > 0 else { return nil }
+        return NSColor(
+            deviceRed: red / count,
+            green: green / count,
+            blue: blue / count,
+            alpha: alpha / count
+        )
     }
 }
 
@@ -192,6 +282,7 @@ private struct ImageEditorPreviewBackdropView: View {
 struct ImageEditorPreviewPanel: View {
     @ObservedObject var viewModel: ImageEditorViewModel
     @State private var pixelSample: ImageEditorPreviewPixelSample?
+    @State private var pixelSampleSize: ImageEditorPreviewPixelSampleSize = .point
 
     var body: some View {
         VStack(spacing: 0) {
@@ -281,6 +372,18 @@ struct ImageEditorPreviewPanel: View {
                         Int(viewModel.document.canvasSize.height.rounded())
                     )
                 )
+                Picker(
+                    L10n.text("imageEditor.preview.sampleSize"),
+                    selection: $pixelSampleSize
+                ) {
+                    ForEach(ImageEditorPreviewPixelSampleSize.allCases) { sampleSize in
+                        Text(sampleSize.title).tag(sampleSize)
+                    }
+                }
+                .pickerStyle(.menu)
+                .controlSize(.small)
+                .fixedSize()
+                .accessibilityIdentifier("image-editor-preview-sample-size")
                 Spacer()
                 if let pixelSample {
                     RoundedRectangle(cornerRadius: 3)
@@ -308,6 +411,9 @@ struct ImageEditorPreviewPanel: View {
         .environment(\.colorScheme, .dark)
         .background(Color(nsColor: ImageEditorTheme.panel))
         .onChange(of: viewModel.previewZoomMode) { _ in
+            pixelSample = nil
+        }
+        .onChange(of: pixelSampleSize) { _ in
             pixelSample = nil
         }
         .onDisappear {
@@ -342,7 +448,8 @@ struct ImageEditorPreviewPanel: View {
                         image: viewModel.previewImage,
                         location: location,
                         displayedSize: size,
-                        canvasSize: viewModel.document.canvasSize
+                        canvasSize: viewModel.document.canvasSize,
+                        sampleSize: pixelSampleSize
                     )
                 case .ended:
                     pixelSample = nil

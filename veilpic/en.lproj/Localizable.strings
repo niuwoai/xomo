@@ -422,6 +422,10 @@
 "imageEditor.preview.dimensions" = "%d × %d px";
 "imageEditor.preview.sample" = "X %d  Y %d · %@";
 "imageEditor.preview.sample.empty" = "Move over the image to inspect a pixel";
+"imageEditor.preview.sampleSize" = "Sample Size";
+"imageEditor.preview.sampleSize.point" = "Point Sample";
+"imageEditor.preview.sampleSize.average3" = "3 × 3 Average";
+"imageEditor.preview.sampleSize.average5" = "5 × 5 Average";
 "imageEditor.action.swatchesShowPanel" = "Show Swatches Panel";
 "imageEditor.action.brushesShowPanel" = "Show Brushes Panel";
 "imageEditor.action.characterShowPanel" = "Show Character Panel";

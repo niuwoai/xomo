@@ -170,6 +170,61 @@ struct ImageEditorExportFormatTests {
         #expect(sample.text.contains("#FF800040"))
     }
 
+    @Test func previewPixelInspectionAveragesNeighborhoodAndClipsCanvasEdges() throws {
+        let canvasSize = CGSize(width: 3, height: 1)
+        let image = try #require(NSImage.rendered(size: canvasSize) { _ in
+            NSColor(deviceRed: 1, green: 0, blue: 0, alpha: 1).setFill()
+            CGRect(x: 0, y: 0, width: 1, height: 1).fill()
+            NSColor(deviceRed: 0, green: 1, blue: 0, alpha: 1).setFill()
+            CGRect(x: 1, y: 0, width: 1, height: 1).fill()
+            NSColor(deviceRed: 0, green: 0, blue: 1, alpha: 1).setFill()
+            CGRect(x: 2, y: 0, width: 1, height: 1).fill()
+        })
+
+        let point = try #require(
+            ImageEditorPreviewPixelSample.sample(
+                image: image,
+                location: CGPoint(x: 1.5, y: 0.5),
+                displayedSize: canvasSize,
+                canvasSize: canvasSize,
+                sampleSize: .point
+            )
+        )
+        let average3 = try #require(
+            ImageEditorPreviewPixelSample.sample(
+                image: image,
+                location: CGPoint(x: 1.5, y: 0.5),
+                displayedSize: canvasSize,
+                canvasSize: canvasSize,
+                sampleSize: .average3
+            )
+        )
+        let average5 = try #require(
+            ImageEditorPreviewPixelSample.sample(
+                image: image,
+                location: CGPoint(x: 1.5, y: 0.5),
+                displayedSize: canvasSize,
+                canvasSize: canvasSize,
+                sampleSize: .average5
+            )
+        )
+        let edgeAverage = try #require(
+            ImageEditorPreviewPixelSample.sample(
+                image: image,
+                location: CGPoint(x: 0.5, y: 0.5),
+                displayedSize: canvasSize,
+                canvasSize: canvasSize,
+                sampleSize: .average3
+            )
+        )
+
+        #expect(point.text.contains("#00FF00FF"))
+        #expect(average3.text.contains("#555555FF"))
+        #expect(average5.text.contains("#555555FF"))
+        #expect(edgeAverage.text.contains("#808000FF"))
+        #expect(ImageEditorPreviewPixelSampleSize.allCases.map(\.rawValue) == [1, 3, 5])
+    }
+
     @Test func pureVectorCanvasExportsEditableSVG() throws {
         let viewModel = ImageEditorViewModel(
             sourceName: "vector-canvas",

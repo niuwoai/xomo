@@ -1189,11 +1189,21 @@ struct ImageEditorScopeTests {
         let previewSource = source[previewStart.lowerBound..<previewEnd.lowerBound]
 
         #expect(source.contains("struct ImageEditorPreviewPixelSample"))
+        #expect(source.contains("enum ImageEditorPreviewPixelSampleSize"))
         #expect(source.contains("static func canvasPoint("))
+        #expect(source.contains("private static func sampledColor("))
+        #expect(source.contains("let bitmap = NSBitmapImageRep(cgImage: cgImage)"))
         #expect(source.contains("image.color("))
         #expect(previewSource.contains("@State private var pixelSample"))
+        #expect(previewSource.contains("@State private var pixelSampleSize"))
+        #expect(previewSource.contains("selection: $pixelSampleSize"))
+        #expect(previewSource.contains("ForEach(ImageEditorPreviewPixelSampleSize.allCases)"))
+        #expect(previewSource.contains(
+            ".accessibilityIdentifier(\"image-editor-preview-sample-size\")"
+        ))
         #expect(previewSource.contains(".onContinuousHover"))
         #expect(previewSource.contains("ImageEditorPreviewPixelSample.sample("))
+        #expect(previewSource.contains("sampleSize: pixelSampleSize"))
         #expect(previewSource.contains("case .ended:\n                    pixelSample = nil"))
         #expect(previewSource.contains(".accessibilityIdentifier(\"image-editor-preview-inspector\")"))
         #expect(previewSource.contains(".accessibilityIdentifier(\"image-editor-preview-pixel-sample\")"))
@@ -1208,6 +1218,10 @@ struct ImageEditorScopeTests {
             #expect(localization.contains("\"imageEditor.preview.dimensions\""))
             #expect(localization.contains("\"imageEditor.preview.sample\""))
             #expect(localization.contains("\"imageEditor.preview.sample.empty\""))
+            #expect(localization.contains("\"imageEditor.preview.sampleSize\""))
+            #expect(localization.contains("\"imageEditor.preview.sampleSize.point\""))
+            #expect(localization.contains("\"imageEditor.preview.sampleSize.average3\""))
+            #expect(localization.contains("\"imageEditor.preview.sampleSize.average5\""))
         }
     }
 

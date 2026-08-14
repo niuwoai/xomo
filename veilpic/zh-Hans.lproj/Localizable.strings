@@ -422,6 +422,10 @@
 "imageEditor.preview.dimensions" = "%d × %d 像素";
 "imageEditor.preview.sample" = "X %d  Y %d · %@";
 "imageEditor.preview.sample.empty" = "将鼠标移到图像上检查像素";
+"imageEditor.preview.sampleSize" = "取样范围";
+"imageEditor.preview.sampleSize.point" = "单点取样";
+"imageEditor.preview.sampleSize.average3" = "3 × 3 平均";
+"imageEditor.preview.sampleSize.average5" = "5 × 5 平均";
 "imageEditor.action.swatchesShowPanel" = "显示色板面板";
 "imageEditor.action.brushesShowPanel" = "显示画笔面板";
 "imageEditor.action.characterShowPanel" = "显示字符面板";
