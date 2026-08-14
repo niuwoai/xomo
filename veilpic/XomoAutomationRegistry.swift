@@ -4697,8 +4697,14 @@ final class XomoAutomationRegistry {
         }
         switch action {
         case "loadTransparency":
+            let threshold = try selectionAlphaThreshold(arguments["threshold"])
+            guard viewModel.canLoadSelectionFromLayerTransparency else {
+                throw XomoAutomationCallError.operationFailed(
+                    "Loading a selection from transparency requires a selected pixel layer"
+                )
+            }
             viewModel.loadSelectionFromLayerTransparency(
-                threshold: try selectionAlphaThreshold(arguments["threshold"])
+                threshold: threshold
             )
         case "save": viewModel.saveCurrentSelection()
         case "reselect": viewModel.reselectSelection()

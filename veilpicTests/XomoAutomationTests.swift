@@ -1233,6 +1233,62 @@ struct XomoAutomationTests {
         #expect(viewModel.document.selectedLayerIDs == selectedLayerIDsBeforeRequests)
     }
 
+    @Test func registryLoadTransparencyRequiresSelectablePixelLayers() throws {
+        let viewModel = makeViewModel()
+        viewModel.createRectSelection(from: CGPoint(x: 12, y: 10), to: CGPoint(x: 44, y: 34))
+        viewModel.document.selectedLayerID = nil
+        viewModel.document.selectedLayerIDs = []
+        let selectionBeforeMissingLayer = viewModel.document.selection
+        let historyCountBeforeMissingLayer = viewModel.document.history.count
+        let undoCountBeforeMissingLayer = viewModel.undoStack.count
+        let statusBeforeMissingLayer = viewModel.statusText
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+
+        let missingLayerResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.selection.modify",
+            arguments: [
+                "action": .string("loadTransparency"),
+                "threshold": .number(128)
+            ]
+        ))
+        #expect(!missingLayerResponse.ok)
+        #expect(missingLayerResponse.error?.contains("requires a selected pixel layer") == true)
+        #expect(viewModel.document.selection == selectionBeforeMissingLayer)
+        #expect(viewModel.document.history.count == historyCountBeforeMissingLayer)
+        #expect(viewModel.undoStack.count == undoCountBeforeMissingLayer)
+        #expect(viewModel.statusText == statusBeforeMissingLayer)
+
+        let groupViewModel = makeViewModel()
+        let group = ImageEditorLayer.group(
+            name: "Transparency Group",
+            size: groupViewModel.document.canvasSize
+        )
+        groupViewModel.document.layers = [group]
+        groupViewModel.document.selectedLayerID = group.id
+        groupViewModel.document.selectedLayerIDs = [group.id]
+        let groupHistoryCount = groupViewModel.document.history.count
+        let groupUndoCount = groupViewModel.undoStack.count
+        registry.register(groupViewModel)
+
+        let groupResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.selection.modify",
+            arguments: [
+                "action": .string("loadTransparency"),
+                "threshold": .number(128)
+            ]
+        ))
+        #expect(!groupResponse.ok)
+        #expect(groupResponse.error?.contains("requires a selected pixel layer") == true)
+        #expect(groupViewModel.document.selection == nil)
+        #expect(groupViewModel.document.layers.count == 1)
+        #expect(groupViewModel.document.selectedLayerID == group.id)
+        #expect(groupViewModel.document.history.count == groupHistoryCount)
+        #expect(groupViewModel.undoStack.count == groupUndoCount)
+    }
+
     @Test func registryDoesNotRecordRepeatedAlphaChannelSelectionLoad() throws {
         let viewModel = makeViewModel()
         viewModel.createRectSelection(from: CGPoint(x: 20, y: 16), to: CGPoint(x: 80, y: 64))
