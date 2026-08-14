@@ -102,6 +102,7 @@ struct ImageEditorExportSettings: Equatable {
     var namingRule: ImageEditorExportNamingRule = .sourceScopeAndScale
     var quality: Double = 0.9
     var filenameSuffix: String = ""
+    var sliceConflictPolicy: ImageEditorSliceExportConflictPolicy = .abort
 
     var usesQuality: Bool {
         format == .jpeg || format == .webp
@@ -128,12 +129,49 @@ struct ImageEditorSliceExportArtifact {
     let data: Data
 }
 
-enum ImageEditorSliceExportConflictPolicy {
+enum ImageEditorSliceExportConflictPolicy: String, CaseIterable, Identifiable {
+    case abort
+    case skipExisting
+
+    var id: String { rawValue }
+
+    var title: String {
+        L10n.text("imageEditor.export.sliceConflictPolicy.\(rawValue)")
+    }
+
+    struct Resolution {
+        let deliverablePlan: [ImageEditorSliceExportVariant]
+        let conflictingFilenames: [String]
+    }
+
     static func conflictingFilenames(
         in plan: [ImageEditorSliceExportVariant],
         fileExists: (String) -> Bool
     ) -> [String] {
         plan.map(\.filename).filter(fileExists)
+    }
+
+    static func resolve(
+        plan: [ImageEditorSliceExportVariant],
+        policy: Self,
+        fileExists: (String) -> Bool
+    ) -> Resolution {
+        var deliverablePlan: [ImageEditorSliceExportVariant] = []
+        var conflictingFilenames: [String] = []
+        for variant in plan {
+            if fileExists(variant.filename) {
+                conflictingFilenames.append(variant.filename)
+            } else {
+                deliverablePlan.append(variant)
+            }
+        }
+        if policy == .abort, !conflictingFilenames.isEmpty {
+            deliverablePlan = []
+        }
+        return Resolution(
+            deliverablePlan: deliverablePlan,
+            conflictingFilenames: conflictingFilenames
+        )
     }
 }
 
@@ -425,17 +463,29 @@ extension ImageEditorViewModel {
             statusText = L10n.text("imageEditor.status.exportFailed")
             return 0
         }
-        let conflicts = ImageEditorSliceExportConflictPolicy.conflictingFilenames(
-            in: currentPlan
+        let resolution = ImageEditorSliceExportConflictPolicy.resolve(
+            plan: currentPlan,
+            policy: settings.sliceConflictPolicy
         ) { filename in
             let url = directory.appendingPathComponent(filename, isDirectory: false)
             return FileManager.default.fileExists(atPath: url.path)
         }
-        guard conflicts.isEmpty else {
-            statusText = L10n.format("imageEditor.status.exportSliceConflicts", conflicts.count)
+        if settings.sliceConflictPolicy == .abort,
+           !resolution.conflictingFilenames.isEmpty {
+            statusText = L10n.format(
+                "imageEditor.status.exportSliceConflicts",
+                resolution.conflictingFilenames.count
+            )
             return 0
         }
-        guard let artifacts = sliceExportArtifacts(plan: currentPlan) else {
+        guard !resolution.deliverablePlan.isEmpty else {
+            statusText = L10n.format(
+                "imageEditor.status.exportSlicesAllSkipped",
+                resolution.conflictingFilenames.count
+            )
+            return 0
+        }
+        guard let artifacts = sliceExportArtifacts(plan: resolution.deliverablePlan) else {
             statusText = L10n.text("imageEditor.status.exportFailed")
             return 0
         }
@@ -447,11 +497,18 @@ extension ImageEditorViewModel {
                 )
                 try artifact.data.write(to: destination, options: .withoutOverwriting)
             }
-            statusText = L10n.format(
-                "imageEditor.status.exportedAllSlices",
-                artifacts.count,
-                directory.lastPathComponent
-            )
+            statusText = resolution.conflictingFilenames.isEmpty
+                ? L10n.format(
+                    "imageEditor.status.exportedAllSlices",
+                    artifacts.count,
+                    directory.lastPathComponent
+                )
+                : L10n.format(
+                    "imageEditor.status.exportedSlicesSkippingExisting",
+                    artifacts.count,
+                    resolution.conflictingFilenames.count,
+                    directory.lastPathComponent
+                )
             isExportSheetPresented = false
             return artifacts.count
         } catch {

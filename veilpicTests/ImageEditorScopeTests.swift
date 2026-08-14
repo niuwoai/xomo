@@ -2161,14 +2161,18 @@ struct ImageEditorScopeTests {
         #expect(exportSource.contains("func runExportAllSlices()"))
         #expect(exportSource.contains("let panel = NSOpenPanel()"))
         #expect(exportSource.contains("panel.canChooseDirectories = true"))
-        #expect(exportSource.contains("ImageEditorSliceExportConflictPolicy.conflictingFilenames("))
-        #expect(exportSource.contains("guard conflicts.isEmpty"))
+        #expect(panelSource.contains("imageEditor.export.sliceConflictPolicy"))
+        #expect(panelSource.contains("ImageEditorSliceExportConflictPolicy.allCases"))
+        #expect(panelSource.contains("sliceConflictPolicyBinding"))
+        #expect(exportSource.contains("ImageEditorSliceExportConflictPolicy.resolve("))
+        #expect(exportSource.contains("settings.sliceConflictPolicy == .abort"))
+        #expect(exportSource.contains("resolution.deliverablePlan"))
         #expect(exportSource.contains("options: .withoutOverwriting"))
 
-        let conflictCheck = try #require(exportSource.range(of: "guard conflicts.isEmpty"))
+        let conflictCheck = try #require(exportSource.range(of: "settings.sliceConflictPolicy == .abort"))
         let artifactCreation = try #require(
             exportSource[conflictCheck.upperBound...].range(
-                of: "sliceExportArtifacts(plan: currentPlan)"
+                of: "sliceExportArtifacts(plan: resolution.deliverablePlan)"
             )
         )
         #expect(conflictCheck.lowerBound < artifactCreation.lowerBound)
@@ -2184,6 +2188,9 @@ struct ImageEditorScopeTests {
             #expect(localization.contains("\"imageEditor.export.chooseFolder\""))
             #expect(localization.contains("\"imageEditor.status.exportedAllSlices\""))
             #expect(localization.contains("\"imageEditor.status.exportSliceConflicts\""))
+            #expect(localization.contains("\"imageEditor.export.sliceConflictPolicy.skipExisting\""))
+            #expect(localization.contains("\"imageEditor.status.exportedSlicesSkippingExisting\""))
+            #expect(localization.contains("\"imageEditor.status.exportSlicesAllSkipped\""))
         }
     }
 

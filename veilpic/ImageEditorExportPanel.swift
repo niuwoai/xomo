@@ -1832,6 +1832,18 @@ struct ImageEditorExportPanel: View {
                         .frame(width: Layout.namingMenuWidth, alignment: .leading)
                         .accessibilityLabel(L10n.text("imageEditor.export.slice"))
                     }
+
+                    exportFormRow(L10n.text("imageEditor.export.sliceConflictPolicy")) {
+                        Picker("", selection: sliceConflictPolicyBinding) {
+                            ForEach(ImageEditorSliceExportConflictPolicy.allCases) { policy in
+                                Text(policy.title).tag(policy)
+                            }
+                        }
+                        .labelsHidden()
+                        .pickerStyle(.menu)
+                        .frame(width: Layout.namingMenuWidth, alignment: .leading)
+                        .accessibilityLabel(L10n.text("imageEditor.export.sliceConflictPolicy"))
+                    }
                 }
 
                 exportFormRow(L10n.text("imageEditor.export.namingRule")) {
@@ -1983,6 +1995,13 @@ struct ImageEditorExportPanel: View {
         Binding(
             get: { viewModel.exportSettings.namingRule },
             set: { viewModel.exportSettings.namingRule = $0 }
+        )
+    }
+
+    private var sliceConflictPolicyBinding: Binding<ImageEditorSliceExportConflictPolicy> {
+        Binding(
+            get: { viewModel.exportSettings.sliceConflictPolicy },
+            set: { viewModel.exportSettings.sliceConflictPolicy = $0 }
         )
     }
 

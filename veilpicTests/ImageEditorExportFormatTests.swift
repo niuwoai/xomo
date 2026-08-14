@@ -1861,6 +1861,84 @@ struct ImageEditorExportFormatTests {
         #expect(protectedDataAfterConflict == protectedData)
     }
 
+    @Test func exportingAllSlicesCanSkipExistingFilesWithoutOverwritingThem() throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "delivery.png",
+            image: NSImage.rendered(size: CGSize(width: 40, height: 20)) { rect in
+                NSColor.systemTeal.setFill()
+                rect.fill()
+            }!
+        ) { _ in }
+        viewModel.document.slices = [
+            ImageEditorSlice(
+                name: "Alpha",
+                frame: CGRect(x: 0, y: 0, width: 10, height: 10)
+            ),
+            ImageEditorSlice(
+                name: "Beta",
+                frame: CGRect(x: 12, y: 0, width: 10, height: 10)
+            )
+        ]
+        var settings = ImageEditorExportSettings()
+        settings.scope = .slice
+        settings.format = .png
+        settings.scale = 1
+        let plan = viewModel.sliceExportPlan(settings: settings)
+        #expect(plan.count == 2)
+        let firstFilename = plan[0].filename
+        let secondFilename = plan[1].filename
+        let resolution = ImageEditorSliceExportConflictPolicy.resolve(
+            plan: plan,
+            policy: .skipExisting
+        ) { $0 == firstFilename }
+        #expect(resolution.conflictingFilenames == [firstFilename])
+        #expect(resolution.deliverablePlan.map(\.filename) == [secondFilename])
+
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(
+            "xomo-tests.slice-export-skip.\(UUID().uuidString)",
+            isDirectory: true
+        )
+        try FileManager.default.createDirectory(
+            at: directory,
+            withIntermediateDirectories: false
+        )
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let protectedURL = directory.appendingPathComponent(firstFilename)
+        let protectedData = Data("keep-existing".utf8)
+        try protectedData.write(to: protectedURL, options: .atomic)
+
+        let abortedCount = viewModel.exportAllSlices(settings: settings, to: directory)
+        #expect(abortedCount == 0)
+        #expect(!FileManager.default.fileExists(
+            atPath: directory.appendingPathComponent(secondFilename).path
+        ))
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.exportSliceConflicts", 1))
+
+        settings.sliceConflictPolicy = .skipExisting
+        viewModel.isExportSheetPresented = true
+        let exportedCount = viewModel.exportAllSlices(settings: settings, to: directory)
+        #expect(exportedCount == 1)
+        #expect(try Data(contentsOf: protectedURL) == protectedData)
+        #expect(FileManager.default.fileExists(
+            atPath: directory.appendingPathComponent(secondFilename).path
+        ))
+        #expect(viewModel.statusText == L10n.format(
+            "imageEditor.status.exportedSlicesSkippingExisting",
+            1,
+            1,
+            directory.lastPathComponent
+        ))
+        #expect(!viewModel.isExportSheetPresented)
+
+        let repeatedCount = viewModel.exportAllSlices(settings: settings, to: directory)
+        #expect(repeatedCount == 0)
+        #expect(viewModel.statusText == L10n.format(
+            "imageEditor.status.exportSlicesAllSkipped",
+            2
+        ))
+        #expect(try Data(contentsOf: protectedURL) == protectedData)
+    }
+
     @Test func hotspotHTMLExportEmbedsCanvasAndEscapesImageMapMetadata() throws {
         let image = NSImage.transparent(size: CGSize(width: 80, height: 60))
         let pngData = try #require(image.qingtuPNGData())

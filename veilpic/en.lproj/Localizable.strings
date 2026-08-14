@@ -565,6 +565,9 @@
 "imageEditor.export.saveAs" = "Save As";
 "imageEditor.export.saveAllSlices" = "Export All Slices…";
 "imageEditor.export.chooseFolder" = "Choose Folder";
+"imageEditor.export.sliceConflictPolicy" = "Existing files";
+"imageEditor.export.sliceConflictPolicy.abort" = "Stop before exporting";
+"imageEditor.export.sliceConflictPolicy.skipExisting" = "Skip existing files";
 "imageEditor.action.exportAllSlices" = "Export All Slices…";
 "imageEditor.action.applyAdjustment" = "Apply Adjustment";
 "imageEditor.action.applyFilter" = "Apply Filter";
@@ -1872,6 +1875,8 @@
 "imageEditor.status.exportedBatch" = "Exported %ld variants to %@";
 "imageEditor.status.exportedAllSlices" = "Exported %ld slice files to %@";
 "imageEditor.status.exportSliceConflicts" = "%ld slice files already exist; nothing was exported";
+"imageEditor.status.exportedSlicesSkippingExisting" = "Exported %1$ld slice files to %3$@ and skipped %2$ld existing files";
+"imageEditor.status.exportSlicesAllSkipped" = "All %ld slice files already exist; nothing new was exported";
 "imageEditor.status.exportSVGRequiresVector" = "SVG export requires a pure vector canvas without raster layers, masks, filters, or effects";
 "imageEditor.status.projectOpened" = "Project opened: %@";
 "imageEditor.status.projectSaved" = "Project saved: %@";
