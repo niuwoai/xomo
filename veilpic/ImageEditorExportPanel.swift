@@ -338,6 +338,7 @@ struct ImageEditorPreviewPixelSample {
 struct ImageEditorPreviewPinnedSample: Identifiable {
     let number: Int
     let sample: ImageEditorPreviewPixelSample
+    var readoutMode: ImageEditorPreviewPixelReadoutMode
 
     var id: Int { number }
 }
@@ -353,15 +354,32 @@ struct ImageEditorPreviewPinnedSamples {
 
     @discardableResult
     mutating func pin(
-        _ sample: ImageEditorPreviewPixelSample
+        _ sample: ImageEditorPreviewPixelSample,
+        readoutMode: ImageEditorPreviewPixelReadoutMode = .hexadecimalRGBA
     ) -> ImageEditorPreviewPinnedSample? {
         guard entries.count < Self.maximumCount else { return nil }
         let usedNumbers = Set(entries.map(\.number))
         guard let number = (1...Self.maximumCount).first(where: { !usedNumbers.contains($0) })
         else { return nil }
-        let entry = ImageEditorPreviewPinnedSample(number: number, sample: sample)
+        let entry = ImageEditorPreviewPinnedSample(
+            number: number,
+            sample: sample,
+            readoutMode: readoutMode
+        )
         entries.append(entry)
         return entry
+    }
+
+    @discardableResult
+    mutating func setReadoutMode(
+        _ readoutMode: ImageEditorPreviewPixelReadoutMode,
+        for number: Int
+    ) -> Bool {
+        guard let index = entries.firstIndex(where: { $0.number == number }),
+              entries[index].readoutMode != readoutMode
+        else { return false }
+        entries[index].readoutMode = readoutMode
+        return true
     }
 
     @discardableResult
@@ -558,16 +576,18 @@ struct ImageEditorPreviewPanel: View {
                         .foregroundStyle(Color(nsColor: ImageEditorTheme.exportAccent))
                         .help(L10n.text("imageEditor.preview.sample.pinned"))
                     Button {
-                        copyReadout(for: pinnedSample)
+                        copyReadout(for: pinnedSample, mode: pixelReadoutMode)
                     } label: {
                         Image(
-                            systemName: isCopied(pinnedSample) ? "checkmark" : "doc.on.doc"
+                            systemName: isCopied(pinnedSample, mode: pixelReadoutMode)
+                                ? "checkmark"
+                                : "doc.on.doc"
                         )
                     }
                     .buttonStyle(.plain)
                     .help(
                         L10n.text(
-                            isCopied(pinnedSample)
+                            isCopied(pinnedSample, mode: pixelReadoutMode)
                                 ? "imageEditor.preview.sample.copied"
                                 : "imageEditor.preview.sample.copy"
                         )
@@ -631,7 +651,22 @@ struct ImageEditorPreviewPanel: View {
                                     )
                             }
                             .frame(width: 14, height: 14)
-                        Text(pinnedSample.sample.text(mode: pixelReadoutMode))
+                        Picker(
+                            L10n.text("imageEditor.preview.readoutMode"),
+                            selection: readoutModeBinding(for: pinnedSample.number)
+                        ) {
+                            ForEach(ImageEditorPreviewPixelReadoutMode.allCases) { mode in
+                                Text(mode.title).tag(mode)
+                            }
+                        }
+                        .labelsHidden()
+                        .pickerStyle(.menu)
+                        .controlSize(.mini)
+                        .fixedSize()
+                        .accessibilityIdentifier(
+                            "image-editor-preview-pinned-sample-mode-\(pinnedSample.number)"
+                        )
+                        Text(pinnedSample.sample.text(mode: pinnedSample.readoutMode))
                             .monospacedDigit()
                         Button {
                             copyReadout(for: pinnedSample)
@@ -681,17 +716,38 @@ struct ImageEditorPreviewPanel: View {
         .accessibilityIdentifier("image-editor-preview-pinned-samples")
     }
 
-    private func isCopied(_ pinnedSample: ImageEditorPreviewPinnedSample) -> Bool {
-        copiedPinnedSampleNumber == pinnedSample.number
-            && copiedPixelReadout == pinnedSample.sample.valueText(mode: pixelReadoutMode)
+    private func isCopied(
+        _ pinnedSample: ImageEditorPreviewPinnedSample,
+        mode: ImageEditorPreviewPixelReadoutMode? = nil
+    ) -> Bool {
+        let readoutMode = mode ?? pinnedSample.readoutMode
+        return copiedPinnedSampleNumber == pinnedSample.number
+            && copiedPixelReadout == pinnedSample.sample.valueText(mode: readoutMode)
     }
 
-    private func copyReadout(for pinnedSample: ImageEditorPreviewPinnedSample) {
-        let value = pinnedSample.sample.valueText(mode: pixelReadoutMode)
+    private func copyReadout(
+        for pinnedSample: ImageEditorPreviewPinnedSample,
+        mode: ImageEditorPreviewPixelReadoutMode? = nil
+    ) {
+        let value = pinnedSample.sample.valueText(mode: mode ?? pinnedSample.readoutMode)
         if ImageEditorPreviewClipboard.copy(value) {
             copiedPinnedSampleNumber = pinnedSample.number
             copiedPixelReadout = value
         }
+    }
+
+    private func readoutModeBinding(for number: Int) -> Binding<ImageEditorPreviewPixelReadoutMode> {
+        Binding(
+            get: {
+                pinnedPixelSamples.entries.first(where: { $0.number == number })?.readoutMode
+                    ?? pixelReadoutMode
+            },
+            set: { readoutMode in
+                if pinnedPixelSamples.setReadoutMode(readoutMode, for: number) {
+                    resetCopyFeedback()
+                }
+            }
+        )
     }
 
     private func resetCopyFeedback() {
@@ -767,7 +823,7 @@ struct ImageEditorPreviewPanel: View {
                     sampleSize: pixelSampleSize
                 )
                 if let sample {
-                    _ = pinnedPixelSamples.pin(sample)
+                    _ = pinnedPixelSamples.pin(sample, readoutMode: pixelReadoutMode)
                 }
                 pixelSample = sample
                 resetCopyFeedback()

@@ -1194,6 +1194,7 @@ struct ImageEditorScopeTests {
         #expect(source.contains("enum ImageEditorPreviewClipboard"))
         #expect(source.contains("struct ImageEditorPreviewPinnedSamples"))
         #expect(source.contains("static let maximumCount = 4"))
+        #expect(source.contains("mutating func setReadoutMode("))
         #expect(source.contains("pasteboard.setString(value, forType: .string)"))
         #expect(source.contains("static func canvasPoint("))
         #expect(source.contains("func displayedCenter("))
@@ -1218,7 +1219,9 @@ struct ImageEditorScopeTests {
         ))
         #expect(previewSource.contains("displayedPixelSample.text(mode: pixelReadoutMode)"))
         #expect(previewSource.contains("SpatialTapGesture().onEnded"))
-        #expect(previewSource.contains("pinnedPixelSamples.pin(sample)"))
+        #expect(previewSource.contains(
+            "pinnedPixelSamples.pin(sample, readoutMode: pixelReadoutMode)"
+        ))
         #expect(previewSource.contains("ForEach(pinnedPixelSamples.entries)"))
         #expect(previewSource.contains("pinnedSample.sample.displayedCenter("))
         #expect(previewSource.contains("pinnedSample.number"))
@@ -1231,7 +1234,19 @@ struct ImageEditorScopeTests {
             ".accessibilityIdentifier(\"image-editor-preview-clear-pinned-sample\")"
         ))
         #expect(previewSource.contains("ImageEditorPreviewClipboard.copy(value)"))
-        #expect(previewSource.contains("pinnedSample.sample.valueText(mode: pixelReadoutMode)"))
+        #expect(previewSource.contains(
+            "pinnedSample.sample.text(mode: pinnedSample.readoutMode)"
+        ))
+        #expect(previewSource.contains(
+            "pinnedSample.sample.valueText(mode: readoutMode)"
+        ))
+        #expect(previewSource.contains("mode ?? pinnedSample.readoutMode"))
+        #expect(previewSource.contains(
+            "copyReadout(for: pinnedSample, mode: pixelReadoutMode)"
+        ))
+        #expect(previewSource.contains("selection: readoutModeBinding(for: pinnedSample.number)"))
+        #expect(previewSource.contains("pinnedPixelSamples.setReadoutMode(readoutMode, for: number)"))
+        #expect(previewSource.contains("image-editor-preview-pinned-sample-mode-"))
         #expect(previewSource.contains(
             ".accessibilityIdentifier(\"image-editor-preview-copy-pinned-sample\")"
         ))

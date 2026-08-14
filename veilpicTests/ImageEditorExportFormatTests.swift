@@ -290,6 +290,42 @@ struct ImageEditorExportFormatTests {
         #expect(pinnedSamples.latest == nil)
     }
 
+    @Test func previewPinnedSamplesKeepIndependentColorReadoutModes() {
+        var pinnedSamples = ImageEditorPreviewPinnedSamples()
+        let firstSample = ImageEditorPreviewPixelSample(
+            point: CGPoint(x: 12, y: 8),
+            color: NSColor(deviceRed: 1, green: 0.5, blue: 0, alpha: 1)
+        )
+        let secondSample = ImageEditorPreviewPixelSample(
+            point: CGPoint(x: 24, y: 16),
+            color: NSColor(deviceRed: 0, green: 0.5, blue: 1, alpha: 0.5)
+        )
+
+        let firstPinned = pinnedSamples.pin(firstSample, readoutMode: .rgb)
+        let secondPinned = pinnedSamples.pin(secondSample, readoutMode: .cmyk)
+        #expect(firstPinned?.readoutMode == .rgb)
+        #expect(secondPinned?.readoutMode == .cmyk)
+        #expect(pinnedSamples.entries.map(\.readoutMode) == [.rgb, .cmyk])
+
+        let changedFirst = pinnedSamples.setReadoutMode(.hsb, for: 1)
+        let unchangedSecond = pinnedSamples.setReadoutMode(.cmyk, for: 2)
+        let missingSample = pinnedSamples.setReadoutMode(.hexadecimalRGBA, for: 3)
+        #expect(changedFirst)
+        #expect(!unchangedSecond)
+        #expect(!missingSample)
+        #expect(pinnedSamples.entries.map(\.readoutMode) == [.hsb, .cmyk])
+        #expect(pinnedSamples.entries[0].sample.point == firstSample.point)
+        #expect(pinnedSamples.entries[1].sample.point == secondSample.point)
+
+        let removedFirst = pinnedSamples.remove(number: 1)
+        let reusedFirst = pinnedSamples.pin(firstSample, readoutMode: .hexadecimalRGBA)
+        #expect(removedFirst)
+        #expect(reusedFirst?.number == 1)
+        #expect(reusedFirst?.readoutMode == .hexadecimalRGBA)
+        #expect(pinnedSamples.entries.map(\.number) == [2, 1])
+        #expect(pinnedSamples.entries.map(\.readoutMode) == [.cmyk, .hexadecimalRGBA])
+    }
+
     @Test func previewPixelInspectionAveragesNeighborhoodAndClipsCanvasEdges() throws {
         let canvasSize = CGSize(width: 3, height: 1)
         let image = try #require(NSImage.rendered(size: canvasSize) { _ in
