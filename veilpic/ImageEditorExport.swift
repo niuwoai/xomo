@@ -111,6 +111,26 @@ struct ImageEditorExportSettings: Equatable {
     }
 }
 
+struct ImageEditorSliceExportVariant: Equatable {
+    let sliceID: UUID
+    let filename: String
+    let settings: ImageEditorExportSettings
+}
+
+struct ImageEditorSliceExportArtifact {
+    let variant: ImageEditorSliceExportVariant
+    let data: Data
+}
+
+enum ImageEditorSliceExportConflictPolicy {
+    static func conflictingFilenames(
+        in plan: [ImageEditorSliceExportVariant],
+        fileExists: (String) -> Bool
+    ) -> [String] {
+        plan.map(\.filename).filter(fileExists)
+    }
+}
+
 @MainActor
 extension ImageEditorViewModel {
     var exportSizeText: String {
@@ -229,6 +249,91 @@ extension ImageEditorViewModel {
         }
     }
 
+    func sliceExportPlan(settings: ImageEditorExportSettings) -> [ImageEditorSliceExportVariant] {
+        var variants: [ImageEditorSliceExportVariant] = []
+        var usedFilenames: Set<String> = []
+
+        for slice in availableSlices {
+            let resolved = resolvedSliceExportSettings(for: slice, defaults: settings)
+
+            for variantSettings in resolved.settings {
+                let includesScaleSuffix = !resolved.usesPresets && resolved.settings.count > 1
+                let proposedFilename = exportFilename(
+                    settings: variantSettings,
+                    scale: variantSettings.scale,
+                    includesScaleSuffix: includesScaleSuffix
+                )
+                let filename = Self.uniqueExportFilename(
+                    proposedFilename,
+                    usedFilenames: &usedFilenames
+                )
+                variants.append(
+                    ImageEditorSliceExportVariant(
+                        sliceID: slice.id,
+                        filename: filename,
+                        settings: variantSettings
+                    )
+                )
+            }
+        }
+        return variants
+    }
+
+    private func resolvedSliceExportSettings(
+        for slice: ImageEditorSlice,
+        defaults: ImageEditorExportSettings
+    ) -> (settings: [ImageEditorExportSettings], usesPresets: Bool) {
+        let presetSettings = (slice.exportPresets ?? []).compactMap { preset -> ImageEditorExportSettings? in
+            guard (preset.format == .png || preset.format == .jpeg),
+                  let scale = preset.resolvedScale(for: slice.frame)
+            else { return nil }
+            var settings = defaults
+            settings.format = preset.format
+            settings.scope = .slice
+            settings.sliceID = slice.id
+            settings.scale = scale
+            settings.batchScales = []
+            settings.filenameSuffix = preset.suffix
+            return normalizedExportSettings(settings)
+        }
+        guard presetSettings.isEmpty else { return (presetSettings, true) }
+
+        var fallback = defaults
+        if fallback.format == .svg || fallback.format == .psd {
+            fallback.format = .png
+        }
+        fallback.scope = .slice
+        fallback.sliceID = slice.id
+        fallback.filenameSuffix = ""
+        fallback = normalizedExportSettings(fallback)
+        let settings = exportScales(for: fallback).map { scale in
+            var variant = fallback
+            variant.scale = scale
+            variant.batchScales = []
+            return variant
+        }
+        return (settings, false)
+    }
+
+    func sliceExportArtifacts(
+        settings: ImageEditorExportSettings
+    ) -> [ImageEditorSliceExportArtifact]? {
+        sliceExportArtifacts(plan: sliceExportPlan(settings: settings))
+    }
+
+    private func sliceExportArtifacts(
+        plan: [ImageEditorSliceExportVariant]
+    ) -> [ImageEditorSliceExportArtifact]? {
+        guard !plan.isEmpty else { return nil }
+        var artifacts: [ImageEditorSliceExportArtifact] = []
+        artifacts.reserveCapacity(plan.count)
+        for variant in plan {
+            guard let data = exportData(settings: variant.settings) else { return nil }
+            artifacts.append(ImageEditorSliceExportArtifact(variant: variant, data: data))
+        }
+        return artifacts
+    }
+
     func runExport() {
         let settings = normalizedExportSettings(exportSettings)
         exportSettings = settings
@@ -276,6 +381,79 @@ extension ImageEditorViewModel {
                     self.statusText = L10n.format("imageEditor.status.exportFailedWithReason", error.localizedDescription)
                 }
             }
+        }
+    }
+
+    func runExportAllSlices() {
+        let settings = normalizedExportSettings(exportSettings)
+        let plan = sliceExportPlan(settings: settings)
+        guard !plan.isEmpty else {
+            statusText = L10n.text("imageEditor.status.exportFailed")
+            return
+        }
+        guard !plan.contains(where: { $0.settings.format == .webp })
+                || NSImage.canWriteImage(typeIdentifier: UTType.webP.identifier)
+        else {
+            statusText = L10n.text("imageEditor.status.exportWebPUnsupported")
+            return
+        }
+
+        let panel = NSOpenPanel()
+        panel.canChooseFiles = false
+        panel.canChooseDirectories = true
+        panel.canCreateDirectories = true
+        panel.allowsMultipleSelection = false
+        panel.prompt = L10n.text("imageEditor.export.chooseFolder")
+        panel.begin { [weak self] response in
+            Task { @MainActor in
+                guard let self, response == .OK, let directory = panel.url else { return }
+                self.exportAllSlices(settings: settings, to: directory)
+            }
+        }
+    }
+
+    @discardableResult
+    func exportAllSlices(settings: ImageEditorExportSettings, to directory: URL) -> Int {
+        let currentPlan = sliceExportPlan(settings: settings)
+        guard !currentPlan.isEmpty else {
+            statusText = L10n.text("imageEditor.status.exportFailed")
+            return 0
+        }
+        let conflicts = ImageEditorSliceExportConflictPolicy.conflictingFilenames(
+            in: currentPlan
+        ) { filename in
+            let url = directory.appendingPathComponent(filename, isDirectory: false)
+            return FileManager.default.fileExists(atPath: url.path)
+        }
+        guard conflicts.isEmpty else {
+            statusText = L10n.format("imageEditor.status.exportSliceConflicts", conflicts.count)
+            return 0
+        }
+        guard let artifacts = sliceExportArtifacts(plan: currentPlan) else {
+            statusText = L10n.text("imageEditor.status.exportFailed")
+            return 0
+        }
+        do {
+            for artifact in artifacts {
+                let destination = directory.appendingPathComponent(
+                    artifact.variant.filename,
+                    isDirectory: false
+                )
+                try artifact.data.write(to: destination, options: .withoutOverwriting)
+            }
+            statusText = L10n.format(
+                "imageEditor.status.exportedAllSlices",
+                artifacts.count,
+                directory.lastPathComponent
+            )
+            isExportSheetPresented = false
+            return artifacts.count
+        } catch {
+            statusText = L10n.format(
+                "imageEditor.status.exportFailedWithReason",
+                error.localizedDescription
+            )
+            return 0
         }
     }
 
@@ -472,6 +650,33 @@ extension ImageEditorViewModel {
     private static func sanitizedExportBasename(_ rawValue: String, fallback: String) -> String {
         let sanitized = ImageEditorSliceExportPreset.sanitizedFilenameComponent(rawValue)
         return sanitized.isEmpty ? fallback : sanitized
+    }
+
+    private static func uniqueExportFilename(
+        _ filename: String,
+        usedFilenames: inout Set<String>
+    ) -> String {
+        let key = filename.lowercased()
+        guard usedFilenames.contains(key) else {
+            usedFilenames.insert(key)
+            return filename
+        }
+        let pathExtension = (filename as NSString).pathExtension
+        let basename = (filename as NSString).deletingPathExtension
+        var occurrence = 2
+        while true {
+            let candidate: String
+            if pathExtension.isEmpty {
+                candidate = "\(basename)-\(occurrence)"
+            } else {
+                candidate = "\(basename)-\(occurrence).\(pathExtension)"
+            }
+            if !usedFilenames.contains(candidate.lowercased()) {
+                usedFilenames.insert(candidate.lowercased())
+                return candidate
+            }
+            occurrence += 1
+        }
     }
 
     private func batchExportURL(

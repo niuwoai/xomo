@@ -563,6 +563,8 @@
 "imageEditor.export.qualityValue" = "%d%%";
 "imageEditor.export.outputSize" = "Output Size";
 "imageEditor.export.saveAs" = "Save As";
+"imageEditor.export.saveAllSlices" = "Export All Slices…";
+"imageEditor.export.chooseFolder" = "Choose Folder";
 "imageEditor.action.applyAdjustment" = "Apply Adjustment";
 "imageEditor.action.applyFilter" = "Apply Filter";
 "imageEditor.action.lastFilter" = "Last Filter";
@@ -1867,6 +1869,8 @@
 "imageEditor.status.exportFailedWithReason" = "Export failed: %@";
 "imageEditor.status.exportWebPUnsupported" = "This system cannot write WebP files";
 "imageEditor.status.exportedBatch" = "Exported %ld variants to %@";
+"imageEditor.status.exportedAllSlices" = "Exported %ld slice files to %@";
+"imageEditor.status.exportSliceConflicts" = "%ld slice files already exist; nothing was exported";
 "imageEditor.status.exportSVGRequiresVector" = "SVG export requires a pure vector canvas without raster layers, masks, filters, or effects";
 "imageEditor.status.projectOpened" = "Project opened: %@";
 "imageEditor.status.projectSaved" = "Project saved: %@";

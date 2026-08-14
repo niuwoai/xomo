@@ -1910,6 +1910,15 @@ struct ImageEditorExportPanel: View {
                 }
                 .buttonStyle(.bordered)
 
+                if viewModel.exportSettings.scope == .slice {
+                    Button(L10n.text("imageEditor.export.saveAllSlices")) {
+                        viewModel.runExportAllSlices()
+                    }
+                    .buttonStyle(.bordered)
+                    .disabled(!viewModel.canExportNamedSlice)
+                    .accessibilityIdentifier("image-editor-export-all-slices")
+                }
+
                 Button(L10n.text("imageEditor.export.saveAs")) {
                     viewModel.runExport()
                 }

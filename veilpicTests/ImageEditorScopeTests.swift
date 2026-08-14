@@ -2136,6 +2136,57 @@ struct ImageEditorScopeTests {
         #expect(L10n.text("imageEditor.export.scope.slice") != "imageEditor.export.scope.slice")
     }
 
+    @Test func exportPanelWiresCollisionSafeAllSlicesDelivery() throws {
+        let panelSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent(
+                "veilpic/ImageEditorExportPanel.swift"
+            ),
+            encoding: .utf8
+        )
+        let exportSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent(
+                "veilpic/ImageEditorExport.swift"
+            ),
+            encoding: .utf8
+        )
+
+        #expect(panelSource.contains("imageEditor.export.saveAllSlices"))
+        #expect(panelSource.contains("viewModel.runExportAllSlices()"))
+        #expect(panelSource.contains(
+            ".accessibilityIdentifier(\"image-editor-export-all-slices\")"
+        ))
+        #expect(exportSource.contains("func sliceExportPlan("))
+        #expect(exportSource.contains("slice.exportPresets ?? []"))
+        #expect(exportSource.contains("func sliceExportArtifacts("))
+        #expect(exportSource.contains("func runExportAllSlices()"))
+        #expect(exportSource.contains("let panel = NSOpenPanel()"))
+        #expect(exportSource.contains("panel.canChooseDirectories = true"))
+        #expect(exportSource.contains("ImageEditorSliceExportConflictPolicy.conflictingFilenames("))
+        #expect(exportSource.contains("guard conflicts.isEmpty"))
+        #expect(exportSource.contains("options: .withoutOverwriting"))
+
+        let conflictCheck = try #require(exportSource.range(of: "guard conflicts.isEmpty"))
+        let artifactCreation = try #require(
+            exportSource[conflictCheck.upperBound...].range(
+                of: "sliceExportArtifacts(plan: currentPlan)"
+            )
+        )
+        #expect(conflictCheck.lowerBound < artifactCreation.lowerBound)
+
+        for locale in ["en", "ja", "zh-Hans"] {
+            let localization = try String(
+                contentsOf: Self.repositoryRoot().appendingPathComponent(
+                    "veilpic/\(locale).lproj/Localizable.strings"
+                ),
+                encoding: .utf8
+            )
+            #expect(localization.contains("\"imageEditor.export.saveAllSlices\""))
+            #expect(localization.contains("\"imageEditor.export.chooseFolder\""))
+            #expect(localization.contains("\"imageEditor.status.exportedAllSlices\""))
+            #expect(localization.contains("\"imageEditor.status.exportSliceConflicts\""))
+        }
+    }
+
     @Test func exportPanelUsesSharedLabelGridAndSingleLineScopeSegments() throws {
         let source = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorExportPanel.swift"),

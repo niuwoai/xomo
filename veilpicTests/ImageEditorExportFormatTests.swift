@@ -1275,6 +1275,118 @@ struct ImageEditorExportFormatTests {
         #expect(viewModel.exportFilenames(settings: settings) == ["Hero.png"])
     }
 
+    @Test func exportingAllSlicesUsesPresetsFallbackScalesAndCollisionSafeNames() throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "delivery.png",
+            image: NSImage.rendered(size: CGSize(width: 40, height: 20)) { rect in
+                NSColor.systemBlue.setFill()
+                rect.fill()
+            }!
+        ) { _ in }
+        let presetSlice = ImageEditorSlice(
+            name: "Hero",
+            frame: CGRect(x: 0, y: 0, width: 10, height: 10),
+            exportPresets: [
+                ImageEditorSliceExportPreset(
+                    suffix: "@2x",
+                    format: .png,
+                    constraint: .scale,
+                    value: 2
+                ),
+                ImageEditorSliceExportPreset(
+                    suffix: "-wide",
+                    format: .jpeg,
+                    constraint: .width,
+                    value: 30
+                )
+            ]
+        )
+        let fallbackSlice = ImageEditorSlice(
+            name: "Hero",
+            frame: CGRect(x: 12, y: 2, width: 8, height: 6)
+        )
+        viewModel.document.slices = [presetSlice, fallbackSlice]
+        let settings = ImageEditorExportSettings(
+            format: .png,
+            scope: .slice,
+            scale: 1,
+            batchScales: [2],
+            filenameSuffix: "-selected-only"
+        )
+
+        let plan = viewModel.sliceExportPlan(settings: settings)
+
+        #expect(plan.map(\.sliceID) == [
+            presetSlice.id,
+            presetSlice.id,
+            fallbackSlice.id,
+            fallbackSlice.id
+        ])
+        #expect(plan.map(\.filename) == [
+            "Hero@2x.png",
+            "Hero-wide.jpg",
+            "Hero@1x.png",
+            "Hero@2x-2.png"
+        ])
+        #expect(plan.map(\.settings.format) == [.png, .jpeg, .png, .png])
+        #expect(plan.map(\.settings.scale) == [2, 3, 1, 2])
+        #expect(plan.map(\.settings.filenameSuffix) == ["@2x", "-wide", "", ""])
+        #expect(plan.allSatisfy { variant in
+            variant.settings.scope == .slice
+                && variant.settings.sliceID == variant.sliceID
+                && variant.settings.batchScales.isEmpty
+        })
+
+        let artifacts = try #require(viewModel.sliceExportArtifacts(settings: settings))
+        #expect(artifacts.map(\.variant.filename) == plan.map(\.filename))
+        var sizes: [CGSize] = []
+        for artifact in artifacts {
+            let image = try #require(NSImage(data: artifact.data))
+            sizes.append(image.size)
+        }
+        #expect(sizes == [
+            CGSize(width: 20, height: 20),
+            CGSize(width: 30, height: 30),
+            CGSize(width: 8, height: 6),
+            CGSize(width: 16, height: 12)
+        ])
+
+        let conflicts = ImageEditorSliceExportConflictPolicy.conflictingFilenames(
+            in: plan
+        ) { filename in
+            filename == "Hero-wide.jpg" || filename == "Hero@2x-2.png"
+        }
+        #expect(conflicts == ["Hero-wide.jpg", "Hero@2x-2.png"])
+
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(
+            "xomo-tests.slice-export.\(UUID().uuidString)",
+            isDirectory: true
+        )
+        try FileManager.default.createDirectory(
+            at: directory,
+            withIntermediateDirectories: false
+        )
+        defer { try? FileManager.default.removeItem(at: directory) }
+
+        viewModel.isExportSheetPresented = true
+        let exportedCount = viewModel.exportAllSlices(settings: settings, to: directory)
+        #expect(exportedCount == 4)
+        #expect(!viewModel.isExportSheetPresented)
+        let exportedNames = try FileManager.default.contentsOfDirectory(atPath: directory.path)
+        #expect(Set(exportedNames) == Set(plan.map(\.filename)))
+        let protectedURL = directory.appendingPathComponent("Hero@2x.png")
+        let protectedData = try Data(contentsOf: protectedURL)
+
+        let repeatedCount = viewModel.exportAllSlices(settings: settings, to: directory)
+        #expect(repeatedCount == 0)
+        #expect(viewModel.statusText == L10n.format(
+            "imageEditor.status.exportSliceConflicts",
+            4
+        ))
+        let protectedDataAfterConflict = try Data(contentsOf: protectedURL)
+        #expect(protectedDataAfterConflict == protectedData)
+    }
+
     @Test func hotspotHTMLExportEmbedsCanvasAndEscapesImageMapMetadata() throws {
         let image = NSImage.transparent(size: CGSize(width: 80, height: 60))
         let pngData = try #require(image.qingtuPNGData())

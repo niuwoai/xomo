@@ -563,6 +563,8 @@
 "imageEditor.export.qualityValue" = "%d%%";
 "imageEditor.export.outputSize" = "出力サイズ";
 "imageEditor.export.saveAs" = "別名で保存";
+"imageEditor.export.saveAllSlices" = "すべてのスライスを書き出す…";
+"imageEditor.export.chooseFolder" = "フォルダを選択";
 "imageEditor.action.applyAdjustment" = "調整を適用";
 "imageEditor.action.applyFilter" = "フィルターを適用";
 "imageEditor.action.lastFilter" = "最後のフィルター";
@@ -1867,6 +1869,8 @@
 "imageEditor.status.exportFailedWithReason" = "書き出しに失敗しました：%@";
 "imageEditor.status.exportWebPUnsupported" = "このシステムでは WebP を書き出せません";
 "imageEditor.status.exportedBatch" = "%2$@ に %1$ld 種類の倍率を書き出しました";
+"imageEditor.status.exportedAllSlices" = "%2$@ に %1$ld 個のスライスファイルを書き出しました";
+"imageEditor.status.exportSliceConflicts" = "同名のスライスファイルが %ld 個あるため、何も書き出しませんでした";
 "imageEditor.status.exportSVGRequiresVector" = "SVG は、ラスター画像、マスク、フィルター、レイヤー効果を含まない純粋なベクターキャンバスでのみ書き出せます";
 "imageEditor.status.projectOpened" = "プロジェクトを開きました：%@";
 "imageEditor.status.projectSaved" = "プロジェクトを保存しました：%@";
