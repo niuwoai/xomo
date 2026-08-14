@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-15 07:19:22 +0800",
+  "generated_at": "2026-08-15 07:27:15 +0800",
   "total": 1,
   "passed": 1,
   "failed": 0,
@@ -10,15 +10,15 @@
   "results": [
     {
       "suite": "XomoAutomationTests",
-      "method": "registryReselectAndRestoreSavedRequireTheirOwnSnapshots",
-      "identifier": "veilpicTests/XomoAutomationTests/registryReselectAndRestoreSavedRequireTheirOwnSnapshots()",
+      "method": "registrySelectionPixelEditsRequireSelectionButLayerFallbacksRemainAvailable",
+      "identifier": "veilpicTests/XomoAutomationTests/registrySelectionPixelEditsRequireSelectionButLayerFallbacksRemainAvailable()",
       "file": "XomoAutomationTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.167,
+      "duration": 3.017,
       "infrastructure_retries": 0,
       "issues": [],
-      "log": "XomoAutomationTests.registryReselectAndRestoreSavedRequireTheirOwnSnapshots.log"
+      "log": "XomoAutomationTests.registrySelectionPixelEditsRequireSelectionButLayerFallbacksRemainAvailable.log"
     }
   ]
 }

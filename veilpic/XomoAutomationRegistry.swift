@@ -34,6 +34,15 @@ final class XomoAutomationRegistry {
         "fitCanvas",
         "nudge"
     ]
+    private static let selectionEditActionsRequiringActiveSelection: Set<String> = [
+        "fillForeground",
+        "fillBackground",
+        "stroke",
+        "contentAwareFill",
+        "clearPixels",
+        "copyToLayer",
+        "cutToLayer"
+    ]
 
     private weak var activeViewModel: ImageEditorViewModel?
 
@@ -4649,7 +4658,11 @@ final class XomoAutomationRegistry {
         _ arguments: [String: XomoJSONValue],
         viewModel: ImageEditorViewModel
     ) throws {
-        switch try requiredString("action", in: arguments) {
+        let action = try requiredString("action", in: arguments)
+        if Self.selectionEditActionsRequiringActiveSelection.contains(action) {
+            try requireActiveSelection(for: action, viewModel: viewModel)
+        }
+        switch action {
         case "fillForeground": viewModel.fillSelection()
         case "fillBackground": viewModel.fillSelectionWithBackgroundColor()
         case "stroke": viewModel.strokeSelection()
@@ -6420,7 +6433,7 @@ private extension XomoAutomationRegistry {
                 maximum: 16
             )
         ]),
-        tool("xomo.selection.edit", "Fill, stroke, clear, duplicate, or move selected pixels into new layers.", [
+        tool("xomo.selection.edit", "Edit selected pixels; copy merged and duplicate can also operate without a selection.", [
             "action": XomoAutomationSchema.string(description: "Selection edit action", values: ["fillForeground", "fillBackground", "stroke", "contentAwareFill", "clearPixels", "copyToLayer", "cutToLayer", "copyMergedToLayer", "duplicate"])
         ], required: ["action"]),
         tool("xomo.selection.modify", "Save, restore, transform, clean, color-match, or nudge the pixel selection.", [

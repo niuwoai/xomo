@@ -1992,6 +1992,54 @@ struct XomoAutomationTests {
         #expect(viewModel.document.history.count == historyCountBeforeRestore + 1)
     }
 
+    @Test func registrySelectionPixelEditsRequireSelectionButLayerFallbacksRemainAvailable() {
+        let viewModel = makeViewModel()
+        let layerCountBeforeRequests = viewModel.document.layers.count
+        let historyCountBeforeRequests = viewModel.document.history.count
+        let undoCountBeforeRequests = viewModel.undoStack.count
+        let statusBeforeRequests = viewModel.statusText
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        let selectionActions = [
+            "fillForeground",
+            "fillBackground",
+            "stroke",
+            "contentAwareFill",
+            "clearPixels",
+            "copyToLayer",
+            "cutToLayer"
+        ]
+
+        for action in selectionActions {
+            let response = registry.execute(request(
+                operation: "call",
+                name: "xomo.selection.edit",
+                arguments: ["action": .string(action)]
+            ))
+            #expect(!response.ok)
+            #expect(response.error?.contains("requires an active selection") == true)
+        }
+        #expect(viewModel.document.selection == nil)
+        #expect(viewModel.document.layers.count == layerCountBeforeRequests)
+        #expect(viewModel.document.history.count == historyCountBeforeRequests)
+        #expect(viewModel.undoStack.count == undoCountBeforeRequests)
+        #expect(viewModel.statusText == statusBeforeRequests)
+
+        #expect(registry.execute(request(
+            operation: "call",
+            name: "xomo.selection.edit",
+            arguments: ["action": .string("copyMergedToLayer")]
+        )).ok)
+        #expect(viewModel.document.layers.count == layerCountBeforeRequests + 1)
+
+        #expect(registry.execute(request(
+            operation: "call",
+            name: "xomo.selection.edit",
+            arguments: ["action": .string("duplicate")]
+        )).ok)
+        #expect(viewModel.document.layers.count == layerCountBeforeRequests + 2)
+    }
+
     @Test func registryRepeatedEquivalentSelectionSaveDoesNotCreateDuplicateHistory() throws {
         let viewModel = makeViewModel()
         viewModel.document.selection = ImageEditorSelection.rectangle(
