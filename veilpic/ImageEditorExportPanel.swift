@@ -544,6 +544,46 @@ struct ImageEditorPreviewMarkerDragTarget {
     }
 }
 
+enum ImageEditorPreviewMarkerDragConstraint {
+    static func location(
+        proposedLocation: CGPoint,
+        markerNumber: Int,
+        selection: ImageEditorPreviewSampleMeasurementSelection,
+        samples: ImageEditorPreviewPinnedSamples,
+        displayedSize: CGSize,
+        canvasSize: CGSize,
+        modifierFlags: NSEvent.ModifierFlags
+    ) -> CGPoint {
+        guard modifierFlags.contains(.shift) else { return proposedLocation }
+        let anchorNumber: Int?
+        if selection.fromNumber == markerNumber {
+            anchorNumber = selection.toNumber
+        } else if selection.toNumber == markerNumber {
+            anchorNumber = selection.fromNumber
+        } else {
+            anchorNumber = nil
+        }
+        guard let anchorNumber,
+              let anchorSample = samples.entries.first(where: {
+                  $0.number == anchorNumber
+              }),
+              let anchorCenter = anchorSample.sample.displayedCenter(
+                  displayedSize: displayedSize,
+                  canvasSize: canvasSize
+              ),
+              proposedLocation.x.isFinite,
+              proposedLocation.y.isFinite
+        else { return proposedLocation }
+
+        let deltaX = proposedLocation.x - anchorCenter.x
+        let deltaY = proposedLocation.y - anchorCenter.y
+        if abs(deltaX) >= abs(deltaY) {
+            return CGPoint(x: proposedLocation.x, y: anchorCenter.y)
+        }
+        return CGPoint(x: anchorCenter.x, y: proposedLocation.y)
+    }
+}
+
 enum ImageEditorPreviewMarkerTapAction: Equatable {
     case pinSample
     case selectDestination(Int)
@@ -1354,15 +1394,23 @@ struct ImageEditorPreviewPanel: View {
                     samples: pinnedPixelSamples,
                     displayedSize: size,
                     canvasSize: viewModel.document.canvasSize
-                ),
-                      let sample = ImageEditorPreviewPixelSample.sample(
-                        image: viewModel.previewImage,
-                        location: value.location,
-                        displayedSize: size,
-                        canvasSize: viewModel.document.canvasSize,
-                        sampleSize: pixelSampleSize
-                      )
-                else { return }
+                ) else { return }
+                let location = ImageEditorPreviewMarkerDragConstraint.location(
+                    proposedLocation: value.location,
+                    markerNumber: markerNumber,
+                    selection: measurementSelection,
+                    samples: pinnedPixelSamples,
+                    displayedSize: size,
+                    canvasSize: viewModel.document.canvasSize,
+                    modifierFlags: NSEvent.modifierFlags
+                )
+                guard let sample = ImageEditorPreviewPixelSample.sample(
+                    image: viewModel.previewImage,
+                    location: location,
+                    displayedSize: size,
+                    canvasSize: viewModel.document.canvasSize,
+                    sampleSize: pixelSampleSize
+                ) else { return }
                 movePinnedSample(number: markerNumber, to: sample)
             }
             .onEnded { _ in

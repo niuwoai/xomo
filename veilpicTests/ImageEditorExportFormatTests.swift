@@ -392,6 +392,114 @@ struct ImageEditorExportFormatTests {
         #expect(nextGestureResolvesItsOwnStart == 1)
     }
 
+    @Test func previewMarkerShiftDragConstrainsOnlyTheSelectedMeasurementEndpoint() throws {
+        var pinnedSamples = ImageEditorPreviewPinnedSamples()
+        _ = pinnedSamples.pin(
+            ImageEditorPreviewPixelSample(point: CGPoint(x: 2, y: 3), color: .red)
+        )
+        _ = pinnedSamples.pin(
+            ImageEditorPreviewPixelSample(point: CGPoint(x: 14, y: 15), color: .green)
+        )
+        _ = pinnedSamples.pin(
+            ImageEditorPreviewPixelSample(point: CGPoint(x: 10, y: 12), color: .blue)
+        )
+        var selection = ImageEditorPreviewSampleMeasurementSelection()
+        selection.setFrom(1, in: pinnedSamples)
+        selection.setTo(2, in: pinnedSamples)
+        let displayedSize = CGSize(width: 200, height: 200)
+        let canvasSize = CGSize(width: 20, height: 20)
+
+        let freeProposal = CGPoint(x: 170, y: 65)
+        let unconstrained = ImageEditorPreviewMarkerDragConstraint.location(
+            proposedLocation: freeProposal,
+            markerNumber: 2,
+            selection: selection,
+            samples: pinnedSamples,
+            displayedSize: displayedSize,
+            canvasSize: canvasSize,
+            modifierFlags: []
+        )
+        let horizontal = ImageEditorPreviewMarkerDragConstraint.location(
+            proposedLocation: freeProposal,
+            markerNumber: 2,
+            selection: selection,
+            samples: pinnedSamples,
+            displayedSize: displayedSize,
+            canvasSize: canvasSize,
+            modifierFlags: [.shift]
+        )
+        let vertical = ImageEditorPreviewMarkerDragConstraint.location(
+            proposedLocation: CGPoint(x: 55, y: 190),
+            markerNumber: 2,
+            selection: selection,
+            samples: pinnedSamples,
+            displayedSize: displayedSize,
+            canvasSize: canvasSize,
+            modifierFlags: [.shift, .command]
+        )
+        let horizontalTie = ImageEditorPreviewMarkerDragConstraint.location(
+            proposedLocation: CGPoint(x: 75, y: 85),
+            markerNumber: 2,
+            selection: selection,
+            samples: pinnedSamples,
+            displayedSize: displayedSize,
+            canvasSize: canvasSize,
+            modifierFlags: [.shift]
+        )
+        let constrainedOrigin = ImageEditorPreviewMarkerDragConstraint.location(
+            proposedLocation: CGPoint(x: 190, y: 180),
+            markerNumber: 1,
+            selection: selection,
+            samples: pinnedSamples,
+            displayedSize: displayedSize,
+            canvasSize: canvasSize,
+            modifierFlags: [.shift]
+        )
+
+        #expect(unconstrained == freeProposal)
+        #expect(horizontal == CGPoint(x: 170, y: 35))
+        #expect(vertical == CGPoint(x: 25, y: 190))
+        #expect(horizontalTie == CGPoint(x: 75, y: 35))
+        #expect(constrainedOrigin == CGPoint(x: 190, y: 155))
+        let horizontalCanvasPoint = try #require(
+            ImageEditorPreviewPixelSample.canvasPoint(
+                from: horizontal,
+                displayedSize: displayedSize,
+                canvasSize: canvasSize
+            )
+        )
+        let verticalCanvasPoint = try #require(
+            ImageEditorPreviewPixelSample.canvasPoint(
+                from: vertical,
+                displayedSize: displayedSize,
+                canvasSize: canvasSize
+            )
+        )
+        #expect(horizontalCanvasPoint.y == 3)
+        #expect(verticalCanvasPoint.x == 2)
+
+        let nonEndpoint = ImageEditorPreviewMarkerDragConstraint.location(
+            proposedLocation: freeProposal,
+            markerNumber: 3,
+            selection: selection,
+            samples: pinnedSamples,
+            displayedSize: displayedSize,
+            canvasSize: canvasSize,
+            modifierFlags: [.shift]
+        )
+        let invalidGeometry = ImageEditorPreviewMarkerDragConstraint.location(
+            proposedLocation: freeProposal,
+            markerNumber: 2,
+            selection: selection,
+            samples: pinnedSamples,
+            displayedSize: .zero,
+            canvasSize: canvasSize,
+            modifierFlags: [.shift]
+        )
+        #expect(nonEndpoint == freeProposal)
+        #expect(invalidGeometry == freeProposal)
+    }
+
     @Test func previewPinnedSampleMarkersResolveTheTopmostHitWithoutPinningAgain() {
         var pinnedSamples = ImageEditorPreviewPinnedSamples()
         let first = pinnedSamples.pin(
