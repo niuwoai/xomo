@@ -821,6 +821,36 @@ struct ImageEditorSelectionOperationTests {
         #expect(viewModel.document.history.count == historyCountBeforeCleanup + 1)
     }
 
+    @Test func diagonalSelectionPixelsRemainOneIslandDuringSpeckleCleanup() throws {
+        let canvasSize = NSSize(width: 8, height: 8)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: testImage(size: canvasSize)) { _ in }
+        var alpha = [UInt8](repeating: 0, count: Int(canvasSize.width * canvasSize.height))
+        alpha[2 * Int(canvasSize.width) + 2] = 255
+        alpha[3 * Int(canvasSize.width) + 3] = 255
+        alpha[4 * Int(canvasSize.width) + 4] = 255
+        alpha[0 * Int(canvasSize.width) + 7] = 255
+        let originalSelection = ImageEditorSelection.raster(
+            mask: ImageEditorSelectionMask(width: 8, height: 8, alpha: alpha),
+            bounds: CGRect(x: 2, y: 0, width: 6, height: 5)
+        )
+        viewModel.document.selection = originalSelection
+
+        viewModel.removeSelectionSpeckles(maximumArea: 2)
+
+        let selection = try #require(viewModel.document.selection)
+        let cleanedMask = try #require(selection.rasterMask)
+        #expect(maskAlpha(cleanedMask, x: 2, y: 2) == 255)
+        #expect(maskAlpha(cleanedMask, x: 3, y: 3) == 255)
+        #expect(maskAlpha(cleanedMask, x: 4, y: 4) == 255)
+        #expect(maskAlpha(cleanedMask, x: 7, y: 0) == 0)
+        #expect(selection.bounds == CGRect(x: 2, y: 2, width: 3, height: 3))
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.selectionRemoveSpeckles"))
+
+        viewModel.undo()
+
+        #expect(viewModel.document.selection == originalSelection)
+    }
+
     @Test func imageEditorMovesSelectionMaskWithoutMovingPixels() async throws {
         let canvasSize = NSSize(width: 8, height: 6)
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: testImage(size: canvasSize)) { _ in }

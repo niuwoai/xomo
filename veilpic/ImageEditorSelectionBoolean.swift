@@ -504,10 +504,12 @@ extension ImageEditorSelectionMask {
 
                 let x = index % width
                 let y = index / width
-                if x > 0 { enqueueIfSelected(index - 1) }
-                if x + 1 < width { enqueueIfSelected(index + 1) }
-                if y > 0 { enqueueIfSelected(index - width) }
-                if y + 1 < height { enqueueIfSelected(index + width) }
+                for neighborY in max(0, y - 1)...min(height - 1, y + 1) {
+                    for neighborX in max(0, x - 1)...min(width - 1, x + 1) {
+                        guard neighborX != x || neighborY != y else { continue }
+                        enqueueIfSelected(neighborY * width + neighborX)
+                    }
+                }
             }
 
             guard component.count <= maximumArea else { continue }
