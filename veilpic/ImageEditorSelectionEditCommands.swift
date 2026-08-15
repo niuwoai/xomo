@@ -471,19 +471,19 @@ extension ImageEditorViewModel {
         statusText = L10n.text("imageEditor.status.selectionCutToLayer")
     }
 
-    func copySelectionToClipboard() {
+    @discardableResult
+    func copySelectionToClipboard() -> Bool {
         guard hasSelection else {
-            copySelectedLayersToClipboard()
-            return
+            return copySelectedLayersToClipboard()
         }
 
         guard let selection = document.selection else {
             statusText = L10n.text("imageEditor.status.noSelection")
-            return
+            return false
         }
         guard canCopySelectionToClipboard else {
             statusText = L10n.text("imageEditor.status.operationFailed")
-            return
+            return false
         }
         guard let layer = document.selectedLayer,
               let clippedImage = layer.visibleImage.copied(
@@ -500,7 +500,7 @@ extension ImageEditorViewModel {
               )
         else {
             statusText = L10n.text("imageEditor.status.selectionEmpty")
-            return
+            return false
         }
 
         let didCopy = ClipboardImageWriter.copy(
@@ -513,6 +513,7 @@ extension ImageEditorViewModel {
         statusText = didCopy
             ? L10n.text("imageEditor.status.selectionCopiedToClipboard")
             : L10n.text("imageEditor.status.selectionCopyToClipboardFailed")
+        return didCopy
     }
 
     private func selectionClipboardCopy(
@@ -556,14 +557,15 @@ extension ImageEditorViewModel {
         return (croppedImage.normalizedBitmapImage(), clipboardFrame)
     }
 
-    func cutSelectionToClipboard() {
+    @discardableResult
+    func cutSelectionToClipboard() -> Bool {
         guard let selection = document.selection else {
             statusText = L10n.text("imageEditor.status.noSelection")
-            return
+            return false
         }
         guard canCutSelectionToClipboard else {
             statusText = L10n.text("imageEditor.status.operationFailed")
-            return
+            return false
         }
         guard let index = document.selectedLayerIndex,
               let clippedImage = document.layers[index].visibleImage.copied(
@@ -580,7 +582,7 @@ extension ImageEditorViewModel {
               )
         else {
             statusText = L10n.text("imageEditor.status.selectionEmpty")
-            return
+            return false
         }
 
         let sourceLayer = document.layers[index]
@@ -597,7 +599,7 @@ extension ImageEditorViewModel {
               )
         else {
             statusText = L10n.text("imageEditor.status.selectionCopyToClipboardFailed")
-            return
+            return false
         }
 
         XomoClipboardLayerPayload.write(frame: clipboardCopy.frame)
@@ -605,12 +607,14 @@ extension ImageEditorViewModel {
         document.layers[index].image = output.normalizedBitmapImage()
         appendHistory(L10n.text("imageEditor.history.selectionCutClipboard"))
         statusText = L10n.text("imageEditor.status.selectionCutToClipboard")
+        return true
     }
 
-    func copyMergedToClipboard() {
+    @discardableResult
+    func copyMergedToClipboard() -> Bool {
         guard canCopyMergedToClipboard else {
             statusText = L10n.text("imageEditor.status.copyMergedToClipboardFailed")
-            return
+            return false
         }
 
         let clipboardCopy: (image: NSImage, frame: CGRect)
@@ -627,7 +631,7 @@ extension ImageEditorViewModel {
                 feather: feather
             ) else {
                 statusText = L10n.text("imageEditor.status.selectionEmpty")
-                return
+                return false
             }
             clipboardCopy = selectionCopy
         } else {
@@ -647,12 +651,14 @@ extension ImageEditorViewModel {
         statusText = didCopy
             ? L10n.text("imageEditor.status.copyMergedToClipboard")
             : L10n.text("imageEditor.status.copyMergedToClipboardFailed")
+        return didCopy
     }
 
-    func copySelectedLayersToClipboard() {
+    @discardableResult
+    func copySelectedLayersToClipboard() -> Bool {
         guard selectedLayersExportScope != nil else {
             statusText = L10n.text("imageEditor.status.selectedLayersCopyToClipboardFailed")
-            return
+            return false
         }
 
         let renderedImage = document.compositedImage(
@@ -664,12 +670,12 @@ extension ImageEditorViewModel {
               )
         else {
             statusText = L10n.text("imageEditor.status.selectedLayersCopyToClipboardFailed")
-            return
+            return false
         }
 
         guard let clipboardData = image.qingtuPNGData() else {
             statusText = L10n.text("imageEditor.status.selectedLayersCopyToClipboardFailed")
-            return
+            return false
         }
 
         let baseName = (document.sourceName as NSString).deletingPathExtension
@@ -685,6 +691,7 @@ extension ImageEditorViewModel {
         statusText = didCopy
             ? L10n.text("imageEditor.status.selectedLayersCopiedToClipboard")
             : L10n.text("imageEditor.status.selectedLayersCopyToClipboardFailed")
+        return didCopy
     }
 
     func copyMergedToNewLayer() {

@@ -1113,6 +1113,54 @@ struct XomoAutomationTests {
         #expect(fallbackViewModel.document.layers.count == layerCountBeforeRejectedPaste + 1)
     }
 
+    @Test func registryClipboardCopyActionsReportTransparentOutputFailures() throws {
+        let viewModel = makeViewModel()
+        let selectedLayerID = try #require(viewModel.document.selectedLayerID)
+        let selectedLayerIndex = try #require(viewModel.document.selectedLayerIndex)
+        let transparentData = try #require(
+            viewModel.document.layers[selectedLayerIndex].image.qingtuPNGData()
+        )
+        let historyCountBeforeRequests = viewModel.document.history.count
+        let undoCountBeforeRequests = viewModel.undoStack.count
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+
+        #expect(viewModel.canCopySelectedLayersToClipboard)
+        #expect(viewModel.canCopySelectionToClipboard)
+        for action in ["copySelection", "copySelectedLayers"] {
+            let response = registry.execute(request(
+                operation: "call",
+                name: "xomo.clipboard.action",
+                arguments: ["action": .string(action)]
+            ))
+            #expect(!response.ok)
+            #expect(response.error?.contains("did not produce clipboard content") == true)
+        }
+
+        viewModel.selectAll()
+        let historyCountAfterSelection = viewModel.document.history.count
+        let undoCountAfterSelection = viewModel.undoStack.count
+        #expect(viewModel.canCopySelectionToClipboard)
+        #expect(viewModel.canCutSelectionToClipboard)
+        #expect(viewModel.canCopyMergedToClipboard)
+        for action in ["copySelection", "cutSelection", "copyMerged"] {
+            let response = registry.execute(request(
+                operation: "call",
+                name: "xomo.clipboard.action",
+                arguments: ["action": .string(action)]
+            ))
+            #expect(!response.ok)
+            #expect(response.error?.contains("did not produce clipboard content") == true)
+        }
+
+        #expect(viewModel.document.selectedLayerID == selectedLayerID)
+        #expect(viewModel.document.layers[selectedLayerIndex].image.qingtuPNGData() == transparentData)
+        #expect(historyCountAfterSelection == historyCountBeforeRequests + 1)
+        #expect(undoCountAfterSelection == undoCountBeforeRequests + 1)
+        #expect(viewModel.document.history.count == historyCountAfterSelection)
+        #expect(viewModel.undoStack.count == undoCountAfterSelection)
+    }
+
     @Test func registryAppliesExplicitSelectionFeatherRadius() throws {
         let viewModel = makeViewModel()
         let registry = XomoAutomationRegistry.shared

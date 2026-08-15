@@ -4900,10 +4900,14 @@ final class XomoAutomationRegistry {
         case "pasteAsLayer": viewModel.pasteClipboardAsLayer()
         case "pasteIntoSelection": viewModel.pasteClipboardIntoSelectionAsLayer()
         case "pasteInPlace": viewModel.pasteClipboardInPlaceAsLayer()
-        case "copySelection": viewModel.copySelectionToClipboard()
-        case "cutSelection": viewModel.cutSelectionToClipboard()
-        case "copyMerged": viewModel.copyMergedToClipboard()
-        case "copySelectedLayers": viewModel.copySelectedLayersToClipboard()
+        case "copySelection":
+            try requireClipboardOutput(viewModel.copySelectionToClipboard(), action: action)
+        case "cutSelection":
+            try requireClipboardOutput(viewModel.cutSelectionToClipboard(), action: action)
+        case "copyMerged":
+            try requireClipboardOutput(viewModel.copyMergedToClipboard(), action: action)
+        case "copySelectedLayers":
+            try requireClipboardOutput(viewModel.copySelectedLayersToClipboard(), action: action)
         default: throw XomoAutomationCallError.invalidArgument("Unknown clipboard action")
         }
     }
@@ -4943,6 +4947,14 @@ final class XomoAutomationRegistry {
         guard requirement.isAvailable else {
             throw XomoAutomationCallError.operationFailed(
                 "Clipboard action \(action) requires \(requirement.description)"
+            )
+        }
+    }
+
+    private func requireClipboardOutput(_ didProduceOutput: Bool, action: String) throws {
+        guard didProduceOutput else {
+            throw XomoAutomationCallError.operationFailed(
+                "Clipboard action \(action) did not produce clipboard content"
             )
         }
     }
