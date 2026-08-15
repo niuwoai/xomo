@@ -801,6 +801,9 @@ extension ImageEditorViewModel {
         _ selection: ImageEditorSelection,
         combination: ImageEditorLayerMaskSelectionCombination
     ) -> [(index: Int, mask: NSImage)] {
+        guard selection.effectiveSelectedBounds(in: document.canvasSize) != nil else {
+            return []
+        }
         let selectedIDs = document.selectedLayerIDs.isEmpty
             ? Set(document.selectedLayerID.map { [$0] } ?? [])
             : document.selectedLayerIDs
@@ -820,6 +823,9 @@ extension ImageEditorViewModel {
         _ selection: ImageEditorSelection,
         hidingSelection: Bool
     ) -> [(index: Int, mask: NSImage)] {
+        guard selection.effectiveSelectedBounds(in: document.canvasSize) != nil else {
+            return []
+        }
         let selectedIDs = document.selectedLayerIDs.isEmpty
             ? Set(document.selectedLayerID.map { [$0] } ?? [])
             : document.selectedLayerIDs

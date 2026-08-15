@@ -52,10 +52,7 @@ enum ImageEditorLayerPanelTab: String, CaseIterable, Identifiable {
 @MainActor
 extension ImageEditorViewModel {
     var canSaveSelectionAsAlphaChannel: Bool {
-        // SwiftUI reads this while rebuilding menus after every selection change.
-        // A selection object is only created after its bounds are proven non-empty,
-        // so rasterizing the entire canvas here adds latency without improving validity.
-        document.selection != nil
+        document.selection?.effectiveSelectedBounds(in: document.canvasSize) != nil
     }
 
     var canCreateBlankAlphaChannel: Bool {
