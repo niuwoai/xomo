@@ -809,6 +809,94 @@ struct ImageEditorPSDTests {
         #expect(layer.vectorMask != nil)
     }
 
+    @Test func psdExportWritesModernVSCGSolidShapeContent() throws {
+        let source = try ImageEditorPSDCodec.decode(
+            psdFixtureData("modern-solid-vector-shape.psd"),
+            sourceName: "modern-solid-vector-shape.psd"
+        )
+        var exported = try ImageEditorPSDCodec.encode(document: source)
+        let vscgRange = try #require(exported.range(of: Data("8BIMvscg".utf8)))
+        let payloadOffset = vscgRange.upperBound + 4
+        try #require(exported.count >= payloadOffset + 8)
+
+        #expect(Data(exported[payloadOffset..<(payloadOffset + 4)]) == Data("SoCo".utf8))
+        #expect(Array(exported[(payloadOffset + 4)..<(payloadOffset + 8)]) == [0, 0, 0, 16])
+
+        let legacyRange = try #require(exported.range(of: Data("8BIMSoCo".utf8)))
+        exported.replaceSubrange(
+            (legacyRange.upperBound - 4)..<legacyRange.upperBound,
+            with: Data("zzzz".utf8)
+        )
+        let restored = try ImageEditorPSDCodec.decode(
+            exported,
+            sourceName: "vscg-only-solid-shape.psd"
+        )
+        let shape = try #require(restored.layers.first?.shapeContent)
+        let color = try #require(shape.fillColor.usingColorSpace(.deviceRGB))
+        #expect(shape.kind == .path)
+        #expect(abs(color.redComponent - 20.0 / 255.0) < 0.01)
+        #expect(abs(color.greenComponent - 160.0 / 255.0) < 0.01)
+        #expect(abs(color.blueComponent - 96.0 / 255.0) < 0.01)
+    }
+
+    @Test func psdExportWritesModernVSCGGradientShapeContent() throws {
+        let source = try ImageEditorPSDCodec.decode(
+            psdFixtureData("modern-gradient-vector-shape.psd"),
+            sourceName: "modern-gradient-vector-shape.psd"
+        )
+        var exported = try ImageEditorPSDCodec.encode(document: source)
+        let vscgRange = try #require(exported.range(of: Data("8BIMvscg".utf8)))
+        let payloadOffset = vscgRange.upperBound + 4
+        try #require(exported.count >= payloadOffset + 8)
+
+        #expect(Data(exported[payloadOffset..<(payloadOffset + 4)]) == Data("GdFl".utf8))
+        #expect(Array(exported[(payloadOffset + 4)..<(payloadOffset + 8)]) == [0, 0, 0, 16])
+
+        let legacyRange = try #require(exported.range(of: Data("8BIMGdFl".utf8)))
+        exported.replaceSubrange(
+            (legacyRange.upperBound - 4)..<legacyRange.upperBound,
+            with: Data("zzzz".utf8)
+        )
+        let restored = try ImageEditorPSDCodec.decode(
+            exported,
+            sourceName: "vscg-only-gradient-shape.psd"
+        )
+        let gradient = try #require(restored.layers.first?.shapeContent?.fillGradient?.normalized())
+        #expect(gradient.style == .linear)
+        #expect(gradient.colorStops?.count == 2)
+    }
+
+    @Test func psdExportDoesNotWriteVSCGForStandaloneFillLayers() throws {
+        let canvasSize = CGSize(width: 12, height: 10)
+        var document = ImageEditorDocument(
+            sourceName: "standalone-fills.xomoproject",
+            image: psdSolidImage(color: .clear, size: canvasSize)
+        )
+        document.layers = [
+            ImageEditorLayer.solidColorFill(
+                name: "Solid",
+                size: canvasSize,
+                content: ImageEditorSolidColorFillContent(red: 0.2, green: 0.4, blue: 0.8)
+            ),
+            ImageEditorLayer.gradientFill(
+                name: "Gradient",
+                size: canvasSize,
+                content: ImageEditorGradientFillContent(
+                    preset: .custom,
+                    style: .linear,
+                    reverse: false,
+                    angle: 45,
+                    scale: 1
+                )
+            )
+        ]
+
+        let exported = try ImageEditorPSDCodec.encode(document: document)
+        #expect(exported.range(of: Data("8BIMSoCo".utf8)) != nil)
+        #expect(exported.range(of: Data("8BIMGdFl".utf8)) != nil)
+        #expect(exported.range(of: Data("8BIMvscg".utf8)) == nil)
+    }
+
     @Test func externalGradientFillFixtureBecomesNativeEditableGradientLayer() throws {
         let data = try psdFixtureData("gradient-fill.psd")
         let document = try ImageEditorPSDCodec.decode(data, sourceName: "gradient-fill.psd")

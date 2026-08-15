@@ -1426,6 +1426,12 @@ enum ImageEditorPSDCodec {
         extra.appendSolidColorFill(item.solidFillContent)
         extra.appendGradientFill(item.gradientFillContent)
         extra.appendVectorMask(item.vectorMask)
+        if item.vectorMask != nil {
+            extra.appendVectorStrokeContent(
+                solid: item.solidFillContent,
+                gradient: item.gradientFillContent
+            )
+        }
         extra.appendVectorStroke(item.vectorStroke)
         extra.appendTextToolObject(item.textObject)
         record.appendUInt32(UInt32(extra.count))
@@ -3334,6 +3340,17 @@ private extension Data {
 
     mutating func appendSolidColorFill(_ content: ImageEditorSolidColorFillContent?) {
         guard let content else { return }
+        let descriptor = Data.solidColorFillDescriptor(content)
+        appendASCII("8BIM")
+        appendASCII("SoCo")
+        appendUInt32(UInt32(descriptor.count))
+        append(descriptor)
+        if descriptor.count % 2 != 0 { append(0) }
+    }
+
+    private static func solidColorFillDescriptor(
+        _ content: ImageEditorSolidColorFillContent
+    ) -> Data {
         let normalized = content.normalized()
         var color = Data()
         color.appendDescriptorBody(name: "RGB Color", classID: "RGBC", items: [
@@ -3345,15 +3362,22 @@ private extension Data {
         descriptor.appendDescriptorBlock(name: "", classID: "SoCo", items: [
             descriptor.descriptorItem(key: "Clr ", type: "Objc", payload: color)
         ])
+        return descriptor
+    }
+
+    mutating func appendGradientFill(_ content: ImageEditorGradientFillContent?) {
+        guard let content else { return }
+        let descriptor = Data.gradientFillDescriptor(content)
         appendASCII("8BIM")
-        appendASCII("SoCo")
+        appendASCII("GdFl")
         appendUInt32(UInt32(descriptor.count))
         append(descriptor)
         if descriptor.count % 2 != 0 { append(0) }
     }
 
-    mutating func appendGradientFill(_ content: ImageEditorGradientFillContent?) {
-        guard let content else { return }
+    private static func gradientFillDescriptor(
+        _ content: ImageEditorGradientFillContent
+    ) -> Data {
         let normalized = content.normalized()
         let colors = normalized.colors()
         let stops = normalized.colorStops ?? [
@@ -3425,11 +3449,33 @@ private extension Data {
             ),
             Data.descriptorItem(key: "Rvrs", type: "bool", payload: Data(boolean: normalized.reverse))
         ])
+        return descriptor
+    }
+
+    mutating func appendVectorStrokeContent(
+        solid: ImageEditorSolidColorFillContent?,
+        gradient: ImageEditorGradientFillContent?
+    ) {
+        let key: String
+        let descriptor: Data
+        if let gradient {
+            key = "GdFl"
+            descriptor = Data.gradientFillDescriptor(gradient)
+        } else if let solid {
+            key = "SoCo"
+            descriptor = Data.solidColorFillDescriptor(solid)
+        } else {
+            return
+        }
+
+        var payload = Data()
+        payload.appendASCII(key)
+        payload.append(descriptor)
         appendASCII("8BIM")
-        appendASCII("GdFl")
-        appendUInt32(UInt32(descriptor.count))
-        append(descriptor)
-        if descriptor.count % 2 != 0 { append(0) }
+        appendASCII("vscg")
+        appendUInt32(UInt32(payload.count))
+        append(payload)
+        if payload.count % 2 != 0 { append(0) }
     }
 
     mutating func appendTextToolObject(_ text: PSDExportText?) {

@@ -1,10 +1,10 @@
 {
-  "generated_at": "2026-08-15 19:25:46 +0800",
-  "total": 3,
-  "passed": 3,
+  "generated_at": "2026-08-15 19:36:50 +0800",
+  "total": 6,
+  "passed": 6,
   "failed": 0,
-  "total_tests": 3,
-  "passed_tests": 3,
+  "total_tests": 6,
+  "passed_tests": 6,
   "failed_tests_in_failed_groups": 0,
   "jobs": 1,
   "results": [
@@ -15,7 +15,7 @@
       "file": "ImageEditorPSDTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 2.806,
+      "duration": 2.865,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorPSDTests.modernVSCGGradientShapeBecomesEditableAndRoundTrips.log"
@@ -27,10 +27,46 @@
       "file": "ImageEditorPSDTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 2.782,
+      "duration": 2.778,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorPSDTests.modernVSCGSolidShapeBecomesEditableAndRoundTrips.log"
+    },
+    {
+      "suite": "ImageEditorPSDTests",
+      "method": "psdExportDoesNotWriteVSCGForStandaloneFillLayers",
+      "identifier": "veilpicTests/ImageEditorPSDTests/psdExportDoesNotWriteVSCGForStandaloneFillLayers()",
+      "file": "ImageEditorPSDTests.swift",
+      "test_count": 1,
+      "passed": true,
+      "duration": 2.799,
+      "infrastructure_retries": 0,
+      "issues": [],
+      "log": "ImageEditorPSDTests.psdExportDoesNotWriteVSCGForStandaloneFillLayers.log"
+    },
+    {
+      "suite": "ImageEditorPSDTests",
+      "method": "psdExportWritesModernVSCGGradientShapeContent",
+      "identifier": "veilpicTests/ImageEditorPSDTests/psdExportWritesModernVSCGGradientShapeContent()",
+      "file": "ImageEditorPSDTests.swift",
+      "test_count": 1,
+      "passed": true,
+      "duration": 2.8,
+      "infrastructure_retries": 0,
+      "issues": [],
+      "log": "ImageEditorPSDTests.psdExportWritesModernVSCGGradientShapeContent.log"
+    },
+    {
+      "suite": "ImageEditorPSDTests",
+      "method": "psdExportWritesModernVSCGSolidShapeContent",
+      "identifier": "veilpicTests/ImageEditorPSDTests/psdExportWritesModernVSCGSolidShapeContent()",
+      "file": "ImageEditorPSDTests.swift",
+      "test_count": 1,
+      "passed": true,
+      "duration": 2.791,
+      "infrastructure_retries": 0,
+      "issues": [],
+      "log": "ImageEditorPSDTests.psdExportWritesModernVSCGSolidShapeContent.log"
     },
     {
       "suite": "ImageEditorPSDTests",
@@ -39,7 +75,7 @@
       "file": "ImageEditorPSDTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 2.797,
+      "duration": 2.809,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorPSDTests.unsupportedVSCGContentReportsRasterFallback.log"
