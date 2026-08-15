@@ -1313,6 +1313,146 @@ struct XomoFigmaNodeImportPlanTests {
         #expect((shape.fillGradient?.shapeColorStops[1].green ?? 0) > 0.95)
     }
 
+    @Test func orthogonalDiamondGradientsMapWhileDistortedAndAngularPaintsDegrade() throws {
+        let response = try JSONDecoder().decode(
+            XomoFigmaNodeResponse.self,
+            from: Data(
+                """
+                {
+                  "name": "Diamond Gradients",
+                  "nodes": {
+                    "1:42": {
+                      "document": {
+                        "id": "1:42",
+                        "name": "Diamond Frame",
+                        "type": "FRAME",
+                        "absoluteBoundingBox": {"x": 0, "y": 0, "width": 390, "height": 140},
+                        "children": [
+                          {
+                            "id": "2:42",
+                            "name": "Editable Diamond",
+                            "type": "RECTANGLE",
+                            "absoluteBoundingBox": {"x": 20, "y": 20, "width": 120, "height": 80},
+                            "fills": [{
+                              "type": "GRADIENT_DIAMOND",
+                              "opacity": 0.8,
+                              "gradientHandlePositions": [
+                                {"x": 0.4, "y": 0.5},
+                                {"x": 0.65, "y": 0.75},
+                                {"x": 0.2333333333, "y": 0.875}
+                              ],
+                              "gradientStops": [
+                                {"position": 0, "color": {"r": 1, "g": 0, "b": 0, "a": 0.5}},
+                                {"position": 0.45, "color": {"r": 0, "g": 1, "b": 0, "a": 0.5}},
+                                {"position": 1, "color": {"r": 0, "g": 0, "b": 1, "a": 0.5}}
+                              ]
+                            }]
+                          },
+                          {
+                            "id": "2:43",
+                            "name": "Distorted Diamond",
+                            "type": "RECTANGLE",
+                            "absoluteBoundingBox": {"x": 160, "y": 20, "width": 100, "height": 80},
+                            "fills": [{
+                              "type": "GRADIENT_DIAMOND",
+                              "gradientHandlePositions": [
+                                {"x": 0.5, "y": 0.5},
+                                {"x": 0.9, "y": 0.5},
+                                {"x": 0.5, "y": 0.75}
+                              ],
+                              "gradientStops": [
+                                {"position": 0, "color": {"r": 1, "g": 1, "b": 1, "a": 1}},
+                                {"position": 1, "color": {"r": 0, "g": 0, "b": 0, "a": 1}}
+                              ]
+                            }]
+                          },
+                          {
+                            "id": "2:44",
+                            "name": "Angular Gradient",
+                            "type": "ELLIPSE",
+                            "absoluteBoundingBox": {"x": 280, "y": 20, "width": 80, "height": 80},
+                            "fills": [{
+                              "type": "GRADIENT_ANGULAR",
+                              "gradientHandlePositions": [
+                                {"x": 0.5, "y": 0.5},
+                                {"x": 1, "y": 0.5},
+                                {"x": 0.5, "y": 1}
+                              ],
+                              "gradientStops": [
+                                {"position": 0, "color": {"r": 1, "g": 1, "b": 1, "a": 1}},
+                                {"position": 1, "color": {"r": 0, "g": 0, "b": 0, "a": 1}}
+                              ]
+                            }]
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+                """.utf8
+            )
+        )
+
+        let plan = try XomoFigmaNodeImportMapper.makePlan(
+            response: response,
+            requestedNodeID: "1:42"
+        )
+        let diamond = try #require(plan.items.first { $0.sourceID == "2:42" })
+        let distorted = try #require(plan.items.first { $0.sourceID == "2:43" })
+        let angular = try #require(plan.items.first { $0.sourceID == "2:44" })
+        let diamondFill = try #require(diamond.diamondGradientFill)
+        #expect(diamond.fidelity == .exact)
+        #expect(diamond.linearGradientFill == nil)
+        #expect(diamond.radialGradientFill == nil)
+        #expect(!diamond.issues.contains(.unsupportedPaint))
+        #expect(abs(diamondFill.centerX - 0.4) < 0.001)
+        #expect(abs(diamondFill.centerY - 0.5) < 0.001)
+        #expect(abs(diamondFill.angle - 33.6900675) < 0.001)
+        #expect(abs(diamondFill.scale - 0.5) < 0.001)
+        #expect(abs(diamondFill.opacity - 0.4) < 0.001)
+        #expect(diamondFill.colorStops.count == 3)
+        #expect(diamondFill.colorStops[1].position == 0.45)
+        #expect(distorted.fidelity == .partial)
+        #expect(distorted.diamondGradientFill == nil)
+        #expect(distorted.issues.contains(.unsupportedPaint))
+        #expect(angular.fidelity == .partial)
+        #expect(angular.diamondGradientFill == nil)
+        #expect(angular.issues.contains(.unsupportedPaint))
+
+        let materialized = XomoFigmaNodeMaterializer.materialize(
+            plan: plan,
+            canvasSize: CGSize(width: 420, height: 180)
+        )
+        let shape = try #require(
+            materialized.layers.first { $0.name == "Editable Diamond" }?.shapeContent
+        )
+        #expect(shape.fillGradient?.style == .diamond)
+        #expect(abs((shape.fillGradient?.angle ?? 0) - diamondFill.angle) < 0.001)
+        #expect(abs((shape.fillGradient?.scale ?? 0) - diamondFill.scale) < 0.001)
+        #expect(abs(shape.fillGradientCenter.x - 0.4) < 0.001)
+        #expect(abs(shape.fillGradientCenter.y - 0.5) < 0.001)
+        #expect(abs(shape.fillOpacity - 0.4) < 0.001)
+        #expect(shape.fillGradient?.shapeColorStops.count == 3)
+        #expect((shape.fillGradient?.shapeColorStops[1].green ?? 0) > 0.95)
+
+        var document = ImageEditorDocument(
+            sourceName: "figma-diamond.png",
+            image: NSImage.transparent(size: CGSize(width: 420, height: 180))
+        )
+        document.layers = materialized.layers
+        let project = try ImageEditorProjectDocument(document: document)
+        let restoredDocument = try project.restoredDocument()
+        let restoredShape = try #require(
+            restoredDocument.layers.first { $0.name == "Editable Diamond" }?.shapeContent
+        )
+        #expect(restoredShape.fillGradient?.style == .diamond)
+        #expect(abs((restoredShape.fillGradient?.angle ?? 0) - diamondFill.angle) < 0.001)
+        #expect(abs((restoredShape.fillGradient?.scale ?? 0) - diamondFill.scale) < 0.001)
+        #expect(abs(restoredShape.fillGradientCenter.x - 0.4) < 0.001)
+        #expect(abs(restoredShape.fillGradientCenter.y - 0.5) < 0.001)
+        #expect(restoredShape.fillGradient?.shapeColorStops.count == 3)
+    }
+
     @Test func clientRequiresSpecificNodeAndUsesBoundedOfficialEndpoint() async throws {
         let transport = RecordingFigmaNodeTransport(statusCode: 200, body: Self.validNodeResponse)
         let client = XomoFigmaNodeContentAPIClient(transport: transport)

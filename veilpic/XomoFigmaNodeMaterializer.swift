@@ -543,7 +543,11 @@ enum XomoFigmaNodeMaterializer {
         transform: XomoFigmaImportTransform,
         groupID: UUID?
     ) -> ImageEditorLayer? {
-        guard item.solidFill != nil || item.linearGradientFill != nil || item.solidStroke != nil,
+        guard item.solidFill != nil
+                || item.linearGradientFill != nil
+                || item.radialGradientFill != nil
+                || item.diamondGradientFill != nil
+                || item.solidStroke != nil,
               let frame = mappedFrame(item.frame, transform: transform)
         else { return nil }
         var layer = ImageEditorLayer.shape(
@@ -754,14 +758,31 @@ enum XomoFigmaNodeMaterializer {
             gradient.style = .radial
             return gradient
         }
-        let gradient = linearGradient ?? radialGradient
+        let diamondGradient = item.diamondGradientFill.map { value in
+            var gradient = ImageEditorGradientFillContent.shapeLinear(
+                colorStops: value.colorStops.map { stop in
+                    ImageEditorGradientColorStop(
+                        position: stop.position,
+                        color: nsColor(stop.color, fallback: .clear)
+                    )
+                },
+                angle: CGFloat(value.angle),
+                scale: CGFloat(value.scale)
+            )
+            gradient.style = .diamond
+            return gradient
+        }
+        let gradient = linearGradient ?? radialGradient ?? diamondGradient
         let gradientCenter = item.linearGradientFill.map {
             CGPoint(x: $0.centerX, y: $0.centerY)
         } ?? item.radialGradientFill.map {
             CGPoint(x: $0.centerX, y: $0.centerY)
+        } ?? item.diamondGradientFill.map {
+            CGPoint(x: $0.centerX, y: $0.centerY)
         }
         let gradientOpacity = item.linearGradientFill?.opacity
             ?? item.radialGradientFill?.opacity
+            ?? item.diamondGradientFill?.opacity
         return ImageEditorShapeContent(
             kind: kind,
             fillColor: fill,

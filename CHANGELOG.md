@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.12.0-rc1013 - 2026-08-15
+
+### Added
+- Figma 链接导入现在把两条控制轴等长且正交的 `GRADIENT_DIAMOND` 填充恢复为 Xomo 原生可编辑菱形渐变，保留多色标、公共透明度、中心、旋转角和比例，并进入项目保存重开闭环。
+
+### Changed
+- 不等轴、倾斜或退化的 Diamond 几何继续明确报告 `unsupportedPaint` 并安全降级；尚无等价模型的 `GRADIENT_ANGULAR` 仍不会被伪装成菱形或线性渐变。
+
+### Verification
+- Figma Diamond 精确映射、材料化、项目保存重开和失真/Angular 降级，以及线性/径向边界、分区背景、PSD、原生与 MCP Diamond 相邻回归共 13/13 通过；CLI/MCP 2/2、发布契约 7/7（21 项断言）通过。下一次周期完整门禁为 rc1040，本版不覆盖 `/Applications` 安装。
+
 ## 2.12.0-rc1012 - 2026-08-15
 
 ### Fixed

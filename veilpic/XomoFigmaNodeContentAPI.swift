@@ -432,6 +432,9 @@ enum XomoFigmaNodeImportMapper {
             radialGradientFill: supportsGradientFill(node.type)
                 ? radialGradient(in: node.fills, bounds: node.absoluteBoundingBox)
                 : nil,
+            diamondGradientFill: supportsGradientFill(node.type)
+                ? diamondGradient(in: node.fills, bounds: node.absoluteBoundingBox)
+                : nil,
             solidStroke: solidColor(in: node.strokes),
             strokeWeight: resolvedStrokeWeight(node),
             strokeAlign: node.strokeAlign,
@@ -1117,19 +1120,19 @@ enum XomoFigmaNodeImportMapper {
             !isSupportedPaintBlendMode($0.blendMode)
         }
         let hasUnsupportedGradientColor = visiblePaints.contains { paint in
-            ["GRADIENT_LINEAR", "GRADIENT_RADIAL"].contains(paint.type)
+            editableGradientPaintTypes.contains(paint.type)
                 && !hasSupportedGradientColorComponents(paint)
         }
         let hasUnsupportedGradientStopPosition = visiblePaints.contains { paint in
-            ["GRADIENT_LINEAR", "GRADIENT_RADIAL"].contains(paint.type)
+            editableGradientPaintTypes.contains(paint.type)
                 && !hasSupportedGradientStopPositions(paint)
         }
         let hasUnsupportedGradientCenter = visiblePaints.contains { paint in
-            ["GRADIENT_LINEAR", "GRADIENT_RADIAL"].contains(paint.type)
+            editableGradientPaintTypes.contains(paint.type)
                 && !hasSupportedGradientCenter(paint)
         }
         let hasUnsupportedGradientScale = visiblePaints.contains { paint in
-            guard ["GRADIENT_LINEAR", "GRADIENT_RADIAL"].contains(paint.type),
+            guard editableGradientPaintTypes.contains(paint.type),
                   let scale = rawGradientScale(paint, bounds: node.absoluteBoundingBox)
             else { return false }
             return !gradientScaleRange.contains(scale)
@@ -1142,6 +1145,8 @@ enum XomoFigmaNodeImportMapper {
                 return linearGradient(in: [paint], bounds: node.absoluteBoundingBox) == nil
             case "GRADIENT_RADIAL":
                 return radialGradient(in: [paint], bounds: node.absoluteBoundingBox) == nil
+            case "GRADIENT_DIAMOND":
+                return diamondGradient(in: [paint], bounds: node.absoluteBoundingBox) == nil
             default:
                 return true
             }
@@ -1201,7 +1206,7 @@ enum XomoFigmaNodeImportMapper {
         else { return false }
         let centerX: Double
         let centerY: Double
-        if paint.type == "GRADIENT_RADIAL" {
+        if paint.type == "GRADIENT_RADIAL" || paint.type == "GRADIENT_DIAMOND" {
             centerX = handles[0].x
             centerY = handles[0].y
         } else {
@@ -1354,10 +1359,71 @@ enum XomoFigmaNodeImportMapper {
         )
     }
 
+    private static func diamondGradient(
+        in paints: [XomoFigmaPaint]?,
+        bounds: XomoFigmaRectangle?
+    ) -> XomoFigmaPlanDiamondGradient? {
+        guard let paint = (paints ?? []).first(where: {
+            ($0.visible ?? true) && $0.type == "GRADIENT_DIAMOND"
+        }),
+        let bounds,
+        bounds.width.isFinite,
+        bounds.height.isFinite,
+        bounds.width > 0,
+        bounds.height > 0,
+        let handles = paint.gradientHandlePositions,
+        handles.count == 3,
+        handles.allSatisfy(\.isFinite),
+        let resolvedStops = resolvedGradientStops(paint)
+        else { return nil }
+
+        let center = handles[0]
+        let firstAxis = (
+            x: (handles[1].x - center.x) * bounds.width,
+            y: (handles[1].y - center.y) * bounds.height
+        )
+        let secondAxis = (
+            x: (handles[2].x - center.x) * bounds.width,
+            y: (handles[2].y - center.y) * bounds.height
+        )
+        let firstLength = hypot(firstAxis.x, firstAxis.y)
+        let secondLength = hypot(secondAxis.x, secondAxis.y)
+        let maximumLength = max(firstLength, secondLength)
+        guard firstLength.isFinite,
+              secondLength.isFinite,
+              firstLength >= minimumGradientAxisLength,
+              secondLength >= minimumGradientAxisLength,
+              abs(firstLength - secondLength) <= maximumLength * circularGradientTolerance,
+              abs(firstAxis.x * secondAxis.x + firstAxis.y * secondAxis.y)
+                <= firstLength * secondLength * circularGradientTolerance
+        else { return nil }
+
+        let referenceRadius = hypot(bounds.width / 2, bounds.height / 2)
+        let scale = ((firstLength + secondLength) / 2) / referenceRadius
+        let angle = atan2(firstAxis.y, firstAxis.x) * 180 / .pi
+        guard scale.isFinite, angle.isFinite else { return nil }
+
+        return XomoFigmaPlanDiamondGradient(
+            startColor: resolvedStops.startColor,
+            endColor: resolvedStops.endColor,
+            angle: angle,
+            scale: normalizedGradientScale(scale),
+            centerX: normalizedGradientCenter(center.x),
+            centerY: normalizedGradientCenter(center.y),
+            opacity: resolvedStops.opacity,
+            colorStops: resolvedStops.colorStops
+        )
+    }
+
     private static let minimumGradientAxisLength = 0.001
     private static let circularGradientTolerance = 0.001
     private static let gradientCenterRange = -4.0...5.0
     private static let gradientScaleRange = 0.25...4.0
+    private static let editableGradientPaintTypes: Set<String> = [
+        "GRADIENT_LINEAR",
+        "GRADIENT_RADIAL",
+        "GRADIENT_DIAMOND"
+    ]
 
     private static func normalizedGradientCenter(_ value: Double) -> Double {
         min(max(value, gradientCenterRange.lowerBound), gradientCenterRange.upperBound)
@@ -1395,7 +1461,9 @@ enum XomoFigmaNodeImportMapper {
             return scale.isFinite ? scale : nil
         }
 
-        guard paint.type == "GRADIENT_RADIAL" else { return nil }
+        guard paint.type == "GRADIENT_RADIAL" || paint.type == "GRADIENT_DIAMOND" else {
+            return nil
+        }
         let secondX = (handles[2].x - center.x) * bounds.width
         let secondY = (handles[2].y - center.y) * bounds.height
         let secondLength = hypot(secondX, secondY)
