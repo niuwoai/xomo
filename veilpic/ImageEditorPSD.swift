@@ -536,7 +536,9 @@ enum ImageEditorPSDCodec {
             }
             if !record.additionalKeys.isDisjoint(with: smartObjectKeys) { addIssue(.smartObjectRasterized) }
             if !record.additionalKeys.isDisjoint(with: effectKeys) { addIssue(.layerEffectsRasterized) }
-            if !record.additionalKeys.isDisjoint(with: fillKeys),
+            let declaresFillContent = !record.additionalKeys.isDisjoint(with: fillKeys)
+                || record.additionalKeys.contains("vscg")
+            if declaresFillContent,
                record.solidFillContent == nil,
                record.gradientFillContent == nil {
                 addIssue(.fillLayerRasterized)
@@ -1495,6 +1497,12 @@ enum ImageEditorPSDCodec {
             } else if key == "vstk" {
                 let blockData = try reader.data(count: length)
                 vectorStrokeInfo = parseVectorStroke(blockData) ?? vectorStrokeInfo
+            } else if key == "vscg" {
+                let blockData = try reader.data(count: length)
+                if let content = parseVectorStrokeContent(blockData) {
+                    solidFillContent = solidFillContent ?? content.solid
+                    gradientFillContent = gradientFillContent ?? content.gradient
+                }
             } else if key == "SoCo" {
                 let blockData = try reader.data(count: length)
                 solidFillContent = parseSolidColorFill(blockData)
@@ -1867,6 +1875,33 @@ enum ImageEditorPSDCodec {
                 scale: CGFloat(scale),
                 colorStops: stops
             ).normalized()
+        } catch {
+            return nil
+        }
+    }
+
+    private static func parseVectorStrokeContent(
+        _ data: Data
+    ) -> (
+        solid: ImageEditorSolidColorFillContent?,
+        gradient: ImageEditorGradientFillContent?
+    )? {
+        guard data.count >= 8 else { return nil }
+        do {
+            var reader = PSDReader(data: data)
+            let contentKey = try reader.ascii(count: 4)
+            guard try reader.uint32() == 16 else { return nil }
+            let descriptorData = Data(data.dropFirst(4))
+            switch contentKey {
+            case "SoCo":
+                guard let solid = parseSolidColorFill(descriptorData) else { return nil }
+                return (solid, nil)
+            case "GdFl":
+                guard let gradient = parseGradientFill(descriptorData) else { return nil }
+                return (nil, gradient)
+            default:
+                return nil
+            }
         } catch {
             return nil
         }

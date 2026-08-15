@@ -79,6 +79,26 @@
       ]
     },
     {
+      "file": "modern-solid-vector-shape.psd",
+      "sha256": "52bc5122723351d68fe67164bdd45641ef3588e8bda35818a047e02ee0c3d69a",
+      "expected": [
+        "editable_vector_shape",
+        "vscg",
+        "solid_fill",
+        "vector_mask"
+      ]
+    },
+    {
+      "file": "modern-gradient-vector-shape.psd",
+      "sha256": "12a97c86494817d22c9cffa9734892d1f85f54936c8fc9933182ff81dff7501a",
+      "expected": [
+        "editable_vector_shape",
+        "vscg",
+        "gradient_fill",
+        "vector_mask"
+      ]
+    },
+    {
       "file": "stroked-vector-shape.psd",
       "sha256": "72c821059ecae6b2f21b858a3dd319d77e4e929e3ec50f93398677805c82f93e",
       "expected": [

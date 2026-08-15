@@ -216,6 +216,10 @@ def gradient_fill_descriptor
   )
 end
 
+def vector_stroke_content_payload(key:, descriptor:)
+  key.b + descriptor
+end
+
 def vector_stroke_descriptor
   dash_set = u32(2) + [6.0, 3.0].map { |value| "UntF" + "#Pnt" + f64(value) }.join
   color = descriptor_body(
@@ -558,6 +562,62 @@ def gradient_vector_shape_fixture
   )
 end
 
+def modern_solid_vector_shape_fixture
+  pixel = ([180] * 16).pack("C*")
+  alpha = ([255] * 16).pack("C*")
+  channels = {
+    -1 => raw_channel(alpha),
+    0 => raw_channel(pixel),
+    1 => raw_channel(pixel),
+    2 => raw_channel(pixel)
+  }
+  fill = solid_color_fill_descriptor(red: 20, green: 160, blue: 96)
+  record = layer_record(
+    name: "Modern Solid Shape",
+    channels: channels,
+    blocks: [
+      tagged_block("vsms", vector_mask_payload),
+      tagged_block("vscg", vector_stroke_content_payload(key: "SoCo", descriptor: fill))
+    ]
+  )
+  layer_info = i16(1) + record + channels.values.join
+  layer_info << "\0" if layer_info.bytesize.odd?
+  layer_and_mask = u32(layer_info.bytesize) + layer_info + u32(0)
+  psd(
+    layer_payload: u32(layer_and_mask.bytesize) + layer_and_mask,
+    composite: u16(0) + pixel + pixel + pixel + alpha
+  )
+end
+
+def modern_gradient_vector_shape_fixture
+  pixel = ([180] * 16).pack("C*")
+  alpha = ([255] * 16).pack("C*")
+  channels = {
+    -1 => raw_channel(alpha),
+    0 => raw_channel(pixel),
+    1 => raw_channel(pixel),
+    2 => raw_channel(pixel)
+  }
+  record = layer_record(
+    name: "Modern Gradient Shape",
+    channels: channels,
+    blocks: [
+      tagged_block("vsms", vector_mask_payload),
+      tagged_block(
+        "vscg",
+        vector_stroke_content_payload(key: "GdFl", descriptor: gradient_fill_descriptor)
+      )
+    ]
+  )
+  layer_info = i16(1) + record + channels.values.join
+  layer_info << "\0" if layer_info.bytesize.odd?
+  layer_and_mask = u32(layer_info.bytesize) + layer_info + u32(0)
+  psd(
+    layer_payload: u32(layer_and_mask.bytesize) + layer_and_mask,
+    composite: u16(0) + pixel + pixel + pixel + alpha
+  )
+end
+
 def stroked_vector_shape_fixture
   pixel = ([180] * 16).pack("C*")
   alpha = ([255] * 16).pack("C*")
@@ -674,6 +734,8 @@ fixtures = {
   "solid-color-fill.psd" => solid_color_fill_fixture,
   "solid-vector-shape.psd" => solid_vector_shape_fixture,
   "gradient-vector-shape.psd" => gradient_vector_shape_fixture,
+  "modern-solid-vector-shape.psd" => modern_solid_vector_shape_fixture,
+  "modern-gradient-vector-shape.psd" => modern_gradient_vector_shape_fixture,
   "stroked-vector-shape.psd" => stroked_vector_shape_fixture,
   "gradient-fill.psd" => gradient_fill_fixture,
   "vector-mask.psd" => vector_mask_fixture,
@@ -693,6 +755,8 @@ expectations = {
   "solid-color-fill.psd" => %w[editable_solid_color_fill rgb_descriptor],
   "solid-vector-shape.psd" => %w[editable_vector_shape solid_fill vector_mask],
   "gradient-vector-shape.psd" => %w[editable_vector_shape gradient_fill vector_mask vector_stroke dash_pattern],
+  "modern-solid-vector-shape.psd" => %w[editable_vector_shape vscg solid_fill vector_mask],
+  "modern-gradient-vector-shape.psd" => %w[editable_vector_shape vscg gradient_fill vector_mask],
   "stroked-vector-shape.psd" => %w[editable_vector_shape solid_fill vector_mask vector_stroke dash_pattern],
   "gradient-fill.psd" => %w[editable_gradient_fill linear_color_stops],
   "vector-mask.psd" => %w[editable_vector_mask closed_path bezier_points],

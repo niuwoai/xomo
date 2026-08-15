@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.12.0-rc1010 - 2026-08-15
+
+### Fixed
+- PSD 导入现在按 Adobe 官方结构读取 `vscg`（Vector Stroke Content Data）中的 `SoCo` 与 `GdFl` 描述符；使用 `vsms + vscg` 的现代 Photoshop 实色和线性渐变形状可恢复为原生可编辑路径，而不再依赖旧式独立填充块。
+- 不支持的 `vscg` 内容（当前包括 Pattern Fill）会明确进入兼容性报告并保留栅格像素与矢量蒙版降级，不再静默声称完整保真。
+
+### Verification
+- 现代 `vscg` 实色、渐变与不支持内容降级 3/3，旧式矢量形状、描边、非链接蒙版、兼容性报告及直接填充相邻回归 7/7，共 10 项 PSD 专项通过；CLI/MCP 2/2、发布契约 7/7（21 项断言）通过。下一次周期完整门禁为 rc1040，本版不覆盖 `/Applications` 安装。
+
 ## 2.12.0-rc1009 - 2026-08-15
 
 ### Fixed

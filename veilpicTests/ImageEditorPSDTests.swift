@@ -728,6 +728,87 @@ struct ImageEditorPSDTests {
         #expect(reimportedShape.strokeDashPattern == [6, 3])
     }
 
+    @Test func modernVSCGSolidShapeBecomesEditableAndRoundTrips() throws {
+        let data = try psdFixtureData("modern-solid-vector-shape.psd")
+        let document = try ImageEditorPSDCodec.decode(
+            data,
+            sourceName: "modern-solid-vector-shape.psd"
+        )
+        let layer = try #require(document.layers.first)
+        let shape = try #require(layer.shapeContent)
+        let fillColor = try #require(shape.fillColor.usingColorSpace(.deviceRGB))
+
+        #expect(layer.isShape)
+        #expect(shape.kind == .path)
+        #expect(shape.editablePathAnchors.count == 3)
+        #expect(abs(fillColor.redComponent - 20.0 / 255.0) < 0.01)
+        #expect(abs(fillColor.greenComponent - 160.0 / 255.0) < 0.01)
+        #expect(abs(fillColor.blueComponent - 96.0 / 255.0) < 0.01)
+
+        let report = try ImageEditorPSDCodec.compatibilityReport(data)
+        #expect(!report.issues.contains { $0.kind == .vectorRasterized })
+        #expect(!report.issues.contains { $0.kind == .fillLayerRasterized })
+
+        let exported = try ImageEditorPSDCodec.encode(document: document)
+        let reimported = try ImageEditorPSDCodec.decode(
+            exported,
+            sourceName: "modern-solid-vector-shape-roundtrip.psd"
+        )
+        let restoredColor = try #require(
+            reimported.layers.first?.shapeContent?.fillColor.usingColorSpace(.deviceRGB)
+        )
+        #expect(abs(restoredColor.redComponent - fillColor.redComponent) < 0.01)
+        #expect(abs(restoredColor.greenComponent - fillColor.greenComponent) < 0.01)
+        #expect(abs(restoredColor.blueComponent - fillColor.blueComponent) < 0.01)
+    }
+
+    @Test func modernVSCGGradientShapeBecomesEditableAndRoundTrips() throws {
+        let data = try psdFixtureData("modern-gradient-vector-shape.psd")
+        let document = try ImageEditorPSDCodec.decode(
+            data,
+            sourceName: "modern-gradient-vector-shape.psd"
+        )
+        let shape = try #require(document.layers.first?.shapeContent)
+        let gradient = try #require(shape.fillGradient?.normalized())
+        let stops = try #require(gradient.colorStops)
+
+        #expect(shape.kind == .path)
+        #expect(shape.editablePathAnchors.count == 3)
+        #expect(gradient.style == .linear)
+        #expect(stops.count == 2)
+        #expect(abs(stops[0].red - 32.0 / 255.0) < 0.01)
+        #expect(abs(stops[1].blue - 40.0 / 255.0) < 0.01)
+
+        let report = try ImageEditorPSDCodec.compatibilityReport(data)
+        #expect(!report.issues.contains { $0.kind == .vectorRasterized })
+        #expect(!report.issues.contains { $0.kind == .fillLayerRasterized })
+
+        let exported = try ImageEditorPSDCodec.encode(document: document)
+        let reimported = try ImageEditorPSDCodec.decode(
+            exported,
+            sourceName: "modern-gradient-vector-shape-roundtrip.psd"
+        )
+        #expect(reimported.layers.first?.shapeContent?.fillGradient?.normalized() == gradient)
+    }
+
+    @Test func unsupportedVSCGContentReportsRasterFallback() throws {
+        var data = try psdFixtureData("modern-solid-vector-shape.psd")
+        let blockRange = try #require(data.range(of: Data("vscg".utf8)))
+        let contentKeyOffset = blockRange.upperBound + 4
+        data.replaceSubrange(
+            contentKeyOffset..<(contentKeyOffset + 4),
+            with: Data("PtFl".utf8)
+        )
+
+        let report = try ImageEditorPSDCodec.compatibilityReport(data)
+        #expect(report.issues.contains { $0.kind == .fillLayerRasterized })
+
+        let document = try ImageEditorPSDCodec.decode(data, sourceName: "pattern-vscg-shape.psd")
+        let layer = try #require(document.layers.first)
+        #expect(!layer.isShape)
+        #expect(layer.vectorMask != nil)
+    }
+
     @Test func externalGradientFillFixtureBecomesNativeEditableGradientLayer() throws {
         let data = try psdFixtureData("gradient-fill.psd")
         let document = try ImageEditorPSDCodec.decode(data, sourceName: "gradient-fill.psd")
