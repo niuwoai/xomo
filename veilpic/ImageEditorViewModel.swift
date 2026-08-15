@@ -6978,12 +6978,28 @@ final class ImageEditorViewModel: ObservableObject {
                 < (stops[rhs + 1].position - stops[rhs].position)
         } ?? 0
         let position = (stops[gap].position + stops[gap + 1].position) / 2
-        let insertionIndex = gap + 1
+        return addGradientFillColorStop(at: position)
+    }
+
+    @discardableResult
+    func addGradientFillColorStop(at position: Double) -> Int? {
+        guard position.isFinite else { return nil }
+        let stops = gradientFillColorStops
+        guard stops.count < ImageEditorGradientFillContent.maximumColorStopCount else { return nil }
+        let requestedPosition = max(0, min(1, position))
+        let insertionIndex = stops.firstIndex {
+            requestedPosition < $0.position
+        } ?? stops.count
+        guard insertionIndex > 0, insertionIndex < stops.count else { return nil }
+        let lowerBound = stops[insertionIndex - 1].position + 0.01
+        let upperBound = stops[insertionIndex].position - 0.01
+        guard lowerBound <= upperBound else { return nil }
+        let resolvedPosition = max(lowerBound, min(upperBound, requestedPosition))
         let color = ImageEditorGradientFillContent.shapeLinear(
             colorStops: stops
-        ).shapeColor(at: position)
+        ).shapeColor(at: resolvedPosition)
         gradientFillColorStops.insert(
-            ImageEditorGradientColorStop(position: position, color: color),
+            ImageEditorGradientColorStop(position: resolvedPosition, color: color),
             at: insertionIndex
         )
         gradientFillColorStops = normalizedGradientFillDraftStops(gradientFillColorStops)

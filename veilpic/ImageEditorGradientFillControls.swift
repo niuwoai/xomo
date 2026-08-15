@@ -8,7 +8,57 @@
 import AppKit
 import SwiftUI
 
+enum ImageEditorGradientStopTrackGeometry {
+    static let horizontalInset: CGFloat = 6
+
+    static func xPosition(for position: Double, width: CGFloat) -> CGFloat {
+        guard width.isFinite else { return 0 }
+        guard width > horizontalInset * 2 else { return max(0, width / 2) }
+        let resolvedPosition = max(0, min(1, position.isFinite ? position : 0))
+        return horizontalInset
+            + CGFloat(resolvedPosition) * (width - horizontalInset * 2)
+    }
+
+    static func logicalPosition(forX x: CGFloat, width: CGFloat) -> Double {
+        guard x.isFinite, width.isFinite else { return 0 }
+        guard width > horizontalInset * 2 else { return 0.5 }
+        let position = (x - horizontalInset) / (width - horizontalInset * 2)
+        return Double(max(0, min(1, position)))
+    }
+
+    static func midpointPosition(
+        after lowerStopIndex: Int,
+        stops: [ImageEditorGradientColorStop]
+    ) -> Double? {
+        guard stops.indices.contains(lowerStopIndex), lowerStopIndex < stops.count - 1 else {
+            return nil
+        }
+        let lower = stops[lowerStopIndex]
+        let upper = stops[lowerStopIndex + 1]
+        return lower.position + (upper.position - lower.position) * lower.midpoint
+    }
+
+    static func midpoint(
+        forX x: CGFloat,
+        width: CGFloat,
+        after lowerStopIndex: Int,
+        stops: [ImageEditorGradientColorStop]
+    ) -> Double? {
+        guard stops.indices.contains(lowerStopIndex), lowerStopIndex < stops.count - 1 else {
+            return nil
+        }
+        let lowerPosition = stops[lowerStopIndex].position
+        let upperPosition = stops[lowerStopIndex + 1].position
+        let distance = upperPosition - lowerPosition
+        guard distance > 0.000_001 else { return nil }
+        let logicalPosition = logicalPosition(forX: x, width: width)
+        return max(0, min(1, (logicalPosition - lowerPosition) / distance))
+    }
+}
+
 struct ImageEditorGradientFillStopsEditor: View {
+    private static let trackCoordinateSpace = "image-editor-gradient-fill-track-space"
+
     @ObservedObject var viewModel: ImageEditorViewModel
     @State private var selectedStopIndex = 0
 
@@ -117,6 +167,7 @@ struct ImageEditorGradientFillStopsEditor: View {
                 ImageEditorTransparencyCheckerboard()
                     .clipShape(RoundedRectangle(cornerRadius: 3, style: .continuous))
                     .frame(height: 14)
+                    .padding(.horizontal, ImageEditorGradientStopTrackGeometry.horizontalInset)
 
                 RoundedRectangle(cornerRadius: 3, style: .continuous)
                     .fill(
@@ -136,6 +187,97 @@ struct ImageEditorGradientFillStopsEditor: View {
                             .stroke(Color.white.opacity(0.45), lineWidth: 1)
                     }
                     .frame(height: 14)
+                    .padding(.horizontal, ImageEditorGradientStopTrackGeometry.horizontalInset)
+
+                Rectangle()
+                    .fill(Color.white.opacity(0.001))
+                    .frame(height: 14)
+                    .padding(.horizontal, ImageEditorGradientStopTrackGeometry.horizontalInset)
+                    .contentShape(Rectangle())
+                    .gesture(
+                        SpatialTapGesture(
+                            count: 2,
+                            coordinateSpace: .named(Self.trackCoordinateSpace)
+                        )
+                        .onEnded { value in
+                            let position = ImageEditorGradientStopTrackGeometry.logicalPosition(
+                                forX: value.location.x,
+                                width: geometry.size.width
+                            )
+                            if let index = viewModel.addGradientFillColorStop(at: position) {
+                                selectedStopIndex = index
+                            }
+                        }
+                    )
+                    .allowsHitTesting(
+                        stops.count < ImageEditorGradientFillContent.maximumColorStopCount
+                    )
+                    .help(L10n.text("imageEditor.help.shapeGradientAxis"))
+                    .accessibilityIdentifier("image-editor-gradient-fill-track")
+                    .accessibilityLabel(L10n.text("imageEditor.action.shapeGradientStopAdd"))
+
+                ForEach(stops.indices.dropLast(), id: \.self) { index in
+                    if let midpointPosition = ImageEditorGradientStopTrackGeometry.midpointPosition(
+                        after: index,
+                        stops: stops
+                    ) {
+                        Button {
+                            selectedStopIndex = index
+                        } label: {
+                            Rectangle()
+                                .fill(
+                                    index == selectedIndex
+                                        ? Color.accentColor
+                                        : Color.white.opacity(0.88)
+                                )
+                                .overlay {
+                                    Rectangle()
+                                        .stroke(Color.black.opacity(0.62), lineWidth: 0.75)
+                                }
+                                .frame(width: 8, height: 8)
+                                .rotationEffect(.degrees(45))
+                        }
+                        .buttonStyle(.plain)
+                        .focusable(false)
+                        .position(
+                            x: ImageEditorGradientStopTrackGeometry.xPosition(
+                                for: midpointPosition,
+                                width: geometry.size.width
+                            ),
+                            y: 23
+                        )
+                        .highPriorityGesture(
+                            DragGesture(
+                                minimumDistance: 1,
+                                coordinateSpace: .named(Self.trackCoordinateSpace)
+                            )
+                            .onChanged { value in
+                                selectedStopIndex = index
+                                let currentStops = viewModel.gradientFillColorStops
+                                guard let midpoint = ImageEditorGradientStopTrackGeometry.midpoint(
+                                    forX: value.location.x,
+                                    width: geometry.size.width,
+                                    after: index,
+                                    stops: currentStops
+                                ) else { return }
+                                viewModel.setGradientFillColorStopMidpoint(
+                                    after: index,
+                                    midpoint: midpoint
+                                )
+                            }
+                        )
+                        .help(L10n.text("imageEditor.help.shapeGradientMidpointHandle"))
+                        .accessibilityIdentifier(
+                            "image-editor-gradient-fill-midpoint-\(index)"
+                        )
+                        .accessibilityLabel(
+                            L10n.format(
+                                "imageEditor.properties.shapeGradientStopMidpoint",
+                                Int((stops[index].midpoint * 100).rounded())
+                            )
+                        )
+                    }
+                }
 
                 ForEach(stops.indices, id: \.self) { index in
                     Button {
@@ -157,15 +299,29 @@ struct ImageEditorGradientFillStopsEditor: View {
                     .buttonStyle(.plain)
                     .focusable(false)
                     .position(
-                        x: max(
-                            6,
-                            min(
-                                geometry.size.width - 6,
-                                CGFloat(stops[index].position) * geometry.size.width
-                            )
+                        x: ImageEditorGradientStopTrackGeometry.xPosition(
+                            for: stops[index].position,
+                            width: geometry.size.width
                         ),
-                        y: 26
+                        y: 36
                     )
+                    .highPriorityGesture(
+                        DragGesture(
+                            minimumDistance: 1,
+                            coordinateSpace: .named(Self.trackCoordinateSpace)
+                        )
+                        .onChanged { value in
+                            selectedStopIndex = index
+                            viewModel.setGradientFillColorStopPosition(
+                                at: index,
+                                position: ImageEditorGradientStopTrackGeometry.logicalPosition(
+                                    forX: value.location.x,
+                                    width: geometry.size.width
+                                )
+                            )
+                        }
+                    )
+                    .help(L10n.text("imageEditor.help.shapeGradientStopHandle"))
                     .accessibilityIdentifier("image-editor-gradient-fill-stop-\(index)")
                     .accessibilityLabel(
                         L10n.format(
@@ -177,8 +333,9 @@ struct ImageEditorGradientFillStopsEditor: View {
                     )
                 }
             }
+            .coordinateSpace(name: Self.trackCoordinateSpace)
         }
-        .frame(height: 36)
+        .frame(height: 46)
     }
 
     private var selectedColorBinding: Binding<Color> {

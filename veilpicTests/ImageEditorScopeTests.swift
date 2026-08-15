@@ -5229,6 +5229,7 @@ struct ImageEditorScopeTests {
         #expect(viewSource.contains("viewModel.setGradientFillDraftPreset(preset)"))
         for identifier in [
             "image-editor-gradient-fill-stops",
+            "image-editor-gradient-fill-track",
             "image-editor-gradient-fill-stop-add",
             "image-editor-gradient-fill-stop-remove",
             "image-editor-gradient-fill-stop-color",
@@ -5238,6 +5239,7 @@ struct ImageEditorScopeTests {
         ] {
             #expect(editorSource.contains(identifier))
         }
+        #expect(editorSource.contains("image-editor-gradient-fill-midpoint-\\(index)"))
         for method in [
             "addGradientFillColorStop()",
             "removeGradientFillColorStop(at:",
@@ -5250,6 +5252,12 @@ struct ImageEditorScopeTests {
         }
         #expect(editorSource.contains("supportsOpacity: false"))
         #expect(editorSource.contains("ImageEditorTransparencyCheckerboard"))
+        #expect(editorSource.contains("SpatialTapGesture("))
+        #expect(editorSource.contains("count: 2"))
+        #expect(editorSource.contains("addGradientFillColorStop(at: position)"))
+        #expect(editorSource.components(separatedBy: "DragGesture(").count - 1 >= 2)
+        #expect(editorSource.contains("coordinateSpace: .named(Self.trackCoordinateSpace)"))
+        #expect(editorSource.contains("ImageEditorGradientStopTrackGeometry.midpoint("))
         #expect(editorSource.components(separatedBy: ".focusable(false)").count - 1 >= 7)
     }
 

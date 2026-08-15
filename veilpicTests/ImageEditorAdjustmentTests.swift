@@ -456,6 +456,135 @@ struct ImageEditorAdjustmentTests {
         )
     }
 
+    @Test func gradientFillTrackGeometryMapsStopsAndMidpoints() throws {
+        let width: CGFloat = 112
+        let stops = [
+            ImageEditorGradientColorStop(
+                position: 0,
+                color: .systemRed,
+                midpoint: 0.25
+            ),
+            ImageEditorGradientColorStop(
+                position: 0.4,
+                color: .systemGreen,
+                midpoint: 0.75
+            ),
+            ImageEditorGradientColorStop(position: 1, color: .systemBlue)
+        ]
+
+        #expect(
+            abs(ImageEditorGradientStopTrackGeometry.xPosition(for: 0.25, width: width) - 31)
+                < 0.000_001
+        )
+        #expect(
+            abs(ImageEditorGradientStopTrackGeometry.logicalPosition(forX: 81, width: width) - 0.75)
+                < 0.000_001
+        )
+        #expect(
+            abs(
+                try #require(
+                    ImageEditorGradientStopTrackGeometry.midpointPosition(
+                        after: 0,
+                        stops: stops
+                    )
+                ) - 0.1
+            ) < 0.000_001
+        )
+        #expect(
+            abs(
+                try #require(
+                    ImageEditorGradientStopTrackGeometry.midpointPosition(
+                        after: 1,
+                        stops: stops
+                    )
+                ) - 0.85
+            ) < 0.000_001
+        )
+        let midpointX = ImageEditorGradientStopTrackGeometry.xPosition(for: 0.7, width: width)
+        #expect(
+            abs(
+                try #require(
+                    ImageEditorGradientStopTrackGeometry.midpoint(
+                        forX: midpointX,
+                        width: width,
+                        after: 1,
+                        stops: stops
+                    )
+                ) - 0.5
+            ) < 0.000_001
+        )
+        #expect(
+            ImageEditorGradientStopTrackGeometry.midpoint(
+                forX: midpointX,
+                width: width,
+                after: 2,
+                stops: stops
+            ) == nil
+        )
+        #expect(ImageEditorGradientStopTrackGeometry.logicalPosition(forX: -20, width: width) == 0)
+        #expect(ImageEditorGradientStopTrackGeometry.logicalPosition(forX: 200, width: width) == 1)
+        #expect(ImageEditorGradientStopTrackGeometry.logicalPosition(forX: 5, width: 10) == 0.5)
+        #expect(ImageEditorGradientStopTrackGeometry.xPosition(for: .nan, width: width) == 6)
+        #expect(ImageEditorGradientStopTrackGeometry.xPosition(for: 0.5, width: .nan) == 0)
+    }
+
+    @Test func gradientFillTrackAddsAStopAtTheRequestedCurvePosition() throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "gradient-track-insertion.png",
+            image: bitmapImage(size: NSSize(width: 60, height: 30), background: .clear)
+        ) { _ in }
+        let original = ImageEditorGradientFillContent(
+            preset: .custom,
+            colorStops: [
+                ImageEditorGradientColorStop(
+                    position: 0,
+                    red: 1,
+                    green: 0,
+                    blue: 0,
+                    alpha: 0.2,
+                    midpoint: 0.25
+                ),
+                ImageEditorGradientColorStop(
+                    position: 1,
+                    red: 0,
+                    green: 0,
+                    blue: 1,
+                    alpha: 0.8
+                )
+            ]
+        ).normalized()
+        viewModel.setGradientFillDraft(original)
+        let historyCount = viewModel.document.history.count
+        let expectedColor = try #require(
+            original.shapeColor(at: 0.25).usingColorSpace(.deviceRGB)
+        )
+
+        let insertedIndex = try #require(viewModel.addGradientFillColorStop(at: 0.25))
+        let inserted = viewModel.gradientFillColorStops[insertedIndex]
+        let insertedColor = try #require(inserted.color.usingColorSpace(.deviceRGB))
+        #expect(insertedIndex == 1)
+        #expect(abs(inserted.position - 0.25) < 0.000_001)
+        #expect(abs(insertedColor.redComponent - expectedColor.redComponent) < 0.000_001)
+        #expect(abs(insertedColor.blueComponent - expectedColor.blueComponent) < 0.000_001)
+        #expect(abs(insertedColor.alphaComponent - expectedColor.alphaComponent) < 0.000_001)
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.addGradientFillColorStop(at: .nan) == nil)
+
+        viewModel.setGradientFillDraft(
+            ImageEditorGradientFillContent(
+                preset: .custom,
+                colorStops: [
+                    ImageEditorGradientColorStop(position: 0, color: .black),
+                    ImageEditorGradientColorStop(position: 0.01, color: .gray),
+                    ImageEditorGradientColorStop(position: 1, color: .white)
+                ]
+            )
+        )
+        let unchanged = viewModel.gradientFillColorStops
+        #expect(viewModel.addGradientFillColorStop(at: 0.005) == nil)
+        #expect(viewModel.gradientFillColorStops == unchanged)
+    }
+
     @Test func imageEditorGradientFillStylesRenderAndRoundTripProjectState() async throws {
         let canvasSize = NSSize(width: 61, height: 61)
         let sourceImage = bitmapImage(size: canvasSize, background: .black)
