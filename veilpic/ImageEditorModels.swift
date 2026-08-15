@@ -1225,6 +1225,8 @@ enum ImageEditorGradientFillStyle: String, CaseIterable, Identifiable {
 }
 
 struct ImageEditorGradientColorStop: Equatable, Codable, Sendable {
+    static let defaultMidpoint = 0.5
+
     var position: Double
     var red: Double
     var green: Double
@@ -1244,7 +1246,7 @@ struct ImageEditorGradientColorStop: Equatable, Codable, Sendable {
         red: Double,
         green: Double,
         blue: Double,
-        midpoint: Double = 0.5
+        midpoint: Double = Self.defaultMidpoint
     ) {
         self.position = position
         self.red = red
@@ -1253,7 +1255,11 @@ struct ImageEditorGradientColorStop: Equatable, Codable, Sendable {
         self.midpoint = midpoint
     }
 
-    init(position: Double, color: NSColor, midpoint: Double = 0.5) {
+    init(
+        position: Double,
+        color: NSColor,
+        midpoint: Double = Self.defaultMidpoint
+    ) {
         let resolved = color.usingColorSpace(.deviceRGB) ?? .black
         self.init(
             position: position,
@@ -1270,7 +1276,8 @@ struct ImageEditorGradientColorStop: Equatable, Codable, Sendable {
         red = try container.decode(Double.self, forKey: .red)
         green = try container.decode(Double.self, forKey: .green)
         blue = try container.decode(Double.self, forKey: .blue)
-        midpoint = try container.decodeIfPresent(Double.self, forKey: .midpoint) ?? 0.5
+        midpoint = try container.decodeIfPresent(Double.self, forKey: .midpoint)
+            ?? Self.defaultMidpoint
     }
 
     func encode(to encoder: Encoder) throws {
@@ -1292,7 +1299,10 @@ struct ImageEditorGradientColorStop: Equatable, Codable, Sendable {
             red: max(0, min(1, red.isFinite ? red : 0)),
             green: max(0, min(1, green.isFinite ? green : 0)),
             blue: max(0, min(1, blue.isFinite ? blue : 0)),
-            midpoint: max(0, min(1, midpoint.isFinite ? midpoint : 0.5))
+            midpoint: max(
+                0,
+                min(1, midpoint.isFinite ? midpoint : Self.defaultMidpoint)
+            )
         )
     }
 

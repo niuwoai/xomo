@@ -2572,6 +2572,24 @@ final class XomoAutomationRegistry {
                         "fillGradient.stops[\(index)].position must be between 0 and 1"
                     )
                 }
+                let midpoint: Double
+                if let midpointValue = stop["midpoint"] {
+                    guard let parsedMidpoint = midpointValue.doubleValue,
+                          parsedMidpoint.isFinite
+                    else {
+                        throw XomoAutomationCallError.invalidArgument(
+                            "fillGradient.stops[\(index)].midpoint must be a number"
+                        )
+                    }
+                    guard (0...1).contains(parsedMidpoint) else {
+                        throw XomoAutomationCallError.invalidArgument(
+                            "fillGradient.stops[\(index)].midpoint must be between 0 and 1"
+                        )
+                    }
+                    midpoint = parsedMidpoint
+                } else {
+                    midpoint = ImageEditorGradientColorStop.defaultMidpoint
+                }
                 guard let colorValue = stop["color"] else {
                     throw XomoAutomationCallError.invalidArgument(
                         "fillGradient.stops[\(index)].color is required"
@@ -2587,7 +2605,8 @@ final class XomoAutomationRegistry {
                     color: try requiredShapeGradientStopColor(
                         colorObject,
                         stopIndex: index
-                    )
+                    ),
+                    midpoint: midpoint
                 )
             }
             guard abs((stops.first?.position ?? 1)) <= 0.000_1,
@@ -2780,6 +2799,7 @@ final class XomoAutomationRegistry {
             "stops": .array(normalized.shapeColorStops.map { stop in
                 .object([
                     "position": .number(stop.position),
+                    "midpoint": .number(stop.midpoint),
                     "color": colorJSON(stop.color)
                 ])
             }),
@@ -7089,6 +7109,9 @@ private extension XomoAutomationRegistry {
         "items": XomoAutomationSchema.object(
             properties: [
                 "position": shapeUnitIntervalSchema(description: "Normalized position"),
+                "midpoint": shapeUnitIntervalSchema(
+                    description: "Optional interpolation midpoint after this stop; defaults to 0.5"
+                ),
                 "color": gradientFillColorSchema
             ],
             required: ["position", "color"]
@@ -7109,6 +7132,9 @@ private extension XomoAutomationRegistry {
                 "items": XomoAutomationSchema.object(
                     properties: [
                         "position": shapeUnitIntervalSchema(description: "Normalized position"),
+                        "midpoint": shapeUnitIntervalSchema(
+                            description: "Optional interpolation midpoint after this stop; defaults to 0.5"
+                        ),
                         "color": shapeOpaqueColorSchema
                     ],
                     required: ["position", "color"]

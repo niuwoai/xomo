@@ -5413,6 +5413,14 @@ struct XomoAutomationTests {
         )
         #expect(properties["stops"]?.objectValue?["minItems"] == .number(2))
         #expect(properties["stops"]?.objectValue?["maxItems"] == .number(16))
+        let stopProperties = properties["stops"]?.objectValue?["items"]?
+            .objectValue?["properties"]?.objectValue
+        #expect(stopProperties?["midpoint"]?.objectValue?["minimum"] == .number(0))
+        #expect(stopProperties?["midpoint"]?.objectValue?["maximum"] == .number(1))
+        #expect(
+            properties["stops"]?.objectValue?["items"]?.objectValue?["required"]?
+                .arrayValue?.contains(.string("midpoint")) == false
+        )
 
         viewModel.selectedGradientFillPreset = .blackWhite
         viewModel.selectedGradientFillStyle = .linear
@@ -5445,8 +5453,16 @@ struct XomoAutomationTests {
             "startColor": color(0.10, 0.20, 0.30),
             "endColor": color(0.80, 0.90, 1),
             "stops": .array([
-                .object(["position": .number(0), "color": color(0.10, 0.20, 0.30)]),
-                .object(["position": .number(0.45), "color": color(0.40, 0.50, 0.60)]),
+                .object([
+                    "position": .number(0),
+                    "midpoint": .number(0.25),
+                    "color": color(0.10, 0.20, 0.30)
+                ]),
+                .object([
+                    "position": .number(0.45),
+                    "midpoint": .number(0.75),
+                    "color": color(0.40, 0.50, 0.60)
+                ]),
                 .object(["position": .number(1), "color": color(0.80, 0.90, 1)])
             ])
         ]
@@ -5469,7 +5485,10 @@ struct XomoAutomationTests {
         #expect(editable.angle == 35)
         #expect(editable.scale == 1.75)
         #expect(editable.colorStops?.count == 3)
+        #expect(editable.colorStops?[0].midpoint == 0.25)
         #expect(editable.colorStops?[1].position == 0.45)
+        #expect(editable.colorStops?[1].midpoint == 0.75)
+        #expect(editable.colorStops?[2].midpoint == ImageEditorGradientColorStop.defaultMidpoint)
         #expect(editable.colorStops?[1].green == 0.50)
         #expect(locked.preset == .sunset)
         #expect(locked.style == .radial)
@@ -5494,6 +5513,10 @@ struct XomoAutomationTests {
         }
         #expect(getResponse.ok)
         #expect(editableResult?["stops"]?.arrayValue?.count == 3)
+        let returnedStops = editableResult?["stops"]?.arrayValue?.compactMap(\.objectValue)
+        #expect(returnedStops?[0]["midpoint"] == .number(0.25))
+        #expect(returnedStops?[1]["midpoint"] == .number(0.75))
+        #expect(returnedStops?[2]["midpoint"] == .number(0.5))
 
         var invalidArguments = setArguments
         invalidArguments["stops"] = .array([
@@ -5515,7 +5538,9 @@ struct XomoAutomationTests {
         let retained = try #require(viewModel.document.selectedLayer?.gradientFillContent?.normalized())
         #expect(retained.colorStops?.count == 3)
         #expect(retained.colorStops?[0].red == 0.95)
+        #expect(retained.colorStops?[0].midpoint == 0.25)
         #expect(retained.colorStops?[1].position == 0.45)
+        #expect(retained.colorStops?[1].midpoint == 0.75)
         #expect(retained.colorStops?[1].green == 0.50)
     }
 
@@ -6866,12 +6891,14 @@ struct XomoAutomationTests {
                     "stops": .array([
                         .object([
                             "position": .number(0),
+                            "midpoint": .number(0.2),
                             "color": .object([
                                 "red": .number(1), "green": .number(0), "blue": .number(0)
                             ])
                         ]),
                         .object([
                             "position": .number(0.4),
+                            "midpoint": .number(0.8),
                             "color": .object([
                                 "red": .number(0), "green": .number(1), "blue": .number(0)
                             ])
@@ -6896,7 +6923,13 @@ struct XomoAutomationTests {
         #expect(shape.fillGradient?.angle == 30)
         #expect(shape.fillGradient?.scale == 1.5)
         #expect(shape.fillGradient?.shapeColorStops.count == 3)
+        #expect(shape.fillGradient?.shapeColorStops[0].midpoint == 0.2)
         #expect(shape.fillGradient?.shapeColorStops[1].position == 0.4)
+        #expect(shape.fillGradient?.shapeColorStops[1].midpoint == 0.8)
+        #expect(
+            shape.fillGradient?.shapeColorStops[2].midpoint
+                == ImageEditorGradientColorStop.defaultMidpoint
+        )
         #expect(shape.fillGradientCenter == CGPoint(x: 0.35, y: 0.65))
         #expect(shape.fillOpacity == 0.7)
 
@@ -6919,6 +6952,21 @@ struct XomoAutomationTests {
             return
         }
         #expect(stopResult.count == 3)
+        #expect(stopResult[0].objectValue?["midpoint"] == .number(0.2))
+        #expect(stopResult[1].objectValue?["midpoint"] == .number(0.8))
+        #expect(stopResult[2].objectValue?["midpoint"] == .number(0.5))
+
+        let toolsResponse = registry.execute(request(operation: "tools"))
+        let shapeCreateTool = try #require(
+            automationTool(named: "xomo.shape.create", in: toolsResponse)
+        )
+        let shapeStopSchema = shapeCreateTool["inputSchema"]?.objectValue?["properties"]?
+            .objectValue?["fillGradient"]?.objectValue?["properties"]?
+            .objectValue?["stops"]?.objectValue?["items"]?.objectValue
+        let midpointSchema = shapeStopSchema?["properties"]?.objectValue?["midpoint"]?.objectValue
+        #expect(midpointSchema?["minimum"] == .number(0))
+        #expect(midpointSchema?["maximum"] == .number(1))
+        #expect(shapeStopSchema?["required"]?.arrayValue?.contains(.string("midpoint")) == false)
 
         let previousStroke = shape.strokeColor
         let updated = registry.execute(request(
@@ -7355,6 +7403,7 @@ struct XomoAutomationTests {
         let stops: XomoJSONValue = .array([
             .object([
                 "position": .number(0),
+                "midpoint": .number(0.3),
                 "color": .object([
                     "red": .number(1), "green": .number(0), "blue": .number(0)
                 ])
@@ -7432,6 +7481,14 @@ struct XomoAutomationTests {
         #expect(validStopsUpdate.ok)
         #expect(viewModel.document.selectedLayer?.shapeContent?.fillGradient?.angle == 20)
         #expect(viewModel.document.selectedLayer?.shapeContent?.fillGradient?.shapeColorStops.count == 2)
+        #expect(
+            viewModel.document.selectedLayer?.shapeContent?.fillGradient?
+                .shapeColorStops[0].midpoint == 0.3
+        )
+        #expect(
+            viewModel.document.selectedLayer?.shapeContent?.fillGradient?
+                .shapeColorStops[1].midpoint == ImageEditorGradientColorStop.defaultMidpoint
+        )
 
         let toolsResponse = registry.execute(request(operation: "tools"))
         let tools = try #require(toolsResponse.result?.arrayValue)
@@ -7486,6 +7543,18 @@ struct XomoAutomationTests {
             (
                 .object(["position": .number(-0.01), "color": validColor]),
                 "fillGradient.stops[0].position must be between 0 and 1"
+            ),
+            (
+                .object([
+                    "position": .number(0), "midpoint": .string("0.5"), "color": validColor
+                ]),
+                "fillGradient.stops[0].midpoint must be a number"
+            ),
+            (
+                .object([
+                    "position": .number(0), "midpoint": .number(1.01), "color": validColor
+                ]),
+                "fillGradient.stops[0].midpoint must be between 0 and 1"
             )
         ]
 
@@ -7953,6 +8022,18 @@ struct XomoAutomationTests {
             (
                 .object(["position": .number(-0.01), "color": color]),
                 "stops[0].position must be between 0 and 1"
+            ),
+            (
+                .object([
+                    "position": .number(0), "midpoint": .string("0.5"), "color": color
+                ]),
+                "stops[0].midpoint must be a number"
+            ),
+            (
+                .object([
+                    "position": .number(0), "midpoint": .number(-0.01), "color": color
+                ]),
+                "stops[0].midpoint must be between 0 and 1"
             ),
             (.object(["position": .number(0)]), "stops[0].color is required"),
             (

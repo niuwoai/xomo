@@ -267,6 +267,24 @@ extension XomoAutomationRegistry {
                     "stops[\(index)].position must be between 0 and 1"
                 )
             }
+            let midpoint: Double
+            if let midpointValue = stop["midpoint"] {
+                guard let parsedMidpoint = midpointValue.doubleValue,
+                      parsedMidpoint.isFinite
+                else {
+                    throw XomoAutomationCallError.invalidArgument(
+                        "stops[\(index)].midpoint must be a number"
+                    )
+                }
+                guard (0...1).contains(parsedMidpoint) else {
+                    throw XomoAutomationCallError.invalidArgument(
+                        "stops[\(index)].midpoint must be between 0 and 1"
+                    )
+                }
+                midpoint = parsedMidpoint
+            } else {
+                midpoint = ImageEditorGradientColorStop.defaultMidpoint
+            }
             guard let colorValue = stop["color"] else {
                 throw XomoAutomationCallError.invalidArgument(
                     "stops[\(index)].color is required"
@@ -286,7 +304,8 @@ extension XomoAutomationRegistry {
                 position: position,
                 red: color.red,
                 green: color.green,
-                blue: color.blue
+                blue: color.blue,
+                midpoint: midpoint
             )
         }
         guard
@@ -338,6 +357,7 @@ extension XomoAutomationRegistry {
                 result["stops"] = .array(stops.map { stop in
                     .object([
                         "position": .number(stop.position),
+                        "midpoint": .number(stop.midpoint),
                         "color": gradientColorJSON(
                             red: stop.red,
                             green: stop.green,
