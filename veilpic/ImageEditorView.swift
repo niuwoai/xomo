@@ -9915,6 +9915,13 @@ struct ImageEditorView: View {
                 ) { style in
                     viewModel.setSelectedLayerGradientOverlayStyle(style)
                 }
+                layerStyleTriStateToggle(
+                    state: viewModel.selectedLayerGradientOverlayDitherState,
+                    labelKey: "imageEditor.gradientFill.dither",
+                    accessibilityIdentifier: "image-editor-layer-style-gradient-overlay-dither"
+                ) {
+                    viewModel.toggleSelectedLayerGradientOverlayDither()
+                }
                 HStack(spacing: 8) {
                     Text(L10n.text("imageEditor.properties.gradientOverlayStartColor"))
                         .font(.system(size: 10, weight: .medium))

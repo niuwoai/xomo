@@ -3418,6 +3418,48 @@ struct ImageEditorLayerRowBatchPropertyTests {
         return fixture
     }
 
+    @Test func layerStyleGradientOverlayDitherConvergesAcrossEditableSelection() throws {
+        let fixture = makeFixture()
+        let viewModel = fixture.viewModel
+        let firstID = fixture.layers[0].id
+        let secondID = fixture.layers[1].id
+        let lockedID = fixture.layers[2].id
+        viewModel.document.layers[0].style.gradientOverlayEnabled = true
+        viewModel.document.layers[0].style.gradientOverlayDither = false
+        viewModel.document.layers[1].style.gradientOverlayEnabled = true
+        viewModel.document.layers[1].style.gradientOverlayDither = true
+        viewModel.document.layers[2].style.gradientOverlayEnabled = true
+        viewModel.document.layers[2].style.gradientOverlayDither = false
+        viewModel.document.layers[2].isLocked = true
+        select(Set(fixture.layers.map(\.id)), primary: firstID, in: viewModel)
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.selectedLayerGradientOverlayDitherState == .mixed)
+        #expect(viewModel.setSelectedLayerGradientOverlayDither(true) == 1)
+        #expect((try layer(firstID, in: viewModel)).style.gradientOverlayDither)
+        #expect((try layer(secondID, in: viewModel)).style.gradientOverlayDither)
+        #expect(!(try layer(lockedID, in: viewModel)).style.gradientOverlayDither)
+        #expect(viewModel.selectedLayerGradientOverlayDitherState == .on)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.setSelectedLayerGradientOverlayDither(true) == 0)
+        #expect(viewModel.document.history.count == historyCount + 1)
+
+        viewModel.undo()
+        #expect(viewModel.selectedLayerGradientOverlayDitherState == .mixed)
+        viewModel.redo()
+        #expect(viewModel.selectedLayerGradientOverlayDitherState == .on)
+
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        #expect(source.contains("image-editor-layer-style-gradient-overlay-dither"))
+        #expect(source.contains("viewModel.toggleSelectedLayerGradientOverlayDither()"))
+    }
+
     @Test func layerStyleMixedPatternOverlayKindConvergesAcrossEditableSelection() throws {
         let fixture = patternOverlayKindFixture()
         let viewModel = fixture.viewModel

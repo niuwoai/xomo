@@ -1479,7 +1479,8 @@ struct ImageEditorGradientFillContent: Equatable, Codable {
         size: CGSize,
         foreground: NSColor = .systemRed,
         background: NSColor = .clear,
-        centerNormalized: CGPoint = CGPoint(x: 0.5, y: 0.5)
+        centerNormalized: CGPoint = CGPoint(x: 0.5, y: 0.5),
+        opacity: Double = 1
     ) -> NSImage {
         let content = normalized()
         let width = max(1, Int(size.width.rounded()))
@@ -1544,7 +1545,7 @@ struct ImageEditorGradientFillContent: Equatable, Codable {
                     ? Self.ditheredProgress(rawProgress, x: x, y: y)
                     : rawProgress
                 let color = Self.interpolatedColor(at: t, stops: stops)
-                let alpha = Self.zeroOne(color.w)
+                let alpha = Self.zeroOne(color.w * opacity)
                 let offset = y * bytesPerRow + x * bytesPerPixel
                 pixels[offset] = Self.byte(color.x * alpha)
                 pixels[offset + 1] = Self.byte(color.y * alpha)
@@ -2771,6 +2772,7 @@ struct ImageEditorLayerStyle {
     var gradientOverlayStyle = ImageEditorGradientFillStyle.linear
     var gradientOverlayScale: CGFloat = 1
     var gradientOverlayAngle: CGFloat = 0
+    var gradientOverlayDither = false
     var patternOverlayEnabled = false
     var patternOverlayKind = ImageEditorPatternOverlayKind.checkerboard
     var patternOverlayColor = NSColor.white
@@ -4333,26 +4335,47 @@ struct ImageEditorLayer: Identifiable {
                 )
             }
 
-            if style.gradientOverlayEnabled,
-               let gradientImage = ImageEditorGradientFillContent(
-                   preset: .custom,
-                   style: style.gradientOverlayStyle,
-                   angle: style.gradientOverlayAngle,
-                   scale: style.gradientOverlayScale,
-                   startRed: Double(style.gradientOverlayStartColor.usingColorSpace(.deviceRGB)?.redComponent ?? 1),
-                   startGreen: Double(style.gradientOverlayStartColor.usingColorSpace(.deviceRGB)?.greenComponent ?? 0),
-                   startBlue: Double(style.gradientOverlayStartColor.usingColorSpace(.deviceRGB)?.blueComponent ?? 0),
-                   endRed: Double(style.gradientOverlayEndColor.usingColorSpace(.deviceRGB)?.redComponent ?? 1),
-                   endGreen: Double(style.gradientOverlayEndColor.usingColorSpace(.deviceRGB)?.greenComponent ?? 1),
-                   endBlue: Double(style.gradientOverlayEndColor.usingColorSpace(.deviceRGB)?.blueComponent ?? 1)
-               ).renderedImage(size: contentRect.size).withOpacity(style.gradientOverlayOpacity) {
+            if style.gradientOverlayEnabled {
+                let gradientImage = ImageEditorGradientFillContent(
+                    preset: .custom,
+                    style: style.gradientOverlayStyle,
+                    dither: style.gradientOverlayDither,
+                    angle: style.gradientOverlayAngle,
+                    scale: style.gradientOverlayScale,
+                    startRed: Double(style.gradientOverlayStartColor.usingColorSpace(.deviceRGB)?.redComponent ?? 1),
+                    startGreen: Double(style.gradientOverlayStartColor.usingColorSpace(.deviceRGB)?.greenComponent ?? 0),
+                    startBlue: Double(style.gradientOverlayStartColor.usingColorSpace(.deviceRGB)?.blueComponent ?? 0),
+                    endRed: Double(style.gradientOverlayEndColor.usingColorSpace(.deviceRGB)?.redComponent ?? 1),
+                    endGreen: Double(style.gradientOverlayEndColor.usingColorSpace(.deviceRGB)?.greenComponent ?? 1),
+                    endBlue: Double(style.gradientOverlayEndColor.usingColorSpace(.deviceRGB)?.blueComponent ?? 1)
+                ).renderedImage(
+                    size: contentRect.size,
+                    opacity: Double(style.gradientOverlayOpacity)
+                )
                 let gradientCanvas = NSImage.rendered(size: outputSize) { _ in
-                    gradientImage.draw(
-                        in: contentRect,
-                        from: CGRect(origin: .zero, size: gradientImage.size),
-                        operation: .sourceOver,
-                        fraction: 1
-                    )
+                    let context = NSGraphicsContext.current
+                    let previousInterpolation = context?.imageInterpolation
+                    let previousInterpolationQuality = context?.cgContext.interpolationQuality
+                    context?.imageInterpolation = .none
+                    defer {
+                        context?.imageInterpolation = previousInterpolation ?? .default
+                        context?.cgContext.interpolationQuality = previousInterpolationQuality ?? .default
+                    }
+                    if let gradientCGImage = gradientImage.cgImage(
+                        forProposedRect: nil,
+                        context: context,
+                        hints: nil
+                    ) {
+                        context?.cgContext.interpolationQuality = .none
+                        context?.cgContext.draw(gradientCGImage, in: contentRect)
+                    } else {
+                        gradientImage.draw(
+                            in: contentRect,
+                            from: CGRect(origin: .zero, size: gradientImage.size),
+                            operation: .sourceOver,
+                            fraction: 1
+                        )
+                    }
                     baseImage.draw(
                         in: contentRect,
                         from: CGRect(origin: .zero, size: baseImage.size),
@@ -4360,12 +4383,27 @@ struct ImageEditorLayer: Identifiable {
                         fraction: 1
                     )
                 } ?? NSImage(size: outputSize)
-                gradientCanvas.draw(
-                    in: CGRect(origin: .zero, size: outputSize),
-                    from: CGRect(origin: .zero, size: outputSize),
-                    operation: .sourceOver,
-                    fraction: 1
-                )
+                if let context = NSGraphicsContext.current,
+                   let gradientCanvasCGImage = gradientCanvas.cgImage(
+                    forProposedRect: nil,
+                    context: context,
+                    hints: nil
+                ) {
+                    let previousInterpolationQuality = context.cgContext.interpolationQuality
+                    context.cgContext.interpolationQuality = .none
+                    defer { context.cgContext.interpolationQuality = previousInterpolationQuality }
+                    context.cgContext.draw(
+                        gradientCanvasCGImage,
+                        in: CGRect(origin: .zero, size: outputSize)
+                    )
+                } else {
+                    gradientCanvas.draw(
+                        in: CGRect(origin: .zero, size: outputSize),
+                        from: CGRect(origin: .zero, size: gradientCanvas.size),
+                        operation: .sourceOver,
+                        fraction: 1
+                    )
+                }
             }
 
             if style.patternOverlayEnabled {

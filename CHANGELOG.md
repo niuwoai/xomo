@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.12.0-rc1028 - 2026-08-16
+
+### Added
+- Photoshop 式 Gradient Overlay 新增真实“抖动”参数，复用 rc1027 的确定性 Bayer 像素算法，在不改动源图层像素的前提下减少图层样式渐变色带。
+- 图层样式面板提供三态抖动开关，多选混合值、锁定层跳过、一步 Undo/Redo、工程保存与旧项目默认关闭完整闭环。
+- `xomo.layer.style_settings` 新增 `gradientOverlayDither` 布尔属性，返回实际更新层数并拒绝重复空操作。
+
+### Verification
+- Layer Style 完整套件 49/49，以及多选属性与 MCP 定向回归 2/2，共 51/51 通过；CLI 2/2、发布契约 7/7（21 项断言）通过。下一次周期完整门禁为 rc1040，本版不覆盖 `/Applications` 安装。
+
 ## 2.12.0-rc1027 - 2026-08-16
 
 ### Added

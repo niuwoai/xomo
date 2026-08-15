@@ -188,6 +188,10 @@ extension ImageEditorViewModel {
         selectedLayerStyleBooleanState(\.satinInvert)
     }
 
+    var selectedLayerGradientOverlayDitherState: ImageEditorLayerStyleSelectionState {
+        selectedLayerStyleBooleanState(\.gradientOverlayDither)
+    }
+
     var canCreateLayerStylePreset: Bool {
         guard customLayerStylePresets.count < ImageEditorLayerStylePresetPreferences.maximumPresetCount,
               let layer = document.selectedLayer
@@ -1713,6 +1717,20 @@ extension ImageEditorViewModel {
             $0.gradientOverlayEnabled = true
             $0.gradientOverlayAngle = normalizedLayerStyleAngle(CGFloat(angle))
         }
+    }
+
+    @discardableResult
+    func setSelectedLayerGradientOverlayDither(_ enabled: Bool) -> Int {
+        updateSelectedLayerStyle {
+            $0.gradientOverlayEnabled = true
+            $0.gradientOverlayDither = enabled
+        }
+    }
+
+    func toggleSelectedLayerGradientOverlayDither() {
+        _ = setSelectedLayerGradientOverlayDither(
+            selectedLayerGradientOverlayDitherState != .on
+        )
     }
 
     @discardableResult

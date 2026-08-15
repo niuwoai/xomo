@@ -904,6 +904,7 @@ struct ImageEditorProjectLayerStyle: Codable, Equatable {
     var gradientOverlayStyle: ImageEditorGradientFillStyle?
     var gradientOverlayScale: CGFloat?
     var gradientOverlayAngle: CGFloat
+    var gradientOverlayDither: Bool?
     var patternOverlayEnabled: Bool
     var patternOverlayKind: ImageEditorPatternOverlayKind
     var patternOverlayColor: ImageEditorProjectColor
@@ -997,6 +998,7 @@ struct ImageEditorProjectLayerStyle: Codable, Equatable {
         gradientOverlayStyle = style.gradientOverlayStyle
         gradientOverlayScale = style.gradientOverlayScale
         gradientOverlayAngle = style.gradientOverlayAngle
+        gradientOverlayDither = style.gradientOverlayDither
         patternOverlayEnabled = style.patternOverlayEnabled
         patternOverlayKind = style.patternOverlayKind
         patternOverlayColor = ImageEditorProjectColor(color: style.patternOverlayColor)
@@ -1097,6 +1099,7 @@ struct ImageEditorProjectLayerStyle: Codable, Equatable {
             gradientOverlayStyle: gradientOverlayStyle ?? .linear,
             gradientOverlayScale: max(0.25, min(4, gradientOverlayScale ?? 1)),
             gradientOverlayAngle: gradientOverlayAngle,
+            gradientOverlayDither: gradientOverlayDither ?? false,
             patternOverlayEnabled: patternOverlayEnabled,
             patternOverlayKind: patternOverlayKind,
             patternOverlayColor: patternOverlayColor.nsColor,

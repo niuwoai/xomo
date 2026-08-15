@@ -13106,6 +13106,55 @@ struct XomoAutomationTests {
         #expect(viewModel.document.history.count == historyAfterUpdate)
     }
 
+    @Test func registrySetsGradientOverlayDitherAcrossEditableSelection() throws {
+        let viewModel = makeViewModel()
+        let canvasSize = viewModel.document.canvasSize
+        var first = ImageEditorLayer.blank(name: "First", size: canvasSize)
+        var second = ImageEditorLayer.blank(name: "Second", size: canvasSize)
+        var locked = ImageEditorLayer.blank(name: "Locked", size: canvasSize)
+        first.style.gradientOverlayEnabled = true
+        second.style.gradientOverlayEnabled = true
+        second.style.gradientOverlayDither = true
+        locked.style.gradientOverlayEnabled = true
+        locked.isLocked = true
+        viewModel.document.layers = [first, second, locked]
+        viewModel.document.selectedLayerID = first.id
+        viewModel.document.selectedLayerIDs = [first.id, second.id, locked.id]
+        let historyCount = viewModel.document.history.count
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        defer { registry.unregister(viewModel) }
+
+        let toolsResponse = registry.execute(request(operation: "tools"))
+        try assertLayerStylePropertySchema("gradientOverlayDither", in: toolsResponse)
+        let result = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style_settings",
+            arguments: [
+                "property": .string("gradientOverlayDither"),
+                "enabled": .bool(true)
+            ]
+        ))
+
+        #expect(result.ok)
+        #expect(result.result?.objectValue?["updatedLayerCount"] == .number(1))
+        #expect(viewModel.document.layers[0].style.gradientOverlayDither)
+        #expect(viewModel.document.layers[1].style.gradientOverlayDither)
+        #expect(!viewModel.document.layers[2].style.gradientOverlayDither)
+        #expect(viewModel.document.history.count == historyCount + 1)
+
+        let repeated = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style_settings",
+            arguments: [
+                "property": .string("gradientOverlayDither"),
+                "enabled": .bool(true)
+            ]
+        ))
+        #expect(!repeated.ok)
+        #expect(viewModel.document.history.count == historyCount + 1)
+    }
+
     @Test func registrySetsLayerStyleGradientOverlayColorsAcrossEditableSelection() throws {
         let viewModel = makeViewModel()
         let canvasSize = viewModel.document.canvasSize

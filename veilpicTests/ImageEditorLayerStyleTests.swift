@@ -1950,6 +1950,7 @@ struct ImageEditorLayerStyleTests {
         viewModel.setSelectedLayerGradientOverlayStyle(.radial)
         viewModel.setSelectedLayerGradientOverlayScale(2)
         viewModel.setSelectedLayerGradientOverlayAngle(45)
+        viewModel.setSelectedLayerGradientOverlayDither(true)
 
         let styledLayer = try #require(viewModel.document.selectedLayer)
         let layerPixelsAfterStyle = try #require(styledLayer.image.qingtuPNGData())
@@ -1961,6 +1962,7 @@ struct ImageEditorLayerStyleTests {
         #expect(styledLayer.style.gradientOverlayStyle == .radial)
         #expect(styledLayer.style.gradientOverlayScale == 2)
         #expect(styledLayer.style.gradientOverlayAngle == 45)
+        #expect(styledLayer.style.gradientOverlayDither)
         let startColor = try #require(styledLayer.style.gradientOverlayStartColor.usingColorSpace(.deviceRGB))
         let endColor = try #require(styledLayer.style.gradientOverlayEndColor.usingColorSpace(.deviceRGB))
         #expect(startColor.redComponent > 0.85)
@@ -1986,6 +1988,49 @@ struct ImageEditorLayerStyleTests {
         #expect(restoredLayer.style.gradientOverlayStyle == .radial)
         #expect(restoredLayer.style.gradientOverlayScale == 2)
         #expect(restoredLayer.style.gradientOverlayOpacity == 1)
+        #expect(restoredLayer.style.gradientOverlayDither)
+    }
+
+    @Test func gradientOverlayDitherIsUndoableNonDestructiveAndTransparentSafe() throws {
+        let canvasSize = NSSize(width: 80, height: 60)
+        let viewModel = ImageEditorViewModel(
+            sourceName: "gradient-overlay-dither.png",
+            image: centerRectImage(size: canvasSize, color: .white)
+        ) { _ in }
+        viewModel.setSelectedLayerGradientOverlayOpacity(1)
+        viewModel.setSelectedLayerGradientOverlayStartColor(.black)
+        viewModel.setSelectedLayerGradientOverlayEndColor(.white)
+        viewModel.setSelectedLayerGradientOverlayStyle(.linear)
+        viewModel.setSelectedLayerGradientOverlayScale(1)
+        viewModel.setSelectedLayerGradientOverlayAngle(0)
+        var sharedGradient = ImageEditorGradientFillContent.shapeLinear(
+            startColor: .black,
+            endColor: .white
+        )
+        let plainGradientPixels = sharedGradient.renderedImage(size: canvasSize).qingtuPNGData()
+        sharedGradient.dither = true
+        #expect(sharedGradient.renderedImage(size: canvasSize).qingtuPNGData() != plainGradientPixels)
+        let sourcePixels = try #require(
+            viewModel.document.selectedLayer?.image.qingtuPNGData()
+        )
+        let plainPixels = try #require(viewModel.currentImage.qingtuPNGData())
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.setSelectedLayerGradientOverlayDither(true) == 1)
+        #expect(viewModel.document.selectedLayer?.style.gradientOverlayDither == true)
+        let ditheredPixels = try #require(viewModel.currentImage.qingtuPNGData())
+        #expect(viewModel.currentImage.color(at: .zero)?.alphaComponent == 0)
+        #expect(viewModel.document.selectedLayer?.image.qingtuPNGData() == sourcePixels)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.setSelectedLayerGradientOverlayDither(true) == 0)
+        #expect(viewModel.document.history.count == historyCount + 1)
+
+        viewModel.undo()
+        #expect(!viewModel.document.selectedLayer!.style.gradientOverlayDither)
+        #expect(viewModel.currentImage.qingtuPNGData() == plainPixels)
+        viewModel.redo()
+        #expect(viewModel.document.selectedLayer?.style.gradientOverlayDither == true)
+        #expect(viewModel.currentImage.qingtuPNGData() == ditheredPixels)
     }
 
     @Test func imageEditorPatternOverlayIsNonDestructiveAndRemainsVisibleWithZeroFill() async throws {
