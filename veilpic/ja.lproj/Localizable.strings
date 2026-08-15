@@ -1342,6 +1342,7 @@
 "imageEditor.innerGlowSource.center" = "中心";
 "imageEditor.properties.colorOverlayOpacityValue" = "カラーオーバーレイ不透明度：%d%%";
 "imageEditor.properties.gradientOverlayOpacityValue" = "グラデーションオーバーレイ不透明度：%d%%";
+"imageEditor.properties.gradientOverlayBlendMode" = "グラデーションオーバーレイ描画モード";
 "imageEditor.properties.gradientOverlayStyle" = "グラデーションオーバーレイスタイル";
 "imageEditor.properties.gradientOverlayStartColor" = "グラデーション開始色";
 "imageEditor.properties.gradientOverlayEndColor" = "グラデーション終了色";

@@ -279,6 +279,10 @@ extension NSImage {
 }
 
 extension ImageEditorBlendMode {
+    /// Layer effects share the full pixel compositor with regular layers.
+    /// Pass-through is a group-only behavior rather than an effect blend mode.
+    static let layerEffectCases = smartFilterCases
+
     func blend(
         baseRed: Double,
         baseGreen: Double,

@@ -689,6 +689,14 @@ extension ImageEditorViewModel {
         selectedLayerStyleValueState(\.gradientOverlayOpacity)
     }
 
+    var selectedLayerGradientOverlayBlendMode: ImageEditorBlendMode {
+        document.selectedLayer?.style.gradientOverlayBlendMode ?? .normal
+    }
+
+    var selectedLayerGradientOverlayBlendModeState: ImageEditorLayerStyleValueState<ImageEditorBlendMode> {
+        selectedLayerStyleValueState(\.gradientOverlayBlendMode)
+    }
+
     var selectedLayerGradientOverlayStartColor: NSColor {
         document.selectedLayer?.style.gradientOverlayStartColor ?? .systemRed
     }
@@ -1722,6 +1730,18 @@ extension ImageEditorViewModel {
         updateSelectedLayerStyle {
             $0.gradientOverlayEnabled = true
             $0.gradientOverlayOpacity = max(0.05, min(1, CGFloat(opacity)))
+        }
+    }
+
+    @discardableResult
+    func setSelectedLayerGradientOverlayBlendMode(_ blendMode: ImageEditorBlendMode) -> Int {
+        guard ImageEditorBlendMode.layerEffectCases.contains(blendMode) else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return 0
+        }
+        return updateSelectedLayerStyle {
+            $0.gradientOverlayEnabled = true
+            $0.gradientOverlayBlendMode = blendMode
         }
     }
 

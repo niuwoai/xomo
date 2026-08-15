@@ -901,6 +901,7 @@ struct ImageEditorProjectLayerStyle: Codable, Equatable {
     var gradientOverlayStartColor: ImageEditorProjectColor
     var gradientOverlayEndColor: ImageEditorProjectColor
     var gradientOverlayOpacity: CGFloat
+    var gradientOverlayBlendMode: ImageEditorBlendMode?
     var gradientOverlayStyle: ImageEditorGradientFillStyle?
     var gradientOverlayScale: CGFloat?
     var gradientOverlayAngle: CGFloat
@@ -998,6 +999,7 @@ struct ImageEditorProjectLayerStyle: Codable, Equatable {
         gradientOverlayStartColor = ImageEditorProjectColor(color: style.gradientOverlayStartColor)
         gradientOverlayEndColor = ImageEditorProjectColor(color: style.gradientOverlayEndColor)
         gradientOverlayOpacity = style.gradientOverlayOpacity
+        gradientOverlayBlendMode = style.gradientOverlayBlendMode
         gradientOverlayStyle = style.gradientOverlayStyle
         gradientOverlayScale = style.gradientOverlayScale
         gradientOverlayAngle = style.gradientOverlayAngle
@@ -1102,6 +1104,9 @@ struct ImageEditorProjectLayerStyle: Codable, Equatable {
             gradientOverlayStartColor: gradientOverlayStartColor.nsColor,
             gradientOverlayEndColor: gradientOverlayEndColor.nsColor,
             gradientOverlayOpacity: gradientOverlayOpacity,
+            gradientOverlayBlendMode: ImageEditorBlendMode.layerEffectCases.contains(
+                gradientOverlayBlendMode ?? .normal
+            ) ? (gradientOverlayBlendMode ?? .normal) : .normal,
             gradientOverlayStyle: gradientOverlayStyle ?? .linear,
             gradientOverlayScale: max(0.25, min(4, gradientOverlayScale ?? 1)),
             gradientOverlayAngle: gradientOverlayAngle,

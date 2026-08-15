@@ -3365,6 +3365,49 @@ struct ImageEditorLayerRowBatchPropertyTests {
         #expect(source.contains("image-editor-layer-style-gradient-overlay-center-y"))
     }
 
+    @Test func layerStyleGradientOverlayBlendModeConvergesAcrossEditableSelection() throws {
+        let fixture = makeFixture()
+        let viewModel = fixture.viewModel
+        let firstID = fixture.layers[0].id
+        let secondID = fixture.layers[1].id
+        let lockedID = fixture.layers[2].id
+        viewModel.document.layers[0].style.gradientOverlayBlendMode = .normal
+        viewModel.document.layers[1].style.gradientOverlayBlendMode = .screen
+        viewModel.document.layers[2].style.gradientOverlayBlendMode = .overlay
+        viewModel.document.layers[2].isLocked = true
+        select(Set(fixture.layers.map(\.id)), primary: firstID, in: viewModel)
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.selectedLayerGradientOverlayBlendModeState == .mixed)
+        #expect(viewModel.setSelectedLayerGradientOverlayBlendMode(.softLight) == 2)
+        #expect((try layer(firstID, in: viewModel)).style.gradientOverlayBlendMode == .softLight)
+        #expect((try layer(secondID, in: viewModel)).style.gradientOverlayBlendMode == .softLight)
+        #expect((try layer(lockedID, in: viewModel)).style.gradientOverlayBlendMode == .overlay)
+        #expect(viewModel.selectedLayerGradientOverlayBlendModeState == .value(.softLight))
+        #expect((try layer(firstID, in: viewModel)).style.gradientOverlayEnabled)
+        #expect((try layer(secondID, in: viewModel)).style.gradientOverlayEnabled)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.setSelectedLayerGradientOverlayBlendMode(.softLight) == 0)
+        #expect(viewModel.setSelectedLayerGradientOverlayBlendMode(.passThrough) == 0)
+        #expect(viewModel.document.history.count == historyCount + 1)
+
+        viewModel.undo()
+        #expect(viewModel.selectedLayerGradientOverlayBlendModeState == .mixed)
+        viewModel.redo()
+        #expect(viewModel.selectedLayerGradientOverlayBlendModeState == .value(.softLight))
+
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        #expect(source.contains("selectedLayerGradientOverlayBlendModeState"))
+        #expect(source.contains("values: ImageEditorBlendMode.layerEffectCases"))
+        #expect(source.contains("image-editor-layer-style-gradient-overlay-blend-mode"))
+    }
+
     @Test func layerStyleGradientOverlayStopsConvergeAcrossEditableSelectionInOneHistoryStep() throws {
         let fixture = makeFixture()
         let viewModel = fixture.viewModel

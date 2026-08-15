@@ -1342,6 +1342,7 @@
 "imageEditor.innerGlowSource.center" = "Center";
 "imageEditor.properties.colorOverlayOpacityValue" = "Color Overlay Opacity: %d%%";
 "imageEditor.properties.gradientOverlayOpacityValue" = "Gradient Overlay Opacity: %d%%";
+"imageEditor.properties.gradientOverlayBlendMode" = "Gradient Overlay Blend Mode";
 "imageEditor.properties.gradientOverlayStyle" = "Gradient Overlay Style";
 "imageEditor.properties.gradientOverlayStartColor" = "Gradient Start Color";
 "imageEditor.properties.gradientOverlayEndColor" = "Gradient End Color";

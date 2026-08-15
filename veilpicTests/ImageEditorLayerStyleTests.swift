@@ -2151,6 +2151,87 @@ struct ImageEditorLayerStyleTests {
         ) == ImageEditorGradientOverlayCenterPolicy.defaultCenter)
     }
 
+    @Test func gradientOverlayBlendModeChangesPixelsAndLegacyProjectsDefaultToNormal() throws {
+        let canvasSize = NSSize(width: 32, height: 24)
+        let viewModel = ImageEditorViewModel(
+            sourceName: "gradient-overlay-blend.png",
+            image: solidImage(color: .black, size: canvasSize)
+        ) { _ in }
+        viewModel.replaceSelectedLayerImageForTesting(
+            solidImage(color: .black, size: canvasSize),
+            historyTitle: L10n.text("imageEditor.history.brush")
+        )
+        #expect(viewModel.setSelectedLayerGradientOverlayOpacity(1) == 1)
+        #expect(viewModel.setSelectedLayerGradientOverlayStartColor(.white) == 1)
+        viewModel.setSelectedLayerGradientOverlayEndColor(.white)
+        #expect(viewModel.document.selectedLayer?.style.gradientOverlayEnabled == true)
+        let sourcePixels = try #require(viewModel.document.selectedLayer?.image.qingtuPNGData())
+        let normalPixels = try #require(viewModel.currentImage.qingtuPNGData())
+        let normalColor = try #require(
+            viewModel.currentImage.color(at: CGPoint(x: 16, y: 12))?.usingColorSpace(.deviceRGB)
+        )
+        let directlyRenderedColor = try #require(
+            viewModel.document.compositedImage
+                .color(at: CGPoint(x: 16, y: 12))?
+                .usingColorSpace(.deviceRGB)
+        )
+        #expect(directlyRenderedColor.redComponent > 0.9)
+        let historyCount = viewModel.document.history.count
+
+        #expect(ImageEditorBlendMode.layerEffectCases.contains(.multiply))
+        #expect(ImageEditorBlendMode.layerEffectCases.contains(.hardMix))
+        #expect(!ImageEditorBlendMode.layerEffectCases.contains(.passThrough))
+        #expect(viewModel.setSelectedLayerGradientOverlayBlendMode(.multiply) == 1)
+        #expect(viewModel.selectedLayerGradientOverlayBlendMode == .multiply)
+        let multipliedPixels = try #require(viewModel.currentImage.qingtuPNGData())
+        let multipliedColor = try #require(
+            viewModel.currentImage.color(at: CGPoint(x: 16, y: 12))?.usingColorSpace(.deviceRGB)
+        )
+        #expect(normalColor.redComponent > 0.9)
+        #expect(multipliedColor.redComponent < 0.1)
+        #expect(multipliedPixels != normalPixels)
+        #expect(viewModel.document.selectedLayer?.image.qingtuPNGData() == sourcePixels)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.setSelectedLayerGradientOverlayBlendMode(.screen) == 1)
+        let screenedColor = try #require(
+            viewModel.currentImage.color(at: CGPoint(x: 16, y: 12))?.usingColorSpace(.deviceRGB)
+        )
+        #expect(screenedColor.redComponent > 0.9)
+        viewModel.undo()
+        #expect(viewModel.selectedLayerGradientOverlayBlendMode == .multiply)
+        #expect(viewModel.setSelectedLayerGradientOverlayBlendMode(.multiply) == 0)
+        #expect(viewModel.setSelectedLayerGradientOverlayBlendMode(.passThrough) == 0)
+        #expect(viewModel.document.history.count == historyCount + 1)
+
+        viewModel.undo()
+        #expect(viewModel.selectedLayerGradientOverlayBlendMode == .normal)
+        #expect(viewModel.currentImage.qingtuPNGData() == normalPixels)
+        viewModel.redo()
+        #expect(viewModel.selectedLayerGradientOverlayBlendMode == .multiply)
+        #expect(viewModel.currentImage.qingtuPNGData() == multipliedPixels)
+
+        let styledLayer = try #require(viewModel.document.selectedLayer)
+        let project = try ImageEditorProjectDocument(document: viewModel.document)
+        let restoredLayer = try #require(
+            try project.restoredDocument().layers.first { $0.id == styledLayer.id }
+        )
+        #expect(restoredLayer.style.gradientOverlayBlendMode == .multiply)
+
+        let encodedStyle = try JSONEncoder().encode(
+            ImageEditorProjectLayerStyle(style: styledLayer.style)
+        )
+        var legacyObject = try #require(
+            JSONSerialization.jsonObject(with: encodedStyle) as? [String: Any]
+        )
+        legacyObject.removeValue(forKey: "gradientOverlayBlendMode")
+        let legacyData = try JSONSerialization.data(withJSONObject: legacyObject)
+        let legacyStyle = try JSONDecoder().decode(
+            ImageEditorProjectLayerStyle.self,
+            from: legacyData
+        ).layerStyle
+        #expect(legacyStyle.gradientOverlayBlendMode == .normal)
+    }
+
     @Test func gradientOverlayReverseIsUndoableAndLegacyProjectsDefaultForward() throws {
         let canvasSize = NSSize(width: 80, height: 60)
         let viewModel = ImageEditorViewModel(

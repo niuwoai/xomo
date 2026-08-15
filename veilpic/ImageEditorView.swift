@@ -9931,6 +9931,15 @@ struct ImageEditorView: View {
                 ) { style in
                     viewModel.setSelectedLayerGradientOverlayStyle(style)
                 }
+                layerStyleValuePicker(
+                    state: viewModel.selectedLayerGradientOverlayBlendModeState,
+                    values: ImageEditorBlendMode.layerEffectCases,
+                    labelKey: "imageEditor.properties.gradientOverlayBlendMode",
+                    accessibilityIdentifier: "image-editor-layer-style-gradient-overlay-blend-mode",
+                    title: \.title
+                ) { blendMode in
+                    viewModel.setSelectedLayerGradientOverlayBlendMode(blendMode)
+                }
                 layerStyleTriStateToggle(
                     state: viewModel.selectedLayerGradientOverlayReverseState,
                     labelKey: "imageEditor.gradientFill.reverse",

@@ -2769,6 +2769,7 @@ struct ImageEditorLayerStyle {
     var gradientOverlayStartColor = NSColor.systemRed
     var gradientOverlayEndColor = NSColor.white
     var gradientOverlayOpacity: CGFloat = 0.55
+    var gradientOverlayBlendMode = ImageEditorBlendMode.normal
     var gradientOverlayStyle = ImageEditorGradientFillStyle.linear
     var gradientOverlayScale: CGFloat = 1
     var gradientOverlayAngle: CGFloat = 0
@@ -4391,7 +4392,9 @@ struct ImageEditorLayer: Identifiable {
                         fraction: 1
                     )
                 } ?? NSImage(size: outputSize)
-                if let context = NSGraphicsContext.current,
+                let outputRect = CGRect(origin: .zero, size: outputSize)
+                if style.gradientOverlayBlendMode == .normal,
+                   let context = NSGraphicsContext.current,
                    let gradientCanvasCGImage = gradientCanvas.cgImage(
                     forProposedRect: nil,
                     context: context,
@@ -4400,14 +4403,26 @@ struct ImageEditorLayer: Identifiable {
                     let previousInterpolationQuality = context.cgContext.interpolationQuality
                     context.cgContext.interpolationQuality = .none
                     defer { context.cgContext.interpolationQuality = previousInterpolationQuality }
-                    context.cgContext.draw(
-                        gradientCanvasCGImage,
-                        in: CGRect(origin: .zero, size: outputSize)
+                    context.cgContext.draw(gradientCanvasCGImage, in: outputRect)
+                } else if let backdropCGImage = NSGraphicsContext.current?.cgContext.makeImage(),
+                   let compositedImage = NSImage(
+                       cgImage: backdropCGImage,
+                       size: outputSize
+                   ).blended(
+                       with: gradientCanvas,
+                       mode: style.gradientOverlayBlendMode,
+                       opacity: 1
+                   ) {
+                    compositedImage.draw(
+                        in: outputRect,
+                        from: outputRect,
+                        operation: .copy,
+                        fraction: 1
                     )
                 } else {
                     gradientCanvas.draw(
-                        in: CGRect(origin: .zero, size: outputSize),
-                        from: CGRect(origin: .zero, size: gradientCanvas.size),
+                        in: outputRect,
+                        from: outputRect,
                         operation: .sourceOver,
                         fraction: 1
                     )

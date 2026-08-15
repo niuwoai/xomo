@@ -1,5 +1,18 @@
 # Changelog
 
+## 2.12.0-rc1033 - 2026-08-16
+
+### Added
+- Gradient Overlay 新增独立混合模式，复用图层逐像素合成器，提供除组专属 Pass Through 外的 27 种模式；面板与 MCP 使用同一权威枚举。
+- 图层样式面板支持混合值与批量收敛；工程文件、便携样式预设和 MCP `gradientOverlayBlendMode` 会保存、恢复并返回真实更新层数。
+
+### Changed
+- 渐变叠加不再固定以 Normal 覆盖，而是在已有填充、内描边、内阴影及颜色叠加之上使用选定混合模式，同时继续受原始图层 Alpha 限制并保持源像素非破坏。
+- 旧工程缺少混合模式字段时默认 Normal；组专属 Pass Through 外部字段安全回退为 Normal。
+
+### Verification
+- 像素合成/Undo/Redo/工程兼容、多选/UI 接线、MCP 枚举与三语资源专项 4/4，CLI 2/2、发布契约 7/7（21 项断言）通过；下一次周期完整门禁为 rc1040，本版不覆盖 `/Applications` 安装。
+
 ## 2.12.0-rc1032 - 2026-08-16
 
 ### Added

@@ -1342,6 +1342,7 @@
 "imageEditor.innerGlowSource.center" = "中心";
 "imageEditor.properties.colorOverlayOpacityValue" = "颜色叠加不透明度：%d%%";
 "imageEditor.properties.gradientOverlayOpacityValue" = "渐变叠加不透明度：%d%%";
+"imageEditor.properties.gradientOverlayBlendMode" = "渐变叠加混合模式";
 "imageEditor.properties.gradientOverlayStyle" = "渐变叠加样式";
 "imageEditor.properties.gradientOverlayStartColor" = "渐变起点颜色";
 "imageEditor.properties.gradientOverlayEndColor" = "渐变终点颜色";

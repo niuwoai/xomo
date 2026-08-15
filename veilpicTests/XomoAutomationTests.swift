@@ -13674,6 +13674,71 @@ struct XomoAutomationTests {
         #expect(viewModel.document.history.count == historyAfterUpdate)
     }
 
+    @Test func registrySetsLayerStyleGradientOverlayBlendModeWithAdvertisedEnum() throws {
+        let viewModel = makeViewModel()
+        let canvasSize = viewModel.document.canvasSize
+        var first = ImageEditorLayer.blank(name: "First", size: canvasSize)
+        var second = ImageEditorLayer.blank(name: "Second", size: canvasSize)
+        var locked = ImageEditorLayer.blank(name: "Locked", size: canvasSize)
+        first.style.gradientOverlayBlendMode = .normal
+        second.style.gradientOverlayBlendMode = .screen
+        locked.style.gradientOverlayBlendMode = .overlay
+        locked.isLocked = true
+        viewModel.document.layers = [first, second, locked]
+        viewModel.document.selectedLayerID = first.id
+        viewModel.document.selectedLayerIDs = [first.id, second.id, locked.id]
+        let historyCount = viewModel.document.history.count
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+
+        let toolsResponse = registry.execute(request(operation: "tools"))
+        let styleTool = try #require(
+            automationTool(named: "xomo.layer.style_settings", in: toolsResponse)
+        )
+        let inputSchema = try #require(styleTool["inputSchema"]?.objectValue)
+        let properties = try #require(inputSchema["properties"]?.objectValue)
+        let propertySchema = try #require(properties["property"]?.objectValue)
+        let blendModeSchema = try #require(properties["blendMode"]?.objectValue)
+        #expect(
+            propertySchema["enum"]?.arrayValue?.contains(
+                .string("gradientOverlayBlendMode")
+            ) == true
+        )
+        #expect(
+            blendModeSchema["enum"] == .array(
+                ImageEditorBlendMode.layerEffectCases.map { .string($0.rawValue) }
+            )
+        )
+
+        let result = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style_settings",
+            arguments: [
+                "property": .string("gradientOverlayBlendMode"),
+                "blendMode": .string("softLight")
+            ]
+        ))
+        #expect(result.ok)
+        #expect(result.result?.objectValue?["updatedLayerCount"] == .number(2))
+        #expect(viewModel.document.layers[0].style.gradientOverlayBlendMode == .softLight)
+        #expect(viewModel.document.layers[1].style.gradientOverlayBlendMode == .softLight)
+        #expect(viewModel.document.layers[2].style.gradientOverlayBlendMode == .overlay)
+        #expect(viewModel.document.layers[0].style.gradientOverlayEnabled)
+        #expect(viewModel.document.layers[1].style.gradientOverlayEnabled)
+        #expect(viewModel.document.history.count == historyCount + 1)
+
+        let invalid = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style_settings",
+            arguments: [
+                "property": .string("gradientOverlayBlendMode"),
+                "blendMode": .string("passThrough")
+            ]
+        ))
+        #expect(!invalid.ok)
+        #expect(viewModel.document.history.count == historyCount + 1)
+    }
+
     @Test func registrySetsLayerStylePatternOverlayKindWithAdvertisedEnum() throws {
         let viewModel = makeViewModel()
         let canvasSize = viewModel.document.canvasSize
