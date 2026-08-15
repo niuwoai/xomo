@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-15 15:10:34 +0800",
+  "generated_at": "2026-08-15 15:17:40 +0800",
   "total": 2,
   "passed": 2,
   "failed": 0,
@@ -9,28 +9,28 @@
   "jobs": 1,
   "results": [
     {
-      "suite": "ImageEditorSelectionTargetBoundsTests",
-      "method": "layerFitFillAndAlignmentUseRasterSelectedPixelBounds",
-      "identifier": "veilpicTests/ImageEditorSelectionTargetBoundsTests/layerFitFillAndAlignmentUseRasterSelectedPixelBounds()",
-      "file": "ImageEditorSelectionTargetBoundsTests.swift",
+      "suite": "ImageEditorSelectionCenteringTests",
+      "method": "centeringEmptyAndInvertedSelectionsDoesNotPolluteHistory",
+      "identifier": "veilpicTests/ImageEditorSelectionCenteringTests/centeringEmptyAndInvertedSelectionsDoesNotPolluteHistory()",
+      "file": "ImageEditorSelectionCenteringTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.184,
+      "duration": 2.899,
       "infrastructure_retries": 0,
       "issues": [],
-      "log": "ImageEditorSelectionTargetBoundsTests.layerFitFillAndAlignmentUseRasterSelectedPixelBounds.log"
+      "log": "ImageEditorSelectionCenteringTests.centeringEmptyAndInvertedSelectionsDoesNotPolluteHistory.log"
     },
     {
-      "suite": "ImageEditorSelectionTargetBoundsTests",
-      "method": "selectionTargetCommandsRejectEmptyRasterSelectionWithoutHistory",
-      "identifier": "veilpicTests/ImageEditorSelectionTargetBoundsTests/selectionTargetCommandsRejectEmptyRasterSelectionWithoutHistory()",
-      "file": "ImageEditorSelectionTargetBoundsTests.swift",
+      "suite": "ImageEditorSelectionCenteringTests",
+      "method": "centeringRasterSelectionUsesSelectedPixelsInsteadOfStoredBounds",
+      "identifier": "veilpicTests/ImageEditorSelectionCenteringTests/centeringRasterSelectionUsesSelectedPixelsInsteadOfStoredBounds()",
+      "file": "ImageEditorSelectionCenteringTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 2.975,
+      "duration": 3.163,
       "infrastructure_retries": 0,
       "issues": [],
-      "log": "ImageEditorSelectionTargetBoundsTests.selectionTargetCommandsRejectEmptyRasterSelectionWithoutHistory.log"
+      "log": "ImageEditorSelectionCenteringTests.centeringRasterSelectionUsesSelectedPixelsInsteadOfStoredBounds.log"
     }
   ]
 }

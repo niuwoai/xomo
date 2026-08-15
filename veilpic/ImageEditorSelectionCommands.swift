@@ -466,7 +466,10 @@ extension ImageEditorViewModel {
             return
         }
 
-        let bounds = selection.bounds
+        guard let bounds = selection.effectiveSelectedBounds(in: document.canvasSize) else {
+            statusText = L10n.text("imageEditor.status.selectionEmpty")
+            return
+        }
         let canvasBounds = CGRect(origin: .zero, size: document.canvasSize)
         let delta = CGSize(
             width: horizontal ? canvasBounds.midX - bounds.midX : 0,
