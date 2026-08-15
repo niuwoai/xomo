@@ -2993,6 +2993,37 @@ struct ImageEditorScopeTests {
         #expect(selectMenuSource.contains(".keyboardShortcut(\"d\", modifiers: [.command, .option])"))
     }
 
+    @Test func selectMenuSeparatesStructuralSelectionActionsFromPixelGeometry() throws {
+        let source = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),
+            encoding: .utf8
+        )
+        let selectMenuStart = try #require(source.range(of: "private var selectMenu: some View"))
+        let nextMenuStart = try #require(
+            source[selectMenuStart.upperBound...].range(of: "private var alphaChannelMenu: some View")
+        )
+        let selectMenuSource = String(source[selectMenuStart.lowerBound..<nextMenuStart.lowerBound])
+
+        #expect(
+            selectMenuSource.components(
+                separatedBy: ".disabled(!canModifySelectionGeometry)"
+            ).count - 1 == 8
+        )
+        #expect(
+            selectMenuSource.components(
+                separatedBy: "let canModifySelectionGeometry = viewModel.canModifySelectionGeometry"
+            ).count - 1 == 1
+        )
+        #expect(
+            selectMenuSource.components(
+                separatedBy: ".disabled(!viewModel.hasSelection)"
+            ).count - 1 == 3
+        )
+        #expect(selectMenuSource.contains("viewModel.clearSelection()"))
+        #expect(selectMenuSource.contains("viewModel.invertSelection()"))
+        #expect(selectMenuSource.contains("viewModel.toggleQuickMaskMode()"))
+    }
+
     @Test func windowMenuExposesChannelPanelActionsInPhotoshopStyleLocation() throws {
         let source = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),

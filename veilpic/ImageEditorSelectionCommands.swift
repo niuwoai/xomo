@@ -42,6 +42,10 @@ extension ImageEditorViewModel {
         hasEffectiveSelectionPixels
     }
 
+    var canModifySelectionGeometry: Bool {
+        hasEffectiveSelectionPixels
+    }
+
     func selectAll() {
         let fullCanvasSelection = ImageEditorSelection.fullCanvas(size: document.canvasSize)
         guard !selectionsAreEquivalent(document.selection, fullCanvasSelection) else {
@@ -273,10 +277,7 @@ extension ImageEditorViewModel {
     }
 
     func featherSelection(radius: Int? = nil) {
-        guard let selection = document.selection else {
-            statusText = L10n.text("imageEditor.status.noSelection")
-            return
-        }
+        guard let selection = effectiveSelectionForGeometryCommand() else { return }
         let effectiveRadius = effectiveSelectionRadius(radius, maximum: 64)
         let modified = selection.feathered(by: effectiveRadius, canvasSize: document.canvasSize)
         commitSelectionBoundaryResult(
@@ -289,10 +290,7 @@ extension ImageEditorViewModel {
     }
 
     func borderSelection(radius: Int? = nil) {
-        guard let selection = document.selection else {
-            statusText = L10n.text("imageEditor.status.noSelection")
-            return
-        }
+        guard let selection = effectiveSelectionForGeometryCommand() else { return }
         let effectiveRadius = effectiveSelectionRadius(radius, maximum: 64)
         let modified = selection.bordered(by: effectiveRadius, canvasSize: document.canvasSize)
         commitSelectionBoundaryResult(
@@ -305,10 +303,7 @@ extension ImageEditorViewModel {
     }
 
     func smoothSelection(radius: Int? = nil) {
-        guard let selection = document.selection else {
-            statusText = L10n.text("imageEditor.status.noSelection")
-            return
-        }
+        guard let selection = effectiveSelectionForGeometryCommand() else { return }
         let effectiveRadius = effectiveSelectionRadius(radius, maximum: 16)
         let modified = selection.smoothed(by: effectiveRadius, canvasSize: document.canvasSize)
         guard !selectionsAreEquivalent(selection, modified) else {
@@ -325,10 +320,7 @@ extension ImageEditorViewModel {
     }
 
     func fillSelectionHoles() {
-        guard let selection = document.selection else {
-            statusText = L10n.text("imageEditor.status.noSelection")
-            return
-        }
+        guard let selection = effectiveSelectionForGeometryCommand() else { return }
         guard let modified = selection.filledHoles(canvasSize: document.canvasSize) else {
             statusText = L10n.text("imageEditor.status.selectionEmpty")
             return
@@ -345,10 +337,7 @@ extension ImageEditorViewModel {
     }
 
     func removeSelectionSpeckles(maximumArea: Int? = nil) {
-        guard let selection = document.selection else {
-            statusText = L10n.text("imageEditor.status.noSelection")
-            return
-        }
+        guard let selection = effectiveSelectionForGeometryCommand() else { return }
         let effectiveMaximumArea = effectiveSelectionRadius(maximumArea, maximum: 64)
         let modified = selection.removedSpeckles(
             maximumArea: effectiveMaximumArea,
@@ -428,10 +417,7 @@ extension ImageEditorViewModel {
     }
 
     func fitSelectionToCanvas() {
-        guard let selection = document.selection else {
-            statusText = L10n.text("imageEditor.status.noSelection")
-            return
-        }
+        guard let selection = effectiveSelectionForGeometryCommand() else { return }
         guard let modified = selection.fittedToCanvas(canvasSize: document.canvasSize) else {
             statusText = L10n.text("imageEditor.status.selectionEmpty")
             return
@@ -452,10 +438,7 @@ extension ImageEditorViewModel {
     }
 
     private func moveSelection(by delta: CGSize) {
-        guard let selection = document.selection else {
-            statusText = L10n.text("imageEditor.status.noSelection")
-            return
-        }
+        guard let selection = effectiveSelectionForGeometryCommand() else { return }
         let modified = selection.translated(by: delta, canvasSize: document.canvasSize)
         guard !selectionsAreEquivalent(selection, modified) else {
             statusText = L10n.text("imageEditor.status.selectionUnchanged")
@@ -475,15 +458,9 @@ extension ImageEditorViewModel {
     }
 
     private func centerSelection(horizontal: Bool, vertical: Bool) {
-        guard let selection = document.selection else {
-            statusText = L10n.text("imageEditor.status.noSelection")
-            return
-        }
-
-        guard let bounds = selection.effectiveSelectedBounds(in: document.canvasSize) else {
-            statusText = L10n.text("imageEditor.status.selectionEmpty")
-            return
-        }
+        guard let selection = effectiveSelectionForGeometryCommand(),
+              let bounds = selection.effectiveSelectedBounds(in: document.canvasSize)
+        else { return }
         let canvasBounds = CGRect(origin: .zero, size: document.canvasSize)
         let delta = CGSize(
             width: horizontal ? canvasBounds.midX - bounds.midX : 0,
@@ -521,10 +498,7 @@ extension ImageEditorViewModel {
     }
 
     private func flipSelection(horizontal: Bool) {
-        guard let selection = document.selection else {
-            statusText = L10n.text("imageEditor.status.noSelection")
-            return
-        }
+        guard let selection = effectiveSelectionForGeometryCommand() else { return }
         guard let modified = selection.flipped(horizontal: horizontal, canvasSize: document.canvasSize) else {
             statusText = L10n.text("imageEditor.status.selectionEmpty")
             return
@@ -541,10 +515,7 @@ extension ImageEditorViewModel {
     }
 
     private func rotateSelection(clockwiseTurns: Int) {
-        guard let selection = document.selection else {
-            statusText = L10n.text("imageEditor.status.noSelection")
-            return
-        }
+        guard let selection = effectiveSelectionForGeometryCommand() else { return }
         guard let modified = selection.rotatedQuarterTurns(
             clockwiseTurns: clockwiseTurns,
             canvasSize: document.canvasSize
@@ -581,10 +552,7 @@ extension ImageEditorViewModel {
     }
 
     private func scaleSelection(by factor: CGFloat, historyKey: String, statusKey: String) {
-        guard let selection = document.selection else {
-            statusText = L10n.text("imageEditor.status.noSelection")
-            return
-        }
+        guard let selection = effectiveSelectionForGeometryCommand() else { return }
         guard let modified = selection.scaled(by: factor, canvasSize: document.canvasSize) else {
             statusText = L10n.text("imageEditor.status.selectionEmpty")
             return
@@ -601,10 +569,7 @@ extension ImageEditorViewModel {
     }
 
     private func modifySelectionBoundary(expanding: Bool, radius: Int? = nil) {
-        guard let selection = document.selection else {
-            statusText = L10n.text("imageEditor.status.noSelection")
-            return
-        }
+        guard let selection = effectiveSelectionForGeometryCommand() else { return }
         let effectiveRadius = effectiveSelectionRadius(radius, maximum: 64)
         let modified = expanding
             ? selection.expanded(by: effectiveRadius, canvasSize: document.canvasSize)
@@ -643,6 +608,18 @@ extension ImageEditorViewModel {
         statusText = modified == nil
             ? L10n.text("imageEditor.status.selectionEmpty")
             : L10n.format(statusKey, radius)
+    }
+
+    private func effectiveSelectionForGeometryCommand() -> ImageEditorSelection? {
+        guard let selection = document.selection else {
+            statusText = L10n.text("imageEditor.status.noSelection")
+            return nil
+        }
+        guard selectionHasEffectivePixels(selection) else {
+            statusText = L10n.text("imageEditor.status.selectionEmpty")
+            return nil
+        }
+        return selection
     }
 
     private func effectiveSelectionRadius(_ requested: Int?, maximum: Int) -> Int {

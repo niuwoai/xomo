@@ -1219,6 +1219,7 @@ extension ImageEditorView {
 
     @ViewBuilder
     private var selectMenu: some View {
+        let canModifySelectionGeometry = viewModel.canModifySelectionGeometry
         Button(L10n.text("imageEditor.action.selectAll")) {
             viewModel.selectAll()
         }
@@ -1284,32 +1285,32 @@ extension ImageEditorView {
         Button(L10n.text("imageEditor.action.expandSelection")) {
             viewModel.expandSelection()
         }
-        .disabled(!viewModel.hasSelection)
+        .disabled(!canModifySelectionGeometry)
         Button(L10n.text("imageEditor.action.contractSelection")) {
             viewModel.contractSelection()
         }
-        .disabled(!viewModel.hasSelection)
+        .disabled(!canModifySelectionGeometry)
         Button(L10n.text("imageEditor.action.featherSelection")) {
             viewModel.featherSelection()
         }
         .keyboardShortcut("d", modifiers: [.command, .option])
-        .disabled(!viewModel.hasSelection)
+        .disabled(!canModifySelectionGeometry)
         Button(L10n.text("imageEditor.action.borderSelection")) {
             viewModel.borderSelection()
         }
-        .disabled(!viewModel.hasSelection)
+        .disabled(!canModifySelectionGeometry)
         Button(L10n.text("imageEditor.action.smoothSelection")) {
             viewModel.smoothSelection()
         }
-        .disabled(!viewModel.hasSelection)
+        .disabled(!canModifySelectionGeometry)
         Button(L10n.text("imageEditor.action.fillSelectionHoles")) {
             viewModel.fillSelectionHoles()
         }
-        .disabled(!viewModel.hasSelection)
+        .disabled(!canModifySelectionGeometry)
         Button(L10n.text("imageEditor.action.removeSelectionSpeckles")) {
             viewModel.removeSelectionSpeckles()
         }
-        .disabled(!viewModel.hasSelection)
+        .disabled(!canModifySelectionGeometry)
         Menu(L10n.text("imageEditor.menu.select.transform")) {
             Button(L10n.text("imageEditor.action.selectionMoveLeft")) {
                 viewModel.moveSelectionLeft()
@@ -1361,7 +1362,7 @@ extension ImageEditorView {
                 viewModel.fitSelectionToCanvas()
             }
         }
-        .disabled(!viewModel.hasSelection)
+        .disabled(!canModifySelectionGeometry)
     }
 
     @ViewBuilder
