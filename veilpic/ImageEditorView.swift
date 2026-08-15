@@ -106,6 +106,9 @@ struct ImageEditorView: View {
     @State private var isGradientOverlayAxisDragActive = false
     @State private var gradientOverlayAxisDragStartLocation: CGPoint?
     @State private var cancelledGradientOverlayAxisDragStartLocation: CGPoint?
+    @State private var activeGradientOverlayStopIndex: Int?
+    @State private var gradientOverlayStopDragStartLocation: CGPoint?
+    @State private var cancelledGradientOverlayStopDragStartLocation: CGPoint?
     @State var selectedShapeGradientStopIndex = 0
     @State var activeShapeGradientTrackStopIndex: Int?
     @State var activeShapeGradientTrackMidpointIndex: Int?
@@ -7561,9 +7564,10 @@ struct ImageEditorView: View {
            viewModel.document.areExtrasVisible,
            let geometry = viewModel.selectedLayerGradientOverlayCanvasGeometry {
             let center = viewPoint(from: geometry.center, in: size)
+            let axisStart = viewPoint(from: geometry.axisStart, in: size)
             let axisEndpoint = viewPoint(from: geometry.axisEndpoint, in: size)
             let axisPath = Path { path in
-                path.move(to: center)
+                path.move(to: axisStart)
                 path.addLine(to: axisEndpoint)
             }
             ZStack {
@@ -7573,6 +7577,37 @@ struct ImageEditorView: View {
                         style: StrokeStyle(lineWidth: 1.25, dash: [5, 4])
                     )
                     .allowsHitTesting(false)
+
+                axisPath
+                    .stroke(Color.white.opacity(0.001), lineWidth: 18)
+                    .contentShape(axisPath.strokedPath(StrokeStyle(lineWidth: 18)))
+                    .gesture(
+                        SpatialTapGesture(
+                            count: 2,
+                            coordinateSpace: .named("image-editor-canvas-space")
+                        )
+                        .onEnded { value in
+                            _ = viewModel.addSelectedLayerGradientOverlayCanvasStop(
+                                at: unboundedImagePoint(from: value.location, in: size)
+                            )
+                        }
+                    )
+                    .allowsHitTesting(
+                        viewModel.canEditSelectedLayerGradientOverlayCanvasCenter
+                            && viewModel.selectedLayerGradientOverlayColorStops.count
+                                < ImageEditorGradientFillContent.maximumColorStopCount
+                    )
+                    .help(L10n.text("imageEditor.help.gradientOverlayAxis"))
+                    .accessibilityIdentifier("image-editor-gradient-overlay-axis")
+
+                ForEach(viewModel.selectedLayerGradientOverlayCanvasStopHandlePoints) { point in
+                    gradientOverlayStopHandleView(
+                        point,
+                        axisStart: axisStart,
+                        axisEndpoint: axisEndpoint,
+                        canvasSize: size
+                    )
+                }
 
                 Circle()
                     .fill(Color.accentColor)
@@ -7692,11 +7727,87 @@ struct ImageEditorView: View {
         }
     }
 
+    private func gradientOverlayStopHandleView(
+        _ point: ImageEditorGradientOverlayStopHandlePoint,
+        axisStart: CGPoint,
+        axisEndpoint: CGPoint,
+        canvasSize: CGSize
+    ) -> some View {
+        let axis = CGVector(dx: axisEndpoint.x - axisStart.x, dy: axisEndpoint.y - axisStart.y)
+        let length = max(0.001, hypot(axis.dx, axis.dy))
+        let canvasPosition = viewPoint(from: point.canvasPoint, in: canvasSize)
+        let position = CGPoint(
+            x: canvasPosition.x - axis.dy / length * 14,
+            y: canvasPosition.y + axis.dx / length * 14
+        )
+        return RoundedRectangle(cornerRadius: 2, style: .continuous)
+            .fill(Color(nsColor: point.stop.color))
+            .overlay {
+                RoundedRectangle(cornerRadius: 2, style: .continuous)
+                    .stroke(Color.white.opacity(0.96), lineWidth: 1.5)
+                RoundedRectangle(cornerRadius: 2, style: .continuous)
+                    .stroke(Color.black.opacity(0.62), lineWidth: 0.5)
+                    .padding(-1)
+            }
+            .frame(width: 12, height: 12)
+            .rotationEffect(.degrees(45))
+            .position(position)
+            .contentShape(Rectangle().inset(by: -7))
+            .highPriorityGesture(
+                DragGesture(
+                    minimumDistance: 0,
+                    coordinateSpace: .named("image-editor-canvas-space")
+                )
+                .onChanged { value in
+                    if let cancelledStart = cancelledGradientOverlayStopDragStartLocation {
+                        guard cancelledStart != value.startLocation else { return }
+                        cancelledGradientOverlayStopDragStartLocation = nil
+                    }
+                    if activeGradientOverlayStopIndex == nil {
+                        gradientOverlayStopDragStartLocation = value.startLocation
+                        guard viewModel.beginEditingSelectedLayerGradientOverlayCanvasStop(
+                            at: point.index
+                        ) else {
+                            gradientOverlayStopDragStartLocation = nil
+                            return
+                        }
+                        activeGradientOverlayStopIndex = point.index
+                    }
+                    guard activeGradientOverlayStopIndex == point.index else { return }
+                    viewModel.updateSelectedLayerGradientOverlayCanvasStop(
+                        to: unboundedImagePoint(from: value.location, in: canvasSize)
+                    )
+                }
+                .onEnded { value in
+                    defer {
+                        activeGradientOverlayStopIndex = nil
+                        gradientOverlayStopDragStartLocation = nil
+                    }
+                    if cancelledGradientOverlayStopDragStartLocation == value.startLocation {
+                        cancelledGradientOverlayStopDragStartLocation = nil
+                        return
+                    }
+                    guard activeGradientOverlayStopIndex == point.index else { return }
+                    viewModel.updateSelectedLayerGradientOverlayCanvasStop(
+                        to: unboundedImagePoint(from: value.location, in: canvasSize)
+                    )
+                    viewModel.finishEditingSelectedLayerGradientOverlayCanvasStop()
+                }
+            )
+            .allowsHitTesting(viewModel.canEditSelectedLayerGradientOverlayCanvasCenter)
+            .opacity(viewModel.canEditSelectedLayerGradientOverlayCanvasCenter ? 1 : 0.55)
+            .help(L10n.text("imageEditor.help.gradientOverlayStopHandle"))
+            .accessibilityIdentifier(
+                "image-editor-gradient-overlay-canvas-stop-\(point.index)"
+            )
+    }
+
     @discardableResult
     private func cancelGradientOverlayCanvasHandleDragForLifecycle() -> Bool {
+        let cancelledStop = cancelGradientOverlayStopDragForLifecycle()
         let cancelledAxis = cancelGradientOverlayAxisDragForLifecycle()
         let cancelledCenter = cancelGradientOverlayCenterDragForLifecycle()
-        return cancelledAxis || cancelledCenter
+        return cancelledStop || cancelledAxis || cancelledCenter
     }
 
     @discardableResult
@@ -7720,6 +7831,18 @@ struct ImageEditorView: View {
         isGradientOverlayAxisDragActive = false
         gradientOverlayAxisDragStartLocation = nil
         _ = viewModel.cancelEditingSelectedLayerGradientOverlayCanvasAxis()
+        return true
+    }
+
+    @discardableResult
+    private func cancelGradientOverlayStopDragForLifecycle() -> Bool {
+        let hadActiveDrag = activeGradientOverlayStopIndex != nil
+            || viewModel.hasActiveGradientOverlayStopTransaction
+        guard hadActiveDrag else { return false }
+        cancelledGradientOverlayStopDragStartLocation = gradientOverlayStopDragStartLocation
+        activeGradientOverlayStopIndex = nil
+        gradientOverlayStopDragStartLocation = nil
+        _ = viewModel.cancelEditingSelectedLayerGradientOverlayCanvasStop()
         return true
     }
 

@@ -963,6 +963,8 @@
 "imageEditor.history.shapeGradientHandle" = "シェイプのグラデーションを調整";
 "imageEditor.history.gradientOverlayCenter" = "グラデーションオーバーレイの中心を移動";
 "imageEditor.history.gradientOverlayAxis" = "グラデーションオーバーレイ軸を調整";
+"imageEditor.history.gradientOverlayStop" = "グラデーションオーバーレイのカラーストップを移動";
+"imageEditor.history.gradientOverlayStopAdded" = "グラデーションオーバーレイのカラーストップを追加";
 "imageEditor.history.shapeGradientStop" = "グラデーションストップを移動";
 "imageEditor.history.shapeGradientMidpoint" = "グラデーションカラー中間点を移動";
 "imageEditor.action.shapeGradientStopAdd" = "グラデーションストップを追加";
@@ -970,12 +972,15 @@
 "imageEditor.status.shapeGradientHandleMoved" = "シェイプのグラデーションを調整中";
 "imageEditor.status.gradientOverlayCenterMoved" = "グラデーションオーバーレイの中心を移動中";
 "imageEditor.status.gradientOverlayAxisMoved" = "グラデーションオーバーレイの角度とスケールを調整中";
+"imageEditor.status.gradientOverlayStopMoved" = "グラデーションオーバーレイのカラーストップを移動中";
 "imageEditor.status.shapeGradientStopMoved" = "グラデーションストップを移動中";
 "imageEditor.status.shapeGradientMidpointMoved" = "グラデーションカラー中間点を調整中";
 "imageEditor.help.shapeGradientHandle.start" = "グラデーションの始点をドラッグします。Shift キーで角度をスナップします";
 "imageEditor.help.shapeGradientHandle.end" = "グラデーションの終点をドラッグします。Shift キーで角度をスナップします";
 "imageEditor.help.gradientOverlayCenterHandle" = "ドラッグしてグラデーションオーバーレイの中心を移動します";
 "imageEditor.help.gradientOverlayAxisHandle" = "ドラッグして角度とスケールを調整します。Shift キーで角度をスナップします";
+"imageEditor.help.gradientOverlayAxis" = "ダブルクリックしてグラデーションオーバーレイのカラーストップを追加します";
+"imageEditor.help.gradientOverlayStopHandle" = "ドラッグしてこのグラデーションオーバーレイのカラーストップを移動します";
 "imageEditor.help.shapeGradientStopHandle" = "中間ストップをグラデーション軸に沿ってドラッグします";
 "imageEditor.help.shapeGradientMidpointHandle" = "隣接するカラー間の遷移中間点をドラッグします";
 "imageEditor.help.shapeGradientAxis" = "グラデーション軸をダブルクリックして、その位置にストップを追加します";

@@ -37,12 +37,21 @@ enum ImageEditorGradientOverlayCenterGeometry {
 
 struct ImageEditorGradientOverlayCanvasGeometry: Equatable {
     var center: CGPoint
+    var axisStart: CGPoint
     var axisEndpoint: CGPoint
 }
 
 struct ImageEditorGradientOverlayAxisValues: Equatable {
     var angle: CGFloat
     var scale: CGFloat
+}
+
+struct ImageEditorGradientOverlayStopHandlePoint: Identifiable, Equatable {
+    var index: Int
+    var canvasPoint: CGPoint
+    var stop: ImageEditorGradientColorStop
+
+    var id: Int { index }
 }
 
 enum ImageEditorGradientOverlayAxisGeometry {
@@ -75,12 +84,97 @@ enum ImageEditorGradientOverlayAxisGeometry {
         case .radial, .diamond:
             length = referenceRadius(size: frame.size) * resolvedScale
         }
+        let endpoint = CGPoint(
+            x: canvasCenter.x + direction.width * length,
+            y: canvasCenter.y + direction.height * length
+        )
+        let start = style == .linear
+            ? CGPoint(
+                x: canvasCenter.x - direction.width * length,
+                y: canvasCenter.y - direction.height * length
+            )
+            : canvasCenter
         return ImageEditorGradientOverlayCanvasGeometry(
             center: canvasCenter,
-            axisEndpoint: CGPoint(
-                x: canvasCenter.x + direction.width * length,
-                y: canvasCenter.y + direction.height * length
+            axisStart: start,
+            axisEndpoint: endpoint
+        )
+    }
+
+    static func stopHandlePoints(
+        style: ImageEditorGradientFillStyle,
+        center: CGPoint,
+        angle: CGFloat,
+        scale: CGFloat,
+        reverse: Bool,
+        stops: [ImageEditorGradientColorStop],
+        layerFrame: CGRect
+    ) -> [ImageEditorGradientOverlayStopHandlePoint] {
+        guard let geometry = canvasGeometry(
+            style: style,
+            center: center,
+            angle: angle,
+            scale: scale,
+            layerFrame: layerFrame
+        ) else { return [] }
+        let normalizedStops = ImageEditorGradientFillContent.shapeLinear(
+            colorStops: stops
+        ).shapeColorStops
+        return normalizedStops.indices.dropFirst().dropLast().map { index in
+            let stop = normalizedStops[index]
+            let displayedPosition = reverse ? 1 - stop.position : stop.position
+            return ImageEditorGradientOverlayStopHandlePoint(
+                index: index,
+                canvasPoint: point(
+                    at: displayedPosition,
+                    from: geometry.axisStart,
+                    to: geometry.axisEndpoint
+                ),
+                stop: stop
             )
+        }
+    }
+
+    static func logicalStopPosition(
+        style: ImageEditorGradientFillStyle,
+        center: CGPoint,
+        angle: CGFloat,
+        scale: CGFloat,
+        reverse: Bool,
+        layerFrame: CGRect,
+        canvasPoint: CGPoint
+    ) -> Double? {
+        guard canvasPoint.x.isFinite,
+              canvasPoint.y.isFinite,
+              let geometry = canvasGeometry(
+                  style: style,
+                  center: center,
+                  angle: angle,
+                  scale: scale,
+                  layerFrame: layerFrame
+              )
+        else { return nil }
+        let axis = CGVector(
+            dx: geometry.axisEndpoint.x - geometry.axisStart.x,
+            dy: geometry.axisEndpoint.y - geometry.axisStart.y
+        )
+        let lengthSquared = axis.dx * axis.dx + axis.dy * axis.dy
+        guard lengthSquared > 0.000_001 else { return nil }
+        let pointer = CGVector(
+            dx: canvasPoint.x - geometry.axisStart.x,
+            dy: canvasPoint.y - geometry.axisStart.y
+        )
+        let displayedPosition = max(
+            0,
+            min(1, (pointer.dx * axis.dx + pointer.dy * axis.dy) / lengthSquared)
+        )
+        return reverse ? 1 - displayedPosition : displayedPosition
+    }
+
+    private static func point(at position: Double, from start: CGPoint, to end: CGPoint) -> CGPoint {
+        CGPoint(
+            x: start.x + (end.x - start.x) * CGFloat(position),
+            y: start.y + (end.y - start.y) * CGFloat(position)
         )
     }
 
@@ -168,6 +262,22 @@ extension ImageEditorViewModel {
         )
     }
 
+    var selectedLayerGradientOverlayCanvasStopHandlePoints:
+        [ImageEditorGradientOverlayStopHandlePoint] {
+        guard !isEditingLayerMask,
+              let layer = singleSelectedGradientOverlayCanvasLayer
+        else { return [] }
+        return ImageEditorGradientOverlayAxisGeometry.stopHandlePoints(
+            style: layer.style.gradientOverlayStyle,
+            center: layer.style.gradientOverlayCenter,
+            angle: layer.style.gradientOverlayAngle,
+            scale: layer.style.gradientOverlayScale,
+            reverse: layer.style.gradientOverlayReverse,
+            stops: layer.style.resolvedGradientOverlayColorStops,
+            layerFrame: layer.frame
+        )
+    }
+
     var selectedLayerGradientOverlayCanvasCenterPoint: CGPoint? {
         selectedLayerGradientOverlayCanvasGeometry?.center
     }
@@ -185,6 +295,7 @@ extension ImageEditorViewModel {
     func beginEditingSelectedLayerGradientOverlayCanvasCenter() -> Bool {
         guard editingGradientOverlayCenterLayerID == nil,
               editingGradientOverlayAxisLayerID == nil,
+              editingGradientOverlayStopLayerID == nil,
               canEditSelectedLayerGradientOverlayCanvasCenter,
               let layer = singleSelectedGradientOverlayCanvasLayer
         else {
@@ -243,6 +354,7 @@ extension ImageEditorViewModel {
     func beginEditingSelectedLayerGradientOverlayCanvasAxis() -> Bool {
         guard editingGradientOverlayAxisLayerID == nil,
               editingGradientOverlayCenterLayerID == nil,
+              editingGradientOverlayStopLayerID == nil,
               canEditSelectedLayerGradientOverlayCanvasCenter,
               let layer = singleSelectedGradientOverlayCanvasLayer
         else {
@@ -315,6 +427,114 @@ extension ImageEditorViewModel {
         return cancelled
     }
 
+    var hasActiveGradientOverlayStopTransaction: Bool {
+        editingGradientOverlayStopLayerID != nil
+    }
+
+    @discardableResult
+    func beginEditingSelectedLayerGradientOverlayCanvasStop(at stopIndex: Int) -> Bool {
+        guard editingGradientOverlayStopLayerID == nil,
+              editingGradientOverlayCenterLayerID == nil,
+              editingGradientOverlayAxisLayerID == nil,
+              canEditSelectedLayerGradientOverlayCanvasCenter,
+              let layer = singleSelectedGradientOverlayCanvasLayer
+        else {
+            statusText = L10n.text("imageEditor.status.layerLocked")
+            return false
+        }
+        let stops = layer.style.resolvedGradientOverlayColorStops
+        guard stopIndex > 0, stopIndex < stops.count - 1 else { return false }
+        beginGradientOverlayStopUndoTransaction()
+        editingGradientOverlayStopLayerID = layer.id
+        editingGradientOverlayStopIndex = stopIndex
+        editingGradientOverlayOriginalStops = stops
+        return true
+    }
+
+    func updateSelectedLayerGradientOverlayCanvasStop(to canvasPoint: CGPoint) {
+        guard let layerID = editingGradientOverlayStopLayerID,
+              let stopIndex = editingGradientOverlayStopIndex,
+              let originalStops = editingGradientOverlayOriginalStops,
+              let index = document.layers.firstIndex(where: { $0.id == layerID }),
+              let position = logicalGradientOverlayStopPosition(
+                  layer: document.layers[index],
+                  canvasPoint: canvasPoint
+              )
+        else { return }
+        let stops = ImageEditorGradientOverlayStopDraftEditing.movingStop(
+            originalStops,
+            at: stopIndex,
+            to: position
+        )
+        guard stops != document.layers[index].style.resolvedGradientOverlayColorStops else {
+            return
+        }
+        document.layers[index].style.setGradientOverlayColorStops(stops)
+        statusText = L10n.text("imageEditor.status.gradientOverlayStopMoved")
+    }
+
+    func finishEditingSelectedLayerGradientOverlayCanvasStop() {
+        guard let layerID = editingGradientOverlayStopLayerID else { return }
+        let currentStops = document.layers.first(where: { $0.id == layerID })?
+            .style.resolvedGradientOverlayColorStops
+        let didChange = currentStops != editingGradientOverlayOriginalStops
+        if didChange {
+            appendHistory(L10n.text("imageEditor.history.gradientOverlayStop"))
+        }
+        finishGradientOverlayStopUndoTransaction(didChange: didChange)
+        clearGradientOverlayStopEditingState()
+        if !didChange { updateStatus() }
+    }
+
+    @discardableResult
+    func cancelEditingSelectedLayerGradientOverlayCanvasStop() -> Bool {
+        guard editingGradientOverlayStopLayerID != nil else { return false }
+        let cancelled = cancelGradientOverlayStopUndoTransaction()
+        clearGradientOverlayStopEditingState()
+        if cancelled { updateStatus() }
+        return cancelled
+    }
+
+    @discardableResult
+    func addSelectedLayerGradientOverlayCanvasStop(at canvasPoint: CGPoint) -> Int? {
+        guard editingGradientOverlayCenterLayerID == nil,
+              editingGradientOverlayAxisLayerID == nil,
+              editingGradientOverlayStopLayerID == nil,
+              canEditSelectedLayerGradientOverlayCanvasCenter,
+              let layer = singleSelectedGradientOverlayCanvasLayer,
+              let layerIndex = document.layers.firstIndex(where: { $0.id == layer.id }),
+              let position = logicalGradientOverlayStopPosition(
+                  layer: layer,
+                  canvasPoint: canvasPoint
+              )
+        else { return nil }
+        var stops = layer.style.resolvedGradientOverlayColorStops
+        guard stops.count < ImageEditorGradientFillContent.maximumColorStopCount else {
+            return nil
+        }
+        let insertionIndex = stops.firstIndex { position < $0.position } ?? stops.count - 1
+        guard insertionIndex > 0, insertionIndex < stops.count else { return nil }
+        let lowerBound = stops[insertionIndex - 1].position
+            + ImageEditorGradientOverlayStopDraftEditing.minimumStopSpacing
+        let upperBound = stops[insertionIndex].position
+            - ImageEditorGradientOverlayStopDraftEditing.minimumStopSpacing
+        guard lowerBound <= upperBound else { return nil }
+        let resolvedPosition = max(lowerBound, min(upperBound, position))
+        let gradient = ImageEditorGradientFillContent.shapeLinear(colorStops: stops)
+        stops.insert(
+            ImageEditorGradientColorStop(
+                position: resolvedPosition,
+                color: gradient.shapeColor(at: resolvedPosition)
+            ),
+            at: insertionIndex
+        )
+        beginGradientOverlayStopUndoTransaction()
+        document.layers[layerIndex].style.setGradientOverlayColorStops(stops)
+        appendHistory(L10n.text("imageEditor.history.gradientOverlayStopAdded"))
+        finishGradientOverlayStopUndoTransaction(didChange: true)
+        return insertionIndex
+    }
+
     private var singleSelectedGradientOverlayCanvasLayer: ImageEditorLayer? {
         let selectedIDs = document.selectedLayerIDs.isEmpty
             ? Set(document.selectedLayerID.map { [$0] } ?? [])
@@ -341,5 +561,26 @@ extension ImageEditorViewModel {
         editingGradientOverlayAxisLayerID = nil
         editingGradientOverlayAxisOriginalAngle = nil
         editingGradientOverlayAxisOriginalScale = nil
+    }
+
+    private func clearGradientOverlayStopEditingState() {
+        editingGradientOverlayStopLayerID = nil
+        editingGradientOverlayStopIndex = nil
+        editingGradientOverlayOriginalStops = nil
+    }
+
+    private func logicalGradientOverlayStopPosition(
+        layer: ImageEditorLayer,
+        canvasPoint: CGPoint
+    ) -> Double? {
+        ImageEditorGradientOverlayAxisGeometry.logicalStopPosition(
+            style: layer.style.gradientOverlayStyle,
+            center: layer.style.gradientOverlayCenter,
+            angle: layer.style.gradientOverlayAngle,
+            scale: layer.style.gradientOverlayScale,
+            reverse: layer.style.gradientOverlayReverse,
+            layerFrame: layer.frame,
+            canvasPoint: canvasPoint
+        )
     }
 }

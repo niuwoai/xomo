@@ -2273,6 +2273,7 @@ struct ImageEditorLayerStyleTests {
             )
         )
         #expect(linear.center == CGPoint(x: 50, y: 25))
+        #expect(linear.axisStart == CGPoint(x: 0, y: 25))
         #expect(linear.axisEndpoint == CGPoint(x: 100, y: 25))
 
         let reflected = try #require(
@@ -2284,7 +2285,9 @@ struct ImageEditorLayerStyleTests {
                 layerFrame: frame
             )
         )
-        #expect(reflected == linear)
+        #expect(reflected.center == linear.center)
+        #expect(reflected.axisStart == reflected.center)
+        #expect(reflected.axisEndpoint == linear.axisEndpoint)
 
         let radius = hypot(CGFloat(50), CGFloat(25))
         let radial = try #require(
@@ -2297,6 +2300,7 @@ struct ImageEditorLayerStyleTests {
             )
         )
         #expect(radial.center == linear.center)
+        #expect(radial.axisStart == radial.center)
         #expect(abs(radial.axisEndpoint.x - (50 + radius)) < 0.000_001)
         #expect(abs(radial.axisEndpoint.y - 25) < 0.000_001)
 
@@ -2337,6 +2341,215 @@ struct ImageEditorLayerStyleTests {
         )
         #expect(radialUpdate.angle == 73)
         #expect(abs(radialUpdate.scale - 2) < 0.000_001)
+    }
+
+    @Test func gradientOverlayCanvasStopsMapAcrossStylesAndReverse() throws {
+        let frame = CGRect(x: 0, y: 0, width: 100, height: 50)
+        let center = CGPoint(x: 0.5, y: 0.5)
+        let stops = [
+            ImageEditorGradientColorStop(position: 0, color: .systemRed),
+            ImageEditorGradientColorStop(position: 0.25, color: .systemGreen),
+            ImageEditorGradientColorStop(position: 1, color: .systemBlue)
+        ]
+        let linear = try #require(
+            ImageEditorGradientOverlayAxisGeometry.stopHandlePoints(
+                style: .linear,
+                center: center,
+                angle: 0,
+                scale: 1,
+                reverse: false,
+                stops: stops,
+                layerFrame: frame
+            ).first
+        )
+        #expect(linear.index == 1)
+        #expect(linear.canvasPoint == CGPoint(x: 25, y: 25))
+
+        let reversed = try #require(
+            ImageEditorGradientOverlayAxisGeometry.stopHandlePoints(
+                style: .linear,
+                center: center,
+                angle: 0,
+                scale: 1,
+                reverse: true,
+                stops: stops,
+                layerFrame: frame
+            ).first
+        )
+        #expect(reversed.canvasPoint == CGPoint(x: 75, y: 25))
+        #expect(
+            ImageEditorGradientOverlayAxisGeometry.logicalStopPosition(
+                style: .linear,
+                center: center,
+                angle: 0,
+                scale: 1,
+                reverse: true,
+                layerFrame: frame,
+                canvasPoint: CGPoint(x: 25, y: 25)
+            ) == 0.75
+        )
+
+        for style in [
+            ImageEditorGradientFillStyle.radial,
+            .reflected,
+            .diamond
+        ] {
+            let handle = try #require(
+                ImageEditorGradientOverlayAxisGeometry.stopHandlePoints(
+                    style: style,
+                    center: center,
+                    angle: 0,
+                    scale: 1,
+                    reverse: false,
+                    stops: stops,
+                    layerFrame: frame
+                ).first
+            )
+            let logical = try #require(
+                ImageEditorGradientOverlayAxisGeometry.logicalStopPosition(
+                    style: style,
+                    center: center,
+                    angle: 0,
+                    scale: 1,
+                    reverse: false,
+                    layerFrame: frame,
+                    canvasPoint: handle.canvasPoint
+                )
+            )
+            #expect(abs(logical - 0.25) < 0.000_001)
+        }
+    }
+
+    @Test func addingGradientOverlayCanvasStopInterpolatesAndHonorsLimits() throws {
+        let viewModel = gradientOverlayCenterViewModel()
+        let selectedIndex = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[selectedIndex].style.gradientOverlayStartColor = .black
+        viewModel.document.layers[selectedIndex].style.gradientOverlayEndColor = .white
+        let geometry = try #require(viewModel.selectedLayerGradientOverlayCanvasGeometry)
+        let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
+        let layerPixels = try #require(viewModel.document.selectedLayer?.image.qingtuPNGData())
+        let inserted = try #require(
+            viewModel.addSelectedLayerGradientOverlayCanvasStop(at: geometry.center)
+        )
+        let stops = try #require(viewModel.document.selectedLayer?.style.gradientOverlayColorStops)
+        #expect(inserted == 1)
+        #expect(stops.count == 3)
+        #expect(stops[1].position == 0.5)
+        #expect(stops[1].red > 0 && stops[1].red < 1)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.undoStack.count == undoCount + 1)
+        #expect(viewModel.document.selectedLayer?.image.qingtuPNGData() == layerPixels)
+        viewModel.undo()
+        #expect(viewModel.document.selectedLayer?.style.gradientOverlayColorStops == nil)
+
+        let reversed = gradientOverlayCenterViewModel()
+        let reversedIndex = try #require(reversed.document.selectedLayerIndex)
+        reversed.document.layers[reversedIndex].style.gradientOverlayReverse = true
+        let reversedGeometry = try #require(reversed.selectedLayerGradientOverlayCanvasGeometry)
+        let quarterPoint = CGPoint(
+            x: reversedGeometry.axisStart.x
+                + (reversedGeometry.axisEndpoint.x - reversedGeometry.axisStart.x) * 0.25,
+            y: reversedGeometry.axisStart.y
+                + (reversedGeometry.axisEndpoint.y - reversedGeometry.axisStart.y) * 0.25
+        )
+        _ = try #require(reversed.addSelectedLayerGradientOverlayCanvasStop(at: quarterPoint))
+        let reversedStops = try #require(
+            reversed.document.selectedLayer?.style.gradientOverlayColorStops
+        )
+        #expect(reversedStops[1].position == 0.75)
+
+        let maximum = gradientOverlayCenterViewModel()
+        let maximumIndex = try #require(maximum.document.selectedLayerIndex)
+        maximum.document.layers[maximumIndex].style.setGradientOverlayColorStops(
+            (0..<ImageEditorGradientFillContent.maximumColorStopCount).map { index in
+                ImageEditorGradientColorStop(
+                    position: Double(index)
+                        / Double(ImageEditorGradientFillContent.maximumColorStopCount - 1),
+                    color: .white
+                )
+            }
+        )
+        let maximumHistory = maximum.document.history.count
+        #expect(maximum.addSelectedLayerGradientOverlayCanvasStop(at: geometry.center) == nil)
+        #expect(maximum.document.history.count == maximumHistory)
+    }
+
+    @Test func draggingGradientOverlayCanvasStopCommitsOnceAndRoundTripPreservesRedo() throws {
+        let viewModel = gradientOverlayCenterViewModel()
+        let selectedIndex = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[selectedIndex].style.setGradientOverlayColorStops([
+            ImageEditorGradientColorStop(position: 0, color: .systemRed),
+            ImageEditorGradientColorStop(position: 0.4, color: .systemGreen),
+            ImageEditorGradientColorStop(position: 1, color: .systemBlue)
+        ])
+        #expect(viewModel.setSelectedLayerGradientOverlayAngle(15) == 1)
+        viewModel.undo()
+        let originalProjectData = try viewModel.projectData()
+        let originalHandle = try #require(
+            viewModel.selectedLayerGradientOverlayCanvasStopHandlePoints.first
+        )
+        let geometry = try #require(viewModel.selectedLayerGradientOverlayCanvasGeometry)
+        let target = CGPoint(
+            x: geometry.axisStart.x
+                + (geometry.axisEndpoint.x - geometry.axisStart.x) * 0.7,
+            y: geometry.axisStart.y
+                + (geometry.axisEndpoint.y - geometry.axisStart.y) * 0.7
+        )
+        let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
+
+        #expect(viewModel.beginEditingSelectedLayerGradientOverlayCanvasStop(at: 1))
+        viewModel.updateSelectedLayerGradientOverlayCanvasStop(to: target)
+        viewModel.updateSelectedLayerGradientOverlayCanvasStop(to: originalHandle.canvasPoint)
+        viewModel.finishEditingSelectedLayerGradientOverlayCanvasStop()
+        #expect(try viewModel.projectData() == originalProjectData)
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.undoStack.count == undoCount)
+        #expect(viewModel.canRedo)
+
+        #expect(viewModel.beginEditingSelectedLayerGradientOverlayCanvasStop(at: 1))
+        viewModel.updateSelectedLayerGradientOverlayCanvasStop(to: target)
+        viewModel.finishEditingSelectedLayerGradientOverlayCanvasStop()
+        let movedStops = try #require(
+            viewModel.document.selectedLayer?.style.gradientOverlayColorStops
+        )
+        #expect(abs(movedStops[1].position - 0.7) < 0.000_001)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.undoStack.count == undoCount + 1)
+        #expect(!viewModel.canRedo)
+        viewModel.undo()
+        #expect(
+            viewModel.document.selectedLayer?.style.resolvedGradientOverlayColorStops[1].position
+                == 0.4
+        )
+    }
+
+    @Test func undoCancelsActiveGradientOverlayCanvasStopBeforeHistory() throws {
+        let viewModel = gradientOverlayCenterViewModel()
+        let selectedIndex = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[selectedIndex].style.setGradientOverlayColorStops([
+            ImageEditorGradientColorStop(position: 0, color: .systemRed),
+            ImageEditorGradientColorStop(position: 0.4, color: .systemGreen),
+            ImageEditorGradientColorStop(position: 1, color: .systemBlue)
+        ])
+        #expect(viewModel.setSelectedLayerGradientOverlayScale(1.5) == 1)
+        viewModel.undo()
+        let originalProjectData = try viewModel.projectData()
+        let geometry = try #require(viewModel.selectedLayerGradientOverlayCanvasGeometry)
+        let target = CGPoint(x: geometry.axisEndpoint.x, y: geometry.axisEndpoint.y)
+        let undoCount = viewModel.undoStack.count
+
+        #expect(viewModel.beginEditingSelectedLayerGradientOverlayCanvasStop(at: 1))
+        viewModel.updateSelectedLayerGradientOverlayCanvasStop(to: target)
+        #expect(viewModel.canRedo)
+        viewModel.undo()
+        #expect(!viewModel.hasActiveGradientOverlayStopTransaction)
+        #expect(try viewModel.projectData() == originalProjectData)
+        #expect(viewModel.undoStack.count == undoCount)
+        #expect(viewModel.canRedo)
+        viewModel.redo()
+        #expect(viewModel.selectedLayerGradientOverlayScale == 1.5)
     }
 
     @Test func gradientOverlayAxisGeometryClampsScaleAndRejectsDegenerateInput() throws {
@@ -2603,9 +2816,15 @@ struct ImageEditorLayerStyleTests {
         #expect(source.contains("beginEditingSelectedLayerGradientOverlayCanvasAxis"))
         #expect(source.contains("updateSelectedLayerGradientOverlayCanvasAxis"))
         #expect(source.contains("finishEditingSelectedLayerGradientOverlayCanvasAxis"))
+        #expect(source.contains("addSelectedLayerGradientOverlayCanvasStop"))
+        #expect(source.contains("beginEditingSelectedLayerGradientOverlayCanvasStop"))
+        #expect(source.contains("updateSelectedLayerGradientOverlayCanvasStop"))
+        #expect(source.contains("finishEditingSelectedLayerGradientOverlayCanvasStop"))
         #expect(source.contains("cancelGradientOverlayCanvasHandleDragForLifecycle"))
         #expect(source.contains("image-editor-gradient-overlay-center-handle"))
         #expect(source.contains("image-editor-gradient-overlay-axis-handle"))
+        #expect(source.contains("image-editor-gradient-overlay-axis"))
+        #expect(source.contains("image-editor-gradient-overlay-canvas-stop-"))
     }
 
     @Test func gradientOverlayCenterHandleRejectsLockedAndMultiLayerSelections() throws {
