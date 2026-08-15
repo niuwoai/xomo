@@ -103,6 +103,9 @@ struct ImageEditorView: View {
     @State private var isGradientOverlayCenterDragActive = false
     @State private var gradientOverlayCenterDragStartLocation: CGPoint?
     @State private var cancelledGradientOverlayCenterDragStartLocation: CGPoint?
+    @State private var isGradientOverlayAxisDragActive = false
+    @State private var gradientOverlayAxisDragStartLocation: CGPoint?
+    @State private var cancelledGradientOverlayAxisDragStartLocation: CGPoint?
     @State var selectedShapeGradientStopIndex = 0
     @State var activeShapeGradientTrackStopIndex: Int?
     @State var activeShapeGradientTrackMidpointIndex: Int?
@@ -279,7 +282,7 @@ struct ImageEditorView: View {
                         || isUncommittedPenPointerSequence
                 },
                 cancelSelectedObject: {
-                    if cancelGradientOverlayCenterDragForLifecycle() {
+                    if cancelGradientOverlayCanvasHandleDragForLifecycle() {
                         NSCursor.arrow.set()
                         return true
                     }
@@ -2878,13 +2881,13 @@ struct ImageEditorView: View {
                     refreshCanvasCursor(in: geometry.size)
                 }
                 .onChange(of: viewModel.selectedTool) { _ in
-                    _ = cancelGradientOverlayCenterDragForLifecycle()
+                    _ = cancelGradientOverlayCanvasHandleDragForLifecycle()
                 }
                 .onChange(of: viewModel.selectedLeftSidebarTab) { _ in
-                    _ = cancelGradientOverlayCenterDragForLifecycle()
+                    _ = cancelGradientOverlayCanvasHandleDragForLifecycle()
                 }
                 .onDisappear {
-                    _ = cancelGradientOverlayCenterDragForLifecycle()
+                    _ = cancelGradientOverlayCanvasHandleDragForLifecycle()
                     cancelPathAnchorDragForCanvasLifecycle()
                     pendingPenCreationAction = nil
                     resetPenAnchorConversionGesture()
@@ -7556,66 +7559,144 @@ struct ImageEditorView: View {
         if viewModel.selectedLeftSidebarTab == .tools,
            canvasInteractionTool == .move,
            viewModel.document.areExtrasVisible,
-           let center = viewModel.selectedLayerGradientOverlayCanvasCenterPoint {
-            let position = viewPoint(from: center, in: size)
-            ZStack {
-                Circle()
-                    .fill(Color.black.opacity(0.62))
-                Circle()
-                    .stroke(Color.white.opacity(0.96), lineWidth: 1.5)
-                Rectangle()
-                    .fill(Color.white.opacity(0.96))
-                    .frame(width: 12, height: 1)
-                Rectangle()
-                    .fill(Color.white.opacity(0.96))
-                    .frame(width: 1, height: 12)
+           let geometry = viewModel.selectedLayerGradientOverlayCanvasGeometry {
+            let center = viewPoint(from: geometry.center, in: size)
+            let axisEndpoint = viewPoint(from: geometry.axisEndpoint, in: size)
+            let axisPath = Path { path in
+                path.move(to: center)
+                path.addLine(to: axisEndpoint)
             }
-            .frame(width: 16, height: 16)
-            .position(position)
-            .contentShape(Circle().inset(by: -7))
-            .highPriorityGesture(
-                DragGesture(
-                    minimumDistance: 0,
-                    coordinateSpace: .named("image-editor-canvas-space")
-                )
-                .onChanged { value in
-                    if let cancelledStart = cancelledGradientOverlayCenterDragStartLocation {
-                        guard cancelledStart != value.startLocation else { return }
-                        cancelledGradientOverlayCenterDragStartLocation = nil
+            ZStack {
+                axisPath
+                    .stroke(
+                        Color.gray.opacity(0.76),
+                        style: StrokeStyle(lineWidth: 1.25, dash: [5, 4])
+                    )
+                    .allowsHitTesting(false)
+
+                Circle()
+                    .fill(Color.accentColor)
+                    .overlay {
+                        Circle()
+                            .stroke(Color.white.opacity(0.96), lineWidth: 1.5)
+                        Circle()
+                            .stroke(Color.black.opacity(0.62), lineWidth: 0.5)
+                            .padding(-1)
                     }
-                    if !isGradientOverlayCenterDragActive {
-                        gradientOverlayCenterDragStartLocation = value.startLocation
-                        guard viewModel.beginEditingSelectedLayerGradientOverlayCanvasCenter() else {
+                    .frame(width: 13, height: 13)
+                    .position(axisEndpoint)
+                    .contentShape(Circle().inset(by: -7))
+                    .highPriorityGesture(
+                        DragGesture(
+                            minimumDistance: 0,
+                            coordinateSpace: .named("image-editor-canvas-space")
+                        )
+                        .onChanged { value in
+                            if let cancelledStart = cancelledGradientOverlayAxisDragStartLocation {
+                                guard cancelledStart != value.startLocation else { return }
+                                cancelledGradientOverlayAxisDragStartLocation = nil
+                            }
+                            if !isGradientOverlayAxisDragActive {
+                                gradientOverlayAxisDragStartLocation = value.startLocation
+                                guard viewModel.beginEditingSelectedLayerGradientOverlayCanvasAxis() else {
+                                    gradientOverlayAxisDragStartLocation = nil
+                                    return
+                                }
+                                isGradientOverlayAxisDragActive = true
+                            }
+                            viewModel.updateSelectedLayerGradientOverlayCanvasAxis(
+                                to: unboundedImagePoint(from: value.location, in: size),
+                                snappingAngle: NSEvent.modifierFlags.contains(.shift)
+                            )
+                        }
+                        .onEnded { value in
+                            defer {
+                                isGradientOverlayAxisDragActive = false
+                                gradientOverlayAxisDragStartLocation = nil
+                            }
+                            if cancelledGradientOverlayAxisDragStartLocation == value.startLocation {
+                                cancelledGradientOverlayAxisDragStartLocation = nil
+                                return
+                            }
+                            guard isGradientOverlayAxisDragActive else { return }
+                            viewModel.updateSelectedLayerGradientOverlayCanvasAxis(
+                                to: unboundedImagePoint(from: value.location, in: size),
+                                snappingAngle: NSEvent.modifierFlags.contains(.shift)
+                            )
+                            viewModel.finishEditingSelectedLayerGradientOverlayCanvasAxis()
+                        }
+                    )
+                    .allowsHitTesting(viewModel.canEditSelectedLayerGradientOverlayCanvasCenter)
+                    .opacity(viewModel.canEditSelectedLayerGradientOverlayCanvasCenter ? 1 : 0.55)
+                    .help(L10n.text("imageEditor.help.gradientOverlayAxisHandle"))
+                    .accessibilityIdentifier("image-editor-gradient-overlay-axis-handle")
+
+                ZStack {
+                    Circle()
+                        .fill(Color.black.opacity(0.62))
+                    Circle()
+                        .stroke(Color.white.opacity(0.96), lineWidth: 1.5)
+                    Rectangle()
+                        .fill(Color.white.opacity(0.96))
+                        .frame(width: 12, height: 1)
+                    Rectangle()
+                        .fill(Color.white.opacity(0.96))
+                        .frame(width: 1, height: 12)
+                }
+                .frame(width: 16, height: 16)
+                .position(center)
+                .contentShape(Circle().inset(by: -7))
+                .highPriorityGesture(
+                    DragGesture(
+                        minimumDistance: 0,
+                        coordinateSpace: .named("image-editor-canvas-space")
+                    )
+                    .onChanged { value in
+                        if let cancelledStart = cancelledGradientOverlayCenterDragStartLocation {
+                            guard cancelledStart != value.startLocation else { return }
+                            cancelledGradientOverlayCenterDragStartLocation = nil
+                        }
+                        if !isGradientOverlayCenterDragActive {
+                            gradientOverlayCenterDragStartLocation = value.startLocation
+                            guard viewModel.beginEditingSelectedLayerGradientOverlayCanvasCenter() else {
+                                gradientOverlayCenterDragStartLocation = nil
+                                return
+                            }
+                            isGradientOverlayCenterDragActive = true
+                        }
+                        viewModel.updateSelectedLayerGradientOverlayCanvasCenter(
+                            to: unboundedImagePoint(from: value.location, in: size)
+                        )
+                    }
+                    .onEnded { value in
+                        defer {
+                            isGradientOverlayCenterDragActive = false
                             gradientOverlayCenterDragStartLocation = nil
+                        }
+                        if cancelledGradientOverlayCenterDragStartLocation == value.startLocation {
+                            cancelledGradientOverlayCenterDragStartLocation = nil
                             return
                         }
-                        isGradientOverlayCenterDragActive = true
+                        guard isGradientOverlayCenterDragActive else { return }
+                        viewModel.updateSelectedLayerGradientOverlayCanvasCenter(
+                            to: unboundedImagePoint(from: value.location, in: size)
+                        )
+                        viewModel.finishEditingSelectedLayerGradientOverlayCanvasCenter()
                     }
-                    viewModel.updateSelectedLayerGradientOverlayCanvasCenter(
-                        to: unboundedImagePoint(from: value.location, in: size)
-                    )
-                }
-                .onEnded { value in
-                    defer {
-                        isGradientOverlayCenterDragActive = false
-                        gradientOverlayCenterDragStartLocation = nil
-                    }
-                    if cancelledGradientOverlayCenterDragStartLocation == value.startLocation {
-                        cancelledGradientOverlayCenterDragStartLocation = nil
-                        return
-                    }
-                    guard isGradientOverlayCenterDragActive else { return }
-                    viewModel.updateSelectedLayerGradientOverlayCanvasCenter(
-                        to: unboundedImagePoint(from: value.location, in: size)
-                    )
-                    viewModel.finishEditingSelectedLayerGradientOverlayCanvasCenter()
-                }
-            )
-            .allowsHitTesting(viewModel.canEditSelectedLayerGradientOverlayCanvasCenter)
-            .opacity(viewModel.canEditSelectedLayerGradientOverlayCanvasCenter ? 1 : 0.55)
-            .help(L10n.text("imageEditor.help.gradientOverlayCenterHandle"))
-            .accessibilityIdentifier("image-editor-gradient-overlay-center-handle")
+                )
+                .allowsHitTesting(viewModel.canEditSelectedLayerGradientOverlayCanvasCenter)
+                .opacity(viewModel.canEditSelectedLayerGradientOverlayCanvasCenter ? 1 : 0.55)
+                .help(L10n.text("imageEditor.help.gradientOverlayCenterHandle"))
+                .accessibilityIdentifier("image-editor-gradient-overlay-center-handle")
+            }
         }
+    }
+
+    @discardableResult
+    private func cancelGradientOverlayCanvasHandleDragForLifecycle() -> Bool {
+        let cancelledAxis = cancelGradientOverlayAxisDragForLifecycle()
+        let cancelledCenter = cancelGradientOverlayCenterDragForLifecycle()
+        return cancelledAxis || cancelledCenter
     }
 
     @discardableResult
@@ -7627,6 +7708,18 @@ struct ImageEditorView: View {
         isGradientOverlayCenterDragActive = false
         gradientOverlayCenterDragStartLocation = nil
         _ = viewModel.cancelEditingSelectedLayerGradientOverlayCanvasCenter()
+        return true
+    }
+
+    @discardableResult
+    private func cancelGradientOverlayAxisDragForLifecycle() -> Bool {
+        let hadActiveDrag = isGradientOverlayAxisDragActive
+            || viewModel.hasActiveGradientOverlayAxisTransaction
+        guard hadActiveDrag else { return false }
+        cancelledGradientOverlayAxisDragStartLocation = gradientOverlayAxisDragStartLocation
+        isGradientOverlayAxisDragActive = false
+        gradientOverlayAxisDragStartLocation = nil
+        _ = viewModel.cancelEditingSelectedLayerGradientOverlayCanvasAxis()
         return true
     }
 

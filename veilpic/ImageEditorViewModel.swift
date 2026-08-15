@@ -478,6 +478,8 @@ final class ImageEditorViewModel: ObservableObject {
     private var activeShapeGradientRedoThemeStates: [ImageEditorXomoThemeUndoState] = []
     private var activeGradientOverlayCenterRedoStack: [ImageEditorDocument] = []
     private var activeGradientOverlayCenterRedoThemeStates: [ImageEditorXomoThemeUndoState] = []
+    private var activeGradientOverlayAxisRedoStack: [ImageEditorDocument] = []
+    private var activeGradientOverlayAxisRedoThemeStates: [ImageEditorXomoThemeUndoState] = []
     var movingLayerIDs = Set<UUID>()
     var movingLayerDidChange = false
     var movingLayerWasDuplicated = false
@@ -514,6 +516,9 @@ final class ImageEditorViewModel: ObservableObject {
     var editingShapeGradientDidChange = false
     var editingGradientOverlayCenterLayerID: UUID?
     var editingGradientOverlayCenterOriginalPoint: CGPoint?
+    var editingGradientOverlayAxisLayerID: UUID?
+    var editingGradientOverlayAxisOriginalAngle: CGFloat?
+    var editingGradientOverlayAxisOriginalScale: CGFloat?
     var copiedLayerStyle: ImageEditorLayerStyle?
     var copiedLayerStyleSourceID: UUID?
     private var cloneStampAlignedCanvasOffset: CGSize?
@@ -774,7 +779,8 @@ final class ImageEditorViewModel: ObservableObject {
 
     var canRedo: Bool {
         if hasActivePathAnchorMoveTransaction
-            || hasActiveGradientOverlayCenterTransaction {
+            || hasActiveGradientOverlayCenterTransaction
+            || hasActiveGradientOverlayAxisTransaction {
             return true
         }
         if hasPendingPenPathTransaction {
@@ -3318,6 +3324,7 @@ final class ImageEditorViewModel: ObservableObject {
         // that snapshot as ordinary history would restore the document while
         // leaving the transform transaction active. The first history command
         // therefore cancels the preview; a subsequent command reaches history.
+        guard !cancelEditingSelectedLayerGradientOverlayCanvasAxis() else { return }
         guard !cancelEditingSelectedLayerGradientOverlayCanvasCenter() else { return }
         guard !cancelMovingPathAnchor() else { return }
         if hasPendingPenPathTransaction {
@@ -3347,6 +3354,7 @@ final class ImageEditorViewModel: ObservableObject {
     func redo() {
         // Redo follows the same transaction boundary as Undo: an unfinished
         // pointer move is cancelled before either history stack can change.
+        guard !cancelEditingSelectedLayerGradientOverlayCanvasAxis() else { return }
         guard !cancelEditingSelectedLayerGradientOverlayCanvasCenter() else { return }
         guard !cancelMovingPathAnchor() else { return }
         if hasPendingPenPathTransaction {
@@ -8943,6 +8951,35 @@ final class ImageEditorViewModel: ObservableObject {
     private func clearGradientOverlayCenterUndoTransaction() {
         activeGradientOverlayCenterRedoStack = []
         activeGradientOverlayCenterRedoThemeStates = []
+    }
+
+    func beginGradientOverlayAxisUndoTransaction() {
+        activeGradientOverlayAxisRedoStack = redoStack
+        activeGradientOverlayAxisRedoThemeStates = redoXomoThemeStates
+        pushUndo()
+    }
+
+    func finishGradientOverlayAxisUndoTransaction(didChange: Bool) {
+        if !didChange {
+            _ = cancelGradientOverlayAxisUndoTransaction()
+            return
+        }
+        clearGradientOverlayAxisUndoTransaction()
+    }
+
+    @discardableResult
+    func cancelGradientOverlayAxisUndoTransaction() -> Bool {
+        guard let originalDocument = discardLastUndoSnapshot() else { return false }
+        document = originalDocument
+        redoStack = activeGradientOverlayAxisRedoStack
+        redoXomoThemeStates = activeGradientOverlayAxisRedoThemeStates
+        clearGradientOverlayAxisUndoTransaction()
+        return true
+    }
+
+    private func clearGradientOverlayAxisUndoTransaction() {
+        activeGradientOverlayAxisRedoStack = []
+        activeGradientOverlayAxisRedoThemeStates = []
     }
 
     func finishPathAnchorMoveUndoTransaction(didChange: Bool) {

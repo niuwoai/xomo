@@ -2260,6 +2260,210 @@ struct ImageEditorLayerStyleTests {
         )
     }
 
+    @Test func gradientOverlayAxisGeometryMatchesAllStylesAndSnapsAngles() throws {
+        let frame = CGRect(x: 0, y: 0, width: 100, height: 50)
+        let center = CGPoint(x: 0.5, y: 0.5)
+        let linear = try #require(
+            ImageEditorGradientOverlayAxisGeometry.canvasGeometry(
+                style: .linear,
+                center: center,
+                angle: 0,
+                scale: 1,
+                layerFrame: frame
+            )
+        )
+        #expect(linear.center == CGPoint(x: 50, y: 25))
+        #expect(linear.axisEndpoint == CGPoint(x: 100, y: 25))
+
+        let reflected = try #require(
+            ImageEditorGradientOverlayAxisGeometry.canvasGeometry(
+                style: .reflected,
+                center: center,
+                angle: 0,
+                scale: 1,
+                layerFrame: frame
+            )
+        )
+        #expect(reflected == linear)
+
+        let radius = hypot(CGFloat(50), CGFloat(25))
+        let radial = try #require(
+            ImageEditorGradientOverlayAxisGeometry.canvasGeometry(
+                style: .radial,
+                center: center,
+                angle: 90,
+                scale: 1,
+                layerFrame: frame
+            )
+        )
+        #expect(radial.center == linear.center)
+        #expect(abs(radial.axisEndpoint.x - (50 + radius)) < 0.000_001)
+        #expect(abs(radial.axisEndpoint.y - 25) < 0.000_001)
+
+        let diamond = try #require(
+            ImageEditorGradientOverlayAxisGeometry.canvasGeometry(
+                style: .diamond,
+                center: center,
+                angle: 90,
+                scale: 1,
+                layerFrame: frame
+            )
+        )
+        #expect(abs(diamond.axisEndpoint.x - 50) < 0.000_001)
+        #expect(abs(diamond.axisEndpoint.y - (25 + radius)) < 0.000_001)
+
+        let snapped = try #require(
+            ImageEditorGradientOverlayAxisGeometry.updatedAxis(
+                style: .linear,
+                center: center,
+                currentAngle: 0,
+                layerFrame: frame,
+                canvasPoint: CGPoint(x: 90, y: 55),
+                snappingAngle: true
+            )
+        )
+        #expect(snapped.angle == 30)
+        #expect(snapped.scale >= 0.25 && snapped.scale <= 4)
+
+        let radialUpdate = try #require(
+            ImageEditorGradientOverlayAxisGeometry.updatedAxis(
+                style: .radial,
+                center: center,
+                currentAngle: 73,
+                layerFrame: frame,
+                canvasPoint: CGPoint(x: 50, y: 25 + radius * 2),
+                snappingAngle: true
+            )
+        )
+        #expect(radialUpdate.angle == 73)
+        #expect(abs(radialUpdate.scale - 2) < 0.000_001)
+    }
+
+    @Test func gradientOverlayAxisGeometryClampsScaleAndRejectsDegenerateInput() throws {
+        let frame = CGRect(x: 0, y: 0, width: 100, height: 50)
+        let center = CGPoint(x: 0.5, y: 0.5)
+        let minimum = try #require(
+            ImageEditorGradientOverlayAxisGeometry.updatedAxis(
+                style: .diamond,
+                center: center,
+                currentAngle: 0,
+                layerFrame: frame,
+                canvasPoint: CGPoint(x: 51, y: 25),
+                snappingAngle: false
+            )
+        )
+        #expect(minimum.scale == 0.25)
+        let maximum = try #require(
+            ImageEditorGradientOverlayAxisGeometry.updatedAxis(
+                style: .linear,
+                center: center,
+                currentAngle: 0,
+                layerFrame: frame,
+                canvasPoint: CGPoint(x: 5000, y: 25),
+                snappingAngle: false
+            )
+        )
+        #expect(maximum.scale == 4)
+        #expect(
+            ImageEditorGradientOverlayAxisGeometry.updatedAxis(
+                style: .linear,
+                center: center,
+                currentAngle: 0,
+                layerFrame: frame,
+                canvasPoint: CGPoint(x: 50, y: 25),
+                snappingAngle: false
+            ) == nil
+        )
+        #expect(
+            ImageEditorGradientOverlayAxisGeometry.canvasGeometry(
+                style: .linear,
+                center: center,
+                angle: 0,
+                scale: 1,
+                layerFrame: .zero
+            ) == nil
+        )
+    }
+
+    @Test func draggingGradientOverlayAxisCommitsOnceAndRoundTripPreservesRedo() throws {
+        let viewModel = gradientOverlayCenterViewModel()
+        let originalGeometry = try #require(viewModel.selectedLayerGradientOverlayCanvasGeometry)
+        #expect(viewModel.setSelectedLayerGradientOverlayAngle(15) == 1)
+        viewModel.undo()
+        let originalProjectData = try viewModel.projectData()
+        let undoCount = viewModel.undoStack.count
+        let historyCount = viewModel.document.history.count
+        #expect(viewModel.canRedo)
+
+        #expect(viewModel.beginEditingSelectedLayerGradientOverlayCanvasAxis())
+        viewModel.updateSelectedLayerGradientOverlayCanvasAxis(
+            to: CGPoint(x: originalGeometry.center.x, y: originalGeometry.center.y + 80),
+            snappingAngle: true
+        )
+        viewModel.updateSelectedLayerGradientOverlayCanvasAxis(
+            to: originalGeometry.axisEndpoint,
+            snappingAngle: false
+        )
+        viewModel.finishEditingSelectedLayerGradientOverlayCanvasAxis()
+        #expect(try viewModel.projectData() == originalProjectData)
+        #expect(viewModel.undoStack.count == undoCount)
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.canRedo)
+
+        viewModel.redo()
+        #expect(viewModel.selectedLayerGradientOverlayAngle == 15)
+        let historyAfterRedo = viewModel.document.history.count
+        let undoAfterRedo = viewModel.undoStack.count
+        let centerPoint = try #require(viewModel.selectedLayerGradientOverlayCanvasGeometry?.center)
+        #expect(viewModel.beginEditingSelectedLayerGradientOverlayCanvasAxis())
+        viewModel.updateSelectedLayerGradientOverlayCanvasAxis(
+            to: CGPoint(x: centerPoint.x, y: centerPoint.y + 80),
+            snappingAngle: true
+        )
+        viewModel.finishEditingSelectedLayerGradientOverlayCanvasAxis()
+        #expect(viewModel.selectedLayerGradientOverlayAngle == 90)
+        #expect(viewModel.document.history.count == historyAfterRedo + 1)
+        #expect(viewModel.undoStack.count == undoAfterRedo + 1)
+        #expect(!viewModel.canRedo)
+        viewModel.undo()
+        #expect(viewModel.selectedLayerGradientOverlayAngle == 15)
+    }
+
+    @Test func undoAndRedoCancelActiveGradientOverlayAxisBeforeHistory() throws {
+        let viewModel = gradientOverlayCenterViewModel()
+        let geometry = try #require(viewModel.selectedLayerGradientOverlayCanvasGeometry)
+        #expect(viewModel.setSelectedLayerGradientOverlayScale(1.5) == 1)
+        viewModel.undo()
+        let originalProjectData = try viewModel.projectData()
+        let undoCount = viewModel.undoStack.count
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.beginEditingSelectedLayerGradientOverlayCanvasAxis())
+        viewModel.updateSelectedLayerGradientOverlayCanvasAxis(
+            to: CGPoint(x: geometry.center.x, y: geometry.center.y + 60),
+            snappingAngle: false
+        )
+        #expect(viewModel.canRedo)
+        viewModel.undo()
+        #expect(!viewModel.hasActiveGradientOverlayAxisTransaction)
+        #expect(try viewModel.projectData() == originalProjectData)
+        #expect(viewModel.undoStack.count == undoCount)
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.canRedo)
+
+        #expect(viewModel.beginEditingSelectedLayerGradientOverlayCanvasAxis())
+        viewModel.updateSelectedLayerGradientOverlayCanvasAxis(
+            to: CGPoint(x: geometry.center.x - 60, y: geometry.center.y),
+            snappingAngle: false
+        )
+        viewModel.redo()
+        #expect(!viewModel.hasActiveGradientOverlayAxisTransaction)
+        #expect(try viewModel.projectData() == originalProjectData)
+        #expect(viewModel.canRedo)
+        viewModel.redo()
+        #expect(viewModel.selectedLayerGradientOverlayScale == 1.5)
+    }
+
     @Test func draggingGradientOverlayCenterCommitsOnceAndRoundTripPreservesRedo() throws {
         let viewModel = gradientOverlayCenterViewModel()
         let layerFrame = try #require(viewModel.document.selectedLayer?.frame)
@@ -2396,8 +2600,12 @@ struct ImageEditorLayerStyleTests {
         #expect(source.contains("beginEditingSelectedLayerGradientOverlayCanvasCenter"))
         #expect(source.contains("updateSelectedLayerGradientOverlayCanvasCenter"))
         #expect(source.contains("finishEditingSelectedLayerGradientOverlayCanvasCenter"))
-        #expect(source.contains("cancelGradientOverlayCenterDragForLifecycle"))
+        #expect(source.contains("beginEditingSelectedLayerGradientOverlayCanvasAxis"))
+        #expect(source.contains("updateSelectedLayerGradientOverlayCanvasAxis"))
+        #expect(source.contains("finishEditingSelectedLayerGradientOverlayCanvasAxis"))
+        #expect(source.contains("cancelGradientOverlayCanvasHandleDragForLifecycle"))
         #expect(source.contains("image-editor-gradient-overlay-center-handle"))
+        #expect(source.contains("image-editor-gradient-overlay-axis-handle"))
     }
 
     @Test func gradientOverlayCenterHandleRejectsLockedAndMultiLayerSelections() throws {
