@@ -13,7 +13,7 @@ private let defaultLayerTransparencySelectionThreshold = 8
 @MainActor
 extension ImageEditorViewModel {
     var hasEffectiveSelectionPixels: Bool {
-        document.selection?.effectiveSelectedBounds(in: document.canvasSize) != nil
+        selectionHasEffectivePixels(document.selection)
     }
 
     var canLoadSelectionFromLayerTransparency: Bool {
@@ -27,11 +27,11 @@ extension ImageEditorViewModel {
     }
 
     var hasSavedSelection: Bool {
-        document.savedSelection != nil
+        selectionHasEffectivePixels(document.savedSelection)
     }
 
     var canReselectSelection: Bool {
-        reselectableSelection != nil && document.selection == nil
+        document.selection == nil && selectionHasEffectivePixels(reselectableSelection)
     }
 
     var canSelectSimilarColors: Bool {
@@ -72,7 +72,9 @@ extension ImageEditorViewModel {
     }
 
     func saveCurrentSelection() {
-        guard let selection = document.selection else {
+        guard let selection = document.selection,
+              selectionHasEffectivePixels(selection)
+        else {
             statusText = L10n.text("imageEditor.status.noSelection")
             return
         }
@@ -88,7 +90,9 @@ extension ImageEditorViewModel {
     }
 
     func reselectSelection() {
-        guard let selection = reselectableSelection else {
+        guard let selection = reselectableSelection,
+              selectionHasEffectivePixels(selection)
+        else {
             statusText = L10n.text("imageEditor.status.noReselectSelection")
             return
         }
@@ -104,7 +108,9 @@ extension ImageEditorViewModel {
     }
 
     func restoreSavedSelection() {
-        guard let selection = document.savedSelection else {
+        guard let selection = document.savedSelection,
+              selectionHasEffectivePixels(selection)
+        else {
             statusText = L10n.text("imageEditor.status.noSavedSelection")
             return
         }
@@ -117,6 +123,10 @@ extension ImageEditorViewModel {
         document.selection = selection
         appendHistory(L10n.text("imageEditor.history.selectionRestored"))
         statusText = L10n.text("imageEditor.status.selectionRestored")
+    }
+
+    private func selectionHasEffectivePixels(_ selection: ImageEditorSelection?) -> Bool {
+        selection?.effectiveSelectedBounds(in: document.canvasSize) != nil
     }
 
     func selectColorRangeFromForeground(tolerance requestedTolerance: CGFloat? = nil) {

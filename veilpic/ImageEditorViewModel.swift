@@ -3522,7 +3522,9 @@ final class ImageEditorViewModel: ObservableObject {
     func clearSelection() {
         guard let selection = document.selection else { return }
         pushUndo()
-        reselectableSelection = selection
+        reselectableSelection = selection.effectiveSelectedBounds(in: document.canvasSize) == nil
+            ? nil
+            : selection
         document.selection = nil
         isQuickMaskMode = false
         appendHistory(L10n.text("imageEditor.history.selectionCleared"))

@@ -1275,7 +1275,7 @@ extension ImageEditorView {
         Button(L10n.text("imageEditor.action.saveSelection")) {
             viewModel.saveCurrentSelection()
         }
-        .disabled(!viewModel.hasSelection)
+        .disabled(!viewModel.hasEffectiveSelectionPixels)
         Button(L10n.text("imageEditor.action.restoreSelection")) {
             viewModel.restoreSavedSelection()
         }

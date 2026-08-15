@@ -2962,7 +2962,7 @@ struct ImageEditorScopeTests {
 
         #expect(selectMenuSource.contains("imageEditor.action.saveSelection"))
         #expect(selectMenuSource.contains("viewModel.saveCurrentSelection()"))
-        #expect(selectMenuSource.contains("viewModel.hasSelection"))
+        #expect(selectMenuSource.contains("viewModel.hasEffectiveSelectionPixels"))
         #expect(selectMenuSource.contains("imageEditor.action.restoreSelection"))
         #expect(selectMenuSource.contains("viewModel.restoreSavedSelection()"))
         #expect(selectMenuSource.contains("viewModel.hasSavedSelection"))
