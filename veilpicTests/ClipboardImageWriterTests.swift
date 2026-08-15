@@ -65,6 +65,67 @@ struct ClipboardImageWriterTests {
         #expect(viewModel.document.selectedLayer?.frame == selectionFrame)
     }
 
+    @Test func copyingRasterSelectionUsesSelectedPixelBoundsForPasteInPlace() throws {
+        let canvasSize = CGSize(width: 80, height: 60)
+        let selectedFrame = CGRect(x: 13, y: 9, width: 17, height: 11)
+        let mask = rectangularMask(canvasSize: canvasSize, rect: selectedFrame)
+        let viewModel = ImageEditorViewModel(
+            sourceName: "raster-selection-copy.png",
+            image: .transparent(size: canvasSize)
+        ) { _ in }
+        let sourceIndex = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[sourceIndex].image = image(
+            size: canvasSize,
+            highlightedFrame: selectedFrame
+        )
+        viewModel.document.layers[sourceIndex].frame = CGRect(origin: .zero, size: canvasSize)
+        viewModel.document.selection = .raster(
+            mask: mask,
+            bounds: CGRect(origin: .zero, size: canvasSize)
+        )
+        let pasteboard = NSPasteboard.general
+        pasteboard.clearContents()
+        defer { pasteboard.clearContents() }
+
+        #expect(viewModel.copySelectionToClipboard())
+
+        let copiedImage = try #require(NSImage(pasteboard: pasteboard))
+        #expect(copiedImage.size == selectedFrame.size)
+        #expect(XomoClipboardLayerPayload.frame(from: pasteboard) == selectedFrame)
+        let centerColor = try #require(
+            copiedImage.color(at: CGPoint(x: 8, y: 5))?.usingColorSpace(.deviceRGB)
+        )
+        #expect(centerColor.redComponent > 0.8)
+        #expect(centerColor.blueComponent < 0.4)
+        viewModel.pasteClipboardInPlaceAsLayer()
+        #expect(viewModel.document.selectedLayer?.frame == selectedFrame)
+    }
+
+    @Test func copyingRasterSelectionToNewLayerUsesSelectedPixelBounds() throws {
+        let canvasSize = CGSize(width: 80, height: 60)
+        let viewModel = ImageEditorViewModel(
+            sourceName: "raster-selection-layer.png",
+            image: .transparent(size: canvasSize)
+        ) { _ in }
+        let sourceIndex = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[sourceIndex].image = solidImage(
+            color: .systemTeal,
+            size: canvasSize
+        )
+        viewModel.document.layers[sourceIndex].frame = CGRect(origin: .zero, size: canvasSize)
+        let selectedFrame = CGRect(x: 7, y: 15, width: 19, height: 13)
+        viewModel.document.selection = .raster(
+            mask: rectangularMask(canvasSize: canvasSize, rect: selectedFrame),
+            bounds: CGRect(origin: .zero, size: canvasSize)
+        )
+
+        viewModel.copySelectionToNewLayer()
+
+        let copiedLayer = try #require(viewModel.document.selectedLayer)
+        #expect(copiedLayer.frame == selectedFrame)
+        #expect(copiedLayer.image.size == selectedFrame.size)
+    }
+
     @Test func cuttingSelectionCropsToSelectionFrameForPasteInPlace() throws {
         let canvas = solidImage(color: .clear, size: CGSize(width: 120, height: 90))
         let viewModel = ImageEditorViewModel(sourceName: "selection-cut.png", image: canvas) { _ in }
@@ -196,6 +257,39 @@ struct ClipboardImageWriterTests {
             rect.fill()
             return true
         }
+    }
+
+    private func image(size: CGSize, highlightedFrame: CGRect) -> NSImage {
+        NSImage(size: size, flipped: false) { rect in
+            NSColor.systemBlue.setFill()
+            rect.fill()
+            NSColor.systemOrange.setFill()
+            CGRect(
+                x: highlightedFrame.minX,
+                y: size.height - highlightedFrame.maxY,
+                width: highlightedFrame.width,
+                height: highlightedFrame.height
+            ).fill()
+            return true
+        }
+    }
+
+    private func rectangularMask(
+        canvasSize: CGSize,
+        rect: CGRect
+    ) -> ImageEditorSelectionMask {
+        let width = Int(canvasSize.width)
+        let height = Int(canvasSize.height)
+        var alpha = [UInt8](repeating: 0, count: width * height)
+        let selectedBounds = rect.standardized.integral.intersection(
+            CGRect(origin: .zero, size: canvasSize)
+        )
+        for y in Int(selectedBounds.minY)..<Int(selectedBounds.maxY) {
+            for x in Int(selectedBounds.minX)..<Int(selectedBounds.maxX) {
+                alpha[y * width + x] = UInt8.max
+            }
+        }
+        return ImageEditorSelectionMask(width: width, height: height, alpha: alpha)
     }
 
     private func bitmapImage(pixelSize: CGSize, logicalSize: CGSize) -> NSImage? {

@@ -542,9 +542,12 @@ extension ImageEditorViewModel {
             )
         }), let contentBounds = canvasImage.nonTransparentPixelBounds() else { return nil }
 
+        guard let selectedBounds = selection.effectiveSelectedBounds(
+            in: document.canvasSize
+        ) else { return nil }
         let candidateFrame = selection.isInverted
             ? contentBounds.integral
-            : selection.bounds.standardized
+            : selectedBounds.standardized
                 .insetBy(dx: -featherExtent, dy: -featherExtent)
                 .integral
         let clipboardFrame = candidateFrame.intersection(canvasBounds)
