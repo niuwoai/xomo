@@ -1812,8 +1812,17 @@ final class XomoAutomationRegistry {
     }
 
     private func selectionResult(_ viewModel: ImageEditorViewModel) -> XomoJSONValue {
-        guard let selection = viewModel.document.selection else { return .object(["active": .bool(false)]) }
-        let bounds = selection.bounds.standardized
+        guard let selection = viewModel.document.selection,
+              let selectedBounds = selection.effectiveSelectedBounds(
+                in: viewModel.document.canvasSize
+              )
+        else { return .object(["active": .bool(false)]) }
+
+        let canvasBounds = CGRect(origin: .zero, size: viewModel.document.canvasSize)
+        let bounds = selectedBounds.standardized.integral.intersection(canvasBounds)
+        guard !bounds.isNull, !bounds.isEmpty else {
+            return .object(["active": .bool(false)])
+        }
         return .object([
             "active": .bool(true),
             "inverted": .bool(selection.isInverted),
