@@ -101,6 +101,7 @@ extension ImageEditorViewModel {
         guard editableIndices.contains(where: { index in
             selection.mayAffect(
                 layerFrame: document.layers[index].frame,
+                canvasSize: document.canvasSize,
                 expansion: feather
             )
         }) else {
@@ -115,6 +116,7 @@ extension ImageEditorViewModel {
         ) { layer in
             guard selection.mayAffect(
                 layerFrame: layer.frame,
+                canvasSize: document.canvasSize,
                 expansion: feather
             ) else { return nil }
             guard let output = layer.image.filled(
@@ -145,6 +147,7 @@ extension ImageEditorViewModel {
         guard editableIndices.contains(where: { index in
             selection.mayAffect(
                 layerFrame: document.layers[index].frame,
+                canvasSize: document.canvasSize,
                 expansion: strokeExpansion
             )
         }) else {
@@ -159,6 +162,7 @@ extension ImageEditorViewModel {
         ) { layer in
             guard selection.mayAffect(
                 layerFrame: layer.frame,
+                canvasSize: document.canvasSize,
                 expansion: strokeExpansion
             ) else { return nil }
             guard let output = layer.image.stroked(
@@ -189,6 +193,7 @@ extension ImageEditorViewModel {
         guard editableIndices.contains(where: { index in
             selection.mayAffect(
                 layerFrame: document.layers[index].frame,
+                canvasSize: document.canvasSize,
                 expansion: feather
             )
         }) else {
@@ -203,6 +208,7 @@ extension ImageEditorViewModel {
         ) { layer in
             guard selection.mayAffect(
                 layerFrame: layer.frame,
+                canvasSize: document.canvasSize,
                 expansion: feather
             ) else { return nil }
             guard let output = layer.image.contentAwareFilled(
@@ -381,6 +387,7 @@ extension ImageEditorViewModel {
         guard editableIndices.contains(where: { index in
             selection.mayAffect(
                 layerFrame: document.layers[index].frame,
+                canvasSize: document.canvasSize,
                 expansion: feather
             )
         }) else {
@@ -396,6 +403,7 @@ extension ImageEditorViewModel {
             guard !document.isEffectivelyTransparencyLocked(layer) else { return nil }
             guard selection.mayAffect(
                 layerFrame: layer.frame,
+                canvasSize: document.canvasSize,
                 expansion: feather
             ) else { return nil }
             return layer.image.cleared(

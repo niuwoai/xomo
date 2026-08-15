@@ -71,6 +71,7 @@ extension ImageEditorViewModel {
         }
         guard document.selection?.mayAffect(
             layerFrame: layer.frame,
+            canvasSize: document.canvasSize,
             expansion: feather
         ) != false else {
             statusText = L10n.text("imageEditor.status.selectionEmpty")
@@ -128,6 +129,7 @@ extension ImageEditorViewModel {
         }
         guard document.selection?.mayAffect(
             layerFrame: document.layers[index].frame,
+            canvasSize: document.canvasSize,
             expansion: feather
         ) != false else {
             statusText = L10n.text("imageEditor.status.selectionEmpty")

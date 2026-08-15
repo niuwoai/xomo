@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.12.0-rc1003 - 2026-08-15
+
+### Fixed
+- 填充、描边、内容识别填充、清除和渐变的选区覆盖预检现在读取 raster mask 的真实有效像素范围，不再因整画布结构外框误判远离图层的选区能够修改该图层。
+- 羽化与描边扩张仍可触达邻近图层，反相选区继续按实际补集判断；结构损坏的蒙版保持 fail-open 并由下游明确报告操作失败，不会伪装成合法空选区。
+
+### Verification
+- Gradient/Selection Coverage 10/10、Fill/Stroke/Content-Aware/Clear/Copy/Cut 33/33，共 43 项回归通过；CLI/MCP 2/2、发布契约 7/7（21 项断言）通过。下一次周期完整门禁为 rc1040，本版不覆盖 `/Applications` 安装。
+
 ## 2.12.0-rc1002 - 2026-08-15
 
 ### Fixed

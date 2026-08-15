@@ -305,4 +305,70 @@ struct ImageEditorGradientSelectionTests {
 
         #expect(inverted.document.history.count == invertedHistoryCount + 1)
     }
+
+    @Test func rasterSelectionCoverageUsesSelectedPixelsInsteadOfStorageBounds() throws {
+        let canvasSize = CGSize(width: 120, height: 90)
+        let selectedFrame = CGRect(x: 5, y: 5, width: 25, height: 20)
+        let layerFrame = CGRect(x: 70, y: 55, width: 40, height: 25)
+        let mask = rectangularMask(canvasSize: canvasSize, rect: selectedFrame)
+        let selection = ImageEditorSelection.raster(
+            mask: mask,
+            bounds: CGRect(origin: .zero, size: canvasSize)
+        )
+
+        #expect(!selection.mayAffect(layerFrame: layerFrame, canvasSize: canvasSize))
+        #expect(selection.mayAffect(
+            layerFrame: layerFrame,
+            canvasSize: canvasSize,
+            expansion: 41
+        ))
+
+        var inverted = selection
+        inverted.isInverted = true
+        #expect(inverted.mayAffect(layerFrame: layerFrame, canvasSize: canvasSize))
+
+        let empty = ImageEditorSelection.raster(
+            mask: ImageEditorSelectionMask(
+                width: Int(canvasSize.width),
+                height: Int(canvasSize.height),
+                alpha: [UInt8](repeating: 0, count: Int(canvasSize.width * canvasSize.height))
+            ),
+            bounds: CGRect(origin: .zero, size: canvasSize)
+        )
+        #expect(!empty.mayAffect(layerFrame: layerFrame, canvasSize: canvasSize))
+
+        let viewModel = ImageEditorViewModel(
+            sourceName: "raster-coverage-gradient.png",
+            image: .transparent(size: canvasSize)
+        ) { _ in }
+        let layerIndex = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[layerIndex].frame = layerFrame
+        viewModel.document.selection = selection
+        let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
+
+        viewModel.drawGradient(
+            from: CGPoint(x: 0, y: 0),
+            to: CGPoint(x: canvasSize.width, y: canvasSize.height)
+        )
+
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.undoStack.count == undoCount)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionEmpty"))
+    }
+
+    private func rectangularMask(
+        canvasSize: CGSize,
+        rect: CGRect
+    ) -> ImageEditorSelectionMask {
+        let width = Int(canvasSize.width)
+        let height = Int(canvasSize.height)
+        var alpha = [UInt8](repeating: 0, count: width * height)
+        for y in Int(rect.minY)..<Int(rect.maxY) {
+            for x in Int(rect.minX)..<Int(rect.maxX) {
+                alpha[y * width + x] = UInt8.max
+            }
+        }
+        return ImageEditorSelectionMask(width: width, height: height, alpha: alpha)
+    }
 }
