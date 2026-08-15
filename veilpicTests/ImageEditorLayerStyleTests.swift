@@ -2232,6 +2232,196 @@ struct ImageEditorLayerStyleTests {
         #expect(legacyStyle.gradientOverlayBlendMode == .normal)
     }
 
+    @Test func gradientOverlayCenterGeometryMapsCanvasAndClampsExtendedRange() throws {
+        let frame = CGRect(x: 10, y: 20, width: 100, height: 50)
+        #expect(
+            ImageEditorGradientOverlayCenterGeometry.canvasPoint(
+                center: CGPoint(x: 0.5, y: 0.5),
+                layerFrame: frame
+            ) == CGPoint(x: 60, y: 45)
+        )
+        #expect(
+            ImageEditorGradientOverlayCenterGeometry.normalizedCenter(
+                canvasPoint: CGPoint(x: -500, y: 500),
+                layerFrame: frame
+            ) == CGPoint(x: -4, y: 5)
+        )
+        #expect(
+            ImageEditorGradientOverlayCenterGeometry.canvasPoint(
+                center: .zero,
+                layerFrame: .zero
+            ) == nil
+        )
+        #expect(
+            ImageEditorGradientOverlayCenterGeometry.normalizedCenter(
+                canvasPoint: CGPoint(x: CGFloat.nan, y: 0),
+                layerFrame: frame
+            ) == nil
+        )
+    }
+
+    @Test func draggingGradientOverlayCenterCommitsOnceAndRoundTripPreservesRedo() throws {
+        let viewModel = gradientOverlayCenterViewModel()
+        let layerFrame = try #require(viewModel.document.selectedLayer?.frame)
+        #expect(viewModel.setSelectedLayerGradientOverlayCenterX(0.6) == 1)
+        viewModel.undo()
+        let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
+        #expect(viewModel.canRedo)
+
+        #expect(viewModel.beginEditingSelectedLayerGradientOverlayCanvasCenter())
+        viewModel.updateSelectedLayerGradientOverlayCanvasCenter(
+            to: try #require(
+                ImageEditorGradientOverlayCenterGeometry.canvasPoint(
+                    center: CGPoint(x: 0.8, y: 0.7),
+                    layerFrame: layerFrame
+                )
+            )
+        )
+        viewModel.updateSelectedLayerGradientOverlayCanvasCenter(
+            to: try #require(
+                ImageEditorGradientOverlayCenterGeometry.canvasPoint(
+                    center: CGPoint(x: 0.5, y: 0.5),
+                    layerFrame: layerFrame
+                )
+            )
+        )
+        viewModel.finishEditingSelectedLayerGradientOverlayCanvasCenter()
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.undoStack.count == undoCount)
+        #expect(viewModel.canRedo)
+
+        viewModel.redo()
+        #expect(viewModel.selectedLayerGradientOverlayCenterX == 0.6)
+        let historyAfterRedo = viewModel.document.history.count
+        let undoAfterRedo = viewModel.undoStack.count
+        #expect(viewModel.beginEditingSelectedLayerGradientOverlayCanvasCenter())
+        viewModel.updateSelectedLayerGradientOverlayCanvasCenter(
+            to: try #require(
+                ImageEditorGradientOverlayCenterGeometry.canvasPoint(
+                    center: CGPoint(x: 0.8, y: 0.7),
+                    layerFrame: layerFrame
+                )
+            )
+        )
+        viewModel.finishEditingSelectedLayerGradientOverlayCanvasCenter()
+        #expect(viewModel.selectedLayerGradientOverlayCenterX == 0.8)
+        #expect(viewModel.selectedLayerGradientOverlayCenterY == 0.7)
+        #expect(viewModel.document.history.count == historyAfterRedo + 1)
+        #expect(viewModel.undoStack.count == undoAfterRedo + 1)
+        #expect(!viewModel.canRedo)
+        viewModel.undo()
+        #expect(viewModel.selectedLayerGradientOverlayCenterX == 0.6)
+        #expect(viewModel.selectedLayerGradientOverlayCenterY == 0.5)
+    }
+
+    @Test func cancellingGradientOverlayCenterRestoresDocumentRedoAndNextGesture() throws {
+        let viewModel = gradientOverlayCenterViewModel()
+        let layerFrame = try #require(viewModel.document.selectedLayer?.frame)
+        #expect(viewModel.setSelectedLayerGradientOverlayCenterX(0.6) == 1)
+        viewModel.undo()
+        let originalProjectData = try viewModel.projectData()
+        let undoCount = viewModel.undoStack.count
+        #expect(viewModel.canRedo)
+
+        #expect(viewModel.beginEditingSelectedLayerGradientOverlayCanvasCenter())
+        viewModel.updateSelectedLayerGradientOverlayCanvasCenter(
+            to: CGPoint(x: layerFrame.maxX, y: layerFrame.maxY)
+        )
+        #expect(viewModel.hasActiveGradientOverlayCenterTransaction)
+        #expect(viewModel.cancelEditingSelectedLayerGradientOverlayCanvasCenter())
+        #expect(try viewModel.projectData() == originalProjectData)
+        #expect(viewModel.undoStack.count == undoCount)
+        #expect(viewModel.canRedo)
+        #expect(!viewModel.hasActiveGradientOverlayCenterTransaction)
+        #expect(!viewModel.cancelEditingSelectedLayerGradientOverlayCanvasCenter())
+
+        #expect(viewModel.beginEditingSelectedLayerGradientOverlayCanvasCenter())
+        viewModel.updateSelectedLayerGradientOverlayCanvasCenter(
+            to: CGPoint(x: layerFrame.midX, y: layerFrame.maxY)
+        )
+        viewModel.finishEditingSelectedLayerGradientOverlayCanvasCenter()
+        #expect(viewModel.selectedLayerGradientOverlayCenterY == 1)
+        #expect(!viewModel.canRedo)
+    }
+
+    @Test func undoAndRedoCancelActiveGradientOverlayCenterDragBeforeHistory() throws {
+        let viewModel = gradientOverlayCenterViewModel()
+        let layerFrame = try #require(viewModel.document.selectedLayer?.frame)
+        #expect(viewModel.setSelectedLayerGradientOverlayCenterX(0.6) == 1)
+        viewModel.undo()
+        let originalProjectData = try viewModel.projectData()
+        let undoCount = viewModel.undoStack.count
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.beginEditingSelectedLayerGradientOverlayCanvasCenter())
+        viewModel.updateSelectedLayerGradientOverlayCanvasCenter(
+            to: CGPoint(x: layerFrame.maxX, y: layerFrame.maxY)
+        )
+        #expect(viewModel.canUndo)
+        #expect(viewModel.canRedo)
+        viewModel.undo()
+        #expect(!viewModel.hasActiveGradientOverlayCenterTransaction)
+        #expect(try viewModel.projectData() == originalProjectData)
+        #expect(viewModel.undoStack.count == undoCount)
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.canRedo)
+
+        #expect(viewModel.beginEditingSelectedLayerGradientOverlayCanvasCenter())
+        viewModel.updateSelectedLayerGradientOverlayCanvasCenter(
+            to: CGPoint(x: layerFrame.minX, y: layerFrame.minY)
+        )
+        viewModel.redo()
+        #expect(!viewModel.hasActiveGradientOverlayCenterTransaction)
+        #expect(try viewModel.projectData() == originalProjectData)
+        #expect(viewModel.undoStack.count == undoCount)
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.canRedo)
+
+        viewModel.redo()
+        #expect(viewModel.selectedLayerGradientOverlayCenterX == 0.6)
+        #expect(!viewModel.canRedo)
+    }
+
+    @Test func gradientOverlayCenterCanvasWiringStaysOutOfComponentMode() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        #expect(source.contains("gradientOverlayCenterControlOverlay(in: geometry.size)"))
+        #expect(source.contains("viewModel.selectedLeftSidebarTab == .tools"))
+        #expect(source.contains("beginEditingSelectedLayerGradientOverlayCanvasCenter"))
+        #expect(source.contains("updateSelectedLayerGradientOverlayCanvasCenter"))
+        #expect(source.contains("finishEditingSelectedLayerGradientOverlayCanvasCenter"))
+        #expect(source.contains("cancelGradientOverlayCenterDragForLifecycle"))
+        #expect(source.contains("image-editor-gradient-overlay-center-handle"))
+    }
+
+    @Test func gradientOverlayCenterHandleRejectsLockedAndMultiLayerSelections() throws {
+        let viewModel = gradientOverlayCenterViewModel()
+        let selectedIndex = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[selectedIndex].isLocked = true
+        let undoCount = viewModel.undoStack.count
+        #expect(viewModel.selectedLayerGradientOverlayCanvasCenterPoint != nil)
+        #expect(!viewModel.canEditSelectedLayerGradientOverlayCanvasCenter)
+        #expect(!viewModel.beginEditingSelectedLayerGradientOverlayCanvasCenter())
+        #expect(viewModel.undoStack.count == undoCount)
+
+        viewModel.document.layers[selectedIndex].isLocked = false
+        let second = ImageEditorLayer.blank(
+            name: "Second",
+            size: viewModel.document.canvasSize
+        )
+        viewModel.document.layers.append(second)
+        let firstID = viewModel.document.layers[selectedIndex].id
+        viewModel.document.selectedLayerIDs = [firstID, second.id]
+        #expect(viewModel.selectedLayerGradientOverlayCanvasCenterPoint == nil)
+        #expect(!viewModel.canEditSelectedLayerGradientOverlayCanvasCenter)
+    }
+
     @Test func gradientOverlayReverseIsUndoableAndLegacyProjectsDefaultForward() throws {
         let canvasSize = NSSize(width: 80, height: 60)
         let viewModel = ImageEditorViewModel(
@@ -2439,6 +2629,18 @@ struct ImageEditorLayerStyleTests {
             color.setFill()
             rect.fill()
         } ?? NSImage.transparent(size: size)
+    }
+
+    private func gradientOverlayCenterViewModel() -> ImageEditorViewModel {
+        let canvasSize = NSSize(width: 120, height: 80)
+        let viewModel = ImageEditorViewModel(
+            sourceName: "gradient-overlay-center.png",
+            image: solidImage(color: .white, size: canvasSize)
+        ) { _ in }
+        guard let selectedIndex = viewModel.document.selectedLayerIndex else { return viewModel }
+        viewModel.document.layers[selectedIndex].style.gradientOverlayEnabled = true
+        viewModel.document.layers[selectedIndex].style.gradientOverlayCenter = CGPoint(x: 0.5, y: 0.5)
+        return viewModel
     }
 
     private func layer(_ id: UUID, in viewModel: ImageEditorViewModel) -> ImageEditorLayer? {

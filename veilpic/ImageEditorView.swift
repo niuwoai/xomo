@@ -100,6 +100,9 @@ struct ImageEditorView: View {
     @State private var activeShapeRadialGradientHandle: ImageEditorShapeRadialGradientHandle?
     @State private var activeShapeGradientStopIndex: Int?
     @State private var activeShapeGradientMidpointIndex: Int?
+    @State private var isGradientOverlayCenterDragActive = false
+    @State private var gradientOverlayCenterDragStartLocation: CGPoint?
+    @State private var cancelledGradientOverlayCenterDragStartLocation: CGPoint?
     @State var selectedShapeGradientStopIndex = 0
     @State var activeShapeGradientTrackStopIndex: Int?
     @State var activeShapeGradientTrackMidpointIndex: Int?
@@ -276,6 +279,10 @@ struct ImageEditorView: View {
                         || isUncommittedPenPointerSequence
                 },
                 cancelSelectedObject: {
+                    if cancelGradientOverlayCenterDragForLifecycle() {
+                        NSCursor.arrow.set()
+                        return true
+                    }
                     if isMovingPathAnchor {
                         isPathAnchorDragCancelled = true
                         if viewModel.cancelMovingPathAnchor() {
@@ -2324,6 +2331,7 @@ struct ImageEditorView: View {
                     toneAirbrushOverlay(in: geometry.size)
                     layerTransformOverlay(in: geometry.size)
                     shapeGradientControlOverlay(in: geometry.size)
+                    gradientOverlayCenterControlOverlay(in: geometry.size)
                     textBoxOverflowOverlay(in: geometry.size)
                     dragOverlay(in: geometry.size)
                     rulerOverlay(in: geometry.size)
@@ -2869,7 +2877,14 @@ struct ImageEditorView: View {
                 .onChange(of: viewModel.zoom) { _ in
                     refreshCanvasCursor(in: geometry.size)
                 }
+                .onChange(of: viewModel.selectedTool) { _ in
+                    _ = cancelGradientOverlayCenterDragForLifecycle()
+                }
+                .onChange(of: viewModel.selectedLeftSidebarTab) { _ in
+                    _ = cancelGradientOverlayCenterDragForLifecycle()
+                }
                 .onDisappear {
+                    _ = cancelGradientOverlayCenterDragForLifecycle()
                     cancelPathAnchorDragForCanvasLifecycle()
                     pendingPenCreationAction = nil
                     resetPenAnchorConversionGesture()
@@ -7534,6 +7549,85 @@ struct ImageEditorView: View {
                 handle: handle
             )
         )
+    }
+
+    @ViewBuilder
+    private func gradientOverlayCenterControlOverlay(in size: CGSize) -> some View {
+        if viewModel.selectedLeftSidebarTab == .tools,
+           canvasInteractionTool == .move,
+           viewModel.document.areExtrasVisible,
+           let center = viewModel.selectedLayerGradientOverlayCanvasCenterPoint {
+            let position = viewPoint(from: center, in: size)
+            ZStack {
+                Circle()
+                    .fill(Color.black.opacity(0.62))
+                Circle()
+                    .stroke(Color.white.opacity(0.96), lineWidth: 1.5)
+                Rectangle()
+                    .fill(Color.white.opacity(0.96))
+                    .frame(width: 12, height: 1)
+                Rectangle()
+                    .fill(Color.white.opacity(0.96))
+                    .frame(width: 1, height: 12)
+            }
+            .frame(width: 16, height: 16)
+            .position(position)
+            .contentShape(Circle().inset(by: -7))
+            .highPriorityGesture(
+                DragGesture(
+                    minimumDistance: 0,
+                    coordinateSpace: .named("image-editor-canvas-space")
+                )
+                .onChanged { value in
+                    if let cancelledStart = cancelledGradientOverlayCenterDragStartLocation {
+                        guard cancelledStart != value.startLocation else { return }
+                        cancelledGradientOverlayCenterDragStartLocation = nil
+                    }
+                    if !isGradientOverlayCenterDragActive {
+                        gradientOverlayCenterDragStartLocation = value.startLocation
+                        guard viewModel.beginEditingSelectedLayerGradientOverlayCanvasCenter() else {
+                            gradientOverlayCenterDragStartLocation = nil
+                            return
+                        }
+                        isGradientOverlayCenterDragActive = true
+                    }
+                    viewModel.updateSelectedLayerGradientOverlayCanvasCenter(
+                        to: unboundedImagePoint(from: value.location, in: size)
+                    )
+                }
+                .onEnded { value in
+                    defer {
+                        isGradientOverlayCenterDragActive = false
+                        gradientOverlayCenterDragStartLocation = nil
+                    }
+                    if cancelledGradientOverlayCenterDragStartLocation == value.startLocation {
+                        cancelledGradientOverlayCenterDragStartLocation = nil
+                        return
+                    }
+                    guard isGradientOverlayCenterDragActive else { return }
+                    viewModel.updateSelectedLayerGradientOverlayCanvasCenter(
+                        to: unboundedImagePoint(from: value.location, in: size)
+                    )
+                    viewModel.finishEditingSelectedLayerGradientOverlayCanvasCenter()
+                }
+            )
+            .allowsHitTesting(viewModel.canEditSelectedLayerGradientOverlayCanvasCenter)
+            .opacity(viewModel.canEditSelectedLayerGradientOverlayCanvasCenter ? 1 : 0.55)
+            .help(L10n.text("imageEditor.help.gradientOverlayCenterHandle"))
+            .accessibilityIdentifier("image-editor-gradient-overlay-center-handle")
+        }
+    }
+
+    @discardableResult
+    private func cancelGradientOverlayCenterDragForLifecycle() -> Bool {
+        let hadActiveDrag = isGradientOverlayCenterDragActive
+            || viewModel.hasActiveGradientOverlayCenterTransaction
+        guard hadActiveDrag else { return false }
+        cancelledGradientOverlayCenterDragStartLocation = gradientOverlayCenterDragStartLocation
+        isGradientOverlayCenterDragActive = false
+        gradientOverlayCenterDragStartLocation = nil
+        _ = viewModel.cancelEditingSelectedLayerGradientOverlayCanvasCenter()
+        return true
     }
 
     @ViewBuilder
