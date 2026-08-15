@@ -1049,24 +1049,39 @@ struct ImageEditorPSDTests {
         #expect(report.issues.contains { $0.kind == .fillLayerRasterized })
     }
 
-    @Test func variableAlphaShapeGradientsUseSafePSDRasterFallback() throws {
+    @Test func variableAlphaGradientsRoundTripThroughEditablePSDDescriptors() throws {
         let canvasSize = CGSize(width: 120, height: 80)
-        let gradient = ImageEditorGradientFillContent.shapeLinear(colorStops: [
-            ImageEditorGradientColorStop(
-                position: 0,
-                red: 1,
-                green: 0,
-                blue: 0,
-                alpha: 0
-            ),
-            ImageEditorGradientColorStop(
-                position: 1,
-                red: 1,
-                green: 0,
-                blue: 0,
-                alpha: 1
-            )
-        ])
+        let gradient = ImageEditorGradientFillContent(
+            preset: .custom,
+            style: .linear,
+            angle: 18,
+            scale: 0.9,
+            colorStops: [
+                ImageEditorGradientColorStop(
+                    position: 0,
+                    red: 1,
+                    green: 0,
+                    blue: 0,
+                    alpha: 0.2,
+                    midpoint: 0.25
+                ),
+                ImageEditorGradientColorStop(
+                    position: 0.5,
+                    red: 0,
+                    green: 1,
+                    blue: 0,
+                    alpha: 0.65,
+                    midpoint: 0.7
+                ),
+                ImageEditorGradientColorStop(
+                    position: 1,
+                    red: 0,
+                    green: 0,
+                    blue: 1,
+                    alpha: 1
+                )
+            ]
+        )
         var document = ImageEditorDocument(
             sourceName: "variable-alpha-gradient.xomoproject",
             image: psdSolidImage(color: .clear, size: canvasSize)
@@ -1093,8 +1108,9 @@ struct ImageEditorPSDTests {
         ]
 
         let exported = try ImageEditorPSDCodec.encode(document: document)
-        #expect(exported.range(of: Data("GdFl".utf8)) == nil)
-        #expect(exported.range(of: Data("vscg".utf8)) == nil)
+        #expect(exported.range(of: Data("GdFl".utf8)) != nil)
+        #expect(exported.range(of: Data("vscg".utf8)) != nil)
+        #expect(exported.range(of: Data("Trns".utf8)) != nil)
 
         let restored = try ImageEditorPSDCodec.decode(
             exported,
@@ -1103,30 +1119,140 @@ struct ImageEditorPSDTests {
         let shapeLayer = try #require(
             restored.layers.first { $0.name == "Variable Alpha Gradient" }
         )
-        #expect(shapeLayer.kind.isPixel)
-        #expect(shapeLayer.shapeContent == nil)
-        #expect(shapeLayer.vectorMask != nil)
-        let transparentSide = try #require(
-            shapeLayer.image.color(at: CGPoint(x: 8, y: 26))
+        let shapeStops = try #require(
+            shapeLayer.shapeContent?.fillGradient?.normalized().colorStops
         )
-        let opaqueSide = try #require(
-            shapeLayer.image.color(at: CGPoint(x: 71, y: 26))
-        )
-        #expect(transparentSide.alphaComponent < 0.2)
-        #expect(opaqueSide.alphaComponent > 0.8)
+        #expect(shapeLayer.isShape)
+        #expect(shapeStops.count == 3)
+        #expect(abs(shapeStops[0].alpha - 0.2) < 0.000_001)
+        #expect(abs(shapeStops[1].alpha - 0.65) < 0.000_001)
+        #expect(abs(shapeStops[1].midpoint - 0.7) < 0.000_001)
+        #expect(abs(shapeStops[2].alpha - 1) < 0.000_001)
         let fillLayer = try #require(
             restored.layers.first { $0.name == "Variable Alpha Fill Layer" }
         )
-        #expect(fillLayer.kind.isPixel)
-        #expect(fillLayer.gradientFillContent == nil)
-        let fillTransparentSide = try #require(
-            fillLayer.image.color(at: CGPoint(x: 8, y: 40))
+        let fillStops = try #require(
+            fillLayer.gradientFillContent?.normalized().colorStops
         )
-        let fillOpaqueSide = try #require(
-            fillLayer.image.color(at: CGPoint(x: 111, y: 40))
+        #expect(fillLayer.isGradientFill)
+        #expect(fillStops.map(\.alpha) == shapeStops.map(\.alpha))
+        #expect(fillStops.map(\.midpoint) == shapeStops.map(\.midpoint))
+
+        var legacyOnly = exported
+        let modernKey = try #require(legacyOnly.range(of: Data("vscg".utf8)))
+        legacyOnly.replaceSubrange(modernKey, with: Data("zzzz".utf8))
+        let legacyDocument = try ImageEditorPSDCodec.decode(
+            legacyOnly,
+            sourceName: "variable-alpha-gradient-legacy.psd"
         )
-        #expect(fillTransparentSide.alphaComponent < 0.2)
-        #expect(fillOpaqueSide.alphaComponent > 0.8)
+
+        var modernOnly = exported
+        let legacyKey = try #require(modernOnly.range(of: Data("GdFl".utf8)))
+        modernOnly.replaceSubrange(legacyKey, with: Data("zzzz".utf8))
+        let modernDocument = try ImageEditorPSDCodec.decode(
+            modernOnly,
+            sourceName: "variable-alpha-gradient-modern.psd"
+        )
+
+        for variant in [legacyDocument, modernDocument] {
+            let stops = try #require(
+                variant.layers.first { $0.name == "Variable Alpha Gradient" }?
+                    .shapeContent?.fillGradient?.normalized().colorStops
+            )
+            #expect(stops.map(\.alpha) == shapeStops.map(\.alpha))
+            #expect(stops.map(\.midpoint) == shapeStops.map(\.midpoint))
+        }
+    }
+
+    @Test func independentPSDTransparencyStopsUseSafeRasterFallback() throws {
+        let canvasSize = CGSize(width: 96, height: 64)
+        let gradient = ImageEditorGradientFillContent.shapeLinear(colorStops: [
+            ImageEditorGradientColorStop(position: 0, red: 1, green: 0, blue: 0, alpha: 0),
+            ImageEditorGradientColorStop(position: 1, red: 0, green: 0, blue: 1, alpha: 1)
+        ])
+        var document = ImageEditorDocument(
+            sourceName: "independent-transparency.xomoproject",
+            image: psdSolidImage(color: .clear, size: canvasSize)
+        )
+        document.layers = [
+            ImageEditorLayer.gradientFill(
+                name: "Independent Transparency",
+                size: canvasSize,
+                content: gradient
+            )
+        ]
+
+        var exported = try ImageEditorPSDCodec.encode(document: document)
+        let transparencyKey = try #require(exported.range(of: Data("Trns".utf8)))
+        let locationKey = try #require(
+            exported.range(
+                of: Data("Lctn".utf8),
+                options: [],
+                in: transparencyKey.upperBound..<exported.endIndex
+            )
+        )
+        let typeEnd = locationKey.upperBound + 4
+        #expect(exported.subdata(in: locationKey.upperBound..<typeEnd) == Data("long".utf8))
+        exported.replaceSubrange(
+            typeEnd..<(typeEnd + 4),
+            with: Data([0, 0, 4, 0])
+        )
+
+        let restored = try ImageEditorPSDCodec.decode(
+            exported,
+            sourceName: "independent-transparency.psd"
+        )
+        let layer = try #require(restored.layers.first)
+        #expect(layer.kind.isPixel)
+        #expect(layer.gradientFillContent == nil)
+        let report = try ImageEditorPSDCodec.compatibilityReport(exported)
+        #expect(report.issues.contains { $0.kind == .fillLayerRasterized })
+    }
+
+    @Test func constantPSDTransparencyCurveRemainsEditableAcrossIndependentLocations() throws {
+        let canvasSize = CGSize(width: 88, height: 56)
+        let gradient = ImageEditorGradientFillContent.shapeLinear(colorStops: [
+            ImageEditorGradientColorStop(position: 0, red: 1, green: 0.2, blue: 0, alpha: 0.4),
+            ImageEditorGradientColorStop(position: 1, red: 0, green: 0.3, blue: 1, alpha: 0.4)
+        ])
+        var document = ImageEditorDocument(
+            sourceName: "constant-transparency.xomoproject",
+            image: psdSolidImage(color: .clear, size: canvasSize)
+        )
+        document.layers = [
+            ImageEditorLayer.gradientFill(
+                name: "Constant Transparency",
+                size: canvasSize,
+                content: gradient
+            )
+        ]
+
+        var exported = try ImageEditorPSDCodec.encode(document: document)
+        let transparencyKey = try #require(exported.range(of: Data("Trns".utf8)))
+        let locationKey = try #require(
+            exported.range(
+                of: Data("Lctn".utf8),
+                options: [],
+                in: transparencyKey.upperBound..<exported.endIndex
+            )
+        )
+        let valueStart = locationKey.upperBound + 4
+        exported.replaceSubrange(
+            valueStart..<(valueStart + 4),
+            with: Data([0, 0, 4, 0])
+        )
+
+        let restored = try ImageEditorPSDCodec.decode(
+            exported,
+            sourceName: "constant-transparency.psd"
+        )
+        let stops = try #require(
+            restored.layers.first?.gradientFillContent?.normalized().colorStops
+        )
+        #expect(stops.count == 2)
+        #expect(stops.allSatisfy { abs($0.alpha - 0.4) < 0.000_001 })
+        let report = try ImageEditorPSDCodec.compatibilityReport(exported)
+        #expect(!report.issues.contains { $0.kind == .fillLayerRasterized })
     }
 
     @Test func gradientColorMidpointsRoundTripThroughLegacyAndModernDescriptors() throws {
@@ -1190,7 +1316,7 @@ struct ImageEditorPSDTests {
             midpointPayloads.append(value)
             searchStart = valueStart + 4
         }
-        #expect(midpointPayloads == [27, 50, 27, 50])
+        #expect(midpointPayloads == [27, 50, 27, 50, 27, 50, 27, 50])
 
         var legacyOnly = exported
         let modernKey = try #require(legacyOnly.range(of: Data("vscg".utf8)))

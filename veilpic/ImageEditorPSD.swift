@@ -1423,21 +1423,14 @@ enum ImageEditorPSDCodec {
     ) -> ImageEditorGradientFillContent? {
         guard !layer.style.hasConfiguredEffects else { return nil }
         if let content = layer.gradientFillContent?.normalized() {
-            return supportsPSDGradientColorStops(content) ? content : nil
+            return content
         }
         guard let shape = layer.shapeContent,
               shape.kind == .path || exportablePSDPathContent(for: shape, layer: layer) != nil,
               shape.fillOpacity <= 0.001 || shape.fillOpacity >= 0.999,
-              let content = shape.fillGradient?.normalized(),
-              supportsPSDGradientColorStops(content)
+              let content = shape.fillGradient?.normalized()
         else { return nil }
         return content
-    }
-
-    private static func supportsPSDGradientColorStops(
-        _ content: ImageEditorGradientFillContent
-    ) -> Bool {
-        content.colorStops?.allSatisfy { $0.alpha >= 0.999_999 } ?? true
     }
 
     private static func exportGradientFillCenter(for layer: ImageEditorLayer) -> CGPoint? {
@@ -1971,7 +1964,7 @@ enum ImageEditorPSDCodec {
                   colorEntries.count >= 2,
                   colorEntries.count <= ImageEditorGradientFillContent.maximumColorStopCount
             else { return nil }
-            let stops = colorEntries.compactMap { entry -> ImageEditorGradientColorStop? in
+            let parsedColorStops = colorEntries.compactMap { entry -> ImageEditorGradientColorStop? in
                 let midpoint = entry.objectValue?["Mdpn"]?.numericValue ?? 50
                 guard let item = entry.objectValue,
                       let color = item["Clr "]?.objectValue,
@@ -1990,7 +1983,19 @@ enum ImageEditorPSDCodec {
                     midpoint: midpoint / 100
                 )
             }.sorted { $0.position < $1.position }
-            guard stops.count >= 2 else { return nil }
+            let transparencyEntries: [PSDDescriptorValue]?
+            if let transparencyValue = gradient["Trns"] {
+                guard let entries = transparencyValue.listValue else { return nil }
+                transparencyEntries = entries
+            } else {
+                transparencyEntries = nil
+            }
+            guard parsedColorStops.count == colorEntries.count,
+                  let stops = gradientStops(
+                      applying: transparencyEntries,
+                      to: parsedColorStops
+                  )
+            else { return nil }
             let angle = descriptor["Angl"]?.numericValue ?? 0
             let scale = (descriptor["Scl "]?.numericValue ?? 100) / 100
             let offset = descriptor["Ofst"]?.objectValue
@@ -2016,6 +2021,65 @@ enum ImageEditorPSDCodec {
             return PSDParsedGradientFill(content: content, center: center)
         } catch {
             return nil
+        }
+    }
+
+    private static func gradientStops(
+        applying transparencyEntries: [PSDDescriptorValue]?,
+        to colorStops: [ImageEditorGradientColorStop]
+    ) -> [ImageEditorGradientColorStop]? {
+        guard let transparencyEntries else { return colorStops }
+        guard transparencyEntries.count >= 2,
+              transparencyEntries.count <= ImageEditorGradientFillContent.maximumColorStopCount
+        else { return nil }
+        let transparencyStops = transparencyEntries.compactMap { entry -> (position: Double, alpha: Double, midpoint: Double)? in
+            let midpoint = entry.objectValue?["Mdpn"]?.numericValue ?? 50
+            guard let item = entry.objectValue,
+                  let opacity = item["Opct"]?.numericValue,
+                  let location = item["Lctn"]?.numericValue,
+                  opacity.isFinite,
+                  location.isFinite,
+                  midpoint.isFinite,
+                  opacity >= 0,
+                  opacity <= 100,
+                  location >= 0,
+                  location <= 4096,
+                  midpoint >= 0,
+                  midpoint <= 100
+            else { return nil }
+            return (
+                position: location > 1 ? location / 4096 : location,
+                alpha: opacity / 100,
+                midpoint: midpoint / 100
+            )
+        }.sorted { $0.position < $1.position }
+        guard transparencyStops.count == transparencyEntries.count else { return nil }
+
+        let alpha = transparencyStops[0].alpha
+        if transparencyStops.allSatisfy({ abs($0.alpha - alpha) < 0.000_001 }) {
+            return colorStops.map { stop in
+                var stop = stop
+                stop.alpha = alpha
+                return stop
+            }
+        }
+
+        let locationTolerance = 0.5 / 4096 + 0.000_001
+        let midpointTolerance = 0.005 + 0.000_001
+        guard transparencyStops.count == colorStops.count else { return nil }
+        for index in colorStops.indices {
+            guard abs(transparencyStops[index].position - colorStops[index].position) <= locationTolerance else {
+                return nil
+            }
+            if index < colorStops.index(before: colorStops.endIndex),
+               abs(transparencyStops[index].midpoint - colorStops[index].midpoint) > midpointTolerance {
+                return nil
+            }
+        }
+        return zip(colorStops, transparencyStops).map { colorStop, transparencyStop in
+            var stop = colorStop
+            stop.alpha = transparencyStop.alpha
+            return stop
         }
     }
 
@@ -3576,13 +3640,39 @@ private extension Data {
             colorList.appendASCII("Objc")
             colorList.append(item)
         }
+        let transparencyItems = stops.map { stop in
+            Data.descriptorBody(name: "", classID: "TrnS", items: [
+                Data.descriptorItem(
+                    key: "Opct",
+                    type: "UntF",
+                    payload: Data(unit: "#Prc", value: stop.alpha * 100)
+                ),
+                Data.descriptorItem(
+                    key: "Lctn",
+                    type: "long",
+                    payload: Data(intPayload: Int32((stop.position * 4096).rounded()))
+                ),
+                Data.descriptorItem(
+                    key: "Mdpn",
+                    type: "long",
+                    payload: Data(intPayload: Int32((stop.midpoint * 100).rounded()))
+                )
+            ])
+        }
+        var transparencyList = Data()
+        transparencyList.appendUInt32(UInt32(transparencyItems.count))
+        for item in transparencyItems {
+            transparencyList.appendASCII("Objc")
+            transparencyList.append(item)
+        }
         let gradient = Data.descriptorBody(name: "", classID: "Grdn", items: [
             Data.descriptorItem(
                 key: "GrdF",
                 type: "enum",
                 payload: Data.descriptorEnumPayload(enumType: "GrdF", value: "CstS")
             ),
-            Data.descriptorItem(key: "Clrs", type: "VlLs", payload: colorList)
+            Data.descriptorItem(key: "Clrs", type: "VlLs", payload: colorList),
+            Data.descriptorItem(key: "Trns", type: "VlLs", payload: transparencyList)
         ])
         var items = [
             Data.descriptorItem(key: "Grad", type: "Objc", payload: gradient),
