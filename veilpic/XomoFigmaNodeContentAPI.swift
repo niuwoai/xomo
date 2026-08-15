@@ -1491,8 +1491,7 @@ enum XomoFigmaNodeImportMapper {
         let colors = stops.compactMap(normalizedGradientStopColor)
         guard colors.count == stops.count,
               let first = colors.first,
-              let last = colors.last,
-              colors.allSatisfy({ abs($0.alpha - first.alpha) <= 0.001 })
+              let last = colors.last
         else { return nil }
         let lastIndex = stops.index(before: stops.endIndex)
         let normalizedPositions = stops.indices.map { index in
@@ -1502,21 +1501,17 @@ enum XomoFigmaNodeImportMapper {
         }
 
         return ResolvedGradientStops(
-            startColor: opaqueColor(first),
-            endColor: opaqueColor(last),
-            opacity: first.alpha * paintOpacity,
+            startColor: first,
+            endColor: last,
+            opacity: paintOpacity,
             colorStops: zip(normalizedPositions, colors).map { pair in
                 let (position, color) = pair
                 return XomoFigmaPlanGradientStop(
                     position: position,
-                    color: opaqueColor(color)
+                    color: color
                 )
             }
         )
-    }
-
-    private static func opaqueColor(_ color: XomoFigmaPlanColor) -> XomoFigmaPlanColor {
-        XomoFigmaPlanColor(red: color.red, green: color.green, blue: color.blue, alpha: 1)
     }
 
     nonisolated static func resolveGradientStopColor(

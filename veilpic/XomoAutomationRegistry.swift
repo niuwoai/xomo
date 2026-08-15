@@ -2756,12 +2756,6 @@ final class XomoAutomationRegistry {
             : requiredShapeGradientStopColorComponent(
                 "alpha", in: object, stopIndex: stopIndex
             )
-        guard abs(alpha - 1) <= 0.000_1 else {
-            throw XomoAutomationCallError.invalidArgument(
-                "fillGradient.stops[\(stopIndex)].color.alpha must be 1; "
-                    + "use fillOpacity for the shared gradient opacity"
-            )
-        }
         return NSColor(
             deviceRed: CGFloat(red),
             green: CGFloat(green),
@@ -7103,6 +7097,17 @@ private extension XomoAutomationRegistry {
         ],
         required: ["red", "green", "blue"]
     )
+    static let gradientFillStopColorSchema = XomoAutomationSchema.object(
+        properties: [
+            "red": shapeUnitIntervalSchema(description: "Red component"),
+            "green": shapeUnitIntervalSchema(description: "Green component"),
+            "blue": shapeUnitIntervalSchema(description: "Blue component"),
+            "alpha": shapeUnitIntervalSchema(
+                description: "Optional per-stop alpha; defaults to 1"
+            )
+        ],
+        required: ["red", "green", "blue"]
+    )
     static let gradientFillStopsSchema: XomoJSONValue = .object([
         "type": .string("array"),
         "description": .string("Optional ordered 2 to 16 color stops spanning positions 0 through 1"),
@@ -7112,7 +7117,7 @@ private extension XomoAutomationRegistry {
                 "midpoint": shapeUnitIntervalSchema(
                     description: "Optional interpolation midpoint after this stop; defaults to 0.5"
                 ),
-                "color": gradientFillColorSchema
+                "color": gradientFillStopColorSchema
             ],
             required: ["position", "color"]
         ),
@@ -7135,7 +7140,7 @@ private extension XomoAutomationRegistry {
                         "midpoint": shapeUnitIntervalSchema(
                             description: "Optional interpolation midpoint after this stop; defaults to 0.5"
                         ),
-                        "color": shapeOpaqueColorSchema
+                        "color": shapeColorSchema
                     ],
                     required: ["position", "color"]
                 ),

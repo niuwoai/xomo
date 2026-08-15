@@ -153,7 +153,13 @@ extension ImageEditorGradientFillContent {
             let lower = stops[index - 1]
             let amount = lower.interpolationAmount(to: upper, at: value)
             let vector = lower.vector + (upper.vector - lower.vector) * amount
-            return NSColor(deviceRed: vector.x, green: vector.y, blue: vector.z, alpha: 1)
+            let alpha = lower.alpha + (upper.alpha - lower.alpha) * amount
+            return NSColor(
+                deviceRed: vector.x,
+                green: vector.y,
+                blue: vector.z,
+                alpha: alpha
+            )
         }
         return last.color
     }

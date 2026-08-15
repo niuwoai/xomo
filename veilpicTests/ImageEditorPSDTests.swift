@@ -1045,9 +1045,88 @@ struct ImageEditorPSDTests {
         #expect(layer.kind.isPixel)
         #expect(layer.shapeContent == nil)
         #expect(layer.vectorMask != nil)
-
         let report = try ImageEditorPSDCodec.compatibilityReport(exported)
         #expect(report.issues.contains { $0.kind == .fillLayerRasterized })
+    }
+
+    @Test func variableAlphaShapeGradientsUseSafePSDRasterFallback() throws {
+        let canvasSize = CGSize(width: 120, height: 80)
+        let gradient = ImageEditorGradientFillContent.shapeLinear(colorStops: [
+            ImageEditorGradientColorStop(
+                position: 0,
+                red: 1,
+                green: 0,
+                blue: 0,
+                alpha: 0
+            ),
+            ImageEditorGradientColorStop(
+                position: 1,
+                red: 1,
+                green: 0,
+                blue: 0,
+                alpha: 1
+            )
+        ])
+        var document = ImageEditorDocument(
+            sourceName: "variable-alpha-gradient.xomoproject",
+            image: psdSolidImage(color: .clear, size: canvasSize)
+        )
+        document.layers = [
+            ImageEditorLayer.shape(
+                name: "Variable Alpha Gradient",
+                frame: CGRect(x: 20, y: 14, width: 80, height: 52),
+                content: ImageEditorShapeContent(
+                    kind: .rectangle,
+                    fillColor: .clear,
+                    fillGradient: gradient,
+                    fillOpacity: 1,
+                    strokeColor: .clear,
+                    strokeWidth: 1,
+                    strokeOpacity: 0
+                )
+            ),
+            ImageEditorLayer.gradientFill(
+                name: "Variable Alpha Fill Layer",
+                size: canvasSize,
+                content: gradient
+            )
+        ]
+
+        let exported = try ImageEditorPSDCodec.encode(document: document)
+        #expect(exported.range(of: Data("GdFl".utf8)) == nil)
+        #expect(exported.range(of: Data("vscg".utf8)) == nil)
+
+        let restored = try ImageEditorPSDCodec.decode(
+            exported,
+            sourceName: "variable-alpha-gradient.psd"
+        )
+        let shapeLayer = try #require(
+            restored.layers.first { $0.name == "Variable Alpha Gradient" }
+        )
+        #expect(shapeLayer.kind.isPixel)
+        #expect(shapeLayer.shapeContent == nil)
+        #expect(shapeLayer.vectorMask != nil)
+        let transparentSide = try #require(
+            shapeLayer.image.color(at: CGPoint(x: 8, y: 26))
+        )
+        let opaqueSide = try #require(
+            shapeLayer.image.color(at: CGPoint(x: 71, y: 26))
+        )
+        #expect(transparentSide.alphaComponent < 0.2)
+        #expect(opaqueSide.alphaComponent > 0.8)
+        let fillLayer = try #require(
+            restored.layers.first { $0.name == "Variable Alpha Fill Layer" }
+        )
+        #expect(fillLayer.kind.isPixel)
+        #expect(fillLayer.gradientFillContent == nil)
+        let fillTransparentSide = try #require(
+            fillLayer.image.color(at: CGPoint(x: 8, y: 40))
+        )
+        let fillOpaqueSide = try #require(
+            fillLayer.image.color(at: CGPoint(x: 111, y: 40))
+        )
+        #expect(fillTransparentSide.alphaComponent < 0.2)
+        #expect(fillOpaqueSide.alphaComponent > 0.8)
     }
 
     @Test func gradientColorMidpointsRoundTripThroughLegacyAndModernDescriptors() throws {

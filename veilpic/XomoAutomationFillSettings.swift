@@ -298,13 +298,15 @@ extension XomoAutomationRegistry {
             let color = try gradientColor(
                 "color",
                 in: stop,
-                path: "stops[\(index)].color"
+                path: "stops[\(index)].color",
+                allowsAlpha: true
             )
             return ImageEditorGradientColorStop(
                 position: position,
                 red: color.red,
                 green: color.green,
                 blue: color.blue,
+                alpha: color.alpha,
                 midpoint: midpoint
             )
         }
@@ -361,7 +363,8 @@ extension XomoAutomationRegistry {
                         "color": gradientColorJSON(
                             red: stop.red,
                             green: stop.green,
-                            blue: stop.blue
+                            blue: stop.blue,
+                            alpha: stop.alpha
                         )
                     ])
                 })
@@ -373,34 +376,42 @@ extension XomoAutomationRegistry {
     private func gradientColor(
         _ key: String,
         in arguments: [String: XomoJSONValue],
-        path: String? = nil
-    ) throws -> (red: Double, green: Double, blue: Double) {
+        path: String? = nil,
+        allowsAlpha: Bool = false
+    ) throws -> (red: Double, green: Double, blue: Double, alpha: Double) {
         guard let object = arguments[key]?.objectValue else {
             throw XomoAutomationCallError.invalidArgument("\(key) must be an object")
         }
         let colorPath = path ?? key
-        guard object["alpha"] == nil else {
+        guard allowsAlpha || object["alpha"] == nil else {
             throw XomoAutomationCallError.invalidArgument(
                 "\(colorPath).alpha is unsupported; gradient fill colors use RGB channels"
             )
         }
+        let alpha = object["alpha"] == nil
+            ? ImageEditorGradientColorStop.defaultAlpha
+            : try unitNumber("alpha", in: object, path: colorPath)
         return (
             try unitNumber("red", in: object, path: colorPath),
             try unitNumber("green", in: object, path: colorPath),
-            try unitNumber("blue", in: object, path: colorPath)
+            try unitNumber("blue", in: object, path: colorPath),
+            alpha
         )
     }
 
     private func gradientColorJSON(
         red: Double,
         green: Double,
-        blue: Double
+        blue: Double,
+        alpha: Double? = nil
     ) -> XomoJSONValue {
-        .object([
+        var object: [String: XomoJSONValue] = [
             "red": .number(red),
             "green": .number(green),
             "blue": .number(blue)
-        ])
+        ]
+        if let alpha { object["alpha"] = .number(alpha) }
+        return .object(object)
     }
 
     private func unitNumber(

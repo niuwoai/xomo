@@ -1226,11 +1226,13 @@ enum ImageEditorGradientFillStyle: String, CaseIterable, Identifiable {
 
 struct ImageEditorGradientColorStop: Equatable, Codable, Sendable {
     static let defaultMidpoint = 0.5
+    static let defaultAlpha = 1.0
 
     var position: Double
     var red: Double
     var green: Double
     var blue: Double
+    var alpha: Double
     var midpoint: Double
 
     enum CodingKeys: String, CodingKey {
@@ -1238,6 +1240,7 @@ struct ImageEditorGradientColorStop: Equatable, Codable, Sendable {
         case red
         case green
         case blue
+        case alpha
         case midpoint
     }
 
@@ -1246,12 +1249,14 @@ struct ImageEditorGradientColorStop: Equatable, Codable, Sendable {
         red: Double,
         green: Double,
         blue: Double,
+        alpha: Double = Self.defaultAlpha,
         midpoint: Double = Self.defaultMidpoint
     ) {
         self.position = position
         self.red = red
         self.green = green
         self.blue = blue
+        self.alpha = alpha
         self.midpoint = midpoint
     }
 
@@ -1266,6 +1271,7 @@ struct ImageEditorGradientColorStop: Equatable, Codable, Sendable {
             red: Double(resolved.redComponent),
             green: Double(resolved.greenComponent),
             blue: Double(resolved.blueComponent),
+            alpha: Double(resolved.alphaComponent),
             midpoint: midpoint
         )
     }
@@ -1276,6 +1282,8 @@ struct ImageEditorGradientColorStop: Equatable, Codable, Sendable {
         red = try container.decode(Double.self, forKey: .red)
         green = try container.decode(Double.self, forKey: .green)
         blue = try container.decode(Double.self, forKey: .blue)
+        alpha = try container.decodeIfPresent(Double.self, forKey: .alpha)
+            ?? Self.defaultAlpha
         midpoint = try container.decodeIfPresent(Double.self, forKey: .midpoint)
             ?? Self.defaultMidpoint
     }
@@ -1286,11 +1294,12 @@ struct ImageEditorGradientColorStop: Equatable, Codable, Sendable {
         try container.encode(red, forKey: .red)
         try container.encode(green, forKey: .green)
         try container.encode(blue, forKey: .blue)
+        try container.encode(alpha, forKey: .alpha)
         try container.encode(midpoint, forKey: .midpoint)
     }
 
     var color: NSColor {
-        NSColor(deviceRed: red, green: green, blue: blue, alpha: 1)
+        NSColor(deviceRed: red, green: green, blue: blue, alpha: alpha)
     }
 
     func normalized() -> ImageEditorGradientColorStop {
@@ -1299,6 +1308,7 @@ struct ImageEditorGradientColorStop: Equatable, Codable, Sendable {
             red: max(0, min(1, red.isFinite ? red : 0)),
             green: max(0, min(1, green.isFinite ? green : 0)),
             blue: max(0, min(1, blue.isFinite ? blue : 0)),
+            alpha: max(0, min(1, alpha.isFinite ? alpha : Self.defaultAlpha)),
             midpoint: max(
                 0,
                 min(1, midpoint.isFinite ? midpoint : Self.defaultMidpoint)
@@ -1309,6 +1319,11 @@ struct ImageEditorGradientColorStop: Equatable, Codable, Sendable {
     var vector: SIMD3<Double> {
         let value = normalized()
         return SIMD3<Double>(value.red, value.green, value.blue)
+    }
+
+    var rgbaVector: SIMD4<Double> {
+        let value = normalized()
+        return SIMD4<Double>(value.red, value.green, value.blue, value.alpha)
     }
 
     func interpolationAmount(to upper: ImageEditorGradientColorStop, at position: Double) -> Double {
@@ -1484,6 +1499,7 @@ struct ImageEditorGradientFillContent: Equatable, Codable {
                     red: stop.red,
                     green: stop.green,
                     blue: stop.blue,
+                    alpha: stop.alpha,
                     midpoint: index > forwardStops.startIndex
                         ? 1 - forwardStops[index - 1].midpoint
                         : 0.5
@@ -1507,11 +1523,12 @@ struct ImageEditorGradientFillContent: Equatable, Codable {
                 let point = SIMD2<Double>(Double(x), Double(y))
                 let t = content.progress(at: point, center: center, direction: direction, span: span, cornerDistance: cornerDistance)
                 let color = Self.interpolatedColor(at: t, stops: stops)
+                let alpha = Self.zeroOne(color.w)
                 let offset = y * bytesPerRow + x * bytesPerPixel
-                pixels[offset] = Self.byte(color.x)
-                pixels[offset + 1] = Self.byte(color.y)
-                pixels[offset + 2] = Self.byte(color.z)
-                pixels[offset + 3] = 255
+                pixels[offset] = Self.byte(color.x * alpha)
+                pixels[offset + 1] = Self.byte(color.y * alpha)
+                pixels[offset + 2] = Self.byte(color.z * alpha)
+                pixels[offset + 3] = Self.byte(alpha)
             }
         }
 
@@ -1588,18 +1605,18 @@ struct ImageEditorGradientFillContent: Equatable, Codable {
     private static func interpolatedColor(
         at progress: Double,
         stops: [ImageEditorGradientColorStop]
-    ) -> SIMD3<Double> {
+    ) -> SIMD4<Double> {
         guard let first = stops.first, let last = stops.last else { return .zero }
-        if progress <= first.position { return first.vector }
-        if progress >= last.position { return last.vector }
+        if progress <= first.position { return first.rgbaVector }
+        if progress >= last.position { return last.rgbaVector }
         for index in 1..<stops.count {
             let upper = stops[index]
             guard progress <= upper.position else { continue }
             let lower = stops[index - 1]
             let amount = lower.interpolationAmount(to: upper, at: progress)
-            return lower.vector + (upper.vector - lower.vector) * amount
+            return lower.rgbaVector + (upper.rgbaVector - lower.rgbaVector) * amount
         }
-        return last.vector
+        return last.rgbaVector
     }
 
     private static func zeroOne(_ value: Double) -> Double {

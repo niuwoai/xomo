@@ -1423,14 +1423,21 @@ enum ImageEditorPSDCodec {
     ) -> ImageEditorGradientFillContent? {
         guard !layer.style.hasConfiguredEffects else { return nil }
         if let content = layer.gradientFillContent?.normalized() {
-            return content
+            return supportsPSDGradientColorStops(content) ? content : nil
         }
         guard let shape = layer.shapeContent,
               shape.kind == .path || exportablePSDPathContent(for: shape, layer: layer) != nil,
               shape.fillOpacity <= 0.001 || shape.fillOpacity >= 0.999,
-              let content = shape.fillGradient?.normalized()
+              let content = shape.fillGradient?.normalized(),
+              supportsPSDGradientColorStops(content)
         else { return nil }
         return content
+    }
+
+    private static func supportsPSDGradientColorStops(
+        _ content: ImageEditorGradientFillContent
+    ) -> Bool {
+        content.colorStops?.allSatisfy { $0.alpha >= 0.999_999 } ?? true
     }
 
     private static func exportGradientFillCenter(for layer: ImageEditorLayer) -> CGPoint? {

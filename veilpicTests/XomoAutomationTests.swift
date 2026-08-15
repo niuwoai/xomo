@@ -5388,12 +5388,19 @@ struct XomoAutomationTests {
         registry.register(viewModel)
         defer { registry.unregister(viewModel) }
 
-        func color(_ red: Double, _ green: Double, _ blue: Double) -> XomoJSONValue {
-            .object([
+        func color(
+            _ red: Double,
+            _ green: Double,
+            _ blue: Double,
+            alpha: Double? = nil
+        ) -> XomoJSONValue {
+            var value: [String: XomoJSONValue] = [
                 "red": .number(red),
                 "green": .number(green),
                 "blue": .number(blue)
-            ])
+            ]
+            if let alpha { value["alpha"] = .number(alpha) }
+            return .object(value)
         }
 
         let toolsResponse = registry.execute(request(operation: "tools"))
@@ -5456,12 +5463,12 @@ struct XomoAutomationTests {
                 .object([
                     "position": .number(0),
                     "midpoint": .number(0.25),
-                    "color": color(0.10, 0.20, 0.30)
+                    "color": color(0.10, 0.20, 0.30, alpha: 0.2)
                 ]),
                 .object([
                     "position": .number(0.45),
                     "midpoint": .number(0.75),
-                    "color": color(0.40, 0.50, 0.60)
+                    "color": color(0.40, 0.50, 0.60, alpha: 0.65)
                 ]),
                 .object(["position": .number(1), "color": color(0.80, 0.90, 1)])
             ])
@@ -5486,8 +5493,10 @@ struct XomoAutomationTests {
         #expect(editable.scale == 1.75)
         #expect(editable.colorStops?.count == 3)
         #expect(editable.colorStops?[0].midpoint == 0.25)
+        #expect(editable.colorStops?[0].alpha == 0.2)
         #expect(editable.colorStops?[1].position == 0.45)
         #expect(editable.colorStops?[1].midpoint == 0.75)
+        #expect(editable.colorStops?[1].alpha == 0.65)
         #expect(editable.colorStops?[2].midpoint == ImageEditorGradientColorStop.defaultMidpoint)
         #expect(editable.colorStops?[1].green == 0.50)
         #expect(locked.preset == .sunset)
@@ -5515,7 +5524,9 @@ struct XomoAutomationTests {
         #expect(editableResult?["stops"]?.arrayValue?.count == 3)
         let returnedStops = editableResult?["stops"]?.arrayValue?.compactMap(\.objectValue)
         #expect(returnedStops?[0]["midpoint"] == .number(0.25))
+        #expect(returnedStops?[0]["color"]?.objectValue?["alpha"] == .number(0.2))
         #expect(returnedStops?[1]["midpoint"] == .number(0.75))
+        #expect(returnedStops?[1]["color"]?.objectValue?["alpha"] == .number(0.65))
         #expect(returnedStops?[2]["midpoint"] == .number(0.5))
 
         var invalidArguments = setArguments
@@ -5539,8 +5550,10 @@ struct XomoAutomationTests {
         #expect(retained.colorStops?.count == 3)
         #expect(retained.colorStops?[0].red == 0.95)
         #expect(retained.colorStops?[0].midpoint == 0.25)
+        #expect(retained.colorStops?[0].alpha == 0.2)
         #expect(retained.colorStops?[1].position == 0.45)
         #expect(retained.colorStops?[1].midpoint == 0.75)
+        #expect(retained.colorStops?[1].alpha == 0.65)
         #expect(retained.colorStops?[1].green == 0.50)
     }
 
@@ -6893,7 +6906,8 @@ struct XomoAutomationTests {
                             "position": .number(0),
                             "midpoint": .number(0.2),
                             "color": .object([
-                                "red": .number(1), "green": .number(0), "blue": .number(0)
+                                "red": .number(1), "green": .number(0), "blue": .number(0),
+                                "alpha": .number(0.3)
                             ])
                         ]),
                         .object([
@@ -6924,6 +6938,7 @@ struct XomoAutomationTests {
         #expect(shape.fillGradient?.scale == 1.5)
         #expect(shape.fillGradient?.shapeColorStops.count == 3)
         #expect(shape.fillGradient?.shapeColorStops[0].midpoint == 0.2)
+        #expect(shape.fillGradient?.shapeColorStops[0].alpha == 0.3)
         #expect(shape.fillGradient?.shapeColorStops[1].position == 0.4)
         #expect(shape.fillGradient?.shapeColorStops[1].midpoint == 0.8)
         #expect(
@@ -6953,6 +6968,9 @@ struct XomoAutomationTests {
         }
         #expect(stopResult.count == 3)
         #expect(stopResult[0].objectValue?["midpoint"] == .number(0.2))
+        #expect(
+            stopResult[0].objectValue?["color"]?.objectValue?["alpha"] == .number(0.3)
+        )
         #expect(stopResult[1].objectValue?["midpoint"] == .number(0.8))
         #expect(stopResult[2].objectValue?["midpoint"] == .number(0.5))
 
@@ -7692,7 +7710,7 @@ struct XomoAutomationTests {
         }
         #expect(fillColorProperties?["alpha"]?.objectValue?["minimum"] == .number(0))
         #expect(fillColorProperties?["alpha"]?.objectValue?["maximum"] == .number(1))
-        #expect(stopColorProperties?["alpha"]?.objectValue?["minimum"] == .number(1))
+        #expect(stopColorProperties?["alpha"]?.objectValue?["minimum"] == .number(0))
         #expect(stopColorProperties?["alpha"]?.objectValue?["maximum"] == .number(1))
     }
 
@@ -7748,9 +7766,9 @@ struct XomoAutomationTests {
             (
                 .object([
                     "red": .number(1), "green": .number(0), "blue": .number(0),
-                    "alpha": .number(0.5)
+                    "alpha": .number(1.01)
                 ]),
-                "fillGradient.stops[0].color.alpha must be 1"
+                "fillGradient.stops[0].color.alpha must be between 0 and 1"
             )
         ]
 
@@ -7801,7 +7819,7 @@ struct XomoAutomationTests {
                             "position": .number(0),
                             "color": .object([
                                 "red": .number(0), "green": .number(1), "blue": .number(0),
-                                "alpha": .number(1)
+                                "alpha": .number(0.35)
                             ])
                         ]),
                         terminalStop
@@ -7811,6 +7829,10 @@ struct XomoAutomationTests {
         ))
         #expect(validUpdate.ok)
         #expect(viewModel.document.selectedLayer?.shapeContent?.fillGradient?.shapeColorStops.count == 2)
+        #expect(
+            viewModel.document.selectedLayer?.shapeContent?.fillGradient?
+                .shapeColorStops[0].alpha == 0.35
+        )
     }
 
     @Test func gradientColorSchemasMatchShapeAndFillLayerAlphaSemantics() throws {
@@ -7835,7 +7857,7 @@ struct XomoAutomationTests {
 
         var alphaStartArguments = baseArguments
         var alphaStart = rgb
-        alphaStart["alpha"] = .number(1)
+        alphaStart["alpha"] = .number(0.35)
         alphaStartArguments["startColor"] = .object(alphaStart)
         let invalidStart = registry.execute(request(
             operation: "call",
@@ -7858,15 +7880,25 @@ struct XomoAutomationTests {
                 "color": .object(rgb)
             ])
         ])
-        let invalidStop = registry.execute(request(
+        let validStop = registry.execute(request(
             operation: "call",
             name: "xomo.layer.create",
             arguments: alphaStopArguments
         ))
-        #expect(!invalidStop.ok)
-        #expect(invalidStop.error?.contains("stops[0].color.alpha is unsupported") == true)
-        #expect(viewModel.document.layers.count == stableLayerCount)
-        #expect(viewModel.document.history.count == stableHistoryCount)
+        #expect(validStop.ok)
+        #expect(viewModel.document.layers.count == stableLayerCount + 1)
+        #expect(viewModel.document.history.count == stableHistoryCount + 1)
+        #expect(viewModel.document.selectedLayer?.gradientFillContent?.colorStops?[0].alpha == 0.35)
+        #expect(viewModel.document.selectedLayer?.gradientFillContent?.colorStops?[1].alpha == 1)
+        let settings = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.gradient_fill_settings",
+            arguments: ["action": .string("get")]
+        ))
+        #expect(
+            settings.result?.arrayValue?[0].objectValue?["stops"]?.arrayValue?[0]
+                .objectValue?["color"]?.objectValue?["alpha"] == .number(0.35)
+        )
 
         let toolsResponse = registry.execute(request(operation: "tools"))
         let tools = try #require(toolsResponse.result?.arrayValue)
@@ -7886,7 +7918,7 @@ struct XomoAutomationTests {
             .objectValue?["alpha"]?.objectValue
         #expect(shapeStartAlpha?["minimum"] == .number(1))
         #expect(shapeStartAlpha?["maximum"] == .number(1))
-        #expect(shapeStopAlpha?["minimum"] == .number(1))
+        #expect(shapeStopAlpha?["minimum"] == .number(0))
         #expect(shapeStopAlpha?["maximum"] == .number(1))
 
         let layerProperties = layerCreate["inputSchema"]?.objectValue?["properties"]?.objectValue
@@ -7896,7 +7928,8 @@ struct XomoAutomationTests {
             .objectValue?["properties"]?.objectValue?["color"]?.objectValue?["properties"]?
             .objectValue
         #expect(layerStartColorProperties?["alpha"] == nil)
-        #expect(layerStopColorProperties?["alpha"] == nil)
+        #expect(layerStopColorProperties?["alpha"]?.objectValue?["minimum"] == .number(0))
+        #expect(layerStopColorProperties?["alpha"]?.objectValue?["maximum"] == .number(1))
         #expect(shapeProperties?["fillColor"]?.objectValue?["properties"]?
             .objectValue?["alpha"]?.objectValue?["minimum"] == .number(0))
         #expect(shapeProperties?["fillColor"]?.objectValue?["properties"]?
@@ -8039,6 +8072,26 @@ struct XomoAutomationTests {
             (
                 .object(["position": .number(0), "color": .string("red")]),
                 "stops[0].color must be an object"
+            ),
+            (
+                .object([
+                    "position": .number(0),
+                    "color": .object([
+                        "red": .number(1), "green": .number(0), "blue": .number(0),
+                        "alpha": .string("0.5")
+                    ])
+                ]),
+                "stops[0].color.alpha must be a number"
+            ),
+            (
+                .object([
+                    "position": .number(0),
+                    "color": .object([
+                        "red": .number(1), "green": .number(0), "blue": .number(0),
+                        "alpha": .number(1.01)
+                    ])
+                ]),
+                "stops[0].color.alpha must be between 0 and 1"
             )
         ]
 

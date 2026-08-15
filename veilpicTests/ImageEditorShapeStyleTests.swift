@@ -13,6 +13,62 @@ import Testing
 @Suite
 @MainActor
 struct ImageEditorShapeStyleTests {
+    @Test func gradientColorStopAlphaRendersAndPersistsAcrossProjects() throws {
+        let gradient = ImageEditorGradientFillContent.shapeLinear(colorStops: [
+            ImageEditorGradientColorStop(
+                position: 0,
+                red: 1,
+                green: 0,
+                blue: 0,
+                alpha: 0
+            ),
+            ImageEditorGradientColorStop(
+                position: 1,
+                red: 1,
+                green: 0,
+                blue: 0,
+                alpha: 1
+            )
+        ])
+        let midpointColor = try #require(
+            gradient.shapeColor(at: 0.5).usingColorSpace(.deviceRGB)
+        )
+        #expect(abs(midpointColor.alphaComponent - 0.5) < 0.001)
+
+        let rendered = gradient.renderedImage(size: CGSize(width: 101, height: 1))
+        let renderedMidpoint = try #require(rendered.color(at: CGPoint(x: 50, y: 0)))
+        #expect(abs(renderedMidpoint.redComponent - 1) < 0.025)
+        #expect(abs(renderedMidpoint.alphaComponent - 0.5) < 0.025)
+
+        let viewModel = makeViewModel()
+        viewModel.drawShape(
+            from: CGPoint(x: 10, y: 10),
+            to: CGPoint(x: 110, y: 70),
+            ellipse: false,
+            fillGradient: gradient,
+            fillOpacity: 0.8
+        )
+        let shapeImage = try #require(
+            viewModel.document.selectedLayer?.shapeContent?.renderedImage(
+                size: CGSize(width: 101, height: 61)
+            )
+        )
+        let shapeMidpoint = try #require(shapeImage.color(at: CGPoint(x: 50, y: 30)))
+        #expect(abs(shapeMidpoint.alphaComponent - 0.4) < 0.04)
+
+        let projectData = try viewModel.projectData()
+        let reopened = makeViewModel()
+        try reopened.loadProjectData(projectData)
+        #expect(reopened.selectedShapeGradientColorStops[0].alpha == 0)
+        #expect(reopened.selectedShapeGradientColorStops[1].alpha == 1)
+
+        let legacyStop = try JSONDecoder().decode(
+            ImageEditorGradientColorStop.self,
+            from: Data(#"{"position":0,"red":1,"green":0,"blue":0}"#.utf8)
+        )
+        #expect(legacyStop.alpha == ImageEditorGradientColorStop.defaultAlpha)
+    }
+
     @Test func gradientColorMidpointsShapeRenderingAndPersistAcrossProjects() throws {
         let gradient = ImageEditorGradientFillContent.shapeLinear(colorStops: [
             ImageEditorGradientColorStop(

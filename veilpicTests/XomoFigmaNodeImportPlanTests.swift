@@ -842,15 +842,18 @@ struct XomoFigmaNodeImportPlanTests {
         #expect(abs((editable.linearGradientFill?.scale ?? 0) - 0.6) < 0.001)
         #expect(abs((editable.linearGradientFill?.centerX ?? 0) - 0.4) < 0.001)
         #expect(editable.linearGradientFill?.centerY == 0.5)
-        #expect(editable.linearGradientFill?.opacity == 0.4)
+        #expect(editable.linearGradientFill?.opacity == 0.8)
+        #expect(editable.linearGradientFill?.colorStops[0].color.alpha == 0.5)
         #expect(!editable.issues.contains(.unsupportedPaint))
         #expect(multiStop.fidelity == .exact)
         #expect(multiStop.linearGradientFill?.colorStops.count == 3)
         #expect(multiStop.linearGradientFill?.colorStops[1].position == 0.5)
         #expect(!multiStop.issues.contains(.unsupportedPaint))
-        #expect(differentAlpha.fidelity == .partial)
-        #expect(differentAlpha.linearGradientFill == nil)
-        #expect(differentAlpha.issues.contains(.unsupportedPaint))
+        #expect(differentAlpha.fidelity == .exact)
+        #expect(differentAlpha.linearGradientFill?.colorStops[0].color.alpha == 1)
+        #expect(differentAlpha.linearGradientFill?.colorStops[1].color.alpha == 0.5)
+        #expect(differentAlpha.linearGradientFill?.colorStops[2].color.alpha == 1)
+        #expect(!differentAlpha.issues.contains(.unsupportedPaint))
 
         let materialized = XomoFigmaNodeMaterializer.materialize(
             plan: plan,
@@ -863,12 +866,19 @@ struct XomoFigmaNodeImportPlanTests {
         #expect(abs((shape.fillGradient?.scale ?? 0) - 0.6) < 0.001)
         #expect(abs(shape.fillGradientCenter.x - 0.4) < 0.001)
         #expect(shape.fillGradientCenter.y == 0.5)
-        #expect(abs(shape.fillOpacity - 0.4) < 0.001)
+        #expect(abs(shape.fillOpacity - 0.8) < 0.001)
+        #expect(shape.fillGradient?.shapeColorStops[0].alpha == 0.5)
         let multiStopShape = try #require(
             materialized.layers.first { $0.name == "Three Stops" }?.shapeContent
         )
         #expect(multiStopShape.fillGradient?.shapeColorStops.count == 3)
         #expect((multiStopShape.fillGradient?.shapeColorStops[1].green ?? 0) > 0.95)
+        let variableAlphaShape = try #require(
+            materialized.layers.first { $0.name == "Different Stop Alpha" }?.shapeContent
+        )
+        #expect(variableAlphaShape.fillGradient?.shapeColorStops[0].alpha == 1)
+        #expect(variableAlphaShape.fillGradient?.shapeColorStops[1].alpha == 0.5)
+        #expect(variableAlphaShape.fillGradient?.shapeColorStops[2].alpha == 1)
     }
 
     @Test func outOfRangeFigmaSolidPaintReportsAndUsesSafeEditableColor() throws {
@@ -1290,9 +1300,10 @@ struct XomoFigmaNodeImportPlanTests {
         #expect(abs(radialFill.centerX - 0.4) < 0.001)
         #expect(abs(radialFill.centerY - 0.5) < 0.001)
         #expect(abs(radialFill.scale - (40 / hypot(60, 40))) < 0.001)
-        #expect(abs(radialFill.opacity - 0.4) < 0.001)
+        #expect(abs(radialFill.opacity - 0.8) < 0.001)
         #expect(radialFill.colorStops.count == 3)
         #expect(radialFill.colorStops[1].position == 0.45)
+        #expect(radialFill.colorStops[1].color.alpha == 0.5)
         #expect(elliptical.fidelity == .partial)
         #expect(elliptical.radialGradientFill == nil)
         #expect(elliptical.issues.contains(.unsupportedPaint))
@@ -1308,7 +1319,8 @@ struct XomoFigmaNodeImportPlanTests {
         #expect(abs((shape.fillGradient?.scale ?? 0) - radialFill.scale) < 0.001)
         #expect(abs(shape.fillGradientCenter.x - 0.4) < 0.001)
         #expect(abs(shape.fillGradientCenter.y - 0.5) < 0.001)
-        #expect(abs(shape.fillOpacity - 0.4) < 0.001)
+        #expect(abs(shape.fillOpacity - 0.8) < 0.001)
+        #expect(shape.fillGradient?.shapeColorStops[1].alpha == 0.5)
         #expect(shape.fillGradient?.shapeColorStops.count == 3)
         #expect((shape.fillGradient?.shapeColorStops[1].green ?? 0) > 0.95)
     }
@@ -1409,9 +1421,10 @@ struct XomoFigmaNodeImportPlanTests {
         #expect(abs(diamondFill.centerY - 0.5) < 0.001)
         #expect(abs(diamondFill.angle - 33.6900675) < 0.001)
         #expect(abs(diamondFill.scale - 0.5) < 0.001)
-        #expect(abs(diamondFill.opacity - 0.4) < 0.001)
+        #expect(abs(diamondFill.opacity - 0.8) < 0.001)
         #expect(diamondFill.colorStops.count == 3)
         #expect(diamondFill.colorStops[1].position == 0.45)
+        #expect(diamondFill.colorStops[1].color.alpha == 0.5)
         #expect(distorted.fidelity == .partial)
         #expect(distorted.diamondGradientFill == nil)
         #expect(distorted.issues.contains(.unsupportedPaint))
@@ -1431,7 +1444,8 @@ struct XomoFigmaNodeImportPlanTests {
         #expect(abs((shape.fillGradient?.scale ?? 0) - diamondFill.scale) < 0.001)
         #expect(abs(shape.fillGradientCenter.x - 0.4) < 0.001)
         #expect(abs(shape.fillGradientCenter.y - 0.5) < 0.001)
-        #expect(abs(shape.fillOpacity - 0.4) < 0.001)
+        #expect(abs(shape.fillOpacity - 0.8) < 0.001)
+        #expect(shape.fillGradient?.shapeColorStops[1].alpha == 0.5)
         #expect(shape.fillGradient?.shapeColorStops.count == 3)
         #expect((shape.fillGradient?.shapeColorStops[1].green ?? 0) > 0.95)
 
