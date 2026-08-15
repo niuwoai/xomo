@@ -1092,6 +1092,7 @@ enum ImageEditorPSDCodec {
             vectorStroke: vectorStroke,
             solidFillContent: exportSolidColorFillContent(for: layer),
             gradientFillContent: exportGradientFillContent(for: layer),
+            gradientFillCenter: exportGradientFillCenter(for: layer),
             textObject: layer.textContent.flatMap {
                 exportTextToolObject($0, size: frame.size)
             }
@@ -1237,6 +1238,7 @@ enum ImageEditorPSDCodec {
             vectorStroke: nil,
             solidFillContent: nil,
             gradientFillContent: nil,
+            gradientFillCenter: nil,
             textObject: nil
         )
     }
@@ -1431,6 +1433,14 @@ enum ImageEditorPSDCodec {
         return content
     }
 
+    private static func exportGradientFillCenter(for layer: ImageEditorLayer) -> CGPoint? {
+        guard let shape = layer.shapeContent,
+              shape.fillGradient != nil,
+              exportablePSDPathContent(for: shape, layer: layer) != nil
+        else { return nil }
+        return shape.normalized(size: layer.image.size).fillGradientCenter
+    }
+
     private static func appendVectorPathPoint(
         _ point: CGPoint,
         size: CGSize,
@@ -1513,12 +1523,16 @@ enum ImageEditorPSDCodec {
             extra.appendSectionDivider(type: sectionType, blendMode: item.blendMode)
         }
         extra.appendSolidColorFill(item.solidFillContent)
-        extra.appendGradientFill(item.gradientFillContent)
+        extra.appendGradientFill(
+            item.gradientFillContent,
+            center: item.gradientFillCenter
+        )
         extra.appendVectorMask(item.vectorMask)
         if item.vectorMask != nil {
             extra.appendVectorStrokeContent(
                 solid: item.solidFillContent,
-                gradient: item.gradientFillContent
+                gradient: item.gradientFillContent,
+                gradientCenter: item.gradientFillCenter
             )
         }
         extra.appendVectorStroke(item.vectorStroke)
@@ -1559,6 +1573,7 @@ enum ImageEditorPSDCodec {
         var vectorStrokeInfo: PSDVectorStrokeInfo?
         var solidFillContent: ImageEditorSolidColorFillContent?
         var gradientFillContent: ImageEditorGradientFillContent?
+        var gradientFillCenter: CGPoint?
         while reader.offset + 12 <= extraEnd {
             let signature = try reader.ascii(count: 4)
             let key = try reader.ascii(count: 4)
@@ -1596,14 +1611,18 @@ enum ImageEditorPSDCodec {
                 let blockData = try reader.data(count: length)
                 if let content = parseVectorStrokeContent(blockData) {
                     solidFillContent = solidFillContent ?? content.solid
-                    gradientFillContent = gradientFillContent ?? content.gradient
+                    gradientFillContent = gradientFillContent ?? content.gradient?.content
+                    gradientFillCenter = gradientFillCenter ?? content.gradient?.center
                 }
             } else if key == "SoCo" {
                 let blockData = try reader.data(count: length)
                 solidFillContent = parseSolidColorFill(blockData)
             } else if key == "GdFl" {
                 let blockData = try reader.data(count: length)
-                gradientFillContent = parseGradientFill(blockData)
+                if let gradient = parseGradientFill(blockData) {
+                    gradientFillContent = gradient.content
+                    gradientFillCenter = gradient.center
+                }
             }
             reader.offset = blockEnd
             let paddedEnd = min(extraEnd, blockEnd + (length % 2))
@@ -1630,7 +1649,8 @@ enum ImageEditorPSDCodec {
             vectorMaskInfo: vectorMaskInfo,
             vectorStrokeInfo: vectorStrokeInfo,
             solidFillContent: solidFillContent,
-            gradientFillContent: gradientFillContent
+            gradientFillContent: gradientFillContent,
+            gradientFillCenter: gradientFillCenter
         )
     }
 
@@ -1932,7 +1952,7 @@ enum ImageEditorPSDCodec {
         }
     }
 
-    private static func parseGradientFill(_ data: Data) -> ImageEditorGradientFillContent? {
+    private static func parseGradientFill(_ data: Data) -> PSDParsedGradientFill? {
         do {
             var reader = PSDReader(data: data)
             let descriptor = try reader.psdDescriptorBlock()
@@ -1962,7 +1982,19 @@ enum ImageEditorPSDCodec {
             guard stops.count >= 2 else { return nil }
             let angle = descriptor["Angl"]?.numericValue ?? 0
             let scale = (descriptor["Scl "]?.numericValue ?? 100) / 100
-            return ImageEditorGradientFillContent(
+            let offset = descriptor["Ofst"]?.objectValue
+            let horizontalOffset = offset?["Hrzn"]?.numericValue ?? 0
+            let verticalOffset = offset?["Vrtc"]?.numericValue ?? 0
+            guard angle.isFinite,
+                  scale.isFinite,
+                  horizontalOffset.isFinite,
+                  verticalOffset.isFinite
+            else { return nil }
+            let center = CGPoint(
+                x: max(-4, min(5, 0.5 + horizontalOffset / 100)),
+                y: max(-4, min(5, 0.5 + verticalOffset / 100))
+            )
+            let content = ImageEditorGradientFillContent(
                 preset: .custom,
                 style: style,
                 reverse: descriptor["Rvrs"]?.booleanValue ?? false,
@@ -1970,6 +2002,7 @@ enum ImageEditorPSDCodec {
                 scale: CGFloat(scale),
                 colorStops: stops
             ).normalized()
+            return PSDParsedGradientFill(content: content, center: center)
         } catch {
             return nil
         }
@@ -1979,7 +2012,7 @@ enum ImageEditorPSDCodec {
         _ data: Data
     ) -> (
         solid: ImageEditorSolidColorFillContent?,
-        gradient: ImageEditorGradientFillContent?
+        gradient: PSDParsedGradientFill?
     )? {
         guard data.count >= 8 else { return nil }
         do {
@@ -2353,6 +2386,7 @@ enum ImageEditorPSDCodec {
            let shapeContent = vectorMaskContent(record: record, size: CGSize(width: width, height: height)) {
             var shape = shapeContent
             shape.fillGradient = gradientFillContent
+            shape.fillGradientCenter = record.gradientFillCenter ?? CGPoint(x: 0.5, y: 0.5)
             applyVectorStroke(record: record, to: &shape)
             var layer = ImageEditorLayer.shape(
                 name: record.name,
@@ -2814,6 +2848,7 @@ private struct PSDExportLayer {
     let vectorStroke: PSDExportVectorStroke?
     let solidFillContent: ImageEditorSolidColorFillContent?
     let gradientFillContent: ImageEditorGradientFillContent?
+    let gradientFillCenter: CGPoint?
     let textObject: PSDExportText?
 
     static func groupDivider(canvasHeight: Int) -> PSDExportLayer {
@@ -2837,6 +2872,7 @@ private struct PSDExportLayer {
             vectorStroke: nil,
             solidFillContent: nil,
             gradientFillContent: nil,
+            gradientFillCenter: nil,
             textObject: nil
         )
     }
@@ -3005,6 +3041,11 @@ private struct PSDVectorStrokeInfo {
     let dashPattern: [CGFloat]
 }
 
+private struct PSDParsedGradientFill {
+    let content: ImageEditorGradientFillContent
+    let center: CGPoint
+}
+
 private extension ImageEditorStrokePosition {
     init(psdValue: String?) {
         switch psdValue {
@@ -3080,6 +3121,7 @@ nonisolated private struct PSDLayerRecord {
     let vectorStrokeInfo: PSDVectorStrokeInfo?
     let solidFillContent: ImageEditorSolidColorFillContent?
     let gradientFillContent: ImageEditorGradientFillContent?
+    let gradientFillCenter: CGPoint?
 
     var isSmartObject: Bool {
         additionalKeys.contains("SoLd")
@@ -3459,9 +3501,12 @@ private extension Data {
         return descriptor
     }
 
-    mutating func appendGradientFill(_ content: ImageEditorGradientFillContent?) {
+    mutating func appendGradientFill(
+        _ content: ImageEditorGradientFillContent?,
+        center: CGPoint?
+    ) {
         guard let content else { return }
-        let descriptor = Data.gradientFillDescriptor(content)
+        let descriptor = Data.gradientFillDescriptor(content, center: center)
         appendASCII("8BIM")
         appendASCII("GdFl")
         appendUInt32(UInt32(descriptor.count))
@@ -3470,7 +3515,8 @@ private extension Data {
     }
 
     private static func gradientFillDescriptor(
-        _ content: ImageEditorGradientFillContent
+        _ content: ImageEditorGradientFillContent,
+        center: CGPoint?
     ) -> Data {
         let normalized = content.normalized()
         let colors = normalized.colors()
@@ -3523,8 +3569,7 @@ private extension Data {
             ),
             Data.descriptorItem(key: "Clrs", type: "VlLs", payload: colorList)
         ])
-        var descriptor = Data()
-        descriptor.appendDescriptorBlock(name: "", classID: "GdFl", items: [
+        var items = [
             Data.descriptorItem(key: "Grad", type: "Objc", payload: gradient),
             Data.descriptorItem(
                 key: "Type",
@@ -3545,19 +3590,39 @@ private extension Data {
                 payload: Data(unit: "#Prc", value: Double(normalized.scale * 100))
             ),
             Data.descriptorItem(key: "Rvrs", type: "bool", payload: Data(boolean: normalized.reverse))
-        ])
+        ]
+        if let center {
+            let horizontalOffset = (Swift.max(-4, Swift.min(5, center.x)) - 0.5) * 100
+            let verticalOffset = (Swift.max(-4, Swift.min(5, center.y)) - 0.5) * 100
+            let offset = Data.descriptorBody(name: "", classID: "Pnt ", items: [
+                Data.descriptorItem(
+                    key: "Hrzn",
+                    type: "UntF",
+                    payload: Data(unit: "#Prc", value: Double(horizontalOffset))
+                ),
+                Data.descriptorItem(
+                    key: "Vrtc",
+                    type: "UntF",
+                    payload: Data(unit: "#Prc", value: Double(verticalOffset))
+                )
+            ])
+            items.append(Data.descriptorItem(key: "Ofst", type: "Objc", payload: offset))
+        }
+        var descriptor = Data()
+        descriptor.appendDescriptorBlock(name: "", classID: "GdFl", items: items)
         return descriptor
     }
 
     mutating func appendVectorStrokeContent(
         solid: ImageEditorSolidColorFillContent?,
-        gradient: ImageEditorGradientFillContent?
+        gradient: ImageEditorGradientFillContent?,
+        gradientCenter: CGPoint?
     ) {
         let key: String
         let descriptor: Data
         if let gradient {
             key = "GdFl"
-            descriptor = Data.gradientFillDescriptor(gradient)
+            descriptor = Data.gradientFillDescriptor(gradient, center: gradientCenter)
         } else if let solid {
             key = "SoCo"
             descriptor = Data.solidColorFillDescriptor(solid)

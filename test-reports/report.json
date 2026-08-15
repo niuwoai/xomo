@@ -1,48 +1,24 @@
 {
-  "generated_at": "2026-08-15 20:56:04 +0800",
-  "total": 3,
-  "passed": 3,
+  "generated_at": "2026-08-15 21:07:59 +0800",
+  "total": 1,
+  "passed": 1,
   "failed": 0,
-  "total_tests": 3,
-  "passed_tests": 3,
+  "total_tests": 1,
+  "passed_tests": 1,
   "failed_tests_in_failed_groups": 0,
   "jobs": 1,
   "results": [
     {
       "suite": "ImageEditorPSDTests",
-      "method": "fillOnlyPrimitiveShapesExportAsEditablePSDPaths",
-      "identifier": "veilpicTests/ImageEditorPSDTests/fillOnlyPrimitiveShapesExportAsEditablePSDPaths()",
+      "method": "offsetShapeGradientCentersRoundTripThroughLegacyAndModernDescriptors",
+      "identifier": "veilpicTests/ImageEditorPSDTests/offsetShapeGradientCentersRoundTripThroughLegacyAndModernDescriptors()",
       "file": "ImageEditorPSDTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 2.917,
+      "duration": 2.847,
       "infrastructure_retries": 0,
       "issues": [],
-      "log": "ImageEditorPSDTests.fillOnlyPrimitiveShapesExportAsEditablePSDPaths.log"
-    },
-    {
-      "suite": "ImageEditorPSDTests",
-      "method": "insideStrokedPrimitiveShapesExportAsEditablePSDPaths",
-      "identifier": "veilpicTests/ImageEditorPSDTests/insideStrokedPrimitiveShapesExportAsEditablePSDPaths()",
-      "file": "ImageEditorPSDTests.swift",
-      "test_count": 1,
-      "passed": true,
-      "duration": 2.857,
-      "infrastructure_retries": 0,
-      "issues": [],
-      "log": "ImageEditorPSDTests.insideStrokedPrimitiveShapesExportAsEditablePSDPaths.log"
-    },
-    {
-      "suite": "ImageEditorPSDTests",
-      "method": "unsupportedPrimitiveShapeSemanticsKeepRasterFallback",
-      "identifier": "veilpicTests/ImageEditorPSDTests/unsupportedPrimitiveShapeSemanticsKeepRasterFallback()",
-      "file": "ImageEditorPSDTests.swift",
-      "test_count": 1,
-      "passed": true,
-      "duration": 2.951,
-      "infrastructure_retries": 0,
-      "issues": [],
-      "log": "ImageEditorPSDTests.unsupportedPrimitiveShapeSemanticsKeepRasterFallback.log"
+      "log": "ImageEditorPSDTests.offsetShapeGradientCentersRoundTripThroughLegacyAndModernDescriptors.log"
     }
   ]
 }

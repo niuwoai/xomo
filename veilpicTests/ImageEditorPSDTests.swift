@@ -921,6 +921,70 @@ struct ImageEditorPSDTests {
         #expect(restoredEllipse.strokeDashPattern == [5, 3])
     }
 
+    @Test func offsetShapeGradientCentersRoundTripThroughLegacyAndModernDescriptors() throws {
+        let canvasSize = CGSize(width: 120, height: 90)
+        let expectedCenter = CGPoint(x: 0.27, y: 0.71)
+        var document = ImageEditorDocument(
+            sourceName: "offset-shape-gradient.xomoproject",
+            image: psdSolidImage(color: .clear, size: canvasSize)
+        )
+        document.layers = [
+            ImageEditorLayer.shape(
+                name: "Offset Radial Ellipse",
+                frame: CGRect(x: 18, y: 12, width: 76, height: 62),
+                content: ImageEditorShapeContent(
+                    kind: .ellipse,
+                    fillColor: .clear,
+                    fillGradient: ImageEditorGradientFillContent(
+                        preset: .custom,
+                        style: .radial,
+                        angle: 17,
+                        scale: 0.84,
+                        colorStops: [
+                            ImageEditorGradientColorStop(position: 0, red: 1, green: 0.1, blue: 0.2),
+                            ImageEditorGradientColorStop(position: 1, red: 0.1, green: 0.4, blue: 1)
+                        ]
+                    ),
+                    fillGradientCenter: expectedCenter,
+                    fillOpacity: 1,
+                    strokeColor: .clear,
+                    strokeWidth: 1,
+                    strokeOpacity: 0
+                )
+            )
+        ]
+
+        let exported = try ImageEditorPSDCodec.encode(document: document)
+        #expect(exported.range(of: Data("Ofst".utf8)) != nil)
+        #expect(exported.range(of: Data("Hrzn".utf8)) != nil)
+        #expect(exported.range(of: Data("Vrtc".utf8)) != nil)
+        #expect(exported.range(of: Data("vscg".utf8)) != nil)
+
+        var legacyOnly = exported
+        let modernKey = try #require(legacyOnly.range(of: Data("vscg".utf8)))
+        legacyOnly.replaceSubrange(modernKey, with: Data("zzzz".utf8))
+        let legacyDocument = try ImageEditorPSDCodec.decode(
+            legacyOnly,
+            sourceName: "offset-shape-gradient-legacy.psd"
+        )
+
+        var modernOnly = exported
+        let legacyKey = try #require(modernOnly.range(of: Data("GdFl".utf8)))
+        modernOnly.replaceSubrange(legacyKey, with: Data("zzzz".utf8))
+        let modernDocument = try ImageEditorPSDCodec.decode(
+            modernOnly,
+            sourceName: "offset-shape-gradient-modern.psd"
+        )
+
+        for restored in [legacyDocument, modernDocument] {
+            let shape = try #require(restored.layers.first?.shapeContent)
+            #expect(shape.kind == .path)
+            #expect(shape.fillGradient?.style == .radial)
+            #expect(abs(shape.fillGradientCenter.x - expectedCenter.x) < 0.000_001)
+            #expect(abs(shape.fillGradientCenter.y - expectedCenter.y) < 0.000_001)
+        }
+    }
+
     @Test func compatibilityReportCountsUnsupportedVectorMaskStructure() throws {
         var data = try psdFixtureData("solid-vector-shape.psd")
         let keyRange = try #require(data.range(of: Data("vmsk".utf8)))
