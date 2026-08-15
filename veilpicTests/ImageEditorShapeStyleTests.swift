@@ -69,6 +69,64 @@ struct ImageEditorShapeStyleTests {
         #expect(legacyStop.alpha == ImageEditorGradientColorStop.defaultAlpha)
     }
 
+    @Test func gradientStopOpacityEditingIsUndoableAndColorChangesPreserveAlpha() throws {
+        let gradient = ImageEditorGradientFillContent.shapeLinear(colorStops: [
+            ImageEditorGradientColorStop(
+                position: 0,
+                red: 0.8,
+                green: 0.1,
+                blue: 0.2,
+                alpha: 0.2,
+                midpoint: 0.3
+            ),
+            ImageEditorGradientColorStop(position: 1, color: .systemBlue)
+        ])
+        let viewModel = makeViewModel()
+        viewModel.drawShape(
+            from: CGPoint(x: 10, y: 10),
+            to: CGPoint(x: 110, y: 70),
+            ellipse: false,
+            fillGradient: gradient
+        )
+        let original = viewModel.selectedShapeGradientColorStops[0]
+        let historyCount = viewModel.document.history.count
+
+        viewModel.setSelectedShapeGradientStopOpacity(at: 0, opacity: 0.35)
+        let edited = viewModel.selectedShapeGradientColorStops[0]
+        #expect(abs(edited.alpha - 0.35) < 0.000_001)
+        #expect(edited.red == original.red)
+        #expect(edited.green == original.green)
+        #expect(edited.blue == original.blue)
+        #expect(edited.midpoint == original.midpoint)
+        #expect(viewModel.document.history.count == historyCount + 1)
+
+        viewModel.setSelectedShapeGradientStopOpacity(at: 0, opacity: 0.35)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        viewModel.undo()
+        #expect(viewModel.selectedShapeGradientColorStops[0] == original)
+        #expect(viewModel.canRedo)
+
+        viewModel.setSelectedShapeGradientStopOpacity(at: 0, opacity: .infinity)
+        #expect(viewModel.selectedShapeGradientColorStops[0] == original)
+        #expect(viewModel.canRedo)
+        viewModel.redo()
+        #expect(abs(viewModel.selectedShapeGradientColorStops[0].alpha - 0.35) < 0.000_001)
+
+        viewModel.setSelectedShapeGradientStopColor(at: 0, color: .systemGreen)
+        let recolored = viewModel.selectedShapeGradientColorStops[0]
+        #expect(abs(recolored.alpha - 0.35) < 0.000_001)
+        #expect(recolored.midpoint == original.midpoint)
+
+        let projectData = try viewModel.projectData()
+        let reopened = makeViewModel()
+        try reopened.loadProjectData(projectData)
+        #expect(reopened.selectedShapeGradientColorStops[0] == recolored)
+        reopened.setSelectedShapeGradientStopOpacity(at: 0, opacity: -1)
+        #expect(reopened.selectedShapeGradientColorStops[0].alpha == 0)
+        reopened.setSelectedShapeGradientStopOpacity(at: 0, opacity: 2)
+        #expect(reopened.selectedShapeGradientColorStops[0].alpha == 1)
+    }
+
     @Test func gradientColorMidpointsShapeRenderingAndPersistAcrossProjects() throws {
         let gradient = ImageEditorGradientFillContent.shapeLinear(colorStops: [
             ImageEditorGradientColorStop(
@@ -1357,6 +1415,7 @@ struct ImageEditorShapeStyleTests {
         viewModel.updateSelectedShapeProperties(fillColor: .systemGreen, strokeWidth: 20)
         viewModel.setSelectedShapeFillKind(.radialGradient)
         viewModel.setSelectedShapeGradientScale(0.5)
+        viewModel.setSelectedShapeGradientStopOpacity(at: 0, opacity: 0.25)
 
         let locked = try #require(viewModel.document.layers[selectedIndex].shapeContent)
         #expect(locked.fillColor.isEqual(original.fillColor))
@@ -1378,6 +1437,7 @@ struct ImageEditorShapeStyleTests {
             "image-editor-shape-gradient-stop-add",
             "image-editor-shape-gradient-stop-remove",
             "image-editor-shape-gradient-stop-color",
+            "image-editor-shape-gradient-stop-opacity",
             "image-editor-shape-gradient-stop-position",
             "image-editor-shape-gradient-stop-midpoint",
             "image-editor-shape-gradient-angle",

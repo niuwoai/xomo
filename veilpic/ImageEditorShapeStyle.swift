@@ -310,11 +310,25 @@ extension ImageEditorViewModel {
         var gradient = selectedShapeGradient
         var stops = gradient.shapeColorStops
         guard stops.indices.contains(index) else { return }
+        let resolved = color.usingColorSpace(.deviceRGB) ?? .black
         stops[index] = ImageEditorGradientColorStop(
             position: stops[index].position,
-            color: color,
+            red: Double(resolved.redComponent),
+            green: Double(resolved.greenComponent),
+            blue: Double(resolved.blueComponent),
+            alpha: stops[index].alpha,
             midpoint: stops[index].midpoint
         )
+        gradient.colorStops = stops
+        updateSelectedShapeProperties(fillGradient: gradient)
+    }
+
+    func setSelectedShapeGradientStopOpacity(at index: Int, opacity: Double) {
+        guard opacity.isFinite else { return }
+        var gradient = selectedShapeGradient
+        var stops = gradient.shapeColorStops
+        guard stops.indices.contains(index) else { return }
+        stops[index].alpha = max(0, min(1, opacity))
         gradient.colorStops = stops
         updateSelectedShapeProperties(fillGradient: gradient)
     }

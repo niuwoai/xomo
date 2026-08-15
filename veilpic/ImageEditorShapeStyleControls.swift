@@ -237,6 +237,10 @@ extension ImageEditorView {
         return VStack(alignment: .leading, spacing: 6) {
             GeometryReader { geometry in
                 ZStack(alignment: .topLeading) {
+                    shapeGradientTransparencyCheckerboard
+                        .clipShape(RoundedRectangle(cornerRadius: 3, style: .continuous))
+                        .frame(height: 14)
+
                     RoundedRectangle(cornerRadius: 3, style: .continuous)
                         .fill(
                             LinearGradient(
@@ -284,7 +288,8 @@ extension ImageEditorView {
                             L10n.format(
                                 "imageEditor.properties.shapeGradientStopAccessibility",
                                 index + 1,
-                                Int((stops[index].position * 100).rounded())
+                                Int((stops[index].position * 100).rounded()),
+                                Int((stops[index].alpha * 100).rounded())
                             )
                         )
                     }
@@ -336,6 +341,18 @@ extension ImageEditorView {
                     .focusable(false)
                     .accessibilityIdentifier("image-editor-shape-gradient-stop-color")
             }
+
+            Stepper(
+                L10n.format(
+                    "imageEditor.properties.shapeGradientStopOpacity",
+                    Int((stops[selectedIndex].alpha * 100).rounded())
+                ),
+                value: selectedShapeGradientStopOpacityBinding,
+                in: 0...1,
+                step: 0.01
+            )
+            .focusable(false)
+            .accessibilityIdentifier("image-editor-shape-gradient-stop-opacity")
 
             Stepper(
                 L10n.format(
@@ -414,6 +431,18 @@ extension ImageEditorView {
         }
     }
 
+    private var selectedShapeGradientStopOpacityBinding: Binding<Double> {
+        Binding {
+            let stops = viewModel.selectedShapeGradientColorStops
+            let index = normalizedShapeGradientStopIndex(stops: stops)
+            return stops[index].alpha
+        } set: { opacity in
+            let stops = viewModel.selectedShapeGradientColorStops
+            let index = normalizedShapeGradientStopIndex(stops: stops)
+            viewModel.setSelectedShapeGradientStopOpacity(at: index, opacity: opacity)
+        }
+    }
+
     private var selectedShapeGradientStopMidpointBinding: Binding<Double> {
         Binding {
             let stops = viewModel.selectedShapeGradientColorStops
@@ -430,6 +459,31 @@ extension ImageEditorView {
         stops: [ImageEditorGradientColorStop]
     ) -> Int {
         max(0, min(selectedShapeGradientStopIndex, stops.count - 1))
+    }
+
+    private var shapeGradientTransparencyCheckerboard: some View {
+        Canvas { context, size in
+            let square: CGFloat = 4
+            let light = Color(nsColor: NSColor(calibratedWhite: 0.72, alpha: 1))
+            let dark = Color(nsColor: NSColor(calibratedWhite: 0.46, alpha: 1))
+            var row = 0
+            var y: CGFloat = 0
+            while y < size.height {
+                var column = 0
+                var x: CGFloat = 0
+                while x < size.width {
+                    let rect = CGRect(x: x, y: y, width: square, height: square)
+                    let color = (row + column).isMultiple(of: 2) ? light : dark
+                    context.fill(Path(rect), with: .color(color))
+                    column += 1
+                    x += square
+                }
+                row += 1
+                y += square
+            }
+        }
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
     }
 
     private var selectedShapeGradientEndColorBinding: Binding<Color> {

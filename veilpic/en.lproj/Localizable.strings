@@ -910,7 +910,8 @@
 "imageEditor.properties.shapeGradientStopCount" = "%d color stops";
 "imageEditor.properties.shapeGradientStopColor" = "Stop %d color";
 "imageEditor.properties.shapeGradientStopPosition" = "Stop position: %d%%";
-"imageEditor.properties.shapeGradientStopAccessibility" = "Stop %d at %d%%";
+"imageEditor.properties.shapeGradientStopAccessibility" = "Stop %d at %d%%, opacity %d%%";
+"imageEditor.properties.shapeGradientStopOpacity" = "Stop opacity: %d%%";
 "imageEditor.properties.shapeGradientStopMidpoint" = "Following color midpoint: %d%%";
 "imageEditor.properties.shapeGradientMidpointAccessibility" = "Color midpoint after stop %d at %d%%";
 "imageEditor.properties.shapeGradientAngleValue" = "Gradient angle: %d°";
