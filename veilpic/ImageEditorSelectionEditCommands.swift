@@ -24,26 +24,31 @@ private enum ImageEditorSelectionCropMetrics {
 @MainActor
 extension ImageEditorViewModel {
     var canEditSelectionPixels: Bool {
-        !editableSelectionPixelLayerIndices().isEmpty
+        hasPotentialSelectionPixels && !editableSelectionPixelLayerIndices().isEmpty
     }
 
     var canRemoveSelectionPixels: Bool {
-        !removableSelectionPixelLayerIndices().isEmpty
+        hasPotentialSelectionPixels && !removableSelectionPixelLayerIndices().isEmpty
     }
 
     var canCopySelectionToNewLayer: Bool {
         guard selectedLayerCount == 1,
-              hasSelection,
+              let selection = document.selection,
               !isEditingLayerMask,
               let layer = document.selectedLayer
         else { return false }
         return !layer.isGroup
             && !layer.isAdjustment
             && !layer.isFilter
+            && selection.mayAffect(
+                layerFrame: layer.frame,
+                canvasSize: document.canvasSize,
+                expansion: feather
+            )
     }
 
     var canCutSelectionToNewLayer: Bool {
-        selectedLayerCount == 1 && canRemoveSelectionPixels
+        canCopySelectionToNewLayer && canRemoveSelectionPixels
     }
 
     var canCopySelectionToClipboard: Bool {
@@ -70,6 +75,14 @@ extension ImageEditorViewModel {
 
     var canDuplicateSelectionOrSelectedLayer: Bool {
         canCopySelectionToNewLayer || canDuplicateSelectedLayer
+    }
+
+    private var hasPotentialSelectionPixels: Bool {
+        guard let selection = document.selection else { return false }
+        return selection.mayAffect(
+            layerFrame: CGRect(origin: .zero, size: document.canvasSize),
+            canvasSize: document.canvasSize
+        )
     }
 
     func duplicateSelectionOrSelectedLayer() {

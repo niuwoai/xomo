@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.12.0-rc1004 - 2026-08-15
+
+### Fixed
+- 像素编辑能力现在区分“结构上存在选区”和“画布上确有可作用像素”：有效像素为空的栅格选区不再错误启用填充、清除、复制或剪切，也不会让 MCP 预检承诺一个最终静默无效的操作。
+- 复制/剪切到新图层会按选区真实像素范围、当前图层范围与羽化扩张判断可用性；空有效像素选区下的 Duplicate 会正确回退为复制当前图层，损坏蒙版仍保持 fail-open 并交由下游返回明确错误。
+
+### Verification
+- Selection Pixel Availability 2/2、Fill/Clear/Copy/Cut 33/33、Selection Operation 44/44、Layer Duplicate 8/8，共 87 项模型回归通过；CLI/MCP 2/2、发布契约 7/7（21 项断言）通过。下一次周期完整门禁为 rc1040，本版不覆盖 `/Applications` 安装。
+
 ## 2.12.0-rc1003 - 2026-08-15
 
 ### Fixed
