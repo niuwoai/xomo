@@ -103,6 +103,7 @@ struct ImageEditorPSDTests {
             preset: .custom,
             style: .linear,
             reverse: true,
+            dither: true,
             angle: 32,
             scale: 1.35,
             colorStops: [
@@ -118,6 +119,7 @@ struct ImageEditorPSDTests {
         let data = try ImageEditorPSDCodec.encode(document: document)
         #expect(data.range(of: Data("AnglUntF#Ang".utf8)) != nil)
         #expect(data.range(of: Data("AnglUntFAngl".utf8)) == nil)
+        #expect(data.range(of: Data("Dthrbool".utf8)) != nil)
         let restored = try ImageEditorPSDCodec.decode(data, sourceName: "native-gradient.psd")
         let restoredLayer = try #require(restored.layers.first)
         let restoredContent = try #require(restoredLayer.gradientFillContent?.normalized())
@@ -128,6 +130,7 @@ struct ImageEditorPSDTests {
         #expect(restoredLayer.frame == layer.frame)
         #expect(restoredContent.style == .linear)
         #expect(restoredContent.reverse == expected.reverse)
+        #expect(restoredContent.dither == expected.dither)
         #expect(abs(restoredContent.angle - expected.angle) < 0.01)
         #expect(abs(restoredContent.scale - expected.scale) < 0.01)
         #expect(restoredStops.count == expectedStops.count)

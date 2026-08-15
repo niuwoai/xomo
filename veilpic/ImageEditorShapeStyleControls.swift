@@ -48,6 +48,15 @@ extension ImageEditorView {
 
             if viewModel.selectedShapeFillKind != .solid {
                 shapeGradientStopsEditor
+                Toggle(
+                    L10n.text("imageEditor.gradientFill.dither"),
+                    isOn: selectedShapeGradientDitherBinding
+                )
+                .toggleStyle(.checkbox)
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                .focusable(false)
+                .accessibilityIdentifier("image-editor-shape-gradient-dither")
                 if viewModel.selectedShapeFillKind != .radialGradient {
                     Stepper(
                         L10n.format(
@@ -640,6 +649,14 @@ extension ImageEditorView {
             viewModel.selectedShapeGradientScale
         } set: { scale in
             viewModel.setSelectedShapeGradientScale(scale)
+        }
+    }
+
+    private var selectedShapeGradientDitherBinding: Binding<Bool> {
+        Binding {
+            viewModel.selectedShapeGradientDither
+        } set: { dither in
+            viewModel.setSelectedShapeGradientDither(dither)
         }
     }
 

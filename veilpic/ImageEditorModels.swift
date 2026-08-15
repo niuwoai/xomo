@@ -1343,10 +1343,17 @@ struct ImageEditorGradientColorStop: Equatable, Codable, Sendable {
 
 struct ImageEditorGradientFillContent: Equatable, Codable {
     static let maximumColorStopCount = 16
+    private static let bayer4x4 = [
+        0, 8, 2, 10,
+        12, 4, 14, 6,
+        3, 11, 1, 9,
+        15, 7, 13, 5
+    ]
 
     var preset: ImageEditorGradientFillPreset = .blueOrange
     var style: ImageEditorGradientFillStyle = .linear
     var reverse: Bool = false
+    var dither: Bool = false
     var angle: CGFloat = 0
     var scale: CGFloat = 1
     var startRed: Double = 0.12
@@ -1361,6 +1368,7 @@ struct ImageEditorGradientFillContent: Equatable, Codable {
         case preset
         case style
         case reverse
+        case dither
         case angle
         case scale
         case startRed
@@ -1376,6 +1384,7 @@ struct ImageEditorGradientFillContent: Equatable, Codable {
         preset: ImageEditorGradientFillPreset = .blueOrange,
         style: ImageEditorGradientFillStyle = .linear,
         reverse: Bool = false,
+        dither: Bool = false,
         angle: CGFloat = 0,
         scale: CGFloat = 1,
         startRed: Double = 0.12,
@@ -1389,6 +1398,7 @@ struct ImageEditorGradientFillContent: Equatable, Codable {
         self.preset = preset
         self.style = style
         self.reverse = reverse
+        self.dither = dither
         self.angle = angle
         self.scale = scale
         self.startRed = startRed
@@ -1405,6 +1415,7 @@ struct ImageEditorGradientFillContent: Equatable, Codable {
         preset = try container.decodeIfPresent(ImageEditorGradientFillPreset.self, forKey: .preset) ?? .blueOrange
         style = try container.decodeIfPresent(ImageEditorGradientFillStyle.self, forKey: .style) ?? .linear
         reverse = try container.decodeIfPresent(Bool.self, forKey: .reverse) ?? false
+        dither = try container.decodeIfPresent(Bool.self, forKey: .dither) ?? false
         angle = try container.decodeIfPresent(CGFloat.self, forKey: .angle) ?? 0
         scale = try container.decodeIfPresent(CGFloat.self, forKey: .scale) ?? 1
         startRed = try container.decodeIfPresent(Double.self, forKey: .startRed) ?? 0.12
@@ -1427,6 +1438,7 @@ struct ImageEditorGradientFillContent: Equatable, Codable {
             preset: preset,
             style: style,
             reverse: reverse,
+            dither: dither,
             angle: max(-180, min(180, angle)),
             scale: max(0.25, min(4, scale)),
             startRed: first?.red ?? Self.zeroOne(startRed),
@@ -1521,7 +1533,16 @@ struct ImageEditorGradientFillContent: Equatable, Codable {
         for y in 0..<height {
             for x in 0..<width {
                 let point = SIMD2<Double>(Double(x), Double(y))
-                let t = content.progress(at: point, center: center, direction: direction, span: span, cornerDistance: cornerDistance)
+                let rawProgress = content.progress(
+                    at: point,
+                    center: center,
+                    direction: direction,
+                    span: span,
+                    cornerDistance: cornerDistance
+                )
+                let t = content.dither
+                    ? Self.ditheredProgress(rawProgress, x: x, y: y)
+                    : rawProgress
                 let color = Self.interpolatedColor(at: t, stops: stops)
                 let alpha = Self.zeroOne(color.w)
                 let offset = y * bytesPerRow + x * bytesPerPixel
@@ -1549,6 +1570,11 @@ struct ImageEditorGradientFillContent: Equatable, Codable {
         else { return NSImage.transparent(size: size) }
 
         return NSImage(cgImage: image, size: size)
+    }
+
+    static func ditheredProgress(_ progress: Double, x: Int, y: Int) -> Double {
+        let threshold = (Double(bayer4x4[(y & 3) * 4 + (x & 3)]) + 0.5) / 16
+        return max(0, min(1, progress + (threshold - 0.5) / 96))
     }
 
     private func progress(

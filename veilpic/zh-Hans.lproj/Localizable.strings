@@ -1194,6 +1194,7 @@
 "imageEditor.gradientFill.style.reflected" = "反射";
 "imageEditor.gradientFill.style.diamond" = "菱形";
 "imageEditor.gradientFill.reverse" = "反向";
+"imageEditor.gradientFill.dither" = "抖动";
 "imageEditor.gradientFill.angle" = "角度";
 "imageEditor.gradientFill.angleValue" = "%d°";
 "imageEditor.gradientFill.scale" = "缩放";

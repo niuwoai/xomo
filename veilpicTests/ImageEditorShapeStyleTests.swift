@@ -13,6 +13,59 @@ import Testing
 @Suite
 @MainActor
 struct ImageEditorShapeStyleTests {
+    @Test func gradientDitherIsDeterministicVisibleAndBackwardCompatible() throws {
+        var gradient = ImageEditorGradientFillContent.shapeLinear(
+            startColor: .black,
+            endColor: .white
+        )
+        let plain = gradient.renderedImage(size: CGSize(width: 64, height: 4))
+        gradient.dither = true
+        let first = gradient.renderedImage(size: CGSize(width: 64, height: 4))
+        let second = gradient.renderedImage(size: CGSize(width: 64, height: 4))
+
+        #expect(first.qingtuPNGData() == second.qingtuPNGData())
+        #expect(first.qingtuPNGData() != plain.qingtuPNGData())
+        let plainSamples = try (0..<4).map { y in
+            try #require(plain.color(at: CGPoint(x: 32, y: y))).redComponent
+        }
+        let ditheredSamples = try (0..<4).map { y in
+            try #require(first.color(at: CGPoint(x: 32, y: y))).redComponent
+        }
+        #expect(Set(plainSamples).count == 1)
+        #expect(Set(ditheredSamples).count > 1)
+
+        let legacy = try JSONDecoder().decode(
+            ImageEditorGradientFillContent.self,
+            from: Data(#"{"preset":"blackWhite","style":"linear"}"#.utf8)
+        )
+        #expect(!legacy.dither)
+    }
+
+    @Test func shapeGradientDitherIsUndoableAndPersistsAcrossProjects() throws {
+        let viewModel = makeViewModel()
+        viewModel.drawShape(
+            from: CGPoint(x: 10, y: 10),
+            to: CGPoint(x: 110, y: 70),
+            ellipse: false,
+            fillGradient: .shapeLinear(startColor: .black, endColor: .white)
+        )
+        let historyCount = viewModel.document.history.count
+
+        viewModel.setSelectedShapeGradientDither(true)
+        #expect(viewModel.selectedShapeGradientDither)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        viewModel.setSelectedShapeGradientDither(true)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        viewModel.undo()
+        #expect(!viewModel.selectedShapeGradientDither)
+        viewModel.redo()
+        #expect(viewModel.selectedShapeGradientDither)
+
+        let reopened = makeViewModel()
+        try reopened.loadProjectData(viewModel.projectData())
+        #expect(reopened.selectedShapeGradientDither)
+    }
+
     @Test func gradientColorStopAlphaRendersAndPersistsAcrossProjects() throws {
         let gradient = ImageEditorGradientFillContent.shapeLinear(colorStops: [
             ImageEditorGradientColorStop(
@@ -1563,6 +1616,7 @@ struct ImageEditorShapeStyleTests {
             "image-editor-shape-gradient-stop-opacity",
             "image-editor-shape-gradient-stop-position",
             "image-editor-shape-gradient-stop-midpoint",
+            "image-editor-shape-gradient-dither",
             "image-editor-shape-gradient-angle",
             "image-editor-shape-fill-opacity",
             "image-editor-shape-stroke-color",

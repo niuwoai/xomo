@@ -285,6 +285,7 @@ struct ImageEditorAdjustmentTests {
         viewModel.gradientFillEndGreen = 1
         viewModel.gradientFillEndBlue = 0
         viewModel.selectedGradientFillStyle = .linear
+        viewModel.gradientFillDither = true
         viewModel.gradientFillAngle = 0
         viewModel.gradientFillScale = 1
         viewModel.addGradientFillLayer()
@@ -296,6 +297,7 @@ struct ImageEditorAdjustmentTests {
 
         #expect(content.preset == .custom)
         #expect(content.style == .linear)
+        #expect(content.dither)
         #expect(content.angle == 0)
         #expect(content.scale == 1)
         #expect(leftColor.redComponent > rightColor.redComponent + 0.55)
@@ -323,6 +325,7 @@ struct ImageEditorAdjustmentTests {
         #expect(restoredContent.preset == .custom)
         #expect(restoredContent.style == .linear)
         #expect(restoredContent.reverse)
+        #expect(restoredContent.dither)
         #expect(restoredContent.scale == 2)
         #expect(restoredContent.startRed == 1)
         #expect(restoredContent.endGreen == 1)

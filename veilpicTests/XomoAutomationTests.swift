@@ -5420,6 +5420,7 @@ struct XomoAutomationTests {
         )
         #expect(properties["stops"]?.objectValue?["minItems"] == .number(2))
         #expect(properties["stops"]?.objectValue?["maxItems"] == .number(16))
+        #expect(properties["dither"]?.objectValue?["type"] == .string("boolean"))
         let stopProperties = properties["stops"]?.objectValue?["items"]?
             .objectValue?["properties"]?.objectValue
         #expect(stopProperties?["midpoint"]?.objectValue?["minimum"] == .number(0))
@@ -5455,6 +5456,7 @@ struct XomoAutomationTests {
             "preset": .string(ImageEditorGradientFillPreset.custom.rawValue),
             "style": .string(ImageEditorGradientFillStyle.diamond.rawValue),
             "reverse": .bool(true),
+            "dither": .bool(true),
             "angle": .number(35),
             "scale": .number(1.75),
             "startColor": color(0.10, 0.20, 0.30),
@@ -5489,6 +5491,7 @@ struct XomoAutomationTests {
         #expect(editable.preset == .custom)
         #expect(editable.style == .diamond)
         #expect(editable.reverse)
+        #expect(editable.dither)
         #expect(editable.angle == 35)
         #expect(editable.scale == 1.75)
         #expect(editable.colorStops?.count == 3)
@@ -5521,6 +5524,7 @@ struct XomoAutomationTests {
             $0["id"] == .string(editableID.uuidString)
         }
         #expect(getResponse.ok)
+        #expect(editableResult?["dither"] == .bool(true))
         #expect(editableResult?["stops"]?.arrayValue?.count == 3)
         let returnedStops = editableResult?["stops"]?.arrayValue?.compactMap(\.objectValue)
         #expect(returnedStops?[0]["midpoint"] == .number(0.25))
@@ -5584,6 +5588,7 @@ struct XomoAutomationTests {
         )
         #expect(properties["stops"]?.objectValue?["minItems"] == .number(2))
         #expect(properties["stops"]?.objectValue?["maxItems"] == .number(16))
+        #expect(properties["dither"]?.objectValue?["type"] == .string("boolean"))
 
         viewModel.selectedGradientFillPreset = .sunset
         viewModel.selectedGradientFillStyle = .radial
@@ -5598,6 +5603,7 @@ struct XomoAutomationTests {
             "preset": .string(ImageEditorGradientFillPreset.custom.rawValue),
             "style": .string(ImageEditorGradientFillStyle.reflected.rawValue),
             "reverse": .bool(true),
+            "dither": .bool(true),
             "angle": .number(80),
             "scale": .number(2.25),
             "startColor": color(0.05, 0.10, 0.15),
@@ -5621,6 +5627,7 @@ struct XomoAutomationTests {
         #expect(content.preset == .custom)
         #expect(content.style == .reflected)
         #expect(content.reverse)
+        #expect(content.dither)
         #expect(content.angle == 80)
         #expect(content.scale == 2.25)
         #expect(content.colorStops?.count == 4)
@@ -6926,6 +6933,7 @@ struct XomoAutomationTests {
                     ]),
                     "angle": .number(30),
                     "scale": .number(1.5),
+                    "dither": .bool(true),
                     "centerX": .number(0.35),
                     "centerY": .number(0.65)
                 ]),
@@ -6936,6 +6944,7 @@ struct XomoAutomationTests {
         let shape = try #require(viewModel.document.selectedLayer?.shapeContent)
         #expect(shape.fillGradient?.angle == 30)
         #expect(shape.fillGradient?.scale == 1.5)
+        #expect(shape.fillGradient?.dither == true)
         #expect(shape.fillGradient?.shapeColorStops.count == 3)
         #expect(shape.fillGradient?.shapeColorStops[0].midpoint == 0.2)
         #expect(shape.fillGradient?.shapeColorStops[0].alpha == 0.3)
@@ -6958,6 +6967,7 @@ struct XomoAutomationTests {
             Issue.record("Expected editable gradient payload")
             return
         }
+        #expect(gradientResult["dither"] == .bool(true))
         #expect(gradientResult["angle"] == .number(30))
         #expect(gradientResult["scale"] == .number(1.5))
         #expect(gradientResult["centerX"] == .number(0.35))

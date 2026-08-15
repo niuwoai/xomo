@@ -10888,6 +10888,11 @@ struct ImageEditorView: View {
                 .toggleStyle(.checkbox)
                 .font(.system(size: 11, weight: .semibold))
                 .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+            Toggle(L10n.text("imageEditor.gradientFill.dither"), isOn: $viewModel.gradientFillDither)
+                .toggleStyle(.checkbox)
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                .accessibilityIdentifier("image-editor-gradient-fill-dither")
             adjustmentSlider(
                 labelKey: "imageEditor.gradientFill.angle",
                 value: $viewModel.gradientFillAngle,

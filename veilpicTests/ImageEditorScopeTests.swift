@@ -5227,6 +5227,8 @@ struct ImageEditorScopeTests {
 
         #expect(viewSource.contains("ImageEditorGradientFillStopsEditor(viewModel: viewModel)"))
         #expect(viewSource.contains("viewModel.setGradientFillDraftPreset(preset)"))
+        #expect(viewSource.contains("image-editor-gradient-fill-dither"))
+        #expect(viewSource.contains("$viewModel.gradientFillDither"))
         for identifier in [
             "image-editor-gradient-fill-stops",
             "image-editor-gradient-fill-track",

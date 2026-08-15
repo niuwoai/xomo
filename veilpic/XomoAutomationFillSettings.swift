@@ -123,7 +123,7 @@ extension XomoAutomationRegistry {
         viewModel: ImageEditorViewModel
     ) throws {
         let settingKeys = [
-            "preset", "style", "reverse", "angle", "scale",
+            "preset", "style", "reverse", "dither", "angle", "scale",
             "startColor", "endColor", "stops"
         ]
         guard settingKeys.contains(where: { arguments[$0] != nil }) else {
@@ -198,6 +198,15 @@ extension XomoAutomationRegistry {
         guard let reverse = arguments["reverse"]?.boolValue else {
             throw XomoAutomationCallError.invalidArgument("Missing boolean argument: reverse")
         }
+        let dither: Bool
+        if let value = arguments["dither"] {
+            guard let parsed = value.boolValue else {
+                throw XomoAutomationCallError.invalidArgument("dither must be a boolean")
+            }
+            dither = parsed
+        } else {
+            dither = false
+        }
         let angle = try finiteNumber("angle", in: arguments)
         guard (-180...180).contains(angle) else {
             throw XomoAutomationCallError.invalidArgument("angle must be between -180 and 180")
@@ -214,6 +223,7 @@ extension XomoAutomationRegistry {
             preset: preset,
             style: style,
             reverse: reverse,
+            dither: dither,
             angle: CGFloat(angle),
             scale: CGFloat(scale),
             startRed: start.red,
@@ -332,6 +342,7 @@ extension XomoAutomationRegistry {
                 "preset": .string(content.preset.rawValue),
                 "style": .string(content.style.rawValue),
                 "reverse": .bool(content.reverse),
+                "dither": .bool(content.dither),
                 "angle": .number(Double(content.angle)),
                 "scale": .number(Double(content.scale)),
                 "startColor": gradientColorJSON(

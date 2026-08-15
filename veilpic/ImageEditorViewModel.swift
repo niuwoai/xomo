@@ -343,6 +343,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var selectedGradientFillPreset: ImageEditorGradientFillPreset = .blueOrange
     @Published var selectedGradientFillStyle: ImageEditorGradientFillStyle = .linear
     @Published var gradientFillReverse: Bool = false
+    @Published var gradientFillDither: Bool = false
     @Published var gradientFillAngle: Double = 0
     @Published var gradientFillScale: Double = 1
     @Published var gradientFillStartRed: Double = 0.10
@@ -6917,6 +6918,7 @@ final class ImageEditorViewModel: ObservableObject {
         selectedGradientFillPreset = normalized.preset
         selectedGradientFillStyle = normalized.style
         gradientFillReverse = normalized.reverse
+        gradientFillDither = normalized.dither
         gradientFillAngle = Double(normalized.angle)
         gradientFillScale = Double(normalized.scale)
         gradientFillColorStops = normalized.shapeColorStops
@@ -7923,6 +7925,7 @@ final class ImageEditorViewModel: ObservableObject {
             preset: selectedGradientFillPreset,
             style: selectedGradientFillStyle,
             reverse: gradientFillReverse,
+            dither: gradientFillDither,
             angle: CGFloat(gradientFillAngle),
             scale: CGFloat(gradientFillScale),
             startRed: gradientFillStartRed,
@@ -8043,6 +8046,7 @@ final class ImageEditorViewModel: ObservableObject {
         selectedGradientFillPreset = .blueOrange
         selectedGradientFillStyle = .linear
         gradientFillReverse = false
+        gradientFillDither = false
         gradientFillAngle = 0
         gradientFillScale = 1
         gradientFillStartRed = 0.10

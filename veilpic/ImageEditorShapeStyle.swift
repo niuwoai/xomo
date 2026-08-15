@@ -216,6 +216,10 @@ extension ImageEditorViewModel {
         Double(selectedShapeGradient.scale)
     }
 
+    var selectedShapeGradientDither: Bool {
+        selectedShapeGradient.dither
+    }
+
     var selectedShapeGradientColorStops: [ImageEditorGradientColorStop] {
         selectedShapeGradient.shapeColorStops
     }
@@ -415,6 +419,12 @@ extension ImageEditorViewModel {
         guard scale.isFinite else { return }
         var gradient = selectedShapeGradient
         gradient.scale = CGFloat(max(0.25, min(4, scale)))
+        updateSelectedShapeProperties(fillGradient: gradient)
+    }
+
+    func setSelectedShapeGradientDither(_ dither: Bool) {
+        var gradient = selectedShapeGradient
+        gradient.dither = dither
         updateSelectedShapeProperties(fillGradient: gradient)
     }
 

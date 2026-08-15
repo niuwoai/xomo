@@ -2014,6 +2014,7 @@ enum ImageEditorPSDCodec {
                 preset: .custom,
                 style: style,
                 reverse: descriptor["Rvrs"]?.booleanValue ?? false,
+                dither: descriptor["Dthr"]?.booleanValue ?? false,
                 angle: CGFloat(angle),
                 scale: CGFloat(scale),
                 colorStops: stops
@@ -3695,7 +3696,8 @@ private extension Data {
                 payload: Data(unit: "#Prc", value: Double(normalized.scale * 100))
             ),
             Data.descriptorItem(key: "Algn", type: "bool", payload: Data(boolean: true)),
-            Data.descriptorItem(key: "Rvrs", type: "bool", payload: Data(boolean: normalized.reverse))
+            Data.descriptorItem(key: "Rvrs", type: "bool", payload: Data(boolean: normalized.reverse)),
+            Data.descriptorItem(key: "Dthr", type: "bool", payload: Data(boolean: normalized.dither))
         ]
         if let center {
             let horizontalOffset = (Swift.max(-4, Swift.min(5, center.x)) - 0.5) * 100

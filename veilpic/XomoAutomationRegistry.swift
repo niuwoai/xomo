@@ -2537,6 +2537,17 @@ final class XomoAutomationRegistry {
             in: object,
             range: 0.25...4
         ) ?? 1
+        let dither: Bool
+        if let value = object["dither"] {
+            guard let parsed = value.boolValue else {
+                throw XomoAutomationCallError.invalidArgument(
+                    "fillGradient.dither must be a boolean"
+                )
+            }
+            dither = parsed
+        } else {
+            dither = false
+        }
         if let stopsValue = object["stops"] {
             guard let values = stopsValue.arrayValue else {
                 throw XomoAutomationCallError.invalidArgument(
@@ -2619,20 +2630,24 @@ final class XomoAutomationRegistry {
                     "fillGradient.stops must be ordered and span positions 0 through 1"
                 )
             }
-            return .shapeLinear(
+            var gradient = ImageEditorGradientFillContent.shapeLinear(
                 colorStops: stops,
                 angle: CGFloat(angle),
                 scale: CGFloat(scale)
             )
+            gradient.dither = dither
+            return gradient
         }
         let start = try requiredOpaqueColor("startColor", in: object)
         let end = try requiredOpaqueColor("endColor", in: object)
-        return .shapeLinear(
+        var gradient = ImageEditorGradientFillContent.shapeLinear(
             startColor: start,
             endColor: end,
             angle: CGFloat(angle),
             scale: CGFloat(scale)
         )
+        gradient.dither = dither
+        return gradient
     }
 
     private func shapeFillKind(_ gradient: ImageEditorGradientFillContent?) -> String {
@@ -2799,6 +2814,7 @@ final class XomoAutomationRegistry {
             }),
             "angle": .number(normalized.angle),
             "scale": .number(normalized.scale),
+            "dither": .bool(normalized.dither),
             "centerX": .number(center.x),
             "centerY": .number(center.y)
         ])
@@ -6367,6 +6383,7 @@ private extension XomoAutomationRegistry {
             "preset": XomoAutomationSchema.string(description: "Optional gradient-fill preset", values: ImageEditorGradientFillPreset.allCases.map(\.rawValue)),
             "style": XomoAutomationSchema.string(description: "Optional gradient-fill style", values: ImageEditorGradientFillStyle.allCases.map(\.rawValue)),
             "reverse": XomoAutomationSchema.boolean(description: "Optional gradient-fill reverse direction"),
+            "dither": XomoAutomationSchema.boolean(description: "Optional deterministic gradient dithering"),
             "angle": shapeBoundedNumberSchema(
                 description: "Optional gradient-fill angle in degrees",
                 minimum: -180,
@@ -6410,6 +6427,7 @@ private extension XomoAutomationRegistry {
             "preset": XomoAutomationSchema.string(description: "Gradient preset", values: ImageEditorGradientFillPreset.allCases.map(\.rawValue)),
             "style": XomoAutomationSchema.string(description: "Gradient style", values: ImageEditorGradientFillStyle.allCases.map(\.rawValue)),
             "reverse": XomoAutomationSchema.boolean(description: "Reverse the gradient direction"),
+            "dither": XomoAutomationSchema.boolean(description: "Apply deterministic gradient dithering"),
             "angle": shapeBoundedNumberSchema(
                 description: "Gradient angle in degrees",
                 minimum: -180,
@@ -7156,6 +7174,9 @@ private extension XomoAutomationRegistry {
                 description: "Linear gradient span scale",
                 minimum: 0.25,
                 maximum: 4
+            ),
+            "dither": XomoAutomationSchema.boolean(
+                description: "Apply deterministic gradient dithering"
             ),
             "centerX": shapeBoundedNumberSchema(
                 description: "Normalized horizontal gradient center",
