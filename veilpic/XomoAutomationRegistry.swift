@@ -975,10 +975,20 @@ final class XomoAutomationRegistry {
               let image = NSImage(data: data)
         else { throw XomoAutomationCallError.invalidArgument("Image base64 is invalid") }
         let name = arguments["name"]?.stringValue ?? "imported-image.png"
-        if arguments["intoSelection"]?.boolValue == true {
-            viewModel.importImageLayerIntoSelection(image, sourceName: name)
+        let importsIntoSelection = arguments["intoSelection"]?.boolValue == true
+        if importsIntoSelection, viewModel.document.selection == nil {
+            throw XomoAutomationCallError.operationFailed(
+                "Image import into selection requires an active selection"
+            )
+        }
+        let didImportLayer: Bool
+        if importsIntoSelection {
+            didImportLayer = viewModel.importImageLayerIntoSelection(image, sourceName: name)
         } else {
-            viewModel.importImageLayer(image, sourceName: name)
+            didImportLayer = viewModel.importImageLayer(image, sourceName: name)
+        }
+        guard didImportLayer else {
+            throw XomoAutomationCallError.operationFailed("Image import did not create a layer")
         }
     }
 

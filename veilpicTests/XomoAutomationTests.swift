@@ -8058,6 +8058,68 @@ struct XomoAutomationTests {
         #expect(destination.document.layers.contains { $0.name == "Round Trip Group" && $0.isGroup })
     }
 
+    @Test func registryImageImportReportsSelectionFailuresAndSuccessfulLayers() throws {
+        let viewModel = makeViewModel()
+        let importedImage = try #require(NSImage.rendered(size: CGSize(width: 24, height: 16)) { rect in
+            NSColor.systemOrange.setFill()
+            rect.fill()
+        })
+        let imageData = try #require(importedImage.qingtuPNGData())
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        let importArguments: [String: XomoJSONValue] = [
+            "base64": .string(imageData.base64EncodedString()),
+            "name": .string("automation-import.png")
+        ]
+        let originalLayerCount = viewModel.document.layers.count
+        let originalHistoryCount = viewModel.document.history.count
+        let originalUndoCount = viewModel.undoStack.count
+
+        var selectionArguments = importArguments
+        selectionArguments["intoSelection"] = .bool(true)
+        let missingSelection = registry.execute(request(
+            operation: "call",
+            name: "xomo.import.image",
+            arguments: selectionArguments
+        ))
+        #expect(!missingSelection.ok)
+        #expect(missingSelection.error?.contains("requires an active selection") == true)
+        #expect(viewModel.document.layers.count == originalLayerCount)
+        #expect(viewModel.document.history.count == originalHistoryCount)
+        #expect(viewModel.undoStack.count == originalUndoCount)
+
+        viewModel.document.selection = .rectangle(CGRect(x: 400, y: 0, width: 20, height: 20))
+        let outsideSelection = registry.execute(request(
+            operation: "call",
+            name: "xomo.import.image",
+            arguments: selectionArguments
+        ))
+        #expect(!outsideSelection.ok)
+        #expect(outsideSelection.error?.contains("did not create a layer") == true)
+        #expect(viewModel.document.layers.count == originalLayerCount)
+        #expect(viewModel.document.history.count == originalHistoryCount)
+        #expect(viewModel.undoStack.count == originalUndoCount)
+
+        viewModel.document.selection = .rectangle(CGRect(x: 8, y: 6, width: 40, height: 30))
+        let selectionImport = registry.execute(request(
+            operation: "call",
+            name: "xomo.import.image",
+            arguments: selectionArguments
+        ))
+        #expect(selectionImport.ok)
+        #expect(viewModel.document.layers.count == originalLayerCount + 1)
+        #expect(viewModel.document.selectedLayer?.mask != nil)
+
+        let ordinaryImport = registry.execute(request(
+            operation: "call",
+            name: "xomo.import.image",
+            arguments: importArguments
+        ))
+        #expect(ordinaryImport.ok)
+        #expect(viewModel.document.layers.count == originalLayerCount + 2)
+        #expect(viewModel.document.selectedLayer?.name.contains("automation-import") == true)
+    }
+
     @Test func registryCreatesCanvasAndEditsText() throws {
         let viewModel = makeViewModel()
         let registry = XomoAutomationRegistry.shared

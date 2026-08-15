@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-15 08:23:41 +0800",
+  "generated_at": "2026-08-15 08:33:34 +0800",
   "total": 1,
   "passed": 1,
   "failed": 0,
@@ -10,15 +10,15 @@
   "results": [
     {
       "suite": "XomoAutomationTests",
-      "method": "registryClipboardActionsRequireTheirOwnResourcesAndPreserveCopyFallbacks",
-      "identifier": "veilpicTests/XomoAutomationTests/registryClipboardActionsRequireTheirOwnResourcesAndPreserveCopyFallbacks()",
+      "method": "registryImageImportReportsSelectionFailuresAndSuccessfulLayers",
+      "identifier": "veilpicTests/XomoAutomationTests/registryImageImportReportsSelectionFailuresAndSuccessfulLayers()",
       "file": "XomoAutomationTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 4.868,
+      "duration": 4.293,
       "infrastructure_retries": 0,
       "issues": [],
-      "log": "XomoAutomationTests.registryClipboardActionsRequireTheirOwnResourcesAndPreserveCopyFallbacks.log"
+      "log": "XomoAutomationTests.registryImageImportReportsSelectionFailuresAndSuccessfulLayers.log"
     }
   ]
 }
