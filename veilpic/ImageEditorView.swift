@@ -109,6 +109,9 @@ struct ImageEditorView: View {
     @State private var activeGradientOverlayStopIndex: Int?
     @State private var gradientOverlayStopDragStartLocation: CGPoint?
     @State private var cancelledGradientOverlayStopDragStartLocation: CGPoint?
+    @State private var activeGradientOverlayMidpointIndex: Int?
+    @State private var gradientOverlayMidpointDragStartLocation: CGPoint?
+    @State private var cancelledGradientOverlayMidpointDragStartLocation: CGPoint?
     @State var selectedShapeGradientStopIndex = 0
     @State var activeShapeGradientTrackStopIndex: Int?
     @State var activeShapeGradientTrackMidpointIndex: Int?
@@ -7609,6 +7612,17 @@ struct ImageEditorView: View {
                     )
                 }
 
+                ForEach(
+                    viewModel.selectedLayerGradientOverlayCanvasMidpointHandlePoints
+                ) { point in
+                    gradientOverlayMidpointHandleView(
+                        point,
+                        axisStart: axisStart,
+                        axisEndpoint: axisEndpoint,
+                        canvasSize: size
+                    )
+                }
+
                 Circle()
                     .fill(Color.accentColor)
                     .overlay {
@@ -7802,12 +7816,97 @@ struct ImageEditorView: View {
             )
     }
 
+    private func gradientOverlayMidpointHandleView(
+        _ point: ImageEditorGradientOverlayMidpointHandlePoint,
+        axisStart: CGPoint,
+        axisEndpoint: CGPoint,
+        canvasSize: CGSize
+    ) -> some View {
+        let axis = CGVector(dx: axisEndpoint.x - axisStart.x, dy: axisEndpoint.y - axisStart.y)
+        let length = max(0.001, hypot(axis.dx, axis.dy))
+        let canvasPosition = viewPoint(from: point.canvasPoint, in: canvasSize)
+        let position = CGPoint(
+            x: canvasPosition.x + axis.dy / length * 14,
+            y: canvasPosition.y - axis.dx / length * 14
+        )
+        return RoundedRectangle(cornerRadius: 1.5, style: .continuous)
+            .fill(Color.white.opacity(0.92))
+            .overlay {
+                RoundedRectangle(cornerRadius: 1.5, style: .continuous)
+                    .stroke(Color.black.opacity(0.72), lineWidth: 1)
+            }
+            .frame(width: 8, height: 8)
+            .rotationEffect(.degrees(45))
+            .position(position)
+            .contentShape(Rectangle().inset(by: -7))
+            .highPriorityGesture(
+                DragGesture(
+                    minimumDistance: 0,
+                    coordinateSpace: .named("image-editor-canvas-space")
+                )
+                .onChanged { value in
+                    if let cancelledStart = cancelledGradientOverlayMidpointDragStartLocation {
+                        guard cancelledStart != value.startLocation else { return }
+                        cancelledGradientOverlayMidpointDragStartLocation = nil
+                    }
+                    if activeGradientOverlayMidpointIndex == nil {
+                        gradientOverlayMidpointDragStartLocation = value.startLocation
+                        guard viewModel.beginEditingSelectedLayerGradientOverlayCanvasMidpoint(
+                            after: point.lowerStopIndex
+                        ) else {
+                            gradientOverlayMidpointDragStartLocation = nil
+                            return
+                        }
+                        activeGradientOverlayMidpointIndex = point.lowerStopIndex
+                    }
+                    guard activeGradientOverlayMidpointIndex == point.lowerStopIndex else {
+                        return
+                    }
+                    viewModel.updateSelectedLayerGradientOverlayCanvasMidpoint(
+                        to: unboundedImagePoint(from: value.location, in: canvasSize)
+                    )
+                }
+                .onEnded { value in
+                    defer {
+                        activeGradientOverlayMidpointIndex = nil
+                        gradientOverlayMidpointDragStartLocation = nil
+                    }
+                    if cancelledGradientOverlayMidpointDragStartLocation
+                        == value.startLocation {
+                        cancelledGradientOverlayMidpointDragStartLocation = nil
+                        return
+                    }
+                    guard activeGradientOverlayMidpointIndex == point.lowerStopIndex else {
+                        return
+                    }
+                    viewModel.updateSelectedLayerGradientOverlayCanvasMidpoint(
+                        to: unboundedImagePoint(from: value.location, in: canvasSize)
+                    )
+                    viewModel.finishEditingSelectedLayerGradientOverlayCanvasMidpoint()
+                }
+            )
+            .allowsHitTesting(viewModel.canEditSelectedLayerGradientOverlayCanvasCenter)
+            .opacity(viewModel.canEditSelectedLayerGradientOverlayCanvasCenter ? 1 : 0.55)
+            .help(L10n.text("imageEditor.help.gradientOverlayMidpointHandle"))
+            .accessibilityLabel(
+                L10n.format(
+                    "imageEditor.properties.shapeGradientMidpointAccessibility",
+                    point.lowerStopIndex + 1,
+                    Int((point.midpoint * 100).rounded())
+                )
+            )
+            .accessibilityIdentifier(
+                "image-editor-gradient-overlay-canvas-midpoint-\(point.lowerStopIndex)"
+            )
+    }
+
     @discardableResult
     private func cancelGradientOverlayCanvasHandleDragForLifecycle() -> Bool {
+        let cancelledMidpoint = cancelGradientOverlayMidpointDragForLifecycle()
         let cancelledStop = cancelGradientOverlayStopDragForLifecycle()
         let cancelledAxis = cancelGradientOverlayAxisDragForLifecycle()
         let cancelledCenter = cancelGradientOverlayCenterDragForLifecycle()
-        return cancelledStop || cancelledAxis || cancelledCenter
+        return cancelledMidpoint || cancelledStop || cancelledAxis || cancelledCenter
     }
 
     @discardableResult
@@ -7843,6 +7942,19 @@ struct ImageEditorView: View {
         activeGradientOverlayStopIndex = nil
         gradientOverlayStopDragStartLocation = nil
         _ = viewModel.cancelEditingSelectedLayerGradientOverlayCanvasStop()
+        return true
+    }
+
+    @discardableResult
+    private func cancelGradientOverlayMidpointDragForLifecycle() -> Bool {
+        let hadActiveDrag = activeGradientOverlayMidpointIndex != nil
+            || viewModel.hasActiveGradientOverlayMidpointTransaction
+        guard hadActiveDrag else { return false }
+        cancelledGradientOverlayMidpointDragStartLocation =
+            gradientOverlayMidpointDragStartLocation
+        activeGradientOverlayMidpointIndex = nil
+        gradientOverlayMidpointDragStartLocation = nil
+        _ = viewModel.cancelEditingSelectedLayerGradientOverlayCanvasMidpoint()
         return true
     }
 

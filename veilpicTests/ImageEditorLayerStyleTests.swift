@@ -2475,6 +2475,99 @@ struct ImageEditorLayerStyleTests {
         #expect(maximum.document.history.count == maximumHistory)
     }
 
+    @Test func gradientOverlayCanvasMidpointsMapAcrossStylesAndReverse() throws {
+        let frame = CGRect(x: 0, y: 0, width: 100, height: 50)
+        let center = CGPoint(x: 0.5, y: 0.5)
+        let stops = [
+            ImageEditorGradientColorStop(
+                position: 0,
+                color: .systemRed,
+                midpoint: 0.25
+            ),
+            ImageEditorGradientColorStop(
+                position: 0.4,
+                color: .systemGreen,
+                midpoint: 0.75
+            ),
+            ImageEditorGradientColorStop(position: 1, color: .systemBlue)
+        ]
+        let linear = ImageEditorGradientOverlayAxisGeometry.midpointHandlePoints(
+            style: .linear,
+            center: center,
+            angle: 0,
+            scale: 1,
+            reverse: false,
+            stops: stops,
+            layerFrame: frame
+        )
+        #expect(linear.count == 2)
+        #expect(linear[0].lowerStopIndex == 0)
+        #expect(abs(linear[0].canvasPoint.x - 10) < 0.000_001)
+        #expect(abs(linear[0].canvasPoint.y - 25) < 0.000_001)
+        #expect(abs(linear[1].canvasPoint.x - 85) < 0.000_001)
+        #expect(abs(linear[1].canvasPoint.y - 25) < 0.000_001)
+
+        let reversed = ImageEditorGradientOverlayAxisGeometry.midpointHandlePoints(
+            style: .linear,
+            center: center,
+            angle: 0,
+            scale: 1,
+            reverse: true,
+            stops: stops,
+            layerFrame: frame
+        )
+        #expect(abs(reversed[0].canvasPoint.x - 90) < 0.000_001)
+        #expect(abs(reversed[0].canvasPoint.y - 25) < 0.000_001)
+        #expect(abs(reversed[1].canvasPoint.x - 15) < 0.000_001)
+        #expect(abs(reversed[1].canvasPoint.y - 25) < 0.000_001)
+        let reversedMidpoint = try #require(
+            ImageEditorGradientOverlayAxisGeometry.logicalMidpoint(
+                after: 0,
+                style: .linear,
+                center: center,
+                angle: 0,
+                scale: 1,
+                reverse: true,
+                stops: stops,
+                layerFrame: frame,
+                canvasPoint: CGPoint(x: 80, y: 25)
+            )
+        )
+        #expect(abs(reversedMidpoint - 0.5) < 0.000_001)
+
+        for style in [
+            ImageEditorGradientFillStyle.radial,
+            .reflected,
+            .diamond
+        ] {
+            let handle = try #require(
+                ImageEditorGradientOverlayAxisGeometry.midpointHandlePoints(
+                    style: style,
+                    center: center,
+                    angle: 0,
+                    scale: 1,
+                    reverse: false,
+                    stops: stops,
+                    layerFrame: frame
+                ).first
+            )
+            let midpoint = try #require(
+                ImageEditorGradientOverlayAxisGeometry.logicalMidpoint(
+                    after: 0,
+                    style: style,
+                    center: center,
+                    angle: 0,
+                    scale: 1,
+                    reverse: false,
+                    stops: stops,
+                    layerFrame: frame,
+                    canvasPoint: handle.canvasPoint
+                )
+            )
+            #expect(abs(midpoint - 0.25) < 0.000_001)
+        }
+    }
+
     @Test func draggingGradientOverlayCanvasStopCommitsOnceAndRoundTripPreservesRedo() throws {
         let viewModel = gradientOverlayCenterViewModel()
         let selectedIndex = try #require(viewModel.document.selectedLayerIndex)
@@ -2545,6 +2638,105 @@ struct ImageEditorLayerStyleTests {
         #expect(viewModel.canRedo)
         viewModel.undo()
         #expect(!viewModel.hasActiveGradientOverlayStopTransaction)
+        #expect(try viewModel.projectData() == originalProjectData)
+        #expect(viewModel.undoStack.count == undoCount)
+        #expect(viewModel.canRedo)
+        viewModel.redo()
+        #expect(viewModel.selectedLayerGradientOverlayScale == 1.5)
+    }
+
+    @Test func draggingGradientOverlayCanvasMidpointCommitsOnceAndPreservesRedo() throws {
+        let viewModel = gradientOverlayCenterViewModel()
+        let selectedIndex = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[selectedIndex].style.setGradientOverlayColorStops([
+            ImageEditorGradientColorStop(
+                position: 0,
+                color: .systemRed,
+                midpoint: 0.3
+            ),
+            ImageEditorGradientColorStop(
+                position: 0.4,
+                color: .systemGreen,
+                midpoint: 0.6
+            ),
+            ImageEditorGradientColorStop(position: 1, color: .systemBlue)
+        ])
+        #expect(viewModel.setSelectedLayerGradientOverlayAngle(15) == 1)
+        viewModel.undo()
+        let originalProjectData = try viewModel.projectData()
+        let originalHandle = try #require(
+            viewModel.selectedLayerGradientOverlayCanvasMidpointHandlePoints.first
+        )
+        let geometry = try #require(viewModel.selectedLayerGradientOverlayCanvasGeometry)
+        let target = CGPoint(
+            x: geometry.axisStart.x
+                + (geometry.axisEndpoint.x - geometry.axisStart.x) * 0.32,
+            y: geometry.axisStart.y
+                + (geometry.axisEndpoint.y - geometry.axisStart.y) * 0.32
+        )
+        let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
+
+        #expect(
+            viewModel.beginEditingSelectedLayerGradientOverlayCanvasMidpoint(after: 0)
+        )
+        viewModel.updateSelectedLayerGradientOverlayCanvasMidpoint(to: target)
+        viewModel.updateSelectedLayerGradientOverlayCanvasMidpoint(
+            to: originalHandle.canvasPoint
+        )
+        viewModel.finishEditingSelectedLayerGradientOverlayCanvasMidpoint()
+        #expect(try viewModel.projectData() == originalProjectData)
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.undoStack.count == undoCount)
+        #expect(viewModel.canRedo)
+
+        #expect(
+            viewModel.beginEditingSelectedLayerGradientOverlayCanvasMidpoint(after: 0)
+        )
+        viewModel.updateSelectedLayerGradientOverlayCanvasMidpoint(to: target)
+        viewModel.finishEditingSelectedLayerGradientOverlayCanvasMidpoint()
+        let movedStops = try #require(
+            viewModel.document.selectedLayer?.style.gradientOverlayColorStops
+        )
+        #expect(abs(movedStops[0].midpoint - 0.8) < 0.000_001)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.undoStack.count == undoCount + 1)
+        #expect(!viewModel.canRedo)
+        viewModel.undo()
+        let restoredMidpoint = try #require(
+            viewModel.document.selectedLayer?.style.resolvedGradientOverlayColorStops[0]
+                .midpoint
+        )
+        #expect(abs(restoredMidpoint - 0.3) < 0.000_001)
+    }
+
+    @Test func undoCancelsActiveGradientOverlayCanvasMidpointBeforeHistory() throws {
+        let viewModel = gradientOverlayCenterViewModel()
+        let selectedIndex = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[selectedIndex].style.setGradientOverlayColorStops([
+            ImageEditorGradientColorStop(position: 0, color: .systemRed),
+            ImageEditorGradientColorStop(
+                position: 0.4,
+                color: .systemGreen,
+                midpoint: 0.6
+            ),
+            ImageEditorGradientColorStop(position: 1, color: .systemBlue)
+        ])
+        #expect(viewModel.setSelectedLayerGradientOverlayScale(1.5) == 1)
+        viewModel.undo()
+        let originalProjectData = try viewModel.projectData()
+        let geometry = try #require(viewModel.selectedLayerGradientOverlayCanvasGeometry)
+        let undoCount = viewModel.undoStack.count
+
+        #expect(
+            viewModel.beginEditingSelectedLayerGradientOverlayCanvasMidpoint(after: 1)
+        )
+        viewModel.updateSelectedLayerGradientOverlayCanvasMidpoint(
+            to: geometry.axisEndpoint
+        )
+        #expect(viewModel.canRedo)
+        viewModel.undo()
+        #expect(!viewModel.hasActiveGradientOverlayMidpointTransaction)
         #expect(try viewModel.projectData() == originalProjectData)
         #expect(viewModel.undoStack.count == undoCount)
         #expect(viewModel.canRedo)
@@ -2820,11 +3012,16 @@ struct ImageEditorLayerStyleTests {
         #expect(source.contains("beginEditingSelectedLayerGradientOverlayCanvasStop"))
         #expect(source.contains("updateSelectedLayerGradientOverlayCanvasStop"))
         #expect(source.contains("finishEditingSelectedLayerGradientOverlayCanvasStop"))
+        #expect(source.contains("beginEditingSelectedLayerGradientOverlayCanvasMidpoint"))
+        #expect(source.contains("updateSelectedLayerGradientOverlayCanvasMidpoint"))
+        #expect(source.contains("finishEditingSelectedLayerGradientOverlayCanvasMidpoint"))
+        #expect(source.contains("cancelGradientOverlayMidpointDragForLifecycle"))
         #expect(source.contains("cancelGradientOverlayCanvasHandleDragForLifecycle"))
         #expect(source.contains("image-editor-gradient-overlay-center-handle"))
         #expect(source.contains("image-editor-gradient-overlay-axis-handle"))
         #expect(source.contains("image-editor-gradient-overlay-axis"))
         #expect(source.contains("image-editor-gradient-overlay-canvas-stop-"))
+        #expect(source.contains("image-editor-gradient-overlay-canvas-midpoint-"))
     }
 
     @Test func gradientOverlayCenterHandleRejectsLockedAndMultiLayerSelections() throws {
