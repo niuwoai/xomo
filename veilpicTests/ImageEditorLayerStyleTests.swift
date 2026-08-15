@@ -1951,6 +1951,7 @@ struct ImageEditorLayerStyleTests {
         viewModel.setSelectedLayerGradientOverlayScale(2)
         viewModel.setSelectedLayerGradientOverlayAngle(45)
         viewModel.setSelectedLayerGradientOverlayDither(true)
+        viewModel.setSelectedLayerGradientOverlayReverse(true)
 
         let styledLayer = try #require(viewModel.document.selectedLayer)
         let layerPixelsAfterStyle = try #require(styledLayer.image.qingtuPNGData())
@@ -1963,6 +1964,7 @@ struct ImageEditorLayerStyleTests {
         #expect(styledLayer.style.gradientOverlayScale == 2)
         #expect(styledLayer.style.gradientOverlayAngle == 45)
         #expect(styledLayer.style.gradientOverlayDither)
+        #expect(styledLayer.style.gradientOverlayReverse)
         let startColor = try #require(styledLayer.style.gradientOverlayStartColor.usingColorSpace(.deviceRGB))
         let endColor = try #require(styledLayer.style.gradientOverlayEndColor.usingColorSpace(.deviceRGB))
         #expect(startColor.redComponent > 0.85)
@@ -1973,8 +1975,8 @@ struct ImageEditorLayerStyleTests {
         #expect(viewModel.selectedLayerGradientOverlayScale == 2)
         #expect(layerPixelsAfterStyle == layerPixelsBeforeStyle)
         #expect(compositedAfterStyle != compositedBeforeStyle)
-        #expect(centerColor.redComponent > edgeColor.redComponent + 0.10)
-        #expect(edgeColor.blueComponent > centerColor.blueComponent + 0.10)
+        #expect(centerColor.blueComponent > edgeColor.blueComponent + 0.10)
+        #expect(edgeColor.redComponent > centerColor.redComponent + 0.10)
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerStyle"))
 
         let project = try ImageEditorProjectDocument(document: viewModel.document)
@@ -1989,6 +1991,57 @@ struct ImageEditorLayerStyleTests {
         #expect(restoredLayer.style.gradientOverlayScale == 2)
         #expect(restoredLayer.style.gradientOverlayOpacity == 1)
         #expect(restoredLayer.style.gradientOverlayDither)
+        #expect(restoredLayer.style.gradientOverlayReverse)
+    }
+
+    @Test func gradientOverlayReverseIsUndoableAndLegacyProjectsDefaultForward() throws {
+        let canvasSize = NSSize(width: 80, height: 60)
+        let viewModel = ImageEditorViewModel(
+            sourceName: "gradient-overlay-reverse.png",
+            image: solidImage(color: .black, size: canvasSize)
+        ) { _ in }
+        viewModel.replaceSelectedLayerImageForTesting(
+            centerRectImage(size: canvasSize, color: .white),
+            historyTitle: L10n.text("imageEditor.history.brush")
+        )
+        viewModel.setSelectedLayerGradientOverlayOpacity(1)
+        viewModel.setSelectedLayerGradientOverlayStartColor(.systemRed)
+        viewModel.setSelectedLayerGradientOverlayEndColor(.systemBlue)
+        viewModel.setSelectedLayerGradientOverlayStyle(.linear)
+        viewModel.setSelectedLayerGradientOverlayAngle(0)
+        let sourcePixels = try #require(viewModel.document.selectedLayer?.image.qingtuPNGData())
+        let forwardPixels = try #require(viewModel.currentImage.qingtuPNGData())
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.setSelectedLayerGradientOverlayReverse(true) == 1)
+        #expect(viewModel.document.selectedLayer?.style.gradientOverlayReverse == true)
+        let reversedPixels = try #require(viewModel.currentImage.qingtuPNGData())
+        #expect(reversedPixels != forwardPixels)
+        #expect(viewModel.document.selectedLayer?.image.qingtuPNGData() == sourcePixels)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.setSelectedLayerGradientOverlayReverse(true) == 0)
+        #expect(viewModel.document.history.count == historyCount + 1)
+
+        viewModel.undo()
+        #expect(viewModel.document.selectedLayer?.style.gradientOverlayReverse == false)
+        #expect(viewModel.currentImage.qingtuPNGData() == forwardPixels)
+        viewModel.redo()
+        #expect(viewModel.document.selectedLayer?.style.gradientOverlayReverse == true)
+        #expect(viewModel.currentImage.qingtuPNGData() == reversedPixels)
+
+        let encodedStyle = try JSONEncoder().encode(
+            ImageEditorProjectLayerStyle(style: viewModel.document.selectedLayer!.style)
+        )
+        var legacyObject = try #require(
+            JSONSerialization.jsonObject(with: encodedStyle) as? [String: Any]
+        )
+        legacyObject.removeValue(forKey: "gradientOverlayReverse")
+        let legacyData = try JSONSerialization.data(withJSONObject: legacyObject)
+        let legacyStyle = try JSONDecoder().decode(
+            ImageEditorProjectLayerStyle.self,
+            from: legacyData
+        )
+        #expect(!legacyStyle.layerStyle.gradientOverlayReverse)
     }
 
     @Test func gradientOverlayDitherIsUndoableNonDestructiveAndTransparentSafe() throws {

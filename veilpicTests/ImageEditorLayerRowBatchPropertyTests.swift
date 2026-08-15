@@ -3460,6 +3460,48 @@ struct ImageEditorLayerRowBatchPropertyTests {
         #expect(source.contains("viewModel.toggleSelectedLayerGradientOverlayDither()"))
     }
 
+    @Test func layerStyleGradientOverlayReverseConvergesAcrossEditableSelection() throws {
+        let fixture = makeFixture()
+        let viewModel = fixture.viewModel
+        let firstID = fixture.layers[0].id
+        let secondID = fixture.layers[1].id
+        let lockedID = fixture.layers[2].id
+        viewModel.document.layers[0].style.gradientOverlayEnabled = true
+        viewModel.document.layers[0].style.gradientOverlayReverse = false
+        viewModel.document.layers[1].style.gradientOverlayEnabled = true
+        viewModel.document.layers[1].style.gradientOverlayReverse = true
+        viewModel.document.layers[2].style.gradientOverlayEnabled = true
+        viewModel.document.layers[2].style.gradientOverlayReverse = false
+        viewModel.document.layers[2].isLocked = true
+        select(Set(fixture.layers.map(\.id)), primary: firstID, in: viewModel)
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.selectedLayerGradientOverlayReverseState == .mixed)
+        #expect(viewModel.setSelectedLayerGradientOverlayReverse(true) == 1)
+        #expect((try layer(firstID, in: viewModel)).style.gradientOverlayReverse)
+        #expect((try layer(secondID, in: viewModel)).style.gradientOverlayReverse)
+        #expect(!(try layer(lockedID, in: viewModel)).style.gradientOverlayReverse)
+        #expect(viewModel.selectedLayerGradientOverlayReverseState == .on)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.setSelectedLayerGradientOverlayReverse(true) == 0)
+        #expect(viewModel.document.history.count == historyCount + 1)
+
+        viewModel.undo()
+        #expect(viewModel.selectedLayerGradientOverlayReverseState == .mixed)
+        viewModel.redo()
+        #expect(viewModel.selectedLayerGradientOverlayReverseState == .on)
+
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        #expect(source.contains("image-editor-layer-style-gradient-overlay-reverse"))
+        #expect(source.contains("viewModel.toggleSelectedLayerGradientOverlayReverse()"))
+    }
+
     @Test func layerStyleMixedPatternOverlayKindConvergesAcrossEditableSelection() throws {
         let fixture = patternOverlayKindFixture()
         let viewModel = fixture.viewModel

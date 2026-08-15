@@ -192,6 +192,10 @@ extension ImageEditorViewModel {
         selectedLayerStyleBooleanState(\.gradientOverlayDither)
     }
 
+    var selectedLayerGradientOverlayReverseState: ImageEditorLayerStyleSelectionState {
+        selectedLayerStyleBooleanState(\.gradientOverlayReverse)
+    }
+
     var canCreateLayerStylePreset: Bool {
         guard customLayerStylePresets.count < ImageEditorLayerStylePresetPreferences.maximumPresetCount,
               let layer = document.selectedLayer
@@ -1730,6 +1734,20 @@ extension ImageEditorViewModel {
     func toggleSelectedLayerGradientOverlayDither() {
         _ = setSelectedLayerGradientOverlayDither(
             selectedLayerGradientOverlayDitherState != .on
+        )
+    }
+
+    @discardableResult
+    func setSelectedLayerGradientOverlayReverse(_ enabled: Bool) -> Int {
+        updateSelectedLayerStyle {
+            $0.gradientOverlayEnabled = true
+            $0.gradientOverlayReverse = enabled
+        }
+    }
+
+    func toggleSelectedLayerGradientOverlayReverse() {
+        _ = setSelectedLayerGradientOverlayReverse(
+            selectedLayerGradientOverlayReverseState != .on
         )
     }
 

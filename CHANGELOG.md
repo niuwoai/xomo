@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.12.0-rc1029 - 2026-08-16
+
+### Added
+- Photoshop 式 Gradient Overlay 新增“反向”，在不交换或破坏渐变端点颜色的前提下翻转整条渐变方向，并与线性、径向、对称、菱形及抖动渲染共用同一算法。
+- 图层样式面板提供三态反向开关，多选混合值、锁定层跳过、一步 Undo/Redo、样式预设和工程保存闭环；旧工程缺少字段时保持正向。
+- `xomo.layer.style_settings` 新增 `gradientOverlayReverse` 布尔属性，返回实际更新层数并拒绝重复空操作。
+
+### Verification
+- Layer Style 完整套件 50/50，以及 Reverse 多选三态与 MCP 定向回归 2/2，共 52/52 通过；CLI 2/2、发布契约 7/7（21 项断言）通过。下一次周期完整门禁为 rc1040，本版不覆盖 `/Applications` 安装。
+
 ## 2.12.0-rc1028 - 2026-08-16
 
 ### Added

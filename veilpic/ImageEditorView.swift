@@ -9916,6 +9916,13 @@ struct ImageEditorView: View {
                     viewModel.setSelectedLayerGradientOverlayStyle(style)
                 }
                 layerStyleTriStateToggle(
+                    state: viewModel.selectedLayerGradientOverlayReverseState,
+                    labelKey: "imageEditor.gradientFill.reverse",
+                    accessibilityIdentifier: "image-editor-layer-style-gradient-overlay-reverse"
+                ) {
+                    viewModel.toggleSelectedLayerGradientOverlayReverse()
+                }
+                layerStyleTriStateToggle(
                     state: viewModel.selectedLayerGradientOverlayDitherState,
                     labelKey: "imageEditor.gradientFill.dither",
                     accessibilityIdentifier: "image-editor-layer-style-gradient-overlay-dither"

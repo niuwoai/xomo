@@ -2772,6 +2772,7 @@ struct ImageEditorLayerStyle {
     var gradientOverlayStyle = ImageEditorGradientFillStyle.linear
     var gradientOverlayScale: CGFloat = 1
     var gradientOverlayAngle: CGFloat = 0
+    var gradientOverlayReverse = false
     var gradientOverlayDither = false
     var patternOverlayEnabled = false
     var patternOverlayKind = ImageEditorPatternOverlayKind.checkerboard
@@ -4339,6 +4340,7 @@ struct ImageEditorLayer: Identifiable {
                 let gradientImage = ImageEditorGradientFillContent(
                     preset: .custom,
                     style: style.gradientOverlayStyle,
+                    reverse: style.gradientOverlayReverse,
                     dither: style.gradientOverlayDither,
                     angle: style.gradientOverlayAngle,
                     scale: style.gradientOverlayScale,
