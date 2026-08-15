@@ -1347,6 +1347,8 @@
 "imageEditor.properties.gradientOverlayEndColor" = "Gradient End Color";
 "imageEditor.properties.gradientOverlayStops" = "Gradient Color Stops";
 "imageEditor.action.gradientOverlayStopsApply" = "Apply Gradient";
+"imageEditor.properties.gradientOverlayCenterXValue" = "Center X %d%%";
+"imageEditor.properties.gradientOverlayCenterYValue" = "Center Y %d%%";
 "imageEditor.properties.gradientOverlayScaleValue" = "Gradient Overlay Scale: %d%%";
 "imageEditor.properties.gradientOverlayAngleValue" = "Gradient Angle: %d°";
 "imageEditor.properties.patternOverlayKind" = "Pattern";

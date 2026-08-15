@@ -907,6 +907,7 @@ struct ImageEditorProjectLayerStyle: Codable, Equatable {
     var gradientOverlayReverse: Bool?
     var gradientOverlayDither: Bool?
     var gradientOverlayColorStops: [ImageEditorGradientColorStop]?
+    var gradientOverlayCenter: CGPoint?
     var patternOverlayEnabled: Bool
     var patternOverlayKind: ImageEditorPatternOverlayKind
     var patternOverlayColor: ImageEditorProjectColor
@@ -1003,6 +1004,7 @@ struct ImageEditorProjectLayerStyle: Codable, Equatable {
         gradientOverlayReverse = style.gradientOverlayReverse
         gradientOverlayDither = style.gradientOverlayDither
         gradientOverlayColorStops = style.gradientOverlayColorStops
+        gradientOverlayCenter = style.gradientOverlayCenter
         patternOverlayEnabled = style.patternOverlayEnabled
         patternOverlayKind = style.patternOverlayKind
         patternOverlayColor = ImageEditorProjectColor(color: style.patternOverlayColor)
@@ -1106,6 +1108,9 @@ struct ImageEditorProjectLayerStyle: Codable, Equatable {
             gradientOverlayReverse: gradientOverlayReverse ?? false,
             gradientOverlayDither: gradientOverlayDither ?? false,
             gradientOverlayColorStops: gradientOverlayColorStops,
+            gradientOverlayCenter: ImageEditorGradientOverlayCenterPolicy.normalized(
+                gradientOverlayCenter ?? ImageEditorGradientOverlayCenterPolicy.defaultCenter
+            ),
             patternOverlayEnabled: patternOverlayEnabled,
             patternOverlayKind: patternOverlayKind,
             patternOverlayColor: patternOverlayColor.nsColor,

@@ -6292,6 +6292,22 @@ struct ImageEditorView: View {
         }
     }
 
+    private var selectedLayerGradientOverlayCenterXBinding: Binding<Double> {
+        Binding {
+            viewModel.selectedLayerGradientOverlayCenterX
+        } set: { value in
+            viewModel.setSelectedLayerGradientOverlayCenterX(value)
+        }
+    }
+
+    private var selectedLayerGradientOverlayCenterYBinding: Binding<Double> {
+        Binding {
+            viewModel.selectedLayerGradientOverlayCenterY
+        } set: { value in
+            viewModel.setSelectedLayerGradientOverlayCenterY(value)
+        }
+    }
+
     private var selectedLayerPatternOverlayOpacityBinding: Binding<Double> {
         Binding {
             viewModel.selectedLayerPatternOverlayOpacity
@@ -9976,6 +9992,32 @@ struct ImageEditorView: View {
                     accessibilityIdentifier: "image-editor-layer-style-gradient-overlay-scale"
                 ) { value in
                     L10n.format("imageEditor.properties.gradientOverlayScaleValue", Int((value * 100).rounded()))
+                }
+                HStack {
+                    layerStyleNumericStepper(
+                        state: viewModel.selectedLayerGradientOverlayCenterXState,
+                        value: selectedLayerGradientOverlayCenterXBinding,
+                        range: -4...5,
+                        step: 0.01,
+                        accessibilityIdentifier: "image-editor-layer-style-gradient-overlay-center-x"
+                    ) { value in
+                        L10n.format(
+                            "imageEditor.properties.gradientOverlayCenterXValue",
+                            Int((value * 100).rounded())
+                        )
+                    }
+                    layerStyleNumericStepper(
+                        state: viewModel.selectedLayerGradientOverlayCenterYState,
+                        value: selectedLayerGradientOverlayCenterYBinding,
+                        range: -4...5,
+                        step: 0.01,
+                        accessibilityIdentifier: "image-editor-layer-style-gradient-overlay-center-y"
+                    ) { value in
+                        L10n.format(
+                            "imageEditor.properties.gradientOverlayCenterYValue",
+                            Int((value * 100).rounded())
+                        )
+                    }
                 }
                 layerStyleValuePicker(
                     state: viewModel.selectedLayerPatternOverlayKindState,

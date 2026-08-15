@@ -3317,6 +3317,54 @@ struct ImageEditorLayerRowBatchPropertyTests {
         #expect(viewModel.selectedLayerGradientOverlayAngleState == .value(120))
     }
 
+    @Test func layerStyleGradientOverlayCenterConvergesAcrossEditableSelection() throws {
+        let fixture = makeFixture()
+        let viewModel = fixture.viewModel
+        let firstID = fixture.layers[0].id
+        let secondID = fixture.layers[1].id
+        let lockedID = fixture.layers[2].id
+        viewModel.document.layers[0].style.gradientOverlayCenter = CGPoint(x: 0.2, y: 0.3)
+        viewModel.document.layers[1].style.gradientOverlayCenter = CGPoint(x: 0.8, y: 0.7)
+        viewModel.document.layers[2].style.gradientOverlayCenter = CGPoint(x: 0.4, y: 0.6)
+        viewModel.document.layers[2].isLocked = true
+        select(Set(fixture.layers.map(\.id)), primary: firstID, in: viewModel)
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.selectedLayerGradientOverlayCenterXState == .mixed)
+        #expect(viewModel.selectedLayerGradientOverlayCenterYState == .mixed)
+        #expect(viewModel.setSelectedLayerGradientOverlayCenterX(0.55) == 2)
+        #expect((try layer(firstID, in: viewModel)).style.gradientOverlayCenter.x == 0.55)
+        #expect((try layer(secondID, in: viewModel)).style.gradientOverlayCenter.x == 0.55)
+        #expect((try layer(lockedID, in: viewModel)).style.gradientOverlayCenter.x == 0.4)
+        #expect(viewModel.selectedLayerGradientOverlayCenterXState == .value(0.55))
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.setSelectedLayerGradientOverlayCenterX(0.55) == 0)
+        #expect(viewModel.document.history.count == historyCount + 1)
+
+        #expect(viewModel.setSelectedLayerGradientOverlayCenterY(8) == 2)
+        #expect((try layer(firstID, in: viewModel)).style.gradientOverlayCenter.y == 5)
+        #expect((try layer(secondID, in: viewModel)).style.gradientOverlayCenter.y == 5)
+        #expect((try layer(lockedID, in: viewModel)).style.gradientOverlayCenter.y == 0.6)
+        #expect(viewModel.document.history.count == historyCount + 2)
+
+        viewModel.undo()
+        #expect(viewModel.selectedLayerGradientOverlayCenterYState == .mixed)
+        viewModel.redo()
+        #expect(viewModel.selectedLayerGradientOverlayCenterYState == .value(5))
+
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        #expect(source.contains("selectedLayerGradientOverlayCenterXState"))
+        #expect(source.contains("selectedLayerGradientOverlayCenterYState"))
+        #expect(source.contains("image-editor-layer-style-gradient-overlay-center-x"))
+        #expect(source.contains("image-editor-layer-style-gradient-overlay-center-y"))
+    }
+
     @Test func layerStyleGradientOverlayStopsConvergeAcrossEditableSelectionInOneHistoryStep() throws {
         let fixture = makeFixture()
         let viewModel = fixture.viewModel

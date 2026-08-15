@@ -7,6 +7,24 @@
 
 import AppKit
 
+enum ImageEditorGradientOverlayCenterPolicy {
+    static let minimumComponent: CGFloat = -4
+    static let maximumComponent: CGFloat = 5
+    static let defaultCenter = CGPoint(x: 0.5, y: 0.5)
+
+    static func normalized(_ center: CGPoint) -> CGPoint {
+        CGPoint(
+            x: normalizedComponent(center.x),
+            y: normalizedComponent(center.y)
+        )
+    }
+
+    static func normalizedComponent(_ value: CGFloat) -> CGFloat {
+        guard value.isFinite else { return 0.5 }
+        return max(minimumComponent, min(maximumComponent, value))
+    }
+}
+
 enum ImageEditorGradientOverlayStopDraftEditing {
     static let minimumStopSpacing = 0.01
 

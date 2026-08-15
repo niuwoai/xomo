@@ -2086,6 +2086,71 @@ struct ImageEditorLayerStyleTests {
             == ImageEditorProjectColor(color: legacyStyle.gradientOverlayEndColor))
     }
 
+    @Test func gradientOverlayCenterMovesRenderingAndLegacyProjectsDefaultToLayerCenter() throws {
+        let canvasSize = NSSize(width: 80, height: 60)
+        let viewModel = ImageEditorViewModel(
+            sourceName: "gradient-overlay-center.png",
+            image: solidImage(color: .black, size: canvasSize)
+        ) { _ in }
+        viewModel.replaceSelectedLayerImageForTesting(
+            centerRectImage(size: canvasSize, color: .white),
+            historyTitle: L10n.text("imageEditor.history.brush")
+        )
+        viewModel.setSelectedLayerGradientOverlayOpacity(1)
+        viewModel.setSelectedLayerGradientOverlayStartColor(.systemRed)
+        viewModel.setSelectedLayerGradientOverlayEndColor(.systemBlue)
+        viewModel.setSelectedLayerGradientOverlayStyle(.radial)
+        viewModel.setSelectedLayerGradientOverlayScale(1)
+        let sourcePixels = try #require(viewModel.document.selectedLayer?.image.qingtuPNGData())
+        let centeredPixels = try #require(viewModel.currentImage.qingtuPNGData())
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.setSelectedLayerGradientOverlayCenterX(0.25) == 1)
+        #expect(viewModel.selectedLayerGradientOverlayCenterX == 0.25)
+        #expect(viewModel.selectedLayerGradientOverlayCenterY == 0.5)
+        let movedPixels = try #require(viewModel.currentImage.qingtuPNGData())
+        #expect(movedPixels != centeredPixels)
+        #expect(viewModel.document.selectedLayer?.image.qingtuPNGData() == sourcePixels)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.setSelectedLayerGradientOverlayCenterX(0.25) == 0)
+        #expect(viewModel.document.history.count == historyCount + 1)
+
+        viewModel.undo()
+        #expect(viewModel.selectedLayerGradientOverlayCenterX == 0.5)
+        #expect(viewModel.currentImage.qingtuPNGData() == centeredPixels)
+        viewModel.redo()
+        #expect(viewModel.selectedLayerGradientOverlayCenterX == 0.25)
+        #expect(viewModel.currentImage.qingtuPNGData() == movedPixels)
+
+        #expect(viewModel.setSelectedLayerGradientOverlayCenterY(0.75) == 1)
+        let styledLayer = try #require(viewModel.document.selectedLayer)
+        let project = try ImageEditorProjectDocument(document: viewModel.document)
+        let restoredDocument = try project.restoredDocument()
+        let restoredLayer = try #require(restoredDocument.layers.first { $0.id == styledLayer.id })
+        #expect(restoredLayer.style.gradientOverlayCenter == CGPoint(x: 0.25, y: 0.75))
+
+        let encodedStyle = try JSONEncoder().encode(
+            ImageEditorProjectLayerStyle(style: styledLayer.style)
+        )
+        var legacyObject = try #require(
+            JSONSerialization.jsonObject(with: encodedStyle) as? [String: Any]
+        )
+        legacyObject.removeValue(forKey: "gradientOverlayCenter")
+        let legacyData = try JSONSerialization.data(withJSONObject: legacyObject)
+        let legacyStyle = try JSONDecoder().decode(
+            ImageEditorProjectLayerStyle.self,
+            from: legacyData
+        ).layerStyle
+        #expect(legacyStyle.gradientOverlayCenter
+            == ImageEditorGradientOverlayCenterPolicy.defaultCenter)
+        #expect(ImageEditorGradientOverlayCenterPolicy.normalized(
+            CGPoint(x: -9, y: 12)
+        ) == CGPoint(x: -4, y: 5))
+        #expect(ImageEditorGradientOverlayCenterPolicy.normalized(
+            CGPoint(x: CGFloat.nan, y: CGFloat.infinity)
+        ) == ImageEditorGradientOverlayCenterPolicy.defaultCenter)
+    }
+
     @Test func gradientOverlayReverseIsUndoableAndLegacyProjectsDefaultForward() throws {
         let canvasSize = NSSize(width: 80, height: 60)
         let viewModel = ImageEditorViewModel(

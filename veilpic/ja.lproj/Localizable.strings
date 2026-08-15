@@ -1347,6 +1347,8 @@
 "imageEditor.properties.gradientOverlayEndColor" = "グラデーション終了色";
 "imageEditor.properties.gradientOverlayStops" = "グラデーションカラーストップ";
 "imageEditor.action.gradientOverlayStopsApply" = "グラデーションを適用";
+"imageEditor.properties.gradientOverlayCenterXValue" = "中心 X %d%%";
+"imageEditor.properties.gradientOverlayCenterYValue" = "中心 Y %d%%";
 "imageEditor.properties.gradientOverlayScaleValue" = "グラデーションオーバーレイスケール：%d%%";
 "imageEditor.properties.gradientOverlayAngleValue" = "グラデーション角度：%d°";
 "imageEditor.properties.patternOverlayKind" = "パターン";

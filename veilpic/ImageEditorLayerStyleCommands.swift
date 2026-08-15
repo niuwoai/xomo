@@ -733,6 +733,36 @@ extension ImageEditorViewModel {
         selectedLayerStyleValueState(\.gradientOverlayAngle)
     }
 
+    var selectedLayerGradientOverlayCenterX: Double {
+        Double(
+            ImageEditorGradientOverlayCenterPolicy.normalized(
+                document.selectedLayer?.style.gradientOverlayCenter
+                    ?? ImageEditorGradientOverlayCenterPolicy.defaultCenter
+            ).x
+        )
+    }
+
+    var selectedLayerGradientOverlayCenterXState: ImageEditorLayerStyleValueState<CGFloat> {
+        selectedLayerStyleValueState {
+            ImageEditorGradientOverlayCenterPolicy.normalized($0.gradientOverlayCenter).x
+        }
+    }
+
+    var selectedLayerGradientOverlayCenterY: Double {
+        Double(
+            ImageEditorGradientOverlayCenterPolicy.normalized(
+                document.selectedLayer?.style.gradientOverlayCenter
+                    ?? ImageEditorGradientOverlayCenterPolicy.defaultCenter
+            ).y
+        )
+    }
+
+    var selectedLayerGradientOverlayCenterYState: ImageEditorLayerStyleValueState<CGFloat> {
+        selectedLayerStyleValueState {
+            ImageEditorGradientOverlayCenterPolicy.normalized($0.gradientOverlayCenter).y
+        }
+    }
+
     var selectedLayerPatternOverlayKind: ImageEditorPatternOverlayKind {
         document.selectedLayer?.style.patternOverlayKind ?? .checkerboard
     }
@@ -1745,6 +1775,34 @@ extension ImageEditorViewModel {
         updateSelectedLayerStyle {
             $0.gradientOverlayEnabled = true
             $0.gradientOverlayAngle = normalizedLayerStyleAngle(CGFloat(angle))
+        }
+    }
+
+    @discardableResult
+    func setSelectedLayerGradientOverlayCenterX(_ centerX: Double) -> Int {
+        updateSelectedLayerStyle {
+            $0.gradientOverlayEnabled = true
+            var center = ImageEditorGradientOverlayCenterPolicy.normalized(
+                $0.gradientOverlayCenter
+            )
+            center.x = ImageEditorGradientOverlayCenterPolicy.normalizedComponent(
+                CGFloat(centerX)
+            )
+            $0.gradientOverlayCenter = center
+        }
+    }
+
+    @discardableResult
+    func setSelectedLayerGradientOverlayCenterY(_ centerY: Double) -> Int {
+        updateSelectedLayerStyle {
+            $0.gradientOverlayEnabled = true
+            var center = ImageEditorGradientOverlayCenterPolicy.normalized(
+                $0.gradientOverlayCenter
+            )
+            center.y = ImageEditorGradientOverlayCenterPolicy.normalizedComponent(
+                CGFloat(centerY)
+            )
+            $0.gradientOverlayCenter = center
         }
     }
 

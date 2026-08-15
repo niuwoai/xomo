@@ -2775,6 +2775,7 @@ struct ImageEditorLayerStyle {
     var gradientOverlayReverse = false
     var gradientOverlayDither = false
     var gradientOverlayColorStops: [ImageEditorGradientColorStop]? = nil
+    var gradientOverlayCenter = CGPoint(x: 0.5, y: 0.5)
     var patternOverlayEnabled = false
     var patternOverlayKind = ImageEditorPatternOverlayKind.checkerboard
     var patternOverlayColor = NSColor.white
@@ -4354,6 +4355,9 @@ struct ImageEditorLayer: Identifiable {
                     colorStops: style.gradientOverlayColorStops
                 ).renderedImage(
                     size: contentRect.size,
+                    centerNormalized: ImageEditorGradientOverlayCenterPolicy.normalized(
+                        style.gradientOverlayCenter
+                    ),
                     opacity: Double(style.gradientOverlayOpacity)
                 )
                 let gradientCanvas = NSImage.rendered(size: outputSize) { _ in

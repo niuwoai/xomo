@@ -13532,6 +13532,83 @@ struct XomoAutomationTests {
         #expect(viewModel.document.history.count == historyAfterUpdate)
     }
 
+    @Test func registrySetsLayerStyleGradientOverlayCenterAcrossEditableSelection() throws {
+        let viewModel = makeViewModel()
+        let canvasSize = viewModel.document.canvasSize
+        var first = ImageEditorLayer.blank(name: "First", size: canvasSize)
+        var second = ImageEditorLayer.blank(name: "Second", size: canvasSize)
+        var locked = ImageEditorLayer.blank(name: "Locked", size: canvasSize)
+        first.style.gradientOverlayCenter = CGPoint(x: 0.2, y: 0.3)
+        second.style.gradientOverlayCenter = CGPoint(x: 0.8, y: 0.7)
+        locked.style.gradientOverlayCenter = CGPoint(x: 0.4, y: 0.6)
+        locked.isLocked = true
+        viewModel.document.layers = [first, second, locked]
+        viewModel.document.selectedLayerID = first.id
+        viewModel.document.selectedLayerIDs = [first.id, second.id, locked.id]
+        let historyCount = viewModel.document.history.count
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+
+        let toolsResponse = registry.execute(request(operation: "tools"))
+        try assertNumericLayerStylePropertySchema("gradientOverlayCenterX", in: toolsResponse)
+        try assertNumericLayerStylePropertySchema("gradientOverlayCenterY", in: toolsResponse)
+
+        let xResult = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style_settings",
+            arguments: [
+                "property": .string("gradientOverlayCenterX"),
+                "value": .number(0.25)
+            ]
+        ))
+        #expect(xResult.ok)
+        #expect(xResult.result?.objectValue?["updatedLayerCount"] == .number(2))
+        #expect(viewModel.document.layers[0].style.gradientOverlayCenter.x == 0.25)
+        #expect(viewModel.document.layers[1].style.gradientOverlayCenter.x == 0.25)
+        #expect(viewModel.document.layers[2].style.gradientOverlayCenter.x == 0.4)
+        #expect(viewModel.document.history.count == historyCount + 1)
+
+        let yResult = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style_settings",
+            arguments: [
+                "property": .string("gradientOverlayCenterY"),
+                "value": .number(9)
+            ]
+        ))
+        #expect(yResult.ok)
+        #expect(yResult.result?.objectValue?["updatedLayerCount"] == .number(2))
+        #expect(viewModel.document.layers[0].style.gradientOverlayCenter.y == 5)
+        #expect(viewModel.document.layers[1].style.gradientOverlayCenter.y == 5)
+        #expect(viewModel.document.layers[2].style.gradientOverlayCenter.y == 0.6)
+        #expect(viewModel.document.layers[0].style.gradientOverlayEnabled)
+        #expect(viewModel.document.layers[1].style.gradientOverlayEnabled)
+        #expect(viewModel.document.history.count == historyCount + 2)
+
+        let repeated = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style_settings",
+            arguments: [
+                "property": .string("gradientOverlayCenterY"),
+                "value": .number(9)
+            ]
+        ))
+        #expect(!repeated.ok)
+        #expect(viewModel.document.history.count == historyCount + 2)
+
+        let invalid = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style_settings",
+            arguments: [
+                "property": .string("gradientOverlayCenterX"),
+                "value": .string("center")
+            ]
+        ))
+        #expect(!invalid.ok)
+        #expect(viewModel.document.layers[0].style.gradientOverlayCenter.x == 0.25)
+        #expect(viewModel.document.history.count == historyCount + 2)
+    }
+
     @Test func registrySetsLayerStyleGradientOverlayStyleWithAdvertisedEnum() throws {
         let viewModel = makeViewModel()
         let canvasSize = viewModel.document.canvasSize
