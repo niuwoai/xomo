@@ -851,13 +851,13 @@ final class ImageEditorViewModel: ObservableObject {
             return L10n.text("imageEditor.info.selection.empty")
         }
         let canvasBounds = CGRect(origin: .zero, size: document.canvasSize)
-        let candidateBounds = selection.isInverted
-            ? canvasBounds
-            : selection.bounds.standardized.intersection(canvasBounds)
-        guard !candidateBounds.isNull, !candidateBounds.isEmpty else {
+        guard let selectedBounds = selection.effectiveSelectedBounds(in: document.canvasSize) else {
             return L10n.text("imageEditor.info.selection.empty")
         }
-        let pixelBounds = candidateBounds.integral
+        let pixelBounds = selectedBounds.standardized.integral.intersection(canvasBounds)
+        guard !pixelBounds.isNull, !pixelBounds.isEmpty else {
+            return L10n.text("imageEditor.info.selection.empty")
+        }
         return L10n.format(
             "imageEditor.info.selection.bounds",
             Int(pixelBounds.minX),
