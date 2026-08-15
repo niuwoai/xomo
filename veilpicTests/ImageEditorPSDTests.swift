@@ -819,7 +819,7 @@ struct ImageEditorPSDTests {
                 strokeColor: .systemRed,
                 strokeWidth: 6,
                 strokeOpacity: 1,
-                strokePosition: .inside
+                strokePosition: .center
             )
         )
         document.layers = [partialFill, visibleStroke]
@@ -833,6 +833,92 @@ struct ImageEditorPSDTests {
         #expect(restored.layers.first { $0.name == "Partial Fill" }?.kind.isPixel == true)
         #expect(restored.layers.first { $0.name == "Visible Stroke" }?.kind.isPixel == true)
         #expect(restored.layers.allSatisfy { $0.shapeContent == nil })
+    }
+
+    @Test func insideStrokedPrimitiveShapesExportAsEditablePSDPaths() throws {
+        let canvasSize = CGSize(width: 190, height: 100)
+        var document = ImageEditorDocument(
+            sourceName: "primitive-inside-strokes.xomoproject",
+            image: psdSolidImage(color: .clear, size: canvasSize)
+        )
+        document.layers.removeAll()
+
+        let rectangle = ImageEditorLayer.shape(
+            name: "Inside Stroke Rectangle",
+            frame: CGRect(x: 10, y: 14, width: 78, height: 58),
+            content: ImageEditorShapeContent(
+                kind: .rectangle,
+                fillColor: .systemYellow,
+                fillOpacity: 1,
+                strokeColor: NSColor(deviceRed: 0.8, green: 0.1, blue: 0.3, alpha: 1),
+                strokeWidth: 8,
+                strokeOpacity: 0.65,
+                strokePosition: .inside,
+                strokeCap: .square,
+                strokeJoin: .miter,
+                strokeMiterLimit: 7,
+                strokeDashPattern: [8, 4],
+                cornerRadii: ImageEditorRectangleCornerRadii(
+                    topLeft: 4,
+                    topRight: 10,
+                    bottomRight: 14,
+                    bottomLeft: 6
+                )
+            )
+        )
+        let ellipse = ImageEditorLayer.shape(
+            name: "Stroke Only Ellipse",
+            frame: CGRect(x: 112, y: 20, width: 56, height: 56),
+            content: ImageEditorShapeContent(
+                kind: .ellipse,
+                fillColor: .systemGreen,
+                fillOpacity: 0,
+                strokeColor: .systemBlue,
+                strokeWidth: 5,
+                strokeOpacity: 1,
+                strokePosition: .inside,
+                strokeCap: .round,
+                strokeJoin: .bevel,
+                strokeDashPattern: [5, 3]
+            )
+        )
+        document.layers = [rectangle, ellipse]
+
+        let data = try ImageEditorPSDCodec.encode(document: document)
+        #expect(data.range(of: Data("vmsk".utf8)) != nil)
+        #expect(data.range(of: Data("vstk".utf8)) != nil)
+        #expect(data.range(of: Data("SoCo".utf8)) != nil)
+        let restored = try ImageEditorPSDCodec.decode(
+            data,
+            sourceName: "primitive-inside-strokes.psd"
+        )
+        let restoredRectangle = try #require(
+            restored.layers.first { $0.name == "Inside Stroke Rectangle" }?.shapeContent
+        )
+        let restoredEllipse = try #require(
+            restored.layers.first { $0.name == "Stroke Only Ellipse" }?.shapeContent
+        )
+        let rectangleStroke = try #require(
+            restoredRectangle.strokeColor.usingColorSpace(.deviceRGB)
+        )
+
+        #expect(restoredRectangle.kind == .path)
+        #expect(restoredRectangle.strokePosition == .inside)
+        #expect(restoredRectangle.strokeCap == .square)
+        #expect(restoredRectangle.strokeJoin == .miter)
+        #expect(abs(restoredRectangle.strokeWidth - 8) < 0.001)
+        #expect(abs(restoredRectangle.strokeOpacity - 0.65) < 0.001)
+        #expect(abs(restoredRectangle.strokeMiterLimit - 7) < 0.001)
+        #expect(restoredRectangle.strokeDashPattern == [8, 4])
+        #expect(abs(rectangleStroke.redComponent - 0.8) < 0.01)
+        #expect(abs(rectangleStroke.greenComponent - 0.1) < 0.01)
+        #expect(abs(rectangleStroke.blueComponent - 0.3) < 0.01)
+        #expect(restoredEllipse.kind == .path)
+        #expect(restoredEllipse.fillOpacity == 0)
+        #expect(restoredEllipse.strokePosition == .inside)
+        #expect(restoredEllipse.strokeJoin == .bevel)
+        #expect(abs(restoredEllipse.strokeWidth - 5) < 0.001)
+        #expect(restoredEllipse.strokeDashPattern == [5, 3])
     }
 
     @Test func compatibilityReportCountsUnsupportedVectorMaskStructure() throws {
