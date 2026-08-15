@@ -242,6 +242,12 @@ struct ImageEditorView: View {
                     if cancelPathAnchorDragForKeyboardCommand() {
                         return
                     }
+                    if cancelGradientOverlayCanvasHandleDragForLifecycle() {
+                        return
+                    }
+                    if nudgeSelectedGradientOverlayStopIfNeeded(by: delta) {
+                        return
+                    }
                     if !viewModel.nudgeSelectedDeliveryObject(by: delta) {
                         viewModel.nudgeSelectionOrSelectedLayer(by: delta)
                     }
@@ -7435,6 +7441,28 @@ struct ImageEditorView: View {
     private func deleteSelectedGradientOverlayStopIfNeeded() -> Bool {
         guard let selectedGradientOverlayStopIndex else { return false }
         return removeGradientOverlayCanvasStop(at: selectedGradientOverlayStopIndex)
+    }
+
+    private func nudgeSelectedGradientOverlayStopIfNeeded(by delta: CGSize) -> Bool {
+        guard let selectedGradientOverlayStopIndex,
+              viewModel.selectedLeftSidebarTab == .tools,
+              canvasInteractionTool == .move,
+              viewModel.document.areExtrasVisible,
+              viewModel.canEditSelectedLayerGradientOverlayCanvasCenter,
+              viewModel.selectedLayerGradientOverlayCanvasStopHandlePoints.contains(
+                  where: { $0.index == selectedGradientOverlayStopIndex }
+              )
+        else { return false }
+        switch ImageEditorGradientOverlayStopKeyboardAction.resolve(delta: delta) {
+        case .nudge(let displayedDelta):
+            _ = viewModel.nudgeSelectedLayerGradientOverlayCanvasStop(
+                at: selectedGradientOverlayStopIndex,
+                displayedDelta: displayedDelta
+            )
+        case .consume:
+            break
+        }
+        return true
     }
 
     @discardableResult

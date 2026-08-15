@@ -67,6 +67,17 @@ struct ImageEditorGradientOverlayStopRemovalResult: Equatable {
     var nextSelectedIndex: Int?
 }
 
+enum ImageEditorGradientOverlayStopKeyboardAction: Equatable {
+    case nudge(Double)
+    case consume
+
+    static func resolve(delta: CGSize) -> ImageEditorGradientOverlayStopKeyboardAction {
+        guard delta.width.isFinite, delta.height.isFinite else { return .consume }
+        guard delta.height == 0, delta.width != 0 else { return .consume }
+        return .nudge(Double(delta.width / 100))
+    }
+}
+
 enum ImageEditorGradientOverlayAxisGeometry {
     static let angleSnapStep: CGFloat = 15
 
@@ -746,6 +757,39 @@ extension ImageEditorViewModel {
             removedIndex: stopIndex,
             nextSelectedIndex: nextSelectedIndex
         )
+    }
+
+    @discardableResult
+    func nudgeSelectedLayerGradientOverlayCanvasStop(
+        at stopIndex: Int,
+        displayedDelta: Double
+    ) -> Bool {
+        guard displayedDelta.isFinite,
+              displayedDelta != 0,
+              editingGradientOverlayCenterLayerID == nil,
+              editingGradientOverlayAxisLayerID == nil,
+              editingGradientOverlayStopLayerID == nil,
+              editingGradientOverlayMidpointLayerID == nil,
+              canEditSelectedLayerGradientOverlayCanvasCenter,
+              let layer = singleSelectedGradientOverlayCanvasLayer,
+              let layerIndex = document.layers.firstIndex(where: { $0.id == layer.id })
+        else { return false }
+        let stops = layer.style.resolvedGradientOverlayColorStops
+        guard stopIndex > 0, stopIndex < stops.count - 1 else { return false }
+        let logicalDelta = layer.style.gradientOverlayReverse
+            ? -displayedDelta
+            : displayedDelta
+        let movedStops = ImageEditorGradientOverlayStopDraftEditing.movingStop(
+            stops,
+            at: stopIndex,
+            to: stops[stopIndex].position + logicalDelta
+        )
+        guard !gradientOverlayStopsMatch(movedStops, stops) else { return false }
+        beginGradientOverlayStopUndoTransaction()
+        document.layers[layerIndex].style.setGradientOverlayColorStops(movedStops)
+        appendHistory(L10n.text("imageEditor.history.gradientOverlayStopNudged"))
+        finishGradientOverlayStopUndoTransaction(didChange: true)
+        return true
     }
 
     private var singleSelectedGradientOverlayCanvasLayer: ImageEditorLayer? {
