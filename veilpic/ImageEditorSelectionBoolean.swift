@@ -70,6 +70,19 @@ extension ImageEditorSelection {
         return image?.alphaPlaneMask(width: width, height: height, flipsY: true)
     }
 
+    func effectiveSelectedBounds(in canvasSize: CGSize) -> CGRect? {
+        guard canvasSize.width > 0, canvasSize.height > 0 else { return nil }
+        if let rasterMask {
+            return rasterMask.selectedBounds(in: canvasSize, inverted: isInverted)
+        }
+        if isInverted {
+            return rasterizedMask(canvasSize: canvasSize)?.selectedBounds(in: canvasSize)
+        }
+        let canvasBounds = CGRect(origin: .zero, size: canvasSize)
+        let clippedBounds = bounds.standardized.intersection(canvasBounds)
+        return clippedBounds.isNull || clippedBounds.isEmpty ? nil : clippedBounds
+    }
+
     func quickMaskOverlayImage(
         canvasSize: CGSize,
         color: NSColor = .systemRed,
@@ -629,8 +642,8 @@ extension ImageEditorSelectionMask {
         return scaledSelection(from: selectedBounds, to: (0, 0, width - 1, height - 1))
     }
 
-    func selectedBounds(in canvasSize: CGSize) -> CGRect? {
-        guard let bounds = selectedPixelBounds() else { return nil }
+    func selectedBounds(in canvasSize: CGSize, inverted: Bool = false) -> CGRect? {
+        guard let bounds = selectedPixelBounds(inverted: inverted) else { return nil }
         let scaleX = canvasSize.width / CGFloat(width)
         let scaleY = canvasSize.height / CGFloat(height)
         return CGRect(
@@ -641,7 +654,8 @@ extension ImageEditorSelectionMask {
         )
     }
 
-    private func selectedPixelBounds() -> (minX: Int, minY: Int, maxX: Int, maxY: Int)? {
+    private func selectedPixelBounds(inverted: Bool = false) -> (minX: Int, minY: Int, maxX: Int, maxY: Int)? {
+        guard width > 0, height > 0, alpha.count == width * height else { return nil }
         var minX = width
         var minY = height
         var maxX = -1
@@ -649,7 +663,8 @@ extension ImageEditorSelectionMask {
 
         for y in 0..<height {
             for x in 0..<width {
-                guard alpha[y * width + x] > 0 else { continue }
+                let value = alpha[y * width + x]
+                guard inverted ? value < UInt8.max : value > 0 else { continue }
                 minX = min(minX, x)
                 minY = min(minY, y)
                 maxX = max(maxX, x)

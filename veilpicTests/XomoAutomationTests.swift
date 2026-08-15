@@ -1109,14 +1109,14 @@ struct XomoAutomationTests {
         )
         let historyCountBeforeEmptySelectionPaste = fallbackViewModel.document.history.count
         let undoCountBeforeEmptySelectionPaste = fallbackViewModel.undoStack.count
-        #expect(fallbackViewModel.canPasteClipboardImageIntoSelection)
+        #expect(!fallbackViewModel.canPasteClipboardImageIntoSelection)
         let emptySelectionPasteResponse = registry.execute(request(
             operation: "call",
             name: "xomo.clipboard.action",
             arguments: ["action": .string("pasteIntoSelection")]
         ))
         #expect(!emptySelectionPasteResponse.ok)
-        #expect(emptySelectionPasteResponse.error?.contains("did not import a layer") == true)
+        #expect(emptySelectionPasteResponse.error?.contains("requires") == true)
         #expect(fallbackViewModel.document.layers.count == layerCountBeforeRejectedPaste)
         #expect(fallbackViewModel.document.history.count == historyCountBeforeEmptySelectionPaste)
         #expect(fallbackViewModel.undoStack.count == undoCountBeforeEmptySelectionPaste)
@@ -8095,7 +8095,7 @@ struct XomoAutomationTests {
             arguments: selectionArguments
         ))
         #expect(!outsideSelection.ok)
-        #expect(outsideSelection.error?.contains("did not create a layer") == true)
+        #expect(outsideSelection.error?.contains("selected pixels inside the canvas") == true)
         #expect(viewModel.document.layers.count == originalLayerCount)
         #expect(viewModel.document.history.count == originalHistoryCount)
         #expect(viewModel.undoStack.count == originalUndoCount)

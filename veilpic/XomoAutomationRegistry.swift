@@ -981,6 +981,11 @@ final class XomoAutomationRegistry {
                 "Image import into selection requires an active selection"
             )
         }
+        if importsIntoSelection, !viewModel.canImportImageIntoSelection {
+            throw XomoAutomationCallError.operationFailed(
+                "Image import into selection requires selected pixels inside the canvas"
+            )
+        }
         let didImportLayer: Bool
         if importsIntoSelection {
             didImportLayer = viewModel.importImageLayerIntoSelection(image, sourceName: name)

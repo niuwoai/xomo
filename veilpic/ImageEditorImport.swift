@@ -15,7 +15,11 @@ extension ImageEditorViewModel {
     }
 
     var canPasteClipboardImageIntoSelection: Bool {
-        hasSelection && canPasteClipboardImage
+        canImportImageIntoSelection && canPasteClipboardImage
+    }
+
+    var canImportImageIntoSelection: Bool {
+        importSelectionBounds != nil
     }
 
     var canPasteClipboardImageInPlace: Bool {
@@ -205,9 +209,7 @@ extension ImageEditorViewModel {
             return false
         }
 
-        let canvasRect = CGRect(origin: .zero, size: document.canvasSize)
-        let selectedBounds = selection.bounds.standardized.intersection(canvasRect)
-        guard !selectedBounds.isNull, !selectedBounds.isEmpty else {
+        guard let selectedBounds = selection.effectiveSelectedBounds(in: document.canvasSize) else {
             statusText = L10n.text("imageEditor.status.selectionEmpty")
             return false
         }
@@ -345,6 +347,10 @@ extension ImageEditorViewModel {
                 fraction: 1
             )
         }
+    }
+
+    private var importSelectionBounds: CGRect? {
+        document.selection?.effectiveSelectedBounds(in: document.canvasSize)
     }
 
     private func canvasSelectionMaskForImport(_ selection: ImageEditorSelection) -> NSImage? {

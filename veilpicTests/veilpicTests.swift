@@ -1445,9 +1445,9 @@ struct veilpicTests {
         let pastedRight = try #require(viewModel.currentImage.color(at: CGPoint(x: 60, y: 30))?.usingColorSpace(.deviceRGB))
 
         #expect(viewModel.document.layers.count == originalLayerCount + 1)
-        #expect(pastedIntoSelectionLayer.frame == CGRect(x: 0, y: 0, width: 80, height: 60))
+        #expect(pastedIntoSelectionLayer.frame == CGRect(x: 0, y: 15, width: 40, height: 30))
         #expect(leftMask.alphaComponent > 0.8)
-        #expect(rightMask.alphaComponent < 0.05)
+        #expect(rightMask.alphaComponent > 0.8)
         #expect(pastedLeft.redComponent > 0.8)
         #expect(pastedRight.blueComponent > 0.8)
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.clipboardPasteIntoSelection"))
@@ -1455,6 +1455,68 @@ struct veilpicTests {
 
         viewModel.undo()
         #expect(viewModel.document.layers.count == originalLayerCount)
+    }
+
+    @MainActor
+    @Test func imageEditorImportSelectionBoundsRespectRasterPixelsAndInversion() throws {
+        let canvasSize = NSSize(width: 80, height: 60)
+        let canvas = testImage(color: .systemBlue, size: canvasSize)
+        let imported = testImage(color: .systemPink, size: NSSize(width: 20, height: 12))
+        let viewModel = ImageEditorViewModel(sourceName: "selection-import.png", image: canvas) { _ in }
+        let originalLayerCount = viewModel.document.layers.count
+        let originalHistoryCount = viewModel.document.history.count
+        let originalUndoCount = viewModel.undoStack.count
+
+        viewModel.document.selection = .rectangle(CGRect(x: 100, y: 0, width: 12, height: 12))
+        #expect(!viewModel.canImportImageIntoSelection)
+        #expect(!viewModel.importImageLayerIntoSelection(imported, sourceName: "outside.png"))
+        #expect(viewModel.document.layers.count == originalLayerCount)
+        #expect(viewModel.document.history.count == originalHistoryCount)
+        #expect(viewModel.undoStack.count == originalUndoCount)
+
+        let emptyMask = ImageEditorSelectionMask(
+            width: Int(canvasSize.width),
+            height: Int(canvasSize.height),
+            alpha: [UInt8](repeating: 0, count: Int(canvasSize.width * canvasSize.height))
+        )
+        viewModel.document.selection = .raster(
+            mask: emptyMask,
+            bounds: CGRect(origin: .zero, size: canvasSize)
+        )
+        #expect(!viewModel.canImportImageIntoSelection)
+        #expect(!viewModel.importImageLayerIntoSelection(imported, sourceName: "empty-mask.png"))
+        #expect(viewModel.document.layers.count == originalLayerCount)
+
+        var invertedEmptyMask = try #require(viewModel.document.selection)
+        invertedEmptyMask.isInverted = true
+        viewModel.document.selection = invertedEmptyMask
+        #expect(viewModel.canImportImageIntoSelection)
+        #expect(invertedEmptyMask.effectiveSelectedBounds(in: canvasSize) == CGRect(origin: .zero, size: canvasSize))
+
+        let fullMask = ImageEditorSelectionMask(
+            width: Int(canvasSize.width),
+            height: Int(canvasSize.height),
+            alpha: [UInt8](repeating: UInt8.max, count: Int(canvasSize.width * canvasSize.height))
+        )
+        var invertedFullMask = ImageEditorSelection.raster(
+            mask: fullMask,
+            bounds: CGRect(origin: .zero, size: canvasSize)
+        )
+        invertedFullMask.isInverted = true
+        viewModel.document.selection = invertedFullMask
+        #expect(!viewModel.canImportImageIntoSelection)
+
+        var invertedOutside = ImageEditorSelection.rectangle(
+            CGRect(x: 100, y: 0, width: 12, height: 12)
+        )
+        invertedOutside.isInverted = true
+        viewModel.document.selection = invertedOutside
+        #expect(viewModel.canImportImageIntoSelection)
+        #expect(viewModel.importImageLayerIntoSelection(imported, sourceName: "inverted-outside.png"))
+        #expect(viewModel.document.layers.count == originalLayerCount + 1)
+        #expect(viewModel.document.selectedLayer?.mask != nil)
+        #expect(viewModel.document.history.count == originalHistoryCount + 1)
+        #expect(viewModel.undoStack.count == originalUndoCount + 1)
     }
 
     @MainActor
