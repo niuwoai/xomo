@@ -867,6 +867,155 @@ struct ImageEditorShapeStyleTests {
         #expect(viewModel.document.history.count == noOpHistoryCount)
     }
 
+    @Test func canvasGradientMidpointsProjectPerSegmentAndRespectReverse() throws {
+        let gradient = ImageEditorGradientFillContent.shapeLinear(colorStops: [
+            ImageEditorGradientColorStop(
+                position: 0,
+                color: .systemRed,
+                midpoint: 0.25
+            ),
+            ImageEditorGradientColorStop(
+                position: 0.5,
+                color: .systemGreen,
+                midpoint: 0.8
+            ),
+            ImageEditorGradientColorStop(position: 1, color: .systemBlue)
+        ])
+        let content = ImageEditorShapeContent(
+            kind: .rectangle,
+            fillColor: .clear,
+            fillGradient: gradient,
+            fillOpacity: 1,
+            strokeColor: .clear,
+            strokeWidth: 1,
+            strokeOpacity: 0
+        )
+        let imageSize = CGSize(width: 100, height: 50)
+        let layerFrame = CGRect(x: 10, y: 20, width: 200, height: 100)
+        let points = ImageEditorShapeGradientGeometry.canvasMidpointHandlePoints(
+            content: content,
+            imageSize: imageSize,
+            layerFrame: layerFrame
+        )
+        #expect(points.count == 2)
+        #expect(points.map(\.lowerStopIndex) == [0, 1])
+        #expect(abs(points[0].canvasPoint.x - 35) < 0.001)
+        #expect(abs(points[1].canvasPoint.x - 190) < 0.001)
+
+        let moved = try #require(
+            ImageEditorShapeGradientGeometry.updatedContent(
+                from: content,
+                imageSize: imageSize,
+                layerFrame: layerFrame,
+                movingMidpointAfter: 0,
+                to: CGPoint(x: 90, y: 500)
+            )
+        )
+        #expect(abs((moved.fillGradient?.shapeColorStops[0].midpoint ?? 0) - 0.8) < 0.001)
+
+        var reversedContent = content
+        reversedContent.fillGradient?.reverse = true
+        let reversedPoints = ImageEditorShapeGradientGeometry.canvasMidpointHandlePoints(
+            content: reversedContent,
+            imageSize: imageSize,
+            layerFrame: layerFrame
+        )
+        #expect(abs(reversedPoints[0].canvasPoint.x - 185) < 0.001)
+        #expect(abs(reversedPoints[1].canvasPoint.x - 30) < 0.001)
+        let reversedMoved = try #require(
+            ImageEditorShapeGradientGeometry.updatedContent(
+                from: reversedContent,
+                imageSize: imageSize,
+                layerFrame: layerFrame,
+                movingMidpointAfter: 0,
+                to: CGPoint(x: 130, y: -500)
+            )
+        )
+        #expect(
+            abs((reversedMoved.fillGradient?.shapeColorStops[0].midpoint ?? 0) - 0.8)
+                < 0.001
+        )
+
+        var radialContent = content
+        radialContent.fillGradient?.style = .radial
+        #expect(
+            ImageEditorShapeGradientGeometry.canvasMidpointHandlePoints(
+                content: radialContent,
+                imageSize: imageSize,
+                layerFrame: layerFrame
+            ).count == 2
+        )
+    }
+
+    @Test func canvasGradientMidpointDragCommitsOneUndoAndNoOpPreservesHistory() throws {
+        let gradient = ImageEditorGradientFillContent.shapeLinear(colorStops: [
+            ImageEditorGradientColorStop(
+                position: 0,
+                color: .systemRed,
+                midpoint: 0.25
+            ),
+            ImageEditorGradientColorStop(position: 1, color: .systemBlue)
+        ])
+        let viewModel = makeViewModel()
+        viewModel.drawShape(
+            from: CGPoint(x: 10, y: 10),
+            to: CGPoint(x: 110, y: 60),
+            ellipse: false,
+            fillGradient: gradient
+        )
+        let historyCount = viewModel.document.history.count
+        let axis = try #require(viewModel.selectedShapeGradientCanvasHandlePoints)
+        #expect(viewModel.selectedShapeGradientCanvasMidpointHandlePoints.count == 1)
+        #expect(viewModel.beginEditingSelectedShapeGradientMidpoint(after: 0))
+        viewModel.updateSelectedShapeGradientMidpoint(
+            to: CGPoint(
+                x: axis.start.x + (axis.end.x - axis.start.x) * 0.75,
+                y: axis.start.y + (axis.end.y - axis.start.y) * 0.75
+            )
+        )
+        viewModel.finishEditingSelectedShapeGradient()
+        #expect(abs(viewModel.selectedShapeGradientColorStops[0].midpoint - 0.75) < 0.001)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(
+            viewModel.document.history.last?.title
+                == L10n.text("imageEditor.history.shapeGradientMidpoint")
+        )
+        viewModel.undo()
+        #expect(abs(viewModel.selectedShapeGradientColorStops[0].midpoint - 0.25) < 0.001)
+        viewModel.redo()
+        #expect(abs(viewModel.selectedShapeGradientColorStops[0].midpoint - 0.75) < 0.001)
+
+        let noOpHistoryCount = viewModel.document.history.count
+        let currentPoint = try #require(
+            viewModel.selectedShapeGradientCanvasMidpointHandlePoints.first?.canvasPoint
+        )
+        #expect(viewModel.beginEditingSelectedShapeGradientMidpoint(after: 0))
+        viewModel.updateSelectedShapeGradientMidpoint(to: currentPoint)
+        viewModel.finishEditingSelectedShapeGradient()
+        #expect(viewModel.document.history.count == noOpHistoryCount)
+
+        viewModel.setSelectedShapeGradientStopMidpoint(after: 0, midpoint: 0.4)
+        #expect(abs(viewModel.selectedShapeGradientColorStops[0].midpoint - 0.4) < 0.001)
+        let propertyHistoryCount = viewModel.document.history.count
+        viewModel.setSelectedShapeGradientStopMidpoint(after: 0, midpoint: 0.4)
+        #expect(viewModel.document.history.count == propertyHistoryCount)
+
+        viewModel.undo()
+        #expect(abs(viewModel.selectedShapeGradientColorStops[0].midpoint - 0.75) < 0.001)
+        #expect(viewModel.canRedo)
+        let redoPreservingHistoryCount = viewModel.document.history.count
+        let redoPreservingPoint = try #require(
+            viewModel.selectedShapeGradientCanvasMidpointHandlePoints.first?.canvasPoint
+        )
+        #expect(viewModel.beginEditingSelectedShapeGradientMidpoint(after: 0))
+        viewModel.updateSelectedShapeGradientMidpoint(to: redoPreservingPoint)
+        viewModel.finishEditingSelectedShapeGradient()
+        #expect(viewModel.document.history.count == redoPreservingHistoryCount)
+        #expect(viewModel.canRedo)
+        viewModel.redo()
+        #expect(abs(viewModel.selectedShapeGradientColorStops[0].midpoint - 0.4) < 0.001)
+    }
+
     @Test func lockedShapeRejectsCanvasGradientStopDrag() throws {
         let viewModel = makeViewModel()
         viewModel.drawShape(
@@ -885,6 +1034,7 @@ struct ImageEditorShapeStyleTests {
         let historyCount = viewModel.document.history.count
 
         #expect(!viewModel.beginEditingSelectedShapeGradientStop(at: 1))
+        #expect(!viewModel.beginEditingSelectedShapeGradientMidpoint(after: 0))
         #expect(viewModel.addSelectedShapeGradientStop(atCanvasPoint: CGPoint(x: 40, y: 30)) == nil)
         #expect(viewModel.removeSelectedShapeGradientCanvasStop(at: 1) == nil)
         #expect(viewModel.document.history.count == historyCount)
@@ -1173,6 +1323,7 @@ struct ImageEditorShapeStyleTests {
             "image-editor-shape-gradient-stop-remove",
             "image-editor-shape-gradient-stop-color",
             "image-editor-shape-gradient-stop-position",
+            "image-editor-shape-gradient-stop-midpoint",
             "image-editor-shape-gradient-angle",
             "image-editor-shape-fill-opacity",
             "image-editor-shape-stroke-color",
@@ -1204,6 +1355,10 @@ struct ImageEditorShapeStyleTests {
         #expect(canvasSource.contains("!isTextInputActive"))
         #expect(canvasSource.contains("deleteSelectedObject() {"))
         #expect(canvasSource.contains("activeShapeGradientStopIndex"))
+        #expect(canvasSource.contains("activeShapeGradientMidpointIndex"))
+        #expect(canvasSource.contains("image-editor-shape-gradient-midpoint-"))
+        #expect(canvasSource.contains("beginEditingSelectedShapeGradientMidpoint"))
+        #expect(canvasSource.contains("updateSelectedShapeGradientMidpoint"))
         #expect(canvasSource.contains("image-editor-shape-radial-gradient-boundary"))
         #expect(canvasSource.contains("image-editor-shape-radial-gradient-axis"))
 
@@ -1213,6 +1368,8 @@ struct ImageEditorShapeStyleTests {
             encoding: .utf8
         )
         #expect(gradientHandleSource.contains("func addSelectedShapeGradientStop(atCanvasPoint"))
+        #expect(gradientHandleSource.contains("func canvasMidpointHandlePoints("))
+        #expect(gradientHandleSource.contains("movingMidpointAfter:"))
         #expect(canvasSource.contains("image-editor-shape-radial-gradient-handle-"))
         #expect(canvasSource.contains("radiusPath.strokedPath"))
         #expect(canvasSource.contains("beginEditingSelectedShapeRadialGradient"))
@@ -1225,6 +1382,11 @@ struct ImageEditorShapeStyleTests {
         #expect(
             canvasSource.components(
                 separatedBy: "ForEach(viewModel.selectedShapeGradientCanvasStopHandlePoints)"
+            ).count - 1 == 2
+        )
+        #expect(
+            canvasSource.components(
+                separatedBy: "ForEach(viewModel.selectedShapeGradientCanvasMidpointHandlePoints)"
             ).count - 1 == 2
         )
 

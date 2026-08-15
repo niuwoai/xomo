@@ -470,6 +470,8 @@ final class ImageEditorViewModel: ObservableObject {
     private var activePathAnchorMoveRedoStack: [ImageEditorDocument] = []
     private var activePathAnchorMoveRedoThemeStates: [ImageEditorXomoThemeUndoState] = []
     private var isPathAnchorMoveUndoTransactionActive = false
+    private var activeShapeGradientRedoStack: [ImageEditorDocument] = []
+    private var activeShapeGradientRedoThemeStates: [ImageEditorXomoThemeUndoState] = []
     var movingLayerIDs = Set<UUID>()
     var movingLayerDidChange = false
     var movingLayerWasDuplicated = false
@@ -502,6 +504,7 @@ final class ImageEditorViewModel: ObservableObject {
     var editingShapeGradientLayerID: UUID?
     var editingShapeGradientOriginalContent: ImageEditorShapeContent?
     var editingShapeGradientStopIndex: Int?
+    var editingShapeGradientMidpointIndex: Int?
     var editingShapeGradientDidChange = false
     var copiedLayerStyle: ImageEditorLayerStyle?
     var copiedLayerStyleSourceID: UUID?
@@ -8748,6 +8751,22 @@ final class ImageEditorViewModel: ObservableObject {
         activePathAnchorMoveRedoThemeStates = redoXomoThemeStates
         pushUndo()
         isPathAnchorMoveUndoTransactionActive = true
+    }
+
+    func beginShapeGradientUndoTransaction() {
+        activeShapeGradientRedoStack = redoStack
+        activeShapeGradientRedoThemeStates = redoXomoThemeStates
+        pushUndo()
+    }
+
+    func finishShapeGradientUndoTransaction(didChange: Bool) {
+        if !didChange {
+            _ = discardLastUndoSnapshot()
+            redoStack = activeShapeGradientRedoStack
+            redoXomoThemeStates = activeShapeGradientRedoThemeStates
+        }
+        activeShapeGradientRedoStack = []
+        activeShapeGradientRedoThemeStates = []
     }
 
     func finishPathAnchorMoveUndoTransaction(didChange: Bool) {

@@ -911,6 +911,8 @@
 "imageEditor.properties.shapeGradientStopColor" = "Stop %d color";
 "imageEditor.properties.shapeGradientStopPosition" = "Stop position: %d%%";
 "imageEditor.properties.shapeGradientStopAccessibility" = "Stop %d at %d%%";
+"imageEditor.properties.shapeGradientStopMidpoint" = "Following color midpoint: %d%%";
+"imageEditor.properties.shapeGradientMidpointAccessibility" = "Color midpoint after stop %d at %d%%";
 "imageEditor.properties.shapeGradientAngleValue" = "Gradient angle: %d°";
 "imageEditor.properties.shapeGradientRadiusValue" = "Gradient radius: %d%%";
 "imageEditor.properties.shapeGradientScaleValue" = "Gradient scale: %d%%";
@@ -959,13 +961,16 @@
 "imageEditor.history.shapeStyle" = "Update Shape Appearance";
 "imageEditor.history.shapeGradientHandle" = "Adjust Shape Gradient";
 "imageEditor.history.shapeGradientStop" = "Move Gradient Stop";
+"imageEditor.history.shapeGradientMidpoint" = "Move Gradient Color Midpoint";
 "imageEditor.action.shapeGradientStopAdd" = "Add Gradient Stop";
 "imageEditor.action.shapeGradientStopRemove" = "Remove Selected Gradient Stop";
 "imageEditor.status.shapeGradientHandleMoved" = "Adjusting shape gradient";
 "imageEditor.status.shapeGradientStopMoved" = "Moving gradient stop";
+"imageEditor.status.shapeGradientMidpointMoved" = "Adjusting gradient color midpoint";
 "imageEditor.help.shapeGradientHandle.start" = "Drag the gradient start; hold Shift to snap the angle";
 "imageEditor.help.shapeGradientHandle.end" = "Drag the gradient end; hold Shift to snap the angle";
 "imageEditor.help.shapeGradientStopHandle" = "Drag the middle stop along the gradient axis";
+"imageEditor.help.shapeGradientMidpointHandle" = "Drag the transition midpoint between adjacent colors";
 "imageEditor.help.shapeGradientAxis" = "Double-click the gradient axis to add a stop at that position";
 "imageEditor.help.shapeRadialGradientHandle.center" = "Drag the radial gradient center";
 "imageEditor.help.shapeRadialGradientHandle.radius" = "Drag the radial gradient radius";

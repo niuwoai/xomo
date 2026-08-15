@@ -99,6 +99,7 @@ struct ImageEditorView: View {
     @State private var activeShapeGradientHandle: ImageEditorShapeGradientHandle?
     @State private var activeShapeRadialGradientHandle: ImageEditorShapeRadialGradientHandle?
     @State private var activeShapeGradientStopIndex: Int?
+    @State private var activeShapeGradientMidpointIndex: Int?
     @State var selectedShapeGradientStopIndex = 0
     @State private var isRotatingLayer = false
     @State private var isMovingTransformReferencePoint = false
@@ -7165,6 +7166,14 @@ struct ImageEditorView: View {
                 .help(L10n.text("imageEditor.help.shapeGradientAxis"))
                 .accessibilityIdentifier("image-editor-shape-gradient-axis")
 
+            ForEach(viewModel.selectedShapeGradientCanvasMidpointHandlePoints) { midpointPoint in
+                shapeGradientMidpointHandleView(
+                    midpointPoint,
+                    position: viewPoint(from: midpointPoint.canvasPoint, in: canvasSize),
+                    canvasSize: canvasSize
+                )
+            }
+
             ForEach(viewModel.selectedShapeGradientCanvasStopHandlePoints) { stopPoint in
                 shapeGradientStopHandleView(
                     stopPoint,
@@ -7235,6 +7244,14 @@ struct ImageEditorView: View {
                 .help(L10n.text("imageEditor.help.shapeGradientAxis"))
                 .accessibilityIdentifier("image-editor-shape-radial-gradient-axis")
 
+            ForEach(viewModel.selectedShapeGradientCanvasMidpointHandlePoints) { midpointPoint in
+                shapeGradientMidpointHandleView(
+                    midpointPoint,
+                    position: viewPoint(from: midpointPoint.canvasPoint, in: canvasSize),
+                    canvasSize: canvasSize
+                )
+            }
+
             ForEach(viewModel.selectedShapeGradientCanvasStopHandlePoints) { stopPoint in
                 shapeGradientStopHandleView(
                     stopPoint,
@@ -7303,6 +7320,66 @@ struct ImageEditorView: View {
             .opacity(viewModel.canEditSelectedShapeGradientStops ? 1 : 0.55)
             .help(L10n.text("imageEditor.help.shapeGradientStopHandle"))
             .accessibilityIdentifier("image-editor-shape-gradient-canvas-stop-\(stopPoint.index)")
+    }
+
+    private func shapeGradientMidpointHandleView(
+        _ midpointPoint: ImageEditorShapeGradientMidpointHandlePoint,
+        position: CGPoint,
+        canvasSize: CGSize
+    ) -> some View {
+        RoundedRectangle(cornerRadius: 1.5, style: .continuous)
+            .fill(Color.white.opacity(0.92))
+            .overlay {
+                RoundedRectangle(cornerRadius: 1.5, style: .continuous)
+                    .stroke(Color.black.opacity(0.72), lineWidth: 1)
+            }
+            .frame(width: 8, height: 8)
+            .rotationEffect(.degrees(45))
+            .position(position)
+            .contentShape(Rectangle().inset(by: -7))
+            .highPriorityGesture(
+                DragGesture(
+                    minimumDistance: 0,
+                    coordinateSpace: .named("image-editor-canvas-space")
+                )
+                .onChanged { value in
+                    selectedShapeGradientStopIndex = midpointPoint.lowerStopIndex
+                    if activeShapeGradientMidpointIndex == nil,
+                       viewModel.beginEditingSelectedShapeGradientMidpoint(
+                           after: midpointPoint.lowerStopIndex
+                       ) {
+                        activeShapeGradientMidpointIndex = midpointPoint.lowerStopIndex
+                    }
+                    guard activeShapeGradientMidpointIndex == midpointPoint.lowerStopIndex else {
+                        return
+                    }
+                    viewModel.updateSelectedShapeGradientMidpoint(
+                        to: unboundedImagePoint(from: value.location, in: canvasSize)
+                    )
+                }
+                .onEnded { value in
+                    guard activeShapeGradientMidpointIndex == midpointPoint.lowerStopIndex else {
+                        return
+                    }
+                    viewModel.updateSelectedShapeGradientMidpoint(
+                        to: unboundedImagePoint(from: value.location, in: canvasSize)
+                    )
+                    viewModel.finishEditingSelectedShapeGradient()
+                    activeShapeGradientMidpointIndex = nil
+                }
+            )
+            .opacity(viewModel.canEditSelectedShapeGradientStops ? 1 : 0.55)
+            .help(L10n.text("imageEditor.help.shapeGradientMidpointHandle"))
+            .accessibilityLabel(
+                L10n.format(
+                    "imageEditor.properties.shapeGradientMidpointAccessibility",
+                    midpointPoint.lowerStopIndex + 1,
+                    Int((midpointPoint.midpoint * 100).rounded())
+                )
+            )
+            .accessibilityIdentifier(
+                "image-editor-shape-gradient-midpoint-\(midpointPoint.lowerStopIndex)"
+            )
     }
 
     private func deleteSelectedShapeGradientStopIfNeeded() -> Bool {

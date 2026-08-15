@@ -349,6 +349,20 @@ extension ImageEditorView {
             .focusable(false)
             .disabled(selectedIndex == 0 || selectedIndex == stops.count - 1)
             .accessibilityIdentifier("image-editor-shape-gradient-stop-position")
+
+            if selectedIndex < stops.count - 1 {
+                Stepper(
+                    L10n.format(
+                        "imageEditor.properties.shapeGradientStopMidpoint",
+                        Int((stops[selectedIndex].midpoint * 100).rounded())
+                    ),
+                    value: selectedShapeGradientStopMidpointBinding,
+                    in: 0...1,
+                    step: 0.01
+                )
+                .focusable(false)
+                .accessibilityIdentifier("image-editor-shape-gradient-stop-midpoint")
+            }
         }
     }
 
@@ -397,6 +411,18 @@ extension ImageEditorView {
             let stops = viewModel.selectedShapeGradientColorStops
             let index = normalizedShapeGradientStopIndex(stops: stops)
             viewModel.setSelectedShapeGradientStopPosition(at: index, position: position)
+        }
+    }
+
+    private var selectedShapeGradientStopMidpointBinding: Binding<Double> {
+        Binding {
+            let stops = viewModel.selectedShapeGradientColorStops
+            let index = normalizedShapeGradientStopIndex(stops: stops)
+            return stops[index].midpoint
+        } set: { midpoint in
+            let stops = viewModel.selectedShapeGradientColorStops
+            let index = normalizedShapeGradientStopIndex(stops: stops)
+            viewModel.setSelectedShapeGradientStopMidpoint(after: index, midpoint: midpoint)
         }
     }
 

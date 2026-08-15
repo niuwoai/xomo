@@ -326,6 +326,16 @@ extension ImageEditorViewModel {
         updateSelectedShapeProperties(fillGradient: gradient)
     }
 
+    func setSelectedShapeGradientStopMidpoint(after index: Int, midpoint: Double) {
+        guard midpoint.isFinite else { return }
+        var gradient = selectedShapeGradient
+        var stops = gradient.shapeColorStops
+        guard stops.indices.contains(index), index < stops.count - 1 else { return }
+        stops[index].midpoint = max(0, min(1, midpoint))
+        gradient.colorStops = stops
+        updateSelectedShapeProperties(fillGradient: gradient)
+    }
+
     @discardableResult
     func addSelectedShapeGradientStop() -> Int? {
         let stops = selectedShapeGradient.shapeColorStops

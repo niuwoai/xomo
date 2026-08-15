@@ -911,6 +911,8 @@
 "imageEditor.properties.shapeGradientStopColor" = "色标 %d 颜色";
 "imageEditor.properties.shapeGradientStopPosition" = "色标位置：%d%%";
 "imageEditor.properties.shapeGradientStopAccessibility" = "色标 %d，位置 %d%%";
+"imageEditor.properties.shapeGradientStopMidpoint" = "后续颜色中点：%d%%";
+"imageEditor.properties.shapeGradientMidpointAccessibility" = "色标 %d 后的颜色中点，位置 %d%%";
 "imageEditor.properties.shapeGradientAngleValue" = "渐变角度：%d°";
 "imageEditor.properties.shapeGradientRadiusValue" = "渐变半径：%d%%";
 "imageEditor.properties.shapeGradientScaleValue" = "渐变缩放：%d%%";
@@ -959,13 +961,16 @@
 "imageEditor.history.shapeStyle" = "调整形状外观";
 "imageEditor.history.shapeGradientHandle" = "调整形状渐变";
 "imageEditor.history.shapeGradientStop" = "移动渐变色标";
+"imageEditor.history.shapeGradientMidpoint" = "移动渐变颜色中点";
 "imageEditor.action.shapeGradientStopAdd" = "添加渐变色标";
 "imageEditor.action.shapeGradientStopRemove" = "删除选中的渐变色标";
 "imageEditor.status.shapeGradientHandleMoved" = "正在调整形状渐变";
 "imageEditor.status.shapeGradientStopMoved" = "正在移动渐变色标";
+"imageEditor.status.shapeGradientMidpointMoved" = "正在调整渐变颜色中点";
 "imageEditor.help.shapeGradientHandle.start" = "拖动渐变起点；按住 Shift 吸附角度";
 "imageEditor.help.shapeGradientHandle.end" = "拖动渐变终点；按住 Shift 吸附角度";
 "imageEditor.help.shapeGradientStopHandle" = "沿渐变轴拖动中间色标";
+"imageEditor.help.shapeGradientMidpointHandle" = "拖动相邻颜色之间的过渡中点";
 "imageEditor.help.shapeGradientAxis" = "双击渐变轴，在该位置新增色标";
 "imageEditor.help.shapeRadialGradientHandle.center" = "拖动径向渐变中心";
 "imageEditor.help.shapeRadialGradientHandle.radius" = "拖动径向渐变半径";

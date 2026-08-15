@@ -911,6 +911,8 @@
 "imageEditor.properties.shapeGradientStopColor" = "ストップ %d の色";
 "imageEditor.properties.shapeGradientStopPosition" = "ストップ位置：%d%%";
 "imageEditor.properties.shapeGradientStopAccessibility" = "ストップ %d、位置 %d%%";
+"imageEditor.properties.shapeGradientStopMidpoint" = "次のカラー中間点：%d%%";
+"imageEditor.properties.shapeGradientMidpointAccessibility" = "ストップ %d の後のカラー中間点、位置 %d%%";
 "imageEditor.properties.shapeGradientAngleValue" = "グラデーション角度：%d°";
 "imageEditor.properties.shapeGradientRadiusValue" = "グラデーション半径：%d%%";
 "imageEditor.properties.shapeGradientScaleValue" = "グラデーションスケール：%d%%";
@@ -959,13 +961,16 @@
 "imageEditor.history.shapeStyle" = "シェイプの外観を変更";
 "imageEditor.history.shapeGradientHandle" = "シェイプのグラデーションを調整";
 "imageEditor.history.shapeGradientStop" = "グラデーションストップを移動";
+"imageEditor.history.shapeGradientMidpoint" = "グラデーションカラー中間点を移動";
 "imageEditor.action.shapeGradientStopAdd" = "グラデーションストップを追加";
 "imageEditor.action.shapeGradientStopRemove" = "選択したグラデーションストップを削除";
 "imageEditor.status.shapeGradientHandleMoved" = "シェイプのグラデーションを調整中";
 "imageEditor.status.shapeGradientStopMoved" = "グラデーションストップを移動中";
+"imageEditor.status.shapeGradientMidpointMoved" = "グラデーションカラー中間点を調整中";
 "imageEditor.help.shapeGradientHandle.start" = "グラデーションの始点をドラッグします。Shift キーで角度をスナップします";
 "imageEditor.help.shapeGradientHandle.end" = "グラデーションの終点をドラッグします。Shift キーで角度をスナップします";
 "imageEditor.help.shapeGradientStopHandle" = "中間ストップをグラデーション軸に沿ってドラッグします";
+"imageEditor.help.shapeGradientMidpointHandle" = "隣接するカラー間の遷移中間点をドラッグします";
 "imageEditor.help.shapeGradientAxis" = "グラデーション軸をダブルクリックして、その位置にストップを追加します";
 "imageEditor.help.shapeRadialGradientHandle.center" = "放射グラデーションの中心をドラッグします";
 "imageEditor.help.shapeRadialGradientHandle.radius" = "放射グラデーションの半径をドラッグします";

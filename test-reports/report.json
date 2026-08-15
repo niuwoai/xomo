@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-15 21:33:12 +0800",
+  "generated_at": "2026-08-15 21:53:39 +0800",
   "total": 1,
   "passed": 1,
   "failed": 0,
@@ -9,16 +9,16 @@
   "jobs": 1,
   "results": [
     {
-      "suite": "ImageEditorPSDTests",
-      "method": "gradientColorMidpointsRoundTripThroughLegacyAndModernDescriptors",
-      "identifier": "veilpicTests/ImageEditorPSDTests/gradientColorMidpointsRoundTripThroughLegacyAndModernDescriptors()",
-      "file": "ImageEditorPSDTests.swift",
+      "suite": "ImageEditorShapeStyleTests",
+      "method": "canvasGradientMidpointDragCommitsOneUndoAndNoOpPreservesHistory",
+      "identifier": "veilpicTests/ImageEditorShapeStyleTests/canvasGradientMidpointDragCommitsOneUndoAndNoOpPreservesHistory()",
+      "file": "ImageEditorShapeStyleTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 4.195,
+      "duration": 4.231,
       "infrastructure_retries": 0,
       "issues": [],
-      "log": "ImageEditorPSDTests.gradientColorMidpointsRoundTripThroughLegacyAndModernDescriptors.log"
+      "log": "ImageEditorShapeStyleTests.canvasGradientMidpointDragCommitsOneUndoAndNoOpPreservesHistory.log"
     }
   ]
 }
