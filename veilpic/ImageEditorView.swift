@@ -10874,6 +10874,9 @@ struct ImageEditorView: View {
                     Text(preset.title).tag(preset)
                 }
             }
+            .onChange(of: viewModel.selectedGradientFillPreset) { preset in
+                viewModel.setGradientFillDraftPreset(preset)
+            }
             Picker(L10n.text("imageEditor.gradientFill.style"), selection: $viewModel.selectedGradientFillStyle) {
                 ForEach(ImageEditorGradientFillStyle.allCases) { style in
                     Text(style.title).tag(style)
@@ -10898,24 +10901,7 @@ struct ImageEditorView: View {
                 displayText: L10n.format("imageEditor.gradientFill.scaleValue", Int((viewModel.gradientFillScale * 100).rounded()))
             )
             if viewModel.selectedGradientFillPreset == .custom {
-                Text(L10n.text("imageEditor.gradientFill.start"))
-                    .font(.system(size: 10, weight: .bold))
-                    .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
-                gradientFillColorSliders(
-                    red: $viewModel.gradientFillStartRed,
-                    green: $viewModel.gradientFillStartGreen,
-                    blue: $viewModel.gradientFillStartBlue,
-                    labelPrefix: "imageEditor.gradientFill"
-                )
-                Text(L10n.text("imageEditor.gradientFill.end"))
-                    .font(.system(size: 10, weight: .bold))
-                    .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
-                gradientFillColorSliders(
-                    red: $viewModel.gradientFillEndRed,
-                    green: $viewModel.gradientFillEndGreen,
-                    blue: $viewModel.gradientFillEndBlue,
-                    labelPrefix: "imageEditor.gradientFill"
-                )
+                ImageEditorGradientFillStopsEditor(viewModel: viewModel)
             }
             HStack {
                 Button(L10n.text("imageEditor.action.layerGradientFillNew")) {

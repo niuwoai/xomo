@@ -5212,6 +5212,47 @@ struct ImageEditorScopeTests {
         #expect(pathMenuSource.contains("viewModel.canApplySelectedPathAsLayerMask"))
     }
 
+    @Test func gradientFillPanelWiresTheFullColorStopEditor() throws {
+        let repositoryRoot = Self.repositoryRoot()
+        let viewSource = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let editorSource = try String(
+            contentsOf: repositoryRoot.appendingPathComponent(
+                "veilpic/ImageEditorGradientFillControls.swift"
+            ),
+            encoding: .utf8
+        )
+
+        #expect(viewSource.contains("ImageEditorGradientFillStopsEditor(viewModel: viewModel)"))
+        #expect(viewSource.contains("viewModel.setGradientFillDraftPreset(preset)"))
+        for identifier in [
+            "image-editor-gradient-fill-stops",
+            "image-editor-gradient-fill-stop-add",
+            "image-editor-gradient-fill-stop-remove",
+            "image-editor-gradient-fill-stop-color",
+            "image-editor-gradient-fill-stop-opacity",
+            "image-editor-gradient-fill-stop-position",
+            "image-editor-gradient-fill-stop-midpoint"
+        ] {
+            #expect(editorSource.contains(identifier))
+        }
+        for method in [
+            "addGradientFillColorStop()",
+            "removeGradientFillColorStop(at:",
+            "setGradientFillColorStopColor(",
+            "setGradientFillColorStopOpacity(",
+            "setGradientFillColorStopPosition(",
+            "setGradientFillColorStopMidpoint("
+        ] {
+            #expect(editorSource.contains(method))
+        }
+        #expect(editorSource.contains("supportsOpacity: false"))
+        #expect(editorSource.contains("ImageEditorTransparencyCheckerboard"))
+        #expect(editorSource.components(separatedBy: ".focusable(false)").count - 1 >= 7)
+    }
+
     @Test func deploymentTargetsRemainCompatibleWithMacOS13() throws {
         let repositoryRoot = Self.repositoryRoot()
         let project = try String(

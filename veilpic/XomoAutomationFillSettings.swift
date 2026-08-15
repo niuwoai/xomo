@@ -177,17 +177,7 @@ extension XomoAutomationRegistry {
         _ content: ImageEditorGradientFillContent,
         viewModel: ImageEditorViewModel
     ) {
-        viewModel.selectedGradientFillPreset = content.preset
-        viewModel.selectedGradientFillStyle = content.style
-        viewModel.gradientFillReverse = content.reverse
-        viewModel.gradientFillAngle = Double(content.angle)
-        viewModel.gradientFillScale = Double(content.scale)
-        viewModel.gradientFillStartRed = content.startRed
-        viewModel.gradientFillStartGreen = content.startGreen
-        viewModel.gradientFillStartBlue = content.startBlue
-        viewModel.gradientFillEndRed = content.endRed
-        viewModel.gradientFillEndGreen = content.endGreen
-        viewModel.gradientFillEndBlue = content.endBlue
+        viewModel.setGradientFillDraft(content)
     }
 
     private func gradientFillContent(

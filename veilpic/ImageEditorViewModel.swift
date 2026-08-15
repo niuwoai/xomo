@@ -351,6 +351,9 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var gradientFillEndRed: Double = 1
     @Published var gradientFillEndGreen: Double = 0.50
     @Published var gradientFillEndBlue: Double = 0.12
+    @Published var gradientFillColorStops = ImageEditorGradientFillContent(
+        preset: .blueOrange
+    ).shapeColorStops
     @Published var selectedFilter: ImageEditorFilter = .gaussianBlur {
         didSet {
             if oldValue != selectedFilter {
@@ -6889,12 +6892,17 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     func updateSelectedGradientFillLayer() {
-        let indices = selectedLayerIndices.filter { document.layers[$0].isGradientFill && !document.isEffectivelyPixelsLocked(document.layers[$0]) }
+        let content = currentGradientFillContent()
+        let indices = selectedLayerIndices.filter {
+            let layer = document.layers[$0]
+            return layer.isGradientFill
+                && !document.isEffectivelyPixelsLocked(layer)
+                && layer.gradientFillContent?.normalized() != content
+        }
         guard !indices.isEmpty else {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return
         }
-        let content = currentGradientFillContent()
         pushUndo()
         for index in indices {
             document.layers[index].kind = .gradientFill(content)
@@ -6902,6 +6910,95 @@ final class ImageEditorViewModel: ObservableObject {
         }
         appendHistory(L10n.text(indices.count == 1 ? "imageEditor.history.layerGradientFillUpdate" : "imageEditor.history.layerGradientFillUpdateSelected"))
         if indices.count > 1 { statusText = L10n.format("imageEditor.status.layerGradientFillUpdatedSelected", indices.count) }
+    }
+
+    func setGradientFillDraft(_ content: ImageEditorGradientFillContent) {
+        let normalized = content.normalized()
+        selectedGradientFillPreset = normalized.preset
+        selectedGradientFillStyle = normalized.style
+        gradientFillReverse = normalized.reverse
+        gradientFillAngle = Double(normalized.angle)
+        gradientFillScale = Double(normalized.scale)
+        gradientFillColorStops = normalized.shapeColorStops
+        syncGradientFillEndpointControls()
+    }
+
+    func setGradientFillDraftPreset(_ preset: ImageEditorGradientFillPreset) {
+        guard preset != .custom else { return }
+        gradientFillColorStops = ImageEditorGradientFillContent(
+            preset: preset
+        ).shapeColorStops
+        syncGradientFillEndpointControls()
+    }
+
+    func setGradientFillColorStopColor(at index: Int, color: NSColor) {
+        guard gradientFillColorStops.indices.contains(index) else { return }
+        let resolved = color.usingColorSpace(.deviceRGB) ?? .black
+        gradientFillColorStops[index].red = Double(resolved.redComponent)
+        gradientFillColorStops[index].green = Double(resolved.greenComponent)
+        gradientFillColorStops[index].blue = Double(resolved.blueComponent)
+        gradientFillColorStops = normalizedGradientFillDraftStops(gradientFillColorStops)
+        syncGradientFillEndpointControls()
+    }
+
+    func setGradientFillColorStopOpacity(at index: Int, opacity: Double) {
+        guard opacity.isFinite, gradientFillColorStops.indices.contains(index) else { return }
+        gradientFillColorStops[index].alpha = max(0, min(1, opacity))
+        gradientFillColorStops = normalizedGradientFillDraftStops(gradientFillColorStops)
+    }
+
+    func setGradientFillColorStopPosition(at index: Int, position: Double) {
+        guard position.isFinite,
+              gradientFillColorStops.indices.contains(index),
+              index > 0,
+              index < gradientFillColorStops.count - 1
+        else { return }
+        let lowerBound = gradientFillColorStops[index - 1].position + 0.01
+        let upperBound = gradientFillColorStops[index + 1].position - 0.01
+        guard lowerBound <= upperBound else { return }
+        gradientFillColorStops[index].position = max(lowerBound, min(upperBound, position))
+        gradientFillColorStops = normalizedGradientFillDraftStops(gradientFillColorStops)
+    }
+
+    func setGradientFillColorStopMidpoint(after index: Int, midpoint: Double) {
+        guard midpoint.isFinite,
+              gradientFillColorStops.indices.contains(index),
+              index < gradientFillColorStops.count - 1
+        else { return }
+        gradientFillColorStops[index].midpoint = max(0, min(1, midpoint))
+        gradientFillColorStops = normalizedGradientFillDraftStops(gradientFillColorStops)
+    }
+
+    @discardableResult
+    func addGradientFillColorStop() -> Int? {
+        let stops = gradientFillColorStops
+        guard stops.count < ImageEditorGradientFillContent.maximumColorStopCount else { return nil }
+        let gap = stops.indices.dropLast().max { lhs, rhs in
+            (stops[lhs + 1].position - stops[lhs].position)
+                < (stops[rhs + 1].position - stops[rhs].position)
+        } ?? 0
+        let position = (stops[gap].position + stops[gap + 1].position) / 2
+        let insertionIndex = gap + 1
+        let color = ImageEditorGradientFillContent.shapeLinear(
+            colorStops: stops
+        ).shapeColor(at: position)
+        gradientFillColorStops.insert(
+            ImageEditorGradientColorStop(position: position, color: color),
+            at: insertionIndex
+        )
+        gradientFillColorStops = normalizedGradientFillDraftStops(gradientFillColorStops)
+        return insertionIndex
+    }
+
+    @discardableResult
+    func removeGradientFillColorStop(at index: Int) -> Int? {
+        guard gradientFillColorStops.count > 2,
+              index > 0,
+              index < gradientFillColorStops.count - 1
+        else { return nil }
+        gradientFillColorStops.remove(at: index)
+        gradientFillColorStops = normalizedGradientFillDraftStops(gradientFillColorStops)
+        return min(index, gradientFillColorStops.count - 1)
     }
 
     @discardableResult
@@ -7795,9 +7892,8 @@ final class ImageEditorViewModel: ObservableObject {
 
     private func currentGradientFillContent() -> ImageEditorGradientFillContent {
         var retainedColorStops: [ImageEditorGradientColorStop]?
-        if selectedGradientFillPreset == .custom,
-           var stops = document.selectedLayer?.gradientFillContent?.normalized().colorStops,
-           stops.count >= 2 {
+        if selectedGradientFillPreset == .custom {
+            var stops = normalizedGradientFillDraftStops(gradientFillColorStops)
             stops[0].red = gradientFillStartRed
             stops[0].green = gradientFillStartGreen
             stops[0].blue = gradientFillStartBlue
@@ -7821,6 +7917,26 @@ final class ImageEditorViewModel: ObservableObject {
             endBlue: gradientFillEndBlue,
             colorStops: retainedColorStops
         ).normalized()
+    }
+
+    private func normalizedGradientFillDraftStops(
+        _ stops: [ImageEditorGradientColorStop]
+    ) -> [ImageEditorGradientColorStop] {
+        ImageEditorGradientFillContent.shapeLinear(
+            colorStops: stops
+        ).shapeColorStops
+    }
+
+    private func syncGradientFillEndpointControls() {
+        guard let first = gradientFillColorStops.first,
+              let last = gradientFillColorStops.last
+        else { return }
+        gradientFillStartRed = first.red
+        gradientFillStartGreen = first.green
+        gradientFillStartBlue = first.blue
+        gradientFillEndRed = last.red
+        gradientFillEndGreen = last.green
+        gradientFillEndBlue = last.blue
     }
 
     private func resetAdjustmentControls() {
@@ -7919,6 +8035,9 @@ final class ImageEditorViewModel: ObservableObject {
         gradientFillEndRed = 1
         gradientFillEndGreen = 0.50
         gradientFillEndBlue = 0.12
+        gradientFillColorStops = ImageEditorGradientFillContent(
+            preset: .blueOrange
+        ).shapeColorStops
     }
 
     private func editableSelectedLayer() -> ImageEditorLayer? {
@@ -9023,17 +9142,7 @@ final class ImageEditorViewModel: ObservableObject {
 
     private func syncGradientFillControlsFromSelection() {
         guard let content = document.selectedLayer?.gradientFillContent?.normalized() else { return }
-        selectedGradientFillPreset = content.preset
-        selectedGradientFillStyle = content.style
-        gradientFillReverse = content.reverse
-        gradientFillAngle = Double(content.angle)
-        gradientFillScale = Double(content.scale)
-        gradientFillStartRed = content.startRed
-        gradientFillStartGreen = content.startGreen
-        gradientFillStartBlue = content.startBlue
-        gradientFillEndRed = content.endRed
-        gradientFillEndGreen = content.endGreen
-        gradientFillEndBlue = content.endBlue
+        setGradientFillDraft(content)
     }
 
     private func syncTextControlsFromSelection() {

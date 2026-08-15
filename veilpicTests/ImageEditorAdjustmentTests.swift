@@ -328,6 +328,134 @@ struct ImageEditorAdjustmentTests {
         #expect(restoredContent.endGreen == 1)
     }
 
+    @Test func gradientFillDraftEditsEveryStopAndCommitsOneRealTransaction() throws {
+        let canvasSize = NSSize(width: 90, height: 40)
+        let viewModel = ImageEditorViewModel(
+            sourceName: "gradient-stops.png",
+            image: bitmapImage(size: canvasSize, background: .clear)
+        ) { _ in }
+        let original = ImageEditorGradientFillContent(
+            preset: .custom,
+            style: .linear,
+            colorStops: [
+                ImageEditorGradientColorStop(
+                    position: 0,
+                    red: 1,
+                    green: 0,
+                    blue: 0,
+                    alpha: 0.2,
+                    midpoint: 0.3
+                ),
+                ImageEditorGradientColorStop(
+                    position: 0.4,
+                    red: 0,
+                    green: 1,
+                    blue: 0,
+                    alpha: 0.5,
+                    midpoint: 0.7
+                ),
+                ImageEditorGradientColorStop(
+                    position: 1,
+                    red: 0,
+                    green: 0,
+                    blue: 1,
+                    alpha: 1
+                )
+            ]
+        ).normalized()
+        viewModel.setGradientFillDraft(original)
+        #expect(viewModel.gradientFillColorStops == original.shapeColorStops)
+
+        viewModel.setGradientFillColorStopOpacity(at: 1, opacity: 0.65)
+        viewModel.setGradientFillColorStopColor(at: 1, color: .systemYellow)
+        viewModel.setGradientFillColorStopPosition(at: 1, position: 0.45)
+        viewModel.setGradientFillColorStopMidpoint(after: 1, midpoint: 0.25)
+        let editedMiddle = viewModel.gradientFillColorStops[1]
+        #expect(abs(editedMiddle.alpha - 0.65) < 0.000_001)
+        #expect(abs(editedMiddle.position - 0.45) < 0.000_001)
+        #expect(abs(editedMiddle.midpoint - 0.25) < 0.000_001)
+
+        let insertedIndex = try #require(viewModel.addGradientFillColorStop())
+        #expect(viewModel.gradientFillColorStops.count == 4)
+        #expect(insertedIndex == 2)
+        let inserted = viewModel.gradientFillColorStops[insertedIndex]
+        #expect(abs(inserted.position - 0.725) < 0.000_001)
+        #expect(inserted.alpha > 0.65 && inserted.alpha < 1)
+        #expect(viewModel.removeGradientFillColorStop(at: insertedIndex) == 2)
+        #expect(viewModel.gradientFillColorStops.count == 3)
+
+        viewModel.addGradientFillLayer()
+        let layerID = try #require(viewModel.document.selectedLayerID)
+        let created = try #require(
+            viewModel.document.selectedLayer?.gradientFillContent?.normalized().colorStops
+        )
+        #expect(created == viewModel.gradientFillColorStops)
+
+        let historyCount = viewModel.document.history.count
+        viewModel.setGradientFillColorStopOpacity(at: 1, opacity: 0.8)
+        viewModel.updateSelectedGradientFillLayer()
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(
+            viewModel.document.selectedLayer?.gradientFillContent?
+                .normalized().colorStops?[1].alpha == 0.8
+        )
+
+        viewModel.updateSelectedGradientFillLayer()
+        #expect(viewModel.document.history.count == historyCount + 1)
+        viewModel.undo()
+        #expect(
+            viewModel.document.layers.first { $0.id == layerID }?
+                .gradientFillContent?.normalized().colorStops == created
+        )
+        viewModel.redo()
+        #expect(
+            viewModel.document.layers.first { $0.id == layerID }?
+                .gradientFillContent?.normalized().colorStops?[1].alpha == 0.8
+        )
+
+        let project = try ImageEditorProjectDocument(document: viewModel.document)
+        let restored = try project.restoredDocument()
+        #expect(
+            restored.layers.first { $0.id == layerID }?
+                .gradientFillContent?.normalized().colorStops?[1].alpha == 0.8
+        )
+    }
+
+    @Test func gradientFillDraftProtectsEndpointsAndSixteenStopLimit() throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "gradient-stop-limits.png",
+            image: bitmapImage(size: NSSize(width: 60, height: 30), background: .clear)
+        ) { _ in }
+        viewModel.setGradientFillDraft(
+            .shapeLinear(startColor: .systemRed, endColor: .systemBlue)
+        )
+        let original = viewModel.gradientFillColorStops
+
+        #expect(viewModel.removeGradientFillColorStop(at: 0) == nil)
+        #expect(viewModel.removeGradientFillColorStop(at: 1) == nil)
+        viewModel.setGradientFillColorStopPosition(at: 0, position: 0.5)
+        viewModel.setGradientFillColorStopPosition(at: 1, position: 0.5)
+        viewModel.setGradientFillColorStopOpacity(at: 0, opacity: .nan)
+        #expect(viewModel.gradientFillColorStops == original)
+
+        while viewModel.gradientFillColorStops.count
+            < ImageEditorGradientFillContent.maximumColorStopCount {
+            #expect(viewModel.addGradientFillColorStop() != nil)
+        }
+        #expect(viewModel.gradientFillColorStops.count == 16)
+        #expect(viewModel.addGradientFillColorStop() == nil)
+        #expect(viewModel.gradientFillColorStops.first?.position == 0)
+        #expect(viewModel.gradientFillColorStops.last?.position == 1)
+        #expect(
+            zip(
+                viewModel.gradientFillColorStops,
+                viewModel.gradientFillColorStops.dropFirst()
+            ).allSatisfy { lower, upper in
+                lower.position < upper.position
+            }
+        )
+    }
+
     @Test func imageEditorGradientFillStylesRenderAndRoundTripProjectState() async throws {
         let canvasSize = NSSize(width: 61, height: 61)
         let sourceImage = bitmapImage(size: canvasSize, background: .black)

@@ -237,7 +237,7 @@ extension ImageEditorView {
         return VStack(alignment: .leading, spacing: 6) {
             GeometryReader { geometry in
                 ZStack(alignment: .topLeading) {
-                    shapeGradientTransparencyCheckerboard
+                    ImageEditorTransparencyCheckerboard()
                         .clipShape(RoundedRectangle(cornerRadius: 3, style: .continuous))
                         .frame(height: 14)
 
@@ -459,31 +459,6 @@ extension ImageEditorView {
         stops: [ImageEditorGradientColorStop]
     ) -> Int {
         max(0, min(selectedShapeGradientStopIndex, stops.count - 1))
-    }
-
-    private var shapeGradientTransparencyCheckerboard: some View {
-        Canvas { context, size in
-            let square: CGFloat = 4
-            let light = Color(nsColor: NSColor(calibratedWhite: 0.72, alpha: 1))
-            let dark = Color(nsColor: NSColor(calibratedWhite: 0.46, alpha: 1))
-            var row = 0
-            var y: CGFloat = 0
-            while y < size.height {
-                var column = 0
-                var x: CGFloat = 0
-                while x < size.width {
-                    let rect = CGRect(x: x, y: y, width: square, height: square)
-                    let color = (row + column).isMultiple(of: 2) ? light : dark
-                    context.fill(Path(rect), with: .color(color))
-                    column += 1
-                    x += square
-                }
-                row += 1
-                y += square
-            }
-        }
-        .allowsHitTesting(false)
-        .accessibilityHidden(true)
     }
 
     private var selectedShapeGradientEndColorBinding: Binding<Color> {
