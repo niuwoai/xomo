@@ -12,6 +12,8 @@ enum ImageEditorShapeFillKind: String, CaseIterable, Identifiable {
     case solid
     case linearGradient
     case radialGradient
+    case reflectedGradient
+    case diamondGradient
 
     var id: String { rawValue }
 
@@ -182,7 +184,12 @@ extension ImageEditorViewModel {
         guard let gradient = document.selectedLayer?.shapeContent?.fillGradient else {
             return .solid
         }
-        return gradient.style == .radial ? .radialGradient : .linearGradient
+        switch gradient.style {
+        case .linear: return .linearGradient
+        case .radial: return .radialGradient
+        case .reflected: return .reflectedGradient
+        case .diamond: return .diamondGradient
+        }
     }
 
     var selectedShapeFillColor: NSColor {
@@ -274,6 +281,14 @@ extension ImageEditorViewModel {
         case .radialGradient:
             var gradient = selectedShapeGradient
             gradient.style = .radial
+            updateSelectedShapeProperties(fillGradient: gradient)
+        case .reflectedGradient:
+            var gradient = selectedShapeGradient
+            gradient.style = .reflected
+            updateSelectedShapeProperties(fillGradient: gradient)
+        case .diamondGradient:
+            var gradient = selectedShapeGradient
+            gradient.style = .diamond
             updateSelectedShapeProperties(fillGradient: gradient)
         }
     }
@@ -449,10 +464,7 @@ extension ImageEditorViewModel {
             if let fillColor { content.fillColor = fillColor }
             if clearsFillGradient {
                 content.fillGradient = nil
-            } else if var fillGradient {
-                if fillGradient.style != .radial {
-                    fillGradient.style = .linear
-                }
+            } else if let fillGradient {
                 content.fillGradient = fillGradient.normalized()
             }
             if let fillGradientCenter {

@@ -12,6 +12,10 @@
 | `vector-mask-multi.psd` | 外部生成的 vmsk 两个闭合子路径，验证 pathSubpaths 与偶奇填充孔洞 |
 | `modern-solid-vector-shape.psd` | `vsms + vscg` version 16 的 `SoCo` 内容，恢复为原生实色矢量形状 |
 | `modern-gradient-vector-shape.psd` | `vsms + vscg` version 16 的 `GdFl` 内容，恢复为原生线性渐变矢量形状 |
+| `modern-radial-vector-shape.psd` | `GdFl` 的 `Rdl ` 类型，恢复为原生径向渐变矢量形状 |
+| `modern-reflected-vector-shape.psd` | `GdFl` 的 `Rflc` 类型，恢复为原生对称渐变矢量形状 |
+| `modern-diamond-vector-shape.psd` | `GdFl` 的 `Dmnd` 类型，恢复为原生菱形渐变矢量形状 |
+| `modern-angle-vector-shape.psd` | Xomo 尚无对应模型的 `Angl` 类型，验证兼容性报告与安全栅格降级 |
 | `path-resources.psd` | 外部生成的 Image Resources 路径资源，验证闭合路径和开放路径进入路径面板 |
 
 重新生成：

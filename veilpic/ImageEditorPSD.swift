@@ -1330,14 +1330,13 @@ enum ImageEditorPSDCodec {
         for layer: ImageEditorLayer
     ) -> ImageEditorGradientFillContent? {
         guard !layer.style.hasConfiguredEffects else { return nil }
-        if let content = layer.gradientFillContent?.normalized(), content.style == .linear {
+        if let content = layer.gradientFillContent?.normalized() {
             return content
         }
         guard let shape = layer.shapeContent,
               shape.kind == .path,
               shape.fillOpacity <= 0.001 || shape.fillOpacity >= 0.999,
-              let content = shape.fillGradient?.normalized(),
-              content.style == .linear
+              let content = shape.fillGradient?.normalized()
         else { return nil }
         return content
     }
@@ -1849,7 +1848,7 @@ enum ImageEditorPSDCodec {
             let descriptor = try reader.psdDescriptorBlock()
             guard let gradient = descriptor["Grad"]?.objectValue,
                   let gradientType = descriptor["Type"]?.enumValue,
-                  ["Lnr ", "GrdL", "linear"].contains(gradientType),
+                  let style = ImageEditorGradientFillStyle(psdValue: gradientType),
                   let colorEntries = gradient["Clrs"]?.listValue,
                   colorEntries.count >= 2,
                   colorEntries.count <= ImageEditorGradientFillContent.maximumColorStopCount
@@ -1875,7 +1874,7 @@ enum ImageEditorPSDCodec {
             let scale = (descriptor["Scl "]?.numericValue ?? 100) / 100
             return ImageEditorGradientFillContent(
                 preset: .custom,
-                style: .linear,
+                style: style,
                 reverse: descriptor["Rvrs"]?.booleanValue ?? false,
                 angle: CGFloat(angle),
                 scale: CGFloat(scale),
@@ -2257,7 +2256,6 @@ enum ImageEditorPSDCodec {
             return layer
         }
         if let gradientFillContent = record.gradientFillContent?.normalized(),
-           gradientFillContent.style == .linear,
            record.vectorMaskInfo?.isEnabled == true,
            let shapeContent = vectorMaskContent(record: record, size: CGSize(width: width, height: height)) {
             var shape = shapeContent
@@ -3435,7 +3433,10 @@ private extension Data {
             Data.descriptorItem(
                 key: "Type",
                 type: "enum",
-                payload: Data.descriptorEnumPayload(enumType: "GrdT", value: "Lnr ")
+                payload: Data.descriptorEnumPayload(
+                    enumType: "GrdT",
+                    value: normalized.style.psdValue
+                )
             ),
             Data.descriptorItem(
                 key: "Angl",
@@ -3590,6 +3591,27 @@ private extension Data {
 private extension Comparable {
     func clamped(to range: ClosedRange<Self>) -> Self {
         min(max(self, range.lowerBound), range.upperBound)
+    }
+}
+
+private extension ImageEditorGradientFillStyle {
+    init?(psdValue: String) {
+        switch psdValue {
+        case "Lnr ", "GrdL", "linear": self = .linear
+        case "Rdl ", "radial": self = .radial
+        case "Rflc", "reflected": self = .reflected
+        case "Dmnd", "diamond": self = .diamond
+        default: return nil
+        }
+    }
+
+    var psdValue: String {
+        switch self {
+        case .linear: "Lnr "
+        case .radial: "Rdl "
+        case .reflected: "Rflc"
+        case .diamond: "Dmnd"
+        }
     }
 }
 

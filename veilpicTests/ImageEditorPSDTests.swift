@@ -791,6 +791,53 @@ struct ImageEditorPSDTests {
         #expect(reimported.layers.first?.shapeContent?.fillGradient?.normalized() == gradient)
     }
 
+    @Test func modernVSCGNonLinearGradientShapesBecomeEditableAndRoundTrip() throws {
+        let cases: [(file: String, style: ImageEditorGradientFillStyle, psdValue: String)] = [
+            ("modern-radial-vector-shape.psd", .radial, "Rdl "),
+            ("modern-reflected-vector-shape.psd", .reflected, "Rflc"),
+            ("modern-diamond-vector-shape.psd", .diamond, "Dmnd")
+        ]
+
+        for item in cases {
+            let data = try psdFixtureData(item.file)
+            let document = try ImageEditorPSDCodec.decode(data, sourceName: item.file)
+            let gradient = try #require(document.layers.first?.shapeContent?.fillGradient?.normalized())
+            #expect(gradient.style == item.style)
+            #expect(gradient.colorStops?.count == 2)
+
+            let report = try ImageEditorPSDCodec.compatibilityReport(data)
+            #expect(!report.issues.contains { $0.kind == .vectorRasterized })
+            #expect(!report.issues.contains { $0.kind == .fillLayerRasterized })
+
+            var exported = try ImageEditorPSDCodec.encode(document: document)
+            #expect(exported.range(of: Data(item.psdValue.utf8)) != nil)
+            let legacyRange = try #require(exported.range(of: Data("8BIMGdFl".utf8)))
+            exported.replaceSubrange(
+                (legacyRange.upperBound - 4)..<legacyRange.upperBound,
+                with: Data("zzzz".utf8)
+            )
+            let restored = try ImageEditorPSDCodec.decode(
+                exported,
+                sourceName: "vscg-only-\(item.file)"
+            )
+            #expect(restored.layers.first?.shapeContent?.fillGradient?.normalized().style == item.style)
+        }
+    }
+
+    @Test func unsupportedAngleVSCGReportsRasterFallback() throws {
+        let data = try psdFixtureData("modern-angle-vector-shape.psd")
+        let report = try ImageEditorPSDCodec.compatibilityReport(data)
+        #expect(report.issues.contains { $0.kind == .fillLayerRasterized })
+
+        let document = try ImageEditorPSDCodec.decode(
+            data,
+            sourceName: "modern-angle-vector-shape.psd"
+        )
+        let layer = try #require(document.layers.first)
+        #expect(!layer.isShape)
+        #expect(layer.vectorMask != nil)
+    }
+
     @Test func unsupportedVSCGContentReportsRasterFallback() throws {
         var data = try psdFixtureData("modern-solid-vector-shape.psd")
         let blockRange = try #require(data.range(of: Data("vscg".utf8)))
@@ -895,6 +942,40 @@ struct ImageEditorPSDTests {
         #expect(exported.range(of: Data("8BIMSoCo".utf8)) != nil)
         #expect(exported.range(of: Data("8BIMGdFl".utf8)) != nil)
         #expect(exported.range(of: Data("8BIMvscg".utf8)) == nil)
+    }
+
+    @Test func psdRoundTripPreservesNativeNonLinearGradientFillTags() throws {
+        let canvasSize = CGSize(width: 12, height: 10)
+        let styles: [ImageEditorGradientFillStyle] = [.radial, .reflected, .diamond]
+
+        for style in styles {
+            var document = ImageEditorDocument(
+                sourceName: "\(style.rawValue)-fill.xomoproject",
+                image: psdSolidImage(color: .clear, size: canvasSize)
+            )
+            document.layers = [
+                ImageEditorLayer.gradientFill(
+                    name: style.rawValue,
+                    size: canvasSize,
+                    content: ImageEditorGradientFillContent(
+                        preset: .custom,
+                        style: style,
+                        reverse: true,
+                        angle: 30,
+                        scale: 1.25
+                    )
+                )
+            ]
+
+            let exported = try ImageEditorPSDCodec.encode(document: document)
+            #expect(exported.range(of: Data("8BIMGdFl".utf8)) != nil)
+            #expect(exported.range(of: Data("8BIMvscg".utf8)) == nil)
+            let restored = try ImageEditorPSDCodec.decode(
+                exported,
+                sourceName: "\(style.rawValue)-fill.psd"
+            )
+            #expect(restored.layers.first?.gradientFillContent?.normalized().style == style)
+        }
     }
 
     @Test func externalGradientFillFixtureBecomesNativeEditableGradientLayer() throws {

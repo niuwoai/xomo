@@ -99,6 +99,45 @@
       ]
     },
     {
+      "file": "modern-radial-vector-shape.psd",
+      "sha256": "9170c4bb4630eb526594837e9cf2f7304213bbeba62a5a87b92493c545abfd9e",
+      "expected": [
+        "editable_vector_shape",
+        "vscg",
+        "radial_gradient",
+        "vector_mask"
+      ]
+    },
+    {
+      "file": "modern-reflected-vector-shape.psd",
+      "sha256": "af8fca066638a3b455abd01106f4e93f444fd24686502c1391ce95ef5031e4a4",
+      "expected": [
+        "editable_vector_shape",
+        "vscg",
+        "reflected_gradient",
+        "vector_mask"
+      ]
+    },
+    {
+      "file": "modern-diamond-vector-shape.psd",
+      "sha256": "f62c4deac76d901a55a1311d183f9490bb03c4642169037f9a2d89267d05df5f",
+      "expected": [
+        "editable_vector_shape",
+        "vscg",
+        "diamond_gradient",
+        "vector_mask"
+      ]
+    },
+    {
+      "file": "modern-angle-vector-shape.psd",
+      "sha256": "940346216abca9f268703265206821d4cf19356f94a918c5b3377257c164c615",
+      "expected": [
+        "compatibility_report",
+        "raster_fallback",
+        "angle_gradient"
+      ]
+    },
+    {
       "file": "stroked-vector-shape.psd",
       "sha256": "72c821059ecae6b2f21b858a3dd319d77e4e929e3ec50f93398677805c82f93e",
       "expected": [

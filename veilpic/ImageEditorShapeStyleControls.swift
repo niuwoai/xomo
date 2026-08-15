@@ -48,7 +48,7 @@ extension ImageEditorView {
 
             if viewModel.selectedShapeFillKind != .solid {
                 shapeGradientStopsEditor
-                if viewModel.selectedShapeFillKind == .linearGradient {
+                if viewModel.selectedShapeFillKind != .radialGradient {
                     Stepper(
                         L10n.format(
                             "imageEditor.properties.shapeGradientAngleValue",
@@ -60,10 +60,13 @@ extension ImageEditorView {
                     )
                     .focusable(false)
                     .accessibilityIdentifier("image-editor-shape-gradient-angle")
-                } else {
+                }
+                if viewModel.selectedShapeFillKind != .linearGradient {
                     Stepper(
                         L10n.format(
-                            "imageEditor.properties.shapeGradientRadiusValue",
+                            viewModel.selectedShapeFillKind == .radialGradient
+                                ? "imageEditor.properties.shapeGradientRadiusValue"
+                                : "imageEditor.properties.shapeGradientScaleValue",
                             Int((viewModel.selectedShapeGradientScale * 100).rounded())
                         ),
                         value: selectedShapeGradientScaleBinding,
@@ -71,7 +74,11 @@ extension ImageEditorView {
                         step: 0.05
                     )
                     .focusable(false)
-                    .accessibilityIdentifier("image-editor-shape-gradient-radius")
+                    .accessibilityIdentifier(
+                        viewModel.selectedShapeFillKind == .radialGradient
+                            ? "image-editor-shape-gradient-radius"
+                            : "image-editor-shape-gradient-scale"
+                    )
                 }
             } else {
                 HStack(spacing: 8) {

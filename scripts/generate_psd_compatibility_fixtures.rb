@@ -162,7 +162,7 @@ def solid_color_fill_descriptor(red:, green:, blue:)
   )
 end
 
-def gradient_fill_descriptor
+def gradient_fill_descriptor(gradient_type: "Lnr ")
   color = lambda do |red, green, blue|
     descriptor_body(
       name: "RGB Color",
@@ -208,7 +208,7 @@ def gradient_fill_descriptor
     class_id: "GdFl",
     items: [
       descriptor_item(key: "Grad", type: "Objc", payload: gradient),
-      descriptor_item(key: "Type", type: "enum", payload: descriptor_enum_payload(enum_type: "GrdT", value: "Lnr ")),
+      descriptor_item(key: "Type", type: "enum", payload: descriptor_enum_payload(enum_type: "GrdT", value: gradient_type)),
       descriptor_item(key: "Angl", type: "UntF", payload: "#Ang" + f64(0)),
       descriptor_item(key: "Scl ", type: "UntF", payload: "#Prc" + f64(100)),
       descriptor_item(key: "Rvrs", type: "bool", payload: [0].pack("C"))
@@ -589,7 +589,7 @@ def modern_solid_vector_shape_fixture
   )
 end
 
-def modern_gradient_vector_shape_fixture
+def modern_gradient_vector_shape_fixture(name: "Modern Gradient Shape", gradient_type: "Lnr ")
   pixel = ([180] * 16).pack("C*")
   alpha = ([255] * 16).pack("C*")
   channels = {
@@ -599,13 +599,16 @@ def modern_gradient_vector_shape_fixture
     2 => raw_channel(pixel)
   }
   record = layer_record(
-    name: "Modern Gradient Shape",
+    name: name,
     channels: channels,
     blocks: [
       tagged_block("vsms", vector_mask_payload),
       tagged_block(
         "vscg",
-        vector_stroke_content_payload(key: "GdFl", descriptor: gradient_fill_descriptor)
+        vector_stroke_content_payload(
+          key: "GdFl",
+          descriptor: gradient_fill_descriptor(gradient_type: gradient_type)
+        )
       )
     ]
   )
@@ -736,6 +739,22 @@ fixtures = {
   "gradient-vector-shape.psd" => gradient_vector_shape_fixture,
   "modern-solid-vector-shape.psd" => modern_solid_vector_shape_fixture,
   "modern-gradient-vector-shape.psd" => modern_gradient_vector_shape_fixture,
+  "modern-radial-vector-shape.psd" => modern_gradient_vector_shape_fixture(
+    name: "Modern Radial Shape",
+    gradient_type: "Rdl "
+  ),
+  "modern-reflected-vector-shape.psd" => modern_gradient_vector_shape_fixture(
+    name: "Modern Reflected Shape",
+    gradient_type: "Rflc"
+  ),
+  "modern-diamond-vector-shape.psd" => modern_gradient_vector_shape_fixture(
+    name: "Modern Diamond Shape",
+    gradient_type: "Dmnd"
+  ),
+  "modern-angle-vector-shape.psd" => modern_gradient_vector_shape_fixture(
+    name: "Unsupported Angle Shape",
+    gradient_type: "Angl"
+  ),
   "stroked-vector-shape.psd" => stroked_vector_shape_fixture,
   "gradient-fill.psd" => gradient_fill_fixture,
   "vector-mask.psd" => vector_mask_fixture,
@@ -757,6 +776,10 @@ expectations = {
   "gradient-vector-shape.psd" => %w[editable_vector_shape gradient_fill vector_mask vector_stroke dash_pattern],
   "modern-solid-vector-shape.psd" => %w[editable_vector_shape vscg solid_fill vector_mask],
   "modern-gradient-vector-shape.psd" => %w[editable_vector_shape vscg gradient_fill vector_mask],
+  "modern-radial-vector-shape.psd" => %w[editable_vector_shape vscg radial_gradient vector_mask],
+  "modern-reflected-vector-shape.psd" => %w[editable_vector_shape vscg reflected_gradient vector_mask],
+  "modern-diamond-vector-shape.psd" => %w[editable_vector_shape vscg diamond_gradient vector_mask],
+  "modern-angle-vector-shape.psd" => %w[compatibility_report raster_fallback angle_gradient],
   "stroked-vector-shape.psd" => %w[editable_vector_shape solid_fill vector_mask vector_stroke dash_pattern],
   "gradient-fill.psd" => %w[editable_gradient_fill linear_color_stops],
   "vector-mask.psd" => %w[editable_vector_mask closed_path bezier_points],

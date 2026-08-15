@@ -902,6 +902,8 @@
 "imageEditor.properties.shapeFillKind.solid" = "単色";
 "imageEditor.properties.shapeFillKind.linearGradient" = "線形グラデーション";
 "imageEditor.properties.shapeFillKind.radialGradient" = "放射グラデーション";
+"imageEditor.properties.shapeFillKind.reflectedGradient" = "反射グラデーション";
+"imageEditor.properties.shapeFillKind.diamondGradient" = "菱形グラデーション";
 "imageEditor.properties.shapeFillColor" = "塗りの色";
 "imageEditor.properties.shapeGradientStartColor" = "グラデーション開始色";
 "imageEditor.properties.shapeGradientEndColor" = "グラデーション終了色";
@@ -911,6 +913,7 @@
 "imageEditor.properties.shapeGradientStopAccessibility" = "ストップ %d、位置 %d%%";
 "imageEditor.properties.shapeGradientAngleValue" = "グラデーション角度：%d°";
 "imageEditor.properties.shapeGradientRadiusValue" = "グラデーション半径：%d%%";
+"imageEditor.properties.shapeGradientScaleValue" = "グラデーションスケール：%d%%";
 "imageEditor.properties.shapeFillOpacityValue" = "塗りの不透明度：%d%%";
 "imageEditor.properties.shapeStrokeColor" = "線の色";
 "imageEditor.properties.shapeStrokeOpacityValue" = "線の不透明度：%d%%";

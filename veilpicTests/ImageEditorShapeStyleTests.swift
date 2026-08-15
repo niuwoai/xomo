@@ -57,12 +57,14 @@ struct ImageEditorShapeStyleTests {
             strokeOpacity: 0
         ).normalized(size: CGSize(width: 101, height: 101))
         #expect(content.fillGradient?.style == .radial)
-        var unsupportedContent = content
-        unsupportedContent.fillGradient?.style = .diamond
-        #expect(
-            unsupportedContent.normalized(size: CGSize(width: 101, height: 101))
-                .fillGradient?.style == .linear
-        )
+        for style in [ImageEditorGradientFillStyle.reflected, .diamond] {
+            var alternateContent = content
+            alternateContent.fillGradient?.style = style
+            #expect(
+                alternateContent.normalized(size: CGSize(width: 101, height: 101))
+                    .fillGradient?.style == style
+            )
+        }
         let image = content.renderedImage(size: CGSize(width: 101, height: 101))
         let center = try #require(image.color(at: CGPoint(x: 50, y: 50)))
         let edge = try #require(image.color(at: CGPoint(x: 95, y: 50)))
@@ -100,6 +102,32 @@ struct ImageEditorShapeStyleTests {
         reopened.setSelectedShapeFillKind(.linearGradient)
         #expect(reopened.selectedShapeFillKind == .linearGradient)
         #expect(reopened.document.selectedLayer?.shapeContent?.fillGradient?.style == .linear)
+    }
+
+    @Test func reflectedAndDiamondShapeGradientsStayEditableAndPersist() throws {
+        let viewModel = makeViewModel()
+        viewModel.drawShape(
+            from: CGPoint(x: 10, y: 10),
+            to: CGPoint(x: 110, y: 70),
+            ellipse: false
+        )
+
+        viewModel.setSelectedShapeFillKind(.reflectedGradient)
+        #expect(viewModel.selectedShapeFillKind == .reflectedGradient)
+        #expect(viewModel.document.selectedLayer?.shapeContent?.fillGradient?.style == .reflected)
+        viewModel.setSelectedShapeGradientScale(0.75)
+        #expect(abs(viewModel.selectedShapeGradientScale - 0.75) < 0.001)
+
+        viewModel.setSelectedShapeFillKind(.diamondGradient)
+        #expect(viewModel.selectedShapeFillKind == .diamondGradient)
+        #expect(viewModel.document.selectedLayer?.shapeContent?.fillGradient?.style == .diamond)
+
+        let projectData = try viewModel.projectData()
+        let reopened = makeViewModel()
+        try reopened.loadProjectData(projectData)
+        #expect(reopened.selectedShapeFillKind == .diamondGradient)
+        #expect(reopened.document.selectedLayer?.shapeContent?.fillGradient?.style == .diamond)
+        #expect(abs(reopened.selectedShapeGradientScale - 0.75) < 0.001)
     }
 
     @Test func gradientEndpointHandleColorsUseActualStopsAndTrackReverse() {
@@ -1149,7 +1177,10 @@ struct ImageEditorShapeStyleTests {
 
         #expect(source.contains("image-editor-shape-fill-kind-\\(kind.rawValue)"))
         #expect(ImageEditorShapeFillKind.radialGradient.rawValue == "radialGradient")
+        #expect(ImageEditorShapeFillKind.reflectedGradient.rawValue == "reflectedGradient")
+        #expect(ImageEditorShapeFillKind.diamondGradient.rawValue == "diamondGradient")
         #expect(source.contains("image-editor-shape-gradient-radius"))
+        #expect(source.contains("image-editor-shape-gradient-scale"))
     }
 
     private func makeViewModel() -> ImageEditorViewModel {

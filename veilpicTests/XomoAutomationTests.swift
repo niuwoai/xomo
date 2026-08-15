@@ -7087,6 +7087,85 @@ struct XomoAutomationTests {
         #expect(viewModel.document.selectedLayer?.shapeContent?.fillGradient?.style == .radial)
     }
 
+    @Test func registryCreatesAndSwitchesReflectedAndDiamondShapeGradients() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        let fillGradient: XomoJSONValue = .object([
+            "startColor": .object([
+                "red": .number(1), "green": .number(0), "blue": .number(0)
+            ]),
+            "endColor": .object([
+                "red": .number(0), "green": .number(0), "blue": .number(1)
+            ]),
+            "angle": .number(25),
+            "scale": .number(0.8)
+        ])
+
+        let created = registry.execute(request(
+            operation: "call",
+            name: "xomo.shape.create",
+            arguments: [
+                "kind": .string("rectangle"),
+                "x": .number(10),
+                "y": .number(12),
+                "width": .number(90),
+                "height": .number(70),
+                "fillKind": .string("reflectedGradient"),
+                "fillGradient": fillGradient
+            ]
+        ))
+        #expect(created.ok)
+        #expect(viewModel.document.selectedLayer?.shapeContent?.fillGradient?.style == .reflected)
+
+        let reflected = registry.execute(request(operation: "call", name: "xomo.shape.get"))
+        #expect(reflected.result?.objectValue?["fillKind"] == .string("reflectedGradient"))
+
+        #expect(registry.execute(request(
+            operation: "call",
+            name: "xomo.shape.update",
+            arguments: ["fillKind": .string("diamondGradient")]
+        )).ok)
+        #expect(viewModel.document.selectedLayer?.shapeContent?.fillGradient?.style == .diamond)
+
+        #expect(registry.execute(request(
+            operation: "call",
+            name: "xomo.shape.update",
+            arguments: [
+                "fillGradient": .object([
+                    "startColor": .object([
+                        "red": .number(1), "green": .number(0), "blue": .number(0)
+                    ]),
+                    "endColor": .object([
+                        "red": .number(0), "green": .number(0), "blue": .number(1)
+                    ]),
+                    "angle": .number(25),
+                    "scale": .number(0.9)
+                ])
+            ]
+        )).ok)
+        #expect(viewModel.document.selectedLayer?.shapeContent?.fillGradient?.style == .diamond)
+        #expect(viewModel.document.selectedLayer?.shapeContent?.fillGradient?.scale == 0.9)
+        let diamond = registry.execute(request(operation: "call", name: "xomo.shape.get"))
+        #expect(diamond.result?.objectValue?["fillKind"] == .string("diamondGradient"))
+
+        let tools = registry.execute(request(operation: "tools")).result?.arrayValue ?? []
+        let updateTool = try #require(tools.compactMap(\.objectValue).first {
+            $0["name"] == .string("xomo.shape.update")
+        })
+        #expect(
+            updateTool["inputSchema"]?.objectValue?["properties"]?
+                .objectValue?["fillKind"]?.objectValue?["enum"]?.arrayValue
+                == [
+                    .string("solid"),
+                    .string("linearGradient"),
+                    .string("radialGradient"),
+                    .string("reflectedGradient"),
+                    .string("diamondGradient")
+                ]
+        )
+    }
+
     @Test func shapeGradientNumericFieldsRejectInvalidValuesAtomically() throws {
         let viewModel = makeViewModel()
         let registry = XomoAutomationRegistry.shared
