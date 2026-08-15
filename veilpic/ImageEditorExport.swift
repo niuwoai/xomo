@@ -586,8 +586,11 @@ extension ImageEditorViewModel {
     private var selectionExportBounds: CGRect? {
         guard let selection = document.selection else { return nil }
         let canvasBounds = CGRect(origin: .zero, size: document.canvasSize)
-        let candidate = selection.isInverted ? canvasBounds : selection.bounds.standardized
-        let bounded = candidate.intersection(canvasBounds).integral.intersection(canvasBounds)
+        guard let selectedBounds = selection.effectiveSelectedBounds(in: document.canvasSize) else { return nil }
+        let bounded = selectedBounds.standardized
+            .intersection(canvasBounds)
+            .integral
+            .intersection(canvasBounds)
         guard bounded.width > 0, bounded.height > 0 else { return nil }
         return bounded
     }
