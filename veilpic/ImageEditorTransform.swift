@@ -446,7 +446,7 @@ extension ImageEditorViewModel {
             return
         }
 
-        if document.selection?.effectiveSelectedBounds(in: document.canvasSize) != nil {
+        if hasEffectiveSelectionPixels {
             nudgeSelection(by: delta)
             return
         }

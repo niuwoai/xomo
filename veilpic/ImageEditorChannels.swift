@@ -52,7 +52,7 @@ enum ImageEditorLayerPanelTab: String, CaseIterable, Identifiable {
 @MainActor
 extension ImageEditorViewModel {
     var canSaveSelectionAsAlphaChannel: Bool {
-        document.selection?.effectiveSelectedBounds(in: document.canvasSize) != nil
+        hasEffectiveSelectionPixels
     }
 
     var canCreateBlankAlphaChannel: Bool {

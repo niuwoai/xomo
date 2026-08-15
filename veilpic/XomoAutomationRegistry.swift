@@ -4768,7 +4768,7 @@ final class XomoAutomationRegistry {
         for action: String,
         viewModel: ImageEditorViewModel
     ) throws {
-        guard viewModel.hasSelection else {
+        guard viewModel.hasEffectiveSelectionPixels else {
             throw XomoAutomationCallError.operationFailed(
                 "Selection action \(action) requires an active selection"
             )

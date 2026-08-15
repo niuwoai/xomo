@@ -12,6 +12,10 @@ private let defaultLayerTransparencySelectionThreshold = 8
 
 @MainActor
 extension ImageEditorViewModel {
+    var hasEffectiveSelectionPixels: Bool {
+        document.selection?.effectiveSelectedBounds(in: document.canvasSize) != nil
+    }
+
     var canLoadSelectionFromLayerTransparency: Bool {
         if let cachedLayerTransparencySelectionAvailability {
             return cachedLayerTransparencySelectionAvailability
@@ -31,11 +35,11 @@ extension ImageEditorViewModel {
     }
 
     var canSelectSimilarColors: Bool {
-        hasSelection
+        hasEffectiveSelectionPixels
     }
 
     var canGrowColorSelection: Bool {
-        hasSelection
+        hasEffectiveSelectionPixels
     }
 
     func selectAll() {
