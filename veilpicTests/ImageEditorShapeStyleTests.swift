@@ -13,6 +13,59 @@ import Testing
 @Suite
 @MainActor
 struct ImageEditorShapeStyleTests {
+    @Test func gradientColorMidpointsShapeRenderingAndPersistAcrossProjects() throws {
+        let gradient = ImageEditorGradientFillContent.shapeLinear(colorStops: [
+            ImageEditorGradientColorStop(
+                position: 0,
+                red: 0,
+                green: 0,
+                blue: 0,
+                midpoint: 0.25
+            ),
+            ImageEditorGradientColorStop(position: 1, red: 1, green: 1, blue: 1)
+        ])
+        let midpointColor = try #require(
+            gradient.shapeColor(at: 0.25).usingColorSpace(.deviceRGB)
+        )
+        let laterColor = try #require(
+            gradient.shapeColor(at: 0.5).usingColorSpace(.deviceRGB)
+        )
+        #expect(abs(midpointColor.redComponent - 0.5) < 0.001)
+        #expect(abs(midpointColor.greenComponent - 0.5) < 0.001)
+        #expect(abs(midpointColor.blueComponent - 0.5) < 0.001)
+        #expect(abs(laterColor.redComponent - (2.0 / 3.0)) < 0.001)
+
+        let rendered = gradient.renderedImage(size: CGSize(width: 101, height: 1))
+        let renderedMidpoint = try #require(rendered.color(at: CGPoint(x: 25, y: 0)))
+        #expect(abs(renderedMidpoint.redComponent - 0.5) < 0.025)
+        var reversed = gradient
+        reversed.reverse = true
+        let reversedImage = reversed.renderedImage(size: CGSize(width: 101, height: 1))
+        let reversedMidpoint = try #require(reversedImage.color(at: CGPoint(x: 75, y: 0)))
+        #expect(abs(reversedMidpoint.redComponent - 0.5) < 0.025)
+
+        let viewModel = makeViewModel()
+        viewModel.drawShape(
+            from: CGPoint(x: 10, y: 10),
+            to: CGPoint(x: 110, y: 70),
+            ellipse: false,
+            fillGradient: gradient
+        )
+        viewModel.setSelectedShapeGradientStopColor(at: 0, color: .systemRed)
+        #expect(abs(viewModel.selectedShapeGradientColorStops[0].midpoint - 0.25) < 0.000_001)
+
+        let projectData = try viewModel.projectData()
+        let reopened = makeViewModel()
+        try reopened.loadProjectData(projectData)
+        #expect(abs(reopened.selectedShapeGradientColorStops[0].midpoint - 0.25) < 0.000_001)
+
+        let legacyStop = try JSONDecoder().decode(
+            ImageEditorGradientColorStop.self,
+            from: Data(#"{"position":0,"red":0,"green":0,"blue":0}"#.utf8)
+        )
+        #expect(legacyStop.midpoint == 0.5)
+    }
+
     @Test func linearGradientFillClipsToShapeAndPreservesIndependentStroke() throws {
         let gradient = ImageEditorGradientFillContent.shapeLinear(
             startColor: .systemRed,

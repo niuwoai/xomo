@@ -151,9 +151,7 @@ extension ImageEditorGradientFillContent {
             let upper = stops[index]
             guard value <= upper.position else { continue }
             let lower = stops[index - 1]
-            let distance = upper.position - lower.position
-            guard distance > 0.000_001 else { return upper.color }
-            let amount = (value - lower.position) / distance
+            let amount = lower.interpolationAmount(to: upper, at: value)
             let vector = lower.vector + (upper.vector - lower.vector) * amount
             return NSColor(deviceRed: vector.x, green: vector.y, blue: vector.z, alpha: 1)
         }
@@ -306,7 +304,11 @@ extension ImageEditorViewModel {
         var gradient = selectedShapeGradient
         var stops = gradient.shapeColorStops
         guard stops.indices.contains(index) else { return }
-        stops[index] = ImageEditorGradientColorStop(position: stops[index].position, color: color)
+        stops[index] = ImageEditorGradientColorStop(
+            position: stops[index].position,
+            color: color,
+            midpoint: stops[index].midpoint
+        )
         gradient.colorStops = stops
         updateSelectedShapeProperties(fillGradient: gradient)
     }

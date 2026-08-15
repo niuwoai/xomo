@@ -1050,6 +1050,95 @@ struct ImageEditorPSDTests {
         #expect(report.issues.contains { $0.kind == .fillLayerRasterized })
     }
 
+    @Test func gradientColorMidpointsRoundTripThroughLegacyAndModernDescriptors() throws {
+        let canvasSize = CGSize(width: 112, height: 76)
+        var document = ImageEditorDocument(
+            sourceName: "gradient-midpoint.xomoproject",
+            image: psdSolidImage(color: .clear, size: canvasSize)
+        )
+        document.layers = [
+            ImageEditorLayer.shape(
+                name: "Weighted Gradient",
+                frame: CGRect(x: 14, y: 12, width: 80, height: 52),
+                content: ImageEditorShapeContent(
+                    kind: .ellipse,
+                    fillColor: .clear,
+                    fillGradient: ImageEditorGradientFillContent(
+                        preset: .custom,
+                        style: .linear,
+                        angle: -18,
+                        scale: 0.9,
+                        colorStops: [
+                            ImageEditorGradientColorStop(
+                                position: 0,
+                                red: 0.1,
+                                green: 0.2,
+                                blue: 0.9,
+                                midpoint: 0.27
+                            ),
+                            ImageEditorGradientColorStop(
+                                position: 1,
+                                red: 1,
+                                green: 0.4,
+                                blue: 0.1
+                            )
+                        ]
+                    ),
+                    fillOpacity: 1,
+                    strokeColor: .clear,
+                    strokeWidth: 1,
+                    strokeOpacity: 0
+                )
+            )
+        ]
+
+        let exported = try ImageEditorPSDCodec.encode(document: document)
+        let midpointKey = Data("Mdpn".utf8)
+        var searchStart = exported.startIndex
+        var midpointPayloads: [Int] = []
+        while searchStart < exported.endIndex,
+              let range = exported.range(
+                  of: midpointKey,
+                  options: [],
+                  in: searchStart..<exported.endIndex
+              ) {
+            let typeStart = range.upperBound
+            let valueStart = typeStart + 4
+            #expect(exported.subdata(in: typeStart..<valueStart) == Data("long".utf8))
+            let value = exported[valueStart..<(valueStart + 4)].reduce(0) {
+                ($0 << 8) | Int($1)
+            }
+            midpointPayloads.append(value)
+            searchStart = valueStart + 4
+        }
+        #expect(midpointPayloads == [27, 50, 27, 50])
+
+        var legacyOnly = exported
+        let modernKey = try #require(legacyOnly.range(of: Data("vscg".utf8)))
+        legacyOnly.replaceSubrange(modernKey, with: Data("zzzz".utf8))
+        let legacyDocument = try ImageEditorPSDCodec.decode(
+            legacyOnly,
+            sourceName: "gradient-midpoint-legacy.psd"
+        )
+
+        var modernOnly = exported
+        let legacyKey = try #require(modernOnly.range(of: Data("GdFl".utf8)))
+        modernOnly.replaceSubrange(legacyKey, with: Data("zzzz".utf8))
+        let modernDocument = try ImageEditorPSDCodec.decode(
+            modernOnly,
+            sourceName: "gradient-midpoint-modern.psd"
+        )
+
+        for restored in [legacyDocument, modernDocument] {
+            let stops = try #require(
+                restored.layers.first?.shapeContent?.fillGradient?.normalized().colorStops
+            )
+            #expect(stops.count == 2)
+            #expect(abs(stops[0].midpoint - 0.27) < 0.000_001)
+            #expect(stops[1].midpoint == 0.5)
+        }
+    }
+
     @Test func compatibilityReportCountsUnsupportedVectorMaskStructure() throws {
         var data = try psdFixtureData("solid-vector-shape.psd")
         let keyRange = try #require(data.range(of: Data("vmsk".utf8)))

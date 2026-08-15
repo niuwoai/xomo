@@ -1965,19 +1965,22 @@ enum ImageEditorPSDCodec {
                   colorEntries.count <= ImageEditorGradientFillContent.maximumColorStopCount
             else { return nil }
             let stops = colorEntries.compactMap { entry -> ImageEditorGradientColorStop? in
+                let midpoint = entry.objectValue?["Mdpn"]?.numericValue ?? 50
                 guard let item = entry.objectValue,
                       let color = item["Clr "]?.objectValue,
                       let red = color["Rd  "]?.numericValue,
                       let green = color["Grn "]?.numericValue,
                       let blue = color["Bl  "]?.numericValue,
                       let location = item["Lctn"]?.numericValue,
-                      red.isFinite, green.isFinite, blue.isFinite, location.isFinite
+                      red.isFinite, green.isFinite, blue.isFinite,
+                      location.isFinite, midpoint.isFinite
                 else { return nil }
                 return ImageEditorGradientColorStop(
                     position: location > 1 ? location / 4096 : location,
                     red: red / 255,
                     green: green / 255,
-                    blue: blue / 255
+                    blue: blue / 255,
+                    midpoint: midpoint / 100
                 )
             }.sorted { $0.position < $1.position }
             guard stops.count >= 2 else { return nil }
@@ -3553,7 +3556,11 @@ private extension Data {
                     type: "long",
                     payload: Data(intPayload: Int32((stop.position * 4096).rounded()))
                 ),
-                Data.descriptorItem(key: "Mdpn", type: "long", payload: Data(intPayload: 50))
+                Data.descriptorItem(
+                    key: "Mdpn",
+                    type: "long",
+                    payload: Data(intPayload: Int32((stop.midpoint * 100).rounded()))
+                )
             ])
         }
         var colorList = Data()
