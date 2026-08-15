@@ -1,48 +1,36 @@
 {
-  "generated_at": "2026-08-15 20:23:48 +0800",
-  "total": 3,
-  "passed": 3,
+  "generated_at": "2026-08-15 20:47:22 +0800",
+  "total": 2,
+  "passed": 2,
   "failed": 0,
-  "total_tests": 3,
-  "passed_tests": 3,
+  "total_tests": 2,
+  "passed_tests": 2,
   "failed_tests_in_failed_groups": 0,
   "jobs": 1,
   "results": [
     {
-      "suite": "ImageEditorShapeStyleTests",
-      "method": "reflectedAndDiamondShapeGradientsStayEditableAndPersist",
-      "identifier": "veilpicTests/ImageEditorShapeStyleTests/reflectedAndDiamondShapeGradientsStayEditableAndPersist()",
-      "file": "ImageEditorShapeStyleTests.swift",
+      "suite": "ImageEditorPSDTests",
+      "method": "fillOnlyPrimitiveShapesExportAsEditablePSDPaths",
+      "identifier": "veilpicTests/ImageEditorPSDTests/fillOnlyPrimitiveShapesExportAsEditablePSDPaths()",
+      "file": "ImageEditorPSDTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 4.174,
+      "duration": 2.855,
       "infrastructure_retries": 0,
       "issues": [],
-      "log": "ImageEditorShapeStyleTests.reflectedAndDiamondShapeGradientsStayEditableAndPersist.log"
+      "log": "ImageEditorPSDTests.fillOnlyPrimitiveShapesExportAsEditablePSDPaths.log"
     },
     {
-      "suite": "XomoAutomationTests",
-      "method": "registryCreatesAndSwitchesReflectedAndDiamondShapeGradients",
-      "identifier": "veilpicTests/XomoAutomationTests/registryCreatesAndSwitchesReflectedAndDiamondShapeGradients()",
-      "file": "XomoAutomationTests.swift",
+      "suite": "ImageEditorPSDTests",
+      "method": "unsupportedPrimitiveShapeSemanticsKeepRasterFallback",
+      "identifier": "veilpicTests/ImageEditorPSDTests/unsupportedPrimitiveShapeSemanticsKeepRasterFallback()",
+      "file": "ImageEditorPSDTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 2.795,
+      "duration": 2.817,
       "infrastructure_retries": 0,
       "issues": [],
-      "log": "XomoAutomationTests.registryCreatesAndSwitchesReflectedAndDiamondShapeGradients.log"
-    },
-    {
-      "suite": "XomoFigmaNodeImportPlanTests",
-      "method": "orthogonalDiamondGradientsMapWhileDistortedAndAngularPaintsDegrade",
-      "identifier": "veilpicTests/XomoFigmaNodeImportPlanTests/orthogonalDiamondGradientsMapWhileDistortedAndAngularPaintsDegrade()",
-      "file": "XomoFigmaNodeImportPlanTests.swift",
-      "test_count": 1,
-      "passed": true,
-      "duration": 2.813,
-      "infrastructure_retries": 0,
-      "issues": [],
-      "log": "XomoFigmaNodeImportPlanTests.orthogonalDiamondGradientsMapWhileDistortedAndAngularPaintsDegrade.log"
+      "log": "ImageEditorPSDTests.unsupportedPrimitiveShapeSemanticsKeepRasterFallback.log"
     }
   ]
 }

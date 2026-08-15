@@ -677,6 +677,164 @@ struct ImageEditorPSDTests {
         #expect(restoredLayer.shapeContent?.editablePathAnchors.count == 3)
     }
 
+    @Test func fillOnlyPrimitiveShapesExportAsEditablePSDPaths() throws {
+        let canvasSize = CGSize(width: 180, height: 120)
+        var document = ImageEditorDocument(
+            sourceName: "primitive-shapes.xomoproject",
+            image: psdSolidImage(color: .clear, size: canvasSize)
+        )
+        document.layers.removeAll()
+
+        let rectangle = ImageEditorLayer.shape(
+            name: "Rounded Rectangle",
+            frame: CGRect(x: 12, y: 18, width: 72, height: 48),
+            content: ImageEditorShapeContent(
+                kind: .rectangle,
+                fillColor: NSColor(deviceRed: 0.12, green: 0.48, blue: 0.86, alpha: 1),
+                fillOpacity: 1,
+                strokeColor: .clear,
+                strokeWidth: 2,
+                strokeOpacity: 0,
+                cornerRadii: ImageEditorRectangleCornerRadii(
+                    topLeft: 4,
+                    topRight: 8,
+                    bottomRight: 12,
+                    bottomLeft: 16
+                )
+            )
+        )
+        let gradient = ImageEditorGradientFillContent(
+            preset: .custom,
+            style: .diamond,
+            angle: 28,
+            scale: 0.8,
+            colorStops: [
+                ImageEditorGradientColorStop(position: 0, red: 1, green: 0.2, blue: 0.1),
+                ImageEditorGradientColorStop(position: 0.4, red: 0.1, green: 0.9, blue: 0.3),
+                ImageEditorGradientColorStop(position: 1, red: 0.1, green: 0.3, blue: 1)
+            ]
+        )
+        let ellipse = ImageEditorLayer.shape(
+            name: "Gradient Ellipse",
+            frame: CGRect(x: 98, y: 24, width: 54, height: 54),
+            content: ImageEditorShapeContent(
+                kind: .ellipse,
+                fillColor: .clear,
+                fillGradient: gradient,
+                fillOpacity: 1,
+                strokeColor: .clear,
+                strokeWidth: 1,
+                strokeOpacity: 0
+            )
+        )
+        let rectangleContent = try #require(rectangle.shapeContent)
+        let ellipseContent = try #require(ellipse.shapeContent)
+        let exportedRectanglePath = try #require(
+            ImageEditorPSDCodec.exportablePSDPathContent(
+                for: rectangleContent,
+                layer: rectangle
+            )
+        )
+        let exportedEllipsePath = try #require(
+            ImageEditorPSDCodec.exportablePSDPathContent(
+                for: ellipseContent,
+                layer: ellipse
+            )
+        )
+        #expect(exportedRectanglePath.editablePathAnchors.count == 8)
+        #expect(exportedEllipsePath.editablePathAnchors.count == 4)
+        document.layers = [rectangle, ellipse]
+
+        let data = try ImageEditorPSDCodec.encode(document: document)
+        #expect(data.range(of: Data("vmsk".utf8)) != nil)
+        #expect(data.range(of: Data("vscg".utf8)) != nil)
+        let restored = try ImageEditorPSDCodec.decode(
+            data,
+            sourceName: "primitive-shapes.psd"
+        )
+        let restoredRectangle = try #require(
+            restored.layers.first { $0.name == "Rounded Rectangle" }?.shapeContent
+        )
+        let restoredEllipse = try #require(
+            restored.layers.first { $0.name == "Gradient Ellipse" }?.shapeContent
+        )
+        let rectangleColor = try #require(
+            restoredRectangle.fillColor.usingColorSpace(.deviceRGB)
+        )
+
+        #expect(restoredRectangle.kind == .path)
+        #expect(restoredRectangle.editablePathAnchors.count == 8)
+        #expect(restoredRectangle.editablePathAnchors.contains { $0.inControl != nil })
+        #expect(abs(rectangleColor.redComponent - 0.12) < 0.01)
+        #expect(abs(rectangleColor.greenComponent - 0.48) < 0.01)
+        #expect(abs(rectangleColor.blueComponent - 0.86) < 0.01)
+        #expect(restoredEllipse.kind == .path)
+        #expect(restoredEllipse.editablePathAnchors.count == 4)
+        #expect(restoredEllipse.editablePathAnchors.allSatisfy {
+            $0.inControl != nil && $0.outControl != nil
+        })
+        let restoredGradient = try #require(restoredEllipse.fillGradient?.normalized())
+        let expectedGradient = gradient.normalized()
+        #expect(restoredGradient.style == expectedGradient.style)
+        #expect(abs(restoredGradient.angle - expectedGradient.angle) < 0.001)
+        #expect(abs(restoredGradient.scale - expectedGradient.scale) < 0.001)
+        let restoredStops = try #require(restoredGradient.colorStops)
+        let expectedStops = try #require(expectedGradient.colorStops)
+        #expect(restoredStops.count == expectedStops.count)
+        for (restoredStop, expectedStop) in zip(restoredStops, expectedStops) {
+            #expect(abs(restoredStop.position - expectedStop.position) < 0.001)
+            #expect(abs(restoredStop.red - expectedStop.red) < 0.001)
+            #expect(abs(restoredStop.green - expectedStop.green) < 0.001)
+            #expect(abs(restoredStop.blue - expectedStop.blue) < 0.001)
+        }
+    }
+
+    @Test func unsupportedPrimitiveShapeSemanticsKeepRasterFallback() throws {
+        let canvasSize = CGSize(width: 140, height: 80)
+        var document = ImageEditorDocument(
+            sourceName: "primitive-fallback.xomoproject",
+            image: psdSolidImage(color: .clear, size: canvasSize)
+        )
+        document.layers.removeAll()
+        let partialFill = ImageEditorLayer.shape(
+            name: "Partial Fill",
+            frame: CGRect(x: 8, y: 10, width: 52, height: 42),
+            content: ImageEditorShapeContent(
+                kind: .rectangle,
+                fillColor: .systemOrange,
+                fillOpacity: 0.5,
+                strokeColor: .clear,
+                strokeWidth: 1,
+                strokeOpacity: 0,
+                cornerRadius: 8
+            )
+        )
+        let visibleStroke = ImageEditorLayer.shape(
+            name: "Visible Stroke",
+            frame: CGRect(x: 76, y: 12, width: 48, height: 48),
+            content: ImageEditorShapeContent(
+                kind: .ellipse,
+                fillColor: .systemBlue,
+                fillOpacity: 1,
+                strokeColor: .systemRed,
+                strokeWidth: 6,
+                strokeOpacity: 1,
+                strokePosition: .inside
+            )
+        )
+        document.layers = [partialFill, visibleStroke]
+
+        let data = try ImageEditorPSDCodec.encode(document: document)
+        let restored = try ImageEditorPSDCodec.decode(
+            data,
+            sourceName: "primitive-fallback.psd"
+        )
+
+        #expect(restored.layers.first { $0.name == "Partial Fill" }?.kind.isPixel == true)
+        #expect(restored.layers.first { $0.name == "Visible Stroke" }?.kind.isPixel == true)
+        #expect(restored.layers.allSatisfy { $0.shapeContent == nil })
+    }
+
     @Test func compatibilityReportCountsUnsupportedVectorMaskStructure() throws {
         var data = try psdFixtureData("solid-vector-shape.psd")
         let keyRange = try #require(data.range(of: Data("vmsk".utf8)))

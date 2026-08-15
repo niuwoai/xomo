@@ -1245,8 +1245,8 @@ enum ImageEditorPSDCodec {
         let content: ImageEditorShapeContent?
         if let vectorMask = layer.vectorMask {
             content = vectorMask
-        } else if let shapeContent = layer.shapeContent, shapeContent.kind == .path {
-            content = shapeContent
+        } else if let shapeContent = layer.shapeContent {
+            content = exportablePSDPathContent(for: shapeContent, layer: layer)
         } else {
             content = nil
         }
@@ -1283,6 +1283,94 @@ enum ImageEditorPSDCodec {
         return PSDExportVectorMask(data: payload)
     }
 
+    static func exportablePSDPathContent(
+        for content: ImageEditorShapeContent,
+        layer: ImageEditorLayer
+    ) -> ImageEditorShapeContent? {
+        if content.kind == .path { return content }
+        guard !layer.style.hasConfiguredEffects,
+              content.fillOpacity >= 0.999,
+              content.strokeOpacity <= 0.001,
+              content.kind == .rectangle || content.kind == .ellipse
+        else { return nil }
+
+        let size = CGSize(
+            width: max(1, layer.image.size.width),
+            height: max(1, layer.image.size.height)
+        )
+        let normalized = content.normalized(size: size)
+        let fillInset = normalized.strokeWidth / 2
+        let fillRect = CGRect(origin: .zero, size: size).insetBy(
+            dx: fillInset,
+            dy: fillInset
+        )
+        guard fillRect.width > 0, fillRect.height > 0 else { return nil }
+        let path = normalized.kind == .ellipse
+            ? NSBezierPath(ovalIn: fillRect)
+            : normalized.rectangleBezierPath(in: fillRect)
+        guard let anchors = closedPathAnchors(path), anchors.count >= 3 else { return nil }
+        return ImageEditorShapeContent(
+            kind: .path,
+            fillColor: .white,
+            fillOpacity: 1,
+            strokeColor: .clear,
+            strokeWidth: 1,
+            strokeOpacity: 0,
+            pathPoints: anchors.map(\.point),
+            pathAnchors: anchors,
+            isPathClosed: true
+        ).normalized(size: size)
+    }
+
+    private static func closedPathAnchors(
+        _ path: NSBezierPath
+    ) -> [ImageEditorPathAnchor]? {
+        var anchors: [ImageEditorPathAnchor] = []
+        var isClosed = false
+        var points = [NSPoint](repeating: .zero, count: 3)
+
+        for index in 0..<path.elementCount {
+            switch path.element(at: index, associatedPoints: &points) {
+            case .moveTo:
+                if anchors.isEmpty {
+                    anchors.append(ImageEditorPathAnchor(point: points[0]))
+                } else if !(isClosed && pointsAreEquivalent(points[0], anchors[0].point)) {
+                    return nil
+                }
+            case .lineTo:
+                guard !anchors.isEmpty else { return nil }
+                if pointsAreEquivalent(points[0], anchors[0].point) {
+                    isClosed = true
+                } else {
+                    anchors.append(ImageEditorPathAnchor(point: points[0]))
+                }
+            case .curveTo, .cubicCurveTo:
+                guard !anchors.isEmpty else { return nil }
+                anchors[anchors.count - 1].outControl = points[0]
+                if pointsAreEquivalent(points[2], anchors[0].point) {
+                    anchors[0].inControl = points[1]
+                    isClosed = true
+                } else {
+                    anchors.append(ImageEditorPathAnchor(
+                        point: points[2],
+                        inControl: points[1]
+                    ))
+                }
+            case .quadraticCurveTo:
+                return nil
+            case .closePath:
+                isClosed = true
+            @unknown default:
+                return nil
+            }
+        }
+        return isClosed ? anchors : nil
+    }
+
+    private static func pointsAreEquivalent(_ lhs: CGPoint, _ rhs: CGPoint) -> Bool {
+        abs(lhs.x - rhs.x) <= 0.000_001 && abs(lhs.y - rhs.y) <= 0.000_001
+    }
+
     private static func exportVectorStroke(layer: ImageEditorLayer) -> PSDExportVectorStroke? {
         guard let content = layer.shapeContent,
               content.kind == .path,
@@ -1314,7 +1402,7 @@ enum ImageEditorPSDCodec {
             return content
         }
         guard let shape = layer.shapeContent,
-              shape.kind == .path,
+              shape.kind == .path || exportablePSDPathContent(for: shape, layer: layer) != nil,
               shape.fillGradient == nil,
               shape.fillOpacity <= 0.001 || shape.fillOpacity >= 0.999,
               let color = shape.fillColor.usingColorSpace(.deviceRGB)
@@ -1334,7 +1422,7 @@ enum ImageEditorPSDCodec {
             return content
         }
         guard let shape = layer.shapeContent,
-              shape.kind == .path,
+              shape.kind == .path || exportablePSDPathContent(for: shape, layer: layer) != nil,
               shape.fillOpacity <= 0.001 || shape.fillOpacity >= 0.999,
               let content = shape.fillGradient?.normalized()
         else { return nil }
