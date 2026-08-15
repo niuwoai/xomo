@@ -1,24 +1,36 @@
 {
-  "generated_at": "2026-08-15 15:02:58 +0800",
-  "total": 1,
-  "passed": 1,
+  "generated_at": "2026-08-15 15:10:34 +0800",
+  "total": 2,
+  "passed": 2,
   "failed": 0,
-  "total_tests": 1,
-  "passed_tests": 1,
+  "total_tests": 2,
+  "passed_tests": 2,
   "failed_tests_in_failed_groups": 0,
   "jobs": 1,
   "results": [
     {
-      "suite": "ImageEditorCanvasCommandTests",
-      "method": "cropToSelectionUsesRasterPixelsAndRejectsInvertedCanvasBounds",
-      "identifier": "veilpicTests/ImageEditorCanvasCommandTests/cropToSelectionUsesRasterPixelsAndRejectsInvertedCanvasBounds()",
-      "file": "ImageEditorCanvasCommandTests.swift",
+      "suite": "ImageEditorSelectionTargetBoundsTests",
+      "method": "layerFitFillAndAlignmentUseRasterSelectedPixelBounds",
+      "identifier": "veilpicTests/ImageEditorSelectionTargetBoundsTests/layerFitFillAndAlignmentUseRasterSelectedPixelBounds()",
+      "file": "ImageEditorSelectionTargetBoundsTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.823,
+      "duration": 3.184,
       "infrastructure_retries": 0,
       "issues": [],
-      "log": "ImageEditorCanvasCommandTests.cropToSelectionUsesRasterPixelsAndRejectsInvertedCanvasBounds.log"
+      "log": "ImageEditorSelectionTargetBoundsTests.layerFitFillAndAlignmentUseRasterSelectedPixelBounds.log"
+    },
+    {
+      "suite": "ImageEditorSelectionTargetBoundsTests",
+      "method": "selectionTargetCommandsRejectEmptyRasterSelectionWithoutHistory",
+      "identifier": "veilpicTests/ImageEditorSelectionTargetBoundsTests/selectionTargetCommandsRejectEmptyRasterSelectionWithoutHistory()",
+      "file": "ImageEditorSelectionTargetBoundsTests.swift",
+      "test_count": 1,
+      "passed": true,
+      "duration": 2.975,
+      "infrastructure_retries": 0,
+      "issues": [],
+      "log": "ImageEditorSelectionTargetBoundsTests.selectionTargetCommandsRejectEmptyRasterSelectionWithoutHistory.log"
     }
   ]
 }

@@ -294,8 +294,8 @@ extension ImageEditorViewModel {
 
     private func selectionAlignmentTargetBounds() -> CGRect? {
         guard let selection = document.selection else { return nil }
-        let canvasRect = CGRect(origin: .zero, size: document.canvasSize)
-        let bounds = selection.bounds.standardized.intersection(canvasRect)
+        guard let selectedBounds = selection.effectiveSelectedBounds(in: document.canvasSize) else { return nil }
+        let bounds = selectedBounds.standardized
         guard !bounds.isNull, bounds.width > 0.1, bounds.height > 0.1 else { return nil }
         return bounds
     }
