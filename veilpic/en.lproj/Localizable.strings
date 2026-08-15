@@ -965,6 +965,7 @@
 "imageEditor.history.gradientOverlayAxis" = "Adjust Gradient Overlay Axis";
 "imageEditor.history.gradientOverlayStop" = "Move Gradient Overlay Color Stop";
 "imageEditor.history.gradientOverlayStopAdded" = "Add Gradient Overlay Color Stop";
+"imageEditor.history.gradientOverlayStopRemoved" = "Remove Gradient Overlay Color Stop";
 "imageEditor.history.gradientOverlayMidpoint" = "Move Gradient Overlay Color Midpoint";
 "imageEditor.history.shapeGradientStop" = "Move Gradient Stop";
 "imageEditor.history.shapeGradientMidpoint" = "Move Gradient Color Midpoint";
@@ -982,7 +983,7 @@
 "imageEditor.help.gradientOverlayCenterHandle" = "Drag to move the gradient overlay center";
 "imageEditor.help.gradientOverlayAxisHandle" = "Drag to adjust angle and scale; hold Shift to snap the angle";
 "imageEditor.help.gradientOverlayAxis" = "Double-click to add a gradient overlay color stop";
-"imageEditor.help.gradientOverlayStopHandle" = "Drag to move this gradient overlay color stop";
+"imageEditor.help.gradientOverlayStopHandle" = "Click to select; drag to move this color stop, or press Delete to remove it";
 "imageEditor.help.gradientOverlayMidpointHandle" = "Drag the transition midpoint between adjacent gradient overlay colors";
 "imageEditor.help.shapeGradientStopHandle" = "Drag the middle stop along the gradient axis";
 "imageEditor.help.shapeGradientMidpointHandle" = "Drag the transition midpoint between adjacent colors";

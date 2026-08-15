@@ -2568,6 +2568,79 @@ struct ImageEditorLayerStyleTests {
         }
     }
 
+    @Test func removingGradientOverlayCanvasStopCommitsOnceAndUndoRestores() throws {
+        let viewModel = gradientOverlayCenterViewModel()
+        let selectedIndex = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[selectedIndex].style.setGradientOverlayColorStops([
+            ImageEditorGradientColorStop(position: 0, color: .systemRed),
+            ImageEditorGradientColorStop(position: 0.25, color: .systemGreen),
+            ImageEditorGradientColorStop(position: 0.6, color: .systemBlue),
+            ImageEditorGradientColorStop(position: 1, color: .white)
+        ])
+        let originalProjectData = try viewModel.projectData()
+        let originalPixels = try #require(
+            viewModel.document.selectedLayer?.image.qingtuPNGData()
+        )
+        let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
+
+        let result = try #require(
+            viewModel.removeSelectedLayerGradientOverlayCanvasStop(at: 1)
+        )
+        let stops = try #require(
+            viewModel.document.selectedLayer?.style.gradientOverlayColorStops
+        )
+        #expect(result.removedIndex == 1)
+        #expect(result.nextSelectedIndex == 1)
+        #expect(stops.count == 3)
+        #expect(stops[1].position == 0.6)
+        #expect(stops[1].blue == 1)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.undoStack.count == undoCount + 1)
+        #expect(viewModel.document.selectedLayer?.image.qingtuPNGData() == originalPixels)
+
+        viewModel.undo()
+        #expect(try viewModel.projectData() == originalProjectData)
+
+        let finalRemoval = try #require(
+            viewModel.removeSelectedLayerGradientOverlayCanvasStop(at: 2)
+        )
+        #expect(finalRemoval.nextSelectedIndex == 1)
+    }
+
+    @Test func removingGradientOverlayCanvasStopProtectsEndpointsLocksAndTransactions() throws {
+        let viewModel = gradientOverlayCenterViewModel()
+        let selectedIndex = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[selectedIndex].style.setGradientOverlayColorStops([
+            ImageEditorGradientColorStop(position: 0, color: .systemRed),
+            ImageEditorGradientColorStop(position: 0.4, color: .systemGreen),
+            ImageEditorGradientColorStop(position: 1, color: .systemBlue)
+        ])
+        #expect(viewModel.setSelectedLayerGradientOverlayAngle(15) == 1)
+        viewModel.undo()
+        let originalProjectData = try viewModel.projectData()
+        let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
+
+        #expect(viewModel.removeSelectedLayerGradientOverlayCanvasStop(at: 0) == nil)
+        #expect(viewModel.removeSelectedLayerGradientOverlayCanvasStop(at: 2) == nil)
+        #expect(viewModel.beginEditingSelectedLayerGradientOverlayCanvasStop(at: 1))
+        #expect(viewModel.removeSelectedLayerGradientOverlayCanvasStop(at: 1) == nil)
+        #expect(viewModel.cancelEditingSelectedLayerGradientOverlayCanvasStop())
+        viewModel.document.layers[selectedIndex].isLocked = true
+        #expect(viewModel.removeSelectedLayerGradientOverlayCanvasStop(at: 1) == nil)
+        viewModel.document.layers[selectedIndex].isLocked = false
+
+        #expect(try viewModel.projectData() == originalProjectData)
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.undoStack.count == undoCount)
+        #expect(viewModel.canRedo)
+
+        let twoStops = gradientOverlayCenterViewModel()
+        #expect(twoStops.removeSelectedLayerGradientOverlayCanvasStop(at: 1) == nil)
+        #expect(twoStops.undoStack.isEmpty)
+    }
+
     @Test func draggingGradientOverlayCanvasStopCommitsOnceAndRoundTripPreservesRedo() throws {
         let viewModel = gradientOverlayCenterViewModel()
         let selectedIndex = try #require(viewModel.document.selectedLayerIndex)
@@ -3009,6 +3082,7 @@ struct ImageEditorLayerStyleTests {
         #expect(source.contains("updateSelectedLayerGradientOverlayCanvasAxis"))
         #expect(source.contains("finishEditingSelectedLayerGradientOverlayCanvasAxis"))
         #expect(source.contains("addSelectedLayerGradientOverlayCanvasStop"))
+        #expect(source.contains("removeSelectedLayerGradientOverlayCanvasStop"))
         #expect(source.contains("beginEditingSelectedLayerGradientOverlayCanvasStop"))
         #expect(source.contains("updateSelectedLayerGradientOverlayCanvasStop"))
         #expect(source.contains("finishEditingSelectedLayerGradientOverlayCanvasStop"))
@@ -3016,12 +3090,31 @@ struct ImageEditorLayerStyleTests {
         #expect(source.contains("updateSelectedLayerGradientOverlayCanvasMidpoint"))
         #expect(source.contains("finishEditingSelectedLayerGradientOverlayCanvasMidpoint"))
         #expect(source.contains("cancelGradientOverlayMidpointDragForLifecycle"))
+        #expect(source.contains("selectedGradientOverlayStopIndex"))
+        #expect(source.contains("deleteSelectedGradientOverlayStopIfNeeded"))
+        #expect(source.contains(".contextMenu"))
         #expect(source.contains("cancelGradientOverlayCanvasHandleDragForLifecycle"))
         #expect(source.contains("image-editor-gradient-overlay-center-handle"))
         #expect(source.contains("image-editor-gradient-overlay-axis-handle"))
         #expect(source.contains("image-editor-gradient-overlay-axis"))
         #expect(source.contains("image-editor-gradient-overlay-canvas-stop-"))
         #expect(source.contains("image-editor-gradient-overlay-canvas-midpoint-"))
+
+        let deleteStart = try #require(source.range(of: "deleteSelectedObject: {"))
+        let deleteEnd = try #require(
+            source.range(
+                of: "finishPendingPenPath:",
+                range: deleteStart.upperBound..<source.endIndex
+            )
+        )
+        let deleteBlock = source[deleteStart.lowerBound..<deleteEnd.lowerBound]
+        let cancelPosition = try #require(
+            deleteBlock.range(of: "cancelGradientOverlayCanvasHandleDragForLifecycle()")
+        )
+        let removalPosition = try #require(
+            deleteBlock.range(of: "deleteSelectedGradientOverlayStopIfNeeded()")
+        )
+        #expect(cancelPosition.lowerBound < removalPosition.lowerBound)
     }
 
     @Test func gradientOverlayCenterHandleRejectsLockedAndMultiLayerSelections() throws {

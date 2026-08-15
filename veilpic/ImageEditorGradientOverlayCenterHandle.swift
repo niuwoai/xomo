@@ -62,6 +62,11 @@ struct ImageEditorGradientOverlayMidpointHandlePoint: Identifiable, Equatable {
     var id: Int { lowerStopIndex }
 }
 
+struct ImageEditorGradientOverlayStopRemovalResult: Equatable {
+    var removedIndex: Int
+    var nextSelectedIndex: Int?
+}
+
 enum ImageEditorGradientOverlayAxisGeometry {
     static let angleSnapStep: CGFloat = 15
 
@@ -710,6 +715,37 @@ extension ImageEditorViewModel {
         appendHistory(L10n.text("imageEditor.history.gradientOverlayStopAdded"))
         finishGradientOverlayStopUndoTransaction(didChange: true)
         return insertionIndex
+    }
+
+    @discardableResult
+    func removeSelectedLayerGradientOverlayCanvasStop(
+        at stopIndex: Int
+    ) -> ImageEditorGradientOverlayStopRemovalResult? {
+        guard editingGradientOverlayCenterLayerID == nil,
+              editingGradientOverlayAxisLayerID == nil,
+              editingGradientOverlayStopLayerID == nil,
+              editingGradientOverlayMidpointLayerID == nil,
+              canEditSelectedLayerGradientOverlayCanvasCenter,
+              let layer = singleSelectedGradientOverlayCanvasLayer,
+              let layerIndex = document.layers.firstIndex(where: { $0.id == layer.id })
+        else { return nil }
+        var stops = layer.style.resolvedGradientOverlayColorStops
+        guard stops.count > 2,
+              stopIndex > 0,
+              stopIndex < stops.count - 1
+        else { return nil }
+        stops.remove(at: stopIndex)
+        beginGradientOverlayStopUndoTransaction()
+        document.layers[layerIndex].style.setGradientOverlayColorStops(stops)
+        appendHistory(L10n.text("imageEditor.history.gradientOverlayStopRemoved"))
+        finishGradientOverlayStopUndoTransaction(didChange: true)
+        let nextSelectedIndex = stops.count > 2
+            ? min(stopIndex, stops.count - 2)
+            : nil
+        return ImageEditorGradientOverlayStopRemovalResult(
+            removedIndex: stopIndex,
+            nextSelectedIndex: nextSelectedIndex
+        )
     }
 
     private var singleSelectedGradientOverlayCanvasLayer: ImageEditorLayer? {

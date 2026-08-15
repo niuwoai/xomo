@@ -965,6 +965,7 @@
 "imageEditor.history.gradientOverlayAxis" = "调整渐变叠加轴线";
 "imageEditor.history.gradientOverlayStop" = "移动渐变叠加颜色色标";
 "imageEditor.history.gradientOverlayStopAdded" = "添加渐变叠加颜色色标";
+"imageEditor.history.gradientOverlayStopRemoved" = "删除渐变叠加颜色色标";
 "imageEditor.history.gradientOverlayMidpoint" = "移动渐变叠加颜色中点";
 "imageEditor.history.shapeGradientStop" = "移动渐变色标";
 "imageEditor.history.shapeGradientMidpoint" = "移动渐变颜色中点";
@@ -982,7 +983,7 @@
 "imageEditor.help.gradientOverlayCenterHandle" = "拖动以移动渐变叠加中心";
 "imageEditor.help.gradientOverlayAxisHandle" = "拖动以调整角度与缩放；按住 Shift 吸附角度";
 "imageEditor.help.gradientOverlayAxis" = "双击以添加渐变叠加颜色色标";
-"imageEditor.help.gradientOverlayStopHandle" = "拖动以移动此渐变叠加颜色色标";
+"imageEditor.help.gradientOverlayStopHandle" = "点击选中；拖动可移动此颜色色标，按 Delete 可删除";
 "imageEditor.help.gradientOverlayMidpointHandle" = "拖动相邻渐变叠加颜色之间的过渡中点";
 "imageEditor.help.shapeGradientStopHandle" = "沿渐变轴拖动中间色标";
 "imageEditor.help.shapeGradientMidpointHandle" = "拖动相邻颜色之间的过渡中点";
