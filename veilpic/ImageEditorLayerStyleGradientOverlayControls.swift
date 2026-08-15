@@ -233,6 +233,72 @@ struct ImageEditorLayerStyleGradientOverlayStopsEditor: View {
                         "image-editor-layer-style-gradient-overlay-track"
                     )
 
+                ForEach(stops.indices.dropLast(), id: \.self) { index in
+                    if let midpointPosition = ImageEditorGradientStopTrackGeometry.midpointPosition(
+                        after: index,
+                        stops: stops
+                    ) {
+                        Button {
+                            selectedStopIndex = index
+                        } label: {
+                            Rectangle()
+                                .fill(
+                                    index == selectedIndex
+                                        ? Color.accentColor
+                                        : Color.white.opacity(0.88)
+                                )
+                                .overlay {
+                                    Rectangle()
+                                        .stroke(Color.black.opacity(0.62), lineWidth: 0.75)
+                                }
+                                .frame(width: 8, height: 8)
+                                .rotationEffect(.degrees(45))
+                        }
+                        .buttonStyle(.plain)
+                        .focusable(false)
+                        .position(
+                            x: ImageEditorGradientStopTrackGeometry.xPosition(
+                                for: midpointPosition,
+                                width: geometry.size.width
+                            ),
+                            y: 23
+                        )
+                        .highPriorityGesture(
+                            DragGesture(
+                                minimumDistance: 1,
+                                coordinateSpace: .named(Self.trackCoordinateSpace)
+                            )
+                            .onChanged { value in
+                                selectedStopIndex = index
+                                let currentStops = normalizedDraftStops
+                                guard let midpoint = ImageEditorGradientStopTrackGeometry.midpoint(
+                                    forX: value.location.x,
+                                    width: geometry.size.width,
+                                    after: index,
+                                    stops: currentStops
+                                ) else { return }
+                                draftStops = ImageEditorGradientOverlayStopDraftEditing
+                                    .movingMidpoint(
+                                        currentStops,
+                                        after: index,
+                                        to: midpoint
+                                    )
+                            }
+                        )
+                        .help(L10n.text("imageEditor.help.shapeGradientMidpointHandle"))
+                        .accessibilityIdentifier(
+                            "image-editor-layer-style-gradient-overlay-midpoint-\(index)"
+                        )
+                        .accessibilityLabel(
+                            L10n.format(
+                                "imageEditor.properties.shapeGradientMidpointAccessibility",
+                                index + 1,
+                                Int((stops[index].midpoint * 100).rounded())
+                            )
+                        )
+                    }
+                }
+
                 ForEach(stops.indices, id: \.self) { index in
                     Button {
                         selectedStopIndex = index
@@ -259,6 +325,24 @@ struct ImageEditorLayerStyleGradientOverlayStopsEditor: View {
                         ),
                         y: 30
                     )
+                    .highPriorityGesture(
+                        DragGesture(
+                            minimumDistance: 1,
+                            coordinateSpace: .named(Self.trackCoordinateSpace)
+                        )
+                        .onChanged { value in
+                            selectedStopIndex = index
+                            draftStops = ImageEditorGradientOverlayStopDraftEditing.movingStop(
+                                normalizedDraftStops,
+                                at: index,
+                                to: ImageEditorGradientStopTrackGeometry.logicalPosition(
+                                    forX: value.location.x,
+                                    width: geometry.size.width
+                                )
+                            )
+                        }
+                    )
+                    .help(L10n.text("imageEditor.help.shapeGradientStopHandle"))
                     .accessibilityIdentifier(
                         "image-editor-layer-style-gradient-overlay-stop-\(index)"
                     )
@@ -274,7 +358,7 @@ struct ImageEditorLayerStyleGradientOverlayStopsEditor: View {
             }
             .coordinateSpace(name: Self.trackCoordinateSpace)
         }
-        .frame(height: 40)
+        .frame(height: 46)
     }
 
     private var selectedColorBinding: Binding<Color> {
@@ -310,14 +394,14 @@ struct ImageEditorLayerStyleGradientOverlayStopsEditor: View {
             return stops[normalizedSelectedIndex(stops: stops)].position
         } set: { position in
             guard position.isFinite else { return }
-            var stops = normalizedDraftStops
+            let stops = normalizedDraftStops
             let index = normalizedSelectedIndex(stops: stops)
             guard index > 0, index < stops.count - 1 else { return }
-            let lowerBound = stops[index - 1].position + 0.01
-            let upperBound = stops[index + 1].position - 0.01
-            guard lowerBound <= upperBound else { return }
-            stops[index].position = max(lowerBound, min(upperBound, position))
-            draftStops = normalized(stops)
+            draftStops = ImageEditorGradientOverlayStopDraftEditing.movingStop(
+                stops,
+                at: index,
+                to: position
+            )
         }
     }
 
@@ -327,11 +411,14 @@ struct ImageEditorLayerStyleGradientOverlayStopsEditor: View {
             return stops[normalizedSelectedIndex(stops: stops)].midpoint
         } set: { midpoint in
             guard midpoint.isFinite else { return }
-            var stops = normalizedDraftStops
+            let stops = normalizedDraftStops
             let index = normalizedSelectedIndex(stops: stops)
             guard index < stops.count - 1 else { return }
-            stops[index].midpoint = max(0, min(1, midpoint))
-            draftStops = normalized(stops)
+            draftStops = ImageEditorGradientOverlayStopDraftEditing.movingMidpoint(
+                stops,
+                after: index,
+                to: midpoint
+            )
         }
     }
 
@@ -355,8 +442,10 @@ struct ImageEditorLayerStyleGradientOverlayStopsEditor: View {
             requestedPosition < $0.position
         } ?? stops.count
         guard insertionIndex > 0, insertionIndex < stops.count else { return }
-        let lowerBound = stops[insertionIndex - 1].position + 0.01
-        let upperBound = stops[insertionIndex].position - 0.01
+        let lowerBound = stops[insertionIndex - 1].position
+            + ImageEditorGradientOverlayStopDraftEditing.minimumStopSpacing
+        let upperBound = stops[insertionIndex].position
+            - ImageEditorGradientOverlayStopDraftEditing.minimumStopSpacing
         guard lowerBound <= upperBound else { return }
         let resolvedPosition = max(lowerBound, min(upperBound, requestedPosition))
         let color = ImageEditorGradientFillContent.shapeLinear(

@@ -7,6 +7,49 @@
 
 import AppKit
 
+enum ImageEditorGradientOverlayStopDraftEditing {
+    static let minimumStopSpacing = 0.01
+
+    static func movingStop(
+        _ stops: [ImageEditorGradientColorStop],
+        at index: Int,
+        to position: Double
+    ) -> [ImageEditorGradientColorStop] {
+        var normalizedStops = normalized(stops)
+        guard position.isFinite,
+              index > 0,
+              index < normalizedStops.count - 1
+        else { return normalizedStops }
+        let lowerBound = normalizedStops[index - 1].position + minimumStopSpacing
+        let upperBound = normalizedStops[index + 1].position - minimumStopSpacing
+        guard lowerBound <= upperBound else { return normalizedStops }
+        normalizedStops[index].position = max(lowerBound, min(upperBound, position))
+        return normalized(normalizedStops)
+    }
+
+    static func movingMidpoint(
+        _ stops: [ImageEditorGradientColorStop],
+        after index: Int,
+        to midpoint: Double
+    ) -> [ImageEditorGradientColorStop] {
+        var normalizedStops = normalized(stops)
+        guard midpoint.isFinite,
+              index >= 0,
+              index < normalizedStops.count - 1
+        else { return normalizedStops }
+        normalizedStops[index].midpoint = max(0, min(1, midpoint))
+        return normalized(normalizedStops)
+    }
+
+    private static func normalized(
+        _ stops: [ImageEditorGradientColorStop]
+    ) -> [ImageEditorGradientColorStop] {
+        ImageEditorGradientFillContent.shapeLinear(
+            colorStops: stops
+        ).shapeColorStops
+    }
+}
+
 extension ImageEditorLayerStyle {
     var resolvedGradientOverlayColorStops: [ImageEditorGradientColorStop] {
         if let gradientOverlayColorStops {

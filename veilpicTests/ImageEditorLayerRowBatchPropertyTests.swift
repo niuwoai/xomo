@@ -3393,6 +3393,106 @@ struct ImageEditorLayerRowBatchPropertyTests {
         #expect(editorSource.contains("ImageEditorLayerStyleGradientOverlayStopsEditor("))
     }
 
+    @Test func gradientOverlayDraftTrackMovesStopsAndMidpointsWithoutWritingTheDocument() throws {
+        let stops = [
+            ImageEditorGradientColorStop(
+                position: 0,
+                red: 1,
+                green: 0,
+                blue: 0,
+                alpha: 0.8,
+                midpoint: 0.35
+            ),
+            ImageEditorGradientColorStop(
+                position: 0.5,
+                red: 0,
+                green: 1,
+                blue: 0,
+                alpha: 0.45,
+                midpoint: 0.65
+            ),
+            ImageEditorGradientColorStop(position: 1, color: .systemBlue)
+        ]
+
+        let moved = ImageEditorGradientOverlayStopDraftEditing.movingStop(
+            stops,
+            at: 1,
+            to: 0.8
+        )
+        #expect(moved[1].position == 0.8)
+        #expect(moved[1].red == stops[1].red)
+        #expect(moved[1].green == stops[1].green)
+        #expect(moved[1].blue == stops[1].blue)
+        #expect(moved[1].alpha == stops[1].alpha)
+        #expect(moved[1].midpoint == stops[1].midpoint)
+        #expect(ImageEditorGradientOverlayStopDraftEditing.movingStop(
+            stops,
+            at: 1,
+            to: -1
+        )[1].position == 0.01)
+        #expect(ImageEditorGradientOverlayStopDraftEditing.movingStop(
+            stops,
+            at: 1,
+            to: 2
+        )[1].position == 0.99)
+        #expect(ImageEditorGradientOverlayStopDraftEditing.movingStop(
+            stops,
+            at: 0,
+            to: 0.4
+        ) == stops)
+        #expect(ImageEditorGradientOverlayStopDraftEditing.movingStop(
+            stops,
+            at: 2,
+            to: 0.6
+        ) == stops)
+        #expect(ImageEditorGradientOverlayStopDraftEditing.movingStop(
+            stops,
+            at: 1,
+            to: .nan
+        ) == stops)
+
+        let midpointMoved = ImageEditorGradientOverlayStopDraftEditing.movingMidpoint(
+            stops,
+            after: 0,
+            to: 0.82
+        )
+        #expect(midpointMoved[0].midpoint == 0.82)
+        #expect(midpointMoved[0].position == stops[0].position)
+        #expect(midpointMoved[0].alpha == stops[0].alpha)
+        #expect(ImageEditorGradientOverlayStopDraftEditing.movingMidpoint(
+            stops,
+            after: 0,
+            to: -1
+        )[0].midpoint == 0)
+        #expect(ImageEditorGradientOverlayStopDraftEditing.movingMidpoint(
+            stops,
+            after: 1,
+            to: 2
+        )[1].midpoint == 1)
+        #expect(ImageEditorGradientOverlayStopDraftEditing.movingMidpoint(
+            stops,
+            after: 2,
+            to: 0.2
+        ) == stops)
+
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent(
+                "veilpic/ImageEditorLayerStyleGradientOverlayControls.swift"
+            ),
+            encoding: .utf8
+        )
+        #expect(source.contains("ImageEditorGradientStopTrackGeometry.midpoint("))
+        #expect(source.contains("ImageEditorGradientOverlayStopDraftEditing.movingStop("))
+        #expect(source.contains(".movingMidpoint("))
+        #expect(source.contains("image-editor-layer-style-gradient-overlay-midpoint-"))
+        #expect(source.components(
+            separatedBy: "setSelectedLayerGradientOverlayColorStops("
+        ).count - 1 == 1)
+    }
+
     @Test func layerStyleGradientOverlayAngleControlReusesMixedNumericStepper() throws {
         let repositoryRoot = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()
