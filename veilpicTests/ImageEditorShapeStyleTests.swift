@@ -1130,6 +1130,127 @@ struct ImageEditorShapeStyleTests {
         #expect(abs(viewModel.selectedShapeGradientColorStops[0].midpoint - 0.4) < 0.001)
     }
 
+    @Test func propertyTrackStopDragCommitsOnceAndRoundTripPreservesRedo() throws {
+        var gradient = ImageEditorGradientFillContent.shapeLinear(colorStops: [
+            ImageEditorGradientColorStop(position: 0, color: .systemRed),
+            ImageEditorGradientColorStop(position: 0.5, color: .systemGreen),
+            ImageEditorGradientColorStop(position: 1, color: .systemBlue)
+        ])
+        gradient.style = .reflected
+        let viewModel = makeViewModel()
+        viewModel.drawShape(
+            from: CGPoint(x: 10, y: 10),
+            to: CGPoint(x: 110, y: 60),
+            ellipse: false,
+            fillGradient: gradient
+        )
+        let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
+
+        #expect(viewModel.canEditSelectedShapeGradientStops)
+        #expect(viewModel.beginEditingSelectedShapeGradientStop(at: 1))
+        viewModel.updateSelectedShapeGradientStop(toLogicalPosition: 0.62)
+        viewModel.updateSelectedShapeGradientStop(toLogicalPosition: 0.7)
+        viewModel.finishEditingSelectedShapeGradient()
+
+        #expect(abs(viewModel.selectedShapeGradientColorStops[1].position - 0.7) < 0.001)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.undoStack.count == undoCount + 1)
+        #expect(!viewModel.canRedo)
+
+        viewModel.undo()
+        #expect(abs(viewModel.selectedShapeGradientColorStops[1].position - 0.5) < 0.001)
+        #expect(viewModel.canRedo)
+        let redoPreservingHistoryCount = viewModel.document.history.count
+        let redoPreservingUndoCount = viewModel.undoStack.count
+
+        #expect(viewModel.beginEditingSelectedShapeGradientStop(at: 1))
+        viewModel.updateSelectedShapeGradientStop(toLogicalPosition: 0.8)
+        viewModel.updateSelectedShapeGradientStop(toLogicalPosition: 0.5)
+        viewModel.finishEditingSelectedShapeGradient()
+
+        #expect(viewModel.document.history.count == redoPreservingHistoryCount)
+        #expect(viewModel.undoStack.count == redoPreservingUndoCount)
+        #expect(viewModel.canRedo)
+        viewModel.redo()
+        #expect(abs(viewModel.selectedShapeGradientColorStops[1].position - 0.7) < 0.001)
+    }
+
+    @Test func propertyTrackMidpointDragSupportsDiamondGradientAsOneTransaction() throws {
+        var gradient = ImageEditorGradientFillContent.shapeLinear(colorStops: [
+            ImageEditorGradientColorStop(
+                position: 0,
+                color: .systemRed,
+                midpoint: 0.25
+            ),
+            ImageEditorGradientColorStop(position: 1, color: .systemBlue)
+        ])
+        gradient.style = .diamond
+        let viewModel = makeViewModel()
+        viewModel.drawShape(
+            from: CGPoint(x: 10, y: 10),
+            to: CGPoint(x: 110, y: 60),
+            ellipse: false,
+            fillGradient: gradient
+        )
+        let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
+
+        #expect(viewModel.canEditSelectedShapeGradientStops)
+        #expect(viewModel.beginEditingSelectedShapeGradientMidpoint(after: 0))
+        viewModel.updateSelectedShapeGradientMidpoint(toLogicalMidpoint: 0.4)
+        viewModel.updateSelectedShapeGradientMidpoint(toLogicalMidpoint: 0.8)
+        viewModel.finishEditingSelectedShapeGradient()
+
+        #expect(abs(viewModel.selectedShapeGradientColorStops[0].midpoint - 0.8) < 0.001)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.undoStack.count == undoCount + 1)
+        viewModel.undo()
+        #expect(abs(viewModel.selectedShapeGradientColorStops[0].midpoint - 0.25) < 0.001)
+        viewModel.redo()
+        #expect(abs(viewModel.selectedShapeGradientColorStops[0].midpoint - 0.8) < 0.001)
+    }
+
+    @Test func propertyTrackInsertionUsesExactPositionAndCurrentGradientCurve() throws {
+        let gradient = ImageEditorGradientFillContent.shapeLinear(colorStops: [
+            ImageEditorGradientColorStop(
+                position: 0,
+                red: 0,
+                green: 0,
+                blue: 0,
+                alpha: 0.2,
+                midpoint: 0.3
+            ),
+            ImageEditorGradientColorStop(
+                position: 1,
+                red: 1,
+                green: 1,
+                blue: 1,
+                alpha: 0.8
+            )
+        ])
+        let expectedColor = try #require(
+            gradient.shapeColor(at: 0.4).usingColorSpace(.deviceRGB)
+        )
+        let viewModel = makeViewModel()
+        viewModel.drawShape(
+            from: CGPoint(x: 10, y: 10),
+            to: CGPoint(x: 110, y: 60),
+            ellipse: false,
+            fillGradient: gradient
+        )
+        let historyCount = viewModel.document.history.count
+
+        let insertedIndex = try #require(viewModel.addSelectedShapeGradientStop(at: 0.4))
+        let inserted = viewModel.selectedShapeGradientColorStops[insertedIndex]
+        #expect(abs(inserted.position - 0.4) < 0.000_001)
+        #expect(abs(inserted.red - Double(expectedColor.redComponent)) < 0.000_001)
+        #expect(abs(inserted.green - Double(expectedColor.greenComponent)) < 0.000_001)
+        #expect(abs(inserted.blue - Double(expectedColor.blueComponent)) < 0.000_001)
+        #expect(abs(inserted.alpha - Double(expectedColor.alphaComponent)) < 0.000_001)
+        #expect(viewModel.document.history.count == historyCount + 1)
+    }
+
     @Test func lockedShapeRejectsCanvasGradientStopDrag() throws {
         let viewModel = makeViewModel()
         viewModel.drawShape(
@@ -1434,6 +1555,8 @@ struct ImageEditorShapeStyleTests {
             "image-editor-shape-fill-kind",
             "image-editor-shape-fill-color",
             "image-editor-shape-gradient-stops",
+            "image-editor-shape-gradient-track",
+            "image-editor-shape-gradient-track-midpoint-",
             "image-editor-shape-gradient-stop-add",
             "image-editor-shape-gradient-stop-remove",
             "image-editor-shape-gradient-stop-color",
@@ -1456,6 +1579,16 @@ struct ImageEditorShapeStyleTests {
         #expect(source.components(separatedBy: ".focusable(false)").count - 1 >= 10)
         #expect(source.contains("if viewModel.selectedShapeStrokeJoin == .miter"))
         #expect(source.contains("viewModel.setSelectedShapeStrokeMiterLimit(limit)"))
+        #expect(source.contains("ImageEditorGradientStopTrackGeometry.logicalPosition"))
+        #expect(source.contains("ImageEditorGradientStopTrackGeometry.midpoint"))
+        #expect(source.contains("SpatialTapGesture("))
+        #expect(source.contains("DragGesture("))
+        #expect(source.contains("beginEditingSelectedShapeGradientStop"))
+        #expect(source.contains("beginEditingSelectedShapeGradientMidpoint"))
+        #expect(source.contains("updateSelectedShapeGradientStop(toLogicalPosition:"))
+        #expect(source.contains("updateSelectedShapeGradientMidpoint("))
+        #expect(source.contains("toLogicalMidpoint:"))
+        #expect(source.contains("finishEditingSelectedShapeGradient()"))
 
         let canvasSource = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),

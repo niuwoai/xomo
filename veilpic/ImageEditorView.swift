@@ -101,6 +101,8 @@ struct ImageEditorView: View {
     @State private var activeShapeGradientStopIndex: Int?
     @State private var activeShapeGradientMidpointIndex: Int?
     @State var selectedShapeGradientStopIndex = 0
+    @State var activeShapeGradientTrackStopIndex: Int?
+    @State var activeShapeGradientTrackMidpointIndex: Int?
     @State private var isRotatingLayer = false
     @State private var isMovingTransformReferencePoint = false
     @State private var isTransformReferencePointDragCancelled = false

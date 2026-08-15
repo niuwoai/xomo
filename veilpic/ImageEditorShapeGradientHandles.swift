@@ -550,8 +550,7 @@ extension ImageEditorViewModel {
 
     var canEditSelectedShapeGradientStops: Bool {
         guard let layer = singleSelectedShapeGradientLayer,
-              let style = layer.shapeContent?.fillGradient?.style,
-              style == .linear || style == .radial
+              layer.shapeContent?.fillGradient != nil
         else { return false }
         return !document.isEffectivelyPixelsLocked(layer)
     }
@@ -683,6 +682,33 @@ extension ImageEditorViewModel {
         statusText = L10n.text("imageEditor.status.shapeGradientStopMoved")
     }
 
+    func updateSelectedShapeGradientStop(toLogicalPosition position: Double) {
+        guard position.isFinite,
+              let layerID = editingShapeGradientLayerID,
+              let stopIndex = editingShapeGradientStopIndex,
+              var content = editingShapeGradientOriginalContent,
+              var gradient = content.fillGradient,
+              let index = document.layers.firstIndex(where: { $0.id == layerID })
+        else { return }
+        var stops = gradient.shapeColorStops
+        guard stops.indices.contains(stopIndex),
+              stopIndex > 0,
+              stopIndex < stops.count - 1
+        else { return }
+        let lowerBound = stops[stopIndex - 1].position + 0.01
+        let upperBound = stops[stopIndex + 1].position - 0.01
+        guard lowerBound <= upperBound else { return }
+        stops[stopIndex].position = max(lowerBound, min(upperBound, position))
+        gradient.colorStops = stops
+        content.fillGradient = gradient.normalized()
+        guard document.layers[index].shapeContent?.fillGradient != content.fillGradient else {
+            return
+        }
+        document.layers[index].kind = .shape(content)
+        editingShapeGradientDidChange = true
+        statusText = L10n.text("imageEditor.status.shapeGradientStopMoved")
+    }
+
     func beginEditingSelectedShapeGradientMidpoint(after lowerStopIndex: Int) -> Bool {
         guard editingShapeGradientLayerID == nil,
               canEditSelectedShapeGradientStops,
@@ -722,6 +748,29 @@ extension ImageEditorViewModel {
         statusText = L10n.text("imageEditor.status.shapeGradientMidpointMoved")
     }
 
+    func updateSelectedShapeGradientMidpoint(toLogicalMidpoint midpoint: Double) {
+        guard midpoint.isFinite,
+              let layerID = editingShapeGradientLayerID,
+              let lowerStopIndex = editingShapeGradientMidpointIndex,
+              var content = editingShapeGradientOriginalContent,
+              var gradient = content.fillGradient,
+              let index = document.layers.firstIndex(where: { $0.id == layerID })
+        else { return }
+        var stops = gradient.shapeColorStops
+        guard stops.indices.contains(lowerStopIndex), lowerStopIndex < stops.count - 1 else {
+            return
+        }
+        stops[lowerStopIndex].midpoint = max(0, min(1, midpoint))
+        gradient.colorStops = stops
+        content.fillGradient = gradient.normalized()
+        guard document.layers[index].shapeContent?.fillGradient != content.fillGradient else {
+            return
+        }
+        document.layers[index].kind = .shape(content)
+        editingShapeGradientDidChange = true
+        statusText = L10n.text("imageEditor.status.shapeGradientMidpointMoved")
+    }
+
     func addSelectedShapeGradientStop(atCanvasPoint canvasPoint: CGPoint) -> Int? {
         guard canEditSelectedShapeGradientStops,
               let layer = singleSelectedShapeGradientLayer,
@@ -742,8 +791,16 @@ extension ImageEditorViewModel {
     }
 
     func finishEditingSelectedShapeGradient() {
-        guard editingShapeGradientLayerID != nil else { return }
-        if editingShapeGradientDidChange {
+        guard let layerID = editingShapeGradientLayerID else { return }
+        let didChange: Bool
+        if let originalContent = editingShapeGradientOriginalContent,
+           let currentContent = document.layers.first(where: { $0.id == layerID })?.shapeContent {
+            didChange = currentContent.fillGradient != originalContent.fillGradient
+                || currentContent.fillGradientCenter != originalContent.fillGradientCenter
+        } else {
+            didChange = editingShapeGradientDidChange
+        }
+        if didChange {
             let historyKey: String
             if editingShapeGradientMidpointIndex != nil {
                 historyKey = "imageEditor.history.shapeGradientMidpoint"
@@ -756,7 +813,7 @@ extension ImageEditorViewModel {
         } else {
             updateStatus()
         }
-        finishShapeGradientUndoTransaction(didChange: editingShapeGradientDidChange)
+        finishShapeGradientUndoTransaction(didChange: didChange)
         editingShapeGradientLayerID = nil
         editingShapeGradientOriginalContent = nil
         editingShapeGradientStopIndex = nil

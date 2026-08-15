@@ -235,67 +235,7 @@ extension ImageEditorView {
         let selectedIndex = normalizedShapeGradientStopIndex(stops: stops)
         let canRemove = stops.count > 2 && selectedIndex > 0 && selectedIndex < stops.count - 1
         return VStack(alignment: .leading, spacing: 6) {
-            GeometryReader { geometry in
-                ZStack(alignment: .topLeading) {
-                    ImageEditorTransparencyCheckerboard()
-                        .clipShape(RoundedRectangle(cornerRadius: 3, style: .continuous))
-                        .frame(height: 14)
-
-                    RoundedRectangle(cornerRadius: 3, style: .continuous)
-                        .fill(
-                            LinearGradient(
-                                gradient: Gradient(stops: stops.map { stop in
-                                    Gradient.Stop(
-                                        color: Color(nsColor: stop.color),
-                                        location: CGFloat(stop.position)
-                                    )
-                                }),
-                                startPoint: .leading,
-                                endPoint: .trailing
-                            )
-                        )
-                        .overlay {
-                            RoundedRectangle(cornerRadius: 3, style: .continuous)
-                                .stroke(Color.white.opacity(0.45), lineWidth: 1)
-                        }
-                        .frame(height: 14)
-
-                    ForEach(stops.indices, id: \.self) { index in
-                        Button {
-                            selectedShapeGradientStopIndex = index
-                        } label: {
-                            RoundedRectangle(cornerRadius: 2, style: .continuous)
-                                .fill(Color(nsColor: stops[index].color))
-                                .overlay {
-                                    RoundedRectangle(cornerRadius: 2, style: .continuous)
-                                        .stroke(
-                                            index == selectedIndex
-                                                ? Color.accentColor
-                                                : Color.white.opacity(0.86),
-                                            lineWidth: index == selectedIndex ? 2 : 1
-                                        )
-                                }
-                                .frame(width: 12, height: 16)
-                        }
-                        .buttonStyle(.plain)
-                        .focusable(false)
-                        .position(
-                            x: max(6, min(geometry.size.width - 6, CGFloat(stops[index].position) * geometry.size.width)),
-                            y: 26
-                        )
-                        .accessibilityIdentifier("image-editor-shape-gradient-stop-\(index)")
-                        .accessibilityLabel(
-                            L10n.format(
-                                "imageEditor.properties.shapeGradientStopAccessibility",
-                                index + 1,
-                                Int((stops[index].position * 100).rounded()),
-                                Int((stops[index].alpha * 100).rounded())
-                            )
-                        )
-                    }
-                }
-            }
-            .frame(height: 36)
+            shapeGradientStopTrack(stops: stops, selectedIndex: selectedIndex)
             .accessibilityIdentifier("image-editor-shape-gradient-stops")
 
             HStack(spacing: 6) {
@@ -381,6 +321,224 @@ extension ImageEditorView {
                 .accessibilityIdentifier("image-editor-shape-gradient-stop-midpoint")
             }
         }
+    }
+
+    private func shapeGradientStopTrack(
+        stops: [ImageEditorGradientColorStop],
+        selectedIndex: Int
+    ) -> some View {
+        GeometryReader { geometry in
+            ZStack(alignment: .topLeading) {
+                ImageEditorTransparencyCheckerboard()
+                    .clipShape(RoundedRectangle(cornerRadius: 3, style: .continuous))
+                    .frame(height: 14)
+                    .padding(.horizontal, ImageEditorGradientStopTrackGeometry.horizontalInset)
+
+                RoundedRectangle(cornerRadius: 3, style: .continuous)
+                    .fill(
+                        LinearGradient(
+                            gradient: Gradient(stops: stops.map { stop in
+                                Gradient.Stop(
+                                    color: Color(nsColor: stop.color),
+                                    location: CGFloat(stop.position)
+                                )
+                            }),
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
+                    .overlay {
+                        RoundedRectangle(cornerRadius: 3, style: .continuous)
+                            .stroke(Color.white.opacity(0.45), lineWidth: 1)
+                    }
+                    .frame(height: 14)
+                    .padding(.horizontal, ImageEditorGradientStopTrackGeometry.horizontalInset)
+
+                Rectangle()
+                    .fill(Color.white.opacity(0.001))
+                    .frame(height: 14)
+                    .padding(.horizontal, ImageEditorGradientStopTrackGeometry.horizontalInset)
+                    .contentShape(Rectangle())
+                    .gesture(
+                        SpatialTapGesture(
+                            count: 2,
+                            coordinateSpace: .named("image-editor-shape-gradient-track-space")
+                        )
+                        .onEnded { value in
+                            let position = ImageEditorGradientStopTrackGeometry.logicalPosition(
+                                forX: value.location.x,
+                                width: geometry.size.width
+                            )
+                            if let index = viewModel.addSelectedShapeGradientStop(at: position) {
+                                selectedShapeGradientStopIndex = index
+                            }
+                        }
+                    )
+                    .allowsHitTesting(
+                        stops.count < ImageEditorGradientFillContent.maximumColorStopCount
+                    )
+                    .help(L10n.text("imageEditor.help.shapeGradientAxis"))
+                    .accessibilityIdentifier("image-editor-shape-gradient-track")
+                    .accessibilityLabel(L10n.text("imageEditor.action.shapeGradientStopAdd"))
+
+                ForEach(stops.indices.dropLast(), id: \.self) { index in
+                    if let midpointPosition = ImageEditorGradientStopTrackGeometry.midpointPosition(
+                        after: index,
+                        stops: stops
+                    ) {
+                        Button {
+                            selectedShapeGradientStopIndex = index
+                        } label: {
+                            Rectangle()
+                                .fill(
+                                    index == selectedIndex
+                                        ? Color.accentColor
+                                        : Color.white.opacity(0.88)
+                                )
+                                .overlay {
+                                    Rectangle()
+                                        .stroke(Color.black.opacity(0.62), lineWidth: 0.75)
+                                }
+                                .frame(width: 8, height: 8)
+                                .rotationEffect(.degrees(45))
+                        }
+                        .buttonStyle(.plain)
+                        .focusable(false)
+                        .position(
+                            x: ImageEditorGradientStopTrackGeometry.xPosition(
+                                for: midpointPosition,
+                                width: geometry.size.width
+                            ),
+                            y: 23
+                        )
+                        .highPriorityGesture(
+                            DragGesture(
+                                minimumDistance: 1,
+                                coordinateSpace: .named(
+                                    "image-editor-shape-gradient-track-space"
+                                )
+                            )
+                            .onChanged { value in
+                                selectedShapeGradientStopIndex = index
+                                if activeShapeGradientTrackMidpointIndex == nil,
+                                   viewModel.beginEditingSelectedShapeGradientMidpoint(
+                                       after: index
+                                   ) {
+                                    activeShapeGradientTrackMidpointIndex = index
+                                }
+                                guard activeShapeGradientTrackMidpointIndex == index,
+                                      let midpoint = ImageEditorGradientStopTrackGeometry.midpoint(
+                                          forX: value.location.x,
+                                          width: geometry.size.width,
+                                          after: index,
+                                          stops: stops
+                                      )
+                                else { return }
+                                viewModel.updateSelectedShapeGradientMidpoint(
+                                    toLogicalMidpoint: midpoint
+                                )
+                            }
+                            .onEnded { value in
+                                guard activeShapeGradientTrackMidpointIndex == index else { return }
+                                if let midpoint = ImageEditorGradientStopTrackGeometry.midpoint(
+                                    forX: value.location.x,
+                                    width: geometry.size.width,
+                                    after: index,
+                                    stops: stops
+                                ) {
+                                    viewModel.updateSelectedShapeGradientMidpoint(
+                                        toLogicalMidpoint: midpoint
+                                    )
+                                }
+                                viewModel.finishEditingSelectedShapeGradient()
+                                activeShapeGradientTrackMidpointIndex = nil
+                            }
+                        )
+                        .help(L10n.text("imageEditor.help.shapeGradientMidpointHandle"))
+                        .accessibilityIdentifier("image-editor-shape-gradient-track-midpoint-\(index)")
+                        .accessibilityLabel(
+                            L10n.format(
+                                "imageEditor.properties.shapeGradientMidpointAccessibility",
+                                index + 1,
+                                Int((stops[index].midpoint * 100).rounded())
+                            )
+                        )
+                    }
+                }
+
+                ForEach(stops.indices, id: \.self) { index in
+                    Button {
+                        selectedShapeGradientStopIndex = index
+                    } label: {
+                        RoundedRectangle(cornerRadius: 2, style: .continuous)
+                            .fill(Color(nsColor: stops[index].color))
+                            .overlay {
+                                RoundedRectangle(cornerRadius: 2, style: .continuous)
+                                    .stroke(
+                                        index == selectedIndex
+                                            ? Color.accentColor
+                                            : Color.white.opacity(0.86),
+                                        lineWidth: index == selectedIndex ? 2 : 1
+                                    )
+                            }
+                            .frame(width: 12, height: 16)
+                    }
+                    .buttonStyle(.plain)
+                    .focusable(false)
+                    .position(
+                        x: ImageEditorGradientStopTrackGeometry.xPosition(
+                            for: stops[index].position,
+                            width: geometry.size.width
+                        ),
+                        y: 36
+                    )
+                    .highPriorityGesture(
+                        DragGesture(
+                            minimumDistance: 1,
+                            coordinateSpace: .named("image-editor-shape-gradient-track-space")
+                        )
+                        .onChanged { value in
+                            selectedShapeGradientStopIndex = index
+                            guard index > 0, index < stops.count - 1 else { return }
+                            if activeShapeGradientTrackStopIndex == nil,
+                               viewModel.beginEditingSelectedShapeGradientStop(at: index) {
+                                activeShapeGradientTrackStopIndex = index
+                            }
+                            guard activeShapeGradientTrackStopIndex == index else { return }
+                            viewModel.updateSelectedShapeGradientStop(toLogicalPosition:
+                                ImageEditorGradientStopTrackGeometry.logicalPosition(
+                                    forX: value.location.x,
+                                    width: geometry.size.width
+                                )
+                            )
+                        }
+                        .onEnded { value in
+                            guard activeShapeGradientTrackStopIndex == index else { return }
+                            viewModel.updateSelectedShapeGradientStop(toLogicalPosition:
+                                ImageEditorGradientStopTrackGeometry.logicalPosition(
+                                    forX: value.location.x,
+                                    width: geometry.size.width
+                                )
+                            )
+                            viewModel.finishEditingSelectedShapeGradient()
+                            activeShapeGradientTrackStopIndex = nil
+                        }
+                    )
+                    .help(L10n.text("imageEditor.help.shapeGradientStopHandle"))
+                    .accessibilityIdentifier("image-editor-shape-gradient-stop-\(index)")
+                    .accessibilityLabel(
+                        L10n.format(
+                            "imageEditor.properties.shapeGradientStopAccessibility",
+                            index + 1,
+                            Int((stops[index].position * 100).rounded()),
+                            Int((stops[index].alpha * 100).rounded())
+                        )
+                    )
+                }
+            }
+            .coordinateSpace(name: "image-editor-shape-gradient-track-space")
+        }
+        .frame(height: 46)
     }
 
     private var selectedShapeFillColorBinding: Binding<Color> {
