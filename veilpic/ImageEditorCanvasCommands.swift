@@ -320,7 +320,8 @@ extension ImageEditorViewModel {
     private func cropSelectionRect() -> CGRect? {
         guard let selection = document.selection else { return nil }
         let canvasBounds = CGRect(origin: .zero, size: document.canvasSize)
-        let rect = selection.bounds.standardized.intersection(canvasBounds).integral
+        guard let selectedBounds = selection.effectiveSelectedBounds(in: document.canvasSize) else { return nil }
+        let rect = selectedBounds.standardized.intersection(canvasBounds).integral
         guard rect.width >= 8,
               rect.height >= 8,
               rect.width < canvasBounds.width || rect.height < canvasBounds.height

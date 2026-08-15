@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-15 08:51:42 +0800",
+  "generated_at": "2026-08-15 15:02:58 +0800",
   "total": 1,
   "passed": 1,
   "failed": 0,
@@ -9,16 +9,16 @@
   "jobs": 1,
   "results": [
     {
-      "suite": "veilpicTests",
-      "method": "imageEditorImportSelectionBoundsRespectRasterPixelsAndInversion",
-      "identifier": "veilpicTests/veilpicTests/imageEditorImportSelectionBoundsRespectRasterPixelsAndInversion()",
-      "file": "veilpicTests.swift",
+      "suite": "ImageEditorCanvasCommandTests",
+      "method": "cropToSelectionUsesRasterPixelsAndRejectsInvertedCanvasBounds",
+      "identifier": "veilpicTests/ImageEditorCanvasCommandTests/cropToSelectionUsesRasterPixelsAndRejectsInvertedCanvasBounds()",
+      "file": "ImageEditorCanvasCommandTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 4.296,
+      "duration": 3.823,
       "infrastructure_retries": 0,
       "issues": [],
-      "log": "veilpicTests.imageEditorImportSelectionBoundsRespectRasterPixelsAndInversion.log"
+      "log": "ImageEditorCanvasCommandTests.cropToSelectionUsesRasterPixelsAndRejectsInvertedCanvasBounds.log"
     }
   ]
 }

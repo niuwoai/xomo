@@ -182,6 +182,49 @@ struct ImageEditorCanvasCommandTests {
     }
 
     @Test
+    func cropToSelectionUsesRasterPixelsAndRejectsInvertedCanvasBounds() throws {
+        let canvasSize = CGSize(width: 100, height: 80)
+        let viewModel = ImageEditorViewModel(
+            sourceName: "raster-selection.png",
+            image: testImage(color: .systemGreen, size: canvasSize)
+        ) { _ in }
+        viewModel.document.selection = .raster(
+            mask: rectangularMask(
+                width: Int(canvasSize.width),
+                height: Int(canvasSize.height),
+                rect: CGRect(x: 24, y: 16, width: 40, height: 32)
+            ),
+            bounds: CGRect(origin: .zero, size: canvasSize)
+        )
+
+        #expect(viewModel.canCropToSelection)
+        viewModel.cropToSelection()
+
+        #expect(viewModel.document.canvasSize == CGSize(width: 40, height: 32))
+        #expect(viewModel.document.selection == .fullCanvas(size: CGSize(width: 40, height: 32)))
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.cropSelection"))
+        #expect(viewModel.canUndo)
+
+        viewModel.undo()
+        let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
+        var invertedSelection = ImageEditorSelection.rectangle(
+            CGRect(x: 20, y: 10, width: 50, height: 40)
+        )
+        invertedSelection.isInverted = true
+        viewModel.document.selection = invertedSelection
+
+        #expect(!viewModel.canCropToSelection)
+        viewModel.cropToSelection()
+
+        #expect(viewModel.document.canvasSize == canvasSize)
+        #expect(viewModel.document.selection == invertedSelection)
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.undoStack.count == undoCount)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.cropSelectionInvalid"))
+    }
+
+    @Test
     func canvasRotationCommandsTransformLayerFramesAndHistory() throws {
         let viewModel = ImageEditorViewModel(
             sourceName: "source.png",
@@ -321,6 +364,26 @@ struct ImageEditorCanvasCommandTests {
             let x = min(width - 1, max(0, Int(point.x.rounded())))
             let y = min(height - 1, max(0, Int(point.y.rounded())))
             alpha[y * width + x] = 255
+        }
+        return ImageEditorSelectionMask(width: width, height: height, alpha: alpha)
+    }
+
+    private func rectangularMask(
+        width: Int,
+        height: Int,
+        rect: CGRect
+    ) -> ImageEditorSelectionMask {
+        var alpha = [UInt8](repeating: 0, count: width * height)
+        let bounds = rect.standardized.integral.intersection(
+            CGRect(x: 0, y: 0, width: width, height: height)
+        )
+        guard !bounds.isNull, !bounds.isEmpty else {
+            return ImageEditorSelectionMask(width: width, height: height, alpha: alpha)
+        }
+        for y in Int(bounds.minY)..<Int(bounds.maxY) {
+            for x in Int(bounds.minX)..<Int(bounds.maxX) {
+                alpha[y * width + x] = UInt8.max
+            }
         }
         return ImageEditorSelectionMask(width: width, height: height, alpha: alpha)
     }
