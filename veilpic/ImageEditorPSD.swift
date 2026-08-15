@@ -1959,6 +1959,7 @@ enum ImageEditorPSDCodec {
             guard let gradient = descriptor["Grad"]?.objectValue,
                   let gradientType = descriptor["Type"]?.enumValue,
                   let style = ImageEditorGradientFillStyle(psdValue: gradientType),
+                  descriptor["Algn"]?.booleanValue ?? true,
                   let colorEntries = gradient["Clrs"]?.listValue,
                   colorEntries.count >= 2,
                   colorEntries.count <= ImageEditorGradientFillContent.maximumColorStopCount
@@ -3589,6 +3590,7 @@ private extension Data {
                 type: "UntF",
                 payload: Data(unit: "#Prc", value: Double(normalized.scale * 100))
             ),
+            Data.descriptorItem(key: "Algn", type: "bool", payload: Data(boolean: true)),
             Data.descriptorItem(key: "Rvrs", type: "bool", payload: Data(boolean: normalized.reverse))
         ]
         if let center {

@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-15 21:07:59 +0800",
+  "generated_at": "2026-08-15 21:15:43 +0800",
   "total": 1,
   "passed": 1,
   "failed": 0,
@@ -10,15 +10,15 @@
   "results": [
     {
       "suite": "ImageEditorPSDTests",
-      "method": "offsetShapeGradientCentersRoundTripThroughLegacyAndModernDescriptors",
-      "identifier": "veilpicTests/ImageEditorPSDTests/offsetShapeGradientCentersRoundTripThroughLegacyAndModernDescriptors()",
+      "method": "canvasAlignedShapeGradientsStayRasterizedInsteadOfMovingWithLayers",
+      "identifier": "veilpicTests/ImageEditorPSDTests/canvasAlignedShapeGradientsStayRasterizedInsteadOfMovingWithLayers()",
       "file": "ImageEditorPSDTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 2.847,
+      "duration": 2.864,
       "infrastructure_retries": 0,
       "issues": [],
-      "log": "ImageEditorPSDTests.offsetShapeGradientCentersRoundTripThroughLegacyAndModernDescriptors.log"
+      "log": "ImageEditorPSDTests.canvasAlignedShapeGradientsStayRasterizedInsteadOfMovingWithLayers.log"
     }
   ]
 }

@@ -985,6 +985,71 @@ struct ImageEditorPSDTests {
         }
     }
 
+    @Test func canvasAlignedShapeGradientsStayRasterizedInsteadOfMovingWithLayers() throws {
+        let canvasSize = CGSize(width: 130, height: 90)
+        var document = ImageEditorDocument(
+            sourceName: "canvas-aligned-gradient.xomoproject",
+            image: psdSolidImage(color: .clear, size: canvasSize)
+        )
+        document.layers = [
+            ImageEditorLayer.shape(
+                name: "Canvas Aligned Gradient",
+                frame: CGRect(x: 22, y: 14, width: 82, height: 58),
+                content: ImageEditorShapeContent(
+                    kind: .ellipse,
+                    fillColor: .clear,
+                    fillGradient: ImageEditorGradientFillContent(
+                        preset: .custom,
+                        style: .diamond,
+                        angle: 31,
+                        scale: 0.72,
+                        colorStops: [
+                            ImageEditorGradientColorStop(position: 0, red: 1, green: 0.3, blue: 0.1),
+                            ImageEditorGradientColorStop(position: 1, red: 0.1, green: 0.2, blue: 0.9)
+                        ]
+                    ),
+                    fillGradientCenter: CGPoint(x: 0.34, y: 0.62),
+                    fillOpacity: 1,
+                    strokeColor: .clear,
+                    strokeWidth: 1,
+                    strokeOpacity: 0
+                )
+            )
+        ]
+
+        var exported = try ImageEditorPSDCodec.encode(document: document)
+        let alignmentKey = Data("Algn".utf8)
+        var searchStart = exported.startIndex
+        var alignmentCount = 0
+        while searchStart < exported.endIndex,
+              let range = exported.range(
+                  of: alignmentKey,
+                  options: [],
+                  in: searchStart..<exported.endIndex
+              ) {
+            let typeStart = range.upperBound
+            let valueIndex = typeStart + 4
+            #expect(exported.subdata(in: typeStart..<valueIndex) == Data("bool".utf8))
+            #expect(exported[valueIndex] == 1)
+            exported[valueIndex] = 0
+            alignmentCount += 1
+            searchStart = valueIndex + 1
+        }
+        #expect(alignmentCount == 2)
+
+        let restored = try ImageEditorPSDCodec.decode(
+            exported,
+            sourceName: "canvas-aligned-gradient.psd"
+        )
+        let layer = try #require(restored.layers.first)
+        #expect(layer.kind.isPixel)
+        #expect(layer.shapeContent == nil)
+        #expect(layer.vectorMask != nil)
+
+        let report = try ImageEditorPSDCodec.compatibilityReport(exported)
+        #expect(report.issues.contains { $0.kind == .fillLayerRasterized })
+    }
+
     @Test func compatibilityReportCountsUnsupportedVectorMaskStructure() throws {
         var data = try psdFixtureData("solid-vector-shape.psd")
         let keyRange = try #require(data.range(of: Data("vmsk".utf8)))
