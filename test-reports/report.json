@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-15 15:17:40 +0800",
+  "generated_at": "2026-08-15 15:26:08 +0800",
   "total": 2,
   "passed": 2,
   "failed": 0,
@@ -9,28 +9,28 @@
   "jobs": 1,
   "results": [
     {
-      "suite": "ImageEditorSelectionCenteringTests",
-      "method": "centeringEmptyAndInvertedSelectionsDoesNotPolluteHistory",
-      "identifier": "veilpicTests/ImageEditorSelectionCenteringTests/centeringEmptyAndInvertedSelectionsDoesNotPolluteHistory()",
-      "file": "ImageEditorSelectionCenteringTests.swift",
+      "suite": "ImageEditorSelectionDeliveryBoundsTests",
+      "method": "emptySelectionCannotCreateDeliveryRegionsAndInversionUsesCanvas",
+      "identifier": "veilpicTests/ImageEditorSelectionDeliveryBoundsTests/emptySelectionCannotCreateDeliveryRegionsAndInversionUsesCanvas()",
+      "file": "ImageEditorSelectionDeliveryBoundsTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 2.899,
+      "duration": 2.988,
       "infrastructure_retries": 0,
       "issues": [],
-      "log": "ImageEditorSelectionCenteringTests.centeringEmptyAndInvertedSelectionsDoesNotPolluteHistory.log"
+      "log": "ImageEditorSelectionDeliveryBoundsTests.emptySelectionCannotCreateDeliveryRegionsAndInversionUsesCanvas.log"
     },
     {
-      "suite": "ImageEditorSelectionCenteringTests",
-      "method": "centeringRasterSelectionUsesSelectedPixelsInsteadOfStoredBounds",
-      "identifier": "veilpicTests/ImageEditorSelectionCenteringTests/centeringRasterSelectionUsesSelectedPixelsInsteadOfStoredBounds()",
-      "file": "ImageEditorSelectionCenteringTests.swift",
+      "suite": "ImageEditorSelectionDeliveryBoundsTests",
+      "method": "slicesAndHotspotsUseRasterSelectedPixelBounds",
+      "identifier": "veilpicTests/ImageEditorSelectionDeliveryBoundsTests/slicesAndHotspotsUseRasterSelectedPixelBounds()",
+      "file": "ImageEditorSelectionDeliveryBoundsTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.163,
+      "duration": 2.953,
       "infrastructure_retries": 0,
       "issues": [],
-      "log": "ImageEditorSelectionCenteringTests.centeringRasterSelectionUsesSelectedPixelsInsteadOfStoredBounds.log"
+      "log": "ImageEditorSelectionDeliveryBoundsTests.slicesAndHotspotsUseRasterSelectedPixelBounds.log"
     }
   ]
 }

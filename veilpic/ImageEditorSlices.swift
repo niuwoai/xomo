@@ -18,7 +18,7 @@ enum ImageEditorSliceExportPresetMoveDirection {
 @MainActor
 extension ImageEditorViewModel {
     var canCreateSliceFromSelection: Bool {
-        document.slices.count < ImageEditorSlice.maximumCount && sliceBoundsFromSelection != nil
+        document.slices.count < ImageEditorSlice.maximumCount && selectionDeliveryBounds != nil
     }
 
     var availableSlices: [ImageEditorSlice] {
@@ -27,7 +27,7 @@ extension ImageEditorViewModel {
 
     @discardableResult
     func createSliceFromCurrentSelection(name: String? = nil) -> ImageEditorSlice? {
-        guard let frame = sliceBoundsFromSelection else { return nil }
+        guard let frame = selectionDeliveryBounds else { return nil }
         guard document.slices.count < ImageEditorSlice.maximumCount else {
             statusText = L10n.text("imageEditor.status.sliceLimitReached")
             return nil
@@ -396,15 +396,6 @@ extension ImageEditorViewModel {
         }
     }
 
-    private var sliceBoundsFromSelection: CGRect? {
-        guard let selection = document.selection else { return nil }
-        let canvasBounds = CGRect(origin: .zero, size: document.canvasSize)
-        let candidate = selection.isInverted ? canvasBounds : selection.bounds.standardized
-        let bounded = candidate.intersection(canvasBounds).integral.intersection(canvasBounds)
-        guard bounded.width > 0, bounded.height > 0 else { return nil }
-        return bounded
-    }
-
     private func nextSliceName() -> String {
         let existing = Set(document.slices.map { $0.name.lowercased() })
         var index = document.slices.count + 1
@@ -415,7 +406,7 @@ extension ImageEditorViewModel {
     }
 
     var canCreateHotspotFromSelection: Bool {
-        document.hotspots.count < ImageEditorHotspot.maximumCount && hotspotBoundsFromSelection != nil
+        document.hotspots.count < ImageEditorHotspot.maximumCount && selectionDeliveryBounds != nil
     }
 
     var availableHotspots: [ImageEditorHotspot] {
@@ -424,7 +415,7 @@ extension ImageEditorViewModel {
 
     @discardableResult
     func createHotspotFromCurrentSelection(name: String? = nil, url: String? = nil) -> ImageEditorHotspot? {
-        guard let frame = hotspotBoundsFromSelection else { return nil }
+        guard let frame = selectionDeliveryBounds else { return nil }
         guard document.hotspots.count < ImageEditorHotspot.maximumCount else {
             statusText = L10n.text("imageEditor.status.hotspotLimitReached")
             return nil
@@ -588,11 +579,14 @@ extension ImageEditorViewModel {
         }
     }
 
-    private var hotspotBoundsFromSelection: CGRect? {
+    private var selectionDeliveryBounds: CGRect? {
         guard let selection = document.selection else { return nil }
         let canvasBounds = CGRect(origin: .zero, size: document.canvasSize)
-        let candidate = selection.isInverted ? canvasBounds : selection.bounds.standardized
-        let bounded = candidate.intersection(canvasBounds).integral.intersection(canvasBounds)
+        guard let selectedBounds = selection.effectiveSelectedBounds(in: document.canvasSize) else { return nil }
+        let bounded = selectedBounds.standardized
+            .intersection(canvasBounds)
+            .integral
+            .intersection(canvasBounds)
         guard bounded.width > 0, bounded.height > 0 else { return nil }
         return bounded
     }
