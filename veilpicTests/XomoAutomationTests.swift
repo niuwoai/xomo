@@ -1104,6 +1104,23 @@ struct XomoAutomationTests {
         #expect(pasteIntoSelectionResponse.error?.contains("active selection") == true)
         #expect(fallbackViewModel.document.layers.count == layerCountBeforeRejectedPaste)
 
+        fallbackViewModel.document.selection = .rectangle(
+            CGRect(x: size.width + 10, y: 0, width: 5, height: 5)
+        )
+        let historyCountBeforeEmptySelectionPaste = fallbackViewModel.document.history.count
+        let undoCountBeforeEmptySelectionPaste = fallbackViewModel.undoStack.count
+        #expect(fallbackViewModel.canPasteClipboardImageIntoSelection)
+        let emptySelectionPasteResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.clipboard.action",
+            arguments: ["action": .string("pasteIntoSelection")]
+        ))
+        #expect(!emptySelectionPasteResponse.ok)
+        #expect(emptySelectionPasteResponse.error?.contains("did not import a layer") == true)
+        #expect(fallbackViewModel.document.layers.count == layerCountBeforeRejectedPaste)
+        #expect(fallbackViewModel.document.history.count == historyCountBeforeEmptySelectionPaste)
+        #expect(fallbackViewModel.undoStack.count == undoCountBeforeEmptySelectionPaste)
+
         let pasteResponse = registry.execute(request(
             operation: "call",
             name: "xomo.clipboard.action",

@@ -4897,9 +4897,12 @@ final class XomoAutomationRegistry {
         let action = try requiredString("action", in: arguments)
         try requireClipboardActionAvailability(for: action, viewModel: viewModel)
         switch action {
-        case "pasteAsLayer": viewModel.pasteClipboardAsLayer()
-        case "pasteIntoSelection": viewModel.pasteClipboardIntoSelectionAsLayer()
-        case "pasteInPlace": viewModel.pasteClipboardInPlaceAsLayer()
+        case "pasteAsLayer":
+            try requireClipboardImport(viewModel.pasteClipboardAsLayer(), action: action)
+        case "pasteIntoSelection":
+            try requireClipboardImport(viewModel.pasteClipboardIntoSelectionAsLayer(), action: action)
+        case "pasteInPlace":
+            try requireClipboardImport(viewModel.pasteClipboardInPlaceAsLayer(), action: action)
         case "copySelection":
             try requireClipboardOutput(viewModel.copySelectionToClipboard(), action: action)
         case "cutSelection":
@@ -4955,6 +4958,14 @@ final class XomoAutomationRegistry {
         guard didProduceOutput else {
             throw XomoAutomationCallError.operationFailed(
                 "Clipboard action \(action) did not produce clipboard content"
+            )
+        }
+    }
+
+    private func requireClipboardImport(_ didImportLayer: Bool, action: String) throws {
+        guard didImportLayer else {
+            throw XomoAutomationCallError.operationFailed(
+                "Clipboard action \(action) did not import a layer"
             )
         }
     }

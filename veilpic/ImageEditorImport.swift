@@ -99,13 +99,14 @@ extension ImageEditorViewModel {
         return true
     }
 
-    func pasteClipboardAsLayer(from pasteboard: NSPasteboard = .general) {
+    @discardableResult
+    func pasteClipboardAsLayer(from pasteboard: NSPasteboard = .general) -> Bool {
         guard let image = pasteboard.readImage() else {
             statusText = L10n.text("imageEditor.status.clipboardImageMissing")
-            return
+            return false
         }
 
-        importImageLayer(
+        return importImageLayer(
             image,
             sourceName: L10n.text("source.clipboard"),
             historyTitle: L10n.text("imageEditor.history.clipboardPasteLayer"),
@@ -113,17 +114,18 @@ extension ImageEditorViewModel {
         )
     }
 
-    func pasteClipboardIntoSelectionAsLayer(from pasteboard: NSPasteboard = .general) {
+    @discardableResult
+    func pasteClipboardIntoSelectionAsLayer(from pasteboard: NSPasteboard = .general) -> Bool {
         guard document.selection != nil else {
             statusText = L10n.text("imageEditor.status.noSelection")
-            return
+            return false
         }
         guard let image = pasteboard.readImage() else {
             statusText = L10n.text("imageEditor.status.clipboardImageMissing")
-            return
+            return false
         }
 
-        importImageLayerIntoSelection(
+        return importImageLayerIntoSelection(
             image,
             sourceName: L10n.text("source.clipboard"),
             historyTitle: L10n.text("imageEditor.history.clipboardPasteIntoSelection"),
@@ -131,17 +133,18 @@ extension ImageEditorViewModel {
         )
     }
 
-    func pasteClipboardInPlaceAsLayer(from pasteboard: NSPasteboard = .general) {
+    @discardableResult
+    func pasteClipboardInPlaceAsLayer(from pasteboard: NSPasteboard = .general) -> Bool {
         guard let image = pasteboard.readImage() else {
             statusText = L10n.text("imageEditor.status.clipboardImageMissing")
-            return
+            return false
         }
         guard let frame = XomoClipboardLayerPayload.frame(from: pasteboard) else {
             statusText = L10n.text("imageEditor.status.clipboardLayerPositionMissing")
-            return
+            return false
         }
 
-        importImageLayer(
+        return importImageLayer(
             image,
             sourceName: L10n.text("source.clipboard"),
             historyTitle: L10n.text("imageEditor.history.clipboardPasteLayer"),
@@ -150,17 +153,18 @@ extension ImageEditorViewModel {
         )
     }
 
+    @discardableResult
     func importImageLayer(
         _ image: NSImage,
         sourceName: String,
         historyTitle: String? = nil,
         importedStatus: String? = nil,
         frameOverride: CGRect? = nil
-    ) {
+    ) -> Bool {
         let normalized = image.normalizedImportedBitmapImage()
         guard normalized.size.width > 0, normalized.size.height > 0 else {
             statusText = L10n.text("imageEditor.status.layerImportFailed")
-            return
+            return false
         }
 
         pushUndo()
@@ -180,30 +184,32 @@ extension ImageEditorViewModel {
         isEditingLayerMask = false
         appendHistory(historyTitle ?? L10n.text("imageEditor.history.layerImport"))
         statusText = importedStatus ?? L10n.format("imageEditor.status.layerImported", cleanLayerName(from: sourceName))
+        return true
     }
 
+    @discardableResult
     func importImageLayerIntoSelection(
         _ image: NSImage,
         sourceName: String,
         historyTitle: String? = nil,
         importedStatus: String? = nil
-    ) {
+    ) -> Bool {
         guard let selection = document.selection else {
             statusText = L10n.text("imageEditor.status.noSelection")
-            return
+            return false
         }
 
         let normalized = image.normalizedImportedBitmapImage()
         guard normalized.size.width > 0, normalized.size.height > 0 else {
             statusText = L10n.text("imageEditor.status.layerImportFailed")
-            return
+            return false
         }
 
         let canvasRect = CGRect(origin: .zero, size: document.canvasSize)
         let selectedBounds = selection.bounds.standardized.intersection(canvasRect)
         guard !selectedBounds.isNull, !selectedBounds.isEmpty else {
             statusText = L10n.text("imageEditor.status.selectionEmpty")
-            return
+            return false
         }
 
         let layerFrame = fittedImportFrame(for: normalized.size, inside: selectedBounds)
@@ -213,7 +219,7 @@ extension ImageEditorViewModel {
             layerSize: normalized.size
         ) else {
             statusText = L10n.text("imageEditor.status.layerImportFailed")
-            return
+            return false
         }
 
         pushUndo()
@@ -238,6 +244,7 @@ extension ImageEditorViewModel {
         isEditingLayerMask = false
         appendHistory(historyTitle ?? L10n.text("imageEditor.history.clipboardPasteIntoSelection"))
         statusText = importedStatus ?? L10n.format("imageEditor.status.layerImported", cleanLayerName(from: sourceName))
+        return true
     }
 
     func replaceSelectedSmartObjectContents(_ image: NSImage, sourceName: String) {
