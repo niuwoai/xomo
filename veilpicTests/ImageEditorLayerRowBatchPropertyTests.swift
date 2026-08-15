@@ -3317,6 +3317,82 @@ struct ImageEditorLayerRowBatchPropertyTests {
         #expect(viewModel.selectedLayerGradientOverlayAngleState == .value(120))
     }
 
+    @Test func layerStyleGradientOverlayStopsConvergeAcrossEditableSelectionInOneHistoryStep() throws {
+        let fixture = makeFixture()
+        let viewModel = fixture.viewModel
+        let firstID = fixture.layers[0].id
+        let secondID = fixture.layers[1].id
+        let lockedID = fixture.layers[2].id
+        let firstStops = [
+            ImageEditorGradientColorStop(position: 0, color: .systemRed),
+            ImageEditorGradientColorStop(position: 0.4, color: .systemGreen),
+            ImageEditorGradientColorStop(position: 1, color: .systemBlue)
+        ]
+        let secondStops = [
+            ImageEditorGradientColorStop(position: 0, color: .black),
+            ImageEditorGradientColorStop(position: 1, color: .white)
+        ]
+        viewModel.document.layers[0].style.setGradientOverlayColorStops(firstStops)
+        viewModel.document.layers[1].style.setGradientOverlayColorStops(secondStops)
+        viewModel.document.layers[2].style.setGradientOverlayColorStops(secondStops)
+        viewModel.document.layers[2].isLocked = true
+        select(Set(fixture.layers.map(\.id)), primary: firstID, in: viewModel)
+        let historyCount = viewModel.document.history.count
+        let requestedStops = [
+            ImageEditorGradientColorStop(
+                position: 0,
+                red: 0.1,
+                green: 0.2,
+                blue: 0.3,
+                alpha: 0.9,
+                midpoint: 0.3
+            ),
+            ImageEditorGradientColorStop(
+                position: 0.65,
+                red: 0.8,
+                green: 0.4,
+                blue: 0.2,
+                alpha: 0.45,
+                midpoint: 0.75
+            ),
+            ImageEditorGradientColorStop(position: 1, color: .systemPurple)
+        ]
+
+        #expect(viewModel.selectedLayerGradientOverlayColorStopsState == .mixed)
+        #expect(viewModel.setSelectedLayerGradientOverlayColorStops(requestedStops) == 2)
+        #expect((try layer(firstID, in: viewModel)).style.gradientOverlayColorStops == requestedStops)
+        #expect((try layer(secondID, in: viewModel)).style.gradientOverlayColorStops == requestedStops)
+        #expect((try layer(lockedID, in: viewModel)).style.gradientOverlayColorStops == secondStops)
+        #expect(viewModel.selectedLayerGradientOverlayColorStopsState == .value(requestedStops))
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.setSelectedLayerGradientOverlayColorStops(requestedStops) == 0)
+        #expect(viewModel.document.history.count == historyCount + 1)
+
+        viewModel.undo()
+        #expect((try layer(firstID, in: viewModel)).style.gradientOverlayColorStops == firstStops)
+        #expect((try layer(secondID, in: viewModel)).style.gradientOverlayColorStops == secondStops)
+        viewModel.redo()
+        #expect(viewModel.selectedLayerGradientOverlayColorStopsState == .value(requestedStops))
+
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let controlSource = try String(
+            contentsOf: repositoryRoot.appendingPathComponent(
+                "veilpic/ImageEditorLayerStyleGradientOverlayControls.swift"
+            ),
+            encoding: .utf8
+        )
+        let editorSource = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        #expect(controlSource.contains("@State private var draftStops"))
+        #expect(controlSource.contains("image-editor-layer-style-gradient-overlay-stops-apply"))
+        #expect(controlSource.contains("setSelectedLayerGradientOverlayColorStops(stops)"))
+        #expect(editorSource.contains("ImageEditorLayerStyleGradientOverlayStopsEditor("))
+    }
+
     @Test func layerStyleGradientOverlayAngleControlReusesMixedNumericStepper() throws {
         let repositoryRoot = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()

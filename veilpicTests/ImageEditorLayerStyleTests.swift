@@ -1994,6 +1994,98 @@ struct ImageEditorLayerStyleTests {
         #expect(restoredLayer.style.gradientOverlayReverse)
     }
 
+    @Test func gradientOverlayColorStopsRenderRoundTripAndPreserveLegacyEndpoints() throws {
+        let canvasSize = NSSize(width: 80, height: 60)
+        let viewModel = ImageEditorViewModel(
+            sourceName: "gradient-overlay-stops.png",
+            image: solidImage(color: .black, size: canvasSize)
+        ) { _ in }
+        viewModel.replaceSelectedLayerImageForTesting(
+            centerRectImage(size: canvasSize, color: .white),
+            historyTitle: L10n.text("imageEditor.history.brush")
+        )
+        viewModel.setSelectedLayerGradientOverlayOpacity(1)
+        viewModel.setSelectedLayerGradientOverlayStyle(.linear)
+        viewModel.setSelectedLayerGradientOverlayAngle(0)
+        viewModel.setSelectedLayerGradientOverlayScale(1)
+        let sourcePixels = try #require(viewModel.document.selectedLayer?.image.qingtuPNGData())
+        let twoStopPixels = try #require(viewModel.currentImage.qingtuPNGData())
+        let stops = [
+            ImageEditorGradientColorStop(
+                position: 0,
+                red: 1,
+                green: 0,
+                blue: 0,
+                alpha: 1,
+                midpoint: 0.25
+            ),
+            ImageEditorGradientColorStop(
+                position: 0.5,
+                red: 0,
+                green: 1,
+                blue: 0,
+                alpha: 0.35,
+                midpoint: 0.7
+            ),
+            ImageEditorGradientColorStop(
+                position: 1,
+                red: 0,
+                green: 0,
+                blue: 1,
+                alpha: 1,
+                midpoint: 0.5
+            )
+        ]
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.setSelectedLayerGradientOverlayColorStops(stops) == 1)
+        let styledLayer = try #require(viewModel.document.selectedLayer)
+        let multiStopPixels = try #require(viewModel.currentImage.qingtuPNGData())
+        #expect(styledLayer.style.gradientOverlayColorStops == stops)
+        #expect(styledLayer.style.resolvedGradientOverlayColorStops == stops)
+        #expect(ImageEditorProjectColor(color: styledLayer.style.gradientOverlayStartColor)
+            == ImageEditorProjectColor(color: stops[0].color))
+        #expect(ImageEditorProjectColor(color: styledLayer.style.gradientOverlayEndColor)
+            == ImageEditorProjectColor(color: stops[2].color))
+        #expect(styledLayer.image.qingtuPNGData() == sourcePixels)
+        #expect(multiStopPixels != twoStopPixels)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.setSelectedLayerGradientOverlayColorStops(stops) == 0)
+        #expect(viewModel.document.history.count == historyCount + 1)
+
+        viewModel.undo()
+        #expect(viewModel.document.selectedLayer?.style.gradientOverlayColorStops == nil)
+        #expect(viewModel.currentImage.qingtuPNGData() == twoStopPixels)
+        viewModel.redo()
+        #expect(viewModel.document.selectedLayer?.style.gradientOverlayColorStops == stops)
+        #expect(viewModel.currentImage.qingtuPNGData() == multiStopPixels)
+
+        let project = try ImageEditorProjectDocument(document: viewModel.document)
+        let restoredLayer = try #require(
+            try project.restoredDocument().layers.first { $0.id == styledLayer.id }
+        )
+        #expect(restoredLayer.style.gradientOverlayColorStops == stops)
+
+        let encodedStyle = try JSONEncoder().encode(
+            ImageEditorProjectLayerStyle(style: styledLayer.style)
+        )
+        var legacyObject = try #require(
+            JSONSerialization.jsonObject(with: encodedStyle) as? [String: Any]
+        )
+        legacyObject.removeValue(forKey: "gradientOverlayColorStops")
+        let legacyData = try JSONSerialization.data(withJSONObject: legacyObject)
+        let legacyStyle = try JSONDecoder().decode(
+            ImageEditorProjectLayerStyle.self,
+            from: legacyData
+        ).layerStyle
+        #expect(legacyStyle.gradientOverlayColorStops == nil)
+        #expect(legacyStyle.resolvedGradientOverlayColorStops.count == 2)
+        #expect(ImageEditorProjectColor(color: legacyStyle.resolvedGradientOverlayColorStops[0].color)
+            == ImageEditorProjectColor(color: legacyStyle.gradientOverlayStartColor))
+        #expect(ImageEditorProjectColor(color: legacyStyle.resolvedGradientOverlayColorStops[1].color)
+            == ImageEditorProjectColor(color: legacyStyle.gradientOverlayEndColor))
+    }
+
     @Test func gradientOverlayReverseIsUndoableAndLegacyProjectsDefaultForward() throws {
         let canvasSize = NSSize(width: 80, height: 60)
         let viewModel = ImageEditorViewModel(

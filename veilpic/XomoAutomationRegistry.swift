@@ -2549,87 +2549,15 @@ final class XomoAutomationRegistry {
             dither = false
         }
         if let stopsValue = object["stops"] {
-            guard let values = stopsValue.arrayValue else {
-                throw XomoAutomationCallError.invalidArgument(
-                    "fillGradient.stops must be an array"
-                )
-            }
             guard object["startColor"] == nil, object["endColor"] == nil else {
                 throw XomoAutomationCallError.invalidArgument(
                     "fillGradient.stops cannot be combined with startColor or endColor"
                 )
             }
-            guard (2...ImageEditorGradientFillContent.maximumColorStopCount).contains(values.count) else {
-                throw XomoAutomationCallError.invalidArgument("fillGradient.stops must contain 2 to 16 items")
-            }
-            let stops = try values.enumerated().map { index, value in
-                guard let stop = value.objectValue else {
-                    throw XomoAutomationCallError.invalidArgument(
-                        "fillGradient.stops[\(index)] must be an object"
-                    )
-                }
-                guard let positionValue = stop["position"] else {
-                    throw XomoAutomationCallError.invalidArgument(
-                        "fillGradient.stops[\(index)].position is required"
-                    )
-                }
-                guard let position = positionValue.doubleValue else {
-                    throw XomoAutomationCallError.invalidArgument(
-                        "fillGradient.stops[\(index)].position must be a number"
-                    )
-                }
-                guard position.isFinite, (0...1).contains(position) else {
-                    throw XomoAutomationCallError.invalidArgument(
-                        "fillGradient.stops[\(index)].position must be between 0 and 1"
-                    )
-                }
-                let midpoint: Double
-                if let midpointValue = stop["midpoint"] {
-                    guard let parsedMidpoint = midpointValue.doubleValue,
-                          parsedMidpoint.isFinite
-                    else {
-                        throw XomoAutomationCallError.invalidArgument(
-                            "fillGradient.stops[\(index)].midpoint must be a number"
-                        )
-                    }
-                    guard (0...1).contains(parsedMidpoint) else {
-                        throw XomoAutomationCallError.invalidArgument(
-                            "fillGradient.stops[\(index)].midpoint must be between 0 and 1"
-                        )
-                    }
-                    midpoint = parsedMidpoint
-                } else {
-                    midpoint = ImageEditorGradientColorStop.defaultMidpoint
-                }
-                guard let colorValue = stop["color"] else {
-                    throw XomoAutomationCallError.invalidArgument(
-                        "fillGradient.stops[\(index)].color is required"
-                    )
-                }
-                guard let colorObject = colorValue.objectValue else {
-                    throw XomoAutomationCallError.invalidArgument(
-                        "fillGradient.stops[\(index)].color must be an object"
-                    )
-                }
-                return ImageEditorGradientColorStop(
-                    position: position,
-                    color: try requiredShapeGradientStopColor(
-                        colorObject,
-                        stopIndex: index
-                    ),
-                    midpoint: midpoint
-                )
-            }
-            guard abs((stops.first?.position ?? 1)) <= 0.000_1,
-                  abs((stops.last?.position ?? 0) - 1) <= 0.000_1,
-                  zip(stops, stops.dropFirst()).allSatisfy({ pair in
-                      pair.0.position <= pair.1.position
-                  })
-            else {
-                throw XomoAutomationCallError.invalidArgument(
-                    "fillGradient.stops must be ordered and span positions 0 through 1"
-                )
-            }
+            let stops = try requiredGradientStops(
+                stopsValue,
+                path: "fillGradient.stops"
+            )
             var gradient = ImageEditorGradientFillContent.shapeLinear(
                 colorStops: stops,
                 angle: CGFloat(angle),
@@ -2753,23 +2681,108 @@ final class XomoAutomationRegistry {
         return color
     }
 
-    private func requiredShapeGradientStopColor(
+    private func requiredGradientStops(
+        _ value: XomoJSONValue,
+        path: String
+    ) throws -> [ImageEditorGradientColorStop] {
+        guard let values = value.arrayValue else {
+            throw XomoAutomationCallError.invalidArgument("\(path) must be an array")
+        }
+        guard (2...ImageEditorGradientFillContent.maximumColorStopCount).contains(values.count) else {
+            throw XomoAutomationCallError.invalidArgument(
+                "\(path) must contain 2 to 16 items"
+            )
+        }
+        let stops = try values.enumerated().map { index, value in
+            guard let stop = value.objectValue else {
+                throw XomoAutomationCallError.invalidArgument(
+                    "\(path)[\(index)] must be an object"
+                )
+            }
+            guard let positionValue = stop["position"] else {
+                throw XomoAutomationCallError.invalidArgument(
+                    "\(path)[\(index)].position is required"
+                )
+            }
+            guard let position = positionValue.doubleValue else {
+                throw XomoAutomationCallError.invalidArgument(
+                    "\(path)[\(index)].position must be a number"
+                )
+            }
+            guard position.isFinite, (0...1).contains(position) else {
+                throw XomoAutomationCallError.invalidArgument(
+                    "\(path)[\(index)].position must be between 0 and 1"
+                )
+            }
+            let midpoint: Double
+            if let midpointValue = stop["midpoint"] {
+                guard let parsedMidpoint = midpointValue.doubleValue,
+                      parsedMidpoint.isFinite
+                else {
+                    throw XomoAutomationCallError.invalidArgument(
+                        "\(path)[\(index)].midpoint must be a number"
+                    )
+                }
+                guard (0...1).contains(parsedMidpoint) else {
+                    throw XomoAutomationCallError.invalidArgument(
+                        "\(path)[\(index)].midpoint must be between 0 and 1"
+                    )
+                }
+                midpoint = parsedMidpoint
+            } else {
+                midpoint = ImageEditorGradientColorStop.defaultMidpoint
+            }
+            guard let colorValue = stop["color"] else {
+                throw XomoAutomationCallError.invalidArgument(
+                    "\(path)[\(index)].color is required"
+                )
+            }
+            guard let colorObject = colorValue.objectValue else {
+                throw XomoAutomationCallError.invalidArgument(
+                    "\(path)[\(index)].color must be an object"
+                )
+            }
+            return ImageEditorGradientColorStop(
+                position: position,
+                color: try requiredGradientStopColor(
+                    colorObject,
+                    stopIndex: index,
+                    path: path
+                ),
+                midpoint: midpoint
+            )
+        }
+        guard abs((stops.first?.position ?? 1)) <= 0.000_1,
+              abs((stops.last?.position ?? 0) - 1) <= 0.000_1,
+              zip(stops, stops.dropFirst()).allSatisfy({ pair in
+                  pair.0.position <= pair.1.position
+              })
+        else {
+            throw XomoAutomationCallError.invalidArgument(
+                "\(path) must be ordered and span positions 0 through 1"
+            )
+        }
+        return stops
+    }
+
+    private func requiredGradientStopColor(
         _ object: [String: XomoJSONValue],
-        stopIndex: Int
+        stopIndex: Int,
+        path: String
     ) throws -> NSColor {
-        let red = try requiredShapeGradientStopColorComponent(
-            "red", in: object, stopIndex: stopIndex
+        let red = try requiredGradientStopColorComponent(
+            "red", in: object, stopIndex: stopIndex, path: path
         )
-        let green = try requiredShapeGradientStopColorComponent(
-            "green", in: object, stopIndex: stopIndex
+        let green = try requiredGradientStopColorComponent(
+            "green", in: object, stopIndex: stopIndex, path: path
         )
-        let blue = try requiredShapeGradientStopColorComponent(
-            "blue", in: object, stopIndex: stopIndex
+        let blue = try requiredGradientStopColorComponent(
+            "blue", in: object, stopIndex: stopIndex, path: path
         )
         let alpha = try object["alpha"] == nil
             ? 1
-            : requiredShapeGradientStopColorComponent(
-                "alpha", in: object, stopIndex: stopIndex
+            : requiredGradientStopColorComponent(
+                "alpha", in: object, stopIndex: stopIndex, path: path
             )
         return NSColor(
             deviceRed: CGFloat(red),
@@ -2779,20 +2792,23 @@ final class XomoAutomationRegistry {
         )
     }
 
-    private func requiredShapeGradientStopColorComponent(
+    private func requiredGradientStopColorComponent(
         _ component: String,
         in object: [String: XomoJSONValue],
-        stopIndex: Int
+        stopIndex: Int,
+        path: String
     ) throws -> Double {
-        let path = "fillGradient.stops[\(stopIndex)].color.\(component)"
+        let componentPath = "\(path)[\(stopIndex)].color.\(component)"
         guard let value = object[component] else {
-            throw XomoAutomationCallError.invalidArgument("\(path) is required")
+            throw XomoAutomationCallError.invalidArgument("\(componentPath) is required")
         }
         guard let number = value.doubleValue, number.isFinite else {
-            throw XomoAutomationCallError.invalidArgument("\(path) must be a number")
+            throw XomoAutomationCallError.invalidArgument("\(componentPath) must be a number")
         }
         guard (0...1).contains(number) else {
-            throw XomoAutomationCallError.invalidArgument("\(path) must be between 0 and 1")
+            throw XomoAutomationCallError.invalidArgument(
+                "\(componentPath) must be between 0 and 1"
+            )
         }
         return number
     }
@@ -4266,6 +4282,20 @@ final class XomoAutomationRegistry {
             guard updatedLayerCount > 0 else {
                 throw XomoAutomationCallError.operationFailed(
                     "No editable layer needs the requested gradient overlay end color"
+                )
+            }
+            return .object([
+                "updatedLayerCount": .number(Double(updatedLayerCount))
+            ])
+        case "gradientOverlayStops":
+            guard let value = arguments["stops"] else {
+                throw XomoAutomationCallError.invalidArgument("stops is required")
+            }
+            let stops = try requiredGradientStops(value, path: "stops")
+            let updatedLayerCount = viewModel.setSelectedLayerGradientOverlayColorStops(stops)
+            guard updatedLayerCount > 0 else {
+                throw XomoAutomationCallError.operationFailed(
+                    "No editable layer needs the requested gradient overlay stops"
                 )
             }
             return .object([
@@ -6521,8 +6551,8 @@ private extension XomoAutomationRegistry {
             "direction": XomoAutomationSchema.string(description: "Preset ordering direction", values: ImageEditorLayerStylePresetMoveDirection.allCases.map(\.rawValue)),
             "path": XomoAutomationSchema.string(description: "Local .xomostyles path for preset import preview, import, or export")
         ], required: ["action"]),
-        tool("xomo.layer.style_settings", "Set effect scale; complete stroke gradient endpoints, stroke pattern color/offset, and other stroke settings; shadow; inner-shadow; outer/inner-glow settings; color-overlay color/opacity; complete gradient-overlay and pattern-overlay settings including pattern phase offsets; bevel settings; and per-effect global-light linkage with actual updated-layer counts. Stroke/overlay gradient start, stroke/overlay pattern, and bevel colors use the current foreground color; stroke/overlay gradient end colors use the current background color. Shadow, inner-shadow, and bevel angle updates report whether global light changed; direct global-light updates report affected layer/effect counts across all linked shadows, inner shadows, and bevels.", [
-            "property": XomoAutomationSchema.string(description: "Layer style property", values: ["effectScale", "strokeWidth", "strokePosition", "strokeFillType", "strokeGradientStartColor", "strokeGradientEndColor", "strokeGradientStyle", "strokeGradientAngle", "strokePatternKind", "strokePatternColor", "strokePatternScale", "strokePatternOffsetX", "strokePatternOffsetY", "strokeOpacity", "strokeColor", "shadowOpacity", "shadowColor", "shadowBlur", "shadowSpread", "shadowNoise", "shadowContour", "shadowDistance", "shadowAngle", "shadowUsesGlobalLight", "globalLightAngle", "innerShadowOpacity", "innerShadowBlur", "innerShadowChoke", "innerShadowNoise", "innerShadowContour", "innerShadowDistance", "innerShadowAngle", "innerShadowUsesGlobalLight", "outerGlowOpacity", "outerGlowColor", "outerGlowBlur", "outerGlowSpread", "outerGlowTechnique", "outerGlowNoise", "outerGlowContour", "outerGlowRange", "outerGlowJitter", "innerGlowOpacity", "innerGlowColor", "innerGlowBlur", "innerGlowChoke", "innerGlowTechnique", "innerGlowNoise", "innerGlowSource", "innerGlowContour", "innerGlowRange", "innerGlowJitter", "colorOverlayOpacity", "colorOverlayColor", "gradientOverlayOpacity", "gradientOverlayStartColor", "gradientOverlayEndColor", "gradientOverlayScale", "gradientOverlayAngle", "gradientOverlayStyle", "gradientOverlayReverse", "gradientOverlayDither", "patternOverlayKind", "patternOverlayColor", "patternOverlayOpacity", "patternOverlayScale", "patternOverlayOffsetX", "patternOverlayOffsetY", "satinOpacity", "satinColor", "satinDistance", "satinSize", "satinAngle", "satinInvert", "satinContour", "bevelSize", "bevelOpacity", "bevelHighlightColor", "bevelShadowColor", "bevelSoften", "bevelAngle", "bevelUsesGlobalLight", "bevelDirection"]),
+        tool("xomo.layer.style_settings", "Set effect scale; complete stroke gradient endpoints, stroke pattern color/offset, and other stroke settings; shadow; inner-shadow; outer/inner-glow settings; color-overlay color/opacity; complete gradient-overlay stops and pattern-overlay settings including pattern phase offsets; bevel settings; and per-effect global-light linkage with actual updated-layer counts. Stroke/overlay gradient start, stroke/overlay pattern, and bevel colors use the current foreground color; stroke/overlay gradient end colors use the current background color. Shadow, inner-shadow, and bevel angle updates report whether global light changed; direct global-light updates report affected layer/effect counts across all linked shadows, inner shadows, and bevels.", [
+            "property": XomoAutomationSchema.string(description: "Layer style property", values: ["effectScale", "strokeWidth", "strokePosition", "strokeFillType", "strokeGradientStartColor", "strokeGradientEndColor", "strokeGradientStyle", "strokeGradientAngle", "strokePatternKind", "strokePatternColor", "strokePatternScale", "strokePatternOffsetX", "strokePatternOffsetY", "strokeOpacity", "strokeColor", "shadowOpacity", "shadowColor", "shadowBlur", "shadowSpread", "shadowNoise", "shadowContour", "shadowDistance", "shadowAngle", "shadowUsesGlobalLight", "globalLightAngle", "innerShadowOpacity", "innerShadowBlur", "innerShadowChoke", "innerShadowNoise", "innerShadowContour", "innerShadowDistance", "innerShadowAngle", "innerShadowUsesGlobalLight", "outerGlowOpacity", "outerGlowColor", "outerGlowBlur", "outerGlowSpread", "outerGlowTechnique", "outerGlowNoise", "outerGlowContour", "outerGlowRange", "outerGlowJitter", "innerGlowOpacity", "innerGlowColor", "innerGlowBlur", "innerGlowChoke", "innerGlowTechnique", "innerGlowNoise", "innerGlowSource", "innerGlowContour", "innerGlowRange", "innerGlowJitter", "colorOverlayOpacity", "colorOverlayColor", "gradientOverlayOpacity", "gradientOverlayStartColor", "gradientOverlayEndColor", "gradientOverlayStops", "gradientOverlayScale", "gradientOverlayAngle", "gradientOverlayStyle", "gradientOverlayReverse", "gradientOverlayDither", "patternOverlayKind", "patternOverlayColor", "patternOverlayOpacity", "patternOverlayScale", "patternOverlayOffsetX", "patternOverlayOffsetY", "satinOpacity", "satinColor", "satinDistance", "satinSize", "satinAngle", "satinInvert", "satinContour", "bevelSize", "bevelOpacity", "bevelHighlightColor", "bevelShadowColor", "bevelSoften", "bevelAngle", "bevelUsesGlobalLight", "bevelDirection"]),
             "value": XomoAutomationSchema.number(description: "Numeric style value"),
             "position": XomoAutomationSchema.string(description: "Stroke position", values: ImageEditorStrokePosition.allCases.map(\.rawValue)),
             "fillType": XomoAutomationSchema.string(description: "Stroke fill type", values: ImageEditorStrokeFillType.allCases.map(\.rawValue)),
@@ -6530,6 +6560,7 @@ private extension XomoAutomationRegistry {
             "patternKind": XomoAutomationSchema.string(description: "Stroke pattern kind", values: ImageEditorPatternOverlayKind.allCases.map(\.rawValue)),
             "source": XomoAutomationSchema.string(description: "Inner glow source", values: ImageEditorInnerGlowSource.allCases.map(\.rawValue)),
             "gradientOverlayStyle": XomoAutomationSchema.string(description: "Gradient overlay style", values: ImageEditorGradientFillStyle.allCases.map(\.rawValue)),
+            "stops": gradientFillStopsSchema,
             "patternOverlayKind": XomoAutomationSchema.string(description: "Pattern overlay kind", values: ImageEditorPatternOverlayKind.allCases.map(\.rawValue)),
             "shadowContour": XomoAutomationSchema.string(description: "Drop shadow contour", values: ImageEditorLayerEffectContour.allCases.map(\.rawValue)),
             "innerShadowContour": XomoAutomationSchema.string(description: "Inner shadow contour", values: ImageEditorLayerEffectContour.allCases.map(\.rawValue)),

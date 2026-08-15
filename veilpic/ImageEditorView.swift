@@ -9947,6 +9947,7 @@ struct ImageEditorView: View {
                         .frame(width: 32)
                     Spacer(minLength: 4)
                 }
+                ImageEditorLayerStyleGradientOverlayStopsEditor(viewModel: viewModel)
                 HStack {
                     layerStyleNumericStepper(
                         state: viewModel.selectedLayerGradientOverlayOpacityState,

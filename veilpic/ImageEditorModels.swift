@@ -2774,6 +2774,7 @@ struct ImageEditorLayerStyle {
     var gradientOverlayAngle: CGFloat = 0
     var gradientOverlayReverse = false
     var gradientOverlayDither = false
+    var gradientOverlayColorStops: [ImageEditorGradientColorStop]? = nil
     var patternOverlayEnabled = false
     var patternOverlayKind = ImageEditorPatternOverlayKind.checkerboard
     var patternOverlayColor = NSColor.white
@@ -4349,7 +4350,8 @@ struct ImageEditorLayer: Identifiable {
                     startBlue: Double(style.gradientOverlayStartColor.usingColorSpace(.deviceRGB)?.blueComponent ?? 0),
                     endRed: Double(style.gradientOverlayEndColor.usingColorSpace(.deviceRGB)?.redComponent ?? 1),
                     endGreen: Double(style.gradientOverlayEndColor.usingColorSpace(.deviceRGB)?.greenComponent ?? 1),
-                    endBlue: Double(style.gradientOverlayEndColor.usingColorSpace(.deviceRGB)?.blueComponent ?? 1)
+                    endBlue: Double(style.gradientOverlayEndColor.usingColorSpace(.deviceRGB)?.blueComponent ?? 1),
+                    colorStops: style.gradientOverlayColorStops
                 ).renderedImage(
                     size: contentRect.size,
                     opacity: Double(style.gradientOverlayOpacity)

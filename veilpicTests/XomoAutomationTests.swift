@@ -13283,6 +13283,127 @@ struct XomoAutomationTests {
         #expect(viewModel.document.history.count == historyAfterEnd)
     }
 
+    @Test func registrySetsCompleteGradientOverlayStopsAcrossEditableSelection() throws {
+        let viewModel = makeViewModel()
+        let canvasSize = viewModel.document.canvasSize
+        var first = ImageEditorLayer.blank(name: "First", size: canvasSize)
+        var second = ImageEditorLayer.blank(name: "Second", size: canvasSize)
+        var locked = ImageEditorLayer.blank(name: "Locked", size: canvasSize)
+        let oldStops = [
+            ImageEditorGradientColorStop(position: 0, color: .black),
+            ImageEditorGradientColorStop(position: 1, color: .white)
+        ]
+        first.style.setGradientOverlayColorStops(oldStops)
+        second.style.setGradientOverlayColorStops(oldStops)
+        locked.style.setGradientOverlayColorStops(oldStops)
+        locked.isLocked = true
+        viewModel.document.layers = [first, second, locked]
+        viewModel.document.selectedLayerID = first.id
+        viewModel.document.selectedLayerIDs = [first.id, second.id, locked.id]
+        let historyCount = viewModel.document.history.count
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+
+        let toolsResponse = registry.execute(request(operation: "tools"))
+        let styleTool = try #require(
+            automationTool(named: "xomo.layer.style_settings", in: toolsResponse)
+        )
+        let inputSchema = try #require(styleTool["inputSchema"]?.objectValue)
+        let properties = try #require(inputSchema["properties"]?.objectValue)
+        let propertySchema = try #require(properties["property"]?.objectValue)
+        #expect(propertySchema["enum"]?.arrayValue?.contains(.string("gradientOverlayStops")) == true)
+        #expect(properties["stops"]?.objectValue?["type"] == .string("array"))
+
+        let stopsJSON: XomoJSONValue = .array([
+            .object([
+                "position": .number(0),
+                "midpoint": .number(0.25),
+                "color": .object([
+                    "red": .number(1), "green": .number(0),
+                    "blue": .number(0), "alpha": .number(1)
+                ])
+            ]),
+            .object([
+                "position": .number(0.6),
+                "midpoint": .number(0.75),
+                "color": .object([
+                    "red": .number(0), "green": .number(1),
+                    "blue": .number(0), "alpha": .number(0.4)
+                ])
+            ]),
+            .object([
+                "position": .number(1),
+                "color": .object([
+                    "red": .number(0), "green": .number(0),
+                    "blue": .number(1), "alpha": .number(1)
+                ])
+            ])
+        ])
+        let expectedStops = [
+            ImageEditorGradientColorStop(
+                position: 0, red: 1, green: 0, blue: 0, alpha: 1, midpoint: 0.25
+            ),
+            ImageEditorGradientColorStop(
+                position: 0.6, red: 0, green: 1, blue: 0, alpha: 0.4, midpoint: 0.75
+            ),
+            ImageEditorGradientColorStop(position: 1, red: 0, green: 0, blue: 1)
+        ]
+        let result = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style_settings",
+            arguments: [
+                "property": .string("gradientOverlayStops"),
+                "stops": stopsJSON
+            ]
+        ))
+
+        #expect(result.ok)
+        #expect(result.result?.objectValue?["updatedLayerCount"] == .number(2))
+        #expect(viewModel.document.layers[0].style.gradientOverlayColorStops == expectedStops)
+        #expect(viewModel.document.layers[1].style.gradientOverlayColorStops == expectedStops)
+        #expect(viewModel.document.layers[2].style.gradientOverlayColorStops == oldStops)
+        #expect(viewModel.document.layers[0].style.gradientOverlayEnabled)
+        #expect(viewModel.document.layers[1].style.gradientOverlayEnabled)
+        #expect(viewModel.document.history.count == historyCount + 1)
+
+        let historyAfterUpdate = viewModel.document.history.count
+        let repeated = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style_settings",
+            arguments: [
+                "property": .string("gradientOverlayStops"),
+                "stops": stopsJSON
+            ]
+        ))
+        #expect(!repeated.ok)
+        #expect(viewModel.document.history.count == historyAfterUpdate)
+
+        let invalid = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style_settings",
+            arguments: [
+                "property": .string("gradientOverlayStops"),
+                "stops": .array([
+                    .object([
+                        "position": .number(1),
+                        "color": .object([
+                            "red": .number(1), "green": .number(0), "blue": .number(0)
+                        ])
+                    ]),
+                    .object([
+                        "position": .number(0),
+                        "color": .object([
+                            "red": .number(0), "green": .number(0), "blue": .number(1)
+                        ])
+                    ])
+                ])
+            ]
+        ))
+        #expect(!invalid.ok)
+        #expect(viewModel.document.layers[0].style.gradientOverlayColorStops == expectedStops)
+        #expect(viewModel.document.history.count == historyAfterUpdate)
+    }
+
     @Test func registrySetsLayerStyleGradientOverlayScaleAcrossEditableSelection() throws {
         let viewModel = makeViewModel()
         let canvasSize = viewModel.document.canvasSize

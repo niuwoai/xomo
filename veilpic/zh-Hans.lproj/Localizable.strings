@@ -1345,6 +1345,8 @@
 "imageEditor.properties.gradientOverlayStyle" = "渐变叠加样式";
 "imageEditor.properties.gradientOverlayStartColor" = "渐变起点颜色";
 "imageEditor.properties.gradientOverlayEndColor" = "渐变终点颜色";
+"imageEditor.properties.gradientOverlayStops" = "渐变颜色色标";
+"imageEditor.action.gradientOverlayStopsApply" = "应用渐变";
 "imageEditor.properties.gradientOverlayScaleValue" = "渐变叠加缩放：%d%%";
 "imageEditor.properties.gradientOverlayAngleValue" = "渐变角度：%d°";
 "imageEditor.properties.patternOverlayKind" = "图案";

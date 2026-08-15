@@ -697,6 +697,18 @@ extension ImageEditorViewModel {
         document.selectedLayer?.style.gradientOverlayEndColor ?? .white
     }
 
+    var selectedLayerGradientOverlayColorStops: [ImageEditorGradientColorStop] {
+        document.selectedLayer?.style.resolvedGradientOverlayColorStops
+            ?? ImageEditorGradientFillContent.shapeLinear(
+                startColor: .systemRed,
+                endColor: .white
+            ).shapeColorStops
+    }
+
+    var selectedLayerGradientOverlayColorStopsState: ImageEditorLayerStyleValueState<[ImageEditorGradientColorStop]> {
+        selectedLayerStyleValueState(\.resolvedGradientOverlayColorStops)
+    }
+
     var selectedLayerGradientOverlayStyle: ImageEditorGradientFillStyle {
         document.selectedLayer?.style.gradientOverlayStyle ?? .linear
     }
@@ -1687,7 +1699,7 @@ extension ImageEditorViewModel {
     func setSelectedLayerGradientOverlayStartColor(_ color: NSColor) -> Int {
         updateSelectedLayerStyle {
             $0.gradientOverlayEnabled = true
-            $0.gradientOverlayStartColor = color.usingColorSpace(.sRGB) ?? color
+            $0.setGradientOverlayEndpointColor(color, atStart: true)
         }
     }
 
@@ -1695,7 +1707,20 @@ extension ImageEditorViewModel {
     func setSelectedLayerGradientOverlayEndColor(_ color: NSColor) -> Int {
         updateSelectedLayerStyle {
             $0.gradientOverlayEnabled = true
-            $0.gradientOverlayEndColor = color.usingColorSpace(.sRGB) ?? color
+            $0.setGradientOverlayEndpointColor(color, atStart: false)
+        }
+    }
+
+    @discardableResult
+    func setSelectedLayerGradientOverlayColorStops(
+        _ stops: [ImageEditorGradientColorStop]
+    ) -> Int {
+        let normalizedStops = ImageEditorGradientFillContent.shapeLinear(
+            colorStops: stops
+        ).shapeColorStops
+        return updateSelectedLayerStyle {
+            $0.gradientOverlayEnabled = true
+            $0.setGradientOverlayColorStops(normalizedStops)
         }
     }
 
