@@ -196,6 +196,14 @@ extension ImageEditorViewModel {
         hasMovableDeepSelectedCanvasLayer(at: point) || prepareXomoObjectMove(at: point)
     }
 
+    /// Option-drag preserves an already deep-selected child in tools mode.
+    /// Otherwise the conventional selection path chooses the component object
+    /// or ordinary frontmost layer before the duplication transaction starts.
+    func prepareCanvasCloneMove(at point: CGPoint) -> Bool {
+        hasMovableDeepSelectedCanvasLayer(at: point)
+            || selectMovableCanvasTarget(at: point)
+    }
+
     /// Shared move-target selection for both the transparent object hit target
     /// and the canvas gesture fallback used by macOS 13. Component instances
     /// must win before ordinary layers so their children never steal a drag.

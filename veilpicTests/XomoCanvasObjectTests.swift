@@ -394,6 +394,93 @@ struct XomoCanvasObjectTests {
         #expect(viewModel.document.layers.contains { $0.id == layer.id })
     }
 
+    @Test func optionDragDuplicatesOnlyTheDeepSelectedComponentChild() throws {
+        let viewModel = makeViewModel()
+        viewModel.insertXomoComponent(.button, at: CGPoint(x: 80, y: 90))
+        let group = try #require(viewModel.document.selectedLayer)
+        let point = CGPoint(x: 160, y: 112)
+        let target = try #require(
+            viewModel.selectMoveToolDoubleClickTarget(at: point, hitTolerance: 0)
+        )
+        let originalFrames: [UUID: CGRect] = Dictionary(
+            uniqueKeysWithValues: viewModel.document.layers.compactMap { layer in
+                guard layer.groupID == group.id else { return nil }
+                return (layer.id, layer.frame)
+            }
+        )
+        let targetFrame = try #require(originalFrames[target.layerID])
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.prepareCanvasCloneMove(at: point))
+        #expect(viewModel.document.selectedLayerID == target.layerID)
+        #expect(viewModel.beginDuplicatingSelectedLayerForMove())
+        let duplicate = try #require(viewModel.document.selectedLayer)
+        #expect(duplicate.id != target.layerID)
+        #expect(duplicate.groupID == group.id)
+        #expect(!duplicate.isGroup)
+        viewModel.moveSelectedLayer(by: CGSize(width: 24, height: 12), snapping: false)
+        viewModel.finishMovingSelectedLayer()
+
+        #expect(
+            viewModel.document.layers.first { $0.id == duplicate.id }?.frame
+                == targetFrame.offsetBy(dx: 24, dy: 12)
+        )
+        for (originalID, originalFrame) in originalFrames {
+            #expect(viewModel.document.layers.first { $0.id == originalID }?.frame == originalFrame)
+        }
+        #expect(viewModel.document.layers.contains { $0.id == group.id })
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerDuplicate"))
+
+        viewModel.undo()
+        #expect(!viewModel.document.layers.contains { $0.id == duplicate.id })
+        #expect(viewModel.document.layers.contains { $0.id == target.layerID })
+        #expect(viewModel.document.layers.contains { $0.id == group.id })
+    }
+
+    @Test func componentModeClonePreparationStillSelectsTheWholeObject() throws {
+        let viewModel = makeViewModel()
+        viewModel.insertXomoComponent(.button, at: CGPoint(x: 80, y: 90))
+        let group = try #require(viewModel.document.selectedLayer)
+        let point = CGPoint(x: 160, y: 112)
+        let target = try #require(
+            viewModel.selectMoveToolDoubleClickTarget(at: point, hitTolerance: 0)
+        )
+        #expect(viewModel.document.selectedLayerID == target.layerID)
+
+        viewModel.selectLeftSidebarTab(.components)
+        #expect(viewModel.prepareCanvasCloneMove(at: point))
+        #expect(viewModel.document.selectedLayerID == group.id)
+        #expect(viewModel.document.selectedLayerIDs == [group.id])
+    }
+
+    @Test func optionCloneGesturePreparesTheDeepTargetBeforeDuplicating() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let cloneStart = try #require(
+            source.range(of: "if ImageEditorObjectDragEventPolicy.allowsCloneDrag(")
+        )
+        let cloneEnd = try #require(
+            source[cloneStart.upperBound...].range(of: "if isCanvasCloneGestureActive {")
+        )
+        let cloneSource = source[cloneStart.lowerBound..<cloneEnd.lowerBound]
+        let prepareCall = try #require(
+            cloneSource.range(of: "viewModel.prepareCanvasCloneMove(")
+        )
+        let beginCall = try #require(
+            cloneSource.range(of: "viewModel.beginDuplicatingSelectedLayerForMove()")
+        )
+
+        #expect(prepareCall.lowerBound < beginCall.lowerBound)
+        #expect(!cloneSource.contains("viewModel.selectMovableCanvasTarget("))
+        #expect(cloneSource.contains("isCanvasCloneGestureActive = true"))
+    }
+
     @Test func commandCanvasSelectionCanEnterAVisibleComponentChild() throws {
         let viewModel = makeViewModel()
         viewModel.insertXomoComponent(.button, at: CGPoint(x: 80, y: 90))

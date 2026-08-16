@@ -3880,10 +3880,10 @@ struct ImageEditorView: View {
                     ),
                        !isCanvasCloneGestureActive,
                        !isCanvasSelectionGestureActive,
-                       !isObjectMoveGestureActive {
+                        !isObjectMoveGestureActive {
                         let pressedImagePoint = imagePoint(from: value.startLocation, in: size)
                         if let pressedImagePoint,
-                           viewModel.selectMovableCanvasTarget(at: pressedImagePoint) {
+                           viewModel.prepareCanvasCloneMove(at: pressedImagePoint) {
                             isCanvasCloneGestureActive = true
                             if viewModel.beginDuplicatingSelectedLayerForMove() {
                                 resetObjectMoveTracking()

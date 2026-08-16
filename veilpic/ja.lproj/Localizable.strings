@@ -718,7 +718,7 @@
 "imageEditor.tool.directSelection" = "直接選択";
 "imageEditor.tool.hand" = "手のひら";
 "imageEditor.tool.zoom" = "ズーム";
-"imageEditor.tool.move.help" = "移動：ダブルクリックでグループ内を選択し、その子レイヤーを直接ドラッグ、Escape で親へ戻ります。";
+"imageEditor.tool.move.help" = "移動：ダブルクリックでグループ内を選択し、子レイヤーを直接ドラッグ、Option ドラッグで複製、Escape で親へ戻ります。";
 "imageEditor.tool.marquee.help" = "矩形選択：ドラッグして矩形の選択範囲を作成します。";
 "imageEditor.tool.lasso.help" = "なげなわ：輪郭に沿って自由に選択範囲を描きます。";
 "imageEditor.tool.magicWand.help" = "自動選択：近い色の連続した領域を選択します。";

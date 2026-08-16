@@ -718,7 +718,7 @@
 "imageEditor.tool.directSelection" = "Direct Selection";
 "imageEditor.tool.hand" = "Hand";
 "imageEditor.tool.zoom" = "Zoom";
-"imageEditor.tool.move.help" = "Move: double-click to select inside a group, drag that child directly, or press Escape to return to its parent.";
+"imageEditor.tool.move.help" = "Move: double-click inside a group, drag the child directly, Option-drag to copy it, or press Escape for its parent.";
 "imageEditor.tool.marquee.help" = "Marquee: drag to create a rectangular selection.";
 "imageEditor.tool.lasso.help" = "Lasso: draw freely around the area to select.";
 "imageEditor.tool.magicWand.help" = "Magic Wand: select a contiguous area with similar colors.";
