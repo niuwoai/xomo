@@ -36,6 +36,34 @@ struct ImageEditorLayerThumbnailSelectionTests {
         ) == nil)
     }
 
+    @Test func pureShiftTogglesOnlyMaskThumbnailsAndCommandShiftKeepsSelectionPriority() {
+        for source in [
+            ImageEditorLayerThumbnailSelectionSource.rasterMask,
+            .vectorMask
+        ] {
+            #expect(ImageEditorLayerThumbnailSelectionPolicy.togglesMaskEnabled(
+                sidebarTab: .tools,
+                source: source,
+                modifierFlags: [.shift]
+            ))
+            #expect(!ImageEditorLayerThumbnailSelectionPolicy.togglesMaskEnabled(
+                sidebarTab: .tools,
+                source: source,
+                modifierFlags: [.command, .shift]
+            ))
+        }
+        #expect(!ImageEditorLayerThumbnailSelectionPolicy.togglesMaskEnabled(
+            sidebarTab: .tools,
+            source: .transparency,
+            modifierFlags: [.shift]
+        ))
+        #expect(!ImageEditorLayerThumbnailSelectionPolicy.togglesMaskEnabled(
+            sidebarTab: .components,
+            source: .rasterMask,
+            modifierFlags: [.shift]
+        ))
+    }
+
     @Test func clickedTransparencyThumbnailTargetsItsLayerWithoutChangingLayerOrToolMode() throws {
         let fixture = makeLayerFixture()
         let viewModel = fixture.viewModel
@@ -112,6 +140,62 @@ struct ImageEditorLayerThumbnailSelectionTests {
         #expect(viewModel.statusText == L10n.text("imageEditor.status.vectorMaskSelection"))
     }
 
+    @Test func clickedMaskTogglesAreSingleTargetUndoableAndSelectionNeutral() throws {
+        let fixture = makeLayerFixture(includeMasks: true)
+        let viewModel = fixture.viewModel
+        let selectedLayerID = viewModel.document.selectedLayerID
+        let selectedLayerIDs = viewModel.document.selectedLayerIDs
+        let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
+
+        #expect(viewModel.toggleLayerMaskEnabled(layerID: fixture.thumbnailLayerID))
+        var target = try #require(viewModel.document.layers.first { $0.id == fixture.thumbnailLayerID })
+        #expect(!target.isMaskEnabled)
+        #expect(target.isVectorMaskEnabled)
+        #expect(viewModel.document.selectedLayerID == selectedLayerID)
+        #expect(viewModel.document.selectedLayerIDs == selectedLayerIDs)
+        #expect(viewModel.undoStack.count == undoCount + 1)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerMaskDisable"))
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.layerMaskDisabled"))
+
+        viewModel.undo()
+        target = try #require(viewModel.document.layers.first { $0.id == fixture.thumbnailLayerID })
+        #expect(target.isMaskEnabled)
+
+        #expect(viewModel.toggleVectorMaskEnabled(layerID: fixture.thumbnailLayerID))
+        target = try #require(viewModel.document.layers.first { $0.id == fixture.thumbnailLayerID })
+        #expect(target.isMaskEnabled)
+        #expect(!target.isVectorMaskEnabled)
+        #expect(viewModel.document.selectedLayerID == selectedLayerID)
+        #expect(viewModel.document.selectedLayerIDs == selectedLayerIDs)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.vectorMaskDisable"))
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.vectorMaskDisabled"))
+
+        viewModel.undo()
+        target = try #require(viewModel.document.layers.first { $0.id == fixture.thumbnailLayerID })
+        #expect(target.isVectorMaskEnabled)
+    }
+
+    @Test func lockedClickedMaskRejectsToggleWithoutCreatingTransaction() throws {
+        let fixture = makeLayerFixture(includeMasks: true)
+        let viewModel = fixture.viewModel
+        let index = try #require(viewModel.document.layers.firstIndex { $0.id == fixture.thumbnailLayerID })
+        viewModel.document.layers[index].isLocked = true
+        let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
+
+        #expect(!viewModel.toggleLayerMaskEnabled(layerID: fixture.thumbnailLayerID))
+        #expect(!viewModel.toggleVectorMaskEnabled(layerID: fixture.thumbnailLayerID))
+
+        let target = try #require(viewModel.document.layers.first { $0.id == fixture.thumbnailLayerID })
+        #expect(target.isMaskEnabled)
+        #expect(target.isVectorMaskEnabled)
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.undoStack.count == undoCount)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.operationFailed"))
+    }
+
     @Test func layerPanelWiresEachThumbnailToTheExplicitSelectionSource() throws {
         let repositoryRoot = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()
@@ -122,11 +206,13 @@ struct ImageEditorLayerThumbnailSelectionTests {
         )
 
         #expect(source.contains("loadSelectionFromLayerThumbnail(layer, source: .transparency)"))
-        #expect(source.contains("loadSelectionFromLayerThumbnail(layer, source: .rasterMask)"))
-        #expect(source.contains("loadSelectionFromLayerThumbnail(layer, source: .vectorMask)"))
+        #expect(source.contains("handleLayerThumbnailGesture(layer, source: .rasterMask)"))
+        #expect(source.contains("handleLayerThumbnailGesture(layer, source: .vectorMask)"))
         #expect(source.contains("viewModel.loadSelectionFromLayerTransparency(layerID: layer.id, mode: mode)"))
         #expect(source.contains("viewModel.loadSelectionFromLayerMask(layerID: layer.id, mode: mode)"))
         #expect(source.contains("viewModel.loadSelectionFromVectorMask(layerID: layer.id, mode: mode)"))
+        #expect(source.contains("viewModel.toggleLayerMaskEnabled(layerID: layer.id)"))
+        #expect(source.contains("viewModel.toggleVectorMaskEnabled(layerID: layer.id)"))
         #expect(source.contains("sidebarTab: viewModel.selectedLeftSidebarTab"))
     }
 

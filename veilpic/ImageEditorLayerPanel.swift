@@ -11,7 +11,7 @@ import UniformTypeIdentifiers
 
 private let imageEditorLayerRowDragStride: CGFloat = 66
 
-enum ImageEditorLayerThumbnailSelectionSource {
+enum ImageEditorLayerThumbnailSelectionSource: Equatable {
     case transparency
     case rasterMask
     case vectorMask
@@ -36,6 +36,18 @@ enum ImageEditorLayerThumbnailSelectionPolicy {
         default:
             return nil
         }
+    }
+
+    static func togglesMaskEnabled(
+        sidebarTab: XomoLeftSidebarTab,
+        source: ImageEditorLayerThumbnailSelectionSource,
+        modifierFlags: NSEvent.ModifierFlags
+    ) -> Bool {
+        guard sidebarTab == .tools,
+              source != .transparency
+        else { return false }
+        let relevantFlags = modifierFlags.intersection([.command, .shift, .option, .control])
+        return relevantFlags == [.shift]
     }
 }
 
@@ -2416,7 +2428,7 @@ extension ImageEditorView {
                 .foregroundStyle(layer.isMaskLinked ? Color(nsColor: ImageEditorTheme.mutedText) : Color(nsColor: ImageEditorTheme.selected))
                 .help(L10n.text(layer.isMaskLinked ? "imageEditor.action.layerMaskLinked" : "imageEditor.action.layerMaskUnlinked"))
             Button {
-                if !loadSelectionFromLayerThumbnail(layer, source: .rasterMask) {
+                if !handleLayerThumbnailGesture(layer, source: .rasterMask) {
                     viewModel.selectLayer(layer.id, editingMask: true)
                 }
             } label: {
@@ -2447,7 +2459,7 @@ extension ImageEditorView {
                 .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
                 .help(L10n.text("imageEditor.layer.vectorMaskBadge"))
             Button {
-                if !loadSelectionFromLayerThumbnail(layer, source: .vectorMask) {
+                if !handleLayerThumbnailGesture(layer, source: .vectorMask) {
                     viewModel.selectLayer(layer.id, editingMask: false)
                     viewModel.editSelectedVectorMaskAsPath()
                 }
@@ -2488,6 +2500,29 @@ extension ImageEditorView {
             viewModel.loadSelectionFromVectorMask(layerID: layer.id, mode: mode)
         }
         return true
+    }
+
+    private func handleLayerThumbnailGesture(
+        _ layer: ImageEditorLayer,
+        source: ImageEditorLayerThumbnailSelectionSource
+    ) -> Bool {
+        let flags = NSEvent.modifierFlags
+        if ImageEditorLayerThumbnailSelectionPolicy.togglesMaskEnabled(
+            sidebarTab: viewModel.selectedLeftSidebarTab,
+            source: source,
+            modifierFlags: flags
+        ) {
+            switch source {
+            case .transparency:
+                return false
+            case .rasterMask:
+                viewModel.toggleLayerMaskEnabled(layerID: layer.id)
+            case .vectorMask:
+                viewModel.toggleVectorMaskEnabled(layerID: layer.id)
+            }
+            return true
+        }
+        return loadSelectionFromLayerThumbnail(layer, source: source)
     }
 
     private func layerBadges(_ layer: ImageEditorLayer) -> some View {

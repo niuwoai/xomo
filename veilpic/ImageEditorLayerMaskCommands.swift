@@ -571,6 +571,32 @@ extension ImageEditorViewModel {
         }
     }
 
+    @discardableResult
+    func toggleLayerMaskEnabled(layerID: UUID) -> Bool {
+        guard let index = document.layers.firstIndex(where: { $0.id == layerID }),
+              !document.isEffectivelyLocked(document.layers[index]),
+              document.layers[index].mask != nil
+        else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return false
+        }
+
+        pushUndo()
+        document.layers[index].isMaskEnabled.toggle()
+        let isEnabled = document.layers[index].isMaskEnabled
+        appendHistory(L10n.text(
+            isEnabled
+                ? "imageEditor.history.layerMaskEnable"
+                : "imageEditor.history.layerMaskDisable"
+        ))
+        statusText = L10n.text(
+            isEnabled
+                ? "imageEditor.status.layerMaskEnabled"
+                : "imageEditor.status.layerMaskDisabled"
+        )
+        return true
+    }
+
     func toggleLayerMaskLinked() {
         let indices = layerMaskToggleLinkedIndices()
         guard !indices.isEmpty else {
@@ -639,6 +665,32 @@ extension ImageEditorViewModel {
                 ? L10n.format("imageEditor.status.vectorMaskEnabledSelected", changedIndices.count)
                 : L10n.format("imageEditor.status.vectorMaskDisabledSelected", changedIndices.count)
         }
+    }
+
+    @discardableResult
+    func toggleVectorMaskEnabled(layerID: UUID) -> Bool {
+        guard let index = document.layers.firstIndex(where: { $0.id == layerID }),
+              !document.isEffectivelyLocked(document.layers[index]),
+              document.layers[index].vectorMask != nil
+        else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return false
+        }
+
+        pushUndo()
+        document.layers[index].isVectorMaskEnabled.toggle()
+        let isEnabled = document.layers[index].isVectorMaskEnabled
+        appendHistory(L10n.text(
+            isEnabled
+                ? "imageEditor.history.vectorMaskEnable"
+                : "imageEditor.history.vectorMaskDisable"
+        ))
+        statusText = L10n.text(
+            isEnabled
+                ? "imageEditor.status.vectorMaskEnabled"
+                : "imageEditor.status.vectorMaskDisabled"
+        )
+        return true
     }
 
     func deleteVectorMask() {
