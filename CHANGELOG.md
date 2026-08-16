@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.12.0-rc1096 - 2026-08-17
+
+### Fixed
+- Quick Mask 的“颜色指示：选定区域”现在拥有完整 Photoshop 语义，不再只反转红色覆盖显示：黑色增加选区，白色减少选区，灰色按反向亮度写入部分选择；“颜色指示：蒙版区域”继续保持黑色减选、白色加选。
+
+### Changed
+- MCP/CLI 的 Quick Mask `paint.reveal` 继续表达稳定的选区结果，不受界面当前“蒙版区域/选定区域”显示选项影响；真实选区变化仍只写一步 History/Undo，无变化落笔保持幂等。
+
+### Verification
+- “选定区域”反向黑/白/灰专项与既有 Quick Mask 回归 12/12、偏好持久化 3/3、MCP 自动化语义 1/1、CLI 2/2、发布契约 7/7（21 项断言）及最终 `build-for-testing` 通过；本版本不触发周期 Universal Release、完整冒烟与 `/Applications` 安装，下一次完整门禁为 rc1120。
+
 ## 2.12.0-rc1095 - 2026-08-17
 
 ### Added

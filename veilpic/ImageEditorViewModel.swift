@@ -6037,7 +6037,21 @@ final class ImageEditorViewModel: ObservableObject {
         usingBackgroundColor: Bool
     ) {
         let paintColor = usingBackgroundColor ? backgroundColor : foregroundColor
-        let targetAlpha = quickMaskSelectionAlpha(for: paintColor)
+        paintQuickMask(samples: samples, targetAlpha: quickMaskSelectionAlpha(for: paintColor))
+    }
+
+    func paintQuickMaskSelection(
+        samples: [ImageEditorBrushStrokeSample],
+        reveal: Bool
+    ) {
+        guard isQuickMaskMode else { return }
+        paintQuickMask(samples: samples, targetAlpha: reveal ? UInt8.max : UInt8.min)
+    }
+
+    private func paintQuickMask(
+        samples: [ImageEditorBrushStrokeSample],
+        targetAlpha: UInt8
+    ) {
         guard let selection = document.selection,
               let currentMask = selection.rasterizedMask(canvasSize: document.canvasSize),
               let updatedMask = currentMask.paintedByQuickMaskStroke(
@@ -6097,7 +6111,12 @@ final class ImageEditorViewModel: ObservableObject {
         let luminance = 0.2126 * rgb.redComponent
             + 0.7152 * rgb.greenComponent
             + 0.0722 * rgb.blueComponent
-        return UInt8((max(0, min(1, luminance)) * CGFloat(UInt8.max)).rounded())
+        let grayscaleAlpha = UInt8(
+            (max(0, min(1, luminance)) * CGFloat(UInt8.max)).rounded()
+        )
+        return quickMaskOverlayTarget == .maskedAreas
+            ? grayscaleAlpha
+            : UInt8.max - grayscaleAlpha
     }
 
     func setCloneSource(at point: CGPoint?) {

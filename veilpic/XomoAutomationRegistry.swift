@@ -5002,9 +5002,9 @@ final class XomoAutomationRegistry {
             guard viewModel.isQuickMaskMode else {
                 throw XomoAutomationCallError.operationFailed("Quick Mask is not active")
             }
-            viewModel.drawBrush(
+            viewModel.paintQuickMaskSelection(
                 samples: try requiredBrushSamples("points", in: arguments),
-                erase: arguments["reveal"]?.boolValue ?? false
+                reveal: arguments["reveal"]?.boolValue ?? false
             )
         default:
             throw XomoAutomationCallError.invalidArgument("Unknown quick mask action: \(action)")

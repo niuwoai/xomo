@@ -3189,13 +3189,16 @@ struct XomoAutomationTests {
             arguments: [
                 "action": .string("paint"),
                 "points": .array([
-                    .object(["x": .number(24), "y": .number(24)]),
-                    .object(["x": .number(36), "y": .number(36)])
+                    .object(["x": .number(88), "y": .number(88)])
                 ]),
                 "reveal": .bool(true)
             ]
         ))
         #expect(paintResponse.ok)
+        let revealedMask = try #require(
+            viewModel.document.selection?.rasterizedMask(canvasSize: viewModel.document.canvasSize)
+        )
+        #expect(revealedMask.alpha[88 * revealedMask.width + 88] == UInt8.max)
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.quickMaskReveal"))
 
         let disabled = registry.execute(request(

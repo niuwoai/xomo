@@ -413,6 +413,40 @@ struct ImageEditorSelectionOperationTests {
         #expect(viewModel.backgroundColor == originalBackground)
     }
 
+    @Test func selectedAreasQuickMaskInvertsBlackWhiteAndGrayPainting() throws {
+        let canvasSize = NSSize(width: 32, height: 24)
+        let viewModel = ImageEditorViewModel(
+            sourceName: "quick-mask-selected-areas.png",
+            image: testImage(size: canvasSize)
+        ) { _ in }
+        viewModel.createRectSelection(from: CGPoint(x: 4, y: 4), to: CGPoint(x: 14, y: 14))
+        viewModel.setQuickMaskOverlayTarget(.selectedAreas)
+        viewModel.brushSize = 4
+        viewModel.hardness = 1
+        viewModel.opacity = 1
+        viewModel.toggleQuickMaskMode()
+        let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
+
+        viewModel.drawBrush(points: [CGPoint(x: 22, y: 10)])
+        var mask = try #require(viewModel.document.selection?.rasterizedMask(canvasSize: canvasSize))
+        #expect(maskAlpha(mask, x: 22, y: 10) == UInt8.max)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.quickMaskReveal"))
+
+        viewModel.drawBrush(points: [CGPoint(x: 8, y: 8)], erase: true)
+        mask = try #require(viewModel.document.selection?.rasterizedMask(canvasSize: canvasSize))
+        #expect(maskAlpha(mask, x: 8, y: 8) == UInt8.min)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.quickMaskHide"))
+
+        viewModel.foregroundColor = NSColor(deviceWhite: 0.25, alpha: 1)
+        viewModel.drawBrush(points: [CGPoint(x: 18, y: 18)])
+        mask = try #require(viewModel.document.selection?.rasterizedMask(canvasSize: canvasSize))
+        #expect((190...193).contains(maskAlpha(mask, x: 18, y: 18)))
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.quickMaskPaintTone"))
+        #expect(viewModel.document.history.count == historyCount + 3)
+        #expect(viewModel.undoStack.count == undoCount + 3)
+    }
+
     @Test func quickMaskStrokeHonorsOpacityAndBrushDiameter() throws {
         let width = 16
         let height = 16
