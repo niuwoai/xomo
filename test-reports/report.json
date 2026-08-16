@@ -1,36 +1,24 @@
 {
-  "generated_at": "2026-08-16 15:28:41 +0800",
-  "total": 2,
-  "passed": 2,
+  "generated_at": "2026-08-16 15:36:35 +0800",
+  "total": 1,
+  "passed": 1,
   "failed": 0,
-  "total_tests": 2,
-  "passed_tests": 2,
+  "total_tests": 1,
+  "passed_tests": 1,
   "failed_tests_in_failed_groups": 0,
   "jobs": 1,
   "results": [
     {
-      "suite": "ImageEditorSelectionTargetBoundsTests",
-      "method": "moveAlignmentTargetDefaultsToSelectedLayerBounds",
-      "identifier": "veilpicTests/ImageEditorSelectionTargetBoundsTests/moveAlignmentTargetDefaultsToSelectedLayerBounds()",
-      "file": "ImageEditorSelectionTargetBoundsTests.swift",
+      "suite": "XomoLeftSidebarTests",
+      "method": "moveToolOptionBarExposesClassicAndEqualSpacingDistribution",
+      "identifier": "veilpicTests/XomoLeftSidebarTests/moveToolOptionBarExposesClassicAndEqualSpacingDistribution()",
+      "file": "XomoLeftSidebarTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 4.8,
+      "duration": 5.18,
       "infrastructure_retries": 0,
       "issues": [],
-      "log": "ImageEditorSelectionTargetBoundsTests.moveAlignmentTargetDefaultsToSelectedLayerBounds.log"
-    },
-    {
-      "suite": "ImageEditorSelectionTargetBoundsTests",
-      "method": "moveAlignmentTargetRoutesCanvasAndPixelSelection",
-      "identifier": "veilpicTests/ImageEditorSelectionTargetBoundsTests/moveAlignmentTargetRoutesCanvasAndPixelSelection()",
-      "file": "ImageEditorSelectionTargetBoundsTests.swift",
-      "test_count": 1,
-      "passed": true,
-      "duration": 3.244,
-      "infrastructure_retries": 0,
-      "issues": [],
-      "log": "ImageEditorSelectionTargetBoundsTests.moveAlignmentTargetRoutesCanvasAndPixelSelection.log"
+      "log": "XomoLeftSidebarTests.moveToolOptionBarExposesClassicAndEqualSpacingDistribution.log"
     }
   ]
 }

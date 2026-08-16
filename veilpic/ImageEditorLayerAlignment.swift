@@ -74,18 +74,66 @@ enum ImageEditorLayerAlignment: CaseIterable, Hashable, Identifiable {
     }
 }
 
-enum ImageEditorLayerDistribution {
+enum ImageEditorLayerDistribution: String, CaseIterable, Identifiable {
     case left
     case horizontalCenter
     case right
     case top
     case verticalCenter
     case bottom
+
+    var id: String { rawValue }
+
+    var optionBarSystemImage: String {
+        switch self {
+        case .left: "distribute.horizontal.left"
+        case .horizontalCenter: "arrow.left.and.right"
+        case .right: "distribute.horizontal.right"
+        case .top: "distribute.vertical.top"
+        case .verticalCenter: "arrow.up.and.down"
+        case .bottom: "distribute.vertical.bottom"
+        }
+    }
+
+    var actionTitleKey: String {
+        switch self {
+        case .left: "imageEditor.action.layerDistributeLeft"
+        case .horizontalCenter: "imageEditor.action.layerDistributeHorizontalCenter"
+        case .right: "imageEditor.action.layerDistributeRight"
+        case .top: "imageEditor.action.layerDistributeTop"
+        case .verticalCenter: "imageEditor.action.layerDistributeVerticalCenter"
+        case .bottom: "imageEditor.action.layerDistributeBottom"
+        }
+    }
+
+    var accessibilityIdentifier: String {
+        "image-editor-move-distribute-\(rawValue)"
+    }
 }
 
-enum ImageEditorLayerSpacingDistribution {
+enum ImageEditorLayerSpacingDistribution: String, CaseIterable, Identifiable {
     case horizontal
     case vertical
+
+    var id: String { rawValue }
+
+    var optionBarSystemImage: String {
+        switch self {
+        case .horizontal: "rectangle.split.3x1"
+        case .vertical: "rectangle.split.1x3"
+        }
+    }
+
+    var actionTitleKey: String {
+        switch self {
+        case .horizontal: "imageEditor.action.layerDistributeHorizontalSpacing"
+        case .vertical: "imageEditor.action.layerDistributeVerticalSpacing"
+        }
+    }
+
+    var accessibilityIdentifier: String {
+        "image-editor-move-distribute-\(rawValue)-spacing"
+    }
 }
 
 @MainActor

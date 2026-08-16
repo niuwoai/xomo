@@ -685,6 +685,8 @@
 "imageEditor.option.moveAlignmentTarget.selectedLayers" = "選択レイヤー";
 "imageEditor.option.moveAlignmentTarget.canvas" = "キャンバス";
 "imageEditor.option.moveAlignmentTarget.pixelSelection" = "ピクセル選択範囲";
+"imageEditor.option.moveDistribute" = "分布";
+"imageEditor.option.moveDistributeHelp" = "3つ以上の選択レイヤーを端、中心、または等間隔で分布します";
 "imageEditor.option.posterizeLevels" = "階調数";
 "imageEditor.selectionMode.replace" = "新規選択";
 "imageEditor.selectionMode.replace.short" = "新規";

@@ -603,6 +603,44 @@ struct ImageEditorView: View {
                 }
                 .accessibilityElement(children: .contain)
                 .accessibilityIdentifier("image-editor-move-alignment-controls")
+
+                Menu {
+                    ForEach(ImageEditorLayerDistribution.allCases) { distribution in
+                        Button {
+                            viewModel.distributeSelectedLayers(distribution)
+                        } label: {
+                            Label(
+                                L10n.text(distribution.actionTitleKey),
+                                systemImage: distribution.optionBarSystemImage
+                            )
+                        }
+                        .accessibilityIdentifier(distribution.accessibilityIdentifier)
+                    }
+                    Divider()
+                    ForEach(ImageEditorLayerSpacingDistribution.allCases) { distribution in
+                        Button {
+                            viewModel.distributeSelectedLayerSpacing(distribution)
+                        } label: {
+                            Label(
+                                L10n.text(distribution.actionTitleKey),
+                                systemImage: distribution.optionBarSystemImage
+                            )
+                        }
+                        .accessibilityIdentifier(distribution.accessibilityIdentifier)
+                    }
+                } label: {
+                    Label(
+                        L10n.text("imageEditor.option.moveDistribute"),
+                        systemImage: "rectangle.split.3x1"
+                    )
+                    .font(.system(size: 11, weight: .semibold))
+                }
+                .menuStyle(.borderlessButton)
+                .fixedSize()
+                .focusable(false)
+                .disabled(!viewModel.canDistributeSelectedLayers)
+                .help(L10n.text("imageEditor.option.moveDistributeHelp"))
+                .accessibilityIdentifier("image-editor-move-distribute-menu")
             }
 
             if viewModel.selectedTool.supportsSelectionMode {

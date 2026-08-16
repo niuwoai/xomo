@@ -685,6 +685,8 @@
 "imageEditor.option.moveAlignmentTarget.selectedLayers" = "Selected Layers";
 "imageEditor.option.moveAlignmentTarget.canvas" = "Canvas";
 "imageEditor.option.moveAlignmentTarget.pixelSelection" = "Pixel Selection";
+"imageEditor.option.moveDistribute" = "Distribute";
+"imageEditor.option.moveDistributeHelp" = "Distribute three or more selected layers by edges, centers, or equal spacing";
 "imageEditor.option.posterizeLevels" = "Levels";
 "imageEditor.selectionMode.replace" = "New Selection";
 "imageEditor.selectionMode.replace.short" = "New";

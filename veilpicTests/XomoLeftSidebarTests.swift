@@ -726,6 +726,45 @@ struct XomoLeftSidebarTests {
         #expect(!componentSource.contains("ImageEditorLayerAlignment.allCases"))
     }
 
+    @Test func moveToolOptionBarExposesClassicAndEqualSpacingDistribution() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let toolStart = try #require(source.range(of: "private var toolOptionBar: some View"))
+        let componentStart = try #require(
+            source[toolStart.upperBound...].range(of: "private func componentLibraryOptionBar(")
+        )
+        let toolSource = source[toolStart.lowerBound..<componentStart.lowerBound]
+        let componentEnd = try #require(
+            source[componentStart.upperBound...].range(of: "private var optionHistoryButtons:")
+        )
+        let componentSource = source[componentStart.lowerBound..<componentEnd.lowerBound]
+        let classic = ImageEditorLayerDistribution.allCases
+        let spacing = ImageEditorLayerSpacingDistribution.allCases
+
+        #expect(classic == [.left, .horizontalCenter, .right, .top, .verticalCenter, .bottom])
+        #expect(spacing == [.horizontal, .vertical])
+        #expect(Set(classic.map(\.optionBarSystemImage)).count == 6)
+        #expect(Set((classic.map(\.accessibilityIdentifier)
+            + spacing.map(\.accessibilityIdentifier))).count == 8)
+        #expect((classic.map(\.actionTitleKey) + spacing.map(\.actionTitleKey)).allSatisfy {
+            L10n.text($0) != $0
+        })
+        #expect(toolSource.contains("ForEach(ImageEditorLayerDistribution.allCases)"))
+        #expect(toolSource.contains("viewModel.distributeSelectedLayers(distribution)"))
+        #expect(toolSource.contains("ForEach(ImageEditorLayerSpacingDistribution.allCases)"))
+        #expect(toolSource.contains("viewModel.distributeSelectedLayerSpacing(distribution)"))
+        #expect(toolSource.contains(".disabled(!viewModel.canDistributeSelectedLayers)"))
+        #expect(toolSource.contains("image-editor-move-distribute-menu"))
+        #expect(!componentSource.contains("image-editor-move-distribute-menu"))
+        #expect(!componentSource.contains("ImageEditorLayerDistribution.allCases"))
+        #expect(!componentSource.contains("ImageEditorLayerSpacingDistribution.allCases"))
+    }
+
     @Test func componentSidebarWiresMoveSemanticsIntoCanvasCursorAndGestures() throws {
         let repositoryRoot = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()
