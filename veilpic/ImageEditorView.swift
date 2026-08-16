@@ -7952,7 +7952,8 @@ struct ImageEditorView: View {
                     }
                     guard activeGradientOverlayStopIndex == point.index else { return }
                     viewModel.updateSelectedLayerGradientOverlayCanvasStop(
-                        to: unboundedImagePoint(from: value.location, in: canvasSize)
+                        to: unboundedImagePoint(from: value.location, in: canvasSize),
+                        snappingToStep: NSEvent.modifierFlags.contains(.shift)
                     )
                 }
                 .onEnded { value in
@@ -7966,7 +7967,8 @@ struct ImageEditorView: View {
                     }
                     guard activeGradientOverlayStopIndex == point.index else { return }
                     viewModel.updateSelectedLayerGradientOverlayCanvasStop(
-                        to: unboundedImagePoint(from: value.location, in: canvasSize)
+                        to: unboundedImagePoint(from: value.location, in: canvasSize),
+                        snappingToStep: NSEvent.modifierFlags.contains(.shift)
                     )
                     viewModel.finishEditingSelectedLayerGradientOverlayCanvasStop()
                 }
@@ -8042,7 +8044,8 @@ struct ImageEditorView: View {
                         return
                     }
                     viewModel.updateSelectedLayerGradientOverlayCanvasMidpoint(
-                        to: unboundedImagePoint(from: value.location, in: canvasSize)
+                        to: unboundedImagePoint(from: value.location, in: canvasSize),
+                        snappingToStep: NSEvent.modifierFlags.contains(.shift)
                     )
                 }
                 .onEnded { value in
@@ -8059,7 +8062,8 @@ struct ImageEditorView: View {
                         return
                     }
                     viewModel.updateSelectedLayerGradientOverlayCanvasMidpoint(
-                        to: unboundedImagePoint(from: value.location, in: canvasSize)
+                        to: unboundedImagePoint(from: value.location, in: canvasSize),
+                        snappingToStep: NSEvent.modifierFlags.contains(.shift)
                     )
                     viewModel.finishEditingSelectedLayerGradientOverlayCanvasMidpoint()
                 }

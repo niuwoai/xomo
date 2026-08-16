@@ -3083,6 +3083,77 @@ struct ImageEditorLayerStyleTests {
         )
     }
 
+    @Test func gradientOverlayCanvasStopShiftSnapUsesFivePercentGridAndReverse() throws {
+        #expect(
+            abs(
+                ImageEditorGradientOverlayCanvasHandleSnap.value(
+                    0.373,
+                    snappingToStep: true
+                ) - 0.35
+            ) < 0.000_001
+        )
+        #expect(
+            ImageEditorGradientOverlayCanvasHandleSnap.value(
+                0.373,
+                snappingToStep: false
+            ) == 0.373
+        )
+        let viewModel = gradientOverlayCenterViewModel()
+        let selectedIndex = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[selectedIndex].style.gradientOverlayReverse = true
+        viewModel.document.layers[selectedIndex].style.setGradientOverlayColorStops([
+            ImageEditorGradientColorStop(position: 0, color: .systemRed),
+            ImageEditorGradientColorStop(position: 0.5, color: .systemGreen),
+            ImageEditorGradientColorStop(position: 1, color: .systemBlue)
+        ])
+        let geometry = try #require(viewModel.selectedLayerGradientOverlayCanvasGeometry)
+        let target = CGPoint(
+            x: geometry.axisStart.x
+                + (geometry.axisEndpoint.x - geometry.axisStart.x) * 0.373,
+            y: geometry.axisStart.y
+                + (geometry.axisEndpoint.y - geometry.axisStart.y) * 0.373
+        )
+
+        #expect(viewModel.beginEditingSelectedLayerGradientOverlayCanvasStop(at: 1))
+        viewModel.updateSelectedLayerGradientOverlayCanvasStop(
+            to: target,
+            snappingToStep: true
+        )
+        viewModel.finishEditingSelectedLayerGradientOverlayCanvasStop()
+        #expect(
+            abs(viewModel.selectedLayerGradientOverlayColorStops[1].position - 0.65)
+                < 0.000_001
+        )
+    }
+
+    @Test func gradientOverlayCanvasMidpointShiftSnapUsesSegmentPercentGrid() throws {
+        let viewModel = gradientOverlayCenterViewModel()
+        let selectedIndex = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[selectedIndex].style.setGradientOverlayColorStops([
+            ImageEditorGradientColorStop(position: 0, color: .systemRed),
+            ImageEditorGradientColorStop(position: 0.4, color: .systemGreen),
+            ImageEditorGradientColorStop(position: 1, color: .systemBlue)
+        ])
+        let geometry = try #require(viewModel.selectedLayerGradientOverlayCanvasGeometry)
+        let target = CGPoint(
+            x: geometry.axisStart.x
+                + (geometry.axisEndpoint.x - geometry.axisStart.x) * 0.133,
+            y: geometry.axisStart.y
+                + (geometry.axisEndpoint.y - geometry.axisStart.y) * 0.133
+        )
+
+        #expect(viewModel.beginEditingSelectedLayerGradientOverlayCanvasMidpoint(after: 0))
+        viewModel.updateSelectedLayerGradientOverlayCanvasMidpoint(
+            to: target,
+            snappingToStep: true
+        )
+        viewModel.finishEditingSelectedLayerGradientOverlayCanvasMidpoint()
+        #expect(
+            abs(viewModel.selectedLayerGradientOverlayColorStops[0].midpoint - 0.35)
+                < 0.000_001
+        )
+    }
+
     @Test func undoCancelsActiveGradientOverlayCanvasStopBeforeHistory() throws {
         let viewModel = gradientOverlayCenterViewModel()
         let selectedIndex = try #require(viewModel.document.selectedLayerIndex)
@@ -3495,6 +3566,11 @@ struct ImageEditorLayerStyleTests {
         #expect(source.contains("ImageEditorGradientOverlayCanvasTabKeyPolicy.matches"))
         #expect(source.contains("ImageEditorGradientOverlayCanvasBoundaryKeyPolicy.displayedDelta"))
         #expect(source.contains("moveSelectedCanvasHandleToBoundary"))
+        #expect(
+            source.components(
+                separatedBy: "snappingToStep: NSEvent.modifierFlags.contains(.shift)"
+            ).count - 1 == 5
+        )
         #expect(source.contains(".contextMenu"))
         #expect(source.contains("cancelGradientOverlayCanvasHandleDragForLifecycle"))
         #expect(source.contains("image-editor-gradient-overlay-center-handle"))

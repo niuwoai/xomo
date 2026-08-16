@@ -144,6 +144,15 @@ enum ImageEditorGradientOverlayCanvasBoundaryKeyPolicy {
     }
 }
 
+enum ImageEditorGradientOverlayCanvasHandleSnap {
+    static let step = 0.05
+
+    static func value(_ value: Double, snappingToStep: Bool) -> Double {
+        guard value.isFinite, snappingToStep else { return value }
+        return (value / step).rounded() * step
+    }
+}
+
 enum ImageEditorGradientOverlayAxisGeometry {
     static let angleSnapStep: CGFloat = 15
 
@@ -634,7 +643,10 @@ extension ImageEditorViewModel {
         return true
     }
 
-    func updateSelectedLayerGradientOverlayCanvasStop(to canvasPoint: CGPoint) {
+    func updateSelectedLayerGradientOverlayCanvasStop(
+        to canvasPoint: CGPoint,
+        snappingToStep: Bool = false
+    ) {
         guard let layerID = editingGradientOverlayStopLayerID,
               let stopIndex = editingGradientOverlayStopIndex,
               let originalStops = editingGradientOverlayOriginalStops,
@@ -647,7 +659,10 @@ extension ImageEditorViewModel {
         let stops = ImageEditorGradientOverlayStopDraftEditing.movingStop(
             originalStops,
             at: stopIndex,
-            to: position
+            to: ImageEditorGradientOverlayCanvasHandleSnap.value(
+                position,
+                snappingToStep: snappingToStep
+            )
         )
         guard stops != document.layers[index].style.resolvedGradientOverlayColorStops else {
             return
@@ -708,7 +723,10 @@ extension ImageEditorViewModel {
         return true
     }
 
-    func updateSelectedLayerGradientOverlayCanvasMidpoint(to canvasPoint: CGPoint) {
+    func updateSelectedLayerGradientOverlayCanvasMidpoint(
+        to canvasPoint: CGPoint,
+        snappingToStep: Bool = false
+    ) {
         guard let layerID = editingGradientOverlayMidpointLayerID,
               let lowerStopIndex = editingGradientOverlayMidpointLowerStopIndex,
               let originalStops = editingGradientOverlayMidpointOriginalStops,
@@ -723,7 +741,10 @@ extension ImageEditorViewModel {
         let stops = ImageEditorGradientOverlayStopDraftEditing.movingMidpoint(
             originalStops,
             after: lowerStopIndex,
-            to: midpoint
+            to: ImageEditorGradientOverlayCanvasHandleSnap.value(
+                midpoint,
+                snappingToStep: snappingToStep
+            )
         )
         guard stops != document.layers[index].style.resolvedGradientOverlayColorStops else {
             return
