@@ -6991,8 +6991,38 @@ struct ImageEditorView: View {
                     style: StrokeStyle(lineWidth: 1.5, dash: [4, 3])
                 )
             }
+
+            for guide in viewModel.activeSpacingGuides {
+                context.stroke(
+                    spacingGuidePath(guide, in: size),
+                    with: .color(Color(nsColor: ImageEditorTheme.selected).opacity(0.96)),
+                    style: StrokeStyle(lineWidth: 1.5, dash: [2, 2])
+                )
+            }
         }
         .allowsHitTesting(false)
+    }
+
+    private func spacingGuidePath(_ guide: ImageEditorSpacingGuide, in size: CGSize) -> Path {
+        let start = viewPoint(from: guide.start, in: size)
+        let end = viewPoint(from: guide.end, in: size)
+        let capLength: CGFloat = 4
+        var path = Path()
+        path.move(to: start)
+        path.addLine(to: end)
+        switch guide.orientation {
+        case .horizontal:
+            path.move(to: CGPoint(x: start.x, y: start.y - capLength))
+            path.addLine(to: CGPoint(x: start.x, y: start.y + capLength))
+            path.move(to: CGPoint(x: end.x, y: end.y - capLength))
+            path.addLine(to: CGPoint(x: end.x, y: end.y + capLength))
+        case .vertical:
+            path.move(to: CGPoint(x: start.x - capLength, y: start.y))
+            path.addLine(to: CGPoint(x: start.x + capLength, y: start.y))
+            path.move(to: CGPoint(x: end.x - capLength, y: end.y))
+            path.addLine(to: CGPoint(x: end.x + capLength, y: end.y))
+        }
+        return path
     }
 
     @ViewBuilder

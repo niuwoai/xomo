@@ -349,6 +349,7 @@ extension ImageEditorViewModel {
         movingOriginalTransformFrame = transformFrame
         movingObjectPreviewFrame = transformFrame
         activeAlignmentGuides = []
+        activeSpacingGuides = []
         return true
     }
 
@@ -394,6 +395,7 @@ extension ImageEditorViewModel {
         movingOriginalTransformFrame = transformFrame
         movingObjectPreviewFrame = transformFrame
         activeAlignmentGuides = []
+        activeSpacingGuides = []
         return true
     }
 
@@ -407,12 +409,32 @@ extension ImageEditorViewModel {
         let snappedDelta = snapping ? snappedMoveDelta(delta, movingLayerIDs: movingLayerIDs) : delta
         let adjustedDelta = ImageEditorObjectDragConstraint.constrainedDelta(snappedDelta, to: axis)
         if let axis {
+            let discardedCorrection = CGSize(
+                width: adjustedDelta.width - snappedDelta.width,
+                height: adjustedDelta.height - snappedDelta.height
+            )
+            activeSpacingGuides = activeSpacingGuides.map { guide in
+                switch guide.orientation {
+                case .horizontal:
+                    return guide.offsetBy(dx: 0, dy: discardedCorrection.height)
+                case .vertical:
+                    return guide.offsetBy(dx: discardedCorrection.width, dy: 0)
+                }
+            }
             activeAlignmentGuides.removeAll { guide in
                 switch axis {
                 case .horizontal:
                     return guide.orientation == .horizontal
                 case .vertical:
                     return guide.orientation == .vertical
+                }
+            }
+            activeSpacingGuides.removeAll { guide in
+                switch axis {
+                case .horizontal:
+                    return guide.orientation == .vertical
+                case .vertical:
+                    return guide.orientation == .horizontal
                 }
             }
         }
@@ -512,6 +534,7 @@ extension ImageEditorViewModel {
         movingOriginalTransformFrame = nil
         movingObjectPreviewFrame = nil
         activeAlignmentGuides = []
+        activeSpacingGuides = []
     }
 
     private func commitMovingSelectedLayers(by delta: CGSize) {
@@ -567,6 +590,7 @@ extension ImageEditorViewModel {
         resizingOriginalTransformFrame = transformFrame
         resizingLayerDidChange = false
         activeAlignmentGuides = []
+        activeSpacingGuides = []
     }
 
     func resizeSelectedLayer(
@@ -637,6 +661,7 @@ extension ImageEditorViewModel {
         resizingOriginalTransformFrame = nil
         resizingLayerDidChange = false
         activeAlignmentGuides = []
+        activeSpacingGuides = []
     }
 
     func beginRotatingSelectedLayer(from point: CGPoint) {
@@ -667,6 +692,7 @@ extension ImageEditorViewModel {
         rotatingLayerDidChange = false
         rotatingPreviewDegrees = 0
         activeAlignmentGuides = []
+        activeSpacingGuides = []
     }
 
     func rotateSelectedLayer(
@@ -733,6 +759,7 @@ extension ImageEditorViewModel {
         rotatingLayerDidChange = false
         rotatingPreviewDegrees = nil
         activeAlignmentGuides = []
+        activeSpacingGuides = []
     }
 
     func scaleSelectedLayer(by factor: CGFloat) {

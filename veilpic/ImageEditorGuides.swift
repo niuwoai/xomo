@@ -204,19 +204,25 @@ extension ImageEditorViewModel {
               abs(delta.width) >= 0.1 || abs(delta.height) >= 0.1
         else {
             activeAlignmentGuides = []
+            activeSpacingGuides = []
             return delta
         }
 
         let indices = document.layers.indices.filter { movingLayerIDs.contains(document.layers[$0].id) }
         guard let currentFrame = movingObjectPreviewFrame ?? transformFrame(for: Array(indices)) else {
             activeAlignmentGuides = []
+            activeSpacingGuides = []
             return delta
         }
         let proposedFrame = currentFrame.offsetBy(dx: delta.width, dy: delta.height)
         let threshold = max(1, 8 / max(zoom, 0.01))
         let snapGuides = guideSnapPositions(excluding: movingLayerIDs)
-        guard !snapGuides.vertical.isEmpty || !snapGuides.horizontal.isEmpty else {
+        let peerFrames = document.isGuideSnappingEnabled
+            ? smartGuideObjectFrames(excluding: movingLayerIDs)
+            : []
+        guard !snapGuides.vertical.isEmpty || !snapGuides.horizontal.isEmpty || peerFrames.count >= 2 else {
             activeAlignmentGuides = []
+            activeSpacingGuides = []
             return delta
         }
         let horizontalSnap = nearestMoveAlignment(
@@ -229,13 +235,59 @@ extension ImageEditorViewModel {
             positions: snapGuides.horizontal,
             threshold: threshold
         )
+        let horizontalSpacingSnap = nearestEqualSpacing(
+            for: proposedFrame,
+            among: peerFrames,
+            orientation: .horizontal,
+            threshold: threshold
+        )
+        let verticalSpacingSnap = nearestEqualSpacing(
+            for: proposedFrame,
+            among: peerFrames,
+            orientation: .vertical,
+            threshold: threshold
+        )
+        let useHorizontalSpacing = shouldPreferSpacing(
+            horizontalSpacingSnap,
+            over: horizontalSnap
+        )
+        let useVerticalSpacing = shouldPreferSpacing(
+            verticalSpacingSnap,
+            over: verticalSnap
+        )
+        let horizontalCorrection = (
+            useHorizontalSpacing
+                ? horizontalSpacingSnap?.correction
+                : horizontalSnap?.correction
+        ) ?? 0
+        let verticalCorrection = (
+            useVerticalSpacing
+                ? verticalSpacingSnap?.correction
+                : verticalSnap?.correction
+        ) ?? 0
         activeAlignmentGuides = [
-            horizontalSnap.map { ImageEditorAlignmentGuide(orientation: .vertical, position: $0.position) },
-            verticalSnap.map { ImageEditorAlignmentGuide(orientation: .horizontal, position: $0.position) }
+            useHorizontalSpacing ? nil : horizontalSnap.map {
+                ImageEditorAlignmentGuide(orientation: .vertical, position: $0.position)
+            },
+            useVerticalSpacing ? nil : verticalSnap.map {
+                ImageEditorAlignmentGuide(orientation: .horizontal, position: $0.position)
+            }
         ].compactMap { $0 }
+        activeSpacingGuides = [
+            useHorizontalSpacing
+                ? horizontalSpacingSnap?.guides.map {
+                    $0.offsetBy(dx: 0, dy: verticalCorrection)
+                }
+                : nil,
+            useVerticalSpacing
+                ? verticalSpacingSnap?.guides.map {
+                    $0.offsetBy(dx: horizontalCorrection, dy: 0)
+                }
+                : nil
+        ].compactMap { $0 }.flatMap { $0 }
         return CGSize(
-            width: delta.width + (horizontalSnap?.correction ?? 0),
-            height: delta.height + (verticalSnap?.correction ?? 0)
+            width: delta.width + horizontalCorrection,
+            height: delta.height + verticalCorrection
         )
     }
 
@@ -246,6 +298,7 @@ extension ImageEditorViewModel {
         preservingAspectRatio: Bool,
         resizingFromCenter: Bool = false
     ) -> CGRect {
+        activeSpacingGuides = []
         guard document.isGuideSnappingEnabled || document.isGridSnappingEnabled,
               !preservingAspectRatio
         else {
@@ -445,27 +498,7 @@ extension ImageEditorViewModel {
                 document.canvasSize.height
             ])
 
-            let excludedGroupIDs = Set(document.layers.compactMap { layer in
-                excludedLayerIDs.contains(layer.id) && layer.isGroup ? layer.id : nil
-            })
-            let componentGroupFrames = xomoComponentGuideFrames(excluding: excludedGroupIDs)
-            for frame in componentGroupFrames.values {
-                vertical.append(contentsOf: [frame.minX, frame.midX, frame.maxX])
-                horizontal.append(contentsOf: [frame.minY, frame.midY, frame.maxY])
-            }
-
-            for layer in document.layers {
-                guard !excludedLayerIDs.contains(layer.id),
-                      !excludedGroupIDs.contains(layer.groupID ?? UUID()),
-                      componentGroupFrames[layer.groupID ?? UUID()] == nil,
-                      !layer.isGroup,
-                      !layer.isAdjustment,
-                      !layer.isFilter,
-                      document.isEffectivelyVisible(layer)
-                else { continue }
-
-                let frame = layer.frame.standardized
-                guard frame.width > 0.1, frame.height > 0.1 else { continue }
+            for frame in smartGuideObjectFrames(excluding: excludedLayerIDs) {
                 vertical.append(contentsOf: [frame.minX, frame.midX, frame.maxX])
                 horizontal.append(contentsOf: [frame.minY, frame.midY, frame.maxY])
             }
@@ -480,6 +513,149 @@ extension ImageEditorViewModel {
             vertical: uniqueRoundedPositions(vertical),
             horizontal: uniqueRoundedPositions(horizontal)
         )
+    }
+
+    private func smartGuideObjectFrames(excluding excludedLayerIDs: Set<UUID>) -> [CGRect] {
+        let excludedGroupIDs = Set(document.layers.compactMap { layer in
+            excludedLayerIDs.contains(layer.id) && layer.isGroup ? layer.id : nil
+        })
+        let componentGroupFrames = xomoComponentGuideFrames(excluding: excludedGroupIDs)
+        var frames = Array(componentGroupFrames.values)
+
+        for layer in document.layers {
+            let belongsToExcludedGroup = layer.groupID.map(excludedGroupIDs.contains) ?? false
+            let belongsToComponent = layer.groupID.map { componentGroupFrames[$0] != nil } ?? false
+            guard !excludedLayerIDs.contains(layer.id),
+                  !belongsToExcludedGroup,
+                  !belongsToComponent,
+                  !layer.isGroup,
+                  !layer.isAdjustment,
+                  !layer.isFilter,
+                  document.isEffectivelyVisible(layer)
+            else { continue }
+
+            let frame = layer.frame.standardized
+            guard frame.width > 0.1, frame.height > 0.1 else { continue }
+            frames.append(frame)
+        }
+        return frames
+    }
+
+    private func nearestEqualSpacing(
+        for proposedFrame: CGRect,
+        among peerFrames: [CGRect],
+        orientation: ImageEditorGuideOrientation,
+        threshold: CGFloat
+    ) -> ImageEditorEqualSpacingSnap? {
+        let relevantFrames: [CGRect]
+        switch orientation {
+        case .horizontal:
+            relevantFrames = peerFrames.filter {
+                rangesOverlap(proposedFrame.minY...proposedFrame.maxY, $0.minY...$0.maxY)
+            }
+        case .vertical:
+            relevantFrames = peerFrames.filter {
+                rangesOverlap(proposedFrame.minX...proposedFrame.maxX, $0.minX...$0.maxX)
+            }
+        }
+        let sortedFrames: [CGRect]
+        switch orientation {
+        case .horizontal:
+            sortedFrames = relevantFrames.sorted { $0.minX < $1.minX }
+        case .vertical:
+            sortedFrames = relevantFrames.sorted { $0.minY < $1.minY }
+        }
+        guard sortedFrames.count >= 2 else { return nil }
+
+        var bestSnap: ImageEditorEqualSpacingSnap?
+        for index in 0..<(sortedFrames.count - 1) {
+            let before = sortedFrames[index]
+            let after = sortedFrames[index + 1]
+            let candidate = equalSpacingSnap(
+                for: proposedFrame,
+                between: before,
+                and: after,
+                orientation: orientation
+            )
+            guard let candidate, abs(candidate.correction) <= threshold else { continue }
+            if bestSnap == nil || abs(candidate.correction) < abs(bestSnap?.correction ?? .greatestFiniteMagnitude) {
+                bestSnap = candidate
+            }
+        }
+        return bestSnap
+    }
+
+    private func equalSpacingSnap(
+        for proposedFrame: CGRect,
+        between before: CGRect,
+        and after: CGRect,
+        orientation: ImageEditorGuideOrientation
+    ) -> ImageEditorEqualSpacingSnap? {
+        switch orientation {
+        case .horizontal:
+            guard rangesOverlap(proposedFrame.minY...proposedFrame.maxY, before.minY...before.maxY),
+                  rangesOverlap(proposedFrame.minY...proposedFrame.maxY, after.minY...after.maxY)
+            else { return nil }
+            let availableSpace = after.minX - before.maxX - proposedFrame.width
+            guard availableSpace >= 0 else { return nil }
+            let spacing = availableSpace / 2
+            let correction = before.maxX + spacing - proposedFrame.minX
+            let snappedFrame = proposedFrame.offsetBy(dx: correction, dy: 0)
+            let crossPosition = proposedFrame.midY
+            return ImageEditorEqualSpacingSnap(
+                correction: correction,
+                guides: [
+                    ImageEditorSpacingGuide(
+                        orientation: .horizontal,
+                        start: CGPoint(x: before.maxX, y: crossPosition),
+                        end: CGPoint(x: snappedFrame.minX, y: crossPosition)
+                    ),
+                    ImageEditorSpacingGuide(
+                        orientation: .horizontal,
+                        start: CGPoint(x: snappedFrame.maxX, y: crossPosition),
+                        end: CGPoint(x: after.minX, y: crossPosition)
+                    )
+                ]
+            )
+        case .vertical:
+            guard rangesOverlap(proposedFrame.minX...proposedFrame.maxX, before.minX...before.maxX),
+                  rangesOverlap(proposedFrame.minX...proposedFrame.maxX, after.minX...after.maxX)
+            else { return nil }
+            let availableSpace = after.minY - before.maxY - proposedFrame.height
+            guard availableSpace >= 0 else { return nil }
+            let spacing = availableSpace / 2
+            let correction = before.maxY + spacing - proposedFrame.minY
+            let snappedFrame = proposedFrame.offsetBy(dx: 0, dy: correction)
+            let crossPosition = proposedFrame.midX
+            return ImageEditorEqualSpacingSnap(
+                correction: correction,
+                guides: [
+                    ImageEditorSpacingGuide(
+                        orientation: .vertical,
+                        start: CGPoint(x: crossPosition, y: before.maxY),
+                        end: CGPoint(x: crossPosition, y: snappedFrame.minY)
+                    ),
+                    ImageEditorSpacingGuide(
+                        orientation: .vertical,
+                        start: CGPoint(x: crossPosition, y: snappedFrame.maxY),
+                        end: CGPoint(x: crossPosition, y: after.minY)
+                    )
+                ]
+            )
+        }
+    }
+
+    private func shouldPreferSpacing(
+        _ spacing: ImageEditorEqualSpacingSnap?,
+        over alignment: ImageEditorMoveAlignment?
+    ) -> Bool {
+        guard let spacing else { return false }
+        guard let alignment else { return true }
+        return abs(spacing.correction) < abs(alignment.correction)
+    }
+
+    private func rangesOverlap(_ lhs: ClosedRange<CGFloat>, _ rhs: ClosedRange<CGFloat>) -> Bool {
+        lhs.overlaps(rhs)
     }
 
     private func xomoComponentGuideFrames(excluding excludedGroupIDs: Set<UUID>) -> [UUID: CGRect] {
@@ -612,9 +788,32 @@ struct ImageEditorAlignmentGuide: Identifiable, Equatable {
     var id: String { "\(orientation.rawValue)-\(position.rounded())" }
 }
 
+struct ImageEditorSpacingGuide: Identifiable, Equatable {
+    let orientation: ImageEditorGuideOrientation
+    let start: CGPoint
+    let end: CGPoint
+
+    var id: String {
+        "\(orientation.rawValue)-\(start.x)-\(start.y)-\(end.x)-\(end.y)"
+    }
+
+    func offsetBy(dx: CGFloat, dy: CGFloat) -> ImageEditorSpacingGuide {
+        ImageEditorSpacingGuide(
+            orientation: orientation,
+            start: CGPoint(x: start.x + dx, y: start.y + dy),
+            end: CGPoint(x: end.x + dx, y: end.y + dy)
+        )
+    }
+}
+
 private struct ImageEditorMoveAlignment {
     let position: CGFloat
     let correction: CGFloat
+}
+
+private struct ImageEditorEqualSpacingSnap {
+    let correction: CGFloat
+    let guides: [ImageEditorSpacingGuide]
 }
 
 private extension CGRect {

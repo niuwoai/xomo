@@ -54,6 +54,162 @@ struct ImageEditorGuideTests {
     }
 
     @Test
+    func movingLayerSnapsBetweenHorizontalPeersAndShowsEqualSpacingGuides() throws {
+        let viewModel = transformableViewModel(
+            sourceName: "source.png",
+            image: testImage(color: .systemBlue, size: NSSize(width: 160, height: 100))
+        )
+        let layerIndex = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[layerIndex].frame = CGRect(x: 40, y: 20, width: 20, height: 20)
+        var leftLayer = ImageEditorLayer.blank(name: "Left", size: CGSize(width: 20, height: 20))
+        leftLayer.frame = CGRect(x: 10, y: 20, width: 20, height: 20)
+        var rightLayer = ImageEditorLayer.blank(name: "Right", size: CGSize(width: 20, height: 20))
+        rightLayer.frame = CGRect(x: 90, y: 20, width: 20, height: 20)
+        viewModel.document.layers.append(contentsOf: [leftLayer, rightLayer])
+        let historyCount = viewModel.document.history.count
+
+        viewModel.beginMovingSelectedLayer()
+        viewModel.moveSelectedLayer(by: CGSize(width: 8, height: 0), snapping: true)
+
+        #expect(viewModel.movingObjectPreviewFrame?.minX == 50)
+        #expect(viewModel.activeSpacingGuides.count == 2)
+        #expect(viewModel.activeSpacingGuides.allSatisfy { $0.orientation == .horizontal })
+        #expect(viewModel.activeSpacingGuides.map { $0.end.x - $0.start.x } == [20, 20])
+
+        viewModel.finishMovingSelectedLayer()
+
+        #expect(viewModel.document.layers[layerIndex].frame.minX == 50)
+        #expect(viewModel.activeSpacingGuides.isEmpty)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerTranslate"))
+    }
+
+    @Test
+    func movingLayerSnapsBetweenVerticalPeersAndShowsEqualSpacingGuides() throws {
+        let viewModel = transformableViewModel(
+            sourceName: "source.png",
+            image: testImage(color: .systemTeal, size: NSSize(width: 100, height: 160))
+        )
+        let layerIndex = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[layerIndex].frame = CGRect(x: 20, y: 40, width: 20, height: 20)
+        var bottomLayer = ImageEditorLayer.blank(name: "Bottom", size: CGSize(width: 20, height: 20))
+        bottomLayer.frame = CGRect(x: 20, y: 10, width: 20, height: 20)
+        var topLayer = ImageEditorLayer.blank(name: "Top", size: CGSize(width: 20, height: 20))
+        topLayer.frame = CGRect(x: 20, y: 90, width: 20, height: 20)
+        viewModel.document.layers.append(contentsOf: [bottomLayer, topLayer])
+
+        viewModel.beginMovingSelectedLayer()
+        viewModel.moveSelectedLayer(by: CGSize(width: 0, height: 8), snapping: true)
+
+        #expect(viewModel.movingObjectPreviewFrame?.minY == 50)
+        #expect(viewModel.activeSpacingGuides.count == 2)
+        #expect(viewModel.activeSpacingGuides.allSatisfy { $0.orientation == .vertical })
+        #expect(viewModel.activeSpacingGuides.map { $0.end.y - $0.start.y } == [20, 20])
+
+        #expect(viewModel.cancelMovingSelectedLayer())
+        #expect(viewModel.document.layers[layerIndex].frame.minY == 40)
+        #expect(viewModel.activeSpacingGuides.isEmpty)
+    }
+
+    @Test
+    func equalSpacingSnapIgnoresPeersFromOtherRows() throws {
+        let viewModel = transformableViewModel(
+            sourceName: "source.png",
+            image: testImage(color: .systemIndigo, size: NSSize(width: 160, height: 120))
+        )
+        let layerIndex = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[layerIndex].frame = CGRect(x: 40, y: 20, width: 20, height: 20)
+        var leftLayer = ImageEditorLayer.blank(name: "Left", size: CGSize(width: 20, height: 20))
+        leftLayer.frame = CGRect(x: 10, y: 20, width: 20, height: 20)
+        var unrelatedLayer = ImageEditorLayer.blank(name: "Other Row", size: CGSize(width: 20, height: 20))
+        unrelatedLayer.frame = CGRect(x: 55, y: 80, width: 20, height: 20)
+        var rightLayer = ImageEditorLayer.blank(name: "Right", size: CGSize(width: 20, height: 20))
+        rightLayer.frame = CGRect(x: 90, y: 20, width: 20, height: 20)
+        viewModel.document.layers.append(contentsOf: [leftLayer, unrelatedLayer, rightLayer])
+
+        viewModel.beginMovingSelectedLayer()
+        viewModel.moveSelectedLayer(by: CGSize(width: 8, height: 0), snapping: true)
+
+        #expect(viewModel.movingObjectPreviewFrame?.minX == 50)
+        #expect(viewModel.activeSpacingGuides.count == 2)
+    }
+
+    @Test
+    func disablingSmartGuidesAlsoDisablesEqualSpacingSnap() throws {
+        let viewModel = transformableViewModel(
+            sourceName: "source.png",
+            image: testImage(color: .systemOrange, size: NSSize(width: 160, height: 100))
+        )
+        let layerIndex = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[layerIndex].frame = CGRect(x: 40, y: 20, width: 20, height: 20)
+        var leftLayer = ImageEditorLayer.blank(name: "Left", size: CGSize(width: 20, height: 20))
+        leftLayer.frame = CGRect(x: 10, y: 20, width: 20, height: 20)
+        var rightLayer = ImageEditorLayer.blank(name: "Right", size: CGSize(width: 20, height: 20))
+        rightLayer.frame = CGRect(x: 90, y: 20, width: 20, height: 20)
+        viewModel.document.layers.append(contentsOf: [leftLayer, rightLayer])
+        viewModel.toggleGuideSnapping()
+
+        viewModel.beginMovingSelectedLayer()
+        viewModel.moveSelectedLayer(by: CGSize(width: 8, height: 0), snapping: true)
+
+        #expect(viewModel.movingObjectPreviewFrame?.minX == 48)
+        #expect(viewModel.activeSpacingGuides.isEmpty)
+    }
+
+    @Test
+    func classicAlignmentWinsWhenItsCorrectionTiesEqualSpacing() throws {
+        let viewModel = transformableViewModel(
+            sourceName: "source.png",
+            image: testImage(color: .systemPink, size: NSSize(width: 160, height: 100))
+        )
+        let layerIndex = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[layerIndex].frame = CGRect(x: 40, y: 20, width: 20, height: 20)
+        var leftLayer = ImageEditorLayer.blank(name: "Left", size: CGSize(width: 20, height: 20))
+        leftLayer.frame = CGRect(x: 10, y: 20, width: 20, height: 20)
+        var rightLayer = ImageEditorLayer.blank(name: "Right", size: CGSize(width: 20, height: 20))
+        rightLayer.frame = CGRect(x: 90, y: 20, width: 20, height: 20)
+        viewModel.document.layers.append(contentsOf: [leftLayer, rightLayer])
+        viewModel.addGuide(.vertical, at: 50)
+
+        viewModel.beginMovingSelectedLayer()
+        viewModel.moveSelectedLayer(by: CGSize(width: 8, height: 0), snapping: true)
+
+        #expect(viewModel.movingObjectPreviewFrame?.minX == 50)
+        #expect(viewModel.activeSpacingGuides.isEmpty)
+        #expect(viewModel.activeAlignmentGuides.contains {
+            $0.orientation == .vertical && $0.position == 50
+        })
+    }
+
+    @Test
+    func horizontalConstraintKeepsSpacingGuidesOnTheConstrainedPreviewRow() throws {
+        let viewModel = transformableViewModel(
+            sourceName: "source.png",
+            image: testImage(color: .systemGreen, size: NSSize(width: 160, height: 120))
+        )
+        let layerIndex = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[layerIndex].frame = CGRect(x: 40, y: 20, width: 20, height: 20)
+        var leftLayer = ImageEditorLayer.blank(name: "Left", size: CGSize(width: 20, height: 100))
+        leftLayer.frame = CGRect(x: 10, y: 0, width: 20, height: 100)
+        var rightLayer = ImageEditorLayer.blank(name: "Right", size: CGSize(width: 20, height: 100))
+        rightLayer.frame = CGRect(x: 90, y: 0, width: 20, height: 100)
+        viewModel.document.layers.append(contentsOf: [leftLayer, rightLayer])
+
+        viewModel.beginMovingSelectedLayer()
+        viewModel.moveSelectedLayer(
+            by: CGSize(width: 8, height: 3),
+            snapping: true,
+            constrainingTo: .horizontal
+        )
+
+        #expect(viewModel.movingObjectPreviewFrame == CGRect(x: 50, y: 20, width: 20, height: 20))
+        #expect(viewModel.activeSpacingGuides.count == 2)
+        #expect(viewModel.activeSpacingGuides.allSatisfy {
+            $0.orientation == .horizontal && $0.start.y == 30 && $0.end.y == 30
+        })
+    }
+
+    @Test
     func movingOrdinaryLayerSnapsToCanvasCenterWithoutManualGuide() throws {
         let viewModel = transformableViewModel(
             sourceName: "source.png",

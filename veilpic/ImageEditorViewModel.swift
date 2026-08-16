@@ -493,6 +493,7 @@ final class ImageEditorViewModel: ObservableObject {
     var movingOriginalTransformFrame: CGRect?
     @Published var movingObjectPreviewFrame: CGRect?
     @Published var activeAlignmentGuides: [ImageEditorAlignmentGuide] = []
+    @Published var activeSpacingGuides: [ImageEditorSpacingGuide] = []
     var movingGuideID: UUID?
     var movingGuideDidChange = false
     var movingPathAnchorOriginalLayerID: UUID?
