@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.12.0-rc1099 - 2026-08-17
+
+### Fixed
+- Quick Mask 活动时，`Option + Delete` 前景色填充与 `Command + Delete` 背景色填充现在写入临时蒙版通道，不再误改当前图层像素；Edit 菜单、画布选择面板与 Xomo 自动化共用同一目标仲裁。
+- 临时通道填充遵循当前“蒙版区域/选定区域”方向与前后景色亮度；即使所选图层锁定或蒙版已全黑，仍可反向填回。重复填入相同值不写空 History/Undo。
+
+### Verification
+- Quick Mask 全回归 15/15、普通选区填充与邻接 33/33、Xomo 共享填充入口 1/1、Edit 菜单接线 1/1、CLI 2/2、发布契约 7/7（21 项断言）通过；本版本不触发周期 Universal Release、完整冒烟与 `/Applications` 安装，下一次完整门禁为 rc1120。
+
 ## 2.12.0-rc1098 - 2026-08-17
 
 ### Added

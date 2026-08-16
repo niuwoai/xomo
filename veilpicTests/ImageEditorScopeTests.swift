@@ -2121,6 +2121,11 @@ struct ImageEditorScopeTests {
         #expect(editMenuSource.contains(".keyboardShortcut(.delete, modifiers: [.option])"))
         #expect(editMenuSource.contains("viewModel.fillSelectionWithBackgroundColor()"))
         #expect(editMenuSource.contains(".keyboardShortcut(.delete, modifiers: [.command])"))
+        #expect(
+            String(editMenuSource).components(
+                separatedBy: ".disabled(!viewModel.canFillCurrentEditingTarget)"
+            ).count - 1 == 2
+        )
         #expect(editMenuSource.contains("viewModel.clearSelectionPixels()"))
         #expect(editMenuSource.contains(".keyboardShortcut(.delete, modifiers: [])"))
     }

@@ -10102,7 +10102,7 @@ struct ImageEditorView: View {
                                 viewModel.fillSelection()
                             }
                             .buttonStyle(EditorTextButtonStyle())
-                            .disabled(!viewModel.canEditSelectionPixels)
+                            .disabled(!viewModel.canFillCurrentEditingTarget)
                             Button(L10n.text("imageEditor.action.contentAwareFillSelection")) {
                                 viewModel.contentAwareFillSelection()
                             }

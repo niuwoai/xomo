@@ -4824,7 +4824,11 @@ final class XomoAutomationRegistry {
     ) throws {
         let action = try requiredString("action", in: arguments)
         if Self.selectionEditActionsRequiringActiveSelection.contains(action) {
-            try requireActiveSelection(for: action, viewModel: viewModel)
+            let fillsQuickMask = viewModel.isQuickMaskMode
+                && (action == "fillForeground" || action == "fillBackground")
+            if !fillsQuickMask {
+                try requireActiveSelection(for: action, viewModel: viewModel)
+            }
             try requireSelectionEditAvailability(for: action, viewModel: viewModel)
         }
         switch action {
@@ -4921,7 +4925,9 @@ final class XomoAutomationRegistry {
     ) throws {
         let requirement: (isAvailable: Bool, description: String)
         switch action {
-        case "fillForeground", "fillBackground", "stroke", "contentAwareFill":
+        case "fillForeground", "fillBackground":
+            requirement = (viewModel.canFillCurrentEditingTarget, "a fillable editing target")
+        case "stroke", "contentAwareFill":
             requirement = (viewModel.canEditSelectionPixels, "an editable selected pixel layer")
         case "clearPixels":
             requirement = (viewModel.canRemoveSelectionPixels, "a removable selected pixel layer")

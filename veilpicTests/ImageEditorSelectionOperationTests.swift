@@ -447,6 +447,67 @@ struct ImageEditorSelectionOperationTests {
         #expect(viewModel.undoStack.count == undoCount + 3)
     }
 
+    @Test func quickMaskForegroundAndBackgroundFillsTargetTheTemporaryChannel() throws {
+        let canvasSize = NSSize(width: 12, height: 8)
+        let viewModel = ImageEditorViewModel(
+            sourceName: "quick-mask-fill.png",
+            image: testImage(size: canvasSize)
+        ) { _ in }
+        viewModel.createRectSelection(from: CGPoint(x: 2, y: 2), to: CGPoint(x: 8, y: 6))
+        viewModel.setQuickMaskOverlayTarget(.maskedAreas)
+        viewModel.toggleQuickMaskMode()
+        let selectedLayerIndex = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[selectedLayerIndex].locksPixels = true
+        let originalLayerData = try #require(viewModel.document.selectedLayer?.image.qingtuPNGData())
+        let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
+
+        #expect(!viewModel.canEditSelectionPixels)
+        #expect(viewModel.canFillCurrentEditingTarget)
+        viewModel.fillSelection()
+
+        var mask = try #require(
+            viewModel.document.selection?.rasterizedMask(canvasSize: canvasSize)
+        )
+        #expect(mask.alpha.allSatisfy { $0 == UInt8.min })
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.undoStack.count == undoCount + 1)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.quickMaskHide"))
+        #expect(try #require(viewModel.document.selectedLayer?.image.qingtuPNGData()) == originalLayerData)
+
+        viewModel.fillSelection()
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.undoStack.count == undoCount + 1)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionUnchanged"))
+
+        viewModel.fillSelectionWithBackgroundColor()
+        mask = try #require(viewModel.document.selection?.rasterizedMask(canvasSize: canvasSize))
+        #expect(mask.alpha.allSatisfy { $0 == UInt8.max })
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.quickMaskReveal"))
+
+        viewModel.foregroundColor = NSColor(deviceWhite: 0.25, alpha: 1)
+        viewModel.fillSelection()
+        mask = try #require(viewModel.document.selection?.rasterizedMask(canvasSize: canvasSize))
+        #expect(mask.alpha.allSatisfy { (63...65).contains($0) })
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.quickMaskPaintTone"))
+
+        viewModel.setQuickMaskOverlayTarget(.selectedAreas)
+        viewModel.foregroundColor = .black
+        viewModel.fillSelection()
+        mask = try #require(viewModel.document.selection?.rasterizedMask(canvasSize: canvasSize))
+        #expect(mask.alpha.allSatisfy { $0 == UInt8.max })
+        #expect(viewModel.document.history.count == historyCount + 4)
+        #expect(viewModel.undoStack.count == undoCount + 4)
+
+        viewModel.undo()
+        mask = try #require(viewModel.document.selection?.rasterizedMask(canvasSize: canvasSize))
+        #expect(mask.alpha.allSatisfy { (63...65).contains($0) })
+        viewModel.redo()
+        mask = try #require(viewModel.document.selection?.rasterizedMask(canvasSize: canvasSize))
+        #expect(mask.alpha.allSatisfy { $0 == UInt8.max })
+        #expect(try #require(viewModel.document.selectedLayer?.image.qingtuPNGData()) == originalLayerData)
+    }
+
     @Test func quickMaskGrayscalePreviewFollowsTargetAndResetsOnExit() throws {
         let canvasSize = NSSize(width: 4, height: 2)
         let viewModel = ImageEditorViewModel(

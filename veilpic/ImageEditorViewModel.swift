@@ -6083,6 +6083,47 @@ final class ImageEditorViewModel: ObservableObject {
         paintQuickMask(samples: samples, targetAlpha: quickMaskSelectionAlpha(for: paintColor))
     }
 
+    func fillQuickMask(with color: NSColor) {
+        guard isQuickMaskMode,
+              let selection = document.selection,
+              let currentMask = selection.rasterizedMask(canvasSize: document.canvasSize)
+        else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return
+        }
+        let targetAlpha = quickMaskSelectionAlpha(for: color)
+        let updatedMask = ImageEditorSelectionMask(
+            width: currentMask.width,
+            height: currentMask.height,
+            alpha: [UInt8](repeating: targetAlpha, count: currentMask.alpha.count)
+        )
+        guard updatedMask != currentMask else {
+            statusText = L10n.text("imageEditor.status.selectionUnchanged")
+            return
+        }
+
+        let bounds = updatedMask.selectedBounds(in: document.canvasSize)
+            ?? CGRect(origin: .zero, size: document.canvasSize)
+        pushUndo()
+        document.selection = .raster(mask: updatedMask, bounds: bounds)
+        appendHistory(
+            L10n.text(
+                targetAlpha == UInt8.max
+                    ? "imageEditor.history.quickMaskReveal"
+                    : targetAlpha == UInt8.min
+                        ? "imageEditor.history.quickMaskHide"
+                        : "imageEditor.history.quickMaskPaintTone"
+            )
+        )
+        statusText = L10n.text(
+            targetAlpha == UInt8.max
+                ? "imageEditor.status.quickMaskRevealed"
+                : targetAlpha == UInt8.min
+                    ? "imageEditor.status.quickMaskHidden"
+                    : "imageEditor.status.quickMaskPaintedTone"
+        )
+    }
+
     func paintQuickMaskSelection(
         samples: [ImageEditorBrushStrokeSample],
         reveal: Bool

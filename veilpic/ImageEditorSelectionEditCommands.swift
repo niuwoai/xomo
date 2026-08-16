@@ -27,6 +27,10 @@ extension ImageEditorViewModel {
         hasPotentialSelectionPixels && !editableSelectionPixelLayerIndices().isEmpty
     }
 
+    var canFillCurrentEditingTarget: Bool {
+        isQuickMaskMode ? document.selection != nil : canEditSelectionPixels
+    }
+
     var canRemoveSelectionPixels: Bool {
         hasPotentialSelectionPixels && !removableSelectionPixelLayerIndices().isEmpty
     }
@@ -102,6 +106,10 @@ extension ImageEditorViewModel {
     }
 
     private func fillSelection(with color: NSColor) {
+        if isQuickMaskMode {
+            fillQuickMask(with: color)
+            return
+        }
         guard let selection = document.selection else {
             statusText = L10n.text("imageEditor.status.noSelection")
             return

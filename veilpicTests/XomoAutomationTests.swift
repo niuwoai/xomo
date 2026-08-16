@@ -3143,6 +3143,7 @@ struct XomoAutomationTests {
         registry.register(viewModel)
 
         viewModel.createRectSelection(from: CGPoint(x: 16, y: 16), to: CGPoint(x: 80, y: 80))
+        viewModel.setQuickMaskOverlayTarget(.maskedAreas)
 
         let enabled = registry.execute(request(
             operation: "call",
@@ -3151,6 +3152,32 @@ struct XomoAutomationTests {
         ))
         #expect(enabled.ok)
         #expect(enabled.result?.objectValue?["active"] == .bool(true))
+
+        let selectedLayerIndex = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[selectedLayerIndex].locksPixels = true
+        let layerData = try #require(viewModel.document.selectedLayer?.image.qingtuPNGData())
+        let filledHidden = registry.execute(request(
+            operation: "call",
+            name: "xomo.selection.edit",
+            arguments: ["action": .string("fillForeground")]
+        ))
+        #expect(filledHidden.ok)
+        var filledMask = try #require(
+            viewModel.document.selection?.rasterizedMask(canvasSize: viewModel.document.canvasSize)
+        )
+        #expect(filledMask.alpha.allSatisfy { $0 == UInt8.min })
+
+        let filledRevealed = registry.execute(request(
+            operation: "call",
+            name: "xomo.selection.edit",
+            arguments: ["action": .string("fillBackground")]
+        ))
+        #expect(filledRevealed.ok)
+        filledMask = try #require(
+            viewModel.document.selection?.rasterizedMask(canvasSize: viewModel.document.canvasSize)
+        )
+        #expect(filledMask.alpha.allSatisfy { $0 == UInt8.max })
+        #expect(try #require(viewModel.document.selectedLayer?.image.qingtuPNGData()) == layerData)
 
         let configured = registry.execute(request(
             operation: "call",

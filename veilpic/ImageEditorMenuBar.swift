@@ -252,12 +252,12 @@ extension ImageEditorView {
             viewModel.fillSelection()
         }
         .keyboardShortcut(.delete, modifiers: [.option])
-        .disabled(!viewModel.canEditSelectionPixels)
+        .disabled(!viewModel.canFillCurrentEditingTarget)
         Button(L10n.text("imageEditor.action.fillSelectionBackground")) {
             viewModel.fillSelectionWithBackgroundColor()
         }
         .keyboardShortcut(.delete, modifiers: [.command])
-        .disabled(!viewModel.canEditSelectionPixels)
+        .disabled(!viewModel.canFillCurrentEditingTarget)
         Button(L10n.text("imageEditor.action.contentAwareFillSelection")) {
             viewModel.contentAwareFillSelection()
         }
