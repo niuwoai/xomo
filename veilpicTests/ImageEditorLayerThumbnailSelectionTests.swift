@@ -441,6 +441,43 @@ struct ImageEditorLayerThumbnailSelectionTests {
         #expect(viewModel.undoStack.count == undoCount)
     }
 
+    @Test func currentTargetInvertChangesTheEditedMaskInsteadOfLayerPixels() throws {
+        let fixture = makeLayerFixture(includeMasks: true)
+        let viewModel = fixture.viewModel
+        try installSplitAlphaMask(in: fixture)
+        viewModel.selectLayer(fixture.thumbnailLayerID, editingMask: true)
+        let width = Int(fixture.canvasSize.width)
+        let height = Int(fixture.canvasSize.height)
+        let originalLayerData = try #require(viewModel.document.selectedLayer?.image.qingtuPNGData())
+        let originalMask = try #require(
+            viewModel.document.selectedLayer?.mask?.alphaMask(width: width, height: height)
+        )
+
+        #expect(viewModel.canInvertCurrentEditingTarget)
+        #expect(viewModel.invertCurrentEditingTarget())
+        let invertedMask = try #require(
+            viewModel.document.selectedLayer?.mask?.alphaMask(width: width, height: height)
+        )
+        #expect(invertedMask.alpha[10] == UInt8.max - originalMask.alpha[10])
+        #expect(invertedMask.alpha[70] == UInt8.max - originalMask.alpha[70])
+        #expect(try #require(viewModel.document.selectedLayer?.image.qingtuPNGData()) == originalLayerData)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerMaskInvert"))
+
+        viewModel.undo()
+        let restoredMask = try #require(
+            viewModel.document.selectedLayer?.mask?.alphaMask(width: width, height: height)
+        )
+        #expect(restoredMask == originalMask)
+        let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
+        viewModel.selectedLeftSidebarTab = .components
+        #expect(!viewModel.canInvertCurrentEditingTarget)
+        #expect(!viewModel.invertCurrentEditingTarget())
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.undoStack.count == undoCount)
+        #expect(try #require(viewModel.document.selectedLayer?.image.qingtuPNGData()) == originalLayerData)
+    }
+
     @Test func contentOrChannelSelectionLeavesMaskSoloPreviewWithoutHistory() throws {
         let fixture = makeLayerFixture(includeMasks: true)
         let viewModel = fixture.viewModel
@@ -539,6 +576,7 @@ struct ImageEditorLayerThumbnailSelectionTests {
         #expect(viewSource.contains("viewModel.canvasMaskOverlayImage"))
         #expect(viewSource.contains("canToggleLayerMaskRubylith: viewModel.canToggleSelectedLayerMaskRubylithPreview"))
         #expect(viewSource.contains("case .toggleLayerMaskRubylith: viewModel.toggleSelectedLayerMaskRubylithPreview()"))
+        #expect(viewSource.contains("case .invertPixels: viewModel.invertCurrentEditingTarget()"))
     }
 
     private func installSplitAlphaMask(

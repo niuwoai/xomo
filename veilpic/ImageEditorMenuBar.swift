@@ -349,10 +349,10 @@ extension ImageEditorView {
         .keyboardShortcut("u", modifiers: [.command, .shift])
         .disabled(!viewModel.canDesaturateSelectedLayer)
         Button(ImageEditorAdjustment.invert.title) {
-            viewModel.invertSelectedLayer()
+            viewModel.invertCurrentEditingTarget()
         }
         .keyboardShortcut("i", modifiers: [.command])
-        .disabled(!viewModel.canInvertSelectedLayer)
+        .disabled(!viewModel.canInvertCurrentEditingTarget)
         Menu(L10n.text("imageEditor.menu.image.adjustments")) {
             Button(ImageEditorAdjustment.brightnessContrast.title) {
                 viewModel.selectAdjustment(.brightnessContrast)

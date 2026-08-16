@@ -2363,7 +2363,7 @@ struct ImageEditorView: View {
         case .toneRange(let range): viewModel.applyToneRangeShortcut(range)
         case .spongeMode(let mode): viewModel.applySpongeModeShortcut(mode)
         case .desaturate: viewModel.desaturateSelectedLayer()
-        case .invertPixels: viewModel.invertSelectedLayer()
+        case .invertPixels: viewModel.invertCurrentEditingTarget()
         case .autoLevels: viewModel.autoLevelsSelectedLayer()
         case .autoContrast: viewModel.autoContrastSelectedLayer()
         case .autoColor: viewModel.autoColorSelectedLayer()

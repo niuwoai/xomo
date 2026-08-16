@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.12.0-rc1092 - 2026-08-17
+
+### Fixed
+- 修正 `Command+I` 在图层蒙版编辑状态仍反相图层内容的目标错位：现在按当前编辑上下文依次作用于正在预览的 Alpha 通道、实际图层蒙版或普通图层像素。
+
+### Changed
+- Image > Adjustments > Invert 与画布快捷键共享同一目标派发和可用性；Alpha 通道切回 Composite 后，即使通道仍被列表选中，也会恢复反相图层像素。组件库不执行像素/通道反相，蒙版与 Alpha 操作分别沿用现有单步 Undo/History 和状态反馈。
+
+### Verification
+- 图层蒙版、Alpha 通道、Composite 像素、组件工作区、菜单/快捷键接线及 Undo/History 专项与邻接回归 23/23，文字输入保护 5/5、CLI 2/2、发布契约 7/7（21 项断言）及最终 `build-for-testing` 通过。本版本不触发周期 Universal Release、完整冒烟与 `/Applications` 安装，下一次完整门禁为 rc1120。
+
 ## 2.12.0-rc1091 - 2026-08-17
 
 ### Added

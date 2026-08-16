@@ -634,6 +634,42 @@ struct ImageEditorChannelTests {
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.alphaChannelDelete"))
     }
 
+    @Test func currentTargetInvertPrefersPreviewedAlphaThenReturnsToLayerPixels() throws {
+        let sourceImage = splitChannelImage()
+        let viewModel = ImageEditorViewModel(
+            sourceName: "current-invert-target.png",
+            image: sourceImage
+        ) { _ in }
+        let selectedLayerIndex = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[selectedLayerIndex].image = sourceImage
+        viewModel.loadSelectionFromChannel(.red)
+        viewModel.saveSelectionAsAlphaChannel()
+        let channelID = try #require(viewModel.selectedAlphaChannelID)
+        viewModel.selectAlphaChannel(channelID)
+        let originalLayerData = try #require(viewModel.document.selectedLayer?.image.qingtuPNGData())
+        let originalMask = try #require(viewModel.selectedAlphaChannel?.mask)
+
+        #expect(viewModel.previewedAlphaChannelID == channelID)
+        #expect(viewModel.canInvertCurrentEditingTarget)
+        #expect(viewModel.invertCurrentEditingTarget())
+        let invertedMask = try #require(viewModel.selectedAlphaChannel?.mask)
+        #expect(maskAlpha(invertedMask, x: 0, y: 0) == UInt8.max - maskAlpha(originalMask, x: 0, y: 0))
+        #expect(maskAlpha(invertedMask, x: 1, y: 0) == UInt8.max - maskAlpha(originalMask, x: 1, y: 0))
+        #expect(try #require(viewModel.document.selectedLayer?.image.qingtuPNGData()) == originalLayerData)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.alphaChannelInvert"))
+
+        viewModel.selectChannelPreview(.composite)
+        #expect(viewModel.previewedAlphaChannelID == nil)
+        #expect(viewModel.selectedAlphaChannelID == channelID)
+        viewModel.document.selection = nil
+        let alphaBeforePixelInvert = try #require(viewModel.selectedAlphaChannel?.mask)
+        #expect(viewModel.canInvertCurrentEditingTarget)
+        #expect(viewModel.invertCurrentEditingTarget())
+        #expect(try #require(viewModel.document.selectedLayer?.image.qingtuPNGData()) != originalLayerData)
+        #expect(viewModel.selectedAlphaChannel?.mask == alphaBeforePixelInvert)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.invert"))
+    }
+
     @Test func alphaChannelsCanThresholdSoftMasks() async throws {
         let viewModel = ImageEditorViewModel(sourceName: "split.png", image: splitChannelImage()) { _ in }
         let mask = ImageEditorSelectionMask(width: 3, height: 1, alpha: [0, 127, 128])

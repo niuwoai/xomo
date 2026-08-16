@@ -2229,6 +2229,17 @@ final class ImageEditorViewModel: ObservableObject {
         canAutoLevelsSelectedLayer
     }
 
+    var canInvertCurrentEditingTarget: Bool {
+        guard selectedLeftSidebarTab == .tools else { return false }
+        if previewedAlphaChannelID != nil {
+            return previewedAlphaChannel != nil
+        }
+        if isEditingLayerMask {
+            return canInvertLayerMask
+        }
+        return canInvertSelectedLayer
+    }
+
     var canApplySelectedFilter: Bool {
         canAutoLevelsSelectedLayer
     }
@@ -6957,6 +6968,21 @@ final class ImageEditorViewModel: ObservableObject {
             status: "imageEditor.status.invert",
             selectedStatus: "imageEditor.status.invertSelected"
         )
+    }
+
+    @discardableResult
+    func invertCurrentEditingTarget() -> Bool {
+        guard canInvertCurrentEditingTarget else { return false }
+        if let previewedAlphaChannelID {
+            invertAlphaChannel(previewedAlphaChannelID)
+            return true
+        }
+        if isEditingLayerMask {
+            invertLayerMask()
+            return true
+        }
+        invertSelectedLayer()
+        return true
     }
 
     func addAdjustmentLayer() {
