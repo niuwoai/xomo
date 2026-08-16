@@ -104,7 +104,7 @@ struct ImageEditorGuideTests {
         #expect(
             ImageEditorObjectDistanceMeasurement.guides(
                 from: source,
-                to: CGRect(x: 15, y: 25, width: 10, height: 10)
+                to: CGRect(x: 25, y: 35, width: 10, height: 10)
             ).isEmpty
         )
     }
@@ -155,6 +155,51 @@ struct ImageEditorGuideTests {
         #expect(
             ImageEditorObjectDistanceMeasurement.guides(from: lowerLeft, to: source)
                 == lowerLeftGuides
+        )
+    }
+
+    @Test
+    func containedObjectDistanceMeasurementShowsFourPaddingEdges() {
+        let outer = CGRect(x: 0, y: 0, width: 100, height: 80)
+        let inner = CGRect(x: 10, y: 20, width: 50, height: 30)
+        let guides = ImageEditorObjectDistanceMeasurement.guides(from: inner, to: outer)
+
+        #expect(guides == [
+            ImageEditorSpacingGuide(
+                orientation: .horizontal,
+                start: CGPoint(x: 0, y: 35),
+                end: CGPoint(x: 10, y: 35)
+            ),
+            ImageEditorSpacingGuide(
+                orientation: .horizontal,
+                start: CGPoint(x: 60, y: 35),
+                end: CGPoint(x: 100, y: 35)
+            ),
+            ImageEditorSpacingGuide(
+                orientation: .vertical,
+                start: CGPoint(x: 35, y: 0),
+                end: CGPoint(x: 35, y: 20)
+            ),
+            ImageEditorSpacingGuide(
+                orientation: .vertical,
+                start: CGPoint(x: 35, y: 50),
+                end: CGPoint(x: 35, y: 80)
+            )
+        ])
+        #expect(ImageEditorObjectDistanceMeasurement.guides(from: outer, to: inner) == guides)
+        #expect(guides.map(\.distance) == [10, 40, 20, 30])
+
+        let edgeToEdge = CGRect(x: 0, y: 10, width: 100, height: 60)
+        #expect(
+            ImageEditorObjectDistanceMeasurement.guides(from: outer, to: edgeToEdge)
+                .map(\.distance) == [0, 0, 10, 10]
+        )
+        #expect(ImageEditorObjectDistanceMeasurement.guides(from: outer, to: outer).isEmpty)
+        #expect(
+            ImageEditorObjectDistanceMeasurement.guides(
+                from: outer,
+                to: CGRect(x: 80, y: 60, width: 40, height: 40)
+            ).isEmpty
         )
     }
 
@@ -216,6 +261,50 @@ struct ImageEditorGuideTests {
         viewModel.moveToolAutoSelectTarget = .layer
         #expect(viewModel.moveToolDistanceInspectionTargetFrame(at: hoverPoint) == firstChild.frame)
         #expect(viewModel.document.selectedLayerID == selectedID)
+    }
+
+    @Test
+    func groupScopeMeasuresASelectedChildAgainstItsContainerBounds() throws {
+        let viewModel = transformableViewModel(
+            sourceName: "source.png",
+            image: testImage(color: .windowBackgroundColor, size: NSSize(width: 220, height: 140))
+        )
+        var background = ImageEditorLayer.solidColorFill(
+            name: "Container background",
+            size: CGSize(width: 120, height: 80),
+            content: ImageEditorSolidColorFillContent(red: 0.2, green: 0.3, blue: 0.4)
+        )
+        background.frame = CGRect(x: 40, y: 20, width: 120, height: 80)
+        var child = ImageEditorLayer.solidColorFill(
+            name: "Measured child",
+            size: CGSize(width: 30, height: 20),
+            content: ImageEditorSolidColorFillContent(red: 0.8, green: 0.5, blue: 0.2)
+        )
+        child.frame = CGRect(x: 70, y: 40, width: 30, height: 20)
+        let group = ImageEditorLayer.group(
+            name: "Container",
+            size: viewModel.document.canvasSize
+        )
+        background.groupID = group.id
+        child.groupID = group.id
+        viewModel.document.layers.append(contentsOf: [background, child, group])
+        viewModel.selectLayer(child.id)
+        let hoverPoint = CGPoint(x: child.frame.midX, y: child.frame.midY)
+
+        viewModel.moveToolAutoSelectTarget = .group
+        let targetFrame = try #require(
+            viewModel.moveToolDistanceInspectionTargetFrame(at: hoverPoint)
+        )
+        #expect(targetFrame == background.frame)
+        #expect(
+            ImageEditorObjectDistanceMeasurement.guides(from: child.frame, to: targetFrame)
+                .map(\.distance) == [30, 60, 20, 40]
+        )
+        #expect(viewModel.document.selectedLayerID == child.id)
+
+        viewModel.moveToolAutoSelectTarget = .layer
+        #expect(viewModel.moveToolDistanceInspectionTargetFrame(at: hoverPoint) == nil)
+        #expect(viewModel.document.selectedLayerID == child.id)
     }
 
     @Test

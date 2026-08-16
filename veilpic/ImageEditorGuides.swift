@@ -32,6 +32,14 @@ enum ImageEditorObjectDistanceMeasurement {
         guard source.width > 0, source.height > 0, target.width > 0, target.height > 0 else {
             return []
         }
+        if source != target {
+            if source.contains(target) {
+                return paddingGuides(outer: source, inner: target)
+            }
+            if target.contains(source) {
+                return paddingGuides(outer: target, inner: source)
+            }
+        }
 
         let overlapX = overlap(source.minX...source.maxX, target.minX...target.maxX)
         let overlapY = overlap(source.minY...source.maxY, target.minY...target.maxY)
@@ -78,6 +86,31 @@ enum ImageEditorObjectDistanceMeasurement {
             )
         }
         return guides
+    }
+
+    private static func paddingGuides(outer: CGRect, inner: CGRect) -> [ImageEditorSpacingGuide] {
+        [
+            ImageEditorSpacingGuide(
+                orientation: .horizontal,
+                start: CGPoint(x: outer.minX, y: inner.midY),
+                end: CGPoint(x: inner.minX, y: inner.midY)
+            ),
+            ImageEditorSpacingGuide(
+                orientation: .horizontal,
+                start: CGPoint(x: inner.maxX, y: inner.midY),
+                end: CGPoint(x: outer.maxX, y: inner.midY)
+            ),
+            ImageEditorSpacingGuide(
+                orientation: .vertical,
+                start: CGPoint(x: inner.midX, y: outer.minY),
+                end: CGPoint(x: inner.midX, y: inner.minY)
+            ),
+            ImageEditorSpacingGuide(
+                orientation: .vertical,
+                start: CGPoint(x: inner.midX, y: inner.maxY),
+                end: CGPoint(x: inner.midX, y: outer.maxY)
+            )
+        ]
     }
 
     private static func midpoint(of range: ClosedRange<CGFloat>) -> CGFloat {
