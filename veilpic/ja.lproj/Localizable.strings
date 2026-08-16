@@ -718,7 +718,7 @@
 "imageEditor.tool.directSelection" = "直接選択";
 "imageEditor.tool.hand" = "手のひら";
 "imageEditor.tool.zoom" = "ズーム";
-"imageEditor.tool.move.help" = "移動：ドラッグして現在のレイヤーまたは選択範囲を移動します。";
+"imageEditor.tool.move.help" = "移動：レイヤーまたは選択範囲をドラッグし、編集可能なテキストをダブルクリックしてその場で編集します。";
 "imageEditor.tool.marquee.help" = "矩形選択：ドラッグして矩形の選択範囲を作成します。";
 "imageEditor.tool.lasso.help" = "なげなわ：輪郭に沿って自由に選択範囲を描きます。";
 "imageEditor.tool.magicWand.help" = "自動選択：近い色の連続した領域を選択します。";

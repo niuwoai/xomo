@@ -2814,7 +2814,7 @@ struct ImageEditorView: View {
                             activeResizeHandle = nil
                             refreshCanvasCursor(in: geometry.size)
                         },
-                        onObjectMoveCandidateBegan: { location, modifierFlags in
+                        onObjectMoveCandidateBegan: { location, modifierFlags, clickCount in
                             guard canvasInteractionTool == .move,
                                   ImageEditorObjectDragEventPolicy.allowsCandidate(
                                     modifierFlags: modifierFlags,
@@ -2825,6 +2825,20 @@ struct ImageEditorView: View {
                                   ),
                                   let imagePoint = imagePoint(from: location, in: geometry.size)
                             else { return false }
+                            let isEditableTextDoubleClick = ImageEditorMoveToolDoubleClickPolicy
+                                .shouldBeginTextEditing(
+                                    sidebarTab: viewModel.selectedLeftSidebarTab,
+                                    selectedTool: viewModel.selectedTool,
+                                    clickCount: clickCount,
+                                    modifierFlags: modifierFlags
+                                )
+                                && viewModel.hasEditableTextLayer(
+                                    at: imagePoint,
+                                    hitTolerance: canvasTextHitTolerance(in: geometry.size)
+                                )
+                            if isEditableTextDoubleClick {
+                                return true
+                            }
                             return viewModel.hasXomoObject(at: imagePoint)
                                 && viewModel.canvasContentHit(at: imagePoint) == .movable
                         },
@@ -2839,8 +2853,19 @@ struct ImageEditorView: View {
                             ImageEditorCanvasCursor.objectMoveCursor().set()
                             return true
                         },
-                        onObjectMoveClicked: { location, modifierFlags in
+                        onObjectMoveClicked: { location, modifierFlags, clickCount in
                             guard let imagePoint = imagePoint(from: location, in: geometry.size) else {
+                                return
+                            }
+                            if ImageEditorMoveToolDoubleClickPolicy.shouldBeginTextEditing(
+                                sidebarTab: viewModel.selectedLeftSidebarTab,
+                                selectedTool: viewModel.selectedTool,
+                                clickCount: clickCount,
+                                modifierFlags: modifierFlags
+                            ), beginExistingCanvasTextEditing(
+                                at: imagePoint,
+                                hitTolerance: canvasTextHitTolerance(in: geometry.size)
+                            ) {
                                 return
                             }
                             _ = viewModel.selectXomoObject(
@@ -4680,13 +4705,17 @@ struct ImageEditorView: View {
             commitCanvasTextEditing()
             excludedLayerID = viewModel.document.selectedLayerID
         }
-        let imageRect = fittedImageRect(in: size)
-        let displayScale = imageRect.width / max(viewModel.document.canvasSize.width, 1)
         startCanvasTextEditing(
             at: point,
             excluding: excludedLayerID,
-            hitTolerance: ImageEditorTextHitTesting.canvasTolerance(displayScale: displayScale)
+            hitTolerance: canvasTextHitTolerance(in: size)
         )
+    }
+
+    private func canvasTextHitTolerance(in size: CGSize) -> CGFloat {
+        let imageRect = fittedImageRect(in: size)
+        let displayScale = imageRect.width / max(viewModel.document.canvasSize.width, 1)
+        return ImageEditorTextHitTesting.canvasTolerance(displayScale: displayScale)
     }
 
     private func beginCanvasParagraphTextEditing(in frame: CGRect) {
@@ -4708,24 +4737,40 @@ struct ImageEditorView: View {
         excluding excludedLayerID: UUID? = nil,
         hitTolerance: CGFloat = ImageEditorTextHitTesting.viewTolerance
     ) {
-        if viewModel.selectEditableTextLayer(
+        if beginExistingCanvasTextEditing(
             at: point,
             excluding: excludedLayerID,
             hitTolerance: hitTolerance
-        ),
-           let layer = viewModel.document.selectedLayer {
-            canvasTextEditingLayerID = layer.id
-            canvasTextEditingOrigin = layer.frame.origin
-            canvasTextEditingFrame = nil
-        } else {
-            viewModel.textValue = ""
-            viewModel.textBoxWidth = 0
-            viewModel.textBoxHeight = 0
-            canvasTextEditingLayerID = nil
-            canvasTextEditingOrigin = point
-            canvasTextEditingFrame = nil
+        ) {
+            return
         }
+        viewModel.textValue = ""
+        viewModel.textBoxWidth = 0
+        viewModel.textBoxHeight = 0
+        canvasTextEditingLayerID = nil
+        canvasTextEditingOrigin = point
+        canvasTextEditingFrame = nil
         DispatchQueue.main.async { isCanvasTextEditorFocused = true }
+    }
+
+    @discardableResult
+    private func beginExistingCanvasTextEditing(
+        at point: CGPoint,
+        excluding excludedLayerID: UUID? = nil,
+        hitTolerance: CGFloat = ImageEditorTextHitTesting.viewTolerance
+    ) -> Bool {
+        guard viewModel.selectEditableTextLayer(
+            at: point,
+            excluding: excludedLayerID,
+            hitTolerance: hitTolerance
+        ), let layer = viewModel.document.selectedLayer
+        else { return false }
+
+        canvasTextEditingLayerID = layer.id
+        canvasTextEditingOrigin = layer.frame.origin
+        canvasTextEditingFrame = nil
+        DispatchQueue.main.async { isCanvasTextEditorFocused = true }
+        return true
     }
 
     private func commitCanvasTextEditing() {

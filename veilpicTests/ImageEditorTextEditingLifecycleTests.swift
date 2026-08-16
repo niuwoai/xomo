@@ -71,4 +71,68 @@ struct ImageEditorTextEditingLifecycleTests {
         #expect(overlaySource.components(separatedBy: ".focusable(false)").count == 3)
         #expect(!overlaySource.contains(".keyboardShortcut(.return, modifiers: [])"))
     }
+
+    @Test
+    func moveToolDoubleClickRoutesOnlyExistingEditableTextIntoTheCanvasEditor() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let viewSource = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let bridgeSource = try String(
+            contentsOf: repositoryRoot.appendingPathComponent(
+                "veilpic/ImageEditorScrollZoom.swift"
+            ),
+            encoding: .utf8
+        )
+
+        #expect(bridgeSource.contains("objectMoveCandidateClickCount = event.clickCount"))
+        #expect(
+            bridgeSource.contains(
+                "onObjectMoveCandidateBegan?(location, flags, event.clickCount)"
+            )
+        )
+        #expect(
+            bridgeSource.contains(
+                "objectMoveCandidateModifierFlags,\n                    objectMoveCandidateClickCount"
+            )
+        )
+
+        let candidateStart = try #require(
+            viewSource.range(of: "onObjectMoveCandidateBegan: { location, modifierFlags, clickCount in")
+        )
+        let activationStart = try #require(
+            viewSource[candidateStart.upperBound...].range(of: "onObjectMoveActivated:")
+        )
+        let candidateSource = viewSource[candidateStart.lowerBound..<activationStart.lowerBound]
+        #expect(candidateSource.contains("ImageEditorMoveToolDoubleClickPolicy"))
+        #expect(candidateSource.contains("viewModel.hasEditableTextLayer("))
+        #expect(candidateSource.contains("canvasTextHitTolerance(in: geometry.size)"))
+
+        let clickStart = try #require(
+            viewSource.range(of: "onObjectMoveClicked: { location, modifierFlags, clickCount in")
+        )
+        let changedStart = try #require(
+            viewSource[clickStart.upperBound...].range(of: "onObjectMoveChanged:")
+        )
+        let clickSource = viewSource[clickStart.lowerBound..<changedStart.lowerBound]
+        let editCall = try #require(clickSource.range(of: "beginExistingCanvasTextEditing("))
+        let fallbackCall = try #require(clickSource.range(of: "viewModel.selectXomoObject("))
+        #expect(editCall.lowerBound < fallbackCall.lowerBound)
+        #expect(clickSource.contains("return"))
+
+        let helperStart = try #require(
+            viewSource.range(of: "private func beginExistingCanvasTextEditing(")
+        )
+        let commitStart = try #require(
+            viewSource[helperStart.upperBound...].range(of: "private func commitCanvasTextEditing()")
+        )
+        let helperSource = viewSource[helperStart.lowerBound..<commitStart.lowerBound]
+        #expect(helperSource.contains("viewModel.selectEditableTextLayer("))
+        #expect(helperSource.contains("canvasTextEditingLayerID = layer.id"))
+        #expect(helperSource.contains("isCanvasTextEditorFocused = true"))
+        #expect(!helperSource.contains("viewModel.addText("))
+    }
 }

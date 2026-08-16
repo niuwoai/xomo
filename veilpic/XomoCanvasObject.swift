@@ -225,17 +225,36 @@ extension ImageEditorViewModel {
         excluding excludedLayerID: UUID? = nil,
         hitTolerance: CGFloat = ImageEditorTextHitTesting.viewTolerance
     ) -> Bool {
+        guard let layer = editableTextLayer(
+            at: point,
+            excluding: excludedLayerID,
+            hitTolerance: hitTolerance
+        ) else { return false }
+
+        selectLayer(layer.id)
+        return true
+    }
+
+    func hasEditableTextLayer(
+        at point: CGPoint,
+        hitTolerance: CGFloat = ImageEditorTextHitTesting.viewTolerance
+    ) -> Bool {
+        editableTextLayer(at: point, hitTolerance: hitTolerance) != nil
+    }
+
+    private func editableTextLayer(
+        at point: CGPoint,
+        excluding excludedLayerID: UUID? = nil,
+        hitTolerance: CGFloat
+    ) -> ImageEditorLayer? {
         let tolerance = max(0, hitTolerance)
-        guard let layer = document.layers.reversed().first(where: { layer in
+        return document.layers.reversed().first { layer in
             layer.isText
                 && layer.id != excludedLayerID
                 && document.isEffectivelyVisible(layer)
                 && !document.isEffectivelyPixelsLocked(layer)
                 && layer.frame.standardized.insetBy(dx: -tolerance, dy: -tolerance).contains(point)
-        }) else { return false }
-
-        selectLayer(layer.id)
-        return true
+        }
     }
 
     func deleteSelectedXomoObjectIfNeeded() -> Bool {

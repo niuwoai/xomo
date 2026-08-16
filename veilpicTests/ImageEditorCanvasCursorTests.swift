@@ -681,6 +681,59 @@ struct ImageEditorCanvasCursorTests {
         )
     }
 
+    @Test func moveToolDoubleClickBeginsTextEditingOnlyInPlainToolsMode() {
+        #expect(
+            ImageEditorMoveToolDoubleClickPolicy.shouldBeginTextEditing(
+                sidebarTab: .tools,
+                selectedTool: .move,
+                clickCount: 2,
+                modifierFlags: []
+            )
+        )
+        #expect(
+            ImageEditorMoveToolDoubleClickPolicy.shouldBeginTextEditing(
+                sidebarTab: .tools,
+                selectedTool: .move,
+                clickCount: 3,
+                modifierFlags: []
+            )
+        )
+        #expect(
+            !ImageEditorMoveToolDoubleClickPolicy.shouldBeginTextEditing(
+                sidebarTab: .tools,
+                selectedTool: .move,
+                clickCount: 1,
+                modifierFlags: []
+            )
+        )
+        #expect(
+            !ImageEditorMoveToolDoubleClickPolicy.shouldBeginTextEditing(
+                sidebarTab: .components,
+                selectedTool: .move,
+                clickCount: 2,
+                modifierFlags: []
+            )
+        )
+        #expect(
+            !ImageEditorMoveToolDoubleClickPolicy.shouldBeginTextEditing(
+                sidebarTab: .tools,
+                selectedTool: .brush,
+                clickCount: 2,
+                modifierFlags: []
+            )
+        )
+        for modifier: NSEvent.ModifierFlags in [.shift, .command, .option, .control] {
+            #expect(
+                !ImageEditorMoveToolDoubleClickPolicy.shouldBeginTextEditing(
+                    sidebarTab: .tools,
+                    selectedTool: .move,
+                    clickCount: 2,
+                    modifierFlags: modifier
+                )
+            )
+        }
+    }
+
     @Test func interruptedObjectCaptureCancelsOnlyAnActiveMove() {
         #expect(
             ImageEditorObjectDragEventPolicy.resetDecision(
