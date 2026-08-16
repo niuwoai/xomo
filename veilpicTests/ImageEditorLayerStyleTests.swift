@@ -4283,6 +4283,23 @@ struct ImageEditorLayerStyleTests {
         #expect(source.contains("imageEditor.option.gradientOverlayStopOpacity"))
         #expect(source.contains("image-editor-gradient-overlay-canvas-stop-opacity-"))
         #expect(source.contains("setSelectedLayerGradientOverlayCanvasStopOpacity"))
+        #expect(source.contains("gradientOverlayStopColorActivationRequestID"))
+        #expect(source.contains("activationRequestID: gradientOverlayStopColorActivationRequestID"))
+        #expect(source.contains("requestGradientOverlayCanvasStopColorEditing(at: point.index)"))
+        let doubleClickStopHandleStart = try #require(
+            source.range(of: "private func gradientOverlayStopHandleView(")
+        )
+        let doubleClickMidpointHandleStart = try #require(
+            source[doubleClickStopHandleStart.upperBound...].range(
+                of: "private func gradientOverlayMidpointHandleView("
+            )
+        )
+        let stopHandleSource = source[
+            doubleClickStopHandleStart.lowerBound..<doubleClickMidpointHandleStart.lowerBound
+        ]
+        #expect(stopHandleSource.contains(".simultaneousGesture("))
+        #expect(stopHandleSource.contains("SpatialTapGesture("))
+        #expect(stopHandleSource.contains("count: 2"))
         #expect(source.contains("imageEditor.option.gradientOverlayMidpoint"))
         #expect(source.contains("image-editor-gradient-overlay-canvas-midpoint-position-"))
         #expect(source.contains("setSelectedLayerGradientOverlayCanvasMidpoint"))

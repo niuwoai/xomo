@@ -108,6 +108,7 @@ struct ImageEditorView: View {
     @State private var cancelledGradientOverlayAxisDragStartLocation: CGPoint?
     @State private var activeGradientOverlayStopIndex: Int?
     @State private var selectedGradientOverlayStopIndex: Int?
+    @State private var gradientOverlayStopColorActivationRequestID = 0
     @State private var selectedGradientOverlayMidpointIndex: Int?
     @State private var gradientOverlayStopDragStartLocation: CGPoint?
     @State private var cancelledGradientOverlayStopDragStartLocation: CGPoint?
@@ -2431,12 +2432,22 @@ struct ImageEditorView: View {
             },
             onEditingEnded: {
                 viewModel.finishEditingSelectedLayerGradientOverlayCanvasStop()
-            }
+            },
+            activationRequestID: gradientOverlayStopColorActivationRequestID
         )
         .frame(width: 26, height: 26)
         .focusable(false)
         .xomoFocusEffectDisabled()
         .help(label)
+    }
+
+    private func requestGradientOverlayCanvasStopColorEditing(at stopIndex: Int) {
+        selectedGradientOverlayStopIndex = stopIndex
+        selectedGradientOverlayMidpointIndex = nil
+        DispatchQueue.main.async {
+            guard selectedGradientOverlayStopIndex == stopIndex else { return }
+            gradientOverlayStopColorActivationRequestID &+= 1
+        }
     }
 
     private var canvasWorkspace: some View {
@@ -8159,6 +8170,15 @@ struct ImageEditorView: View {
                             )
                     }
                     viewModel.finishEditingSelectedLayerGradientOverlayCanvasStop()
+                }
+            )
+            .simultaneousGesture(
+                SpatialTapGesture(
+                    count: 2,
+                    coordinateSpace: .named("image-editor-canvas-space")
+                )
+                .onEnded { _ in
+                    requestGradientOverlayCanvasStopColorEditing(at: point.index)
                 }
             )
             .zIndex(isEndpoint ? 2 : 0)

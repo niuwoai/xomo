@@ -99,7 +99,10 @@ struct ImageEditorColorWellTests {
         #expect(endCount == 1)
 
         colorWell.beginColorPanelEditing()
-        ImageEditorColorWell.dismantleNSView(colorWell, coordinator: ())
+        ImageEditorColorWell.dismantleNSView(
+            colorWell,
+            coordinator: ImageEditorColorWell.Coordinator()
+        )
         #expect(!colorWell.isColorPanelEditing)
         #expect(beginCount == 2)
         #expect(endCount == 2)
@@ -108,6 +111,20 @@ struct ImageEditorColorWellTests {
         rejectedColorWell.onEditingBegan = { false }
         #expect(!rejectedColorWell.beginColorPanelEditing())
         #expect(!rejectedColorWell.isColorPanelEditing)
+    }
+
+    @Test
+    func externalActivationRequestsAreConsumedExactlyOnceAfterMount() {
+        let coordinator = ImageEditorColorWell.Coordinator()
+        coordinator.synchronizeActivationRequest(7)
+        #expect(!coordinator.consumeActivationRequest(7))
+        #expect(coordinator.consumeActivationRequest(8))
+        #expect(!coordinator.consumeActivationRequest(8))
+        #expect(coordinator.consumeActivationRequest(9))
+
+        coordinator.synchronizeActivationRequest(nil)
+        #expect(!coordinator.consumeActivationRequest(nil))
+        #expect(coordinator.consumeActivationRequest(10))
     }
 
     @Test

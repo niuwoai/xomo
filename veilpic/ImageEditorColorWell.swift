@@ -150,6 +150,25 @@ struct ImageEditorColorWell: NSViewRepresentable {
     var accessibilityLabel: String
     var onEditingBegan: (() -> Bool)? = nil
     var onEditingEnded: (() -> Void)? = nil
+    var activationRequestID: Int? = nil
+
+    final class Coordinator {
+        private var appliedActivationRequestID: Int?
+
+        func synchronizeActivationRequest(_ requestID: Int?) {
+            appliedActivationRequestID = requestID
+        }
+
+        func consumeActivationRequest(_ requestID: Int?) -> Bool {
+            guard let requestID else { return false }
+            defer { appliedActivationRequestID = requestID }
+            return appliedActivationRequestID != requestID
+        }
+    }
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator()
+    }
 
     func makeNSView(context: Context) -> ImageEditorColorWellControl {
         let colorWell = ImageEditorColorWellControl(
@@ -164,6 +183,7 @@ struct ImageEditorColorWell: NSViewRepresentable {
         colorWell.toolTip = accessibilityLabel
         colorWell.setAccessibilityIdentifier(accessibilityIdentifier)
         colorWell.setAccessibilityLabel(accessibilityLabel)
+        context.coordinator.synchronizeActivationRequest(activationRequestID)
         return colorWell
     }
 
@@ -179,11 +199,16 @@ struct ImageEditorColorWell: NSViewRepresentable {
         colorWell.toolTip = accessibilityLabel
         colorWell.setAccessibilityIdentifier(accessibilityIdentifier)
         colorWell.setAccessibilityLabel(accessibilityLabel)
+        if context.coordinator.consumeActivationRequest(activationRequestID) {
+            DispatchQueue.main.async { [weak colorWell] in
+                colorWell?.performClick(nil)
+            }
+        }
     }
 
     static func dismantleNSView(
         _ colorWell: ImageEditorColorWellControl,
-        coordinator: ()
+        coordinator: Coordinator
     ) {
         colorWell.endColorPanelEditing()
     }
