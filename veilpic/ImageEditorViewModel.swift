@@ -833,6 +833,21 @@ final class ImageEditorViewModel: ObservableObject {
         return true
     }
 
+    var canToggleSelectedLayerMaskRubylithPreview: Bool {
+        selectedLeftSidebarTab == .tools
+            && isEditingLayerMask
+            && document.selectedLayerIDs.count == 1
+            && document.selectedLayer?.mask != nil
+    }
+
+    @discardableResult
+    func toggleSelectedLayerMaskRubylithPreview() -> Bool {
+        guard canToggleSelectedLayerMaskRubylithPreview,
+              let layerID = document.selectedLayerID
+        else { return false }
+        return toggleLayerMaskRubylithPreview(layerID: layerID)
+    }
+
     func clearLayerMaskSoloPreview() {
         previewedLayerMaskID = nil
         previewedLayerMaskMode = nil

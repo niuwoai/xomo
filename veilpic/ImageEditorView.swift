@@ -280,6 +280,7 @@ struct ImageEditorView: View {
             ImageEditorKeyboardShortcutMonitor(
                 perform: performKeyboardShortcut,
                 activeTool: viewModel.canvasInteractionTool,
+                canToggleLayerMaskRubylith: viewModel.canToggleSelectedLayerMaskRubylithPreview,
                 nudgeSelected: { delta in
                     if cancelPathAnchorDragForKeyboardCommand() {
                         return
@@ -2386,6 +2387,7 @@ struct ImageEditorView: View {
         case .invertSelection: viewModel.invertSelection()
         case .featherSelection: viewModel.featherSelection()
         case .toggleQuickMask: viewModel.toggleQuickMaskMode()
+        case .toggleLayerMaskRubylith: viewModel.toggleSelectedLayerMaskRubylithPreview()
         case .applyLastFilter: viewModel.applyLastFilter()
         case .toggleRulers: viewModel.toggleRulersVisible()
         case .toggleGuides: viewModel.toggleGuidesVisible()
@@ -15045,6 +15047,7 @@ enum ImageEditorKeyboardShortcutAction: Equatable {
     case invertSelection
     case featherSelection
     case toggleQuickMask
+    case toggleLayerMaskRubylith
     case applyLastFilter
     case toggleRulers
     case toggleGuides
@@ -15092,6 +15095,7 @@ enum ImageEditorKeyboardShortcutAction: Equatable {
              .navigateLayerSelection,
              .selectAllLayers,
              .toggleQuickMask,
+             .toggleLayerMaskRubylith,
              .toneRange,
              .spongeMode:
             true
@@ -15104,7 +15108,8 @@ enum ImageEditorKeyboardShortcutAction: Equatable {
         charactersIgnoringModifiers: String?,
         modifierFlags: NSEvent.ModifierFlags,
         keyCode: UInt16? = nil,
-        activeTool: ImageEditorTool? = nil
+        activeTool: ImageEditorTool? = nil,
+        canToggleLayerMaskRubylith: Bool = false
     ) -> ImageEditorKeyboardShortcutAction? {
         let key = charactersIgnoringModifiers?.lowercased() ?? ""
         let relevantFlags = modifierFlags.intersection([.command, .option, .shift, .control])
@@ -15209,6 +15214,11 @@ enum ImageEditorKeyboardShortcutAction: Equatable {
         if key == "i", relevantFlags == [.command, .shift] { return .invertSelection }
         if key == "d", relevantFlags == [.command, .option] { return .featherSelection }
         if key == "q", relevantFlags.isEmpty { return .toggleQuickMask }
+        if (key == "\\" || keyCode == 42),
+           relevantFlags.isEmpty,
+           canToggleLayerMaskRubylith {
+            return .toggleLayerMaskRubylith
+        }
         if key == "f", relevantFlags == [.command] { return .applyLastFilter }
         if key == "r", relevantFlags == [.command] { return .toggleRulers }
         if key == ";", relevantFlags == [.command] { return .toggleGuides }
@@ -15508,6 +15518,7 @@ enum ImageEditorPendingPenPointerFinishPolicy {
 struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
     let perform: (ImageEditorKeyboardShortcutAction) -> Void
     let activeTool: ImageEditorTool
+    let canToggleLayerMaskRubylith: Bool
     let nudgeSelected: (CGSize) -> Void
     let selectNextCanvasHandle: (Bool) -> Bool
     let moveSelectedCanvasHandleToBoundary: (Double) -> Bool
@@ -15524,6 +15535,7 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
         Coordinator(
             perform: perform,
             activeTool: activeTool,
+            canToggleLayerMaskRubylith: canToggleLayerMaskRubylith,
             nudgeSelected: nudgeSelected,
             selectNextCanvasHandle: selectNextCanvasHandle,
             moveSelectedCanvasHandleToBoundary: moveSelectedCanvasHandleToBoundary,
@@ -15545,6 +15557,7 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
     func updateNSView(_ nsView: KeyboardShortcutMonitorNSView, context: Context) {
         context.coordinator.perform = perform
         context.coordinator.activeTool = activeTool
+        context.coordinator.canToggleLayerMaskRubylith = canToggleLayerMaskRubylith
         context.coordinator.nudgeSelected = nudgeSelected
         context.coordinator.selectNextCanvasHandle = selectNextCanvasHandle
         context.coordinator.moveSelectedCanvasHandleToBoundary = moveSelectedCanvasHandleToBoundary
@@ -15562,6 +15575,7 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
         private(set) weak var window: NSWindow?
         var perform: (ImageEditorKeyboardShortcutAction) -> Void
         var activeTool: ImageEditorTool
+        var canToggleLayerMaskRubylith: Bool
         var nudgeSelected: (CGSize) -> Void
         var selectNextCanvasHandle: (Bool) -> Bool
         var moveSelectedCanvasHandleToBoundary: (Double) -> Bool
@@ -15581,6 +15595,7 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
         init(
             perform: @escaping (ImageEditorKeyboardShortcutAction) -> Void,
             activeTool: ImageEditorTool,
+            canToggleLayerMaskRubylith: Bool,
             nudgeSelected: @escaping (CGSize) -> Void,
             selectNextCanvasHandle: @escaping (Bool) -> Bool,
             moveSelectedCanvasHandleToBoundary: @escaping (Double) -> Bool,
@@ -15595,6 +15610,7 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
         ) {
             self.perform = perform
             self.activeTool = activeTool
+            self.canToggleLayerMaskRubylith = canToggleLayerMaskRubylith
             self.nudgeSelected = nudgeSelected
             self.selectNextCanvasHandle = selectNextCanvasHandle
             self.moveSelectedCanvasHandleToBoundary = moveSelectedCanvasHandleToBoundary
@@ -15750,7 +15766,8 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
                 charactersIgnoringModifiers: event.charactersIgnoringModifiers,
                 modifierFlags: event.modifierFlags,
                 keyCode: event.keyCode,
-                activeTool: activeTool
+                activeTool: activeTool,
+                canToggleLayerMaskRubylith: canToggleLayerMaskRubylith
             ) {
                 if action.isBlockedByTextInput, isTextInputActive {
                     return event

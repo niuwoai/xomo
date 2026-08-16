@@ -3624,5 +3624,5 @@
 "imageEditor.status.sliceInvalidFrame" = "切片矩形数值无效，请检查 X、Y、宽度和高度";
 "imageEditor.history.sliceUpdated" = "更新切片：%@";
 "imageEditor.layer.thumbnailSelectionHelp" = "点击选择图层；Command 点按载入透明度，配合 Shift、Option 或两者可添加、减去或交叉选区。";
-"imageEditor.layer.rasterMaskThumbnailSelectionHelp" = "点击编辑图层蒙版；Option 点按独显蒙版通道，Shift+Option 点按切换红色覆盖，Shift 点按启用或禁用，Command 点按载入边界并可配合 Shift 或 Option 组合选区。";
+"imageEditor.layer.rasterMaskThumbnailSelectionHelp" = "点击编辑图层蒙版，随后按 \\ 可切换红色覆盖；Option 点按独显蒙版通道，Shift+Option 点按也可切换红色覆盖，Shift 点按启用或禁用，Command 点按载入边界并可配合 Shift 或 Option 组合选区。";
 "imageEditor.layer.vectorMaskThumbnailSelectionHelp" = "点击编辑矢量蒙版；Shift 点按启用或禁用，Command 点按载入边界并可配合 Shift 或 Option 组合选区。";

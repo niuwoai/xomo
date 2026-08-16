@@ -3624,5 +3624,5 @@
 "imageEditor.status.sliceInvalidFrame" = "The slice rectangle is invalid. Check X, Y, width, and height.";
 "imageEditor.history.sliceUpdated" = "Update Slice: %@";
 "imageEditor.layer.thumbnailSelectionHelp" = "Click to select the layer. Command-click loads transparency; add Shift, Option, or both to add, subtract, or intersect.";
-"imageEditor.layer.rasterMaskThumbnailSelectionHelp" = "Click to edit the layer mask. Option-click shows its mask channel; Shift-Option-click toggles its red overlay; Shift-click toggles it; Command-click loads its boundary, with Shift or Option combining the selection.";
+"imageEditor.layer.rasterMaskThumbnailSelectionHelp" = "Click to edit the layer mask, then press \\ to toggle its red overlay. Option-click shows its mask channel; Shift-Option-click also toggles the overlay; Shift-click toggles the mask; Command-click loads its boundary, with Shift or Option combining the selection.";
 "imageEditor.layer.vectorMaskThumbnailSelectionHelp" = "Click to edit the vector mask. Shift-click toggles it; Command-click loads its boundary, with Shift or Option combining the selection.";

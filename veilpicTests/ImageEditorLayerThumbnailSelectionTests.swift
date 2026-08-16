@@ -122,6 +122,29 @@ struct ImageEditorLayerThumbnailSelectionTests {
         ) == .intersect)
     }
 
+    @Test func backslashResolvesRubylithOnlyForAnEligibleSelectedLayerMask() {
+        #expect(ImageEditorKeyboardShortcutAction.resolve(
+            charactersIgnoringModifiers: "\\",
+            modifierFlags: [],
+            canToggleLayerMaskRubylith: true
+        ) == .toggleLayerMaskRubylith)
+        #expect(ImageEditorKeyboardShortcutAction.resolve(
+            charactersIgnoringModifiers: nil,
+            modifierFlags: [],
+            keyCode: 42,
+            canToggleLayerMaskRubylith: true
+        ) == .toggleLayerMaskRubylith)
+        #expect(ImageEditorKeyboardShortcutAction.resolve(
+            charactersIgnoringModifiers: "\\",
+            modifierFlags: []
+        ) == nil)
+        #expect(ImageEditorKeyboardShortcutAction.resolve(
+            charactersIgnoringModifiers: "\\",
+            modifierFlags: [.shift],
+            canToggleLayerMaskRubylith: true
+        ) == nil)
+    }
+
     @Test func clickedTransparencyThumbnailTargetsItsLayerWithoutChangingLayerOrToolMode() throws {
         let fixture = makeLayerFixture()
         let viewModel = fixture.viewModel
@@ -387,6 +410,37 @@ struct ImageEditorLayerThumbnailSelectionTests {
         #expect(viewModel.canvasMaskOverlayImage != nil)
     }
 
+    @Test func selectedLayerMaskBackslashToggleIsTransientAndWorkspaceScoped() throws {
+        let fixture = makeLayerFixture(includeMasks: true)
+        let viewModel = fixture.viewModel
+        try installSplitAlphaMask(in: fixture)
+        let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
+
+        viewModel.selectLayer(fixture.thumbnailLayerID, editingMask: false)
+        #expect(!viewModel.canToggleSelectedLayerMaskRubylithPreview)
+        #expect(!viewModel.toggleSelectedLayerMaskRubylithPreview())
+
+        viewModel.selectLayer(fixture.thumbnailLayerID, editingMask: true)
+        #expect(viewModel.canToggleSelectedLayerMaskRubylithPreview)
+        #expect(viewModel.toggleSelectedLayerMaskRubylithPreview())
+        #expect(viewModel.previewedLayerMaskMode == .rubylith)
+        #expect(viewModel.canvasMaskOverlayImage != nil)
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.undoStack.count == undoCount)
+
+        #expect(viewModel.toggleSelectedLayerMaskRubylithPreview())
+        #expect(viewModel.previewedLayerMaskMode == nil)
+        #expect(viewModel.canvasMaskOverlayImage == nil)
+
+        viewModel.selectedLeftSidebarTab = .components
+        #expect(!viewModel.canToggleSelectedLayerMaskRubylithPreview)
+        #expect(!viewModel.toggleSelectedLayerMaskRubylithPreview())
+        #expect(viewModel.previewedLayerMaskMode == nil)
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.undoStack.count == undoCount)
+    }
+
     @Test func contentOrChannelSelectionLeavesMaskSoloPreviewWithoutHistory() throws {
         let fixture = makeLayerFixture(includeMasks: true)
         let viewModel = fixture.viewModel
@@ -483,6 +537,8 @@ struct ImageEditorLayerThumbnailSelectionTests {
         #expect(source.contains("sidebarTab: viewModel.selectedLeftSidebarTab"))
         #expect(viewSource.contains("maskColorOverlay(in: geometry.size)"))
         #expect(viewSource.contains("viewModel.canvasMaskOverlayImage"))
+        #expect(viewSource.contains("canToggleLayerMaskRubylith: viewModel.canToggleSelectedLayerMaskRubylithPreview"))
+        #expect(viewSource.contains("case .toggleLayerMaskRubylith: viewModel.toggleSelectedLayerMaskRubylithPreview()"))
     }
 
     private func installSplitAlphaMask(
