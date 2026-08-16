@@ -319,6 +319,83 @@ struct XomoCanvasObjectTests {
         #expect(viewModel.document.selectedLayerID != group.id)
     }
 
+    @Test func moveToolDoubleClickEntersTheForegroundComponentChild() throws {
+        let viewModel = makeViewModel()
+        viewModel.insertXomoComponent(.button, at: CGPoint(x: 80, y: 90))
+        let group = try #require(viewModel.document.selectedLayer)
+        let textLayer = try #require(viewModel.document.layers.first {
+            $0.groupID == group.id && $0.isText
+        })
+        let textPoint = CGPoint(x: textLayer.frame.midX, y: textLayer.frame.midY)
+
+        #expect(
+            viewModel.moveToolDoubleClickTarget(at: textPoint, hitTolerance: 0)
+                == .editableText(textLayer.id)
+        )
+        #expect(viewModel.document.selectedLayerID == group.id)
+        #expect(
+            viewModel.selectMoveToolDoubleClickTarget(at: textPoint, hitTolerance: 0)
+                == .editableText(textLayer.id)
+        )
+        #expect(viewModel.document.selectedLayerID == textLayer.id)
+
+        let backgroundPoint = CGPoint(x: 88, y: 98)
+        let backgroundTarget = try #require(
+            viewModel.moveToolDoubleClickTarget(at: backgroundPoint, hitTolerance: 0)
+        )
+        #expect(backgroundTarget.layerID != group.id)
+        #expect(backgroundTarget.layerID != textLayer.id)
+        #expect(viewModel.selectMoveToolDoubleClickTarget(at: backgroundPoint) == backgroundTarget)
+        #expect(viewModel.document.selectedLayerID == backgroundTarget.layerID)
+        #expect(viewModel.document.selectedLayer?.groupID == group.id)
+    }
+
+    @Test func foregroundCoverPreventsDoubleClickFromEditingTextUnderneath() throws {
+        let viewModel = makeViewModel()
+        viewModel.textValue = "Covered text"
+        viewModel.addText(at: CGPoint(x: 120, y: 110))
+        let textLayer = try #require(viewModel.document.selectedLayer)
+        let hitPoint = CGPoint(x: textLayer.frame.midX, y: textLayer.frame.midY)
+        var cover = ImageEditorLayer.solidColorFill(
+            name: "Cover",
+            size: textLayer.frame.size,
+            content: ImageEditorSolidColorFillContent(red: 0.1, green: 0.2, blue: 0.3)
+        )
+        cover.frame = textLayer.frame
+        viewModel.document.layers.append(cover)
+        viewModel.selectLayer(textLayer.id)
+
+        #expect(
+            viewModel.moveToolDoubleClickTarget(at: hitPoint, hitTolerance: 0)
+                == .layer(cover.id)
+        )
+        #expect(viewModel.document.selectedLayerID == textLayer.id)
+        #expect(
+            viewModel.selectMoveToolDoubleClickTarget(at: hitPoint, hitTolerance: 0)
+                == .layer(cover.id)
+        )
+        #expect(viewModel.document.selectedLayerID == cover.id)
+    }
+
+    @Test func transparentForegroundLayerDoesNotStealTextDoubleClick() throws {
+        let viewModel = makeViewModel()
+        viewModel.textValue = "Visible text"
+        viewModel.addText(at: CGPoint(x: 120, y: 110))
+        let textLayer = try #require(viewModel.document.selectedLayer)
+        let hitPoint = CGPoint(x: textLayer.frame.midX, y: textLayer.frame.midY)
+        var transparentLayer = ImageEditorLayer.blank(
+            name: "Transparent cover",
+            size: textLayer.frame.size
+        )
+        transparentLayer.frame = textLayer.frame
+        viewModel.document.layers.append(transparentLayer)
+
+        #expect(
+            viewModel.moveToolDoubleClickTarget(at: hitPoint, hitTolerance: 0)
+                == .editableText(textLayer.id)
+        )
+    }
+
     @Test func commandShiftCanvasSelectionAddsAVisibleComponentChild() throws {
         let viewModel = makeViewModel()
         viewModel.insertXomoComponent(.button, at: CGPoint(x: 80, y: 90))

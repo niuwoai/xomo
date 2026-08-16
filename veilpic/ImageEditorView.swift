@@ -2825,18 +2825,18 @@ struct ImageEditorView: View {
                                   ),
                                   let imagePoint = imagePoint(from: location, in: geometry.size)
                             else { return false }
-                            let isEditableTextDoubleClick = ImageEditorMoveToolDoubleClickPolicy
-                                .shouldBeginTextEditing(
+                            let isDirectEditingDoubleClick = ImageEditorMoveToolDoubleClickPolicy
+                                .shouldBeginDirectEditing(
                                     sidebarTab: viewModel.selectedLeftSidebarTab,
                                     selectedTool: viewModel.selectedTool,
                                     clickCount: clickCount,
                                     modifierFlags: modifierFlags
                                 )
-                                && viewModel.hasEditableTextLayer(
+                                && viewModel.moveToolDoubleClickTarget(
                                     at: imagePoint,
                                     hitTolerance: canvasTextHitTolerance(in: geometry.size)
-                                )
-                            if isEditableTextDoubleClick {
+                                ) != nil
+                            if isDirectEditingDoubleClick {
                                 return true
                             }
                             return viewModel.hasXomoObject(at: imagePoint)
@@ -2857,15 +2857,18 @@ struct ImageEditorView: View {
                             guard let imagePoint = imagePoint(from: location, in: geometry.size) else {
                                 return
                             }
-                            if ImageEditorMoveToolDoubleClickPolicy.shouldBeginTextEditing(
+                            if ImageEditorMoveToolDoubleClickPolicy.shouldBeginDirectEditing(
                                 sidebarTab: viewModel.selectedLeftSidebarTab,
                                 selectedTool: viewModel.selectedTool,
                                 clickCount: clickCount,
                                 modifierFlags: modifierFlags
-                            ), beginExistingCanvasTextEditing(
+                            ), let target = viewModel.selectMoveToolDoubleClickTarget(
                                 at: imagePoint,
                                 hitTolerance: canvasTextHitTolerance(in: geometry.size)
                             ) {
+                                if case .editableText = target {
+                                    _ = beginEditingSelectedCanvasTextLayer()
+                                }
                                 return
                             }
                             _ = viewModel.selectXomoObject(
@@ -4763,7 +4766,16 @@ struct ImageEditorView: View {
             at: point,
             excluding: excludedLayerID,
             hitTolerance: hitTolerance
-        ), let layer = viewModel.document.selectedLayer
+        ) else { return false }
+
+        return beginEditingSelectedCanvasTextLayer()
+    }
+
+    @discardableResult
+    private func beginEditingSelectedCanvasTextLayer() -> Bool {
+        guard let layer = viewModel.document.selectedLayer,
+              layer.isText,
+              !viewModel.document.isEffectivelyPixelsLocked(layer)
         else { return false }
 
         canvasTextEditingLayerID = layer.id

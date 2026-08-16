@@ -31,6 +31,18 @@ enum XomoCanvasContentHit: Equatable {
     var isBlocked: Bool { self == .blocked }
 }
 
+enum ImageEditorMoveToolDoubleClickTarget: Equatable {
+    case editableText(UUID)
+    case layer(UUID)
+
+    var layerID: UUID {
+        switch self {
+        case let .editableText(layerID), let .layer(layerID):
+            layerID
+        }
+    }
+}
+
 @MainActor
 extension ImageEditorViewModel {
     var hasSelectedXomoObject: Bool {
@@ -235,11 +247,53 @@ extension ImageEditorViewModel {
         return true
     }
 
-    func hasEditableTextLayer(
+    /// Resolves one foreground target for a plain Move-tool double-click.
+    /// Text keeps a small frame tolerance for whitespace and edge editing,
+    /// while ordinary layers require a visible pixel and therefore prevent
+    /// the click from tunnelling through an opaque cover to text underneath.
+    func moveToolDoubleClickTarget(
         at point: CGPoint,
         hitTolerance: CGFloat = ImageEditorTextHitTesting.viewTolerance
-    ) -> Bool {
-        editableTextLayer(at: point, hitTolerance: hitTolerance) != nil
+    ) -> ImageEditorMoveToolDoubleClickTarget? {
+        guard point.x.isFinite, point.y.isFinite else { return nil }
+
+        let tolerance = max(0, hitTolerance)
+        for layer in document.layers.reversed() {
+            guard !layer.isGroup, document.isEffectivelyVisible(layer) else { continue }
+
+            let isHit = if layer.isText {
+                layer.frame.standardized
+                    .insetBy(dx: -tolerance, dy: -tolerance)
+                    .contains(point)
+            } else {
+                layerContainsVisibleContent(layer, at: point)
+            }
+            guard isHit else { continue }
+
+            if layer.isText, !document.isEffectivelyPixelsLocked(layer) {
+                return .editableText(layer.id)
+            }
+            return .layer(layer.id)
+        }
+        return nil
+    }
+
+    @discardableResult
+    func selectMoveToolDoubleClickTarget(
+        at point: CGPoint,
+        hitTolerance: CGFloat = ImageEditorTextHitTesting.viewTolerance
+    ) -> ImageEditorMoveToolDoubleClickTarget? {
+        guard let target = moveToolDoubleClickTarget(
+            at: point,
+            hitTolerance: hitTolerance
+        ) else { return nil }
+
+        selectLayer(target.layerID)
+        statusText = L10n.format(
+            "imageEditor.status.layerRangeSelected",
+            document.selectedLayerIDs.count
+        )
+        return target
     }
 
     private func editableTextLayer(

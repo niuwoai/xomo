@@ -73,7 +73,7 @@ struct ImageEditorTextEditingLifecycleTests {
     }
 
     @Test
-    func moveToolDoubleClickRoutesOnlyExistingEditableTextIntoTheCanvasEditor() throws {
+    func moveToolDoubleClickRoutesForegroundTargetsIntoSelectionOrTextEditing() throws {
         let repositoryRoot = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()
             .deletingLastPathComponent()
@@ -108,7 +108,7 @@ struct ImageEditorTextEditingLifecycleTests {
         )
         let candidateSource = viewSource[candidateStart.lowerBound..<activationStart.lowerBound]
         #expect(candidateSource.contains("ImageEditorMoveToolDoubleClickPolicy"))
-        #expect(candidateSource.contains("viewModel.hasEditableTextLayer("))
+        #expect(candidateSource.contains("viewModel.moveToolDoubleClickTarget("))
         #expect(candidateSource.contains("canvasTextHitTolerance(in: geometry.size)"))
 
         let clickStart = try #require(
@@ -118,9 +118,14 @@ struct ImageEditorTextEditingLifecycleTests {
             viewSource[clickStart.upperBound...].range(of: "onObjectMoveChanged:")
         )
         let clickSource = viewSource[clickStart.lowerBound..<changedStart.lowerBound]
-        let editCall = try #require(clickSource.range(of: "beginExistingCanvasTextEditing("))
+        let targetCall = try #require(
+            clickSource.range(of: "viewModel.selectMoveToolDoubleClickTarget(")
+        )
+        let editCall = try #require(clickSource.range(of: "beginEditingSelectedCanvasTextLayer()"))
         let fallbackCall = try #require(clickSource.range(of: "viewModel.selectXomoObject("))
+        #expect(targetCall.lowerBound < editCall.lowerBound)
         #expect(editCall.lowerBound < fallbackCall.lowerBound)
+        #expect(clickSource.contains("if case .editableText = target"))
         #expect(clickSource.contains("return"))
 
         let helperStart = try #require(
@@ -131,6 +136,9 @@ struct ImageEditorTextEditingLifecycleTests {
         )
         let helperSource = viewSource[helperStart.lowerBound..<commitStart.lowerBound]
         #expect(helperSource.contains("viewModel.selectEditableTextLayer("))
+        #expect(helperSource.contains("private func beginEditingSelectedCanvasTextLayer()"))
+        #expect(helperSource.contains("layer.isText"))
+        #expect(helperSource.contains("!viewModel.document.isEffectivelyPixelsLocked(layer)"))
         #expect(helperSource.contains("canvasTextEditingLayerID = layer.id"))
         #expect(helperSource.contains("isCanvasTextEditorFocused = true"))
         #expect(!helperSource.contains("viewModel.addText("))

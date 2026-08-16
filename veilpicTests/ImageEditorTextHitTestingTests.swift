@@ -50,7 +50,7 @@ struct ImageEditorTextHitTestingTests {
     }
 
     @Test @MainActor
-    func editableTextCandidateQueryIsPassiveAndRejectsLockedOrHiddenText() throws {
+    func moveToolDoubleClickTargetIsPassiveAndRespectsTextLocksAndVisibility() throws {
         let viewModel = ImageEditorViewModel(
             sourceName: "passive-text-hit-testing",
             image: NSImage.transparent(size: CGSize(width: 640, height: 480))
@@ -62,25 +62,34 @@ struct ImageEditorTextHitTestingTests {
         let hitPoint = CGPoint(x: textLayer.frame.midX, y: textLayer.frame.midY)
         viewModel.selectLayer(backgroundID)
 
-        #expect(viewModel.hasEditableTextLayer(at: hitPoint, hitTolerance: 0))
+        #expect(
+            viewModel.moveToolDoubleClickTarget(at: hitPoint, hitTolerance: 0)
+                == .editableText(textLayer.id)
+        )
         #expect(viewModel.document.selectedLayerID == backgroundID)
 
         let textIndex = try #require(
             viewModel.document.layers.firstIndex(where: { $0.id == textLayer.id })
         )
         viewModel.document.layers[textIndex].locksPosition = true
-        #expect(viewModel.hasEditableTextLayer(at: hitPoint, hitTolerance: 0))
+        #expect(
+            viewModel.moveToolDoubleClickTarget(at: hitPoint, hitTolerance: 0)
+                == .editableText(textLayer.id)
+        )
         #expect(viewModel.document.selectedLayerID == backgroundID)
 
         viewModel.document.layers[textIndex].locksPixels = true
-        #expect(!viewModel.hasEditableTextLayer(at: hitPoint, hitTolerance: 0))
+        #expect(
+            viewModel.moveToolDoubleClickTarget(at: hitPoint, hitTolerance: 0)
+                == .layer(textLayer.id)
+        )
         #expect(viewModel.document.selectedLayerID == backgroundID)
 
         viewModel.document.layers[textIndex].locksPixels = false
         viewModel.document.layers[textIndex].locksPosition = false
         viewModel.document.layers[textIndex].isVisible = false
-        #expect(!viewModel.hasEditableTextLayer(at: hitPoint, hitTolerance: 0))
+        #expect(viewModel.moveToolDoubleClickTarget(at: hitPoint, hitTolerance: 0) == nil)
         #expect(viewModel.document.selectedLayerID == backgroundID)
-        #expect(!viewModel.hasEditableTextLayer(at: CGPoint(x: 600, y: 460)))
+        #expect(viewModel.moveToolDoubleClickTarget(at: CGPoint(x: 600, y: 460)) == nil)
     }
 }

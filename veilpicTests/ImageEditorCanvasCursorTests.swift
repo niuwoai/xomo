@@ -681,9 +681,9 @@ struct ImageEditorCanvasCursorTests {
         )
     }
 
-    @Test func moveToolDoubleClickBeginsTextEditingOnlyInPlainToolsMode() {
+    @Test func moveToolDoubleClickBeginsDirectEditingOnlyInPlainToolsMode() {
         #expect(
-            ImageEditorMoveToolDoubleClickPolicy.shouldBeginTextEditing(
+            ImageEditorMoveToolDoubleClickPolicy.shouldBeginDirectEditing(
                 sidebarTab: .tools,
                 selectedTool: .move,
                 clickCount: 2,
@@ -691,7 +691,7 @@ struct ImageEditorCanvasCursorTests {
             )
         )
         #expect(
-            ImageEditorMoveToolDoubleClickPolicy.shouldBeginTextEditing(
+            ImageEditorMoveToolDoubleClickPolicy.shouldBeginDirectEditing(
                 sidebarTab: .tools,
                 selectedTool: .move,
                 clickCount: 3,
@@ -699,7 +699,7 @@ struct ImageEditorCanvasCursorTests {
             )
         )
         #expect(
-            !ImageEditorMoveToolDoubleClickPolicy.shouldBeginTextEditing(
+            !ImageEditorMoveToolDoubleClickPolicy.shouldBeginDirectEditing(
                 sidebarTab: .tools,
                 selectedTool: .move,
                 clickCount: 1,
@@ -707,7 +707,7 @@ struct ImageEditorCanvasCursorTests {
             )
         )
         #expect(
-            !ImageEditorMoveToolDoubleClickPolicy.shouldBeginTextEditing(
+            !ImageEditorMoveToolDoubleClickPolicy.shouldBeginDirectEditing(
                 sidebarTab: .components,
                 selectedTool: .move,
                 clickCount: 2,
@@ -715,7 +715,7 @@ struct ImageEditorCanvasCursorTests {
             )
         )
         #expect(
-            !ImageEditorMoveToolDoubleClickPolicy.shouldBeginTextEditing(
+            !ImageEditorMoveToolDoubleClickPolicy.shouldBeginDirectEditing(
                 sidebarTab: .tools,
                 selectedTool: .brush,
                 clickCount: 2,
@@ -724,7 +724,7 @@ struct ImageEditorCanvasCursorTests {
         )
         for modifier: NSEvent.ModifierFlags in [.shift, .command, .option, .control] {
             #expect(
-                !ImageEditorMoveToolDoubleClickPolicy.shouldBeginTextEditing(
+                !ImageEditorMoveToolDoubleClickPolicy.shouldBeginDirectEditing(
                     sidebarTab: .tools,
                     selectedTool: .move,
                     clickCount: 2,

@@ -135,7 +135,7 @@ enum ImageEditorObjectDragEventPolicy {
 }
 
 enum ImageEditorMoveToolDoubleClickPolicy {
-    static func shouldBeginTextEditing(
+    static func shouldBeginDirectEditing(
         sidebarTab: XomoLeftSidebarTab,
         selectedTool: ImageEditorTool,
         clickCount: Int,
