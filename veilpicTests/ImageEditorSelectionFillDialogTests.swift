@@ -30,7 +30,13 @@ struct ImageEditorSelectionFillDialogTests {
         #expect(ImageEditorSelectionFillContents.pattern.resolvedColor(
             foreground: foreground, background: background, custom: custom
         ) == nil)
-        #expect(ImageEditorSelectionFillContents.allCases.count == 7)
+        #expect(ImageEditorSelectionFillContents.contentAware.resolvedColor(
+            foreground: foreground, background: background, custom: custom
+        ) == nil)
+        #expect(ImageEditorSelectionFillContents.allCases.count == 8)
+        #expect(ImageEditorSelectionFillContents.availableCases(isQuickMaskMode: false).contains(.contentAware))
+        #expect(!ImageEditorSelectionFillContents.availableCases(isQuickMaskMode: true).contains(.contentAware))
+        #expect(ImageEditorSelectionFillContents.availableCases(isQuickMaskMode: true).contains(.pattern))
     }
 
     @Test func multiplyFillUsesDialogOpacityAndCommitsOneTransaction() throws {
@@ -268,6 +274,126 @@ struct ImageEditorSelectionFillDialogTests {
         #expect(try #require(viewModel.document.selectedLayer?.image.qingtuPNGData()) == layerBefore)
     }
 
+    @Test func contentAwareFillUsesDialogOpacityAndCommitsOneTransaction() throws {
+        let viewModel = makeContentAwareViewModel()
+        let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
+
+        viewModel.fillSelection(options: ImageEditorSelectionFillOptions(
+            contents: .contentAware,
+            blendMode: .normal,
+            opacity: 0.5,
+            adaptsContentAwareColor: true
+        ))
+
+        let image = try #require(viewModel.document.selectedLayer?.image)
+        let center = try #require(image.color(at: CGPoint(x: 30, y: 20))?.usingColorSpace(.deviceRGB))
+        #expect(center.greenComponent > 0.35)
+        #expect(center.greenComponent < 0.75)
+        #expect(center.redComponent < 0.2)
+        #expect(center.blueComponent < 0.2)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.undoStack.count == undoCount + 1)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.selectionContentAwareFill"))
+    }
+
+    @Test func contentAwareFillHonorsBlendMode() throws {
+        let normal = makeSplitSamplingViewModel(selectedColor: NSColor(deviceWhite: 0.5, alpha: 1))
+        let multiply = makeSplitSamplingViewModel(selectedColor: NSColor(deviceWhite: 0.5, alpha: 1))
+
+        normal.fillSelection(options: ImageEditorSelectionFillOptions(
+            contents: .contentAware,
+            blendMode: .normal,
+            opacity: 1,
+            adaptsContentAwareColor: false
+        ))
+        multiply.fillSelection(options: ImageEditorSelectionFillOptions(
+            contents: .contentAware,
+            blendMode: .multiply,
+            opacity: 1,
+            adaptsContentAwareColor: false
+        ))
+
+        let normalCenter = try #require(normal.document.selectedLayer?.image.color(
+            at: CGPoint(x: 30, y: 20)
+        )?.usingColorSpace(.deviceRGB))
+        let multiplyCenter = try #require(multiply.document.selectedLayer?.image.color(
+            at: CGPoint(x: 30, y: 20)
+        )?.usingColorSpace(.deviceRGB))
+        #expect(multiplyCenter.redComponent < normalCenter.redComponent * 0.7)
+        #expect(multiplyCenter.blueComponent < normalCenter.blueComponent * 0.7)
+    }
+
+    @Test func contentAwareColorAdaptationUsesNearbyPixelsInsteadOfOneGlobalAverage() throws {
+        let adapted = makeSplitSamplingViewModel(selectedColor: .black)
+        let uniform = makeSplitSamplingViewModel(selectedColor: .black)
+
+        adapted.fillSelection(options: ImageEditorSelectionFillOptions(
+            contents: .contentAware,
+            adaptsContentAwareColor: true
+        ))
+        uniform.fillSelection(options: ImageEditorSelectionFillOptions(
+            contents: .contentAware,
+            adaptsContentAwareColor: false
+        ))
+
+        let adaptedImage = try #require(adapted.document.selectedLayer?.image)
+        let uniformImage = try #require(uniform.document.selectedLayer?.image)
+        let adaptedLeft = try #require(adaptedImage.color(at: CGPoint(x: 21, y: 20))?.usingColorSpace(.deviceRGB))
+        let adaptedRight = try #require(adaptedImage.color(at: CGPoint(x: 38, y: 20))?.usingColorSpace(.deviceRGB))
+        let uniformLeft = try #require(uniformImage.color(at: CGPoint(x: 21, y: 20))?.usingColorSpace(.deviceRGB))
+        let uniformRight = try #require(uniformImage.color(at: CGPoint(x: 38, y: 20))?.usingColorSpace(.deviceRGB))
+
+        #expect(adaptedLeft.redComponent > adaptedLeft.blueComponent + 0.4)
+        #expect(adaptedRight.blueComponent > adaptedRight.redComponent + 0.4)
+        #expect(abs(uniformLeft.redComponent - uniformRight.redComponent) < 0.03)
+        #expect(abs(uniformLeft.blueComponent - uniformRight.blueComponent) < 0.03)
+    }
+
+    @Test func contentAwareFillPreservesTransparentPixelsWhenRequested() throws {
+        let canvasSize = CGSize(width: 60, height: 40)
+        let image = NSImage(size: canvasSize, flipped: false) { rect in
+            NSColor.systemGreen.setFill()
+            rect.fill()
+            NSColor.clear.setFill()
+            CGRect(x: 20, y: 10, width: 20, height: 20).fill(using: .copy)
+            return true
+        }
+        let viewModel = ImageEditorViewModel(sourceName: "content-aware-alpha.png", image: image) { _ in }
+        viewModel.replaceSelectedLayerImageForTesting(
+            image,
+            historyTitle: L10n.text("imageEditor.history.brush")
+        )
+        viewModel.createRectSelection(from: CGPoint(x: 20, y: 10), to: CGPoint(x: 40, y: 30))
+
+        viewModel.fillSelection(options: ImageEditorSelectionFillOptions(
+            contents: .contentAware,
+            preservesTransparency: true
+        ))
+
+        let center = try #require(viewModel.document.selectedLayer?.image.color(
+            at: CGPoint(x: 30, y: 20)
+        )?.usingColorSpace(.deviceRGB))
+        #expect(center.alphaComponent < 0.05)
+    }
+
+    @Test func contentAwareFillIsUnavailableInQuickMaskAndDoesNotMutateHistory() throws {
+        let viewModel = makeContentAwareViewModel()
+        let layerBefore = try #require(viewModel.document.selectedLayer?.image.qingtuPNGData())
+        viewModel.toggleQuickMaskMode()
+        let maskBefore = viewModel.document.selection
+        let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
+
+        viewModel.fillSelection(options: ImageEditorSelectionFillOptions(contents: .contentAware))
+
+        #expect(viewModel.document.selection == maskBefore)
+        #expect(try #require(viewModel.document.selectedLayer?.image.qingtuPNGData()) == layerBefore)
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.undoStack.count == undoCount)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.operationFailed"))
+    }
+
     @Test func panelDefaultsAndApplyUseOneExplicitFillTransaction() {
         let viewModel = makeViewModel(color: .systemBlue)
         let historyCount = viewModel.document.history.count
@@ -299,6 +425,44 @@ struct ImageEditorSelectionFillDialogTests {
             historyTitle: L10n.text("imageEditor.history.brush")
         )
         viewModel.selectAll()
+        return viewModel
+    }
+
+    private func makeContentAwareViewModel() -> ImageEditorViewModel {
+        let canvasSize = CGSize(width: 60, height: 40)
+        let image = NSImage(size: canvasSize, flipped: false) { rect in
+            NSColor.systemGreen.setFill()
+            rect.fill()
+            NSColor.black.setFill()
+            CGRect(x: 20, y: 10, width: 20, height: 20).fill()
+            return true
+        }
+        let viewModel = ImageEditorViewModel(sourceName: "content-aware-fill.png", image: image) { _ in }
+        viewModel.replaceSelectedLayerImageForTesting(
+            image,
+            historyTitle: L10n.text("imageEditor.history.brush")
+        )
+        viewModel.createRectSelection(from: CGPoint(x: 20, y: 10), to: CGPoint(x: 40, y: 30))
+        return viewModel
+    }
+
+    private func makeSplitSamplingViewModel(selectedColor: NSColor) -> ImageEditorViewModel {
+        let canvasSize = CGSize(width: 60, height: 40)
+        let image = NSImage(size: canvasSize, flipped: false) { _ in
+            NSColor.systemRed.setFill()
+            CGRect(x: 0, y: 0, width: 20, height: 40).fill()
+            selectedColor.setFill()
+            CGRect(x: 20, y: 0, width: 20, height: 40).fill()
+            NSColor.systemBlue.setFill()
+            CGRect(x: 40, y: 0, width: 20, height: 40).fill()
+            return true
+        }
+        let viewModel = ImageEditorViewModel(sourceName: "content-aware-adaptation.png", image: image) { _ in }
+        viewModel.replaceSelectedLayerImageForTesting(
+            image,
+            historyTitle: L10n.text("imageEditor.history.brush")
+        )
+        viewModel.createRectSelection(from: CGPoint(x: 20, y: 0), to: CGPoint(x: 40, y: 40))
         return viewModel
     }
 }

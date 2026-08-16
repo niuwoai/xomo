@@ -2156,6 +2156,29 @@ struct ImageEditorScopeTests {
         #expect(commandSource.contains("fillQuickMask(\n                with: pattern"))
     }
 
+    @Test func fillDialogWiresContentAwareOptionsAndQuickMaskAvailability() throws {
+        let panelSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent(
+                "veilpic/ImageEditorSelectionFillPanel.swift"
+            ),
+            encoding: .utf8
+        )
+        let commandSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent(
+                "veilpic/ImageEditorSelectionEditCommands.swift"
+            ),
+            encoding: .utf8
+        )
+
+        #expect(panelSource.contains("availableCases(\n                        isQuickMaskMode: viewModel.isQuickMaskMode"))
+        #expect(panelSource.contains("selectionFillContentAwareColorAdaptation"))
+        #expect(panelSource.contains("imageEditor.selectionFill.colorAdaptationHelp"))
+        #expect(commandSource.contains("case contentAware"))
+        #expect(commandSource.contains("guard !isQuickMaskMode else"))
+        #expect(commandSource.contains("colorAdaptation: options.adaptsContentAwareColor"))
+        #expect(commandSource.contains("blendMode: blendMode"))
+    }
+
     @Test func fileMenuExposesClipboardCanvasCreation() throws {
         let source = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),

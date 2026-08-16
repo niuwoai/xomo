@@ -45,7 +45,9 @@ struct ImageEditorSelectionFillPanel: View {
                     L10n.text("imageEditor.selectionFill.use"),
                     selection: $viewModel.selectionFillContents
                 ) {
-                    ForEach(ImageEditorSelectionFillContents.allCases) { contents in
+                    ForEach(ImageEditorSelectionFillContents.availableCases(
+                        isQuickMaskMode: viewModel.isQuickMaskMode
+                    )) { contents in
                         Text(contents.title).tag(contents)
                     }
                 }
@@ -62,6 +64,14 @@ struct ImageEditorSelectionFillPanel: View {
 
                 if viewModel.selectionFillContents == .pattern {
                     patternControls
+                }
+
+                if viewModel.selectionFillContents == .contentAware {
+                    Toggle(
+                        L10n.text("imageEditor.selectionFill.colorAdaptation"),
+                        isOn: $viewModel.selectionFillContentAwareColorAdaptation
+                    )
+                    .help(L10n.text("imageEditor.selectionFill.colorAdaptationHelp"))
                 }
             }
             .padding(.top, 4)

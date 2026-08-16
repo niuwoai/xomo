@@ -194,6 +194,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var selectionFillPreservesTransparency = false
     @Published var selectionFillPatternContent = ImageEditorPatternFillContent()
     @Published var selectionFillPatternAlignsWithCanvas = true
+    @Published var selectionFillContentAwareColorAdaptation = true
     @Published var foregroundColor: NSColor = .black
     @Published var backgroundColor: NSColor = .white
     private var screenColorSampler: NSColorSampler?

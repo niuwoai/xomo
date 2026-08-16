@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.12.0-rc1104 - 2026-08-17
+
+### Added
+- Fill 对话框新增 Content-Aware 内容源，把既有内容识别修复纳入 `Shift + F5` 主流程，并提供“颜色适应”开关：开启时按选区附近像素局部取样，关闭时使用图层未选区域的全局平均样本。
+
+### Changed
+- Content-Aware Fill 现在复用 Fill 对话框的完整混合模式、总不透明度和“保持透明区域”，同时继续遵守图层透明像素锁与单步 Undo/History；旧的独立内容识别命令保持 100% Normal 的兼容行为。
+- Quick Mask 不显示 Content-Aware 内容源，直接调用也会安全拒绝且不修改临时通道、图层、Undo 或 History，因为临时蒙版没有可供取样的图层内容语义。
+
+### Verification
+- Fill/Content-Aware 专项 14/14、UI 接线 177/177、旧选区填充 33/33、旧 Content-Aware/透明锁 1/1、选区与 Quick Mask 51/51、混合模式 5/5、本地化 33/33、CLI 2/2 与发布契约 7/7 通过；本版本不触发周期 Universal Release、完整冒烟与 `/Applications` 安装，下一次完整门禁为 rc1120。
+
 ## 2.12.0-rc1103 - 2026-08-17
 
 ### Added

@@ -2691,11 +2691,14 @@
 "imageEditor.selectionFill.contents.white" = "白色";
 "imageEditor.selectionFill.contents.color" = "颜色…";
 "imageEditor.selectionFill.contents.pattern" = "图案";
+"imageEditor.selectionFill.contents.contentAware" = "内容识别";
 "imageEditor.selectionFill.customColor" = "自定义颜色";
 "imageEditor.selectionFill.patternColor" = "图案颜色";
 "imageEditor.selectionFill.patternOpacity" = "图案不透明度";
 "imageEditor.selectionFill.patternOffset" = "偏移";
 "imageEditor.selectionFill.alignPatternWithCanvas" = "与画布对齐";
+"imageEditor.selectionFill.colorAdaptation" = "颜色适应";
+"imageEditor.selectionFill.colorAdaptationHelp" = "让替换颜色适应各图层内选区附近的像素。";
 "imageEditor.selectionFill.blending" = "混合";
 "imageEditor.selectionFill.mode" = "模式";
 "imageEditor.selectionFill.opacity" = "不透明度";

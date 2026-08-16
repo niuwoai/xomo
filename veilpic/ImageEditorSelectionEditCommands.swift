@@ -16,6 +16,7 @@ enum ImageEditorSelectionFillContents: String, CaseIterable, Identifiable {
     case white
     case color
     case pattern
+    case contentAware
 
     var id: String { rawValue }
 
@@ -36,7 +37,12 @@ enum ImageEditorSelectionFillContents: String, CaseIterable, Identifiable {
         case .white: .white
         case .color: custom
         case .pattern: nil
+        case .contentAware: nil
         }
+    }
+
+    static func availableCases(isQuickMaskMode: Bool) -> [Self] {
+        isQuickMaskMode ? allCases.filter { $0 != .contentAware } : allCases
     }
 }
 
@@ -48,6 +54,7 @@ struct ImageEditorSelectionFillOptions {
     var preservesTransparency = false
     var patternContent = ImageEditorPatternFillContent()
     var alignsPatternWithCanvas = true
+    var adaptsContentAwareColor = true
 }
 
 enum ImageEditorSelectionPatternAlignment {
@@ -311,13 +318,27 @@ extension ImageEditorViewModel {
             opacity: selectionFillOpacity,
             preservesTransparency: selectionFillPreservesTransparency,
             patternContent: selectionFillPatternContent,
-            alignsPatternWithCanvas: selectionFillPatternAlignsWithCanvas
+            alignsPatternWithCanvas: selectionFillPatternAlignsWithCanvas,
+            adaptsContentAwareColor: selectionFillContentAwareColorAdaptation
         )
         isSelectionFillSheetPresented = false
         fillSelection(options: options)
     }
 
     func fillSelection(options: ImageEditorSelectionFillOptions) {
+        if options.contents == .contentAware {
+            guard !isQuickMaskMode else {
+                statusText = L10n.text("imageEditor.status.operationFailed")
+                return
+            }
+            contentAwareFillSelection(
+                opacity: options.opacity,
+                blendMode: options.blendMode,
+                preservingTransparency: options.preservesTransparency,
+                colorAdaptation: options.adaptsContentAwareColor
+            )
+            return
+        }
         if options.contents == .pattern {
             fillSelection(
                 with: options.patternContent,
@@ -505,6 +526,20 @@ extension ImageEditorViewModel {
     }
 
     func contentAwareFillSelection() {
+        contentAwareFillSelection(
+            opacity: 1,
+            blendMode: .normal,
+            preservingTransparency: false,
+            colorAdaptation: true
+        )
+    }
+
+    private func contentAwareFillSelection(
+        opacity: CGFloat,
+        blendMode: ImageEditorBlendMode,
+        preservingTransparency: Bool,
+        colorAdaptation: Bool
+    ) {
         guard let selection = document.selection else {
             statusText = L10n.text("imageEditor.status.noSelection")
             return
@@ -539,9 +574,12 @@ extension ImageEditorViewModel {
                 selection: selection,
                 layerFrame: layer.frame,
                 canvasSize: document.canvasSize,
+                opacity: opacity,
+                blendMode: blendMode,
+                colorAdaptation: colorAdaptation,
                 feather: feather
             ) else { return nil }
-            return document.isEffectivelyTransparencyLocked(layer)
+            return preservingTransparency || document.isEffectivelyTransparencyLocked(layer)
                 ? (output.preservingAlpha(from: layer.image) ?? output)
                 : output
         }
@@ -1258,10 +1296,11 @@ private extension NSImage {
             for x in 0..<width {
                 let pixelIndex = y * width + x
                 let offset = y * bytesPerRow + x * bytesPerPixel
-                let overlay = overlayAtOffset(offset)
                 var sourceAlpha = Double(mask.alpha[pixelIndex]) / 255
                     * normalizedOpacity
-                    * overlay.alpha
+                guard sourceAlpha > 0 else { continue }
+                let overlay = overlayAtOffset(offset)
+                sourceAlpha *= overlay.alpha
                 guard sourceAlpha > 0 else { continue }
                 if blendMode == .dissolve {
                     sourceAlpha = Self.selectionFillDissolves(
@@ -1377,6 +1416,9 @@ private extension NSImage {
         selection: ImageEditorSelection,
         layerFrame: CGRect,
         canvasSize: CGSize,
+        opacity: CGFloat,
+        blendMode: ImageEditorBlendMode,
+        colorAdaptation: Bool,
         feather: CGFloat
     ) -> NSImage? {
         guard let selectionMask = selection.layerMask(
@@ -1388,7 +1430,7 @@ private extension NSImage {
 
         let width = max(1, Int(size.width.rounded()))
         let height = max(1, Int(size.height.rounded()))
-        guard var pixels = rgbaPixels(width: width, height: height),
+        guard let pixels = rgbaPixels(width: width, height: height),
               let mask = selectionMask.alphaMask(width: width, height: height)
         else { return nil }
 
@@ -1400,16 +1442,17 @@ private extension NSImage {
 
         let sourcePixels = pixels
         let bytesPerPixel = 4
-        let bytesPerRow = width * bytesPerPixel
         let maxRadius = max(8, min(48, max(width, height) / 4))
-
-        for y in 0..<height {
-            for x in 0..<width {
-                let pixelIndex = y * width + x
-                let maskAlpha = CGFloat(selectedAlpha[pixelIndex]) / 255
-                guard maskAlpha > 0 else { continue }
-
-                let replacement = contentAwareColor(
+        return compositedSelectionFill(
+            selectionMask: selectionMask,
+            opacity: opacity,
+            blendMode: blendMode
+        ) { offset in
+            let pixelIndex = offset / bytesPerPixel
+            let x = pixelIndex % width
+            let y = pixelIndex / width
+            let replacement = colorAdaptation
+                ? contentAwareColor(
                     x: x,
                     y: y,
                     pixels: sourcePixels,
@@ -1419,16 +1462,15 @@ private extension NSImage {
                     maxRadius: maxRadius,
                     fallback: fallback
                 )
-                let offset = y * bytesPerRow + x * bytesPerPixel
-                let inverseAlpha = 1 - maskAlpha
-                pixels[offset] = blendedByte(original: pixels[offset], replacement: replacement.red, alpha: maskAlpha, inverseAlpha: inverseAlpha)
-                pixels[offset + 1] = blendedByte(original: pixels[offset + 1], replacement: replacement.green, alpha: maskAlpha, inverseAlpha: inverseAlpha)
-                pixels[offset + 2] = blendedByte(original: pixels[offset + 2], replacement: replacement.blue, alpha: maskAlpha, inverseAlpha: inverseAlpha)
-                pixels[offset + 3] = blendedByte(original: pixels[offset + 3], replacement: replacement.alpha, alpha: maskAlpha, inverseAlpha: inverseAlpha)
-            }
+                : fallback
+            let alpha = Double(replacement.alpha) / 255
+            return (
+                red: alpha > 0 ? Double(replacement.red) / 255 / alpha : 0,
+                green: alpha > 0 ? Double(replacement.green) / 255 / alpha : 0,
+                blue: alpha > 0 ? Double(replacement.blue) / 255 / alpha : 0,
+                alpha: alpha
+            )
         }
-
-        return NSImage.rgbaImage(width: width, height: height, pixels: pixels, size: size)
     }
 
     func patched(
