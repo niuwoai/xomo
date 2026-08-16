@@ -134,6 +134,7 @@ final class ImageEditorViewModel: ObservableObject {
     private var magnifyBaseOffset: CGSize?
     @Published var brushSize: CGFloat = 18
     @Published var opacity: CGFloat = 1
+    @Published var eraserErasesToHistory = false
     @Published var isGradientReversed = false
     @Published var hardness: CGFloat = 0.8
     @Published var brushFlow: CGFloat = 100

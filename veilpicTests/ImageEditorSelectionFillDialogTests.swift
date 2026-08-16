@@ -790,6 +790,93 @@ struct ImageEditorSelectionFillDialogTests {
         #expect(viewModel.statusText == L10n.text("imageEditor.status.historyBrushUnavailable"))
     }
 
+    @Test func eraseToHistoryRestoresPixelsWhileOrdinaryEraserClearsThem() throws {
+        let canvasSize = CGSize(width: 12, height: 8)
+        let green = solidImage(color: .systemGreen, size: canvasSize)
+        let red = solidImage(color: .systemRed, size: canvasSize)
+        let restoring = historyBrushViewModel(source: green, current: red)
+        let erasing = historyBrushViewModel(source: green, current: red)
+        for viewModel in [restoring, erasing] {
+            viewModel.brushSize = 4
+            viewModel.hardness = 1
+            viewModel.opacity = 1
+            viewModel.brushFlow = 100
+        }
+        let samples = [
+            ImageEditorBrushStrokeSample(point: CGPoint(x: 4, y: 4)),
+            ImageEditorBrushStrokeSample(point: CGPoint(x: 8, y: 4)),
+        ]
+
+        restoring.eraseBrush(samples: samples, restoringHistory: true)
+        erasing.eraseBrush(samples: samples, restoringHistory: false)
+
+        let restored = try #require(restoring.document.selectedLayer?.image.color(
+            at: CGPoint(x: 6, y: 4)
+        )?.usingColorSpace(.deviceRGB))
+        let erased = try #require(erasing.document.selectedLayer?.image.color(
+            at: CGPoint(x: 6, y: 4)
+        )?.usingColorSpace(.deviceRGB))
+        let untouched = try #require(restoring.document.selectedLayer?.image.color(
+            at: CGPoint(x: 6, y: 0)
+        )?.usingColorSpace(.deviceRGB))
+        #expect(restored.greenComponent > restored.redComponent + 0.4)
+        #expect(restored.alphaComponent > 0.9)
+        #expect(erased.alphaComponent < 0.1)
+        #expect(untouched.redComponent > untouched.greenComponent + 0.4)
+        #expect(restoring.document.history.last?.title == L10n.text("imageEditor.history.historyBrush"))
+        #expect(erasing.document.history.last?.title == L10n.text("imageEditor.history.erase"))
+    }
+
+    @Test func eraseToHistoryPolicyRequiresACompatibleSourceAndSupportsOption() {
+        let canvasSize = CGSize(width: 8, height: 6)
+        let green = solidImage(color: .systemGreen, size: canvasSize)
+        let red = solidImage(color: .systemRed, size: canvasSize)
+        let viewModel = historyBrushViewModel(source: green, current: red)
+
+        #expect(viewModel.canEraseToHistory)
+        #expect(!viewModel.shouldEraseToHistory(modifierFlags: []))
+        #expect(viewModel.shouldEraseToHistory(modifierFlags: [.option]))
+        viewModel.eraserErasesToHistory = true
+        #expect(viewModel.shouldEraseToHistory(modifierFlags: []))
+
+        viewModel.toggleQuickMaskMode()
+        #expect(!viewModel.canEraseToHistory)
+        #expect(!viewModel.shouldEraseToHistory(modifierFlags: [.option]))
+    }
+
+    @Test func unchangedEraseToHistoryPreservesUndoRedoAndHistory() throws {
+        let canvasSize = CGSize(width: 8, height: 6)
+        let red = solidImage(color: .systemRed, size: canvasSize)
+        let blue = solidImage(color: .systemBlue, size: canvasSize)
+        let viewModel = ImageEditorViewModel(
+            sourceName: "erase-to-history-noop.png",
+            image: red
+        ) { _ in }
+        let sourceEntryID = try #require(viewModel.document.history.last?.id)
+        viewModel.setHistoryFillSource(entryID: sourceEntryID)
+        viewModel.replaceSelectedLayerImageForTesting(
+            blue,
+            historyTitle: L10n.text("imageEditor.history.brush")
+        )
+        viewModel.undo()
+        let history = viewModel.document.history
+        let undoCount = viewModel.undoStack.count
+        let redoCount = viewModel.redoStack.count
+
+        viewModel.eraseBrush(
+            samples: [
+                ImageEditorBrushStrokeSample(point: CGPoint(x: 2, y: 3)),
+                ImageEditorBrushStrokeSample(point: CGPoint(x: 6, y: 3)),
+            ],
+            restoringHistory: true
+        )
+
+        #expect(viewModel.document.history == history)
+        #expect(viewModel.undoStack.count == undoCount)
+        #expect(viewModel.redoStack.count == redoCount)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.historyBrushUnchanged"))
+    }
+
     @Test func panelDefaultsAndApplyUseOneExplicitFillTransaction() {
         let viewModel = makeViewModel(color: .systemBlue)
         let historyCount = viewModel.document.history.count

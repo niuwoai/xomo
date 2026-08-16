@@ -1617,6 +1617,36 @@ struct ImageEditorCanvasCursorTests {
         #expect(ImageEditorCanvasCursor.cursor(for: .healingBrush, brushDiameter: 18) !== NSCursor.crosshair)
     }
 
+    @Test func eraseToHistoryAddsACompactBadgeWithoutBreakingCursorPriority() {
+        let ordinary = ImageEditorCanvasCursor.cursor(
+            for: .eraser,
+            brushDiameter: 18
+        )
+        let restoring = ImageEditorCanvasCursor.cursor(
+            for: .eraser,
+            brushDiameter: 18,
+            isErasingToHistory: true
+        )
+        let precision = ImageEditorCanvasCursor.cursor(
+            for: .eraser,
+            brushDiameter: 18,
+            isErasingToHistory: true,
+            modifierFlags: [.capsLock]
+        )
+        let components = ImageEditorCanvasCursor.cursor(
+            for: .components,
+            selectedTool: .eraser,
+            brushDiameter: 18,
+            isErasingToHistory: true
+        )
+
+        #expect(restoring.hotSpot == ordinary.hotSpot)
+        #expect(restoring.image.size == ordinary.image.size)
+        #expect(restoring.image.tiffRepresentation != ordinary.image.tiffRepresentation)
+        #expect(precision === NSCursor.crosshair)
+        #expect(components === NSCursor.arrow)
+    }
+
     @Test func sampledBrushSourcePickingUsesPrecisionCursorWithoutChangingPaintFootprints() {
         let clonePainting = ImageEditorCanvasCursor.cursor(for: .cloneStamp, brushDiameter: 18)
         let healingPainting = ImageEditorCanvasCursor.cursor(for: .healingBrush, brushDiameter: 18)

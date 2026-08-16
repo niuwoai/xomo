@@ -534,6 +534,38 @@ extension ImageEditorViewModel {
         return didChange
     }
 
+    var canEraseToHistory: Bool {
+        guard !isQuickMaskMode,
+              !isEditingLayerMask,
+              let index = document.selectedLayerIndex
+        else { return false }
+        let layer = document.layers[index]
+        guard layer.kind.isPixel,
+              !document.isEffectivelyPixelsLocked(layer),
+              let source = effectiveHistoryFillSource,
+              let sourceDocument = historyFillDocument(for: source)
+        else { return false }
+        return sourceDocument.layers.contains {
+            $0.id == layer.id && $0.kind.isPixel
+        }
+    }
+
+    func shouldEraseToHistory(modifierFlags: NSEvent.ModifierFlags) -> Bool {
+        canEraseToHistory
+            && (eraserErasesToHistory || modifierFlags.contains(.option))
+    }
+
+    func eraseBrush(
+        samples: [ImageEditorBrushStrokeSample],
+        restoringHistory: Bool
+    ) {
+        if restoringHistory {
+            _ = historyBrush(samples: samples)
+        } else {
+            drawBrush(samples: samples, erase: true)
+        }
+    }
+
     private func fillSelectionFromHistory(
         opacity: CGFloat,
         blendMode: ImageEditorBlendMode,

@@ -105,6 +105,7 @@ struct ImageEditorView: View {
     @StateObject var viewModel: ImageEditorViewModel
     @State private var dragPoints: [CGPoint] = []
     @State private var brushStrokeSamples: [ImageEditorBrushStrokeSample] = []
+    @State private var isEraserHistoryGestureActive = false
     @State private var toneAirbrushStroke = ImageEditorToneAirbrushStroke()
     @State private var dragStart: CGPoint?
     @State private var dragEnd: CGPoint?
@@ -518,6 +519,7 @@ struct ImageEditorView: View {
             primaryToolViewStart = nil
             dragPoints = []
             brushStrokeSamples = []
+            isEraserHistoryGestureActive = false
             activeBrushPressure = nil
             activeBrushTilt = nil
             toneAirbrushStroke.reset()
@@ -1032,6 +1034,18 @@ struct ImageEditorView: View {
                     .font(.system(size: 10, weight: .medium))
                     .help(L10n.text("imageEditor.tool.historyBrush.sourceHelp"))
                     .accessibilityIdentifier("image-editor-history-brush-source")
+                }
+                if viewModel.selectedTool == .eraser {
+                    Toggle(
+                        L10n.text("imageEditor.option.eraseToHistory"),
+                        isOn: $viewModel.eraserErasesToHistory
+                    )
+                    .toggleStyle(.checkbox)
+                    .focusable(false)
+                    .fixedSize()
+                    .disabled(!viewModel.canEraseToHistory)
+                    .help(L10n.text("imageEditor.option.eraseToHistory.help"))
+                    .accessibilityIdentifier("image-editor-erase-to-history")
                 }
                 if viewModel.selectedTool.supportsSelectionMode {
                     optionSlider(titleKey: "imageEditor.option.feather", value: $viewModel.feather, range: 0...40, step: 1, suffix: "px")
@@ -2927,6 +2941,11 @@ struct ImageEditorView: View {
                                   let imagePoint = imagePoint(from: location, in: geometry.size)
                             else { return false }
                             viewModel.canvasPointerCaptureState.activeTool = canvasInteractionTool
+                            if canvasInteractionTool == .eraser {
+                                isEraserHistoryGestureActive = viewModel.shouldEraseToHistory(
+                                    modifierFlags: NSEvent.modifierFlags
+                                )
+                            }
                             // Keep the native NSView as first responder for the
                             // whole brush stroke. Mutating several SwiftUI
                             // states on mouse-down can rebuild the overlay
@@ -2993,9 +3012,9 @@ struct ImageEditorView: View {
                             case .historyBrush:
                                 viewModel.historyBrush(samples: committedBrushSamples)
                             case .eraser:
-                                viewModel.drawBrush(
+                                viewModel.eraseBrush(
                                     samples: committedBrushSamples,
-                                    erase: true
+                                    restoringHistory: isEraserHistoryGestureActive
                                 )
                             case .rectangle:
                                 if let dragStart, let endImagePoint {
@@ -3023,6 +3042,7 @@ struct ImageEditorView: View {
                                 break
                             }
                             brushStrokeSamples = []
+                            isEraserHistoryGestureActive = false
                             activeBrushPressure = nil
                             activeBrushTilt = nil
                             dragStart = nil
@@ -3032,6 +3052,7 @@ struct ImageEditorView: View {
                         },
                         onPrimaryToolDragCancelled: {
                             brushStrokeSamples = []
+                            isEraserHistoryGestureActive = false
                             activeBrushPressure = nil
                             activeBrushTilt = nil
                             dragStart = nil
@@ -3270,6 +3291,7 @@ struct ImageEditorView: View {
                             isSpacebarPanning: isSpacebarPanning,
                             isCanvasPanGestureActive: isCanvasPanGestureActive,
                             isPickingSampledBrushSource: isSettingSampledBrushSourceGesture,
+                            isErasingToHistory: isEraserHistoryCursorActive,
                             patchPhase: patchCursorPhase(at: canvasPoint),
                             modifierFlags: canvasModifierFlags,
                             marqueeShape: viewModel.marqueeShape,
@@ -3349,6 +3371,9 @@ struct ImageEditorView: View {
                 .onChange(of: viewModel.isSettingHealingSource) { _ in
                     refreshCanvasCursor(in: geometry.size)
                 }
+                .onChange(of: viewModel.eraserErasesToHistory) { _ in
+                    refreshCanvasCursor(in: geometry.size)
+                }
                 .onChange(of: viewModel.healingBrushMode) { _ in
                     refreshCanvasCursor(in: geometry.size)
                 }
@@ -3372,6 +3397,7 @@ struct ImageEditorView: View {
                     isPointerInsideCanvas = false
                     activeBrushPressure = nil
                     activeBrushTilt = nil
+                    isEraserHistoryGestureActive = false
                     isPatchGestureBlocked = false
                     endPendingCropInteraction()
                     resetColorSamplerGesture()
@@ -4274,6 +4300,12 @@ struct ImageEditorView: View {
                     }
                 case .brush, .historyBrush, .eraser, .sponge:
                     if let pointerImagePoint {
+                        if canvasInteractionTool == .eraser,
+                           brushStrokeSamples.isEmpty {
+                            isEraserHistoryGestureActive = viewModel.shouldEraseToHistory(
+                                modifierFlags: canvasModifierFlags
+                            )
+                        }
                         activeBrushPressure = eventPressure
                         activeBrushTilt = stylusInput.tilt
                         brushStrokeSamples.append(ImageEditorBrushStrokeSample(
@@ -4686,7 +4718,10 @@ struct ImageEditorView: View {
                 case .historyBrush:
                     viewModel.historyBrush(samples: committedBrushSamples)
                 case .eraser:
-                    viewModel.drawBrush(samples: committedBrushSamples, erase: true)
+                    viewModel.eraseBrush(
+                        samples: committedBrushSamples,
+                        restoringHistory: isEraserHistoryGestureActive
+                    )
                 case .cloneStamp:
                     if viewModel.isSettingCloneSource || NSEvent.modifierFlags.contains(.option), let endImagePoint {
                         viewModel.setCloneSource(at: endImagePoint)
@@ -4869,6 +4904,7 @@ struct ImageEditorView: View {
 
                 dragPoints = []
                 brushStrokeSamples = []
+                isEraserHistoryGestureActive = false
                 activeBrushPressure = nil
                 toneAirbrushStroke.reset()
                 dragStart = nil
@@ -5234,6 +5270,7 @@ struct ImageEditorView: View {
             isSpacebarPanning: isSpacebarPanning,
             isCanvasPanGestureActive: isCanvasPanGestureActive,
             isPickingSampledBrushSource: isSettingSampledBrushSourceGesture,
+            isErasingToHistory: isEraserHistoryCursorActive,
             patchPhase: patchCursorPhase(at: canvasPoint),
             modifierFlags: NSEvent.modifierFlags,
             marqueeShape: viewModel.marqueeShape,
@@ -5282,6 +5319,7 @@ struct ImageEditorView: View {
             isSpacebarPanning: isSpacebarPanning,
             isCanvasPanGestureActive: isCanvasPanGestureActive,
             isPickingSampledBrushSource: isSettingSampledBrushSourceGesture,
+            isErasingToHistory: isEraserHistoryCursorActive,
             patchPhase: patchCursorPhase(at: nil),
             modifierFlags: canvasModifierFlags,
             marqueeShape: viewModel.marqueeShape,
@@ -5340,6 +5378,15 @@ struct ImageEditorView: View {
             sidebarTab: viewModel.selectedLeftSidebarTab,
             isEraserInProximity: stylusProximity.isEraser
         )
+    }
+
+    private var isEraserHistoryCursorActive: Bool {
+        guard canvasInteractionTool == .eraser else { return false }
+        if viewModel.canvasPointerCaptureState.activeTool == .eraser
+            || !brushStrokeSamples.isEmpty {
+            return isEraserHistoryGestureActive
+        }
+        return viewModel.shouldEraseToHistory(modifierFlags: canvasModifierFlags)
     }
 
     private func imagePoint(from viewPoint: CGPoint, in size: CGSize) -> CGPoint? {
@@ -13095,6 +13142,7 @@ enum ImageEditorCanvasCursor {
         isSpacebarPanning: Bool = false,
         isCanvasPanGestureActive: Bool = false,
         isPickingSampledBrushSource: Bool = false,
+        isErasingToHistory: Bool = false,
         patchPhase: ImageEditorPatchCursorPhase = .drawingSelection,
         modifierFlags: NSEvent.ModifierFlags = [],
         marqueeShape: ImageEditorMarqueeShape = .rectangle,
@@ -13191,6 +13239,7 @@ enum ImageEditorCanvasCursor {
                 pathHandleIsBreaking: pathHandleIsBreaking,
                 handIsDragging: handIsDragging,
                 isPickingSampledBrushSource: isPickingSampledBrushSource,
+                isErasingToHistory: isErasingToHistory,
                 patchPhase: patchPhase,
                 modifierFlags: modifierFlags,
                 marqueeShape: marqueeShape,
@@ -13677,6 +13726,7 @@ enum ImageEditorCanvasCursor {
         pathHandleIsBreaking: Bool = false,
         handIsDragging: Bool = false,
         isPickingSampledBrushSource: Bool = false,
+        isErasingToHistory: Bool = false,
         patchPhase: ImageEditorPatchCursorPhase = .drawingSelection,
         modifierFlags: NSEvent.ModifierFlags = [],
         marqueeShape: ImageEditorMarqueeShape = .rectangle,
@@ -13712,7 +13762,7 @@ enum ImageEditorCanvasCursor {
             return modifierFlags.contains(.capsLock) || isPickingSampledBrushSource
                 ? .crosshair
                 : familiarBrushCursor(diameter: brushDiameter)
-        case .brushTool, .eraserTool:
+        case .brushTool:
             return modifierFlags.contains(.capsLock)
                 ? .crosshair
                 : familiarBrushCursor(
@@ -13721,6 +13771,17 @@ enum ImageEditorCanvasCursor {
                     tiltControlsShape: brushTiltControlsShape,
                     tipRoundness: brushTipRoundness,
                     tipAngleDegrees: brushTipAngleDegrees
+                )
+        case .eraserTool:
+            return modifierFlags.contains(.capsLock)
+                ? .crosshair
+                : familiarBrushCursor(
+                    diameter: brushDiameter,
+                    tilt: brushTilt,
+                    tiltControlsShape: brushTiltControlsShape,
+                    tipRoundness: brushTipRoundness,
+                    tipAngleDegrees: brushTipAngleDegrees,
+                    symbolName: isErasingToHistory ? "clock.arrow.circlepath" : ""
                 )
         case .toneBrush, .retouchBrush:
             return modifierFlags.contains(.capsLock)
@@ -13790,7 +13851,8 @@ enum ImageEditorCanvasCursor {
         tilt: ImageEditorStylusTilt? = nil,
         tiltControlsShape: Bool = false,
         tipRoundness: CGFloat = 1,
-        tipAngleDegrees: CGFloat = 0
+        tipAngleDegrees: CGFloat = 0,
+        symbolName: String = ""
     ) -> NSCursor {
         brushCursor(
             footprint: ImageEditorBrushCursorFootprint(
@@ -13800,7 +13862,7 @@ enum ImageEditorCanvasCursor {
                 tipRoundness: tipRoundness,
                 tipAngleDegrees: tipAngleDegrees
             ),
-            symbolName: ""
+            symbolName: symbolName
         )
     }
 

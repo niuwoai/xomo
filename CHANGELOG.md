@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.12.0-rc1107 - 2026-08-17
+
+### Added
+- 橡皮擦选项栏新增 Photoshop 经典“抹到历史记录”：开启后沿用 History 面板画笔列选中的普通历史状态或命名快照，按真实橡皮足迹恢复当前图层；按住 Option 落笔可只对当前笔触临时启用。
+
+### Changed
+- 是否恢复历史在 pointer-down 时锁存，笔触途中松开 Option 或切换选项不会改变已开始事务；Quick Mask、图层蒙版、锁定或缺少同层来源时继续执行普通擦除，不把历史图层像素误写进通道。
+- 历史擦除复用 History Brush 的 frame 对齐、选区、透明度锁、笔刷动态及无变化事务语义；光标保留真实 footprint 并加紧凑回溯徽标，Caps Lock 精确十字、组件库系统箭头以及对象/平移/变换优先级保持不变。
+
+### Verification
+- Fill/History/History Brush/Erase To History 专项 29/29、完整画布光标 88/88、UI 接线 1/1、CLI 2/2 与发布契约 7/7 通过；本版本不触发周期 Universal Release、完整冒烟与 `/Applications` 安装，下一次完整门禁为 rc1120。
+
 ## 2.12.0-rc1106 - 2026-08-17
 
 ### Added

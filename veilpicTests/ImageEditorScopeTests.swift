@@ -2245,6 +2245,43 @@ struct ImageEditorScopeTests {
         #expect(commandSource.contains("skipIfUnchanged: true"))
     }
 
+    @Test func eraserHistoryModeLatchesAtPointerDownAndWiresBothPaintingPaths() throws {
+        let editorSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let commandSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent(
+                "veilpic/ImageEditorSelectionEditCommands.swift"
+            ),
+            encoding: .utf8
+        )
+
+        #expect(editorSource.contains("image-editor-erase-to-history"))
+        #expect(editorSource.contains("isOn: $viewModel.eraserErasesToHistory"))
+        #expect(editorSource.contains(".disabled(!viewModel.canEraseToHistory)"))
+        #expect(editorSource.contains("if canvasInteractionTool == .eraser {\n                                isEraserHistoryGestureActive = viewModel.shouldEraseToHistory"))
+        #expect(editorSource.contains("if canvasInteractionTool == .eraser,\n                           brushStrokeSamples.isEmpty {\n                            isEraserHistoryGestureActive = viewModel.shouldEraseToHistory"))
+        #expect(editorSource.components(separatedBy: "viewModel.eraseBrush(").count == 3)
+        #expect(editorSource.components(separatedBy: "isEraserHistoryGestureActive = false").count >= 5)
+        #expect(editorSource.components(separatedBy: "isErasingToHistory: isEraserHistoryCursorActive").count == 4)
+        #expect(commandSource.contains("var canEraseToHistory: Bool"))
+        #expect(commandSource.contains("func shouldEraseToHistory(modifierFlags: NSEvent.ModifierFlags) -> Bool"))
+        #expect(commandSource.contains("func eraseBrush("))
+        #expect(commandSource.contains("_ = historyBrush(samples: samples)"))
+
+        for locale in ["en", "ja", "zh-Hans"] {
+            let localization = try String(
+                contentsOf: Self.repositoryRoot().appendingPathComponent(
+                    "veilpic/\(locale).lproj/Localizable.strings"
+                ),
+                encoding: .utf8
+            )
+            #expect(localization.contains("\"imageEditor.option.eraseToHistory\""))
+            #expect(localization.contains("\"imageEditor.option.eraseToHistory.help\""))
+        }
+    }
+
     @Test func fileMenuExposesClipboardCanvasCreation() throws {
         let source = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),
