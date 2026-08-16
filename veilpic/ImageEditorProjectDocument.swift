@@ -1237,6 +1237,7 @@ extension ImageEditorViewModel {
         }
         selectedTool = .move
         selectedChannelPreview = .composite
+        clearLayerMaskSoloPreview()
         isEditingLayerMask = false
         statusText = L10n.format("imageEditor.status.projectOpened", document.sourceName)
     }
@@ -1326,6 +1327,7 @@ extension ImageEditorViewModel {
         document.history.forEach { entry in historySnapshots[entry.id] = document }
         selectedTool = .move
         selectedChannelPreview = .composite
+        clearLayerMaskSoloPreview()
         isEditingLayerMask = false
     }
 

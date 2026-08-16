@@ -49,6 +49,18 @@ enum ImageEditorLayerThumbnailSelectionPolicy {
         let relevantFlags = modifierFlags.intersection([.command, .shift, .option, .control])
         return relevantFlags == [.shift]
     }
+
+    static func previewsRasterMask(
+        sidebarTab: XomoLeftSidebarTab,
+        source: ImageEditorLayerThumbnailSelectionSource,
+        modifierFlags: NSEvent.ModifierFlags
+    ) -> Bool {
+        guard sidebarTab == .tools,
+              source == .rasterMask
+        else { return false }
+        let relevantFlags = modifierFlags.intersection([.command, .shift, .option, .control])
+        return relevantFlags == [.option]
+    }
 }
 
 enum ImageEditorLayerPanelTabAppearance {
@@ -393,7 +405,9 @@ extension ImageEditorView {
     }
 
     private func channelRow(_ channel: ImageEditorChannelPreview) -> some View {
-        let isSelected = viewModel.previewedAlphaChannel == nil && viewModel.selectedChannelPreview == channel
+        let isSelected = viewModel.previewedLayerMask == nil
+            && viewModel.previewedAlphaChannel == nil
+            && viewModel.selectedChannelPreview == channel
         return HStack(spacing: 6) {
             Button {
                 viewModel.selectChannelPreview(channel)
@@ -2531,6 +2545,13 @@ extension ImageEditorView {
         source: ImageEditorLayerThumbnailSelectionSource
     ) -> Bool {
         let flags = NSEvent.modifierFlags
+        if ImageEditorLayerThumbnailSelectionPolicy.previewsRasterMask(
+            sidebarTab: viewModel.selectedLeftSidebarTab,
+            source: source,
+            modifierFlags: flags
+        ) {
+            return viewModel.toggleLayerMaskSoloPreview(layerID: layer.id)
+        }
         if ImageEditorLayerThumbnailSelectionPolicy.togglesMaskEnabled(
             sidebarTab: viewModel.selectedLeftSidebarTab,
             source: source,

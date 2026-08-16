@@ -1186,7 +1186,7 @@ extension ImageEditorViewModel {
         }
     }
 
-    private func canvasMaskImage(fromLayerMask mask: NSImage, layer: ImageEditorLayer) -> NSImage? {
+    func canvasMaskImage(fromLayerMask mask: NSImage, layer: ImageEditorLayer) -> NSImage? {
         if layer.isGroup {
             return mask.resized(to: document.canvasSize)
         }

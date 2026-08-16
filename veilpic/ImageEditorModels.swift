@@ -6233,6 +6233,17 @@ private extension NSImage {
     }
 }
 
+extension NSImage {
+    func grayscaleAlphaPreviewImage(targetSize: CGSize) -> NSImage? {
+        guard let alpha = alphaPlane() else { return nil }
+        return ImageEditorSelectionMask(
+            width: alpha.width,
+            height: alpha.height,
+            alpha: alpha.values
+        ).grayscalePreviewImage(targetSize: targetSize)
+    }
+}
+
 struct ImageEditorTheme {
     static let window = NSColor(calibratedWhite: 0.11, alpha: 1)
     static let chrome = NSColor(calibratedRed: 0.105, green: 0.118, blue: 0.145, alpha: 1)

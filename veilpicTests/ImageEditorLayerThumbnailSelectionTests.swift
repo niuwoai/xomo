@@ -64,6 +64,32 @@ struct ImageEditorLayerThumbnailSelectionTests {
         ))
     }
 
+    @Test func pureOptionPreviewsOnlyRasterMasksWithoutStealingSelectionCombinations() {
+        #expect(ImageEditorLayerThumbnailSelectionPolicy.previewsRasterMask(
+            sidebarTab: .tools,
+            source: .rasterMask,
+            modifierFlags: [.option]
+        ))
+        for (source, flags) in [
+            (ImageEditorLayerThumbnailSelectionSource.vectorMask, NSEvent.ModifierFlags.option),
+            (.transparency, .option),
+            (.rasterMask, [.command, .option]),
+            (.rasterMask, [.shift, .option]),
+            (.rasterMask, [.control, .option])
+        ] {
+            #expect(!ImageEditorLayerThumbnailSelectionPolicy.previewsRasterMask(
+                sidebarTab: .tools,
+                source: source,
+                modifierFlags: flags
+            ))
+        }
+        #expect(!ImageEditorLayerThumbnailSelectionPolicy.previewsRasterMask(
+            sidebarTab: .components,
+            source: .rasterMask,
+            modifierFlags: [.option]
+        ))
+    }
+
     @Test func clickedTransparencyThumbnailTargetsItsLayerWithoutChangingLayerOrToolMode() throws {
         let fixture = makeLayerFixture()
         let viewModel = fixture.viewModel
@@ -204,6 +230,82 @@ struct ImageEditorLayerThumbnailSelectionTests {
         #expect(target.isMaskLinked)
     }
 
+    @Test func rasterMaskSoloPreviewIsTransientGrayscaleAndSelectsItsEditingTarget() throws {
+        let fixture = makeLayerFixture(includeMasks: true)
+        let viewModel = fixture.viewModel
+        let index = try #require(viewModel.document.layers.firstIndex {
+            $0.id == fixture.thumbnailLayerID
+        })
+        let width = Int(fixture.canvasSize.width)
+        let height = Int(fixture.canvasSize.height)
+        let alpha = (0..<(width * height)).map { offset in
+            offset % width < width / 2 ? UInt8.min : UInt8.max
+        }
+        viewModel.document.layers[index].mask = try #require(
+            NSImage.alphaMaskImage(width: width, height: height, alpha: alpha)
+        )
+        let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
+        let compositeData = try #require(viewModel.currentImage.qingtuPNGData())
+
+        #expect(viewModel.toggleLayerMaskSoloPreview(layerID: fixture.thumbnailLayerID))
+        #expect(viewModel.previewedLayerMaskID == fixture.thumbnailLayerID)
+        #expect(viewModel.document.selectedLayerID == fixture.thumbnailLayerID)
+        #expect(viewModel.document.selectedLayerIDs == [fixture.thumbnailLayerID])
+        #expect(viewModel.isEditingLayerMask)
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.undoStack.count == undoCount)
+        #expect(try #require(viewModel.currentImage.qingtuPNGData()) == compositeData)
+
+        let dark = try #require(
+            viewModel.previewImage.color(at: CGPoint(x: 10.5, y: 20.5))?.usingColorSpace(.deviceRGB)
+        )
+        let light = try #require(
+            viewModel.previewImage.color(at: CGPoint(x: 70.5, y: 20.5))?.usingColorSpace(.deviceRGB)
+        )
+        #expect(dark.redComponent < 0.02)
+        #expect(dark.greenComponent < 0.02)
+        #expect(dark.blueComponent < 0.02)
+        #expect(light.redComponent > 0.98)
+        #expect(light.greenComponent > 0.98)
+        #expect(light.blueComponent > 0.98)
+        #expect(dark.alphaComponent > 0.98)
+        #expect(light.alphaComponent > 0.98)
+
+        #expect(viewModel.toggleLayerMaskSoloPreview(layerID: fixture.thumbnailLayerID))
+        #expect(viewModel.previewedLayerMaskID == nil)
+        #expect(viewModel.isEditingLayerMask)
+        #expect(try #require(viewModel.previewImage.qingtuPNGData()) == compositeData)
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.undoStack.count == undoCount)
+    }
+
+    @Test func contentOrChannelSelectionLeavesMaskSoloPreviewWithoutHistory() throws {
+        let fixture = makeLayerFixture(includeMasks: true)
+        let viewModel = fixture.viewModel
+        let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
+
+        #expect(viewModel.toggleLayerMaskSoloPreview(layerID: fixture.thumbnailLayerID))
+        viewModel.selectLayer(fixture.thumbnailLayerID, editingMask: false)
+        #expect(viewModel.previewedLayerMaskID == nil)
+        #expect(!viewModel.isEditingLayerMask)
+
+        #expect(viewModel.toggleLayerMaskSoloPreview(layerID: fixture.thumbnailLayerID))
+        viewModel.selectChannelPreview(.red)
+        #expect(viewModel.previewedLayerMaskID == nil)
+        #expect(viewModel.selectedChannelPreview == .red)
+
+        #expect(viewModel.toggleLayerMaskSoloPreview(layerID: fixture.thumbnailLayerID))
+        let index = try #require(viewModel.document.layers.firstIndex {
+            $0.id == fixture.thumbnailLayerID
+        })
+        viewModel.document.layers[index].mask = nil
+        #expect(viewModel.previewedLayerMaskID == nil)
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.undoStack.count == undoCount)
+    }
+
     @Test func vectorOnlyMaskKeepsAReachableLinkControl() throws {
         let vectorFixture = makeLayerFixture(includeMasks: true)
         let vectorViewModel = vectorFixture.viewModel
@@ -259,6 +361,9 @@ struct ImageEditorLayerThumbnailSelectionTests {
         #expect(source.contains("viewModel.loadSelectionFromVectorMask(layerID: layer.id, mode: mode)"))
         #expect(source.contains("viewModel.toggleLayerMaskEnabled(layerID: layer.id)"))
         #expect(source.contains("viewModel.toggleVectorMaskEnabled(layerID: layer.id)"))
+        #expect(source.contains("ImageEditorLayerThumbnailSelectionPolicy.previewsRasterMask("))
+        #expect(source.contains("viewModel.toggleLayerMaskSoloPreview(layerID: layer.id)"))
+        #expect(source.contains("let isSelected = viewModel.previewedLayerMask == nil"))
         #expect(source.contains("viewModel.toggleLayerMaskLinked(layerID: layer.id)"))
         #expect(source.contains("if layer.mask == nil"))
         #expect(source.contains(".disabled(viewModel.document.isEffectivelyLocked(layer))"))

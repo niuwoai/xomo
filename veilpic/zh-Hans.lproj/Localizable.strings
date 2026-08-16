@@ -1162,6 +1162,7 @@
 "imageEditor.channel.blue" = "蓝色";
 "imageEditor.channel.alpha" = "Alpha";
 "imageEditor.channel.previewing" = "正在预览 %@";
+"imageEditor.channel.layerMaskName" = "%@ 的图层蒙版";
 "imageEditor.channel.previewHint" = "可预览通道，也可载入为选区；导出仍使用完整合成图。";
 "imageEditor.channel.savedAlphaChannels" = "已保存 Alpha 通道";
 "imageEditor.channel.alphaChannelName" = "Alpha 通道 %d";
@@ -3621,5 +3622,5 @@
 "imageEditor.status.sliceInvalidFrame" = "切片矩形数值无效，请检查 X、Y、宽度和高度";
 "imageEditor.history.sliceUpdated" = "更新切片：%@";
 "imageEditor.layer.thumbnailSelectionHelp" = "点击选择图层；Command 点按载入透明度，配合 Shift、Option 或两者可添加、减去或交叉选区。";
-"imageEditor.layer.rasterMaskThumbnailSelectionHelp" = "点击编辑图层蒙版；Shift 点按启用或禁用，Command 点按载入边界并可配合 Shift 或 Option 组合选区。";
+"imageEditor.layer.rasterMaskThumbnailSelectionHelp" = "点击编辑图层蒙版；Option 点按独显蒙版通道，Shift 点按启用或禁用，Command 点按载入边界并可配合 Shift 或 Option 组合选区。";
 "imageEditor.layer.vectorMaskThumbnailSelectionHelp" = "点击编辑矢量蒙版；Shift 点按启用或禁用，Command 点按载入边界并可配合 Shift 或 Option 组合选区。";

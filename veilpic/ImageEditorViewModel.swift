@@ -108,6 +108,10 @@ final class ImageEditorViewModel: ObservableObject {
 
     @Published var document: ImageEditorDocument {
         didSet {
+            if let previewedLayerMaskID,
+               !document.layers.contains(where: { $0.id == previewedLayerMaskID && $0.mask != nil }) {
+                self.previewedLayerMaskID = nil
+            }
             refreshSelectionEdgeGeometry()
             refreshQuickMaskOverlay()
             if preservesRenderedImageCachesForNextDocumentMutation {
@@ -393,7 +397,14 @@ final class ImageEditorViewModel: ObservableObject {
     @Published private(set) var selectedColorSamplerSource: ImageEditorColorSamplerSource = .composite
     @Published var selectedChannelPreview: ImageEditorChannelPreview = .composite
     @Published var selectedAlphaChannelID: UUID?
-    @Published var previewedAlphaChannelID: UUID?
+    @Published var previewedAlphaChannelID: UUID? {
+        didSet {
+            if previewedAlphaChannelID != nil {
+                previewedLayerMaskID = nil
+            }
+        }
+    }
+    @Published private(set) var previewedLayerMaskID: UUID?
     @Published var isEditingLayerMask: Bool = false
     @Published var pendingPenPathAnchors: [ImageEditorPathAnchor] = []
     @Published var undonePendingPenPathAnchors: [ImageEditorPathAnchor] = []
@@ -443,6 +454,7 @@ final class ImageEditorViewModel: ObservableObject {
     )?
     private var cachedChannelPreviewImages: [String: NSImage] = [:]
     private var cachedAlphaChannelPreviewImages: [UUID: NSImage] = [:]
+    private var cachedLayerMaskSoloPreviewImages: [UUID: NSImage] = [:]
     private var cachedChannelThumbnailImages: [String: NSImage] = [:]
     private var cachedAlphaChannelThumbnailImages: [UUID: NSImage] = [:]
     private var cachedHistogramSummary: ImageEditorHistogramSummary?
@@ -672,6 +684,7 @@ final class ImageEditorViewModel: ObservableObject {
         newDocument.designCanvasMetadata = XomoDesignCanvasMetadata(draft: draft)
 
         document = newDocument
+        previewedLayerMaskID = nil
         colorSamplerPoints.removeAll()
         psdCompatibilityReport = nil
         psdCompatibilityFileName = ""
@@ -724,6 +737,7 @@ final class ImageEditorViewModel: ObservableObject {
         selectedTool = .move
         selectedChannelPreview = .composite
         previewedAlphaChannelID = nil
+        previewedLayerMaskID = nil
         isEditingLayerMask = false
         isQuickMaskMode = false
         clearUndoHistory()
@@ -743,10 +757,62 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     var previewImage: NSImage {
+        if let image = layerMaskSoloPreviewImage {
+            return image
+        }
         if let previewedAlphaChannel {
             return alphaChannelPreviewImage(previewedAlphaChannel)
         }
         return channelPreviewImage(for: selectedChannelPreview)
+    }
+
+    var previewedLayerMask: ImageEditorLayer? {
+        guard let previewedLayerMaskID else { return nil }
+        return document.layers.first { $0.id == previewedLayerMaskID && $0.mask != nil }
+    }
+
+    func toggleLayerMaskSoloPreview(layerID: UUID) -> Bool {
+        guard document.layers.contains(where: { $0.id == layerID && $0.mask != nil }) else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return false
+        }
+
+        if previewedLayerMaskID == layerID {
+            previewedLayerMaskID = nil
+            statusText = L10n.format(
+                "imageEditor.status.channelPreview",
+                ImageEditorChannelPreview.composite.title
+            )
+            return true
+        }
+
+        selectLayer(layerID, editingMask: true)
+        selectedChannelPreview = .composite
+        previewedAlphaChannelID = nil
+        previewedLayerMaskID = layerID
+        statusText = L10n.format(
+            "imageEditor.status.channelPreview",
+            L10n.format("imageEditor.channel.layerMaskName", previewedLayerMask?.name ?? "")
+        )
+        return true
+    }
+
+    func clearLayerMaskSoloPreview() {
+        previewedLayerMaskID = nil
+    }
+
+    private var layerMaskSoloPreviewImage: NSImage? {
+        guard let layer = previewedLayerMask,
+              let mask = layer.mask
+        else { return nil }
+        if let cached = cachedLayerMaskSoloPreviewImages[layer.id] {
+            return cached
+        }
+        guard let canvasMask = canvasMaskImage(fromLayerMask: mask, layer: layer),
+              let preview = canvasMask.grayscaleAlphaPreviewImage(targetSize: document.canvasSize)
+        else { return nil }
+        cachedLayerMaskSoloPreviewImages[layer.id] = preview
+        return preview
     }
 
     func channelPreviewImage(for channel: ImageEditorChannelPreview) -> NSImage {
@@ -784,6 +850,7 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     func selectChannelPreview(_ channel: ImageEditorChannelPreview) {
+        previewedLayerMaskID = nil
         selectedChannelPreview = channel
         previewedAlphaChannelID = nil
         statusText = L10n.format("imageEditor.status.channelPreview", channel.title)
@@ -3984,6 +4051,9 @@ final class ImageEditorViewModel: ObservableObject {
 
     func selectLayer(_ id: UUID, editingMask: Bool = false, extendingSelection: Bool = false) {
         guard document.layers.contains(where: { $0.id == id }) else { return }
+        if !editingMask || previewedLayerMaskID != id {
+            previewedLayerMaskID = nil
+        }
         let shouldEditMask = editingMask && (document.layers.first { $0.id == id }?.mask != nil)
         if !extendingSelection,
            document.selectedLayerID == id,
@@ -9558,6 +9628,7 @@ final class ImageEditorViewModel: ObservableObject {
         resetPointerSampleCache()
         cachedChannelPreviewImages.removeAll(keepingCapacity: true)
         cachedAlphaChannelPreviewImages.removeAll(keepingCapacity: true)
+        cachedLayerMaskSoloPreviewImages.removeAll(keepingCapacity: true)
         cachedChannelThumbnailImages.removeAll(keepingCapacity: true)
         cachedAlphaChannelThumbnailImages.removeAll(keepingCapacity: true)
         cachedHistogramSummary = nil

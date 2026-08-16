@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.12.0-rc1089 - 2026-08-17
+
+### Added
+- 图层面板栅格蒙版缩略图支持 Photoshop 式 Option 点按，直接把被点蒙版作为黑白通道独显；再次 Option 点按恢复复合画面。
+
+### Changed
+- 蒙版独显与 Shift 启停、Command 选区组合集中仲裁：纯 Option 仅作用于栅格图层蒙版，Command+Option 继续执行选区相减，矢量蒙版与组件库不冒充此命令。进入独显会选择实际被点图层并激活其蒙版编辑，点击内容缩略图、选择颜色/Alpha 通道或打开新文档会退出；显示状态不写文档、Undo 或 History。三语缩略图提示同步说明新手势。
+
+### Verification
+- 缩略图修饰键、蒙版灰度像素、目标选择、退出路径、Undo/History 隔离与界面接线专项 13/13，颜色/Alpha 通道邻接回归 2/2、三语资源键 1/1、CLI 2/2、发布契约 7/7（21 项断言）及最终 `build-for-testing` 通过。本版本不触发周期 Universal Release、完整冒烟与 `/Applications` 安装，下一次完整门禁为 rc1120。
+
 ## 2.12.0-rc1088 - 2026-08-17
 
 ### Added
