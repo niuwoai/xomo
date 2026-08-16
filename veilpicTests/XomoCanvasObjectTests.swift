@@ -577,6 +577,39 @@ struct XomoCanvasObjectTests {
         #expect(viewModel.document.selectedLayerID == group.id)
     }
 
+    @Test func componentWorkspaceSelectAllKeepsOnlyWholeInstances() throws {
+        let viewModel = makeViewModel()
+        viewModel.insertXomoComponent(.button, at: CGPoint(x: 80, y: 90))
+        let firstComponentID = try #require(viewModel.document.selectedLayerID)
+        viewModel.insertXomoComponent(.card, at: CGPoint(x: 280, y: 190))
+        let secondComponentID = try #require(viewModel.document.selectedLayerID)
+        var ordinary = ImageEditorLayer.solidColorFill(
+            name: "Ordinary",
+            size: CGSize(width: 40, height: 30),
+            content: ImageEditorSolidColorFillContent(red: 0.2, green: 0.5, blue: 0.8)
+        )
+        ordinary.frame.origin = CGPoint(x: 500, y: 360)
+        viewModel.document.layers.append(ordinary)
+        viewModel.selectLayer(ordinary.id)
+        viewModel.selectLeftSidebarTab(.components)
+        let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
+
+        #expect(viewModel.canSelectAllWorkspaceObjects)
+        #expect(viewModel.selectAllWorkspaceObjects())
+        #expect(viewModel.document.selectedLayerIDs == [firstComponentID, secondComponentID])
+        #expect(viewModel.document.selectedLayerID == secondComponentID)
+        #expect(viewModel.selectedXomoObjectFrame != nil)
+        #expect(!viewModel.document.selectedLayerIDs.contains(ordinary.id))
+        #expect(viewModel.document.selectedLayerIDs.allSatisfy { selectedID in
+            viewModel.document.layers.first(where: { $0.id == selectedID })?.isGroup == true
+        })
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.undoStack.count == undoCount)
+        #expect(viewModel.statusText == L10n.format("xomo.object.status.selectAll", 2))
+        #expect(!viewModel.selectAllWorkspaceObjects())
+    }
+
     @Test func sharedMoveTargetFallbackSelectsAComponentBeforeItsChildren() throws {
         let viewModel = makeViewModel()
         viewModel.insertXomoComponent(.button, at: CGPoint(x: 80, y: 90))

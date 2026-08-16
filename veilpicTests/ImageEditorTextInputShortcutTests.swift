@@ -6,6 +6,7 @@ struct ImageEditorTextInputShortcutTests {
     @Test func standardTextEditingShortcutsRemainOwnedByTheActiveTextInput() {
         let standardActions: [(String, NSEvent.ModifierFlags, ImageEditorKeyboardShortcutAction)] = [
             ("a", [.command], .selectAll),
+            ("a", [.command, .option], .selectAllLayers),
             ("c", [.command], .copySelectionClipboard),
             ("x", [.command], .cutSelectionClipboard),
             ("v", [.command], .pasteClipboardLayer),

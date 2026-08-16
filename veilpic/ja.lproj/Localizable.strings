@@ -3206,6 +3206,8 @@
 "xomo.themeSample.status.inserted" = "%@ ページ例を挿入しました";
 "xomo.object.status.selected" = "オブジェクトを選択しました：%@";
 "xomo.object.status.deleted" = "オブジェクトを削除しました：%@";
+"xomo.object.action.selectAll" = "すべてのコンポーネントを選択";
+"xomo.object.status.selectAll" = "%d 個すべてのコンポーネントを選択しました";
 "xomo.instance.title" = "コンポーネントインスタンス";
 "xomo.instance.makeMaster" = "マスターに設定";
 "xomo.instance.link" = "選択項目をリンク";

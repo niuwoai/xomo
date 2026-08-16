@@ -3206,6 +3206,8 @@
 "xomo.themeSample.status.inserted" = "Inserted %@ page sample";
 "xomo.object.status.selected" = "Selected object: %@";
 "xomo.object.status.deleted" = "Deleted object: %@";
+"xomo.object.action.selectAll" = "Select All Components";
+"xomo.object.status.selectAll" = "All %d components selected";
 "xomo.instance.title" = "Component instances";
 "xomo.instance.makeMaster" = "Set as master";
 "xomo.instance.link" = "Link selected";

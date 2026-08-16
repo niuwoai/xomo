@@ -2379,6 +2379,7 @@ struct ImageEditorView: View {
         case .layerDown: viewModel.moveSelectedLayerDown(inVisibleOrder: filteredVisibleLayerRowIDs)
         case .layerBottom: viewModel.moveSelectedLayerToBottom(inVisibleOrder: filteredVisibleLayerRowIDs)
         case .navigateLayerSelection(let navigation): viewModel.navigateLayerSelection(navigation)
+        case .selectAllLayers: viewModel.selectAllWorkspaceObjects()
         case .selectAll: viewModel.selectAll()
         case .clearSelection: viewModel.clearSelection()
         case .reselectSelection: viewModel.reselectSelection()
@@ -15037,6 +15038,7 @@ enum ImageEditorKeyboardShortcutAction: Equatable {
     case layerDown
     case layerBottom
     case navigateLayerSelection(ImageEditorLayerSelectionNavigation)
+    case selectAllLayers
     case selectAll
     case clearSelection
     case reselectSelection
@@ -15088,6 +15090,7 @@ enum ImageEditorKeyboardShortcutAction: Equatable {
              .layerDown,
              .layerBottom,
              .navigateLayerSelection,
+             .selectAllLayers,
              .toggleQuickMask,
              .toneRange,
              .spongeMode:
@@ -15199,6 +15202,7 @@ enum ImageEditorKeyboardShortcutAction: Equatable {
         if key == "]", relevantFlags == [.command] { return .layerUp }
         if key == "[", relevantFlags == [.command] { return .layerDown }
         if key == "[", relevantFlags == [.command, .shift] { return .layerBottom }
+        if key == "a", relevantFlags == [.command, .option] { return .selectAllLayers }
         if key == "a", relevantFlags == [.command] { return .selectAll }
         if key == "d", relevantFlags == [.command] { return .clearSelection }
         if key == "d", relevantFlags == [.command, .shift] { return .reselectSelection }

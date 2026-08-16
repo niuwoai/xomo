@@ -477,10 +477,14 @@ extension ImageEditorView {
         Divider()
         layerLockMenu
         Divider()
-        Button(L10n.text("imageEditor.action.layerSelectAll")) {
-            viewModel.selectAllLayers()
+        Button(L10n.text(
+            viewModel.selectedLeftSidebarTab == .components
+                ? "xomo.object.action.selectAll"
+                : "imageEditor.action.layerSelectAll"
+        )) {
+            viewModel.selectAllWorkspaceObjects()
         }
-        .disabled(!viewModel.canSelectAllLayers)
+        .disabled(!viewModel.canSelectAllWorkspaceObjects)
         Button(L10n.text("imageEditor.action.layerSelectVisible")) {
             viewModel.selectVisibleLayers()
         }

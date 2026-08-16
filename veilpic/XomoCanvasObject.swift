@@ -897,6 +897,52 @@ extension ImageEditorViewModel {
         return true
     }
 
+    var canSelectAllWorkspaceObjects: Bool {
+        guard !hasActiveLayerMoveTransaction,
+              !hasActivePathAnchorMoveTransaction,
+              !hasPendingPenPathTransaction
+        else { return false }
+        let targetIDs = workspaceSelectAllTargetIDs
+        return !targetIDs.isEmpty && document.selectedLayerIDs != targetIDs
+    }
+
+    /// Command-Option-A follows Photoshop in the layer workspace, but keeps
+    /// Sketch/Figma whole-instance semantics while the component library owns
+    /// canvas interaction. Automation can still call selectAllLayers directly
+    /// without inheriting transient UI state.
+    @discardableResult
+    func selectAllWorkspaceObjects() -> Bool {
+        guard canSelectAllWorkspaceObjects else { return false }
+        if selectedLeftSidebarTab == .tools {
+            selectAllLayers()
+            return true
+        }
+
+        let componentIDs = workspaceSelectAllTargetIDs
+        let orderedIDs = document.layers.compactMap { layer in
+            componentIDs.contains(layer.id) ? layer.id : nil
+        }
+        guard let firstID = orderedIDs.first else { return false }
+        selectLayer(firstID)
+        if let lastID = orderedIDs.last, lastID != firstID {
+            selectLayerRange(to: lastID, among: orderedIDs)
+        }
+        statusText = L10n.format(
+            "xomo.object.status.selectAll",
+            componentIDs.count
+        )
+        return true
+    }
+
+    private var workspaceSelectAllTargetIDs: Set<UUID> {
+        guard selectedLeftSidebarTab == .components else {
+            return Set(document.layers.map(\.id))
+        }
+        return Set(document.layers.compactMap { layer in
+            layer.isGroup && layer.xomoComponentInstance != nil ? layer.id : nil
+        })
+    }
+
     private func canvasLayerChoiceTarget(for leaf: ImageEditorLayer) -> ImageEditorLayer? {
         let ancestors = document.ancestorGroups(for: leaf)
         if selectedLeftSidebarTab == .components {

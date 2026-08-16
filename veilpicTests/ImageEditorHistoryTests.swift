@@ -301,6 +301,7 @@ struct ImageEditorHistoryTests {
             ("]", command, nil, .layerUp),
             ("[", command, nil, .layerDown),
             ("[", [command, shift], nil, .layerBottom),
+            ("a", [command, option], nil, .selectAllLayers),
             ("a", command, nil, .selectAll),
             ("d", command, nil, .clearSelection),
             ("d", [command, shift], nil, .reselectSelection),

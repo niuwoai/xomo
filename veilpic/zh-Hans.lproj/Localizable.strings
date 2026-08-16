@@ -3206,6 +3206,8 @@
 "xomo.themeSample.status.inserted" = "已插入“%@”页面示例";
 "xomo.object.status.selected" = "已选中对象：%@";
 "xomo.object.status.deleted" = "已删除对象：%@";
+"xomo.object.action.selectAll" = "选择全部组件";
+"xomo.object.status.selectAll" = "已选择全部 %d 个组件";
 "xomo.instance.title" = "组件实例";
 "xomo.instance.makeMaster" = "设为主组件";
 "xomo.instance.link" = "链接所选";

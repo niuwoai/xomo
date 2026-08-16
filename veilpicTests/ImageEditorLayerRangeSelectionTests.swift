@@ -119,6 +119,7 @@ struct ImageEditorLayerRangeSelectionTests {
 
     @Test func classicLayerSelectionShortcutsResolveWithoutChangingReorderShortcuts() {
         let cases: [(String, NSEvent.ModifierFlags, ImageEditorKeyboardShortcutAction)] = [
+            ("a", [.command, .option], .selectAllLayers),
             ("]", [.option], .navigateLayerSelection(.above(extendingSelection: false))),
             ("[", [.option], .navigateLayerSelection(.below(extendingSelection: false))),
             ("]", [.option, .shift], .navigateLayerSelection(.above(extendingSelection: true))),
@@ -137,6 +138,61 @@ struct ImageEditorLayerRangeSelectionTests {
             #expect(action == expected)
             #expect(action?.isBlockedByTextInput == true)
         }
+    }
+
+    @Test func workspaceSelectAllUsesEveryLayerWithoutHistoryInToolsMode() {
+        let fixture = makeFixture()
+        let viewModel = fixture.viewModel
+        let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
+        viewModel.selectLayer(fixture.layers[2].id)
+
+        #expect(viewModel.canSelectAllWorkspaceObjects)
+        #expect(viewModel.selectAllWorkspaceObjects())
+        #expect(viewModel.document.selectedLayerIDs == Set(fixture.layers.map(\.id)))
+        #expect(viewModel.document.selectedLayerID == fixture.layers.last?.id)
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.undoStack.count == undoCount)
+        #expect(!viewModel.canSelectAllWorkspaceObjects)
+        #expect(!viewModel.selectAllWorkspaceObjects())
+    }
+
+    @Test func pendingPenAndContinuousMovesBlockWorkspaceSelectAll() {
+        let fixture = makeFixture()
+        let viewModel = fixture.viewModel
+        viewModel.selectLayer(fixture.layers[1].id)
+        let originalSelection = viewModel.document.selectedLayerIDs
+
+        viewModel.pendingPenPathPoints = [CGPoint(x: 12, y: 8)]
+        #expect(!viewModel.canSelectAllWorkspaceObjects)
+        #expect(!viewModel.selectAllWorkspaceObjects())
+        #expect(viewModel.document.selectedLayerIDs == originalSelection)
+
+        viewModel.pendingPenPathPoints = []
+        #expect(viewModel.beginMovingSelectedLayer())
+        #expect(!viewModel.canSelectAllWorkspaceObjects)
+        #expect(!viewModel.selectAllWorkspaceObjects())
+        #expect(viewModel.document.selectedLayerIDs == originalSelection)
+        #expect(viewModel.cancelMovingSelectedLayer())
+    }
+
+    @Test func workspaceSelectAllShortcutAndMenuUseTheContextualModel() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let viewSource = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let menuSource = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),
+            encoding: .utf8
+        )
+
+        #expect(viewSource.contains("case .selectAllLayers: viewModel.selectAllWorkspaceObjects()"))
+        #expect(menuSource.contains("viewModel.selectAllWorkspaceObjects()"))
+        #expect(menuSource.contains("viewModel.canSelectAllWorkspaceObjects"))
+        #expect(menuSource.contains("xomo.object.action.selectAll"))
     }
 
     @Test func keyboardNavigationSelectsAdjacentAndBoundaryLayersWithoutHistory() {
