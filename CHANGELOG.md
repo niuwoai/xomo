@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.12.0-rc1045 - 2026-08-16
+
+### Added
+- Gradient Overlay 画布内部颜色色标支持 Option 拖动复制；真正越过拖动阈值后才创建副本，Option 单击仍只负责选中。
+
+### Changed
+- 副本按实际拖动方向插入源色标两侧并完整保留 RGB、Alpha 与中点；复制和移动合并为一步连续 History/Undo，Reverse、Shift 5% 吸附、Escape/Undo/Redo、相邻 1% 间距与 16 色标上限保持一致。
+- 三语画布色标帮助补充 Option 拖动复制提示。
+
+### Verification
+- 复制方向/回退、属性保真、拖动阈值、上限、Reverse、Shift 吸附、事务取消、普通拖动/Undo 相邻回归与 UI 接线测试 6/6 通过；CLI 2/2、发布契约 7/7（21 项断言）通过。rc1040 周期安装/真实界面冒烟仍等待本机 Developer ID 私钥恢复。
+
 ## 2.12.0-rc1044 - 2026-08-16
 
 ### Added

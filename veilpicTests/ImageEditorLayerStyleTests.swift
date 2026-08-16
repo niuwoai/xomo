@@ -3154,6 +3154,183 @@ struct ImageEditorLayerStyleTests {
         )
     }
 
+    @Test func gradientOverlayCanvasStopDuplicationChoosesDragSideAndHonorsLimits() throws {
+        let source = ImageEditorGradientColorStop(
+            position: 0.4,
+            red: 0.2,
+            green: 0.7,
+            blue: 0.3,
+            alpha: 0.6,
+            midpoint: 0.35
+        )
+        let stops = [
+            ImageEditorGradientColorStop(position: 0, color: .systemRed),
+            source,
+            ImageEditorGradientColorStop(position: 0.41, color: .systemYellow),
+            ImageEditorGradientColorStop(position: 1, color: .systemBlue)
+        ]
+        let result = try #require(
+            ImageEditorGradientOverlayStopDraftEditing.duplicatingStop(
+                stops,
+                at: 1,
+                toward: 0.8
+            )
+        )
+        #expect(result.duplicateIndex == 1)
+        #expect(abs(result.stops[1].position - 0.39) < 0.000_001)
+        #expect(result.stops[1].red == source.red)
+        #expect(result.stops[1].green == source.green)
+        #expect(result.stops[1].blue == source.blue)
+        #expect(result.stops[1].alpha == source.alpha)
+        #expect(result.stops[1].midpoint == source.midpoint)
+
+        let maximumStops = (0..<ImageEditorGradientFillContent.maximumColorStopCount).map {
+            ImageEditorGradientColorStop(
+                position: Double($0)
+                    / Double(ImageEditorGradientFillContent.maximumColorStopCount - 1),
+                color: .systemRed
+            )
+        }
+        #expect(
+            ImageEditorGradientOverlayStopDraftEditing.duplicatingStop(
+                maximumStops,
+                at: 1,
+                toward: 0.2
+            ) == nil
+        )
+        #expect(
+            !ImageEditorGradientOverlayStopDuplicateGesturePolicy.hasStartedDrag(
+                from: .zero,
+                to: CGPoint(x: 1.9, y: 0)
+            )
+        )
+        #expect(
+            ImageEditorGradientOverlayStopDuplicateGesturePolicy.hasStartedDrag(
+                from: .zero,
+                to: CGPoint(x: 2, y: 0)
+            )
+        )
+
+        let viewModel = gradientOverlayCenterViewModel()
+        let selectedIndex = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[selectedIndex].style.setGradientOverlayColorStops(
+            maximumStops
+        )
+        let geometry = try #require(viewModel.selectedLayerGradientOverlayCanvasGeometry)
+        let target = CGPoint(
+            x: geometry.axisStart.x
+                + (geometry.axisEndpoint.x - geometry.axisStart.x) * 0.2,
+            y: geometry.axisStart.y
+                + (geometry.axisEndpoint.y - geometry.axisStart.y) * 0.2
+        )
+        let originalProjectData = try viewModel.projectData()
+        let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
+        #expect(
+            viewModel.beginDuplicatingSelectedLayerGradientOverlayCanvasStop(
+                at: 1,
+                toward: target
+            ) == nil
+        )
+        #expect(try viewModel.projectData() == originalProjectData)
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.undoStack.count == undoCount)
+    }
+
+    @Test func optionDraggingGradientOverlayCanvasStopDuplicatesOnceWithReverseAndSnap() throws {
+        let viewModel = gradientOverlayCenterViewModel()
+        let selectedIndex = try #require(viewModel.document.selectedLayerIndex)
+        let source = ImageEditorGradientColorStop(
+            position: 0.4,
+            red: 0.2,
+            green: 0.7,
+            blue: 0.3,
+            alpha: 0.6,
+            midpoint: 0.35
+        )
+        viewModel.document.layers[selectedIndex].style.gradientOverlayReverse = true
+        viewModel.document.layers[selectedIndex].style.setGradientOverlayColorStops([
+            ImageEditorGradientColorStop(position: 0, color: .systemRed),
+            source,
+            ImageEditorGradientColorStop(position: 1, color: .systemBlue)
+        ])
+        let geometry = try #require(viewModel.selectedLayerGradientOverlayCanvasGeometry)
+        let target = CGPoint(
+            x: geometry.axisStart.x
+                + (geometry.axisEndpoint.x - geometry.axisStart.x) * 0.73,
+            y: geometry.axisStart.y
+                + (geometry.axisEndpoint.y - geometry.axisStart.y) * 0.73
+        )
+        let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
+
+        #expect(
+            viewModel.beginDuplicatingSelectedLayerGradientOverlayCanvasStop(
+                at: 1,
+                toward: target
+            ) == 1
+        )
+        viewModel.updateSelectedLayerGradientOverlayCanvasStop(
+            to: target,
+            snappingToStep: true
+        )
+        viewModel.finishEditingSelectedLayerGradientOverlayCanvasStop()
+
+        let duplicatedStops = viewModel.selectedLayerGradientOverlayColorStops
+        #expect(duplicatedStops.count == 4)
+        #expect(abs(duplicatedStops[1].position - 0.25) < 0.000_001)
+        #expect(duplicatedStops[1].red == source.red)
+        #expect(duplicatedStops[1].green == source.green)
+        #expect(duplicatedStops[1].blue == source.blue)
+        #expect(duplicatedStops[1].alpha == source.alpha)
+        #expect(duplicatedStops[1].midpoint == source.midpoint)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.undoStack.count == undoCount + 1)
+        #expect(
+            viewModel.document.history.last?.title
+                == L10n.text("imageEditor.history.gradientOverlayStopDuplicated")
+        )
+
+        viewModel.undo()
+        #expect(viewModel.selectedLayerGradientOverlayColorStops.count == 3)
+        #expect(viewModel.selectedLayerGradientOverlayColorStops[1] == source)
+    }
+
+    @Test func cancellingGradientOverlayCanvasStopDuplicationRestoresRedo() throws {
+        let viewModel = gradientOverlayCenterViewModel()
+        let selectedIndex = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[selectedIndex].style.setGradientOverlayColorStops([
+            ImageEditorGradientColorStop(position: 0, color: .systemRed),
+            ImageEditorGradientColorStop(position: 0.4, color: .systemGreen),
+            ImageEditorGradientColorStop(position: 1, color: .systemBlue)
+        ])
+        #expect(viewModel.setSelectedLayerGradientOverlayAngle(15) == 1)
+        viewModel.undo()
+        let originalProjectData = try viewModel.projectData()
+        let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
+        let geometry = try #require(viewModel.selectedLayerGradientOverlayCanvasGeometry)
+        let target = CGPoint(
+            x: geometry.axisStart.x
+                + (geometry.axisEndpoint.x - geometry.axisStart.x) * 0.7,
+            y: geometry.axisStart.y
+                + (geometry.axisEndpoint.y - geometry.axisStart.y) * 0.7
+        )
+
+        #expect(
+            viewModel.beginDuplicatingSelectedLayerGradientOverlayCanvasStop(
+                at: 1,
+                toward: target
+            ) == 2
+        )
+        viewModel.updateSelectedLayerGradientOverlayCanvasStop(to: target)
+        #expect(viewModel.cancelEditingSelectedLayerGradientOverlayCanvasStop())
+        #expect(try viewModel.projectData() == originalProjectData)
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.undoStack.count == undoCount)
+        #expect(viewModel.canRedo)
+    }
+
     @Test func undoCancelsActiveGradientOverlayCanvasStopBeforeHistory() throws {
         let viewModel = gradientOverlayCenterViewModel()
         let selectedIndex = try #require(viewModel.document.selectedLayerIndex)
@@ -3566,6 +3743,11 @@ struct ImageEditorLayerStyleTests {
         #expect(source.contains("ImageEditorGradientOverlayCanvasTabKeyPolicy.matches"))
         #expect(source.contains("ImageEditorGradientOverlayCanvasBoundaryKeyPolicy.displayedDelta"))
         #expect(source.contains("moveSelectedCanvasHandleToBoundary"))
+        #expect(source.contains("beginDuplicatingSelectedLayerGradientOverlayCanvasStop"))
+        #expect(source.contains("gradientOverlayStopDragDuplicates"))
+        #expect(source.contains("NSEvent.modifierFlags.contains(.option)"))
+        #expect(source.contains("ImageEditorGradientOverlayStopDuplicateGesturePolicy"))
+        #expect(source.contains("isGradientOverlayStopDuplicateDragBlocked"))
         #expect(
             source.components(
                 separatedBy: "snappingToStep: NSEvent.modifierFlags.contains(.shift)"
@@ -3578,6 +3760,32 @@ struct ImageEditorLayerStyleTests {
         #expect(source.contains("image-editor-gradient-overlay-axis"))
         #expect(source.contains("image-editor-gradient-overlay-canvas-stop-"))
         #expect(source.contains("image-editor-gradient-overlay-canvas-midpoint-"))
+
+        let stopHandleStart = try #require(
+            source.range(of: "private func gradientOverlayStopHandleView")
+        )
+        let stopHandleEnd = try #require(
+            source.range(
+                of: "private func gradientOverlayMidpointHandleView",
+                range: stopHandleStart.upperBound..<source.endIndex
+            )
+        )
+        let stopHandleBlock = source[stopHandleStart.lowerBound..<stopHandleEnd.lowerBound]
+        let optionCapture = try #require(
+            stopHandleBlock.range(
+                of: "gradientOverlayStopDragDuplicates = NSEvent.modifierFlags.contains(.option)"
+            )
+        )
+        let dragThreshold = try #require(
+            stopHandleBlock.range(of: ".hasStartedDrag(")
+        )
+        let duplicateBegin = try #require(
+            stopHandleBlock.range(
+                of: ".beginDuplicatingSelectedLayerGradientOverlayCanvasStop("
+            )
+        )
+        #expect(optionCapture.lowerBound < dragThreshold.lowerBound)
+        #expect(dragThreshold.lowerBound < duplicateBegin.lowerBound)
 
         let deleteStart = try #require(source.range(of: "deleteSelectedObject: {"))
         let deleteEnd = try #require(

@@ -111,6 +111,8 @@ struct ImageEditorView: View {
     @State private var selectedGradientOverlayMidpointIndex: Int?
     @State private var gradientOverlayStopDragStartLocation: CGPoint?
     @State private var cancelledGradientOverlayStopDragStartLocation: CGPoint?
+    @State private var gradientOverlayStopDragDuplicates = false
+    @State private var isGradientOverlayStopDuplicateDragBlocked = false
     @State private var activeGradientOverlayMidpointIndex: Int?
     @State private var gradientOverlayMidpointDragStartLocation: CGPoint?
     @State private var cancelledGradientOverlayMidpointDragStartLocation: CGPoint?
@@ -7934,23 +7936,52 @@ struct ImageEditorView: View {
                     coordinateSpace: .named("image-editor-canvas-space")
                 )
                 .onChanged { value in
-                    selectedGradientOverlayStopIndex = point.index
-                    selectedGradientOverlayMidpointIndex = nil
+                    if activeGradientOverlayStopIndex == nil,
+                       gradientOverlayStopDragStartLocation == nil {
+                        selectedGradientOverlayStopIndex = point.index
+                        selectedGradientOverlayMidpointIndex = nil
+                    }
                     if let cancelledStart = cancelledGradientOverlayStopDragStartLocation {
                         guard cancelledStart != value.startLocation else { return }
                         cancelledGradientOverlayStopDragStartLocation = nil
                     }
-                    if activeGradientOverlayStopIndex == nil {
+                    if gradientOverlayStopDragStartLocation == nil {
                         gradientOverlayStopDragStartLocation = value.startLocation
-                        guard viewModel.beginEditingSelectedLayerGradientOverlayCanvasStop(
+                        gradientOverlayStopDragDuplicates = NSEvent.modifierFlags.contains(.option)
+                    }
+                    if activeGradientOverlayStopIndex == nil {
+                        if gradientOverlayStopDragDuplicates {
+                            guard ImageEditorGradientOverlayStopDuplicateGesturePolicy
+                                .hasStartedDrag(
+                                    from: value.startLocation,
+                                    to: value.location
+                                )
+                            else { return }
+                            guard let duplicateIndex = viewModel
+                                .beginDuplicatingSelectedLayerGradientOverlayCanvasStop(
+                                    at: point.index,
+                                    toward: unboundedImagePoint(
+                                        from: value.location,
+                                        in: canvasSize
+                                    )
+                                )
+                            else {
+                                activeGradientOverlayStopIndex = point.index
+                                isGradientOverlayStopDuplicateDragBlocked = true
+                                return
+                            }
+                            selectedGradientOverlayStopIndex = duplicateIndex
+                        } else if !viewModel.beginEditingSelectedLayerGradientOverlayCanvasStop(
                             at: point.index
-                        ) else {
+                        ) {
                             gradientOverlayStopDragStartLocation = nil
                             return
                         }
                         activeGradientOverlayStopIndex = point.index
                     }
-                    guard activeGradientOverlayStopIndex == point.index else { return }
+                    guard activeGradientOverlayStopIndex == point.index,
+                          !isGradientOverlayStopDuplicateDragBlocked
+                    else { return }
                     viewModel.updateSelectedLayerGradientOverlayCanvasStop(
                         to: unboundedImagePoint(from: value.location, in: canvasSize),
                         snappingToStep: NSEvent.modifierFlags.contains(.shift)
@@ -7960,12 +7991,16 @@ struct ImageEditorView: View {
                     defer {
                         activeGradientOverlayStopIndex = nil
                         gradientOverlayStopDragStartLocation = nil
+                        gradientOverlayStopDragDuplicates = false
+                        isGradientOverlayStopDuplicateDragBlocked = false
                     }
                     if cancelledGradientOverlayStopDragStartLocation == value.startLocation {
                         cancelledGradientOverlayStopDragStartLocation = nil
                         return
                     }
-                    guard activeGradientOverlayStopIndex == point.index else { return }
+                    guard activeGradientOverlayStopIndex == point.index,
+                          !isGradientOverlayStopDuplicateDragBlocked
+                    else { return }
                     viewModel.updateSelectedLayerGradientOverlayCanvasStop(
                         to: unboundedImagePoint(from: value.location, in: canvasSize),
                         snappingToStep: NSEvent.modifierFlags.contains(.shift)
@@ -8129,11 +8164,14 @@ struct ImageEditorView: View {
     @discardableResult
     private func cancelGradientOverlayStopDragForLifecycle() -> Bool {
         let hadActiveDrag = activeGradientOverlayStopIndex != nil
+            || gradientOverlayStopDragStartLocation != nil
             || viewModel.hasActiveGradientOverlayStopTransaction
         guard hadActiveDrag else { return false }
         cancelledGradientOverlayStopDragStartLocation = gradientOverlayStopDragStartLocation
         activeGradientOverlayStopIndex = nil
         gradientOverlayStopDragStartLocation = nil
+        gradientOverlayStopDragDuplicates = false
+        isGradientOverlayStopDuplicateDragBlocked = false
         _ = viewModel.cancelEditingSelectedLayerGradientOverlayCanvasStop()
         return true
     }

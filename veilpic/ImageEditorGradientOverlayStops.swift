@@ -28,6 +28,43 @@ enum ImageEditorGradientOverlayCenterPolicy {
 enum ImageEditorGradientOverlayStopDraftEditing {
     static let minimumStopSpacing = 0.01
 
+    struct DuplicationResult: Equatable {
+        var stops: [ImageEditorGradientColorStop]
+        var duplicateIndex: Int
+    }
+
+    static func duplicatingStop(
+        _ stops: [ImageEditorGradientColorStop],
+        at index: Int,
+        toward position: Double
+    ) -> DuplicationResult? {
+        let normalizedStops = normalized(stops)
+        guard position.isFinite,
+              normalizedStops.count < ImageEditorGradientFillContent.maximumColorStopCount,
+              index > 0,
+              index < normalizedStops.count - 1
+        else { return nil }
+
+        let source = normalizedStops[index]
+        let prefersLowerSegment = position < source.position
+        let segmentOrder = prefersLowerSegment ? [index - 1, index] : [index, index - 1]
+        for lowerIndex in segmentOrder {
+            let lowerBound = normalizedStops[lowerIndex].position + minimumStopSpacing
+            let upperBound = normalizedStops[lowerIndex + 1].position - minimumStopSpacing
+            guard lowerBound <= upperBound else { continue }
+            let duplicateIndex = lowerIndex + 1
+            var duplicatedStops = normalizedStops
+            var duplicate = source
+            duplicate.position = max(lowerBound, min(upperBound, position))
+            duplicatedStops.insert(duplicate, at: duplicateIndex)
+            return DuplicationResult(
+                stops: normalized(duplicatedStops),
+                duplicateIndex: duplicateIndex
+            )
+        }
+        return nil
+    }
+
     static func movingStop(
         _ stops: [ImageEditorGradientColorStop],
         at index: Int,
