@@ -49,6 +49,19 @@ enum ImageEditorCanvasDragGeometry {
     }
 }
 
+enum ImageEditorSpacingGuideLabelLayout {
+    static func clampedCoordinate(
+        _ coordinate: CGFloat,
+        minimum: CGFloat,
+        maximum: CGFloat,
+        badgeLength: CGFloat
+    ) -> CGFloat {
+        guard maximum - minimum >= badgeLength else { return (minimum + maximum) / 2 }
+        let halfLength = badgeLength / 2
+        return min(max(coordinate, minimum + halfLength), maximum - halfLength)
+    }
+}
+
 private enum ImageEditorDeliveryObjectReference: Equatable {
     case slice(UUID)
     case hotspot(UUID)
@@ -66,6 +79,7 @@ private struct ImageEditorColorSamplerDrag: Equatable {
 }
 
 struct ImageEditorView: View {
+    @Environment(\.locale) private var locale
     @StateObject var viewModel: ImageEditorViewModel
     @State private var dragPoints: [CGPoint] = []
     @State private var brushStrokeSamples: [ImageEditorBrushStrokeSample] = []
@@ -6998,6 +7012,7 @@ struct ImageEditorView: View {
                     with: .color(Color(nsColor: ImageEditorTheme.selected).opacity(0.96)),
                     style: StrokeStyle(lineWidth: 1.5, dash: [2, 2])
                 )
+                drawSpacingGuideLabel(guide, context: context, in: size)
             }
         }
         .allowsHitTesting(false)
@@ -7023,6 +7038,63 @@ struct ImageEditorView: View {
             path.addLine(to: CGPoint(x: end.x + capLength, y: end.y))
         }
         return path
+    }
+
+    private func drawSpacingGuideLabel(
+        _ guide: ImageEditorSpacingGuide,
+        context: GraphicsContext,
+        in size: CGSize
+    ) {
+        let start = viewPoint(from: guide.start, in: size)
+        let end = viewPoint(from: guide.end, in: size)
+        let midpoint = CGPoint(x: (start.x + end.x) / 2, y: (start.y + end.y) / 2)
+        let preferredLabelPoint: CGPoint
+        switch guide.orientation {
+        case .horizontal:
+            preferredLabelPoint = CGPoint(x: midpoint.x, y: midpoint.y - 10)
+        case .vertical:
+            preferredLabelPoint = CGPoint(x: midpoint.x + 12, y: midpoint.y)
+        }
+
+        let label = guide.distanceText(locale: locale)
+        let badgeSize = CGSize(width: max(18, CGFloat(label.count) * 6 + 8), height: 14)
+        let canvasRect = fittedImageRect(in: size)
+        let labelPoint = CGPoint(
+            x: ImageEditorSpacingGuideLabelLayout.clampedCoordinate(
+                preferredLabelPoint.x,
+                minimum: canvasRect.minX,
+                maximum: canvasRect.maxX,
+                badgeLength: badgeSize.width
+            ),
+            y: ImageEditorSpacingGuideLabelLayout.clampedCoordinate(
+                preferredLabelPoint.y,
+                minimum: canvasRect.minY,
+                maximum: canvasRect.maxY,
+                badgeLength: badgeSize.height
+            )
+        )
+        let badgeRect = CGRect(
+            x: labelPoint.x - badgeSize.width / 2,
+            y: labelPoint.y - badgeSize.height / 2,
+            width: badgeSize.width,
+            height: badgeSize.height
+        )
+        let badgePath = Path(roundedRect: badgeRect, cornerRadius: 3)
+        context.fill(
+            badgePath,
+            with: .color(Color(nsColor: ImageEditorTheme.window).opacity(0.88))
+        )
+        context.stroke(
+            badgePath,
+            with: .color(Color(nsColor: ImageEditorTheme.selected).opacity(0.82)),
+            lineWidth: 0.75
+        )
+        context.draw(
+            Text(label)
+                .font(.system(size: 9, weight: .semibold, design: .monospaced))
+                .foregroundColor(Color(nsColor: ImageEditorTheme.text)),
+            at: labelPoint
+        )
     }
 
     @ViewBuilder

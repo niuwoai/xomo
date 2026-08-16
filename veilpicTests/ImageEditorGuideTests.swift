@@ -12,6 +12,54 @@ import Testing
 @MainActor
 struct ImageEditorGuideTests {
     @Test
+    func spacingGuideDistanceAndLabelFollowTheGuideAxisAndLocale() {
+        let horizontal = ImageEditorSpacingGuide(
+            orientation: .horizontal,
+            start: CGPoint(x: 5, y: 12),
+            end: CGPoint(x: 25, y: 99)
+        )
+        let reversedVertical = ImageEditorSpacingGuide(
+            orientation: .vertical,
+            start: CGPoint(x: 8, y: 42.25),
+            end: CGPoint(x: 100, y: 30)
+        )
+
+        #expect(horizontal.distance == 20)
+        #expect(horizontal.distanceText(locale: Locale(identifier: "en_US")) == "20")
+        #expect(reversedVertical.distance == 12.25)
+        #expect(reversedVertical.distanceText(locale: Locale(identifier: "en_US")) == "12.3")
+        #expect(reversedVertical.distanceText(locale: Locale(identifier: "de_DE")) == "12,3")
+    }
+
+    @Test
+    func spacingGuideLabelStaysInsideTheVisibleCanvasBounds() {
+        #expect(
+            ImageEditorSpacingGuideLabelLayout.clampedCoordinate(
+                -5,
+                minimum: 0,
+                maximum: 100,
+                badgeLength: 20
+            ) == 10
+        )
+        #expect(
+            ImageEditorSpacingGuideLabelLayout.clampedCoordinate(
+                105,
+                minimum: 0,
+                maximum: 100,
+                badgeLength: 20
+            ) == 90
+        )
+        #expect(
+            ImageEditorSpacingGuideLabelLayout.clampedCoordinate(
+                0,
+                minimum: 20,
+                maximum: 30,
+                badgeLength: 18
+            ) == 25
+        )
+    }
+
+    @Test
     func movingLayerSnapsBoundsToNearbyGuide() throws {
         let viewModel = transformableViewModel(
             sourceName: "source.png",

@@ -909,6 +909,24 @@ struct ImageEditorSpacingGuide: Identifiable, Equatable {
         "\(orientation.rawValue)-\(start.x)-\(start.y)-\(end.x)-\(end.y)"
     }
 
+    var distance: CGFloat {
+        switch orientation {
+        case .horizontal:
+            return abs(end.x - start.x)
+        case .vertical:
+            return abs(end.y - start.y)
+        }
+    }
+
+    func distanceText(locale: Locale = .current) -> String {
+        guard distance.isFinite else { return "0" }
+        let tenths = Int((max(0, distance) * 10).rounded())
+        let whole = tenths / 10
+        let fraction = tenths % 10
+        guard fraction != 0 else { return "\(whole)" }
+        return "\(whole)\(locale.decimalSeparator ?? ".")\(fraction)"
+    }
+
     func offsetBy(dx: CGFloat, dy: CGFloat) -> ImageEditorSpacingGuide {
         ImageEditorSpacingGuide(
             orientation: orientation,
