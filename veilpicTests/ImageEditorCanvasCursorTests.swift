@@ -1079,6 +1079,36 @@ struct ImageEditorCanvasCursorTests {
         ))
     }
 
+    @Test func optionCloneWaitsForARealDragBeforeActivating() {
+        let start = CGPoint(x: 40, y: 60)
+
+        #expect(ImageEditorObjectDragEventPolicy.cloneDragDecision(
+            modifierFlags: [.option],
+            from: start,
+            to: start
+        ) == .pending)
+        #expect(ImageEditorObjectDragEventPolicy.cloneDragDecision(
+            modifierFlags: [.option, .shift],
+            from: start,
+            to: CGPoint(x: 42.9, y: 60)
+        ) == .pending)
+        #expect(ImageEditorObjectDragEventPolicy.cloneDragDecision(
+            modifierFlags: [.option],
+            from: start,
+            to: CGPoint(x: 43, y: 60)
+        ) == .activate)
+        #expect(ImageEditorObjectDragEventPolicy.cloneDragDecision(
+            modifierFlags: [.option, .command],
+            from: start,
+            to: CGPoint(x: 80, y: 60)
+        ) == .unavailable)
+        #expect(ImageEditorObjectDragEventPolicy.cloneDragDecision(
+            modifierFlags: [],
+            from: start,
+            to: CGPoint(x: 80, y: 60)
+        ) == .unavailable)
+    }
+
     @Test func commandShiftExtendsDeepSelectionWithoutClaimingOtherCombinations() {
         #expect(ImageEditorObjectDragEventPolicy.deepSelectionExtendsSelection(
             modifierFlags: [.command]

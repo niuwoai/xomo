@@ -462,13 +462,18 @@ struct XomoCanvasObjectTests {
             contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
             encoding: .utf8
         )
-        let cloneStart = try #require(
-            source.range(of: "if ImageEditorObjectDragEventPolicy.allowsCloneDrag(")
-        )
+        let cloneStart = try #require(source.range(
+            of: "let cloneDragDecision = ImageEditorObjectDragEventPolicy.cloneDragDecision("
+        ))
         let cloneEnd = try #require(
-            source[cloneStart.upperBound...].range(of: "if isCanvasCloneGestureActive {")
+            source[cloneStart.upperBound...].range(
+                of: "if let extendsDeepSelection = ImageEditorObjectDragEventPolicy"
+            )
         )
         let cloneSource = source[cloneStart.lowerBound..<cloneEnd.lowerBound]
+        let activationGate = try #require(
+            cloneSource.range(of: "if cloneDragDecision == .activate,")
+        )
         let prepareCall = try #require(
             cloneSource.range(of: "viewModel.prepareCanvasCloneMove(")
         )
@@ -476,9 +481,12 @@ struct XomoCanvasObjectTests {
             cloneSource.range(of: "viewModel.beginDuplicatingSelectedLayerForMove()")
         )
 
+        #expect(activationGate.lowerBound < prepareCall.lowerBound)
         #expect(prepareCall.lowerBound < beginCall.lowerBound)
         #expect(!cloneSource.contains("viewModel.selectMovableCanvasTarget("))
         #expect(cloneSource.contains("isCanvasCloneGestureActive = true"))
+        #expect(cloneSource.contains("if cloneDragDecision != .unavailable,"))
+        #expect(cloneSource.contains("// Option owns the whole pointer sequence"))
     }
 
     @Test func commandCanvasSelectionCanEnterAVisibleComponentChild() throws {

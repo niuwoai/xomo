@@ -59,6 +59,12 @@ enum ImageEditorCanvasLifecycleInterruption: Equatable {
 enum ImageEditorObjectDragEventPolicy {
     static let activationDistance: CGFloat = 3
 
+    enum CloneDragDecision: Equatable {
+        case unavailable
+        case pending
+        case activate
+    }
+
     struct ReleaseDecision: Equatable {
         let shouldFinishMove: Bool
         let shouldCommitClick: Bool
@@ -93,6 +99,15 @@ enum ImageEditorObjectDragEventPolicy {
     static func allowsCloneDrag(modifierFlags: NSEvent.ModifierFlags) -> Bool {
         let relevantFlags = modifierFlags.intersection([.command, .option, .shift, .control])
         return relevantFlags == [.option] || relevantFlags == [.option, .shift]
+    }
+
+    static func cloneDragDecision(
+        modifierFlags: NSEvent.ModifierFlags,
+        from start: CGPoint,
+        to current: CGPoint
+    ) -> CloneDragDecision {
+        guard allowsCloneDrag(modifierFlags: modifierFlags) else { return .unavailable }
+        return shouldActivate(from: start, to: current) ? .activate : .pending
     }
 
     static func deepSelectionExtendsSelection(

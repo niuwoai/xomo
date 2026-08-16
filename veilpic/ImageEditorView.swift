@@ -3875,26 +3875,33 @@ struct ImageEditorView: View {
                         updateDeliveryObjectMove(translation: value.translation, in: size)
                         break
                     }
-                    if ImageEditorObjectDragEventPolicy.allowsCloneDrag(
-                        modifierFlags: NSEvent.modifierFlags
-                    ),
-                       !isCanvasCloneGestureActive,
+                    if isCanvasCloneGestureActive {
+                        if isObjectMoveGestureActive {
+                            updateObjectMove(translation: value.translation, in: size)
+                        }
+                        break
+                    }
+                    let cloneDragDecision = ImageEditorObjectDragEventPolicy.cloneDragDecision(
+                        modifierFlags: NSEvent.modifierFlags,
+                        from: value.startLocation,
+                        to: value.location
+                    )
+                    if cloneDragDecision != .unavailable,
                        !isCanvasSelectionGestureActive,
-                        !isObjectMoveGestureActive {
-                        let pressedImagePoint = imagePoint(from: value.startLocation, in: size)
-                        if let pressedImagePoint,
+                       !isObjectMoveGestureActive {
+                        if cloneDragDecision == .activate,
+                           let pressedImagePoint = imagePoint(from: value.startLocation, in: size),
                            viewModel.prepareCanvasCloneMove(at: pressedImagePoint) {
                             isCanvasCloneGestureActive = true
                             if viewModel.beginDuplicatingSelectedLayerForMove() {
                                 resetObjectMoveTracking()
                                 isObjectMoveGestureActive = true
+                                updateObjectMove(translation: value.translation, in: size)
                             }
                         }
-                    }
-                    if isCanvasCloneGestureActive {
-                        if isObjectMoveGestureActive {
-                            updateObjectMove(translation: value.translation, in: size)
-                        }
+                        // Option owns the whole pointer sequence while it is
+                        // waiting for the drag threshold. Falling through here
+                        // would start an ordinary move and prevent cloning.
                         break
                     }
                     if let extendsDeepSelection = ImageEditorObjectDragEventPolicy
