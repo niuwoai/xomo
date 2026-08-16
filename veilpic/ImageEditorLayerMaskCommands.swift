@@ -632,6 +632,32 @@ extension ImageEditorViewModel {
         }
     }
 
+    @discardableResult
+    func toggleLayerMaskLinked(layerID: UUID) -> Bool {
+        guard let index = document.layers.firstIndex(where: { $0.id == layerID }),
+              !document.isEffectivelyLocked(document.layers[index]),
+              document.layers[index].mask != nil || document.layers[index].vectorMask != nil
+        else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return false
+        }
+
+        pushUndo()
+        document.layers[index].isMaskLinked.toggle()
+        let isLinked = document.layers[index].isMaskLinked
+        appendHistory(L10n.text(
+            isLinked
+                ? "imageEditor.history.layerMaskLink"
+                : "imageEditor.history.layerMaskUnlink"
+        ))
+        statusText = L10n.text(
+            isLinked
+                ? "imageEditor.status.layerMaskLinked"
+                : "imageEditor.status.layerMaskUnlinked"
+        )
+        return true
+    }
+
     func toggleVectorMaskEnabled() {
         let indices = vectorMaskToggleEnabledIndices()
         guard !indices.isEmpty else {

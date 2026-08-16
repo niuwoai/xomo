@@ -177,6 +177,50 @@ struct ImageEditorLayerThumbnailSelectionTests {
         #expect(target.isVectorMaskEnabled)
     }
 
+    @Test func clickedLinkControlTargetsRasterMaskWithoutChangingSelection() throws {
+        let rasterFixture = makeLayerFixture(includeMasks: true)
+        let rasterViewModel = rasterFixture.viewModel
+        let selectedLayerID = rasterViewModel.document.selectedLayerID
+        let selectedLayerIDs = rasterViewModel.document.selectedLayerIDs
+        let historyCount = rasterViewModel.document.history.count
+        let undoCount = rasterViewModel.undoStack.count
+
+        #expect(rasterViewModel.toggleLayerMaskLinked(layerID: rasterFixture.thumbnailLayerID))
+        var target = try #require(rasterViewModel.document.layers.first {
+            $0.id == rasterFixture.thumbnailLayerID
+        })
+        #expect(!target.isMaskLinked)
+        #expect(rasterViewModel.document.selectedLayerID == selectedLayerID)
+        #expect(rasterViewModel.document.selectedLayerIDs == selectedLayerIDs)
+        #expect(rasterViewModel.document.history.count == historyCount + 1)
+        #expect(rasterViewModel.undoStack.count == undoCount + 1)
+        #expect(rasterViewModel.document.history.last?.title == L10n.text("imageEditor.history.layerMaskUnlink"))
+        #expect(rasterViewModel.statusText == L10n.text("imageEditor.status.layerMaskUnlinked"))
+
+        rasterViewModel.undo()
+        target = try #require(rasterViewModel.document.layers.first {
+            $0.id == rasterFixture.thumbnailLayerID
+        })
+        #expect(target.isMaskLinked)
+    }
+
+    @Test func vectorOnlyMaskKeepsAReachableLinkControl() throws {
+        let vectorFixture = makeLayerFixture(includeMasks: true)
+        let vectorViewModel = vectorFixture.viewModel
+        let vectorIndex = try #require(vectorViewModel.document.layers.firstIndex {
+            $0.id == vectorFixture.thumbnailLayerID
+        })
+        vectorViewModel.document.layers[vectorIndex].mask = nil
+
+        #expect(vectorViewModel.toggleLayerMaskLinked(layerID: vectorFixture.thumbnailLayerID))
+        let target = try #require(vectorViewModel.document.layers.first {
+            $0.id == vectorFixture.thumbnailLayerID
+        })
+        #expect(target.mask == nil)
+        #expect(target.vectorMask != nil)
+        #expect(!target.isMaskLinked)
+    }
+
     @Test func lockedClickedMaskRejectsToggleWithoutCreatingTransaction() throws {
         let fixture = makeLayerFixture(includeMasks: true)
         let viewModel = fixture.viewModel
@@ -187,10 +231,12 @@ struct ImageEditorLayerThumbnailSelectionTests {
 
         #expect(!viewModel.toggleLayerMaskEnabled(layerID: fixture.thumbnailLayerID))
         #expect(!viewModel.toggleVectorMaskEnabled(layerID: fixture.thumbnailLayerID))
+        #expect(!viewModel.toggleLayerMaskLinked(layerID: fixture.thumbnailLayerID))
 
         let target = try #require(viewModel.document.layers.first { $0.id == fixture.thumbnailLayerID })
         #expect(target.isMaskEnabled)
         #expect(target.isVectorMaskEnabled)
+        #expect(target.isMaskLinked)
         #expect(viewModel.document.history.count == historyCount)
         #expect(viewModel.undoStack.count == undoCount)
         #expect(viewModel.statusText == L10n.text("imageEditor.status.operationFailed"))
@@ -213,6 +259,9 @@ struct ImageEditorLayerThumbnailSelectionTests {
         #expect(source.contains("viewModel.loadSelectionFromVectorMask(layerID: layer.id, mode: mode)"))
         #expect(source.contains("viewModel.toggleLayerMaskEnabled(layerID: layer.id)"))
         #expect(source.contains("viewModel.toggleVectorMaskEnabled(layerID: layer.id)"))
+        #expect(source.contains("viewModel.toggleLayerMaskLinked(layerID: layer.id)"))
+        #expect(source.contains("if layer.mask == nil"))
+        #expect(source.contains(".disabled(viewModel.document.isEffectivelyLocked(layer))"))
         #expect(source.contains("sidebarTab: viewModel.selectedLeftSidebarTab"))
     }
 

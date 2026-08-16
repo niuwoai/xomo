@@ -2422,11 +2422,7 @@ extension ImageEditorView {
     @ViewBuilder
     private func layerRasterMaskThumbnail(_ layer: ImageEditorLayer) -> some View {
         if let maskThumbnail = layer.maskThumbnail() {
-            Image(systemName: layer.isMaskLinked ? "link" : "link.slash")
-                .font(.system(size: 9, weight: .bold))
-                .frame(width: 12, height: 24)
-                .foregroundStyle(layer.isMaskLinked ? Color(nsColor: ImageEditorTheme.mutedText) : Color(nsColor: ImageEditorTheme.selected))
-                .help(L10n.text(layer.isMaskLinked ? "imageEditor.action.layerMaskLinked" : "imageEditor.action.layerMaskUnlinked"))
+            layerMaskLinkButton(layer)
             Button {
                 if !handleLayerThumbnailGesture(layer, source: .rasterMask) {
                     viewModel.selectLayer(layer.id, editingMask: true)
@@ -2453,11 +2449,15 @@ extension ImageEditorView {
     @ViewBuilder
     private func layerVectorMaskThumbnail(_ layer: ImageEditorLayer) -> some View {
         if let vectorMaskThumbnail = layer.vectorMaskThumbnail() {
-            Image(systemName: "point.topleft.down.curvedto.point.bottomright.up")
-                .font(.system(size: 9, weight: .bold))
-                .frame(width: 12, height: 24)
-                .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
-                .help(L10n.text("imageEditor.layer.vectorMaskBadge"))
+            if layer.mask == nil {
+                layerMaskLinkButton(layer)
+            } else {
+                Image(systemName: "point.topleft.down.curvedto.point.bottomright.up")
+                    .font(.system(size: 9, weight: .bold))
+                    .frame(width: 12, height: 24)
+                    .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                    .help(L10n.text("imageEditor.layer.vectorMaskBadge"))
+            }
             Button {
                 if !handleLayerThumbnailGesture(layer, source: .vectorMask) {
                     viewModel.selectLayer(layer.id, editingMask: false)
@@ -2480,6 +2480,30 @@ extension ImageEditorView {
             .buttonStyle(.plain)
             .help(L10n.text("imageEditor.layer.vectorMaskThumbnailSelectionHelp"))
         }
+    }
+
+    private func layerMaskLinkButton(_ layer: ImageEditorLayer) -> some View {
+        Button {
+            viewModel.toggleLayerMaskLinked(layerID: layer.id)
+        } label: {
+            Image(systemName: layer.isMaskLinked ? "link" : "link.slash")
+                .font(.system(size: 9, weight: .bold))
+                .frame(width: 12, height: 24)
+                .foregroundStyle(
+                    layer.isMaskLinked
+                        ? Color(nsColor: ImageEditorTheme.mutedText)
+                        : Color(nsColor: ImageEditorTheme.selected)
+                )
+        }
+        .buttonStyle(.plain)
+        .disabled(viewModel.document.isEffectivelyLocked(layer))
+        .help(L10n.text("imageEditor.action.layerMaskLinkToggle"))
+        .accessibilityLabel(L10n.text("imageEditor.action.layerMaskLinkToggle"))
+        .accessibilityValue(L10n.text(
+            layer.isMaskLinked
+                ? "imageEditor.action.layerMaskLinked"
+                : "imageEditor.action.layerMaskUnlinked"
+        ))
     }
 
     private func loadSelectionFromLayerThumbnail(
