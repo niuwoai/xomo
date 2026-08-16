@@ -280,6 +280,8 @@ struct ImageEditorHistoryTests {
             ("", [option, shift], 51, .fillSelectionPreservingTransparency),
             ("", command, 51, .fillSelectionBackground),
             ("", [command, shift], 51, .fillSelectionBackgroundPreservingTransparency),
+            ("", [command, option], 51, .fillSelectionHistory),
+            ("", [command, option, shift], 51, .fillSelectionHistoryPreservingTransparency),
             ("", [], 51, .clearSelectionPixels),
             ("i", [command, option], nil, .resizeImage),
             ("c", [command, option], nil, .resizeCanvas),

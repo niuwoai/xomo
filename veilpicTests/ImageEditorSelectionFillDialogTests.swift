@@ -33,9 +33,14 @@ struct ImageEditorSelectionFillDialogTests {
         #expect(ImageEditorSelectionFillContents.contentAware.resolvedColor(
             foreground: foreground, background: background, custom: custom
         ) == nil)
-        #expect(ImageEditorSelectionFillContents.allCases.count == 8)
+        #expect(ImageEditorSelectionFillContents.history.resolvedColor(
+            foreground: foreground, background: background, custom: custom
+        ) == nil)
+        #expect(ImageEditorSelectionFillContents.allCases.count == 9)
         #expect(ImageEditorSelectionFillContents.availableCases(isQuickMaskMode: false).contains(.contentAware))
+        #expect(ImageEditorSelectionFillContents.availableCases(isQuickMaskMode: false).contains(.history))
         #expect(!ImageEditorSelectionFillContents.availableCases(isQuickMaskMode: true).contains(.contentAware))
+        #expect(!ImageEditorSelectionFillContents.availableCases(isQuickMaskMode: true).contains(.history))
         #expect(ImageEditorSelectionFillContents.availableCases(isQuickMaskMode: true).contains(.pattern))
     }
 
@@ -394,6 +399,242 @@ struct ImageEditorSelectionFillDialogTests {
         #expect(viewModel.statusText == L10n.text("imageEditor.status.operationFailed"))
     }
 
+    @Test func historyFillRestoresOnlySelectedPixelsFromTheChosenHistoryState() throws {
+        let canvasSize = CGSize(width: 8, height: 4)
+        let source = solidImage(color: NSColor(deviceRed: 0, green: 1, blue: 0, alpha: 1), size: canvasSize)
+        let current = solidImage(color: NSColor(deviceRed: 1, green: 0, blue: 0, alpha: 1), size: canvasSize)
+        let viewModel = ImageEditorViewModel(sourceName: "history-fill.png", image: source) { _ in }
+        viewModel.replaceSelectedLayerImageForTesting(
+            source,
+            historyTitle: L10n.text("imageEditor.history.brush")
+        )
+        let sourceEntryID = try #require(viewModel.document.history.last?.id)
+        viewModel.setHistoryFillSource(entryID: sourceEntryID)
+        viewModel.replaceSelectedLayerImageForTesting(
+            current,
+            historyTitle: L10n.text("imageEditor.history.brush")
+        )
+        viewModel.createRectSelection(from: CGPoint(x: 0, y: 0), to: CGPoint(x: 4, y: 4))
+        let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
+
+        viewModel.fillSelection(options: ImageEditorSelectionFillOptions(contents: .history))
+
+        let image = try #require(viewModel.document.selectedLayer?.image)
+        let inside = try #require(image.color(at: CGPoint(x: 2, y: 2))?.usingColorSpace(.deviceRGB))
+        let outside = try #require(image.color(at: CGPoint(x: 6, y: 2))?.usingColorSpace(.deviceRGB))
+        #expect(inside.greenComponent > 0.7)
+        #expect(inside.redComponent < 0.3)
+        #expect(outside.redComponent > 0.7)
+        #expect(outside.greenComponent < 0.3)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.undoStack.count == undoCount + 1)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.selectionHistoryFill"))
+    }
+
+    @Test func namedSnapshotCanOwnTheHistoryFillSourceWithoutRestoringTheWholeDocument() throws {
+        let canvasSize = CGSize(width: 6, height: 4)
+        let green = solidImage(color: NSColor(deviceRed: 0, green: 1, blue: 0, alpha: 1), size: canvasSize)
+        let blue = solidImage(color: NSColor(deviceRed: 0, green: 0, blue: 1, alpha: 1), size: canvasSize)
+        let red = solidImage(color: NSColor(deviceRed: 1, green: 0, blue: 0, alpha: 1), size: canvasSize)
+        let viewModel = ImageEditorViewModel(sourceName: "history-snapshot-fill.png", image: green) { _ in }
+        viewModel.replaceSelectedLayerImageForTesting(
+            green,
+            historyTitle: L10n.text("imageEditor.history.brush")
+        )
+        viewModel.createHistorySnapshot()
+        let snapshotID = try #require(viewModel.namedHistorySnapshots.first?.id)
+        viewModel.replaceSelectedLayerImageForTesting(
+            blue,
+            historyTitle: L10n.text("imageEditor.history.brush")
+        )
+        viewModel.replaceSelectedLayerImageForTesting(
+            red,
+            historyTitle: L10n.text("imageEditor.history.brush")
+        )
+        viewModel.selectAll()
+        viewModel.setHistoryFillSource(snapshotID: snapshotID)
+
+        viewModel.fillSelectionFromHistory()
+
+        #expect(viewModel.isHistoryFillSource(snapshotID: snapshotID))
+        let center = try #require(viewModel.document.selectedLayer?.image.color(
+            at: CGPoint(x: 3, y: 2)
+        )?.usingColorSpace(.deviceRGB))
+        #expect(center.greenComponent > 0.7)
+        #expect(center.redComponent < 0.3)
+        #expect(center.blueComponent < 0.3)
+    }
+
+    @Test func historyFillAlignsTheSourceLayerByItsHistoricalCanvasFrame() throws {
+        let canvasSize = CGSize(width: 12, height: 12)
+        let background = solidImage(color: .black, size: canvasSize)
+        let green = solidImage(
+            color: NSColor(deviceRed: 0, green: 1, blue: 0, alpha: 1),
+            size: CGSize(width: 6, height: 6)
+        )
+        let red = solidImage(
+            color: NSColor(deviceRed: 1, green: 0, blue: 0, alpha: 1),
+            size: CGSize(width: 6, height: 6)
+        )
+        let viewModel = ImageEditorViewModel(sourceName: "history-fill-frame.png", image: background) { _ in }
+        viewModel.replaceSelectedLayerImageForTesting(
+            green,
+            historyTitle: L10n.text("imageEditor.history.brush")
+        )
+        let sourceEntryID = try #require(viewModel.document.history.last?.id)
+        viewModel.setHistoryFillSource(entryID: sourceEntryID)
+        viewModel.replaceSelectedLayerImageForTesting(
+            red,
+            historyTitle: L10n.text("imageEditor.history.brush")
+        )
+        let selectedIndex = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[selectedIndex].frame.origin = CGPoint(x: 3, y: 3)
+        viewModel.createRectSelection(from: CGPoint(x: 3, y: 3), to: CGPoint(x: 9, y: 9))
+        #expect(viewModel.effectiveHistoryFillSource == .entry(sourceEntryID))
+        #expect(viewModel.canFillSelectionFromHistory)
+        #expect(viewModel.document.layers[selectedIndex].frame == CGRect(x: 3, y: 3, width: 6, height: 6))
+
+        viewModel.fillSelectionFromHistory()
+
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionHistoryFilled"))
+        let image = try #require(viewModel.document.selectedLayer?.image)
+        let pixels = try #require(imageEditorRGBABytes(image, width: 6, height: 6))
+        let pixelOffsets = stride(from: 0, to: pixels.count, by: 4)
+        let restoredGreenCount = pixelOffsets.filter { offset in
+            pixels[offset] < 10 && pixels[offset + 1] > 245
+                && pixels[offset + 2] < 10 && pixels[offset + 3] > 245
+        }.count
+        let restoredTransparencyCount = pixelOffsets.filter { pixels[$0 + 3] < 10 }.count
+        #expect(restoredGreenCount == 9)
+        #expect(restoredTransparencyCount == 27)
+    }
+
+    @Test func historyFillRestoresTransparencyUnlessPreserveTransparencyIsRequested() throws {
+        let canvasSize = CGSize(width: 6, height: 4)
+        let source = NSImage(size: canvasSize, flipped: false) { rect in
+            NSColor.systemGreen.setFill()
+            rect.fill()
+            NSColor.clear.setFill()
+            CGRect(x: 2, y: 1, width: 2, height: 2).fill(using: .copy)
+            return true
+        }
+        let current = solidImage(color: .systemRed, size: canvasSize)
+        let restoring = historyFillViewModel(source: source, current: current)
+        let preserving = historyFillViewModel(source: source, current: current)
+
+        restoring.fillSelection(options: ImageEditorSelectionFillOptions(contents: .history))
+        preserving.fillSelection(options: ImageEditorSelectionFillOptions(
+            contents: .history,
+            preservesTransparency: true
+        ))
+
+        let restoredCenter = try #require(restoring.document.selectedLayer?.image.color(
+            at: CGPoint(x: 3, y: 2)
+        )?.usingColorSpace(.deviceRGB))
+        let preservedCenter = try #require(preserving.document.selectedLayer?.image.color(
+            at: CGPoint(x: 3, y: 2)
+        )?.usingColorSpace(.deviceRGB))
+        #expect(restoredCenter.alphaComponent < 0.05)
+        #expect(preservedCenter.alphaComponent > 0.95)
+    }
+
+    @Test func historyFillUsesDialogOpacityAndBlendMode() throws {
+        let canvasSize = CGSize(width: 4, height: 4)
+        let source = solidImage(color: NSColor(deviceRed: 1, green: 0, blue: 0, alpha: 1), size: canvasSize)
+        let current = solidImage(color: NSColor(deviceWhite: 0.5, alpha: 1), size: canvasSize)
+        let normal = historyFillViewModel(source: source, current: current)
+        let multiply = historyFillViewModel(source: source, current: current)
+
+        normal.fillSelection(options: ImageEditorSelectionFillOptions(
+            contents: .history,
+            blendMode: .normal,
+            opacity: 0.5
+        ))
+        multiply.fillSelection(options: ImageEditorSelectionFillOptions(
+            contents: .history,
+            blendMode: .multiply,
+            opacity: 1
+        ))
+
+        let normalCenter = try #require(normal.document.selectedLayer?.image.color(
+            at: CGPoint(x: 2, y: 2)
+        )?.usingColorSpace(.deviceRGB))
+        let multiplyCenter = try #require(multiply.document.selectedLayer?.image.color(
+            at: CGPoint(x: 2, y: 2)
+        )?.usingColorSpace(.deviceRGB))
+        #expect(normalCenter.redComponent > 0.7)
+        #expect(normalCenter.greenComponent > 0.15)
+        #expect(multiplyCenter.redComponent < normalCenter.redComponent * 0.75)
+        #expect(multiplyCenter.greenComponent < 0.1)
+    }
+
+    @Test func classicHistoryShortcutUsesFullOpacityAndShiftOnlyPreservesTransparency() throws {
+        let canvasSize = CGSize(width: 4, height: 4)
+        let source = solidImage(
+            color: NSColor(deviceRed: 0, green: 1, blue: 0, alpha: 1),
+            size: canvasSize
+        )
+        let current = solidImage(
+            color: NSColor(deviceRed: 1, green: 0, blue: 0, alpha: 1),
+            size: canvasSize
+        )
+        let viewModel = historyFillViewModel(source: source, current: current)
+        viewModel.opacity = 0.2
+
+        viewModel.fillSelectionFromHistoryPreservingTransparency()
+
+        let center = try #require(viewModel.document.selectedLayer?.image.color(
+            at: CGPoint(x: 2, y: 2)
+        )?.usingColorSpace(.deviceRGB))
+        #expect(center.greenComponent > 0.9)
+        #expect(center.redComponent < 0.1)
+        #expect(center.alphaComponent > 0.95)
+    }
+
+    @Test func unchangedHistoryFillPreservesUndoRedoAndHistory() throws {
+        let canvasSize = CGSize(width: 4, height: 4)
+        let red = solidImage(color: .systemRed, size: canvasSize)
+        let blue = solidImage(color: .systemBlue, size: canvasSize)
+        let viewModel = ImageEditorViewModel(sourceName: "history-fill-noop.png", image: red) { _ in }
+        viewModel.selectAll()
+        let sourceEntryID = try #require(viewModel.document.history.last?.id)
+        viewModel.setHistoryFillSource(entryID: sourceEntryID)
+        viewModel.replaceSelectedLayerImageForTesting(
+            blue,
+            historyTitle: L10n.text("imageEditor.history.brush")
+        )
+        viewModel.undo()
+        let history = viewModel.document.history
+        let undoCount = viewModel.undoStack.count
+        let redoCount = viewModel.redoStack.count
+
+        viewModel.fillSelectionFromHistory()
+
+        #expect(viewModel.document.history == history)
+        #expect(viewModel.undoStack.count == undoCount)
+        #expect(viewModel.redoStack.count == redoCount)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.historyFillUnchanged"))
+    }
+
+    @Test func historyFillIsUnavailableInQuickMaskWithoutMutation() throws {
+        let canvasSize = CGSize(width: 4, height: 4)
+        let source = solidImage(color: NSColor(deviceRed: 0, green: 1, blue: 0, alpha: 1), size: canvasSize)
+        let current = solidImage(color: NSColor(deviceRed: 1, green: 0, blue: 0, alpha: 1), size: canvasSize)
+        let viewModel = historyFillViewModel(source: source, current: current)
+        viewModel.toggleQuickMaskMode()
+        let layerBefore = try #require(viewModel.document.selectedLayer?.image.qingtuPNGData())
+        let selectionBefore = viewModel.document.selection
+        let historyCount = viewModel.document.history.count
+
+        viewModel.fillSelection(options: ImageEditorSelectionFillOptions(contents: .history))
+
+        #expect(try #require(viewModel.document.selectedLayer?.image.qingtuPNGData()) == layerBefore)
+        #expect(viewModel.document.selection == selectionBefore)
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.operationFailed"))
+    }
+
     @Test func panelDefaultsAndApplyUseOneExplicitFillTransaction() {
         let viewModel = makeViewModel(color: .systemBlue)
         let historyCount = viewModel.document.history.count
@@ -464,5 +705,30 @@ struct ImageEditorSelectionFillDialogTests {
         )
         viewModel.createRectSelection(from: CGPoint(x: 20, y: 0), to: CGPoint(x: 40, y: 40))
         return viewModel
+    }
+
+    private func historyFillViewModel(source: NSImage, current: NSImage) -> ImageEditorViewModel {
+        let viewModel = ImageEditorViewModel(sourceName: "history-fill-options.png", image: source) { _ in }
+        viewModel.replaceSelectedLayerImageForTesting(
+            source,
+            historyTitle: L10n.text("imageEditor.history.brush")
+        )
+        if let sourceEntryID = viewModel.document.history.last?.id {
+            viewModel.setHistoryFillSource(entryID: sourceEntryID)
+        }
+        viewModel.replaceSelectedLayerImageForTesting(
+            current,
+            historyTitle: L10n.text("imageEditor.history.brush")
+        )
+        viewModel.selectAll()
+        return viewModel
+    }
+
+    private func solidImage(color: NSColor, size: CGSize) -> NSImage {
+        NSImage(size: size, flipped: false) { rect in
+            color.setFill()
+            rect.fill()
+            return true
+        }
     }
 }

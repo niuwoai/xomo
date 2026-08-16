@@ -47,7 +47,9 @@ struct ImageEditorTextInputShortcutTests {
             ([.option], .fillSelection),
             ([.option, .shift], .fillSelectionPreservingTransparency),
             ([.command], .fillSelectionBackground),
-            ([.command, .shift], .fillSelectionBackgroundPreservingTransparency)
+            ([.command, .shift], .fillSelectionBackgroundPreservingTransparency),
+            ([.command, .option], .fillSelectionHistory),
+            ([.command, .option, .shift], .fillSelectionHistoryPreservingTransparency)
         ]
 
         for (modifiers, expected) in cases {

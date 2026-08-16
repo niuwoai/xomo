@@ -268,6 +268,11 @@ extension ImageEditorView {
         }
         .keyboardShortcut(.delete, modifiers: [.command])
         .disabled(!viewModel.canFillCurrentEditingTarget)
+        Button(L10n.text("imageEditor.action.fillSelectionHistory")) {
+            viewModel.fillSelectionFromHistory()
+        }
+        .keyboardShortcut(.delete, modifiers: [.command, .option])
+        .disabled(!viewModel.canFillSelectionFromHistory)
         Button(L10n.text("imageEditor.action.contentAwareFillSelection")) {
             viewModel.contentAwareFillSelection()
         }

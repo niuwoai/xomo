@@ -2179,6 +2179,40 @@ struct ImageEditorScopeTests {
         #expect(commandSource.contains("blendMode: blendMode"))
     }
 
+    @Test func historyFillWiresPanelSourceDialogAndClassicShortcut() throws {
+        let editorSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let menuSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),
+            encoding: .utf8
+        )
+        let panelSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent(
+                "veilpic/ImageEditorSelectionFillPanel.swift"
+            ),
+            encoding: .utf8
+        )
+        let commandSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent(
+                "veilpic/ImageEditorSelectionEditCommands.swift"
+            ),
+            encoding: .utf8
+        )
+
+        #expect(editorSource.contains("viewModel.setHistoryFillSource(entryID: entry.id)"))
+        #expect(editorSource.contains("viewModel.setHistoryFillSource(snapshotID: snapshot.id)"))
+        #expect(editorSource.contains("case .fillSelectionHistory: viewModel.fillSelectionFromHistory()"))
+        #expect(editorSource.contains("relevantFlags == [.command, .option]"))
+        #expect(panelSource.contains("selectionFillContents == .history"))
+        #expect(panelSource.contains("viewModel.historyFillSourceTitle"))
+        #expect(commandSource.contains("sourceDocument.layers.first(where: { $0.id == layer.id"))
+        #expect(commandSource.contains("func historyFilled("))
+        #expect(menuSource.contains(".keyboardShortcut(.delete, modifiers: [.command, .option])"))
+        #expect(menuSource.contains(".disabled(!viewModel.canFillSelectionFromHistory)"))
+    }
+
     @Test func fileMenuExposesClipboardCanvasCreation() throws {
         let source = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),

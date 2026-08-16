@@ -1848,6 +1848,8 @@
 "imageEditor.history.selectionFillSelected" = "填充所选图层选区";
 "imageEditor.history.selectionContentAwareFill" = "内容感知填充选区";
 "imageEditor.history.selectionContentAwareFillSelected" = "内容感知填充所选图层选区";
+"imageEditor.history.selectionHistoryFill" = "从历史记录填充选区";
+"imageEditor.history.selectionHistoryFillSelected" = "从历史记录填充所选图层选区";
 "imageEditor.history.selectionPatch" = "修补选区";
 "imageEditor.history.selectionStroke" = "描边选区";
 "imageEditor.history.selectionStrokeSelected" = "描边所选图层选区";
@@ -2185,6 +2187,8 @@
 "imageEditor.status.selectionFilledSelected" = "已在 %d 个图层中填充当前选区";
 "imageEditor.status.selectionContentAwareFilled" = "已对当前选区执行内容感知填充";
 "imageEditor.status.selectionContentAwareFilledSelected" = "已在 %d 个图层中执行内容感知填充";
+"imageEditor.status.selectionHistoryFilled" = "已从历史记录填充当前选区";
+"imageEditor.status.selectionHistoryFilledSelected" = "已在 %d 个图层中从历史记录填充当前选区";
 "imageEditor.status.selectionPatched" = "已从拖拽取样区域修补当前选区";
 "imageEditor.status.patchSelectionReady" = "修补选区已就绪，请从选区内拖拽";
 "imageEditor.status.selectionPatchedSource" = "已用拖拽到的干净纹理修补原选区";
@@ -2221,6 +2225,9 @@
 "imageEditor.status.historyCleared" = "已清理历史记录，当前画面已作为新的起点";
 "imageEditor.status.historySnapshotCreated" = "已创建历史快照“%@”";
 "imageEditor.status.historySnapshotSelected" = "已选择历史快照“%@”";
+"imageEditor.status.historyFillSourceSet" = "已将“%@”设为历史填充来源";
+"imageEditor.status.historyFillSourceUnavailable" = "历史填充来源不可用";
+"imageEditor.status.historyFillUnchanged" = "历史填充来源与当前像素相同";
 "imageEditor.status.historySnapshotDuplicated" = "已复制历史快照“%@”";
 "imageEditor.status.historySnapshotRenamed" = "历史快照已重命名为“%@”";
 "imageEditor.status.historySnapshotRestored" = "已恢复历史快照“%@”";
@@ -2681,6 +2688,7 @@
 "imageEditor.action.fillSelection" = "填充选区";
 "imageEditor.action.fillDialog" = "填充…";
 "imageEditor.action.fillSelectionBackground" = "用背景色填充选区";
+"imageEditor.action.fillSelectionHistory" = "从历史记录填充";
 "imageEditor.selectionFill.title" = "填充";
 "imageEditor.selectionFill.contents" = "内容";
 "imageEditor.selectionFill.use" = "使用";
@@ -2692,6 +2700,7 @@
 "imageEditor.selectionFill.contents.color" = "颜色…";
 "imageEditor.selectionFill.contents.pattern" = "图案";
 "imageEditor.selectionFill.contents.contentAware" = "内容识别";
+"imageEditor.selectionFill.contents.history" = "历史记录";
 "imageEditor.selectionFill.customColor" = "自定义颜色";
 "imageEditor.selectionFill.patternColor" = "图案颜色";
 "imageEditor.selectionFill.patternOpacity" = "图案不透明度";
@@ -2699,6 +2708,9 @@
 "imageEditor.selectionFill.alignPatternWithCanvas" = "与画布对齐";
 "imageEditor.selectionFill.colorAdaptation" = "颜色适应";
 "imageEditor.selectionFill.colorAdaptationHelp" = "让替换颜色适应各图层内选区附近的像素。";
+"imageEditor.selectionFill.historySource" = "来源";
+"imageEditor.selectionFill.historySourceHelp" = "在“历史记录”面板的画笔列中设置历史填充来源。";
+"imageEditor.selectionFill.historySourceUnavailable" = "无可用历史来源";
 "imageEditor.selectionFill.blending" = "混合";
 "imageEditor.selectionFill.mode" = "模式";
 "imageEditor.selectionFill.opacity" = "不透明度";
@@ -2727,6 +2739,7 @@
 "imageEditor.action.historyClear" = "清理历史记录";
 "imageEditor.action.historySnapshotCreate" = "创建历史快照";
 "imageEditor.action.historySnapshotSelect" = "选择历史快照";
+"imageEditor.action.historyFillSource" = "将“%@”设为历史填充来源";
 "imageEditor.action.historySnapshotRestoreSelected" = "恢复选中的历史快照";
 "imageEditor.action.historySnapshotDuplicate" = "复制选中的历史快照";
 "imageEditor.action.historySnapshotDeleteSelected" = "删除选中的历史快照";

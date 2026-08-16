@@ -1848,6 +1848,8 @@
 "imageEditor.history.selectionFillSelected" = "Fill Selection on Selected Layers";
 "imageEditor.history.selectionContentAwareFill" = "Content-Aware Fill Selection";
 "imageEditor.history.selectionContentAwareFillSelected" = "Content-Aware Fill Selection on Selected Layers";
+"imageEditor.history.selectionHistoryFill" = "Fill Selection from History";
+"imageEditor.history.selectionHistoryFillSelected" = "Fill Selection from History on Selected Layers";
 "imageEditor.history.selectionPatch" = "Patch Selection";
 "imageEditor.history.selectionStroke" = "Stroke Selection";
 "imageEditor.history.selectionStrokeSelected" = "Stroke Selection on Selected Layers";
@@ -2185,6 +2187,8 @@
 "imageEditor.status.selectionFilledSelected" = "Selection filled on %d layers";
 "imageEditor.status.selectionContentAwareFilled" = "Selection content-aware filled";
 "imageEditor.status.selectionContentAwareFilledSelected" = "Selection content-aware filled on %d layers";
+"imageEditor.status.selectionHistoryFilled" = "Selection filled from history";
+"imageEditor.status.selectionHistoryFilledSelected" = "Selection filled from history on %d layers";
 "imageEditor.status.selectionPatched" = "Selection patched from the dragged sample area";
 "imageEditor.status.patchSelectionReady" = "Patch selection ready; drag from inside the selection";
 "imageEditor.status.selectionPatchedSource" = "Original selection patched from the clean dragged sample";
@@ -2221,6 +2225,9 @@
 "imageEditor.status.historyCleared" = "History cleared; the current image is now the new starting state";
 "imageEditor.status.historySnapshotCreated" = "History snapshot “%@” created";
 "imageEditor.status.historySnapshotSelected" = "Selected history snapshot “%@”";
+"imageEditor.status.historyFillSourceSet" = "Set “%@” as the History Fill source";
+"imageEditor.status.historyFillSourceUnavailable" = "The History Fill source is unavailable";
+"imageEditor.status.historyFillUnchanged" = "The History Fill source matches the current pixels";
 "imageEditor.status.historySnapshotDuplicated" = "Duplicated history snapshot “%@”";
 "imageEditor.status.historySnapshotRenamed" = "History snapshot renamed to “%@”";
 "imageEditor.status.historySnapshotRestored" = "Restored history snapshot “%@”";
@@ -2681,6 +2688,7 @@
 "imageEditor.action.fillSelection" = "Fill Selection";
 "imageEditor.action.fillDialog" = "Fill…";
 "imageEditor.action.fillSelectionBackground" = "Fill with Background Color";
+"imageEditor.action.fillSelectionHistory" = "Fill from History";
 "imageEditor.selectionFill.title" = "Fill";
 "imageEditor.selectionFill.contents" = "Contents";
 "imageEditor.selectionFill.use" = "Use";
@@ -2692,6 +2700,7 @@
 "imageEditor.selectionFill.contents.color" = "Color…";
 "imageEditor.selectionFill.contents.pattern" = "Pattern";
 "imageEditor.selectionFill.contents.contentAware" = "Content-Aware";
+"imageEditor.selectionFill.contents.history" = "History";
 "imageEditor.selectionFill.customColor" = "Custom Color";
 "imageEditor.selectionFill.patternColor" = "Pattern Color";
 "imageEditor.selectionFill.patternOpacity" = "Pattern Opacity";
@@ -2699,6 +2708,9 @@
 "imageEditor.selectionFill.alignPatternWithCanvas" = "Align with Canvas";
 "imageEditor.selectionFill.colorAdaptation" = "Color Adaptation";
 "imageEditor.selectionFill.colorAdaptationHelp" = "Adapt replacement colors to nearby pixels inside each layer.";
+"imageEditor.selectionFill.historySource" = "Source";
+"imageEditor.selectionFill.historySourceHelp" = "Set the History Fill source from the brush column in the History panel.";
+"imageEditor.selectionFill.historySourceUnavailable" = "No history source";
 "imageEditor.selectionFill.blending" = "Blending";
 "imageEditor.selectionFill.mode" = "Mode";
 "imageEditor.selectionFill.opacity" = "Opacity";
@@ -2727,6 +2739,7 @@
 "imageEditor.action.historyClear" = "Clear history states";
 "imageEditor.action.historySnapshotCreate" = "Create history snapshot";
 "imageEditor.action.historySnapshotSelect" = "Select history snapshot";
+"imageEditor.action.historyFillSource" = "Use “%@” as the History Fill source";
 "imageEditor.action.historySnapshotRestoreSelected" = "Restore selected history snapshot";
 "imageEditor.action.historySnapshotDuplicate" = "Duplicate selected history snapshot";
 "imageEditor.action.historySnapshotDeleteSelected" = "Delete selected history snapshot";

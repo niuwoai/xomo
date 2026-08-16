@@ -454,6 +454,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var namedHistorySnapshots: [ImageEditorHistorySnapshot] = []
     @Published var selectedHistorySnapshotID: UUID?
     @Published var selectedHistoryEntryID: UUID?
+    @Published var historyFillSource: ImageEditorHistoryFillSource?
 
     // SwiftUI reads these values from several panels in one render pass. Keep all
     // pixel work behind one document-scoped cache rather than recompositing per view.

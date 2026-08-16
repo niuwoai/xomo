@@ -17,6 +17,7 @@ enum ImageEditorSelectionFillContents: String, CaseIterable, Identifiable {
     case color
     case pattern
     case contentAware
+    case history
 
     var id: String { rawValue }
 
@@ -38,12 +39,20 @@ enum ImageEditorSelectionFillContents: String, CaseIterable, Identifiable {
         case .color: custom
         case .pattern: nil
         case .contentAware: nil
+        case .history: nil
         }
     }
 
     static func availableCases(isQuickMaskMode: Bool) -> [Self] {
-        isQuickMaskMode ? allCases.filter { $0 != .contentAware } : allCases
+        isQuickMaskMode
+            ? allCases.filter { $0 != .contentAware && $0 != .history }
+            : allCases
     }
+}
+
+enum ImageEditorHistoryFillSource: Equatable {
+    case entry(UUID)
+    case snapshot(UUID)
 }
 
 struct ImageEditorSelectionFillOptions {
@@ -207,6 +216,60 @@ private enum ImageEditorSelectionCropMetrics {
 
 @MainActor
 extension ImageEditorViewModel {
+    var effectiveHistoryFillSource: ImageEditorHistoryFillSource? {
+        if let historyFillSource,
+           historyFillDocument(for: historyFillSource) != nil {
+            return historyFillSource
+        }
+        guard let firstEntry = document.history.first(where: { historySnapshots[$0.id] != nil }) else {
+            return nil
+        }
+        return .entry(firstEntry.id)
+    }
+
+    var historyFillSourceTitle: String {
+        guard let source = effectiveHistoryFillSource else {
+            return L10n.text("imageEditor.selectionFill.historySourceUnavailable")
+        }
+        switch source {
+        case .entry(let id):
+            return document.history.first(where: { $0.id == id })?.title
+                ?? L10n.text("imageEditor.selectionFill.historySourceUnavailable")
+        case .snapshot(let id):
+            return namedHistorySnapshots.first(where: { $0.id == id })?.name
+                ?? L10n.text("imageEditor.selectionFill.historySourceUnavailable")
+        }
+    }
+
+    var canFillSelectionFromHistory: Bool {
+        !isQuickMaskMode
+            && canEditSelectionPixels
+            && effectiveHistoryFillSource != nil
+    }
+
+    func setHistoryFillSource(entryID: UUID) {
+        guard document.history.contains(where: { $0.id == entryID }),
+              historySnapshots[entryID] != nil
+        else { return }
+        historyFillSource = .entry(entryID)
+        let title = document.history.first(where: { $0.id == entryID })?.title ?? ""
+        statusText = L10n.format("imageEditor.status.historyFillSourceSet", title)
+    }
+
+    func setHistoryFillSource(snapshotID: UUID) {
+        guard let snapshot = namedHistorySnapshots.first(where: { $0.id == snapshotID }) else { return }
+        historyFillSource = .snapshot(snapshotID)
+        statusText = L10n.format("imageEditor.status.historyFillSourceSet", snapshot.name)
+    }
+
+    func isHistoryFillSource(entryID: UUID) -> Bool {
+        effectiveHistoryFillSource == .entry(entryID)
+    }
+
+    func isHistoryFillSource(snapshotID: UUID) -> Bool {
+        effectiveHistoryFillSource == .snapshot(snapshotID)
+    }
+
     var canEditSelectionPixels: Bool {
         hasPotentialSelectionPixels && !editableSelectionPixelLayerIndices().isEmpty
     }
@@ -297,6 +360,14 @@ extension ImageEditorViewModel {
         fillSelection(with: backgroundColor, opacity: opacity, preservingTransparency: true)
     }
 
+    func fillSelectionFromHistoryPreservingTransparency() {
+        fillSelectionFromHistory(
+            opacity: 1,
+            blendMode: .normal,
+            preservingTransparency: true
+        )
+    }
+
     func presentSelectionFillPanel() {
         guard canFillCurrentEditingTarget else {
             statusText = L10n.text("imageEditor.status.noSelection")
@@ -326,6 +397,18 @@ extension ImageEditorViewModel {
     }
 
     func fillSelection(options: ImageEditorSelectionFillOptions) {
+        if options.contents == .history {
+            guard !isQuickMaskMode else {
+                statusText = L10n.text("imageEditor.status.operationFailed")
+                return
+            }
+            fillSelectionFromHistory(
+                opacity: options.opacity,
+                blendMode: options.blendMode,
+                preservingTransparency: options.preservesTransparency
+            )
+            return
+        }
         if options.contents == .contentAware {
             guard !isQuickMaskMode else {
                 statusText = L10n.text("imageEditor.status.operationFailed")
@@ -360,6 +443,90 @@ extension ImageEditorViewModel {
             blendMode: options.blendMode,
             preservingTransparency: options.preservesTransparency
         )
+    }
+
+    func fillSelectionFromHistory() {
+        fillSelectionFromHistory(
+            opacity: 1,
+            blendMode: .normal,
+            preservingTransparency: false
+        )
+    }
+
+    private func fillSelectionFromHistory(
+        opacity: CGFloat,
+        blendMode: ImageEditorBlendMode,
+        preservingTransparency: Bool
+    ) {
+        guard !isQuickMaskMode else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return
+        }
+        guard let selection = document.selection else {
+            statusText = L10n.text("imageEditor.status.noSelection")
+            return
+        }
+        guard let source = effectiveHistoryFillSource,
+              let sourceDocument = historyFillDocument(for: source)
+        else {
+            statusText = L10n.text("imageEditor.status.historyFillSourceUnavailable")
+            return
+        }
+        let editableIndices = editableSelectionPixelLayerIndices()
+        guard !editableIndices.isEmpty else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return
+        }
+        guard editableIndices.contains(where: { index in
+            let layer = document.layers[index]
+            return sourceDocument.layers.contains(where: { $0.id == layer.id && $0.kind.isPixel })
+                && selection.mayAffect(
+                    layerFrame: layer.frame,
+                    canvasSize: document.canvasSize,
+                    expansion: feather
+                )
+        }) else {
+            statusText = L10n.text("imageEditor.status.historyFillSourceUnavailable")
+            return
+        }
+
+        applySelectionPixelEdit(
+            historyKey: "imageEditor.history.selectionHistoryFill",
+            selectedHistoryKey: "imageEditor.history.selectionHistoryFillSelected",
+            statusKey: "imageEditor.status.selectionHistoryFilled",
+            selectedStatusKey: "imageEditor.status.selectionHistoryFilledSelected",
+            noChangeStatusKey: "imageEditor.status.historyFillUnchanged"
+        ) { layer in
+            guard selection.mayAffect(
+                layerFrame: layer.frame,
+                canvasSize: document.canvasSize,
+                expansion: feather
+            ),
+            let sourceLayer = sourceDocument.layers.first(where: { $0.id == layer.id && $0.kind.isPixel }),
+            let output = layer.image.historyFilled(
+                from: sourceLayer.image,
+                sourceLayerFrame: sourceLayer.frame,
+                selection: selection,
+                layerFrame: layer.frame,
+                canvasSize: document.canvasSize,
+                opacity: opacity,
+                blendMode: blendMode,
+                feather: feather
+            ) else { return nil }
+            return preservingTransparency || document.isEffectivelyTransparencyLocked(layer)
+                ? (output.preservingAlpha(from: layer.image) ?? output)
+                : output
+        }
+    }
+
+    private func historyFillDocument(for source: ImageEditorHistoryFillSource) -> ImageEditorDocument? {
+        switch source {
+        case .entry(let id):
+            guard document.history.contains(where: { $0.id == id }) else { return nil }
+            return historySnapshots[id]
+        case .snapshot(let id):
+            return namedHistorySnapshots.first(where: { $0.id == id })?.document
+        }
     }
 
     private func fillSelection(
@@ -1144,6 +1311,7 @@ extension ImageEditorViewModel {
         selectedHistoryKey: String,
         statusKey: String,
         selectedStatusKey: String,
+        noChangeStatusKey: String = "imageEditor.status.selectionEmpty",
         render: (ImageEditorLayer) -> NSImage?
     ) {
         let edits = editableSelectionPixelLayerIndices().compactMap { index -> (Int, NSImage)? in
@@ -1157,7 +1325,7 @@ extension ImageEditorViewModel {
             return (index, output)
         }
         guard !edits.isEmpty else {
-            statusText = L10n.text("imageEditor.status.selectionEmpty")
+            statusText = L10n.text(noChangeStatusKey)
             return
         }
 
@@ -1274,6 +1442,120 @@ private extension NSImage {
                 alpha: alpha
             )
         }
+    }
+
+    func historyFilled(
+        from sourceImage: NSImage,
+        sourceLayerFrame: CGRect,
+        selection: ImageEditorSelection,
+        layerFrame: CGRect,
+        canvasSize: CGSize,
+        opacity: CGFloat,
+        blendMode: ImageEditorBlendMode,
+        feather: CGFloat
+    ) -> NSImage? {
+        guard layerFrame.width > 0,
+              layerFrame.height > 0,
+              let selectionMask = selection.layerMask(
+                layerFrame: layerFrame,
+                layerSize: size,
+                canvasSize: canvasSize,
+                feather: feather
+              )
+        else { return nil }
+
+        let alignedSource = NSImage.rendered(size: size) { _ in
+            let overlap = sourceLayerFrame.intersection(layerFrame)
+            guard !overlap.isNull,
+                  overlap.width > 0,
+                  overlap.height > 0,
+                  sourceLayerFrame.width > 0,
+                  sourceLayerFrame.height > 0
+            else { return }
+            let targetScaleX = size.width / layerFrame.width
+            let targetScaleY = size.height / layerFrame.height
+            let sourceScaleX = sourceImage.size.width / sourceLayerFrame.width
+            let sourceScaleY = sourceImage.size.height / sourceLayerFrame.height
+            let destination = CGRect(
+                x: (overlap.minX - layerFrame.minX) * targetScaleX,
+                y: (layerFrame.maxY - overlap.maxY) * targetScaleY,
+                width: overlap.width * targetScaleX,
+                height: overlap.height * targetScaleY
+            )
+            let sourceRect = CGRect(
+                x: (overlap.minX - sourceLayerFrame.minX) * sourceScaleX,
+                y: (sourceLayerFrame.maxY - overlap.maxY) * sourceScaleY,
+                width: overlap.width * sourceScaleX,
+                height: overlap.height * sourceScaleY
+            )
+            sourceImage.draw(
+                in: destination,
+                from: sourceRect,
+                operation: .copy,
+                fraction: 1
+            )
+        }
+        let width = max(1, Int(size.width.rounded()))
+        let height = max(1, Int(size.height.rounded()))
+        guard var pixels = rgbaPixels(width: width, height: height),
+              let sourcePixels = alignedSource?.rgbaPixels(width: width, height: height),
+              let mask = selectionMask.alphaMask(width: width, height: height)
+        else { return nil }
+
+        let normalizedOpacity = Double(max(0, min(1, opacity)))
+        let bytesPerPixel = 4
+        let bytesPerRow = width * bytesPerPixel
+        for y in 0..<height {
+            for x in 0..<width {
+                let pixelIndex = y * width + x
+                let offset = y * bytesPerRow + x * bytesPerPixel
+                var coverage = Double(mask.alpha[pixelIndex]) / 255 * normalizedOpacity
+                guard coverage > 0 else { continue }
+                if blendMode == .dissolve {
+                    coverage = Self.selectionFillDissolves(
+                        x: x,
+                        y: y,
+                        probability: coverage
+                    ) ? 1 : 0
+                    guard coverage > 0 else { continue }
+                }
+
+                let baseAlpha = Double(pixels[offset + 3]) / 255
+                let sourceAlpha = Double(sourcePixels[offset + 3]) / 255
+                let baseRed = baseAlpha > 0 ? Double(pixels[offset]) / 255 / baseAlpha : 0
+                let baseGreen = baseAlpha > 0 ? Double(pixels[offset + 1]) / 255 / baseAlpha : 0
+                let baseBlue = baseAlpha > 0 ? Double(pixels[offset + 2]) / 255 / baseAlpha : 0
+                let sourceRed = sourceAlpha > 0 ? Double(sourcePixels[offset]) / 255 / sourceAlpha : 0
+                let sourceGreen = sourceAlpha > 0 ? Double(sourcePixels[offset + 1]) / 255 / sourceAlpha : 0
+                let sourceBlue = sourceAlpha > 0 ? Double(sourcePixels[offset + 2]) / 255 / sourceAlpha : 0
+                let blended = blendMode.blend(
+                    baseRed: baseRed,
+                    baseGreen: baseGreen,
+                    baseBlue: baseBlue,
+                    overlayRed: sourceRed,
+                    overlayGreen: sourceGreen,
+                    overlayBlue: sourceBlue
+                )
+                let targetRed = sourceAlpha * ((1 - baseAlpha) * sourceRed + baseAlpha * blended.red)
+                let targetGreen = sourceAlpha * ((1 - baseAlpha) * sourceGreen + baseAlpha * blended.green)
+                let targetBlue = sourceAlpha * ((1 - baseAlpha) * sourceBlue + baseAlpha * blended.blue)
+                let inverseCoverage = 1 - coverage
+                pixels[offset] = Self.selectionFillByte(
+                    Double(pixels[offset]) / 255 * inverseCoverage + targetRed * coverage
+                )
+                pixels[offset + 1] = Self.selectionFillByte(
+                    Double(pixels[offset + 1]) / 255 * inverseCoverage + targetGreen * coverage
+                )
+                pixels[offset + 2] = Self.selectionFillByte(
+                    Double(pixels[offset + 2]) / 255 * inverseCoverage + targetBlue * coverage
+                )
+                pixels[offset + 3] = Self.selectionFillByte(
+                    baseAlpha * inverseCoverage + sourceAlpha * coverage
+                )
+            }
+        }
+
+        return NSImage.rgbaImage(width: width, height: height, pixels: pixels, size: size)
     }
 
     private func compositedSelectionFill(

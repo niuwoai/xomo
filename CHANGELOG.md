@@ -1,5 +1,18 @@
 # Changelog
 
+## 2.12.0-rc1105 - 2026-08-17
+
+### Added
+- Fill 对话框新增 Photoshop 经典 History 内容源，可从 History 面板左侧画笔列显式指定普通历史状态或命名快照，在不恢复整份文档的情况下只还原选区内的同一图层像素。
+- 新增经典 macOS `Command + Option + Delete` 历史填充快捷键；加按 Shift 时保持当前图层透明区域。Edit 菜单提供同一普通历史填充入口，文字输入活动时两组快捷键均安全让位。
+
+### Changed
+- History Fill 按历史与当前图层各自的画布 frame 对齐来源，移动后部分重叠会恢复相交区域并正确恢复透明区域；完整混合模式、不透明度、透明像素锁、单步 Undo/History 与无变化幂等语义统一复用 Fill 基础设施。
+- Quick Mask 不展示 History 内容源，绕过界面调用也会安全拒绝，因为历史图层像素不能冒充临时选区通道来源。
+
+### Verification
+- Fill/History Fill 专项 22/22、History 与快捷键 14/14、文字输入保护 6/6、UI 接线 1/1、选择像素事务 33/33、混合模式 5/5、本地化 33/33、CLI 2/2 与发布契约 7/7 通过；本版本不触发周期 Universal Release、完整冒烟与 `/Applications` 安装，下一次完整门禁为 rc1120。
+
 ## 2.12.0-rc1104 - 2026-08-17
 
 ### Added

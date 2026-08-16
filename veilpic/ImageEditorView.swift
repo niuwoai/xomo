@@ -2385,6 +2385,9 @@ struct ImageEditorView: View {
         case .fillSelectionBackground: viewModel.fillSelectionWithBackgroundColor()
         case .fillSelectionBackgroundPreservingTransparency:
             viewModel.fillSelectionWithBackgroundColorPreservingTransparency()
+        case .fillSelectionHistory: viewModel.fillSelectionFromHistory()
+        case .fillSelectionHistoryPreservingTransparency:
+            viewModel.fillSelectionFromHistoryPreservingTransparency()
         case .clearSelectionPixels: viewModel.clearSelectionPixels()
         case .resizeImage: viewModel.resizeImageToControlSize()
         case .resizeCanvas: viewModel.resizeCanvasToControlSize()
@@ -5899,6 +5902,23 @@ struct ImageEditorView: View {
 
                         ForEach(viewModel.filteredHistoryEntries) { entry in
                             HStack(spacing: 4) {
+                                Button {
+                                    viewModel.setHistoryFillSource(entryID: entry.id)
+                                } label: {
+                                    Image(systemName: viewModel.isHistoryFillSource(entryID: entry.id)
+                                        ? "paintbrush.fill"
+                                        : "circle")
+                                        .font(.system(size: 10, weight: .semibold))
+                                        .frame(width: 18, height: 22)
+                                }
+                                .buttonStyle(.plain)
+                                .foregroundStyle(Color(nsColor: viewModel.isHistoryFillSource(entryID: entry.id)
+                                    ? ImageEditorTheme.selected
+                                    : ImageEditorTheme.mutedText))
+                                .focusable(false)
+                                .help(L10n.format("imageEditor.action.historyFillSource", entry.title))
+                                .accessibilityIdentifier("image-editor-history-fill-source-\(entry.id)")
+
                                 HStack(spacing: 6) {
                                     Image(systemName: historyIconName(for: entry))
                                         .font(.system(size: 12, weight: .medium))
@@ -6015,6 +6035,23 @@ struct ImageEditorView: View {
     private func historySnapshotRow(_ snapshot: ImageEditorHistorySnapshot) -> some View {
         let isSelected = viewModel.selectedHistorySnapshotID == snapshot.id
         return HStack(spacing: 6) {
+            Button {
+                viewModel.setHistoryFillSource(snapshotID: snapshot.id)
+            } label: {
+                Image(systemName: viewModel.isHistoryFillSource(snapshotID: snapshot.id)
+                    ? "paintbrush.fill"
+                    : "circle")
+                    .font(.system(size: 10, weight: .semibold))
+                    .frame(width: 16)
+                    .foregroundStyle(Color(nsColor: viewModel.isHistoryFillSource(snapshotID: snapshot.id)
+                        ? ImageEditorTheme.selected
+                        : ImageEditorTheme.mutedText))
+            }
+            .buttonStyle(.plain)
+            .focusable(false)
+            .help(L10n.format("imageEditor.action.historyFillSource", snapshot.name))
+            .accessibilityIdentifier("image-editor-history-snapshot-fill-source-\(snapshot.id)")
+
             Button {
                 viewModel.selectHistorySnapshot(snapshot.id)
             } label: {
@@ -15049,6 +15086,8 @@ enum ImageEditorKeyboardShortcutAction: Equatable {
     case fillSelectionPreservingTransparency
     case fillSelectionBackground
     case fillSelectionBackgroundPreservingTransparency
+    case fillSelectionHistory
+    case fillSelectionHistoryPreservingTransparency
     case clearSelectionPixels
     case resizeImage
     case resizeCanvas
@@ -15114,6 +15153,8 @@ enum ImageEditorKeyboardShortcutAction: Equatable {
              .fillSelectionPreservingTransparency,
              .fillSelectionBackground,
              .fillSelectionBackgroundPreservingTransparency,
+             .fillSelectionHistory,
+             .fillSelectionHistoryPreservingTransparency,
              .clearSelectionPixels,
              .selectAll,
              .undo,
@@ -15182,6 +15223,10 @@ enum ImageEditorKeyboardShortcutAction: Equatable {
             if relevantFlags == [.command] { return .fillSelectionBackground }
             if relevantFlags == [.command, .shift] {
                 return .fillSelectionBackgroundPreservingTransparency
+            }
+            if relevantFlags == [.command, .option] { return .fillSelectionHistory }
+            if relevantFlags == [.command, .option, .shift] {
+                return .fillSelectionHistoryPreservingTransparency
             }
             return nil
         }

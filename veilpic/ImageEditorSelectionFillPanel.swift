@@ -73,6 +73,20 @@ struct ImageEditorSelectionFillPanel: View {
                     )
                     .help(L10n.text("imageEditor.selectionFill.colorAdaptationHelp"))
                 }
+
+                if viewModel.selectionFillContents == .history {
+                    HStack(spacing: 6) {
+                        Image(systemName: "paintbrush.fill")
+                            .foregroundStyle(Color(nsColor: ImageEditorTheme.selected))
+                        Text(L10n.text("imageEditor.selectionFill.historySource"))
+                        Spacer(minLength: 8)
+                        Text(viewModel.historyFillSourceTitle)
+                            .lineLimit(1)
+                            .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                    }
+                    .help(L10n.text("imageEditor.selectionFill.historySourceHelp"))
+                    .accessibilityIdentifier("image-editor-fill-history-source")
+                }
             }
             .padding(.top, 4)
         }

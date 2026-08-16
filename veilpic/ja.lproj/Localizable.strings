@@ -1848,6 +1848,8 @@
 "imageEditor.history.selectionFillSelected" = "選択レイヤーの選択範囲を塗りつぶし";
 "imageEditor.history.selectionContentAwareFill" = "選択範囲をコンテンツに応じて塗りつぶし";
 "imageEditor.history.selectionContentAwareFillSelected" = "選択レイヤーの選択範囲をコンテンツに応じて塗りつぶし";
+"imageEditor.history.selectionHistoryFill" = "履歴から選択範囲を塗りつぶし";
+"imageEditor.history.selectionHistoryFillSelected" = "履歴から選択レイヤーの選択範囲を塗りつぶし";
 "imageEditor.history.selectionPatch" = "選択範囲にパッチを適用";
 "imageEditor.history.selectionStroke" = "選択範囲を境界線描画";
 "imageEditor.history.selectionStrokeSelected" = "選択レイヤーの選択範囲を境界線描画";
@@ -2185,6 +2187,8 @@
 "imageEditor.status.selectionFilledSelected" = "%d個のレイヤーで現在の選択範囲を塗りつぶしました";
 "imageEditor.status.selectionContentAwareFilled" = "現在の選択範囲をコンテンツに応じて塗りつぶしました";
 "imageEditor.status.selectionContentAwareFilledSelected" = "%d個のレイヤーで現在の選択範囲をコンテンツに応じて塗りつぶしました";
+"imageEditor.status.selectionHistoryFilled" = "履歴から現在の選択範囲を塗りつぶしました";
+"imageEditor.status.selectionHistoryFilledSelected" = "%d個のレイヤーで履歴から現在の選択範囲を塗りつぶしました";
 "imageEditor.status.selectionPatched" = "ドラッグしたサンプル領域から現在の選択範囲にパッチを適用しました";
 "imageEditor.status.patchSelectionReady" = "パッチ選択範囲の準備ができました。選択範囲内からドラッグしてください";
 "imageEditor.status.selectionPatchedSource" = "ドラッグ先のきれいなテクスチャで元の選択範囲を修復しました";
@@ -2221,6 +2225,9 @@
 "imageEditor.status.historyCleared" = "履歴を消去し、現在の画像を新しい開始状態にしました";
 "imageEditor.status.historySnapshotCreated" = "履歴スナップショット「%@」を作成しました";
 "imageEditor.status.historySnapshotSelected" = "履歴スナップショット「%@」を選択しました";
+"imageEditor.status.historyFillSourceSet" = "「%@」を履歴塗りつぶしのソースに設定しました";
+"imageEditor.status.historyFillSourceUnavailable" = "履歴塗りつぶしのソースを利用できません";
+"imageEditor.status.historyFillUnchanged" = "履歴塗りつぶしのソースは現在のピクセルと同じです";
 "imageEditor.status.historySnapshotDuplicated" = "履歴スナップショット「%@」を複製しました";
 "imageEditor.status.historySnapshotRenamed" = "履歴スナップショット名を「%@」に変更しました";
 "imageEditor.status.historySnapshotRestored" = "履歴スナップショット「%@」を復元しました";
@@ -2681,6 +2688,7 @@
 "imageEditor.action.fillSelection" = "選択範囲を塗りつぶし";
 "imageEditor.action.fillDialog" = "塗りつぶし…";
 "imageEditor.action.fillSelectionBackground" = "背景色で選択範囲を塗りつぶし";
+"imageEditor.action.fillSelectionHistory" = "履歴から塗りつぶし";
 "imageEditor.selectionFill.title" = "塗りつぶし";
 "imageEditor.selectionFill.contents" = "内容";
 "imageEditor.selectionFill.use" = "使用";
@@ -2692,6 +2700,7 @@
 "imageEditor.selectionFill.contents.color" = "カラー…";
 "imageEditor.selectionFill.contents.pattern" = "パターン";
 "imageEditor.selectionFill.contents.contentAware" = "コンテンツに応じる";
+"imageEditor.selectionFill.contents.history" = "履歴";
 "imageEditor.selectionFill.customColor" = "カスタムカラー";
 "imageEditor.selectionFill.patternColor" = "パターンカラー";
 "imageEditor.selectionFill.patternOpacity" = "パターンの不透明度";
@@ -2699,6 +2708,9 @@
 "imageEditor.selectionFill.alignPatternWithCanvas" = "キャンバスに合わせる";
 "imageEditor.selectionFill.colorAdaptation" = "カラー適応";
 "imageEditor.selectionFill.colorAdaptationHelp" = "各レイヤーで選択範囲周辺のピクセルに置換色を適応します。";
+"imageEditor.selectionFill.historySource" = "ソース";
+"imageEditor.selectionFill.historySourceHelp" = "履歴パネルのブラシ列で履歴塗りつぶしのソースを設定します。";
+"imageEditor.selectionFill.historySourceUnavailable" = "履歴ソースなし";
 "imageEditor.selectionFill.blending" = "合成";
 "imageEditor.selectionFill.mode" = "描画モード";
 "imageEditor.selectionFill.opacity" = "不透明度";
@@ -2727,6 +2739,7 @@
 "imageEditor.action.historyClear" = "履歴状態を消去";
 "imageEditor.action.historySnapshotCreate" = "履歴スナップショットを作成";
 "imageEditor.action.historySnapshotSelect" = "履歴スナップショットを選択";
+"imageEditor.action.historyFillSource" = "「%@」を履歴塗りつぶしのソースに使用";
 "imageEditor.action.historySnapshotRestoreSelected" = "選択中の履歴スナップショットを復元";
 "imageEditor.action.historySnapshotDuplicate" = "選択中の履歴スナップショットを複製";
 "imageEditor.action.historySnapshotDeleteSelected" = "選択中の履歴スナップショットを削除";
