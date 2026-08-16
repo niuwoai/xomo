@@ -7381,8 +7381,7 @@ struct XomoAutomationTests {
             .bool(false),
             .null
         ] {
-            var invalidGradient = colorPair
-            invalidGradient["stops"] = invalidStops
+            let invalidGradient: [String: XomoJSONValue] = ["stops": invalidStops]
             let invalidUpdate = registry.execute(request(
                 operation: "call",
                 name: "xomo.shape.update",
@@ -13225,6 +13224,14 @@ struct XomoAutomationTests {
         viewModel.document.selectedLayerIDs = [first.id, second.id, locked.id]
         viewModel.foregroundColor = foreground
         viewModel.backgroundColor = background
+        let normalizedForeground = ImageEditorGradientColorStop(
+            position: 0,
+            color: foreground
+        ).color
+        let normalizedBackground = ImageEditorGradientColorStop(
+            position: 1,
+            color: background
+        ).color
         let historyCount = viewModel.document.history.count
         let registry = XomoAutomationRegistry.shared
         registry.register(viewModel)
@@ -13240,8 +13247,8 @@ struct XomoAutomationTests {
         ))
         #expect(startResult.ok)
         #expect(startResult.result?.objectValue?["updatedLayerCount"] == .number(2))
-        #expect(viewModel.document.layers[0].style.gradientOverlayStartColor.isEqual(foreground))
-        #expect(viewModel.document.layers[1].style.gradientOverlayStartColor.isEqual(foreground))
+        #expect(imageEditorColorsMatch(viewModel.document.layers[0].style.gradientOverlayStartColor, normalizedForeground))
+        #expect(imageEditorColorsMatch(viewModel.document.layers[1].style.gradientOverlayStartColor, normalizedForeground))
         #expect(viewModel.document.layers[2].style.gradientOverlayStartColor.isEqual(NSColor.systemOrange))
         #expect(viewModel.document.layers[0].style.gradientOverlayEndColor.isEqual(NSColor.systemYellow))
         #expect(viewModel.document.layers[1].style.gradientOverlayEndColor.isEqual(NSColor.systemPink))
@@ -13265,11 +13272,11 @@ struct XomoAutomationTests {
         ))
         #expect(endResult.ok)
         #expect(endResult.result?.objectValue?["updatedLayerCount"] == .number(2))
-        #expect(viewModel.document.layers[0].style.gradientOverlayEndColor.isEqual(background))
-        #expect(viewModel.document.layers[1].style.gradientOverlayEndColor.isEqual(background))
+        #expect(imageEditorColorsMatch(viewModel.document.layers[0].style.gradientOverlayEndColor, normalizedBackground))
+        #expect(imageEditorColorsMatch(viewModel.document.layers[1].style.gradientOverlayEndColor, normalizedBackground))
         #expect(viewModel.document.layers[2].style.gradientOverlayEndColor.isEqual(NSColor.systemCyan))
-        #expect(viewModel.document.layers[0].style.gradientOverlayStartColor.isEqual(foreground))
-        #expect(viewModel.document.layers[1].style.gradientOverlayStartColor.isEqual(foreground))
+        #expect(imageEditorColorsMatch(viewModel.document.layers[0].style.gradientOverlayStartColor, normalizedForeground))
+        #expect(imageEditorColorsMatch(viewModel.document.layers[1].style.gradientOverlayStartColor, normalizedForeground))
         #expect(viewModel.document.history.count == historyAfterStart + 1)
         #expect(viewModel.document.selectedLayerIDs == [first.id, second.id, locked.id])
 

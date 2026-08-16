@@ -108,6 +108,7 @@ struct ImageEditorView: View {
     @State private var cancelledGradientOverlayAxisDragStartLocation: CGPoint?
     @State private var activeGradientOverlayStopIndex: Int?
     @State private var selectedGradientOverlayStopIndex: Int?
+    @State private var selectedGradientOverlayMidpointIndex: Int?
     @State private var gradientOverlayStopDragStartLocation: CGPoint?
     @State private var cancelledGradientOverlayStopDragStartLocation: CGPoint?
     @State private var activeGradientOverlayMidpointIndex: Int?
@@ -245,7 +246,7 @@ struct ImageEditorView: View {
                     if cancelGradientOverlayCanvasHandleDragForLifecycle() {
                         return
                     }
-                    if nudgeSelectedGradientOverlayStopIfNeeded(by: delta) {
+                    if nudgeSelectedGradientOverlayHandleIfNeeded(by: delta) {
                         return
                     }
                     if !viewModel.nudgeSelectedDeliveryObject(by: delta) {
@@ -400,6 +401,7 @@ struct ImageEditorView: View {
             isMovingTransformReferencePoint = false
             isTransformReferencePointDragCancelled = false
             selectedGradientOverlayStopIndex = nil
+            selectedGradientOverlayMidpointIndex = nil
         }
         .onChange(of: viewModel.selectedLayerFigmaComponentProperties) { _ in
             syncFigmaComponentPropertyDrafts()
@@ -7443,26 +7445,58 @@ struct ImageEditorView: View {
         return removeGradientOverlayCanvasStop(at: selectedGradientOverlayStopIndex)
     }
 
-    private func nudgeSelectedGradientOverlayStopIfNeeded(by delta: CGSize) -> Bool {
-        guard let selectedGradientOverlayStopIndex,
-              viewModel.selectedLeftSidebarTab == .tools,
+    private func nudgeSelectedGradientOverlayHandleIfNeeded(by delta: CGSize) -> Bool {
+        guard viewModel.selectedLeftSidebarTab == .tools,
               canvasInteractionTool == .move,
               viewModel.document.areExtrasVisible,
-              viewModel.canEditSelectedLayerGradientOverlayCanvasCenter,
-              viewModel.selectedLayerGradientOverlayCanvasStopHandlePoints.contains(
-                  where: { $0.index == selectedGradientOverlayStopIndex }
-              )
+              viewModel.canEditSelectedLayerGradientOverlayCanvasCenter
         else { return false }
-        switch ImageEditorGradientOverlayStopKeyboardAction.resolve(delta: delta) {
+        let action = ImageEditorGradientOverlayStopKeyboardAction.resolve(delta: delta)
+        if let index = selectedGradientOverlayStopIndex,
+           viewModel.selectedLayerGradientOverlayCanvasStopHandlePoints.contains(
+               where: { $0.index == index }
+           ) {
+            applyGradientOverlayStopKeyboardAction(action, at: index)
+            return true
+        }
+        if let index = selectedGradientOverlayMidpointIndex,
+           viewModel.selectedLayerGradientOverlayCanvasMidpointHandlePoints.contains(
+               where: { $0.lowerStopIndex == index }
+           ) {
+            applyGradientOverlayMidpointKeyboardAction(action, after: index)
+            return true
+        }
+        return false
+    }
+
+    private func applyGradientOverlayStopKeyboardAction(
+        _ action: ImageEditorGradientOverlayStopKeyboardAction,
+        at index: Int
+    ) {
+        switch action {
         case .nudge(let displayedDelta):
             _ = viewModel.nudgeSelectedLayerGradientOverlayCanvasStop(
-                at: selectedGradientOverlayStopIndex,
+                at: index,
                 displayedDelta: displayedDelta
             )
         case .consume:
             break
         }
-        return true
+    }
+
+    private func applyGradientOverlayMidpointKeyboardAction(
+        _ action: ImageEditorGradientOverlayStopKeyboardAction,
+        after index: Int
+    ) {
+        switch action {
+        case .nudge(let displayedDelta):
+            _ = viewModel.nudgeSelectedLayerGradientOverlayCanvasMidpoint(
+                after: index,
+                displayedDelta: displayedDelta
+            )
+        case .consume:
+            break
+        }
     }
 
     @discardableResult
@@ -7477,6 +7511,7 @@ struct ImageEditorView: View {
               let result = viewModel.removeSelectedLayerGradientOverlayCanvasStop(at: index)
         else { return false }
         selectedGradientOverlayStopIndex = result.nextSelectedIndex
+        selectedGradientOverlayMidpointIndex = nil
         return true
     }
 
@@ -7646,6 +7681,7 @@ struct ImageEditorView: View {
                             coordinateSpace: .named("image-editor-canvas-space")
                         )
                         .onEnded { value in
+                            selectedGradientOverlayMidpointIndex = nil
                             selectedGradientOverlayStopIndex =
                                 viewModel.addSelectedLayerGradientOverlayCanvasStop(
                                     at: unboundedImagePoint(from: value.location, in: size)
@@ -7835,6 +7871,7 @@ struct ImageEditorView: View {
                 )
                 .onChanged { value in
                     selectedGradientOverlayStopIndex = point.index
+                    selectedGradientOverlayMidpointIndex = nil
                     if let cancelledStart = cancelledGradientOverlayStopDragStartLocation {
                         guard cancelledStart != value.startLocation else { return }
                         cancelledGradientOverlayStopDragStartLocation = nil
@@ -7894,6 +7931,7 @@ struct ImageEditorView: View {
         axisEndpoint: CGPoint,
         canvasSize: CGSize
     ) -> some View {
+        let isSelected = selectedGradientOverlayMidpointIndex == point.lowerStopIndex
         let axis = CGVector(dx: axisEndpoint.x - axisStart.x, dy: axisEndpoint.y - axisStart.y)
         let length = max(0.001, hypot(axis.dx, axis.dy))
         let canvasPosition = viewPoint(from: point.canvasPoint, in: canvasSize)
@@ -7905,7 +7943,10 @@ struct ImageEditorView: View {
             .fill(Color.white.opacity(0.92))
             .overlay {
                 RoundedRectangle(cornerRadius: 1.5, style: .continuous)
-                    .stroke(Color.black.opacity(0.72), lineWidth: 1)
+                    .stroke(
+                        isSelected ? Color.accentColor : Color.black.opacity(0.72),
+                        lineWidth: isSelected ? 2 : 1
+                    )
             }
             .frame(width: 8, height: 8)
             .rotationEffect(.degrees(45))
@@ -7917,6 +7958,8 @@ struct ImageEditorView: View {
                     coordinateSpace: .named("image-editor-canvas-space")
                 )
                 .onChanged { value in
+                    selectedGradientOverlayStopIndex = nil
+                    selectedGradientOverlayMidpointIndex = point.lowerStopIndex
                     if let cancelledStart = cancelledGradientOverlayMidpointDragStartLocation {
                         guard cancelledStart != value.startLocation else { return }
                         cancelledGradientOverlayMidpointDragStartLocation = nil

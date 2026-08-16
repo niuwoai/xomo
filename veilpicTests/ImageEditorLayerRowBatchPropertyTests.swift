@@ -676,8 +676,14 @@ struct ImageEditorLayerRowBatchPropertyTests {
         select(Set(fixture.layers.map(\.id)), primary: firstID, in: viewModel)
         let targetStart = NSColor(displayP3Red: 0.82, green: 0.21, blue: 0.43, alpha: 1)
         let targetEnd = NSColor(displayP3Red: 0.16, green: 0.71, blue: 0.86, alpha: 1)
-        let normalizedStart = try #require(targetStart.usingColorSpace(.sRGB))
-        let normalizedEnd = try #require(targetEnd.usingColorSpace(.sRGB))
+        let normalizedStart = ImageEditorGradientColorStop(
+            position: 0,
+            color: targetStart
+        ).color
+        let normalizedEnd = ImageEditorGradientColorStop(
+            position: 1,
+            color: targetEnd
+        ).color
         let secondOriginalEnd = try layer(secondID, in: viewModel).style.strokeGradientEndColor
         let historyCount = viewModel.document.history.count
 
@@ -688,8 +694,8 @@ struct ImageEditorLayerRowBatchPropertyTests {
         ))
         #expect((try layer(firstID, in: viewModel)).style.strokeFillType == .gradient)
         #expect((try layer(firstID, in: viewModel)).style.strokeEnabled)
-        #expect((try layer(firstID, in: viewModel)).style.strokeGradientStartColor.isEqual(normalizedStart))
-        #expect((try layer(secondID, in: viewModel)).style.strokeGradientStartColor.isEqual(normalizedStart))
+        #expect(imageEditorColorsMatch((try layer(firstID, in: viewModel)).style.strokeGradientStartColor, normalizedStart))
+        #expect(imageEditorColorsMatch((try layer(secondID, in: viewModel)).style.strokeGradientStartColor, normalizedStart))
         #expect((try layer(secondID, in: viewModel)).style.strokeGradientEndColor.isEqual(secondOriginalEnd))
         #expect((try layer(lockedID, in: viewModel)).style.strokeGradientStartColor.isEqual(NSColor.systemYellow))
         #expect(viewModel.document.history.count == historyCount + 1)
@@ -703,10 +709,10 @@ struct ImageEditorLayerRowBatchPropertyTests {
         #expect(viewModel.selectedLayerStrokeGradientEndColorState == .value(
             ImageEditorProjectColor(color: normalizedEnd)
         ))
-        #expect((try layer(firstID, in: viewModel)).style.strokeGradientEndColor.isEqual(normalizedEnd))
-        #expect((try layer(secondID, in: viewModel)).style.strokeGradientEndColor.isEqual(normalizedEnd))
-        #expect((try layer(firstID, in: viewModel)).style.strokeGradientStartColor.isEqual(normalizedStart))
-        #expect((try layer(secondID, in: viewModel)).style.strokeGradientStartColor.isEqual(normalizedStart))
+        #expect(imageEditorColorsMatch((try layer(firstID, in: viewModel)).style.strokeGradientEndColor, normalizedEnd))
+        #expect(imageEditorColorsMatch((try layer(secondID, in: viewModel)).style.strokeGradientEndColor, normalizedEnd))
+        #expect(imageEditorColorsMatch((try layer(firstID, in: viewModel)).style.strokeGradientStartColor, normalizedStart))
+        #expect(imageEditorColorsMatch((try layer(secondID, in: viewModel)).style.strokeGradientStartColor, normalizedStart))
         #expect((try layer(lockedID, in: viewModel)).style.strokeGradientEndColor.isEqual(NSColor.systemPurple))
         #expect(viewModel.document.selectedLayerIDs == [firstID, secondID, lockedID])
         #expect(viewModel.document.history.count == historyAfterStart + 1)
@@ -717,7 +723,7 @@ struct ImageEditorLayerRowBatchPropertyTests {
         viewModel.undo()
         #expect((try layer(secondID, in: viewModel)).style.strokeGradientEndColor.isEqual(secondOriginalEnd))
         viewModel.redo()
-        #expect((try layer(secondID, in: viewModel)).style.strokeGradientEndColor.isEqual(normalizedEnd))
+        #expect(imageEditorColorsMatch((try layer(secondID, in: viewModel)).style.strokeGradientEndColor, normalizedEnd))
     }
 
     @Test func layerStyleStrokeFillTypePickerHidesIncorrectMixedBranch() throws {
@@ -3110,8 +3116,8 @@ struct ImageEditorLayerRowBatchPropertyTests {
         let historyCount = viewModel.document.history.count
 
         #expect(viewModel.setSelectedLayerGradientOverlayStartColor(targetStart) == 2)
-        #expect((try layer(firstID, in: viewModel)).style.gradientOverlayStartColor.isEqual(normalizedStart))
-        #expect((try layer(secondID, in: viewModel)).style.gradientOverlayStartColor.isEqual(normalizedStart))
+        #expect(imageEditorColorsMatch((try layer(firstID, in: viewModel)).style.gradientOverlayStartColor, normalizedStart))
+        #expect(imageEditorColorsMatch((try layer(secondID, in: viewModel)).style.gradientOverlayStartColor, normalizedStart))
         #expect((try layer(lockedID, in: viewModel)).style.gradientOverlayStartColor.isEqual(NSColor.systemOrange))
         #expect((try layer(firstID, in: viewModel)).style.gradientOverlayEndColor.isEqual(firstEndColor))
         #expect((try layer(secondID, in: viewModel)).style.gradientOverlayEndColor.isEqual(secondEndColor))
@@ -3124,11 +3130,11 @@ struct ImageEditorLayerRowBatchPropertyTests {
         #expect(viewModel.document.history.count == historyAfterStart)
 
         #expect(viewModel.setSelectedLayerGradientOverlayEndColor(targetEnd) == 2)
-        #expect((try layer(firstID, in: viewModel)).style.gradientOverlayEndColor.isEqual(normalizedEnd))
-        #expect((try layer(secondID, in: viewModel)).style.gradientOverlayEndColor.isEqual(normalizedEnd))
+        #expect(imageEditorColorsMatch((try layer(firstID, in: viewModel)).style.gradientOverlayEndColor, normalizedEnd))
+        #expect(imageEditorColorsMatch((try layer(secondID, in: viewModel)).style.gradientOverlayEndColor, normalizedEnd))
         #expect((try layer(lockedID, in: viewModel)).style.gradientOverlayEndColor.isEqual(NSColor.systemCyan))
-        #expect((try layer(firstID, in: viewModel)).style.gradientOverlayStartColor.isEqual(normalizedStart))
-        #expect((try layer(secondID, in: viewModel)).style.gradientOverlayStartColor.isEqual(normalizedStart))
+        #expect(imageEditorColorsMatch((try layer(firstID, in: viewModel)).style.gradientOverlayStartColor, normalizedStart))
+        #expect(imageEditorColorsMatch((try layer(secondID, in: viewModel)).style.gradientOverlayStartColor, normalizedStart))
         #expect(viewModel.document.history.count == historyAfterStart + 1)
         #expect(viewModel.document.selectedLayerIDs == [firstID, secondID, lockedID])
 
@@ -3139,7 +3145,7 @@ struct ImageEditorLayerRowBatchPropertyTests {
         viewModel.undo()
         #expect((try layer(firstID, in: viewModel)).style.gradientOverlayEndColor.isEqual(firstEndColor))
         viewModel.redo()
-        #expect((try layer(firstID, in: viewModel)).style.gradientOverlayEndColor.isEqual(normalizedEnd))
+        #expect(imageEditorColorsMatch((try layer(firstID, in: viewModel)).style.gradientOverlayEndColor, normalizedEnd))
     }
 
     @Test func layerStyleGradientOverlayOpacityMixedValueConvergesAcrossEditableSelection() throws {

@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.12.0-rc1040 - 2026-08-16
+
+### Added
+- Gradient Overlay 画布中点支持持久选中与键盘精调：Left/Right 沿显示轴移动 1%，Option 为 5%，Shift 为 10%；短色段会按真实轴线距离换算中点比例，Reverse 下视觉方向保持一致。
+
+### Changed
+- 色标与中点在画布上互斥选中并共享方向键仲裁；Up/Down 不会误移图层，达到 0%/100% 中点边界的无效操作不写 History/Undo、不清 Redo，活动拖动仍由首次方向键优先取消。
+
+### Verification
+- 全量隔离测试 114/114 套件、2175/2175 用例通过；测试运行器契约、图层面板样式契约、CLI 2/2 与发布版本契约 7/7（21 项断言）通过，Universal App 与 CLI 均成功生成 arm64+x86_64 产物。
+- `/Applications` 门禁发现本机两张 Developer ID 私钥均返回 `errSecInternalComponent`：未降低 Release 的 Library Validation，启动失败的 rc1040 已移出并恢复严格验签通过的 rc1000。真实界面冒烟和 rc1040 覆盖安装仍待钥匙串签名能力恢复后补验；在此之前下一次完整门禁仍为 rc1040。
+
 ## 2.12.0-rc1039 - 2026-08-16
 
 ### Added

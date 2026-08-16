@@ -14,6 +14,20 @@ enum ImageEditorTestPixelTolerance {
     static let clippedAdjustmentMerge = 40
 }
 
+func imageEditorColorsMatch(
+    _ lhs: NSColor,
+    _ rhs: NSColor,
+    tolerance: CGFloat = 0.000_001
+) -> Bool {
+    guard let left = lhs.usingColorSpace(.deviceRGB),
+          let right = rhs.usingColorSpace(.deviceRGB)
+    else { return false }
+    return abs(left.redComponent - right.redComponent) <= tolerance
+        && abs(left.greenComponent - right.greenComponent) <= tolerance
+        && abs(left.blueComponent - right.blueComponent) <= tolerance
+        && abs(left.alphaComponent - right.alphaComponent) <= tolerance
+}
+
 func imageEditorMaximumPixelDifference(_ lhs: NSImage, _ rhs: NSImage) -> Int {
     guard lhs.size == rhs.size else { return .max }
     let width = Int(lhs.size.width.rounded())

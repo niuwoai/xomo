@@ -792,6 +792,43 @@ extension ImageEditorViewModel {
         return true
     }
 
+    @discardableResult
+    func nudgeSelectedLayerGradientOverlayCanvasMidpoint(
+        after lowerStopIndex: Int,
+        displayedDelta: Double
+    ) -> Bool {
+        guard displayedDelta.isFinite,
+              displayedDelta != 0,
+              editingGradientOverlayCenterLayerID == nil,
+              editingGradientOverlayAxisLayerID == nil,
+              editingGradientOverlayStopLayerID == nil,
+              editingGradientOverlayMidpointLayerID == nil,
+              canEditSelectedLayerGradientOverlayCanvasCenter,
+              let layer = singleSelectedGradientOverlayCanvasLayer,
+              let layerIndex = document.layers.firstIndex(where: { $0.id == layer.id })
+        else { return false }
+        let stops = layer.style.resolvedGradientOverlayColorStops
+        guard lowerStopIndex >= 0, lowerStopIndex < stops.count - 1 else { return false }
+        let lower = stops[lowerStopIndex]
+        let upper = stops[lowerStopIndex + 1]
+        let span = upper.position - lower.position
+        guard span > 0 else { return false }
+        let logicalDelta = layer.style.gradientOverlayReverse
+            ? -displayedDelta
+            : displayedDelta
+        let movedStops = ImageEditorGradientOverlayStopDraftEditing.movingMidpoint(
+            stops,
+            after: lowerStopIndex,
+            to: lower.midpoint + logicalDelta / span
+        )
+        guard !gradientOverlayStopsMatch(movedStops, stops) else { return false }
+        beginGradientOverlayMidpointUndoTransaction()
+        document.layers[layerIndex].style.setGradientOverlayColorStops(movedStops)
+        appendHistory(L10n.text("imageEditor.history.gradientOverlayMidpointNudged"))
+        finishGradientOverlayMidpointUndoTransaction(didChange: true)
+        return true
+    }
+
     private var singleSelectedGradientOverlayCanvasLayer: ImageEditorLayer? {
         let selectedIDs = document.selectedLayerIDs.isEmpty
             ? Set(document.selectedLayerID.map { [$0] } ?? [])

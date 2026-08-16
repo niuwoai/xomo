@@ -2752,7 +2752,13 @@ struct ImageEditorScopeTests {
 
         #expect(viewSource.contains("onCanvasPointerSequenceBegan: {\n                            beginCanvasPointerSequence()"))
         #expect(viewSource.contains("onCanvasLifecycleInterrupted: { _ in\n                            cancelPathAnchorDragForCanvasLifecycle()"))
-        #expect(viewSource.contains(".onDisappear {\n                    cancelPathAnchorDragForCanvasLifecycle()"))
+        let disappearStart = try #require(viewSource.range(of: ".onDisappear {"))
+        let disappearEnd = try #require(
+            viewSource[disappearStart.upperBound...].range(of: ".onAppear {")
+        )
+        let disappearSource = viewSource[disappearStart.lowerBound..<disappearEnd.lowerBound]
+        #expect(disappearSource.contains("cancelGradientOverlayCanvasHandleDragForLifecycle()"))
+        #expect(disappearSource.contains("cancelPathAnchorDragForCanvasLifecycle()"))
 
         #expect(bridgeSource.contains("interruptCanvasLifecycle(.applicationDeactivated)"))
         #expect(bridgeSource.contains("notification.object as? NSWindow === self.window"))
@@ -3351,7 +3357,18 @@ struct ImageEditorScopeTests {
         #expect(endedSource.contains("let action = pendingPenCreationAction"))
         #expect(endedSource.contains("symmetricControlDrag: action?.symmetricControlDrag"))
         #expect(viewSource.contains("pendingPenCreationAction = nil\n                resetPenAnchorConversionGesture()"))
-        #expect(viewSource.contains(".onDisappear {\n                    cancelPathAnchorDragForCanvasLifecycle()\n                    pendingPenCreationAction = nil"))
+        let disappearStart = try #require(viewSource.range(of: ".onDisappear {"))
+        let disappearEnd = try #require(
+            viewSource[disappearStart.upperBound...].range(of: ".onAppear {")
+        )
+        let disappearSource = viewSource[disappearStart.lowerBound..<disappearEnd.lowerBound]
+        let lifecycleCancel = try #require(
+            disappearSource.range(of: "cancelPathAnchorDragForCanvasLifecycle()")
+        )
+        let pendingCleanup = try #require(
+            disappearSource.range(of: "pendingPenCreationAction = nil")
+        )
+        #expect(lifecycleCancel.lowerBound < pendingCleanup.lowerBound)
     }
 
     @Test func optionClickAndDragConversionCommitOnlyAtPenMouseUp() throws {
