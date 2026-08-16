@@ -619,6 +619,64 @@ struct ImageEditorCanvasCursorTests {
         #expect(viewModel.canvasContentHit(at: CGPoint(x: frame.midX, y: frame.midY)) == .blocked)
     }
 
+    @Test func deepSelectedLayerCursorUsesItsOwnMovabilityBeforeWholeComponentLocks() throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "deep-selected-cursor",
+            image: NSImage.transparent(size: CGSize(width: 640, height: 480))
+        ) { _ in }
+        viewModel.insertXomoComponent(.button, at: CGPoint(x: 80, y: 90))
+        let group = try #require(viewModel.document.selectedLayer)
+        let point = CGPoint(x: 160, y: 112)
+        let target = try #require(
+            viewModel.selectMoveToolDoubleClickTarget(at: point, hitTolerance: 0)
+        )
+        let lockedSiblingIndex = try #require(
+            viewModel.document.layers.firstIndex {
+                $0.groupID == group.id && $0.id != target.layerID
+            }
+        )
+        viewModel.document.layers[lockedSiblingIndex].locksPosition = true
+
+        #expect(viewModel.hasMovableDeepSelectedCanvasLayer(at: point))
+        let deepHit = viewModel.canvasContentHit(at: point)
+        #expect(deepHit == .movable)
+        #expect(
+            ImageEditorCanvasCursor.cursor(
+                for: .tools,
+                selectedTool: .move,
+                brushDiameter: 18,
+                isPointerOverMovableContent: deepHit.isMovable,
+                isPointerOverBlockedContent: deepHit.isBlocked
+            ) === NSCursor.arrow
+        )
+
+        viewModel.selectLayer(group.id)
+        let groupHit = viewModel.canvasContentHit(at: point)
+        #expect(groupHit == .blocked)
+        #expect(
+            ImageEditorCanvasCursor.cursor(
+                for: .tools,
+                selectedTool: .move,
+                brushDiameter: 18,
+                isPointerOverMovableContent: groupHit.isMovable,
+                isPointerOverBlockedContent: groupHit.isBlocked
+            ) === NSCursor.operationNotAllowed
+        )
+
+        viewModel.selectLayer(target.layerID)
+        viewModel.selectLeftSidebarTab(.components)
+        #expect(viewModel.canvasContentHit(at: point) == .blocked)
+        #expect(
+            ImageEditorCanvasCursor.cursor(
+                for: .components,
+                selectedTool: .move,
+                brushDiameter: 18,
+                isPointerOverMovableContent: false,
+                isPointerOverBlockedContent: true
+            ) === NSCursor.arrow
+        )
+    }
+
     @Test func objectDragReleaseKeepsTheLocallyOwnedEventStreamBalanced() {
         let activeMove = ImageEditorObjectDragEventPolicy.releaseDecision(
             eventType: .leftMouseUp,

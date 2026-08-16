@@ -96,6 +96,9 @@ extension ImageEditorViewModel {
     /// CursorRect fallback cannot disagree or scan the layer stack twice for
     /// one mouse-move event.
     func canvasContentHit(at point: CGPoint) -> XomoCanvasContentHit {
+        if hasMovableDeepSelectedCanvasLayer(at: point) {
+            return .movable
+        }
         guard let hit = topmostCanvasContent(at: point) else { return .none }
         return hit.isMovable ? .movable : .blocked
     }
