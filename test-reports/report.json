@@ -1,10 +1,10 @@
 {
-  "generated_at": "2026-08-16 19:02:25 +0800",
+  "generated_at": "2026-08-16 19:15:39 +0800",
   "total": 1,
   "passed": 1,
   "failed": 0,
-  "total_tests": 70,
-  "passed_tests": 70,
+  "total_tests": 71,
+  "passed_tests": 71,
   "failed_tests_in_failed_groups": 0,
   "jobs": 1,
   "results": [
@@ -13,9 +13,9 @@
       "method": null,
       "identifier": "veilpicTests/XomoCanvasObjectTests",
       "file": "XomoCanvasObjectTests.swift",
-      "test_count": 70,
+      "test_count": 71,
       "passed": true,
-      "duration": 5.767,
+      "duration": 5.717,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "XomoCanvasObjectTests.log"

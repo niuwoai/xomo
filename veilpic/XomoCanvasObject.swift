@@ -66,6 +66,27 @@ enum ImageEditorObjectBoxSelectionPolicy {
     }
 }
 
+enum ImageEditorObjectBoxSelectionMode: String, Equatable, CaseIterable {
+    case replace
+    case add
+    case subtract
+    case intersect
+
+    static func resolve(modifierFlags: NSEvent.ModifierFlags) -> Self {
+        let flags = modifierFlags.intersection([.shift, .option])
+        switch flags {
+        case [.shift, .option]:
+            return .intersect
+        case [.shift]:
+            return .add
+        case [.option]:
+            return .subtract
+        default:
+            return .replace
+        }
+    }
+}
+
 struct ImageEditorObjectBoxSelectionTarget: Equatable, Identifiable {
     let id: UUID
     let frame: CGRect
@@ -237,30 +258,62 @@ extension ImageEditorViewModel {
         moveToolBoxSelectionTargets(in: selectionRect).map(\.id)
     }
 
+    func moveToolBoxSelectionPreviewTargets(
+        in selectionRect: CGRect,
+        mode: ImageEditorObjectBoxSelectionMode
+    ) -> [ImageEditorObjectBoxSelectionTarget] {
+        let targets = moveToolBoxSelectionTargets(in: selectionRect)
+        switch mode {
+        case .replace:
+            return targets
+        case .add:
+            return targets.filter { !document.selectedLayerIDs.contains($0.id) }
+        case .subtract, .intersect:
+            return targets.filter { document.selectedLayerIDs.contains($0.id) }
+        }
+    }
+
     /// Applies a Sketch/Figma-style intersection sweep as a selection-only
     /// operation. It intentionally does not create History or Undo entries.
     @discardableResult
     func applyMoveToolBoxSelection(
         in selectionRect: CGRect,
-        extendingSelection: Bool
+        mode: ImageEditorObjectBoxSelectionMode
     ) -> Bool {
         let targetIDs = moveToolBoxSelectionTargetIDs(in: selectionRect)
         let previousIDs = document.selectedLayerIDs
+        let targetIDSet = Set(targetIDs)
+        let desiredIDSet: Set<UUID> = switch mode {
+        case .replace:
+            targetIDSet
+        case .add:
+            previousIDs.union(targetIDSet)
+        case .subtract:
+            previousIDs.subtracting(targetIDSet)
+        case .intersect:
+            previousIDs.intersection(targetIDSet)
+        }
+        guard desiredIDSet != previousIDs else { return false }
 
-        if extendingSelection {
-            for id in targetIDs where !document.selectedLayerIDs.contains(id) {
-                selectLayer(id, extendingSelection: true)
-            }
-        } else if let firstID = targetIDs.first {
+        var desiredIDs = document.layers.compactMap { layer in
+            desiredIDSet.contains(layer.id) ? layer.id : nil
+        }
+        if mode != .replace,
+           let primaryID = document.selectedLayerID,
+           let primaryIndex = desiredIDs.firstIndex(of: primaryID) {
+            desiredIDs.remove(at: primaryIndex)
+            desiredIDs.append(primaryID)
+        }
+
+        if let firstID = desiredIDs.first {
             selectLayer(firstID)
-            for id in targetIDs.dropFirst() where !document.selectedLayerIDs.contains(id) {
+            for id in desiredIDs.dropFirst() {
                 selectLayer(id, extendingSelection: true)
             }
         } else {
             clearLayerSelection()
         }
 
-        guard document.selectedLayerIDs != previousIDs else { return false }
         statusText = document.selectedLayerIDs.isEmpty
             ? L10n.text("imageEditor.status.layerSelectionCleared")
             : L10n.format(

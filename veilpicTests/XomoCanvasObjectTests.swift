@@ -55,7 +55,7 @@ struct XomoCanvasObjectTests {
 
         #expect(viewModel.applyMoveToolBoxSelection(
             in: CGRect(x: 10, y: 20, width: 65, height: 55),
-            extendingSelection: false
+            mode: .replace
         ))
         #expect(viewModel.document.selectedLayerIDs == [first.id])
         #expect(viewModel.document.history.count == historyCount)
@@ -160,19 +160,83 @@ struct XomoCanvasObjectTests {
 
         #expect(viewModel.applyMoveToolBoxSelection(
             in: CGRect(x: 110, y: 110, width: 50, height: 50),
-            extendingSelection: true
+            mode: .add
         ))
         #expect(viewModel.document.selectedLayerIDs == [first.id, second.id])
         #expect(!viewModel.applyMoveToolBoxSelection(
             in: CGRect(x: 400, y: 400, width: 20, height: 20),
-            extendingSelection: true
+            mode: .add
         ))
         #expect(viewModel.document.selectedLayerIDs == [first.id, second.id])
         #expect(viewModel.applyMoveToolBoxSelection(
             in: CGRect(x: 400, y: 400, width: 20, height: 20),
-            extendingSelection: false
+            mode: .replace
         ))
         #expect(viewModel.document.selectedLayerIDs.isEmpty)
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.undoStack.count == undoCount)
+    }
+
+    @Test func optionBoxSelectionSubtractsAndShiftOptionIntersectsWithoutHistory() {
+        let viewModel = makeViewModel()
+        viewModel.document.layers = []
+        viewModel.document.selectedLayerID = nil
+        viewModel.document.selectedLayerIDs = []
+        let xPositions: [CGFloat] = [20, 120, 220]
+        let layers = xPositions.enumerated().map { index, x -> ImageEditorLayer in
+            var layer = ImageEditorLayer.solidColorFill(
+                name: "Layer \(index)",
+                size: CGSize(width: 40, height: 40),
+                content: ImageEditorSolidColorFillContent(
+                    red: index == 0 ? 1 : 0,
+                    green: index == 1 ? 1 : 0,
+                    blue: index == 2 ? 1 : 0
+                )
+            )
+            layer.frame.origin = CGPoint(x: x, y: 40)
+            return layer
+        }
+        viewModel.document.layers = layers
+        viewModel.moveToolAutoSelectTarget = .layer
+        viewModel.selectLayer(layers[0].id)
+        viewModel.selectLayer(layers[1].id, extendingSelection: true)
+        viewModel.selectLayer(layers[2].id, extendingSelection: true)
+        let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
+
+        #expect(ImageEditorObjectBoxSelectionMode.resolve(modifierFlags: []) == .replace)
+        #expect(ImageEditorObjectBoxSelectionMode.resolve(modifierFlags: [.shift]) == .add)
+        #expect(ImageEditorObjectBoxSelectionMode.resolve(modifierFlags: [.option]) == .subtract)
+        #expect(ImageEditorObjectBoxSelectionMode.resolve(
+            modifierFlags: [.shift, .option]
+        ) == .intersect)
+
+        #expect(viewModel.applyMoveToolBoxSelection(
+            in: CGRect(x: 110, y: 30, width: 60, height: 60),
+            mode: .subtract
+        ))
+        #expect(viewModel.document.selectedLayerIDs == [layers[0].id, layers[2].id])
+        #expect(viewModel.applyMoveToolBoxSelection(
+            in: CGRect(x: 110, y: 30, width: 60, height: 60),
+            mode: .add
+        ))
+        #expect(viewModel.document.selectedLayerIDs == Set(layers.map(\.id)))
+        #expect(viewModel.applyMoveToolBoxSelection(
+            in: CGRect(x: 110, y: 30, width: 160, height: 60),
+            mode: .intersect
+        ))
+        #expect(viewModel.document.selectedLayerIDs == [layers[1].id, layers[2].id])
+
+        let subtractPreview = viewModel.moveToolBoxSelectionPreviewTargets(
+            in: CGRect(x: 10, y: 30, width: 160, height: 60),
+            mode: .subtract
+        )
+        let addPreview = viewModel.moveToolBoxSelectionPreviewTargets(
+            in: CGRect(x: 10, y: 30, width: 260, height: 60),
+            mode: .add
+        )
+        #expect(subtractPreview.map(\.id) == [layers[1].id])
+        #expect(addPreview.map(\.id) == [layers[0].id])
         #expect(viewModel.document.history.count == historyCount)
         #expect(viewModel.undoStack.count == undoCount)
     }
@@ -190,7 +254,9 @@ struct XomoCanvasObjectTests {
         #expect(source.contains("viewModel.moveToolContentHit(at: pressedImagePoint) == .none"))
         #expect(source.contains("objectSelectionBoxDrag = ImageEditorObjectSelectionBoxDrag("))
         #expect(source.contains("viewModel.applyMoveToolBoxSelection("))
-        #expect(source.contains("viewModel.moveToolBoxSelectionTargets(in: selectionRect)"))
+        #expect(source.contains("viewModel.moveToolBoxSelectionPreviewTargets("))
+        #expect(source.contains("boxSelectionOwnsModifiedBlankDrag"))
+        #expect(source.contains("mode: ImageEditorObjectBoxSelectionMode.resolve("))
         #expect(source.contains("moveToolUsesBoxSelection: viewModel.moveToolAutoSelectsCanvasTarget"))
         #expect(source.contains("onCanvasLifecycleInterrupted: { _ in\n                            objectSelectionBoxDrag = nil"))
         #expect(source.contains("if objectSelectionBoxDrag != nil {\n                        objectSelectionBoxDrag = nil"))
@@ -1025,7 +1091,7 @@ struct XomoCanvasObjectTests {
         #expect(source.contains("guard viewModel.moveToolAutoSelectsCanvasTarget else { return }"))
         #expect(source.contains("if viewModel.moveToolAutoSelectsCanvasTarget,"))
         #expect(source.contains("viewModel.prepareCanvasFallbackMove("))
-        #expect(source.components(separatedBy: "viewModel.moveToolContentHit(at:").count == 4)
+        #expect(source.components(separatedBy: "viewModel.moveToolContentHit(at:").count == 5)
     }
 
     @Test func commandShiftCanvasSelectionAddsAVisibleComponentChild() throws {

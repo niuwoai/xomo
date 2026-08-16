@@ -82,7 +82,7 @@ private struct ImageEditorObjectSelectionBoxDrag: Equatable {
     let startCanvasPoint: CGPoint
     var endCanvasPoint: CGPoint
     var viewTranslation: CGSize
-    let extendsSelection: Bool
+    let mode: ImageEditorObjectBoxSelectionMode
 
     var selectionRect: CGRect? {
         ImageEditorObjectBoxSelectionPolicy.selectionRect(
@@ -4062,7 +4062,11 @@ struct ImageEditorView: View {
                         from: value.startLocation,
                         to: value.location
                     )
+                    let cloneStartImagePoint = imagePoint(from: value.startLocation, in: size)
+                    let boxSelectionOwnsModifiedBlankDrag = viewModel.moveToolAutoSelectsCanvasTarget
+                        && cloneStartImagePoint.map(viewModel.moveToolContentHit(at:)) == .some(.none)
                     if cloneDragDecision != .unavailable,
+                       !boxSelectionOwnsModifiedBlankDrag,
                        !isCanvasSelectionGestureActive,
                        !isObjectMoveGestureActive {
                         if cloneDragDecision == .activate,
@@ -4127,7 +4131,9 @@ struct ImageEditorView: View {
                                 startCanvasPoint: pressedImagePoint,
                                 endCanvasPoint: boundedImagePoint(from: value.location, in: size),
                                 viewTranslation: value.translation,
-                                extendsSelection: NSEvent.modifierFlags.contains(.shift)
+                                mode: ImageEditorObjectBoxSelectionMode.resolve(
+                                    modifierFlags: NSEvent.modifierFlags
+                                )
                             )
                             break
                         }
@@ -4504,9 +4510,9 @@ struct ImageEditorView: View {
                        let selectionRect = selectionBoxDrag.selectionRect {
                         viewModel.applyMoveToolBoxSelection(
                             in: selectionRect,
-                            extendingSelection: selectionBoxDrag.extendsSelection
+                            mode: selectionBoxDrag.mode
                         )
-                    } else if !selectionBoxDrag.extendsSelection {
+                    } else if selectionBoxDrag.mode == .replace {
                         viewModel.clearLayerSelection()
                     }
                     objectSelectionBoxDrag = nil
@@ -7125,7 +7131,18 @@ struct ImageEditorView: View {
         if let selectionBoxDrag = objectSelectionBoxDrag,
            selectionBoxDrag.isActivated,
            let selectionRect = selectionBoxDrag.selectionRect {
-            let previewTargets = viewModel.moveToolBoxSelectionTargets(in: selectionRect)
+            let previewTargets = viewModel.moveToolBoxSelectionPreviewTargets(
+                in: selectionRect,
+                mode: selectionBoxDrag.mode
+            )
+            let previewColor = switch selectionBoxDrag.mode {
+            case .replace, .add:
+                Color(nsColor: ImageEditorTheme.selected)
+            case .subtract:
+                Color(nsColor: .systemRed)
+            case .intersect:
+                Color(nsColor: .systemPurple)
+            }
             let start = viewPoint(from: selectionRect.origin, in: size)
             let end = viewPoint(
                 from: CGPoint(x: selectionRect.maxX, y: selectionRect.maxY),
@@ -7165,7 +7182,7 @@ struct ImageEditorView: View {
                         )
                         context.stroke(
                             Path(targetViewRect),
-                            with: .color(Color(nsColor: ImageEditorTheme.selected)),
+                            with: .color(previewColor),
                             lineWidth: 1.5
                         )
                     }
@@ -12908,7 +12925,13 @@ enum ImageEditorCanvasCursor {
                 return .operationNotAllowed
             }
             if selectedTool == .move, !isPointerOverMovableContent {
-                return moveToolUsesBoxSelection ? .arrow : .openHand
+                return moveToolUsesBoxSelection
+                    ? objectBoxSelectionCursor(
+                        mode: ImageEditorObjectBoxSelectionMode.resolve(
+                            modifierFlags: modifierFlags
+                        )
+                    )
+                    : .openHand
             }
             if selectedTool == .move {
                 // Sketch and Figma keep the ordinary pointer while hovering a
@@ -13161,6 +13184,46 @@ enum ImageEditorCanvasCursor {
     /// hands exclusively for the document viewport.
     static func objectMoveCursor(isDuplicating: Bool = false) -> NSCursor {
         moveToolCursor(isDuplicating: isDuplicating)
+    }
+
+    /// Object-box selection keeps the precise native arrow and adds only the
+    /// compact set-operation badge used by familiar selection tools.
+    static func objectBoxSelectionCursor(
+        mode: ImageEditorObjectBoxSelectionMode
+    ) -> NSCursor {
+        guard mode != .replace else { return .arrow }
+        let cacheKey = "object-box-selection:\(mode.rawValue)"
+        if let cachedCursor = cursorCache[cacheKey] {
+            return cachedCursor
+        }
+
+        let arrowCursor = NSCursor.arrow
+        let arrowImage = arrowCursor.image
+        let side = max(34, arrowImage.size.width, arrowImage.size.height)
+        let image = NSImage(size: NSSize(width: side, height: side))
+        image.lockFocus()
+        arrowImage.draw(
+            in: NSRect(origin: .zero, size: arrowImage.size),
+            from: .zero,
+            operation: .sourceOver,
+            fraction: 1
+        )
+        let selectionMode: ImageEditorSelectionCursorMode = switch mode {
+        case .replace:
+            .replace
+        case .add:
+            .add
+        case .subtract:
+            .subtract
+        case .intersect:
+            .intersect
+        }
+        drawSelectionModifierBadge(selectionMode, side: side)
+        image.unlockFocus()
+        return cache(
+            NSCursor(image: image, hotSpot: arrowCursor.hotSpot),
+            for: cacheKey
+        )
     }
 
     /// Photoshop exposes Option-click as the familiar way to remove an

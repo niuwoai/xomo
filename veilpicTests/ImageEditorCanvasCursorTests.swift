@@ -520,6 +520,42 @@ struct ImageEditorCanvasCursorTests {
         )
         #expect(boxSelectionMove === NSCursor.arrow)
 
+        let additiveBoxSelection = ImageEditorCanvasCursor.cursor(
+            for: .tools,
+            selectedTool: .move,
+            brushDiameter: 18,
+            isPointerOverMovableContent: false,
+            moveToolUsesBoxSelection: true,
+            modifierFlags: [.shift]
+        )
+        let subtractiveBoxSelection = ImageEditorCanvasCursor.cursor(
+            for: .tools,
+            selectedTool: .move,
+            brushDiameter: 18,
+            isPointerOverMovableContent: false,
+            moveToolUsesBoxSelection: true,
+            modifierFlags: [.option]
+        )
+        let intersectingBoxSelection = ImageEditorCanvasCursor.cursor(
+            for: .tools,
+            selectedTool: .move,
+            brushDiameter: 18,
+            isPointerOverMovableContent: false,
+            moveToolUsesBoxSelection: true,
+            modifierFlags: [.shift, .option]
+        )
+        #expect(additiveBoxSelection !== NSCursor.arrow)
+        #expect(subtractiveBoxSelection !== NSCursor.arrow)
+        #expect(intersectingBoxSelection !== NSCursor.arrow)
+        #expect(
+            additiveBoxSelection.image.tiffRepresentation
+                != subtractiveBoxSelection.image.tiffRepresentation
+        )
+        #expect(
+            subtractiveBoxSelection.image.tiffRepresentation
+                != intersectingBoxSelection.image.tiffRepresentation
+        )
+
         let blockedContentMove = ImageEditorCanvasCursor.cursor(
             for: .tools,
             selectedTool: .move,
