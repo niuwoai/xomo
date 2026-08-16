@@ -522,6 +522,21 @@ struct ImageEditorView: View {
                 .accessibilityIdentifier("image-editor-selected-tool")
                 .accessibilityValue(viewModel.selectedTool.rawValue)
 
+            if viewModel.selectedTool == .move {
+                Toggle(
+                    L10n.text("imageEditor.action.transformControlsVisible"),
+                    isOn: Binding(
+                        get: { viewModel.document.areTransformControlsVisible },
+                        set: { _ in viewModel.toggleTransformControlsVisible() }
+                    )
+                )
+                .toggleStyle(.checkbox)
+                .focusable(false)
+                .fixedSize()
+                .help(L10n.text("imageEditor.action.transformControlsVisible"))
+                .accessibilityIdentifier("image-editor-move-transform-controls")
+            }
+
             if viewModel.selectedTool.supportsSelectionMode {
                 selectionModePicker
             }

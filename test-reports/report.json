@@ -1,84 +1,60 @@
 {
-  "generated_at": "2026-08-16 14:24:43 +0800",
-  "total": 6,
-  "passed": 6,
+  "generated_at": "2026-08-16 14:33:38 +0800",
+  "total": 4,
+  "passed": 4,
   "failed": 0,
-  "total_tests": 6,
-  "passed_tests": 6,
+  "total_tests": 4,
+  "passed_tests": 4,
   "failed_tests_in_failed_groups": 0,
   "jobs": 1,
   "results": [
     {
-      "suite": "ImageEditorLayerStyleTests",
-      "method": "optionDraggingGradientOverlayCanvasStopDuplicatesOnceWithReverseAndSnap",
-      "identifier": "veilpicTests/ImageEditorLayerStyleTests/optionDraggingGradientOverlayCanvasStopDuplicatesOnceWithReverseAndSnap()",
-      "file": "ImageEditorLayerStyleTests.swift",
+      "suite": "ImageEditorCanvasCursorTests",
+      "method": "compactLayerTransformControlsPreserveAnInteriorMoveTarget",
+      "identifier": "veilpicTests/ImageEditorCanvasCursorTests/compactLayerTransformControlsPreserveAnInteriorMoveTarget()",
+      "file": "ImageEditorCanvasCursorTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.17,
+      "duration": 3.221,
       "infrastructure_retries": 0,
       "issues": [],
-      "log": "ImageEditorLayerStyleTests.optionDraggingGradientOverlayCanvasStopDuplicatesOnceWithReverseAndSnap.log"
+      "log": "ImageEditorCanvasCursorTests.compactLayerTransformControlsPreserveAnInteriorMoveTarget.log"
     },
     {
-      "suite": "ImageEditorVectorLayerTests",
-      "method": "optionDragConvertsCornerAnchorToSmoothAsOneUndoableEdit",
-      "identifier": "veilpicTests/ImageEditorVectorLayerTests/optionDragConvertsCornerAnchorToSmoothAsOneUndoableEdit()",
-      "file": "ImageEditorVectorLayerTests.swift",
+      "suite": "ImageEditorCanvasCursorTests",
+      "method": "layerTransformControlsUseFamiliarResizeAndRotateCursors",
+      "identifier": "veilpicTests/ImageEditorCanvasCursorTests/layerTransformControlsUseFamiliarResizeAndRotateCursors()",
+      "file": "ImageEditorCanvasCursorTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.306,
+      "duration": 3.964,
       "infrastructure_retries": 0,
       "issues": [],
-      "log": "ImageEditorVectorLayerTests.optionDragConvertsCornerAnchorToSmoothAsOneUndoableEdit.log"
+      "log": "ImageEditorCanvasCursorTests.layerTransformControlsUseFamiliarResizeAndRotateCursors.log"
     },
     {
-      "suite": "ImageEditorVectorLayerTests",
-      "method": "optionDragSelectsAndSmoothsAnUnselectedVisibleAnchor",
-      "identifier": "veilpicTests/ImageEditorVectorLayerTests/optionDragSelectsAndSmoothsAnUnselectedVisibleAnchor()",
-      "file": "ImageEditorVectorLayerTests.swift",
+      "suite": "ImageEditorScopeTests",
+      "method": "imageEditorCanHideTransformControlsWithoutChangingSelectedLayerFrame",
+      "identifier": "veilpicTests/ImageEditorScopeTests/imageEditorCanHideTransformControlsWithoutChangingSelectedLayerFrame()",
+      "file": "ImageEditorScopeTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.183,
+      "duration": 3.328,
       "infrastructure_retries": 0,
       "issues": [],
-      "log": "ImageEditorVectorLayerTests.optionDragSelectsAndSmoothsAnUnselectedVisibleAnchor.log"
+      "log": "ImageEditorScopeTests.imageEditorCanHideTransformControlsWithoutChangingSelectedLayerFrame.log"
     },
     {
-      "suite": "XomoCanvasObjectTests",
-      "method": "optionDragDuplicatesAndMovesAComponentAsOneUndoableAction",
-      "identifier": "veilpicTests/XomoCanvasObjectTests/optionDragDuplicatesAndMovesAComponentAsOneUndoableAction()",
-      "file": "XomoCanvasObjectTests.swift",
+      "suite": "XomoLeftSidebarTests",
+      "method": "moveToolOptionBarExposesTransformControlsWithoutLeakingIntoComponents",
+      "identifier": "veilpicTests/XomoLeftSidebarTests/moveToolOptionBarExposesTransformControlsWithoutLeakingIntoComponents()",
+      "file": "XomoLeftSidebarTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.27,
+      "duration": 3.278,
       "infrastructure_retries": 0,
       "issues": [],
-      "log": "XomoCanvasObjectTests.optionDragDuplicatesAndMovesAComponentAsOneUndoableAction.log"
-    },
-    {
-      "suite": "XomoCanvasObjectTests",
-      "method": "optionDragDuplicatesOnlyTheDeepSelectedComponentChild",
-      "identifier": "veilpicTests/XomoCanvasObjectTests/optionDragDuplicatesOnlyTheDeepSelectedComponentChild()",
-      "file": "XomoCanvasObjectTests.swift",
-      "test_count": 1,
-      "passed": true,
-      "duration": 3.218,
-      "infrastructure_retries": 0,
-      "issues": [],
-      "log": "XomoCanvasObjectTests.optionDragDuplicatesOnlyTheDeepSelectedComponentChild.log"
-    },
-    {
-      "suite": "XomoCanvasObjectTests",
-      "method": "optionDragDuplicatesSelectedOrdinaryLayer",
-      "identifier": "veilpicTests/XomoCanvasObjectTests/optionDragDuplicatesSelectedOrdinaryLayer()",
-      "file": "XomoCanvasObjectTests.swift",
-      "test_count": 1,
-      "passed": true,
-      "duration": 3.186,
-      "infrastructure_retries": 0,
-      "issues": [],
-      "log": "XomoCanvasObjectTests.optionDragDuplicatesSelectedOrdinaryLayer.log"
+      "log": "XomoLeftSidebarTests.moveToolOptionBarExposesTransformControlsWithoutLeakingIntoComponents.log"
     }
   ]
 }

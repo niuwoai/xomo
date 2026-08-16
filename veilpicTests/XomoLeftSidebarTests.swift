@@ -644,6 +644,33 @@ struct XomoLeftSidebarTests {
         #expect(!hintSource.contains("viewModel.selectedTool"))
     }
 
+    @Test func moveToolOptionBarExposesTransformControlsWithoutLeakingIntoComponents() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let toolStart = try #require(source.range(of: "private var toolOptionBar: some View"))
+        let componentStart = try #require(
+            source[toolStart.upperBound...].range(of: "private func componentLibraryOptionBar(")
+        )
+        let toolSource = source[toolStart.lowerBound..<componentStart.lowerBound]
+        let componentEnd = try #require(
+            source[componentStart.upperBound...].range(of: "private var optionHistoryButtons:")
+        )
+        let componentSource = source[componentStart.lowerBound..<componentEnd.lowerBound]
+
+        #expect(toolSource.contains("if viewModel.selectedTool == .move {"))
+        #expect(toolSource.contains("imageEditor.action.transformControlsVisible"))
+        #expect(toolSource.contains("get: { viewModel.document.areTransformControlsVisible }"))
+        #expect(toolSource.contains("set: { _ in viewModel.toggleTransformControlsVisible() }"))
+        #expect(toolSource.contains("image-editor-move-transform-controls"))
+        #expect(!componentSource.contains("image-editor-move-transform-controls"))
+        #expect(!componentSource.contains("toggleTransformControlsVisible"))
+    }
+
     @Test func componentSidebarWiresMoveSemanticsIntoCanvasCursorAndGestures() throws {
         let repositoryRoot = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()
