@@ -7177,20 +7177,42 @@ struct ImageEditorView: View {
                 modifierFlags: canvasModifierFlags
            ), !viewModel.document.selectedLayerIDs.contains(target.id) {
             let rect = viewRect(from: target.frame, in: size)
-            Rectangle()
-                .stroke(
-                    target.isBlocked
-                        ? Color(nsColor: .systemRed).opacity(0.9)
-                        : Color(nsColor: ImageEditorTheme.selected).opacity(0.82),
-                    style: StrokeStyle(
-                        lineWidth: 1,
-                        dash: target.isBlocked ? [4, 3] : []
+            let accent = target.isBlocked
+                ? Color(nsColor: .systemRed)
+                : Color(nsColor: ImageEditorTheme.selected)
+            let labelHalfWidth: CGFloat = 74
+            let labelX = size.width >= labelHalfWidth * 2
+                ? min(max(rect.midX, labelHalfWidth), size.width - labelHalfWidth)
+                : size.width / 2
+            let labelY = min(max(rect.minY + 10, 10), max(10, size.height - 10))
+            ZStack {
+                Rectangle()
+                    .stroke(
+                        accent.opacity(target.isBlocked ? 0.9 : 0.82),
+                        style: StrokeStyle(
+                            lineWidth: 1,
+                            dash: target.isBlocked ? [4, 3] : []
+                        )
                     )
-                )
-                .frame(width: max(1, rect.width), height: max(1, rect.height))
-                .position(x: rect.midX, y: rect.midY)
-                .allowsHitTesting(false)
-                .accessibilityHidden(true)
+                    .frame(width: max(1, rect.width), height: max(1, rect.height))
+                    .position(x: rect.midX, y: rect.midY)
+
+                if !target.name.isEmpty {
+                    Text(verbatim: target.name)
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundStyle(.white)
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+                        .padding(.horizontal, 5)
+                        .frame(maxWidth: labelHalfWidth * 2, minHeight: 18)
+                        .background(accent.opacity(0.92))
+                        .clipShape(RoundedRectangle(cornerRadius: 3, style: .continuous))
+                        .position(x: labelX, y: labelY)
+                }
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .allowsHitTesting(false)
+            .accessibilityHidden(true)
         }
     }
 

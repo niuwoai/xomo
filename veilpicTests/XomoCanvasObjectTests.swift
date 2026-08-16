@@ -395,6 +395,7 @@ struct XomoCanvasObjectTests {
         #expect(source.contains("moveToolHoverOutlineOverlay(in: geometry.size)"))
         #expect(source.contains("ImageEditorMoveToolHoverOutlinePolicy.shouldShow("))
         #expect(source.contains("viewModel.moveToolHoverTarget("))
+        #expect(source.contains("Text(verbatim: target.name)"))
         #expect(source.contains(".option,\n                        .command,"))
         #expect(source.contains("!viewModel.document.selectedLayerIDs.contains(target.id)"))
         #expect(source.contains("viewModel.moveToolContentHit(at: pressedImagePoint) == .none"))
@@ -1178,6 +1179,7 @@ struct XomoCanvasObjectTests {
         #expect(viewModel.moveToolAutoSelectLayer(at: point)?.id == outerGroup.id)
         let groupHover = try #require(viewModel.moveToolHoverTarget(at: point))
         #expect(groupHover.id == outerGroup.id)
+        #expect(groupHover.name == "Outer")
         #expect(groupHover.frame == leaf.frame.union(lockedSibling.frame))
         #expect(groupHover.isBlocked)
         let deepHover = try #require(viewModel.moveToolHoverTarget(
@@ -1185,6 +1187,7 @@ struct XomoCanvasObjectTests {
             modifierFlags: [.command]
         ))
         #expect(deepHover.id == leaf.id)
+        #expect(deepHover.name == "Leaf")
         #expect(deepHover.frame == leaf.frame)
         #expect(!deepHover.isBlocked)
         #expect(viewModel.moveToolContentHit(at: point) == .blocked)
@@ -1202,6 +1205,7 @@ struct XomoCanvasObjectTests {
         let viewModel = makeViewModel()
         viewModel.insertXomoComponent(.button, at: CGPoint(x: 80, y: 90))
         let groupID = try #require(viewModel.document.selectedLayerID)
+        let groupName = try #require(viewModel.document.selectedLayer?.name)
         let point = CGPoint(x: 160, y: 112)
         let backgroundID = try #require(viewModel.document.layers.first?.id)
         viewModel.selectLayer(backgroundID)
@@ -1227,6 +1231,7 @@ struct XomoCanvasObjectTests {
             at: point,
             modifierFlags: [.command]
         )?.id == groupID)
+        #expect(viewModel.moveToolHoverTarget(at: point)?.name == groupName)
         var ordinary = ImageEditorLayer.solidColorFill(
             name: "Ordinary",
             size: CGSize(width: 30, height: 30),
@@ -1238,6 +1243,10 @@ struct XomoCanvasObjectTests {
             x: ordinary.frame.midX,
             y: ordinary.frame.midY
         ))?.id == ordinary.id)
+        #expect(viewModel.moveToolHoverTarget(at: CGPoint(
+            x: ordinary.frame.midX,
+            y: ordinary.frame.midY
+        ))?.name == "Ordinary")
         #expect(viewModel.selectMovableCanvasTarget(at: point))
         #expect(viewModel.document.selectedLayerID == groupID)
         #expect(viewModel.document.selectedLayerIDs == [groupID])

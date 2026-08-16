@@ -130,6 +130,7 @@ struct ImageEditorObjectBoxSelectionTarget: Equatable, Identifiable {
 
 struct ImageEditorMoveToolHoverTarget: Equatable, Identifiable {
     let id: UUID
+    let name: String
     let frame: CGRect
     let isBlocked: Bool
 }
@@ -453,8 +454,11 @@ extension ImageEditorViewModel {
 
         if selectedLeftSidebarTab == .components {
             if let object = topmostXomoObject(at: point) {
+                let groupName = document.layers.first(where: { $0.id == object.groupID })?.name
+                let name = groupName.flatMap { $0.isEmpty ? nil : $0 } ?? object.kind.title
                 return ImageEditorMoveToolHoverTarget(
                     id: object.groupID,
+                    name: name,
                     frame: object.frame.standardized,
                     isBlocked: moveToolContentHit(at: point).isBlocked
                 )
@@ -464,6 +468,7 @@ extension ImageEditorViewModel {
             }
             return ImageEditorMoveToolHoverTarget(
                 id: leaf.id,
+                name: leaf.name,
                 frame: leaf.frame.standardized,
                 isBlocked: document.isEffectivelyPositionLocked(leaf)
             )
@@ -489,6 +494,7 @@ extension ImageEditorViewModel {
         guard let frame = moveToolVisibleBounds(for: target) else { return nil }
         return ImageEditorMoveToolHoverTarget(
             id: target.id,
+            name: target.name,
             frame: frame,
             isBlocked: !isMoveToolAutoSelectTargetMovable(target)
         )
