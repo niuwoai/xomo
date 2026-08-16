@@ -7040,16 +7040,9 @@ struct ImageEditorView: View {
             modifierFlags: canvasModifierFlags,
             hasActiveInteraction: hasActiveInteraction
         ), let hoverViewPoint,
-           let canvasPoint = imagePoint(from: hoverViewPoint, in: size),
-           let sourceFrame = viewModel.selectedXomoObjectFrame
-                ?? viewModel.selectedLayerTransformFrame,
-           let targetFrame = viewModel.moveToolDistanceInspectionTargetFrame(at: canvasPoint)
+           let canvasPoint = imagePoint(from: hoverViewPoint, in: size)
         else { return [] }
-
-        return ImageEditorObjectDistanceMeasurement.guides(
-            from: sourceFrame,
-            to: targetFrame
-        )
+        return viewModel.moveToolDistanceInspectionGuides(at: canvasPoint)
     }
 
     private func spacingGuidePath(_ guide: ImageEditorSpacingGuide, in size: CGSize) -> Path {

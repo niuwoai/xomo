@@ -182,6 +182,19 @@ extension ImageEditorViewModel {
             }
     }
 
+    func moveToolDistanceInspectionGuides(at point: CGPoint) -> [ImageEditorSpacingGuide] {
+        guard let sourceFrame = selectedXomoObjectFrame ?? selectedLayerTransformFrame,
+              let targetFrame = ImageEditorObjectDistanceInspectionTargetResolver.frame(
+                hoveredObjectFrame: moveToolDistanceInspectionTargetFrame(at: point),
+                canvasSize: document.canvasSize
+              )
+        else { return [] }
+        return ImageEditorObjectDistanceMeasurement.guides(
+            from: sourceFrame,
+            to: targetFrame
+        )
+    }
+
     /// Resolves the visible leaf first, then optionally promotes it to the
     /// outermost ordinary/component group. This matches Photoshop's Group
     /// scope and Figma's first-click container selection.

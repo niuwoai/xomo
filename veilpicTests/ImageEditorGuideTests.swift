@@ -46,6 +46,37 @@ struct ImageEditorGuideTests {
     }
 
     @Test
+    func objectDistanceTargetPrefersHoveredObjectAndFallsBackToCanvas() {
+        let hovered = CGRect(x: 80, y: 30, width: 40, height: 20)
+        let canvasSize = CGSize(width: 240, height: 160)
+
+        #expect(
+            ImageEditorObjectDistanceInspectionTargetResolver.frame(
+                hoveredObjectFrame: hovered,
+                canvasSize: canvasSize
+            ) == hovered
+        )
+        #expect(
+            ImageEditorObjectDistanceInspectionTargetResolver.frame(
+                hoveredObjectFrame: nil,
+                canvasSize: canvasSize
+            ) == CGRect(origin: .zero, size: canvasSize)
+        )
+        #expect(
+            ImageEditorObjectDistanceInspectionTargetResolver.frame(
+                hoveredObjectFrame: nil,
+                canvasSize: CGSize(width: 0, height: 160)
+            ) == nil
+        )
+        #expect(
+            ImageEditorObjectDistanceInspectionTargetResolver.frame(
+                hoveredObjectFrame: CGRect(x: CGFloat.infinity, y: 0, width: 40, height: 20),
+                canvasSize: canvasSize
+            ) == nil
+        )
+    }
+
+    @Test
     func objectDistanceMeasurementUsesNearestOrthogonalEdges() {
         let source = CGRect(x: 10, y: 20, width: 20, height: 20)
         let rightTarget = CGRect(x: 50, y: 25, width: 30, height: 10)
@@ -297,7 +328,7 @@ struct ImageEditorGuideTests {
         )
         #expect(targetFrame == background.frame)
         #expect(
-            ImageEditorObjectDistanceMeasurement.guides(from: child.frame, to: targetFrame)
+            viewModel.moveToolDistanceInspectionGuides(at: hoverPoint)
                 .map(\.distance) == [30, 60, 20, 40]
         )
         #expect(viewModel.document.selectedLayerID == child.id)
@@ -328,9 +359,33 @@ struct ImageEditorGuideTests {
             ) == firstFrame
         )
         #expect(
+            ImageEditorObjectDistanceInspectionTargetResolver.frame(
+                hoveredObjectFrame: firstFrame,
+                canvasSize: viewModel.document.canvasSize
+            ) == firstFrame
+        )
+        #expect(
             viewModel.moveToolDistanceInspectionTargetFrame(
                 at: CGPoint(x: secondFrame.midX, y: secondFrame.midY)
             ) == nil
+        )
+        let canvasFrame = try #require(
+            ImageEditorObjectDistanceInspectionTargetResolver.frame(
+                hoveredObjectFrame: nil,
+                canvasSize: viewModel.document.canvasSize
+            )
+        )
+        #expect(canvasFrame == CGRect(origin: .zero, size: viewModel.document.canvasSize))
+        #expect(
+            viewModel.moveToolDistanceInspectionGuides(
+                at: CGPoint(x: secondFrame.midX, y: secondFrame.midY)
+            )
+                .map(\.distance) == [
+                    secondFrame.minX,
+                    canvasFrame.maxX - secondFrame.maxX,
+                    secondFrame.minY,
+                    canvasFrame.maxY - secondFrame.maxY
+                ]
         )
         #expect(viewModel.document.selectedLayerID == secondID)
     }

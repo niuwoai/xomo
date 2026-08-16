@@ -25,6 +25,31 @@ enum ImageEditorObjectDistanceInspectionPolicy {
     }
 }
 
+enum ImageEditorObjectDistanceInspectionTargetResolver {
+    static func frame(
+        hoveredObjectFrame: CGRect?,
+        canvasSize: CGSize
+    ) -> CGRect? {
+        if let hoveredObjectFrame {
+            let frame = hoveredObjectFrame.standardized
+            guard frame.minX.isFinite,
+                  frame.minY.isFinite,
+                  frame.maxX.isFinite,
+                  frame.maxY.isFinite,
+                  frame.width > 0,
+                  frame.height > 0
+            else { return nil }
+            return frame
+        }
+        guard canvasSize.width.isFinite,
+              canvasSize.height.isFinite,
+              canvasSize.width > 0,
+              canvasSize.height > 0
+        else { return nil }
+        return CGRect(origin: .zero, size: canvasSize)
+    }
+}
+
 enum ImageEditorObjectDistanceMeasurement {
     static func guides(from sourceFrame: CGRect, to targetFrame: CGRect) -> [ImageEditorSpacingGuide] {
         let source = sourceFrame.standardized
