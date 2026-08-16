@@ -1046,6 +1046,34 @@ extension ImageEditorViewModel {
     }
 
     @discardableResult
+    func setSelectedLayerGradientOverlayCanvasStopOpacity(
+        at stopIndex: Int,
+        to opacity: Double
+    ) -> Bool {
+        guard opacity.isFinite,
+              editingGradientOverlayCenterLayerID == nil,
+              editingGradientOverlayAxisLayerID == nil,
+              editingGradientOverlayStopLayerID == nil,
+              editingGradientOverlayMidpointLayerID == nil,
+              canEditSelectedLayerGradientOverlayCanvasCenter,
+              let layer = singleSelectedGradientOverlayCanvasLayer,
+              let layerIndex = document.layers.firstIndex(where: { $0.id == layer.id })
+        else { return false }
+        var stops = layer.style.resolvedGradientOverlayColorStops
+        guard stops.indices.contains(stopIndex) else { return false }
+        let resolvedOpacity = max(0, min(1, opacity))
+        guard abs(stops[stopIndex].alpha - resolvedOpacity) > 0.000_001 else {
+            return false
+        }
+        stops[stopIndex].alpha = resolvedOpacity
+        beginGradientOverlayStopUndoTransaction()
+        document.layers[layerIndex].style.setGradientOverlayColorStops(stops)
+        appendHistory(L10n.text("imageEditor.history.gradientOverlayStopOpacity"))
+        finishGradientOverlayStopUndoTransaction(didChange: true)
+        return true
+    }
+
+    @discardableResult
     func setSelectedLayerGradientOverlayCanvasMidpoint(
         after lowerStopIndex: Int,
         to midpoint: Double

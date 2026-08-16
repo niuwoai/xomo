@@ -911,6 +911,7 @@
 "imageEditor.properties.shapeGradientStopColor" = "ストップ %d の色";
 "imageEditor.properties.shapeGradientStopPosition" = "ストップ位置：%d%%";
 "imageEditor.option.gradientOverlayStopPosition" = "位置";
+"imageEditor.option.gradientOverlayStopOpacity" = "不透明度";
 "imageEditor.option.gradientOverlayMidpoint" = "中間点";
 "imageEditor.properties.percentUnit" = "%";
 "imageEditor.properties.shapeGradientStopAccessibility" = "ストップ %d、位置 %d%%、不透明度 %d%%";
@@ -968,6 +969,7 @@
 "imageEditor.history.gradientOverlayAxis" = "グラデーションオーバーレイ軸を調整";
 "imageEditor.history.gradientOverlayStop" = "グラデーションオーバーレイのカラーストップを移動";
 "imageEditor.history.gradientOverlayStopPosition" = "グラデーションオーバーレイのストップ位置を設定";
+"imageEditor.history.gradientOverlayStopOpacity" = "グラデーションオーバーレイのストップ不透明度を設定";
 "imageEditor.history.gradientOverlayMidpointPosition" = "グラデーションオーバーレイのカラー中間点を設定";
 "imageEditor.history.gradientOverlayStopColor" = "グラデーションオーバーレイのカラーストップ色を変更";
 "imageEditor.history.gradientOverlayStopAdded" = "グラデーションオーバーレイのカラーストップを追加";

@@ -2545,6 +2545,91 @@ struct ImageEditorLayerStyleTests {
         #expect(midpointViewModel.selectedLayerGradientOverlayColorStops == originalStops)
     }
 
+    @Test func settingGradientOverlayCanvasStopOpacitySupportsEndpointsAndPreservesRedo() throws {
+        let viewModel = gradientOverlayCenterViewModel()
+        let selectedIndex = try #require(viewModel.document.selectedLayerIndex)
+        let originalStops = [
+            ImageEditorGradientColorStop(
+                position: 0,
+                red: 0.2,
+                green: 0.4,
+                blue: 0.6,
+                alpha: 0.8,
+                midpoint: 0.35
+            ),
+            ImageEditorGradientColorStop(
+                position: 0.45,
+                red: 0.7,
+                green: 0.3,
+                blue: 0.1,
+                alpha: 0.65,
+                midpoint: 0.7
+            ),
+            ImageEditorGradientColorStop(position: 1, color: .white)
+        ]
+        viewModel.document.layers[selectedIndex].style.setGradientOverlayColorStops(
+            originalStops
+        )
+        #expect(viewModel.setSelectedLayerGradientOverlayAngle(15) == 1)
+        viewModel.undo()
+        let originalProjectData = try viewModel.projectData()
+        let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
+
+        #expect(
+            viewModel.setSelectedLayerGradientOverlayCanvasStopOpacity(
+                at: 0,
+                to: 0.4
+            )
+        )
+        let changedStops = viewModel.selectedLayerGradientOverlayColorStops
+        #expect(changedStops[0].alpha == 0.4)
+        #expect(changedStops[0].position == originalStops[0].position)
+        #expect(changedStops[0].red == originalStops[0].red)
+        #expect(changedStops[0].green == originalStops[0].green)
+        #expect(changedStops[0].blue == originalStops[0].blue)
+        #expect(changedStops[0].midpoint == originalStops[0].midpoint)
+        #expect(changedStops[1] == originalStops[1])
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.undoStack.count == undoCount + 1)
+        #expect(!viewModel.canRedo)
+
+        viewModel.undo()
+        #expect(try viewModel.projectData() == originalProjectData)
+        #expect(viewModel.canRedo)
+        let noOpHistoryCount = viewModel.document.history.count
+        let noOpUndoCount = viewModel.undoStack.count
+        #expect(
+            !viewModel.setSelectedLayerGradientOverlayCanvasStopOpacity(
+                at: 0,
+                to: 0.8
+            )
+        )
+        #expect(viewModel.document.history.count == noOpHistoryCount)
+        #expect(viewModel.undoStack.count == noOpUndoCount)
+        #expect(viewModel.canRedo)
+        #expect(
+            !viewModel.setSelectedLayerGradientOverlayCanvasStopOpacity(
+                at: 0,
+                to: .nan
+            )
+        )
+        #expect(
+            !viewModel.setSelectedLayerGradientOverlayCanvasStopOpacity(
+                at: originalStops.count,
+                to: 0.5
+            )
+        )
+
+        #expect(
+            viewModel.setSelectedLayerGradientOverlayCanvasStopOpacity(
+                at: 2,
+                to: -1
+            )
+        )
+        #expect(viewModel.selectedLayerGradientOverlayColorStops[2].alpha == 0)
+    }
+
     @Test func addingGradientOverlayCanvasStopInterpolatesAndHonorsLimits() throws {
         let viewModel = gradientOverlayCenterViewModel()
         let selectedIndex = try #require(viewModel.document.selectedLayerIndex)
@@ -4195,6 +4280,9 @@ struct ImageEditorLayerStyleTests {
         #expect(source.contains("imageEditor.option.gradientOverlayStopPosition"))
         #expect(source.contains("image-editor-gradient-overlay-canvas-stop-position-"))
         #expect(source.contains("setSelectedLayerGradientOverlayCanvasStopDisplayedPosition"))
+        #expect(source.contains("imageEditor.option.gradientOverlayStopOpacity"))
+        #expect(source.contains("image-editor-gradient-overlay-canvas-stop-opacity-"))
+        #expect(source.contains("setSelectedLayerGradientOverlayCanvasStopOpacity"))
         #expect(source.contains("imageEditor.option.gradientOverlayMidpoint"))
         #expect(source.contains("image-editor-gradient-overlay-canvas-midpoint-position-"))
         #expect(source.contains("setSelectedLayerGradientOverlayCanvasMidpoint"))

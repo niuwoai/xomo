@@ -542,6 +542,18 @@ struct ImageEditorView: View {
                 ))
                 .font(.system(size: 11, weight: .medium))
                 gradientOverlayCanvasStopColorWell(at: stopIndex)
+                ImageEditorPercentageField(
+                    label: L10n.text("imageEditor.option.gradientOverlayStopOpacity"),
+                    normalizedValue: stopHandle.stop.alpha,
+                    accessibilityIdentifier:
+                        "image-editor-gradient-overlay-canvas-stop-opacity-\(stopIndex)"
+                ) { opacity in
+                    _ = viewModel.setSelectedLayerGradientOverlayCanvasStopOpacity(
+                        at: stopIndex,
+                        to: opacity
+                    )
+                }
+                .id("gradient-overlay-stop-opacity-\(stopIndex)")
                 if !stopHandle.isEndpoint {
                     ImageEditorPercentageField(
                         label: L10n.text("imageEditor.option.gradientOverlayStopPosition"),
