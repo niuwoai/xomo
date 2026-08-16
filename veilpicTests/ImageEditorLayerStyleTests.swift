@@ -4300,6 +4300,39 @@ struct ImageEditorLayerStyleTests {
         #expect(stopHandleSource.contains(".simultaneousGesture("))
         #expect(stopHandleSource.contains("SpatialTapGesture("))
         #expect(stopHandleSource.contains("count: 2"))
+        let doubleClickMidpointHandleEnd = try #require(
+            source[doubleClickMidpointHandleStart.upperBound...].range(
+                of: "@discardableResult\n    private func cancelGradientOverlayCanvasHandleDragForLifecycle()"
+            )
+        )
+        let midpointHandleSource = source[
+            doubleClickMidpointHandleStart.lowerBound..<doubleClickMidpointHandleEnd.lowerBound
+        ]
+        #expect(midpointHandleSource.contains(".simultaneousGesture("))
+        #expect(midpointHandleSource.contains("SpatialTapGesture("))
+        #expect(midpointHandleSource.contains("count: 2"))
+        #expect(
+            midpointHandleSource.contains(
+                "resetGradientOverlayCanvasMidpoint(after: point.lowerStopIndex)"
+            )
+        )
+        #expect(midpointHandleSource.contains("selectedGradientOverlayStopIndex = nil"))
+        #expect(
+            midpointHandleSource.contains(
+                "selectedGradientOverlayMidpointIndex = lowerStopIndex"
+            )
+        )
+        #expect(midpointHandleSource.contains("DispatchQueue.main.async"))
+        #expect(
+            midpointHandleSource.contains(
+                "guard selectedGradientOverlayMidpointIndex == lowerStopIndex else { return }"
+            )
+        )
+        #expect(
+            midpointHandleSource.contains(
+                "resetSelectedLayerGradientOverlayCanvasMidpoint(after: lowerStopIndex)"
+            )
+        )
         #expect(source.contains("imageEditor.option.gradientOverlayMidpoint"))
         #expect(source.contains("image-editor-gradient-overlay-canvas-midpoint-position-"))
         #expect(source.contains("setSelectedLayerGradientOverlayCanvasMidpoint"))

@@ -8295,13 +8295,18 @@ struct ImageEditorView: View {
                     viewModel.finishEditingSelectedLayerGradientOverlayCanvasMidpoint()
                 }
             )
+            .simultaneousGesture(
+                SpatialTapGesture(
+                    count: 2,
+                    coordinateSpace: .named("image-editor-canvas-space")
+                )
+                .onEnded { _ in
+                    resetGradientOverlayCanvasMidpoint(after: point.lowerStopIndex)
+                }
+            )
             .contextMenu {
                 Button(L10n.text("imageEditor.action.resetGradientOverlayMidpoint")) {
-                    selectedGradientOverlayStopIndex = nil
-                    selectedGradientOverlayMidpointIndex = point.lowerStopIndex
-                    viewModel.resetSelectedLayerGradientOverlayCanvasMidpoint(
-                        after: point.lowerStopIndex
-                    )
+                    resetGradientOverlayCanvasMidpoint(after: point.lowerStopIndex)
                 }
                 .disabled(abs(point.midpoint - 0.5) < 0.000_001)
             }
@@ -8318,6 +8323,15 @@ struct ImageEditorView: View {
             .accessibilityIdentifier(
                 "image-editor-gradient-overlay-canvas-midpoint-\(point.lowerStopIndex)"
             )
+    }
+
+    private func resetGradientOverlayCanvasMidpoint(after lowerStopIndex: Int) {
+        selectedGradientOverlayStopIndex = nil
+        selectedGradientOverlayMidpointIndex = lowerStopIndex
+        DispatchQueue.main.async {
+            guard selectedGradientOverlayMidpointIndex == lowerStopIndex else { return }
+            viewModel.resetSelectedLayerGradientOverlayCanvasMidpoint(after: lowerStopIndex)
+        }
     }
 
     @discardableResult

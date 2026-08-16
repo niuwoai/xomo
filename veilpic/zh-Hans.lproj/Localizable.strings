@@ -999,7 +999,7 @@
 "imageEditor.help.gradientOverlayAxis" = "双击以添加渐变叠加颜色色标";
 "imageEditor.help.gradientOverlayStopHandle" = "点击选中，双击直接改色；拖过其他色标可重排，拖离轴线可删除，Option 拖动复制，Shift 按 5% 吸附；也可用 Tab、左右键、Home/End 和 Delete";
 "imageEditor.help.gradientOverlayEndpointHandle" = "点击选中渐变端点，双击直接改色；端点位置固定且不能删除，可用 Tab 或 Shift-Tab 遍历";
-"imageEditor.help.gradientOverlayMidpointHandle" = "点击选中；拖动（Shift 按 5% 吸附）或按左右键，Home/End 到边界，Delete 恢复 50%";
+"imageEditor.help.gradientOverlayMidpointHandle" = "点击选中；双击或按 Delete 恢复 50%；也可拖动（Shift 按 5% 吸附）、按左右键或 Home/End 调整";
 "imageEditor.help.shapeGradientStopHandle" = "沿渐变轴拖动中间色标";
 "imageEditor.help.shapeGradientMidpointHandle" = "拖动相邻颜色之间的过渡中点";
 "imageEditor.help.shapeGradientAxis" = "双击渐变轴，在该位置新增色标";

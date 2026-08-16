@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-16 12:24:33 +0800",
+  "generated_at": "2026-08-16 12:37:53 +0800",
   "total": 94,
   "passed": 94,
   "failed": 0,
@@ -15,7 +15,7 @@
       "file": "ImageEditorLayerStyleTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.239,
+      "duration": 3.228,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorLayerStyleTests.addingGradientOverlayCanvasStopInterpolatesAndHonorsLimits.log"
@@ -27,7 +27,7 @@
       "file": "ImageEditorLayerStyleTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.216,
+      "duration": 3.16,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorLayerStyleTests.cancellingGradientOverlayCanvasStopDuplicationRestoresRedo.log"
@@ -39,7 +39,7 @@
       "file": "ImageEditorLayerStyleTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.271,
+      "duration": 3.196,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorLayerStyleTests.cancellingGradientOverlayCenterRestoresDocumentRedoAndNextGesture.log"
@@ -51,7 +51,7 @@
       "file": "ImageEditorLayerStyleTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.299,
+      "duration": 3.296,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorLayerStyleTests.draggingDuplicatedGradientOverlayStopAwayCancelsCopyAndPreservesRedo.log"
@@ -63,7 +63,7 @@
       "file": "ImageEditorLayerStyleTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.323,
+      "duration": 3.155,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorLayerStyleTests.draggingGradientOverlayAxisCommitsOnceAndRoundTripPreservesRedo.log"
@@ -75,7 +75,7 @@
       "file": "ImageEditorLayerStyleTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.24,
+      "duration": 3.245,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorLayerStyleTests.draggingGradientOverlayCanvasMidpointCommitsOnceAndPreservesRedo.log"
@@ -87,7 +87,7 @@
       "file": "ImageEditorLayerStyleTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.155,
+      "duration": 3.215,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorLayerStyleTests.draggingGradientOverlayCanvasStopAcrossNeighborsTracksIndexAndUndo.log"
@@ -99,7 +99,7 @@
       "file": "ImageEditorLayerStyleTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.218,
+      "duration": 3.257,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorLayerStyleTests.draggingGradientOverlayCanvasStopAwayRemovesOnceAndUndoRestores.log"
@@ -111,7 +111,7 @@
       "file": "ImageEditorLayerStyleTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.149,
+      "duration": 3.226,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorLayerStyleTests.draggingGradientOverlayCanvasStopCommitsOnceAndRoundTripPreservesRedo.log"
@@ -123,7 +123,7 @@
       "file": "ImageEditorLayerStyleTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.284,
+      "duration": 3.131,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorLayerStyleTests.draggingGradientOverlayCenterCommitsOnceAndRoundTripPreservesRedo.log"
@@ -135,7 +135,7 @@
       "file": "ImageEditorLayerStyleTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.189,
+      "duration": 3.182,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorLayerStyleTests.editingGradientOverlayCanvasStopColorIsOneLiveUndoTransaction.log"
@@ -147,7 +147,7 @@
       "file": "ImageEditorLayerStyleTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.238,
+      "duration": 3.239,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorLayerStyleTests.gradientOverlayAxisGeometryClampsScaleAndRejectsDegenerateInput.log"
@@ -159,7 +159,7 @@
       "file": "ImageEditorLayerStyleTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.217,
+      "duration": 3.172,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorLayerStyleTests.gradientOverlayAxisGeometryMatchesAllStylesAndSnapsAngles.log"
@@ -171,7 +171,7 @@
       "file": "ImageEditorLayerStyleTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.569,
+      "duration": 3.223,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorLayerStyleTests.gradientOverlayBlendModeChangesPixelsAndLegacyProjectsDefaultToNormal.log"
@@ -183,7 +183,7 @@
       "file": "ImageEditorLayerStyleTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.135,
+      "duration": 3.176,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorLayerStyleTests.gradientOverlayCanvasHandleHomeEndUsesDisplayedBoundariesAndReverse.log"
@@ -195,7 +195,7 @@
       "file": "ImageEditorLayerStyleTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.161,
+      "duration": 3.229,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorLayerStyleTests.gradientOverlayCanvasHandleTabSelectionCyclesInDisplayedOrder.log"
@@ -207,7 +207,7 @@
       "file": "ImageEditorLayerStyleTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.389,
+      "duration": 3.617,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorLayerStyleTests.gradientOverlayCanvasMidpointKeyboardBoundaryIsHistoryNoOp.log"
@@ -219,7 +219,7 @@
       "file": "ImageEditorLayerStyleTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.195,
+      "duration": 3.147,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorLayerStyleTests.gradientOverlayCanvasMidpointKeyboardNudgeUsesDisplayedDistanceAndReverse.log"
@@ -231,7 +231,7 @@
       "file": "ImageEditorLayerStyleTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.359,
+      "duration": 3.22,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorLayerStyleTests.gradientOverlayCanvasMidpointResetAtDefaultPreservesHistoryAndRedo.log"
@@ -243,7 +243,7 @@
       "file": "ImageEditorLayerStyleTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.272,
+      "duration": 3.241,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorLayerStyleTests.gradientOverlayCanvasMidpointResetCommitsOnceAndSupportsUndoRedo.log"
@@ -255,7 +255,7 @@
       "file": "ImageEditorLayerStyleTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.123,
+      "duration": 3.239,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorLayerStyleTests.gradientOverlayCanvasMidpointShiftSnapUsesSegmentPercentGrid.log"
@@ -267,7 +267,7 @@
       "file": "ImageEditorLayerStyleTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.427,
+      "duration": 3.228,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorLayerStyleTests.gradientOverlayCanvasMidpointsMapAcrossStylesAndReverse.log"
@@ -279,7 +279,7 @@
       "file": "ImageEditorLayerStyleTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.439,
+      "duration": 3.12,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorLayerStyleTests.gradientOverlayCanvasPercentageDraftParsesAndFormatsExactValues.log"
@@ -291,7 +291,7 @@
       "file": "ImageEditorLayerStyleTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.163,
+      "duration": 3.166,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorLayerStyleTests.gradientOverlayCanvasStopDuplicationChoosesDragSideAndHonorsLimits.log"
@@ -303,7 +303,7 @@
       "file": "ImageEditorLayerStyleTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.207,
+      "duration": 3.279,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorLayerStyleTests.gradientOverlayCanvasStopKeyboardNudgeAtBoundaryIsHistoryNoOp.log"
@@ -315,7 +315,7 @@
       "file": "ImageEditorLayerStyleTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.23,
+      "duration": 3.16,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorLayerStyleTests.gradientOverlayCanvasStopKeyboardNudgeUsesDisplayedDirectionAndSteps.log"
@@ -327,7 +327,7 @@
       "file": "ImageEditorLayerStyleTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.303,
+      "duration": 3.24,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorLayerStyleTests.gradientOverlayCanvasStopRemovalUsesPerpendicularInfiniteAxisDistance.log"
@@ -339,7 +339,7 @@
       "file": "ImageEditorLayerStyleTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.272,
+      "duration": 3.245,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorLayerStyleTests.gradientOverlayCanvasStopReorderingCrossesNeighborsAndResolvesDirectionalTies.log"
@@ -351,7 +351,7 @@
       "file": "ImageEditorLayerStyleTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.174,
+      "duration": 3.164,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorLayerStyleTests.gradientOverlayCanvasStopShiftSnapUsesFivePercentGridAndReverse.log"
@@ -363,7 +363,7 @@
       "file": "ImageEditorLayerStyleTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.325,
+      "duration": 3.249,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorLayerStyleTests.gradientOverlayCanvasStopsMapAcrossStylesAndReverse.log"
@@ -375,7 +375,7 @@
       "file": "ImageEditorLayerStyleTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.659,
+      "duration": 3.564,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorLayerStyleTests.gradientOverlayCenterCanvasWiringStaysOutOfComponentMode.log"
@@ -387,7 +387,7 @@
       "file": "ImageEditorLayerStyleTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.5,
+      "duration": 3.282,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorLayerStyleTests.gradientOverlayCenterGeometryMapsCanvasAndClampsExtendedRange.log"
@@ -399,7 +399,7 @@
       "file": "ImageEditorLayerStyleTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.293,
+      "duration": 3.183,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorLayerStyleTests.gradientOverlayCenterHandleRejectsLockedAndMultiLayerSelections.log"
@@ -411,7 +411,7 @@
       "file": "ImageEditorLayerStyleTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.446,
+      "duration": 3.139,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorLayerStyleTests.gradientOverlayCenterMovesRenderingAndLegacyProjectsDefaultToLayerCenter.log"
@@ -423,7 +423,7 @@
       "file": "ImageEditorLayerStyleTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.317,
+      "duration": 3.174,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorLayerStyleTests.gradientOverlayColorStopsRenderRoundTripAndPreserveLegacyEndpoints.log"
@@ -435,7 +435,7 @@
       "file": "ImageEditorLayerStyleTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.3,
+      "duration": 3.159,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorLayerStyleTests.gradientOverlayDitherIsUndoableNonDestructiveAndTransparentSafe.log"
@@ -447,7 +447,7 @@
       "file": "ImageEditorLayerStyleTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.216,
+      "duration": 3.099,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorLayerStyleTests.gradientOverlayReverseIsUndoableAndLegacyProjectsDefaultForward.log"
@@ -459,7 +459,7 @@
       "file": "ImageEditorLayerStyleTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.274,
+      "duration": 5.048,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorLayerStyleTests.imageEditorBatchEditsLayerStyleEffectsAcrossEditableSelection.log"
@@ -471,7 +471,7 @@
       "file": "ImageEditorLayerStyleTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.969,
+      "duration": 3.248,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorLayerStyleTests.imageEditorBevelIsNonDestructiveAndUpdatesStyleParameters.log"
@@ -483,7 +483,7 @@
       "file": "ImageEditorLayerStyleTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.201,
+      "duration": 3.253,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorLayerStyleTests.imageEditorBlendIfHidesSourceLuminanceOutsideSelectedRange.log"
@@ -495,7 +495,7 @@
       "file": "ImageEditorLayerStyleTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.161,
+      "duration": 3.207,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorLayerStyleTests.imageEditorBlendIfUnderlyingHidesLayerOverBackdropLuminanceOutsideRange.log"
@@ -507,7 +507,7 @@
       "file": "ImageEditorLayerStyleTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.181,
+      "duration": 3.196,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorLayerStyleTests.imageEditorColorOverlayIsNonDestructiveAndBakesOnMerge.log"
@@ -519,7 +519,7 @@
       "file": "ImageEditorLayerStyleTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.168,
+      "duration": 3.158,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorLayerStyleTests.imageEditorColorOverlayRemainsVisibleWhenFillOpacityIsZero.log"
@@ -531,7 +531,7 @@
       "file": "ImageEditorLayerStyleTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.248,
+      "duration": 3.295,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorLayerStyleTests.imageEditorCopiesPastesAndClearsLayerStyleAcrossEditableSelection.log"
@@ -543,7 +543,7 @@
       "file": "ImageEditorLayerStyleTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.165,
+      "duration": 3.179,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorLayerStyleTests.imageEditorDissolveBlendModeDithersLayerOpacityDeterministically.log"
@@ -555,7 +555,7 @@
       "file": "ImageEditorLayerStyleTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.156,
+      "duration": 3.142,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorLayerStyleTests.imageEditorDropShadowAngleAndDistanceMoveShadowDirectionally.log"
@@ -567,7 +567,7 @@
       "file": "ImageEditorLayerStyleTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.168,
+      "duration": 3.216,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorLayerStyleTests.imageEditorDropShadowColorUsesForegroundColor.log"
@@ -579,7 +579,7 @@
       "file": "ImageEditorLayerStyleTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.157,
+      "duration": 3.212,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorLayerStyleTests.imageEditorDropShadowNoiseVariesShadowAlphaAndRoundTripsProjectState.log"
@@ -591,7 +591,7 @@
       "file": "ImageEditorLayerStyleTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.172,
+      "duration": 3.192,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorLayerStyleTests.imageEditorDropShadowRemainsVisibleWhenFillOpacityIsZero.log"
@@ -603,7 +603,7 @@
       "file": "ImageEditorLayerStyleTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.189,
+      "duration": 3.203,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorLayerStyleTests.imageEditorDropShadowSpreadExpandsShadowBeforeBlur.log"
@@ -615,7 +615,7 @@
       "file": "ImageEditorLayerStyleTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.209,
+      "duration": 3.117,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorLayerStyleTests.imageEditorGlobalLightDrivesLinkedBevelAngles.log"
@@ -627,7 +627,7 @@
       "file": "ImageEditorLayerStyleTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.155,
+      "duration": 3.214,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorLayerStyleTests.imageEditorGlobalLightDrivesLinkedShadowAngles.log"
@@ -639,7 +639,7 @@
       "file": "ImageEditorLayerStyleTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.769,
+      "duration": 3.227,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorLayerStyleTests.imageEditorGradientOverlayIsNonDestructiveAndUpdatesStyleParameters.log"
@@ -651,7 +651,7 @@
       "file": "ImageEditorLayerStyleTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.227,
+      "duration": 3.191,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorLayerStyleTests.imageEditorInnerGlowColorChangesCompositeAndRoundTripsProjectState.log"
@@ -663,7 +663,7 @@
       "file": "ImageEditorLayerStyleTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.217,
+      "duration": 3.2,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorLayerStyleTests.imageEditorInnerGlowContourChangesFalloffAndRoundTripsProjectState.log"
@@ -675,7 +675,7 @@
       "file": "ImageEditorLayerStyleTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.291,
+      "duration": 3.188,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorLayerStyleTests.imageEditorInnerGlowJitterTexturesQualityAndRoundTripsProjectState.log"
@@ -687,7 +687,7 @@
       "file": "ImageEditorLayerStyleTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.209,
+      "duration": 3.166,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorLayerStyleTests.imageEditorInnerGlowNoiseChangesGlowAndRoundTripsProjectState.log"
@@ -699,7 +699,7 @@
       "file": "ImageEditorLayerStyleTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.162,
+      "duration": 3.168,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorLayerStyleTests.imageEditorInnerGlowOpacityChangesCompositeWithoutReplacingExistingColor.log"
@@ -711,7 +711,7 @@
       "file": "ImageEditorLayerStyleTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.183,
+      "duration": 3.235,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorLayerStyleTests.imageEditorInnerGlowRangeChangesFalloffAndPreservesLegacyProjects.log"
@@ -723,7 +723,7 @@
       "file": "ImageEditorLayerStyleTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.236,
+      "duration": 3.242,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorLayerStyleTests.imageEditorInnerGlowSourceChangesRenderedGlow.log"
@@ -735,7 +735,7 @@
       "file": "ImageEditorLayerStyleTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.211,
+      "duration": 3.239,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorLayerStyleTests.imageEditorInnerGlowTechniqueFollowsAlphaAndPreservesLegacyProjects.log"
@@ -747,7 +747,7 @@
       "file": "ImageEditorLayerStyleTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.787,
+      "duration": 3.214,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorLayerStyleTests.imageEditorInnerShadowAngleUsesGlobalLightWithoutReplacingExistingColor.log"
@@ -759,7 +759,7 @@
       "file": "ImageEditorLayerStyleTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.762,
+      "duration": 3.177,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorLayerStyleTests.imageEditorInnerShadowChokeAndNoiseRoundTripProjectState.log"
@@ -771,7 +771,7 @@
       "file": "ImageEditorLayerStyleTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 6.802,
+      "duration": 3.147,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorLayerStyleTests.imageEditorInnerShadowIsNonDestructiveAndUpdatesStyleParameters.log"
@@ -783,7 +783,7 @@
       "file": "ImageEditorLayerStyleTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.17,
+      "duration": 3.162,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorLayerStyleTests.imageEditorInsideStrokeStaysInsideLayerAlpha.log"
@@ -795,7 +795,7 @@
       "file": "ImageEditorLayerStyleTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.284,
+      "duration": 3.303,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorLayerStyleTests.imageEditorLayerEffectContoursChangeFalloffAndRoundTripProjectState.log"
@@ -807,7 +807,7 @@
       "file": "ImageEditorLayerStyleTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.21,
+      "duration": 3.303,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorLayerStyleTests.imageEditorOuterGlowBlurChangesFalloffAndRoundTripsProjectState.log"
@@ -819,7 +819,7 @@
       "file": "ImageEditorLayerStyleTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.211,
+      "duration": 3.203,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorLayerStyleTests.imageEditorOuterGlowColorChangesCompositeAndRoundTripsProjectState.log"
@@ -831,7 +831,7 @@
       "file": "ImageEditorLayerStyleTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.242,
+      "duration": 3.262,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorLayerStyleTests.imageEditorOuterGlowContourChangesAlphaFalloffAndRoundTripsProjectState.log"
@@ -843,7 +843,7 @@
       "file": "ImageEditorLayerStyleTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.231,
+      "duration": 3.407,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorLayerStyleTests.imageEditorOuterGlowJitterTexturesQualityAndRoundTripsProjectState.log"
@@ -855,7 +855,7 @@
       "file": "ImageEditorLayerStyleTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.189,
+      "duration": 3.167,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorLayerStyleTests.imageEditorOuterGlowNoiseChangesGlowAndRoundTripsProjectState.log"
@@ -867,7 +867,7 @@
       "file": "ImageEditorLayerStyleTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.158,
+      "duration": 3.187,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorLayerStyleTests.imageEditorOuterGlowOpacityChangesCompositeWithoutReplacingExistingColor.log"
@@ -879,7 +879,7 @@
       "file": "ImageEditorLayerStyleTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.215,
+      "duration": 3.228,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorLayerStyleTests.imageEditorOuterGlowRangeChangesFalloffAndPreservesLegacyProjects.log"
@@ -891,7 +891,7 @@
       "file": "ImageEditorLayerStyleTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.156,
+      "duration": 3.19,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorLayerStyleTests.imageEditorOuterGlowSpreadExpandsGlowAndRoundTripsProjectState.log"
@@ -903,7 +903,7 @@
       "file": "ImageEditorLayerStyleTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.201,
+      "duration": 3.191,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorLayerStyleTests.imageEditorOuterGlowTechniqueChangesDiffusionAndPreservesLegacyProjects.log"
@@ -915,7 +915,7 @@
       "file": "ImageEditorLayerStyleTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.25,
+      "duration": 3.129,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorLayerStyleTests.imageEditorPatternOverlayIsNonDestructiveAndRemainsVisibleWithZeroFill.log"
@@ -927,7 +927,7 @@
       "file": "ImageEditorLayerStyleTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.235,
+      "duration": 3.222,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorLayerStyleTests.imageEditorSatinIsNonDestructiveAndUpdatesStyleParameters.log"
@@ -939,7 +939,7 @@
       "file": "ImageEditorLayerStyleTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.242,
+      "duration": 3.132,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorLayerStyleTests.imageEditorStrokeColorUsesForegroundColor.log"
@@ -951,7 +951,7 @@
       "file": "ImageEditorLayerStyleTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 4.037,
+      "duration": 3.192,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorLayerStyleTests.imageEditorStrokeGradientFillRendersAndRoundTripsProjectState.log"
@@ -963,7 +963,7 @@
       "file": "ImageEditorLayerStyleTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.125,
+      "duration": 3.173,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorLayerStyleTests.imageEditorStrokeOpacityBlendsStrokeIndependentlyFromFill.log"
@@ -975,7 +975,7 @@
       "file": "ImageEditorLayerStyleTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 5.934,
+      "duration": 3.234,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorLayerStyleTests.imageEditorStrokePatternFillRendersAndRoundTripsProjectState.log"
@@ -987,7 +987,7 @@
       "file": "ImageEditorLayerStyleTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.227,
+      "duration": 3.203,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorLayerStyleTests.imageEditorStrokeSupportsGradientAndPatternFillTypesAndRoundTripsProjectState.log"
@@ -999,7 +999,7 @@
       "file": "ImageEditorLayerStyleTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.162,
+      "duration": 3.236,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorLayerStyleTests.layerStylePasteAndClearCountOnlyChangedEditableTargetsAndSkipNoOps.log"
@@ -1011,7 +1011,7 @@
       "file": "ImageEditorLayerStyleTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.282,
+      "duration": 3.278,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorLayerStyleTests.optionDraggingGradientOverlayCanvasStopDuplicatesOnceWithReverseAndSnap.log"
@@ -1023,7 +1023,7 @@
       "file": "ImageEditorLayerStyleTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.255,
+      "duration": 3.134,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorLayerStyleTests.patternOverlayOffsetChangesRenderedPhaseAndRoundTripsProjectState.log"
@@ -1035,7 +1035,7 @@
       "file": "ImageEditorLayerStyleTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.243,
+      "duration": 3.239,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorLayerStyleTests.removingGradientOverlayCanvasStopCommitsOnceAndUndoRestores.log"
@@ -1047,7 +1047,7 @@
       "file": "ImageEditorLayerStyleTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.232,
+      "duration": 3.236,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorLayerStyleTests.removingGradientOverlayCanvasStopProtectsEndpointsLocksAndTransactions.log"
@@ -1059,7 +1059,7 @@
       "file": "ImageEditorLayerStyleTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.151,
+      "duration": 3.177,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorLayerStyleTests.settingGradientOverlayCanvasHandlePercentagesReordersOnceAndPreservesRedo.log"
@@ -1071,7 +1071,7 @@
       "file": "ImageEditorLayerStyleTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.164,
+      "duration": 3.201,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorLayerStyleTests.settingGradientOverlayCanvasStopOpacitySupportsEndpointsAndPreservesRedo.log"
@@ -1083,7 +1083,7 @@
       "file": "ImageEditorLayerStyleTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.177,
+      "duration": 3.187,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorLayerStyleTests.strokePatternOffsetChangesRenderedPhaseAndRoundTripsProjectState.log"
@@ -1095,7 +1095,7 @@
       "file": "ImageEditorLayerStyleTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.219,
+      "duration": 3.203,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorLayerStyleTests.undoAndRedoCancelActiveGradientOverlayAxisBeforeHistory.log"
@@ -1107,7 +1107,7 @@
       "file": "ImageEditorLayerStyleTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.275,
+      "duration": 3.201,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorLayerStyleTests.undoAndRedoCancelActiveGradientOverlayCenterDragBeforeHistory.log"
@@ -1119,7 +1119,7 @@
       "file": "ImageEditorLayerStyleTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.178,
+      "duration": 3.165,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorLayerStyleTests.undoCancelsActiveGradientOverlayCanvasMidpointBeforeHistory.log"
@@ -1131,7 +1131,7 @@
       "file": "ImageEditorLayerStyleTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.246,
+      "duration": 3.173,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorLayerStyleTests.undoCancelsActiveGradientOverlayCanvasStopBeforeHistory.log"
