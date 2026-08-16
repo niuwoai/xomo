@@ -964,6 +964,7 @@
 "imageEditor.history.gradientOverlayCenter" = "Move Gradient Overlay Center";
 "imageEditor.history.gradientOverlayAxis" = "Adjust Gradient Overlay Axis";
 "imageEditor.history.gradientOverlayStop" = "Move Gradient Overlay Color Stop";
+"imageEditor.history.gradientOverlayStopColor" = "Change Gradient Overlay Color Stop";
 "imageEditor.history.gradientOverlayStopAdded" = "Add Gradient Overlay Color Stop";
 "imageEditor.history.gradientOverlayStopDuplicated" = "Duplicate Gradient Overlay Color Stop";
 "imageEditor.history.gradientOverlayStopRemoved" = "Remove Gradient Overlay Color Stop";
@@ -980,6 +981,7 @@
 "imageEditor.status.gradientOverlayCenterMoved" = "Moving gradient overlay center";
 "imageEditor.status.gradientOverlayAxisMoved" = "Adjusting gradient overlay angle and scale";
 "imageEditor.status.gradientOverlayStopMoved" = "Moving gradient overlay color stop";
+"imageEditor.status.gradientOverlayStopColorChanged" = "Changing gradient overlay color stop";
 "imageEditor.status.gradientOverlayMidpointMoved" = "Adjusting gradient overlay color midpoint";
 "imageEditor.status.shapeGradientStopMoved" = "Moving gradient stop";
 "imageEditor.status.shapeGradientMidpointMoved" = "Adjusting gradient color midpoint";

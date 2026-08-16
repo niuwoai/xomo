@@ -7,12 +7,16 @@ import SwiftUI
 @MainActor
 final class ImageEditorColorWellControl: NSView {
     static let swatchBorderWidth: CGFloat = 1
+    private static weak var activeColorWell: ImageEditorColorWellControl?
 
     var onColorChange: ((NSColor) -> Void)?
+    var onEditingBegan: (() -> Bool)?
+    var onEditingEnded: (() -> Void)?
     var colorPanelActivationHandler: (() -> Void)?
     var color: NSColor = .black {
         didSet { needsDisplay = true }
     }
+    private(set) var isColorPanelEditing = false
 
     override var acceptsFirstResponder: Bool { false }
 
@@ -29,6 +33,41 @@ final class ImageEditorColorWellControl: NSView {
     private func configure() {
         setAccessibilityElement(true)
         setAccessibilityRole(.colorWell)
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(colorPanelEditingDidEnd(_:)),
+            name: NSWindow.didResignKeyNotification,
+            object: NSColorPanel.shared
+        )
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(colorPanelEditingDidEnd(_:)),
+            name: NSWindow.willCloseNotification,
+            object: NSColorPanel.shared
+        )
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(colorPanelEditingDidEnd(_:)),
+            name: NSMenu.didBeginTrackingNotification,
+            object: nil
+        )
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(colorPanelEditingDidEnd(_:)),
+            name: NSApplication.didResignActiveNotification,
+            object: NSApplication.shared
+        )
+    }
+
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
+
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        if window == nil {
+            endColorPanelEditing()
+        }
     }
 
     override func draw(_ dirtyRect: NSRect) {
@@ -61,6 +100,12 @@ final class ImageEditorColorWellControl: NSView {
             return
         }
         let panel = NSColorPanel.shared
+        if let activeColorWell = Self.activeColorWell,
+           activeColorWell !== self {
+            activeColorWell.endColorPanelEditing()
+        }
+        guard beginColorPanelEditing() else { return }
+        Self.activeColorWell = self
         panel.setTarget(self)
         panel.setAction(#selector(colorPanelDidChange(_:)))
         panel.isContinuous = true
@@ -70,8 +115,32 @@ final class ImageEditorColorWellControl: NSView {
 
     @objc
     private func colorPanelDidChange(_ sender: NSColorPanel) {
+        guard beginColorPanelEditing() else { return }
+        Self.activeColorWell = self
         color = sender.color
         onColorChange?(color)
+    }
+
+    @discardableResult
+    func beginColorPanelEditing() -> Bool {
+        guard !isColorPanelEditing else { return true }
+        guard onEditingBegan?() ?? true else { return false }
+        isColorPanelEditing = true
+        return true
+    }
+
+    func endColorPanelEditing() {
+        guard isColorPanelEditing else { return }
+        isColorPanelEditing = false
+        if Self.activeColorWell === self {
+            Self.activeColorWell = nil
+        }
+        onEditingEnded?()
+    }
+
+    @objc
+    private func colorPanelEditingDidEnd(_ notification: Notification) {
+        endColorPanelEditing()
     }
 }
 
@@ -79,6 +148,8 @@ struct ImageEditorColorWell: NSViewRepresentable {
     @Binding var color: NSColor
     var accessibilityIdentifier: String
     var accessibilityLabel: String
+    var onEditingBegan: (() -> Bool)? = nil
+    var onEditingEnded: (() -> Void)? = nil
 
     func makeNSView(context: Context) -> ImageEditorColorWellControl {
         let colorWell = ImageEditorColorWellControl(
@@ -88,6 +159,8 @@ struct ImageEditorColorWell: NSViewRepresentable {
         colorWell.onColorChange = { selectedColor in
             color = selectedColor
         }
+        colorWell.onEditingBegan = onEditingBegan
+        colorWell.onEditingEnded = onEditingEnded
         colorWell.toolTip = accessibilityLabel
         colorWell.setAccessibilityIdentifier(accessibilityIdentifier)
         colorWell.setAccessibilityLabel(accessibilityLabel)
@@ -101,8 +174,17 @@ struct ImageEditorColorWell: NSViewRepresentable {
         colorWell.onColorChange = { selectedColor in
             color = selectedColor
         }
+        colorWell.onEditingBegan = onEditingBegan
+        colorWell.onEditingEnded = onEditingEnded
         colorWell.toolTip = accessibilityLabel
         colorWell.setAccessibilityIdentifier(accessibilityIdentifier)
         colorWell.setAccessibilityLabel(accessibilityLabel)
+    }
+
+    static func dismantleNSView(
+        _ colorWell: ImageEditorColorWellControl,
+        coordinator: ()
+    ) {
+        colorWell.endColorPanelEditing()
     }
 }

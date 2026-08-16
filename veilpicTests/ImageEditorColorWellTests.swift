@@ -32,6 +32,16 @@ struct ImageEditorColorWellTests {
         let targetBinding = try #require(controlSource.range(of: "panel.setTarget(self)"))
         let colorAssignment = try #require(controlSource.range(of: "panel.color = color"))
         #expect(targetBinding.lowerBound < colorAssignment.lowerBound)
+        let previousSessionEnd = try #require(
+            controlSource.range(of: "activeColorWell.endColorPanelEditing()")
+        )
+        let sessionBegin = try #require(controlSource.range(of: "beginColorPanelEditing()"))
+        #expect(previousSessionEnd.lowerBound < sessionBegin.lowerBound)
+        #expect(sessionBegin.lowerBound < targetBinding.lowerBound)
+        #expect(controlSource.contains("NSWindow.didResignKeyNotification"))
+        #expect(controlSource.contains("NSWindow.willCloseNotification"))
+        #expect(controlSource.contains("NSMenu.didBeginTrackingNotification"))
+        #expect(controlSource.contains("NSApplication.didResignActiveNotification"))
     }
 
     @Test
@@ -63,6 +73,41 @@ struct ImageEditorColorWellTests {
         #expect(activationCount == 1)
         #expect(colorWell.accessibilityPerformPress())
         #expect(activationCount == 2)
+    }
+
+    @Test
+    func colorPanelEditingLifecycleBeginsAndEndsExactlyOnce() {
+        let colorWell = ImageEditorColorWellControl(
+            frame: NSRect(x: 0, y: 0, width: 26, height: 26)
+        )
+        var beginCount = 0
+        var endCount = 0
+        colorWell.onEditingBegan = {
+            beginCount += 1
+            return true
+        }
+        colorWell.onEditingEnded = { endCount += 1 }
+
+        colorWell.beginColorPanelEditing()
+        colorWell.beginColorPanelEditing()
+        #expect(colorWell.isColorPanelEditing)
+        #expect(beginCount == 1)
+
+        colorWell.endColorPanelEditing()
+        colorWell.endColorPanelEditing()
+        #expect(!colorWell.isColorPanelEditing)
+        #expect(endCount == 1)
+
+        colorWell.beginColorPanelEditing()
+        ImageEditorColorWell.dismantleNSView(colorWell, coordinator: ())
+        #expect(!colorWell.isColorPanelEditing)
+        #expect(beginCount == 2)
+        #expect(endCount == 2)
+
+        let rejectedColorWell = ImageEditorColorWellControl(frame: .zero)
+        rejectedColorWell.onEditingBegan = { false }
+        #expect(!rejectedColorWell.beginColorPanelEditing())
+        #expect(!rejectedColorWell.isColorPanelEditing)
     }
 
     @Test

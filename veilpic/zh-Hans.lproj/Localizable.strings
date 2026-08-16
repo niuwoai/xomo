@@ -964,6 +964,7 @@
 "imageEditor.history.gradientOverlayCenter" = "移动渐变叠加中心";
 "imageEditor.history.gradientOverlayAxis" = "调整渐变叠加轴线";
 "imageEditor.history.gradientOverlayStop" = "移动渐变叠加颜色色标";
+"imageEditor.history.gradientOverlayStopColor" = "更改渐变叠加颜色色标";
 "imageEditor.history.gradientOverlayStopAdded" = "添加渐变叠加颜色色标";
 "imageEditor.history.gradientOverlayStopDuplicated" = "复制渐变叠加颜色色标";
 "imageEditor.history.gradientOverlayStopRemoved" = "删除渐变叠加颜色色标";
@@ -980,6 +981,7 @@
 "imageEditor.status.gradientOverlayCenterMoved" = "正在移动渐变叠加中心";
 "imageEditor.status.gradientOverlayAxisMoved" = "正在调整渐变叠加角度与缩放";
 "imageEditor.status.gradientOverlayStopMoved" = "正在移动渐变叠加颜色色标";
+"imageEditor.status.gradientOverlayStopColorChanged" = "正在更改渐变叠加颜色色标";
 "imageEditor.status.gradientOverlayMidpointMoved" = "正在调整渐变叠加颜色中点";
 "imageEditor.status.shapeGradientStopMoved" = "正在移动渐变色标";
 "imageEditor.status.shapeGradientMidpointMoved" = "正在调整渐变颜色中点";

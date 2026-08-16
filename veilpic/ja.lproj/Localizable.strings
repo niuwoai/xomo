@@ -964,6 +964,7 @@
 "imageEditor.history.gradientOverlayCenter" = "グラデーションオーバーレイの中心を移動";
 "imageEditor.history.gradientOverlayAxis" = "グラデーションオーバーレイ軸を調整";
 "imageEditor.history.gradientOverlayStop" = "グラデーションオーバーレイのカラーストップを移動";
+"imageEditor.history.gradientOverlayStopColor" = "グラデーションオーバーレイのカラーストップ色を変更";
 "imageEditor.history.gradientOverlayStopAdded" = "グラデーションオーバーレイのカラーストップを追加";
 "imageEditor.history.gradientOverlayStopDuplicated" = "グラデーションオーバーレイのカラーストップを複製";
 "imageEditor.history.gradientOverlayStopRemoved" = "グラデーションオーバーレイのカラーストップを削除";
@@ -980,6 +981,7 @@
 "imageEditor.status.gradientOverlayCenterMoved" = "グラデーションオーバーレイの中心を移動中";
 "imageEditor.status.gradientOverlayAxisMoved" = "グラデーションオーバーレイの角度とスケールを調整中";
 "imageEditor.status.gradientOverlayStopMoved" = "グラデーションオーバーレイのカラーストップを移動中";
+"imageEditor.status.gradientOverlayStopColorChanged" = "グラデーションオーバーレイのカラーストップ色を変更中";
 "imageEditor.status.gradientOverlayMidpointMoved" = "グラデーションオーバーレイのカラー中間点を調整中";
 "imageEditor.status.shapeGradientStopMoved" = "グラデーションストップを移動中";
 "imageEditor.status.shapeGradientMidpointMoved" = "グラデーションカラー中間点を調整中";

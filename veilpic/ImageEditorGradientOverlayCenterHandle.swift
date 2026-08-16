@@ -660,6 +660,59 @@ extension ImageEditorViewModel {
     }
 
     @discardableResult
+    func beginEditingSelectedLayerGradientOverlayCanvasStopColor(
+        at stopIndex: Int
+    ) -> Bool {
+        guard editingGradientOverlayStopLayerID == nil,
+              editingGradientOverlayCenterLayerID == nil,
+              editingGradientOverlayAxisLayerID == nil,
+              editingGradientOverlayMidpointLayerID == nil,
+              canEditSelectedLayerGradientOverlayCanvasCenter,
+              let layer = singleSelectedGradientOverlayCanvasLayer
+        else {
+            statusText = L10n.text("imageEditor.status.layerLocked")
+            return false
+        }
+        let stops = layer.style.resolvedGradientOverlayColorStops
+        guard stops.indices.contains(stopIndex) else { return false }
+        beginGradientOverlayStopUndoTransaction()
+        editingGradientOverlayStopLayerID = layer.id
+        editingGradientOverlayStopIndex = stopIndex
+        editingGradientOverlayOriginalStops = stops
+        editingGradientOverlayStopMovementStops = nil
+        editingGradientOverlayStopWasDuplicated = false
+        editingGradientOverlayStopWasRemoved = false
+        editingGradientOverlayStopColorWasEdited = true
+        return true
+    }
+
+    @discardableResult
+    func updateSelectedLayerGradientOverlayCanvasStopColor(
+        _ color: NSColor
+    ) -> Bool {
+        guard editingGradientOverlayStopColorWasEdited,
+              let layerID = editingGradientOverlayStopLayerID,
+              let stopIndex = editingGradientOverlayStopIndex,
+              let layerIndex = document.layers.firstIndex(where: { $0.id == layerID })
+        else { return false }
+        var stops = document.layers[layerIndex].style.resolvedGradientOverlayColorStops
+        guard stops.indices.contains(stopIndex) else { return false }
+        let previous = stops[stopIndex]
+        stops[stopIndex] = ImageEditorGradientColorStop(
+            position: previous.position,
+            color: color,
+            midpoint: previous.midpoint
+        )
+        guard !gradientOverlayStopsMatch(
+            stops,
+            document.layers[layerIndex].style.resolvedGradientOverlayColorStops
+        ) else { return false }
+        document.layers[layerIndex].style.setGradientOverlayColorStops(stops)
+        statusText = L10n.text("imageEditor.status.gradientOverlayStopColorChanged")
+        return true
+    }
+
+    @discardableResult
     func beginEditingSelectedLayerGradientOverlayCanvasStop(at stopIndex: Int) -> Bool {
         guard editingGradientOverlayStopLayerID == nil,
               editingGradientOverlayCenterLayerID == nil,
@@ -680,6 +733,7 @@ extension ImageEditorViewModel {
         editingGradientOverlayStopMovementStops = stops
         editingGradientOverlayStopWasDuplicated = false
         editingGradientOverlayStopWasRemoved = false
+        editingGradientOverlayStopColorWasEdited = false
         return true
     }
 
@@ -714,6 +768,7 @@ extension ImageEditorViewModel {
         editingGradientOverlayStopMovementStops = result.stops
         editingGradientOverlayStopWasDuplicated = true
         editingGradientOverlayStopWasRemoved = false
+        editingGradientOverlayStopColorWasEdited = false
         document.layers[layerIndex].style.setGradientOverlayColorStops(result.stops)
         return result.duplicateIndex
     }
@@ -777,6 +832,8 @@ extension ImageEditorViewModel {
                 historyKey = "imageEditor.history.gradientOverlayStopRemoved"
             } else if editingGradientOverlayStopWasDuplicated {
                 historyKey = "imageEditor.history.gradientOverlayStopDuplicated"
+            } else if editingGradientOverlayStopColorWasEdited {
+                historyKey = "imageEditor.history.gradientOverlayStopColor"
             } else {
                 historyKey = "imageEditor.history.gradientOverlayStop"
             }
@@ -1082,6 +1139,7 @@ extension ImageEditorViewModel {
         editingGradientOverlayStopMovementStops = nil
         editingGradientOverlayStopWasDuplicated = false
         editingGradientOverlayStopWasRemoved = false
+        editingGradientOverlayStopColorWasEdited = false
     }
 
     private func clearGradientOverlayMidpointEditingState() {

@@ -2475,6 +2475,77 @@ struct ImageEditorLayerStyleTests {
         #expect(maximum.document.history.count == maximumHistory)
     }
 
+    @Test func editingGradientOverlayCanvasStopColorIsOneLiveUndoTransaction() throws {
+        let viewModel = gradientOverlayCenterViewModel()
+        let selectedIndex = try #require(viewModel.document.selectedLayerIndex)
+        let originalStops = [
+            ImageEditorGradientColorStop(
+                position: 0,
+                color: NSColor(srgbRed: 0.1, green: 0.2, blue: 0.3, alpha: 0.4),
+                midpoint: 0.35
+            ),
+            ImageEditorGradientColorStop(
+                position: 0.45,
+                color: NSColor(srgbRed: 0.4, green: 0.5, blue: 0.6, alpha: 0.7),
+                midpoint: 0.65
+            ),
+            ImageEditorGradientColorStop(position: 1, color: .white)
+        ]
+        viewModel.document.layers[selectedIndex].style.setGradientOverlayColorStops(
+            originalStops
+        )
+        #expect(viewModel.setSelectedLayerGradientOverlayAngle(15) == 1)
+        viewModel.undo()
+        let originalProjectData = try viewModel.projectData()
+        let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
+
+        #expect(viewModel.beginEditingSelectedLayerGradientOverlayCanvasStopColor(at: 0))
+        #expect(viewModel.updateSelectedLayerGradientOverlayCanvasStopColor(.systemOrange))
+        #expect(
+            viewModel.updateSelectedLayerGradientOverlayCanvasStopColor(
+                originalStops[0].color
+            )
+        )
+        viewModel.finishEditingSelectedLayerGradientOverlayCanvasStop()
+        #expect(try viewModel.projectData() == originalProjectData)
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.undoStack.count == undoCount)
+        #expect(viewModel.canRedo)
+
+        let previewColor = NSColor(srgbRed: 0.9, green: 0.15, blue: 0.25, alpha: 0.5)
+        let finalColor = NSColor(srgbRed: 0.2, green: 0.75, blue: 0.35, alpha: 0.6)
+        let finalDeviceColor = try #require(finalColor.usingColorSpace(.deviceRGB))
+        #expect(viewModel.beginEditingSelectedLayerGradientOverlayCanvasStopColor(at: 1))
+        #expect(viewModel.updateSelectedLayerGradientOverlayCanvasStopColor(previewColor))
+        #expect(viewModel.updateSelectedLayerGradientOverlayCanvasStopColor(finalColor))
+        #expect(viewModel.document.history.count == historyCount)
+        viewModel.finishEditingSelectedLayerGradientOverlayCanvasStop()
+
+        let changedStops = viewModel.selectedLayerGradientOverlayColorStops
+        #expect(changedStops[0] == originalStops[0])
+        #expect(changedStops[1].position == originalStops[1].position)
+        #expect(changedStops[1].midpoint == originalStops[1].midpoint)
+        #expect(changedStops[1].color.isEqual(finalDeviceColor))
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.undoStack.count == undoCount + 1)
+        #expect(!viewModel.canRedo)
+
+        viewModel.undo()
+        #expect(viewModel.selectedLayerGradientOverlayColorStops == originalStops)
+        viewModel.redo()
+        #expect(
+            viewModel.selectedLayerGradientOverlayColorStops[1].color.isEqual(finalDeviceColor)
+        )
+
+        let locked = gradientOverlayCenterViewModel()
+        let lockedIndex = try #require(locked.document.selectedLayerIndex)
+        locked.document.layers[lockedIndex].isLocked = true
+        #expect(!locked.beginEditingSelectedLayerGradientOverlayCanvasStopColor(at: 0))
+        #expect(!locked.hasActiveGradientOverlayStopTransaction)
+        #expect(locked.undoStack.isEmpty)
+    }
+
     @Test func gradientOverlayCanvasMidpointsMapAcrossStylesAndReverse() throws {
         let frame = CGRect(x: 0, y: 0, width: 100, height: 50)
         let center = CGPoint(x: 0.5, y: 0.5)
@@ -3943,6 +4014,10 @@ struct ImageEditorLayerStyleTests {
         #expect(source.contains("beginEditingSelectedLayerGradientOverlayCanvasStop"))
         #expect(source.contains("updateSelectedLayerGradientOverlayCanvasStop"))
         #expect(source.contains("finishEditingSelectedLayerGradientOverlayCanvasStop"))
+        #expect(source.contains("gradientOverlayCanvasStopColorWell(at: stopIndex)"))
+        #expect(source.contains("beginEditingSelectedLayerGradientOverlayCanvasStopColor"))
+        #expect(source.contains("updateSelectedLayerGradientOverlayCanvasStopColor"))
+        #expect(source.contains("image-editor-gradient-overlay-canvas-stop-color-"))
         #expect(source.contains("beginEditingSelectedLayerGradientOverlayCanvasMidpoint"))
         #expect(source.contains("updateSelectedLayerGradientOverlayCanvasMidpoint"))
         #expect(source.contains("finishEditingSelectedLayerGradientOverlayCanvasMidpoint"))
@@ -3989,6 +4064,46 @@ struct ImageEditorLayerStyleTests {
         #expect(source.contains("image-editor-gradient-overlay-axis"))
         #expect(source.contains("image-editor-gradient-overlay-canvas-stop-"))
         #expect(source.contains("image-editor-gradient-overlay-canvas-midpoint-"))
+
+        let toolOptionStart = try #require(source.range(of: "private var toolOptionBar:"))
+        let toolOptionEnd = try #require(
+            source.range(
+                of: "private func componentLibraryOptionBar(",
+                range: toolOptionStart.upperBound..<source.endIndex
+            )
+        )
+        let toolOptionBlock = source[
+            toolOptionStart.lowerBound..<toolOptionEnd.lowerBound
+        ]
+        #expect(toolOptionBlock.contains("viewModel.selectedTool == .move"))
+        #expect(toolOptionBlock.contains("selectedGradientOverlayStopIndex"))
+        #expect(toolOptionBlock.contains("viewModel.document.areExtrasVisible"))
+        #expect(
+            toolOptionBlock.contains(
+                "viewModel.canEditSelectedLayerGradientOverlayCanvasCenter"
+            )
+        )
+        #expect(toolOptionBlock.contains("gradientOverlayCanvasStopColorWell(at: stopIndex)"))
+
+        let colorWellStart = try #require(
+            source.range(of: "private func gradientOverlayCanvasStopColorWell")
+        )
+        let colorWellEnd = try #require(
+            source.range(
+                of: "private var canvasWorkspace:",
+                range: colorWellStart.upperBound..<source.endIndex
+            )
+        )
+        let colorWellBlock = source[colorWellStart.lowerBound..<colorWellEnd.lowerBound]
+        #expect(
+            colorWellBlock.contains(
+                "beginEditingSelectedLayerGradientOverlayCanvasStopColor"
+            )
+        )
+        #expect(
+            colorWellBlock.contains("updateSelectedLayerGradientOverlayCanvasStopColor")
+        )
+        #expect(colorWellBlock.contains("finishEditingSelectedLayerGradientOverlayCanvasStop"))
 
         let stopHandleStart = try #require(
             source.range(of: "private func gradientOverlayStopHandleView")

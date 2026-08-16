@@ -526,6 +526,24 @@ struct ImageEditorView: View {
                 marqueeShapePicker
             }
 
+            if viewModel.selectedTool == .move,
+               let stopIndex = selectedGradientOverlayStopIndex,
+               viewModel.document.areExtrasVisible,
+               viewModel.canEditSelectedLayerGradientOverlayCanvasCenter,
+               viewModel.selectedLayerGradientOverlayCanvasStopHandlePoints.contains(
+                   where: { $0.index == stopIndex }
+               ) {
+                Divider()
+                    .frame(height: 20)
+                    .overlay(editorBorder)
+                Text(L10n.format(
+                    "imageEditor.properties.shapeGradientStopColor",
+                    stopIndex + 1
+                ))
+                .font(.system(size: 11, weight: .medium))
+                gradientOverlayCanvasStopColorWell(at: stopIndex)
+            }
+
             if viewModel.selectedTool == .patchTool {
                 patchModePicker
             }
@@ -2326,6 +2344,42 @@ struct ImageEditorView: View {
         .focusable(false)
         .xomoFocusEffectDisabled()
         .help(L10n.text(accessibilityLabelKey))
+    }
+
+    private func gradientOverlayCanvasStopColorWell(at stopIndex: Int) -> some View {
+        let label = L10n.format(
+            "imageEditor.properties.shapeGradientStopColor",
+            stopIndex + 1
+        )
+        return ImageEditorColorWell(
+            color: Binding(
+                get: {
+                    let stops = viewModel.selectedLayerGradientOverlayColorStops
+                    return stops.indices.contains(stopIndex)
+                        ? stops[stopIndex].color
+                        : .clear
+                },
+                set: { color in
+                    _ = viewModel.updateSelectedLayerGradientOverlayCanvasStopColor(color)
+                }
+            ),
+            accessibilityIdentifier:
+                "image-editor-gradient-overlay-canvas-stop-color-\(stopIndex)",
+            accessibilityLabel: label,
+            onEditingBegan: {
+                guard selectedGradientOverlayStopIndex == stopIndex else { return false }
+                return viewModel.beginEditingSelectedLayerGradientOverlayCanvasStopColor(
+                    at: stopIndex
+                )
+            },
+            onEditingEnded: {
+                viewModel.finishEditingSelectedLayerGradientOverlayCanvasStop()
+            }
+        )
+        .frame(width: 26, height: 26)
+        .focusable(false)
+        .xomoFocusEffectDisabled()
+        .help(label)
     }
 
     private var canvasWorkspace: some View {
