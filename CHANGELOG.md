@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.12.0-rc1093 - 2026-08-17
+
+### Fixed
+- 修正快速蒙版开启时 `Command+I` 仍可能反相图层像素或残留图层蒙版的问题；Quick Mask 现在作为独立当前编辑目标，反相选区遮罩并保留图层内容与图层蒙版像素。
+
+### Changed
+- Quick Mask 与 Alpha/颜色通道预览改为互斥工作区状态：选择通道会退出 Quick Mask，进入 Quick Mask 会回到 Composite 并退出 Alpha 预览，但保留 Alpha 列表选择供后续返回。切换显示状态不写文档、Undo 或 History；Quick Mask 反相继续使用既有单步选区 Undo/History。
+
+### Verification
+- Quick Mask/Alpha/图层蒙版当前目标 3/3、Quick Mask 与通道生命周期及画笔邻接 9/9、Alpha 菜单命令 1/1、文字输入快捷键保护 5/5、CLI 2/2、发布契约 7/7（21 项断言）及最终 `build-for-testing` 通过；本版本不触发周期 Universal Release、完整冒烟与 `/Applications` 安装，下一次完整门禁为 rc1120。
+
 ## 2.12.0-rc1092 - 2026-08-17
 
 ### Fixed

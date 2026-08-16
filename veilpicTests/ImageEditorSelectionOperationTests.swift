@@ -206,6 +206,45 @@ struct ImageEditorSelectionOperationTests {
         #expect(viewModel.quickMaskOverlayImage == nil)
     }
 
+    @Test func currentTargetInvertChangesQuickMaskSelectionBeforeAStaleLayerMaskTarget() throws {
+        let canvasSize = NSSize(width: 8, height: 6)
+        let viewModel = ImageEditorViewModel(
+            sourceName: "quick-mask-invert.png",
+            image: testImage(size: canvasSize)
+        ) { _ in }
+        let selectedLayerIndex = try #require(viewModel.document.selectedLayerIndex)
+        let layerMask = try #require(NSImage.alphaMaskImage(
+            width: Int(canvasSize.width),
+            height: Int(canvasSize.height),
+            alpha: [UInt8](repeating: UInt8.max, count: Int(canvasSize.width * canvasSize.height))
+        ))
+        viewModel.document.layers[selectedLayerIndex].mask = layerMask
+        viewModel.isEditingLayerMask = true
+        viewModel.createRectSelection(from: CGPoint(x: 2, y: 1), to: CGPoint(x: 6, y: 4))
+        viewModel.toggleQuickMaskMode()
+        let originalSelection = try #require(viewModel.document.selection)
+        let originalLayerData = try #require(viewModel.document.selectedLayer?.image.qingtuPNGData())
+        let originalMaskData = try #require(viewModel.document.selectedLayer?.mask?.qingtuPNGData())
+        let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
+
+        #expect(viewModel.isQuickMaskMode)
+        #expect(viewModel.isEditingLayerMask)
+        #expect(viewModel.canInvertCurrentEditingTarget)
+        #expect(viewModel.invertCurrentEditingTarget())
+        #expect(viewModel.document.selection?.isInverted != originalSelection.isInverted)
+        #expect(try #require(viewModel.document.selectedLayer?.image.qingtuPNGData()) == originalLayerData)
+        #expect(try #require(viewModel.document.selectedLayer?.mask?.qingtuPNGData()) == originalMaskData)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.undoStack.count == undoCount + 1)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.selectionInverted"))
+
+        viewModel.undo()
+        #expect(viewModel.document.selection == originalSelection)
+        #expect(try #require(viewModel.document.selectedLayer?.image.qingtuPNGData()) == originalLayerData)
+        #expect(try #require(viewModel.document.selectedLayer?.mask?.qingtuPNGData()) == originalMaskData)
+    }
+
     @Test func quickMaskBrushAndEraserEditSelectionWithUndoAndRedo() throws {
         let canvasSize = NSSize(width: 32, height: 24)
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: testImage(size: canvasSize)) { _ in }

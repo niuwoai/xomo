@@ -936,6 +936,7 @@ final class ImageEditorViewModel: ObservableObject {
 
     func selectChannelPreview(_ channel: ImageEditorChannelPreview) {
         clearLayerMaskSoloPreview()
+        leaveQuickMaskModeForChannelPreview()
         selectedChannelPreview = channel
         previewedAlphaChannelID = nil
         statusText = L10n.format("imageEditor.status.channelPreview", channel.title)
@@ -2233,6 +2234,9 @@ final class ImageEditorViewModel: ObservableObject {
         guard selectedLeftSidebarTab == .tools else { return false }
         if previewedAlphaChannelID != nil {
             return previewedAlphaChannel != nil
+        }
+        if isQuickMaskMode {
+            return document.selection != nil
         }
         if isEditingLayerMask {
             return canInvertLayerMask
@@ -3752,6 +3756,8 @@ final class ImageEditorViewModel: ObservableObject {
         isQuickMaskMode.toggle()
         if isQuickMaskMode {
             clearLayerMaskSoloPreview()
+            selectedChannelPreview = .composite
+            previewedAlphaChannelID = nil
         }
         refreshQuickMaskOverlay()
         statusText = L10n.text(
@@ -3759,6 +3765,11 @@ final class ImageEditorViewModel: ObservableObject {
                 ? "imageEditor.status.quickMaskEnabled"
                 : "imageEditor.status.quickMaskDisabled"
         )
+    }
+
+    func leaveQuickMaskModeForChannelPreview() {
+        isQuickMaskMode = false
+        quickMaskOverlayImage = nil
     }
 
     func setQuickMaskOverlayTarget(_ target: ImageEditorQuickMaskOverlayTarget) {
@@ -6975,6 +6986,10 @@ final class ImageEditorViewModel: ObservableObject {
         guard canInvertCurrentEditingTarget else { return false }
         if let previewedAlphaChannelID {
             invertAlphaChannel(previewedAlphaChannelID)
+            return true
+        }
+        if isQuickMaskMode {
+            invertSelection()
             return true
         }
         if isEditingLayerMask {

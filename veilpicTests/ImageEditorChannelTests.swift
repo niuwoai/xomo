@@ -670,6 +670,42 @@ struct ImageEditorChannelTests {
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.invert"))
     }
 
+    @Test func quickMaskAndChannelPreviewsReplaceEachOtherWithoutHistory() throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "quick-mask-channel-lifecycle.png",
+            image: splitChannelImage()
+        ) { _ in }
+        viewModel.loadSelectionFromChannel(.red)
+        viewModel.saveSelectionAsAlphaChannel()
+        let channelID = try #require(viewModel.selectedAlphaChannelID)
+        let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
+
+        viewModel.toggleQuickMaskMode()
+        #expect(viewModel.isQuickMaskMode)
+        #expect(viewModel.previewedAlphaChannelID == nil)
+        #expect(viewModel.selectedChannelPreview == .composite)
+
+        viewModel.selectAlphaChannel(channelID)
+        #expect(!viewModel.isQuickMaskMode)
+        #expect(viewModel.quickMaskOverlayImage == nil)
+        #expect(viewModel.previewedAlphaChannelID == channelID)
+
+        viewModel.toggleQuickMaskMode()
+        #expect(viewModel.isQuickMaskMode)
+        #expect(viewModel.previewedAlphaChannelID == nil)
+        #expect(viewModel.selectedAlphaChannelID == channelID)
+        #expect(viewModel.selectedChannelPreview == .composite)
+
+        viewModel.selectChannelPreview(.red)
+        #expect(!viewModel.isQuickMaskMode)
+        #expect(viewModel.quickMaskOverlayImage == nil)
+        #expect(viewModel.previewedAlphaChannelID == nil)
+        #expect(viewModel.selectedChannelPreview == .red)
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.undoStack.count == undoCount)
+    }
+
     @Test func alphaChannelsCanThresholdSoftMasks() async throws {
         let viewModel = ImageEditorViewModel(sourceName: "split.png", image: splitChannelImage()) { _ in }
         let mask = ImageEditorSelectionMask(width: 3, height: 1, alpha: [0, 127, 128])

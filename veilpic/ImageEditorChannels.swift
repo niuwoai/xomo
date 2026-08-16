@@ -375,6 +375,7 @@ extension ImageEditorViewModel {
     func selectAlphaChannel(_ id: UUID) {
         guard let channel = document.alphaChannels.first(where: { $0.id == id }) else { return }
         clearLayerMaskSoloPreview()
+        leaveQuickMaskModeForChannelPreview()
         selectedAlphaChannelID = channel.id
         previewedAlphaChannelID = channel.id
         statusText = L10n.format("imageEditor.status.alphaChannelSelected", channel.name)
