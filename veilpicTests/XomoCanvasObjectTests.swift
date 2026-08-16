@@ -4,6 +4,39 @@ import Testing
 
 @MainActor
 struct XomoCanvasObjectTests {
+    @Test func shiftHoverSelectionIntentMatchesAddAndRemovalSemantics() {
+        #expect(ImageEditorMoveToolHoverSelectionIntent.resolve(
+            sidebarTab: .tools,
+            modifierFlags: [.shift],
+            targetIsSelected: false,
+            selectedLayerCount: 1
+        ) == .add)
+        #expect(ImageEditorMoveToolHoverSelectionIntent.resolve(
+            sidebarTab: .tools,
+            modifierFlags: [.shift, .command],
+            targetIsSelected: true,
+            selectedLayerCount: 2
+        ) == .remove)
+        #expect(ImageEditorMoveToolHoverSelectionIntent.resolve(
+            sidebarTab: .tools,
+            modifierFlags: [.shift],
+            targetIsSelected: true,
+            selectedLayerCount: 1
+        ) == .none)
+        #expect(ImageEditorMoveToolHoverSelectionIntent.resolve(
+            sidebarTab: .tools,
+            modifierFlags: [.shift, .option],
+            targetIsSelected: false,
+            selectedLayerCount: 1
+        ) == .none)
+        #expect(ImageEditorMoveToolHoverSelectionIntent.resolve(
+            sidebarTab: .components,
+            modifierFlags: [.shift],
+            targetIsSelected: false,
+            selectedLayerCount: 1
+        ) == .none)
+    }
+
     @Test func moveToolHoverOutlineOnlyAppearsForIdleAutoSelection() {
         #expect(ImageEditorMoveToolHoverOutlinePolicy.shouldShow(
             sidebarTab: .tools,
@@ -396,6 +429,13 @@ struct XomoCanvasObjectTests {
         #expect(source.contains("ImageEditorMoveToolHoverOutlinePolicy.shouldShow("))
         #expect(source.contains("viewModel.moveToolHoverTarget("))
         #expect(source.contains("Text(verbatim: target.name)"))
+        #expect(source.components(
+            separatedBy: "moveToolHoverSelectionIntent: moveToolHoverSelectionIntent"
+        ).count == 3)
+        #expect(source.contains("target.selectionIntent == .remove"))
+        #expect(source.contains(
+            "Image(systemName: target.selectionIntent == .add ? \"plus\" : \"minus\")"
+        ))
         #expect(source.contains(".option,\n                        .command,"))
         #expect(source.contains("!viewModel.document.selectedLayerIDs.contains(target.id)"))
         #expect(source.contains("viewModel.moveToolContentHit(at: pressedImagePoint) == .none"))
@@ -1180,6 +1220,7 @@ struct XomoCanvasObjectTests {
         let groupHover = try #require(viewModel.moveToolHoverTarget(at: point))
         #expect(groupHover.id == outerGroup.id)
         #expect(groupHover.name == "Outer")
+        #expect(groupHover.selectionIntent == .none)
         #expect(groupHover.frame == leaf.frame.union(lockedSibling.frame))
         #expect(groupHover.isBlocked)
         let deepHover = try #require(viewModel.moveToolHoverTarget(
@@ -1190,9 +1231,17 @@ struct XomoCanvasObjectTests {
         #expect(deepHover.name == "Leaf")
         #expect(deepHover.frame == leaf.frame)
         #expect(!deepHover.isBlocked)
+        #expect(viewModel.moveToolHoverTarget(
+            at: point,
+            modifierFlags: [.shift, .command]
+        )?.selectionIntent == .add)
         #expect(viewModel.moveToolContentHit(at: point) == .blocked)
         #expect(viewModel.selectMovableCanvasTarget(at: point))
         #expect(viewModel.document.selectedLayerID == outerGroup.id)
+        #expect(viewModel.moveToolHoverTarget(
+            at: point,
+            modifierFlags: [.shift]
+        )?.selectionIntent == ImageEditorMoveToolHoverSelectionIntent.none)
 
         viewModel.moveToolAutoSelectTarget = .layer
         #expect(viewModel.moveToolAutoSelectLayer(at: point)?.id == leaf.id)
@@ -1232,6 +1281,10 @@ struct XomoCanvasObjectTests {
             modifierFlags: [.command]
         )?.id == groupID)
         #expect(viewModel.moveToolHoverTarget(at: point)?.name == groupName)
+        #expect(viewModel.moveToolHoverTarget(
+            at: point,
+            modifierFlags: [.shift]
+        )?.selectionIntent == ImageEditorMoveToolHoverSelectionIntent.none)
         var ordinary = ImageEditorLayer.solidColorFill(
             name: "Ordinary",
             size: CGSize(width: 30, height: 30),

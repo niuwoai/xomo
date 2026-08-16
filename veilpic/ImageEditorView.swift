@@ -3112,6 +3112,12 @@ struct ImageEditorView: View {
                     let contentHit: XomoCanvasContentHit = objectMoveIsActive
                         ? .movable
                         : (canvasPoint.map(viewModel.moveToolContentHit(at:)) ?? .none)
+                    let moveToolHoverSelectionIntent = canvasPoint.flatMap {
+                        viewModel.moveToolHoverTarget(
+                            at: $0,
+                            modifierFlags: canvasModifierFlags
+                        )?.selectionIntent
+                    } ?? .none
                     let cropHandle = cropInteractionHandle(at: hoverViewPoint, in: geometry.size)
                     let layerTransformTarget = layerTransformCursorTarget(
                         at: hoverViewPoint,
@@ -3145,6 +3151,7 @@ struct ImageEditorView: View {
                             isPointerOverMovableContent: contentHit.isMovable,
                             isPointerOverBlockedContent: contentHit.isBlocked,
                             moveToolUsesBoxSelection: viewModel.moveToolAutoSelectsCanvasTarget,
+                            moveToolHoverSelectionIntent: moveToolHoverSelectionIntent,
                             isPointerOverColorSamplerPoint:
                                 canvasInteractionTool == .colorSampler
                                     && hoverViewPoint.map {
@@ -5084,6 +5091,12 @@ struct ImageEditorView: View {
         let imageRect = fittedImageRect(in: size)
         let displayScale = imageRect.width / max(viewModel.document.canvasSize.width, 1)
         let contentHit = canvasPoint.map(viewModel.moveToolContentHit(at:)) ?? .none
+        let moveToolHoverSelectionIntent = canvasPoint.flatMap {
+            viewModel.moveToolHoverTarget(
+                at: $0,
+                modifierFlags: NSEvent.modifierFlags
+            )?.selectionIntent
+        } ?? .none
         let displayedBrushDiameter = ImageEditorCanvasCursor.pressureAdjustedBrushDiameter(
             baseDiameter: viewModel.brushSize * displayScale,
             tool: canvasInteractionTool,
@@ -5106,6 +5119,7 @@ struct ImageEditorView: View {
             isPointerOverMovableContent: contentHit.isMovable,
             isPointerOverBlockedContent: contentHit.isBlocked,
             moveToolUsesBoxSelection: viewModel.moveToolAutoSelectsCanvasTarget,
+            moveToolHoverSelectionIntent: moveToolHoverSelectionIntent,
             isPointerOverColorSamplerPoint:
                 canvasInteractionTool == .colorSampler
                     && colorSamplerPointID(at: viewPoint, in: size) != nil,
@@ -7175,9 +7189,10 @@ struct ImageEditorView: View {
            let target = viewModel.moveToolHoverTarget(
                 at: canvasPoint,
                 modifierFlags: canvasModifierFlags
-           ), !viewModel.document.selectedLayerIDs.contains(target.id) {
+           ), !viewModel.document.selectedLayerIDs.contains(target.id)
+                || target.selectionIntent == .remove {
             let rect = viewRect(from: target.frame, in: size)
-            let accent = target.isBlocked
+            let accent = target.isBlocked || target.selectionIntent == .remove
                 ? Color(nsColor: .systemRed)
                 : Color(nsColor: ImageEditorTheme.selected)
             let labelHalfWidth: CGFloat = 74
@@ -7198,16 +7213,22 @@ struct ImageEditorView: View {
                     .position(x: rect.midX, y: rect.midY)
 
                 if !target.name.isEmpty {
-                    Text(verbatim: target.name)
-                        .font(.system(size: 10, weight: .semibold))
-                        .foregroundStyle(.white)
-                        .lineLimit(1)
-                        .truncationMode(.tail)
-                        .padding(.horizontal, 5)
-                        .frame(maxWidth: labelHalfWidth * 2, minHeight: 18)
-                        .background(accent.opacity(0.92))
-                        .clipShape(RoundedRectangle(cornerRadius: 3, style: .continuous))
-                        .position(x: labelX, y: labelY)
+                    HStack(spacing: 3) {
+                        if target.selectionIntent != .none {
+                            Image(systemName: target.selectionIntent == .add ? "plus" : "minus")
+                                .font(.system(size: 8, weight: .bold))
+                        }
+                        Text(verbatim: target.name)
+                            .lineLimit(1)
+                            .truncationMode(.tail)
+                    }
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 5)
+                    .frame(maxWidth: labelHalfWidth * 2, minHeight: 18)
+                    .background(accent.opacity(0.92))
+                    .clipShape(RoundedRectangle(cornerRadius: 3, style: .continuous))
+                    .position(x: labelX, y: labelY)
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -12938,6 +12959,7 @@ enum ImageEditorCanvasCursor {
         isPointerOverMovableContent: Bool = true,
         isPointerOverBlockedContent: Bool = false,
         moveToolUsesBoxSelection: Bool = false,
+        moveToolHoverSelectionIntent: ImageEditorMoveToolHoverSelectionIntent = .none,
         isPointerOverColorSamplerPoint: Bool = false,
         penIsClosing: Bool = false,
         penIsConverting: Bool = false,
@@ -13026,6 +13048,9 @@ enum ImageEditorCanvasCursor {
                     : .openHand
             }
             if selectedTool == .move {
+                if let mode = moveToolHoverSelectionIntent.boxSelectionMode {
+                    return objectBoxSelectionCursor(mode: mode)
+                }
                 // Sketch and Figma keep the ordinary pointer while hovering a
                 // selectable object. The four-way move cursor appears only
                 // after a real drag starts, so hover never impersonates pan.

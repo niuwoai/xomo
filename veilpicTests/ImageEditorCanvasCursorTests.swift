@@ -381,6 +381,38 @@ struct ImageEditorCanvasCursorTests {
         #expect(componentDrag !== NSCursor.closedHand)
     }
 
+    @Test func moveToolShiftHoverUsesSelectionBadgesButComponentsStayArrow() {
+        let additive = ImageEditorCanvasCursor.cursor(
+            for: .tools,
+            selectedTool: .move,
+            brushDiameter: 18,
+            isPointerOverMovableContent: true,
+            moveToolHoverSelectionIntent: .add,
+            modifierFlags: [.shift]
+        )
+        let subtractive = ImageEditorCanvasCursor.cursor(
+            for: .tools,
+            selectedTool: .move,
+            brushDiameter: 18,
+            isPointerOverMovableContent: true,
+            moveToolHoverSelectionIntent: .remove,
+            modifierFlags: [.shift]
+        )
+        let component = ImageEditorCanvasCursor.cursor(
+            for: .components,
+            selectedTool: .brush,
+            brushDiameter: 18,
+            isPointerOverMovableContent: true,
+            moveToolHoverSelectionIntent: .remove,
+            modifierFlags: [.shift]
+        )
+
+        #expect(additive !== NSCursor.arrow)
+        #expect(subtractive !== NSCursor.arrow)
+        #expect(additive.image.tiffRepresentation != subtractive.image.tiffRepresentation)
+        #expect(component === NSCursor.arrow)
+    }
+
     @Test func componentLibraryUsesArrowExceptForAnActualTransformControl() {
         let ordinary = ImageEditorCanvasCursor.cursor(
             for: .components,

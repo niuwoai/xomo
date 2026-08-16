@@ -133,6 +133,40 @@ struct ImageEditorMoveToolHoverTarget: Equatable, Identifiable {
     let name: String
     let frame: CGRect
     let isBlocked: Bool
+    let selectionIntent: ImageEditorMoveToolHoverSelectionIntent
+}
+
+enum ImageEditorMoveToolHoverSelectionIntent: Equatable {
+    case none
+    case add
+    case remove
+
+    static func resolve(
+        sidebarTab: XomoLeftSidebarTab,
+        modifierFlags: NSEvent.ModifierFlags,
+        targetIsSelected: Bool,
+        selectedLayerCount: Int
+    ) -> Self {
+        guard sidebarTab == .tools,
+              modifierFlags.contains(.shift),
+              !modifierFlags.contains(.option)
+        else { return .none }
+        if targetIsSelected {
+            return selectedLayerCount > 1 ? .remove : .none
+        }
+        return .add
+    }
+
+    var boxSelectionMode: ImageEditorObjectBoxSelectionMode? {
+        switch self {
+        case .none:
+            nil
+        case .add:
+            .add
+        case .remove:
+            .subtract
+        }
+    }
 }
 
 enum ImageEditorMoveToolHoverOutlinePolicy {
@@ -460,7 +494,8 @@ extension ImageEditorViewModel {
                     id: object.groupID,
                     name: name,
                     frame: object.frame.standardized,
-                    isBlocked: moveToolContentHit(at: point).isBlocked
+                    isBlocked: moveToolContentHit(at: point).isBlocked,
+                    selectionIntent: .none
                 )
             }
             guard let leaf = frontmostVisibleCanvasLayerOutsideComponents(at: point) else {
@@ -470,7 +505,8 @@ extension ImageEditorViewModel {
                 id: leaf.id,
                 name: leaf.name,
                 frame: leaf.frame.standardized,
-                isBlocked: document.isEffectivelyPositionLocked(leaf)
+                isBlocked: document.isEffectivelyPositionLocked(leaf),
+                selectionIntent: .none
             )
         }
 
@@ -496,7 +532,13 @@ extension ImageEditorViewModel {
             id: target.id,
             name: target.name,
             frame: frame,
-            isBlocked: !isMoveToolAutoSelectTargetMovable(target)
+            isBlocked: !isMoveToolAutoSelectTargetMovable(target),
+            selectionIntent: ImageEditorMoveToolHoverSelectionIntent.resolve(
+                sidebarTab: selectedLeftSidebarTab,
+                modifierFlags: modifierFlags,
+                targetIsSelected: document.selectedLayerIDs.contains(target.id),
+                selectedLayerCount: document.selectedLayerIDs.count
+            )
         )
     }
 
