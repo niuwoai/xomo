@@ -410,6 +410,33 @@ struct ImageEditorLayerThumbnailSelectionTests {
         #expect(viewModel.canvasMaskOverlayImage != nil)
     }
 
+    @Test func blankQuickMaskOriginDoesNotLeakThroughPreviewSwitches() throws {
+        let fixture = makeLayerFixture(includeMasks: true)
+        let viewModel = fixture.viewModel
+        let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
+
+        #expect(viewModel.document.selection == nil)
+        viewModel.toggleQuickMaskMode()
+        #expect(viewModel.isQuickMaskMode)
+        #expect(viewModel.document.selection != nil)
+
+        #expect(viewModel.toggleLayerMaskSoloPreview(layerID: fixture.thumbnailLayerID))
+        #expect(!viewModel.isQuickMaskMode)
+        #expect(viewModel.document.selection == nil)
+        #expect(viewModel.previewedLayerMaskMode == .solo)
+
+        viewModel.toggleQuickMaskMode()
+        #expect(viewModel.isQuickMaskMode)
+        #expect(viewModel.previewedLayerMaskMode == nil)
+        viewModel.selectChannelPreview(.red)
+        #expect(!viewModel.isQuickMaskMode)
+        #expect(viewModel.document.selection == nil)
+        #expect(viewModel.selectedChannelPreview == .red)
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.undoStack.count == undoCount)
+    }
+
     @Test func selectedLayerMaskBackslashToggleIsTransientAndWorkspaceScoped() throws {
         let fixture = makeLayerFixture(includeMasks: true)
         let viewModel = fixture.viewModel

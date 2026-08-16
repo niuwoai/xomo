@@ -176,10 +176,21 @@ struct ImageEditorSelectionOperationTests {
         viewModel.setQuickMaskOverlayTarget(.maskedAreas)
         viewModel.setQuickMaskOverlayColor(.systemRed)
         viewModel.setQuickMaskOverlayOpacity(0.5)
+        let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
+
+        viewModel.toggleQuickMaskMode()
+        #expect(viewModel.isQuickMaskMode)
+        #expect(viewModel.document.selection != nil)
+        #expect((quickMaskColor(viewModel.quickMaskOverlayImage, x: 0, y: 0)?.alphaComponent ?? 1) < 0.05)
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.undoStack.count == undoCount)
 
         viewModel.toggleQuickMaskMode()
         #expect(!viewModel.isQuickMaskMode)
-        #expect(viewModel.statusText == L10n.text("imageEditor.status.quickMaskNeedsSelection"))
+        #expect(viewModel.document.selection == nil)
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.undoStack.count == undoCount)
 
         viewModel.createRectSelection(from: CGPoint(x: 2, y: 1), to: CGPoint(x: 6, y: 4))
         viewModel.toggleQuickMaskMode()
@@ -204,6 +215,50 @@ struct ImageEditorSelectionOperationTests {
         viewModel.clearSelection()
         #expect(!viewModel.isQuickMaskMode)
         #expect(viewModel.quickMaskOverlayImage == nil)
+    }
+
+    @Test func quickMaskPaintFromNoSelectionRestoresTheTrueUndoOrigin() throws {
+        let canvasSize = NSSize(width: 16, height: 12)
+        let viewModel = ImageEditorViewModel(
+            sourceName: "quick-mask-from-empty.png",
+            image: testImage(size: canvasSize)
+        ) { _ in }
+        viewModel.brushSize = 6
+        viewModel.hardness = 1
+        viewModel.opacity = 1
+        viewModel.createRectSelection(from: CGPoint(x: 1, y: 1), to: CGPoint(x: 4, y: 4))
+        viewModel.clearSelection()
+        let originalLayerData = try #require(viewModel.document.selectedLayer?.image.qingtuPNGData())
+        let historyCount = viewModel.document.history.count
+
+        viewModel.toggleQuickMaskMode()
+        viewModel.clearUndoHistory()
+        let undoCount = viewModel.undoStack.count
+        viewModel.drawBrush(points: [CGPoint(x: 8, y: 6)])
+
+        var mask = try #require(viewModel.document.selection?.rasterizedMask(canvasSize: canvasSize))
+        #expect(maskAlpha(mask, x: 8, y: 6) == 0)
+        #expect(maskAlpha(mask, x: 1, y: 1) == UInt8.max)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.undoStack.count == undoCount + 1)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.quickMaskHide"))
+
+        viewModel.toggleQuickMaskMode()
+        #expect(!viewModel.isQuickMaskMode)
+        #expect(viewModel.document.selection != nil)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.undoStack.count == undoCount + 1)
+
+        viewModel.undo()
+        #expect(viewModel.document.selection == nil)
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(try #require(viewModel.document.selectedLayer?.image.qingtuPNGData()) == originalLayerData)
+
+        viewModel.redo()
+        mask = try #require(viewModel.document.selection?.rasterizedMask(canvasSize: canvasSize))
+        #expect(maskAlpha(mask, x: 8, y: 6) == 0)
+        #expect(maskAlpha(mask, x: 1, y: 1) == UInt8.max)
+        #expect(!viewModel.isQuickMaskMode)
     }
 
     @Test func currentTargetInvertChangesQuickMaskSelectionBeforeAStaleLayerMaskTarget() throws {

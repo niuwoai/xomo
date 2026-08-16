@@ -171,6 +171,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var selectionMode: ImageEditorSelectionMode = .replace
     @Published var isQuickMaskMode = false
     @Published private(set) var quickMaskOverlayImage: NSImage?
+    private var quickMaskSelectionOriginUndoIndex: Int?
     @Published private(set) var selectionEdgeGeometry: ImageEditorSelectionEdgeGeometry?
     @Published private(set) var quickMaskOverlayTarget: ImageEditorQuickMaskOverlayTarget
     @Published private(set) var quickMaskOverlayColor: NSColor
@@ -687,6 +688,9 @@ final class ImageEditorViewModel: ObservableObject {
 
         document = newDocument
         clearLayerMaskSoloPreview()
+        isQuickMaskMode = false
+        quickMaskSelectionOriginUndoIndex = nil
+        quickMaskOverlayImage = nil
         colorSamplerPoints.removeAll()
         psdCompatibilityReport = nil
         psdCompatibilityFileName = ""
@@ -742,6 +746,7 @@ final class ImageEditorViewModel: ObservableObject {
         clearLayerMaskSoloPreview()
         isEditingLayerMask = false
         isQuickMaskMode = false
+        quickMaskSelectionOriginUndoIndex = nil
         clearUndoHistory()
         historySnapshots.removeAll()
         namedHistorySnapshots.removeAll()
@@ -793,8 +798,7 @@ final class ImageEditorViewModel: ObservableObject {
         }
 
         selectLayer(layerID, editingMask: true)
-        isQuickMaskMode = false
-        quickMaskOverlayImage = nil
+        leaveQuickMaskMode()
         selectedChannelPreview = .composite
         previewedAlphaChannelID = nil
         previewedLayerMaskID = layerID
@@ -820,8 +824,7 @@ final class ImageEditorViewModel: ObservableObject {
         }
 
         selectLayer(layerID, editingMask: true)
-        isQuickMaskMode = false
-        quickMaskOverlayImage = nil
+        leaveQuickMaskMode()
         selectedChannelPreview = .composite
         previewedAlphaChannelID = nil
         previewedLayerMaskID = layerID
@@ -3735,39 +3738,59 @@ final class ImageEditorViewModel: ObservableObject {
 
     func clearSelection() {
         guard let selection = document.selection else { return }
+        if isQuickMaskMode,
+           quickMaskSelectionOriginUndoIndex != nil,
+           selectionsAreEquivalent(selection, .fullCanvas(size: document.canvasSize)) {
+            leaveQuickMaskMode()
+            statusText = L10n.text("imageEditor.status.selectionCleared")
+            return
+        }
         pushUndo()
         reselectableSelection = selection.effectiveSelectedBounds(in: document.canvasSize) == nil
             ? nil
             : selection
         document.selection = nil
-        isQuickMaskMode = false
+        leaveQuickMaskMode()
         appendHistory(L10n.text("imageEditor.history.selectionCleared"))
         statusText = L10n.text("imageEditor.status.selectionCleared")
     }
 
     func toggleQuickMaskMode() {
-        guard hasSelection else {
-            isQuickMaskMode = false
-            quickMaskOverlayImage = nil
-            statusText = L10n.text("imageEditor.status.quickMaskNeedsSelection")
+        if isQuickMaskMode {
+            leaveQuickMaskMode()
+            statusText = L10n.text("imageEditor.status.quickMaskDisabled")
             return
         }
 
-        isQuickMaskMode.toggle()
-        if isQuickMaskMode {
-            clearLayerMaskSoloPreview()
-            selectedChannelPreview = .composite
-            previewedAlphaChannelID = nil
+        if document.selection?.effectiveSelectedBounds(in: document.canvasSize) == nil {
+            quickMaskSelectionOriginUndoIndex = undoStack.count
+            document.selection = .fullCanvas(size: document.canvasSize)
+        } else {
+            quickMaskSelectionOriginUndoIndex = nil
         }
+        isQuickMaskMode = true
+        clearLayerMaskSoloPreview()
+        selectedChannelPreview = .composite
+        previewedAlphaChannelID = nil
         refreshQuickMaskOverlay()
-        statusText = L10n.text(
-            isQuickMaskMode
-                ? "imageEditor.status.quickMaskEnabled"
-                : "imageEditor.status.quickMaskDisabled"
-        )
+        statusText = L10n.text("imageEditor.status.quickMaskEnabled")
     }
 
     func leaveQuickMaskModeForChannelPreview() {
+        leaveQuickMaskMode()
+    }
+
+    private func leaveQuickMaskMode() {
+        if let undoIndex = quickMaskSelectionOriginUndoIndex,
+           undoStack.indices.contains(undoIndex) {
+            undoStack[undoIndex].selection = nil
+        }
+        if document.selection?.effectiveSelectedBounds(in: document.canvasSize) == nil
+            || (quickMaskSelectionOriginUndoIndex != nil
+                && selectionsAreEquivalent(document.selection, .fullCanvas(size: document.canvasSize))) {
+            document.selection = nil
+        }
+        quickMaskSelectionOriginUndoIndex = nil
         isQuickMaskMode = false
         quickMaskOverlayImage = nil
     }
@@ -9311,6 +9334,12 @@ final class ImageEditorViewModel: ObservableObject {
         redoStack.removeAll()
         undoXomoThemeStates.removeAll()
         redoXomoThemeStates.removeAll()
+        if quickMaskSelectionOriginUndoIndex != nil {
+            quickMaskSelectionOriginUndoIndex = selectionsAreEquivalent(
+                document.selection,
+                .fullCanvas(size: document.canvasSize)
+            ) ? 0 : nil
+        }
     }
 
     func appendHistory(_ title: String) {

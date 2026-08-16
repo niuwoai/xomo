@@ -33,6 +33,8 @@ struct XomoCanvasPresetTests {
         let viewModel = ImageEditorViewModel(sourceName: "source", image: image) { _ in }
         var draft = XomoCanvasDraft(preset: .phonePortrait)
         draft.background = .transparent
+        viewModel.toggleQuickMaskMode()
+        #expect(viewModel.isQuickMaskMode)
 
         viewModel.createCanvas(from: draft)
 
@@ -45,6 +47,9 @@ struct XomoCanvasPresetTests {
         #expect(viewModel.exportSettings.scale == 3)
         #expect(viewModel.document.designCanvasMetadata?.preset == .phonePortrait)
         #expect(viewModel.document.designCanvasMetadata?.exportScale == 3)
+        #expect(!viewModel.isQuickMaskMode)
+        #expect(viewModel.document.selection == nil)
+        #expect(viewModel.quickMaskOverlayImage == nil)
     }
 
     @MainActor
