@@ -1,24 +1,24 @@
 {
-  "generated_at": "2026-08-16 18:51:15 +0800",
+  "generated_at": "2026-08-16 19:02:25 +0800",
   "total": 1,
   "passed": 1,
   "failed": 0,
-  "total_tests": 84,
-  "passed_tests": 84,
+  "total_tests": 70,
+  "passed_tests": 70,
   "failed_tests_in_failed_groups": 0,
   "jobs": 1,
   "results": [
     {
-      "suite": "ImageEditorCanvasCursorTests",
+      "suite": "XomoCanvasObjectTests",
       "method": null,
-      "identifier": "veilpicTests/ImageEditorCanvasCursorTests",
-      "file": "ImageEditorCanvasCursorTests.swift",
-      "test_count": 84,
+      "identifier": "veilpicTests/XomoCanvasObjectTests",
+      "file": "XomoCanvasObjectTests.swift",
+      "test_count": 70,
       "passed": true,
-      "duration": 4.781,
+      "duration": 5.767,
       "infrastructure_retries": 0,
       "issues": [],
-      "log": "ImageEditorCanvasCursorTests.log"
+      "log": "XomoCanvasObjectTests.log"
     }
   ]
 }

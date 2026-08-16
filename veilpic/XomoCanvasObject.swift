@@ -66,6 +66,11 @@ enum ImageEditorObjectBoxSelectionPolicy {
     }
 }
 
+struct ImageEditorObjectBoxSelectionTarget: Equatable, Identifiable {
+    let id: UUID
+    let frame: CGRect
+}
+
 enum ImageEditorMoveToolDoubleClickTarget: Equatable {
     case editableText(UUID)
     case layer(UUID)
@@ -149,7 +154,9 @@ extension ImageEditorViewModel {
     /// Layer scope uses visible leaf bounds, Group scope promotes every hit to
     /// its outermost container, and component mode preserves whole component
     /// instances while still allowing ordinary top-level artwork.
-    func moveToolBoxSelectionTargetIDs(in selectionRect: CGRect) -> [UUID] {
+    func moveToolBoxSelectionTargets(
+        in selectionRect: CGRect
+    ) -> [ImageEditorObjectBoxSelectionTarget] {
         let rect = selectionRect.standardized
         guard rect.width > 0,
               rect.height > 0,
@@ -161,48 +168,73 @@ extension ImageEditorViewModel {
 
         let componentObjects = xomoCanvasObjects()
         let componentGroupIDs = Set(componentObjects.map(\.groupID))
-        var orderedIDs: [UUID] = []
+        let visibleLeaves: [(layer: ImageEditorLayer, ancestors: [ImageEditorLayer])] =
+            document.layers.compactMap { layer in
+                guard !layer.isGroup,
+                      !layer.isAdjustment,
+                      !layer.isFilter,
+                      document.isEffectivelyVisible(layer),
+                      layer.frame.standardized.width > 0,
+                      layer.frame.standardized.height > 0
+                else { return nil }
+                return (layer, document.ancestorGroups(for: layer))
+            }
+        var outerGroupFrames: [UUID: CGRect] = [:]
+        if selectedLeftSidebarTab == .tools, moveToolAutoSelectTarget == .group {
+            for entry in visibleLeaves {
+                guard let groupID = entry.ancestors.last?.id else { continue }
+                let frame = entry.layer.frame.standardized
+                outerGroupFrames[groupID] = outerGroupFrames[groupID]?.union(frame) ?? frame
+            }
+        }
+        var targets: [ImageEditorObjectBoxSelectionTarget] = []
         var seenIDs: Set<UUID> = []
 
-        func append(_ id: UUID) {
+        func append(_ id: UUID, frame: CGRect) {
             guard seenIDs.insert(id).inserted else { return }
-            orderedIDs.append(id)
+            targets.append(ImageEditorObjectBoxSelectionTarget(
+                id: id,
+                frame: frame.standardized
+            ))
         }
 
         if selectedLeftSidebarTab == .components {
             for object in componentObjects.sorted(by: { $0.frontIndex < $1.frontIndex })
             where rect.intersects(object.frame.standardized) {
-                append(object.groupID)
+                append(object.groupID, frame: object.frame)
             }
         }
 
-        for layer in document.layers {
-            guard !layer.isGroup,
-                  !layer.isAdjustment,
-                  !layer.isFilter,
-                  document.isEffectivelyVisible(layer),
-                  layer.frame.standardized.width > 0,
-                  layer.frame.standardized.height > 0,
-                  rect.intersects(layer.frame.standardized)
-            else { continue }
-
-            let ancestors = document.ancestorGroups(for: layer)
+        for entry in visibleLeaves where rect.intersects(entry.layer.frame.standardized) {
+            let layer = entry.layer
+            let ancestors = entry.ancestors
             if selectedLeftSidebarTab == .components {
                 guard !ancestors.contains(where: { componentGroupIDs.contains($0.id) }) else {
                     continue
                 }
-                append(layer.id)
+                append(layer.id, frame: layer.frame)
                 continue
             }
 
             switch moveToolAutoSelectTarget {
             case .layer:
-                append(layer.id)
+                append(layer.id, frame: layer.frame)
             case .group:
-                append(ancestors.last?.id ?? layer.id)
+                guard let group = ancestors.last else {
+                    append(layer.id, frame: layer.frame)
+                    continue
+                }
+                guard !seenIDs.contains(group.id) else { continue }
+                if let groupFrame = outerGroupFrames[group.id] {
+                    append(group.id, frame: groupFrame)
+                }
             }
         }
-        return orderedIDs
+        return targets
+    }
+
+    func moveToolBoxSelectionTargetIDs(in selectionRect: CGRect) -> [UUID] {
+        moveToolBoxSelectionTargets(in: selectionRect).map(\.id)
     }
 
     /// Applies a Sketch/Figma-style intersection sweep as a selection-only

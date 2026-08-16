@@ -88,11 +88,17 @@ struct XomoCanvasObjectTests {
         viewModel.isMoveToolAutoSelectEnabled = true
         viewModel.moveToolAutoSelectTarget = .group
 
-        let ids = viewModel.moveToolBoxSelectionTargetIDs(
+        let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
+        let targets = viewModel.moveToolBoxSelectionTargets(
             in: CGRect(x: 20, y: 20, width: 100, height: 50)
         )
 
-        #expect(ids == [outer.id])
+        #expect(targets.map(\.id) == [outer.id])
+        #expect(targets.first?.frame == first.frame.union(second.frame))
+        #expect(viewModel.document.selectedLayerIDs.isEmpty)
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.undoStack.count == undoCount)
     }
 
     @Test func componentModeBoxSelectionReturnsWholeInstances() throws {
@@ -110,11 +116,19 @@ struct XomoCanvasObjectTests {
             .map(\.frame)
             .reduce(nil) { bounds, frame in bounds?.union(frame) ?? frame })
 
-        let ids = Set(viewModel.moveToolBoxSelectionTargetIDs(
+        let targets = viewModel.moveToolBoxSelectionTargets(
             in: union.insetBy(dx: -2, dy: -2)
-        ))
+        )
+        let ids = Set(targets.map(\.id))
 
         #expect(ids == [firstGroup.id, secondGroup.id])
+        #expect(targets.allSatisfy { target in
+            let childBounds = viewModel.document.layers
+                .filter { $0.groupID == target.id }
+                .map(\.frame)
+                .reduce(nil) { bounds, frame in bounds?.union(frame) ?? frame }
+            return target.frame == childBounds
+        })
         #expect(!ids.contains { id in
             viewModel.document.layers.contains { $0.id == id && $0.groupID != nil }
         })
@@ -176,6 +190,7 @@ struct XomoCanvasObjectTests {
         #expect(source.contains("viewModel.moveToolContentHit(at: pressedImagePoint) == .none"))
         #expect(source.contains("objectSelectionBoxDrag = ImageEditorObjectSelectionBoxDrag("))
         #expect(source.contains("viewModel.applyMoveToolBoxSelection("))
+        #expect(source.contains("viewModel.moveToolBoxSelectionTargets(in: selectionRect)"))
         #expect(source.contains("moveToolUsesBoxSelection: viewModel.moveToolAutoSelectsCanvasTarget"))
         #expect(source.contains("onCanvasLifecycleInterrupted: { _ in\n                            objectSelectionBoxDrag = nil"))
         #expect(source.contains("if objectSelectionBoxDrag != nil {\n                        objectSelectionBoxDrag = nil"))

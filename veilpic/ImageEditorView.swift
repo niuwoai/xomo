@@ -7125,6 +7125,7 @@ struct ImageEditorView: View {
         if let selectionBoxDrag = objectSelectionBoxDrag,
            selectionBoxDrag.isActivated,
            let selectionRect = selectionBoxDrag.selectionRect {
+            let previewTargets = viewModel.moveToolBoxSelectionTargets(in: selectionRect)
             let start = viewPoint(from: selectionRect.origin, in: size)
             let end = viewPoint(
                 from: CGPoint(x: selectionRect.maxX, y: selectionRect.maxY),
@@ -7136,19 +7137,43 @@ struct ImageEditorView: View {
                 width: abs(end.x - start.x),
                 height: abs(end.y - start.y)
             )
-            Rectangle()
-                .fill(Color(nsColor: ImageEditorTheme.selected).opacity(0.12))
-                .overlay {
-                    Rectangle()
-                        .stroke(
-                            Color(nsColor: ImageEditorTheme.selected).opacity(0.96),
-                            lineWidth: 1
+            ZStack {
+                Rectangle()
+                    .fill(Color(nsColor: ImageEditorTheme.selected).opacity(0.12))
+                    .overlay {
+                        Rectangle()
+                            .stroke(
+                                Color(nsColor: ImageEditorTheme.selected).opacity(0.96),
+                                lineWidth: 1
+                            )
+                    }
+                    .frame(width: viewRect.width, height: viewRect.height)
+                    .position(x: viewRect.midX, y: viewRect.midY)
+
+                Canvas { context, _ in
+                    for target in previewTargets {
+                        let targetStart = viewPoint(from: target.frame.origin, in: size)
+                        let targetEnd = viewPoint(
+                            from: CGPoint(x: target.frame.maxX, y: target.frame.maxY),
+                            in: size
                         )
+                        let targetViewRect = CGRect(
+                            x: min(targetStart.x, targetEnd.x),
+                            y: min(targetStart.y, targetEnd.y),
+                            width: abs(targetEnd.x - targetStart.x),
+                            height: abs(targetEnd.y - targetStart.y)
+                        )
+                        context.stroke(
+                            Path(targetViewRect),
+                            with: .color(Color(nsColor: ImageEditorTheme.selected)),
+                            lineWidth: 1.5
+                        )
+                    }
                 }
-                .frame(width: viewRect.width, height: viewRect.height)
-                .position(x: viewRect.midX, y: viewRect.midY)
-                .allowsHitTesting(false)
-                .accessibilityHidden(true)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .allowsHitTesting(false)
+            .accessibilityHidden(true)
         }
     }
 
