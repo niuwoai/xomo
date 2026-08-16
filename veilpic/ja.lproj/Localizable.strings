@@ -969,6 +969,8 @@
 "imageEditor.history.gradientOverlayStopNudged" = "グラデーションオーバーレイのカラーストップを微調整";
 "imageEditor.history.gradientOverlayMidpoint" = "グラデーションオーバーレイのカラー中間点を移動";
 "imageEditor.history.gradientOverlayMidpointNudged" = "グラデーションオーバーレイのカラー中間点を微調整";
+"imageEditor.history.gradientOverlayMidpointReset" = "グラデーションオーバーレイのカラー中間点をリセット";
+"imageEditor.action.resetGradientOverlayMidpoint" = "中間点を 50% にリセット";
 "imageEditor.history.shapeGradientStop" = "グラデーションストップを移動";
 "imageEditor.history.shapeGradientMidpoint" = "グラデーションカラー中間点を移動";
 "imageEditor.action.shapeGradientStopAdd" = "グラデーションストップを追加";

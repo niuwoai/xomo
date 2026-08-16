@@ -969,6 +969,8 @@
 "imageEditor.history.gradientOverlayStopNudged" = "微调渐变叠加颜色色标";
 "imageEditor.history.gradientOverlayMidpoint" = "移动渐变叠加颜色中点";
 "imageEditor.history.gradientOverlayMidpointNudged" = "微调渐变叠加颜色中点";
+"imageEditor.history.gradientOverlayMidpointReset" = "重置渐变叠加颜色中点";
+"imageEditor.action.resetGradientOverlayMidpoint" = "将中点重置为 50%";
 "imageEditor.history.shapeGradientStop" = "移动渐变色标";
 "imageEditor.history.shapeGradientMidpoint" = "移动渐变颜色中点";
 "imageEditor.action.shapeGradientStopAdd" = "添加渐变色标";

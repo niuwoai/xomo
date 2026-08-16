@@ -2824,6 +2824,55 @@ struct ImageEditorLayerStyleTests {
         #expect(try viewModel.projectData() == originalProjectData)
     }
 
+    @Test func gradientOverlayCanvasMidpointResetCommitsOnceAndSupportsUndoRedo() throws {
+        let viewModel = gradientOverlayCenterViewModel()
+        let selectedIndex = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[selectedIndex].style.setGradientOverlayColorStops([
+            ImageEditorGradientColorStop(
+                position: 0,
+                color: .systemRed,
+                midpoint: 0.2
+            ),
+            ImageEditorGradientColorStop(position: 1, color: .systemBlue)
+        ])
+        let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
+
+        #expect(viewModel.resetSelectedLayerGradientOverlayCanvasMidpoint(after: 0))
+        #expect(
+            abs(viewModel.selectedLayerGradientOverlayColorStops[0].midpoint - 0.5)
+                < 0.000_001
+        )
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.undoStack.count == undoCount + 1)
+
+        viewModel.undo()
+        #expect(
+            abs(viewModel.selectedLayerGradientOverlayColorStops[0].midpoint - 0.2)
+                < 0.000_001
+        )
+        viewModel.redo()
+        #expect(
+            abs(viewModel.selectedLayerGradientOverlayColorStops[0].midpoint - 0.5)
+                < 0.000_001
+        )
+    }
+
+    @Test func gradientOverlayCanvasMidpointResetAtDefaultPreservesHistoryAndRedo() throws {
+        let viewModel = gradientOverlayCenterViewModel()
+        #expect(viewModel.setSelectedLayerGradientOverlayAngle(15) == 1)
+        viewModel.undo()
+        let originalProjectData = try viewModel.projectData()
+        let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
+
+        #expect(!viewModel.resetSelectedLayerGradientOverlayCanvasMidpoint(after: 0))
+        #expect(try viewModel.projectData() == originalProjectData)
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.undoStack.count == undoCount)
+        #expect(viewModel.canRedo)
+    }
+
     @Test func draggingGradientOverlayCanvasStopCommitsOnceAndRoundTripPreservesRedo() throws {
         let viewModel = gradientOverlayCenterViewModel()
         let selectedIndex = try #require(viewModel.document.selectedLayerIndex)
@@ -3279,6 +3328,8 @@ struct ImageEditorLayerStyleTests {
         #expect(source.contains("deleteSelectedGradientOverlayStopIfNeeded"))
         #expect(source.contains("selectedGradientOverlayMidpointIndex"))
         #expect(source.contains("nudgeSelectedGradientOverlayHandleIfNeeded"))
+        #expect(source.contains("resetSelectedGradientOverlayMidpointIfNeeded"))
+        #expect(source.contains("imageEditor.action.resetGradientOverlayMidpoint"))
         #expect(source.contains(".contextMenu"))
         #expect(source.contains("cancelGradientOverlayCanvasHandleDragForLifecycle"))
         #expect(source.contains("image-editor-gradient-overlay-center-handle"))

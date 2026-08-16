@@ -969,6 +969,8 @@
 "imageEditor.history.gradientOverlayStopNudged" = "Nudge Gradient Overlay Color Stop";
 "imageEditor.history.gradientOverlayMidpoint" = "Move Gradient Overlay Color Midpoint";
 "imageEditor.history.gradientOverlayMidpointNudged" = "Nudge Gradient Overlay Color Midpoint";
+"imageEditor.history.gradientOverlayMidpointReset" = "Reset Gradient Overlay Color Midpoint";
+"imageEditor.action.resetGradientOverlayMidpoint" = "Reset Midpoint to 50%";
 "imageEditor.history.shapeGradientStop" = "Move Gradient Stop";
 "imageEditor.history.shapeGradientMidpoint" = "Move Gradient Color Midpoint";
 "imageEditor.action.shapeGradientStopAdd" = "Add Gradient Stop";

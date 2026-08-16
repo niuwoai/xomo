@@ -275,6 +275,9 @@ struct ImageEditorView: View {
                     if deleteSelectedGradientOverlayStopIfNeeded() {
                         return true
                     }
+                    if resetSelectedGradientOverlayMidpointIfNeeded() {
+                        return true
+                    }
                     if deleteSelectedShapeGradientStopIfNeeded() {
                         return true
                     }
@@ -7445,6 +7448,20 @@ struct ImageEditorView: View {
         return removeGradientOverlayCanvasStop(at: selectedGradientOverlayStopIndex)
     }
 
+    private func resetSelectedGradientOverlayMidpointIfNeeded() -> Bool {
+        guard viewModel.selectedLeftSidebarTab == .tools,
+              canvasInteractionTool == .move,
+              viewModel.document.areExtrasVisible,
+              viewModel.canEditSelectedLayerGradientOverlayCanvasCenter,
+              let index = selectedGradientOverlayMidpointIndex,
+              viewModel.selectedLayerGradientOverlayCanvasMidpointHandlePoints.contains(
+                  where: { $0.lowerStopIndex == index }
+              )
+        else { return false }
+        viewModel.resetSelectedLayerGradientOverlayCanvasMidpoint(after: index)
+        return true
+    }
+
     private func nudgeSelectedGradientOverlayHandleIfNeeded(by delta: CGSize) -> Bool {
         guard viewModel.selectedLeftSidebarTab == .tools,
               canvasInteractionTool == .move,
@@ -8000,6 +8017,16 @@ struct ImageEditorView: View {
                     viewModel.finishEditingSelectedLayerGradientOverlayCanvasMidpoint()
                 }
             )
+            .contextMenu {
+                Button(L10n.text("imageEditor.action.resetGradientOverlayMidpoint")) {
+                    selectedGradientOverlayStopIndex = nil
+                    selectedGradientOverlayMidpointIndex = point.lowerStopIndex
+                    viewModel.resetSelectedLayerGradientOverlayCanvasMidpoint(
+                        after: point.lowerStopIndex
+                    )
+                }
+                .disabled(abs(point.midpoint - 0.5) < 0.000_001)
+            }
             .allowsHitTesting(viewModel.canEditSelectedLayerGradientOverlayCanvasCenter)
             .opacity(viewModel.canEditSelectedLayerGradientOverlayCanvasCenter ? 1 : 0.55)
             .help(L10n.text("imageEditor.help.gradientOverlayMidpointHandle"))

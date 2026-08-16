@@ -829,6 +829,33 @@ extension ImageEditorViewModel {
         return true
     }
 
+    @discardableResult
+    func resetSelectedLayerGradientOverlayCanvasMidpoint(
+        after lowerStopIndex: Int
+    ) -> Bool {
+        guard editingGradientOverlayCenterLayerID == nil,
+              editingGradientOverlayAxisLayerID == nil,
+              editingGradientOverlayStopLayerID == nil,
+              editingGradientOverlayMidpointLayerID == nil,
+              canEditSelectedLayerGradientOverlayCanvasCenter,
+              let layer = singleSelectedGradientOverlayCanvasLayer,
+              let layerIndex = document.layers.firstIndex(where: { $0.id == layer.id })
+        else { return false }
+        let stops = layer.style.resolvedGradientOverlayColorStops
+        guard lowerStopIndex >= 0, lowerStopIndex < stops.count - 1 else { return false }
+        let resetStops = ImageEditorGradientOverlayStopDraftEditing.movingMidpoint(
+            stops,
+            after: lowerStopIndex,
+            to: 0.5
+        )
+        guard !gradientOverlayStopsMatch(resetStops, stops) else { return false }
+        beginGradientOverlayMidpointUndoTransaction()
+        document.layers[layerIndex].style.setGradientOverlayColorStops(resetStops)
+        appendHistory(L10n.text("imageEditor.history.gradientOverlayMidpointReset"))
+        finishGradientOverlayMidpointUndoTransaction(didChange: true)
+        return true
+    }
+
     private var singleSelectedGradientOverlayCanvasLayer: ImageEditorLayer? {
         let selectedIDs = document.selectedLayerIDs.isEmpty
             ? Set(document.selectedLayerID.map { [$0] } ?? [])
