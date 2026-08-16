@@ -5,6 +5,7 @@
 //  Created by Codex on 2026/8/16.
 //
 
+import AppKit
 import CoreGraphics
 import Foundation
 
@@ -75,6 +76,55 @@ enum ImageEditorGradientOverlayStopKeyboardAction: Equatable {
         guard delta.width.isFinite, delta.height.isFinite else { return .consume }
         guard delta.height == 0, delta.width != 0 else { return .consume }
         return .nudge(Double(delta.width / 100))
+    }
+}
+
+enum ImageEditorGradientOverlayCanvasHandleSelection: Equatable {
+    case stop(Int)
+    case midpoint(after: Int)
+}
+
+enum ImageEditorGradientOverlayCanvasHandleSelectionPolicy {
+    static func next(
+        current: ImageEditorGradientOverlayCanvasHandleSelection?,
+        stopCount: Int,
+        isReversed: Bool,
+        movesBackward: Bool
+    ) -> ImageEditorGradientOverlayCanvasHandleSelection? {
+        guard stopCount >= 2 else { return nil }
+        var ordered: [ImageEditorGradientOverlayCanvasHandleSelection] = []
+        for lowerStopIndex in 0..<(stopCount - 1) {
+            ordered.append(.midpoint(after: lowerStopIndex))
+            let upperStopIndex = lowerStopIndex + 1
+            if upperStopIndex < stopCount - 1 {
+                ordered.append(.stop(upperStopIndex))
+            }
+        }
+        if isReversed {
+            ordered.reverse()
+        }
+        guard !ordered.isEmpty else { return nil }
+        guard let current,
+              let currentIndex = ordered.firstIndex(of: current)
+        else {
+            return movesBackward ? ordered.last : ordered.first
+        }
+        let offset = movesBackward ? -1 : 1
+        let nextIndex = (currentIndex + offset + ordered.count) % ordered.count
+        return ordered[nextIndex]
+    }
+}
+
+enum ImageEditorGradientOverlayCanvasTabKeyPolicy {
+    static func matches(
+        keyCode: UInt16,
+        modifierFlags: NSEvent.ModifierFlags,
+        isTextInputActive: Bool
+    ) -> Bool {
+        let relevantFlags = modifierFlags.intersection([.command, .option, .shift, .control])
+        return keyCode == 48
+            && !isTextInputActive
+            && (relevantFlags.isEmpty || relevantFlags == [.shift])
     }
 }
 
@@ -343,6 +393,10 @@ enum ImageEditorGradientOverlayAxisGeometry {
 
 @MainActor
 extension ImageEditorViewModel {
+    var selectedLayerGradientOverlayCanvasIsReversed: Bool {
+        singleSelectedGradientOverlayCanvasLayer?.style.gradientOverlayReverse ?? false
+    }
+
     var selectedLayerGradientOverlayCanvasGeometry: ImageEditorGradientOverlayCanvasGeometry? {
         guard !isEditingLayerMask,
               let layer = singleSelectedGradientOverlayCanvasLayer

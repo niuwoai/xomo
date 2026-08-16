@@ -2706,6 +2706,103 @@ struct ImageEditorLayerStyleTests {
         )
     }
 
+    @Test func gradientOverlayCanvasHandleTabSelectionCyclesInDisplayedOrder() {
+        typealias Selection = ImageEditorGradientOverlayCanvasHandleSelection
+        typealias Policy = ImageEditorGradientOverlayCanvasHandleSelectionPolicy
+
+        #expect(
+            Policy.next(
+                current: nil,
+                stopCount: 1,
+                isReversed: false,
+                movesBackward: false
+            ) == nil
+        )
+        #expect(
+            Policy.next(
+                current: nil,
+                stopCount: 4,
+                isReversed: false,
+                movesBackward: false
+            ) == Selection.midpoint(after: 0)
+        )
+        #expect(
+            Policy.next(
+                current: .midpoint(after: 0),
+                stopCount: 4,
+                isReversed: false,
+                movesBackward: false
+            ) == Selection.stop(1)
+        )
+        #expect(
+            Policy.next(
+                current: .midpoint(after: 2),
+                stopCount: 4,
+                isReversed: false,
+                movesBackward: false
+            ) == Selection.midpoint(after: 0)
+        )
+        #expect(
+            Policy.next(
+                current: nil,
+                stopCount: 4,
+                isReversed: false,
+                movesBackward: true
+            ) == Selection.midpoint(after: 2)
+        )
+        #expect(
+            Policy.next(
+                current: nil,
+                stopCount: 4,
+                isReversed: true,
+                movesBackward: false
+            ) == Selection.midpoint(after: 2)
+        )
+        #expect(
+            Policy.next(
+                current: .midpoint(after: 2),
+                stopCount: 4,
+                isReversed: true,
+                movesBackward: false
+            ) == Selection.stop(2)
+        )
+        #expect(
+            ImageEditorGradientOverlayCanvasTabKeyPolicy.matches(
+                keyCode: 48,
+                modifierFlags: [],
+                isTextInputActive: false
+            )
+        )
+        #expect(
+            ImageEditorGradientOverlayCanvasTabKeyPolicy.matches(
+                keyCode: 48,
+                modifierFlags: [.shift],
+                isTextInputActive: false
+            )
+        )
+        #expect(
+            !ImageEditorGradientOverlayCanvasTabKeyPolicy.matches(
+                keyCode: 48,
+                modifierFlags: [.option],
+                isTextInputActive: false
+            )
+        )
+        #expect(
+            !ImageEditorGradientOverlayCanvasTabKeyPolicy.matches(
+                keyCode: 48,
+                modifierFlags: [],
+                isTextInputActive: true
+            )
+        )
+        #expect(
+            !ImageEditorGradientOverlayCanvasTabKeyPolicy.matches(
+                keyCode: 49,
+                modifierFlags: [],
+                isTextInputActive: false
+            )
+        )
+    }
+
     @Test func gradientOverlayCanvasStopKeyboardNudgeAtBoundaryIsHistoryNoOp() throws {
         let viewModel = gradientOverlayCenterViewModel()
         let selectedIndex = try #require(viewModel.document.selectedLayerIndex)
@@ -3330,6 +3427,9 @@ struct ImageEditorLayerStyleTests {
         #expect(source.contains("nudgeSelectedGradientOverlayHandleIfNeeded"))
         #expect(source.contains("resetSelectedGradientOverlayMidpointIfNeeded"))
         #expect(source.contains("imageEditor.action.resetGradientOverlayMidpoint"))
+        #expect(source.contains("selectNextGradientOverlayCanvasHandle"))
+        #expect(source.contains("selectNextCanvasHandle"))
+        #expect(source.contains("ImageEditorGradientOverlayCanvasTabKeyPolicy.matches"))
         #expect(source.contains(".contextMenu"))
         #expect(source.contains("cancelGradientOverlayCanvasHandleDragForLifecycle"))
         #expect(source.contains("image-editor-gradient-overlay-center-handle"))

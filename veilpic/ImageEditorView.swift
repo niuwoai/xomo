@@ -253,6 +253,14 @@ struct ImageEditorView: View {
                         viewModel.nudgeSelectionOrSelectedLayer(by: delta)
                     }
                 },
+                selectNextCanvasHandle: { movesBackward in
+                    if cancelGradientOverlayCanvasHandleDragForLifecycle() {
+                        return true
+                    }
+                    return selectNextGradientOverlayCanvasHandle(
+                        movesBackward: movesBackward
+                    )
+                },
                 deleteSelectedObject: {
                     if cancelPathAnchorDragForKeyboardCommand() {
                         return true
@@ -7486,6 +7494,37 @@ struct ImageEditorView: View {
         return false
     }
 
+    private func selectNextGradientOverlayCanvasHandle(movesBackward: Bool) -> Bool {
+        guard viewModel.selectedLeftSidebarTab == .tools,
+              canvasInteractionTool == .move,
+              viewModel.document.areExtrasVisible,
+              viewModel.canEditSelectedLayerGradientOverlayCanvasCenter
+        else { return false }
+        let current: ImageEditorGradientOverlayCanvasHandleSelection?
+        if let index = selectedGradientOverlayStopIndex {
+            current = .stop(index)
+        } else if let index = selectedGradientOverlayMidpointIndex {
+            current = .midpoint(after: index)
+        } else {
+            current = nil
+        }
+        guard let next = ImageEditorGradientOverlayCanvasHandleSelectionPolicy.next(
+            current: current,
+            stopCount: viewModel.selectedLayerGradientOverlayColorStops.count,
+            isReversed: viewModel.selectedLayerGradientOverlayCanvasIsReversed,
+            movesBackward: movesBackward
+        ) else { return false }
+        switch next {
+        case .stop(let index):
+            selectedGradientOverlayStopIndex = index
+            selectedGradientOverlayMidpointIndex = nil
+        case .midpoint(after: let index):
+            selectedGradientOverlayStopIndex = nil
+            selectedGradientOverlayMidpointIndex = index
+        }
+        return true
+    }
+
     private func applyGradientOverlayStopKeyboardAction(
         _ action: ImageEditorGradientOverlayStopKeyboardAction,
         at index: Int
@@ -14542,6 +14581,7 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
     let perform: (ImageEditorKeyboardShortcutAction) -> Void
     let activeTool: ImageEditorTool
     let nudgeSelected: (CGSize) -> Void
+    let selectNextCanvasHandle: (Bool) -> Bool
     let deleteSelectedObject: () -> Bool
     let finishPendingPenPath: () -> Bool
     let cancelSelectedObject: () -> Bool
@@ -14555,6 +14595,7 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
             perform: perform,
             activeTool: activeTool,
             nudgeSelected: nudgeSelected,
+            selectNextCanvasHandle: selectNextCanvasHandle,
             deleteSelectedObject: deleteSelectedObject,
             finishPendingPenPath: finishPendingPenPath,
             cancelSelectedObject: cancelSelectedObject,
@@ -14573,6 +14614,7 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
         context.coordinator.perform = perform
         context.coordinator.activeTool = activeTool
         context.coordinator.nudgeSelected = nudgeSelected
+        context.coordinator.selectNextCanvasHandle = selectNextCanvasHandle
         context.coordinator.deleteSelectedObject = deleteSelectedObject
         context.coordinator.finishPendingPenPath = finishPendingPenPath
         context.coordinator.cancelSelectedObject = cancelSelectedObject
@@ -14587,6 +14629,7 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
         var perform: (ImageEditorKeyboardShortcutAction) -> Void
         var activeTool: ImageEditorTool
         var nudgeSelected: (CGSize) -> Void
+        var selectNextCanvasHandle: (Bool) -> Bool
         var deleteSelectedObject: () -> Bool
         var finishPendingPenPath: () -> Bool
         var cancelSelectedObject: () -> Bool
@@ -14603,6 +14646,7 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
             perform: @escaping (ImageEditorKeyboardShortcutAction) -> Void,
             activeTool: ImageEditorTool,
             nudgeSelected: @escaping (CGSize) -> Void,
+            selectNextCanvasHandle: @escaping (Bool) -> Bool,
             deleteSelectedObject: @escaping () -> Bool,
             finishPendingPenPath: @escaping () -> Bool,
             cancelSelectedObject: @escaping () -> Bool,
@@ -14614,6 +14658,7 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
             self.perform = perform
             self.activeTool = activeTool
             self.nudgeSelected = nudgeSelected
+            self.selectNextCanvasHandle = selectNextCanvasHandle
             self.deleteSelectedObject = deleteSelectedObject
             self.finishPendingPenPath = finishPendingPenPath
             self.cancelSelectedObject = cancelSelectedObject
@@ -14688,6 +14733,15 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
                 }
             }
             let isDelete = event.keyCode == 51 || event.keyCode == 117
+            if event.type == .keyDown,
+               ImageEditorGradientOverlayCanvasTabKeyPolicy.matches(
+                keyCode: event.keyCode,
+                modifierFlags: event.modifierFlags,
+                isTextInputActive: isTextInputActive
+               ),
+               selectNextCanvasHandle(relevantFlags.contains(.shift)) {
+                return nil
+            }
             if event.type == .keyDown,
                event.keyCode == 53,
                relevantFlags.isEmpty,
