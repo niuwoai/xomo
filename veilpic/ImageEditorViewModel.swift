@@ -528,6 +528,7 @@ final class ImageEditorViewModel: ObservableObject {
     var editingGradientOverlayOriginalStops: [ImageEditorGradientColorStop]?
     var editingGradientOverlayStopMovementStops: [ImageEditorGradientColorStop]?
     var editingGradientOverlayStopWasDuplicated = false
+    var editingGradientOverlayStopWasRemoved = false
     var editingGradientOverlayMidpointLayerID: UUID?
     var editingGradientOverlayMidpointLowerStopIndex: Int?
     var editingGradientOverlayMidpointOriginalStops: [ImageEditorGradientColorStop]?
