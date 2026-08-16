@@ -530,7 +530,7 @@ struct ImageEditorView: View {
                let stopIndex = selectedGradientOverlayStopIndex,
                viewModel.document.areExtrasVisible,
                viewModel.canEditSelectedLayerGradientOverlayCanvasCenter,
-               viewModel.selectedLayerGradientOverlayCanvasStopHandlePoints.contains(
+               let stopHandle = viewModel.selectedLayerGradientOverlayCanvasStopHandlePoints.first(
                    where: { $0.index == stopIndex }
                ) {
                 Divider()
@@ -542,6 +542,51 @@ struct ImageEditorView: View {
                 ))
                 .font(.system(size: 11, weight: .medium))
                 gradientOverlayCanvasStopColorWell(at: stopIndex)
+                if !stopHandle.isEndpoint {
+                    ImageEditorPercentageField(
+                        label: L10n.text("imageEditor.option.gradientOverlayStopPosition"),
+                        normalizedValue: viewModel.selectedLayerGradientOverlayCanvasIsReversed
+                            ? 1 - stopHandle.stop.position
+                            : stopHandle.stop.position,
+                        accessibilityIdentifier:
+                            "image-editor-gradient-overlay-canvas-stop-position-\(stopIndex)"
+                    ) { displayedPosition in
+                        if let movedIndex = viewModel
+                            .setSelectedLayerGradientOverlayCanvasStopDisplayedPosition(
+                                at: stopIndex,
+                                to: displayedPosition
+                            ) {
+                            selectedGradientOverlayStopIndex = movedIndex
+                            selectedGradientOverlayMidpointIndex = nil
+                        }
+                    }
+                    .id("gradient-overlay-stop-position-\(stopIndex)")
+                }
+            }
+
+            if viewModel.selectedTool == .move,
+               let midpointIndex = selectedGradientOverlayMidpointIndex,
+               viewModel.document.areExtrasVisible,
+               viewModel.canEditSelectedLayerGradientOverlayCanvasCenter,
+               let midpointHandle = viewModel
+                   .selectedLayerGradientOverlayCanvasMidpointHandlePoints.first(
+                       where: { $0.lowerStopIndex == midpointIndex }
+                   ) {
+                Divider()
+                    .frame(height: 20)
+                    .overlay(editorBorder)
+                ImageEditorPercentageField(
+                    label: L10n.text("imageEditor.option.gradientOverlayMidpoint"),
+                    normalizedValue: midpointHandle.midpoint,
+                    accessibilityIdentifier:
+                        "image-editor-gradient-overlay-canvas-midpoint-position-\(midpointIndex)"
+                ) { midpoint in
+                    _ = viewModel.setSelectedLayerGradientOverlayCanvasMidpoint(
+                        after: midpointIndex,
+                        to: midpoint
+                    )
+                }
+                .id("gradient-overlay-midpoint-position-\(midpointIndex)")
             }
 
             if viewModel.selectedTool == .patchTool {

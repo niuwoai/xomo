@@ -910,6 +910,9 @@
 "imageEditor.properties.shapeGradientStopCount" = "%d color stops";
 "imageEditor.properties.shapeGradientStopColor" = "Stop %d color";
 "imageEditor.properties.shapeGradientStopPosition" = "Stop position: %d%%";
+"imageEditor.option.gradientOverlayStopPosition" = "Location";
+"imageEditor.option.gradientOverlayMidpoint" = "Midpoint";
+"imageEditor.properties.percentUnit" = "%";
 "imageEditor.properties.shapeGradientStopAccessibility" = "Stop %d at %d%%, opacity %d%%";
 "imageEditor.properties.shapeGradientStopOpacity" = "Stop opacity: %d%%";
 "imageEditor.properties.shapeGradientStopMidpoint" = "Following color midpoint: %d%%";
@@ -964,6 +967,8 @@
 "imageEditor.history.gradientOverlayCenter" = "Move Gradient Overlay Center";
 "imageEditor.history.gradientOverlayAxis" = "Adjust Gradient Overlay Axis";
 "imageEditor.history.gradientOverlayStop" = "Move Gradient Overlay Color Stop";
+"imageEditor.history.gradientOverlayStopPosition" = "Set Gradient Overlay Stop Location";
+"imageEditor.history.gradientOverlayMidpointPosition" = "Set Gradient Overlay Color Midpoint";
 "imageEditor.history.gradientOverlayStopColor" = "Change Gradient Overlay Color Stop";
 "imageEditor.history.gradientOverlayStopAdded" = "Add Gradient Overlay Color Stop";
 "imageEditor.history.gradientOverlayStopDuplicated" = "Duplicate Gradient Overlay Color Stop";

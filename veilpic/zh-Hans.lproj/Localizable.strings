@@ -910,6 +910,9 @@
 "imageEditor.properties.shapeGradientStopCount" = "%d 个色标";
 "imageEditor.properties.shapeGradientStopColor" = "色标 %d 颜色";
 "imageEditor.properties.shapeGradientStopPosition" = "色标位置：%d%%";
+"imageEditor.option.gradientOverlayStopPosition" = "位置";
+"imageEditor.option.gradientOverlayMidpoint" = "中点";
+"imageEditor.properties.percentUnit" = "%";
 "imageEditor.properties.shapeGradientStopAccessibility" = "色标 %d，位置 %d%%，不透明度 %d%%";
 "imageEditor.properties.shapeGradientStopOpacity" = "色标不透明度：%d%%";
 "imageEditor.properties.shapeGradientStopMidpoint" = "后续颜色中点：%d%%";
@@ -964,6 +967,8 @@
 "imageEditor.history.gradientOverlayCenter" = "移动渐变叠加中心";
 "imageEditor.history.gradientOverlayAxis" = "调整渐变叠加轴线";
 "imageEditor.history.gradientOverlayStop" = "移动渐变叠加颜色色标";
+"imageEditor.history.gradientOverlayStopPosition" = "设置渐变叠加色标位置";
+"imageEditor.history.gradientOverlayMidpointPosition" = "设置渐变叠加颜色中点";
 "imageEditor.history.gradientOverlayStopColor" = "更改渐变叠加颜色色标";
 "imageEditor.history.gradientOverlayStopAdded" = "添加渐变叠加颜色色标";
 "imageEditor.history.gradientOverlayStopDuplicated" = "复制渐变叠加颜色色标";

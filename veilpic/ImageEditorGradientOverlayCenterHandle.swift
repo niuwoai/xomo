@@ -1011,6 +1011,70 @@ extension ImageEditorViewModel {
     }
 
     @discardableResult
+    func setSelectedLayerGradientOverlayCanvasStopDisplayedPosition(
+        at stopIndex: Int,
+        to displayedPosition: Double
+    ) -> Int? {
+        guard displayedPosition.isFinite,
+              editingGradientOverlayCenterLayerID == nil,
+              editingGradientOverlayAxisLayerID == nil,
+              editingGradientOverlayStopLayerID == nil,
+              editingGradientOverlayMidpointLayerID == nil,
+              canEditSelectedLayerGradientOverlayCanvasCenter,
+              let layer = singleSelectedGradientOverlayCanvasLayer,
+              let layerIndex = document.layers.firstIndex(where: { $0.id == layer.id })
+        else { return nil }
+        let stops = layer.style.resolvedGradientOverlayColorStops
+        guard stopIndex > 0, stopIndex < stops.count - 1 else { return nil }
+        let clampedDisplayedPosition = max(0, min(1, displayedPosition))
+        let logicalPosition = layer.style.gradientOverlayReverse
+            ? 1 - clampedDisplayedPosition
+            : clampedDisplayedPosition
+        let result = ImageEditorGradientOverlayStopDraftEditing.reorderingStop(
+            stops,
+            at: stopIndex,
+            to: logicalPosition
+        )
+        guard !gradientOverlayStopsMatch(result.stops, stops) else {
+            return result.movedIndex
+        }
+        beginGradientOverlayStopUndoTransaction()
+        document.layers[layerIndex].style.setGradientOverlayColorStops(result.stops)
+        appendHistory(L10n.text("imageEditor.history.gradientOverlayStopPosition"))
+        finishGradientOverlayStopUndoTransaction(didChange: true)
+        return result.movedIndex
+    }
+
+    @discardableResult
+    func setSelectedLayerGradientOverlayCanvasMidpoint(
+        after lowerStopIndex: Int,
+        to midpoint: Double
+    ) -> Bool {
+        guard midpoint.isFinite,
+              editingGradientOverlayCenterLayerID == nil,
+              editingGradientOverlayAxisLayerID == nil,
+              editingGradientOverlayStopLayerID == nil,
+              editingGradientOverlayMidpointLayerID == nil,
+              canEditSelectedLayerGradientOverlayCanvasCenter,
+              let layer = singleSelectedGradientOverlayCanvasLayer,
+              let layerIndex = document.layers.firstIndex(where: { $0.id == layer.id })
+        else { return false }
+        let stops = layer.style.resolvedGradientOverlayColorStops
+        guard lowerStopIndex >= 0, lowerStopIndex < stops.count - 1 else { return false }
+        let movedStops = ImageEditorGradientOverlayStopDraftEditing.movingMidpoint(
+            stops,
+            after: lowerStopIndex,
+            to: max(0, min(1, midpoint))
+        )
+        guard !gradientOverlayStopsMatch(movedStops, stops) else { return false }
+        beginGradientOverlayMidpointUndoTransaction()
+        document.layers[layerIndex].style.setGradientOverlayColorStops(movedStops)
+        appendHistory(L10n.text("imageEditor.history.gradientOverlayMidpointPosition"))
+        finishGradientOverlayMidpointUndoTransaction(didChange: true)
+        return true
+    }
+
+    @discardableResult
     func nudgeSelectedLayerGradientOverlayCanvasStop(
         at stopIndex: Int,
         displayedDelta: Double

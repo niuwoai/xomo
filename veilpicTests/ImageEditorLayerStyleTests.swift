@@ -2430,6 +2430,121 @@ struct ImageEditorLayerStyleTests {
         }
     }
 
+    @Test func gradientOverlayCanvasPercentageDraftParsesAndFormatsExactValues() {
+        #expect(ImageEditorPercentageDraft.normalizedValue(from: "37.5") == 0.375)
+        #expect(ImageEditorPercentageDraft.normalizedValue(from: " 37,5% ") == 0.375)
+        #expect(ImageEditorPercentageDraft.normalizedValue(from: "-5") == 0)
+        #expect(ImageEditorPercentageDraft.normalizedValue(from: "125") == 1)
+        #expect(ImageEditorPercentageDraft.normalizedValue(from: "") == nil)
+        #expect(ImageEditorPercentageDraft.normalizedValue(from: "not-a-number") == nil)
+        #expect(ImageEditorPercentageDraft.normalizedValue(from: "nan") == nil)
+        #expect(ImageEditorPercentageDraft.text(for: 0) == "0")
+        #expect(ImageEditorPercentageDraft.text(for: 0.375) == "37.5")
+        #expect(ImageEditorPercentageDraft.text(for: 1) == "100")
+        #expect(ImageEditorPercentageDraft.text(for: 0.333_333) == "33.33")
+    }
+
+    @Test func settingGradientOverlayCanvasHandlePercentagesReordersOnceAndPreservesRedo() throws {
+        let viewModel = gradientOverlayCenterViewModel()
+        let selectedIndex = try #require(viewModel.document.selectedLayerIndex)
+        let movingStop = ImageEditorGradientColorStop(
+            position: 0.2,
+            color: NSColor(srgbRed: 0.8, green: 0.2, blue: 0.4, alpha: 0.6),
+            midpoint: 0.35
+        )
+        let originalStops = [
+            ImageEditorGradientColorStop(position: 0, color: .black),
+            movingStop,
+            ImageEditorGradientColorStop(
+                position: 0.6,
+                color: .systemGreen,
+                midpoint: 0.65
+            ),
+            ImageEditorGradientColorStop(position: 1, color: .white)
+        ]
+        viewModel.document.layers[selectedIndex].style.setGradientOverlayColorStops(
+            originalStops
+        )
+        #expect(viewModel.setSelectedLayerGradientOverlayAngle(15) == 1)
+        viewModel.undo()
+        let originalProjectData = try viewModel.projectData()
+        let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
+
+        #expect(
+            viewModel.setSelectedLayerGradientOverlayCanvasStopDisplayedPosition(
+                at: 1,
+                to: 0.8
+            ) == 2
+        )
+        let reordered = viewModel.selectedLayerGradientOverlayColorStops
+        #expect(reordered[2].position == 0.8)
+        #expect(reordered[2].red == movingStop.red)
+        #expect(reordered[2].green == movingStop.green)
+        #expect(reordered[2].blue == movingStop.blue)
+        #expect(reordered[2].alpha == movingStop.alpha)
+        #expect(reordered[2].midpoint == movingStop.midpoint)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.undoStack.count == undoCount + 1)
+        #expect(!viewModel.canRedo)
+
+        viewModel.undo()
+        #expect(try viewModel.projectData() == originalProjectData)
+        #expect(viewModel.canRedo)
+        let noOpHistoryCount = viewModel.document.history.count
+        let noOpUndoCount = viewModel.undoStack.count
+        #expect(
+            viewModel.setSelectedLayerGradientOverlayCanvasStopDisplayedPosition(
+                at: 1,
+                to: 0.2
+            ) == 1
+        )
+        #expect(viewModel.document.history.count == noOpHistoryCount)
+        #expect(viewModel.undoStack.count == noOpUndoCount)
+        #expect(viewModel.canRedo)
+        #expect(
+            viewModel.setSelectedLayerGradientOverlayCanvasStopDisplayedPosition(
+                at: 0,
+                to: 0.5
+            ) == nil
+        )
+
+        viewModel.document.layers[selectedIndex].style.gradientOverlayReverse = true
+        #expect(
+            viewModel.setSelectedLayerGradientOverlayCanvasStopDisplayedPosition(
+                at: 1,
+                to: 0.25
+            ) == 2
+        )
+        #expect(viewModel.selectedLayerGradientOverlayColorStops[2].position == 0.75)
+
+        let midpointViewModel = gradientOverlayCenterViewModel()
+        let midpointIndex = try #require(midpointViewModel.document.selectedLayerIndex)
+        midpointViewModel.document.layers[midpointIndex].style.setGradientOverlayColorStops(
+            originalStops
+        )
+        let midpointHistoryCount = midpointViewModel.document.history.count
+        let midpointUndoCount = midpointViewModel.undoStack.count
+        #expect(
+            midpointViewModel.setSelectedLayerGradientOverlayCanvasMidpoint(
+                after: 0,
+                to: 0.22
+            )
+        )
+        #expect(midpointViewModel.selectedLayerGradientOverlayColorStops[0].midpoint == 0.22)
+        #expect(midpointViewModel.document.history.count == midpointHistoryCount + 1)
+        #expect(midpointViewModel.undoStack.count == midpointUndoCount + 1)
+        #expect(
+            !midpointViewModel.setSelectedLayerGradientOverlayCanvasMidpoint(
+                after: 0,
+                to: 0.22
+            )
+        )
+        #expect(midpointViewModel.document.history.count == midpointHistoryCount + 1)
+        midpointViewModel.undo()
+        #expect(midpointViewModel.selectedLayerGradientOverlayColorStops == originalStops)
+    }
+
     @Test func addingGradientOverlayCanvasStopInterpolatesAndHonorsLimits() throws {
         let viewModel = gradientOverlayCenterViewModel()
         let selectedIndex = try #require(viewModel.document.selectedLayerIndex)
@@ -4050,6 +4165,12 @@ struct ImageEditorLayerStyleTests {
             contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
             encoding: .utf8
         )
+        let percentageFieldSource = try String(
+            contentsOf: repositoryRoot.appendingPathComponent(
+                "veilpic/ImageEditorPercentageField.swift"
+            ),
+            encoding: .utf8
+        )
         #expect(source.contains("gradientOverlayCenterControlOverlay(in: geometry.size)"))
         #expect(source.contains("viewModel.selectedLeftSidebarTab == .tools"))
         #expect(source.contains("beginEditingSelectedLayerGradientOverlayCanvasCenter"))
@@ -4069,6 +4190,19 @@ struct ImageEditorLayerStyleTests {
         #expect(source.contains("beginEditingSelectedLayerGradientOverlayCanvasStopColor"))
         #expect(source.contains("updateSelectedLayerGradientOverlayCanvasStopColor"))
         #expect(source.contains("image-editor-gradient-overlay-canvas-stop-color-"))
+        #expect(source.contains("if !stopHandle.isEndpoint"))
+        #expect(source.contains("ImageEditorPercentageField("))
+        #expect(source.contains("imageEditor.option.gradientOverlayStopPosition"))
+        #expect(source.contains("image-editor-gradient-overlay-canvas-stop-position-"))
+        #expect(source.contains("setSelectedLayerGradientOverlayCanvasStopDisplayedPosition"))
+        #expect(source.contains("imageEditor.option.gradientOverlayMidpoint"))
+        #expect(source.contains("image-editor-gradient-overlay-canvas-midpoint-position-"))
+        #expect(source.contains("setSelectedLayerGradientOverlayCanvasMidpoint"))
+        #expect(percentageFieldSource.contains(".onSubmit"))
+        #expect(percentageFieldSource.contains(".onChange(of: isFocused)"))
+        #expect(percentageFieldSource.contains("commitDraft()"))
+        #expect(percentageFieldSource.contains("guard let value = ImageEditorPercentageDraft"))
+        #expect(percentageFieldSource.contains("synchronizeDraft()"))
         #expect(source.contains("beginEditingSelectedLayerGradientOverlayCanvasMidpoint"))
         #expect(source.contains("updateSelectedLayerGradientOverlayCanvasMidpoint"))
         #expect(source.contains("finishEditingSelectedLayerGradientOverlayCanvasMidpoint"))
