@@ -42,6 +42,30 @@ enum ImageEditorMoveAutoSelectTarget: String, CaseIterable, Identifiable {
     }
 }
 
+enum ImageEditorObjectBoxSelectionPolicy {
+    nonisolated static let activationDistance: CGFloat = 3
+
+    nonisolated static func isActivated(viewTranslation: CGSize) -> Bool {
+        hypot(viewTranslation.width, viewTranslation.height) >= activationDistance
+    }
+
+    nonisolated static func selectionRect(from start: CGPoint, to end: CGPoint) -> CGRect? {
+        guard start.x.isFinite,
+              start.y.isFinite,
+              end.x.isFinite,
+              end.y.isFinite
+        else { return nil }
+        let rect = CGRect(
+            x: min(start.x, end.x),
+            y: min(start.y, end.y),
+            width: abs(end.x - start.x),
+            height: abs(end.y - start.y)
+        )
+        guard rect.width > 0 || rect.height > 0 else { return nil }
+        return rect
+    }
+}
+
 enum ImageEditorMoveToolDoubleClickTarget: Equatable {
     case editableText(UUID)
     case layer(UUID)
@@ -119,6 +143,99 @@ extension ImageEditorViewModel {
     /// locked to the current layer.
     var moveToolAutoSelectsCanvasTarget: Bool {
         selectedLeftSidebarTab == .components || isMoveToolAutoSelectEnabled
+    }
+
+    /// Returns stable box-selection targets without changing document state.
+    /// Layer scope uses visible leaf bounds, Group scope promotes every hit to
+    /// its outermost container, and component mode preserves whole component
+    /// instances while still allowing ordinary top-level artwork.
+    func moveToolBoxSelectionTargetIDs(in selectionRect: CGRect) -> [UUID] {
+        let rect = selectionRect.standardized
+        guard rect.width > 0,
+              rect.height > 0,
+              rect.origin.x.isFinite,
+              rect.origin.y.isFinite,
+              rect.width.isFinite,
+              rect.height.isFinite
+        else { return [] }
+
+        let componentObjects = xomoCanvasObjects()
+        let componentGroupIDs = Set(componentObjects.map(\.groupID))
+        var orderedIDs: [UUID] = []
+        var seenIDs: Set<UUID> = []
+
+        func append(_ id: UUID) {
+            guard seenIDs.insert(id).inserted else { return }
+            orderedIDs.append(id)
+        }
+
+        if selectedLeftSidebarTab == .components {
+            for object in componentObjects.sorted(by: { $0.frontIndex < $1.frontIndex })
+            where rect.intersects(object.frame.standardized) {
+                append(object.groupID)
+            }
+        }
+
+        for layer in document.layers {
+            guard !layer.isGroup,
+                  !layer.isAdjustment,
+                  !layer.isFilter,
+                  document.isEffectivelyVisible(layer),
+                  layer.frame.standardized.width > 0,
+                  layer.frame.standardized.height > 0,
+                  rect.intersects(layer.frame.standardized)
+            else { continue }
+
+            let ancestors = document.ancestorGroups(for: layer)
+            if selectedLeftSidebarTab == .components {
+                guard !ancestors.contains(where: { componentGroupIDs.contains($0.id) }) else {
+                    continue
+                }
+                append(layer.id)
+                continue
+            }
+
+            switch moveToolAutoSelectTarget {
+            case .layer:
+                append(layer.id)
+            case .group:
+                append(ancestors.last?.id ?? layer.id)
+            }
+        }
+        return orderedIDs
+    }
+
+    /// Applies a Sketch/Figma-style intersection sweep as a selection-only
+    /// operation. It intentionally does not create History or Undo entries.
+    @discardableResult
+    func applyMoveToolBoxSelection(
+        in selectionRect: CGRect,
+        extendingSelection: Bool
+    ) -> Bool {
+        let targetIDs = moveToolBoxSelectionTargetIDs(in: selectionRect)
+        let previousIDs = document.selectedLayerIDs
+
+        if extendingSelection {
+            for id in targetIDs where !document.selectedLayerIDs.contains(id) {
+                selectLayer(id, extendingSelection: true)
+            }
+        } else if let firstID = targetIDs.first {
+            selectLayer(firstID)
+            for id in targetIDs.dropFirst() where !document.selectedLayerIDs.contains(id) {
+                selectLayer(id, extendingSelection: true)
+            }
+        } else {
+            clearLayerSelection()
+        }
+
+        guard document.selectedLayerIDs != previousIDs else { return false }
+        statusText = document.selectedLayerIDs.isEmpty
+            ? L10n.text("imageEditor.status.layerSelectionCleared")
+            : L10n.format(
+                "imageEditor.status.layerRangeSelected",
+                document.selectedLayerIDs.count
+            )
+        return true
     }
 
     /// Cursor feedback follows the same target policy as pointer activation.

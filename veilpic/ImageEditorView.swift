@@ -78,6 +78,26 @@ private struct ImageEditorColorSamplerDrag: Equatable {
     var previewPoint: CGPoint
 }
 
+private struct ImageEditorObjectSelectionBoxDrag: Equatable {
+    let startCanvasPoint: CGPoint
+    var endCanvasPoint: CGPoint
+    var viewTranslation: CGSize
+    let extendsSelection: Bool
+
+    var selectionRect: CGRect? {
+        ImageEditorObjectBoxSelectionPolicy.selectionRect(
+            from: startCanvasPoint,
+            to: endCanvasPoint
+        )
+    }
+
+    var isActivated: Bool {
+        ImageEditorObjectBoxSelectionPolicy.isActivated(
+            viewTranslation: viewTranslation
+        )
+    }
+}
+
 struct ImageEditorView: View {
     @Environment(\.locale) private var locale
     @StateObject var viewModel: ImageEditorViewModel
@@ -102,6 +122,7 @@ struct ImageEditorView: View {
     @State private var objectMoveAxisLock: ImageEditorObjectDragAxis?
     @State private var isObjectMoveGestureActive = false
     @State private var isCanvasSelectionGestureActive = false
+    @State private var objectSelectionBoxDrag: ImageEditorObjectSelectionBoxDrag?
     @State private var isCanvasCloneGestureActive = false
     @State private var isSelectedObjectMoveGestureActive = false
     @State private var isDeliveryObjectMoveGestureActive = false
@@ -339,6 +360,11 @@ struct ImageEditorView: View {
                         || isUncommittedPenPointerSequence
                 },
                 cancelSelectedObject: {
+                    if objectSelectionBoxDrag != nil {
+                        objectSelectionBoxDrag = nil
+                        NSCursor.arrow.set()
+                        return true
+                    }
                     if cancelGradientOverlayCanvasHandleDragForLifecycle() {
                         NSCursor.arrow.set()
                         return true
@@ -2393,6 +2419,9 @@ struct ImageEditorView: View {
     }
 
     private func beginCanvasPointerSequence() {
+        // A lost mouse-up must not leave a stale rubber band owning the next
+        // pointer sequence. Selection is committed only by the matching end.
+        objectSelectionBoxDrag = nil
         isPenPointerSequenceActive = canvasInteractionTool == .pen
         isDirectPathGestureResolved = false
         isPathSelectionGestureResolved = false
@@ -2629,6 +2658,7 @@ struct ImageEditorView: View {
                     guideInteractionOverlay(in: geometry.size)
                     quickMaskOverlay(in: geometry.size)
                     selectionOverlay(in: geometry.size)
+                    objectSelectionBoxOverlay(in: geometry.size)
                     savedPathOverlay(in: geometry.size)
                     sliceOverlay(in: geometry.size)
                     hotspotOverlay(in: geometry.size)
@@ -2720,6 +2750,7 @@ struct ImageEditorView: View {
                             beginCanvasPointerSequence()
                         },
                         onCanvasLifecycleInterrupted: { _ in
+                            objectSelectionBoxDrag = nil
                             cancelPathAnchorDragForCanvasLifecycle()
                         },
                         onZoom: { factor, location, viewportSize in
@@ -3089,6 +3120,7 @@ struct ImageEditorView: View {
                             isPointerOverCanvas: isPointerOverDrawableCanvas,
                             isPointerOverMovableContent: contentHit.isMovable,
                             isPointerOverBlockedContent: contentHit.isBlocked,
+                            moveToolUsesBoxSelection: viewModel.moveToolAutoSelectsCanvasTarget,
                             isPointerOverColorSamplerPoint:
                                 canvasInteractionTool == .colorSampler
                                     && hoverViewPoint.map {
@@ -3214,9 +3246,11 @@ struct ImageEditorView: View {
                 }
                 .onChange(of: viewModel.selectedTool) { _ in
                     _ = cancelGradientOverlayCanvasHandleDragForLifecycle()
+                    objectSelectionBoxDrag = nil
                 }
                 .onChange(of: viewModel.selectedLeftSidebarTab) { _ in
                     _ = cancelGradientOverlayCanvasHandleDragForLifecycle()
+                    objectSelectionBoxDrag = nil
                 }
                 .onDisappear {
                     _ = cancelGradientOverlayCanvasHandleDragForLifecycle()
@@ -3230,6 +3264,7 @@ struct ImageEditorView: View {
                     isPatchGestureBlocked = false
                     endPendingCropInteraction()
                     resetColorSamplerGesture()
+                    objectSelectionBoxDrag = nil
                     NSCursor.arrow.set()
                 }
                 .onAppear {
@@ -3984,6 +4019,15 @@ struct ImageEditorView: View {
 
                 switch canvasInteractionTool {
                 case .move:
+                    if var selectionBoxDrag = objectSelectionBoxDrag {
+                        selectionBoxDrag.endCanvasPoint = boundedImagePoint(
+                            from: value.location,
+                            in: size
+                        )
+                        selectionBoxDrag.viewTranslation = value.translation
+                        objectSelectionBoxDrag = selectionBoxDrag
+                        break
+                    }
                     if !isObjectMoveGestureActive,
                        !isSelectedObjectMoveGestureActive,
                        layerTransformCursorTarget(
@@ -4076,12 +4120,24 @@ struct ImageEditorView: View {
                     }
                     if !isObjectMoveGestureActive {
                         let pressedImagePoint = imagePoint(from: value.startLocation, in: size)
-                        guard let pressedImagePoint,
-                              viewModel.prepareCanvasFallbackMove(at: pressedImagePoint)
-                        else {
+                        if let pressedImagePoint,
+                           viewModel.moveToolAutoSelectsCanvasTarget,
+                           viewModel.moveToolContentHit(at: pressedImagePoint) == .none {
+                            objectSelectionBoxDrag = ImageEditorObjectSelectionBoxDrag(
+                                startCanvasPoint: pressedImagePoint,
+                                endCanvasPoint: boundedImagePoint(from: value.location, in: size),
+                                viewTranslation: value.translation,
+                                extendsSelection: NSEvent.modifierFlags.contains(.shift)
+                            )
+                            break
+                        }
+                        guard let pressedImagePoint else {
                             isCanvasPanGestureActive = true
                             updateCanvasPan(translation: value.translation)
                             NSCursor.closedHand.set()
+                            return
+                        }
+                        guard viewModel.prepareCanvasFallbackMove(at: pressedImagePoint) else {
                             return
                         }
                         guard viewModel.beginMovingSelectedLayer() else { return }
@@ -4440,6 +4496,22 @@ struct ImageEditorView: View {
                     dragStart = nil
                     dragEnd = nil
                     resetObjectMoveTracking()
+                    return
+                }
+
+                if let selectionBoxDrag = objectSelectionBoxDrag {
+                    if selectionBoxDrag.isActivated,
+                       let selectionRect = selectionBoxDrag.selectionRect {
+                        viewModel.applyMoveToolBoxSelection(
+                            in: selectionRect,
+                            extendingSelection: selectionBoxDrag.extendsSelection
+                        )
+                    } else if !selectionBoxDrag.extendsSelection {
+                        viewModel.clearLayerSelection()
+                    }
+                    objectSelectionBoxDrag = nil
+                    resetObjectMoveTracking()
+                    refreshCanvasCursor(in: size)
                     return
                 }
 
@@ -4996,6 +5068,7 @@ struct ImageEditorView: View {
             isPointerOverCanvas: canvasPoint != nil,
             isPointerOverMovableContent: contentHit.isMovable,
             isPointerOverBlockedContent: contentHit.isBlocked,
+            moveToolUsesBoxSelection: viewModel.moveToolAutoSelectsCanvasTarget,
             isPointerOverColorSamplerPoint:
                 canvasInteractionTool == .colorSampler
                     && colorSamplerPointID(at: viewPoint, in: size) != nil,
@@ -5069,6 +5142,7 @@ struct ImageEditorView: View {
             brushDiameter: viewModel.brushSize,
             isPointerOverCanvas: false,
             isPointerOverMovableContent: false,
+            moveToolUsesBoxSelection: viewModel.moveToolAutoSelectsCanvasTarget,
             handIsDragging: isCanvasPanGestureActive,
             isObjectMoveGestureActive: isSelectedObjectMoveGestureActive || isObjectMoveGestureActive,
             isColorSamplerMoveGestureActive: colorSamplerDrag != nil,
@@ -7028,6 +7102,7 @@ struct ImageEditorView: View {
             || isSelectedObjectMoveGestureActive
             || isCanvasCloneGestureActive
             || isCanvasSelectionGestureActive
+            || objectSelectionBoxDrag != nil
             || activeResizeHandle != nil
             || isRotatingLayer
             || isMovingTransformReferencePoint
@@ -7043,6 +7118,38 @@ struct ImageEditorView: View {
            let canvasPoint = imagePoint(from: hoverViewPoint, in: size)
         else { return [] }
         return viewModel.moveToolDistanceInspectionGuides(at: canvasPoint)
+    }
+
+    @ViewBuilder
+    private func objectSelectionBoxOverlay(in size: CGSize) -> some View {
+        if let selectionBoxDrag = objectSelectionBoxDrag,
+           selectionBoxDrag.isActivated,
+           let selectionRect = selectionBoxDrag.selectionRect {
+            let start = viewPoint(from: selectionRect.origin, in: size)
+            let end = viewPoint(
+                from: CGPoint(x: selectionRect.maxX, y: selectionRect.maxY),
+                in: size
+            )
+            let viewRect = CGRect(
+                x: min(start.x, end.x),
+                y: min(start.y, end.y),
+                width: abs(end.x - start.x),
+                height: abs(end.y - start.y)
+            )
+            Rectangle()
+                .fill(Color(nsColor: ImageEditorTheme.selected).opacity(0.12))
+                .overlay {
+                    Rectangle()
+                        .stroke(
+                            Color(nsColor: ImageEditorTheme.selected).opacity(0.96),
+                            lineWidth: 1
+                        )
+                }
+                .frame(width: viewRect.width, height: viewRect.height)
+                .position(x: viewRect.midX, y: viewRect.midY)
+                .allowsHitTesting(false)
+                .accessibilityHidden(true)
+        }
     }
 
     private func spacingGuidePath(_ guide: ImageEditorSpacingGuide, in size: CGSize) -> Path {
@@ -12696,6 +12803,7 @@ enum ImageEditorCanvasCursor {
         isPointerOverCanvas: Bool = true,
         isPointerOverMovableContent: Bool = true,
         isPointerOverBlockedContent: Bool = false,
+        moveToolUsesBoxSelection: Bool = false,
         isPointerOverColorSamplerPoint: Bool = false,
         penIsClosing: Bool = false,
         penIsConverting: Bool = false,
@@ -12775,7 +12883,7 @@ enum ImageEditorCanvasCursor {
                 return .operationNotAllowed
             }
             if selectedTool == .move, !isPointerOverMovableContent {
-                return .openHand
+                return moveToolUsesBoxSelection ? .arrow : .openHand
             }
             if selectedTool == .move {
                 // Sketch and Figma keep the ordinary pointer while hovering a

@@ -4,6 +4,184 @@ import Testing
 
 @MainActor
 struct XomoCanvasObjectTests {
+    @Test func objectBoxSelectionRequiresThreeViewPointsAndNormalizesDirection() throws {
+        #expect(!ImageEditorObjectBoxSelectionPolicy.isActivated(
+            viewTranslation: CGSize(width: 2.9, height: 0)
+        ))
+        #expect(ImageEditorObjectBoxSelectionPolicy.isActivated(
+            viewTranslation: CGSize(width: 0, height: -3)
+        ))
+
+        let rect = try #require(ImageEditorObjectBoxSelectionPolicy.selectionRect(
+            from: CGPoint(x: 90, y: 70),
+            to: CGPoint(x: 20, y: 30)
+        ))
+        #expect(rect == CGRect(x: 20, y: 30, width: 70, height: 40))
+        #expect(ImageEditorObjectBoxSelectionPolicy.selectionRect(
+            from: CGPoint(x: 10, y: 10),
+            to: CGPoint(x: 10, y: 10)
+        ) == nil)
+    }
+
+    @Test func layerScopeBoxSelectionUsesVisibleLeafBoundsWithoutHistory() {
+        let viewModel = makeViewModel()
+        viewModel.document.layers = []
+        viewModel.document.selectedLayerID = nil
+        viewModel.document.selectedLayerIDs = []
+        var first = ImageEditorLayer.solidColorFill(
+            name: "First",
+            size: CGSize(width: 40, height: 30),
+            content: ImageEditorSolidColorFillContent(red: 1, green: 0, blue: 0)
+        )
+        first.frame.origin = CGPoint(x: 20, y: 30)
+        var second = ImageEditorLayer.solidColorFill(
+            name: "Second",
+            size: CGSize(width: 50, height: 40),
+            content: ImageEditorSolidColorFillContent(red: 0, green: 0, blue: 1)
+        )
+        second.frame.origin = CGPoint(x: 160, y: 120)
+        var hidden = ImageEditorLayer.solidColorFill(
+            name: "Hidden",
+            size: CGSize(width: 30, height: 30),
+            content: ImageEditorSolidColorFillContent(red: 0, green: 1, blue: 0)
+        )
+        hidden.frame.origin = CGPoint(x: 45, y: 40)
+        hidden.isVisible = false
+        viewModel.document.layers = [first, second, hidden]
+        viewModel.isMoveToolAutoSelectEnabled = true
+        viewModel.moveToolAutoSelectTarget = .layer
+        let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
+
+        #expect(viewModel.applyMoveToolBoxSelection(
+            in: CGRect(x: 10, y: 20, width: 65, height: 55),
+            extendingSelection: false
+        ))
+        #expect(viewModel.document.selectedLayerIDs == [first.id])
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.undoStack.count == undoCount)
+    }
+
+    @Test func groupScopePromotesIntersectedLeavesAndDeduplicatesTheirContainer() throws {
+        let viewModel = makeViewModel()
+        viewModel.document.layers = []
+        viewModel.document.selectedLayerID = nil
+        viewModel.document.selectedLayerIDs = []
+        let outer = ImageEditorLayer.group(name: "Outer", size: viewModel.document.canvasSize)
+        var inner = ImageEditorLayer.group(name: "Inner", size: viewModel.document.canvasSize)
+        inner.groupID = outer.id
+        var first = ImageEditorLayer.solidColorFill(
+            name: "First",
+            size: CGSize(width: 30, height: 30),
+            content: ImageEditorSolidColorFillContent(red: 1, green: 0, blue: 0)
+        )
+        first.groupID = inner.id
+        first.frame.origin = CGPoint(x: 30, y: 30)
+        var second = ImageEditorLayer.solidColorFill(
+            name: "Second",
+            size: CGSize(width: 30, height: 30),
+            content: ImageEditorSolidColorFillContent(red: 0, green: 0, blue: 1)
+        )
+        second.groupID = inner.id
+        second.frame.origin = CGPoint(x: 80, y: 30)
+        viewModel.document.layers = [first, second, inner, outer]
+        viewModel.isMoveToolAutoSelectEnabled = true
+        viewModel.moveToolAutoSelectTarget = .group
+
+        let ids = viewModel.moveToolBoxSelectionTargetIDs(
+            in: CGRect(x: 20, y: 20, width: 100, height: 50)
+        )
+
+        #expect(ids == [outer.id])
+    }
+
+    @Test func componentModeBoxSelectionReturnsWholeInstances() throws {
+        let viewModel = makeViewModel()
+        viewModel.document.layers = []
+        viewModel.document.selectedLayerID = nil
+        viewModel.document.selectedLayerIDs = []
+        viewModel.insertXomoComponent(.button, at: CGPoint(x: 80, y: 90))
+        let firstGroup = try #require(viewModel.document.selectedLayer)
+        viewModel.insertXomoComponent(.badge, at: CGPoint(x: 280, y: 190))
+        let secondGroup = try #require(viewModel.document.selectedLayer)
+        viewModel.selectLeftSidebarTab(.components)
+        let union = try #require(viewModel.document.layers
+            .filter { $0.groupID == firstGroup.id || $0.groupID == secondGroup.id }
+            .map(\.frame)
+            .reduce(nil) { bounds, frame in bounds?.union(frame) ?? frame })
+
+        let ids = Set(viewModel.moveToolBoxSelectionTargetIDs(
+            in: union.insetBy(dx: -2, dy: -2)
+        ))
+
+        #expect(ids == [firstGroup.id, secondGroup.id])
+        #expect(!ids.contains { id in
+            viewModel.document.layers.contains { $0.id == id && $0.groupID != nil }
+        })
+    }
+
+    @Test func shiftBoxSelectionAddsTargetsAndEmptyPlainBoxClearsWithoutUndo() {
+        let viewModel = makeViewModel()
+        viewModel.document.layers = []
+        viewModel.document.selectedLayerID = nil
+        viewModel.document.selectedLayerIDs = []
+        var first = ImageEditorLayer.solidColorFill(
+            name: "First",
+            size: CGSize(width: 30, height: 30),
+            content: ImageEditorSolidColorFillContent(red: 1, green: 0, blue: 0)
+        )
+        first.frame.origin = CGPoint(x: 20, y: 20)
+        var second = ImageEditorLayer.solidColorFill(
+            name: "Second",
+            size: CGSize(width: 30, height: 30),
+            content: ImageEditorSolidColorFillContent(red: 0, green: 0, blue: 1)
+        )
+        second.frame.origin = CGPoint(x: 120, y: 120)
+        viewModel.document.layers = [first, second]
+        viewModel.isMoveToolAutoSelectEnabled = true
+        viewModel.moveToolAutoSelectTarget = .layer
+        viewModel.selectLayer(first.id)
+        let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
+
+        #expect(viewModel.applyMoveToolBoxSelection(
+            in: CGRect(x: 110, y: 110, width: 50, height: 50),
+            extendingSelection: true
+        ))
+        #expect(viewModel.document.selectedLayerIDs == [first.id, second.id])
+        #expect(!viewModel.applyMoveToolBoxSelection(
+            in: CGRect(x: 400, y: 400, width: 20, height: 20),
+            extendingSelection: true
+        ))
+        #expect(viewModel.document.selectedLayerIDs == [first.id, second.id])
+        #expect(viewModel.applyMoveToolBoxSelection(
+            in: CGRect(x: 400, y: 400, width: 20, height: 20),
+            extendingSelection: false
+        ))
+        #expect(viewModel.document.selectedLayerIDs.isEmpty)
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.undoStack.count == undoCount)
+    }
+
+    @Test func moveToolBlankCanvasGestureOwnsBoxSelectionInsteadOfPan() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(source.contains("objectSelectionBoxOverlay(in: geometry.size)"))
+        #expect(source.contains("viewModel.moveToolContentHit(at: pressedImagePoint) == .none"))
+        #expect(source.contains("objectSelectionBoxDrag = ImageEditorObjectSelectionBoxDrag("))
+        #expect(source.contains("viewModel.applyMoveToolBoxSelection("))
+        #expect(source.contains("moveToolUsesBoxSelection: viewModel.moveToolAutoSelectsCanvasTarget"))
+        #expect(source.contains("onCanvasLifecycleInterrupted: { _ in\n                            objectSelectionBoxDrag = nil"))
+        #expect(source.contains("if objectSelectionBoxDrag != nil {\n                        objectSelectionBoxDrag = nil"))
+        #expect(source.contains("private func beginCanvasPointerSequence() {\n        // A lost mouse-up"))
+    }
+
     @Test func canvasDragTranslationMapsViewPixelsToImagePixels() {
         let imageDelta = ImageEditorCanvasDragGeometry.imageDelta(
             from: CGSize(width: 75, height: 40),
@@ -832,7 +1010,7 @@ struct XomoCanvasObjectTests {
         #expect(source.contains("guard viewModel.moveToolAutoSelectsCanvasTarget else { return }"))
         #expect(source.contains("if viewModel.moveToolAutoSelectsCanvasTarget,"))
         #expect(source.contains("viewModel.prepareCanvasFallbackMove("))
-        #expect(source.components(separatedBy: "viewModel.moveToolContentHit(at:").count == 3)
+        #expect(source.components(separatedBy: "viewModel.moveToolContentHit(at:").count == 4)
     }
 
     @Test func commandShiftCanvasSelectionAddsAVisibleComponentChild() throws {

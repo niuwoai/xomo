@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.12.0-rc1074 - 2026-08-16
+
+### Added
+- 移动工具开启 Auto-Select 后，空白画布拖拽新增 Sketch/Figma 式对象框选：3 pt 后显示主题色选择框，Layer 范围选择相交的可见叶子，Group 范围提升并去重到最外层容器，组件模式保持完整组件实例；Shift 拖拽追加，普通空白点击清空选择。
+
+### Changed
+- Auto-Select 空白区光标由平移手掌改为系统箭头，框选只改变图层选择而不写 History/Undo；关闭 Auto-Select 的当前选择移动、对象真实拖动、组件库箭头、Space/中键/手形工具平移及变换控件优先级保持不变。
+
+### Verification
+- Xomo 对象专项 70/70、完整画布光标 84/84、CLI 2/2、发布契约 7/7（21 项断言）通过。覆盖阈值与反向拖拽、Layer/Group/组件范围、Shift 追加、空白清空、Escape/失焦/新指针序列清理、选择无 History/Undo，以及 Auto-Select 关闭、明确平移、真实对象拖动、变换控件和组件库箭头邻接回归。rc1040 周期安装/真实界面冒烟仍等待本机 Developer ID 私钥恢复，下一次周期完整门禁为 rc1080。
+
 ## 2.12.0-rc1073 - 2026-08-16
 
 ### Added

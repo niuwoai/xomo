@@ -511,6 +511,15 @@ struct ImageEditorCanvasCursorTests {
         )
         #expect(emptyCanvasMove === NSCursor.openHand)
 
+        let boxSelectionMove = ImageEditorCanvasCursor.cursor(
+            for: .tools,
+            selectedTool: .move,
+            brushDiameter: 18,
+            isPointerOverMovableContent: false,
+            moveToolUsesBoxSelection: true
+        )
+        #expect(boxSelectionMove === NSCursor.arrow)
+
         let blockedContentMove = ImageEditorCanvasCursor.cursor(
             for: .tools,
             selectedTool: .move,
