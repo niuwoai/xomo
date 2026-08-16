@@ -1861,6 +1861,7 @@
 "imageEditor.history.selectionCleared" = "清除选区";
 "imageEditor.history.quickMaskHide" = "绘制快速蒙版";
 "imageEditor.history.quickMaskReveal" = "擦除快速蒙版";
+"imageEditor.history.quickMaskPaintTone" = "按明度绘制快速蒙版";
 "imageEditor.history.autoLevels" = "自动色阶";
 "imageEditor.history.autoContrast" = "自动对比度";
 "imageEditor.history.autoColor" = "自动颜色";
@@ -2215,6 +2216,7 @@
 "imageEditor.status.quickMaskNeedsSelection" = "请先创建选区，再进入快速蒙版";
 "imageEditor.status.quickMaskHidden" = "已绘制快速蒙版，并从选区中移除对应区域";
 "imageEditor.status.quickMaskRevealed" = "已擦除快速蒙版，并将对应区域恢复到选区";
+"imageEditor.status.quickMaskPaintedTone" = "已按颜色明度绘制快速蒙版，并更新半透明选区";
 "imageEditor.status.selectionInverted" = "已反选选区";
 "imageEditor.status.historyCleared" = "已清理历史记录，当前画面已作为新的起点";
 "imageEditor.status.historySnapshotCreated" = "已创建历史快照“%@”";

@@ -33,6 +33,10 @@ struct XomoCanvasPresetTests {
         let viewModel = ImageEditorViewModel(sourceName: "source", image: image) { _ in }
         var draft = XomoCanvasDraft(preset: .phonePortrait)
         draft.background = .transparent
+        let originalForeground = NSColor.systemPink
+        let originalBackground = NSColor.systemTeal
+        viewModel.foregroundColor = originalForeground
+        viewModel.backgroundColor = originalBackground
         viewModel.toggleQuickMaskMode()
         #expect(viewModel.isQuickMaskMode)
 
@@ -50,6 +54,8 @@ struct XomoCanvasPresetTests {
         #expect(!viewModel.isQuickMaskMode)
         #expect(viewModel.document.selection == nil)
         #expect(viewModel.quickMaskOverlayImage == nil)
+        #expect(viewModel.foregroundColor == originalForeground)
+        #expect(viewModel.backgroundColor == originalBackground)
     }
 
     @MainActor

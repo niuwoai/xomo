@@ -351,6 +351,68 @@ struct ImageEditorSelectionOperationTests {
         #expect(viewModel.document.selection?.rasterMask != nil)
     }
 
+    @Test func quickMaskUsesTemporarySwatchesAndPaintsBlackWhiteAndGray() throws {
+        let canvasSize = NSSize(width: 32, height: 24)
+        let viewModel = ImageEditorViewModel(
+            sourceName: "quick-mask-grayscale.png",
+            image: testImage(size: canvasSize)
+        ) { _ in }
+        let originalForeground = NSColor(deviceRed: 0.9, green: 0.2, blue: 0.1, alpha: 1)
+        let originalBackground = NSColor(deviceRed: 0.1, green: 0.3, blue: 0.9, alpha: 1)
+        viewModel.foregroundColor = originalForeground
+        viewModel.backgroundColor = originalBackground
+        viewModel.brushSize = 4
+        viewModel.hardness = 1
+        viewModel.opacity = 1
+        let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
+
+        viewModel.toggleQuickMaskMode()
+        let quickForeground = try #require(viewModel.foregroundColor.usingColorSpace(.deviceRGB))
+        let quickBackground = try #require(viewModel.backgroundColor.usingColorSpace(.deviceRGB))
+        #expect(quickForeground.redComponent == 0)
+        #expect(quickForeground.greenComponent == 0)
+        #expect(quickForeground.blueComponent == 0)
+        #expect(quickBackground.redComponent == 1)
+        #expect(quickBackground.greenComponent == 1)
+        #expect(quickBackground.blueComponent == 1)
+
+        viewModel.drawBrush(points: [CGPoint(x: 8, y: 8)], erase: true)
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.undoStack.count == undoCount)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionUnchanged"))
+
+        viewModel.drawBrush(points: [CGPoint(x: 8, y: 8)])
+        var mask = try #require(viewModel.document.selection?.rasterizedMask(canvasSize: canvasSize))
+        #expect(maskAlpha(mask, x: 8, y: 8) == UInt8.min)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.quickMaskHide"))
+
+        viewModel.swapForegroundBackgroundColors()
+        viewModel.drawBrush(points: [CGPoint(x: 8, y: 8)])
+        mask = try #require(viewModel.document.selection?.rasterizedMask(canvasSize: canvasSize))
+        #expect(maskAlpha(mask, x: 8, y: 8) == UInt8.max)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.quickMaskReveal"))
+
+        viewModel.foregroundColor = NSColor(deviceWhite: 0.5, alpha: 1)
+        viewModel.drawBrush(points: [CGPoint(x: 24, y: 16)])
+        mask = try #require(viewModel.document.selection?.rasterizedMask(canvasSize: canvasSize))
+        #expect((126...129).contains(maskAlpha(mask, x: 24, y: 16)))
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.quickMaskPaintTone"))
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.quickMaskPaintedTone"))
+
+        viewModel.foregroundColor = .red
+        viewModel.drawBrush(points: [CGPoint(x: 16, y: 16)])
+        mask = try #require(viewModel.document.selection?.rasterizedMask(canvasSize: canvasSize))
+        #expect((53...55).contains(maskAlpha(mask, x: 16, y: 16)))
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.quickMaskPaintTone"))
+        #expect(viewModel.document.history.count == historyCount + 4)
+        #expect(viewModel.undoStack.count == undoCount + 4)
+
+        viewModel.toggleQuickMaskMode()
+        #expect(viewModel.foregroundColor == originalForeground)
+        #expect(viewModel.backgroundColor == originalBackground)
+    }
+
     @Test func quickMaskStrokeHonorsOpacityAndBrushDiameter() throws {
         let width = 16
         let height = 16

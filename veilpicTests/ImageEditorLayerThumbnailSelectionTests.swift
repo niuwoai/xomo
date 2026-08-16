@@ -413,6 +413,10 @@ struct ImageEditorLayerThumbnailSelectionTests {
     @Test func blankQuickMaskOriginDoesNotLeakThroughPreviewSwitches() throws {
         let fixture = makeLayerFixture(includeMasks: true)
         let viewModel = fixture.viewModel
+        let originalForeground = NSColor.systemOrange
+        let originalBackground = NSColor.systemPurple
+        viewModel.foregroundColor = originalForeground
+        viewModel.backgroundColor = originalBackground
         let historyCount = viewModel.document.history.count
         let undoCount = viewModel.undoStack.count
 
@@ -420,19 +424,27 @@ struct ImageEditorLayerThumbnailSelectionTests {
         viewModel.toggleQuickMaskMode()
         #expect(viewModel.isQuickMaskMode)
         #expect(viewModel.document.selection != nil)
+        #expect(viewModel.foregroundColor == .black)
+        #expect(viewModel.backgroundColor == .white)
 
         #expect(viewModel.toggleLayerMaskSoloPreview(layerID: fixture.thumbnailLayerID))
         #expect(!viewModel.isQuickMaskMode)
         #expect(viewModel.document.selection == nil)
         #expect(viewModel.previewedLayerMaskMode == .solo)
+        #expect(viewModel.foregroundColor == originalForeground)
+        #expect(viewModel.backgroundColor == originalBackground)
 
         viewModel.toggleQuickMaskMode()
         #expect(viewModel.isQuickMaskMode)
         #expect(viewModel.previewedLayerMaskMode == nil)
+        #expect(viewModel.foregroundColor == .black)
+        #expect(viewModel.backgroundColor == .white)
         viewModel.selectChannelPreview(.red)
         #expect(!viewModel.isQuickMaskMode)
         #expect(viewModel.document.selection == nil)
         #expect(viewModel.selectedChannelPreview == .red)
+        #expect(viewModel.foregroundColor == originalForeground)
+        #expect(viewModel.backgroundColor == originalBackground)
         #expect(viewModel.document.history.count == historyCount)
         #expect(viewModel.undoStack.count == undoCount)
     }

@@ -1861,6 +1861,7 @@
 "imageEditor.history.selectionCleared" = "選択範囲を解除";
 "imageEditor.history.quickMaskHide" = "クイックマスクを描画";
 "imageEditor.history.quickMaskReveal" = "クイックマスクを消去";
+"imageEditor.history.quickMaskPaintTone" = "明度でクイックマスクを描画";
 "imageEditor.history.autoLevels" = "自動レベル補正";
 "imageEditor.history.autoContrast" = "自動コントラスト";
 "imageEditor.history.autoColor" = "自動カラー補正";
@@ -2215,6 +2216,7 @@
 "imageEditor.status.quickMaskNeedsSelection" = "クイックマスクを有効にする前に選択範囲を作成してください";
 "imageEditor.status.quickMaskHidden" = "クイックマスクを描画し、対応する領域を選択範囲から除外しました";
 "imageEditor.status.quickMaskRevealed" = "クイックマスクを消去し、対応する領域を選択範囲に戻しました";
+"imageEditor.status.quickMaskPaintedTone" = "カラーの明度でクイックマスクを描画し、半透明の選択範囲を更新しました";
 "imageEditor.status.selectionInverted" = "選択範囲を反転しました";
 "imageEditor.status.historyCleared" = "履歴を消去し、現在の画像を新しい開始状態にしました";
 "imageEditor.status.historySnapshotCreated" = "履歴スナップショット「%@」を作成しました";

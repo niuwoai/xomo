@@ -281,6 +281,50 @@ extension ImageEditorSelectionMask {
         smoothing: CGFloat = 0,
         reveal: Bool
     ) -> ImageEditorSelectionMask? {
+        paintedByQuickMaskStroke(
+            samples: samples,
+            canvasSize: canvasSize,
+            diameter: diameter,
+            opacity: opacity,
+            hardness: hardness,
+            flow: flow,
+            spacing: spacing,
+            pressureControlsSize: pressureControlsSize,
+            pressureControlsOpacity: pressureControlsOpacity,
+            pressureControlsFlow: pressureControlsFlow,
+            pressureSensitivity: pressureSensitivity,
+            minimumDiameter: minimumDiameter,
+            minimumOpacity: minimumOpacity,
+            minimumFlow: minimumFlow,
+            tiltControlsShape: tiltControlsShape,
+            tipRoundness: tipRoundness,
+            tipAngleDegrees: tipAngleDegrees,
+            smoothing: smoothing,
+            targetAlpha: reveal ? UInt8.max : UInt8.min
+        )
+    }
+
+    func paintedByQuickMaskStroke(
+        samples: [ImageEditorBrushStrokeSample],
+        canvasSize: CGSize,
+        diameter: CGFloat,
+        opacity: CGFloat,
+        hardness: CGFloat = 1,
+        flow: CGFloat = 1,
+        spacing: CGFloat = 0.25,
+        pressureControlsSize: Bool = false,
+        pressureControlsOpacity: Bool = false,
+        pressureControlsFlow: Bool = false,
+        pressureSensitivity: CGFloat = 0.5,
+        minimumDiameter: CGFloat = 0,
+        minimumOpacity: CGFloat = 0,
+        minimumFlow: CGFloat = 0,
+        tiltControlsShape: Bool = false,
+        tipRoundness: CGFloat = 1,
+        tipAngleDegrees: CGFloat = 0,
+        smoothing: CGFloat = 0,
+        targetAlpha: UInt8
+    ) -> ImageEditorSelectionMask? {
         guard width > 0,
               height > 0,
               alpha.count == width * height,
@@ -310,12 +354,11 @@ extension ImageEditorSelectionMask {
         else { return nil }
 
         var output = alpha
+        let target = CGFloat(targetAlpha) / CGFloat(UInt8.max)
         for index in output.indices where coverage[index] > 0 {
             let current = CGFloat(alpha[index]) / CGFloat(UInt8.max)
             let amount = CGFloat(coverage[index]) / CGFloat(UInt8.max)
-            let updated = reveal
-                ? current + (1 - current) * amount
-                : current * (1 - amount)
+            let updated = current + (target - current) * amount
             output[index] = UInt8((max(0, min(1, updated)) * CGFloat(UInt8.max)).rounded())
         }
         return ImageEditorSelectionMask(width: width, height: height, alpha: output)

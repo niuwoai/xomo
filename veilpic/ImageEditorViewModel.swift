@@ -172,6 +172,8 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var isQuickMaskMode = false
     @Published private(set) var quickMaskOverlayImage: NSImage?
     private var quickMaskSelectionOriginUndoIndex: Int?
+    private var quickMaskOriginalForegroundColor: NSColor?
+    private var quickMaskOriginalBackgroundColor: NSColor?
     @Published private(set) var selectionEdgeGeometry: ImageEditorSelectionEdgeGeometry?
     @Published private(set) var quickMaskOverlayTarget: ImageEditorQuickMaskOverlayTarget
     @Published private(set) var quickMaskOverlayColor: NSColor
@@ -686,11 +688,9 @@ final class ImageEditorViewModel: ObservableObject {
         newDocument.gridSpacing = XomoCanvasDraft.defaultGridSpacing
         newDocument.designCanvasMetadata = XomoDesignCanvasMetadata(draft: draft)
 
+        leaveQuickMaskMode()
         document = newDocument
         clearLayerMaskSoloPreview()
-        isQuickMaskMode = false
-        quickMaskSelectionOriginUndoIndex = nil
-        quickMaskOverlayImage = nil
         colorSamplerPoints.removeAll()
         psdCompatibilityReport = nil
         psdCompatibilityFileName = ""
@@ -730,6 +730,7 @@ final class ImageEditorViewModel: ObservableObject {
             return
         }
 
+        leaveQuickMaskMode()
         document = ImageEditorDocument(
             sourceName: L10n.text("source.clipboard"),
             image: normalized
@@ -745,8 +746,6 @@ final class ImageEditorViewModel: ObservableObject {
         previewedAlphaChannelID = nil
         clearLayerMaskSoloPreview()
         isEditingLayerMask = false
-        isQuickMaskMode = false
-        quickMaskSelectionOriginUndoIndex = nil
         clearUndoHistory()
         historySnapshots.removeAll()
         namedHistorySnapshots.removeAll()
@@ -3769,6 +3768,10 @@ final class ImageEditorViewModel: ObservableObject {
             quickMaskSelectionOriginUndoIndex = nil
         }
         isQuickMaskMode = true
+        quickMaskOriginalForegroundColor = foregroundColor
+        quickMaskOriginalBackgroundColor = backgroundColor
+        foregroundColor = .black
+        backgroundColor = .white
         clearLayerMaskSoloPreview()
         selectedChannelPreview = .composite
         previewedAlphaChannelID = nil
@@ -3791,6 +3794,14 @@ final class ImageEditorViewModel: ObservableObject {
             document.selection = nil
         }
         quickMaskSelectionOriginUndoIndex = nil
+        if let quickMaskOriginalForegroundColor {
+            foregroundColor = quickMaskOriginalForegroundColor
+        }
+        if let quickMaskOriginalBackgroundColor {
+            backgroundColor = quickMaskOriginalBackgroundColor
+        }
+        quickMaskOriginalForegroundColor = nil
+        quickMaskOriginalBackgroundColor = nil
         isQuickMaskMode = false
         quickMaskOverlayImage = nil
     }
@@ -5976,7 +5987,7 @@ final class ImageEditorViewModel: ObservableObject {
     func drawBrush(samples: [ImageEditorBrushStrokeSample], erase: Bool = false) {
         guard !samples.isEmpty else { return }
         if isQuickMaskMode {
-            paintQuickMask(samples: samples, reveal: erase)
+            paintQuickMask(samples: samples, usingBackgroundColor: erase)
             return
         }
         if isEditingLayerMask {
@@ -6021,7 +6032,12 @@ final class ImageEditorViewModel: ObservableObject {
         )
     }
 
-    private func paintQuickMask(samples: [ImageEditorBrushStrokeSample], reveal: Bool) {
+    private func paintQuickMask(
+        samples: [ImageEditorBrushStrokeSample],
+        usingBackgroundColor: Bool
+    ) {
+        let paintColor = usingBackgroundColor ? backgroundColor : foregroundColor
+        let targetAlpha = quickMaskSelectionAlpha(for: paintColor)
         guard let selection = document.selection,
               let currentMask = selection.rasterizedMask(canvasSize: document.canvasSize),
               let updatedMask = currentMask.paintedByQuickMaskStroke(
@@ -6043,10 +6059,14 @@ final class ImageEditorViewModel: ObservableObject {
                 tipRoundness: brushTipRoundness / 100,
                 tipAngleDegrees: brushTipAngleDegrees,
                 smoothing: brushSmoothing / 100,
-                reveal: reveal
+                targetAlpha: targetAlpha
               )
         else {
             statusText = L10n.text("imageEditor.status.operationFailed")
+            return
+        }
+        guard updatedMask != currentMask else {
+            statusText = L10n.text("imageEditor.status.selectionUnchanged")
             return
         }
 
@@ -6056,16 +6076,28 @@ final class ImageEditorViewModel: ObservableObject {
         document.selection = .raster(mask: updatedMask, bounds: bounds)
         appendHistory(
             L10n.text(
-                reveal
+                targetAlpha == UInt8.max
                     ? "imageEditor.history.quickMaskReveal"
-                    : "imageEditor.history.quickMaskHide"
+                    : targetAlpha == UInt8.min
+                        ? "imageEditor.history.quickMaskHide"
+                        : "imageEditor.history.quickMaskPaintTone"
             )
         )
         statusText = L10n.text(
-            reveal
+            targetAlpha == UInt8.max
                 ? "imageEditor.status.quickMaskRevealed"
-                : "imageEditor.status.quickMaskHidden"
+                : targetAlpha == UInt8.min
+                    ? "imageEditor.status.quickMaskHidden"
+                    : "imageEditor.status.quickMaskPaintedTone"
         )
+    }
+
+    private func quickMaskSelectionAlpha(for color: NSColor) -> UInt8 {
+        guard let rgb = color.usingColorSpace(.deviceRGB) else { return UInt8.min }
+        let luminance = 0.2126 * rgb.redComponent
+            + 0.7152 * rgb.greenComponent
+            + 0.0722 * rgb.blueComponent
+        return UInt8((max(0, min(1, luminance)) * CGFloat(UInt8.max)).rounded())
     }
 
     func setCloneSource(at point: CGPoint?) {
