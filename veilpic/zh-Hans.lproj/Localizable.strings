@@ -674,6 +674,8 @@
 "imageEditor.option.contiguous" = "连续";
 "imageEditor.option.selectionModifyAmount" = "扩缩";
 "imageEditor.option.selectionMode" = "选区模式";
+"imageEditor.option.moveAutoSelect" = "自动选择";
+"imageEditor.option.moveAutoSelectHelp" = "移动前选择指针下的对象；关闭后始终移动当前选择";
 "imageEditor.option.posterizeLevels" = "色阶数";
 "imageEditor.selectionMode.replace" = "新建选区";
 "imageEditor.selectionMode.replace.short" = "新建";

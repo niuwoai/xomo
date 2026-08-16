@@ -103,6 +103,38 @@ extension ImageEditorViewModel {
         return hit.isMovable ? .movable : .blocked
     }
 
+    /// Auto-Select is a toolbox option. Component-library mode always keeps
+    /// its object-selection behavior even if the last Move tool session was
+    /// locked to the current layer.
+    var moveToolAutoSelectsCanvasTarget: Bool {
+        selectedLeftSidebarTab == .components || isMoveToolAutoSelectEnabled
+    }
+
+    /// Cursor feedback follows the same target policy as pointer activation.
+    /// With Auto-Select disabled, any drawable canvas point can start moving
+    /// the current visible selection; a locked selection remains prohibited.
+    func moveToolContentHit(at point: CGPoint) -> XomoCanvasContentHit {
+        guard !moveToolAutoSelectsCanvasTarget else { return canvasContentHit(at: point) }
+        guard point.x.isFinite,
+              point.y.isFinite,
+              selectedLayerTransformFrame != nil
+        else { return .none }
+        return canMoveSelectedLayer ? .movable : .blocked
+    }
+
+    /// The AppKit fast path asks this at mouse-down before it owns the full
+    /// pointer sequence. Auto-Select off intentionally accepts blank canvas
+    /// so the already-selected layer can be dragged without retargeting.
+    func canBeginCanvasObjectMove(at point: CGPoint) -> Bool {
+        if !moveToolAutoSelectsCanvasTarget {
+            return moveToolContentHit(at: point) == .movable
+        }
+        if hasMovableDeepSelectedCanvasLayer(at: point) {
+            return true
+        }
+        return hasXomoObject(at: point) && canvasContentHit(at: point) == .movable
+    }
+
     /// Returns only the frontmost visible pixel at a canvas point. Looking at
     /// every layer would let an unlocked layer underneath a locked cover claim
     /// the move cursor, even though a click can only reach the locked cover.
@@ -193,15 +225,30 @@ extension ImageEditorViewModel {
     /// objects and directly selected children. Components mode always falls
     /// through to whole-object preparation.
     func prepareCanvasObjectMove(at point: CGPoint) -> Bool {
-        hasMovableDeepSelectedCanvasLayer(at: point) || prepareXomoObjectMove(at: point)
+        if !moveToolAutoSelectsCanvasTarget {
+            return moveToolContentHit(at: point) == .movable
+        }
+        return hasMovableDeepSelectedCanvasLayer(at: point) || prepareXomoObjectMove(at: point)
     }
 
     /// Option-drag preserves an already deep-selected child in tools mode.
     /// Otherwise the conventional selection path chooses the component object
     /// or ordinary frontmost layer before the duplication transaction starts.
     func prepareCanvasCloneMove(at point: CGPoint) -> Bool {
-        hasMovableDeepSelectedCanvasLayer(at: point)
+        if !moveToolAutoSelectsCanvasTarget {
+            return moveToolContentHit(at: point) == .movable
+        }
+        return hasMovableDeepSelectedCanvasLayer(at: point)
             || selectMovableCanvasTarget(at: point)
+    }
+
+    /// SwiftUI owns ordinary layers and the macOS 13 fallback. Keep its
+    /// selection rule aligned with the native component/deep-selection path.
+    func prepareCanvasFallbackMove(at point: CGPoint) -> Bool {
+        if !moveToolAutoSelectsCanvasTarget {
+            return moveToolContentHit(at: point) == .movable
+        }
+        return selectMovableCanvasTarget(at: point)
     }
 
     /// Shared move-target selection for both the transparent object hit target

@@ -1,6 +1,6 @@
 # veilpicTests 独立进程测试报告
 
-- 生成时间：2026-08-16 14:33:38 +0800
+- 生成时间：2026-08-16 14:45:29 +0800
 - 执行组：**4**，通过：**4**，失败：**0**
 - 覆盖测试：**4**，通过组内测试：**4**，失败组内测试：**0**
 - 并行度（jobs）：1
@@ -11,6 +11,4 @@
 
 | 套件 | 通过/总数 |
 |---|---|
-| ImageEditorCanvasCursorTests | 2/2 |
-| ImageEditorScopeTests | 1/1 |
-| XomoLeftSidebarTests | 1/1 |
+| XomoCanvasObjectTests | 4/4 |

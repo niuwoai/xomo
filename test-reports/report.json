@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-16 14:33:38 +0800",
+  "generated_at": "2026-08-16 14:45:29 +0800",
   "total": 4,
   "passed": 4,
   "failed": 0,
@@ -9,52 +9,52 @@
   "jobs": 1,
   "results": [
     {
-      "suite": "ImageEditorCanvasCursorTests",
-      "method": "compactLayerTransformControlsPreserveAnInteriorMoveTarget",
-      "identifier": "veilpicTests/ImageEditorCanvasCursorTests/compactLayerTransformControlsPreserveAnInteriorMoveTarget()",
-      "file": "ImageEditorCanvasCursorTests.swift",
+      "suite": "XomoCanvasObjectTests",
+      "method": "componentModeIgnoresTheMoveToolAutoSelectLock",
+      "identifier": "veilpicTests/XomoCanvasObjectTests/componentModeIgnoresTheMoveToolAutoSelectLock()",
+      "file": "XomoCanvasObjectTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.221,
+      "duration": 3.389,
       "infrastructure_retries": 0,
       "issues": [],
-      "log": "ImageEditorCanvasCursorTests.compactLayerTransformControlsPreserveAnInteriorMoveTarget.log"
+      "log": "XomoCanvasObjectTests.componentModeIgnoresTheMoveToolAutoSelectLock.log"
     },
     {
-      "suite": "ImageEditorCanvasCursorTests",
-      "method": "layerTransformControlsUseFamiliarResizeAndRotateCursors",
-      "identifier": "veilpicTests/ImageEditorCanvasCursorTests/layerTransformControlsUseFamiliarResizeAndRotateCursors()",
-      "file": "ImageEditorCanvasCursorTests.swift",
+      "suite": "XomoCanvasObjectTests",
+      "method": "disablingMoveAutoSelectMovesTheCurrentObjectFromBlankCanvas",
+      "identifier": "veilpicTests/XomoCanvasObjectTests/disablingMoveAutoSelectMovesTheCurrentObjectFromBlankCanvas()",
+      "file": "XomoCanvasObjectTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.964,
+      "duration": 5.003,
       "infrastructure_retries": 0,
       "issues": [],
-      "log": "ImageEditorCanvasCursorTests.layerTransformControlsUseFamiliarResizeAndRotateCursors.log"
+      "log": "XomoCanvasObjectTests.disablingMoveAutoSelectMovesTheCurrentObjectFromBlankCanvas.log"
     },
     {
-      "suite": "ImageEditorScopeTests",
-      "method": "imageEditorCanHideTransformControlsWithoutChangingSelectedLayerFrame",
-      "identifier": "veilpicTests/ImageEditorScopeTests/imageEditorCanHideTransformControlsWithoutChangingSelectedLayerFrame()",
-      "file": "ImageEditorScopeTests.swift",
+      "suite": "XomoCanvasObjectTests",
+      "method": "disablingMoveAutoSelectOptionCopiesTheCurrentObjectNotTheHoveredOne",
+      "identifier": "veilpicTests/XomoCanvasObjectTests/disablingMoveAutoSelectOptionCopiesTheCurrentObjectNotTheHoveredOne()",
+      "file": "XomoCanvasObjectTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.328,
+      "duration": 3.156,
       "infrastructure_retries": 0,
       "issues": [],
-      "log": "ImageEditorScopeTests.imageEditorCanHideTransformControlsWithoutChangingSelectedLayerFrame.log"
+      "log": "XomoCanvasObjectTests.disablingMoveAutoSelectOptionCopiesTheCurrentObjectNotTheHoveredOne.log"
     },
     {
-      "suite": "XomoLeftSidebarTests",
-      "method": "moveToolOptionBarExposesTransformControlsWithoutLeakingIntoComponents",
-      "identifier": "veilpicTests/XomoLeftSidebarTests/moveToolOptionBarExposesTransformControlsWithoutLeakingIntoComponents()",
-      "file": "XomoLeftSidebarTests.swift",
+      "suite": "XomoCanvasObjectTests",
+      "method": "nativeObjectDragUsesTheSharedAutoSelectPolicyBeforeMoving",
+      "identifier": "veilpicTests/XomoCanvasObjectTests/nativeObjectDragUsesTheSharedAutoSelectPolicyBeforeMoving()",
+      "file": "XomoCanvasObjectTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.278,
+      "duration": 3.216,
       "infrastructure_retries": 0,
       "issues": [],
-      "log": "XomoLeftSidebarTests.moveToolOptionBarExposesTransformControlsWithoutLeakingIntoComponents.log"
+      "log": "XomoCanvasObjectTests.nativeObjectDragUsesTheSharedAutoSelectPolicyBeforeMoving.log"
     }
   ]
 }

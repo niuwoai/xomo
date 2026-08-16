@@ -674,6 +674,8 @@
 "imageEditor.option.contiguous" = "Contiguous";
 "imageEditor.option.selectionModifyAmount" = "Grow/Shrink";
 "imageEditor.option.selectionMode" = "Selection Mode";
+"imageEditor.option.moveAutoSelect" = "Auto-Select";
+"imageEditor.option.moveAutoSelectHelp" = "Select the object under the pointer before moving it; turn off to keep moving the current selection";
 "imageEditor.option.posterizeLevels" = "Levels";
 "imageEditor.selectionMode.replace" = "New Selection";
 "imageEditor.selectionMode.replace.short" = "New";

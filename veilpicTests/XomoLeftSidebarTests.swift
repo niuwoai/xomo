@@ -644,7 +644,7 @@ struct XomoLeftSidebarTests {
         #expect(!hintSource.contains("viewModel.selectedTool"))
     }
 
-    @Test func moveToolOptionBarExposesTransformControlsWithoutLeakingIntoComponents() throws {
+    @Test func moveToolOptionBarExposesClassicControlsWithoutLeakingIntoComponents() throws {
         let repositoryRoot = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()
             .deletingLastPathComponent()
@@ -663,11 +663,16 @@ struct XomoLeftSidebarTests {
         let componentSource = source[componentStart.lowerBound..<componentEnd.lowerBound]
 
         #expect(toolSource.contains("if viewModel.selectedTool == .move {"))
+        #expect(toolSource.contains("imageEditor.option.moveAutoSelect"))
+        #expect(toolSource.contains("$viewModel.isMoveToolAutoSelectEnabled"))
+        #expect(toolSource.contains("image-editor-move-auto-select"))
         #expect(toolSource.contains("imageEditor.action.transformControlsVisible"))
         #expect(toolSource.contains("get: { viewModel.document.areTransformControlsVisible }"))
         #expect(toolSource.contains("set: { _ in viewModel.toggleTransformControlsVisible() }"))
         #expect(toolSource.contains("image-editor-move-transform-controls"))
         #expect(!componentSource.contains("image-editor-move-transform-controls"))
+        #expect(!componentSource.contains("image-editor-move-auto-select"))
+        #expect(!componentSource.contains("isMoveToolAutoSelectEnabled"))
         #expect(!componentSource.contains("toggleTransformControlsVisible"))
     }
 

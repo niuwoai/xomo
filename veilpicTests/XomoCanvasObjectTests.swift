@@ -658,7 +658,84 @@ struct XomoCanvasObjectTests {
         #expect(viewModel.document.selectedLayerID == group.id)
     }
 
-    @Test func nativeObjectDragPrefersTheDeepSelectedLayerBeforeComponentPreparation() throws {
+    @Test func disablingMoveAutoSelectMovesTheCurrentObjectFromBlankCanvas() throws {
+        let viewModel = makeViewModel()
+        viewModel.insertXomoComponent(.button, at: CGPoint(x: 70, y: 80))
+        let firstID = try #require(viewModel.document.selectedLayerID)
+        let firstFrame = try #require(viewModel.selectedLayerTransformFrame)
+        viewModel.insertXomoComponent(.card, at: CGPoint(x: 330, y: 210))
+        let secondID = try #require(viewModel.document.selectedLayerID)
+        let secondFrame = try #require(viewModel.selectedLayerTransformFrame)
+        viewModel.selectLayer(firstID)
+        viewModel.isMoveToolAutoSelectEnabled = false
+        let blankPoint = CGPoint(x: 620, y: 460)
+
+        #expect(!viewModel.moveToolAutoSelectsCanvasTarget)
+        #expect(viewModel.moveToolContentHit(at: blankPoint) == .movable)
+        #expect(viewModel.canBeginCanvasObjectMove(at: blankPoint))
+        #expect(viewModel.prepareCanvasObjectMove(at: CGPoint(
+            x: secondFrame.midX,
+            y: secondFrame.midY
+        )))
+        #expect(viewModel.document.selectedLayerID == firstID)
+        #expect(viewModel.beginMovingSelectedLayer())
+        viewModel.moveSelectedLayer(by: CGSize(width: 18, height: 9), snapping: false)
+        viewModel.finishMovingSelectedLayer()
+
+        #expect(viewModel.selectedLayerTransformFrame == firstFrame.offsetBy(dx: 18, dy: 9))
+        viewModel.selectLayer(secondID)
+        #expect(viewModel.selectedLayerTransformFrame == secondFrame)
+        viewModel.selectLayer(firstID)
+        viewModel.toggleLayerPositionLock(firstID)
+        #expect(viewModel.moveToolContentHit(at: blankPoint) == .blocked)
+        #expect(!viewModel.canBeginCanvasObjectMove(at: blankPoint))
+    }
+
+    @Test func disablingMoveAutoSelectOptionCopiesTheCurrentObjectNotTheHoveredOne() throws {
+        let viewModel = makeViewModel()
+        viewModel.insertXomoComponent(.button, at: CGPoint(x: 70, y: 80))
+        let firstID = try #require(viewModel.document.selectedLayerID)
+        viewModel.insertXomoComponent(.card, at: CGPoint(x: 330, y: 210))
+        let secondID = try #require(viewModel.document.selectedLayerID)
+        let secondFrame = try #require(viewModel.selectedLayerTransformFrame)
+        viewModel.selectLayer(firstID)
+        viewModel.isMoveToolAutoSelectEnabled = false
+        let initialLayerIDs = viewModel.document.layers.map(\.id)
+
+        #expect(viewModel.prepareCanvasCloneMove(at: CGPoint(
+            x: secondFrame.midX,
+            y: secondFrame.midY
+        )))
+        #expect(viewModel.document.selectedLayerID == firstID)
+        #expect(viewModel.beginDuplicatingSelectedLayerForMove())
+        #expect(viewModel.document.selectedLayerID != firstID)
+        #expect(viewModel.document.selectedLayerID != secondID)
+        #expect(viewModel.cancelMovingSelectedLayer())
+        #expect(viewModel.document.layers.map(\.id) == initialLayerIDs)
+        #expect(viewModel.document.selectedLayerID == firstID)
+    }
+
+    @Test func componentModeIgnoresTheMoveToolAutoSelectLock() throws {
+        let viewModel = makeViewModel()
+        viewModel.insertXomoComponent(.button, at: CGPoint(x: 70, y: 80))
+        let firstID = try #require(viewModel.document.selectedLayerID)
+        viewModel.insertXomoComponent(.card, at: CGPoint(x: 330, y: 210))
+        let secondID = try #require(viewModel.document.selectedLayerID)
+        let secondFrame = try #require(viewModel.selectedLayerTransformFrame)
+        viewModel.selectLayer(firstID)
+        viewModel.isMoveToolAutoSelectEnabled = false
+        viewModel.selectLeftSidebarTab(.components)
+
+        #expect(viewModel.moveToolAutoSelectsCanvasTarget)
+        #expect(viewModel.prepareCanvasFallbackMove(at: CGPoint(
+            x: secondFrame.midX,
+            y: secondFrame.midY
+        )))
+        #expect(viewModel.document.selectedLayerID == secondID)
+        #expect(viewModel.document.selectedLayerIDs == [secondID])
+    }
+
+    @Test func nativeObjectDragUsesTheSharedAutoSelectPolicyBeforeMoving() throws {
         let repositoryRoot = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()
             .deletingLastPathComponent()
@@ -676,18 +753,18 @@ struct XomoCanvasObjectTests {
             source[activationStart.upperBound...].range(of: "onObjectMoveChanged:")
         )
         let candidateSource = source[candidateStart.lowerBound..<activationStart.lowerBound]
-        let deepCandidate = try #require(
-            candidateSource.range(of: "viewModel.hasMovableDeepSelectedCanvasLayer(")
-        )
-        let componentCandidate = try #require(
-            candidateSource.range(of: "viewModel.hasXomoObject(")
-        )
         let activationSource = source[activationStart.lowerBound..<changedStart.lowerBound]
 
-        #expect(deepCandidate.lowerBound < componentCandidate.lowerBound)
+        #expect(candidateSource.contains("viewModel.canBeginCanvasObjectMove("))
+        #expect(!candidateSource.contains("viewModel.hasMovableDeepSelectedCanvasLayer("))
+        #expect(!candidateSource.contains("viewModel.hasXomoObject("))
         #expect(activationSource.contains("viewModel.prepareCanvasObjectMove("))
         #expect(!activationSource.contains("viewModel.prepareXomoObjectMove("))
         #expect(activationSource.contains("viewModel.beginMovingSelectedLayer()"))
+        #expect(source.contains("guard viewModel.moveToolAutoSelectsCanvasTarget else { return }"))
+        #expect(source.contains("if viewModel.moveToolAutoSelectsCanvasTarget,"))
+        #expect(source.contains("viewModel.prepareCanvasFallbackMove("))
+        #expect(source.components(separatedBy: "viewModel.moveToolContentHit(at:").count == 3)
     }
 
     @Test func commandShiftCanvasSelectionAddsAVisibleComponentChild() throws {

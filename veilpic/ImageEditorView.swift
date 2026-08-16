@@ -524,6 +524,16 @@ struct ImageEditorView: View {
 
             if viewModel.selectedTool == .move {
                 Toggle(
+                    L10n.text("imageEditor.option.moveAutoSelect"),
+                    isOn: $viewModel.isMoveToolAutoSelectEnabled
+                )
+                .toggleStyle(.checkbox)
+                .focusable(false)
+                .fixedSize()
+                .help(L10n.text("imageEditor.option.moveAutoSelectHelp"))
+                .accessibilityIdentifier("image-editor-move-auto-select")
+
+                Toggle(
                     L10n.text("imageEditor.action.transformControlsVisible"),
                     isOn: Binding(
                         get: { viewModel.document.areTransformControlsVisible },
@@ -2857,11 +2867,7 @@ struct ImageEditorView: View {
                             if isDirectEditingDoubleClick {
                                 return true
                             }
-                            if viewModel.hasMovableDeepSelectedCanvasLayer(at: imagePoint) {
-                                return true
-                            }
-                            return viewModel.hasXomoObject(at: imagePoint)
-                                && viewModel.canvasContentHit(at: imagePoint) == .movable
+                            return viewModel.canBeginCanvasObjectMove(at: imagePoint)
                         },
                         onObjectMoveActivated: { location, _ in
                             resetObjectMoveTracking()
@@ -2892,6 +2898,7 @@ struct ImageEditorView: View {
                                 }
                                 return
                             }
+                            guard viewModel.moveToolAutoSelectsCanvasTarget else { return }
                             _ = viewModel.selectXomoObject(
                                 at: imagePoint,
                                 extendingSelection: modifierFlags.contains(.shift)
@@ -2939,7 +2946,7 @@ struct ImageEditorView: View {
                     // every lightweight preview-frame update while dragging.
                     let contentHit: XomoCanvasContentHit = objectMoveIsActive
                         ? .movable
-                        : (canvasPoint.map(viewModel.canvasContentHit(at:)) ?? .none)
+                        : (canvasPoint.map(viewModel.moveToolContentHit(at:)) ?? .none)
                     let cropHandle = cropInteractionHandle(at: hoverViewPoint, in: geometry.size)
                     let layerTransformTarget = layerTransformCursorTarget(
                         at: hoverViewPoint,
@@ -3939,7 +3946,8 @@ struct ImageEditorView: View {
                     if isCanvasSelectionGestureActive {
                         break
                     }
-                    if NSEvent.modifierFlags.contains(.shift),
+                    if viewModel.moveToolAutoSelectsCanvasTarget,
+                       NSEvent.modifierFlags.contains(.shift),
                        !isCanvasSelectionGestureActive,
                        !isObjectMoveGestureActive {
                         let pressedImagePoint = imagePoint(from: value.startLocation, in: size)
@@ -3959,7 +3967,7 @@ struct ImageEditorView: View {
                     if !isObjectMoveGestureActive {
                         let pressedImagePoint = imagePoint(from: value.startLocation, in: size)
                         guard let pressedImagePoint,
-                              viewModel.selectMovableCanvasTarget(at: pressedImagePoint)
+                              viewModel.prepareCanvasFallbackMove(at: pressedImagePoint)
                         else {
                             isCanvasPanGestureActive = true
                             updateCanvasPan(translation: value.translation)
@@ -4856,7 +4864,7 @@ struct ImageEditorView: View {
         viewModel.updatePointer(canvasPoint)
         let imageRect = fittedImageRect(in: size)
         let displayScale = imageRect.width / max(viewModel.document.canvasSize.width, 1)
-        let contentHit = canvasPoint.map(viewModel.canvasContentHit(at:)) ?? .none
+        let contentHit = canvasPoint.map(viewModel.moveToolContentHit(at:)) ?? .none
         let displayedBrushDiameter = ImageEditorCanvasCursor.pressureAdjustedBrushDiameter(
             baseDiameter: viewModel.brushSize * displayScale,
             tool: canvasInteractionTool,

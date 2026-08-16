@@ -674,6 +674,8 @@
 "imageEditor.option.contiguous" = "隣接";
 "imageEditor.option.selectionModifyAmount" = "拡張/縮小";
 "imageEditor.option.selectionMode" = "選択モード";
+"imageEditor.option.moveAutoSelect" = "自動選択";
+"imageEditor.option.moveAutoSelectHelp" = "移動前にポインタ下のオブジェクトを選択します。オフにすると現在の選択を移動し続けます";
 "imageEditor.option.posterizeLevels" = "階調数";
 "imageEditor.selectionMode.replace" = "新規選択";
 "imageEditor.selectionMode.replace.short" = "新規";

@@ -118,6 +118,7 @@ final class ImageEditorViewModel: ObservableObject {
         }
     }
     @Published var selectedTool: ImageEditorTool = .move
+    @Published var isMoveToolAutoSelectEnabled = true
     @Published var marqueeShape: ImageEditorMarqueeShape = .rectangle
     @Published var zoom: CGFloat = 1
     @Published var canvasViewportSize: CGSize = .zero
