@@ -75,6 +75,29 @@ extension ImageEditorViewModel {
         }
     }
 
+    @discardableResult
+    func loadSelectionFromLayerTransparency(
+        layerID: UUID,
+        mode: ImageEditorSelectionMode,
+        threshold requestedThreshold: Int? = nil
+    ) -> Bool {
+        guard let index = document.layers.firstIndex(where: { $0.id == layerID }),
+              let selection = transparencySelection(
+                forLayerAt: index,
+                threshold: requestedThreshold
+              )
+        else {
+            statusText = L10n.text("imageEditor.status.selectionFromLayerFailed")
+            return false
+        }
+
+        return applySelectionCandidate(
+            selection,
+            replaceHistoryKey: "imageEditor.history.selectionFromLayer",
+            mode: mode
+        )
+    }
+
     func saveCurrentSelection() {
         guard let selection = document.selection,
               selectionHasEffectivePixels(selection)

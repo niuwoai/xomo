@@ -485,6 +485,57 @@ extension ImageEditorViewModel {
         }
     }
 
+    @discardableResult
+    func loadSelectionFromLayerMask(
+        layerID: UUID,
+        mode: ImageEditorSelectionMode
+    ) -> Bool {
+        guard let layer = document.layers.first(where: { $0.id == layerID }),
+              let mask = layer.mask,
+              let selection = selectionFromLayerMask(mask, layer: layer)
+        else {
+            statusText = L10n.text("imageEditor.status.layerMaskSelectionFailed")
+            return false
+        }
+
+        let didApplySelection = applySelectionCandidate(
+            selection,
+            replaceHistoryKey: "imageEditor.history.selectionFromLayerMask",
+            mode: mode
+        )
+        if didApplySelection, document.selection != nil {
+            statusText = L10n.text("imageEditor.status.layerMaskSelection")
+        }
+        return didApplySelection
+    }
+
+    @discardableResult
+    func loadSelectionFromVectorMask(
+        layerID: UUID,
+        mode: ImageEditorSelectionMode
+    ) -> Bool {
+        guard let layer = document.layers.first(where: { $0.id == layerID }),
+              let vectorMask = layer.vectorMask,
+              vectorMask.kind == .path,
+              vectorMask.isPathClosed,
+              vectorMask.editablePathAnchors.count >= 3,
+              let selection = selectionFromVectorMask(vectorMask, layer: layer)
+        else {
+            statusText = L10n.text("imageEditor.status.vectorMaskSelectionFailed")
+            return false
+        }
+
+        let didApplySelection = applySelectionCandidate(
+            selection,
+            replaceHistoryKey: "imageEditor.history.selectionFromVectorMask",
+            mode: mode
+        )
+        if didApplySelection, document.selection != nil {
+            statusText = L10n.text("imageEditor.status.vectorMaskSelection")
+        }
+        return didApplySelection
+    }
+
     func toggleLayerMaskEnabled() {
         let indices = layerMaskToggleEnabledIndices()
         guard !indices.isEmpty else {

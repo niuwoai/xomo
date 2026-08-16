@@ -3620,3 +3620,6 @@
 "imageEditor.status.sliceUpdated" = "スライスを更新しました：%@";
 "imageEditor.status.sliceInvalidFrame" = "スライスの矩形が無効です。X、Y、幅、高さを確認してください";
 "imageEditor.history.sliceUpdated" = "スライスを更新：%@";
+"imageEditor.layer.thumbnailSelectionHelp" = "クリックでレイヤーを選択します。Commandクリックで透明度を読み込み、Shift、Option、または両方を加えると追加、削除、交差になります。";
+"imageEditor.layer.rasterMaskThumbnailSelectionHelp" = "クリックでレイヤーマスクを編集します。Commandクリックで境界を読み込み、Shift、Option、または両方を加えると追加、削除、交差になります。";
+"imageEditor.layer.vectorMaskThumbnailSelectionHelp" = "クリックでベクターマスクを編集します。Commandクリックで境界を読み込み、Shift、Option、または両方を加えると追加、削除、交差になります。";

@@ -3926,9 +3926,14 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     @discardableResult
-    func applySelectionCandidate(_ selection: ImageEditorSelection, replaceHistoryKey: String) -> Bool {
+    func applySelectionCandidate(
+        _ selection: ImageEditorSelection,
+        replaceHistoryKey: String,
+        mode requestedMode: ImageEditorSelectionMode? = nil
+    ) -> Bool {
+        let effectiveMode = requestedMode ?? selectionMode
         let existingSelection = document.selection
-        guard existingSelection != nil || selectionMode == .replace || selectionMode == .add else {
+        guard existingSelection != nil || effectiveMode == .replace || effectiveMode == .add else {
             statusText = L10n.text("imageEditor.status.noSelection")
             return false
         }
@@ -3936,7 +3941,7 @@ final class ImageEditorViewModel: ObservableObject {
         let nextSelection = ImageEditorSelection.combined(
             current: existingSelection,
             candidate: selection,
-            mode: selectionMode,
+            mode: effectiveMode,
             canvasSize: document.canvasSize
         )
         guard !selectionsAreEquivalent(nextSelection, existingSelection) else {
@@ -3948,7 +3953,7 @@ final class ImageEditorViewModel: ObservableObject {
         mutateDocumentWithoutInvalidatingRenderedImageCaches { document in
             document.selection = nextSelection
         }
-        let historyKey = selectionMode == .replace ? replaceHistoryKey : selectionMode.historyKey
+        let historyKey = effectiveMode == .replace ? replaceHistoryKey : effectiveMode.historyKey
         appendHistory(L10n.text(historyKey))
         statusText = nextSelection == nil
             ? L10n.text("imageEditor.status.selectionEmpty")

@@ -11,6 +11,34 @@ import UniformTypeIdentifiers
 
 private let imageEditorLayerRowDragStride: CGFloat = 66
 
+enum ImageEditorLayerThumbnailSelectionSource {
+    case transparency
+    case rasterMask
+    case vectorMask
+}
+
+enum ImageEditorLayerThumbnailSelectionPolicy {
+    static func mode(
+        sidebarTab: XomoLeftSidebarTab,
+        modifierFlags: NSEvent.ModifierFlags
+    ) -> ImageEditorSelectionMode? {
+        guard sidebarTab == .tools else { return nil }
+        let relevantFlags = modifierFlags.intersection([.command, .shift, .option, .control])
+        switch relevantFlags {
+        case [.command]:
+            return .replace
+        case [.command, .shift]:
+            return .add
+        case [.command, .option]:
+            return .subtract
+        case [.command, .shift, .option]:
+            return .intersect
+        default:
+            return nil
+        }
+    }
+}
+
 enum ImageEditorLayerPanelTabAppearance {
     static let selectedForegroundColor = NSColor.white
     static let foregroundColor = NSColor(calibratedWhite: 0.88, alpha: 1)
@@ -2362,13 +2390,21 @@ extension ImageEditorView {
     }
 
     private func layerThumbnail(_ layer: ImageEditorLayer) -> some View {
-        Image(nsImage: layer.thumbnail())
-            .resizable()
-            .scaledToFill()
-            .frame(width: 34, height: 26)
-            .clipped()
-            .background(Color.white.opacity(0.18))
-            .overlay(Rectangle().stroke(contentThumbnailStroke(for: layer), lineWidth: 1.4))
+        Button {
+            if !loadSelectionFromLayerThumbnail(layer, source: .transparency) {
+                selectLayerFromPanel(layer)
+            }
+        } label: {
+            Image(nsImage: layer.thumbnail())
+                .resizable()
+                .scaledToFill()
+                .frame(width: 34, height: 26)
+                .clipped()
+                .background(Color.white.opacity(0.18))
+                .overlay(Rectangle().stroke(contentThumbnailStroke(for: layer), lineWidth: 1.4))
+        }
+        .buttonStyle(.plain)
+        .help(L10n.text("imageEditor.layer.thumbnailSelectionHelp"))
     }
 
     @ViewBuilder
@@ -2380,7 +2416,9 @@ extension ImageEditorView {
                 .foregroundStyle(layer.isMaskLinked ? Color(nsColor: ImageEditorTheme.mutedText) : Color(nsColor: ImageEditorTheme.selected))
                 .help(L10n.text(layer.isMaskLinked ? "imageEditor.action.layerMaskLinked" : "imageEditor.action.layerMaskUnlinked"))
             Button {
-                viewModel.selectLayer(layer.id, editingMask: true)
+                if !loadSelectionFromLayerThumbnail(layer, source: .rasterMask) {
+                    viewModel.selectLayer(layer.id, editingMask: true)
+                }
             } label: {
                 Image(nsImage: maskThumbnail)
                     .resizable()
@@ -2396,7 +2434,7 @@ extension ImageEditorView {
                     }
             }
             .buttonStyle(.plain)
-            .help(L10n.text("imageEditor.action.layerMaskEdit"))
+            .help(L10n.text("imageEditor.layer.rasterMaskThumbnailSelectionHelp"))
         }
     }
 
@@ -2409,8 +2447,10 @@ extension ImageEditorView {
                 .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
                 .help(L10n.text("imageEditor.layer.vectorMaskBadge"))
             Button {
-                viewModel.selectLayer(layer.id, editingMask: false)
-                viewModel.editSelectedVectorMaskAsPath()
+                if !loadSelectionFromLayerThumbnail(layer, source: .vectorMask) {
+                    viewModel.selectLayer(layer.id, editingMask: false)
+                    viewModel.editSelectedVectorMaskAsPath()
+                }
             } label: {
                 Image(nsImage: vectorMaskThumbnail)
                     .resizable()
@@ -2426,8 +2466,28 @@ extension ImageEditorView {
                     }
             }
             .buttonStyle(.plain)
-            .help(L10n.text("imageEditor.action.vectorMaskSelect"))
+            .help(L10n.text("imageEditor.layer.vectorMaskThumbnailSelectionHelp"))
         }
+    }
+
+    private func loadSelectionFromLayerThumbnail(
+        _ layer: ImageEditorLayer,
+        source: ImageEditorLayerThumbnailSelectionSource
+    ) -> Bool {
+        guard let mode = ImageEditorLayerThumbnailSelectionPolicy.mode(
+            sidebarTab: viewModel.selectedLeftSidebarTab,
+            modifierFlags: NSEvent.modifierFlags
+        ) else { return false }
+
+        switch source {
+        case .transparency:
+            viewModel.loadSelectionFromLayerTransparency(layerID: layer.id, mode: mode)
+        case .rasterMask:
+            viewModel.loadSelectionFromLayerMask(layerID: layer.id, mode: mode)
+        case .vectorMask:
+            viewModel.loadSelectionFromVectorMask(layerID: layer.id, mode: mode)
+        }
+        return true
     }
 
     private func layerBadges(_ layer: ImageEditorLayer) -> some View {
