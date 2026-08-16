@@ -535,6 +535,9 @@ struct ImageEditorView: View {
         .sheet(isPresented: $viewModel.isColorRangeSheetPresented) {
             ImageEditorColorRangePanel(viewModel: viewModel)
         }
+        .sheet(isPresented: $viewModel.isSelectionFillSheetPresented) {
+            ImageEditorSelectionFillPanel(viewModel: viewModel)
+        }
         .sheet(isPresented: $viewModel.isNewCanvasSheetPresented) {
             XomoNewCanvasSheet(viewModel: viewModel)
         }
@@ -2373,6 +2376,10 @@ struct ImageEditorView: View {
         case .pasteClipboardIntoSelection: viewModel.pasteClipboardIntoSelectionAsLayer()
         case .pasteClipboardInPlaceLayer: viewModel.pasteClipboardInPlaceAsLayer()
         case .toggleTransformControls: viewModel.toggleTransformControlsVisible()
+        case .openSelectionFill:
+            if case .tool = viewModel.workspaceInputMode {
+                viewModel.presentSelectionFillPanel()
+            }
         case .fillSelection: viewModel.fillSelection()
         case .fillSelectionPreservingTransparency: viewModel.fillSelectionPreservingTransparency()
         case .fillSelectionBackground: viewModel.fillSelectionWithBackgroundColor()
@@ -15037,6 +15044,7 @@ enum ImageEditorKeyboardShortcutAction: Equatable {
     case pasteClipboardIntoSelection
     case pasteClipboardInPlaceLayer
     case toggleTransformControls
+    case openSelectionFill
     case fillSelection
     case fillSelectionPreservingTransparency
     case fillSelectionBackground
@@ -15101,6 +15109,7 @@ enum ImageEditorKeyboardShortcutAction: Equatable {
         case .cutSelectionClipboard,
              .copySelectionClipboard,
              .pasteClipboardLayer,
+             .openSelectionFill,
              .fillSelection,
              .fillSelectionPreservingTransparency,
              .fillSelectionBackground,
@@ -15175,6 +15184,10 @@ enum ImageEditorKeyboardShortcutAction: Equatable {
                 return .fillSelectionBackgroundPreservingTransparency
             }
             return nil
+        }
+
+        if keyCode == 96, relevantFlags == [.shift] {
+            return .openSelectionFill
         }
 
         if keyCode == 48 {

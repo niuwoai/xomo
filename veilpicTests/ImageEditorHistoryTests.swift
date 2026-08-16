@@ -275,6 +275,7 @@ struct ImageEditorHistoryTests {
             ("v", [command, shift], nil, .pasteClipboardIntoSelection),
             ("v", [command, option, shift], nil, .pasteClipboardInPlaceLayer),
             ("t", command, nil, .toggleTransformControls),
+            ("", shift, 96, .openSelectionFill),
             ("", option, 51, .fillSelection),
             ("", [option, shift], 51, .fillSelectionPreservingTransparency),
             ("", command, 51, .fillSelectionBackground),

@@ -35,6 +35,14 @@ struct ImageEditorTextInputShortcutTests {
     }
 
     @Test func deleteAndFillShortcutsRemainOwnedByActiveTextInput() {
+        let fillDialogAction = ImageEditorKeyboardShortcutAction.resolve(
+            charactersIgnoringModifiers: "",
+            modifierFlags: [.shift],
+            keyCode: 96
+        )
+        #expect(fillDialogAction == .openSelectionFill)
+        #expect(fillDialogAction?.isBlockedByTextInput == true)
+
         let cases: [(NSEvent.ModifierFlags, ImageEditorKeyboardShortcutAction)] = [
             ([.option], .fillSelection),
             ([.option, .shift], .fillSelectionPreservingTransparency),

@@ -8,6 +8,96 @@
 import AppKit
 import Foundation
 
+enum ImageEditorSelectionFillContents: String, CaseIterable, Identifiable {
+    case foreground
+    case background
+    case black
+    case gray50
+    case white
+    case color
+
+    var id: String { rawValue }
+
+    var title: String {
+        L10n.text("imageEditor.selectionFill.contents.\(rawValue)")
+    }
+
+    func resolvedColor(
+        foreground: NSColor,
+        background: NSColor,
+        custom: NSColor
+    ) -> NSColor {
+        switch self {
+        case .foreground: foreground
+        case .background: background
+        case .black: .black
+        case .gray50: NSColor(deviceWhite: 0.5, alpha: 1)
+        case .white: .white
+        case .color: custom
+        }
+    }
+}
+
+struct ImageEditorSelectionFillOptions {
+    var contents: ImageEditorSelectionFillContents = .foreground
+    var customColor: NSColor = .black
+    var blendMode: ImageEditorBlendMode = .normal
+    var opacity: CGFloat = 1
+    var preservesTransparency = false
+}
+
+enum ImageEditorQuickMaskFillCompositor {
+    static func fill(
+        alpha: [UInt8],
+        width: Int,
+        targetAlpha: UInt8,
+        opacity: CGFloat,
+        blendMode: ImageEditorBlendMode
+    ) -> [UInt8] {
+        let normalizedOpacity = Double(max(0, min(1, opacity)))
+        guard normalizedOpacity > 0, width > 0 else { return alpha }
+        let overlay = Double(targetAlpha) / 255
+        return alpha.enumerated().map { index, byte in
+            let base = Double(byte) / 255
+            if blendMode == .dissolve {
+                let x = index % width
+                let y = index / width
+                return dissolves(x: x, y: y, probability: normalizedOpacity)
+                    ? targetAlpha
+                    : byte
+            }
+            let blended = blendMode.blend(
+                baseRed: base,
+                baseGreen: base,
+                baseBlue: base,
+                overlayRed: overlay,
+                overlayGreen: overlay,
+                overlayBlue: overlay
+            ).red
+            return byteValue(base * (1 - normalizedOpacity) + blended * normalizedOpacity)
+        }
+    }
+
+    private static func byteValue(_ value: Double) -> UInt8 {
+        UInt8((max(0, min(1, value)) * 255).rounded())
+    }
+
+    private static func dissolves(x: Int, y: Int, probability: Double) -> Bool {
+        if probability >= 1 { return true }
+        var value = UInt64(truncatingIfNeeded: x)
+            &* 0x9E37_79B9_7F4A_7C15
+            &+ UInt64(truncatingIfNeeded: y)
+            &* 0xBF58_476D_1CE4_E5B9
+            &+ 0x94D0_49BB_1331_11EB
+        value ^= value >> 30
+        value &*= 0xBF58_476D_1CE4_E5B9
+        value ^= value >> 27
+        value &*= 0x94D0_49BB_1331_11EB
+        value ^= value >> 31
+        return Double(value & 0xffff) / 65_535 < probability
+    }
+}
+
 private struct ImageEditorPatchEditResult {
     let layerIndex: Int
     let image: NSImage
@@ -98,27 +188,68 @@ extension ImageEditorViewModel {
     }
 
     func fillSelection() {
-        fillSelection(with: foregroundColor)
+        fillSelection(with: foregroundColor, opacity: opacity)
     }
 
     func fillSelectionPreservingTransparency() {
-        fillSelection(with: foregroundColor, preservingTransparency: true)
+        fillSelection(with: foregroundColor, opacity: opacity, preservingTransparency: true)
     }
 
     func fillSelectionWithBackgroundColor() {
-        fillSelection(with: backgroundColor)
+        fillSelection(with: backgroundColor, opacity: opacity)
     }
 
     func fillSelectionWithBackgroundColorPreservingTransparency() {
-        fillSelection(with: backgroundColor, preservingTransparency: true)
+        fillSelection(with: backgroundColor, opacity: opacity, preservingTransparency: true)
+    }
+
+    func presentSelectionFillPanel() {
+        guard canFillCurrentEditingTarget else {
+            statusText = L10n.text("imageEditor.status.noSelection")
+            return
+        }
+        selectionFillContents = .foreground
+        selectionFillCustomColor = foregroundColor
+        selectionFillBlendMode = .normal
+        selectionFillOpacity = 1
+        selectionFillPreservesTransparency = false
+        isSelectionFillSheetPresented = true
+    }
+
+    func applySelectionFillFromPanel() {
+        let options = ImageEditorSelectionFillOptions(
+            contents: selectionFillContents,
+            customColor: selectionFillCustomColor,
+            blendMode: selectionFillBlendMode,
+            opacity: selectionFillOpacity,
+            preservesTransparency: selectionFillPreservesTransparency
+        )
+        isSelectionFillSheetPresented = false
+        fillSelection(options: options)
+    }
+
+    func fillSelection(options: ImageEditorSelectionFillOptions) {
+        let color = options.contents.resolvedColor(
+            foreground: foregroundColor,
+            background: backgroundColor,
+            custom: options.customColor
+        )
+        fillSelection(
+            with: color,
+            opacity: options.opacity,
+            blendMode: options.blendMode,
+            preservingTransparency: options.preservesTransparency
+        )
     }
 
     private func fillSelection(
         with color: NSColor,
+        opacity: CGFloat,
+        blendMode: ImageEditorBlendMode = .normal,
         preservingTransparency: Bool = false
     ) {
         if isQuickMaskMode {
-            fillQuickMask(with: color)
+            fillQuickMask(with: color, opacity: opacity, blendMode: blendMode)
             return
         }
         guard let selection = document.selection else {
@@ -157,6 +288,7 @@ extension ImageEditorViewModel {
                 canvasSize: document.canvasSize,
                 color: color,
                 opacity: opacity,
+                blendMode: blendMode,
                 feather: feather
             ) else { return nil }
             return preservingTransparency || document.isEffectivelyTransparencyLocked(layer)
@@ -879,6 +1011,7 @@ private extension NSImage {
         canvasSize: CGSize,
         color: NSColor,
         opacity: CGFloat,
+        blendMode: ImageEditorBlendMode,
         feather: CGFloat
     ) -> NSImage? {
         guard let selectionMask = selection.layerMask(
@@ -888,20 +1021,88 @@ private extension NSImage {
             feather: feather
         ) else { return nil }
 
-        return NSImage.rendered(size: size) { rect in
-            draw(in: rect, from: CGRect(origin: .zero, size: size), operation: .copy, fraction: 1)
-            let fill = NSImage.rendered(size: size) { fillRect in
-                color.withAlphaComponent(opacity).setFill()
-                fillRect.fill()
-                selectionMask.draw(
-                    in: fillRect,
-                    from: CGRect(origin: .zero, size: selectionMask.size),
-                    operation: .destinationIn,
-                    fraction: 1
+        let width = max(1, Int(size.width.rounded()))
+        let height = max(1, Int(size.height.rounded()))
+        guard var pixels = rgbaPixels(width: width, height: height),
+              let mask = selectionMask.alphaMask(width: width, height: height),
+              let fillColor = color.usingColorSpace(.deviceRGB)
+        else { return nil }
+
+        let fillRed = Double(fillColor.redComponent)
+        let fillGreen = Double(fillColor.greenComponent)
+        let fillBlue = Double(fillColor.blueComponent)
+        let fillColorAlpha = Double(fillColor.alphaComponent)
+        let normalizedOpacity = Double(max(0, min(1, opacity)))
+        let bytesPerPixel = 4
+        let bytesPerRow = width * bytesPerPixel
+
+        for y in 0..<height {
+            for x in 0..<width {
+                let pixelIndex = y * width + x
+                var sourceAlpha = Double(mask.alpha[pixelIndex]) / 255
+                    * normalizedOpacity
+                    * fillColorAlpha
+                guard sourceAlpha > 0 else { continue }
+                if blendMode == .dissolve {
+                    sourceAlpha = Self.selectionFillDissolves(
+                        x: x,
+                        y: y,
+                        probability: sourceAlpha
+                    ) ? 1 : 0
+                    guard sourceAlpha > 0 else { continue }
+                }
+
+                let offset = y * bytesPerRow + x * bytesPerPixel
+                let baseAlpha = Double(pixels[offset + 3]) / 255
+                let baseRed = baseAlpha > 0 ? Double(pixels[offset]) / 255 / baseAlpha : 0
+                let baseGreen = baseAlpha > 0 ? Double(pixels[offset + 1]) / 255 / baseAlpha : 0
+                let baseBlue = baseAlpha > 0 ? Double(pixels[offset + 2]) / 255 / baseAlpha : 0
+                let blended = blendMode.blend(
+                    baseRed: baseRed,
+                    baseGreen: baseGreen,
+                    baseBlue: baseBlue,
+                    overlayRed: fillRed,
+                    overlayGreen: fillGreen,
+                    overlayBlue: fillBlue
                 )
+                let outputAlpha = sourceAlpha + baseAlpha * (1 - sourceAlpha)
+                let baseContribution = baseAlpha * (1 - sourceAlpha)
+                let sourceAgainstTransparency = 1 - baseAlpha
+                let outputRed = sourceAlpha * (sourceAgainstTransparency * fillRed + baseAlpha * blended.red)
+                    + baseContribution * baseRed
+                let outputGreen = sourceAlpha * (sourceAgainstTransparency * fillGreen + baseAlpha * blended.green)
+                    + baseContribution * baseGreen
+                let outputBlue = sourceAlpha * (sourceAgainstTransparency * fillBlue + baseAlpha * blended.blue)
+                    + baseContribution * baseBlue
+                pixels[offset] = Self.selectionFillByte(outputRed)
+                pixels[offset + 1] = Self.selectionFillByte(outputGreen)
+                pixels[offset + 2] = Self.selectionFillByte(outputBlue)
+                pixels[offset + 3] = Self.selectionFillByte(outputAlpha)
             }
-            fill?.draw(in: rect, from: CGRect(origin: .zero, size: size), operation: .sourceOver, fraction: 1)
         }
+
+        return NSImage.rgbaImage(width: width, height: height, pixels: pixels, size: size)
+    }
+
+    private static func selectionFillByte(_ value: Double) -> UInt8 {
+        UInt8((max(0, min(1, value)) * 255).rounded())
+    }
+
+    private static func selectionFillDissolves(x: Int, y: Int, probability: Double) -> Bool {
+        if probability <= 0 { return false }
+        if probability >= 1 { return true }
+        var value = UInt64(truncatingIfNeeded: x)
+            &* 0x9E37_79B9_7F4A_7C15
+            &+ UInt64(truncatingIfNeeded: y)
+            &* 0xBF58_476D_1CE4_E5B9
+            &+ 0x94D0_49BB_1331_11EB
+        value ^= value >> 30
+        value &*= 0xBF58_476D_1CE4_E5B9
+        value ^= value >> 27
+        value &*= 0x94D0_49BB_1331_11EB
+        value ^= value >> 31
+        let sample = Double(value & 0xffff) / 65_535
+        return sample < probability
     }
 
     func stroked(

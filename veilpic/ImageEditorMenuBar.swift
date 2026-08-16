@@ -190,6 +190,11 @@ extension ImageEditorView {
         }
     }
 
+    private var canPresentSelectionFillPanel: Bool {
+        guard case .tool = viewModel.workspaceInputMode else { return false }
+        return viewModel.canFillCurrentEditingTarget
+    }
+
     @ViewBuilder
     private var editMenu: some View {
         Button(L10n.text("imageEditor.action.undo")) {
@@ -248,6 +253,11 @@ extension ImageEditorView {
         }
         .keyboardShortcut("t", modifiers: [.command])
         Divider()
+        Button(L10n.text("imageEditor.action.fillDialog")) {
+            viewModel.presentSelectionFillPanel()
+        }
+        .keyboardShortcut(KeyEquivalent("\u{F708}"), modifiers: [.shift])
+        .disabled(!canPresentSelectionFillPanel)
         Button(L10n.text("imageEditor.action.fillSelection")) {
             viewModel.fillSelection()
         }

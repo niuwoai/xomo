@@ -186,6 +186,12 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var colorRangeSampleMode: ImageEditorColorRangeSampleMode = .replace
     @Published var colorRangeTolerance: CGFloat = 0.22
     @Published var colorRangeInverted = false
+    @Published var isSelectionFillSheetPresented = false
+    @Published var selectionFillContents: ImageEditorSelectionFillContents = .foreground
+    @Published var selectionFillCustomColor: NSColor = .black
+    @Published var selectionFillBlendMode: ImageEditorBlendMode = .normal
+    @Published var selectionFillOpacity: CGFloat = 1
+    @Published var selectionFillPreservesTransparency = false
     @Published var foregroundColor: NSColor = .black
     @Published var backgroundColor: NSColor = .white
     private var screenColorSampler: NSColorSampler?
@@ -6083,7 +6089,11 @@ final class ImageEditorViewModel: ObservableObject {
         paintQuickMask(samples: samples, targetAlpha: quickMaskSelectionAlpha(for: paintColor))
     }
 
-    func fillQuickMask(with color: NSColor) {
+    func fillQuickMask(
+        with color: NSColor,
+        opacity: CGFloat = 1,
+        blendMode: ImageEditorBlendMode = .normal
+    ) {
         guard isQuickMaskMode,
               let selection = document.selection,
               let currentMask = selection.rasterizedMask(canvasSize: document.canvasSize)
@@ -6092,10 +6102,17 @@ final class ImageEditorViewModel: ObservableObject {
             return
         }
         let targetAlpha = quickMaskSelectionAlpha(for: color)
+        let updatedAlpha = ImageEditorQuickMaskFillCompositor.fill(
+            alpha: currentMask.alpha,
+            width: currentMask.width,
+            targetAlpha: targetAlpha,
+            opacity: opacity,
+            blendMode: blendMode
+        )
         let updatedMask = ImageEditorSelectionMask(
             width: currentMask.width,
             height: currentMask.height,
-            alpha: [UInt8](repeating: targetAlpha, count: currentMask.alpha.count)
+            alpha: updatedAlpha
         )
         guard updatedMask != currentMask else {
             statusText = L10n.text("imageEditor.status.selectionUnchanged")
