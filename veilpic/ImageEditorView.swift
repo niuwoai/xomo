@@ -3096,6 +3096,17 @@ struct ImageEditorView: View {
                             isSelectedObjectMoveGestureActive = false
                             resetObjectMoveTracking()
                             NSCursor.arrow.set()
+                        },
+                        onLayerChooserRequested: { location in
+                            guard canvasInteractionTool == .move,
+                                  canvasTextEditingOrigin == nil,
+                                  let imagePoint = imagePoint(from: location, in: geometry.size)
+                            else { return [] }
+                            return viewModel.canvasLayerChoices(at: imagePoint)
+                        },
+                        onLayerChooserSelected: { layerID in
+                            _ = viewModel.selectCanvasLayerChoice(layerID)
+                            refreshCanvasCursor(in: geometry.size)
                         }
                     )
                     .allowsHitTesting(

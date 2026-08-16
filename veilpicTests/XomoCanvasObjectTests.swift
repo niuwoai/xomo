@@ -603,6 +603,75 @@ struct XomoCanvasObjectTests {
         #expect(viewModel.document.selectedLayerID == layer.id)
     }
 
+    @Test func canvasLayerChooserListsEveryPixelHitFrontToBackWithoutHistory() throws {
+        let viewModel = makeViewModel()
+        var back = ImageEditorLayer.solidColorFill(
+            name: "Back",
+            size: CGSize(width: 120, height: 80),
+            content: ImageEditorSolidColorFillContent(red: 0.8, green: 0.2, blue: 0.1)
+        )
+        back.frame.origin = CGPoint(x: 100, y: 90)
+        var front = ImageEditorLayer.solidColorFill(
+            name: "Front",
+            size: CGSize(width: 120, height: 80),
+            content: ImageEditorSolidColorFillContent(red: 0.1, green: 0.4, blue: 0.9)
+        )
+        front.frame.origin = back.frame.origin
+        viewModel.document.layers.append(contentsOf: [back, front])
+        viewModel.selectLayer(back.id)
+        viewModel.moveToolAutoSelectTarget = .layer
+        let historyCount = viewModel.document.history.count
+        let canUndo = viewModel.canUndo
+
+        let choices = viewModel.canvasLayerChoices(at: CGPoint(x: 140, y: 120))
+
+        #expect(choices.map(\.id) == [front.id, back.id])
+        #expect(choices.map(\.title) == ["Front", "Back"])
+        #expect(choices.map(\.isSelected) == [false, true])
+        #expect(viewModel.selectCanvasLayerChoice(front.id))
+        #expect(viewModel.document.selectedLayerID == front.id)
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.canUndo == canUndo)
+    }
+
+    @Test func canvasLayerChooserCollapsesGroupHitsAndKeepsComponentsWhole() throws {
+        let viewModel = makeViewModel()
+        let group = ImageEditorLayer.group(name: "Card Group", size: viewModel.document.canvasSize)
+        var back = ImageEditorLayer.solidColorFill(
+            name: "Back Child",
+            size: CGSize(width: 90, height: 60),
+            content: ImageEditorSolidColorFillContent(red: 0.7, green: 0.3, blue: 0.2)
+        )
+        back.groupID = group.id
+        back.frame.origin = CGPoint(x: 80, y: 70)
+        var front = ImageEditorLayer.solidColorFill(
+            name: "Front Child",
+            size: CGSize(width: 90, height: 60),
+            content: ImageEditorSolidColorFillContent(red: 0.2, green: 0.5, blue: 0.8)
+        )
+        front.groupID = group.id
+        front.frame.origin = back.frame.origin
+        viewModel.document.layers.append(contentsOf: [group, back, front])
+        viewModel.moveToolAutoSelectTarget = .group
+
+        #expect(
+            viewModel.canvasLayerChoices(at: CGPoint(x: 110, y: 100)).map(\.id)
+                == [group.id]
+        )
+
+        viewModel.insertXomoComponent(.button, at: CGPoint(x: 220, y: 180))
+        let firstComponentID = try #require(viewModel.document.selectedLayerID)
+        viewModel.insertXomoComponent(.button, at: CGPoint(x: 220, y: 180))
+        let secondComponentID = try #require(viewModel.document.selectedLayerID)
+        viewModel.selectLeftSidebarTab(.components)
+
+        let componentChoices = viewModel.canvasLayerChoices(at: CGPoint(x: 300, y: 202))
+        #expect(componentChoices.map(\.id) == [secondComponentID, firstComponentID])
+        #expect(componentChoices.allSatisfy { choice in
+            viewModel.document.layers.first(where: { $0.id == choice.id })?.isGroup == true
+        })
+    }
+
     @Test func componentObjectNudgeWinsOverStalePixelSelectionInComponentsMode() throws {
         let viewModel = makeViewModel()
         viewModel.insertXomoComponent(.button, at: CGPoint(x: 80, y: 90))

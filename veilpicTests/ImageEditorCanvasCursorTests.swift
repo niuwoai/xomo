@@ -4,6 +4,45 @@ import Testing
 
 @MainActor
 struct ImageEditorCanvasCursorTests {
+    @Test func layerChooserUsesNativeRightClickAndMacControlClickOnly() {
+        #expect(ImageEditorCanvasLayerChooserEventPolicy.shouldOpen(
+            eventType: .rightMouseDown,
+            modifierFlags: []
+        ))
+        #expect(ImageEditorCanvasLayerChooserEventPolicy.shouldOpen(
+            eventType: .leftMouseDown,
+            modifierFlags: [.control]
+        ))
+        #expect(!ImageEditorCanvasLayerChooserEventPolicy.shouldOpen(
+            eventType: .leftMouseDown,
+            modifierFlags: []
+        ))
+        #expect(!ImageEditorCanvasLayerChooserEventPolicy.shouldOpen(
+            eventType: .leftMouseDragged,
+            modifierFlags: [.control]
+        ))
+    }
+
+    @Test func nativeCanvasBridgeBuildsAndRoutesTheLayerChooserMenu() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let bridgeSource = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorScrollZoom.swift"),
+            encoding: .utf8
+        )
+        let viewSource = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(bridgeSource.contains("matching: [.rightMouseDown, .leftMouseDown]"))
+        #expect(bridgeSource.contains("NSMenu.popUpContextMenu(menu, with: event, for: self)"))
+        #expect(bridgeSource.contains("onLayerChooserSelected?(layerID)"))
+        #expect(viewSource.contains("return viewModel.canvasLayerChoices(at: imagePoint)"))
+        #expect(viewSource.contains("viewModel.selectCanvasLayerChoice(layerID)"))
+    }
+
     @Test func cursorRectOnlyTreatsTheRenderedImageAsDrawableCanvas() {
         let imageRect = CGRect(x: 120, y: 80, width: 720, height: 450)
 

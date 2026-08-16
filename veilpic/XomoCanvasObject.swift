@@ -42,6 +42,12 @@ enum ImageEditorMoveAutoSelectTarget: String, CaseIterable, Identifiable {
     }
 }
 
+struct ImageEditorCanvasLayerChoice: Equatable, Identifiable {
+    let id: UUID
+    let title: String
+    let isSelected: Bool
+}
+
 enum ImageEditorObjectBoxSelectionInclusion: String, CaseIterable, Identifiable {
     case touching
     case contained
@@ -853,6 +859,55 @@ extension ImageEditorViewModel {
             document.selectedLayerIDs.count
         )
         return true
+    }
+
+    /// Photoshop exposes every visible layer below a context-click, while
+    /// Sketch/Figma-style component editing must never leak instance children.
+    /// Preserve front-to-back paint order and collapse repeated group hits.
+    func canvasLayerChoices(at point: CGPoint) -> [ImageEditorCanvasLayerChoice] {
+        guard point.x.isFinite, point.y.isFinite else { return [] }
+
+        var seenIDs = Set<UUID>()
+        return document.layers.reversed().compactMap { leaf in
+            guard !leaf.isGroup,
+                  document.isEffectivelyVisible(leaf),
+                  layerContainsVisibleContent(leaf, at: point),
+                  let target = canvasLayerChoiceTarget(for: leaf),
+                  seenIDs.insert(target.id).inserted
+            else { return nil }
+
+            return ImageEditorCanvasLayerChoice(
+                id: target.id,
+                title: target.name,
+                isSelected: document.selectedLayerIDs.contains(target.id)
+            )
+        }
+    }
+
+    @discardableResult
+    func selectCanvasLayerChoice(_ id: UUID) -> Bool {
+        guard let layer = document.layers.first(where: { $0.id == id }),
+              document.isEffectivelyVisible(layer)
+        else { return false }
+        selectLayer(id)
+        statusText = L10n.format(
+            "imageEditor.status.layerRangeSelected",
+            document.selectedLayerIDs.count
+        )
+        return true
+    }
+
+    private func canvasLayerChoiceTarget(for leaf: ImageEditorLayer) -> ImageEditorLayer? {
+        let ancestors = document.ancestorGroups(for: leaf)
+        if selectedLeftSidebarTab == .components {
+            return ancestors.last(where: { $0.xomoComponentInstance != nil })
+        }
+        switch moveToolAutoSelectTarget {
+        case .layer:
+            return leaf
+        case .group:
+            return ancestors.last ?? leaf
+        }
     }
 
     /// Returns whether a component object owns the point without changing

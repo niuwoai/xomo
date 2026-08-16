@@ -241,6 +241,16 @@ final class ImageEditorCanvasPointerCaptureState: ObservableObject {
     }
 }
 
+enum ImageEditorCanvasLayerChooserEventPolicy {
+    static func shouldOpen(
+        eventType: NSEvent.EventType,
+        modifierFlags: NSEvent.ModifierFlags
+    ) -> Bool {
+        eventType == .rightMouseDown
+            || (eventType == .leftMouseDown && modifierFlags.contains(.control))
+    }
+}
+
 /// 覆盖在画布上的滚轮缩放捕获层。自身对鼠标点击完全透明（hitTest 返回 nil），
 /// 不会影响 SwiftUI 的绘制、选择和拖拽平移。
 struct ScrollWheelZoomView: NSViewRepresentable {
@@ -312,6 +322,8 @@ struct ScrollWheelZoomView: NSViewRepresentable {
     let onObjectMoveChanged: (_ translation: CGSize) -> Void
     let onObjectMoveEnded: () -> Void
     let onObjectMoveCancelled: () -> Void
+    let onLayerChooserRequested: (_ location: CGPoint) -> [ImageEditorCanvasLayerChoice]
+    let onLayerChooserSelected: (_ layerID: UUID) -> Void
 
     func makeNSView(context: Context) -> ScrollWheelZoomNSView {
         let view = ScrollWheelZoomNSView()
@@ -344,6 +356,8 @@ struct ScrollWheelZoomView: NSViewRepresentable {
         view.onObjectMoveChanged = onObjectMoveChanged
         view.onObjectMoveEnded = onObjectMoveEnded
         view.onObjectMoveCancelled = onObjectMoveCancelled
+        view.onLayerChooserRequested = onLayerChooserRequested
+        view.onLayerChooserSelected = onLayerChooserSelected
         view.markAsCurrentPointerHost()
         return view
     }
@@ -378,6 +392,8 @@ struct ScrollWheelZoomView: NSViewRepresentable {
         nsView.onObjectMoveChanged = onObjectMoveChanged
         nsView.onObjectMoveEnded = onObjectMoveEnded
         nsView.onObjectMoveCancelled = onObjectMoveCancelled
+        nsView.onLayerChooserRequested = onLayerChooserRequested
+        nsView.onLayerChooserSelected = onLayerChooserSelected
         nsView.markAsCurrentPointerHost()
     }
 
@@ -510,9 +526,12 @@ final class ScrollWheelZoomNSView: NSView {
     var onObjectMoveChanged: ((_ translation: CGSize) -> Void)?
     var onObjectMoveEnded: (() -> Void)?
     var onObjectMoveCancelled: (() -> Void)?
+    var onLayerChooserRequested: ((CGPoint) -> [ImageEditorCanvasLayerChoice])?
+    var onLayerChooserSelected: ((UUID) -> Void)?
     private var monitor: Any?
     private var middleMouseMonitor: Any?
     private var mouseMovedMonitor: Any?
+    private var layerChooserMonitor: Any?
     private var appDeactivateObserver: Any?
     private var windowResignKeyObserver: Any?
     private var ownsCanvasLifecycle = false
@@ -652,6 +671,14 @@ final class ScrollWheelZoomNSView: NSView {
                 return event
             }
         }
+        if layerChooserMonitor == nil {
+            layerChooserMonitor = NSEvent.addLocalMonitorForEvents(
+                matching: [.rightMouseDown, .leftMouseDown]
+            ) { [weak self] event in
+                guard let self else { return event }
+                return self.showLayerChooserIfNeeded(for: event) ? nil : event
+            }
+        }
         if appDeactivateObserver == nil {
             appDeactivateObserver = NotificationCenter.default.addObserver(
                 forName: NSApplication.didResignActiveNotification,
@@ -689,6 +716,10 @@ final class ScrollWheelZoomNSView: NSView {
             NSEvent.removeMonitor(mouseMovedMonitor)
         }
         mouseMovedMonitor = nil
+        if let layerChooserMonitor {
+            NSEvent.removeMonitor(layerChooserMonitor)
+        }
+        layerChooserMonitor = nil
         if let appDeactivateObserver {
             NotificationCenter.default.removeObserver(appDeactivateObserver)
         }
@@ -726,6 +757,47 @@ final class ScrollWheelZoomNSView: NSView {
         let location = convert(event.locationInWindow, from: nil)
         guard bounds.contains(location) else { return }
         onMouseMoved?(location, ImageEditorStylusInput.sample(from: event))
+    }
+
+    private func showLayerChooserIfNeeded(for event: NSEvent) -> Bool {
+        guard ImageEditorCanvasLayerChooserEventPolicy.shouldOpen(
+                eventType: event.type,
+                modifierFlags: event.modifierFlags
+              ),
+              let window,
+              event.window === window,
+              !isMiddleMousePanning,
+              !isObjectMoving,
+              Self.activePointerTransaction == nil
+        else { return false }
+
+        let location = convert(event.locationInWindow, from: nil)
+        guard bounds.contains(location),
+              let choices = onLayerChooserRequested?(location),
+              !choices.isEmpty
+        else { return false }
+
+        let menu = NSMenu()
+        for choice in choices {
+            let item = NSMenuItem(
+                title: choice.title,
+                action: #selector(selectLayerChoice(_:)),
+                keyEquivalent: ""
+            )
+            item.target = self
+            item.representedObject = choice.id.uuidString
+            item.state = choice.isSelected ? .on : .off
+            menu.addItem(item)
+        }
+        NSMenu.popUpContextMenu(menu, with: event, for: self)
+        return true
+    }
+
+    @objc private func selectLayerChoice(_ sender: NSMenuItem) {
+        guard let rawLayerID = sender.representedObject as? String,
+              let layerID = UUID(uuidString: rawLayerID)
+        else { return }
+        onLayerChooserSelected?(layerID)
     }
 
     /// The canvas is also a drop destination on macOS 13. Once a mouse-down
