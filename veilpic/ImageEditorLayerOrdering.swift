@@ -7,6 +7,13 @@
 
 import Foundation
 
+nonisolated enum ImageEditorLayerSelectionNavigation: Equatable {
+    case above(extendingSelection: Bool)
+    case below(extendingSelection: Bool)
+    case top
+    case bottom
+}
+
 private enum ImageEditorLayerStackDirection {
     case up
     case down
@@ -30,6 +37,56 @@ private struct ImageEditorLayerMovePlan {
 
 @MainActor
 extension ImageEditorViewModel {
+    @discardableResult
+    func navigateLayerSelection(_ navigation: ImageEditorLayerSelectionNavigation) -> Bool {
+        guard selectedLeftSidebarTab == .tools,
+              !hasActiveLayerMoveTransaction,
+              !hasActivePathAnchorMoveTransaction,
+              !hasPendingPenPathTransaction,
+              let selectedLayerID = document.selectedLayerID,
+              let selectedLayer = document.layers.first(where: { $0.id == selectedLayerID })
+        else { return false }
+
+        let rows = visibleLayerRows
+        let visibleIDs = Set(rows.map(\.id))
+        let referenceID = visibleIDs.contains(selectedLayerID)
+            ? selectedLayerID
+            : document.ancestorGroups(for: selectedLayer).first(where: { visibleIDs.contains($0.id) })?.id
+        guard let referenceID,
+              let referenceIndex = rows.firstIndex(where: { $0.id == referenceID })
+        else { return false }
+
+        let targetIndex: Int
+        let extendingSelection: Bool
+        switch navigation {
+        case .above(let shouldExtend):
+            targetIndex = referenceIndex - 1
+            extendingSelection = shouldExtend
+        case .below(let shouldExtend):
+            targetIndex = referenceIndex + 1
+            extendingSelection = shouldExtend
+        case .top:
+            targetIndex = rows.startIndex
+            extendingSelection = false
+        case .bottom:
+            targetIndex = rows.index(before: rows.endIndex)
+            extendingSelection = false
+        }
+
+        guard rows.indices.contains(targetIndex) else { return false }
+        let target = rows[targetIndex]
+        if extendingSelection && document.selectedLayerIDs.contains(target.id) {
+            return false
+        }
+        guard target.id != selectedLayerID || extendingSelection else { return false }
+
+        selectLayer(target.id, extendingSelection: extendingSelection)
+        statusText = extendingSelection
+            ? L10n.format("imageEditor.status.layerRangeSelected", document.selectedLayerIDs.count)
+            : L10n.format("imageEditor.status.layerKeyboardSelected", target.name)
+        return true
+    }
+
     func canMoveSelectedLayerUp(inVisibleOrder visibleRowIDs: [UUID]) -> Bool {
         reorderedLayers(
             moving: .up,

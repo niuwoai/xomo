@@ -2086,6 +2086,7 @@
 "imageEditor.status.layerSelectionInverted" = "Layer selection inverted; %d layers selected";
 "imageEditor.status.layerSelectionCleared" = "Layer selection cleared";
 "imageEditor.status.layerRangeSelected" = "%d layers selected";
+"imageEditor.status.layerKeyboardSelected" = "Selected layer: %@";
 "imageEditor.status.layerNameInvalid" = "Layer name cannot be empty";
 "imageEditor.status.layerRenamed" = "Layer renamed";
 "imageEditor.status.layerLabelColor" = "Layer color label set: %@";

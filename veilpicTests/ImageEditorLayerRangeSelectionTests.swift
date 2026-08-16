@@ -117,6 +117,105 @@ struct ImageEditorLayerRangeSelectionTests {
         #expect(!source.contains("flags.contains(.command) || flags.contains(.shift)"))
     }
 
+    @Test func classicLayerSelectionShortcutsResolveWithoutChangingReorderShortcuts() {
+        let cases: [(String, NSEvent.ModifierFlags, ImageEditorKeyboardShortcutAction)] = [
+            ("]", [.option], .navigateLayerSelection(.above(extendingSelection: false))),
+            ("[", [.option], .navigateLayerSelection(.below(extendingSelection: false))),
+            ("]", [.option, .shift], .navigateLayerSelection(.above(extendingSelection: true))),
+            ("[", [.option, .shift], .navigateLayerSelection(.below(extendingSelection: true))),
+            (".", [.option], .navigateLayerSelection(.top)),
+            (",", [.option], .navigateLayerSelection(.bottom)),
+            ("]", [.command], .layerUp),
+            ("[", [.command], .layerDown)
+        ]
+
+        for (key, flags, expected) in cases {
+            let action = ImageEditorKeyboardShortcutAction.resolve(
+                charactersIgnoringModifiers: key,
+                modifierFlags: flags
+            )
+            #expect(action == expected)
+            #expect(action?.isBlockedByTextInput == true)
+        }
+    }
+
+    @Test func keyboardNavigationSelectsAdjacentAndBoundaryLayersWithoutHistory() {
+        let fixture = makeFixture()
+        let viewModel = fixture.viewModel
+        let originalHistoryCount = viewModel.document.history.count
+        let originalUndoCount = viewModel.undoStack.count
+        viewModel.selectLayer(fixture.layers[2].id)
+
+        #expect(viewModel.navigateLayerSelection(.above(extendingSelection: false)))
+        #expect(viewModel.document.selectedLayerID == fixture.layers[3].id)
+        viewModel.selectLayer(fixture.layers[2].id)
+        #expect(viewModel.navigateLayerSelection(.below(extendingSelection: false)))
+        #expect(viewModel.document.selectedLayerID == fixture.layers[1].id)
+        #expect(viewModel.navigateLayerSelection(.top))
+        #expect(viewModel.document.selectedLayerID == fixture.layers[4].id)
+        #expect(viewModel.navigateLayerSelection(.bottom))
+        #expect(viewModel.document.selectedLayerID == fixture.layers[0].id)
+
+        #expect(viewModel.document.history.count == originalHistoryCount)
+        #expect(viewModel.undoStack.count == originalUndoCount)
+    }
+
+    @Test func extendingKeyboardNavigationAddsButNeverTogglesExistingLayersOff() {
+        let fixture = makeFixture()
+        let viewModel = fixture.viewModel
+        viewModel.selectLayer(fixture.layers[2].id)
+
+        #expect(viewModel.navigateLayerSelection(.above(extendingSelection: true)))
+        #expect(viewModel.navigateLayerSelection(.above(extendingSelection: true)))
+        #expect(viewModel.document.selectedLayerIDs == Set(fixture.layers[2...4].map(\.id)))
+
+        #expect(!viewModel.navigateLayerSelection(.below(extendingSelection: true)))
+        #expect(viewModel.document.selectedLayerIDs == Set(fixture.layers[2...4].map(\.id)))
+        #expect(viewModel.document.selectedLayerID == fixture.layers[4].id)
+    }
+
+    @Test func collapsedDescendantNavigationUsesNearestVisibleGroupAndIncludesHiddenRows() {
+        let fixture = makeFixture()
+        let viewModel = fixture.viewModel
+        var group = ImageEditorLayer.group(name: "Collapsed", size: viewModel.document.canvasSize)
+        group.isGroupExpanded = false
+        var child = fixture.layers[2]
+        child.groupID = group.id
+        var hiddenAbove = fixture.layers[3]
+        hiddenAbove.isVisible = false
+        let below = fixture.layers[1]
+        viewModel.document.layers = [below, child, group, hiddenAbove]
+
+        viewModel.selectLayer(child.id)
+        #expect(viewModel.navigateLayerSelection(.above(extendingSelection: false)))
+        #expect(viewModel.document.selectedLayerID == hiddenAbove.id)
+
+        viewModel.selectLayer(child.id)
+        #expect(viewModel.navigateLayerSelection(.below(extendingSelection: false)))
+        #expect(viewModel.document.selectedLayerID == below.id)
+    }
+
+    @Test func componentAndContinuousPathOrLayerTransactionsOwnLayerNavigation() {
+        let fixture = makeFixture()
+        let viewModel = fixture.viewModel
+        let originalSelection = viewModel.document.selectedLayerIDs
+
+        viewModel.selectedLeftSidebarTab = .components
+        #expect(!viewModel.navigateLayerSelection(.top))
+        #expect(viewModel.document.selectedLayerIDs == originalSelection)
+
+        viewModel.selectedLeftSidebarTab = .tools
+        viewModel.pendingPenPathPoints = [CGPoint(x: 12, y: 8)]
+        #expect(!viewModel.navigateLayerSelection(.top))
+        #expect(viewModel.document.selectedLayerIDs == originalSelection)
+
+        viewModel.pendingPenPathPoints = []
+        #expect(viewModel.beginMovingSelectedLayer())
+        #expect(!viewModel.navigateLayerSelection(.top))
+        #expect(viewModel.document.selectedLayerIDs == originalSelection)
+        #expect(viewModel.cancelMovingSelectedLayer())
+    }
+
     private struct Fixture {
         let viewModel: ImageEditorViewModel
         let layers: [ImageEditorLayer]
@@ -129,7 +228,15 @@ struct ImageEditorLayerRangeSelectionTests {
             image: NSImage.transparent(size: canvasSize)
         ) { _ in }
         let layers = (1...5).map { index in
-            ImageEditorLayer.blank(name: "Layer \(index)", size: canvasSize)
+            ImageEditorLayer.solidColorFill(
+                name: "Layer \(index)",
+                size: canvasSize,
+                content: ImageEditorSolidColorFillContent(
+                    red: Double(index) / 10,
+                    green: 0.4,
+                    blue: 0.6
+                )
+            )
         }
         viewModel.document.layers = layers
         viewModel.document.selectedLayerID = layers[0].id

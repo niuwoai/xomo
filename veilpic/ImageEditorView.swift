@@ -2378,6 +2378,7 @@ struct ImageEditorView: View {
         case .layerUp: viewModel.moveSelectedLayerUp(inVisibleOrder: filteredVisibleLayerRowIDs)
         case .layerDown: viewModel.moveSelectedLayerDown(inVisibleOrder: filteredVisibleLayerRowIDs)
         case .layerBottom: viewModel.moveSelectedLayerToBottom(inVisibleOrder: filteredVisibleLayerRowIDs)
+        case .navigateLayerSelection(let navigation): viewModel.navigateLayerSelection(navigation)
         case .selectAll: viewModel.selectAll()
         case .clearSelection: viewModel.clearSelection()
         case .reselectSelection: viewModel.reselectSelection()
@@ -15024,6 +15025,7 @@ enum ImageEditorKeyboardShortcutAction: Equatable {
     case layerUp
     case layerDown
     case layerBottom
+    case navigateLayerSelection(ImageEditorLayerSelectionNavigation)
     case selectAll
     case clearSelection
     case reselectSelection
@@ -15074,6 +15076,7 @@ enum ImageEditorKeyboardShortcutAction: Equatable {
              .layerUp,
              .layerDown,
              .layerBottom,
+             .navigateLayerSelection,
              .toggleQuickMask,
              .toneRange,
              .spongeMode:
@@ -15167,6 +15170,20 @@ enum ImageEditorKeyboardShortcutAction: Equatable {
         if key == "e", relevantFlags == [.command] { return .mergeDown }
         if key == "e", relevantFlags == [.command, .option, .shift] { return .stampVisible }
         if key == "e", relevantFlags == [.command, .shift] { return .mergeVisible }
+        if key == "]", relevantFlags == [.option] {
+            return .navigateLayerSelection(.above(extendingSelection: false))
+        }
+        if key == "[", relevantFlags == [.option] {
+            return .navigateLayerSelection(.below(extendingSelection: false))
+        }
+        if key == "]", relevantFlags == [.option, .shift] {
+            return .navigateLayerSelection(.above(extendingSelection: true))
+        }
+        if key == "[", relevantFlags == [.option, .shift] {
+            return .navigateLayerSelection(.below(extendingSelection: true))
+        }
+        if key == ".", relevantFlags == [.option] { return .navigateLayerSelection(.top) }
+        if key == ",", relevantFlags == [.option] { return .navigateLayerSelection(.bottom) }
         if key == "]", relevantFlags == [.command, .shift] { return .layerTop }
         if key == "]", relevantFlags == [.command] { return .layerUp }
         if key == "[", relevantFlags == [.command] { return .layerDown }

@@ -712,6 +712,12 @@ struct XomoCanvasObjectTests {
             size: viewModel.document.canvasSize
         )
         childGroup.groupID = parentGroup.id
+        var backLeaf = ImageEditorLayer.solidColorFill(
+            name: "Back",
+            size: CGSize(width: 80, height: 60),
+            content: ImageEditorSolidColorFillContent(red: 0.1, green: 0.2, blue: 0.3)
+        )
+        backLeaf.groupID = childGroup.id
         var visibleLeaf = ImageEditorLayer.solidColorFill(
             name: "Visible",
             size: CGSize(width: 80, height: 60),

@@ -2086,6 +2086,7 @@
 "imageEditor.status.layerSelectionInverted" = "レイヤー選択を反転しました。現在 %d 個を選択中";
 "imageEditor.status.layerSelectionCleared" = "レイヤー選択を解除しました";
 "imageEditor.status.layerRangeSelected" = "%d 個のレイヤーを選択しました";
+"imageEditor.status.layerKeyboardSelected" = "レイヤーを選択：%@";
 "imageEditor.status.layerNameInvalid" = "レイヤー名は空にできません";
 "imageEditor.status.layerRenamed" = "レイヤー名を変更しました";
 "imageEditor.status.layerLabelColor" = "レイヤーカラーラベルを設定しました：%@";
