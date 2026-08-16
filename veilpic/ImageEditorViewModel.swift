@@ -8060,27 +8060,38 @@ final class ImageEditorViewModel: ObservableObject {
         replaceSelectedLayerPixels(image, historyTitle: historyTitle, resetFrame: true)
     }
 
-    private func replaceSelectedLayerRenderedPixels(_ image: NSImage, historyTitle: String, resetFrame: Bool) {
+    @discardableResult
+    func replaceSelectedLayerRenderedPixels(
+        _ image: NSImage,
+        historyTitle: String,
+        resetFrame: Bool,
+        skipIfUnchanged: Bool = false,
+        unchangedStatusKey: String? = nil
+    ) -> Bool {
         replaceSelectedLayerPixels(
             image,
             historyTitle: historyTitle,
             resetFrame: resetFrame,
-            isRenderedBitmap: true
+            isRenderedBitmap: true,
+            skipIfUnchanged: skipIfUnchanged,
+            unchangedStatusKey: unchangedStatusKey
         )
     }
 
+    @discardableResult
     private func replaceSelectedLayerPixels(
         _ image: NSImage,
         historyTitle: String,
         resetFrame: Bool,
-        isRenderedBitmap: Bool = false
-    ) {
-        guard let index = document.selectedLayerIndex else { return }
+        isRenderedBitmap: Bool = false,
+        skipIfUnchanged: Bool = false,
+        unchangedStatusKey: String? = nil
+    ) -> Bool {
+        guard let index = document.selectedLayerIndex else { return false }
         guard !document.isEffectivelyPixelsLocked(document.layers[index]) else {
             statusText = L10n.text("imageEditor.status.layerLocked")
-            return
+            return false
         }
-        pushUndo()
         let original = document.layers[index].image
         let normalized = isRenderedBitmap ? image : image.normalizedBitmapImage()
         let clippedOutput = clippedToSelection(
@@ -8091,11 +8102,22 @@ final class ImageEditorViewModel: ObservableObject {
         let output = document.isEffectivelyTransparencyLocked(document.layers[index])
             ? (clippedOutput.preservingAlpha(from: original) ?? clippedOutput)
             : clippedOutput
+        if skipIfUnchanged,
+           let originalData = original.qingtuPNGData(),
+           let outputData = output.qingtuPNGData(),
+           originalData == outputData {
+            if let unchangedStatusKey {
+                statusText = L10n.text(unchangedStatusKey)
+            }
+            return false
+        }
+        pushUndo()
         document.layers[index].image = output
         if resetFrame {
             document.layers[index].frame = CGRect(origin: .zero, size: output.size)
         }
         appendHistory(historyTitle)
+        return true
     }
 
     #if DEBUG

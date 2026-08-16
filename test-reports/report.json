@@ -1,10 +1,10 @@
 {
-  "generated_at": "2026-08-17 07:04:50 +0800",
-  "total": 22,
-  "passed": 22,
+  "generated_at": "2026-08-17 07:23:36 +0800",
+  "total": 26,
+  "passed": 26,
   "failed": 0,
-  "total_tests": 22,
-  "passed_tests": 22,
+  "total_tests": 26,
+  "passed_tests": 26,
   "failed_tests_in_failed_groups": 0,
   "jobs": 1,
   "results": [
@@ -15,7 +15,7 @@
       "file": "ImageEditorSelectionFillDialogTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.026,
+      "duration": 3.041,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorSelectionFillDialogTests.canvasAlignedPatternCompensatesEachLayerOrigin.log"
@@ -27,7 +27,7 @@
       "file": "ImageEditorSelectionFillDialogTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.119,
+      "duration": 3.035,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorSelectionFillDialogTests.classicHistoryShortcutUsesFullOpacityAndShiftOnlyPreservesTransparency.log"
@@ -39,7 +39,7 @@
       "file": "ImageEditorSelectionFillDialogTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.024,
+      "duration": 3.118,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorSelectionFillDialogTests.contentAwareColorAdaptationUsesNearbyPixelsInsteadOfOneGlobalAverage.log"
@@ -51,7 +51,7 @@
       "file": "ImageEditorSelectionFillDialogTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.033,
+      "duration": 3.042,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorSelectionFillDialogTests.contentAwareFillHonorsBlendMode.log"
@@ -63,7 +63,7 @@
       "file": "ImageEditorSelectionFillDialogTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.052,
+      "duration": 3.02,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorSelectionFillDialogTests.contentAwareFillIsUnavailableInQuickMaskAndDoesNotMutateHistory.log"
@@ -75,7 +75,7 @@
       "file": "ImageEditorSelectionFillDialogTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.018,
+      "duration": 3.032,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorSelectionFillDialogTests.contentAwareFillPreservesTransparentPixelsWhenRequested.log"
@@ -87,7 +87,7 @@
       "file": "ImageEditorSelectionFillDialogTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.055,
+      "duration": 3.044,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorSelectionFillDialogTests.contentAwareFillUsesDialogOpacityAndCommitsOneTransaction.log"
@@ -99,7 +99,7 @@
       "file": "ImageEditorSelectionFillDialogTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.025,
+      "duration": 3.036,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorSelectionFillDialogTests.fillContentsResolveClassicSources.log"
@@ -111,10 +111,46 @@
       "file": "ImageEditorSelectionFillDialogTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.05,
+      "duration": 3.03,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorSelectionFillDialogTests.fillDialogPatternTargetsQuickMaskWithoutChangingLayerPixels.log"
+    },
+    {
+      "suite": "ImageEditorSelectionFillDialogTests",
+      "method": "historyBrushRejectsQuickMaskWithoutChangingPixelsOrHistory",
+      "identifier": "veilpicTests/ImageEditorSelectionFillDialogTests/historyBrushRejectsQuickMaskWithoutChangingPixelsOrHistory()",
+      "file": "ImageEditorSelectionFillDialogTests.swift",
+      "test_count": 1,
+      "passed": true,
+      "duration": 3.033,
+      "infrastructure_retries": 0,
+      "issues": [],
+      "log": "ImageEditorSelectionFillDialogTests.historyBrushRejectsQuickMaskWithoutChangingPixelsOrHistory.log"
+    },
+    {
+      "suite": "ImageEditorSelectionFillDialogTests",
+      "method": "historyBrushRestoresOnlyItsFootprintInsideTheExistingSelection",
+      "identifier": "veilpicTests/ImageEditorSelectionFillDialogTests/historyBrushRestoresOnlyItsFootprintInsideTheExistingSelection()",
+      "file": "ImageEditorSelectionFillDialogTests.swift",
+      "test_count": 1,
+      "passed": true,
+      "duration": 3.05,
+      "infrastructure_retries": 0,
+      "issues": [],
+      "log": "ImageEditorSelectionFillDialogTests.historyBrushRestoresOnlyItsFootprintInsideTheExistingSelection.log"
+    },
+    {
+      "suite": "ImageEditorSelectionFillDialogTests",
+      "method": "historyBrushUsesTheNamedSnapshotSourceWithoutRestoringTheDocument",
+      "identifier": "veilpicTests/ImageEditorSelectionFillDialogTests/historyBrushUsesTheNamedSnapshotSourceWithoutRestoringTheDocument()",
+      "file": "ImageEditorSelectionFillDialogTests.swift",
+      "test_count": 1,
+      "passed": true,
+      "duration": 3.027,
+      "infrastructure_retries": 0,
+      "issues": [],
+      "log": "ImageEditorSelectionFillDialogTests.historyBrushUsesTheNamedSnapshotSourceWithoutRestoringTheDocument.log"
     },
     {
       "suite": "ImageEditorSelectionFillDialogTests",
@@ -123,7 +159,7 @@
       "file": "ImageEditorSelectionFillDialogTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.011,
+      "duration": 3.019,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorSelectionFillDialogTests.historyFillAlignsTheSourceLayerByItsHistoricalCanvasFrame.log"
@@ -135,7 +171,7 @@
       "file": "ImageEditorSelectionFillDialogTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.019,
+      "duration": 3.058,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorSelectionFillDialogTests.historyFillIsUnavailableInQuickMaskWithoutMutation.log"
@@ -147,7 +183,7 @@
       "file": "ImageEditorSelectionFillDialogTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.017,
+      "duration": 3.029,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorSelectionFillDialogTests.historyFillRestoresOnlySelectedPixelsFromTheChosenHistoryState.log"
@@ -159,7 +195,7 @@
       "file": "ImageEditorSelectionFillDialogTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.03,
+      "duration": 3.067,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorSelectionFillDialogTests.historyFillRestoresTransparencyUnlessPreserveTransparencyIsRequested.log"
@@ -171,7 +207,7 @@
       "file": "ImageEditorSelectionFillDialogTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.047,
+      "duration": 3.091,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorSelectionFillDialogTests.historyFillUsesDialogOpacityAndBlendMode.log"
@@ -183,7 +219,7 @@
       "file": "ImageEditorSelectionFillDialogTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.018,
+      "duration": 3.028,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorSelectionFillDialogTests.multiplyFillUsesDialogOpacityAndCommitsOneTransaction.log"
@@ -195,7 +231,7 @@
       "file": "ImageEditorSelectionFillDialogTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.015,
+      "duration": 3.029,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorSelectionFillDialogTests.namedSnapshotCanOwnTheHistoryFillSourceWithoutRestoringTheWholeDocument.log"
@@ -207,7 +243,7 @@
       "file": "ImageEditorSelectionFillDialogTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.047,
+      "duration": 3.029,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorSelectionFillDialogTests.panelDefaultsAndApplyUseOneExplicitFillTransaction.log"
@@ -219,7 +255,7 @@
       "file": "ImageEditorSelectionFillDialogTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.029,
+      "duration": 3.03,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorSelectionFillDialogTests.patternFillUsesNativeTileContentAndOneTransaction.log"
@@ -231,7 +267,7 @@
       "file": "ImageEditorSelectionFillDialogTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.022,
+      "duration": 3.085,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorSelectionFillDialogTests.preserveTransparencyKeepsPartialAlphaAndTransparentPixels.log"
@@ -255,10 +291,22 @@
       "file": "ImageEditorSelectionFillDialogTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.033,
+      "duration": 3.017,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorSelectionFillDialogTests.quickMaskPatternLeavesTransparentTileAreasUntouched.log"
+    },
+    {
+      "suite": "ImageEditorSelectionFillDialogTests",
+      "method": "unchangedHistoryBrushPreservesUndoRedoAndHistory",
+      "identifier": "veilpicTests/ImageEditorSelectionFillDialogTests/unchangedHistoryBrushPreservesUndoRedoAndHistory()",
+      "file": "ImageEditorSelectionFillDialogTests.swift",
+      "test_count": 1,
+      "passed": true,
+      "duration": 3.035,
+      "infrastructure_retries": 0,
+      "issues": [],
+      "log": "ImageEditorSelectionFillDialogTests.unchangedHistoryBrushPreservesUndoRedoAndHistory.log"
     },
     {
       "suite": "ImageEditorSelectionFillDialogTests",
@@ -267,7 +315,7 @@
       "file": "ImageEditorSelectionFillDialogTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.017,
+      "duration": 3.059,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorSelectionFillDialogTests.unchangedHistoryFillPreservesUndoRedoAndHistory.log"

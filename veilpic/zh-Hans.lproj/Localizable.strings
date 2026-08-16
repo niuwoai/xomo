@@ -712,6 +712,7 @@
 "imageEditor.tool.quickSelection" = "快速选择";
 "imageEditor.tool.crop" = "裁剪";
 "imageEditor.tool.brush" = "画笔";
+"imageEditor.tool.historyBrush" = "历史记录画笔";
 "imageEditor.tool.eraser" = "橡皮擦";
 "imageEditor.tool.cloneStamp" = "仿制图章";
 "imageEditor.tool.dodge" = "减淡";
@@ -742,6 +743,8 @@
 "imageEditor.tool.quickSelection.help" = "快速选择：用笔触扩展相似像素的选区。";
 "imageEditor.tool.crop.help" = "裁剪：拖拽预览裁剪范围，再确认或取消。";
 "imageEditor.tool.brush.help" = "画笔：用前景色在当前可编辑图层上绘制。";
+"imageEditor.tool.historyBrush.help" = "历史记录画笔（Y）：从历史面板标记的来源局部恢复当前图层。";
+"imageEditor.tool.historyBrush.sourceHelp" = "在历史记录面板的画笔列中选择来源。";
 "imageEditor.tool.eraser.help" = "橡皮擦：擦除当前可编辑图层上的像素。";
 "imageEditor.tool.cloneStamp.help" = "仿制图章：从取样源复制像素到笔触位置。";
 "imageEditor.tool.dodge.help" = "减淡：沿笔触提亮局部像素。";
@@ -1566,6 +1569,7 @@
 "imageEditor.history.text" = "文字";
 "imageEditor.history.erase" = "擦除";
 "imageEditor.history.brush" = "画笔";
+"imageEditor.history.historyBrush" = "历史记录画笔";
 "imageEditor.history.cloneStamp" = "仿制图章";
 "imageEditor.history.dodge" = "减淡";
 "imageEditor.history.burn" = "加深";
@@ -2227,6 +2231,9 @@
 "imageEditor.status.historySnapshotSelected" = "已选择历史快照“%@”";
 "imageEditor.status.historyFillSourceSet" = "已将“%@”设为历史填充来源";
 "imageEditor.status.historyFillSourceUnavailable" = "历史填充来源不可用";
+"imageEditor.status.historyBrushApplied" = "已用历史记录画笔恢复像素";
+"imageEditor.status.historyBrushUnavailable" = "历史记录画笔无法编辑当前目标";
+"imageEditor.status.historyBrushUnchanged" = "历史记录画笔没有改变任何像素";
 "imageEditor.status.historyFillUnchanged" = "历史填充来源与当前像素相同";
 "imageEditor.status.historySnapshotDuplicated" = "已复制历史快照“%@”";
 "imageEditor.status.historySnapshotRenamed" = "历史快照已重命名为“%@”";

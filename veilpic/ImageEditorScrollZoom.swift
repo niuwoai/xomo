@@ -178,7 +178,7 @@ enum ImageEditorPrimaryToolPointerCapture {
     ) -> Bool {
         guard sidebarTab == .tools, !isCanvasTextEditing else { return false }
         return switch tool {
-        case .brush, .eraser, .rectangle, .ellipse, .text:
+        case .brush, .historyBrush, .eraser, .rectangle, .ellipse, .text:
             true
         default:
             false

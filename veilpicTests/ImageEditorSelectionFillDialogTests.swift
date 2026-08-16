@@ -635,6 +635,161 @@ struct ImageEditorSelectionFillDialogTests {
         #expect(viewModel.statusText == L10n.text("imageEditor.status.operationFailed"))
     }
 
+    @Test func historyBrushRestoresOnlyItsFootprintInsideTheExistingSelection() throws {
+        let canvasSize = CGSize(width: 16, height: 10)
+        let green = solidImage(
+            color: NSColor(deviceRed: 0, green: 1, blue: 0, alpha: 1),
+            size: canvasSize
+        )
+        let red = solidImage(
+            color: NSColor(deviceRed: 1, green: 0, blue: 0, alpha: 1),
+            size: canvasSize
+        )
+        let viewModel = historyBrushViewModel(source: green, current: red)
+        viewModel.brushSize = 4
+        viewModel.hardness = 1
+        viewModel.opacity = 1
+        viewModel.brushFlow = 100
+        viewModel.createRectSelection(from: CGPoint(x: 8, y: 0), to: CGPoint(x: 16, y: 10))
+        let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
+
+        let didChange = viewModel.historyBrush(samples: [
+            ImageEditorBrushStrokeSample(point: CGPoint(x: 2, y: 5)),
+            ImageEditorBrushStrokeSample(point: CGPoint(x: 14, y: 5)),
+        ])
+
+        #expect(didChange)
+        let image = try #require(viewModel.document.selectedLayer?.image)
+        let outsideSelection = try #require(image.color(
+            at: CGPoint(x: 5, y: 5)
+        )?.usingColorSpace(.deviceRGB))
+        let insideStroke = try #require(image.color(
+            at: CGPoint(x: 11, y: 5)
+        )?.usingColorSpace(.deviceRGB))
+        let outsideStroke = try #require(image.color(
+            at: CGPoint(x: 11, y: 9)
+        )?.usingColorSpace(.deviceRGB))
+        #expect(outsideSelection.redComponent > 0.8)
+        #expect(outsideSelection.greenComponent < 0.2)
+        #expect(insideStroke.greenComponent > 0.8)
+        #expect(insideStroke.redComponent < 0.2)
+        #expect(outsideStroke.redComponent > 0.8)
+        #expect(outsideStroke.greenComponent < 0.2)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.undoStack.count == undoCount + 1)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.historyBrush"))
+        viewModel.undo()
+        let restored = try #require(viewModel.document.selectedLayer?.image.color(
+            at: CGPoint(x: 11, y: 5)
+        )?.usingColorSpace(.deviceRGB))
+        #expect(restored.redComponent > 0.8)
+        #expect(restored.greenComponent < 0.2)
+    }
+
+    @Test func historyBrushUsesTheNamedSnapshotSourceWithoutRestoringTheDocument() throws {
+        let canvasSize = CGSize(width: 8, height: 6)
+        let green = solidImage(color: .systemGreen, size: canvasSize)
+        let blue = solidImage(color: .systemBlue, size: canvasSize)
+        let red = solidImage(color: .systemRed, size: canvasSize)
+        let viewModel = ImageEditorViewModel(
+            sourceName: "history-brush-snapshot.png",
+            image: green
+        ) { _ in }
+        viewModel.replaceSelectedLayerImageForTesting(
+            green,
+            historyTitle: L10n.text("imageEditor.history.brush")
+        )
+        viewModel.createHistorySnapshot()
+        let snapshotID = try #require(viewModel.namedHistorySnapshots.first?.id)
+        viewModel.replaceSelectedLayerImageForTesting(
+            blue,
+            historyTitle: L10n.text("imageEditor.history.brush")
+        )
+        viewModel.replaceSelectedLayerImageForTesting(
+            red,
+            historyTitle: L10n.text("imageEditor.history.brush")
+        )
+        viewModel.setHistoryFillSource(snapshotID: snapshotID)
+        viewModel.brushSize = 4
+        viewModel.hardness = 1
+        viewModel.opacity = 1
+        viewModel.brushFlow = 100
+
+        #expect(viewModel.historyBrush(samples: [
+            ImageEditorBrushStrokeSample(point: CGPoint(x: 2, y: 3)),
+            ImageEditorBrushStrokeSample(point: CGPoint(x: 6, y: 3)),
+        ]))
+
+        let painted = try #require(viewModel.document.selectedLayer?.image.color(
+            at: CGPoint(x: 4, y: 3)
+        )?.usingColorSpace(.deviceRGB))
+        let untouched = try #require(viewModel.document.selectedLayer?.image.color(
+            at: CGPoint(x: 4, y: 0)
+        )?.usingColorSpace(.deviceRGB))
+        #expect(painted.greenComponent > painted.redComponent + 0.4)
+        #expect(painted.greenComponent > painted.blueComponent + 0.4)
+        #expect(untouched.redComponent > untouched.greenComponent + 0.4)
+        #expect(untouched.redComponent > untouched.blueComponent + 0.4)
+        #expect(viewModel.isHistoryFillSource(snapshotID: snapshotID))
+    }
+
+    @Test func unchangedHistoryBrushPreservesUndoRedoAndHistory() throws {
+        let canvasSize = CGSize(width: 8, height: 6)
+        let red = solidImage(color: .systemRed, size: canvasSize)
+        let blue = solidImage(color: .systemBlue, size: canvasSize)
+        let viewModel = ImageEditorViewModel(
+            sourceName: "history-brush-noop.png",
+            image: red
+        ) { _ in }
+        let sourceEntryID = try #require(viewModel.document.history.last?.id)
+        viewModel.setHistoryFillSource(entryID: sourceEntryID)
+        viewModel.replaceSelectedLayerImageForTesting(
+            blue,
+            historyTitle: L10n.text("imageEditor.history.brush")
+        )
+        viewModel.undo()
+        let history = viewModel.document.history
+        let undoCount = viewModel.undoStack.count
+        let redoCount = viewModel.redoStack.count
+
+        let didChange = viewModel.historyBrush(samples: [
+            ImageEditorBrushStrokeSample(point: CGPoint(x: 2, y: 3)),
+            ImageEditorBrushStrokeSample(point: CGPoint(x: 6, y: 3)),
+        ])
+
+        #expect(!didChange)
+        #expect(viewModel.document.history == history)
+        #expect(viewModel.undoStack.count == undoCount)
+        #expect(viewModel.redoStack.count == redoCount)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.historyBrushUnchanged"))
+    }
+
+    @Test func historyBrushRejectsQuickMaskWithoutChangingPixelsOrHistory() throws {
+        let canvasSize = CGSize(width: 8, height: 6)
+        let green = solidImage(color: .systemGreen, size: canvasSize)
+        let red = solidImage(color: .systemRed, size: canvasSize)
+        let viewModel = historyBrushViewModel(source: green, current: red)
+        viewModel.selectAll()
+        viewModel.toggleQuickMaskMode()
+        let pixels = try #require(viewModel.document.selectedLayer?.image.qingtuPNGData())
+        let selection = viewModel.document.selection
+        let history = viewModel.document.history
+        let undoCount = viewModel.undoStack.count
+
+        let didChange = viewModel.historyBrush(samples: [
+            ImageEditorBrushStrokeSample(point: CGPoint(x: 2, y: 3)),
+            ImageEditorBrushStrokeSample(point: CGPoint(x: 6, y: 3)),
+        ])
+
+        #expect(!didChange)
+        #expect(try #require(viewModel.document.selectedLayer?.image.qingtuPNGData()) == pixels)
+        #expect(viewModel.document.selection == selection)
+        #expect(viewModel.document.history == history)
+        #expect(viewModel.undoStack.count == undoCount)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.historyBrushUnavailable"))
+    }
+
     @Test func panelDefaultsAndApplyUseOneExplicitFillTransaction() {
         let viewModel = makeViewModel(color: .systemBlue)
         let historyCount = viewModel.document.history.count
@@ -721,6 +876,25 @@ struct ImageEditorSelectionFillDialogTests {
             historyTitle: L10n.text("imageEditor.history.brush")
         )
         viewModel.selectAll()
+        return viewModel
+    }
+
+    private func historyBrushViewModel(source: NSImage, current: NSImage) -> ImageEditorViewModel {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "history-brush.png",
+            image: source
+        ) { _ in }
+        viewModel.replaceSelectedLayerImageForTesting(
+            source,
+            historyTitle: L10n.text("imageEditor.history.brush")
+        )
+        if let sourceEntryID = viewModel.document.history.last?.id {
+            viewModel.setHistoryFillSource(entryID: sourceEntryID)
+        }
+        viewModel.replaceSelectedLayerImageForTesting(
+            current,
+            historyTitle: L10n.text("imageEditor.history.brush")
+        )
         return viewModel
     }
 

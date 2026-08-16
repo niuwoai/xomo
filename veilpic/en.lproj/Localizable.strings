@@ -712,6 +712,7 @@
 "imageEditor.tool.quickSelection" = "Quick Selection";
 "imageEditor.tool.crop" = "Crop";
 "imageEditor.tool.brush" = "Brush";
+"imageEditor.tool.historyBrush" = "History Brush";
 "imageEditor.tool.eraser" = "Eraser";
 "imageEditor.tool.cloneStamp" = "Clone Stamp";
 "imageEditor.tool.dodge" = "Dodge";
@@ -742,6 +743,8 @@
 "imageEditor.tool.quickSelection.help" = "Quick Selection: brush over similar pixels to grow a selection.";
 "imageEditor.tool.crop.help" = "Crop: drag to preview the crop area, then confirm or cancel.";
 "imageEditor.tool.brush.help" = "Brush: paint with the foreground color on the current editable layer.";
+"imageEditor.tool.historyBrush.help" = "History Brush (Y): selectively restore the current layer from the source marked in the History panel.";
+"imageEditor.tool.historyBrush.sourceHelp" = "Choose the source with the brush column in the History panel.";
 "imageEditor.tool.eraser.help" = "Eraser: remove pixels from the current editable layer.";
 "imageEditor.tool.cloneStamp.help" = "Clone Stamp: copy sampled pixels to the brush stroke.";
 "imageEditor.tool.dodge.help" = "Dodge: lighten pixels along the brush stroke.";
@@ -1566,6 +1569,7 @@
 "imageEditor.history.text" = "Text";
 "imageEditor.history.erase" = "Erase";
 "imageEditor.history.brush" = "Brush";
+"imageEditor.history.historyBrush" = "History Brush";
 "imageEditor.history.cloneStamp" = "Clone Stamp";
 "imageEditor.history.dodge" = "Dodge";
 "imageEditor.history.burn" = "Burn";
@@ -2227,6 +2231,9 @@
 "imageEditor.status.historySnapshotSelected" = "Selected history snapshot “%@”";
 "imageEditor.status.historyFillSourceSet" = "Set “%@” as the History Fill source";
 "imageEditor.status.historyFillSourceUnavailable" = "The History Fill source is unavailable";
+"imageEditor.status.historyBrushApplied" = "Restored pixels with the History Brush";
+"imageEditor.status.historyBrushUnavailable" = "The History Brush cannot edit this target";
+"imageEditor.status.historyBrushUnchanged" = "The History Brush did not change any pixels";
 "imageEditor.status.historyFillUnchanged" = "The History Fill source matches the current pixels";
 "imageEditor.status.historySnapshotDuplicated" = "Duplicated history snapshot “%@”";
 "imageEditor.status.historySnapshotRenamed" = "History snapshot renamed to “%@”";

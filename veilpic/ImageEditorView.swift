@@ -1022,6 +1022,17 @@ struct ImageEditorView: View {
                     brushSmoothingMenu
                     brushPressureMenu
                 }
+                if viewModel.selectedTool == .historyBrush {
+                    HStack(spacing: 4) {
+                        Text(L10n.text("imageEditor.selectionFill.historySource"))
+                            .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                        Text(viewModel.historyFillSourceTitle)
+                            .lineLimit(1)
+                    }
+                    .font(.system(size: 10, weight: .medium))
+                    .help(L10n.text("imageEditor.tool.historyBrush.sourceHelp"))
+                    .accessibilityIdentifier("image-editor-history-brush-source")
+                }
                 if viewModel.selectedTool.supportsSelectionMode {
                     optionSlider(titleKey: "imageEditor.option.feather", value: $viewModel.feather, range: 0...40, step: 1, suffix: "px")
                 }
@@ -1174,7 +1185,7 @@ struct ImageEditorView: View {
 
     private var usesBrushOptions: Bool {
         switch viewModel.selectedTool {
-        case .brush, .eraser, .cloneStamp, .dodge, .burn, .sponge, .blur, .sharpen,
+        case .brush, .historyBrush, .eraser, .cloneStamp, .dodge, .burn, .sponge, .blur, .sharpen,
              .smudge, .healingBrush, .quickSelection:
             true
         default:
@@ -1184,7 +1195,7 @@ struct ImageEditorView: View {
 
     private var usesOpacityOption: Bool {
         switch viewModel.selectedTool {
-        case .brush, .eraser, .cloneStamp, .dodge, .burn, .sponge, .blur, .sharpen,
+        case .brush, .historyBrush, .eraser, .cloneStamp, .dodge, .burn, .sponge, .blur, .sharpen,
              .smudge, .healingBrush, .patchTool, .paintBucket, .gradient, .rectangle, .ellipse:
             true
         default:
@@ -1238,7 +1249,9 @@ struct ImageEditorView: View {
     }
 
     private var usesBrushDynamicsOptions: Bool {
-        viewModel.selectedTool == .brush || viewModel.selectedTool == .eraser
+        viewModel.selectedTool == .brush
+            || viewModel.selectedTool == .historyBrush
+            || viewModel.selectedTool == .eraser
     }
 
     private var usesRetouchPressureOptions: Bool {
@@ -2918,7 +2931,9 @@ struct ImageEditorView: View {
                             // whole brush stroke. Mutating several SwiftUI
                             // states on mouse-down can rebuild the overlay
                             // before mouse-up and strand the responder.
-                            if canvasInteractionTool != .brush && canvasInteractionTool != .eraser {
+                            if canvasInteractionTool != .brush
+                                && canvasInteractionTool != .historyBrush
+                                && canvasInteractionTool != .eraser {
                                 primaryToolViewStart = location
                                 dragStart = imagePoint
                                 dragEnd = imagePoint
@@ -2930,7 +2945,9 @@ struct ImageEditorView: View {
                             guard let imagePoint = imagePoint(from: location, in: geometry.size) else { return }
                             let primaryTool = viewModel.canvasPointerCaptureState.activeTool
                                 ?? canvasInteractionTool
-                            if primaryTool == .brush || primaryTool == .eraser {
+                            if primaryTool == .brush
+                                || primaryTool == .historyBrush
+                                || primaryTool == .eraser {
                                 activeBrushPressure = pressure
                                 activeBrushTilt = tilt
                                 updateCanvasCursor(at: location, in: geometry.size)
@@ -2953,7 +2970,9 @@ struct ImageEditorView: View {
                                 }
                             }
                             if let endImagePoint,
-                               primaryTool == .brush || primaryTool == .eraser {
+                               primaryTool == .brush
+                                || primaryTool == .historyBrush
+                                || primaryTool == .eraser {
                                 let endStylusInput = ImageEditorStylusInput.sample(
                                     from: NSApp.currentEvent
                                 )
@@ -2971,6 +2990,8 @@ struct ImageEditorView: View {
                             switch primaryTool {
                             case .brush:
                                 viewModel.drawBrush(samples: committedBrushSamples)
+                            case .historyBrush:
+                                viewModel.historyBrush(samples: committedBrushSamples)
                             case .eraser:
                                 viewModel.drawBrush(
                                     samples: committedBrushSamples,
@@ -4251,7 +4272,7 @@ struct ImageEditorView: View {
                             isDuplicating: isCanvasCloneGestureActive
                         ).set()
                     }
-                case .brush, .eraser, .sponge:
+                case .brush, .historyBrush, .eraser, .sponge:
                     if let pointerImagePoint {
                         activeBrushPressure = eventPressure
                         activeBrushTilt = stylusInput.tilt
@@ -4662,6 +4683,8 @@ struct ImageEditorView: View {
                     viewModel.createQuickSelection(points: dragPoints)
                 case .brush:
                     viewModel.drawBrush(samples: committedBrushSamples)
+                case .historyBrush:
+                    viewModel.historyBrush(samples: committedBrushSamples)
                 case .eraser:
                     viewModel.drawBrush(samples: committedBrushSamples, erase: true)
                 case .cloneStamp:
@@ -13012,7 +13035,7 @@ enum ImageEditorCanvasCursor {
         guard let pressure else { return baseDiameter }
         let settings: (isEnabled: Bool, sensitivity: CGFloat, minimumDiameter: CGFloat)
         switch tool {
-        case .brush, .eraser:
+        case .brush, .historyBrush, .eraser:
             settings = (
                 brushPressureControlsSize,
                 brushPressureSensitivity,
@@ -13608,7 +13631,7 @@ enum ImageEditorCanvasCursor {
             .rectangleOutline
         case .ellipse:
             .ellipseOutline
-        case .brush:
+        case .brush, .historyBrush:
             .brushTool
         case .eraser:
             .eraserTool

@@ -712,6 +712,7 @@
 "imageEditor.tool.quickSelection" = "クイック選択";
 "imageEditor.tool.crop" = "切り抜き";
 "imageEditor.tool.brush" = "ブラシ";
+"imageEditor.tool.historyBrush" = "ヒストリーブラシ";
 "imageEditor.tool.eraser" = "消しゴム";
 "imageEditor.tool.cloneStamp" = "コピースタンプ";
 "imageEditor.tool.dodge" = "覆い焼き";
@@ -742,6 +743,8 @@
 "imageEditor.tool.quickSelection.help" = "クイック選択：類似ピクセルをブラシでなぞって選択範囲を広げます。";
 "imageEditor.tool.crop.help" = "切り抜き：範囲をドラッグでプレビューしてから、確定またはキャンセルします。";
 "imageEditor.tool.brush.help" = "ブラシ：現在編集できるレイヤーに前景色で描画します。";
+"imageEditor.tool.historyBrush.help" = "ヒストリーブラシ（Y）：ヒストリーパネルで指定したソースから現在のレイヤーを部分的に復元します。";
+"imageEditor.tool.historyBrush.sourceHelp" = "ヒストリーパネルのブラシ列でソースを選択します。";
 "imageEditor.tool.eraser.help" = "消しゴム：現在編集できるレイヤーからピクセルを消去します。";
 "imageEditor.tool.cloneStamp.help" = "コピースタンプ：サンプル元のピクセルを筆跡へ複製します。";
 "imageEditor.tool.dodge.help" = "覆い焼き：筆跡に沿ってピクセルを明るくします。";
@@ -1566,6 +1569,7 @@
 "imageEditor.history.text" = "文字";
 "imageEditor.history.erase" = "消去";
 "imageEditor.history.brush" = "ブラシ";
+"imageEditor.history.historyBrush" = "ヒストリーブラシ";
 "imageEditor.history.cloneStamp" = "コピースタンプ";
 "imageEditor.history.dodge" = "覆い焼き";
 "imageEditor.history.burn" = "焼き込み";
@@ -2227,6 +2231,9 @@
 "imageEditor.status.historySnapshotSelected" = "履歴スナップショット「%@」を選択しました";
 "imageEditor.status.historyFillSourceSet" = "「%@」を履歴塗りつぶしのソースに設定しました";
 "imageEditor.status.historyFillSourceUnavailable" = "履歴塗りつぶしのソースを利用できません";
+"imageEditor.status.historyBrushApplied" = "ヒストリーブラシでピクセルを復元しました";
+"imageEditor.status.historyBrushUnavailable" = "この対象はヒストリーブラシで編集できません";
+"imageEditor.status.historyBrushUnchanged" = "ヒストリーブラシではピクセルが変更されませんでした";
 "imageEditor.status.historyFillUnchanged" = "履歴塗りつぶしのソースは現在のピクセルと同じです";
 "imageEditor.status.historySnapshotDuplicated" = "履歴スナップショット「%@」を複製しました";
 "imageEditor.status.historySnapshotRenamed" = "履歴スナップショット名を「%@」に変更しました";

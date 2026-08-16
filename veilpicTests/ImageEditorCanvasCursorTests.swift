@@ -1244,7 +1244,7 @@ struct ImageEditorCanvasCursorTests {
     }
 
     @Test func primaryDrawingToolsUseBalancedAppKitPointerCaptureOnlyInToolsMode() {
-        for tool in [ImageEditorTool.brush, .eraser, .rectangle, .ellipse, .text] {
+        for tool in [ImageEditorTool.brush, .historyBrush, .eraser, .rectangle, .ellipse, .text] {
             #expect(
                 ImageEditorPrimaryToolPointerCapture.shouldCapture(
                     sidebarTab: .tools,
@@ -1290,7 +1290,7 @@ struct ImageEditorCanvasCursorTests {
             )
         }
 
-        for tool in [ImageEditorTool.brush, .eraser, .rectangle, .ellipse, .text, .marquee, .gradient] {
+        for tool in [ImageEditorTool.brush, .historyBrush, .eraser, .rectangle, .ellipse, .text, .marquee, .gradient] {
             #expect(
                 ImageEditorPrimaryToolPointerCapture.usesDirectCanvasHitTarget(
                     sidebarTab: .tools,
@@ -1586,6 +1586,15 @@ struct ImageEditorCanvasCursorTests {
             brushDiameter: 18,
             modifierFlags: [.capsLock]
         )
+        let historyBrush = ImageEditorCanvasCursor.cursor(
+            for: .historyBrush,
+            brushDiameter: 18
+        )
+        let historyPrecision = ImageEditorCanvasCursor.cursor(
+            for: .historyBrush,
+            brushDiameter: 18,
+            modifierFlags: [.capsLock]
+        )
         let clonePrecision = ImageEditorCanvasCursor.cursor(
             for: .cloneStamp,
             brushDiameter: 18,
@@ -1598,6 +1607,8 @@ struct ImageEditorCanvasCursorTests {
         )
 
         #expect(brush !== NSCursor.crosshair)
+        #expect(historyBrush.image.tiffRepresentation == brush.image.tiffRepresentation)
+        #expect(historyPrecision === NSCursor.crosshair)
         #expect(precision === NSCursor.crosshair)
         #expect(eraserPrecision === NSCursor.crosshair)
         #expect(clonePrecision === NSCursor.crosshair)

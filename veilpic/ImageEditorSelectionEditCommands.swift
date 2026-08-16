@@ -453,6 +453,87 @@ extension ImageEditorViewModel {
         )
     }
 
+    @discardableResult
+    func historyBrush(samples: [ImageEditorBrushStrokeSample]) -> Bool {
+        guard !samples.isEmpty else { return false }
+        guard !isQuickMaskMode, !isEditingLayerMask else {
+            statusText = L10n.text("imageEditor.status.historyBrushUnavailable")
+            return false
+        }
+        guard let index = document.selectedLayerIndex else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return false
+        }
+        let layer = document.layers[index]
+        guard layer.kind.isPixel,
+              !document.isEffectivelyPixelsLocked(layer)
+        else {
+            statusText = L10n.text("imageEditor.status.layerLocked")
+            return false
+        }
+        guard let source = effectiveHistoryFillSource,
+              let sourceDocument = historyFillDocument(for: source),
+              let sourceLayer = sourceDocument.layers.first(where: {
+                  $0.id == layer.id && $0.kind.isPixel
+              })
+        else {
+            statusText = L10n.text("imageEditor.status.historyFillSourceUnavailable")
+            return false
+        }
+
+        let scaleX = layer.image.size.width / max(layer.frame.width, 1)
+        let scaleY = layer.image.size.height / max(layer.frame.height, 1)
+        let localSamples = samples.map { sample in
+            ImageEditorBrushStrokeSample(
+                point: CGPoint(
+                    x: (sample.point.x - layer.frame.minX) * scaleX,
+                    y: (sample.point.y - layer.frame.minY) * scaleY
+                ),
+                pressure: sample.pressure,
+                tilt: sample.tilt
+            )
+        }
+        let output = layer.image.historyBrushed(
+            from: sourceLayer.image,
+            sourceLayerFrame: sourceLayer.frame,
+            layerFrame: layer.frame,
+            samples: localSamples,
+            settings: ImageEditorBrushStrokeSettings(
+                diameter: brushSize * sqrt(max(0.0001, scaleX * scaleY)),
+                hardness: hardness,
+                opacity: opacity,
+                flow: brushFlow / 100,
+                spacing: brushSpacing / 100,
+                pressureControlsSize: brushPressureControlsSize,
+                pressureControlsOpacity: brushPressureControlsOpacity,
+                pressureControlsFlow: brushPressureControlsFlow,
+                pressureSensitivity: brushPressureSensitivity / 100,
+                minimumDiameter: brushMinimumDiameter / 100,
+                minimumOpacity: brushMinimumOpacity / 100,
+                minimumFlow: brushMinimumFlow / 100,
+                tiltControlsShape: brushTiltControlsShape,
+                tipRoundness: brushTipRoundness / 100,
+                tipAngleDegrees: brushTipAngleDegrees,
+                smoothing: brushSmoothing / 100
+            )
+        )
+        guard let output else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return false
+        }
+        let didChange = replaceSelectedLayerRenderedPixels(
+            output,
+            historyTitle: L10n.text("imageEditor.history.historyBrush"),
+            resetFrame: false,
+            skipIfUnchanged: true,
+            unchangedStatusKey: "imageEditor.status.historyBrushUnchanged"
+        )
+        if didChange {
+            statusText = L10n.text("imageEditor.status.historyBrushApplied")
+        }
+        return didChange
+    }
+
     private func fillSelectionFromHistory(
         opacity: CGFloat,
         blendMode: ImageEditorBlendMode,
@@ -1464,6 +1545,70 @@ private extension NSImage {
               )
         else { return nil }
 
+        let width = max(1, Int(size.width.rounded()))
+        let height = max(1, Int(size.height.rounded()))
+        guard let mask = selectionMask.alphaMask(width: width, height: height) else {
+            return nil
+        }
+        return historyRestored(
+            from: sourceImage,
+            sourceLayerFrame: sourceLayerFrame,
+            layerFrame: layerFrame,
+            coverage: mask.alpha,
+            opacity: opacity,
+            blendMode: blendMode
+        )
+    }
+
+    func historyBrushed(
+        from sourceImage: NSImage,
+        sourceLayerFrame: CGRect,
+        layerFrame: CGRect,
+        samples: [ImageEditorBrushStrokeSample],
+        settings: ImageEditorBrushStrokeSettings
+    ) -> NSImage? {
+        guard layerFrame.width > 0,
+              layerFrame.height > 0,
+              !samples.isEmpty
+        else { return nil }
+
+        let width = max(1, Int(size.width.rounded()))
+        let height = max(1, Int(size.height.rounded()))
+        let normalized = settings.normalized
+        let stamps = ImageEditorBrushStrokeKernel.stampSamples(
+            samples: samples,
+            diameter: normalized.diameter,
+            spacing: normalized.spacing,
+            smoothing: normalized.smoothing
+        )
+        let coverage = ImageEditorBrushStrokeKernel.coverage(
+            width: width,
+            height: height,
+            stamps: stamps,
+            settings: normalized
+        )
+        return historyRestored(
+            from: sourceImage,
+            sourceLayerFrame: sourceLayerFrame,
+            layerFrame: layerFrame,
+            coverage: coverage,
+            opacity: 1,
+            blendMode: .normal
+        )
+    }
+
+    private func historyRestored(
+        from sourceImage: NSImage,
+        sourceLayerFrame: CGRect,
+        layerFrame: CGRect,
+        coverage inputCoverage: [UInt8],
+        opacity: CGFloat,
+        blendMode: ImageEditorBlendMode
+    ) -> NSImage? {
+        guard layerFrame.width > 0,
+              layerFrame.height > 0
+        else { return nil }
+
         let alignedSource = NSImage.rendered(size: size) { _ in
             let overlap = sourceLayerFrame.intersection(layerFrame)
             guard !overlap.isNull,
@@ -1499,7 +1644,7 @@ private extension NSImage {
         let height = max(1, Int(size.height.rounded()))
         guard var pixels = rgbaPixels(width: width, height: height),
               let sourcePixels = alignedSource?.rgbaPixels(width: width, height: height),
-              let mask = selectionMask.alphaMask(width: width, height: height)
+              inputCoverage.count == width * height
         else { return nil }
 
         let normalizedOpacity = Double(max(0, min(1, opacity)))
@@ -1509,7 +1654,7 @@ private extension NSImage {
             for x in 0..<width {
                 let pixelIndex = y * width + x
                 let offset = y * bytesPerRow + x * bytesPerPixel
-                var coverage = Double(mask.alpha[pixelIndex]) / 255 * normalizedOpacity
+                var coverage = Double(inputCoverage[pixelIndex]) / 255 * normalizedOpacity
                 guard coverage > 0 else { continue }
                 if blendMode == .dissolve {
                     coverage = Self.selectionFillDissolves(

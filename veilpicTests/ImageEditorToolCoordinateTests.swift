@@ -20,7 +20,7 @@ struct ImageEditorToolCoordinateTests {
             .pathSelection, .directSelection, .hand, .zoom,
         ]
         let rasterStrokeTools: Set<ImageEditorTool> = [
-            .quickSelection, .brush, .eraser, .cloneStamp, .dodge, .burn, .sponge,
+            .quickSelection, .brush, .historyBrush, .eraser, .cloneStamp, .dodge, .burn, .sponge,
             .blur, .sharpen, .smudge, .healingBrush,
         ]
         let rasterPointAndRegionTools: Set<ImageEditorTool> = [

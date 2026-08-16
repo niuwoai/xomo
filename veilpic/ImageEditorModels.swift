@@ -263,6 +263,7 @@ enum ImageEditorTool: String, CaseIterable, Identifiable {
     case quickSelection
     case crop
     case brush
+    case historyBrush
     case eraser
     case cloneStamp
     case dodge
@@ -313,6 +314,8 @@ enum ImageEditorTool: String, CaseIterable, Identifiable {
             "crop"
         case .brush:
             "paintbrush.pointed"
+        case .historyBrush:
+            "clock.arrow.circlepath"
         case .eraser:
             "eraser"
         case .cloneStamp:
@@ -377,6 +380,7 @@ enum ImageEditorTool: String, CaseIterable, Identifiable {
         ImageEditorToolShortcutGroup(key: "w", tools: [.magicWand, .quickSelection]),
         ImageEditorToolShortcutGroup(key: "c", tools: [.crop]),
         ImageEditorToolShortcutGroup(key: "b", tools: [.brush]),
+        ImageEditorToolShortcutGroup(key: "y", tools: [.historyBrush]),
         ImageEditorToolShortcutGroup(key: "e", tools: [.eraser]),
         ImageEditorToolShortcutGroup(key: "s", tools: [.cloneStamp]),
         ImageEditorToolShortcutGroup(key: "j", tools: [.healingBrush, .patchTool, .redEye]),

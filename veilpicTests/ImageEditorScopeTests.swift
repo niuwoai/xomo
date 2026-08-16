@@ -54,6 +54,7 @@ struct ImageEditorScopeTests {
                 "quickSelection",
                 "crop",
                 "brush",
+                "historyBrush",
                 "eraser",
                 "cloneStamp",
                 "dodge",
@@ -150,6 +151,7 @@ struct ImageEditorScopeTests {
         #expect(shortcuts["magicWand"] == "w")
         #expect(shortcuts["crop"] == "c")
         #expect(shortcuts["brush"] == "b")
+        #expect(shortcuts["historyBrush"] == "y")
         #expect(shortcuts["eraser"] == "e")
         #expect(shortcuts["cloneStamp"] == "s")
         #expect(shortcuts["dodge"] == "o")
@@ -175,6 +177,7 @@ struct ImageEditorScopeTests {
         #expect(ImageEditorTool.classicShortcutGroup(for: "r")?.tools == [.blur, .sharpen, .smudge])
         #expect(ImageEditorTool.classicShortcutGroup(for: "u")?.tools == [.rectangle, .ellipse])
         #expect(ImageEditorTool.classicShortcutGroup(for: "j")?.tools == [.healingBrush, .patchTool, .redEye])
+        #expect(ImageEditorTool.classicShortcutGroup(for: "y")?.tools == [.historyBrush])
         #expect(ImageEditorTool.classicShortcutGroup(for: "a")?.tools == [.pathSelection, .directSelection])
         #expect(ImageEditorTool.paintBucket.isClassicShortcutPrimary)
         #expect(!ImageEditorTool.gradient.isClassicShortcutPrimary)
@@ -2211,6 +2214,35 @@ struct ImageEditorScopeTests {
         #expect(commandSource.contains("func historyFilled("))
         #expect(menuSource.contains(".keyboardShortcut(.delete, modifiers: [.command, .option])"))
         #expect(menuSource.contains(".disabled(!viewModel.canFillSelectionFromHistory)"))
+    }
+
+    @Test func historyBrushWiresTheSharedSourceIntoNativePaintingAndOptions() throws {
+        let editorSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let captureSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent(
+                "veilpic/ImageEditorScrollZoom.swift"
+            ),
+            encoding: .utf8
+        )
+        let commandSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent(
+                "veilpic/ImageEditorSelectionEditCommands.swift"
+            ),
+            encoding: .utf8
+        )
+
+        #expect(captureSource.contains("case .brush, .historyBrush, .eraser, .rectangle"))
+        #expect(editorSource.contains("case .historyBrush:\n                                viewModel.historyBrush(samples: committedBrushSamples)"))
+        #expect(editorSource.contains("viewModel.selectedTool == .historyBrush"))
+        #expect(editorSource.contains("viewModel.historyFillSourceTitle"))
+        #expect(editorSource.contains("image-editor-history-brush-source"))
+        #expect(commandSource.contains("func historyBrush(samples: [ImageEditorBrushStrokeSample]) -> Bool"))
+        #expect(commandSource.contains("let sourceDocument = historyFillDocument(for: source)"))
+        #expect(commandSource.contains("func historyBrushed("))
+        #expect(commandSource.contains("skipIfUnchanged: true"))
     }
 
     @Test func fileMenuExposesClipboardCanvasCreation() throws {
