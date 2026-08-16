@@ -485,6 +485,116 @@ struct XomoCanvasObjectTests {
         )
     }
 
+    @Test func toolsModeDragsADeepSelectedComponentChildInsteadOfItsWholeObject() throws {
+        let viewModel = makeViewModel()
+        viewModel.insertXomoComponent(.button, at: CGPoint(x: 80, y: 90))
+        let group = try #require(viewModel.document.selectedLayer)
+        let hitPoint = CGPoint(x: 160, y: 112)
+        let target = try #require(
+            viewModel.selectMoveToolDoubleClickTarget(at: hitPoint, hitTolerance: 0)
+        )
+        let targetID = target.layerID
+        let targetFrame = try #require(
+            viewModel.document.layers.first { $0.id == targetID }?.frame
+        )
+        let siblingFrames: [UUID: CGRect] = Dictionary(
+            uniqueKeysWithValues: viewModel.document.layers.compactMap { layer in
+                guard layer.groupID == group.id, layer.id != targetID else { return nil }
+                return (layer.id, layer.frame)
+            }
+        )
+
+        #expect(viewModel.hasMovableDeepSelectedCanvasLayer(at: hitPoint))
+        #expect(viewModel.prepareCanvasObjectMove(at: hitPoint))
+        #expect(viewModel.document.selectedLayerID == targetID)
+        #expect(viewModel.beginMovingSelectedLayer())
+        viewModel.moveSelectedLayer(by: CGSize(width: 18, height: 9), snapping: false)
+        viewModel.finishMovingSelectedLayer()
+
+        #expect(
+            viewModel.document.layers.first { $0.id == targetID }?.frame
+                == targetFrame.offsetBy(dx: 18, dy: 9)
+        )
+        for (siblingID, siblingFrame) in siblingFrames {
+            #expect(viewModel.document.layers.first { $0.id == siblingID }?.frame == siblingFrame)
+        }
+        #expect(viewModel.document.layers.contains { $0.id == group.id })
+        #expect(viewModel.document.selectedLayerID == targetID)
+    }
+
+    @Test func deepSelectedLayerDragRequiresTheFrontmostEditablePixelAndToolsMode() throws {
+        let viewModel = makeViewModel()
+        viewModel.insertXomoComponent(.button, at: CGPoint(x: 80, y: 90))
+        let group = try #require(viewModel.document.selectedLayer)
+        let hitPoint = CGPoint(x: 160, y: 112)
+        let target = try #require(
+            viewModel.selectMoveToolDoubleClickTarget(at: hitPoint, hitTolerance: 0)
+        )
+        let targetID = target.layerID
+
+        var transparentLayer = ImageEditorLayer.blank(
+            name: "Transparent",
+            size: CGSize(width: 80, height: 40)
+        )
+        transparentLayer.frame = CGRect(x: 120, y: 92, width: 80, height: 40)
+        viewModel.document.layers.append(transparentLayer)
+        #expect(viewModel.hasMovableDeepSelectedCanvasLayer(at: hitPoint))
+
+        var cover = ImageEditorLayer.solidColorFill(
+            name: "Cover",
+            size: CGSize(width: 80, height: 40),
+            content: ImageEditorSolidColorFillContent(red: 0.8, green: 0.2, blue: 0.1)
+        )
+        cover.frame = transparentLayer.frame
+        viewModel.document.layers.append(cover)
+        #expect(!viewModel.hasMovableDeepSelectedCanvasLayer(at: hitPoint))
+
+        viewModel.document.layers.removeAll { $0.id == cover.id || $0.id == transparentLayer.id }
+        let targetIndex = try #require(
+            viewModel.document.layers.firstIndex { $0.id == targetID }
+        )
+        viewModel.document.layers[targetIndex].locksPosition = true
+        #expect(!viewModel.hasMovableDeepSelectedCanvasLayer(at: hitPoint))
+
+        viewModel.document.layers[targetIndex].locksPosition = false
+        viewModel.selectLeftSidebarTab(.components)
+        #expect(!viewModel.hasMovableDeepSelectedCanvasLayer(at: hitPoint))
+        #expect(viewModel.prepareCanvasObjectMove(at: hitPoint))
+        #expect(viewModel.document.selectedLayerID == group.id)
+    }
+
+    @Test func nativeObjectDragPrefersTheDeepSelectedLayerBeforeComponentPreparation() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let candidateStart = try #require(
+            source.range(of: "onObjectMoveCandidateBegan: { location, modifierFlags, clickCount in")
+        )
+        let activationStart = try #require(
+            source[candidateStart.upperBound...].range(of: "onObjectMoveActivated:")
+        )
+        let changedStart = try #require(
+            source[activationStart.upperBound...].range(of: "onObjectMoveChanged:")
+        )
+        let candidateSource = source[candidateStart.lowerBound..<activationStart.lowerBound]
+        let deepCandidate = try #require(
+            candidateSource.range(of: "viewModel.hasMovableDeepSelectedCanvasLayer(")
+        )
+        let componentCandidate = try #require(
+            candidateSource.range(of: "viewModel.hasXomoObject(")
+        )
+        let activationSource = source[activationStart.lowerBound..<changedStart.lowerBound]
+
+        #expect(deepCandidate.lowerBound < componentCandidate.lowerBound)
+        #expect(activationSource.contains("viewModel.prepareCanvasObjectMove("))
+        #expect(!activationSource.contains("viewModel.prepareXomoObjectMove("))
+        #expect(activationSource.contains("viewModel.beginMovingSelectedLayer()"))
+    }
+
     @Test func commandShiftCanvasSelectionAddsAVisibleComponentChild() throws {
         let viewModel = makeViewModel()
         viewModel.insertXomoComponent(.button, at: CGPoint(x: 80, y: 90))

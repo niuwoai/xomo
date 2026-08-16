@@ -1,10 +1,10 @@
 {
-  "generated_at": "2026-08-16 13:35:53 +0800",
-  "total": 53,
-  "passed": 53,
+  "generated_at": "2026-08-16 13:47:17 +0800",
+  "total": 56,
+  "passed": 56,
   "failed": 0,
-  "total_tests": 53,
-  "passed_tests": 53,
+  "total_tests": 56,
+  "passed_tests": 56,
   "failed_tests_in_failed_groups": 0,
   "jobs": 1,
   "results": [
@@ -15,7 +15,7 @@
       "file": "XomoCanvasObjectTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.219,
+      "duration": 3.165,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "XomoCanvasObjectTests.cancellingAnObjectDragDiscardsPreviewWithoutHistoryOrPositionChange.log"
@@ -27,7 +27,7 @@
       "file": "XomoCanvasObjectTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.21,
+      "duration": 3.244,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "XomoCanvasObjectTests.cancellingAnOptionDragRemovesThePendingDuplicate.log"
@@ -39,7 +39,7 @@
       "file": "XomoCanvasObjectTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.538,
+      "duration": 5.379,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "XomoCanvasObjectTests.canvasDragTranslationMapsViewPixelsToImagePixels.log"
@@ -51,7 +51,7 @@
       "file": "XomoCanvasObjectTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.206,
+      "duration": 3.242,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "XomoCanvasObjectTests.clickingAnUncoveredComponentSelectsItsObjectGroup.log"
@@ -63,7 +63,7 @@
       "file": "XomoCanvasObjectTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.269,
+      "duration": 3.254,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "XomoCanvasObjectTests.commandCanvasSelectionCanEnterAVisibleComponentChild.log"
@@ -75,7 +75,7 @@
       "file": "XomoCanvasObjectTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.206,
+      "duration": 3.218,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "XomoCanvasObjectTests.commandShiftCanvasSelectionAddsAVisibleComponentChild.log"
@@ -87,7 +87,7 @@
       "file": "XomoCanvasObjectTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.19,
+      "duration": 3.259,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "XomoCanvasObjectTests.componentHitQueryDoesNotMutateSelection.log"
@@ -99,7 +99,7 @@
       "file": "XomoCanvasObjectTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.228,
+      "duration": 3.216,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "XomoCanvasObjectTests.componentMovePreparationPreservesAnExistingMultiSelection.log"
@@ -111,7 +111,7 @@
       "file": "XomoCanvasObjectTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.236,
+      "duration": 3.334,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "XomoCanvasObjectTests.componentMovePreparationSwitchesFromSelectedBackObjectToFrontObject.log"
@@ -123,7 +123,7 @@
       "file": "XomoCanvasObjectTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.216,
+      "duration": 3.197,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "XomoCanvasObjectTests.componentMovementSnapsToCanvasCenterGuides.log"
@@ -135,7 +135,7 @@
       "file": "XomoCanvasObjectTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.224,
+      "duration": 3.193,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "XomoCanvasObjectTests.componentObjectNudgeWinsOverStalePixelSelectionInComponentsMode.log"
@@ -147,7 +147,7 @@
       "file": "XomoCanvasObjectTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.184,
+      "duration": 3.204,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "XomoCanvasObjectTests.componentsTabRoutesCanvasInputThroughMoveTool.log"
@@ -159,7 +159,7 @@
       "file": "XomoCanvasObjectTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.156,
+      "duration": 3.127,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "XomoCanvasObjectTests.componentsTabSwitchesToAnotherObjectBeforeDragging.log"
@@ -171,10 +171,22 @@
       "file": "XomoCanvasObjectTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.181,
+      "duration": 3.174,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "XomoCanvasObjectTests.coveredComponentDoesNotClaimTheClick.log"
+    },
+    {
+      "suite": "XomoCanvasObjectTests",
+      "method": "deepSelectedLayerDragRequiresTheFrontmostEditablePixelAndToolsMode",
+      "identifier": "veilpicTests/XomoCanvasObjectTests/deepSelectedLayerDragRequiresTheFrontmostEditablePixelAndToolsMode()",
+      "file": "XomoCanvasObjectTests.swift",
+      "test_count": 1,
+      "passed": true,
+      "duration": 3.224,
+      "infrastructure_retries": 0,
+      "issues": [],
+      "log": "XomoCanvasObjectTests.deepSelectedLayerDragRequiresTheFrontmostEditablePixelAndToolsMode.log"
     },
     {
       "suite": "XomoCanvasObjectTests",
@@ -183,7 +195,7 @@
       "file": "XomoCanvasObjectTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.184,
+      "duration": 3.236,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "XomoCanvasObjectTests.deleteWaitsForAnActivePointerMoveToFinishOrCancel.log"
@@ -195,7 +207,7 @@
       "file": "XomoCanvasObjectTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.164,
+      "duration": 3.185,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "XomoCanvasObjectTests.deletingASelectedObjectRemovesItsGroupAndChildren.log"
@@ -207,7 +219,7 @@
       "file": "XomoCanvasObjectTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.19,
+      "duration": 3.165,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "XomoCanvasObjectTests.deliveryDragClampPreservesRectangleSizeAtCanvasEdges.log"
@@ -219,7 +231,7 @@
       "file": "XomoCanvasObjectTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.175,
+      "duration": 3.192,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "XomoCanvasObjectTests.escapeClearsSelectedComponentObjectWithoutChangingHistory.log"
@@ -231,7 +243,7 @@
       "file": "XomoCanvasObjectTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.166,
+      "duration": 3.178,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "XomoCanvasObjectTests.escapeClimbsNestedGroupsOneLevelButIgnoresMultiSelectionAndComponentsMode.log"
@@ -243,7 +255,7 @@
       "file": "XomoCanvasObjectTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.234,
+      "duration": 3.185,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "XomoCanvasObjectTests.escapeReturnsADeepSelectedComponentChildToItsParentGroup.log"
@@ -255,7 +267,7 @@
       "file": "XomoCanvasObjectTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.222,
+      "duration": 3.211,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "XomoCanvasObjectTests.escapeWiresParentNavigationAfterEveryActiveCanvasCancellation.log"
@@ -267,7 +279,7 @@
       "file": "XomoCanvasObjectTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.222,
+      "duration": 3.228,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "XomoCanvasObjectTests.foregroundCoverPreventsDoubleClickFromEditingTextUnderneath.log"
@@ -279,7 +291,7 @@
       "file": "XomoCanvasObjectTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.216,
+      "duration": 3.213,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "XomoCanvasObjectTests.horizontalDragConstraintIgnoresCrossAxisSnapCorrection.log"
@@ -291,7 +303,7 @@
       "file": "XomoCanvasObjectTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.255,
+      "duration": 3.256,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "XomoCanvasObjectTests.keyboardNudgeDoesNotCommitAnActivePointerMove.log"
@@ -303,7 +315,7 @@
       "file": "XomoCanvasObjectTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.163,
+      "duration": 3.189,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "XomoCanvasObjectTests.moveToolDoesNotSelectTransparentOrdinaryLayerOrComponentChildren.log"
@@ -315,7 +327,7 @@
       "file": "XomoCanvasObjectTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.156,
+      "duration": 3.423,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "XomoCanvasObjectTests.moveToolDoubleClickEntersTheForegroundComponentChild.log"
@@ -327,7 +339,7 @@
       "file": "XomoCanvasObjectTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.229,
+      "duration": 3.166,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "XomoCanvasObjectTests.moveToolSelectsTopmostVisibleOrdinaryLayerFromCanvas.log"
@@ -339,10 +351,22 @@
       "file": "XomoCanvasObjectTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.178,
+      "duration": 3.184,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "XomoCanvasObjectTests.movingAnObjectPublishesAndClearsItsDashedPreviewFrame.log"
+    },
+    {
+      "suite": "XomoCanvasObjectTests",
+      "method": "nativeObjectDragPrefersTheDeepSelectedLayerBeforeComponentPreparation",
+      "identifier": "veilpicTests/XomoCanvasObjectTests/nativeObjectDragPrefersTheDeepSelectedLayerBeforeComponentPreparation()",
+      "file": "XomoCanvasObjectTests.swift",
+      "test_count": 1,
+      "passed": true,
+      "duration": 3.156,
+      "infrastructure_retries": 0,
+      "issues": [],
+      "log": "XomoCanvasObjectTests.nativeObjectDragPrefersTheDeepSelectedLayerBeforeComponentPreparation.log"
     },
     {
       "suite": "XomoCanvasObjectTests",
@@ -351,7 +375,7 @@
       "file": "XomoCanvasObjectTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.181,
+      "duration": 3.214,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "XomoCanvasObjectTests.objectPreviewSnapsBeforeTheRealLayersCommit.log"
@@ -363,7 +387,7 @@
       "file": "XomoCanvasObjectTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.15,
+      "duration": 3.207,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "XomoCanvasObjectTests.optionDragDuplicatesAndMovesAComponentAsOneUndoableAction.log"
@@ -375,7 +399,7 @@
       "file": "XomoCanvasObjectTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.164,
+      "duration": 3.237,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "XomoCanvasObjectTests.optionDragDuplicatesSelectedOrdinaryLayer.log"
@@ -387,7 +411,7 @@
       "file": "XomoCanvasObjectTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.185,
+      "duration": 3.183,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "XomoCanvasObjectTests.pixelLockedComponentCanMoveWithoutAllowingContentResampling.log"
@@ -399,7 +423,7 @@
       "file": "XomoCanvasObjectTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.188,
+      "duration": 3.241,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "XomoCanvasObjectTests.repeatedDragUpdatesAccumulateInThePreviewBeforeCommit.log"
@@ -411,7 +435,7 @@
       "file": "XomoCanvasObjectTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.287,
+      "duration": 3.222,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "XomoCanvasObjectTests.repeatedPixelHitTestingKeepsTransparentHoleSemantics.log"
@@ -423,7 +447,7 @@
       "file": "XomoCanvasObjectTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.234,
+      "duration": 3.272,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "XomoCanvasObjectTests.selectingAnotherObjectKeepsTheCompositeImageCache.log"
@@ -435,7 +459,7 @@
       "file": "XomoCanvasObjectTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.228,
+      "duration": 3.27,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "XomoCanvasObjectTests.selectingComponentGroupUsesFastSelectionPath.log"
@@ -447,7 +471,7 @@
       "file": "XomoCanvasObjectTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.233,
+      "duration": 3.199,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "XomoCanvasObjectTests.sharedMoveTargetFallbackSelectsAComponentBeforeItsChildren.log"
@@ -459,7 +483,7 @@
       "file": "XomoCanvasObjectTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.15,
+      "duration": 3.132,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "XomoCanvasObjectTests.sharedMoveTargetFallbackStillSelectsOrdinaryVisibleLayers.log"
@@ -471,7 +495,7 @@
       "file": "XomoCanvasObjectTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.246,
+      "duration": 3.25,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "XomoCanvasObjectTests.shiftCanvasSelectionAddsAndTogglesVisibleOrdinaryLayers.log"
@@ -495,7 +519,7 @@
       "file": "XomoCanvasObjectTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.246,
+      "duration": 3.253,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "XomoCanvasObjectTests.shiftClickTogglesAComponentWithoutCollapsingTheExistingSelection.log"
@@ -507,7 +531,7 @@
       "file": "XomoCanvasObjectTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.226,
+      "duration": 3.215,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "XomoCanvasObjectTests.shiftSelectedComponentsUseACompositeSelectionFrame.log"
@@ -519,7 +543,7 @@
       "file": "XomoCanvasObjectTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.202,
+      "duration": 3.204,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "XomoCanvasObjectTests.switchingObjectsUpdatesKindAndBoundsImmediately.log"
@@ -531,7 +555,7 @@
       "file": "XomoCanvasObjectTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.308,
+      "duration": 3.225,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "XomoCanvasObjectTests.textHitTestingCanExcludeTheJustCommittedLayer.log"
@@ -543,10 +567,22 @@
       "file": "XomoCanvasObjectTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.22,
+      "duration": 3.227,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "XomoCanvasObjectTests.textToolCanSelectEditableTextInsideAComponent.log"
+    },
+    {
+      "suite": "XomoCanvasObjectTests",
+      "method": "toolsModeDragsADeepSelectedComponentChildInsteadOfItsWholeObject",
+      "identifier": "veilpicTests/XomoCanvasObjectTests/toolsModeDragsADeepSelectedComponentChildInsteadOfItsWholeObject()",
+      "file": "XomoCanvasObjectTests.swift",
+      "test_count": 1,
+      "passed": true,
+      "duration": 3.14,
+      "infrastructure_retries": 0,
+      "issues": [],
+      "log": "XomoCanvasObjectTests.toolsModeDragsADeepSelectedComponentChildInsteadOfItsWholeObject.log"
     },
     {
       "suite": "XomoCanvasObjectTests",
@@ -555,7 +591,7 @@
       "file": "XomoCanvasObjectTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.216,
+      "duration": 3.193,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "XomoCanvasObjectTests.topmostOverlappingComponentWinsObjectHitTesting.log"
@@ -567,7 +603,7 @@
       "file": "XomoCanvasObjectTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.183,
+      "duration": 3.165,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "XomoCanvasObjectTests.transformInspectorCanPreserveSelectedLayerAspectRatio.log"
@@ -579,7 +615,7 @@
       "file": "XomoCanvasObjectTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.181,
+      "duration": 3.153,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "XomoCanvasObjectTests.transformInspectorMovesSelectedLayerWithUndoHistory.log"
@@ -591,7 +627,7 @@
       "file": "XomoCanvasObjectTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.153,
+      "duration": 3.224,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "XomoCanvasObjectTests.transformInspectorResizesComponentChildrenAsOneObject.log"
@@ -603,7 +639,7 @@
       "file": "XomoCanvasObjectTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.189,
+      "duration": 3.171,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "XomoCanvasObjectTests.transparentForegroundLayerDoesNotStealTextDoubleClick.log"
@@ -615,7 +651,7 @@
       "file": "XomoCanvasObjectTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.283,
+      "duration": 3.221,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "XomoCanvasObjectTests.transparentLayerDoesNotBlockComponentObjectHitTesting.log"
@@ -627,7 +663,7 @@
       "file": "XomoCanvasObjectTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.187,
+      "duration": 3.165,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "XomoCanvasObjectTests.transparentPixelHoleDoesNotBlockComponentObjectHitTesting.log"
@@ -639,7 +675,7 @@
       "file": "XomoCanvasObjectTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.241,
+      "duration": 3.201,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "XomoCanvasObjectTests.undoAndRedoFirstCancelAnActivePointerMove.log"

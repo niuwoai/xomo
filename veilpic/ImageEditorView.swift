@@ -2842,13 +2842,16 @@ struct ImageEditorView: View {
                             if isDirectEditingDoubleClick {
                                 return true
                             }
+                            if viewModel.hasMovableDeepSelectedCanvasLayer(at: imagePoint) {
+                                return true
+                            }
                             return viewModel.hasXomoObject(at: imagePoint)
                                 && viewModel.canvasContentHit(at: imagePoint) == .movable
                         },
                         onObjectMoveActivated: { location, _ in
                             resetObjectMoveTracking()
                             guard let imagePoint = imagePoint(from: location, in: geometry.size),
-                                  viewModel.prepareXomoObjectMove(at: imagePoint),
+                                  viewModel.prepareCanvasObjectMove(at: imagePoint),
                                   viewModel.canMoveSelectedLayer
                             else { return false }
                             guard viewModel.beginMovingSelectedLayer() else { return false }

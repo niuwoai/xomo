@@ -165,6 +165,34 @@ extension ImageEditorViewModel {
         return true
     }
 
+    /// A child reached through direct selection remains the drag target in
+    /// tools mode. The selected layer must own the frontmost visible pixel;
+    /// this prevents a stale deep selection from moving through an occluder.
+    func hasMovableDeepSelectedCanvasLayer(at point: CGPoint) -> Bool {
+        guard selectedLeftSidebarTab == .tools,
+              document.selectedLayerIDs.count == 1,
+              let selectedLayer = document.selectedLayer,
+              !selectedLayer.isGroup,
+              selectedLayer.groupID != nil,
+              canMoveSelectedLayer,
+              document.isEffectivelyVisible(selectedLayer),
+              layerContainsVisibleContent(selectedLayer, at: point)
+        else { return false }
+
+        return document.layers.reversed().first { layer in
+            !layer.isGroup
+                && document.isEffectivelyVisible(layer)
+                && layerContainsVisibleContent(layer, at: point)
+        }?.id == selectedLayer.id
+    }
+
+    /// Native canvas dragging shares one activation path for component
+    /// objects and directly selected children. Components mode always falls
+    /// through to whole-object preparation.
+    func prepareCanvasObjectMove(at point: CGPoint) -> Bool {
+        hasMovableDeepSelectedCanvasLayer(at: point) || prepareXomoObjectMove(at: point)
+    }
+
     /// Shared move-target selection for both the transparent object hit target
     /// and the canvas gesture fallback used by macOS 13. Component instances
     /// must win before ordinary layers so their children never steal a drag.
