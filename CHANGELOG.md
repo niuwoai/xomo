@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.12.0-rc1097 - 2026-08-17
+
+### Added
+- 工具栏 Quick Mask 按钮支持 Photoshop 经典 Option 点按：在“颜色指示：蒙版区域”和“选定区域”之间直接切换，不进入或退出 Quick Mask，不修改选区、History 或 Undo；三语悬停提示公开该手势。
+
+### Fixed
+- Select 菜单中的 Quick Mask 不再错误依赖已有选区；现在与 `Q` 快捷键及工具栏按钮一致，可从无选区直接进入并创建临时蒙版。
+
+### Verification
+- Quick Mask 核心与入口接线 13/13、偏好及 Option 点按 4/4、Select 菜单结构回归 1/1、三语资源键一致性 1/1、CLI 2/2、发布契约 7/7（21 项断言）及最终 `build-for-testing` 通过；本版本不触发周期 Universal Release、完整冒烟与 `/Applications` 安装，下一次完整门禁为 rc1120。
+
 ## 2.12.0-rc1096 - 2026-08-17
 
 ### Fixed

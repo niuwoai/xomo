@@ -2675,6 +2675,7 @@
 "imageEditor.action.borderSelection" = "選択範囲を境界線化";
 "imageEditor.action.smoothSelection" = "選択範囲を滑らかにする";
 "imageEditor.action.quickMask" = "クイックマスクモード";
+"imageEditor.help.quickMask" = "クイックマスクモード（Option-クリックで表示対象を切り替え）";
 "imageEditor.action.fillSelectionHoles" = "選択範囲の穴を埋める";
 "imageEditor.action.removeSelectionSpeckles" = "選択範囲のノイズを削除";
 "imageEditor.action.fillSelection" = "選択範囲を塗りつぶし";

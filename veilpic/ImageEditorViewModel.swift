@@ -3779,6 +3779,17 @@ final class ImageEditorViewModel: ObservableObject {
         statusText = L10n.text("imageEditor.status.quickMaskEnabled")
     }
 
+    func activateQuickMaskControl(modifierFlags: NSEvent.ModifierFlags) {
+        switch ImageEditorQuickMaskControlAction.resolve(modifierFlags: modifierFlags) {
+        case .toggleMode:
+            toggleQuickMaskMode()
+        case .toggleOverlayTarget:
+            setQuickMaskOverlayTarget(
+                quickMaskOverlayTarget == .maskedAreas ? .selectedAreas : .maskedAreas
+            )
+        }
+    }
+
     func leaveQuickMaskModeForChannelPreview() {
         leaveQuickMaskMode()
     }

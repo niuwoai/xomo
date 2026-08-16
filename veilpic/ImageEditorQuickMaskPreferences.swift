@@ -19,6 +19,16 @@ enum ImageEditorQuickMaskOverlayTarget: String, CaseIterable, Codable, Identifia
     }
 }
 
+enum ImageEditorQuickMaskControlAction: Equatable {
+    case toggleMode
+    case toggleOverlayTarget
+
+    static func resolve(modifierFlags: NSEvent.ModifierFlags) -> Self {
+        let relevantFlags = modifierFlags.intersection([.command, .control, .option, .shift])
+        return relevantFlags == [.option] ? .toggleOverlayTarget : .toggleMode
+    }
+}
+
 struct ImageEditorQuickMaskPreferences: Codable, Equatable {
     static let storageKey = "im.some.xomo.imageEditor.quickMaskPreferences"
     static let minimumOpacity = 0.05

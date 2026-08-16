@@ -1856,7 +1856,7 @@ struct ImageEditorView: View {
 
     private var quickMaskButton: some View {
         Button {
-            viewModel.toggleQuickMaskMode()
+            viewModel.activateQuickMaskControl(modifierFlags: NSEvent.modifierFlags)
         } label: {
             Image(systemName: "circle.inset.filled")
                 .font(.system(size: 15, weight: .semibold))
@@ -1865,7 +1865,7 @@ struct ImageEditorView: View {
         .buttonStyle(EditorIconButtonStyle(isSelected: viewModel.isQuickMaskMode))
         .focusable(false)
         .xomoFocusEffectDisabled()
-        .help(L10n.text("imageEditor.action.quickMask"))
+        .help(L10n.text("imageEditor.help.quickMask"))
         .accessibilityIdentifier("image-editor-quick-mask")
         .accessibilityValue(viewModel.isQuickMaskMode ? "selected" : "available")
     }

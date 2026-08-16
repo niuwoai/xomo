@@ -2675,6 +2675,7 @@
 "imageEditor.action.borderSelection" = "Border Selection";
 "imageEditor.action.smoothSelection" = "Smooth Selection";
 "imageEditor.action.quickMask" = "Quick Mask Mode";
+"imageEditor.help.quickMask" = "Quick Mask Mode (Option-click to switch Color Indicates)";
 "imageEditor.action.fillSelectionHoles" = "Fill Selection Holes";
 "imageEditor.action.removeSelectionSpeckles" = "Remove Selection Speckles";
 "imageEditor.action.fillSelection" = "Fill Selection";

@@ -295,6 +295,39 @@ struct ImageEditorScopeTests {
         #expect(!source.contains(".background(selectionEditShortcutButtons)"))
     }
 
+    @Test func quickMaskControlSupportsClassicOptionClickAndEmptySelectionMenuEntry() throws {
+        let viewSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let buttonStart = try #require(viewSource.range(of: "private var quickMaskButton: some View"))
+        let buttonEnd = try #require(
+            viewSource[buttonStart.upperBound...].range(of: "private var quickMaskOptionsPopover: some View")
+        )
+        let buttonSource = viewSource[buttonStart.lowerBound..<buttonEnd.lowerBound]
+        #expect(
+            buttonSource.contains(
+                "viewModel.activateQuickMaskControl(modifierFlags: NSEvent.modifierFlags)"
+            )
+        )
+        #expect(buttonSource.contains("imageEditor.help.quickMask"))
+
+        let menuSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),
+            encoding: .utf8
+        )
+        let quickMaskStart = try #require(
+            menuSource.range(of: "Button(L10n.text(\"imageEditor.action.quickMask\"))")
+        )
+        let quickMaskEnd = try #require(
+            menuSource[quickMaskStart.upperBound...].range(of: "Divider()")
+        )
+        let quickMaskMenuSource = menuSource[quickMaskStart.lowerBound..<quickMaskEnd.lowerBound]
+        #expect(quickMaskMenuSource.contains("viewModel.toggleQuickMaskMode()"))
+        #expect(quickMaskMenuSource.contains(".keyboardShortcut(\"q\", modifiers: [])"))
+        #expect(!quickMaskMenuSource.contains(".disabled"))
+    }
+
     @Test func toolRailProvidesExplicitLocalizedAccessibleNamesWithoutKeyboardFocus() throws {
         let source = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
@@ -3023,7 +3056,7 @@ struct ImageEditorScopeTests {
         #expect(
             selectMenuSource.components(
                 separatedBy: ".disabled(!viewModel.hasSelection)"
-            ).count - 1 == 3
+            ).count - 1 == 2
         )
         #expect(selectMenuSource.contains("viewModel.clearSelection()"))
         #expect(selectMenuSource.contains("viewModel.invertSelection()"))

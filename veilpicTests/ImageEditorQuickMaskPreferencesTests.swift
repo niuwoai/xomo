@@ -104,6 +104,50 @@ struct ImageEditorQuickMaskPreferencesTests {
         #expect(restoredViewModel.quickMaskOverlayOpacity == CGFloat(ImageEditorQuickMaskPreferences.minimumOpacity))
     }
 
+    @Test func optionClickSwitchesOverlayTargetWithoutTogglingQuickMaskMode() throws {
+        let (defaults, suiteName) = temporaryDefaults()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let viewModel = ImageEditorViewModel(
+            sourceName: "quick-mask-control.png",
+            image: NSImage.transparent(size: CGSize(width: 8, height: 6)),
+            preferencesDefaults: defaults
+        ) { _ in }
+        let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
+
+        #expect(
+            ImageEditorQuickMaskControlAction.resolve(modifierFlags: [.option])
+                == .toggleOverlayTarget
+        )
+        #expect(
+            ImageEditorQuickMaskControlAction.resolve(modifierFlags: [.option, .capsLock])
+                == .toggleOverlayTarget
+        )
+        #expect(
+            ImageEditorQuickMaskControlAction.resolve(modifierFlags: [.option, .shift])
+                == .toggleMode
+        )
+        #expect(ImageEditorQuickMaskControlAction.resolve(modifierFlags: []) == .toggleMode)
+
+        viewModel.activateQuickMaskControl(modifierFlags: [.option])
+        #expect(viewModel.quickMaskOverlayTarget == .selectedAreas)
+        #expect(!viewModel.isQuickMaskMode)
+        #expect(viewModel.document.selection == nil)
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.undoStack.count == undoCount)
+
+        viewModel.activateQuickMaskControl(modifierFlags: [])
+        #expect(viewModel.isQuickMaskMode)
+        let selection = viewModel.document.selection
+
+        viewModel.activateQuickMaskControl(modifierFlags: [.option])
+        #expect(viewModel.quickMaskOverlayTarget == .maskedAreas)
+        #expect(viewModel.isQuickMaskMode)
+        #expect(viewModel.document.selection == selection)
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.undoStack.count == undoCount)
+    }
+
     private func temporaryDefaults() -> (UserDefaults, String) {
         let suiteName = "ImageEditorQuickMaskPreferencesTests.\(UUID().uuidString)"
         return (UserDefaults(suiteName: suiteName) ?? .standard, suiteName)
