@@ -2690,7 +2690,12 @@
 "imageEditor.selectionFill.contents.gray50" = "50% 灰色";
 "imageEditor.selectionFill.contents.white" = "白色";
 "imageEditor.selectionFill.contents.color" = "颜色…";
+"imageEditor.selectionFill.contents.pattern" = "图案";
 "imageEditor.selectionFill.customColor" = "自定义颜色";
+"imageEditor.selectionFill.patternColor" = "图案颜色";
+"imageEditor.selectionFill.patternOpacity" = "图案不透明度";
+"imageEditor.selectionFill.patternOffset" = "偏移";
+"imageEditor.selectionFill.alignPatternWithCanvas" = "与画布对齐";
 "imageEditor.selectionFill.blending" = "混合";
 "imageEditor.selectionFill.mode" = "模式";
 "imageEditor.selectionFill.opacity" = "不透明度";

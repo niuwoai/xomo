@@ -192,6 +192,8 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var selectionFillBlendMode: ImageEditorBlendMode = .normal
     @Published var selectionFillOpacity: CGFloat = 1
     @Published var selectionFillPreservesTransparency = false
+    @Published var selectionFillPatternContent = ImageEditorPatternFillContent()
+    @Published var selectionFillPatternAlignsWithCanvas = true
     @Published var foregroundColor: NSColor = .black
     @Published var backgroundColor: NSColor = .white
     private var screenColorSampler: NSColorSampler?
@@ -6139,6 +6141,49 @@ final class ImageEditorViewModel: ObservableObject {
                     ? "imageEditor.status.quickMaskHidden"
                     : "imageEditor.status.quickMaskPaintedTone"
         )
+    }
+
+    func fillQuickMask(
+        with pattern: ImageEditorPatternFillContent,
+        opacity: CGFloat,
+        blendMode: ImageEditorBlendMode
+    ) {
+        guard isQuickMaskMode,
+              let selection = document.selection,
+              let currentMask = selection.rasterizedMask(canvasSize: document.canvasSize)
+        else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return
+        }
+        let targetAlpha = quickMaskSelectionAlpha(for: pattern.color)
+        guard let updatedAlpha = ImageEditorQuickMaskFillCompositor.fill(
+            alpha: currentMask.alpha,
+            width: currentMask.width,
+            height: currentMask.height,
+            targetAlpha: targetAlpha,
+            pattern: pattern,
+            opacity: opacity,
+            blendMode: blendMode
+        ) else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return
+        }
+        let updatedMask = ImageEditorSelectionMask(
+            width: currentMask.width,
+            height: currentMask.height,
+            alpha: updatedAlpha
+        )
+        guard updatedMask != currentMask else {
+            statusText = L10n.text("imageEditor.status.selectionUnchanged")
+            return
+        }
+
+        let bounds = updatedMask.selectedBounds(in: document.canvasSize)
+            ?? CGRect(origin: .zero, size: document.canvasSize)
+        pushUndo()
+        document.selection = .raster(mask: updatedMask, bounds: bounds)
+        appendHistory(L10n.text("imageEditor.history.selectionFill"))
+        statusText = L10n.text("imageEditor.status.selectionFilled")
     }
 
     func paintQuickMaskSelection(

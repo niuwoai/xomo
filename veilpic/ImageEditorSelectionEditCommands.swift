@@ -15,6 +15,7 @@ enum ImageEditorSelectionFillContents: String, CaseIterable, Identifiable {
     case gray50
     case white
     case color
+    case pattern
 
     var id: String { rawValue }
 
@@ -26,7 +27,7 @@ enum ImageEditorSelectionFillContents: String, CaseIterable, Identifiable {
         foreground: NSColor,
         background: NSColor,
         custom: NSColor
-    ) -> NSColor {
+    ) -> NSColor? {
         switch self {
         case .foreground: foreground
         case .background: background
@@ -34,6 +35,7 @@ enum ImageEditorSelectionFillContents: String, CaseIterable, Identifiable {
         case .gray50: NSColor(deviceWhite: 0.5, alpha: 1)
         case .white: .white
         case .color: custom
+        case .pattern: nil
         }
     }
 }
@@ -44,6 +46,25 @@ struct ImageEditorSelectionFillOptions {
     var blendMode: ImageEditorBlendMode = .normal
     var opacity: CGFloat = 1
     var preservesTransparency = false
+    var patternContent = ImageEditorPatternFillContent()
+    var alignsPatternWithCanvas = true
+}
+
+enum ImageEditorSelectionPatternAlignment {
+    static func localizedContent(
+        _ content: ImageEditorPatternFillContent,
+        layerFrame: CGRect,
+        alignsWithCanvas: Bool
+    ) -> ImageEditorPatternFillContent {
+        var localized = content.normalized()
+        guard alignsWithCanvas else { return localized }
+        let period = localized.scale
+        localized.offsetX = (localized.offsetX - layerFrame.minX)
+            .truncatingRemainder(dividingBy: period)
+        localized.offsetY = (localized.offsetY - layerFrame.minY)
+            .truncatingRemainder(dividingBy: period)
+        return localized
+    }
 }
 
 enum ImageEditorQuickMaskFillCompositor {
@@ -56,26 +77,92 @@ enum ImageEditorQuickMaskFillCompositor {
     ) -> [UInt8] {
         let normalizedOpacity = Double(max(0, min(1, opacity)))
         guard normalizedOpacity > 0, width > 0 else { return alpha }
-        let overlay = Double(targetAlpha) / 255
         return alpha.enumerated().map { index, byte in
-            let base = Double(byte) / 255
-            if blendMode == .dissolve {
-                let x = index % width
-                let y = index / width
-                return dissolves(x: x, y: y, probability: normalizedOpacity)
-                    ? targetAlpha
-                    : byte
-            }
-            let blended = blendMode.blend(
-                baseRed: base,
-                baseGreen: base,
-                baseBlue: base,
-                overlayRed: overlay,
-                overlayGreen: overlay,
-                overlayBlue: overlay
-            ).red
-            return byteValue(base * (1 - normalizedOpacity) + blended * normalizedOpacity)
+            blendedByte(
+                baseByte: byte,
+                targetAlpha: targetAlpha,
+                sourceOpacity: normalizedOpacity,
+                blendMode: blendMode,
+                x: index % width,
+                y: index / width
+            )
         }
+    }
+
+    static func fill(
+        alpha: [UInt8],
+        width: Int,
+        height: Int,
+        targetAlpha: UInt8,
+        pattern: ImageEditorPatternFillContent,
+        opacity: CGFloat,
+        blendMode: ImageEditorBlendMode
+    ) -> [UInt8]? {
+        guard width > 0, height > 0, alpha.count == width * height else { return nil }
+        let image = pattern.normalized().renderedImage(
+            size: CGSize(width: width, height: height)
+        )
+        guard let patternPixels = rgbaPixels(image: image, width: width, height: height) else {
+            return nil
+        }
+        let normalizedOpacity = Double(max(0, min(1, opacity)))
+        return alpha.enumerated().map { index, byte in
+            let patternAlpha = Double(patternPixels[index * 4 + 3]) / 255
+            return blendedByte(
+                baseByte: byte,
+                targetAlpha: targetAlpha,
+                sourceOpacity: normalizedOpacity * patternAlpha,
+                blendMode: blendMode,
+                x: index % width,
+                y: index / width
+            )
+        }
+    }
+
+    private static func blendedByte(
+        baseByte: UInt8,
+        targetAlpha: UInt8,
+        sourceOpacity: Double,
+        blendMode: ImageEditorBlendMode,
+        x: Int,
+        y: Int
+    ) -> UInt8 {
+        guard sourceOpacity > 0 else { return baseByte }
+        if blendMode == .dissolve {
+            return dissolves(x: x, y: y, probability: sourceOpacity)
+                ? targetAlpha
+                : baseByte
+        }
+        let base = Double(baseByte) / 255
+        let overlay = Double(targetAlpha) / 255
+        let blended = blendMode.blend(
+            baseRed: base,
+            baseGreen: base,
+            baseBlue: base,
+            overlayRed: overlay,
+            overlayGreen: overlay,
+            overlayBlue: overlay
+        ).red
+        return byteValue(base * (1 - sourceOpacity) + blended * sourceOpacity)
+    }
+
+    private static func rgbaPixels(image: NSImage, width: Int, height: Int) -> [UInt8]? {
+        let bytesPerRow = width * 4
+        var pixels = [UInt8](repeating: 0, count: bytesPerRow * height)
+        guard let cgImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil),
+              let context = CGContext(
+                data: &pixels,
+                width: width,
+                height: height,
+                bitsPerComponent: 8,
+                bytesPerRow: bytesPerRow,
+                space: CGColorSpaceCreateDeviceRGB(),
+                bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+              )
+        else { return nil }
+        context.interpolationQuality = .none
+        context.draw(cgImage, in: CGRect(x: 0, y: 0, width: width, height: height))
+        return pixels
     }
 
     private static func byteValue(_ value: Double) -> UInt8 {
@@ -222,24 +309,97 @@ extension ImageEditorViewModel {
             customColor: selectionFillCustomColor,
             blendMode: selectionFillBlendMode,
             opacity: selectionFillOpacity,
-            preservesTransparency: selectionFillPreservesTransparency
+            preservesTransparency: selectionFillPreservesTransparency,
+            patternContent: selectionFillPatternContent,
+            alignsPatternWithCanvas: selectionFillPatternAlignsWithCanvas
         )
         isSelectionFillSheetPresented = false
         fillSelection(options: options)
     }
 
     func fillSelection(options: ImageEditorSelectionFillOptions) {
-        let color = options.contents.resolvedColor(
+        if options.contents == .pattern {
+            fillSelection(
+                with: options.patternContent,
+                opacity: options.opacity,
+                blendMode: options.blendMode,
+                preservingTransparency: options.preservesTransparency,
+                alignsWithCanvas: options.alignsPatternWithCanvas
+            )
+            return
+        }
+        guard let color = options.contents.resolvedColor(
             foreground: foregroundColor,
             background: backgroundColor,
             custom: options.customColor
-        )
+        ) else { return }
         fillSelection(
             with: color,
             opacity: options.opacity,
             blendMode: options.blendMode,
             preservingTransparency: options.preservesTransparency
         )
+    }
+
+    private func fillSelection(
+        with pattern: ImageEditorPatternFillContent,
+        opacity: CGFloat,
+        blendMode: ImageEditorBlendMode,
+        preservingTransparency: Bool,
+        alignsWithCanvas: Bool
+    ) {
+        if isQuickMaskMode {
+            fillQuickMask(
+                with: pattern,
+                opacity: opacity,
+                blendMode: blendMode
+            )
+            return
+        }
+        guard let selection = document.selection else {
+            statusText = L10n.text("imageEditor.status.noSelection")
+            return
+        }
+        let editableIndices = editableSelectionPixelLayerIndices()
+        guard !editableIndices.isEmpty else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return
+        }
+        guard editableIndices.contains(where: { index in
+            selection.mayAffect(
+                layerFrame: document.layers[index].frame,
+                canvasSize: document.canvasSize,
+                expansion: feather
+            )
+        }) else {
+            statusText = L10n.text("imageEditor.status.selectionEmpty")
+            return
+        }
+        applySelectionPixelEdit(
+            historyKey: "imageEditor.history.selectionFill",
+            selectedHistoryKey: "imageEditor.history.selectionFillSelected",
+            statusKey: "imageEditor.status.selectionFilled",
+            selectedStatusKey: "imageEditor.status.selectionFilledSelected"
+        ) { layer in
+            guard selection.mayAffect(
+                layerFrame: layer.frame,
+                canvasSize: document.canvasSize,
+                expansion: feather
+            ) else { return nil }
+            guard let output = layer.image.filled(
+                selection: selection,
+                layerFrame: layer.frame,
+                canvasSize: document.canvasSize,
+                pattern: pattern,
+                alignsWithCanvas: alignsWithCanvas,
+                opacity: opacity,
+                blendMode: blendMode,
+                feather: feather
+            ) else { return nil }
+            return preservingTransparency || document.isEffectivelyTransparencyLocked(layer)
+                ? (output.preservingAlpha(from: layer.image) ?? output)
+                : output
+        }
     }
 
     private func fillSelection(
@@ -1021,17 +1181,75 @@ private extension NSImage {
             feather: feather
         ) else { return nil }
 
+        guard let fillColor = color.usingColorSpace(.deviceRGB) else { return nil }
+        let overlay = (
+            red: Double(fillColor.redComponent),
+            green: Double(fillColor.greenComponent),
+            blue: Double(fillColor.blueComponent),
+            alpha: Double(fillColor.alphaComponent)
+        )
+        return compositedSelectionFill(
+            selectionMask: selectionMask,
+            opacity: opacity,
+            blendMode: blendMode
+        ) { _ in overlay }
+    }
+
+    func filled(
+        selection: ImageEditorSelection,
+        layerFrame: CGRect,
+        canvasSize: CGSize,
+        pattern: ImageEditorPatternFillContent,
+        alignsWithCanvas: Bool,
+        opacity: CGFloat,
+        blendMode: ImageEditorBlendMode,
+        feather: CGFloat
+    ) -> NSImage? {
+        guard let selectionMask = selection.layerMask(
+            layerFrame: layerFrame,
+            layerSize: size,
+            canvasSize: canvasSize,
+            feather: feather
+        ) else { return nil }
+
+        let localizedPattern = ImageEditorSelectionPatternAlignment.localizedContent(
+            pattern,
+            layerFrame: layerFrame,
+            alignsWithCanvas: alignsWithCanvas
+        )
+        let patternImage = localizedPattern.renderedImage(size: size)
+        let width = max(1, Int(size.width.rounded()))
+        let height = max(1, Int(size.height.rounded()))
+        guard let overlayPixels = patternImage.rgbaPixels(width: width, height: height) else {
+            return nil
+        }
+        return compositedSelectionFill(
+            selectionMask: selectionMask,
+            opacity: opacity,
+            blendMode: blendMode
+        ) { offset in
+            let alpha = Double(overlayPixels[offset + 3]) / 255
+            return (
+                red: alpha > 0 ? Double(overlayPixels[offset]) / 255 / alpha : 0,
+                green: alpha > 0 ? Double(overlayPixels[offset + 1]) / 255 / alpha : 0,
+                blue: alpha > 0 ? Double(overlayPixels[offset + 2]) / 255 / alpha : 0,
+                alpha: alpha
+            )
+        }
+    }
+
+    private func compositedSelectionFill(
+        selectionMask: NSImage,
+        opacity: CGFloat,
+        blendMode: ImageEditorBlendMode,
+        overlayAtOffset: (Int) -> (red: Double, green: Double, blue: Double, alpha: Double)
+    ) -> NSImage? {
         let width = max(1, Int(size.width.rounded()))
         let height = max(1, Int(size.height.rounded()))
         guard var pixels = rgbaPixels(width: width, height: height),
-              let mask = selectionMask.alphaMask(width: width, height: height),
-              let fillColor = color.usingColorSpace(.deviceRGB)
+              let mask = selectionMask.alphaMask(width: width, height: height)
         else { return nil }
 
-        let fillRed = Double(fillColor.redComponent)
-        let fillGreen = Double(fillColor.greenComponent)
-        let fillBlue = Double(fillColor.blueComponent)
-        let fillColorAlpha = Double(fillColor.alphaComponent)
         let normalizedOpacity = Double(max(0, min(1, opacity)))
         let bytesPerPixel = 4
         let bytesPerRow = width * bytesPerPixel
@@ -1039,9 +1257,11 @@ private extension NSImage {
         for y in 0..<height {
             for x in 0..<width {
                 let pixelIndex = y * width + x
+                let offset = y * bytesPerRow + x * bytesPerPixel
+                let overlay = overlayAtOffset(offset)
                 var sourceAlpha = Double(mask.alpha[pixelIndex]) / 255
                     * normalizedOpacity
-                    * fillColorAlpha
+                    * overlay.alpha
                 guard sourceAlpha > 0 else { continue }
                 if blendMode == .dissolve {
                     sourceAlpha = Self.selectionFillDissolves(
@@ -1052,7 +1272,6 @@ private extension NSImage {
                     guard sourceAlpha > 0 else { continue }
                 }
 
-                let offset = y * bytesPerRow + x * bytesPerPixel
                 let baseAlpha = Double(pixels[offset + 3]) / 255
                 let baseRed = baseAlpha > 0 ? Double(pixels[offset]) / 255 / baseAlpha : 0
                 let baseGreen = baseAlpha > 0 ? Double(pixels[offset + 1]) / 255 / baseAlpha : 0
@@ -1061,18 +1280,18 @@ private extension NSImage {
                     baseRed: baseRed,
                     baseGreen: baseGreen,
                     baseBlue: baseBlue,
-                    overlayRed: fillRed,
-                    overlayGreen: fillGreen,
-                    overlayBlue: fillBlue
+                    overlayRed: overlay.red,
+                    overlayGreen: overlay.green,
+                    overlayBlue: overlay.blue
                 )
                 let outputAlpha = sourceAlpha + baseAlpha * (1 - sourceAlpha)
                 let baseContribution = baseAlpha * (1 - sourceAlpha)
                 let sourceAgainstTransparency = 1 - baseAlpha
-                let outputRed = sourceAlpha * (sourceAgainstTransparency * fillRed + baseAlpha * blended.red)
+                let outputRed = sourceAlpha * (sourceAgainstTransparency * overlay.red + baseAlpha * blended.red)
                     + baseContribution * baseRed
-                let outputGreen = sourceAlpha * (sourceAgainstTransparency * fillGreen + baseAlpha * blended.green)
+                let outputGreen = sourceAlpha * (sourceAgainstTransparency * overlay.green + baseAlpha * blended.green)
                     + baseContribution * baseGreen
-                let outputBlue = sourceAlpha * (sourceAgainstTransparency * fillBlue + baseAlpha * blended.blue)
+                let outputBlue = sourceAlpha * (sourceAgainstTransparency * overlay.blue + baseAlpha * blended.blue)
                     + baseContribution * baseBlue
                 pixels[offset] = Self.selectionFillByte(outputRed)
                 pixels[offset + 1] = Self.selectionFillByte(outputGreen)

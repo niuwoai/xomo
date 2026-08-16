@@ -2133,6 +2133,29 @@ struct ImageEditorScopeTests {
         #expect(editMenuSource.contains(".keyboardShortcut(.delete, modifiers: [])"))
     }
 
+    @Test func fillDialogWiresNativePatternContentAndCanvasAlignment() throws {
+        let panelSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent(
+                "veilpic/ImageEditorSelectionFillPanel.swift"
+            ),
+            encoding: .utf8
+        )
+        let commandSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent(
+                "veilpic/ImageEditorSelectionEditCommands.swift"
+            ),
+            encoding: .utf8
+        )
+
+        #expect(panelSource.contains("ImageEditorPatternOverlayKind.allCases"))
+        #expect(panelSource.contains("selectionFillPatternContent"))
+        #expect(panelSource.contains("selectionFillPatternAlignsWithCanvas"))
+        #expect(panelSource.contains("image-editor-fill-pattern-controls"))
+        #expect(commandSource.contains("case pattern"))
+        #expect(commandSource.contains("ImageEditorSelectionPatternAlignment.localizedContent"))
+        #expect(commandSource.contains("fillQuickMask(\n                with: pattern"))
+    }
+
     @Test func fileMenuExposesClipboardCanvasCreation() throws {
         let source = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),

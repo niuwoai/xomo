@@ -2690,7 +2690,12 @@
 "imageEditor.selectionFill.contents.gray50" = "50% Gray";
 "imageEditor.selectionFill.contents.white" = "White";
 "imageEditor.selectionFill.contents.color" = "Color…";
+"imageEditor.selectionFill.contents.pattern" = "Pattern";
 "imageEditor.selectionFill.customColor" = "Custom Color";
+"imageEditor.selectionFill.patternColor" = "Pattern Color";
+"imageEditor.selectionFill.patternOpacity" = "Pattern Opacity";
+"imageEditor.selectionFill.patternOffset" = "Offset";
+"imageEditor.selectionFill.alignPatternWithCanvas" = "Align with Canvas";
 "imageEditor.selectionFill.blending" = "Blending";
 "imageEditor.selectionFill.mode" = "Mode";
 "imageEditor.selectionFill.opacity" = "Opacity";

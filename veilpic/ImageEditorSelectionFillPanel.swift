@@ -59,8 +59,97 @@ struct ImageEditorSelectionFillPanel: View {
                     )
                     .accessibilityIdentifier("image-editor-fill-custom-color")
                 }
+
+                if viewModel.selectionFillContents == .pattern {
+                    patternControls
+                }
             }
             .padding(.top, 4)
+        }
+    }
+
+    private var patternControls: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 12) {
+                Image(nsImage: viewModel.selectionFillPatternContent.renderedImage(
+                    size: CGSize(width: 52, height: 52)
+                ))
+                .resizable()
+                .interpolation(.none)
+                .frame(width: 52, height: 52)
+                .background(ImageEditorTransparencyCheckerboard())
+                .clipShape(RoundedRectangle(cornerRadius: 5, style: .continuous))
+
+                VStack(alignment: .leading, spacing: 8) {
+                    Picker(
+                        L10n.text("imageEditor.patternFill.kind"),
+                        selection: patternKindBinding
+                    ) {
+                        ForEach(ImageEditorPatternOverlayKind.allCases) { kind in
+                            Text(kind.title).tag(kind)
+                        }
+                    }
+                    ColorPicker(
+                        L10n.text("imageEditor.selectionFill.patternColor"),
+                        selection: patternColorBinding,
+                        supportsOpacity: false
+                    )
+                }
+            }
+
+            patternSlider(
+                labelKey: "imageEditor.selectionFill.patternOpacity",
+                value: patternOpacityBinding,
+                range: 0.05...1,
+                valueText: L10n.format(
+                    "imageEditor.selectionFill.opacityValue",
+                    Int((viewModel.selectionFillPatternContent.opacity * 100).rounded())
+                )
+            )
+            patternSlider(
+                labelKey: "imageEditor.patternFill.scale",
+                value: patternScaleBinding,
+                range: 6...64,
+                valueText: L10n.format(
+                    "imageEditor.patternFill.scaleValue",
+                    Int(viewModel.selectionFillPatternContent.scale.rounded())
+                )
+            )
+            HStack(spacing: 10) {
+                Text(L10n.text("imageEditor.selectionFill.patternOffset"))
+                TextField(
+                    L10n.text("imageEditor.patternFill.offsetX"),
+                    value: patternOffsetXBinding,
+                    format: .number.precision(.fractionLength(0))
+                )
+                    .frame(width: 64)
+                TextField(
+                    L10n.text("imageEditor.patternFill.offsetY"),
+                    value: patternOffsetYBinding,
+                    format: .number.precision(.fractionLength(0))
+                )
+                    .frame(width: 64)
+            }
+            Toggle(
+                L10n.text("imageEditor.selectionFill.alignPatternWithCanvas"),
+                isOn: $viewModel.selectionFillPatternAlignsWithCanvas
+            )
+        }
+        .accessibilityIdentifier("image-editor-fill-pattern-controls")
+    }
+
+    private func patternSlider(
+        labelKey: String,
+        value: Binding<Double>,
+        range: ClosedRange<Double>,
+        valueText: String
+    ) -> some View {
+        HStack(spacing: 10) {
+            Text(L10n.text(labelKey))
+            Slider(value: value, in: range)
+            Text(valueText)
+                .font(.system(size: 11, weight: .medium).monospacedDigit())
+                .frame(width: 48, alignment: .trailing)
         }
     }
 
@@ -121,6 +210,53 @@ struct ImageEditorSelectionFillPanel: View {
         Binding(
             get: { Color(nsColor: viewModel.selectionFillCustomColor) },
             set: { viewModel.selectionFillCustomColor = NSColor($0) }
+        )
+    }
+
+    private var patternKindBinding: Binding<ImageEditorPatternOverlayKind> {
+        Binding(
+            get: { viewModel.selectionFillPatternContent.kind },
+            set: { viewModel.selectionFillPatternContent.kind = $0 }
+        )
+    }
+
+    private var patternColorBinding: Binding<Color> {
+        Binding(
+            get: { Color(nsColor: viewModel.selectionFillPatternContent.color) },
+            set: { color in
+                guard let rgb = NSColor(color).usingColorSpace(.deviceRGB) else { return }
+                viewModel.selectionFillPatternContent.red = rgb.redComponent
+                viewModel.selectionFillPatternContent.green = rgb.greenComponent
+                viewModel.selectionFillPatternContent.blue = rgb.blueComponent
+            }
+        )
+    }
+
+    private var patternOpacityBinding: Binding<Double> {
+        Binding(
+            get: { viewModel.selectionFillPatternContent.opacity },
+            set: { viewModel.selectionFillPatternContent.opacity = $0 }
+        )
+    }
+
+    private var patternScaleBinding: Binding<Double> {
+        Binding(
+            get: { Double(viewModel.selectionFillPatternContent.scale) },
+            set: { viewModel.selectionFillPatternContent.scale = CGFloat($0) }
+        )
+    }
+
+    private var patternOffsetXBinding: Binding<Double> {
+        Binding(
+            get: { Double(viewModel.selectionFillPatternContent.offsetX) },
+            set: { viewModel.selectionFillPatternContent.offsetX = CGFloat(max(-128, min(128, $0))) }
+        )
+    }
+
+    private var patternOffsetYBinding: Binding<Double> {
+        Binding(
+            get: { Double(viewModel.selectionFillPatternContent.offsetY) },
+            set: { viewModel.selectionFillPatternContent.offsetY = CGFloat(max(-128, min(128, $0))) }
         )
     }
 }

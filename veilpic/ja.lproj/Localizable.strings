@@ -2690,7 +2690,12 @@
 "imageEditor.selectionFill.contents.gray50" = "50% グレー";
 "imageEditor.selectionFill.contents.white" = "ホワイト";
 "imageEditor.selectionFill.contents.color" = "カラー…";
+"imageEditor.selectionFill.contents.pattern" = "パターン";
 "imageEditor.selectionFill.customColor" = "カスタムカラー";
+"imageEditor.selectionFill.patternColor" = "パターンカラー";
+"imageEditor.selectionFill.patternOpacity" = "パターンの不透明度";
+"imageEditor.selectionFill.patternOffset" = "オフセット";
+"imageEditor.selectionFill.alignPatternWithCanvas" = "キャンバスに合わせる";
 "imageEditor.selectionFill.blending" = "合成";
 "imageEditor.selectionFill.mode" = "描画モード";
 "imageEditor.selectionFill.opacity" = "不透明度";

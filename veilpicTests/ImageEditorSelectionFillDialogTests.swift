@@ -4,30 +4,33 @@ import Testing
 
 @MainActor
 struct ImageEditorSelectionFillDialogTests {
-    @Test func fillContentsResolveClassicSources() {
+    @Test func fillContentsResolveClassicSources() throws {
         let foreground = NSColor(deviceRed: 0.8, green: 0.2, blue: 0.1, alpha: 1)
         let background = NSColor(deviceRed: 0.1, green: 0.3, blue: 0.9, alpha: 1)
         let custom = NSColor(deviceRed: 0.2, green: 0.7, blue: 0.4, alpha: 1)
 
         #expect(imageEditorColorsMatch(
-            ImageEditorSelectionFillContents.foreground.resolvedColor(
+            try #require(ImageEditorSelectionFillContents.foreground.resolvedColor(
                 foreground: foreground, background: background, custom: custom
-            ),
+            )),
             foreground
         ))
         #expect(imageEditorColorsMatch(
-            ImageEditorSelectionFillContents.background.resolvedColor(
+            try #require(ImageEditorSelectionFillContents.background.resolvedColor(
                 foreground: foreground, background: background, custom: custom
-            ),
+            )),
             background
         ))
         #expect(imageEditorColorsMatch(
-            ImageEditorSelectionFillContents.color.resolvedColor(
+            try #require(ImageEditorSelectionFillContents.color.resolvedColor(
                 foreground: foreground, background: background, custom: custom
-            ),
+            )),
             custom
         ))
-        #expect(ImageEditorSelectionFillContents.allCases.count == 6)
+        #expect(ImageEditorSelectionFillContents.pattern.resolvedColor(
+            foreground: foreground, background: background, custom: custom
+        ) == nil)
+        #expect(ImageEditorSelectionFillContents.allCases.count == 7)
     }
 
     @Test func multiplyFillUsesDialogOpacityAndCommitsOneTransaction() throws {
@@ -119,6 +122,150 @@ struct ImageEditorSelectionFillDialogTests {
             blendMode: .dissolve
         )
         #expect(firstDissolve == secondDissolve)
+    }
+
+    @Test func patternFillUsesNativeTileContentAndOneTransaction() throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "pattern-fill.png",
+            image: .transparent(size: CGSize(width: 12, height: 12))
+        ) { _ in }
+        viewModel.selectAll()
+        let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
+
+        let options = ImageEditorSelectionFillOptions(
+            contents: .pattern,
+            blendMode: .normal,
+            opacity: 1,
+            patternContent: ImageEditorPatternFillContent(
+                kind: .checkerboard,
+                red: 1,
+                green: 0,
+                blue: 0,
+                opacity: 1,
+                scale: 6
+            )
+        )
+        viewModel.fillSelection(options: options)
+
+        let image = try #require(viewModel.document.selectedLayer?.image)
+        let pixels = try #require(imageEditorRGBABytes(image, width: 12, height: 12))
+        let alpha = stride(from: 3, to: pixels.count, by: 4).map { pixels[$0] }
+        #expect(alpha.contains(0))
+        #expect(alpha.contains(where: { $0 > 240 }))
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.undoStack.count == undoCount + 1)
+
+        viewModel.fillSelection(options: options)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.undoStack.count == undoCount + 1)
+    }
+
+    @Test func canvasAlignedPatternCompensatesEachLayerOrigin() throws {
+        let content = ImageEditorPatternFillContent(
+            kind: .checkerboard,
+            scale: 12,
+            offsetX: 5,
+            offsetY: -7
+        )
+        let frame = CGRect(x: 31, y: 19, width: 40, height: 24)
+        let canvasAligned = ImageEditorSelectionPatternAlignment.localizedContent(
+            content,
+            layerFrame: frame,
+            alignsWithCanvas: true
+        )
+        let layerAligned = ImageEditorSelectionPatternAlignment.localizedContent(
+            content,
+            layerFrame: frame,
+            alignsWithCanvas: false
+        )
+
+        #expect(canvasAligned.offsetX == -2)
+        #expect(canvasAligned.offsetY == -2)
+        #expect(layerAligned.offsetX == 5)
+        #expect(layerAligned.offsetY == -7)
+
+        let firstFrame = CGRect(x: 0, y: 0, width: 12, height: 12)
+        let secondFrame = CGRect(x: 5, y: 0, width: 12, height: 12)
+        let firstPattern = ImageEditorSelectionPatternAlignment.localizedContent(
+            ImageEditorPatternFillContent(kind: .checkerboard, opacity: 1, scale: 12),
+            layerFrame: firstFrame,
+            alignsWithCanvas: true
+        ).renderedImage(size: firstFrame.size)
+        let secondPattern = ImageEditorSelectionPatternAlignment.localizedContent(
+            ImageEditorPatternFillContent(kind: .checkerboard, opacity: 1, scale: 12),
+            layerFrame: secondFrame,
+            alignsWithCanvas: true
+        ).renderedImage(size: secondFrame.size)
+        let firstPixels = try #require(imageEditorRGBABytes(firstPattern, width: 12, height: 12))
+        let secondPixels = try #require(imageEditorRGBABytes(secondPattern, width: 12, height: 12))
+        for globalX in 5..<12 {
+            let firstOffset = (6 * 12 + globalX) * 4
+            let secondOffset = (6 * 12 + globalX - 5) * 4
+            #expect(firstPixels[firstOffset + 3] == secondPixels[secondOffset + 3])
+        }
+    }
+
+    @Test func quickMaskPatternLeavesTransparentTileAreasUntouched() throws {
+        let source = [UInt8](repeating: 64, count: 12 * 12)
+        let output = try #require(ImageEditorQuickMaskFillCompositor.fill(
+            alpha: source,
+            width: 12,
+            height: 12,
+            targetAlpha: 255,
+            pattern: ImageEditorPatternFillContent(
+                kind: .checkerboard,
+                red: 1,
+                green: 1,
+                blue: 1,
+                opacity: 1,
+                scale: 6
+            ),
+            opacity: 1,
+            blendMode: .normal
+        ))
+        #expect(output.contains(64))
+        #expect(output.contains(where: { $0 > 240 }))
+    }
+
+    @Test func fillDialogPatternTargetsQuickMaskWithoutChangingLayerPixels() throws {
+        let image = NSImage(size: CGSize(width: 12, height: 12), flipped: false) { rect in
+            NSColor.systemBlue.setFill()
+            rect.fill()
+            return true
+        }
+        let viewModel = ImageEditorViewModel(sourceName: "quick-mask-pattern.png", image: image) { _ in }
+        viewModel.replaceSelectedLayerImageForTesting(
+            image,
+            historyTitle: L10n.text("imageEditor.history.brush")
+        )
+        viewModel.selectAll()
+        let layerBefore = try #require(viewModel.document.selectedLayer?.image.qingtuPNGData())
+        viewModel.setQuickMaskOverlayTarget(.maskedAreas)
+        viewModel.toggleQuickMaskMode()
+        let historyCount = viewModel.document.history.count
+
+        viewModel.fillSelection(options: ImageEditorSelectionFillOptions(
+            contents: .pattern,
+            blendMode: .normal,
+            opacity: 1,
+            patternContent: ImageEditorPatternFillContent(
+                kind: .checkerboard,
+                red: 0,
+                green: 0,
+                blue: 0,
+                opacity: 1,
+                scale: 6
+            )
+        ))
+
+        let mask = try #require(viewModel.document.selection?.rasterizedMask(
+            canvasSize: viewModel.document.canvasSize
+        ))
+        #expect(mask.alpha.contains(0))
+        #expect(mask.alpha.contains(255))
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(try #require(viewModel.document.selectedLayer?.image.qingtuPNGData()) == layerBefore)
     }
 
     @Test func panelDefaultsAndApplyUseOneExplicitFillTransaction() {
