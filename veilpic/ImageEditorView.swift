@@ -2374,7 +2374,10 @@ struct ImageEditorView: View {
         case .pasteClipboardInPlaceLayer: viewModel.pasteClipboardInPlaceAsLayer()
         case .toggleTransformControls: viewModel.toggleTransformControlsVisible()
         case .fillSelection: viewModel.fillSelection()
+        case .fillSelectionPreservingTransparency: viewModel.fillSelectionPreservingTransparency()
         case .fillSelectionBackground: viewModel.fillSelectionWithBackgroundColor()
+        case .fillSelectionBackgroundPreservingTransparency:
+            viewModel.fillSelectionWithBackgroundColorPreservingTransparency()
         case .clearSelectionPixels: viewModel.clearSelectionPixels()
         case .resizeImage: viewModel.resizeImageToControlSize()
         case .resizeCanvas: viewModel.resizeCanvasToControlSize()
@@ -15035,7 +15038,9 @@ enum ImageEditorKeyboardShortcutAction: Equatable {
     case pasteClipboardInPlaceLayer
     case toggleTransformControls
     case fillSelection
+    case fillSelectionPreservingTransparency
     case fillSelectionBackground
+    case fillSelectionBackgroundPreservingTransparency
     case clearSelectionPixels
     case resizeImage
     case resizeCanvas
@@ -15096,6 +15101,10 @@ enum ImageEditorKeyboardShortcutAction: Equatable {
         case .cutSelectionClipboard,
              .copySelectionClipboard,
              .pasteClipboardLayer,
+             .fillSelection,
+             .fillSelectionPreservingTransparency,
+             .fillSelectionBackground,
+             .fillSelectionBackgroundPreservingTransparency,
              .selectAll,
              .undo,
              .redo,
@@ -15159,7 +15168,11 @@ enum ImageEditorKeyboardShortcutAction: Equatable {
         if keyCode == 51 || keyCode == 117 {
             if relevantFlags.isEmpty { return .clearSelectionPixels }
             if relevantFlags == [.option] { return .fillSelection }
+            if relevantFlags == [.option, .shift] { return .fillSelectionPreservingTransparency }
             if relevantFlags == [.command] { return .fillSelectionBackground }
+            if relevantFlags == [.command, .shift] {
+                return .fillSelectionBackgroundPreservingTransparency
+            }
             return nil
         }
 

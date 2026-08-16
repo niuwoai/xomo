@@ -508,6 +508,29 @@ struct ImageEditorSelectionOperationTests {
         #expect(try #require(viewModel.document.selectedLayer?.image.qingtuPNGData()) == originalLayerData)
     }
 
+    @Test func quickMaskPreserveTransparencyShortcutsStillFillTheTemporaryChannel() throws {
+        let canvasSize = NSSize(width: 12, height: 8)
+        let viewModel = ImageEditorViewModel(
+            sourceName: "quick-mask-preserve-alpha.png",
+            image: testImage(size: canvasSize)
+        ) { _ in }
+        viewModel.createRectSelection(from: CGPoint(x: 2, y: 2), to: CGPoint(x: 8, y: 6))
+        viewModel.setQuickMaskOverlayTarget(.maskedAreas)
+        viewModel.toggleQuickMaskMode()
+        let originalLayerData = try #require(viewModel.document.selectedLayer?.image.qingtuPNGData())
+
+        viewModel.fillSelectionPreservingTransparency()
+        var mask = try #require(
+            viewModel.document.selection?.rasterizedMask(canvasSize: canvasSize)
+        )
+        #expect(mask.alpha.allSatisfy { $0 == UInt8.min })
+
+        viewModel.fillSelectionWithBackgroundColorPreservingTransparency()
+        mask = try #require(viewModel.document.selection?.rasterizedMask(canvasSize: canvasSize))
+        #expect(mask.alpha.allSatisfy { $0 == UInt8.max })
+        #expect(try #require(viewModel.document.selectedLayer?.image.qingtuPNGData()) == originalLayerData)
+    }
+
     @Test func quickMaskGrayscalePreviewFollowsTargetAndResetsOnExit() throws {
         let canvasSize = NSSize(width: 4, height: 2)
         let viewModel = ImageEditorViewModel(

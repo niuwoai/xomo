@@ -34,6 +34,25 @@ struct ImageEditorTextInputShortcutTests {
         #expect(ImageEditorKeyboardShortcutAction.toggleLayerMaskRubylith.isBlockedByTextInput)
     }
 
+    @Test func foregroundAndBackgroundFillShortcutsRemainOwnedByActiveTextInput() {
+        let cases: [(NSEvent.ModifierFlags, ImageEditorKeyboardShortcutAction)] = [
+            ([.option], .fillSelection),
+            ([.option, .shift], .fillSelectionPreservingTransparency),
+            ([.command], .fillSelectionBackground),
+            ([.command, .shift], .fillSelectionBackgroundPreservingTransparency)
+        ]
+
+        for (modifiers, expected) in cases {
+            let action = ImageEditorKeyboardShortcutAction.resolve(
+                charactersIgnoringModifiers: "",
+                modifierFlags: modifiers,
+                keyCode: 51
+            )
+            #expect(action == expected)
+            #expect(action?.isBlockedByTextInput == true)
+        }
+    }
+
     @Test func commonTextFormattingAndFindKeysCannotTriggerDestructiveCanvasCommands() {
         let protectedActions: [(String, ImageEditorKeyboardShortcutAction)] = [
             ("b", .colorBalance),

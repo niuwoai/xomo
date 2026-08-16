@@ -101,11 +101,22 @@ extension ImageEditorViewModel {
         fillSelection(with: foregroundColor)
     }
 
+    func fillSelectionPreservingTransparency() {
+        fillSelection(with: foregroundColor, preservingTransparency: true)
+    }
+
     func fillSelectionWithBackgroundColor() {
         fillSelection(with: backgroundColor)
     }
 
-    private func fillSelection(with color: NSColor) {
+    func fillSelectionWithBackgroundColorPreservingTransparency() {
+        fillSelection(with: backgroundColor, preservingTransparency: true)
+    }
+
+    private func fillSelection(
+        with color: NSColor,
+        preservingTransparency: Bool = false
+    ) {
         if isQuickMaskMode {
             fillQuickMask(with: color)
             return
@@ -148,7 +159,7 @@ extension ImageEditorViewModel {
                 opacity: opacity,
                 feather: feather
             ) else { return nil }
-            return document.isEffectivelyTransparencyLocked(layer)
+            return preservingTransparency || document.isEffectivelyTransparencyLocked(layer)
                 ? (output.preservingAlpha(from: layer.image) ?? output)
                 : output
         }

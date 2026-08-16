@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.12.0-rc1100 - 2026-08-17
+
+### Added
+- 补齐 Photoshop 经典保持透明区域填充快捷键：`Option + Shift + Delete` 使用前景色、`Command + Shift + Delete` 使用背景色，只重着色已有不透明像素，无需先锁定图层透明度。
+
+### Changed
+- Quick Mask 中两组 Shift 填充快捷键继续填充完整临时通道，不把图层透明度语义错误套到蒙版；普通与保持透明的四组 Delete 填充快捷键在文字输入活动时均让位给文本编辑。
+
+### Verification
+- 透明像素锁 3/3、Quick Mask 16/16、普通选区填充与邻接 33/33、文字输入保护 6/6、History/快捷键仲裁 14/14、CLI 2/2、发布契约 7/7（21 项断言）通过；本版本不触发周期 Universal Release、完整冒烟与 `/Applications` 安装，下一次完整门禁为 rc1120。
+
 ## 2.12.0-rc1099 - 2026-08-17
 
 ### Fixed
