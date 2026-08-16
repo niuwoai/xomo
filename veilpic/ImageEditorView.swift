@@ -261,6 +261,14 @@ struct ImageEditorView: View {
                         movesBackward: movesBackward
                     )
                 },
+                moveSelectedCanvasHandleToBoundary: { displayedDelta in
+                    if cancelGradientOverlayCanvasHandleDragForLifecycle() {
+                        return true
+                    }
+                    return nudgeSelectedGradientOverlayHandleIfNeeded(
+                        by: CGSize(width: displayedDelta * 100, height: 0)
+                    )
+                },
                 deleteSelectedObject: {
                     if cancelPathAnchorDragForKeyboardCommand() {
                         return true
@@ -14582,6 +14590,7 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
     let activeTool: ImageEditorTool
     let nudgeSelected: (CGSize) -> Void
     let selectNextCanvasHandle: (Bool) -> Bool
+    let moveSelectedCanvasHandleToBoundary: (Double) -> Bool
     let deleteSelectedObject: () -> Bool
     let finishPendingPenPath: () -> Bool
     let cancelSelectedObject: () -> Bool
@@ -14596,6 +14605,7 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
             activeTool: activeTool,
             nudgeSelected: nudgeSelected,
             selectNextCanvasHandle: selectNextCanvasHandle,
+            moveSelectedCanvasHandleToBoundary: moveSelectedCanvasHandleToBoundary,
             deleteSelectedObject: deleteSelectedObject,
             finishPendingPenPath: finishPendingPenPath,
             cancelSelectedObject: cancelSelectedObject,
@@ -14615,6 +14625,7 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
         context.coordinator.activeTool = activeTool
         context.coordinator.nudgeSelected = nudgeSelected
         context.coordinator.selectNextCanvasHandle = selectNextCanvasHandle
+        context.coordinator.moveSelectedCanvasHandleToBoundary = moveSelectedCanvasHandleToBoundary
         context.coordinator.deleteSelectedObject = deleteSelectedObject
         context.coordinator.finishPendingPenPath = finishPendingPenPath
         context.coordinator.cancelSelectedObject = cancelSelectedObject
@@ -14630,6 +14641,7 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
         var activeTool: ImageEditorTool
         var nudgeSelected: (CGSize) -> Void
         var selectNextCanvasHandle: (Bool) -> Bool
+        var moveSelectedCanvasHandleToBoundary: (Double) -> Bool
         var deleteSelectedObject: () -> Bool
         var finishPendingPenPath: () -> Bool
         var cancelSelectedObject: () -> Bool
@@ -14647,6 +14659,7 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
             activeTool: ImageEditorTool,
             nudgeSelected: @escaping (CGSize) -> Void,
             selectNextCanvasHandle: @escaping (Bool) -> Bool,
+            moveSelectedCanvasHandleToBoundary: @escaping (Double) -> Bool,
             deleteSelectedObject: @escaping () -> Bool,
             finishPendingPenPath: @escaping () -> Bool,
             cancelSelectedObject: @escaping () -> Bool,
@@ -14659,6 +14672,7 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
             self.activeTool = activeTool
             self.nudgeSelected = nudgeSelected
             self.selectNextCanvasHandle = selectNextCanvasHandle
+            self.moveSelectedCanvasHandleToBoundary = moveSelectedCanvasHandleToBoundary
             self.deleteSelectedObject = deleteSelectedObject
             self.finishPendingPenPath = finishPendingPenPath
             self.cancelSelectedObject = cancelSelectedObject
@@ -14740,6 +14754,15 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
                 isTextInputActive: isTextInputActive
                ),
                selectNextCanvasHandle(relevantFlags.contains(.shift)) {
+                return nil
+            }
+            if event.type == .keyDown,
+               let displayedDelta = ImageEditorGradientOverlayCanvasBoundaryKeyPolicy.displayedDelta(
+                keyCode: event.keyCode,
+                modifierFlags: event.modifierFlags,
+                isTextInputActive: isTextInputActive
+               ),
+               moveSelectedCanvasHandleToBoundary(displayedDelta) {
                 return nil
             }
             if event.type == .keyDown,

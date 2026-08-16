@@ -128,6 +128,22 @@ enum ImageEditorGradientOverlayCanvasTabKeyPolicy {
     }
 }
 
+enum ImageEditorGradientOverlayCanvasBoundaryKeyPolicy {
+    static func displayedDelta(
+        keyCode: UInt16,
+        modifierFlags: NSEvent.ModifierFlags,
+        isTextInputActive: Bool
+    ) -> Double? {
+        let relevantFlags = modifierFlags.intersection([.command, .option, .shift, .control])
+        guard relevantFlags.isEmpty, !isTextInputActive else { return nil }
+        return switch keyCode {
+        case 115: -1
+        case 119: 1
+        default: nil
+        }
+    }
+}
+
 enum ImageEditorGradientOverlayAxisGeometry {
     static let angleSnapStep: CGFloat = 15
 

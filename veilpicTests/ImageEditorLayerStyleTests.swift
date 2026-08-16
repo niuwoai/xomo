@@ -2803,6 +2803,69 @@ struct ImageEditorLayerStyleTests {
         )
     }
 
+    @Test func gradientOverlayCanvasHandleHomeEndUsesDisplayedBoundariesAndReverse() throws {
+        #expect(
+            ImageEditorGradientOverlayCanvasBoundaryKeyPolicy.displayedDelta(
+                keyCode: 115,
+                modifierFlags: [],
+                isTextInputActive: false
+            ) == -1
+        )
+        #expect(
+            ImageEditorGradientOverlayCanvasBoundaryKeyPolicy.displayedDelta(
+                keyCode: 119,
+                modifierFlags: [],
+                isTextInputActive: false
+            ) == 1
+        )
+        #expect(
+            ImageEditorGradientOverlayCanvasBoundaryKeyPolicy.displayedDelta(
+                keyCode: 115,
+                modifierFlags: [.shift],
+                isTextInputActive: false
+            ) == nil
+        )
+        #expect(
+            ImageEditorGradientOverlayCanvasBoundaryKeyPolicy.displayedDelta(
+                keyCode: 119,
+                modifierFlags: [],
+                isTextInputActive: true
+            ) == nil
+        )
+
+        let stopViewModel = gradientOverlayCenterViewModel()
+        let stopLayerIndex = try #require(stopViewModel.document.selectedLayerIndex)
+        stopViewModel.document.layers[stopLayerIndex].style.setGradientOverlayColorStops([
+            ImageEditorGradientColorStop(position: 0, color: .systemRed),
+            ImageEditorGradientColorStop(position: 0.5, color: .systemGreen),
+            ImageEditorGradientColorStop(position: 1, color: .systemBlue)
+        ])
+        #expect(
+            stopViewModel.nudgeSelectedLayerGradientOverlayCanvasStop(
+                at: 1,
+                displayedDelta: -1
+            )
+        )
+        #expect(
+            abs(stopViewModel.selectedLayerGradientOverlayColorStops[1].position - 0.01)
+                < 0.000_001
+        )
+
+        let reversedViewModel = gradientOverlayCenterViewModel()
+        let reversedLayerIndex = try #require(reversedViewModel.document.selectedLayerIndex)
+        reversedViewModel.document.layers[reversedLayerIndex].style.gradientOverlayReverse = true
+        #expect(
+            reversedViewModel.nudgeSelectedLayerGradientOverlayCanvasMidpoint(
+                after: 0,
+                displayedDelta: -1
+            )
+        )
+        #expect(
+            abs(reversedViewModel.selectedLayerGradientOverlayColorStops[0].midpoint - 1)
+                < 0.000_001
+        )
+    }
+
     @Test func gradientOverlayCanvasStopKeyboardNudgeAtBoundaryIsHistoryNoOp() throws {
         let viewModel = gradientOverlayCenterViewModel()
         let selectedIndex = try #require(viewModel.document.selectedLayerIndex)
@@ -3430,6 +3493,8 @@ struct ImageEditorLayerStyleTests {
         #expect(source.contains("selectNextGradientOverlayCanvasHandle"))
         #expect(source.contains("selectNextCanvasHandle"))
         #expect(source.contains("ImageEditorGradientOverlayCanvasTabKeyPolicy.matches"))
+        #expect(source.contains("ImageEditorGradientOverlayCanvasBoundaryKeyPolicy.displayedDelta"))
+        #expect(source.contains("moveSelectedCanvasHandleToBoundary"))
         #expect(source.contains(".contextMenu"))
         #expect(source.contains("cancelGradientOverlayCanvasHandleDragForLifecycle"))
         #expect(source.contains("image-editor-gradient-overlay-center-handle"))

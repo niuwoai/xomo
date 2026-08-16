@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.12.0-rc1043 - 2026-08-16
+
+### Added
+- 选中的 Gradient Overlay 内部颜色色标或逐段中点支持 Home/End：控制点会直接移动到当前显示方向的合法起点/终点，Reverse 下仍遵循视觉左右而非底层逻辑顺序。
+
+### Changed
+- Home/End 复用现有 1% 色标间距、中点 0%…100% 夹紧和单步事务；到达边界后的重复操作被消费但不写空 History、不清 Redo。文本输入或带 Shift/Option/Command/Control 时继续交还系统。
+- 三语画布手柄帮助补充 Tab、Home/End、Delete/恢复 50% 的完整键盘提示。
+
+### Verification
+- Home/End 按键门禁、色标合法边界、中点 Reverse 显示方向与 UI 接线定向测试 2/2 通过；CLI 2/2、发布契约 7/7（21 项断言）通过。rc1040 周期安装/真实界面冒烟仍等待本机 Developer ID 私钥恢复。
+
 ## 2.12.0-rc1042 - 2026-08-16
 
 ### Added

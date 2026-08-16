@@ -1,7 +1,8 @@
 # Xomo 经典 Photoshop 能力路线图
 
-> 最后更新：2026-08-16 ｜ 当前版本：v2.12.0-rc1042 ｜ 目标：以经典 Photoshop 能力作为现代混合编辑器的可靠像素与图层底座
+> 最后更新：2026-08-16 ｜ 当前版本：v2.12.0-rc1043 ｜ 目标：以经典 Photoshop 能力作为现代混合编辑器的可靠像素与图层底座
 
+- `v2.12.0-rc1043`：Gradient Overlay 画布选中的内部色标/逐段中点支持 Home/End 直达显示方向合法边界，Reverse 仍按视觉左右解释；复用既有夹紧、单步 History/Undo 与边界 no-op/Redo 语义，文本输入及修饰键组合不被抢键。行为/接线 2/2、CLI 2/2、发布契约 7/7（21 项断言）通过；rc1040 周期安装/真实界面冒烟仍等待 Developer ID 私钥恢复。
 - `v2.12.0-rc1042`：Gradient Overlay 画布内部色标与逐段中点支持 Tab/Shift-Tab 按显示轴方向循环选择，Reverse 同步反转，随后可直接衔接方向键微调、删除或恢复 50%；文本输入与无关工具不被抢键。策略/接线 2/2、CLI 2/2、发布契约 7/7（21 项断言）通过；rc1040 周期安装/真实界面冒烟仍等待 Developer ID 私钥恢复。
 - `v2.12.0-rc1041`：Gradient Overlay 画布中点选中后可用 Delete/Backspace 或右键菜单恢复经典 50% 默认值；真实恢复保持单步 History/Undo，默认值 no-op 保留 Redo，活动拖动仍先取消。Layer Style 78/78、CLI 2/2、发布契约 7/7（21 项断言）通过；rc1040 周期安装/真实界面冒烟将在 Developer ID 私钥恢复后用最新小版本补验。
 - `v2.12.0-rc1040`：Gradient Overlay 画布中点支持选中后沿显示轴以 Left/Right 1%、Option 5%、Shift 10% 精调，按色段宽度换算真实中点比例并保持 Reverse 视觉方向；色标/中点互斥选中、Up/Down 消费、边界 no-op 与活动拖动取消语义统一。全量隔离测试 114/114 套件、2175/2175 用例及 CLI/发布契约通过，Universal App/CLI 均完成双架构构建；本机 Developer ID 私钥 `errSecInternalComponent` 阻止安全安装，已恢复 rc1000，真实界面冒烟与 `/Applications` rc1040 覆盖仍作为本周期未关闭门禁。
