@@ -8,6 +8,18 @@
 import CoreGraphics
 import Foundation
 
+enum ImageEditorMoveAlignmentTarget: String, CaseIterable, Identifiable {
+    case selectedLayers
+    case canvas
+    case pixelSelection
+
+    var id: String { rawValue }
+
+    var title: String {
+        L10n.text("imageEditor.option.moveAlignmentTarget.\(rawValue)")
+    }
+}
+
 enum ImageEditorLayerAlignment: CaseIterable, Hashable, Identifiable {
     case left
     case horizontalCenter
@@ -30,14 +42,24 @@ enum ImageEditorLayerAlignment: CaseIterable, Hashable, Identifiable {
     }
 
     var actionTitleKey: String {
-        switch self {
-        case .left: "imageEditor.action.layerAlignLeft"
-        case .horizontalCenter: "imageEditor.action.layerAlignHorizontalCenter"
-        case .right: "imageEditor.action.layerAlignRight"
-        case .top: "imageEditor.action.layerAlignTop"
-        case .verticalCenter: "imageEditor.action.layerAlignVerticalCenter"
-        case .bottom: "imageEditor.action.layerAlignBottom"
+        actionTitleKey(for: .selectedLayers)
+    }
+
+    func actionTitleKey(for target: ImageEditorMoveAlignmentTarget) -> String {
+        let targetName = switch target {
+        case .selectedLayers: "layerAlign"
+        case .canvas: "layerAlignCanvas"
+        case .pixelSelection: "layerAlignSelection"
         }
+        let edgeName = switch self {
+        case .left: "Left"
+        case .horizontalCenter: "HorizontalCenter"
+        case .right: "Right"
+        case .top: "Top"
+        case .verticalCenter: "VerticalCenter"
+        case .bottom: "Bottom"
+        }
+        return "imageEditor.action.\(targetName)\(edgeName)"
     }
 
     var accessibilityIdentifier: String {
@@ -68,6 +90,28 @@ enum ImageEditorLayerSpacingDistribution {
 
 @MainActor
 extension ImageEditorViewModel {
+    var canApplyMoveToolAlignment: Bool {
+        switch moveToolAlignmentTarget {
+        case .selectedLayers:
+            canAlignSelectedLayers
+        case .canvas:
+            canAlignSelectedLayersToCanvas
+        case .pixelSelection:
+            canAlignSelectedLayersToSelection
+        }
+    }
+
+    func applyMoveToolAlignment(_ alignment: ImageEditorLayerAlignment) {
+        switch moveToolAlignmentTarget {
+        case .selectedLayers:
+            alignSelectedLayers(alignment)
+        case .canvas:
+            alignSelectedLayersToCanvas(alignment)
+        case .pixelSelection:
+            alignSelectedLayersToSelection(alignment)
+        }
+    }
+
     var canAlignSelectedLayers: Bool {
         editableTransformLayerIndices().count >= 2
     }

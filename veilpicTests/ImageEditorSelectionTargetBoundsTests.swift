@@ -87,6 +87,78 @@ struct ImageEditorSelectionTargetBoundsTests {
         #expect(viewModel.statusText == L10n.text("imageEditor.status.noSelection"))
     }
 
+    @Test
+    func moveAlignmentTargetDefaultsToSelectedLayerBounds() throws {
+        let (viewModel, firstID, secondID) = try makeMoveAlignmentViewModel()
+        viewModel.selectLayer(firstID)
+        viewModel.selectLayer(secondID, extendingSelection: true)
+
+        #expect(viewModel.moveToolAlignmentTarget == .selectedLayers)
+        #expect(viewModel.canApplyMoveToolAlignment)
+        viewModel.applyMoveToolAlignment(.left)
+        let firstIndex = try #require(viewModel.document.layers.firstIndex { $0.id == firstID })
+        let secondIndex = try #require(viewModel.document.layers.firstIndex { $0.id == secondID })
+        #expect(viewModel.document.layers[firstIndex].frame.minX == 15)
+        #expect(viewModel.document.layers[secondIndex].frame.minX == 15)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerAlign"))
+    }
+
+    @Test
+    func moveAlignmentTargetRoutesCanvasAndPixelSelection() throws {
+        let canvasSize = CGSize(width: 120, height: 90)
+        let (viewModel, firstID, _) = try makeMoveAlignmentViewModel()
+        viewModel.selectLayer(firstID)
+        viewModel.moveToolAlignmentTarget = .canvas
+        #expect(viewModel.canApplyMoveToolAlignment)
+        viewModel.applyMoveToolAlignment(.right)
+        #expect(viewModel.document.selectedLayer?.frame.maxX == canvasSize.width)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerAlignCanvas"))
+
+        viewModel.document.selection = .rectangle(
+            CGRect(x: 30, y: 20, width: 55, height: 40)
+        )
+        viewModel.moveToolAlignmentTarget = .pixelSelection
+        #expect(viewModel.canApplyMoveToolAlignment)
+        viewModel.applyMoveToolAlignment(.top)
+        #expect(viewModel.document.selectedLayer?.frame.maxY == 60)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerAlignSelection"))
+
+        viewModel.document.selection = nil
+        #expect(!viewModel.canApplyMoveToolAlignment)
+        #expect(ImageEditorMoveAlignmentTarget.allCases.allSatisfy {
+            $0.title != "imageEditor.option.moveAlignmentTarget.\($0.rawValue)"
+        })
+    }
+
+    private func makeMoveAlignmentViewModel() throws -> (
+        viewModel: ImageEditorViewModel,
+        firstID: UUID,
+        secondID: UUID
+    ) {
+        let canvasSize = CGSize(width: 120, height: 90)
+        let viewModel = ImageEditorViewModel(
+            sourceName: "move-alignment-target.png",
+            image: testImage(color: .systemBlue, size: canvasSize)
+        ) { _ in }
+        viewModel.addLayer()
+        let firstID = try #require(viewModel.document.selectedLayerID)
+        let firstIndex = try #require(viewModel.document.layers.firstIndex { $0.id == firstID })
+        viewModel.document.layers[firstIndex].frame = CGRect(x: 15, y: 12, width: 20, height: 18)
+        viewModel.document.layers[firstIndex].image = testImage(
+            color: .systemGreen,
+            size: CGSize(width: 20, height: 18)
+        )
+        viewModel.addLayer()
+        let secondID = try #require(viewModel.document.selectedLayerID)
+        let secondIndex = try #require(viewModel.document.layers.firstIndex { $0.id == secondID })
+        viewModel.document.layers[secondIndex].frame = CGRect(x: 70, y: 44, width: 12, height: 10)
+        viewModel.document.layers[secondIndex].image = testImage(
+            color: .systemOrange,
+            size: CGSize(width: 12, height: 10)
+        )
+        return (viewModel, firstID, secondID)
+    }
+
     private func rectangularMask(
         canvasSize: CGSize,
         rect: CGRect

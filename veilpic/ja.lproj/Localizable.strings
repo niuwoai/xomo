@@ -680,6 +680,11 @@
 "imageEditor.option.moveAutoSelectTargetHelp" = "自動選択で最外側のグループまたは最前面の表示レイヤーを対象にします";
 "imageEditor.option.moveAutoSelectTarget.group" = "グループ";
 "imageEditor.option.moveAutoSelectTarget.layer" = "レイヤー";
+"imageEditor.option.moveAlignmentTarget" = "整列先";
+"imageEditor.option.moveAlignmentTargetHelp" = "移動ツールの整列先を選択レイヤー、キャンバス、またはピクセル選択範囲から選びます";
+"imageEditor.option.moveAlignmentTarget.selectedLayers" = "選択レイヤー";
+"imageEditor.option.moveAlignmentTarget.canvas" = "キャンバス";
+"imageEditor.option.moveAlignmentTarget.pixelSelection" = "ピクセル選択範囲";
 "imageEditor.option.posterizeLevels" = "階調数";
 "imageEditor.selectionMode.replace" = "新規選択";
 "imageEditor.selectionMode.replace.short" = "新規";

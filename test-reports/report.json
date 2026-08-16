@@ -1,24 +1,36 @@
 {
-  "generated_at": "2026-08-16 15:13:36 +0800",
-  "total": 1,
-  "passed": 1,
+  "generated_at": "2026-08-16 15:28:41 +0800",
+  "total": 2,
+  "passed": 2,
   "failed": 0,
-  "total_tests": 1,
-  "passed_tests": 1,
+  "total_tests": 2,
+  "passed_tests": 2,
   "failed_tests_in_failed_groups": 0,
   "jobs": 1,
   "results": [
     {
-      "suite": "XomoLeftSidebarTests",
-      "method": "moveToolOptionBarExposesAllSixSelectionAlignmentCommands",
-      "identifier": "veilpicTests/XomoLeftSidebarTests/moveToolOptionBarExposesAllSixSelectionAlignmentCommands()",
-      "file": "XomoLeftSidebarTests.swift",
+      "suite": "ImageEditorSelectionTargetBoundsTests",
+      "method": "moveAlignmentTargetDefaultsToSelectedLayerBounds",
+      "identifier": "veilpicTests/ImageEditorSelectionTargetBoundsTests/moveAlignmentTargetDefaultsToSelectedLayerBounds()",
+      "file": "ImageEditorSelectionTargetBoundsTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 5.981,
+      "duration": 4.8,
       "infrastructure_retries": 0,
       "issues": [],
-      "log": "XomoLeftSidebarTests.moveToolOptionBarExposesAllSixSelectionAlignmentCommands.log"
+      "log": "ImageEditorSelectionTargetBoundsTests.moveAlignmentTargetDefaultsToSelectedLayerBounds.log"
+    },
+    {
+      "suite": "ImageEditorSelectionTargetBoundsTests",
+      "method": "moveAlignmentTargetRoutesCanvasAndPixelSelection",
+      "identifier": "veilpicTests/ImageEditorSelectionTargetBoundsTests/moveAlignmentTargetRoutesCanvasAndPixelSelection()",
+      "file": "ImageEditorSelectionTargetBoundsTests.swift",
+      "test_count": 1,
+      "passed": true,
+      "duration": 3.244,
+      "infrastructure_retries": 0,
+      "issues": [],
+      "log": "ImageEditorSelectionTargetBoundsTests.moveAlignmentTargetRoutesCanvasAndPixelSelection.log"
     }
   ]
 }

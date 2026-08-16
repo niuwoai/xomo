@@ -680,6 +680,11 @@
 "imageEditor.option.moveAutoSelectTargetHelp" = "Choose whether Auto-Select targets the outermost group or the frontmost visible layer";
 "imageEditor.option.moveAutoSelectTarget.group" = "Group";
 "imageEditor.option.moveAutoSelectTarget.layer" = "Layer";
+"imageEditor.option.moveAlignmentTarget" = "Align to";
+"imageEditor.option.moveAlignmentTargetHelp" = "Choose whether Move tool alignment uses the selected layers, canvas, or pixel selection as its target";
+"imageEditor.option.moveAlignmentTarget.selectedLayers" = "Selected Layers";
+"imageEditor.option.moveAlignmentTarget.canvas" = "Canvas";
+"imageEditor.option.moveAlignmentTarget.pixelSelection" = "Pixel Selection";
 "imageEditor.option.posterizeLevels" = "Levels";
 "imageEditor.selectionMode.replace" = "New Selection";
 "imageEditor.selectionMode.replace.short" = "New";

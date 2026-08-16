@@ -566,19 +566,38 @@ struct ImageEditorView: View {
                     .frame(height: 20)
                     .overlay(editorBorder)
 
+                Picker(
+                    L10n.text("imageEditor.option.moveAlignmentTarget"),
+                    selection: $viewModel.moveToolAlignmentTarget
+                ) {
+                    ForEach(ImageEditorMoveAlignmentTarget.allCases) { target in
+                        Text(target.title).tag(target)
+                    }
+                }
+                .labelsHidden()
+                .pickerStyle(.menu)
+                .fixedSize()
+                .focusable(false)
+                .help(L10n.text("imageEditor.option.moveAlignmentTargetHelp"))
+                .accessibilityIdentifier("image-editor-move-alignment-target")
+
                 HStack(spacing: 2) {
                     ForEach(ImageEditorLayerAlignment.allCases) { alignment in
                         Button {
-                            viewModel.alignSelectedLayers(alignment)
+                            viewModel.applyMoveToolAlignment(alignment)
                         } label: {
                             Image(systemName: alignment.optionBarSystemImage)
                                 .font(.system(size: 11, weight: .semibold))
                                 .frame(width: 22, height: 22)
                         }
                         .buttonStyle(EditorIconButtonStyle(isSelected: false))
-                        .disabled(!viewModel.canAlignSelectedLayers)
-                        .help(L10n.text(alignment.actionTitleKey))
-                        .accessibilityLabel(Text(L10n.text(alignment.actionTitleKey)))
+                        .disabled(!viewModel.canApplyMoveToolAlignment)
+                        .help(L10n.text(alignment.actionTitleKey(
+                            for: viewModel.moveToolAlignmentTarget
+                        )))
+                        .accessibilityLabel(Text(L10n.text(alignment.actionTitleKey(
+                            for: viewModel.moveToolAlignmentTarget
+                        ))))
                         .accessibilityIdentifier(alignment.accessibilityIdentifier)
                     }
                 }
