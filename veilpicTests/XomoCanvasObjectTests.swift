@@ -21,6 +21,14 @@ struct XomoCanvasObjectTests {
             from: CGPoint(x: 10, y: 10),
             to: CGPoint(x: 10, y: 10)
         ) == nil)
+        #expect(ImageEditorObjectBoxSelectionScope.resolve(
+            sidebarTab: .tools,
+            modifierFlags: [.command]
+        ) == .deepLayers)
+        #expect(ImageEditorObjectBoxSelectionScope.resolve(
+            sidebarTab: .components,
+            modifierFlags: [.command]
+        ) == .configured)
     }
 
     @Test func layerScopeBoxSelectionUsesVisibleLeafBoundsWithoutHistory() {
@@ -99,6 +107,20 @@ struct XomoCanvasObjectTests {
         #expect(viewModel.document.selectedLayerIDs.isEmpty)
         #expect(viewModel.document.history.count == historyCount)
         #expect(viewModel.undoStack.count == undoCount)
+
+        let deepTargets = viewModel.moveToolBoxSelectionTargets(
+            in: CGRect(x: 20, y: 20, width: 100, height: 50),
+            scope: .deepLayers
+        )
+        #expect(deepTargets.map(\.id) == [first.id, second.id])
+        #expect(viewModel.applyMoveToolBoxSelection(
+            in: CGRect(x: 20, y: 20, width: 100, height: 50),
+            mode: .replace,
+            scope: .deepLayers
+        ))
+        #expect(viewModel.document.selectedLayerIDs == [first.id, second.id])
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.undoStack.count == undoCount)
     }
 
     @Test func componentModeBoxSelectionReturnsWholeInstances() throws {
@@ -110,14 +132,32 @@ struct XomoCanvasObjectTests {
         let firstGroup = try #require(viewModel.document.selectedLayer)
         viewModel.insertXomoComponent(.badge, at: CGPoint(x: 280, y: 190))
         let secondGroup = try #require(viewModel.document.selectedLayer)
-        viewModel.selectLeftSidebarTab(.components)
         let union = try #require(viewModel.document.layers
             .filter { $0.groupID == firstGroup.id || $0.groupID == secondGroup.id }
             .map(\.frame)
             .reduce(nil) { bounds, frame in bounds?.union(frame) ?? frame })
+        let childIDs = Set(viewModel.document.layers
+            .filter {
+                ($0.groupID == firstGroup.id || $0.groupID == secondGroup.id)
+                    && !$0.isGroup
+                    && !$0.isAdjustment
+                    && !$0.isFilter
+                    && viewModel.document.isEffectivelyVisible($0)
+            }
+            .map(\.id))
+
+        let deepTargets = viewModel.moveToolBoxSelectionTargets(
+            in: union.insetBy(dx: -2, dy: -2),
+            scope: .deepLayers
+        )
+        #expect(Set(deepTargets.map(\.id)) == childIDs)
+        #expect(!deepTargets.contains { $0.id == firstGroup.id || $0.id == secondGroup.id })
+
+        viewModel.selectLeftSidebarTab(.components)
 
         let targets = viewModel.moveToolBoxSelectionTargets(
-            in: union.insetBy(dx: -2, dy: -2)
+            in: union.insetBy(dx: -2, dy: -2),
+            scope: .deepLayers
         )
         let ids = Set(targets.map(\.id))
 
@@ -257,6 +297,7 @@ struct XomoCanvasObjectTests {
         #expect(source.contains("viewModel.moveToolBoxSelectionPreviewTargets("))
         #expect(source.contains("boxSelectionOwnsModifiedBlankDrag"))
         #expect(source.contains("mode: ImageEditorObjectBoxSelectionMode.resolve("))
+        #expect(source.contains("scope: ImageEditorObjectBoxSelectionScope.resolve("))
         #expect(source.contains("moveToolUsesBoxSelection: viewModel.moveToolAutoSelectsCanvasTarget"))
         #expect(source.contains("onCanvasLifecycleInterrupted: { _ in\n                            objectSelectionBoxDrag = nil"))
         #expect(source.contains("if objectSelectionBoxDrag != nil {\n                        objectSelectionBoxDrag = nil"))

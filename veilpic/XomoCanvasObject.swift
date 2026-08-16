@@ -87,6 +87,20 @@ enum ImageEditorObjectBoxSelectionMode: String, Equatable, CaseIterable {
     }
 }
 
+enum ImageEditorObjectBoxSelectionScope: Equatable {
+    case configured
+    case deepLayers
+
+    static func resolve(
+        sidebarTab: XomoLeftSidebarTab,
+        modifierFlags: NSEvent.ModifierFlags
+    ) -> Self {
+        sidebarTab == .tools && modifierFlags.contains(.command)
+            ? .deepLayers
+            : .configured
+    }
+}
+
 struct ImageEditorObjectBoxSelectionTarget: Equatable, Identifiable {
     let id: UUID
     let frame: CGRect
@@ -172,11 +186,12 @@ extension ImageEditorViewModel {
     }
 
     /// Returns stable box-selection targets without changing document state.
-    /// Layer scope uses visible leaf bounds, Group scope promotes every hit to
-    /// its outermost container, and component mode preserves whole component
-    /// instances while still allowing ordinary top-level artwork.
+    /// Configured Layer scope uses visible leaf bounds, configured Group scope
+    /// promotes every hit to its outermost container, Command deep scope keeps
+    /// leaf targets, and component mode preserves whole component instances.
     func moveToolBoxSelectionTargets(
-        in selectionRect: CGRect
+        in selectionRect: CGRect,
+        scope requestedScope: ImageEditorObjectBoxSelectionScope = .configured
     ) -> [ImageEditorObjectBoxSelectionTarget] {
         let rect = selectionRect.standardized
         guard rect.width > 0,
@@ -189,6 +204,9 @@ extension ImageEditorViewModel {
 
         let componentObjects = xomoCanvasObjects()
         let componentGroupIDs = Set(componentObjects.map(\.groupID))
+        let scope: ImageEditorObjectBoxSelectionScope = selectedLeftSidebarTab == .components
+            ? .configured
+            : requestedScope
         let visibleLeaves: [(layer: ImageEditorLayer, ancestors: [ImageEditorLayer])] =
             document.layers.compactMap { layer in
                 guard !layer.isGroup,
@@ -201,7 +219,9 @@ extension ImageEditorViewModel {
                 return (layer, document.ancestorGroups(for: layer))
             }
         var outerGroupFrames: [UUID: CGRect] = [:]
-        if selectedLeftSidebarTab == .tools, moveToolAutoSelectTarget == .group {
+        if selectedLeftSidebarTab == .tools,
+           scope == .configured,
+           moveToolAutoSelectTarget == .group {
             for entry in visibleLeaves {
                 guard let groupID = entry.ancestors.last?.id else { continue }
                 let frame = entry.layer.frame.standardized
@@ -237,6 +257,11 @@ extension ImageEditorViewModel {
                 continue
             }
 
+            if scope == .deepLayers {
+                append(layer.id, frame: layer.frame)
+                continue
+            }
+
             switch moveToolAutoSelectTarget {
             case .layer:
                 append(layer.id, frame: layer.frame)
@@ -254,15 +279,19 @@ extension ImageEditorViewModel {
         return targets
     }
 
-    func moveToolBoxSelectionTargetIDs(in selectionRect: CGRect) -> [UUID] {
-        moveToolBoxSelectionTargets(in: selectionRect).map(\.id)
+    func moveToolBoxSelectionTargetIDs(
+        in selectionRect: CGRect,
+        scope: ImageEditorObjectBoxSelectionScope = .configured
+    ) -> [UUID] {
+        moveToolBoxSelectionTargets(in: selectionRect, scope: scope).map(\.id)
     }
 
     func moveToolBoxSelectionPreviewTargets(
         in selectionRect: CGRect,
-        mode: ImageEditorObjectBoxSelectionMode
+        mode: ImageEditorObjectBoxSelectionMode,
+        scope: ImageEditorObjectBoxSelectionScope = .configured
     ) -> [ImageEditorObjectBoxSelectionTarget] {
-        let targets = moveToolBoxSelectionTargets(in: selectionRect)
+        let targets = moveToolBoxSelectionTargets(in: selectionRect, scope: scope)
         switch mode {
         case .replace:
             return targets
@@ -278,9 +307,13 @@ extension ImageEditorViewModel {
     @discardableResult
     func applyMoveToolBoxSelection(
         in selectionRect: CGRect,
-        mode: ImageEditorObjectBoxSelectionMode
+        mode: ImageEditorObjectBoxSelectionMode,
+        scope: ImageEditorObjectBoxSelectionScope = .configured
     ) -> Bool {
-        let targetIDs = moveToolBoxSelectionTargetIDs(in: selectionRect)
+        let targetIDs = moveToolBoxSelectionTargetIDs(
+            in: selectionRect,
+            scope: scope
+        )
         let previousIDs = document.selectedLayerIDs
         let targetIDSet = Set(targetIDs)
         let desiredIDSet: Set<UUID> = switch mode {

@@ -83,6 +83,7 @@ private struct ImageEditorObjectSelectionBoxDrag: Equatable {
     var endCanvasPoint: CGPoint
     var viewTranslation: CGSize
     let mode: ImageEditorObjectBoxSelectionMode
+    let scope: ImageEditorObjectBoxSelectionScope
 
     var selectionRect: CGRect? {
         ImageEditorObjectBoxSelectionPolicy.selectionRect(
@@ -4133,6 +4134,10 @@ struct ImageEditorView: View {
                                 viewTranslation: value.translation,
                                 mode: ImageEditorObjectBoxSelectionMode.resolve(
                                     modifierFlags: NSEvent.modifierFlags
+                                ),
+                                scope: ImageEditorObjectBoxSelectionScope.resolve(
+                                    sidebarTab: viewModel.selectedLeftSidebarTab,
+                                    modifierFlags: NSEvent.modifierFlags
                                 )
                             )
                             break
@@ -4510,7 +4515,8 @@ struct ImageEditorView: View {
                        let selectionRect = selectionBoxDrag.selectionRect {
                         viewModel.applyMoveToolBoxSelection(
                             in: selectionRect,
-                            mode: selectionBoxDrag.mode
+                            mode: selectionBoxDrag.mode,
+                            scope: selectionBoxDrag.scope
                         )
                     } else if selectionBoxDrag.mode == .replace {
                         viewModel.clearLayerSelection()
@@ -7133,7 +7139,8 @@ struct ImageEditorView: View {
            let selectionRect = selectionBoxDrag.selectionRect {
             let previewTargets = viewModel.moveToolBoxSelectionPreviewTargets(
                 in: selectionRect,
-                mode: selectionBoxDrag.mode
+                mode: selectionBoxDrag.mode,
+                scope: selectionBoxDrag.scope
             )
             let previewColor = switch selectionBoxDrag.mode {
             case .replace, .add:
