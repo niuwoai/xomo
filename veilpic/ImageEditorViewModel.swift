@@ -110,7 +110,7 @@ final class ImageEditorViewModel: ObservableObject {
         didSet {
             if let previewedLayerMaskID,
                !document.layers.contains(where: { $0.id == previewedLayerMaskID && $0.mask != nil }) {
-                self.previewedLayerMaskID = nil
+                clearLayerMaskSoloPreview()
             }
             refreshSelectionEdgeGeometry()
             refreshQuickMaskOverlay()
@@ -400,11 +400,12 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var previewedAlphaChannelID: UUID? {
         didSet {
             if previewedAlphaChannelID != nil {
-                previewedLayerMaskID = nil
+                clearLayerMaskSoloPreview()
             }
         }
     }
     @Published private(set) var previewedLayerMaskID: UUID?
+    @Published private(set) var previewedLayerMaskMode: ImageEditorLayerMaskPreviewMode?
     @Published var isEditingLayerMask: Bool = false
     @Published var pendingPenPathAnchors: [ImageEditorPathAnchor] = []
     @Published var undonePendingPenPathAnchors: [ImageEditorPathAnchor] = []
@@ -455,6 +456,7 @@ final class ImageEditorViewModel: ObservableObject {
     private var cachedChannelPreviewImages: [String: NSImage] = [:]
     private var cachedAlphaChannelPreviewImages: [UUID: NSImage] = [:]
     private var cachedLayerMaskSoloPreviewImages: [UUID: NSImage] = [:]
+    private var cachedLayerMaskRubylithOverlayImages: [UUID: NSImage] = [:]
     private var cachedChannelThumbnailImages: [String: NSImage] = [:]
     private var cachedAlphaChannelThumbnailImages: [UUID: NSImage] = [:]
     private var cachedHistogramSummary: ImageEditorHistogramSummary?
@@ -684,7 +686,7 @@ final class ImageEditorViewModel: ObservableObject {
         newDocument.designCanvasMetadata = XomoDesignCanvasMetadata(draft: draft)
 
         document = newDocument
-        previewedLayerMaskID = nil
+        clearLayerMaskSoloPreview()
         colorSamplerPoints.removeAll()
         psdCompatibilityReport = nil
         psdCompatibilityFileName = ""
@@ -737,7 +739,7 @@ final class ImageEditorViewModel: ObservableObject {
         selectedTool = .move
         selectedChannelPreview = .composite
         previewedAlphaChannelID = nil
-        previewedLayerMaskID = nil
+        clearLayerMaskSoloPreview()
         isEditingLayerMask = false
         isQuickMaskMode = false
         clearUndoHistory()
@@ -757,7 +759,8 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     var previewImage: NSImage {
-        if let image = layerMaskSoloPreviewImage {
+        if previewedLayerMaskMode == .solo,
+           let image = layerMaskSoloPreviewImage {
             return image
         }
         if let previewedAlphaChannel {
@@ -767,7 +770,9 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     var previewedLayerMask: ImageEditorLayer? {
-        guard let previewedLayerMaskID else { return nil }
+        guard previewedLayerMaskMode != nil,
+              let previewedLayerMaskID
+        else { return nil }
         return document.layers.first { $0.id == previewedLayerMaskID && $0.mask != nil }
     }
 
@@ -777,8 +782,9 @@ final class ImageEditorViewModel: ObservableObject {
             return false
         }
 
-        if previewedLayerMaskID == layerID {
-            previewedLayerMaskID = nil
+        if previewedLayerMaskID == layerID,
+           previewedLayerMaskMode == .solo {
+            clearLayerMaskSoloPreview()
             statusText = L10n.format(
                 "imageEditor.status.channelPreview",
                 ImageEditorChannelPreview.composite.title
@@ -787,9 +793,12 @@ final class ImageEditorViewModel: ObservableObject {
         }
 
         selectLayer(layerID, editingMask: true)
+        isQuickMaskMode = false
+        quickMaskOverlayImage = nil
         selectedChannelPreview = .composite
         previewedAlphaChannelID = nil
         previewedLayerMaskID = layerID
+        previewedLayerMaskMode = .solo
         statusText = L10n.format(
             "imageEditor.status.channelPreview",
             L10n.format("imageEditor.channel.layerMaskName", previewedLayerMask?.name ?? "")
@@ -797,8 +806,43 @@ final class ImageEditorViewModel: ObservableObject {
         return true
     }
 
+    func toggleLayerMaskRubylithPreview(layerID: UUID) -> Bool {
+        guard document.layers.contains(where: { $0.id == layerID && $0.mask != nil }) else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return false
+        }
+
+        if previewedLayerMaskID == layerID,
+           previewedLayerMaskMode == .rubylith {
+            clearLayerMaskSoloPreview()
+            statusText = L10n.text("imageEditor.status.layerMaskRubylithDisabled")
+            return true
+        }
+
+        selectLayer(layerID, editingMask: true)
+        isQuickMaskMode = false
+        quickMaskOverlayImage = nil
+        selectedChannelPreview = .composite
+        previewedAlphaChannelID = nil
+        previewedLayerMaskID = layerID
+        previewedLayerMaskMode = .rubylith
+        statusText = L10n.format(
+            "imageEditor.status.layerMaskRubylithEnabled",
+            previewedLayerMask?.name ?? ""
+        )
+        return true
+    }
+
     func clearLayerMaskSoloPreview() {
         previewedLayerMaskID = nil
+        previewedLayerMaskMode = nil
+    }
+
+    var canvasMaskOverlayImage: NSImage? {
+        if previewedLayerMaskMode == .rubylith {
+            return layerMaskRubylithOverlayImage
+        }
+        return quickMaskOverlayImage
     }
 
     private var layerMaskSoloPreviewImage: NSImage? {
@@ -813,6 +857,32 @@ final class ImageEditorViewModel: ObservableObject {
         else { return nil }
         cachedLayerMaskSoloPreviewImages[layer.id] = preview
         return preview
+    }
+
+    private var layerMaskRubylithOverlayImage: NSImage? {
+        guard let layer = previewedLayerMask,
+              let mask = layer.mask
+        else { return nil }
+        if let cached = cachedLayerMaskRubylithOverlayImages[layer.id] {
+            return cached
+        }
+        let canvasSize = document.canvasSize
+        guard let canvasMask = canvasMaskImage(fromLayerMask: mask, layer: layer),
+              let selectionMask = canvasMask.imageEditorSelectionMask(targetSize: canvasSize)
+        else { return nil }
+        let selection = ImageEditorSelection.raster(
+            mask: selectionMask,
+            bounds: CGRect(origin: .zero, size: canvasSize)
+        )
+        let preferences = ImageEditorQuickMaskPreferences.defaultValue
+        guard let overlay = selection.quickMaskOverlayImage(
+            canvasSize: canvasSize,
+            color: preferences.color.nsColor,
+            opacity: CGFloat(preferences.opacity),
+            target: .maskedAreas
+        ) else { return nil }
+        cachedLayerMaskRubylithOverlayImages[layer.id] = overlay
+        return overlay
     }
 
     func channelPreviewImage(for channel: ImageEditorChannelPreview) -> NSImage {
@@ -850,7 +920,7 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     func selectChannelPreview(_ channel: ImageEditorChannelPreview) {
-        previewedLayerMaskID = nil
+        clearLayerMaskSoloPreview()
         selectedChannelPreview = channel
         previewedAlphaChannelID = nil
         statusText = L10n.format("imageEditor.status.channelPreview", channel.title)
@@ -3654,6 +3724,9 @@ final class ImageEditorViewModel: ObservableObject {
         }
 
         isQuickMaskMode.toggle()
+        if isQuickMaskMode {
+            clearLayerMaskSoloPreview()
+        }
         refreshQuickMaskOverlay()
         statusText = L10n.text(
             isQuickMaskMode
@@ -4052,7 +4125,7 @@ final class ImageEditorViewModel: ObservableObject {
     func selectLayer(_ id: UUID, editingMask: Bool = false, extendingSelection: Bool = false) {
         guard document.layers.contains(where: { $0.id == id }) else { return }
         if !editingMask || previewedLayerMaskID != id {
-            previewedLayerMaskID = nil
+            clearLayerMaskSoloPreview()
         }
         let shouldEditMask = editingMask && (document.layers.first { $0.id == id }?.mask != nil)
         if !extendingSelection,
@@ -9629,6 +9702,7 @@ final class ImageEditorViewModel: ObservableObject {
         cachedChannelPreviewImages.removeAll(keepingCapacity: true)
         cachedAlphaChannelPreviewImages.removeAll(keepingCapacity: true)
         cachedLayerMaskSoloPreviewImages.removeAll(keepingCapacity: true)
+        cachedLayerMaskRubylithOverlayImages.removeAll(keepingCapacity: true)
         cachedChannelThumbnailImages.removeAll(keepingCapacity: true)
         cachedAlphaChannelThumbnailImages.removeAll(keepingCapacity: true)
         cachedHistogramSummary = nil

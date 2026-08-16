@@ -834,3 +834,11 @@ private extension NSImage {
         return ImageEditorSelectionMask(width: width, height: height, alpha: alpha)
     }
 }
+
+extension NSImage {
+    func imageEditorSelectionMask(targetSize: CGSize, flipsY: Bool = false) -> ImageEditorSelectionMask? {
+        let width = max(1, Int(targetSize.width.rounded()))
+        let height = max(1, Int(targetSize.height.rounded()))
+        return alphaPlaneMask(width: width, height: height, flipsY: flipsY)
+    }
+}

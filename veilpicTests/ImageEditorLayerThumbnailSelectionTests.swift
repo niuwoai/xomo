@@ -90,6 +90,38 @@ struct ImageEditorLayerThumbnailSelectionTests {
         ))
     }
 
+    @Test func shiftOptionPreviewsOnlyRasterMaskRubylithAndKeepsCommandIntersection() {
+        #expect(ImageEditorLayerThumbnailSelectionPolicy.previewsRasterMaskAsRubylith(
+            sidebarTab: .tools,
+            source: .rasterMask,
+            modifierFlags: [.shift, .option]
+        ))
+        let rejectedCases: [(ImageEditorLayerThumbnailSelectionSource, NSEvent.ModifierFlags)] = [
+            (.vectorMask, [.shift, .option]),
+            (.transparency, [.shift, .option]),
+            (.rasterMask, [.option]),
+            (.rasterMask, [.shift]),
+            (.rasterMask, [.command, .shift, .option]),
+            (.rasterMask, [.control, .shift, .option])
+        ]
+        for (source, flags) in rejectedCases {
+            #expect(!ImageEditorLayerThumbnailSelectionPolicy.previewsRasterMaskAsRubylith(
+                sidebarTab: .tools,
+                source: source,
+                modifierFlags: flags
+            ))
+        }
+        #expect(!ImageEditorLayerThumbnailSelectionPolicy.previewsRasterMaskAsRubylith(
+            sidebarTab: .components,
+            source: .rasterMask,
+            modifierFlags: [.shift, .option]
+        ))
+        #expect(ImageEditorLayerThumbnailSelectionPolicy.mode(
+            sidebarTab: .tools,
+            modifierFlags: [.command, .shift, .option]
+        ) == .intersect)
+    }
+
     @Test func clickedTransparencyThumbnailTargetsItsLayerWithoutChangingLayerOrToolMode() throws {
         let fixture = makeLayerFixture()
         let viewModel = fixture.viewModel
@@ -280,6 +312,81 @@ struct ImageEditorLayerThumbnailSelectionTests {
         #expect(viewModel.undoStack.count == undoCount)
     }
 
+    @Test func rasterMaskRubylithPreviewOverlaysOnlyMaskedPixelsWithoutAHistoryTransaction() throws {
+        let fixture = makeLayerFixture(includeMasks: true)
+        let viewModel = fixture.viewModel
+        try installSplitAlphaMask(in: fixture)
+        let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
+        let compositeData = try #require(viewModel.currentImage.qingtuPNGData())
+
+        #expect(viewModel.toggleLayerMaskRubylithPreview(layerID: fixture.thumbnailLayerID))
+        #expect(viewModel.previewedLayerMaskID == fixture.thumbnailLayerID)
+        #expect(viewModel.previewedLayerMaskMode == .rubylith)
+        #expect(viewModel.document.selectedLayerID == fixture.thumbnailLayerID)
+        #expect(viewModel.document.selectedLayerIDs == [fixture.thumbnailLayerID])
+        #expect(viewModel.isEditingLayerMask)
+        #expect(!viewModel.isQuickMaskMode)
+        #expect(try #require(viewModel.previewImage.qingtuPNGData()) == compositeData)
+
+        let overlay = try #require(viewModel.canvasMaskOverlayImage)
+        let masked = try #require(
+            overlay.color(at: CGPoint(x: 10.5, y: 20.5))?.usingColorSpace(.deviceRGB)
+        )
+        let revealedAlpha = overlay.color(
+            at: CGPoint(x: 70.5, y: 20.5)
+        )?.usingColorSpace(.deviceRGB)?.alphaComponent ?? 0
+        #expect(masked.redComponent > 0.98)
+        #expect(masked.greenComponent < 0.02)
+        #expect(masked.blueComponent < 0.02)
+        #expect(abs(masked.alphaComponent - 0.5) < 0.02)
+        #expect(revealedAlpha < 0.02)
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.undoStack.count == undoCount)
+
+        #expect(viewModel.toggleLayerMaskRubylithPreview(layerID: fixture.thumbnailLayerID))
+        #expect(viewModel.previewedLayerMaskID == nil)
+        #expect(viewModel.previewedLayerMaskMode == nil)
+        #expect(viewModel.canvasMaskOverlayImage == nil)
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.undoStack.count == undoCount)
+    }
+
+    @Test func layerMaskSoloRubylithAndQuickMaskModesAreMutuallyExclusive() throws {
+        let fixture = makeLayerFixture(includeMasks: true)
+        let viewModel = fixture.viewModel
+        try installSplitAlphaMask(in: fixture)
+
+        #expect(viewModel.toggleLayerMaskSoloPreview(layerID: fixture.thumbnailLayerID))
+        #expect(viewModel.previewedLayerMaskMode == .solo)
+        #expect(viewModel.canvasMaskOverlayImage == nil)
+
+        #expect(viewModel.toggleLayerMaskRubylithPreview(layerID: fixture.thumbnailLayerID))
+        #expect(viewModel.previewedLayerMaskMode == .rubylith)
+        #expect(viewModel.canvasMaskOverlayImage != nil)
+
+        #expect(viewModel.toggleLayerMaskSoloPreview(layerID: fixture.thumbnailLayerID))
+        #expect(viewModel.previewedLayerMaskMode == .solo)
+        #expect(viewModel.canvasMaskOverlayImage == nil)
+
+        viewModel.document.selection = ImageEditorSelection.rectangle(
+            CGRect(x: 8, y: 8, width: 24, height: 18)
+        )
+        viewModel.toggleQuickMaskMode()
+        #expect(viewModel.isQuickMaskMode)
+        #expect(viewModel.previewedLayerMaskID == nil)
+        #expect(viewModel.previewedLayerMaskMode == nil)
+        let canvasOverlay = try #require(viewModel.canvasMaskOverlayImage)
+        let quickMaskOverlay = try #require(viewModel.quickMaskOverlayImage)
+        #expect(canvasOverlay === quickMaskOverlay)
+
+        #expect(viewModel.toggleLayerMaskRubylithPreview(layerID: fixture.thumbnailLayerID))
+        #expect(!viewModel.isQuickMaskMode)
+        #expect(viewModel.quickMaskOverlayImage == nil)
+        #expect(viewModel.previewedLayerMaskMode == .rubylith)
+        #expect(viewModel.canvasMaskOverlayImage != nil)
+    }
+
     @Test func contentOrChannelSelectionLeavesMaskSoloPreviewWithoutHistory() throws {
         let fixture = makeLayerFixture(includeMasks: true)
         let viewModel = fixture.viewModel
@@ -352,6 +459,10 @@ struct ImageEditorLayerThumbnailSelectionTests {
             contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorLayerPanel.swift"),
             encoding: .utf8
         )
+        let viewSource = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
 
         #expect(source.contains("loadSelectionFromLayerThumbnail(layer, source: .transparency)"))
         #expect(source.contains("handleLayerThumbnailGesture(layer, source: .rasterMask)"))
@@ -363,11 +474,31 @@ struct ImageEditorLayerThumbnailSelectionTests {
         #expect(source.contains("viewModel.toggleVectorMaskEnabled(layerID: layer.id)"))
         #expect(source.contains("ImageEditorLayerThumbnailSelectionPolicy.previewsRasterMask("))
         #expect(source.contains("viewModel.toggleLayerMaskSoloPreview(layerID: layer.id)"))
+        #expect(source.contains("ImageEditorLayerThumbnailSelectionPolicy.previewsRasterMaskAsRubylith("))
+        #expect(source.contains("viewModel.toggleLayerMaskRubylithPreview(layerID: layer.id)"))
         #expect(source.contains("let isSelected = viewModel.previewedLayerMask == nil"))
         #expect(source.contains("viewModel.toggleLayerMaskLinked(layerID: layer.id)"))
         #expect(source.contains("if layer.mask == nil"))
         #expect(source.contains(".disabled(viewModel.document.isEffectivelyLocked(layer))"))
         #expect(source.contains("sidebarTab: viewModel.selectedLeftSidebarTab"))
+        #expect(viewSource.contains("maskColorOverlay(in: geometry.size)"))
+        #expect(viewSource.contains("viewModel.canvasMaskOverlayImage"))
+    }
+
+    private func installSplitAlphaMask(
+        in fixture: (viewModel: ImageEditorViewModel, thumbnailLayerID: UUID, canvasSize: CGSize)
+    ) throws {
+        let index = try #require(fixture.viewModel.document.layers.firstIndex {
+            $0.id == fixture.thumbnailLayerID
+        })
+        let width = Int(fixture.canvasSize.width)
+        let height = Int(fixture.canvasSize.height)
+        let alpha = (0..<(width * height)).map { offset in
+            offset % width < width / 2 ? UInt8.min : UInt8.max
+        }
+        fixture.viewModel.document.layers[index].mask = try #require(
+            NSImage.alphaMaskImage(width: width, height: height, alpha: alpha)
+        )
     }
 
     private func makeLayerFixture(includeMasks: Bool = false) -> (

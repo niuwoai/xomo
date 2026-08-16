@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.12.0-rc1090 - 2026-08-17
+
+### Added
+- 栅格图层蒙版缩略图支持 Photoshop 式 Shift+Option 点按 Rubylith 预览：复合画面保持可见，被蒙版遮挡区域以默认 50% 红色叠加显示；再次执行恢复普通复合视图。
+
+### Changed
+- 黑白独显、Rubylith 与快速蒙版成为互斥的工作区显示状态；进入任一蒙版预览都会选择实际被点图层及其蒙版编辑目标，但不写文档、Undo 或 History。Shift+Option 只作用于工具模式的栅格蒙版，Command+Shift+Option 仍执行选区交叉，矢量蒙版与组件库不误触。画布复用统一蒙版颜色叠加入口，三语提示和状态同步更新。
+
+### Verification
+- 缩略图手势、Rubylith 像素方向、显示互斥、目标选择、Undo/History 隔离与画布接线专项 16/16，快速蒙版邻接回归 8/8、三语资源键 1/1、CLI 2/2、发布契约 7/7（21 项断言）及最终 `build-for-testing` 通过。本版本不触发周期 Universal Release、完整冒烟与 `/Applications` 安装，下一次完整门禁为 rc1120。
+
 ## 2.12.0-rc1089 - 2026-08-17
 
 ### Added

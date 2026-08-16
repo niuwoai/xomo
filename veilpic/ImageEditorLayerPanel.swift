@@ -61,6 +61,18 @@ enum ImageEditorLayerThumbnailSelectionPolicy {
         let relevantFlags = modifierFlags.intersection([.command, .shift, .option, .control])
         return relevantFlags == [.option]
     }
+
+    static func previewsRasterMaskAsRubylith(
+        sidebarTab: XomoLeftSidebarTab,
+        source: ImageEditorLayerThumbnailSelectionSource,
+        modifierFlags: NSEvent.ModifierFlags
+    ) -> Bool {
+        guard sidebarTab == .tools,
+              source == .rasterMask
+        else { return false }
+        let relevantFlags = modifierFlags.intersection([.command, .shift, .option, .control])
+        return relevantFlags == [.shift, .option]
+    }
 }
 
 enum ImageEditorLayerPanelTabAppearance {
@@ -2551,6 +2563,13 @@ extension ImageEditorView {
             modifierFlags: flags
         ) {
             return viewModel.toggleLayerMaskSoloPreview(layerID: layer.id)
+        }
+        if ImageEditorLayerThumbnailSelectionPolicy.previewsRasterMaskAsRubylith(
+            sidebarTab: viewModel.selectedLeftSidebarTab,
+            source: source,
+            modifierFlags: flags
+        ) {
+            return viewModel.toggleLayerMaskRubylithPreview(layerID: layer.id)
         }
         if ImageEditorLayerThumbnailSelectionPolicy.togglesMaskEnabled(
             sidebarTab: viewModel.selectedLeftSidebarTab,

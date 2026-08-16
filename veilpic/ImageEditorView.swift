@@ -2689,7 +2689,7 @@ struct ImageEditorView: View {
                     gridOverlay(in: geometry.size)
                     guideOverlay(in: geometry.size)
                     guideInteractionOverlay(in: geometry.size)
-                    quickMaskOverlay(in: geometry.size)
+                    maskColorOverlay(in: geometry.size)
                     selectionOverlay(in: geometry.size)
                     moveToolHoverOutlineOverlay(in: geometry.size)
                     objectSelectionBoxOverlay(in: geometry.size)
@@ -7579,8 +7579,8 @@ struct ImageEditorView: View {
     }
 
     @ViewBuilder
-    private func quickMaskOverlay(in size: CGSize) -> some View {
-        if let overlayImage = viewModel.quickMaskOverlayImage {
+    private func maskColorOverlay(in size: CGSize) -> some View {
+        if let overlayImage = viewModel.canvasMaskOverlayImage {
             let imageRect = fittedImageRect(in: size)
             Image(nsImage: overlayImage)
                 .resizable()

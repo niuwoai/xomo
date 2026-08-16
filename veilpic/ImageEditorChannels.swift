@@ -36,6 +36,11 @@ enum ImageEditorChannelPreview: String, CaseIterable, Identifiable {
     }
 }
 
+enum ImageEditorLayerMaskPreviewMode: Equatable {
+    case solo
+    case rubylith
+}
+
 enum ImageEditorLayerPanelTab: String, CaseIterable, Identifiable {
     case layers
     case channels
