@@ -735,6 +735,74 @@ struct XomoCanvasObjectTests {
         #expect(viewModel.document.selectedLayerIDs == [secondID])
     }
 
+    @Test func moveAutoSelectGroupTargetsTheOutermostContainerAndItsLockClosure() throws {
+        let viewModel = makeViewModel()
+        var leaf = ImageEditorLayer.solidColorFill(
+            name: "Leaf",
+            size: CGSize(width: 80, height: 60),
+            content: ImageEditorSolidColorFillContent(red: 0.2, green: 0.7, blue: 0.4)
+        )
+        leaf.frame = CGRect(x: 120, y: 100, width: 80, height: 60)
+        var innerGroup = ImageEditorLayer.group(
+            name: "Inner",
+            size: viewModel.document.canvasSize
+        )
+        let outerGroup = ImageEditorLayer.group(
+            name: "Outer",
+            size: viewModel.document.canvasSize
+        )
+        var lockedSibling = ImageEditorLayer.solidColorFill(
+            name: "Locked sibling",
+            size: CGSize(width: 40, height: 40),
+            content: ImageEditorSolidColorFillContent(red: 0.8, green: 0.2, blue: 0.2)
+        )
+        lockedSibling.frame = CGRect(x: 260, y: 180, width: 40, height: 40)
+        leaf.groupID = innerGroup.id
+        innerGroup.groupID = outerGroup.id
+        lockedSibling.groupID = outerGroup.id
+        lockedSibling.locksPosition = true
+        viewModel.document.layers = [leaf, innerGroup, lockedSibling, outerGroup]
+        let point = CGPoint(x: leaf.frame.midX, y: leaf.frame.midY)
+
+        #expect(viewModel.moveToolAutoSelectTarget == .group)
+        #expect(viewModel.moveToolAutoSelectLayer(at: point)?.id == outerGroup.id)
+        #expect(viewModel.moveToolContentHit(at: point) == .blocked)
+        #expect(viewModel.selectMovableCanvasTarget(at: point))
+        #expect(viewModel.document.selectedLayerID == outerGroup.id)
+
+        viewModel.moveToolAutoSelectTarget = .layer
+        #expect(viewModel.moveToolAutoSelectLayer(at: point)?.id == leaf.id)
+        #expect(viewModel.moveToolContentHit(at: point) == .movable)
+        #expect(viewModel.selectMovableCanvasTarget(at: point))
+        #expect(viewModel.document.selectedLayerID == leaf.id)
+    }
+
+    @Test func moveAutoSelectScopeDrillsIntoComponentsOnlyInToolsMode() throws {
+        let viewModel = makeViewModel()
+        viewModel.insertXomoComponent(.button, at: CGPoint(x: 80, y: 90))
+        let groupID = try #require(viewModel.document.selectedLayerID)
+        let point = CGPoint(x: 160, y: 112)
+        let backgroundID = try #require(viewModel.document.layers.first?.id)
+        viewModel.selectLayer(backgroundID)
+
+        viewModel.moveToolAutoSelectTarget = .group
+        #expect(viewModel.selectMovableCanvasTarget(at: point))
+        #expect(viewModel.document.selectedLayerID == groupID)
+
+        viewModel.selectLayer(backgroundID)
+        viewModel.moveToolAutoSelectTarget = .layer
+        #expect(viewModel.selectMovableCanvasTarget(at: point))
+        let child = try #require(viewModel.document.selectedLayer)
+        #expect(!child.isGroup)
+        #expect(child.groupID == groupID)
+
+        viewModel.selectLayer(backgroundID)
+        viewModel.selectLeftSidebarTab(.components)
+        #expect(viewModel.selectMovableCanvasTarget(at: point))
+        #expect(viewModel.document.selectedLayerID == groupID)
+        #expect(viewModel.document.selectedLayerIDs == [groupID])
+    }
+
     @Test func nativeObjectDragUsesTheSharedAutoSelectPolicyBeforeMoving() throws {
         let repositoryRoot = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()

@@ -676,6 +676,10 @@
 "imageEditor.option.selectionMode" = "Selection Mode";
 "imageEditor.option.moveAutoSelect" = "Auto-Select";
 "imageEditor.option.moveAutoSelectHelp" = "Select the object under the pointer before moving it; turn off to keep moving the current selection";
+"imageEditor.option.moveAutoSelectTarget" = "Auto-Select Target";
+"imageEditor.option.moveAutoSelectTargetHelp" = "Choose whether Auto-Select targets the outermost group or the frontmost visible layer";
+"imageEditor.option.moveAutoSelectTarget.group" = "Group";
+"imageEditor.option.moveAutoSelectTarget.layer" = "Layer";
 "imageEditor.option.posterizeLevels" = "Levels";
 "imageEditor.selectionMode.replace" = "New Selection";
 "imageEditor.selectionMode.replace.short" = "New";

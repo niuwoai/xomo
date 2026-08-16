@@ -1,60 +1,36 @@
 {
-  "generated_at": "2026-08-16 14:45:29 +0800",
-  "total": 4,
-  "passed": 4,
+  "generated_at": "2026-08-16 14:59:17 +0800",
+  "total": 2,
+  "passed": 2,
   "failed": 0,
-  "total_tests": 4,
-  "passed_tests": 4,
+  "total_tests": 2,
+  "passed_tests": 2,
   "failed_tests_in_failed_groups": 0,
   "jobs": 1,
   "results": [
     {
       "suite": "XomoCanvasObjectTests",
-      "method": "componentModeIgnoresTheMoveToolAutoSelectLock",
-      "identifier": "veilpicTests/XomoCanvasObjectTests/componentModeIgnoresTheMoveToolAutoSelectLock()",
+      "method": "moveAutoSelectGroupTargetsTheOutermostContainerAndItsLockClosure",
+      "identifier": "veilpicTests/XomoCanvasObjectTests/moveAutoSelectGroupTargetsTheOutermostContainerAndItsLockClosure()",
       "file": "XomoCanvasObjectTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.389,
+      "duration": 5.757,
       "infrastructure_retries": 0,
       "issues": [],
-      "log": "XomoCanvasObjectTests.componentModeIgnoresTheMoveToolAutoSelectLock.log"
+      "log": "XomoCanvasObjectTests.moveAutoSelectGroupTargetsTheOutermostContainerAndItsLockClosure.log"
     },
     {
       "suite": "XomoCanvasObjectTests",
-      "method": "disablingMoveAutoSelectMovesTheCurrentObjectFromBlankCanvas",
-      "identifier": "veilpicTests/XomoCanvasObjectTests/disablingMoveAutoSelectMovesTheCurrentObjectFromBlankCanvas()",
+      "method": "moveAutoSelectScopeDrillsIntoComponentsOnlyInToolsMode",
+      "identifier": "veilpicTests/XomoCanvasObjectTests/moveAutoSelectScopeDrillsIntoComponentsOnlyInToolsMode()",
       "file": "XomoCanvasObjectTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 5.003,
+      "duration": 3.283,
       "infrastructure_retries": 0,
       "issues": [],
-      "log": "XomoCanvasObjectTests.disablingMoveAutoSelectMovesTheCurrentObjectFromBlankCanvas.log"
-    },
-    {
-      "suite": "XomoCanvasObjectTests",
-      "method": "disablingMoveAutoSelectOptionCopiesTheCurrentObjectNotTheHoveredOne",
-      "identifier": "veilpicTests/XomoCanvasObjectTests/disablingMoveAutoSelectOptionCopiesTheCurrentObjectNotTheHoveredOne()",
-      "file": "XomoCanvasObjectTests.swift",
-      "test_count": 1,
-      "passed": true,
-      "duration": 3.156,
-      "infrastructure_retries": 0,
-      "issues": [],
-      "log": "XomoCanvasObjectTests.disablingMoveAutoSelectOptionCopiesTheCurrentObjectNotTheHoveredOne.log"
-    },
-    {
-      "suite": "XomoCanvasObjectTests",
-      "method": "nativeObjectDragUsesTheSharedAutoSelectPolicyBeforeMoving",
-      "identifier": "veilpicTests/XomoCanvasObjectTests/nativeObjectDragUsesTheSharedAutoSelectPolicyBeforeMoving()",
-      "file": "XomoCanvasObjectTests.swift",
-      "test_count": 1,
-      "passed": true,
-      "duration": 3.216,
-      "infrastructure_retries": 0,
-      "issues": [],
-      "log": "XomoCanvasObjectTests.nativeObjectDragUsesTheSharedAutoSelectPolicyBeforeMoving.log"
+      "log": "XomoCanvasObjectTests.moveAutoSelectScopeDrillsIntoComponentsOnlyInToolsMode.log"
     }
   ]
 }

@@ -31,6 +31,17 @@ enum XomoCanvasContentHit: Equatable {
     var isBlocked: Bool { self == .blocked }
 }
 
+enum ImageEditorMoveAutoSelectTarget: String, CaseIterable, Identifiable {
+    case group
+    case layer
+
+    var id: String { rawValue }
+
+    var title: String {
+        L10n.text("imageEditor.option.moveAutoSelectTarget.\(rawValue)")
+    }
+}
+
 enum ImageEditorMoveToolDoubleClickTarget: Equatable {
     case editableText(UUID)
     case layer(UUID)
@@ -114,12 +125,62 @@ extension ImageEditorViewModel {
     /// With Auto-Select disabled, any drawable canvas point can start moving
     /// the current visible selection; a locked selection remains prohibited.
     func moveToolContentHit(at point: CGPoint) -> XomoCanvasContentHit {
-        guard !moveToolAutoSelectsCanvasTarget else { return canvasContentHit(at: point) }
+        guard !moveToolAutoSelectsCanvasTarget else {
+            if selectedLeftSidebarTab == .tools,
+               let target = moveToolAutoSelectLayer(at: point) {
+                if hasMovableDeepSelectedCanvasLayer(at: point) {
+                    return .movable
+                }
+                return isMoveToolAutoSelectTargetMovable(target) ? .movable : .blocked
+            }
+            return canvasContentHit(at: point)
+        }
         guard point.x.isFinite,
               point.y.isFinite,
               selectedLayerTransformFrame != nil
         else { return .none }
         return canMoveSelectedLayer ? .movable : .blocked
+    }
+
+    /// Resolves the visible leaf first, then optionally promotes it to the
+    /// outermost ordinary/component group. This matches Photoshop's Group
+    /// scope and Figma's first-click container selection.
+    func moveToolAutoSelectLayer(at point: CGPoint) -> ImageEditorLayer? {
+        guard selectedLeftSidebarTab == .tools,
+              isMoveToolAutoSelectEnabled,
+              let leaf = frontmostVisibleCanvasLayer(at: point)
+        else { return nil }
+        switch moveToolAutoSelectTarget {
+        case .layer:
+            return leaf
+        case .group:
+            return document.ancestorGroups(for: leaf).last ?? leaf
+        }
+    }
+
+    private func isMoveToolAutoSelectTargetMovable(_ target: ImageEditorLayer) -> Bool {
+        guard target.isGroup else {
+            return !document.isEffectivelyPositionLocked(target)
+        }
+        let transformableDescendants = document.layers.filter { layer in
+            !layer.isGroup
+                && !layer.isAdjustment
+                && !layer.isFilter
+                && document.ancestorGroups(for: layer).contains { $0.id == target.id }
+        }
+        return !transformableDescendants.isEmpty
+            && transformableDescendants.allSatisfy {
+                !document.isEffectivelyPositionLocked($0)
+            }
+    }
+
+    private func frontmostVisibleCanvasLayer(at point: CGPoint) -> ImageEditorLayer? {
+        guard point.x.isFinite, point.y.isFinite else { return nil }
+        return document.layers.reversed().first { layer in
+            !layer.isGroup
+                && document.isEffectivelyVisible(layer)
+                && layerContainsVisibleContent(layer, at: point)
+        }
     }
 
     /// The AppKit fast path asks this at mouse-down before it owns the full
@@ -132,7 +193,7 @@ extension ImageEditorViewModel {
         if hasMovableDeepSelectedCanvasLayer(at: point) {
             return true
         }
-        return hasXomoObject(at: point) && canvasContentHit(at: point) == .movable
+        return hasXomoObject(at: point) && moveToolContentHit(at: point) == .movable
     }
 
     /// Returns only the frontmost visible pixel at a canvas point. Looking at
@@ -228,7 +289,18 @@ extension ImageEditorViewModel {
         if !moveToolAutoSelectsCanvasTarget {
             return moveToolContentHit(at: point) == .movable
         }
-        return hasMovableDeepSelectedCanvasLayer(at: point) || prepareXomoObjectMove(at: point)
+        if selectedLeftSidebarTab == .tools {
+            if hasMovableDeepSelectedCanvasLayer(at: point) {
+                return true
+            }
+            if let target = moveToolAutoSelectLayer(at: point),
+               document.selectedLayerIDs.contains(target.id),
+               selectedLayerTransformFrame != nil {
+                return true
+            }
+            return selectMoveToolAutoSelectTarget(at: point)
+        }
+        return prepareXomoObjectMove(at: point)
     }
 
     /// Option-drag preserves an already deep-selected child in tools mode.
@@ -255,8 +327,28 @@ extension ImageEditorViewModel {
     /// and the canvas gesture fallback used by macOS 13. Component instances
     /// must win before ordinary layers so their children never steal a drag.
     func selectMovableCanvasTarget(at point: CGPoint, extendingSelection: Bool = false) -> Bool {
-        selectXomoObject(at: point, extendingSelection: extendingSelection)
+        if selectedLeftSidebarTab == .tools {
+            return selectMoveToolAutoSelectTarget(
+                at: point,
+                extendingSelection: extendingSelection
+            )
+        }
+        return selectXomoObject(at: point, extendingSelection: extendingSelection)
             || selectVisibleLayer(at: point, extendingSelection: extendingSelection)
+    }
+
+    @discardableResult
+    func selectMoveToolAutoSelectTarget(
+        at point: CGPoint,
+        extendingSelection: Bool = false
+    ) -> Bool {
+        guard let target = moveToolAutoSelectLayer(at: point) else { return false }
+        selectLayer(target.id, extendingSelection: extendingSelection)
+        statusText = L10n.format(
+            "imageEditor.status.layerRangeSelected",
+            document.selectedLayerIDs.count
+        )
+        return true
     }
 
     /// Returns whether a component object owns the point without changing

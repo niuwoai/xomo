@@ -122,7 +122,9 @@ struct ImageEditorTextEditingLifecycleTests {
             clickSource.range(of: "viewModel.selectMoveToolDoubleClickTarget(")
         )
         let editCall = try #require(clickSource.range(of: "beginEditingSelectedCanvasTextLayer()"))
-        let fallbackCall = try #require(clickSource.range(of: "viewModel.selectXomoObject("))
+        let fallbackCall = try #require(
+            clickSource.range(of: "viewModel.selectMovableCanvasTarget(")
+        )
         #expect(targetCall.lowerBound < editCall.lowerBound)
         #expect(editCall.lowerBound < fallbackCall.lowerBound)
         #expect(clickSource.contains("if case .editableText = target"))

@@ -533,6 +533,22 @@ struct ImageEditorView: View {
                 .help(L10n.text("imageEditor.option.moveAutoSelectHelp"))
                 .accessibilityIdentifier("image-editor-move-auto-select")
 
+                Picker(
+                    L10n.text("imageEditor.option.moveAutoSelectTarget"),
+                    selection: $viewModel.moveToolAutoSelectTarget
+                ) {
+                    ForEach(ImageEditorMoveAutoSelectTarget.allCases) { target in
+                        Text(target.title).tag(target)
+                    }
+                }
+                .labelsHidden()
+                .pickerStyle(.menu)
+                .fixedSize()
+                .focusable(false)
+                .disabled(!viewModel.isMoveToolAutoSelectEnabled)
+                .help(L10n.text("imageEditor.option.moveAutoSelectTargetHelp"))
+                .accessibilityIdentifier("image-editor-move-auto-select-target")
+
                 Toggle(
                     L10n.text("imageEditor.action.transformControlsVisible"),
                     isOn: Binding(
@@ -2899,7 +2915,7 @@ struct ImageEditorView: View {
                                 return
                             }
                             guard viewModel.moveToolAutoSelectsCanvasTarget else { return }
-                            _ = viewModel.selectXomoObject(
+                            _ = viewModel.selectMovableCanvasTarget(
                                 at: imagePoint,
                                 extendingSelection: modifierFlags.contains(.shift)
                             )
