@@ -1,36 +1,24 @@
 {
-  "generated_at": "2026-08-16 14:59:17 +0800",
-  "total": 2,
-  "passed": 2,
+  "generated_at": "2026-08-16 15:13:36 +0800",
+  "total": 1,
+  "passed": 1,
   "failed": 0,
-  "total_tests": 2,
-  "passed_tests": 2,
+  "total_tests": 1,
+  "passed_tests": 1,
   "failed_tests_in_failed_groups": 0,
   "jobs": 1,
   "results": [
     {
-      "suite": "XomoCanvasObjectTests",
-      "method": "moveAutoSelectGroupTargetsTheOutermostContainerAndItsLockClosure",
-      "identifier": "veilpicTests/XomoCanvasObjectTests/moveAutoSelectGroupTargetsTheOutermostContainerAndItsLockClosure()",
-      "file": "XomoCanvasObjectTests.swift",
+      "suite": "XomoLeftSidebarTests",
+      "method": "moveToolOptionBarExposesAllSixSelectionAlignmentCommands",
+      "identifier": "veilpicTests/XomoLeftSidebarTests/moveToolOptionBarExposesAllSixSelectionAlignmentCommands()",
+      "file": "XomoLeftSidebarTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 5.757,
+      "duration": 5.981,
       "infrastructure_retries": 0,
       "issues": [],
-      "log": "XomoCanvasObjectTests.moveAutoSelectGroupTargetsTheOutermostContainerAndItsLockClosure.log"
-    },
-    {
-      "suite": "XomoCanvasObjectTests",
-      "method": "moveAutoSelectScopeDrillsIntoComponentsOnlyInToolsMode",
-      "identifier": "veilpicTests/XomoCanvasObjectTests/moveAutoSelectScopeDrillsIntoComponentsOnlyInToolsMode()",
-      "file": "XomoCanvasObjectTests.swift",
-      "test_count": 1,
-      "passed": true,
-      "duration": 3.283,
-      "infrastructure_retries": 0,
-      "issues": [],
-      "log": "XomoCanvasObjectTests.moveAutoSelectScopeDrillsIntoComponentsOnlyInToolsMode.log"
+      "log": "XomoLeftSidebarTests.moveToolOptionBarExposesAllSixSelectionAlignmentCommands.log"
     }
   ]
 }

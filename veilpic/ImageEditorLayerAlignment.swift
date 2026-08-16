@@ -8,13 +8,48 @@
 import CoreGraphics
 import Foundation
 
-enum ImageEditorLayerAlignment {
+enum ImageEditorLayerAlignment: CaseIterable, Hashable, Identifiable {
     case left
     case horizontalCenter
     case right
     case top
     case verticalCenter
     case bottom
+
+    var id: Self { self }
+
+    var optionBarSystemImage: String {
+        switch self {
+        case .left: "align.horizontal.left"
+        case .horizontalCenter: "align.horizontal.center"
+        case .right: "align.horizontal.right"
+        case .top: "align.vertical.top"
+        case .verticalCenter: "align.vertical.center"
+        case .bottom: "align.vertical.bottom"
+        }
+    }
+
+    var actionTitleKey: String {
+        switch self {
+        case .left: "imageEditor.action.layerAlignLeft"
+        case .horizontalCenter: "imageEditor.action.layerAlignHorizontalCenter"
+        case .right: "imageEditor.action.layerAlignRight"
+        case .top: "imageEditor.action.layerAlignTop"
+        case .verticalCenter: "imageEditor.action.layerAlignVerticalCenter"
+        case .bottom: "imageEditor.action.layerAlignBottom"
+        }
+    }
+
+    var accessibilityIdentifier: String {
+        switch self {
+        case .left: "image-editor-move-align-left"
+        case .horizontalCenter: "image-editor-move-align-horizontal-center"
+        case .right: "image-editor-move-align-right"
+        case .top: "image-editor-move-align-top"
+        case .verticalCenter: "image-editor-move-align-vertical-center"
+        case .bottom: "image-editor-move-align-bottom"
+        }
+    }
 }
 
 enum ImageEditorLayerDistribution {

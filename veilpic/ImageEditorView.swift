@@ -561,6 +561,29 @@ struct ImageEditorView: View {
                 .fixedSize()
                 .help(L10n.text("imageEditor.action.transformControlsVisible"))
                 .accessibilityIdentifier("image-editor-move-transform-controls")
+
+                Divider()
+                    .frame(height: 20)
+                    .overlay(editorBorder)
+
+                HStack(spacing: 2) {
+                    ForEach(ImageEditorLayerAlignment.allCases) { alignment in
+                        Button {
+                            viewModel.alignSelectedLayers(alignment)
+                        } label: {
+                            Image(systemName: alignment.optionBarSystemImage)
+                                .font(.system(size: 11, weight: .semibold))
+                                .frame(width: 22, height: 22)
+                        }
+                        .buttonStyle(EditorIconButtonStyle(isSelected: false))
+                        .disabled(!viewModel.canAlignSelectedLayers)
+                        .help(L10n.text(alignment.actionTitleKey))
+                        .accessibilityLabel(Text(L10n.text(alignment.actionTitleKey)))
+                        .accessibilityIdentifier(alignment.accessibilityIdentifier)
+                    }
+                }
+                .accessibilityElement(children: .contain)
+                .accessibilityIdentifier("image-editor-move-alignment-controls")
             }
 
             if viewModel.selectedTool.supportsSelectionMode {

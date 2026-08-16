@@ -682,6 +682,44 @@ struct XomoLeftSidebarTests {
         #expect(!componentSource.contains("toggleTransformControlsVisible"))
     }
 
+    @Test func moveToolOptionBarExposesAllSixSelectionAlignmentCommands() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let toolStart = try #require(source.range(of: "private var toolOptionBar: some View"))
+        let componentStart = try #require(
+            source[toolStart.upperBound...].range(of: "private func componentLibraryOptionBar(")
+        )
+        let toolSource = source[toolStart.lowerBound..<componentStart.lowerBound]
+        let componentEnd = try #require(
+            source[componentStart.upperBound...].range(of: "private var optionHistoryButtons:")
+        )
+        let componentSource = source[componentStart.lowerBound..<componentEnd.lowerBound]
+        let alignments = ImageEditorLayerAlignment.allCases
+
+        #expect(alignments == [
+            .left,
+            .horizontalCenter,
+            .right,
+            .top,
+            .verticalCenter,
+            .bottom
+        ])
+        #expect(Set(alignments.map(\.optionBarSystemImage)).count == 6)
+        #expect(Set(alignments.map(\.actionTitleKey)).count == 6)
+        #expect(Set(alignments.map(\.accessibilityIdentifier)).count == 6)
+        #expect(toolSource.contains("ForEach(ImageEditorLayerAlignment.allCases)"))
+        #expect(toolSource.contains("viewModel.alignSelectedLayers(alignment)"))
+        #expect(toolSource.contains(".disabled(!viewModel.canAlignSelectedLayers)"))
+        #expect(toolSource.contains("image-editor-move-alignment-controls"))
+        #expect(!componentSource.contains("image-editor-move-alignment-controls"))
+        #expect(!componentSource.contains("ImageEditorLayerAlignment.allCases"))
+    }
+
     @Test func componentSidebarWiresMoveSemanticsIntoCanvasCursorAndGestures() throws {
         let repositoryRoot = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()
