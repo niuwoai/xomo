@@ -78,17 +78,83 @@ struct ImageEditorGuideTests {
                 end: CGPoint(x: 20, y: 60)
             )
         ])
+        let lowerRight = CGRect(x: 50, y: 60, width: 20, height: 20)
+        let lowerRightGuides = ImageEditorObjectDistanceMeasurement.guides(
+            from: source,
+            to: lowerRight
+        )
         #expect(
-            ImageEditorObjectDistanceMeasurement.guides(
-                from: source,
-                to: CGRect(x: 50, y: 60, width: 20, height: 20)
-            ).isEmpty
+            lowerRightGuides == [
+                ImageEditorSpacingGuide(
+                    orientation: .horizontal,
+                    start: CGPoint(x: 30, y: 40),
+                    end: CGPoint(x: 50, y: 40)
+                ),
+                ImageEditorSpacingGuide(
+                    orientation: .vertical,
+                    start: CGPoint(x: 50, y: 40),
+                    end: CGPoint(x: 50, y: 60)
+                )
+            ]
+        )
+        #expect(
+            ImageEditorObjectDistanceMeasurement.guides(from: lowerRight, to: source)
+                == lowerRightGuides
         )
         #expect(
             ImageEditorObjectDistanceMeasurement.guides(
                 from: source,
                 to: CGRect(x: 15, y: 25, width: 10, height: 10)
             ).isEmpty
+        )
+    }
+
+    @Test
+    func diagonalObjectDistanceMeasurementConnectsNearestCornersInEveryQuadrant() {
+        let source = CGRect(x: 10, y: 20, width: 20, height: 20)
+        let upperRight = CGRect(x: 50, y: -20, width: 20, height: 20)
+        let lowerLeft = CGRect(x: -30, y: 60, width: 20, height: 20)
+
+        let upperRightGuides = ImageEditorObjectDistanceMeasurement.guides(
+            from: source,
+            to: upperRight
+        )
+        #expect(upperRightGuides == [
+            ImageEditorSpacingGuide(
+                orientation: .horizontal,
+                start: CGPoint(x: 30, y: 20),
+                end: CGPoint(x: 50, y: 20)
+            ),
+            ImageEditorSpacingGuide(
+                orientation: .vertical,
+                start: CGPoint(x: 50, y: 0),
+                end: CGPoint(x: 50, y: 20)
+            )
+        ])
+        #expect(
+            ImageEditorObjectDistanceMeasurement.guides(from: upperRight, to: source)
+                == upperRightGuides
+        )
+
+        let lowerLeftGuides = ImageEditorObjectDistanceMeasurement.guides(
+            from: source,
+            to: lowerLeft
+        )
+        #expect(lowerLeftGuides == [
+            ImageEditorSpacingGuide(
+                orientation: .horizontal,
+                start: CGPoint(x: -10, y: 60),
+                end: CGPoint(x: 10, y: 60)
+            ),
+            ImageEditorSpacingGuide(
+                orientation: .vertical,
+                start: CGPoint(x: 10, y: 40),
+                end: CGPoint(x: 10, y: 60)
+            )
+        ])
+        #expect(
+            ImageEditorObjectDistanceMeasurement.guides(from: lowerLeft, to: source)
+                == lowerLeftGuides
         )
     }
 

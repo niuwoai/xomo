@@ -33,49 +33,55 @@ enum ImageEditorObjectDistanceMeasurement {
             return []
         }
 
-        var guides: [ImageEditorSpacingGuide] = []
-        if let overlapY = overlap(source.minY...source.maxY, target.minY...target.maxY) {
-            let crossPosition = (overlapY.lowerBound + overlapY.upperBound) / 2
-            if source.maxX <= target.minX {
-                guides.append(
-                    ImageEditorSpacingGuide(
-                        orientation: .horizontal,
-                        start: CGPoint(x: source.maxX, y: crossPosition),
-                        end: CGPoint(x: target.minX, y: crossPosition)
-                    )
-                )
-            } else if target.maxX <= source.minX {
-                guides.append(
-                    ImageEditorSpacingGuide(
-                        orientation: .horizontal,
-                        start: CGPoint(x: target.maxX, y: crossPosition),
-                        end: CGPoint(x: source.minX, y: crossPosition)
-                    )
-                )
-            }
+        let overlapX = overlap(source.minX...source.maxX, target.minX...target.maxX)
+        let overlapY = overlap(source.minY...source.maxY, target.minY...target.maxY)
+        let horizontalGap: (left: CGRect, right: CGRect)?
+        if source.maxX <= target.minX {
+            horizontalGap = (source, target)
+        } else if target.maxX <= source.minX {
+            horizontalGap = (target, source)
+        } else {
+            horizontalGap = nil
+        }
+        let verticalGap: (upper: CGRect, lower: CGRect)?
+        if source.maxY <= target.minY {
+            verticalGap = (source, target)
+        } else if target.maxY <= source.minY {
+            verticalGap = (target, source)
+        } else {
+            verticalGap = nil
         }
 
-        if let overlapX = overlap(source.minX...source.maxX, target.minX...target.maxX) {
-            let crossPosition = (overlapX.lowerBound + overlapX.upperBound) / 2
-            if source.maxY <= target.minY {
-                guides.append(
-                    ImageEditorSpacingGuide(
-                        orientation: .vertical,
-                        start: CGPoint(x: crossPosition, y: source.maxY),
-                        end: CGPoint(x: crossPosition, y: target.minY)
-                    )
+        var guides: [ImageEditorSpacingGuide] = []
+        if let horizontalGap {
+            let crossPosition = overlapY.map { midpoint(of: $0) }
+                ?? (horizontalGap.left.maxY <= horizontalGap.right.minY
+                    ? horizontalGap.left.maxY
+                    : horizontalGap.left.minY)
+            guides.append(
+                ImageEditorSpacingGuide(
+                    orientation: .horizontal,
+                    start: CGPoint(x: horizontalGap.left.maxX, y: crossPosition),
+                    end: CGPoint(x: horizontalGap.right.minX, y: crossPosition)
                 )
-            } else if target.maxY <= source.minY {
-                guides.append(
-                    ImageEditorSpacingGuide(
-                        orientation: .vertical,
-                        start: CGPoint(x: crossPosition, y: target.maxY),
-                        end: CGPoint(x: crossPosition, y: source.minY)
-                    )
+            )
+        }
+
+        if let verticalGap,
+           let crossPosition = overlapX.map({ midpoint(of: $0) }) ?? horizontalGap?.right.minX {
+            guides.append(
+                ImageEditorSpacingGuide(
+                    orientation: .vertical,
+                    start: CGPoint(x: crossPosition, y: verticalGap.upper.maxY),
+                    end: CGPoint(x: crossPosition, y: verticalGap.lower.minY)
                 )
-            }
+            )
         }
         return guides
+    }
+
+    private static func midpoint(of range: ClosedRange<CGFloat>) -> CGFloat {
+        (range.lowerBound + range.upperBound) / 2
     }
 
     private static func overlap(
