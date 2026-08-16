@@ -142,6 +142,46 @@ extension ImageEditorViewModel {
         return canMoveSelectedLayer ? .movable : .blocked
     }
 
+    /// Resolves the object under an idle Option-hover without changing the
+    /// current selection. Distance inspection follows the Move tool's
+    /// Group/Layer scope, while component-library mode keeps whole components.
+    func moveToolDistanceInspectionTargetFrame(at point: CGPoint) -> CGRect? {
+        guard point.x.isFinite, point.y.isFinite else { return nil }
+
+        if selectedLeftSidebarTab == .components {
+            guard let object = topmostXomoObject(at: point),
+                  !document.selectedLayerIDs.contains(object.groupID)
+            else { return nil }
+            return object.frame.standardized
+        }
+
+        guard let leaf = frontmostVisibleCanvasLayer(at: point) else { return nil }
+        let target: ImageEditorLayer
+        switch moveToolAutoSelectTarget {
+        case .layer:
+            target = leaf
+        case .group:
+            target = document.ancestorGroups(for: leaf).last ?? leaf
+        }
+        guard !document.selectedLayerIDs.contains(target.id),
+              !document.ancestorGroups(for: target).contains(where: {
+                  document.selectedLayerIDs.contains($0.id)
+              })
+        else { return nil }
+
+        guard target.isGroup else { return target.frame.standardized }
+        return document.layers.lazy
+            .filter { layer in
+                !layer.isGroup
+                    && self.document.isEffectivelyVisible(layer)
+                    && self.document.ancestorGroups(for: layer).contains(where: { $0.id == target.id })
+            }
+            .map { $0.frame.standardized }
+            .reduce(nil) { bounds, frame in
+                bounds?.union(frame) ?? frame
+            }
+    }
+
     /// Resolves the visible leaf first, then optionally promotes it to the
     /// outermost ordinary/component group. This matches Photoshop's Group
     /// scope and Figma's first-click container selection.

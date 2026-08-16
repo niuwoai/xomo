@@ -8,6 +8,87 @@
 import AppKit
 import Foundation
 
+enum ImageEditorObjectDistanceInspectionPolicy {
+    static func shouldShow(
+        sidebarTab: XomoLeftSidebarTab,
+        selectedTool: ImageEditorTool,
+        modifierFlags: NSEvent.ModifierFlags,
+        hasActiveInteraction: Bool
+    ) -> Bool {
+        guard modifierFlags.contains(.option), !hasActiveInteraction else { return false }
+        switch sidebarTab {
+        case .components:
+            return true
+        case .tools:
+            return selectedTool == .move
+        }
+    }
+}
+
+enum ImageEditorObjectDistanceMeasurement {
+    static func guides(from sourceFrame: CGRect, to targetFrame: CGRect) -> [ImageEditorSpacingGuide] {
+        let source = sourceFrame.standardized
+        let target = targetFrame.standardized
+        guard source.width > 0, source.height > 0, target.width > 0, target.height > 0 else {
+            return []
+        }
+
+        var guides: [ImageEditorSpacingGuide] = []
+        if let overlapY = overlap(source.minY...source.maxY, target.minY...target.maxY) {
+            let crossPosition = (overlapY.lowerBound + overlapY.upperBound) / 2
+            if source.maxX <= target.minX {
+                guides.append(
+                    ImageEditorSpacingGuide(
+                        orientation: .horizontal,
+                        start: CGPoint(x: source.maxX, y: crossPosition),
+                        end: CGPoint(x: target.minX, y: crossPosition)
+                    )
+                )
+            } else if target.maxX <= source.minX {
+                guides.append(
+                    ImageEditorSpacingGuide(
+                        orientation: .horizontal,
+                        start: CGPoint(x: target.maxX, y: crossPosition),
+                        end: CGPoint(x: source.minX, y: crossPosition)
+                    )
+                )
+            }
+        }
+
+        if let overlapX = overlap(source.minX...source.maxX, target.minX...target.maxX) {
+            let crossPosition = (overlapX.lowerBound + overlapX.upperBound) / 2
+            if source.maxY <= target.minY {
+                guides.append(
+                    ImageEditorSpacingGuide(
+                        orientation: .vertical,
+                        start: CGPoint(x: crossPosition, y: source.maxY),
+                        end: CGPoint(x: crossPosition, y: target.minY)
+                    )
+                )
+            } else if target.maxY <= source.minY {
+                guides.append(
+                    ImageEditorSpacingGuide(
+                        orientation: .vertical,
+                        start: CGPoint(x: crossPosition, y: target.maxY),
+                        end: CGPoint(x: crossPosition, y: source.minY)
+                    )
+                )
+            }
+        }
+        return guides
+    }
+
+    private static func overlap(
+        _ lhs: ClosedRange<CGFloat>,
+        _ rhs: ClosedRange<CGFloat>
+    ) -> ClosedRange<CGFloat>? {
+        let lowerBound = max(lhs.lowerBound, rhs.lowerBound)
+        let upperBound = min(lhs.upperBound, rhs.upperBound)
+        guard lowerBound <= upperBound else { return nil }
+        return lowerBound...upperBound
+    }
+}
+
 @MainActor
 extension ImageEditorViewModel {
     func addVerticalGuideAtCanvasCenter() {

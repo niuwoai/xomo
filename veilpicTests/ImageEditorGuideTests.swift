@@ -12,6 +12,175 @@ import Testing
 @MainActor
 struct ImageEditorGuideTests {
     @Test
+    func objectDistanceInspectionRequiresIdleOptionInObjectEditingModes() {
+        #expect(ImageEditorObjectDistanceInspectionPolicy.shouldShow(
+            sidebarTab: .tools,
+            selectedTool: .move,
+            modifierFlags: [.option],
+            hasActiveInteraction: false
+        ))
+        #expect(ImageEditorObjectDistanceInspectionPolicy.shouldShow(
+            sidebarTab: .components,
+            selectedTool: .brush,
+            modifierFlags: [.option],
+            hasActiveInteraction: false
+        ))
+        #expect(!ImageEditorObjectDistanceInspectionPolicy.shouldShow(
+            sidebarTab: .tools,
+            selectedTool: .brush,
+            modifierFlags: [.option],
+            hasActiveInteraction: false
+        ))
+        #expect(!ImageEditorObjectDistanceInspectionPolicy.shouldShow(
+            sidebarTab: .tools,
+            selectedTool: .move,
+            modifierFlags: [],
+            hasActiveInteraction: false
+        ))
+        #expect(!ImageEditorObjectDistanceInspectionPolicy.shouldShow(
+            sidebarTab: .components,
+            selectedTool: .move,
+            modifierFlags: [.option],
+            hasActiveInteraction: true
+        ))
+    }
+
+    @Test
+    func objectDistanceMeasurementUsesNearestOrthogonalEdges() {
+        let source = CGRect(x: 10, y: 20, width: 20, height: 20)
+        let rightTarget = CGRect(x: 50, y: 25, width: 30, height: 10)
+        let upperTarget = CGRect(x: 15, y: 60, width: 10, height: 20)
+
+        let horizontal = ImageEditorObjectDistanceMeasurement.guides(
+            from: source,
+            to: rightTarget
+        )
+        #expect(horizontal == [
+            ImageEditorSpacingGuide(
+                orientation: .horizontal,
+                start: CGPoint(x: 30, y: 30),
+                end: CGPoint(x: 50, y: 30)
+            )
+        ])
+        #expect(
+            ImageEditorObjectDistanceMeasurement.guides(from: rightTarget, to: source)
+                == horizontal
+        )
+
+        let vertical = ImageEditorObjectDistanceMeasurement.guides(
+            from: source,
+            to: upperTarget
+        )
+        #expect(vertical == [
+            ImageEditorSpacingGuide(
+                orientation: .vertical,
+                start: CGPoint(x: 20, y: 40),
+                end: CGPoint(x: 20, y: 60)
+            )
+        ])
+        #expect(
+            ImageEditorObjectDistanceMeasurement.guides(
+                from: source,
+                to: CGRect(x: 50, y: 60, width: 20, height: 20)
+            ).isEmpty
+        )
+        #expect(
+            ImageEditorObjectDistanceMeasurement.guides(
+                from: source,
+                to: CGRect(x: 15, y: 25, width: 10, height: 10)
+            ).isEmpty
+        )
+    }
+
+    @Test
+    func distanceInspectionResolvesHoverTargetsWithoutChangingSelection() throws {
+        let viewModel = transformableViewModel(
+            sourceName: "source.png",
+            image: testImage(color: .systemBlue, size: NSSize(width: 160, height: 100))
+        )
+        let selectedID = try #require(viewModel.document.selectedLayerID)
+        var targetLayer = ImageEditorLayer.blank(name: "Target", size: CGSize(width: 30, height: 20))
+        targetLayer.image = testImage(color: .systemOrange, size: CGSize(width: 30, height: 20))
+        targetLayer.frame = CGRect(x: 90, y: 20, width: 30, height: 20)
+        viewModel.document.layers.append(targetLayer)
+
+        #expect(
+            viewModel.moveToolDistanceInspectionTargetFrame(at: CGPoint(x: 100, y: 30))
+                == targetLayer.frame
+        )
+        #expect(viewModel.document.selectedLayerID == selectedID)
+        #expect(viewModel.moveToolDistanceInspectionTargetFrame(at: CGPoint(x: 10, y: 10)) == nil)
+        #expect(viewModel.document.selectedLayerID == selectedID)
+    }
+
+    @Test
+    func distanceInspectionFollowsMoveToolGroupAndLayerScopes() throws {
+        let viewModel = transformableViewModel(
+            sourceName: "source.png",
+            image: testImage(color: .systemBlue, size: NSSize(width: 200, height: 120))
+        )
+        let selectedID = try #require(viewModel.document.selectedLayerID)
+        var firstChild = ImageEditorLayer.solidColorFill(
+            name: "First child",
+            size: CGSize(width: 30, height: 20),
+            content: ImageEditorSolidColorFillContent(red: 0.8, green: 0.3, blue: 0.2)
+        )
+        firstChild.frame = CGRect(x: 90, y: 20, width: 30, height: 20)
+        var secondChild = ImageEditorLayer.solidColorFill(
+            name: "Second child",
+            size: CGSize(width: 20, height: 10),
+            content: ImageEditorSolidColorFillContent(red: 0.2, green: 0.7, blue: 0.4)
+        )
+        secondChild.frame = CGRect(x: 130, y: 30, width: 20, height: 10)
+        let group = ImageEditorLayer.group(
+            name: "Measured group",
+            size: viewModel.document.canvasSize
+        )
+        firstChild.groupID = group.id
+        secondChild.groupID = group.id
+        viewModel.document.layers.append(contentsOf: [firstChild, secondChild, group])
+        let hoverPoint = CGPoint(x: firstChild.frame.midX, y: firstChild.frame.midY)
+
+        viewModel.moveToolAutoSelectTarget = .group
+        #expect(
+            viewModel.moveToolDistanceInspectionTargetFrame(at: hoverPoint)
+                == firstChild.frame.union(secondChild.frame)
+        )
+
+        viewModel.moveToolAutoSelectTarget = .layer
+        #expect(viewModel.moveToolDistanceInspectionTargetFrame(at: hoverPoint) == firstChild.frame)
+        #expect(viewModel.document.selectedLayerID == selectedID)
+    }
+
+    @Test
+    func componentDistanceInspectionTargetsWholeUnselectedComponents() throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "source.png",
+            image: testImage(color: .windowBackgroundColor, size: NSSize(width: 420, height: 240))
+        ) { _ in }
+        viewModel.insertXomoComponent(.button, at: CGPoint(x: 90, y: 90))
+        let firstID = try #require(viewModel.document.selectedLayerID)
+        let firstFrame = try #require(viewModel.selectedXomoObjectFrame)
+        viewModel.insertXomoComponent(.card, at: CGPoint(x: 300, y: 120))
+        let secondID = try #require(viewModel.document.selectedLayerID)
+        let secondFrame = try #require(viewModel.selectedXomoObjectFrame)
+        #expect(firstID != secondID)
+        viewModel.selectedLeftSidebarTab = .components
+
+        #expect(
+            viewModel.moveToolDistanceInspectionTargetFrame(
+                at: CGPoint(x: firstFrame.midX, y: firstFrame.midY)
+            ) == firstFrame
+        )
+        #expect(
+            viewModel.moveToolDistanceInspectionTargetFrame(
+                at: CGPoint(x: secondFrame.midX, y: secondFrame.midY)
+            ) == nil
+        )
+        #expect(viewModel.document.selectedLayerID == secondID)
+    }
+
+    @Test
     func spacingGuideDistanceAndLabelFollowTheGuideAxisAndLocale() {
         let horizontal = ImageEditorSpacingGuide(
             orientation: .horizontal,

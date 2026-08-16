@@ -6975,7 +6975,11 @@ struct ImageEditorView: View {
     }
 
     private func guideOverlay(in size: CGSize) -> some View {
-        Canvas { context, _ in
+        let inspectedSpacingGuides = objectDistanceInspectionGuides(in: size)
+        let displayedSpacingGuides = viewModel.activeSpacingGuides.isEmpty
+            ? inspectedSpacingGuides
+            : viewModel.activeSpacingGuides
+        return Canvas { context, _ in
             if viewModel.document.areExtrasVisible && viewModel.document.areGuidesVisible {
                 for guide in viewModel.document.guides {
                     context.stroke(
@@ -7006,7 +7010,7 @@ struct ImageEditorView: View {
                 )
             }
 
-            for guide in viewModel.activeSpacingGuides {
+            for guide in displayedSpacingGuides {
                 context.stroke(
                     spacingGuidePath(guide, in: size),
                     with: .color(Color(nsColor: ImageEditorTheme.selected).opacity(0.96)),
@@ -7016,6 +7020,36 @@ struct ImageEditorView: View {
             }
         }
         .allowsHitTesting(false)
+    }
+
+    private func objectDistanceInspectionGuides(in size: CGSize) -> [ImageEditorSpacingGuide] {
+        let hasActiveInteraction = viewModel.hasActiveLayerMoveTransaction
+            || isObjectMoveGestureActive
+            || isSelectedObjectMoveGestureActive
+            || isCanvasCloneGestureActive
+            || isCanvasSelectionGestureActive
+            || activeResizeHandle != nil
+            || isRotatingLayer
+            || isMovingTransformReferencePoint
+            || isCanvasPanGestureActive
+            || isDeliveryObjectMoveGestureActive
+            || activeGuideDrag != nil
+        guard ImageEditorObjectDistanceInspectionPolicy.shouldShow(
+            sidebarTab: viewModel.selectedLeftSidebarTab,
+            selectedTool: viewModel.selectedTool,
+            modifierFlags: canvasModifierFlags,
+            hasActiveInteraction: hasActiveInteraction
+        ), let hoverViewPoint,
+           let canvasPoint = imagePoint(from: hoverViewPoint, in: size),
+           let sourceFrame = viewModel.selectedXomoObjectFrame
+                ?? viewModel.selectedLayerTransformFrame,
+           let targetFrame = viewModel.moveToolDistanceInspectionTargetFrame(at: canvasPoint)
+        else { return [] }
+
+        return ImageEditorObjectDistanceMeasurement.guides(
+            from: sourceFrame,
+            to: targetFrame
+        )
     }
 
     private func spacingGuidePath(_ guide: ImageEditorSpacingGuide, in size: CGSize) -> Path {
