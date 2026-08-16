@@ -133,6 +133,25 @@ extension ImageEditorSelection {
         return image
     }
 
+    func quickMaskGrayscalePreviewImage(
+        canvasSize: CGSize,
+        target: ImageEditorQuickMaskOverlayTarget
+    ) -> NSImage? {
+        guard let mask = rasterizedMask(canvasSize: canvasSize) else { return nil }
+        let displayedMask: ImageEditorSelectionMask
+        switch target {
+        case .maskedAreas:
+            displayedMask = mask
+        case .selectedAreas:
+            displayedMask = ImageEditorSelectionMask(
+                width: mask.width,
+                height: mask.height,
+                alpha: mask.alpha.map { UInt8.max - $0 }
+            )
+        }
+        return displayedMask.grayscalePreviewImage(targetSize: canvasSize)
+    }
+
     func expanded(by radius: Int, canvasSize: CGSize) -> ImageEditorSelection? {
         guard radius > 0 else { return self }
         guard let mask = rasterizedMask(canvasSize: canvasSize),

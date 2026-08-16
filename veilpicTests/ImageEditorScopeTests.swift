@@ -328,6 +328,41 @@ struct ImageEditorScopeTests {
         #expect(!quickMaskMenuSource.contains(".disabled"))
     }
 
+    @Test func quickMaskGrayscalePreviewSharesOptionsAndKeyboardEntryPoints() throws {
+        let source = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let optionsStart = try #require(
+            source.range(of: "private var quickMaskOptionsPopover: some View")
+        )
+        let optionsEnd = try #require(
+            source[optionsStart.upperBound...].range(of: "private var quickMaskOverlayColorBinding")
+        )
+        let optionsSource = source[optionsStart.lowerBound..<optionsEnd.lowerBound]
+        #expect(optionsSource.contains("ImageEditorQuickMaskPreviewMode.allCases"))
+        #expect(optionsSource.contains("viewModel.setQuickMaskPreviewMode(mode)"))
+        #expect(optionsSource.contains("viewModel.quickMaskPreviewMode == mode"))
+        #expect(optionsSource.contains(".disabled(!viewModel.isQuickMaskMode)"))
+        #expect(optionsSource.contains("imageEditor.help.quickMaskPreview"))
+
+        #expect(
+            source.contains(
+                "canToggleQuickMaskGrayscalePreview: viewModel.isQuickMaskMode"
+            )
+        )
+        #expect(
+            source.contains(
+                "case .toggleQuickMaskGrayscalePreview: viewModel.toggleQuickMaskGrayscalePreview()"
+            )
+        )
+        #expect(
+            source.contains(
+                "canToggleQuickMaskGrayscalePreview: canToggleQuickMaskGrayscalePreview"
+            )
+        )
+    }
+
     @Test func toolRailProvidesExplicitLocalizedAccessibleNamesWithoutKeyboardFocus() throws {
         let source = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),

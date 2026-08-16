@@ -3237,9 +3237,15 @@
 "imageEditor.quickMask.targetLabel" = "Color Indicates";
 "imageEditor.quickMask.target.maskedAreas" = "Masked Areas";
 "imageEditor.quickMask.target.selectedAreas" = "Selected Areas";
+"imageEditor.quickMask.previewLabel" = "View";
+"imageEditor.quickMask.preview.overlay" = "Color Overlay";
+"imageEditor.quickMask.preview.grayscale" = "Grayscale Mask";
+"imageEditor.help.quickMaskPreview" = "Switch Quick Mask view (Shift + `)";
 "imageEditor.quickMask.color" = "Color";
 "imageEditor.quickMask.opacity" = "Opacity";
 "imageEditor.status.quickMaskOptionsUpdated" = "Quick Mask display options updated";
+"imageEditor.status.quickMaskGrayscaleEnabled" = "Quick Mask grayscale preview enabled";
+"imageEditor.status.quickMaskOverlayRestored" = "Quick Mask color overlay restored";
 "imageEditor.option.cloneAligned" = "Aligned";
 "imageEditor.option.cloneSampleSource" = "Sample";
 "imageEditor.option.healingMode" = "Healing Mode";

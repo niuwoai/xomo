@@ -29,6 +29,17 @@ enum ImageEditorQuickMaskControlAction: Equatable {
     }
 }
 
+enum ImageEditorQuickMaskPreviewMode: String, CaseIterable, Identifiable {
+    case overlay
+    case grayscale
+
+    var id: String { rawValue }
+
+    var title: String {
+        L10n.text("imageEditor.quickMask.preview.\(rawValue)")
+    }
+}
+
 struct ImageEditorQuickMaskPreferences: Codable, Equatable {
     static let storageKey = "im.some.xomo.imageEditor.quickMaskPreferences"
     static let minimumOpacity = 0.05

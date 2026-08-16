@@ -171,6 +171,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var selectionMode: ImageEditorSelectionMode = .replace
     @Published var isQuickMaskMode = false
     @Published private(set) var quickMaskOverlayImage: NSImage?
+    @Published private(set) var quickMaskPreviewMode: ImageEditorQuickMaskPreviewMode = .overlay
     private var quickMaskSelectionOriginUndoIndex: Int?
     private var quickMaskOriginalForegroundColor: NSColor?
     private var quickMaskOriginalBackgroundColor: NSColor?
@@ -763,6 +764,11 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     var previewImage: NSImage {
+        if isQuickMaskMode,
+           quickMaskPreviewMode == .grayscale,
+           let image = quickMaskGrayscalePreviewImage {
+            return image
+        }
         if previewedLayerMaskMode == .solo,
            let image = layerMaskSoloPreviewImage {
             return image
@@ -859,7 +865,14 @@ final class ImageEditorViewModel: ObservableObject {
         if previewedLayerMaskMode == .rubylith {
             return layerMaskRubylithOverlayImage
         }
-        return quickMaskOverlayImage
+        return quickMaskPreviewMode == .overlay ? quickMaskOverlayImage : nil
+    }
+
+    private var quickMaskGrayscalePreviewImage: NSImage? {
+        document.selection?.quickMaskGrayscalePreviewImage(
+            canvasSize: document.canvasSize,
+            target: quickMaskOverlayTarget
+        )
     }
 
     private var layerMaskSoloPreviewImage: NSImage? {
@@ -3768,6 +3781,7 @@ final class ImageEditorViewModel: ObservableObject {
             quickMaskSelectionOriginUndoIndex = nil
         }
         isQuickMaskMode = true
+        quickMaskPreviewMode = .overlay
         quickMaskOriginalForegroundColor = foregroundColor
         quickMaskOriginalBackgroundColor = backgroundColor
         foregroundColor = .black
@@ -3814,7 +3828,25 @@ final class ImageEditorViewModel: ObservableObject {
         quickMaskOriginalForegroundColor = nil
         quickMaskOriginalBackgroundColor = nil
         isQuickMaskMode = false
+        quickMaskPreviewMode = .overlay
         quickMaskOverlayImage = nil
+    }
+
+    func setQuickMaskPreviewMode(_ mode: ImageEditorQuickMaskPreviewMode) {
+        guard isQuickMaskMode, quickMaskPreviewMode != mode else { return }
+        quickMaskPreviewMode = mode
+        statusText = L10n.text(
+            mode == .grayscale
+                ? "imageEditor.status.quickMaskGrayscaleEnabled"
+                : "imageEditor.status.quickMaskOverlayRestored"
+        )
+    }
+
+    @discardableResult
+    func toggleQuickMaskGrayscalePreview() -> Bool {
+        guard isQuickMaskMode else { return false }
+        setQuickMaskPreviewMode(quickMaskPreviewMode == .overlay ? .grayscale : .overlay)
+        return true
     }
 
     func setQuickMaskOverlayTarget(_ target: ImageEditorQuickMaskOverlayTarget) {

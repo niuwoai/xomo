@@ -447,6 +447,94 @@ struct ImageEditorSelectionOperationTests {
         #expect(viewModel.undoStack.count == undoCount + 3)
     }
 
+    @Test func quickMaskGrayscalePreviewFollowsTargetAndResetsOnExit() throws {
+        let canvasSize = NSSize(width: 4, height: 2)
+        let viewModel = ImageEditorViewModel(
+            sourceName: "quick-mask-grayscale-preview.png",
+            image: solidImage(color: .systemRed, size: canvasSize)
+        ) { _ in }
+        let selectionMask = ImageEditorSelectionMask(
+            width: 4,
+            height: 2,
+            alpha: [
+                UInt8.max, UInt8.max, UInt8.min, UInt8.min,
+                UInt8.max, UInt8.max, UInt8.min, UInt8.min
+            ]
+        )
+        viewModel.document.selection = .raster(
+            mask: selectionMask,
+            bounds: CGRect(x: 0, y: 0, width: 2, height: 2)
+        )
+        viewModel.setQuickMaskOverlayTarget(.maskedAreas)
+        viewModel.toggleQuickMaskMode()
+        let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
+
+        #expect(viewModel.quickMaskPreviewMode == .overlay)
+        #expect(viewModel.canvasMaskOverlayImage != nil)
+        let compositeColor = try #require(
+            quickMaskColor(viewModel.previewImage, x: 0, y: 0)?.usingColorSpace(.deviceRGB)
+        )
+        #expect(compositeColor.redComponent > 0.9)
+
+        #expect(viewModel.toggleQuickMaskGrayscalePreview())
+        #expect(viewModel.quickMaskPreviewMode == .grayscale)
+        #expect(viewModel.canvasMaskOverlayImage == nil)
+        var selectedColor = try #require(
+            quickMaskColor(viewModel.previewImage, x: 0, y: 0)?.usingColorSpace(.deviceRGB)
+        )
+        var maskedColor = try #require(
+            quickMaskColor(viewModel.previewImage, x: 3, y: 0)?.usingColorSpace(.deviceRGB)
+        )
+        #expect(selectedColor.redComponent > 0.99)
+        #expect(maskedColor.redComponent < 0.01)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.quickMaskGrayscaleEnabled"))
+
+        viewModel.setQuickMaskOverlayTarget(.selectedAreas)
+        selectedColor = try #require(
+            quickMaskColor(viewModel.previewImage, x: 0, y: 0)?.usingColorSpace(.deviceRGB)
+        )
+        maskedColor = try #require(
+            quickMaskColor(viewModel.previewImage, x: 3, y: 0)?.usingColorSpace(.deviceRGB)
+        )
+        #expect(selectedColor.redComponent < 0.01)
+        #expect(maskedColor.redComponent > 0.99)
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.undoStack.count == undoCount)
+
+        #expect(viewModel.toggleQuickMaskGrayscalePreview())
+        #expect(viewModel.quickMaskPreviewMode == .overlay)
+        #expect(viewModel.canvasMaskOverlayImage != nil)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.quickMaskOverlayRestored"))
+
+        #expect(viewModel.toggleQuickMaskGrayscalePreview())
+        viewModel.toggleQuickMaskMode()
+        #expect(!viewModel.isQuickMaskMode)
+        #expect(viewModel.quickMaskPreviewMode == .overlay)
+        #expect(viewModel.canvasMaskOverlayImage == nil)
+        #expect(!viewModel.toggleQuickMaskGrayscalePreview())
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.undoStack.count == undoCount)
+
+        #expect(ImageEditorKeyboardShortcutAction.resolve(
+            charactersIgnoringModifiers: "`",
+            modifierFlags: [.shift],
+            keyCode: 50,
+            canToggleQuickMaskGrayscalePreview: true
+        ) == .toggleQuickMaskGrayscalePreview)
+        #expect(ImageEditorKeyboardShortcutAction.resolve(
+            charactersIgnoringModifiers: "`",
+            modifierFlags: [.shift],
+            keyCode: 50
+        ) == nil)
+        #expect(ImageEditorKeyboardShortcutAction.resolve(
+            charactersIgnoringModifiers: "`",
+            modifierFlags: [],
+            keyCode: 50,
+            canToggleQuickMaskGrayscalePreview: true
+        ) == nil)
+    }
+
     @Test func quickMaskStrokeHonorsOpacityAndBrushDiameter() throws {
         let width = 16
         let height = 16
@@ -1364,7 +1452,9 @@ struct ImageEditorSelectionOperationTests {
     }
 
     private func quickMaskColor(_ image: NSImage?, x: Int, y: Int) -> NSColor? {
-        guard let bitmap = image?.representations.compactMap({ $0 as? NSBitmapImageRep }).first,
+        guard let image,
+              let bitmap = image.representations.compactMap({ $0 as? NSBitmapImageRep }).first
+                ?? image.tiffRepresentation.flatMap(NSBitmapImageRep.init(data:)),
               x >= 0,
               y >= 0,
               x < bitmap.pixelsWide,

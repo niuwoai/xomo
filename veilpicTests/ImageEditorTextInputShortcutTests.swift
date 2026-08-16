@@ -30,6 +30,7 @@ struct ImageEditorTextInputShortcutTests {
         #expect(!ImageEditorKeyboardShortcutAction.copyMergedClipboard.isBlockedByTextInput)
         #expect(!ImageEditorKeyboardShortcutAction.pasteClipboardInPlaceLayer.isBlockedByTextInput)
         #expect(ImageEditorKeyboardShortcutAction.toggleQuickMask.isBlockedByTextInput)
+        #expect(ImageEditorKeyboardShortcutAction.toggleQuickMaskGrayscalePreview.isBlockedByTextInput)
         #expect(ImageEditorKeyboardShortcutAction.toggleLayerMaskRubylith.isBlockedByTextInput)
     }
 

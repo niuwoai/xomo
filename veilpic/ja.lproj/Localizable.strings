@@ -3237,9 +3237,15 @@
 "imageEditor.quickMask.targetLabel" = "カラー表示";
 "imageEditor.quickMask.target.maskedAreas" = "マスク領域";
 "imageEditor.quickMask.target.selectedAreas" = "選択領域";
+"imageEditor.quickMask.previewLabel" = "表示";
+"imageEditor.quickMask.preview.overlay" = "カラーオーバーレイ";
+"imageEditor.quickMask.preview.grayscale" = "グレースケールマスク";
+"imageEditor.help.quickMaskPreview" = "クイックマスク表示を切り替え（Shift + `）";
 "imageEditor.quickMask.color" = "カラー";
 "imageEditor.quickMask.opacity" = "不透明度";
 "imageEditor.status.quickMaskOptionsUpdated" = "クイックマスクの表示オプションを更新しました";
+"imageEditor.status.quickMaskGrayscaleEnabled" = "クイックマスクのグレースケールプレビューを有効にしました";
+"imageEditor.status.quickMaskOverlayRestored" = "クイックマスクのカラーオーバーレイを復元しました";
 "imageEditor.option.cloneAligned" = "整列";
 "imageEditor.option.cloneSampleSource" = "サンプル";
 "imageEditor.option.healingMode" = "修復モード";
