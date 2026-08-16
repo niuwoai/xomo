@@ -7517,7 +7517,18 @@ struct ImageEditorView: View {
     }
 
     private func deleteSelectedGradientOverlayStopIfNeeded() -> Bool {
-        guard let selectedGradientOverlayStopIndex else { return false }
+        guard viewModel.selectedLeftSidebarTab == .tools,
+              canvasInteractionTool == .move,
+              viewModel.document.areExtrasVisible,
+              viewModel.canEditSelectedLayerGradientOverlayCanvasCenter,
+              let selectedGradientOverlayStopIndex,
+              let selectedHandle = viewModel.selectedLayerGradientOverlayCanvasStopHandlePoints.first(
+                  where: { $0.index == selectedGradientOverlayStopIndex }
+              )
+        else { return false }
+        if selectedHandle.isEndpoint {
+            return true
+        }
         return removeGradientOverlayCanvasStop(at: selectedGradientOverlayStopIndex)
     }
 
@@ -7962,14 +7973,16 @@ struct ImageEditorView: View {
         canvasSize: CGSize
     ) -> some View {
         let isSelected = selectedGradientOverlayStopIndex == point.index
+        let isEndpoint = point.isEndpoint
         let isBeingRemoved = activeGradientOverlayStopIndex == point.index
             && isGradientOverlayStopDragRemovalPreview
         let axis = CGVector(dx: axisEndpoint.x - axisStart.x, dy: axisEndpoint.y - axisStart.y)
         let length = max(0.001, hypot(axis.dx, axis.dy))
         let canvasPosition = viewPoint(from: point.canvasPoint, in: canvasSize)
+        let perpendicularOffset: CGFloat = isEndpoint ? 20 : 14
         let position = CGPoint(
-            x: canvasPosition.x - axis.dy / length * 14,
-            y: canvasPosition.y + axis.dx / length * 14
+            x: canvasPosition.x - axis.dy / length * perpendicularOffset,
+            y: canvasPosition.y + axis.dx / length * perpendicularOffset
         )
         return RoundedRectangle(cornerRadius: 2, style: .continuous)
             .fill(
@@ -7990,7 +8003,7 @@ struct ImageEditorView: View {
             .frame(width: 12, height: 12)
             .rotationEffect(.degrees(45))
             .position(position)
-            .contentShape(Rectangle().inset(by: -7))
+            .contentShape(Rectangle().inset(by: isEndpoint ? -3 : -7))
             .highPriorityGesture(
                 DragGesture(
                     minimumDistance: 0,
@@ -8002,6 +8015,7 @@ struct ImageEditorView: View {
                         selectedGradientOverlayStopIndex = point.index
                         selectedGradientOverlayMidpointIndex = nil
                     }
+                    guard !isEndpoint else { return }
                     if let cancelledStart = cancelledGradientOverlayStopDragStartLocation {
                         guard cancelledStart != value.startLocation else { return }
                         cancelledGradientOverlayStopDragStartLocation = nil
@@ -8090,19 +8104,38 @@ struct ImageEditorView: View {
                     viewModel.finishEditingSelectedLayerGradientOverlayCanvasStop()
                 }
             )
+            .zIndex(isEndpoint ? 2 : 0)
             .allowsHitTesting(viewModel.canEditSelectedLayerGradientOverlayCanvasCenter)
             .opacity(viewModel.canEditSelectedLayerGradientOverlayCanvasCenter ? 1 : 0.55)
             .contextMenu {
-                Button(role: .destructive) {
-                    _ = removeGradientOverlayCanvasStop(at: point.index)
-                } label: {
-                    Label(
-                        L10n.text("imageEditor.action.shapeGradientStopRemove"),
-                        systemImage: "trash"
-                    )
+                if !isEndpoint {
+                    Button(role: .destructive) {
+                        _ = removeGradientOverlayCanvasStop(at: point.index)
+                    } label: {
+                        Label(
+                            L10n.text("imageEditor.action.shapeGradientStopRemove"),
+                            systemImage: "trash"
+                        )
+                    }
                 }
             }
-            .help(L10n.text("imageEditor.help.gradientOverlayStopHandle"))
+            .help(L10n.text(
+                isEndpoint
+                    ? "imageEditor.help.gradientOverlayEndpointHandle"
+                    : "imageEditor.help.gradientOverlayStopHandle"
+            ))
+            .accessibilityLabel(
+                L10n.format(
+                    "imageEditor.properties.shapeGradientStopAccessibility",
+                    point.index + 1,
+                    Int(
+                        ((viewModel.selectedLayerGradientOverlayCanvasIsReversed
+                            ? 1 - point.stop.position
+                            : point.stop.position) * 100).rounded()
+                    ),
+                    Int((point.stop.alpha * 100).rounded())
+                )
+            )
             .accessibilityIdentifier(
                 "image-editor-gradient-overlay-canvas-stop-\(point.index)"
             )

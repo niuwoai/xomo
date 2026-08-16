@@ -51,6 +51,7 @@ struct ImageEditorGradientOverlayStopHandlePoint: Identifiable, Equatable {
     var index: Int
     var canvasPoint: CGPoint
     var stop: ImageEditorGradientColorStop
+    var isEndpoint: Bool
 
     var id: Int { index }
 }
@@ -94,11 +95,11 @@ enum ImageEditorGradientOverlayCanvasHandleSelectionPolicy {
         guard stopCount >= 2 else { return nil }
         var ordered: [ImageEditorGradientOverlayCanvasHandleSelection] = []
         for lowerStopIndex in 0..<(stopCount - 1) {
-            ordered.append(.midpoint(after: lowerStopIndex))
-            let upperStopIndex = lowerStopIndex + 1
-            if upperStopIndex < stopCount - 1 {
-                ordered.append(.stop(upperStopIndex))
+            if lowerStopIndex == 0 {
+                ordered.append(.stop(0))
             }
+            ordered.append(.midpoint(after: lowerStopIndex))
+            ordered.append(.stop(lowerStopIndex + 1))
         }
         if isReversed {
             ordered.reverse()
@@ -256,7 +257,7 @@ enum ImageEditorGradientOverlayAxisGeometry {
         let normalizedStops = ImageEditorGradientFillContent.shapeLinear(
             colorStops: stops
         ).shapeColorStops
-        return normalizedStops.indices.dropFirst().dropLast().map { index in
+        return normalizedStops.indices.map { index in
             let stop = normalizedStops[index]
             let displayedPosition = reverse ? 1 - stop.position : stop.position
             return ImageEditorGradientOverlayStopHandlePoint(
@@ -266,7 +267,9 @@ enum ImageEditorGradientOverlayAxisGeometry {
                     from: geometry.axisStart,
                     to: geometry.axisEndpoint
                 ),
-                stop: stop
+                stop: stop,
+                isEndpoint: index == normalizedStops.startIndex
+                    || index == normalizedStops.index(before: normalizedStops.endIndex)
             )
         }
     }

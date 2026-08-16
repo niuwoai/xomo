@@ -990,7 +990,8 @@
 "imageEditor.help.gradientOverlayCenterHandle" = "ドラッグしてグラデーションオーバーレイの中心を移動します";
 "imageEditor.help.gradientOverlayAxisHandle" = "ドラッグして角度とスケールを調整します。Shift キーで角度をスナップします";
 "imageEditor.help.gradientOverlayAxis" = "ダブルクリックしてグラデーションオーバーレイのカラーストップを追加します";
-"imageEditor.help.gradientOverlayStopHandle" = "クリックで選択し、他のストップを越えてドラッグすると並べ替え、軸から離すと削除、Option ドラッグで複製、Shift で 5% スナップします。左右キー、Home/End、Delete も使えます";
+"imageEditor.help.gradientOverlayStopHandle" = "クリックで選択してオプションバーで色を編集できます。他のストップを越えてドラッグすると並べ替え、軸から離すと削除、Option ドラッグで複製、Shift で 5% スナップします。Tab、左右キー、Home/End、Delete も使えます";
+"imageEditor.help.gradientOverlayEndpointHandle" = "グラデーション端点をクリックして選択し、オプションバーで色を編集します。端点位置は固定され削除できず、Tab または Shift-Tab で移動できます";
 "imageEditor.help.gradientOverlayMidpointHandle" = "クリックで選択し、ドラッグ（Shift で 5% スナップ）または左右キー、Home/End で端へ、Delete で 50% に戻します";
 "imageEditor.help.shapeGradientStopHandle" = "中間ストップをグラデーション軸に沿ってドラッグします";
 "imageEditor.help.shapeGradientMidpointHandle" = "隣接するカラー間の遷移中間点をドラッグします";

@@ -2351,31 +2351,41 @@ struct ImageEditorLayerStyleTests {
             ImageEditorGradientColorStop(position: 0.25, color: .systemGreen),
             ImageEditorGradientColorStop(position: 1, color: .systemBlue)
         ]
-        let linear = try #require(
-            ImageEditorGradientOverlayAxisGeometry.stopHandlePoints(
-                style: .linear,
-                center: center,
-                angle: 0,
-                scale: 1,
-                reverse: false,
-                stops: stops,
-                layerFrame: frame
-            ).first
+        let linearHandles = ImageEditorGradientOverlayAxisGeometry.stopHandlePoints(
+            style: .linear,
+            center: center,
+            angle: 0,
+            scale: 1,
+            reverse: false,
+            stops: stops,
+            layerFrame: frame
         )
+        #expect(linearHandles.map(\.index) == [0, 1, 2])
+        #expect(linearHandles.map(\.isEndpoint) == [true, false, true])
+        #expect(linearHandles.map(\.canvasPoint) == [
+            CGPoint(x: 0, y: 25),
+            CGPoint(x: 25, y: 25),
+            CGPoint(x: 100, y: 25)
+        ])
+        let linear = try #require(linearHandles.first { $0.index == 1 })
         #expect(linear.index == 1)
         #expect(linear.canvasPoint == CGPoint(x: 25, y: 25))
 
-        let reversed = try #require(
-            ImageEditorGradientOverlayAxisGeometry.stopHandlePoints(
-                style: .linear,
-                center: center,
-                angle: 0,
-                scale: 1,
-                reverse: true,
-                stops: stops,
-                layerFrame: frame
-            ).first
+        let reversedHandles = ImageEditorGradientOverlayAxisGeometry.stopHandlePoints(
+            style: .linear,
+            center: center,
+            angle: 0,
+            scale: 1,
+            reverse: true,
+            stops: stops,
+            layerFrame: frame
         )
+        #expect(reversedHandles.map(\.canvasPoint) == [
+            CGPoint(x: 100, y: 25),
+            CGPoint(x: 75, y: 25),
+            CGPoint(x: 0, y: 25)
+        ])
+        let reversed = try #require(reversedHandles.first { $0.index == 1 })
         #expect(reversed.canvasPoint == CGPoint(x: 75, y: 25))
         #expect(
             ImageEditorGradientOverlayAxisGeometry.logicalStopPosition(
@@ -2403,7 +2413,7 @@ struct ImageEditorLayerStyleTests {
                     reverse: false,
                     stops: stops,
                     layerFrame: frame
-                ).first
+                ).first { $0.index == 1 }
             )
             let logical = try #require(
                 ImageEditorGradientOverlayAxisGeometry.logicalStopPosition(
@@ -2695,6 +2705,13 @@ struct ImageEditorLayerStyleTests {
 
         #expect(viewModel.removeSelectedLayerGradientOverlayCanvasStop(at: 0) == nil)
         #expect(viewModel.removeSelectedLayerGradientOverlayCanvasStop(at: 2) == nil)
+        #expect(!viewModel.beginEditingSelectedLayerGradientOverlayCanvasStop(at: 0))
+        #expect(
+            !viewModel.nudgeSelectedLayerGradientOverlayCanvasStop(
+                at: 0,
+                displayedDelta: 0.1
+            )
+        )
         #expect(viewModel.beginEditingSelectedLayerGradientOverlayCanvasStop(at: 1))
         #expect(viewModel.removeSelectedLayerGradientOverlayCanvasStop(at: 1) == nil)
         #expect(viewModel.cancelEditingSelectedLayerGradientOverlayCanvasStop())
@@ -2795,6 +2812,14 @@ struct ImageEditorLayerStyleTests {
                 stopCount: 4,
                 isReversed: false,
                 movesBackward: false
+            ) == Selection.stop(0)
+        )
+        #expect(
+            Policy.next(
+                current: .stop(0),
+                stopCount: 4,
+                isReversed: false,
+                movesBackward: false
             ) == Selection.midpoint(after: 0)
         )
         #expect(
@@ -2811,7 +2836,15 @@ struct ImageEditorLayerStyleTests {
                 stopCount: 4,
                 isReversed: false,
                 movesBackward: false
-            ) == Selection.midpoint(after: 0)
+            ) == Selection.stop(3)
+        )
+        #expect(
+            Policy.next(
+                current: .stop(3),
+                stopCount: 4,
+                isReversed: false,
+                movesBackward: false
+            ) == Selection.stop(0)
         )
         #expect(
             Policy.next(
@@ -2819,11 +2852,19 @@ struct ImageEditorLayerStyleTests {
                 stopCount: 4,
                 isReversed: false,
                 movesBackward: true
-            ) == Selection.midpoint(after: 2)
+            ) == Selection.stop(3)
         )
         #expect(
             Policy.next(
                 current: nil,
+                stopCount: 4,
+                isReversed: true,
+                movesBackward: false
+            ) == Selection.stop(3)
+        )
+        #expect(
+            Policy.next(
+                current: .stop(3),
                 stopCount: 4,
                 isReversed: true,
                 movesBackward: false
@@ -2836,6 +2877,14 @@ struct ImageEditorLayerStyleTests {
                 isReversed: true,
                 movesBackward: false
             ) == Selection.stop(2)
+        )
+        #expect(
+            Policy.next(
+                current: nil,
+                stopCount: 2,
+                isReversed: false,
+                movesBackward: false
+            ) == Selection.stop(0)
         )
         #expect(
             ImageEditorGradientOverlayCanvasTabKeyPolicy.matches(
@@ -3116,7 +3165,9 @@ struct ImageEditorLayerStyleTests {
         viewModel.undo()
         let originalProjectData = try viewModel.projectData()
         let originalHandle = try #require(
-            viewModel.selectedLayerGradientOverlayCanvasStopHandlePoints.first
+            viewModel.selectedLayerGradientOverlayCanvasStopHandlePoints.first {
+                $0.index == 1
+            }
         )
         let geometry = try #require(viewModel.selectedLayerGradientOverlayCanvasGeometry)
         let target = CGPoint(
@@ -4115,6 +4166,13 @@ struct ImageEditorLayerStyleTests {
             )
         )
         let stopHandleBlock = source[stopHandleStart.lowerBound..<stopHandleEnd.lowerBound]
+        #expect(stopHandleBlock.contains("let isEndpoint = point.isEndpoint"))
+        #expect(stopHandleBlock.contains("isEndpoint ? 20 : 14"))
+        #expect(stopHandleBlock.contains("isEndpoint ? -3 : -7"))
+        #expect(stopHandleBlock.contains("guard !isEndpoint else { return }"))
+        #expect(stopHandleBlock.contains("if !isEndpoint {"))
+        #expect(stopHandleBlock.contains("imageEditor.help.gradientOverlayEndpointHandle"))
+        #expect(stopHandleBlock.contains("imageEditor.properties.shapeGradientStopAccessibility"))
         let optionCapture = try #require(
             stopHandleBlock.range(
                 of: "gradientOverlayStopDragDuplicates = NSEvent.modifierFlags.contains(.option)"
@@ -4147,6 +4205,35 @@ struct ImageEditorLayerStyleTests {
         )
         #expect(removalBranch.lowerBound < removalCommit.lowerBound)
         #expect(removalCommit.lowerBound < stopFinish.lowerBound)
+
+        let endpointDeleteStart = try #require(
+            source.range(of: "private func deleteSelectedGradientOverlayStopIfNeeded()")
+        )
+        let endpointDeleteEnd = try #require(
+            source.range(
+                of: "private func resetSelectedGradientOverlayMidpointIfNeeded()",
+                range: endpointDeleteStart.upperBound..<source.endIndex
+            )
+        )
+        let endpointDeleteBlock = source[
+            endpointDeleteStart.lowerBound..<endpointDeleteEnd.lowerBound
+        ]
+        let endpointProtection = try #require(
+            endpointDeleteBlock.range(of: "if selectedHandle.isEndpoint {")
+        )
+        let consumedDelete = try #require(
+            endpointDeleteBlock.range(
+                of: "return true",
+                range: endpointProtection.upperBound..<endpointDeleteBlock.endIndex
+            )
+        )
+        let actualRemoval = try #require(
+            endpointDeleteBlock.range(
+                of: "return removeGradientOverlayCanvasStop",
+                range: consumedDelete.upperBound..<endpointDeleteBlock.endIndex
+            )
+        )
+        #expect(consumedDelete.lowerBound < actualRemoval.lowerBound)
 
         let deleteStart = try #require(source.range(of: "deleteSelectedObject: {"))
         let deleteEnd = try #require(

@@ -990,7 +990,8 @@
 "imageEditor.help.gradientOverlayCenterHandle" = "Drag to move the gradient overlay center";
 "imageEditor.help.gradientOverlayAxisHandle" = "Drag to adjust angle and scale; hold Shift to snap the angle";
 "imageEditor.help.gradientOverlayAxis" = "Double-click to add a gradient overlay color stop";
-"imageEditor.help.gradientOverlayStopHandle" = "Click to select; drag across stops to reorder or away from the axis to remove, Option-drag to duplicate, Shift snaps 5%; Left/Right, Home/End, and Delete are also available";
+"imageEditor.help.gradientOverlayStopHandle" = "Click to select and edit its color in the options bar; drag across stops to reorder or away from the axis to remove, Option-drag to duplicate, Shift snaps 5%; Tab, Left/Right, Home/End, and Delete are also available";
+"imageEditor.help.gradientOverlayEndpointHandle" = "Click to select the gradient endpoint and edit its color in the options bar; its position is fixed and protected from deletion, and Tab or Shift-Tab traverses it";
 "imageEditor.help.gradientOverlayMidpointHandle" = "Click to select; drag (Shift snaps 5%) or use Left/Right, Home/End for bounds, and Delete to reset to 50%";
 "imageEditor.help.shapeGradientStopHandle" = "Drag the middle stop along the gradient axis";
 "imageEditor.help.shapeGradientMidpointHandle" = "Drag the transition midpoint between adjacent colors";
