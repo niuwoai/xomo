@@ -680,6 +680,10 @@
 "imageEditor.option.moveAutoSelectTargetHelp" = "Choose whether Auto-Select targets the outermost group or the frontmost visible layer";
 "imageEditor.option.moveAutoSelectTarget.group" = "Group";
 "imageEditor.option.moveAutoSelectTarget.layer" = "Layer";
+"imageEditor.option.moveBoxSelectionInclusion" = "Box Selection";
+"imageEditor.option.moveBoxSelectionInclusionHelp" = "Choose whether a box selects every touching object or only objects fully contained by the box";
+"imageEditor.option.moveBoxSelectionInclusion.touching" = "Touching";
+"imageEditor.option.moveBoxSelectionInclusion.contained" = "Contained";
 "imageEditor.option.moveAlignmentTarget" = "Align to";
 "imageEditor.option.moveAlignmentTargetHelp" = "Choose whether Move tool alignment uses the selected layers, canvas, or pixel selection as its target";
 "imageEditor.option.moveAlignmentTarget.selectedLayers" = "Selected Layers";

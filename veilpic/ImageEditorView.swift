@@ -84,6 +84,7 @@ private struct ImageEditorObjectSelectionBoxDrag: Equatable {
     var viewTranslation: CGSize
     let mode: ImageEditorObjectBoxSelectionMode
     let scope: ImageEditorObjectBoxSelectionScope
+    let inclusion: ImageEditorObjectBoxSelectionInclusion
 
     var selectionRect: CGRect? {
         ImageEditorObjectBoxSelectionPolicy.selectionRect(
@@ -589,6 +590,22 @@ struct ImageEditorView: View {
                 .disabled(!viewModel.isMoveToolAutoSelectEnabled)
                 .help(L10n.text("imageEditor.option.moveAutoSelectTargetHelp"))
                 .accessibilityIdentifier("image-editor-move-auto-select-target")
+
+                Picker(
+                    L10n.text("imageEditor.option.moveBoxSelectionInclusion"),
+                    selection: $viewModel.moveToolBoxSelectionInclusion
+                ) {
+                    ForEach(ImageEditorObjectBoxSelectionInclusion.allCases) { inclusion in
+                        Text(inclusion.title).tag(inclusion)
+                    }
+                }
+                .labelsHidden()
+                .pickerStyle(.menu)
+                .fixedSize()
+                .focusable(false)
+                .disabled(!viewModel.isMoveToolAutoSelectEnabled)
+                .help(L10n.text("imageEditor.option.moveBoxSelectionInclusionHelp"))
+                .accessibilityIdentifier("image-editor-move-box-selection-inclusion")
 
                 Toggle(
                     L10n.text("imageEditor.action.transformControlsVisible"),
@@ -4138,7 +4155,8 @@ struct ImageEditorView: View {
                                 scope: ImageEditorObjectBoxSelectionScope.resolve(
                                     sidebarTab: viewModel.selectedLeftSidebarTab,
                                     modifierFlags: NSEvent.modifierFlags
-                                )
+                                ),
+                                inclusion: viewModel.moveToolBoxSelectionInclusion
                             )
                             break
                         }
@@ -4516,7 +4534,8 @@ struct ImageEditorView: View {
                         viewModel.applyMoveToolBoxSelection(
                             in: selectionRect,
                             mode: selectionBoxDrag.mode,
-                            scope: selectionBoxDrag.scope
+                            scope: selectionBoxDrag.scope,
+                            inclusion: selectionBoxDrag.inclusion
                         )
                     } else if selectionBoxDrag.mode == .replace {
                         viewModel.clearLayerSelection()
@@ -7140,7 +7159,8 @@ struct ImageEditorView: View {
             let previewTargets = viewModel.moveToolBoxSelectionPreviewTargets(
                 in: selectionRect,
                 mode: selectionBoxDrag.mode,
-                scope: selectionBoxDrag.scope
+                scope: selectionBoxDrag.scope,
+                inclusion: selectionBoxDrag.inclusion
             )
             let previewColor = switch selectionBoxDrag.mode {
             case .replace, .add:

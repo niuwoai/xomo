@@ -120,6 +120,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var selectedTool: ImageEditorTool = .move
     @Published var isMoveToolAutoSelectEnabled = true
     @Published var moveToolAutoSelectTarget: ImageEditorMoveAutoSelectTarget = .group
+    @Published var moveToolBoxSelectionInclusion: ImageEditorObjectBoxSelectionInclusion = .touching
     @Published var moveToolAlignmentTarget: ImageEditorMoveAlignmentTarget = .selectedLayers
     @Published var marqueeShape: ImageEditorMarqueeShape = .rectangle
     @Published var zoom: CGFloat = 1

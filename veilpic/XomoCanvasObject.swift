@@ -42,6 +42,28 @@ enum ImageEditorMoveAutoSelectTarget: String, CaseIterable, Identifiable {
     }
 }
 
+enum ImageEditorObjectBoxSelectionInclusion: String, CaseIterable, Identifiable {
+    case touching
+    case contained
+
+    var id: String { rawValue }
+
+    var title: String {
+        L10n.text("imageEditor.option.moveBoxSelectionInclusion.\(rawValue)")
+    }
+
+    func includes(targetFrame: CGRect, in selectionRect: CGRect) -> Bool {
+        let target = targetFrame.standardized
+        let selection = selectionRect.standardized
+        switch self {
+        case .touching:
+            return selection.intersects(target)
+        case .contained:
+            return selection.contains(target)
+        }
+    }
+}
+
 enum ImageEditorObjectBoxSelectionPolicy {
     nonisolated static let activationDistance: CGFloat = 3
 
@@ -191,7 +213,8 @@ extension ImageEditorViewModel {
     /// leaf targets, and component mode preserves whole component instances.
     func moveToolBoxSelectionTargets(
         in selectionRect: CGRect,
-        scope requestedScope: ImageEditorObjectBoxSelectionScope = .configured
+        scope requestedScope: ImageEditorObjectBoxSelectionScope = .configured,
+        inclusion: ImageEditorObjectBoxSelectionInclusion = .touching
     ) -> [ImageEditorObjectBoxSelectionTarget] {
         let rect = selectionRect.standardized
         guard rect.width > 0,
@@ -276,22 +299,34 @@ extension ImageEditorViewModel {
                 }
             }
         }
-        return targets
+        return targets.filter { target in
+            inclusion.includes(targetFrame: target.frame, in: rect)
+        }
     }
 
     func moveToolBoxSelectionTargetIDs(
         in selectionRect: CGRect,
-        scope: ImageEditorObjectBoxSelectionScope = .configured
+        scope: ImageEditorObjectBoxSelectionScope = .configured,
+        inclusion: ImageEditorObjectBoxSelectionInclusion = .touching
     ) -> [UUID] {
-        moveToolBoxSelectionTargets(in: selectionRect, scope: scope).map(\.id)
+        moveToolBoxSelectionTargets(
+            in: selectionRect,
+            scope: scope,
+            inclusion: inclusion
+        ).map(\.id)
     }
 
     func moveToolBoxSelectionPreviewTargets(
         in selectionRect: CGRect,
         mode: ImageEditorObjectBoxSelectionMode,
-        scope: ImageEditorObjectBoxSelectionScope = .configured
+        scope: ImageEditorObjectBoxSelectionScope = .configured,
+        inclusion: ImageEditorObjectBoxSelectionInclusion = .touching
     ) -> [ImageEditorObjectBoxSelectionTarget] {
-        let targets = moveToolBoxSelectionTargets(in: selectionRect, scope: scope)
+        let targets = moveToolBoxSelectionTargets(
+            in: selectionRect,
+            scope: scope,
+            inclusion: inclusion
+        )
         switch mode {
         case .replace:
             return targets
@@ -302,17 +337,19 @@ extension ImageEditorViewModel {
         }
     }
 
-    /// Applies a Sketch/Figma-style intersection sweep as a selection-only
+    /// Applies the configured box-inclusion rule as a selection-only
     /// operation. It intentionally does not create History or Undo entries.
     @discardableResult
     func applyMoveToolBoxSelection(
         in selectionRect: CGRect,
         mode: ImageEditorObjectBoxSelectionMode,
-        scope: ImageEditorObjectBoxSelectionScope = .configured
+        scope: ImageEditorObjectBoxSelectionScope = .configured,
+        inclusion: ImageEditorObjectBoxSelectionInclusion = .touching
     ) -> Bool {
         let targetIDs = moveToolBoxSelectionTargetIDs(
             in: selectionRect,
-            scope: scope
+            scope: scope,
+            inclusion: inclusion
         )
         let previousIDs = document.selectedLayerIDs
         let targetIDSet = Set(targetIDs)

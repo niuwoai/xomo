@@ -29,6 +29,21 @@ struct XomoCanvasObjectTests {
             sidebarTab: .components,
             modifierFlags: [.command]
         ) == .configured)
+        let target = CGRect(x: 20, y: 20, width: 40, height: 30)
+        let partialSelection = CGRect(x: 10, y: 10, width: 30, height: 30)
+        let containingSelection = CGRect(x: 10, y: 10, width: 60, height: 50)
+        #expect(ImageEditorObjectBoxSelectionInclusion.touching.includes(
+            targetFrame: target,
+            in: partialSelection
+        ))
+        #expect(!ImageEditorObjectBoxSelectionInclusion.contained.includes(
+            targetFrame: target,
+            in: partialSelection
+        ))
+        #expect(ImageEditorObjectBoxSelectionInclusion.contained.includes(
+            targetFrame: target,
+            in: containingSelection
+        ))
     }
 
     @Test func layerScopeBoxSelectionUsesVisibleLeafBoundsWithoutHistory() {
@@ -60,6 +75,20 @@ struct XomoCanvasObjectTests {
         viewModel.moveToolAutoSelectTarget = .layer
         let historyCount = viewModel.document.history.count
         let undoCount = viewModel.undoStack.count
+
+        let partialRect = CGRect(x: 10, y: 20, width: 25, height: 25)
+        #expect(viewModel.moveToolBoxSelectionTargetIDs(
+            in: partialRect,
+            inclusion: .touching
+        ) == [first.id])
+        #expect(viewModel.moveToolBoxSelectionTargetIDs(
+            in: partialRect,
+            inclusion: .contained
+        ).isEmpty)
+        #expect(viewModel.moveToolBoxSelectionTargetIDs(
+            in: CGRect(x: 10, y: 20, width: 65, height: 55),
+            inclusion: .contained
+        ) == [first.id])
 
         #expect(viewModel.applyMoveToolBoxSelection(
             in: CGRect(x: 10, y: 20, width: 65, height: 55),
@@ -104,6 +133,14 @@ struct XomoCanvasObjectTests {
 
         #expect(targets.map(\.id) == [outer.id])
         #expect(targets.first?.frame == first.frame.union(second.frame))
+        #expect(viewModel.moveToolBoxSelectionTargetIDs(
+            in: CGRect(x: 20, y: 20, width: 100, height: 50),
+            inclusion: .contained
+        ) == [outer.id])
+        #expect(viewModel.moveToolBoxSelectionTargetIDs(
+            in: CGRect(x: 20, y: 20, width: 25, height: 25),
+            inclusion: .contained
+        ).isEmpty)
         #expect(viewModel.document.selectedLayerIDs.isEmpty)
         #expect(viewModel.document.history.count == historyCount)
         #expect(viewModel.undoStack.count == undoCount)
@@ -132,6 +169,10 @@ struct XomoCanvasObjectTests {
         let firstGroup = try #require(viewModel.document.selectedLayer)
         viewModel.insertXomoComponent(.badge, at: CGPoint(x: 280, y: 190))
         let secondGroup = try #require(viewModel.document.selectedLayer)
+        let firstBounds = try #require(viewModel.document.layers
+            .filter { $0.groupID == firstGroup.id }
+            .map(\.frame)
+            .reduce(nil) { bounds, frame in bounds?.union(frame) ?? frame })
         let union = try #require(viewModel.document.layers
             .filter { $0.groupID == firstGroup.id || $0.groupID == secondGroup.id }
             .map(\.frame)
@@ -157,7 +198,8 @@ struct XomoCanvasObjectTests {
 
         let targets = viewModel.moveToolBoxSelectionTargets(
             in: union.insetBy(dx: -2, dy: -2),
-            scope: .deepLayers
+            scope: .deepLayers,
+            inclusion: .contained
         )
         let ids = Set(targets.map(\.id))
 
@@ -172,6 +214,14 @@ struct XomoCanvasObjectTests {
         #expect(!ids.contains { id in
             viewModel.document.layers.contains { $0.id == id && $0.groupID != nil }
         })
+        #expect(viewModel.moveToolBoxSelectionTargets(
+            in: firstBounds.insetBy(
+                dx: firstBounds.width * 0.25,
+                dy: firstBounds.height * 0.25
+            ),
+            scope: .deepLayers,
+            inclusion: .contained
+        ).isEmpty)
     }
 
     @Test func shiftBoxSelectionAddsTargetsAndEmptyPlainBoxClearsWithoutUndo() {
@@ -298,6 +348,10 @@ struct XomoCanvasObjectTests {
         #expect(source.contains("boxSelectionOwnsModifiedBlankDrag"))
         #expect(source.contains("mode: ImageEditorObjectBoxSelectionMode.resolve("))
         #expect(source.contains("scope: ImageEditorObjectBoxSelectionScope.resolve("))
+        #expect(source.contains("inclusion: viewModel.moveToolBoxSelectionInclusion"))
+        #expect(source.contains("inclusion: selectionBoxDrag.inclusion"))
+        #expect(source.contains("selection: $viewModel.moveToolBoxSelectionInclusion"))
+        #expect(source.contains("image-editor-move-box-selection-inclusion"))
         #expect(source.contains("moveToolUsesBoxSelection: viewModel.moveToolAutoSelectsCanvasTarget"))
         #expect(source.contains("onCanvasLifecycleInterrupted: { _ in\n                            objectSelectionBoxDrag = nil"))
         #expect(source.contains("if objectSelectionBoxDrag != nil {\n                        objectSelectionBoxDrag = nil"))

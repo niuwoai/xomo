@@ -680,6 +680,10 @@
 "imageEditor.option.moveAutoSelectTargetHelp" = "选择自动选择最外层组或最前方可见图层";
 "imageEditor.option.moveAutoSelectTarget.group" = "组";
 "imageEditor.option.moveAutoSelectTarget.layer" = "图层";
+"imageEditor.option.moveBoxSelectionInclusion" = "框选纳入";
+"imageEditor.option.moveBoxSelectionInclusionHelp" = "选择框选纳入所有相交对象，还是只纳入完全包含在框内的对象";
+"imageEditor.option.moveBoxSelectionInclusion.touching" = "相交";
+"imageEditor.option.moveBoxSelectionInclusion.contained" = "完全包含";
 "imageEditor.option.moveAlignmentTarget" = "对齐到";
 "imageEditor.option.moveAlignmentTargetHelp" = "选择移动工具以所选图层、画布或像素选区作为对齐目标";
 "imageEditor.option.moveAlignmentTarget.selectedLayers" = "所选图层";

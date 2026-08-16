@@ -680,6 +680,10 @@
 "imageEditor.option.moveAutoSelectTargetHelp" = "自動選択で最外側のグループまたは最前面の表示レイヤーを対象にします";
 "imageEditor.option.moveAutoSelectTarget.group" = "グループ";
 "imageEditor.option.moveAutoSelectTarget.layer" = "レイヤー";
+"imageEditor.option.moveBoxSelectionInclusion" = "範囲選択";
+"imageEditor.option.moveBoxSelectionInclusionHelp" = "選択範囲に接するすべてのオブジェクトを選ぶか、完全に含まれるオブジェクトだけを選ぶかを指定します";
+"imageEditor.option.moveBoxSelectionInclusion.touching" = "接触";
+"imageEditor.option.moveBoxSelectionInclusion.contained" = "完全に内側";
 "imageEditor.option.moveAlignmentTarget" = "整列先";
 "imageEditor.option.moveAlignmentTargetHelp" = "移動ツールの整列先を選択レイヤー、キャンバス、またはピクセル選択範囲から選びます";
 "imageEditor.option.moveAlignmentTarget.selectedLayers" = "選択レイヤー";
