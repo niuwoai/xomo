@@ -128,6 +128,34 @@ struct ImageEditorObjectBoxSelectionTarget: Equatable, Identifiable {
     let frame: CGRect
 }
 
+struct ImageEditorMoveToolHoverTarget: Equatable, Identifiable {
+    let id: UUID
+    let frame: CGRect
+    let isBlocked: Bool
+}
+
+enum ImageEditorMoveToolHoverOutlinePolicy {
+    static func shouldShow(
+        sidebarTab: XomoLeftSidebarTab,
+        selectedTool: ImageEditorTool,
+        isAutoSelectEnabled: Bool,
+        isPointerInsideCanvas: Bool,
+        modifierFlags: NSEvent.ModifierFlags,
+        hasActiveInteraction: Bool
+    ) -> Bool {
+        guard isPointerInsideCanvas,
+              !hasActiveInteraction,
+              !modifierFlags.contains(.option)
+        else { return false }
+        switch sidebarTab {
+        case .tools:
+            return selectedTool == .move && isAutoSelectEnabled
+        case .components:
+            return true
+        }
+    }
+}
+
 enum ImageEditorMoveToolDoubleClickTarget: Equatable {
     case editableText(UUID)
     case layer(UUID)
@@ -414,6 +442,58 @@ extension ImageEditorViewModel {
         return canMoveSelectedLayer ? .movable : .blocked
     }
 
+    /// Resolves the exact idle-hover selection target without changing the
+    /// document. Command exposes the visible leaf in tools mode, while the
+    /// component library continues to own whole component instances.
+    func moveToolHoverTarget(
+        at point: CGPoint,
+        modifierFlags: NSEvent.ModifierFlags = []
+    ) -> ImageEditorMoveToolHoverTarget? {
+        guard point.x.isFinite, point.y.isFinite else { return nil }
+
+        if selectedLeftSidebarTab == .components {
+            if let object = topmostXomoObject(at: point) {
+                return ImageEditorMoveToolHoverTarget(
+                    id: object.groupID,
+                    frame: object.frame.standardized,
+                    isBlocked: moveToolContentHit(at: point).isBlocked
+                )
+            }
+            guard let leaf = frontmostVisibleCanvasLayerOutsideComponents(at: point) else {
+                return nil
+            }
+            return ImageEditorMoveToolHoverTarget(
+                id: leaf.id,
+                frame: leaf.frame.standardized,
+                isBlocked: document.isEffectivelyPositionLocked(leaf)
+            )
+        }
+
+        guard isMoveToolAutoSelectEnabled,
+              let leaf = frontmostVisibleCanvasLayer(at: point)
+        else { return nil }
+        let scope = ImageEditorObjectBoxSelectionScope.resolve(
+            sidebarTab: selectedLeftSidebarTab,
+            modifierFlags: modifierFlags
+        )
+        let target: ImageEditorLayer = if scope == .deepLayers {
+            leaf
+        } else {
+            switch moveToolAutoSelectTarget {
+            case .layer:
+                leaf
+            case .group:
+                document.ancestorGroups(for: leaf).last ?? leaf
+            }
+        }
+        guard let frame = moveToolVisibleBounds(for: target) else { return nil }
+        return ImageEditorMoveToolHoverTarget(
+            id: target.id,
+            frame: frame,
+            isBlocked: !isMoveToolAutoSelectTargetMovable(target)
+        )
+    }
+
     /// Resolves the object under an idle Option-hover without changing the
     /// current selection. Distance inspection follows the Move tool's
     /// Group/Layer scope, while component-library mode keeps whole components.
@@ -499,10 +579,41 @@ extension ImageEditorViewModel {
             }
     }
 
+    private func moveToolVisibleBounds(for target: ImageEditorLayer) -> CGRect? {
+        guard target.isGroup else { return target.frame.standardized }
+        return document.layers.lazy
+            .filter { [self] layer in
+                !layer.isGroup
+                    && !layer.isAdjustment
+                    && !layer.isFilter
+                    && self.document.isEffectivelyVisible(layer)
+                    && self.document.ancestorGroups(for: layer).contains { $0.id == target.id }
+            }
+            .map { $0.frame.standardized }
+            .reduce(nil) { bounds, frame in
+                bounds?.union(frame) ?? frame
+            }
+    }
+
     private func frontmostVisibleCanvasLayer(at point: CGPoint) -> ImageEditorLayer? {
         guard point.x.isFinite, point.y.isFinite else { return nil }
         return document.layers.reversed().first { layer in
             !layer.isGroup
+                && document.isEffectivelyVisible(layer)
+                && layerContainsVisibleContent(layer, at: point)
+        }
+    }
+
+    private func frontmostVisibleCanvasLayerOutsideComponents(
+        at point: CGPoint
+    ) -> ImageEditorLayer? {
+        guard point.x.isFinite, point.y.isFinite else { return nil }
+        let componentGroupIDs = Set(document.layers.compactMap { layer in
+            layer.isGroup && layer.xomoComponentInstance != nil ? layer.id : nil
+        })
+        return document.layers.reversed().first { layer in
+            !layer.isGroup
+                && (layer.groupID.map { !componentGroupIDs.contains($0) } ?? true)
                 && document.isEffectivelyVisible(layer)
                 && layerContainsVisibleContent(layer, at: point)
         }
@@ -688,28 +799,15 @@ extension ImageEditorViewModel {
     /// must remain the selection target; the component path above already
     /// performs the same topmost/occlusion check for them.
     func selectVisibleLayer(at point: CGPoint, extendingSelection: Bool = false) -> Bool {
-        let componentGroupIDs: Set<UUID> = Set(
-            document.layers.compactMap { layer in
-                guard layer.isGroup, layer.xomoComponentInstance != nil else { return nil }
-                return layer.id
-            }
-        )
-
-        for layer in document.layers.reversed() {
-            guard !layer.isGroup,
-                  layer.groupID.map({ !componentGroupIDs.contains($0) }) ?? true,
-                  document.isEffectivelyVisible(layer),
-                  layerContainsVisibleContent(layer, at: point)
-            else { continue }
-
-            selectLayer(layer.id, extendingSelection: extendingSelection)
-            statusText = L10n.format(
-                "imageEditor.status.layerRangeSelected",
-                document.selectedLayerIDs.count
-            )
-            return true
+        guard let layer = frontmostVisibleCanvasLayerOutsideComponents(at: point) else {
+            return false
         }
-        return false
+        selectLayer(layer.id, extendingSelection: extendingSelection)
+        statusText = L10n.format(
+            "imageEditor.status.layerRangeSelected",
+            document.selectedLayerIDs.count
+        )
+        return true
     }
 
     /// Sketch/Figma-style deep selection for Command-click. Unlike ordinary

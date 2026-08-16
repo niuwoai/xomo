@@ -4,6 +4,57 @@ import Testing
 
 @MainActor
 struct XomoCanvasObjectTests {
+    @Test func moveToolHoverOutlineOnlyAppearsForIdleAutoSelection() {
+        #expect(ImageEditorMoveToolHoverOutlinePolicy.shouldShow(
+            sidebarTab: .tools,
+            selectedTool: .move,
+            isAutoSelectEnabled: true,
+            isPointerInsideCanvas: true,
+            modifierFlags: [],
+            hasActiveInteraction: false
+        ))
+        #expect(!ImageEditorMoveToolHoverOutlinePolicy.shouldShow(
+            sidebarTab: .tools,
+            selectedTool: .move,
+            isAutoSelectEnabled: true,
+            isPointerInsideCanvas: true,
+            modifierFlags: [.option],
+            hasActiveInteraction: false
+        ))
+        #expect(!ImageEditorMoveToolHoverOutlinePolicy.shouldShow(
+            sidebarTab: .tools,
+            selectedTool: .move,
+            isAutoSelectEnabled: true,
+            isPointerInsideCanvas: true,
+            modifierFlags: [],
+            hasActiveInteraction: true
+        ))
+        #expect(!ImageEditorMoveToolHoverOutlinePolicy.shouldShow(
+            sidebarTab: .tools,
+            selectedTool: .brush,
+            isAutoSelectEnabled: true,
+            isPointerInsideCanvas: true,
+            modifierFlags: [],
+            hasActiveInteraction: false
+        ))
+        #expect(ImageEditorMoveToolHoverOutlinePolicy.shouldShow(
+            sidebarTab: .components,
+            selectedTool: .brush,
+            isAutoSelectEnabled: false,
+            isPointerInsideCanvas: true,
+            modifierFlags: [.command],
+            hasActiveInteraction: false
+        ))
+        #expect(!ImageEditorMoveToolHoverOutlinePolicy.shouldShow(
+            sidebarTab: .components,
+            selectedTool: .move,
+            isAutoSelectEnabled: true,
+            isPointerInsideCanvas: false,
+            modifierFlags: [],
+            hasActiveInteraction: false
+        ))
+    }
+
     @Test func objectBoxSelectionRequiresThreeViewPointsAndNormalizesDirection() throws {
         #expect(!ImageEditorObjectBoxSelectionPolicy.isActivated(
             viewTranslation: CGSize(width: 2.9, height: 0)
@@ -341,6 +392,11 @@ struct XomoCanvasObjectTests {
         )
 
         #expect(source.contains("objectSelectionBoxOverlay(in: geometry.size)"))
+        #expect(source.contains("moveToolHoverOutlineOverlay(in: geometry.size)"))
+        #expect(source.contains("ImageEditorMoveToolHoverOutlinePolicy.shouldShow("))
+        #expect(source.contains("viewModel.moveToolHoverTarget("))
+        #expect(source.contains(".option,\n                        .command,"))
+        #expect(source.contains("!viewModel.document.selectedLayerIDs.contains(target.id)"))
         #expect(source.contains("viewModel.moveToolContentHit(at: pressedImagePoint) == .none"))
         #expect(source.contains("objectSelectionBoxDrag = ImageEditorObjectSelectionBoxDrag("))
         #expect(source.contains("viewModel.applyMoveToolBoxSelection("))
@@ -1120,6 +1176,17 @@ struct XomoCanvasObjectTests {
 
         #expect(viewModel.moveToolAutoSelectTarget == .group)
         #expect(viewModel.moveToolAutoSelectLayer(at: point)?.id == outerGroup.id)
+        let groupHover = try #require(viewModel.moveToolHoverTarget(at: point))
+        #expect(groupHover.id == outerGroup.id)
+        #expect(groupHover.frame == leaf.frame.union(lockedSibling.frame))
+        #expect(groupHover.isBlocked)
+        let deepHover = try #require(viewModel.moveToolHoverTarget(
+            at: point,
+            modifierFlags: [.command]
+        ))
+        #expect(deepHover.id == leaf.id)
+        #expect(deepHover.frame == leaf.frame)
+        #expect(!deepHover.isBlocked)
         #expect(viewModel.moveToolContentHit(at: point) == .blocked)
         #expect(viewModel.selectMovableCanvasTarget(at: point))
         #expect(viewModel.document.selectedLayerID == outerGroup.id)
@@ -1140,11 +1207,15 @@ struct XomoCanvasObjectTests {
         viewModel.selectLayer(backgroundID)
 
         viewModel.moveToolAutoSelectTarget = .group
+        #expect(viewModel.moveToolHoverTarget(at: point)?.id == groupID)
         #expect(viewModel.selectMovableCanvasTarget(at: point))
         #expect(viewModel.document.selectedLayerID == groupID)
 
         viewModel.selectLayer(backgroundID)
         viewModel.moveToolAutoSelectTarget = .layer
+        let layerHover = try #require(viewModel.moveToolHoverTarget(at: point))
+        #expect(layerHover.id != groupID)
+        #expect(layerHover.frame.contains(point))
         #expect(viewModel.selectMovableCanvasTarget(at: point))
         let child = try #require(viewModel.document.selectedLayer)
         #expect(!child.isGroup)
@@ -1152,6 +1223,21 @@ struct XomoCanvasObjectTests {
 
         viewModel.selectLayer(backgroundID)
         viewModel.selectLeftSidebarTab(.components)
+        #expect(viewModel.moveToolHoverTarget(
+            at: point,
+            modifierFlags: [.command]
+        )?.id == groupID)
+        var ordinary = ImageEditorLayer.solidColorFill(
+            name: "Ordinary",
+            size: CGSize(width: 30, height: 30),
+            content: ImageEditorSolidColorFillContent(red: 0.2, green: 0.4, blue: 0.8)
+        )
+        ordinary.frame.origin = CGPoint(x: 420, y: 320)
+        viewModel.document.layers.append(ordinary)
+        #expect(viewModel.moveToolHoverTarget(at: CGPoint(
+            x: ordinary.frame.midX,
+            y: ordinary.frame.midY
+        ))?.id == ordinary.id)
         #expect(viewModel.selectMovableCanvasTarget(at: point))
         #expect(viewModel.document.selectedLayerID == groupID)
         #expect(viewModel.document.selectedLayerIDs == [groupID])

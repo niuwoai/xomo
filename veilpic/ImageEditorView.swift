@@ -437,10 +437,15 @@ struct ImageEditorView: View {
                     isSpacebarPanning = isPressed
                 },
                 setCanvasModifierFlags: { flags in
-                    // Photoshop uses Caps Lock as a precision toggle for
-                    // brush-like tools. Keep it in the cursor-only state;
-                    // selection and zoom modifiers retain their current rules.
-                    canvasModifierFlags = flags.intersection([.shift, .option, .capsLock])
+                    // Keep semantic cursor and idle-hover feedback in sync
+                    // with modifier changes; gesture commits still snapshot
+                    // the authoritative event flags when their sequence starts.
+                    canvasModifierFlags = flags.intersection([
+                        .shift,
+                        .option,
+                        .command,
+                        .capsLock
+                    ])
                 }
             )
             .allowsHitTesting(false)
@@ -2676,6 +2681,7 @@ struct ImageEditorView: View {
                     guideInteractionOverlay(in: geometry.size)
                     quickMaskOverlay(in: geometry.size)
                     selectionOverlay(in: geometry.size)
+                    moveToolHoverOutlineOverlay(in: geometry.size)
                     objectSelectionBoxOverlay(in: geometry.size)
                     savedPathOverlay(in: geometry.size)
                     sliceOverlay(in: geometry.size)
@@ -7128,7 +7134,19 @@ struct ImageEditorView: View {
     }
 
     private func objectDistanceInspectionGuides(in size: CGSize) -> [ImageEditorSpacingGuide] {
-        let hasActiveInteraction = viewModel.hasActiveLayerMoveTransaction
+        guard ImageEditorObjectDistanceInspectionPolicy.shouldShow(
+            sidebarTab: viewModel.selectedLeftSidebarTab,
+            selectedTool: viewModel.selectedTool,
+            modifierFlags: canvasModifierFlags,
+            hasActiveInteraction: hasActiveMoveToolVisualInteraction
+        ), let hoverViewPoint,
+           let canvasPoint = imagePoint(from: hoverViewPoint, in: size)
+        else { return [] }
+        return viewModel.moveToolDistanceInspectionGuides(at: canvasPoint)
+    }
+
+    private var hasActiveMoveToolVisualInteraction: Bool {
+        viewModel.hasActiveLayerMoveTransaction
             || isObjectMoveGestureActive
             || isSelectedObjectMoveGestureActive
             || isCanvasCloneGestureActive
@@ -7137,18 +7155,43 @@ struct ImageEditorView: View {
             || activeResizeHandle != nil
             || isRotatingLayer
             || isMovingTransformReferencePoint
+            || isSpacebarPanning
             || isCanvasPanGestureActive
             || isDeliveryObjectMoveGestureActive
             || activeGuideDrag != nil
-        guard ImageEditorObjectDistanceInspectionPolicy.shouldShow(
+    }
+
+    @ViewBuilder
+    private func moveToolHoverOutlineOverlay(in size: CGSize) -> some View {
+        if ImageEditorMoveToolHoverOutlinePolicy.shouldShow(
             sidebarTab: viewModel.selectedLeftSidebarTab,
             selectedTool: viewModel.selectedTool,
+            isAutoSelectEnabled: viewModel.isMoveToolAutoSelectEnabled,
+            isPointerInsideCanvas: isPointerInsideCanvas,
             modifierFlags: canvasModifierFlags,
-            hasActiveInteraction: hasActiveInteraction
+            hasActiveInteraction: hasActiveMoveToolVisualInteraction
         ), let hoverViewPoint,
-           let canvasPoint = imagePoint(from: hoverViewPoint, in: size)
-        else { return [] }
-        return viewModel.moveToolDistanceInspectionGuides(at: canvasPoint)
+           let canvasPoint = imagePoint(from: hoverViewPoint, in: size),
+           let target = viewModel.moveToolHoverTarget(
+                at: canvasPoint,
+                modifierFlags: canvasModifierFlags
+           ), !viewModel.document.selectedLayerIDs.contains(target.id) {
+            let rect = viewRect(from: target.frame, in: size)
+            Rectangle()
+                .stroke(
+                    target.isBlocked
+                        ? Color(nsColor: .systemRed).opacity(0.9)
+                        : Color(nsColor: ImageEditorTheme.selected).opacity(0.82),
+                    style: StrokeStyle(
+                        lineWidth: 1,
+                        dash: target.isBlocked ? [4, 3] : []
+                    )
+                )
+                .frame(width: max(1, rect.width), height: max(1, rect.height))
+                .position(x: rect.midX, y: rect.midY)
+                .allowsHitTesting(false)
+                .accessibilityHidden(true)
+        }
     }
 
     @ViewBuilder
