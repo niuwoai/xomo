@@ -2340,6 +2340,7 @@
 "imageEditor.status.layerNoLinks" = "Selected layers are not linked";
 "imageEditor.status.layerGroupEmpty" = "The selected group has no selectable members";
 "imageEditor.status.layerGroupMembersSelected" = "%d group members selected";
+"imageEditor.status.layerChildSelected" = "Selected group child: %@";
 "imageEditor.status.layerParentGroupSelected" = "Parent group selected: %@";
 "imageEditor.status.layerGroupTargetMissing" = "No group above the selection can receive these layers";
 "imageEditor.status.layerNotInGroup" = "Selected layers are not inside a group";
@@ -2351,6 +2352,7 @@
 "imageEditor.action.layerGroupNew" = "New Layer Group";
 "imageEditor.action.layerGroupSelected" = "Group Selected Layers";
 "imageEditor.action.layerSelectGroupMembers" = "Select group members";
+"imageEditor.action.layerSelectFrontmostChild" = "Enter Selected Group";
 "imageEditor.action.layerSelectParentGroup" = "Select Parent Group";
 "imageEditor.action.layerMoveIntoGroup" = "Move into group above";
 "imageEditor.action.layerMoveOutOfGroup" = "Move out of group";

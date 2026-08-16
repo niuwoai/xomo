@@ -361,6 +361,14 @@ struct ImageEditorView: View {
                     return viewModel.finishPendingPenPathFromKeyboard()
                         || isUncommittedPenPointerSequence
                 },
+                enterSelectedGroup: {
+                    guard ImageEditorMoveToolGroupEntryKeyPolicy.shouldEnter(
+                        sidebarTab: viewModel.selectedLeftSidebarTab,
+                        selectedTool: viewModel.selectedTool,
+                        hasActiveInteraction: hasActiveMoveToolVisualInteraction
+                    ) else { return false }
+                    return viewModel.enterSelectedCanvasGroupIfNeeded()
+                },
                 cancelSelectedObject: {
                     if objectSelectionBoxDrag != nil {
                         objectSelectionBoxDrag = nil
@@ -15473,6 +15481,7 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
     let moveSelectedCanvasHandleToBoundary: (Double) -> Bool
     let deleteSelectedObject: () -> Bool
     let finishPendingPenPath: () -> Bool
+    let enterSelectedGroup: () -> Bool
     let cancelSelectedObject: () -> Bool
     let discardPendingSmartFilterChanges: () -> Bool
     let deleteSelectedHistory: () -> Bool
@@ -15488,6 +15497,7 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
             moveSelectedCanvasHandleToBoundary: moveSelectedCanvasHandleToBoundary,
             deleteSelectedObject: deleteSelectedObject,
             finishPendingPenPath: finishPendingPenPath,
+            enterSelectedGroup: enterSelectedGroup,
             cancelSelectedObject: cancelSelectedObject,
             discardPendingSmartFilterChanges: discardPendingSmartFilterChanges,
             deleteSelectedHistory: deleteSelectedHistory,
@@ -15508,6 +15518,7 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
         context.coordinator.moveSelectedCanvasHandleToBoundary = moveSelectedCanvasHandleToBoundary
         context.coordinator.deleteSelectedObject = deleteSelectedObject
         context.coordinator.finishPendingPenPath = finishPendingPenPath
+        context.coordinator.enterSelectedGroup = enterSelectedGroup
         context.coordinator.cancelSelectedObject = cancelSelectedObject
         context.coordinator.discardPendingSmartFilterChanges = discardPendingSmartFilterChanges
         context.coordinator.deleteSelectedHistory = deleteSelectedHistory
@@ -15524,6 +15535,7 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
         var moveSelectedCanvasHandleToBoundary: (Double) -> Bool
         var deleteSelectedObject: () -> Bool
         var finishPendingPenPath: () -> Bool
+        var enterSelectedGroup: () -> Bool
         var cancelSelectedObject: () -> Bool
         var discardPendingSmartFilterChanges: () -> Bool
         var deleteSelectedHistory: () -> Bool
@@ -15542,6 +15554,7 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
             moveSelectedCanvasHandleToBoundary: @escaping (Double) -> Bool,
             deleteSelectedObject: @escaping () -> Bool,
             finishPendingPenPath: @escaping () -> Bool,
+            enterSelectedGroup: @escaping () -> Bool,
             cancelSelectedObject: @escaping () -> Bool,
             discardPendingSmartFilterChanges: @escaping () -> Bool,
             deleteSelectedHistory: @escaping () -> Bool,
@@ -15555,6 +15568,7 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
             self.moveSelectedCanvasHandleToBoundary = moveSelectedCanvasHandleToBoundary
             self.deleteSelectedObject = deleteSelectedObject
             self.finishPendingPenPath = finishPendingPenPath
+            self.enterSelectedGroup = enterSelectedGroup
             self.cancelSelectedObject = cancelSelectedObject
             self.discardPendingSmartFilterChanges = discardPendingSmartFilterChanges
             self.deleteSelectedHistory = deleteSelectedHistory
@@ -15663,6 +15677,15 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
                 modifierFlags: event.modifierFlags
                ),
                finishPendingPenPath() {
+                return nil
+            }
+            if event.type == .keyDown,
+               ImageEditorMoveToolGroupEntryKeyPolicy.matches(
+                keyCode: event.keyCode,
+                modifierFlags: event.modifierFlags,
+                isTextInputActive: isTextInputActive
+               ),
+               enterSelectedGroup() {
                 return nil
             }
             if event.type == .keyDown,

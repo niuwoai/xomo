@@ -4,6 +4,51 @@ import Testing
 
 @MainActor
 struct XomoCanvasObjectTests {
+    @Test func returnGroupEntryKeyRequiresMoveToolContextAndNoActiveInteraction() {
+        for keyCode: UInt16 in [36, 76] {
+            #expect(ImageEditorMoveToolGroupEntryKeyPolicy.matches(
+                keyCode: keyCode,
+                modifierFlags: [],
+                isTextInputActive: false
+            ))
+            #expect(!ImageEditorMoveToolGroupEntryKeyPolicy.matches(
+                keyCode: keyCode,
+                modifierFlags: [.shift],
+                isTextInputActive: false
+            ))
+            #expect(!ImageEditorMoveToolGroupEntryKeyPolicy.matches(
+                keyCode: keyCode,
+                modifierFlags: [],
+                isTextInputActive: true
+            ))
+        }
+        #expect(!ImageEditorMoveToolGroupEntryKeyPolicy.matches(
+            keyCode: 53,
+            modifierFlags: [],
+            isTextInputActive: false
+        ))
+        #expect(ImageEditorMoveToolGroupEntryKeyPolicy.shouldEnter(
+            sidebarTab: .tools,
+            selectedTool: .move,
+            hasActiveInteraction: false
+        ))
+        #expect(!ImageEditorMoveToolGroupEntryKeyPolicy.shouldEnter(
+            sidebarTab: .components,
+            selectedTool: .move,
+            hasActiveInteraction: false
+        ))
+        #expect(!ImageEditorMoveToolGroupEntryKeyPolicy.shouldEnter(
+            sidebarTab: .tools,
+            selectedTool: .brush,
+            hasActiveInteraction: false
+        ))
+        #expect(!ImageEditorMoveToolGroupEntryKeyPolicy.shouldEnter(
+            sidebarTab: .tools,
+            selectedTool: .move,
+            hasActiveInteraction: true
+        ))
+    }
+
     @Test func shiftHoverSelectionIntentMatchesAddAndRemovalSemantics() {
         #expect(ImageEditorMoveToolHoverSelectionIntent.resolve(
             sidebarTab: .tools,
@@ -624,6 +669,12 @@ struct XomoCanvasObjectTests {
             size: viewModel.document.canvasSize
         )
         childGroup.groupID = parentGroup.id
+        var backLeaf = ImageEditorLayer.solidColorFill(
+            name: "Back",
+            size: CGSize(width: 80, height: 60),
+            content: ImageEditorSolidColorFillContent(red: 0.2, green: 0.8, blue: 0.4)
+        )
+        backLeaf.groupID = parentGroup.id
         var leaf = ImageEditorLayer.solidColorFill(
             name: "Leaf",
             size: CGSize(width: 80, height: 60),
@@ -648,6 +699,90 @@ struct XomoCanvasObjectTests {
         viewModel.selectLeftSidebarTab(.components)
         #expect(!viewModel.exitDeepCanvasSelectionIfNeeded())
         #expect(viewModel.document.selectedLayerID == leaf.id)
+    }
+
+    @Test func returnEntersFrontmostVisibleChildOneLevelAtATimeWithoutHistory() throws {
+        let viewModel = makeViewModel()
+        let parentGroup = ImageEditorLayer.group(
+            name: "Parent",
+            size: viewModel.document.canvasSize
+        )
+        var childGroup = ImageEditorLayer.group(
+            name: "Child",
+            size: viewModel.document.canvasSize
+        )
+        childGroup.groupID = parentGroup.id
+        var visibleLeaf = ImageEditorLayer.solidColorFill(
+            name: "Visible",
+            size: CGSize(width: 80, height: 60),
+            content: ImageEditorSolidColorFillContent(red: 0.2, green: 0.4, blue: 0.8)
+        )
+        visibleLeaf.groupID = childGroup.id
+        var hiddenFrontLeaf = ImageEditorLayer.solidColorFill(
+            name: "Hidden front",
+            size: CGSize(width: 80, height: 60),
+            content: ImageEditorSolidColorFillContent(red: 0.8, green: 0.2, blue: 0.2)
+        )
+        hiddenFrontLeaf.groupID = childGroup.id
+        hiddenFrontLeaf.isVisible = false
+        viewModel.document.layers.append(contentsOf: [
+            backLeaf,
+            visibleLeaf,
+            hiddenFrontLeaf,
+            childGroup,
+            parentGroup
+        ])
+        viewModel.selectLayer(parentGroup.id)
+        let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
+
+        #expect(viewModel.canEnterSelectedCanvasGroup)
+        #expect(viewModel.enterSelectedCanvasGroupIfNeeded())
+        #expect(viewModel.document.selectedLayerID == childGroup.id)
+        #expect(viewModel.enterSelectedCanvasGroupIfNeeded())
+        #expect(viewModel.document.selectedLayerID == visibleLeaf.id)
+        #expect(!viewModel.enterSelectedCanvasGroupIfNeeded())
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.undoStack.count == undoCount)
+        #expect(viewModel.exitDeepCanvasSelectionIfNeeded())
+        #expect(viewModel.document.selectedLayerID == childGroup.id)
+
+        viewModel.selectLayer(parentGroup.id)
+        viewModel.selectLeftSidebarTab(.components)
+        #expect(!viewModel.canEnterSelectedCanvasGroup)
+        #expect(!viewModel.enterSelectedCanvasGroupIfNeeded())
+        #expect(viewModel.document.selectedLayerID == parentGroup.id)
+    }
+
+    @Test func returnGroupEntryWiresAfterPendingPenFinishAndIntoTheLayerMenu() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let viewSource = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let menuSource = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),
+            encoding: .utf8
+        )
+        let handlerStart = try #require(viewSource.range(of: "private func handle(_ event: NSEvent)"))
+        let handlerEnd = try #require(
+            viewSource[handlerStart.upperBound...].range(of: "private var isTextInputActive")
+        )
+        let handler = viewSource[handlerStart.lowerBound..<handlerEnd.lowerBound]
+        let pendingPen = try #require(handler.range(of: "ImageEditorPendingPenFinishKeyPolicy.matches("))
+        let groupEntry = try #require(handler.range(of: "ImageEditorMoveToolGroupEntryKeyPolicy.matches("))
+
+        #expect(pendingPen.lowerBound < groupEntry.lowerBound)
+        #expect(viewSource.contains("let enterSelectedGroup: () -> Bool"))
+        #expect(viewSource.contains("context.coordinator.enterSelectedGroup = enterSelectedGroup"))
+        #expect(viewSource.contains("self.enterSelectedGroup = enterSelectedGroup"))
+        #expect(viewSource.contains("ImageEditorMoveToolGroupEntryKeyPolicy.shouldEnter("))
+        #expect(viewSource.contains("return viewModel.enterSelectedCanvasGroupIfNeeded()"))
+        #expect(menuSource.contains("imageEditor.action.layerSelectFrontmostChild"))
+        #expect(menuSource.contains("viewModel.enterSelectedCanvasGroupIfNeeded()"))
+        #expect(menuSource.contains(".disabled(!viewModel.canEnterSelectedCanvasGroup)"))
     }
 
     @Test func escapeWiresParentNavigationAfterEveryActiveCanvasCancellation() throws {

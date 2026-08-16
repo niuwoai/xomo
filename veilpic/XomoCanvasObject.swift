@@ -191,6 +191,26 @@ enum ImageEditorMoveToolHoverOutlinePolicy {
     }
 }
 
+enum ImageEditorMoveToolGroupEntryKeyPolicy {
+    static func matches(
+        keyCode: UInt16,
+        modifierFlags: NSEvent.ModifierFlags,
+        isTextInputActive: Bool
+    ) -> Bool {
+        guard !isTextInputActive else { return false }
+        let relevantFlags = modifierFlags.intersection([.command, .option, .shift, .control])
+        return (keyCode == 36 || keyCode == 76) && relevantFlags.isEmpty
+    }
+
+    static func shouldEnter(
+        sidebarTab: XomoLeftSidebarTab,
+        selectedTool: ImageEditorTool,
+        hasActiveInteraction: Bool
+    ) -> Bool {
+        sidebarTab == .tools && selectedTool == .move && !hasActiveInteraction
+    }
+}
+
 enum ImageEditorMoveToolDoubleClickTarget: Equatable {
     case editableText(UUID)
     case layer(UUID)
@@ -992,6 +1012,34 @@ extension ImageEditorViewModel {
         else { return false }
 
         selectParentGroup()
+        return true
+    }
+
+    var canEnterSelectedCanvasGroup: Bool {
+        guard selectedLeftSidebarTab == .tools,
+              document.selectedLayerIDs.count == 1,
+              let selectedLayer = document.selectedLayer,
+              selectedLayer.isGroup
+        else { return false }
+        return document.layers.contains { layer in
+            layer.groupID == selectedLayer.id && document.isEffectivelyVisible(layer)
+        }
+    }
+
+    /// Return follows Sketch/Figma group navigation one level at a time. The
+    /// frontmost visible direct child is selected so repeated Return descends
+    /// nested groups predictably, while Escape can climb the same hierarchy.
+    @discardableResult
+    func enterSelectedCanvasGroupIfNeeded() -> Bool {
+        guard canEnterSelectedCanvasGroup,
+              let groupID = document.selectedLayerID,
+              let child = document.layers.reversed().first(where: { layer in
+                layer.groupID == groupID && document.isEffectivelyVisible(layer)
+              })
+        else { return false }
+
+        selectLayer(child.id)
+        statusText = L10n.format("imageEditor.status.layerChildSelected", child.name)
         return true
     }
 

@@ -560,6 +560,10 @@ extension ImageEditorView {
             viewModel.selectSelectedGroupMembers()
         }
         .disabled(!viewModel.canSelectSelectedGroupMembers)
+        Button(L10n.text("imageEditor.action.layerSelectFrontmostChild")) {
+            viewModel.enterSelectedCanvasGroupIfNeeded()
+        }
+        .disabled(!viewModel.canEnterSelectedCanvasGroup)
         Button(L10n.text("imageEditor.action.layerSelectParentGroup")) {
             viewModel.selectParentGroup()
         }
