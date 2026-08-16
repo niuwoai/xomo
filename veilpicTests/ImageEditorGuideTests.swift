@@ -85,6 +85,60 @@ struct ImageEditorGuideTests {
     }
 
     @Test
+    func movingLayerRepeatsHorizontalSpacingAfterPeerPair() throws {
+        let viewModel = transformableViewModel(
+            sourceName: "source.png",
+            image: testImage(color: .systemBlue, size: NSSize(width: 180, height: 100))
+        )
+        let layerIndex = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[layerIndex].frame = CGRect(x: 110, y: 20, width: 15, height: 20)
+        var firstLayer = ImageEditorLayer.blank(name: "First", size: CGSize(width: 20, height: 20))
+        firstLayer.frame = CGRect(x: 10, y: 20, width: 20, height: 20)
+        var secondLayer = ImageEditorLayer.blank(name: "Second", size: CGSize(width: 30, height: 20))
+        secondLayer.frame = CGRect(x: 50, y: 20, width: 30, height: 20)
+        viewModel.document.layers.append(contentsOf: [firstLayer, secondLayer])
+        let historyCount = viewModel.document.history.count
+
+        viewModel.beginMovingSelectedLayer()
+        viewModel.moveSelectedLayer(by: CGSize(width: -8, height: 0), snapping: true)
+
+        #expect(viewModel.movingObjectPreviewFrame?.minX == 100)
+        #expect(viewModel.activeSpacingGuides.count == 2)
+        #expect(viewModel.activeSpacingGuides.map { $0.end.x - $0.start.x } == [20, 20])
+
+        viewModel.finishMovingSelectedLayer()
+
+        #expect(viewModel.document.layers[layerIndex].frame.minX == 100)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.activeSpacingGuides.isEmpty)
+    }
+
+    @Test
+    func movingLayerRepeatsHorizontalSpacingBeforePeerPair() throws {
+        let viewModel = transformableViewModel(
+            sourceName: "source.png",
+            image: testImage(color: .systemPurple, size: NSSize(width: 160, height: 100))
+        )
+        let layerIndex = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[layerIndex].frame = CGRect(x: 0, y: 20, width: 20, height: 20)
+        var firstLayer = ImageEditorLayer.blank(name: "First", size: CGSize(width: 20, height: 20))
+        firstLayer.frame = CGRect(x: 50, y: 20, width: 20, height: 20)
+        var secondLayer = ImageEditorLayer.blank(name: "Second", size: CGSize(width: 20, height: 20))
+        secondLayer.frame = CGRect(x: 90, y: 20, width: 20, height: 20)
+        viewModel.document.layers.append(contentsOf: [firstLayer, secondLayer])
+
+        viewModel.beginMovingSelectedLayer()
+        viewModel.moveSelectedLayer(by: CGSize(width: 8, height: 0), snapping: true)
+
+        #expect(viewModel.movingObjectPreviewFrame?.minX == 10)
+        #expect(viewModel.activeSpacingGuides.map { $0.end.x - $0.start.x } == [20, 20])
+
+        #expect(viewModel.cancelMovingSelectedLayer())
+        #expect(viewModel.document.layers[layerIndex].frame.minX == 0)
+        #expect(viewModel.activeSpacingGuides.isEmpty)
+    }
+
+    @Test
     func movingLayerSnapsBetweenVerticalPeersAndShowsEqualSpacingGuides() throws {
         let viewModel = transformableViewModel(
             sourceName: "source.png",
@@ -112,6 +166,58 @@ struct ImageEditorGuideTests {
     }
 
     @Test
+    func movingLayerRepeatsVerticalSpacingAfterPeerPair() throws {
+        let viewModel = transformableViewModel(
+            sourceName: "source.png",
+            image: testImage(color: .systemTeal, size: NSSize(width: 100, height: 160))
+        )
+        let layerIndex = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[layerIndex].frame = CGRect(x: 20, y: 100, width: 20, height: 20)
+        var firstLayer = ImageEditorLayer.blank(name: "First", size: CGSize(width: 20, height: 20))
+        firstLayer.frame = CGRect(x: 20, y: 10, width: 20, height: 20)
+        var secondLayer = ImageEditorLayer.blank(name: "Second", size: CGSize(width: 20, height: 20))
+        secondLayer.frame = CGRect(x: 20, y: 50, width: 20, height: 20)
+        viewModel.document.layers.append(contentsOf: [firstLayer, secondLayer])
+
+        viewModel.beginMovingSelectedLayer()
+        viewModel.moveSelectedLayer(by: CGSize(width: 0, height: -8), snapping: true)
+
+        #expect(viewModel.movingObjectPreviewFrame?.minY == 90)
+        #expect(viewModel.activeSpacingGuides.count == 2)
+        #expect(viewModel.activeSpacingGuides.map { $0.end.y - $0.start.y } == [20, 20])
+
+        viewModel.finishMovingSelectedLayer()
+        #expect(viewModel.document.layers[layerIndex].frame.minY == 90)
+        #expect(viewModel.activeSpacingGuides.isEmpty)
+    }
+
+    @Test
+    func movingLayerRepeatsVerticalSpacingBeforePeerPair() throws {
+        let viewModel = transformableViewModel(
+            sourceName: "source.png",
+            image: testImage(color: .systemYellow, size: NSSize(width: 100, height: 160))
+        )
+        let layerIndex = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[layerIndex].frame = CGRect(x: 20, y: 0, width: 20, height: 20)
+        var firstLayer = ImageEditorLayer.blank(name: "First", size: CGSize(width: 20, height: 20))
+        firstLayer.frame = CGRect(x: 20, y: 50, width: 20, height: 20)
+        var secondLayer = ImageEditorLayer.blank(name: "Second", size: CGSize(width: 20, height: 20))
+        secondLayer.frame = CGRect(x: 20, y: 90, width: 20, height: 20)
+        viewModel.document.layers.append(contentsOf: [firstLayer, secondLayer])
+
+        viewModel.beginMovingSelectedLayer()
+        viewModel.moveSelectedLayer(by: CGSize(width: 0, height: 8), snapping: true)
+
+        #expect(viewModel.movingObjectPreviewFrame?.minY == 10)
+        #expect(viewModel.activeSpacingGuides.count == 2)
+        #expect(viewModel.activeSpacingGuides.map { $0.end.y - $0.start.y } == [20, 20])
+
+        #expect(viewModel.cancelMovingSelectedLayer())
+        #expect(viewModel.document.layers[layerIndex].frame.minY == 0)
+        #expect(viewModel.activeSpacingGuides.isEmpty)
+    }
+
+    @Test
     func equalSpacingSnapIgnoresPeersFromOtherRows() throws {
         let viewModel = transformableViewModel(
             sourceName: "source.png",
@@ -132,6 +238,27 @@ struct ImageEditorGuideTests {
 
         #expect(viewModel.movingObjectPreviewFrame?.minX == 50)
         #expect(viewModel.activeSpacingGuides.count == 2)
+    }
+
+    @Test
+    func repeatedSpacingSnapIgnoresPeerPairsFromOtherRows() throws {
+        let viewModel = transformableViewModel(
+            sourceName: "source.png",
+            image: testImage(color: .systemBrown, size: NSSize(width: 160, height: 120))
+        )
+        let layerIndex = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[layerIndex].frame = CGRect(x: 100, y: 20, width: 20, height: 20)
+        var firstLayer = ImageEditorLayer.blank(name: "First", size: CGSize(width: 20, height: 20))
+        firstLayer.frame = CGRect(x: 10, y: 80, width: 20, height: 20)
+        var secondLayer = ImageEditorLayer.blank(name: "Second", size: CGSize(width: 20, height: 20))
+        secondLayer.frame = CGRect(x: 50, y: 80, width: 20, height: 20)
+        viewModel.document.layers.append(contentsOf: [firstLayer, secondLayer])
+
+        viewModel.beginMovingSelectedLayer()
+        viewModel.moveSelectedLayer(by: CGSize(width: -8, height: 0), snapping: true)
+
+        #expect(viewModel.movingObjectPreviewFrame?.minX == 92)
+        #expect(viewModel.activeSpacingGuides.isEmpty)
     }
 
     @Test

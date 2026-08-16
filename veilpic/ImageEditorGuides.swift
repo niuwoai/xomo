@@ -571,15 +571,32 @@ extension ImageEditorViewModel {
         for index in 0..<(sortedFrames.count - 1) {
             let before = sortedFrames[index]
             let after = sortedFrames[index + 1]
-            let candidate = equalSpacingSnap(
-                for: proposedFrame,
-                between: before,
-                and: after,
-                orientation: orientation
-            )
-            guard let candidate, abs(candidate.correction) <= threshold else { continue }
-            if bestSnap == nil || abs(candidate.correction) < abs(bestSnap?.correction ?? .greatestFiniteMagnitude) {
-                bestSnap = candidate
+            let candidates = [
+                equalSpacingSnap(
+                    for: proposedFrame,
+                    between: before,
+                    and: after,
+                    orientation: orientation
+                ),
+                repeatedSpacingSnap(
+                    for: proposedFrame,
+                    beside: before,
+                    and: after,
+                    placement: .before,
+                    orientation: orientation
+                ),
+                repeatedSpacingSnap(
+                    for: proposedFrame,
+                    beside: before,
+                    and: after,
+                    placement: .after,
+                    orientation: orientation
+                )
+            ].compactMap { $0 }
+            for candidate in candidates where abs(candidate.correction) <= threshold {
+                if bestSnap == nil || abs(candidate.correction) < abs(bestSnap?.correction ?? .greatestFiniteMagnitude) {
+                    bestSnap = candidate
+                }
             }
         }
         return bestSnap
@@ -640,6 +657,101 @@ extension ImageEditorViewModel {
                         start: CGPoint(x: crossPosition, y: snappedFrame.maxY),
                         end: CGPoint(x: crossPosition, y: after.minY)
                     )
+                ]
+            )
+        }
+    }
+
+    private func repeatedSpacingSnap(
+        for proposedFrame: CGRect,
+        beside before: CGRect,
+        and after: CGRect,
+        placement: ImageEditorEqualSpacingPlacement,
+        orientation: ImageEditorGuideOrientation
+    ) -> ImageEditorEqualSpacingSnap? {
+        switch orientation {
+        case .horizontal:
+            guard rangesOverlap(proposedFrame.minY...proposedFrame.maxY, before.minY...before.maxY),
+                  rangesOverlap(proposedFrame.minY...proposedFrame.maxY, after.minY...after.maxY)
+            else { return nil }
+            let spacing = after.minX - before.maxX
+            guard spacing >= 0 else { return nil }
+            let targetMinX: CGFloat
+            switch placement {
+            case .before:
+                targetMinX = before.minX - spacing - proposedFrame.width
+            case .after:
+                targetMinX = after.maxX + spacing
+            }
+            let correction = targetMinX - proposedFrame.minX
+            let snappedFrame = proposedFrame.offsetBy(dx: correction, dy: 0)
+            let crossPosition = proposedFrame.midY
+            let repeatedGuide: ImageEditorSpacingGuide
+            switch placement {
+            case .before:
+                repeatedGuide = ImageEditorSpacingGuide(
+                    orientation: .horizontal,
+                    start: CGPoint(x: snappedFrame.maxX, y: crossPosition),
+                    end: CGPoint(x: before.minX, y: crossPosition)
+                )
+            case .after:
+                repeatedGuide = ImageEditorSpacingGuide(
+                    orientation: .horizontal,
+                    start: CGPoint(x: after.maxX, y: crossPosition),
+                    end: CGPoint(x: snappedFrame.minX, y: crossPosition)
+                )
+            }
+            return ImageEditorEqualSpacingSnap(
+                correction: correction,
+                guides: [
+                    ImageEditorSpacingGuide(
+                        orientation: .horizontal,
+                        start: CGPoint(x: before.maxX, y: crossPosition),
+                        end: CGPoint(x: after.minX, y: crossPosition)
+                    ),
+                    repeatedGuide
+                ]
+            )
+        case .vertical:
+            guard rangesOverlap(proposedFrame.minX...proposedFrame.maxX, before.minX...before.maxX),
+                  rangesOverlap(proposedFrame.minX...proposedFrame.maxX, after.minX...after.maxX)
+            else { return nil }
+            let spacing = after.minY - before.maxY
+            guard spacing >= 0 else { return nil }
+            let targetMinY: CGFloat
+            switch placement {
+            case .before:
+                targetMinY = before.minY - spacing - proposedFrame.height
+            case .after:
+                targetMinY = after.maxY + spacing
+            }
+            let correction = targetMinY - proposedFrame.minY
+            let snappedFrame = proposedFrame.offsetBy(dx: 0, dy: correction)
+            let crossPosition = proposedFrame.midX
+            let repeatedGuide: ImageEditorSpacingGuide
+            switch placement {
+            case .before:
+                repeatedGuide = ImageEditorSpacingGuide(
+                    orientation: .vertical,
+                    start: CGPoint(x: crossPosition, y: snappedFrame.maxY),
+                    end: CGPoint(x: crossPosition, y: before.minY)
+                )
+            case .after:
+                repeatedGuide = ImageEditorSpacingGuide(
+                    orientation: .vertical,
+                    start: CGPoint(x: crossPosition, y: after.maxY),
+                    end: CGPoint(x: crossPosition, y: snappedFrame.minY)
+                )
+            }
+            return ImageEditorEqualSpacingSnap(
+                correction: correction,
+                guides: [
+                    ImageEditorSpacingGuide(
+                        orientation: .vertical,
+                        start: CGPoint(x: crossPosition, y: before.maxY),
+                        end: CGPoint(x: crossPosition, y: after.minY)
+                    ),
+                    repeatedGuide
                 ]
             )
         }
@@ -814,6 +926,11 @@ private struct ImageEditorMoveAlignment {
 private struct ImageEditorEqualSpacingSnap {
     let correction: CGFloat
     let guides: [ImageEditorSpacingGuide]
+}
+
+private enum ImageEditorEqualSpacingPlacement {
+    case before
+    case after
 }
 
 private extension CGRect {
