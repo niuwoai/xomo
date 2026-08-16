@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-17 04:59:54 +0800",
+  "generated_at": "2026-08-17 05:08:53 +0800",
   "total": 1,
   "passed": 1,
   "failed": 0,
@@ -9,16 +9,16 @@
   "jobs": 1,
   "results": [
     {
-      "suite": "ImageEditorTransparentPixelLockTests",
-      "method": "explicitPreserveTransparencyFillsKeepExistingAlphaWithoutLockingTheLayer",
-      "identifier": "veilpicTests/ImageEditorTransparentPixelLockTests/explicitPreserveTransparencyFillsKeepExistingAlphaWithoutLockingTheLayer()",
-      "file": "ImageEditorTransparentPixelLockTests.swift",
+      "suite": "ImageEditorTextInputShortcutTests",
+      "method": "deleteAndFillShortcutsRemainOwnedByActiveTextInput",
+      "identifier": "veilpicTests/ImageEditorTextInputShortcutTests/deleteAndFillShortcutsRemainOwnedByActiveTextInput()",
+      "file": "ImageEditorTextInputShortcutTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 4.573,
+      "duration": 4.494,
       "infrastructure_retries": 0,
       "issues": [],
-      "log": "ImageEditorTransparentPixelLockTests.explicitPreserveTransparencyFillsKeepExistingAlphaWithoutLockingTheLayer.log"
+      "log": "ImageEditorTextInputShortcutTests.deleteAndFillShortcutsRemainOwnedByActiveTextInput.log"
     }
   ]
 }

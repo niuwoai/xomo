@@ -15105,6 +15105,7 @@ enum ImageEditorKeyboardShortcutAction: Equatable {
              .fillSelectionPreservingTransparency,
              .fillSelectionBackground,
              .fillSelectionBackgroundPreservingTransparency,
+             .clearSelectionPixels,
              .selectAll,
              .undo,
              .redo,
