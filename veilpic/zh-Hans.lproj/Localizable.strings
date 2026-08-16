@@ -718,7 +718,7 @@
 "imageEditor.tool.directSelection" = "直接选择";
 "imageEditor.tool.hand" = "抓手";
 "imageEditor.tool.zoom" = "缩放";
-"imageEditor.tool.move.help" = "移动：拖动图层或选区；双击文字可原位编辑，双击其他内容可深入选择组内图层。";
+"imageEditor.tool.move.help" = "移动：拖动图层或选区；双击可编辑或深入选择组内图层，按 Escape 返回父级。";
 "imageEditor.tool.marquee.help" = "矩形选区：拖拽创建矩形选区。";
 "imageEditor.tool.lasso.help" = "套索：沿轮廓自由绘制选区。";
 "imageEditor.tool.magicWand.help" = "魔棒：按颜色相近程度选择连续区域。";

@@ -332,6 +332,20 @@ extension ImageEditorViewModel {
         return true
     }
 
+    /// Sketch/Figma-style Escape navigation after direct selection drills
+    /// into a group. Active pointer transactions are cancelled by the view
+    /// before this fallback runs, so one Escape only changes selection depth.
+    func exitDeepCanvasSelectionIfNeeded() -> Bool {
+        guard selectedLeftSidebarTab == .tools,
+              document.selectedLayerIDs.count == 1,
+              let selectedLayer = document.selectedLayer,
+              document.group(for: selectedLayer) != nil
+        else { return false }
+
+        selectParentGroup()
+        return true
+    }
+
     private func xomoCanvasObjects() -> [XomoCanvasObject] {
         let groups = document.layers.enumerated().reduce(into: [UUID: (kind: XomoComponentKind, index: Int)]()) { result, item in
             let (index, layer) = item

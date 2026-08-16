@@ -142,6 +142,95 @@ struct XomoCanvasObjectTests {
         #expect(viewModel.document.history.count == historyCount)
     }
 
+    @Test func escapeReturnsADeepSelectedComponentChildToItsParentGroup() throws {
+        let viewModel = makeViewModel()
+        viewModel.insertXomoComponent(.button, at: CGPoint(x: 80, y: 90))
+        let group = try #require(viewModel.document.selectedLayer)
+        let child = try #require(viewModel.document.layers.first {
+            $0.groupID == group.id && !$0.isGroup
+        })
+        viewModel.selectLayer(child.id)
+        let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
+
+        #expect(viewModel.exitDeepCanvasSelectionIfNeeded())
+        #expect(viewModel.document.selectedLayerID == group.id)
+        #expect(viewModel.document.selectedLayerIDs == [group.id])
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.undoStack.count == undoCount)
+        #expect(!viewModel.exitDeepCanvasSelectionIfNeeded())
+        #expect(viewModel.document.selectedLayerID == group.id)
+    }
+
+    @Test func escapeClimbsNestedGroupsOneLevelButIgnoresMultiSelectionAndComponentsMode() throws {
+        let viewModel = makeViewModel()
+        let parentGroup = ImageEditorLayer.group(
+            name: "Parent",
+            size: viewModel.document.canvasSize
+        )
+        var childGroup = ImageEditorLayer.group(
+            name: "Child",
+            size: viewModel.document.canvasSize
+        )
+        childGroup.groupID = parentGroup.id
+        var leaf = ImageEditorLayer.solidColorFill(
+            name: "Leaf",
+            size: CGSize(width: 80, height: 60),
+            content: ImageEditorSolidColorFillContent(red: 0.2, green: 0.4, blue: 0.8)
+        )
+        leaf.groupID = childGroup.id
+        viewModel.document.layers.append(contentsOf: [leaf, childGroup, parentGroup])
+
+        viewModel.selectLayer(leaf.id)
+        #expect(viewModel.exitDeepCanvasSelectionIfNeeded())
+        #expect(viewModel.document.selectedLayerID == childGroup.id)
+        #expect(viewModel.exitDeepCanvasSelectionIfNeeded())
+        #expect(viewModel.document.selectedLayerID == parentGroup.id)
+
+        viewModel.selectLayer(leaf.id)
+        viewModel.selectLayer(parentGroup.id, extendingSelection: true)
+        let multiSelection = viewModel.document.selectedLayerIDs
+        #expect(!viewModel.exitDeepCanvasSelectionIfNeeded())
+        #expect(viewModel.document.selectedLayerIDs == multiSelection)
+
+        viewModel.selectLayer(leaf.id)
+        viewModel.selectLeftSidebarTab(.components)
+        #expect(!viewModel.exitDeepCanvasSelectionIfNeeded())
+        #expect(viewModel.document.selectedLayerID == leaf.id)
+    }
+
+    @Test func escapeWiresParentNavigationAfterEveryActiveCanvasCancellation() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let escapeStart = try #require(source.range(of: "cancelSelectedObject: {"))
+        let filterStart = try #require(
+            source[escapeStart.upperBound...].range(of: "discardPendingSmartFilterChanges:")
+        )
+        let escapeSource = source[escapeStart.lowerBound..<filterStart.lowerBound]
+        let transformCancel = try #require(
+            escapeSource.range(of: "viewModel.cancelTransformingSelectedLayer()")
+        )
+        let moveCancel = try #require(
+            escapeSource.range(of: "viewModel.cancelMovingSelectedLayer()")
+        )
+        let componentExit = try #require(
+            escapeSource.range(of: "viewModel.clearSelectedXomoObjectIfNeeded()")
+        )
+        let parentExit = try #require(
+            escapeSource.range(of: "viewModel.exitDeepCanvasSelectionIfNeeded()")
+        )
+
+        #expect(transformCancel.lowerBound < parentExit.lowerBound)
+        #expect(moveCancel.lowerBound < parentExit.lowerBound)
+        #expect(componentExit.lowerBound < parentExit.lowerBound)
+        #expect(escapeSource.contains("return true"))
+    }
+
     @Test func componentHitQueryDoesNotMutateSelection() throws {
         let viewModel = makeViewModel()
         viewModel.insertXomoComponent(.button, at: CGPoint(x: 80, y: 90))

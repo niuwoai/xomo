@@ -375,7 +375,10 @@ struct ImageEditorView: View {
                         NSCursor.arrow.set()
                         return true
                     }
-                    return viewModel.clearSelectedXomoObjectIfNeeded()
+                    if viewModel.clearSelectedXomoObjectIfNeeded() {
+                        return true
+                    }
+                    return viewModel.exitDeepCanvasSelectionIfNeeded()
                 },
                 discardPendingSmartFilterChanges: {
                     viewModel.discardLoadedSmartFilterControlChanges()
