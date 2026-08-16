@@ -988,7 +988,7 @@
 "imageEditor.help.gradientOverlayCenterHandle" = "拖动以移动渐变叠加中心";
 "imageEditor.help.gradientOverlayAxisHandle" = "拖动以调整角度与缩放；按住 Shift 吸附角度";
 "imageEditor.help.gradientOverlayAxis" = "双击以添加渐变叠加颜色色标";
-"imageEditor.help.gradientOverlayStopHandle" = "点击选中；拖动移动，Option 拖动复制，Shift 按 5% 吸附；也可用左右键、Home/End 和 Delete";
+"imageEditor.help.gradientOverlayStopHandle" = "点击选中；拖过其他色标可重排，Option 拖动复制，Shift 按 5% 吸附；也可用左右键、Home/End 和 Delete";
 "imageEditor.help.gradientOverlayMidpointHandle" = "点击选中；拖动（Shift 按 5% 吸附）或按左右键，Home/End 到边界，Delete 恢复 50%";
 "imageEditor.help.shapeGradientStopHandle" = "沿渐变轴拖动中间色标";
 "imageEditor.help.shapeGradientMidpointHandle" = "拖动相邻颜色之间的过渡中点";

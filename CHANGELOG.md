@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.12.0-rc1046 - 2026-08-16
+
+### Added
+- Gradient Overlay 画布内部颜色色标可拖过相邻色标并自动重排，补齐 Sketch/Figma 式自由直接操控。
+
+### Changed
+- 重排按拖动方向处理落在相邻色标正中的等距边界，并在所有可用色段中选择离指针最近的合法位置；移动色标完整携带 RGB、Alpha 与中点，同时保持端点、相邻 1% 间距和稳定选中索引。
+- 画布重排继续复用 Reverse、Shift 5% 吸附、Option 拖动复制与单步连续 History/Undo；键盘微调、Home/End 和属性轨道仍限制在当前邻居内，避免扩大行为范围。
+
+### Verification
+- 跨邻居排序、方向等距边界、属性保真、Reverse、Shift 吸附、选中索引、Undo/Redo、Option 复制及 UI 接线专项与相邻回归 8/8 通过；CLI 2/2、发布契约 7/7（21 项断言）通过。rc1040 周期安装/真实界面冒烟仍等待本机 Developer ID 私钥恢复。
+
 ## 2.12.0-rc1045 - 2026-08-16
 
 ### Added

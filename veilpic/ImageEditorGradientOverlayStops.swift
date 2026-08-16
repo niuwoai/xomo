@@ -33,6 +33,11 @@ enum ImageEditorGradientOverlayStopDraftEditing {
         var duplicateIndex: Int
     }
 
+    struct ReorderingResult: Equatable {
+        var stops: [ImageEditorGradientColorStop]
+        var movedIndex: Int
+    }
+
     static func duplicatingStop(
         _ stops: [ImageEditorGradientColorStop],
         at index: Int,
@@ -63,6 +68,57 @@ enum ImageEditorGradientOverlayStopDraftEditing {
             )
         }
         return nil
+    }
+
+    static func reorderingStop(
+        _ stops: [ImageEditorGradientColorStop],
+        at index: Int,
+        to position: Double
+    ) -> ReorderingResult {
+        let normalizedStops = normalized(stops)
+        guard position.isFinite,
+              index > 0,
+              index < normalizedStops.count - 1
+        else {
+            return ReorderingResult(stops: normalizedStops, movedIndex: index)
+        }
+
+        let source = normalizedStops[index]
+        var remainingStops = normalizedStops
+        remainingStops.remove(at: index)
+        let movesTowardLowerPositions = position < source.position
+        var bestLowerIndex: Int?
+        var bestPosition = source.position
+        var bestDistance = Double.greatestFiniteMagnitude
+        for lowerIndex in remainingStops.indices.dropLast() {
+            let lowerBound = remainingStops[lowerIndex].position + minimumStopSpacing
+            let upperBound = remainingStops[lowerIndex + 1].position - minimumStopSpacing
+            guard lowerBound <= upperBound else { continue }
+            let candidate = max(lowerBound, min(upperBound, position))
+            let distance = abs(candidate - position)
+            let isCloser = distance < bestDistance - 0.000_001
+            let isDirectionalTie = abs(distance - bestDistance) <= 0.000_001
+                && bestLowerIndex.map {
+                    movesTowardLowerPositions ? lowerIndex > $0 : lowerIndex < $0
+                } == true
+            if isCloser || isDirectionalTie {
+                bestLowerIndex = lowerIndex
+                bestPosition = candidate
+                bestDistance = distance
+            }
+        }
+        guard let bestLowerIndex else {
+            return ReorderingResult(stops: normalizedStops, movedIndex: index)
+        }
+
+        var movedStop = source
+        movedStop.position = bestPosition
+        let movedIndex = bestLowerIndex + 1
+        remainingStops.insert(movedStop, at: movedIndex)
+        return ReorderingResult(
+            stops: normalized(remainingStops),
+            movedIndex: movedIndex
+        )
     }
 
     static func movingStop(

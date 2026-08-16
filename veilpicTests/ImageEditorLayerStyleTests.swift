@@ -3331,6 +3331,110 @@ struct ImageEditorLayerStyleTests {
         #expect(viewModel.canRedo)
     }
 
+    @Test func gradientOverlayCanvasStopReorderingCrossesNeighborsAndResolvesDirectionalTies() throws {
+        let source = ImageEditorGradientColorStop(
+            position: 0.25,
+            red: 0.2,
+            green: 0.7,
+            blue: 0.3,
+            alpha: 0.6,
+            midpoint: 0.35
+        )
+        let stops = [
+            ImageEditorGradientColorStop(position: 0, color: .systemRed),
+            source,
+            ImageEditorGradientColorStop(position: 0.5, color: .systemYellow),
+            ImageEditorGradientColorStop(position: 0.75, color: .systemPurple),
+            ImageEditorGradientColorStop(position: 1, color: .systemBlue)
+        ]
+        let crossed = ImageEditorGradientOverlayStopDraftEditing.reorderingStop(
+            stops,
+            at: 1,
+            to: 0.8
+        )
+        #expect(crossed.movedIndex == 3)
+        #expect(crossed.stops.map(\.position) == [0, 0.5, 0.75, 0.8, 1])
+        #expect(crossed.stops[3].red == source.red)
+        #expect(crossed.stops[3].green == source.green)
+        #expect(crossed.stops[3].blue == source.blue)
+        #expect(crossed.stops[3].alpha == source.alpha)
+        #expect(crossed.stops[3].midpoint == source.midpoint)
+
+        let rightwardTie = ImageEditorGradientOverlayStopDraftEditing.reorderingStop(
+            stops,
+            at: 1,
+            to: 0.5
+        )
+        #expect(rightwardTie.movedIndex == 1)
+        #expect(abs(rightwardTie.stops[1].position - 0.49) < 0.000_001)
+
+        let leftwardTie = ImageEditorGradientOverlayStopDraftEditing.reorderingStop(
+            stops,
+            at: 3,
+            to: 0.5
+        )
+        #expect(leftwardTie.movedIndex == 3)
+        #expect(abs(leftwardTie.stops[3].position - 0.51) < 0.000_001)
+    }
+
+    @Test func draggingGradientOverlayCanvasStopAcrossNeighborsTracksIndexAndUndo() throws {
+        let viewModel = gradientOverlayCenterViewModel()
+        let selectedIndex = try #require(viewModel.document.selectedLayerIndex)
+        let source = ImageEditorGradientColorStop(
+            position: 0.25,
+            red: 0.2,
+            green: 0.7,
+            blue: 0.3,
+            alpha: 0.6,
+            midpoint: 0.35
+        )
+        let originalStops = [
+            ImageEditorGradientColorStop(position: 0, color: .systemRed),
+            source,
+            ImageEditorGradientColorStop(position: 0.5, color: .systemYellow),
+            ImageEditorGradientColorStop(position: 0.75, color: .systemPurple),
+            ImageEditorGradientColorStop(position: 1, color: .systemBlue)
+        ]
+        viewModel.document.layers[selectedIndex].style.gradientOverlayReverse = true
+        viewModel.document.layers[selectedIndex].style.setGradientOverlayColorStops(originalStops)
+        let geometry = try #require(viewModel.selectedLayerGradientOverlayCanvasGeometry)
+        let target = CGPoint(
+            x: geometry.axisStart.x
+                + (geometry.axisEndpoint.x - geometry.axisStart.x) * 0.17,
+            y: geometry.axisStart.y
+                + (geometry.axisEndpoint.y - geometry.axisStart.y) * 0.17
+        )
+        let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
+
+        #expect(viewModel.beginEditingSelectedLayerGradientOverlayCanvasStop(at: 1))
+        #expect(
+            viewModel.updateSelectedLayerGradientOverlayCanvasStop(
+                to: target,
+                snappingToStep: true
+            ) == 3
+        )
+        viewModel.finishEditingSelectedLayerGradientOverlayCanvasStop()
+
+        let reorderedStops = viewModel.selectedLayerGradientOverlayColorStops
+        let expectedPositions = [0.0, 0.5, 0.75, 0.85, 1.0]
+        #expect(
+            zip(reorderedStops.map(\.position), expectedPositions).allSatisfy {
+                abs($0 - $1) < 0.000_001
+            }
+        )
+        #expect(reorderedStops[3].red == source.red)
+        #expect(reorderedStops[3].green == source.green)
+        #expect(reorderedStops[3].blue == source.blue)
+        #expect(reorderedStops[3].alpha == source.alpha)
+        #expect(reorderedStops[3].midpoint == source.midpoint)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.undoStack.count == undoCount + 1)
+
+        viewModel.undo()
+        #expect(viewModel.selectedLayerGradientOverlayColorStops == originalStops)
+    }
+
     @Test func undoCancelsActiveGradientOverlayCanvasStopBeforeHistory() throws {
         let viewModel = gradientOverlayCenterViewModel()
         let selectedIndex = try #require(viewModel.document.selectedLayerIndex)
@@ -3748,6 +3852,11 @@ struct ImageEditorLayerStyleTests {
         #expect(source.contains("NSEvent.modifierFlags.contains(.option)"))
         #expect(source.contains("ImageEditorGradientOverlayStopDuplicateGesturePolicy"))
         #expect(source.contains("isGradientOverlayStopDuplicateDragBlocked"))
+        #expect(
+            source.components(
+                separatedBy: "selectedGradientOverlayStopIndex = viewModel\n                        .updateSelectedLayerGradientOverlayCanvasStop("
+            ).count - 1 == 2
+        )
         #expect(
             source.components(
                 separatedBy: "snappingToStep: NSEvent.modifierFlags.contains(.shift)"

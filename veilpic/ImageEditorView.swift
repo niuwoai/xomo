@@ -7982,10 +7982,11 @@ struct ImageEditorView: View {
                     guard activeGradientOverlayStopIndex == point.index,
                           !isGradientOverlayStopDuplicateDragBlocked
                     else { return }
-                    viewModel.updateSelectedLayerGradientOverlayCanvasStop(
-                        to: unboundedImagePoint(from: value.location, in: canvasSize),
-                        snappingToStep: NSEvent.modifierFlags.contains(.shift)
-                    )
+                    selectedGradientOverlayStopIndex = viewModel
+                        .updateSelectedLayerGradientOverlayCanvasStop(
+                            to: unboundedImagePoint(from: value.location, in: canvasSize),
+                            snappingToStep: NSEvent.modifierFlags.contains(.shift)
+                        )
                 }
                 .onEnded { value in
                     defer {
@@ -8001,10 +8002,11 @@ struct ImageEditorView: View {
                     guard activeGradientOverlayStopIndex == point.index,
                           !isGradientOverlayStopDuplicateDragBlocked
                     else { return }
-                    viewModel.updateSelectedLayerGradientOverlayCanvasStop(
-                        to: unboundedImagePoint(from: value.location, in: canvasSize),
-                        snappingToStep: NSEvent.modifierFlags.contains(.shift)
-                    )
+                    selectedGradientOverlayStopIndex = viewModel
+                        .updateSelectedLayerGradientOverlayCanvasStop(
+                            to: unboundedImagePoint(from: value.location, in: canvasSize),
+                            snappingToStep: NSEvent.modifierFlags.contains(.shift)
+                        )
                     viewModel.finishEditingSelectedLayerGradientOverlayCanvasStop()
                 }
             )

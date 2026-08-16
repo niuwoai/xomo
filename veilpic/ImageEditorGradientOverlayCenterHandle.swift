@@ -687,10 +687,11 @@ extension ImageEditorViewModel {
         return result.duplicateIndex
     }
 
+    @discardableResult
     func updateSelectedLayerGradientOverlayCanvasStop(
         to canvasPoint: CGPoint,
         snappingToStep: Bool = false
-    ) {
+    ) -> Int? {
         guard let layerID = editingGradientOverlayStopLayerID,
               let stopIndex = editingGradientOverlayStopIndex,
               let movementStops = editingGradientOverlayStopMovementStops,
@@ -699,8 +700,8 @@ extension ImageEditorViewModel {
                   layer: document.layers[index],
                   canvasPoint: canvasPoint
               )
-        else { return }
-        let stops = ImageEditorGradientOverlayStopDraftEditing.movingStop(
+        else { return nil }
+        let result = ImageEditorGradientOverlayStopDraftEditing.reorderingStop(
             movementStops,
             at: stopIndex,
             to: ImageEditorGradientOverlayCanvasHandleSnap.value(
@@ -708,11 +709,12 @@ extension ImageEditorViewModel {
                 snappingToStep: snappingToStep
             )
         )
-        guard stops != document.layers[index].style.resolvedGradientOverlayColorStops else {
-            return
+        guard result.stops != document.layers[index].style.resolvedGradientOverlayColorStops else {
+            return result.movedIndex
         }
-        document.layers[index].style.setGradientOverlayColorStops(stops)
+        document.layers[index].style.setGradientOverlayColorStops(result.stops)
         statusText = L10n.text("imageEditor.status.gradientOverlayStopMoved")
+        return result.movedIndex
     }
 
     func finishEditingSelectedLayerGradientOverlayCanvasStop() {
