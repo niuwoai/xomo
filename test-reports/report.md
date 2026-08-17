@@ -1,8 +1,8 @@
 # veilpicTests 独立进程测试报告
 
-- 生成时间：2026-08-17 07:51:09 +0800
-- 执行组：**3**，通过：**3**，失败：**0**
-- 覆盖测试：**3**，通过组内测试：**3**，失败组内测试：**0**
+- 生成时间：2026-08-17 08:08:47 +0800
+- 执行组：**6**，通过：**6**，失败：**0**
+- 覆盖测试：**6**，通过组内测试：**6**，失败组内测试：**0**
 - 并行度（jobs）：1
 
 ✅ 全部通过。
@@ -11,5 +11,5 @@
 
 | 套件 | 通过/总数 |
 |---|---|
-| ImageEditorCanvasCursorTests | 1/1 |
-| ImageEditorSelectionFillDialogTests | 2/2 |
+| ImageEditorScopeTests | 2/2 |
+| ImageEditorSelectionFillDialogTests | 4/4 |

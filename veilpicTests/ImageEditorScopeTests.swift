@@ -2282,6 +2282,44 @@ struct ImageEditorScopeTests {
         }
     }
 
+    @Test func historyBrushBlendModeWiresPersistencePixelsAndOptionsWithoutAffectingEraser() throws {
+        let editorSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let commandSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent(
+                "veilpic/ImageEditorSelectionEditCommands.swift"
+            ),
+            encoding: .utf8
+        )
+        let preferencesSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent(
+                "veilpic/ImageEditorBrushDynamicsPreferences.swift"
+            ),
+            encoding: .utf8
+        )
+
+        #expect(editorSource.contains("image-editor-history-brush-blend-mode"))
+        #expect(editorSource.contains("ForEach(ImageEditorBlendMode.smartFilterCases)"))
+        #expect(editorSource.contains("set: { viewModel.setHistoryBrushBlendMode($0) }"))
+        #expect(commandSource.contains("historyBrush(samples: samples, blendMode: historyBrushBlendMode)"))
+        #expect(commandSource.contains("historyBrush(samples: samples, blendMode: .normal)"))
+        #expect(commandSource.contains("blendMode: blendMode == .passThrough ? .normal : blendMode"))
+        #expect(preferencesSource.contains("case historyBrushBlendMode"))
+        #expect(preferencesSource.contains("?? .normal"))
+
+        for locale in ["en", "ja", "zh-Hans"] {
+            let localization = try String(
+                contentsOf: Self.repositoryRoot().appendingPathComponent(
+                    "veilpic/\(locale).lproj/Localizable.strings"
+                ),
+                encoding: .utf8
+            )
+            #expect(localization.contains("\"imageEditor.option.historyBrushBlendMode\""))
+        }
+    }
+
     @Test func fileMenuExposesClipboardCanvasCreation() throws {
         let source = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),

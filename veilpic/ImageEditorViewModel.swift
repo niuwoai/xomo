@@ -150,6 +150,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var brushTipRoundness: CGFloat = 100
     @Published var brushTipAngleDegrees: CGFloat = 0
     @Published var brushSmoothing: CGFloat = 0
+    @Published var historyBrushBlendMode: ImageEditorBlendMode = .normal
     @Published var retouchPressureControlsSize = false
     @Published var retouchPressureSensitivity: CGFloat = 50
     @Published var toneRange: ImageEditorToneRange = .midtones
@@ -608,6 +609,7 @@ final class ImageEditorViewModel: ObservableObject {
         brushTipRoundness = CGFloat(brushDynamicsPreferences.tipRoundness)
         brushTipAngleDegrees = CGFloat(brushDynamicsPreferences.tipAngleDegrees)
         brushSmoothing = CGFloat(brushDynamicsPreferences.smoothing)
+        historyBrushBlendMode = brushDynamicsPreferences.historyBrushBlendMode
         retouchPressureControlsSize = retouchDynamicsPreferences.pressureControlsSize
         retouchPressureSensitivity = CGFloat(retouchDynamicsPreferences.pressureSensitivity)
         customBrushPresets = brushPresetPreferences.presets
@@ -657,6 +659,7 @@ final class ImageEditorViewModel: ObservableObject {
         brushTipRoundness = CGFloat(brushDynamicsPreferences.tipRoundness)
         brushTipAngleDegrees = CGFloat(brushDynamicsPreferences.tipAngleDegrees)
         brushSmoothing = CGFloat(brushDynamicsPreferences.smoothing)
+        historyBrushBlendMode = brushDynamicsPreferences.historyBrushBlendMode
         retouchPressureControlsSize = retouchDynamicsPreferences.pressureControlsSize
         retouchPressureSensitivity = CGFloat(retouchDynamicsPreferences.pressureSensitivity)
         customBrushPresets = brushPresetPreferences.presets
@@ -3911,7 +3914,8 @@ final class ImageEditorViewModel: ObservableObject {
             tiltControlsShape: brushTiltControlsShape,
             tipRoundness: Double(brushTipRoundness),
             tipAngleDegrees: Double(brushTipAngleDegrees),
-            smoothing: Double(brushSmoothing)
+            smoothing: Double(brushSmoothing),
+            historyBrushBlendMode: historyBrushBlendMode
         ).save(to: workspacePreferencesDefaults)
     }
 
@@ -3995,6 +3999,13 @@ final class ImageEditorViewModel: ObservableObject {
         let normalized = max(0, min(100, smoothing))
         guard brushSmoothing != normalized else { return }
         brushSmoothing = normalized
+        persistBrushDynamicsPreferences()
+    }
+
+    func setHistoryBrushBlendMode(_ blendMode: ImageEditorBlendMode) {
+        let normalized = blendMode == .passThrough ? ImageEditorBlendMode.normal : blendMode
+        guard historyBrushBlendMode != normalized else { return }
+        historyBrushBlendMode = normalized
         persistBrushDynamicsPreferences()
     }
 

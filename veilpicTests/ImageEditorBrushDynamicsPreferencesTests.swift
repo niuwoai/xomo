@@ -27,7 +27,8 @@ struct ImageEditorBrushDynamicsPreferencesTests {
             tiltControlsShape: true,
             tipRoundness: 2,
             tipAngleDegrees: 250,
-            smoothing: 140
+            smoothing: 140,
+            historyBrushBlendMode: .passThrough
         ).save(to: defaults)
 
         let loaded = ImageEditorBrushDynamicsPreferences.load(from: defaults)
@@ -42,6 +43,7 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         #expect(loaded.tipRoundness == 10)
         #expect(loaded.tipAngleDegrees == 180)
         #expect(loaded.smoothing == 100)
+        #expect(loaded.historyBrushBlendMode == .normal)
 
         defaults.set(
             Data("not-json".utf8),
@@ -70,6 +72,7 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         first.setBrushTipRoundness(47)
         first.setBrushTipAngleDegrees(-45)
         first.setBrushSmoothing(64)
+        first.setHistoryBrushBlendMode(.multiply)
 
         let restored = ImageEditorViewModel(
             sourceName: "restored.png",
@@ -87,6 +90,7 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         #expect(restored.brushTipRoundness == 47)
         #expect(restored.brushTipAngleDegrees == -45)
         #expect(restored.brushSmoothing == 64)
+        #expect(restored.historyBrushBlendMode == .multiply)
     }
 
     @Test func legacyBrushDynamicsAndPresetsDefaultTiltShapeOff() throws {
@@ -111,6 +115,7 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         #expect(decodedDynamics.tipRoundness == 100)
         #expect(decodedDynamics.tipAngleDegrees == 0)
         #expect(decodedDynamics.smoothing == 0)
+        #expect(decodedDynamics.historyBrushBlendMode == .normal)
 
         let legacyPreset = Data(
             """

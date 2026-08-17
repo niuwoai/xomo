@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.12.0-rc1108 - 2026-08-17
+
+### Added
+- History Brush 选项栏新增 Photoshop 经典 Mode，可从 Normal、Dissolve 及完整暗化、亮化、对比、差值和颜色混合族中选择；Pass Through 不作为像素画笔模式暴露。
+
+### Changed
+- History Brush 把历史来源颜色与当前图层像素按所选 Mode 做真实逐像素混合，再叠加现有 Opacity、Flow、压力、笔尖覆盖率、选区与透明像素锁；Normal 保持既有恢复结果。
+- Mode 写入工作区画笔偏好并跨编辑器会话恢复；旧偏好缺字段时默认 Normal，非法 Pass Through 同样归一化为 Normal。Erase To History 始终使用 Normal，不继承历史画笔的模式。
+
+### Verification
+- Fill/History/History Brush/Erase To History 邻接专项 30/30、画笔偏好迁移与持久化 9/9、History Brush/UI 接线 6/6、混合模式数学回归 5/5、CLI 2/2 与发布契约 7/7 通过；本版本不触发周期 Universal Release、完整冒烟与 `/Applications` 安装，下一次完整门禁为 rc1120。
+
 ## 2.12.0-rc1107 - 2026-08-17
 
 ### Added

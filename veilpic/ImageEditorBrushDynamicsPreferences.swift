@@ -48,7 +48,8 @@ struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
         tiltControlsShape: false,
         tipRoundness: 100,
         tipAngleDegrees: 0,
-        smoothing: 0
+        smoothing: 0,
+        historyBrushBlendMode: .normal
     )
 
     var pressureControlsSize: Bool
@@ -62,6 +63,7 @@ struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
     var tipRoundness: Double
     var tipAngleDegrees: Double
     var smoothing: Double
+    var historyBrushBlendMode: ImageEditorBlendMode
 
     init(
         pressureControlsSize: Bool,
@@ -74,7 +76,8 @@ struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
         tiltControlsShape: Bool = false,
         tipRoundness: Double = 100,
         tipAngleDegrees: Double = 0,
-        smoothing: Double = 0
+        smoothing: Double = 0,
+        historyBrushBlendMode: ImageEditorBlendMode = .normal
     ) {
         self.pressureControlsSize = pressureControlsSize
         self.pressureControlsOpacity = pressureControlsOpacity
@@ -87,6 +90,7 @@ struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
         self.tipRoundness = tipRoundness
         self.tipAngleDegrees = tipAngleDegrees
         self.smoothing = smoothing
+        self.historyBrushBlendMode = historyBrushBlendMode
     }
 
     private enum CodingKeys: String, CodingKey {
@@ -101,6 +105,7 @@ struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
         case tipRoundness
         case tipAngleDegrees
         case smoothing
+        case historyBrushBlendMode
     }
 
     init(from decoder: Decoder) throws {
@@ -140,6 +145,10 @@ struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
             Double.self,
             forKey: .smoothing
         ) ?? 0
+        historyBrushBlendMode = try values.decodeIfPresent(
+            ImageEditorBlendMode.self,
+            forKey: .historyBrushBlendMode
+        ) ?? .normal
     }
 
     var normalized: ImageEditorBrushDynamicsPreferences {
@@ -154,7 +163,10 @@ struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
             tiltControlsShape: tiltControlsShape,
             tipRoundness: max(10, min(100, tipRoundness)),
             tipAngleDegrees: max(-180, min(180, tipAngleDegrees)),
-            smoothing: max(0, min(100, smoothing))
+            smoothing: max(0, min(100, smoothing)),
+            historyBrushBlendMode: historyBrushBlendMode == .passThrough
+                ? .normal
+                : historyBrushBlendMode
         )
     }
 

@@ -734,6 +734,47 @@ struct ImageEditorSelectionFillDialogTests {
         #expect(viewModel.isHistoryFillSource(snapshotID: snapshotID))
     }
 
+    @Test func historyBrushModeBlendsTheHistoricalPixelsWithTheCurrentLayer() throws {
+        let canvasSize = CGSize(width: 10, height: 8)
+        let yellow = solidImage(
+            color: NSColor(deviceRed: 1, green: 1, blue: 0, alpha: 1),
+            size: canvasSize
+        )
+        let cyan = solidImage(
+            color: NSColor(deviceRed: 0, green: 1, blue: 1, alpha: 1),
+            size: canvasSize
+        )
+        let normal = historyBrushViewModel(source: yellow, current: cyan)
+        let multiply = historyBrushViewModel(source: yellow, current: cyan)
+        for viewModel in [normal, multiply] {
+            viewModel.brushSize = 4
+            viewModel.hardness = 1
+            viewModel.opacity = 1
+            viewModel.brushFlow = 100
+        }
+        multiply.historyBrushBlendMode = .multiply
+        let samples = [
+            ImageEditorBrushStrokeSample(point: CGPoint(x: 3, y: 4)),
+            ImageEditorBrushStrokeSample(point: CGPoint(x: 7, y: 4)),
+        ]
+
+        #expect(normal.historyBrush(samples: samples))
+        #expect(multiply.historyBrush(samples: samples))
+
+        let normalColor = try #require(normal.document.selectedLayer?.image.color(
+            at: CGPoint(x: 5, y: 4)
+        )?.usingColorSpace(.deviceRGB))
+        let multiplyColor = try #require(multiply.document.selectedLayer?.image.color(
+            at: CGPoint(x: 5, y: 4)
+        )?.usingColorSpace(.deviceRGB))
+        #expect(normalColor.redComponent > 0.8)
+        #expect(normalColor.greenComponent > 0.8)
+        #expect(normalColor.blueComponent < 0.2)
+        #expect(multiplyColor.redComponent < 0.2)
+        #expect(multiplyColor.greenComponent > 0.8)
+        #expect(multiplyColor.blueComponent < 0.2)
+    }
+
     @Test func unchangedHistoryBrushPreservesUndoRedoAndHistory() throws {
         let canvasSize = CGSize(width: 8, height: 6)
         let red = solidImage(color: .systemRed, size: canvasSize)
@@ -802,6 +843,7 @@ struct ImageEditorSelectionFillDialogTests {
             viewModel.opacity = 1
             viewModel.brushFlow = 100
         }
+        restoring.historyBrushBlendMode = .multiply
         let samples = [
             ImageEditorBrushStrokeSample(point: CGPoint(x: 4, y: 4)),
             ImageEditorBrushStrokeSample(point: CGPoint(x: 8, y: 4)),

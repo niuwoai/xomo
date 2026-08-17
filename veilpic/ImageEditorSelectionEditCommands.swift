@@ -455,6 +455,14 @@ extension ImageEditorViewModel {
 
     @discardableResult
     func historyBrush(samples: [ImageEditorBrushStrokeSample]) -> Bool {
+        historyBrush(samples: samples, blendMode: historyBrushBlendMode)
+    }
+
+    @discardableResult
+    private func historyBrush(
+        samples: [ImageEditorBrushStrokeSample],
+        blendMode: ImageEditorBlendMode
+    ) -> Bool {
         guard !samples.isEmpty else { return false }
         guard !isQuickMaskMode, !isEditingLayerMask else {
             statusText = L10n.text("imageEditor.status.historyBrushUnavailable")
@@ -515,7 +523,8 @@ extension ImageEditorViewModel {
                 tipRoundness: brushTipRoundness / 100,
                 tipAngleDegrees: brushTipAngleDegrees,
                 smoothing: brushSmoothing / 100
-            )
+            ),
+            blendMode: blendMode
         )
         guard let output else {
             statusText = L10n.text("imageEditor.status.operationFailed")
@@ -560,7 +569,7 @@ extension ImageEditorViewModel {
         restoringHistory: Bool
     ) {
         if restoringHistory {
-            _ = historyBrush(samples: samples)
+            _ = historyBrush(samples: samples, blendMode: .normal)
         } else {
             drawBrush(samples: samples, erase: true)
         }
@@ -1597,7 +1606,8 @@ private extension NSImage {
         sourceLayerFrame: CGRect,
         layerFrame: CGRect,
         samples: [ImageEditorBrushStrokeSample],
-        settings: ImageEditorBrushStrokeSettings
+        settings: ImageEditorBrushStrokeSettings,
+        blendMode: ImageEditorBlendMode = .normal
     ) -> NSImage? {
         guard layerFrame.width > 0,
               layerFrame.height > 0,
@@ -1625,7 +1635,7 @@ private extension NSImage {
             layerFrame: layerFrame,
             coverage: coverage,
             opacity: 1,
-            blendMode: .normal
+            blendMode: blendMode == .passThrough ? .normal : blendMode
         )
     }
 

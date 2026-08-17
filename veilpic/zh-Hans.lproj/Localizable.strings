@@ -616,6 +616,7 @@
 "imageEditor.option.maskDensity" = "蒙版密度";
 "imageEditor.option.maskFeather" = "蒙版羽化";
 "imageEditor.option.hardness" = "硬度";
+"imageEditor.option.historyBrushBlendMode" = "历史记录画笔模式";
 "imageEditor.option.eraseToHistory" = "抹到历史记录";
 "imageEditor.option.eraseToHistory.help" = "从选中的历史来源恢复像素；按住 Option 可临时恢复。";
 "imageEditor.option.flow" = "流量";

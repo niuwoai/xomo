@@ -1025,6 +1025,24 @@ struct ImageEditorView: View {
                     brushPressureMenu
                 }
                 if viewModel.selectedTool == .historyBrush {
+                    Picker(
+                        L10n.text("imageEditor.option.historyBrushBlendMode"),
+                        selection: Binding(
+                            get: { viewModel.historyBrushBlendMode },
+                            set: { viewModel.setHistoryBrushBlendMode($0) }
+                        )
+                    ) {
+                        ForEach(ImageEditorBlendMode.smartFilterCases) { mode in
+                            Text(mode.title).tag(mode)
+                        }
+                    }
+                    .labelsHidden()
+                    .pickerStyle(.menu)
+                    .focusable(false)
+                    .frame(width: 132)
+                    .help(L10n.text("imageEditor.option.historyBrushBlendMode"))
+                    .accessibilityIdentifier("image-editor-history-brush-blend-mode")
+
                     HStack(spacing: 4) {
                         Text(L10n.text("imageEditor.selectionFill.historySource"))
                             .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
