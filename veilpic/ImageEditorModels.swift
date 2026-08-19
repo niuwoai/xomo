@@ -51,6 +51,10 @@ struct ImageEditorBrushPreset: Identifiable, Codable, Equatable {
     let angleJitter: CGFloat
     let roundnessJitter: CGFloat
     let minimumRoundness: CGFloat
+    let scatter: CGFloat
+    let scatterBothAxes: Bool
+    let scatterCount: Int
+    let scatterCountJitter: CGFloat
     let minimumDiameter: CGFloat
     let minimumOpacity: CGFloat
     let minimumFlow: CGFloat
@@ -75,6 +79,10 @@ struct ImageEditorBrushPreset: Identifiable, Codable, Equatable {
         angleJitter: CGFloat = 0,
         roundnessJitter: CGFloat = 0,
         minimumRoundness: CGFloat = 1,
+        scatter: CGFloat = 0,
+        scatterBothAxes: Bool = false,
+        scatterCount: Int = 1,
+        scatterCountJitter: CGFloat = 0,
         minimumDiameter: CGFloat = 0,
         minimumOpacity: CGFloat = 0,
         minimumFlow: CGFloat = 0,
@@ -98,6 +106,10 @@ struct ImageEditorBrushPreset: Identifiable, Codable, Equatable {
         self.angleJitter = angleJitter
         self.roundnessJitter = roundnessJitter
         self.minimumRoundness = minimumRoundness
+        self.scatter = scatter
+        self.scatterBothAxes = scatterBothAxes
+        self.scatterCount = scatterCount
+        self.scatterCountJitter = scatterCountJitter
         self.minimumDiameter = minimumDiameter
         self.minimumOpacity = minimumOpacity
         self.minimumFlow = minimumFlow
@@ -123,6 +135,10 @@ struct ImageEditorBrushPreset: Identifiable, Codable, Equatable {
         case angleJitter
         case roundnessJitter
         case minimumRoundness
+        case scatter
+        case scatterBothAxes
+        case scatterCount
+        case scatterCountJitter
         case minimumDiameter
         case minimumOpacity
         case minimumFlow
@@ -173,6 +189,16 @@ struct ImageEditorBrushPreset: Identifiable, Codable, Equatable {
             CGFloat.self,
             forKey: .minimumRoundness
         ) ?? 1
+        scatter = try values.decodeIfPresent(CGFloat.self, forKey: .scatter) ?? 0
+        scatterBothAxes = try values.decodeIfPresent(
+            Bool.self,
+            forKey: .scatterBothAxes
+        ) ?? false
+        scatterCount = try values.decodeIfPresent(Int.self, forKey: .scatterCount) ?? 1
+        scatterCountJitter = try values.decodeIfPresent(
+            CGFloat.self,
+            forKey: .scatterCountJitter
+        ) ?? 0
         minimumDiameter = try values.decodeIfPresent(
             CGFloat.self,
             forKey: .minimumDiameter
@@ -227,6 +253,10 @@ struct ImageEditorBrushPreset: Identifiable, Codable, Equatable {
             angleJitter: max(0, min(100, angleJitter)),
             roundnessJitter: max(0, min(100, roundnessJitter)),
             minimumRoundness: max(1, min(100, minimumRoundness)),
+            scatter: max(0, min(1_000, scatter)),
+            scatterBothAxes: scatterBothAxes,
+            scatterCount: max(1, min(16, scatterCount)),
+            scatterCountJitter: max(0, min(100, scatterCountJitter)),
             minimumDiameter: max(0, min(100, minimumDiameter)),
             minimumOpacity: max(0, min(100, minimumOpacity)),
             minimumFlow: max(0, min(100, minimumFlow)),
@@ -251,6 +281,10 @@ struct ImageEditorBrushPreset: Identifiable, Codable, Equatable {
         angleJitter: CGFloat,
         roundnessJitter: CGFloat,
         minimumRoundness: CGFloat,
+        scatter: CGFloat,
+        scatterBothAxes: Bool,
+        scatterCount: Int,
+        scatterCountJitter: CGFloat,
         minimumDiameter: CGFloat,
         minimumOpacity: CGFloat,
         minimumFlow: CGFloat,
@@ -272,6 +306,10 @@ struct ImageEditorBrushPreset: Identifiable, Codable, Equatable {
             && abs(self.angleJitter - angleJitter) < tolerance
             && abs(self.roundnessJitter - roundnessJitter) < tolerance
             && abs(self.minimumRoundness - minimumRoundness) < tolerance
+            && abs(self.scatter - scatter) < tolerance
+            && self.scatterBothAxes == scatterBothAxes
+            && self.scatterCount == scatterCount
+            && abs(self.scatterCountJitter - scatterCountJitter) < tolerance
             && abs(self.minimumDiameter - minimumDiameter) < tolerance
             && abs(self.minimumOpacity - minimumOpacity) < tolerance
             && abs(self.minimumFlow - minimumFlow) < tolerance

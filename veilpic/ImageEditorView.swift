@@ -1073,6 +1073,7 @@ struct ImageEditorView: View {
                     brushPresetMenu
                     brushRoundnessMenu
                     brushSizeJitterMenu
+                    brushScatteringMenu
                     optionSlider(titleKey: "imageEditor.option.flow", value: $viewModel.brushFlow, range: 1...100, step: 1, suffix: "%")
                     optionSlider(titleKey: "imageEditor.option.spacing", value: $viewModel.brushSpacing, range: 1...200, step: 1, suffix: "%")
                     brushSmoothingMenu
@@ -1741,6 +1742,68 @@ struct ImageEditorView: View {
         .xomoFocusEffectDisabled()
         .help(L10n.text("imageEditor.help.brushTipShape"))
         .accessibilityIdentifier("image-editor-brush-roundness")
+    }
+
+    private var brushScatteringMenu: some View {
+        Menu {
+            Picker(
+                L10n.text("imageEditor.option.scatter"),
+                selection: Binding(
+                    get: { viewModel.brushScatter },
+                    set: { viewModel.setBrushScatter($0) }
+                )
+            ) {
+                ForEach(ImageEditorBrushScatterPresets.values, id: \.self) { scatter in
+                    Text(L10n.format("imageEditor.option.percentPreset", Int(scatter)))
+                        .tag(scatter)
+                }
+            }
+            Toggle(
+                L10n.text("imageEditor.option.scatterBothAxes"),
+                isOn: Binding(
+                    get: { viewModel.brushScatterBothAxes },
+                    set: { viewModel.setBrushScatterBothAxes($0) }
+                )
+            )
+            Divider()
+            Picker(
+                L10n.text("imageEditor.option.scatterCount"),
+                selection: Binding(
+                    get: { viewModel.brushScatterCount },
+                    set: { viewModel.setBrushScatterCount($0) }
+                )
+            ) {
+                ForEach(ImageEditorBrushScatterCountPresets.values, id: \.self) { count in
+                    Text(L10n.format("imageEditor.option.countPreset", count))
+                        .tag(count)
+                }
+            }
+            Picker(
+                L10n.text("imageEditor.option.scatterCountJitter"),
+                selection: Binding(
+                    get: { viewModel.brushScatterCountJitter },
+                    set: { viewModel.setBrushScatterCountJitter($0) }
+                )
+            ) {
+                ForEach(ImageEditorBrushScatterCountJitterPresets.values, id: \.self) { jitter in
+                    Text(L10n.format("imageEditor.option.percentPreset", Int(jitter)))
+                        .tag(jitter)
+                }
+            }
+            .disabled(viewModel.brushScatterCount == 1)
+        } label: {
+            Label(
+                L10n.text("imageEditor.option.scattering"),
+                systemImage: "circle.grid.cross"
+            )
+                .font(.system(size: 11, weight: .semibold))
+        }
+        .menuStyle(.borderlessButton)
+        .fixedSize()
+        .focusable(false)
+        .xomoFocusEffectDisabled()
+        .help(L10n.text("imageEditor.help.scattering"))
+        .accessibilityIdentifier("image-editor-brush-scattering")
     }
 
     private var retouchPressureSensitivityMenu: some View {

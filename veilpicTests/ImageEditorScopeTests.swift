@@ -4747,6 +4747,7 @@ struct ImageEditorScopeTests {
 
         #expect(source.contains("brushPresetMenu\n                    brushRoundnessMenu"))
         #expect(source.contains("brushRoundnessMenu\n                    brushSizeJitterMenu"))
+        #expect(source.contains("brushSizeJitterMenu\n                    brushScatteringMenu"))
         #expect(source.contains("ImageEditorBrushSizeJitterPresets.values"))
         #expect(source.contains("viewModel.setBrushSizeJitter($0)"))
         #expect(source.contains("image-editor-brush-size-jitter"))
@@ -4755,14 +4756,23 @@ struct ImageEditorScopeTests {
         #expect(menuSource.contains("ImageEditorBrushAngleJitterPresets.values"))
         #expect(menuSource.contains("ImageEditorBrushRoundnessJitterPresets.values"))
         #expect(menuSource.contains("ImageEditorBrushMinimumRoundnessPresets.values"))
+        #expect(menuSource.contains("ImageEditorBrushScatterPresets.values"))
+        #expect(menuSource.contains("ImageEditorBrushScatterCountPresets.values"))
+        #expect(menuSource.contains("ImageEditorBrushScatterCountJitterPresets.values"))
         #expect(menuSource.contains("viewModel.setBrushTipRoundness($0)"))
         #expect(menuSource.contains("viewModel.setBrushTipAngleDegrees($0)"))
         #expect(menuSource.contains("viewModel.setBrushAngleJitter($0)"))
         #expect(menuSource.contains("viewModel.setBrushRoundnessJitter($0)"))
         #expect(menuSource.contains("viewModel.setBrushMinimumRoundness($0)"))
+        #expect(menuSource.contains("viewModel.setBrushScatter($0)"))
+        #expect(menuSource.contains("viewModel.setBrushScatterBothAxes($0)"))
+        #expect(menuSource.contains("viewModel.setBrushScatterCount($0)"))
+        #expect(menuSource.contains("viewModel.setBrushScatterCountJitter($0)"))
         #expect(menuSource.contains("imageEditor.option.angleJitter"))
         #expect(menuSource.contains("imageEditor.option.roundnessJitter"))
         #expect(menuSource.contains("imageEditor.option.minimumRoundness"))
+        #expect(menuSource.contains("imageEditor.option.scatterBothAxes"))
+        #expect(menuSource.contains("image-editor-brush-scattering"))
         #expect(
             viewModelSource.components(
                 separatedBy: "angleJitter: brushAngleJitter / 100"
@@ -4776,6 +4786,26 @@ struct ImageEditorScopeTests {
         #expect(
             viewModelSource.components(
                 separatedBy: "minimumRoundness: brushMinimumRoundness / 100"
+            ).count == 4
+        )
+        #expect(
+            viewModelSource.components(
+                separatedBy: "scatter: brushScatter / 100"
+            ).count == 4
+        )
+        #expect(
+            viewModelSource.components(
+                separatedBy: "scatterBothAxes: brushScatterBothAxes"
+            ).count == 7
+        )
+        #expect(
+            viewModelSource.components(
+                separatedBy: "scatterCount: brushScatterCount"
+            ).count == 7
+        )
+        #expect(
+            viewModelSource.components(
+                separatedBy: "scatterCountJitter: brushScatterCountJitter / 100"
             ).count == 4
         )
         #expect(menuSource.contains("imageEditor.option.brushTipShapeValue"))

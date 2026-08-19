@@ -843,6 +843,216 @@ struct ImageEditorBrushStrokeTests {
         #expect(limited.filter { $0 > 0 }.count > first.filter { $0 > 0 }.count)
     }
 
+    @Test func scatteringUsesStrokeNormalAndOptionalBothAxesDeterministically() {
+        let stamps = [30, 50, 70].map {
+            ImageEditorBrushStrokeSample(point: CGPoint(x: $0, y: 40))
+        }
+        var settings = ImageEditorBrushStrokeSettings(
+            diameter: 12,
+            hardness: 1,
+            opacity: 1,
+            flow: 1,
+            spacing: 1,
+            scatter: 0.75
+        )
+        let transverse = ImageEditorBrushStrokeKernel.renderedStamps(
+            from: stamps,
+            settings: settings
+        )
+        let replay = ImageEditorBrushStrokeKernel.renderedStamps(
+            from: stamps,
+            settings: settings
+        )
+
+        #expect(transverse == replay)
+        #expect(transverse.map(\.sample.point.x) == stamps.map(\.point.x))
+        #expect(zip(transverse, stamps).allSatisfy {
+            abs($0.0.sample.point.y - $0.1.point.y) <= 9
+        })
+        #expect(zip(transverse, stamps).contains {
+            abs($0.0.sample.point.y - $0.1.point.y) > 0.1
+        })
+
+        settings.scatterBothAxes = true
+        let bothAxes = ImageEditorBrushStrokeKernel.renderedStamps(
+            from: stamps,
+            settings: settings
+        )
+        #expect(bothAxes.map(\.sample.point.y) == transverse.map(\.sample.point.y))
+        #expect(zip(bothAxes, stamps).contains {
+            abs($0.0.sample.point.x - $0.1.point.x) > 0.1
+        })
+        #expect(zip(bothAxes, stamps).allSatisfy {
+            abs($0.0.sample.point.x - $0.1.point.x) <= 9
+        })
+
+        let normalized = ImageEditorBrushStrokeSettings(
+            diameter: 12,
+            hardness: 1,
+            opacity: 1,
+            flow: 1,
+            spacing: 1,
+            scatter: 20,
+            scatterCount: 99,
+            scatterCountJitter: -1
+        ).normalized
+        #expect(normalized.scatter == 10)
+        #expect(normalized.scatterCount == 16)
+        #expect(normalized.scatterCountJitter == 0)
+    }
+
+    @Test func scatterCountJitterIsStableBoundedAndDoesNotShiftExistingCopies() {
+        let counts = (0..<64).map {
+            ImageEditorBrushStrokeKernel.resolvedScatterCount(
+                stampIndex: $0,
+                count: 4,
+                jitter: 1
+            )
+        }
+        #expect(counts == (0..<64).map {
+            ImageEditorBrushStrokeKernel.resolvedScatterCount(
+                stampIndex: $0,
+                count: 4,
+                jitter: 1
+            )
+        })
+        #expect(counts.allSatisfy { (1...4).contains($0) })
+        #expect(Set(counts).count == 4)
+        #expect(ImageEditorBrushStrokeKernel.resolvedScatterCount(
+            stampIndex: 12,
+            count: 4,
+            jitter: 0
+        ) == 4)
+
+        let stamp = ImageEditorBrushStrokeSample(point: CGPoint(x: 40, y: 40))
+        var fourSettings = ImageEditorBrushStrokeSettings(
+            diameter: 10,
+            hardness: 1,
+            opacity: 1,
+            flow: 0.25,
+            spacing: 1,
+            scatter: 0.6,
+            scatterBothAxes: true,
+            scatterCount: 4
+        )
+        let four = ImageEditorBrushStrokeKernel.renderedStamps(
+            from: [stamp],
+            settings: fourSettings
+        )
+        fourSettings.scatterCount = 8
+        let eight = ImageEditorBrushStrokeKernel.renderedStamps(
+            from: [stamp],
+            settings: fourSettings
+        )
+        #expect(four == Array(eight.prefix(4)))
+
+        let baseline = ImageEditorBrushStrokeSettings(
+            diameter: 10,
+            hardness: 1,
+            opacity: 1,
+            flow: 0.25,
+            spacing: 1
+        )
+        var irrelevant = baseline
+        irrelevant.scatterBothAxes = true
+        irrelevant.scatterCountJitter = 1
+        #expect(ImageEditorBrushStrokeKernel.renderedStamps(
+            from: [stamp],
+            settings: irrelevant
+        ) == [ImageEditorBrushRenderedStamp(sample: stamp, dynamicIndex: 0)])
+        #expect(ImageEditorBrushStrokeKernel.coverage(
+            width: 80,
+            height: 80,
+            stamps: [stamp],
+            settings: baseline
+        ) == ImageEditorBrushStrokeKernel.coverage(
+            width: 80,
+            height: 80,
+            stamps: [stamp],
+            settings: irrelevant
+        ))
+    }
+
+    @Test func scatteringReplaysPixelsAndQuickMaskUsesTheSameExpandedTips() throws {
+        let samples = [
+            ImageEditorBrushStrokeSample(point: CGPoint(x: 18, y: 40)),
+            ImageEditorBrushStrokeSample(point: CGPoint(x: 98, y: 40))
+        ]
+        let stamps = ImageEditorBrushStrokeKernel.stampSamples(
+            samples: samples,
+            diameter: 10,
+            spacing: 1
+        )
+        let baseline = ImageEditorBrushStrokeSettings(
+            diameter: 10,
+            hardness: 1,
+            opacity: 0.8,
+            flow: 0.35,
+            spacing: 1
+        )
+        var scatteredSettings = baseline
+        scatteredSettings.scatter = 0.8
+        scatteredSettings.scatterBothAxes = true
+        scatteredSettings.scatterCount = 4
+        scatteredSettings.scatterCountJitter = 0.5
+
+        let original = ImageEditorBrushStrokeKernel.coverage(
+            width: 120,
+            height: 80,
+            stamps: stamps,
+            settings: baseline
+        )
+        let scattered = ImageEditorBrushStrokeKernel.coverage(
+            width: 120,
+            height: 80,
+            stamps: stamps,
+            settings: scatteredSettings
+        )
+        #expect(scattered == ImageEditorBrushStrokeKernel.coverage(
+            width: 120,
+            height: 80,
+            stamps: stamps,
+            settings: scatteredSettings
+        ))
+        #expect(scattered != original)
+        #expect(scattered.filter { $0 > 0 }.count > original.filter { $0 > 0 }.count)
+
+        let mask = ImageEditorSelectionMask(
+            width: 120,
+            height: 80,
+            alpha: [UInt8](repeating: 0, count: 120 * 80)
+        )
+        let quickMask = try #require(mask.paintedByQuickMaskStroke(
+            samples: samples,
+            canvasSize: CGSize(width: 120, height: 80),
+            diameter: 10,
+            opacity: 0.8,
+            hardness: 1,
+            flow: 0.35,
+            spacing: 1,
+            scatter: 0.8,
+            scatterBothAxes: true,
+            scatterCount: 4,
+            scatterCountJitter: 0.5,
+            targetAlpha: .max
+        ))
+        #expect(quickMask == mask.paintedByQuickMaskStroke(
+            samples: samples,
+            canvasSize: CGSize(width: 120, height: 80),
+            diameter: 10,
+            opacity: 0.8,
+            hardness: 1,
+            flow: 0.35,
+            spacing: 1,
+            scatter: 0.8,
+            scatterBothAxes: true,
+            scatterCount: 4,
+            scatterCountJitter: 0.5,
+            targetAlpha: .max
+        ))
+        #expect(quickMask.alpha.filter { $0 > 0 }.count > original.filter { $0 > 0 }.count)
+    }
+
     @Test func missingPressureFallsBackToFullPressureWithoutChangingMouseStrokes() {
         let settings = ImageEditorBrushStrokeSettings(
             diameter: 12,

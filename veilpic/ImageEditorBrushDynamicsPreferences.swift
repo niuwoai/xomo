@@ -51,6 +51,18 @@ enum ImageEditorBrushMinimumRoundnessPresets {
     static let values: [CGFloat] = [1, 10, 25, 50, 75, 100]
 }
 
+enum ImageEditorBrushScatterPresets {
+    static let values: [CGFloat] = [0, 25, 50, 100, 200, 500, 1_000]
+}
+
+enum ImageEditorBrushScatterCountPresets {
+    static let values: [Int] = [1, 2, 3, 4, 8, 16]
+}
+
+enum ImageEditorBrushScatterCountJitterPresets {
+    static let values: [CGFloat] = [0, 10, 25, 50, 75, 100]
+}
+
 struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
     static let storageKey = "im.some.xomo.imageEditor.brushDynamicsPreferences"
     static let defaultValue = ImageEditorBrushDynamicsPreferences(
@@ -62,6 +74,10 @@ struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
         angleJitter: 0,
         roundnessJitter: 0,
         minimumRoundness: 1,
+        scatter: 0,
+        scatterBothAxes: false,
+        scatterCount: 1,
+        scatterCountJitter: 0,
         minimumDiameter: 0,
         minimumOpacity: 0,
         minimumFlow: 0,
@@ -83,6 +99,10 @@ struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
     var angleJitter: Double
     var roundnessJitter: Double
     var minimumRoundness: Double
+    var scatter: Double
+    var scatterBothAxes: Bool
+    var scatterCount: Int
+    var scatterCountJitter: Double
     var minimumDiameter: Double
     var minimumOpacity: Double
     var minimumFlow: Double
@@ -104,6 +124,10 @@ struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
         angleJitter: Double = 0,
         roundnessJitter: Double = 0,
         minimumRoundness: Double = 1,
+        scatter: Double = 0,
+        scatterBothAxes: Bool = false,
+        scatterCount: Int = 1,
+        scatterCountJitter: Double = 0,
         minimumDiameter: Double = 0,
         minimumOpacity: Double = 0,
         minimumFlow: Double = 0,
@@ -124,6 +148,10 @@ struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
         self.angleJitter = angleJitter
         self.roundnessJitter = roundnessJitter
         self.minimumRoundness = minimumRoundness
+        self.scatter = scatter
+        self.scatterBothAxes = scatterBothAxes
+        self.scatterCount = scatterCount
+        self.scatterCountJitter = scatterCountJitter
         self.minimumDiameter = minimumDiameter
         self.minimumOpacity = minimumOpacity
         self.minimumFlow = minimumFlow
@@ -146,6 +174,10 @@ struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
         case angleJitter
         case roundnessJitter
         case minimumRoundness
+        case scatter
+        case scatterBothAxes
+        case scatterCount
+        case scatterCountJitter
         case minimumDiameter
         case minimumOpacity
         case minimumFlow
@@ -175,6 +207,16 @@ struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
             Double.self,
             forKey: .minimumRoundness
         ) ?? 1
+        scatter = try values.decodeIfPresent(Double.self, forKey: .scatter) ?? 0
+        scatterBothAxes = try values.decodeIfPresent(
+            Bool.self,
+            forKey: .scatterBothAxes
+        ) ?? false
+        scatterCount = try values.decodeIfPresent(Int.self, forKey: .scatterCount) ?? 1
+        scatterCountJitter = try values.decodeIfPresent(
+            Double.self,
+            forKey: .scatterCountJitter
+        ) ?? 0
         minimumDiameter = try values.decodeIfPresent(
             Double.self,
             forKey: .minimumDiameter
@@ -231,6 +273,10 @@ struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
             angleJitter: max(0, min(100, angleJitter)),
             roundnessJitter: max(0, min(100, roundnessJitter)),
             minimumRoundness: max(1, min(100, minimumRoundness)),
+            scatter: max(0, min(1_000, scatter)),
+            scatterBothAxes: scatterBothAxes,
+            scatterCount: max(1, min(16, scatterCount)),
+            scatterCountJitter: max(0, min(100, scatterCountJitter)),
             minimumDiameter: max(0, min(100, minimumDiameter)),
             minimumOpacity: max(0, min(100, minimumOpacity)),
             minimumFlow: max(0, min(100, minimumFlow)),

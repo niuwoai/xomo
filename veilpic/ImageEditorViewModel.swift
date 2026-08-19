@@ -147,6 +147,10 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var brushAngleJitter: CGFloat = 0
     @Published var brushRoundnessJitter: CGFloat = 0
     @Published var brushMinimumRoundness: CGFloat = 1
+    @Published var brushScatter: CGFloat = 0
+    @Published var brushScatterBothAxes = false
+    @Published var brushScatterCount = 1
+    @Published var brushScatterCountJitter: CGFloat = 0
     @Published var brushMinimumDiameter: CGFloat = 0
     @Published var brushMinimumOpacity: CGFloat = 0
     @Published var brushMinimumFlow: CGFloat = 0
@@ -613,6 +617,10 @@ final class ImageEditorViewModel: ObservableObject {
         brushAngleJitter = CGFloat(brushDynamicsPreferences.angleJitter)
         brushRoundnessJitter = CGFloat(brushDynamicsPreferences.roundnessJitter)
         brushMinimumRoundness = CGFloat(brushDynamicsPreferences.minimumRoundness)
+        brushScatter = CGFloat(brushDynamicsPreferences.scatter)
+        brushScatterBothAxes = brushDynamicsPreferences.scatterBothAxes
+        brushScatterCount = brushDynamicsPreferences.scatterCount
+        brushScatterCountJitter = CGFloat(brushDynamicsPreferences.scatterCountJitter)
         brushMinimumDiameter = CGFloat(brushDynamicsPreferences.minimumDiameter)
         brushMinimumOpacity = CGFloat(brushDynamicsPreferences.minimumOpacity)
         brushMinimumFlow = CGFloat(brushDynamicsPreferences.minimumFlow)
@@ -670,6 +678,10 @@ final class ImageEditorViewModel: ObservableObject {
         brushAngleJitter = CGFloat(brushDynamicsPreferences.angleJitter)
         brushRoundnessJitter = CGFloat(brushDynamicsPreferences.roundnessJitter)
         brushMinimumRoundness = CGFloat(brushDynamicsPreferences.minimumRoundness)
+        brushScatter = CGFloat(brushDynamicsPreferences.scatter)
+        brushScatterBothAxes = brushDynamicsPreferences.scatterBothAxes
+        brushScatterCount = brushDynamicsPreferences.scatterCount
+        brushScatterCountJitter = CGFloat(brushDynamicsPreferences.scatterCountJitter)
         brushMinimumDiameter = CGFloat(brushDynamicsPreferences.minimumDiameter)
         brushMinimumOpacity = CGFloat(brushDynamicsPreferences.minimumOpacity)
         brushMinimumFlow = CGFloat(brushDynamicsPreferences.minimumFlow)
@@ -2921,6 +2933,10 @@ final class ImageEditorViewModel: ObservableObject {
             angleJitter: brushAngleJitter,
             roundnessJitter: brushRoundnessJitter,
             minimumRoundness: brushMinimumRoundness,
+            scatter: brushScatter,
+            scatterBothAxes: brushScatterBothAxes,
+            scatterCount: brushScatterCount,
+            scatterCountJitter: brushScatterCountJitter,
             minimumDiameter: brushMinimumDiameter,
             minimumOpacity: brushMinimumOpacity,
             minimumFlow: brushMinimumFlow,
@@ -3077,6 +3093,10 @@ final class ImageEditorViewModel: ObservableObject {
         brushAngleJitter = max(0, min(100, preset.angleJitter))
         brushRoundnessJitter = max(0, min(100, preset.roundnessJitter))
         brushMinimumRoundness = max(1, min(100, preset.minimumRoundness))
+        brushScatter = max(0, min(1_000, preset.scatter))
+        brushScatterBothAxes = preset.scatterBothAxes
+        brushScatterCount = max(1, min(16, preset.scatterCount))
+        brushScatterCountJitter = max(0, min(100, preset.scatterCountJitter))
         brushMinimumDiameter = max(0, min(100, preset.minimumDiameter))
         brushMinimumOpacity = max(0, min(100, preset.minimumOpacity))
         brushMinimumFlow = max(0, min(100, preset.minimumFlow))
@@ -3120,6 +3140,10 @@ final class ImageEditorViewModel: ObservableObject {
             angleJitter: brushAngleJitter,
             roundnessJitter: brushRoundnessJitter,
             minimumRoundness: brushMinimumRoundness,
+            scatter: brushScatter,
+            scatterBothAxes: brushScatterBothAxes,
+            scatterCount: brushScatterCount,
+            scatterCountJitter: brushScatterCountJitter,
             minimumDiameter: brushMinimumDiameter,
             minimumOpacity: brushMinimumOpacity,
             minimumFlow: brushMinimumFlow,
@@ -3945,6 +3969,10 @@ final class ImageEditorViewModel: ObservableObject {
             angleJitter: Double(brushAngleJitter),
             roundnessJitter: Double(brushRoundnessJitter),
             minimumRoundness: Double(brushMinimumRoundness),
+            scatter: Double(brushScatter),
+            scatterBothAxes: brushScatterBothAxes,
+            scatterCount: brushScatterCount,
+            scatterCountJitter: Double(brushScatterCountJitter),
             minimumDiameter: Double(brushMinimumDiameter),
             minimumOpacity: Double(brushMinimumOpacity),
             minimumFlow: Double(brushMinimumFlow),
@@ -4109,6 +4137,33 @@ final class ImageEditorViewModel: ObservableObject {
         let normalized = max(1, min(100, roundness))
         guard brushMinimumRoundness != normalized else { return }
         brushMinimumRoundness = normalized
+        persistBrushDynamicsPreferences()
+    }
+
+    func setBrushScatter(_ scatter: CGFloat) {
+        let normalized = max(0, min(1_000, scatter))
+        guard brushScatter != normalized else { return }
+        brushScatter = normalized
+        persistBrushDynamicsPreferences()
+    }
+
+    func setBrushScatterBothAxes(_ isEnabled: Bool) {
+        guard brushScatterBothAxes != isEnabled else { return }
+        brushScatterBothAxes = isEnabled
+        persistBrushDynamicsPreferences()
+    }
+
+    func setBrushScatterCount(_ count: Int) {
+        let normalized = max(1, min(16, count))
+        guard brushScatterCount != normalized else { return }
+        brushScatterCount = normalized
+        persistBrushDynamicsPreferences()
+    }
+
+    func setBrushScatterCountJitter(_ jitter: CGFloat) {
+        let normalized = max(0, min(100, jitter))
+        guard brushScatterCountJitter != normalized else { return }
+        brushScatterCountJitter = normalized
         persistBrushDynamicsPreferences()
     }
 
@@ -6219,6 +6274,10 @@ final class ImageEditorViewModel: ObservableObject {
                 angleJitter: brushAngleJitter / 100,
                 roundnessJitter: brushRoundnessJitter / 100,
                 minimumRoundness: brushMinimumRoundness / 100,
+                scatter: brushScatter / 100,
+                scatterBothAxes: brushScatterBothAxes,
+                scatterCount: brushScatterCount,
+                scatterCountJitter: brushScatterCountJitter / 100,
                 minimumDiameter: brushMinimumDiameter / 100,
                 minimumOpacity: brushMinimumOpacity / 100,
                 minimumFlow: brushMinimumFlow / 100,
@@ -6486,6 +6545,10 @@ final class ImageEditorViewModel: ObservableObject {
             angleJitter: brushAngleJitter / 100,
             roundnessJitter: brushRoundnessJitter / 100,
             minimumRoundness: brushMinimumRoundness / 100,
+            scatter: brushScatter / 100,
+            scatterBothAxes: brushScatterBothAxes,
+            scatterCount: brushScatterCount,
+            scatterCountJitter: brushScatterCountJitter / 100,
             minimumDiameter: brushMinimumDiameter / 100,
             minimumOpacity: brushMinimumOpacity / 100,
             minimumFlow: brushMinimumFlow / 100,
@@ -8447,6 +8510,10 @@ final class ImageEditorViewModel: ObservableObject {
             angleJitter: brushAngleJitter / 100,
             roundnessJitter: brushRoundnessJitter / 100,
             minimumRoundness: brushMinimumRoundness / 100,
+            scatter: brushScatter / 100,
+            scatterBothAxes: brushScatterBothAxes,
+            scatterCount: brushScatterCount,
+            scatterCountJitter: brushScatterCountJitter / 100,
             minimumDiameter: brushMinimumDiameter / 100,
             minimumOpacity: brushMinimumOpacity / 100,
             minimumFlow: brushMinimumFlow / 100,

@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.12.0-rc1116 - 2026-08-19
+
+### Added
+- 增加 Photoshop 经典 Scattering 动态族，完整提供 Scatter、Both Axes、Count 与 Count Jitter；笔尖可横跨笔触或沿双轴散布，并在每个 spacing 位置落下 1～16 个印章。
+
+### Changed
+- 散布位置与数量使用独立的无状态序列，重复 Airbrush 脉冲继承最近有效笔触方向；改变散布幅度不会重抽已有笔尖的 Size、Angle 或 Roundness 动态。Scatter=0、Count=1 时保持旧像素结果，设置贯通普通像素层、Quick Mask、栅格图层蒙版、跨会话偏好和自定义预设；组件库系统箭头与稳定基础足迹光标不变。
+
+### Verification
+- 最终 `build-for-testing` 通过；画笔/蒙版 47/47、偏好与旧数据迁移 9/9、生产接线 1/1、完整光标 88/88、CLI 2/2、发布契约 7/7 全绿。本版本不触发周期 Universal Release、完整冒烟与 `/Applications` 安装，下一次完整门禁为 rc1120。
+
 ## 2.12.0-rc1115 - 2026-08-19
 
 ### Added

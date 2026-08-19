@@ -24,6 +24,11 @@ struct ImageEditorBrushStrokeSample: Equatable {
     }
 }
 
+struct ImageEditorBrushRenderedStamp: Equatable {
+    var sample: ImageEditorBrushStrokeSample
+    var dynamicIndex: Int
+}
+
 enum ImageEditorBrushEdgeStyle: Equatable {
     case antialiased
     case aliased
@@ -71,6 +76,10 @@ struct ImageEditorBrushStrokeSettings: Equatable {
     var angleJitter: CGFloat
     var roundnessJitter: CGFloat
     var minimumRoundness: CGFloat
+    var scatter: CGFloat
+    var scatterBothAxes: Bool
+    var scatterCount: Int
+    var scatterCountJitter: CGFloat
     var minimumDiameter: CGFloat
     var minimumOpacity: CGFloat
     var minimumFlow: CGFloat
@@ -94,6 +103,10 @@ struct ImageEditorBrushStrokeSettings: Equatable {
         angleJitter: CGFloat = 0,
         roundnessJitter: CGFloat = 0,
         minimumRoundness: CGFloat = 0.01,
+        scatter: CGFloat = 0,
+        scatterBothAxes: Bool = false,
+        scatterCount: Int = 1,
+        scatterCountJitter: CGFloat = 0,
         minimumDiameter: CGFloat = 0,
         minimumOpacity: CGFloat = 0,
         minimumFlow: CGFloat = 0,
@@ -116,6 +129,10 @@ struct ImageEditorBrushStrokeSettings: Equatable {
         self.angleJitter = angleJitter
         self.roundnessJitter = roundnessJitter
         self.minimumRoundness = minimumRoundness
+        self.scatter = scatter
+        self.scatterBothAxes = scatterBothAxes
+        self.scatterCount = scatterCount
+        self.scatterCountJitter = scatterCountJitter
         self.minimumDiameter = minimumDiameter
         self.minimumOpacity = minimumOpacity
         self.minimumFlow = minimumFlow
@@ -141,6 +158,10 @@ struct ImageEditorBrushStrokeSettings: Equatable {
             angleJitter: max(0, min(1, angleJitter)),
             roundnessJitter: max(0, min(1, roundnessJitter)),
             minimumRoundness: max(0.01, min(1, minimumRoundness)),
+            scatter: max(0, min(10, scatter)),
+            scatterBothAxes: scatterBothAxes,
+            scatterCount: max(1, min(16, scatterCount)),
+            scatterCountJitter: max(0, min(1, scatterCountJitter)),
             minimumDiameter: max(0, min(1, minimumDiameter)),
             minimumOpacity: max(0, min(1, minimumOpacity)),
             minimumFlow: max(0, min(1, minimumFlow)),
@@ -156,6 +177,7 @@ struct ImageEditorBrushStrokeSettings: Equatable {
 enum ImageEditorBrushStrokeKernel {
     static let bytesPerPixel = 4
     private static let maximumSmoothingRadius = 8
+    private static let maximumScatterCount = 16
 
     static func stampCenters(
         points: [CGPoint],
@@ -292,7 +314,9 @@ enum ImageEditorBrushStrokeKernel {
         let settings = settings.normalized
         var accumulated = [CGFloat](repeating: 0, count: width * height)
 
-        for (stampIndex, stamp) in stamps.enumerated() {
+        for renderedStamp in renderedStamps(from: stamps, settings: settings) {
+            let stamp = renderedStamp.sample
+            let stampIndex = renderedStamp.dynamicIndex
             let mappedPressure = mappedPressure(
                 stamp.pressure ?? 1,
                 sensitivity: settings.pressureSensitivity
@@ -373,6 +397,125 @@ enum ImageEditorBrushStrokeKernel {
         }
 
         return accumulated.map { UInt8(($0 * 255).rounded()) }
+    }
+
+    static func renderedStamps(
+        from stamps: [ImageEditorBrushStrokeSample],
+        settings: ImageEditorBrushStrokeSettings
+    ) -> [ImageEditorBrushRenderedStamp] {
+        let settings = settings.normalized
+        guard settings.scatter > 0 || settings.scatterCount > 1 else {
+            return stamps.enumerated().map {
+                ImageEditorBrushRenderedStamp(sample: $0.element, dynamicIndex: $0.offset)
+            }
+        }
+
+        return stamps.indices.flatMap { stampIndex -> [ImageEditorBrushRenderedStamp] in
+            let stamp = stamps[stampIndex]
+            let count = resolvedScatterCount(
+                stampIndex: stampIndex,
+                count: settings.scatterCount,
+                jitter: settings.scatterCountJitter
+            )
+            let tangent = strokeTangent(at: stampIndex, stamps: stamps)
+            let normal = CGVector(dx: -tangent.dy, dy: tangent.dx)
+
+            return (0..<count).map { copyIndex in
+                let dynamicIndex = stampIndex * maximumScatterCount + copyIndex
+                let normalOffset = scatterOffset(
+                    dynamicIndex: dynamicIndex,
+                    amount: settings.scatter,
+                    diameter: settings.diameter,
+                    salt: 0x8EBC6AF09C88C6E3
+                )
+                let tangentOffset = settings.scatterBothAxes
+                    ? scatterOffset(
+                        dynamicIndex: dynamicIndex,
+                        amount: settings.scatter,
+                        diameter: settings.diameter,
+                        salt: 0x589965CC75374CC3
+                    )
+                    : 0
+                var scattered = stamp
+                scattered.point = CGPoint(
+                    x: stamp.point.x
+                        + normal.dx * normalOffset
+                        + tangent.dx * tangentOffset,
+                    y: stamp.point.y
+                        + normal.dy * normalOffset
+                        + tangent.dy * tangentOffset
+                )
+                return ImageEditorBrushRenderedStamp(
+                    sample: scattered,
+                    dynamicIndex: dynamicIndex
+                )
+            }
+        }
+    }
+
+    static func resolvedScatterCount(
+        stampIndex: Int,
+        count: Int,
+        jitter: CGFloat
+    ) -> Int {
+        let maximum = max(1, min(maximumScatterCount, count))
+        let normalizedJitter = max(0, min(1, jitter))
+        guard maximum > 1, normalizedJitter > 0 else { return maximum }
+        let unit = deterministicUnit(
+            stampIndex: stampIndex,
+            salt: 0x1D8E4E27C47D124F
+        )
+        let reduction = Int(floor(unit * normalizedJitter * CGFloat(maximum)))
+        return max(1, maximum - reduction)
+    }
+
+    private static func scatterOffset(
+        dynamicIndex: Int,
+        amount: CGFloat,
+        diameter: CGFloat,
+        salt: UInt64
+    ) -> CGFloat {
+        let unit = deterministicUnit(stampIndex: dynamicIndex, salt: salt)
+        return (unit * 2 - 1) * max(0, amount) * max(1, diameter)
+    }
+
+    private static func strokeTangent(
+        at index: Int,
+        stamps: [ImageEditorBrushStrokeSample]
+    ) -> CGVector {
+        let point = stamps[index].point
+        let previous = distinctNeighborPoint(
+            from: index,
+            step: -1,
+            stamps: stamps
+        ) ?? point
+        let next = distinctNeighborPoint(
+            from: index,
+            step: 1,
+            stamps: stamps
+        ) ?? point
+        let deltaX = next.x - previous.x
+        let deltaY = next.y - previous.y
+        let length = hypot(deltaX, deltaY)
+        guard length > 0.0001 else { return CGVector(dx: 1, dy: 0) }
+        return CGVector(dx: deltaX / length, dy: deltaY / length)
+    }
+
+    private static func distinctNeighborPoint(
+        from index: Int,
+        step: Int,
+        stamps: [ImageEditorBrushStrokeSample]
+    ) -> CGPoint? {
+        let origin = stamps[index].point
+        var candidateIndex = index + step
+        while stamps.indices.contains(candidateIndex) {
+            let candidate = stamps[candidateIndex].point
+            if hypot(candidate.x - origin.x, candidate.y - origin.y) > 0.0001 {
+                return candidate
+            }
+            candidateIndex += step
+        }
+        return nil
     }
 
     /// Returns a stable per-tip scale so replay, Undo/Redo, masks, and
