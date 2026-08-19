@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.12.0-rc1109 - 2026-08-19
+
+### Added
+- 新增 Photoshop 经典 Pencil 工具，并加入 `B` 工具组循环；它使用前景色绘制真正无抗锯齿的硬边像素，而不是把普通画笔机械地设为 100% Hardness。
+
+### Changed
+- Pencil 复用尺寸、Opacity、Flow、Spacing、平滑、压力和椭圆笔尖参数，但隐藏并忽略没有意义的 Hardness；普通 Brush 的柔边与抗锯齿结果保持不变。
+- 硬边覆盖率贯通普通像素层、Quick Mask 与栅格图层蒙版，继续服从选区、透明像素锁和单步 History/Undo；画布显示实际笔尖足迹，Caps Lock 精确十字和组件库系统箭头保持原有优先级。Auto Erase 留作后续独立里程碑。
+
+### Verification
+- 完整画笔内核与蒙版回归 30/30、完整画布光标 88/88、Pencil 生产接线 1/1、经典快捷键 1/1、工具坐标审计 1/1、CLI 2/2 与发布契约 7/7 通过；本版本不触发周期 Universal Release、完整冒烟与 `/Applications` 安装，下一次完整门禁为 rc1120。
+
 ## 2.12.0-rc1108 - 2026-08-17
 
 ### Added

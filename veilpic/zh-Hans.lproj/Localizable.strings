@@ -715,6 +715,7 @@
 "imageEditor.tool.quickSelection" = "快速选择";
 "imageEditor.tool.crop" = "裁剪";
 "imageEditor.tool.brush" = "画笔";
+"imageEditor.tool.pencil" = "铅笔";
 "imageEditor.tool.historyBrush" = "历史记录画笔";
 "imageEditor.tool.eraser" = "橡皮擦";
 "imageEditor.tool.cloneStamp" = "仿制图章";
@@ -746,6 +747,7 @@
 "imageEditor.tool.quickSelection.help" = "快速选择：用笔触扩展相似像素的选区。";
 "imageEditor.tool.crop.help" = "裁剪：拖拽预览裁剪范围，再确认或取消。";
 "imageEditor.tool.brush.help" = "画笔：用前景色在当前可编辑图层上绘制。";
+"imageEditor.tool.pencil.help" = "铅笔（B）：用前景色绘制清晰、无抗锯齿的硬边像素。";
 "imageEditor.tool.historyBrush.help" = "历史记录画笔（Y）：从历史面板标记的来源局部恢复当前图层。";
 "imageEditor.tool.historyBrush.sourceHelp" = "在历史记录面板的画笔列中选择来源。";
 "imageEditor.tool.eraser.help" = "橡皮擦：擦除当前可编辑图层上的像素。";
@@ -1572,6 +1574,7 @@
 "imageEditor.history.text" = "文字";
 "imageEditor.history.erase" = "擦除";
 "imageEditor.history.brush" = "画笔";
+"imageEditor.history.pencil" = "铅笔";
 "imageEditor.history.historyBrush" = "历史记录画笔";
 "imageEditor.history.cloneStamp" = "仿制图章";
 "imageEditor.history.dodge" = "减淡";

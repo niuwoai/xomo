@@ -2945,7 +2945,7 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     var brushPanelTools: [ImageEditorTool] {
-        [.brush, .eraser, .cloneStamp, .dodge, .burn, .blur, .sharpen, .smudge, .healingBrush]
+        [.brush, .pencil, .eraser, .cloneStamp, .dodge, .burn, .blur, .sharpen, .smudge, .healingBrush]
     }
 
     var toolsPanelTools: [ImageEditorTool] {
@@ -6050,13 +6050,33 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     func drawBrush(samples: [ImageEditorBrushStrokeSample], erase: Bool = false) {
+        drawPaintStroke(samples: samples, erase: erase, edgeStyle: .antialiased)
+    }
+
+    func drawPencil(samples: [ImageEditorBrushStrokeSample]) {
+        drawPaintStroke(samples: samples, erase: false, edgeStyle: .aliased)
+    }
+
+    private func drawPaintStroke(
+        samples: [ImageEditorBrushStrokeSample],
+        erase: Bool,
+        edgeStyle: ImageEditorBrushEdgeStyle
+    ) {
         guard !samples.isEmpty else { return }
         if isQuickMaskMode {
-            paintQuickMask(samples: samples, usingBackgroundColor: erase)
+            paintQuickMask(
+                samples: samples,
+                usingBackgroundColor: erase,
+                edgeStyle: edgeStyle
+            )
             return
         }
         if isEditingLayerMask {
-            paintSelectedLayerMask(samples: samples, reveal: erase)
+            paintSelectedLayerMask(
+                samples: samples,
+                reveal: erase,
+                edgeStyle: edgeStyle
+            )
             return
         }
         guard let layer = editableSelectedLayer() else {
@@ -6069,7 +6089,7 @@ final class ImageEditorViewModel: ObservableObject {
             color: foregroundColor,
             settings: ImageEditorBrushStrokeSettings(
                 diameter: rasterLocalBrushWidth(brushSize, layer: layer),
-                hardness: hardness,
+                hardness: edgeStyle == .aliased ? 1 : hardness,
                 opacity: opacity,
                 flow: brushFlow / 100,
                 spacing: brushSpacing / 100,
@@ -6083,7 +6103,8 @@ final class ImageEditorViewModel: ObservableObject {
                 tiltControlsShape: brushTiltControlsShape,
                 tipRoundness: brushTipRoundness / 100,
                 tipAngleDegrees: brushTipAngleDegrees,
-                smoothing: brushSmoothing / 100
+                smoothing: brushSmoothing / 100,
+                edgeStyle: edgeStyle
             ),
             erase: erase
         ) else {
@@ -6092,17 +6113,28 @@ final class ImageEditorViewModel: ObservableObject {
         }
         replaceSelectedLayerRenderedPixels(
             output,
-            historyTitle: erase ? L10n.text("imageEditor.history.erase") : L10n.text("imageEditor.history.brush"),
+            historyTitle: L10n.text(
+                erase
+                    ? "imageEditor.history.erase"
+                    : edgeStyle == .aliased
+                        ? "imageEditor.history.pencil"
+                        : "imageEditor.history.brush"
+            ),
             resetFrame: false
         )
     }
 
     private func paintQuickMask(
         samples: [ImageEditorBrushStrokeSample],
-        usingBackgroundColor: Bool
+        usingBackgroundColor: Bool,
+        edgeStyle: ImageEditorBrushEdgeStyle = .antialiased
     ) {
         let paintColor = usingBackgroundColor ? backgroundColor : foregroundColor
-        paintQuickMask(samples: samples, targetAlpha: quickMaskSelectionAlpha(for: paintColor))
+        paintQuickMask(
+            samples: samples,
+            targetAlpha: quickMaskSelectionAlpha(for: paintColor),
+            edgeStyle: edgeStyle
+        )
     }
 
     func fillQuickMask(
@@ -6210,7 +6242,8 @@ final class ImageEditorViewModel: ObservableObject {
 
     private func paintQuickMask(
         samples: [ImageEditorBrushStrokeSample],
-        targetAlpha: UInt8
+        targetAlpha: UInt8,
+        edgeStyle: ImageEditorBrushEdgeStyle = .antialiased
     ) {
         guard let selection = document.selection,
               let currentMask = selection.rasterizedMask(canvasSize: document.canvasSize),
@@ -6219,7 +6252,7 @@ final class ImageEditorViewModel: ObservableObject {
                 canvasSize: document.canvasSize,
                 diameter: brushSize,
                 opacity: opacity,
-                hardness: hardness,
+                hardness: edgeStyle == .aliased ? 1 : hardness,
                 flow: brushFlow / 100,
                 spacing: brushSpacing / 100,
                 pressureControlsSize: brushPressureControlsSize,
@@ -6233,6 +6266,7 @@ final class ImageEditorViewModel: ObservableObject {
                 tipRoundness: brushTipRoundness / 100,
                 tipAngleDegrees: brushTipAngleDegrees,
                 smoothing: brushSmoothing / 100,
+                edgeStyle: edgeStyle,
                 targetAlpha: targetAlpha
               )
         else {
@@ -8138,7 +8172,11 @@ final class ImageEditorViewModel: ObservableObject {
     }
     #endif
 
-    private func paintSelectedLayerMask(samples: [ImageEditorBrushStrokeSample], reveal: Bool) {
+    private func paintSelectedLayerMask(
+        samples: [ImageEditorBrushStrokeSample],
+        reveal: Bool,
+        edgeStyle: ImageEditorBrushEdgeStyle = .antialiased
+    ) {
         guard let index = document.selectedLayerIndex else { return }
         guard !document.isEffectivelyLocked(document.layers[index]) else {
             statusText = L10n.text("imageEditor.status.layerLocked")
@@ -8158,7 +8196,7 @@ final class ImageEditorViewModel: ObservableObject {
             samples: rasterLocalSamples(samples, layer: maskLayer),
             width: rasterLocalBrushWidth(brushSize, layer: maskLayer),
             opacity: opacity,
-            hardness: hardness,
+            hardness: edgeStyle == .aliased ? 1 : hardness,
             flow: brushFlow / 100,
             spacing: brushSpacing / 100,
             pressureControlsSize: brushPressureControlsSize,
@@ -8172,6 +8210,7 @@ final class ImageEditorViewModel: ObservableObject {
             tipRoundness: brushTipRoundness / 100,
             tipAngleDegrees: brushTipAngleDegrees,
             smoothing: brushSmoothing / 100,
+            edgeStyle: edgeStyle,
             reveal: reveal
         ) else {
             statusText = L10n.text("imageEditor.status.operationFailed")
@@ -10241,6 +10280,7 @@ extension NSImage {
         tipRoundness: CGFloat = 1,
         tipAngleDegrees: CGFloat = 0,
         smoothing: CGFloat = 0,
+        edgeStyle: ImageEditorBrushEdgeStyle = .antialiased,
         reveal: Bool
     ) -> NSImage? {
         withBrushStroke(
@@ -10262,7 +10302,8 @@ extension NSImage {
                 tiltControlsShape: tiltControlsShape,
                 tipRoundness: tipRoundness,
                 tipAngleDegrees: tipAngleDegrees,
-                smoothing: smoothing
+                smoothing: smoothing,
+                edgeStyle: edgeStyle
             ),
             erase: !reveal
         )

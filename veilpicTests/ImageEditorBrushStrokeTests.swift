@@ -149,6 +149,37 @@ struct ImageEditorBrushStrokeTests {
         #expect(hard[edge] > soft[edge])
     }
 
+    @Test func aliasedEdgeStyleProducesOnlyHardPixelCoverage() {
+        let center = CGPoint(x: 10.75, y: 10.75)
+        let antialiasedSettings = ImageEditorBrushStrokeSettings(
+            diameter: 6,
+            hardness: 1,
+            opacity: 1,
+            flow: 1,
+            spacing: 0.25
+        )
+        var aliasedSettings = antialiasedSettings
+        aliasedSettings.hardness = 0
+        aliasedSettings.edgeStyle = .aliased
+
+        let antialiased = ImageEditorBrushStrokeKernel.coverage(
+            width: 24,
+            height: 24,
+            centers: [center],
+            settings: antialiasedSettings
+        )
+        let aliased = ImageEditorBrushStrokeKernel.coverage(
+            width: 24,
+            height: 24,
+            centers: [center],
+            settings: aliasedSettings
+        )
+
+        #expect(antialiased.contains { $0 > 0 && $0 < .max })
+        #expect(aliased.allSatisfy { $0 == 0 || $0 == .max })
+        #expect(aliased != antialiased)
+    }
+
     @Test func pressureCurveRespondsToSensitivityAndClampsInput() {
         let lowSensitivity = ImageEditorBrushStrokeKernel.mappedPressure(0.25, sensitivity: 0)
         let neutral = ImageEditorBrushStrokeKernel.mappedPressure(0.25, sensitivity: 0.5)
@@ -748,6 +779,43 @@ struct ImageEditorBrushStrokeTests {
         #expect(undone.alphaComponent < 0.03)
     }
 
+    @Test func pencilPaintsCrispPixelsAsOneUndoableHistoryStep() throws {
+        let size = CGSize(width: 24, height: 24)
+        let viewModel = ImageEditorViewModel(
+            sourceName: "pencil.png",
+            image: NSImage.transparent(size: size)
+        ) { _ in }
+        viewModel.foregroundColor = .systemRed
+        viewModel.brushSize = 6
+        viewModel.hardness = 0
+        viewModel.opacity = 1
+        viewModel.brushFlow = 100
+
+        viewModel.drawPencil(samples: [
+            ImageEditorBrushStrokeSample(point: CGPoint(x: 10.75, y: 10.75))
+        ])
+
+        let image = try #require(viewModel.document.selectedLayer?.image)
+        var paintedPixelCount = 0
+        for y in 0..<24 {
+            for x in 0..<24 {
+                let color = try #require(image.color(at: CGPoint(x: x, y: y)))
+                #expect(color.alphaComponent < 0.01 || color.alphaComponent > 0.99)
+                if color.alphaComponent > 0.99 {
+                    paintedPixelCount += 1
+                }
+            }
+        }
+        #expect(paintedPixelCount > 0)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.pencil"))
+
+        viewModel.undo()
+        let undone = try #require(
+            viewModel.document.selectedLayer?.image.color(at: CGPoint(x: 10, y: 10))
+        )
+        #expect(undone.alphaComponent < 0.01)
+    }
+
     @Test func viewModelPressureStrokeSupportsSingleStampHistoryAndUndo() throws {
         let size = CGSize(width: 80, height: 40)
         let viewModel = ImageEditorViewModel(
@@ -819,6 +887,47 @@ struct ImageEditorBrushStrokeTests {
 
         #expect(firstStamp.alphaComponent > 0.75 && firstStamp.alphaComponent < 0.85)
         #expect(gap.alphaComponent > 0.97)
+    }
+
+    @Test func pencilEdgeStyleStaysAliasedInQuickMaskAndLayerMask() throws {
+        let size = CGSize(width: 24, height: 24)
+        let samples = [ImageEditorBrushStrokeSample(point: CGPoint(x: 10.75, y: 10.75))]
+        let selectionMask = ImageEditorSelectionMask(
+            width: 24,
+            height: 24,
+            alpha: [UInt8](repeating: .max, count: 24 * 24)
+        )
+        let quickMask = try #require(selectionMask.paintedByQuickMaskStroke(
+            samples: samples,
+            canvasSize: size,
+            diameter: 6,
+            opacity: 1,
+            hardness: 0,
+            flow: 1,
+            edgeStyle: .aliased,
+            reveal: false
+        ))
+        #expect(quickMask.alpha.allSatisfy { $0 == 0 || $0 == .max })
+
+        let sourceMask = NSImage.rendered(size: size) { rect in
+            NSColor.white.setFill()
+            rect.fill()
+        } ?? NSImage.transparent(size: size)
+        let layerMask = try #require(sourceMask.withMaskStroke(
+            samples: samples,
+            width: 6,
+            opacity: 1,
+            hardness: 0,
+            flow: 1,
+            edgeStyle: .aliased,
+            reveal: false
+        ))
+        for y in 0..<24 {
+            for x in 0..<24 {
+                let alpha = try #require(layerMask.color(at: CGPoint(x: x, y: y))).alphaComponent
+                #expect(alpha < 0.01 || alpha > 0.99)
+            }
+        }
     }
 
     @Test func quickMaskAndLayerMaskSharePressureDynamics() throws {

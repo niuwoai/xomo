@@ -298,6 +298,7 @@ extension ImageEditorSelectionMask {
         tipRoundness: CGFloat = 1,
         tipAngleDegrees: CGFloat = 0,
         smoothing: CGFloat = 0,
+        edgeStyle: ImageEditorBrushEdgeStyle = .antialiased,
         reveal: Bool
     ) -> ImageEditorSelectionMask? {
         paintedByQuickMaskStroke(
@@ -319,6 +320,7 @@ extension ImageEditorSelectionMask {
             tipRoundness: tipRoundness,
             tipAngleDegrees: tipAngleDegrees,
             smoothing: smoothing,
+            edgeStyle: edgeStyle,
             targetAlpha: reveal ? UInt8.max : UInt8.min
         )
     }
@@ -342,6 +344,7 @@ extension ImageEditorSelectionMask {
         tipRoundness: CGFloat = 1,
         tipAngleDegrees: CGFloat = 0,
         smoothing: CGFloat = 0,
+        edgeStyle: ImageEditorBrushEdgeStyle = .antialiased,
         targetAlpha: UInt8
     ) -> ImageEditorSelectionMask? {
         guard width > 0,
@@ -368,7 +371,8 @@ extension ImageEditorSelectionMask {
                 tiltControlsShape: tiltControlsShape,
                 tipRoundness: tipRoundness,
                 tipAngleDegrees: tipAngleDegrees,
-                smoothing: smoothing
+                smoothing: smoothing,
+                edgeStyle: edgeStyle
               )
         else { return nil }
 
@@ -401,7 +405,8 @@ extension ImageEditorSelectionMask {
         tiltControlsShape: Bool,
         tipRoundness: CGFloat,
         tipAngleDegrees: CGFloat,
-        smoothing: CGFloat
+        smoothing: CGFloat,
+        edgeStyle: ImageEditorBrushEdgeStyle
     ) -> [UInt8]? {
         guard !samples.isEmpty else { return nil }
         let scaleX = CGFloat(width) / canvasSize.width
@@ -430,7 +435,8 @@ extension ImageEditorSelectionMask {
             tiltControlsShape: tiltControlsShape,
             tipRoundness: tipRoundness,
             tipAngleDegrees: tipAngleDegrees,
-            smoothing: smoothing
+            smoothing: smoothing,
+            edgeStyle: edgeStyle
         )
         return ImageEditorBrushStrokeKernel.coverage(
             width: width,

@@ -24,6 +24,11 @@ struct ImageEditorBrushStrokeSample: Equatable {
     }
 }
 
+enum ImageEditorBrushEdgeStyle: Equatable {
+    case antialiased
+    case aliased
+}
+
 struct ImageEditorBrushStrokeSettings: Equatable {
     var diameter: CGFloat
     var hardness: CGFloat
@@ -41,6 +46,7 @@ struct ImageEditorBrushStrokeSettings: Equatable {
     var tipRoundness: CGFloat
     var tipAngleDegrees: CGFloat
     var smoothing: CGFloat
+    var edgeStyle: ImageEditorBrushEdgeStyle
 
     init(
         diameter: CGFloat,
@@ -58,7 +64,8 @@ struct ImageEditorBrushStrokeSettings: Equatable {
         tiltControlsShape: Bool = false,
         tipRoundness: CGFloat = 1,
         tipAngleDegrees: CGFloat = 0,
-        smoothing: CGFloat = 0
+        smoothing: CGFloat = 0,
+        edgeStyle: ImageEditorBrushEdgeStyle = .antialiased
     ) {
         self.diameter = diameter
         self.hardness = hardness
@@ -76,6 +83,7 @@ struct ImageEditorBrushStrokeSettings: Equatable {
         self.tipRoundness = tipRoundness
         self.tipAngleDegrees = tipAngleDegrees
         self.smoothing = smoothing
+        self.edgeStyle = edgeStyle
     }
 
     var normalized: ImageEditorBrushStrokeSettings {
@@ -95,7 +103,8 @@ struct ImageEditorBrushStrokeSettings: Equatable {
             tiltControlsShape: tiltControlsShape,
             tipRoundness: max(0.1, min(1, tipRoundness)),
             tipAngleDegrees: max(-180, min(180, tipAngleDegrees)),
-            smoothing: max(0, min(1, smoothing))
+            smoothing: max(0, min(1, smoothing)),
+            edgeStyle: edgeStyle
         )
     }
 }
@@ -295,7 +304,8 @@ enum ImageEditorBrushStrokeKernel {
                     let stampCoverage = radialCoverage(
                         distance: distance,
                         innerRadius: innerRadius,
-                        outerRadius: radius
+                        outerRadius: radius,
+                        edgeStyle: settings.edgeStyle
                     )
                     guard stampCoverage > 0 else { continue }
                     let index = y * width + x
@@ -409,8 +419,12 @@ enum ImageEditorBrushStrokeKernel {
     private static func radialCoverage(
         distance: CGFloat,
         innerRadius: CGFloat,
-        outerRadius: CGFloat
+        outerRadius: CGFloat,
+        edgeStyle: ImageEditorBrushEdgeStyle
     ) -> CGFloat {
+        if edgeStyle == .aliased {
+            return distance <= outerRadius ? 1 : 0
+        }
         let antialiasedEdge = max(0, min(1, outerRadius + 0.5 - distance))
         guard antialiasedEdge > 0 else { return 0 }
         guard distance > innerRadius, innerRadius < outerRadius else { return antialiasedEdge }

@@ -715,6 +715,7 @@
 "imageEditor.tool.quickSelection" = "クイック選択";
 "imageEditor.tool.crop" = "切り抜き";
 "imageEditor.tool.brush" = "ブラシ";
+"imageEditor.tool.pencil" = "鉛筆";
 "imageEditor.tool.historyBrush" = "ヒストリーブラシ";
 "imageEditor.tool.eraser" = "消しゴム";
 "imageEditor.tool.cloneStamp" = "コピースタンプ";
@@ -746,6 +747,7 @@
 "imageEditor.tool.quickSelection.help" = "クイック選択：類似ピクセルをブラシでなぞって選択範囲を広げます。";
 "imageEditor.tool.crop.help" = "切り抜き：範囲をドラッグでプレビューしてから、確定またはキャンセルします。";
 "imageEditor.tool.brush.help" = "ブラシ：現在編集できるレイヤーに前景色で描画します。";
+"imageEditor.tool.pencil.help" = "鉛筆（B）：前景色でアンチエイリアスのない鮮明なピクセルを描画します。";
 "imageEditor.tool.historyBrush.help" = "ヒストリーブラシ（Y）：ヒストリーパネルで指定したソースから現在のレイヤーを部分的に復元します。";
 "imageEditor.tool.historyBrush.sourceHelp" = "ヒストリーパネルのブラシ列でソースを選択します。";
 "imageEditor.tool.eraser.help" = "消しゴム：現在編集できるレイヤーからピクセルを消去します。";
@@ -1572,6 +1574,7 @@
 "imageEditor.history.text" = "文字";
 "imageEditor.history.erase" = "消去";
 "imageEditor.history.brush" = "ブラシ";
+"imageEditor.history.pencil" = "鉛筆";
 "imageEditor.history.historyBrush" = "ヒストリーブラシ";
 "imageEditor.history.cloneStamp" = "コピースタンプ";
 "imageEditor.history.dodge" = "覆い焼き";

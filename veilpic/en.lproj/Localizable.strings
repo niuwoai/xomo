@@ -715,6 +715,7 @@
 "imageEditor.tool.quickSelection" = "Quick Selection";
 "imageEditor.tool.crop" = "Crop";
 "imageEditor.tool.brush" = "Brush";
+"imageEditor.tool.pencil" = "Pencil";
 "imageEditor.tool.historyBrush" = "History Brush";
 "imageEditor.tool.eraser" = "Eraser";
 "imageEditor.tool.cloneStamp" = "Clone Stamp";
@@ -746,6 +747,7 @@
 "imageEditor.tool.quickSelection.help" = "Quick Selection: brush over similar pixels to grow a selection.";
 "imageEditor.tool.crop.help" = "Crop: drag to preview the crop area, then confirm or cancel.";
 "imageEditor.tool.brush.help" = "Brush: paint with the foreground color on the current editable layer.";
+"imageEditor.tool.pencil.help" = "Pencil (B): draw crisp, hard-edged pixels with the foreground color.";
 "imageEditor.tool.historyBrush.help" = "History Brush (Y): selectively restore the current layer from the source marked in the History panel.";
 "imageEditor.tool.historyBrush.sourceHelp" = "Choose the source with the brush column in the History panel.";
 "imageEditor.tool.eraser.help" = "Eraser: remove pixels from the current editable layer.";
@@ -1572,6 +1574,7 @@
 "imageEditor.history.text" = "Text";
 "imageEditor.history.erase" = "Erase";
 "imageEditor.history.brush" = "Brush";
+"imageEditor.history.pencil" = "Pencil";
 "imageEditor.history.historyBrush" = "History Brush";
 "imageEditor.history.cloneStamp" = "Clone Stamp";
 "imageEditor.history.dodge" = "Dodge";

@@ -994,7 +994,9 @@ struct ImageEditorView: View {
             } else {
                 if usesBrushOptions {
                     optionSlider(titleKey: "imageEditor.option.size", value: $viewModel.brushSize, range: 1...96, step: 1, suffix: "px")
-                    optionSlider(titleKey: "imageEditor.option.hardness", value: $viewModel.hardness, range: 0...1, step: 0.05, suffix: "")
+                    if usesBrushHardnessOption {
+                        optionSlider(titleKey: "imageEditor.option.hardness", value: $viewModel.hardness, range: 0...1, step: 0.05, suffix: "")
+                    }
                 }
                 if usesOpacityOption {
                     optionSlider(
@@ -1217,7 +1219,7 @@ struct ImageEditorView: View {
 
     private var usesBrushOptions: Bool {
         switch viewModel.selectedTool {
-        case .brush, .historyBrush, .eraser, .cloneStamp, .dodge, .burn, .sponge, .blur, .sharpen,
+        case .brush, .pencil, .historyBrush, .eraser, .cloneStamp, .dodge, .burn, .sponge, .blur, .sharpen,
              .smudge, .healingBrush, .quickSelection:
             true
         default:
@@ -1227,12 +1229,16 @@ struct ImageEditorView: View {
 
     private var usesOpacityOption: Bool {
         switch viewModel.selectedTool {
-        case .brush, .historyBrush, .eraser, .cloneStamp, .dodge, .burn, .sponge, .blur, .sharpen,
+        case .brush, .pencil, .historyBrush, .eraser, .cloneStamp, .dodge, .burn, .sponge, .blur, .sharpen,
              .smudge, .healingBrush, .patchTool, .paintBucket, .gradient, .rectangle, .ellipse:
             true
         default:
             false
         }
+    }
+
+    private var usesBrushHardnessOption: Bool {
+        usesBrushOptions && viewModel.selectedTool != .pencil
     }
 
     private var amountOptionTitleKey: String {
@@ -1282,6 +1288,7 @@ struct ImageEditorView: View {
 
     private var usesBrushDynamicsOptions: Bool {
         viewModel.selectedTool == .brush
+            || viewModel.selectedTool == .pencil
             || viewModel.selectedTool == .historyBrush
             || viewModel.selectedTool == .eraser
     }
@@ -2969,6 +2976,7 @@ struct ImageEditorView: View {
                             // states on mouse-down can rebuild the overlay
                             // before mouse-up and strand the responder.
                             if canvasInteractionTool != .brush
+                                && canvasInteractionTool != .pencil
                                 && canvasInteractionTool != .historyBrush
                                 && canvasInteractionTool != .eraser {
                                 primaryToolViewStart = location
@@ -2983,6 +2991,7 @@ struct ImageEditorView: View {
                             let primaryTool = viewModel.canvasPointerCaptureState.activeTool
                                 ?? canvasInteractionTool
                             if primaryTool == .brush
+                                || primaryTool == .pencil
                                 || primaryTool == .historyBrush
                                 || primaryTool == .eraser {
                                 activeBrushPressure = pressure
@@ -3008,6 +3017,7 @@ struct ImageEditorView: View {
                             }
                             if let endImagePoint,
                                primaryTool == .brush
+                                || primaryTool == .pencil
                                 || primaryTool == .historyBrush
                                 || primaryTool == .eraser {
                                 let endStylusInput = ImageEditorStylusInput.sample(
@@ -3027,6 +3037,8 @@ struct ImageEditorView: View {
                             switch primaryTool {
                             case .brush:
                                 viewModel.drawBrush(samples: committedBrushSamples)
+                            case .pencil:
+                                viewModel.drawPencil(samples: committedBrushSamples)
                             case .historyBrush:
                                 viewModel.historyBrush(samples: committedBrushSamples)
                             case .eraser:
@@ -4316,7 +4328,7 @@ struct ImageEditorView: View {
                             isDuplicating: isCanvasCloneGestureActive
                         ).set()
                     }
-                case .brush, .historyBrush, .eraser, .sponge:
+                case .brush, .pencil, .historyBrush, .eraser, .sponge:
                     if let pointerImagePoint {
                         if canvasInteractionTool == .eraser,
                            brushStrokeSamples.isEmpty {
@@ -4733,6 +4745,8 @@ struct ImageEditorView: View {
                     viewModel.createQuickSelection(points: dragPoints)
                 case .brush:
                     viewModel.drawBrush(samples: committedBrushSamples)
+                case .pencil:
+                    viewModel.drawPencil(samples: committedBrushSamples)
                 case .historyBrush:
                     viewModel.historyBrush(samples: committedBrushSamples)
                 case .eraser:
@@ -13100,7 +13114,7 @@ enum ImageEditorCanvasCursor {
         guard let pressure else { return baseDiameter }
         let settings: (isEnabled: Bool, sensitivity: CGFloat, minimumDiameter: CGFloat)
         switch tool {
-        case .brush, .historyBrush, .eraser:
+        case .brush, .pencil, .historyBrush, .eraser:
             settings = (
                 brushPressureControlsSize,
                 brushPressureSensitivity,
@@ -13698,7 +13712,7 @@ enum ImageEditorCanvasCursor {
             .rectangleOutline
         case .ellipse:
             .ellipseOutline
-        case .brush, .historyBrush:
+        case .brush, .pencil, .historyBrush:
             .brushTool
         case .eraser:
             .eraserTool
@@ -13977,7 +13991,7 @@ enum ImageEditorCanvasCursor {
 
         let markOrigin = NSPoint(x: min(side - 28, center.x + diameter / 2 - 3), y: min(side - 28, center.y - diameter / 2 - 3))
         switch tool {
-        case .brush:
+        case .brush, .pencil:
             let handle = NSBezierPath()
             handle.move(to: NSPoint(x: markOrigin.x + 5, y: markOrigin.y + 4))
             handle.line(to: NSPoint(x: markOrigin.x + 19, y: markOrigin.y + 18))

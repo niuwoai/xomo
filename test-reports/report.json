@@ -1,84 +1,48 @@
 {
-  "generated_at": "2026-08-17 08:08:47 +0800",
-  "total": 6,
-  "passed": 6,
+  "generated_at": "2026-08-19 12:25:38 +0800",
+  "total": 3,
+  "passed": 3,
   "failed": 0,
-  "total_tests": 6,
-  "passed_tests": 6,
+  "total_tests": 3,
+  "passed_tests": 3,
   "failed_tests_in_failed_groups": 0,
   "jobs": 1,
   "results": [
     {
-      "suite": "ImageEditorScopeTests",
-      "method": "historyBrushBlendModeWiresPersistencePixelsAndOptionsWithoutAffectingEraser",
-      "identifier": "veilpicTests/ImageEditorScopeTests/historyBrushBlendModeWiresPersistencePixelsAndOptionsWithoutAffectingEraser()",
-      "file": "ImageEditorScopeTests.swift",
+      "suite": "ImageEditorBrushStrokeTests",
+      "method": "pencilEdgeStyleStaysAliasedInQuickMaskAndLayerMask",
+      "identifier": "veilpicTests/ImageEditorBrushStrokeTests/pencilEdgeStyleStaysAliasedInQuickMaskAndLayerMask()",
+      "file": "ImageEditorBrushStrokeTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.071,
+      "duration": 3.93,
       "infrastructure_retries": 0,
       "issues": [],
-      "log": "ImageEditorScopeTests.historyBrushBlendModeWiresPersistencePixelsAndOptionsWithoutAffectingEraser.log"
+      "log": "ImageEditorBrushStrokeTests.pencilEdgeStyleStaysAliasedInQuickMaskAndLayerMask.log"
+    },
+    {
+      "suite": "ImageEditorBrushStrokeTests",
+      "method": "pencilPaintsCrispPixelsAsOneUndoableHistoryStep",
+      "identifier": "veilpicTests/ImageEditorBrushStrokeTests/pencilPaintsCrispPixelsAsOneUndoableHistoryStep()",
+      "file": "ImageEditorBrushStrokeTests.swift",
+      "test_count": 1,
+      "passed": true,
+      "duration": 7.893,
+      "infrastructure_retries": 0,
+      "issues": [],
+      "log": "ImageEditorBrushStrokeTests.pencilPaintsCrispPixelsAsOneUndoableHistoryStep.log"
     },
     {
       "suite": "ImageEditorScopeTests",
-      "method": "historyBrushWiresTheSharedSourceIntoNativePaintingAndOptions",
-      "identifier": "veilpicTests/ImageEditorScopeTests/historyBrushWiresTheSharedSourceIntoNativePaintingAndOptions()",
+      "method": "pencilWiresAliasedPaintingThroughNativeCaptureOptionsMasksAndHistory",
+      "identifier": "veilpicTests/ImageEditorScopeTests/pencilWiresAliasedPaintingThroughNativeCaptureOptionsMasksAndHistory()",
       "file": "ImageEditorScopeTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 4.898,
+      "duration": 3.683,
       "infrastructure_retries": 0,
       "issues": [],
-      "log": "ImageEditorScopeTests.historyBrushWiresTheSharedSourceIntoNativePaintingAndOptions.log"
-    },
-    {
-      "suite": "ImageEditorSelectionFillDialogTests",
-      "method": "historyBrushModeBlendsTheHistoricalPixelsWithTheCurrentLayer",
-      "identifier": "veilpicTests/ImageEditorSelectionFillDialogTests/historyBrushModeBlendsTheHistoricalPixelsWithTheCurrentLayer()",
-      "file": "ImageEditorSelectionFillDialogTests.swift",
-      "test_count": 1,
-      "passed": true,
-      "duration": 3.048,
-      "infrastructure_retries": 0,
-      "issues": [],
-      "log": "ImageEditorSelectionFillDialogTests.historyBrushModeBlendsTheHistoricalPixelsWithTheCurrentLayer.log"
-    },
-    {
-      "suite": "ImageEditorSelectionFillDialogTests",
-      "method": "historyBrushRejectsQuickMaskWithoutChangingPixelsOrHistory",
-      "identifier": "veilpicTests/ImageEditorSelectionFillDialogTests/historyBrushRejectsQuickMaskWithoutChangingPixelsOrHistory()",
-      "file": "ImageEditorSelectionFillDialogTests.swift",
-      "test_count": 1,
-      "passed": true,
-      "duration": 3.096,
-      "infrastructure_retries": 0,
-      "issues": [],
-      "log": "ImageEditorSelectionFillDialogTests.historyBrushRejectsQuickMaskWithoutChangingPixelsOrHistory.log"
-    },
-    {
-      "suite": "ImageEditorSelectionFillDialogTests",
-      "method": "historyBrushRestoresOnlyItsFootprintInsideTheExistingSelection",
-      "identifier": "veilpicTests/ImageEditorSelectionFillDialogTests/historyBrushRestoresOnlyItsFootprintInsideTheExistingSelection()",
-      "file": "ImageEditorSelectionFillDialogTests.swift",
-      "test_count": 1,
-      "passed": true,
-      "duration": 3.1,
-      "infrastructure_retries": 0,
-      "issues": [],
-      "log": "ImageEditorSelectionFillDialogTests.historyBrushRestoresOnlyItsFootprintInsideTheExistingSelection.log"
-    },
-    {
-      "suite": "ImageEditorSelectionFillDialogTests",
-      "method": "historyBrushUsesTheNamedSnapshotSourceWithoutRestoringTheDocument",
-      "identifier": "veilpicTests/ImageEditorSelectionFillDialogTests/historyBrushUsesTheNamedSnapshotSourceWithoutRestoringTheDocument()",
-      "file": "ImageEditorSelectionFillDialogTests.swift",
-      "test_count": 1,
-      "passed": true,
-      "duration": 3.064,
-      "infrastructure_retries": 0,
-      "issues": [],
-      "log": "ImageEditorSelectionFillDialogTests.historyBrushUsesTheNamedSnapshotSourceWithoutRestoringTheDocument.log"
+      "log": "ImageEditorScopeTests.pencilWiresAliasedPaintingThroughNativeCaptureOptionsMasksAndHistory.log"
     }
   ]
 }

@@ -151,6 +151,7 @@ struct ImageEditorScopeTests {
         #expect(shortcuts["magicWand"] == "w")
         #expect(shortcuts["crop"] == "c")
         #expect(shortcuts["brush"] == "b")
+        #expect(shortcuts["pencil"] == "b")
         #expect(shortcuts["historyBrush"] == "y")
         #expect(shortcuts["eraser"] == "e")
         #expect(shortcuts["cloneStamp"] == "s")
@@ -173,6 +174,7 @@ struct ImageEditorScopeTests {
         #expect(shortcuts["healingBrush"] == "j")
         #expect(shortcuts["patchTool"] == "j")
         #expect(ImageEditorTool.classicShortcutGroup(for: "g")?.tools == [.paintBucket, .gradient])
+        #expect(ImageEditorTool.classicShortcutGroup(for: "b")?.tools == [.brush, .pencil])
         #expect(ImageEditorTool.classicShortcutGroup(for: "o")?.tools == [.dodge, .burn, .sponge])
         #expect(ImageEditorTool.classicShortcutGroup(for: "r")?.tools == [.blur, .sharpen, .smudge])
         #expect(ImageEditorTool.classicShortcutGroup(for: "u")?.tools == [.rectangle, .ellipse])
@@ -2234,7 +2236,7 @@ struct ImageEditorScopeTests {
             encoding: .utf8
         )
 
-        #expect(captureSource.contains("case .brush, .historyBrush, .eraser, .rectangle"))
+        #expect(captureSource.contains("case .brush, .pencil, .historyBrush, .eraser, .rectangle"))
         #expect(editorSource.contains("case .historyBrush:\n                                viewModel.historyBrush(samples: committedBrushSamples)"))
         #expect(editorSource.contains("viewModel.selectedTool == .historyBrush"))
         #expect(editorSource.contains("viewModel.historyFillSourceTitle"))
@@ -2243,6 +2245,45 @@ struct ImageEditorScopeTests {
         #expect(commandSource.contains("let sourceDocument = historyFillDocument(for: source)"))
         #expect(commandSource.contains("func historyBrushed("))
         #expect(commandSource.contains("skipIfUnchanged: true"))
+    }
+
+    @Test func pencilWiresAliasedPaintingThroughNativeCaptureOptionsMasksAndHistory() throws {
+        let editorSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let viewModelSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent(
+                "veilpic/ImageEditorViewModel.swift"
+            ),
+            encoding: .utf8
+        )
+        let brushSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent(
+                "veilpic/ImageEditorBrushStroke.swift"
+            ),
+            encoding: .utf8
+        )
+
+        #expect(editorSource.components(separatedBy: "viewModel.drawPencil(samples: committedBrushSamples)").count == 3)
+        #expect(editorSource.contains("usesBrushOptions && viewModel.selectedTool != .pencil"))
+        #expect(editorSource.contains("case .brush, .pencil, .historyBrush, .eraser"))
+        #expect(viewModelSource.contains("drawPaintStroke(samples: samples, erase: false, edgeStyle: .aliased)"))
+        #expect(viewModelSource.contains("edgeStyle == .aliased ? 1 : hardness"))
+        #expect(viewModelSource.contains("? \"imageEditor.history.pencil\""))
+        #expect(brushSource.contains("return distance <= outerRadius ? 1 : 0"))
+
+        for locale in ["en", "ja", "zh-Hans"] {
+            let localization = try String(
+                contentsOf: Self.repositoryRoot().appendingPathComponent(
+                    "veilpic/\(locale).lproj/Localizable.strings"
+                ),
+                encoding: .utf8
+            )
+            #expect(localization.contains("\"imageEditor.tool.pencil\""))
+            #expect(localization.contains("\"imageEditor.tool.pencil.help\""))
+            #expect(localization.contains("\"imageEditor.history.pencil\""))
+        }
     }
 
     @Test func eraserHistoryModeLatchesAtPointerDownAndWiresBothPaintingPaths() throws {

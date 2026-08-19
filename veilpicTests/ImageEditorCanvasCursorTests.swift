@@ -1244,7 +1244,7 @@ struct ImageEditorCanvasCursorTests {
     }
 
     @Test func primaryDrawingToolsUseBalancedAppKitPointerCaptureOnlyInToolsMode() {
-        for tool in [ImageEditorTool.brush, .historyBrush, .eraser, .rectangle, .ellipse, .text] {
+        for tool in [ImageEditorTool.brush, .pencil, .historyBrush, .eraser, .rectangle, .ellipse, .text] {
             #expect(
                 ImageEditorPrimaryToolPointerCapture.shouldCapture(
                     sidebarTab: .tools,
@@ -1290,7 +1290,7 @@ struct ImageEditorCanvasCursorTests {
             )
         }
 
-        for tool in [ImageEditorTool.brush, .historyBrush, .eraser, .rectangle, .ellipse, .text, .marquee, .gradient] {
+        for tool in [ImageEditorTool.brush, .pencil, .historyBrush, .eraser, .rectangle, .ellipse, .text, .marquee, .gradient] {
             #expect(
                 ImageEditorPrimaryToolPointerCapture.usesDirectCanvasHitTarget(
                     sidebarTab: .tools,
@@ -2147,6 +2147,7 @@ struct ImageEditorCanvasCursorTests {
         #expect(ImageEditorCanvasCursor.family(for: .healingBrush) == .healingBrush)
         #expect(ImageEditorCanvasCursor.family(for: .colorSampler) == .samplingScope)
         #expect(ImageEditorCanvasCursor.family(for: .brush) == .brushTool)
+        #expect(ImageEditorCanvasCursor.family(for: .pencil) == .brushTool)
         #expect(ImageEditorCanvasCursor.family(for: .eraser) == .eraserTool)
         #expect(ImageEditorCanvasCursor.family(for: .rectangle) == .rectangleOutline)
         #expect(ImageEditorCanvasCursor.family(for: .ellipse) == .ellipseOutline)
@@ -2173,7 +2174,7 @@ struct ImageEditorCanvasCursorTests {
         }
 
         let brushTools: [ImageEditorTool] = [
-            .brush, .eraser, .cloneStamp, .healingBrush,
+            .brush, .pencil, .eraser, .cloneStamp, .healingBrush,
             .dodge, .burn, .sponge, .blur, .sharpen, .smudge
         ]
         let brushRepresentations = brushTools.compactMap {
