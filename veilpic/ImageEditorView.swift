@@ -1018,6 +1018,25 @@ struct ImageEditorView: View {
                     .fixedSize()
                     .accessibilityIdentifier("image-editor-gradient-reverse")
                 }
+                if viewModel.selectedTool == .brush || viewModel.selectedTool == .pencil {
+                    Picker(
+                        L10n.text("imageEditor.option.paintBlendMode"),
+                        selection: Binding(
+                            get: { viewModel.paintBlendMode },
+                            set: { viewModel.setPaintBlendMode($0) }
+                        )
+                    ) {
+                        ForEach(ImageEditorBlendMode.paintCases) { mode in
+                            Text(mode.title).tag(mode)
+                        }
+                    }
+                    .labelsHidden()
+                    .pickerStyle(.menu)
+                    .focusable(false)
+                    .frame(width: 132)
+                    .help(L10n.text("imageEditor.option.paintBlendMode.help"))
+                    .accessibilityIdentifier("image-editor-paint-blend-mode")
+                }
                 if viewModel.selectedTool == .pencil {
                     Toggle(
                         L10n.text("imageEditor.option.pencilAutoErase"),

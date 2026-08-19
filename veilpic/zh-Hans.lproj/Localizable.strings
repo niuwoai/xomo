@@ -617,6 +617,8 @@
 "imageEditor.option.maskFeather" = "蒙版羽化";
 "imageEditor.option.hardness" = "硬度";
 "imageEditor.option.historyBrushBlendMode" = "历史记录画笔模式";
+"imageEditor.option.paintBlendMode" = "绘画模式";
+"imageEditor.option.paintBlendMode.help" = "将画笔或铅笔颜色与当前编辑目标已有像素混合";
 "imageEditor.option.pencilAutoErase" = "自动抹除";
 "imageEditor.option.pencilAutoErase.help" = "从前景色像素开始落笔时，整条铅笔笔触改用背景色绘制";
 "imageEditor.option.eraseToHistory" = "抹到历史记录";

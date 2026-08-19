@@ -49,6 +49,7 @@ struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
         tipRoundness: 100,
         tipAngleDegrees: 0,
         smoothing: 0,
+        paintBlendMode: .normal,
         historyBrushBlendMode: .normal,
         pencilAutoEraseEnabled: false
     )
@@ -64,6 +65,7 @@ struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
     var tipRoundness: Double
     var tipAngleDegrees: Double
     var smoothing: Double
+    var paintBlendMode: ImageEditorBlendMode
     var historyBrushBlendMode: ImageEditorBlendMode
     var pencilAutoEraseEnabled: Bool
 
@@ -79,6 +81,7 @@ struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
         tipRoundness: Double = 100,
         tipAngleDegrees: Double = 0,
         smoothing: Double = 0,
+        paintBlendMode: ImageEditorBlendMode = .normal,
         historyBrushBlendMode: ImageEditorBlendMode = .normal,
         pencilAutoEraseEnabled: Bool = false
     ) {
@@ -93,6 +96,7 @@ struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
         self.tipRoundness = tipRoundness
         self.tipAngleDegrees = tipAngleDegrees
         self.smoothing = smoothing
+        self.paintBlendMode = paintBlendMode
         self.historyBrushBlendMode = historyBrushBlendMode
         self.pencilAutoEraseEnabled = pencilAutoEraseEnabled
     }
@@ -109,6 +113,7 @@ struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
         case tipRoundness
         case tipAngleDegrees
         case smoothing
+        case paintBlendMode
         case historyBrushBlendMode
         case pencilAutoEraseEnabled
     }
@@ -150,6 +155,10 @@ struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
             Double.self,
             forKey: .smoothing
         ) ?? 0
+        paintBlendMode = try values.decodeIfPresent(
+            ImageEditorBlendMode.self,
+            forKey: .paintBlendMode
+        ) ?? .normal
         historyBrushBlendMode = try values.decodeIfPresent(
             ImageEditorBlendMode.self,
             forKey: .historyBrushBlendMode
@@ -173,6 +182,9 @@ struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
             tipRoundness: max(10, min(100, tipRoundness)),
             tipAngleDegrees: max(-180, min(180, tipAngleDegrees)),
             smoothing: max(0, min(100, smoothing)),
+            paintBlendMode: ImageEditorBlendMode.paintCases.contains(paintBlendMode)
+                ? paintBlendMode
+                : .normal,
             historyBrushBlendMode: historyBrushBlendMode == .passThrough
                 ? .normal
                 : historyBrushBlendMode,

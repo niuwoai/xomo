@@ -150,6 +150,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var brushTipRoundness: CGFloat = 100
     @Published var brushTipAngleDegrees: CGFloat = 0
     @Published var brushSmoothing: CGFloat = 0
+    @Published var paintBlendMode: ImageEditorBlendMode = .normal
     @Published var historyBrushBlendMode: ImageEditorBlendMode = .normal
     @Published var pencilAutoEraseEnabled = false
     @Published var retouchPressureControlsSize = false
@@ -610,6 +611,7 @@ final class ImageEditorViewModel: ObservableObject {
         brushTipRoundness = CGFloat(brushDynamicsPreferences.tipRoundness)
         brushTipAngleDegrees = CGFloat(brushDynamicsPreferences.tipAngleDegrees)
         brushSmoothing = CGFloat(brushDynamicsPreferences.smoothing)
+        paintBlendMode = brushDynamicsPreferences.paintBlendMode
         historyBrushBlendMode = brushDynamicsPreferences.historyBrushBlendMode
         pencilAutoEraseEnabled = brushDynamicsPreferences.pencilAutoEraseEnabled
         retouchPressureControlsSize = retouchDynamicsPreferences.pressureControlsSize
@@ -661,6 +663,7 @@ final class ImageEditorViewModel: ObservableObject {
         brushTipRoundness = CGFloat(brushDynamicsPreferences.tipRoundness)
         brushTipAngleDegrees = CGFloat(brushDynamicsPreferences.tipAngleDegrees)
         brushSmoothing = CGFloat(brushDynamicsPreferences.smoothing)
+        paintBlendMode = brushDynamicsPreferences.paintBlendMode
         historyBrushBlendMode = brushDynamicsPreferences.historyBrushBlendMode
         pencilAutoEraseEnabled = brushDynamicsPreferences.pencilAutoEraseEnabled
         retouchPressureControlsSize = retouchDynamicsPreferences.pressureControlsSize
@@ -3918,6 +3921,7 @@ final class ImageEditorViewModel: ObservableObject {
             tipRoundness: Double(brushTipRoundness),
             tipAngleDegrees: Double(brushTipAngleDegrees),
             smoothing: Double(brushSmoothing),
+            paintBlendMode: paintBlendMode,
             historyBrushBlendMode: historyBrushBlendMode,
             pencilAutoEraseEnabled: pencilAutoEraseEnabled
         ).save(to: workspacePreferencesDefaults)
@@ -4010,6 +4014,15 @@ final class ImageEditorViewModel: ObservableObject {
         let normalized = blendMode == .passThrough ? ImageEditorBlendMode.normal : blendMode
         guard historyBrushBlendMode != normalized else { return }
         historyBrushBlendMode = normalized
+        persistBrushDynamicsPreferences()
+    }
+
+    func setPaintBlendMode(_ blendMode: ImageEditorBlendMode) {
+        let normalized = ImageEditorBlendMode.paintCases.contains(blendMode)
+            ? blendMode
+            : .normal
+        guard paintBlendMode != normalized else { return }
+        paintBlendMode = normalized
         persistBrushDynamicsPreferences()
     }
 
@@ -6092,7 +6105,8 @@ final class ImageEditorViewModel: ObservableObject {
             paintQuickMask(
                 samples: samples,
                 usingBackgroundColor: usesBackgroundColorForMasks,
-                edgeStyle: edgeStyle
+                edgeStyle: edgeStyle,
+                blendMode: erase ? .normal : paintBlendMode
             )
             return
         }
@@ -6100,7 +6114,8 @@ final class ImageEditorViewModel: ObservableObject {
             paintSelectedLayerMask(
                 samples: samples,
                 reveal: usesBackgroundColorForMasks,
-                edgeStyle: edgeStyle
+                edgeStyle: edgeStyle,
+                blendMode: erase ? .normal : paintBlendMode
             )
             return
         }
@@ -6131,7 +6146,8 @@ final class ImageEditorViewModel: ObservableObject {
                 smoothing: brushSmoothing / 100,
                 edgeStyle: edgeStyle
             ),
-            erase: erase
+            erase: erase,
+            blendMode: erase ? .normal : paintBlendMode
         ) else {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return
@@ -6239,13 +6255,15 @@ final class ImageEditorViewModel: ObservableObject {
     private func paintQuickMask(
         samples: [ImageEditorBrushStrokeSample],
         usingBackgroundColor: Bool,
-        edgeStyle: ImageEditorBrushEdgeStyle = .antialiased
+        edgeStyle: ImageEditorBrushEdgeStyle = .antialiased,
+        blendMode: ImageEditorBlendMode = .normal
     ) {
         let paintColor = usingBackgroundColor ? backgroundColor : foregroundColor
         paintQuickMask(
             samples: samples,
             targetAlpha: quickMaskSelectionAlpha(for: paintColor),
-            edgeStyle: edgeStyle
+            edgeStyle: edgeStyle,
+            blendMode: blendMode
         )
     }
 
@@ -6355,7 +6373,8 @@ final class ImageEditorViewModel: ObservableObject {
     private func paintQuickMask(
         samples: [ImageEditorBrushStrokeSample],
         targetAlpha: UInt8,
-        edgeStyle: ImageEditorBrushEdgeStyle = .antialiased
+        edgeStyle: ImageEditorBrushEdgeStyle = .antialiased,
+        blendMode: ImageEditorBlendMode = .normal
     ) {
         guard let selection = document.selection,
               let currentMask = selection.rasterizedMask(canvasSize: document.canvasSize),
@@ -6379,7 +6398,8 @@ final class ImageEditorViewModel: ObservableObject {
                 tipAngleDegrees: brushTipAngleDegrees,
                 smoothing: brushSmoothing / 100,
                 edgeStyle: edgeStyle,
-                targetAlpha: targetAlpha
+                targetAlpha: targetAlpha,
+                blendMode: blendMode
               )
         else {
             statusText = L10n.text("imageEditor.status.operationFailed")
@@ -8287,7 +8307,8 @@ final class ImageEditorViewModel: ObservableObject {
     private func paintSelectedLayerMask(
         samples: [ImageEditorBrushStrokeSample],
         reveal: Bool,
-        edgeStyle: ImageEditorBrushEdgeStyle = .antialiased
+        edgeStyle: ImageEditorBrushEdgeStyle = .antialiased,
+        blendMode: ImageEditorBlendMode = .normal
     ) {
         guard let index = document.selectedLayerIndex else { return }
         guard !document.isEffectivelyLocked(document.layers[index]) else {
@@ -8304,9 +8325,11 @@ final class ImageEditorViewModel: ObservableObject {
         var maskLayer = layer
         maskLayer.image = mask
         maskLayer.frame = maskFrame
-        guard let updated = mask.withMaskStroke(
+        guard let currentMask = mask.imageEditorSelectionMask(targetSize: mask.size),
+              let updatedMask = currentMask.paintedByQuickMaskStroke(
             samples: rasterLocalSamples(samples, layer: maskLayer),
-            width: rasterLocalBrushWidth(brushSize, layer: maskLayer),
+            canvasSize: mask.size,
+            diameter: rasterLocalBrushWidth(brushSize, layer: maskLayer),
             opacity: opacity,
             hardness: edgeStyle == .aliased ? 1 : hardness,
             flow: brushFlow / 100,
@@ -8323,8 +8346,15 @@ final class ImageEditorViewModel: ObservableObject {
             tipAngleDegrees: brushTipAngleDegrees,
             smoothing: brushSmoothing / 100,
             edgeStyle: edgeStyle,
-            reveal: reveal
-        ) else {
+            targetAlpha: reveal ? UInt8.max : UInt8.min,
+            blendMode: blendMode
+        ),
+              let updated = NSImage.alphaMaskImage(
+                width: updatedMask.width,
+                height: updatedMask.height,
+                alpha: updatedMask.alpha
+              )
+        else {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return
         }

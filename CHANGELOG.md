@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.12.0-rc1111 - 2026-08-19
+
+### Added
+- 为普通 Brush 与 Pencil 增加共享的绘画 Mode 选项，覆盖仓库已实现的暗化、亮化、对比、差值及颜色混合族。
+
+### Changed
+- 绘画混合按预乘 Alpha 正确合成当前编辑目标，并贯通普通像素层、Quick Mask 与栅格图层蒙版；模式跨编辑器会话保存，旧偏好及不适用值回落 Normal。Eraser 继续固定使用 Normal，组件库系统箭头与工具足迹光标保持不变。
+
+### Verification
+- 最终 `build-for-testing` 通过；画笔/蒙版 36/36、偏好与旧数据迁移 9/9、生产接线 1/1、混合模式邻接 5/5、完整光标 88/88、CLI 2/2、发布契约 7/7 全绿。本版本不触发周期 Universal Release、完整冒烟与 `/Applications` 安装，下一次完整门禁为 rc1120。
+
 ## 2.12.0-rc1110 - 2026-08-19
 
 ### Added

@@ -28,6 +28,7 @@ struct ImageEditorBrushDynamicsPreferencesTests {
             tipRoundness: 2,
             tipAngleDegrees: 250,
             smoothing: 140,
+            paintBlendMode: .passThrough,
             historyBrushBlendMode: .passThrough,
             pencilAutoEraseEnabled: true
         ).save(to: defaults)
@@ -44,6 +45,7 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         #expect(loaded.tipRoundness == 10)
         #expect(loaded.tipAngleDegrees == 180)
         #expect(loaded.smoothing == 100)
+        #expect(loaded.paintBlendMode == .normal)
         #expect(loaded.historyBrushBlendMode == .normal)
         #expect(loaded.pencilAutoEraseEnabled)
 
@@ -74,6 +76,7 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         first.setBrushTipRoundness(47)
         first.setBrushTipAngleDegrees(-45)
         first.setBrushSmoothing(64)
+        first.setPaintBlendMode(.screen)
         first.setHistoryBrushBlendMode(.multiply)
         first.setPencilAutoEraseEnabled(true)
 
@@ -93,6 +96,7 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         #expect(restored.brushTipRoundness == 47)
         #expect(restored.brushTipAngleDegrees == -45)
         #expect(restored.brushSmoothing == 64)
+        #expect(restored.paintBlendMode == .screen)
         #expect(restored.historyBrushBlendMode == .multiply)
         #expect(restored.pencilAutoEraseEnabled)
     }
@@ -119,6 +123,7 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         #expect(decodedDynamics.tipRoundness == 100)
         #expect(decodedDynamics.tipAngleDegrees == 0)
         #expect(decodedDynamics.smoothing == 0)
+        #expect(decodedDynamics.paintBlendMode == .normal)
         #expect(decodedDynamics.historyBrushBlendMode == .normal)
         #expect(!decodedDynamics.pencilAutoEraseEnabled)
 

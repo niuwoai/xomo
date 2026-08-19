@@ -410,7 +410,8 @@ enum ImageEditorBrushStrokeKernel {
         targetPixels: [UInt8],
         coverage: [UInt8],
         color: NSColor,
-        erase: Bool
+        erase: Bool,
+        blendMode: ImageEditorBlendMode = .normal
     ) -> [UInt8] {
         guard coverage.count * bytesPerPixel == targetPixels.count else { return targetPixels }
         let rgb = color.usingColorSpace(.deviceRGB) ?? color
@@ -435,9 +436,26 @@ enum ImageEditorBrushStrokeKernel {
             let sourceAlpha = amount * sourceColorAlpha
             let remaining = 1 - sourceAlpha
             let targetAlpha = CGFloat(targetPixels[offset + 3]) / 255
+            let targetColors = (0..<3).map { channel -> Double in
+                guard targetAlpha > 0 else { return 0 }
+                return Double(CGFloat(targetPixels[offset + channel]) / 255 / targetAlpha)
+            }
+            let blended = blendMode.blend(
+                baseRed: targetColors[0],
+                baseGreen: targetColors[1],
+                baseBlue: targetColors[2],
+                overlayRed: Double(sourceRed),
+                overlayGreen: Double(sourceGreen),
+                overlayBlue: Double(sourceBlue)
+            )
+            let blendedColors = [blended.red, blended.green, blended.blue]
             for channel in 0..<3 {
                 let targetPremultiplied = CGFloat(targetPixels[offset + channel]) / 255
-                output[offset + channel] = byte(sourceColors[channel] * sourceAlpha + targetPremultiplied * remaining)
+                let sourceContribution = sourceAlpha * (
+                    (1 - targetAlpha) * sourceColors[channel]
+                        + targetAlpha * CGFloat(blendedColors[channel])
+                )
+                output[offset + channel] = byte(sourceContribution + targetPremultiplied * remaining)
             }
             output[offset + 3] = byte(sourceAlpha + targetAlpha * remaining)
         }
@@ -550,13 +568,15 @@ extension NSImage {
         points: [CGPoint],
         color: NSColor,
         settings: ImageEditorBrushStrokeSettings,
-        erase: Bool
+        erase: Bool,
+        blendMode: ImageEditorBlendMode = .normal
     ) -> NSImage? {
         withBrushStroke(
             samples: points.map { ImageEditorBrushStrokeSample(point: $0) },
             color: color,
             settings: settings,
-            erase: erase
+            erase: erase,
+            blendMode: blendMode
         )
     }
 
@@ -564,7 +584,8 @@ extension NSImage {
         samples: [ImageEditorBrushStrokeSample],
         color: NSColor,
         settings: ImageEditorBrushStrokeSettings,
-        erase: Bool
+        erase: Bool,
+        blendMode: ImageEditorBlendMode = .normal
     ) -> NSImage? {
         guard !samples.isEmpty else { return nil }
         let pixelWidth = max(1, Int(size.width.rounded()))
@@ -602,7 +623,8 @@ extension NSImage {
             targetPixels: pixels,
             coverage: strokeCoverage,
             color: color,
-            erase: erase
+            erase: erase,
+            blendMode: blendMode
         )
         guard let outputContext = CGContext(
             data: &outputPixels,

@@ -135,7 +135,7 @@ enum ImageEditorQuickMaskFillCompositor {
         }
     }
 
-    private static func blendedByte(
+    static func blendedByte(
         baseByte: UInt8,
         targetAlpha: UInt8,
         sourceOpacity: Double,

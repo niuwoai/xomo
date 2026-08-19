@@ -2515,6 +2515,13 @@ enum ImageEditorBlendMode: String, CaseIterable, Identifiable {
         allCases.filter { $0 != .passThrough }
     }
 
+    /// Brush and Pencil share the paint modes backed by the pixel compositor.
+    /// Pass-through belongs to groups, while Dissolve needs stochastic per-dab
+    /// semantics that the continuous stroke kernel does not currently promise.
+    static var paintCases: [ImageEditorBlendMode] {
+        allCases.filter { $0 != .passThrough && $0 != .dissolve }
+    }
+
     var title: String {
         L10n.text("imageEditor.blend.\(rawValue)")
     }

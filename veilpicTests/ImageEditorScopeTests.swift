@@ -2375,6 +2375,49 @@ struct ImageEditorScopeTests {
         }
     }
 
+    @Test func brushAndPencilBlendModeWiresOptionsPixelsAndBothMaskTargets() throws {
+        let editorSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let modelSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorViewModel.swift"),
+            encoding: .utf8
+        )
+        let strokeSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorBrushStroke.swift"),
+            encoding: .utf8
+        )
+        let preferencesSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent(
+                "veilpic/ImageEditorBrushDynamicsPreferences.swift"
+            ),
+            encoding: .utf8
+        )
+
+        #expect(editorSource.contains("viewModel.selectedTool == .brush || viewModel.selectedTool == .pencil"))
+        #expect(editorSource.contains("ForEach(ImageEditorBlendMode.paintCases)"))
+        #expect(editorSource.contains("set: { viewModel.setPaintBlendMode($0) }"))
+        #expect(editorSource.contains("image-editor-paint-blend-mode"))
+        #expect(modelSource.contains("blendMode: erase ? .normal : paintBlendMode"))
+        #expect(modelSource.contains("paintQuickMask("))
+        #expect(modelSource.contains("paintSelectedLayerMask("))
+        #expect(modelSource.contains("targetAlpha: reveal ? UInt8.max : UInt8.min"))
+        #expect(strokeSource.contains("targetAlpha * CGFloat(blendedColors[channel])"))
+        #expect(preferencesSource.contains("case paintBlendMode"))
+
+        for locale in ["en", "ja", "zh-Hans"] {
+            let localization = try String(
+                contentsOf: Self.repositoryRoot().appendingPathComponent(
+                    "veilpic/\(locale).lproj/Localizable.strings"
+                ),
+                encoding: .utf8
+            )
+            #expect(localization.contains("\"imageEditor.option.paintBlendMode\""))
+            #expect(localization.contains("\"imageEditor.option.paintBlendMode.help\""))
+        }
+    }
+
     @Test func fileMenuExposesClipboardCanvasCreation() throws {
         let source = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),

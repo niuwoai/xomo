@@ -23,6 +23,10 @@ struct ImageEditorBlendModeTests {
         #expect(ImageEditorBlendMode.subtract.title != "imageEditor.blend.subtract")
         #expect(ImageEditorBlendMode.divide.title != "imageEditor.blend.divide")
         #expect(ImageEditorBlendMode.hardMix.title != "imageEditor.blend.hardMix")
+        #expect(ImageEditorBlendMode.paintCases.contains(.multiply))
+        #expect(ImageEditorBlendMode.paintCases.contains(.color))
+        #expect(!ImageEditorBlendMode.paintCases.contains(.passThrough))
+        #expect(!ImageEditorBlendMode.paintCases.contains(.dissolve))
     }
 
     @Test func photoshopExtendedBlendModesUsePixelMath() async throws {

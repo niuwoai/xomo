@@ -345,7 +345,8 @@ extension ImageEditorSelectionMask {
         tipAngleDegrees: CGFloat = 0,
         smoothing: CGFloat = 0,
         edgeStyle: ImageEditorBrushEdgeStyle = .antialiased,
-        targetAlpha: UInt8
+        targetAlpha: UInt8,
+        blendMode: ImageEditorBlendMode = .normal
     ) -> ImageEditorSelectionMask? {
         guard width > 0,
               height > 0,
@@ -377,12 +378,15 @@ extension ImageEditorSelectionMask {
         else { return nil }
 
         var output = alpha
-        let target = CGFloat(targetAlpha) / CGFloat(UInt8.max)
         for index in output.indices where coverage[index] > 0 {
-            let current = CGFloat(alpha[index]) / CGFloat(UInt8.max)
-            let amount = CGFloat(coverage[index]) / CGFloat(UInt8.max)
-            let updated = current + (target - current) * amount
-            output[index] = UInt8((max(0, min(1, updated)) * CGFloat(UInt8.max)).rounded())
+            output[index] = ImageEditorQuickMaskFillCompositor.blendedByte(
+                baseByte: alpha[index],
+                targetAlpha: targetAlpha,
+                sourceOpacity: Double(coverage[index]) / Double(UInt8.max),
+                blendMode: blendMode,
+                x: index % width,
+                y: index / width
+            )
         }
         return ImageEditorSelectionMask(width: width, height: height, alpha: output)
     }

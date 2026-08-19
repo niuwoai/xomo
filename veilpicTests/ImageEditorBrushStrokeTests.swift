@@ -12,6 +12,76 @@ import Testing
 @MainActor
 @Suite(.serialized)
 struct ImageEditorBrushStrokeTests {
+    @Test func paintingBlendModesUseUnpremultipliedBaseColorAndSourceOverAlpha() {
+        let opaqueBlue: [UInt8] = [0, 0, 255, 255]
+        let coverage: [UInt8] = [.max]
+        let multiply = ImageEditorBrushStrokeKernel.composite(
+            targetPixels: opaqueBlue,
+            coverage: coverage,
+            color: .red,
+            erase: false,
+            blendMode: .multiply
+        )
+        let screen = ImageEditorBrushStrokeKernel.composite(
+            targetPixels: opaqueBlue,
+            coverage: coverage,
+            color: .red,
+            erase: false,
+            blendMode: .screen
+        )
+
+        #expect(multiply == [0, 0, 0, 255])
+        #expect(screen == [255, 0, 255, 255])
+
+        let halfTransparentBlue: [UInt8] = [0, 0, 128, 128]
+        let screenOverTransparency = ImageEditorBrushStrokeKernel.composite(
+            targetPixels: halfTransparentBlue,
+            coverage: coverage,
+            color: .red,
+            erase: false,
+            blendMode: .screen
+        )
+        #expect(screenOverTransparency[0] == 255)
+        #expect(screenOverTransparency[1] == 0)
+        #expect(abs(Int(screenOverTransparency[2]) - 128) <= 1)
+        #expect(screenOverTransparency[3] == 255)
+    }
+
+    @Test func quickAndLayerMaskStrokeMathUsesTheSelectedPaintingBlendMode() throws {
+        let base = ImageEditorSelectionMask(
+            width: 8,
+            height: 8,
+            alpha: [UInt8](repeating: 128, count: 64)
+        )
+        let sample = ImageEditorBrushStrokeSample(point: CGPoint(x: 4, y: 4))
+        let multiply = try #require(base.paintedByQuickMaskStroke(
+            samples: [sample],
+            canvasSize: CGSize(width: 8, height: 8),
+            diameter: 6,
+            opacity: 1,
+            hardness: 1,
+            flow: 1,
+            edgeStyle: .aliased,
+            targetAlpha: .max,
+            blendMode: .multiply
+        ))
+        let screen = try #require(base.paintedByQuickMaskStroke(
+            samples: [sample],
+            canvasSize: CGSize(width: 8, height: 8),
+            diameter: 6,
+            opacity: 1,
+            hardness: 1,
+            flow: 1,
+            edgeStyle: .aliased,
+            targetAlpha: .max,
+            blendMode: .screen
+        ))
+        let center = 4 * 8 + 4
+
+        #expect(multiply.alpha[center] == 128)
+        #expect(screen.alpha[center] == .max)
+    }
+
     @Test func stampSpacingIsStableAcrossSparseAndDensePointerSamples() {
         let sparse = ImageEditorBrushStrokeKernel.stampCenters(
             points: [CGPoint(x: 5, y: 10), CGPoint(x: 95, y: 10)],
@@ -1281,6 +1351,59 @@ struct ImageEditorBrushStrokeTests {
         #expect(smoothedCenter.alphaComponent < 0.08)
     }
 
+    @Test func brushAndPencilApplyTheSharedPaintingBlendModeToSelectedLayerPixels() throws {
+        let size = CGSize(width: 24, height: 24)
+        let blue = NSColor(deviceRed: 0, green: 0, blue: 1, alpha: 1)
+        let red = NSColor(deviceRed: 1, green: 0, blue: 0, alpha: 1)
+        let defaultsSuite = "ImageEditorBrushStrokeTests.paintBlendMode.\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: defaultsSuite))
+        defer { defaults.removePersistentDomain(forName: defaultsSuite) }
+        let source = NSImage.rendered(size: size) { rect in
+            blue.setFill()
+            rect.fill()
+        } ?? NSImage.transparent(size: size)
+        let viewModel = ImageEditorViewModel(
+            sourceName: "paint-mode.png",
+            image: source,
+            preferencesDefaults: defaults
+        ) { _ in }
+        viewModel.replaceSelectedLayerImageForTesting(
+            source,
+            historyTitle: L10n.text("imageEditor.history.brush")
+        )
+        viewModel.foregroundColor = red
+        viewModel.brushSize = 10
+        viewModel.hardness = 1
+        viewModel.opacity = 1
+        viewModel.brushFlow = 100
+        viewModel.paintBlendMode = .multiply
+
+        viewModel.drawBrush(points: [CGPoint(x: 12, y: 12)])
+
+        let multiplied = try #require(
+            viewModel.document.selectedLayer?.image.color(at: CGPoint(x: 12, y: 12))
+        )
+        #expect(multiplied.redComponent < 0.03)
+        #expect(multiplied.greenComponent < 0.03)
+        #expect(multiplied.blueComponent < 0.03)
+
+        viewModel.replaceSelectedLayerImageForTesting(
+            source,
+            historyTitle: L10n.text("imageEditor.history.pencil")
+        )
+        viewModel.paintBlendMode = .screen
+        viewModel.drawPencil(samples: [
+            ImageEditorBrushStrokeSample(point: CGPoint(x: 12, y: 12))
+        ])
+
+        let screened = try #require(
+            viewModel.document.selectedLayer?.image.color(at: CGPoint(x: 12, y: 12))
+        )
+        #expect(screened.redComponent > 0.97)
+        #expect(screened.greenComponent < 0.03)
+        #expect(screened.blueComponent > 0.97)
+    }
+
     @Test func brushStrokeRespectsTransparentPixelLock() throws {
         let size = CGSize(width: 80, height: 30)
         let source = NSImage.rendered(size: size) { _ in
@@ -1301,6 +1424,7 @@ struct ImageEditorBrushStrokeTests {
         viewModel.opacity = 1
         viewModel.brushFlow = 100
         viewModel.brushSpacing = 25
+        viewModel.paintBlendMode = .normal
 
         viewModel.drawBrush(points: [CGPoint(x: 10, y: 15), CGPoint(x: 70, y: 15)])
 
