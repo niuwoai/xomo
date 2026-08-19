@@ -80,6 +80,8 @@ struct ImageEditorBrushStrokeSettings: Equatable {
     var scatterBothAxes: Bool
     var scatterCount: Int
     var scatterCountJitter: CGFloat
+    var noiseEnabled: Bool
+    var wetEdgesEnabled: Bool
     var minimumDiameter: CGFloat
     var minimumOpacity: CGFloat
     var minimumFlow: CGFloat
@@ -107,6 +109,8 @@ struct ImageEditorBrushStrokeSettings: Equatable {
         scatterBothAxes: Bool = false,
         scatterCount: Int = 1,
         scatterCountJitter: CGFloat = 0,
+        noiseEnabled: Bool = false,
+        wetEdgesEnabled: Bool = false,
         minimumDiameter: CGFloat = 0,
         minimumOpacity: CGFloat = 0,
         minimumFlow: CGFloat = 0,
@@ -133,6 +137,8 @@ struct ImageEditorBrushStrokeSettings: Equatable {
         self.scatterBothAxes = scatterBothAxes
         self.scatterCount = scatterCount
         self.scatterCountJitter = scatterCountJitter
+        self.noiseEnabled = noiseEnabled
+        self.wetEdgesEnabled = wetEdgesEnabled
         self.minimumDiameter = minimumDiameter
         self.minimumOpacity = minimumOpacity
         self.minimumFlow = minimumFlow
@@ -162,6 +168,8 @@ struct ImageEditorBrushStrokeSettings: Equatable {
             scatterBothAxes: scatterBothAxes,
             scatterCount: max(1, min(16, scatterCount)),
             scatterCountJitter: max(0, min(1, scatterCountJitter)),
+            noiseEnabled: noiseEnabled,
+            wetEdgesEnabled: wetEdgesEnabled,
             minimumDiameter: max(0, min(1, minimumDiameter)),
             minimumOpacity: max(0, min(1, minimumOpacity)),
             minimumFlow: max(0, min(1, minimumFlow)),
@@ -379,12 +387,19 @@ enum ImageEditorBrushStrokeKernel {
                         direction: tipDirection,
                         aspectRatio: tipAspectRatio
                     )
-                    let stampCoverage = radialCoverage(
+                    let baseStampCoverage = radialCoverage(
                         distance: distance,
                         innerRadius: innerRadius,
                         outerRadius: radius,
                         edgeStyle: settings.edgeStyle
                     )
+                    let stampCoverage = settings.noiseEnabled
+                        ? baseStampCoverage * noiseMultiplier(
+                            stampIndex: stampIndex,
+                            x: x,
+                            y: y
+                        )
+                        : baseStampCoverage
                     guard stampCoverage > 0 else { continue }
                     let index = y * width + x
                     let deposited = stampCoverage * settings.flow * flowScale
@@ -396,7 +411,63 @@ enum ImageEditorBrushStrokeKernel {
             }
         }
 
-        return accumulated.map { UInt8(($0 * 255).rounded()) }
+        let resolvedCoverage = settings.wetEdgesEnabled
+            ? wetEdgeCoverage(accumulated, width: width, height: height)
+            : accumulated
+        return resolvedCoverage.map { UInt8(($0 * 255).rounded()) }
+    }
+
+    /// Adds stable, per-tip grain without mutable RNG state. The multiplier
+    /// only removes paint, so Noise cannot exceed the configured opacity cap.
+    static func noiseMultiplier(stampIndex: Int, x: Int, y: Int) -> CGFloat {
+        let spatialSeed = stampIndex
+            ^ (x &* 73_856_093)
+            ^ (y &* 19_349_663)
+        let unit = deterministicUnit(
+            stampIndex: spatialSeed,
+            salt: 0xD6E8FEB86659FD93
+        )
+        return 0.5 + unit * 0.5
+    }
+
+    /// Builds pigment at the outside of the completed stroke rather than at
+    /// every spacing stamp. This avoids a mechanical chain of circular rings.
+    static func wetEdgeCoverage(
+        _ coverage: [CGFloat],
+        width: Int,
+        height: Int
+    ) -> [CGFloat] {
+        guard width > 0,
+              height > 0,
+              coverage.count == width * height
+        else { return coverage }
+        var output = coverage
+        for y in 0..<height {
+            for x in 0..<width {
+                let index = y * width + x
+                let alpha = max(0, min(1, coverage[index]))
+                guard alpha > 0 else { continue }
+                var minimumNeighbor: CGFloat = 1
+                for neighborY in (y - 1)...(y + 1) {
+                    for neighborX in (x - 1)...(x + 1) {
+                        guard neighborX != x || neighborY != y else { continue }
+                        guard (0..<width).contains(neighborX),
+                              (0..<height).contains(neighborY)
+                        else {
+                            minimumNeighbor = 0
+                            continue
+                        }
+                        minimumNeighbor = min(
+                            minimumNeighbor,
+                            max(0, min(1, coverage[neighborY * width + neighborX]))
+                        )
+                    }
+                }
+                let boundary = max(0, alpha - minimumNeighbor)
+                output[index] = alpha * 0.45 + boundary * 0.55
+            }
+        }
+        return output
     }
 
     static func renderedStamps(

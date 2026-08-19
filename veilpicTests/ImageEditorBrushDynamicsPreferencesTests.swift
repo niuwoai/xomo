@@ -29,6 +29,8 @@ struct ImageEditorBrushDynamicsPreferencesTests {
             scatterBothAxes: true,
             scatterCount: 99,
             scatterCountJitter: 140,
+            noiseEnabled: true,
+            wetEdgesEnabled: true,
             minimumDiameter: 140,
             minimumOpacity: 140,
             minimumFlow: 140,
@@ -54,6 +56,8 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         #expect(loaded.scatterBothAxes)
         #expect(loaded.scatterCount == 16)
         #expect(loaded.scatterCountJitter == 100)
+        #expect(loaded.noiseEnabled)
+        #expect(loaded.wetEdgesEnabled)
         #expect(loaded.minimumDiameter == 100)
         #expect(loaded.minimumOpacity == 100)
         #expect(loaded.minimumFlow == 100)
@@ -93,6 +97,8 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         first.setBrushScatterBothAxes(true)
         first.setBrushScatterCount(8)
         first.setBrushScatterCountJitter(46)
+        first.setBrushNoiseEnabled(true)
+        first.setBrushWetEdgesEnabled(true)
         first.setBrushMinimumDiameter(37)
         first.setBrushMinimumOpacity(31)
         first.setBrushMinimumFlow(29)
@@ -122,6 +128,8 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         #expect(restored.brushScatterBothAxes)
         #expect(restored.brushScatterCount == 8)
         #expect(restored.brushScatterCountJitter == 46)
+        #expect(restored.brushNoiseEnabled)
+        #expect(restored.brushWetEdgesEnabled)
         #expect(restored.brushMinimumDiameter == 37)
         #expect(restored.brushMinimumOpacity == 31)
         #expect(restored.brushMinimumFlow == 29)
@@ -160,6 +168,8 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         #expect(!decodedDynamics.scatterBothAxes)
         #expect(decodedDynamics.scatterCount == 1)
         #expect(decodedDynamics.scatterCountJitter == 0)
+        #expect(!decodedDynamics.noiseEnabled)
+        #expect(!decodedDynamics.wetEdgesEnabled)
         #expect(decodedDynamics.minimumOpacity == 0)
         #expect(decodedDynamics.minimumFlow == 0)
         #expect(decodedDynamics.tipRoundness == 100)
@@ -201,6 +211,8 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         #expect(!decodedPreset.scatterBothAxes)
         #expect(decodedPreset.scatterCount == 1)
         #expect(decodedPreset.scatterCountJitter == 0)
+        #expect(!decodedPreset.noiseEnabled)
+        #expect(!decodedPreset.wetEdgesEnabled)
         #expect(decodedPreset.minimumOpacity == 0)
         #expect(decodedPreset.minimumFlow == 0)
         #expect(decodedPreset.tipRoundness == 100)
@@ -282,6 +294,8 @@ struct ImageEditorBrushDynamicsPreferencesTests {
             scatterBothAxes: true,
             scatterCount: 99,
             scatterCountJitter: 140,
+            noiseEnabled: true,
+            wetEdgesEnabled: true,
             minimumDiameter: -20,
             minimumOpacity: 140,
             minimumFlow: 120,
@@ -310,6 +324,8 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         #expect(preset.scatterBothAxes)
         #expect(preset.scatterCount == 16)
         #expect(preset.scatterCountJitter == 100)
+        #expect(preset.noiseEnabled)
+        #expect(preset.wetEdgesEnabled)
         #expect(preset.minimumDiameter == 0)
         #expect(preset.minimumOpacity == 100)
         #expect(preset.minimumFlow == 100)
@@ -342,6 +358,8 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         first.setBrushScatterBothAxes(true)
         first.setBrushScatterCount(8)
         first.setBrushScatterCountJitter(46)
+        first.setBrushNoiseEnabled(true)
+        first.setBrushWetEdgesEnabled(true)
         first.setBrushMinimumDiameter(37)
         first.setBrushMinimumOpacity(31)
         first.setBrushMinimumFlow(29)
@@ -374,6 +392,8 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         #expect(restored.brushScatterBothAxes)
         #expect(restored.brushScatterCount == 8)
         #expect(restored.brushScatterCountJitter == 46)
+        #expect(restored.brushNoiseEnabled)
+        #expect(restored.brushWetEdgesEnabled)
         #expect(restored.brushMinimumDiameter == 37)
         #expect(restored.brushMinimumOpacity == 31)
         #expect(restored.brushMinimumFlow == 29)
@@ -411,6 +431,8 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         viewModel.setBrushScatterBothAxes(true)
         viewModel.setBrushScatterCount(16)
         viewModel.setBrushScatterCountJitter(75)
+        viewModel.setBrushNoiseEnabled(true)
+        viewModel.setBrushWetEdgesEnabled(true)
         viewModel.setBrushMinimumDiameter(75)
         viewModel.setBrushMinimumOpacity(75)
         viewModel.setBrushMinimumFlow(75)
@@ -438,6 +460,8 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         #expect(!viewModel.brushScatterBothAxes)
         #expect(viewModel.brushScatterCount == 1)
         #expect(viewModel.brushScatterCountJitter == 0)
+        #expect(!viewModel.brushNoiseEnabled)
+        #expect(!viewModel.brushWetEdgesEnabled)
         #expect(viewModel.brushMinimumDiameter == 0)
         #expect(viewModel.brushMinimumOpacity == 0)
         #expect(viewModel.brushMinimumFlow == 0)

@@ -647,6 +647,10 @@
 "imageEditor.option.scatterCountJitter" = "数のジッター";
 "imageEditor.option.countPreset" = "マークごとに %d 個";
 "imageEditor.help.scattering" = "ストロークを横切ってブラシマークを散布し、必要に応じて両軸へ広げ、各間隔で配置する先端数を変化させます";
+"imageEditor.option.brushTipFinish" = "先端効果";
+"imageEditor.option.noise" = "ノイズ";
+"imageEditor.option.wetEdges" = "ウェットエッジ";
+"imageEditor.help.brushTipFinish" = "各ブラシ先端に再現可能な粒状感を加えるか、完成したストロークの輪郭に顔料を集積します";
 "imageEditor.option.degreePreset" = "%d°";
 "imageEditor.option.brushTipShapeValue" = "先端 %d%% / %d°";
 "imageEditor.help.brushTipShape" = "ブラシと消しゴムの先端の真円率、基準角度、角度ジッター、真円率ジッター、最小真円率を調整します。有効なペン傾斜が基準角度を優先します";

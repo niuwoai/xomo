@@ -1074,6 +1074,9 @@ struct ImageEditorView: View {
                     brushRoundnessMenu
                     brushSizeJitterMenu
                     brushScatteringMenu
+                    if viewModel.selectedTool != .pencil {
+                        brushTipFinishMenu
+                    }
                     optionSlider(titleKey: "imageEditor.option.flow", value: $viewModel.brushFlow, range: 1...100, step: 1, suffix: "%")
                     optionSlider(titleKey: "imageEditor.option.spacing", value: $viewModel.brushSpacing, range: 1...200, step: 1, suffix: "%")
                     brushSmoothingMenu
@@ -1804,6 +1807,37 @@ struct ImageEditorView: View {
         .xomoFocusEffectDisabled()
         .help(L10n.text("imageEditor.help.scattering"))
         .accessibilityIdentifier("image-editor-brush-scattering")
+    }
+
+    private var brushTipFinishMenu: some View {
+        Menu {
+            Toggle(
+                L10n.text("imageEditor.option.noise"),
+                isOn: Binding(
+                    get: { viewModel.brushNoiseEnabled },
+                    set: { viewModel.setBrushNoiseEnabled($0) }
+                )
+            )
+            Toggle(
+                L10n.text("imageEditor.option.wetEdges"),
+                isOn: Binding(
+                    get: { viewModel.brushWetEdgesEnabled },
+                    set: { viewModel.setBrushWetEdgesEnabled($0) }
+                )
+            )
+        } label: {
+            Label(
+                L10n.text("imageEditor.option.brushTipFinish"),
+                systemImage: "circle.dotted"
+            )
+                .font(.system(size: 11, weight: .semibold))
+        }
+        .menuStyle(.borderlessButton)
+        .fixedSize()
+        .focusable(false)
+        .xomoFocusEffectDisabled()
+        .help(L10n.text("imageEditor.help.brushTipFinish"))
+        .accessibilityIdentifier("image-editor-brush-tip-finish")
     }
 
     private var retouchPressureSensitivityMenu: some View {

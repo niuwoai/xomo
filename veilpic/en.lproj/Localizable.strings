@@ -647,6 +647,10 @@
 "imageEditor.option.scatterCountJitter" = "Count Jitter";
 "imageEditor.option.countPreset" = "%d per mark";
 "imageEditor.help.scattering" = "Scatter brush marks across the stroke, optionally along both axes, and vary the number of tips deposited at each spacing step";
+"imageEditor.option.brushTipFinish" = "Tip Finish";
+"imageEditor.option.noise" = "Noise";
+"imageEditor.option.wetEdges" = "Wet Edges";
+"imageEditor.help.brushTipFinish" = "Add deterministic grain to individual brush tips or build pigment along the completed stroke edge";
 "imageEditor.option.degreePreset" = "%d°";
 "imageEditor.option.brushTipShapeValue" = "Tip %d%% / %d°";
 "imageEditor.help.brushTipShape" = "Adjust brush and eraser tip roundness, base angle, angle jitter, roundness jitter, and minimum roundness; active stylus tilt takes over the base angle";

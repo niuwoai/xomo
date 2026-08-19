@@ -647,6 +647,10 @@
 "imageEditor.option.scatterCountJitter" = "数量抖动";
 "imageEditor.option.countPreset" = "每个印章 %d 个";
 "imageEditor.help.scattering" = "让笔尖横跨笔触散布，可选择沿双轴散布，并改变每个间距位置落下的笔尖数量";
+"imageEditor.option.brushTipFinish" = "笔尖效果";
+"imageEditor.option.noise" = "杂色";
+"imageEditor.option.wetEdges" = "湿边";
+"imageEditor.help.brushTipFinish" = "为每个笔尖加入可重放颗粒，或让颜料沿整条笔迹的最终边缘积聚";
 "imageEditor.option.degreePreset" = "%d°";
 "imageEditor.option.brushTipShapeValue" = "笔尖 %d%% / %d°";
 "imageEditor.help.brushTipShape" = "调整画笔和橡皮擦笔尖的圆度、基础角度、角度抖动、圆度抖动与最小圆度；有效数位笔倾斜会接管基础角度";

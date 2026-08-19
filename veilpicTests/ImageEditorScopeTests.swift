@@ -4748,6 +4748,7 @@ struct ImageEditorScopeTests {
         #expect(source.contains("brushPresetMenu\n                    brushRoundnessMenu"))
         #expect(source.contains("brushRoundnessMenu\n                    brushSizeJitterMenu"))
         #expect(source.contains("brushSizeJitterMenu\n                    brushScatteringMenu"))
+        #expect(source.contains("brushScatteringMenu\n                    if viewModel.selectedTool != .pencil {\n                        brushTipFinishMenu"))
         #expect(source.contains("ImageEditorBrushSizeJitterPresets.values"))
         #expect(source.contains("viewModel.setBrushSizeJitter($0)"))
         #expect(source.contains("image-editor-brush-size-jitter"))
@@ -4773,6 +4774,13 @@ struct ImageEditorScopeTests {
         #expect(menuSource.contains("imageEditor.option.minimumRoundness"))
         #expect(menuSource.contains("imageEditor.option.scatterBothAxes"))
         #expect(menuSource.contains("image-editor-brush-scattering"))
+        #expect(menuSource.contains("private var brushTipFinishMenu: some View"))
+        #expect(menuSource.contains("viewModel.setBrushNoiseEnabled($0)"))
+        #expect(menuSource.contains("viewModel.setBrushWetEdgesEnabled($0)"))
+        #expect(menuSource.contains("imageEditor.option.brushTipFinish"))
+        #expect(menuSource.contains("imageEditor.option.noise"))
+        #expect(menuSource.contains("imageEditor.option.wetEdges"))
+        #expect(menuSource.contains("image-editor-brush-tip-finish"))
         #expect(
             viewModelSource.components(
                 separatedBy: "angleJitter: brushAngleJitter / 100"
@@ -4806,6 +4814,16 @@ struct ImageEditorScopeTests {
         #expect(
             viewModelSource.components(
                 separatedBy: "scatterCountJitter: brushScatterCountJitter / 100"
+            ).count == 4
+        )
+        #expect(
+            viewModelSource.components(
+                separatedBy: "noiseEnabled: edgeStyle != .aliased && brushNoiseEnabled"
+            ).count == 4
+        )
+        #expect(
+            viewModelSource.components(
+                separatedBy: "wetEdgesEnabled: edgeStyle != .aliased && brushWetEdgesEnabled"
             ).count == 4
         )
         #expect(menuSource.contains("imageEditor.option.brushTipShapeValue"))

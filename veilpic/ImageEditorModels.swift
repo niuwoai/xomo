@@ -55,6 +55,8 @@ struct ImageEditorBrushPreset: Identifiable, Codable, Equatable {
     let scatterBothAxes: Bool
     let scatterCount: Int
     let scatterCountJitter: CGFloat
+    let noiseEnabled: Bool
+    let wetEdgesEnabled: Bool
     let minimumDiameter: CGFloat
     let minimumOpacity: CGFloat
     let minimumFlow: CGFloat
@@ -83,6 +85,8 @@ struct ImageEditorBrushPreset: Identifiable, Codable, Equatable {
         scatterBothAxes: Bool = false,
         scatterCount: Int = 1,
         scatterCountJitter: CGFloat = 0,
+        noiseEnabled: Bool = false,
+        wetEdgesEnabled: Bool = false,
         minimumDiameter: CGFloat = 0,
         minimumOpacity: CGFloat = 0,
         minimumFlow: CGFloat = 0,
@@ -110,6 +114,8 @@ struct ImageEditorBrushPreset: Identifiable, Codable, Equatable {
         self.scatterBothAxes = scatterBothAxes
         self.scatterCount = scatterCount
         self.scatterCountJitter = scatterCountJitter
+        self.noiseEnabled = noiseEnabled
+        self.wetEdgesEnabled = wetEdgesEnabled
         self.minimumDiameter = minimumDiameter
         self.minimumOpacity = minimumOpacity
         self.minimumFlow = minimumFlow
@@ -139,6 +145,8 @@ struct ImageEditorBrushPreset: Identifiable, Codable, Equatable {
         case scatterBothAxes
         case scatterCount
         case scatterCountJitter
+        case noiseEnabled
+        case wetEdgesEnabled
         case minimumDiameter
         case minimumOpacity
         case minimumFlow
@@ -199,6 +207,11 @@ struct ImageEditorBrushPreset: Identifiable, Codable, Equatable {
             CGFloat.self,
             forKey: .scatterCountJitter
         ) ?? 0
+        noiseEnabled = try values.decodeIfPresent(Bool.self, forKey: .noiseEnabled) ?? false
+        wetEdgesEnabled = try values.decodeIfPresent(
+            Bool.self,
+            forKey: .wetEdgesEnabled
+        ) ?? false
         minimumDiameter = try values.decodeIfPresent(
             CGFloat.self,
             forKey: .minimumDiameter
@@ -257,6 +270,8 @@ struct ImageEditorBrushPreset: Identifiable, Codable, Equatable {
             scatterBothAxes: scatterBothAxes,
             scatterCount: max(1, min(16, scatterCount)),
             scatterCountJitter: max(0, min(100, scatterCountJitter)),
+            noiseEnabled: noiseEnabled,
+            wetEdgesEnabled: wetEdgesEnabled,
             minimumDiameter: max(0, min(100, minimumDiameter)),
             minimumOpacity: max(0, min(100, minimumOpacity)),
             minimumFlow: max(0, min(100, minimumFlow)),
@@ -285,6 +300,8 @@ struct ImageEditorBrushPreset: Identifiable, Codable, Equatable {
         scatterBothAxes: Bool,
         scatterCount: Int,
         scatterCountJitter: CGFloat,
+        noiseEnabled: Bool,
+        wetEdgesEnabled: Bool,
         minimumDiameter: CGFloat,
         minimumOpacity: CGFloat,
         minimumFlow: CGFloat,
@@ -310,6 +327,8 @@ struct ImageEditorBrushPreset: Identifiable, Codable, Equatable {
             && self.scatterBothAxes == scatterBothAxes
             && self.scatterCount == scatterCount
             && abs(self.scatterCountJitter - scatterCountJitter) < tolerance
+            && self.noiseEnabled == noiseEnabled
+            && self.wetEdgesEnabled == wetEdgesEnabled
             && abs(self.minimumDiameter - minimumDiameter) < tolerance
             && abs(self.minimumOpacity - minimumOpacity) < tolerance
             && abs(self.minimumFlow - minimumFlow) < tolerance

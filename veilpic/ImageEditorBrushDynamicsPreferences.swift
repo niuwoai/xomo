@@ -78,6 +78,8 @@ struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
         scatterBothAxes: false,
         scatterCount: 1,
         scatterCountJitter: 0,
+        noiseEnabled: false,
+        wetEdgesEnabled: false,
         minimumDiameter: 0,
         minimumOpacity: 0,
         minimumFlow: 0,
@@ -103,6 +105,8 @@ struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
     var scatterBothAxes: Bool
     var scatterCount: Int
     var scatterCountJitter: Double
+    var noiseEnabled: Bool
+    var wetEdgesEnabled: Bool
     var minimumDiameter: Double
     var minimumOpacity: Double
     var minimumFlow: Double
@@ -128,6 +132,8 @@ struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
         scatterBothAxes: Bool = false,
         scatterCount: Int = 1,
         scatterCountJitter: Double = 0,
+        noiseEnabled: Bool = false,
+        wetEdgesEnabled: Bool = false,
         minimumDiameter: Double = 0,
         minimumOpacity: Double = 0,
         minimumFlow: Double = 0,
@@ -152,6 +158,8 @@ struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
         self.scatterBothAxes = scatterBothAxes
         self.scatterCount = scatterCount
         self.scatterCountJitter = scatterCountJitter
+        self.noiseEnabled = noiseEnabled
+        self.wetEdgesEnabled = wetEdgesEnabled
         self.minimumDiameter = minimumDiameter
         self.minimumOpacity = minimumOpacity
         self.minimumFlow = minimumFlow
@@ -178,6 +186,8 @@ struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
         case scatterBothAxes
         case scatterCount
         case scatterCountJitter
+        case noiseEnabled
+        case wetEdgesEnabled
         case minimumDiameter
         case minimumOpacity
         case minimumFlow
@@ -217,6 +227,11 @@ struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
             Double.self,
             forKey: .scatterCountJitter
         ) ?? 0
+        noiseEnabled = try values.decodeIfPresent(Bool.self, forKey: .noiseEnabled) ?? false
+        wetEdgesEnabled = try values.decodeIfPresent(
+            Bool.self,
+            forKey: .wetEdgesEnabled
+        ) ?? false
         minimumDiameter = try values.decodeIfPresent(
             Double.self,
             forKey: .minimumDiameter
@@ -277,6 +292,8 @@ struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
             scatterBothAxes: scatterBothAxes,
             scatterCount: max(1, min(16, scatterCount)),
             scatterCountJitter: max(0, min(100, scatterCountJitter)),
+            noiseEnabled: noiseEnabled,
+            wetEdgesEnabled: wetEdgesEnabled,
             minimumDiameter: max(0, min(100, minimumDiameter)),
             minimumOpacity: max(0, min(100, minimumOpacity)),
             minimumFlow: max(0, min(100, minimumFlow)),

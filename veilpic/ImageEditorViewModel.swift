@@ -151,6 +151,8 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var brushScatterBothAxes = false
     @Published var brushScatterCount = 1
     @Published var brushScatterCountJitter: CGFloat = 0
+    @Published var brushNoiseEnabled = false
+    @Published var brushWetEdgesEnabled = false
     @Published var brushMinimumDiameter: CGFloat = 0
     @Published var brushMinimumOpacity: CGFloat = 0
     @Published var brushMinimumFlow: CGFloat = 0
@@ -621,6 +623,8 @@ final class ImageEditorViewModel: ObservableObject {
         brushScatterBothAxes = brushDynamicsPreferences.scatterBothAxes
         brushScatterCount = brushDynamicsPreferences.scatterCount
         brushScatterCountJitter = CGFloat(brushDynamicsPreferences.scatterCountJitter)
+        brushNoiseEnabled = brushDynamicsPreferences.noiseEnabled
+        brushWetEdgesEnabled = brushDynamicsPreferences.wetEdgesEnabled
         brushMinimumDiameter = CGFloat(brushDynamicsPreferences.minimumDiameter)
         brushMinimumOpacity = CGFloat(brushDynamicsPreferences.minimumOpacity)
         brushMinimumFlow = CGFloat(brushDynamicsPreferences.minimumFlow)
@@ -682,6 +686,8 @@ final class ImageEditorViewModel: ObservableObject {
         brushScatterBothAxes = brushDynamicsPreferences.scatterBothAxes
         brushScatterCount = brushDynamicsPreferences.scatterCount
         brushScatterCountJitter = CGFloat(brushDynamicsPreferences.scatterCountJitter)
+        brushNoiseEnabled = brushDynamicsPreferences.noiseEnabled
+        brushWetEdgesEnabled = brushDynamicsPreferences.wetEdgesEnabled
         brushMinimumDiameter = CGFloat(brushDynamicsPreferences.minimumDiameter)
         brushMinimumOpacity = CGFloat(brushDynamicsPreferences.minimumOpacity)
         brushMinimumFlow = CGFloat(brushDynamicsPreferences.minimumFlow)
@@ -2937,6 +2943,8 @@ final class ImageEditorViewModel: ObservableObject {
             scatterBothAxes: brushScatterBothAxes,
             scatterCount: brushScatterCount,
             scatterCountJitter: brushScatterCountJitter,
+            noiseEnabled: brushNoiseEnabled,
+            wetEdgesEnabled: brushWetEdgesEnabled,
             minimumDiameter: brushMinimumDiameter,
             minimumOpacity: brushMinimumOpacity,
             minimumFlow: brushMinimumFlow,
@@ -3097,6 +3105,8 @@ final class ImageEditorViewModel: ObservableObject {
         brushScatterBothAxes = preset.scatterBothAxes
         brushScatterCount = max(1, min(16, preset.scatterCount))
         brushScatterCountJitter = max(0, min(100, preset.scatterCountJitter))
+        brushNoiseEnabled = preset.noiseEnabled
+        brushWetEdgesEnabled = preset.wetEdgesEnabled
         brushMinimumDiameter = max(0, min(100, preset.minimumDiameter))
         brushMinimumOpacity = max(0, min(100, preset.minimumOpacity))
         brushMinimumFlow = max(0, min(100, preset.minimumFlow))
@@ -3144,6 +3154,8 @@ final class ImageEditorViewModel: ObservableObject {
             scatterBothAxes: brushScatterBothAxes,
             scatterCount: brushScatterCount,
             scatterCountJitter: brushScatterCountJitter,
+            noiseEnabled: brushNoiseEnabled,
+            wetEdgesEnabled: brushWetEdgesEnabled,
             minimumDiameter: brushMinimumDiameter,
             minimumOpacity: brushMinimumOpacity,
             minimumFlow: brushMinimumFlow,
@@ -3973,6 +3985,8 @@ final class ImageEditorViewModel: ObservableObject {
             scatterBothAxes: brushScatterBothAxes,
             scatterCount: brushScatterCount,
             scatterCountJitter: Double(brushScatterCountJitter),
+            noiseEnabled: brushNoiseEnabled,
+            wetEdgesEnabled: brushWetEdgesEnabled,
             minimumDiameter: Double(brushMinimumDiameter),
             minimumOpacity: Double(brushMinimumOpacity),
             minimumFlow: Double(brushMinimumFlow),
@@ -4164,6 +4178,18 @@ final class ImageEditorViewModel: ObservableObject {
         let normalized = max(0, min(100, jitter))
         guard brushScatterCountJitter != normalized else { return }
         brushScatterCountJitter = normalized
+        persistBrushDynamicsPreferences()
+    }
+
+    func setBrushNoiseEnabled(_ isEnabled: Bool) {
+        guard brushNoiseEnabled != isEnabled else { return }
+        brushNoiseEnabled = isEnabled
+        persistBrushDynamicsPreferences()
+    }
+
+    func setBrushWetEdgesEnabled(_ isEnabled: Bool) {
+        guard brushWetEdgesEnabled != isEnabled else { return }
+        brushWetEdgesEnabled = isEnabled
         persistBrushDynamicsPreferences()
     }
 
@@ -6278,6 +6304,8 @@ final class ImageEditorViewModel: ObservableObject {
                 scatterBothAxes: brushScatterBothAxes,
                 scatterCount: brushScatterCount,
                 scatterCountJitter: brushScatterCountJitter / 100,
+                noiseEnabled: edgeStyle != .aliased && brushNoiseEnabled,
+                wetEdgesEnabled: edgeStyle != .aliased && brushWetEdgesEnabled,
                 minimumDiameter: brushMinimumDiameter / 100,
                 minimumOpacity: brushMinimumOpacity / 100,
                 minimumFlow: brushMinimumFlow / 100,
@@ -6549,6 +6577,8 @@ final class ImageEditorViewModel: ObservableObject {
             scatterBothAxes: brushScatterBothAxes,
             scatterCount: brushScatterCount,
             scatterCountJitter: brushScatterCountJitter / 100,
+            noiseEnabled: edgeStyle != .aliased && brushNoiseEnabled,
+            wetEdgesEnabled: edgeStyle != .aliased && brushWetEdgesEnabled,
             minimumDiameter: brushMinimumDiameter / 100,
             minimumOpacity: brushMinimumOpacity / 100,
             minimumFlow: brushMinimumFlow / 100,
@@ -8514,6 +8544,8 @@ final class ImageEditorViewModel: ObservableObject {
             scatterBothAxes: brushScatterBothAxes,
             scatterCount: brushScatterCount,
             scatterCountJitter: brushScatterCountJitter / 100,
+            noiseEnabled: edgeStyle != .aliased && brushNoiseEnabled,
+            wetEdgesEnabled: edgeStyle != .aliased && brushWetEdgesEnabled,
             minimumDiameter: brushMinimumDiameter / 100,
             minimumOpacity: brushMinimumOpacity / 100,
             minimumFlow: brushMinimumFlow / 100,

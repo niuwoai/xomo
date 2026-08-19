@@ -1053,6 +1053,142 @@ struct ImageEditorBrushStrokeTests {
         #expect(quickMask.alpha.filter { $0 > 0 }.count > original.filter { $0 > 0 }.count)
     }
 
+    @Test func noiseAddsDeterministicPerTipGrainWithoutExceedingBaselineCoverage() {
+        let stamp = ImageEditorBrushStrokeSample(point: CGPoint(x: 24, y: 24))
+        let baselineSettings = ImageEditorBrushStrokeSettings(
+            diameter: 24,
+            hardness: 0.35,
+            opacity: 0.8,
+            flow: 1,
+            spacing: 1
+        )
+        var noisySettings = baselineSettings
+        noisySettings.noiseEnabled = true
+        let baseline = ImageEditorBrushStrokeKernel.coverage(
+            width: 48,
+            height: 48,
+            stamps: [stamp],
+            settings: baselineSettings
+        )
+        let noisy = ImageEditorBrushStrokeKernel.coverage(
+            width: 48,
+            height: 48,
+            stamps: [stamp],
+            settings: noisySettings
+        )
+
+        #expect(noisy == ImageEditorBrushStrokeKernel.coverage(
+            width: 48,
+            height: 48,
+            stamps: [stamp],
+            settings: noisySettings
+        ))
+        #expect(noisy != baseline)
+        #expect(zip(noisy, baseline).allSatisfy { $0.0 <= $0.1 })
+        #expect(Set(noisy.filter { $0 > 0 }).count > 20)
+        #expect((0..<32).map {
+            ImageEditorBrushStrokeKernel.noiseMultiplier(stampIndex: 4, x: $0, y: 7)
+        }.allSatisfy { (0.5...1).contains($0) })
+    }
+
+    @Test func wetEdgesBuildPigmentAlongTheCompletedStrokeBoundary() {
+        let stamp = ImageEditorBrushStrokeSample(point: CGPoint(x: 20, y: 20))
+        let baselineSettings = ImageEditorBrushStrokeSettings(
+            diameter: 20,
+            hardness: 1,
+            opacity: 1,
+            flow: 1,
+            spacing: 1
+        )
+        var wetSettings = baselineSettings
+        wetSettings.wetEdgesEnabled = true
+        let baseline = ImageEditorBrushStrokeKernel.coverage(
+            width: 41,
+            height: 41,
+            stamps: [stamp],
+            settings: baselineSettings
+        )
+        let wet = ImageEditorBrushStrokeKernel.coverage(
+            width: 41,
+            height: 41,
+            stamps: [stamp],
+            settings: wetSettings
+        )
+        let center = 20 * 41 + 20
+        let outsideEdge = 20 * 41 + 29
+
+        #expect(wet == ImageEditorBrushStrokeKernel.coverage(
+            width: 41,
+            height: 41,
+            stamps: [stamp],
+            settings: wetSettings
+        ))
+        #expect(baseline[center] > 250)
+        #expect(baseline[outsideEdge] > 240)
+        #expect(wet[center] >= 110 && wet[center] <= 120)
+        #expect(wet[outsideEdge] > 230)
+        #expect(wet[outsideEdge] > wet[center] * 2)
+        #expect(zip(wet, baseline).allSatisfy { $0.0 <= $0.1 })
+    }
+
+    @Test func noiseAndWetEdgesReplayThroughQuickMaskCoverage() throws {
+        let samples = [
+            ImageEditorBrushStrokeSample(point: CGPoint(x: 12, y: 20)),
+            ImageEditorBrushStrokeSample(point: CGPoint(x: 52, y: 20))
+        ]
+        let settings = ImageEditorBrushStrokeSettings(
+            diameter: 12,
+            hardness: 0.5,
+            opacity: 0.75,
+            flow: 0.4,
+            spacing: 0.5,
+            noiseEnabled: true,
+            wetEdgesEnabled: true
+        )
+        let stamps = ImageEditorBrushStrokeKernel.stampSamples(
+            samples: samples,
+            diameter: settings.diameter,
+            spacing: settings.spacing
+        )
+        let expected = ImageEditorBrushStrokeKernel.coverage(
+            width: 64,
+            height: 40,
+            stamps: stamps,
+            settings: settings
+        )
+        let mask = ImageEditorSelectionMask(
+            width: 64,
+            height: 40,
+            alpha: [UInt8](repeating: 0, count: 64 * 40)
+        )
+        let quickMask = try #require(mask.paintedByQuickMaskStroke(
+            samples: samples,
+            canvasSize: CGSize(width: 64, height: 40),
+            diameter: 12,
+            opacity: 0.75,
+            hardness: 0.5,
+            flow: 0.4,
+            spacing: 0.5,
+            noiseEnabled: true,
+            wetEdgesEnabled: true,
+            targetAlpha: .max
+        ))
+
+        #expect(quickMask.alpha == expected)
+        #expect(quickMask == mask.paintedByQuickMaskStroke(
+            samples: samples,
+            canvasSize: CGSize(width: 64, height: 40),
+            diameter: 12,
+            opacity: 0.75,
+            hardness: 0.5,
+            flow: 0.4,
+            spacing: 0.5,
+            noiseEnabled: true,
+            wetEdgesEnabled: true,
+            targetAlpha: .max
+        ))
+    }
+
     @Test func missingPressureFallsBackToFullPressureWithoutChangingMouseStrokes() {
         let settings = ImageEditorBrushStrokeSettings(
             diameter: 12,
@@ -1398,9 +1534,13 @@ struct ImageEditorBrushStrokeTests {
 
     @Test func viewModelBrushUsesFlowSpacingSelectionAndHistory() throws {
         let size = CGSize(width: 80, height: 30)
+        let suiteName = "ImageEditorBrushStrokeTests.brushHistory.\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
+        defer { defaults.removePersistentDomain(forName: suiteName) }
         let viewModel = ImageEditorViewModel(
             sourceName: "brush.png",
-            image: NSImage.transparent(size: size)
+            image: NSImage.transparent(size: size),
+            preferencesDefaults: defaults
         ) { _ in }
         viewModel.foregroundColor = .systemRed
         viewModel.brushSize = 10
@@ -1428,15 +1568,21 @@ struct ImageEditorBrushStrokeTests {
 
     @Test func pencilPaintsCrispPixelsAsOneUndoableHistoryStep() throws {
         let size = CGSize(width: 24, height: 24)
+        let suiteName = "ImageEditorBrushStrokeTests.pencil.\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
+        defer { defaults.removePersistentDomain(forName: suiteName) }
         let viewModel = ImageEditorViewModel(
             sourceName: "pencil.png",
-            image: NSImage.transparent(size: size)
+            image: NSImage.transparent(size: size),
+            preferencesDefaults: defaults
         ) { _ in }
         viewModel.foregroundColor = .systemRed
         viewModel.brushSize = 6
         viewModel.hardness = 0
         viewModel.opacity = 1
         viewModel.brushFlow = 100
+        viewModel.brushNoiseEnabled = true
+        viewModel.brushWetEdgesEnabled = true
 
         viewModel.drawPencil(samples: [
             ImageEditorBrushStrokeSample(point: CGPoint(x: 10.75, y: 10.75))
@@ -1494,6 +1640,9 @@ struct ImageEditorBrushStrokeTests {
 
     @Test func pencilAutoEraseLatchesBackgroundOrForegroundFromStrokeStart() throws {
         let size = CGSize(width: 48, height: 20)
+        let suiteName = "ImageEditorBrushStrokeTests.pencilAutoEraseLatch.\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
+        defer { defaults.removePersistentDomain(forName: suiteName) }
         let foreground = NSColor(deviceRed: 1, green: 0, blue: 0, alpha: 1)
         let background = NSColor(deviceRed: 0, green: 0, blue: 1, alpha: 1)
         let source = NSImage.rendered(size: size) { rect in
@@ -1505,7 +1654,8 @@ struct ImageEditorBrushStrokeTests {
 
         let backgroundStroke = ImageEditorViewModel(
             sourceName: "pencil-auto-erase-background.png",
-            image: source
+            image: source,
+            preferencesDefaults: defaults
         ) { _ in }
         let backgroundLayerIndex = try #require(backgroundStroke.document.selectedLayerIndex)
         backgroundStroke.document.layers[backgroundLayerIndex].image = source
@@ -1532,7 +1682,8 @@ struct ImageEditorBrushStrokeTests {
 
         let foregroundStroke = ImageEditorViewModel(
             sourceName: "pencil-auto-erase-foreground.png",
-            image: source
+            image: source,
+            preferencesDefaults: defaults
         ) { _ in }
         let foregroundLayerIndex = try #require(foregroundStroke.document.selectedLayerIndex)
         foregroundStroke.document.layers[foregroundLayerIndex].image = source
@@ -1610,9 +1761,13 @@ struct ImageEditorBrushStrokeTests {
 
     @Test func viewModelPressureStrokeSupportsSingleStampHistoryAndUndo() throws {
         let size = CGSize(width: 80, height: 40)
+        let suiteName = "ImageEditorBrushStrokeTests.pressureHistory.\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
+        defer { defaults.removePersistentDomain(forName: suiteName) }
         let viewModel = ImageEditorViewModel(
             sourceName: "pressure.png",
-            image: NSImage.transparent(size: size)
+            image: NSImage.transparent(size: size),
+            preferencesDefaults: defaults
         ) { _ in }
         viewModel.foregroundColor = .systemBlue
         viewModel.brushSize = 20
@@ -1983,11 +2138,18 @@ struct ImageEditorBrushStrokeTests {
 
     @Test func brushStrokeRespectsTransparentPixelLock() throws {
         let size = CGSize(width: 80, height: 30)
+        let suiteName = "ImageEditorBrushStrokeTests.transparentLock.\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
+        defer { defaults.removePersistentDomain(forName: suiteName) }
         let source = NSImage.rendered(size: size) { _ in
             NSColor.systemRed.setFill()
             CGRect(x: 0, y: 0, width: 30, height: 30).fill()
         } ?? NSImage.transparent(size: size)
-        let viewModel = ImageEditorViewModel(sourceName: "locked.png", image: source) { _ in }
+        let viewModel = ImageEditorViewModel(
+            sourceName: "locked.png",
+            image: source,
+            preferencesDefaults: defaults
+        ) { _ in }
         viewModel.replaceSelectedLayerImageForTesting(
             source,
             historyTitle: L10n.text("imageEditor.history.brush")
