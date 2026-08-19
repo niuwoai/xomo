@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.12.0-rc1115 - 2026-08-19
+
+### Added
+- 为 Shape Dynamics 增加 Photoshop 经典 Roundness Jitter 与 Minimum Roundness；每个笔尖印章可在基础圆度和 1%–100% 下限之间产生确定性短轴/长轴比变化。
+
+### Changed
+- 圆度抖动使用独立于 Size Jitter 与 Angle Jitter 的无状态序列，并在数位笔倾斜形变之前解析基础圆度；0% 保持旧像素结果，100% 覆盖完整允许区间，最小圆度高于基础圆度时安全收敛为基础圆度。普通像素层、Quick Mask、栅格图层蒙版、Airbrush、跨会话偏好及自定义预设共享语义；组件库系统箭头与稳定基础足迹光标不变。
+
+### Verification
+- 最终 `build-for-testing` 通过；画笔/蒙版 44/44、偏好与旧数据迁移 9/9、生产接线 1/1、完整光标 88/88、CLI 2/2、发布契约 7/7 全绿。本版本不触发周期 Universal Release、完整冒烟与 `/Applications` 安装，下一次完整门禁为 rc1120。
+
 ## 2.12.0-rc1114 - 2026-08-19
 
 ### Added

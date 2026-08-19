@@ -69,6 +69,8 @@ struct ImageEditorBrushStrokeSettings: Equatable {
     var pressureSensitivity: CGFloat
     var sizeJitter: CGFloat
     var angleJitter: CGFloat
+    var roundnessJitter: CGFloat
+    var minimumRoundness: CGFloat
     var minimumDiameter: CGFloat
     var minimumOpacity: CGFloat
     var minimumFlow: CGFloat
@@ -90,6 +92,8 @@ struct ImageEditorBrushStrokeSettings: Equatable {
         pressureSensitivity: CGFloat = 0.5,
         sizeJitter: CGFloat = 0,
         angleJitter: CGFloat = 0,
+        roundnessJitter: CGFloat = 0,
+        minimumRoundness: CGFloat = 0.01,
         minimumDiameter: CGFloat = 0,
         minimumOpacity: CGFloat = 0,
         minimumFlow: CGFloat = 0,
@@ -110,6 +114,8 @@ struct ImageEditorBrushStrokeSettings: Equatable {
         self.pressureSensitivity = pressureSensitivity
         self.sizeJitter = sizeJitter
         self.angleJitter = angleJitter
+        self.roundnessJitter = roundnessJitter
+        self.minimumRoundness = minimumRoundness
         self.minimumDiameter = minimumDiameter
         self.minimumOpacity = minimumOpacity
         self.minimumFlow = minimumFlow
@@ -133,6 +139,8 @@ struct ImageEditorBrushStrokeSettings: Equatable {
             pressureSensitivity: max(0, min(1, pressureSensitivity)),
             sizeJitter: max(0, min(1, sizeJitter)),
             angleJitter: max(0, min(1, angleJitter)),
+            roundnessJitter: max(0, min(1, roundnessJitter)),
+            minimumRoundness: max(0.01, min(1, minimumRoundness)),
             minimumDiameter: max(0, min(1, minimumDiameter)),
             minimumOpacity: max(0, min(1, minimumOpacity)),
             minimumFlow: max(0, min(1, minimumFlow)),
@@ -313,7 +321,12 @@ enum ImageEditorBrushStrokeKernel {
             let radius = max(1, settings.diameter * diameterScale) / 2
             let innerRadius = radius * settings.hardness
             let tipAspectRatio = effectiveTipAspectRatio(
-                roundness: settings.tipRoundness,
+                roundness: roundnessJitterAspectRatio(
+                    stampIndex: stampIndex,
+                    baseRoundness: settings.tipRoundness,
+                    amount: settings.roundnessJitter,
+                    minimumRoundness: settings.minimumRoundness
+                ),
                 tilt: stamp.tilt,
                 tiltControlsShape: settings.tiltControlsShape
             )
@@ -381,6 +394,25 @@ enum ImageEditorBrushStrokeKernel {
             salt: 0xA0761D6478BD642F
         )
         return (unit * 2 - 1) * 180 * normalizedAmount
+    }
+
+    /// Varies the short-to-long axis ratio without mutable RNG state. Jitter
+    /// scales the available range from the base tip down to the configured floor.
+    static func roundnessJitterAspectRatio(
+        stampIndex: Int,
+        baseRoundness: CGFloat,
+        amount: CGFloat,
+        minimumRoundness: CGFloat
+    ) -> CGFloat {
+        let base = max(0.1, min(1, baseRoundness))
+        let normalizedAmount = max(0, min(1, amount))
+        guard normalizedAmount > 0 else { return base }
+        let minimum = min(base, max(0.01, min(1, minimumRoundness)))
+        let unit = deterministicUnit(
+            stampIndex: stampIndex,
+            salt: 0xE7037ED1A0B428DB
+        )
+        return base - (base - minimum) * normalizedAmount * unit
     }
 
     private static func deterministicUnit(stampIndex: Int, salt: UInt64) -> CGFloat {
@@ -466,7 +498,7 @@ enum ImageEditorBrushStrokeKernel {
         tiltControlsShape: Bool
     ) -> CGFloat {
         min(
-            max(0.1, min(1, roundness)),
+            max(0.01, min(1, roundness)),
             tiltTipAspectRatio(tilt: tilt, isEnabled: tiltControlsShape)
         )
     }

@@ -638,9 +638,11 @@
 "imageEditor.help.brushRoundness" = "Adjust how flat the brush and eraser tip appears";
 "imageEditor.option.brushAngle" = "Tip Angle";
 "imageEditor.option.angleJitter" = "Angle Jitter";
+"imageEditor.option.roundnessJitter" = "Roundness Jitter";
+"imageEditor.option.minimumRoundness" = "Minimum Roundness";
 "imageEditor.option.degreePreset" = "%d°";
 "imageEditor.option.brushTipShapeValue" = "Tip %d%% / %d°";
-"imageEditor.help.brushTipShape" = "Adjust brush and eraser tip roundness, base angle, and deterministic angle jitter; active stylus tilt takes over the base angle";
+"imageEditor.help.brushTipShape" = "Adjust brush and eraser tip roundness, base angle, angle jitter, roundness jitter, and minimum roundness; active stylus tilt takes over the base angle";
 "imageEditor.option.pressure" = "Pressure";
 "imageEditor.option.pressureSize" = "Control Size";
 "imageEditor.option.pressureOpacity" = "Control Opacity";

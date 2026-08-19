@@ -638,9 +638,11 @@
 "imageEditor.help.brushRoundness" = "ブラシと消しゴムの先端の扁平率を調整します";
 "imageEditor.option.brushAngle" = "ブラシ先端の角度";
 "imageEditor.option.angleJitter" = "角度のジッター";
+"imageEditor.option.roundnessJitter" = "真円率のジッター";
+"imageEditor.option.minimumRoundness" = "最小の真円率";
 "imageEditor.option.degreePreset" = "%d°";
 "imageEditor.option.brushTipShapeValue" = "先端 %d%% / %d°";
-"imageEditor.help.brushTipShape" = "ブラシと消しゴムの先端の真円率、基準角度、決定論的な角度ジッターを調整します。有効なペン傾斜が基準角度を優先します";
+"imageEditor.help.brushTipShape" = "ブラシと消しゴムの先端の真円率、基準角度、角度ジッター、真円率ジッター、最小真円率を調整します。有効なペン傾斜が基準角度を優先します";
 "imageEditor.option.pressure" = "筆圧";
 "imageEditor.option.pressureSize" = "サイズを制御";
 "imageEditor.option.pressureOpacity" = "不透明度を制御";

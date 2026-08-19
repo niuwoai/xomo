@@ -4753,13 +4753,29 @@ struct ImageEditorScopeTests {
         #expect(menuSource.contains("ImageEditorBrushRoundnessPresets.values"))
         #expect(menuSource.contains("ImageEditorBrushAnglePresets.values"))
         #expect(menuSource.contains("ImageEditorBrushAngleJitterPresets.values"))
+        #expect(menuSource.contains("ImageEditorBrushRoundnessJitterPresets.values"))
+        #expect(menuSource.contains("ImageEditorBrushMinimumRoundnessPresets.values"))
         #expect(menuSource.contains("viewModel.setBrushTipRoundness($0)"))
         #expect(menuSource.contains("viewModel.setBrushTipAngleDegrees($0)"))
         #expect(menuSource.contains("viewModel.setBrushAngleJitter($0)"))
+        #expect(menuSource.contains("viewModel.setBrushRoundnessJitter($0)"))
+        #expect(menuSource.contains("viewModel.setBrushMinimumRoundness($0)"))
         #expect(menuSource.contains("imageEditor.option.angleJitter"))
+        #expect(menuSource.contains("imageEditor.option.roundnessJitter"))
+        #expect(menuSource.contains("imageEditor.option.minimumRoundness"))
         #expect(
             viewModelSource.components(
                 separatedBy: "angleJitter: brushAngleJitter / 100"
+            ).count == 4
+        )
+        #expect(
+            viewModelSource.components(
+                separatedBy: "roundnessJitter: brushRoundnessJitter / 100"
+            ).count == 4
+        )
+        #expect(
+            viewModelSource.components(
+                separatedBy: "minimumRoundness: brushMinimumRoundness / 100"
             ).count == 4
         )
         #expect(menuSource.contains("imageEditor.option.brushTipShapeValue"))

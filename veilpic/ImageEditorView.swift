@@ -1699,6 +1699,31 @@ struct ImageEditorView: View {
                         .tag(jitter)
                 }
             }
+            Divider()
+            Picker(
+                L10n.text("imageEditor.option.roundnessJitter"),
+                selection: Binding(
+                    get: { viewModel.brushRoundnessJitter },
+                    set: { viewModel.setBrushRoundnessJitter($0) }
+                )
+            ) {
+                ForEach(ImageEditorBrushRoundnessJitterPresets.values, id: \.self) { jitter in
+                    Text(L10n.format("imageEditor.option.percentPreset", Int(jitter)))
+                        .tag(jitter)
+                }
+            }
+            Picker(
+                L10n.text("imageEditor.option.minimumRoundness"),
+                selection: Binding(
+                    get: { viewModel.brushMinimumRoundness },
+                    set: { viewModel.setBrushMinimumRoundness($0) }
+                )
+            ) {
+                ForEach(ImageEditorBrushMinimumRoundnessPresets.values, id: \.self) { roundness in
+                    Text(L10n.format("imageEditor.option.percentPreset", Int(roundness)))
+                        .tag(roundness)
+                }
+            }
         } label: {
             Text(
                 L10n.format(

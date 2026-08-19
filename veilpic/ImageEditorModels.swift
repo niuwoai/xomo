@@ -49,6 +49,8 @@ struct ImageEditorBrushPreset: Identifiable, Codable, Equatable {
     let pressureSensitivity: CGFloat
     let sizeJitter: CGFloat
     let angleJitter: CGFloat
+    let roundnessJitter: CGFloat
+    let minimumRoundness: CGFloat
     let minimumDiameter: CGFloat
     let minimumOpacity: CGFloat
     let minimumFlow: CGFloat
@@ -71,6 +73,8 @@ struct ImageEditorBrushPreset: Identifiable, Codable, Equatable {
         pressureSensitivity: CGFloat = 50,
         sizeJitter: CGFloat = 0,
         angleJitter: CGFloat = 0,
+        roundnessJitter: CGFloat = 0,
+        minimumRoundness: CGFloat = 1,
         minimumDiameter: CGFloat = 0,
         minimumOpacity: CGFloat = 0,
         minimumFlow: CGFloat = 0,
@@ -92,6 +96,8 @@ struct ImageEditorBrushPreset: Identifiable, Codable, Equatable {
         self.pressureSensitivity = pressureSensitivity
         self.sizeJitter = sizeJitter
         self.angleJitter = angleJitter
+        self.roundnessJitter = roundnessJitter
+        self.minimumRoundness = minimumRoundness
         self.minimumDiameter = minimumDiameter
         self.minimumOpacity = minimumOpacity
         self.minimumFlow = minimumFlow
@@ -115,6 +121,8 @@ struct ImageEditorBrushPreset: Identifiable, Codable, Equatable {
         case pressureSensitivity
         case sizeJitter
         case angleJitter
+        case roundnessJitter
+        case minimumRoundness
         case minimumDiameter
         case minimumOpacity
         case minimumFlow
@@ -157,6 +165,14 @@ struct ImageEditorBrushPreset: Identifiable, Codable, Equatable {
             CGFloat.self,
             forKey: .angleJitter
         ) ?? 0
+        roundnessJitter = try values.decodeIfPresent(
+            CGFloat.self,
+            forKey: .roundnessJitter
+        ) ?? 0
+        minimumRoundness = try values.decodeIfPresent(
+            CGFloat.self,
+            forKey: .minimumRoundness
+        ) ?? 1
         minimumDiameter = try values.decodeIfPresent(
             CGFloat.self,
             forKey: .minimumDiameter
@@ -209,6 +225,8 @@ struct ImageEditorBrushPreset: Identifiable, Codable, Equatable {
             pressureSensitivity: max(0, min(100, pressureSensitivity)),
             sizeJitter: max(0, min(100, sizeJitter)),
             angleJitter: max(0, min(100, angleJitter)),
+            roundnessJitter: max(0, min(100, roundnessJitter)),
+            minimumRoundness: max(1, min(100, minimumRoundness)),
             minimumDiameter: max(0, min(100, minimumDiameter)),
             minimumOpacity: max(0, min(100, minimumOpacity)),
             minimumFlow: max(0, min(100, minimumFlow)),
@@ -231,6 +249,8 @@ struct ImageEditorBrushPreset: Identifiable, Codable, Equatable {
         pressureSensitivity: CGFloat,
         sizeJitter: CGFloat,
         angleJitter: CGFloat,
+        roundnessJitter: CGFloat,
+        minimumRoundness: CGFloat,
         minimumDiameter: CGFloat,
         minimumOpacity: CGFloat,
         minimumFlow: CGFloat,
@@ -250,6 +270,8 @@ struct ImageEditorBrushPreset: Identifiable, Codable, Equatable {
             && abs(self.pressureSensitivity - pressureSensitivity) < tolerance
             && abs(self.sizeJitter - sizeJitter) < tolerance
             && abs(self.angleJitter - angleJitter) < tolerance
+            && abs(self.roundnessJitter - roundnessJitter) < tolerance
+            && abs(self.minimumRoundness - minimumRoundness) < tolerance
             && abs(self.minimumDiameter - minimumDiameter) < tolerance
             && abs(self.minimumOpacity - minimumOpacity) < tolerance
             && abs(self.minimumFlow - minimumFlow) < tolerance

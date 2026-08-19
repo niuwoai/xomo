@@ -754,6 +754,95 @@ struct ImageEditorBrushStrokeTests {
         ))
     }
 
+    @Test func roundnessJitterIsDeterministicBoundedAndIndependentFromOtherDynamics() {
+        let first = (0..<32).map {
+            ImageEditorBrushStrokeKernel.roundnessJitterAspectRatio(
+                stampIndex: $0,
+                baseRoundness: 0.8,
+                amount: 1,
+                minimumRoundness: 0.2
+            )
+        }
+        let replay = (0..<32).map {
+            ImageEditorBrushStrokeKernel.roundnessJitterAspectRatio(
+                stampIndex: $0,
+                baseRoundness: 0.8,
+                amount: 1,
+                minimumRoundness: 0.2
+            )
+        }
+        let sizeSequence = (0..<32).map {
+            ImageEditorBrushStrokeKernel.sizeJitterScale(stampIndex: $0, amount: 1)
+        }
+
+        #expect(first == replay)
+        #expect(first.allSatisfy { $0 >= 0.2 && $0 <= 0.8 })
+        #expect(Set(first).count > 16)
+        #expect(ImageEditorBrushStrokeKernel.roundnessJitterAspectRatio(
+            stampIndex: 7,
+            baseRoundness: 0.8,
+            amount: 0,
+            minimumRoundness: 0.01
+        ) == 0.8)
+        #expect(ImageEditorBrushStrokeKernel.roundnessJitterAspectRatio(
+            stampIndex: 7,
+            baseRoundness: 0.4,
+            amount: 1,
+            minimumRoundness: 0.75
+        ) == 0.4)
+        #expect(zip(first, sizeSequence).contains { abs($0.0 - $0.1) > 0.01 })
+    }
+
+    @Test func roundnessJitterReplaysPixelsAndMinimumRoundnessLimitsFlattening() {
+        let stamps = (0..<7).map {
+            ImageEditorBrushStrokeSample(point: CGPoint(x: 12 + $0 * 16, y: 24))
+        }
+        let baseline = ImageEditorBrushStrokeSettings(
+            diameter: 14,
+            hardness: 1,
+            opacity: 1,
+            flow: 1,
+            spacing: 1,
+            tipRoundness: 1,
+            tipAngleDegrees: 25
+        )
+        var jittered = baseline
+        jittered.roundnessJitter = 1
+        jittered.minimumRoundness = 0.1
+        var constrained = jittered
+        constrained.minimumRoundness = 0.75
+
+        let original = ImageEditorBrushStrokeKernel.coverage(
+            width: 124,
+            height: 48,
+            stamps: stamps,
+            settings: baseline
+        )
+        let first = ImageEditorBrushStrokeKernel.coverage(
+            width: 124,
+            height: 48,
+            stamps: stamps,
+            settings: jittered
+        )
+        let replay = ImageEditorBrushStrokeKernel.coverage(
+            width: 124,
+            height: 48,
+            stamps: stamps,
+            settings: jittered
+        )
+        let limited = ImageEditorBrushStrokeKernel.coverage(
+            width: 124,
+            height: 48,
+            stamps: stamps,
+            settings: constrained
+        )
+
+        #expect(first == replay)
+        #expect(first != original)
+        #expect(limited != first)
+        #expect(limited.filter { $0 > 0 }.count > first.filter { $0 > 0 }.count)
+    }
+
     @Test func missingPressureFallsBackToFullPressureWithoutChangingMouseStrokes() {
         let settings = ImageEditorBrushStrokeSettings(
             diameter: 12,

@@ -145,6 +145,8 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var brushPressureSensitivity: CGFloat = 50
     @Published var brushSizeJitter: CGFloat = 0
     @Published var brushAngleJitter: CGFloat = 0
+    @Published var brushRoundnessJitter: CGFloat = 0
+    @Published var brushMinimumRoundness: CGFloat = 1
     @Published var brushMinimumDiameter: CGFloat = 0
     @Published var brushMinimumOpacity: CGFloat = 0
     @Published var brushMinimumFlow: CGFloat = 0
@@ -609,6 +611,8 @@ final class ImageEditorViewModel: ObservableObject {
         brushPressureSensitivity = CGFloat(brushDynamicsPreferences.pressureSensitivity)
         brushSizeJitter = CGFloat(brushDynamicsPreferences.sizeJitter)
         brushAngleJitter = CGFloat(brushDynamicsPreferences.angleJitter)
+        brushRoundnessJitter = CGFloat(brushDynamicsPreferences.roundnessJitter)
+        brushMinimumRoundness = CGFloat(brushDynamicsPreferences.minimumRoundness)
         brushMinimumDiameter = CGFloat(brushDynamicsPreferences.minimumDiameter)
         brushMinimumOpacity = CGFloat(brushDynamicsPreferences.minimumOpacity)
         brushMinimumFlow = CGFloat(brushDynamicsPreferences.minimumFlow)
@@ -664,6 +668,8 @@ final class ImageEditorViewModel: ObservableObject {
         brushPressureSensitivity = CGFloat(brushDynamicsPreferences.pressureSensitivity)
         brushSizeJitter = CGFloat(brushDynamicsPreferences.sizeJitter)
         brushAngleJitter = CGFloat(brushDynamicsPreferences.angleJitter)
+        brushRoundnessJitter = CGFloat(brushDynamicsPreferences.roundnessJitter)
+        brushMinimumRoundness = CGFloat(brushDynamicsPreferences.minimumRoundness)
         brushMinimumDiameter = CGFloat(brushDynamicsPreferences.minimumDiameter)
         brushMinimumOpacity = CGFloat(brushDynamicsPreferences.minimumOpacity)
         brushMinimumFlow = CGFloat(brushDynamicsPreferences.minimumFlow)
@@ -2913,6 +2919,8 @@ final class ImageEditorViewModel: ObservableObject {
             pressureSensitivity: brushPressureSensitivity,
             sizeJitter: brushSizeJitter,
             angleJitter: brushAngleJitter,
+            roundnessJitter: brushRoundnessJitter,
+            minimumRoundness: brushMinimumRoundness,
             minimumDiameter: brushMinimumDiameter,
             minimumOpacity: brushMinimumOpacity,
             minimumFlow: brushMinimumFlow,
@@ -3067,6 +3075,8 @@ final class ImageEditorViewModel: ObservableObject {
         brushPressureSensitivity = max(0, min(100, preset.pressureSensitivity))
         brushSizeJitter = max(0, min(100, preset.sizeJitter))
         brushAngleJitter = max(0, min(100, preset.angleJitter))
+        brushRoundnessJitter = max(0, min(100, preset.roundnessJitter))
+        brushMinimumRoundness = max(1, min(100, preset.minimumRoundness))
         brushMinimumDiameter = max(0, min(100, preset.minimumDiameter))
         brushMinimumOpacity = max(0, min(100, preset.minimumOpacity))
         brushMinimumFlow = max(0, min(100, preset.minimumFlow))
@@ -3108,6 +3118,8 @@ final class ImageEditorViewModel: ObservableObject {
             pressureSensitivity: brushPressureSensitivity,
             sizeJitter: brushSizeJitter,
             angleJitter: brushAngleJitter,
+            roundnessJitter: brushRoundnessJitter,
+            minimumRoundness: brushMinimumRoundness,
             minimumDiameter: brushMinimumDiameter,
             minimumOpacity: brushMinimumOpacity,
             minimumFlow: brushMinimumFlow,
@@ -3931,6 +3943,8 @@ final class ImageEditorViewModel: ObservableObject {
             pressureSensitivity: Double(brushPressureSensitivity),
             sizeJitter: Double(brushSizeJitter),
             angleJitter: Double(brushAngleJitter),
+            roundnessJitter: Double(brushRoundnessJitter),
+            minimumRoundness: Double(brushMinimumRoundness),
             minimumDiameter: Double(brushMinimumDiameter),
             minimumOpacity: Double(brushMinimumOpacity),
             minimumFlow: Double(brushMinimumFlow),
@@ -4081,6 +4095,20 @@ final class ImageEditorViewModel: ObservableObject {
         let normalized = max(0, min(100, jitter))
         guard brushAngleJitter != normalized else { return }
         brushAngleJitter = normalized
+        persistBrushDynamicsPreferences()
+    }
+
+    func setBrushRoundnessJitter(_ jitter: CGFloat) {
+        let normalized = max(0, min(100, jitter))
+        guard brushRoundnessJitter != normalized else { return }
+        brushRoundnessJitter = normalized
+        persistBrushDynamicsPreferences()
+    }
+
+    func setBrushMinimumRoundness(_ roundness: CGFloat) {
+        let normalized = max(1, min(100, roundness))
+        guard brushMinimumRoundness != normalized else { return }
+        brushMinimumRoundness = normalized
         persistBrushDynamicsPreferences()
     }
 
@@ -6189,6 +6217,8 @@ final class ImageEditorViewModel: ObservableObject {
                 pressureSensitivity: brushPressureSensitivity / 100,
                 sizeJitter: brushSizeJitter / 100,
                 angleJitter: brushAngleJitter / 100,
+                roundnessJitter: brushRoundnessJitter / 100,
+                minimumRoundness: brushMinimumRoundness / 100,
                 minimumDiameter: brushMinimumDiameter / 100,
                 minimumOpacity: brushMinimumOpacity / 100,
                 minimumFlow: brushMinimumFlow / 100,
@@ -6454,6 +6484,8 @@ final class ImageEditorViewModel: ObservableObject {
             pressureSensitivity: brushPressureSensitivity / 100,
             sizeJitter: brushSizeJitter / 100,
             angleJitter: brushAngleJitter / 100,
+            roundnessJitter: brushRoundnessJitter / 100,
+            minimumRoundness: brushMinimumRoundness / 100,
             minimumDiameter: brushMinimumDiameter / 100,
             minimumOpacity: brushMinimumOpacity / 100,
             minimumFlow: brushMinimumFlow / 100,
@@ -8413,6 +8445,8 @@ final class ImageEditorViewModel: ObservableObject {
             pressureSensitivity: brushPressureSensitivity / 100,
             sizeJitter: brushSizeJitter / 100,
             angleJitter: brushAngleJitter / 100,
+            roundnessJitter: brushRoundnessJitter / 100,
+            minimumRoundness: brushMinimumRoundness / 100,
             minimumDiameter: brushMinimumDiameter / 100,
             minimumOpacity: brushMinimumOpacity / 100,
             minimumFlow: brushMinimumFlow / 100,

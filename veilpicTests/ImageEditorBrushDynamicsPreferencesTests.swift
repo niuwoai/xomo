@@ -23,6 +23,8 @@ struct ImageEditorBrushDynamicsPreferencesTests {
             pressureSensitivity: 140,
             sizeJitter: 140,
             angleJitter: 140,
+            roundnessJitter: 140,
+            minimumRoundness: -20,
             minimumDiameter: 140,
             minimumOpacity: 140,
             minimumFlow: 140,
@@ -42,6 +44,8 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         #expect(loaded.pressureSensitivity == 100)
         #expect(loaded.sizeJitter == 100)
         #expect(loaded.angleJitter == 100)
+        #expect(loaded.roundnessJitter == 100)
+        #expect(loaded.minimumRoundness == 1)
         #expect(loaded.minimumDiameter == 100)
         #expect(loaded.minimumOpacity == 100)
         #expect(loaded.minimumFlow == 100)
@@ -75,6 +79,8 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         first.setBrushPressureSensitivity(73)
         first.setBrushSizeJitter(58)
         first.setBrushAngleJitter(63)
+        first.setBrushRoundnessJitter(57)
+        first.setBrushMinimumRoundness(23)
         first.setBrushMinimumDiameter(37)
         first.setBrushMinimumOpacity(31)
         first.setBrushMinimumFlow(29)
@@ -98,6 +104,8 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         #expect(restored.brushPressureSensitivity == 73)
         #expect(restored.brushSizeJitter == 58)
         #expect(restored.brushAngleJitter == 63)
+        #expect(restored.brushRoundnessJitter == 57)
+        #expect(restored.brushMinimumRoundness == 23)
         #expect(restored.brushMinimumDiameter == 37)
         #expect(restored.brushMinimumOpacity == 31)
         #expect(restored.brushMinimumFlow == 29)
@@ -130,6 +138,8 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         #expect(decodedDynamics.minimumDiameter == 0)
         #expect(decodedDynamics.sizeJitter == 0)
         #expect(decodedDynamics.angleJitter == 0)
+        #expect(decodedDynamics.roundnessJitter == 0)
+        #expect(decodedDynamics.minimumRoundness == 1)
         #expect(decodedDynamics.minimumOpacity == 0)
         #expect(decodedDynamics.minimumFlow == 0)
         #expect(decodedDynamics.tipRoundness == 100)
@@ -165,6 +175,8 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         #expect(decodedPreset.minimumDiameter == 0)
         #expect(decodedPreset.sizeJitter == 0)
         #expect(decodedPreset.angleJitter == 0)
+        #expect(decodedPreset.roundnessJitter == 0)
+        #expect(decodedPreset.minimumRoundness == 1)
         #expect(decodedPreset.minimumOpacity == 0)
         #expect(decodedPreset.minimumFlow == 0)
         #expect(decodedPreset.tipRoundness == 100)
@@ -202,6 +214,8 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         #expect(ImageEditorBrushMinimumDiameterPresets.values == [0, 10, 25, 50, 75, 100])
         #expect(ImageEditorBrushSizeJitterPresets.values == [0, 10, 25, 50, 75, 100])
         #expect(ImageEditorBrushAngleJitterPresets.values == [0, 10, 25, 50, 75, 100])
+        #expect(ImageEditorBrushRoundnessJitterPresets.values == [0, 10, 25, 50, 75, 100])
+        #expect(ImageEditorBrushMinimumRoundnessPresets.values == [1, 10, 25, 50, 75, 100])
         #expect(ImageEditorBrushMinimumOpacityPresets.values == [0, 10, 25, 50, 75, 100])
         #expect(ImageEditorBrushMinimumFlowPresets.values == [0, 10, 25, 50, 75, 100])
         #expect(ImageEditorBrushRoundnessPresets.values == [10, 25, 50, 75, 100])
@@ -235,6 +249,8 @@ struct ImageEditorBrushDynamicsPreferencesTests {
             pressureSensitivity: 180,
             sizeJitter: 140,
             angleJitter: 140,
+            roundnessJitter: 140,
+            minimumRoundness: -20,
             minimumDiameter: -20,
             minimumOpacity: 140,
             minimumFlow: 120,
@@ -257,6 +273,8 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         #expect(preset.pressureSensitivity == 100)
         #expect(preset.sizeJitter == 100)
         #expect(preset.angleJitter == 100)
+        #expect(preset.roundnessJitter == 100)
+        #expect(preset.minimumRoundness == 1)
         #expect(preset.minimumDiameter == 0)
         #expect(preset.minimumOpacity == 100)
         #expect(preset.minimumFlow == 100)
@@ -283,6 +301,8 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         first.setBrushPressureSensitivity(73)
         first.setBrushSizeJitter(58)
         first.setBrushAngleJitter(63)
+        first.setBrushRoundnessJitter(57)
+        first.setBrushMinimumRoundness(23)
         first.setBrushMinimumDiameter(37)
         first.setBrushMinimumOpacity(31)
         first.setBrushMinimumFlow(29)
@@ -309,6 +329,8 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         #expect(restored.brushPressureSensitivity == 73)
         #expect(restored.brushSizeJitter == 58)
         #expect(restored.brushAngleJitter == 63)
+        #expect(restored.brushRoundnessJitter == 57)
+        #expect(restored.brushMinimumRoundness == 23)
         #expect(restored.brushMinimumDiameter == 37)
         #expect(restored.brushMinimumOpacity == 31)
         #expect(restored.brushMinimumFlow == 29)
@@ -340,6 +362,8 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         viewModel.setBrushPressureSensitivity(0)
         viewModel.setBrushSizeJitter(75)
         viewModel.setBrushAngleJitter(75)
+        viewModel.setBrushRoundnessJitter(75)
+        viewModel.setBrushMinimumRoundness(75)
         viewModel.setBrushMinimumDiameter(75)
         viewModel.setBrushMinimumOpacity(75)
         viewModel.setBrushMinimumFlow(75)
@@ -361,6 +385,8 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         #expect(viewModel.brushPressureSensitivity == 50)
         #expect(viewModel.brushSizeJitter == 0)
         #expect(viewModel.brushAngleJitter == 0)
+        #expect(viewModel.brushRoundnessJitter == 0)
+        #expect(viewModel.brushMinimumRoundness == 1)
         #expect(viewModel.brushMinimumDiameter == 0)
         #expect(viewModel.brushMinimumOpacity == 0)
         #expect(viewModel.brushMinimumFlow == 0)
