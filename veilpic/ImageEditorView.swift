@@ -1072,6 +1072,7 @@ struct ImageEditorView: View {
                 if usesBrushDynamicsOptions {
                     brushPresetMenu
                     brushRoundnessMenu
+                    brushSizeJitterMenu
                     optionSlider(titleKey: "imageEditor.option.flow", value: $viewModel.brushFlow, range: 1...100, step: 1, suffix: "%")
                     optionSlider(titleKey: "imageEditor.option.spacing", value: $viewModel.brushSpacing, range: 1...200, step: 1, suffix: "%")
                     brushSmoothingMenu
@@ -1624,6 +1625,38 @@ struct ImageEditorView: View {
         .xomoFocusEffectDisabled()
         .help(L10n.text("imageEditor.help.brushSmoothing"))
         .accessibilityIdentifier("image-editor-brush-smoothing")
+    }
+
+    private var brushSizeJitterMenu: some View {
+        Menu {
+            Picker(
+                L10n.text("imageEditor.option.sizeJitter"),
+                selection: Binding(
+                    get: { viewModel.brushSizeJitter },
+                    set: { viewModel.setBrushSizeJitter($0) }
+                )
+            ) {
+                ForEach(ImageEditorBrushSizeJitterPresets.values, id: \.self) { jitter in
+                    Text(L10n.format("imageEditor.option.percentPreset", Int(jitter)))
+                        .tag(jitter)
+                }
+            }
+        } label: {
+            Text(
+                L10n.format(
+                    "imageEditor.option.sizeJitterValue",
+                    Int(viewModel.brushSizeJitter.rounded())
+                )
+            )
+                .font(.system(size: 11, weight: .medium))
+                .lineLimit(1)
+        }
+        .menuStyle(.borderlessButton)
+        .fixedSize()
+        .focusable(false)
+        .xomoFocusEffectDisabled()
+        .help(L10n.text("imageEditor.help.sizeJitter"))
+        .accessibilityIdentifier("image-editor-brush-size-jitter")
     }
 
     private var brushRoundnessMenu: some View {

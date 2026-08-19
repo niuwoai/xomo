@@ -143,6 +143,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var brushPressureControlsOpacity = false
     @Published var brushPressureControlsFlow = true
     @Published var brushPressureSensitivity: CGFloat = 50
+    @Published var brushSizeJitter: CGFloat = 0
     @Published var brushMinimumDiameter: CGFloat = 0
     @Published var brushMinimumOpacity: CGFloat = 0
     @Published var brushMinimumFlow: CGFloat = 0
@@ -605,6 +606,7 @@ final class ImageEditorViewModel: ObservableObject {
         brushPressureControlsOpacity = brushDynamicsPreferences.pressureControlsOpacity
         brushPressureControlsFlow = brushDynamicsPreferences.pressureControlsFlow
         brushPressureSensitivity = CGFloat(brushDynamicsPreferences.pressureSensitivity)
+        brushSizeJitter = CGFloat(brushDynamicsPreferences.sizeJitter)
         brushMinimumDiameter = CGFloat(brushDynamicsPreferences.minimumDiameter)
         brushMinimumOpacity = CGFloat(brushDynamicsPreferences.minimumOpacity)
         brushMinimumFlow = CGFloat(brushDynamicsPreferences.minimumFlow)
@@ -658,6 +660,7 @@ final class ImageEditorViewModel: ObservableObject {
         brushPressureControlsOpacity = brushDynamicsPreferences.pressureControlsOpacity
         brushPressureControlsFlow = brushDynamicsPreferences.pressureControlsFlow
         brushPressureSensitivity = CGFloat(brushDynamicsPreferences.pressureSensitivity)
+        brushSizeJitter = CGFloat(brushDynamicsPreferences.sizeJitter)
         brushMinimumDiameter = CGFloat(brushDynamicsPreferences.minimumDiameter)
         brushMinimumOpacity = CGFloat(brushDynamicsPreferences.minimumOpacity)
         brushMinimumFlow = CGFloat(brushDynamicsPreferences.minimumFlow)
@@ -2905,6 +2908,7 @@ final class ImageEditorViewModel: ObservableObject {
             pressureControlsOpacity: brushPressureControlsOpacity,
             pressureControlsFlow: brushPressureControlsFlow,
             pressureSensitivity: brushPressureSensitivity,
+            sizeJitter: brushSizeJitter,
             minimumDiameter: brushMinimumDiameter,
             minimumOpacity: brushMinimumOpacity,
             minimumFlow: brushMinimumFlow,
@@ -3057,6 +3061,7 @@ final class ImageEditorViewModel: ObservableObject {
         brushPressureControlsOpacity = preset.pressureControlsOpacity
         brushPressureControlsFlow = preset.pressureControlsFlow
         brushPressureSensitivity = max(0, min(100, preset.pressureSensitivity))
+        brushSizeJitter = max(0, min(100, preset.sizeJitter))
         brushMinimumDiameter = max(0, min(100, preset.minimumDiameter))
         brushMinimumOpacity = max(0, min(100, preset.minimumOpacity))
         brushMinimumFlow = max(0, min(100, preset.minimumFlow))
@@ -3096,6 +3101,7 @@ final class ImageEditorViewModel: ObservableObject {
             pressureControlsOpacity: brushPressureControlsOpacity,
             pressureControlsFlow: brushPressureControlsFlow,
             pressureSensitivity: brushPressureSensitivity,
+            sizeJitter: brushSizeJitter,
             minimumDiameter: brushMinimumDiameter,
             minimumOpacity: brushMinimumOpacity,
             minimumFlow: brushMinimumFlow,
@@ -3917,6 +3923,7 @@ final class ImageEditorViewModel: ObservableObject {
             pressureControlsOpacity: brushPressureControlsOpacity,
             pressureControlsFlow: brushPressureControlsFlow,
             pressureSensitivity: Double(brushPressureSensitivity),
+            sizeJitter: Double(brushSizeJitter),
             minimumDiameter: Double(brushMinimumDiameter),
             minimumOpacity: Double(brushMinimumOpacity),
             minimumFlow: Double(brushMinimumFlow),
@@ -3984,6 +3991,13 @@ final class ImageEditorViewModel: ObservableObject {
         let normalized = max(0, min(100, diameter))
         guard brushMinimumDiameter != normalized else { return }
         brushMinimumDiameter = normalized
+        persistBrushDynamicsPreferences()
+    }
+
+    func setBrushSizeJitter(_ jitter: CGFloat) {
+        let normalized = max(0, min(100, jitter))
+        guard brushSizeJitter != normalized else { return }
+        brushSizeJitter = normalized
         persistBrushDynamicsPreferences()
     }
 
@@ -6159,6 +6173,7 @@ final class ImageEditorViewModel: ObservableObject {
                 pressureControlsOpacity: brushPressureControlsOpacity,
                 pressureControlsFlow: brushPressureControlsFlow,
                 pressureSensitivity: brushPressureSensitivity / 100,
+                sizeJitter: brushSizeJitter / 100,
                 minimumDiameter: brushMinimumDiameter / 100,
                 minimumOpacity: brushMinimumOpacity / 100,
                 minimumFlow: brushMinimumFlow / 100,
@@ -6402,33 +6417,39 @@ final class ImageEditorViewModel: ObservableObject {
         blendMode: ImageEditorBlendMode = .normal,
         airbrushPulseSamples: [ImageEditorBrushStrokeSample] = []
     ) {
+        let canvasSize = document.canvasSize
         guard let selection = document.selection,
-              let currentMask = selection.rasterizedMask(canvasSize: document.canvasSize),
-              let updatedMask = currentMask.paintedByQuickMaskStroke(
-                samples: samples,
-                canvasSize: document.canvasSize,
-                diameter: brushSize,
-                opacity: opacity,
-                hardness: edgeStyle == .aliased ? 1 : hardness,
-                flow: brushFlow / 100,
-                spacing: brushSpacing / 100,
-                pressureControlsSize: brushPressureControlsSize,
-                pressureControlsOpacity: brushPressureControlsOpacity,
-                pressureControlsFlow: brushPressureControlsFlow,
-                pressureSensitivity: brushPressureSensitivity / 100,
-                minimumDiameter: brushMinimumDiameter / 100,
-                minimumOpacity: brushMinimumOpacity / 100,
-                minimumFlow: brushMinimumFlow / 100,
-                tiltControlsShape: brushTiltControlsShape,
-                tipRoundness: brushTipRoundness / 100,
-                tipAngleDegrees: brushTipAngleDegrees,
-                smoothing: brushSmoothing / 100,
-                edgeStyle: edgeStyle,
-                targetAlpha: targetAlpha,
-                blendMode: blendMode,
-                airbrushPulseSamples: airbrushPulseSamples
-              )
+              let currentMask = selection.rasterizedMask(canvasSize: canvasSize)
         else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return
+        }
+        let strokeHardness = edgeStyle == .aliased ? CGFloat(1) : hardness
+        guard let updatedMask = currentMask.paintedByQuickMaskStroke(
+            samples: samples,
+            canvasSize: canvasSize,
+            diameter: brushSize,
+            opacity: opacity,
+            hardness: strokeHardness,
+            flow: brushFlow / 100,
+            spacing: brushSpacing / 100,
+            pressureControlsSize: brushPressureControlsSize,
+            pressureControlsOpacity: brushPressureControlsOpacity,
+            pressureControlsFlow: brushPressureControlsFlow,
+            pressureSensitivity: brushPressureSensitivity / 100,
+            sizeJitter: brushSizeJitter / 100,
+            minimumDiameter: brushMinimumDiameter / 100,
+            minimumOpacity: brushMinimumOpacity / 100,
+            minimumFlow: brushMinimumFlow / 100,
+            tiltControlsShape: brushTiltControlsShape,
+            tipRoundness: brushTipRoundness / 100,
+            tipAngleDegrees: brushTipAngleDegrees,
+            smoothing: brushSmoothing / 100,
+            edgeStyle: edgeStyle,
+            targetAlpha: targetAlpha,
+            blendMode: blendMode,
+            airbrushPulseSamples: airbrushPulseSamples
+        ) else {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return
         }
@@ -8353,19 +8374,28 @@ final class ImageEditorViewModel: ObservableObject {
         var maskLayer = layer
         maskLayer.image = mask
         maskLayer.frame = maskFrame
-        guard let currentMask = mask.imageEditorSelectionMask(targetSize: mask.size),
-              let updatedMask = currentMask.paintedByQuickMaskStroke(
-            samples: rasterLocalSamples(samples, layer: maskLayer),
+        guard let currentMask = mask.imageEditorSelectionMask(targetSize: mask.size) else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return
+        }
+        let localSamples = rasterLocalSamples(samples, layer: maskLayer)
+        let localPulseSamples = rasterLocalSamples(airbrushPulseSamples, layer: maskLayer)
+        let localDiameter = rasterLocalBrushWidth(brushSize, layer: maskLayer)
+        let strokeHardness = edgeStyle == .aliased ? CGFloat(1) : hardness
+        let targetAlpha = reveal ? UInt8.max : UInt8.min
+        guard let updatedMask = currentMask.paintedByQuickMaskStroke(
+            samples: localSamples,
             canvasSize: mask.size,
-            diameter: rasterLocalBrushWidth(brushSize, layer: maskLayer),
+            diameter: localDiameter,
             opacity: opacity,
-            hardness: edgeStyle == .aliased ? 1 : hardness,
+            hardness: strokeHardness,
             flow: brushFlow / 100,
             spacing: brushSpacing / 100,
             pressureControlsSize: brushPressureControlsSize,
             pressureControlsOpacity: brushPressureControlsOpacity,
             pressureControlsFlow: brushPressureControlsFlow,
             pressureSensitivity: brushPressureSensitivity / 100,
+            sizeJitter: brushSizeJitter / 100,
             minimumDiameter: brushMinimumDiameter / 100,
             minimumOpacity: brushMinimumOpacity / 100,
             minimumFlow: brushMinimumFlow / 100,
@@ -8374,14 +8404,10 @@ final class ImageEditorViewModel: ObservableObject {
             tipAngleDegrees: brushTipAngleDegrees,
             smoothing: brushSmoothing / 100,
             edgeStyle: edgeStyle,
-            targetAlpha: reveal ? UInt8.max : UInt8.min,
+            targetAlpha: targetAlpha,
             blendMode: blendMode,
-            airbrushPulseSamples: rasterLocalSamples(
-                airbrushPulseSamples,
-                layer: maskLayer
-            )
-        ),
-              let updated = NSImage.alphaMaskImage(
+            airbrushPulseSamples: localPulseSamples
+        ), let updated = NSImage.alphaMaskImage(
                 width: updatedMask.width,
                 height: updatedMask.height,
                 alpha: updatedMask.alpha

@@ -630,6 +630,9 @@
 "imageEditor.option.smoothing" = "平滑";
 "imageEditor.option.smoothingValue" = "平滑 %d%%";
 "imageEditor.help.brushSmoothing" = "在生成画笔间距前减少鼠标或数位笔路径抖动";
+"imageEditor.option.sizeJitter" = "大小抖动";
+"imageEditor.option.sizeJitterValue" = "抖动 %d%%";
+"imageEditor.help.sizeJitter" = "让每个画笔印章在最小直径与当前画笔大小之间变化";
 "imageEditor.option.brushRoundness" = "笔尖圆度";
 "imageEditor.option.brushRoundnessValue" = "圆度 %d%%";
 "imageEditor.help.brushRoundness" = "调整画笔和橡皮擦笔尖的扁平程度";

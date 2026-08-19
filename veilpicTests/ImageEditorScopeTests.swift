@@ -4740,6 +4740,10 @@ struct ImageEditorScopeTests {
         let menuSource = source[menuStart.lowerBound..<menuEnd.lowerBound]
 
         #expect(source.contains("brushPresetMenu\n                    brushRoundnessMenu"))
+        #expect(source.contains("brushRoundnessMenu\n                    brushSizeJitterMenu"))
+        #expect(source.contains("ImageEditorBrushSizeJitterPresets.values"))
+        #expect(source.contains("viewModel.setBrushSizeJitter($0)"))
+        #expect(source.contains("image-editor-brush-size-jitter"))
         #expect(menuSource.contains("ImageEditorBrushRoundnessPresets.values"))
         #expect(menuSource.contains("ImageEditorBrushAnglePresets.values"))
         #expect(menuSource.contains("viewModel.setBrushTipRoundness($0)"))

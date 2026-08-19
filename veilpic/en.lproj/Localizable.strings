@@ -630,6 +630,9 @@
 "imageEditor.option.smoothing" = "Smoothing";
 "imageEditor.option.smoothingValue" = "Smoothing %d%%";
 "imageEditor.help.brushSmoothing" = "Reduce pointer jitter before spacing the brush stroke";
+"imageEditor.option.sizeJitter" = "Size Jitter";
+"imageEditor.option.sizeJitterValue" = "Jitter %d%%";
+"imageEditor.help.sizeJitter" = "Vary each brush mark from the minimum diameter up to the selected brush size";
 "imageEditor.option.brushRoundness" = "Tip Roundness";
 "imageEditor.option.brushRoundnessValue" = "Roundness %d%%";
 "imageEditor.help.brushRoundness" = "Adjust how flat the brush and eraser tip appears";

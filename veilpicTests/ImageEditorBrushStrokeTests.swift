@@ -591,6 +591,76 @@ struct ImageEditorBrushStrokeTests {
         #expect(minimumFlowed[20 * 80 + 55] == flowed[20 * 80 + 55])
     }
 
+    @Test func sizeJitterIsDeterministicAndZeroRemainsPixelCompatible() {
+        let stamps = (0..<8).map {
+            ImageEditorBrushStrokeSample(point: CGPoint(x: 8 + $0 * 8, y: 16))
+        }
+        let baseline = ImageEditorBrushStrokeSettings(
+            diameter: 12,
+            hardness: 0.75,
+            opacity: 0.8,
+            flow: 0.6,
+            spacing: 0.25
+        )
+        var explicitZero = baseline
+        explicitZero.sizeJitter = 0
+        explicitZero.minimumDiameter = 1
+        let original = ImageEditorBrushStrokeKernel.coverage(
+            width: 80,
+            height: 32,
+            stamps: stamps,
+            settings: baseline
+        )
+        let zeroJitter = ImageEditorBrushStrokeKernel.coverage(
+            width: 80,
+            height: 32,
+            stamps: stamps,
+            settings: explicitZero
+        )
+
+        #expect(original == zeroJitter)
+        let sequence = stamps.indices.map {
+            ImageEditorBrushStrokeKernel.sizeJitterScale(stampIndex: $0, amount: 0.75)
+        }
+        #expect(sequence == stamps.indices.map {
+            ImageEditorBrushStrokeKernel.sizeJitterScale(stampIndex: $0, amount: 0.75)
+        })
+        #expect(Set(sequence).count > 4)
+        #expect(sequence.allSatisfy { $0 >= 0.25 && $0 <= 1 })
+    }
+
+    @Test func sizeJitterAndPressureShareTheMinimumDiameterFloor() {
+        let jitterOnly = (0..<32).map {
+            ImageEditorBrushStrokeKernel.resolvedDiameterScale(
+                mappedPressure: 1,
+                pressureControlsSize: false,
+                stampIndex: $0,
+                sizeJitter: 1,
+                minimumDiameter: 0.4
+            )
+        }
+        let pressureAndJitter = (0..<32).map {
+            ImageEditorBrushStrokeKernel.resolvedDiameterScale(
+                mappedPressure: 0.2,
+                pressureControlsSize: true,
+                stampIndex: $0,
+                sizeJitter: 1,
+                minimumDiameter: 0.4
+            )
+        }
+
+        #expect(jitterOnly.allSatisfy { $0 >= 0.4 && $0 <= 1 })
+        #expect(jitterOnly.contains(0.4))
+        #expect(pressureAndJitter.allSatisfy { $0 == 0.4 })
+        #expect(ImageEditorBrushStrokeKernel.resolvedDiameterScale(
+            mappedPressure: 0.1,
+            pressureControlsSize: false,
+            stampIndex: 7,
+            sizeJitter: 0,
+            minimumDiameter: 1
+        ) == 1)
+    }
+
     @Test func missingPressureFallsBackToFullPressureWithoutChangingMouseStrokes() {
         let settings = ImageEditorBrushStrokeSettings(
             diameter: 12,

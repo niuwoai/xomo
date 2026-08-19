@@ -630,6 +630,9 @@
 "imageEditor.option.smoothing" = "滑らかさ";
 "imageEditor.option.smoothingValue" = "滑らかさ %d%%";
 "imageEditor.help.brushSmoothing" = "ブラシストロークの間隔処理前にポインターの揺れを抑えます";
+"imageEditor.option.sizeJitter" = "サイズのジッター";
+"imageEditor.option.sizeJitterValue" = "ジッター %d%%";
+"imageEditor.help.sizeJitter" = "各ブラシマークのサイズを最小直径から選択したブラシサイズまで変化させます";
 "imageEditor.option.brushRoundness" = "ブラシ先端の真円率";
 "imageEditor.option.brushRoundnessValue" = "真円率 %d%%";
 "imageEditor.help.brushRoundness" = "ブラシと消しゴムの先端の扁平率を調整します";

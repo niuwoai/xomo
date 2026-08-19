@@ -67,6 +67,7 @@ struct ImageEditorBrushStrokeSettings: Equatable {
     var pressureControlsOpacity: Bool
     var pressureControlsFlow: Bool
     var pressureSensitivity: CGFloat
+    var sizeJitter: CGFloat
     var minimumDiameter: CGFloat
     var minimumOpacity: CGFloat
     var minimumFlow: CGFloat
@@ -86,6 +87,7 @@ struct ImageEditorBrushStrokeSettings: Equatable {
         pressureControlsOpacity: Bool = false,
         pressureControlsFlow: Bool = false,
         pressureSensitivity: CGFloat = 0.5,
+        sizeJitter: CGFloat = 0,
         minimumDiameter: CGFloat = 0,
         minimumOpacity: CGFloat = 0,
         minimumFlow: CGFloat = 0,
@@ -104,6 +106,7 @@ struct ImageEditorBrushStrokeSettings: Equatable {
         self.pressureControlsOpacity = pressureControlsOpacity
         self.pressureControlsFlow = pressureControlsFlow
         self.pressureSensitivity = pressureSensitivity
+        self.sizeJitter = sizeJitter
         self.minimumDiameter = minimumDiameter
         self.minimumOpacity = minimumOpacity
         self.minimumFlow = minimumFlow
@@ -125,6 +128,7 @@ struct ImageEditorBrushStrokeSettings: Equatable {
             pressureControlsOpacity: pressureControlsOpacity,
             pressureControlsFlow: pressureControlsFlow,
             pressureSensitivity: max(0, min(1, pressureSensitivity)),
+            sizeJitter: max(0, min(1, sizeJitter)),
             minimumDiameter: max(0, min(1, minimumDiameter)),
             minimumOpacity: max(0, min(1, minimumOpacity)),
             minimumFlow: max(0, min(1, minimumFlow)),
@@ -276,17 +280,18 @@ enum ImageEditorBrushStrokeKernel {
         let settings = settings.normalized
         var accumulated = [CGFloat](repeating: 0, count: width * height)
 
-        for stamp in stamps {
+        for (stampIndex, stamp) in stamps.enumerated() {
             let mappedPressure = mappedPressure(
                 stamp.pressure ?? 1,
                 sensitivity: settings.pressureSensitivity
             )
-            let diameterScale = settings.pressureControlsSize
-                ? pressureDiameterScale(
-                    mappedPressure: mappedPressure,
-                    minimumDiameter: settings.minimumDiameter
-                )
-                : 1
+            let diameterScale = resolvedDiameterScale(
+                mappedPressure: mappedPressure,
+                pressureControlsSize: settings.pressureControlsSize,
+                stampIndex: stampIndex,
+                sizeJitter: settings.sizeJitter,
+                minimumDiameter: settings.minimumDiameter
+            )
             let flowScale = settings.pressureControlsFlow
                 ? pressureFlowScale(
                     mappedPressure: mappedPressure,
@@ -347,6 +352,41 @@ enum ImageEditorBrushStrokeKernel {
         }
 
         return accumulated.map { UInt8(($0 * 255).rounded()) }
+    }
+
+    /// Returns a stable per-tip scale so replay, Undo/Redo, masks, and
+    /// airbrush pulses render identically without shared mutable RNG state.
+    static func sizeJitterScale(stampIndex: Int, amount: CGFloat) -> CGFloat {
+        let normalizedAmount = max(0, min(1, amount))
+        guard normalizedAmount > 0 else { return 1 }
+        var value = UInt64(truncatingIfNeeded: stampIndex) &+ 0x9E3779B97F4A7C15
+        value = (value ^ (value >> 30)) &* 0xBF58476D1CE4E5B9
+        value = (value ^ (value >> 27)) &* 0x94D049BB133111EB
+        value ^= value >> 31
+        let unit = CGFloat(value & ((UInt64(1) << 53) - 1)) / CGFloat(UInt64(1) << 53)
+        return 1 - normalizedAmount * unit
+    }
+
+    static func resolvedDiameterScale(
+        mappedPressure: CGFloat,
+        pressureControlsSize: Bool,
+        stampIndex: Int,
+        sizeJitter: CGFloat,
+        minimumDiameter: CGFloat
+    ) -> CGFloat {
+        let minimum = max(0, min(1, minimumDiameter))
+        let pressureScale = pressureControlsSize
+            ? pressureDiameterScale(
+                mappedPressure: mappedPressure,
+                minimumDiameter: minimum
+            )
+            : 1
+        let jitter = max(0, min(1, sizeJitter))
+        guard pressureControlsSize || jitter > 0 else { return 1 }
+        return max(
+            minimum,
+            pressureScale * sizeJitterScale(stampIndex: stampIndex, amount: jitter)
+        )
     }
 
     static func mappedPressure(_ pressure: CGFloat, sensitivity: CGFloat) -> CGFloat {
