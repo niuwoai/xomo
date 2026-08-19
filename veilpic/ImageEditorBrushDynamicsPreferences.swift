@@ -39,6 +39,10 @@ enum ImageEditorBrushAnglePresets {
     static let values: [CGFloat] = [-90, -45, 0, 45, 90]
 }
 
+enum ImageEditorBrushAngleJitterPresets {
+    static let values: [CGFloat] = [0, 10, 25, 50, 75, 100]
+}
+
 struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
     static let storageKey = "im.some.xomo.imageEditor.brushDynamicsPreferences"
     static let defaultValue = ImageEditorBrushDynamicsPreferences(
@@ -47,6 +51,7 @@ struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
         pressureControlsFlow: true,
         pressureSensitivity: 50,
         sizeJitter: 0,
+        angleJitter: 0,
         minimumDiameter: 0,
         minimumOpacity: 0,
         minimumFlow: 0,
@@ -65,6 +70,7 @@ struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
     var pressureControlsFlow: Bool
     var pressureSensitivity: Double
     var sizeJitter: Double
+    var angleJitter: Double
     var minimumDiameter: Double
     var minimumOpacity: Double
     var minimumFlow: Double
@@ -83,6 +89,7 @@ struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
         pressureControlsFlow: Bool,
         pressureSensitivity: Double,
         sizeJitter: Double = 0,
+        angleJitter: Double = 0,
         minimumDiameter: Double = 0,
         minimumOpacity: Double = 0,
         minimumFlow: Double = 0,
@@ -100,6 +107,7 @@ struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
         self.pressureControlsFlow = pressureControlsFlow
         self.pressureSensitivity = pressureSensitivity
         self.sizeJitter = sizeJitter
+        self.angleJitter = angleJitter
         self.minimumDiameter = minimumDiameter
         self.minimumOpacity = minimumOpacity
         self.minimumFlow = minimumFlow
@@ -119,6 +127,7 @@ struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
         case pressureControlsFlow
         case pressureSensitivity
         case sizeJitter
+        case angleJitter
         case minimumDiameter
         case minimumOpacity
         case minimumFlow
@@ -142,6 +151,7 @@ struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
         pressureControlsFlow = try values.decode(Bool.self, forKey: .pressureControlsFlow)
         pressureSensitivity = try values.decode(Double.self, forKey: .pressureSensitivity)
         sizeJitter = try values.decodeIfPresent(Double.self, forKey: .sizeJitter) ?? 0
+        angleJitter = try values.decodeIfPresent(Double.self, forKey: .angleJitter) ?? 0
         minimumDiameter = try values.decodeIfPresent(
             Double.self,
             forKey: .minimumDiameter
@@ -195,6 +205,7 @@ struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
             pressureControlsFlow: pressureControlsFlow,
             pressureSensitivity: max(0, min(100, pressureSensitivity)),
             sizeJitter: max(0, min(100, sizeJitter)),
+            angleJitter: max(0, min(100, angleJitter)),
             minimumDiameter: max(0, min(100, minimumDiameter)),
             minimumOpacity: max(0, min(100, minimumOpacity)),
             minimumFlow: max(0, min(100, minimumFlow)),

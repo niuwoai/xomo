@@ -1686,6 +1686,19 @@ struct ImageEditorView: View {
                         .tag(angle)
                 }
             }
+            Divider()
+            Picker(
+                L10n.text("imageEditor.option.angleJitter"),
+                selection: Binding(
+                    get: { viewModel.brushAngleJitter },
+                    set: { viewModel.setBrushAngleJitter($0) }
+                )
+            ) {
+                ForEach(ImageEditorBrushAngleJitterPresets.values, id: \.self) { jitter in
+                    Text(L10n.format("imageEditor.option.percentPreset", Int(jitter)))
+                        .tag(jitter)
+                }
+            }
         } label: {
             Text(
                 L10n.format(

@@ -637,9 +637,10 @@
 "imageEditor.option.brushRoundnessValue" = "圆度 %d%%";
 "imageEditor.help.brushRoundness" = "调整画笔和橡皮擦笔尖的扁平程度";
 "imageEditor.option.brushAngle" = "笔尖角度";
+"imageEditor.option.angleJitter" = "角度抖动";
 "imageEditor.option.degreePreset" = "%d°";
 "imageEditor.option.brushTipShapeValue" = "笔尖 %d%% / %d°";
-"imageEditor.help.brushTipShape" = "调整画笔和橡皮擦笔尖的圆度与角度；有效数位笔倾斜会接管角度";
+"imageEditor.help.brushTipShape" = "调整画笔和橡皮擦笔尖的圆度、基础角度与确定性角度抖动；有效数位笔倾斜会接管基础角度";
 "imageEditor.option.pressure" = "笔压";
 "imageEditor.option.pressureSize" = "控制大小";
 "imageEditor.option.pressureOpacity" = "控制不透明度";

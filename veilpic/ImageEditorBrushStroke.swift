@@ -68,6 +68,7 @@ struct ImageEditorBrushStrokeSettings: Equatable {
     var pressureControlsFlow: Bool
     var pressureSensitivity: CGFloat
     var sizeJitter: CGFloat
+    var angleJitter: CGFloat
     var minimumDiameter: CGFloat
     var minimumOpacity: CGFloat
     var minimumFlow: CGFloat
@@ -88,6 +89,7 @@ struct ImageEditorBrushStrokeSettings: Equatable {
         pressureControlsFlow: Bool = false,
         pressureSensitivity: CGFloat = 0.5,
         sizeJitter: CGFloat = 0,
+        angleJitter: CGFloat = 0,
         minimumDiameter: CGFloat = 0,
         minimumOpacity: CGFloat = 0,
         minimumFlow: CGFloat = 0,
@@ -107,6 +109,7 @@ struct ImageEditorBrushStrokeSettings: Equatable {
         self.pressureControlsFlow = pressureControlsFlow
         self.pressureSensitivity = pressureSensitivity
         self.sizeJitter = sizeJitter
+        self.angleJitter = angleJitter
         self.minimumDiameter = minimumDiameter
         self.minimumOpacity = minimumOpacity
         self.minimumFlow = minimumFlow
@@ -129,6 +132,7 @@ struct ImageEditorBrushStrokeSettings: Equatable {
             pressureControlsFlow: pressureControlsFlow,
             pressureSensitivity: max(0, min(1, pressureSensitivity)),
             sizeJitter: max(0, min(1, sizeJitter)),
+            angleJitter: max(0, min(1, angleJitter)),
             minimumDiameter: max(0, min(1, minimumDiameter)),
             minimumOpacity: max(0, min(1, minimumOpacity)),
             minimumFlow: max(0, min(1, minimumFlow)),
@@ -315,6 +319,10 @@ enum ImageEditorBrushStrokeKernel {
             )
             let tipDirection = resolvedTipDirection(
                 manualAngleDegrees: settings.tipAngleDegrees,
+                jitterOffsetDegrees: angleJitterOffsetDegrees(
+                    stampIndex: stampIndex,
+                    amount: settings.angleJitter
+                ),
                 tilt: stamp.tilt,
                 tiltControlsShape: settings.tiltControlsShape
             )
@@ -359,12 +367,29 @@ enum ImageEditorBrushStrokeKernel {
     static func sizeJitterScale(stampIndex: Int, amount: CGFloat) -> CGFloat {
         let normalizedAmount = max(0, min(1, amount))
         guard normalizedAmount > 0 else { return 1 }
-        var value = UInt64(truncatingIfNeeded: stampIndex) &+ 0x9E3779B97F4A7C15
+        let unit = deterministicUnit(stampIndex: stampIndex, salt: 0)
+        return 1 - normalizedAmount * unit
+    }
+
+    /// Returns a stable signed orientation offset. A value of 100% spans the
+    /// full 360-degree orientation range without changing the base tip cursor.
+    static func angleJitterOffsetDegrees(stampIndex: Int, amount: CGFloat) -> CGFloat {
+        let normalizedAmount = max(0, min(1, amount))
+        guard normalizedAmount > 0 else { return 0 }
+        let unit = deterministicUnit(
+            stampIndex: stampIndex,
+            salt: 0xA0761D6478BD642F
+        )
+        return (unit * 2 - 1) * 180 * normalizedAmount
+    }
+
+    private static func deterministicUnit(stampIndex: Int, salt: UInt64) -> CGFloat {
+        var value = UInt64(truncatingIfNeeded: stampIndex) ^ salt
+        value &+= 0x9E3779B97F4A7C15
         value = (value ^ (value >> 30)) &* 0xBF58476D1CE4E5B9
         value = (value ^ (value >> 27)) &* 0x94D049BB133111EB
         value ^= value >> 31
-        let unit = CGFloat(value & ((UInt64(1) << 53) - 1)) / CGFloat(UInt64(1) << 53)
-        return 1 - normalizedAmount * unit
+        return CGFloat(value & ((UInt64(1) << 53) - 1)) / CGFloat(UInt64(1) << 53)
     }
 
     static func resolvedDiameterScale(
@@ -546,6 +571,7 @@ enum ImageEditorBrushStrokeKernel {
 
     private static func resolvedTipDirection(
         manualAngleDegrees: CGFloat,
+        jitterOffsetDegrees: CGFloat,
         tilt: ImageEditorStylusTilt?,
         tiltControlsShape: Bool
     ) -> CGVector {
@@ -554,7 +580,7 @@ enum ImageEditorBrushStrokeKernel {
             tilt: tilt,
             tiltControlsShape: tiltControlsShape
         )
-        let radians = angle * .pi / 180
+        let radians = (angle + jitterOffsetDegrees) * .pi / 180
         return CGVector(
             dx: cos(radians),
             dy: sin(radians)

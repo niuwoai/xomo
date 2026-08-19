@@ -4729,6 +4729,12 @@ struct ImageEditorScopeTests {
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
             encoding: .utf8
         )
+        let viewModelSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent(
+                "veilpic/ImageEditorViewModel.swift"
+            ),
+            encoding: .utf8
+        )
         let menuStart = try #require(
             source.range(of: "private var brushRoundnessMenu: some View")
         )
@@ -4746,8 +4752,16 @@ struct ImageEditorScopeTests {
         #expect(source.contains("image-editor-brush-size-jitter"))
         #expect(menuSource.contains("ImageEditorBrushRoundnessPresets.values"))
         #expect(menuSource.contains("ImageEditorBrushAnglePresets.values"))
+        #expect(menuSource.contains("ImageEditorBrushAngleJitterPresets.values"))
         #expect(menuSource.contains("viewModel.setBrushTipRoundness($0)"))
         #expect(menuSource.contains("viewModel.setBrushTipAngleDegrees($0)"))
+        #expect(menuSource.contains("viewModel.setBrushAngleJitter($0)"))
+        #expect(menuSource.contains("imageEditor.option.angleJitter"))
+        #expect(
+            viewModelSource.components(
+                separatedBy: "angleJitter: brushAngleJitter / 100"
+            ).count == 4
+        )
         #expect(menuSource.contains("imageEditor.option.brushTipShapeValue"))
         #expect(menuSource.contains(".focusable(false)"))
         #expect(menuSource.contains("image-editor-brush-roundness"))

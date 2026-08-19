@@ -48,6 +48,7 @@ struct ImageEditorBrushPreset: Identifiable, Codable, Equatable {
     let pressureControlsFlow: Bool
     let pressureSensitivity: CGFloat
     let sizeJitter: CGFloat
+    let angleJitter: CGFloat
     let minimumDiameter: CGFloat
     let minimumOpacity: CGFloat
     let minimumFlow: CGFloat
@@ -69,6 +70,7 @@ struct ImageEditorBrushPreset: Identifiable, Codable, Equatable {
         pressureControlsFlow: Bool = true,
         pressureSensitivity: CGFloat = 50,
         sizeJitter: CGFloat = 0,
+        angleJitter: CGFloat = 0,
         minimumDiameter: CGFloat = 0,
         minimumOpacity: CGFloat = 0,
         minimumFlow: CGFloat = 0,
@@ -89,6 +91,7 @@ struct ImageEditorBrushPreset: Identifiable, Codable, Equatable {
         self.pressureControlsFlow = pressureControlsFlow
         self.pressureSensitivity = pressureSensitivity
         self.sizeJitter = sizeJitter
+        self.angleJitter = angleJitter
         self.minimumDiameter = minimumDiameter
         self.minimumOpacity = minimumOpacity
         self.minimumFlow = minimumFlow
@@ -111,6 +114,7 @@ struct ImageEditorBrushPreset: Identifiable, Codable, Equatable {
         case pressureControlsFlow
         case pressureSensitivity
         case sizeJitter
+        case angleJitter
         case minimumDiameter
         case minimumOpacity
         case minimumFlow
@@ -148,6 +152,10 @@ struct ImageEditorBrushPreset: Identifiable, Codable, Equatable {
         sizeJitter = try values.decodeIfPresent(
             CGFloat.self,
             forKey: .sizeJitter
+        ) ?? 0
+        angleJitter = try values.decodeIfPresent(
+            CGFloat.self,
+            forKey: .angleJitter
         ) ?? 0
         minimumDiameter = try values.decodeIfPresent(
             CGFloat.self,
@@ -200,6 +208,7 @@ struct ImageEditorBrushPreset: Identifiable, Codable, Equatable {
             pressureControlsFlow: pressureControlsFlow,
             pressureSensitivity: max(0, min(100, pressureSensitivity)),
             sizeJitter: max(0, min(100, sizeJitter)),
+            angleJitter: max(0, min(100, angleJitter)),
             minimumDiameter: max(0, min(100, minimumDiameter)),
             minimumOpacity: max(0, min(100, minimumOpacity)),
             minimumFlow: max(0, min(100, minimumFlow)),
@@ -221,6 +230,7 @@ struct ImageEditorBrushPreset: Identifiable, Codable, Equatable {
         pressureControlsFlow: Bool,
         pressureSensitivity: CGFloat,
         sizeJitter: CGFloat,
+        angleJitter: CGFloat,
         minimumDiameter: CGFloat,
         minimumOpacity: CGFloat,
         minimumFlow: CGFloat,
@@ -239,6 +249,7 @@ struct ImageEditorBrushPreset: Identifiable, Codable, Equatable {
             && self.pressureControlsFlow == pressureControlsFlow
             && abs(self.pressureSensitivity - pressureSensitivity) < tolerance
             && abs(self.sizeJitter - sizeJitter) < tolerance
+            && abs(self.angleJitter - angleJitter) < tolerance
             && abs(self.minimumDiameter - minimumDiameter) < tolerance
             && abs(self.minimumOpacity - minimumOpacity) < tolerance
             && abs(self.minimumFlow - minimumFlow) < tolerance

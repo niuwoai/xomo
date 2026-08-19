@@ -144,6 +144,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var brushPressureControlsFlow = true
     @Published var brushPressureSensitivity: CGFloat = 50
     @Published var brushSizeJitter: CGFloat = 0
+    @Published var brushAngleJitter: CGFloat = 0
     @Published var brushMinimumDiameter: CGFloat = 0
     @Published var brushMinimumOpacity: CGFloat = 0
     @Published var brushMinimumFlow: CGFloat = 0
@@ -607,6 +608,7 @@ final class ImageEditorViewModel: ObservableObject {
         brushPressureControlsFlow = brushDynamicsPreferences.pressureControlsFlow
         brushPressureSensitivity = CGFloat(brushDynamicsPreferences.pressureSensitivity)
         brushSizeJitter = CGFloat(brushDynamicsPreferences.sizeJitter)
+        brushAngleJitter = CGFloat(brushDynamicsPreferences.angleJitter)
         brushMinimumDiameter = CGFloat(brushDynamicsPreferences.minimumDiameter)
         brushMinimumOpacity = CGFloat(brushDynamicsPreferences.minimumOpacity)
         brushMinimumFlow = CGFloat(brushDynamicsPreferences.minimumFlow)
@@ -661,6 +663,7 @@ final class ImageEditorViewModel: ObservableObject {
         brushPressureControlsFlow = brushDynamicsPreferences.pressureControlsFlow
         brushPressureSensitivity = CGFloat(brushDynamicsPreferences.pressureSensitivity)
         brushSizeJitter = CGFloat(brushDynamicsPreferences.sizeJitter)
+        brushAngleJitter = CGFloat(brushDynamicsPreferences.angleJitter)
         brushMinimumDiameter = CGFloat(brushDynamicsPreferences.minimumDiameter)
         brushMinimumOpacity = CGFloat(brushDynamicsPreferences.minimumOpacity)
         brushMinimumFlow = CGFloat(brushDynamicsPreferences.minimumFlow)
@@ -2909,6 +2912,7 @@ final class ImageEditorViewModel: ObservableObject {
             pressureControlsFlow: brushPressureControlsFlow,
             pressureSensitivity: brushPressureSensitivity,
             sizeJitter: brushSizeJitter,
+            angleJitter: brushAngleJitter,
             minimumDiameter: brushMinimumDiameter,
             minimumOpacity: brushMinimumOpacity,
             minimumFlow: brushMinimumFlow,
@@ -3062,6 +3066,7 @@ final class ImageEditorViewModel: ObservableObject {
         brushPressureControlsFlow = preset.pressureControlsFlow
         brushPressureSensitivity = max(0, min(100, preset.pressureSensitivity))
         brushSizeJitter = max(0, min(100, preset.sizeJitter))
+        brushAngleJitter = max(0, min(100, preset.angleJitter))
         brushMinimumDiameter = max(0, min(100, preset.minimumDiameter))
         brushMinimumOpacity = max(0, min(100, preset.minimumOpacity))
         brushMinimumFlow = max(0, min(100, preset.minimumFlow))
@@ -3102,6 +3107,7 @@ final class ImageEditorViewModel: ObservableObject {
             pressureControlsFlow: brushPressureControlsFlow,
             pressureSensitivity: brushPressureSensitivity,
             sizeJitter: brushSizeJitter,
+            angleJitter: brushAngleJitter,
             minimumDiameter: brushMinimumDiameter,
             minimumOpacity: brushMinimumOpacity,
             minimumFlow: brushMinimumFlow,
@@ -3924,6 +3930,7 @@ final class ImageEditorViewModel: ObservableObject {
             pressureControlsFlow: brushPressureControlsFlow,
             pressureSensitivity: Double(brushPressureSensitivity),
             sizeJitter: Double(brushSizeJitter),
+            angleJitter: Double(brushAngleJitter),
             minimumDiameter: Double(brushMinimumDiameter),
             minimumOpacity: Double(brushMinimumOpacity),
             minimumFlow: Double(brushMinimumFlow),
@@ -4067,6 +4074,13 @@ final class ImageEditorViewModel: ObservableObject {
         let normalized = max(-180, min(180, angle))
         guard brushTipAngleDegrees != normalized else { return }
         brushTipAngleDegrees = normalized
+        persistBrushDynamicsPreferences()
+    }
+
+    func setBrushAngleJitter(_ jitter: CGFloat) {
+        let normalized = max(0, min(100, jitter))
+        guard brushAngleJitter != normalized else { return }
+        brushAngleJitter = normalized
         persistBrushDynamicsPreferences()
     }
 
@@ -6174,6 +6188,7 @@ final class ImageEditorViewModel: ObservableObject {
                 pressureControlsFlow: brushPressureControlsFlow,
                 pressureSensitivity: brushPressureSensitivity / 100,
                 sizeJitter: brushSizeJitter / 100,
+                angleJitter: brushAngleJitter / 100,
                 minimumDiameter: brushMinimumDiameter / 100,
                 minimumOpacity: brushMinimumOpacity / 100,
                 minimumFlow: brushMinimumFlow / 100,
@@ -6438,6 +6453,7 @@ final class ImageEditorViewModel: ObservableObject {
             pressureControlsFlow: brushPressureControlsFlow,
             pressureSensitivity: brushPressureSensitivity / 100,
             sizeJitter: brushSizeJitter / 100,
+            angleJitter: brushAngleJitter / 100,
             minimumDiameter: brushMinimumDiameter / 100,
             minimumOpacity: brushMinimumOpacity / 100,
             minimumFlow: brushMinimumFlow / 100,
@@ -8396,6 +8412,7 @@ final class ImageEditorViewModel: ObservableObject {
             pressureControlsFlow: brushPressureControlsFlow,
             pressureSensitivity: brushPressureSensitivity / 100,
             sizeJitter: brushSizeJitter / 100,
+            angleJitter: brushAngleJitter / 100,
             minimumDiameter: brushMinimumDiameter / 100,
             minimumOpacity: brushMinimumOpacity / 100,
             minimumFlow: brushMinimumFlow / 100,

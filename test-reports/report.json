@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-19 15:45:35 +0800",
+  "generated_at": "2026-08-19 16:17:12 +0800",
   "total": 88,
   "passed": 88,
   "failed": 0,
@@ -15,7 +15,7 @@
       "file": "ImageEditorCanvasCursorTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.852,
+      "duration": 4.162,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorCanvasCursorTests.activeLayerTransformKeepsItsCursorAfterPointerLeavesTheHandle.log"
@@ -27,7 +27,7 @@
       "file": "ImageEditorCanvasCursorTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 4.598,
+      "duration": 4.312,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorCanvasCursorTests.appAndWindowDeactivationCancelUncommittedCanvasPointerWork.log"
@@ -39,7 +39,7 @@
       "file": "ImageEditorCanvasCursorTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 4.719,
+      "duration": 4.105,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorCanvasCursorTests.appAndWindowDeactivationEndNativeMiddleMousePanning.log"
@@ -51,7 +51,7 @@
       "file": "ImageEditorCanvasCursorTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.437,
+      "duration": 3.616,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorCanvasCursorTests.applicationDeactivationCancelsTheNativeObjectMoveCapture.log"
@@ -63,7 +63,7 @@
       "file": "ImageEditorCanvasCursorTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.483,
+      "duration": 10.184,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorCanvasCursorTests.arrowNudgeUsesPhotoshopStyleModifierDistances.log"
@@ -75,7 +75,7 @@
       "file": "ImageEditorCanvasCursorTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 11.04,
+      "duration": 4.507,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorCanvasCursorTests.blockedDirectSelectionUsesForbiddenCursorWithoutOverridingHigherModes.log"
@@ -87,7 +87,7 @@
       "file": "ImageEditorCanvasCursorTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.63,
+      "duration": 4.282,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorCanvasCursorTests.brushCommitKeepsAStartAndEndFallbackWhenDragUpdatesAreCoalesced.log"
@@ -99,7 +99,7 @@
       "file": "ImageEditorCanvasCursorTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 4.999,
+      "duration": 3.847,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorCanvasCursorTests.canvasBridgeReportsOnlyOwnedWindowAppAndSingleDetachInterruptions.log"
@@ -111,7 +111,7 @@
       "file": "ImageEditorCanvasCursorTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 6.005,
+      "duration": 4.039,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorCanvasCursorTests.canvasContentHitSharesTheSameSemanticForCursorPaths.log"
@@ -123,7 +123,7 @@
       "file": "ImageEditorCanvasCursorTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.588,
+      "duration": 4.373,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorCanvasCursorTests.canvasMoveGestureYieldsToTransformHandles.log"
@@ -135,7 +135,7 @@
       "file": "ImageEditorCanvasCursorTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 5.578,
+      "duration": 9.747,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorCanvasCursorTests.capsLockSwitchesEveryBrushLikeToolToPrecisionCursor.log"
@@ -147,7 +147,7 @@
       "file": "ImageEditorCanvasCursorTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 4.935,
+      "duration": 4.063,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorCanvasCursorTests.colorSamplerCursorDistinguishesPlacementMoveAndOptionRemoval.log"
@@ -159,7 +159,7 @@
       "file": "ImageEditorCanvasCursorTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.371,
+      "duration": 4.305,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorCanvasCursorTests.commandJUsesOnlyTheWindowShortcutMonitor.log"
@@ -171,7 +171,7 @@
       "file": "ImageEditorCanvasCursorTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 4.099,
+      "duration": 4.278,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorCanvasCursorTests.commandShiftExtendsDeepSelectionWithoutClaimingOtherCombinations.log"
@@ -183,7 +183,7 @@
       "file": "ImageEditorCanvasCursorTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.695,
+      "duration": 4.739,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorCanvasCursorTests.compactLayerTransformControlsPreserveAnInteriorMoveTarget.log"
@@ -195,7 +195,7 @@
       "file": "ImageEditorCanvasCursorTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 6.166,
+      "duration": 8.114,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorCanvasCursorTests.componentLibraryCursorLifecycleIsWiredToProductionEvents.log"
@@ -207,7 +207,7 @@
       "file": "ImageEditorCanvasCursorTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.574,
+      "duration": 12.518,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorCanvasCursorTests.componentLibraryCursorRectOwnsAnArrowAndTracksCursorUpdates.log"
@@ -219,7 +219,7 @@
       "file": "ImageEditorCanvasCursorTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.749,
+      "duration": 4.21,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorCanvasCursorTests.componentLibraryLifecycleAlwaysRestoresSystemArrow.log"
@@ -231,7 +231,7 @@
       "file": "ImageEditorCanvasCursorTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 5.04,
+      "duration": 4.468,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorCanvasCursorTests.componentLibraryNeverLeaksAnyPreviousToolOrHoverCursor.log"
@@ -243,7 +243,7 @@
       "file": "ImageEditorCanvasCursorTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.369,
+      "duration": 5.374,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorCanvasCursorTests.componentLibraryUsesArrowExceptForAnActualTransformControl.log"
@@ -255,7 +255,7 @@
       "file": "ImageEditorCanvasCursorTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.598,
+      "duration": 6.198,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorCanvasCursorTests.componentLibraryUsesClosedHandOnlyDuringCanvasPan.log"
@@ -267,7 +267,7 @@
       "file": "ImageEditorCanvasCursorTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.282,
+      "duration": 3.756,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorCanvasCursorTests.componentLibraryUsesSystemArrowUntilDragOrCanvasPanBegins.log"
@@ -279,7 +279,7 @@
       "file": "ImageEditorCanvasCursorTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.585,
+      "duration": 3.979,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorCanvasCursorTests.componentTilesDoNotCombineNativeButtonTrackingWithDragSources.log"
@@ -291,7 +291,7 @@
       "file": "ImageEditorCanvasCursorTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.649,
+      "duration": 6.861,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorCanvasCursorTests.cropHandlesUseContextualResizeCursors.log"
@@ -303,7 +303,7 @@
       "file": "ImageEditorCanvasCursorTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.39,
+      "duration": 3.794,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorCanvasCursorTests.cursorRectOnlyTreatsTheRenderedImageAsDrawableCanvas.log"
@@ -315,7 +315,7 @@
       "file": "ImageEditorCanvasCursorTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 7.434,
+      "duration": 3.681,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorCanvasCursorTests.deepSelectedLayerCursorUsesItsOwnMovabilityBeforeWholeComponentLocks.log"
@@ -327,7 +327,7 @@
       "file": "ImageEditorCanvasCursorTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 9.907,
+      "duration": 3.766,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorCanvasCursorTests.directSelectionUsesAWhiteEditingArrowAndSharesTheAGroup.log"
@@ -339,7 +339,7 @@
       "file": "ImageEditorCanvasCursorTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.379,
+      "duration": 3.997,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorCanvasCursorTests.draggingAnObjectKeepsMoveCursorAcrossSidebarModes.log"
@@ -351,7 +351,7 @@
       "file": "ImageEditorCanvasCursorTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 5.529,
+      "duration": 3.954,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorCanvasCursorTests.editorWindowDeactivationCancelsOnlyItsNativeObjectMoveCapture.log"
@@ -363,7 +363,7 @@
       "file": "ImageEditorCanvasCursorTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 11.001,
+      "duration": 10.264,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorCanvasCursorTests.eraseToHistoryAddsACompactBadgeWithoutBreakingCursorPriority.log"
@@ -375,7 +375,7 @@
       "file": "ImageEditorCanvasCursorTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.672,
+      "duration": 3.927,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorCanvasCursorTests.everyKeyboardDeactivationPathUsesTheAtomicTransientReset.log"
@@ -387,7 +387,7 @@
       "file": "ImageEditorCanvasCursorTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.269,
+      "duration": 3.827,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorCanvasCursorTests.interactionModeSeparatesComponentLibraryFromToolsAndPan.log"
@@ -399,7 +399,7 @@
       "file": "ImageEditorCanvasCursorTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.81,
+      "duration": 3.617,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorCanvasCursorTests.interruptedMiddleMouseCaptureEndsOnlyAnActivePan.log"
@@ -411,7 +411,7 @@
       "file": "ImageEditorCanvasCursorTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.572,
+      "duration": 3.574,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorCanvasCursorTests.interruptedObjectCaptureCancelsOnlyAnActiveMove.log"
@@ -423,7 +423,7 @@
       "file": "ImageEditorCanvasCursorTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.51,
+      "duration": 3.768,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorCanvasCursorTests.interruptedPrimaryPointerCaptureCancelsExactlyItsActiveTransaction.log"
@@ -435,7 +435,7 @@
       "file": "ImageEditorCanvasCursorTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.495,
+      "duration": 3.837,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorCanvasCursorTests.keyboardMonitorReleasesSpacebarPanWhenItsWindowDeactivatesOrDetaches.log"
@@ -447,7 +447,7 @@
       "file": "ImageEditorCanvasCursorTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.778,
+      "duration": 4.772,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorCanvasCursorTests.layerChooserUsesNativeRightClickAndMacControlClickOnly.log"
@@ -459,7 +459,7 @@
       "file": "ImageEditorCanvasCursorTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.453,
+      "duration": 4.882,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorCanvasCursorTests.layerTransformControlsUseFamiliarResizeAndRotateCursors.log"
@@ -471,7 +471,7 @@
       "file": "ImageEditorCanvasCursorTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.635,
+      "duration": 5.17,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorCanvasCursorTests.layerTransformGeometryFindsTheNearestVisibleControl.log"
@@ -483,7 +483,7 @@
       "file": "ImageEditorCanvasCursorTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.521,
+      "duration": 3.462,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorCanvasCursorTests.manualRoundnessAndAngleUpdateBrushAndEraserWhileTiltTakesPriority.log"
@@ -495,7 +495,7 @@
       "file": "ImageEditorCanvasCursorTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.788,
+      "duration": 9.681,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorCanvasCursorTests.marqueeUsesTheConventionalCrosshairForEveryBaseShape.log"
@@ -507,7 +507,7 @@
       "file": "ImageEditorCanvasCursorTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 8.437,
+      "duration": 4.253,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorCanvasCursorTests.moveCursorDoesNotClaimOccludedOrPositionLockedContent.log"
@@ -519,7 +519,7 @@
       "file": "ImageEditorCanvasCursorTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 6.256,
+      "duration": 5.994,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorCanvasCursorTests.moveCursorHitTestUsesComponentGeometryWithoutChangingSelection.log"
@@ -531,7 +531,7 @@
       "file": "ImageEditorCanvasCursorTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 9.524,
+      "duration": 4.491,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorCanvasCursorTests.moveCursorUsesTheFrontmostLockedLayerOverAnUnlockedLayer.log"
@@ -543,7 +543,7 @@
       "file": "ImageEditorCanvasCursorTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.901,
+      "duration": 3.739,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorCanvasCursorTests.moveToolDoubleClickBeginsDirectEditingOnlyInPlainToolsMode.log"
@@ -555,7 +555,7 @@
       "file": "ImageEditorCanvasCursorTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.429,
+      "duration": 3.764,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorCanvasCursorTests.moveToolShiftHoverUsesSelectionBadgesButComponentsStayArrow.log"
@@ -567,7 +567,7 @@
       "file": "ImageEditorCanvasCursorTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.68,
+      "duration": 7.873,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorCanvasCursorTests.moveToolShowsCopyBadgeOnlyAfterAnOptionDragStarts.log"
@@ -579,7 +579,7 @@
       "file": "ImageEditorCanvasCursorTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.217,
+      "duration": 4.244,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorCanvasCursorTests.nativeCanvasBridgeBuildsAndRoutesTheLayerChooserMenu.log"
@@ -591,7 +591,7 @@
       "file": "ImageEditorCanvasCursorTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 4.905,
+      "duration": 3.731,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorCanvasCursorTests.objectDragReleaseKeepsTheLocallyOwnedEventStreamBalanced.log"
@@ -603,7 +603,7 @@
       "file": "ImageEditorCanvasCursorTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 4.371,
+      "duration": 3.924,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorCanvasCursorTests.objectDragStartsOnlyAfterThePointerLeavesClickTolerance.log"
@@ -615,7 +615,7 @@
       "file": "ImageEditorCanvasCursorTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 4.04,
+      "duration": 3.704,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorCanvasCursorTests.optionBreakHandleCursorAppearsOnlyForPathToolsAndNeverComponents.log"
@@ -627,7 +627,7 @@
       "file": "ImageEditorCanvasCursorTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 5.235,
+      "duration": 3.786,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorCanvasCursorTests.optionCloneDragAcceptsShiftConstraintButRejectsConflictingModifiers.log"
@@ -639,7 +639,7 @@
       "file": "ImageEditorCanvasCursorTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 4.33,
+      "duration": 4.035,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorCanvasCursorTests.optionCloneWaitsForARealDragBeforeActivating.log"
@@ -651,7 +651,7 @@
       "file": "ImageEditorCanvasCursorTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 4.588,
+      "duration": 9.873,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorCanvasCursorTests.patchCursorCannotOverrideCanvasBoundsComponentsOrPan.log"
@@ -663,7 +663,7 @@
       "file": "ImageEditorCanvasCursorTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 4.012,
+      "duration": 9.912,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorCanvasCursorTests.patchCursorPhaseIsWiredToEveryCanvasCursorPath.log"
@@ -675,7 +675,7 @@
       "file": "ImageEditorCanvasCursorTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.767,
+      "duration": 4.0,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorCanvasCursorTests.patchCursorPhaseLocksTheActiveGestureAndRejectsBlockedEdits.log"
@@ -687,7 +687,7 @@
       "file": "ImageEditorCanvasCursorTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.691,
+      "duration": 7.975,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorCanvasCursorTests.patchCursorUsesLassoArrowMoveAndForbiddenActionSemantics.log"
@@ -699,7 +699,7 @@
       "file": "ImageEditorCanvasCursorTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.569,
+      "duration": 4.11,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorCanvasCursorTests.patchGestureStartRejectsBlockedSelectionsButStillAllowsReplacementLasso.log"
@@ -711,7 +711,7 @@
       "file": "ImageEditorCanvasCursorTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 6.503,
+      "duration": 3.597,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorCanvasCursorTests.pathAnchorLifecycleCancellationReleasesOnlyForAFreshPointerSequence.log"
@@ -723,7 +723,7 @@
       "file": "ImageEditorCanvasCursorTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 11.277,
+      "duration": 4.034,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorCanvasCursorTests.pathSelectionUsesTheFamiliarSystemArrowAndPhotoshopShortcut.log"
@@ -735,7 +735,7 @@
       "file": "ImageEditorCanvasCursorTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 5.257,
+      "duration": 4.521,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorCanvasCursorTests.penActionCursorStateIsWiredToCursorRectAndImmediateUpdates.log"
@@ -747,7 +747,7 @@
       "file": "ImageEditorCanvasCursorTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.962,
+      "duration": 3.841,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorCanvasCursorTests.penAnchorAutoDeletePolicySeparatesShortClickFromCommittedDrag.log"
@@ -759,7 +759,7 @@
       "file": "ImageEditorCanvasCursorTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 4.577,
+      "duration": 3.867,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorCanvasCursorTests.penAnchorDeletionCursorUsesMinusAndHonorsBlockedAndComponentModes.log"
@@ -771,7 +771,7 @@
       "file": "ImageEditorCanvasCursorTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 4.404,
+      "duration": 3.675,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorCanvasCursorTests.penContinuationCursorUsesConnectorAndHonorsBlockedAndComponentModes.log"
@@ -783,7 +783,7 @@
       "file": "ImageEditorCanvasCursorTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.666,
+      "duration": 4.203,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorCanvasCursorTests.penCursorDistinguishesConstrainedPlacementAndCloseTarget.log"
@@ -795,7 +795,7 @@
       "file": "ImageEditorCanvasCursorTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 4.543,
+      "duration": 3.712,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorCanvasCursorTests.penSegmentInsertionCursorUsesAddBadgeAndHonorsBlockedAndComponentModes.log"
@@ -807,7 +807,7 @@
       "file": "ImageEditorCanvasCursorTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.581,
+      "duration": 4.043,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorCanvasCursorTests.pointerDownRefreshesTheSemanticCursorBeforeCaptureArbitration.log"
@@ -819,7 +819,7 @@
       "file": "ImageEditorCanvasCursorTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.173,
+      "duration": 3.646,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorCanvasCursorTests.pressureCursorDiameterTracksBrushFamiliesAndKeepsComponentArrow.log"
@@ -831,7 +831,7 @@
       "file": "ImageEditorCanvasCursorTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.694,
+      "duration": 4.077,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorCanvasCursorTests.primaryDrawingToolsUseBalancedAppKitPointerCaptureOnlyInToolsMode.log"
@@ -843,7 +843,7 @@
       "file": "ImageEditorCanvasCursorTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.683,
+      "duration": 4.956,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorCanvasCursorTests.sampledBrushCursorRefreshIsWiredToModifierAndExplicitSourceChanges.log"
@@ -855,7 +855,7 @@
       "file": "ImageEditorCanvasCursorTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 5.157,
+      "duration": 4.574,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorCanvasCursorTests.sampledBrushSourcePickingCannotOverrideHigherPriorityCanvasModes.log"
@@ -867,7 +867,7 @@
       "file": "ImageEditorCanvasCursorTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 6.932,
+      "duration": 5.728,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorCanvasCursorTests.sampledBrushSourcePickingUsesPrecisionCursorWithoutChangingPaintFootprints.log"
@@ -879,7 +879,7 @@
       "file": "ImageEditorCanvasCursorTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 4.101,
+      "duration": 4.054,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorCanvasCursorTests.sampledBrushSourcePolicyKeepsSpotHealingInPaintMode.log"
@@ -891,7 +891,7 @@
       "file": "ImageEditorCanvasCursorTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 4.262,
+      "duration": 10.266,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorCanvasCursorTests.selectionCursorModesReflectPhotoshopModifierSemantics.log"
@@ -903,7 +903,7 @@
       "file": "ImageEditorCanvasCursorTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.612,
+      "duration": 5.119,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorCanvasCursorTests.selectionModifierCursorStillCommunicatesAddSubtractModes.log"
@@ -915,7 +915,7 @@
       "file": "ImageEditorCanvasCursorTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 4.514,
+      "duration": 4.172,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorCanvasCursorTests.selectionToolsUseRecognizablePointersInsteadOfOneGenericShape.log"
@@ -927,7 +927,7 @@
       "file": "ImageEditorCanvasCursorTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 4.852,
+      "duration": 4.228,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorCanvasCursorTests.shiftCanBeginAConstrainedDragWhileReservedModifiersAndHandlesWin.log"
@@ -939,7 +939,7 @@
       "file": "ImageEditorCanvasCursorTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.498,
+      "duration": 3.616,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorCanvasCursorTests.tiltChangesOnlyBrushAndEraserFootprintCursors.log"
@@ -951,7 +951,7 @@
       "file": "ImageEditorCanvasCursorTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.28,
+      "duration": 3.626,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorCanvasCursorTests.tiltCursorFootprintMatchesTheRenderedBrushTipAndKeepsMouseCircular.log"
@@ -963,7 +963,7 @@
       "file": "ImageEditorCanvasCursorTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.536,
+      "duration": 4.343,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorCanvasCursorTests.toolCursorFallsBackToSystemArrowOutsideDrawableCanvas.log"
@@ -975,7 +975,7 @@
       "file": "ImageEditorCanvasCursorTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.687,
+      "duration": 3.96,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorCanvasCursorTests.toolCursorsUseFamiliarPrecisionAndBrushConventions.log"
@@ -987,7 +987,7 @@
       "file": "ImageEditorCanvasCursorTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 6.32,
+      "duration": 4.211,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorCanvasCursorTests.toolsTabPreservesSelectedToolCursorAndPanOverride.log"
@@ -999,7 +999,7 @@
       "file": "ImageEditorCanvasCursorTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.643,
+      "duration": 4.019,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorCanvasCursorTests.transformControlCursorOverridesComponentArrowOutsideDrawableCanvas.log"
@@ -1011,7 +1011,7 @@
       "file": "ImageEditorCanvasCursorTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.689,
+      "duration": 4.664,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorCanvasCursorTests.transformCursorHitTestingMatchesVisibleControlRules.log"
@@ -1023,7 +1023,7 @@
       "file": "ImageEditorCanvasCursorTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.485,
+      "duration": 3.664,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorCanvasCursorTests.transientKeyboardResetAlwaysClearsModifiersAndStopsOnlyAnActiveTemporaryHand.log"
@@ -1035,7 +1035,7 @@
       "file": "ImageEditorCanvasCursorTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.544,
+      "duration": 3.867,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorCanvasCursorTests.visualResizeHandlesMapToTheTransformModelsVerticalAxis.log"
@@ -1047,7 +1047,7 @@
       "file": "ImageEditorCanvasCursorTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.667,
+      "duration": 7.884,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorCanvasCursorTests.zoomCursorReflectsOptionZoomOutMode.log"
@@ -1059,7 +1059,7 @@
       "file": "ImageEditorCanvasCursorTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.767,
+      "duration": 7.274,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorCanvasCursorTests.zoomDirectionUsesOptionForZoomOut.log"
