@@ -82,6 +82,121 @@ struct ImageEditorBrushStrokeTests {
         #expect(screen.alpha[center] == .max)
     }
 
+    @Test func airbrushTimePulsesRemainDiscreteAndBuildUpToTheOpacityLimit() throws {
+        let size = CGSize(width: 24, height: 24)
+        let point = CGPoint(x: 12, y: 12)
+        let source = NSImage.transparent(size: size)
+        let settings = ImageEditorBrushStrokeSettings(
+            diameter: 8,
+            hardness: 1,
+            opacity: 0.7,
+            flow: 0.2,
+            spacing: 0.25
+        )
+        let ordinary = try #require(source.withBrushStroke(
+            samples: [ImageEditorBrushStrokeSample(point: point)],
+            color: .red,
+            settings: settings,
+            erase: false
+        ))
+        let airbrushed = try #require(source.withBrushStroke(
+            samples: [ImageEditorBrushStrokeSample(point: point)],
+            color: .red,
+            settings: settings,
+            erase: false,
+            airbrushPulseSamples: Array(
+                repeating: ImageEditorBrushStrokeSample(point: point),
+                count: 4
+            )
+        ))
+        let ordinaryAlpha = try #require(ordinary.color(at: point)).alphaComponent
+        let airbrushAlpha = try #require(airbrushed.color(at: point)).alphaComponent
+
+        #expect(ordinaryAlpha > 0.18 && ordinaryAlpha < 0.23)
+        #expect(airbrushAlpha > 0.64 && airbrushAlpha < 0.70)
+        #expect(airbrushAlpha > ordinaryAlpha + 0.4)
+        #expect(airbrushAlpha <= 0.71)
+    }
+
+    @Test func brushAirbrushBuildsPixelsAndBothMaskTargetsAsOneHistoryStep() throws {
+        let size = CGSize(width: 24, height: 24)
+        let point = CGPoint(x: 12, y: 12)
+        let samples = [ImageEditorBrushStrokeSample(point: point)]
+        let pulses = Array(repeating: ImageEditorBrushStrokeSample(point: point), count: 4)
+        let suiteName = "ImageEditorBrushStrokeTests.airbrush.\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+
+        let pixels = ImageEditorViewModel(
+            sourceName: "airbrush-pixels.png",
+            image: NSImage.transparent(size: size),
+            preferencesDefaults: defaults
+        ) { _ in }
+        pixels.foregroundColor = .red
+        pixels.brushSize = 8
+        pixels.hardness = 1
+        pixels.opacity = 0.7
+        pixels.brushFlow = 20
+        let pixelHistoryCount = pixels.document.history.count
+        pixels.drawBrush(samples: samples, airbrushPulseSamples: pulses)
+        let pixelAlpha = try #require(
+            pixels.document.selectedLayer?.image.color(at: point)
+        ).alphaComponent
+        #expect(pixelAlpha > 0.64 && pixelAlpha < 0.70)
+        #expect(pixels.document.history.count == pixelHistoryCount + 1)
+
+        let quickMask = ImageEditorViewModel(
+            sourceName: "airbrush-quick-mask.png",
+            image: NSImage.transparent(size: size),
+            preferencesDefaults: defaults
+        ) { _ in }
+        quickMask.document.selection = .raster(
+            mask: ImageEditorSelectionMask(
+                width: 24,
+                height: 24,
+                alpha: [UInt8](repeating: .min, count: 24 * 24)
+            ),
+            bounds: CGRect(origin: .zero, size: size)
+        )
+        quickMask.isQuickMaskMode = true
+        quickMask.foregroundColor = .white
+        quickMask.brushSize = 8
+        quickMask.hardness = 1
+        quickMask.opacity = 0.7
+        quickMask.brushFlow = 20
+        let quickHistoryCount = quickMask.document.history.count
+        quickMask.drawBrush(samples: samples, airbrushPulseSamples: pulses)
+        let quickAlpha = try #require(
+            quickMask.document.selection?.rasterizedMask(canvasSize: size)
+        ).alpha[12 * 24 + 12]
+        #expect(quickAlpha > 160 && quickAlpha < 180)
+        #expect(quickMask.document.history.count == quickHistoryCount + 1)
+
+        let whiteMask = NSImage.rendered(size: size) { rect in
+            NSColor.white.setFill()
+            rect.fill()
+        } ?? NSImage.transparent(size: size)
+        let layerMask = ImageEditorViewModel(
+            sourceName: "airbrush-layer-mask.png",
+            image: NSImage.transparent(size: size),
+            preferencesDefaults: defaults
+        ) { _ in }
+        let layerIndex = try #require(layerMask.document.selectedLayerIndex)
+        layerMask.document.layers[layerIndex].mask = whiteMask
+        layerMask.isEditingLayerMask = true
+        layerMask.brushSize = 8
+        layerMask.hardness = 1
+        layerMask.opacity = 0.7
+        layerMask.brushFlow = 20
+        let maskHistoryCount = layerMask.document.history.count
+        layerMask.drawBrush(samples: samples, airbrushPulseSamples: pulses)
+        let maskAlpha = try #require(
+            layerMask.document.selectedLayer?.mask?.color(at: point)
+        ).alphaComponent
+        #expect(maskAlpha > 0.30 && maskAlpha < 0.36)
+        #expect(layerMask.document.history.count == maskHistoryCount + 1)
+    }
+
     @Test func stampSpacingIsStableAcrossSparseAndDensePointerSamples() {
         let sparse = ImageEditorBrushStrokeKernel.stampCenters(
             points: [CGPoint(x: 5, y: 10), CGPoint(x: 95, y: 10)],

@@ -346,7 +346,8 @@ extension ImageEditorSelectionMask {
         smoothing: CGFloat = 0,
         edgeStyle: ImageEditorBrushEdgeStyle = .antialiased,
         targetAlpha: UInt8,
-        blendMode: ImageEditorBlendMode = .normal
+        blendMode: ImageEditorBlendMode = .normal,
+        airbrushPulseSamples: [ImageEditorBrushStrokeSample] = []
     ) -> ImageEditorSelectionMask? {
         guard width > 0,
               height > 0,
@@ -373,7 +374,8 @@ extension ImageEditorSelectionMask {
                 tipRoundness: tipRoundness,
                 tipAngleDegrees: tipAngleDegrees,
                 smoothing: smoothing,
-                edgeStyle: edgeStyle
+                edgeStyle: edgeStyle,
+                airbrushPulseSamples: airbrushPulseSamples
               )
         else { return nil }
 
@@ -410,12 +412,20 @@ extension ImageEditorSelectionMask {
         tipRoundness: CGFloat,
         tipAngleDegrees: CGFloat,
         smoothing: CGFloat,
-        edgeStyle: ImageEditorBrushEdgeStyle
+        edgeStyle: ImageEditorBrushEdgeStyle,
+        airbrushPulseSamples: [ImageEditorBrushStrokeSample]
     ) -> [UInt8]? {
-        guard !samples.isEmpty else { return nil }
+        guard !samples.isEmpty || !airbrushPulseSamples.isEmpty else { return nil }
         let scaleX = CGFloat(width) / canvasSize.width
         let scaleY = CGFloat(height) / canvasSize.height
         let scaledSamples = samples.map {
+            ImageEditorBrushStrokeSample(
+                point: CGPoint(x: $0.point.x * scaleX, y: $0.point.y * scaleY),
+                pressure: $0.pressure,
+                tilt: $0.tilt
+            )
+        }
+        let scaledAirbrushPulseSamples = airbrushPulseSamples.map {
             ImageEditorBrushStrokeSample(
                 point: CGPoint(x: $0.point.x * scaleX, y: $0.point.y * scaleY),
                 pressure: $0.pressure,
@@ -450,7 +460,7 @@ extension ImageEditorSelectionMask {
                 diameter: scaledDiameter,
                 spacing: spacing,
                 smoothing: smoothing
-            ),
+            ) + scaledAirbrushPulseSamples,
             settings: settings
         )
     }

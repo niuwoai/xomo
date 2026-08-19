@@ -619,6 +619,8 @@
 "imageEditor.option.historyBrushBlendMode" = "History Brush mode";
 "imageEditor.option.paintBlendMode" = "Painting mode";
 "imageEditor.option.paintBlendMode.help" = "Blend Brush or Pencil paint with the pixels already on the active target";
+"imageEditor.option.paintAirbrush" = "Airbrush";
+"imageEditor.option.paintAirbrush.help" = "Build up Brush color over time while holding the pointer down";
 "imageEditor.option.pencilAutoErase" = "Auto Erase";
 "imageEditor.option.pencilAutoErase.help" = "Start on the foreground color to paint the whole Pencil stroke with the background color";
 "imageEditor.option.eraseToHistory" = "Erase To History";

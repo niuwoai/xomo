@@ -569,14 +569,16 @@ extension NSImage {
         color: NSColor,
         settings: ImageEditorBrushStrokeSettings,
         erase: Bool,
-        blendMode: ImageEditorBlendMode = .normal
+        blendMode: ImageEditorBlendMode = .normal,
+        airbrushPulseSamples: [ImageEditorBrushStrokeSample] = []
     ) -> NSImage? {
         withBrushStroke(
             samples: points.map { ImageEditorBrushStrokeSample(point: $0) },
             color: color,
             settings: settings,
             erase: erase,
-            blendMode: blendMode
+            blendMode: blendMode,
+            airbrushPulseSamples: airbrushPulseSamples
         )
     }
 
@@ -585,9 +587,10 @@ extension NSImage {
         color: NSColor,
         settings: ImageEditorBrushStrokeSettings,
         erase: Bool,
-        blendMode: ImageEditorBlendMode = .normal
+        blendMode: ImageEditorBlendMode = .normal,
+        airbrushPulseSamples: [ImageEditorBrushStrokeSample] = []
     ) -> NSImage? {
-        guard !samples.isEmpty else { return nil }
+        guard !samples.isEmpty || !airbrushPulseSamples.isEmpty else { return nil }
         let pixelWidth = max(1, Int(size.width.rounded()))
         let pixelHeight = max(1, Int(size.height.rounded()))
         let bytesPerRow = pixelWidth * ImageEditorBrushStrokeKernel.bytesPerPixel
@@ -607,7 +610,7 @@ extension NSImage {
         context.draw(cgImage, in: CGRect(x: 0, y: 0, width: pixelWidth, height: pixelHeight))
 
         let normalized = settings.normalized
-        let stamps = ImageEditorBrushStrokeKernel.stampSamples(
+        let pathStamps = ImageEditorBrushStrokeKernel.stampSamples(
             samples: samples,
             diameter: normalized.diameter,
             spacing: normalized.spacing,
@@ -616,7 +619,10 @@ extension NSImage {
         let strokeCoverage = ImageEditorBrushStrokeKernel.coverage(
             width: pixelWidth,
             height: pixelHeight,
-            stamps: stamps,
+            // Time-based airbrush pulses are already discrete stamps. Keeping
+            // them outside spatial resampling preserves repeated stationary
+            // points instead of collapsing a held pointer to one mark.
+            stamps: pathStamps + airbrushPulseSamples,
             settings: normalized
         )
         var outputPixels = ImageEditorBrushStrokeKernel.composite(

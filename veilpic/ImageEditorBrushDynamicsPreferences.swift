@@ -50,6 +50,7 @@ struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
         tipAngleDegrees: 0,
         smoothing: 0,
         paintBlendMode: .normal,
+        paintAirbrushEnabled: false,
         historyBrushBlendMode: .normal,
         pencilAutoEraseEnabled: false
     )
@@ -66,6 +67,7 @@ struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
     var tipAngleDegrees: Double
     var smoothing: Double
     var paintBlendMode: ImageEditorBlendMode
+    var paintAirbrushEnabled: Bool
     var historyBrushBlendMode: ImageEditorBlendMode
     var pencilAutoEraseEnabled: Bool
 
@@ -82,6 +84,7 @@ struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
         tipAngleDegrees: Double = 0,
         smoothing: Double = 0,
         paintBlendMode: ImageEditorBlendMode = .normal,
+        paintAirbrushEnabled: Bool = false,
         historyBrushBlendMode: ImageEditorBlendMode = .normal,
         pencilAutoEraseEnabled: Bool = false
     ) {
@@ -97,6 +100,7 @@ struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
         self.tipAngleDegrees = tipAngleDegrees
         self.smoothing = smoothing
         self.paintBlendMode = paintBlendMode
+        self.paintAirbrushEnabled = paintAirbrushEnabled
         self.historyBrushBlendMode = historyBrushBlendMode
         self.pencilAutoEraseEnabled = pencilAutoEraseEnabled
     }
@@ -114,6 +118,7 @@ struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
         case tipAngleDegrees
         case smoothing
         case paintBlendMode
+        case paintAirbrushEnabled
         case historyBrushBlendMode
         case pencilAutoEraseEnabled
     }
@@ -159,6 +164,10 @@ struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
             ImageEditorBlendMode.self,
             forKey: .paintBlendMode
         ) ?? .normal
+        paintAirbrushEnabled = try values.decodeIfPresent(
+            Bool.self,
+            forKey: .paintAirbrushEnabled
+        ) ?? false
         historyBrushBlendMode = try values.decodeIfPresent(
             ImageEditorBlendMode.self,
             forKey: .historyBrushBlendMode
@@ -185,6 +194,7 @@ struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
             paintBlendMode: ImageEditorBlendMode.paintCases.contains(paintBlendMode)
                 ? paintBlendMode
                 : .normal,
+            paintAirbrushEnabled: paintAirbrushEnabled,
             historyBrushBlendMode: historyBrushBlendMode == .passThrough
                 ? .normal
                 : historyBrushBlendMode,

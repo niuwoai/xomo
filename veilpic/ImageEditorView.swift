@@ -106,6 +106,7 @@ struct ImageEditorView: View {
     @State private var dragPoints: [CGPoint] = []
     @State private var brushStrokeSamples: [ImageEditorBrushStrokeSample] = []
     @State private var isEraserHistoryGestureActive = false
+    @State private var paintAirbrushStroke = ImageEditorToneAirbrushStroke()
     @State private var toneAirbrushStroke = ImageEditorToneAirbrushStroke()
     @State private var dragStart: CGPoint?
     @State private var dragEnd: CGPoint?
@@ -522,6 +523,7 @@ struct ImageEditorView: View {
             isEraserHistoryGestureActive = false
             activeBrushPressure = nil
             activeBrushTilt = nil
+            paintAirbrushStroke.reset()
             toneAirbrushStroke.reset()
             if viewModel.selectedTool != .crop {
                 pendingCropRect = nil
@@ -1036,6 +1038,21 @@ struct ImageEditorView: View {
                     .frame(width: 132)
                     .help(L10n.text("imageEditor.option.paintBlendMode.help"))
                     .accessibilityIdentifier("image-editor-paint-blend-mode")
+                }
+                if viewModel.selectedTool == .brush {
+                    Toggle(
+                        isOn: Binding(
+                            get: { viewModel.paintAirbrushEnabled },
+                            set: { viewModel.setPaintAirbrushEnabled($0) }
+                        )
+                    ) {
+                        Image(systemName: "wind")
+                    }
+                    .toggleStyle(.button)
+                    .focusable(false)
+                    .help(L10n.text("imageEditor.option.paintAirbrush.help"))
+                    .accessibilityLabel(L10n.text("imageEditor.option.paintAirbrush"))
+                    .accessibilityIdentifier("image-editor-paint-airbrush")
                 }
                 if viewModel.selectedTool == .pencil {
                     Toggle(
@@ -2823,6 +2840,7 @@ struct ImageEditorView: View {
                     deliverySelectionOverlay(in: geometry.size)
                     colorSamplerOverlay(in: geometry.size)
                     sampledBrushSourceOverlay(in: geometry.size)
+                    paintAirbrushOverlay(in: geometry.size)
                     toneAirbrushOverlay(in: geometry.size)
                     layerTransformOverlay(in: geometry.size)
                     shapeGradientControlOverlay(in: geometry.size)
@@ -3005,6 +3023,16 @@ struct ImageEditorView: View {
                                     modifierFlags: NSEvent.modifierFlags
                                 )
                             }
+                            if canvasInteractionTool == .brush {
+                                // Let the AppKit host finish installing its
+                                // static mouse-up transaction before the
+                                // Timeline overlay mutates SwiftUI state.
+                                DispatchQueue.main.async {
+                                    guard viewModel.canvasPointerCaptureState.activeTool == .brush
+                                    else { return }
+                                    updatePaintAirbrushStroke(at: imagePoint, pressure: nil)
+                                }
+                            }
                             // Keep the native NSView as first responder for the
                             // whole brush stroke. Mutating several SwiftUI
                             // states on mouse-down can rebuild the overlay
@@ -3030,6 +3058,12 @@ struct ImageEditorView: View {
                                 || primaryTool == .eraser {
                                 activeBrushPressure = pressure
                                 activeBrushTilt = tilt
+                                if primaryTool == .brush {
+                                    updatePaintAirbrushStroke(
+                                        at: imagePoint,
+                                        pressure: pressure
+                                    )
+                                }
                                 updateCanvasCursor(at: location, in: geometry.size)
                                 return
                             }
@@ -3068,9 +3102,15 @@ struct ImageEditorView: View {
                             let committedBrushSamples = brushStrokeSamples.count >= 2
                                 ? brushStrokeSamples
                                 : fallbackBrushSamples
+                            let paintAirbrushPulseSamples = primaryTool == .brush
+                                ? finishPaintAirbrushStroke(at: endImagePoint)
+                                : []
                             switch primaryTool {
                             case .brush:
-                                viewModel.drawBrush(samples: committedBrushSamples)
+                                viewModel.drawBrush(
+                                    samples: committedBrushSamples,
+                                    airbrushPulseSamples: paintAirbrushPulseSamples
+                                )
                             case .pencil:
                                 viewModel.drawPencil(samples: committedBrushSamples)
                             case .historyBrush:
@@ -3107,6 +3147,7 @@ struct ImageEditorView: View {
                             }
                             brushStrokeSamples = []
                             isEraserHistoryGestureActive = false
+                            paintAirbrushStroke.reset()
                             activeBrushPressure = nil
                             activeBrushTilt = nil
                             dragStart = nil
@@ -3117,6 +3158,7 @@ struct ImageEditorView: View {
                         onPrimaryToolDragCancelled: {
                             brushStrokeSamples = []
                             isEraserHistoryGestureActive = false
+                            paintAirbrushStroke.reset()
                             activeBrushPressure = nil
                             activeBrushTilt = nil
                             dragStart = nil
@@ -3462,6 +3504,7 @@ struct ImageEditorView: View {
                     activeBrushPressure = nil
                     activeBrushTilt = nil
                     isEraserHistoryGestureActive = false
+                    paintAirbrushStroke.reset()
                     isPatchGestureBlocked = false
                     endPendingCropInteraction()
                     resetColorSamplerGesture()
@@ -4074,6 +4117,69 @@ struct ImageEditorView: View {
         }
     }
 
+    private func updatePaintAirbrushStroke(at point: CGPoint, pressure: CGFloat?) {
+        guard viewModel.paintAirbrushEnabled else {
+            paintAirbrushStroke.reset()
+            return
+        }
+        let time = Date.timeIntervalSinceReferenceDate
+        if paintAirbrushStroke.isActive {
+            paintAirbrushStroke.update(to: point, pressure: pressure, time: time)
+        } else {
+            paintAirbrushStroke.begin(at: point, pressure: pressure, time: time)
+        }
+    }
+
+    private func finishPaintAirbrushStroke(
+        at point: CGPoint?
+    ) -> [ImageEditorBrushStrokeSample] {
+        guard viewModel.paintAirbrushEnabled,
+              paintAirbrushStroke.isActive,
+              let finalPoint = point ?? paintAirbrushStroke.currentPoint
+        else {
+            paintAirbrushStroke.reset()
+            return []
+        }
+        return paintAirbrushStroke.finishSamples(
+            at: finalPoint,
+            pressure: paintAirbrushStroke.currentPressure,
+            time: Date.timeIntervalSinceReferenceDate
+        )
+    }
+
+    @ViewBuilder
+    private func paintAirbrushOverlay(in size: CGSize) -> some View {
+        if viewModel.paintAirbrushEnabled,
+           canvasInteractionTool == .brush,
+           let imagePoint = paintAirbrushStroke.currentPoint,
+           let dwellBeganAt = paintAirbrushStroke.currentDwellBeganAt {
+            let imageRect = fittedImageRect(in: size)
+            let pressureScale = viewModel.brushPressureControlsSize
+                ? ImageEditorBrushStrokeKernel.pressureDiameterScale(
+                    mappedPressure: ImageEditorBrushStrokeKernel.mappedPressure(
+                        paintAirbrushStroke.currentPressure ?? 1,
+                        sensitivity: viewModel.brushPressureSensitivity / 100
+                    ),
+                    minimumDiameter: viewModel.brushMinimumDiameter / 100
+                )
+                : 1
+            ImageEditorPaintAirbrushPreview(
+                color: viewModel.foregroundColor,
+                point: viewPoint(from: imagePoint, in: size),
+                dwellBeganAt: dwellBeganAt,
+                opacity: viewModel.opacity,
+                flow: viewModel.brushFlow / 100,
+                diameter: max(
+                    4,
+                    viewModel.brushSize * pressureScale * imageRect.width
+                        / max(1, viewModel.document.canvasSize.width)
+                ),
+                roundness: viewModel.brushTipRoundness / 100,
+                angleDegrees: viewModel.brushTipAngleDegrees
+            )
+        }
+    }
+
     private func updateToneAirbrushStroke(at point: CGPoint, pressure: CGFloat?) {
         guard viewModel.toneBrushAirbrushEnabled else {
             toneAirbrushStroke.reset()
@@ -4377,6 +4483,12 @@ struct ImageEditorView: View {
                             pressure: eventPressure,
                             tilt: stylusInput.tilt
                         ))
+                        if canvasInteractionTool == .brush {
+                            updatePaintAirbrushStroke(
+                                at: pointerImagePoint,
+                                pressure: eventPressure
+                            )
+                        }
                         updateCanvasCursor(at: value.location, in: size)
                     }
                 case .dodge, .burn:
@@ -4708,6 +4820,9 @@ struct ImageEditorView: View {
                 let committedBrushSamples = brushStrokeSamples.count >= 2
                     ? brushStrokeSamples
                     : fallbackBrushSamples
+                let paintAirbrushPulseSamples = canvasInteractionTool == .brush
+                    ? finishPaintAirbrushStroke(at: endImagePoint)
+                    : []
 
                 if activeCropHandle != nil {
                     endPendingCropInteraction()
@@ -4778,7 +4893,10 @@ struct ImageEditorView: View {
                 case .quickSelection:
                     viewModel.createQuickSelection(points: dragPoints)
                 case .brush:
-                    viewModel.drawBrush(samples: committedBrushSamples)
+                    viewModel.drawBrush(
+                        samples: committedBrushSamples,
+                        airbrushPulseSamples: paintAirbrushPulseSamples
+                    )
                 case .pencil:
                     viewModel.drawPencil(samples: committedBrushSamples)
                 case .historyBrush:
@@ -4972,6 +5090,7 @@ struct ImageEditorView: View {
                 brushStrokeSamples = []
                 isEraserHistoryGestureActive = false
                 activeBrushPressure = nil
+                paintAirbrushStroke.reset()
                 toneAirbrushStroke.reset()
                 dragStart = nil
                 dragEnd = nil

@@ -5,6 +5,7 @@
 //  Created by Codex on 2026/7/19.
 //
 
+import AppKit
 import Foundation
 import SwiftUI
 
@@ -116,6 +117,22 @@ struct ImageEditorToneAirbrushStroke: Equatable {
         return min(0.24, 0.035 + accumulated * 0.205)
     }
 
+    static func paintPreviewOpacity(
+        opacity: CGFloat,
+        flow: CGFloat,
+        elapsed: TimeInterval
+    ) -> CGFloat {
+        let pulses = previewPulseCount(elapsed: elapsed)
+        guard pulses > 0 else { return 0.035 }
+        let normalizedFlow = max(0, min(1, flow))
+        let normalizedOpacity = max(0, min(1, opacity))
+        let accumulated = min(
+            normalizedOpacity,
+            1 - pow(1 - normalizedFlow, CGFloat(pulses))
+        )
+        return min(0.32, 0.035 + accumulated * 0.285)
+    }
+
     private func interpolatedPressure(
         from start: CGFloat?,
         to end: CGFloat?,
@@ -130,6 +147,45 @@ struct ImageEditorToneAirbrushStroke: Equatable {
             return end
         case (.none, .none):
             return nil
+        }
+    }
+}
+
+struct ImageEditorPaintAirbrushPreview: View {
+    let color: NSColor
+    let point: CGPoint
+    let dwellBeganAt: TimeInterval
+    let opacity: CGFloat
+    let flow: CGFloat
+    let diameter: CGFloat
+    let roundness: CGFloat
+    let angleDegrees: CGFloat
+
+    var body: some View {
+        TimelineView(.periodic(from: .now, by: 1.0 / 15.0)) { context in
+            let elapsed = context.date.timeIntervalSinceReferenceDate - dwellBeganAt
+            let previewOpacity = ImageEditorToneAirbrushStroke.paintPreviewOpacity(
+                opacity: opacity,
+                flow: flow,
+                elapsed: elapsed
+            )
+            Ellipse()
+                .fill(Color(nsColor: color).opacity(previewOpacity))
+                .overlay {
+                    Ellipse()
+                        .stroke(
+                            Color.gray.opacity(0.68),
+                            style: StrokeStyle(lineWidth: 1, dash: [3, 3])
+                        )
+                }
+                .frame(
+                    width: diameter,
+                    height: diameter * max(0.1, min(1, roundness))
+                )
+                .rotationEffect(.degrees(Double(angleDegrees)))
+                .position(point)
+                .allowsHitTesting(false)
+                .accessibilityHidden(true)
         }
     }
 }

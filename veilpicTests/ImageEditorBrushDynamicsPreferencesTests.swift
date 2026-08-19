@@ -77,6 +77,7 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         first.setBrushTipAngleDegrees(-45)
         first.setBrushSmoothing(64)
         first.setPaintBlendMode(.screen)
+        first.setPaintAirbrushEnabled(true)
         first.setHistoryBrushBlendMode(.multiply)
         first.setPencilAutoEraseEnabled(true)
 
@@ -97,6 +98,7 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         #expect(restored.brushTipAngleDegrees == -45)
         #expect(restored.brushSmoothing == 64)
         #expect(restored.paintBlendMode == .screen)
+        #expect(restored.paintAirbrushEnabled)
         #expect(restored.historyBrushBlendMode == .multiply)
         #expect(restored.pencilAutoEraseEnabled)
     }
@@ -124,6 +126,7 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         #expect(decodedDynamics.tipAngleDegrees == 0)
         #expect(decodedDynamics.smoothing == 0)
         #expect(decodedDynamics.paintBlendMode == .normal)
+        #expect(!decodedDynamics.paintAirbrushEnabled)
         #expect(decodedDynamics.historyBrushBlendMode == .normal)
         #expect(!decodedDynamics.pencilAutoEraseEnabled)
 

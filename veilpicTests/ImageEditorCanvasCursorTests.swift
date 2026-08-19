@@ -1337,7 +1337,8 @@ struct ImageEditorCanvasCursorTests {
 
         #expect(viewSource.contains("let fallbackBrushSamples = ["))
         #expect(viewSource.contains("brushStrokeSamples.count >= 2"))
-        #expect(viewSource.contains("viewModel.drawBrush(samples: committedBrushSamples)"))
+        #expect(viewSource.contains("samples: committedBrushSamples,"))
+        #expect(viewSource.contains("airbrushPulseSamples: paintAirbrushPulseSamples"))
         #expect(viewSource.contains(".allowsHitTesting("))
         #expect(viewSource.contains("ImageEditorPrimaryToolPointerCapture.usesDirectCanvasHitTarget("))
         #expect(

@@ -619,6 +619,8 @@
 "imageEditor.option.historyBrushBlendMode" = "ヒストリーブラシの描画モード";
 "imageEditor.option.paintBlendMode" = "描画モード";
 "imageEditor.option.paintBlendMode.help" = "ブラシまたは鉛筆の色を現在の編集対象のピクセルと合成します";
+"imageEditor.option.paintAirbrush" = "エアブラシ";
+"imageEditor.option.paintAirbrush.help" = "ポインタを押している間、ブラシの色を時間とともに重ねます";
 "imageEditor.option.pencilAutoErase" = "自動消去";
 "imageEditor.option.pencilAutoErase.help" = "描き始めが描画色のピクセルなら、鉛筆ストローク全体を背景色で描画します";
 "imageEditor.option.eraseToHistory" = "ヒストリーから消去";

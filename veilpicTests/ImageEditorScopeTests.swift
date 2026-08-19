@@ -2418,6 +2418,49 @@ struct ImageEditorScopeTests {
         }
     }
 
+    @Test func brushAirbrushWiresTimePulsesAcrossNativeFallbackAndMaskPaths() throws {
+        let root = Self.repositoryRoot()
+        let editorSource = try String(
+            contentsOf: root.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let modelSource = try String(
+            contentsOf: root.appendingPathComponent("veilpic/ImageEditorViewModel.swift"),
+            encoding: .utf8
+        )
+        let strokeSource = try String(
+            contentsOf: root.appendingPathComponent("veilpic/ImageEditorBrushStroke.swift"),
+            encoding: .utf8
+        )
+        let maskSource = try String(
+            contentsOf: root.appendingPathComponent("veilpic/ImageEditorSelectionBoolean.swift"),
+            encoding: .utf8
+        )
+
+        #expect(editorSource.contains("viewModel.selectedTool == .brush"))
+        #expect(editorSource.contains("set: { viewModel.setPaintAirbrushEnabled($0) }"))
+        #expect(editorSource.contains("image-editor-paint-airbrush"))
+        #expect(editorSource.contains("updatePaintAirbrushStroke(at: imagePoint, pressure: nil)"))
+        #expect(editorSource.components(separatedBy: "updatePaintAirbrushStroke(").count >= 4)
+        #expect(editorSource.components(separatedBy: "finishPaintAirbrushStroke(at:").count >= 3)
+        #expect(editorSource.components(separatedBy: "paintAirbrushStroke.reset()").count >= 5)
+        #expect(modelSource.contains("airbrushPulseSamples: erase ? [] : airbrushPulseSamples"))
+        #expect(modelSource.contains("localPaintAirbrushPulseSamples = rasterLocalSamples"))
+        #expect(strokeSource.contains("stamps: pathStamps + airbrushPulseSamples"))
+        #expect(maskSource.contains(") + scaledAirbrushPulseSamples"))
+
+        for locale in ["en", "ja", "zh-Hans"] {
+            let localization = try String(
+                contentsOf: root.appendingPathComponent(
+                    "veilpic/\(locale).lproj/Localizable.strings"
+                ),
+                encoding: .utf8
+            )
+            #expect(localization.contains("\"imageEditor.option.paintAirbrush\""))
+            #expect(localization.contains("\"imageEditor.option.paintAirbrush.help\""))
+        }
+    }
+
     @Test func fileMenuExposesClipboardCanvasCreation() throws {
         let source = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),

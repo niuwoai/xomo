@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.12.0-rc1112 - 2026-08-19
+
+### Added
+- 为普通 Brush 增加经典 Airbrush 开关；按住指针即使不移动也会按稳定时间节拍继续累积颜色。
+
+### Changed
+- Airbrush 的时间脉冲保留为独立笔尖印章，不会被空间间距重采样折叠；Opacity 继续限定单笔上限，Flow 控制累积速度。普通像素层、Quick Mask 与栅格图层蒙版共享相同压力、倾斜、软硬度及混合模式，并保持一次 History/Undo。Pencil、Eraser、History Brush、组件库箭头与既有足迹光标不受影响。
+
+### Verification
+- 最终 `build-for-testing` 通过；画笔/蒙版 38/38、Airbrush 时间节拍 4/4、偏好与旧数据迁移 9/9、生产接线 1/1、完整光标 88/88、CLI 2/2、发布契约 7/7 全绿。本版本不触发周期 Universal Release、完整冒烟与 `/Applications` 安装，下一次完整门禁为 rc1120。
+
 ## 2.12.0-rc1111 - 2026-08-19
 
 ### Added

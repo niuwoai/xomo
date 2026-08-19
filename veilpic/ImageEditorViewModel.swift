@@ -151,6 +151,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var brushTipAngleDegrees: CGFloat = 0
     @Published var brushSmoothing: CGFloat = 0
     @Published var paintBlendMode: ImageEditorBlendMode = .normal
+    @Published var paintAirbrushEnabled = false
     @Published var historyBrushBlendMode: ImageEditorBlendMode = .normal
     @Published var pencilAutoEraseEnabled = false
     @Published var retouchPressureControlsSize = false
@@ -612,6 +613,7 @@ final class ImageEditorViewModel: ObservableObject {
         brushTipAngleDegrees = CGFloat(brushDynamicsPreferences.tipAngleDegrees)
         brushSmoothing = CGFloat(brushDynamicsPreferences.smoothing)
         paintBlendMode = brushDynamicsPreferences.paintBlendMode
+        paintAirbrushEnabled = brushDynamicsPreferences.paintAirbrushEnabled
         historyBrushBlendMode = brushDynamicsPreferences.historyBrushBlendMode
         pencilAutoEraseEnabled = brushDynamicsPreferences.pencilAutoEraseEnabled
         retouchPressureControlsSize = retouchDynamicsPreferences.pressureControlsSize
@@ -664,6 +666,7 @@ final class ImageEditorViewModel: ObservableObject {
         brushTipAngleDegrees = CGFloat(brushDynamicsPreferences.tipAngleDegrees)
         brushSmoothing = CGFloat(brushDynamicsPreferences.smoothing)
         paintBlendMode = brushDynamicsPreferences.paintBlendMode
+        paintAirbrushEnabled = brushDynamicsPreferences.paintAirbrushEnabled
         historyBrushBlendMode = brushDynamicsPreferences.historyBrushBlendMode
         pencilAutoEraseEnabled = brushDynamicsPreferences.pencilAutoEraseEnabled
         retouchPressureControlsSize = retouchDynamicsPreferences.pressureControlsSize
@@ -3922,6 +3925,7 @@ final class ImageEditorViewModel: ObservableObject {
             tipAngleDegrees: Double(brushTipAngleDegrees),
             smoothing: Double(brushSmoothing),
             paintBlendMode: paintBlendMode,
+            paintAirbrushEnabled: paintAirbrushEnabled,
             historyBrushBlendMode: historyBrushBlendMode,
             pencilAutoEraseEnabled: pencilAutoEraseEnabled
         ).save(to: workspacePreferencesDefaults)
@@ -4023,6 +4027,12 @@ final class ImageEditorViewModel: ObservableObject {
             : .normal
         guard paintBlendMode != normalized else { return }
         paintBlendMode = normalized
+        persistBrushDynamicsPreferences()
+    }
+
+    func setPaintAirbrushEnabled(_ isEnabled: Bool) {
+        guard paintAirbrushEnabled != isEnabled else { return }
+        paintAirbrushEnabled = isEnabled
         persistBrushDynamicsPreferences()
     }
 
@@ -6072,13 +6082,18 @@ final class ImageEditorViewModel: ObservableObject {
         )
     }
 
-    func drawBrush(samples: [ImageEditorBrushStrokeSample], erase: Bool = false) {
+    func drawBrush(
+        samples: [ImageEditorBrushStrokeSample],
+        erase: Bool = false,
+        airbrushPulseSamples: [ImageEditorBrushStrokeSample] = []
+    ) {
         drawPaintStroke(
             samples: samples,
             erase: erase,
             paintColor: foregroundColor,
             usesBackgroundColorForMasks: erase,
-            edgeStyle: .antialiased
+            edgeStyle: .antialiased,
+            airbrushPulseSamples: erase ? [] : airbrushPulseSamples
         )
     }
 
@@ -6098,15 +6113,17 @@ final class ImageEditorViewModel: ObservableObject {
         erase: Bool,
         paintColor: NSColor,
         usesBackgroundColorForMasks: Bool,
-        edgeStyle: ImageEditorBrushEdgeStyle
+        edgeStyle: ImageEditorBrushEdgeStyle,
+        airbrushPulseSamples: [ImageEditorBrushStrokeSample] = []
     ) {
-        guard !samples.isEmpty else { return }
+        guard !samples.isEmpty || !airbrushPulseSamples.isEmpty else { return }
         if isQuickMaskMode {
             paintQuickMask(
                 samples: samples,
                 usingBackgroundColor: usesBackgroundColorForMasks,
                 edgeStyle: edgeStyle,
-                blendMode: erase ? .normal : paintBlendMode
+                blendMode: erase ? .normal : paintBlendMode,
+                airbrushPulseSamples: airbrushPulseSamples
             )
             return
         }
@@ -6115,7 +6132,8 @@ final class ImageEditorViewModel: ObservableObject {
                 samples: samples,
                 reveal: usesBackgroundColorForMasks,
                 edgeStyle: edgeStyle,
-                blendMode: erase ? .normal : paintBlendMode
+                blendMode: erase ? .normal : paintBlendMode,
+                airbrushPulseSamples: airbrushPulseSamples
             )
             return
         }
@@ -6124,6 +6142,10 @@ final class ImageEditorViewModel: ObservableObject {
             return
         }
         let localSamples = rasterLocalSamples(samples, layer: layer)
+        let localPaintAirbrushPulseSamples = rasterLocalSamples(
+            airbrushPulseSamples,
+            layer: layer
+        )
         guard let output = layer.image.withBrushStroke(
             samples: localSamples,
             color: paintColor,
@@ -6147,7 +6169,8 @@ final class ImageEditorViewModel: ObservableObject {
                 edgeStyle: edgeStyle
             ),
             erase: erase,
-            blendMode: erase ? .normal : paintBlendMode
+            blendMode: erase ? .normal : paintBlendMode,
+            airbrushPulseSamples: localPaintAirbrushPulseSamples
         ) else {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return
@@ -6256,14 +6279,16 @@ final class ImageEditorViewModel: ObservableObject {
         samples: [ImageEditorBrushStrokeSample],
         usingBackgroundColor: Bool,
         edgeStyle: ImageEditorBrushEdgeStyle = .antialiased,
-        blendMode: ImageEditorBlendMode = .normal
+        blendMode: ImageEditorBlendMode = .normal,
+        airbrushPulseSamples: [ImageEditorBrushStrokeSample] = []
     ) {
         let paintColor = usingBackgroundColor ? backgroundColor : foregroundColor
         paintQuickMask(
             samples: samples,
             targetAlpha: quickMaskSelectionAlpha(for: paintColor),
             edgeStyle: edgeStyle,
-            blendMode: blendMode
+            blendMode: blendMode,
+            airbrushPulseSamples: airbrushPulseSamples
         )
     }
 
@@ -6374,7 +6399,8 @@ final class ImageEditorViewModel: ObservableObject {
         samples: [ImageEditorBrushStrokeSample],
         targetAlpha: UInt8,
         edgeStyle: ImageEditorBrushEdgeStyle = .antialiased,
-        blendMode: ImageEditorBlendMode = .normal
+        blendMode: ImageEditorBlendMode = .normal,
+        airbrushPulseSamples: [ImageEditorBrushStrokeSample] = []
     ) {
         guard let selection = document.selection,
               let currentMask = selection.rasterizedMask(canvasSize: document.canvasSize),
@@ -6399,7 +6425,8 @@ final class ImageEditorViewModel: ObservableObject {
                 smoothing: brushSmoothing / 100,
                 edgeStyle: edgeStyle,
                 targetAlpha: targetAlpha,
-                blendMode: blendMode
+                blendMode: blendMode,
+                airbrushPulseSamples: airbrushPulseSamples
               )
         else {
             statusText = L10n.text("imageEditor.status.operationFailed")
@@ -8308,7 +8335,8 @@ final class ImageEditorViewModel: ObservableObject {
         samples: [ImageEditorBrushStrokeSample],
         reveal: Bool,
         edgeStyle: ImageEditorBrushEdgeStyle = .antialiased,
-        blendMode: ImageEditorBlendMode = .normal
+        blendMode: ImageEditorBlendMode = .normal,
+        airbrushPulseSamples: [ImageEditorBrushStrokeSample] = []
     ) {
         guard let index = document.selectedLayerIndex else { return }
         guard !document.isEffectivelyLocked(document.layers[index]) else {
@@ -8347,7 +8375,11 @@ final class ImageEditorViewModel: ObservableObject {
             smoothing: brushSmoothing / 100,
             edgeStyle: edgeStyle,
             targetAlpha: reveal ? UInt8.max : UInt8.min,
-            blendMode: blendMode
+            blendMode: blendMode,
+            airbrushPulseSamples: rasterLocalSamples(
+                airbrushPulseSamples,
+                layer: maskLayer
+            )
         ),
               let updated = NSImage.alphaMaskImage(
                 width: updatedMask.width,

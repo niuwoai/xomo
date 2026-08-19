@@ -32,6 +32,17 @@ struct ImageEditorToneAirbrushTests {
             ImageEditorToneAirbrushStroke.previewOpacity(exposure: 0.5, elapsed: 0.50)
                 > ImageEditorToneAirbrushStroke.previewOpacity(exposure: 0.5, elapsed: 0.12)
         )
+        #expect(
+            ImageEditorToneAirbrushStroke.paintPreviewOpacity(
+                opacity: 0.7,
+                flow: 0.2,
+                elapsed: 0.50
+            ) > ImageEditorToneAirbrushStroke.paintPreviewOpacity(
+                opacity: 0.7,
+                flow: 0.2,
+                elapsed: 0.12
+            )
+        )
     }
 
     @Test func retouchPressureInterpolatesAcrossAirbrushDwellSamples() throws {
