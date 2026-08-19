@@ -816,6 +816,151 @@ struct ImageEditorBrushStrokeTests {
         #expect(undone.alphaComponent < 0.01)
     }
 
+    @Test func pencilAutoErasePolicyRequiresAnOpaqueForegroundMatch() {
+        let foreground = NSColor(deviceRed: 1, green: 0, blue: 0, alpha: 1)
+        #expect(ImageEditorPencilAutoErasePolicy.usesBackgroundColor(
+            isEnabled: true,
+            sampledColor: foreground,
+            foregroundColor: foreground
+        ))
+        #expect(!ImageEditorPencilAutoErasePolicy.usesBackgroundColor(
+            isEnabled: false,
+            sampledColor: foreground,
+            foregroundColor: foreground
+        ))
+        #expect(!ImageEditorPencilAutoErasePolicy.usesBackgroundColor(
+            isEnabled: true,
+            sampledColor: .clear,
+            foregroundColor: .black
+        ))
+        #expect(!ImageEditorPencilAutoErasePolicy.usesBackgroundColor(
+            isEnabled: true,
+            sampledColor: .systemGreen,
+            foregroundColor: foreground
+        ))
+        #expect(ImageEditorPencilAutoErasePolicy.usesBackgroundTone(
+            isEnabled: true,
+            sampledValue: 0,
+            foregroundValue: 0
+        ))
+    }
+
+    @Test func pencilAutoEraseLatchesBackgroundOrForegroundFromStrokeStart() throws {
+        let size = CGSize(width: 48, height: 20)
+        let foreground = NSColor(deviceRed: 1, green: 0, blue: 0, alpha: 1)
+        let background = NSColor(deviceRed: 0, green: 0, blue: 1, alpha: 1)
+        let source = NSImage.rendered(size: size) { rect in
+            foreground.setFill()
+            CGRect(x: rect.minX, y: rect.minY, width: rect.width / 2, height: rect.height).fill()
+            NSColor(deviceRed: 0, green: 1, blue: 0, alpha: 1).setFill()
+            CGRect(x: rect.midX, y: rect.minY, width: rect.width / 2, height: rect.height).fill()
+        } ?? NSImage.transparent(size: size)
+
+        let backgroundStroke = ImageEditorViewModel(
+            sourceName: "pencil-auto-erase-background.png",
+            image: source
+        ) { _ in }
+        let backgroundLayerIndex = try #require(backgroundStroke.document.selectedLayerIndex)
+        backgroundStroke.document.layers[backgroundLayerIndex].image = source
+        backgroundStroke.foregroundColor = foreground
+        backgroundStroke.backgroundColor = background
+        backgroundStroke.pencilAutoEraseEnabled = true
+        backgroundStroke.brushSize = 4
+        backgroundStroke.opacity = 1
+        backgroundStroke.brushFlow = 100
+        let historyCount = backgroundStroke.document.history.count
+        let undoCount = backgroundStroke.undoStack.count
+        backgroundStroke.drawPencil(samples: [
+            ImageEditorBrushStrokeSample(point: CGPoint(x: 8, y: 10)),
+            ImageEditorBrushStrokeSample(point: CGPoint(x: 40, y: 10))
+        ])
+        let crossedGreenWithBackground = try #require(
+            backgroundStroke.document.selectedLayer?.image.color(at: CGPoint(x: 36, y: 10))
+        )
+        #expect(crossedGreenWithBackground.blueComponent > 0.98)
+        #expect(crossedGreenWithBackground.alphaComponent > 0.98)
+        #expect(backgroundStroke.document.history.count == historyCount + 1)
+        #expect(backgroundStroke.undoStack.count == undoCount + 1)
+        #expect(backgroundStroke.document.history.last?.title == L10n.text("imageEditor.history.pencil"))
+
+        let foregroundStroke = ImageEditorViewModel(
+            sourceName: "pencil-auto-erase-foreground.png",
+            image: source
+        ) { _ in }
+        let foregroundLayerIndex = try #require(foregroundStroke.document.selectedLayerIndex)
+        foregroundStroke.document.layers[foregroundLayerIndex].image = source
+        foregroundStroke.foregroundColor = foreground
+        foregroundStroke.backgroundColor = background
+        foregroundStroke.pencilAutoEraseEnabled = true
+        foregroundStroke.brushSize = 4
+        foregroundStroke.opacity = 1
+        foregroundStroke.brushFlow = 100
+        foregroundStroke.drawPencil(samples: [
+            ImageEditorBrushStrokeSample(point: CGPoint(x: 40, y: 10)),
+            ImageEditorBrushStrokeSample(point: CGPoint(x: 8, y: 10))
+        ])
+        let paintedGreenWithForeground = try #require(
+            foregroundStroke.document.selectedLayer?.image.color(at: CGPoint(x: 36, y: 10))
+        )
+        #expect(paintedGreenWithForeground.redComponent > 0.98)
+        #expect(paintedGreenWithForeground.alphaComponent > 0.98)
+    }
+
+    @Test func pencilAutoEraseUsesBackgroundToneInQuickMaskAndLayerMask() throws {
+        let size = CGSize(width: 32, height: 20)
+        let suiteName = "ImageEditorBrushStrokeTests.pencilAutoErase.\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let samples = [
+            ImageEditorBrushStrokeSample(point: CGPoint(x: 6, y: 10)),
+            ImageEditorBrushStrokeSample(point: CGPoint(x: 26, y: 10))
+        ]
+
+        let quickMaskModel = ImageEditorViewModel(
+            sourceName: "pencil-auto-erase-quick-mask.png",
+            image: NSImage.transparent(size: size),
+            preferencesDefaults: defaults
+        ) { _ in }
+        quickMaskModel.document.selection = .raster(
+            mask: ImageEditorSelectionMask(
+                width: 32,
+                height: 20,
+                alpha: [UInt8](repeating: .min, count: 32 * 20)
+            ),
+            bounds: CGRect(origin: .zero, size: size)
+        )
+        quickMaskModel.isQuickMaskMode = true
+        quickMaskModel.foregroundColor = .black
+        quickMaskModel.backgroundColor = .white
+        quickMaskModel.pencilAutoEraseEnabled = true
+        quickMaskModel.brushSize = 4
+        quickMaskModel.opacity = 1
+        quickMaskModel.brushFlow = 100
+        quickMaskModel.drawPencil(samples: samples)
+        let quickMask = try #require(
+            quickMaskModel.document.selection?.rasterizedMask(canvasSize: size)
+        )
+        #expect(quickMask.alpha[10 * 32 + 24] == .max)
+
+        let layerMaskModel = ImageEditorViewModel(
+            sourceName: "pencil-auto-erase-layer-mask.png",
+            image: NSImage.transparent(size: size),
+            preferencesDefaults: defaults
+        ) { _ in }
+        let layerIndex = try #require(layerMaskModel.document.selectedLayerIndex)
+        layerMaskModel.document.layers[layerIndex].mask = NSImage.transparent(size: size)
+        layerMaskModel.isEditingLayerMask = true
+        layerMaskModel.pencilAutoEraseEnabled = true
+        layerMaskModel.brushSize = 4
+        layerMaskModel.opacity = 1
+        layerMaskModel.brushFlow = 100
+        layerMaskModel.drawPencil(samples: samples)
+        let revealedMaskPixel = try #require(
+            layerMaskModel.document.selectedLayer?.mask?.color(at: CGPoint(x: 24, y: 10))
+        )
+        #expect(revealedMaskPixel.alphaComponent > 0.98)
+    }
+
     @Test func viewModelPressureStrokeSupportsSingleStampHistoryAndUndo() throws {
         let size = CGSize(width: 80, height: 40)
         let viewModel = ImageEditorViewModel(

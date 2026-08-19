@@ -617,6 +617,8 @@
 "imageEditor.option.maskFeather" = "マスクぼかし";
 "imageEditor.option.hardness" = "硬さ";
 "imageEditor.option.historyBrushBlendMode" = "ヒストリーブラシの描画モード";
+"imageEditor.option.pencilAutoErase" = "自動消去";
+"imageEditor.option.pencilAutoErase.help" = "描き始めが描画色のピクセルなら、鉛筆ストローク全体を背景色で描画します";
 "imageEditor.option.eraseToHistory" = "ヒストリーから消去";
 "imageEditor.option.eraseToHistory.help" = "選択したヒストリーソースからピクセルを復元します。Option を押している間は一時的に復元します。";
 "imageEditor.option.flow" = "流量";

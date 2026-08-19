@@ -2264,14 +2264,26 @@ struct ImageEditorScopeTests {
             ),
             encoding: .utf8
         )
+        let preferencesSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent(
+                "veilpic/ImageEditorBrushDynamicsPreferences.swift"
+            ),
+            encoding: .utf8
+        )
 
         #expect(editorSource.components(separatedBy: "viewModel.drawPencil(samples: committedBrushSamples)").count == 3)
         #expect(editorSource.contains("usesBrushOptions && viewModel.selectedTool != .pencil"))
         #expect(editorSource.contains("case .brush, .pencil, .historyBrush, .eraser"))
-        #expect(viewModelSource.contains("drawPaintStroke(samples: samples, erase: false, edgeStyle: .aliased)"))
+        #expect(viewModelSource.contains("usesBackgroundColorForMasks: usesBackgroundColor,\n            edgeStyle: .aliased"))
         #expect(viewModelSource.contains("edgeStyle == .aliased ? 1 : hardness"))
         #expect(viewModelSource.contains("? \"imageEditor.history.pencil\""))
+        #expect(viewModelSource.contains("pencilUsesBackgroundColor(at: samples.first?.point)"))
+        #expect(viewModelSource.contains("usesBackgroundColor ? backgroundColor : foregroundColor"))
         #expect(brushSource.contains("return distance <= outerRadius ? 1 : 0"))
+        #expect(brushSource.contains("enum ImageEditorPencilAutoErasePolicy"))
+        #expect(preferencesSource.contains("case pencilAutoEraseEnabled"))
+        #expect(editorSource.contains("viewModel.setPencilAutoEraseEnabled($0)"))
+        #expect(editorSource.contains("image-editor-pencil-auto-erase"))
 
         for locale in ["en", "ja", "zh-Hans"] {
             let localization = try String(
@@ -2283,6 +2295,8 @@ struct ImageEditorScopeTests {
             #expect(localization.contains("\"imageEditor.tool.pencil\""))
             #expect(localization.contains("\"imageEditor.tool.pencil.help\""))
             #expect(localization.contains("\"imageEditor.history.pencil\""))
+            #expect(localization.contains("\"imageEditor.option.pencilAutoErase\""))
+            #expect(localization.contains("\"imageEditor.option.pencilAutoErase.help\""))
         }
     }
 

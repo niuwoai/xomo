@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.12.0-rc1110 - 2026-08-19
+
+### Added
+- 为经典 Pencil 增加 Auto Erase 选项：笔触起点命中当前前景色时，整条笔触改用背景色；从其它颜色起笔则继续使用前景色。
+
+### Changed
+- Auto Erase 在 mouse-down 起点锁存语义，跨过其它颜色时不会半途换色；背景色作为真实硬边像素写入而非擦成透明，并同步适用于 Quick Mask 与栅格图层蒙版。选项跨编辑器会话持久化，普通 Brush、关闭 Auto Erase 的 Pencil、单步 History/Undo 与组件库系统箭头保持不变。
+
+### Verification
+- 最终 `build-for-testing` 通过；画笔/蒙版 33/33、偏好与旧数据迁移 9/9、生产接线 1/1、完整光标 88/88、CLI 2/2、发布契约 7/7 全绿。本版本不触发周期 Universal Release、完整冒烟与 `/Applications` 安装，下一次完整门禁为 rc1120。
+
 ## 2.12.0-rc1109 - 2026-08-19
 
 ### Added

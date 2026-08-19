@@ -617,6 +617,8 @@
 "imageEditor.option.maskFeather" = "Mask Feather";
 "imageEditor.option.hardness" = "Hardness";
 "imageEditor.option.historyBrushBlendMode" = "History Brush mode";
+"imageEditor.option.pencilAutoErase" = "Auto Erase";
+"imageEditor.option.pencilAutoErase.help" = "Start on the foreground color to paint the whole Pencil stroke with the background color";
 "imageEditor.option.eraseToHistory" = "Erase To History";
 "imageEditor.option.eraseToHistory.help" = "Restore pixels from the selected History source. Hold Option for a temporary restore stroke.";
 "imageEditor.option.flow" = "Flow";

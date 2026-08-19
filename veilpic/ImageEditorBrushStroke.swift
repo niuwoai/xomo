@@ -29,6 +29,34 @@ enum ImageEditorBrushEdgeStyle: Equatable {
     case aliased
 }
 
+enum ImageEditorPencilAutoErasePolicy {
+    private static let componentTolerance = CGFloat(1) / CGFloat(UInt8.max)
+
+    static func usesBackgroundColor(
+        isEnabled: Bool,
+        sampledColor: NSColor?,
+        foregroundColor: NSColor
+    ) -> Bool {
+        guard isEnabled,
+              let sampled = sampledColor?.usingColorSpace(.deviceRGB),
+              let foreground = foregroundColor.usingColorSpace(.deviceRGB)
+        else { return false }
+        return abs(sampled.redComponent - foreground.redComponent) <= componentTolerance
+            && abs(sampled.greenComponent - foreground.greenComponent) <= componentTolerance
+            && abs(sampled.blueComponent - foreground.blueComponent) <= componentTolerance
+            && abs(sampled.alphaComponent - foreground.alphaComponent) <= componentTolerance
+    }
+
+    static func usesBackgroundTone(
+        isEnabled: Bool,
+        sampledValue: UInt8?,
+        foregroundValue: UInt8
+    ) -> Bool {
+        isEnabled && sampledValue == foregroundValue
+    }
+
+}
+
 struct ImageEditorBrushStrokeSettings: Equatable {
     var diameter: CGFloat
     var hardness: CGFloat

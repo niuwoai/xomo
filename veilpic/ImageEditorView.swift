@@ -1018,6 +1018,21 @@ struct ImageEditorView: View {
                     .fixedSize()
                     .accessibilityIdentifier("image-editor-gradient-reverse")
                 }
+                if viewModel.selectedTool == .pencil {
+                    Toggle(
+                        L10n.text("imageEditor.option.pencilAutoErase"),
+                        isOn: Binding(
+                            get: { viewModel.pencilAutoEraseEnabled },
+                            set: { viewModel.setPencilAutoEraseEnabled($0) }
+                        )
+                    )
+                    .toggleStyle(.checkbox)
+                    .focusable(false)
+                    .fixedSize()
+                    .help(L10n.text("imageEditor.option.pencilAutoErase.help"))
+                    .accessibilityHint(L10n.text("imageEditor.option.pencilAutoErase.help"))
+                    .accessibilityIdentifier("image-editor-pencil-auto-erase")
+                }
                 if usesBrushDynamicsOptions {
                     brushPresetMenu
                     brushRoundnessMenu

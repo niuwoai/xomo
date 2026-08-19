@@ -151,6 +151,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var brushTipAngleDegrees: CGFloat = 0
     @Published var brushSmoothing: CGFloat = 0
     @Published var historyBrushBlendMode: ImageEditorBlendMode = .normal
+    @Published var pencilAutoEraseEnabled = false
     @Published var retouchPressureControlsSize = false
     @Published var retouchPressureSensitivity: CGFloat = 50
     @Published var toneRange: ImageEditorToneRange = .midtones
@@ -610,6 +611,7 @@ final class ImageEditorViewModel: ObservableObject {
         brushTipAngleDegrees = CGFloat(brushDynamicsPreferences.tipAngleDegrees)
         brushSmoothing = CGFloat(brushDynamicsPreferences.smoothing)
         historyBrushBlendMode = brushDynamicsPreferences.historyBrushBlendMode
+        pencilAutoEraseEnabled = brushDynamicsPreferences.pencilAutoEraseEnabled
         retouchPressureControlsSize = retouchDynamicsPreferences.pressureControlsSize
         retouchPressureSensitivity = CGFloat(retouchDynamicsPreferences.pressureSensitivity)
         customBrushPresets = brushPresetPreferences.presets
@@ -660,6 +662,7 @@ final class ImageEditorViewModel: ObservableObject {
         brushTipAngleDegrees = CGFloat(brushDynamicsPreferences.tipAngleDegrees)
         brushSmoothing = CGFloat(brushDynamicsPreferences.smoothing)
         historyBrushBlendMode = brushDynamicsPreferences.historyBrushBlendMode
+        pencilAutoEraseEnabled = brushDynamicsPreferences.pencilAutoEraseEnabled
         retouchPressureControlsSize = retouchDynamicsPreferences.pressureControlsSize
         retouchPressureSensitivity = CGFloat(retouchDynamicsPreferences.pressureSensitivity)
         customBrushPresets = brushPresetPreferences.presets
@@ -3915,7 +3918,8 @@ final class ImageEditorViewModel: ObservableObject {
             tipRoundness: Double(brushTipRoundness),
             tipAngleDegrees: Double(brushTipAngleDegrees),
             smoothing: Double(brushSmoothing),
-            historyBrushBlendMode: historyBrushBlendMode
+            historyBrushBlendMode: historyBrushBlendMode,
+            pencilAutoEraseEnabled: pencilAutoEraseEnabled
         ).save(to: workspacePreferencesDefaults)
     }
 
@@ -4006,6 +4010,12 @@ final class ImageEditorViewModel: ObservableObject {
         let normalized = blendMode == .passThrough ? ImageEditorBlendMode.normal : blendMode
         guard historyBrushBlendMode != normalized else { return }
         historyBrushBlendMode = normalized
+        persistBrushDynamicsPreferences()
+    }
+
+    func setPencilAutoEraseEnabled(_ isEnabled: Bool) {
+        guard pencilAutoEraseEnabled != isEnabled else { return }
+        pencilAutoEraseEnabled = isEnabled
         persistBrushDynamicsPreferences()
     }
 
@@ -6050,23 +6060,38 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     func drawBrush(samples: [ImageEditorBrushStrokeSample], erase: Bool = false) {
-        drawPaintStroke(samples: samples, erase: erase, edgeStyle: .antialiased)
+        drawPaintStroke(
+            samples: samples,
+            erase: erase,
+            paintColor: foregroundColor,
+            usesBackgroundColorForMasks: erase,
+            edgeStyle: .antialiased
+        )
     }
 
     func drawPencil(samples: [ImageEditorBrushStrokeSample]) {
-        drawPaintStroke(samples: samples, erase: false, edgeStyle: .aliased)
+        let usesBackgroundColor = pencilUsesBackgroundColor(at: samples.first?.point)
+        drawPaintStroke(
+            samples: samples,
+            erase: false,
+            paintColor: usesBackgroundColor ? backgroundColor : foregroundColor,
+            usesBackgroundColorForMasks: usesBackgroundColor,
+            edgeStyle: .aliased
+        )
     }
 
     private func drawPaintStroke(
         samples: [ImageEditorBrushStrokeSample],
         erase: Bool,
+        paintColor: NSColor,
+        usesBackgroundColorForMasks: Bool,
         edgeStyle: ImageEditorBrushEdgeStyle
     ) {
         guard !samples.isEmpty else { return }
         if isQuickMaskMode {
             paintQuickMask(
                 samples: samples,
-                usingBackgroundColor: erase,
+                usingBackgroundColor: usesBackgroundColorForMasks,
                 edgeStyle: edgeStyle
             )
             return
@@ -6074,7 +6099,7 @@ final class ImageEditorViewModel: ObservableObject {
         if isEditingLayerMask {
             paintSelectedLayerMask(
                 samples: samples,
-                reveal: erase,
+                reveal: usesBackgroundColorForMasks,
                 edgeStyle: edgeStyle
             )
             return
@@ -6086,7 +6111,7 @@ final class ImageEditorViewModel: ObservableObject {
         let localSamples = rasterLocalSamples(samples, layer: layer)
         guard let output = layer.image.withBrushStroke(
             samples: localSamples,
-            color: foregroundColor,
+            color: paintColor,
             settings: ImageEditorBrushStrokeSettings(
                 diameter: rasterLocalBrushWidth(brushSize, layer: layer),
                 hardness: edgeStyle == .aliased ? 1 : hardness,
@@ -6122,6 +6147,93 @@ final class ImageEditorViewModel: ObservableObject {
             ),
             resetFrame: false
         )
+    }
+
+    private func pencilUsesBackgroundColor(at canvasPoint: CGPoint?) -> Bool {
+        guard pencilAutoEraseEnabled, let canvasPoint else { return false }
+        if isQuickMaskMode {
+            return pencilQuickMaskStartsOverForeground(at: canvasPoint)
+        }
+        guard let layer = document.selectedLayer else { return false }
+        if isEditingLayerMask, let mask = layer.mask {
+            return pencilLayerMaskStartsOverForeground(
+                at: canvasPoint,
+                layer: layer,
+                mask: mask
+            )
+        }
+        let localPoint = rasterLocalPoint(canvasPoint, layer: layer)
+        guard CGRect(origin: .zero, size: layer.image.size).contains(localPoint) else { return false }
+        return ImageEditorPencilAutoErasePolicy.usesBackgroundColor(
+            isEnabled: true,
+            sampledColor: layer.image.color(at: localPoint),
+            foregroundColor: foregroundColor
+        )
+    }
+
+    private func pencilQuickMaskStartsOverForeground(at canvasPoint: CGPoint) -> Bool {
+        guard let mask = document.selection?.rasterizedMask(canvasSize: document.canvasSize),
+              let sampledValue = selectionMaskValue(
+                in: mask,
+                at: canvasPoint,
+                canvasSize: document.canvasSize
+              )
+        else { return false }
+        return ImageEditorPencilAutoErasePolicy.usesBackgroundTone(
+            isEnabled: true,
+            sampledValue: sampledValue,
+            foregroundValue: quickMaskSelectionAlpha(for: foregroundColor)
+        )
+    }
+
+    private func pencilLayerMaskStartsOverForeground(
+        at canvasPoint: CGPoint,
+        layer: ImageEditorLayer,
+        mask: NSImage
+    ) -> Bool {
+        let maskFrame = layer.isGroup
+            ? CGRect(origin: .zero, size: document.canvasSize)
+            : layer.frame
+        let localPoint = rasterLocalPoint(
+            canvasPoint,
+            layerFrame: maskFrame,
+            rasterSize: mask.size
+        )
+        guard CGRect(origin: .zero, size: mask.size).contains(localPoint),
+              let sampledColor = mask.color(at: localPoint)
+        else { return false }
+        let sampledValue = UInt8(
+            (max(0, min(1, sampledColor.alphaComponent)) * CGFloat(UInt8.max)).rounded()
+        )
+        return ImageEditorPencilAutoErasePolicy.usesBackgroundTone(
+            isEnabled: true,
+            sampledValue: sampledValue,
+            foregroundValue: UInt8.min
+        )
+    }
+
+    private func selectionMaskValue(
+        in mask: ImageEditorSelectionMask,
+        at canvasPoint: CGPoint,
+        canvasSize: CGSize
+    ) -> UInt8? {
+        guard canvasPoint.x >= 0,
+              canvasPoint.y >= 0,
+              canvasPoint.x < canvasSize.width,
+              canvasPoint.y < canvasSize.height,
+              mask.width > 0,
+              mask.height > 0,
+              mask.alpha.count == mask.width * mask.height
+        else { return nil }
+        let x = min(
+            mask.width - 1,
+            Int(canvasPoint.x / max(canvasSize.width, 1) * CGFloat(mask.width))
+        )
+        let y = min(
+            mask.height - 1,
+            Int(canvasPoint.y / max(canvasSize.height, 1) * CGFloat(mask.height))
+        )
+        return mask.alpha[y * mask.width + x]
     }
 
     private func paintQuickMask(
@@ -8330,9 +8442,17 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     private func rasterLocalPoint(_ point: CGPoint, layer: ImageEditorLayer) -> CGPoint {
+        rasterLocalPoint(point, layerFrame: layer.frame, rasterSize: layer.image.size)
+    }
+
+    private func rasterLocalPoint(
+        _ point: CGPoint,
+        layerFrame: CGRect,
+        rasterSize: CGSize
+    ) -> CGPoint {
         CGPoint(
-            x: (point.x - layer.frame.minX) / max(layer.frame.width, 1) * layer.image.size.width,
-            y: (point.y - layer.frame.minY) / max(layer.frame.height, 1) * layer.image.size.height
+            x: (point.x - layerFrame.minX) / max(layerFrame.width, 1) * rasterSize.width,
+            y: (point.y - layerFrame.minY) / max(layerFrame.height, 1) * rasterSize.height
         )
     }
 

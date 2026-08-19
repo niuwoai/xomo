@@ -28,7 +28,8 @@ struct ImageEditorBrushDynamicsPreferencesTests {
             tipRoundness: 2,
             tipAngleDegrees: 250,
             smoothing: 140,
-            historyBrushBlendMode: .passThrough
+            historyBrushBlendMode: .passThrough,
+            pencilAutoEraseEnabled: true
         ).save(to: defaults)
 
         let loaded = ImageEditorBrushDynamicsPreferences.load(from: defaults)
@@ -44,6 +45,7 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         #expect(loaded.tipAngleDegrees == 180)
         #expect(loaded.smoothing == 100)
         #expect(loaded.historyBrushBlendMode == .normal)
+        #expect(loaded.pencilAutoEraseEnabled)
 
         defaults.set(
             Data("not-json".utf8),
@@ -52,7 +54,7 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         #expect(ImageEditorBrushDynamicsPreferences.load(from: defaults) == .defaultValue)
     }
 
-    @Test func viewModelRestoresPressureOptionsAcrossEditorSessions() {
+    @Test func viewModelRestoresBrushAndPencilOptionsAcrossEditorSessions() {
         let (defaults, suiteName) = temporaryDefaults()
         defer { defaults.removePersistentDomain(forName: suiteName) }
         let image = NSImage.transparent(size: CGSize(width: 32, height: 32))
@@ -73,6 +75,7 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         first.setBrushTipAngleDegrees(-45)
         first.setBrushSmoothing(64)
         first.setHistoryBrushBlendMode(.multiply)
+        first.setPencilAutoEraseEnabled(true)
 
         let restored = ImageEditorViewModel(
             sourceName: "restored.png",
@@ -91,6 +94,7 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         #expect(restored.brushTipAngleDegrees == -45)
         #expect(restored.brushSmoothing == 64)
         #expect(restored.historyBrushBlendMode == .multiply)
+        #expect(restored.pencilAutoEraseEnabled)
     }
 
     @Test func legacyBrushDynamicsAndPresetsDefaultTiltShapeOff() throws {
@@ -116,6 +120,7 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         #expect(decodedDynamics.tipAngleDegrees == 0)
         #expect(decodedDynamics.smoothing == 0)
         #expect(decodedDynamics.historyBrushBlendMode == .normal)
+        #expect(!decodedDynamics.pencilAutoEraseEnabled)
 
         let legacyPreset = Data(
             """

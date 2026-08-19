@@ -49,7 +49,8 @@ struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
         tipRoundness: 100,
         tipAngleDegrees: 0,
         smoothing: 0,
-        historyBrushBlendMode: .normal
+        historyBrushBlendMode: .normal,
+        pencilAutoEraseEnabled: false
     )
 
     var pressureControlsSize: Bool
@@ -64,6 +65,7 @@ struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
     var tipAngleDegrees: Double
     var smoothing: Double
     var historyBrushBlendMode: ImageEditorBlendMode
+    var pencilAutoEraseEnabled: Bool
 
     init(
         pressureControlsSize: Bool,
@@ -77,7 +79,8 @@ struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
         tipRoundness: Double = 100,
         tipAngleDegrees: Double = 0,
         smoothing: Double = 0,
-        historyBrushBlendMode: ImageEditorBlendMode = .normal
+        historyBrushBlendMode: ImageEditorBlendMode = .normal,
+        pencilAutoEraseEnabled: Bool = false
     ) {
         self.pressureControlsSize = pressureControlsSize
         self.pressureControlsOpacity = pressureControlsOpacity
@@ -91,6 +94,7 @@ struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
         self.tipAngleDegrees = tipAngleDegrees
         self.smoothing = smoothing
         self.historyBrushBlendMode = historyBrushBlendMode
+        self.pencilAutoEraseEnabled = pencilAutoEraseEnabled
     }
 
     private enum CodingKeys: String, CodingKey {
@@ -106,6 +110,7 @@ struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
         case tipAngleDegrees
         case smoothing
         case historyBrushBlendMode
+        case pencilAutoEraseEnabled
     }
 
     init(from decoder: Decoder) throws {
@@ -149,6 +154,10 @@ struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
             ImageEditorBlendMode.self,
             forKey: .historyBrushBlendMode
         ) ?? .normal
+        pencilAutoEraseEnabled = try values.decodeIfPresent(
+            Bool.self,
+            forKey: .pencilAutoEraseEnabled
+        ) ?? false
     }
 
     var normalized: ImageEditorBrushDynamicsPreferences {
@@ -166,7 +175,8 @@ struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
             smoothing: max(0, min(100, smoothing)),
             historyBrushBlendMode: historyBrushBlendMode == .passThrough
                 ? .normal
-                : historyBrushBlendMode
+                : historyBrushBlendMode,
+            pencilAutoEraseEnabled: pencilAutoEraseEnabled
         )
     }
 
