@@ -72,6 +72,7 @@ struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
         pressureSensitivity: 50,
         sizeJitter: 0,
         angleJitter: 0,
+        angleFollowsStrokeDirection: false,
         roundnessJitter: 0,
         opacityJitter: 0,
         flowJitter: 0,
@@ -101,6 +102,7 @@ struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
     var pressureSensitivity: Double
     var sizeJitter: Double
     var angleJitter: Double
+    var angleFollowsStrokeDirection: Bool
     var roundnessJitter: Double
     var opacityJitter: Double
     var flowJitter: Double
@@ -130,6 +132,7 @@ struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
         pressureSensitivity: Double,
         sizeJitter: Double = 0,
         angleJitter: Double = 0,
+        angleFollowsStrokeDirection: Bool = false,
         roundnessJitter: Double = 0,
         opacityJitter: Double = 0,
         flowJitter: Double = 0,
@@ -158,6 +161,7 @@ struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
         self.pressureSensitivity = pressureSensitivity
         self.sizeJitter = sizeJitter
         self.angleJitter = angleJitter
+        self.angleFollowsStrokeDirection = angleFollowsStrokeDirection
         self.roundnessJitter = roundnessJitter
         self.opacityJitter = opacityJitter
         self.flowJitter = flowJitter
@@ -188,6 +192,7 @@ struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
         case pressureSensitivity
         case sizeJitter
         case angleJitter
+        case angleFollowsStrokeDirection
         case roundnessJitter
         case opacityJitter
         case flowJitter
@@ -222,6 +227,10 @@ struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
         pressureSensitivity = try values.decode(Double.self, forKey: .pressureSensitivity)
         sizeJitter = try values.decodeIfPresent(Double.self, forKey: .sizeJitter) ?? 0
         angleJitter = try values.decodeIfPresent(Double.self, forKey: .angleJitter) ?? 0
+        angleFollowsStrokeDirection = try values.decodeIfPresent(
+            Bool.self,
+            forKey: .angleFollowsStrokeDirection
+        ) ?? false
         roundnessJitter = try values.decodeIfPresent(Double.self, forKey: .roundnessJitter) ?? 0
         opacityJitter = try values.decodeIfPresent(Double.self, forKey: .opacityJitter) ?? 0
         flowJitter = try values.decodeIfPresent(Double.self, forKey: .flowJitter) ?? 0
@@ -298,6 +307,7 @@ struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
             pressureSensitivity: max(0, min(100, pressureSensitivity)),
             sizeJitter: max(0, min(100, sizeJitter)),
             angleJitter: max(0, min(100, angleJitter)),
+            angleFollowsStrokeDirection: angleFollowsStrokeDirection,
             roundnessJitter: max(0, min(100, roundnessJitter)),
             opacityJitter: max(0, min(100, opacityJitter)),
             flowJitter: max(0, min(100, flowJitter)),

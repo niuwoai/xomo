@@ -637,6 +637,7 @@
 "imageEditor.option.brushRoundnessValue" = "Roundness %d%%";
 "imageEditor.help.brushRoundness" = "Adjust how flat the brush and eraser tip appears";
 "imageEditor.option.brushAngle" = "Tip Angle";
+"imageEditor.option.angleFollowsStrokeDirection" = "Follow Stroke Direction";
 "imageEditor.option.angleJitter" = "Angle Jitter";
 "imageEditor.option.roundnessJitter" = "Roundness Jitter";
 "imageEditor.option.minimumRoundness" = "Minimum Roundness";

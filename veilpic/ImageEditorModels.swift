@@ -49,6 +49,7 @@ struct ImageEditorBrushPreset: Identifiable, Codable, Equatable {
     let pressureSensitivity: CGFloat
     let sizeJitter: CGFloat
     let angleJitter: CGFloat
+    let angleFollowsStrokeDirection: Bool
     let roundnessJitter: CGFloat
     let opacityJitter: CGFloat
     let flowJitter: CGFloat
@@ -81,6 +82,7 @@ struct ImageEditorBrushPreset: Identifiable, Codable, Equatable {
         pressureSensitivity: CGFloat = 50,
         sizeJitter: CGFloat = 0,
         angleJitter: CGFloat = 0,
+        angleFollowsStrokeDirection: Bool = false,
         roundnessJitter: CGFloat = 0,
         opacityJitter: CGFloat = 0,
         flowJitter: CGFloat = 0,
@@ -112,6 +114,7 @@ struct ImageEditorBrushPreset: Identifiable, Codable, Equatable {
         self.pressureSensitivity = pressureSensitivity
         self.sizeJitter = sizeJitter
         self.angleJitter = angleJitter
+        self.angleFollowsStrokeDirection = angleFollowsStrokeDirection
         self.roundnessJitter = roundnessJitter
         self.opacityJitter = opacityJitter
         self.flowJitter = flowJitter
@@ -145,6 +148,7 @@ struct ImageEditorBrushPreset: Identifiable, Codable, Equatable {
         case pressureSensitivity
         case sizeJitter
         case angleJitter
+        case angleFollowsStrokeDirection
         case roundnessJitter
         case opacityJitter
         case flowJitter
@@ -197,6 +201,10 @@ struct ImageEditorBrushPreset: Identifiable, Codable, Equatable {
             CGFloat.self,
             forKey: .angleJitter
         ) ?? 0
+        angleFollowsStrokeDirection = try values.decodeIfPresent(
+            Bool.self,
+            forKey: .angleFollowsStrokeDirection
+        ) ?? false
         roundnessJitter = try values.decodeIfPresent(
             CGFloat.self,
             forKey: .roundnessJitter
@@ -280,6 +288,7 @@ struct ImageEditorBrushPreset: Identifiable, Codable, Equatable {
             pressureSensitivity: max(0, min(100, pressureSensitivity)),
             sizeJitter: max(0, min(100, sizeJitter)),
             angleJitter: max(0, min(100, angleJitter)),
+            angleFollowsStrokeDirection: angleFollowsStrokeDirection,
             roundnessJitter: max(0, min(100, roundnessJitter)),
             opacityJitter: max(0, min(100, opacityJitter)),
             flowJitter: max(0, min(100, flowJitter)),
@@ -312,6 +321,7 @@ struct ImageEditorBrushPreset: Identifiable, Codable, Equatable {
         pressureSensitivity: CGFloat,
         sizeJitter: CGFloat,
         angleJitter: CGFloat,
+        angleFollowsStrokeDirection: Bool,
         roundnessJitter: CGFloat,
         opacityJitter: CGFloat,
         flowJitter: CGFloat,
@@ -341,6 +351,7 @@ struct ImageEditorBrushPreset: Identifiable, Codable, Equatable {
             && abs(self.pressureSensitivity - pressureSensitivity) < tolerance
             && abs(self.sizeJitter - sizeJitter) < tolerance
             && abs(self.angleJitter - angleJitter) < tolerance
+            && self.angleFollowsStrokeDirection == angleFollowsStrokeDirection
             && abs(self.roundnessJitter - roundnessJitter) < tolerance
             && abs(self.opacityJitter - opacityJitter) < tolerance
             && abs(self.flowJitter - flowJitter) < tolerance

@@ -637,6 +637,7 @@
 "imageEditor.option.brushRoundnessValue" = "真円率 %d%%";
 "imageEditor.help.brushRoundness" = "ブラシと消しゴムの先端の扁平率を調整します";
 "imageEditor.option.brushAngle" = "ブラシ先端の角度";
+"imageEditor.option.angleFollowsStrokeDirection" = "ストローク方向に追従";
 "imageEditor.option.angleJitter" = "角度のジッター";
 "imageEditor.option.roundnessJitter" = "真円率のジッター";
 "imageEditor.option.minimumRoundness" = "最小の真円率";

@@ -793,6 +793,84 @@ struct ImageEditorBrushStrokeTests {
         })
     }
 
+    @Test func flattenedTipCanFollowStrokeDirectionWithManualOffsetAndStableFallback() {
+        let horizontal = [
+            ImageEditorBrushStrokeSample(point: CGPoint(x: 32, y: 32)),
+            ImageEditorBrushStrokeSample(point: CGPoint(x: 33, y: 32))
+        ]
+        let vertical = [
+            ImageEditorBrushStrokeSample(point: CGPoint(x: 32, y: 32)),
+            ImageEditorBrushStrokeSample(point: CGPoint(x: 32, y: 33))
+        ]
+        var settings = ImageEditorBrushStrokeSettings(
+            diameter: 20,
+            hardness: 1,
+            opacity: 1,
+            flow: 1,
+            spacing: 1,
+            angleFollowsStrokeDirection: true,
+            tipRoundness: 0.2
+        )
+
+        let horizontalCoverage = ImageEditorBrushStrokeKernel.coverage(
+            width: 64,
+            height: 64,
+            stamps: horizontal,
+            settings: settings
+        )
+        let verticalCoverage = ImageEditorBrushStrokeKernel.coverage(
+            width: 64,
+            height: 64,
+            stamps: vertical,
+            settings: settings
+        )
+        let rightSample = 32 * 64 + 40
+        let lowerSample = 40 * 64 + 32
+        #expect(horizontalCoverage[rightSample] > 0)
+        #expect(horizontalCoverage[lowerSample] == 0)
+        #expect(verticalCoverage[rightSample] == 0)
+        #expect(verticalCoverage[lowerSample] > 0)
+
+        settings.tipAngleDegrees = 90
+        let offsetCoverage = ImageEditorBrushStrokeKernel.coverage(
+            width: 64,
+            height: 64,
+            stamps: horizontal,
+            settings: settings
+        )
+        #expect(offsetCoverage[rightSample] == 0)
+        #expect(offsetCoverage[lowerSample] > 0)
+
+        settings.tipAngleDegrees = 0
+        settings.tiltControlsShape = true
+        let tiltedHorizontal = horizontal.map {
+            ImageEditorBrushStrokeSample(
+                point: $0.point,
+                tilt: ImageEditorStylusTilt(x: 0, y: 1)
+            )
+        }
+        let tiltCoverage = ImageEditorBrushStrokeKernel.coverage(
+            width: 64,
+            height: 64,
+            stamps: tiltedHorizontal,
+            settings: settings
+        )
+        #expect(tiltCoverage[rightSample] == 0)
+        #expect(tiltCoverage[lowerSample] > 0)
+
+        let stationary = Array(
+            repeating: ImageEditorBrushStrokeSample(point: CGPoint(x: 32, y: 32)),
+            count: 3
+        )
+        let stationaryStamps = ImageEditorBrushStrokeKernel.renderedStamps(
+            from: stationary,
+            settings: settings
+        )
+        #expect(stationaryStamps.allSatisfy {
+            $0.strokeDirection == CGVector(dx: 1, dy: 0)
+        })
+    }
+
     @Test func flattenedTipAngleJitterReplaysIdenticalPixelsAndZeroKeepsBaseline() {
         let stamps = (0..<7).map {
             ImageEditorBrushStrokeSample(point: CGPoint(x: 12 + $0 * 16, y: 24))

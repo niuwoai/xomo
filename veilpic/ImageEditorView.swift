@@ -1691,6 +1691,13 @@ struct ImageEditorView: View {
                         .tag(angle)
                 }
             }
+            Toggle(
+                L10n.text("imageEditor.option.angleFollowsStrokeDirection"),
+                isOn: Binding(
+                    get: { viewModel.brushAngleFollowsStrokeDirection },
+                    set: { viewModel.setBrushAngleFollowsStrokeDirection($0) }
+                )
+            )
             Divider()
             Picker(
                 L10n.text("imageEditor.option.angleJitter"),

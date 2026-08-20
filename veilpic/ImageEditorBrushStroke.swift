@@ -27,6 +27,7 @@ struct ImageEditorBrushStrokeSample: Equatable {
 struct ImageEditorBrushRenderedStamp: Equatable {
     var sample: ImageEditorBrushStrokeSample
     var dynamicIndex: Int
+    var strokeDirection: CGVector = CGVector(dx: 1, dy: 0)
 }
 
 enum ImageEditorBrushEdgeStyle: Equatable {
@@ -74,6 +75,7 @@ struct ImageEditorBrushStrokeSettings: Equatable {
     var pressureSensitivity: CGFloat
     var sizeJitter: CGFloat
     var angleJitter: CGFloat
+    var angleFollowsStrokeDirection: Bool
     var roundnessJitter: CGFloat
     var opacityJitter: CGFloat
     var flowJitter: CGFloat
@@ -105,6 +107,7 @@ struct ImageEditorBrushStrokeSettings: Equatable {
         pressureSensitivity: CGFloat = 0.5,
         sizeJitter: CGFloat = 0,
         angleJitter: CGFloat = 0,
+        angleFollowsStrokeDirection: Bool = false,
         roundnessJitter: CGFloat = 0,
         opacityJitter: CGFloat = 0,
         flowJitter: CGFloat = 0,
@@ -135,6 +138,7 @@ struct ImageEditorBrushStrokeSettings: Equatable {
         self.pressureSensitivity = pressureSensitivity
         self.sizeJitter = sizeJitter
         self.angleJitter = angleJitter
+        self.angleFollowsStrokeDirection = angleFollowsStrokeDirection
         self.roundnessJitter = roundnessJitter
         self.opacityJitter = opacityJitter
         self.flowJitter = flowJitter
@@ -168,6 +172,7 @@ struct ImageEditorBrushStrokeSettings: Equatable {
             pressureSensitivity: max(0, min(1, pressureSensitivity)),
             sizeJitter: max(0, min(1, sizeJitter)),
             angleJitter: max(0, min(1, angleJitter)),
+            angleFollowsStrokeDirection: angleFollowsStrokeDirection,
             roundnessJitter: max(0, min(1, roundnessJitter)),
             opacityJitter: max(0, min(1, opacityJitter)),
             flowJitter: max(0, min(1, flowJitter)),
@@ -375,6 +380,8 @@ enum ImageEditorBrushStrokeKernel {
             )
             let tipDirection = resolvedTipDirection(
                 manualAngleDegrees: settings.tipAngleDegrees,
+                strokeDirection: renderedStamp.strokeDirection,
+                angleFollowsStrokeDirection: settings.angleFollowsStrokeDirection,
                 jitterOffsetDegrees: angleJitterOffsetDegrees(
                     stampIndex: stampIndex,
                     amount: settings.angleJitter
@@ -493,7 +500,11 @@ enum ImageEditorBrushStrokeKernel {
         let settings = settings.normalized
         guard settings.scatter > 0 || settings.scatterCount > 1 else {
             return stamps.enumerated().map {
-                ImageEditorBrushRenderedStamp(sample: $0.element, dynamicIndex: $0.offset)
+                ImageEditorBrushRenderedStamp(
+                    sample: $0.element,
+                    dynamicIndex: $0.offset,
+                    strokeDirection: strokeTangent(at: $0.offset, stamps: stamps)
+                )
             }
         }
 
@@ -534,7 +545,8 @@ enum ImageEditorBrushStrokeKernel {
                 )
                 return ImageEditorBrushRenderedStamp(
                     sample: scattered,
-                    dynamicIndex: dynamicIndex
+                    dynamicIndex: dynamicIndex,
+                    strokeDirection: tangent
                 )
             }
         }
@@ -864,15 +876,23 @@ enum ImageEditorBrushStrokeKernel {
 
     private static func resolvedTipDirection(
         manualAngleDegrees: CGFloat,
+        strokeDirection: CGVector,
+        angleFollowsStrokeDirection: Bool,
         jitterOffsetDegrees: CGFloat,
         tilt: ImageEditorStylusTilt?,
         tiltControlsShape: Bool
     ) -> CGVector {
-        let angle = resolvedTipAngleDegrees(
-            manualAngleDegrees: manualAngleDegrees,
-            tilt: tilt,
-            tiltControlsShape: tiltControlsShape
-        )
+        let angle: CGFloat
+        if tiltControlsShape,
+           let tilt,
+           tilt.magnitude > 0.0001 {
+            angle = CGFloat(tilt.azimuthDegrees ?? 0)
+        } else if angleFollowsStrokeDirection {
+            angle = atan2(strokeDirection.dy, strokeDirection.dx) * 180 / .pi
+                + max(-180, min(180, manualAngleDegrees))
+        } else {
+            angle = max(-180, min(180, manualAngleDegrees))
+        }
         let radians = (angle + jitterOffsetDegrees) * .pi / 180
         return CGVector(
             dx: cos(radians),

@@ -145,6 +145,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var brushPressureSensitivity: CGFloat = 50
     @Published var brushSizeJitter: CGFloat = 0
     @Published var brushAngleJitter: CGFloat = 0
+    @Published var brushAngleFollowsStrokeDirection = false
     @Published var brushRoundnessJitter: CGFloat = 0
     @Published var brushOpacityJitter: CGFloat = 0
     @Published var brushFlowJitter: CGFloat = 0
@@ -619,6 +620,7 @@ final class ImageEditorViewModel: ObservableObject {
         brushPressureSensitivity = CGFloat(brushDynamicsPreferences.pressureSensitivity)
         brushSizeJitter = CGFloat(brushDynamicsPreferences.sizeJitter)
         brushAngleJitter = CGFloat(brushDynamicsPreferences.angleJitter)
+        brushAngleFollowsStrokeDirection = brushDynamicsPreferences.angleFollowsStrokeDirection
         brushRoundnessJitter = CGFloat(brushDynamicsPreferences.roundnessJitter)
         brushOpacityJitter = CGFloat(brushDynamicsPreferences.opacityJitter)
         brushFlowJitter = CGFloat(brushDynamicsPreferences.flowJitter)
@@ -684,6 +686,7 @@ final class ImageEditorViewModel: ObservableObject {
         brushPressureSensitivity = CGFloat(brushDynamicsPreferences.pressureSensitivity)
         brushSizeJitter = CGFloat(brushDynamicsPreferences.sizeJitter)
         brushAngleJitter = CGFloat(brushDynamicsPreferences.angleJitter)
+        brushAngleFollowsStrokeDirection = brushDynamicsPreferences.angleFollowsStrokeDirection
         brushRoundnessJitter = CGFloat(brushDynamicsPreferences.roundnessJitter)
         brushOpacityJitter = CGFloat(brushDynamicsPreferences.opacityJitter)
         brushFlowJitter = CGFloat(brushDynamicsPreferences.flowJitter)
@@ -2943,6 +2946,7 @@ final class ImageEditorViewModel: ObservableObject {
             pressureSensitivity: brushPressureSensitivity,
             sizeJitter: brushSizeJitter,
             angleJitter: brushAngleJitter,
+            angleFollowsStrokeDirection: brushAngleFollowsStrokeDirection,
             roundnessJitter: brushRoundnessJitter,
             opacityJitter: brushOpacityJitter,
             flowJitter: brushFlowJitter,
@@ -3107,6 +3111,7 @@ final class ImageEditorViewModel: ObservableObject {
         brushPressureSensitivity = max(0, min(100, preset.pressureSensitivity))
         brushSizeJitter = max(0, min(100, preset.sizeJitter))
         brushAngleJitter = max(0, min(100, preset.angleJitter))
+        brushAngleFollowsStrokeDirection = preset.angleFollowsStrokeDirection
         brushRoundnessJitter = max(0, min(100, preset.roundnessJitter))
         brushOpacityJitter = max(0, min(100, preset.opacityJitter))
         brushFlowJitter = max(0, min(100, preset.flowJitter))
@@ -3158,6 +3163,7 @@ final class ImageEditorViewModel: ObservableObject {
             pressureSensitivity: brushPressureSensitivity,
             sizeJitter: brushSizeJitter,
             angleJitter: brushAngleJitter,
+            angleFollowsStrokeDirection: brushAngleFollowsStrokeDirection,
             roundnessJitter: brushRoundnessJitter,
             opacityJitter: brushOpacityJitter,
             flowJitter: brushFlowJitter,
@@ -3991,6 +3997,7 @@ final class ImageEditorViewModel: ObservableObject {
             pressureSensitivity: Double(brushPressureSensitivity),
             sizeJitter: Double(brushSizeJitter),
             angleJitter: Double(brushAngleJitter),
+            angleFollowsStrokeDirection: brushAngleFollowsStrokeDirection,
             roundnessJitter: Double(brushRoundnessJitter),
             opacityJitter: Double(brushOpacityJitter),
             flowJitter: Double(brushFlowJitter),
@@ -4165,6 +4172,12 @@ final class ImageEditorViewModel: ObservableObject {
         let normalized = max(0, min(100, jitter))
         guard brushAngleJitter != normalized else { return }
         brushAngleJitter = normalized
+        persistBrushDynamicsPreferences()
+    }
+
+    func setBrushAngleFollowsStrokeDirection(_ isEnabled: Bool) {
+        guard brushAngleFollowsStrokeDirection != isEnabled else { return }
+        brushAngleFollowsStrokeDirection = isEnabled
         persistBrushDynamicsPreferences()
     }
 
@@ -6326,6 +6339,7 @@ final class ImageEditorViewModel: ObservableObject {
                 pressureSensitivity: brushPressureSensitivity / 100,
                 sizeJitter: brushSizeJitter / 100,
                 angleJitter: brushAngleJitter / 100,
+                angleFollowsStrokeDirection: brushAngleFollowsStrokeDirection,
                 roundnessJitter: brushRoundnessJitter / 100,
                 opacityJitter: brushOpacityJitter / 100,
                 flowJitter: brushFlowJitter / 100,
@@ -6601,6 +6615,7 @@ final class ImageEditorViewModel: ObservableObject {
             pressureSensitivity: brushPressureSensitivity / 100,
             sizeJitter: brushSizeJitter / 100,
             angleJitter: brushAngleJitter / 100,
+            angleFollowsStrokeDirection: brushAngleFollowsStrokeDirection,
             roundnessJitter: brushRoundnessJitter / 100,
             opacityJitter: brushOpacityJitter / 100,
             flowJitter: brushFlowJitter / 100,
@@ -8570,6 +8585,7 @@ final class ImageEditorViewModel: ObservableObject {
             pressureSensitivity: brushPressureSensitivity / 100,
             sizeJitter: brushSizeJitter / 100,
             angleJitter: brushAngleJitter / 100,
+            angleFollowsStrokeDirection: brushAngleFollowsStrokeDirection,
             roundnessJitter: brushRoundnessJitter / 100,
             opacityJitter: brushOpacityJitter / 100,
             flowJitter: brushFlowJitter / 100,
