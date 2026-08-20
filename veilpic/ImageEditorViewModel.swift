@@ -146,6 +146,8 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var brushSizeJitter: CGFloat = 0
     @Published var brushAngleJitter: CGFloat = 0
     @Published var brushRoundnessJitter: CGFloat = 0
+    @Published var brushOpacityJitter: CGFloat = 0
+    @Published var brushFlowJitter: CGFloat = 0
     @Published var brushMinimumRoundness: CGFloat = 1
     @Published var brushScatter: CGFloat = 0
     @Published var brushScatterBothAxes = false
@@ -618,6 +620,8 @@ final class ImageEditorViewModel: ObservableObject {
         brushSizeJitter = CGFloat(brushDynamicsPreferences.sizeJitter)
         brushAngleJitter = CGFloat(brushDynamicsPreferences.angleJitter)
         brushRoundnessJitter = CGFloat(brushDynamicsPreferences.roundnessJitter)
+        brushOpacityJitter = CGFloat(brushDynamicsPreferences.opacityJitter)
+        brushFlowJitter = CGFloat(brushDynamicsPreferences.flowJitter)
         brushMinimumRoundness = CGFloat(brushDynamicsPreferences.minimumRoundness)
         brushScatter = CGFloat(brushDynamicsPreferences.scatter)
         brushScatterBothAxes = brushDynamicsPreferences.scatterBothAxes
@@ -681,6 +685,8 @@ final class ImageEditorViewModel: ObservableObject {
         brushSizeJitter = CGFloat(brushDynamicsPreferences.sizeJitter)
         brushAngleJitter = CGFloat(brushDynamicsPreferences.angleJitter)
         brushRoundnessJitter = CGFloat(brushDynamicsPreferences.roundnessJitter)
+        brushOpacityJitter = CGFloat(brushDynamicsPreferences.opacityJitter)
+        brushFlowJitter = CGFloat(brushDynamicsPreferences.flowJitter)
         brushMinimumRoundness = CGFloat(brushDynamicsPreferences.minimumRoundness)
         brushScatter = CGFloat(brushDynamicsPreferences.scatter)
         brushScatterBothAxes = brushDynamicsPreferences.scatterBothAxes
@@ -2938,6 +2944,8 @@ final class ImageEditorViewModel: ObservableObject {
             sizeJitter: brushSizeJitter,
             angleJitter: brushAngleJitter,
             roundnessJitter: brushRoundnessJitter,
+            opacityJitter: brushOpacityJitter,
+            flowJitter: brushFlowJitter,
             minimumRoundness: brushMinimumRoundness,
             scatter: brushScatter,
             scatterBothAxes: brushScatterBothAxes,
@@ -3100,6 +3108,8 @@ final class ImageEditorViewModel: ObservableObject {
         brushSizeJitter = max(0, min(100, preset.sizeJitter))
         brushAngleJitter = max(0, min(100, preset.angleJitter))
         brushRoundnessJitter = max(0, min(100, preset.roundnessJitter))
+        brushOpacityJitter = max(0, min(100, preset.opacityJitter))
+        brushFlowJitter = max(0, min(100, preset.flowJitter))
         brushMinimumRoundness = max(1, min(100, preset.minimumRoundness))
         brushScatter = max(0, min(1_000, preset.scatter))
         brushScatterBothAxes = preset.scatterBothAxes
@@ -3149,6 +3159,8 @@ final class ImageEditorViewModel: ObservableObject {
             sizeJitter: brushSizeJitter,
             angleJitter: brushAngleJitter,
             roundnessJitter: brushRoundnessJitter,
+            opacityJitter: brushOpacityJitter,
+            flowJitter: brushFlowJitter,
             minimumRoundness: brushMinimumRoundness,
             scatter: brushScatter,
             scatterBothAxes: brushScatterBothAxes,
@@ -3980,6 +3992,8 @@ final class ImageEditorViewModel: ObservableObject {
             sizeJitter: Double(brushSizeJitter),
             angleJitter: Double(brushAngleJitter),
             roundnessJitter: Double(brushRoundnessJitter),
+            opacityJitter: Double(brushOpacityJitter),
+            flowJitter: Double(brushFlowJitter),
             minimumRoundness: Double(brushMinimumRoundness),
             scatter: Double(brushScatter),
             scatterBothAxes: brushScatterBothAxes,
@@ -4061,6 +4075,20 @@ final class ImageEditorViewModel: ObservableObject {
         let normalized = max(0, min(100, jitter))
         guard brushSizeJitter != normalized else { return }
         brushSizeJitter = normalized
+        persistBrushDynamicsPreferences()
+    }
+
+    func setBrushOpacityJitter(_ jitter: CGFloat) {
+        let normalized = max(0, min(100, jitter))
+        guard brushOpacityJitter != normalized else { return }
+        brushOpacityJitter = normalized
+        persistBrushDynamicsPreferences()
+    }
+
+    func setBrushFlowJitter(_ jitter: CGFloat) {
+        let normalized = max(0, min(100, jitter))
+        guard brushFlowJitter != normalized else { return }
+        brushFlowJitter = normalized
         persistBrushDynamicsPreferences()
     }
 
@@ -6299,6 +6327,8 @@ final class ImageEditorViewModel: ObservableObject {
                 sizeJitter: brushSizeJitter / 100,
                 angleJitter: brushAngleJitter / 100,
                 roundnessJitter: brushRoundnessJitter / 100,
+                opacityJitter: brushOpacityJitter / 100,
+                flowJitter: brushFlowJitter / 100,
                 minimumRoundness: brushMinimumRoundness / 100,
                 scatter: brushScatter / 100,
                 scatterBothAxes: brushScatterBothAxes,
@@ -6572,6 +6602,8 @@ final class ImageEditorViewModel: ObservableObject {
             sizeJitter: brushSizeJitter / 100,
             angleJitter: brushAngleJitter / 100,
             roundnessJitter: brushRoundnessJitter / 100,
+            opacityJitter: brushOpacityJitter / 100,
+            flowJitter: brushFlowJitter / 100,
             minimumRoundness: brushMinimumRoundness / 100,
             scatter: brushScatter / 100,
             scatterBothAxes: brushScatterBothAxes,
@@ -8539,6 +8571,8 @@ final class ImageEditorViewModel: ObservableObject {
             sizeJitter: brushSizeJitter / 100,
             angleJitter: brushAngleJitter / 100,
             roundnessJitter: brushRoundnessJitter / 100,
+            opacityJitter: brushOpacityJitter / 100,
+            flowJitter: brushFlowJitter / 100,
             minimumRoundness: brushMinimumRoundness / 100,
             scatter: brushScatter / 100,
             scatterBothAxes: brushScatterBothAxes,

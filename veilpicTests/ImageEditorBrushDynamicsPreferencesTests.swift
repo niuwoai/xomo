@@ -24,6 +24,8 @@ struct ImageEditorBrushDynamicsPreferencesTests {
             sizeJitter: 140,
             angleJitter: 140,
             roundnessJitter: 140,
+            opacityJitter: 140,
+            flowJitter: -20,
             minimumRoundness: -20,
             scatter: 2_000,
             scatterBothAxes: true,
@@ -51,6 +53,8 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         #expect(loaded.sizeJitter == 100)
         #expect(loaded.angleJitter == 100)
         #expect(loaded.roundnessJitter == 100)
+        #expect(loaded.opacityJitter == 100)
+        #expect(loaded.flowJitter == 0)
         #expect(loaded.minimumRoundness == 1)
         #expect(loaded.scatter == 1_000)
         #expect(loaded.scatterBothAxes)
@@ -92,6 +96,8 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         first.setBrushSizeJitter(58)
         first.setBrushAngleJitter(63)
         first.setBrushRoundnessJitter(57)
+        first.setBrushOpacityJitter(54)
+        first.setBrushFlowJitter(49)
         first.setBrushMinimumRoundness(23)
         first.setBrushScatter(420)
         first.setBrushScatterBothAxes(true)
@@ -123,6 +129,8 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         #expect(restored.brushSizeJitter == 58)
         #expect(restored.brushAngleJitter == 63)
         #expect(restored.brushRoundnessJitter == 57)
+        #expect(restored.brushOpacityJitter == 54)
+        #expect(restored.brushFlowJitter == 49)
         #expect(restored.brushMinimumRoundness == 23)
         #expect(restored.brushScatter == 420)
         #expect(restored.brushScatterBothAxes)
@@ -163,6 +171,8 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         #expect(decodedDynamics.sizeJitter == 0)
         #expect(decodedDynamics.angleJitter == 0)
         #expect(decodedDynamics.roundnessJitter == 0)
+        #expect(decodedDynamics.opacityJitter == 0)
+        #expect(decodedDynamics.flowJitter == 0)
         #expect(decodedDynamics.minimumRoundness == 1)
         #expect(decodedDynamics.scatter == 0)
         #expect(!decodedDynamics.scatterBothAxes)
@@ -206,6 +216,8 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         #expect(decodedPreset.sizeJitter == 0)
         #expect(decodedPreset.angleJitter == 0)
         #expect(decodedPreset.roundnessJitter == 0)
+        #expect(decodedPreset.opacityJitter == 0)
+        #expect(decodedPreset.flowJitter == 0)
         #expect(decodedPreset.minimumRoundness == 1)
         #expect(decodedPreset.scatter == 0)
         #expect(!decodedPreset.scatterBothAxes)
@@ -289,6 +301,8 @@ struct ImageEditorBrushDynamicsPreferencesTests {
             sizeJitter: 140,
             angleJitter: 140,
             roundnessJitter: 140,
+            opacityJitter: 140,
+            flowJitter: -20,
             minimumRoundness: -20,
             scatter: 2_000,
             scatterBothAxes: true,
@@ -319,6 +333,8 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         #expect(preset.sizeJitter == 100)
         #expect(preset.angleJitter == 100)
         #expect(preset.roundnessJitter == 100)
+        #expect(preset.opacityJitter == 100)
+        #expect(preset.flowJitter == 0)
         #expect(preset.minimumRoundness == 1)
         #expect(preset.scatter == 1_000)
         #expect(preset.scatterBothAxes)
@@ -353,6 +369,8 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         first.setBrushSizeJitter(58)
         first.setBrushAngleJitter(63)
         first.setBrushRoundnessJitter(57)
+        first.setBrushOpacityJitter(54)
+        first.setBrushFlowJitter(49)
         first.setBrushMinimumRoundness(23)
         first.setBrushScatter(420)
         first.setBrushScatterBothAxes(true)
@@ -387,6 +405,8 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         #expect(restored.brushSizeJitter == 58)
         #expect(restored.brushAngleJitter == 63)
         #expect(restored.brushRoundnessJitter == 57)
+        #expect(restored.brushOpacityJitter == 54)
+        #expect(restored.brushFlowJitter == 49)
         #expect(restored.brushMinimumRoundness == 23)
         #expect(restored.brushScatter == 420)
         #expect(restored.brushScatterBothAxes)
@@ -426,6 +446,8 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         viewModel.setBrushSizeJitter(75)
         viewModel.setBrushAngleJitter(75)
         viewModel.setBrushRoundnessJitter(75)
+        viewModel.setBrushOpacityJitter(75)
+        viewModel.setBrushFlowJitter(75)
         viewModel.setBrushMinimumRoundness(75)
         viewModel.setBrushScatter(500)
         viewModel.setBrushScatterBothAxes(true)
@@ -455,6 +477,8 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         #expect(viewModel.brushSizeJitter == 0)
         #expect(viewModel.brushAngleJitter == 0)
         #expect(viewModel.brushRoundnessJitter == 0)
+        #expect(viewModel.brushOpacityJitter == 0)
+        #expect(viewModel.brushFlowJitter == 0)
         #expect(viewModel.brushMinimumRoundness == 1)
         #expect(viewModel.brushScatter == 0)
         #expect(!viewModel.brushScatterBothAxes)

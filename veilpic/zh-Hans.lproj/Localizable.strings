@@ -647,6 +647,10 @@
 "imageEditor.option.scatterCountJitter" = "数量抖动";
 "imageEditor.option.countPreset" = "每个印章 %d 个";
 "imageEditor.help.scattering" = "让笔尖横跨笔触散布，可选择沿双轴散布，并改变每个间距位置落下的笔尖数量";
+"imageEditor.option.transfer" = "传递";
+"imageEditor.option.opacityJitter" = "透明度抖动";
+"imageEditor.option.flowJitter" = "流量抖动";
+"imageEditor.help.transfer" = "让每个画笔印章的透明度与流量变化，但不超过选项栏设定值";
 "imageEditor.option.brushTipFinish" = "笔尖效果";
 "imageEditor.option.noise" = "杂色";
 "imageEditor.option.wetEdges" = "湿边";

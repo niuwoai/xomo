@@ -73,6 +73,8 @@ struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
         sizeJitter: 0,
         angleJitter: 0,
         roundnessJitter: 0,
+        opacityJitter: 0,
+        flowJitter: 0,
         minimumRoundness: 1,
         scatter: 0,
         scatterBothAxes: false,
@@ -100,6 +102,8 @@ struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
     var sizeJitter: Double
     var angleJitter: Double
     var roundnessJitter: Double
+    var opacityJitter: Double
+    var flowJitter: Double
     var minimumRoundness: Double
     var scatter: Double
     var scatterBothAxes: Bool
@@ -127,6 +131,8 @@ struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
         sizeJitter: Double = 0,
         angleJitter: Double = 0,
         roundnessJitter: Double = 0,
+        opacityJitter: Double = 0,
+        flowJitter: Double = 0,
         minimumRoundness: Double = 1,
         scatter: Double = 0,
         scatterBothAxes: Bool = false,
@@ -153,6 +159,8 @@ struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
         self.sizeJitter = sizeJitter
         self.angleJitter = angleJitter
         self.roundnessJitter = roundnessJitter
+        self.opacityJitter = opacityJitter
+        self.flowJitter = flowJitter
         self.minimumRoundness = minimumRoundness
         self.scatter = scatter
         self.scatterBothAxes = scatterBothAxes
@@ -181,6 +189,8 @@ struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
         case sizeJitter
         case angleJitter
         case roundnessJitter
+        case opacityJitter
+        case flowJitter
         case minimumRoundness
         case scatter
         case scatterBothAxes
@@ -213,6 +223,8 @@ struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
         sizeJitter = try values.decodeIfPresent(Double.self, forKey: .sizeJitter) ?? 0
         angleJitter = try values.decodeIfPresent(Double.self, forKey: .angleJitter) ?? 0
         roundnessJitter = try values.decodeIfPresent(Double.self, forKey: .roundnessJitter) ?? 0
+        opacityJitter = try values.decodeIfPresent(Double.self, forKey: .opacityJitter) ?? 0
+        flowJitter = try values.decodeIfPresent(Double.self, forKey: .flowJitter) ?? 0
         minimumRoundness = try values.decodeIfPresent(
             Double.self,
             forKey: .minimumRoundness
@@ -287,6 +299,8 @@ struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
             sizeJitter: max(0, min(100, sizeJitter)),
             angleJitter: max(0, min(100, angleJitter)),
             roundnessJitter: max(0, min(100, roundnessJitter)),
+            opacityJitter: max(0, min(100, opacityJitter)),
+            flowJitter: max(0, min(100, flowJitter)),
             minimumRoundness: max(1, min(100, minimumRoundness)),
             scatter: max(0, min(1_000, scatter)),
             scatterBothAxes: scatterBothAxes,

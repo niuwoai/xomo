@@ -647,6 +647,10 @@
 "imageEditor.option.scatterCountJitter" = "数のジッター";
 "imageEditor.option.countPreset" = "マークごとに %d 個";
 "imageEditor.help.scattering" = "ストロークを横切ってブラシマークを散布し、必要に応じて両軸へ広げ、各間隔で配置する先端数を変化させます";
+"imageEditor.option.transfer" = "転送";
+"imageEditor.option.opacityJitter" = "不透明度のジッター";
+"imageEditor.option.flowJitter" = "流量のジッター";
+"imageEditor.help.transfer" = "オプションバーの値を超えない範囲で、各ブラシマークの不透明度と流量を変化させます";
 "imageEditor.option.brushTipFinish" = "先端効果";
 "imageEditor.option.noise" = "ノイズ";
 "imageEditor.option.wetEdges" = "ウェットエッジ";

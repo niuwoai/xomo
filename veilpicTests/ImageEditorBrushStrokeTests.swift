@@ -629,6 +629,108 @@ struct ImageEditorBrushStrokeTests {
         #expect(sequence.allSatisfy { $0 >= 0.25 && $0 <= 1 })
     }
 
+    @Test func transferJitterIsDeterministicBoundedIndependentAndZeroCompatible() {
+        let indices = Array(0..<32)
+        let opacity = indices.map {
+            ImageEditorBrushStrokeKernel.opacityJitterScale(stampIndex: $0, amount: 0.75)
+        }
+        let flow = indices.map {
+            ImageEditorBrushStrokeKernel.flowJitterScale(stampIndex: $0, amount: 0.75)
+        }
+
+        #expect(opacity == indices.map {
+            ImageEditorBrushStrokeKernel.opacityJitterScale(stampIndex: $0, amount: 0.75)
+        })
+        #expect(flow == indices.map {
+            ImageEditorBrushStrokeKernel.flowJitterScale(stampIndex: $0, amount: 0.75)
+        })
+        #expect(opacity.allSatisfy { $0 >= 0.25 && $0 <= 1 })
+        #expect(flow.allSatisfy { $0 >= 0.25 && $0 <= 1 })
+        #expect(zip(opacity, flow).contains { abs($0.0 - $0.1) > 0.01 })
+        #expect(ImageEditorBrushStrokeKernel.opacityJitterScale(
+            stampIndex: 7,
+            amount: 0
+        ) == 1)
+        #expect(ImageEditorBrushStrokeKernel.flowJitterScale(
+            stampIndex: 7,
+            amount: 0
+        ) == 1)
+
+        let stamps = (0..<8).map {
+            ImageEditorBrushStrokeSample(point: CGPoint(x: 8 + $0 * 8, y: 16))
+        }
+        let baseline = ImageEditorBrushStrokeSettings(
+            diameter: 12,
+            hardness: 0.75,
+            opacity: 0.8,
+            flow: 0.6,
+            spacing: 0.25
+        )
+        var explicitZero = baseline
+        explicitZero.opacityJitter = 0
+        explicitZero.flowJitter = 0
+        #expect(ImageEditorBrushStrokeKernel.coverage(
+            width: 80,
+            height: 32,
+            stamps: stamps,
+            settings: baseline
+        ) == ImageEditorBrushStrokeKernel.coverage(
+            width: 80,
+            height: 32,
+            stamps: stamps,
+            settings: explicitZero
+        ))
+    }
+
+    @Test func transferJitterNeverExceedsBaseOrRemovesDepositedCoverage() {
+        var settings = ImageEditorBrushStrokeSettings(
+            diameter: 12,
+            hardness: 1,
+            opacity: 0.7,
+            flow: 0.8,
+            spacing: 1,
+            opacityJitter: 1,
+            flowJitter: 1,
+            edgeStyle: .aliased
+        )
+        let stamp = ImageEditorBrushStrokeSample(point: CGPoint(x: 16, y: 16))
+        var previousCenter = UInt8.zero
+        for count in 1...24 {
+            let coverage = ImageEditorBrushStrokeKernel.coverage(
+                width: 32,
+                height: 32,
+                stamps: Array(repeating: stamp, count: count),
+                settings: settings
+            )
+            let center = coverage[16 * 32 + 16]
+            #expect(center >= previousCenter)
+            #expect(center <= UInt8((settings.opacity * 255).rounded()))
+            previousCenter = center
+        }
+
+        let jittered = ImageEditorBrushStrokeKernel.coverage(
+            width: 32,
+            height: 32,
+            stamps: Array(repeating: stamp, count: 24),
+            settings: settings
+        )
+        #expect(jittered == ImageEditorBrushStrokeKernel.coverage(
+            width: 32,
+            height: 32,
+            stamps: Array(repeating: stamp, count: 24),
+            settings: settings
+        ))
+        settings.opacityJitter = 0
+        settings.flowJitter = 0
+        let baseline = ImageEditorBrushStrokeKernel.coverage(
+            width: 32,
+            height: 32,
+            stamps: Array(repeating: stamp, count: 24),
+            settings: settings
+        )
+        #expect(jittered != baseline)
+    }
+
     @Test func sizeJitterAndPressureShareTheMinimumDiameterFloor() {
         let jitterOnly = (0..<32).map {
             ImageEditorBrushStrokeKernel.resolvedDiameterScale(

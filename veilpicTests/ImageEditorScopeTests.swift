@@ -4748,7 +4748,8 @@ struct ImageEditorScopeTests {
         #expect(source.contains("brushPresetMenu\n                    brushRoundnessMenu"))
         #expect(source.contains("brushRoundnessMenu\n                    brushSizeJitterMenu"))
         #expect(source.contains("brushSizeJitterMenu\n                    brushScatteringMenu"))
-        #expect(source.contains("brushScatteringMenu\n                    if viewModel.selectedTool != .pencil {\n                        brushTipFinishMenu"))
+        #expect(source.contains("brushScatteringMenu\n                    brushTransferMenu"))
+        #expect(source.contains("brushTransferMenu\n                    if viewModel.selectedTool != .pencil {\n                        brushTipFinishMenu"))
         #expect(source.contains("ImageEditorBrushSizeJitterPresets.values"))
         #expect(source.contains("viewModel.setBrushSizeJitter($0)"))
         #expect(source.contains("image-editor-brush-size-jitter"))
@@ -4774,6 +4775,12 @@ struct ImageEditorScopeTests {
         #expect(menuSource.contains("imageEditor.option.minimumRoundness"))
         #expect(menuSource.contains("imageEditor.option.scatterBothAxes"))
         #expect(menuSource.contains("image-editor-brush-scattering"))
+        #expect(menuSource.contains("private var brushTransferMenu: some View"))
+        #expect(menuSource.contains("viewModel.setBrushOpacityJitter($0)"))
+        #expect(menuSource.contains("viewModel.setBrushFlowJitter($0)"))
+        #expect(menuSource.contains("imageEditor.option.opacityJitter"))
+        #expect(menuSource.contains("imageEditor.option.flowJitter"))
+        #expect(menuSource.contains("image-editor-brush-transfer"))
         #expect(menuSource.contains("private var brushTipFinishMenu: some View"))
         #expect(menuSource.contains("viewModel.setBrushNoiseEnabled($0)"))
         #expect(menuSource.contains("viewModel.setBrushWetEdgesEnabled($0)"))
@@ -4789,6 +4796,16 @@ struct ImageEditorScopeTests {
         #expect(
             viewModelSource.components(
                 separatedBy: "roundnessJitter: brushRoundnessJitter / 100"
+            ).count == 4
+        )
+        #expect(
+            viewModelSource.components(
+                separatedBy: "opacityJitter: brushOpacityJitter / 100"
+            ).count == 4
+        )
+        #expect(
+            viewModelSource.components(
+                separatedBy: "flowJitter: brushFlowJitter / 100"
             ).count == 4
         )
         #expect(

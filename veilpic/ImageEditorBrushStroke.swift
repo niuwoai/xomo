@@ -75,6 +75,8 @@ struct ImageEditorBrushStrokeSettings: Equatable {
     var sizeJitter: CGFloat
     var angleJitter: CGFloat
     var roundnessJitter: CGFloat
+    var opacityJitter: CGFloat
+    var flowJitter: CGFloat
     var minimumRoundness: CGFloat
     var scatter: CGFloat
     var scatterBothAxes: Bool
@@ -104,6 +106,8 @@ struct ImageEditorBrushStrokeSettings: Equatable {
         sizeJitter: CGFloat = 0,
         angleJitter: CGFloat = 0,
         roundnessJitter: CGFloat = 0,
+        opacityJitter: CGFloat = 0,
+        flowJitter: CGFloat = 0,
         minimumRoundness: CGFloat = 0.01,
         scatter: CGFloat = 0,
         scatterBothAxes: Bool = false,
@@ -132,6 +136,8 @@ struct ImageEditorBrushStrokeSettings: Equatable {
         self.sizeJitter = sizeJitter
         self.angleJitter = angleJitter
         self.roundnessJitter = roundnessJitter
+        self.opacityJitter = opacityJitter
+        self.flowJitter = flowJitter
         self.minimumRoundness = minimumRoundness
         self.scatter = scatter
         self.scatterBothAxes = scatterBothAxes
@@ -163,6 +169,8 @@ struct ImageEditorBrushStrokeSettings: Equatable {
             sizeJitter: max(0, min(1, sizeJitter)),
             angleJitter: max(0, min(1, angleJitter)),
             roundnessJitter: max(0, min(1, roundnessJitter)),
+            opacityJitter: max(0, min(1, opacityJitter)),
+            flowJitter: max(0, min(1, flowJitter)),
             minimumRoundness: max(0.01, min(1, minimumRoundness)),
             scatter: max(0, min(10, scatter)),
             scatterBothAxes: scatterBothAxes,
@@ -336,13 +344,16 @@ enum ImageEditorBrushStrokeKernel {
                 sizeJitter: settings.sizeJitter,
                 minimumDiameter: settings.minimumDiameter
             )
-            let flowScale = settings.pressureControlsFlow
+            let pressureFlowScale = settings.pressureControlsFlow
                 ? pressureFlowScale(
                     mappedPressure: mappedPressure,
                     minimumFlow: settings.minimumFlow
                 )
                 : 1
-            let opacityLimit = settings.opacity * (
+            let opacityLimit = settings.opacity * opacityJitterScale(
+                stampIndex: stampIndex,
+                amount: settings.opacityJitter
+            ) * (
                 settings.pressureControlsOpacity
                     ? pressureOpacityScale(
                         mappedPressure: mappedPressure,
@@ -402,11 +413,16 @@ enum ImageEditorBrushStrokeKernel {
                         : baseStampCoverage
                     guard stampCoverage > 0 else { continue }
                     let index = y * width + x
-                    let deposited = stampCoverage * settings.flow * flowScale
-                    accumulated[index] = min(
+                    let deposited = stampCoverage * settings.flow * pressureFlowScale
+                        * flowJitterScale(
+                            stampIndex: stampIndex,
+                            amount: settings.flowJitter
+                        )
+                    let currentCoverage = accumulated[index]
+                    accumulated[index] = max(currentCoverage, min(
                         opacityLimit,
-                        accumulated[index] + (1 - accumulated[index]) * deposited
-                    )
+                        currentCoverage + (1 - currentCoverage) * deposited
+                    ))
                 }
             }
         }
@@ -627,6 +643,37 @@ enum ImageEditorBrushStrokeKernel {
             salt: 0xE7037ED1A0B428DB
         )
         return base - (base - minimum) * normalizedAmount * unit
+    }
+
+    /// Varies transfer only downward from the options-bar opacity or flow.
+    /// Independent salts keep both controls deterministic without correlating them.
+    static func opacityJitterScale(stampIndex: Int, amount: CGFloat) -> CGFloat {
+        transferJitterScale(
+            stampIndex: stampIndex,
+            amount: amount,
+            salt: 0x8EBC6AF09C88C6E3
+        )
+    }
+
+    static func flowJitterScale(stampIndex: Int, amount: CGFloat) -> CGFloat {
+        transferJitterScale(
+            stampIndex: stampIndex,
+            amount: amount,
+            salt: 0x589965CC75374CC3
+        )
+    }
+
+    private static func transferJitterScale(
+        stampIndex: Int,
+        amount: CGFloat,
+        salt: UInt64
+    ) -> CGFloat {
+        let normalizedAmount = max(0, min(1, amount))
+        guard normalizedAmount > 0 else { return 1 }
+        return 1 - normalizedAmount * deterministicUnit(
+            stampIndex: stampIndex,
+            salt: salt
+        )
     }
 
     private static func deterministicUnit(stampIndex: Int, salt: UInt64) -> CGFloat {

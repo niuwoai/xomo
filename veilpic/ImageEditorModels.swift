@@ -50,6 +50,8 @@ struct ImageEditorBrushPreset: Identifiable, Codable, Equatable {
     let sizeJitter: CGFloat
     let angleJitter: CGFloat
     let roundnessJitter: CGFloat
+    let opacityJitter: CGFloat
+    let flowJitter: CGFloat
     let minimumRoundness: CGFloat
     let scatter: CGFloat
     let scatterBothAxes: Bool
@@ -80,6 +82,8 @@ struct ImageEditorBrushPreset: Identifiable, Codable, Equatable {
         sizeJitter: CGFloat = 0,
         angleJitter: CGFloat = 0,
         roundnessJitter: CGFloat = 0,
+        opacityJitter: CGFloat = 0,
+        flowJitter: CGFloat = 0,
         minimumRoundness: CGFloat = 1,
         scatter: CGFloat = 0,
         scatterBothAxes: Bool = false,
@@ -109,6 +113,8 @@ struct ImageEditorBrushPreset: Identifiable, Codable, Equatable {
         self.sizeJitter = sizeJitter
         self.angleJitter = angleJitter
         self.roundnessJitter = roundnessJitter
+        self.opacityJitter = opacityJitter
+        self.flowJitter = flowJitter
         self.minimumRoundness = minimumRoundness
         self.scatter = scatter
         self.scatterBothAxes = scatterBothAxes
@@ -140,6 +146,8 @@ struct ImageEditorBrushPreset: Identifiable, Codable, Equatable {
         case sizeJitter
         case angleJitter
         case roundnessJitter
+        case opacityJitter
+        case flowJitter
         case minimumRoundness
         case scatter
         case scatterBothAxes
@@ -192,6 +200,14 @@ struct ImageEditorBrushPreset: Identifiable, Codable, Equatable {
         roundnessJitter = try values.decodeIfPresent(
             CGFloat.self,
             forKey: .roundnessJitter
+        ) ?? 0
+        opacityJitter = try values.decodeIfPresent(
+            CGFloat.self,
+            forKey: .opacityJitter
+        ) ?? 0
+        flowJitter = try values.decodeIfPresent(
+            CGFloat.self,
+            forKey: .flowJitter
         ) ?? 0
         minimumRoundness = try values.decodeIfPresent(
             CGFloat.self,
@@ -265,6 +281,8 @@ struct ImageEditorBrushPreset: Identifiable, Codable, Equatable {
             sizeJitter: max(0, min(100, sizeJitter)),
             angleJitter: max(0, min(100, angleJitter)),
             roundnessJitter: max(0, min(100, roundnessJitter)),
+            opacityJitter: max(0, min(100, opacityJitter)),
+            flowJitter: max(0, min(100, flowJitter)),
             minimumRoundness: max(1, min(100, minimumRoundness)),
             scatter: max(0, min(1_000, scatter)),
             scatterBothAxes: scatterBothAxes,
@@ -295,6 +313,8 @@ struct ImageEditorBrushPreset: Identifiable, Codable, Equatable {
         sizeJitter: CGFloat,
         angleJitter: CGFloat,
         roundnessJitter: CGFloat,
+        opacityJitter: CGFloat,
+        flowJitter: CGFloat,
         minimumRoundness: CGFloat,
         scatter: CGFloat,
         scatterBothAxes: Bool,
@@ -322,6 +342,8 @@ struct ImageEditorBrushPreset: Identifiable, Codable, Equatable {
             && abs(self.sizeJitter - sizeJitter) < tolerance
             && abs(self.angleJitter - angleJitter) < tolerance
             && abs(self.roundnessJitter - roundnessJitter) < tolerance
+            && abs(self.opacityJitter - opacityJitter) < tolerance
+            && abs(self.flowJitter - flowJitter) < tolerance
             && abs(self.minimumRoundness - minimumRoundness) < tolerance
             && abs(self.scatter - scatter) < tolerance
             && self.scatterBothAxes == scatterBothAxes

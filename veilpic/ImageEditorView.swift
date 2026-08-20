@@ -1074,6 +1074,7 @@ struct ImageEditorView: View {
                     brushRoundnessMenu
                     brushSizeJitterMenu
                     brushScatteringMenu
+                    brushTransferMenu
                     if viewModel.selectedTool != .pencil {
                         brushTipFinishMenu
                     }
@@ -1807,6 +1808,47 @@ struct ImageEditorView: View {
         .xomoFocusEffectDisabled()
         .help(L10n.text("imageEditor.help.scattering"))
         .accessibilityIdentifier("image-editor-brush-scattering")
+    }
+
+    private var brushTransferMenu: some View {
+        Menu {
+            Picker(
+                L10n.text("imageEditor.option.opacityJitter"),
+                selection: Binding(
+                    get: { viewModel.brushOpacityJitter },
+                    set: { viewModel.setBrushOpacityJitter($0) }
+                )
+            ) {
+                ForEach(ImageEditorBrushSizeJitterPresets.values, id: \.self) { jitter in
+                    Text(L10n.format("imageEditor.option.percentPreset", Int(jitter)))
+                        .tag(jitter)
+                }
+            }
+            Picker(
+                L10n.text("imageEditor.option.flowJitter"),
+                selection: Binding(
+                    get: { viewModel.brushFlowJitter },
+                    set: { viewModel.setBrushFlowJitter($0) }
+                )
+            ) {
+                ForEach(ImageEditorBrushSizeJitterPresets.values, id: \.self) { jitter in
+                    Text(L10n.format("imageEditor.option.percentPreset", Int(jitter)))
+                        .tag(jitter)
+                }
+            }
+        } label: {
+            Label(
+                L10n.text("imageEditor.option.transfer"),
+                systemImage: "drop.halffull"
+            )
+                .font(.system(size: 11, weight: .semibold))
+        }
+        .menuStyle(.borderlessButton)
+        .fixedSize()
+        .focusable(false)
+        .xomoFocusEffectDisabled()
+        .help(L10n.text("imageEditor.help.transfer"))
+        .accessibilityIdentifier("image-editor-brush-transfer")
     }
 
     private var brushTipFinishMenu: some View {
