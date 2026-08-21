@@ -3251,9 +3251,16 @@ final class ImageEditorViewModel: ObservableObject {
 
     @discardableResult
     func updateSelectedCustomBrushPresetFromCurrentSettings() -> Bool {
-        guard let targetPresetID = selectedCustomBrushPreset?.id,
-              let index = customBrushPresets.firstIndex(where: { $0.id == targetPresetID })
-        else {
+        guard let targetPresetID = selectedCustomBrushPreset?.id else {
+            statusText = L10n.text("imageEditor.status.brushPresetUpdateUnavailable")
+            return false
+        }
+        return updateCustomBrushPresetFromCurrentSettings(id: targetPresetID)
+    }
+
+    @discardableResult
+    func updateCustomBrushPresetFromCurrentSettings(id targetPresetID: String) -> Bool {
+        guard let index = customBrushPresets.firstIndex(where: { $0.id == targetPresetID }) else {
             statusText = L10n.text("imageEditor.status.brushPresetUpdateUnavailable")
             return false
         }

@@ -237,7 +237,8 @@ struct XomoAutomationTests {
             brushPresetTool["inputSchema"]?.objectValue?["properties"]?.objectValue
         )
         #expect(brushPresetProperties["action"]?.objectValue?["enum"] == .array([
-            .string("list"), .string("create"), .string("apply"), .string("rename"), .string("delete")
+            .string("list"), .string("create"), .string("apply"), .string("update"),
+            .string("rename"), .string("delete")
         ]))
         #expect(brushPresetProperties["name"]?.objectValue?["type"] == .string("string"))
         #expect(tools.contains { tool in
@@ -9960,6 +9961,87 @@ struct XomoAutomationTests {
         #expect(transactionSignature(viewModel.document) == documentBeforeRename)
         #expect(viewModel.undoStack.map(transactionSignature) == undoBeforeRename)
         #expect(viewModel.redoStack.map(transactionSignature) == redoBeforeRename)
+    }
+
+    @Test func registryUpdatesCustomBrushPresetByStableIDWithoutSelectingOrApplyingIt() throws {
+        let suiteName = "XomoAutomationTests.updatePreset.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName) ?? .standard
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let viewModel = makeViewModel(preferencesDefaults: defaults)
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        defer { registry.unregister(viewModel) }
+
+        viewModel.brushSize = 22
+        let first = try #require(viewModel.createBrushPresetFromCurrentSettings())
+        viewModel.brushSize = 33
+        let second = try #require(viewModel.createBrushPresetFromCurrentSettings())
+        viewModel.brushSize = 71
+        viewModel.setBrushSizeJitter(68)
+        viewModel.setBrushNoiseEnabled(true)
+        viewModel.addLayer()
+        viewModel.undo()
+        let documentBeforeUpdate = transactionSignature(viewModel.document)
+        let undoBeforeUpdate = viewModel.undoStack.map(transactionSignature)
+        let redoBeforeUpdate = viewModel.redoStack.map(transactionSignature)
+
+        let update = registry.execute(request(
+            operation: "call",
+            name: "xomo.brush.preset",
+            arguments: ["action": .string("update"), "id": .string(first.id)]
+        ))
+
+        #expect(update.ok)
+        let updated = try #require(viewModel.customBrushPresets.first)
+        #expect(viewModel.customBrushPresets.map(\.id) == [first.id, second.id])
+        #expect(updated.id == first.id)
+        #expect(updated.name == first.name)
+        #expect(updated.size == 71)
+        #expect(updated.sizeJitter == 68)
+        #expect(updated.noiseEnabled)
+        #expect(viewModel.customBrushPresets[1] == second)
+        #expect(viewModel.selectedBrushPresetID == second.id)
+        #expect(viewModel.brushSize == 71)
+        #expect(viewModel.brushSizeJitter == 68)
+        #expect(viewModel.brushNoiseEnabled)
+        #expect(transactionSignature(viewModel.document) == documentBeforeUpdate)
+        #expect(viewModel.undoStack.map(transactionSignature) == undoBeforeUpdate)
+        #expect(viewModel.redoStack.map(transactionSignature) == redoBeforeUpdate)
+        #expect(
+            makeViewModel(preferencesDefaults: defaults).customBrushPresets.first == updated
+        )
+        let returnedPreset = try #require(update.result?.arrayValue?.first(where: {
+            $0.objectValue?["id"] == .string(first.id)
+        })?.objectValue)
+        #expect(returnedPreset["active"] == .bool(true))
+        #expect(returnedPreset["size"] == .number(71))
+
+        let presetsAfterUpdate = viewModel.customBrushPresets
+        let preferencesAfterUpdate = defaults.data(
+            forKey: ImageEditorBrushPresetPreferences.storageKey
+        )
+        let repeated = registry.execute(request(
+            operation: "call",
+            name: "xomo.brush.preset",
+            arguments: ["action": .string("update"), "id": .string(first.id)]
+        ))
+        #expect(repeated.ok)
+        #expect(viewModel.customBrushPresets == presetsAfterUpdate)
+        #expect(defaults.data(forKey: ImageEditorBrushPresetPreferences.storageKey) == preferencesAfterUpdate)
+
+        let builtInID = try #require(ImageEditorBrushPreset.defaultPresets.first?.id)
+        let builtIn = registry.execute(request(
+            operation: "call",
+            name: "xomo.brush.preset",
+            arguments: ["action": .string("update"), "id": .string(builtInID)]
+        ))
+        #expect(!builtIn.ok)
+        #expect(builtIn.error?.contains("Not found: Custom brush preset") == true)
+        #expect(viewModel.customBrushPresets == presetsAfterUpdate)
+        #expect(viewModel.selectedBrushPresetID == second.id)
+        #expect(transactionSignature(viewModel.document) == documentBeforeUpdate)
+        #expect(viewModel.undoStack.map(transactionSignature) == undoBeforeUpdate)
+        #expect(viewModel.redoStack.map(transactionSignature) == redoBeforeUpdate)
     }
 
     @Test func registryRecursivelyExpandsAndCollapsesSelectedLayerGroups() {

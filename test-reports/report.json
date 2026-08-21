@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-22 05:51:38 +0800",
+  "generated_at": "2026-08-22 06:06:21 +0800",
   "total": 1,
   "passed": 1,
   "failed": 0,
@@ -10,15 +10,15 @@
   "results": [
     {
       "suite": "ImageEditorBrushDynamicsPreferencesTests",
-      "method": "renamingSelectedCustomPresetPreservesSavedSettingsDirtyStateAndTransactions",
-      "identifier": "veilpicTests/ImageEditorBrushDynamicsPreferencesTests/renamingSelectedCustomPresetPreservesSavedSettingsDirtyStateAndTransactions()",
+      "method": "updatingSelectedCustomPresetKeepsIdentityOrderAndDocumentTransactions",
+      "identifier": "veilpicTests/ImageEditorBrushDynamicsPreferencesTests/updatingSelectedCustomPresetKeepsIdentityOrderAndDocumentTransactions()",
       "file": "ImageEditorBrushDynamicsPreferencesTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 4.889,
+      "duration": 9.537,
       "infrastructure_retries": 0,
       "issues": [],
-      "log": "ImageEditorBrushDynamicsPreferencesTests.renamingSelectedCustomPresetPreservesSavedSettingsDirtyStateAndTransactions.log"
+      "log": "ImageEditorBrushDynamicsPreferencesTests.updatingSelectedCustomPresetKeepsIdentityOrderAndDocumentTransactions.log"
     }
   ]
 }
