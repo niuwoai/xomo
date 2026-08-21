@@ -237,10 +237,12 @@ struct XomoAutomationTests {
             brushPresetTool["inputSchema"]?.objectValue?["properties"]?.objectValue
         )
         #expect(brushPresetProperties["action"]?.objectValue?["enum"] == .array([
-            .string("list"), .string("create"), .string("apply"), .string("update"),
-            .string("duplicate"), .string("moveToIndex"), .string("import"), .string("export"),
-            .string("rename"), .string("delete")
+            .string("list"), .string("favorites"), .string("recent"), .string("create"),
+            .string("apply"), .string("favorite"), .string("update"), .string("duplicate"),
+            .string("moveToIndex"), .string("import"), .string("export"), .string("rename"),
+            .string("delete")
         ]))
+        #expect(brushPresetProperties["favorite"]?.objectValue?["type"] == .string("boolean"))
         #expect(brushPresetProperties["index"]?.objectValue?["type"] == .string("integer"))
         #expect(brushPresetProperties["index"]?.objectValue?["minimum"] == .number(0))
         #expect(brushPresetProperties["path"]?.objectValue?["type"] == .string("string"))
@@ -9892,6 +9894,125 @@ struct XomoAutomationTests {
         #expect(delete.ok)
         #expect(viewModel.customBrushPresets.isEmpty)
         #expect(delete.result?.arrayValue?.count == ImageEditorBrushPreset.defaultPresets.count)
+    }
+
+    @Test func registryFavoritesAndListsRecentBrushPresetsWithoutDocumentTransactions() throws {
+        let suiteName = "XomoAutomationTests.brushPresetUsage.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName) ?? .standard
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let viewModel = makeViewModel(preferencesDefaults: defaults)
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        defer { registry.unregister(viewModel) }
+        viewModel.brushSize = 43
+        let custom = try #require(viewModel.createBrushPresetFromCurrentSettings())
+        let builtIn = try #require(ImageEditorBrushPreset.defaultPresets.first)
+        let documentBeforeUsage = transactionSignature(viewModel.document)
+        let undoBeforeUsage = viewModel.undoStack.map(transactionSignature)
+        let redoBeforeUsage = viewModel.redoStack.map(transactionSignature)
+
+        for id in [builtIn.id, custom.id] {
+            let response = registry.execute(request(
+                operation: "call",
+                name: "xomo.brush.preset",
+                arguments: [
+                    "action": .string("favorite"),
+                    "id": .string(id),
+                    "favorite": .bool(true)
+                ]
+            ))
+            #expect(response.ok)
+        }
+        let applyBuiltIn = registry.execute(request(
+            operation: "call",
+            name: "xomo.brush.preset",
+            arguments: ["action": .string("apply"), "id": .string(builtIn.id)]
+        ))
+        let applyCustom = registry.execute(request(
+            operation: "call",
+            name: "xomo.brush.preset",
+            arguments: ["action": .string("apply"), "id": .string(custom.id)]
+        ))
+        #expect(applyBuiltIn.ok)
+        #expect(applyCustom.ok)
+        #expect(transactionSignature(viewModel.document) == documentBeforeUsage)
+        #expect(viewModel.undoStack.map(transactionSignature) == undoBeforeUsage)
+        #expect(viewModel.redoStack.map(transactionSignature) == redoBeforeUsage)
+
+        let reopened = makeViewModel(preferencesDefaults: defaults)
+        registry.unregister(viewModel)
+        registry.register(reopened)
+        defer { registry.unregister(reopened) }
+        let favorites = registry.execute(request(
+            operation: "call",
+            name: "xomo.brush.preset",
+            arguments: ["action": .string("favorites")]
+        ))
+        let recent = registry.execute(request(
+            operation: "call",
+            name: "xomo.brush.preset",
+            arguments: ["action": .string("recent")]
+        ))
+        let favoriteResults = try #require(favorites.result?.arrayValue)
+        let recentResults = try #require(recent.result?.arrayValue)
+        #expect(favorites.ok)
+        #expect(favoriteResults.compactMap { $0.objectValue?["id"]?.stringValue } == [builtIn.id, custom.id])
+        #expect(favoriteResults.allSatisfy { $0.objectValue?["favorite"] == .bool(true) })
+        #expect(recent.ok)
+        #expect(recentResults.compactMap { $0.objectValue?["id"]?.stringValue } == [custom.id, builtIn.id])
+        #expect(recentResults.allSatisfy { $0.objectValue?["recent"] == .bool(true) })
+
+        let removeBuiltInFavorite = registry.execute(request(
+            operation: "call",
+            name: "xomo.brush.preset",
+            arguments: [
+                "action": .string("favorite"),
+                "id": .string(builtIn.id),
+                "favorite": .bool(false)
+            ]
+        ))
+        #expect(removeBuiltInFavorite.ok)
+        #expect(removeBuiltInFavorite.result?.arrayValue?.compactMap { $0.objectValue?["id"]?.stringValue } == [custom.id])
+        let list = registry.execute(request(
+            operation: "call",
+            name: "xomo.brush.preset",
+            arguments: ["action": .string("list")]
+        ))
+        let listedBuiltIn = try #require(
+            list.result?.arrayValue?.first { $0.objectValue?["id"] == .string(builtIn.id) }
+        )
+        let listedCustom = try #require(
+            list.result?.arrayValue?.first { $0.objectValue?["id"] == .string(custom.id) }
+        )
+        #expect(listedBuiltIn.objectValue?["favorite"] == .bool(false))
+        #expect(listedBuiltIn.objectValue?["recent"] == .bool(true))
+        #expect(listedCustom.objectValue?["favorite"] == .bool(true))
+        #expect(listedCustom.objectValue?["recent"] == .bool(true))
+
+        let removeCustomFavorite = registry.execute(request(
+            operation: "call",
+            name: "xomo.brush.preset",
+            arguments: [
+                "action": .string("favorite"),
+                "id": .string(custom.id),
+                "favorite": .bool(false)
+            ]
+        ))
+        #expect(removeCustomFavorite.ok)
+        #expect(removeCustomFavorite.result == .array([]))
+
+        let unknown = registry.execute(request(
+            operation: "call",
+            name: "xomo.brush.preset",
+            arguments: [
+                "action": .string("favorite"),
+                "id": .string("missing-brush-preset"),
+                "favorite": .bool(true)
+            ]
+        ))
+        #expect(!unknown.ok)
+        #expect(unknown.error?.contains("Not found: Brush preset missing-brush-preset") == true)
+        #expect(reopened.favoriteBrushPresetIDs.isEmpty)
     }
 
     @Test func registryRenamesCustomBrushPresetByStableIDWithoutApplyingIt() throws {

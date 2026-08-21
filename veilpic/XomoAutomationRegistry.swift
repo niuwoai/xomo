@@ -2006,9 +2006,14 @@ final class XomoAutomationRegistry {
         viewModel: ImageEditorViewModel
     ) throws -> XomoJSONValue {
         let action = arguments["action"]?.stringValue ?? "list"
+        var resultPresets: [ImageEditorBrushPreset]?
         switch action {
         case "list":
             break
+        case "favorites":
+            resultPresets = viewModel.favoriteBrushPresets
+        case "recent":
+            resultPresets = viewModel.recentBrushPresets
         case "create":
             guard viewModel.createBrushPresetFromCurrentSettings() != nil else {
                 throw XomoAutomationCallError.invalidArgument("Custom brush preset limit reached")
@@ -2019,6 +2024,13 @@ final class XomoAutomationRegistry {
                 throw XomoAutomationCallError.notFound("Brush preset \(id)")
             }
             viewModel.applyBrushPreset(preset)
+        case "favorite":
+            let id = try requiredString("id", in: arguments)
+            let isFavorite = try requiredBool("favorite", in: arguments)
+            guard viewModel.setBrushPresetFavorite(id: id, isFavorite: isFavorite) else {
+                throw XomoAutomationCallError.notFound("Brush preset \(id)")
+            }
+            resultPresets = viewModel.favoriteBrushPresets
         case "update":
             let id = try requiredString("id", in: arguments)
             guard viewModel.customBrushPresets.contains(where: { $0.id == id }) else {
@@ -2122,7 +2134,7 @@ final class XomoAutomationRegistry {
         default:
             throw XomoAutomationCallError.invalidArgument("Unknown brush preset action: \(action)")
         }
-        return brushPresetsResult(viewModel)
+        return brushPresetsResult(viewModel, presets: resultPresets)
     }
 
     private func brushPresetsResult(
@@ -2135,6 +2147,8 @@ final class XomoAutomationRegistry {
                 "title": .string(preset.title),
                 "builtIn": .bool(preset.isBuiltIn),
                 "active": .bool(viewModel.activeBrushPreset?.id == preset.id),
+                "favorite": .bool(viewModel.isFavoriteBrushPreset(id: preset.id)),
+                "recent": .bool(viewModel.recentBrushPresetIDs.contains(preset.id)),
                 "size": .number(Double(preset.size)),
                 "hardness": .number(Double(preset.hardness)),
                 "flow": .number(Double(preset.flow)),
@@ -6938,9 +6952,10 @@ private extension XomoAutomationRegistry {
             "id": XomoAutomationSchema.string(description: "Stable color sampler UUID")
         ], required: ["id"]),
         tool("xomo.color_sampler.clear", "Clear all canvas color samplers and report the actual cleared count."),
-        tool("xomo.brush.preset", "List, create, apply, update, duplicate, reorder, import, export, rename, or delete persisted brush presets.", [
-            "action": XomoAutomationSchema.string(description: "Brush preset action", values: ["list", "create", "apply", "update", "duplicate", "moveToIndex", "import", "export", "rename", "delete"]),
-            "id": XomoAutomationSchema.string(description: "Preset identifier for apply, update, duplicate, moveToIndex, single-preset export, rename, or delete"),
+        tool("xomo.brush.preset", "List, favorite, apply, create, update, duplicate, reorder, import, export, rename, or delete persisted brush presets.", [
+            "action": XomoAutomationSchema.string(description: "Brush preset action", values: ["list", "favorites", "recent", "create", "apply", "favorite", "update", "duplicate", "moveToIndex", "import", "export", "rename", "delete"]),
+            "id": XomoAutomationSchema.string(description: "Preset identifier for apply, favorite, update, duplicate, moveToIndex, single-preset export, rename, or delete"),
+            "favorite": XomoAutomationSchema.boolean(description: "Whether favorite should add or remove the preset from favorites"),
             "index": XomoAutomationSchema.integer(description: "Zero-based destination index within custom presets for moveToIndex", minimum: 0),
             "path": XomoAutomationSchema.string(description: "Source path for import or destination path for export of a .xomobrushes file"),
             "name": XomoAutomationSchema.string(description: "New custom preset name for rename")

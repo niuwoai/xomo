@@ -1,60 +1,24 @@
 {
-  "generated_at": "2026-08-22 07:29:09 +0800",
-  "total": 4,
-  "passed": 4,
+  "generated_at": "2026-08-22 07:51:57 +0800",
+  "total": 1,
+  "passed": 1,
   "failed": 0,
-  "total_tests": 4,
-  "passed_tests": 4,
+  "total_tests": 1,
+  "passed_tests": 1,
   "failed_tests_in_failed_groups": 0,
   "jobs": 1,
   "results": [
     {
-      "suite": "ImageEditorBrushPresetUsageTests",
-      "method": "favoritesAndRecentUsesPersistWithoutDocumentTransactionsAndPruneOnDelete",
-      "identifier": "veilpicTests/ImageEditorBrushPresetUsageTests/favoritesAndRecentUsesPersistWithoutDocumentTransactionsAndPruneOnDelete()",
-      "file": "ImageEditorBrushPresetUsageTests.swift",
+      "suite": "XomoAutomationTests",
+      "method": "registryFavoritesAndListsRecentBrushPresetsWithoutDocumentTransactions",
+      "identifier": "veilpicTests/XomoAutomationTests/registryFavoritesAndListsRecentBrushPresetsWithoutDocumentTransactions()",
+      "file": "XomoAutomationTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 4.893,
+      "duration": 5.55,
       "infrastructure_retries": 0,
       "issues": [],
-      "log": "ImageEditorBrushPresetUsageTests.favoritesAndRecentUsesPersistWithoutDocumentTransactionsAndPruneOnDelete.log"
-    },
-    {
-      "suite": "ImageEditorBrushPresetUsageTests",
-      "method": "optionsAndWindowMenusExposeFavoriteAndRecentBrushPresets",
-      "identifier": "veilpicTests/ImageEditorBrushPresetUsageTests/optionsAndWindowMenusExposeFavoriteAndRecentBrushPresets()",
-      "file": "ImageEditorBrushPresetUsageTests.swift",
-      "test_count": 1,
-      "passed": true,
-      "duration": 5.033,
-      "infrastructure_retries": 0,
-      "issues": [],
-      "log": "ImageEditorBrushPresetUsageTests.optionsAndWindowMenusExposeFavoriteAndRecentBrushPresets.log"
-    },
-    {
-      "suite": "ImageEditorBrushPresetUsageTests",
-      "method": "recentUsageIsDeduplicatedCappedAndMostRecentFirst",
-      "identifier": "veilpicTests/ImageEditorBrushPresetUsageTests/recentUsageIsDeduplicatedCappedAndMostRecentFirst()",
-      "file": "ImageEditorBrushPresetUsageTests.swift",
-      "test_count": 1,
-      "passed": true,
-      "duration": 4.866,
-      "infrastructure_retries": 0,
-      "issues": [],
-      "log": "ImageEditorBrushPresetUsageTests.recentUsageIsDeduplicatedCappedAndMostRecentFirst.log"
-    },
-    {
-      "suite": "ImageEditorBrushPresetUsageTests",
-      "method": "usagePreferencesNormalizeAndRoundTripFavoriteAndRecentIDs",
-      "identifier": "veilpicTests/ImageEditorBrushPresetUsageTests/usagePreferencesNormalizeAndRoundTripFavoriteAndRecentIDs()",
-      "file": "ImageEditorBrushPresetUsageTests.swift",
-      "test_count": 1,
-      "passed": true,
-      "duration": 7.57,
-      "infrastructure_retries": 0,
-      "issues": [],
-      "log": "ImageEditorBrushPresetUsageTests.usagePreferencesNormalizeAndRoundTripFavoriteAndRecentIDs.log"
+      "log": "XomoAutomationTests.registryFavoritesAndListsRecentBrushPresetsWithoutDocumentTransactions.log"
     }
   ]
 }
