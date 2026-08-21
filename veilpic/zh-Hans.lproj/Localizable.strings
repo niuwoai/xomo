@@ -700,6 +700,7 @@
 "imageEditor.help.brushPreset" = "选择预设，或保存当前画笔设置";
 "imageEditor.action.brushPresetCreate" = "从当前设置新建预设";
 "imageEditor.action.brushPresetDelete" = "删除当前自定义预设";
+"imageEditor.action.brushSettingsReset" = "重置画笔设置";
 "imageEditor.option.feather" = "羽化";
 "imageEditor.option.tolerance" = "容差";
 "imageEditor.option.contiguous" = "连续";
@@ -1942,6 +1943,7 @@
 "imageEditor.status.brushPresetApplied" = "已应用%@：%@";
 "imageEditor.status.brushPresetCreated" = "已创建画笔预设：%@";
 "imageEditor.status.brushPresetDeleted" = "已删除画笔预设：%@";
+"imageEditor.status.brushSettingsReset" = "已将画笔设置恢复为默认值。";
 "imageEditor.status.brushPresetLimitReached" = "最多只能保存 %d 个自定义画笔预设";
 "imageEditor.status.characterPanelSummary" = "文字：%@ | 字号：%d px | 粗体：%@ | 斜体：%@ | 下划线：%@ | 删除线：%@ | 字距：%d | 行距：%d";
 "imageEditor.status.paragraphPanelSummary" = "对齐：%@ | 文本框：%d × %d px | 左缩进：%d px | 右缩进：%d px | 首行缩进：%d px";

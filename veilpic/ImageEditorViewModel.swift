@@ -3101,6 +3101,27 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     func applyBrushPreset(_ preset: ImageEditorBrushPreset) {
+        applyBrushSettings(preset)
+        persistBrushDynamicsPreferences()
+        statusText = L10n.format("imageEditor.status.brushPresetApplied", preset.title, brushesPanelSummaryText)
+    }
+
+    func resetBrushSettings() {
+        applyBrushSettings(
+            ImageEditorBrushPreset(
+                id: "standard-brush-settings",
+                size: 18,
+                isBuiltIn: true
+            )
+        )
+        opacity = 1
+        paintBlendMode = .normal
+        paintAirbrushEnabled = false
+        persistBrushDynamicsPreferences()
+        statusText = L10n.text("imageEditor.status.brushSettingsReset")
+    }
+
+    private func applyBrushSettings(_ preset: ImageEditorBrushPreset) {
         brushSize = max(1, min(96, preset.size))
         hardness = max(0, min(1, preset.hardness))
         brushFlow = max(1, min(100, preset.flow))
@@ -3129,8 +3150,6 @@ final class ImageEditorViewModel: ObservableObject {
         brushTipRoundness = max(10, min(100, preset.tipRoundness))
         brushTipAngleDegrees = max(-180, min(180, preset.tipAngleDegrees))
         brushSmoothing = max(0, min(100, preset.smoothing))
-        persistBrushDynamicsPreferences()
-        statusText = L10n.format("imageEditor.status.brushPresetApplied", preset.title, brushesPanelSummaryText)
     }
 
     @discardableResult

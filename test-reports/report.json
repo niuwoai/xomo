@@ -1,24 +1,24 @@
 {
-  "generated_at": "2026-08-22 01:58:29 +0800",
+  "generated_at": "2026-08-22 03:02:46 +0800",
   "total": 1,
   "passed": 1,
   "failed": 0,
-  "total_tests": 185,
-  "passed_tests": 185,
+  "total_tests": 10,
+  "passed_tests": 10,
   "failed_tests_in_failed_groups": 0,
   "jobs": 1,
   "results": [
     {
-      "suite": "ImageEditorScopeTests",
+      "suite": "ImageEditorBrushDynamicsPreferencesTests",
       "method": null,
-      "identifier": "veilpicTests/ImageEditorScopeTests",
-      "file": "ImageEditorScopeTests.swift",
-      "test_count": 185,
+      "identifier": "veilpicTests/ImageEditorBrushDynamicsPreferencesTests",
+      "file": "ImageEditorBrushDynamicsPreferencesTests.swift",
+      "test_count": 10,
       "passed": true,
-      "duration": 59.121,
+      "duration": 4.985,
       "infrastructure_retries": 0,
       "issues": [],
-      "log": "ImageEditorScopeTests.log"
+      "log": "ImageEditorBrushDynamicsPreferencesTests.log"
     }
   ]
 }

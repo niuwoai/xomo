@@ -4672,6 +4672,8 @@ struct ImageEditorScopeTests {
         #expect(brushesMenuSource.contains("imageEditor.menu.window.brushes.presets"))
         #expect(brushesMenuSource.contains("ForEach(viewModel.brushPresets)"))
         #expect(brushesMenuSource.contains("viewModel.applyBrushPreset(preset)"))
+        #expect(brushesMenuSource.contains("imageEditor.action.brushSettingsReset"))
+        #expect(brushesMenuSource.contains("viewModel.resetBrushSettings()"))
         #expect(brushesMenuSource.contains("viewModel.createBrushPresetFromCurrentSettings()"))
         #expect(brushesMenuSource.contains("viewModel.deleteBrushPreset(activePreset)"))
     }
@@ -4690,6 +4692,8 @@ struct ImageEditorScopeTests {
         #expect(source.contains("if usesBrushDynamicsOptions {\n                    brushPresetMenu"))
         #expect(menuSource.contains("ForEach(viewModel.brushPresets)"))
         #expect(menuSource.contains("viewModel.activeBrushPreset?.id == preset.id"))
+        #expect(menuSource.contains("imageEditor.action.brushSettingsReset"))
+        #expect(menuSource.contains("viewModel.resetBrushSettings()"))
         #expect(menuSource.contains("viewModel.createBrushPresetFromCurrentSettings()"))
         #expect(menuSource.contains("viewModel.deleteBrushPreset(activePreset)"))
         #expect(menuSource.contains(".focusable(false)"))

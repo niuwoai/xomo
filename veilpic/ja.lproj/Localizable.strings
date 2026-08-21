@@ -700,6 +700,7 @@
 "imageEditor.help.brushPreset" = "プリセットを選択するか、現在のブラシ設定を保存します";
 "imageEditor.action.brushPresetCreate" = "現在の設定からプリセットを作成";
 "imageEditor.action.brushPresetDelete" = "現在のカスタムプリセットを削除";
+"imageEditor.action.brushSettingsReset" = "ブラシ設定をリセット";
 "imageEditor.option.feather" = "ぼかし";
 "imageEditor.option.tolerance" = "許容値";
 "imageEditor.option.contiguous" = "隣接";
@@ -1942,6 +1943,7 @@
 "imageEditor.status.brushPresetApplied" = "%@を適用しました：%@";
 "imageEditor.status.brushPresetCreated" = "ブラシプリセットを作成しました：%@";
 "imageEditor.status.brushPresetDeleted" = "ブラシプリセットを削除しました：%@";
+"imageEditor.status.brushSettingsReset" = "ブラシ設定をデフォルトに戻しました。";
 "imageEditor.status.brushPresetLimitReached" = "カスタムブラシプリセットは最大%d件まで保存できます";
 "imageEditor.status.characterPanelSummary" = "テキスト：%@ | サイズ：%d px | 太字：%@ | 斜体：%@ | 下線：%@ | 取り消し線：%@ | 字間：%d | 行間：%d";
 "imageEditor.status.paragraphPanelSummary" = "配置：%@ | テキスト枠：%d × %d px | 左インデント：%d px | 右インデント：%d px | 最初の行：%d px";

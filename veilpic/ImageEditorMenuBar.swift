@@ -2030,6 +2030,9 @@ extension ImageEditorView {
                     }
                 }
                 Divider()
+                Button(L10n.text("imageEditor.action.brushSettingsReset")) {
+                    viewModel.resetBrushSettings()
+                }
                 Button(L10n.text("imageEditor.action.brushPresetCreate")) {
                     viewModel.createBrushPresetFromCurrentSettings()
                 }

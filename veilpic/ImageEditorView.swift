@@ -1479,6 +1479,11 @@ struct ImageEditorView: View {
             }
             Divider()
             Button {
+                viewModel.resetBrushSettings()
+            } label: {
+                Label(L10n.text("imageEditor.action.brushSettingsReset"), systemImage: "arrow.counterclockwise")
+            }
+            Button {
                 viewModel.createBrushPresetFromCurrentSettings()
             } label: {
                 Label(L10n.text("imageEditor.action.brushPresetCreate"), systemImage: "plus")

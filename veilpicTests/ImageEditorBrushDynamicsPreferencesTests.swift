@@ -439,6 +439,114 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         #expect(makeViewModel(defaults: defaults).customBrushPresets.isEmpty)
     }
 
+    @Test func resettingBrushSettingsRestoresDefaultsWithoutTouchingPresetsOrDocumentHistory() throws {
+        let (defaults, suiteName) = temporaryDefaults()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let viewModel = makeViewModel(defaults: defaults)
+        viewModel.brushSize = 71
+        viewModel.opacity = 0.23
+        viewModel.hardness = 0.12
+        viewModel.brushFlow = 34
+        viewModel.brushSpacing = 167
+        viewModel.setBrushPressureControlsSize(false)
+        viewModel.setBrushPressureControlsOpacity(true)
+        viewModel.setBrushPressureControlsFlow(false)
+        viewModel.setBrushPressureSensitivity(81)
+        viewModel.setBrushSizeJitter(61)
+        viewModel.setBrushAngleJitter(62)
+        viewModel.setBrushAngleFollowsStrokeDirection(true)
+        viewModel.setBrushRoundnessJitter(63)
+        viewModel.setBrushOpacityJitter(64)
+        viewModel.setBrushFlowJitter(65)
+        viewModel.setBrushMinimumRoundness(42)
+        viewModel.setBrushScatter(500)
+        viewModel.setBrushScatterBothAxes(true)
+        viewModel.setBrushScatterCount(8)
+        viewModel.setBrushScatterCountJitter(66)
+        viewModel.setBrushNoiseEnabled(true)
+        viewModel.setBrushWetEdgesEnabled(true)
+        viewModel.setBrushMinimumDiameter(31)
+        viewModel.setBrushMinimumOpacity(32)
+        viewModel.setBrushMinimumFlow(33)
+        viewModel.setBrushTiltControlsShape(true)
+        viewModel.setBrushTipRoundness(47)
+        viewModel.setBrushTipAngleDegrees(-45)
+        viewModel.setBrushSmoothing(67)
+        viewModel.setPaintBlendMode(.multiply)
+        viewModel.setPaintAirbrushEnabled(true)
+        viewModel.setHistoryBrushBlendMode(.screen)
+        viewModel.setPencilAutoEraseEnabled(true)
+        let customPreset = try #require(viewModel.createBrushPresetFromCurrentSettings())
+
+        viewModel.addLayer()
+        viewModel.undo()
+        let documentBeforeReset = transactionSignature(viewModel.document)
+        let undoBeforeReset = viewModel.undoStack.map { transactionSignature($0) }
+        let redoBeforeReset = viewModel.redoStack.map { transactionSignature($0) }
+
+        viewModel.resetBrushSettings()
+
+        #expect(viewModel.brushSize == 18)
+        #expect(viewModel.opacity == 1)
+        #expect(viewModel.hardness == 0.8)
+        #expect(viewModel.brushFlow == 100)
+        #expect(viewModel.brushSpacing == 25)
+        #expect(viewModel.brushPressureControlsSize)
+        #expect(!viewModel.brushPressureControlsOpacity)
+        #expect(viewModel.brushPressureControlsFlow)
+        #expect(viewModel.brushPressureSensitivity == 50)
+        #expect(viewModel.brushSizeJitter == 0)
+        #expect(viewModel.brushAngleJitter == 0)
+        #expect(!viewModel.brushAngleFollowsStrokeDirection)
+        #expect(viewModel.brushRoundnessJitter == 0)
+        #expect(viewModel.brushOpacityJitter == 0)
+        #expect(viewModel.brushFlowJitter == 0)
+        #expect(viewModel.brushMinimumRoundness == 1)
+        #expect(viewModel.brushScatter == 0)
+        #expect(!viewModel.brushScatterBothAxes)
+        #expect(viewModel.brushScatterCount == 1)
+        #expect(viewModel.brushScatterCountJitter == 0)
+        #expect(!viewModel.brushNoiseEnabled)
+        #expect(!viewModel.brushWetEdgesEnabled)
+        #expect(viewModel.brushMinimumDiameter == 0)
+        #expect(viewModel.brushMinimumOpacity == 0)
+        #expect(viewModel.brushMinimumFlow == 0)
+        #expect(!viewModel.brushTiltControlsShape)
+        #expect(viewModel.brushTipRoundness == 100)
+        #expect(viewModel.brushTipAngleDegrees == 0)
+        #expect(viewModel.brushSmoothing == 0)
+        #expect(viewModel.paintBlendMode == .normal)
+        #expect(!viewModel.paintAirbrushEnabled)
+        #expect(viewModel.historyBrushBlendMode == .screen)
+        #expect(viewModel.pencilAutoEraseEnabled)
+        #expect(viewModel.customBrushPresets == [customPreset])
+        #expect(transactionSignature(viewModel.document) == documentBeforeReset)
+        #expect(viewModel.undoStack.map { transactionSignature($0) } == undoBeforeReset)
+        #expect(viewModel.redoStack.map { transactionSignature($0) } == redoBeforeReset)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.brushSettingsReset"))
+
+        viewModel.resetBrushSettings()
+        #expect(transactionSignature(viewModel.document) == documentBeforeReset)
+        #expect(viewModel.undoStack.map { transactionSignature($0) } == undoBeforeReset)
+        #expect(viewModel.redoStack.map { transactionSignature($0) } == redoBeforeReset)
+        #expect(viewModel.customBrushPresets == [customPreset])
+
+        let restored = makeViewModel(defaults: defaults)
+        #expect(restored.brushPressureControlsSize)
+        #expect(!restored.brushPressureControlsOpacity)
+        #expect(restored.brushPressureControlsFlow)
+        #expect(restored.brushPressureSensitivity == 50)
+        #expect(restored.brushSizeJitter == 0)
+        #expect(restored.brushScatter == 0)
+        #expect(restored.brushTipRoundness == 100)
+        #expect(restored.brushSmoothing == 0)
+        #expect(restored.paintBlendMode == .normal)
+        #expect(!restored.paintAirbrushEnabled)
+        #expect(restored.historyBrushBlendMode == .screen)
+        #expect(restored.pencilAutoEraseEnabled)
+        #expect(restored.customBrushPresets == [customPreset])
+    }
+
     @Test func builtInPresetsCannotBeDeletedAndRestoreTheCompleteBrushDefinition() throws {
         let (defaults, suiteName) = temporaryDefaults()
         defer { defaults.removePersistentDomain(forName: suiteName) }
@@ -530,5 +638,33 @@ struct ImageEditorBrushDynamicsPreferencesTests {
     private func temporaryDefaults() -> (UserDefaults, String) {
         let suiteName = "ImageEditorBrushDynamicsPreferencesTests.\(UUID().uuidString)"
         return (UserDefaults(suiteName: suiteName) ?? .standard, suiteName)
+    }
+
+    private func transactionSignature(_ document: ImageEditorDocument) -> DocumentTransactionSignature {
+        DocumentTransactionSignature(
+            canvasSize: document.canvasSize,
+            layerIDs: document.layers.map(\.id),
+            layerFrames: document.layers.map(\.frame),
+            layerImageData: document.layers.map { $0.image.tiffRepresentation },
+            layerMaskData: document.layers.map { $0.mask?.tiffRepresentation },
+            selectedLayerID: document.selectedLayerID,
+            selectedLayerIDs: document.selectedLayerIDs,
+            historyIDs: document.history.map(\.id),
+            historyTitles: document.history.map(\.title),
+            historyDates: document.history.map(\.createdAt)
+        )
+    }
+
+    private struct DocumentTransactionSignature: Equatable {
+        let canvasSize: CGSize
+        let layerIDs: [UUID]
+        let layerFrames: [CGRect]
+        let layerImageData: [Data?]
+        let layerMaskData: [Data?]
+        let selectedLayerID: UUID?
+        let selectedLayerIDs: Set<UUID>
+        let historyIDs: [UUID]
+        let historyTitles: [String]
+        let historyDates: [Date]
     }
 }
