@@ -3288,9 +3288,16 @@ final class ImageEditorViewModel: ObservableObject {
 
     @discardableResult
     func renameSelectedCustomBrushPreset(to proposedName: String) -> Bool {
-        guard let targetPresetID = selectedCustomBrushPreset?.id,
-              let index = customBrushPresets.firstIndex(where: { $0.id == targetPresetID })
-        else {
+        guard let targetPresetID = selectedCustomBrushPreset?.id else {
+            statusText = L10n.text("imageEditor.status.brushPresetRenameUnavailable")
+            return false
+        }
+        return renameCustomBrushPreset(id: targetPresetID, to: proposedName)
+    }
+
+    @discardableResult
+    func renameCustomBrushPreset(id targetPresetID: String, to proposedName: String) -> Bool {
+        guard let index = customBrushPresets.firstIndex(where: { $0.id == targetPresetID }) else {
             statusText = L10n.text("imageEditor.status.brushPresetRenameUnavailable")
             return false
         }

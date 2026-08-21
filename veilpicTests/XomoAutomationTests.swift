@@ -229,10 +229,17 @@ struct XomoAutomationTests {
             guard case .object(let value) = tool else { return false }
             return value["name"] == .string("xomo.layer_comp.action")
         })
-        #expect(tools.contains { tool in
-            guard case .object(let value) = tool else { return false }
-            return value["name"] == .string("xomo.brush.preset")
-        })
+        let brushPresetTool = try #require(tools.compactMap { tool -> [String: XomoJSONValue]? in
+            guard case .object(let value) = tool else { return nil }
+            return value
+        }.first { $0["name"] == .string("xomo.brush.preset") })
+        let brushPresetProperties = try #require(
+            brushPresetTool["inputSchema"]?.objectValue?["properties"]?.objectValue
+        )
+        #expect(brushPresetProperties["action"]?.objectValue?["enum"] == .array([
+            .string("list"), .string("create"), .string("apply"), .string("rename"), .string("delete")
+        ]))
+        #expect(brushPresetProperties["name"]?.objectValue?["type"] == .string("string"))
         #expect(tools.contains { tool in
             guard case .object(let value) = tool else { return false }
             return value["name"] == .string("xomo.text.convert")
@@ -9882,6 +9889,79 @@ struct XomoAutomationTests {
         #expect(delete.result?.arrayValue?.count == ImageEditorBrushPreset.defaultPresets.count)
     }
 
+    @Test func registryRenamesCustomBrushPresetByStableIDWithoutApplyingIt() throws {
+        let suiteName = "XomoAutomationTests.renamePreset.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName) ?? .standard
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let viewModel = makeViewModel(preferencesDefaults: defaults)
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        defer { registry.unregister(viewModel) }
+
+        viewModel.brushSize = 22
+        let first = try #require(viewModel.createBrushPresetFromCurrentSettings())
+        viewModel.brushSize = 33
+        let second = try #require(viewModel.createBrushPresetFromCurrentSettings())
+        viewModel.brushSize = 71
+        viewModel.addLayer()
+        viewModel.undo()
+        let documentBeforeRename = transactionSignature(viewModel.document)
+        let undoBeforeRename = viewModel.undoStack.map(transactionSignature)
+        let redoBeforeRename = viewModel.redoStack.map(transactionSignature)
+
+        let rename = registry.execute(request(
+            operation: "call",
+            name: "xomo.brush.preset",
+            arguments: [
+                "action": .string("rename"),
+                "id": .string(first.id),
+                "name": .string("  Team Inking  \n")
+            ]
+        ))
+
+        #expect(rename.ok)
+        #expect(viewModel.customBrushPresets.map(\.id) == [first.id, second.id])
+        #expect(viewModel.customBrushPresets.first?.name == "Team Inking")
+        #expect(viewModel.selectedBrushPresetID == second.id)
+        #expect(viewModel.brushSize == 71)
+        #expect(transactionSignature(viewModel.document) == documentBeforeRename)
+        #expect(viewModel.undoStack.map(transactionSignature) == undoBeforeRename)
+        #expect(viewModel.redoStack.map(transactionSignature) == redoBeforeRename)
+        #expect(
+            makeViewModel(preferencesDefaults: defaults).customBrushPresets.first?.name
+                == "Team Inking"
+        )
+
+        let emptyName = registry.execute(request(
+            operation: "call",
+            name: "xomo.brush.preset",
+            arguments: [
+                "action": .string("rename"),
+                "id": .string(first.id),
+                "name": .string(" \n ")
+            ]
+        ))
+        #expect(!emptyName.ok)
+        #expect(emptyName.error?.contains("name cannot be empty") == true)
+
+        let builtInID = try #require(ImageEditorBrushPreset.defaultPresets.first?.id)
+        let builtIn = registry.execute(request(
+            operation: "call",
+            name: "xomo.brush.preset",
+            arguments: [
+                "action": .string("rename"),
+                "id": .string(builtInID),
+                "name": .string("Forbidden")
+            ]
+        ))
+        #expect(!builtIn.ok)
+        #expect(builtIn.error?.contains("Not found: Custom brush preset") == true)
+        #expect(viewModel.customBrushPresets.first?.name == "Team Inking")
+        #expect(transactionSignature(viewModel.document) == documentBeforeRename)
+        #expect(viewModel.undoStack.map(transactionSignature) == undoBeforeRename)
+        #expect(viewModel.redoStack.map(transactionSignature) == redoBeforeRename)
+    }
+
     @Test func registryRecursivelyExpandsAndCollapsesSelectedLayerGroups() {
         let viewModel = makeViewModel()
         let registry = XomoAutomationRegistry.shared
@@ -16039,6 +16119,36 @@ struct XomoAutomationTests {
             image: NSImage.transparent(size: CGSize(width: 320, height: 240)),
             preferencesDefaults: preferencesDefaults
         ) { _ in }
+    }
+
+    private func transactionSignature(
+        _ document: ImageEditorDocument
+    ) -> DocumentTransactionSignature {
+        DocumentTransactionSignature(
+            canvasSize: document.canvasSize,
+            layerIDs: document.layers.map(\.id),
+            layerFrames: document.layers.map(\.frame),
+            layerImageData: document.layers.map { $0.image.tiffRepresentation },
+            layerMaskData: document.layers.map { $0.mask?.tiffRepresentation },
+            selectedLayerID: document.selectedLayerID,
+            selectedLayerIDs: document.selectedLayerIDs,
+            historyIDs: document.history.map(\.id),
+            historyTitles: document.history.map(\.title),
+            historyDates: document.history.map(\.createdAt)
+        )
+    }
+
+    private struct DocumentTransactionSignature: Equatable {
+        let canvasSize: CGSize
+        let layerIDs: [UUID]
+        let layerFrames: [CGRect]
+        let layerImageData: [Data?]
+        let layerMaskData: [Data?]
+        let selectedLayerID: UUID?
+        let selectedLayerIDs: Set<UUID>
+        let historyIDs: [UUID]
+        let historyTitles: [String]
+        let historyDates: [Date]
     }
 
     private func maskAlpha(_ mask: ImageEditorSelectionMask, x: Int, y: Int) -> UInt8 {

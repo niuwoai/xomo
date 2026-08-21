@@ -1,24 +1,24 @@
 {
-  "generated_at": "2026-08-22 05:31:12 +0800",
+  "generated_at": "2026-08-22 05:51:38 +0800",
   "total": 1,
   "passed": 1,
   "failed": 0,
-  "total_tests": 33,
-  "passed_tests": 33,
+  "total_tests": 1,
+  "passed_tests": 1,
   "failed_tests_in_failed_groups": 0,
   "jobs": 1,
   "results": [
     {
-      "suite": "LocalizationResourceTests",
-      "method": null,
-      "identifier": "veilpicTests/LocalizationResourceTests",
-      "file": "LocalizationResourceTests.swift",
-      "test_count": 33,
+      "suite": "ImageEditorBrushDynamicsPreferencesTests",
+      "method": "renamingSelectedCustomPresetPreservesSavedSettingsDirtyStateAndTransactions",
+      "identifier": "veilpicTests/ImageEditorBrushDynamicsPreferencesTests/renamingSelectedCustomPresetPreservesSavedSettingsDirtyStateAndTransactions()",
+      "file": "ImageEditorBrushDynamicsPreferencesTests.swift",
+      "test_count": 1,
       "passed": true,
-      "duration": 5.668,
+      "duration": 4.889,
       "infrastructure_retries": 0,
       "issues": [],
-      "log": "LocalizationResourceTests.log"
+      "log": "ImageEditorBrushDynamicsPreferencesTests.renamingSelectedCustomPresetPreservesSavedSettingsDirtyStateAndTransactions.log"
     }
   ]
 }
