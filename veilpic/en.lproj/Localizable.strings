@@ -701,6 +701,8 @@
 "imageEditor.action.brushPresetCreate" = "Create Preset from Current Settings";
 "imageEditor.action.brushPresetRename" = "Rename Current Custom Preset";
 "imageEditor.action.brushPresetUpdate" = "Update Current Custom Preset";
+"imageEditor.action.brushPresetMoveUp" = "Move Current Preset Up";
+"imageEditor.action.brushPresetMoveDown" = "Move Current Preset Down";
 "imageEditor.action.brushPresetDelete" = "Delete Current Custom Preset";
 "imageEditor.action.brushSettingsReset" = "Reset Brush Settings";
 "imageEditor.brushPreset.modified" = "%@ (Modified)";
@@ -1955,6 +1957,8 @@
 "imageEditor.status.brushPresetUpdated" = "Brush preset updated: %@";
 "imageEditor.status.brushPresetUnchanged" = "Brush preset is already up to date: %@";
 "imageEditor.status.brushPresetUpdateUnavailable" = "Apply or create a custom brush preset before updating it.";
+"imageEditor.status.brushPresetMoved" = "Brush preset order updated: %@";
+"imageEditor.status.brushPresetMoveUnavailable" = "This custom brush preset cannot move farther in that direction.";
 "imageEditor.status.brushPresetDeleted" = "Brush preset deleted: %@";
 "imageEditor.status.brushSettingsReset" = "Brush settings reset to defaults.";
 "imageEditor.status.brushPresetLimitReached" = "You can save up to %d custom brush presets";

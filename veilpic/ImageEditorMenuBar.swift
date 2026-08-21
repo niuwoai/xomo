@@ -2043,6 +2043,14 @@ extension ImageEditorView {
                     Button(L10n.text("imageEditor.action.brushPresetUpdate")) {
                         viewModel.updateSelectedCustomBrushPresetFromCurrentSettings()
                     }
+                    Button(L10n.text("imageEditor.action.brushPresetMoveUp")) {
+                        viewModel.moveSelectedCustomBrushPresetUp()
+                    }
+                    .disabled(!viewModel.canMoveSelectedCustomBrushPresetUp)
+                    Button(L10n.text("imageEditor.action.brushPresetMoveDown")) {
+                        viewModel.moveSelectedCustomBrushPresetDown()
+                    }
+                    .disabled(!viewModel.canMoveSelectedCustomBrushPresetDown)
                     Button(L10n.text("imageEditor.action.brushPresetDelete"), role: .destructive) {
                         viewModel.deleteBrushPreset(selectedPreset)
                     }

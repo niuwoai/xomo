@@ -1519,6 +1519,18 @@ struct ImageEditorView: View {
                 } label: {
                     Label(L10n.text("imageEditor.action.brushPresetUpdate"), systemImage: "square.and.arrow.down")
                 }
+                Button {
+                    viewModel.moveSelectedCustomBrushPresetUp()
+                } label: {
+                    Label(L10n.text("imageEditor.action.brushPresetMoveUp"), systemImage: "arrow.up")
+                }
+                .disabled(!viewModel.canMoveSelectedCustomBrushPresetUp)
+                Button {
+                    viewModel.moveSelectedCustomBrushPresetDown()
+                } label: {
+                    Label(L10n.text("imageEditor.action.brushPresetMoveDown"), systemImage: "arrow.down")
+                }
+                .disabled(!viewModel.canMoveSelectedCustomBrushPresetDown)
                 Button(role: .destructive) {
                     viewModel.deleteBrushPreset(selectedPreset)
                 } label: {

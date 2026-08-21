@@ -2951,6 +2951,20 @@ final class ImageEditorViewModel: ObservableObject {
         return customBrushPresets.first(where: { $0.id == selectedBrushPresetID })
     }
 
+    var canMoveSelectedCustomBrushPresetUp: Bool {
+        guard let selectedBrushPresetID,
+              let index = customBrushPresets.firstIndex(where: { $0.id == selectedBrushPresetID })
+        else { return false }
+        return index > customBrushPresets.startIndex
+    }
+
+    var canMoveSelectedCustomBrushPresetDown: Bool {
+        guard let selectedBrushPresetID,
+              let index = customBrushPresets.firstIndex(where: { $0.id == selectedBrushPresetID })
+        else { return false }
+        return index < customBrushPresets.index(before: customBrushPresets.endIndex)
+    }
+
     var brushPresetMenuTitle: String {
         guard let selectedBrushPreset else {
             return activeBrushPreset?.title ?? L10n.text("imageEditor.option.brushPreset")
@@ -3252,6 +3266,38 @@ final class ImageEditorViewModel: ObservableObject {
         customBrushPresets[index] = renamed
         persistBrushPresetPreferences()
         statusText = L10n.format("imageEditor.status.brushPresetRenamed", renamed.title)
+        return true
+    }
+
+    @discardableResult
+    func moveSelectedCustomBrushPresetUp() -> Bool {
+        guard let selectedBrushPresetID,
+              let index = customBrushPresets.firstIndex(where: { $0.id == selectedBrushPresetID }),
+              index > customBrushPresets.startIndex
+        else {
+            statusText = L10n.text("imageEditor.status.brushPresetMoveUnavailable")
+            return false
+        }
+        return moveCustomBrushPreset(from: index, to: customBrushPresets.index(before: index))
+    }
+
+    @discardableResult
+    func moveSelectedCustomBrushPresetDown() -> Bool {
+        guard let selectedBrushPresetID,
+              let index = customBrushPresets.firstIndex(where: { $0.id == selectedBrushPresetID }),
+              index < customBrushPresets.index(before: customBrushPresets.endIndex)
+        else {
+            statusText = L10n.text("imageEditor.status.brushPresetMoveUnavailable")
+            return false
+        }
+        return moveCustomBrushPreset(from: index, to: customBrushPresets.index(after: index))
+    }
+
+    private func moveCustomBrushPreset(from sourceIndex: Int, to destinationIndex: Int) -> Bool {
+        let preset = customBrushPresets.remove(at: sourceIndex)
+        customBrushPresets.insert(preset, at: destinationIndex)
+        persistBrushPresetPreferences()
+        statusText = L10n.format("imageEditor.status.brushPresetMoved", preset.title)
         return true
     }
 

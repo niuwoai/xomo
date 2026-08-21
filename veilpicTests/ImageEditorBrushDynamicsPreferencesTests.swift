@@ -698,6 +698,75 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         #expect(makeViewModel(defaults: defaults).selectedBrushPresetID == nil)
     }
 
+    @Test func movingSelectedCustomPresetPersistsOrderWithoutChangingSelectionOrTransactions() throws {
+        let (defaults, suiteName) = temporaryDefaults()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let viewModel = makeViewModel(defaults: defaults)
+        viewModel.brushSize = 12
+        let first = try #require(viewModel.createBrushPresetFromCurrentSettings())
+        viewModel.brushSize = 24
+        let second = try #require(viewModel.createBrushPresetFromCurrentSettings())
+        viewModel.brushSize = 36
+        let third = try #require(viewModel.createBrushPresetFromCurrentSettings())
+        viewModel.applyBrushPreset(second)
+        viewModel.brushSize = 48
+        #expect(viewModel.activeBrushPreset == nil)
+
+        viewModel.addLayer()
+        viewModel.undo()
+        let documentBeforeMove = transactionSignature(viewModel.document)
+        let undoBeforeMove = viewModel.undoStack.map { transactionSignature($0) }
+        let redoBeforeMove = viewModel.redoStack.map { transactionSignature($0) }
+
+        #expect(viewModel.canMoveSelectedCustomBrushPresetUp)
+        #expect(viewModel.canMoveSelectedCustomBrushPresetDown)
+        #expect(viewModel.moveSelectedCustomBrushPresetUp())
+        #expect(viewModel.customBrushPresets == [second, first, third])
+        #expect(viewModel.selectedBrushPresetID == second.id)
+        #expect(viewModel.selectedCustomBrushPreset == second)
+        #expect(viewModel.activeBrushPreset == nil)
+        #expect(!viewModel.canMoveSelectedCustomBrushPresetUp)
+        #expect(viewModel.canMoveSelectedCustomBrushPresetDown)
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.brushPresetMoved", second.title))
+
+        let preferencesAtTop = defaults.data(
+            forKey: ImageEditorBrushPresetPreferences.storageKey
+        )
+        #expect(!viewModel.moveSelectedCustomBrushPresetUp())
+        #expect(viewModel.customBrushPresets == [second, first, third])
+        #expect(
+            defaults.data(forKey: ImageEditorBrushPresetPreferences.storageKey)
+                == preferencesAtTop
+        )
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.brushPresetMoveUnavailable"))
+
+        #expect(viewModel.moveSelectedCustomBrushPresetDown())
+        #expect(viewModel.customBrushPresets == [first, second, third])
+        #expect(viewModel.moveSelectedCustomBrushPresetDown())
+        #expect(viewModel.customBrushPresets == [first, third, second])
+        #expect(viewModel.canMoveSelectedCustomBrushPresetUp)
+        #expect(!viewModel.canMoveSelectedCustomBrushPresetDown)
+        #expect(!viewModel.moveSelectedCustomBrushPresetDown())
+        #expect(viewModel.customBrushPresets == [first, third, second])
+        #expect(viewModel.brushSize == 48)
+        #expect(viewModel.activeBrushPreset == nil)
+        #expect(transactionSignature(viewModel.document) == documentBeforeMove)
+        #expect(viewModel.undoStack.map { transactionSignature($0) } == undoBeforeMove)
+        #expect(viewModel.redoStack.map { transactionSignature($0) } == redoBeforeMove)
+
+        let restored = makeViewModel(defaults: defaults)
+        #expect(restored.customBrushPresets == [first, third, second])
+        #expect(restored.selectedBrushPresetID == second.id)
+        #expect(restored.selectedCustomBrushPreset == second)
+
+        let builtIn = try #require(ImageEditorBrushPreset.defaultPresets.first)
+        viewModel.applyBrushPreset(builtIn)
+        #expect(!viewModel.canMoveSelectedCustomBrushPresetUp)
+        #expect(!viewModel.canMoveSelectedCustomBrushPresetDown)
+        #expect(!viewModel.moveSelectedCustomBrushPresetUp())
+        #expect(viewModel.customBrushPresets == [first, third, second])
+    }
+
     @Test func builtInPresetsCannotBeDeletedAndRestoreTheCompleteBrushDefinition() throws {
         let (defaults, suiteName) = temporaryDefaults()
         defer { defaults.removePersistentDomain(forName: suiteName) }

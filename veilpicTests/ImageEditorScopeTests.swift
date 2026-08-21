@@ -4680,6 +4680,10 @@ struct ImageEditorScopeTests {
         #expect(brushesMenuSource.contains("beginBrushPresetRename()"))
         #expect(brushesMenuSource.contains("imageEditor.action.brushPresetUpdate"))
         #expect(brushesMenuSource.contains("viewModel.updateSelectedCustomBrushPresetFromCurrentSettings()"))
+        #expect(brushesMenuSource.contains("viewModel.moveSelectedCustomBrushPresetUp()"))
+        #expect(brushesMenuSource.contains("!viewModel.canMoveSelectedCustomBrushPresetUp"))
+        #expect(brushesMenuSource.contains("viewModel.moveSelectedCustomBrushPresetDown()"))
+        #expect(brushesMenuSource.contains("!viewModel.canMoveSelectedCustomBrushPresetDown"))
         #expect(brushesMenuSource.contains("viewModel.deleteBrushPreset(selectedPreset)"))
     }
 
@@ -4705,6 +4709,10 @@ struct ImageEditorScopeTests {
         #expect(menuSource.contains("beginBrushPresetRename()"))
         #expect(menuSource.contains("imageEditor.action.brushPresetUpdate"))
         #expect(menuSource.contains("viewModel.updateSelectedCustomBrushPresetFromCurrentSettings()"))
+        #expect(menuSource.contains("viewModel.moveSelectedCustomBrushPresetUp()"))
+        #expect(menuSource.contains("!viewModel.canMoveSelectedCustomBrushPresetUp"))
+        #expect(menuSource.contains("viewModel.moveSelectedCustomBrushPresetDown()"))
+        #expect(menuSource.contains("!viewModel.canMoveSelectedCustomBrushPresetDown"))
         #expect(menuSource.contains("viewModel.deleteBrushPreset(selectedPreset)"))
         #expect(menuSource.contains("viewModel.brushPresetMenuTitle"))
         #expect(menuSource.contains(".focusable(false)"))
