@@ -238,8 +238,10 @@ struct XomoAutomationTests {
         )
         #expect(brushPresetProperties["action"]?.objectValue?["enum"] == .array([
             .string("list"), .string("create"), .string("apply"), .string("update"),
-            .string("duplicate"), .string("rename"), .string("delete")
+            .string("duplicate"), .string("moveToIndex"), .string("rename"), .string("delete")
         ]))
+        #expect(brushPresetProperties["index"]?.objectValue?["type"] == .string("integer"))
+        #expect(brushPresetProperties["index"]?.objectValue?["minimum"] == .number(0))
         #expect(brushPresetProperties["name"]?.objectValue?["type"] == .string("string"))
         #expect(tools.contains { tool in
             guard case .object(let value) = tool else { return false }
@@ -10122,6 +10124,116 @@ struct XomoAutomationTests {
         #expect(transactionSignature(viewModel.document) == documentBeforeDuplicate)
         #expect(viewModel.undoStack.map(transactionSignature) == undoBeforeDuplicate)
         #expect(viewModel.redoStack.map(transactionSignature) == redoBeforeDuplicate)
+    }
+
+    @Test func registryMovesCustomBrushPresetToStableIndexWithoutChangingEditorState() throws {
+        let suiteName = "XomoAutomationTests.movePreset.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName) ?? .standard
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let viewModel = makeViewModel(preferencesDefaults: defaults)
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        defer { registry.unregister(viewModel) }
+
+        viewModel.brushSize = 12
+        let first = try #require(viewModel.createBrushPresetFromCurrentSettings())
+        viewModel.brushSize = 24
+        let second = try #require(viewModel.createBrushPresetFromCurrentSettings())
+        viewModel.brushSize = 36
+        let third = try #require(viewModel.createBrushPresetFromCurrentSettings())
+        viewModel.applyBrushPreset(second)
+        viewModel.brushSize = 71
+        viewModel.setBrushAngleJitter(47)
+        viewModel.addLayer()
+        viewModel.undo()
+        let documentBeforeMove = transactionSignature(viewModel.document)
+        let undoBeforeMove = viewModel.undoStack.map(transactionSignature)
+        let redoBeforeMove = viewModel.redoStack.map(transactionSignature)
+
+        let move = registry.execute(request(
+            operation: "call",
+            name: "xomo.brush.preset",
+            arguments: [
+                "action": .string("moveToIndex"),
+                "id": .string(first.id),
+                "index": .number(2)
+            ]
+        ))
+
+        #expect(move.ok)
+        #expect(viewModel.customBrushPresets == [second, third, first])
+        #expect(viewModel.selectedBrushPresetID == second.id)
+        #expect(viewModel.brushSize == 71)
+        #expect(viewModel.brushAngleJitter == 47)
+        #expect(transactionSignature(viewModel.document) == documentBeforeMove)
+        #expect(viewModel.undoStack.map(transactionSignature) == undoBeforeMove)
+        #expect(viewModel.redoStack.map(transactionSignature) == redoBeforeMove)
+        let returnedCustomIDs = try #require(move.result?.arrayValue).compactMap { value -> String? in
+            guard value.objectValue?["builtIn"] == .bool(false) else { return nil }
+            return value.objectValue?["id"]?.stringValue
+        }
+        #expect(returnedCustomIDs == [second.id, third.id, first.id])
+        let restored = makeViewModel(preferencesDefaults: defaults)
+        #expect(restored.customBrushPresets == [second, third, first])
+        #expect(restored.selectedBrushPresetID == second.id)
+
+        let preferencesAfterMove = defaults.data(
+            forKey: ImageEditorBrushPresetPreferences.storageKey
+        )
+        let statusAfterMove = viewModel.statusText
+        let repeated = registry.execute(request(
+            operation: "call",
+            name: "xomo.brush.preset",
+            arguments: [
+                "action": .string("moveToIndex"),
+                "id": .string(first.id),
+                "index": .number(2)
+            ]
+        ))
+        #expect(repeated.ok)
+        #expect(viewModel.customBrushPresets == [second, third, first])
+        #expect(defaults.data(forKey: ImageEditorBrushPresetPreferences.storageKey) == preferencesAfterMove)
+        #expect(viewModel.statusText == statusAfterMove)
+
+        for invalidIndex in [-1.0, 1.5, 3.0] {
+            let invalid = registry.execute(request(
+                operation: "call",
+                name: "xomo.brush.preset",
+                arguments: [
+                    "action": .string("moveToIndex"),
+                    "id": .string(first.id),
+                    "index": .number(invalidIndex)
+                ]
+            ))
+            #expect(!invalid.ok)
+            #expect(invalid.error?.contains("zero-based integer") == true)
+        }
+        let missingIndex = registry.execute(request(
+            operation: "call",
+            name: "xomo.brush.preset",
+            arguments: ["action": .string("moveToIndex"), "id": .string(first.id)]
+        ))
+        #expect(!missingIndex.ok)
+
+        let builtInID = try #require(ImageEditorBrushPreset.defaultPresets.first?.id)
+        let builtIn = registry.execute(request(
+            operation: "call",
+            name: "xomo.brush.preset",
+            arguments: [
+                "action": .string("moveToIndex"),
+                "id": .string(builtInID),
+                "index": .number(0)
+            ]
+        ))
+        #expect(!builtIn.ok)
+        #expect(builtIn.error?.contains("Not found: Custom brush preset") == true)
+        #expect(viewModel.customBrushPresets == [second, third, first])
+        #expect(viewModel.selectedBrushPresetID == second.id)
+        #expect(viewModel.brushSize == 71)
+        #expect(viewModel.brushAngleJitter == 47)
+        #expect(transactionSignature(viewModel.document) == documentBeforeMove)
+        #expect(viewModel.undoStack.map(transactionSignature) == undoBeforeMove)
+        #expect(viewModel.redoStack.map(transactionSignature) == redoBeforeMove)
     }
 
     @Test func registryRecursivelyExpandsAndCollapsesSelectedLayerGroups() {

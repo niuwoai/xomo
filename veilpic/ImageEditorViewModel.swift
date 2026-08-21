@@ -3387,7 +3387,10 @@ final class ImageEditorViewModel: ObservableObject {
             statusText = L10n.text("imageEditor.status.brushPresetMoveUnavailable")
             return false
         }
-        return moveCustomBrushPreset(from: index, to: customBrushPresets.index(before: index))
+        return moveCustomBrushPreset(
+            id: selectedBrushPresetID,
+            toIndex: customBrushPresets.index(before: index)
+        )
     }
 
     @discardableResult
@@ -3399,10 +3402,21 @@ final class ImageEditorViewModel: ObservableObject {
             statusText = L10n.text("imageEditor.status.brushPresetMoveUnavailable")
             return false
         }
-        return moveCustomBrushPreset(from: index, to: customBrushPresets.index(after: index))
+        return moveCustomBrushPreset(
+            id: selectedBrushPresetID,
+            toIndex: customBrushPresets.index(after: index)
+        )
     }
 
-    private func moveCustomBrushPreset(from sourceIndex: Int, to destinationIndex: Int) -> Bool {
+    @discardableResult
+    func moveCustomBrushPreset(id presetID: String, toIndex destinationIndex: Int) -> Bool {
+        guard let sourceIndex = customBrushPresets.firstIndex(where: { $0.id == presetID }),
+              customBrushPresets.indices.contains(destinationIndex)
+        else {
+            statusText = L10n.text("imageEditor.status.brushPresetMoveUnavailable")
+            return false
+        }
+        guard sourceIndex != destinationIndex else { return false }
         let preset = customBrushPresets.remove(at: sourceIndex)
         customBrushPresets.insert(preset, at: destinationIndex)
         persistBrushPresetPreferences()

@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-22 06:22:21 +0800",
+  "generated_at": "2026-08-22 06:38:22 +0800",
   "total": 1,
   "passed": 1,
   "failed": 0,
@@ -15,7 +15,7 @@
       "file": "XomoAutomationTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 4.777,
+      "duration": 5.196,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "XomoAutomationTests.registryCreatesListsAppliesAndDeletesPersistedBrushPresets.log"
