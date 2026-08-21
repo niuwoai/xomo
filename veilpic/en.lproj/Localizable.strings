@@ -709,11 +709,17 @@
 "imageEditor.action.brushPresetMoveUp" = "Move Current Preset Up";
 "imageEditor.action.brushPresetMoveDown" = "Move Current Preset Down";
 "imageEditor.action.brushPresetDelete" = "Delete Current Custom Preset";
+"imageEditor.action.brushPresetFavorite" = "Add Current Preset to Favorites";
+"imageEditor.action.brushPresetUnfavorite" = "Remove Current Preset from Favorites";
 "imageEditor.action.brushSettingsReset" = "Reset Brush Settings";
 "imageEditor.brushPreset.modified" = "%@ (Modified)";
 "imageEditor.brushPreset.copySuffix" = " Copy";
 "imageEditor.brushPreset.copySuffixIndexed" = " Copy %d";
 "imageEditor.brushPreset.libraryFilename" = "Xomo Brush Presets";
+"imageEditor.brushPreset.favoriteSection" = "Favorites";
+"imageEditor.brushPreset.recentSection" = "Recent";
+"imageEditor.brushPreset.builtInSection" = "Built-in";
+"imageEditor.brushPreset.customSection" = "Custom";
 "imageEditor.brushPreset.renameTitle" = "Rename Brush Preset";
 "imageEditor.brushPreset.renameMessage" = "Choose a name for the current custom brush preset. Its saved brush settings will not change.";
 "imageEditor.brushPreset.namePlaceholder" = "Preset Name";
@@ -1972,6 +1978,9 @@
 "imageEditor.status.brushPresetMoved" = "Brush preset order updated: %@";
 "imageEditor.status.brushPresetMoveUnavailable" = "This custom brush preset cannot move farther in that direction.";
 "imageEditor.status.brushPresetDeleted" = "Brush preset deleted: %@";
+"imageEditor.status.brushPresetFavorited" = "Brush preset added to favorites: %@";
+"imageEditor.status.brushPresetUnfavorited" = "Brush preset removed from favorites: %@";
+"imageEditor.status.brushPresetFavoriteUnavailable" = "This brush preset is no longer available.";
 "imageEditor.status.brushPresetImported" = "%d brush presets imported; %d skipped.";
 "imageEditor.status.brushPresetExported" = "Brush presets exported: %@";
 "imageEditor.status.brushPresetFileTooLarge" = "The brush preset file exceeds the 5 MB limit.";

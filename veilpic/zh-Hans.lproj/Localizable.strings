@@ -709,11 +709,17 @@
 "imageEditor.action.brushPresetMoveUp" = "上移当前预设";
 "imageEditor.action.brushPresetMoveDown" = "下移当前预设";
 "imageEditor.action.brushPresetDelete" = "删除当前自定义预设";
+"imageEditor.action.brushPresetFavorite" = "将当前预设加入收藏";
+"imageEditor.action.brushPresetUnfavorite" = "将当前预设移出收藏";
 "imageEditor.action.brushSettingsReset" = "重置画笔设置";
 "imageEditor.brushPreset.modified" = "%@（已修改）";
 "imageEditor.brushPreset.copySuffix" = " 副本";
 "imageEditor.brushPreset.copySuffixIndexed" = " 副本 %d";
 "imageEditor.brushPreset.libraryFilename" = "Xomo 画笔预设";
+"imageEditor.brushPreset.favoriteSection" = "收藏";
+"imageEditor.brushPreset.recentSection" = "最近使用";
+"imageEditor.brushPreset.builtInSection" = "内置";
+"imageEditor.brushPreset.customSection" = "自定义";
 "imageEditor.brushPreset.renameTitle" = "重命名画笔预设";
 "imageEditor.brushPreset.renameMessage" = "为当前自定义画笔预设设置名称；已保存的画笔参数不会改变。";
 "imageEditor.brushPreset.namePlaceholder" = "预设名称";
@@ -1972,6 +1978,9 @@
 "imageEditor.status.brushPresetMoved" = "已调整画笔预设顺序：%@";
 "imageEditor.status.brushPresetMoveUnavailable" = "当前自定义画笔预设无法继续向该方向移动。";
 "imageEditor.status.brushPresetDeleted" = "已删除画笔预设：%@";
+"imageEditor.status.brushPresetFavorited" = "已收藏画笔预设：%@";
+"imageEditor.status.brushPresetUnfavorited" = "已取消收藏画笔预设：%@";
+"imageEditor.status.brushPresetFavoriteUnavailable" = "此画笔预设已不可用。";
 "imageEditor.status.brushPresetImported" = "已导入 %d 个画笔预设，跳过 %d 个。";
 "imageEditor.status.brushPresetExported" = "已导出画笔预设：%@";
 "imageEditor.status.brushPresetFileTooLarge" = "画笔预设文件超过 5 MB 上限。";

@@ -186,6 +186,8 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var smudgeSampleAllLayersEnabled = false
     @Published private(set) var customBrushPresets: [ImageEditorBrushPreset] = []
     @Published private(set) var selectedBrushPresetID: String? = nil
+    @Published var favoriteBrushPresetIDs: [String] = []
+    @Published var recentBrushPresetIDs: [String] = []
     @Published var customLayerStylePresets: [ImageEditorLayerStylePreset] = []
     @Published var favoriteLayerStylePresetIDs: [String] = []
     @Published var recentLayerStylePresetIDs: [String] = []
@@ -614,6 +616,9 @@ final class ImageEditorViewModel: ObservableObject {
         let brushDynamicsPreferences = ImageEditorBrushDynamicsPreferences.load(from: preferencesDefaults)
         let retouchDynamicsPreferences = ImageEditorRetouchDynamicsPreferences.load(from: preferencesDefaults)
         let brushPresetPreferences = ImageEditorBrushPresetPreferences.load(from: preferencesDefaults)
+        let brushPresetUsagePreferences = ImageEditorBrushPresetUsagePreferences.load(
+            from: preferencesDefaults
+        )
         let layerStylePresetPreferences = ImageEditorLayerStylePresetPreferences.load(from: preferencesDefaults)
         let layerStylePresetUsagePreferences = ImageEditorLayerStylePresetUsagePreferences.load(
             from: preferencesDefaults
@@ -660,6 +665,12 @@ final class ImageEditorViewModel: ObservableObject {
         retouchPressureSensitivity = CGFloat(retouchDynamicsPreferences.pressureSensitivity)
         customBrushPresets = brushPresetPreferences.presets
         selectedBrushPresetID = brushPresetPreferences.selectedPresetID
+        let knownBrushPresetIDs = Set(
+            ImageEditorBrushPreset.defaultPresets.map(\.id) + customBrushPresets.map(\.id)
+        )
+        let prunedBrushUsage = brushPresetUsagePreferences.pruned(to: knownBrushPresetIDs)
+        favoriteBrushPresetIDs = prunedBrushUsage.favoriteIDs
+        recentBrushPresetIDs = prunedBrushUsage.recentIDs
         customLayerStylePresets = layerStylePresetPreferences.presets
         let knownPresetIDs = Set(
             ImageEditorLayerStyleBuiltInPresetCatalog.presets.map(\.id)
@@ -686,6 +697,9 @@ final class ImageEditorViewModel: ObservableObject {
         let brushDynamicsPreferences = ImageEditorBrushDynamicsPreferences.load(from: preferencesDefaults)
         let retouchDynamicsPreferences = ImageEditorRetouchDynamicsPreferences.load(from: preferencesDefaults)
         let brushPresetPreferences = ImageEditorBrushPresetPreferences.load(from: preferencesDefaults)
+        let brushPresetUsagePreferences = ImageEditorBrushPresetUsagePreferences.load(
+            from: preferencesDefaults
+        )
         let layerStylePresetPreferences = ImageEditorLayerStylePresetPreferences.load(from: preferencesDefaults)
         let layerStylePresetUsagePreferences = ImageEditorLayerStylePresetUsagePreferences.load(
             from: preferencesDefaults
@@ -732,6 +746,12 @@ final class ImageEditorViewModel: ObservableObject {
         retouchPressureSensitivity = CGFloat(retouchDynamicsPreferences.pressureSensitivity)
         customBrushPresets = brushPresetPreferences.presets
         selectedBrushPresetID = brushPresetPreferences.selectedPresetID
+        let knownBrushPresetIDs = Set(
+            ImageEditorBrushPreset.defaultPresets.map(\.id) + customBrushPresets.map(\.id)
+        )
+        let prunedBrushUsage = brushPresetUsagePreferences.pruned(to: knownBrushPresetIDs)
+        favoriteBrushPresetIDs = prunedBrushUsage.favoriteIDs
+        recentBrushPresetIDs = prunedBrushUsage.recentIDs
         customLayerStylePresets = layerStylePresetPreferences.presets
         let knownPresetIDs = Set(
             ImageEditorLayerStyleBuiltInPresetCatalog.presets.map(\.id)
@@ -3170,6 +3190,7 @@ final class ImageEditorViewModel: ObservableObject {
         selectedBrushPresetID = preset.id
         persistBrushDynamicsPreferences()
         persistBrushPresetPreferences()
+        recordBrushPresetUse(id: preset.id)
         statusText = L10n.format("imageEditor.status.brushPresetApplied", preset.title, brushesPanelSummaryText)
     }
 
@@ -3487,6 +3508,7 @@ final class ImageEditorViewModel: ObservableObject {
             selectedBrushPresetID = nil
         }
         persistBrushPresetPreferences()
+        removeBrushPresetUsage(id: removed.id)
         statusText = L10n.format("imageEditor.status.brushPresetDeleted", removed.title)
     }
 
@@ -4337,6 +4359,13 @@ final class ImageEditorViewModel: ObservableObject {
             selectedPresetID: selectedCustomBrushPreset?.id
         )
             .save(to: workspacePreferencesDefaults)
+    }
+
+    func persistBrushPresetUsagePreferences() {
+        ImageEditorBrushPresetUsagePreferences(
+            favoriteIDs: favoriteBrushPresetIDs,
+            recentIDs: recentBrushPresetIDs
+        ).save(to: workspacePreferencesDefaults)
     }
 
     func persistLayerStylePresetPreferences() {

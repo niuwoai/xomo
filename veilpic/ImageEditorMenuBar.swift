@@ -2018,14 +2018,29 @@ extension ImageEditorView {
                 }
             }
             Menu(L10n.text("imageEditor.menu.window.brushes.presets")) {
-                ForEach(viewModel.brushPresets) { preset in
-                    Button {
-                        viewModel.applyBrushPreset(preset)
-                    } label: {
-                        if viewModel.activeBrushPreset?.id == preset.id {
-                            Label(preset.title, systemImage: "checkmark")
-                        } else {
-                            Text(preset.title)
+                if !viewModel.favoriteBrushPresets.isEmpty {
+                    Section(L10n.text("imageEditor.brushPreset.favoriteSection")) {
+                        ForEach(viewModel.favoriteBrushPresets) { preset in
+                            brushPresetMenuButton(preset)
+                        }
+                    }
+                }
+                if !viewModel.recentBrushPresets.isEmpty {
+                    Section(L10n.text("imageEditor.brushPreset.recentSection")) {
+                        ForEach(viewModel.recentBrushPresets) { preset in
+                            brushPresetMenuButton(preset)
+                        }
+                    }
+                }
+                Section(L10n.text("imageEditor.brushPreset.builtInSection")) {
+                    ForEach(ImageEditorBrushPreset.defaultPresets) { preset in
+                        brushPresetMenuButton(preset)
+                    }
+                }
+                if !viewModel.customBrushPresets.isEmpty {
+                    Section(L10n.text("imageEditor.brushPreset.customSection")) {
+                        ForEach(viewModel.customBrushPresets) { preset in
+                            brushPresetMenuButton(preset)
                         }
                     }
                 }
@@ -2043,6 +2058,18 @@ extension ImageEditorView {
                     viewModel.chooseBrushPresetExportFile()
                 }
                 .disabled(viewModel.customBrushPresets.isEmpty)
+                if let selectedPreset = viewModel.selectedBrushPreset {
+                    Button(L10n.text(
+                        viewModel.isFavoriteBrushPreset(id: selectedPreset.id)
+                            ? "imageEditor.action.brushPresetUnfavorite"
+                            : "imageEditor.action.brushPresetFavorite"
+                    )) {
+                        viewModel.setBrushPresetFavorite(
+                            id: selectedPreset.id,
+                            isFavorite: !viewModel.isFavoriteBrushPreset(id: selectedPreset.id)
+                        )
+                    }
+                }
                 if let selectedPreset = viewModel.selectedCustomBrushPreset {
                     Button(L10n.text("imageEditor.action.brushPresetExport")) {
                         viewModel.chooseBrushPresetExportFile(presetIDs: [selectedPreset.id])
@@ -2071,6 +2098,22 @@ extension ImageEditorView {
                     Button(L10n.text("imageEditor.action.brushPresetDelete"), role: .destructive) {
                         viewModel.deleteBrushPreset(selectedPreset)
                     }
+                }
+            }
+        }
+    }
+
+    private func brushPresetMenuButton(_ preset: ImageEditorBrushPreset) -> some View {
+        Button {
+            viewModel.applyBrushPreset(preset)
+        } label: {
+            HStack(spacing: 6) {
+                Text(preset.title)
+                if viewModel.isFavoriteBrushPreset(id: preset.id) {
+                    Image(systemName: "star.fill")
+                }
+                if viewModel.activeBrushPreset?.id == preset.id {
+                    Image(systemName: "checkmark")
                 }
             }
         }

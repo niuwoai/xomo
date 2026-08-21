@@ -709,11 +709,17 @@
 "imageEditor.action.brushPresetMoveUp" = "現在のプリセットを上へ移動";
 "imageEditor.action.brushPresetMoveDown" = "現在のプリセットを下へ移動";
 "imageEditor.action.brushPresetDelete" = "現在のカスタムプリセットを削除";
+"imageEditor.action.brushPresetFavorite" = "現在のプリセットをお気に入りに追加";
+"imageEditor.action.brushPresetUnfavorite" = "現在のプリセットをお気に入りから削除";
 "imageEditor.action.brushSettingsReset" = "ブラシ設定をリセット";
 "imageEditor.brushPreset.modified" = "%@（変更済み）";
 "imageEditor.brushPreset.copySuffix" = " のコピー";
 "imageEditor.brushPreset.copySuffixIndexed" = " のコピー %d";
 "imageEditor.brushPreset.libraryFilename" = "Xomo ブラシプリセット";
+"imageEditor.brushPreset.favoriteSection" = "お気に入り";
+"imageEditor.brushPreset.recentSection" = "最近使用";
+"imageEditor.brushPreset.builtInSection" = "内蔵";
+"imageEditor.brushPreset.customSection" = "カスタム";
 "imageEditor.brushPreset.renameTitle" = "ブラシプリセット名を変更";
 "imageEditor.brushPreset.renameMessage" = "現在のカスタムブラシプリセットの名前を設定します。保存済みのブラシ設定は変更されません。";
 "imageEditor.brushPreset.namePlaceholder" = "プリセット名";
@@ -1972,6 +1978,9 @@
 "imageEditor.status.brushPresetMoved" = "ブラシプリセットの順序を更新しました：%@";
 "imageEditor.status.brushPresetMoveUnavailable" = "このカスタムブラシプリセットはその方向へこれ以上移動できません。";
 "imageEditor.status.brushPresetDeleted" = "ブラシプリセットを削除しました：%@";
+"imageEditor.status.brushPresetFavorited" = "ブラシプリセットをお気に入りに追加しました：%@";
+"imageEditor.status.brushPresetUnfavorited" = "ブラシプリセットをお気に入りから削除しました：%@";
+"imageEditor.status.brushPresetFavoriteUnavailable" = "このブラシプリセットは利用できません。";
 "imageEditor.status.brushPresetImported" = "ブラシプリセットを%d件読み込み、%d件スキップしました。";
 "imageEditor.status.brushPresetExported" = "ブラシプリセットを書き出しました：%@";
 "imageEditor.status.brushPresetFileTooLarge" = "ブラシプリセットファイルが5 MBの上限を超えています。";

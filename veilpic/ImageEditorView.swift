@@ -1486,14 +1486,29 @@ struct ImageEditorView: View {
 
     private var brushPresetMenu: some View {
         Menu {
-            ForEach(viewModel.brushPresets) { preset in
-                Button {
-                    viewModel.applyBrushPreset(preset)
-                } label: {
-                    if viewModel.activeBrushPreset?.id == preset.id {
-                        Label(preset.title, systemImage: "checkmark")
-                    } else {
-                        Text(preset.title)
+            if !viewModel.favoriteBrushPresets.isEmpty {
+                Section(L10n.text("imageEditor.brushPreset.favoriteSection")) {
+                    ForEach(viewModel.favoriteBrushPresets) { preset in
+                        brushPresetButton(preset)
+                    }
+                }
+            }
+            if !viewModel.recentBrushPresets.isEmpty {
+                Section(L10n.text("imageEditor.brushPreset.recentSection")) {
+                    ForEach(viewModel.recentBrushPresets) { preset in
+                        brushPresetButton(preset)
+                    }
+                }
+            }
+            Section(L10n.text("imageEditor.brushPreset.builtInSection")) {
+                ForEach(ImageEditorBrushPreset.defaultPresets) { preset in
+                    brushPresetButton(preset)
+                }
+            }
+            if !viewModel.customBrushPresets.isEmpty {
+                Section(L10n.text("imageEditor.brushPreset.customSection")) {
+                    ForEach(viewModel.customBrushPresets) { preset in
+                        brushPresetButton(preset)
                     }
                 }
             }
@@ -1519,6 +1534,25 @@ struct ImageEditorView: View {
                 Label(L10n.text("imageEditor.action.brushPresetExportAll"), systemImage: "square.and.arrow.up.on.square")
             }
             .disabled(viewModel.customBrushPresets.isEmpty)
+            if let selectedPreset = viewModel.selectedBrushPreset {
+                Button {
+                    viewModel.setBrushPresetFavorite(
+                        id: selectedPreset.id,
+                        isFavorite: !viewModel.isFavoriteBrushPreset(id: selectedPreset.id)
+                    )
+                } label: {
+                    Label(
+                        L10n.text(
+                            viewModel.isFavoriteBrushPreset(id: selectedPreset.id)
+                                ? "imageEditor.action.brushPresetUnfavorite"
+                                : "imageEditor.action.brushPresetFavorite"
+                        ),
+                        systemImage: viewModel.isFavoriteBrushPreset(id: selectedPreset.id)
+                            ? "star.slash"
+                            : "star"
+                    )
+                }
+            }
             if let selectedPreset = viewModel.selectedCustomBrushPreset {
                 Button {
                     viewModel.chooseBrushPresetExportFile(presetIDs: [selectedPreset.id])
@@ -1576,6 +1610,22 @@ struct ImageEditorView: View {
         .focusable(false)
         .help(L10n.text("imageEditor.help.brushPreset"))
         .accessibilityIdentifier("image-editor-brush-preset-menu")
+    }
+
+    private func brushPresetButton(_ preset: ImageEditorBrushPreset) -> some View {
+        Button {
+            viewModel.applyBrushPreset(preset)
+        } label: {
+            HStack(spacing: 6) {
+                Text(preset.title)
+                if viewModel.isFavoriteBrushPreset(id: preset.id) {
+                    Image(systemName: "star.fill")
+                }
+                if viewModel.activeBrushPreset?.id == preset.id {
+                    Image(systemName: "checkmark")
+                }
+            }
+        }
     }
 
     func beginBrushPresetRename() {
