@@ -701,6 +701,7 @@
 "imageEditor.action.brushPresetCreate" = "現在の設定からプリセットを作成";
 "imageEditor.action.brushPresetImport" = "ブラシプリセットを読み込む…";
 "imageEditor.action.brushPresetExport" = "現在のブラシプリセットを書き出す…";
+"imageEditor.action.brushPresetExportAll" = "すべてのカスタムブラシプリセットを書き出す…";
 "imageEditor.action.brushPresetRename" = "現在のカスタムプリセットの名前を変更";
 "imageEditor.action.brushPresetUpdate" = "現在のカスタムプリセットを更新";
 "imageEditor.action.brushPresetRevert" = "現在のプリセットを保存済み設定に戻す";

@@ -701,6 +701,7 @@
 "imageEditor.action.brushPresetCreate" = "从当前设置新建预设";
 "imageEditor.action.brushPresetImport" = "导入画笔预设…";
 "imageEditor.action.brushPresetExport" = "导出当前画笔预设…";
+"imageEditor.action.brushPresetExportAll" = "导出全部自定义画笔预设…";
 "imageEditor.action.brushPresetRename" = "重命名当前自定义预设";
 "imageEditor.action.brushPresetUpdate" = "更新当前自定义预设";
 "imageEditor.action.brushPresetRevert" = "恢复当前预设的已保存设置";

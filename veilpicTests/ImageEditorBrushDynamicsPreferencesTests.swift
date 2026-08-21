@@ -980,6 +980,11 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         let sourcePreset = try #require(source.createBrushPresetFromCurrentSettings())
         #expect(source.renameSelectedCustomBrushPreset(to: "Shared Brush"))
         let exportedPreset = try #require(source.selectedCustomBrushPreset)
+        let secondPreset = try #require(source.duplicateSelectedCustomBrushPreset())
+
+        let allData = try source.brushPresetLibraryData()
+        let allLibrary = try JSONDecoder().decode(ImageEditorBrushPresetLibrary.self, from: allData)
+        #expect(allLibrary.presets == [exportedPreset, secondPreset])
 
         let data = try source.brushPresetLibraryData(presetIDs: [sourcePreset.id])
         let library = try JSONDecoder().decode(ImageEditorBrushPresetLibrary.self, from: data)
@@ -1028,6 +1033,9 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         let (defaults, suiteName) = temporaryDefaults()
         defer { defaults.removePersistentDomain(forName: suiteName) }
         let viewModel = makeViewModel(defaults: defaults)
+        #expect(throws: ImageEditorBrushPresetLibraryError.noMatchingPresets) {
+            try viewModel.brushPresetLibraryData()
+        }
         let seed = try #require(viewModel.createBrushPresetFromCurrentSettings())
         let localPresets = (0..<99).map { index in
             seed.copyingCustomPreset(id: "local-\(index)", name: "Local \(index)")

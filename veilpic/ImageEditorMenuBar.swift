@@ -2039,6 +2039,10 @@ extension ImageEditorView {
                 Button(L10n.text("imageEditor.action.brushPresetImport")) {
                     viewModel.chooseBrushPresetImportFile()
                 }
+                Button(L10n.text("imageEditor.action.brushPresetExportAll")) {
+                    viewModel.chooseBrushPresetExportFile()
+                }
+                .disabled(viewModel.customBrushPresets.isEmpty)
                 if let selectedPreset = viewModel.selectedCustomBrushPreset {
                     Button(L10n.text("imageEditor.action.brushPresetExport")) {
                         viewModel.chooseBrushPresetExportFile(presetIDs: [selectedPreset.id])
