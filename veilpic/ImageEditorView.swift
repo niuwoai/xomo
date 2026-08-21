@@ -214,6 +214,8 @@ struct ImageEditorView: View {
     @State private var hoveredTool: ImageEditorTool?
     @State private var isQuickMaskOptionsPresented = false
     @State var isFigmaLinkImportPresented = false
+    @State var isBrushPresetRenamePresented = false
+    @State var brushPresetNameDraft = ""
     @State private var canvasTextEditingOrigin: CGPoint?
     @State private var canvasTextEditingLayerID: UUID?
     @State private var canvasTextEditingFrame: CGRect?
@@ -529,6 +531,24 @@ struct ImageEditorView: View {
                 pendingCropRect = nil
                 endPendingCropInteraction()
             }
+        }
+        .alert(
+            L10n.text("imageEditor.brushPreset.renameTitle"),
+            isPresented: $isBrushPresetRenamePresented
+        ) {
+            TextField(
+                L10n.text("imageEditor.brushPreset.namePlaceholder"),
+                text: $brushPresetNameDraft
+            )
+            Button(L10n.text("imageEditor.action.cancel"), role: .cancel) {}
+            Button(L10n.text("imageEditor.action.brushPresetRename")) {
+                viewModel.renameSelectedCustomBrushPreset(to: brushPresetNameDraft)
+            }
+            .disabled(
+                ImageEditorBrushPreset.normalizedCustomName(brushPresetNameDraft) == nil
+            )
+        } message: {
+            Text(L10n.text("imageEditor.brushPreset.renameMessage"))
         }
         .sheet(isPresented: $viewModel.isExportSheetPresented) {
             ImageEditorExportPanel(viewModel: viewModel)
@@ -1490,6 +1510,11 @@ struct ImageEditorView: View {
             }
             if let selectedPreset = viewModel.selectedCustomBrushPreset {
                 Button {
+                    beginBrushPresetRename()
+                } label: {
+                    Label(L10n.text("imageEditor.action.brushPresetRename"), systemImage: "pencil")
+                }
+                Button {
                     viewModel.updateSelectedCustomBrushPresetFromCurrentSettings()
                 } label: {
                     Label(L10n.text("imageEditor.action.brushPresetUpdate"), systemImage: "square.and.arrow.down")
@@ -1512,6 +1537,15 @@ struct ImageEditorView: View {
         .focusable(false)
         .help(L10n.text("imageEditor.help.brushPreset"))
         .accessibilityIdentifier("image-editor-brush-preset-menu")
+    }
+
+    func beginBrushPresetRename() {
+        guard let selectedPreset = viewModel.selectedCustomBrushPreset else {
+            viewModel.statusText = L10n.text("imageEditor.status.brushPresetRenameUnavailable")
+            return
+        }
+        brushPresetNameDraft = selectedPreset.title
+        isBrushPresetRenamePresented = true
     }
 
     private var brushPressureMenu: some View {

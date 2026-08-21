@@ -1,10 +1,10 @@
 {
-  "generated_at": "2026-08-22 03:27:09 +0800",
+  "generated_at": "2026-08-22 03:53:49 +0800",
   "total": 1,
   "passed": 1,
   "failed": 0,
-  "total_tests": 11,
-  "passed_tests": 11,
+  "total_tests": 12,
+  "passed_tests": 12,
   "failed_tests_in_failed_groups": 0,
   "jobs": 1,
   "results": [
@@ -13,9 +13,9 @@
       "method": null,
       "identifier": "veilpicTests/ImageEditorBrushDynamicsPreferencesTests",
       "file": "ImageEditorBrushDynamicsPreferencesTests.swift",
-      "test_count": 11,
+      "test_count": 12,
       "passed": true,
-      "duration": 5.009,
+      "duration": 4.987,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorBrushDynamicsPreferencesTests.log"

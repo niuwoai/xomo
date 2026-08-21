@@ -3231,6 +3231,30 @@ final class ImageEditorViewModel: ObservableObject {
         return true
     }
 
+    @discardableResult
+    func renameSelectedCustomBrushPreset(to proposedName: String) -> Bool {
+        guard let targetPresetID = selectedCustomBrushPreset?.id,
+              let index = customBrushPresets.firstIndex(where: { $0.id == targetPresetID })
+        else {
+            statusText = L10n.text("imageEditor.status.brushPresetRenameUnavailable")
+            return false
+        }
+        guard let normalizedName = ImageEditorBrushPreset.normalizedCustomName(proposedName) else {
+            statusText = L10n.text("imageEditor.status.brushPresetNameRequired")
+            return false
+        }
+        let existing = customBrushPresets[index]
+        guard existing.name != normalizedName else {
+            statusText = L10n.format("imageEditor.status.brushPresetRenameUnchanged", existing.title)
+            return false
+        }
+        let renamed = existing.renamingCustomPreset(to: normalizedName)
+        customBrushPresets[index] = renamed
+        persistBrushPresetPreferences()
+        statusText = L10n.format("imageEditor.status.brushPresetRenamed", renamed.title)
+        return true
+    }
+
     private func currentBrushPreset(id: String, name: String?) -> ImageEditorBrushPreset {
         ImageEditorBrushPreset(
             id: id,

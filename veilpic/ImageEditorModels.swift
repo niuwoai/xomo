@@ -37,6 +37,8 @@ struct ImageEditorColorSwatch: Identifiable {
 }
 
 struct ImageEditorBrushPreset: Identifiable, Codable, Equatable {
+    nonisolated static let maximumCustomNameLength = 80
+
     let id: String
     let name: String?
     let size: CGFloat
@@ -271,13 +273,54 @@ struct ImageEditorBrushPreset: Identifiable, Codable, Equatable {
         name ?? L10n.format("imageEditor.brushPreset.size", Int(size.rounded()))
     }
 
+    nonisolated static func normalizedCustomName(_ proposedName: String) -> String? {
+        let trimmedName = proposedName.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedName.isEmpty else { return nil }
+        return String(trimmedName.prefix(maximumCustomNameLength))
+    }
+
+    func renamingCustomPreset(to normalizedName: String) -> ImageEditorBrushPreset {
+        ImageEditorBrushPreset(
+            id: id,
+            name: normalizedName,
+            size: size,
+            hardness: hardness,
+            flow: flow,
+            spacing: spacing,
+            pressureControlsSize: pressureControlsSize,
+            pressureControlsOpacity: pressureControlsOpacity,
+            pressureControlsFlow: pressureControlsFlow,
+            pressureSensitivity: pressureSensitivity,
+            sizeJitter: sizeJitter,
+            angleJitter: angleJitter,
+            angleFollowsStrokeDirection: angleFollowsStrokeDirection,
+            roundnessJitter: roundnessJitter,
+            opacityJitter: opacityJitter,
+            flowJitter: flowJitter,
+            minimumRoundness: minimumRoundness,
+            scatter: scatter,
+            scatterBothAxes: scatterBothAxes,
+            scatterCount: scatterCount,
+            scatterCountJitter: scatterCountJitter,
+            noiseEnabled: noiseEnabled,
+            wetEdgesEnabled: wetEdgesEnabled,
+            minimumDiameter: minimumDiameter,
+            minimumOpacity: minimumOpacity,
+            minimumFlow: minimumFlow,
+            tiltControlsShape: tiltControlsShape,
+            tipRoundness: tipRoundness,
+            tipAngleDegrees: tipAngleDegrees,
+            smoothing: smoothing,
+            isBuiltIn: false
+        ).normalizedCustomPreset
+    }
+
     var normalizedCustomPreset: ImageEditorBrushPreset {
-        let trimmedName = name?.trimmingCharacters(in: .whitespacesAndNewlines)
-        let normalizedName = (trimmedName?.isEmpty == false ? trimmedName : nil)
+        let normalizedName = name.flatMap(Self.normalizedCustomName)
             ?? L10n.text("imageEditor.brushPreset.untitled")
         return ImageEditorBrushPreset(
             id: id.isEmpty ? UUID().uuidString : id,
-            name: String(normalizedName.prefix(80)),
+            name: normalizedName,
             size: max(1, min(96, size)),
             hardness: max(0, min(1, hardness)),
             flow: max(1, min(100, flow)),

@@ -623,6 +623,81 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         #expect(makeViewModel(defaults: defaults).selectedBrushPresetID == nil)
     }
 
+    @Test func renamingSelectedCustomPresetPreservesSavedSettingsDirtyStateAndTransactions() throws {
+        let (defaults, suiteName) = temporaryDefaults()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let viewModel = makeViewModel(defaults: defaults)
+        viewModel.brushSize = 22
+        let first = try #require(viewModel.createBrushPresetFromCurrentSettings())
+        viewModel.brushSize = 33
+        let second = try #require(viewModel.createBrushPresetFromCurrentSettings())
+        viewModel.applyBrushPreset(first)
+        viewModel.brushSize = 41
+        #expect(viewModel.activeBrushPreset == nil)
+
+        viewModel.addLayer()
+        viewModel.undo()
+        let documentBeforeRename = transactionSignature(viewModel.document)
+        let undoBeforeRename = viewModel.undoStack.map { transactionSignature($0) }
+        let redoBeforeRename = viewModel.redoStack.map { transactionSignature($0) }
+        let normalizedName = String(repeating: "A", count: ImageEditorBrushPreset.maximumCustomNameLength)
+
+        #expect(
+            viewModel.renameSelectedCustomBrushPreset(
+                to: "  \(String(repeating: "A", count: 90))  \n"
+            )
+        )
+
+        let renamed = try #require(viewModel.customBrushPresets.first)
+        #expect(viewModel.customBrushPresets.map(\.id) == [first.id, second.id])
+        #expect(renamed == first.renamingCustomPreset(to: normalizedName))
+        #expect(viewModel.customBrushPresets[1] == second)
+        #expect(viewModel.selectedBrushPresetID == first.id)
+        #expect(viewModel.selectedCustomBrushPreset == renamed)
+        #expect(viewModel.activeBrushPreset == nil)
+        #expect(
+            viewModel.brushPresetMenuTitle
+                == L10n.format("imageEditor.brushPreset.modified", normalizedName)
+        )
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.brushPresetRenamed", normalizedName))
+        #expect(transactionSignature(viewModel.document) == documentBeforeRename)
+        #expect(viewModel.undoStack.map { transactionSignature($0) } == undoBeforeRename)
+        #expect(viewModel.redoStack.map { transactionSignature($0) } == redoBeforeRename)
+
+        let preferencesAfterRename = defaults.data(
+            forKey: ImageEditorBrushPresetPreferences.storageKey
+        )
+        #expect(!viewModel.renameSelectedCustomBrushPreset(to: "  \(normalizedName)\n"))
+        #expect(viewModel.customBrushPresets == [renamed, second])
+        #expect(
+            viewModel.statusText
+                == L10n.format("imageEditor.status.brushPresetRenameUnchanged", normalizedName)
+        )
+        #expect(
+            defaults.data(forKey: ImageEditorBrushPresetPreferences.storageKey)
+                == preferencesAfterRename
+        )
+
+        #expect(!viewModel.renameSelectedCustomBrushPreset(to: " \n "))
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.brushPresetNameRequired"))
+        #expect(viewModel.customBrushPresets == [renamed, second])
+        #expect(transactionSignature(viewModel.document) == documentBeforeRename)
+        #expect(viewModel.undoStack.map { transactionSignature($0) } == undoBeforeRename)
+        #expect(viewModel.redoStack.map { transactionSignature($0) } == redoBeforeRename)
+
+        let restored = makeViewModel(defaults: defaults)
+        #expect(restored.customBrushPresets == [renamed, second])
+        #expect(restored.selectedBrushPresetID == first.id)
+        #expect(restored.selectedCustomBrushPreset == renamed)
+
+        let builtIn = try #require(ImageEditorBrushPreset.defaultPresets.first)
+        viewModel.applyBrushPreset(builtIn)
+        #expect(!viewModel.renameSelectedCustomBrushPreset(to: "Must Not Replace Custom"))
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.brushPresetRenameUnavailable"))
+        #expect(viewModel.customBrushPresets == [renamed, second])
+        #expect(makeViewModel(defaults: defaults).selectedBrushPresetID == nil)
+    }
+
     @Test func builtInPresetsCannotBeDeletedAndRestoreTheCompleteBrushDefinition() throws {
         let (defaults, suiteName) = temporaryDefaults()
         defer { defaults.removePersistentDomain(forName: suiteName) }

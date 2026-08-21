@@ -4676,6 +4676,8 @@ struct ImageEditorScopeTests {
         #expect(brushesMenuSource.contains("viewModel.resetBrushSettings()"))
         #expect(brushesMenuSource.contains("viewModel.createBrushPresetFromCurrentSettings()"))
         #expect(brushesMenuSource.contains("viewModel.selectedCustomBrushPreset"))
+        #expect(brushesMenuSource.contains("imageEditor.action.brushPresetRename"))
+        #expect(brushesMenuSource.contains("beginBrushPresetRename()"))
         #expect(brushesMenuSource.contains("imageEditor.action.brushPresetUpdate"))
         #expect(brushesMenuSource.contains("viewModel.updateSelectedCustomBrushPresetFromCurrentSettings()"))
         #expect(brushesMenuSource.contains("viewModel.deleteBrushPreset(selectedPreset)"))
@@ -4699,12 +4701,17 @@ struct ImageEditorScopeTests {
         #expect(menuSource.contains("viewModel.resetBrushSettings()"))
         #expect(menuSource.contains("viewModel.createBrushPresetFromCurrentSettings()"))
         #expect(menuSource.contains("viewModel.selectedCustomBrushPreset"))
+        #expect(menuSource.contains("imageEditor.action.brushPresetRename"))
+        #expect(menuSource.contains("beginBrushPresetRename()"))
         #expect(menuSource.contains("imageEditor.action.brushPresetUpdate"))
         #expect(menuSource.contains("viewModel.updateSelectedCustomBrushPresetFromCurrentSettings()"))
         #expect(menuSource.contains("viewModel.deleteBrushPreset(selectedPreset)"))
         #expect(menuSource.contains("viewModel.brushPresetMenuTitle"))
         #expect(menuSource.contains(".focusable(false)"))
         #expect(menuSource.contains("image-editor-brush-preset-menu"))
+        #expect(source.contains("isPresented: $isBrushPresetRenamePresented"))
+        #expect(source.contains("viewModel.renameSelectedCustomBrushPreset(to: brushPresetNameDraft)"))
+        #expect(source.contains("ImageEditorBrushPreset.normalizedCustomName(brushPresetNameDraft) == nil"))
     }
 
     @Test func brushAndEraserExposeCompactNonFocusableSmoothingPresets() throws {

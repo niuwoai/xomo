@@ -2037,6 +2037,9 @@ extension ImageEditorView {
                     viewModel.createBrushPresetFromCurrentSettings()
                 }
                 if let selectedPreset = viewModel.selectedCustomBrushPreset {
+                    Button(L10n.text("imageEditor.action.brushPresetRename")) {
+                        beginBrushPresetRename()
+                    }
                     Button(L10n.text("imageEditor.action.brushPresetUpdate")) {
                         viewModel.updateSelectedCustomBrushPresetFromCurrentSettings()
                     }
