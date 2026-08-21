@@ -698,6 +698,76 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         #expect(makeViewModel(defaults: defaults).selectedBrushPresetID == nil)
     }
 
+    @Test func duplicatingSelectedCustomPresetCreatesAdjacentUniqueResourceWithoutApplyingIt() throws {
+        let (defaults, suiteName) = temporaryDefaults()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let viewModel = makeViewModel(defaults: defaults)
+        viewModel.brushSize = 22
+        let original = try #require(viewModel.createBrushPresetFromCurrentSettings())
+        viewModel.brushSize = 33
+        let trailing = try #require(viewModel.createBrushPresetFromCurrentSettings())
+        viewModel.applyBrushPreset(original)
+        let longName = String(repeating: "A", count: ImageEditorBrushPreset.maximumCustomNameLength)
+        #expect(viewModel.renameSelectedCustomBrushPreset(to: longName))
+        let source = try #require(viewModel.selectedCustomBrushPreset)
+        viewModel.brushSize = 41
+        #expect(viewModel.activeBrushPreset == nil)
+
+        viewModel.addLayer()
+        viewModel.undo()
+        let documentBeforeDuplicate = transactionSignature(viewModel.document)
+        let undoBeforeDuplicate = viewModel.undoStack.map { transactionSignature($0) }
+        let redoBeforeDuplicate = viewModel.redoStack.map { transactionSignature($0) }
+        let firstSuffix = L10n.text("imageEditor.brushPreset.copySuffix")
+        let firstCopyName = String(
+            longName.prefix(ImageEditorBrushPreset.maximumCustomNameLength - firstSuffix.count)
+        ) + firstSuffix
+
+        let firstCopy = try #require(viewModel.duplicateSelectedCustomBrushPreset())
+
+        #expect(firstCopy.id != source.id)
+        #expect(firstCopy.name == firstCopyName)
+        #expect(firstCopy.name?.count == ImageEditorBrushPreset.maximumCustomNameLength)
+        #expect(firstCopy == source.copyingCustomPreset(id: firstCopy.id, name: firstCopyName))
+        #expect(viewModel.customBrushPresets == [source, firstCopy, trailing])
+        #expect(viewModel.selectedBrushPresetID == firstCopy.id)
+        #expect(viewModel.selectedCustomBrushPreset == firstCopy)
+        #expect(viewModel.brushSize == 41)
+        #expect(viewModel.activeBrushPreset == nil)
+        #expect(
+            viewModel.brushPresetMenuTitle
+                == L10n.format("imageEditor.brushPreset.modified", firstCopy.title)
+        )
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.brushPresetDuplicated", firstCopy.title))
+        #expect(transactionSignature(viewModel.document) == documentBeforeDuplicate)
+        #expect(viewModel.undoStack.map { transactionSignature($0) } == undoBeforeDuplicate)
+        #expect(viewModel.redoStack.map { transactionSignature($0) } == redoBeforeDuplicate)
+
+        viewModel.applyBrushPreset(source)
+        let numberedSuffix = L10n.format("imageEditor.brushPreset.copySuffixIndexed", 2)
+        let secondCopyName = String(
+            longName.prefix(ImageEditorBrushPreset.maximumCustomNameLength - numberedSuffix.count)
+        ) + numberedSuffix
+        let secondCopy = try #require(viewModel.duplicateSelectedCustomBrushPreset())
+        #expect(secondCopy.name == secondCopyName)
+        #expect(Set(viewModel.customBrushPresets.compactMap(\.name)).count == 4)
+        #expect(viewModel.customBrushPresets == [source, secondCopy, firstCopy, trailing])
+        #expect(viewModel.selectedBrushPresetID == secondCopy.id)
+        #expect(transactionSignature(viewModel.document) == documentBeforeDuplicate)
+        #expect(viewModel.undoStack.map { transactionSignature($0) } == undoBeforeDuplicate)
+        #expect(viewModel.redoStack.map { transactionSignature($0) } == redoBeforeDuplicate)
+
+        let restored = makeViewModel(defaults: defaults)
+        #expect(restored.customBrushPresets == [source, secondCopy, firstCopy, trailing])
+        #expect(restored.selectedBrushPresetID == secondCopy.id)
+
+        let builtIn = try #require(ImageEditorBrushPreset.defaultPresets.first)
+        viewModel.applyBrushPreset(builtIn)
+        #expect(viewModel.duplicateSelectedCustomBrushPreset() == nil)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.brushPresetDuplicateUnavailable"))
+        #expect(viewModel.customBrushPresets == [source, secondCopy, firstCopy, trailing])
+    }
+
     @Test func movingSelectedCustomPresetPersistsOrderWithoutChangingSelectionOrTransactions() throws {
         let (defaults, suiteName) = temporaryDefaults()
         defer { defaults.removePersistentDomain(forName: suiteName) }

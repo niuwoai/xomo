@@ -701,11 +701,14 @@
 "imageEditor.action.brushPresetCreate" = "从当前设置新建预设";
 "imageEditor.action.brushPresetRename" = "重命名当前自定义预设";
 "imageEditor.action.brushPresetUpdate" = "更新当前自定义预设";
+"imageEditor.action.brushPresetDuplicate" = "复制当前自定义预设";
 "imageEditor.action.brushPresetMoveUp" = "上移当前预设";
 "imageEditor.action.brushPresetMoveDown" = "下移当前预设";
 "imageEditor.action.brushPresetDelete" = "删除当前自定义预设";
 "imageEditor.action.brushSettingsReset" = "重置画笔设置";
 "imageEditor.brushPreset.modified" = "%@（已修改）";
+"imageEditor.brushPreset.copySuffix" = " 副本";
+"imageEditor.brushPreset.copySuffixIndexed" = " 副本 %d";
 "imageEditor.brushPreset.renameTitle" = "重命名画笔预设";
 "imageEditor.brushPreset.renameMessage" = "为当前自定义画笔预设设置名称；已保存的画笔参数不会改变。";
 "imageEditor.brushPreset.namePlaceholder" = "预设名称";
@@ -1957,6 +1960,8 @@
 "imageEditor.status.brushPresetUpdated" = "已更新画笔预设：%@";
 "imageEditor.status.brushPresetUnchanged" = "画笔预设已是最新状态：%@";
 "imageEditor.status.brushPresetUpdateUnavailable" = "请先应用或创建一个自定义画笔预设，再更新它。";
+"imageEditor.status.brushPresetDuplicated" = "已复制画笔预设：%@";
+"imageEditor.status.brushPresetDuplicateUnavailable" = "请先应用或创建一个自定义画笔预设，再复制它。";
 "imageEditor.status.brushPresetMoved" = "已调整画笔预设顺序：%@";
 "imageEditor.status.brushPresetMoveUnavailable" = "当前自定义画笔预设无法继续向该方向移动。";
 "imageEditor.status.brushPresetDeleted" = "已删除画笔预设：%@";

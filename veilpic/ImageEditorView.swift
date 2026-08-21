@@ -1520,6 +1520,11 @@ struct ImageEditorView: View {
                     Label(L10n.text("imageEditor.action.brushPresetUpdate"), systemImage: "square.and.arrow.down")
                 }
                 Button {
+                    viewModel.duplicateSelectedCustomBrushPreset()
+                } label: {
+                    Label(L10n.text("imageEditor.action.brushPresetDuplicate"), systemImage: "square.on.square")
+                }
+                Button {
                     viewModel.moveSelectedCustomBrushPresetUp()
                 } label: {
                     Label(L10n.text("imageEditor.action.brushPresetMoveUp"), systemImage: "arrow.up")

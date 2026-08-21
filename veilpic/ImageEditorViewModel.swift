@@ -3270,6 +3270,34 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     @discardableResult
+    func duplicateSelectedCustomBrushPreset() -> ImageEditorBrushPreset? {
+        guard customBrushPresets.count < ImageEditorBrushPresetPreferences.maximumPresetCount else {
+            statusText = L10n.format(
+                "imageEditor.status.brushPresetLimitReached",
+                ImageEditorBrushPresetPreferences.maximumPresetCount
+            )
+            return nil
+        }
+        guard let sourcePresetID = selectedCustomBrushPreset?.id,
+              let sourceIndex = customBrushPresets.firstIndex(where: { $0.id == sourcePresetID })
+        else {
+            statusText = L10n.text("imageEditor.status.brushPresetDuplicateUnavailable")
+            return nil
+        }
+
+        let source = customBrushPresets[sourceIndex]
+        let copy = source.copyingCustomPreset(
+            id: UUID().uuidString,
+            name: uniqueBrushPresetCopyName(for: source.title)
+        )
+        customBrushPresets.insert(copy, at: customBrushPresets.index(after: sourceIndex))
+        selectedBrushPresetID = copy.id
+        persistBrushPresetPreferences()
+        statusText = L10n.format("imageEditor.status.brushPresetDuplicated", copy.title)
+        return copy
+    }
+
+    @discardableResult
     func moveSelectedCustomBrushPresetUp() -> Bool {
         guard let selectedBrushPresetID,
               let index = customBrushPresets.firstIndex(where: { $0.id == selectedBrushPresetID }),
@@ -3299,6 +3327,25 @@ final class ImageEditorViewModel: ObservableObject {
         persistBrushPresetPreferences()
         statusText = L10n.format("imageEditor.status.brushPresetMoved", preset.title)
         return true
+    }
+
+    private func uniqueBrushPresetCopyName(for sourceName: String) -> String {
+        let existingNames = Set(customBrushPresets.compactMap(\.name))
+        var sequence = 1
+        while true {
+            let suffix = sequence == 1
+                ? L10n.text("imageEditor.brushPreset.copySuffix")
+                : L10n.format("imageEditor.brushPreset.copySuffixIndexed", sequence)
+            let availableBaseLength = max(
+                0,
+                ImageEditorBrushPreset.maximumCustomNameLength - suffix.count
+            )
+            let candidate = String(sourceName.prefix(availableBaseLength)) + suffix
+            if !existingNames.contains(candidate) {
+                return candidate
+            }
+            sequence += 1
+        }
     }
 
     private func currentBrushPreset(id: String, name: String?) -> ImageEditorBrushPreset {

@@ -280,9 +280,13 @@ struct ImageEditorBrushPreset: Identifiable, Codable, Equatable {
     }
 
     func renamingCustomPreset(to normalizedName: String) -> ImageEditorBrushPreset {
+        copyingCustomPreset(id: id, name: normalizedName)
+    }
+
+    func copyingCustomPreset(id copyID: String, name copyName: String) -> ImageEditorBrushPreset {
         ImageEditorBrushPreset(
-            id: id,
-            name: normalizedName,
+            id: copyID,
+            name: copyName,
             size: size,
             hardness: hardness,
             flow: flow,

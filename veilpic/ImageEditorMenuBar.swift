@@ -2043,6 +2043,9 @@ extension ImageEditorView {
                     Button(L10n.text("imageEditor.action.brushPresetUpdate")) {
                         viewModel.updateSelectedCustomBrushPresetFromCurrentSettings()
                     }
+                    Button(L10n.text("imageEditor.action.brushPresetDuplicate")) {
+                        viewModel.duplicateSelectedCustomBrushPreset()
+                    }
                     Button(L10n.text("imageEditor.action.brushPresetMoveUp")) {
                         viewModel.moveSelectedCustomBrushPresetUp()
                     }
