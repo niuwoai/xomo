@@ -238,10 +238,12 @@ struct XomoAutomationTests {
         )
         #expect(brushPresetProperties["action"]?.objectValue?["enum"] == .array([
             .string("list"), .string("create"), .string("apply"), .string("update"),
-            .string("duplicate"), .string("moveToIndex"), .string("rename"), .string("delete")
+            .string("duplicate"), .string("moveToIndex"), .string("export"),
+            .string("rename"), .string("delete")
         ]))
         #expect(brushPresetProperties["index"]?.objectValue?["type"] == .string("integer"))
         #expect(brushPresetProperties["index"]?.objectValue?["minimum"] == .number(0))
+        #expect(brushPresetProperties["path"]?.objectValue?["type"] == .string("string"))
         #expect(brushPresetProperties["name"]?.objectValue?["type"] == .string("string"))
         #expect(tools.contains { tool in
             guard case .object(let value) = tool else { return false }
@@ -10234,6 +10236,119 @@ struct XomoAutomationTests {
         #expect(transactionSignature(viewModel.document) == documentBeforeMove)
         #expect(viewModel.undoStack.map(transactionSignature) == undoBeforeMove)
         #expect(viewModel.redoStack.map(transactionSignature) == redoBeforeMove)
+    }
+
+    @Test func registryExportsSingleAndCompleteBrushPresetLibrariesWithoutChangingEditorState() throws {
+        let suiteName = "XomoAutomationTests.exportPreset.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName) ?? .standard
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let viewModel = makeViewModel(preferencesDefaults: defaults)
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        defer { registry.unregister(viewModel) }
+        let singlePath = FileManager.default.temporaryDirectory
+            .appendingPathComponent("xomo-single-\(UUID().uuidString).xomobrushes")
+        let libraryPath = FileManager.default.temporaryDirectory
+            .appendingPathComponent("xomo-library-\(UUID().uuidString).xomobrushes")
+        let emptyPath = FileManager.default.temporaryDirectory
+            .appendingPathComponent("xomo-empty-\(UUID().uuidString).xomobrushes")
+        defer {
+            try? FileManager.default.removeItem(at: singlePath)
+            try? FileManager.default.removeItem(at: libraryPath)
+            try? FileManager.default.removeItem(at: emptyPath)
+        }
+
+        let empty = registry.execute(request(
+            operation: "call",
+            name: "xomo.brush.preset",
+            arguments: ["action": .string("export"), "path": .string(emptyPath.path)]
+        ))
+        #expect(!empty.ok)
+        #expect(empty.error?.contains("No custom brush presets") == true)
+        #expect(!FileManager.default.fileExists(atPath: emptyPath.path))
+
+        viewModel.brushSize = 19
+        viewModel.setBrushScatter(240)
+        let first = try #require(viewModel.createBrushPresetFromCurrentSettings())
+        viewModel.brushSize = 43
+        viewModel.setBrushNoiseEnabled(true)
+        let second = try #require(viewModel.createBrushPresetFromCurrentSettings())
+        viewModel.applyBrushPreset(second)
+        viewModel.brushSize = 71
+        viewModel.setBrushAngleJitter(38)
+        viewModel.addLayer()
+        viewModel.undo()
+        let documentBeforeExport = transactionSignature(viewModel.document)
+        let undoBeforeExport = viewModel.undoStack.map(transactionSignature)
+        let redoBeforeExport = viewModel.redoStack.map(transactionSignature)
+
+        let single = registry.execute(request(
+            operation: "call",
+            name: "xomo.brush.preset",
+            arguments: [
+                "action": .string("export"),
+                "id": .string(first.id),
+                "path": .string(singlePath.path)
+            ]
+        ))
+        #expect(single.ok)
+        #expect(single.result?.objectValue?["path"] == .string(singlePath.path))
+        #expect(single.result?.objectValue?["filename"] == .string(singlePath.lastPathComponent))
+        #expect(single.result?.objectValue?["presetCount"] == .number(1))
+        let singleLibrary = try JSONDecoder().decode(
+            ImageEditorBrushPresetLibrary.self,
+            from: Data(contentsOf: singlePath)
+        )
+        #expect(singleLibrary.formatVersion == ImageEditorBrushPresetLibrary.currentFormatVersion)
+        #expect(singleLibrary.presets == [first])
+
+        let library = registry.execute(request(
+            operation: "call",
+            name: "xomo.brush.preset",
+            arguments: ["action": .string("export"), "path": .string(libraryPath.path)]
+        ))
+        #expect(library.ok)
+        #expect(library.result?.objectValue?["presetCount"] == .number(2))
+        let completeLibrary = try JSONDecoder().decode(
+            ImageEditorBrushPresetLibrary.self,
+            from: Data(contentsOf: libraryPath)
+        )
+        #expect(completeLibrary.presets == [first, second])
+        #expect(viewModel.selectedBrushPresetID == second.id)
+        #expect(viewModel.brushSize == 71)
+        #expect(viewModel.brushAngleJitter == 38)
+        #expect(transactionSignature(viewModel.document) == documentBeforeExport)
+        #expect(viewModel.undoStack.map(transactionSignature) == undoBeforeExport)
+        #expect(viewModel.redoStack.map(transactionSignature) == redoBeforeExport)
+
+        let builtInID = try #require(ImageEditorBrushPreset.defaultPresets.first?.id)
+        for invalidID in [builtInID, "missing-custom-preset"] {
+            let rejected = registry.execute(request(
+                operation: "call",
+                name: "xomo.brush.preset",
+                arguments: [
+                    "action": .string("export"),
+                    "id": .string(invalidID),
+                    "path": .string(emptyPath.path)
+                ]
+            ))
+            #expect(!rejected.ok)
+            #expect(rejected.error?.contains("Not found: Custom brush preset") == true)
+        }
+        let missingPath = registry.execute(request(
+            operation: "call",
+            name: "xomo.brush.preset",
+            arguments: ["action": .string("export"), "id": .string(first.id)]
+        ))
+        #expect(!missingPath.ok)
+        #expect(!FileManager.default.fileExists(atPath: emptyPath.path))
+        #expect(viewModel.customBrushPresets == [first, second])
+        #expect(viewModel.selectedBrushPresetID == second.id)
+        #expect(viewModel.brushSize == 71)
+        #expect(viewModel.brushAngleJitter == 38)
+        #expect(transactionSignature(viewModel.document) == documentBeforeExport)
+        #expect(viewModel.undoStack.map(transactionSignature) == undoBeforeExport)
+        #expect(viewModel.redoStack.map(transactionSignature) == redoBeforeExport)
     }
 
     @Test func registryRecursivelyExpandsAndCollapsesSelectedLayerGroups() {
