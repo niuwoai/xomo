@@ -239,6 +239,9 @@ struct ImageEditorSelectionEdgeTests {
 
     @Test func everyStageASelectionSourceCanRoundTripThroughQuickMask() throws {
         let canvasSize = CGSize(width: 24, height: 24)
+        let preferencesSuiteName = "ImageEditorSelectionEdgeTests.\(UUID().uuidString)"
+        let preferencesDefaults = try #require(UserDefaults(suiteName: preferencesSuiteName))
+        defer { preferencesDefaults.removePersistentDomain(forName: preferencesSuiteName) }
         let builders: [(ImageEditorViewModel) -> Void] = [
             { $0.createRectSelection(from: CGPoint(x: 3, y: 3), to: CGPoint(x: 21, y: 21)) },
             {
@@ -259,7 +262,8 @@ struct ImageEditorSelectionEdgeTests {
         for buildSelection in builders {
             let viewModel = ImageEditorViewModel(
                 sourceName: "source.png",
-                image: solidImage(color: .systemBlue, size: canvasSize)
+                image: solidImage(color: .systemBlue, size: canvasSize),
+                preferencesDefaults: preferencesDefaults
             ) { _ in }
             buildSelection(viewModel)
             _ = try #require(viewModel.document.selection)

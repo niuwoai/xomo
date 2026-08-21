@@ -54,6 +54,7 @@ struct ImageEditorScopeTests {
                 "quickSelection",
                 "crop",
                 "brush",
+                "pencil",
                 "historyBrush",
                 "eraser",
                 "cloneStamp",
@@ -2323,7 +2324,7 @@ struct ImageEditorScopeTests {
         #expect(commandSource.contains("var canEraseToHistory: Bool"))
         #expect(commandSource.contains("func shouldEraseToHistory(modifierFlags: NSEvent.ModifierFlags) -> Bool"))
         #expect(commandSource.contains("func eraseBrush("))
-        #expect(commandSource.contains("_ = historyBrush(samples: samples)"))
+        #expect(commandSource.contains("_ = historyBrush(samples: samples, blendMode: .normal)"))
 
         for locale in ["en", "ja", "zh-Hans"] {
             let localization = try String(

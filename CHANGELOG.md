@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.12.0-rc1120 - 2026-08-21
+
+### Changed
+
+- 冻结 rc1081–rc1119 的对象交互、快速蒙版、经典填充、History Brush、Pencil 与画笔动态累积改动，执行每 40 个候选版本一次的完整质量门禁，不在本版夹带新算法或文档模型迁移。
+- 全量隔离测试最终 116/116 组、2370/2370 项通过；CLI/MCP 2/2、发布契约 7/7（21 项断言）与测试运行器契约全部通过。Universal Release 生成 `arm64 + x86_64` 双架构应用，ad-hoc hardened runtime 严格签名校验通过；Developer ID 仍在 Sparkle 签名阶段因 `errSecInternalComponent` 失败，因此没有执行外部公证、上传或 GitHub Release。
+- 临时构建真实界面冒烟通过组件插入与 Brush/Pencil 工具切换；覆盖 `/Applications/Xomo.app` 后的退出流程捕获到工具栏拆除崩溃，安装门禁因此转入 rc1121 修复与复验，而不是把崩溃版本视为交付完成。
+
 ## 2.12.0-rc1119 - 2026-08-20
 
 ### Added

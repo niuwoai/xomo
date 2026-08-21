@@ -6754,7 +6754,7 @@ struct veilpicTests {
             (.moveTool, [.move]),
             (.grab, [.hand]),
             (.textInsertion, [.text]),
-            (.brushTool, [.brush, .historyBrush]),
+            (.brushTool, [.brush, .pencil, .historyBrush]),
             (.eraserTool, [.eraser]),
             (.toneBrush, [.dodge, .burn, .sponge]),
             (.retouchBrush, [.blur, .sharpen, .smudge]),

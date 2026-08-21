@@ -2293,7 +2293,10 @@ struct XomoAutomationTests {
                 arguments: ["action": .string(action)]
             ))
             #expect(!response.ok)
-            #expect(response.error?.contains("editable selected pixel layer") == true)
+            let expectedRequirement = action == "fillForeground" || action == "fillBackground"
+                ? "fillable editing target"
+                : "editable selected pixel layer"
+            #expect(response.error?.contains(expectedRequirement) == true)
         }
         for action in ["clearPixels", "cutToLayer"] {
             let response = registry.execute(request(

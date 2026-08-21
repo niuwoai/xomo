@@ -55,3 +55,4 @@ test-reports/
 .idea/
 .cursor/
 .claude/settings.local.json
+.codex/
