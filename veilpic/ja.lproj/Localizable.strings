@@ -699,8 +699,10 @@
 "imageEditor.option.brushPreset" = "ブラシプリセット";
 "imageEditor.help.brushPreset" = "プリセットを選択するか、現在のブラシ設定を保存します";
 "imageEditor.action.brushPresetCreate" = "現在の設定からプリセットを作成";
+"imageEditor.action.brushPresetUpdate" = "現在のカスタムプリセットを更新";
 "imageEditor.action.brushPresetDelete" = "現在のカスタムプリセットを削除";
 "imageEditor.action.brushSettingsReset" = "ブラシ設定をリセット";
+"imageEditor.brushPreset.modified" = "%@（変更済み）";
 "imageEditor.option.feather" = "ぼかし";
 "imageEditor.option.tolerance" = "許容値";
 "imageEditor.option.contiguous" = "隣接";
@@ -1942,6 +1944,9 @@
 "imageEditor.status.brushToolSelected" = "%@を選択しました：%@";
 "imageEditor.status.brushPresetApplied" = "%@を適用しました：%@";
 "imageEditor.status.brushPresetCreated" = "ブラシプリセットを作成しました：%@";
+"imageEditor.status.brushPresetUpdated" = "ブラシプリセットを更新しました：%@";
+"imageEditor.status.brushPresetUnchanged" = "ブラシプリセットはすでに最新です：%@";
+"imageEditor.status.brushPresetUpdateUnavailable" = "更新する前にカスタムブラシプリセットを適用または作成してください。";
 "imageEditor.status.brushPresetDeleted" = "ブラシプリセットを削除しました：%@";
 "imageEditor.status.brushSettingsReset" = "ブラシ設定をデフォルトに戻しました。";
 "imageEditor.status.brushPresetLimitReached" = "カスタムブラシプリセットは最大%d件まで保存できます";

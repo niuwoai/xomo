@@ -2036,9 +2036,12 @@ extension ImageEditorView {
                 Button(L10n.text("imageEditor.action.brushPresetCreate")) {
                     viewModel.createBrushPresetFromCurrentSettings()
                 }
-                if let activePreset = viewModel.activeBrushPreset, !activePreset.isBuiltIn {
+                if let selectedPreset = viewModel.selectedCustomBrushPreset {
+                    Button(L10n.text("imageEditor.action.brushPresetUpdate")) {
+                        viewModel.updateSelectedCustomBrushPresetFromCurrentSettings()
+                    }
                     Button(L10n.text("imageEditor.action.brushPresetDelete"), role: .destructive) {
-                        viewModel.deleteBrushPreset(activePreset)
+                        viewModel.deleteBrushPreset(selectedPreset)
                     }
                 }
             }

@@ -393,6 +393,7 @@ struct ImageEditorBrushPresetPreferences: Codable, Equatable {
     static let maximumPresetCount = 100
 
     var presets: [ImageEditorBrushPreset]
+    var selectedPresetID: String? = nil
 
     var normalized: ImageEditorBrushPresetPreferences {
         var seenIDs = Set<String>()
@@ -401,8 +402,11 @@ struct ImageEditorBrushPresetPreferences: Codable, Equatable {
             guard seenIDs.insert(normalized.id).inserted else { return nil }
             return normalized
         }
+        let limitedPresets = Array(normalizedPresets.prefix(Self.maximumPresetCount))
+        let validIDs = Set(limitedPresets.map(\.id))
         return ImageEditorBrushPresetPreferences(
-            presets: Array(normalizedPresets.prefix(Self.maximumPresetCount))
+            presets: limitedPresets,
+            selectedPresetID: selectedPresetID.flatMap { validIDs.contains($0) ? $0 : nil }
         )
     }
 

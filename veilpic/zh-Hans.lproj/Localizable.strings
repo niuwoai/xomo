@@ -699,8 +699,10 @@
 "imageEditor.option.brushPreset" = "画笔预设";
 "imageEditor.help.brushPreset" = "选择预设，或保存当前画笔设置";
 "imageEditor.action.brushPresetCreate" = "从当前设置新建预设";
+"imageEditor.action.brushPresetUpdate" = "更新当前自定义预设";
 "imageEditor.action.brushPresetDelete" = "删除当前自定义预设";
 "imageEditor.action.brushSettingsReset" = "重置画笔设置";
+"imageEditor.brushPreset.modified" = "%@（已修改）";
 "imageEditor.option.feather" = "羽化";
 "imageEditor.option.tolerance" = "容差";
 "imageEditor.option.contiguous" = "连续";
@@ -1942,6 +1944,9 @@
 "imageEditor.status.brushToolSelected" = "已选择%@：%@";
 "imageEditor.status.brushPresetApplied" = "已应用%@：%@";
 "imageEditor.status.brushPresetCreated" = "已创建画笔预设：%@";
+"imageEditor.status.brushPresetUpdated" = "已更新画笔预设：%@";
+"imageEditor.status.brushPresetUnchanged" = "画笔预设已是最新状态：%@";
+"imageEditor.status.brushPresetUpdateUnavailable" = "请先应用或创建一个自定义画笔预设，再更新它。";
 "imageEditor.status.brushPresetDeleted" = "已删除画笔预设：%@";
 "imageEditor.status.brushSettingsReset" = "已将画笔设置恢复为默认值。";
 "imageEditor.status.brushPresetLimitReached" = "最多只能保存 %d 个自定义画笔预设";

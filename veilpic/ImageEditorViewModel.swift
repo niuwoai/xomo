@@ -177,6 +177,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var smudgeFingerPaintingEnabled = false
     @Published var smudgeSampleAllLayersEnabled = false
     @Published private(set) var customBrushPresets: [ImageEditorBrushPreset] = []
+    @Published private(set) var selectedBrushPresetID: String? = nil
     @Published var customLayerStylePresets: [ImageEditorLayerStylePreset] = []
     @Published var favoriteLayerStylePresetIDs: [String] = []
     @Published var recentLayerStylePresetIDs: [String] = []
@@ -645,6 +646,7 @@ final class ImageEditorViewModel: ObservableObject {
         retouchPressureControlsSize = retouchDynamicsPreferences.pressureControlsSize
         retouchPressureSensitivity = CGFloat(retouchDynamicsPreferences.pressureSensitivity)
         customBrushPresets = brushPresetPreferences.presets
+        selectedBrushPresetID = brushPresetPreferences.selectedPresetID
         customLayerStylePresets = layerStylePresetPreferences.presets
         let knownPresetIDs = Set(
             ImageEditorLayerStyleBuiltInPresetCatalog.presets.map(\.id)
@@ -711,6 +713,7 @@ final class ImageEditorViewModel: ObservableObject {
         retouchPressureControlsSize = retouchDynamicsPreferences.pressureControlsSize
         retouchPressureSensitivity = CGFloat(retouchDynamicsPreferences.pressureSensitivity)
         customBrushPresets = brushPresetPreferences.presets
+        selectedBrushPresetID = brushPresetPreferences.selectedPresetID
         customLayerStylePresets = layerStylePresetPreferences.presets
         let knownPresetIDs = Set(
             ImageEditorLayerStyleBuiltInPresetCatalog.presets.map(\.id)
@@ -2930,8 +2933,32 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     var activeBrushPreset: ImageEditorBrushPreset? {
-        customBrushPresets.first(where: brushPresetMatchesCurrentSettings)
+        if let selectedBrushPreset,
+           brushPresetMatchesCurrentSettings(selectedBrushPreset) {
+            return selectedBrushPreset
+        }
+        return customBrushPresets.first(where: brushPresetMatchesCurrentSettings)
             ?? ImageEditorBrushPreset.defaultPresets.first(where: brushPresetMatchesCurrentSettings)
+    }
+
+    var selectedBrushPreset: ImageEditorBrushPreset? {
+        guard let selectedBrushPresetID else { return nil }
+        return brushPresets.first(where: { $0.id == selectedBrushPresetID })
+    }
+
+    var selectedCustomBrushPreset: ImageEditorBrushPreset? {
+        guard let selectedBrushPresetID else { return nil }
+        return customBrushPresets.first(where: { $0.id == selectedBrushPresetID })
+    }
+
+    var brushPresetMenuTitle: String {
+        guard let selectedBrushPreset else {
+            return activeBrushPreset?.title ?? L10n.text("imageEditor.option.brushPreset")
+        }
+        guard !brushPresetMatchesCurrentSettings(selectedBrushPreset) else {
+            return selectedBrushPreset.title
+        }
+        return L10n.format("imageEditor.brushPreset.modified", selectedBrushPreset.title)
     }
 
     private func brushPresetMatchesCurrentSettings(_ preset: ImageEditorBrushPreset) -> Bool {
@@ -3102,7 +3129,9 @@ final class ImageEditorViewModel: ObservableObject {
 
     func applyBrushPreset(_ preset: ImageEditorBrushPreset) {
         applyBrushSettings(preset)
+        selectedBrushPresetID = preset.id
         persistBrushDynamicsPreferences()
+        persistBrushPresetPreferences()
         statusText = L10n.format("imageEditor.status.brushPresetApplied", preset.title, brushesPanelSummaryText)
     }
 
@@ -3117,7 +3146,9 @@ final class ImageEditorViewModel: ObservableObject {
         opacity = 1
         paintBlendMode = .normal
         paintAirbrushEnabled = false
+        selectedBrushPresetID = nil
         persistBrushDynamicsPreferences()
+        persistBrushPresetPreferences()
         statusText = L10n.text("imageEditor.status.brushSettingsReset")
     }
 
@@ -3169,8 +3200,40 @@ final class ImageEditorViewModel: ObservableObject {
             sequence += 1
             name = L10n.format("imageEditor.brushPreset.customName", sequence)
         }
-        let preset = ImageEditorBrushPreset(
+        let preset = currentBrushPreset(
             id: UUID().uuidString,
+            name: name
+        )
+        customBrushPresets.append(preset)
+        selectedBrushPresetID = preset.id
+        persistBrushPresetPreferences()
+        statusText = L10n.format("imageEditor.status.brushPresetCreated", preset.title)
+        return preset
+    }
+
+    @discardableResult
+    func updateSelectedCustomBrushPresetFromCurrentSettings() -> Bool {
+        guard let targetPresetID = selectedCustomBrushPreset?.id,
+              let index = customBrushPresets.firstIndex(where: { $0.id == targetPresetID })
+        else {
+            statusText = L10n.text("imageEditor.status.brushPresetUpdateUnavailable")
+            return false
+        }
+        let existing = customBrushPresets[index]
+        let updated = currentBrushPreset(id: existing.id, name: existing.name)
+        guard updated != existing else {
+            statusText = L10n.format("imageEditor.status.brushPresetUnchanged", existing.title)
+            return false
+        }
+        customBrushPresets[index] = updated
+        persistBrushPresetPreferences()
+        statusText = L10n.format("imageEditor.status.brushPresetUpdated", updated.title)
+        return true
+    }
+
+    private func currentBrushPreset(id: String, name: String?) -> ImageEditorBrushPreset {
+        ImageEditorBrushPreset(
+            id: id,
             name: name,
             size: brushSize,
             hardness: hardness,
@@ -3201,10 +3264,6 @@ final class ImageEditorViewModel: ObservableObject {
             tipAngleDegrees: brushTipAngleDegrees,
             smoothing: brushSmoothing
         ).normalizedCustomPreset
-        customBrushPresets.append(preset)
-        persistBrushPresetPreferences()
-        statusText = L10n.format("imageEditor.status.brushPresetCreated", preset.title)
-        return preset
     }
 
     func deleteBrushPreset(_ preset: ImageEditorBrushPreset) {
@@ -3212,6 +3271,9 @@ final class ImageEditorViewModel: ObservableObject {
               let index = customBrushPresets.firstIndex(where: { $0.id == preset.id })
         else { return }
         let removed = customBrushPresets.remove(at: index)
+        if selectedBrushPresetID == removed.id {
+            selectedBrushPresetID = nil
+        }
         persistBrushPresetPreferences()
         statusText = L10n.format("imageEditor.status.brushPresetDeleted", removed.title)
     }
@@ -4049,7 +4111,10 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     private func persistBrushPresetPreferences() {
-        ImageEditorBrushPresetPreferences(presets: customBrushPresets)
+        ImageEditorBrushPresetPreferences(
+            presets: customBrushPresets,
+            selectedPresetID: selectedCustomBrushPreset?.id
+        )
             .save(to: workspacePreferencesDefaults)
     }
 

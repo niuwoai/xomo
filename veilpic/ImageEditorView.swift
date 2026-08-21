@@ -1488,16 +1488,21 @@ struct ImageEditorView: View {
             } label: {
                 Label(L10n.text("imageEditor.action.brushPresetCreate"), systemImage: "plus")
             }
-            if let activePreset = viewModel.activeBrushPreset, !activePreset.isBuiltIn {
+            if let selectedPreset = viewModel.selectedCustomBrushPreset {
+                Button {
+                    viewModel.updateSelectedCustomBrushPresetFromCurrentSettings()
+                } label: {
+                    Label(L10n.text("imageEditor.action.brushPresetUpdate"), systemImage: "square.and.arrow.down")
+                }
                 Button(role: .destructive) {
-                    viewModel.deleteBrushPreset(activePreset)
+                    viewModel.deleteBrushPreset(selectedPreset)
                 } label: {
                     Label(L10n.text("imageEditor.action.brushPresetDelete"), systemImage: "trash")
                 }
             }
         } label: {
             Label(
-                viewModel.activeBrushPreset?.title ?? L10n.text("imageEditor.option.brushPreset"),
+                viewModel.brushPresetMenuTitle,
                 systemImage: "paintbrush.pointed"
             )
             .font(.system(size: 11, weight: .semibold))

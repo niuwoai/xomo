@@ -433,9 +433,10 @@ struct ImageEditorBrushDynamicsPreferencesTests {
 
         restored.brushFlow = 66
         #expect(restored.activeBrushPreset == nil)
-        restored.brushFlow = 67
+        #expect(restored.selectedCustomBrushPreset?.id == restoredPreset.id)
         restored.deleteBrushPreset(restoredPreset)
         #expect(restored.customBrushPresets.isEmpty)
+        #expect(restored.selectedBrushPresetID == nil)
         #expect(makeViewModel(defaults: defaults).customBrushPresets.isEmpty)
     }
 
@@ -526,6 +527,7 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         #expect(viewModel.statusText == L10n.text("imageEditor.status.brushSettingsReset"))
 
         viewModel.resetBrushSettings()
+        #expect(viewModel.selectedBrushPresetID == nil)
         #expect(transactionSignature(viewModel.document) == documentBeforeReset)
         #expect(viewModel.undoStack.map { transactionSignature($0) } == undoBeforeReset)
         #expect(viewModel.redoStack.map { transactionSignature($0) } == redoBeforeReset)
@@ -545,6 +547,80 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         #expect(restored.historyBrushBlendMode == .screen)
         #expect(restored.pencilAutoEraseEnabled)
         #expect(restored.customBrushPresets == [customPreset])
+    }
+
+    @Test func updatingSelectedCustomPresetKeepsIdentityOrderAndDocumentTransactions() throws {
+        let (defaults, suiteName) = temporaryDefaults()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let viewModel = makeViewModel(defaults: defaults)
+        viewModel.brushSize = 22
+        let first = try #require(viewModel.createBrushPresetFromCurrentSettings())
+        viewModel.brushSize = 33
+        let second = try #require(viewModel.createBrushPresetFromCurrentSettings())
+        viewModel.applyBrushPreset(first)
+
+        viewModel.brushSize = 41
+        viewModel.setBrushSizeJitter(74)
+        viewModel.setBrushNoiseEnabled(true)
+        #expect(viewModel.selectedBrushPresetID == first.id)
+        #expect(viewModel.selectedCustomBrushPreset?.id == first.id)
+        #expect(viewModel.activeBrushPreset == nil)
+        #expect(
+            viewModel.brushPresetMenuTitle
+                == L10n.format("imageEditor.brushPreset.modified", first.title)
+        )
+
+        viewModel.addLayer()
+        viewModel.undo()
+        let documentBeforeUpdate = transactionSignature(viewModel.document)
+        let undoBeforeUpdate = viewModel.undoStack.map { transactionSignature($0) }
+        let redoBeforeUpdate = viewModel.redoStack.map { transactionSignature($0) }
+
+        #expect(viewModel.updateSelectedCustomBrushPresetFromCurrentSettings())
+
+        let updated = try #require(viewModel.customBrushPresets.first)
+        #expect(viewModel.customBrushPresets.map(\.id) == [first.id, second.id])
+        #expect(updated.id == first.id)
+        #expect(updated.name == first.name)
+        #expect(updated.size == 41)
+        #expect(updated.sizeJitter == 74)
+        #expect(updated.noiseEnabled)
+        #expect(viewModel.selectedBrushPresetID == first.id)
+        #expect(viewModel.activeBrushPreset == updated)
+        #expect(viewModel.brushPresetMenuTitle == updated.title)
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.brushPresetUpdated", updated.title))
+        #expect(transactionSignature(viewModel.document) == documentBeforeUpdate)
+        #expect(viewModel.undoStack.map { transactionSignature($0) } == undoBeforeUpdate)
+        #expect(viewModel.redoStack.map { transactionSignature($0) } == redoBeforeUpdate)
+
+        let presetsAfterUpdate = viewModel.customBrushPresets
+        #expect(!viewModel.updateSelectedCustomBrushPresetFromCurrentSettings())
+        #expect(viewModel.customBrushPresets == presetsAfterUpdate)
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.brushPresetUnchanged", updated.title))
+        #expect(transactionSignature(viewModel.document) == documentBeforeUpdate)
+        #expect(viewModel.undoStack.map { transactionSignature($0) } == undoBeforeUpdate)
+        #expect(viewModel.redoStack.map { transactionSignature($0) } == redoBeforeUpdate)
+
+        let restored = makeViewModel(defaults: defaults)
+        #expect(restored.customBrushPresets == presetsAfterUpdate)
+        #expect(restored.selectedBrushPresetID == first.id)
+        #expect(restored.selectedCustomBrushPreset?.id == first.id)
+
+        viewModel.resetBrushSettings()
+        #expect(viewModel.selectedBrushPresetID == nil)
+        #expect(viewModel.selectedCustomBrushPreset == nil)
+        #expect(!viewModel.updateSelectedCustomBrushPresetFromCurrentSettings())
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.brushPresetUpdateUnavailable"))
+        #expect(viewModel.customBrushPresets == presetsAfterUpdate)
+        #expect(makeViewModel(defaults: defaults).selectedBrushPresetID == nil)
+
+        let builtIn = try #require(ImageEditorBrushPreset.defaultPresets.first)
+        viewModel.applyBrushPreset(builtIn)
+        #expect(viewModel.selectedBrushPresetID == builtIn.id)
+        #expect(viewModel.selectedCustomBrushPreset == nil)
+        #expect(!viewModel.updateSelectedCustomBrushPresetFromCurrentSettings())
+        #expect(viewModel.customBrushPresets == presetsAfterUpdate)
+        #expect(makeViewModel(defaults: defaults).selectedBrushPresetID == nil)
     }
 
     @Test func builtInPresetsCannotBeDeletedAndRestoreTheCompleteBrushDefinition() throws {

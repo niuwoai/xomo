@@ -4675,7 +4675,10 @@ struct ImageEditorScopeTests {
         #expect(brushesMenuSource.contains("imageEditor.action.brushSettingsReset"))
         #expect(brushesMenuSource.contains("viewModel.resetBrushSettings()"))
         #expect(brushesMenuSource.contains("viewModel.createBrushPresetFromCurrentSettings()"))
-        #expect(brushesMenuSource.contains("viewModel.deleteBrushPreset(activePreset)"))
+        #expect(brushesMenuSource.contains("viewModel.selectedCustomBrushPreset"))
+        #expect(brushesMenuSource.contains("imageEditor.action.brushPresetUpdate"))
+        #expect(brushesMenuSource.contains("viewModel.updateSelectedCustomBrushPresetFromCurrentSettings()"))
+        #expect(brushesMenuSource.contains("viewModel.deleteBrushPreset(selectedPreset)"))
     }
 
     @Test func brushAndEraserOptionsExposeNonFocusablePresetManagement() throws {
@@ -4695,7 +4698,11 @@ struct ImageEditorScopeTests {
         #expect(menuSource.contains("imageEditor.action.brushSettingsReset"))
         #expect(menuSource.contains("viewModel.resetBrushSettings()"))
         #expect(menuSource.contains("viewModel.createBrushPresetFromCurrentSettings()"))
-        #expect(menuSource.contains("viewModel.deleteBrushPreset(activePreset)"))
+        #expect(menuSource.contains("viewModel.selectedCustomBrushPreset"))
+        #expect(menuSource.contains("imageEditor.action.brushPresetUpdate"))
+        #expect(menuSource.contains("viewModel.updateSelectedCustomBrushPresetFromCurrentSettings()"))
+        #expect(menuSource.contains("viewModel.deleteBrushPreset(selectedPreset)"))
+        #expect(menuSource.contains("viewModel.brushPresetMenuTitle"))
         #expect(menuSource.contains(".focusable(false)"))
         #expect(menuSource.contains("image-editor-brush-preset-menu"))
     }
