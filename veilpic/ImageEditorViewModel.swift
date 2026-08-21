@@ -3333,9 +3333,26 @@ final class ImageEditorViewModel: ObservableObject {
             )
             return nil
         }
-        guard let sourcePresetID = selectedCustomBrushPreset?.id,
-              let sourceIndex = customBrushPresets.firstIndex(where: { $0.id == sourcePresetID })
-        else {
+        guard let sourcePresetID = selectedCustomBrushPreset?.id else {
+            statusText = L10n.text("imageEditor.status.brushPresetDuplicateUnavailable")
+            return nil
+        }
+        return duplicateCustomBrushPreset(id: sourcePresetID, selectingDuplicate: true)
+    }
+
+    @discardableResult
+    func duplicateCustomBrushPreset(
+        id sourcePresetID: String,
+        selectingDuplicate: Bool = false
+    ) -> ImageEditorBrushPreset? {
+        guard customBrushPresets.count < ImageEditorBrushPresetPreferences.maximumPresetCount else {
+            statusText = L10n.format(
+                "imageEditor.status.brushPresetLimitReached",
+                ImageEditorBrushPresetPreferences.maximumPresetCount
+            )
+            return nil
+        }
+        guard let sourceIndex = customBrushPresets.firstIndex(where: { $0.id == sourcePresetID }) else {
             statusText = L10n.text("imageEditor.status.brushPresetDuplicateUnavailable")
             return nil
         }
@@ -3346,7 +3363,9 @@ final class ImageEditorViewModel: ObservableObject {
             name: uniqueBrushPresetCopyName(for: source.title)
         )
         customBrushPresets.insert(copy, at: customBrushPresets.index(after: sourceIndex))
-        selectedBrushPresetID = copy.id
+        if selectingDuplicate {
+            selectedBrushPresetID = copy.id
+        }
         persistBrushPresetPreferences()
         statusText = L10n.format("imageEditor.status.brushPresetDuplicated", copy.title)
         return copy

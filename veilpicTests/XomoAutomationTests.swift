@@ -238,7 +238,7 @@ struct XomoAutomationTests {
         )
         #expect(brushPresetProperties["action"]?.objectValue?["enum"] == .array([
             .string("list"), .string("create"), .string("apply"), .string("update"),
-            .string("rename"), .string("delete")
+            .string("duplicate"), .string("rename"), .string("delete")
         ]))
         #expect(brushPresetProperties["name"]?.objectValue?["type"] == .string("string"))
         #expect(tools.contains { tool in
@@ -10042,6 +10042,86 @@ struct XomoAutomationTests {
         #expect(transactionSignature(viewModel.document) == documentBeforeUpdate)
         #expect(viewModel.undoStack.map(transactionSignature) == undoBeforeUpdate)
         #expect(viewModel.redoStack.map(transactionSignature) == redoBeforeUpdate)
+    }
+
+    @Test func registryDuplicatesCustomBrushPresetByStableIDWithoutSelectingOrApplyingIt() throws {
+        let suiteName = "XomoAutomationTests.duplicatePreset.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName) ?? .standard
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let viewModel = makeViewModel(preferencesDefaults: defaults)
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        defer { registry.unregister(viewModel) }
+
+        viewModel.brushSize = 22
+        viewModel.setBrushSizeJitter(41)
+        viewModel.setBrushNoiseEnabled(true)
+        let first = try #require(viewModel.createBrushPresetFromCurrentSettings())
+        viewModel.brushSize = 33
+        let second = try #require(viewModel.createBrushPresetFromCurrentSettings())
+        viewModel.brushSize = 71
+        viewModel.setBrushSizeJitter(68)
+        viewModel.setBrushNoiseEnabled(false)
+        viewModel.addLayer()
+        viewModel.undo()
+        let documentBeforeDuplicate = transactionSignature(viewModel.document)
+        let undoBeforeDuplicate = viewModel.undoStack.map(transactionSignature)
+        let redoBeforeDuplicate = viewModel.redoStack.map(transactionSignature)
+
+        let duplicate = registry.execute(request(
+            operation: "call",
+            name: "xomo.brush.preset",
+            arguments: ["action": .string("duplicate"), "id": .string(first.id)]
+        ))
+
+        #expect(duplicate.ok)
+        #expect(viewModel.customBrushPresets.count == 3)
+        let copy = viewModel.customBrushPresets[1]
+        #expect(viewModel.customBrushPresets.map(\.id) == [first.id, copy.id, second.id])
+        #expect(copy.id != first.id)
+        #expect(copy.name != first.name)
+        #expect(copy.size == first.size)
+        #expect(copy.sizeJitter == first.sizeJitter)
+        #expect(copy.noiseEnabled == first.noiseEnabled)
+        #expect(viewModel.selectedBrushPresetID == second.id)
+        #expect(viewModel.brushSize == 71)
+        #expect(viewModel.brushSizeJitter == 68)
+        #expect(!viewModel.brushNoiseEnabled)
+        #expect(transactionSignature(viewModel.document) == documentBeforeDuplicate)
+        #expect(viewModel.undoStack.map(transactionSignature) == undoBeforeDuplicate)
+        #expect(viewModel.redoStack.map(transactionSignature) == redoBeforeDuplicate)
+        #expect(makeViewModel(preferencesDefaults: defaults).customBrushPresets == viewModel.customBrushPresets)
+        let returnedCopy = try #require(duplicate.result?.arrayValue?.first(where: {
+            $0.objectValue?["id"] == .string(copy.id)
+        })?.objectValue)
+        #expect(returnedCopy["size"] == .number(first.size))
+        #expect(returnedCopy["active"] == .bool(false))
+
+        let builtInID = try #require(ImageEditorBrushPreset.defaultPresets.first?.id)
+        let builtIn = registry.execute(request(
+            operation: "call",
+            name: "xomo.brush.preset",
+            arguments: ["action": .string("duplicate"), "id": .string(builtInID)]
+        ))
+        #expect(!builtIn.ok)
+        #expect(builtIn.error?.contains("Not found: Custom brush preset") == true)
+
+        while viewModel.customBrushPresets.count < ImageEditorBrushPresetPreferences.maximumPresetCount {
+            _ = try #require(viewModel.duplicateCustomBrushPreset(id: first.id))
+        }
+        let presetsAtCapacity = viewModel.customBrushPresets
+        let capacity = registry.execute(request(
+            operation: "call",
+            name: "xomo.brush.preset",
+            arguments: ["action": .string("duplicate"), "id": .string(first.id)]
+        ))
+        #expect(!capacity.ok)
+        #expect(capacity.error?.contains("Custom brush preset limit reached") == true)
+        #expect(viewModel.customBrushPresets == presetsAtCapacity)
+        #expect(viewModel.selectedBrushPresetID == second.id)
+        #expect(transactionSignature(viewModel.document) == documentBeforeDuplicate)
+        #expect(viewModel.undoStack.map(transactionSignature) == undoBeforeDuplicate)
+        #expect(viewModel.redoStack.map(transactionSignature) == redoBeforeDuplicate)
     }
 
     @Test func registryRecursivelyExpandsAndCollapsesSelectedLayerGroups() {

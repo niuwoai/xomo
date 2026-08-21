@@ -2025,6 +2025,15 @@ final class XomoAutomationRegistry {
                 throw XomoAutomationCallError.notFound("Custom brush preset \(id)")
             }
             viewModel.updateCustomBrushPresetFromCurrentSettings(id: id)
+        case "duplicate":
+            let id = try requiredString("id", in: arguments)
+            guard viewModel.customBrushPresets.contains(where: { $0.id == id }) else {
+                throw XomoAutomationCallError.notFound("Custom brush preset \(id)")
+            }
+            guard viewModel.customBrushPresets.count < ImageEditorBrushPresetPreferences.maximumPresetCount else {
+                throw XomoAutomationCallError.invalidArgument("Custom brush preset limit reached")
+            }
+            viewModel.duplicateCustomBrushPreset(id: id)
         case "delete":
             let id = try requiredString("id", in: arguments)
             guard let preset = viewModel.customBrushPresets.first(where: { $0.id == id }) else {
@@ -6840,9 +6849,9 @@ private extension XomoAutomationRegistry {
             "id": XomoAutomationSchema.string(description: "Stable color sampler UUID")
         ], required: ["id"]),
         tool("xomo.color_sampler.clear", "Clear all canvas color samplers and report the actual cleared count."),
-        tool("xomo.brush.preset", "List, create, apply, update, rename, or delete persisted brush presets.", [
-            "action": XomoAutomationSchema.string(description: "Brush preset action", values: ["list", "create", "apply", "update", "rename", "delete"]),
-            "id": XomoAutomationSchema.string(description: "Preset identifier for apply, update, rename, or delete"),
+        tool("xomo.brush.preset", "List, create, apply, update, duplicate, rename, or delete persisted brush presets.", [
+            "action": XomoAutomationSchema.string(description: "Brush preset action", values: ["list", "create", "apply", "update", "duplicate", "rename", "delete"]),
+            "id": XomoAutomationSchema.string(description: "Preset identifier for apply, update, duplicate, rename, or delete"),
             "name": XomoAutomationSchema.string(description: "New custom preset name for rename")
         ]),
         tool("xomo.paint.stroke", "Paint a brush or eraser stroke from canvas points.", [

@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-22 06:06:21 +0800",
+  "generated_at": "2026-08-22 06:22:21 +0800",
   "total": 1,
   "passed": 1,
   "failed": 0,
@@ -9,16 +9,16 @@
   "jobs": 1,
   "results": [
     {
-      "suite": "ImageEditorBrushDynamicsPreferencesTests",
-      "method": "updatingSelectedCustomPresetKeepsIdentityOrderAndDocumentTransactions",
-      "identifier": "veilpicTests/ImageEditorBrushDynamicsPreferencesTests/updatingSelectedCustomPresetKeepsIdentityOrderAndDocumentTransactions()",
-      "file": "ImageEditorBrushDynamicsPreferencesTests.swift",
+      "suite": "XomoAutomationTests",
+      "method": "registryCreatesListsAppliesAndDeletesPersistedBrushPresets",
+      "identifier": "veilpicTests/XomoAutomationTests/registryCreatesListsAppliesAndDeletesPersistedBrushPresets()",
+      "file": "XomoAutomationTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 9.537,
+      "duration": 4.777,
       "infrastructure_retries": 0,
       "issues": [],
-      "log": "ImageEditorBrushDynamicsPreferencesTests.updatingSelectedCustomPresetKeepsIdentityOrderAndDocumentTransactions.log"
+      "log": "XomoAutomationTests.registryCreatesListsAppliesAndDeletesPersistedBrushPresets.log"
     }
   ]
 }
