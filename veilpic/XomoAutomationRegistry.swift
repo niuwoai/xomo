@@ -2049,6 +2049,31 @@ final class XomoAutomationRegistry {
                 )
             }
             viewModel.moveCustomBrushPreset(id: id, toIndex: Int(rawIndex))
+        case "import":
+            let path = try requiredString("path", in: arguments)
+            let url = URL(fileURLWithPath: path)
+            let existingIDs = Set(viewModel.customBrushPresets.map(\.id))
+            let result: ImageEditorBrushPresetImportResult
+            do {
+                result = try viewModel.importBrushPresetLibrary(from: url)
+            } catch {
+                if let message = brushPresetLibraryArgumentMessage(error) {
+                    throw XomoAutomationCallError.invalidArgument(message)
+                }
+                throw XomoAutomationCallError.operationFailed(
+                    "Brush preset import failed: \(error.localizedDescription)"
+                )
+            }
+            let importedPresets = viewModel.customBrushPresets.filter {
+                !existingIDs.contains($0.id)
+            }
+            return .object([
+                "path": .string(path),
+                "filename": .string(url.lastPathComponent),
+                "importedCount": .number(Double(result.importedCount)),
+                "skippedCount": .number(Double(result.skippedCount)),
+                "presets": brushPresetsResult(viewModel, presets: importedPresets)
+            ])
         case "export":
             let path = try requiredString("path", in: arguments)
             let presetIDs: [String]?
@@ -2100,8 +2125,11 @@ final class XomoAutomationRegistry {
         return brushPresetsResult(viewModel)
     }
 
-    private func brushPresetsResult(_ viewModel: ImageEditorViewModel) -> XomoJSONValue {
-        .array(viewModel.brushPresets.map { preset in
+    private func brushPresetsResult(
+        _ viewModel: ImageEditorViewModel,
+        presets: [ImageEditorBrushPreset]? = nil
+    ) -> XomoJSONValue {
+        .array((presets ?? viewModel.brushPresets).map { preset in
             .object([
                 "id": .string(preset.id),
                 "title": .string(preset.title),
@@ -2124,6 +2152,23 @@ final class XomoAutomationRegistry {
                 "smoothing": .number(Double(preset.smoothing))
             ])
         })
+    }
+
+    private func brushPresetLibraryArgumentMessage(_ error: Error) -> String? {
+        switch error as? ImageEditorBrushPresetLibraryError {
+        case .fileTooLarge:
+            "Brush preset library exceeds the 5 MB limit"
+        case .invalidFile:
+            "File is not a valid .xomobrushes archive"
+        case .unsupportedFormatVersion:
+            "Brush preset library format version is not supported"
+        case .emptyLibrary:
+            "Brush preset library contains no presets"
+        case .noMatchingPresets:
+            "Brush preset library contains no matching presets"
+        case .none:
+            nil
+        }
     }
 
     private func pathResult(_ viewModel: ImageEditorViewModel) -> XomoJSONValue {
@@ -6893,11 +6938,11 @@ private extension XomoAutomationRegistry {
             "id": XomoAutomationSchema.string(description: "Stable color sampler UUID")
         ], required: ["id"]),
         tool("xomo.color_sampler.clear", "Clear all canvas color samplers and report the actual cleared count."),
-        tool("xomo.brush.preset", "List, create, apply, update, duplicate, reorder, export, rename, or delete persisted brush presets.", [
-            "action": XomoAutomationSchema.string(description: "Brush preset action", values: ["list", "create", "apply", "update", "duplicate", "moveToIndex", "export", "rename", "delete"]),
+        tool("xomo.brush.preset", "List, create, apply, update, duplicate, reorder, import, export, rename, or delete persisted brush presets.", [
+            "action": XomoAutomationSchema.string(description: "Brush preset action", values: ["list", "create", "apply", "update", "duplicate", "moveToIndex", "import", "export", "rename", "delete"]),
             "id": XomoAutomationSchema.string(description: "Preset identifier for apply, update, duplicate, moveToIndex, single-preset export, rename, or delete"),
             "index": XomoAutomationSchema.integer(description: "Zero-based destination index within custom presets for moveToIndex", minimum: 0),
-            "path": XomoAutomationSchema.string(description: "Destination .xomobrushes file path for export"),
+            "path": XomoAutomationSchema.string(description: "Source path for import or destination path for export of a .xomobrushes file"),
             "name": XomoAutomationSchema.string(description: "New custom preset name for rename")
         ]),
         tool("xomo.paint.stroke", "Paint a brush or eraser stroke from canvas points.", [

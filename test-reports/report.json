@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-22 06:51:58 +0800",
+  "generated_at": "2026-08-22 07:04:23 +0800",
   "total": 1,
   "passed": 1,
   "failed": 0,
@@ -10,15 +10,15 @@
   "results": [
     {
       "suite": "XomoAutomationTests",
-      "method": "registryExportsSingleAndCompleteBrushPresetLibrariesWithoutChangingEditorState",
-      "identifier": "veilpicTests/XomoAutomationTests/registryExportsSingleAndCompleteBrushPresetLibrariesWithoutChangingEditorState()",
+      "method": "registryImportsPortableBrushLibraryWithFreshIdentityWithoutApplyingIt",
+      "identifier": "veilpicTests/XomoAutomationTests/registryImportsPortableBrushLibraryWithFreshIdentityWithoutApplyingIt()",
       "file": "XomoAutomationTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 6.393,
+      "duration": 5.79,
       "infrastructure_retries": 0,
       "issues": [],
-      "log": "XomoAutomationTests.registryExportsSingleAndCompleteBrushPresetLibrariesWithoutChangingEditorState.log"
+      "log": "XomoAutomationTests.registryImportsPortableBrushLibraryWithFreshIdentityWithoutApplyingIt.log"
     }
   ]
 }

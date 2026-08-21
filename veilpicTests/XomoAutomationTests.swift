@@ -238,7 +238,7 @@ struct XomoAutomationTests {
         )
         #expect(brushPresetProperties["action"]?.objectValue?["enum"] == .array([
             .string("list"), .string("create"), .string("apply"), .string("update"),
-            .string("duplicate"), .string("moveToIndex"), .string("export"),
+            .string("duplicate"), .string("moveToIndex"), .string("import"), .string("export"),
             .string("rename"), .string("delete")
         ]))
         #expect(brushPresetProperties["index"]?.objectValue?["type"] == .string("integer"))
@@ -10349,6 +10349,124 @@ struct XomoAutomationTests {
         #expect(transactionSignature(viewModel.document) == documentBeforeExport)
         #expect(viewModel.undoStack.map(transactionSignature) == undoBeforeExport)
         #expect(viewModel.redoStack.map(transactionSignature) == redoBeforeExport)
+    }
+
+    @Test func registryImportsPortableBrushLibraryWithFreshIdentityWithoutApplyingIt() throws {
+        let sourceSuiteName = "XomoAutomationTests.importPresetSource.\(UUID().uuidString)"
+        let sourceDefaults = UserDefaults(suiteName: sourceSuiteName) ?? .standard
+        defer { sourceDefaults.removePersistentDomain(forName: sourceSuiteName) }
+        let source = makeViewModel(preferencesDefaults: sourceDefaults)
+        source.brushSize = 23
+        source.setBrushScatter(360)
+        _ = try #require(source.createBrushPresetFromCurrentSettings())
+        #expect(source.renameSelectedCustomBrushPreset(to: "Shared Brush"))
+        source.brushSize = 47
+        source.setBrushNoiseEnabled(true)
+        _ = try #require(source.createBrushPresetFromCurrentSettings())
+        #expect(source.renameSelectedCustomBrushPreset(to: "Texture Brush"))
+        let sourcePresets = source.customBrushPresets
+
+        let libraryPath = FileManager.default.temporaryDirectory
+            .appendingPathComponent("xomo-import-\(UUID().uuidString).xomobrushes")
+        let invalidPath = FileManager.default.temporaryDirectory
+            .appendingPathComponent("xomo-invalid-\(UUID().uuidString).xomobrushes")
+        let missingPath = FileManager.default.temporaryDirectory
+            .appendingPathComponent("xomo-missing-\(UUID().uuidString).xomobrushes")
+        defer {
+            try? FileManager.default.removeItem(at: libraryPath)
+            try? FileManager.default.removeItem(at: invalidPath)
+            try? FileManager.default.removeItem(at: missingPath)
+        }
+        try source.brushPresetLibraryData().write(to: libraryPath, options: .atomic)
+        try Data("not-json".utf8).write(to: invalidPath, options: .atomic)
+
+        let targetSuiteName = "XomoAutomationTests.importPresetTarget.\(UUID().uuidString)"
+        let targetDefaults = UserDefaults(suiteName: targetSuiteName) ?? .standard
+        defer { targetDefaults.removePersistentDomain(forName: targetSuiteName) }
+        let viewModel = makeViewModel(preferencesDefaults: targetDefaults)
+        viewModel.brushSize = 11
+        let local = try #require(viewModel.createBrushPresetFromCurrentSettings())
+        #expect(viewModel.renameSelectedCustomBrushPreset(to: "Shared Brush"))
+        viewModel.brushSize = 71
+        viewModel.setBrushAngleJitter(42)
+        viewModel.addLayer()
+        viewModel.undo()
+        let documentBeforeImport = transactionSignature(viewModel.document)
+        let undoBeforeImport = viewModel.undoStack.map(transactionSignature)
+        let redoBeforeImport = viewModel.redoStack.map(transactionSignature)
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        defer { registry.unregister(viewModel) }
+
+        let imported = registry.execute(request(
+            operation: "call",
+            name: "xomo.brush.preset",
+            arguments: ["action": .string("import"), "path": .string(libraryPath.path)]
+        ))
+
+        #expect(imported.ok)
+        #expect(imported.result?.objectValue?["path"] == .string(libraryPath.path))
+        #expect(imported.result?.objectValue?["filename"] == .string(libraryPath.lastPathComponent))
+        #expect(imported.result?.objectValue?["importedCount"] == .number(2))
+        #expect(imported.result?.objectValue?["skippedCount"] == .number(0))
+        let returnedPresets = try #require(imported.result?.objectValue?["presets"]?.arrayValue)
+        let installedPresets = Array(viewModel.customBrushPresets.dropFirst())
+        #expect(returnedPresets.compactMap { $0.objectValue?["id"]?.stringValue } == installedPresets.map(\.id))
+        #expect(returnedPresets.compactMap { $0.objectValue?["title"]?.stringValue } == installedPresets.map(\.title))
+        #expect(installedPresets.count == 2)
+        #expect(installedPresets[0].id != sourcePresets[0].id)
+        #expect(installedPresets[1].id != sourcePresets[1].id)
+        #expect(installedPresets[0].name == "Shared Brush" + L10n.text("imageEditor.brushPreset.copySuffix"))
+        #expect(installedPresets[1].name == "Texture Brush")
+        #expect(
+            installedPresets[0]
+                == sourcePresets[0].copyingCustomPreset(
+                    id: installedPresets[0].id,
+                    name: installedPresets[0].title
+                )
+        )
+        #expect(
+            installedPresets[1]
+                == sourcePresets[1].copyingCustomPreset(
+                    id: installedPresets[1].id,
+                    name: installedPresets[1].title
+                )
+        )
+        #expect(viewModel.selectedBrushPresetID == installedPresets.last?.id)
+        #expect(viewModel.brushSize == 71)
+        #expect(viewModel.brushAngleJitter == 42)
+        #expect(viewModel.activeBrushPreset == nil)
+        #expect(transactionSignature(viewModel.document) == documentBeforeImport)
+        #expect(viewModel.undoStack.map(transactionSignature) == undoBeforeImport)
+        #expect(viewModel.redoStack.map(transactionSignature) == redoBeforeImport)
+        let restored = makeViewModel(preferencesDefaults: targetDefaults)
+        #expect(restored.customBrushPresets == viewModel.customBrushPresets)
+        #expect(restored.selectedBrushPresetID == installedPresets.last?.id)
+
+        let presetsBeforeRejections = viewModel.customBrushPresets
+        let selectedBeforeRejections = viewModel.selectedBrushPresetID
+        for path in [invalidPath, missingPath] {
+            let rejected = registry.execute(request(
+                operation: "call",
+                name: "xomo.brush.preset",
+                arguments: ["action": .string("import"), "path": .string(path.path)]
+            ))
+            #expect(!rejected.ok)
+        }
+        let absentPath = registry.execute(request(
+            operation: "call",
+            name: "xomo.brush.preset",
+            arguments: ["action": .string("import")]
+        ))
+        #expect(!absentPath.ok)
+        #expect(viewModel.customBrushPresets == presetsBeforeRejections)
+        #expect(viewModel.selectedBrushPresetID == selectedBeforeRejections)
+        #expect(viewModel.brushSize == 71)
+        #expect(viewModel.brushAngleJitter == 42)
+        #expect(transactionSignature(viewModel.document) == documentBeforeImport)
+        #expect(viewModel.undoStack.map(transactionSignature) == undoBeforeImport)
+        #expect(viewModel.redoStack.map(transactionSignature) == redoBeforeImport)
+        #expect(viewModel.customBrushPresets.first?.id == local.id)
     }
 
     @Test func registryRecursivelyExpandsAndCollapsesSelectedLayerGroups() {
