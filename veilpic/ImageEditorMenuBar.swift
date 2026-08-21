@@ -2043,6 +2043,10 @@ extension ImageEditorView {
                     Button(L10n.text("imageEditor.action.brushPresetUpdate")) {
                         viewModel.updateSelectedCustomBrushPresetFromCurrentSettings()
                     }
+                    Button(L10n.text("imageEditor.action.brushPresetRevert")) {
+                        viewModel.revertSelectedCustomBrushPresetToSavedSettings()
+                    }
+                    .disabled(!viewModel.canRevertSelectedCustomBrushPreset)
                     Button(L10n.text("imageEditor.action.brushPresetDuplicate")) {
                         viewModel.duplicateSelectedCustomBrushPreset()
                     }

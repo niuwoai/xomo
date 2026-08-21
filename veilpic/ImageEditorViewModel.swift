@@ -2951,6 +2951,11 @@ final class ImageEditorViewModel: ObservableObject {
         return customBrushPresets.first(where: { $0.id == selectedBrushPresetID })
     }
 
+    var canRevertSelectedCustomBrushPreset: Bool {
+        guard let selectedCustomBrushPreset else { return false }
+        return !brushPresetMatchesCurrentSettings(selectedCustomBrushPreset)
+    }
+
     var canMoveSelectedCustomBrushPresetUp: Bool {
         guard let selectedBrushPresetID,
               let index = customBrushPresets.firstIndex(where: { $0.id == selectedBrushPresetID })
@@ -3242,6 +3247,23 @@ final class ImageEditorViewModel: ObservableObject {
         customBrushPresets[index] = updated
         persistBrushPresetPreferences()
         statusText = L10n.format("imageEditor.status.brushPresetUpdated", updated.title)
+        return true
+    }
+
+    @discardableResult
+    func revertSelectedCustomBrushPresetToSavedSettings() -> Bool {
+        guard let preset = selectedCustomBrushPreset else {
+            statusText = L10n.text("imageEditor.status.brushPresetRevertUnavailable")
+            return false
+        }
+        guard !brushPresetMatchesCurrentSettings(preset) else {
+            statusText = L10n.format("imageEditor.status.brushPresetUnchanged", preset.title)
+            return false
+        }
+
+        applyBrushSettings(preset)
+        persistBrushDynamicsPreferences()
+        statusText = L10n.format("imageEditor.status.brushPresetReverted", preset.title)
         return true
     }
 

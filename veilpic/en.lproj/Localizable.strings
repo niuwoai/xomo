@@ -701,6 +701,7 @@
 "imageEditor.action.brushPresetCreate" = "Create Preset from Current Settings";
 "imageEditor.action.brushPresetRename" = "Rename Current Custom Preset";
 "imageEditor.action.brushPresetUpdate" = "Update Current Custom Preset";
+"imageEditor.action.brushPresetRevert" = "Revert Current Preset Changes";
 "imageEditor.action.brushPresetDuplicate" = "Duplicate Current Custom Preset";
 "imageEditor.action.brushPresetMoveUp" = "Move Current Preset Up";
 "imageEditor.action.brushPresetMoveDown" = "Move Current Preset Down";
@@ -1960,6 +1961,8 @@
 "imageEditor.status.brushPresetUpdated" = "Brush preset updated: %@";
 "imageEditor.status.brushPresetUnchanged" = "Brush preset is already up to date: %@";
 "imageEditor.status.brushPresetUpdateUnavailable" = "Apply or create a custom brush preset before updating it.";
+"imageEditor.status.brushPresetReverted" = "Brush preset restored to its saved settings: %@";
+"imageEditor.status.brushPresetRevertUnavailable" = "Apply or create a custom brush preset before reverting its changes.";
 "imageEditor.status.brushPresetDuplicated" = "Brush preset duplicated: %@";
 "imageEditor.status.brushPresetDuplicateUnavailable" = "Apply or create a custom brush preset before duplicating it.";
 "imageEditor.status.brushPresetMoved" = "Brush preset order updated: %@";

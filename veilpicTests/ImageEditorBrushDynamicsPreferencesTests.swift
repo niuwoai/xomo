@@ -698,6 +698,90 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         #expect(makeViewModel(defaults: defaults).selectedBrushPresetID == nil)
     }
 
+    @Test func revertingSelectedCustomPresetRestoresSavedSettingsWithoutChangingResourcesOrHistory() throws {
+        let (defaults, suiteName) = temporaryDefaults()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let viewModel = makeViewModel(defaults: defaults)
+        viewModel.brushSize = 22
+        viewModel.hardness = 0.35
+        viewModel.brushFlow = 44
+        viewModel.brushSpacing = 73
+        viewModel.brushSizeJitter = 61
+        viewModel.brushAngleJitter = 27
+        viewModel.brushNoiseEnabled = true
+        let source = try #require(viewModel.createBrushPresetFromCurrentSettings())
+
+        viewModel.brushSize = 83
+        viewModel.hardness = 0.9
+        viewModel.brushFlow = 91
+        viewModel.brushSpacing = 12
+        viewModel.brushSizeJitter = 0
+        viewModel.brushAngleJitter = 78
+        viewModel.brushNoiseEnabled = false
+        #expect(viewModel.canRevertSelectedCustomBrushPreset)
+        #expect(viewModel.activeBrushPreset == nil)
+        #expect(
+            viewModel.brushPresetMenuTitle
+                == L10n.format("imageEditor.brushPreset.modified", source.title)
+        )
+
+        viewModel.addLayer()
+        viewModel.undo()
+        let documentBeforeRevert = transactionSignature(viewModel.document)
+        let undoBeforeRevert = viewModel.undoStack.map { transactionSignature($0) }
+        let redoBeforeRevert = viewModel.redoStack.map { transactionSignature($0) }
+        let presetPreferencesBeforeRevert = defaults.data(
+            forKey: ImageEditorBrushPresetPreferences.storageKey
+        )
+
+        #expect(viewModel.revertSelectedCustomBrushPresetToSavedSettings())
+
+        #expect(viewModel.customBrushPresets == [source])
+        #expect(viewModel.selectedBrushPresetID == source.id)
+        #expect(viewModel.selectedCustomBrushPreset == source)
+        #expect(viewModel.activeBrushPreset == source)
+        #expect(!viewModel.canRevertSelectedCustomBrushPreset)
+        #expect(viewModel.brushPresetMenuTitle == source.title)
+        #expect(viewModel.brushSize == source.size)
+        #expect(viewModel.hardness == source.hardness)
+        #expect(viewModel.brushFlow == source.flow)
+        #expect(viewModel.brushSpacing == source.spacing)
+        #expect(viewModel.brushSizeJitter == source.sizeJitter)
+        #expect(viewModel.brushAngleJitter == source.angleJitter)
+        #expect(viewModel.brushNoiseEnabled == source.noiseEnabled)
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.brushPresetReverted", source.title))
+        #expect(
+            defaults.data(forKey: ImageEditorBrushPresetPreferences.storageKey)
+                == presetPreferencesBeforeRevert
+        )
+        #expect(transactionSignature(viewModel.document) == documentBeforeRevert)
+        #expect(viewModel.undoStack.map { transactionSignature($0) } == undoBeforeRevert)
+        #expect(viewModel.redoStack.map { transactionSignature($0) } == redoBeforeRevert)
+
+        let savedPreferences = defaults.data(forKey: ImageEditorBrushPresetPreferences.storageKey)
+        #expect(!viewModel.revertSelectedCustomBrushPresetToSavedSettings())
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.brushPresetUnchanged", source.title))
+        #expect(defaults.data(forKey: ImageEditorBrushPresetPreferences.storageKey) == savedPreferences)
+        #expect(transactionSignature(viewModel.document) == documentBeforeRevert)
+        #expect(viewModel.undoStack.map { transactionSignature($0) } == undoBeforeRevert)
+        #expect(viewModel.redoStack.map { transactionSignature($0) } == redoBeforeRevert)
+
+        let restored = makeViewModel(defaults: defaults)
+        #expect(restored.customBrushPresets == [source])
+        #expect(restored.selectedBrushPresetID == source.id)
+        #expect(restored.brushSizeJitter == source.sizeJitter)
+        #expect(restored.brushAngleJitter == source.angleJitter)
+        #expect(restored.brushNoiseEnabled == source.noiseEnabled)
+
+        let builtIn = try #require(ImageEditorBrushPreset.defaultPresets.first)
+        viewModel.applyBrushPreset(builtIn)
+        viewModel.brushSize = 57
+        #expect(!viewModel.canRevertSelectedCustomBrushPreset)
+        #expect(!viewModel.revertSelectedCustomBrushPresetToSavedSettings())
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.brushPresetRevertUnavailable"))
+        #expect(viewModel.customBrushPresets == [source])
+    }
+
     @Test func duplicatingSelectedCustomPresetCreatesAdjacentUniqueResourceWithoutApplyingIt() throws {
         let (defaults, suiteName) = temporaryDefaults()
         defer { defaults.removePersistentDomain(forName: suiteName) }

@@ -701,6 +701,7 @@
 "imageEditor.action.brushPresetCreate" = "現在の設定からプリセットを作成";
 "imageEditor.action.brushPresetRename" = "現在のカスタムプリセットの名前を変更";
 "imageEditor.action.brushPresetUpdate" = "現在のカスタムプリセットを更新";
+"imageEditor.action.brushPresetRevert" = "現在のプリセットを保存済み設定に戻す";
 "imageEditor.action.brushPresetDuplicate" = "現在のカスタムプリセットを複製";
 "imageEditor.action.brushPresetMoveUp" = "現在のプリセットを上へ移動";
 "imageEditor.action.brushPresetMoveDown" = "現在のプリセットを下へ移動";
@@ -1960,6 +1961,8 @@
 "imageEditor.status.brushPresetUpdated" = "ブラシプリセットを更新しました：%@";
 "imageEditor.status.brushPresetUnchanged" = "ブラシプリセットはすでに最新です：%@";
 "imageEditor.status.brushPresetUpdateUnavailable" = "更新する前にカスタムブラシプリセットを適用または作成してください。";
+"imageEditor.status.brushPresetReverted" = "ブラシプリセットを保存済み設定に戻しました：%@";
+"imageEditor.status.brushPresetRevertUnavailable" = "変更を戻す前にカスタムブラシプリセットを適用または作成してください。";
 "imageEditor.status.brushPresetDuplicated" = "ブラシプリセットを複製しました：%@";
 "imageEditor.status.brushPresetDuplicateUnavailable" = "複製する前にカスタムブラシプリセットを適用または作成してください。";
 "imageEditor.status.brushPresetMoved" = "ブラシプリセットの順序を更新しました：%@";

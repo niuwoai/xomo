@@ -1520,6 +1520,12 @@ struct ImageEditorView: View {
                     Label(L10n.text("imageEditor.action.brushPresetUpdate"), systemImage: "square.and.arrow.down")
                 }
                 Button {
+                    viewModel.revertSelectedCustomBrushPresetToSavedSettings()
+                } label: {
+                    Label(L10n.text("imageEditor.action.brushPresetRevert"), systemImage: "arrow.uturn.backward")
+                }
+                .disabled(!viewModel.canRevertSelectedCustomBrushPreset)
+                Button {
                     viewModel.duplicateSelectedCustomBrushPreset()
                 } label: {
                     Label(L10n.text("imageEditor.action.brushPresetDuplicate"), systemImage: "square.on.square")
