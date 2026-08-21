@@ -132,13 +132,21 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var canvasOffset: CGSize = .zero
     private var magnifyBaseZoom: CGFloat?
     private var magnifyBaseOffset: CGSize?
-    @Published var brushSize: CGFloat = 18
+    @Published var brushSize: CGFloat = 18 {
+        didSet { persistBrushDynamicsPreferencesIfReady() }
+    }
     @Published var opacity: CGFloat = 1
     @Published var eraserErasesToHistory = false
     @Published var isGradientReversed = false
-    @Published var hardness: CGFloat = 0.8
-    @Published var brushFlow: CGFloat = 100
-    @Published var brushSpacing: CGFloat = 25
+    @Published var hardness: CGFloat = 0.8 {
+        didSet { persistBrushDynamicsPreferencesIfReady() }
+    }
+    @Published var brushFlow: CGFloat = 100 {
+        didSet { persistBrushDynamicsPreferencesIfReady() }
+    }
+    @Published var brushSpacing: CGFloat = 25 {
+        didSet { persistBrushDynamicsPreferencesIfReady() }
+    }
     @Published var brushPressureControlsSize = true
     @Published var brushPressureControlsOpacity = false
     @Published var brushPressureControlsFlow = true
@@ -592,6 +600,7 @@ final class ImageEditorViewModel: ObservableObject {
     private var layerSelectionAnchorID: UUID?
     private let onApply: (NSImage) -> Void
     private let workspacePreferencesDefaults: UserDefaults
+    private var isBrushWorkspacePersistenceEnabled = false
     private var selectionEdgeGeometrySource: ImageEditorSelection?
     private var selectionEdgeGeometryCanvasSize: CGSize = .zero
 
@@ -615,6 +624,10 @@ final class ImageEditorViewModel: ObservableObject {
         quickMaskOverlayTarget = quickMaskPreferences.target
         quickMaskOverlayColor = quickMaskPreferences.color.nsColor
         quickMaskOverlayOpacity = CGFloat(quickMaskPreferences.opacity)
+        brushSize = CGFloat(brushDynamicsPreferences.brushSize)
+        hardness = CGFloat(brushDynamicsPreferences.brushHardness)
+        brushFlow = CGFloat(brushDynamicsPreferences.brushFlow)
+        brushSpacing = CGFloat(brushDynamicsPreferences.brushSpacing)
         brushPressureControlsSize = brushDynamicsPreferences.pressureControlsSize
         brushPressureControlsOpacity = brushDynamicsPreferences.pressureControlsOpacity
         brushPressureControlsFlow = brushDynamicsPreferences.pressureControlsFlow
@@ -660,6 +673,7 @@ final class ImageEditorViewModel: ObservableObject {
         syncSizeControlsFromDocument()
         recordCurrentHistorySnapshot()
         updateStatus()
+        isBrushWorkspacePersistenceEnabled = true
     }
 
     init(
@@ -682,6 +696,10 @@ final class ImageEditorViewModel: ObservableObject {
         quickMaskOverlayTarget = quickMaskPreferences.target
         quickMaskOverlayColor = quickMaskPreferences.color.nsColor
         quickMaskOverlayOpacity = CGFloat(quickMaskPreferences.opacity)
+        brushSize = CGFloat(brushDynamicsPreferences.brushSize)
+        hardness = CGFloat(brushDynamicsPreferences.brushHardness)
+        brushFlow = CGFloat(brushDynamicsPreferences.brushFlow)
+        brushSpacing = CGFloat(brushDynamicsPreferences.brushSpacing)
         brushPressureControlsSize = brushDynamicsPreferences.pressureControlsSize
         brushPressureControlsOpacity = brushDynamicsPreferences.pressureControlsOpacity
         brushPressureControlsFlow = brushDynamicsPreferences.pressureControlsFlow
@@ -727,6 +745,7 @@ final class ImageEditorViewModel: ObservableObject {
         syncSizeControlsFromDocument()
         recordCurrentHistorySnapshot()
         updateStatus()
+        isBrushWorkspacePersistenceEnabled = true
     }
 
     var currentImage: NSImage {
@@ -4209,8 +4228,17 @@ final class ImageEditorViewModel: ObservableObject {
         ).save(to: workspacePreferencesDefaults)
     }
 
+    private func persistBrushDynamicsPreferencesIfReady() {
+        guard isBrushWorkspacePersistenceEnabled else { return }
+        persistBrushDynamicsPreferences()
+    }
+
     private func persistBrushDynamicsPreferences() {
         ImageEditorBrushDynamicsPreferences(
+            brushSize: Double(brushSize),
+            brushHardness: Double(hardness),
+            brushFlow: Double(brushFlow),
+            brushSpacing: Double(brushSpacing),
             pressureControlsSize: brushPressureControlsSize,
             pressureControlsOpacity: brushPressureControlsOpacity,
             pressureControlsFlow: brushPressureControlsFlow,

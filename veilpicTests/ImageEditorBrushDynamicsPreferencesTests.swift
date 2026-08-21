@@ -17,6 +17,10 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         let (defaults, suiteName) = temporaryDefaults()
         defer { defaults.removePersistentDomain(forName: suiteName) }
         ImageEditorBrushDynamicsPreferences(
+            brushSize: 999,
+            brushHardness: -1,
+            brushFlow: 0,
+            brushSpacing: 999,
             pressureControlsSize: false,
             pressureControlsOpacity: true,
             pressureControlsFlow: true,
@@ -47,6 +51,10 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         ).save(to: defaults)
 
         let loaded = ImageEditorBrushDynamicsPreferences.load(from: defaults)
+        #expect(loaded.brushSize == 96)
+        #expect(loaded.brushHardness == 0)
+        #expect(loaded.brushFlow == 1)
+        #expect(loaded.brushSpacing == 200)
         #expect(!loaded.pressureControlsSize)
         #expect(loaded.pressureControlsOpacity)
         #expect(loaded.pressureControlsFlow)
@@ -91,6 +99,10 @@ struct ImageEditorBrushDynamicsPreferencesTests {
             image: image,
             preferencesDefaults: defaults
         ) { _ in }
+        first.brushSize = 37
+        first.hardness = 0.45
+        first.brushFlow = 68
+        first.brushSpacing = 84
         first.setBrushPressureControlsSize(false)
         first.setBrushPressureControlsOpacity(true)
         first.setBrushPressureControlsFlow(true)
@@ -125,6 +137,10 @@ struct ImageEditorBrushDynamicsPreferencesTests {
             image: image,
             preferencesDefaults: defaults
         ) { _ in }
+        #expect(restored.brushSize == 37)
+        #expect(restored.hardness == 0.45)
+        #expect(restored.brushFlow == 68)
+        #expect(restored.brushSpacing == 84)
         #expect(!restored.brushPressureControlsSize)
         #expect(restored.brushPressureControlsOpacity)
         #expect(restored.brushPressureControlsFlow)
@@ -155,6 +171,31 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         #expect(restored.pencilAutoEraseEnabled)
     }
 
+    @Test func baseBrushSettingsKeepSelectedCustomPresetActiveAcrossEditorSessions() throws {
+        let (defaults, suiteName) = temporaryDefaults()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let first = makeViewModel(defaults: defaults)
+        first.brushSize = 31
+        first.hardness = 0.55
+        first.brushFlow = 72
+        first.brushSpacing = 66
+        first.setBrushSizeJitter(43)
+        let preset = try #require(first.createBrushPresetFromCurrentSettings())
+        #expect(first.activeBrushPreset == preset)
+
+        let restored = makeViewModel(defaults: defaults)
+
+        #expect(restored.brushSize == 31)
+        #expect(restored.hardness == 0.55)
+        #expect(restored.brushFlow == 72)
+        #expect(restored.brushSpacing == 66)
+        #expect(restored.brushSizeJitter == 43)
+        #expect(restored.customBrushPresets == [preset])
+        #expect(restored.selectedBrushPresetID == preset.id)
+        #expect(restored.activeBrushPreset == preset)
+        #expect(restored.brushPresetMenuTitle == preset.title)
+    }
+
     @Test func legacyBrushDynamicsAndPresetsDefaultTiltShapeOff() throws {
         let legacyDynamics = Data(
             """
@@ -169,6 +210,10 @@ struct ImageEditorBrushDynamicsPreferencesTests {
             ImageEditorBrushDynamicsPreferences.self,
             from: legacyDynamics
         )
+        #expect(decodedDynamics.brushSize == 18)
+        #expect(decodedDynamics.brushHardness == 0.8)
+        #expect(decodedDynamics.brushFlow == 100)
+        #expect(decodedDynamics.brushSpacing == 25)
         #expect(!decodedDynamics.pressureControlsOpacity)
         #expect(!decodedDynamics.tiltControlsShape)
         #expect(decodedDynamics.minimumDiameter == 0)
@@ -772,6 +817,7 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         #expect(restored.brushSizeJitter == source.sizeJitter)
         #expect(restored.brushAngleJitter == source.angleJitter)
         #expect(restored.brushNoiseEnabled == source.noiseEnabled)
+        #expect(restored.activeBrushPreset == source)
 
         let builtIn = try #require(ImageEditorBrushPreset.defaultPresets.first)
         viewModel.applyBrushPreset(builtIn)

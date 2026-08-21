@@ -66,6 +66,10 @@ enum ImageEditorBrushScatterCountJitterPresets {
 struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
     static let storageKey = "im.some.xomo.imageEditor.brushDynamicsPreferences"
     static let defaultValue = ImageEditorBrushDynamicsPreferences(
+        brushSize: 18,
+        brushHardness: 0.8,
+        brushFlow: 100,
+        brushSpacing: 25,
         pressureControlsSize: true,
         pressureControlsOpacity: false,
         pressureControlsFlow: true,
@@ -96,6 +100,10 @@ struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
         pencilAutoEraseEnabled: false
     )
 
+    var brushSize: Double
+    var brushHardness: Double
+    var brushFlow: Double
+    var brushSpacing: Double
     var pressureControlsSize: Bool
     var pressureControlsOpacity: Bool
     var pressureControlsFlow: Bool
@@ -126,6 +134,10 @@ struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
     var pencilAutoEraseEnabled: Bool
 
     init(
+        brushSize: Double = 18,
+        brushHardness: Double = 0.8,
+        brushFlow: Double = 100,
+        brushSpacing: Double = 25,
         pressureControlsSize: Bool,
         pressureControlsOpacity: Bool = false,
         pressureControlsFlow: Bool,
@@ -155,6 +167,10 @@ struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
         historyBrushBlendMode: ImageEditorBlendMode = .normal,
         pencilAutoEraseEnabled: Bool = false
     ) {
+        self.brushSize = brushSize
+        self.brushHardness = brushHardness
+        self.brushFlow = brushFlow
+        self.brushSpacing = brushSpacing
         self.pressureControlsSize = pressureControlsSize
         self.pressureControlsOpacity = pressureControlsOpacity
         self.pressureControlsFlow = pressureControlsFlow
@@ -186,6 +202,10 @@ struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
     }
 
     private enum CodingKeys: String, CodingKey {
+        case brushSize
+        case brushHardness
+        case brushFlow
+        case brushSpacing
         case pressureControlsSize
         case pressureControlsOpacity
         case pressureControlsFlow
@@ -218,6 +238,10 @@ struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
 
     init(from decoder: Decoder) throws {
         let values = try decoder.container(keyedBy: CodingKeys.self)
+        brushSize = try values.decodeIfPresent(Double.self, forKey: .brushSize) ?? 18
+        brushHardness = try values.decodeIfPresent(Double.self, forKey: .brushHardness) ?? 0.8
+        brushFlow = try values.decodeIfPresent(Double.self, forKey: .brushFlow) ?? 100
+        brushSpacing = try values.decodeIfPresent(Double.self, forKey: .brushSpacing) ?? 25
         pressureControlsSize = try values.decode(Bool.self, forKey: .pressureControlsSize)
         pressureControlsOpacity = try values.decodeIfPresent(
             Bool.self,
@@ -301,6 +325,10 @@ struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
 
     var normalized: ImageEditorBrushDynamicsPreferences {
         ImageEditorBrushDynamicsPreferences(
+            brushSize: max(1, min(96, brushSize)),
+            brushHardness: max(0, min(1, brushHardness)),
+            brushFlow: max(1, min(100, brushFlow)),
+            brushSpacing: max(1, min(200, brushSpacing)),
             pressureControlsSize: pressureControlsSize,
             pressureControlsOpacity: pressureControlsOpacity,
             pressureControlsFlow: pressureControlsFlow,
