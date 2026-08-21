@@ -7,6 +7,11 @@
 - 修复切换工具/组件侧栏或关闭窗口时，工具栏原生点击层在 SwiftUI 拆除阶段同步写入悬停 `@State`，触发 Swift 独占访问冲突并导致主线程 `SIGABRT` 的问题；拆除现在先断开全部事件闭包，再移除 AppKit 跟踪区，不再向已销毁的视图状态发送事件。
 - 新增原生工具栏点击层拆除回归，明确验证清理过程不会调用悬停状态回调，并会释放激活、选区菜单与悬停闭包。
 
+### Verification
+
+- 最终代码的 `build-for-testing`、拆除行为 1/1、Scope 185/185、光标 88/88、左侧栏 54/54、CLI 2/2、发布契约 7/7（21 项断言）与隔离运行器契约通过。
+- Universal Release 为 `x86_64 + arm64`，ad-hoc hardened runtime 严格校验通过并已覆盖安装 `/Applications/Xomo.app`；真实界面完成 Brush/Pencil/Eraser 与组件库多轮往返、组件插入及正常退出，进程完整结束且未生成新的 Xomo 崩溃报告。
+
 ## 2.12.0-rc1120 - 2026-08-21
 
 ### Changed
