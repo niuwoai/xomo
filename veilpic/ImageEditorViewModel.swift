@@ -3338,6 +3338,13 @@ final class ImageEditorViewModel: ObservableObject {
         return copy
     }
 
+    func installImportedBrushPresets(_ presets: [ImageEditorBrushPreset]) {
+        guard !presets.isEmpty else { return }
+        customBrushPresets.append(contentsOf: presets)
+        selectedBrushPresetID = presets.last?.id
+        persistBrushPresetPreferences()
+    }
+
     @discardableResult
     func moveSelectedCustomBrushPresetUp() -> Bool {
         guard let selectedBrushPresetID,

@@ -699,6 +699,8 @@
 "imageEditor.option.brushPreset" = "Brush Presets";
 "imageEditor.help.brushPreset" = "Choose a preset or save the current brush settings";
 "imageEditor.action.brushPresetCreate" = "Create Preset from Current Settings";
+"imageEditor.action.brushPresetImport" = "Import Brush Presets…";
+"imageEditor.action.brushPresetExport" = "Export Current Brush Preset…";
 "imageEditor.action.brushPresetRename" = "Rename Current Custom Preset";
 "imageEditor.action.brushPresetUpdate" = "Update Current Custom Preset";
 "imageEditor.action.brushPresetRevert" = "Revert Current Preset Changes";
@@ -710,6 +712,7 @@
 "imageEditor.brushPreset.modified" = "%@ (Modified)";
 "imageEditor.brushPreset.copySuffix" = " Copy";
 "imageEditor.brushPreset.copySuffixIndexed" = " Copy %d";
+"imageEditor.brushPreset.libraryFilename" = "Xomo Brush Presets";
 "imageEditor.brushPreset.renameTitle" = "Rename Brush Preset";
 "imageEditor.brushPreset.renameMessage" = "Choose a name for the current custom brush preset. Its saved brush settings will not change.";
 "imageEditor.brushPreset.namePlaceholder" = "Preset Name";
@@ -1968,6 +1971,12 @@
 "imageEditor.status.brushPresetMoved" = "Brush preset order updated: %@";
 "imageEditor.status.brushPresetMoveUnavailable" = "This custom brush preset cannot move farther in that direction.";
 "imageEditor.status.brushPresetDeleted" = "Brush preset deleted: %@";
+"imageEditor.status.brushPresetImported" = "%d brush presets imported; %d skipped.";
+"imageEditor.status.brushPresetExported" = "Brush presets exported: %@";
+"imageEditor.status.brushPresetFileTooLarge" = "The brush preset file exceeds the 5 MB limit.";
+"imageEditor.status.brushPresetUnsupportedVersion" = "This brush preset file uses an unsupported format version.";
+"imageEditor.status.brushPresetLibraryEmpty" = "The brush preset file contains no importable resources.";
+"imageEditor.status.brushPresetFileInvalid" = "This brush preset file could not be read.";
 "imageEditor.status.brushSettingsReset" = "Brush settings reset to defaults.";
 "imageEditor.status.brushPresetLimitReached" = "You can save up to %d custom brush presets";
 "imageEditor.status.characterPanelSummary" = "Text: %@ | Size: %d px | Bold: %@ | Italic: %@ | Underline: %@ | Strikethrough: %@ | Tracking: %d | Leading: %d";

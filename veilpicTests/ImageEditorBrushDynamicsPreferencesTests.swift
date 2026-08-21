@@ -967,6 +967,108 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         #expect(viewModel.customBrushPresets == [first, third, second])
     }
 
+    @Test func portableBrushLibraryRoundTripsCompleteResourcesWithFreshIdentityAndStableNames() throws {
+        let (sourceDefaults, sourceSuiteName) = temporaryDefaults()
+        defer { sourceDefaults.removePersistentDomain(forName: sourceSuiteName) }
+        let source = makeViewModel(defaults: sourceDefaults)
+        source.brushSize = 37
+        source.hardness = 0.42
+        source.brushFlow = 63
+        source.brushSpacing = 71
+        source.setBrushScatter(420)
+        source.setBrushNoiseEnabled(true)
+        let sourcePreset = try #require(source.createBrushPresetFromCurrentSettings())
+        #expect(source.renameSelectedCustomBrushPreset(to: "Shared Brush"))
+        let exportedPreset = try #require(source.selectedCustomBrushPreset)
+
+        let data = try source.brushPresetLibraryData(presetIDs: [sourcePreset.id])
+        let library = try JSONDecoder().decode(ImageEditorBrushPresetLibrary.self, from: data)
+        #expect(library.formatVersion == ImageEditorBrushPresetLibrary.currentFormatVersion)
+        #expect(library.presets == [exportedPreset])
+
+        let (targetDefaults, targetSuiteName) = temporaryDefaults()
+        defer { targetDefaults.removePersistentDomain(forName: targetSuiteName) }
+        let target = makeViewModel(defaults: targetDefaults)
+        let local = try #require(target.createBrushPresetFromCurrentSettings())
+        #expect(target.renameSelectedCustomBrushPreset(to: "Shared Brush"))
+        target.brushSize = 91
+        target.addLayer()
+        target.undo()
+        let documentBeforeImport = transactionSignature(target.document)
+        let undoBeforeImport = target.undoStack.map { transactionSignature($0) }
+        let redoBeforeImport = target.redoStack.map { transactionSignature($0) }
+
+        let result = try target.importBrushPresetLibraryData(data)
+
+        #expect(result == ImageEditorBrushPresetImportResult(importedCount: 1, skippedCount: 0))
+        let imported = try #require(target.customBrushPresets.last)
+        #expect(imported.id != exportedPreset.id)
+        #expect(imported.id != local.id)
+        #expect(imported.name == "Shared Brush" + L10n.text("imageEditor.brushPreset.copySuffix"))
+        #expect(imported == exportedPreset.copyingCustomPreset(id: imported.id, name: imported.title))
+        #expect(target.selectedBrushPresetID == imported.id)
+        #expect(target.brushSize == 91)
+        #expect(target.activeBrushPreset == nil)
+        #expect(transactionSignature(target.document) == documentBeforeImport)
+        #expect(target.undoStack.map { transactionSignature($0) } == undoBeforeImport)
+        #expect(target.redoStack.map { transactionSignature($0) } == redoBeforeImport)
+
+        let secondResult = try target.importBrushPresetLibraryData(data)
+        #expect(secondResult.importedCount == 1)
+        #expect(
+            target.customBrushPresets.last?.name
+                == "Shared Brush" + L10n.format("imageEditor.brushPreset.copySuffixIndexed", 2)
+        )
+        let restored = makeViewModel(defaults: targetDefaults)
+        #expect(restored.customBrushPresets == target.customBrushPresets)
+        #expect(restored.selectedBrushPresetID == target.customBrushPresets.last?.id)
+    }
+
+    @Test func brushLibraryImportFillsCapacityAndRejectsInvalidArchivesAtomically() throws {
+        let (defaults, suiteName) = temporaryDefaults()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let viewModel = makeViewModel(defaults: defaults)
+        let seed = try #require(viewModel.createBrushPresetFromCurrentSettings())
+        let localPresets = (0..<99).map { index in
+            seed.copyingCustomPreset(id: "local-\(index)", name: "Local \(index)")
+        }
+        let capacityDefaults = ImageEditorBrushPresetPreferences(
+            presets: localPresets,
+            selectedPresetID: localPresets.last?.id
+        )
+        capacityDefaults.save(to: defaults)
+        let capacityViewModel = makeViewModel(defaults: defaults)
+        let incoming = (0..<3).map { index in
+            seed.copyingCustomPreset(id: "incoming-\(index)", name: "Incoming \(index)")
+        }
+        let result = try capacityViewModel.importBrushPresetLibraryData(
+            JSONEncoder().encode(ImageEditorBrushPresetLibrary(presets: incoming))
+        )
+        #expect(result == ImageEditorBrushPresetImportResult(importedCount: 1, skippedCount: 2))
+        #expect(capacityViewModel.customBrushPresets.count == 100)
+        #expect(capacityViewModel.customBrushPresets.last?.name == "Incoming 0")
+
+        let presetsAtCapacity = capacityViewModel.customBrushPresets
+        let selectedAtCapacity = capacityViewModel.selectedBrushPresetID
+        let unsupported = ImageEditorBrushPresetLibrary(
+            formatVersion: ImageEditorBrushPresetLibrary.currentFormatVersion + 1,
+            presets: incoming
+        )
+        #expect(throws: ImageEditorBrushPresetLibraryError.unsupportedFormatVersion) {
+            try capacityViewModel.importBrushPresetLibraryData(JSONEncoder().encode(unsupported))
+        }
+        #expect(throws: ImageEditorBrushPresetLibraryError.invalidFile) {
+            try capacityViewModel.importBrushPresetLibraryData(Data("not-json".utf8))
+        }
+        #expect(throws: ImageEditorBrushPresetLibraryError.fileTooLarge) {
+            try capacityViewModel.importBrushPresetLibraryData(
+                Data(count: ImageEditorBrushPresetLibrary.maximumFileSize + 1)
+            )
+        }
+        #expect(capacityViewModel.customBrushPresets == presetsAtCapacity)
+        #expect(capacityViewModel.selectedBrushPresetID == selectedAtCapacity)
+    }
+
     @Test func builtInPresetsCannotBeDeletedAndRestoreTheCompleteBrushDefinition() throws {
         let (defaults, suiteName) = temporaryDefaults()
         defer { defaults.removePersistentDomain(forName: suiteName) }

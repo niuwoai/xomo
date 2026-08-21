@@ -2036,7 +2036,13 @@ extension ImageEditorView {
                 Button(L10n.text("imageEditor.action.brushPresetCreate")) {
                     viewModel.createBrushPresetFromCurrentSettings()
                 }
+                Button(L10n.text("imageEditor.action.brushPresetImport")) {
+                    viewModel.chooseBrushPresetImportFile()
+                }
                 if let selectedPreset = viewModel.selectedCustomBrushPreset {
+                    Button(L10n.text("imageEditor.action.brushPresetExport")) {
+                        viewModel.chooseBrushPresetExportFile(presetIDs: [selectedPreset.id])
+                    }
                     Button(L10n.text("imageEditor.action.brushPresetRename")) {
                         beginBrushPresetRename()
                     }

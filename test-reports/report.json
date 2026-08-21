@@ -1,24 +1,24 @@
 {
-  "generated_at": "2026-08-22 05:01:08 +0800",
+  "generated_at": "2026-08-22 05:18:01 +0800",
   "total": 1,
   "passed": 1,
   "failed": 0,
-  "total_tests": 16,
-  "passed_tests": 16,
+  "total_tests": 33,
+  "passed_tests": 33,
   "failed_tests_in_failed_groups": 0,
   "jobs": 1,
   "results": [
     {
-      "suite": "ImageEditorBrushDynamicsPreferencesTests",
+      "suite": "LocalizationResourceTests",
       "method": null,
-      "identifier": "veilpicTests/ImageEditorBrushDynamicsPreferencesTests",
-      "file": "ImageEditorBrushDynamicsPreferencesTests.swift",
-      "test_count": 16,
+      "identifier": "veilpicTests/LocalizationResourceTests",
+      "file": "LocalizationResourceTests.swift",
+      "test_count": 33,
       "passed": true,
-      "duration": 5.047,
+      "duration": 8.982,
       "infrastructure_retries": 0,
       "issues": [],
-      "log": "ImageEditorBrushDynamicsPreferencesTests.log"
+      "log": "LocalizationResourceTests.log"
     }
   ]
 }

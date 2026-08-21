@@ -64,6 +64,23 @@
 				<string>application/x-xomo-project</string>
 			</dict>
 		</dict>
+		<dict>
+			<key>UTTypeConformsTo</key>
+			<array>
+				<string>public.json</string>
+			</array>
+			<key>UTTypeDescription</key>
+			<string>Xomo brush preset library</string>
+			<key>UTTypeIdentifier</key>
+			<string>im.some.xomo.brush-presets</string>
+			<key>UTTypeTagSpecification</key>
+			<dict>
+				<key>public.filename-extension</key>
+				<string>xomobrushes</string>
+				<key>public.mime-type</key>
+				<string>application/x-xomo-brush-presets</string>
+			</dict>
+		</dict>
 	</array>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>

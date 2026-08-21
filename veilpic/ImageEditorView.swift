@@ -1508,7 +1508,17 @@ struct ImageEditorView: View {
             } label: {
                 Label(L10n.text("imageEditor.action.brushPresetCreate"), systemImage: "plus")
             }
+            Button {
+                viewModel.chooseBrushPresetImportFile()
+            } label: {
+                Label(L10n.text("imageEditor.action.brushPresetImport"), systemImage: "square.and.arrow.down")
+            }
             if let selectedPreset = viewModel.selectedCustomBrushPreset {
+                Button {
+                    viewModel.chooseBrushPresetExportFile(presetIDs: [selectedPreset.id])
+                } label: {
+                    Label(L10n.text("imageEditor.action.brushPresetExport"), systemImage: "square.and.arrow.up")
+                }
                 Button {
                     beginBrushPresetRename()
                 } label: {
