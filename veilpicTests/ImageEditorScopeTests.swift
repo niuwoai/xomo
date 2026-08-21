@@ -402,6 +402,8 @@ struct ImageEditorScopeTests {
         #expect(source.contains("toolCount: ImageEditorTool.allCases.count"))
         #expect(source.contains("onActivate: selectToolFromRail(at:)"))
         #expect(source.contains("onHoverChanged: updateHoveredTool(at:)"))
+        #expect(clickSurfaceSource.contains("nsView.prepareForDismantling()"))
+        #expect(!clickSurfaceSource.contains("nsView.onHoverChanged?(nil)"))
         #expect(source.contains(".allowsHitTesting(false)"))
         #expect(!clickSurfaceSource.contains(".onTapGesture(perform: action)"))
         #expect(source.contains(".accessibilityAction {\n                action()\n            }"))
@@ -438,6 +440,25 @@ struct ImageEditorScopeTests {
         #expect(surface.toolHit(at: NSPoint(x: -1, y: 18)) == nil)
         #expect(!surface.acceptsFirstResponder)
         #expect(surface.isFlipped)
+    }
+
+    @MainActor
+    @Test func toolRailGridClickSurfaceDismantlesWithoutWritingSwiftUIHoverState() {
+        let surface = EditorToolRailGridClickNSView(
+            frame: NSRect(x: 0, y: 0, width: 74, height: 74)
+        )
+        var hoverCallbacks: [Int?] = []
+        surface.activationHandler = { _ in }
+        surface.marqueeMenuHandler = {}
+        surface.onHoverChanged = { hoverCallbacks.append($0) }
+        surface.updateTrackingAreas()
+
+        surface.prepareForDismantling()
+
+        #expect(hoverCallbacks.isEmpty)
+        #expect(surface.activationHandler == nil)
+        #expect(surface.marqueeMenuHandler == nil)
+        #expect(surface.onHoverChanged == nil)
     }
 
     @Test func marqueeShapeMenuDoesNotConsumeTheNextToolClick() throws {

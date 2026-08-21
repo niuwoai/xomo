@@ -16693,10 +16693,7 @@ private struct EditorToolRailGridClickSurface: NSViewRepresentable {
     }
 
     static func dismantleNSView(_ nsView: EditorToolRailGridClickNSView, coordinator: ()) {
-        nsView.onHoverChanged?(nil)
-        nsView.activationHandler = nil
-        nsView.marqueeMenuHandler = nil
-        nsView.onHoverChanged = nil
+        nsView.prepareForDismantling()
     }
 
     private func configure(_ view: EditorToolRailGridClickNSView) {
@@ -16722,6 +16719,16 @@ final class EditorToolRailGridClickNSView: NSView {
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         setAccessibilityElement(false)
+    }
+
+    func prepareForDismantling() {
+        activationHandler = nil
+        marqueeMenuHandler = nil
+        onHoverChanged = nil
+        if let hoverTrackingArea {
+            removeTrackingArea(hoverTrackingArea)
+            self.hoverTrackingArea = nil
+        }
     }
 
     @available(*, unavailable)
