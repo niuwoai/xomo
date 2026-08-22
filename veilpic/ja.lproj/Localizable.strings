@@ -707,6 +707,8 @@
 "imageEditor.action.brushPresetExport" = "現在のブラシプリセットを書き出す…";
 "imageEditor.action.brushPresetExportMenu" = "ブラシプリセットを書き出す…";
 "imageEditor.action.brushPresetExportSelected" = "選択したカスタムブラシプリセットを書き出す…";
+"imageEditor.action.brushPresetFavoriteSelected" = "選択したプリセットをお気に入りに追加";
+"imageEditor.action.brushPresetUnfavoriteSelected" = "選択したプリセットをお気に入りから削除";
 "imageEditor.action.brushPresetExportVisible" = "表示中のカスタムブラシプリセットを書き出す…";
 "imageEditor.action.brushPresetExportAll" = "すべてのカスタムブラシプリセットを書き出す…";
 "imageEditor.action.brushPresetRename" = "現在のカスタムプリセットの名前を変更";
@@ -740,6 +742,7 @@
 "imageEditor.brushPreset.multiSelectionHelp" = "Commandクリックで切り替え、Shiftクリックで表示範囲を選択します";
 "imageEditor.brushPreset.multiSelectionTitle" = "%d個のブラシプリセットを選択中";
 "imageEditor.brushPreset.multiSelectionSummary" = "選択したカスタムプリセットのうち%d個を現在の表示順で書き出せます。";
+"imageEditor.brushPreset.multiSelectionFavoriteSummary" = "選択したプリセットのうち%d / %d個がお気に入りです。";
 "imageEditor.brushPreset.scopeLabel" = "プリセットの提供元";
 "imageEditor.brushPreset.scope.all" = "すべて";
 "imageEditor.brushPreset.scope.builtIn" = "内蔵";
@@ -2030,6 +2033,8 @@
 "imageEditor.status.brushPresetDeleted" = "ブラシプリセットを削除しました：%@";
 "imageEditor.status.brushPresetFavorited" = "ブラシプリセットをお気に入りに追加しました：%@";
 "imageEditor.status.brushPresetUnfavorited" = "ブラシプリセットをお気に入りから削除しました：%@";
+"imageEditor.status.brushPresetsFavorited" = "%d個のブラシプリセットをお気に入りに追加しました。";
+"imageEditor.status.brushPresetsUnfavorited" = "%d個のブラシプリセットをお気に入りから削除しました。";
 "imageEditor.status.brushPresetFavoriteUnavailable" = "このブラシプリセットは利用できません。";
 "imageEditor.status.brushPresetImported" = "ブラシプリセットを%d件読み込み、%d件スキップしました。";
 "imageEditor.status.brushPresetLibraryReplaced" = "%d 個のブラシプリセットをインストールし、ライブラリの置き換え時に %d 個をスキップしました。";

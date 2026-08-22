@@ -98,6 +98,44 @@ extension ImageEditorViewModel {
         return true
     }
 
+    @discardableResult
+    func setBrushPresetsFavorite(ids: [String], isFavorite: Bool) -> Int {
+        let knownIDs = Set(brushPresets.map(\.id))
+        var seenIDs = Set<String>()
+        let targetIDs = ids.filter {
+            knownIDs.contains($0) && seenIDs.insert($0).inserted
+        }
+        guard !targetIDs.isEmpty else {
+            statusText = L10n.text("imageEditor.status.brushPresetFavoriteUnavailable")
+            return 0
+        }
+
+        let changedCount: Int
+        if isFavorite {
+            var favoriteIDs = Set(favoriteBrushPresetIDs)
+            let addedIDs = targetIDs.filter { favoriteIDs.insert($0).inserted }
+            changedCount = addedIDs.count
+            guard changedCount > 0 else { return 0 }
+            favoriteBrushPresetIDs.append(contentsOf: addedIDs)
+        } else {
+            let targetIDSet = Set(targetIDs)
+            changedCount = favoriteBrushPresetIDs.count {
+                targetIDSet.contains($0)
+            }
+            guard changedCount > 0 else { return 0 }
+            favoriteBrushPresetIDs.removeAll(where: targetIDSet.contains)
+        }
+
+        persistBrushPresetUsagePreferences()
+        statusText = L10n.format(
+            isFavorite
+                ? "imageEditor.status.brushPresetsFavorited"
+                : "imageEditor.status.brushPresetsUnfavorited",
+            changedCount
+        )
+        return changedCount
+    }
+
     func recordBrushPresetUse(id: String) {
         guard brushPresets.contains(where: { $0.id == id }) else { return }
         recentBrushPresetIDs.removeAll { $0 == id }

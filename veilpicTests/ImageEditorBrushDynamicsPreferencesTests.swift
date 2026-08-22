@@ -1062,6 +1062,70 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         #expect(viewModel.redoStack.map { transactionSignature($0) } == redoBeforeExport)
     }
 
+    @Test func batchFavoriteSelectedBrushPresetsIsAtomicOrderedAndTransactionFree() throws {
+        let (defaults, suiteName) = temporaryDefaults()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let viewModel = makeViewModel(defaults: defaults)
+        let builtIn = try #require(ImageEditorBrushPreset.defaultPresets.first)
+        #expect(viewModel.setBrushPresetFavorite(id: builtIn.id, isFavorite: true))
+
+        viewModel.brushSize = 31
+        let first = try #require(viewModel.createBrushPresetFromCurrentSettings())
+        viewModel.brushSize = 57
+        let second = try #require(viewModel.createBrushPresetFromCurrentSettings())
+        viewModel.brushSize = 91
+        viewModel.addLayer()
+        viewModel.undo()
+        let documentBeforeBatch = transactionSignature(viewModel.document)
+        let undoBeforeBatch = viewModel.undoStack.map { transactionSignature($0) }
+        let redoBeforeBatch = viewModel.redoStack.map { transactionSignature($0) }
+
+        #expect(viewModel.setBrushPresetsFavorite(
+            ids: [second.id, "missing", first.id, second.id],
+            isFavorite: true
+        ) == 2)
+        #expect(viewModel.favoriteBrushPresetIDs == [builtIn.id, second.id, first.id])
+        #expect(viewModel.statusText == L10n.format(
+            "imageEditor.status.brushPresetsFavorited",
+            2
+        ))
+        let storedAfterAdd = defaults.data(
+            forKey: ImageEditorBrushPresetUsagePreferences.storageKey
+        )
+        #expect(viewModel.setBrushPresetsFavorite(
+            ids: [second.id, first.id],
+            isFavorite: true
+        ) == 0)
+        #expect(
+            defaults.data(forKey: ImageEditorBrushPresetUsagePreferences.storageKey)
+                == storedAfterAdd
+        )
+
+        #expect(viewModel.setBrushPresetsFavorite(
+            ids: [first.id, builtIn.id, "missing"],
+            isFavorite: false
+        ) == 2)
+        #expect(viewModel.favoriteBrushPresetIDs == [second.id])
+        #expect(viewModel.statusText == L10n.format(
+            "imageEditor.status.brushPresetsUnfavorited",
+            2
+        ))
+        #expect(transactionSignature(viewModel.document) == documentBeforeBatch)
+        #expect(viewModel.undoStack.map { transactionSignature($0) } == undoBeforeBatch)
+        #expect(viewModel.redoStack.map { transactionSignature($0) } == redoBeforeBatch)
+
+        let restored = makeViewModel(defaults: defaults)
+        #expect(restored.favoriteBrushPresetIDs == [second.id])
+        #expect(viewModel.setBrushPresetsFavorite(
+            ids: ["missing"],
+            isFavorite: true
+        ) == 0)
+        #expect(viewModel.favoriteBrushPresetIDs == [second.id])
+        #expect(viewModel.statusText == L10n.text(
+            "imageEditor.status.brushPresetFavoriteUnavailable"
+        ))
+    }
+
     @Test func replacingBrushLibraryIsAtomicAndPreservesCurrentEditingState() throws {
         let (sourceDefaults, sourceSuiteName) = temporaryDefaults()
         defer { sourceDefaults.removePersistentDomain(forName: sourceSuiteName) }

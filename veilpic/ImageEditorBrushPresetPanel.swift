@@ -58,6 +58,17 @@ struct ImageEditorBrushPresetManager: View {
         )
     }
 
+    private var selectedVisiblePresetIDs: [String] {
+        filteredPresets
+            .filter { selectedPresetIDs.contains($0.id) }
+            .map(\.id)
+    }
+
+    private var selectedFavoriteCount: Int {
+        let favoriteIDs = Set(viewModel.favoriteBrushPresetIDs)
+        return selectedVisiblePresetIDs.count(where: favoriteIDs.contains)
+    }
+
     private var selectedPreset: ImageEditorBrushPreset? {
         guard let selectedPresetID else { return nil }
         return viewModel.brushPresets.first { $0.id == selectedPresetID }
@@ -430,7 +441,45 @@ struct ImageEditorBrushPresetManager: View {
             ))
             .font(.system(size: 11))
             .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+            Text(L10n.format(
+                "imageEditor.brushPreset.multiSelectionFavoriteSummary",
+                selectedFavoriteCount,
+                selectedVisiblePresetIDs.count
+            ))
+            .font(.system(size: 11))
+            .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
             Spacer(minLength: 0)
+            HStack(spacing: 8) {
+                Button {
+                    viewModel.setBrushPresetsFavorite(
+                        ids: selectedVisiblePresetIDs,
+                        isFavorite: true
+                    )
+                } label: {
+                    Label(
+                        L10n.text("imageEditor.action.brushPresetFavoriteSelected"),
+                        systemImage: "star.fill"
+                    )
+                }
+                .focusable(false)
+                .disabled(selectedFavoriteCount == selectedVisiblePresetIDs.count)
+
+                Button {
+                    viewModel.setBrushPresetsFavorite(
+                        ids: selectedVisiblePresetIDs,
+                        isFavorite: false
+                    )
+                } label: {
+                    Label(
+                        L10n.text("imageEditor.action.brushPresetUnfavoriteSelected"),
+                        systemImage: "star.slash"
+                    )
+                }
+                .focusable(false)
+                .disabled(selectedFavoriteCount == 0)
+            }
+            .accessibilityIdentifier("image-editor-brush-preset-multi-favorite-actions")
+
             Button(L10n.text("imageEditor.action.brushPresetExportSelected")) {
                 viewModel.chooseBrushPresetExportFile(
                     presetIDs: exportableSelectedCustomPresetIDs

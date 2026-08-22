@@ -707,6 +707,8 @@
 "imageEditor.action.brushPresetExport" = "Export Current Brush Preset…";
 "imageEditor.action.brushPresetExportMenu" = "Export Presets…";
 "imageEditor.action.brushPresetExportSelected" = "Export Selected Custom Brush Presets…";
+"imageEditor.action.brushPresetFavoriteSelected" = "Favorite Selected Presets";
+"imageEditor.action.brushPresetUnfavoriteSelected" = "Remove Selected from Favorites";
 "imageEditor.action.brushPresetExportVisible" = "Export Visible Custom Brush Presets…";
 "imageEditor.action.brushPresetExportAll" = "Export All Custom Brush Presets…";
 "imageEditor.action.brushPresetRename" = "Rename Current Custom Preset";
@@ -740,6 +742,7 @@
 "imageEditor.brushPreset.multiSelectionHelp" = "Command-click to toggle presets; Shift-click to select a visible range";
 "imageEditor.brushPreset.multiSelectionTitle" = "%d brush presets selected";
 "imageEditor.brushPreset.multiSelectionSummary" = "%d selected custom presets can be exported in the current visible order.";
+"imageEditor.brushPreset.multiSelectionFavoriteSummary" = "%d of %d selected presets are favorites.";
 "imageEditor.brushPreset.scopeLabel" = "Preset Source";
 "imageEditor.brushPreset.scope.all" = "All";
 "imageEditor.brushPreset.scope.builtIn" = "Built-in";
@@ -2030,6 +2033,8 @@
 "imageEditor.status.brushPresetDeleted" = "Brush preset deleted: %@";
 "imageEditor.status.brushPresetFavorited" = "Brush preset added to favorites: %@";
 "imageEditor.status.brushPresetUnfavorited" = "Brush preset removed from favorites: %@";
+"imageEditor.status.brushPresetsFavorited" = "%d brush presets added to favorites.";
+"imageEditor.status.brushPresetsUnfavorited" = "%d brush presets removed from favorites.";
 "imageEditor.status.brushPresetFavoriteUnavailable" = "This brush preset is no longer available.";
 "imageEditor.status.brushPresetImported" = "%d brush presets imported; %d skipped.";
 "imageEditor.status.brushPresetLibraryReplaced" = "%d brush presets installed; %d skipped while replacing the library.";
