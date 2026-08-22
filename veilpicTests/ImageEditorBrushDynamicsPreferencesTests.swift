@@ -1129,6 +1129,80 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         #expect(restored.recentBrushPresetIDs == [builtIn.id])
     }
 
+    @Test func resettingBrushLibraryPreservesEditingStateAndBuiltInUsage() throws {
+        let (defaults, suiteName) = temporaryDefaults()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let viewModel = makeViewModel(defaults: defaults)
+        let builtIn = try #require(ImageEditorBrushPreset.defaultPresets.first)
+        viewModel.applyBrushPreset(builtIn)
+        #expect(viewModel.setBrushPresetFavorite(id: builtIn.id, isFavorite: true))
+
+        viewModel.brushSize = 29
+        let first = try #require(viewModel.createBrushPresetFromCurrentSettings())
+        #expect(viewModel.setBrushPresetFavorite(id: first.id, isFavorite: true))
+        viewModel.applyBrushPreset(first)
+        viewModel.brushSize = 53
+        let second = try #require(viewModel.createBrushPresetFromCurrentSettings())
+        #expect(viewModel.setBrushPresetFavorite(id: second.id, isFavorite: true))
+        viewModel.applyBrushPreset(second)
+        viewModel.brushSize = 91
+        viewModel.setBrushAngleJitter(47)
+        viewModel.addLayer()
+        viewModel.undo()
+        let documentBeforeReset = transactionSignature(viewModel.document)
+        let undoBeforeReset = viewModel.undoStack.map { transactionSignature($0) }
+        let redoBeforeReset = viewModel.redoStack.map { transactionSignature($0) }
+
+        #expect(viewModel.canResetCustomBrushPresetLibrary)
+        #expect(viewModel.resetCustomBrushPresetLibrary() == 2)
+        #expect(viewModel.customBrushPresets.isEmpty)
+        #expect(viewModel.selectedBrushPresetID == nil)
+        #expect(viewModel.favoriteBrushPresetIDs == [builtIn.id])
+        #expect(viewModel.recentBrushPresetIDs == [builtIn.id])
+        #expect(viewModel.brushSize == 91)
+        #expect(viewModel.brushAngleJitter == 47)
+        #expect(viewModel.activeBrushPreset == nil)
+        #expect(transactionSignature(viewModel.document) == documentBeforeReset)
+        #expect(viewModel.undoStack.map { transactionSignature($0) } == undoBeforeReset)
+        #expect(viewModel.redoStack.map { transactionSignature($0) } == redoBeforeReset)
+        #expect(!viewModel.canResetCustomBrushPresetLibrary)
+
+        let presetsAfterReset = viewModel.customBrushPresets
+        let favoritesAfterReset = viewModel.favoriteBrushPresetIDs
+        let recentAfterReset = viewModel.recentBrushPresetIDs
+        #expect(viewModel.resetCustomBrushPresetLibrary() == 0)
+        #expect(viewModel.customBrushPresets == presetsAfterReset)
+        #expect(viewModel.favoriteBrushPresetIDs == favoritesAfterReset)
+        #expect(viewModel.recentBrushPresetIDs == recentAfterReset)
+        #expect(transactionSignature(viewModel.document) == documentBeforeReset)
+        #expect(viewModel.undoStack.map { transactionSignature($0) } == undoBeforeReset)
+        #expect(viewModel.redoStack.map { transactionSignature($0) } == redoBeforeReset)
+
+        let restored = makeViewModel(defaults: defaults)
+        #expect(restored.customBrushPresets.isEmpty)
+        #expect(restored.selectedBrushPresetID == nil)
+        #expect(restored.favoriteBrushPresetIDs == [builtIn.id])
+        #expect(restored.recentBrushPresetIDs == [builtIn.id])
+    }
+
+    @Test func resettingBrushLibraryKeepsAnAppliedBuiltInSelected() throws {
+        let (defaults, suiteName) = temporaryDefaults()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let viewModel = makeViewModel(defaults: defaults)
+        viewModel.brushSize = 37
+        _ = try #require(viewModel.createBrushPresetFromCurrentSettings())
+        let builtIn = try #require(ImageEditorBrushPreset.defaultPresets.last)
+        viewModel.applyBrushPreset(builtIn)
+
+        #expect(viewModel.resetCustomBrushPresetLibrary() == 1)
+        #expect(viewModel.customBrushPresets.isEmpty)
+        #expect(viewModel.selectedBrushPresetID == builtIn.id)
+        #expect(viewModel.activeBrushPreset?.id == builtIn.id)
+        let restored = makeViewModel(defaults: defaults)
+        #expect(restored.selectedBrushPresetID == nil)
+        #expect(restored.activeBrushPreset?.id == builtIn.id)
+    }
+
     @Test func portableBrushLibraryRoundTripsCompleteResourcesWithFreshIdentityAndStableNames() throws {
         let (sourceDefaults, sourceSuiteName) = temporaryDefaults()
         defer { sourceDefaults.removePersistentDomain(forName: sourceSuiteName) }

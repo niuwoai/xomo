@@ -700,8 +700,10 @@
 "imageEditor.help.brushPreset" = "プリセットを選択するか、現在のブラシ設定を保存します";
 "imageEditor.action.brushPresetCreate" = "現在の設定からプリセットを作成";
 "imageEditor.action.brushPresetImportMenu" = "ブラシプリセットを読み込む…";
+"imageEditor.action.brushPresetLibraryMenu" = "ブラシプリセットを管理…";
 "imageEditor.action.brushPresetImport" = "ブラシプリセットを読み込む…";
 "imageEditor.action.brushPresetReplaceLibrary" = "カスタムブラシプリセットを置き換える…";
+"imageEditor.action.brushPresetResetLibrary" = "ライブラリを内蔵プリセットに戻す…";
 "imageEditor.action.brushPresetExport" = "現在のブラシプリセットを書き出す…";
 "imageEditor.action.brushPresetExportMenu" = "ブラシプリセットを書き出す…";
 "imageEditor.action.brushPresetExportVisible" = "表示中のカスタムブラシプリセットを書き出す…";
@@ -2026,6 +2028,8 @@
 "imageEditor.status.brushPresetFavoriteUnavailable" = "このブラシプリセットは利用できません。";
 "imageEditor.status.brushPresetImported" = "ブラシプリセットを%d件読み込み、%d件スキップしました。";
 "imageEditor.status.brushPresetLibraryReplaced" = "%d 個のブラシプリセットをインストールし、ライブラリの置き換え時に %d 個をスキップしました。";
+"imageEditor.status.brushPresetLibraryReset" = "%d 個のカスタムブラシプリセットを削除し、ライブラリを内蔵プリセットのみに戻しました。";
+"imageEditor.status.brushPresetLibraryResetUnavailable" = "削除できるカスタムブラシプリセットはありません。";
 "imageEditor.status.brushPresetExported" = "ブラシプリセットを書き出しました：%@";
 "imageEditor.status.brushPresetFileTooLarge" = "ブラシプリセットファイルが5 MBの上限を超えています。";
 "imageEditor.status.brushPresetUnsupportedVersion" = "このブラシプリセットファイルの形式バージョンには対応していません。";
@@ -2033,6 +2037,8 @@
 "imageEditor.status.brushPresetFileInvalid" = "このブラシプリセットファイルを読み込めませんでした。";
 "imageEditor.brushPreset.replaceConfirmation.title" = "すべてのカスタムブラシプリセットを置き換えますか？";
 "imageEditor.brushPreset.replaceConfirmation.message" = "既存のカスタムブラシプリセット %d 個を削除し、選択したライブラリをインストールします。現在のブラシ設定とドキュメント履歴は変更されません。";
+"imageEditor.brushPreset.resetConfirmation.title" = "ブラシライブラリを内蔵プリセットに戻しますか？";
+"imageEditor.brushPreset.resetConfirmation.message" = "既存のカスタムブラシプリセット %d 個を削除します。内蔵プリセット、現在のブラシ設定、ドキュメント履歴は変更されません。";
 "imageEditor.status.brushSettingsReset" = "ブラシ設定をデフォルトに戻しました。";
 "imageEditor.status.brushPresetLimitReached" = "カスタムブラシプリセットは最大%d件まで保存できます";
 "imageEditor.status.characterPanelSummary" = "テキスト：%@ | サイズ：%d px | 太字：%@ | 斜体：%@ | 下線：%@ | 取り消し線：%@ | 字間：%d | 行間：%d";

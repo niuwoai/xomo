@@ -700,8 +700,10 @@
 "imageEditor.help.brushPreset" = "Choose a preset or save the current brush settings";
 "imageEditor.action.brushPresetCreate" = "Create Preset from Current Settings";
 "imageEditor.action.brushPresetImportMenu" = "Import Presets…";
+"imageEditor.action.brushPresetLibraryMenu" = "Manage Presets…";
 "imageEditor.action.brushPresetImport" = "Import Brush Presets…";
 "imageEditor.action.brushPresetReplaceLibrary" = "Replace Custom Brush Presets…";
+"imageEditor.action.brushPresetResetLibrary" = "Reset Library to Built-in Presets…";
 "imageEditor.action.brushPresetExport" = "Export Current Brush Preset…";
 "imageEditor.action.brushPresetExportMenu" = "Export Presets…";
 "imageEditor.action.brushPresetExportVisible" = "Export Visible Custom Brush Presets…";
@@ -2026,6 +2028,8 @@
 "imageEditor.status.brushPresetFavoriteUnavailable" = "This brush preset is no longer available.";
 "imageEditor.status.brushPresetImported" = "%d brush presets imported; %d skipped.";
 "imageEditor.status.brushPresetLibraryReplaced" = "%d brush presets installed; %d skipped while replacing the library.";
+"imageEditor.status.brushPresetLibraryReset" = "%d custom brush presets removed; the library now contains built-in presets only.";
+"imageEditor.status.brushPresetLibraryResetUnavailable" = "There are no custom brush presets to remove.";
 "imageEditor.status.brushPresetExported" = "Brush presets exported: %@";
 "imageEditor.status.brushPresetFileTooLarge" = "The brush preset file exceeds the 5 MB limit.";
 "imageEditor.status.brushPresetUnsupportedVersion" = "This brush preset file uses an unsupported format version.";
@@ -2033,6 +2037,8 @@
 "imageEditor.status.brushPresetFileInvalid" = "This brush preset file could not be read.";
 "imageEditor.brushPreset.replaceConfirmation.title" = "Replace all custom brush presets?";
 "imageEditor.brushPreset.replaceConfirmation.message" = "This will remove %d existing custom brush presets and install the selected library. Current brush settings and document history will not change.";
+"imageEditor.brushPreset.resetConfirmation.title" = "Reset the brush library to built-in presets?";
+"imageEditor.brushPreset.resetConfirmation.message" = "This will remove %d existing custom brush presets. Built-in presets, current brush settings, and document history will not change.";
 "imageEditor.status.brushSettingsReset" = "Brush settings reset to defaults.";
 "imageEditor.status.brushPresetLimitReached" = "You can save up to %d custom brush presets";
 "imageEditor.status.characterPanelSummary" = "Text: %@ | Size: %d px | Bold: %@ | Italic: %@ | Underline: %@ | Strikethrough: %@ | Tracking: %d | Leading: %d";

@@ -3010,6 +3010,10 @@ final class ImageEditorViewModel: ObservableObject {
         return index < customBrushPresets.index(before: customBrushPresets.endIndex)
     }
 
+    var canResetCustomBrushPresetLibrary: Bool {
+        !customBrushPresets.isEmpty
+    }
+
     var brushPresetMenuTitle: String {
         guard let selectedBrushPreset else {
             return activeBrushPreset?.title ?? L10n.text("imageEditor.option.brushPreset")
@@ -3406,6 +3410,27 @@ final class ImageEditorViewModel: ObservableObject {
         selectedBrushPresetID = presets.last?.id
         persistBrushPresetPreferences()
         pruneBrushPresetUsageToKnownPresets()
+    }
+
+    @discardableResult
+    func resetCustomBrushPresetLibrary() -> Int {
+        let removedIDs = Set(customBrushPresets.map(\.id))
+        guard !removedIDs.isEmpty else {
+            statusText = L10n.text("imageEditor.status.brushPresetLibraryResetUnavailable")
+            return 0
+        }
+
+        customBrushPresets = []
+        if let selectedBrushPresetID, removedIDs.contains(selectedBrushPresetID) {
+            self.selectedBrushPresetID = nil
+        }
+        persistBrushPresetPreferences()
+        pruneBrushPresetUsageToKnownPresets()
+        statusText = L10n.format(
+            "imageEditor.status.brushPresetLibraryReset",
+            removedIDs.count
+        )
+        return removedIDs.count
     }
 
     @discardableResult

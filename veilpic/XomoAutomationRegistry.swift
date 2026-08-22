@@ -2110,6 +2110,15 @@ final class XomoAutomationRegistry {
                     presets: viewModel.customBrushPresets
                 )
             ])
+        case "resetLibrary":
+            let removedCount = viewModel.resetCustomBrushPresetLibrary()
+            return .object([
+                "removedCount": .number(Double(removedCount)),
+                "presets": brushPresetsResult(
+                    viewModel,
+                    presets: viewModel.brushPresets
+                )
+            ])
         case "export":
             let path = try requiredString("path", in: arguments)
             let presetIDs: [String]?
@@ -6976,8 +6985,8 @@ private extension XomoAutomationRegistry {
             "id": XomoAutomationSchema.string(description: "Stable color sampler UUID")
         ], required: ["id"]),
         tool("xomo.color_sampler.clear", "Clear all canvas color samplers and report the actual cleared count."),
-        tool("xomo.brush.preset", "List, favorite, apply, create, update, duplicate, reorder, import, replace, export, rename, or delete persisted brush presets.", [
-            "action": XomoAutomationSchema.string(description: "Brush preset action", values: ["list", "favorites", "recent", "create", "apply", "favorite", "update", "duplicate", "moveToIndex", "import", "replace", "export", "rename", "delete"]),
+        tool("xomo.brush.preset", "List, favorite, apply, create, update, duplicate, reorder, import, replace, reset, export, rename, or delete persisted brush presets.", [
+            "action": XomoAutomationSchema.string(description: "Brush preset action", values: ["list", "favorites", "recent", "create", "apply", "favorite", "update", "duplicate", "moveToIndex", "import", "replace", "resetLibrary", "export", "rename", "delete"]),
             "id": XomoAutomationSchema.string(description: "Preset identifier for apply, favorite, update, duplicate, moveToIndex, single-preset export, rename, or delete"),
             "favorite": XomoAutomationSchema.boolean(description: "Whether favorite should add or remove the preset from favorites"),
             "index": XomoAutomationSchema.integer(description: "Zero-based destination index within custom presets for moveToIndex", minimum: 0),

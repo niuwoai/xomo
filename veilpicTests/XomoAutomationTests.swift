@@ -239,7 +239,8 @@ struct XomoAutomationTests {
         #expect(brushPresetProperties["action"]?.objectValue?["enum"] == .array([
             .string("list"), .string("favorites"), .string("recent"), .string("create"),
             .string("apply"), .string("favorite"), .string("update"), .string("duplicate"),
-            .string("moveToIndex"), .string("import"), .string("replace"), .string("export"),
+            .string("moveToIndex"), .string("import"), .string("replace"),
+            .string("resetLibrary"), .string("export"),
             .string("rename"), .string("delete")
         ]))
         #expect(brushPresetProperties["favorite"]?.objectValue?["type"] == .string("boolean"))
@@ -10659,6 +10660,64 @@ struct XomoAutomationTests {
         #expect(transactionSignature(viewModel.document) == documentBeforeReplace)
         #expect(viewModel.undoStack.map(transactionSignature) == undoBeforeReplace)
         #expect(viewModel.redoStack.map(transactionSignature) == redoBeforeReplace)
+    }
+
+    @Test func registryResetsBrushLibraryWithoutApplyingBuiltInDefaults() throws {
+        let suiteName = "XomoAutomationTests.resetPresetLibrary.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName) ?? .standard
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let viewModel = makeViewModel(preferencesDefaults: defaults)
+        let builtIn = try #require(ImageEditorBrushPreset.defaultPresets.first)
+        viewModel.applyBrushPreset(builtIn)
+        #expect(viewModel.setBrushPresetFavorite(id: builtIn.id, isFavorite: true))
+        viewModel.brushSize = 25
+        let custom = try #require(viewModel.createBrushPresetFromCurrentSettings())
+        viewModel.applyBrushPreset(custom)
+        #expect(viewModel.setBrushPresetFavorite(id: custom.id, isFavorite: true))
+        viewModel.brushSize = 83
+        viewModel.setBrushAngleJitter(39)
+        viewModel.addLayer()
+        viewModel.undo()
+        let documentBeforeReset = transactionSignature(viewModel.document)
+        let undoBeforeReset = viewModel.undoStack.map(transactionSignature)
+        let redoBeforeReset = viewModel.redoStack.map(transactionSignature)
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        defer { registry.unregister(viewModel) }
+
+        let reset = registry.execute(request(
+            operation: "call",
+            name: "xomo.brush.preset",
+            arguments: ["action": .string("resetLibrary")]
+        ))
+
+        #expect(reset.ok)
+        #expect(reset.result?.objectValue?["removedCount"] == .number(1))
+        let returned = try #require(reset.result?.objectValue?["presets"]?.arrayValue)
+        #expect(returned.compactMap { $0.objectValue?["id"]?.stringValue }
+            == ImageEditorBrushPreset.defaultPresets.map(\.id))
+        #expect(viewModel.customBrushPresets.isEmpty)
+        #expect(viewModel.selectedBrushPresetID == nil)
+        #expect(viewModel.favoriteBrushPresetIDs == [builtIn.id])
+        #expect(viewModel.recentBrushPresetIDs == [builtIn.id])
+        #expect(viewModel.brushSize == 83)
+        #expect(viewModel.brushAngleJitter == 39)
+        #expect(viewModel.activeBrushPreset == nil)
+        #expect(transactionSignature(viewModel.document) == documentBeforeReset)
+        #expect(viewModel.undoStack.map(transactionSignature) == undoBeforeReset)
+        #expect(viewModel.redoStack.map(transactionSignature) == redoBeforeReset)
+
+        let repeated = registry.execute(request(
+            operation: "call",
+            name: "xomo.brush.preset",
+            arguments: ["action": .string("resetLibrary")]
+        ))
+        #expect(repeated.ok)
+        #expect(repeated.result?.objectValue?["removedCount"] == .number(0))
+        #expect(viewModel.customBrushPresets.isEmpty)
+        #expect(transactionSignature(viewModel.document) == documentBeforeReset)
+        #expect(viewModel.undoStack.map(transactionSignature) == undoBeforeReset)
+        #expect(viewModel.redoStack.map(transactionSignature) == redoBeforeReset)
     }
 
     @Test func registryRecursivelyExpandsAndCollapsesSelectedLayerGroups() {

@@ -700,8 +700,10 @@
 "imageEditor.help.brushPreset" = "选择预设，或保存当前画笔设置";
 "imageEditor.action.brushPresetCreate" = "从当前设置新建预设";
 "imageEditor.action.brushPresetImportMenu" = "导入画笔预设…";
+"imageEditor.action.brushPresetLibraryMenu" = "管理画笔预设…";
 "imageEditor.action.brushPresetImport" = "导入画笔预设…";
 "imageEditor.action.brushPresetReplaceLibrary" = "替换自定义画笔预设…";
+"imageEditor.action.brushPresetResetLibrary" = "将画笔库重置为内置预设…";
 "imageEditor.action.brushPresetExport" = "导出当前画笔预设…";
 "imageEditor.action.brushPresetExportMenu" = "导出画笔预设…";
 "imageEditor.action.brushPresetExportVisible" = "导出可见的自定义画笔预设…";
@@ -2026,6 +2028,8 @@
 "imageEditor.status.brushPresetFavoriteUnavailable" = "此画笔预设已不可用。";
 "imageEditor.status.brushPresetImported" = "已导入 %d 个画笔预设，跳过 %d 个。";
 "imageEditor.status.brushPresetLibraryReplaced" = "已安装 %d 个画笔预设，替换画笔库时跳过 %d 个。";
+"imageEditor.status.brushPresetLibraryReset" = "已移除 %d 个自定义画笔预设；画笔库已恢复为仅含内置预设。";
+"imageEditor.status.brushPresetLibraryResetUnavailable" = "没有可移除的自定义画笔预设。";
 "imageEditor.status.brushPresetExported" = "已导出画笔预设：%@";
 "imageEditor.status.brushPresetFileTooLarge" = "画笔预设文件超过 5 MB 上限。";
 "imageEditor.status.brushPresetUnsupportedVersion" = "此画笔预设文件来自不受支持的格式版本。";
@@ -2033,6 +2037,8 @@
 "imageEditor.status.brushPresetFileInvalid" = "无法读取此画笔预设文件。";
 "imageEditor.brushPreset.replaceConfirmation.title" = "替换全部自定义画笔预设？";
 "imageEditor.brushPreset.replaceConfirmation.message" = "这将移除现有的 %d 个自定义画笔预设并安装所选画笔库。当前画笔设置和文档历史不会改变。";
+"imageEditor.brushPreset.resetConfirmation.title" = "将画笔库重置为内置预设？";
+"imageEditor.brushPreset.resetConfirmation.message" = "这将移除现有的 %d 个自定义画笔预设。内置预设、当前画笔设置和文档历史不会改变。";
 "imageEditor.status.brushSettingsReset" = "已将画笔设置恢复为默认值。";
 "imageEditor.status.brushPresetLimitReached" = "最多只能保存 %d 个自定义画笔预设";
 "imageEditor.status.characterPanelSummary" = "文字：%@ | 字号：%d px | 粗体：%@ | 斜体：%@ | 下划线：%@ | 删除线：%@ | 字距：%d | 行距：%d";

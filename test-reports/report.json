@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-22 10:37:45 +0800",
+  "generated_at": "2026-08-22 11:00:43 +0800",
   "total": 14,
   "passed": 14,
   "failed": 0,
@@ -15,7 +15,7 @@
       "file": "ImageEditorBrushPresetQueryTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.431,
+      "duration": 4.068,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorBrushPresetQueryTests.brushesPanelConnectsSearchCollectionsAndSharedPresetActions.log"
@@ -27,7 +27,7 @@
       "file": "ImageEditorBrushPresetQueryTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.351,
+      "duration": 4.052,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorBrushPresetQueryTests.contextPolicyTargetsTheClickedCustomPresetAndItsRealBoundaries.log"
@@ -39,7 +39,7 @@
       "file": "ImageEditorBrushPresetQueryTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.431,
+      "duration": 4.141,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorBrushPresetQueryTests.dropPolicyAcceptsExactlyOneLocalBrushLibrary.log"
@@ -51,7 +51,7 @@
       "file": "ImageEditorBrushPresetQueryTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.397,
+      "duration": 4.191,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorBrushPresetQueryTests.favoriteAndRecentCollectionsKeepTheirAuthoritativeOrdering.log"
@@ -63,7 +63,7 @@
       "file": "ImageEditorBrushPresetQueryTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.583,
+      "duration": 4.052,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorBrushPresetQueryTests.gridDensityDefaultsToRegularAndPersistsLargeThumbnails.log"
@@ -75,7 +75,7 @@
       "file": "ImageEditorBrushPresetQueryTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.385,
+      "duration": 4.021,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorBrushPresetQueryTests.gridDensityMapsCompactRegularAndLargeToDistinctUsefulMetrics.log"
@@ -87,7 +87,7 @@
       "file": "ImageEditorBrushPresetQueryTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 4.758,
+      "duration": 4.643,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorBrushPresetQueryTests.panelLayoutDefaultsToListAndPersistsGridChoice.log"
@@ -99,7 +99,7 @@
       "file": "ImageEditorBrushPresetQueryTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.394,
+      "duration": 4.129,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorBrushPresetQueryTests.queryMatchesCaseAndDiacriticsWithoutChangingCatalogOrder.log"
@@ -111,7 +111,7 @@
       "file": "ImageEditorBrushPresetQueryTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.37,
+      "duration": 4.065,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorBrushPresetQueryTests.queryRepairsSelectionOnlyWhenTheCurrentPresetIsHidden.log"
@@ -123,7 +123,7 @@
       "file": "ImageEditorBrushPresetQueryTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.317,
+      "duration": 4.076,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorBrushPresetQueryTests.querySortsVisiblePresetsByNameAndKeepsEquivalentNamesStable.log"
@@ -135,7 +135,7 @@
       "file": "ImageEditorBrushPresetQueryTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.343,
+      "duration": 3.951,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorBrushPresetQueryTests.reorderPolicyAcceptsOneCustomPresetOnlyInCatalogCollection.log"
@@ -147,7 +147,7 @@
       "file": "ImageEditorBrushPresetQueryTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.497,
+      "duration": 4.005,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorBrushPresetQueryTests.sortPreferenceDefaultsToCatalogAndPersistsNameOrder.log"
@@ -159,7 +159,7 @@
       "file": "ImageEditorBrushPresetQueryTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.389,
+      "duration": 5.036,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorBrushPresetQueryTests.sourceScopeSeparatesBuiltInAndCustomBrushPresets.log"
@@ -171,7 +171,7 @@
       "file": "ImageEditorBrushPresetQueryTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.325,
+      "duration": 4.194,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorBrushPresetQueryTests.visibleExportKeepsQueryOrderAndExcludesBuiltInPresets.log"

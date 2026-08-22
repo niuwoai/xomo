@@ -206,6 +206,29 @@ extension ImageEditorViewModel {
         }
     }
 
+    func confirmBrushPresetLibraryReset() {
+        guard canResetCustomBrushPresetLibrary else {
+            statusText = L10n.text("imageEditor.status.brushPresetLibraryResetUnavailable")
+            return
+        }
+        let alert = NSAlert()
+        alert.alertStyle = .warning
+        alert.messageText = L10n.text(
+            "imageEditor.brushPreset.resetConfirmation.title"
+        )
+        alert.informativeText = L10n.format(
+            "imageEditor.brushPreset.resetConfirmation.message",
+            customBrushPresets.count
+        )
+        alert.addButton(withTitle: L10n.text(
+            "imageEditor.action.brushPresetResetLibrary"
+        ))
+        alert.addButton(withTitle: L10n.text("imageEditor.action.cancel"))
+        alert.buttons.first?.hasDestructiveAction = true
+        guard alert.runModal() == .alertFirstButtonReturn else { return }
+        resetCustomBrushPresetLibrary()
+    }
+
     @discardableResult
     func importDroppedBrushPresetLibrary(from urls: [URL]) -> Bool {
         guard let url = ImageEditorBrushPresetDropPolicy.acceptedURL(from: urls) else {

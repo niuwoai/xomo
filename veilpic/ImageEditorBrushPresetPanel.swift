@@ -744,13 +744,21 @@ struct ImageEditorBrushPresetManager: View {
             }
             .focusable(false)
 
-            Menu(L10n.text("imageEditor.action.brushPresetImportMenu")) {
+            Menu(L10n.text("imageEditor.action.brushPresetLibraryMenu")) {
                 Button(L10n.text("imageEditor.action.brushPresetImport")) {
                     viewModel.chooseBrushPresetImportFile()
                 }
                 Button(L10n.text("imageEditor.action.brushPresetReplaceLibrary")) {
                     viewModel.chooseBrushPresetReplacementFile()
                 }
+                Divider()
+                Button(
+                    L10n.text("imageEditor.action.brushPresetResetLibrary"),
+                    role: .destructive
+                ) {
+                    viewModel.confirmBrushPresetLibraryReset()
+                }
+                .disabled(!viewModel.canResetCustomBrushPresetLibrary)
             }
             .focusable(false)
 
