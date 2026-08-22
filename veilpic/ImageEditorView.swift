@@ -1243,6 +1243,25 @@ struct ImageEditorView: View {
             }
 
             if viewModel.selectedTool == .cloneStamp {
+                Picker(
+                    L10n.text("imageEditor.option.cloneSourceSlot"),
+                    selection: Binding(
+                        get: { viewModel.activeCloneSourceSlotIndex },
+                        set: { viewModel.selectCloneSourceSlot($0) }
+                    )
+                ) {
+                    ForEach(0..<ImageEditorCloneSourceSlotState.maximumCount, id: \.self) { index in
+                        Text("\(index + 1)").tag(index)
+                    }
+                }
+                .labelsHidden()
+                .pickerStyle(.segmented)
+                .frame(width: 130)
+                .focusable(false)
+                .xomoFocusEffectDisabled()
+                .accessibilityLabel(L10n.text("imageEditor.option.cloneSourceSlot"))
+                .accessibilityIdentifier("image-editor-clone-source-slot")
+
                 sampledBrushOptions(
                     isAligned: $viewModel.isCloneStampAligned,
                     sampleSource: $viewModel.cloneStampSampleSource,

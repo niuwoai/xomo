@@ -5639,6 +5639,17 @@ final class XomoAutomationRegistry {
         }
         if let feather = arguments["feather"]?.doubleValue { viewModel.feather = max(0, feather) }
         if action == "setCloneSource" || action == "cloneStamp" {
+            if let rawSlot = arguments["sourceSlot"]?.doubleValue {
+                guard rawSlot.isFinite,
+                      rawSlot.rounded() == rawSlot,
+                      (1...Double(ImageEditorCloneSourceSlotState.maximumCount)).contains(rawSlot)
+                else {
+                    throw XomoAutomationCallError.invalidArgument(
+                        "Clone sourceSlot must be an integer from 1 through \(ImageEditorCloneSourceSlotState.maximumCount)"
+                    )
+                }
+                _ = viewModel.selectCloneSourceSlot(Int(rawSlot) - 1)
+            }
             if let aligned = arguments["aligned"]?.boolValue {
                 viewModel.isCloneStampAligned = aligned
             }
@@ -7223,6 +7234,7 @@ private extension XomoAutomationRegistry {
             "pressureSize": XomoAutomationSchema.boolean(description: "Use point pressure to control retouch brush diameter"),
             "pressureSensitivity": XomoAutomationSchema.number(description: "Retouch brush pressure curve sensitivity from 0 to 100"),
             "aligned": XomoAutomationSchema.boolean(description: "Keep the clone or healing source offset aligned across strokes"),
+            "sourceSlot": XomoAutomationSchema.integer(description: "One-based clone source slot from 1 through 5", minimum: 1, maximum: 5),
             "sampleSource": XomoAutomationSchema.string(description: "Clone or healing sampling layer range", values: ["currentLayer", "currentAndBelow", "allVisible"]),
             "ignoresAdjustmentLayers": XomoAutomationSchema.boolean(description: "Exclude adjustment layers from clone or healing composite sampling")
         ], required: ["action"]),

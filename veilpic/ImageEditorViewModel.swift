@@ -233,11 +233,18 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var backgroundColor: NSColor = .white
     @Published var eyedropperShowsSamplingRing = true
     private var screenColorSampler: NSColorSampler?
-    @Published var cloneSourcePoint: CGPoint?
+    @Published private(set) var cloneSourceSlots = Array(
+        repeating: ImageEditorCloneSourceSlotState(),
+        count: ImageEditorCloneSourceSlotState.maximumCount
+    )
+    @Published private(set) var activeCloneSourceSlotIndex = 0
+    var cloneSourcePoint: CGPoint? {
+        cloneSourceSlots[activeCloneSourceSlotIndex].sourcePoint
+    }
     @Published var isCloneStampAligned = true {
         didSet {
             guard isCloneStampAligned != oldValue else { return }
-            cloneStampAlignedCanvasOffset = nil
+            resetCloneSourceAlignedOffsets()
         }
     }
     @Published var cloneStampSampleSource: ImageEditorCloneSampleSource = .currentLayer
@@ -609,7 +616,14 @@ final class ImageEditorViewModel: ObservableObject {
     var editingGradientOverlayMidpointOriginalStops: [ImageEditorGradientColorStop]?
     var copiedLayerStyle: ImageEditorLayerStyle?
     var copiedLayerStyleSourceID: UUID?
-    private var cloneStampAlignedCanvasOffset: CGSize?
+    private var cloneStampAlignedCanvasOffset: CGSize? {
+        get {
+            cloneSourceSlots[activeCloneSourceSlotIndex].alignedCanvasOffset
+        }
+        set {
+            cloneSourceSlots[activeCloneSourceSlotIndex].alignedCanvasOffset = newValue
+        }
+    }
     private var healingBrushAlignedCanvasOffset: CGSize?
     private var layerSelectionAnchorID: UUID?
     private let onApply: (NSImage) -> Void
@@ -7097,12 +7111,32 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     func setCloneSource(at point: CGPoint?) {
-        cloneSourcePoint = point
-        cloneStampAlignedCanvasOffset = nil
+        cloneSourceSlots[activeCloneSourceSlotIndex] = ImageEditorCloneSourceSlotState(
+            sourcePoint: point,
+            alignedCanvasOffset: nil
+        )
         isSettingCloneSource = false
         statusText = point == nil
             ? L10n.text("imageEditor.status.cloneSourceMissing")
             : L10n.text("imageEditor.status.cloneSourceSet")
+    }
+
+    @discardableResult
+    func selectCloneSourceSlot(_ index: Int) -> Bool {
+        guard cloneSourceSlots.indices.contains(index) else { return false }
+        guard activeCloneSourceSlotIndex != index else { return true }
+        activeCloneSourceSlotIndex = index
+        isSettingCloneSource = false
+        statusText = cloneSourcePoint == nil
+            ? L10n.text("imageEditor.status.cloneSourceMissing")
+            : L10n.text("imageEditor.status.cloneSourceSet")
+        return true
+    }
+
+    private func resetCloneSourceAlignedOffsets() {
+        for index in cloneSourceSlots.indices {
+            cloneSourceSlots[index].alignedCanvasOffset = nil
+        }
     }
 
     func beginSettingCloneSource() {

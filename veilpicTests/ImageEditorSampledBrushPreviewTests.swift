@@ -41,6 +41,41 @@ struct ImageEditorSampledBrushPreviewTests {
         #expect(nonAlignedPreview == CGPoint(x: 15, y: 15))
     }
 
+    @Test func cloneSourceSlotsRetainTheirOwnAlignedOffsets() {
+        let viewModel = sampledBrushViewModel()
+        viewModel.setCloneSource(at: CGPoint(x: 10, y: 15))
+        viewModel.cloneStamp(points: [CGPoint(x: 50, y: 15)])
+
+        #expect(viewModel.selectCloneSourceSlot(1))
+        viewModel.setCloneSource(at: CGPoint(x: 30, y: 15))
+        viewModel.cloneStamp(points: [CGPoint(x: 60, y: 15)])
+
+        #expect(viewModel.selectCloneSourceSlot(0))
+        let firstSlotPreview = viewModel.sampledBrushPreviewSourcePoint(
+            for: .cloneStamp,
+            strokeStart: CGPoint(x: 80, y: 15),
+            currentDestination: CGPoint(x: 85, y: 15)
+        )
+        #expect(firstSlotPreview == CGPoint(x: 45, y: 15))
+
+        #expect(viewModel.selectCloneSourceSlot(1))
+        let secondSlotPreview = viewModel.sampledBrushPreviewSourcePoint(
+            for: .cloneStamp,
+            strokeStart: CGPoint(x: 80, y: 15),
+            currentDestination: CGPoint(x: 85, y: 15)
+        )
+        #expect(secondSlotPreview == CGPoint(x: 55, y: 15))
+
+        viewModel.isCloneStampAligned = false
+        viewModel.isCloneStampAligned = true
+        let resetPreview = viewModel.sampledBrushPreviewSourcePoint(
+            for: .cloneStamp,
+            strokeStart: CGPoint(x: 80, y: 15),
+            currentDestination: CGPoint(x: 85, y: 15)
+        )
+        #expect(resetPreview == CGPoint(x: 35, y: 15))
+    }
+
     @Test func healingPreviewUsesItsOwnSourceAndRejectsOtherTools() {
         let viewModel = sampledBrushViewModel()
         viewModel.isHealingBrushAligned = false

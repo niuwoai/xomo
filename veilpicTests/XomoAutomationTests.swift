@@ -119,6 +119,13 @@ struct XomoAutomationTests {
                 .objectValue?["ignoresAdjustmentLayers"]?.objectValue?["type"]
                 == .string("boolean")
         )
+        let sourceSlotSchema = try #require(
+            specialPaintTool["inputSchema"]?.objectValue?["properties"]?
+                .objectValue?["sourceSlot"]?.objectValue
+        )
+        #expect(sourceSlotSchema["type"] == .string("integer"))
+        #expect(sourceSlotSchema["minimum"] == .number(1))
+        #expect(sourceSlotSchema["maximum"] == .number(5))
         #expect(tools.contains { tool in
             guard case .object(let value) = tool else { return false }
             return value["name"] == .string("xomo.color_sampler.list")
@@ -8946,6 +8953,7 @@ struct XomoAutomationTests {
                 "action": .string("setCloneSource"),
                 "x": .number(12),
                 "y": .number(18),
+                "sourceSlot": .number(3),
                 "aligned": .bool(false),
                 "sampleSource": .string("allVisible"),
                 "ignoresAdjustmentLayers": .bool(true)
@@ -8953,10 +8961,53 @@ struct XomoAutomationTests {
         ))
 
         #expect(response.ok)
+        #expect(viewModel.activeCloneSourceSlotIndex == 2)
         #expect(viewModel.cloneSourcePoint == CGPoint(x: 12, y: 18))
         #expect(!viewModel.isCloneStampAligned)
         #expect(viewModel.cloneStampSampleSource == .allVisible)
         #expect(viewModel.cloneStampIgnoresAdjustmentLayers)
+
+        #expect(registry.execute(request(
+            operation: "call",
+            name: "xomo.paint.special",
+            arguments: [
+                "action": .string("setCloneSource"),
+                "sourceSlot": .number(1),
+                "x": .number(30),
+                "y": .number(40)
+            ]
+        )).ok)
+        #expect(viewModel.activeCloneSourceSlotIndex == 0)
+        #expect(viewModel.cloneSourcePoint == CGPoint(x: 30, y: 40))
+        #expect(viewModel.selectCloneSourceSlot(2))
+        #expect(viewModel.cloneSourcePoint == CGPoint(x: 12, y: 18))
+    }
+
+    @Test func registryRejectsInvalidCloneSourceSlotsAtomically() {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        let historyCount = viewModel.document.history.count
+
+        for sourceSlot in [0.0, 2.5, 6.0] {
+            let response = registry.execute(request(
+                operation: "call",
+                name: "xomo.paint.special",
+                arguments: [
+                    "action": .string("setCloneSource"),
+                    "sourceSlot": .number(sourceSlot),
+                    "x": .number(12),
+                    "y": .number(18),
+                    "aligned": .bool(false)
+                ]
+            ))
+
+            #expect(!response.ok)
+            #expect(viewModel.activeCloneSourceSlotIndex == 0)
+            #expect(viewModel.cloneSourcePoint == nil)
+            #expect(viewModel.isCloneStampAligned)
+            #expect(viewModel.document.history.count == historyCount)
+        }
     }
 
     @Test func registryConfiguresHealingBrushSourceAndSamplingOptions() {

@@ -3454,6 +3454,7 @@
 "imageEditor.status.quickMaskOverlayRestored" = "已恢复快速蒙版彩色覆盖";
 "imageEditor.option.cloneAligned" = "对齐";
 "imageEditor.option.cloneSampleSource" = "样本";
+"imageEditor.option.cloneSourceSlot" = "仿制源槽位";
 "imageEditor.option.healingMode" = "修复模式";
 "imageEditor.healingMode.source" = "取样";
 "imageEditor.healingMode.spot" = "污点";

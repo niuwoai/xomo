@@ -5016,6 +5016,26 @@ struct ImageEditorScopeTests {
         #expect(optionsSource.contains(".focusable(false)"))
     }
 
+    @Test func cloneStampExposesFiveNonFocusableSourceSlots() throws {
+        let source = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let cloneStart = try #require(source.range(of: "if viewModel.selectedTool == .cloneStamp {"))
+        let healingStart = try #require(
+            source[cloneStart.upperBound...].range(of: "if viewModel.selectedTool == .healingBrush {")
+        )
+        let cloneSource = source[cloneStart.lowerBound..<healingStart.lowerBound]
+
+        #expect(cloneSource.contains("imageEditor.option.cloneSourceSlot"))
+        #expect(cloneSource.contains("ImageEditorCloneSourceSlotState.maximumCount"))
+        #expect(cloneSource.contains("viewModel.activeCloneSourceSlotIndex"))
+        #expect(cloneSource.contains("viewModel.selectCloneSourceSlot($0)"))
+        #expect(cloneSource.contains(".pickerStyle(.segmented)"))
+        #expect(cloneSource.contains(".focusable(false)"))
+        #expect(cloneSource.contains("image-editor-clone-source-slot"))
+    }
+
     @Test func pressureCursorGestureUsesTabletPressureAndResetsAfterRelease() throws {
         let source = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),

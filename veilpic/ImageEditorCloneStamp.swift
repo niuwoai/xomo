@@ -20,6 +20,13 @@ enum ImageEditorCloneSampleSource: String, CaseIterable, Identifiable {
     }
 }
 
+struct ImageEditorCloneSourceSlotState: Equatable {
+    static let maximumCount = 5
+
+    var sourcePoint: CGPoint?
+    var alignedCanvasOffset: CGSize?
+}
+
 struct ImageEditorSampledBrushOffsetResolution: Equatable {
     var canvasOffset: CGSize
     var nextAlignedOffset: CGSize?

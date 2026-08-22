@@ -60,6 +60,49 @@ struct ImageEditorCloneStampSamplingTests {
         #expect(nonAlignedSecond.redComponent > nonAlignedSecond.greenComponent + 0.25)
     }
 
+    @Test func cloneSourceSlotsRetainIndependentSourcesAndDriveRealStrokes() throws {
+        let viewModel = patternedCurrentLayerViewModel()
+        viewModel.isCloneStampAligned = false
+        viewModel.brushSize = 6
+        viewModel.opacity = 1
+        let historyCount = viewModel.document.history.count
+
+        viewModel.setCloneSource(at: CGPoint(x: 10, y: 15))
+        viewModel.cloneStamp(points: [CGPoint(x: 50, y: 15)])
+
+        #expect(viewModel.selectCloneSourceSlot(1))
+        viewModel.setCloneSource(at: CGPoint(x: 30, y: 15))
+        viewModel.cloneStamp(points: [CGPoint(x: 70, y: 15)])
+
+        #expect(viewModel.selectCloneSourceSlot(0))
+        #expect(viewModel.cloneSourcePoint == CGPoint(x: 10, y: 15))
+        viewModel.cloneStamp(points: [CGPoint(x: 90, y: 15)])
+
+        let firstSlotPixel = try color(
+            viewModel.document.selectedLayer?.image,
+            at: CGPoint(x: 50, y: 15)
+        )
+        let secondSlotPixel = try color(
+            viewModel.document.selectedLayer?.image,
+            at: CGPoint(x: 70, y: 15)
+        )
+        let restoredSlotPixel = try color(
+            viewModel.document.selectedLayer?.image,
+            at: CGPoint(x: 90, y: 15)
+        )
+        #expect(firstSlotPixel.redComponent > firstSlotPixel.greenComponent + 0.25)
+        #expect(secondSlotPixel.greenComponent > secondSlotPixel.redComponent + 0.25)
+        #expect(restoredSlotPixel.redComponent > restoredSlotPixel.greenComponent + 0.25)
+        #expect(viewModel.document.history.count == historyCount + 3)
+
+        let activeSlot = viewModel.activeCloneSourceSlotIndex
+        let activePoint = viewModel.cloneSourcePoint
+        #expect(!viewModel.selectCloneSourceSlot(-1))
+        #expect(!viewModel.selectCloneSourceSlot(ImageEditorCloneSourceSlotState.maximumCount))
+        #expect(viewModel.activeCloneSourceSlotIndex == activeSlot)
+        #expect(viewModel.cloneSourcePoint == activePoint)
+    }
+
     @Test func samplingRangeDistinguishesCurrentBelowAndAllVisibleLayers() throws {
         let current = layeredSamplingViewModel()
         current.cloneStampSampleSource = .currentLayer
