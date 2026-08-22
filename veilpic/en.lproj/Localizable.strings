@@ -871,7 +871,7 @@
 "imageEditor.tool.redEye.help" = "Red Eye: click a red pupil to reduce red while preserving brightness.";
 "imageEditor.tool.paintBucket.help" = "Paint Bucket: fill neighboring similar pixels with the foreground color.";
 "imageEditor.tool.gradient.help" = "Gradient: drag to fill a foreground-to-background color gradient.";
-"imageEditor.tool.eyedropper.help" = "Eyedropper: sample the canvas and set the foreground color.";
+"imageEditor.tool.eyedropper.help" = "Eyedropper: sample the canvas into the foreground color, or hold Option for the background color.";
 "imageEditor.tool.colorSampler.help" = "Color Sampler: retain up to four samples, drag a numbered point to move it, or Option-click it to remove it.";
 "imageEditor.tool.text.help" = "Text: click the canvas to create an editable text layer.";
 "imageEditor.tool.rectangle.help" = "Rectangle: drag to create a rectangular shape layer.";
@@ -2184,6 +2184,7 @@
 "imageEditor.status.savedPathFilled" = "Filled path “%@” with the foreground color";
 "imageEditor.status.savedPathStroked" = "Stroked path “%@” with the current brush";
 "imageEditor.status.colorSampled" = "Foreground color sampled";
+"imageEditor.status.colorSampledBackground" = "Background color sampled";
 "imageEditor.status.colorSamplerAdded" = "Color sampler %d added";
 "imageEditor.status.colorSamplerMoved" = "Color sampler %d moved";
 "imageEditor.status.colorSamplerRemoved" = "Color sampler %d removed";

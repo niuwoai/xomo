@@ -16,6 +16,11 @@ enum ImageEditorImageProcessing {
     static let ciContext = CIContext(options: nil)
 }
 
+enum ImageEditorColorSampleTarget: Equatable {
+    case foreground
+    case background
+}
+
 enum ImageEditorClippingMaskSelectionState: Equatable {
     case off
     case on
@@ -7683,10 +7688,19 @@ final class ImageEditorViewModel: ObservableObject {
         if indices.count > 1 { statusText = L10n.format("imageEditor.status.layerShapeUpdatedSelected", indices.count) }
     }
 
-    func sampleColor(at point: CGPoint) {
+    func sampleColor(
+        at point: CGPoint,
+        target: ImageEditorColorSampleTarget = .foreground
+    ) {
         guard let color = document.compositedImage.color(at: point) else { return }
-        foregroundColor = color
-        statusText = L10n.text("imageEditor.status.colorSampled")
+        switch target {
+        case .foreground:
+            foregroundColor = color
+            statusText = L10n.text("imageEditor.status.colorSampled")
+        case .background:
+            backgroundColor = color
+            statusText = L10n.text("imageEditor.status.colorSampledBackground")
+        }
     }
 
     @discardableResult

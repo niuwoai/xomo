@@ -1779,6 +1779,102 @@ struct ImageEditorCanvasCursorTests {
         ))
     }
 
+    @Test func eyedropperOptionTargetsBackgroundAndLatchesForThePointerSequence() {
+        #expect(ImageEditorEyedropperTargetPolicy.target(
+            tool: .eyedropper,
+            modifierFlags: []
+        ) == .foreground)
+        #expect(ImageEditorEyedropperTargetPolicy.target(
+            tool: .eyedropper,
+            modifierFlags: [.option]
+        ) == .background)
+        #expect(ImageEditorEyedropperTargetPolicy.target(
+            tool: .eyedropper,
+            modifierFlags: [],
+            latchedTarget: .background
+        ) == .background)
+
+        for tool in [ImageEditorTool.brush, .pencil, .colorSampler, .paintBucket] {
+            #expect(ImageEditorEyedropperTargetPolicy.target(
+                tool: tool,
+                modifierFlags: [.option]
+            ) == .foreground)
+        }
+    }
+
+    @Test func eyedropperBackgroundTargetHasDistinctCursorWithoutOverridingCanvasModes() {
+        let foreground = ImageEditorCanvasCursor.cursor(
+            for: .eyedropper,
+            brushDiameter: 18,
+            eyedropperTarget: .foreground
+        )
+        let background = ImageEditorCanvasCursor.cursor(
+            for: .eyedropper,
+            brushDiameter: 18,
+            eyedropperTarget: .background
+        )
+        #expect(foreground !== background)
+
+        #expect(ImageEditorCanvasCursor.cursor(
+            for: .components,
+            selectedTool: .eyedropper,
+            brushDiameter: 18,
+            eyedropperTarget: .background
+        ) === NSCursor.arrow)
+        #expect(ImageEditorCanvasCursor.cursor(
+            for: .tools,
+            selectedTool: .eyedropper,
+            brushDiameter: 18,
+            isSpacebarPanning: true,
+            eyedropperTarget: .background
+        ) === NSCursor.openHand)
+        #expect(ImageEditorCanvasCursor.cursor(
+            for: .brush,
+            brushDiameter: 18,
+            isTemporaryEyedropperActive: true,
+            eyedropperTarget: .background
+        ) === foreground)
+    }
+
+    @Test func eyedropperGestureLatchesTargetAndRoutesItToSamplingAndCursor() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let gestureStart = try #require(
+            source.range(of: "private func canvasGesture(in size: CGSize) -> some Gesture")
+        )
+        let gestureEnd = try #require(
+            source[gestureStart.upperBound...].range(of: "private func gradientDragPoint")
+        )
+        let gestureSource = source[gestureStart.lowerBound..<gestureEnd.lowerBound]
+
+        #expect(gestureSource.contains("canvasInteractionTool == .eyedropper"))
+        #expect(gestureSource.contains("eyedropperGestureTarget == nil"))
+        #expect(gestureSource.contains(
+            "eyedropperGestureTarget = ImageEditorEyedropperTargetPolicy.target("
+        ))
+        #expect(gestureSource.contains("target: eyedropperGestureTarget"))
+        let ended = try #require(gestureSource.range(of: ".onEnded { value in"))
+        let panEnd = try #require(
+            gestureSource[ended.upperBound...].range(of: "if isCanvasPanGestureActive {")
+        )
+        let panEndBoundary = try #require(
+            gestureSource[panEnd.upperBound...].range(of: "let endImagePoint")
+        )
+        let panEndSource = gestureSource[panEnd.lowerBound..<panEndBoundary.lowerBound]
+        #expect(panEndSource.contains("isTemporaryEyedropperGestureActive = false"))
+        #expect(panEndSource.contains("eyedropperGestureTarget = nil"))
+        #expect(
+            source.components(
+                separatedBy: "eyedropperTarget: eyedropperCursorTarget"
+            ).count - 1 == 3
+        )
+    }
+
     @Test func temporaryEyedropperUsesSemanticCursorWithoutOverridingCanvasModes() {
         let eyedropper = ImageEditorCanvasCursor.cursor(for: .eyedropper, brushDiameter: 18)
         for tool in [ImageEditorTool.brush, .pencil] {
@@ -1843,7 +1939,7 @@ struct ImageEditorCanvasCursorTests {
         #expect(
             gestureSource.components(
                 separatedBy: "viewModel.sampleColor(at: endImagePoint)"
-            ).count - 1 == 3
+            ).count - 1 == 2
         )
         #expect(
             source.components(

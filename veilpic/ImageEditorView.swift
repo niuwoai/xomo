@@ -106,6 +106,7 @@ struct ImageEditorView: View {
     @State private var dragPoints: [CGPoint] = []
     @State private var brushStrokeSamples: [ImageEditorBrushStrokeSample] = []
     @State private var isTemporaryEyedropperGestureActive = false
+    @State private var eyedropperGestureTarget: ImageEditorColorSampleTarget?
     @State private var isEraserHistoryGestureActive = false
     @State private var paintAirbrushStroke = ImageEditorToneAirbrushStroke()
     @State private var toneAirbrushStroke = ImageEditorToneAirbrushStroke()
@@ -524,6 +525,7 @@ struct ImageEditorView: View {
             dragPoints = []
             brushStrokeSamples = []
             isTemporaryEyedropperGestureActive = false
+            eyedropperGestureTarget = nil
             isEraserHistoryGestureActive = false
             activeBrushPressure = nil
             activeBrushTilt = nil
@@ -3758,6 +3760,7 @@ struct ImageEditorView: View {
                             isCanvasPanGestureActive: isCanvasPanGestureActive,
                             isPickingSampledBrushSource: isSettingSampledBrushSourceGesture,
                             isTemporaryEyedropperActive: isTemporaryEyedropperCursorActive,
+                            eyedropperTarget: eyedropperCursorTarget,
                             isErasingToHistory: isEraserHistoryCursorActive,
                             patchPhase: patchCursorPhase(at: canvasPoint),
                             modifierFlags: canvasModifierFlags,
@@ -3865,6 +3868,7 @@ struct ImageEditorView: View {
                     activeBrushPressure = nil
                     activeBrushTilt = nil
                     isTemporaryEyedropperGestureActive = false
+                    eyedropperGestureTarget = nil
                     isEraserHistoryGestureActive = false
                     paintAirbrushStroke.reset()
                     isPatchGestureBlocked = false
@@ -4678,6 +4682,14 @@ struct ImageEditorView: View {
             )
     }
 
+    private var eyedropperCursorTarget: ImageEditorColorSampleTarget {
+        ImageEditorEyedropperTargetPolicy.target(
+            tool: canvasInteractionTool,
+            modifierFlags: canvasModifierFlags,
+            latchedTarget: eyedropperGestureTarget
+        )
+    }
+
     private func patchCursorPhase(at canvasPoint: CGPoint?) -> ImageEditorPatchCursorPhase {
         guard canvasInteractionTool == .patchTool else { return .drawingSelection }
         return ImageEditorPatchCursorPhase.resolve(
@@ -4740,6 +4752,15 @@ struct ImageEditorView: View {
                     activeBrushTilt = nil
                     updateCanvasCursor(at: value.location, in: size)
                     return
+                }
+
+                if canvasInteractionTool == .eyedropper,
+                   eyedropperGestureTarget == nil {
+                    eyedropperGestureTarget = ImageEditorEyedropperTargetPolicy.target(
+                        tool: canvasInteractionTool,
+                        modifierFlags: NSEvent.modifierFlags
+                    )
+                    updateCanvasCursor(at: value.location, in: size)
                 }
 
                 switch canvasInteractionTool {
@@ -5215,6 +5236,8 @@ struct ImageEditorView: View {
                     updateCanvasPan(translation: value.translation)
                     isCanvasPanGestureActive = false
                     lastPanTranslation = .zero
+                    isTemporaryEyedropperGestureActive = false
+                    eyedropperGestureTarget = nil
                     if isPointerInsideCanvas {
                         updateCanvasCursor(at: value.location, in: size)
                     }
@@ -5475,7 +5498,14 @@ struct ImageEditorView: View {
                     }
                 case .eyedropper:
                     if let endImagePoint {
-                        viewModel.sampleColor(at: endImagePoint)
+                        viewModel.sampleColor(
+                            at: endImagePoint,
+                            target: eyedropperGestureTarget
+                                ?? ImageEditorEyedropperTargetPolicy.target(
+                                    tool: canvasInteractionTool,
+                                    modifierFlags: NSEvent.modifierFlags
+                                )
+                        )
                     }
                 case .colorSampler:
                     if isColorSamplerRemovalGestureActive {
@@ -5515,6 +5545,7 @@ struct ImageEditorView: View {
                 dragPoints = []
                 brushStrokeSamples = []
                 isTemporaryEyedropperGestureActive = false
+                eyedropperGestureTarget = nil
                 isEraserHistoryGestureActive = false
                 activeBrushPressure = nil
                 paintAirbrushStroke.reset()
@@ -5883,6 +5914,7 @@ struct ImageEditorView: View {
             isCanvasPanGestureActive: isCanvasPanGestureActive,
             isPickingSampledBrushSource: isSettingSampledBrushSourceGesture,
             isTemporaryEyedropperActive: isTemporaryEyedropperCursorActive,
+            eyedropperTarget: eyedropperCursorTarget,
             isErasingToHistory: isEraserHistoryCursorActive,
             patchPhase: patchCursorPhase(at: canvasPoint),
             modifierFlags: NSEvent.modifierFlags,
@@ -5933,6 +5965,7 @@ struct ImageEditorView: View {
             isCanvasPanGestureActive: isCanvasPanGestureActive,
             isPickingSampledBrushSource: isSettingSampledBrushSourceGesture,
             isTemporaryEyedropperActive: isTemporaryEyedropperCursorActive,
+            eyedropperTarget: eyedropperCursorTarget,
             isErasingToHistory: isEraserHistoryCursorActive,
             patchPhase: patchCursorPhase(at: nil),
             modifierFlags: canvasModifierFlags,
@@ -13658,6 +13691,20 @@ enum ImageEditorTemporaryEyedropperPolicy {
     }
 }
 
+enum ImageEditorEyedropperTargetPolicy {
+    static func target(
+        tool: ImageEditorTool,
+        modifierFlags: NSEvent.ModifierFlags,
+        latchedTarget: ImageEditorColorSampleTarget? = nil
+    ) -> ImageEditorColorSampleTarget {
+        if let latchedTarget { return latchedTarget }
+        guard tool == .eyedropper, modifierFlags.contains(.option) else {
+            return .foreground
+        }
+        return .background
+    }
+}
+
 enum ImageEditorPatchCursorPhase: Equatable {
     case drawingSelection
     case readyToDrag
@@ -13781,6 +13828,7 @@ enum ImageEditorCanvasCursor {
         isCanvasPanGestureActive: Bool = false,
         isPickingSampledBrushSource: Bool = false,
         isTemporaryEyedropperActive: Bool = false,
+        eyedropperTarget: ImageEditorColorSampleTarget = .foreground,
         isErasingToHistory: Bool = false,
         patchPhase: ImageEditorPatchCursorPhase = .drawingSelection,
         modifierFlags: NSEvent.ModifierFlags = [],
@@ -13879,6 +13927,7 @@ enum ImageEditorCanvasCursor {
                 handIsDragging: handIsDragging,
                 isPickingSampledBrushSource: isPickingSampledBrushSource,
                 isTemporaryEyedropperActive: isTemporaryEyedropperActive,
+                eyedropperTarget: eyedropperTarget,
                 isErasingToHistory: isErasingToHistory,
                 patchPhase: patchPhase,
                 modifierFlags: modifierFlags,
@@ -14367,6 +14416,7 @@ enum ImageEditorCanvasCursor {
         handIsDragging: Bool = false,
         isPickingSampledBrushSource: Bool = false,
         isTemporaryEyedropperActive: Bool = false,
+        eyedropperTarget: ImageEditorColorSampleTarget = .foreground,
         isErasingToHistory: Bool = false,
         patchPhase: ImageEditorPatchCursorPhase = .drawingSelection,
         modifierFlags: NSEvent.ModifierFlags = [],
@@ -14375,7 +14425,7 @@ enum ImageEditorCanvasCursor {
     ) -> NSCursor {
         if isTemporaryEyedropperActive,
            ImageEditorTemporaryEyedropperPolicy.isAvailable(for: tool) {
-            return eyedropperCursor()
+            return eyedropperCursor(target: .foreground)
         }
         let selectionMode = ImageEditorSelectionCursorMode.from(modifierFlags: modifierFlags)
         switch family(for: tool) {
@@ -14455,7 +14505,7 @@ enum ImageEditorCanvasCursor {
         case .paintBucket:
             return paintBucketCursor()
         case .eyedropper:
-            return eyedropperCursor()
+            return eyedropperCursor(target: eyedropperTarget)
         case .redEye:
             return .crosshair
         case .samplingScope:
@@ -15433,8 +15483,10 @@ enum ImageEditorCanvasCursor {
         )
     }
 
-    private static func eyedropperCursor() -> NSCursor {
-        let cacheKey = "eyedropper"
+    private static func eyedropperCursor(
+        target: ImageEditorColorSampleTarget
+    ) -> NSCursor {
+        let cacheKey = "eyedropper:\(target)"
         if let cachedCursor = cursorCache[cacheKey] {
             return cachedCursor
         }
@@ -15483,6 +15535,22 @@ enum ImageEditorCanvasCursor {
         NSColor.white.setStroke()
         drop.lineWidth = 1
         drop.stroke()
+
+        if target == .background {
+            let backSwatch = NSBezierPath(rect: NSRect(x: 2, y: 25, width: 7, height: 7))
+            NSColor.white.setFill()
+            backSwatch.fill()
+            NSColor.black.setStroke()
+            backSwatch.lineWidth = 2
+            backSwatch.stroke()
+
+            let frontSwatch = NSBezierPath(rect: NSRect(x: 6, y: 21, width: 7, height: 7))
+            NSColor.black.setFill()
+            frontSwatch.fill()
+            NSColor.white.setStroke()
+            frontSwatch.lineWidth = 1
+            frontSwatch.stroke()
+        }
 
         image.unlockFocus()
         return cache(

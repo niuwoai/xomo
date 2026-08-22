@@ -1061,6 +1061,37 @@ struct ImageEditorToolSmokeTests {
         #expect(viewModel.clearColorSamplers() == 0)
     }
 
+    @Test func eyedropperCanSampleBackgroundWithoutChangingForegroundOrHistory() throws {
+        let viewModel = makeViewModel(image: solidImage(color: .magenta))
+        viewModel.foregroundColor = .cyan
+        viewModel.backgroundColor = .yellow
+        let originalForeground = try #require(
+            viewModel.foregroundColor.usingColorSpace(.deviceRGB)
+        )
+        let originalHistory = viewModel.document.history
+        let originalCanUndo = viewModel.canUndo
+
+        viewModel.sampleColor(
+            at: CGPoint(x: 20, y: 14),
+            target: .background
+        )
+
+        let foreground = try #require(
+            viewModel.foregroundColor.usingColorSpace(.deviceRGB)
+        )
+        let background = try #require(
+            viewModel.backgroundColor.usingColorSpace(.deviceRGB)
+        )
+        #expect(abs(foreground.redComponent - originalForeground.redComponent) < 0.001)
+        #expect(abs(foreground.greenComponent - originalForeground.greenComponent) < 0.001)
+        #expect(abs(foreground.blueComponent - originalForeground.blueComponent) < 0.001)
+        #expect(background.redComponent > 0.8)
+        #expect(background.blueComponent > 0.8)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.colorSampledBackground"))
+        #expect(viewModel.document.history == originalHistory)
+        #expect(viewModel.canUndo == originalCanUndo)
+    }
+
     @Test func colorSamplerMoveAndRemoveAreAtomicAndHistoryFree() throws {
         let image = try #require(NSImage.rendered(size: canvasSize) { rect in
             NSColor(deviceRed: 1, green: 0, blue: 0, alpha: 1).setFill()

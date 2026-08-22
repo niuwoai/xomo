@@ -871,7 +871,7 @@
 "imageEditor.tool.redEye.help" = "红眼：点击红色瞳孔，降低红色并保留亮度。";
 "imageEditor.tool.paintBucket.help" = "油漆桶：向相邻的相似像素区域填充前景色。";
 "imageEditor.tool.gradient.help" = "渐变：拖拽以填充前景色到背景色的渐变。";
-"imageEditor.tool.eyedropper.help" = "吸管：从画布取样并设置前景色。";
+"imageEditor.tool.eyedropper.help" = "吸管：从画布取样并设置前景色，按住 Option 时设置背景色。";
 "imageEditor.tool.colorSampler.help" = "颜色取样器：保留最多四个取样点；拖动编号点可移动，按住 Option 点击可单独删除。";
 "imageEditor.tool.text.help" = "文字：点击画布创建可编辑文字图层。";
 "imageEditor.tool.rectangle.help" = "矩形：拖拽创建矩形形状图层。";
@@ -2184,6 +2184,7 @@
 "imageEditor.status.savedPathFilled" = "已用前景色填充路径“%@”";
 "imageEditor.status.savedPathStroked" = "已用当前画笔描边路径“%@”";
 "imageEditor.status.colorSampled" = "已取样前景色";
+"imageEditor.status.colorSampledBackground" = "已取样背景色";
 "imageEditor.status.colorSamplerAdded" = "已添加颜色取样点 %d";
 "imageEditor.status.colorSamplerMoved" = "已移动颜色取样点 %d";
 "imageEditor.status.colorSamplerRemoved" = "已删除颜色取样点 %d";
