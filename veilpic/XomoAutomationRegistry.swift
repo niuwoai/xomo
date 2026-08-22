@@ -2139,6 +2139,8 @@ final class XomoAutomationRegistry {
                 "filename": .string(url.lastPathComponent),
                 "importedCount": .number(Double(result.importedCount)),
                 "skippedCount": .number(Double(result.skippedCount)),
+                "unselectedCount": .number(Double(result.unselectedCount)),
+                "capacitySkippedCount": .number(Double(result.capacitySkippedCount)),
                 "presets": brushPresetsResult(viewModel, presets: importedPresets)
             ])
         case "replace":
@@ -2164,6 +2166,8 @@ final class XomoAutomationRegistry {
                 "filename": .string(url.lastPathComponent),
                 "importedCount": .number(Double(result.importedCount)),
                 "skippedCount": .number(Double(result.skippedCount)),
+                "unselectedCount": .number(Double(result.unselectedCount)),
+                "capacitySkippedCount": .number(Double(result.capacitySkippedCount)),
                 "presets": brushPresetsResult(
                     viewModel,
                     presets: viewModel.customBrushPresets

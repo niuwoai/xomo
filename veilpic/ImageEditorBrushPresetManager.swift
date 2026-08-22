@@ -37,7 +37,12 @@ struct ImageEditorBrushPresetLibrary: Codable, Equatable {
 
 struct ImageEditorBrushPresetImportResult: Equatable {
     let importedCount: Int
-    let skippedCount: Int
+    let unselectedCount: Int
+    let capacitySkippedCount: Int
+
+    var skippedCount: Int {
+        unselectedCount + capacitySkippedCount
+    }
 }
 
 enum ImageEditorBrushPresetLibraryInspectionMode: String, CaseIterable {
@@ -512,13 +517,10 @@ extension ImageEditorViewModel {
         installImportedBrushPresets(importedPresets)
         let result = ImageEditorBrushPresetImportResult(
             importedCount: importedPresets.count,
-            skippedCount: library.presets.count - importedPresets.count
+            unselectedCount: library.presets.count - selectedPresets.count,
+            capacitySkippedCount: selectedPresets.count - importedPresets.count
         )
-        statusText = L10n.format(
-            "imageEditor.status.brushPresetImported",
-            result.importedCount,
-            result.skippedCount
-        )
+        statusText = brushPresetImportResultStatus(result, isReplacement: false)
         return result
     }
 
@@ -541,13 +543,10 @@ extension ImageEditorViewModel {
         installReplacingBrushPresets(replacementPresets)
         let result = ImageEditorBrushPresetImportResult(
             importedCount: replacementPresets.count,
-            skippedCount: library.presets.count - replacementPresets.count
+            unselectedCount: library.presets.count - selectedPresets.count,
+            capacitySkippedCount: selectedPresets.count - replacementPresets.count
         )
-        statusText = L10n.format(
-            "imageEditor.status.brushPresetLibraryReplaced",
-            result.importedCount,
-            result.skippedCount
-        )
+        statusText = brushPresetImportResultStatus(result, isReplacement: true)
         return result
     }
 
@@ -956,6 +955,31 @@ extension ImageEditorViewModel {
             .replacingOccurrences(of: ":", with: "-")
             .replacingOccurrences(of: "\n", with: " ")
         return "\(safeBaseName).\(ImageEditorBrushPresetLibrary.fileExtension)"
+    }
+
+    private func brushPresetImportResultStatus(
+        _ result: ImageEditorBrushPresetImportResult,
+        isReplacement: Bool
+    ) -> String {
+        if result.unselectedCount > 0 {
+            let key = isReplacement
+                ? "imageEditor.status.brushPresetLibraryReplacedSelection"
+                : "imageEditor.status.brushPresetImportedSelection"
+            return L10n.format(
+                key,
+                result.importedCount,
+                result.unselectedCount,
+                result.capacitySkippedCount
+            )
+        }
+        let key = isReplacement
+            ? "imageEditor.status.brushPresetLibraryReplaced"
+            : "imageEditor.status.brushPresetImported"
+        return L10n.format(
+            key,
+            result.importedCount,
+            result.capacitySkippedCount
+        )
     }
 
     private func brushPresetLibraryErrorStatus(_ error: Error) -> String {

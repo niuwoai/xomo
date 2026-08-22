@@ -2028,6 +2028,8 @@
 "imageEditor.status.brushPresetFavoriteUnavailable" = "このブラシプリセットは利用できません。";
 "imageEditor.status.brushPresetImported" = "ブラシプリセットを%d件読み込み、%d件スキップしました。";
 "imageEditor.status.brushPresetLibraryReplaced" = "%d 個のブラシプリセットをインストールし、ライブラリの置き換え時に %d 個をスキップしました。";
+"imageEditor.status.brushPresetImportedSelection" = "%d 個のブラシプリセットを読み込みました。%d 個は未選択、%d 個はライブラリ上限のためスキップしました。";
+"imageEditor.status.brushPresetLibraryReplacedSelection" = "%d 個のブラシプリセットをインストールしました。%d 個は未選択、%d 個はライブラリ上限のためスキップしました。";
 "imageEditor.status.brushPresetLibraryReset" = "%d 個のカスタムブラシプリセットを削除し、ライブラリを内蔵プリセットのみに戻しました。";
 "imageEditor.status.brushPresetLibraryResetUnavailable" = "削除できるカスタムブラシプリセットはありません。";
 "imageEditor.status.brushPresetExported" = "ブラシプリセットを書き出しました：%@";

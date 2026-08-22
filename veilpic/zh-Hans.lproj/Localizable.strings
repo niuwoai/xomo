@@ -2028,6 +2028,8 @@
 "imageEditor.status.brushPresetFavoriteUnavailable" = "此画笔预设已不可用。";
 "imageEditor.status.brushPresetImported" = "已导入 %d 个画笔预设，跳过 %d 个。";
 "imageEditor.status.brushPresetLibraryReplaced" = "已安装 %d 个画笔预设，替换画笔库时跳过 %d 个。";
+"imageEditor.status.brushPresetImportedSelection" = "已导入 %d 个画笔预设；%d 个未选择；%d 个因画笔库已满而跳过。";
+"imageEditor.status.brushPresetLibraryReplacedSelection" = "已安装 %d 个画笔预设；%d 个未选择；%d 个因画笔库已满而跳过。";
 "imageEditor.status.brushPresetLibraryReset" = "已移除 %d 个自定义画笔预设；画笔库已恢复为仅含内置预设。";
 "imageEditor.status.brushPresetLibraryResetUnavailable" = "没有可移除的自定义画笔预设。";
 "imageEditor.status.brushPresetExported" = "已导出画笔预设：%@";

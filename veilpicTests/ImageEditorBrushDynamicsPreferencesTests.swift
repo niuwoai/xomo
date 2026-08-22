@@ -1093,7 +1093,11 @@ struct ImageEditorBrushDynamicsPreferencesTests {
 
         let result = try target.replaceBrushPresetLibraryData(replacementData)
 
-        #expect(result == ImageEditorBrushPresetImportResult(importedCount: 2, skippedCount: 0))
+        #expect(result == ImageEditorBrushPresetImportResult(
+            importedCount: 2,
+            unselectedCount: 0,
+            capacitySkippedCount: 0
+        ))
         #expect(target.customBrushPresets.map(\.title) == ["Shared Ink", "Shared Texture"])
         #expect(Set(target.customBrushPresets.map(\.id)).isDisjoint(with: sourcePresets.map(\.id)))
         #expect(!target.customBrushPresets.contains(where: { $0.id == local.id }))
@@ -1299,7 +1303,11 @@ struct ImageEditorBrushDynamicsPreferencesTests {
             data,
             selectedIndexes: IndexSet([0, 1, 2])
         )
-        #expect(result == ImageEditorBrushPresetImportResult(importedCount: 3, skippedCount: 0))
+        #expect(result == ImageEditorBrushPresetImportResult(
+            importedCount: 3,
+            unselectedCount: 0,
+            capacitySkippedCount: 0
+        ))
         #expect(
             Array(viewModel.customBrushPresets.dropFirst()).map(\.title)
                 == appendPlan.map(\.installedTitle)
@@ -1521,6 +1529,12 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         #expect(confirmedInspection?.skippedCount == 0)
         #expect(confirmedInspection?.presetTitles == ["Source One", "Source Two", "Source Three"])
         #expect(viewModel.customBrushPresets.map(\.title) == ["Source One", "Source Three"])
+        #expect(viewModel.statusText == L10n.format(
+            "imageEditor.status.brushPresetLibraryReplacedSelection",
+            2,
+            1,
+            0
+        ))
         #expect(!viewModel.customBrushPresets.contains(where: { $0.id == localPreset.id }))
         #expect(Set(viewModel.customBrushPresets.map(\.id)).isDisjoint(with: sourcePresets.map(\.id)))
         #expect(viewModel.brushSize == 87)
@@ -1670,7 +1684,11 @@ struct ImageEditorBrushDynamicsPreferencesTests {
 
         let result = try target.importBrushPresetLibraryData(data)
 
-        #expect(result == ImageEditorBrushPresetImportResult(importedCount: 1, skippedCount: 0))
+        #expect(result == ImageEditorBrushPresetImportResult(
+            importedCount: 1,
+            unselectedCount: 0,
+            capacitySkippedCount: 0
+        ))
         let imported = try #require(target.customBrushPresets.last)
         #expect(imported.id != exportedPreset.id)
         #expect(imported.id != local.id)
@@ -1786,11 +1804,22 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         }
         let result = try capacityViewModel.importBrushPresetLibraryData(
             JSONEncoder().encode(ImageEditorBrushPresetLibrary(presets: incoming)),
-            selectedIndexes: IndexSet(integer: 1)
+            selectedIndexes: IndexSet([0, 1])
         )
-        #expect(result == ImageEditorBrushPresetImportResult(importedCount: 1, skippedCount: 2))
+        #expect(result == ImageEditorBrushPresetImportResult(
+            importedCount: 1,
+            unselectedCount: 1,
+            capacitySkippedCount: 1
+        ))
+        #expect(result.skippedCount == 2)
         #expect(capacityViewModel.customBrushPresets.count == 100)
-        #expect(capacityViewModel.customBrushPresets.last?.name == "Incoming 1")
+        #expect(capacityViewModel.customBrushPresets.last?.name == "Incoming 0")
+        #expect(capacityViewModel.statusText == L10n.format(
+            "imageEditor.status.brushPresetImportedSelection",
+            1,
+            1,
+            1
+        ))
 
         let presetsAtCapacity = capacityViewModel.customBrushPresets
         let selectedAtCapacity = capacityViewModel.selectedBrushPresetID

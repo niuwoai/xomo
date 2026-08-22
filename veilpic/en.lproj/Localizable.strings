@@ -2028,6 +2028,8 @@
 "imageEditor.status.brushPresetFavoriteUnavailable" = "This brush preset is no longer available.";
 "imageEditor.status.brushPresetImported" = "%d brush presets imported; %d skipped.";
 "imageEditor.status.brushPresetLibraryReplaced" = "%d brush presets installed; %d skipped while replacing the library.";
+"imageEditor.status.brushPresetImportedSelection" = "%d brush presets imported; %d not selected; %d skipped because the library is full.";
+"imageEditor.status.brushPresetLibraryReplacedSelection" = "%d brush presets installed; %d not selected; %d skipped because the library is full.";
 "imageEditor.status.brushPresetLibraryReset" = "%d custom brush presets removed; the library now contains built-in presets only.";
 "imageEditor.status.brushPresetLibraryResetUnavailable" = "There are no custom brush presets to remove.";
 "imageEditor.status.brushPresetExported" = "Brush presets exported: %@";
