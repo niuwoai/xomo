@@ -709,6 +709,10 @@
 "imageEditor.action.brushPresetExportSelected" = "导出所选自定义画笔预设…";
 "imageEditor.action.brushPresetFavoriteSelected" = "收藏所选预设";
 "imageEditor.action.brushPresetUnfavoriteSelected" = "取消收藏所选预设";
+"imageEditor.action.brushPresetSelectionMenu" = "选择画笔预设";
+"imageEditor.action.brushPresetSelectAllVisible" = "全选可见预设";
+"imageEditor.action.brushPresetDeselectAll" = "取消选择全部预设";
+"imageEditor.action.brushPresetInvertVisibleSelection" = "反选可见预设";
 "imageEditor.action.brushPresetExportVisible" = "导出可见的自定义画笔预设…";
 "imageEditor.action.brushPresetExportAll" = "导出全部自定义画笔预设…";
 "imageEditor.action.brushPresetRename" = "重命名当前自定义预设";

@@ -709,6 +709,10 @@
 "imageEditor.action.brushPresetExportSelected" = "選択したカスタムブラシプリセットを書き出す…";
 "imageEditor.action.brushPresetFavoriteSelected" = "選択したプリセットをお気に入りに追加";
 "imageEditor.action.brushPresetUnfavoriteSelected" = "選択したプリセットをお気に入りから削除";
+"imageEditor.action.brushPresetSelectionMenu" = "ブラシプリセットを選択";
+"imageEditor.action.brushPresetSelectAllVisible" = "表示中のプリセットをすべて選択";
+"imageEditor.action.brushPresetDeselectAll" = "すべてのプリセットの選択を解除";
+"imageEditor.action.brushPresetInvertVisibleSelection" = "表示中の選択を反転";
 "imageEditor.action.brushPresetExportVisible" = "表示中のカスタムブラシプリセットを書き出す…";
 "imageEditor.action.brushPresetExportAll" = "すべてのカスタムブラシプリセットを書き出す…";
 "imageEditor.action.brushPresetRename" = "現在のカスタムプリセットの名前を変更";

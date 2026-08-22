@@ -301,6 +301,35 @@ struct ImageEditorBrushPresetQueryTests {
         #expect(state.repaired(visibleIDs: []) == ImageEditorBrushPresetSelectionState())
     }
 
+    @Test func selectionPolicySelectsDeselectsAndInvertsVisibleResources() {
+        let orderedIDs = ["zulu", "alpha", "middle", "last"]
+        let initial = ImageEditorBrushPresetSelectionState(
+            selectedIDs: ["alpha", "hidden"],
+            primaryID: "alpha",
+            anchorID: "alpha"
+        )
+
+        let selectedAll = initial.selectingAll(orderedIDs: orderedIDs)
+        #expect(selectedAll.selectedIDs == Set(orderedIDs))
+        #expect(selectedAll.primaryID == "alpha")
+        #expect(selectedAll.anchorID == "alpha")
+
+        let deselected = selectedAll.deselectingAll()
+        #expect(deselected == ImageEditorBrushPresetSelectionState())
+
+        let inverted = initial.inverting(orderedIDs: orderedIDs)
+        #expect(inverted.selectedIDs == ["zulu", "middle", "last"])
+        #expect(inverted.primaryID == "zulu")
+        #expect(inverted.anchorID == "zulu")
+
+        let restored = inverted.inverting(orderedIDs: orderedIDs)
+        #expect(restored.selectedIDs == ["alpha"])
+        #expect(restored.primaryID == "alpha")
+        #expect(restored.anchorID == "alpha")
+        #expect(selectedAll.inverting(orderedIDs: orderedIDs) == .init())
+        #expect(initial.selectingAll(orderedIDs: []) == .init())
+    }
+
     @Test func querySortsVisiblePresetsByNameAndKeepsEquivalentNamesStable() {
         let presets = [
             preset(id: "zulu", name: "Zulu"),
@@ -713,6 +742,14 @@ struct ImageEditorBrushPresetQueryTests {
         #expect(manager.contains("imageEditor.action.brushPresetUnfavoriteSelected"))
         #expect(manager.contains("imageEditor.brushPreset.multiSelectionFavoriteSummary"))
         #expect(manager.contains("image-editor-brush-preset-multi-favorite-actions"))
+        #expect(manager.contains("selectionState.selectingAll("))
+        #expect(manager.contains("selectionState.deselectingAll()"))
+        #expect(manager.contains("selectionState.inverting("))
+        #expect(manager.contains("imageEditor.action.brushPresetSelectAllVisible"))
+        #expect(manager.contains("imageEditor.action.brushPresetDeselectAll"))
+        #expect(manager.contains("imageEditor.action.brushPresetInvertVisibleSelection"))
+        #expect(manager.contains("imageEditor.action.brushPresetSelectionMenu"))
+        #expect(manager.contains("image-editor-brush-preset-selection-menu"))
         #expect(manager.contains("imageEditor.action.brushPresetExportVisible"))
         #expect(manager.contains("presetIDs: exportableVisibleCustomPresetIDs"))
         #expect(manager.contains(".disabled(exportableVisibleCustomPresetIDs.isEmpty)"))

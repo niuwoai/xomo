@@ -311,6 +311,43 @@ struct ImageEditorBrushPresetSelectionState: Equatable {
         )
     }
 
+    func selectingAll(orderedIDs: [String]) -> Self {
+        guard !orderedIDs.isEmpty else { return Self() }
+        let visibleIDs = Set(orderedIDs)
+        let resolvedPrimaryID = primaryID.flatMap {
+            visibleIDs.contains($0) ? $0 : nil
+        } ?? orderedIDs[0]
+        let resolvedAnchorID = anchorID.flatMap {
+            visibleIDs.contains($0) ? $0 : nil
+        } ?? resolvedPrimaryID
+        return Self(
+            selectedIDs: visibleIDs,
+            primaryID: resolvedPrimaryID,
+            anchorID: resolvedAnchorID
+        )
+    }
+
+    func deselectingAll() -> Self {
+        Self()
+    }
+
+    func inverting(orderedIDs: [String]) -> Self {
+        let invertedIDs = orderedIDs.filter { !selectedIDs.contains($0) }
+        guard let firstInvertedID = invertedIDs.first else { return Self() }
+        let invertedIDSet = Set(invertedIDs)
+        let resolvedPrimaryID = primaryID.flatMap {
+            invertedIDSet.contains($0) ? $0 : nil
+        } ?? firstInvertedID
+        let resolvedAnchorID = anchorID.flatMap {
+            invertedIDSet.contains($0) ? $0 : nil
+        } ?? resolvedPrimaryID
+        return Self(
+            selectedIDs: invertedIDSet,
+            primaryID: resolvedPrimaryID,
+            anchorID: resolvedAnchorID
+        )
+    }
+
     private func toggling(_ targetID: String, orderedIDs: [String]) -> Self {
         var selectedIDs = selectedIDs
         if selectedIDs.remove(targetID) == nil {

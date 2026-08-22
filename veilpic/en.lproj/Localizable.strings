@@ -709,6 +709,10 @@
 "imageEditor.action.brushPresetExportSelected" = "Export Selected Custom Brush Presets…";
 "imageEditor.action.brushPresetFavoriteSelected" = "Favorite Selected Presets";
 "imageEditor.action.brushPresetUnfavoriteSelected" = "Remove Selected from Favorites";
+"imageEditor.action.brushPresetSelectionMenu" = "Select Brush Presets";
+"imageEditor.action.brushPresetSelectAllVisible" = "Select All Visible Presets";
+"imageEditor.action.brushPresetDeselectAll" = "Deselect All Presets";
+"imageEditor.action.brushPresetInvertVisibleSelection" = "Invert Visible Selection";
 "imageEditor.action.brushPresetExportVisible" = "Export Visible Custom Brush Presets…";
 "imageEditor.action.brushPresetExportAll" = "Export All Custom Brush Presets…";
 "imageEditor.action.brushPresetRename" = "Rename Current Custom Preset";

@@ -236,6 +236,34 @@ struct ImageEditorBrushPresetManager: View {
                 Spacer(minLength: 0)
 
                 Menu {
+                    Button(L10n.text("imageEditor.action.brushPresetSelectAllVisible")) {
+                        selectAllVisiblePresets()
+                    }
+                    .disabled(
+                        filteredPresets.isEmpty
+                            || selectedPresetIDs == Set(filteredPresets.map(\.id))
+                    )
+
+                    Button(L10n.text("imageEditor.action.brushPresetDeselectAll")) {
+                        deselectAllPresets()
+                    }
+                    .disabled(selectedPresetIDs.isEmpty)
+
+                    Button(L10n.text("imageEditor.action.brushPresetInvertVisibleSelection")) {
+                        invertVisiblePresetSelection()
+                    }
+                    .disabled(filteredPresets.isEmpty)
+                } label: {
+                    Image(systemName: "checklist")
+                }
+                .menuStyle(.borderlessButton)
+                .fixedSize()
+                .focusable(false)
+                .help(L10n.text("imageEditor.action.brushPresetSelectionMenu"))
+                .accessibilityLabel(L10n.text("imageEditor.action.brushPresetSelectionMenu"))
+                .accessibilityIdentifier("image-editor-brush-preset-selection-menu")
+
+                Menu {
                     ForEach(ImageEditorBrushPresetSortOrder.allCases) { option in
                         Button {
                             sortOrder = option
@@ -936,6 +964,22 @@ struct ImageEditorBrushPresetManager: View {
         selectedPresetIDs = state.selectedIDs
         selectedPresetID = state.primaryID
         selectionAnchorID = state.anchorID
+    }
+
+    private func selectAllVisiblePresets() {
+        applySelectionState(
+            selectionState.selectingAll(orderedIDs: filteredPresets.map(\.id))
+        )
+    }
+
+    private func deselectAllPresets() {
+        applySelectionState(selectionState.deselectingAll())
+    }
+
+    private func invertVisiblePresetSelection() {
+        applySelectionState(
+            selectionState.inverting(orderedIDs: filteredPresets.map(\.id))
+        )
     }
 
     private func selectInitialPreset() {
