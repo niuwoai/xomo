@@ -1233,6 +1233,79 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         ) == IndexSet([0, 3]))
     }
 
+    @Test func brushLibraryInstallationPlanMatchesCommittedConflictRenames() throws {
+        let sourcePresets = [
+            ImageEditorBrushPreset(id: "source-one", name: "Shared Brush", size: 24),
+            ImageEditorBrushPreset(id: "source-two", name: "Shared Brush", size: 48),
+            ImageEditorBrushPreset(id: "source-three", name: "Unique Brush", size: 72)
+        ]
+        let data = try JSONEncoder().encode(
+            ImageEditorBrushPresetLibrary(presets: sourcePresets)
+        )
+        let (defaults, suiteName) = temporaryDefaults()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let viewModel = makeViewModel(defaults: defaults)
+        _ = try #require(viewModel.createBrushPresetFromCurrentSettings())
+        #expect(viewModel.renameSelectedCustomBrushPreset(to: "Shared Brush"))
+
+        let appendInspection = try viewModel.inspectBrushPresetLibraryData(
+            data,
+            mode: .append
+        )
+        let appendPlan = try viewModel.brushPresetLibraryInstallationPlan(
+            appendInspection,
+            selectedIndexes: IndexSet([0, 1, 2])
+        )
+        let firstCopy = "Shared Brush"
+            + L10n.text("imageEditor.brushPreset.copySuffix")
+        let secondCopy = "Shared Brush"
+            + L10n.format("imageEditor.brushPreset.copySuffixIndexed", 2)
+        #expect(appendPlan.map(\.sourceIndex) == [0, 1, 2])
+        #expect(appendPlan.map(\.sourceTitle) == sourcePresets.map(\.title))
+        #expect(appendPlan.map(\.installedTitle) == [firstCopy, secondCopy, "Unique Brush"])
+        #expect(appendPlan.map(\.isRenamed) == [true, true, false])
+        #expect(throws: ImageEditorBrushPresetLibraryError.invalidPresetSelection) {
+            try viewModel.brushPresetLibraryInstallationPlan(
+                appendInspection,
+                selectedIndexes: IndexSet(integer: 3)
+            )
+        }
+        let zeroCapacityInspection = ImageEditorBrushPresetLibraryInspection(
+            mode: .append,
+            presetCount: sourcePresets.count,
+            installableCount: 0,
+            skippedCount: sourcePresets.count,
+            presetTitles: sourcePresets.map(\.title),
+            reservedTitles: ["Shared Brush"]
+        )
+        #expect(
+            try viewModel.brushPresetLibraryInstallationPlan(zeroCapacityInspection).isEmpty
+        )
+
+        let replaceInspection = try viewModel.inspectBrushPresetLibraryData(
+            data,
+            mode: .replace
+        )
+        let replacePlan = try viewModel.brushPresetLibraryInstallationPlan(
+            replaceInspection,
+            selectedIndexes: IndexSet([0, 1, 2])
+        )
+        #expect(
+            replacePlan.map(\.installedTitle)
+                == ["Shared Brush", firstCopy, "Unique Brush"]
+        )
+
+        let result = try viewModel.importBrushPresetLibraryData(
+            data,
+            selectedIndexes: IndexSet([0, 1, 2])
+        )
+        #expect(result == ImageEditorBrushPresetImportResult(importedCount: 3, skippedCount: 0))
+        #expect(
+            Array(viewModel.customBrushPresets.dropFirst()).map(\.title)
+                == appendPlan.map(\.installedTitle)
+        )
+    }
+
     @Test func inspectingBrushLibraryReportsReplacementCapacityWithoutMutation() throws {
         let incoming = (0..<(ImageEditorBrushPresetPreferences.maximumPresetCount + 2)).map {
             ImageEditorBrushPreset(

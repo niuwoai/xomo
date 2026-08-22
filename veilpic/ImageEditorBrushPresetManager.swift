@@ -51,6 +51,69 @@ struct ImageEditorBrushPresetLibraryInspection: Equatable {
     let installableCount: Int
     let skippedCount: Int
     let presetTitles: [String]
+    let reservedTitles: Set<String>
+}
+
+struct ImageEditorBrushPresetLibraryInstallationPlanItem: Equatable {
+    let sourceIndex: Int
+    let sourceTitle: String
+    let installedTitle: String
+
+    var isRenamed: Bool {
+        sourceTitle != installedTitle
+    }
+}
+
+enum ImageEditorBrushPresetImportNamingPolicy {
+    static func plannedItems(
+        presetTitles: [String],
+        selectedIndexes: IndexSet,
+        capacity: Int,
+        reservedTitles: Set<String>
+    ) -> [ImageEditorBrushPresetLibraryInstallationPlanItem] {
+        let normalizedIndexes = ImageEditorBrushPresetImportSelectionPolicy.normalizedSelection(
+            selectedIndexes,
+            presetCount: presetTitles.count,
+            capacity: capacity
+        )
+        var occupiedTitles = reservedTitles
+        return normalizedIndexes.map { sourceIndex in
+            let sourceTitle = presetTitles[sourceIndex]
+            let installedTitle = uniqueTitle(
+                sourceTitle,
+                occupiedTitles: occupiedTitles
+            )
+            occupiedTitles.insert(installedTitle)
+            return ImageEditorBrushPresetLibraryInstallationPlanItem(
+                sourceIndex: sourceIndex,
+                sourceTitle: sourceTitle,
+                installedTitle: installedTitle
+            )
+        }
+    }
+
+    private static func uniqueTitle(
+        _ sourceTitle: String,
+        occupiedTitles: Set<String>
+    ) -> String {
+        let normalizedSource = ImageEditorBrushPreset.normalizedCustomName(sourceTitle)
+            ?? L10n.text("imageEditor.brushPreset.untitled")
+        guard occupiedTitles.contains(normalizedSource) else { return normalizedSource }
+
+        var sequence = 1
+        while true {
+            let suffix = sequence == 1
+                ? L10n.text("imageEditor.brushPreset.copySuffix")
+                : L10n.format("imageEditor.brushPreset.copySuffixIndexed", sequence)
+            let availableBaseLength = max(
+                0,
+                ImageEditorBrushPreset.maximumCustomNameLength - suffix.count
+            )
+            let candidate = String(normalizedSource.prefix(availableBaseLength)) + suffix
+            if !occupiedTitles.contains(candidate) { return candidate }
+            sequence += 1
+        }
+    }
 }
 
 enum ImageEditorBrushPresetImportSelectionPolicy {
@@ -186,6 +249,7 @@ enum ImageEditorBrushPresetDropPolicy {
 
 private final class ImageEditorBrushPresetImportSelectionView: NSView {
     private let presetTitles: [String]
+    private let reservedTitles: Set<String>
     private let presetCount: Int
     private let capacity: Int
     private let summaryLabel = NSTextField(labelWithString: "")
@@ -200,6 +264,7 @@ private final class ImageEditorBrushPresetImportSelectionView: NSView {
 
     init(inspection: ImageEditorBrushPresetLibraryInspection) {
         presetTitles = inspection.presetTitles
+        reservedTitles = inspection.reservedTitles
         presetCount = inspection.presetTitles.count
         capacity = inspection.installableCount
         selectedIndexes = ImageEditorBrushPresetImportSelectionPolicy.defaultSelection(
@@ -259,11 +324,7 @@ private final class ImageEditorBrushPresetImportSelectionView: NSView {
         presetStack.edgeInsets = NSEdgeInsets(top: 6, left: 8, bottom: 6, right: 8)
         presetButtons = inspection.presetTitles.enumerated().map { index, title in
             let button = NSButton(
-                checkboxWithTitle: L10n.format(
-                    "imageEditor.brushPreset.importSelection.item",
-                    index + 1,
-                    title
-                ),
+                checkboxWithTitle: selectionItemTitle(index: index, title: title),
                 target: self,
                 action: #selector(togglePreset(_:))
             )
@@ -335,8 +396,25 @@ private final class ImageEditorBrushPresetImportSelectionView: NSView {
         )
     }
 
+    private func selectionItemTitle(index: Int, title: String) -> String {
+        L10n.format(
+            "imageEditor.brushPreset.importSelection.item",
+            index + 1,
+            title
+        )
+    }
+
     private func updateControls(notifySelection: Bool = true) {
         let visibleIndexes = visibleIndexes
+        let installationPlan = ImageEditorBrushPresetImportNamingPolicy.plannedItems(
+            presetTitles: presetTitles,
+            selectedIndexes: selectedIndexes,
+            capacity: capacity,
+            reservedTitles: reservedTitles
+        )
+        let planBySourceIndex = Dictionary(
+            uniqueKeysWithValues: installationPlan.map { ($0.sourceIndex, $0) }
+        )
         summaryLabel.stringValue = L10n.format(
             "imageEditor.brushPreset.importSelection.summary",
             selectedIndexes.count,
@@ -346,6 +424,24 @@ private final class ImageEditorBrushPresetImportSelectionView: NSView {
         )
         for button in presetButtons {
             let isSelected = selectedIndexes.contains(button.tag)
+            let sourceTitle = presetTitles[button.tag]
+            if let item = planBySourceIndex[button.tag], item.isRenamed {
+                button.title = L10n.format(
+                    "imageEditor.brushPreset.importSelection.renamedItem",
+                    button.tag + 1,
+                    sourceTitle,
+                    item.installedTitle
+                )
+                button.toolTip = L10n.format(
+                    "imageEditor.brushPreset.importSelection.renamedItem",
+                    button.tag + 1,
+                    sourceTitle,
+                    item.installedTitle
+                )
+            } else {
+                button.title = selectionItemTitle(index: button.tag, title: sourceTitle)
+                button.toolTip = sourceTitle
+            }
             button.state = isSelected ? .on : .off
             button.isEnabled = isSelected || selectedIndexes.count < capacity
             button.isHidden = !visibleIndexes.contains(button.tag)
@@ -472,12 +568,43 @@ extension ImageEditorViewModel {
             capacity = ImageEditorBrushPresetPreferences.maximumPresetCount
         }
         let installableCount = min(library.presets.count, capacity)
+        let reservedTitles: Set<String>
+        switch mode {
+        case .append:
+            reservedTitles = Set(customBrushPresets.compactMap(\.name))
+        case .replace:
+            reservedTitles = []
+        }
         return ImageEditorBrushPresetLibraryInspection(
             mode: mode,
             presetCount: library.presets.count,
             installableCount: installableCount,
             skippedCount: library.presets.count - installableCount,
-            presetTitles: library.presets.map { $0.normalizedCustomPreset.title }
+            presetTitles: library.presets.map { $0.normalizedCustomPreset.title },
+            reservedTitles: reservedTitles
+        )
+    }
+
+    func brushPresetLibraryInstallationPlan(
+        _ inspection: ImageEditorBrushPresetLibraryInspection,
+        selectedIndexes: IndexSet? = nil
+    ) throws -> [ImageEditorBrushPresetLibraryInstallationPlanItem] {
+        if let selectedIndexes {
+            guard !selectedIndexes.isEmpty,
+                  selectedIndexes.allSatisfy({ $0 >= 0 && $0 < inspection.presetCount })
+            else {
+                throw ImageEditorBrushPresetLibraryError.invalidPresetSelection
+            }
+        }
+        let indexes = selectedIndexes ?? ImageEditorBrushPresetImportSelectionPolicy.defaultSelection(
+            presetCount: inspection.presetCount,
+            capacity: inspection.installableCount
+        )
+        return ImageEditorBrushPresetImportNamingPolicy.plannedItems(
+            presetTitles: inspection.presetTitles,
+            selectedIndexes: indexes,
+            capacity: inspection.installableCount,
+            reservedTitles: inspection.reservedTitles
         )
     }
 
@@ -761,29 +888,6 @@ extension ImageEditorViewModel {
         }
     }
 
-    private func uniqueImportedBrushPresetName(
-        _ sourceName: String,
-        existingNames: Set<String>
-    ) -> String {
-        let normalizedSource = ImageEditorBrushPreset.normalizedCustomName(sourceName)
-            ?? L10n.text("imageEditor.brushPreset.untitled")
-        guard existingNames.contains(normalizedSource) else { return normalizedSource }
-
-        var sequence = 1
-        while true {
-            let suffix = sequence == 1
-                ? L10n.text("imageEditor.brushPreset.copySuffix")
-                : L10n.format("imageEditor.brushPreset.copySuffixIndexed", sequence)
-            let availableBaseLength = max(
-                0,
-                ImageEditorBrushPreset.maximumCustomNameLength - suffix.count
-            )
-            let candidate = String(normalizedSource.prefix(availableBaseLength)) + suffix
-            if !existingNames.contains(candidate) { return candidate }
-            sequence += 1
-        }
-    }
-
     private func decodedBrushPresetLibrary(
         from data: Data
     ) throws -> ImageEditorBrushPresetLibrary {
@@ -823,17 +927,17 @@ extension ImageEditorViewModel {
         limit: Int,
         existingNames initialNames: Set<String>
     ) -> [ImageEditorBrushPreset] {
-        var existingNames = initialNames
-        return sourcePresets.prefix(max(0, limit)).map { sourcePreset in
-            let sourceName = sourcePreset.normalizedCustomPreset.title
-            let name = uniqueImportedBrushPresetName(
-                sourceName,
-                existingNames: existingNames
-            )
-            existingNames.insert(name)
-            return sourcePreset.copyingCustomPreset(
+        let sourceTitles = sourcePresets.map { $0.normalizedCustomPreset.title }
+        let plan = ImageEditorBrushPresetImportNamingPolicy.plannedItems(
+            presetTitles: sourceTitles,
+            selectedIndexes: IndexSet(integersIn: sourceTitles.indices),
+            capacity: limit,
+            reservedTitles: initialNames
+        )
+        return plan.map { item in
+            sourcePresets[item.sourceIndex].copyingCustomPreset(
                 id: UUID().uuidString,
-                name: name
+                name: item.installedTitle
             )
         }
     }

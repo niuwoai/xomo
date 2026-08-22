@@ -10706,6 +10706,7 @@ struct XomoAutomationTests {
         viewModel.brushSize = 23
         let local = try #require(viewModel.createBrushPresetFromCurrentSettings())
         viewModel.applyBrushPreset(local)
+        #expect(viewModel.renameSelectedCustomBrushPreset(to: sourcePresets[0].title))
         viewModel.brushSize = 81
         viewModel.setBrushAngleJitter(43)
         viewModel.addLayer()
@@ -10751,6 +10752,18 @@ struct XomoAutomationTests {
             inspected.result?.objectValue?["titles"]?.arrayValue?.compactMap(\.stringValue)
                 == sourcePresets.map(\.title)
         )
+        #expect(inspected.result?.objectValue?["plannedCount"] == .number(100))
+        #expect(inspected.result?.objectValue?["renamedCount"] == .number(0))
+        let replacementPlan = inspected.result?.objectValue?["plannedPresets"]?.arrayValue
+        #expect(replacementPlan?.count == 100)
+        #expect(
+            replacementPlan?.first?.objectValue?["sourceIndex"] == .number(0)
+        )
+        #expect(
+            replacementPlan?.first?.objectValue?["installedTitle"]
+                == .string(sourcePresets[0].title)
+        )
+        #expect(replacementPlan?.first?.objectValue?["renamed"] == .bool(false))
 
         let appendInspection = registry.execute(request(
             operation: "call",
@@ -10769,6 +10782,37 @@ struct XomoAutomationTests {
             appendInspection.result?.objectValue?["installableCount"] == .number(99)
         )
         #expect(appendInspection.result?.objectValue?["skippedCount"] == .number(3))
+        #expect(appendInspection.result?.objectValue?["plannedCount"] == .number(99))
+        #expect(appendInspection.result?.objectValue?["renamedCount"] == .number(1))
+        let appendPlan = appendInspection.result?.objectValue?["plannedPresets"]?.arrayValue
+        #expect(appendPlan?.count == 99)
+        #expect(
+            appendPlan?.first?.objectValue?["installedTitle"]
+                == .string(
+                    sourcePresets[0].title
+                        + L10n.text("imageEditor.brushPreset.copySuffix")
+                )
+        )
+        #expect(appendPlan?.first?.objectValue?["renamed"] == .bool(true))
+
+        let selectedInspection = registry.execute(request(
+            operation: "call",
+            name: "xomo.brush.preset",
+            arguments: [
+                "action": .string("inspectLibrary"),
+                "path": .string(libraryPath.path),
+                "inspectionMode": .string("append"),
+                "presetIndexes": .array([.number(0), .number(100)])
+            ]
+        ))
+        #expect(selectedInspection.ok)
+        #expect(selectedInspection.result?.objectValue?["plannedCount"] == .number(2))
+        #expect(selectedInspection.result?.objectValue?["renamedCount"] == .number(1))
+        #expect(
+            selectedInspection.result?.objectValue?["plannedPresets"]?.arrayValue?
+                .compactMap { $0.objectValue?["sourceIndex"]?.doubleValue }
+                == [0, 100]
+        )
 
         let rejected = registry.execute(request(
             operation: "call",

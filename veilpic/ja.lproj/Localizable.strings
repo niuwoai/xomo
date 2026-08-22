@@ -2041,6 +2041,7 @@
 "imageEditor.brushPreset.importSelection.summary" = "%d / %d 個を選択 · %d 個を表示 · 最大 %d 個を選択可能";
 "imageEditor.brushPreset.importSelection.searchPlaceholder" = "読み込み元のブラシプリセットを検索";
 "imageEditor.brushPreset.importSelection.item" = "%d. %@";
+"imageEditor.brushPreset.importSelection.renamedItem" = "%d. %@ → %@";
 "imageEditor.brushPreset.replaceConfirmation.title" = "すべてのカスタムブラシプリセットを置き換えますか？";
 "imageEditor.brushPreset.replaceConfirmation.message" = "「%@」には %d 個のブラシプリセットがあります。最大 %d 個を選択でき、%d 個はライブラリ容量を超えます。下で置き換えるプリセットを選択してください。続行すると既存のカスタムブラシプリセット %d 個が削除され、選択した置換項目だけが保持されます。現在のブラシ設定とドキュメント履歴は変更されません。";
 "imageEditor.brushPreset.resetConfirmation.title" = "ブラシライブラリを内蔵プリセットに戻しますか？";

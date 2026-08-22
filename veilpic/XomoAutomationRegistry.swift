@@ -2064,6 +2064,7 @@ final class XomoAutomationRegistry {
         case "inspectLibrary":
             let path = try requiredString("path", in: arguments)
             let url = URL(fileURLWithPath: path)
+            let selectedIndexes = try optionalBrushPresetIndexes(arguments)
             let rawMode = arguments["inspectionMode"]?.stringValue
                 ?? ImageEditorBrushPresetLibraryInspectionMode.replace.rawValue
             guard let mode = ImageEditorBrushPresetLibraryInspectionMode(rawValue: rawMode) else {
@@ -2072,10 +2073,15 @@ final class XomoAutomationRegistry {
                 )
             }
             let inspection: ImageEditorBrushPresetLibraryInspection
+            let installationPlan: [ImageEditorBrushPresetLibraryInstallationPlanItem]
             do {
                 inspection = try viewModel.inspectBrushPresetLibrary(
                     from: url,
                     mode: mode
+                )
+                installationPlan = try viewModel.brushPresetLibraryInstallationPlan(
+                    inspection,
+                    selectedIndexes: selectedIndexes
                 )
             } catch {
                 if let message = brushPresetLibraryArgumentMessage(error) {
@@ -2092,7 +2098,19 @@ final class XomoAutomationRegistry {
                 "presetCount": .number(Double(inspection.presetCount)),
                 "installableCount": .number(Double(inspection.installableCount)),
                 "skippedCount": .number(Double(inspection.skippedCount)),
-                "titles": .array(inspection.presetTitles.map(XomoJSONValue.string))
+                "titles": .array(inspection.presetTitles.map(XomoJSONValue.string)),
+                "plannedCount": .number(Double(installationPlan.count)),
+                "renamedCount": .number(Double(
+                    installationPlan.filter(\.isRenamed).count
+                )),
+                "plannedPresets": .array(installationPlan.map { item in
+                    .object([
+                        "sourceIndex": .number(Double(item.sourceIndex)),
+                        "sourceTitle": .string(item.sourceTitle),
+                        "installedTitle": .string(item.installedTitle),
+                        "renamed": .bool(item.isRenamed)
+                    ])
+                })
             ])
         case "import":
             let path = try requiredString("path", in: arguments)
@@ -7068,7 +7086,7 @@ private extension XomoAutomationRegistry {
             "inspectionMode": XomoAutomationSchema.string(description: "Capacity policy for inspectLibrary; append preserves current custom presets, while replace starts from an empty custom library", values: ImageEditorBrushPresetLibraryInspectionMode.allCases.map(\.rawValue)),
             "presetIndexes": .object([
                 "type": .string("array"),
-                "description": .string("Optional zero-based source library indexes to import or replace in source order; omitted uses every entry"),
+                "description": .string("Optional zero-based source library indexes to preview, import, or replace in source order; inspectLibrary omits it to preview the default capacity-limited selection"),
                 "items": XomoAutomationSchema.integer(
                     description: "Zero-based index from inspectLibrary titles",
                     minimum: 0
