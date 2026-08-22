@@ -480,6 +480,11 @@ struct ImageEditorBrushPresetQueryTests {
         #expect(archiveManager.contains("static func inverting("))
         #expect(archiveManager.contains("ImageEditorBrushPresetImportSelectionView"))
         #expect(archiveManager.contains("struct ImageEditorBrushPresetLibraryInspection"))
+        #expect(archiveManager.contains("struct ImageEditorBrushPresetLibraryPreview"))
+        #expect(archiveManager.contains("let presetPreviews: [ImageEditorBrushPresetLibraryPreview]"))
+        #expect(archiveManager.contains("parameterLabel = NSTextField"))
+        #expect(archiveManager.contains("preview.primarySummary"))
+        #expect(archiveManager.contains("visibleIndexes.count * 42"))
         #expect(archiveManager.contains("let library = try decodedBrushPresetLibrary(from: data)"))
         #expect(archiveManager.contains("self.importBrushPresetLibraryWithConfirmation(from: url)"))
         #expect(archiveManager.contains("imageEditor.brushPreset.importConfirmation.message"))
@@ -490,7 +495,9 @@ struct ImageEditorBrushPresetQueryTests {
         #expect(archiveManager.contains("image-editor-brush-preset-import-sort"))
         #expect(archiveManager.contains("sortOrderPopUpButton.action = #selector(sortPresets)"))
         #expect(archiveManager.contains("arrangePresetButtons(visibleIndexes: visibleIndexes)"))
-        #expect(archiveManager.contains("button.isHidden = !visibleIndexes.contains(button.tag)"))
+        #expect(archiveManager.contains(
+            "presetRows[button.tag].isHidden = !visibleIndexes.contains(button.tag)"
+        ))
         #expect(archiveManager.contains("invertSelectionButton.action = #selector(invertVisiblePresets)"))
         #expect(archiveManager.contains("alert.accessoryView = selectionView"))
         #expect(archiveManager.contains("imageEditor.brushPreset.importSelection.item"))

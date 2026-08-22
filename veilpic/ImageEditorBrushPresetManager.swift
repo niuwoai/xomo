@@ -50,13 +50,60 @@ enum ImageEditorBrushPresetLibraryInspectionMode: String, CaseIterable {
     case replace
 }
 
+struct ImageEditorBrushPresetLibraryPreview: Equatable {
+    let sourceIndex: Int
+    let title: String
+    let size: CGFloat
+    let hardness: CGFloat
+    let flow: CGFloat
+    let spacing: CGFloat
+    let tipRoundness: CGFloat
+    let tipAngleDegrees: CGFloat
+    let smoothing: CGFloat
+
+    init(sourceIndex: Int, preset: ImageEditorBrushPreset) {
+        self.sourceIndex = sourceIndex
+        title = preset.title
+        size = preset.size
+        hardness = preset.hardness
+        flow = preset.flow
+        spacing = preset.spacing
+        tipRoundness = preset.tipRoundness
+        tipAngleDegrees = preset.tipAngleDegrees
+        smoothing = preset.smoothing
+    }
+
+    var primarySummary: String {
+        L10n.format(
+            "imageEditor.brushPreset.summaryPrimary",
+            Int(size.rounded()),
+            Int((hardness * 100).rounded()),
+            Int(flow.rounded()),
+            Int(spacing.rounded())
+        )
+    }
+
+    var tipSummary: String {
+        L10n.format(
+            "imageEditor.brushPreset.summaryTip",
+            Int(tipRoundness.rounded()),
+            Int(tipAngleDegrees.rounded()),
+            Int(smoothing.rounded())
+        )
+    }
+}
+
 struct ImageEditorBrushPresetLibraryInspection: Equatable {
     let mode: ImageEditorBrushPresetLibraryInspectionMode
     let presetCount: Int
     let installableCount: Int
     let skippedCount: Int
-    let presetTitles: [String]
+    let presetPreviews: [ImageEditorBrushPresetLibraryPreview]
     let reservedTitles: Set<String>
+
+    var presetTitles: [String] {
+        presetPreviews.map(\.title)
+    }
 }
 
 struct ImageEditorBrushPresetLibraryInstallationPlanItem: Equatable {
@@ -275,6 +322,7 @@ enum ImageEditorBrushPresetDropPolicy {
 }
 
 final class ImageEditorBrushPresetImportSelectionView: NSView {
+    private let presetPreviews: [ImageEditorBrushPresetLibraryPreview]
     private let presetTitles: [String]
     private let reservedTitles: Set<String>
     private let presetCount: Int
@@ -287,11 +335,13 @@ final class ImageEditorBrushPresetImportSelectionView: NSView {
     private let sortOrderPopUpButton = NSPopUpButton()
     private let presetStack = NSStackView()
     private var presetButtons: [NSButton] = []
+    private var presetRows: [NSStackView] = []
     private var sortOrder = ImageEditorBrushPresetSortOrder.catalog
     private(set) var selectedIndexes: IndexSet
     var onSelectionChange: ((IndexSet) -> Void)?
 
     init(inspection: ImageEditorBrushPresetLibraryInspection) {
+        presetPreviews = inspection.presetPreviews
         presetTitles = inspection.presetTitles
         reservedTitles = inspection.reservedTitles
         presetCount = inspection.presetTitles.count
@@ -365,18 +415,38 @@ final class ImageEditorBrushPresetImportSelectionView: NSView {
         presetStack.alignment = .leading
         presetStack.spacing = 2
         presetStack.edgeInsets = NSEdgeInsets(top: 6, left: 8, bottom: 6, right: 8)
-        presetButtons = inspection.presetTitles.enumerated().map { index, title in
+        for preview in inspection.presetPreviews {
+            let index = preview.sourceIndex
             let button = NSButton(
-                checkboxWithTitle: selectionItemTitle(index: index, title: title),
+                checkboxWithTitle: selectionItemTitle(index: index, title: preview.title),
                 target: self,
                 action: #selector(togglePreset(_:))
             )
             button.tag = index
             button.controlSize = .small
             button.lineBreakMode = .byTruncatingTail
-            button.toolTip = title
-            presetStack.addArrangedSubview(button)
-            return button
+            button.toolTip = previewToolTip(preview)
+
+            let parameterLabel = NSTextField(labelWithString: preview.primarySummary)
+            parameterLabel.font = .monospacedDigitSystemFont(
+                ofSize: NSFont.smallSystemFontSize - 1,
+                weight: .regular
+            )
+            parameterLabel.textColor = .secondaryLabelColor
+            parameterLabel.lineBreakMode = .byTruncatingTail
+            parameterLabel.maximumNumberOfLines = 1
+            parameterLabel.toolTip = previewToolTip(preview)
+
+            let row = NSStackView(views: [button, parameterLabel])
+            row.orientation = .vertical
+            row.alignment = .leading
+            row.spacing = 0
+            row.identifier = NSUserInterfaceItemIdentifier(
+                "image-editor-brush-preset-import-row-\(index)"
+            )
+            presetButtons.append(button)
+            presetRows.append(row)
+            presetStack.addArrangedSubview(row)
         }
         scrollView.documentView = presetStack
         addSubview(scrollView)
@@ -456,6 +526,13 @@ final class ImageEditorBrushPresetImportSelectionView: NSView {
         )
     }
 
+    private func previewToolTip(
+        _ preview: ImageEditorBrushPresetLibraryPreview
+    ) -> String {
+        [preview.title, preview.primarySummary, preview.tipSummary]
+            .joined(separator: "\n")
+    }
+
     private func updateControls(notifySelection: Bool = true) {
         let visibleIndexes = visibleIndexes
         let installationPlan = ImageEditorBrushPresetImportNamingPolicy.plannedItems(
@@ -492,14 +569,16 @@ final class ImageEditorBrushPresetImportSelectionView: NSView {
                 )
             } else {
                 button.title = selectionItemTitle(index: button.tag, title: sourceTitle)
-                button.toolTip = sourceTitle
             }
+            let preview = presetPreviews[button.tag]
+            button.toolTip = [button.title, preview.primarySummary, preview.tipSummary]
+                .joined(separator: "\n")
             button.state = isSelected ? .on : .off
             button.isEnabled = isSelected || selectedIndexes.count < capacity
-            button.isHidden = !visibleIndexes.contains(button.tag)
+            presetRows[button.tag].isHidden = !visibleIndexes.contains(button.tag)
         }
         arrangePresetButtons(visibleIndexes: visibleIndexes)
-        let documentHeight = max(188, CGFloat(visibleIndexes.count * 24 + 12))
+        let documentHeight = max(188, CGFloat(visibleIndexes.count * 42 + 12))
         presetStack.frame = NSRect(x: 0, y: 0, width: 400, height: documentHeight)
         selectAllButton.isEnabled = selectedIndexes.count < capacity
             && visibleIndexes.contains { !selectedIndexes.contains($0) }
@@ -526,12 +605,12 @@ final class ImageEditorBrushPresetImportSelectionView: NSView {
         let hiddenIndexes = presetTitles.indices.filter {
             !visibleIndexes.contains($0)
         }
-        for button in presetButtons {
-            presetStack.removeArrangedSubview(button)
-            button.removeFromSuperview()
+        for row in presetRows {
+            presetStack.removeArrangedSubview(row)
+            row.removeFromSuperview()
         }
         for index in orderedVisibleIndexes + hiddenIndexes {
-            presetStack.addArrangedSubview(presetButtons[index])
+            presetStack.addArrangedSubview(presetRows[index])
         }
     }
 }
@@ -640,12 +719,18 @@ extension ImageEditorViewModel {
         case .replace:
             reservedTitles = []
         }
+        let normalizedPresets = library.presets.map(\.normalizedCustomPreset)
         return ImageEditorBrushPresetLibraryInspection(
             mode: mode,
             presetCount: library.presets.count,
             installableCount: installableCount,
             skippedCount: library.presets.count - installableCount,
-            presetTitles: library.presets.map { $0.normalizedCustomPreset.title },
+            presetPreviews: normalizedPresets.enumerated().map { index, preset in
+                ImageEditorBrushPresetLibraryPreview(
+                    sourceIndex: index,
+                    preset: preset
+                )
+            },
             reservedTitles: reservedTitles
         )
     }

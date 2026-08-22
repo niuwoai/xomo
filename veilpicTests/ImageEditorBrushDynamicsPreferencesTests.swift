@@ -1251,12 +1251,23 @@ struct ImageEditorBrushDynamicsPreferencesTests {
     }
 
     @Test func brushLibraryImportSelectionViewSortsFilteredRowsWithoutMutatingSelection() throws {
+        let presets = [
+            ImageEditorBrushPreset(id: "0", name: "Zulu Ink", size: 10),
+            ImageEditorBrushPreset(id: "1", name: "Alpha Grain", size: 20),
+            ImageEditorBrushPreset(id: "2", name: "Beta Chalk", size: 30),
+            ImageEditorBrushPreset(id: "3", name: "alpha Wash", size: 40)
+        ]
         let inspection = ImageEditorBrushPresetLibraryInspection(
             mode: .append,
             presetCount: 4,
             installableCount: 2,
             skippedCount: 2,
-            presetTitles: ["Zulu Ink", "Alpha Grain", "Beta Chalk", "alpha Wash"],
+            presetPreviews: presets.enumerated().map { index, preset in
+                ImageEditorBrushPresetLibraryPreview(
+                    sourceIndex: index,
+                    preset: preset
+                )
+            },
             reservedTitles: []
         )
         let view = ImageEditorBrushPresetImportSelectionView(inspection: inspection)
@@ -1274,7 +1285,10 @@ struct ImageEditorBrushDynamicsPreferencesTests {
 
         sortPopUp.selectItem(at: 1)
         #expect(sortPopUp.sendAction(sortPopUp.action, to: sortPopUp.target))
-        #expect(stack.arrangedSubviews.compactMap { ($0 as? NSButton)?.tag } == [1, 3, 2, 0])
+        let sourceIndexes = stack.arrangedSubviews.compactMap { row in
+            row.subviews.compactMap { $0 as? NSButton }.first?.tag
+        }
+        #expect(sourceIndexes == [1, 3, 2, 0])
         #expect(view.selectedIndexes == initialSelection)
 
         searchField.stringValue = "alpha"
@@ -1282,10 +1296,22 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         #expect(
             stack.arrangedSubviews
                 .filter { !$0.isHidden }
-                .compactMap { ($0 as? NSButton)?.tag }
+                .compactMap { row in
+                    row.subviews.compactMap { $0 as? NSButton }.first?.tag
+                }
                 == [1, 3]
         )
         #expect(view.selectedIndexes == initialSelection)
+        let firstRow = stack.arrangedSubviews.first
+        let alphaRow = try #require(firstRow)
+        let parameterLabels = alphaRow.subviews.compactMap {
+            $0 as? NSTextField
+        }
+        let parameterLabel = try #require(parameterLabels.first)
+        #expect(parameterLabel.stringValue == ImageEditorBrushPresetLibraryPreview(
+            sourceIndex: 1,
+            preset: presets[1]
+        ).primarySummary)
     }
 
     @Test func brushLibraryImportSelectionInvertsVisibleMatchesWithinGlobalCapacity() {
@@ -1357,7 +1383,12 @@ struct ImageEditorBrushDynamicsPreferencesTests {
             presetCount: sourcePresets.count,
             installableCount: 0,
             skippedCount: sourcePresets.count,
-            presetTitles: sourcePresets.map(\.title),
+            presetPreviews: sourcePresets.enumerated().map { index, preset in
+                ImageEditorBrushPresetLibraryPreview(
+                    sourceIndex: index,
+                    preset: preset
+                )
+            },
             reservedTitles: ["Shared Brush"]
         )
         #expect(
@@ -1439,6 +1470,15 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         )
         #expect(inspection.skippedCount == 2)
         #expect(inspection.presetTitles == incoming.map(\.title))
+        #expect(inspection.presetPreviews.first?.sourceIndex == 0)
+        #expect(inspection.presetPreviews.first?.size == 12)
+        #expect(inspection.presetPreviews.first?.primarySummary == L10n.format(
+            "imageEditor.brushPreset.summaryPrimary",
+            12,
+            80,
+            100,
+            25
+        ))
         #expect(appendInspection.mode == .append)
         #expect(appendInspection.presetCount == incoming.count)
         #expect(appendInspection.installableCount == 99)

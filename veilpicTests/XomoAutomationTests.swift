@@ -10756,6 +10756,14 @@ struct XomoAutomationTests {
             inspected.result?.objectValue?["titles"]?.arrayValue?.compactMap(\.stringValue)
                 == sourcePresets.map(\.title)
         )
+        let previews = inspected.result?.objectValue?["previews"]?.arrayValue
+        #expect(previews?.count == sourcePresets.count)
+        #expect(previews?.first?.objectValue?["sourceIndex"] == .number(0))
+        #expect(previews?.first?.objectValue?["title"] == .string(sourcePresets[0].title))
+        #expect(previews?.first?.objectValue?["size"] == .number(10))
+        #expect(previews?.first?.objectValue?["hardness"] == .number(0.8))
+        #expect(previews?.first?.objectValue?["flow"] == .number(100))
+        #expect(previews?.first?.objectValue?["spacing"] == .number(25))
         #expect(inspected.result?.objectValue?["plannedCount"] == .number(100))
         #expect(inspected.result?.objectValue?["renamedCount"] == .number(0))
         let replacementPlan = inspected.result?.objectValue?["plannedPresets"]?.arrayValue

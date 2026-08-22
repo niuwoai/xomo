@@ -2099,6 +2099,19 @@ final class XomoAutomationRegistry {
                 "installableCount": .number(Double(inspection.installableCount)),
                 "skippedCount": .number(Double(inspection.skippedCount)),
                 "titles": .array(inspection.presetTitles.map(XomoJSONValue.string)),
+                "previews": .array(inspection.presetPreviews.map { preview in
+                    .object([
+                        "sourceIndex": .number(Double(preview.sourceIndex)),
+                        "title": .string(preview.title),
+                        "size": .number(Double(preview.size)),
+                        "hardness": .number(Double(preview.hardness)),
+                        "flow": .number(Double(preview.flow)),
+                        "spacing": .number(Double(preview.spacing)),
+                        "roundness": .number(Double(preview.tipRoundness)),
+                        "angle": .number(Double(preview.tipAngleDegrees)),
+                        "smoothing": .number(Double(preview.smoothing))
+                    ])
+                }),
                 "plannedCount": .number(Double(installationPlan.count)),
                 "renamedCount": .number(Double(
                     installationPlan.filter(\.isRenamed).count
