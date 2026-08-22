@@ -62,6 +62,29 @@ struct ImageEditorBrushPresetQueryTests {
         #expect(densities.map(\.minimumTileHeight) == [72, 92, 118])
     }
 
+    @Test func dropPolicyAcceptsExactlyOneLocalBrushLibrary() {
+        let library = URL(fileURLWithPath: "/tmp/Studio.xomobrushes")
+        let uppercaseLibrary = URL(fileURLWithPath: "/tmp/Studio.XOMOBRUSHES")
+
+        #expect(ImageEditorBrushPresetDropPolicy.acceptedURL(from: [library]) == library)
+        #expect(
+            ImageEditorBrushPresetDropPolicy.acceptedURL(from: [uppercaseLibrary])
+                == uppercaseLibrary
+        )
+        #expect(ImageEditorBrushPresetDropPolicy.acceptedURL(from: []) == nil)
+        #expect(ImageEditorBrushPresetDropPolicy.acceptedURL(from: [library, library]) == nil)
+        #expect(
+            ImageEditorBrushPresetDropPolicy.acceptedURL(
+                from: [URL(fileURLWithPath: "/tmp/Studio.json")]
+            ) == nil
+        )
+        #expect(
+            ImageEditorBrushPresetDropPolicy.acceptedURL(
+                from: [URL(string: "https://example.com/Studio.xomobrushes")!]
+            ) == nil
+        )
+    }
+
     @Test func querySortsVisiblePresetsByNameAndKeepsEquivalentNamesStable() {
         let presets = [
             preset(id: "zulu", name: "Zulu"),
@@ -168,6 +191,10 @@ struct ImageEditorBrushPresetQueryTests {
         #expect(manager.contains("image-editor-brush-preset-layout"))
         #expect(manager.contains("image-editor-brush-preset-sort"))
         #expect(manager.contains("image-editor-brush-preset-grid-density"))
+        #expect(manager.contains("image-editor-brush-preset-drop-target"))
+        #expect(manager.contains(".dropDestination(for: URL.self)"))
+        #expect(manager.contains("viewModel.importDroppedBrushPresetLibrary(from: urls)"))
+        #expect(manager.contains("selectedPresetID = viewModel.selectedBrushPreset?.id"))
         #expect(manager.contains("ImageEditorBrushPresetPanelLayout.load()"))
         #expect(manager.contains("layout.save()"))
         #expect(manager.contains("ImageEditorBrushPresetGridDensity.load()"))

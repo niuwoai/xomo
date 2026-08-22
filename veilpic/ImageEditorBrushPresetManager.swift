@@ -39,6 +39,19 @@ struct ImageEditorBrushPresetImportResult: Equatable {
     let skippedCount: Int
 }
 
+enum ImageEditorBrushPresetDropPolicy {
+    static func acceptedURL(from urls: [URL]) -> URL? {
+        guard urls.count == 1,
+              let url = urls.first,
+              url.isFileURL,
+              url.pathExtension.caseInsensitiveCompare(
+                ImageEditorBrushPresetLibrary.fileExtension
+              ) == .orderedSame
+        else { return nil }
+        return url
+    }
+}
+
 @MainActor
 extension ImageEditorViewModel {
     static var brushPresetContentType: UTType {
@@ -143,6 +156,26 @@ extension ImageEditorViewModel {
                     self.statusText = self.brushPresetLibraryErrorStatus(error)
                 }
             }
+        }
+    }
+
+    @discardableResult
+    func importDroppedBrushPresetLibrary(from urls: [URL]) -> Bool {
+        guard let url = ImageEditorBrushPresetDropPolicy.acceptedURL(from: urls) else {
+            return false
+        }
+        let didAccessSecurityScope = url.startAccessingSecurityScopedResource()
+        defer {
+            if didAccessSecurityScope {
+                url.stopAccessingSecurityScopedResource()
+            }
+        }
+        do {
+            try importBrushPresetLibrary(from: url)
+            return true
+        } catch {
+            statusText = brushPresetLibraryErrorStatus(error)
+            return false
         }
     }
 

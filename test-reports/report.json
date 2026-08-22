@@ -1,10 +1,10 @@
 {
-  "generated_at": "2026-08-22 09:02:53 +0800",
-  "total": 10,
-  "passed": 10,
+  "generated_at": "2026-08-22 09:18:46 +0800",
+  "total": 11,
+  "passed": 11,
   "failed": 0,
-  "total_tests": 10,
-  "passed_tests": 10,
+  "total_tests": 11,
+  "passed_tests": 11,
   "failed_tests_in_failed_groups": 0,
   "jobs": 1,
   "results": [
@@ -15,10 +15,22 @@
       "file": "ImageEditorBrushPresetQueryTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.6,
+      "duration": 3.586,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorBrushPresetQueryTests.brushesPanelConnectsSearchCollectionsAndSharedPresetActions.log"
+    },
+    {
+      "suite": "ImageEditorBrushPresetQueryTests",
+      "method": "dropPolicyAcceptsExactlyOneLocalBrushLibrary",
+      "identifier": "veilpicTests/ImageEditorBrushPresetQueryTests/dropPolicyAcceptsExactlyOneLocalBrushLibrary()",
+      "file": "ImageEditorBrushPresetQueryTests.swift",
+      "test_count": 1,
+      "passed": true,
+      "duration": 3.537,
+      "infrastructure_retries": 0,
+      "issues": [],
+      "log": "ImageEditorBrushPresetQueryTests.dropPolicyAcceptsExactlyOneLocalBrushLibrary.log"
     },
     {
       "suite": "ImageEditorBrushPresetQueryTests",
@@ -27,7 +39,7 @@
       "file": "ImageEditorBrushPresetQueryTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.53,
+      "duration": 3.577,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorBrushPresetQueryTests.favoriteAndRecentCollectionsKeepTheirAuthoritativeOrdering.log"
@@ -39,7 +51,7 @@
       "file": "ImageEditorBrushPresetQueryTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.647,
+      "duration": 3.578,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorBrushPresetQueryTests.gridDensityDefaultsToRegularAndPersistsLargeThumbnails.log"
@@ -51,7 +63,7 @@
       "file": "ImageEditorBrushPresetQueryTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.584,
+      "duration": 3.59,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorBrushPresetQueryTests.gridDensityMapsCompactRegularAndLargeToDistinctUsefulMetrics.log"
@@ -63,7 +75,7 @@
       "file": "ImageEditorBrushPresetQueryTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 4.162,
+      "duration": 4.053,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorBrushPresetQueryTests.panelLayoutDefaultsToListAndPersistsGridChoice.log"
@@ -75,7 +87,7 @@
       "file": "ImageEditorBrushPresetQueryTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.521,
+      "duration": 3.569,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorBrushPresetQueryTests.queryMatchesCaseAndDiacriticsWithoutChangingCatalogOrder.log"
@@ -87,7 +99,7 @@
       "file": "ImageEditorBrushPresetQueryTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.65,
+      "duration": 3.521,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorBrushPresetQueryTests.queryRepairsSelectionOnlyWhenTheCurrentPresetIsHidden.log"
@@ -99,7 +111,7 @@
       "file": "ImageEditorBrushPresetQueryTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.604,
+      "duration": 3.531,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorBrushPresetQueryTests.querySortsVisiblePresetsByNameAndKeepsEquivalentNamesStable.log"
@@ -111,7 +123,7 @@
       "file": "ImageEditorBrushPresetQueryTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.574,
+      "duration": 3.599,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorBrushPresetQueryTests.sortPreferenceDefaultsToCatalogAndPersistsNameOrder.log"
@@ -123,7 +135,7 @@
       "file": "ImageEditorBrushPresetQueryTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.634,
+      "duration": 3.507,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorBrushPresetQueryTests.sourceScopeSeparatesBuiltInAndCustomBrushPresets.log"

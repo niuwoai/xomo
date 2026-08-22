@@ -18,6 +18,7 @@ struct ImageEditorBrushPresetManager: View {
     @State private var layout = ImageEditorBrushPresetPanelLayout.load()
     @State private var gridDensity = ImageEditorBrushPresetGridDensity.load()
     @State private var sortOrder = ImageEditorBrushPresetSortOrder.load()
+    @State private var isImportDropTargeted = false
 
     private var query: ImageEditorBrushPresetQuery {
         ImageEditorBrushPresetQuery(
@@ -70,6 +71,38 @@ struct ImageEditorBrushPresetManager: View {
         .frame(width: 680, height: 470)
         .background(Color(nsColor: ImageEditorTheme.panel))
         .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
+        .dropDestination(for: URL.self) { urls, _ in
+            let didImport = viewModel.importDroppedBrushPresetLibrary(from: urls)
+            if didImport {
+                selectedPresetID = viewModel.selectedBrushPreset?.id
+            }
+            return didImport
+        } isTargeted: { isTargeted in
+            isImportDropTargeted = isTargeted
+        }
+        .overlay {
+            if isImportDropTargeted {
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .fill(Color.accentColor.opacity(0.16))
+                    .overlay {
+                        RoundedRectangle(cornerRadius: 10, style: .continuous)
+                            .stroke(Color.accentColor, lineWidth: 2)
+                    }
+                    .overlay {
+                        Label(
+                            L10n.text("imageEditor.brushPreset.dropTarget"),
+                            systemImage: "tray.and.arrow.down.fill"
+                        )
+                        .font(.system(size: 14, weight: .bold))
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 10)
+                        .background(.regularMaterial)
+                        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                    }
+                    .allowsHitTesting(false)
+                    .accessibilityIdentifier("image-editor-brush-preset-drop-target")
+            }
+        }
         .onAppear(perform: selectInitialPreset)
         .onChange(of: selectedPresetID) { _ in syncNameDraft() }
         .onChange(of: viewModel.customBrushPresets) { _ in repairSelection() }

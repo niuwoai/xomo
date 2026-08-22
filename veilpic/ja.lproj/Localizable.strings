@@ -744,6 +744,7 @@
 "imageEditor.brushPreset.gridDensity.compact" = "コンパクト";
 "imageEditor.brushPreset.gridDensity.regular" = "標準";
 "imageEditor.brushPreset.gridDensity.large" = "大";
+"imageEditor.brushPreset.dropTarget" = "ブラシプリセットライブラリをドロップ";
 "imageEditor.brushPreset.sortLabel" = "プリセットの並べ替え";
 "imageEditor.brushPreset.sort.catalog" = "カタログ順";
 "imageEditor.brushPreset.sort.nameAscending" = "名前 A–Z";

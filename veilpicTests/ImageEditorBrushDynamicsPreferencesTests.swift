@@ -1029,6 +1029,54 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         #expect(restored.selectedBrushPresetID == target.customBrushPresets.last?.id)
     }
 
+    @Test func droppedBrushLibraryImportsThroughTheSameAtomicArchiveBoundary() throws {
+        let fileManager = FileManager.default
+        let validURL = fileManager.temporaryDirectory
+            .appendingPathComponent("dropped-\(UUID().uuidString).xomobrushes")
+        let invalidExtensionURL = fileManager.temporaryDirectory
+            .appendingPathComponent("dropped-\(UUID().uuidString).json")
+        let corruptURL = fileManager.temporaryDirectory
+            .appendingPathComponent("dropped-\(UUID().uuidString).xomobrushes")
+        defer {
+            try? fileManager.removeItem(at: validURL)
+            try? fileManager.removeItem(at: invalidExtensionURL)
+            try? fileManager.removeItem(at: corruptURL)
+        }
+
+        let (sourceDefaults, sourceSuiteName) = temporaryDefaults()
+        defer { sourceDefaults.removePersistentDomain(forName: sourceSuiteName) }
+        let source = makeViewModel(defaults: sourceDefaults)
+        let sourcePreset = try #require(source.createBrushPresetFromCurrentSettings())
+        try source.brushPresetLibraryData().write(to: validURL, options: .atomic)
+        try source.brushPresetLibraryData().write(to: invalidExtensionURL, options: .atomic)
+        try Data("not-json".utf8).write(to: corruptURL, options: .atomic)
+
+        let (targetDefaults, targetSuiteName) = temporaryDefaults()
+        defer { targetDefaults.removePersistentDomain(forName: targetSuiteName) }
+        let target = makeViewModel(defaults: targetDefaults)
+        target.addLayer()
+        target.undo()
+        let documentBeforeImport = transactionSignature(target.document)
+        let undoBeforeImport = target.undoStack.map { transactionSignature($0) }
+        let redoBeforeImport = target.redoStack.map { transactionSignature($0) }
+
+        #expect(target.importDroppedBrushPresetLibrary(from: [validURL]))
+        let imported = try #require(target.customBrushPresets.last)
+        #expect(imported.id != sourcePreset.id)
+        #expect(imported.title == sourcePreset.title)
+        #expect(target.selectedBrushPresetID == imported.id)
+        #expect(transactionSignature(target.document) == documentBeforeImport)
+        #expect(target.undoStack.map { transactionSignature($0) } == undoBeforeImport)
+        #expect(target.redoStack.map { transactionSignature($0) } == redoBeforeImport)
+
+        let presetsAfterImport = target.customBrushPresets
+        #expect(!target.importDroppedBrushPresetLibrary(from: [invalidExtensionURL]))
+        #expect(target.customBrushPresets == presetsAfterImport)
+        #expect(!target.importDroppedBrushPresetLibrary(from: [corruptURL]))
+        #expect(target.customBrushPresets == presetsAfterImport)
+        #expect(target.statusText == L10n.text("imageEditor.status.brushPresetFileInvalid"))
+    }
+
     @Test func brushLibraryImportFillsCapacityAndRejectsInvalidArchivesAtomically() throws {
         let (defaults, suiteName) = temporaryDefaults()
         defer { defaults.removePersistentDomain(forName: suiteName) }

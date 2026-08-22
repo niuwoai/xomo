@@ -744,6 +744,7 @@
 "imageEditor.brushPreset.gridDensity.compact" = "Compact Thumbnails";
 "imageEditor.brushPreset.gridDensity.regular" = "Standard Thumbnails";
 "imageEditor.brushPreset.gridDensity.large" = "Large Thumbnails";
+"imageEditor.brushPreset.dropTarget" = "Drop Brush Preset Library";
 "imageEditor.brushPreset.sortLabel" = "Sort Presets";
 "imageEditor.brushPreset.sort.catalog" = "Catalog Order";
 "imageEditor.brushPreset.sort.nameAscending" = "Name A–Z";
