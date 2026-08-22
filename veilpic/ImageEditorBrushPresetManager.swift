@@ -39,7 +39,13 @@ struct ImageEditorBrushPresetImportResult: Equatable {
     let skippedCount: Int
 }
 
+enum ImageEditorBrushPresetLibraryInspectionMode: String, CaseIterable {
+    case append
+    case replace
+}
+
 struct ImageEditorBrushPresetLibraryInspection: Equatable {
+    let mode: ImageEditorBrushPresetLibraryInspectionMode
     let presetCount: Int
     let installableCount: Int
     let skippedCount: Int
@@ -134,14 +140,24 @@ extension ImageEditorViewModel {
     }
 
     func inspectBrushPresetLibraryData(
-        _ data: Data
+        _ data: Data,
+        mode: ImageEditorBrushPresetLibraryInspectionMode = .replace
     ) throws -> ImageEditorBrushPresetLibraryInspection {
         let library = try decodedBrushPresetLibrary(from: data)
-        let installableCount = min(
-            library.presets.count,
-            ImageEditorBrushPresetPreferences.maximumPresetCount
-        )
+        let capacity: Int
+        switch mode {
+        case .append:
+            capacity = max(
+                0,
+                ImageEditorBrushPresetPreferences.maximumPresetCount
+                    - customBrushPresets.count
+            )
+        case .replace:
+            capacity = ImageEditorBrushPresetPreferences.maximumPresetCount
+        }
+        let installableCount = min(library.presets.count, capacity)
         return ImageEditorBrushPresetLibraryInspection(
+            mode: mode,
             presetCount: library.presets.count,
             installableCount: installableCount,
             skippedCount: library.presets.count - installableCount,
@@ -167,9 +183,13 @@ extension ImageEditorViewModel {
     }
 
     func inspectBrushPresetLibrary(
-        from url: URL
+        from url: URL,
+        mode: ImageEditorBrushPresetLibraryInspectionMode = .replace
     ) throws -> ImageEditorBrushPresetLibraryInspection {
-        try inspectBrushPresetLibraryData(brushPresetLibraryArchiveData(from: url))
+        try inspectBrushPresetLibraryData(
+            brushPresetLibraryArchiveData(from: url),
+            mode: mode
+        )
     }
 
     func brushPresetLibraryArchiveData(from url: URL) throws -> Data {
@@ -195,13 +215,58 @@ extension ImageEditorViewModel {
         panel.begin { [weak self] response in
             Task { @MainActor in
                 guard let self, response == .OK, let url = panel.url else { return }
-                do {
-                    try self.importBrushPresetLibrary(from: url)
-                } catch {
-                    self.statusText = self.brushPresetLibraryErrorStatus(error)
-                }
+                self.importBrushPresetLibraryWithConfirmation(from: url)
             }
         }
+    }
+
+    @discardableResult
+    func importBrushPresetLibraryWithConfirmation(from url: URL) -> Bool {
+        importBrushPresetLibraryWithConfirmation(from: url) { [weak self] url, inspection in
+            self?.presentBrushPresetImportConfirmation(
+                sourceURL: url,
+                inspection: inspection
+            ) ?? false
+        }
+    }
+
+    @discardableResult
+    func importBrushPresetLibraryWithConfirmation(
+        from url: URL,
+        confirmImport: (URL, ImageEditorBrushPresetLibraryInspection) -> Bool
+    ) -> Bool {
+        do {
+            let data = try brushPresetLibraryArchiveData(from: url)
+            let inspection = try inspectBrushPresetLibraryData(data, mode: .append)
+            guard confirmImport(url, inspection) else { return false }
+            try importBrushPresetLibraryData(data)
+            return true
+        } catch {
+            statusText = brushPresetLibraryErrorStatus(error)
+            return false
+        }
+    }
+
+    private func presentBrushPresetImportConfirmation(
+        sourceURL: URL,
+        inspection: ImageEditorBrushPresetLibraryInspection
+    ) -> Bool {
+        let alert = NSAlert()
+        alert.alertStyle = .informational
+        alert.messageText = L10n.text(
+            "imageEditor.brushPreset.importConfirmation.title"
+        )
+        alert.informativeText = L10n.format(
+            "imageEditor.brushPreset.importConfirmation.message",
+            sourceURL.lastPathComponent,
+            inspection.presetCount,
+            inspection.installableCount,
+            inspection.skippedCount,
+            customBrushPresets.count
+        )
+        alert.addButton(withTitle: L10n.text("imageEditor.action.brushPresetImport"))
+        alert.addButton(withTitle: L10n.text("imageEditor.action.cancel"))
+        return alert.runModal() == .alertFirstButtonReturn
     }
 
     func chooseBrushPresetReplacementFile() {
@@ -269,6 +334,19 @@ extension ImageEditorViewModel {
 
     @discardableResult
     func importDroppedBrushPresetLibrary(from urls: [URL]) -> Bool {
+        importDroppedBrushPresetLibrary(from: urls) { [weak self] url, inspection in
+            self?.presentBrushPresetImportConfirmation(
+                sourceURL: url,
+                inspection: inspection
+            ) ?? false
+        }
+    }
+
+    @discardableResult
+    func importDroppedBrushPresetLibrary(
+        from urls: [URL],
+        confirmImport: (URL, ImageEditorBrushPresetLibraryInspection) -> Bool
+    ) -> Bool {
         guard let url = ImageEditorBrushPresetDropPolicy.acceptedURL(from: urls) else {
             return false
         }
@@ -278,13 +356,10 @@ extension ImageEditorViewModel {
                 url.stopAccessingSecurityScopedResource()
             }
         }
-        do {
-            try importBrushPresetLibrary(from: url)
-            return true
-        } catch {
-            statusText = brushPresetLibraryErrorStatus(error)
-            return false
-        }
+        return importBrushPresetLibraryWithConfirmation(
+            from: url,
+            confirmImport: confirmImport
+        )
     }
 
     func chooseBrushPresetExportFile(presetIDs: [String]? = nil) {

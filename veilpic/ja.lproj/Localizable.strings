@@ -2035,6 +2035,8 @@
 "imageEditor.status.brushPresetUnsupportedVersion" = "このブラシプリセットファイルの形式バージョンには対応していません。";
 "imageEditor.status.brushPresetLibraryEmpty" = "ブラシプリセットファイルに読み込めるリソースがありません。";
 "imageEditor.status.brushPresetFileInvalid" = "このブラシプリセットファイルを読み込めませんでした。";
+"imageEditor.brushPreset.importConfirmation.title" = "ブラシプリセットを読み込みますか？";
+"imageEditor.brushPreset.importConfirmation.message" = "「%@」には %d 個のブラシプリセットがあります。100 個の上限内で %d 個を追加し、%d 個をスキップします。既存のカスタムブラシプリセット %d 個は保持されます。現在のブラシ設定とドキュメント履歴は変更されません。";
 "imageEditor.brushPreset.replaceConfirmation.title" = "すべてのカスタムブラシプリセットを置き換えますか？";
 "imageEditor.brushPreset.replaceConfirmation.message" = "「%@」には %d 個のブラシプリセットがあります。%d 個をインストールし、%d 個をスキップします。続行すると既存のカスタムブラシプリセット %d 個が削除されます。現在のブラシ設定とドキュメント履歴は変更されません。";
 "imageEditor.brushPreset.resetConfirmation.title" = "ブラシライブラリを内蔵プリセットに戻しますか？";

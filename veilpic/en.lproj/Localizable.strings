@@ -2035,6 +2035,8 @@
 "imageEditor.status.brushPresetUnsupportedVersion" = "This brush preset file uses an unsupported format version.";
 "imageEditor.status.brushPresetLibraryEmpty" = "The brush preset file contains no importable resources.";
 "imageEditor.status.brushPresetFileInvalid" = "This brush preset file could not be read.";
+"imageEditor.brushPreset.importConfirmation.title" = "Import brush presets?";
+"imageEditor.brushPreset.importConfirmation.message" = "“%@” contains %d presets: %d will be added and %d skipped at the 100-preset capacity. Your %d existing custom brush presets will be kept. Current brush settings and document history will not change.";
 "imageEditor.brushPreset.replaceConfirmation.title" = "Replace all custom brush presets?";
 "imageEditor.brushPreset.replaceConfirmation.message" = "“%@” contains %d presets: %d will be installed and %d skipped. Continuing will remove %d existing custom brush presets. Current brush settings and document history will not change.";
 "imageEditor.brushPreset.resetConfirmation.title" = "Reset the brush library to built-in presets?";

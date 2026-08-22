@@ -1163,7 +1163,12 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         let redoBeforeInspection = viewModel.redoStack.map { transactionSignature($0) }
 
         let inspection = try viewModel.inspectBrushPresetLibraryData(data)
+        let appendInspection = try viewModel.inspectBrushPresetLibraryData(
+            data,
+            mode: .append
+        )
 
+        #expect(inspection.mode == .replace)
         #expect(inspection.presetCount == incoming.count)
         #expect(
             inspection.installableCount
@@ -1171,6 +1176,11 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         )
         #expect(inspection.skippedCount == 2)
         #expect(inspection.presetTitles == incoming.map(\.title))
+        #expect(appendInspection.mode == .append)
+        #expect(appendInspection.presetCount == incoming.count)
+        #expect(appendInspection.installableCount == 99)
+        #expect(appendInspection.skippedCount == 3)
+        #expect(appendInspection.presetTitles == incoming.map(\.title))
         #expect(throws: ImageEditorBrushPresetLibraryError.invalidFile) {
             try viewModel.inspectBrushPresetLibraryData(Data("not-json".utf8))
         }
@@ -1203,6 +1213,92 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         #expect(transactionSignature(viewModel.document) == documentBeforeInspection)
         #expect(viewModel.undoStack.map { transactionSignature($0) } == undoBeforeInspection)
         #expect(viewModel.redoStack.map { transactionSignature($0) } == redoBeforeInspection)
+    }
+
+    @Test func confirmedBrushLibraryImportCommitsPreflightDataAndCancelStaysAtomic() throws {
+        let sourcePresets = [
+            ImageEditorBrushPreset(id: "source-one", name: "Source One", size: 24),
+            ImageEditorBrushPreset(id: "source-two", name: "Source Two", size: 48)
+        ]
+        let sourceData = try JSONEncoder().encode(
+            ImageEditorBrushPresetLibrary(presets: sourcePresets)
+        )
+        let sourceURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent("brush-import-preflight-\(UUID().uuidString).xomobrushes")
+        defer { try? FileManager.default.removeItem(at: sourceURL) }
+        try sourceData.write(to: sourceURL, options: .atomic)
+
+        let (defaults, suiteName) = temporaryDefaults()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let viewModel = makeViewModel(defaults: defaults)
+        viewModel.brushSize = 83
+        viewModel.setBrushAngleJitter(37)
+        viewModel.addLayer()
+        viewModel.undo()
+        let documentBeforeImport = transactionSignature(viewModel.document)
+        let undoBeforeImport = viewModel.undoStack.map { transactionSignature($0) }
+        let redoBeforeImport = viewModel.redoStack.map { transactionSignature($0) }
+        var confirmedInspection: ImageEditorBrushPresetLibraryInspection?
+
+        let didImport = viewModel.importBrushPresetLibraryWithConfirmation(
+            from: sourceURL
+        ) { url, inspection in
+            confirmedInspection = inspection
+            try? Data("replaced-after-preflight".utf8).write(to: url, options: .atomic)
+            return true
+        }
+
+        #expect(didImport)
+        #expect(
+            try Data(contentsOf: sourceURL)
+                == Data("replaced-after-preflight".utf8)
+        )
+        #expect(confirmedInspection?.mode == .append)
+        #expect(confirmedInspection?.presetCount == 2)
+        #expect(confirmedInspection?.installableCount == 2)
+        #expect(confirmedInspection?.skippedCount == 0)
+        #expect(confirmedInspection?.presetTitles == ["Source One", "Source Two"])
+        #expect(viewModel.customBrushPresets.map(\.title) == ["Source One", "Source Two"])
+        #expect(Set(viewModel.customBrushPresets.map(\.id)).isDisjoint(with: sourcePresets.map(\.id)))
+        #expect(viewModel.brushSize == 83)
+        #expect(viewModel.brushAngleJitter == 37)
+        #expect(viewModel.activeBrushPreset == nil)
+        #expect(transactionSignature(viewModel.document) == documentBeforeImport)
+        #expect(viewModel.undoStack.map { transactionSignature($0) } == undoBeforeImport)
+        #expect(viewModel.redoStack.map { transactionSignature($0) } == redoBeforeImport)
+
+        try sourceData.write(to: sourceURL, options: .atomic)
+        let presetsBeforeCancel = viewModel.customBrushPresets
+        let selectedBeforeCancel = viewModel.selectedBrushPresetID
+        var cancelledInspection: ImageEditorBrushPresetLibraryInspection?
+        let cancelledImport = viewModel.importBrushPresetLibraryWithConfirmation(
+            from: sourceURL,
+            confirmImport: { _, inspection in
+                cancelledInspection = inspection
+                return false
+            }
+        )
+        #expect(!cancelledImport)
+        #expect(cancelledInspection?.installableCount == 2)
+        #expect(viewModel.customBrushPresets == presetsBeforeCancel)
+        #expect(viewModel.selectedBrushPresetID == selectedBeforeCancel)
+
+        try Data("not-json".utf8).write(to: sourceURL, options: .atomic)
+        var invalidConfirmationCount = 0
+        #expect(!viewModel.importBrushPresetLibraryWithConfirmation(
+            from: sourceURL,
+            confirmImport: { _, _ in
+                invalidConfirmationCount += 1
+                return true
+            }
+        ))
+        #expect(invalidConfirmationCount == 0)
+        #expect(viewModel.customBrushPresets == presetsBeforeCancel)
+        #expect(viewModel.selectedBrushPresetID == selectedBeforeCancel)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.brushPresetFileInvalid"))
+        #expect(transactionSignature(viewModel.document) == documentBeforeImport)
+        #expect(viewModel.undoStack.map { transactionSignature($0) } == undoBeforeImport)
+        #expect(viewModel.redoStack.map { transactionSignature($0) } == redoBeforeImport)
     }
 
     @Test func resettingBrushLibraryPreservesEditingStateAndBuiltInUsage() throws {
@@ -1372,7 +1468,20 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         let undoBeforeImport = target.undoStack.map { transactionSignature($0) }
         let redoBeforeImport = target.redoStack.map { transactionSignature($0) }
 
-        #expect(target.importDroppedBrushPresetLibrary(from: [validURL]))
+        var droppedURL: URL?
+        var droppedInspection: ImageEditorBrushPresetLibraryInspection?
+        let didImportDrop = target.importDroppedBrushPresetLibrary(
+            from: [validURL],
+            confirmImport: { url, inspection in
+                droppedURL = url
+                droppedInspection = inspection
+                return true
+            }
+        )
+        #expect(didImportDrop)
+        #expect(droppedURL == validURL)
+        #expect(droppedInspection?.mode == .append)
+        #expect(droppedInspection?.installableCount == 1)
         let imported = try #require(target.customBrushPresets.last)
         #expect(imported.id != sourcePreset.id)
         #expect(imported.title == sourcePreset.title)
@@ -1382,9 +1491,15 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         #expect(target.redoStack.map { transactionSignature($0) } == redoBeforeImport)
 
         let presetsAfterImport = target.customBrushPresets
-        #expect(!target.importDroppedBrushPresetLibrary(from: [invalidExtensionURL]))
+        #expect(!target.importDroppedBrushPresetLibrary(
+            from: [invalidExtensionURL],
+            confirmImport: { _, _ in true }
+        ))
         #expect(target.customBrushPresets == presetsAfterImport)
-        #expect(!target.importDroppedBrushPresetLibrary(from: [corruptURL]))
+        #expect(!target.importDroppedBrushPresetLibrary(
+            from: [corruptURL],
+            confirmImport: { _, _ in true }
+        ))
         #expect(target.customBrushPresets == presetsAfterImport)
         #expect(target.statusText == L10n.text("imageEditor.status.brushPresetFileInvalid"))
     }

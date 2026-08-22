@@ -248,6 +248,9 @@ struct XomoAutomationTests {
         #expect(brushPresetProperties["index"]?.objectValue?["type"] == .string("integer"))
         #expect(brushPresetProperties["index"]?.objectValue?["minimum"] == .number(0))
         #expect(brushPresetProperties["path"]?.objectValue?["type"] == .string("string"))
+        #expect(brushPresetProperties["inspectionMode"]?.objectValue?["enum"] == .array([
+            .string("append"), .string("replace")
+        ]))
         #expect(brushPresetProperties["name"]?.objectValue?["type"] == .string("string"))
         #expect(tools.contains { tool in
             guard case .object(let value) = tool else { return false }
@@ -10650,6 +10653,9 @@ struct XomoAutomationTests {
                 == .string(libraryPath.lastPathComponent)
         )
         #expect(
+            inspected.result?.objectValue?["inspectionMode"] == .string("replace")
+        )
+        #expect(
             inspected.result?.objectValue?["presetCount"]
                 == .number(Double(sourcePresets.count))
         )
@@ -10663,6 +10669,24 @@ struct XomoAutomationTests {
                 == sourcePresets.map(\.title)
         )
 
+        let appendInspection = registry.execute(request(
+            operation: "call",
+            name: "xomo.brush.preset",
+            arguments: [
+                "action": .string("inspectLibrary"),
+                "path": .string(libraryPath.path),
+                "inspectionMode": .string("append")
+            ]
+        ))
+        #expect(appendInspection.ok)
+        #expect(
+            appendInspection.result?.objectValue?["inspectionMode"] == .string("append")
+        )
+        #expect(
+            appendInspection.result?.objectValue?["installableCount"] == .number(99)
+        )
+        #expect(appendInspection.result?.objectValue?["skippedCount"] == .number(3))
+
         let rejected = registry.execute(request(
             operation: "call",
             name: "xomo.brush.preset",
@@ -10672,6 +10696,16 @@ struct XomoAutomationTests {
             ]
         ))
         #expect(!rejected.ok)
+        let invalidMode = registry.execute(request(
+            operation: "call",
+            name: "xomo.brush.preset",
+            arguments: [
+                "action": .string("inspectLibrary"),
+                "path": .string(libraryPath.path),
+                "inspectionMode": .string("merge")
+            ]
+        ))
+        #expect(!invalidMode.ok)
         #expect(viewModel.customBrushPresets == presetsBeforeInspection)
         #expect(viewModel.selectedBrushPresetID == selectedBeforeInspection)
         #expect(viewModel.statusText == statusBeforeInspection)

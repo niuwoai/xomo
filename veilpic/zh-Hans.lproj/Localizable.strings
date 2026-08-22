@@ -2035,6 +2035,8 @@
 "imageEditor.status.brushPresetUnsupportedVersion" = "此画笔预设文件来自不受支持的格式版本。";
 "imageEditor.status.brushPresetLibraryEmpty" = "画笔预设文件中没有可导入的资源。";
 "imageEditor.status.brushPresetFileInvalid" = "无法读取此画笔预设文件。";
+"imageEditor.brushPreset.importConfirmation.title" = "导入画笔预设？";
+"imageEditor.brushPreset.importConfirmation.message" = "“%@”包含 %d 个画笔预设：将在 100 项容量内新增 %d 个，跳过 %d 个。现有的 %d 个自定义画笔预设会保留；当前画笔设置和文档历史不会改变。";
 "imageEditor.brushPreset.replaceConfirmation.title" = "替换全部自定义画笔预设？";
 "imageEditor.brushPreset.replaceConfirmation.message" = "“%@”包含 %d 个画笔预设：将安装 %d 个，跳过 %d 个。继续会移除现有的 %d 个自定义画笔预设；当前画笔设置和文档历史不会改变。";
 "imageEditor.brushPreset.resetConfirmation.title" = "将画笔库重置为内置预设？";

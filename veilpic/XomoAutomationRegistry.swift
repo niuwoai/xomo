@@ -2064,9 +2064,19 @@ final class XomoAutomationRegistry {
         case "inspectLibrary":
             let path = try requiredString("path", in: arguments)
             let url = URL(fileURLWithPath: path)
+            let rawMode = arguments["inspectionMode"]?.stringValue
+                ?? ImageEditorBrushPresetLibraryInspectionMode.replace.rawValue
+            guard let mode = ImageEditorBrushPresetLibraryInspectionMode(rawValue: rawMode) else {
+                throw XomoAutomationCallError.invalidArgument(
+                    "Brush preset inspectionMode must be append or replace"
+                )
+            }
             let inspection: ImageEditorBrushPresetLibraryInspection
             do {
-                inspection = try viewModel.inspectBrushPresetLibrary(from: url)
+                inspection = try viewModel.inspectBrushPresetLibrary(
+                    from: url,
+                    mode: mode
+                )
             } catch {
                 if let message = brushPresetLibraryArgumentMessage(error) {
                     throw XomoAutomationCallError.invalidArgument(message)
@@ -2078,6 +2088,7 @@ final class XomoAutomationRegistry {
             return .object([
                 "path": .string(path),
                 "filename": .string(url.lastPathComponent),
+                "inspectionMode": .string(inspection.mode.rawValue),
                 "presetCount": .number(Double(inspection.presetCount)),
                 "installableCount": .number(Double(inspection.installableCount)),
                 "skippedCount": .number(Double(inspection.skippedCount)),
@@ -7013,6 +7024,7 @@ private extension XomoAutomationRegistry {
             "favorite": XomoAutomationSchema.boolean(description: "Whether favorite should add or remove the preset from favorites"),
             "index": XomoAutomationSchema.integer(description: "Zero-based destination index within custom presets for moveToIndex", minimum: 0),
             "path": XomoAutomationSchema.string(description: "Source path for inspect/import/replace or destination path for export of a .xomobrushes file"),
+            "inspectionMode": XomoAutomationSchema.string(description: "Capacity policy for inspectLibrary; append preserves current custom presets, while replace starts from an empty custom library", values: ImageEditorBrushPresetLibraryInspectionMode.allCases.map(\.rawValue)),
             "name": XomoAutomationSchema.string(description: "New custom preset name for rename")
         ]),
         tool("xomo.paint.stroke", "Paint a brush or eraser stroke from canvas points.", [
