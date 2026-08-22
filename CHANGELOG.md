@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.12.0-rc1160 - 2026-08-22
+
+### Changed
+
+- 执行第 40 个小版本周期门禁，冻结并整体复验 rc1121–rc1159 的工具栏崩溃修复、经典画笔资源工作区、Sketch/Figma 式资源浏览以及自动化导入导出链路；本版不扩大文档模型或归档格式。
+- 版本、构建号、App/CLI、Xcode 目标与发布契约统一提升到 rc1160/1160，为 Universal Release 和 `/Applications` 覆盖安装建立可核验基线。
+
+### Verification
+
+- 唯一完整测试构建与最终全量隔离测试 118/118 组、2426/2426 项通过，修正后的 Scope 契约 185/185、CLI/MCP 2/2、发布契约 7/7（21 项断言）及测试运行器契约均通过。
+- Universal Release App 与 CLI 均为 `x86_64 + arm64`；App 的 ad-hoc hardened runtime 严格签名通过。临时产物完成画笔选项、工具/组件切换、组件插入与画笔预设管理器冒烟，安装版完成启动和组件库切换后正常退出，未生成新崩溃报告；已覆盖 `/Applications/Xomo.app`，旧 rc1121 备份于 `/private/tmp/Xomo-rc1121-before-rc1160.app`。下一次周期完整门禁为 rc1200。
+
 ## 2.12.0-rc1159 - 2026-08-22
 
 ### Added
