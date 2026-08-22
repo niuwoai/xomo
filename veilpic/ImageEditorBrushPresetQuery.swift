@@ -177,6 +177,40 @@ enum ImageEditorBrushPresetSortOrder: String, CaseIterable, Identifiable {
     }
 }
 
+struct ImageEditorBrushPresetReorderMove: Equatable {
+    let sourceID: String
+    let destinationIndex: Int
+}
+
+enum ImageEditorBrushPresetReorderPolicy {
+    static func canReorder(
+        _ preset: ImageEditorBrushPreset,
+        collection: ImageEditorBrushPresetCollection,
+        sortOrder: ImageEditorBrushPresetSortOrder
+    ) -> Bool {
+        !preset.isBuiltIn && collection == .all && sortOrder == .catalog
+    }
+
+    static func resolvedMove(
+        draggedIDs: [String],
+        onto targetID: String,
+        customPresets: [ImageEditorBrushPreset]
+    ) -> ImageEditorBrushPresetReorderMove? {
+        guard draggedIDs.count == 1,
+              let sourceID = draggedIDs.first,
+              sourceID != targetID,
+              customPresets.contains(where: { $0.id == sourceID && !$0.isBuiltIn }),
+              let destinationIndex = customPresets.firstIndex(where: {
+                $0.id == targetID && !$0.isBuiltIn
+              })
+        else { return nil }
+        return ImageEditorBrushPresetReorderMove(
+            sourceID: sourceID,
+            destinationIndex: destinationIndex
+        )
+    }
+}
+
 struct ImageEditorBrushPresetQuery: Equatable {
     var searchText: String
     var scope: ImageEditorBrushPresetScope

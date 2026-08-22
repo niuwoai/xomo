@@ -19,6 +19,7 @@ struct ImageEditorBrushPresetManager: View {
     @State private var gridDensity = ImageEditorBrushPresetGridDensity.load()
     @State private var sortOrder = ImageEditorBrushPresetSortOrder.load()
     @State private var isImportDropTargeted = false
+    @State private var reorderDropTargetID: String?
 
     private var query: ImageEditorBrushPresetQuery {
         ImageEditorBrushPresetQuery(
@@ -110,10 +111,14 @@ struct ImageEditorBrushPresetManager: View {
         .onChange(of: viewModel.recentBrushPresetIDs) { _ in repairSelection() }
         .onChange(of: searchText) { _ in repairSelection() }
         .onChange(of: scope) { _ in repairSelection() }
-        .onChange(of: collection) { _ in repairSelection() }
+        .onChange(of: collection) { _ in
+            reorderDropTargetID = nil
+            repairSelection()
+        }
         .onChange(of: layout) { layout in layout.save() }
         .onChange(of: gridDensity) { gridDensity in gridDensity.save() }
         .onChange(of: sortOrder) { sortOrder in
+            reorderDropTargetID = nil
             sortOrder.save()
             repairSelection()
         }
@@ -402,73 +407,131 @@ struct ImageEditorBrushPresetManager: View {
     }
 
     private func presetRow(_ preset: ImageEditorBrushPreset) -> some View {
-        HStack(spacing: 4) {
-            Button {
-                selectedPresetID = preset.id
-            } label: {
-                HStack(spacing: 8) {
-                    ImageEditorBrushPresetThumbnail(preset: preset, size: 28)
-                    Text(preset.title)
-                        .lineLimit(1)
-                    Spacer(minLength: 0)
-                    if viewModel.activeBrushPreset?.id == preset.id {
-                        Image(systemName: "checkmark")
-                    }
-                }
-                .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-            .focusable(false)
-
-            favoriteButton(for: preset)
-        }
-        .font(.system(size: 11, weight: .semibold))
-        .padding(.horizontal, 8)
-        .frame(height: 38)
-        .background(
-            selectedPresetID == preset.id
-                ? Color.accentColor.opacity(0.72)
-                : Color.white.opacity(0.05)
-        )
-        .clipShape(RoundedRectangle(cornerRadius: 5, style: .continuous))
-    }
-
-    private func presetTile(_ preset: ImageEditorBrushPreset) -> some View {
-        ZStack(alignment: .topTrailing) {
-            Button {
-                selectedPresetID = preset.id
-            } label: {
-                VStack(spacing: 6) {
-                    ImageEditorBrushPresetThumbnail(
-                        preset: preset,
-                        size: gridDensity.thumbnailSize
-                    )
-                    HStack(spacing: 4) {
+        reorderablePresetSurface(preset) {
+            HStack(spacing: 4) {
+                Button {
+                    selectedPresetID = preset.id
+                } label: {
+                    HStack(spacing: 8) {
+                        ImageEditorBrushPresetThumbnail(preset: preset, size: 28)
                         Text(preset.title)
                             .lineLimit(1)
+                        Spacer(minLength: 0)
                         if viewModel.activeBrushPreset?.id == preset.id {
                             Image(systemName: "checkmark")
                         }
                     }
+                    .contentShape(Rectangle())
                 }
-                .frame(maxWidth: .infinity)
-                .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-            .focusable(false)
+                .buttonStyle(.plain)
+                .focusable(false)
 
-            favoriteButton(for: preset)
-                .padding(5)
+                favoriteButton(for: preset)
+            }
+            .font(.system(size: 11, weight: .semibold))
+            .padding(.horizontal, 8)
+            .frame(height: 38)
+            .background(
+                selectedPresetID == preset.id
+                    ? Color.accentColor.opacity(0.72)
+                    : Color.white.opacity(0.05)
+            )
+            .clipShape(RoundedRectangle(cornerRadius: 5, style: .continuous))
         }
-        .font(.system(size: 10, weight: .semibold))
-        .padding(6)
-        .frame(minHeight: gridDensity.minimumTileHeight)
-        .background(
-            selectedPresetID == preset.id
-                ? Color.accentColor.opacity(0.72)
-                : Color.white.opacity(0.05)
-        )
-        .clipShape(RoundedRectangle(cornerRadius: 5, style: .continuous))
+    }
+
+    private func presetTile(_ preset: ImageEditorBrushPreset) -> some View {
+        reorderablePresetSurface(preset) {
+            ZStack(alignment: .topTrailing) {
+                Button {
+                    selectedPresetID = preset.id
+                } label: {
+                    VStack(spacing: 6) {
+                        ImageEditorBrushPresetThumbnail(
+                            preset: preset,
+                            size: gridDensity.thumbnailSize
+                        )
+                        HStack(spacing: 4) {
+                            Text(preset.title)
+                                .lineLimit(1)
+                            if viewModel.activeBrushPreset?.id == preset.id {
+                                Image(systemName: "checkmark")
+                            }
+                        }
+                    }
+                    .frame(maxWidth: .infinity)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .focusable(false)
+
+                favoriteButton(for: preset)
+                    .padding(5)
+            }
+            .font(.system(size: 10, weight: .semibold))
+            .padding(6)
+            .frame(minHeight: gridDensity.minimumTileHeight)
+            .background(
+                selectedPresetID == preset.id
+                    ? Color.accentColor.opacity(0.72)
+                    : Color.white.opacity(0.05)
+            )
+            .clipShape(RoundedRectangle(cornerRadius: 5, style: .continuous))
+        }
+    }
+
+    @ViewBuilder
+    private func reorderablePresetSurface<Content: View>(
+        _ preset: ImageEditorBrushPreset,
+        @ViewBuilder content: () -> Content
+    ) -> some View {
+        let surface = content()
+            .overlay {
+                if reorderDropTargetID == preset.id {
+                    RoundedRectangle(cornerRadius: 5, style: .continuous)
+                        .stroke(Color.accentColor, lineWidth: 2)
+                        .allowsHitTesting(false)
+                }
+            }
+
+        if ImageEditorBrushPresetReorderPolicy.canReorder(
+            preset,
+            collection: collection,
+            sortOrder: sortOrder
+        ) {
+            surface
+                .draggable(preset.id) {
+                    Label(preset.title, systemImage: "paintbrush.pointed")
+                        .font(.system(size: 11, weight: .semibold))
+                        .padding(8)
+                        .background(.regularMaterial)
+                        .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+                }
+                .dropDestination(for: String.self) { draggedIDs, _ in
+                    guard let move = ImageEditorBrushPresetReorderPolicy.resolvedMove(
+                        draggedIDs: draggedIDs,
+                        onto: preset.id,
+                        customPresets: viewModel.customBrushPresets
+                    ),
+                    viewModel.moveCustomBrushPreset(
+                        id: move.sourceID,
+                        toIndex: move.destinationIndex
+                    ) else { return false }
+                    selectedPresetID = move.sourceID
+                    reorderDropTargetID = nil
+                    return true
+                } isTargeted: { isTargeted in
+                    if isTargeted {
+                        reorderDropTargetID = preset.id
+                    } else if reorderDropTargetID == preset.id {
+                        reorderDropTargetID = nil
+                    }
+                }
+                .accessibilityIdentifier("image-editor-brush-preset-reorder-\(preset.id)")
+                .help(L10n.text("imageEditor.brushPreset.reorderHelp"))
+        } else {
+            surface
+        }
     }
 
     private func favoriteButton(for preset: ImageEditorBrushPreset) -> some View {

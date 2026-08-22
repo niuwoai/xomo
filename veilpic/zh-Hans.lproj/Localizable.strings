@@ -745,6 +745,7 @@
 "imageEditor.brushPreset.gridDensity.regular" = "标准缩略图";
 "imageEditor.brushPreset.gridDensity.large" = "大缩略图";
 "imageEditor.brushPreset.dropTarget" = "拖放画笔预设库";
+"imageEditor.brushPreset.reorderHelp" = "拖动以排列自定义预设";
 "imageEditor.brushPreset.sortLabel" = "预设排序";
 "imageEditor.brushPreset.sort.catalog" = "目录顺序";
 "imageEditor.brushPreset.sort.nameAscending" = "名称 A–Z";

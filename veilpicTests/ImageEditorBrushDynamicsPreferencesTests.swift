@@ -967,6 +967,54 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         #expect(viewModel.customBrushPresets == [first, third, second])
     }
 
+    @Test func dragReorderMovesAFilteredCustomPresetOntoItsCatalogTarget() throws {
+        let (defaults, suiteName) = temporaryDefaults()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let viewModel = makeViewModel(defaults: defaults)
+        viewModel.brushSize = 12
+        let first = try #require(viewModel.createBrushPresetFromCurrentSettings())
+        viewModel.brushSize = 24
+        let second = try #require(viewModel.createBrushPresetFromCurrentSettings())
+        viewModel.brushSize = 36
+        let third = try #require(viewModel.createBrushPresetFromCurrentSettings())
+        #expect(viewModel.renameCustomBrushPreset(id: first.id, to: "Edge Soft"))
+        #expect(viewModel.renameCustomBrushPreset(id: second.id, to: "Hidden Middle"))
+        #expect(viewModel.renameCustomBrushPreset(id: third.id, to: "Edge Hard"))
+        viewModel.brushSize = 91
+        viewModel.addLayer()
+        viewModel.undo()
+        let documentBeforeMove = transactionSignature(viewModel.document)
+        let undoBeforeMove = viewModel.undoStack.map { transactionSignature($0) }
+        let redoBeforeMove = viewModel.redoStack.map { transactionSignature($0) }
+
+        let filtered = ImageEditorBrushPresetQuery(
+            searchText: "Edge",
+            scope: .custom
+        ).filter(viewModel.brushPresets)
+        #expect(filtered.map(\.id) == [first.id, third.id])
+        let move = try #require(ImageEditorBrushPresetReorderPolicy.resolvedMove(
+            draggedIDs: [filtered[0].id],
+            onto: filtered[1].id,
+            customPresets: viewModel.customBrushPresets
+        ))
+        #expect(viewModel.moveCustomBrushPreset(
+            id: move.sourceID,
+            toIndex: move.destinationIndex
+        ))
+
+        #expect(viewModel.customBrushPresets.map(\.id) == [second.id, third.id, first.id])
+        #expect(viewModel.selectedBrushPresetID == third.id)
+        #expect(viewModel.brushSize == 91)
+        #expect(viewModel.activeBrushPreset == nil)
+        #expect(transactionSignature(viewModel.document) == documentBeforeMove)
+        #expect(viewModel.undoStack.map { transactionSignature($0) } == undoBeforeMove)
+        #expect(viewModel.redoStack.map { transactionSignature($0) } == redoBeforeMove)
+        #expect(
+            makeViewModel(defaults: defaults).customBrushPresets.map(\.id)
+                == [second.id, third.id, first.id]
+        )
+    }
+
     @Test func portableBrushLibraryRoundTripsCompleteResourcesWithFreshIdentityAndStableNames() throws {
         let (sourceDefaults, sourceSuiteName) = temporaryDefaults()
         defer { sourceDefaults.removePersistentDomain(forName: sourceSuiteName) }

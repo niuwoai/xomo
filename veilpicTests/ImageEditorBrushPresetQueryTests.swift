@@ -85,6 +85,80 @@ struct ImageEditorBrushPresetQueryTests {
         )
     }
 
+    @Test func reorderPolicyAcceptsOneCustomPresetOnlyInCatalogCollection() {
+        let first = preset(id: "first", name: "First")
+        let second = preset(id: "second", name: "Second")
+        let third = preset(id: "third", name: "Third")
+        let builtIn = preset(id: "built-in", name: "Built In", isBuiltIn: true)
+        let customPresets = [first, second, third]
+
+        #expect(ImageEditorBrushPresetReorderPolicy.canReorder(
+            first,
+            collection: .all,
+            sortOrder: .catalog
+        ))
+        #expect(!ImageEditorBrushPresetReorderPolicy.canReorder(
+            builtIn,
+            collection: .all,
+            sortOrder: .catalog
+        ))
+        #expect(!ImageEditorBrushPresetReorderPolicy.canReorder(
+            first,
+            collection: .favorites,
+            sortOrder: .catalog
+        ))
+        #expect(!ImageEditorBrushPresetReorderPolicy.canReorder(
+            first,
+            collection: .all,
+            sortOrder: .nameAscending
+        ))
+        #expect(
+            ImageEditorBrushPresetReorderPolicy.resolvedMove(
+                draggedIDs: [first.id],
+                onto: third.id,
+                customPresets: customPresets
+            ) == ImageEditorBrushPresetReorderMove(
+                sourceID: first.id,
+                destinationIndex: 2
+            )
+        )
+        #expect(
+            ImageEditorBrushPresetReorderPolicy.resolvedMove(
+                draggedIDs: [third.id],
+                onto: first.id,
+                customPresets: customPresets
+            ) == ImageEditorBrushPresetReorderMove(
+                sourceID: third.id,
+                destinationIndex: 0
+            )
+        )
+        #expect(ImageEditorBrushPresetReorderPolicy.resolvedMove(
+            draggedIDs: [],
+            onto: second.id,
+            customPresets: customPresets
+        ) == nil)
+        #expect(ImageEditorBrushPresetReorderPolicy.resolvedMove(
+            draggedIDs: [first.id, second.id],
+            onto: third.id,
+            customPresets: customPresets
+        ) == nil)
+        #expect(ImageEditorBrushPresetReorderPolicy.resolvedMove(
+            draggedIDs: [second.id],
+            onto: second.id,
+            customPresets: customPresets
+        ) == nil)
+        #expect(ImageEditorBrushPresetReorderPolicy.resolvedMove(
+            draggedIDs: ["external-text"],
+            onto: third.id,
+            customPresets: customPresets
+        ) == nil)
+        #expect(ImageEditorBrushPresetReorderPolicy.resolvedMove(
+            draggedIDs: [first.id],
+            onto: builtIn.id,
+            customPresets: customPresets + [builtIn]
+        ) == nil)
+    }
+
     @Test func querySortsVisiblePresetsByNameAndKeepsEquivalentNamesStable() {
         let presets = [
             preset(id: "zulu", name: "Zulu"),
@@ -195,6 +269,11 @@ struct ImageEditorBrushPresetQueryTests {
         #expect(manager.contains(".dropDestination(for: URL.self)"))
         #expect(manager.contains("viewModel.importDroppedBrushPresetLibrary(from: urls)"))
         #expect(manager.contains("selectedPresetID = viewModel.selectedBrushPreset?.id"))
+        #expect(manager.contains(".draggable(preset.id)"))
+        #expect(manager.contains(".dropDestination(for: String.self)"))
+        #expect(manager.contains("ImageEditorBrushPresetReorderPolicy.resolvedMove("))
+        #expect(manager.contains("viewModel.moveCustomBrushPreset("))
+        #expect(manager.contains("image-editor-brush-preset-reorder-\\(preset.id)"))
         #expect(manager.contains("ImageEditorBrushPresetPanelLayout.load()"))
         #expect(manager.contains("layout.save()"))
         #expect(manager.contains("ImageEditorBrushPresetGridDensity.load()"))
