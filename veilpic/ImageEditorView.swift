@@ -1220,6 +1220,11 @@ struct ImageEditorView: View {
                 }
             }
 
+            if viewModel.selectedTool == .eyedropper
+                || viewModel.selectedTool == .colorSampler {
+                colorSamplingOptionControls
+            }
+
             if viewModel.selectedTool == .colorSampler {
                 Button(L10n.text("imageEditor.action.colorSamplerClear")) {
                     viewModel.clearColorSamplers()
@@ -1236,6 +1241,54 @@ struct ImageEditorView: View {
         .foregroundStyle(Color(nsColor: ImageEditorOptionsBarAppearance.foregroundColor))
         .environment(\.colorScheme, .dark)
         .background(Color(nsColor: ImageEditorTheme.panel))
+    }
+
+    private var colorSamplingOptionControls: some View {
+        Group {
+            HStack(spacing: 4) {
+                Text(L10n.text("imageEditor.info.colorSampler.source"))
+                    .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                Picker(
+                    L10n.text("imageEditor.info.colorSampler.source"),
+                    selection: Binding(
+                        get: { viewModel.activeColorSamplerSource },
+                        set: { _ = viewModel.selectColorSamplerSource($0) }
+                    )
+                ) {
+                    ForEach(ImageEditorColorSamplerSource.allCases) { source in
+                        Text(source.shortTitle)
+                            .tag(source)
+                            .disabled(!viewModel.canSampleColorSamplerSource(source))
+                    }
+                }
+                .labelsHidden()
+                .pickerStyle(.menu)
+                .fixedSize()
+                .focusable(false)
+                .accessibilityIdentifier("image-editor-color-sampling-source")
+            }
+
+            HStack(spacing: 4) {
+                Text(L10n.text("imageEditor.info.colorSampler.sampleSize"))
+                    .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                Picker(
+                    L10n.text("imageEditor.info.colorSampler.sampleSize"),
+                    selection: Binding(
+                        get: { viewModel.selectedColorSamplerSampleSize },
+                        set: { viewModel.selectColorSamplerSampleSize($0) }
+                    )
+                ) {
+                    ForEach(ImageEditorColorSamplerSampleSize.allCases) { sampleSize in
+                        Text(sampleSize.shortTitle).tag(sampleSize)
+                    }
+                }
+                .labelsHidden()
+                .pickerStyle(.menu)
+                .fixedSize()
+                .focusable(false)
+                .accessibilityIdentifier("image-editor-color-sampling-size")
+            }
+        }
     }
 
     private func componentLibraryOptionBar(
@@ -4750,17 +4803,28 @@ struct ImageEditorView: View {
                     isTemporaryEyedropperGestureActive = true
                     activeBrushPressure = nil
                     activeBrushTilt = nil
+                    if let pointerImagePoint {
+                        viewModel.sampleColor(at: pointerImagePoint)
+                    }
                     updateCanvasCursor(at: value.location, in: size)
                     return
                 }
 
-                if canvasInteractionTool == .eyedropper,
-                   eyedropperGestureTarget == nil {
-                    eyedropperGestureTarget = ImageEditorEyedropperTargetPolicy.target(
-                        tool: canvasInteractionTool,
-                        modifierFlags: NSEvent.modifierFlags
-                    )
-                    updateCanvasCursor(at: value.location, in: size)
+                if canvasInteractionTool == .eyedropper {
+                    if eyedropperGestureTarget == nil {
+                        eyedropperGestureTarget = ImageEditorEyedropperTargetPolicy.target(
+                            tool: canvasInteractionTool,
+                            modifierFlags: NSEvent.modifierFlags
+                        )
+                        updateCanvasCursor(at: value.location, in: size)
+                    }
+                    if let pointerImagePoint,
+                       let eyedropperGestureTarget {
+                        viewModel.sampleColor(
+                            at: pointerImagePoint,
+                            target: eyedropperGestureTarget
+                        )
+                    }
                 }
 
                 switch canvasInteractionTool {

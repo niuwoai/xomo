@@ -1875,6 +1875,43 @@ struct ImageEditorCanvasCursorTests {
         )
     }
 
+    @Test func eyedropperAndTemporaryEyedropperSampleLiveWithSharedOptions() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let gestureStart = try #require(
+            source.range(of: "private func canvasGesture(in size: CGSize) -> some Gesture")
+        )
+        let gestureEnd = try #require(
+            source[gestureStart.upperBound...].range(of: "private func gradientDragPoint")
+        )
+        let gestureSource = source[gestureStart.lowerBound..<gestureEnd.lowerBound]
+        let toolSwitch = try #require(gestureSource.range(of: "switch canvasInteractionTool"))
+        let changedSource = gestureSource[..<toolSwitch.lowerBound]
+        #expect(
+            changedSource.components(separatedBy: "viewModel.sampleColor(").count - 1 == 2
+        )
+        #expect(changedSource.contains("at: pointerImagePoint"))
+        #expect(changedSource.contains("target: eyedropperGestureTarget"))
+
+        let optionBarStart = try #require(
+            source.range(of: "private var toolOptionBar: some View")
+        )
+        let optionBarEnd = try #require(
+            source[optionBarStart.upperBound...].range(of: "private func componentLibraryOptionBar")
+        )
+        let optionBarSource = source[optionBarStart.lowerBound..<optionBarEnd.lowerBound]
+        #expect(optionBarSource.contains("viewModel.selectedTool == .eyedropper"))
+        #expect(optionBarSource.contains("viewModel.selectedTool == .colorSampler"))
+        #expect(optionBarSource.contains("colorSamplingOptionControls"))
+        #expect(optionBarSource.contains("image-editor-color-sampling-source"))
+        #expect(optionBarSource.contains("image-editor-color-sampling-size"))
+    }
+
     @Test func temporaryEyedropperUsesSemanticCursorWithoutOverridingCanvasModes() {
         let eyedropper = ImageEditorCanvasCursor.cursor(for: .eyedropper, brushDiameter: 18)
         for tool in [ImageEditorTool.brush, .pencil] {

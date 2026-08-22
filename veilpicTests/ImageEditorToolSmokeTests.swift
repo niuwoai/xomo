@@ -1309,6 +1309,91 @@ struct ImageEditorToolSmokeTests {
         #expect(viewModel.document.history.count == historyCount)
     }
 
+    @Test func eyedropperSharesSampleSizeAndSourceWithoutWritingHistory() throws {
+        let width = Int(canvasSize.width)
+        let height = Int(canvasSize.height)
+        let bytesPerPixel = 4
+        var pixels = [UInt8](
+            repeating: 0,
+            count: width * height * bytesPerPixel
+        )
+        for pixelOffset in stride(from: 0, to: pixels.count, by: bytesPerPixel) {
+            pixels[pixelOffset + 3] = 255
+        }
+        let point = CGPoint(x: 20, y: 14)
+        let whitePixelOffset = (Int(point.y) * width + Int(point.x)) * bytesPerPixel
+        for componentOffset in 0..<bytesPerPixel {
+            pixels[whitePixelOffset + componentOffset] = 255
+        }
+        let provider = try #require(CGDataProvider(data: Data(pixels) as CFData))
+        let cgImage = try #require(CGImage(
+            width: width,
+            height: height,
+            bitsPerComponent: 8,
+            bitsPerPixel: bytesPerPixel * 8,
+            bytesPerRow: width * bytesPerPixel,
+            space: CGColorSpaceCreateDeviceRGB(),
+            bitmapInfo: CGBitmapInfo(
+                rawValue: CGImageAlphaInfo.premultipliedLast.rawValue
+            ),
+            provider: provider,
+            decode: nil,
+            shouldInterpolate: false,
+            intent: .defaultIntent
+        ))
+        let selectedLayerImage = NSImage(cgImage: cgImage, size: canvasSize)
+        let viewModel = makeViewModel(image: selectedLayerImage)
+        viewModel.foregroundColor = .cyan
+        viewModel.backgroundColor = .yellow
+        let history = viewModel.document.history
+        let canUndo = viewModel.canUndo
+
+        viewModel.selectColorSamplerSampleSize(.threeByThree)
+        viewModel.sampleColor(at: point, target: .background)
+        let compositeAverage = try #require(
+            viewModel.backgroundColor.usingColorSpace(.deviceRGB)
+        )
+        #expect(compositeAverage.redComponent > 0.08)
+        #expect(compositeAverage.redComponent < 0.14)
+        #expect(abs(compositeAverage.redComponent - compositeAverage.greenComponent) < 0.01)
+        #expect(abs(compositeAverage.redComponent - compositeAverage.blueComponent) < 0.01)
+        let unchangedForeground = try #require(
+            viewModel.foregroundColor.usingColorSpace(.deviceRGB)
+        )
+        #expect(unchangedForeground.greenComponent > 0.8)
+        #expect(unchangedForeground.blueComponent > 0.8)
+        #expect(viewModel.document.history == history)
+        #expect(viewModel.canUndo == canUndo)
+
+        let sourceViewModel = makeViewModel(image: solidImage(color: .red))
+        let selectedLayerID = try #require(sourceViewModel.document.layers.first?.id)
+        var blueLayer = ImageEditorLayer.blank(name: "Blue Overlay", size: canvasSize)
+        blueLayer.image = solidImage(color: .blue)
+        sourceViewModel.document.layers.append(blueLayer)
+        sourceViewModel.selectLayer(selectedLayerID)
+        let sourceHistory = sourceViewModel.document.history
+        let sourceCanUndo = sourceViewModel.canUndo
+
+        #expect(sourceViewModel.selectColorSamplerSource(.selectedLayer))
+        #expect(sourceViewModel.activeColorSamplerSource == .selectedLayer)
+        sourceViewModel.sampleColor(at: point, target: .background)
+        let selectedLayer = try #require(
+            sourceViewModel.backgroundColor.usingColorSpace(.deviceRGB)
+        )
+        #expect(selectedLayer.redComponent > 0.95)
+        #expect(selectedLayer.blueComponent < 0.05)
+
+        #expect(sourceViewModel.selectColorSamplerSource(.composite))
+        sourceViewModel.sampleColor(at: point)
+        let composite = try #require(
+            sourceViewModel.foregroundColor.usingColorSpace(.deviceRGB)
+        )
+        #expect(composite.blueComponent > 0.95)
+        #expect(composite.redComponent < 0.05)
+        #expect(sourceViewModel.document.history == sourceHistory)
+        #expect(sourceViewModel.canUndo == sourceCanUndo)
+    }
+
     private let canvasSize = NSSize(width: 40, height: 28)
 
     private func makeViewModel(image: NSImage) -> ImageEditorViewModel {

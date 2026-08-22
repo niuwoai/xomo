@@ -7692,7 +7692,11 @@ final class ImageEditorViewModel: ObservableObject {
         at point: CGPoint,
         target: ImageEditorColorSampleTarget = .foreground
     ) {
-        guard let color = document.compositedImage.color(at: point) else { return }
+        guard let color = sampledCanvasColor(
+            at: point,
+            sampleSize: selectedColorSamplerSampleSize,
+            source: activeColorSamplerSource
+        ) else { return }
         switch target {
         case .foreground:
             foregroundColor = color
