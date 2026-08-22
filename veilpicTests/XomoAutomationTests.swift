@@ -239,7 +239,8 @@ struct XomoAutomationTests {
         #expect(brushPresetProperties["action"]?.objectValue?["enum"] == .array([
             .string("list"), .string("favorites"), .string("recent"), .string("create"),
             .string("apply"), .string("favorite"), .string("update"), .string("duplicate"),
-            .string("moveToIndex"), .string("import"), .string("replace"),
+            .string("moveToIndex"), .string("inspectLibrary"),
+            .string("import"), .string("replace"),
             .string("resetLibrary"), .string("export"),
             .string("rename"), .string("delete")
         ]))
@@ -10589,6 +10590,97 @@ struct XomoAutomationTests {
         #expect(viewModel.undoStack.map(transactionSignature) == undoBeforeImport)
         #expect(viewModel.redoStack.map(transactionSignature) == redoBeforeImport)
         #expect(viewModel.customBrushPresets.first?.id == local.id)
+    }
+
+    @Test func registryInspectsBrushLibraryWithoutMutatingWorkspace() throws {
+        let sourcePresets = (0..<(ImageEditorBrushPresetPreferences.maximumPresetCount + 2)).map {
+            ImageEditorBrushPreset(
+                id: "inspect-source-\($0)",
+                name: "Inspect Brush \($0 + 1)",
+                size: CGFloat(10 + $0)
+            )
+        }
+        let libraryPath = FileManager.default.temporaryDirectory
+            .appendingPathComponent("xomo-inspect-\(UUID().uuidString).xomobrushes")
+        let invalidPath = FileManager.default.temporaryDirectory
+            .appendingPathComponent("xomo-inspect-invalid-\(UUID().uuidString).xomobrushes")
+        defer {
+            try? FileManager.default.removeItem(at: libraryPath)
+            try? FileManager.default.removeItem(at: invalidPath)
+        }
+        try JSONEncoder().encode(
+            ImageEditorBrushPresetLibrary(presets: sourcePresets)
+        ).write(to: libraryPath, options: .atomic)
+        try Data("not-json".utf8).write(to: invalidPath, options: .atomic)
+
+        let suiteName = "XomoAutomationTests.inspectPreset.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName) ?? .standard
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let viewModel = makeViewModel(preferencesDefaults: defaults)
+        viewModel.brushSize = 23
+        let local = try #require(viewModel.createBrushPresetFromCurrentSettings())
+        viewModel.applyBrushPreset(local)
+        viewModel.brushSize = 81
+        viewModel.setBrushAngleJitter(43)
+        viewModel.addLayer()
+        viewModel.undo()
+        let presetsBeforeInspection = viewModel.customBrushPresets
+        let selectedBeforeInspection = viewModel.selectedBrushPresetID
+        let statusBeforeInspection = viewModel.statusText
+        let documentBeforeInspection = transactionSignature(viewModel.document)
+        let undoBeforeInspection = viewModel.undoStack.map(transactionSignature)
+        let redoBeforeInspection = viewModel.redoStack.map(transactionSignature)
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        defer { registry.unregister(viewModel) }
+
+        let inspected = registry.execute(request(
+            operation: "call",
+            name: "xomo.brush.preset",
+            arguments: [
+                "action": .string("inspectLibrary"),
+                "path": .string(libraryPath.path)
+            ]
+        ))
+
+        #expect(inspected.ok)
+        #expect(inspected.result?.objectValue?["path"] == .string(libraryPath.path))
+        #expect(
+            inspected.result?.objectValue?["filename"]
+                == .string(libraryPath.lastPathComponent)
+        )
+        #expect(
+            inspected.result?.objectValue?["presetCount"]
+                == .number(Double(sourcePresets.count))
+        )
+        #expect(
+            inspected.result?.objectValue?["installableCount"]
+                == .number(Double(ImageEditorBrushPresetPreferences.maximumPresetCount))
+        )
+        #expect(inspected.result?.objectValue?["skippedCount"] == .number(2))
+        #expect(
+            inspected.result?.objectValue?["titles"]?.arrayValue?.compactMap(\.stringValue)
+                == sourcePresets.map(\.title)
+        )
+
+        let rejected = registry.execute(request(
+            operation: "call",
+            name: "xomo.brush.preset",
+            arguments: [
+                "action": .string("inspectLibrary"),
+                "path": .string(invalidPath.path)
+            ]
+        ))
+        #expect(!rejected.ok)
+        #expect(viewModel.customBrushPresets == presetsBeforeInspection)
+        #expect(viewModel.selectedBrushPresetID == selectedBeforeInspection)
+        #expect(viewModel.statusText == statusBeforeInspection)
+        #expect(viewModel.brushSize == 81)
+        #expect(viewModel.brushAngleJitter == 43)
+        #expect(viewModel.activeBrushPreset == nil)
+        #expect(transactionSignature(viewModel.document) == documentBeforeInspection)
+        #expect(viewModel.undoStack.map(transactionSignature) == undoBeforeInspection)
+        #expect(viewModel.redoStack.map(transactionSignature) == redoBeforeInspection)
     }
 
     @Test func registryReplacesBrushLibraryAtomicallyWithoutApplyingIt() throws {

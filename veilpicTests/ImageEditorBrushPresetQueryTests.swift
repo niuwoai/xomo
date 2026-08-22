@@ -334,6 +334,35 @@ struct ImageEditorBrushPresetQueryTests {
         let archiveManager = try source(root, "veilpic/ImageEditorBrushPresetManager.swift")
         let editor = try source(root, "veilpic/ImageEditorView.swift")
         let menuBar = try source(root, "veilpic/ImageEditorMenuBar.swift")
+        let replacementStart = try #require(
+            archiveManager.range(of: "func chooseBrushPresetReplacementFile()")
+        )
+        let replacementEnd = try #require(
+            archiveManager[replacementStart.upperBound...].range(
+                of: "func confirmBrushPresetLibraryReset()"
+            )
+        )
+        let replacementSource = archiveManager[
+            replacementStart.lowerBound..<replacementEnd.lowerBound
+        ]
+        let archiveDataRead = try #require(
+            replacementSource.range(
+                of: "let data = try self.brushPresetLibraryArchiveData(from: url)"
+            )
+        )
+        let inspectionRead = try #require(
+            replacementSource.range(
+                of: "let inspection = try self.inspectBrushPresetLibraryData(data)"
+            )
+        )
+        let alertRun = try #require(
+            replacementSource.range(
+                of: "guard alert.runModal() == .alertFirstButtonReturn"
+            )
+        )
+        let replacementCommit = try #require(
+            replacementSource.range(of: "try self.replaceBrushPresetLibraryData(data)")
+        )
 
         #expect(manager.contains("ImageEditorBrushPresetQuery("))
         #expect(manager.contains("image-editor-brush-preset-search"))
@@ -386,11 +415,19 @@ struct ImageEditorBrushPresetQueryTests {
         #expect(manager.contains("presetIDs: exportableVisibleCustomPresetIDs"))
         #expect(manager.contains(".disabled(exportableVisibleCustomPresetIDs.isEmpty)"))
         #expect(archiveManager.contains("func replaceBrushPresetLibraryData("))
+        #expect(archiveManager.contains("func inspectBrushPresetLibraryData("))
+        #expect(archiveManager.contains("struct ImageEditorBrushPresetLibraryInspection"))
         #expect(archiveManager.contains("let library = try decodedBrushPresetLibrary(from: data)"))
         #expect(archiveManager.contains("installReplacingBrushPresets(replacementPresets)"))
-        #expect(archiveManager.contains("alert.buttons.first?.hasDestructiveAction = true"))
-        #expect(archiveManager.contains("guard alert.runModal() == .alertFirstButtonReturn"))
-        #expect(archiveManager.contains("try self.replaceBrushPresetLibrary(from: url)"))
+        #expect(replacementSource.contains("alert.buttons.first?.hasDestructiveAction = true"))
+        #expect(replacementSource.contains("inspection.presetCount"))
+        #expect(replacementSource.contains("inspection.installableCount"))
+        #expect(replacementSource.contains("inspection.skippedCount"))
+        #expect(replacementSource.contains("url.lastPathComponent"))
+        #expect(archiveDataRead.lowerBound < inspectionRead.lowerBound)
+        #expect(inspectionRead.lowerBound < alertRun.lowerBound)
+        #expect(alertRun.lowerBound < replacementCommit.lowerBound)
+        #expect(!replacementSource.contains("replaceBrushPresetLibrary(from: url)"))
         #expect(archiveManager.contains("func confirmBrushPresetLibraryReset()"))
         #expect(archiveManager.contains("imageEditor.brushPreset.resetConfirmation.message"))
         #expect(archiveManager.contains("resetCustomBrushPresetLibrary()"))

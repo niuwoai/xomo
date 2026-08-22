@@ -2036,7 +2036,7 @@
 "imageEditor.status.brushPresetLibraryEmpty" = "The brush preset file contains no importable resources.";
 "imageEditor.status.brushPresetFileInvalid" = "This brush preset file could not be read.";
 "imageEditor.brushPreset.replaceConfirmation.title" = "Replace all custom brush presets?";
-"imageEditor.brushPreset.replaceConfirmation.message" = "This will remove %d existing custom brush presets and install the selected library. Current brush settings and document history will not change.";
+"imageEditor.brushPreset.replaceConfirmation.message" = "“%@” contains %d presets: %d will be installed and %d skipped. Continuing will remove %d existing custom brush presets. Current brush settings and document history will not change.";
 "imageEditor.brushPreset.resetConfirmation.title" = "Reset the brush library to built-in presets?";
 "imageEditor.brushPreset.resetConfirmation.message" = "This will remove %d existing custom brush presets. Built-in presets, current brush settings, and document history will not change.";
 "imageEditor.status.brushSettingsReset" = "Brush settings reset to defaults.";

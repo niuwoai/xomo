@@ -39,6 +39,13 @@ struct ImageEditorBrushPresetImportResult: Equatable {
     let skippedCount: Int
 }
 
+struct ImageEditorBrushPresetLibraryInspection: Equatable {
+    let presetCount: Int
+    let installableCount: Int
+    let skippedCount: Int
+    let presetTitles: [String]
+}
+
 enum ImageEditorBrushPresetDropPolicy {
     static func acceptedURL(from urls: [URL]) -> URL? {
         guard urls.count == 1,
@@ -126,6 +133,22 @@ extension ImageEditorViewModel {
         return result
     }
 
+    func inspectBrushPresetLibraryData(
+        _ data: Data
+    ) throws -> ImageEditorBrushPresetLibraryInspection {
+        let library = try decodedBrushPresetLibrary(from: data)
+        let installableCount = min(
+            library.presets.count,
+            ImageEditorBrushPresetPreferences.maximumPresetCount
+        )
+        return ImageEditorBrushPresetLibraryInspection(
+            presetCount: library.presets.count,
+            installableCount: installableCount,
+            skippedCount: library.presets.count - installableCount,
+            presetTitles: library.presets.map { $0.normalizedCustomPreset.title }
+        )
+    }
+
     func exportBrushPresetLibrary(to url: URL, presetIDs: [String]? = nil) throws {
         try brushPresetLibraryData(presetIDs: presetIDs).write(to: url, options: .atomic)
         statusText = L10n.format("imageEditor.status.brushPresetExported", url.lastPathComponent)
@@ -133,24 +156,33 @@ extension ImageEditorViewModel {
 
     @discardableResult
     func importBrushPresetLibrary(from url: URL) throws -> ImageEditorBrushPresetImportResult {
-        let values = try url.resourceValues(forKeys: [.fileSizeKey])
-        if let fileSize = values.fileSize,
-           fileSize > ImageEditorBrushPresetLibrary.maximumFileSize {
-            throw ImageEditorBrushPresetLibraryError.fileTooLarge
-        }
-        return try importBrushPresetLibraryData(Data(contentsOf: url))
+        try importBrushPresetLibraryData(brushPresetLibraryArchiveData(from: url))
     }
 
     @discardableResult
     func replaceBrushPresetLibrary(
         from url: URL
     ) throws -> ImageEditorBrushPresetImportResult {
+        try replaceBrushPresetLibraryData(brushPresetLibraryArchiveData(from: url))
+    }
+
+    func inspectBrushPresetLibrary(
+        from url: URL
+    ) throws -> ImageEditorBrushPresetLibraryInspection {
+        try inspectBrushPresetLibraryData(brushPresetLibraryArchiveData(from: url))
+    }
+
+    func brushPresetLibraryArchiveData(from url: URL) throws -> Data {
         let values = try url.resourceValues(forKeys: [.fileSizeKey])
         if let fileSize = values.fileSize,
            fileSize > ImageEditorBrushPresetLibrary.maximumFileSize {
             throw ImageEditorBrushPresetLibraryError.fileTooLarge
         }
-        return try replaceBrushPresetLibraryData(Data(contentsOf: url))
+        let data = try Data(contentsOf: url)
+        guard data.count <= ImageEditorBrushPresetLibrary.maximumFileSize else {
+            throw ImageEditorBrushPresetLibraryError.fileTooLarge
+        }
+        return data
     }
 
     func chooseBrushPresetImportFile() {
@@ -182,23 +214,29 @@ extension ImageEditorViewModel {
         panel.begin { [weak self] response in
             Task { @MainActor in
                 guard let self, response == .OK, let url = panel.url else { return }
-                let alert = NSAlert()
-                alert.alertStyle = .warning
-                alert.messageText = L10n.text(
-                    "imageEditor.brushPreset.replaceConfirmation.title"
-                )
-                alert.informativeText = L10n.format(
-                    "imageEditor.brushPreset.replaceConfirmation.message",
-                    self.customBrushPresets.count
-                )
-                alert.addButton(withTitle: L10n.text(
-                    "imageEditor.action.brushPresetReplaceLibrary"
-                ))
-                alert.addButton(withTitle: L10n.text("imageEditor.action.cancel"))
-                alert.buttons.first?.hasDestructiveAction = true
-                guard alert.runModal() == .alertFirstButtonReturn else { return }
                 do {
-                    try self.replaceBrushPresetLibrary(from: url)
+                    let data = try self.brushPresetLibraryArchiveData(from: url)
+                    let inspection = try self.inspectBrushPresetLibraryData(data)
+                    let alert = NSAlert()
+                    alert.alertStyle = .warning
+                    alert.messageText = L10n.text(
+                        "imageEditor.brushPreset.replaceConfirmation.title"
+                    )
+                    alert.informativeText = L10n.format(
+                        "imageEditor.brushPreset.replaceConfirmation.message",
+                        url.lastPathComponent,
+                        inspection.presetCount,
+                        inspection.installableCount,
+                        inspection.skippedCount,
+                        self.customBrushPresets.count
+                    )
+                    alert.addButton(withTitle: L10n.text(
+                        "imageEditor.action.brushPresetReplaceLibrary"
+                    ))
+                    alert.addButton(withTitle: L10n.text("imageEditor.action.cancel"))
+                    alert.buttons.first?.hasDestructiveAction = true
+                    guard alert.runModal() == .alertFirstButtonReturn else { return }
+                    try self.replaceBrushPresetLibraryData(data)
                 } catch {
                     self.statusText = self.brushPresetLibraryErrorStatus(error)
                 }

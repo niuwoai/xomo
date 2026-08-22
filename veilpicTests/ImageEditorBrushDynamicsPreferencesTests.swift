@@ -1129,6 +1129,82 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         #expect(restored.recentBrushPresetIDs == [builtIn.id])
     }
 
+    @Test func inspectingBrushLibraryReportsReplacementCapacityWithoutMutation() throws {
+        let incoming = (0..<(ImageEditorBrushPresetPreferences.maximumPresetCount + 2)).map {
+            ImageEditorBrushPreset(
+                id: "incoming-\($0)",
+                name: "Preview \($0 + 1)",
+                size: CGFloat(12 + $0)
+            )
+        }
+        let data = try JSONEncoder().encode(
+            ImageEditorBrushPresetLibrary(presets: incoming)
+        )
+        let (defaults, suiteName) = temporaryDefaults()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let viewModel = makeViewModel(defaults: defaults)
+        let builtIn = try #require(ImageEditorBrushPreset.defaultPresets.first)
+        viewModel.applyBrushPreset(builtIn)
+        #expect(viewModel.setBrushPresetFavorite(id: builtIn.id, isFavorite: true))
+        viewModel.brushSize = 31
+        let local = try #require(viewModel.createBrushPresetFromCurrentSettings())
+        viewModel.applyBrushPreset(local)
+        viewModel.brushSize = 87
+        viewModel.setBrushAngleJitter(41)
+        viewModel.addLayer()
+        viewModel.undo()
+        let presetsBeforeInspection = viewModel.customBrushPresets
+        let selectedBeforeInspection = viewModel.selectedBrushPresetID
+        let favoritesBeforeInspection = viewModel.favoriteBrushPresetIDs
+        let recentBeforeInspection = viewModel.recentBrushPresetIDs
+        let statusBeforeInspection = viewModel.statusText
+        let documentBeforeInspection = transactionSignature(viewModel.document)
+        let undoBeforeInspection = viewModel.undoStack.map { transactionSignature($0) }
+        let redoBeforeInspection = viewModel.redoStack.map { transactionSignature($0) }
+
+        let inspection = try viewModel.inspectBrushPresetLibraryData(data)
+
+        #expect(inspection.presetCount == incoming.count)
+        #expect(
+            inspection.installableCount
+                == ImageEditorBrushPresetPreferences.maximumPresetCount
+        )
+        #expect(inspection.skippedCount == 2)
+        #expect(inspection.presetTitles == incoming.map(\.title))
+        #expect(throws: ImageEditorBrushPresetLibraryError.invalidFile) {
+            try viewModel.inspectBrushPresetLibraryData(Data("not-json".utf8))
+        }
+        #expect(throws: ImageEditorBrushPresetLibraryError.fileTooLarge) {
+            try viewModel.inspectBrushPresetLibraryData(
+                Data(count: ImageEditorBrushPresetLibrary.maximumFileSize + 1)
+            )
+        }
+        #expect(throws: ImageEditorBrushPresetLibraryError.unsupportedFormatVersion) {
+            try viewModel.inspectBrushPresetLibraryData(JSONEncoder().encode(
+                ImageEditorBrushPresetLibrary(
+                    formatVersion: ImageEditorBrushPresetLibrary.currentFormatVersion + 1,
+                    presets: [incoming[0]]
+                )
+            ))
+        }
+        #expect(throws: ImageEditorBrushPresetLibraryError.emptyLibrary) {
+            try viewModel.inspectBrushPresetLibraryData(JSONEncoder().encode(
+                ImageEditorBrushPresetLibrary(presets: [])
+            ))
+        }
+        #expect(viewModel.customBrushPresets == presetsBeforeInspection)
+        #expect(viewModel.selectedBrushPresetID == selectedBeforeInspection)
+        #expect(viewModel.favoriteBrushPresetIDs == favoritesBeforeInspection)
+        #expect(viewModel.recentBrushPresetIDs == recentBeforeInspection)
+        #expect(viewModel.statusText == statusBeforeInspection)
+        #expect(viewModel.brushSize == 87)
+        #expect(viewModel.brushAngleJitter == 41)
+        #expect(viewModel.activeBrushPreset == nil)
+        #expect(transactionSignature(viewModel.document) == documentBeforeInspection)
+        #expect(viewModel.undoStack.map { transactionSignature($0) } == undoBeforeInspection)
+        #expect(viewModel.redoStack.map { transactionSignature($0) } == redoBeforeInspection)
+    }
+
     @Test func resettingBrushLibraryPreservesEditingStateAndBuiltInUsage() throws {
         let (defaults, suiteName) = temporaryDefaults()
         defer { defaults.removePersistentDomain(forName: suiteName) }

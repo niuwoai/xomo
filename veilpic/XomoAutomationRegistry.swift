@@ -2061,6 +2061,28 @@ final class XomoAutomationRegistry {
                 )
             }
             viewModel.moveCustomBrushPreset(id: id, toIndex: Int(rawIndex))
+        case "inspectLibrary":
+            let path = try requiredString("path", in: arguments)
+            let url = URL(fileURLWithPath: path)
+            let inspection: ImageEditorBrushPresetLibraryInspection
+            do {
+                inspection = try viewModel.inspectBrushPresetLibrary(from: url)
+            } catch {
+                if let message = brushPresetLibraryArgumentMessage(error) {
+                    throw XomoAutomationCallError.invalidArgument(message)
+                }
+                throw XomoAutomationCallError.operationFailed(
+                    "Brush preset inspection failed: \(error.localizedDescription)"
+                )
+            }
+            return .object([
+                "path": .string(path),
+                "filename": .string(url.lastPathComponent),
+                "presetCount": .number(Double(inspection.presetCount)),
+                "installableCount": .number(Double(inspection.installableCount)),
+                "skippedCount": .number(Double(inspection.skippedCount)),
+                "titles": .array(inspection.presetTitles.map(XomoJSONValue.string))
+            ])
         case "import":
             let path = try requiredString("path", in: arguments)
             let url = URL(fileURLWithPath: path)
@@ -6985,12 +7007,12 @@ private extension XomoAutomationRegistry {
             "id": XomoAutomationSchema.string(description: "Stable color sampler UUID")
         ], required: ["id"]),
         tool("xomo.color_sampler.clear", "Clear all canvas color samplers and report the actual cleared count."),
-        tool("xomo.brush.preset", "List, favorite, apply, create, update, duplicate, reorder, import, replace, reset, export, rename, or delete persisted brush presets.", [
-            "action": XomoAutomationSchema.string(description: "Brush preset action", values: ["list", "favorites", "recent", "create", "apply", "favorite", "update", "duplicate", "moveToIndex", "import", "replace", "resetLibrary", "export", "rename", "delete"]),
+        tool("xomo.brush.preset", "List, favorite, apply, create, update, duplicate, reorder, inspect, import, replace, reset, export, rename, or delete persisted brush presets.", [
+            "action": XomoAutomationSchema.string(description: "Brush preset action", values: ["list", "favorites", "recent", "create", "apply", "favorite", "update", "duplicate", "moveToIndex", "inspectLibrary", "import", "replace", "resetLibrary", "export", "rename", "delete"]),
             "id": XomoAutomationSchema.string(description: "Preset identifier for apply, favorite, update, duplicate, moveToIndex, single-preset export, rename, or delete"),
             "favorite": XomoAutomationSchema.boolean(description: "Whether favorite should add or remove the preset from favorites"),
             "index": XomoAutomationSchema.integer(description: "Zero-based destination index within custom presets for moveToIndex", minimum: 0),
-            "path": XomoAutomationSchema.string(description: "Source path for import/replace or destination path for export of a .xomobrushes file"),
+            "path": XomoAutomationSchema.string(description: "Source path for inspect/import/replace or destination path for export of a .xomobrushes file"),
             "name": XomoAutomationSchema.string(description: "New custom preset name for rename")
         ]),
         tool("xomo.paint.stroke", "Paint a brush or eraser stroke from canvas points.", [
