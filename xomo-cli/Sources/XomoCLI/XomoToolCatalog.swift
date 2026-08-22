@@ -288,7 +288,7 @@ enum XomoToolCatalog {
         ("xomo.color.set", "Set foreground or background color."),
         ("xomo.color.swap", "Swap foreground and background colors."),
         ("xomo.color.reset", "Reset foreground and background colors."),
-        ("xomo.brush.preset", "List, create, apply, update, duplicate, reorder, import, export, rename, or delete persisted brush presets."),
+        ("xomo.brush.preset", "Search, list, create, apply, update, duplicate, reorder, import, export, rename, or delete persisted brush presets."),
         ("xomo.paint.stroke", "Paint a pressure-aware brush or eraser stroke with size, hardness, opacity, flow, spacing, minimum diameter, roundness, angle, smoothing, and tablet-dynamics controls."),
         ("xomo.paint.gradient", "Paint a gradient between canvas points."),
         ("xomo.paint.special", "Use clone or healing with explicit source and sampling options, source/destination patching, exposure-, tonal-range-, tone-protection-, and gradual-airbrush-aware dodge and burn, pressure-size-, flow-, and vibrance-aware sponge, strength-aware blur, sharpen, and smudge, red-eye, and paint-bucket tools."),

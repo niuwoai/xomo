@@ -735,6 +735,7 @@
 "imageEditor.brushPreset.managerSubtitle" = "完全なブラシプリセットを検索、整理、適用します。";
 "imageEditor.brushPreset.count" = "カスタムプリセット %d / %d";
 "imageEditor.brushPreset.searchPlaceholder" = "ブラシプリセットを検索";
+"imageEditor.brushPreset.searchHelp" = "名前を検索するか、size:>=24px hardness:80% flow:<60 などの条件を組み合わせます";
 "imageEditor.brushPreset.scopeLabel" = "プリセットの提供元";
 "imageEditor.brushPreset.scope.all" = "すべて";
 "imageEditor.brushPreset.scope.builtIn" = "内蔵";

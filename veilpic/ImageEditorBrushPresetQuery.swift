@@ -241,6 +241,158 @@ struct ImageEditorBrushPresetContextPolicy: Equatable {
     }
 }
 
+enum ImageEditorBrushPresetSearchField: String, CaseIterable {
+    case size
+    case hardness
+    case flow
+    case spacing
+    case roundness
+    case angle
+    case smoothing
+
+    func value(in preset: ImageEditorBrushPreset) -> Double {
+        switch self {
+        case .size: return Double(preset.size)
+        case .hardness: return Double(preset.hardness * 100)
+        case .flow: return Double(preset.flow)
+        case .spacing: return Double(preset.spacing)
+        case .roundness: return Double(preset.tipRoundness)
+        case .angle: return Double(preset.tipAngleDegrees)
+        case .smoothing: return Double(preset.smoothing)
+        }
+    }
+}
+
+enum ImageEditorBrushPresetSearchComparison: Equatable {
+    case equal
+    case lessThan
+    case lessThanOrEqual
+    case greaterThan
+    case greaterThanOrEqual
+
+    func matches(_ actualValue: Double, expectedValue: Double) -> Bool {
+        switch self {
+        case .equal:
+            return abs(actualValue - expectedValue) <= 0.000_001
+        case .lessThan:
+            return actualValue < expectedValue
+        case .lessThanOrEqual:
+            return actualValue <= expectedValue
+        case .greaterThan:
+            return actualValue > expectedValue
+        case .greaterThanOrEqual:
+            return actualValue >= expectedValue
+        }
+    }
+}
+
+struct ImageEditorBrushPresetSearchConstraint: Equatable {
+    let field: ImageEditorBrushPresetSearchField
+    let comparison: ImageEditorBrushPresetSearchComparison
+    let value: Double
+
+    func matches(_ preset: ImageEditorBrushPreset) -> Bool {
+        comparison.matches(field.value(in: preset), expectedValue: value)
+    }
+}
+
+struct ImageEditorBrushPresetSearchExpression: Equatable {
+    let nameTerms: [String]
+    let constraints: [ImageEditorBrushPresetSearchConstraint]
+
+    init(_ searchText: String) {
+        var nameTerms: [String] = []
+        var constraints: [ImageEditorBrushPresetSearchConstraint] = []
+        for token in Self.tokens(in: searchText) {
+            if let constraint = Self.constraint(from: token) {
+                constraints.append(constraint)
+            } else {
+                nameTerms.append(token)
+            }
+        }
+        self.nameTerms = nameTerms
+        self.constraints = constraints
+    }
+
+    func matches(_ preset: ImageEditorBrushPreset) -> Bool {
+        let matchesName = nameTerms.allSatisfy { term in
+            preset.title.range(
+                of: term,
+                options: [.caseInsensitive, .diacriticInsensitive],
+                locale: .current
+            ) != nil
+        }
+        return matchesName && constraints.allSatisfy { $0.matches(preset) }
+    }
+
+    private static func tokens(in searchText: String) -> [String] {
+        var tokens: [String] = []
+        var token = ""
+        var isQuoted = false
+        for character in searchText {
+            if character == "\"" {
+                isQuoted.toggle()
+            } else if character.isWhitespace && !isQuoted {
+                if !token.isEmpty {
+                    tokens.append(token)
+                    token = ""
+                }
+            } else {
+                token.append(character)
+            }
+        }
+        if !token.isEmpty {
+            tokens.append(token)
+        }
+        return tokens
+    }
+
+    private static func constraint(
+        from token: String
+    ) -> ImageEditorBrushPresetSearchConstraint? {
+        guard let separatorIndex = token.firstIndex(of: ":"),
+              let field = ImageEditorBrushPresetSearchField(
+                rawValue: String(token[..<separatorIndex]).lowercased()
+              )
+        else { return nil }
+
+        var valueText = String(token[token.index(after: separatorIndex)...])
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        let comparison: ImageEditorBrushPresetSearchComparison
+        if valueText.hasPrefix(">=") {
+            comparison = .greaterThanOrEqual
+            valueText.removeFirst(2)
+        } else if valueText.hasPrefix("<=") {
+            comparison = .lessThanOrEqual
+            valueText.removeFirst(2)
+        } else if valueText.hasPrefix(">") {
+            comparison = .greaterThan
+            valueText.removeFirst()
+        } else if valueText.hasPrefix("<") {
+            comparison = .lessThan
+            valueText.removeFirst()
+        } else {
+            comparison = .equal
+            if valueText.hasPrefix("=") {
+                valueText.removeFirst()
+            }
+        }
+
+        let lowercaseValue = valueText.lowercased()
+        if lowercaseValue.hasSuffix("px") {
+            valueText.removeLast(2)
+        } else if lowercaseValue.hasSuffix("%") {
+            valueText.removeLast()
+        }
+        guard let value = Double(valueText), value.isFinite else { return nil }
+        return ImageEditorBrushPresetSearchConstraint(
+            field: field,
+            comparison: comparison,
+            value: value
+        )
+    }
+}
+
 struct ImageEditorBrushPresetQuery: Equatable {
     var searchText: String
     var scope: ImageEditorBrushPresetScope
@@ -266,17 +418,22 @@ struct ImageEditorBrushPresetQuery: Equatable {
     }
 
     func filter(_ presets: [ImageEditorBrushPreset]) -> [ImageEditorBrushPreset] {
+        let expression = ImageEditorBrushPresetSearchExpression(searchText)
         let filteredPresets: [ImageEditorBrushPreset]
         switch collection {
         case .all:
-            filteredPresets = presets.filter(matches)
+            filteredPresets = presets.filter { matches($0, expression: expression) }
         case .favorites:
-            filteredPresets = presets.filter { favoriteIDs.contains($0.id) && matches($0) }
+            filteredPresets = presets.filter {
+                favoriteIDs.contains($0.id) && matches($0, expression: expression)
+            }
         case .recent:
             let indexedPresets = Dictionary(
                 uniqueKeysWithValues: presets.map { ($0.id, $0) }
             )
-            filteredPresets = recentIDs.compactMap { indexedPresets[$0] }.filter(matches)
+            filteredPresets = recentIDs.compactMap { indexedPresets[$0] }.filter {
+                matches($0, expression: expression)
+            }
         }
         return sortOrder.sort(filteredPresets)
     }
@@ -300,15 +457,12 @@ struct ImageEditorBrushPresetQuery: Equatable {
         return filteredPresets.first?.id
     }
 
-    private func matches(_ preset: ImageEditorBrushPreset) -> Bool {
+    private func matches(
+        _ preset: ImageEditorBrushPreset,
+        expression: ImageEditorBrushPresetSearchExpression
+    ) -> Bool {
         guard matchesScope(preset) else { return false }
-        let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !query.isEmpty else { return true }
-        return preset.title.range(
-            of: query,
-            options: [.caseInsensitive, .diacriticInsensitive],
-            locale: .current
-        ) != nil
+        return expression.matches(preset)
     }
 
     private func matchesScope(_ preset: ImageEditorBrushPreset) -> Bool {

@@ -735,6 +735,7 @@
 "imageEditor.brushPreset.managerSubtitle" = "搜索、整理并应用完整画笔预设。";
 "imageEditor.brushPreset.count" = "%d / %d 个自定义预设";
 "imageEditor.brushPreset.searchPlaceholder" = "搜索画笔预设";
+"imageEditor.brushPreset.searchHelp" = "搜索名称，或组合 size:>=24px、hardness:80%、flow:<60 等条件";
 "imageEditor.brushPreset.scopeLabel" = "预设来源";
 "imageEditor.brushPreset.scope.all" = "全部";
 "imageEditor.brushPreset.scope.builtIn" = "内置";

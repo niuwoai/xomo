@@ -245,6 +245,13 @@ struct XomoAutomationTests {
             .string("rename"), .string("delete")
         ]))
         #expect(brushPresetProperties["favorite"]?.objectValue?["type"] == .string("boolean"))
+        #expect(brushPresetProperties["query"]?.objectValue?["type"] == .string("string"))
+        #expect(brushPresetProperties["scope"]?.objectValue?["enum"] == .array([
+            .string("all"), .string("builtIn"), .string("custom")
+        ]))
+        #expect(brushPresetProperties["sortOrder"]?.objectValue?["enum"] == .array([
+            .string("catalog"), .string("nameAscending"), .string("nameDescending")
+        ]))
         #expect(brushPresetProperties["index"]?.objectValue?["type"] == .string("integer"))
         #expect(brushPresetProperties["index"]?.objectValue?["minimum"] == .number(0))
         #expect(brushPresetProperties["path"]?.objectValue?["type"] == .string("string"))
@@ -10025,6 +10032,64 @@ struct XomoAutomationTests {
         #expect(!unknown.ok)
         #expect(unknown.error?.contains("Not found: Brush preset missing-brush-preset") == true)
         #expect(reopened.favoriteBrushPresetIDs.isEmpty)
+    }
+
+    @Test func registrySearchesBrushPresetsWithSharedStructuredQueryAndRejectsInvalidOptions() throws {
+        let suiteName = "XomoAutomationTests.structuredPresetSearch.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName) ?? .standard
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let viewModel = makeViewModel(preferencesDefaults: defaults)
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        defer { registry.unregister(viewModel) }
+
+        viewModel.brushSize = 32
+        viewModel.hardness = 0.75
+        viewModel.brushFlow = 55
+        viewModel.brushSpacing = 20
+        let matching = try #require(viewModel.createBrushPresetFromCurrentSettings())
+        #expect(viewModel.renameCustomBrushPreset(id: matching.id, to: "Néon Studio Ink"))
+
+        viewModel.brushSize = 12
+        viewModel.hardness = 0.95
+        viewModel.brushFlow = 80
+        let excluded = try #require(viewModel.createBrushPresetFromCurrentSettings())
+        #expect(viewModel.renameCustomBrushPreset(id: excluded.id, to: "Neon Studio Ink Small"))
+
+        let documentBeforeSearch = transactionSignature(viewModel.document)
+        let historyBeforeSearch = viewModel.document.history
+        let presetIDsBeforeSearch = viewModel.customBrushPresets.map(\.id)
+        let response = registry.execute(request(
+            operation: "call",
+            name: "xomo.brush.preset",
+            arguments: [
+                "action": .string("list"),
+                "query": .string("\"neon studio\" ink size:>=24px hardness:<90% flow:<=60"),
+                "scope": .string("custom"),
+                "sortOrder": .string("nameDescending")
+            ]
+        ))
+
+        #expect(response.ok)
+        #expect(response.result?.arrayValue?.compactMap {
+            $0.objectValue?["id"]?.stringValue
+        } == [matching.id])
+
+        for arguments: [String: XomoJSONValue] in [
+            ["action": .string("list"), "scope": .string("external")],
+            ["action": .string("recent"), "sortOrder": .string("newest")]
+        ] {
+            let invalid = registry.execute(request(
+                operation: "call",
+                name: "xomo.brush.preset",
+                arguments: arguments
+            ))
+            #expect(!invalid.ok)
+            #expect(invalid.error?.contains("Invalid argument") == true)
+        }
+        #expect(transactionSignature(viewModel.document) == documentBeforeSearch)
+        #expect(viewModel.document.history == historyBeforeSearch)
+        #expect(viewModel.customBrushPresets.map(\.id) == presetIDsBeforeSearch)
     }
 
     @Test func registryRenamesCustomBrushPresetByStableIDWithoutApplyingIt() throws {

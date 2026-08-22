@@ -160,6 +160,7 @@ struct ImageEditorBrushPresetManager: View {
                 )
                 .textFieldStyle(.plain)
                 .accessibilityIdentifier("image-editor-brush-preset-search")
+                .help(L10n.text("imageEditor.brushPreset.searchHelp"))
             }
             .padding(.horizontal, 9)
             .frame(height: 28)

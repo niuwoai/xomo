@@ -245,6 +245,92 @@ struct ImageEditorBrushPresetQueryTests {
         #expect(result.map(\.id) == ["custom-one", "custom-two"])
     }
 
+    @Test func structuredQueryCombinesQuotedNameTermsAndExactNumericFilters() {
+        let presets = [
+            preset(
+                id: "studio-ink",
+                name: "Néon Studio Ink",
+                size: 28,
+                hardness: 0.8,
+                flow: 60,
+                roundness: 70
+            ),
+            preset(
+                id: "wrong-size",
+                name: "Neon Studio Ink",
+                size: 18,
+                hardness: 0.8,
+                flow: 60,
+                roundness: 70
+            ),
+            preset(
+                id: "wrong-name",
+                name: "Neon Grain",
+                size: 28,
+                hardness: 0.8,
+                flow: 60,
+                roundness: 70
+            )
+        ]
+
+        let result = ImageEditorBrushPresetQuery(
+            searchText: "\"neon studio\" ink size:28px hardness:80% flow:60 roundness:70",
+            scope: .all
+        ).filter(presets)
+
+        #expect(result.map(\.id) == ["studio-ink"])
+    }
+
+    @Test func structuredQuerySupportsComparisonsForEveryNumericField() {
+        let matching = preset(
+            id: "matching",
+            name: "Precision Ink",
+            size: 32,
+            hardness: 0.75,
+            flow: 55,
+            spacing: 20,
+            roundness: 65,
+            angle: 30,
+            smoothing: 18
+        )
+        let excluded = preset(
+            id: "excluded",
+            name: "Precision Ink",
+            size: 20,
+            hardness: 0.95,
+            flow: 75,
+            spacing: 40,
+            roundness: 40,
+            angle: 0,
+            smoothing: 5
+        )
+
+        let result = ImageEditorBrushPresetQuery(
+            searchText: "precision size:>=24 hardness:<90 flow:<=60 spacing:<25 roundness:>60 angle:>0 smoothing:>=18",
+            scope: .all
+        ).filter([excluded, matching])
+
+        #expect(result.map(\.id) == ["matching"])
+    }
+
+    @Test func structuredQueryComposesWithCollectionScopeAndStableSort() {
+        let presets = [
+            preset(id: "built-in", name: "Ink Built In", size: 30, isBuiltIn: true),
+            preset(id: "zulu", name: "Zulu Ink", size: 30),
+            preset(id: "alpha", name: "Alpha Ink", size: 30),
+            preset(id: "small", name: "Small Ink", size: 12)
+        ]
+        let result = ImageEditorBrushPresetQuery(
+            searchText: "ink size:>=24px",
+            scope: .custom,
+            collection: .favorites,
+            sortOrder: .nameAscending,
+            favoriteIDs: ["built-in", "zulu", "alpha", "small"]
+        ).filter(presets)
+
+        #expect(result.map(\.id) == ["alpha", "zulu"])
+    }
+
     @Test func sourceScopeSeparatesBuiltInAndCustomBrushPresets() {
         let presets = [
             preset(id: "built-in-one", name: "Round", isBuiltIn: true),
@@ -452,6 +538,7 @@ struct ImageEditorBrushPresetQueryTests {
         #expect(manager.contains("minHeight: gridDensity.minimumTileHeight"))
         #expect(manager.contains("presetTile(preset)"))
         #expect(manager.contains("query.repairedSelectionID"))
+        #expect(manager.contains("imageEditor.brushPreset.searchHelp"))
         #expect(manager.contains("viewModel.applyBrushPreset(preset)"))
         #expect(manager.contains("viewModel.setBrushPresetFavorite("))
         #expect(manager.contains("viewModel.renameCustomBrushPreset("))
@@ -546,12 +633,25 @@ struct ImageEditorBrushPresetQueryTests {
     private func preset(
         id: String,
         name: String,
+        size: CGFloat = 24,
+        hardness: CGFloat = 0.8,
+        flow: CGFloat = 100,
+        spacing: CGFloat = 25,
+        roundness: CGFloat = 100,
+        angle: CGFloat = 0,
+        smoothing: CGFloat = 0,
         isBuiltIn: Bool = false
     ) -> ImageEditorBrushPreset {
         ImageEditorBrushPreset(
             id: id,
             name: name,
-            size: 24,
+            size: size,
+            hardness: hardness,
+            flow: flow,
+            spacing: spacing,
+            tipRoundness: roundness,
+            tipAngleDegrees: angle,
+            smoothing: smoothing,
             isBuiltIn: isBuiltIn
         )
     }

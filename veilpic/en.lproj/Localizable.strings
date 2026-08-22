@@ -735,6 +735,7 @@
 "imageEditor.brushPreset.managerSubtitle" = "Search, organize, and apply complete brush presets.";
 "imageEditor.brushPreset.count" = "%d of %d custom presets";
 "imageEditor.brushPreset.searchPlaceholder" = "Search brush presets";
+"imageEditor.brushPreset.searchHelp" = "Search names or combine filters such as size:>=24px hardness:80% flow:<60";
 "imageEditor.brushPreset.scopeLabel" = "Preset Source";
 "imageEditor.brushPreset.scope.all" = "All";
 "imageEditor.brushPreset.scope.builtIn" = "Built-in";

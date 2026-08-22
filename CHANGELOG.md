@@ -1,5 +1,20 @@
 # Changelog
 
+## 2.12.0-rc1161 - 2026-08-22
+
+### Added
+
+- 画笔预设资源管理器新增结构化搜索：名称词与引号词组可和 `size`、`hardness`、`flow`、`spacing`、`roundness`、`angle`、`smoothing` 数值条件组合，并支持 `= / < / <= / > / >=`、`px` 与 `%`。
+- `xomo.brush.preset` 的 `list`、`favorites`、`recent` 新增同源的 `query`、`scope`、`sortOrder` 参数，让脚本与智能体看到和界面一致的资源子集与顺序。
+
+### Changed
+
+- 多个名称词和参数条件采用 AND 语义，名称匹配继续忽略大小写与重音；无查询参数的 UI 与 MCP 保持原有目录、收藏和最近使用顺序。
+
+### Verification
+
+- 唯一测试构建通过；画笔资源查询与 UI 接线 17/17、MCP 结构化查询及无参数收藏/最近回归 2/2、工具 schema 1/1、本地化 33/33，共 53/53 项专项通过；CLI/MCP 2/2、发布契约 7/7（21 项断言）与测试运行器契约均通过。下一次周期完整门禁仍为 rc1200。
+
 ## 2.12.0-rc1160 - 2026-08-22
 
 ### Changed

@@ -2008,12 +2008,35 @@ final class XomoAutomationRegistry {
         let action = arguments["action"]?.stringValue ?? "list"
         var resultPresets: [ImageEditorBrushPreset]?
         switch action {
-        case "list":
-            break
-        case "favorites":
-            resultPresets = viewModel.favoriteBrushPresets
-        case "recent":
-            resultPresets = viewModel.recentBrushPresets
+        case "list", "favorites", "recent":
+            let scopeRaw = arguments["scope"]?.stringValue
+                ?? ImageEditorBrushPresetScope.all.rawValue
+            guard let scope = ImageEditorBrushPresetScope(rawValue: scopeRaw) else {
+                throw XomoAutomationCallError.invalidArgument(
+                    "Brush preset scope must be all, builtIn, or custom"
+                )
+            }
+            let sortOrderRaw = arguments["sortOrder"]?.stringValue
+                ?? ImageEditorBrushPresetSortOrder.catalog.rawValue
+            guard let sortOrder = ImageEditorBrushPresetSortOrder(rawValue: sortOrderRaw) else {
+                throw XomoAutomationCallError.invalidArgument(
+                    "Brush preset sortOrder must be catalog, nameAscending, or nameDescending"
+                )
+            }
+            let collection: ImageEditorBrushPresetCollection
+            switch action {
+            case "favorites": collection = .favorites
+            case "recent": collection = .recent
+            default: collection = .all
+            }
+            resultPresets = ImageEditorBrushPresetQuery(
+                searchText: arguments["query"]?.stringValue ?? "",
+                scope: scope,
+                collection: collection,
+                sortOrder: sortOrder,
+                favoriteIDs: Set(viewModel.favoriteBrushPresetIDs),
+                recentIDs: viewModel.recentBrushPresetIDs
+            ).filter(viewModel.brushPresets)
         case "create":
             guard viewModel.createBrushPresetFromCurrentSettings() != nil else {
                 throw XomoAutomationCallError.invalidArgument("Custom brush preset limit reached")
@@ -7094,8 +7117,11 @@ private extension XomoAutomationRegistry {
             "id": XomoAutomationSchema.string(description: "Stable color sampler UUID")
         ], required: ["id"]),
         tool("xomo.color_sampler.clear", "Clear all canvas color samplers and report the actual cleared count."),
-        tool("xomo.brush.preset", "List, favorite, apply, create, update, duplicate, reorder, inspect, import, replace, reset, export, rename, or delete persisted brush presets.", [
+        tool("xomo.brush.preset", "Search, list, favorite, apply, create, update, duplicate, reorder, inspect, import, replace, reset, export, rename, or delete persisted brush presets.", [
             "action": XomoAutomationSchema.string(description: "Brush preset action", values: ["list", "favorites", "recent", "create", "apply", "favorite", "update", "duplicate", "moveToIndex", "inspectLibrary", "import", "replace", "resetLibrary", "export", "rename", "delete"]),
+            "query": XomoAutomationSchema.string(description: "Optional name terms and numeric filters for list, favorites, or recent, such as size:>=24px hardness:80%"),
+            "scope": XomoAutomationSchema.string(description: "Optional preset source scope for list, favorites, or recent", values: ImageEditorBrushPresetScope.allCases.map(\.rawValue)),
+            "sortOrder": XomoAutomationSchema.string(description: "Optional result order for list, favorites, or recent", values: ImageEditorBrushPresetSortOrder.allCases.map(\.rawValue)),
             "id": XomoAutomationSchema.string(description: "Preset identifier for apply, favorite, update, duplicate, moveToIndex, single-preset export, rename, or delete"),
             "favorite": XomoAutomationSchema.boolean(description: "Whether favorite should add or remove the preset from favorites"),
             "index": XomoAutomationSchema.integer(description: "Zero-based destination index within custom presets for moveToIndex", minimum: 0),
