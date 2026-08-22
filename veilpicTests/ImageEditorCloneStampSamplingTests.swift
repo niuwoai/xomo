@@ -88,6 +88,32 @@ struct ImageEditorCloneStampSamplingTests {
         #expect(redonePixel.greenComponent > redonePixel.redComponent + 0.25)
     }
 
+    @Test func compositeSamplingCanExcludeAdjustmentLayers() throws {
+        let adjusted = adjustmentSamplingViewModel()
+        adjusted.cloneStampSampleSource = .currentAndBelow
+        performSamplingStroke(on: adjusted)
+        let adjustedPixel = try color(
+            adjusted.document.selectedLayer?.image,
+            at: CGPoint(x: 61, y: 15)
+        )
+        #expect(adjustedPixel.redComponent > 0.95)
+        #expect(adjustedPixel.greenComponent > 0.95)
+        #expect(adjustedPixel.blueComponent > 0.95)
+
+        let ignored = adjustmentSamplingViewModel()
+        ignored.cloneStampSampleSource = .currentAndBelow
+        ignored.cloneStampIgnoresAdjustmentLayers = true
+        performSamplingStroke(on: ignored)
+        let ignoredPixel = try color(
+            ignored.document.selectedLayer?.image,
+            at: CGPoint(x: 61, y: 15)
+        )
+        #expect(ignoredPixel.redComponent < 0.05)
+        #expect(ignoredPixel.greenComponent < 0.05)
+        #expect(ignoredPixel.blueComponent < 0.05)
+        #expect(ignoredPixel.alphaComponent > 0.95)
+    }
+
     @Test func cloneStampSupportsASingleClick() throws {
         let viewModel = patternedCurrentLayerViewModel()
         viewModel.brushSize = 8
@@ -249,6 +275,25 @@ struct ImageEditorCloneStampSamplingTests {
         var top = ImageEditorLayer.blank(name: "Top", size: size)
         top.image = topImage
         document.layers = [bottom, edit, top]
+        document.selectedLayerID = edit.id
+        document.selectedLayerIDs = [edit.id]
+        return ImageEditorViewModel(document: document) { _ in }
+    }
+
+    private func adjustmentSamplingViewModel() -> ImageEditorViewModel {
+        let size = CGSize(width: 100, height: 30)
+        let black = bitmap(size: size, background: .black, fills: [])
+        var document = ImageEditorDocument(sourceName: "source.png", image: black)
+        var bottom = ImageEditorLayer.blank(name: "Bottom", size: size)
+        bottom.image = black
+        let adjustment = ImageEditorLayer.adjustment(
+            name: "Invert",
+            size: size,
+            kind: .invert,
+            amount: 1
+        )
+        let edit = ImageEditorLayer.blank(name: "Edit", size: size)
+        document.layers = [bottom, adjustment, edit]
         document.selectedLayerID = edit.id
         document.selectedLayerIDs = [edit.id]
         return ImageEditorViewModel(document: document) { _ in }

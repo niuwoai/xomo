@@ -110,6 +110,15 @@ struct XomoAutomationTests {
                 .objectValue?["ignoresAdjustmentLayers"]?.objectValue?["type"]
                 == .string("boolean")
         )
+        let specialPaintTool = try #require(tools.compactMap { tool -> [String: XomoJSONValue]? in
+            guard case .object(let value) = tool else { return nil }
+            return value
+        }.first { $0["name"] == .string("xomo.paint.special") })
+        #expect(
+            specialPaintTool["inputSchema"]?.objectValue?["properties"]?
+                .objectValue?["ignoresAdjustmentLayers"]?.objectValue?["type"]
+                == .string("boolean")
+        )
         #expect(tools.contains { tool in
             guard case .object(let value) = tool else { return false }
             return value["name"] == .string("xomo.color_sampler.list")
@@ -8938,7 +8947,8 @@ struct XomoAutomationTests {
                 "x": .number(12),
                 "y": .number(18),
                 "aligned": .bool(false),
-                "sampleSource": .string("allVisible")
+                "sampleSource": .string("allVisible"),
+                "ignoresAdjustmentLayers": .bool(true)
             ]
         ))
 
@@ -8946,6 +8956,7 @@ struct XomoAutomationTests {
         #expect(viewModel.cloneSourcePoint == CGPoint(x: 12, y: 18))
         #expect(!viewModel.isCloneStampAligned)
         #expect(viewModel.cloneStampSampleSource == .allVisible)
+        #expect(viewModel.cloneStampIgnoresAdjustmentLayers)
     }
 
     @Test func registryConfiguresHealingBrushSourceAndSamplingOptions() {
@@ -8961,7 +8972,8 @@ struct XomoAutomationTests {
                 "x": .number(21),
                 "y": .number(34),
                 "aligned": .bool(false),
-                "sampleSource": .string("currentAndBelow")
+                "sampleSource": .string("currentAndBelow"),
+                "ignoresAdjustmentLayers": .bool(true)
             ]
         ))
 
@@ -8969,6 +8981,7 @@ struct XomoAutomationTests {
         #expect(viewModel.healingSourcePoint == CGPoint(x: 21, y: 34))
         #expect(!viewModel.isHealingBrushAligned)
         #expect(viewModel.healingBrushSampleSource == .currentAndBelow)
+        #expect(viewModel.healingBrushIgnoresAdjustmentLayers)
     }
 
     @Test func registryConfiguresSpotHealingModeWithoutASourcePoint() {

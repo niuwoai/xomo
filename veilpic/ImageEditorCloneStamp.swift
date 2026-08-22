@@ -146,7 +146,8 @@ extension ImageEditorViewModel {
     func sampledBrushInput(
         for layer: ImageEditorLayer,
         canvasOffset: CGSize,
-        sampleSource: ImageEditorCloneSampleSource
+        sampleSource: ImageEditorCloneSampleSource,
+        ignoringAdjustmentLayers: Bool = false
     ) -> ImageEditorSampledBrushInput? {
         switch sampleSource {
         case .currentLayer:
@@ -159,14 +160,17 @@ extension ImageEditorViewModel {
                 localOffset: localOffset
             )
         case .currentAndBelow, .allVisible:
-            let sourceCanvas: NSImage
-            if sampleSource == .currentAndBelow {
-                guard let selectedIndex = document.selectedLayerIndex else { return nil }
-                let includedIDs = Set(document.layers.prefix(selectedIndex + 1).map(\.id))
-                sourceCanvas = document.compositedImage(includingOnly: includedIDs)
-            } else {
-                sourceCanvas = document.compositedImage
-            }
+            let colorSamplerSource: ImageEditorColorSamplerSource =
+                sampleSource == .currentAndBelow
+                    ? .currentAndBelow
+                    : .composite
+            guard let includedIDs = document.colorSamplingLayerIDs(
+                for: colorSamplerSource,
+                ignoringAdjustmentLayers: ignoringAdjustmentLayers
+            ) else { return nil }
+            let sourceCanvas = document.compositedImage(
+                includingOnly: includedIDs
+            )
             let sourceRect = layer.frame.offsetBy(
                 dx: canvasOffset.width,
                 dy: canvasOffset.height

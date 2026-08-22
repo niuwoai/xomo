@@ -241,6 +241,7 @@ final class ImageEditorViewModel: ObservableObject {
         }
     }
     @Published var cloneStampSampleSource: ImageEditorCloneSampleSource = .currentLayer
+    @Published var cloneStampIgnoresAdjustmentLayers = false
     @Published private(set) var isSettingCloneSource = false
     @Published var healingSourcePoint: CGPoint?
     @Published var healingBrushMode: ImageEditorHealingBrushMode = .source {
@@ -257,6 +258,7 @@ final class ImageEditorViewModel: ObservableObject {
         }
     }
     @Published var healingBrushSampleSource: ImageEditorCloneSampleSource = .currentLayer
+    @Published var healingBrushIgnoresAdjustmentLayers = false
     @Published private(set) var isSettingHealingSource = false
     @Published private(set) var colorSamplerPoints: [ImageEditorColorSamplerPoint] = []
     @Published var reselectableSelection: ImageEditorSelection?
@@ -7168,7 +7170,8 @@ final class ImageEditorViewModel: ObservableObject {
         guard let samplingInput = sampledBrushInput(
             for: layer,
             canvasOffset: offsetResolution.canvasOffset,
-            sampleSource: cloneStampSampleSource
+            sampleSource: cloneStampSampleSource,
+            ignoringAdjustmentLayers: cloneStampIgnoresAdjustmentLayers
         ),
               let output = layer.image.normalizedBitmapImage().withCloneStamp(
             samples: rasterLocalSamples(samples, layer: layer),
@@ -7433,7 +7436,9 @@ final class ImageEditorViewModel: ObservableObject {
             guard let targetContext = sampledBrushInput(
                 for: layer,
                 canvasOffset: .zero,
-                sampleSource: healingBrushSampleSource
+                sampleSource: healingBrushSampleSource,
+                ignoringAdjustmentLayers:
+                    healingBrushIgnoresAdjustmentLayers
             ),
             let output = layer.image.normalizedBitmapImage().withSpotHealingBrush(
                 samples: rasterLocalSamples(samples, layer: layer),
@@ -7471,12 +7476,14 @@ final class ImageEditorViewModel: ObservableObject {
         guard let samplingInput = sampledBrushInput(
             for: layer,
             canvasOffset: offsetResolution.canvasOffset,
-            sampleSource: healingBrushSampleSource
+            sampleSource: healingBrushSampleSource,
+            ignoringAdjustmentLayers: healingBrushIgnoresAdjustmentLayers
         ),
         let targetContext = sampledBrushInput(
             for: layer,
             canvasOffset: .zero,
-            sampleSource: healingBrushSampleSource
+            sampleSource: healingBrushSampleSource,
+            ignoringAdjustmentLayers: healingBrushIgnoresAdjustmentLayers
         ),
         let output = layer.image.normalizedBitmapImage().withHealingBrush(
             samples: rasterLocalSamples(samples, layer: layer),

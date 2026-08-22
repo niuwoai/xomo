@@ -254,6 +254,59 @@ struct ImageEditorHealingBrushTests {
         #expect(visiblePixel.alphaComponent > 0.9)
     }
 
+    @Test func healingCompositeInputCanExcludeAdjustmentLayers() throws {
+        let viewModel = adjustmentHealingViewModel()
+        let layer = try #require(viewModel.document.selectedLayer)
+
+        let adjusted = try #require(viewModel.sampledBrushInput(
+            for: layer,
+            canvasOffset: .zero,
+            sampleSource: .allVisible
+        ))
+        let adjustedPixel = try #require(
+            adjusted.image.color(at: CGPoint(x: 12, y: 15))?.usingColorSpace(.deviceRGB)
+        )
+        #expect(adjustedPixel.redComponent > 0.95)
+
+        let ignored = try #require(viewModel.sampledBrushInput(
+            for: layer,
+            canvasOffset: .zero,
+            sampleSource: .allVisible,
+            ignoringAdjustmentLayers: true
+        ))
+        let ignoredPixel = try #require(
+            ignored.image.color(at: CGPoint(x: 12, y: 15))?.usingColorSpace(.deviceRGB)
+        )
+        #expect(ignoredPixel.redComponent < 0.05)
+        #expect(ignoredPixel.greenComponent < 0.05)
+        #expect(ignoredPixel.blueComponent < 0.05)
+        #expect(ignoredPixel.alphaComponent > 0.95)
+
+        viewModel.healingBrushSampleSource = .allVisible
+        performLayeredHealingStroke(on: viewModel)
+        let adjustedStrokePixel = try #require(
+            viewModel.document.selectedLayer?.image
+                .color(at: CGPoint(x: 62, y: 15))?
+                .usingColorSpace(.deviceRGB)
+        )
+        #expect(adjustedStrokePixel.redComponent > 0.95)
+        #expect(adjustedStrokePixel.alphaComponent > 0.95)
+
+        let ignoredStroke = adjustmentHealingViewModel()
+        ignoredStroke.healingBrushSampleSource = .allVisible
+        ignoredStroke.healingBrushIgnoresAdjustmentLayers = true
+        performLayeredHealingStroke(on: ignoredStroke)
+        let ignoredStrokePixel = try #require(
+            ignoredStroke.document.selectedLayer?.image
+                .color(at: CGPoint(x: 62, y: 15))?
+                .usingColorSpace(.deviceRGB)
+        )
+        #expect(ignoredStrokePixel.redComponent < 0.05)
+        #expect(ignoredStrokePixel.greenComponent < 0.05)
+        #expect(ignoredStrokePixel.blueComponent < 0.05)
+        #expect(ignoredStrokePixel.alphaComponent > 0.95)
+    }
+
     private func blemishImage(size: NSSize) -> NSImage {
         NSImage.rendered(size: size) { rect in
             NSColor(deviceRed: 0.45, green: 0.45, blue: 0.45, alpha: 1).setFill()
@@ -307,6 +360,28 @@ struct ImageEditorHealingBrushTests {
         bottom.image = background
         let edit = ImageEditorLayer.blank(name: "Edit", size: size)
         document.layers = [bottom, edit]
+        document.selectedLayerID = edit.id
+        document.selectedLayerIDs = [edit.id]
+        return ImageEditorViewModel(document: document) { _ in }
+    }
+
+    private func adjustmentHealingViewModel() -> ImageEditorViewModel {
+        let size = CGSize(width: 90, height: 30)
+        let black = NSImage.rendered(size: size) { rect in
+            NSColor.black.setFill()
+            rect.fill()
+        } ?? NSImage.transparent(size: size)
+        var document = ImageEditorDocument(sourceName: "source.png", image: black)
+        var bottom = ImageEditorLayer.blank(name: "Bottom", size: size)
+        bottom.image = black
+        let adjustment = ImageEditorLayer.adjustment(
+            name: "Invert",
+            size: size,
+            kind: .invert,
+            amount: 1
+        )
+        let edit = ImageEditorLayer.blank(name: "Edit", size: size)
+        document.layers = [bottom, adjustment, edit]
         document.selectedLayerID = edit.id
         document.selectedLayerIDs = [edit.id]
         return ImageEditorViewModel(document: document) { _ in }

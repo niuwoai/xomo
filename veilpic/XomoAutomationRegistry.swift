@@ -5650,6 +5650,11 @@ final class XomoAutomationRegistry {
                 }
                 viewModel.cloneStampSampleSource = sampleSource
             }
+            if let ignoresAdjustmentLayers =
+                arguments["ignoresAdjustmentLayers"]?.boolValue {
+                viewModel.cloneStampIgnoresAdjustmentLayers =
+                    ignoresAdjustmentLayers
+            }
         }
         if action == "setHealingSource" || action == "healing" {
             if let rawMode = arguments["healingMode"]?.stringValue {
@@ -5670,6 +5675,11 @@ final class XomoAutomationRegistry {
                     )
                 }
                 viewModel.healingBrushSampleSource = sampleSource
+            }
+            if let ignoresAdjustmentLayers =
+                arguments["ignoresAdjustmentLayers"]?.boolValue {
+                viewModel.healingBrushIgnoresAdjustmentLayers =
+                    ignoresAdjustmentLayers
             }
         }
         if action == "sponge", let rawMode = arguments["spongeMode"]?.stringValue {
@@ -7213,7 +7223,8 @@ private extension XomoAutomationRegistry {
             "pressureSize": XomoAutomationSchema.boolean(description: "Use point pressure to control retouch brush diameter"),
             "pressureSensitivity": XomoAutomationSchema.number(description: "Retouch brush pressure curve sensitivity from 0 to 100"),
             "aligned": XomoAutomationSchema.boolean(description: "Keep the clone or healing source offset aligned across strokes"),
-            "sampleSource": XomoAutomationSchema.string(description: "Clone or healing sampling layer range", values: ["currentLayer", "currentAndBelow", "allVisible"])
+            "sampleSource": XomoAutomationSchema.string(description: "Clone or healing sampling layer range", values: ["currentLayer", "currentAndBelow", "allVisible"]),
+            "ignoresAdjustmentLayers": XomoAutomationSchema.boolean(description: "Exclude adjustment layers from clone or healing composite sampling")
         ], required: ["action"]),
         tool("xomo.shape.create", "Create an editable rectangle or ellipse and return its final layer ID, geometry, and normalized style.", [
             "kind": XomoAutomationSchema.string(description: "Shape kind", values: ["rectangle", "ellipse"]),

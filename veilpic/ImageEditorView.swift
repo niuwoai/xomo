@@ -1246,6 +1246,8 @@ struct ImageEditorView: View {
                 sampledBrushOptions(
                     isAligned: $viewModel.isCloneStampAligned,
                     sampleSource: $viewModel.cloneStampSampleSource,
+                    ignoresAdjustmentLayers:
+                        $viewModel.cloneStampIgnoresAdjustmentLayers,
                     sourceActionKey: "imageEditor.action.cloneSourcePick",
                     identifierPrefix: "image-editor-clone"
                 ) {
@@ -1272,6 +1274,8 @@ struct ImageEditorView: View {
                 sampledBrushOptions(
                     isAligned: $viewModel.isHealingBrushAligned,
                     sampleSource: $viewModel.healingBrushSampleSource,
+                    ignoresAdjustmentLayers:
+                        $viewModel.healingBrushIgnoresAdjustmentLayers,
                     sourceActionKey: "imageEditor.action.healingSourcePick",
                     identifierPrefix: "image-editor-healing",
                     showsExplicitSourceControls: viewModel.healingBrushMode == .source
@@ -2245,6 +2249,7 @@ struct ImageEditorView: View {
     private func sampledBrushOptions(
         isAligned: Binding<Bool>,
         sampleSource: Binding<ImageEditorCloneSampleSource>,
+        ignoresAdjustmentLayers: Binding<Bool>,
         sourceActionKey: String,
         identifierPrefix: String,
         showsExplicitSourceControls: Bool = true,
@@ -2272,6 +2277,17 @@ struct ImageEditorView: View {
         .xomoFocusEffectDisabled()
         .accessibilityLabel(L10n.text("imageEditor.option.cloneSampleSource"))
         .accessibilityIdentifier("\(identifierPrefix)-sample-source")
+
+        Toggle(
+            L10n.text("imageEditor.option.colorSamplerIgnoreAdjustments"),
+            isOn: ignoresAdjustmentLayers
+        )
+        .toggleStyle(.checkbox)
+        .fixedSize()
+        .focusable(false)
+        .xomoFocusEffectDisabled()
+        .disabled(sampleSource.wrappedValue == .currentLayer)
+        .accessibilityIdentifier("\(identifierPrefix)-ignore-adjustments")
 
         if showsExplicitSourceControls {
             Button(L10n.text(sourceActionKey), action: beginSettingSource)

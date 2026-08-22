@@ -4996,6 +4996,26 @@ struct ImageEditorScopeTests {
         #expect(source.contains("viewModel.healingBrush(samples: brushStrokeSamples)"))
     }
 
+    @Test func sampledBrushOptionsExposeAdjustmentExclusionForCloneAndHealing() throws {
+        let source = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let optionsStart = try #require(source.range(of: "private func sampledBrushOptions("))
+        let optionsEnd = try #require(
+            source[optionsStart.upperBound...].range(of: "private var marqueeShapePicker")
+        )
+        let optionsSource = source[optionsStart.lowerBound..<optionsEnd.lowerBound]
+
+        #expect(source.contains("$viewModel.cloneStampIgnoresAdjustmentLayers"))
+        #expect(source.contains("$viewModel.healingBrushIgnoresAdjustmentLayers"))
+        #expect(optionsSource.contains("imageEditor.option.colorSamplerIgnoreAdjustments"))
+        #expect(optionsSource.contains("isOn: ignoresAdjustmentLayers"))
+        #expect(optionsSource.contains(".disabled(sampleSource.wrappedValue == .currentLayer)"))
+        #expect(optionsSource.contains(#"\(identifierPrefix)-ignore-adjustments"#))
+        #expect(optionsSource.contains(".focusable(false)"))
+    }
+
     @Test func pressureCursorGestureUsesTabletPressureAndResetsAfterRelease() throws {
         let source = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
