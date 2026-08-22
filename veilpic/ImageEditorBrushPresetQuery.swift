@@ -211,6 +211,36 @@ enum ImageEditorBrushPresetReorderPolicy {
     }
 }
 
+struct ImageEditorBrushPresetContextPolicy: Equatable {
+    let customIndex: Int?
+    let customCount: Int
+
+    var isCustom: Bool { customIndex != nil }
+    var canMoveUp: Bool { (customIndex ?? 0) > 0 }
+    var canMoveDown: Bool {
+        guard let customIndex else { return false }
+        return customIndex < customCount - 1
+    }
+
+    var moveUpDestinationIndex: Int? {
+        canMoveUp ? customIndex.map { $0 - 1 } : nil
+    }
+
+    var moveDownDestinationIndex: Int? {
+        canMoveDown ? customIndex.map { $0 + 1 } : nil
+    }
+
+    init(
+        preset: ImageEditorBrushPreset,
+        customPresets: [ImageEditorBrushPreset]
+    ) {
+        customIndex = preset.isBuiltIn
+            ? nil
+            : customPresets.firstIndex(where: { $0.id == preset.id })
+        customCount = customPresets.count
+    }
+}
+
 struct ImageEditorBrushPresetQuery: Equatable {
     var searchText: String
     var scope: ImageEditorBrushPresetScope

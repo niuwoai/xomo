@@ -20,6 +20,7 @@ struct ImageEditorBrushPresetManager: View {
     @State private var sortOrder = ImageEditorBrushPresetSortOrder.load()
     @State private var isImportDropTargeted = false
     @State private var reorderDropTargetID: String?
+    @FocusState private var isNameFieldFocused: Bool
 
     private var query: ImageEditorBrushPresetQuery {
         ImageEditorBrushPresetQuery(
@@ -438,6 +439,9 @@ struct ImageEditorBrushPresetManager: View {
             )
             .clipShape(RoundedRectangle(cornerRadius: 5, style: .continuous))
         }
+        .contextMenu {
+            presetContextMenu(preset)
+        }
     }
 
     private func presetTile(_ preset: ImageEditorBrushPreset) -> some View {
@@ -477,6 +481,9 @@ struct ImageEditorBrushPresetManager: View {
                     : Color.white.opacity(0.05)
             )
             .clipShape(RoundedRectangle(cornerRadius: 5, style: .continuous))
+        }
+        .contextMenu {
+            presetContextMenu(preset)
         }
     }
 
@@ -558,6 +565,66 @@ struct ImageEditorBrushPresetManager: View {
         .accessibilityIdentifier("image-editor-brush-preset-favorite-\(preset.id)")
     }
 
+    @ViewBuilder
+    private func presetContextMenu(_ preset: ImageEditorBrushPreset) -> some View {
+        let policy = ImageEditorBrushPresetContextPolicy(
+            preset: preset,
+            customPresets: viewModel.customBrushPresets
+        )
+
+        Button(L10n.text("imageEditor.action.brushPresetApply")) {
+            selectedPresetID = preset.id
+            viewModel.applyBrushPreset(preset)
+        }
+        Button(L10n.text(
+            viewModel.isFavoriteBrushPreset(id: preset.id)
+                ? "imageEditor.action.brushPresetUnfavorite"
+                : "imageEditor.action.brushPresetFavorite"
+        )) {
+            viewModel.setBrushPresetFavorite(
+                id: preset.id,
+                isFavorite: !viewModel.isFavoriteBrushPreset(id: preset.id)
+            )
+        }
+
+        if policy.isCustom {
+            Divider()
+            Button(L10n.text("imageEditor.action.brushPresetRename")) {
+                beginRenaming(preset)
+            }
+            Button(L10n.text("imageEditor.action.brushPresetUpdate")) {
+                selectPresetForManagement(preset)
+                viewModel.updateCustomBrushPresetFromCurrentSettings(id: preset.id)
+            }
+            Button(L10n.text("imageEditor.action.brushPresetDuplicate")) {
+                if let copy = viewModel.duplicateCustomBrushPreset(id: preset.id) {
+                    selectPresetForManagement(copy)
+                }
+            }
+
+            Divider()
+            Button(L10n.text("imageEditor.action.brushPresetMoveUp")) {
+                movePresetFromContextMenu(preset, destinationIndex: policy.moveUpDestinationIndex)
+            }
+            .disabled(!policy.canMoveUp)
+            Button(L10n.text("imageEditor.action.brushPresetMoveDown")) {
+                movePresetFromContextMenu(preset, destinationIndex: policy.moveDownDestinationIndex)
+            }
+            .disabled(!policy.canMoveDown)
+
+            Divider()
+            Button(L10n.text("imageEditor.action.brushPresetExport")) {
+                viewModel.chooseBrushPresetExportFile(presetIDs: [preset.id])
+            }
+            Button(
+                L10n.text("imageEditor.action.brushPresetDelete"),
+                role: .destructive
+            ) {
+                viewModel.deleteBrushPreset(preset)
+            }
+        }
+    }
+
     private func customPresetControls(presetID: String, index: Int) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(L10n.text("imageEditor.brushPreset.name"))
@@ -568,6 +635,7 @@ struct ImageEditorBrushPresetManager: View {
                     text: $nameDraft
                 )
                 .textFieldStyle(.roundedBorder)
+                .focused($isNameFieldFocused)
                 .onSubmit {
                     renameSelectedPreset()
                 }
@@ -723,6 +791,31 @@ struct ImageEditorBrushPresetManager: View {
 
     private func syncNameDraft() {
         nameDraft = selectedPreset?.title ?? ""
+    }
+
+    private func selectPresetForManagement(_ preset: ImageEditorBrushPreset) {
+        selectedPresetID = preset.id
+        nameDraft = preset.title
+    }
+
+    private func beginRenaming(_ preset: ImageEditorBrushPreset) {
+        selectPresetForManagement(preset)
+        DispatchQueue.main.async {
+            isNameFieldFocused = true
+        }
+    }
+
+    private func movePresetFromContextMenu(
+        _ preset: ImageEditorBrushPreset,
+        destinationIndex: Int?
+    ) {
+        guard let destinationIndex,
+              viewModel.moveCustomBrushPreset(
+                id: preset.id,
+                toIndex: destinationIndex
+              )
+        else { return }
+        selectPresetForManagement(preset)
     }
 
     private func renameSelectedPreset() {

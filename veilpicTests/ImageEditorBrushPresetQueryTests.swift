@@ -159,6 +159,55 @@ struct ImageEditorBrushPresetQueryTests {
         ) == nil)
     }
 
+    @Test func contextPolicyTargetsTheClickedCustomPresetAndItsRealBoundaries() {
+        let first = preset(id: "first", name: "First")
+        let second = preset(id: "second", name: "Second")
+        let third = preset(id: "third", name: "Third")
+        let builtIn = preset(id: "built-in", name: "Built In", isBuiltIn: true)
+        let staleCustom = preset(id: "stale", name: "Stale")
+        let customPresets = [first, second, third]
+
+        let firstPolicy = ImageEditorBrushPresetContextPolicy(
+            preset: first,
+            customPresets: customPresets
+        )
+        #expect(firstPolicy.isCustom)
+        #expect(!firstPolicy.canMoveUp)
+        #expect(firstPolicy.canMoveDown)
+        #expect(firstPolicy.moveUpDestinationIndex == nil)
+        #expect(firstPolicy.moveDownDestinationIndex == 1)
+
+        let secondPolicy = ImageEditorBrushPresetContextPolicy(
+            preset: second,
+            customPresets: customPresets
+        )
+        #expect(secondPolicy.isCustom)
+        #expect(secondPolicy.canMoveUp)
+        #expect(secondPolicy.canMoveDown)
+        #expect(secondPolicy.moveUpDestinationIndex == 0)
+        #expect(secondPolicy.moveDownDestinationIndex == 2)
+
+        let thirdPolicy = ImageEditorBrushPresetContextPolicy(
+            preset: third,
+            customPresets: customPresets
+        )
+        #expect(thirdPolicy.isCustom)
+        #expect(thirdPolicy.canMoveUp)
+        #expect(!thirdPolicy.canMoveDown)
+        #expect(thirdPolicy.moveUpDestinationIndex == 1)
+        #expect(thirdPolicy.moveDownDestinationIndex == nil)
+
+        for unavailable in [builtIn, staleCustom] {
+            let policy = ImageEditorBrushPresetContextPolicy(
+                preset: unavailable,
+                customPresets: customPresets
+            )
+            #expect(!policy.isCustom)
+            #expect(!policy.canMoveUp)
+            #expect(!policy.canMoveDown)
+        }
+    }
+
     @Test func querySortsVisiblePresetsByNameAndKeepsEquivalentNamesStable() {
         let presets = [
             preset(id: "zulu", name: "Zulu"),
@@ -274,6 +323,16 @@ struct ImageEditorBrushPresetQueryTests {
         #expect(manager.contains("ImageEditorBrushPresetReorderPolicy.resolvedMove("))
         #expect(manager.contains("viewModel.moveCustomBrushPreset("))
         #expect(manager.contains("image-editor-brush-preset-reorder-\\(preset.id)"))
+        #expect(manager.components(separatedBy: ".contextMenu {").count - 1 == 2)
+        #expect(manager.contains("private func presetContextMenu("))
+        #expect(manager.contains("viewModel.applyBrushPreset(preset)"))
+        #expect(manager.contains("beginRenaming(preset)"))
+        #expect(manager.contains("viewModel.updateCustomBrushPresetFromCurrentSettings(id: preset.id)"))
+        #expect(manager.contains("viewModel.duplicateCustomBrushPreset(id: preset.id)"))
+        #expect(manager.contains("viewModel.chooseBrushPresetExportFile(presetIDs: [preset.id])"))
+        #expect(manager.contains("viewModel.deleteBrushPreset(preset)"))
+        #expect(manager.contains(".focused($isNameFieldFocused)"))
+        #expect(manager.contains("DispatchQueue.main.async"))
         #expect(manager.contains("ImageEditorBrushPresetPanelLayout.load()"))
         #expect(manager.contains("layout.save()"))
         #expect(manager.contains("ImageEditorBrushPresetGridDensity.load()"))
