@@ -1015,7 +1015,7 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         )
     }
 
-    @Test func filteredBrushLibraryExportKeepsVisibleOrderWithoutChangingTransactions() throws {
+    @Test func selectedBrushLibraryExportKeepsVisibleOrderWithoutChangingTransactions() throws {
         let (defaults, suiteName) = temporaryDefaults()
         defer { defaults.removePersistentDomain(forName: suiteName) }
         let viewModel = makeViewModel(defaults: defaults)
@@ -1038,11 +1038,15 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         let undoBeforeExport = viewModel.undoStack.map { transactionSignature($0) }
         let redoBeforeExport = viewModel.redoStack.map { transactionSignature($0) }
         let query = ImageEditorBrushPresetQuery(
-            searchText: "ink",
-            scope: .custom,
+            searchText: "",
+            scope: .all,
             sortOrder: .nameAscending
         )
-        let visibleIDs = query.exportableCustomPresetIDs(in: viewModel.brushPresets)
+        let builtInID = try #require(ImageEditorBrushPreset.defaultPresets.first?.id)
+        let visibleIDs = query.exportableSelectedCustomPresetIDs(
+            [builtInID, alpha.id, zulu.id],
+            in: viewModel.brushPresets
+        )
 
         #expect(visibleIDs == [alpha.id, zulu.id])
         let data = try viewModel.brushPresetLibraryData(presetIDs: visibleIDs)

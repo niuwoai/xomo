@@ -12,6 +12,25 @@ import Testing
 @MainActor
 @Suite(.serialized)
 struct ImageEditorBrushPresetQueryTests {
+    @Test func selectionGestureResolvesAllModifierCombinations() {
+        #expect(ImageEditorBrushPresetSelectionGesture.resolved(
+            isCommandPressed: false,
+            isShiftPressed: false
+        ) == .replace)
+        #expect(ImageEditorBrushPresetSelectionGesture.resolved(
+            isCommandPressed: true,
+            isShiftPressed: false
+        ) == .toggle)
+        #expect(ImageEditorBrushPresetSelectionGesture.resolved(
+            isCommandPressed: false,
+            isShiftPressed: true
+        ) == .range)
+        #expect(ImageEditorBrushPresetSelectionGesture.resolved(
+            isCommandPressed: true,
+            isShiftPressed: true
+        ) == .additiveRange)
+    }
+
     @Test func panelLayoutDefaultsToListAndPersistsGridChoice() {
         let suiteName = "ImageEditorBrushPresetQueryTests.\(UUID().uuidString)"
         let defaults = UserDefaults(suiteName: suiteName) ?? .standard
@@ -208,6 +227,80 @@ struct ImageEditorBrushPresetQueryTests {
         }
     }
 
+    @Test func selectionPolicyReplacesAndCommandTogglesWithoutChangingCatalogOrder() {
+        let orderedIDs = ["first", "second", "third"]
+        let initial = ImageEditorBrushPresetSelectionState().selecting(
+            "second",
+            gesture: .replace,
+            orderedIDs: orderedIDs
+        )
+        #expect(initial.selectedIDs == ["second"])
+        #expect(initial.primaryID == "second")
+        #expect(initial.anchorID == "second")
+
+        let added = initial.selecting(
+            "third",
+            gesture: .toggle,
+            orderedIDs: orderedIDs
+        )
+        #expect(added.selectedIDs == ["second", "third"])
+        #expect(added.primaryID == "third")
+        #expect(added.anchorID == "third")
+
+        let removed = added.selecting(
+            "third",
+            gesture: .toggle,
+            orderedIDs: orderedIDs
+        )
+        #expect(removed.selectedIDs == ["second"])
+        #expect(removed.primaryID == "second")
+        #expect(removed.anchorID == "third")
+    }
+
+    @Test func selectionPolicyUsesVisibleOrderForRangeAndAdditiveRange() {
+        let orderedIDs = ["zulu", "alpha", "middle", "last"]
+        let anchor = ImageEditorBrushPresetSelectionState().selecting(
+            "alpha",
+            gesture: .replace,
+            orderedIDs: orderedIDs
+        )
+        let range = anchor.selecting(
+            "last",
+            gesture: .range,
+            orderedIDs: orderedIDs
+        )
+        #expect(range.selectedIDs == ["alpha", "middle", "last"])
+        #expect(range.primaryID == "last")
+        #expect(range.anchorID == "alpha")
+
+        let additive = range.selecting(
+            "zulu",
+            gesture: .additiveRange,
+            orderedIDs: orderedIDs
+        )
+        #expect(additive.selectedIDs == Set(orderedIDs))
+        #expect(additive.primaryID == "zulu")
+        #expect(additive.anchorID == "alpha")
+    }
+
+    @Test func selectionPolicyRepairsHiddenAndRemovedResourcesDeterministically() {
+        let state = ImageEditorBrushPresetSelectionState(
+            selectedIDs: ["hidden", "visible-two"],
+            primaryID: "hidden",
+            anchorID: "hidden"
+        )
+        let repaired = state.repaired(visibleIDs: ["visible-one", "visible-two"])
+        #expect(repaired.selectedIDs == ["visible-two"])
+        #expect(repaired.primaryID == "visible-two")
+        #expect(repaired.anchorID == "visible-two")
+
+        let fallback = state.repaired(visibleIDs: ["visible-one"])
+        #expect(fallback.selectedIDs == ["visible-one"])
+        #expect(fallback.primaryID == "visible-one")
+        #expect(fallback.anchorID == "visible-one")
+        #expect(state.repaired(visibleIDs: []) == ImageEditorBrushPresetSelectionState())
+    }
+
     @Test func querySortsVisiblePresetsByNameAndKeepsEquivalentNamesStable() {
         let presets = [
             preset(id: "zulu", name: "Zulu"),
@@ -398,6 +491,64 @@ struct ImageEditorBrushPresetQueryTests {
         )
     }
 
+    @Test func selectedExportKeepsVisibleSortAndExcludesBuiltInOrUnselectedPresets() {
+        let presets = [
+            preset(id: "built-in", name: "Bravo Ink", isBuiltIn: true),
+            preset(id: "zulu", name: "Zulu Ink"),
+            preset(id: "alpha", name: "Alpha Ink"),
+            preset(id: "grain", name: "Grain")
+        ]
+        let query = ImageEditorBrushPresetQuery(
+            searchText: "ink",
+            scope: .all,
+            sortOrder: .nameAscending
+        )
+
+        #expect(query.exportableSelectedCustomPresetIDs(
+            ["built-in", "zulu", "alpha", "grain"],
+            in: presets
+        ) == ["alpha", "zulu"])
+    }
+
+    @Test func presentationOrderMatchesSegmentedAllSourcesSurface() {
+        let presets = [
+            preset(id: "custom-alpha", name: "Alpha", isBuiltIn: false),
+            preset(id: "built-in-zulu", name: "Zulu", isBuiltIn: true),
+            preset(id: "custom-charlie", name: "Charlie", isBuiltIn: false),
+            preset(id: "built-in-bravo", name: "Bravo", isBuiltIn: true)
+        ]
+        let query = ImageEditorBrushPresetQuery(
+            searchText: "",
+            scope: .all,
+            sortOrder: .nameAscending
+        )
+
+        let presentedIDs = query.presented(presets).map(\.id)
+        #expect(presentedIDs == [
+            "built-in-bravo",
+            "built-in-zulu",
+            "custom-alpha",
+            "custom-charlie"
+        ])
+        #expect(query.repairedSelectionID(nil, in: presets) == "built-in-bravo")
+        let range = ImageEditorBrushPresetSelectionState()
+            .selecting(
+                "built-in-zulu",
+                gesture: .replace,
+                orderedIDs: presentedIDs
+            )
+            .selecting(
+                "custom-charlie",
+                gesture: .range,
+                orderedIDs: presentedIDs
+            )
+        #expect(range.selectedIDs == [
+            "built-in-zulu",
+            "custom-alpha",
+            "custom-charlie"
+        ])
+    }
+
     @Test func queryRepairsSelectionOnlyWhenTheCurrentPresetIsHidden() {
         let presets = [
             preset(id: "round", name: "Round", isBuiltIn: true),
@@ -511,7 +662,7 @@ struct ImageEditorBrushPresetQueryTests {
         #expect(manager.contains("image-editor-brush-preset-drop-target"))
         #expect(manager.contains(".dropDestination(for: URL.self)"))
         #expect(manager.contains("viewModel.importDroppedBrushPresetLibrary(from: urls)"))
-        #expect(manager.contains("selectedPresetID = viewModel.selectedBrushPreset?.id"))
+        #expect(manager.contains("selectOnly(viewModel.selectedBrushPreset?.id)"))
         #expect(manager.contains(".draggable(preset.id)"))
         #expect(manager.contains(".dropDestination(for: String.self)"))
         #expect(manager.contains("ImageEditorBrushPresetReorderPolicy.resolvedMove("))
@@ -549,6 +700,14 @@ struct ImageEditorBrushPresetQueryTests {
         #expect(manager.contains("viewModel.confirmBrushPresetLibraryReset()"))
         #expect(manager.contains(".disabled(!viewModel.canResetCustomBrushPresetLibrary)"))
         #expect(manager.contains("query.exportableCustomPresetIDs("))
+        #expect(manager.contains("query.exportableSelectedCustomPresetIDs("))
+        #expect(manager.contains("query.presented(viewModel.brushPresets)"))
+        #expect(manager.contains("ImageEditorBrushPresetSelectionState("))
+        #expect(manager.contains("ImageEditorBrushPresetSelectionGesture.resolved("))
+        #expect(manager.contains("modifierFlags.contains(.command)"))
+        #expect(manager.contains("modifierFlags.contains(.shift)"))
+        #expect(manager.contains("imageEditor.action.brushPresetExportSelected"))
+        #expect(manager.contains("image-editor-brush-preset-multi-selection"))
         #expect(manager.contains("imageEditor.action.brushPresetExportVisible"))
         #expect(manager.contains("presetIDs: exportableVisibleCustomPresetIDs"))
         #expect(manager.contains(".disabled(exportableVisibleCustomPresetIDs.isEmpty)"))

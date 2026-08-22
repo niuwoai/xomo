@@ -706,6 +706,7 @@
 "imageEditor.action.brushPresetResetLibrary" = "Reset Library to Built-in Presets…";
 "imageEditor.action.brushPresetExport" = "Export Current Brush Preset…";
 "imageEditor.action.brushPresetExportMenu" = "Export Presets…";
+"imageEditor.action.brushPresetExportSelected" = "Export Selected Custom Brush Presets…";
 "imageEditor.action.brushPresetExportVisible" = "Export Visible Custom Brush Presets…";
 "imageEditor.action.brushPresetExportAll" = "Export All Custom Brush Presets…";
 "imageEditor.action.brushPresetRename" = "Rename Current Custom Preset";
@@ -736,6 +737,9 @@
 "imageEditor.brushPreset.count" = "%d of %d custom presets";
 "imageEditor.brushPreset.searchPlaceholder" = "Search brush presets";
 "imageEditor.brushPreset.searchHelp" = "Search names or combine filters such as size:>=24px hardness:80% flow:<60";
+"imageEditor.brushPreset.multiSelectionHelp" = "Command-click to toggle presets; Shift-click to select a visible range";
+"imageEditor.brushPreset.multiSelectionTitle" = "%d brush presets selected";
+"imageEditor.brushPreset.multiSelectionSummary" = "%d selected custom presets can be exported in the current visible order.";
 "imageEditor.brushPreset.scopeLabel" = "Preset Source";
 "imageEditor.brushPreset.scope.all" = "All";
 "imageEditor.brushPreset.scope.builtIn" = "Built-in";

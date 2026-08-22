@@ -11,6 +11,8 @@ struct ImageEditorBrushPresetManager: View {
     @ObservedObject var viewModel: ImageEditorViewModel
     @Environment(\.dismiss) private var dismiss
     @State private var selectedPresetID: String?
+    @State private var selectedPresetIDs: Set<String> = []
+    @State private var selectionAnchorID: String?
     @State private var nameDraft = ""
     @State private var searchText = ""
     @State private var scope = ImageEditorBrushPresetScope.all
@@ -34,7 +36,7 @@ struct ImageEditorBrushPresetManager: View {
     }
 
     private var filteredPresets: [ImageEditorBrushPreset] {
-        query.filter(viewModel.brushPresets)
+        query.presented(viewModel.brushPresets)
     }
 
     private var filteredBuiltInPresets: [ImageEditorBrushPreset] {
@@ -47,6 +49,13 @@ struct ImageEditorBrushPresetManager: View {
 
     private var exportableVisibleCustomPresetIDs: [String] {
         query.exportableCustomPresetIDs(in: viewModel.brushPresets)
+    }
+
+    private var exportableSelectedCustomPresetIDs: [String] {
+        query.exportableSelectedCustomPresetIDs(
+            selectedPresetIDs,
+            in: viewModel.brushPresets
+        )
     }
 
     private var selectedPreset: ImageEditorBrushPreset? {
@@ -80,7 +89,7 @@ struct ImageEditorBrushPresetManager: View {
         .dropDestination(for: URL.self) { urls, _ in
             let didImport = viewModel.importDroppedBrushPresetLibrary(from: urls)
             if didImport {
-                selectedPresetID = viewModel.selectedBrushPreset?.id
+                selectOnly(viewModel.selectedBrushPreset?.id)
             }
             return didImport
         } isTargeted: { isTargeted in
@@ -363,7 +372,9 @@ struct ImageEditorBrushPresetManager: View {
 
     @ViewBuilder
     private var presetInspector: some View {
-        if let preset = selectedPreset {
+        if selectedPresetIDs.count > 1 {
+            multipleSelectionInspector
+        } else if let preset = selectedPreset {
             VStack(alignment: .leading, spacing: 14) {
                 HStack(spacing: 12) {
                     ImageEditorBrushPresetThumbnail(preset: preset)
@@ -403,6 +414,35 @@ struct ImageEditorBrushPresetManager: View {
         }
     }
 
+    private var multipleSelectionInspector: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Image(systemName: "square.stack.3d.up.fill")
+                .font(.system(size: 30))
+                .foregroundStyle(Color.accentColor)
+            Text(L10n.format(
+                "imageEditor.brushPreset.multiSelectionTitle",
+                selectedPresetIDs.count
+            ))
+            .font(.system(size: 15, weight: .bold))
+            Text(L10n.format(
+                "imageEditor.brushPreset.multiSelectionSummary",
+                exportableSelectedCustomPresetIDs.count
+            ))
+            .font(.system(size: 11))
+            .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+            Spacer(minLength: 0)
+            Button(L10n.text("imageEditor.action.brushPresetExportSelected")) {
+                viewModel.chooseBrushPresetExportFile(
+                    presetIDs: exportableSelectedCustomPresetIDs
+                )
+            }
+            .focusable(false)
+            .disabled(exportableSelectedCustomPresetIDs.isEmpty)
+        }
+        .padding(16)
+        .accessibilityIdentifier("image-editor-brush-preset-multi-selection")
+    }
+
     private func presetSectionTitle(_ key: String) -> some View {
         Text(L10n.text(key))
             .font(.system(size: 10, weight: .bold))
@@ -416,7 +456,7 @@ struct ImageEditorBrushPresetManager: View {
         reorderablePresetSurface(preset) {
             HStack(spacing: 4) {
                 Button {
-                    selectedPresetID = preset.id
+                    selectPresetFromSurface(preset.id)
                 } label: {
                     HStack(spacing: 8) {
                         ImageEditorBrushPresetThumbnail(preset: preset, size: 28)
@@ -431,6 +471,7 @@ struct ImageEditorBrushPresetManager: View {
                 }
                 .buttonStyle(.plain)
                 .focusable(false)
+                .help(L10n.text("imageEditor.brushPreset.multiSelectionHelp"))
 
                 favoriteButton(for: preset)
             }
@@ -438,7 +479,7 @@ struct ImageEditorBrushPresetManager: View {
             .padding(.horizontal, 8)
             .frame(height: 38)
             .background(
-                selectedPresetID == preset.id
+                selectedPresetIDs.contains(preset.id)
                     ? Color.accentColor.opacity(0.72)
                     : Color.white.opacity(0.05)
             )
@@ -453,7 +494,7 @@ struct ImageEditorBrushPresetManager: View {
         reorderablePresetSurface(preset) {
             ZStack(alignment: .topTrailing) {
                 Button {
-                    selectedPresetID = preset.id
+                    selectPresetFromSurface(preset.id)
                 } label: {
                     VStack(spacing: 6) {
                         ImageEditorBrushPresetThumbnail(
@@ -473,6 +514,7 @@ struct ImageEditorBrushPresetManager: View {
                 }
                 .buttonStyle(.plain)
                 .focusable(false)
+                .help(L10n.text("imageEditor.brushPreset.multiSelectionHelp"))
 
                 favoriteButton(for: preset)
                     .padding(5)
@@ -481,7 +523,7 @@ struct ImageEditorBrushPresetManager: View {
             .padding(6)
             .frame(minHeight: gridDensity.minimumTileHeight)
             .background(
-                selectedPresetID == preset.id
+                selectedPresetIDs.contains(preset.id)
                     ? Color.accentColor.opacity(0.72)
                     : Color.white.opacity(0.05)
             )
@@ -529,7 +571,7 @@ struct ImageEditorBrushPresetManager: View {
                         id: move.sourceID,
                         toIndex: move.destinationIndex
                     ) else { return false }
-                    selectedPresetID = move.sourceID
+                    selectOnly(move.sourceID)
                     reorderDropTargetID = nil
                     return true
                 } isTargeted: { isTargeted in
@@ -578,7 +620,7 @@ struct ImageEditorBrushPresetManager: View {
         )
 
         Button(L10n.text("imageEditor.action.brushPresetApply")) {
-            selectedPresetID = preset.id
+            selectOnly(preset.id)
             viewModel.applyBrushPreset(preset)
         }
         Button(L10n.text(
@@ -724,7 +766,7 @@ struct ImageEditorBrushPresetManager: View {
                 .focusable(false)
                 Button(L10n.text("imageEditor.action.brushPresetDuplicate")) {
                     if let copy = viewModel.duplicateCustomBrushPreset(id: preset.id) {
-                        selectedPresetID = copy.id
+                        selectOnly(copy.id)
                     }
                 }
                 .focusable(false)
@@ -740,7 +782,7 @@ struct ImageEditorBrushPresetManager: View {
         HStack(spacing: 8) {
             Button(L10n.text("imageEditor.action.brushPresetCreate")) {
                 if let preset = viewModel.createBrushPresetFromCurrentSettings() {
-                    selectedPresetID = preset.id
+                    selectOnly(preset.id)
                 }
             }
             .focusable(false)
@@ -764,6 +806,13 @@ struct ImageEditorBrushPresetManager: View {
             .focusable(false)
 
             Menu(L10n.text("imageEditor.action.brushPresetExportMenu")) {
+                Button(L10n.text("imageEditor.action.brushPresetExportSelected")) {
+                    viewModel.chooseBrushPresetExportFile(
+                        presetIDs: exportableSelectedCustomPresetIDs
+                    )
+                }
+                .disabled(exportableSelectedCustomPresetIDs.isEmpty)
+
                 Button(L10n.text("imageEditor.action.brushPresetExportVisible")) {
                     viewModel.chooseBrushPresetExportFile(
                         presetIDs: exportableVisibleCustomPresetIDs
@@ -801,18 +850,56 @@ struct ImageEditorBrushPresetManager: View {
         }
     }
 
+    private var selectionState: ImageEditorBrushPresetSelectionState {
+        ImageEditorBrushPresetSelectionState(
+            selectedIDs: selectedPresetIDs,
+            primaryID: selectedPresetID,
+            anchorID: selectionAnchorID
+        )
+    }
+
+    private func selectPresetFromSurface(_ presetID: String) {
+        let modifierFlags = NSEvent.modifierFlags
+        let gesture = ImageEditorBrushPresetSelectionGesture.resolved(
+            isCommandPressed: modifierFlags.contains(.command),
+            isShiftPressed: modifierFlags.contains(.shift)
+        )
+        applySelectionState(selectionState.selecting(
+            presetID,
+            gesture: gesture,
+            orderedIDs: filteredPresets.map(\.id)
+        ))
+    }
+
+    private func selectOnly(_ presetID: String?) {
+        guard let presetID else {
+            applySelectionState(ImageEditorBrushPresetSelectionState())
+            return
+        }
+        applySelectionState(ImageEditorBrushPresetSelectionState(
+            selectedIDs: [presetID],
+            primaryID: presetID,
+            anchorID: presetID
+        ))
+    }
+
+    private func applySelectionState(_ state: ImageEditorBrushPresetSelectionState) {
+        selectedPresetIDs = state.selectedIDs
+        selectedPresetID = state.primaryID
+        selectionAnchorID = state.anchorID
+    }
+
     private func selectInitialPreset() {
-        selectedPresetID = query.repairedSelectionID(
+        selectOnly(query.repairedSelectionID(
             viewModel.selectedBrushPreset?.id ?? viewModel.activeBrushPreset?.id,
             in: viewModel.brushPresets
-        )
+        ))
         syncNameDraft()
     }
 
     private func repairSelection() {
-        selectedPresetID = query.repairedSelectionID(
-            selectedPresetID,
-            in: viewModel.brushPresets
+        applySelectionState(
+            selectionState.repaired(visibleIDs: filteredPresets.map(\.id))
         )
     }
 
@@ -821,7 +908,7 @@ struct ImageEditorBrushPresetManager: View {
     }
 
     private func selectPresetForManagement(_ preset: ImageEditorBrushPreset) {
-        selectedPresetID = preset.id
+        selectOnly(preset.id)
         nameDraft = preset.title
     }
 

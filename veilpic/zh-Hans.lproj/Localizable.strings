@@ -706,6 +706,7 @@
 "imageEditor.action.brushPresetResetLibrary" = "将画笔库重置为内置预设…";
 "imageEditor.action.brushPresetExport" = "导出当前画笔预设…";
 "imageEditor.action.brushPresetExportMenu" = "导出画笔预设…";
+"imageEditor.action.brushPresetExportSelected" = "导出所选自定义画笔预设…";
 "imageEditor.action.brushPresetExportVisible" = "导出可见的自定义画笔预设…";
 "imageEditor.action.brushPresetExportAll" = "导出全部自定义画笔预设…";
 "imageEditor.action.brushPresetRename" = "重命名当前自定义预设";
@@ -736,6 +737,9 @@
 "imageEditor.brushPreset.count" = "%d / %d 个自定义预设";
 "imageEditor.brushPreset.searchPlaceholder" = "搜索画笔预设";
 "imageEditor.brushPreset.searchHelp" = "搜索名称，或组合 size:>=24px、hardness:80%、flow:<60 等条件";
+"imageEditor.brushPreset.multiSelectionHelp" = "Command 点按切换预设；Shift 点按选择当前可见范围";
+"imageEditor.brushPreset.multiSelectionTitle" = "已选择 %d 个画笔预设";
+"imageEditor.brushPreset.multiSelectionSummary" = "其中 %d 个所选自定义预设可按当前可见顺序导出。";
 "imageEditor.brushPreset.scopeLabel" = "预设来源";
 "imageEditor.brushPreset.scope.all" = "全部";
 "imageEditor.brushPreset.scope.builtIn" = "内置";

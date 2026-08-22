@@ -241,6 +241,113 @@ struct ImageEditorBrushPresetContextPolicy: Equatable {
     }
 }
 
+enum ImageEditorBrushPresetSelectionGesture: Equatable {
+    case replace
+    case toggle
+    case range
+    case additiveRange
+
+    static func resolved(
+        isCommandPressed: Bool,
+        isShiftPressed: Bool
+    ) -> Self {
+        switch (isCommandPressed, isShiftPressed) {
+        case (true, true): return .additiveRange
+        case (false, true): return .range
+        case (true, false): return .toggle
+        case (false, false): return .replace
+        }
+    }
+}
+
+struct ImageEditorBrushPresetSelectionState: Equatable {
+    var selectedIDs: Set<String> = []
+    var primaryID: String?
+    var anchorID: String?
+
+    func selecting(
+        _ targetID: String,
+        gesture: ImageEditorBrushPresetSelectionGesture,
+        orderedIDs: [String]
+    ) -> Self {
+        guard orderedIDs.contains(targetID) else { return self }
+        switch gesture {
+        case .replace:
+            return Self(
+                selectedIDs: [targetID],
+                primaryID: targetID,
+                anchorID: targetID
+            )
+        case .toggle:
+            return toggling(targetID, orderedIDs: orderedIDs)
+        case .range:
+            return selectingRange(targetID, additive: false, orderedIDs: orderedIDs)
+        case .additiveRange:
+            return selectingRange(targetID, additive: true, orderedIDs: orderedIDs)
+        }
+    }
+
+    func repaired(visibleIDs: [String]) -> Self {
+        guard !visibleIDs.isEmpty else { return Self() }
+        let visibleIDSet = Set(visibleIDs)
+        var repairedIDs = selectedIDs.intersection(visibleIDSet)
+        var repairedPrimaryID = primaryID.flatMap {
+            repairedIDs.contains($0) ? $0 : nil
+        }
+        if repairedPrimaryID == nil {
+            repairedPrimaryID = visibleIDs.first(where: repairedIDs.contains)
+        }
+        if repairedPrimaryID == nil, let firstID = visibleIDs.first {
+            repairedIDs = [firstID]
+            repairedPrimaryID = firstID
+        }
+        let repairedAnchorID = anchorID.flatMap {
+            visibleIDSet.contains($0) ? $0 : nil
+        } ?? repairedPrimaryID
+        return Self(
+            selectedIDs: repairedIDs,
+            primaryID: repairedPrimaryID,
+            anchorID: repairedAnchorID
+        )
+    }
+
+    private func toggling(_ targetID: String, orderedIDs: [String]) -> Self {
+        var selectedIDs = selectedIDs
+        if selectedIDs.remove(targetID) == nil {
+            selectedIDs.insert(targetID)
+        }
+        let primaryID = selectedIDs.contains(targetID)
+            ? targetID
+            : orderedIDs.first(where: selectedIDs.contains)
+        return Self(
+            selectedIDs: selectedIDs,
+            primaryID: primaryID,
+            anchorID: selectedIDs.contains(targetID) ? targetID : anchorID
+        )
+    }
+
+    private func selectingRange(
+        _ targetID: String,
+        additive: Bool,
+        orderedIDs: [String]
+    ) -> Self {
+        let rangeAnchorID = anchorID.flatMap { orderedIDs.contains($0) ? $0 : nil }
+            ?? primaryID.flatMap { orderedIDs.contains($0) ? $0 : nil }
+            ?? targetID
+        guard let anchorIndex = orderedIDs.firstIndex(of: rangeAnchorID),
+              let targetIndex = orderedIDs.firstIndex(of: targetID)
+        else { return self }
+        let selectedRange = Set(
+            orderedIDs[min(anchorIndex, targetIndex)...max(anchorIndex, targetIndex)]
+        )
+        return Self(
+            selectedIDs: additive ? selectedIDs.union(selectedRange) : selectedRange,
+            primaryID: targetID,
+            anchorID: rangeAnchorID
+        )
+    }
+}
+
 enum ImageEditorBrushPresetSearchField: String, CaseIterable {
     case size
     case hardness
@@ -438,11 +545,27 @@ struct ImageEditorBrushPresetQuery: Equatable {
         return sortOrder.sort(filteredPresets)
     }
 
+    func presented(_ presets: [ImageEditorBrushPreset]) -> [ImageEditorBrushPreset] {
+        let filteredPresets = filter(presets)
+        guard collection == .all else { return filteredPresets }
+        return filteredPresets.filter(\.isBuiltIn)
+            + filteredPresets.filter { !$0.isBuiltIn }
+    }
+
     func exportableCustomPresetIDs(
         in presets: [ImageEditorBrushPreset]
     ) -> [String] {
-        filter(presets)
+        presented(presets)
             .filter { !$0.isBuiltIn }
+            .map(\.id)
+    }
+
+    func exportableSelectedCustomPresetIDs(
+        _ selectedIDs: Set<String>,
+        in presets: [ImageEditorBrushPreset]
+    ) -> [String] {
+        presented(presets)
+            .filter { selectedIDs.contains($0.id) && !$0.isBuiltIn }
             .map(\.id)
     }
 
@@ -450,7 +573,7 @@ struct ImageEditorBrushPresetQuery: Equatable {
         _ currentID: String?,
         in presets: [ImageEditorBrushPreset]
     ) -> String? {
-        let filteredPresets = filter(presets)
+        let filteredPresets = presented(presets)
         if let currentID, filteredPresets.contains(where: { $0.id == currentID }) {
             return currentID
         }
