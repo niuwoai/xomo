@@ -1309,6 +1309,100 @@ struct ImageEditorToolSmokeTests {
         #expect(viewModel.document.history.count == historyCount)
     }
 
+    @Test
+    func colorSamplerCurrentAndBelowExcludesUpperLayersAndTracksSelection() throws {
+        let viewModel = makeViewModel(image: solidImage(color: .red))
+        let bottomLayer = try #require(viewModel.document.layers.first)
+        var currentLayer = ImageEditorLayer.blank(
+            name: "Green Left Half",
+            size: canvasSize
+        )
+        currentLayer.image = NSImage.rendered(size: canvasSize) { rect in
+            NSColor.green.setFill()
+            CGRect(
+                x: rect.minX,
+                y: rect.minY,
+                width: rect.width / 2,
+                height: rect.height
+            ).fill()
+        } ?? currentLayer.image
+        var upperLayer = ImageEditorLayer.blank(
+            name: "Blue Upper Layer",
+            size: canvasSize
+        )
+        upperLayer.image = solidImage(color: .blue)
+        viewModel.document.layers = [bottomLayer, currentLayer, upperLayer]
+        viewModel.selectLayer(currentLayer.id)
+        let historyCount = viewModel.document.history.count
+        let leftPoint = CGPoint(x: 8, y: 12)
+        let rightPoint = CGPoint(x: 32, y: 12)
+
+        #expect(viewModel.selectColorSamplerSource(.currentAndBelow))
+        #expect(viewModel.activeColorSamplerSource == .currentAndBelow)
+        viewModel.updatePointer(leftPoint)
+        #expect(viewModel.pointerColorInfoText.contains("G 255"))
+        viewModel.updatePointer(rightPoint)
+        #expect(viewModel.pointerColorInfoText.contains("R 255"))
+        #expect(viewModel.addColorSampler(at: rightPoint))
+        var sampledColor = try #require(
+            viewModel.colorSamplerPoints.last?.color.usingColorSpace(.deviceRGB)
+        )
+        #expect(sampledColor.redComponent > 0.95)
+        #expect(sampledColor.blueComponent < 0.05)
+
+        viewModel.selectLayer(upperLayer.id)
+        #expect(viewModel.activeColorSamplerSource == .currentAndBelow)
+        sampledColor = try #require(
+            viewModel.colorSamplerPoints.last?.color.usingColorSpace(.deviceRGB)
+        )
+        #expect(sampledColor.blueComponent > 0.95)
+        #expect(sampledColor.redComponent < 0.05)
+
+        #expect(viewModel.selectColorSamplerSource(.selectedLayer))
+        viewModel.selectLayer(currentLayer.id)
+        viewModel.updatePointer(rightPoint)
+        #expect(viewModel.pointerColorInfoText.contains("A 0"))
+        #expect(viewModel.document.history.count == historyCount)
+    }
+
+    @Test
+    func colorSamplerCurrentAndBelowIncludesSelectedAdjustmentLayer() throws {
+        let viewModel = makeViewModel(image: solidImage(color: .black))
+        let bottomLayer = try #require(viewModel.document.layers.first)
+        let adjustmentLayer = ImageEditorLayer.adjustment(
+            name: "Invert Current",
+            size: canvasSize,
+            kind: .invert,
+            amount: 1
+        )
+        var upperLayer = ImageEditorLayer.blank(
+            name: "Blue Upper Layer",
+            size: canvasSize
+        )
+        upperLayer.image = solidImage(color: .blue)
+        viewModel.document.layers = [bottomLayer, adjustmentLayer, upperLayer]
+        viewModel.selectLayer(adjustmentLayer.id)
+        let historyCount = viewModel.document.history.count
+        let point = CGPoint(x: 12, y: 10)
+
+        #expect(
+            viewModel.document.layerIDsThroughSelectedLayer()
+                == Set([bottomLayer.id, adjustmentLayer.id])
+        )
+        #expect(!viewModel.canSampleColorSamplerSource(.selectedLayer))
+        #expect(viewModel.canSampleColorSamplerSource(.currentAndBelow))
+        #expect(viewModel.selectColorSamplerSource(.currentAndBelow))
+        viewModel.updatePointer(point)
+        #expect(viewModel.pointerColorInfoText.contains("R 255"))
+        #expect(viewModel.pointerColorInfoText.contains("G 255"))
+        #expect(viewModel.pointerColorInfoText.contains("B 255"))
+
+        #expect(viewModel.selectColorSamplerSource(.composite))
+        #expect(viewModel.pointerColorInfoText.contains("B 255"))
+        #expect(!viewModel.pointerColorInfoText.contains("R 255"))
+        #expect(viewModel.document.history.count == historyCount)
+    }
+
     @Test func eyedropperSharesSampleSizeAndSourceWithoutWritingHistory() throws {
         let width = Int(canvasSize.width)
         let height = Int(canvasSize.height)

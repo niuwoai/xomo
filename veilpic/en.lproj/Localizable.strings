@@ -506,6 +506,8 @@
 "imageEditor.info.colorSampler.source.composite.short" = "Composite";
 "imageEditor.info.colorSampler.source.selectedLayer" = "Sample only the selected layer";
 "imageEditor.info.colorSampler.source.selectedLayer.short" = "Layer";
+"imageEditor.info.colorSampler.source.currentAndBelow" = "Sample the selected layer and all layers below it";
+"imageEditor.info.colorSampler.source.currentAndBelow.short" = "Current & Below";
 "imageEditor.option.eyedropperSamplingRing" = "Show Sampling Ring";
 "imageEditor.info.pointer.coordinates" = "X: %d  Y: %d";
 "imageEditor.info.pointer.coordinates.empty" = "X: —  Y: —";

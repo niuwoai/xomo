@@ -4759,6 +4759,54 @@ struct XomoAutomationTests {
         #expect(viewModel.document.history.count == historyCount)
     }
 
+    @Test
+    func registrySamplesCurrentLayerAndAllLayersBelowWithoutHistory() throws {
+        let viewModel = makeViewModel()
+        let canvasSize = viewModel.document.canvasSize
+        var bottomLayer = try #require(viewModel.document.layers.first)
+        bottomLayer.image = NSImage.rendered(size: canvasSize) { rect in
+            NSColor.red.setFill()
+            rect.fill()
+        } ?? bottomLayer.image
+        let currentLayer = ImageEditorLayer.blank(
+            name: "Transparent Current",
+            size: canvasSize
+        )
+        var upperLayer = ImageEditorLayer.blank(
+            name: "Blue Upper",
+            size: canvasSize
+        )
+        upperLayer.image = NSImage.rendered(size: canvasSize) { rect in
+            NSColor.blue.setFill()
+            rect.fill()
+        } ?? upperLayer.image
+        viewModel.document.layers = [bottomLayer, currentLayer, upperLayer]
+        viewModel.selectLayer(currentLayer.id)
+        let historyCount = viewModel.document.history.count
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        defer { registry.unregister(viewModel) }
+
+        let response = registry.execute(request(
+            operation: "call",
+            name: "xomo.color_sampler.add",
+            arguments: [
+                "x": .number(24),
+                "y": .number(18),
+                "sampleSource": .string("currentAndBelow")
+            ]
+        ))
+
+        #expect(response.ok)
+        let sample = try #require(response.result?.objectValue)
+        #expect(sample["sampleSource"] == .string("currentAndBelow"))
+        let color = try #require(sample["color"]?.objectValue)
+        #expect((color["red"]?.doubleValue ?? 0) > 0.95)
+        #expect((color["blue"]?.doubleValue ?? 1) < 0.05)
+        #expect(viewModel.selectedColorSamplerSource == .currentAndBelow)
+        #expect(viewModel.document.history.count == historyCount)
+    }
+
     @Test func registryMovesAndRemovesOneColorSamplerByStableID() throws {
         let viewModel = makeViewModel()
         let registry = XomoAutomationRegistry.shared

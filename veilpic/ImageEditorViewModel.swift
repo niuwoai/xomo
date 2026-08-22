@@ -499,7 +499,8 @@ final class ImageEditorViewModel: ObservableObject {
     private var cachedPointerSamplePixels: [UInt8] = []
     private var cachedPointerSampleWidth = 0
     private var cachedPointerSampleHeight = 0
-    private var cachedSelectedLayerColorSamplerImage: (
+    private var cachedLayerColorSamplerImage: (
+        source: ImageEditorColorSamplerSource,
         layerID: UUID,
         image: NSImage
     )?
@@ -1486,6 +1487,8 @@ final class ImageEditorViewModel: ObservableObject {
         case .selectedLayer:
             guard let layer = document.selectedLayer else { return false }
             return layer.isGroup || (!layer.isAdjustment && !layer.isFilter)
+        case .currentAndBelow:
+            return document.selectedLayer != nil
         }
     }
 
@@ -1506,19 +1509,30 @@ final class ImageEditorViewModel: ObservableObject {
         switch source {
         case .composite:
             return currentImage
-        case .selectedLayer:
+        case .selectedLayer, .currentAndBelow:
             guard canSampleColorSamplerSource(source),
                   let layer = document.selectedLayer
             else { return nil }
-            if let cachedSelectedLayerColorSamplerImage,
-               cachedSelectedLayerColorSamplerImage.layerID == layer.id {
-                return cachedSelectedLayerColorSamplerImage.image
+            if let cachedLayerColorSamplerImage,
+               cachedLayerColorSamplerImage.source == source,
+               cachedLayerColorSamplerImage.layerID == layer.id {
+                return cachedLayerColorSamplerImage.image
             }
-            let image = layer.isGroup
-                ? document.compositedImage(includingOnly: [layer.id])
-                : selectedLayerExportImage()
+            let image: NSImage?
+            switch source {
+            case .selectedLayer:
+                image = layer.isGroup
+                    ? document.compositedImage(includingOnly: [layer.id])
+                    : selectedLayerExportImage()
+            case .currentAndBelow:
+                image = document.layerIDsThroughSelectedLayer().map {
+                    document.compositedImage(includingOnly: $0)
+                }
+            case .composite:
+                image = nil
+            }
             guard let image else { return nil }
-            cachedSelectedLayerColorSamplerImage = (layer.id, image)
+            cachedLayerColorSamplerImage = (source, layer.id, image)
             return image
         }
     }
@@ -1641,7 +1655,7 @@ final class ImageEditorViewModel: ObservableObject {
         cachedPointerSamplePixels.removeAll(keepingCapacity: false)
         cachedPointerSampleWidth = 0
         cachedPointerSampleHeight = 0
-        cachedSelectedLayerColorSamplerImage = nil
+        cachedLayerColorSamplerImage = nil
     }
 
     var selectedLayerOpacity: Double {
@@ -4866,6 +4880,7 @@ final class ImageEditorViewModel: ObservableObject {
             }
             layerSelectionAnchorID = id
             isEditingLayerMask = false
+            refreshColorSamplers()
             return
         }
         if extendingSelection && !editingMask {
@@ -4889,6 +4904,7 @@ final class ImageEditorViewModel: ObservableObject {
             syncTextControlsFromSelection()
             syncShapeControlsFromSelection()
             syncPathControlsFromSelection()
+            refreshColorSamplers()
             return
         }
 
@@ -4905,6 +4921,7 @@ final class ImageEditorViewModel: ObservableObject {
         syncTextControlsFromSelection()
         syncShapeControlsFromSelection()
         syncPathControlsFromSelection()
+        refreshColorSamplers()
     }
 
     func syncLayerSelectionAnchorToPrimarySelection() {

@@ -699,6 +699,7 @@ enum ImageEditorColorSamplerSampleSize: String, CaseIterable, Identifiable {
 enum ImageEditorColorSamplerSource: String, CaseIterable, Identifiable {
     case composite
     case selectedLayer
+    case currentAndBelow
 
     var id: String { rawValue }
 
@@ -5611,6 +5612,11 @@ struct ImageEditorDocument {
     var selectedLayer: ImageEditorLayer? {
         guard let selectedLayerIndex else { return nil }
         return layers[selectedLayerIndex]
+    }
+
+    func layerIDsThroughSelectedLayer() -> Set<UUID>? {
+        guard let selectedLayerIndex else { return nil }
+        return Set(layers[...selectedLayerIndex].map(\.id))
     }
 
     var compositedImage: NSImage {

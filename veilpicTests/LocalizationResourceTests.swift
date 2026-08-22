@@ -71,6 +71,31 @@ struct LocalizationResourceTests {
         }
     }
 
+    @Test func currentAndBelowColorSamplingSourceIsLocalizedInEverySupportedLanguage() throws {
+        let paths = try Self.repositoryPaths()
+        let expectedValues = [
+            "zh-Hans": ("取样当前图层及其下方所有图层", "当前及以下"),
+            "en": ("Sample the selected layer and all layers below it", "Current & Below"),
+            "ja": ("選択レイヤーとその下のすべてのレイヤーをサンプル", "現在以下")
+        ]
+
+        for (localizationID, expectedValue) in expectedValues {
+            let strings = try Self.stringTable(
+                tableName: "Localizable",
+                localizationID: localizationID,
+                appDirectory: paths.appDirectory
+            )
+            #expect(
+                strings["imageEditor.info.colorSampler.source.currentAndBelow"]
+                    == expectedValue.0
+            )
+            #expect(
+                strings["imageEditor.info.colorSampler.source.currentAndBelow.short"]
+                    == expectedValue.1
+            )
+        }
+    }
+
     @Test func supportedLocalizationDirectoriesShipOnlyTrackedStringTables() throws {
         let paths = try Self.repositoryPaths()
 

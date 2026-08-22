@@ -506,6 +506,8 @@
 "imageEditor.info.colorSampler.source.composite.short" = "合成";
 "imageEditor.info.colorSampler.source.selectedLayer" = "仅取样当前图层";
 "imageEditor.info.colorSampler.source.selectedLayer.short" = "图层";
+"imageEditor.info.colorSampler.source.currentAndBelow" = "取样当前图层及其下方所有图层";
+"imageEditor.info.colorSampler.source.currentAndBelow.short" = "当前及以下";
 "imageEditor.option.eyedropperSamplingRing" = "显示取样环";
 "imageEditor.info.pointer.coordinates" = "X: %d  Y: %d";
 "imageEditor.info.pointer.coordinates.empty" = "X: —  Y: —";

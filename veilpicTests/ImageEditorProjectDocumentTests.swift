@@ -29,7 +29,7 @@ struct ImageEditorProjectDocumentTests {
         ) { _ in }
         viewModel.selectedColorSamplerReadoutMode = .cmyk
         viewModel.selectColorSamplerSampleSize(.fiveByFive)
-        #expect(viewModel.selectColorSamplerSource(.selectedLayer))
+        #expect(viewModel.selectColorSamplerSource(.currentAndBelow))
         #expect(viewModel.addColorSampler(at: CGPoint(x: 4, y: 5)))
         #expect(viewModel.addColorSampler(at: CGPoint(x: 20, y: 12)))
         let savedIDs = viewModel.colorSamplerPoints.map(\.id)
@@ -46,7 +46,7 @@ struct ImageEditorProjectDocumentTests {
         #expect(project.colorSamplerPoints?.map(\.id) == savedIDs)
         #expect(project.colorSamplerReadoutMode == .cmyk)
         #expect(project.colorSamplerSampleSize == .fiveByFive)
-        #expect(project.colorSamplerSource == .selectedLayer)
+        #expect(project.colorSamplerSource == .currentAndBelow)
 
         let reopened = ImageEditorViewModel(
             sourceName: "empty.png",
@@ -61,7 +61,7 @@ struct ImageEditorProjectDocumentTests {
         )
         #expect(reopened.selectedColorSamplerReadoutMode == .cmyk)
         #expect(reopened.selectedColorSamplerSampleSize == .fiveByFive)
-        #expect(reopened.selectedColorSamplerSource == .selectedLayer)
+        #expect(reopened.selectedColorSamplerSource == .currentAndBelow)
         let reopenedColor = try #require(
             reopened.colorSamplerPoints.first?.color.usingColorSpace(.deviceRGB)
         )
