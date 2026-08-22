@@ -126,6 +126,11 @@ struct XomoAutomationTests {
         #expect(sourceSlotSchema["type"] == .string("integer"))
         #expect(sourceSlotSchema["minimum"] == .number(1))
         #expect(sourceSlotSchema["maximum"] == .number(5))
+        #expect(
+            specialPaintTool["inputSchema"]?.objectValue?["properties"]?
+                .objectValue?["flipHorizontal"]?.objectValue?["type"]
+                == .string("boolean")
+        )
         #expect(tools.contains { tool in
             guard case .object(let value) = tool else { return false }
             return value["name"] == .string("xomo.color_sampler.list")
@@ -8954,6 +8959,7 @@ struct XomoAutomationTests {
                 "x": .number(12),
                 "y": .number(18),
                 "sourceSlot": .number(3),
+                "flipHorizontal": .bool(true),
                 "aligned": .bool(false),
                 "sampleSource": .string("allVisible"),
                 "ignoresAdjustmentLayers": .bool(true)
@@ -8963,6 +8969,7 @@ struct XomoAutomationTests {
         #expect(response.ok)
         #expect(viewModel.activeCloneSourceSlotIndex == 2)
         #expect(viewModel.cloneSourcePoint == CGPoint(x: 12, y: 18))
+        #expect(viewModel.cloneSourceFlipsHorizontally)
         #expect(!viewModel.isCloneStampAligned)
         #expect(viewModel.cloneStampSampleSource == .allVisible)
         #expect(viewModel.cloneStampIgnoresAdjustmentLayers)
@@ -8979,8 +8986,10 @@ struct XomoAutomationTests {
         )).ok)
         #expect(viewModel.activeCloneSourceSlotIndex == 0)
         #expect(viewModel.cloneSourcePoint == CGPoint(x: 30, y: 40))
+        #expect(!viewModel.cloneSourceFlipsHorizontally)
         #expect(viewModel.selectCloneSourceSlot(2))
         #expect(viewModel.cloneSourcePoint == CGPoint(x: 12, y: 18))
+        #expect(viewModel.cloneSourceFlipsHorizontally)
     }
 
     @Test func registryRejectsInvalidCloneSourceSlotsAtomically() {
@@ -8996,6 +9005,7 @@ struct XomoAutomationTests {
                 arguments: [
                     "action": .string("setCloneSource"),
                     "sourceSlot": .number(sourceSlot),
+                    "flipHorizontal": .bool(true),
                     "x": .number(12),
                     "y": .number(18),
                     "aligned": .bool(false)
@@ -9005,6 +9015,7 @@ struct XomoAutomationTests {
             #expect(!response.ok)
             #expect(viewModel.activeCloneSourceSlotIndex == 0)
             #expect(viewModel.cloneSourcePoint == nil)
+            #expect(!viewModel.cloneSourceFlipsHorizontally)
             #expect(viewModel.isCloneStampAligned)
             #expect(viewModel.document.history.count == historyCount)
         }

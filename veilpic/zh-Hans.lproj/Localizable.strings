@@ -3455,6 +3455,7 @@
 "imageEditor.option.cloneAligned" = "对齐";
 "imageEditor.option.cloneSampleSource" = "样本";
 "imageEditor.option.cloneSourceSlot" = "仿制源槽位";
+"imageEditor.option.cloneSourceFlipHorizontal" = "水平翻转";
 "imageEditor.option.healingMode" = "修复模式";
 "imageEditor.healingMode.source" = "取样";
 "imageEditor.healingMode.spot" = "污点";

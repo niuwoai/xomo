@@ -103,6 +103,61 @@ struct ImageEditorCloneStampSamplingTests {
         #expect(viewModel.cloneSourcePoint == activePoint)
     }
 
+    @Test func horizontalSourceFlipMirrorsRealClonePixelsAroundTheSamplingOrigin() throws {
+        let ordinary = mirroredSourceViewModel()
+        let flipped = mirroredSourceViewModel()
+        for viewModel in [ordinary, flipped] {
+            viewModel.isCloneStampAligned = false
+            viewModel.brushSize = 18
+            viewModel.hardness = 1
+            viewModel.opacity = 1
+            viewModel.setCloneSource(at: CGPoint(x: 20, y: 15))
+        }
+        flipped.setCloneSourceFlipsHorizontally(true)
+
+        ordinary.cloneStamp(points: [CGPoint(x: 60, y: 15)])
+        flipped.cloneStamp(points: [CGPoint(x: 60, y: 15)])
+
+        let ordinaryLeft = try color(
+            ordinary.document.selectedLayer?.image,
+            at: CGPoint(x: 55, y: 15)
+        )
+        let ordinaryRight = try color(
+            ordinary.document.selectedLayer?.image,
+            at: CGPoint(x: 65, y: 15)
+        )
+        let flippedLeft = try color(
+            flipped.document.selectedLayer?.image,
+            at: CGPoint(x: 55, y: 15)
+        )
+        let flippedRight = try color(
+            flipped.document.selectedLayer?.image,
+            at: CGPoint(x: 65, y: 15)
+        )
+
+        #expect(ordinaryLeft.redComponent > ordinaryLeft.greenComponent + 0.25)
+        #expect(ordinaryRight.greenComponent > ordinaryRight.redComponent + 0.25)
+        #expect(flippedLeft.greenComponent > flippedLeft.redComponent + 0.25)
+        #expect(flippedRight.redComponent > flippedRight.greenComponent + 0.25)
+        #expect(flipped.document.history.last?.title == L10n.text("imageEditor.history.cloneStamp"))
+    }
+
+    @Test func horizontalSourceFlipIsRememberedPerSlotAndSurvivesResampling() {
+        let viewModel = patternedCurrentLayerViewModel()
+        viewModel.setCloneSourceFlipsHorizontally(true)
+        viewModel.setCloneSource(at: CGPoint(x: 10, y: 15))
+
+        #expect(viewModel.cloneSourceFlipsHorizontally)
+        #expect(viewModel.selectCloneSourceSlot(1))
+        #expect(!viewModel.cloneSourceFlipsHorizontally)
+        viewModel.setCloneSource(at: CGPoint(x: 30, y: 15))
+
+        #expect(viewModel.selectCloneSourceSlot(0))
+        #expect(viewModel.cloneSourceFlipsHorizontally)
+        viewModel.setCloneSource(at: CGPoint(x: 12, y: 15))
+        #expect(viewModel.cloneSourceFlipsHorizontally)
+    }
+
     @Test func samplingRangeDistinguishesCurrentBelowAndAllVisibleLayers() throws {
         let current = layeredSamplingViewModel()
         current.cloneStampSampleSource = .currentLayer
@@ -300,6 +355,21 @@ struct ImageEditorCloneStampSamplingTests {
         document.layers = [editLayer]
         document.selectedLayerID = editLayer.id
         document.selectedLayerIDs = [editLayer.id]
+        return ImageEditorViewModel(document: document) { _ in }
+    }
+
+    private func mirroredSourceViewModel() -> ImageEditorViewModel {
+        let size = CGSize(width: 100, height: 30)
+        let image = bitmap(size: size, background: .systemBlue, fills: [
+            (CGRect(x: 10, y: 8, width: 10, height: 14), .systemRed),
+            (CGRect(x: 20, y: 8, width: 10, height: 14), .systemGreen)
+        ])
+        var document = ImageEditorDocument(sourceName: "source.png", image: image)
+        var layer = ImageEditorLayer.blank(name: "Mirror Pattern", size: size)
+        layer.image = image
+        document.layers = [layer]
+        document.selectedLayerID = layer.id
+        document.selectedLayerIDs = [layer.id]
         return ImageEditorViewModel(document: document) { _ in }
     }
 

@@ -1262,6 +1262,19 @@ struct ImageEditorView: View {
                 .accessibilityLabel(L10n.text("imageEditor.option.cloneSourceSlot"))
                 .accessibilityIdentifier("image-editor-clone-source-slot")
 
+                Toggle(
+                    L10n.text("imageEditor.option.cloneSourceFlipHorizontal"),
+                    isOn: Binding(
+                        get: { viewModel.cloneSourceFlipsHorizontally },
+                        set: { viewModel.setCloneSourceFlipsHorizontally($0) }
+                    )
+                )
+                .toggleStyle(.checkbox)
+                .fixedSize()
+                .focusable(false)
+                .xomoFocusEffectDisabled()
+                .accessibilityIdentifier("image-editor-clone-source-flip-horizontal")
+
                 sampledBrushOptions(
                     isAligned: $viewModel.isCloneStampAligned,
                     sampleSource: $viewModel.cloneStampSampleSource,

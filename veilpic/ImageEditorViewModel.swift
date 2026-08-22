@@ -241,6 +241,9 @@ final class ImageEditorViewModel: ObservableObject {
     var cloneSourcePoint: CGPoint? {
         cloneSourceSlots[activeCloneSourceSlotIndex].sourcePoint
     }
+    var cloneSourceFlipsHorizontally: Bool {
+        cloneSourceSlots[activeCloneSourceSlotIndex].flipsHorizontally
+    }
     @Published var isCloneStampAligned = true {
         didSet {
             guard isCloneStampAligned != oldValue else { return }
@@ -7111,10 +7114,8 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     func setCloneSource(at point: CGPoint?) {
-        cloneSourceSlots[activeCloneSourceSlotIndex] = ImageEditorCloneSourceSlotState(
-            sourcePoint: point,
-            alignedCanvasOffset: nil
-        )
+        cloneSourceSlots[activeCloneSourceSlotIndex].sourcePoint = point
+        cloneSourceSlots[activeCloneSourceSlotIndex].alignedCanvasOffset = nil
         isSettingCloneSource = false
         statusText = point == nil
             ? L10n.text("imageEditor.status.cloneSourceMissing")
@@ -7131,6 +7132,11 @@ final class ImageEditorViewModel: ObservableObject {
             ? L10n.text("imageEditor.status.cloneSourceMissing")
             : L10n.text("imageEditor.status.cloneSourceSet")
         return true
+    }
+
+    func setCloneSourceFlipsHorizontally(_ flipsHorizontally: Bool) {
+        cloneSourceSlots[activeCloneSourceSlotIndex].flipsHorizontally =
+            flipsHorizontally
     }
 
     private func resetCloneSourceAlignedOffsets() {
@@ -7211,6 +7217,7 @@ final class ImageEditorViewModel: ObservableObject {
             samples: rasterLocalSamples(samples, layer: layer),
             sourceOffset: samplingInput.localOffset,
             sourceImage: samplingInput.image,
+            flipSourceHorizontally: cloneSourceFlipsHorizontally,
             width: rasterLocalBrushWidth(brushSize, layer: layer),
             opacity: opacity,
             hardness: hardness,
@@ -11037,6 +11044,7 @@ extension NSImage {
         points: [CGPoint],
         sourceOffset: CGSize,
         sourceImage: NSImage,
+        flipSourceHorizontally: Bool = false,
         width: CGFloat,
         opacity: CGFloat,
         hardness: CGFloat
@@ -11045,6 +11053,7 @@ extension NSImage {
             samples: points.map { ImageEditorBrushStrokeSample(point: $0) },
             sourceOffset: sourceOffset,
             sourceImage: sourceImage,
+            flipSourceHorizontally: flipSourceHorizontally,
             width: width,
             opacity: opacity,
             hardness: hardness,
@@ -11057,6 +11066,7 @@ extension NSImage {
         samples: [ImageEditorBrushStrokeSample],
         sourceOffset: CGSize,
         sourceImage: NSImage,
+        flipSourceHorizontally: Bool = false,
         width: CGFloat,
         opacity: CGFloat,
         hardness: CGFloat,
@@ -11066,17 +11076,38 @@ extension NSImage {
         guard !samples.isEmpty else { return nil }
 
         let shiftedSource = NSImage.rendered(size: size) { _ in
-            sourceImage.draw(
-                in: CGRect(
-                    x: -sourceOffset.width,
-                    y: sourceOffset.height,
-                    width: sourceImage.size.width,
-                    height: sourceImage.size.height
-                ),
-                from: CGRect(origin: .zero, size: sourceImage.size),
-                operation: .copy,
-                fraction: 1
-            )
+            if flipSourceHorizontally,
+               let context = NSGraphicsContext.current?.cgContext,
+               let destinationReference = samples.first?.point {
+                context.translateBy(
+                    x: destinationReference.x * 2 + sourceOffset.width,
+                    y: 0
+                )
+                context.scaleBy(x: -1, y: 1)
+                sourceImage.draw(
+                    in: CGRect(
+                        x: 0,
+                        y: sourceOffset.height,
+                        width: sourceImage.size.width,
+                        height: sourceImage.size.height
+                    ),
+                    from: CGRect(origin: .zero, size: sourceImage.size),
+                    operation: .copy,
+                    fraction: 1
+                )
+            } else {
+                sourceImage.draw(
+                    in: CGRect(
+                        x: -sourceOffset.width,
+                        y: sourceOffset.height,
+                        width: sourceImage.size.width,
+                        height: sourceImage.size.height
+                    ),
+                    from: CGRect(origin: .zero, size: sourceImage.size),
+                    operation: .copy,
+                    fraction: 1
+                )
+            }
         }
         let pixelWidth = max(1, Int(size.width.rounded()))
         let pixelHeight = max(1, Int(size.height.rounded()))

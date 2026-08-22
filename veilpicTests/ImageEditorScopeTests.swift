@@ -5032,8 +5032,12 @@ struct ImageEditorScopeTests {
         #expect(cloneSource.contains("viewModel.activeCloneSourceSlotIndex"))
         #expect(cloneSource.contains("viewModel.selectCloneSourceSlot($0)"))
         #expect(cloneSource.contains(".pickerStyle(.segmented)"))
+        #expect(cloneSource.contains("imageEditor.option.cloneSourceFlipHorizontal"))
+        #expect(cloneSource.contains("viewModel.cloneSourceFlipsHorizontally"))
+        #expect(cloneSource.contains("viewModel.setCloneSourceFlipsHorizontally($0)"))
         #expect(cloneSource.contains(".focusable(false)"))
         #expect(cloneSource.contains("image-editor-clone-source-slot"))
+        #expect(cloneSource.contains("image-editor-clone-source-flip-horizontal"))
     }
 
     @Test func pressureCursorGestureUsesTabletPressureAndResetsAfterRelease() throws {
