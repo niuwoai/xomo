@@ -26,6 +26,42 @@ struct ImageEditorBrushPresetQueryTests {
         #expect(ImageEditorBrushPresetPanelLayout.load(from: defaults) == .list)
     }
 
+    @Test func sortPreferenceDefaultsToCatalogAndPersistsNameOrder() {
+        let suiteName = "ImageEditorBrushPresetQueryTests.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName) ?? .standard
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+
+        #expect(ImageEditorBrushPresetSortOrder.load(from: defaults) == .catalog)
+
+        ImageEditorBrushPresetSortOrder.nameDescending.save(to: defaults)
+        #expect(ImageEditorBrushPresetSortOrder.load(from: defaults) == .nameDescending)
+
+        defaults.set("unsupported-order", forKey: ImageEditorBrushPresetSortOrder.storageKey)
+        #expect(ImageEditorBrushPresetSortOrder.load(from: defaults) == .catalog)
+    }
+
+    @Test func querySortsVisiblePresetsByNameAndKeepsEquivalentNamesStable() {
+        let presets = [
+            preset(id: "zulu", name: "Zulu"),
+            preset(id: "alpha-one", name: "Alpha"),
+            preset(id: "alpha-two", name: "álpha")
+        ]
+
+        let ascending = ImageEditorBrushPresetQuery(
+            searchText: "",
+            scope: .all,
+            sortOrder: .nameAscending
+        ).filter(presets)
+        let descending = ImageEditorBrushPresetQuery(
+            searchText: "",
+            scope: .all,
+            sortOrder: .nameDescending
+        ).filter(presets)
+
+        #expect(ascending.map(\.id) == ["alpha-one", "alpha-two", "zulu"])
+        #expect(descending.map(\.id) == ["zulu", "alpha-one", "alpha-two"])
+    }
+
     @Test func queryMatchesCaseAndDiacriticsWithoutChangingCatalogOrder() {
         let presets = [
             preset(id: "built-in", name: "Soft Round", isBuiltIn: true),
@@ -108,8 +144,11 @@ struct ImageEditorBrushPresetQueryTests {
         #expect(manager.contains("image-editor-brush-preset-scope"))
         #expect(manager.contains("image-editor-brush-preset-collection"))
         #expect(manager.contains("image-editor-brush-preset-layout"))
+        #expect(manager.contains("image-editor-brush-preset-sort"))
         #expect(manager.contains("ImageEditorBrushPresetPanelLayout.load()"))
         #expect(manager.contains("layout.save()"))
+        #expect(manager.contains("ImageEditorBrushPresetSortOrder.load()"))
+        #expect(manager.contains("sortOrder.save()"))
         #expect(manager.contains("LazyVGrid(columns: presetGridColumns"))
         #expect(manager.contains("presetTile(preset)"))
         #expect(manager.contains("query.repairedSelectionID"))

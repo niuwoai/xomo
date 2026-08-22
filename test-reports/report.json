@@ -1,10 +1,10 @@
 {
-  "generated_at": "2026-08-22 08:34:31 +0800",
-  "total": 6,
-  "passed": 6,
+  "generated_at": "2026-08-22 08:49:01 +0800",
+  "total": 8,
+  "passed": 8,
   "failed": 0,
-  "total_tests": 6,
-  "passed_tests": 6,
+  "total_tests": 8,
+  "passed_tests": 8,
   "failed_tests_in_failed_groups": 0,
   "jobs": 1,
   "results": [
@@ -15,7 +15,7 @@
       "file": "ImageEditorBrushPresetQueryTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.584,
+      "duration": 3.57,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorBrushPresetQueryTests.brushesPanelConnectsSearchCollectionsAndSharedPresetActions.log"
@@ -27,7 +27,7 @@
       "file": "ImageEditorBrushPresetQueryTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.585,
+      "duration": 3.59,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorBrushPresetQueryTests.favoriteAndRecentCollectionsKeepTheirAuthoritativeOrdering.log"
@@ -39,7 +39,7 @@
       "file": "ImageEditorBrushPresetQueryTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 6.323,
+      "duration": 4.935,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorBrushPresetQueryTests.panelLayoutDefaultsToListAndPersistsGridChoice.log"
@@ -51,7 +51,7 @@
       "file": "ImageEditorBrushPresetQueryTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.571,
+      "duration": 3.497,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorBrushPresetQueryTests.queryMatchesCaseAndDiacriticsWithoutChangingCatalogOrder.log"
@@ -63,10 +63,34 @@
       "file": "ImageEditorBrushPresetQueryTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.515,
+      "duration": 3.623,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorBrushPresetQueryTests.queryRepairsSelectionOnlyWhenTheCurrentPresetIsHidden.log"
+    },
+    {
+      "suite": "ImageEditorBrushPresetQueryTests",
+      "method": "querySortsVisiblePresetsByNameAndKeepsEquivalentNamesStable",
+      "identifier": "veilpicTests/ImageEditorBrushPresetQueryTests/querySortsVisiblePresetsByNameAndKeepsEquivalentNamesStable()",
+      "file": "ImageEditorBrushPresetQueryTests.swift",
+      "test_count": 1,
+      "passed": true,
+      "duration": 3.604,
+      "infrastructure_retries": 0,
+      "issues": [],
+      "log": "ImageEditorBrushPresetQueryTests.querySortsVisiblePresetsByNameAndKeepsEquivalentNamesStable.log"
+    },
+    {
+      "suite": "ImageEditorBrushPresetQueryTests",
+      "method": "sortPreferenceDefaultsToCatalogAndPersistsNameOrder",
+      "identifier": "veilpicTests/ImageEditorBrushPresetQueryTests/sortPreferenceDefaultsToCatalogAndPersistsNameOrder()",
+      "file": "ImageEditorBrushPresetQueryTests.swift",
+      "test_count": 1,
+      "passed": true,
+      "duration": 3.536,
+      "infrastructure_retries": 0,
+      "issues": [],
+      "log": "ImageEditorBrushPresetQueryTests.sortPreferenceDefaultsToCatalogAndPersistsNameOrder.log"
     },
     {
       "suite": "ImageEditorBrushPresetQueryTests",
@@ -75,7 +99,7 @@
       "file": "ImageEditorBrushPresetQueryTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.467,
+      "duration": 3.55,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorBrushPresetQueryTests.sourceScopeSeparatesBuiltInAndCustomBrushPresets.log"

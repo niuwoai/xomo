@@ -740,6 +740,10 @@
 "imageEditor.brushPreset.layoutLabel" = "Preset Layout";
 "imageEditor.brushPreset.layout.list" = "List";
 "imageEditor.brushPreset.layout.grid" = "Thumbnail Grid";
+"imageEditor.brushPreset.sortLabel" = "Sort Presets";
+"imageEditor.brushPreset.sort.catalog" = "Catalog Order";
+"imageEditor.brushPreset.sort.nameAscending" = "Name A–Z";
+"imageEditor.brushPreset.sort.nameDescending" = "Name Z–A";
 "imageEditor.brushPreset.builtInBadge" = "Built-in preset";
 "imageEditor.brushPreset.customBadge" = "Custom preset";
 "imageEditor.brushPreset.name" = "Name";

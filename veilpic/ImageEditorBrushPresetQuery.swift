@@ -70,10 +70,61 @@ enum ImageEditorBrushPresetPanelLayout: String, CaseIterable, Identifiable {
     }
 }
 
+enum ImageEditorBrushPresetSortOrder: String, CaseIterable, Identifiable {
+    static let storageKey = "im.some.xomo.imageEditor.brushPresetSortOrder"
+
+    case catalog
+    case nameAscending
+    case nameDescending
+
+    var id: String { rawValue }
+
+    var title: String {
+        L10n.text("imageEditor.brushPreset.sort.\(rawValue)")
+    }
+
+    var symbolName: String {
+        switch self {
+        case .catalog: return "list.bullet"
+        case .nameAscending: return "arrow.up"
+        case .nameDescending: return "arrow.down"
+        }
+    }
+
+    static func load(from defaults: UserDefaults = .standard) -> Self {
+        guard let rawValue = defaults.string(forKey: storageKey),
+              let order = Self(rawValue: rawValue)
+        else { return .catalog }
+        return order
+    }
+
+    func save(to defaults: UserDefaults = .standard) {
+        defaults.set(rawValue, forKey: Self.storageKey)
+    }
+
+    func sort(_ presets: [ImageEditorBrushPreset]) -> [ImageEditorBrushPreset] {
+        guard self != .catalog else { return presets }
+        return presets.enumerated().sorted { lhs, rhs in
+            let comparison = lhs.element.title.compare(
+                rhs.element.title,
+                options: [.caseInsensitive, .diacriticInsensitive],
+                locale: .current
+            )
+            if comparison == .orderedSame {
+                return lhs.offset < rhs.offset
+            }
+            return self == .nameAscending
+                ? comparison == .orderedAscending
+                : comparison == .orderedDescending
+        }.map(\.element)
+    }
+}
+
 struct ImageEditorBrushPresetQuery: Equatable {
     var searchText: String
     var scope: ImageEditorBrushPresetScope
     var collection: ImageEditorBrushPresetCollection
+    var sortOrder: ImageEditorBrushPresetSortOrder
     var favoriteIDs: Set<String>
     var recentIDs: [String]
 
@@ -81,28 +132,32 @@ struct ImageEditorBrushPresetQuery: Equatable {
         searchText: String,
         scope: ImageEditorBrushPresetScope,
         collection: ImageEditorBrushPresetCollection = .all,
+        sortOrder: ImageEditorBrushPresetSortOrder = .catalog,
         favoriteIDs: Set<String> = [],
         recentIDs: [String] = []
     ) {
         self.searchText = searchText
         self.scope = scope
         self.collection = collection
+        self.sortOrder = sortOrder
         self.favoriteIDs = favoriteIDs
         self.recentIDs = recentIDs
     }
 
     func filter(_ presets: [ImageEditorBrushPreset]) -> [ImageEditorBrushPreset] {
+        let filteredPresets: [ImageEditorBrushPreset]
         switch collection {
         case .all:
-            return presets.filter(matches)
+            filteredPresets = presets.filter(matches)
         case .favorites:
-            return presets.filter { favoriteIDs.contains($0.id) && matches($0) }
+            filteredPresets = presets.filter { favoriteIDs.contains($0.id) && matches($0) }
         case .recent:
             let indexedPresets = Dictionary(
                 uniqueKeysWithValues: presets.map { ($0.id, $0) }
             )
-            return recentIDs.compactMap { indexedPresets[$0] }.filter(matches)
+            filteredPresets = recentIDs.compactMap { indexedPresets[$0] }.filter(matches)
         }
+        return sortOrder.sort(filteredPresets)
     }
 
     func repairedSelectionID(

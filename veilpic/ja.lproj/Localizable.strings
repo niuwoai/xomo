@@ -740,6 +740,10 @@
 "imageEditor.brushPreset.layoutLabel" = "プリセット表示";
 "imageEditor.brushPreset.layout.list" = "リスト";
 "imageEditor.brushPreset.layout.grid" = "サムネイルグリッド";
+"imageEditor.brushPreset.sortLabel" = "プリセットの並べ替え";
+"imageEditor.brushPreset.sort.catalog" = "カタログ順";
+"imageEditor.brushPreset.sort.nameAscending" = "名前 A–Z";
+"imageEditor.brushPreset.sort.nameDescending" = "名前 Z–A";
 "imageEditor.brushPreset.builtInBadge" = "内蔵プリセット";
 "imageEditor.brushPreset.customBadge" = "カスタムプリセット";
 "imageEditor.brushPreset.name" = "名前";

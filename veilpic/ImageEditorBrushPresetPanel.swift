@@ -16,12 +16,14 @@ struct ImageEditorBrushPresetManager: View {
     @State private var scope = ImageEditorBrushPresetScope.all
     @State private var collection = ImageEditorBrushPresetCollection.all
     @State private var layout = ImageEditorBrushPresetPanelLayout.load()
+    @State private var sortOrder = ImageEditorBrushPresetSortOrder.load()
 
     private var query: ImageEditorBrushPresetQuery {
         ImageEditorBrushPresetQuery(
             searchText: searchText,
             scope: scope,
             collection: collection,
+            sortOrder: sortOrder,
             favoriteIDs: Set(viewModel.favoriteBrushPresetIDs),
             recentIDs: viewModel.recentBrushPresetIDs
         )
@@ -76,6 +78,10 @@ struct ImageEditorBrushPresetManager: View {
         .onChange(of: scope) { _ in repairSelection() }
         .onChange(of: collection) { _ in repairSelection() }
         .onChange(of: layout) { layout in layout.save() }
+        .onChange(of: sortOrder) { sortOrder in
+            sortOrder.save()
+            repairSelection()
+        }
     }
 
     private var header: some View {
@@ -162,6 +168,28 @@ struct ImageEditorBrushPresetManager: View {
                 .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
 
                 Spacer(minLength: 0)
+
+                Menu {
+                    ForEach(ImageEditorBrushPresetSortOrder.allCases) { option in
+                        Button {
+                            sortOrder = option
+                        } label: {
+                            Label(
+                                option.title,
+                                systemImage: sortOrder == option ? "checkmark" : option.symbolName
+                            )
+                        }
+                    }
+                } label: {
+                    Image(systemName: sortOrder.symbolName)
+                }
+                .menuStyle(.borderlessButton)
+                .fixedSize()
+                .focusable(false)
+                .help(sortOrder.title)
+                .accessibilityLabel(L10n.text("imageEditor.brushPreset.sortLabel"))
+                .accessibilityValue(sortOrder.title)
+                .accessibilityIdentifier("image-editor-brush-preset-sort")
 
                 Picker(L10n.text("imageEditor.brushPreset.layoutLabel"), selection: $layout) {
                     ForEach(ImageEditorBrushPresetPanelLayout.allCases) { option in

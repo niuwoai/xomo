@@ -740,6 +740,10 @@
 "imageEditor.brushPreset.layoutLabel" = "预设布局";
 "imageEditor.brushPreset.layout.list" = "列表";
 "imageEditor.brushPreset.layout.grid" = "缩略图网格";
+"imageEditor.brushPreset.sortLabel" = "预设排序";
+"imageEditor.brushPreset.sort.catalog" = "目录顺序";
+"imageEditor.brushPreset.sort.nameAscending" = "名称 A–Z";
+"imageEditor.brushPreset.sort.nameDescending" = "名称 Z–A";
 "imageEditor.brushPreset.builtInBadge" = "内置预设";
 "imageEditor.brushPreset.customBadge" = "自定义预设";
 "imageEditor.brushPreset.name" = "名称";
