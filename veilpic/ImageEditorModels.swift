@@ -5614,9 +5614,42 @@ struct ImageEditorDocument {
         return layers[selectedLayerIndex]
     }
 
+    func colorSamplingLayerIDs(
+        for source: ImageEditorColorSamplerSource,
+        ignoringAdjustmentLayers: Bool
+    ) -> Set<UUID>? {
+        let candidates: [ImageEditorLayer]
+        switch source {
+        case .composite:
+            candidates = layers
+        case .selectedLayer:
+            guard let selectedLayer else { return nil }
+            if selectedLayer.isGroup {
+                candidates = layers.filter { layer in
+                    layer.id == selectedLayer.id
+                        || isLayer(layer, descendantOf: selectedLayer.id)
+                }
+            } else {
+                candidates = [selectedLayer]
+            }
+        case .currentAndBelow:
+            guard let selectedLayerIndex else { return nil }
+            candidates = Array(layers[...selectedLayerIndex])
+        }
+
+        // Keep only eligible leaves while filtering. Including a group ID would
+        // make the compositor include every descendant, including adjustments.
+        let sampledLayers = ignoringAdjustmentLayers
+            ? candidates.filter { !$0.isGroup && !$0.isAdjustment }
+            : candidates
+        return Set(sampledLayers.map(\.id))
+    }
+
     func layerIDsThroughSelectedLayer() -> Set<UUID>? {
-        guard let selectedLayerIndex else { return nil }
-        return Set(layers[...selectedLayerIndex].map(\.id))
+        colorSamplingLayerIDs(
+            for: .currentAndBelow,
+            ignoringAdjustmentLayers: false
+        )
     }
 
     var compositedImage: NSImage {

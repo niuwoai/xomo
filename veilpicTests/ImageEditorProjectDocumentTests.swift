@@ -30,6 +30,7 @@ struct ImageEditorProjectDocumentTests {
         viewModel.selectedColorSamplerReadoutMode = .cmyk
         viewModel.selectColorSamplerSampleSize(.fiveByFive)
         #expect(viewModel.selectColorSamplerSource(.currentAndBelow))
+        viewModel.setColorSamplerIgnoresAdjustmentLayers(true)
         #expect(viewModel.addColorSampler(at: CGPoint(x: 4, y: 5)))
         #expect(viewModel.addColorSampler(at: CGPoint(x: 20, y: 12)))
         let savedIDs = viewModel.colorSamplerPoints.map(\.id)
@@ -47,6 +48,7 @@ struct ImageEditorProjectDocumentTests {
         #expect(project.colorSamplerReadoutMode == .cmyk)
         #expect(project.colorSamplerSampleSize == .fiveByFive)
         #expect(project.colorSamplerSource == .currentAndBelow)
+        #expect(project.colorSamplerIgnoresAdjustmentLayers == true)
 
         let reopened = ImageEditorViewModel(
             sourceName: "empty.png",
@@ -62,6 +64,7 @@ struct ImageEditorProjectDocumentTests {
         #expect(reopened.selectedColorSamplerReadoutMode == .cmyk)
         #expect(reopened.selectedColorSamplerSampleSize == .fiveByFive)
         #expect(reopened.selectedColorSamplerSource == .currentAndBelow)
+        #expect(reopened.colorSamplerIgnoresAdjustmentLayers)
         let reopenedColor = try #require(
             reopened.colorSamplerPoints.first?.color.usingColorSpace(.deviceRGB)
         )
@@ -123,12 +126,14 @@ struct ImageEditorProjectDocumentTests {
         legacyObject.removeValue(forKey: "colorSamplerReadoutMode")
         legacyObject.removeValue(forKey: "colorSamplerSampleSize")
         legacyObject.removeValue(forKey: "colorSamplerSource")
+        legacyObject.removeValue(forKey: "colorSamplerIgnoresAdjustmentLayers")
         let legacyData = try JSONSerialization.data(withJSONObject: legacyObject)
         try reopened.loadProjectData(legacyData)
         #expect(reopened.colorSamplerPoints.isEmpty)
         #expect(reopened.selectedColorSamplerReadoutMode == .rgb)
         #expect(reopened.selectedColorSamplerSampleSize == .threeByThree)
         #expect(reopened.selectedColorSamplerSource == .composite)
+        #expect(!reopened.colorSamplerIgnoresAdjustmentLayers)
     }
 
     @Test func textFontFamilyRoundTripsAndLegacyPayloadUsesSystemFont() throws {

@@ -1389,6 +1389,12 @@ struct ImageEditorToolSmokeTests {
             viewModel.document.layerIDsThroughSelectedLayer()
                 == Set([bottomLayer.id, adjustmentLayer.id])
         )
+        #expect(
+            viewModel.document.colorSamplingLayerIDs(
+                for: .currentAndBelow,
+                ignoringAdjustmentLayers: true
+            ) == Set([bottomLayer.id])
+        )
         #expect(!viewModel.canSampleColorSamplerSource(.selectedLayer))
         #expect(viewModel.canSampleColorSamplerSource(.currentAndBelow))
         #expect(viewModel.selectColorSamplerSource(.currentAndBelow))
@@ -1396,10 +1402,121 @@ struct ImageEditorToolSmokeTests {
         #expect(viewModel.pointerColorInfoText.contains("R 255"))
         #expect(viewModel.pointerColorInfoText.contains("G 255"))
         #expect(viewModel.pointerColorInfoText.contains("B 255"))
+        #expect(viewModel.addColorSampler(at: point))
+        var sampledColor = try #require(
+            viewModel.colorSamplerPoints.last?.color.usingColorSpace(.deviceRGB)
+        )
+        #expect(sampledColor.redComponent > 0.95)
+
+        viewModel.setColorSamplerIgnoresAdjustmentLayers(true)
+        #expect(viewModel.pointerColorInfoText.contains("R 0"))
+        sampledColor = try #require(
+            viewModel.colorSamplerPoints.last?.color.usingColorSpace(.deviceRGB)
+        )
+        #expect(sampledColor.redComponent < 0.05)
+        #expect(sampledColor.greenComponent < 0.05)
+        #expect(sampledColor.blueComponent < 0.05)
+
+        viewModel.setColorSamplerIgnoresAdjustmentLayers(false)
+        sampledColor = try #require(
+            viewModel.colorSamplerPoints.last?.color.usingColorSpace(.deviceRGB)
+        )
+        #expect(sampledColor.redComponent > 0.95)
 
         #expect(viewModel.selectColorSamplerSource(.composite))
         #expect(viewModel.pointerColorInfoText.contains("B 255"))
         #expect(!viewModel.pointerColorInfoText.contains("R 255"))
+        #expect(viewModel.document.history.count == historyCount)
+    }
+
+    @Test
+    func colorSamplerIgnoresAdjustmentDescendantsWithoutReincludingTheirGroup() throws {
+        let viewModel = makeViewModel(image: solidImage(color: .black))
+        var bottomLayer = try #require(viewModel.document.layers.first)
+        let adjustmentLayer = ImageEditorLayer.adjustment(
+            name: "Invert Child",
+            size: canvasSize,
+            kind: .invert,
+            amount: 1
+        )
+        let groupLayer = ImageEditorLayer.group(
+            name: "Sample Group",
+            size: canvasSize
+        )
+        var filterLayer = ImageEditorLayer.filter(
+            name: "Blur Child",
+            size: canvasSize,
+            kind: .gaussianBlur,
+            intensity: 0.5
+        )
+        bottomLayer.groupID = groupLayer.id
+        var groupedAdjustment = adjustmentLayer
+        groupedAdjustment.groupID = groupLayer.id
+        filterLayer.groupID = groupLayer.id
+        viewModel.document.layers = [
+            bottomLayer,
+            groupedAdjustment,
+            filterLayer,
+            groupLayer
+        ]
+        viewModel.selectLayer(groupLayer.id)
+        let historyCount = viewModel.document.history.count
+        let point = CGPoint(x: 12, y: 10)
+
+        #expect(viewModel.selectColorSamplerSource(.selectedLayer))
+        #expect(viewModel.addColorSampler(at: point))
+        var sampledColor = try #require(
+            viewModel.colorSamplerPoints.last?.color.usingColorSpace(.deviceRGB)
+        )
+        #expect(sampledColor.redComponent > 0.95)
+
+        viewModel.setColorSamplerIgnoresAdjustmentLayers(true)
+        #expect(
+            viewModel.document.colorSamplingLayerIDs(
+                for: .selectedLayer,
+                ignoringAdjustmentLayers: true
+            ) == Set([bottomLayer.id, filterLayer.id])
+        )
+        sampledColor = try #require(
+            viewModel.colorSamplerPoints.last?.color.usingColorSpace(.deviceRGB)
+        )
+        #expect(sampledColor.redComponent < 0.05)
+        #expect(sampledColor.greenComponent < 0.05)
+        #expect(sampledColor.blueComponent < 0.05)
+        #expect(viewModel.document.history.count == historyCount)
+    }
+
+    @Test
+    func colorSamplerCompositeIgnoreAdjustmentSwitchInvalidatesItsCachedImage() throws {
+        let viewModel = makeViewModel(image: solidImage(color: .black))
+        let bottomLayer = try #require(viewModel.document.layers.first)
+        let adjustmentLayer = ImageEditorLayer.adjustment(
+            name: "Invert Composite",
+            size: canvasSize,
+            kind: .invert,
+            amount: 1
+        )
+        viewModel.document.layers = [bottomLayer, adjustmentLayer]
+        let historyCount = viewModel.document.history.count
+        let point = CGPoint(x: 12, y: 10)
+
+        #expect(viewModel.addColorSampler(at: point))
+        var sampledColor = try #require(
+            viewModel.colorSamplerPoints.last?.color.usingColorSpace(.deviceRGB)
+        )
+        #expect(sampledColor.redComponent > 0.95)
+
+        viewModel.setColorSamplerIgnoresAdjustmentLayers(true)
+        sampledColor = try #require(
+            viewModel.colorSamplerPoints.last?.color.usingColorSpace(.deviceRGB)
+        )
+        #expect(sampledColor.redComponent < 0.05)
+
+        viewModel.setColorSamplerIgnoresAdjustmentLayers(false)
+        sampledColor = try #require(
+            viewModel.colorSamplerPoints.last?.color.usingColorSpace(.deviceRGB)
+        )
+        #expect(sampledColor.redComponent > 0.95)
         #expect(viewModel.document.history.count == historyCount)
     }
 

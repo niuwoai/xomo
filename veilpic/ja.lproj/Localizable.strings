@@ -508,6 +508,7 @@
 "imageEditor.info.colorSampler.source.selectedLayer.short" = "レイヤー";
 "imageEditor.info.colorSampler.source.currentAndBelow" = "選択レイヤーとその下のすべてのレイヤーをサンプル";
 "imageEditor.info.colorSampler.source.currentAndBelow.short" = "現在以下";
+"imageEditor.option.colorSamplerIgnoreAdjustments" = "調整レイヤーを無視";
 "imageEditor.option.eyedropperSamplingRing" = "サンプルリングを表示";
 "imageEditor.info.pointer.coordinates" = "X: %d  Y: %d";
 "imageEditor.info.pointer.coordinates.empty" = "X: —  Y: —";

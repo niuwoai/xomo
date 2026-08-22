@@ -96,6 +96,27 @@ struct LocalizationResourceTests {
         }
     }
 
+    @Test func ignoreAdjustmentSamplingOptionIsLocalizedInEverySupportedLanguage() throws {
+        let paths = try Self.repositoryPaths()
+        let expectedValues = [
+            "zh-Hans": "忽略调整图层",
+            "en": "Ignore Adjustment Layers",
+            "ja": "調整レイヤーを無視"
+        ]
+
+        for (localizationID, expectedValue) in expectedValues {
+            let strings = try Self.stringTable(
+                tableName: "Localizable",
+                localizationID: localizationID,
+                appDirectory: paths.appDirectory
+            )
+            #expect(
+                strings["imageEditor.option.colorSamplerIgnoreAdjustments"]
+                    == expectedValue
+            )
+        }
+    }
+
     @Test func supportedLocalizationDirectoriesShipOnlyTrackedStringTables() throws {
         let paths = try Self.repositoryPaths()
 

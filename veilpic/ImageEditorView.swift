@@ -1349,6 +1349,20 @@ struct ImageEditorView: View {
                 .accessibilityIdentifier("image-editor-color-sampling-size")
             }
 
+            Toggle(
+                L10n.text("imageEditor.option.colorSamplerIgnoreAdjustments"),
+                isOn: Binding(
+                    get: { viewModel.colorSamplerIgnoresAdjustmentLayers },
+                    set: { viewModel.setColorSamplerIgnoresAdjustmentLayers($0) }
+                )
+            )
+            .toggleStyle(.checkbox)
+            .fixedSize()
+            .focusable(false)
+            .accessibilityIdentifier(
+                "image-editor-color-sampling-ignore-adjustments"
+            )
+
             if viewModel.selectedTool == .eyedropper {
                 Toggle(
                     L10n.text("imageEditor.option.eyedropperSamplingRing"),
@@ -6510,6 +6524,18 @@ struct ImageEditorView: View {
                         )
                     }
                 }
+                Toggle(
+                    L10n.text("imageEditor.option.colorSamplerIgnoreAdjustments"),
+                    isOn: Binding(
+                        get: { viewModel.colorSamplerIgnoresAdjustmentLayers },
+                        set: { viewModel.setColorSamplerIgnoresAdjustmentLayers($0) }
+                    )
+                )
+                .toggleStyle(.checkbox)
+                .focusable(false)
+                .accessibilityIdentifier(
+                    "image-editor-info-color-sampling-ignore-adjustments"
+                )
                 if viewModel.colorSamplerPoints.isEmpty {
                     Text(L10n.text("imageEditor.info.colorSamplers.empty"))
                         .foregroundStyle(Color(nsColor: ImageEditorTheme.menuMutedText))

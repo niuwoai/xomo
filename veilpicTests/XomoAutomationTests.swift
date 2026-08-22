@@ -105,6 +105,11 @@ struct XomoAutomationTests {
                 .objectValue?["sampleSource"]?.objectValue?["enum"]?.arrayValue
                 == ImageEditorColorSamplerSource.allCases.map { .string($0.rawValue) }
         )
+        #expect(
+            colorSamplerAddTool["inputSchema"]?.objectValue?["properties"]?
+                .objectValue?["ignoresAdjustmentLayers"]?.objectValue?["type"]
+                == .string("boolean")
+        )
         #expect(tools.contains { tool in
             guard case .object(let value) = tool else { return false }
             return value["name"] == .string("xomo.color_sampler.list")
@@ -4765,12 +4770,14 @@ struct XomoAutomationTests {
         let canvasSize = viewModel.document.canvasSize
         var bottomLayer = try #require(viewModel.document.layers.first)
         bottomLayer.image = NSImage.rendered(size: canvasSize) { rect in
-            NSColor.red.setFill()
+            NSColor.black.setFill()
             rect.fill()
         } ?? bottomLayer.image
-        let currentLayer = ImageEditorLayer.blank(
-            name: "Transparent Current",
-            size: canvasSize
+        let currentLayer = ImageEditorLayer.adjustment(
+            name: "Invert Current",
+            size: canvasSize,
+            kind: .invert,
+            amount: 1
         )
         var upperLayer = ImageEditorLayer.blank(
             name: "Blue Upper",
@@ -4793,17 +4800,21 @@ struct XomoAutomationTests {
             arguments: [
                 "x": .number(24),
                 "y": .number(18),
-                "sampleSource": .string("currentAndBelow")
+                "sampleSource": .string("currentAndBelow"),
+                "ignoresAdjustmentLayers": .bool(true)
             ]
         ))
 
         #expect(response.ok)
         let sample = try #require(response.result?.objectValue)
         #expect(sample["sampleSource"] == .string("currentAndBelow"))
+        #expect(sample["ignoresAdjustmentLayers"] == .bool(true))
         let color = try #require(sample["color"]?.objectValue)
-        #expect((color["red"]?.doubleValue ?? 0) > 0.95)
+        #expect((color["red"]?.doubleValue ?? 1) < 0.05)
+        #expect((color["green"]?.doubleValue ?? 1) < 0.05)
         #expect((color["blue"]?.doubleValue ?? 1) < 0.05)
         #expect(viewModel.selectedColorSamplerSource == .currentAndBelow)
+        #expect(viewModel.colorSamplerIgnoresAdjustmentLayers)
         #expect(viewModel.document.history.count == historyCount)
     }
 

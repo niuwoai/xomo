@@ -443,6 +443,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var selectedColorSamplerReadoutMode: ImageEditorColorSamplerReadoutMode = .rgb
     @Published private(set) var selectedColorSamplerSampleSize: ImageEditorColorSamplerSampleSize = .threeByThree
     @Published private(set) var selectedColorSamplerSource: ImageEditorColorSamplerSource = .composite
+    @Published private(set) var colorSamplerIgnoresAdjustmentLayers = false
     @Published var selectedChannelPreview: ImageEditorChannelPreview = .composite
     @Published var selectedAlphaChannelID: UUID?
     @Published var previewedAlphaChannelID: UUID? {
@@ -501,7 +502,8 @@ final class ImageEditorViewModel: ObservableObject {
     private var cachedPointerSampleHeight = 0
     private var cachedLayerColorSamplerImage: (
         source: ImageEditorColorSamplerSource,
-        layerID: UUID,
+        layerID: UUID?,
+        ignoresAdjustmentLayers: Bool,
         image: NSImage
     )?
     private var cachedChannelPreviewImages: [String: NSImage] = [:]
@@ -1503,46 +1505,66 @@ final class ImageEditorViewModel: ObservableObject {
         return true
     }
 
-    private func colorSamplerImage(
-        for source: ImageEditorColorSamplerSource
-    ) -> NSImage? {
-        switch source {
-        case .composite:
-            return currentImage
-        case .selectedLayer, .currentAndBelow:
-            guard canSampleColorSamplerSource(source),
-                  let layer = document.selectedLayer
-            else { return nil }
-            if let cachedLayerColorSamplerImage,
-               cachedLayerColorSamplerImage.source == source,
-               cachedLayerColorSamplerImage.layerID == layer.id {
-                return cachedLayerColorSamplerImage.image
-            }
-            let image: NSImage?
-            switch source {
-            case .selectedLayer:
-                image = layer.isGroup
-                    ? document.compositedImage(includingOnly: [layer.id])
-                    : selectedLayerExportImage()
-            case .currentAndBelow:
-                image = document.layerIDsThroughSelectedLayer().map {
-                    document.compositedImage(includingOnly: $0)
-                }
-            case .composite:
-                image = nil
-            }
-            guard let image else { return nil }
-            cachedLayerColorSamplerImage = (source, layer.id, image)
-            return image
+    func setColorSamplerIgnoresAdjustmentLayers(_ ignoresAdjustmentLayers: Bool) {
+        guard ignoresAdjustmentLayers != colorSamplerIgnoresAdjustmentLayers else {
+            return
         }
+        colorSamplerIgnoresAdjustmentLayers = ignoresAdjustmentLayers
+        refreshColorSamplers()
+    }
+
+    private func colorSamplerImage(
+        for source: ImageEditorColorSamplerSource,
+        ignoringAdjustmentLayers: Bool
+    ) -> NSImage? {
+        if source == .composite, !ignoringAdjustmentLayers {
+            return currentImage
+        }
+        guard canSampleColorSamplerSource(source) else { return nil }
+        let layerID = source == .composite ? nil : document.selectedLayerID
+        if let cachedLayerColorSamplerImage,
+           cachedLayerColorSamplerImage.source == source,
+           cachedLayerColorSamplerImage.layerID == layerID,
+           cachedLayerColorSamplerImage.ignoresAdjustmentLayers
+                == ignoringAdjustmentLayers {
+            return cachedLayerColorSamplerImage.image
+        }
+
+        let image: NSImage?
+        if source == .selectedLayer,
+           !ignoringAdjustmentLayers,
+           let layer = document.selectedLayer,
+           !layer.isGroup {
+            image = selectedLayerExportImage()
+        } else {
+            image = document.colorSamplingLayerIDs(
+                for: source,
+                ignoringAdjustmentLayers: ignoringAdjustmentLayers
+            ).map {
+                document.compositedImage(includingOnly: $0)
+            }
+        }
+        guard let image else { return nil }
+        cachedLayerColorSamplerImage = (
+            source,
+            layerID,
+            ignoringAdjustmentLayers,
+            image
+        )
+        return image
     }
 
     private func sampledCanvasColor(
         at point: CGPoint,
         sampleSize: ImageEditorColorSamplerSampleSize,
-        source: ImageEditorColorSamplerSource
+        source: ImageEditorColorSamplerSource,
+        ignoringAdjustmentLayers: Bool? = nil
     ) -> NSColor? {
-        guard let image = colorSamplerImage(for: source) else { return nil }
+        guard let image = colorSamplerImage(
+            for: source,
+            ignoringAdjustmentLayers:
+                ignoringAdjustmentLayers ?? colorSamplerIgnoresAdjustmentLayers
+        ) else { return nil }
         if cachedPointerSampleImage !== image {
             guard let cgImage = image.cgImage(
                 forProposedRect: nil,
@@ -7731,23 +7753,30 @@ final class ImageEditorViewModel: ObservableObject {
     func addColorSampler(
         at point: CGPoint,
         sampleSize requestedSampleSize: ImageEditorColorSamplerSampleSize? = nil,
-        source requestedSource: ImageEditorColorSamplerSource? = nil
+        source requestedSource: ImageEditorColorSamplerSource? = nil,
+        ignoringAdjustmentLayers requestedIgnoresAdjustmentLayers: Bool? = nil
     ) -> Bool {
         let canvasBounds = CGRect(origin: .zero, size: document.canvasSize)
         guard canvasBounds.contains(point) else { return false }
         let sampleSize = requestedSampleSize ?? selectedColorSamplerSampleSize
         let source = requestedSource ?? activeColorSamplerSource
+        let ignoresAdjustmentLayers = requestedIgnoresAdjustmentLayers
+            ?? colorSamplerIgnoresAdjustmentLayers
         guard canSampleColorSamplerSource(source) else { return false }
         guard let color = sampledCanvasColor(
             at: point,
             sampleSize: sampleSize,
-            source: source
+            source: source,
+            ignoringAdjustmentLayers: ignoresAdjustmentLayers
         ) else { return false }
         let shouldRefreshExistingSamples =
             sampleSize != selectedColorSamplerSampleSize
                 || source != selectedColorSamplerSource
+                || ignoresAdjustmentLayers
+                    != colorSamplerIgnoresAdjustmentLayers
         selectedColorSamplerSampleSize = sampleSize
         selectedColorSamplerSource = source
+        colorSamplerIgnoresAdjustmentLayers = ignoresAdjustmentLayers
         if shouldRefreshExistingSamples {
             refreshColorSamplers()
         }
@@ -7765,13 +7794,15 @@ final class ImageEditorViewModel: ObservableObject {
         points: [ImageEditorProjectColorSamplerPoint],
         readoutMode: ImageEditorColorSamplerReadoutMode,
         sampleSize: ImageEditorColorSamplerSampleSize,
-        source: ImageEditorColorSamplerSource
+        source: ImageEditorColorSamplerSource,
+        ignoresAdjustmentLayers: Bool = false
     ) {
         selectedColorSamplerReadoutMode = readoutMode
         selectedColorSamplerSampleSize = sampleSize
         selectedColorSamplerSource = canSampleColorSamplerSource(source)
             ? source
             : .composite
+        colorSamplerIgnoresAdjustmentLayers = ignoresAdjustmentLayers
 
         let canvasBounds = CGRect(origin: .zero, size: document.canvasSize)
         var restoredPoints: [ImageEditorColorSamplerPoint] = []

@@ -438,10 +438,22 @@ final class XomoAutomationRegistry {
             } else {
                 sampleSource = nil
             }
+            let ignoresAdjustmentLayers: Bool?
+            if let value = arguments["ignoresAdjustmentLayers"] {
+                guard let parsedValue = value.boolValue else {
+                    throw XomoAutomationCallError.invalidArgument(
+                        "ignoresAdjustmentLayers must be a boolean"
+                    )
+                }
+                ignoresAdjustmentLayers = parsedValue
+            } else {
+                ignoresAdjustmentLayers = nil
+            }
             guard viewModel.addColorSampler(
                 at: point,
                 sampleSize: sampleSize,
-                source: sampleSource
+                source: sampleSource,
+                ignoringAdjustmentLayers: ignoresAdjustmentLayers
             ),
                   let sample = viewModel.colorSamplerPoints.last
             else {
@@ -453,7 +465,9 @@ final class XomoAutomationRegistry {
                 sample,
                 index: viewModel.colorSamplerPoints.count - 1,
                 sampleSize: viewModel.selectedColorSamplerSampleSize,
-                sampleSource: viewModel.activeColorSamplerSource
+                sampleSource: viewModel.activeColorSamplerSource,
+                ignoresAdjustmentLayers:
+                    viewModel.colorSamplerIgnoresAdjustmentLayers
             )
         case "xomo.color_sampler.move":
             let rawID = try requiredString("id", in: arguments)
@@ -478,7 +492,9 @@ final class XomoAutomationRegistry {
                 viewModel.colorSamplerPoints[index],
                 index: index,
                 sampleSize: viewModel.selectedColorSamplerSampleSize,
-                sampleSource: viewModel.activeColorSamplerSource
+                sampleSource: viewModel.activeColorSamplerSource,
+                ignoresAdjustmentLayers:
+                    viewModel.colorSamplerIgnoresAdjustmentLayers
             )
         case "xomo.color_sampler.remove":
             let rawID = try requiredString("id", in: arguments)
@@ -497,7 +513,9 @@ final class XomoAutomationRegistry {
                     removedSample,
                     index: index,
                     sampleSize: viewModel.selectedColorSamplerSampleSize,
-                    sampleSource: viewModel.activeColorSamplerSource
+                    sampleSource: viewModel.activeColorSamplerSource,
+                    ignoresAdjustmentLayers:
+                        viewModel.colorSamplerIgnoresAdjustmentLayers
                 ),
                 "remainingCount": .number(Double(viewModel.colorSamplerPoints.count))
             ])
@@ -6535,7 +6553,9 @@ final class XomoAutomationRegistry {
                 sample,
                 index: index,
                 sampleSize: viewModel.selectedColorSamplerSampleSize,
-                sampleSource: viewModel.activeColorSamplerSource
+                sampleSource: viewModel.activeColorSamplerSource,
+                ignoresAdjustmentLayers:
+                    viewModel.colorSamplerIgnoresAdjustmentLayers
             )
         })
     }
@@ -6544,7 +6564,8 @@ final class XomoAutomationRegistry {
         _ sample: ImageEditorColorSamplerPoint,
         index: Int,
         sampleSize: ImageEditorColorSamplerSampleSize,
-        sampleSource: ImageEditorColorSamplerSource
+        sampleSource: ImageEditorColorSamplerSource,
+        ignoresAdjustmentLayers: Bool
     ) -> XomoJSONValue {
         let reading = ImageEditorColorSamplerReading(color: sample.color)
         return .object([
@@ -6552,6 +6573,7 @@ final class XomoAutomationRegistry {
             "index": .number(Double(index + 1)),
             "sampleSize": .string(sampleSize.rawValue),
             "sampleSource": .string(sampleSource.rawValue),
+            "ignoresAdjustmentLayers": .bool(ignoresAdjustmentLayers),
             "point": pointJSON(sample.point),
             "color": colorJSON(sample.color),
             "rgb8": .object([
@@ -7106,6 +7128,9 @@ private extension XomoAutomationRegistry {
             "sampleSource": XomoAutomationSchema.string(
                 description: "Optional rendered source to sample",
                 values: ImageEditorColorSamplerSource.allCases.map(\.rawValue)
+            ),
+            "ignoresAdjustmentLayers": XomoAutomationSchema.boolean(
+                description: "Ignore adjustment layers while sampling"
             )
         ], required: ["x", "y"]),
         tool("xomo.color_sampler.move", "Move one color sampler by stable id without writing document history.", [

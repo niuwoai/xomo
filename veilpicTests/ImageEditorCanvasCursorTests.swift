@@ -1977,6 +1977,17 @@ struct ImageEditorCanvasCursorTests {
         #expect(optionBarSource.contains("colorSamplingOptionControls"))
         #expect(optionBarSource.contains("image-editor-color-sampling-source"))
         #expect(optionBarSource.contains("image-editor-color-sampling-size"))
+        #expect(
+            optionBarSource.contains(
+                "image-editor-color-sampling-ignore-adjustments"
+            )
+        )
+        #expect(
+            source.contains(
+                "image-editor-info-color-sampling-ignore-adjustments"
+            )
+        )
+        #expect(source.contains("setColorSamplerIgnoresAdjustmentLayers"))
         #expect(optionBarSource.contains("image-editor-eyedropper-sampling-ring"))
         #expect(source.contains("eyedropperSamplingRingOverlay(in: geometry.size)"))
         #expect(source.contains("foregroundBeforeSampling = viewModel.foregroundColor"))

@@ -87,6 +87,7 @@ struct ImageEditorProjectDocument: Codable {
     var colorSamplerReadoutMode: ImageEditorColorSamplerReadoutMode?
     var colorSamplerSampleSize: ImageEditorColorSamplerSampleSize?
     var colorSamplerSource: ImageEditorColorSamplerSource?
+    var colorSamplerIgnoresAdjustmentLayers: Bool?
     var historyTitles: [String]
 
     @MainActor
@@ -97,7 +98,8 @@ struct ImageEditorProjectDocument: Codable {
         colorSamplerPoints: [ImageEditorColorSamplerPoint] = [],
         colorSamplerReadoutMode: ImageEditorColorSamplerReadoutMode = .rgb,
         colorSamplerSampleSize: ImageEditorColorSamplerSampleSize = .threeByThree,
-        colorSamplerSource: ImageEditorColorSamplerSource = .composite
+        colorSamplerSource: ImageEditorColorSamplerSource = .composite,
+        colorSamplerIgnoresAdjustmentLayers: Bool = false
     ) throws {
         formatVersion = Self.formatVersion
         appVersion = AppVersion.current
@@ -145,6 +147,7 @@ struct ImageEditorProjectDocument: Codable {
         self.colorSamplerReadoutMode = colorSamplerReadoutMode
         self.colorSamplerSampleSize = colorSamplerSampleSize
         self.colorSamplerSource = colorSamplerSource
+        self.colorSamplerIgnoresAdjustmentLayers = colorSamplerIgnoresAdjustmentLayers
         historyTitles = document.history.map(\.title)
     }
 
@@ -1203,7 +1206,8 @@ extension ImageEditorViewModel {
             colorSamplerPoints: colorSamplerPoints,
             colorSamplerReadoutMode: selectedColorSamplerReadoutMode,
             colorSamplerSampleSize: selectedColorSamplerSampleSize,
-            colorSamplerSource: selectedColorSamplerSource
+            colorSamplerSource: selectedColorSamplerSource,
+            colorSamplerIgnoresAdjustmentLayers: colorSamplerIgnoresAdjustmentLayers
         )
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
@@ -1228,7 +1232,9 @@ extension ImageEditorViewModel {
             points: project.colorSamplerPoints ?? [],
             readoutMode: project.colorSamplerReadoutMode ?? .rgb,
             sampleSize: project.colorSamplerSampleSize ?? .threeByThree,
-            source: project.colorSamplerSource ?? .composite
+            source: project.colorSamplerSource ?? .composite,
+            ignoresAdjustmentLayers:
+                project.colorSamplerIgnoresAdjustmentLayers ?? false
         )
         clearUndoHistory()
         historySnapshots.removeAll()
