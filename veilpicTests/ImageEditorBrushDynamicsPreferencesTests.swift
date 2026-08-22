@@ -1206,6 +1206,33 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         ) == IndexSet(integer: 3))
     }
 
+    @Test func brushLibraryImportSelectionInvertsVisibleMatchesWithinGlobalCapacity() {
+        #expect(ImageEditorBrushPresetImportSelectionPolicy.inverting(
+            matchingIndexes: IndexSet([0, 1, 2]),
+            in: IndexSet([0, 3]),
+            presetCount: 4,
+            capacity: 3
+        ) == IndexSet([1, 2, 3]))
+        #expect(ImageEditorBrushPresetImportSelectionPolicy.inverting(
+            matchingIndexes: IndexSet([0, 1, 2]),
+            in: IndexSet([0, 3]),
+            presetCount: 4,
+            capacity: 2
+        ) == IndexSet([1, 3]))
+        #expect(ImageEditorBrushPresetImportSelectionPolicy.inverting(
+            matchingIndexes: IndexSet([0, 1, 2]),
+            in: IndexSet([0, 1, 2, 3]),
+            presetCount: 4,
+            capacity: 4
+        ) == IndexSet(integer: 3))
+        #expect(ImageEditorBrushPresetImportSelectionPolicy.inverting(
+            matchingIndexes: IndexSet(),
+            in: IndexSet([0, 3]),
+            presetCount: 4,
+            capacity: 3
+        ) == IndexSet([0, 3]))
+    }
+
     @Test func inspectingBrushLibraryReportsReplacementCapacityWithoutMutation() throws {
         let incoming = (0..<(ImageEditorBrushPresetPreferences.maximumPresetCount + 2)).map {
             ImageEditorBrushPreset(

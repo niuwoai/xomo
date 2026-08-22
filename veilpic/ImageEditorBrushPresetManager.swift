@@ -146,6 +146,29 @@ enum ImageEditorBrushPresetImportSelectionPolicy {
         }
         return updated
     }
+
+    static func inverting(
+        matchingIndexes: IndexSet,
+        in selection: IndexSet,
+        presetCount: Int,
+        capacity: Int
+    ) -> IndexSet {
+        let validMatches = IndexSet(
+            matchingIndexes.filter { $0 >= 0 && $0 < presetCount }
+        )
+        let normalized = normalizedSelection(
+            selection,
+            presetCount: presetCount,
+            capacity: capacity
+        )
+        let originallySelectedMatches = normalized.intersection(validMatches)
+        var updated = normalized.subtracting(originallySelectedMatches)
+        for index in validMatches where !originallySelectedMatches.contains(index) {
+            guard updated.count < max(0, capacity) else { break }
+            updated.insert(index)
+        }
+        return updated
+    }
 }
 
 enum ImageEditorBrushPresetDropPolicy {
@@ -169,6 +192,7 @@ private final class ImageEditorBrushPresetImportSelectionView: NSView {
     private let searchField = NSSearchField()
     private let selectAllButton = NSButton()
     private let selectNoneButton = NSButton()
+    private let invertSelectionButton = NSButton()
     private let presetStack = NSStackView()
     private var presetButtons: [NSButton] = []
     private(set) var selectedIndexes: IndexSet
@@ -215,6 +239,14 @@ private final class ImageEditorBrushPresetImportSelectionView: NSView {
         selectNoneButton.controlSize = .small
         selectNoneButton.frame = NSRect(x: 102, y: 194, width: 96, height: 24)
         addSubview(selectNoneButton)
+
+        invertSelectionButton.title = L10n.text("imageEditor.action.invertSelection")
+        invertSelectionButton.target = self
+        invertSelectionButton.action = #selector(invertVisiblePresets)
+        invertSelectionButton.bezelStyle = .inline
+        invertSelectionButton.controlSize = .small
+        invertSelectionButton.frame = NSRect(x: 204, y: 194, width: 96, height: 24)
+        addSubview(invertSelectionButton)
 
         let scrollView = NSScrollView(frame: NSRect(x: 0, y: 0, width: 420, height: 190))
         scrollView.borderType = .bezelBorder
@@ -282,6 +314,16 @@ private final class ImageEditorBrushPresetImportSelectionView: NSView {
         updateControls()
     }
 
+    @objc private func invertVisiblePresets() {
+        selectedIndexes = ImageEditorBrushPresetImportSelectionPolicy.inverting(
+            matchingIndexes: visibleIndexes,
+            in: selectedIndexes,
+            presetCount: presetCount,
+            capacity: capacity
+        )
+        updateControls()
+    }
+
     @objc private func searchPresets() {
         updateControls(notifySelection: false)
     }
@@ -315,6 +357,12 @@ private final class ImageEditorBrushPresetImportSelectionView: NSView {
         selectNoneButton.isEnabled = visibleIndexes.contains {
             selectedIndexes.contains($0)
         }
+        invertSelectionButton.isEnabled = ImageEditorBrushPresetImportSelectionPolicy.inverting(
+            matchingIndexes: visibleIndexes,
+            in: selectedIndexes,
+            presetCount: presetCount,
+            capacity: capacity
+        ) != selectedIndexes
         if notifySelection {
             onSelectionChange?(selectedIndexes)
         }
