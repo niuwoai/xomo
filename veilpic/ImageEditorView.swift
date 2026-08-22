@@ -4455,21 +4455,47 @@ struct ImageEditorView: View {
 
     @ViewBuilder
     private func sampledBrushSourceOverlay(in size: CGSize) -> some View {
-        if let sourcePoint = sampledBrushSourcePoint {
-            let point = viewPoint(from: sourcePoint, in: size)
+        if let geometry = sampledBrushOverlayGeometry {
+            let imageRect = fittedImageRect(in: size)
+            let viewScale = imageRect.width / max(1, viewModel.document.canvasSize.width)
+            let sourcePoint = viewPoint(from: geometry.sourcePoint, in: size)
+            let diameter = max(1, geometry.diameter * viewScale)
             ZStack {
+                if let connector = geometry.connector {
+                    let start = viewPoint(from: connector.start, in: size)
+                    let end = viewPoint(from: connector.end, in: size)
+                    Path { path in
+                        path.move(to: start)
+                        path.addLine(to: end)
+                    }
+                    .stroke(
+                        Color.black.opacity(0.72),
+                        style: StrokeStyle(lineWidth: 3, dash: [5, 4])
+                    )
+                    Path { path in
+                        path.move(to: start)
+                        path.addLine(to: end)
+                    }
+                    .stroke(
+                        Color.white.opacity(0.9),
+                        style: StrokeStyle(lineWidth: 1, dash: [5, 4])
+                    )
+                }
                 Circle()
                     .stroke(Color.white.opacity(0.92), lineWidth: 1)
-                    .frame(width: 15, height: 15)
+                    .frame(width: diameter, height: diameter)
+                    .position(sourcePoint)
                 Rectangle()
                     .fill(Color.white.opacity(0.92))
-                    .frame(width: 21, height: 1)
+                    .frame(width: 11, height: 1)
+                    .position(sourcePoint)
                 Rectangle()
                     .fill(Color.white.opacity(0.92))
-                    .frame(width: 1, height: 21)
+                    .frame(width: 1, height: 11)
+                    .position(sourcePoint)
             }
+            .frame(width: size.width, height: size.height, alignment: .topLeading)
             .shadow(color: .black.opacity(0.85), radius: 1)
-            .position(point)
             .allowsHitTesting(false)
             .accessibilityHidden(true)
         }
@@ -4593,32 +4619,41 @@ struct ImageEditorView: View {
         }
     }
 
-    private var sampledBrushSourcePoint: CGPoint? {
-        let originalSourcePoint: CGPoint?
-        let isSettingSource: Bool
+    private var sampledBrushOverlayGeometry: ImageEditorSampledBrushOverlayGeometry? {
+        let sourcePoint: CGPoint?
         switch canvasInteractionTool {
         case .cloneStamp:
-            originalSourcePoint = viewModel.cloneSourcePoint
-            isSettingSource = viewModel.isSettingCloneSource
+            sourcePoint = viewModel.cloneSourcePoint
         case .healingBrush:
             guard viewModel.healingBrushMode == .source else { return nil }
-            originalSourcePoint = viewModel.healingSourcePoint
-            isSettingSource = viewModel.isSettingHealingSource
+            sourcePoint = viewModel.healingSourcePoint
         default:
             return nil
         }
 
-        guard !isSettingSource,
-              !canvasModifierFlags.contains(.option),
-              let strokeStart = dragPoints.first,
-              let currentDestination = dragPoints.last
-        else { return originalSourcePoint }
-
-        return viewModel.sampledBrushPreviewSourcePoint(
-            for: canvasInteractionTool,
-            strokeStart: strokeStart,
-            currentDestination: currentDestination
-        ) ?? originalSourcePoint
+        guard let sourcePoint else { return nil }
+        let strokeStart = dragPoints.first
+        let currentDestination = dragPoints.last
+        let liveSourcePoint: CGPoint?
+        if let strokeStart, let currentDestination {
+            liveSourcePoint = viewModel.sampledBrushPreviewSourcePoint(
+                for: canvasInteractionTool,
+                strokeStart: strokeStart,
+                currentDestination: currentDestination
+            )
+        } else {
+            liveSourcePoint = nil
+        }
+        return ImageEditorSampledBrushOverlayGeometry.resolve(
+            sourcePoint: sourcePoint,
+            liveSourcePoint: liveSourcePoint,
+            currentDestination: currentDestination,
+            isPickingSource: isSettingSampledBrushSourceGesture,
+            brushDiameter: viewModel.brushSize,
+            pressure: brushStrokeSamples.last?.pressure,
+            pressureControlsSize: viewModel.retouchPressureControlsSize,
+            pressureSensitivity: viewModel.retouchPressureSensitivity / 100
+        )
     }
 
     private var isSettingSampledBrushSourceGesture: Bool {

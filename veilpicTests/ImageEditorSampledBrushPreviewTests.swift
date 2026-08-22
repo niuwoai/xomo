@@ -60,23 +60,108 @@ struct ImageEditorSampledBrushPreviewTests {
         ) == nil)
     }
 
+    @Test func overlayGeometryTracksLiveSourceAndPressureAdjustedFootprint() {
+        let pressure: CGFloat = 0.25
+        let geometry = ImageEditorSampledBrushOverlayGeometry.resolve(
+            sourcePoint: CGPoint(x: 10, y: 20),
+            liveSourcePoint: CGPoint(x: 25, y: 30),
+            currentDestination: CGPoint(x: 85, y: 30),
+            isPickingSource: false,
+            brushDiameter: 20,
+            pressure: pressure,
+            pressureControlsSize: true,
+            pressureSensitivity: 0.5
+        )
+        let expectedDiameter = 20 * ImageEditorBrushStrokeKernel.mappedPressure(
+            pressure,
+            sensitivity: 0.5
+        )
+
+        #expect(geometry.sourcePoint == CGPoint(x: 25, y: 30))
+        #expect(geometry.destinationPoint == CGPoint(x: 85, y: 30))
+        #expect(abs(geometry.diameter - expectedDiameter) < 0.001)
+    }
+
+    @Test func overlayGeometryUsesIdleSourceAndFullDiameter() {
+        let idle = ImageEditorSampledBrushOverlayGeometry.resolve(
+            sourcePoint: CGPoint(x: 10, y: 20),
+            liveSourcePoint: nil,
+            currentDestination: nil,
+            isPickingSource: false,
+            brushDiameter: 18,
+            pressure: nil,
+            pressureControlsSize: true,
+            pressureSensitivity: 0.5
+        )
+
+        #expect(idle.sourcePoint == CGPoint(x: 10, y: 20))
+        #expect(idle.destinationPoint == nil)
+        #expect(idle.diameter == 18)
+        #expect(idle.connector == nil)
+    }
+
+    @Test func overlayGeometryKeepsSourcePickingAtTheOriginalPoint() {
+        let picking = ImageEditorSampledBrushOverlayGeometry.resolve(
+            sourcePoint: CGPoint(x: 10, y: 20),
+            liveSourcePoint: CGPoint(x: 40, y: 20),
+            currentDestination: CGPoint(x: 80, y: 20),
+            isPickingSource: true,
+            brushDiameter: 24,
+            pressure: 0.1,
+            pressureControlsSize: false,
+            pressureSensitivity: 1
+        )
+
+        #expect(picking.sourcePoint == CGPoint(x: 10, y: 20))
+        #expect(picking.destinationPoint == nil)
+        #expect(picking.diameter == 24)
+        #expect(picking.connector == nil)
+    }
+
+    @Test func overlayConnectorTrimsBothFootprintsAndSuppressesShortSegments() {
+        let separated = ImageEditorSampledBrushOverlayGeometry(
+            sourcePoint: CGPoint(x: 25, y: 30),
+            destinationPoint: CGPoint(x: 85, y: 30),
+            diameter: 20
+        )
+        #expect(separated.connector?.start == CGPoint(x: 35, y: 30))
+        #expect(separated.connector?.end == CGPoint(x: 75, y: 30))
+
+        let nearby = ImageEditorSampledBrushOverlayGeometry(
+            sourcePoint: CGPoint(x: 10, y: 10),
+            destinationPoint: CGPoint(x: 25, y: 10),
+            diameter: 20
+        )
+        #expect(nearby.connector == nil)
+    }
+
     @Test func canvasOverlayUsesLiveStrokeEndpointsButNotSourceSetting() throws {
         let source = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
             encoding: .utf8
         )
-        let propertyStart = try #require(source.range(of: "private var sampledBrushSourcePoint: CGPoint?"))
+        let overlayStart = try #require(source.range(of: "private func sampledBrushSourceOverlay(in size: CGSize)"))
+        let propertyStart = try #require(
+            source[overlayStart.upperBound...].range(
+                of: "private var sampledBrushOverlayGeometry: ImageEditorSampledBrushOverlayGeometry?"
+            )
+        )
         let propertyEnd = try #require(
             source[propertyStart.upperBound...].range(of: "private func canvasGesture")
         )
+        let overlaySource = source[overlayStart.lowerBound..<propertyStart.lowerBound]
         let propertySource = source[propertyStart.lowerBound..<propertyEnd.lowerBound]
 
         #expect(propertySource.contains("let strokeStart = dragPoints.first"))
         #expect(propertySource.contains("let currentDestination = dragPoints.last"))
         #expect(propertySource.contains("sampledBrushPreviewSourcePoint("))
-        #expect(propertySource.contains("canvasModifierFlags.contains(.option)"))
-        #expect(propertySource.contains("viewModel.isSettingCloneSource"))
-        #expect(propertySource.contains("viewModel.isSettingHealingSource"))
+        #expect(propertySource.contains("isPickingSource: isSettingSampledBrushSourceGesture"))
+        #expect(propertySource.contains("pressure: brushStrokeSamples.last?.pressure"))
+        #expect(propertySource.contains("pressureControlsSize: viewModel.retouchPressureControlsSize"))
+        #expect(propertySource.contains("viewModel.healingBrushMode == .source"))
+        #expect(overlaySource.contains("geometry.connector"))
+        #expect(overlaySource.contains("StrokeStyle(lineWidth: 1, dash: [5, 4])"))
+        #expect(overlaySource.contains("geometry.diameter * viewScale"))
     }
 
     private func sampledBrushViewModel() -> ImageEditorViewModel {

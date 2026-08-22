@@ -49,6 +49,93 @@ struct ImageEditorSampledBrushOffsetResolution: Equatable {
     }
 }
 
+struct ImageEditorSampledBrushOverlayGeometry: Equatable {
+    struct Connector: Equatable {
+        var start: CGPoint
+        var end: CGPoint
+    }
+
+    var sourcePoint: CGPoint
+    var destinationPoint: CGPoint?
+    var diameter: CGFloat
+
+    var connector: Connector? {
+        guard let destinationPoint else { return nil }
+        let delta = CGVector(
+            dx: destinationPoint.x - sourcePoint.x,
+            dy: destinationPoint.y - sourcePoint.y
+        )
+        let distance = hypot(delta.dx, delta.dy)
+        let radius = max(0, diameter) / 2
+        guard distance > radius * 2, distance > 0 else { return nil }
+        let unit = CGVector(dx: delta.dx / distance, dy: delta.dy / distance)
+        return Connector(
+            start: CGPoint(
+                x: sourcePoint.x + unit.dx * radius,
+                y: sourcePoint.y + unit.dy * radius
+            ),
+            end: CGPoint(
+                x: destinationPoint.x - unit.dx * radius,
+                y: destinationPoint.y - unit.dy * radius
+            )
+        )
+    }
+
+    static func resolve(
+        sourcePoint: CGPoint,
+        liveSourcePoint: CGPoint?,
+        currentDestination: CGPoint?,
+        isPickingSource: Bool,
+        brushDiameter: CGFloat,
+        pressure: CGFloat?,
+        pressureControlsSize: Bool,
+        pressureSensitivity: CGFloat
+    ) -> ImageEditorSampledBrushOverlayGeometry {
+        let diameter = resolvedDiameter(
+            brushDiameter: brushDiameter,
+            pressure: pressure,
+            pressureControlsSize: pressureControlsSize,
+            pressureSensitivity: pressureSensitivity
+        )
+
+        guard !isPickingSource,
+              let liveSourcePoint,
+              let currentDestination else {
+            return ImageEditorSampledBrushOverlayGeometry(
+                sourcePoint: sourcePoint,
+                destinationPoint: nil,
+                diameter: diameter
+            )
+        }
+
+        return ImageEditorSampledBrushOverlayGeometry(
+            sourcePoint: liveSourcePoint,
+            destinationPoint: currentDestination,
+            diameter: diameter
+        )
+    }
+
+    private static func resolvedDiameter(
+        brushDiameter: CGFloat,
+        pressure: CGFloat?,
+        pressureControlsSize: Bool,
+        pressureSensitivity: CGFloat
+    ) -> CGFloat {
+        guard pressureControlsSize, let pressure else { return max(1, brushDiameter) }
+        let mappedPressure = ImageEditorBrushStrokeKernel.mappedPressure(
+            pressure,
+            sensitivity: pressureSensitivity
+        )
+        return max(
+            1,
+            brushDiameter * ImageEditorBrushStrokeKernel.pressureDiameterScale(
+                mappedPressure: mappedPressure,
+                minimumDiameter: 0
+            )
+        )
+    }
+}
+
 struct ImageEditorSampledBrushInput {
     var image: NSImage
     var localOffset: CGSize
