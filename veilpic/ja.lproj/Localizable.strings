@@ -3456,6 +3456,7 @@
 "imageEditor.option.cloneSampleSource" = "サンプル";
 "imageEditor.option.cloneSourceSlot" = "クローンソーススロット";
 "imageEditor.option.cloneSourceFlipHorizontal" = "左右反転";
+"imageEditor.option.cloneSourceFlipVertical" = "上下反転";
 "imageEditor.option.healingMode" = "修復モード";
 "imageEditor.healingMode.source" = "サンプル";
 "imageEditor.healingMode.spot" = "スポット";

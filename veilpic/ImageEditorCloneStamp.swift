@@ -26,6 +26,7 @@ struct ImageEditorCloneSourceSlotState: Equatable {
     var sourcePoint: CGPoint?
     var alignedCanvasOffset: CGSize?
     var flipsHorizontally = false
+    var flipsVertically = false
 }
 
 struct ImageEditorSampledBrushOffsetResolution: Equatable {

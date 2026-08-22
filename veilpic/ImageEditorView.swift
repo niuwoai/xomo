@@ -1275,6 +1275,19 @@ struct ImageEditorView: View {
                 .xomoFocusEffectDisabled()
                 .accessibilityIdentifier("image-editor-clone-source-flip-horizontal")
 
+                Toggle(
+                    L10n.text("imageEditor.option.cloneSourceFlipVertical"),
+                    isOn: Binding(
+                        get: { viewModel.cloneSourceFlipsVertically },
+                        set: { viewModel.setCloneSourceFlipsVertically($0) }
+                    )
+                )
+                .toggleStyle(.checkbox)
+                .fixedSize()
+                .focusable(false)
+                .xomoFocusEffectDisabled()
+                .accessibilityIdentifier("image-editor-clone-source-flip-vertical")
+
                 sampledBrushOptions(
                     isAligned: $viewModel.isCloneStampAligned,
                     sampleSource: $viewModel.cloneStampSampleSource,

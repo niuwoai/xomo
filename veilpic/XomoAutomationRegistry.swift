@@ -5653,6 +5653,9 @@ final class XomoAutomationRegistry {
             if let flipHorizontal = arguments["flipHorizontal"]?.boolValue {
                 viewModel.setCloneSourceFlipsHorizontally(flipHorizontal)
             }
+            if let flipVertical = arguments["flipVertical"]?.boolValue {
+                viewModel.setCloneSourceFlipsVertically(flipVertical)
+            }
             if let aligned = arguments["aligned"]?.boolValue {
                 viewModel.isCloneStampAligned = aligned
             }
@@ -7239,6 +7242,7 @@ private extension XomoAutomationRegistry {
             "aligned": XomoAutomationSchema.boolean(description: "Keep the clone or healing source offset aligned across strokes"),
             "sourceSlot": XomoAutomationSchema.integer(description: "One-based clone source slot from 1 through 5", minimum: 1, maximum: 5),
             "flipHorizontal": XomoAutomationSchema.boolean(description: "Mirror the active clone source horizontally around its sampling origin"),
+            "flipVertical": XomoAutomationSchema.boolean(description: "Mirror the active clone source vertically around its sampling origin"),
             "sampleSource": XomoAutomationSchema.string(description: "Clone or healing sampling layer range", values: ["currentLayer", "currentAndBelow", "allVisible"]),
             "ignoresAdjustmentLayers": XomoAutomationSchema.boolean(description: "Exclude adjustment layers from clone or healing composite sampling")
         ], required: ["action"]),

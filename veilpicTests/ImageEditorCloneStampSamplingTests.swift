@@ -142,20 +142,109 @@ struct ImageEditorCloneStampSamplingTests {
         #expect(flipped.document.history.last?.title == L10n.text("imageEditor.history.cloneStamp"))
     }
 
-    @Test func horizontalSourceFlipIsRememberedPerSlotAndSurvivesResampling() {
+    @Test func verticalSourceFlipMirrorsRealClonePixelsAroundTheSamplingOrigin() throws {
+        let ordinary = verticallyMirroredSourceViewModel()
+        let flipped = verticallyMirroredSourceViewModel()
+        for viewModel in [ordinary, flipped] {
+            viewModel.isCloneStampAligned = false
+            viewModel.brushSize = 18
+            viewModel.hardness = 1
+            viewModel.opacity = 1
+            viewModel.setCloneSource(at: CGPoint(x: 20, y: 15))
+        }
+        let sourceAbove = try color(
+            ordinary.document.selectedLayer?.image,
+            at: CGPoint(x: 20, y: 10)
+        )
+        let sourceBelow = try color(
+            ordinary.document.selectedLayer?.image,
+            at: CGPoint(x: 20, y: 20)
+        )
+        flipped.setCloneSourceFlipsVertically(true)
+
+        ordinary.cloneStamp(points: [CGPoint(x: 60, y: 15)])
+        flipped.cloneStamp(points: [CGPoint(x: 60, y: 15)])
+
+        let ordinaryTop = try color(
+            ordinary.document.selectedLayer?.image,
+            at: CGPoint(x: 60, y: 10)
+        )
+        let ordinaryBottom = try color(
+            ordinary.document.selectedLayer?.image,
+            at: CGPoint(x: 60, y: 20)
+        )
+        let flippedTop = try color(
+            flipped.document.selectedLayer?.image,
+            at: CGPoint(x: 60, y: 10)
+        )
+        let flippedBottom = try color(
+            flipped.document.selectedLayer?.image,
+            at: CGPoint(x: 60, y: 20)
+        )
+
+        #expect(colorsMatch(ordinaryTop, sourceAbove))
+        #expect(colorsMatch(ordinaryBottom, sourceBelow))
+        #expect(colorsMatch(flippedTop, sourceBelow))
+        #expect(colorsMatch(flippedBottom, sourceAbove))
+        #expect(flipped.document.history.last?.title == L10n.text("imageEditor.history.cloneStamp"))
+    }
+
+    @Test func combinedSourceFlipsMirrorBothAxesInOneStroke() throws {
+        let viewModel = quadrantSourceViewModel()
+        viewModel.isCloneStampAligned = false
+        viewModel.brushSize = 28
+        viewModel.hardness = 1
+        viewModel.opacity = 1
+        viewModel.setCloneSource(at: CGPoint(x: 20, y: 20))
+        viewModel.setCloneSourceFlipsHorizontally(true)
+        viewModel.setCloneSourceFlipsVertically(true)
+        let expectedTopLeft = try color(
+            viewModel.document.selectedLayer?.image,
+            at: CGPoint(x: 25, y: 25)
+        )
+        let expectedBottomRight = try color(
+            viewModel.document.selectedLayer?.image,
+            at: CGPoint(x: 15, y: 15)
+        )
+
+        viewModel.cloneStamp(points: [CGPoint(x: 60, y: 20)])
+
+        let destinationTopLeft = try color(
+            viewModel.document.selectedLayer?.image,
+            at: CGPoint(x: 55, y: 15)
+        )
+        let destinationBottomRight = try color(
+            viewModel.document.selectedLayer?.image,
+            at: CGPoint(x: 65, y: 25)
+        )
+
+        #expect(colorsMatch(destinationTopLeft, expectedTopLeft))
+        #expect(colorsMatch(destinationBottomRight, expectedBottomRight))
+    }
+
+    @Test func sourceFlipsAreRememberedPerSlotAndSurviveResampling() {
         let viewModel = patternedCurrentLayerViewModel()
         viewModel.setCloneSourceFlipsHorizontally(true)
         viewModel.setCloneSource(at: CGPoint(x: 10, y: 15))
 
         #expect(viewModel.cloneSourceFlipsHorizontally)
+        #expect(!viewModel.cloneSourceFlipsVertically)
         #expect(viewModel.selectCloneSourceSlot(1))
         #expect(!viewModel.cloneSourceFlipsHorizontally)
+        viewModel.setCloneSourceFlipsVertically(true)
         viewModel.setCloneSource(at: CGPoint(x: 30, y: 15))
+        #expect(viewModel.cloneSourceFlipsVertically)
 
         #expect(viewModel.selectCloneSourceSlot(0))
         #expect(viewModel.cloneSourceFlipsHorizontally)
+        #expect(!viewModel.cloneSourceFlipsVertically)
         viewModel.setCloneSource(at: CGPoint(x: 12, y: 15))
         #expect(viewModel.cloneSourceFlipsHorizontally)
+        #expect(!viewModel.cloneSourceFlipsVertically)
+
+        #expect(viewModel.selectCloneSourceSlot(1))
+        #expect(!viewModel.cloneSourceFlipsHorizontally)
+        #expect(viewModel.cloneSourceFlipsVertically)
     }
 
     @Test func samplingRangeDistinguishesCurrentBelowAndAllVisibleLayers() throws {
@@ -373,6 +462,38 @@ struct ImageEditorCloneStampSamplingTests {
         return ImageEditorViewModel(document: document) { _ in }
     }
 
+    private func verticallyMirroredSourceViewModel() -> ImageEditorViewModel {
+        let size = CGSize(width: 100, height: 30)
+        let image = bitmap(size: size, background: .systemBlue, fills: [
+            (CGRect(x: 14, y: 5, width: 12, height: 10), .systemRed),
+            (CGRect(x: 14, y: 15, width: 12, height: 10), .systemGreen)
+        ])
+        var document = ImageEditorDocument(sourceName: "source.png", image: image)
+        var layer = ImageEditorLayer.blank(name: "Vertical Mirror Pattern", size: size)
+        layer.image = image
+        document.layers = [layer]
+        document.selectedLayerID = layer.id
+        document.selectedLayerIDs = [layer.id]
+        return ImageEditorViewModel(document: document) { _ in }
+    }
+
+    private func quadrantSourceViewModel() -> ImageEditorViewModel {
+        let size = CGSize(width: 100, height: 40)
+        let image = bitmap(size: size, background: .systemBlue, fills: [
+            (CGRect(x: 10, y: 10, width: 10, height: 10), .systemRed),
+            (CGRect(x: 20, y: 10, width: 10, height: 10), .systemGreen),
+            (CGRect(x: 10, y: 20, width: 10, height: 10), .systemYellow),
+            (CGRect(x: 20, y: 20, width: 10, height: 10), .magenta)
+        ])
+        var document = ImageEditorDocument(sourceName: "source.png", image: image)
+        var layer = ImageEditorLayer.blank(name: "Quadrant Pattern", size: size)
+        layer.image = image
+        document.layers = [layer]
+        document.selectedLayerID = layer.id
+        document.selectedLayerIDs = [layer.id]
+        return ImageEditorViewModel(document: document) { _ in }
+    }
+
     private func layeredSamplingViewModel() -> ImageEditorViewModel {
         let size = CGSize(width: 100, height: 30)
         let bottomImage = bitmap(size: size, background: .systemBlue, fills: [
@@ -445,5 +566,12 @@ struct ImageEditorCloneStampSamplingTests {
 
     private func color(_ image: NSImage?, at point: CGPoint) throws -> NSColor {
         try #require(image?.color(at: point)?.usingColorSpace(.deviceRGB))
+    }
+
+    private func colorsMatch(_ lhs: NSColor, _ rhs: NSColor, tolerance: CGFloat = 0.05) -> Bool {
+        abs(lhs.redComponent - rhs.redComponent) <= tolerance
+            && abs(lhs.greenComponent - rhs.greenComponent) <= tolerance
+            && abs(lhs.blueComponent - rhs.blueComponent) <= tolerance
+            && abs(lhs.alphaComponent - rhs.alphaComponent) <= tolerance
     }
 }
