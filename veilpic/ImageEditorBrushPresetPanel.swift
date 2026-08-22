@@ -15,6 +15,7 @@ struct ImageEditorBrushPresetManager: View {
     @State private var searchText = ""
     @State private var scope = ImageEditorBrushPresetScope.all
     @State private var collection = ImageEditorBrushPresetCollection.all
+    @State private var layout = ImageEditorBrushPresetPanelLayout.load()
 
     private var query: ImageEditorBrushPresetQuery {
         ImageEditorBrushPresetQuery(
@@ -74,6 +75,7 @@ struct ImageEditorBrushPresetManager: View {
         .onChange(of: searchText) { _ in repairSelection() }
         .onChange(of: scope) { _ in repairSelection() }
         .onChange(of: collection) { _ in repairSelection() }
+        .onChange(of: layout) { layout in layout.save() }
     }
 
     private var header: some View {
@@ -137,20 +139,44 @@ struct ImageEditorBrushPresetManager: View {
             .accessibilityIdentifier("image-editor-brush-preset-collection")
 
             ScrollView {
-                LazyVStack(alignment: .leading, spacing: 5) {
-                    presetRows
+                if layout == .list {
+                    LazyVStack(alignment: .leading, spacing: 5) {
+                        presetRows
+                    }
+                    .padding(.horizontal, 2)
+                } else {
+                    LazyVStack(alignment: .leading, spacing: 5) {
+                        presetGridRows
+                    }
+                    .padding(.horizontal, 2)
                 }
-                .padding(.horizontal, 2)
             }
 
-            Text(L10n.format(
-                "imageEditor.brushPreset.showingCount",
-                filteredPresets.count,
-                viewModel.brushPresets.count
-            ))
-            .font(.system(size: 10).monospacedDigit())
-            .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
-            .frame(maxWidth: .infinity, alignment: .trailing)
+            HStack(spacing: 8) {
+                Text(L10n.format(
+                    "imageEditor.brushPreset.showingCount",
+                    filteredPresets.count,
+                    viewModel.brushPresets.count
+                ))
+                .font(.system(size: 10).monospacedDigit())
+                .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+
+                Spacer(minLength: 0)
+
+                Picker(L10n.text("imageEditor.brushPreset.layoutLabel"), selection: $layout) {
+                    ForEach(ImageEditorBrushPresetPanelLayout.allCases) { option in
+                        Label(option.title, systemImage: option.symbolName)
+                            .labelStyle(.iconOnly)
+                            .tag(option)
+                            .help(option.title)
+                    }
+                }
+                .pickerStyle(.segmented)
+                .labelsHidden()
+                .focusable(false)
+                .frame(width: 66)
+                .accessibilityIdentifier("image-editor-brush-preset-layout")
+            }
         }
         .padding(10)
         .background(Color.black.opacity(0.12))
@@ -187,6 +213,52 @@ struct ImageEditorBrushPresetManager: View {
                 }
             }
         }
+    }
+
+    @ViewBuilder
+    private var presetGridRows: some View {
+        if filteredPresets.isEmpty {
+            Text(L10n.text(emptyListMessageKey))
+                .font(.system(size: 11))
+                .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(10)
+        } else if collection != .all {
+            presetSectionTitle(
+                collection == .favorites
+                    ? "imageEditor.brushPreset.favoriteSection"
+                    : "imageEditor.brushPreset.recentSection"
+            )
+            LazyVGrid(columns: presetGridColumns, spacing: 6) {
+                ForEach(filteredPresets) { preset in
+                    presetTile(preset)
+                }
+            }
+        } else {
+            if !filteredBuiltInPresets.isEmpty {
+                presetSectionTitle("imageEditor.brushPreset.builtInSection")
+                LazyVGrid(columns: presetGridColumns, spacing: 6) {
+                    ForEach(filteredBuiltInPresets) { preset in
+                        presetTile(preset)
+                    }
+                }
+            }
+            if !filteredCustomPresets.isEmpty {
+                presetSectionTitle("imageEditor.brushPreset.customSection")
+                LazyVGrid(columns: presetGridColumns, spacing: 6) {
+                    ForEach(filteredCustomPresets) { preset in
+                        presetTile(preset)
+                    }
+                }
+            }
+        }
+    }
+
+    private var presetGridColumns: [GridItem] {
+        [
+            GridItem(.flexible(), spacing: 6),
+            GridItem(.flexible(), spacing: 6)
+        ]
     }
 
     @ViewBuilder
@@ -259,27 +331,7 @@ struct ImageEditorBrushPresetManager: View {
             .buttonStyle(.plain)
             .focusable(false)
 
-            Button {
-                viewModel.setBrushPresetFavorite(
-                    id: preset.id,
-                    isFavorite: !viewModel.isFavoriteBrushPreset(id: preset.id)
-                )
-            } label: {
-                Image(systemName: viewModel.isFavoriteBrushPreset(id: preset.id) ? "star.fill" : "star")
-                    .foregroundStyle(
-                        viewModel.isFavoriteBrushPreset(id: preset.id)
-                            ? Color.yellow.opacity(0.9)
-                            : Color(nsColor: ImageEditorTheme.mutedText)
-                    )
-            }
-            .buttonStyle(.plain)
-            .focusable(false)
-            .help(L10n.text(
-                viewModel.isFavoriteBrushPreset(id: preset.id)
-                    ? "imageEditor.action.brushPresetUnfavorite"
-                    : "imageEditor.action.brushPresetFavorite"
-            ))
-            .accessibilityIdentifier("image-editor-brush-preset-favorite-\(preset.id)")
+            favoriteButton(for: preset)
         }
         .font(.system(size: 11, weight: .semibold))
         .padding(.horizontal, 8)
@@ -290,6 +342,65 @@ struct ImageEditorBrushPresetManager: View {
                 : Color.white.opacity(0.05)
         )
         .clipShape(RoundedRectangle(cornerRadius: 5, style: .continuous))
+    }
+
+    private func presetTile(_ preset: ImageEditorBrushPreset) -> some View {
+        ZStack(alignment: .topTrailing) {
+            Button {
+                selectedPresetID = preset.id
+            } label: {
+                VStack(spacing: 6) {
+                    ImageEditorBrushPresetThumbnail(preset: preset, size: 58)
+                    HStack(spacing: 4) {
+                        Text(preset.title)
+                            .lineLimit(1)
+                        if viewModel.activeBrushPreset?.id == preset.id {
+                            Image(systemName: "checkmark")
+                        }
+                    }
+                }
+                .frame(maxWidth: .infinity)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .focusable(false)
+
+            favoriteButton(for: preset)
+                .padding(5)
+        }
+        .font(.system(size: 10, weight: .semibold))
+        .padding(6)
+        .frame(minHeight: 92)
+        .background(
+            selectedPresetID == preset.id
+                ? Color.accentColor.opacity(0.72)
+                : Color.white.opacity(0.05)
+        )
+        .clipShape(RoundedRectangle(cornerRadius: 5, style: .continuous))
+    }
+
+    private func favoriteButton(for preset: ImageEditorBrushPreset) -> some View {
+        Button {
+            viewModel.setBrushPresetFavorite(
+                id: preset.id,
+                isFavorite: !viewModel.isFavoriteBrushPreset(id: preset.id)
+            )
+        } label: {
+            Image(systemName: viewModel.isFavoriteBrushPreset(id: preset.id) ? "star.fill" : "star")
+                .foregroundStyle(
+                    viewModel.isFavoriteBrushPreset(id: preset.id)
+                        ? Color.yellow.opacity(0.9)
+                        : Color(nsColor: ImageEditorTheme.mutedText)
+                )
+        }
+        .buttonStyle(.plain)
+        .focusable(false)
+        .help(L10n.text(
+            viewModel.isFavoriteBrushPreset(id: preset.id)
+                ? "imageEditor.action.brushPresetUnfavorite"
+                : "imageEditor.action.brushPresetFavorite"
+        ))
+        .accessibilityIdentifier("image-editor-brush-preset-favorite-\(preset.id)")
     }
 
     private func customPresetControls(presetID: String, index: Int) -> some View {

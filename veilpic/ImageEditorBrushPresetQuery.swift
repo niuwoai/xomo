@@ -39,6 +39,37 @@ enum ImageEditorBrushPresetCollection: String, CaseIterable, Identifiable {
     }
 }
 
+enum ImageEditorBrushPresetPanelLayout: String, CaseIterable, Identifiable {
+    static let storageKey = "im.some.xomo.imageEditor.brushPresetPanelLayout"
+
+    case list
+    case grid
+
+    var id: String { rawValue }
+
+    var title: String {
+        L10n.text("imageEditor.brushPreset.layout.\(rawValue)")
+    }
+
+    var symbolName: String {
+        switch self {
+        case .list: return "list.bullet"
+        case .grid: return "square.grid.2x2"
+        }
+    }
+
+    static func load(from defaults: UserDefaults = .standard) -> Self {
+        guard let rawValue = defaults.string(forKey: storageKey),
+              let layout = Self(rawValue: rawValue)
+        else { return .list }
+        return layout
+    }
+
+    func save(to defaults: UserDefaults = .standard) {
+        defaults.set(rawValue, forKey: Self.storageKey)
+    }
+}
+
 struct ImageEditorBrushPresetQuery: Equatable {
     var searchText: String
     var scope: ImageEditorBrushPresetScope

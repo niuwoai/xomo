@@ -10,7 +10,22 @@ import Testing
 @testable import musepic
 
 @MainActor
+@Suite(.serialized)
 struct ImageEditorBrushPresetQueryTests {
+    @Test func panelLayoutDefaultsToListAndPersistsGridChoice() {
+        let suiteName = "ImageEditorBrushPresetQueryTests.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName) ?? .standard
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+
+        #expect(ImageEditorBrushPresetPanelLayout.load(from: defaults) == .list)
+
+        ImageEditorBrushPresetPanelLayout.grid.save(to: defaults)
+        #expect(ImageEditorBrushPresetPanelLayout.load(from: defaults) == .grid)
+
+        defaults.set("unsupported-layout", forKey: ImageEditorBrushPresetPanelLayout.storageKey)
+        #expect(ImageEditorBrushPresetPanelLayout.load(from: defaults) == .list)
+    }
+
     @Test func queryMatchesCaseAndDiacriticsWithoutChangingCatalogOrder() {
         let presets = [
             preset(id: "built-in", name: "Soft Round", isBuiltIn: true),
@@ -92,6 +107,11 @@ struct ImageEditorBrushPresetQueryTests {
         #expect(manager.contains("image-editor-brush-preset-search"))
         #expect(manager.contains("image-editor-brush-preset-scope"))
         #expect(manager.contains("image-editor-brush-preset-collection"))
+        #expect(manager.contains("image-editor-brush-preset-layout"))
+        #expect(manager.contains("ImageEditorBrushPresetPanelLayout.load()"))
+        #expect(manager.contains("layout.save()"))
+        #expect(manager.contains("LazyVGrid(columns: presetGridColumns"))
+        #expect(manager.contains("presetTile(preset)"))
         #expect(manager.contains("query.repairedSelectionID"))
         #expect(manager.contains("viewModel.applyBrushPreset(preset)"))
         #expect(manager.contains("viewModel.setBrushPresetFavorite("))

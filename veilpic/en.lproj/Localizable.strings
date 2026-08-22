@@ -737,6 +737,9 @@
 "imageEditor.brushPreset.collection.all" = "All";
 "imageEditor.brushPreset.collection.favorites" = "Favorites";
 "imageEditor.brushPreset.collection.recent" = "Recent";
+"imageEditor.brushPreset.layoutLabel" = "Preset Layout";
+"imageEditor.brushPreset.layout.list" = "List";
+"imageEditor.brushPreset.layout.grid" = "Thumbnail Grid";
 "imageEditor.brushPreset.builtInBadge" = "Built-in preset";
 "imageEditor.brushPreset.customBadge" = "Custom preset";
 "imageEditor.brushPreset.name" = "Name";

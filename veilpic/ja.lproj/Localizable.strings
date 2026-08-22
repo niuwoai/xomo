@@ -737,6 +737,9 @@
 "imageEditor.brushPreset.collection.all" = "すべて";
 "imageEditor.brushPreset.collection.favorites" = "お気に入り";
 "imageEditor.brushPreset.collection.recent" = "最近使用";
+"imageEditor.brushPreset.layoutLabel" = "プリセット表示";
+"imageEditor.brushPreset.layout.list" = "リスト";
+"imageEditor.brushPreset.layout.grid" = "サムネイルグリッド";
 "imageEditor.brushPreset.builtInBadge" = "内蔵プリセット";
 "imageEditor.brushPreset.customBadge" = "カスタムプリセット";
 "imageEditor.brushPreset.name" = "名前";
