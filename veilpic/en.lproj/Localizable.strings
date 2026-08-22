@@ -701,6 +701,8 @@
 "imageEditor.action.brushPresetCreate" = "Create Preset from Current Settings";
 "imageEditor.action.brushPresetImport" = "Import Brush Presets…";
 "imageEditor.action.brushPresetExport" = "Export Current Brush Preset…";
+"imageEditor.action.brushPresetExportMenu" = "Export Presets…";
+"imageEditor.action.brushPresetExportVisible" = "Export Visible Custom Brush Presets…";
 "imageEditor.action.brushPresetExportAll" = "Export All Custom Brush Presets…";
 "imageEditor.action.brushPresetRename" = "Rename Current Custom Preset";
 "imageEditor.action.brushPresetUpdate" = "Update Current Custom Preset";

@@ -285,6 +285,33 @@ struct ImageEditorBrushPresetQueryTests {
         #expect(recent.map(\.id) == ["custom-two", "custom-one"])
     }
 
+    @Test func visibleExportKeepsQueryOrderAndExcludesBuiltInPresets() {
+        let presets = [
+            preset(id: "built-in", name: "Ink Classic", isBuiltIn: true),
+            preset(id: "custom-zulu", name: "Ink Zulu"),
+            preset(id: "custom-alpha", name: "Ink Alpha"),
+            preset(id: "custom-chalk", name: "Chalk")
+        ]
+        let query = ImageEditorBrushPresetQuery(
+            searchText: "ink",
+            scope: .all,
+            collection: .favorites,
+            sortOrder: .nameAscending,
+            favoriteIDs: ["built-in", "custom-zulu", "custom-alpha"]
+        )
+
+        #expect(
+            query.exportableCustomPresetIDs(in: presets)
+                == ["custom-alpha", "custom-zulu"]
+        )
+        #expect(
+            ImageEditorBrushPresetQuery(
+                searchText: "",
+                scope: .builtIn
+            ).exportableCustomPresetIDs(in: presets).isEmpty
+        )
+    }
+
     @Test func queryRepairsSelectionOnlyWhenTheCurrentPresetIsHidden() {
         let presets = [
             preset(id: "round", name: "Round", isBuiltIn: true),
@@ -348,6 +375,10 @@ struct ImageEditorBrushPresetQueryTests {
         #expect(manager.contains("viewModel.setBrushPresetFavorite("))
         #expect(manager.contains("viewModel.renameCustomBrushPreset("))
         #expect(manager.contains("viewModel.chooseBrushPresetImportFile()"))
+        #expect(manager.contains("query.exportableCustomPresetIDs("))
+        #expect(manager.contains("imageEditor.action.brushPresetExportVisible"))
+        #expect(manager.contains("presetIDs: exportableVisibleCustomPresetIDs"))
+        #expect(manager.contains(".disabled(exportableVisibleCustomPresetIDs.isEmpty)"))
         #expect(editor.contains("ImageEditorBrushPresetManager(viewModel: viewModel)"))
         #expect(editor.contains("viewModel.isBrushPresetManagerPresented = true"))
         #expect(menuBar.contains("viewModel.isBrushPresetManagerPresented = true"))

@@ -45,6 +45,10 @@ struct ImageEditorBrushPresetManager: View {
         filteredPresets.filter { !$0.isBuiltIn }
     }
 
+    private var exportableVisibleCustomPresetIDs: [String] {
+        query.exportableCustomPresetIDs(in: viewModel.brushPresets)
+    }
+
     private var selectedPreset: ImageEditorBrushPreset? {
         guard let selectedPresetID else { return nil }
         return viewModel.brushPresets.first { $0.id == selectedPresetID }
@@ -745,11 +749,20 @@ struct ImageEditorBrushPresetManager: View {
             }
             .focusable(false)
 
-            Button(L10n.text("imageEditor.action.brushPresetExportAll")) {
-                viewModel.chooseBrushPresetExportFile()
+            Menu(L10n.text("imageEditor.action.brushPresetExportMenu")) {
+                Button(L10n.text("imageEditor.action.brushPresetExportVisible")) {
+                    viewModel.chooseBrushPresetExportFile(
+                        presetIDs: exportableVisibleCustomPresetIDs
+                    )
+                }
+                .disabled(exportableVisibleCustomPresetIDs.isEmpty)
+
+                Button(L10n.text("imageEditor.action.brushPresetExportAll")) {
+                    viewModel.chooseBrushPresetExportFile()
+                }
+                .disabled(viewModel.customBrushPresets.isEmpty)
             }
             .focusable(false)
-            .disabled(viewModel.customBrushPresets.isEmpty)
 
             Spacer()
             Button(L10n.text("action.done")) {

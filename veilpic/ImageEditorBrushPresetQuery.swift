@@ -281,6 +281,14 @@ struct ImageEditorBrushPresetQuery: Equatable {
         return sortOrder.sort(filteredPresets)
     }
 
+    func exportableCustomPresetIDs(
+        in presets: [ImageEditorBrushPreset]
+    ) -> [String] {
+        filter(presets)
+            .filter { !$0.isBuiltIn }
+            .map(\.id)
+    }
+
     func repairedSelectionID(
         _ currentID: String?,
         in presets: [ImageEditorBrushPreset]

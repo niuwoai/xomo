@@ -1015,6 +1015,49 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         )
     }
 
+    @Test func filteredBrushLibraryExportKeepsVisibleOrderWithoutChangingTransactions() throws {
+        let (defaults, suiteName) = temporaryDefaults()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let viewModel = makeViewModel(defaults: defaults)
+
+        viewModel.brushSize = 31
+        let zulu = try #require(viewModel.createBrushPresetFromCurrentSettings())
+        #expect(viewModel.renameSelectedCustomBrushPreset(to: "Ink Zulu"))
+        viewModel.brushSize = 43
+        _ = try #require(viewModel.createBrushPresetFromCurrentSettings())
+        #expect(viewModel.renameSelectedCustomBrushPreset(to: "Chalk"))
+        viewModel.brushSize = 57
+        let alpha = try #require(viewModel.createBrushPresetFromCurrentSettings())
+        #expect(viewModel.renameSelectedCustomBrushPreset(to: "Ink Alpha"))
+
+        viewModel.brushSize = 91
+        viewModel.addLayer()
+        viewModel.undo()
+        let selectedPresetID = viewModel.selectedBrushPresetID
+        let documentBeforeExport = transactionSignature(viewModel.document)
+        let undoBeforeExport = viewModel.undoStack.map { transactionSignature($0) }
+        let redoBeforeExport = viewModel.redoStack.map { transactionSignature($0) }
+        let query = ImageEditorBrushPresetQuery(
+            searchText: "ink",
+            scope: .custom,
+            sortOrder: .nameAscending
+        )
+        let visibleIDs = query.exportableCustomPresetIDs(in: viewModel.brushPresets)
+
+        #expect(visibleIDs == [alpha.id, zulu.id])
+        let data = try viewModel.brushPresetLibraryData(presetIDs: visibleIDs)
+        let library = try JSONDecoder().decode(ImageEditorBrushPresetLibrary.self, from: data)
+
+        #expect(library.presets.map(\.id) == visibleIDs)
+        #expect(library.presets.map(\.title) == ["Ink Alpha", "Ink Zulu"])
+        #expect(viewModel.brushSize == 91)
+        #expect(viewModel.activeBrushPreset == nil)
+        #expect(viewModel.selectedBrushPresetID == selectedPresetID)
+        #expect(transactionSignature(viewModel.document) == documentBeforeExport)
+        #expect(viewModel.undoStack.map { transactionSignature($0) } == undoBeforeExport)
+        #expect(viewModel.redoStack.map { transactionSignature($0) } == redoBeforeExport)
+    }
+
     @Test func portableBrushLibraryRoundTripsCompleteResourcesWithFreshIdentityAndStableNames() throws {
         let (sourceDefaults, sourceSuiteName) = temporaryDefaults()
         defer { sourceDefaults.removePersistentDomain(forName: sourceSuiteName) }
