@@ -231,6 +231,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var selectionFillContentAwareColorAdaptation = true
     @Published var foregroundColor: NSColor = .black
     @Published var backgroundColor: NSColor = .white
+    @Published var eyedropperShowsSamplingRing = true
     private var screenColorSampler: NSColorSampler?
     @Published var cloneSourcePoint: CGPoint?
     @Published var isCloneStampAligned = true {
@@ -7688,15 +7689,16 @@ final class ImageEditorViewModel: ObservableObject {
         if indices.count > 1 { statusText = L10n.format("imageEditor.status.layerShapeUpdatedSelected", indices.count) }
     }
 
+    @discardableResult
     func sampleColor(
         at point: CGPoint,
         target: ImageEditorColorSampleTarget = .foreground
-    ) {
+    ) -> NSColor? {
         guard let color = sampledCanvasColor(
             at: point,
             sampleSize: selectedColorSamplerSampleSize,
             source: activeColorSamplerSource
-        ) else { return }
+        ) else { return nil }
         switch target {
         case .foreground:
             foregroundColor = color
@@ -7705,6 +7707,7 @@ final class ImageEditorViewModel: ObservableObject {
             backgroundColor = color
             statusText = L10n.text("imageEditor.status.colorSampledBackground")
         }
+        return color
     }
 
     @discardableResult

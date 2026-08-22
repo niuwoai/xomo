@@ -50,6 +50,27 @@ struct LocalizationResourceTests {
         }
     }
 
+    @Test func eyedropperSamplingRingIsLocalizedInEverySupportedLanguage() throws {
+        let paths = try Self.repositoryPaths()
+        let expectedValues = [
+            "zh-Hans": "显示取样环",
+            "en": "Show Sampling Ring",
+            "ja": "サンプルリングを表示"
+        ]
+
+        for (localizationID, expectedValue) in expectedValues {
+            let strings = try Self.stringTable(
+                tableName: "Localizable",
+                localizationID: localizationID,
+                appDirectory: paths.appDirectory
+            )
+            #expect(
+                strings["imageEditor.option.eyedropperSamplingRing"]
+                    == expectedValue
+            )
+        }
+    }
+
     @Test func supportedLocalizationDirectoriesShipOnlyTrackedStringTables() throws {
         let paths = try Self.repositoryPaths()
 

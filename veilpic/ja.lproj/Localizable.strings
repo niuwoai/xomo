@@ -506,6 +506,7 @@
 "imageEditor.info.colorSampler.source.composite.short" = "合成";
 "imageEditor.info.colorSampler.source.selectedLayer" = "選択レイヤーのみをサンプル";
 "imageEditor.info.colorSampler.source.selectedLayer.short" = "レイヤー";
+"imageEditor.option.eyedropperSamplingRing" = "サンプルリングを表示";
 "imageEditor.info.pointer.coordinates" = "X: %d  Y: %d";
 "imageEditor.info.pointer.coordinates.empty" = "X: —  Y: —";
 "imageEditor.info.selection.empty" = "選択範囲 · X —  Y — · W —  H —";

@@ -1802,6 +1802,73 @@ struct ImageEditorCanvasCursorTests {
         }
     }
 
+    @Test func eyedropperSamplingRingPreservesTheOriginalSlotAndAvoidsCanvasEdges() throws {
+        let foreground = NSColor.red
+        let background = NSColor.blue
+        let initial = ImageEditorEyedropperSamplingRingState.begin(
+            at: CGPoint(x: 24, y: 18),
+            target: .foreground,
+            foregroundColor: foreground,
+            backgroundColor: background,
+            sampledColor: .green
+        )
+        let initialOriginal = try #require(
+            initial.originalColor.usingColorSpace(.deviceRGB)
+        )
+        #expect(initialOriginal.redComponent > 0.95)
+        #expect(initial.target == .foreground)
+
+        let updated = initial.updating(
+            sampledColor: .yellow,
+            at: CGPoint(x: 44, y: 36)
+        )
+        let updatedOriginal = try #require(
+            updated.originalColor.usingColorSpace(.deviceRGB)
+        )
+        let updatedSample = try #require(
+            updated.sampledColor.usingColorSpace(.deviceRGB)
+        )
+        #expect(updatedOriginal.redComponent > 0.95)
+        #expect(updatedSample.redComponent > 0.95)
+        #expect(updatedSample.greenComponent > 0.95)
+        #expect(updated.canvasPoint == CGPoint(x: 44, y: 36))
+
+        let backgroundState = ImageEditorEyedropperSamplingRingState.begin(
+            at: .zero,
+            target: .background,
+            foregroundColor: foreground,
+            backgroundColor: background,
+            sampledColor: .white
+        )
+        let backgroundOriginal = try #require(
+            backgroundState.originalColor.usingColorSpace(.deviceRGB)
+        )
+        #expect(backgroundOriginal.blueComponent > 0.95)
+
+        let viewport = CGSize(width: 200, height: 160)
+        let topRight = ImageEditorEyedropperSamplingRingGeometry.center(
+            pointer: CGPoint(x: 190, y: 10),
+            viewportSize: viewport
+        )
+        #expect(topRight.x < 190)
+        #expect(topRight.y > 10)
+        for pointer in [
+            CGPoint(x: 0, y: 0),
+            CGPoint(x: 200, y: 0),
+            CGPoint(x: 0, y: 160),
+            CGPoint(x: 200, y: 160)
+        ] {
+            let center = ImageEditorEyedropperSamplingRingGeometry.center(
+                pointer: pointer,
+                viewportSize: viewport
+            )
+            #expect(center.x >= 28)
+            #expect(center.x <= 172)
+            #expect(center.y >= 28)
+            #expect(center.y <= 132)
+        }
+    }
+
     @Test func eyedropperBackgroundTargetHasDistinctCursorWithoutOverridingCanvasModes() {
         let foreground = ImageEditorCanvasCursor.cursor(
             for: .eyedropper,
@@ -1893,7 +1960,7 @@ struct ImageEditorCanvasCursorTests {
         let toolSwitch = try #require(gestureSource.range(of: "switch canvasInteractionTool"))
         let changedSource = gestureSource[..<toolSwitch.lowerBound]
         #expect(
-            changedSource.components(separatedBy: "viewModel.sampleColor(").count - 1 == 2
+            changedSource.components(separatedBy: "sampleEyedropperColor(").count - 1 == 2
         )
         #expect(changedSource.contains("at: pointerImagePoint"))
         #expect(changedSource.contains("target: eyedropperGestureTarget"))
@@ -1910,6 +1977,17 @@ struct ImageEditorCanvasCursorTests {
         #expect(optionBarSource.contains("colorSamplingOptionControls"))
         #expect(optionBarSource.contains("image-editor-color-sampling-source"))
         #expect(optionBarSource.contains("image-editor-color-sampling-size"))
+        #expect(optionBarSource.contains("image-editor-eyedropper-sampling-ring"))
+        #expect(source.contains("eyedropperSamplingRingOverlay(in: geometry.size)"))
+        #expect(source.contains("foregroundBeforeSampling = viewModel.foregroundColor"))
+        #expect(source.contains("backgroundBeforeSampling = viewModel.backgroundColor"))
+        #expect(source.contains("existingRing.updating("))
+        #expect(
+            source.components(separatedBy: "eyedropperSamplingRing = nil").count - 1 >= 7
+        )
+        #expect(source.contains("onCanvasLifecycleInterrupted: { _ in"))
+        #expect(source.contains(".onChange(of: viewModel.eyedropperShowsSamplingRing)"))
+        #expect(source.contains(".onChange(of: viewModel.selectedLeftSidebarTab)"))
     }
 
     @Test func temporaryEyedropperUsesSemanticCursorWithoutOverridingCanvasModes() {

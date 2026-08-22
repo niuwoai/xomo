@@ -78,6 +78,64 @@ private struct ImageEditorColorSamplerDrag: Equatable {
     var previewPoint: CGPoint
 }
 
+struct ImageEditorEyedropperSamplingRingState {
+    let originalColor: NSColor
+    let sampledColor: NSColor
+    let canvasPoint: CGPoint
+    let target: ImageEditorColorSampleTarget
+
+    static func begin(
+        at canvasPoint: CGPoint,
+        target: ImageEditorColorSampleTarget,
+        foregroundColor: NSColor,
+        backgroundColor: NSColor,
+        sampledColor: NSColor
+    ) -> Self {
+        Self(
+            originalColor: target == .foreground ? foregroundColor : backgroundColor,
+            sampledColor: sampledColor,
+            canvasPoint: canvasPoint,
+            target: target
+        )
+    }
+
+    func updating(sampledColor: NSColor, at canvasPoint: CGPoint) -> Self {
+        Self(
+            originalColor: originalColor,
+            sampledColor: sampledColor,
+            canvasPoint: canvasPoint,
+            target: target
+        )
+    }
+}
+
+enum ImageEditorEyedropperSamplingRingGeometry {
+    static let diameter: CGFloat = 48
+    private static let cursorOffset: CGFloat = 42
+    private static let edgePadding: CGFloat = 4
+
+    static func center(pointer: CGPoint, viewportSize: CGSize) -> CGPoint {
+        let radius = diameter / 2
+        let horizontalInset = min(radius + edgePadding, max(viewportSize.width / 2, 0))
+        let verticalInset = min(radius + edgePadding, max(viewportSize.height / 2, 0))
+        let maximumX = max(horizontalInset, viewportSize.width - horizontalInset)
+        let maximumY = max(verticalInset, viewportSize.height - verticalInset)
+        var center = CGPoint(
+            x: pointer.x + cursorOffset,
+            y: pointer.y - cursorOffset
+        )
+        if center.x > maximumX {
+            center.x = pointer.x - cursorOffset
+        }
+        if center.y < verticalInset {
+            center.y = pointer.y + cursorOffset
+        }
+        center.x = min(max(center.x, horizontalInset), maximumX)
+        center.y = min(max(center.y, verticalInset), maximumY)
+        return center
+    }
+}
+
 private struct ImageEditorObjectSelectionBoxDrag: Equatable {
     let startCanvasPoint: CGPoint
     var endCanvasPoint: CGPoint
@@ -107,6 +165,7 @@ struct ImageEditorView: View {
     @State private var brushStrokeSamples: [ImageEditorBrushStrokeSample] = []
     @State private var isTemporaryEyedropperGestureActive = false
     @State private var eyedropperGestureTarget: ImageEditorColorSampleTarget?
+    @State private var eyedropperSamplingRing: ImageEditorEyedropperSamplingRingState?
     @State private var isEraserHistoryGestureActive = false
     @State private var paintAirbrushStroke = ImageEditorToneAirbrushStroke()
     @State private var toneAirbrushStroke = ImageEditorToneAirbrushStroke()
@@ -526,6 +585,7 @@ struct ImageEditorView: View {
             brushStrokeSamples = []
             isTemporaryEyedropperGestureActive = false
             eyedropperGestureTarget = nil
+            eyedropperSamplingRing = nil
             isEraserHistoryGestureActive = false
             activeBrushPressure = nil
             activeBrushTilt = nil
@@ -1287,6 +1347,17 @@ struct ImageEditorView: View {
                 .fixedSize()
                 .focusable(false)
                 .accessibilityIdentifier("image-editor-color-sampling-size")
+            }
+
+            if viewModel.selectedTool == .eyedropper {
+                Toggle(
+                    L10n.text("imageEditor.option.eyedropperSamplingRing"),
+                    isOn: $viewModel.eyedropperShowsSamplingRing
+                )
+                .toggleStyle(.checkbox)
+                .fixedSize()
+                .focusable(false)
+                .accessibilityIdentifier("image-editor-eyedropper-sampling-ring")
             }
         }
     }
@@ -3254,6 +3325,7 @@ struct ImageEditorView: View {
                     hotspotOverlay(in: geometry.size)
                     deliverySelectionOverlay(in: geometry.size)
                     colorSamplerOverlay(in: geometry.size)
+                    eyedropperSamplingRingOverlay(in: geometry.size)
                     sampledBrushSourceOverlay(in: geometry.size)
                     paintAirbrushOverlay(in: geometry.size)
                     toneAirbrushOverlay(in: geometry.size)
@@ -3342,6 +3414,7 @@ struct ImageEditorView: View {
                         },
                         onCanvasLifecycleInterrupted: { _ in
                             objectSelectionBoxDrag = nil
+                            eyedropperSamplingRing = nil
                             cancelPathAnchorDragForCanvasLifecycle()
                         },
                         onZoom: { factor, location, viewportSize in
@@ -3910,6 +3983,12 @@ struct ImageEditorView: View {
                 .onChange(of: viewModel.selectedLeftSidebarTab) { _ in
                     _ = cancelGradientOverlayCanvasHandleDragForLifecycle()
                     objectSelectionBoxDrag = nil
+                    eyedropperSamplingRing = nil
+                }
+                .onChange(of: viewModel.eyedropperShowsSamplingRing) { isVisible in
+                    if !isVisible {
+                        eyedropperSamplingRing = nil
+                    }
                 }
                 .onDisappear {
                     _ = cancelGradientOverlayCanvasHandleDragForLifecycle()
@@ -3922,6 +4001,7 @@ struct ImageEditorView: View {
                     activeBrushTilt = nil
                     isTemporaryEyedropperGestureActive = false
                     eyedropperGestureTarget = nil
+                    eyedropperSamplingRing = nil
                     isEraserHistoryGestureActive = false
                     paintAirbrushStroke.reset()
                     isPatchGestureBlocked = false
@@ -4365,6 +4445,76 @@ struct ImageEditorView: View {
         }
     }
 
+    private func sampleEyedropperColor(
+        at canvasPoint: CGPoint,
+        target: ImageEditorColorSampleTarget
+    ) {
+        let foregroundBeforeSampling = viewModel.foregroundColor
+        let backgroundBeforeSampling = viewModel.backgroundColor
+        let existingRing = eyedropperSamplingRing
+        guard let sampledColor = viewModel.sampleColor(
+            at: canvasPoint,
+            target: target
+        ) else {
+            eyedropperSamplingRing = nil
+            return
+        }
+        guard viewModel.eyedropperShowsSamplingRing else {
+            eyedropperSamplingRing = nil
+            return
+        }
+        if let existingRing, existingRing.target == target {
+            eyedropperSamplingRing = existingRing.updating(
+                sampledColor: sampledColor,
+                at: canvasPoint
+            )
+        } else {
+            eyedropperSamplingRing = ImageEditorEyedropperSamplingRingState.begin(
+                at: canvasPoint,
+                target: target,
+                foregroundColor: foregroundBeforeSampling,
+                backgroundColor: backgroundBeforeSampling,
+                sampledColor: sampledColor
+            )
+        }
+    }
+
+    @ViewBuilder
+    private func eyedropperSamplingRingOverlay(in size: CGSize) -> some View {
+        if viewModel.eyedropperShowsSamplingRing,
+           let eyedropperSamplingRing {
+            let pointer = viewPoint(from: eyedropperSamplingRing.canvasPoint, in: size)
+            let center = ImageEditorEyedropperSamplingRingGeometry.center(
+                pointer: pointer,
+                viewportSize: size
+            )
+            let diameter = ImageEditorEyedropperSamplingRingGeometry.diameter
+            ZStack {
+                Circle()
+                    .fill(Color(nsColor: ImageEditorTheme.panelRaised))
+                HStack(spacing: 0) {
+                    Color(nsColor: eyedropperSamplingRing.sampledColor)
+                    Color(nsColor: eyedropperSamplingRing.originalColor)
+                }
+                .frame(width: diameter, height: diameter)
+                .clipShape(Circle())
+                Rectangle()
+                    .fill(Color.white.opacity(0.9))
+                    .frame(width: 1, height: diameter - 8)
+                Circle()
+                    .stroke(Color.black.opacity(0.86), lineWidth: 4)
+                Circle()
+                    .stroke(Color.white.opacity(0.96), lineWidth: 1)
+                    .padding(1.5)
+            }
+            .frame(width: diameter, height: diameter)
+            .position(center)
+            .shadow(color: .black.opacity(0.72), radius: 3, x: 0, y: 2)
+            .allowsHitTesting(false)
+            .accessibilityHidden(true)
+        }
+    }
+
     @ViewBuilder
     private func colorSamplerOverlay(in size: CGSize) -> some View {
         ForEach(Array(viewModel.colorSamplerPoints.enumerated()), id: \.element.id) { index, sample in
@@ -4804,7 +4954,10 @@ struct ImageEditorView: View {
                     activeBrushPressure = nil
                     activeBrushTilt = nil
                     if let pointerImagePoint {
-                        viewModel.sampleColor(at: pointerImagePoint)
+                        sampleEyedropperColor(
+                            at: pointerImagePoint,
+                            target: .foreground
+                        )
                     }
                     updateCanvasCursor(at: value.location, in: size)
                     return
@@ -4820,7 +4973,7 @@ struct ImageEditorView: View {
                     }
                     if let pointerImagePoint,
                        let eyedropperGestureTarget {
-                        viewModel.sampleColor(
+                        sampleEyedropperColor(
                             at: pointerImagePoint,
                             target: eyedropperGestureTarget
                         )
@@ -5302,6 +5455,7 @@ struct ImageEditorView: View {
                     lastPanTranslation = .zero
                     isTemporaryEyedropperGestureActive = false
                     eyedropperGestureTarget = nil
+                    eyedropperSamplingRing = nil
                     if isPointerInsideCanvas {
                         updateCanvasCursor(at: value.location, in: size)
                     }
@@ -5610,6 +5764,7 @@ struct ImageEditorView: View {
                 brushStrokeSamples = []
                 isTemporaryEyedropperGestureActive = false
                 eyedropperGestureTarget = nil
+                eyedropperSamplingRing = nil
                 isEraserHistoryGestureActive = false
                 activeBrushPressure = nil
                 paintAirbrushStroke.reset()

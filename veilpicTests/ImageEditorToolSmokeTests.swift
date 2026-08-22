@@ -1349,10 +1349,14 @@ struct ImageEditorToolSmokeTests {
         let canUndo = viewModel.canUndo
 
         viewModel.selectColorSamplerSampleSize(.threeByThree)
-        viewModel.sampleColor(at: point, target: .background)
+        let returnedCompositeAverage = try #require(
+            viewModel.sampleColor(at: point, target: .background)?
+                .usingColorSpace(.deviceRGB)
+        )
         let compositeAverage = try #require(
             viewModel.backgroundColor.usingColorSpace(.deviceRGB)
         )
+        #expect(abs(returnedCompositeAverage.redComponent - compositeAverage.redComponent) < 0.01)
         #expect(compositeAverage.redComponent > 0.08)
         #expect(compositeAverage.redComponent < 0.14)
         #expect(abs(compositeAverage.redComponent - compositeAverage.greenComponent) < 0.01)
