@@ -180,6 +180,28 @@ enum ImageEditorBrushPresetImportSelectionPolicy {
         })
     }
 
+    static func orderedIndexes(
+        presetTitles: [String],
+        matchingIndexes: IndexSet,
+        sortOrder: ImageEditorBrushPresetSortOrder
+    ) -> [Int] {
+        let validIndexes = matchingIndexes.filter {
+            $0 >= 0 && $0 < presetTitles.count
+        }
+        guard sortOrder != .catalog else { return Array(validIndexes) }
+        return validIndexes.sorted { lhs, rhs in
+            let comparison = presetTitles[lhs].compare(
+                presetTitles[rhs],
+                options: [.caseInsensitive, .diacriticInsensitive],
+                locale: .current
+            )
+            if comparison == .orderedSame { return lhs < rhs }
+            return sortOrder == .nameAscending
+                ? comparison == .orderedAscending
+                : comparison == .orderedDescending
+        }
+    }
+
     static func selectingAll(
         matchingIndexes: IndexSet,
         in selection: IndexSet,
@@ -252,7 +274,7 @@ enum ImageEditorBrushPresetDropPolicy {
     }
 }
 
-private final class ImageEditorBrushPresetImportSelectionView: NSView {
+final class ImageEditorBrushPresetImportSelectionView: NSView {
     private let presetTitles: [String]
     private let reservedTitles: Set<String>
     private let presetCount: Int
@@ -262,8 +284,10 @@ private final class ImageEditorBrushPresetImportSelectionView: NSView {
     private let selectAllButton = NSButton()
     private let selectNoneButton = NSButton()
     private let invertSelectionButton = NSButton()
+    private let sortOrderPopUpButton = NSPopUpButton()
     private let presetStack = NSStackView()
     private var presetButtons: [NSButton] = []
+    private var sortOrder = ImageEditorBrushPresetSortOrder.catalog
     private(set) var selectedIndexes: IndexSet
     var onSelectionChange: ((IndexSet) -> Void)?
 
@@ -317,6 +341,20 @@ private final class ImageEditorBrushPresetImportSelectionView: NSView {
         invertSelectionButton.controlSize = .small
         invertSelectionButton.frame = NSRect(x: 204, y: 194, width: 96, height: 24)
         addSubview(invertSelectionButton)
+
+        sortOrderPopUpButton.addItems(
+            withTitles: ImageEditorBrushPresetSortOrder.allCases.map(\.title)
+        )
+        sortOrderPopUpButton.selectItem(at: 0)
+        sortOrderPopUpButton.target = self
+        sortOrderPopUpButton.action = #selector(sortPresets)
+        sortOrderPopUpButton.controlSize = .small
+        sortOrderPopUpButton.toolTip = L10n.text("imageEditor.brushPreset.sortLabel")
+        sortOrderPopUpButton.identifier = NSUserInterfaceItemIdentifier(
+            "image-editor-brush-preset-import-sort"
+        )
+        sortOrderPopUpButton.frame = NSRect(x: 306, y: 194, width: 114, height: 24)
+        addSubview(sortOrderPopUpButton)
 
         let scrollView = NSScrollView(frame: NSRect(x: 0, y: 0, width: 420, height: 190))
         scrollView.borderType = .bezelBorder
@@ -394,6 +432,15 @@ private final class ImageEditorBrushPresetImportSelectionView: NSView {
         updateControls(notifySelection: false)
     }
 
+    @objc private func sortPresets() {
+        let index = sortOrderPopUpButton.indexOfSelectedItem
+        guard ImageEditorBrushPresetSortOrder.allCases.indices.contains(index) else {
+            return
+        }
+        sortOrder = ImageEditorBrushPresetSortOrder.allCases[index]
+        updateControls(notifySelection: false)
+    }
+
     private var visibleIndexes: IndexSet {
         ImageEditorBrushPresetImportSelectionPolicy.matchingIndexes(
             presetTitles: presetTitles,
@@ -451,6 +498,7 @@ private final class ImageEditorBrushPresetImportSelectionView: NSView {
             button.isEnabled = isSelected || selectedIndexes.count < capacity
             button.isHidden = !visibleIndexes.contains(button.tag)
         }
+        arrangePresetButtons(visibleIndexes: visibleIndexes)
         let documentHeight = max(188, CGFloat(visibleIndexes.count * 24 + 12))
         presetStack.frame = NSRect(x: 0, y: 0, width: 400, height: documentHeight)
         selectAllButton.isEnabled = selectedIndexes.count < capacity
@@ -466,6 +514,24 @@ private final class ImageEditorBrushPresetImportSelectionView: NSView {
         ) != selectedIndexes
         if notifySelection {
             onSelectionChange?(selectedIndexes)
+        }
+    }
+
+    private func arrangePresetButtons(visibleIndexes: IndexSet) {
+        let orderedVisibleIndexes = ImageEditorBrushPresetImportSelectionPolicy.orderedIndexes(
+            presetTitles: presetTitles,
+            matchingIndexes: visibleIndexes,
+            sortOrder: sortOrder
+        )
+        let hiddenIndexes = presetTitles.indices.filter {
+            !visibleIndexes.contains($0)
+        }
+        for button in presetButtons {
+            presetStack.removeArrangedSubview(button)
+            button.removeFromSuperview()
+        }
+        for index in orderedVisibleIndexes + hiddenIndexes {
+            presetStack.addArrangedSubview(presetButtons[index])
         }
     }
 }

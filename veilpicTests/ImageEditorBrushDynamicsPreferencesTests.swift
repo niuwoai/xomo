@@ -1210,6 +1210,84 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         ) == IndexSet(integer: 3))
     }
 
+    @Test func brushLibraryImportSelectionSortsVisibleRowsWithoutChangingSourceIndexes() {
+        let titles = ["Zulu Ink", "Alpha Grain", "Beta Chalk", "alpha Wash"]
+        let filtered = IndexSet([0, 1, 3])
+
+        #expect(ImageEditorBrushPresetImportSelectionPolicy.orderedIndexes(
+            presetTitles: titles,
+            matchingIndexes: filtered,
+            sortOrder: .catalog
+        ) == [0, 1, 3])
+        #expect(ImageEditorBrushPresetImportSelectionPolicy.orderedIndexes(
+            presetTitles: titles,
+            matchingIndexes: filtered,
+            sortOrder: .nameAscending
+        ) == [1, 3, 0])
+        #expect(ImageEditorBrushPresetImportSelectionPolicy.orderedIndexes(
+            presetTitles: titles,
+            matchingIndexes: filtered,
+            sortOrder: .nameDescending
+        ) == [0, 3, 1])
+        #expect(ImageEditorBrushPresetImportSelectionPolicy.orderedIndexes(
+            presetTitles: titles,
+            matchingIndexes: IndexSet([0, 4, 9]),
+            sortOrder: .nameAscending
+        ) == [0])
+
+        let selected = IndexSet([0, 3])
+        let displayOrder = ImageEditorBrushPresetImportSelectionPolicy.orderedIndexes(
+            presetTitles: titles,
+            matchingIndexes: IndexSet(integersIn: titles.indices),
+            sortOrder: .nameAscending
+        )
+        #expect(displayOrder == [1, 3, 2, 0])
+        #expect(selected == IndexSet([0, 3]))
+        #expect(ImageEditorBrushPresetImportSelectionPolicy.normalizedSelection(
+            selected,
+            presetCount: titles.count,
+            capacity: 2
+        ) == selected)
+    }
+
+    @Test func brushLibraryImportSelectionViewSortsFilteredRowsWithoutMutatingSelection() throws {
+        let inspection = ImageEditorBrushPresetLibraryInspection(
+            mode: .append,
+            presetCount: 4,
+            installableCount: 2,
+            skippedCount: 2,
+            presetTitles: ["Zulu Ink", "Alpha Grain", "Beta Chalk", "alpha Wash"],
+            reservedTitles: []
+        )
+        let view = ImageEditorBrushPresetImportSelectionView(inspection: inspection)
+        let initialSelection = view.selectedIndexes
+        let sortPopUp = try #require(view.subviews.first {
+            $0.identifier?.rawValue == "image-editor-brush-preset-import-sort"
+        } as? NSPopUpButton)
+        let searchField = try #require(view.subviews.first {
+            $0.identifier?.rawValue == "image-editor-brush-preset-import-search"
+        } as? NSSearchField)
+        let stacks = view.subviews.compactMap { subview in
+            (subview as? NSScrollView)?.documentView as? NSStackView
+        }
+        let stack = try #require(stacks.first)
+
+        sortPopUp.selectItem(at: 1)
+        #expect(sortPopUp.sendAction(sortPopUp.action, to: sortPopUp.target))
+        #expect(stack.arrangedSubviews.compactMap { ($0 as? NSButton)?.tag } == [1, 3, 2, 0])
+        #expect(view.selectedIndexes == initialSelection)
+
+        searchField.stringValue = "alpha"
+        #expect(searchField.sendAction(searchField.action, to: searchField.target))
+        #expect(
+            stack.arrangedSubviews
+                .filter { !$0.isHidden }
+                .compactMap { ($0 as? NSButton)?.tag }
+                == [1, 3]
+        )
+        #expect(view.selectedIndexes == initialSelection)
+    }
+
     @Test func brushLibraryImportSelectionInvertsVisibleMatchesWithinGlobalCapacity() {
         #expect(ImageEditorBrushPresetImportSelectionPolicy.inverting(
             matchingIndexes: IndexSet([0, 1, 2]),
