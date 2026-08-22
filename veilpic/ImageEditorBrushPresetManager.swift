@@ -15,6 +15,7 @@ enum ImageEditorBrushPresetLibraryError: Error, Equatable {
     case unsupportedFormatVersion
     case emptyLibrary
     case noMatchingPresets
+    case invalidPresetSelection
 }
 
 struct ImageEditorBrushPresetLibrary: Codable, Equatable {
@@ -52,6 +53,50 @@ struct ImageEditorBrushPresetLibraryInspection: Equatable {
     let presetTitles: [String]
 }
 
+enum ImageEditorBrushPresetImportSelectionPolicy {
+    static func defaultSelection(presetCount: Int, capacity: Int) -> IndexSet {
+        IndexSet(integersIn: 0..<max(0, min(presetCount, capacity)))
+    }
+
+    static func normalizedSelection(
+        _ selection: IndexSet,
+        presetCount: Int,
+        capacity: Int
+    ) -> IndexSet {
+        IndexSet(
+            selection
+                .filter { $0 >= 0 && $0 < presetCount }
+                .prefix(max(0, capacity))
+        )
+    }
+
+    static func toggling(
+        index: Int,
+        in selection: IndexSet,
+        presetCount: Int,
+        capacity: Int
+    ) -> IndexSet {
+        guard index >= 0, index < presetCount else {
+            return normalizedSelection(
+                selection,
+                presetCount: presetCount,
+                capacity: capacity
+            )
+        }
+        var updated = normalizedSelection(
+            selection,
+            presetCount: presetCount,
+            capacity: capacity
+        )
+        if updated.contains(index) {
+            updated.remove(index)
+        } else if updated.count < max(0, capacity) {
+            updated.insert(index)
+        }
+        return updated
+    }
+}
+
 enum ImageEditorBrushPresetDropPolicy {
     static func acceptedURL(from urls: [URL]) -> URL? {
         guard urls.count == 1,
@@ -62,6 +107,125 @@ enum ImageEditorBrushPresetDropPolicy {
               ) == .orderedSame
         else { return nil }
         return url
+    }
+}
+
+private final class ImageEditorBrushPresetImportSelectionView: NSView {
+    private let presetCount: Int
+    private let capacity: Int
+    private let summaryLabel = NSTextField(labelWithString: "")
+    private var presetButtons: [NSButton] = []
+    private(set) var selectedIndexes: IndexSet
+    var onSelectionChange: ((IndexSet) -> Void)?
+
+    init(inspection: ImageEditorBrushPresetLibraryInspection) {
+        presetCount = inspection.presetTitles.count
+        capacity = inspection.installableCount
+        selectedIndexes = ImageEditorBrushPresetImportSelectionPolicy.defaultSelection(
+            presetCount: inspection.presetTitles.count,
+            capacity: inspection.installableCount
+        )
+        super.init(frame: NSRect(x: 0, y: 0, width: 420, height: 280))
+
+        summaryLabel.frame = NSRect(x: 0, y: 252, width: 420, height: 20)
+        summaryLabel.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
+        addSubview(summaryLabel)
+
+        let selectAllButton = NSButton(
+            title: L10n.text("imageEditor.action.selectAll"),
+            target: self,
+            action: #selector(selectAllPresets)
+        )
+        selectAllButton.bezelStyle = .inline
+        selectAllButton.controlSize = .small
+        selectAllButton.frame = NSRect(x: 0, y: 224, width: 96, height: 24)
+        addSubview(selectAllButton)
+
+        let selectNoneButton = NSButton(
+            title: L10n.text("imageEditor.action.selectNone"),
+            target: self,
+            action: #selector(selectNoPresets)
+        )
+        selectNoneButton.bezelStyle = .inline
+        selectNoneButton.controlSize = .small
+        selectNoneButton.frame = NSRect(x: 102, y: 224, width: 96, height: 24)
+        addSubview(selectNoneButton)
+
+        let scrollView = NSScrollView(frame: NSRect(x: 0, y: 0, width: 420, height: 220))
+        scrollView.borderType = .bezelBorder
+        scrollView.hasVerticalScroller = true
+        scrollView.autohidesScrollers = true
+
+        let stack = NSStackView()
+        stack.orientation = .vertical
+        stack.alignment = .leading
+        stack.spacing = 2
+        stack.edgeInsets = NSEdgeInsets(top: 6, left: 8, bottom: 6, right: 8)
+        presetButtons = inspection.presetTitles.enumerated().map { index, title in
+            let button = NSButton(
+                checkboxWithTitle: L10n.format(
+                    "imageEditor.brushPreset.importSelection.item",
+                    index + 1,
+                    title
+                ),
+                target: self,
+                action: #selector(togglePreset(_:))
+            )
+            button.tag = index
+            button.controlSize = .small
+            button.lineBreakMode = .byTruncatingTail
+            button.toolTip = title
+            stack.addArrangedSubview(button)
+            return button
+        }
+        let documentHeight = max(218, CGFloat(presetButtons.count * 24 + 12))
+        stack.frame = NSRect(x: 0, y: 0, width: 400, height: documentHeight)
+        scrollView.documentView = stack
+        addSubview(scrollView)
+        updateControls()
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    @objc private func togglePreset(_ sender: NSButton) {
+        selectedIndexes = ImageEditorBrushPresetImportSelectionPolicy.toggling(
+            index: sender.tag,
+            in: selectedIndexes,
+            presetCount: presetCount,
+            capacity: capacity
+        )
+        updateControls()
+    }
+
+    @objc private func selectAllPresets() {
+        selectedIndexes = ImageEditorBrushPresetImportSelectionPolicy.defaultSelection(
+            presetCount: presetCount,
+            capacity: capacity
+        )
+        updateControls()
+    }
+
+    @objc private func selectNoPresets() {
+        selectedIndexes = []
+        updateControls()
+    }
+
+    private func updateControls() {
+        summaryLabel.stringValue = L10n.format(
+            "imageEditor.brushPreset.importSelection.summary",
+            selectedIndexes.count,
+            presetCount,
+            capacity
+        )
+        for button in presetButtons {
+            let isSelected = selectedIndexes.contains(button.tag)
+            button.state = isSelected ? .on : .off
+            button.isEnabled = isSelected || selectedIndexes.count < capacity
+        }
+        onSelectionChange?(selectedIndexes)
     }
 }
 
@@ -90,14 +254,21 @@ extension ImageEditorViewModel {
     }
 
     @discardableResult
-    func importBrushPresetLibraryData(_ data: Data) throws -> ImageEditorBrushPresetImportResult {
+    func importBrushPresetLibraryData(
+        _ data: Data,
+        selectedIndexes: IndexSet? = nil
+    ) throws -> ImageEditorBrushPresetImportResult {
         let library = try decodedBrushPresetLibrary(from: data)
+        let selectedPresets = try selectedBrushPresets(
+            from: library,
+            selectedIndexes: selectedIndexes
+        )
         let availableCount = max(
             0,
             ImageEditorBrushPresetPreferences.maximumPresetCount - customBrushPresets.count
         )
         let importedPresets = preparedBrushPresets(
-            from: library.presets,
+            from: selectedPresets,
             limit: availableCount,
             existingNames: Set(customBrushPresets.compactMap(\.name))
         )
@@ -171,8 +342,14 @@ extension ImageEditorViewModel {
     }
 
     @discardableResult
-    func importBrushPresetLibrary(from url: URL) throws -> ImageEditorBrushPresetImportResult {
-        try importBrushPresetLibraryData(brushPresetLibraryArchiveData(from: url))
+    func importBrushPresetLibrary(
+        from url: URL,
+        selectedIndexes: IndexSet? = nil
+    ) throws -> ImageEditorBrushPresetImportResult {
+        try importBrushPresetLibraryData(
+            brushPresetLibraryArchiveData(from: url),
+            selectedIndexes: selectedIndexes
+        )
     }
 
     @discardableResult
@@ -223,23 +400,28 @@ extension ImageEditorViewModel {
     @discardableResult
     func importBrushPresetLibraryWithConfirmation(from url: URL) -> Bool {
         importBrushPresetLibraryWithConfirmation(from: url) { [weak self] url, inspection in
-            self?.presentBrushPresetImportConfirmation(
+            self?.presentBrushPresetImportSelection(
                 sourceURL: url,
                 inspection: inspection
-            ) ?? false
+            )
         }
     }
 
     @discardableResult
     func importBrushPresetLibraryWithConfirmation(
         from url: URL,
-        confirmImport: (URL, ImageEditorBrushPresetLibraryInspection) -> Bool
+        selectPresets: (URL, ImageEditorBrushPresetLibraryInspection) -> IndexSet?
     ) -> Bool {
         do {
             let data = try brushPresetLibraryArchiveData(from: url)
             let inspection = try inspectBrushPresetLibraryData(data, mode: .append)
-            guard confirmImport(url, inspection) else { return false }
-            try importBrushPresetLibraryData(data)
+            guard let selectedIndexes = selectPresets(url, inspection),
+                  !selectedIndexes.isEmpty
+            else { return false }
+            try importBrushPresetLibraryData(
+                data,
+                selectedIndexes: selectedIndexes
+            )
             return true
         } catch {
             statusText = brushPresetLibraryErrorStatus(error)
@@ -247,10 +429,10 @@ extension ImageEditorViewModel {
         }
     }
 
-    private func presentBrushPresetImportConfirmation(
+    private func presentBrushPresetImportSelection(
         sourceURL: URL,
         inspection: ImageEditorBrushPresetLibraryInspection
-    ) -> Bool {
+    ) -> IndexSet? {
         let alert = NSAlert()
         alert.alertStyle = .informational
         alert.messageText = L10n.text(
@@ -266,7 +448,16 @@ extension ImageEditorViewModel {
         )
         alert.addButton(withTitle: L10n.text("imageEditor.action.brushPresetImport"))
         alert.addButton(withTitle: L10n.text("imageEditor.action.cancel"))
-        return alert.runModal() == .alertFirstButtonReturn
+        let selectionView = ImageEditorBrushPresetImportSelectionView(
+            inspection: inspection
+        )
+        alert.accessoryView = selectionView
+        selectionView.onSelectionChange = { [weak alert] selection in
+            alert?.buttons.first?.isEnabled = !selection.isEmpty
+        }
+        alert.buttons.first?.isEnabled = !selectionView.selectedIndexes.isEmpty
+        guard alert.runModal() == .alertFirstButtonReturn else { return nil }
+        return selectionView.selectedIndexes
     }
 
     func chooseBrushPresetReplacementFile() {
@@ -335,17 +526,17 @@ extension ImageEditorViewModel {
     @discardableResult
     func importDroppedBrushPresetLibrary(from urls: [URL]) -> Bool {
         importDroppedBrushPresetLibrary(from: urls) { [weak self] url, inspection in
-            self?.presentBrushPresetImportConfirmation(
+            self?.presentBrushPresetImportSelection(
                 sourceURL: url,
                 inspection: inspection
-            ) ?? false
+            )
         }
     }
 
     @discardableResult
     func importDroppedBrushPresetLibrary(
         from urls: [URL],
-        confirmImport: (URL, ImageEditorBrushPresetLibraryInspection) -> Bool
+        selectPresets: (URL, ImageEditorBrushPresetLibraryInspection) -> IndexSet?
     ) -> Bool {
         guard let url = ImageEditorBrushPresetDropPolicy.acceptedURL(from: urls) else {
             return false
@@ -358,7 +549,7 @@ extension ImageEditorViewModel {
         }
         return importBrushPresetLibraryWithConfirmation(
             from: url,
-            confirmImport: confirmImport
+            selectPresets: selectPresets
         )
     }
 
@@ -424,6 +615,19 @@ extension ImageEditorViewModel {
         return library
     }
 
+    private func selectedBrushPresets(
+        from library: ImageEditorBrushPresetLibrary,
+        selectedIndexes: IndexSet?
+    ) throws -> [ImageEditorBrushPreset] {
+        guard let selectedIndexes else { return library.presets }
+        guard !selectedIndexes.isEmpty,
+              selectedIndexes.allSatisfy({ $0 >= 0 && $0 < library.presets.count })
+        else {
+            throw ImageEditorBrushPresetLibraryError.invalidPresetSelection
+        }
+        return selectedIndexes.map { library.presets[$0] }
+    }
+
     private func preparedBrushPresets(
         from sourcePresets: [ImageEditorBrushPreset],
         limit: Int,
@@ -468,6 +672,8 @@ extension ImageEditorViewModel {
             return L10n.text("imageEditor.status.brushPresetUnsupportedVersion")
         case .emptyLibrary, .noMatchingPresets:
             return L10n.text("imageEditor.status.brushPresetLibraryEmpty")
+        case .invalidPresetSelection:
+            return L10n.text("imageEditor.status.brushPresetSelectionInvalid")
         case .invalidFile, .none:
             return L10n.text("imageEditor.status.brushPresetFileInvalid")
         }

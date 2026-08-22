@@ -1129,6 +1129,43 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         #expect(restored.recentBrushPresetIDs == [builtIn.id])
     }
 
+    @Test func brushLibraryImportSelectionStaysWithinCapacityAndCanChooseLaterItems() {
+        let defaults = ImageEditorBrushPresetImportSelectionPolicy.defaultSelection(
+            presetCount: 4,
+            capacity: 2
+        )
+        #expect(defaults == IndexSet([0, 1]))
+
+        let removedFirst = ImageEditorBrushPresetImportSelectionPolicy.toggling(
+            index: 0,
+            in: defaults,
+            presetCount: 4,
+            capacity: 2
+        )
+        let choseLater = ImageEditorBrushPresetImportSelectionPolicy.toggling(
+            index: 3,
+            in: removedFirst,
+            presetCount: 4,
+            capacity: 2
+        )
+        #expect(choseLater == IndexSet([1, 3]))
+        #expect(ImageEditorBrushPresetImportSelectionPolicy.toggling(
+            index: 2,
+            in: choseLater,
+            presetCount: 4,
+            capacity: 2
+        ) == choseLater)
+        #expect(ImageEditorBrushPresetImportSelectionPolicy.normalizedSelection(
+            IndexSet([0, 3, 5]),
+            presetCount: 4,
+            capacity: 1
+        ) == IndexSet(integer: 0))
+        #expect(ImageEditorBrushPresetImportSelectionPolicy.defaultSelection(
+            presetCount: 4,
+            capacity: 0
+        ).isEmpty)
+    }
+
     @Test func inspectingBrushLibraryReportsReplacementCapacityWithoutMutation() throws {
         let incoming = (0..<(ImageEditorBrushPresetPreferences.maximumPresetCount + 2)).map {
             ImageEditorBrushPreset(
@@ -1245,7 +1282,7 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         ) { url, inspection in
             confirmedInspection = inspection
             try? Data("replaced-after-preflight".utf8).write(to: url, options: .atomic)
-            return true
+            return IndexSet(integer: 1)
         }
 
         #expect(didImport)
@@ -1258,7 +1295,7 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         #expect(confirmedInspection?.installableCount == 2)
         #expect(confirmedInspection?.skippedCount == 0)
         #expect(confirmedInspection?.presetTitles == ["Source One", "Source Two"])
-        #expect(viewModel.customBrushPresets.map(\.title) == ["Source One", "Source Two"])
+        #expect(viewModel.customBrushPresets.map(\.title) == ["Source Two"])
         #expect(Set(viewModel.customBrushPresets.map(\.id)).isDisjoint(with: sourcePresets.map(\.id)))
         #expect(viewModel.brushSize == 83)
         #expect(viewModel.brushAngleJitter == 37)
@@ -1273,9 +1310,9 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         var cancelledInspection: ImageEditorBrushPresetLibraryInspection?
         let cancelledImport = viewModel.importBrushPresetLibraryWithConfirmation(
             from: sourceURL,
-            confirmImport: { _, inspection in
+            selectPresets: { _, inspection in
                 cancelledInspection = inspection
-                return false
+                return nil
             }
         )
         #expect(!cancelledImport)
@@ -1287,9 +1324,9 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         var invalidConfirmationCount = 0
         #expect(!viewModel.importBrushPresetLibraryWithConfirmation(
             from: sourceURL,
-            confirmImport: { _, _ in
+            selectPresets: { _, _ in
                 invalidConfirmationCount += 1
-                return true
+                return IndexSet(integer: 0)
             }
         ))
         #expect(invalidConfirmationCount == 0)
@@ -1472,10 +1509,13 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         var droppedInspection: ImageEditorBrushPresetLibraryInspection?
         let didImportDrop = target.importDroppedBrushPresetLibrary(
             from: [validURL],
-            confirmImport: { url, inspection in
+            selectPresets: { url, inspection in
                 droppedURL = url
                 droppedInspection = inspection
-                return true
+                return ImageEditorBrushPresetImportSelectionPolicy.defaultSelection(
+                    presetCount: inspection.presetCount,
+                    capacity: inspection.installableCount
+                )
             }
         )
         #expect(didImportDrop)
@@ -1493,12 +1533,12 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         let presetsAfterImport = target.customBrushPresets
         #expect(!target.importDroppedBrushPresetLibrary(
             from: [invalidExtensionURL],
-            confirmImport: { _, _ in true }
+            selectPresets: { _, _ in IndexSet(integer: 0) }
         ))
         #expect(target.customBrushPresets == presetsAfterImport)
         #expect(!target.importDroppedBrushPresetLibrary(
             from: [corruptURL],
-            confirmImport: { _, _ in true }
+            selectPresets: { _, _ in IndexSet(integer: 0) }
         ))
         #expect(target.customBrushPresets == presetsAfterImport)
         #expect(target.statusText == L10n.text("imageEditor.status.brushPresetFileInvalid"))
@@ -1525,11 +1565,12 @@ struct ImageEditorBrushDynamicsPreferencesTests {
             seed.copyingCustomPreset(id: "incoming-\(index)", name: "Incoming \(index)")
         }
         let result = try capacityViewModel.importBrushPresetLibraryData(
-            JSONEncoder().encode(ImageEditorBrushPresetLibrary(presets: incoming))
+            JSONEncoder().encode(ImageEditorBrushPresetLibrary(presets: incoming)),
+            selectedIndexes: IndexSet(integer: 1)
         )
         #expect(result == ImageEditorBrushPresetImportResult(importedCount: 1, skippedCount: 2))
         #expect(capacityViewModel.customBrushPresets.count == 100)
-        #expect(capacityViewModel.customBrushPresets.last?.name == "Incoming 0")
+        #expect(capacityViewModel.customBrushPresets.last?.name == "Incoming 1")
 
         let presetsAtCapacity = capacityViewModel.customBrushPresets
         let selectedAtCapacity = capacityViewModel.selectedBrushPresetID
@@ -1542,6 +1583,18 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         }
         #expect(throws: ImageEditorBrushPresetLibraryError.invalidFile) {
             try capacityViewModel.importBrushPresetLibraryData(Data("not-json".utf8))
+        }
+        #expect(throws: ImageEditorBrushPresetLibraryError.invalidPresetSelection) {
+            try capacityViewModel.importBrushPresetLibraryData(
+                JSONEncoder().encode(ImageEditorBrushPresetLibrary(presets: incoming)),
+                selectedIndexes: IndexSet(integer: 4)
+            )
+        }
+        #expect(throws: ImageEditorBrushPresetLibraryError.invalidPresetSelection) {
+            try capacityViewModel.importBrushPresetLibraryData(
+                JSONEncoder().encode(ImageEditorBrushPresetLibrary(presets: incoming)),
+                selectedIndexes: []
+            )
         }
         #expect(throws: ImageEditorBrushPresetLibraryError.fileTooLarge) {
             try capacityViewModel.importBrushPresetLibraryData(

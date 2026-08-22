@@ -2035,8 +2035,11 @@
 "imageEditor.status.brushPresetUnsupportedVersion" = "This brush preset file uses an unsupported format version.";
 "imageEditor.status.brushPresetLibraryEmpty" = "The brush preset file contains no importable resources.";
 "imageEditor.status.brushPresetFileInvalid" = "This brush preset file could not be read.";
+"imageEditor.status.brushPresetSelectionInvalid" = "Choose one or more valid brush presets to import.";
 "imageEditor.brushPreset.importConfirmation.title" = "Import brush presets?";
-"imageEditor.brushPreset.importConfirmation.message" = "“%@” contains %d presets: %d will be added and %d skipped at the 100-preset capacity. Your %d existing custom brush presets will be kept. Current brush settings and document history will not change.";
+"imageEditor.brushPreset.importConfirmation.message" = "“%@” contains %d presets: up to %d can be added and %d exceed the 100-preset capacity. Choose the presets to import below. Your %d existing custom brush presets will be kept; current brush settings and document history will not change.";
+"imageEditor.brushPreset.importSelection.summary" = "%d of %d selected · up to %d may be selected";
+"imageEditor.brushPreset.importSelection.item" = "%d. %@";
 "imageEditor.brushPreset.replaceConfirmation.title" = "Replace all custom brush presets?";
 "imageEditor.brushPreset.replaceConfirmation.message" = "“%@” contains %d presets: %d will be installed and %d skipped. Continuing will remove %d existing custom brush presets. Current brush settings and document history will not change.";
 "imageEditor.brushPreset.resetConfirmation.title" = "Reset the brush library to built-in presets?";
@@ -2787,6 +2790,7 @@
 "imageEditor.action.layerClippingMaskCreateSelected" = "Create Clipping Masks for Selected Layers";
 "imageEditor.action.layerClippingMaskReleaseSelected" = "Release Selected Clipping Masks";
 "imageEditor.action.selectAll" = "Select All";
+"imageEditor.action.selectNone" = "Select None";
 "imageEditor.action.selectColorRange" = "Color Range";
 "imageEditor.action.selectSimilar" = "Similar";
 "imageEditor.action.selectGrow" = "Grow";

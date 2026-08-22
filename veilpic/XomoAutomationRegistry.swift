@@ -2097,10 +2097,14 @@ final class XomoAutomationRegistry {
         case "import":
             let path = try requiredString("path", in: arguments)
             let url = URL(fileURLWithPath: path)
+            let selectedIndexes = try optionalBrushPresetIndexes(arguments)
             let existingIDs = Set(viewModel.customBrushPresets.map(\.id))
             let result: ImageEditorBrushPresetImportResult
             do {
-                result = try viewModel.importBrushPresetLibrary(from: url)
+                result = try viewModel.importBrushPresetLibrary(
+                    from: url,
+                    selectedIndexes: selectedIndexes
+                )
             } catch {
                 if let message = brushPresetLibraryArgumentMessage(error) {
                     throw XomoAutomationCallError.invalidArgument(message)
@@ -2246,9 +2250,42 @@ final class XomoAutomationRegistry {
             "Brush preset library contains no presets"
         case .noMatchingPresets:
             "Brush preset library contains no matching presets"
+        case .invalidPresetSelection:
+            "Brush preset indexes must select existing entries from the source library"
         case .none:
             nil
         }
+    }
+
+    private func optionalBrushPresetIndexes(
+        _ arguments: [String: XomoJSONValue]
+    ) throws -> IndexSet? {
+        guard let value = arguments["presetIndexes"] else { return nil }
+        guard let values = value.arrayValue, !values.isEmpty else {
+            throw XomoAutomationCallError.invalidArgument(
+                "Brush preset indexes must be a nonempty array"
+            )
+        }
+        var indexes = IndexSet()
+        for value in values {
+            guard let number = value.doubleValue,
+                  number >= 0,
+                  number.rounded(.towardZero) == number,
+                  number <= Double(Int.max)
+            else {
+                throw XomoAutomationCallError.invalidArgument(
+                    "Brush preset indexes must contain zero-based integers"
+                )
+            }
+            let index = Int(number)
+            guard !indexes.contains(index) else {
+                throw XomoAutomationCallError.invalidArgument(
+                    "Brush preset indexes must not contain duplicates"
+                )
+            }
+            indexes.insert(index)
+        }
+        return indexes
     }
 
     private func pathResult(_ viewModel: ImageEditorViewModel) -> XomoJSONValue {
@@ -7025,6 +7062,17 @@ private extension XomoAutomationRegistry {
             "index": XomoAutomationSchema.integer(description: "Zero-based destination index within custom presets for moveToIndex", minimum: 0),
             "path": XomoAutomationSchema.string(description: "Source path for inspect/import/replace or destination path for export of a .xomobrushes file"),
             "inspectionMode": XomoAutomationSchema.string(description: "Capacity policy for inspectLibrary; append preserves current custom presets, while replace starts from an empty custom library", values: ImageEditorBrushPresetLibraryInspectionMode.allCases.map(\.rawValue)),
+            "presetIndexes": .object([
+                "type": .string("array"),
+                "description": .string("Optional zero-based source library indexes to import in source order; omitted imports every entry"),
+                "items": XomoAutomationSchema.integer(
+                    description: "Zero-based index from inspectLibrary titles",
+                    minimum: 0
+                ),
+                "minItems": .number(1),
+                "maxItems": .number(Double(ImageEditorBrushPresetPreferences.maximumPresetCount)),
+                "uniqueItems": .bool(true)
+            ]),
             "name": XomoAutomationSchema.string(description: "New custom preset name for rename")
         ]),
         tool("xomo.paint.stroke", "Paint a brush or eraser stroke from canvas points.", [

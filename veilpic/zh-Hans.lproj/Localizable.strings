@@ -2035,8 +2035,11 @@
 "imageEditor.status.brushPresetUnsupportedVersion" = "此画笔预设文件来自不受支持的格式版本。";
 "imageEditor.status.brushPresetLibraryEmpty" = "画笔预设文件中没有可导入的资源。";
 "imageEditor.status.brushPresetFileInvalid" = "无法读取此画笔预设文件。";
+"imageEditor.status.brushPresetSelectionInvalid" = "请选择一个或多个有效画笔预设再导入。";
 "imageEditor.brushPreset.importConfirmation.title" = "导入画笔预设？";
-"imageEditor.brushPreset.importConfirmation.message" = "“%@”包含 %d 个画笔预设：将在 100 项容量内新增 %d 个，跳过 %d 个。现有的 %d 个自定义画笔预设会保留；当前画笔设置和文档历史不会改变。";
+"imageEditor.brushPreset.importConfirmation.message" = "“%@”包含 %d 个画笔预设：当前最多可新增 %d 个，另有 %d 个超出 100 项容量。请在下方选择要导入的预设。现有的 %d 个自定义画笔预设会保留；当前画笔设置和文档历史不会改变。";
+"imageEditor.brushPreset.importSelection.summary" = "已选择 %d / %d 项 · 当前最多可选择 %d 项";
+"imageEditor.brushPreset.importSelection.item" = "%d. %@";
 "imageEditor.brushPreset.replaceConfirmation.title" = "替换全部自定义画笔预设？";
 "imageEditor.brushPreset.replaceConfirmation.message" = "“%@”包含 %d 个画笔预设：将安装 %d 个，跳过 %d 个。继续会移除现有的 %d 个自定义画笔预设；当前画笔设置和文档历史不会改变。";
 "imageEditor.brushPreset.resetConfirmation.title" = "将画笔库重置为内置预设？";
@@ -2787,6 +2790,7 @@
 "imageEditor.action.layerClippingMaskCreateSelected" = "为所选图层创建剪贴蒙版";
 "imageEditor.action.layerClippingMaskReleaseSelected" = "释放所选剪贴蒙版";
 "imageEditor.action.selectAll" = "全选";
+"imageEditor.action.selectNone" = "全不选";
 "imageEditor.action.selectColorRange" = "颜色范围";
 "imageEditor.action.selectSimilar" = "选取相似颜色";
 "imageEditor.action.selectGrow" = "扩展相邻颜色";

@@ -336,12 +336,12 @@ struct ImageEditorBrushPresetQueryTests {
         let menuBar = try source(root, "veilpic/ImageEditorMenuBar.swift")
         let importStart = try #require(
             archiveManager.range(
-                of: "func importBrushPresetLibraryWithConfirmation(\n        from url: URL,\n        confirmImport:"
+                of: "func importBrushPresetLibraryWithConfirmation(\n        from url: URL,\n        selectPresets:"
             )
         )
         let importEnd = try #require(
             archiveManager[importStart.upperBound...].range(
-                of: "private func presentBrushPresetImportConfirmation("
+                of: "private func presentBrushPresetImportSelection("
             )
         )
         let importSource = archiveManager[
@@ -356,10 +356,10 @@ struct ImageEditorBrushPresetQueryTests {
             )
         )
         let importConfirmation = try #require(
-            importSource.range(of: "guard confirmImport(url, inspection) else")
+            importSource.range(of: "guard let selectedIndexes = selectPresets(url, inspection)")
         )
         let importCommit = try #require(
-            importSource.range(of: "try importBrushPresetLibraryData(data)")
+            importSource.range(of: "selectedIndexes: selectedIndexes")
         )
         let replacementStart = try #require(
             archiveManager.range(of: "func chooseBrushPresetReplacementFile()")
@@ -444,17 +444,22 @@ struct ImageEditorBrushPresetQueryTests {
         #expect(archiveManager.contains("func replaceBrushPresetLibraryData("))
         #expect(archiveManager.contains("func inspectBrushPresetLibraryData("))
         #expect(archiveManager.contains("enum ImageEditorBrushPresetLibraryInspectionMode"))
+        #expect(archiveManager.contains("enum ImageEditorBrushPresetImportSelectionPolicy"))
+        #expect(archiveManager.contains("ImageEditorBrushPresetImportSelectionView"))
         #expect(archiveManager.contains("struct ImageEditorBrushPresetLibraryInspection"))
         #expect(archiveManager.contains("let library = try decodedBrushPresetLibrary(from: data)"))
         #expect(archiveManager.contains("self.importBrushPresetLibraryWithConfirmation(from: url)"))
         #expect(archiveManager.contains("imageEditor.brushPreset.importConfirmation.message"))
+        #expect(archiveManager.contains("imageEditor.brushPreset.importSelection.summary"))
+        #expect(archiveManager.contains("alert.accessoryView = selectionView"))
+        #expect(archiveManager.contains("imageEditor.brushPreset.importSelection.item"))
         #expect(importDataRead.lowerBound < importInspection.lowerBound)
         #expect(importInspection.lowerBound < importConfirmation.lowerBound)
         #expect(importConfirmation.lowerBound < importCommit.lowerBound)
         #expect(!importSource.contains("importBrushPresetLibrary(from: url)"))
         #expect(
             archiveManager.components(
-                separatedBy: "presentBrushPresetImportConfirmation("
+                separatedBy: "presentBrushPresetImportSelection("
             ).count - 1 == 3
         )
         #expect(archiveManager.contains("installReplacingBrushPresets(replacementPresets)"))
