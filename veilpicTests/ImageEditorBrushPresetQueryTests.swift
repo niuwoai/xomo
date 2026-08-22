@@ -1,0 +1,123 @@
+//
+//  ImageEditorBrushPresetQueryTests.swift
+//  veilpicTests
+//
+//  Created by Codex on 2026/8/22.
+//
+
+import Foundation
+import Testing
+@testable import musepic
+
+@MainActor
+struct ImageEditorBrushPresetQueryTests {
+    @Test func queryMatchesCaseAndDiacriticsWithoutChangingCatalogOrder() {
+        let presets = [
+            preset(id: "built-in", name: "Soft Round", isBuiltIn: true),
+            preset(id: "custom-one", name: "Néon Grain"),
+            preset(id: "custom-two", name: "Neon Ink")
+        ]
+
+        let result = ImageEditorBrushPresetQuery(
+            searchText: "  NEON ",
+            scope: .all
+        ).filter(presets)
+
+        #expect(result.map(\.id) == ["custom-one", "custom-two"])
+    }
+
+    @Test func sourceScopeSeparatesBuiltInAndCustomBrushPresets() {
+        let presets = [
+            preset(id: "built-in-one", name: "Round", isBuiltIn: true),
+            preset(id: "custom-one", name: "Ink"),
+            preset(id: "built-in-two", name: "Hard", isBuiltIn: true),
+            preset(id: "custom-two", name: "Grain")
+        ]
+
+        let builtIns = ImageEditorBrushPresetQuery(searchText: "", scope: .builtIn)
+            .filter(presets)
+        let customs = ImageEditorBrushPresetQuery(searchText: "", scope: .custom)
+            .filter(presets)
+
+        #expect(builtIns.map(\.id) == ["built-in-one", "built-in-two"])
+        #expect(customs.map(\.id) == ["custom-one", "custom-two"])
+    }
+
+    @Test func favoriteAndRecentCollectionsKeepTheirAuthoritativeOrdering() {
+        let presets = [
+            preset(id: "built-in", name: "Round", isBuiltIn: true),
+            preset(id: "custom-one", name: "Detail Ink"),
+            preset(id: "custom-two", name: "Texture Ink")
+        ]
+        let favorites = ImageEditorBrushPresetQuery(
+            searchText: "ink",
+            scope: .all,
+            collection: .favorites,
+            favoriteIDs: ["built-in", "custom-two"]
+        ).filter(presets)
+        let recent = ImageEditorBrushPresetQuery(
+            searchText: "ink",
+            scope: .custom,
+            collection: .recent,
+            recentIDs: ["custom-two", "built-in", "custom-one"]
+        ).filter(presets)
+
+        #expect(favorites.map(\.id) == ["custom-two"])
+        #expect(recent.map(\.id) == ["custom-two", "custom-one"])
+    }
+
+    @Test func queryRepairsSelectionOnlyWhenTheCurrentPresetIsHidden() {
+        let presets = [
+            preset(id: "round", name: "Round", isBuiltIn: true),
+            preset(id: "ink", name: "Studio Ink")
+        ]
+        let all = ImageEditorBrushPresetQuery(searchText: "", scope: .all)
+        let ink = ImageEditorBrushPresetQuery(searchText: "ink", scope: .all)
+        let missing = ImageEditorBrushPresetQuery(searchText: "chalk", scope: .all)
+
+        #expect(all.repairedSelectionID("round", in: presets) == "round")
+        #expect(ink.repairedSelectionID("round", in: presets) == "ink")
+        #expect(missing.repairedSelectionID("round", in: presets) == nil)
+    }
+
+    @Test func brushesPanelConnectsSearchCollectionsAndSharedPresetActions() throws {
+        let root = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let manager = try source(root, "veilpic/ImageEditorBrushPresetPanel.swift")
+        let editor = try source(root, "veilpic/ImageEditorView.swift")
+        let menuBar = try source(root, "veilpic/ImageEditorMenuBar.swift")
+
+        #expect(manager.contains("ImageEditorBrushPresetQuery("))
+        #expect(manager.contains("image-editor-brush-preset-search"))
+        #expect(manager.contains("image-editor-brush-preset-scope"))
+        #expect(manager.contains("image-editor-brush-preset-collection"))
+        #expect(manager.contains("query.repairedSelectionID"))
+        #expect(manager.contains("viewModel.applyBrushPreset(preset)"))
+        #expect(manager.contains("viewModel.setBrushPresetFavorite("))
+        #expect(manager.contains("viewModel.renameCustomBrushPreset("))
+        #expect(manager.contains("viewModel.chooseBrushPresetImportFile()"))
+        #expect(editor.contains("ImageEditorBrushPresetManager(viewModel: viewModel)"))
+        #expect(editor.contains("viewModel.isBrushPresetManagerPresented = true"))
+        #expect(menuBar.contains("viewModel.isBrushPresetManagerPresented = true"))
+        #expect(menuBar.contains("NSF5FunctionKey"))
+        #expect(!menuBar.contains("viewModel.statusText = viewModel.brushesPanelSummaryText"))
+    }
+
+    private func preset(
+        id: String,
+        name: String,
+        isBuiltIn: Bool = false
+    ) -> ImageEditorBrushPreset {
+        ImageEditorBrushPreset(
+            id: id,
+            name: name,
+            size: 24,
+            isBuiltIn: isBuiltIn
+        )
+    }
+
+    private func source(_ root: URL, _ path: String) throws -> String {
+        try String(contentsOf: root.appendingPathComponent(path), encoding: .utf8)
+    }
+}

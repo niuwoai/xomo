@@ -2006,7 +2006,7 @@ extension ImageEditorView {
     private var brushesActionsMenu: some View {
         Menu(L10n.text("imageEditor.menu.window.brushes")) {
             Button(L10n.text("imageEditor.action.brushesShowPanel")) {
-                viewModel.statusText = viewModel.brushesPanelSummaryText
+                viewModel.isBrushPresetManagerPresented = true
             }
             .keyboardShortcut(KeyEquivalent(Character(UnicodeScalar(NSF5FunctionKey)!)), modifiers: [])
             Divider()
@@ -2058,6 +2058,9 @@ extension ImageEditorView {
                     viewModel.chooseBrushPresetExportFile()
                 }
                 .disabled(viewModel.customBrushPresets.isEmpty)
+                Button(L10n.text("imageEditor.action.brushPresetManage")) {
+                    viewModel.isBrushPresetManagerPresented = true
+                }
                 if let selectedPreset = viewModel.selectedBrushPreset {
                     Button(L10n.text(
                         viewModel.isFavoriteBrushPreset(id: selectedPreset.id)

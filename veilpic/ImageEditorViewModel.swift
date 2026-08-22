@@ -476,6 +476,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var isPreviewSheetPresented = false
     @Published var isExportSheetPresented = false
     @Published var isNewCanvasSheetPresented = false
+    @Published var isBrushPresetManagerPresented = false
     @Published var isLayerStylePresetManagerPresented = false
     @Published var isPSDCompatibilityReportPresented = false
     @Published var psdCompatibilityReport: ImageEditorPSDCompatibilityReport?

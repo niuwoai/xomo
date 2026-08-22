@@ -565,6 +565,9 @@ struct ImageEditorView: View {
         .sheet(isPresented: $viewModel.isNewCanvasSheetPresented) {
             XomoNewCanvasSheet(viewModel: viewModel)
         }
+        .sheet(isPresented: $viewModel.isBrushPresetManagerPresented) {
+            ImageEditorBrushPresetManager(viewModel: viewModel)
+        }
         .sheet(isPresented: $viewModel.isLayerStylePresetManagerPresented) {
             ImageEditorLayerStylePresetManager(viewModel: viewModel)
         }
@@ -1534,6 +1537,11 @@ struct ImageEditorView: View {
                 Label(L10n.text("imageEditor.action.brushPresetExportAll"), systemImage: "square.and.arrow.up.on.square")
             }
             .disabled(viewModel.customBrushPresets.isEmpty)
+            Button {
+                viewModel.isBrushPresetManagerPresented = true
+            } label: {
+                Label(L10n.text("imageEditor.action.brushPresetManage"), systemImage: "square.grid.2x2")
+            }
             if let selectedPreset = viewModel.selectedBrushPreset {
                 Button {
                     viewModel.setBrushPresetFavorite(
