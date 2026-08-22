@@ -40,6 +40,28 @@ struct ImageEditorBrushPresetQueryTests {
         #expect(ImageEditorBrushPresetSortOrder.load(from: defaults) == .catalog)
     }
 
+    @Test func gridDensityDefaultsToRegularAndPersistsLargeThumbnails() {
+        let suiteName = "ImageEditorBrushPresetQueryTests.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName) ?? .standard
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+
+        #expect(ImageEditorBrushPresetGridDensity.load(from: defaults) == .regular)
+
+        ImageEditorBrushPresetGridDensity.large.save(to: defaults)
+        #expect(ImageEditorBrushPresetGridDensity.load(from: defaults) == .large)
+
+        defaults.set("unsupported-density", forKey: ImageEditorBrushPresetGridDensity.storageKey)
+        #expect(ImageEditorBrushPresetGridDensity.load(from: defaults) == .regular)
+    }
+
+    @Test func gridDensityMapsCompactRegularAndLargeToDistinctUsefulMetrics() {
+        let densities = ImageEditorBrushPresetGridDensity.allCases
+
+        #expect(densities.map(\.columnCount) == [3, 2, 1])
+        #expect(densities.map(\.thumbnailSize) == [36, 58, 80])
+        #expect(densities.map(\.minimumTileHeight) == [72, 92, 118])
+    }
+
     @Test func querySortsVisiblePresetsByNameAndKeepsEquivalentNamesStable() {
         let presets = [
             preset(id: "zulu", name: "Zulu"),
@@ -145,11 +167,16 @@ struct ImageEditorBrushPresetQueryTests {
         #expect(manager.contains("image-editor-brush-preset-collection"))
         #expect(manager.contains("image-editor-brush-preset-layout"))
         #expect(manager.contains("image-editor-brush-preset-sort"))
+        #expect(manager.contains("image-editor-brush-preset-grid-density"))
         #expect(manager.contains("ImageEditorBrushPresetPanelLayout.load()"))
         #expect(manager.contains("layout.save()"))
+        #expect(manager.contains("ImageEditorBrushPresetGridDensity.load()"))
+        #expect(manager.contains("gridDensity.save()"))
         #expect(manager.contains("ImageEditorBrushPresetSortOrder.load()"))
         #expect(manager.contains("sortOrder.save()"))
-        #expect(manager.contains("LazyVGrid(columns: presetGridColumns"))
+        #expect(manager.contains("count: gridDensity.columnCount"))
+        #expect(manager.contains("size: gridDensity.thumbnailSize"))
+        #expect(manager.contains("minHeight: gridDensity.minimumTileHeight"))
         #expect(manager.contains("presetTile(preset)"))
         #expect(manager.contains("query.repairedSelectionID"))
         #expect(manager.contains("viewModel.applyBrushPreset(preset)"))

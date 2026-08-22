@@ -740,6 +740,10 @@
 "imageEditor.brushPreset.layoutLabel" = "プリセット表示";
 "imageEditor.brushPreset.layout.list" = "リスト";
 "imageEditor.brushPreset.layout.grid" = "サムネイルグリッド";
+"imageEditor.brushPreset.gridDensityLabel" = "サムネイルサイズ";
+"imageEditor.brushPreset.gridDensity.compact" = "コンパクト";
+"imageEditor.brushPreset.gridDensity.regular" = "標準";
+"imageEditor.brushPreset.gridDensity.large" = "大";
 "imageEditor.brushPreset.sortLabel" = "プリセットの並べ替え";
 "imageEditor.brushPreset.sort.catalog" = "カタログ順";
 "imageEditor.brushPreset.sort.nameAscending" = "名前 A–Z";

@@ -16,6 +16,7 @@ struct ImageEditorBrushPresetManager: View {
     @State private var scope = ImageEditorBrushPresetScope.all
     @State private var collection = ImageEditorBrushPresetCollection.all
     @State private var layout = ImageEditorBrushPresetPanelLayout.load()
+    @State private var gridDensity = ImageEditorBrushPresetGridDensity.load()
     @State private var sortOrder = ImageEditorBrushPresetSortOrder.load()
 
     private var query: ImageEditorBrushPresetQuery {
@@ -78,6 +79,7 @@ struct ImageEditorBrushPresetManager: View {
         .onChange(of: scope) { _ in repairSelection() }
         .onChange(of: collection) { _ in repairSelection() }
         .onChange(of: layout) { layout in layout.save() }
+        .onChange(of: gridDensity) { gridDensity in gridDensity.save() }
         .onChange(of: sortOrder) { sortOrder in
             sortOrder.save()
             repairSelection()
@@ -191,6 +193,32 @@ struct ImageEditorBrushPresetManager: View {
                 .accessibilityValue(sortOrder.title)
                 .accessibilityIdentifier("image-editor-brush-preset-sort")
 
+                if layout == .grid {
+                    Menu {
+                        ForEach(ImageEditorBrushPresetGridDensity.allCases) { option in
+                            Button {
+                                gridDensity = option
+                            } label: {
+                                Label(
+                                    option.title,
+                                    systemImage: gridDensity == option
+                                        ? "checkmark"
+                                        : option.symbolName
+                                )
+                            }
+                        }
+                    } label: {
+                        Image(systemName: gridDensity.symbolName)
+                    }
+                    .menuStyle(.borderlessButton)
+                    .fixedSize()
+                    .focusable(false)
+                    .help(gridDensity.title)
+                    .accessibilityLabel(L10n.text("imageEditor.brushPreset.gridDensityLabel"))
+                    .accessibilityValue(gridDensity.title)
+                    .accessibilityIdentifier("image-editor-brush-preset-grid-density")
+                }
+
                 Picker(L10n.text("imageEditor.brushPreset.layoutLabel"), selection: $layout) {
                     ForEach(ImageEditorBrushPresetPanelLayout.allCases) { option in
                         Label(option.title, systemImage: option.symbolName)
@@ -283,10 +311,10 @@ struct ImageEditorBrushPresetManager: View {
     }
 
     private var presetGridColumns: [GridItem] {
-        [
-            GridItem(.flexible(), spacing: 6),
-            GridItem(.flexible(), spacing: 6)
-        ]
+        Array(
+            repeating: GridItem(.flexible(), spacing: 6),
+            count: gridDensity.columnCount
+        )
     }
 
     @ViewBuilder
@@ -378,7 +406,10 @@ struct ImageEditorBrushPresetManager: View {
                 selectedPresetID = preset.id
             } label: {
                 VStack(spacing: 6) {
-                    ImageEditorBrushPresetThumbnail(preset: preset, size: 58)
+                    ImageEditorBrushPresetThumbnail(
+                        preset: preset,
+                        size: gridDensity.thumbnailSize
+                    )
                     HStack(spacing: 4) {
                         Text(preset.title)
                             .lineLimit(1)
@@ -398,7 +429,7 @@ struct ImageEditorBrushPresetManager: View {
         }
         .font(.system(size: 10, weight: .semibold))
         .padding(6)
-        .frame(minHeight: 92)
+        .frame(minHeight: gridDensity.minimumTileHeight)
         .background(
             selectedPresetID == preset.id
                 ? Color.accentColor.opacity(0.72)

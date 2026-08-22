@@ -70,6 +70,63 @@ enum ImageEditorBrushPresetPanelLayout: String, CaseIterable, Identifiable {
     }
 }
 
+enum ImageEditorBrushPresetGridDensity: String, CaseIterable, Identifiable {
+    static let storageKey = "im.some.xomo.imageEditor.brushPresetGridDensity"
+
+    case compact
+    case regular
+    case large
+
+    var id: String { rawValue }
+
+    var title: String {
+        L10n.text("imageEditor.brushPreset.gridDensity.\(rawValue)")
+    }
+
+    var symbolName: String {
+        switch self {
+        case .compact: return "square.grid.3x3"
+        case .regular: return "square.grid.2x2"
+        case .large: return "rectangle.grid.1x2"
+        }
+    }
+
+    var columnCount: Int {
+        switch self {
+        case .compact: return 3
+        case .regular: return 2
+        case .large: return 1
+        }
+    }
+
+    var thumbnailSize: CGFloat {
+        switch self {
+        case .compact: return 36
+        case .regular: return 58
+        case .large: return 80
+        }
+    }
+
+    var minimumTileHeight: CGFloat {
+        switch self {
+        case .compact: return 72
+        case .regular: return 92
+        case .large: return 118
+        }
+    }
+
+    static func load(from defaults: UserDefaults = .standard) -> Self {
+        guard let rawValue = defaults.string(forKey: storageKey),
+              let density = Self(rawValue: rawValue)
+        else { return .regular }
+        return density
+    }
+
+    func save(to defaults: UserDefaults = .standard) {
+        defaults.set(rawValue, forKey: Self.storageKey)
+    }
+}
+
 enum ImageEditorBrushPresetSortOrder: String, CaseIterable, Identifiable {
     static let storageKey = "im.some.xomo.imageEditor.brushPresetSortOrder"
 

@@ -740,6 +740,10 @@
 "imageEditor.brushPreset.layoutLabel" = "预设布局";
 "imageEditor.brushPreset.layout.list" = "列表";
 "imageEditor.brushPreset.layout.grid" = "缩略图网格";
+"imageEditor.brushPreset.gridDensityLabel" = "缩略图大小";
+"imageEditor.brushPreset.gridDensity.compact" = "紧凑缩略图";
+"imageEditor.brushPreset.gridDensity.regular" = "标准缩略图";
+"imageEditor.brushPreset.gridDensity.large" = "大缩略图";
 "imageEditor.brushPreset.sortLabel" = "预设排序";
 "imageEditor.brushPreset.sort.catalog" = "目录顺序";
 "imageEditor.brushPreset.sort.nameAscending" = "名称 A–Z";
