@@ -2038,7 +2038,8 @@
 "imageEditor.status.brushPresetSelectionInvalid" = "请选择一个或多个有效画笔预设。";
 "imageEditor.brushPreset.importConfirmation.title" = "导入画笔预设？";
 "imageEditor.brushPreset.importConfirmation.message" = "“%@”包含 %d 个画笔预设：当前最多可新增 %d 个，另有 %d 个超出 100 项容量。请在下方选择要导入的预设。现有的 %d 个自定义画笔预设会保留；当前画笔设置和文档历史不会改变。";
-"imageEditor.brushPreset.importSelection.summary" = "已选择 %d / %d 项 · 当前最多可选择 %d 项";
+"imageEditor.brushPreset.importSelection.summary" = "已选择 %d / %d 项 · 当前显示 %d 项 · 最多可选择 %d 项";
+"imageEditor.brushPreset.importSelection.searchPlaceholder" = "搜索来源画笔预设";
 "imageEditor.brushPreset.importSelection.item" = "%d. %@";
 "imageEditor.brushPreset.replaceConfirmation.title" = "替换全部自定义画笔预设？";
 "imageEditor.brushPreset.replaceConfirmation.message" = "“%@”包含 %d 个画笔预设；最多可选择 %d 个，另有 %d 个超出资源库容量。请在下方选择替换项。继续会移除现有的 %d 个自定义画笔预设，并只保留选中的替换项；当前画笔设置和文档历史不会改变。";

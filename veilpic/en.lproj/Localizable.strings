@@ -2038,7 +2038,8 @@
 "imageEditor.status.brushPresetSelectionInvalid" = "Choose one or more valid brush presets.";
 "imageEditor.brushPreset.importConfirmation.title" = "Import brush presets?";
 "imageEditor.brushPreset.importConfirmation.message" = "“%@” contains %d presets: up to %d can be added and %d exceed the 100-preset capacity. Choose the presets to import below. Your %d existing custom brush presets will be kept; current brush settings and document history will not change.";
-"imageEditor.brushPreset.importSelection.summary" = "%d of %d selected · up to %d may be selected";
+"imageEditor.brushPreset.importSelection.summary" = "%d of %d selected · %d shown · up to %d may be selected";
+"imageEditor.brushPreset.importSelection.searchPlaceholder" = "Search source brush presets";
 "imageEditor.brushPreset.importSelection.item" = "%d. %@";
 "imageEditor.brushPreset.replaceConfirmation.title" = "Replace all custom brush presets?";
 "imageEditor.brushPreset.replaceConfirmation.message" = "“%@” contains %d presets; up to %d may be selected and %d exceed library capacity. Choose the replacement presets below. Continuing will remove %d existing custom brush presets and keep only the selected replacements. Current brush settings and document history will not change.";

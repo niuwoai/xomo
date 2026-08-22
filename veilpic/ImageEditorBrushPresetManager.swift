@@ -95,6 +95,57 @@ enum ImageEditorBrushPresetImportSelectionPolicy {
         }
         return updated
     }
+
+    static func matchingIndexes(
+        presetTitles: [String],
+        searchText: String
+    ) -> IndexSet {
+        let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !query.isEmpty else {
+            return IndexSet(integersIn: presetTitles.indices)
+        }
+        return IndexSet(presetTitles.indices.filter { index in
+            presetTitles[index].range(
+                of: query,
+                options: [.caseInsensitive, .diacriticInsensitive]
+            ) != nil
+        })
+    }
+
+    static func selectingAll(
+        matchingIndexes: IndexSet,
+        in selection: IndexSet,
+        presetCount: Int,
+        capacity: Int
+    ) -> IndexSet {
+        var updated = normalizedSelection(
+            selection,
+            presetCount: presetCount,
+            capacity: capacity
+        )
+        for index in matchingIndexes where index >= 0 && index < presetCount {
+            guard updated.count < max(0, capacity) else { break }
+            updated.insert(index)
+        }
+        return updated
+    }
+
+    static func deselectingAll(
+        matchingIndexes: IndexSet,
+        in selection: IndexSet,
+        presetCount: Int,
+        capacity: Int
+    ) -> IndexSet {
+        var updated = normalizedSelection(
+            selection,
+            presetCount: presetCount,
+            capacity: capacity
+        )
+        for index in matchingIndexes {
+            updated.remove(index)
+        }
+        return updated
+    }
 }
 
 enum ImageEditorBrushPresetDropPolicy {
@@ -111,14 +162,20 @@ enum ImageEditorBrushPresetDropPolicy {
 }
 
 private final class ImageEditorBrushPresetImportSelectionView: NSView {
+    private let presetTitles: [String]
     private let presetCount: Int
     private let capacity: Int
     private let summaryLabel = NSTextField(labelWithString: "")
+    private let searchField = NSSearchField()
+    private let selectAllButton = NSButton()
+    private let selectNoneButton = NSButton()
+    private let presetStack = NSStackView()
     private var presetButtons: [NSButton] = []
     private(set) var selectedIndexes: IndexSet
     var onSelectionChange: ((IndexSet) -> Void)?
 
     init(inspection: ImageEditorBrushPresetLibraryInspection) {
+        presetTitles = inspection.presetTitles
         presetCount = inspection.presetTitles.count
         capacity = inspection.installableCount
         selectedIndexes = ImageEditorBrushPresetImportSelectionPolicy.defaultSelection(
@@ -131,36 +188,43 @@ private final class ImageEditorBrushPresetImportSelectionView: NSView {
         summaryLabel.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
         addSubview(summaryLabel)
 
-        let selectAllButton = NSButton(
-            title: L10n.text("imageEditor.action.selectAll"),
-            target: self,
-            action: #selector(selectAllPresets)
+        searchField.placeholderString = L10n.text(
+            "imageEditor.brushPreset.importSelection.searchPlaceholder"
         )
+        searchField.target = self
+        searchField.action = #selector(searchPresets)
+        searchField.sendsSearchStringImmediately = true
+        searchField.identifier = NSUserInterfaceItemIdentifier(
+            "image-editor-brush-preset-import-search"
+        )
+        searchField.frame = NSRect(x: 0, y: 222, width: 420, height: 24)
+        addSubview(searchField)
+
+        selectAllButton.title = L10n.text("imageEditor.action.selectAll")
+        selectAllButton.target = self
+        selectAllButton.action = #selector(selectAllPresets)
         selectAllButton.bezelStyle = .inline
         selectAllButton.controlSize = .small
-        selectAllButton.frame = NSRect(x: 0, y: 224, width: 96, height: 24)
+        selectAllButton.frame = NSRect(x: 0, y: 194, width: 96, height: 24)
         addSubview(selectAllButton)
 
-        let selectNoneButton = NSButton(
-            title: L10n.text("imageEditor.action.selectNone"),
-            target: self,
-            action: #selector(selectNoPresets)
-        )
+        selectNoneButton.title = L10n.text("imageEditor.action.selectNone")
+        selectNoneButton.target = self
+        selectNoneButton.action = #selector(selectNoPresets)
         selectNoneButton.bezelStyle = .inline
         selectNoneButton.controlSize = .small
-        selectNoneButton.frame = NSRect(x: 102, y: 224, width: 96, height: 24)
+        selectNoneButton.frame = NSRect(x: 102, y: 194, width: 96, height: 24)
         addSubview(selectNoneButton)
 
-        let scrollView = NSScrollView(frame: NSRect(x: 0, y: 0, width: 420, height: 220))
+        let scrollView = NSScrollView(frame: NSRect(x: 0, y: 0, width: 420, height: 190))
         scrollView.borderType = .bezelBorder
         scrollView.hasVerticalScroller = true
         scrollView.autohidesScrollers = true
 
-        let stack = NSStackView()
-        stack.orientation = .vertical
-        stack.alignment = .leading
-        stack.spacing = 2
-        stack.edgeInsets = NSEdgeInsets(top: 6, left: 8, bottom: 6, right: 8)
+        presetStack.orientation = .vertical
+        presetStack.alignment = .leading
+        presetStack.spacing = 2
+        presetStack.edgeInsets = NSEdgeInsets(top: 6, left: 8, bottom: 6, right: 8)
         presetButtons = inspection.presetTitles.enumerated().map { index, title in
             let button = NSButton(
                 checkboxWithTitle: L10n.format(
@@ -175,14 +239,12 @@ private final class ImageEditorBrushPresetImportSelectionView: NSView {
             button.controlSize = .small
             button.lineBreakMode = .byTruncatingTail
             button.toolTip = title
-            stack.addArrangedSubview(button)
+            presetStack.addArrangedSubview(button)
             return button
         }
-        let documentHeight = max(218, CGFloat(presetButtons.count * 24 + 12))
-        stack.frame = NSRect(x: 0, y: 0, width: 400, height: documentHeight)
-        scrollView.documentView = stack
+        scrollView.documentView = presetStack
         addSubview(scrollView)
-        updateControls()
+        updateControls(notifySelection: false)
     }
 
     @available(*, unavailable)
@@ -201,7 +263,9 @@ private final class ImageEditorBrushPresetImportSelectionView: NSView {
     }
 
     @objc private func selectAllPresets() {
-        selectedIndexes = ImageEditorBrushPresetImportSelectionPolicy.defaultSelection(
+        selectedIndexes = ImageEditorBrushPresetImportSelectionPolicy.selectingAll(
+            matchingIndexes: visibleIndexes,
+            in: selectedIndexes,
             presetCount: presetCount,
             capacity: capacity
         )
@@ -209,23 +273,51 @@ private final class ImageEditorBrushPresetImportSelectionView: NSView {
     }
 
     @objc private func selectNoPresets() {
-        selectedIndexes = []
+        selectedIndexes = ImageEditorBrushPresetImportSelectionPolicy.deselectingAll(
+            matchingIndexes: visibleIndexes,
+            in: selectedIndexes,
+            presetCount: presetCount,
+            capacity: capacity
+        )
         updateControls()
     }
 
-    private func updateControls() {
+    @objc private func searchPresets() {
+        updateControls(notifySelection: false)
+    }
+
+    private var visibleIndexes: IndexSet {
+        ImageEditorBrushPresetImportSelectionPolicy.matchingIndexes(
+            presetTitles: presetTitles,
+            searchText: searchField.stringValue
+        )
+    }
+
+    private func updateControls(notifySelection: Bool = true) {
+        let visibleIndexes = visibleIndexes
         summaryLabel.stringValue = L10n.format(
             "imageEditor.brushPreset.importSelection.summary",
             selectedIndexes.count,
             presetCount,
+            visibleIndexes.count,
             capacity
         )
         for button in presetButtons {
             let isSelected = selectedIndexes.contains(button.tag)
             button.state = isSelected ? .on : .off
             button.isEnabled = isSelected || selectedIndexes.count < capacity
+            button.isHidden = !visibleIndexes.contains(button.tag)
         }
-        onSelectionChange?(selectedIndexes)
+        let documentHeight = max(188, CGFloat(visibleIndexes.count * 24 + 12))
+        presetStack.frame = NSRect(x: 0, y: 0, width: 400, height: documentHeight)
+        selectAllButton.isEnabled = selectedIndexes.count < capacity
+            && visibleIndexes.contains { !selectedIndexes.contains($0) }
+        selectNoneButton.isEnabled = visibleIndexes.contains {
+            selectedIndexes.contains($0)
+        }
+        if notifySelection {
+            onSelectionChange?(selectedIndexes)
+        }
     }
 }
 

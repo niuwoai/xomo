@@ -1166,6 +1166,46 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         ).isEmpty)
     }
 
+    @Test func brushLibraryImportSelectionSearchesWithoutLosingSourceIndexes() {
+        let titles = ["Soft Ink", "Árbol Grain", "Ink Wash", "Chalk"]
+        #expect(ImageEditorBrushPresetImportSelectionPolicy.matchingIndexes(
+            presetTitles: titles,
+            searchText: ""
+        ) == IndexSet(integersIn: 0..<4))
+        #expect(ImageEditorBrushPresetImportSelectionPolicy.matchingIndexes(
+            presetTitles: titles,
+            searchText: " ink "
+        ) == IndexSet([0, 2]))
+        #expect(ImageEditorBrushPresetImportSelectionPolicy.matchingIndexes(
+            presetTitles: titles,
+            searchText: "arbol"
+        ) == IndexSet(integer: 1))
+        #expect(ImageEditorBrushPresetImportSelectionPolicy.matchingIndexes(
+            presetTitles: titles,
+            searchText: "missing"
+        ).isEmpty)
+
+        let selectedAcrossFilters = ImageEditorBrushPresetImportSelectionPolicy.selectingAll(
+            matchingIndexes: IndexSet([0, 2]),
+            in: IndexSet(integer: 3),
+            presetCount: titles.count,
+            capacity: 2
+        )
+        #expect(selectedAcrossFilters == IndexSet([0, 3]))
+        #expect(ImageEditorBrushPresetImportSelectionPolicy.selectingAll(
+            matchingIndexes: IndexSet([1, 2]),
+            in: selectedAcrossFilters,
+            presetCount: titles.count,
+            capacity: 2
+        ) == selectedAcrossFilters)
+        #expect(ImageEditorBrushPresetImportSelectionPolicy.deselectingAll(
+            matchingIndexes: IndexSet([0, 2]),
+            in: IndexSet([0, 2, 3]),
+            presetCount: titles.count,
+            capacity: 3
+        ) == IndexSet(integer: 3))
+    }
+
     @Test func inspectingBrushLibraryReportsReplacementCapacityWithoutMutation() throws {
         let incoming = (0..<(ImageEditorBrushPresetPreferences.maximumPresetCount + 2)).map {
             ImageEditorBrushPreset(
