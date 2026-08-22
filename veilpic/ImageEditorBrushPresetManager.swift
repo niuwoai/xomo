@@ -288,11 +288,16 @@ extension ImageEditorViewModel {
 
     @discardableResult
     func replaceBrushPresetLibraryData(
-        _ data: Data
+        _ data: Data,
+        selectedIndexes: IndexSet? = nil
     ) throws -> ImageEditorBrushPresetImportResult {
         let library = try decodedBrushPresetLibrary(from: data)
+        let selectedPresets = try selectedBrushPresets(
+            from: library,
+            selectedIndexes: selectedIndexes
+        )
         let replacementPresets = preparedBrushPresets(
-            from: library.presets,
+            from: selectedPresets,
             limit: ImageEditorBrushPresetPreferences.maximumPresetCount,
             existingNames: []
         )
@@ -354,9 +359,13 @@ extension ImageEditorViewModel {
 
     @discardableResult
     func replaceBrushPresetLibrary(
-        from url: URL
+        from url: URL,
+        selectedIndexes: IndexSet? = nil
     ) throws -> ImageEditorBrushPresetImportResult {
-        try replaceBrushPresetLibraryData(brushPresetLibraryArchiveData(from: url))
+        try replaceBrushPresetLibraryData(
+            brushPresetLibraryArchiveData(from: url),
+            selectedIndexes: selectedIndexes
+        )
     }
 
     func inspectBrushPresetLibrary(
@@ -460,6 +469,72 @@ extension ImageEditorViewModel {
         return selectionView.selectedIndexes
     }
 
+    @discardableResult
+    func replaceBrushPresetLibraryWithConfirmation(from url: URL) -> Bool {
+        replaceBrushPresetLibraryWithConfirmation(from: url) { [weak self] url, inspection in
+            self?.presentBrushPresetReplacementSelection(
+                sourceURL: url,
+                inspection: inspection
+            )
+        }
+    }
+
+    @discardableResult
+    func replaceBrushPresetLibraryWithConfirmation(
+        from url: URL,
+        selectPresets: (URL, ImageEditorBrushPresetLibraryInspection) -> IndexSet?
+    ) -> Bool {
+        do {
+            let data = try brushPresetLibraryArchiveData(from: url)
+            let inspection = try inspectBrushPresetLibraryData(data, mode: .replace)
+            guard let selectedIndexes = selectPresets(url, inspection),
+                  !selectedIndexes.isEmpty
+            else { return false }
+            try replaceBrushPresetLibraryData(
+                data,
+                selectedIndexes: selectedIndexes
+            )
+            return true
+        } catch {
+            statusText = brushPresetLibraryErrorStatus(error)
+            return false
+        }
+    }
+
+    private func presentBrushPresetReplacementSelection(
+        sourceURL: URL,
+        inspection: ImageEditorBrushPresetLibraryInspection
+    ) -> IndexSet? {
+        let alert = NSAlert()
+        alert.alertStyle = .warning
+        alert.messageText = L10n.text(
+            "imageEditor.brushPreset.replaceConfirmation.title"
+        )
+        alert.informativeText = L10n.format(
+            "imageEditor.brushPreset.replaceConfirmation.message",
+            sourceURL.lastPathComponent,
+            inspection.presetCount,
+            inspection.installableCount,
+            inspection.skippedCount,
+            customBrushPresets.count
+        )
+        alert.addButton(withTitle: L10n.text(
+            "imageEditor.action.brushPresetReplaceLibrary"
+        ))
+        alert.addButton(withTitle: L10n.text("imageEditor.action.cancel"))
+        alert.buttons.first?.hasDestructiveAction = true
+        let selectionView = ImageEditorBrushPresetImportSelectionView(
+            inspection: inspection
+        )
+        alert.accessoryView = selectionView
+        selectionView.onSelectionChange = { [weak alert] selection in
+            alert?.buttons.first?.isEnabled = !selection.isEmpty
+        }
+        alert.buttons.first?.isEnabled = !selectionView.selectedIndexes.isEmpty
+        guard alert.runModal() == .alertFirstButtonReturn else { return nil }
+        return selectionView.selectedIndexes
+    }
+
     func chooseBrushPresetReplacementFile() {
         let panel = NSOpenPanel()
         panel.allowedContentTypes = [Self.brushPresetContentType, .json]
@@ -470,32 +545,7 @@ extension ImageEditorViewModel {
         panel.begin { [weak self] response in
             Task { @MainActor in
                 guard let self, response == .OK, let url = panel.url else { return }
-                do {
-                    let data = try self.brushPresetLibraryArchiveData(from: url)
-                    let inspection = try self.inspectBrushPresetLibraryData(data)
-                    let alert = NSAlert()
-                    alert.alertStyle = .warning
-                    alert.messageText = L10n.text(
-                        "imageEditor.brushPreset.replaceConfirmation.title"
-                    )
-                    alert.informativeText = L10n.format(
-                        "imageEditor.brushPreset.replaceConfirmation.message",
-                        url.lastPathComponent,
-                        inspection.presetCount,
-                        inspection.installableCount,
-                        inspection.skippedCount,
-                        self.customBrushPresets.count
-                    )
-                    alert.addButton(withTitle: L10n.text(
-                        "imageEditor.action.brushPresetReplaceLibrary"
-                    ))
-                    alert.addButton(withTitle: L10n.text("imageEditor.action.cancel"))
-                    alert.buttons.first?.hasDestructiveAction = true
-                    guard alert.runModal() == .alertFirstButtonReturn else { return }
-                    try self.replaceBrushPresetLibraryData(data)
-                } catch {
-                    self.statusText = self.brushPresetLibraryErrorStatus(error)
-                }
+                self.replaceBrushPresetLibraryWithConfirmation(from: url)
             }
         }
     }

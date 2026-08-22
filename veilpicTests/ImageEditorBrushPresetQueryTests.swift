@@ -362,11 +362,13 @@ struct ImageEditorBrushPresetQueryTests {
             importSource.range(of: "selectedIndexes: selectedIndexes")
         )
         let replacementStart = try #require(
-            archiveManager.range(of: "func chooseBrushPresetReplacementFile()")
+            archiveManager.range(
+                of: "func replaceBrushPresetLibraryWithConfirmation(\n        from url: URL,\n        selectPresets:"
+            )
         )
         let replacementEnd = try #require(
             archiveManager[replacementStart.upperBound...].range(
-                of: "func confirmBrushPresetLibraryReset()"
+                of: "private func presentBrushPresetReplacementSelection("
             )
         )
         let replacementSource = archiveManager[
@@ -374,22 +376,44 @@ struct ImageEditorBrushPresetQueryTests {
         ]
         let archiveDataRead = try #require(
             replacementSource.range(
-                of: "let data = try self.brushPresetLibraryArchiveData(from: url)"
+                of: "let data = try brushPresetLibraryArchiveData(from: url)"
             )
         )
         let inspectionRead = try #require(
             replacementSource.range(
-                of: "let inspection = try self.inspectBrushPresetLibraryData(data)"
+                of: "let inspection = try inspectBrushPresetLibraryData(data, mode: .replace)"
             )
         )
-        let alertRun = try #require(
+        let replacementSelection = try #require(
             replacementSource.range(
-                of: "guard alert.runModal() == .alertFirstButtonReturn"
+                of: "guard let selectedIndexes = selectPresets(url, inspection)"
             )
         )
         let replacementCommit = try #require(
-            replacementSource.range(of: "try self.replaceBrushPresetLibraryData(data)")
+            replacementSource.range(of: "selectedIndexes: selectedIndexes")
         )
+        let replacementPresentationStart = try #require(
+            archiveManager.range(of: "private func presentBrushPresetReplacementSelection(")
+        )
+        let replacementPresentationEnd = try #require(
+            archiveManager[replacementPresentationStart.upperBound...].range(
+                of: "func chooseBrushPresetReplacementFile()"
+            )
+        )
+        let replacementPresentationSource = archiveManager[
+            replacementPresentationStart.lowerBound..<replacementPresentationEnd.lowerBound
+        ]
+        let replacementChooseStart = try #require(
+            archiveManager.range(of: "func chooseBrushPresetReplacementFile()")
+        )
+        let replacementChooseEnd = try #require(
+            archiveManager[replacementChooseStart.upperBound...].range(
+                of: "func confirmBrushPresetLibraryReset()"
+            )
+        )
+        let replacementChooseSource = archiveManager[
+            replacementChooseStart.lowerBound..<replacementChooseEnd.lowerBound
+        ]
 
         #expect(manager.contains("ImageEditorBrushPresetQuery("))
         #expect(manager.contains("image-editor-brush-preset-search"))
@@ -463,15 +487,19 @@ struct ImageEditorBrushPresetQueryTests {
             ).count - 1 == 3
         )
         #expect(archiveManager.contains("installReplacingBrushPresets(replacementPresets)"))
-        #expect(replacementSource.contains("alert.buttons.first?.hasDestructiveAction = true"))
-        #expect(replacementSource.contains("inspection.presetCount"))
-        #expect(replacementSource.contains("inspection.installableCount"))
-        #expect(replacementSource.contains("inspection.skippedCount"))
-        #expect(replacementSource.contains("url.lastPathComponent"))
+        #expect(replacementPresentationSource.contains("alert.buttons.first?.hasDestructiveAction = true"))
+        #expect(replacementPresentationSource.contains("inspection.presetCount"))
+        #expect(replacementPresentationSource.contains("inspection.installableCount"))
+        #expect(replacementPresentationSource.contains("inspection.skippedCount"))
+        #expect(replacementPresentationSource.contains("sourceURL.lastPathComponent"))
+        #expect(replacementPresentationSource.contains("ImageEditorBrushPresetImportSelectionView("))
+        #expect(replacementPresentationSource.contains("alert.accessoryView = selectionView"))
+        #expect(replacementPresentationSource.contains("!selection.isEmpty"))
         #expect(archiveDataRead.lowerBound < inspectionRead.lowerBound)
-        #expect(inspectionRead.lowerBound < alertRun.lowerBound)
-        #expect(alertRun.lowerBound < replacementCommit.lowerBound)
+        #expect(inspectionRead.lowerBound < replacementSelection.lowerBound)
+        #expect(replacementSelection.lowerBound < replacementCommit.lowerBound)
         #expect(!replacementSource.contains("replaceBrushPresetLibrary(from: url)"))
+        #expect(replacementChooseSource.contains("self.replaceBrushPresetLibraryWithConfirmation(from: url)"))
         #expect(archiveManager.contains("func confirmBrushPresetLibraryReset()"))
         #expect(archiveManager.contains("imageEditor.brushPreset.resetConfirmation.message"))
         #expect(archiveManager.contains("resetCustomBrushPresetLibrary()"))

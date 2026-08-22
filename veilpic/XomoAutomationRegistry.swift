@@ -2126,9 +2126,13 @@ final class XomoAutomationRegistry {
         case "replace":
             let path = try requiredString("path", in: arguments)
             let url = URL(fileURLWithPath: path)
+            let selectedIndexes = try optionalBrushPresetIndexes(arguments)
             let result: ImageEditorBrushPresetImportResult
             do {
-                result = try viewModel.replaceBrushPresetLibrary(from: url)
+                result = try viewModel.replaceBrushPresetLibrary(
+                    from: url,
+                    selectedIndexes: selectedIndexes
+                )
             } catch {
                 if let message = brushPresetLibraryArgumentMessage(error) {
                     throw XomoAutomationCallError.invalidArgument(message)
@@ -7064,7 +7068,7 @@ private extension XomoAutomationRegistry {
             "inspectionMode": XomoAutomationSchema.string(description: "Capacity policy for inspectLibrary; append preserves current custom presets, while replace starts from an empty custom library", values: ImageEditorBrushPresetLibraryInspectionMode.allCases.map(\.rawValue)),
             "presetIndexes": .object([
                 "type": .string("array"),
-                "description": .string("Optional zero-based source library indexes to import in source order; omitted imports every entry"),
+                "description": .string("Optional zero-based source library indexes to import or replace in source order; omitted uses every entry"),
                 "items": XomoAutomationSchema.integer(
                     description: "Zero-based index from inspectLibrary titles",
                     minimum: 0

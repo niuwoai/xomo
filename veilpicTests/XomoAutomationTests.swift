@@ -10871,6 +10871,84 @@ struct XomoAutomationTests {
         #expect(viewModel.redoStack.map(transactionSignature) == redoBeforeReplace)
     }
 
+    @Test func registrySelectivelyReplacesBrushLibraryBySourceIndexesAtomically() throws {
+        let sourcePresets = [
+            ImageEditorBrushPreset(id: "source-zero", name: "Source Zero", size: 20),
+            ImageEditorBrushPreset(id: "source-one", name: "Source One", size: 40),
+            ImageEditorBrushPreset(id: "source-two", name: "Source Two", size: 60)
+        ]
+        let libraryPath = FileManager.default.temporaryDirectory
+            .appendingPathComponent("xomo-selective-replace-\(UUID().uuidString).xomobrushes")
+        defer { try? FileManager.default.removeItem(at: libraryPath) }
+        try JSONEncoder().encode(
+            ImageEditorBrushPresetLibrary(presets: sourcePresets)
+        ).write(to: libraryPath, options: .atomic)
+
+        let suiteName = "XomoAutomationTests.selectivePresetReplace.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName) ?? .standard
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let viewModel = makeViewModel(preferencesDefaults: defaults)
+        viewModel.brushSize = 17
+        let localPreset = try #require(viewModel.createBrushPresetFromCurrentSettings())
+        viewModel.brushSize = 77
+        viewModel.setBrushAngleJitter(34)
+        viewModel.addLayer()
+        viewModel.undo()
+        let documentBeforeReplace = transactionSignature(viewModel.document)
+        let undoBeforeReplace = viewModel.undoStack.map(transactionSignature)
+        let redoBeforeReplace = viewModel.redoStack.map(transactionSignature)
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        defer { registry.unregister(viewModel) }
+
+        let replaced = registry.execute(request(
+            operation: "call",
+            name: "xomo.brush.preset",
+            arguments: [
+                "action": .string("replace"),
+                "path": .string(libraryPath.path),
+                "presetIndexes": .array([.number(2), .number(0)])
+            ]
+        ))
+
+        #expect(replaced.ok)
+        #expect(replaced.result?.objectValue?["importedCount"] == .number(2))
+        #expect(replaced.result?.objectValue?["skippedCount"] == .number(1))
+        #expect(viewModel.customBrushPresets.map(\.title) == ["Source Zero", "Source Two"])
+        #expect(!viewModel.customBrushPresets.contains(where: { $0.id == localPreset.id }))
+        #expect(Set(viewModel.customBrushPresets.map(\.id)).isDisjoint(with: sourcePresets.map(\.id)))
+        #expect(viewModel.brushSize == 77)
+        #expect(viewModel.brushAngleJitter == 34)
+        #expect(viewModel.activeBrushPreset == nil)
+        #expect(transactionSignature(viewModel.document) == documentBeforeReplace)
+        #expect(viewModel.undoStack.map(transactionSignature) == undoBeforeReplace)
+        #expect(viewModel.redoStack.map(transactionSignature) == redoBeforeReplace)
+
+        let presetsBeforeRejections = viewModel.customBrushPresets
+        let rejectedIndexes: [XomoJSONValue] = [
+            .array([]),
+            .array([.number(1), .number(1)]),
+            .array([.number(3)]),
+            .array([.number(0.5)])
+        ]
+        for indexes in rejectedIndexes {
+            let rejected = registry.execute(request(
+                operation: "call",
+                name: "xomo.brush.preset",
+                arguments: [
+                    "action": .string("replace"),
+                    "path": .string(libraryPath.path),
+                    "presetIndexes": indexes
+                ]
+            ))
+            #expect(!rejected.ok)
+        }
+        #expect(viewModel.customBrushPresets == presetsBeforeRejections)
+        #expect(transactionSignature(viewModel.document) == documentBeforeReplace)
+        #expect(viewModel.undoStack.map(transactionSignature) == undoBeforeReplace)
+        #expect(viewModel.redoStack.map(transactionSignature) == redoBeforeReplace)
+    }
+
     @Test func registryResetsBrushLibraryWithoutApplyingBuiltInDefaults() throws {
         let suiteName = "XomoAutomationTests.resetPresetLibrary.\(UUID().uuidString)"
         let defaults = UserDefaults(suiteName: suiteName) ?? .standard

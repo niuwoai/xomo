@@ -2035,13 +2035,13 @@
 "imageEditor.status.brushPresetUnsupportedVersion" = "このブラシプリセットファイルの形式バージョンには対応していません。";
 "imageEditor.status.brushPresetLibraryEmpty" = "ブラシプリセットファイルに読み込めるリソースがありません。";
 "imageEditor.status.brushPresetFileInvalid" = "このブラシプリセットファイルを読み込めませんでした。";
-"imageEditor.status.brushPresetSelectionInvalid" = "読み込む有効なブラシプリセットを1つ以上選択してください。";
+"imageEditor.status.brushPresetSelectionInvalid" = "有効なブラシプリセットを1つ以上選択してください。";
 "imageEditor.brushPreset.importConfirmation.title" = "ブラシプリセットを読み込みますか？";
 "imageEditor.brushPreset.importConfirmation.message" = "「%@」には %d 個のブラシプリセットがあります。現在は最大 %d 個を追加でき、%d 個は100個の上限を超えます。下で読み込むプリセットを選択してください。既存のカスタムブラシプリセット %d 個は保持され、現在のブラシ設定とドキュメント履歴は変更されません。";
 "imageEditor.brushPreset.importSelection.summary" = "%d / %d 個を選択 · 現在は最大 %d 個を選択可能";
 "imageEditor.brushPreset.importSelection.item" = "%d. %@";
 "imageEditor.brushPreset.replaceConfirmation.title" = "すべてのカスタムブラシプリセットを置き換えますか？";
-"imageEditor.brushPreset.replaceConfirmation.message" = "「%@」には %d 個のブラシプリセットがあります。%d 個をインストールし、%d 個をスキップします。続行すると既存のカスタムブラシプリセット %d 個が削除されます。現在のブラシ設定とドキュメント履歴は変更されません。";
+"imageEditor.brushPreset.replaceConfirmation.message" = "「%@」には %d 個のブラシプリセットがあります。最大 %d 個を選択でき、%d 個はライブラリ容量を超えます。下で置き換えるプリセットを選択してください。続行すると既存のカスタムブラシプリセット %d 個が削除され、選択した置換項目だけが保持されます。現在のブラシ設定とドキュメント履歴は変更されません。";
 "imageEditor.brushPreset.resetConfirmation.title" = "ブラシライブラリを内蔵プリセットに戻しますか？";
 "imageEditor.brushPreset.resetConfirmation.message" = "既存のカスタムブラシプリセット %d 個を削除します。内蔵プリセット、現在のブラシ設定、ドキュメント履歴は変更されません。";
 "imageEditor.status.brushSettingsReset" = "ブラシ設定をデフォルトに戻しました。";

@@ -1338,6 +1338,86 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         #expect(viewModel.redoStack.map { transactionSignature($0) } == redoBeforeImport)
     }
 
+    @Test func confirmedBrushLibraryReplacementSelectsFromPreflightDataAtomically() throws {
+        let sourcePresets = [
+            ImageEditorBrushPreset(id: "source-one", name: "Source One", size: 24),
+            ImageEditorBrushPreset(id: "source-two", name: "Source Two", size: 48),
+            ImageEditorBrushPreset(id: "source-three", name: "Source Three", size: 72)
+        ]
+        let sourceData = try JSONEncoder().encode(
+            ImageEditorBrushPresetLibrary(presets: sourcePresets)
+        )
+        let sourceURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent("brush-replace-selection-\(UUID().uuidString).xomobrushes")
+        defer { try? FileManager.default.removeItem(at: sourceURL) }
+        try sourceData.write(to: sourceURL, options: .atomic)
+
+        let (defaults, suiteName) = temporaryDefaults()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let viewModel = makeViewModel(defaults: defaults)
+        viewModel.brushSize = 19
+        let localPreset = try #require(viewModel.createBrushPresetFromCurrentSettings())
+        viewModel.brushSize = 87
+        viewModel.setBrushAngleJitter(39)
+        viewModel.addLayer()
+        viewModel.undo()
+        let documentBeforeReplace = transactionSignature(viewModel.document)
+        let undoBeforeReplace = viewModel.undoStack.map { transactionSignature($0) }
+        let redoBeforeReplace = viewModel.redoStack.map { transactionSignature($0) }
+        var confirmedInspection: ImageEditorBrushPresetLibraryInspection?
+
+        let didReplace = viewModel.replaceBrushPresetLibraryWithConfirmation(
+            from: sourceURL
+        ) { url, inspection in
+            confirmedInspection = inspection
+            try? Data("replaced-after-preflight".utf8).write(to: url, options: .atomic)
+            return IndexSet([0, 2])
+        }
+
+        #expect(didReplace)
+        #expect(confirmedInspection?.mode == .replace)
+        #expect(confirmedInspection?.presetCount == 3)
+        #expect(confirmedInspection?.installableCount == 3)
+        #expect(confirmedInspection?.skippedCount == 0)
+        #expect(confirmedInspection?.presetTitles == ["Source One", "Source Two", "Source Three"])
+        #expect(viewModel.customBrushPresets.map(\.title) == ["Source One", "Source Three"])
+        #expect(!viewModel.customBrushPresets.contains(where: { $0.id == localPreset.id }))
+        #expect(Set(viewModel.customBrushPresets.map(\.id)).isDisjoint(with: sourcePresets.map(\.id)))
+        #expect(viewModel.brushSize == 87)
+        #expect(viewModel.brushAngleJitter == 39)
+        #expect(viewModel.activeBrushPreset == nil)
+        #expect(transactionSignature(viewModel.document) == documentBeforeReplace)
+        #expect(viewModel.undoStack.map { transactionSignature($0) } == undoBeforeReplace)
+        #expect(viewModel.redoStack.map { transactionSignature($0) } == redoBeforeReplace)
+
+        try sourceData.write(to: sourceURL, options: .atomic)
+        let presetsBeforeCancel = viewModel.customBrushPresets
+        let selectedBeforeCancel = viewModel.selectedBrushPresetID
+        #expect(!viewModel.replaceBrushPresetLibraryWithConfirmation(
+            from: sourceURL,
+            selectPresets: { _, _ in [] }
+        ))
+        #expect(viewModel.customBrushPresets == presetsBeforeCancel)
+        #expect(viewModel.selectedBrushPresetID == selectedBeforeCancel)
+
+        try Data("not-json".utf8).write(to: sourceURL, options: .atomic)
+        var invalidSelectionCount = 0
+        #expect(!viewModel.replaceBrushPresetLibraryWithConfirmation(
+            from: sourceURL,
+            selectPresets: { _, _ in
+                invalidSelectionCount += 1
+                return IndexSet(integer: 0)
+            }
+        ))
+        #expect(invalidSelectionCount == 0)
+        #expect(viewModel.customBrushPresets == presetsBeforeCancel)
+        #expect(viewModel.selectedBrushPresetID == selectedBeforeCancel)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.brushPresetFileInvalid"))
+        #expect(transactionSignature(viewModel.document) == documentBeforeReplace)
+        #expect(viewModel.undoStack.map { transactionSignature($0) } == undoBeforeReplace)
+        #expect(viewModel.redoStack.map { transactionSignature($0) } == redoBeforeReplace)
+    }
+
     @Test func resettingBrushLibraryPreservesEditingStateAndBuiltInUsage() throws {
         let (defaults, suiteName) = temporaryDefaults()
         defer { defaults.removePersistentDomain(forName: suiteName) }
