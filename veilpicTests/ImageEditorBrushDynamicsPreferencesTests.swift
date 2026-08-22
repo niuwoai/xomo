@@ -1251,6 +1251,10 @@ struct ImageEditorBrushDynamicsPreferencesTests {
     }
 
     @Test func brushLibraryImportSelectionViewSortsFilteredRowsWithoutMutatingSelection() throws {
+        func descendants(of view: NSView) -> [NSView] {
+            view.subviews + view.subviews.flatMap { descendants(of: $0) }
+        }
+
         let presets = [
             ImageEditorBrushPreset(id: "0", name: "Zulu Ink", size: 10),
             ImageEditorBrushPreset(id: "1", name: "Alpha Grain", size: 20),
@@ -1286,7 +1290,7 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         sortPopUp.selectItem(at: 1)
         #expect(sortPopUp.sendAction(sortPopUp.action, to: sortPopUp.target))
         let sourceIndexes = stack.arrangedSubviews.compactMap { row in
-            row.subviews.compactMap { $0 as? NSButton }.first?.tag
+            descendants(of: row).compactMap { $0 as? NSButton }.first?.tag
         }
         #expect(sourceIndexes == [1, 3, 2, 0])
         #expect(view.selectedIndexes == initialSelection)
@@ -1297,14 +1301,14 @@ struct ImageEditorBrushDynamicsPreferencesTests {
             stack.arrangedSubviews
                 .filter { !$0.isHidden }
                 .compactMap { row in
-                    row.subviews.compactMap { $0 as? NSButton }.first?.tag
+                    descendants(of: row).compactMap { $0 as? NSButton }.first?.tag
                 }
                 == [1, 3]
         )
         #expect(view.selectedIndexes == initialSelection)
         let firstRow = stack.arrangedSubviews.first
         let alphaRow = try #require(firstRow)
-        let parameterLabels = alphaRow.subviews.compactMap {
+        let parameterLabels = descendants(of: alphaRow).compactMap {
             $0 as? NSTextField
         }
         let parameterLabel = try #require(parameterLabels.first)
@@ -1312,6 +1316,61 @@ struct ImageEditorBrushDynamicsPreferencesTests {
             sourceIndex: 1,
             preset: presets[1]
         ).primarySummary)
+        let thumbnail = try #require(descendants(of: alphaRow).first {
+            $0.identifier?.rawValue == "image-editor-brush-preset-import-thumbnail-1"
+        } as? NSImageView)
+        #expect(thumbnail.image?.size == ImageEditorBrushPresetLibraryThumbnailRenderer.defaultSize)
+    }
+
+    @Test func brushLibraryThumbnailShowsRoundnessAndAngleBeforeImport() throws {
+        let horizontalPreview = ImageEditorBrushPresetLibraryPreview(
+            sourceIndex: 0,
+            preset: ImageEditorBrushPreset(
+                id: "horizontal",
+                name: "Horizontal",
+                size: 24,
+                hardness: 1,
+                tipRoundness: 25,
+                tipAngleDegrees: 0
+            )
+        )
+        let verticalPreview = ImageEditorBrushPresetLibraryPreview(
+            sourceIndex: 1,
+            preset: ImageEditorBrushPreset(
+                id: "vertical",
+                name: "Vertical",
+                size: 24,
+                hardness: 1,
+                tipRoundness: 25,
+                tipAngleDegrees: 90
+            )
+        )
+        let horizontalSize = ImageEditorBrushPresetLibraryThumbnailRenderer.tipSize(
+            for: horizontalPreview
+        )
+        #expect(horizontalSize.width > horizontalSize.height)
+        #expect(horizontalSize.height >= 4)
+
+        let horizontal = ImageEditorBrushPresetLibraryThumbnailRenderer.image(
+            for: horizontalPreview
+        )
+        let vertical = ImageEditorBrushPresetLibraryThumbnailRenderer.image(
+            for: verticalPreview
+        )
+        let horizontalRight = try #require(
+            horizontal.color(at: CGPoint(x: 26, y: 18))?.usingColorSpace(.deviceRGB)
+        )
+        let horizontalTop = try #require(
+            horizontal.color(at: CGPoint(x: 18, y: 26))?.usingColorSpace(.deviceRGB)
+        )
+        let verticalRight = try #require(
+            vertical.color(at: CGPoint(x: 26, y: 18))?.usingColorSpace(.deviceRGB)
+        )
+        let verticalTop = try #require(
+            vertical.color(at: CGPoint(x: 18, y: 26))?.usingColorSpace(.deviceRGB)
+        )
+        #expect(horizontalRight.brightnessComponent > horizontalTop.brightnessComponent + 0.3)
+        #expect(verticalTop.brightnessComponent > verticalRight.brightnessComponent + 0.3)
     }
 
     @Test func brushLibraryImportSelectionInvertsVisibleMatchesWithinGlobalCapacity() {

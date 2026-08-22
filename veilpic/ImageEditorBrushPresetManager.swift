@@ -93,6 +93,69 @@ struct ImageEditorBrushPresetLibraryPreview: Equatable {
     }
 }
 
+enum ImageEditorBrushPresetLibraryThumbnailRenderer {
+    static let defaultSize = NSSize(width: 36, height: 36)
+
+    static func tipSize(
+        for preview: ImageEditorBrushPresetLibraryPreview,
+        canvasSize: NSSize = defaultSize
+    ) -> NSSize {
+        let diameter = max(1, min(canvasSize.width, canvasSize.height) * 0.68)
+        return NSSize(
+            width: diameter,
+            height: max(4, diameter * preview.tipRoundness / 100)
+        )
+    }
+
+    static func image(
+        for preview: ImageEditorBrushPresetLibraryPreview,
+        canvasSize: NSSize = defaultSize
+    ) -> NSImage {
+        NSImage.rendered(size: canvasSize) { rect in
+            let background = NSBezierPath(
+                roundedRect: rect.insetBy(dx: 1, dy: 1),
+                xRadius: 5,
+                yRadius: 5
+            )
+            NSColor(calibratedWhite: 0.12, alpha: 1).setFill()
+            background.fill()
+
+            guard let context = NSGraphicsContext.current?.cgContext,
+                  let gradient = CGGradient(
+                    colorsSpace: CGColorSpaceCreateDeviceRGB(),
+                    colors: [
+                        NSColor.white.cgColor,
+                        NSColor.white.withAlphaComponent(0.12).cgColor
+                    ] as CFArray,
+                    locations: [max(0, min(0.98, preview.hardness)), 1]
+                  )
+            else { return }
+
+            let tipSize = tipSize(for: preview, canvasSize: canvasSize)
+            let tipRect = CGRect(
+                x: -tipSize.width / 2,
+                y: -tipSize.height / 2,
+                width: tipSize.width,
+                height: tipSize.height
+            )
+            context.saveGState()
+            context.translateBy(x: rect.midX, y: rect.midY)
+            context.rotate(by: preview.tipAngleDegrees * .pi / 180)
+            context.addEllipse(in: tipRect)
+            context.clip()
+            context.drawRadialGradient(
+                gradient,
+                startCenter: .zero,
+                startRadius: 0,
+                endCenter: .zero,
+                endRadius: tipSize.width / 2,
+                options: [.drawsAfterEndLocation]
+            )
+            context.restoreGState()
+        } ?? NSImage(size: canvasSize)
+    }
+}
+
 struct ImageEditorBrushPresetLibraryInspection: Equatable {
     let mode: ImageEditorBrushPresetLibraryInspectionMode
     let presetCount: Int
@@ -437,10 +500,26 @@ final class ImageEditorBrushPresetImportSelectionView: NSView {
             parameterLabel.maximumNumberOfLines = 1
             parameterLabel.toolTip = previewToolTip(preview)
 
-            let row = NSStackView(views: [button, parameterLabel])
-            row.orientation = .vertical
-            row.alignment = .leading
-            row.spacing = 0
+            let details = NSStackView(views: [button, parameterLabel])
+            details.orientation = .vertical
+            details.alignment = .leading
+            details.spacing = 0
+
+            let thumbnail = NSImageView(
+                image: ImageEditorBrushPresetLibraryThumbnailRenderer.image(for: preview)
+            )
+            thumbnail.imageScaling = .scaleProportionallyUpOrDown
+            thumbnail.setFrameSize(ImageEditorBrushPresetLibraryThumbnailRenderer.defaultSize)
+            thumbnail.identifier = NSUserInterfaceItemIdentifier(
+                "image-editor-brush-preset-import-thumbnail-\(index)"
+            )
+            thumbnail.toolTip = previewToolTip(preview)
+            thumbnail.setAccessibilityElement(false)
+
+            let row = NSStackView(views: [thumbnail, details])
+            row.orientation = .horizontal
+            row.alignment = .centerY
+            row.spacing = 8
             row.identifier = NSUserInterfaceItemIdentifier(
                 "image-editor-brush-preset-import-row-\(index)"
             )
@@ -578,7 +657,7 @@ final class ImageEditorBrushPresetImportSelectionView: NSView {
             presetRows[button.tag].isHidden = !visibleIndexes.contains(button.tag)
         }
         arrangePresetButtons(visibleIndexes: visibleIndexes)
-        let documentHeight = max(188, CGFloat(visibleIndexes.count * 42 + 12))
+        let documentHeight = max(188, CGFloat(visibleIndexes.count * 48 + 12))
         presetStack.frame = NSRect(x: 0, y: 0, width: 400, height: documentHeight)
         selectAllButton.isEnabled = selectedIndexes.count < capacity
             && visibleIndexes.contains { !selectedIndexes.contains($0) }
