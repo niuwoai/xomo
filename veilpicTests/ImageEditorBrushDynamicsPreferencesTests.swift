@@ -1058,6 +1058,77 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         #expect(viewModel.redoStack.map { transactionSignature($0) } == redoBeforeExport)
     }
 
+    @Test func replacingBrushLibraryIsAtomicAndPreservesCurrentEditingState() throws {
+        let (sourceDefaults, sourceSuiteName) = temporaryDefaults()
+        defer { sourceDefaults.removePersistentDomain(forName: sourceSuiteName) }
+        let source = makeViewModel(defaults: sourceDefaults)
+        source.brushSize = 27
+        _ = try #require(source.createBrushPresetFromCurrentSettings())
+        #expect(source.renameSelectedCustomBrushPreset(to: "Shared Ink"))
+        source.brushSize = 49
+        source.setBrushScatter(380)
+        _ = try #require(source.createBrushPresetFromCurrentSettings())
+        #expect(source.renameSelectedCustomBrushPreset(to: "Shared Texture"))
+        let sourcePresets = source.customBrushPresets
+        let replacementData = try source.brushPresetLibraryData()
+
+        let (targetDefaults, targetSuiteName) = temporaryDefaults()
+        defer { targetDefaults.removePersistentDomain(forName: targetSuiteName) }
+        let target = makeViewModel(defaults: targetDefaults)
+        let builtIn = try #require(ImageEditorBrushPreset.defaultPresets.first)
+        target.applyBrushPreset(builtIn)
+        #expect(target.setBrushPresetFavorite(id: builtIn.id, isFavorite: true))
+        target.brushSize = 13
+        let local = try #require(target.createBrushPresetFromCurrentSettings())
+        #expect(target.renameSelectedCustomBrushPreset(to: "Local Brush"))
+        target.applyBrushPreset(try #require(target.selectedCustomBrushPreset))
+        #expect(target.setBrushPresetFavorite(id: local.id, isFavorite: true))
+        target.brushSize = 91
+        target.setBrushAngleJitter(44)
+        target.addLayer()
+        target.undo()
+        let documentBeforeReplace = transactionSignature(target.document)
+        let undoBeforeReplace = target.undoStack.map { transactionSignature($0) }
+        let redoBeforeReplace = target.redoStack.map { transactionSignature($0) }
+
+        let result = try target.replaceBrushPresetLibraryData(replacementData)
+
+        #expect(result == ImageEditorBrushPresetImportResult(importedCount: 2, skippedCount: 0))
+        #expect(target.customBrushPresets.map(\.title) == ["Shared Ink", "Shared Texture"])
+        #expect(Set(target.customBrushPresets.map(\.id)).isDisjoint(with: sourcePresets.map(\.id)))
+        #expect(!target.customBrushPresets.contains(where: { $0.id == local.id }))
+        #expect(target.selectedBrushPresetID == target.customBrushPresets.last?.id)
+        #expect(target.favoriteBrushPresetIDs == [builtIn.id])
+        #expect(target.recentBrushPresetIDs == [builtIn.id])
+        #expect(target.brushSize == 91)
+        #expect(target.brushAngleJitter == 44)
+        #expect(target.activeBrushPreset == nil)
+        #expect(transactionSignature(target.document) == documentBeforeReplace)
+        #expect(target.undoStack.map { transactionSignature($0) } == undoBeforeReplace)
+        #expect(target.redoStack.map { transactionSignature($0) } == redoBeforeReplace)
+
+        let presetsBeforeInvalidReplace = target.customBrushPresets
+        let selectedBeforeInvalidReplace = target.selectedBrushPresetID
+        let favoritesBeforeInvalidReplace = target.favoriteBrushPresetIDs
+        let recentBeforeInvalidReplace = target.recentBrushPresetIDs
+        #expect(throws: ImageEditorBrushPresetLibraryError.invalidFile) {
+            try target.replaceBrushPresetLibraryData(Data("not-json".utf8))
+        }
+        #expect(target.customBrushPresets == presetsBeforeInvalidReplace)
+        #expect(target.selectedBrushPresetID == selectedBeforeInvalidReplace)
+        #expect(target.favoriteBrushPresetIDs == favoritesBeforeInvalidReplace)
+        #expect(target.recentBrushPresetIDs == recentBeforeInvalidReplace)
+        #expect(transactionSignature(target.document) == documentBeforeReplace)
+        #expect(target.undoStack.map { transactionSignature($0) } == undoBeforeReplace)
+        #expect(target.redoStack.map { transactionSignature($0) } == redoBeforeReplace)
+
+        let restored = makeViewModel(defaults: targetDefaults)
+        #expect(restored.customBrushPresets == target.customBrushPresets)
+        #expect(restored.selectedBrushPresetID == target.selectedBrushPresetID)
+        #expect(restored.favoriteBrushPresetIDs == [builtIn.id])
+        #expect(restored.recentBrushPresetIDs == [builtIn.id])
+    }
+
     @Test func portableBrushLibraryRoundTripsCompleteResourcesWithFreshIdentityAndStableNames() throws {
         let (sourceDefaults, sourceSuiteName) = temporaryDefaults()
         defer { sourceDefaults.removePersistentDomain(forName: sourceSuiteName) }

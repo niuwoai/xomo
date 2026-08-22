@@ -239,8 +239,8 @@ struct XomoAutomationTests {
         #expect(brushPresetProperties["action"]?.objectValue?["enum"] == .array([
             .string("list"), .string("favorites"), .string("recent"), .string("create"),
             .string("apply"), .string("favorite"), .string("update"), .string("duplicate"),
-            .string("moveToIndex"), .string("import"), .string("export"), .string("rename"),
-            .string("delete")
+            .string("moveToIndex"), .string("import"), .string("replace"), .string("export"),
+            .string("rename"), .string("delete")
         ]))
         #expect(brushPresetProperties["favorite"]?.objectValue?["type"] == .string("boolean"))
         #expect(brushPresetProperties["index"]?.objectValue?["type"] == .string("integer"))
@@ -10588,6 +10588,77 @@ struct XomoAutomationTests {
         #expect(viewModel.undoStack.map(transactionSignature) == undoBeforeImport)
         #expect(viewModel.redoStack.map(transactionSignature) == redoBeforeImport)
         #expect(viewModel.customBrushPresets.first?.id == local.id)
+    }
+
+    @Test func registryReplacesBrushLibraryAtomicallyWithoutApplyingIt() throws {
+        let sourcePresets = [
+            ImageEditorBrushPreset(id: "source-ink", name: "Team Ink", size: 28),
+            ImageEditorBrushPreset(id: "source-grain", name: "Team Grain", size: 52)
+        ]
+        let libraryPath = FileManager.default.temporaryDirectory
+            .appendingPathComponent("xomo-replace-\(UUID().uuidString).xomobrushes")
+        let invalidPath = FileManager.default.temporaryDirectory
+            .appendingPathComponent("xomo-replace-invalid-\(UUID().uuidString).xomobrushes")
+        defer {
+            try? FileManager.default.removeItem(at: libraryPath)
+            try? FileManager.default.removeItem(at: invalidPath)
+        }
+        try JSONEncoder().encode(
+            ImageEditorBrushPresetLibrary(presets: sourcePresets)
+        ).write(to: libraryPath, options: .atomic)
+        try Data("not-json".utf8).write(to: invalidPath, options: .atomic)
+
+        let suiteName = "XomoAutomationTests.replacePreset.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName) ?? .standard
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let viewModel = makeViewModel(preferencesDefaults: defaults)
+        viewModel.brushSize = 17
+        let local = try #require(viewModel.createBrushPresetFromCurrentSettings())
+        viewModel.brushSize = 79
+        viewModel.setBrushAngleJitter(36)
+        viewModel.addLayer()
+        viewModel.undo()
+        let documentBeforeReplace = transactionSignature(viewModel.document)
+        let undoBeforeReplace = viewModel.undoStack.map(transactionSignature)
+        let redoBeforeReplace = viewModel.redoStack.map(transactionSignature)
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        defer { registry.unregister(viewModel) }
+
+        let replaced = registry.execute(request(
+            operation: "call",
+            name: "xomo.brush.preset",
+            arguments: ["action": .string("replace"), "path": .string(libraryPath.path)]
+        ))
+
+        #expect(replaced.ok)
+        #expect(replaced.result?.objectValue?["importedCount"] == .number(2))
+        #expect(replaced.result?.objectValue?["skippedCount"] == .number(0))
+        let returned = try #require(replaced.result?.objectValue?["presets"]?.arrayValue)
+        #expect(returned.compactMap { $0.objectValue?["title"]?.stringValue }
+            == ["Team Ink", "Team Grain"])
+        #expect(viewModel.customBrushPresets.map(\.title) == ["Team Ink", "Team Grain"])
+        #expect(!viewModel.customBrushPresets.contains(where: { $0.id == local.id }))
+        #expect(Set(viewModel.customBrushPresets.map(\.id)).isDisjoint(with: sourcePresets.map(\.id)))
+        #expect(viewModel.brushSize == 79)
+        #expect(viewModel.brushAngleJitter == 36)
+        #expect(viewModel.activeBrushPreset == nil)
+        #expect(transactionSignature(viewModel.document) == documentBeforeReplace)
+        #expect(viewModel.undoStack.map(transactionSignature) == undoBeforeReplace)
+        #expect(viewModel.redoStack.map(transactionSignature) == redoBeforeReplace)
+
+        let presetsBeforeFailure = viewModel.customBrushPresets
+        let rejected = registry.execute(request(
+            operation: "call",
+            name: "xomo.brush.preset",
+            arguments: ["action": .string("replace"), "path": .string(invalidPath.path)]
+        ))
+        #expect(!rejected.ok)
+        #expect(viewModel.customBrushPresets == presetsBeforeFailure)
+        #expect(viewModel.brushSize == 79)
+        #expect(transactionSignature(viewModel.document) == documentBeforeReplace)
+        #expect(viewModel.undoStack.map(transactionSignature) == undoBeforeReplace)
+        #expect(viewModel.redoStack.map(transactionSignature) == redoBeforeReplace)
     }
 
     @Test func registryRecursivelyExpandsAndCollapsesSelectedLayerGroups() {

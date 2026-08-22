@@ -78,39 +78,16 @@ extension ImageEditorViewModel {
 
     @discardableResult
     func importBrushPresetLibraryData(_ data: Data) throws -> ImageEditorBrushPresetImportResult {
-        guard data.count <= ImageEditorBrushPresetLibrary.maximumFileSize else {
-            throw ImageEditorBrushPresetLibraryError.fileTooLarge
-        }
-        let library: ImageEditorBrushPresetLibrary
-        do {
-            library = try JSONDecoder().decode(ImageEditorBrushPresetLibrary.self, from: data)
-        } catch {
-            throw ImageEditorBrushPresetLibraryError.invalidFile
-        }
-        guard library.formatVersion == ImageEditorBrushPresetLibrary.currentFormatVersion else {
-            throw ImageEditorBrushPresetLibraryError.unsupportedFormatVersion
-        }
-        guard !library.presets.isEmpty else {
-            throw ImageEditorBrushPresetLibraryError.emptyLibrary
-        }
-
+        let library = try decodedBrushPresetLibrary(from: data)
         let availableCount = max(
             0,
             ImageEditorBrushPresetPreferences.maximumPresetCount - customBrushPresets.count
         )
-        var existingNames = Set(customBrushPresets.compactMap(\.name))
-        let importedPresets = library.presets.prefix(availableCount).map { sourcePreset in
-            let sourceName = sourcePreset.normalizedCustomPreset.title
-            let name = uniqueImportedBrushPresetName(
-                sourceName,
-                existingNames: existingNames
-            )
-            existingNames.insert(name)
-            return sourcePreset.copyingCustomPreset(
-                id: UUID().uuidString,
-                name: name
-            )
-        }
+        let importedPresets = preparedBrushPresets(
+            from: library.presets,
+            limit: availableCount,
+            existingNames: Set(customBrushPresets.compactMap(\.name))
+        )
 
         installImportedBrushPresets(importedPresets)
         let result = ImageEditorBrushPresetImportResult(
@@ -119,6 +96,30 @@ extension ImageEditorViewModel {
         )
         statusText = L10n.format(
             "imageEditor.status.brushPresetImported",
+            result.importedCount,
+            result.skippedCount
+        )
+        return result
+    }
+
+    @discardableResult
+    func replaceBrushPresetLibraryData(
+        _ data: Data
+    ) throws -> ImageEditorBrushPresetImportResult {
+        let library = try decodedBrushPresetLibrary(from: data)
+        let replacementPresets = preparedBrushPresets(
+            from: library.presets,
+            limit: ImageEditorBrushPresetPreferences.maximumPresetCount,
+            existingNames: []
+        )
+
+        installReplacingBrushPresets(replacementPresets)
+        let result = ImageEditorBrushPresetImportResult(
+            importedCount: replacementPresets.count,
+            skippedCount: library.presets.count - replacementPresets.count
+        )
+        statusText = L10n.format(
+            "imageEditor.status.brushPresetLibraryReplaced",
             result.importedCount,
             result.skippedCount
         )
@@ -140,6 +141,18 @@ extension ImageEditorViewModel {
         return try importBrushPresetLibraryData(Data(contentsOf: url))
     }
 
+    @discardableResult
+    func replaceBrushPresetLibrary(
+        from url: URL
+    ) throws -> ImageEditorBrushPresetImportResult {
+        let values = try url.resourceValues(forKeys: [.fileSizeKey])
+        if let fileSize = values.fileSize,
+           fileSize > ImageEditorBrushPresetLibrary.maximumFileSize {
+            throw ImageEditorBrushPresetLibraryError.fileTooLarge
+        }
+        return try replaceBrushPresetLibraryData(Data(contentsOf: url))
+    }
+
     func chooseBrushPresetImportFile() {
         let panel = NSOpenPanel()
         panel.allowedContentTypes = [Self.brushPresetContentType, .json]
@@ -152,6 +165,40 @@ extension ImageEditorViewModel {
                 guard let self, response == .OK, let url = panel.url else { return }
                 do {
                     try self.importBrushPresetLibrary(from: url)
+                } catch {
+                    self.statusText = self.brushPresetLibraryErrorStatus(error)
+                }
+            }
+        }
+    }
+
+    func chooseBrushPresetReplacementFile() {
+        let panel = NSOpenPanel()
+        panel.allowedContentTypes = [Self.brushPresetContentType, .json]
+        panel.allowsMultipleSelection = false
+        panel.canChooseDirectories = false
+        panel.canChooseFiles = true
+        panel.prompt = L10n.text("imageEditor.action.brushPresetReplaceLibrary")
+        panel.begin { [weak self] response in
+            Task { @MainActor in
+                guard let self, response == .OK, let url = panel.url else { return }
+                let alert = NSAlert()
+                alert.alertStyle = .warning
+                alert.messageText = L10n.text(
+                    "imageEditor.brushPreset.replaceConfirmation.title"
+                )
+                alert.informativeText = L10n.format(
+                    "imageEditor.brushPreset.replaceConfirmation.message",
+                    self.customBrushPresets.count
+                )
+                alert.addButton(withTitle: L10n.text(
+                    "imageEditor.action.brushPresetReplaceLibrary"
+                ))
+                alert.addButton(withTitle: L10n.text("imageEditor.action.cancel"))
+                alert.buttons.first?.hasDestructiveAction = true
+                guard alert.runModal() == .alertFirstButtonReturn else { return }
+                do {
+                    try self.replaceBrushPresetLibrary(from: url)
                 } catch {
                     self.statusText = self.brushPresetLibraryErrorStatus(error)
                 }
@@ -217,6 +264,47 @@ extension ImageEditorViewModel {
             let candidate = String(normalizedSource.prefix(availableBaseLength)) + suffix
             if !existingNames.contains(candidate) { return candidate }
             sequence += 1
+        }
+    }
+
+    private func decodedBrushPresetLibrary(
+        from data: Data
+    ) throws -> ImageEditorBrushPresetLibrary {
+        guard data.count <= ImageEditorBrushPresetLibrary.maximumFileSize else {
+            throw ImageEditorBrushPresetLibraryError.fileTooLarge
+        }
+        let library: ImageEditorBrushPresetLibrary
+        do {
+            library = try JSONDecoder().decode(ImageEditorBrushPresetLibrary.self, from: data)
+        } catch {
+            throw ImageEditorBrushPresetLibraryError.invalidFile
+        }
+        guard library.formatVersion == ImageEditorBrushPresetLibrary.currentFormatVersion else {
+            throw ImageEditorBrushPresetLibraryError.unsupportedFormatVersion
+        }
+        guard !library.presets.isEmpty else {
+            throw ImageEditorBrushPresetLibraryError.emptyLibrary
+        }
+        return library
+    }
+
+    private func preparedBrushPresets(
+        from sourcePresets: [ImageEditorBrushPreset],
+        limit: Int,
+        existingNames initialNames: Set<String>
+    ) -> [ImageEditorBrushPreset] {
+        var existingNames = initialNames
+        return sourcePresets.prefix(max(0, limit)).map { sourcePreset in
+            let sourceName = sourcePreset.normalizedCustomPreset.title
+            let name = uniqueImportedBrushPresetName(
+                sourceName,
+                existingNames: existingNames
+            )
+            existingNames.insert(name)
+            return sourcePreset.copyingCustomPreset(
+                id: UUID().uuidString,
+                name: name
+            )
         }
     }
 

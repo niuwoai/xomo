@@ -121,4 +121,17 @@ extension ImageEditorViewModel {
         else { return }
         persistBrushPresetUsagePreferences()
     }
+
+    func pruneBrushPresetUsageToKnownPresets() {
+        let pruned = ImageEditorBrushPresetUsagePreferences(
+            favoriteIDs: favoriteBrushPresetIDs,
+            recentIDs: recentBrushPresetIDs
+        ).pruned(to: Set(brushPresets.map(\.id)))
+        guard pruned.favoriteIDs != favoriteBrushPresetIDs
+                || pruned.recentIDs != recentBrushPresetIDs
+        else { return }
+        favoriteBrushPresetIDs = pruned.favoriteIDs
+        recentBrushPresetIDs = pruned.recentIDs
+        persistBrushPresetUsagePreferences()
+    }
 }
