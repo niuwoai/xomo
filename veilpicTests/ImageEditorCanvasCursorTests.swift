@@ -1744,6 +1744,114 @@ struct ImageEditorCanvasCursorTests {
         )
     }
 
+    @Test func temporaryEyedropperOnlyOwnsOptionSequencesBeforePaintingStarts() {
+        for tool in [ImageEditorTool.brush, .pencil] {
+            #expect(ImageEditorTemporaryEyedropperPolicy.isActive(
+                tool: tool,
+                modifierFlags: [.option]
+            ))
+            #expect(ImageEditorTemporaryEyedropperPolicy.ownsPointerSequence(
+                tool: tool,
+                modifierFlags: [],
+                isGestureActive: true,
+                hasPaintSamples: false
+            ))
+            #expect(!ImageEditorTemporaryEyedropperPolicy.ownsPointerSequence(
+                tool: tool,
+                modifierFlags: [.option],
+                isGestureActive: false,
+                hasPaintSamples: true
+            ))
+        }
+
+        for tool in [
+            ImageEditorTool.eraser, .historyBrush, .cloneStamp,
+            .healingBrush, .paintBucket, .move
+        ] {
+            #expect(!ImageEditorTemporaryEyedropperPolicy.isActive(
+                tool: tool,
+                modifierFlags: [.option]
+            ))
+        }
+        #expect(!ImageEditorTemporaryEyedropperPolicy.isActive(
+            tool: .brush,
+            modifierFlags: []
+        ))
+    }
+
+    @Test func temporaryEyedropperUsesSemanticCursorWithoutOverridingCanvasModes() {
+        let eyedropper = ImageEditorCanvasCursor.cursor(for: .eyedropper, brushDiameter: 18)
+        for tool in [ImageEditorTool.brush, .pencil] {
+            let temporary = ImageEditorCanvasCursor.cursor(
+                for: tool,
+                brushDiameter: 18,
+                isTemporaryEyedropperActive: true
+            )
+            #expect(temporary === eyedropper)
+        }
+
+        #expect(ImageEditorCanvasCursor.cursor(
+            for: .components,
+            selectedTool: .brush,
+            brushDiameter: 18,
+            isTemporaryEyedropperActive: true
+        ) === NSCursor.arrow)
+        #expect(ImageEditorCanvasCursor.cursor(
+            for: .tools,
+            selectedTool: .brush,
+            brushDiameter: 18,
+            isSpacebarPanning: true,
+            isTemporaryEyedropperActive: true
+        ) === NSCursor.openHand)
+        #expect(ImageEditorCanvasCursor.cursor(
+            for: .eraser,
+            brushDiameter: 18,
+            isTemporaryEyedropperActive: true
+        ) !== eyedropper)
+    }
+
+    @Test func temporaryEyedropperGestureSamplesWithoutStartingPaint() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let gestureStart = try #require(
+            source.range(of: "private func canvasGesture(in size: CGSize) -> some Gesture")
+        )
+        let gestureEnd = try #require(
+            source[gestureStart.upperBound...].range(of: "private func gradientDragPoint")
+        )
+        let gestureSource = source[gestureStart.lowerBound..<gestureEnd.lowerBound]
+
+        let ownership = try #require(
+            gestureSource.range(of: "ImageEditorTemporaryEyedropperPolicy.ownsPointerSequence(")
+        )
+        let toolSwitch = try #require(
+            gestureSource[ownership.upperBound...].range(of: "switch canvasInteractionTool")
+        )
+        #expect(ownership.lowerBound < toolSwitch.lowerBound)
+        #expect(gestureSource.contains("isTemporaryEyedropperGestureActive = true"))
+        #expect(gestureSource.contains("hasPaintSamples: !brushStrokeSamples.isEmpty"))
+        #expect(
+            gestureSource.components(
+                separatedBy: "if isTemporaryEyedropperGestureActive, let endImagePoint"
+            ).count - 1 == 2
+        )
+        #expect(
+            gestureSource.components(
+                separatedBy: "viewModel.sampleColor(at: endImagePoint)"
+            ).count - 1 == 3
+        )
+        #expect(
+            source.components(
+                separatedBy: "isTemporaryEyedropperActive: isTemporaryEyedropperCursorActive"
+            ).count - 1 == 3
+        )
+    }
+
     @Test func patchCursorPhaseLocksTheActiveGestureAndRejectsBlockedEdits() {
         #expect(ImageEditorPatchCursorPhase.resolve(
             isPointerOverSelection: false,

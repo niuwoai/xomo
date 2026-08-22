@@ -1,5 +1,19 @@
 # Changelog
 
+## 2.12.0-rc1166 - 2026-08-22
+
+### Added
+
+- 画笔与铅笔支持 macOS Photoshop 式 Option 临时吸管：按住 Option 时保留当前工具选择但立即显示语义吸管光标，点击或拖动结束后从合成画布更新前景色。
+
+### Changed
+
+- 临时取色手势会在首次按下时锁存，先松开 Option 再松开鼠标也不会半途落笔；已经开始的笔触不会因中途按 Option 被劫持。组件库箭头、Space 平移、仿制/修复设源、橡皮历史恢复与其他工具的 Option 语义保持不变。
+
+### Verification
+
+- 唯一 `build-for-testing` 通过；临时取色策略、光标与手势接线 3/3，真实画布取色 1/1，普通 Brush/Pencil 2/2，Clone/Healing 取样优先级 3/3，Eraser History 锁存 1/1，合计专项 10/10；CLI/MCP 2/2、发布契约 7/7（21 项断言）及测试运行器契约均通过。下一次周期完整门禁仍为 rc1200。
+
 ## 2.12.0-rc1165 - 2026-08-22
 
 ### Added
