@@ -222,6 +222,99 @@ struct ImageEditorCloneStampSamplingTests {
         #expect(colorsMatch(destinationBottomRight, expectedBottomRight))
     }
 
+    @Test func uniformSourceScaleEnlargesRealClonePixelsAroundTheSamplingOrigin() throws {
+        let ordinary = mirroredSourceViewModel()
+        let scaled = mirroredSourceViewModel()
+        for viewModel in [ordinary, scaled] {
+            viewModel.isCloneStampAligned = false
+            viewModel.brushSize = 30
+            viewModel.hardness = 1
+            viewModel.opacity = 1
+            viewModel.setCloneSource(at: CGPoint(x: 20, y: 15))
+        }
+        scaled.setCloneSourceScalePercent(200)
+
+        ordinary.cloneStamp(points: [CGPoint(x: 60, y: 15)])
+        scaled.cloneStamp(points: [CGPoint(x: 60, y: 15)])
+
+        let ordinaryPixel = try color(
+            ordinary.document.selectedLayer?.image,
+            at: CGPoint(x: 72, y: 15)
+        )
+        let scaledPixel = try color(
+            scaled.document.selectedLayer?.image,
+            at: CGPoint(x: 72, y: 15)
+        )
+        #expect(ordinaryPixel.blueComponent > ordinaryPixel.greenComponent + 0.25)
+        #expect(scaledPixel.greenComponent > scaledPixel.blueComponent + 0.25)
+        #expect(scaled.document.history.last?.title == L10n.text("imageEditor.history.cloneStamp"))
+    }
+
+    @Test func minimumSourceScaleCanPullPreviouslyOffCanvasAlignedPixelsIntoTheStroke() throws {
+        let viewModel = compressedSourceViewModel()
+        viewModel.isCloneStampAligned = false
+        viewModel.brushSize = 30
+        viewModel.hardness = 1
+        viewModel.opacity = 1
+        viewModel.setCloneSource(at: CGPoint(x: 20, y: 15))
+        viewModel.setCloneSourceScalePercent(25)
+
+        viewModel.cloneStamp(points: [CGPoint(x: 60, y: 15)])
+
+        let compressedPixel = try color(
+            viewModel.document.selectedLayer?.image,
+            at: CGPoint(x: 72, y: 15)
+        )
+        #expect(compressedPixel.redComponent > compressedPixel.blueComponent + 0.25)
+    }
+
+    @Test func horizontalFlipComposesWithUniformSourceScaleInOneTransform() throws {
+        let viewModel = mirroredSourceViewModel()
+        viewModel.isCloneStampAligned = false
+        viewModel.brushSize = 24
+        viewModel.hardness = 1
+        viewModel.opacity = 1
+        viewModel.setCloneSource(at: CGPoint(x: 20, y: 15))
+        viewModel.setCloneSourceScalePercent(200)
+        viewModel.setCloneSourceFlipsHorizontally(true)
+        let expected = try color(
+            viewModel.document.selectedLayer?.image,
+            at: CGPoint(x: 16, y: 15)
+        )
+
+        viewModel.cloneStamp(points: [CGPoint(x: 60, y: 15)])
+
+        let transformed = try color(
+            viewModel.document.selectedLayer?.image,
+            at: CGPoint(x: 68, y: 15)
+        )
+        #expect(colorsMatch(transformed, expected))
+    }
+
+    @Test func bothSourceFlipsComposeWithUniformScaleAcrossBothAxes() throws {
+        let viewModel = quadrantSourceViewModel()
+        viewModel.isCloneStampAligned = false
+        viewModel.brushSize = 30
+        viewModel.hardness = 1
+        viewModel.opacity = 1
+        viewModel.setCloneSource(at: CGPoint(x: 20, y: 20))
+        viewModel.setCloneSourceScalePercent(200)
+        viewModel.setCloneSourceFlipsHorizontally(true)
+        viewModel.setCloneSourceFlipsVertically(true)
+        let expected = try color(
+            viewModel.document.selectedLayer?.image,
+            at: CGPoint(x: 16, y: 16)
+        )
+
+        viewModel.cloneStamp(points: [CGPoint(x: 60, y: 20)])
+
+        let transformed = try color(
+            viewModel.document.selectedLayer?.image,
+            at: CGPoint(x: 68, y: 28)
+        )
+        #expect(colorsMatch(transformed, expected))
+    }
+
     @Test func sourceFlipsAreRememberedPerSlotAndSurviveResampling() {
         let viewModel = patternedCurrentLayerViewModel()
         viewModel.setCloneSourceFlipsHorizontally(true)
@@ -245,6 +338,27 @@ struct ImageEditorCloneStampSamplingTests {
         #expect(viewModel.selectCloneSourceSlot(1))
         #expect(!viewModel.cloneSourceFlipsHorizontally)
         #expect(viewModel.cloneSourceFlipsVertically)
+    }
+
+    @Test func sourceScaleIsClampedRememberedPerSlotAndSurvivesResampling() {
+        let viewModel = patternedCurrentLayerViewModel()
+        viewModel.setCloneSourceScalePercent(500)
+        viewModel.setCloneSource(at: CGPoint(x: 10, y: 15))
+        #expect(viewModel.cloneSourceScalePercent == 400)
+
+        #expect(viewModel.selectCloneSourceSlot(1))
+        #expect(viewModel.cloneSourceScalePercent == 100)
+        viewModel.setCloneSourceScalePercent(10)
+        viewModel.setCloneSource(at: CGPoint(x: 30, y: 15))
+        #expect(viewModel.cloneSourceScalePercent == 25)
+
+        #expect(viewModel.selectCloneSourceSlot(0))
+        #expect(viewModel.cloneSourceScalePercent == 400)
+        viewModel.setCloneSource(at: CGPoint(x: 12, y: 15))
+        #expect(viewModel.cloneSourceScalePercent == 400)
+
+        #expect(viewModel.selectCloneSourceSlot(1))
+        #expect(viewModel.cloneSourceScalePercent == 25)
     }
 
     @Test func samplingRangeDistinguishesCurrentBelowAndAllVisibleLayers() throws {
@@ -470,6 +584,20 @@ struct ImageEditorCloneStampSamplingTests {
         ])
         var document = ImageEditorDocument(sourceName: "source.png", image: image)
         var layer = ImageEditorLayer.blank(name: "Vertical Mirror Pattern", size: size)
+        layer.image = image
+        document.layers = [layer]
+        document.selectedLayerID = layer.id
+        document.selectedLayerIDs = [layer.id]
+        return ImageEditorViewModel(document: document) { _ in }
+    }
+
+    private func compressedSourceViewModel() -> ImageEditorViewModel {
+        let size = CGSize(width: 100, height: 30)
+        let image = bitmap(size: size, background: .systemBlue, fills: [
+            (CGRect(x: 66, y: 8, width: 8, height: 14), .systemRed)
+        ])
+        var document = ImageEditorDocument(sourceName: "source.png", image: image)
+        var layer = ImageEditorLayer.blank(name: "Compressed Pattern", size: size)
         layer.image = image
         document.layers = [layer]
         document.selectedLayerID = layer.id

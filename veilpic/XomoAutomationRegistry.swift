@@ -5639,6 +5639,7 @@ final class XomoAutomationRegistry {
         }
         if let feather = arguments["feather"]?.doubleValue { viewModel.feather = max(0, feather) }
         if action == "setCloneSource" || action == "cloneStamp" {
+            var resolvedSourceSlotIndex: Int?
             if let rawSlot = arguments["sourceSlot"]?.doubleValue {
                 guard rawSlot.isFinite,
                       rawSlot.rounded() == rawSlot,
@@ -5648,7 +5649,25 @@ final class XomoAutomationRegistry {
                         "Clone sourceSlot must be an integer from 1 through \(ImageEditorCloneSourceSlotState.maximumCount)"
                     )
                 }
-                _ = viewModel.selectCloneSourceSlot(Int(rawSlot) - 1)
+                resolvedSourceSlotIndex = Int(rawSlot) - 1
+            }
+            var resolvedScalePercent: CGFloat?
+            if let rawScalePercent = arguments["scalePercent"]?.doubleValue {
+                guard rawScalePercent.isFinite,
+                      (Double(ImageEditorCloneSourceSlotState.minimumScalePercent)...Double(ImageEditorCloneSourceSlotState.maximumScalePercent))
+                        .contains(rawScalePercent)
+                else {
+                    throw XomoAutomationCallError.invalidArgument(
+                        "Clone scalePercent must be from \(Int(ImageEditorCloneSourceSlotState.minimumScalePercent)) through \(Int(ImageEditorCloneSourceSlotState.maximumScalePercent))"
+                    )
+                }
+                resolvedScalePercent = CGFloat(rawScalePercent)
+            }
+            if let resolvedSourceSlotIndex {
+                _ = viewModel.selectCloneSourceSlot(resolvedSourceSlotIndex)
+            }
+            if let resolvedScalePercent {
+                viewModel.setCloneSourceScalePercent(resolvedScalePercent)
             }
             if let flipHorizontal = arguments["flipHorizontal"]?.boolValue {
                 viewModel.setCloneSourceFlipsHorizontally(flipHorizontal)
@@ -7241,6 +7260,7 @@ private extension XomoAutomationRegistry {
             "pressureSensitivity": XomoAutomationSchema.number(description: "Retouch brush pressure curve sensitivity from 0 to 100"),
             "aligned": XomoAutomationSchema.boolean(description: "Keep the clone or healing source offset aligned across strokes"),
             "sourceSlot": XomoAutomationSchema.integer(description: "One-based clone source slot from 1 through 5", minimum: 1, maximum: 5),
+            "scalePercent": XomoAutomationSchema.number(description: "Uniform scale for the active clone source from 25 through 400 percent", minimum: 25, maximum: 400),
             "flipHorizontal": XomoAutomationSchema.boolean(description: "Mirror the active clone source horizontally around its sampling origin"),
             "flipVertical": XomoAutomationSchema.boolean(description: "Mirror the active clone source vertically around its sampling origin"),
             "sampleSource": XomoAutomationSchema.string(description: "Clone or healing sampling layer range", values: ["currentLayer", "currentAndBelow", "allVisible"]),

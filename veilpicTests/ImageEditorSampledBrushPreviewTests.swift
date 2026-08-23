@@ -170,6 +170,25 @@ struct ImageEditorSampledBrushPreviewTests {
         #expect(nearby.connector == nil)
     }
 
+    @Test func cloneScaleShrinksTheSourceFootprintButKeepsTheDestinationFootprint() {
+        let geometry = ImageEditorSampledBrushOverlayGeometry.resolve(
+            sourcePoint: CGPoint(x: 10, y: 20),
+            liveSourcePoint: CGPoint(x: 20, y: 30),
+            currentDestination: CGPoint(x: 80, y: 30),
+            isPickingSource: false,
+            brushDiameter: 20,
+            sourceScale: 2,
+            pressure: nil,
+            pressureControlsSize: false,
+            pressureSensitivity: 0.5
+        )
+
+        #expect(geometry.diameter == 10)
+        #expect(geometry.destinationDiameter == 20)
+        #expect(geometry.connector?.start == CGPoint(x: 25, y: 30))
+        #expect(geometry.connector?.end == CGPoint(x: 70, y: 30))
+    }
+
     @Test func canvasOverlayUsesLiveStrokeEndpointsButNotSourceSetting() throws {
         let source = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),

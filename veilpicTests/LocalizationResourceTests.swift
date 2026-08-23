@@ -120,9 +120,9 @@ struct LocalizationResourceTests {
     @Test func cloneSourceSlotOptionIsLocalizedInEverySupportedLanguage() throws {
         let paths = try Self.repositoryPaths()
         let expectedValues = [
-            "zh-Hans": ("仿制源槽位", "水平翻转", "垂直翻转"),
-            "en": ("Clone Source Slot", "Flip H", "Flip V"),
-            "ja": ("クローンソーススロット", "左右反転", "上下反転")
+            "zh-Hans": ("仿制源槽位", "缩放", "水平翻转", "垂直翻转"),
+            "en": ("Clone Source Slot", "Scale", "Flip H", "Flip V"),
+            "ja": ("クローンソーススロット", "スケール", "左右反転", "上下反転")
         ]
 
         for (localizationID, expectedValue) in expectedValues {
@@ -132,8 +132,9 @@ struct LocalizationResourceTests {
                 appDirectory: paths.appDirectory
             )
             #expect(strings["imageEditor.option.cloneSourceSlot"] == expectedValue.0)
-            #expect(strings["imageEditor.option.cloneSourceFlipHorizontal"] == expectedValue.1)
-            #expect(strings["imageEditor.option.cloneSourceFlipVertical"] == expectedValue.2)
+            #expect(strings["imageEditor.option.cloneSourceScale"] == expectedValue.1)
+            #expect(strings["imageEditor.option.cloneSourceFlipHorizontal"] == expectedValue.2)
+            #expect(strings["imageEditor.option.cloneSourceFlipVertical"] == expectedValue.3)
         }
     }
 

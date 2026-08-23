@@ -1262,6 +1262,18 @@ struct ImageEditorView: View {
                 .accessibilityLabel(L10n.text("imageEditor.option.cloneSourceSlot"))
                 .accessibilityIdentifier("image-editor-clone-source-slot")
 
+                optionSlider(
+                    titleKey: "imageEditor.option.cloneSourceScale",
+                    value: Binding(
+                        get: { viewModel.cloneSourceScalePercent },
+                        set: { viewModel.setCloneSourceScalePercent($0) }
+                    ),
+                    range: ImageEditorCloneSourceSlotState.minimumScalePercent...ImageEditorCloneSourceSlotState.maximumScalePercent,
+                    step: 1,
+                    suffix: "%"
+                )
+                .accessibilityIdentifier("image-editor-clone-source-scale")
+
                 Toggle(
                     L10n.text("imageEditor.option.cloneSourceFlipHorizontal"),
                     isOn: Binding(
@@ -4936,6 +4948,9 @@ struct ImageEditorView: View {
             currentDestination: currentDestination,
             isPickingSource: isSettingSampledBrushSourceGesture,
             brushDiameter: viewModel.brushSize,
+            sourceScale: canvasInteractionTool == .cloneStamp
+                ? viewModel.cloneSourceScalePercent / 100
+                : 1,
             pressure: brushStrokeSamples.last?.pressure,
             pressureControlsSize: viewModel.retouchPressureControlsSize,
             pressureSensitivity: viewModel.retouchPressureSensitivity / 100

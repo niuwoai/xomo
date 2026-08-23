@@ -3455,6 +3455,7 @@
 "imageEditor.option.cloneAligned" = "Aligned";
 "imageEditor.option.cloneSampleSource" = "Sample";
 "imageEditor.option.cloneSourceSlot" = "Clone Source Slot";
+"imageEditor.option.cloneSourceScale" = "Scale";
 "imageEditor.option.cloneSourceFlipHorizontal" = "Flip H";
 "imageEditor.option.cloneSourceFlipVertical" = "Flip V";
 "imageEditor.option.healingMode" = "Healing Mode";

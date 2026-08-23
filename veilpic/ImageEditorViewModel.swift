@@ -247,6 +247,9 @@ final class ImageEditorViewModel: ObservableObject {
     var cloneSourceFlipsVertically: Bool {
         cloneSourceSlots[activeCloneSourceSlotIndex].flipsVertically
     }
+    var cloneSourceScalePercent: CGFloat {
+        cloneSourceSlots[activeCloneSourceSlotIndex].scalePercent
+    }
     @Published var isCloneStampAligned = true {
         didSet {
             guard isCloneStampAligned != oldValue else { return }
@@ -7147,6 +7150,13 @@ final class ImageEditorViewModel: ObservableObject {
             flipsVertically
     }
 
+    func setCloneSourceScalePercent(_ scalePercent: CGFloat) {
+        cloneSourceSlots[activeCloneSourceSlotIndex].scalePercent = min(
+            ImageEditorCloneSourceSlotState.maximumScalePercent,
+            max(ImageEditorCloneSourceSlotState.minimumScalePercent, scalePercent)
+        )
+    }
+
     private func resetCloneSourceAlignedOffsets() {
         for index in cloneSourceSlots.indices {
             cloneSourceSlots[index].alignedCanvasOffset = nil
@@ -7227,6 +7237,7 @@ final class ImageEditorViewModel: ObservableObject {
             sourceImage: samplingInput.image,
             flipSourceHorizontally: cloneSourceFlipsHorizontally,
             flipSourceVertically: cloneSourceFlipsVertically,
+            sourceScale: cloneSourceScalePercent / 100,
             width: rasterLocalBrushWidth(brushSize, layer: layer),
             opacity: opacity,
             hardness: hardness,
@@ -11055,6 +11066,7 @@ extension NSImage {
         sourceImage: NSImage,
         flipSourceHorizontally: Bool = false,
         flipSourceVertically: Bool = false,
+        sourceScale: CGFloat = 1,
         width: CGFloat,
         opacity: CGFloat,
         hardness: CGFloat
@@ -11065,6 +11077,7 @@ extension NSImage {
             sourceImage: sourceImage,
             flipSourceHorizontally: flipSourceHorizontally,
             flipSourceVertically: flipSourceVertically,
+            sourceScale: sourceScale,
             width: width,
             opacity: opacity,
             hardness: hardness,
@@ -11079,6 +11092,7 @@ extension NSImage {
         sourceImage: NSImage,
         flipSourceHorizontally: Bool = false,
         flipSourceVertically: Bool = false,
+        sourceScale: CGFloat = 1,
         width: CGFloat,
         opacity: CGFloat,
         hardness: CGFloat,
@@ -11087,7 +11101,16 @@ extension NSImage {
     ) -> NSImage? {
         guard !samples.isEmpty else { return nil }
 
-        guard let alignedSource = NSImage.rendered(size: size, actions: { _ in
+        let boundedSourceScale = sourceScale.isFinite ? max(0.01, sourceScale) : 1
+        let destinationReference = samples[0].point
+        guard let shiftedSource = NSImage.rendered(size: size, actions: { _ in
+            guard let context = NSGraphicsContext.current?.cgContext else { return }
+            context.translateBy(x: destinationReference.x, y: destinationReference.y)
+            context.scaleBy(
+                x: (flipSourceHorizontally ? -1 : 1) * boundedSourceScale,
+                y: (flipSourceVertically ? -1 : 1) * boundedSourceScale
+            )
+            context.translateBy(x: -destinationReference.x, y: -destinationReference.y)
             sourceImage.draw(
                 in: CGRect(
                     x: -sourceOffset.width,
@@ -11100,32 +11123,6 @@ extension NSImage {
                 fraction: 1
             )
         }) else { return nil }
-
-        let shiftedSource: NSImage
-        if flipSourceHorizontally || flipSourceVertically {
-            let destinationReference = samples[0].point
-            guard let transformedSource = NSImage.rendered(size: size, actions: { _ in
-                      guard let context = NSGraphicsContext.current?.cgContext else { return }
-                      context.translateBy(
-                          x: flipSourceHorizontally ? destinationReference.x * 2 : 0,
-                          y: flipSourceVertically ? destinationReference.y * 2 : 0
-                      )
-                      context.scaleBy(
-                          x: flipSourceHorizontally ? -1 : 1,
-                          y: flipSourceVertically ? -1 : 1
-                      )
-                      alignedSource.draw(
-                          in: CGRect(origin: .zero, size: size),
-                          from: CGRect(origin: .zero, size: alignedSource.size),
-                          operation: .copy,
-                          fraction: 1
-                      )
-                  })
-            else { return nil }
-            shiftedSource = transformedSource
-        } else {
-            shiftedSource = alignedSource
-        }
         let pixelWidth = max(1, Int(size.width.rounded()))
         let pixelHeight = max(1, Int(size.height.rounded()))
         let maskAlpha = retouchStrokeAlpha(

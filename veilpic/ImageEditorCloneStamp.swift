@@ -22,11 +22,14 @@ enum ImageEditorCloneSampleSource: String, CaseIterable, Identifiable {
 
 struct ImageEditorCloneSourceSlotState: Equatable {
     static let maximumCount = 5
+    static let minimumScalePercent: CGFloat = 25
+    static let maximumScalePercent: CGFloat = 400
 
     var sourcePoint: CGPoint?
     var alignedCanvasOffset: CGSize?
     var flipsHorizontally = false
     var flipsVertically = false
+    var scalePercent: CGFloat = 100
 }
 
 struct ImageEditorSampledBrushOffsetResolution: Equatable {
@@ -67,6 +70,7 @@ struct ImageEditorSampledBrushOverlayGeometry: Equatable {
     var sourcePoint: CGPoint
     var destinationPoint: CGPoint?
     var diameter: CGFloat
+    var destinationDiameter: CGFloat? = nil
 
     var connector: Connector? {
         guard let destinationPoint else { return nil }
@@ -75,17 +79,18 @@ struct ImageEditorSampledBrushOverlayGeometry: Equatable {
             dy: destinationPoint.y - sourcePoint.y
         )
         let distance = hypot(delta.dx, delta.dy)
-        let radius = max(0, diameter) / 2
-        guard distance > radius * 2, distance > 0 else { return nil }
+        let sourceRadius = max(0, diameter) / 2
+        let destinationRadius = max(0, destinationDiameter ?? diameter) / 2
+        guard distance > sourceRadius + destinationRadius, distance > 0 else { return nil }
         let unit = CGVector(dx: delta.dx / distance, dy: delta.dy / distance)
         return Connector(
             start: CGPoint(
-                x: sourcePoint.x + unit.dx * radius,
-                y: sourcePoint.y + unit.dy * radius
+                x: sourcePoint.x + unit.dx * sourceRadius,
+                y: sourcePoint.y + unit.dy * sourceRadius
             ),
             end: CGPoint(
-                x: destinationPoint.x - unit.dx * radius,
-                y: destinationPoint.y - unit.dy * radius
+                x: destinationPoint.x - unit.dx * destinationRadius,
+                y: destinationPoint.y - unit.dy * destinationRadius
             )
         )
     }
@@ -96,16 +101,19 @@ struct ImageEditorSampledBrushOverlayGeometry: Equatable {
         currentDestination: CGPoint?,
         isPickingSource: Bool,
         brushDiameter: CGFloat,
+        sourceScale: CGFloat = 1,
         pressure: CGFloat?,
         pressureControlsSize: Bool,
         pressureSensitivity: CGFloat
     ) -> ImageEditorSampledBrushOverlayGeometry {
-        let diameter = resolvedDiameter(
+        let destinationDiameter = resolvedDiameter(
             brushDiameter: brushDiameter,
             pressure: pressure,
             pressureControlsSize: pressureControlsSize,
             pressureSensitivity: pressureSensitivity
         )
+        let boundedSourceScale = sourceScale.isFinite ? max(0.01, sourceScale) : 1
+        let sourceDiameter = destinationDiameter / boundedSourceScale
 
         guard !isPickingSource,
               let liveSourcePoint,
@@ -113,14 +121,16 @@ struct ImageEditorSampledBrushOverlayGeometry: Equatable {
             return ImageEditorSampledBrushOverlayGeometry(
                 sourcePoint: sourcePoint,
                 destinationPoint: nil,
-                diameter: diameter
+                diameter: sourceDiameter,
+                destinationDiameter: destinationDiameter
             )
         }
 
         return ImageEditorSampledBrushOverlayGeometry(
             sourcePoint: liveSourcePoint,
             destinationPoint: currentDestination,
-            diameter: diameter
+            diameter: sourceDiameter,
+            destinationDiameter: destinationDiameter
         )
     }
 
