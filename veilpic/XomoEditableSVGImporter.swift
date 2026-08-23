@@ -165,20 +165,20 @@ enum XomoEditableSVGImporter {
         let scaledSubpaths = parsed.subpaths.map { subpath in
             subpath.map { scaled($0, by: viewportScale) }
         }
-        guard let geometryBounds = bounds(of: scaledSubpaths),
-              presentation.hasVisibleStroke
-                || (pathsAreClosed && presentation.fillOpacity > 0
-                    && geometryBounds.width > 0 && geometryBounds.height > 0)
+        guard let importBounds = pathImportBounds(
+            scaledSubpaths,
+            isClosed: pathsAreClosed,
+            presentation: presentation
+        )
         else { return nil }
 
-        let padding = presentation.hasVisibleStroke ? presentation.strokeWidth / 2 : 0
         let size = CGSize(
-            width: max(1, geometryBounds.width + padding * 2),
-            height: max(1, geometryBounds.height + padding * 2)
+            width: max(1, importBounds.width),
+            height: max(1, importBounds.height)
         )
         let offset = CGSize(
-            width: padding - geometryBounds.minX,
-            height: padding - geometryBounds.minY
+            width: (size.width - importBounds.width) / 2 - importBounds.minX,
+            height: (size.height - importBounds.height) / 2 - importBounds.minY
         )
         let localSubpaths = scaledSubpaths.map { subpath in
             subpath.map { translated($0, by: offset) }
@@ -204,6 +204,60 @@ enum XomoEditableSVGImporter {
             isPathClosed: pathsAreClosed
         )
         return XomoEditableSVGImport(content: content, size: size)
+    }
+
+    private static func pathImportBounds(
+        _ subpaths: [[ImageEditorPathAnchor]],
+        isClosed: Bool,
+        presentation: SVGPresentation
+    ) -> CGRect? {
+        var visualBounds: CGRect?
+        if isClosed, presentation.fillOpacity > 0 {
+            for anchors in subpaths {
+                let fillBounds = cgPath(anchors, isClosed: true).boundingBoxOfPath
+                guard let finiteFillBounds = finiteNonemptyBounds(fillBounds) else { continue }
+                visualBounds = combinedBounds(visualBounds, finiteFillBounds)
+            }
+        }
+        if presentation.hasVisibleStroke {
+            for anchors in subpaths {
+                guard let strokeBounds = strokedPathBounds(
+                    anchors,
+                    strokeWidth: presentation.strokeWidth,
+                    strokeCap: presentation.strokeCap,
+                    strokeJoin: presentation.strokeJoin,
+                    strokeMiterLimit: presentation.strokeMiterLimit,
+                    isClosed: isClosed
+                ) else { continue }
+                visualBounds = combinedBounds(visualBounds, strokeBounds)
+            }
+        }
+        guard let visualBounds,
+              let editableGeometryBounds = bounds(of: subpaths)
+        else { return nil }
+        return combinedBounds(visualBounds, editableGeometryBounds)
+    }
+
+    private static func finiteNonemptyBounds(_ bounds: CGRect) -> CGRect? {
+        guard !bounds.isNull,
+              !bounds.isInfinite,
+              !bounds.isEmpty,
+              bounds.minX.isFinite,
+              bounds.minY.isFinite,
+              bounds.width.isFinite,
+              bounds.height.isFinite
+        else { return nil }
+        return bounds
+    }
+
+    private static func combinedBounds(_ first: CGRect?, _ second: CGRect) -> CGRect {
+        guard let first else { return second }
+        return CGRect(
+            x: min(first.minX, second.minX),
+            y: min(first.minY, second.minY),
+            width: max(first.maxX, second.maxX) - min(first.minX, second.minX),
+            height: max(first.maxY, second.maxY) - min(first.minY, second.minY)
+        )
     }
 
     private static func rectangleImport(

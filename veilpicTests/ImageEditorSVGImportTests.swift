@@ -27,9 +27,12 @@ struct ImageEditorSVGImportTests {
         #expect(content.kind == .path)
         #expect(content.isPathClosed)
         #expect(content.allEditablePathSubpaths.count == 2)
-        #expect(content.editablePathAnchors.first?.point == CGPoint(x: 2, y: 22))
-        #expect(content.editablePathAnchors.first?.outControl == CGPoint(x: 22, y: 2))
-        #expect(imported.size == CGSize(width: 104, height: 104))
+        let firstAnchor = try #require(content.editablePathAnchors.first)
+        let firstControl = try #require(firstAnchor.outControl)
+        #expect(abs((firstControl.x - firstAnchor.point.x) - 20) < 0.001)
+        #expect(abs((firstControl.y - firstAnchor.point.y) + 20) < 0.001)
+        #expect(imported.size.width > 100)
+        #expect(imported.size.height > 100)
         #expect(abs(fill.redComponent - 0.2) < 0.001)
         #expect(abs(fill.greenComponent - 0.4) < 0.001)
         #expect(abs(fill.blueComponent - 0.6) < 0.001)
@@ -338,10 +341,10 @@ struct ImageEditorSVGImportTests {
             </svg>
             """.utf8
         )))
-        #expect(scaled.size == CGSize(width: 44, height: 4))
+        #expect(scaled.size == CGSize(width: 40, height: 4))
         #expect(scaled.content.editablePathAnchors.map(\.point) == [
-            CGPoint(x: 2, y: 2),
-            CGPoint(x: 42, y: 2)
+            CGPoint(x: 0, y: 2),
+            CGPoint(x: 40, y: 2)
         ])
         #expect(scaled.content.strokeWidth == 4)
 
@@ -360,6 +363,70 @@ struct ImageEditorSVGImportTests {
         }
     }
 
+    @Test func pathSquareCapsUseTheirExactDiagonalVisualBounds() throws {
+        let imported = try #require(XomoEditableSVGImporter.parse(Data(
+            """
+            <svg>
+              <path d="M 10 5 L 30 15" fill="none" stroke="black"
+                    stroke-width="4" stroke-linecap="square" />
+            </svg>
+            """.utf8
+        )))
+        let points = imported.content.editablePathAnchors.map(\.point)
+
+        #expect(abs(imported.size.width - 25.366_563) < 0.001)
+        #expect(abs(imported.size.height - 15.366_563) < 0.001)
+        #expect(points.count == 2)
+        #expect(abs(points[0].x - 2.683_282) < 0.001)
+        #expect(abs(points[0].y - 2.683_282) < 0.001)
+        #expect(abs((points[1].x - points[0].x) - 20) < 0.001)
+        #expect(abs((points[1].y - points[0].y) - 10) < 0.001)
+    }
+
+    @Test func closedPathMiterJoinsAreNotClippedByHalfStrokePadding() throws {
+        let imported = try #require(XomoEditableSVGImporter.parse(Data(
+            """
+            <svg>
+              <path d="M 0 10 L 10 0 L 20 10 Z" fill="none" stroke="black"
+                    stroke-width="4" stroke-linejoin="miter" stroke-miterlimit="10" />
+            </svg>
+            """.utf8
+        )))
+
+        #expect(imported.content.isPathClosed)
+        #expect(imported.content.strokeJoin == .miter)
+        #expect(imported.size.width > 24)
+        #expect(imported.content.editablePathAnchors.allSatisfy { anchor in
+            anchor.point.x >= 0 && anchor.point.x <= imported.size.width
+                && anchor.point.y >= 0 && anchor.point.y <= imported.size.height
+        })
+    }
+
+    @Test func pathVisualBoundsKeepBezierControlGeometryEditable() throws {
+        let imported = try #require(XomoEditableSVGImporter.parse(Data(
+            """
+            <svg>
+              <path d="M 0 0 C 100 100 -100 100 20 0"
+                    fill="none" stroke="black" stroke-width="2" />
+            </svg>
+            """.utf8
+        )))
+        let anchors = imported.content.editablePathAnchors
+        let first = try #require(anchors.first)
+        let last = try #require(anchors.last)
+        let outgoing = try #require(first.outControl)
+        let incoming = try #require(last.inControl)
+
+        #expect(abs((outgoing.x - first.point.x) - 100) < 0.001)
+        #expect(abs((outgoing.y - first.point.y) - 100) < 0.001)
+        #expect(abs((incoming.x - last.point.x) + 120) < 0.001)
+        #expect(abs((incoming.y - last.point.y) - 100) < 0.001)
+        #expect([first.point, outgoing, incoming, last.point].allSatisfy { point in
+            point.x >= 0 && point.x <= imported.size.width
+                && point.y >= 0 && point.y <= imported.size.height
+        })
+    }
+
     @Test func importingEditableSVGPathIsOneUndoableLayerTransaction() throws {
         let viewModel = ImageEditorViewModel(
             sourceName: "svg-import",
@@ -370,7 +437,8 @@ struct ImageEditorSVGImportTests {
         let data = Data(
             """
             <svg xmlns="http://www.w3.org/2000/svg">
-              <path d="M 10 20 L 50 40" fill="none" stroke="#123456" stroke-width="4" />
+              <path d="M 10 20 L 50 40" fill="none" stroke="#123456"
+                    stroke-width="4" stroke-linecap="round" />
             </svg>
             """.utf8
         )
@@ -381,11 +449,14 @@ struct ImageEditorSVGImportTests {
         let layer = try #require(viewModel.document.layers.last)
         let content = try #require(layer.shapeContent)
         #expect(layer.name == "Connector")
-        #expect(layer.frame == CGRect(x: 78, y: 48, width: 44, height: 24))
-        #expect(content.editablePathAnchors.map(\.point) == [
-            CGPoint(x: 2, y: 2),
-            CGPoint(x: 42, y: 22)
-        ])
+        #expect(abs(layer.frame.midX - 100) < 0.001)
+        #expect(abs(layer.frame.midY - 60) < 0.001)
+        #expect(abs(layer.frame.width - 44) < 0.002)
+        #expect(abs(layer.frame.height - 24) < 0.002)
+        let points = content.editablePathAnchors.map(\.point)
+        #expect(points.count == 2)
+        #expect(abs((points[1].x - points[0].x) - 40) < 0.001)
+        #expect(abs((points[1].y - points[0].y) - 20) < 0.001)
         #expect(!content.isPathClosed)
         #expect(content.fillOpacity == 0)
         #expect(viewModel.document.selectedLayerID == layer.id)
