@@ -145,6 +145,61 @@ struct ImageEditorSVGImportTests {
         }
     }
 
+    @Test func HSLColorsPreserveModernAlphaLegacySyntaxAndAngleUnits() throws {
+        let imported = try #require(XomoEditableSVGImporter.parse(Data(
+            """
+            <svg color="hsl(-240deg 100% 50% / 80%)">
+              <path d="M0 0 L20 0 L10 20 Z"
+                    fill="currentColor" fill-opacity="0.5"
+                    stroke="hsla(0.5turn, 100%, 50%, 0.5)" stroke-width="2" />
+            </svg>
+            """.utf8
+        )))
+        let content = imported.content
+        let fill = try #require(content.fillColor.usingColorSpace(.deviceRGB))
+        let stroke = try #require(content.strokeColor.usingColorSpace(.deviceRGB))
+
+        #expect(abs(fill.redComponent) < 0.001)
+        #expect(abs(fill.greenComponent - 1) < 0.001)
+        #expect(abs(fill.blueComponent) < 0.001)
+        #expect(abs(content.fillOpacity - 0.4) < 0.001)
+        #expect(abs(stroke.redComponent) < 0.001)
+        #expect(abs(stroke.greenComponent - 1) < 0.001)
+        #expect(abs(stroke.blueComponent - 1) < 0.001)
+        #expect(abs(content.strokeOpacity - 0.5) < 0.001)
+
+        let greenAngles = ["120", "120deg", "133.333333333grad", "2.094395102rad", "0.333333333turn"]
+        for angle in greenAngles {
+            let source = "<svg><path d='M0 0 L20 0 L10 20 Z' fill='hsl(\(angle) 100% 50%)'/></svg>"
+            let angleImport = try #require(XomoEditableSVGImporter.parse(Data(source.utf8)))
+            let color = try #require(angleImport.content.fillColor.usingColorSpace(.deviceRGB))
+            #expect(abs(color.redComponent) < 0.001)
+            #expect(abs(color.greenComponent - 1) < 0.001)
+            #expect(abs(color.blueComponent) < 0.001)
+        }
+    }
+
+    @Test func malformedOrMixedHSLColorSyntaxIsRejectedBeforeImport() {
+        let invalidPaints = [
+            "hsl(120, 100% 50%)",
+            "hsl(120 100% 50%, 0.8)",
+            "hsl(120, 100%, 50% / 0.8)",
+            "hsl(120 100 50%)",
+            "hsl(120 101% 50%)",
+            "hsl(120 100% -1%)",
+            "hsl(120foo 100% 50%)",
+            "hsl(120 100% 50% /)",
+            "hsl(120 100% 50% / 0.8 / 0.5)",
+            "hsl(120, 100%, 50%, 0.8)",
+            "hsla(120, 100%, 50%)",
+            "hsla(120, 100%, 50%, 1.1)"
+        ]
+        for paint in invalidPaints {
+            let source = "<svg><path d='M0 0 L20 0 L10 20 Z' fill='\(paint)'/></svg>"
+            #expect(XomoEditableSVGImporter.parse(Data(source.utf8)) == nil)
+        }
+    }
+
     @Test func explicitInheritResolvesTheWholeInheritedPresentationFamily() throws {
         let imported = try #require(XomoEditableSVGImporter.parse(Data(
             """

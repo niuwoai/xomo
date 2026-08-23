@@ -951,7 +951,10 @@ enum XomoEditableSVGImporter {
             return hexadecimalPaint(String(normalized.dropFirst()))
         }
         if normalized.hasPrefix("rgb(") || normalized.hasPrefix("rgba(") {
-            return functionalPaint(normalized)
+            return rgbFunctionalPaint(normalized)
+        }
+        if normalized.hasPrefix("hsl(") || normalized.hasPrefix("hsla(") {
+            return hslFunctionalPaint(normalized)
         }
         let named: [String: (CGFloat, CGFloat, CGFloat)] = [
             "black": (0, 0, 0), "white": (1, 1, 1), "red": (1, 0, 0),
@@ -988,7 +991,7 @@ enum XomoEditableSVGImporter {
         )
     }
 
-    private static func functionalPaint(_ source: String) -> SVGPaint? {
+    private static func rgbFunctionalPaint(_ source: String) -> SVGPaint? {
         guard let open = source.firstIndex(of: "("), source.last == ")" else { return nil }
         let body = String(source[source.index(after: open)..<source.index(before: source.endIndex)])
         guard let arguments = functionalPaintArguments(
@@ -996,7 +999,7 @@ enum XomoEditableSVGImporter {
             legacyFunctionExpectsAlpha: source.hasPrefix("rgba(")
         ) else { return nil }
         var rgb: [CGFloat] = []
-        for component in arguments.rgb {
+        for component in arguments.components {
             if component.hasSuffix("%"),
                let value = Double(component.dropLast()),
                value.isFinite,
@@ -1021,10 +1024,84 @@ enum XomoEditableSVGImporter {
         )
     }
 
+    private static func hslFunctionalPaint(_ source: String) -> SVGPaint? {
+        guard let open = source.firstIndex(of: "("), source.last == ")" else { return nil }
+        let body = String(source[source.index(after: open)..<source.index(before: source.endIndex)])
+        guard let arguments = functionalPaintArguments(
+            body,
+            legacyFunctionExpectsAlpha: source.hasPrefix("hsla(")
+        ),
+        let hue = hueFraction(arguments.components[0]),
+        let saturation = percentage(arguments.components[1]),
+        let lightness = percentage(arguments.components[2])
+        else { return nil }
+
+        let chroma = (1 - abs(2 * lightness - 1)) * saturation
+        let hueSector = hue * 6
+        let secondary = chroma * (1 - abs(hueSector.truncatingRemainder(dividingBy: 2) - 1))
+        let offset = lightness - chroma / 2
+        let channels: (CGFloat, CGFloat, CGFloat)
+        switch hueSector {
+        case 0..<1: channels = (chroma, secondary, 0)
+        case 1..<2: channels = (secondary, chroma, 0)
+        case 2..<3: channels = (0, chroma, secondary)
+        case 3..<4: channels = (0, secondary, chroma)
+        case 4..<5: channels = (secondary, 0, chroma)
+        default: channels = (chroma, 0, secondary)
+        }
+        let alpha: CGFloat
+        if let alphaSource = arguments.alpha {
+            guard let parsedAlpha = unitInterval(alphaSource) else { return nil }
+            alpha = parsedAlpha
+        } else {
+            alpha = 1
+        }
+        return SVGPaint(
+            color: NSColor(
+                deviceRed: channels.0 + offset,
+                green: channels.1 + offset,
+                blue: channels.2 + offset,
+                alpha: 1
+            ),
+            alpha: alpha
+        )
+    }
+
+    private static func hueFraction(_ source: String) -> CGFloat? {
+        let units: [(suffix: String, degreesPerUnit: Double)] = [
+            ("grad", 0.9),
+            ("turn", 360),
+            ("rad", 180 / .pi),
+            ("deg", 1)
+        ]
+        let value: Double
+        let degreesPerUnit: Double
+        if let unit = units.first(where: { source.hasSuffix($0.suffix) }) {
+            guard let parsed = Double(source.dropLast(unit.suffix.count)), parsed.isFinite else { return nil }
+            value = parsed
+            degreesPerUnit = unit.degreesPerUnit
+        } else {
+            guard let parsed = Double(source), parsed.isFinite else { return nil }
+            value = parsed
+            degreesPerUnit = 1
+        }
+        let normalizedDegrees = (value * degreesPerUnit).truncatingRemainder(dividingBy: 360)
+        let positiveDegrees = normalizedDegrees < 0 ? normalizedDegrees + 360 : normalizedDegrees
+        return CGFloat(positiveDegrees / 360)
+    }
+
+    private static func percentage(_ source: String) -> CGFloat? {
+        guard source.hasSuffix("%"),
+              let value = Double(source.dropLast()),
+              value.isFinite,
+              (0...100).contains(value) else { return nil }
+        return CGFloat(value / 100)
+    }
+
     private static func functionalPaintArguments(
         _ body: String,
         legacyFunctionExpectsAlpha: Bool
-    ) -> (rgb: [String], alpha: String?)? {
+    ) -> (components: [String], alpha: String?)? {
         if body.contains(",") {
             guard !body.contains("/") else { return nil }
             let values = body
@@ -1038,16 +1115,16 @@ enum XomoEditableSVGImporter {
 
         let sections = body.split(separator: "/", omittingEmptySubsequences: false)
         guard (1...2).contains(sections.count) else { return nil }
-        let rgb = sections[0]
+        let components = sections[0]
             .split(whereSeparator: \.isWhitespace)
             .map(String.init)
-        guard rgb.count == 3 else { return nil }
-        guard sections.count == 2 else { return (rgb, nil) }
+        guard components.count == 3 else { return nil }
+        guard sections.count == 2 else { return (components, nil) }
         let alpha = sections[1]
             .split(whereSeparator: \.isWhitespace)
             .map(String.init)
         guard alpha.count == 1 else { return nil }
-        return (rgb, alpha[0])
+        return (components, alpha[0])
     }
 
     private static func bounds(of subpaths: [[ImageEditorPathAnchor]]) -> CGRect? {
