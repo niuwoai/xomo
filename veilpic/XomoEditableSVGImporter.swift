@@ -1098,7 +1098,7 @@ enum XomoEditableSVGImporter {
         in source: String,
         sourceOrder: inout Int
     ) -> [SVGStyleRule]? {
-        guard !source.contains("/*"), !source.contains("*/") else { return nil }
+        guard let source = stylesheetSourceRemovingComments(source) else { return nil }
         var result: [SVGStyleRule] = []
         var remainder = source[...]
         while true {
@@ -1132,6 +1132,29 @@ enum XomoEditableSVGImporter {
             }
             remainder = remainder[remainder.index(after: closingBrace)...]
         }
+    }
+
+    private static func stylesheetSourceRemovingComments(_ source: String) -> String? {
+        var result = ""
+        result.reserveCapacity(source.count)
+        var cursor = source.startIndex
+        while cursor < source.endIndex {
+            let remainder = source[cursor...]
+            if remainder.hasPrefix("/*") {
+                let commentBodyStart = source.index(cursor, offsetBy: 2)
+                guard let closingRange = source.range(
+                    of: "*/",
+                    range: commentBodyStart..<source.endIndex
+                ) else { return nil }
+                result.append(" ")
+                cursor = closingRange.upperBound
+                continue
+            }
+            guard !remainder.hasPrefix("*/") else { return nil }
+            result.append(source[cursor])
+            source.formIndex(after: &cursor)
+        }
+        return result
     }
 
     private static func styleSelector(_ source: String) -> SVGStyleSelector? {

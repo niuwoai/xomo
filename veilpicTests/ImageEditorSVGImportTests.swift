@@ -364,6 +364,42 @@ struct ImageEditorSVGImportTests {
         }
     }
 
+    @Test func stylesheetCommentsAreIgnoredButMalformedCommentsRemainAtomicFailures() throws {
+        let imported = try #require(XomoEditableSVGImporter.parse(Data(
+            """
+            <svg>
+              <style><![CDATA[
+                /* Exported design tokens may contain braces: { } */
+                path /* simple selector */ {
+                  fill: /* resolved token */ rebeccapurple;
+                  stroke: steelblue; /* presentation note */
+                  stroke-width: 3;
+                }
+              ]]></style>
+              <path d="M0 0 L20 0 L10 20 Z" />
+            </svg>
+            """.utf8
+        )))
+        let fill = try #require(imported.content.fillColor.usingColorSpace(.deviceRGB))
+        let stroke = try #require(imported.content.strokeColor.usingColorSpace(.deviceRGB))
+        #expect(abs(fill.redComponent - (102.0 / 255.0)) < 0.001)
+        #expect(abs(fill.greenComponent - (51.0 / 255.0)) < 0.001)
+        #expect(abs(fill.blueComponent - (153.0 / 255.0)) < 0.001)
+        #expect(abs(stroke.redComponent - (70.0 / 255.0)) < 0.001)
+        #expect(abs(stroke.greenComponent - (130.0 / 255.0)) < 0.001)
+        #expect(abs(stroke.blueComponent - (180.0 / 255.0)) < 0.001)
+        #expect(imported.content.strokeWidth == 3)
+
+        let malformedDocuments = [
+            "<svg><style>/* unterminated path { fill: red; }</style><path d='M0 0 L20 0 L10 20 Z'/></svg>",
+            "<svg><style>*/ path { fill: red; }</style><path d='M0 0 L20 0 L10 20 Z'/></svg>",
+            "<svg><style>pa/**/th { fill: red; }</style><path d='M0 0 L20 0 L10 20 Z'/></svg>"
+        ]
+        for source in malformedDocuments {
+            #expect(XomoEditableSVGImporter.parse(Data(source.utf8)) == nil)
+        }
+    }
+
     @Test func explicitInheritResolvesTheWholeInheritedPresentationFamily() throws {
         let imported = try #require(XomoEditableSVGImporter.parse(Data(
             """
