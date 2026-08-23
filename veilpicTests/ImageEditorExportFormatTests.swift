@@ -1271,6 +1271,52 @@ struct ImageEditorExportFormatTests {
         #expect(source.contains(" Z\""))
     }
 
+    @Test func editableSVGPreservesCompoundPathHolesWithEvenOddFill() throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "compound-path-canvas",
+            image: NSImage.transparent(size: CGSize(width: 180, height: 140))
+        ) { _ in }
+        viewModel.document.layers.append(
+            .shape(
+                name: "Compound path",
+                frame: CGRect(x: 20, y: 20, width: 120, height: 100),
+                content: ImageEditorShapeContent(
+                    kind: .path,
+                    fillColor: .systemPurple,
+                    fillOpacity: 1,
+                    strokeColor: .black,
+                    strokeWidth: 2,
+                    strokeOpacity: 1,
+                    pathAnchors: [
+                        ImageEditorPathAnchor(point: CGPoint(x: 0, y: 0)),
+                        ImageEditorPathAnchor(point: CGPoint(x: 120, y: 0)),
+                        ImageEditorPathAnchor(point: CGPoint(x: 120, y: 100)),
+                        ImageEditorPathAnchor(point: CGPoint(x: 0, y: 100))
+                    ],
+                    pathSubpaths: [[
+                        ImageEditorPathAnchor(point: CGPoint(x: 35, y: 30)),
+                        ImageEditorPathAnchor(point: CGPoint(x: 85, y: 30)),
+                        ImageEditorPathAnchor(point: CGPoint(x: 85, y: 70)),
+                        ImageEditorPathAnchor(point: CGPoint(x: 35, y: 70))
+                    ]],
+                    isPathClosed: true
+                )
+            )
+        )
+
+        let data = try #require(
+            viewModel.exportData(settings: ImageEditorExportSettings(format: .svg))
+        )
+        let xml = try XMLDocument(data: data, options: [])
+        let pathNodes = try xml.nodes(forXPath: "//*[local-name()='path']")
+        let path = try #require(pathNodes.first as? XMLElement)
+
+        #expect(path.attribute(forName: "fill-rule")?.stringValue == "evenodd")
+        let pathData = try #require(path.attribute(forName: "d")?.stringValue)
+        #expect(pathData.components(separatedBy: "M ").count - 1 == 2)
+        #expect(pathData.components(separatedBy: "Z").count - 1 == 2)
+    }
+
     @Test func mixedCanvasExportsPDFAndRejectsSVG() throws {
         let rasterImage = try #require(
             NSImage.rendered(size: CGSize(width: 96, height: 64)) { rect in

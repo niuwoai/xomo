@@ -927,6 +927,9 @@ extension ImageEditorViewModel {
             )
             attributes.append("stroke-dashoffset=\"\(svgNumber(content.strokeDashOffset))\"")
         }
+        if content.kind == .path {
+            attributes.append("fill-rule=\"evenodd\"")
+        }
         return attributes.joined(separator: " ")
     }
 
