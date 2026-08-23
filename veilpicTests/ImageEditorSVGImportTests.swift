@@ -455,6 +455,49 @@ struct ImageEditorSVGImportTests {
         #expect(abs(backtrackedFill.blueComponent - 1) < 0.001)
     }
 
+    @Test func universalStylesheetSelectorsMatchAnyElementWithoutAddingSpecificity() throws {
+        let compounded = try #require(XomoEditableSVGImporter.parse(Data(
+            """
+            <svg>
+              <style>
+                * { fill: orange; stroke: black; stroke-width: 1; }
+                path { fill: steelblue; }
+                .theme > * { stroke: gold; stroke-width: 3; }
+                *#hero.icon { stroke: rebeccapurple; stroke-width: 4; }
+              </style>
+              <g class="theme">
+                <path id="hero" class="icon" d="M0 0 L20 0 L10 20 Z" />
+              </g>
+            </svg>
+            """.utf8
+        )))
+        let compoundFill = try #require(compounded.content.fillColor.usingColorSpace(.deviceRGB))
+        let compoundStroke = try #require(
+            compounded.content.strokeColor.usingColorSpace(.deviceRGB)
+        )
+        #expect(abs(compoundFill.redComponent - (70.0 / 255.0)) < 0.001)
+        #expect(abs(compoundFill.greenComponent - (130.0 / 255.0)) < 0.001)
+        #expect(abs(compoundFill.blueComponent - (180.0 / 255.0)) < 0.001)
+        #expect(abs(compoundStroke.redComponent - (102.0 / 255.0)) < 0.001)
+        #expect(abs(compoundStroke.greenComponent - (51.0 / 255.0)) < 0.001)
+        #expect(abs(compoundStroke.blueComponent - (153.0 / 255.0)) < 0.001)
+        #expect(compounded.content.strokeWidth == 4)
+
+        let anyElement = try #require(XomoEditableSVGImporter.parse(Data(
+            """
+            <svg>
+              <style>* { fill: orange; }</style>
+              <rect x="0" y="0" width="20" height="10" />
+            </svg>
+            """.utf8
+        )))
+        let anyFill = try #require(anyElement.content.fillColor.usingColorSpace(.deviceRGB))
+        #expect(anyElement.content.kind == .rectangle)
+        #expect(abs(anyFill.redComponent - 1) < 0.001)
+        #expect(abs(anyFill.greenComponent - (165.0 / 255.0)) < 0.001)
+        #expect(abs(anyFill.blueComponent) < 0.001)
+    }
+
     @Test func unsupportedStylesheetsAndUnresolvedClassesAreRejectedBeforeImport() {
         let invalidDocuments = [
             "<svg><style>path:hover { fill: red; }</style><path d='M0 0 L20 0 L10 20 Z'/></svg>",
@@ -462,6 +505,8 @@ struct ImageEditorSVGImportTests {
             "<svg><style>g + path { fill: red; }</style><path d='M0 0 L20 0 L10 20 Z'/></svg>",
             "<svg><style>g ~ path { fill: red; }</style><path d='M0 0 L20 0 L10 20 Z'/></svg>",
             "<svg><style>g > > path { fill: red; }</style><path d='M0 0 L20 0 L10 20 Z'/></svg>",
+            "<svg><style>** { fill: red; }</style><path d='M0 0 L20 0 L10 20 Z'/></svg>",
+            "<svg><style>path* { fill: red; }</style><path d='M0 0 L20 0 L10 20 Z'/></svg>",
             "<svg><style>@media (dark-mode) { path { fill: red; } }</style><path d='M0 0 L20 0 L10 20 Z'/></svg>",
             "<svg><style>.art { fill: red !important; }</style><path class='art' d='M0 0 L20 0 L10 20 Z'/></svg>",
             "<svg><style>.art { mix-blend-mode: multiply; }</style><path class='art' d='M0 0 L20 0 L10 20 Z'/></svg>",

@@ -169,21 +169,35 @@ enum XomoEditableSVGImporter {
         "svg", "g", "path", "rect", "circle", "ellipse", "line", "polyline", "polygon"
     ])
 
+    private enum SVGStyleTypeSelector {
+        case universal
+        case element(String)
+    }
+
     private struct SVGStyleCompoundSelector {
-        var elementName: String?
+        var typeSelector: SVGStyleTypeSelector?
         var idName: String?
         var classNames: [String]
 
         var specificity: Int {
-            (elementName == nil ? 0 : 1)
+            typeSelectorSpecificity
                 + (classNames.count * 10)
                 + (idName == nil ? 0 : 100)
         }
 
+        private var typeSelectorSpecificity: Int {
+            switch typeSelector {
+            case .element: 1
+            case .universal, nil: 0
+            }
+        }
+
         func matches(_ element: XMLElement) -> Bool {
-            if let elementName,
-               XomoEditableSVGImporter.localName(of: element) != elementName {
-                return false
+            switch typeSelector {
+            case let .element(name):
+                guard XomoEditableSVGImporter.localName(of: element) == name else { return false }
+            case .universal, nil:
+                break
             }
             if let idName,
                element.attribute(forName: "id")?.stringValue != idName {
@@ -1238,7 +1252,7 @@ enum XomoEditableSVGImporter {
     private static func styleCompoundSelector(_ source: String) -> SVGStyleCompoundSelector? {
         guard !source.isEmpty else { return nil }
         var remainder = source[...]
-        var elementName: String?
+        var typeSelector: SVGStyleTypeSelector?
         var idName: String?
         var classNames: [String] = []
 
@@ -1246,8 +1260,12 @@ enum XomoEditableSVGImporter {
             let boundary = remainder.firstIndex(where: { $0 == "." || $0 == "#" })
                 ?? remainder.endIndex
             let candidate = remainder[..<boundary].lowercased()
-            guard supportedStyleElementNames.contains(candidate) else { return nil }
-            elementName = candidate
+            if candidate == "*" {
+                typeSelector = .universal
+            } else {
+                guard supportedStyleElementNames.contains(candidate) else { return nil }
+                typeSelector = .element(candidate)
+            }
             remainder = remainder[boundary...]
         }
 
@@ -1267,9 +1285,9 @@ enum XomoEditableSVGImporter {
             remainder = remainder[boundary...]
         }
 
-        guard elementName != nil || idName != nil || !classNames.isEmpty else { return nil }
+        guard typeSelector != nil || idName != nil || !classNames.isEmpty else { return nil }
         return SVGStyleCompoundSelector(
-            elementName: elementName,
+            typeSelector: typeSelector,
             idName: idName,
             classNames: classNames
         )
