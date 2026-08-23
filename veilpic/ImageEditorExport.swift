@@ -218,7 +218,7 @@ extension ImageEditorViewModel {
     }
 
     var canExportSVG: Bool {
-        svgExportLayers != nil
+        svgExportPlan != nil
     }
 
     func openExportPanel() {
@@ -766,12 +766,12 @@ extension ImageEditorViewModel {
             || document.ancestorGroups(for: layer).contains { includedLayerIDs.contains($0.id) }
     }
 
-    private var svgExportLayers: [ImageEditorLayer]? {
+    private var svgExportPlan: (layers: [ImageEditorLayer], groupIDs: Set<UUID>)? {
         let visibleLayers = document.layers.filter(document.shouldComposite)
         for layer in visibleLayers {
             guard canSerializeAsSVG(layer) else { return nil }
         }
-        return visibleLayers.filter { layer in
+        let exportLayers = visibleLayers.filter { layer in
             switch layer.kind {
             case .text, .shape:
                 true
@@ -779,6 +779,39 @@ extension ImageEditorViewModel {
                 false
             }
         }
+        var groupIDs = Set<UUID>()
+        for layer in exportLayers {
+            let ancestors = document.ancestorGroups(for: layer)
+            if let groupID = layer.groupID {
+                guard ancestors.first?.id == groupID,
+                      ancestors.last?.groupID == nil
+                else { return nil }
+            }
+            for group in ancestors {
+                guard canSerializeAsSVGGroup(group) else { return nil }
+                groupIDs.insert(group.id)
+            }
+        }
+        return (exportLayers, groupIDs)
+    }
+
+    private func canSerializeAsSVGGroup(_ layer: ImageEditorLayer) -> Bool {
+        guard layer.isGroup,
+              layer.blendMode == .passThrough,
+              layer.opacity.isFinite,
+              (0...1).contains(layer.opacity),
+              layer.fillOpacity == 1,
+              !layer.style.hasEffects,
+              layer.mask == nil,
+              layer.vectorMask == nil,
+              !layer.isClippingMask,
+              layer.smartFilters.isEmpty,
+              layer.blendIfSourceBlack == 0,
+              layer.blendIfSourceWhite == 1,
+              layer.blendIfUnderlyingBlack == 0,
+              layer.blendIfUnderlyingWhite == 1
+        else { return false }
+        return true
     }
 
     private func canSerializeAsSVG(_ layer: ImageEditorLayer) -> Bool {
@@ -817,22 +850,14 @@ extension ImageEditorViewModel {
     }
 
     private func svgData() -> Data? {
-        guard let layers = svgExportLayers else { return nil }
+        guard let plan = svgExportPlan else { return nil }
         let size = document.canvasSize
-        var elements: [String] = []
-        elements.reserveCapacity(layers.count)
-        for layer in layers {
-            let element: String
-            switch layer.kind {
-            case let .shape(content):
-                element = svgShape(content, layer: layer)
-            case let .text(content):
-                element = svgText(content, layer: layer)
-            default:
-                continue
-            }
-            elements.append(svgLayerGroup(element, layer: layer))
-        }
+        let elements = svgHierarchyElements(
+            exportLayerIDs: Set(plan.layers.map(\.id)),
+            exportGroupIDs: plan.groupIDs,
+            parentGroupID: nil,
+            visitedGroupIDs: []
+        )
         let source = [
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>",
             "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"\(svgNumber(size.width))\" height=\"\(svgNumber(size.height))\" viewBox=\"0 0 \(svgNumber(size.width)) \(svgNumber(size.height))\">",
@@ -842,11 +867,60 @@ extension ImageEditorViewModel {
         return source.data(using: .utf8)
     }
 
+    private func svgHierarchyElements(
+        exportLayerIDs: Set<UUID>,
+        exportGroupIDs: Set<UUID>,
+        parentGroupID: UUID?,
+        visitedGroupIDs: Set<UUID>
+    ) -> [String] {
+        document.layers.compactMap { layer in
+            guard layer.groupID == parentGroupID else { return nil }
+            if exportLayerIDs.contains(layer.id) {
+                var effectiveLayer = layer
+                effectiveLayer.opacity *= document.ancestorGroups(for: layer).reduce(1) {
+                    $0 * $1.opacity
+                }
+                let element: String
+                switch effectiveLayer.kind {
+                case let .shape(content):
+                    element = svgShape(content, layer: effectiveLayer)
+                case let .text(content):
+                    element = svgText(content, layer: effectiveLayer)
+                default:
+                    return nil
+                }
+                return svgLayerGroup(element, layer: layer)
+            }
+            guard exportGroupIDs.contains(layer.id),
+                  layer.isGroup,
+                  !visitedGroupIDs.contains(layer.id)
+            else { return nil }
+            let content = svgHierarchyElements(
+                exportLayerIDs: exportLayerIDs,
+                exportGroupIDs: exportGroupIDs,
+                parentGroupID: layer.id,
+                visitedGroupIDs: visitedGroupIDs.union([layer.id])
+            ).joined(separator: "\n")
+            return svgLayerGroup(content, layer: layer)
+        }
+    }
+
     private func svgLayerGroup(_ content: String, layer: ImageEditorLayer) -> String {
         let identifier = layer.id.uuidString
         let name = svgAttributeEscaped(layer.name)
         let title = svgEscaped(layer.name)
-        return "<g id=\"xomo-layer-\(identifier)\" data-xomo-layer-id=\"\(identifier)\" data-name=\"\(name)\">\n<title>\(title)</title>\n\(content)\n</g>"
+        let kind: String
+        switch layer.kind {
+        case .group: kind = "group"
+        case .shape: kind = "shape"
+        case .text: kind = "text"
+        default: kind = "layer"
+        }
+        var metadata = "data-xomo-layer-kind=\"\(kind)\""
+        if layer.isGroup {
+            metadata += " data-xomo-blend-mode=\"\(layer.blendMode.rawValue)\" data-xomo-opacity=\"\(svgNumber(CGFloat(layer.opacity)))\""
+        }
+        return "<g id=\"xomo-layer-\(identifier)\" data-xomo-layer-id=\"\(identifier)\" data-name=\"\(name)\" \(metadata)>\n<title>\(title)</title>\n\(content)\n</g>"
     }
 
     private func svgShape(_ content: ImageEditorShapeContent, layer: ImageEditorLayer) -> String {

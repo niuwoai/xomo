@@ -1231,6 +1231,162 @@ struct ImageEditorExportFormatTests {
         #expect(source.contains("<title>Card \"A\" &amp; &lt;hero&gt;</title>"))
     }
 
+    @Test func editableSVGPreservesNestedPassThroughGroupsAndEffectiveOpacity() throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "nested-svg-groups",
+            image: NSImage.transparent(size: CGSize(width: 360, height: 220))
+        ) { _ in }
+        let looseLayer = ImageEditorLayer.shape(
+            name: "Loose Bottom",
+            frame: CGRect(x: 12, y: 12, width: 70, height: 54),
+            content: ImageEditorShapeContent(
+                kind: .rectangle,
+                fillColor: .systemGray,
+                fillOpacity: 1,
+                strokeColor: .clear,
+                strokeWidth: 0.1,
+                strokeOpacity: 0
+            )
+        )
+        var outerGroup = ImageEditorLayer.group(
+            name: "Outer Pass Through",
+            size: viewModel.document.canvasSize
+        )
+        outerGroup.opacity = 0.5
+        var innerGroup = ImageEditorLayer.group(
+            name: "Inner Pass Through",
+            size: viewModel.document.canvasSize
+        )
+        innerGroup.opacity = 0.8
+        innerGroup.groupID = outerGroup.id
+        var nestedShape = ImageEditorLayer.shape(
+            name: "Nested Shape",
+            frame: CGRect(x: 96, y: 30, width: 110, height: 70),
+            content: ImageEditorShapeContent(
+                kind: .ellipse,
+                fillColor: .systemBlue,
+                fillOpacity: 1,
+                strokeColor: .clear,
+                strokeWidth: 0.1,
+                strokeOpacity: 0
+            )
+        )
+        nestedShape.opacity = 0.75
+        nestedShape.groupID = innerGroup.id
+        var directText = ImageEditorLayer.text(
+            name: "Direct Child",
+            origin: CGPoint(x: 104, y: 118),
+            content: ImageEditorTextContent(
+                text: "Grouped",
+                color: .white,
+                fontSize: 18,
+                point: .zero
+            )
+        )
+        directText.opacity = 0.6
+        directText.groupID = outerGroup.id
+        let topLayer = ImageEditorLayer.shape(
+            name: "Loose Top",
+            frame: CGRect(x: 250, y: 142, width: 80, height: 50),
+            content: ImageEditorShapeContent(
+                kind: .rectangle,
+                fillColor: .systemOrange,
+                fillOpacity: 1,
+                strokeColor: .clear,
+                strokeWidth: 0.1,
+                strokeOpacity: 0
+            )
+        )
+        viewModel.document.layers.append(contentsOf: [
+            looseLayer,
+            nestedShape,
+            innerGroup,
+            directText,
+            outerGroup,
+            topLayer
+        ])
+
+        #expect(viewModel.canExportSVG)
+        let data = try #require(
+            viewModel.exportData(settings: ImageEditorExportSettings(format: .svg))
+        )
+        let xml = try XMLDocument(data: data, options: [])
+        let rootGroups = try xml.nodes(
+            forXPath: "/*[local-name()='svg']/*[local-name()='g']"
+        ).compactMap { $0 as? XMLElement }
+        let outerNode = try #require(
+            try xml.nodes(
+                forXPath: "//*[@data-xomo-layer-id='\(outerGroup.id.uuidString)']"
+            ).first as? XMLElement
+        )
+        let innerNode = try #require(
+            try xml.nodes(
+                forXPath: "//*[@data-xomo-layer-id='\(innerGroup.id.uuidString)']"
+            ).first as? XMLElement
+        )
+        let nestedShapeNode = try #require(
+            try xml.nodes(
+                forXPath: "//*[@data-xomo-layer-id='\(nestedShape.id.uuidString)']/*[local-name()='ellipse']"
+            ).first as? XMLElement
+        )
+        let directTextNode = try #require(
+            try xml.nodes(
+                forXPath: "//*[@data-xomo-layer-id='\(directText.id.uuidString)']/*[local-name()='text']"
+            ).first as? XMLElement
+        )
+        let outerChildIDs = try outerNode.nodes(
+            forXPath: "./*[local-name()='g']"
+        ).compactMap {
+            ($0 as? XMLElement)?.attribute(forName: "data-xomo-layer-id")?.stringValue
+        }
+        let innerChildIDs = try innerNode.nodes(
+            forXPath: "./*[local-name()='g']"
+        ).compactMap {
+            ($0 as? XMLElement)?.attribute(forName: "data-xomo-layer-id")?.stringValue
+        }
+
+        #expect(rootGroups.map { $0.attribute(forName: "data-xomo-layer-id")?.stringValue } == [
+            looseLayer.id.uuidString,
+            outerGroup.id.uuidString,
+            topLayer.id.uuidString
+        ])
+        #expect(outerChildIDs == [innerGroup.id.uuidString, directText.id.uuidString])
+        #expect(innerChildIDs == [nestedShape.id.uuidString])
+        #expect(outerNode.attribute(forName: "data-xomo-layer-kind")?.stringValue == "group")
+        #expect(outerNode.attribute(forName: "data-xomo-blend-mode")?.stringValue == "passThrough")
+        #expect(outerNode.attribute(forName: "data-xomo-opacity")?.stringValue == "0.500")
+        #expect(innerNode.attribute(forName: "data-xomo-opacity")?.stringValue == "0.800")
+        #expect(nestedShapeNode.attribute(forName: "fill-opacity")?.stringValue == "0.300")
+        #expect(directTextNode.attribute(forName: "fill-opacity")?.stringValue == "0.300")
+    }
+
+    @Test func editableSVGRejectsUnsupportedIsolatedGroupComposition() {
+        let unsupported = ImageEditorViewModel(
+            sourceName: "isolated-svg-group",
+            image: NSImage.transparent(size: CGSize(width: 120, height: 90))
+        ) { _ in }
+        var isolatedGroup = ImageEditorLayer.group(
+            name: "Isolated Group",
+            size: unsupported.document.canvasSize
+        )
+        isolatedGroup.blendMode = .normal
+        var isolatedChild = ImageEditorLayer.shape(
+            name: "Child",
+            frame: CGRect(x: 12, y: 12, width: 60, height: 44),
+            content: ImageEditorShapeContent(
+                kind: .rectangle,
+                fillColor: .systemRed,
+                fillOpacity: 1,
+                strokeColor: .clear,
+                strokeWidth: 0.1,
+                strokeOpacity: 0
+            )
+        )
+        isolatedChild.groupID = isolatedGroup.id
+        unsupported.document.layers.append(contentsOf: [isolatedChild, isolatedGroup])
+        #expect(!unsupported.canExportSVG)
+    }
+
     @Test func editableSVGPreservesRoundedRectangleCornerGeometry() throws {
         let viewModel = ImageEditorViewModel(
             sourceName: "rounded-rectangle-svg",
