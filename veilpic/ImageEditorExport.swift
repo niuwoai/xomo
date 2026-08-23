@@ -832,17 +832,25 @@ extension ImageEditorViewModel {
 
     private func svgShape(_ content: ImageEditorShapeContent, layer: ImageEditorLayer) -> String {
         let normalized = content.normalized(size: layer.image.size)
-        let attributes = svgPaintAttributes(content: normalized, layer: layer)
+        var attributes = svgPaintAttributes(content: normalized, layer: layer)
+        let markers = svgStrokeMarkers(content: normalized, layer: layer)
+        if !markers.attributes.isEmpty {
+            attributes += " \(markers.attributes)"
+        }
+        let element: String
         switch normalized.kind {
         case .rectangle:
             let inset = normalized.strokeWidth / 2
             let frame = layer.frame.insetBy(dx: inset, dy: inset)
-            return "<rect x=\"\(svgNumber(frame.minX))\" y=\"\(svgNumber(frame.minY))\" width=\"\(svgNumber(frame.width))\" height=\"\(svgNumber(frame.height))\" \(attributes) />"
+            element = "<rect x=\"\(svgNumber(frame.minX))\" y=\"\(svgNumber(frame.minY))\" width=\"\(svgNumber(frame.width))\" height=\"\(svgNumber(frame.height))\" \(attributes) />"
         case .ellipse:
-            return "<ellipse cx=\"\(svgNumber(layer.frame.midX))\" cy=\"\(svgNumber(layer.frame.midY))\" rx=\"\(svgNumber(max(0, layer.frame.width - normalized.strokeWidth) / 2))\" ry=\"\(svgNumber(max(0, layer.frame.height - normalized.strokeWidth) / 2))\" \(attributes) />"
+            element = "<ellipse cx=\"\(svgNumber(layer.frame.midX))\" cy=\"\(svgNumber(layer.frame.midY))\" rx=\"\(svgNumber(max(0, layer.frame.width - normalized.strokeWidth) / 2))\" ry=\"\(svgNumber(max(0, layer.frame.height - normalized.strokeWidth) / 2))\" \(attributes) />"
         case .path:
-            return "<path d=\"\(svgPathData(content: normalized, layer: layer))\" \(attributes) />"
+            element = "<path d=\"\(svgPathData(content: normalized, layer: layer))\" \(attributes) />"
         }
+        return markers.definitions.isEmpty
+            ? element
+            : "<defs>\n\(markers.definitions)\n</defs>\n\(element)"
     }
 
     private func svgText(_ content: ImageEditorTextContent, layer: ImageEditorLayer) -> String {
@@ -903,7 +911,91 @@ extension ImageEditorViewModel {
         let fill = svgColor(content.fillColor)
         let stroke = svgColor(content.strokeColor)
         let fillValue = content.kind == .path && !content.isPathClosed ? "none" : fill.hex
-        return "fill=\"\(fillValue)\" fill-opacity=\"\(svgNumber(fill.alpha * content.fillOpacity * layer.opacity))\" stroke=\"\(stroke.hex)\" stroke-opacity=\"\(svgNumber(stroke.alpha * content.strokeOpacity * layer.opacity))\" stroke-width=\"\(svgNumber(content.strokeWidth))\" stroke-linejoin=\"round\" stroke-linecap=\"round\""
+        var attributes = [
+            "fill=\"\(fillValue)\"",
+            "fill-opacity=\"\(svgNumber(fill.alpha * content.fillOpacity * layer.opacity))\"",
+            "stroke=\"\(stroke.hex)\"",
+            "stroke-opacity=\"\(svgNumber(stroke.alpha * content.strokeOpacity * layer.opacity))\"",
+            "stroke-width=\"\(svgNumber(content.strokeWidth))\"",
+            "stroke-linejoin=\"\(content.strokeJoin.rawValue)\"",
+            "stroke-linecap=\"\(content.strokeCap.rawValue)\"",
+            "stroke-miterlimit=\"\(svgNumber(content.strokeMiterLimit))\""
+        ]
+        if !content.strokeDashPattern.isEmpty {
+            attributes.append(
+                "stroke-dasharray=\"\(content.strokeDashPattern.map { svgNumber($0) }.joined(separator: " "))\""
+            )
+            attributes.append("stroke-dashoffset=\"\(svgNumber(content.strokeDashOffset))\"")
+        }
+        return attributes.joined(separator: " ")
+    }
+
+    private func svgStrokeMarkers(
+        content: ImageEditorShapeContent,
+        layer: ImageEditorLayer
+    ) -> (definitions: String, attributes: String) {
+        guard content.kind == .path, !content.isPathClosed else { return ("", "") }
+        let identifier = layer.id.uuidString.replacingOccurrences(of: "-", with: "")
+        var definitions: [String] = []
+        var attributes: [String] = []
+        if content.strokeStartDecoration != .none {
+            let markerID = "xomo-marker-start-\(identifier)"
+            definitions.append(
+                svgStrokeMarkerDefinition(
+                    id: markerID,
+                    decoration: content.strokeStartDecoration,
+                    content: content,
+                    layer: layer,
+                    isStart: true
+                )
+            )
+            attributes.append("marker-start=\"url(#\(markerID))\"")
+        }
+        if content.strokeEndDecoration != .none {
+            let markerID = "xomo-marker-end-\(identifier)"
+            definitions.append(
+                svgStrokeMarkerDefinition(
+                    id: markerID,
+                    decoration: content.strokeEndDecoration,
+                    content: content,
+                    layer: layer,
+                    isStart: false
+                )
+            )
+            attributes.append("marker-end=\"url(#\(markerID))\"")
+        }
+        return (definitions.joined(separator: "\n"), attributes.joined(separator: " "))
+    }
+
+    private func svgStrokeMarkerDefinition(
+        id: String,
+        decoration: ImageEditorStrokeDecoration,
+        content: ImageEditorShapeContent,
+        layer: ImageEditorLayer,
+        isStart: Bool
+    ) -> String {
+        let halfWidth = max(2.5, content.strokeWidth / 2 + 2.5)
+        let length = max(6, content.strokeWidth * 4)
+        let stroke = svgColor(content.strokeColor)
+        let opacity = svgNumber(stroke.alpha * content.strokeOpacity * layer.opacity)
+        let fillAttributes = "fill=\"\(stroke.hex)\" fill-opacity=\"\(opacity)\""
+        let body: String
+        switch decoration {
+        case .none:
+            body = ""
+        case .openArrow:
+            body = "<path d=\"M -\(svgNumber(length)) \(svgNumber(halfWidth)) L 0 0 L -\(svgNumber(length)) -\(svgNumber(halfWidth))\" fill=\"none\" stroke=\"\(stroke.hex)\" stroke-opacity=\"\(opacity)\" stroke-width=\"\(svgNumber(max(1, content.strokeWidth)))\" stroke-linecap=\"round\" stroke-linejoin=\"round\" />"
+        case .filledArrow:
+            body = "<path d=\"M 0 0 L -\(svgNumber(length)) \(svgNumber(halfWidth)) L -\(svgNumber(length * 0.72)) 0 L -\(svgNumber(length)) -\(svgNumber(halfWidth)) Z\" \(fillAttributes) stroke=\"none\" data-xomo-decoration=\"\(decoration.rawValue)\" />"
+        case .filledTriangle:
+            body = "<path d=\"M 0 \(svgNumber(halfWidth)) L 0 -\(svgNumber(halfWidth)) L -\(svgNumber(length)) 0 Z\" \(fillAttributes) stroke=\"none\" data-xomo-decoration=\"\(decoration.rawValue)\" />"
+        case .filledDiamond:
+            body = "<path d=\"M 0 0 L -\(svgNumber(length * 0.5)) \(svgNumber(halfWidth)) L -\(svgNumber(length)) 0 L -\(svgNumber(length * 0.5)) -\(svgNumber(halfWidth)) Z\" \(fillAttributes) stroke=\"none\" data-xomo-decoration=\"\(decoration.rawValue)\" />"
+        case .filledCircle:
+            body = "<circle cx=\"-\(svgNumber(halfWidth))\" cy=\"0\" r=\"\(svgNumber(halfWidth))\" \(fillAttributes) stroke=\"none\" data-xomo-decoration=\"\(decoration.rawValue)\" />"
+        }
+        let orientation = isStart ? "auto-start-reverse" : "auto"
+        return "<marker id=\"\(id)\" markerUnits=\"userSpaceOnUse\" markerWidth=\"\(svgNumber(length * 2))\" markerHeight=\"\(svgNumber(halfWidth * 2))\" refX=\"0\" refY=\"0\" orient=\"\(orientation)\" overflow=\"visible\" data-xomo-decoration=\"\(decoration.rawValue)\">\(body)</marker>"
     }
 
     private func svgPoint(_ point: CGPoint, layer: ImageEditorLayer) -> String {

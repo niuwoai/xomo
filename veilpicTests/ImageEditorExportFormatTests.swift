@@ -1170,6 +1170,107 @@ struct ImageEditorExportFormatTests {
         #expect(!source.contains("<image"))
     }
 
+    @Test func editableSVGPreservesOpenPathMarkersAndAdvancedStrokeStyle() throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "marker-canvas",
+            image: NSImage.transparent(size: CGSize(width: 320, height: 180))
+        ) { _ in }
+        let decorations: [(ImageEditorStrokeDecoration, ImageEditorStrokeDecoration)] = [
+            (.openArrow, .filledArrow),
+            (.filledTriangle, .filledDiamond),
+            (.filledCircle, .none)
+        ]
+        for (index, pair) in decorations.enumerated() {
+            let content = ImageEditorShapeContent(
+                kind: .path,
+                fillColor: .clear,
+                fillOpacity: 0,
+                strokeColor: .systemBlue,
+                strokeWidth: 4,
+                strokeOpacity: 0.75,
+                strokeCap: .square,
+                strokeStartDecoration: pair.0,
+                strokeEndDecoration: pair.1,
+                strokeJoin: .bevel,
+                strokeMiterLimit: 7,
+                strokeDashPattern: [8, 4],
+                strokeDashOffset: 3.5,
+                pathAnchors: [
+                    ImageEditorPathAnchor(point: CGPoint(x: 20, y: 20)),
+                    ImageEditorPathAnchor(point: CGPoint(x: 180, y: 52))
+                ],
+                isPathClosed: false
+            )
+            viewModel.document.layers.append(
+                .shape(
+                    name: "Marker \(index)",
+                    frame: CGRect(x: 30, y: CGFloat(index * 48), width: 200, height: 72),
+                    content: content
+                )
+            )
+        }
+
+        let data = try #require(
+            viewModel.exportData(settings: ImageEditorExportSettings(format: .svg))
+        )
+        let source = try #require(String(data: data, encoding: .utf8))
+        let xml = try XMLDocument(data: data, options: [])
+        #expect(xml.rootElement()?.name == "svg")
+        #expect(source.contains("<marker"))
+        #expect(source.contains("marker-start=\"url(#xomo-marker-start-"))
+        #expect(source.contains("marker-end=\"url(#xomo-marker-end-"))
+        #expect(source.contains("orient=\"auto-start-reverse\""))
+        for decoration in ImageEditorStrokeDecoration.allCases where decoration != .none {
+            #expect(source.contains("data-xomo-decoration=\"\(decoration.rawValue)\""))
+        }
+        #expect(source.contains("stroke-linecap=\"square\""))
+        #expect(source.contains("stroke-linejoin=\"bevel\""))
+        #expect(source.contains("stroke-miterlimit=\"7\""))
+        #expect(source.contains("stroke-dasharray=\"8 4\""))
+        #expect(source.contains("stroke-dashoffset=\"3.500\""))
+        #expect(!source.contains("<image"))
+    }
+
+    @Test func editableSVGDoesNotAttachEndpointMarkersToClosedPaths() throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "closed-marker-canvas",
+            image: NSImage.transparent(size: CGSize(width: 160, height: 120))
+        ) { _ in }
+        viewModel.document.layers.append(
+            .shape(
+                name: "Closed path",
+                frame: CGRect(x: 20, y: 20, width: 100, height: 80),
+                content: ImageEditorShapeContent(
+                    kind: .path,
+                    fillColor: .systemYellow,
+                    fillOpacity: 1,
+                    strokeColor: .black,
+                    strokeWidth: 3,
+                    strokeOpacity: 1,
+                    strokeStartDecoration: .filledCircle,
+                    strokeEndDecoration: .openArrow,
+                    pathAnchors: [
+                        ImageEditorPathAnchor(point: CGPoint(x: 10, y: 10)),
+                        ImageEditorPathAnchor(point: CGPoint(x: 90, y: 12)),
+                        ImageEditorPathAnchor(point: CGPoint(x: 52, y: 68))
+                    ],
+                    isPathClosed: true
+                )
+            )
+        )
+
+        let data = try #require(
+            viewModel.exportData(settings: ImageEditorExportSettings(format: .svg))
+        )
+        let source = try #require(String(data: data, encoding: .utf8))
+        let xml = try XMLDocument(data: data, options: [])
+        #expect(xml.rootElement()?.name == "svg")
+        #expect(!source.contains("<marker"))
+        #expect(!source.contains("marker-start="))
+        #expect(!source.contains("marker-end="))
+        #expect(source.contains(" Z\""))
+    }
+
     @Test func mixedCanvasExportsPDFAndRejectsSVG() throws {
         let rasterImage = try #require(
             NSImage.rendered(size: CGSize(width: 96, height: 64)) { rect in
