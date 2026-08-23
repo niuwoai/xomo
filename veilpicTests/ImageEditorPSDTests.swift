@@ -861,6 +861,7 @@ struct ImageEditorPSDTests {
                 strokeJoin: .miter,
                 strokeMiterLimit: 7,
                 strokeDashPattern: [8, 4],
+                strokeDashOffset: 2.5,
                 cornerRadii: ImageEditorRectangleCornerRadii(
                     topLeft: 4,
                     topRight: 10,
@@ -882,7 +883,8 @@ struct ImageEditorPSDTests {
                 strokePosition: .inside,
                 strokeCap: .round,
                 strokeJoin: .bevel,
-                strokeDashPattern: [5, 3]
+                strokeDashPattern: [5, 3],
+                strokeDashOffset: -1.5
             )
         )
         document.layers = [rectangle, ellipse]
@@ -913,6 +915,7 @@ struct ImageEditorPSDTests {
         #expect(abs(restoredRectangle.strokeOpacity - 0.65) < 0.001)
         #expect(abs(restoredRectangle.strokeMiterLimit - 7) < 0.001)
         #expect(restoredRectangle.strokeDashPattern == [8, 4])
+        #expect(abs(restoredRectangle.strokeDashOffset - 2.5) < 0.001)
         #expect(abs(rectangleStroke.redComponent - 0.8) < 0.01)
         #expect(abs(rectangleStroke.greenComponent - 0.1) < 0.01)
         #expect(abs(rectangleStroke.blueComponent - 0.3) < 0.01)
@@ -922,6 +925,7 @@ struct ImageEditorPSDTests {
         #expect(restoredEllipse.strokeJoin == .bevel)
         #expect(abs(restoredEllipse.strokeWidth - 5) < 0.001)
         #expect(restoredEllipse.strokeDashPattern == [5, 3])
+        #expect(abs(restoredEllipse.strokeDashOffset + 1.5) < 0.001)
     }
 
     @Test func offsetShapeGradientCentersRoundTripThroughLegacyAndModernDescriptors() throws {
@@ -1375,6 +1379,7 @@ struct ImageEditorPSDTests {
         #expect(shape.strokeCap == .round)
         #expect(shape.strokeJoin == .bevel)
         #expect(shape.strokeDashPattern == [6, 3])
+        #expect(abs(shape.strokeDashOffset - 5.5) < 0.001)
         #expect(stops.count == 2)
         #expect(abs(stops[0].red - 32.0 / 255.0) < 0.01)
         #expect(abs(stops[1].blue - 40.0 / 255.0) < 0.01)
@@ -1396,6 +1401,7 @@ struct ImageEditorPSDTests {
         #expect(reimportedShape.strokePosition == .center)
         #expect(reimportedShape.strokeJoin == .bevel)
         #expect(reimportedShape.strokeDashPattern == [6, 3])
+        #expect(abs(reimportedShape.strokeDashOffset - 5.5) < 0.001)
     }
 
     @Test func modernVSCGSolidShapeBecomesEditableAndRoundTrips() throws {
@@ -1683,6 +1689,7 @@ struct ImageEditorPSDTests {
         #expect(shape.strokeCap == .round)
         #expect(shape.strokeJoin == .bevel)
         #expect(shape.strokeDashPattern == [6, 3])
+        #expect(abs(shape.strokeDashOffset - 5.5) < 0.001)
         #expect(abs(shape.strokeWidth - 2) < 0.01)
         #expect(abs(shape.strokeOpacity - 0.75) < 0.01)
         #expect(abs(strokeColor.redComponent - 240.0 / 255.0) < 0.01)
@@ -1697,6 +1704,7 @@ struct ImageEditorPSDTests {
         #expect(restoredShape.strokePosition == .center)
         #expect(restoredShape.strokeJoin == .bevel)
         #expect(restoredShape.strokeDashPattern == [6, 3])
+        #expect(abs(restoredShape.strokeDashOffset - 5.5) < 0.001)
         #expect(abs(restoredShape.strokeWidth - 2) < 0.01)
         #expect(abs(restoredShape.strokeOpacity - 0.75) < 0.01)
     }

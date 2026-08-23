@@ -1077,6 +1077,7 @@
 "imageEditor.properties.shapeStrokeDash.dot" = "Dots";
 "imageEditor.properties.shapeStrokeDash.longDash" = "Long dash";
 "imageEditor.properties.shapeStrokeDash.custom" = "Custom";
+"imageEditor.properties.shapeStrokeDashOffsetValue" = "Dash offset %.1f px";
 "imageEditor.stackLayout.axis.horizontal" = "Horizontal";
 "imageEditor.stackLayout.axis.vertical" = "Vertical";
 "imageEditor.stackLayout.primary.start" = "Start";

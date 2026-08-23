@@ -12,6 +12,8 @@
 | `vector-mask-multi.psd` | 外部生成的 vmsk 两个闭合子路径，验证 pathSubpaths 与偶奇填充孔洞 |
 | `modern-solid-vector-shape.psd` | `vsms + vscg` version 16 的 `SoCo` 内容，恢复为原生实色矢量形状 |
 | `modern-gradient-vector-shape.psd` | `vsms + vscg` version 16 的 `GdFl` 内容，恢复为原生线性渐变矢量形状 |
+| `gradient-vector-shape.psd` | 外部生成的渐变矢量形状，包含 `[6, 3]` 虚线与 `5.5 pt` 非零虚线偏移 |
+| `stroked-vector-shape.psd` | 外部生成的实色矢量形状，包含 `[6, 3]` 虚线与 `5.5 pt` 非零虚线偏移 |
 | `modern-radial-vector-shape.psd` | `GdFl` 的 `Rdl ` 类型，恢复为原生径向渐变矢量形状 |
 | `modern-reflected-vector-shape.psd` | `GdFl` 的 `Rflc` 类型，恢复为原生对称渐变矢量形状 |
 | `modern-diamond-vector-shape.psd` | `GdFl` 的 `Dmnd` 类型，恢复为原生菱形渐变矢量形状 |

@@ -236,6 +236,20 @@ extension ImageEditorView {
                 .focusable(false)
                 .accessibilityIdentifier("image-editor-shape-stroke-dash")
             }
+
+            if viewModel.selectedShapeStrokeDashPreset != .solid {
+                Stepper(
+                    L10n.format(
+                        "imageEditor.properties.shapeStrokeDashOffsetValue",
+                        viewModel.selectedShapeStrokeDashOffset
+                    ),
+                    value: selectedShapeStrokeDashOffsetBinding,
+                    in: Double(ImageEditorShapeContent.minimumStrokeDashOffset)...Double(ImageEditorShapeContent.maximumStrokeDashOffset),
+                    step: 1
+                )
+                .focusable(false)
+                .accessibilityIdentifier("image-editor-shape-stroke-dash-offset")
+            }
         }
     }
 
@@ -721,6 +735,14 @@ extension ImageEditorView {
             viewModel.selectedShapeStrokeDashPreset
         } set: { preset in
             viewModel.setSelectedShapeStrokeDashPreset(preset)
+        }
+    }
+
+    private var selectedShapeStrokeDashOffsetBinding: Binding<Double> {
+        Binding {
+            viewModel.selectedShapeStrokeDashOffset
+        } set: { offset in
+            viewModel.setSelectedShapeStrokeDashOffset(offset)
         }
     }
 }

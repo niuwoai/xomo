@@ -274,6 +274,10 @@ extension ImageEditorViewModel {
         return pattern.isEmpty ? .solid : .custom
     }
 
+    var selectedShapeStrokeDashOffset: Double {
+        Double(document.selectedLayer?.shapeContent?.strokeDashOffset ?? 0)
+    }
+
     func setSelectedShapeFillColor(_ color: NSColor) {
         updateSelectedShapeProperties(fillColor: color)
     }
@@ -465,6 +469,10 @@ extension ImageEditorViewModel {
         updateSelectedShapeProperties(strokeDashPattern: preset.pattern)
     }
 
+    func setSelectedShapeStrokeDashOffset(_ offset: Double) {
+        updateSelectedShapeProperties(strokeDashOffset: offset)
+    }
+
     @discardableResult
     func updateSelectedShapeProperties(
         fillColor: NSColor? = nil,
@@ -480,6 +488,7 @@ extension ImageEditorViewModel {
         strokeJoin: ImageEditorStrokeJoin? = nil,
         strokeMiterLimit: Double? = nil,
         strokeDashPattern: [CGFloat]? = nil,
+        strokeDashOffset: Double? = nil,
         cornerRadius: Double? = nil,
         cornerRadii: ImageEditorRectangleCornerRadii? = nil,
         cornerSmoothing: Double? = nil
@@ -534,6 +543,17 @@ extension ImageEditorViewModel {
                 )
             }
             if let strokeDashPattern { content.strokeDashPattern = strokeDashPattern }
+            if let strokeDashOffset, strokeDashOffset.isFinite {
+                content.strokeDashOffset = CGFloat(
+                    max(
+                        Double(ImageEditorShapeContent.minimumStrokeDashOffset),
+                        min(
+                            Double(ImageEditorShapeContent.maximumStrokeDashOffset),
+                            strokeDashOffset
+                        )
+                    )
+                )
+            }
             if content.kind == .rectangle,
                let cornerRadius,
                cornerRadius.isFinite {
@@ -579,6 +599,7 @@ extension ImageEditorViewModel {
             && lhs.strokeJoin == rhs.strokeJoin
             && abs(lhs.strokeMiterLimit - rhs.strokeMiterLimit) <= 0.000_1
             && lhs.strokeDashPattern == rhs.strokeDashPattern
+            && abs(lhs.strokeDashOffset - rhs.strokeDashOffset) <= 0.000_1
             && abs(lhs.cornerRadius - rhs.cornerRadius) <= 0.000_1
             && lhs.cornerRadii == rhs.cornerRadii
             && abs(lhs.cornerSmoothing - rhs.cornerSmoothing) <= 0.000_1

@@ -170,17 +170,21 @@ struct ImageEditorProjectDocumentTests {
             strokeOpacity: 1,
             strokeJoin: .miter,
             strokeMiterLimit: 4,
+            strokeDashOffset: 5.5,
             pathPoints: [CGPoint(x: 0, y: 10), CGPoint(x: 10, y: 0), CGPoint(x: 20, y: 10)]
         )
         let encoded = try JSONEncoder().encode(ImageEditorProjectShapeContent(content: content))
         let restored = try JSONDecoder().decode(ImageEditorProjectShapeContent.self, from: encoded)
         #expect(restored.content.strokeMiterLimit == 4)
+        #expect(restored.content.strokeDashOffset == 5.5)
 
         var legacyObject = try #require(JSONSerialization.jsonObject(with: encoded) as? [String: Any])
         legacyObject.removeValue(forKey: "strokeMiterLimit")
+        legacyObject.removeValue(forKey: "strokeDashOffset")
         let legacyData = try JSONSerialization.data(withJSONObject: legacyObject)
         let legacy = try JSONDecoder().decode(ImageEditorProjectShapeContent.self, from: legacyData)
         #expect(legacy.content.strokeMiterLimit == ImageEditorShapeContent.defaultStrokeMiterLimit)
+        #expect(legacy.content.strokeDashOffset == 0)
     }
 
     @Test
@@ -351,7 +355,8 @@ struct ImageEditorProjectDocumentTests {
             strokeCap: .square,
             strokeJoin: .bevel,
             strokeMiterLimit: 4,
-            strokeDashPattern: [6, 3]
+            strokeDashPattern: [6, 3],
+            strokeDashOffset: 2.5
         )
         let shapeLayer = ImageEditorLayer.shape(
             name: "Badge",
@@ -487,6 +492,7 @@ struct ImageEditorProjectDocumentTests {
         #expect(restoredShapeContent.strokeJoin == .bevel)
         #expect(restoredShapeContent.strokeMiterLimit == 4)
         #expect(restoredShapeContent.strokeDashPattern == [6, 3])
+        #expect(restoredShapeContent.strokeDashOffset == 2.5)
 
         let restoredSmartObject = try #require(restoredViewModel.document.layers.first { $0.id == smartObjectLayer.id })
         let restoredSmartObjectContent = try #require(restoredSmartObject.smartObjectContent)

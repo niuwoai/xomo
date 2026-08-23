@@ -3482,6 +3482,8 @@ struct ImageEditorShapeContent {
     static let defaultStrokeMiterLimit: CGFloat = 10
     static let minimumStrokeMiterLimit: CGFloat = 1
     static let maximumStrokeMiterLimit: CGFloat = 1_000
+    static let minimumStrokeDashOffset: CGFloat = -2_048
+    static let maximumStrokeDashOffset: CGFloat = 2_048
 
     var kind: ImageEditorShapeKind
     var fillColor: NSColor
@@ -3496,6 +3498,7 @@ struct ImageEditorShapeContent {
     var strokeJoin: ImageEditorStrokeJoin = .round
     var strokeMiterLimit: CGFloat = Self.defaultStrokeMiterLimit
     var strokeDashPattern: [CGFloat] = []
+    var strokeDashOffset: CGFloat = 0
     var cornerRadius: CGFloat = 0
     var cornerRadii: ImageEditorRectangleCornerRadii? = nil
     var cornerSmoothing: CGFloat = 0
@@ -3526,6 +3529,13 @@ struct ImageEditorShapeContent {
         if content.strokeDashPattern.count < 2 {
             content.strokeDashPattern = []
         }
+        content.strokeDashOffset = max(
+            Self.minimumStrokeDashOffset,
+            min(
+                Self.maximumStrokeDashOffset,
+                strokeDashOffset.isFinite ? strokeDashOffset : 0
+            )
+        )
         if kind == .path {
             content.strokeWidth = max(Self.minimumStrokeWidth, min(Self.maximumStrokeWidth, strokeWidth))
         } else {
@@ -3640,7 +3650,11 @@ struct ImageEditorShapeContent {
                     strokePath.setLineDash(nil, count: 0, phase: 0)
                 } else {
                     normalized.strokeDashPattern.withUnsafeBufferPointer { pattern in
-                        strokePath.setLineDash(pattern.baseAddress, count: pattern.count, phase: 0)
+                        strokePath.setLineDash(
+                            pattern.baseAddress,
+                            count: pattern.count,
+                            phase: normalized.strokeDashOffset
+                        )
                     }
                 }
                 strokePath.lineWidth = normalized.strokeWidth

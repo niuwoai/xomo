@@ -1077,6 +1077,7 @@
 "imageEditor.properties.shapeStrokeDash.dot" = "点線";
 "imageEditor.properties.shapeStrokeDash.longDash" = "長い破線";
 "imageEditor.properties.shapeStrokeDash.custom" = "カスタム";
+"imageEditor.properties.shapeStrokeDashOffsetValue" = "破線オフセット %.1f px";
 "imageEditor.stackLayout.axis.horizontal" = "水平";
 "imageEditor.stackLayout.axis.vertical" = "垂直";
 "imageEditor.stackLayout.primary.start" = "先頭";

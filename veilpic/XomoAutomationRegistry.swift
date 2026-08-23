@@ -577,6 +577,7 @@ final class XomoAutomationRegistry {
             let strokeWidth = try optionalShapeStrokeWidth(arguments["strokeWidth"])
             let strokeMiterLimit = try optionalShapeStrokeMiterLimit(arguments["strokeMiterLimit"])
             let strokeDashPattern = try optionalShapeStrokeDashPattern(arguments["strokeDashPattern"])
+            let strokeDashOffset = try optionalShapeStrokeDashOffset(arguments["strokeDashOffset"])
             let width = try requiredNumber("width", in: arguments)
             let height = try requiredNumber("height", in: arguments)
             guard width > 3, height > 3 else {
@@ -607,7 +608,8 @@ final class XomoAutomationRegistry {
                 strokeCap: strokeCap,
                 strokeJoin: strokeJoin,
                 strokeMiterLimit: strokeMiterLimit,
-                strokeDashPattern: strokeDashPattern
+                strokeDashPattern: strokeDashPattern,
+                strokeDashOffset: strokeDashOffset
             )
             guard viewModel.document.layers.count == layerCountBeforeCreate + 1,
                   viewModel.document.selectedLayer?.shapeContent != nil
@@ -2617,6 +2619,7 @@ final class XomoAutomationRegistry {
             "strokeDashPattern": .array(content.strokeDashPattern.map {
                 .number(Double($0))
             }),
+            "strokeDashOffset": .number(Double(content.strokeDashOffset)),
             "cornerRadius": .number(content.cornerRadius),
             "cornerRadii": cornerRadiiJSON(content.effectiveCornerRadii),
             "cornerSmoothing": .number(content.cornerSmoothing),
@@ -2656,6 +2659,7 @@ final class XomoAutomationRegistry {
         let strokeWidth = try optionalShapeStrokeWidth(arguments["strokeWidth"])
         let strokeMiterLimit = try optionalShapeStrokeMiterLimit(arguments["strokeMiterLimit"])
         let strokeDashPattern = try optionalShapeStrokeDashPattern(arguments["strokeDashPattern"])
+        let strokeDashOffset = try optionalShapeStrokeDashOffset(arguments["strokeDashOffset"])
         let legacyOpacity = try optionalUnitInterval("opacity", in: arguments)
         let fillOpacity = try optionalUnitInterval("fillOpacity", in: arguments) ?? legacyOpacity
         let strokeOpacity = try optionalUnitInterval("strokeOpacity", in: arguments) ?? legacyOpacity
@@ -2691,6 +2695,7 @@ final class XomoAutomationRegistry {
             strokeJoin: strokeJoin,
             strokeMiterLimit: strokeMiterLimit,
             strokeDashPattern: strokeDashPattern,
+            strokeDashOffset: strokeDashOffset,
             cornerRadius: cornerRadius,
             cornerRadii: cornerRadii,
             cornerSmoothing: cornerSmoothing
@@ -2829,6 +2834,22 @@ final class XomoAutomationRegistry {
             }
             return CGFloat(length)
         }
+    }
+
+    private func optionalShapeStrokeDashOffset(
+        _ value: XomoJSONValue?
+    ) throws -> Double? {
+        guard let value else { return nil }
+        guard let offset = value.doubleValue,
+              offset.isFinite,
+              offset >= Double(ImageEditorShapeContent.minimumStrokeDashOffset),
+              offset <= Double(ImageEditorShapeContent.maximumStrokeDashOffset)
+        else {
+            throw XomoAutomationCallError.invalidArgument(
+                "strokeDashOffset must be a number from -2048 through 2048"
+            )
+        }
+        return offset
     }
 
     private func optionalShapeGradient(
@@ -7403,6 +7424,7 @@ private extension XomoAutomationRegistry {
                 "items": XomoAutomationSchema.number(description: "Dash or gap length in pixels"),
                 "maxItems": .number(16)
             ]),
+            "strokeDashOffset": XomoAutomationSchema.number(description: "Dash phase offset from -2048 through 2048 pixels"),
             "cornerRadius": shapeNonnegativeNumberSchema(description: "Rectangle-only uniform corner radius in pixels"),
             "cornerRadii": rectangleCornerRadiiSchema,
             "cornerSmoothing": shapeUnitIntervalSchema(description: "Rectangle-only editable superellipse smoothing")
@@ -7439,6 +7461,7 @@ private extension XomoAutomationRegistry {
                 "items": XomoAutomationSchema.number(description: "Dash or gap length in pixels"),
                 "maxItems": .number(16)
             ]),
+            "strokeDashOffset": XomoAutomationSchema.number(description: "Dash phase offset from -2048 through 2048 pixels"),
             "cornerRadius": shapeNonnegativeNumberSchema(description: "Uniform rectangle corner radius in pixels"),
             "cornerRadii": rectangleCornerRadiiSchema,
             "cornerSmoothing": shapeUnitIntervalSchema(description: "Editable superellipse smoothing")

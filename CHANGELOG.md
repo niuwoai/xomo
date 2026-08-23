@@ -1,5 +1,20 @@
 # Changelog
 
+## 2.12.0-rc1187 - 2026-08-23
+
+### Added
+
+- 矢量形状属性新增可编辑虚线偏移，可在不改变虚线长度组合的前提下移动描边节奏；中英日界面、工程保存与 Undo/Redo 同步支持。
+- `xomo.shape.create/get/update` 新增 `strokeDashOffset`，以 `-2048...2048 px` 有限数值契约创建、读取和批量更新形状。
+
+### Changed
+
+- PSD `strokeStyleLineDashOffset` 现在可从外部文件导入、参与原生描边渲染并在重新导出时保留；外部兼容夹具加入 `5.5 pt` 非零偏移，避免仅验证自家编码器。
+
+### Verification
+
+- 产品测试构建通过；渲染/属性事务/界面接线 3/3、工程 Codable 与旧格式回归 13/13、PSD 外部互操作 3/3、三语 1/1、MCP create/get/update 2/2，唯一专项合计 22/22；CLI/MCP 2/2、发布契约 7/7（21 项断言）、测试运行器契约、三语资源格式及差异检查通过。下一次周期完整编译、冒烟与 `/Applications` 覆盖门禁仍为 rc1200。
+
 ## 2.12.0-rc1186 - 2026-08-23
 
 ### Added

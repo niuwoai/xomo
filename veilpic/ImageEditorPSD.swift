@@ -1394,7 +1394,8 @@ enum ImageEditorPSDCodec {
                 green: Double(color.greenComponent),
                 blue: Double(color.blueComponent)
             ).normalized(),
-            dashPattern: content.strokeDashPattern
+            dashPattern: content.strokeDashPattern,
+            dashOffset: content.strokeDashOffset
         )
     }
 
@@ -2124,6 +2125,7 @@ enum ImageEditorPSDCodec {
                 let enabled = descriptor["strokeEnabled"]?.booleanValue ?? true
                 let fillEnabled = descriptor["fillEnabled"]?.booleanValue ?? true
                 let dashValues = descriptor["strokeStyleLineDashSet"]?.listValue ?? []
+                let dashOffset = descriptor["strokeStyleLineDashOffset"]?.numericValue ?? 0
                 let parsedDashPattern = dashValues.compactMap(\.numericValue)
                 let dashPattern: [CGFloat]
                 if parsedDashPattern.count == dashValues.count,
@@ -2134,7 +2136,7 @@ enum ImageEditorPSDCodec {
                 } else {
                     dashPattern = []
                 }
-                guard width.isFinite, opacity.isFinite, miterLimit.isFinite else { continue }
+                guard width.isFinite, opacity.isFinite, miterLimit.isFinite, dashOffset.isFinite else { continue }
                 return PSDVectorStrokeInfo(
                     width: CGFloat(max(1, min(96, width))),
                     opacity: enabled ? CGFloat(max(0, min(1, opacity))) : 0,
@@ -2144,7 +2146,8 @@ enum ImageEditorPSDCodec {
                     join: ImageEditorStrokeJoin(psdValue: descriptor["strokeStyleLineJoinType"]?.enumValue),
                     miterLimit: CGFloat(miterLimit),
                     color: descriptorColor(descriptor["strokeStyleContent"]),
-                    dashPattern: dashPattern
+                    dashPattern: dashPattern,
+                    dashOffset: CGFloat(dashOffset)
                 )
             } catch {
                 continue
@@ -2620,6 +2623,7 @@ enum ImageEditorPSDCodec {
         shape.strokeJoin = stroke.join
         shape.strokeMiterLimit = stroke.miterLimit
         shape.strokeDashPattern = stroke.dashPattern
+        shape.strokeDashOffset = stroke.dashOffset
         if let color = stroke.color { shape.strokeColor = color }
     }
 
@@ -2979,6 +2983,7 @@ private struct PSDExportVectorStroke {
     let miterLimit: Double
     let color: ImageEditorSolidColorFillContent
     let dashPattern: [CGFloat]
+    let dashOffset: CGFloat
 }
 
 private struct PSDExportText {
@@ -3115,6 +3120,7 @@ private struct PSDVectorStrokeInfo {
     let miterLimit: CGFloat
     let color: NSColor?
     let dashPattern: [CGFloat]
+    let dashOffset: CGFloat
 }
 
 private struct PSDParsedGradientFill {
@@ -3522,7 +3528,7 @@ private extension Data {
             descriptorItem(key: "strokeEnabled", type: "bool", payload: Data(boolean: true)),
             descriptorItem(key: "fillEnabled", type: "bool", payload: Data(boolean: stroke.fillEnabled)),
             descriptorItem(key: "strokeStyleLineWidth", type: "UntF", payload: Data(unit: "#Pxl", value: stroke.width)),
-            descriptorItem(key: "strokeStyleLineDashOffset", type: "UntF", payload: Data(unit: "#Pnt", value: 0)),
+            descriptorItem(key: "strokeStyleLineDashOffset", type: "UntF", payload: Data(unit: "#Pnt", value: Double(stroke.dashOffset))),
             descriptorItem(key: "strokeStyleLineAlignment", type: "enum", payload: Data.descriptorEnumPayload(enumType: "strokeStyleLineAlignment", value: stroke.position.psdValue)),
             descriptorItem(key: "strokeStyleLineCapType", type: "enum", payload: Data.descriptorEnumPayload(enumType: "strokeStyleLineCapType", value: stroke.cap.psdValue)),
             descriptorItem(key: "strokeStyleLineJoinType", type: "enum", payload: Data.descriptorEnumPayload(enumType: "strokeStyleLineJoinType", value: stroke.join.psdValue)),

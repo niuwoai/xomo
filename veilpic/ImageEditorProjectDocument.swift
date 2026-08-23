@@ -749,6 +749,7 @@ struct ImageEditorProjectShapeContent: Equatable, Codable {
     var strokeJoin: ImageEditorStrokeJoin = .round
     var strokeMiterLimit: CGFloat = ImageEditorShapeContent.defaultStrokeMiterLimit
     var strokeDashPattern: [CGFloat] = []
+    var strokeDashOffset: CGFloat = 0
     var cornerRadius: CGFloat?
     var cornerRadii: ImageEditorRectangleCornerRadii?
     var cornerSmoothing: CGFloat?
@@ -759,7 +760,7 @@ struct ImageEditorProjectShapeContent: Equatable, Codable {
 
     enum CodingKeys: String, CodingKey {
         case kind, fillColor, fillGradient, fillGradientCenter, fillOpacity
-        case strokeColor, strokeWidth, strokeOpacity, strokePosition, strokeCap, strokeJoin, strokeMiterLimit, strokeDashPattern
+        case strokeColor, strokeWidth, strokeOpacity, strokePosition, strokeCap, strokeJoin, strokeMiterLimit, strokeDashPattern, strokeDashOffset
         case cornerRadius, cornerRadii, cornerSmoothing, pathPoints, pathAnchors
         case pathSubpaths, isPathClosed
     }
@@ -780,6 +781,7 @@ struct ImageEditorProjectShapeContent: Equatable, Codable {
         strokeMiterLimit = try container.decodeIfPresent(CGFloat.self, forKey: .strokeMiterLimit)
             ?? ImageEditorShapeContent.defaultStrokeMiterLimit
         strokeDashPattern = try container.decodeIfPresent([CGFloat].self, forKey: .strokeDashPattern) ?? []
+        strokeDashOffset = try container.decodeIfPresent(CGFloat.self, forKey: .strokeDashOffset) ?? 0
         cornerRadius = try container.decodeIfPresent(CGFloat.self, forKey: .cornerRadius)
         cornerRadii = try container.decodeIfPresent(ImageEditorRectangleCornerRadii.self, forKey: .cornerRadii)
         cornerSmoothing = try container.decodeIfPresent(CGFloat.self, forKey: .cornerSmoothing)
@@ -803,6 +805,7 @@ struct ImageEditorProjectShapeContent: Equatable, Codable {
         strokeJoin = content.strokeJoin
         strokeMiterLimit = content.strokeMiterLimit
         strokeDashPattern = content.strokeDashPattern
+        strokeDashOffset = content.strokeDashOffset
         cornerRadius = content.cornerRadius
         cornerRadii = content.cornerRadii
         cornerSmoothing = content.cornerSmoothing
@@ -827,6 +830,7 @@ struct ImageEditorProjectShapeContent: Equatable, Codable {
             strokeJoin: strokeJoin,
             strokeMiterLimit: strokeMiterLimit,
             strokeDashPattern: strokeDashPattern,
+            strokeDashOffset: strokeDashOffset,
             cornerRadius: cornerRadius ?? 0,
             cornerRadii: cornerRadii,
             cornerSmoothing: cornerSmoothing ?? 0,

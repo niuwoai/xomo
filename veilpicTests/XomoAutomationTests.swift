@@ -6172,6 +6172,7 @@ struct XomoAutomationTests {
                 "strokeJoin": .string("miter"),
                 "strokeMiterLimit": .number(4),
                 "strokeDashPattern": .array([.number(8), .number(4)]),
+                "strokeDashOffset": .number(3.5),
                 "cornerRadius": .number(40),
                 "cornerSmoothing": .number(0.5)
             ]
@@ -6189,6 +6190,7 @@ struct XomoAutomationTests {
         #expect(createdResult["height"] == .number(40))
         #expect(createdResult["strokePosition"] == .string("outside"))
         #expect(createdResult["strokeDashPattern"] == .array([.number(8), .number(4)]))
+        #expect(createdResult["strokeDashOffset"] == .number(3.5))
         #expect(createdResult["historyCount"] == .number(Double(historyCountBeforeCreate + 1)))
         #expect(viewModel.document.selectedLayer?.shapeContent?.cornerRadius == 20)
         #expect(viewModel.document.selectedLayer?.shapeContent?.cornerSmoothing == 0.5)
@@ -6200,6 +6202,7 @@ struct XomoAutomationTests {
         #expect(viewModel.document.selectedLayer?.shapeContent?.strokeJoin == .miter)
         #expect(viewModel.document.selectedLayer?.shapeContent?.strokeMiterLimit == 4)
         #expect(viewModel.document.selectedLayer?.shapeContent?.strokeDashPattern == [8, 4])
+        #expect(viewModel.document.selectedLayer?.shapeContent?.strokeDashOffset == 3.5)
         #expect(viewModel.document.history.count == historyCountBeforeCreate + 1)
 
         let inspectResponse = registry.execute(request(
@@ -6221,6 +6224,7 @@ struct XomoAutomationTests {
         #expect(inspectedShape["strokeJoin"] == .string("miter"))
         #expect(inspectedShape["strokeMiterLimit"] == .number(4))
         #expect(inspectedShape["strokeDashPattern"] == .array([.number(8), .number(4)]))
+        #expect(inspectedShape["strokeDashOffset"] == .number(3.5))
 
         let historyCountBeforeUpdate = viewModel.document.history.count
         let updateResponse = registry.execute(request(
@@ -6231,7 +6235,8 @@ struct XomoAutomationTests {
                 "strokeColor": .object([
                     "red": .number(0), "green": .number(1), "blue": .number(0)
                 ]),
-                "strokeOpacity": .number(0.35)
+                "strokeOpacity": .number(0.35),
+                "strokeDashOffset": .number(-2.25)
             ]
         ))
         #expect(updateResponse.ok)
@@ -6241,6 +6246,7 @@ struct XomoAutomationTests {
         let unchangedFill = try #require(updated.fillColor.usingColorSpace(.deviceRGB))
         #expect(updated.cornerRadius == 6)
         #expect(updated.strokeOpacity == 0.35)
+        #expect(updated.strokeDashOffset == -2.25)
         #expect(updatedStroke.greenComponent > 0.99)
         #expect(unchangedFill.redComponent > 0.99)
         #expect(updated.fillOpacity == 0.6)
@@ -6260,6 +6266,14 @@ struct XomoAutomationTests {
         ))
         #expect(!invalidColorUpdate.ok)
         #expect(viewModel.document.selectedLayer?.shapeContent?.fillOpacity == 0.6)
+
+        let invalidDashOffsetUpdate = registry.execute(request(
+            operation: "call",
+            name: "xomo.shape.update",
+            arguments: ["strokeDashOffset": .number(2_049)]
+        ))
+        #expect(!invalidDashOffsetUpdate.ok)
+        #expect(viewModel.document.selectedLayer?.shapeContent?.strokeDashOffset == 3.5)
 
         let independentUpdate = registry.execute(request(
             operation: "call",
@@ -6509,6 +6523,7 @@ struct XomoAutomationTests {
         let cornerProperties = createProperties["cornerRadii"]?.objectValue?["properties"]?.objectValue
         #expect(cornerProperties?["topLeft"]?.objectValue?["minimum"] == .number(0))
         #expect(createProperties["strokeDashPattern"]?.objectValue?["type"] == .string("array"))
+        #expect(createProperties["strokeDashOffset"]?.objectValue?["type"] == .string("number"))
     }
 
     @Test func ellipseCreationRejectsRectangleOnlyCornerArgumentsAtomically() throws {
@@ -6950,6 +6965,10 @@ struct XomoAutomationTests {
         #expect(dashSchema["type"] == .string("array"))
         #expect(dashSchema["maxItems"] == .number(16))
         #expect(dashSchema["items"]?.objectValue?["type"] == .string("number"))
+        #expect(
+            updateTool["inputSchema"]?.objectValue?["properties"]?
+                .objectValue?["strokeDashOffset"]?.objectValue?["type"] == .string("number")
+        )
     }
 
     @Test func shapeMiterLimitAutomationUpdatesOnlyChangedShapesAndReportsCount() throws {

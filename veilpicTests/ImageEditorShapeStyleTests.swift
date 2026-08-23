@@ -1413,6 +1413,33 @@ struct ImageEditorShapeStyleTests {
         #expect(abs(edge.alphaComponent - 0.8) < 0.08)
     }
 
+    @Test func dashOffsetChangesRenderedPhaseAndNormalizesInvalidValues() throws {
+        let base = ImageEditorShapeContent(
+            kind: .rectangle,
+            fillColor: .clear,
+            fillOpacity: 0,
+            strokeColor: .black,
+            strokeWidth: 4,
+            strokeOpacity: 1,
+            strokeDashPattern: [8, 4]
+        )
+        var shifted = base
+        shifted.strokeDashOffset = 5.5
+
+        #expect(
+            base.renderedImage(size: CGSize(width: 80, height: 50)).tiffRepresentation
+                != shifted.renderedImage(size: CGSize(width: 80, height: 50)).tiffRepresentation
+        )
+        var invalid = shifted
+        invalid.strokeDashOffset = CGFloat.infinity
+        #expect(invalid.normalized(size: CGSize(width: 80, height: 50)).strokeDashOffset == 0)
+        invalid.strokeDashOffset = 4_096
+        #expect(
+            invalid.normalized(size: CGSize(width: 80, height: 50)).strokeDashOffset
+                == ImageEditorShapeContent.maximumStrokeDashOffset
+        )
+    }
+
     @Test func appearanceEditIsOneUndoableProjectPersistentChange() throws {
         let viewModel = makeViewModel()
         viewModel.drawShape(
@@ -1433,7 +1460,8 @@ struct ImageEditorShapeStyleTests {
             strokeCap: .square,
             strokeJoin: .bevel,
             strokeMiterLimit: 4,
-            strokeDashPattern: [12, 4]
+            strokeDashPattern: [12, 4],
+            strokeDashOffset: 5.5
         )
 
         let edited = try #require(viewModel.document.selectedLayer?.shapeContent)
@@ -1447,6 +1475,7 @@ struct ImageEditorShapeStyleTests {
         #expect(edited.strokeJoin == .bevel)
         #expect(edited.strokeMiterLimit == 4)
         #expect(edited.strokeDashPattern == [12, 4])
+        #expect(edited.strokeDashOffset == 5.5)
         #expect(viewModel.document.history.count == historyCount + 1)
 
         viewModel.undo()
@@ -1461,6 +1490,7 @@ struct ImageEditorShapeStyleTests {
         #expect(undone.strokeJoin == original.strokeJoin)
         #expect(undone.strokeMiterLimit == original.strokeMiterLimit)
         #expect(undone.strokeDashPattern == original.strokeDashPattern)
+        #expect(undone.strokeDashOffset == original.strokeDashOffset)
         viewModel.redo()
         let redone = try #require(viewModel.document.selectedLayer?.shapeContent)
         #expect(redone.fillColor.isEqual(edited.fillColor))
@@ -1473,6 +1503,7 @@ struct ImageEditorShapeStyleTests {
         #expect(redone.strokeJoin == edited.strokeJoin)
         #expect(redone.strokeMiterLimit == edited.strokeMiterLimit)
         #expect(redone.strokeDashPattern == edited.strokeDashPattern)
+        #expect(redone.strokeDashOffset == edited.strokeDashOffset)
 
         let projectData = try viewModel.projectData()
         let reopened = makeViewModel()
@@ -1488,6 +1519,7 @@ struct ImageEditorShapeStyleTests {
         #expect(restored.strokeJoin == edited.strokeJoin)
         #expect(restored.strokeMiterLimit == edited.strokeMiterLimit)
         #expect(restored.strokeDashPattern == edited.strokeDashPattern)
+        #expect(restored.strokeDashOffset == edited.strokeDashOffset)
     }
 
     @Test func subpixelStrokeWidthEditsNormalizeAndPersist() throws {
@@ -1626,13 +1658,16 @@ struct ImageEditorShapeStyleTests {
             "image-editor-shape-stroke-cap",
             "image-editor-shape-stroke-join",
             "image-editor-shape-stroke-miter-limit",
-            "image-editor-shape-stroke-dash"
+            "image-editor-shape-stroke-dash",
+            "image-editor-shape-stroke-dash-offset"
         ] {
             #expect(source.contains(identifier))
         }
         #expect(source.components(separatedBy: ".focusable(false)").count - 1 >= 10)
         #expect(source.contains("if viewModel.selectedShapeStrokeJoin == .miter"))
         #expect(source.contains("viewModel.setSelectedShapeStrokeMiterLimit(limit)"))
+        #expect(source.contains("selectedShapeStrokeDashOffsetBinding"))
+        #expect(source.contains("imageEditor.properties.shapeStrokeDashOffsetValue"))
         #expect(source.contains("ImageEditorGradientStopTrackGeometry.logicalPosition"))
         #expect(source.contains("ImageEditorGradientStopTrackGeometry.midpoint"))
         #expect(source.contains("SpatialTapGesture("))

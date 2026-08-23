@@ -71,6 +71,27 @@ struct LocalizationResourceTests {
         }
     }
 
+    @Test func shapeDashOffsetIsLocalizedInEverySupportedLanguage() throws {
+        let paths = try Self.repositoryPaths()
+        let expectedValues = [
+            "zh-Hans": "虚线偏移 %.1f px",
+            "en": "Dash offset %.1f px",
+            "ja": "破線オフセット %.1f px"
+        ]
+
+        for (localizationID, expectedValue) in expectedValues {
+            let strings = try Self.stringTable(
+                tableName: "Localizable",
+                localizationID: localizationID,
+                appDirectory: paths.appDirectory
+            )
+            #expect(
+                strings["imageEditor.properties.shapeStrokeDashOffsetValue"]
+                    == expectedValue
+            )
+        }
+    }
+
     @Test func currentAndBelowColorSamplingSourceIsLocalizedInEverySupportedLanguage() throws {
         let paths = try Self.repositoryPaths()
         let expectedValues = [

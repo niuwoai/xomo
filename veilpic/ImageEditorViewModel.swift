@@ -7798,7 +7798,8 @@ final class ImageEditorViewModel: ObservableObject {
         strokeCap: ImageEditorStrokeCap? = nil,
         strokeJoin: ImageEditorStrokeJoin? = nil,
         strokeMiterLimit: Double? = nil,
-        strokeDashPattern: [CGFloat]? = nil
+        strokeDashPattern: [CGFloat]? = nil,
+        strokeDashOffset: Double? = nil
     ) {
         let rect = CGRect(
             x: min(start.x, end.x),
@@ -7824,7 +7825,8 @@ final class ImageEditorViewModel: ObservableObject {
             strokeCap: strokeCap,
             strokeJoin: strokeJoin,
             strokeMiterLimit: strokeMiterLimit,
-            strokeDashPattern: strokeDashPattern
+            strokeDashPattern: strokeDashPattern,
+            strokeDashOffset: strokeDashOffset
         )
     }
 
@@ -10915,7 +10917,8 @@ final class ImageEditorViewModel: ObservableObject {
         strokeCap: ImageEditorStrokeCap?,
         strokeJoin: ImageEditorStrokeJoin?,
         strokeMiterLimit: Double?,
-        strokeDashPattern: [CGFloat]?
+        strokeDashPattern: [CGFloat]?,
+        strokeDashOffset: Double?
     ) {
         let requestedCornerRadius = cornerRadius?.isFinite == true ? CGFloat(cornerRadius ?? 0) : 0
         let requestedCornerSmoothing = cornerSmoothing?.isFinite == true
@@ -10942,6 +10945,11 @@ final class ImageEditorViewModel: ObservableObject {
                     : Double(ImageEditorShapeContent.defaultStrokeMiterLimit)
             ),
             strokeDashPattern: strokeDashPattern ?? [],
+            strokeDashOffset: CGFloat(
+                strokeDashOffset?.isFinite == true
+                    ? strokeDashOffset ?? 0
+                    : 0
+            ),
             cornerRadius: kind == .rectangle
                 ? min(maximumCornerRadius, max(0, requestedCornerRadius))
                 : 0,
