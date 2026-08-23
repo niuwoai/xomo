@@ -1,5 +1,18 @@
 # Changelog
 
+## 2.12.0-rc1200 - 2026-08-24
+
+### Changed
+
+- 执行第 40 个小版本周期门禁，冻结并整体复验 rc1161–rc1199 的经典画笔资源操作、Clone Source 工作流、路径与形状编辑、PSD/Figma 互操作以及可编辑 SVG 交付链路；本版本不扩大文档模型或像素算法。
+- 版本、构建号、App/CLI、Xcode 目标与发布契约统一提升到 rc1200/1200，为 Universal Release、真实界面冒烟和 `/Applications` 覆盖安装建立可核验基线。
+
+### Verification
+
+- 唯一完整测试构建通过；首轮全量测试以 117/118 个套件暴露并修正一条已过时的画布生命周期源码契约，修正后的 Scope 套件 187/187 通过，合并结果为 118/118 个套件、2519/2519 项测试通过；Canvas Cursor 全套 96/96、CLI/MCP 2/2、发布契约 7/7（21 项断言）、隔离测试运行器契约与差异检查通过。
+- Universal Release App 与 CLI 均为 `x86_64 + arm64`；App 使用 Developer ID、Hardened Runtime 并通过严格签名验证。该本地门禁明确跳过公证、上传、Appcast、GitHub Release 与下游环境更新，不将未执行的外部发布阶段冒充成功。
+- 临时 Release App 完成画笔选择、工具/组件切换、组件卡片插入及可编辑组/文字/形状图层检查；安装态完成启动、组件库切换和正常退出。未生成新的 Xomo 崩溃报告，已覆盖安装 `/Applications/Xomo.app`，原 rc1160 可从 `/private/tmp/Xomo-rc1160-before-rc1200.app` 恢复；下一次周期完整门禁为 rc1240。
+
 ## 2.12.0-rc1199 - 2026-08-24
 
 ### Added

@@ -1,6 +1,8 @@
 # Xomo 经典 Photoshop 能力路线图
 
-> 最后更新：2026-08-24 ｜ 当前版本：v2.12.0-rc1199 ｜ 目标：以经典 Photoshop 能力作为现代混合编辑器的可靠像素与图层底座
+> 最后更新：2026-08-24 ｜ 当前版本：v2.12.0-rc1200 ｜ 目标：以经典 Photoshop 能力作为现代混合编辑器的可靠像素与图层底座
+
+- `v2.12.0-rc1200`：完成周期完整质量门禁，冻结并整体复验 rc1161–rc1199 的经典画笔资源、Clone Source、路径/形状编辑、PSD/Figma 互操作与可编辑 SVG 交付链路；不扩大文档模型或像素算法。唯一完整测试构建通过，修正一条由门禁发现的过时生命周期测试契约后，最终 118/118 个套件、2519/2519 项测试、Canvas Cursor 96/96、CLI/MCP 2/2、发布与运行器契约全部通过。Universal App/CLI 均为 `x86_64 + arm64`，Developer ID/Hardened Runtime 严格签名有效；临时产物与安装版真实界面冒烟、组件插入、正常退出和崩溃报告检查通过，已覆盖 `/Applications/Xomo.app`。本地门禁明确跳过外部公证、上传、Appcast 与 GitHub Release；下一次周期完整门禁为 rc1240。
 
 - `v2.12.0-rc1199`：可编辑 SVG 支持 Normal 隔离组，以标准组透明度和 isolation 一次合成重叠子层；Normal/Pass Through 任意嵌套时，透明度在叶子、当前隔离组与外层隔离组之间准确分配，非标准组混合及蒙版/效果继续诚实拒绝。产品测试构建、隔离组与保护边界专项 2/2、SVG 邻接回归 12/12、CLI/MCP 2/2、发布与运行器契约及差异检查通过；rc1200 将执行周期完整编译、全量测试、真实冒烟与 `/Applications` 覆盖。
 
@@ -1743,7 +1745,7 @@
 
 - 每个小版本：版本号、CHANGELOG、产品概览、直接相关单元测试和独立 Git commit。
 - 每个小版本只运行与本次改动直接相关的测试；不把单个小版本的 Debug 构建误当作完整发布门禁。
-- 每 40 个小版本：通用 Release 构建、阶段关键测试、冒烟测试和真实界面操作；构建期间可以继续开发，完成后回收构建结果。门禁通过后可直接覆盖安装 `/Applications/Xomo.app`。rc1160 已完成 2426/2426 全量测试、Universal Release、临时副本与安装版真实界面冒烟，并覆盖安装 `/Applications/Xomo.app`。Developer ID 私钥/CMS 链仍在 Sparkle 签名阶段报 `errSecInternalComponent`，因此外部公证与发布继续暂停；下一次周期完整门禁为 rc1200。
+- 每 40 个小版本：通用 Release 构建、阶段关键测试、冒烟测试和真实界面操作；构建期间可以继续开发，完成后回收构建结果。门禁通过后可直接覆盖安装 `/Applications/Xomo.app`。rc1200 已完成 118/118 个套件、2519/2519 项全量测试、Universal Release、临时副本与安装版真实界面冒烟，并覆盖安装 `/Applications/Xomo.app`；原 rc1160 保留于 `/private/tmp/Xomo-rc1160-before-rc1200.app`。本轮只授权本地安装，公证、上传、Appcast、GitHub Release 与下游环境更新均明确跳过；下一次周期完整门禁为 rc1240。
 - 修复只递增当前正式版本下的 `rc`；新增能力开启新的功能版本。
 - 远端已有标签不覆盖、不强推；下一个版本使用新的唯一版本号。
 

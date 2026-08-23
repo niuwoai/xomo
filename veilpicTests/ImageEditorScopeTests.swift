@@ -3177,7 +3177,16 @@ struct ImageEditorScopeTests {
         #expect(beginSource.contains("isMovingPathAnchor = false"))
 
         #expect(viewSource.contains("onCanvasPointerSequenceBegan: {\n                            beginCanvasPointerSequence()"))
-        #expect(viewSource.contains("onCanvasLifecycleInterrupted: { _ in\n                            objectSelectionBoxDrag = nil\n                            cancelPathAnchorDragForCanvasLifecycle()"))
+        let lifecycleStart = try #require(
+            viewSource.range(of: "onCanvasLifecycleInterrupted: { _ in")
+        )
+        let lifecycleEnd = try #require(
+            viewSource[lifecycleStart.upperBound...].range(of: "onZoom:")
+        )
+        let lifecycleSource = viewSource[lifecycleStart.lowerBound..<lifecycleEnd.lowerBound]
+        #expect(lifecycleSource.contains("objectSelectionBoxDrag = nil"))
+        #expect(lifecycleSource.contains("eyedropperSamplingRing = nil"))
+        #expect(lifecycleSource.contains("cancelPathAnchorDragForCanvasLifecycle()"))
         let disappearStart = try #require(viewSource.range(of: ".onDisappear {"))
         let disappearEnd = try #require(
             viewSource[disappearStart.upperBound...].range(of: ".onAppear {")
