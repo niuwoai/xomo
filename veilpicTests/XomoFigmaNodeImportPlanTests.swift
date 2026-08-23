@@ -2874,6 +2874,20 @@ struct XomoFigmaNodeImportPlanTests {
         #expect(XomoSVGPathParser.parse("M 0 0 C 1 2") == nil)
     }
 
+    @Test func svgParserKeepsClosingCurveHandlesWithoutADuplicateStartAnchor() throws {
+        let result = try #require(XomoSVGPathParser.parse(
+            "M 0 0 L 20 0 L 20 20 C 10 30 -10 10 0 0 Z"
+        ))
+        let anchors = try #require(result.subpaths.first)
+
+        #expect(result.isClosed)
+        #expect(anchors.count == 3)
+        #expect(anchors.first?.point == .zero)
+        #expect(anchors.first?.inControl == CGPoint(x: -10, y: 10))
+        #expect(anchors.last?.point == CGPoint(x: 20, y: 20))
+        #expect(anchors.last?.outControl == CGPoint(x: 10, y: 30))
+    }
+
     @Test func supportedFigmaShadowsBecomeEditableLayerEffects() throws {
         let response = try JSONDecoder().decode(
             XomoFigmaNodeResponse.self,

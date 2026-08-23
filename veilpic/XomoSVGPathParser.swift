@@ -295,12 +295,23 @@ nonisolated private struct XomoSVGPathTokenParser {
 
     private mutating func consumeClose() -> Bool {
         guard !currentAnchors.isEmpty else { return false }
+        foldExplicitClosingAnchorIntoStart()
         isCurrentSubpathClosed = true
         currentPoint = subpathStart
         resetControls()
         previousCommand = "Z"
         command = nil
         return true
+    }
+
+    private mutating func foldExplicitClosingAnchorIntoStart() {
+        guard currentAnchors.count >= 4,
+              let closingAnchor = currentAnchors.last,
+              closingAnchor.point == subpathStart,
+              closingAnchor.outControl == nil
+        else { return }
+        currentAnchors[0].inControl = closingAnchor.inControl
+        currentAnchors.removeLast()
     }
 
     private mutating func appendLine(to point: CGPoint) {

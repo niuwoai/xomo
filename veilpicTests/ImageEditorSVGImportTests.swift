@@ -496,13 +496,17 @@ struct ImageEditorSVGImportTests {
         let anchors = [
             ImageEditorPathAnchor(
                 point: CGPoint(x: 0, y: 20),
+                inControl: CGPoint(x: 0, y: 40),
                 outControl: CGPoint(x: 20, y: 0)
             ),
             ImageEditorPathAnchor(
                 point: CGPoint(x: 60, y: 20),
                 inControl: CGPoint(x: 40, y: 0)
             ),
-            ImageEditorPathAnchor(point: CGPoint(x: 30, y: 60))
+            ImageEditorPathAnchor(
+                point: CGPoint(x: 30, y: 60),
+                outControl: CGPoint(x: 10, y: 60)
+            )
         ]
         var layer = ImageEditorLayer.shape(
             name: "Roundtrip Path",
@@ -541,6 +545,14 @@ struct ImageEditorSVGImportTests {
         #expect(abs(restored.fillOpacity - 0.35) < 0.001)
         #expect(abs(restored.strokeOpacity - 0.3) < 0.001)
         #expect(abs(fill.blueComponent - 0.8) < 0.01)
+        let restoredFirst = try #require(restored.editablePathAnchors.first)
+        let restoredLast = try #require(restored.editablePathAnchors.last)
+        let restoredIncoming = try #require(restoredFirst.inControl)
+        let restoredOutgoing = try #require(restoredLast.outControl)
+        #expect(abs(restoredIncoming.x - restoredFirst.point.x) < 0.001)
+        #expect(abs((restoredIncoming.y - restoredFirst.point.y) - 20) < 0.001)
+        #expect(abs((restoredOutgoing.x - restoredLast.point.x) + 20) < 0.001)
+        #expect(abs(restoredOutgoing.y - restoredLast.point.y) < 0.001)
     }
 
     @Test func exportedPlainRectangleCanReturnAsNativeRectangle() throws {

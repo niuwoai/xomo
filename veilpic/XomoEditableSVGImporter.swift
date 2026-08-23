@@ -562,7 +562,18 @@ enum XomoEditableSVGImporter {
                 path.addLine(to: current.point)
             }
         }
-        if isClosed { path.closeSubpath() }
+        if isClosed {
+            if anchors.count > 2,
+               let last = anchors.last,
+               last.outControl != nil || first.inControl != nil {
+                path.addCurve(
+                    to: first.point,
+                    control1: last.outControl ?? last.point,
+                    control2: first.inControl ?? first.point
+                )
+            }
+            path.closeSubpath()
+        }
         return path
     }
 
