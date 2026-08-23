@@ -5609,6 +5609,13 @@ final class XomoAutomationRegistry {
             viewModel.resetActiveCloneSourceTransform()
             return
         }
+        if action == "clearCloneSource" {
+            if let sourceSlotIndex = try validatedCloneSourceSlotIndex() {
+                _ = viewModel.selectCloneSourceSlot(sourceSlotIndex)
+            }
+            viewModel.clearActiveCloneSource()
+            return
+        }
         if let size = arguments["size"]?.doubleValue { viewModel.brushSize = size }
         let usesStrength = ["blur", "sharpen", "smudge"].contains(action)
         let usesExposure = ["dodge", "burn"].contains(action)
@@ -7318,7 +7325,7 @@ private extension XomoAutomationRegistry {
         ], required: ["points"]),
         tool("xomo.paint.gradient", "Paint a gradient between exactly two canvas points.", ["points": pointsSchema], required: ["points"]),
         tool("xomo.paint.special", "Use clone, tone, sponge, blur, sharpen, smudge, healing, red-eye, or paint-bucket tools.", [
-            "action": XomoAutomationSchema.string(description: "Paint action", values: ["setCloneSource", "resetCloneSourceTransform", "cloneStamp", "setHealingSource", "healing", "patch", "dodge", "burn", "sponge", "blur", "sharpen", "smudge", "redEye", "paintBucket"]),
+            "action": XomoAutomationSchema.string(description: "Paint action", values: ["setCloneSource", "clearCloneSource", "resetCloneSourceTransform", "cloneStamp", "setHealingSource", "healing", "patch", "dodge", "burn", "sponge", "blur", "sharpen", "smudge", "redEye", "paintBucket"]),
             "points": pointsSchema,
             "x": XomoAutomationSchema.number(description: "Canvas x coordinate for point actions"),
             "y": XomoAutomationSchema.number(description: "Canvas y coordinate for point actions"),

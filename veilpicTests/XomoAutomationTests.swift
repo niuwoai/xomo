@@ -121,6 +121,11 @@ struct XomoAutomationTests {
         )
         #expect(
             specialPaintTool["inputSchema"]?.objectValue?["properties"]?
+                .objectValue?["action"]?.objectValue?["enum"]?.arrayValue?
+                .contains(.string("clearCloneSource")) == true
+        )
+        #expect(
+            specialPaintTool["inputSchema"]?.objectValue?["properties"]?
                 .objectValue?["ignoresAdjustmentLayers"]?.objectValue?["type"]
                 == .string("boolean")
         )
@@ -9200,6 +9205,92 @@ struct XomoAutomationTests {
         #expect(viewModel.activeCloneSourceSlotIndex == 0)
         #expect(viewModel.cloneSourceHorizontalScalePercent == 225)
         #expect(viewModel.cloneSourceFlipsHorizontally)
+        #expect(viewModel.document.history.count == historyCount)
+    }
+
+    @Test func registryClearsOnlyTheRequestedCloneSource() {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        let historyCount = viewModel.document.history.count
+
+        #expect(registry.execute(request(
+            operation: "call",
+            name: "xomo.paint.special",
+            arguments: [
+                "action": .string("setCloneSource"),
+                "sourceSlot": .number(1),
+                "x": .number(4),
+                "y": .number(5),
+                "scalePercent": .number(225)
+            ]
+        )).ok)
+        #expect(registry.execute(request(
+            operation: "call",
+            name: "xomo.paint.special",
+            arguments: [
+                "action": .string("setCloneSource"),
+                "sourceSlot": .number(3),
+                "x": .number(12),
+                "y": .number(18),
+                "scaleXPercent": .number(175),
+                "scaleYPercent": .number(60),
+                "scaleLinked": .bool(false),
+                "rotationDegrees": .number(37),
+                "flipHorizontal": .bool(true),
+                "flipVertical": .bool(true)
+            ]
+        )).ok)
+        viewModel.cloneStampAlignedCanvasOffset = CGSize(width: -8, height: 3)
+
+        let response = registry.execute(request(
+            operation: "call",
+            name: "xomo.paint.special",
+            arguments: [
+                "action": .string("clearCloneSource"),
+                "sourceSlot": .number(3)
+            ]
+        ))
+
+        #expect(response.ok)
+        #expect(viewModel.activeCloneSourceSlotIndex == 2)
+        #expect(viewModel.cloneSourcePoint == nil)
+        #expect(viewModel.cloneStampAlignedCanvasOffset == nil)
+        #expect(viewModel.cloneSourceHorizontalScalePercent == 175)
+        #expect(viewModel.cloneSourceVerticalScalePercent == 60)
+        #expect(!viewModel.cloneSourceScalesLinked)
+        #expect(viewModel.cloneSourceRotationDegrees == 37)
+        #expect(viewModel.cloneSourceFlipsHorizontally)
+        #expect(viewModel.cloneSourceFlipsVertically)
+        #expect(viewModel.document.history.count == historyCount)
+
+        #expect(registry.execute(request(
+            operation: "call",
+            name: "xomo.paint.special",
+            arguments: [
+                "action": .string("clearCloneSource"),
+                "sourceSlot": .number(3)
+            ]
+        )).ok)
+        #expect(viewModel.document.history.count == historyCount)
+
+        #expect(viewModel.selectCloneSourceSlot(0))
+        #expect(viewModel.cloneSourcePoint == CGPoint(x: 4, y: 5))
+        #expect(viewModel.cloneSourceHorizontalScalePercent == 225)
+        #expect(viewModel.cloneSourceVerticalScalePercent == 225)
+
+        let invalid = registry.execute(request(
+            operation: "call",
+            name: "xomo.paint.special",
+            arguments: [
+                "action": .string("clearCloneSource"),
+                "sourceSlot": .number(6)
+            ]
+        ))
+        #expect(!invalid.ok)
+        #expect(viewModel.activeCloneSourceSlotIndex == 0)
+        #expect(viewModel.cloneSourcePoint == CGPoint(x: 4, y: 5))
+        #expect(viewModel.cloneSourceHorizontalScalePercent == 225)
         #expect(viewModel.document.history.count == historyCount)
     }
 

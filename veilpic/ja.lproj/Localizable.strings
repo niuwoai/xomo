@@ -3475,6 +3475,7 @@
 "imageEditor.option.cloneSourceFlipHorizontal" = "左右反転";
 "imageEditor.option.cloneSourceFlipVertical" = "上下反転";
 "imageEditor.action.cloneSourceResetTransform" = "ソース変形をリセット";
+"imageEditor.action.cloneSourceClear" = "クローンソースを消去";
 "imageEditor.option.healingMode" = "修復モード";
 "imageEditor.healingMode.source" = "サンプル";
 "imageEditor.healingMode.spot" = "スポット";

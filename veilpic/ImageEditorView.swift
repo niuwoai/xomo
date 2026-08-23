@@ -1440,6 +1440,21 @@ struct ImageEditorView: View {
                 .accessibilityLabel(L10n.text("imageEditor.action.cloneSourceResetTransform"))
                 .accessibilityIdentifier("image-editor-clone-source-reset-transform")
 
+                Button {
+                    viewModel.clearActiveCloneSource()
+                } label: {
+                    Image(systemName: "xmark.circle")
+                        .font(.system(size: 11, weight: .semibold))
+                }
+                .buttonStyle(EditorIconButtonStyle(isSelected: false))
+                .frame(width: 28, height: 28)
+                .disabled(!viewModel.canClearCloneSource)
+                .focusable(false)
+                .xomoFocusEffectDisabled()
+                .help(L10n.text("imageEditor.action.cloneSourceClear"))
+                .accessibilityLabel(L10n.text("imageEditor.action.cloneSourceClear"))
+                .accessibilityIdentifier("image-editor-clone-source-clear")
+
                 sampledBrushOptions(
                     isAligned: $viewModel.isCloneStampAligned,
                     sampleSource: $viewModel.cloneStampSampleSource,

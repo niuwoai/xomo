@@ -262,6 +262,10 @@ final class ImageEditorViewModel: ObservableObject {
     var canResetCloneSourceTransform: Bool {
         !cloneSourceSlots[activeCloneSourceSlotIndex].hasIdentityTransform
     }
+
+    var canClearCloneSource: Bool {
+        cloneSourcePoint != nil
+    }
     @Published var isCloneStampAligned = true {
         didSet {
             guard isCloneStampAligned != oldValue else { return }
@@ -7162,6 +7166,13 @@ final class ImageEditorViewModel: ObservableObject {
     func cloneSourceSlotIsPopulated(_ index: Int) -> Bool {
         guard cloneSourceSlots.indices.contains(index) else { return false }
         return cloneSourceSlots[index].sourcePoint != nil
+    }
+
+    @discardableResult
+    func clearActiveCloneSource() -> Bool {
+        guard canClearCloneSource else { return false }
+        setCloneSource(at: nil)
+        return true
     }
 
     func setCloneSourceFlipsHorizontally(_ flipsHorizontally: Bool) {

@@ -3475,6 +3475,7 @@
 "imageEditor.option.cloneSourceFlipHorizontal" = "Flip H";
 "imageEditor.option.cloneSourceFlipVertical" = "Flip V";
 "imageEditor.action.cloneSourceResetTransform" = "Reset Source Transform";
+"imageEditor.action.cloneSourceClear" = "Clear Clone Source";
 "imageEditor.option.healingMode" = "Healing Mode";
 "imageEditor.healingMode.source" = "Source";
 "imageEditor.healingMode.spot" = "Spot";

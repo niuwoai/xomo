@@ -133,6 +133,42 @@ struct ImageEditorCloneStampSamplingTests {
         #expect(viewModel.document.history.count == historyCount)
     }
 
+    @Test func clearingActiveCloneSourcePreservesItsTransformAndOtherSlots() {
+        let viewModel = patternedCurrentLayerViewModel()
+        let historyCount = viewModel.document.history.count
+
+        viewModel.setCloneSource(at: CGPoint(x: 10, y: 15))
+        viewModel.setCloneSourceScalePercent(225)
+        #expect(viewModel.selectCloneSourceSlot(3))
+        viewModel.setCloneSource(at: CGPoint(x: 30, y: 15))
+        viewModel.setCloneSourceScalesLinked(false)
+        viewModel.setCloneSourceHorizontalScalePercent(175)
+        viewModel.setCloneSourceVerticalScalePercent(60)
+        viewModel.setCloneSourceRotationDegrees(37)
+        viewModel.setCloneSourceFlipsHorizontally(true)
+        viewModel.setCloneSourceFlipsVertically(true)
+        viewModel.cloneStampAlignedCanvasOffset = CGSize(width: -8, height: 3)
+
+        #expect(viewModel.canClearCloneSource)
+        #expect(viewModel.clearActiveCloneSource())
+        #expect(!viewModel.canClearCloneSource)
+        #expect(viewModel.cloneSourcePoint == nil)
+        #expect(viewModel.cloneStampAlignedCanvasOffset == nil)
+        #expect(viewModel.cloneSourceHorizontalScalePercent == 175)
+        #expect(viewModel.cloneSourceVerticalScalePercent == 60)
+        #expect(!viewModel.cloneSourceScalesLinked)
+        #expect(viewModel.cloneSourceRotationDegrees == 37)
+        #expect(viewModel.cloneSourceFlipsHorizontally)
+        #expect(viewModel.cloneSourceFlipsVertically)
+        #expect(!viewModel.clearActiveCloneSource())
+
+        #expect(viewModel.selectCloneSourceSlot(0))
+        #expect(viewModel.cloneSourcePoint == CGPoint(x: 10, y: 15))
+        #expect(viewModel.cloneSourceHorizontalScalePercent == 225)
+        #expect(viewModel.cloneSourceVerticalScalePercent == 225)
+        #expect(viewModel.document.history.count == historyCount)
+    }
+
     @Test func resettingActiveCloneTransformPreservesSourceAlignmentAndOtherSlots() throws {
         let viewModel = patternedCurrentLayerViewModel()
         viewModel.setCloneSourceScalePercent(200)
