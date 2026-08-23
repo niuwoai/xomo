@@ -9,6 +9,12 @@ struct XomoEditableSVGImport {
 /// Imports one safely representable SVG geometry node as a native editable shape.
 enum XomoEditableSVGImporter {
     static let maximumByteCount = 2 * 1_024 * 1_024
+    private static let supportedInlineStyleProperties = Set([
+        "color", "opacity", "fill", "fill-opacity", "fill-rule",
+        "stroke", "stroke-opacity", "stroke-width", "stroke-linecap",
+        "stroke-linejoin", "stroke-miterlimit", "stroke-dasharray",
+        "stroke-dashoffset"
+    ])
 
     static func parse(_ data: Data) -> XomoEditableSVGImport? {
         guard !data.isEmpty,
@@ -153,7 +159,7 @@ enum XomoEditableSVGImporter {
         let normalized = source.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
         guard normalized == "currentcolor" else { return paint(source) }
         for element in lineage.reversed() {
-            guard let colorSource = element.attribute(forName: "color")?.stringValue else { continue }
+            guard let colorSource = specifiedPresentationValue("color", on: element) else { continue }
             let normalizedColor = colorSource
                 .trimmingCharacters(in: .whitespacesAndNewlines)
                 .lowercased()
@@ -725,18 +731,19 @@ enum XomoEditableSVGImporter {
 
     private static func hasUnsupportedPresentation(_ lineage: [XMLElement]) -> Bool {
         let unsupportedAttributes = [
-            "style", "class", "transform", "clip-path", "mask", "filter",
+            "class", "transform", "clip-path", "mask", "filter",
             "marker", "marker-start", "marker-mid", "marker-end", "vector-effect",
             "paint-order", "display", "visibility"
         ]
         return lineage.contains { element in
             unsupportedAttributes.contains { element.attribute(forName: $0) != nil }
+                || inlineStyleDeclarations(on: element) == nil
         }
     }
 
     private static func inheritedAttribute(_ name: String, in lineage: [XMLElement]) -> String? {
         for element in lineage.reversed() {
-            guard let value = element.attribute(forName: name)?.stringValue else { continue }
+            guard let value = specifiedPresentationValue(name, on: element) else { continue }
             if value.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() == "inherit" {
                 continue
             }
@@ -753,9 +760,39 @@ enum XomoEditableSVGImporter {
     private static func multipliedOpacity(_ name: String, in lineage: [XMLElement]) -> CGFloat? {
         var result: CGFloat = 1
         for element in lineage {
-            guard let raw = element.attribute(forName: name)?.stringValue else { continue }
+            guard let raw = specifiedPresentationValue(name, on: element) else { continue }
             guard let value = unitInterval(raw) else { return nil }
             result *= value
+        }
+        return result
+    }
+
+    private static func specifiedPresentationValue(_ name: String, on element: XMLElement) -> String? {
+        if element.attribute(forName: "style") != nil,
+           let declarations = inlineStyleDeclarations(on: element),
+           let value = declarations[name] {
+            return value
+        }
+        return element.attribute(forName: name)?.stringValue
+    }
+
+    private static func inlineStyleDeclarations(on element: XMLElement) -> [String: String]? {
+        guard let source = element.attribute(forName: "style")?.stringValue else { return [:] }
+        var result: [String: String] = [:]
+        for rawDeclaration in source.split(separator: ";", omittingEmptySubsequences: false) {
+            let declaration = rawDeclaration.trimmingCharacters(in: .whitespacesAndNewlines)
+            if declaration.isEmpty { continue }
+            guard let separator = declaration.firstIndex(of: ":") else { return nil }
+            let name = declaration[..<separator]
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+                .lowercased()
+            let value = declaration[declaration.index(after: separator)...]
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+            guard supportedInlineStyleProperties.contains(name),
+                  !value.isEmpty,
+                  !value.localizedCaseInsensitiveContains("!important")
+            else { return nil }
+            result[name] = value
         }
         return result
     }

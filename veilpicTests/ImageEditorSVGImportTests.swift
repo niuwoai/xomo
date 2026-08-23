@@ -51,7 +51,7 @@ struct ImageEditorSVGImportTests {
         let unsupported = [
             "<svg><path d='M0 0 L10 10' fill='none' stroke='black'/><path d='M20 20 L30 30' fill='none' stroke='black'/></svg>",
             "<svg><g transform='translate(10 10)'><path d='M0 0 L10 10' fill='none' stroke='black'/></g></svg>",
-            "<svg><path style='fill:red' d='M0 0 L10 0 L10 10 Z'/></svg>",
+            "<svg><path style='mix-blend-mode:multiply' d='M0 0 L10 0 L10 10 Z'/></svg>",
             "<svg><path d='M0 0 L10 0 Z M20 0 L30 0' fill='none' stroke='black'/></svg>",
             "<svg><path d='M0 0 L10 0 M20 0 L30 0' stroke='black'/></svg>",
             "<svg><path d='M0 0 L20 0 L20 20 Z M5 5 L10 5 L10 10 Z'/></svg>",
@@ -196,6 +196,60 @@ struct ImageEditorSVGImportTests {
         ]
         for paint in invalidPaints {
             let source = "<svg><path d='M0 0 L20 0 L10 20 Z' fill='\(paint)'/></svg>"
+            #expect(XomoEditableSVGImporter.parse(Data(source.utf8)) == nil)
+        }
+    }
+
+    @Test func inlinePresentationStyleOverridesAttributesAndInheritsThroughGroups() throws {
+        let imported = try #require(XomoEditableSVGImporter.parse(Data(
+            """
+            <svg color="red" fill="yellow"
+                 style="color: hsl(210 50% 40%); fill: #336699; stroke: #f05020;
+                        stroke-width: 4px; stroke-linecap: square; stroke-linejoin: bevel;
+                        stroke-miterlimit: 7; stroke-dasharray: 5; stroke-dashoffset: -2">
+              <g opacity="0.9" style="opacity: 50%; fill: inherit; stroke: inherit">
+                <path fill="magenta" stroke="cyan" fill-opacity="1" stroke-opacity="1"
+                      style="fill: currentColor; fill-opacity: 40%; stroke: inherit; stroke-opacity: 50%;
+                             fill-rule: evenodd; stroke-dasharray: 3 4; stroke-dasharray: 5"
+                      d="M0 0 L30 0 L30 30 L0 30 Z M10 10 L20 10 L20 20 L10 20 Z" />
+              </g>
+            </svg>
+            """.utf8
+        )))
+        let content = imported.content
+        let fill = try #require(content.fillColor.usingColorSpace(.deviceRGB))
+        let stroke = try #require(content.strokeColor.usingColorSpace(.deviceRGB))
+
+        #expect(content.allEditablePathSubpaths.count == 2)
+        #expect(abs(fill.redComponent - 0.2) < 0.001)
+        #expect(abs(fill.greenComponent - 0.4) < 0.001)
+        #expect(abs(fill.blueComponent - 0.6) < 0.001)
+        #expect(abs(content.fillOpacity - 0.2) < 0.001)
+        #expect(abs(stroke.redComponent - (240.0 / 255.0)) < 0.001)
+        #expect(abs(stroke.greenComponent - (80.0 / 255.0)) < 0.001)
+        #expect(abs(stroke.blueComponent - (32.0 / 255.0)) < 0.001)
+        #expect(abs(content.strokeOpacity - 0.25) < 0.001)
+        #expect(content.strokeWidth == 4)
+        #expect(content.strokeCap == .square)
+        #expect(content.strokeJoin == .bevel)
+        #expect(content.strokeMiterLimit == 7)
+        #expect(content.strokeDashPattern == [5, 5])
+        #expect(content.strokeDashOffset == -2)
+    }
+
+    @Test func unsupportedOrMalformedInlineStyleIsRejectedBeforeImport() {
+        let invalidStyles = [
+            "mix-blend-mode: multiply",
+            "fill red",
+            "fill:",
+            ": red",
+            "fill: red !important",
+            "--brand: red; fill: var(--brand)",
+            "display: none",
+            "fill: red; stroke-width"
+        ]
+        for style in invalidStyles {
+            let source = "<svg><path d='M0 0 L20 0 L10 20 Z' style='\(style)'/></svg>"
             #expect(XomoEditableSVGImporter.parse(Data(source.utf8)) == nil)
         }
     }

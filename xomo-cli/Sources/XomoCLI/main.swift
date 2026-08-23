@@ -1,7 +1,7 @@
 import Darwin
 import Foundation
 
-private let xomoCLIVersion = "2.12.0-rc1213"
+private let xomoCLIVersion = "2.12.0-rc1214"
 
 struct XomoCLI {
     static func run(_ arguments: [String]) throws {

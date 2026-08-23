@@ -1,5 +1,19 @@
 # Changelog
 
+## 2.12.0-rc1214 - 2026-08-24
+
+### Added
+
+- 可编辑 SVG 导入支持严格的元素内联 `style` presentation declarations，覆盖 color、opacity、fill、fill-rule、fill/stroke opacity、描边宽度/端帽/连接/斜接/虚线/偏移；网页、Sketch 与 Figma 资产无需先把这些样式改写成 XML 属性。
+
+### Changed
+
+- 同一元素的内联 style 按 CSS 级联优先于同名 presentation attribute，`inherit` 继续沿祖先解析，重复声明以后写值为准，组 opacity 仍逐级合成。未知 CSS 属性、坏声明、CSS 变量与 `!important` 暂时原子拒绝，避免把局部 CSS 支持伪装成完整样式表引擎。
+
+### Verification
+
+- 最终产品测试构建通过且未新增编译警告；SVG 可编辑导入专项 32/32、CLI/MCP 2/2、发布契约 7/7（21 项断言）、隔离测试运行器契约及差异检查通过；下一次周期完整门禁仍为 rc1240。
+
 ## 2.12.0-rc1213 - 2026-08-24
 
 ### Added
