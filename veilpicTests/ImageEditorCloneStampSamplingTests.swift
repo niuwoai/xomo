@@ -553,6 +553,41 @@ struct ImageEditorCloneStampSamplingTests {
         #expect(viewModel.cloneStampOverlayOpacityPercent == 100)
     }
 
+    @Test func cloneOverlayAutoHideSuppressesOnlyAnActivePaintStroke() throws {
+        let viewModel = patternedCurrentLayerViewModel()
+        viewModel.setCloneSource(at: CGPoint(x: 10, y: 15))
+        let destination = CGPoint(x: 60, y: 15)
+
+        #expect(
+            viewModel.cloneStampOverlayPreview(
+                destinationReference: destination,
+                isPainting: true
+            ) != nil
+        )
+
+        viewModel.cloneStampOverlayAutoHidesWhilePainting = true
+        #expect(
+            viewModel.cloneStampOverlayPreview(
+                destinationReference: destination,
+                isPainting: false
+            ) != nil
+        )
+        #expect(
+            viewModel.cloneStampOverlayPreview(
+                destinationReference: destination,
+                isPainting: true
+            ) == nil
+        )
+
+        viewModel.cloneStampOverlayAutoHidesWhilePainting = false
+        #expect(
+            viewModel.cloneStampOverlayPreview(
+                destinationReference: destination,
+                isPainting: true
+            ) != nil
+        )
+    }
+
     @Test func cloneOverlaySourceCanvasIsCachedAcrossHoverAndInvalidatedByEdits() throws {
         let viewModel = patternedCurrentLayerViewModel()
         viewModel.isCloneStampAligned = false

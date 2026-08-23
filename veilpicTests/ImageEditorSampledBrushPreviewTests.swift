@@ -252,6 +252,7 @@ struct ImageEditorSampledBrushPreviewTests {
         #expect(overlaySource.contains(".rotationEffect("))
         #expect(source.contains("cloneStampPixelOverlay(in: geometry.size)"))
         #expect(source.contains("viewModel.cloneStampOverlayPreview("))
+        #expect(source.contains("isPainting: !dragPoints.isEmpty"))
         #expect(source.contains("context.clip(to: Path(targetFrame))"))
         #expect(source.contains("context.opacity = Double(preview.opacity)"))
         #expect(source.contains("context.draw(Image(nsImage: preview.sourceCanvas), in: sourceFrame)"))

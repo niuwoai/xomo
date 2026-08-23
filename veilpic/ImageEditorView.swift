@@ -1321,6 +1321,17 @@ struct ImageEditorView: View {
                 .xomoFocusEffectDisabled()
                 .accessibilityIdentifier("image-editor-clone-source-show-overlay")
 
+                Toggle(
+                    L10n.text("imageEditor.option.cloneSourceOverlayAutoHide"),
+                    isOn: $viewModel.cloneStampOverlayAutoHidesWhilePainting
+                )
+                .toggleStyle(.checkbox)
+                .fixedSize()
+                .disabled(!viewModel.cloneStampShowsOverlay)
+                .focusable(false)
+                .xomoFocusEffectDisabled()
+                .accessibilityIdentifier("image-editor-clone-source-overlay-auto-hide")
+
                 optionSlider(
                     titleKey: "imageEditor.option.cloneSourceOverlayOpacity",
                     value: Binding(
@@ -4820,7 +4831,8 @@ struct ImageEditorView: View {
            let hoverViewPoint,
            let hoverCanvasPoint = imagePoint(from: hoverViewPoint, in: size),
            let preview = viewModel.cloneStampOverlayPreview(
-               destinationReference: dragPoints.first ?? hoverCanvasPoint
+               destinationReference: dragPoints.first ?? hoverCanvasPoint,
+               isPainting: !dragPoints.isEmpty
            ) {
             let imageRect = fittedImageRect(in: size)
             let xScale = imageRect.width / max(1, viewModel.document.canvasSize.width)

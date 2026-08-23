@@ -316,9 +316,11 @@ struct ImageEditorCloneStampOverlaySourceCache {
 @MainActor
 extension ImageEditorViewModel {
     func cloneStampOverlayPreview(
-        destinationReference: CGPoint
+        destinationReference: CGPoint,
+        isPainting: Bool = false
     ) -> ImageEditorCloneStampOverlayPreview? {
         guard cloneStampShowsOverlay,
+              !cloneStampOverlayAutoHidesWhilePainting || !isPainting,
               !isEditingLayerMask,
               let sourcePoint = cloneSourcePoint,
               let layer = document.selectedLayer,
