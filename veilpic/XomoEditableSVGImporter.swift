@@ -169,28 +169,28 @@ enum XomoEditableSVGImporter {
         "svg", "g", "path", "rect", "circle", "ellipse", "line", "polyline", "polygon"
     ])
 
-    private enum SVGStyleSelector {
-        case element(String)
-        case className(String)
-        case id(String)
+    private struct SVGStyleSelector {
+        var elementName: String?
+        var idName: String?
+        var classNames: [String]
 
         var specificity: Int {
-            switch self {
-            case .element: 1
-            case .className: 10
-            case .id: 100
-            }
+            (elementName == nil ? 0 : 1)
+                + (classNames.count * 10)
+                + (idName == nil ? 0 : 100)
         }
 
         func matches(_ element: XMLElement) -> Bool {
-            switch self {
-            case let .element(name):
-                return XomoEditableSVGImporter.localName(of: element) == name
-            case let .className(name):
-                return XomoEditableSVGImporter.classNames(on: element).contains(name)
-            case let .id(name):
-                return element.attribute(forName: "id")?.stringValue == name
+            if let elementName,
+               XomoEditableSVGImporter.localName(of: element) != elementName {
+                return false
             }
+            if let idName,
+               element.attribute(forName: "id")?.stringValue != idName {
+                return false
+            }
+            let elementClasses = Set(XomoEditableSVGImporter.classNames(on: element))
+            return classNames.allSatisfy(elementClasses.contains)
         }
     }
 
@@ -952,10 +952,7 @@ enum XomoEditableSVGImporter {
             "marker", "marker-start", "marker-mid", "marker-end", "vector-effect",
             "paint-order", "display", "visibility"
         ]
-        let knownClassNames = Set(cssRules.compactMap { rule -> String? in
-            guard case let .className(name) = rule.selector else { return nil }
-            return name
-        })
+        let knownClassNames = Set(cssRules.flatMap(\.selector.classNames))
         return lineage.contains { element in
             unsupportedAttributes.contains { element.attribute(forName: $0) != nil }
                 || inlineStyleDeclarations(on: element) == nil
@@ -1159,19 +1156,42 @@ enum XomoEditableSVGImporter {
 
     private static func styleSelector(_ source: String) -> SVGStyleSelector? {
         guard !source.isEmpty else { return nil }
-        if source.first == "." {
-            let name = String(source.dropFirst())
-            guard isSimpleCSSIdentifier(name) else { return nil }
-            return .className(name)
+        var remainder = source[...]
+        var elementName: String?
+        var idName: String?
+        var classNames: [String] = []
+
+        if remainder.first != ".", remainder.first != "#" {
+            let boundary = remainder.firstIndex(where: { $0 == "." || $0 == "#" })
+                ?? remainder.endIndex
+            let candidate = remainder[..<boundary].lowercased()
+            guard supportedStyleElementNames.contains(candidate) else { return nil }
+            elementName = candidate
+            remainder = remainder[boundary...]
         }
-        if source.first == "#" {
-            let name = String(source.dropFirst())
+
+        while let prefix = remainder.first {
+            guard prefix == "." || prefix == "#" else { return nil }
+            remainder = remainder.dropFirst()
+            let boundary = remainder.firstIndex(where: { $0 == "." || $0 == "#" })
+                ?? remainder.endIndex
+            let name = String(remainder[..<boundary])
             guard isSimpleCSSIdentifier(name) else { return nil }
-            return .id(name)
+            if prefix == "." {
+                classNames.append(name)
+            } else {
+                guard idName == nil else { return nil }
+                idName = name
+            }
+            remainder = remainder[boundary...]
         }
-        let name = source.lowercased()
-        guard supportedStyleElementNames.contains(name) else { return nil }
-        return .element(name)
+
+        guard elementName != nil || idName != nil || !classNames.isEmpty else { return nil }
+        return SVGStyleSelector(
+            elementName: elementName,
+            idName: idName,
+            classNames: classNames
+        )
     }
 
     private static func isSimpleCSSIdentifier(_ source: String) -> Bool {

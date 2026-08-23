@@ -345,10 +345,54 @@ struct ImageEditorSVGImportTests {
         #expect(abs(inherited.content.fillOpacity - 0.5) < 0.001)
     }
 
+    @Test func compoundStylesheetSelectorsRequireEveryComponentAndAccumulateSpecificity() throws {
+        let matched = try #require(XomoEditableSVGImporter.parse(Data(
+            """
+            <svg>
+              <style>
+                path { fill: orange; stroke: black; stroke-width: 1; }
+                path.art.primary { fill: steelblue; stroke: gold; stroke-width: 3; }
+                #hero.art { fill: cyan; stroke: rebeccapurple; stroke-width: 4; }
+                #hero { fill: red; stroke: tomato; stroke-width: 2; }
+              </style>
+              <path id="hero" class="art primary" d="M0 0 L20 0 L10 20 Z" />
+            </svg>
+            """.utf8
+        )))
+        let matchedFill = try #require(matched.content.fillColor.usingColorSpace(.deviceRGB))
+        let matchedStroke = try #require(matched.content.strokeColor.usingColorSpace(.deviceRGB))
+        #expect(abs(matchedFill.redComponent) < 0.001)
+        #expect(abs(matchedFill.greenComponent - 1) < 0.001)
+        #expect(abs(matchedFill.blueComponent - 1) < 0.001)
+        #expect(abs(matchedStroke.redComponent - (102.0 / 255.0)) < 0.001)
+        #expect(abs(matchedStroke.greenComponent - (51.0 / 255.0)) < 0.001)
+        #expect(abs(matchedStroke.blueComponent - (153.0 / 255.0)) < 0.001)
+        #expect(matched.content.strokeWidth == 4)
+
+        let partialMatch = try #require(XomoEditableSVGImporter.parse(Data(
+            """
+            <svg>
+              <style>
+                path { fill: orange; }
+                path.art.primary { fill: cyan; }
+                #other.art { stroke: tomato; }
+              </style>
+              <path id="hero" class="art" d="M0 0 L20 0 L10 20 Z" />
+            </svg>
+            """.utf8
+        )))
+        let partialFill = try #require(partialMatch.content.fillColor.usingColorSpace(.deviceRGB))
+        #expect(abs(partialFill.redComponent - 1) < 0.001)
+        #expect(abs(partialFill.greenComponent - (165.0 / 255.0)) < 0.001)
+        #expect(abs(partialFill.blueComponent) < 0.001)
+        #expect(partialMatch.content.strokeOpacity == 0)
+    }
+
     @Test func unsupportedStylesheetsAndUnresolvedClassesAreRejectedBeforeImport() {
         let invalidDocuments = [
             "<svg><style>path:hover { fill: red; }</style><path d='M0 0 L20 0 L10 20 Z'/></svg>",
             "<svg><style>.art path { fill: red; }</style><path class='art' d='M0 0 L20 0 L10 20 Z'/></svg>",
+            "<svg><style>path#one#two { fill: red; }</style><path id='one' d='M0 0 L20 0 L10 20 Z'/></svg>",
             "<svg><style>@media (dark-mode) { path { fill: red; } }</style><path d='M0 0 L20 0 L10 20 Z'/></svg>",
             "<svg><style>.art { fill: red !important; }</style><path class='art' d='M0 0 L20 0 L10 20 Z'/></svg>",
             "<svg><style>.art { mix-blend-mode: multiply; }</style><path class='art' d='M0 0 L20 0 L10 20 Z'/></svg>",
