@@ -746,6 +746,8 @@ struct ImageEditorProjectShapeContent: Equatable, Codable {
     var strokeOpacity: CGFloat
     var strokePosition: ImageEditorStrokePosition = .inside
     var strokeCap: ImageEditorStrokeCap = .round
+    var strokeStartDecoration: ImageEditorStrokeDecoration = .none
+    var strokeEndDecoration: ImageEditorStrokeDecoration = .none
     var strokeJoin: ImageEditorStrokeJoin = .round
     var strokeMiterLimit: CGFloat = ImageEditorShapeContent.defaultStrokeMiterLimit
     var strokeDashPattern: [CGFloat] = []
@@ -760,7 +762,7 @@ struct ImageEditorProjectShapeContent: Equatable, Codable {
 
     enum CodingKeys: String, CodingKey {
         case kind, fillColor, fillGradient, fillGradientCenter, fillOpacity
-        case strokeColor, strokeWidth, strokeOpacity, strokePosition, strokeCap, strokeJoin, strokeMiterLimit, strokeDashPattern, strokeDashOffset
+        case strokeColor, strokeWidth, strokeOpacity, strokePosition, strokeCap, strokeStartDecoration, strokeEndDecoration, strokeJoin, strokeMiterLimit, strokeDashPattern, strokeDashOffset
         case cornerRadius, cornerRadii, cornerSmoothing, pathPoints, pathAnchors
         case pathSubpaths, isPathClosed
     }
@@ -777,6 +779,8 @@ struct ImageEditorProjectShapeContent: Equatable, Codable {
         strokeOpacity = try container.decode(CGFloat.self, forKey: .strokeOpacity)
         strokePosition = try container.decodeIfPresent(ImageEditorStrokePosition.self, forKey: .strokePosition) ?? .inside
         strokeCap = try container.decodeIfPresent(ImageEditorStrokeCap.self, forKey: .strokeCap) ?? .round
+        strokeStartDecoration = try container.decodeIfPresent(ImageEditorStrokeDecoration.self, forKey: .strokeStartDecoration) ?? .none
+        strokeEndDecoration = try container.decodeIfPresent(ImageEditorStrokeDecoration.self, forKey: .strokeEndDecoration) ?? .none
         strokeJoin = try container.decodeIfPresent(ImageEditorStrokeJoin.self, forKey: .strokeJoin) ?? .round
         strokeMiterLimit = try container.decodeIfPresent(CGFloat.self, forKey: .strokeMiterLimit)
             ?? ImageEditorShapeContent.defaultStrokeMiterLimit
@@ -802,6 +806,8 @@ struct ImageEditorProjectShapeContent: Equatable, Codable {
         strokeOpacity = content.strokeOpacity
         strokePosition = content.strokePosition
         strokeCap = content.strokeCap
+        strokeStartDecoration = content.strokeStartDecoration
+        strokeEndDecoration = content.strokeEndDecoration
         strokeJoin = content.strokeJoin
         strokeMiterLimit = content.strokeMiterLimit
         strokeDashPattern = content.strokeDashPattern
@@ -827,6 +833,8 @@ struct ImageEditorProjectShapeContent: Equatable, Codable {
             strokeOpacity: strokeOpacity,
             strokePosition: strokePosition,
             strokeCap: strokeCap,
+            strokeStartDecoration: strokeStartDecoration,
+            strokeEndDecoration: strokeEndDecoration,
             strokeJoin: strokeJoin,
             strokeMiterLimit: strokeMiterLimit,
             strokeDashPattern: strokeDashPattern,

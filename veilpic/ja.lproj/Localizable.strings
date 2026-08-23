@@ -1066,6 +1066,14 @@
 "imageEditor.properties.shapeStrokeCap.butt" = "バット";
 "imageEditor.properties.shapeStrokeCap.round" = "ラウンド";
 "imageEditor.properties.shapeStrokeCap.square" = "スクエア";
+"imageEditor.properties.shapeStrokeStartDecoration" = "始点マーカー";
+"imageEditor.properties.shapeStrokeEndDecoration" = "終点マーカー";
+"imageEditor.properties.shapeStrokeDecoration.none" = "なし";
+"imageEditor.properties.shapeStrokeDecoration.openArrow" = "開いた矢印";
+"imageEditor.properties.shapeStrokeDecoration.filledArrow" = "正三角形の矢印";
+"imageEditor.properties.shapeStrokeDecoration.filledTriangle" = "塗りつぶし三角形";
+"imageEditor.properties.shapeStrokeDecoration.filledDiamond" = "塗りつぶしひし形";
+"imageEditor.properties.shapeStrokeDecoration.filledCircle" = "塗りつぶし円";
 "imageEditor.properties.shapeStrokeJoin" = "結合";
 "imageEditor.properties.shapeStrokeJoin.miter" = "マイター";
 "imageEditor.properties.shapeStrokeJoin.round" = "ラウンド";

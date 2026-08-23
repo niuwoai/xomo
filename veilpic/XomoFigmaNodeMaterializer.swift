@@ -657,7 +657,37 @@ enum XomoFigmaNodeMaterializer {
         content.pathPoints = primary.map(\.point)
         content.pathSubpaths = Array(transformedSubpaths.dropFirst())
         content.isPathClosed = parsed.allSatisfy(\.isClosed)
-        return ImageEditorLayer.shape(name: item.sourceName, frame: frame, content: content)
+        guard !content.isPathClosed,
+              content.strokeStartDecoration != .none || content.strokeEndDecoration != .none
+        else {
+            return ImageEditorLayer.shape(name: item.sourceName, frame: frame, content: content)
+        }
+        let padding = ceil(content.strokeWidth / 2 + 3)
+        let offset = CGSize(width: padding, height: padding)
+        content.pathAnchors = content.pathAnchors.map { offsetAnchor($0, by: offset) }
+        content.pathPoints = content.pathAnchors.map(\.point)
+        content.pathSubpaths = content.pathSubpaths.map { subpath in
+            subpath.map { offsetAnchor($0, by: offset) }
+        }
+        return ImageEditorLayer.shape(
+            name: item.sourceName,
+            frame: frame.insetBy(dx: -padding, dy: -padding),
+            content: content
+        )
+    }
+
+    private static func offsetAnchor(
+        _ anchor: ImageEditorPathAnchor,
+        by offset: CGSize
+    ) -> ImageEditorPathAnchor {
+        func offsetPoint(_ point: CGPoint) -> CGPoint {
+            CGPoint(x: point.x + offset.width, y: point.y + offset.height)
+        }
+        return ImageEditorPathAnchor(
+            point: offsetPoint(anchor.point),
+            inControl: anchor.inControl.map(offsetPoint),
+            outControl: anchor.outControl.map(offsetPoint)
+        )
     }
 
     private static func transformedVectorSubpaths(
@@ -802,6 +832,8 @@ enum XomoFigmaNodeMaterializer {
             strokeOpacity: item.solidStroke.map { CGFloat($0.alpha) } ?? 0,
             strokePosition: ImageEditorStrokePosition(figmaValue: item.strokeAlign),
             strokeCap: ImageEditorStrokeCap(figmaValue: item.strokeCap),
+            strokeStartDecoration: ImageEditorStrokeDecoration(figmaValue: item.strokeCap),
+            strokeEndDecoration: ImageEditorStrokeDecoration(figmaValue: item.strokeCap),
             strokeJoin: ImageEditorStrokeJoin(figmaValue: item.strokeJoin),
             strokeMiterLimit: CGFloat(
                 item.strokeMiterLimit ?? Double(ImageEditorShapeContent.defaultStrokeMiterLimit)

@@ -1,5 +1,20 @@
 # Changelog
 
+## 2.12.0-rc1190 - 2026-08-24
+
+### Added
+
+- 开放矢量路径新增可独立设置的起点与终点装饰，提供开放箭头、等边箭头、实心三角、实心菱形和实心圆；属性面板、真实 AppKit 渲染、单步 Undo/Redo 与工程保存共用同一原生模型。
+- Figma 链接/节点导入完整识别 `ARROW_LINES`、`ARROW_EQUILATERAL`、`TRIANGLE_FILLED`、`DIAMOND_FILLED`、`CIRCLE_FILLED`，LINE 与开放 VECTOR 不再因这些官方端点类型降级为描边样式回退。
+
+### Changed
+
+- 闭合路径明确忽略端点装饰，既不会在闭环上叠加伪箭头，也不会影响已有填充、端点、连接、虚线和描边位置语义。
+
+### Verification
+
+- 产品测试构建通过；端点渲染、闭合路径隔离、工程往返、幂等编辑、单步 Undo/Redo、三语标题和 Figma LINE/官方枚举映射专项 5/5；CLI/MCP 2/2、发布契约 7/7（21 项断言）、测试运行器契约、三语资源格式及差异检查通过。下一次周期完整编译、冒烟与 `/Applications` 覆盖门禁仍为 rc1200。
+
 ## 2.12.0-rc1189 - 2026-08-24
 
 ### Added

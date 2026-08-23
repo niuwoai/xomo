@@ -3444,6 +3444,28 @@ enum ImageEditorStrokeCap: String, Codable, CaseIterable {
     }
 }
 
+enum ImageEditorStrokeDecoration: String, Codable, CaseIterable, Identifiable {
+    case none
+    case openArrow
+    case filledArrow
+    case filledTriangle
+    case filledDiamond
+    case filledCircle
+
+    var id: String { rawValue }
+
+    init(figmaValue: String?) {
+        switch figmaValue?.uppercased() {
+        case "ARROW_LINES": self = .openArrow
+        case "ARROW_EQUILATERAL": self = .filledArrow
+        case "TRIANGLE_FILLED": self = .filledTriangle
+        case "DIAMOND_FILLED": self = .filledDiamond
+        case "CIRCLE_FILLED": self = .filledCircle
+        default: self = .none
+        }
+    }
+}
+
 enum ImageEditorStrokeJoin: String, Codable, CaseIterable {
     case miter
     case round
@@ -3495,6 +3517,8 @@ struct ImageEditorShapeContent {
     var strokeOpacity: CGFloat
     var strokePosition: ImageEditorStrokePosition = .inside
     var strokeCap: ImageEditorStrokeCap = .round
+    var strokeStartDecoration: ImageEditorStrokeDecoration = .none
+    var strokeEndDecoration: ImageEditorStrokeDecoration = .none
     var strokeJoin: ImageEditorStrokeJoin = .round
     var strokeMiterLimit: CGFloat = Self.defaultStrokeMiterLimit
     var strokeDashPattern: [CGFloat] = []
@@ -3660,6 +3684,7 @@ struct ImageEditorShapeContent {
                 strokePath.lineWidth = normalized.strokeWidth
                 normalized.strokeColor.withAlphaComponent(normalized.strokeOpacity).setStroke()
                 strokePath.stroke()
+                normalized.drawStrokeDecorations()
             }
         } ?? NSImage.transparent(size: size)
     }
@@ -3707,6 +3732,120 @@ struct ImageEditorShapeContent {
             } else {
                 path.close()
             }
+        }
+    }
+
+    private func drawStrokeDecorations() {
+        guard kind == .path, !isPathClosed, strokeOpacity > 0 else { return }
+        let color = strokeColor.withAlphaComponent(strokeOpacity)
+        for anchors in allEditablePathSubpaths where anchors.count >= 2 {
+            if let first = anchors.first,
+               let direction = endpointDirection(anchors: anchors, isStart: true) {
+                drawStrokeDecoration(
+                    strokeStartDecoration,
+                    at: first.point,
+                    outwardDirection: direction,
+                    color: color
+                )
+            }
+            if let last = anchors.last,
+               let direction = endpointDirection(anchors: anchors, isStart: false) {
+                drawStrokeDecoration(
+                    strokeEndDecoration,
+                    at: last.point,
+                    outwardDirection: direction,
+                    color: color
+                )
+            }
+        }
+    }
+
+    private func endpointDirection(
+        anchors: [ImageEditorPathAnchor],
+        isStart: Bool
+    ) -> CGVector? {
+        let delta: CGVector
+        if isStart {
+            let first = anchors[0]
+            let second = anchors[1]
+            let inward = first.outControl ?? second.inControl ?? second.point
+            delta = CGVector(dx: first.point.x - inward.x, dy: first.point.y - inward.y)
+        } else {
+            let last = anchors[anchors.count - 1]
+            let previous = anchors[anchors.count - 2]
+            let inward = last.inControl ?? previous.outControl ?? previous.point
+            delta = CGVector(dx: last.point.x - inward.x, dy: last.point.y - inward.y)
+        }
+        let length = hypot(delta.dx, delta.dy)
+        guard length > 0.000_1 else { return nil }
+        return CGVector(dx: delta.dx / length, dy: delta.dy / length)
+    }
+
+    private func drawStrokeDecoration(
+        _ decoration: ImageEditorStrokeDecoration,
+        at endpoint: CGPoint,
+        outwardDirection: CGVector,
+        color: NSColor
+    ) {
+        guard decoration != .none else { return }
+        let halfWidth = max(2.5, strokeWidth / 2 + 2.5)
+        let length = max(6, strokeWidth * 4)
+        let perpendicular = CGVector(dx: -outwardDirection.dy, dy: outwardDirection.dx)
+        func point(back: CGFloat, side: CGFloat = 0) -> CGPoint {
+            CGPoint(
+                x: endpoint.x - outwardDirection.dx * back + perpendicular.dx * side,
+                y: endpoint.y - outwardDirection.dy * back + perpendicular.dy * side
+            )
+        }
+
+        let marker = NSBezierPath()
+        marker.lineJoinStyle = .round
+        marker.lineCapStyle = .round
+        marker.lineWidth = max(1, strokeWidth)
+        switch decoration {
+        case .none:
+            return
+        case .openArrow:
+            marker.move(to: point(back: length, side: halfWidth))
+            marker.line(to: endpoint)
+            marker.line(to: point(back: length, side: -halfWidth))
+            color.setStroke()
+            marker.stroke()
+        case .filledArrow:
+            marker.move(to: endpoint)
+            marker.line(to: point(back: length, side: halfWidth))
+            marker.line(to: point(back: length * 0.72))
+            marker.line(to: point(back: length, side: -halfWidth))
+            marker.close()
+            color.setFill()
+            marker.fill()
+        case .filledTriangle:
+            marker.move(to: point(back: 0, side: halfWidth))
+            marker.line(to: point(back: 0, side: -halfWidth))
+            marker.line(to: point(back: length))
+            marker.close()
+            color.setFill()
+            marker.fill()
+        case .filledDiamond:
+            marker.move(to: endpoint)
+            marker.line(to: point(back: length * 0.5, side: halfWidth))
+            marker.line(to: point(back: length))
+            marker.line(to: point(back: length * 0.5, side: -halfWidth))
+            marker.close()
+            color.setFill()
+            marker.fill()
+        case .filledCircle:
+            let radius = halfWidth
+            let center = point(back: radius)
+            color.setFill()
+            NSBezierPath(
+                ovalIn: CGRect(
+                    x: center.x - radius,
+                    y: center.y - radius,
+                    width: radius * 2,
+                    height: radius * 2
+                )
+            ).fill()
         }
     }
 }

@@ -1066,6 +1066,14 @@
 "imageEditor.properties.shapeStrokeCap.butt" = "Butt";
 "imageEditor.properties.shapeStrokeCap.round" = "Round";
 "imageEditor.properties.shapeStrokeCap.square" = "Square";
+"imageEditor.properties.shapeStrokeStartDecoration" = "Start marker";
+"imageEditor.properties.shapeStrokeEndDecoration" = "End marker";
+"imageEditor.properties.shapeStrokeDecoration.none" = "None";
+"imageEditor.properties.shapeStrokeDecoration.openArrow" = "Open arrow";
+"imageEditor.properties.shapeStrokeDecoration.filledArrow" = "Equilateral arrow";
+"imageEditor.properties.shapeStrokeDecoration.filledTriangle" = "Filled triangle";
+"imageEditor.properties.shapeStrokeDecoration.filledDiamond" = "Filled diamond";
+"imageEditor.properties.shapeStrokeDecoration.filledCircle" = "Filled circle";
 "imageEditor.properties.shapeStrokeJoin" = "Stroke join";
 "imageEditor.properties.shapeStrokeJoin.miter" = "Miter";
 "imageEditor.properties.shapeStrokeJoin.round" = "Round";

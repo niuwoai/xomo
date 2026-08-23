@@ -2193,6 +2193,7 @@ struct XomoFigmaNodeImportPlanTests {
                           "size": {"width": 40, "height": 1},
                           "strokes": [{"type": "SOLID", "color": {"r": 1, "g": 0, "b": 0}}],
                           "strokeWeight": 3,
+                          "strokeCap": "ARROW_LINES",
                           "strokeGeometry": [{"path": "M 0 0 L 40 0"}],
                           "absoluteBoundingBox": {"x": 110, "y": 210, "width": 40, "height": 3}
                         }]
@@ -2216,6 +2217,26 @@ struct XomoFigmaNodeImportPlanTests {
         #expect(line.issues.contains(.transformFlattened))
         #expect(line.solidStroke?.red == 1)
         #expect(line.strokeWeight == 3)
+        #expect(!line.issues.contains(.strokeStyleFlattened))
+
+        let materialized = XomoFigmaNodeMaterializer.materialize(
+            plan: plan,
+            canvasSize: CGSize(width: 320, height: 240)
+        )
+        let lineLayer = try #require(materialized.layers.first { $0.name == "Stroke Only" })
+        let lineContent = try #require(lineLayer.shapeContent)
+        #expect(lineContent.isPathClosed == false)
+        #expect(lineContent.strokeStartDecoration == .openArrow)
+        #expect(lineContent.strokeEndDecoration == .openArrow)
+        #expect(lineContent.pathAnchors.first?.point.x ?? 0 > 0)
+        #expect(lineContent.pathAnchors.first?.point.y ?? 0 > 0)
+        var undecorated = lineContent
+        undecorated.strokeStartDecoration = .none
+        undecorated.strokeEndDecoration = .none
+        #expect(
+            lineContent.renderedImage(size: lineLayer.frame.size).qingtuPNGData()
+                != undecorated.renderedImage(size: lineLayer.frame.size).qingtuPNGData()
+        )
     }
 
     @Test func mapperAndMaterializerPreserveFigmaStrokeCapAndJoin() throws {
@@ -2283,6 +2304,30 @@ struct XomoFigmaNodeImportPlanTests {
             canvasSize: CGSize(width: 320, height: 240)
         ).layers.first
         #expect(noneLayer?.shapeContent?.strokeCap == .butt)
+
+        let figmaDecorations: [(String, ImageEditorStrokeDecoration)] = [
+            ("ARROW_LINES", .openArrow),
+            ("ARROW_EQUILATERAL", .filledArrow),
+            ("TRIANGLE_FILLED", .filledTriangle),
+            ("DIAMOND_FILLED", .filledDiamond),
+            ("CIRCLE_FILLED", .filledCircle)
+        ]
+        for (figmaCap, expected) in figmaDecorations {
+            var decoratedItem = item
+            decoratedItem.strokeCap = figmaCap
+            let decoratedLayer = XomoFigmaNodeMaterializer.materialize(
+                plan: XomoFigmaNodeImportPlan(
+                    fileName: "stroke.json",
+                    version: nil,
+                    rootSourceID: "2:20",
+                    rootName: "Bevel Square",
+                    items: [decoratedItem]
+                ),
+                canvasSize: CGSize(width: 320, height: 240)
+            ).layers.first
+            #expect(decoratedLayer?.shapeContent?.strokeStartDecoration == expected)
+            #expect(decoratedLayer?.shapeContent?.strokeEndDecoration == expected)
+        }
     }
 
     @Test func unsupportedFigmaStrokeStylesReportEditableFallbacks() throws {

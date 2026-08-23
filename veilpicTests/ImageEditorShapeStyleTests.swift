@@ -1440,6 +1440,96 @@ struct ImageEditorShapeStyleTests {
         )
     }
 
+    @Test func openPathStrokeDecorationsRenderPersistAndEditAtomically() throws {
+        let size = CGSize(width: 120, height: 80)
+        let base = ImageEditorShapeContent(
+            kind: .path,
+            fillColor: .clear,
+            fillOpacity: 0,
+            strokeColor: .black,
+            strokeWidth: 4,
+            strokeOpacity: 1,
+            pathAnchors: [
+                ImageEditorPathAnchor(point: CGPoint(x: 30, y: 40)),
+                ImageEditorPathAnchor(point: CGPoint(x: 90, y: 40))
+            ],
+            isPathClosed: false
+        )
+        let undecorated = base.renderedImage(size: size).qingtuPNGData()
+        for decoration in ImageEditorStrokeDecoration.allCases where decoration != .none {
+            var decorated = base
+            decorated.strokeStartDecoration = decoration
+            decorated.strokeEndDecoration = decoration
+            #expect(decorated.renderedImage(size: size).qingtuPNGData() != undecorated)
+            let restored = try JSONDecoder().decode(
+                ImageEditorProjectShapeContent.self,
+                from: JSONEncoder().encode(ImageEditorProjectShapeContent(content: decorated))
+            ).content
+            #expect(restored.strokeStartDecoration == decoration)
+            #expect(restored.strokeEndDecoration == decoration)
+        }
+
+        let viewModel = makeViewModel()
+        viewModel.addPenPoint(CGPoint(x: 20, y: 30))
+        viewModel.addPenPoint(CGPoint(x: 90, y: 50))
+        viewModel.finishPenPath(closed: false)
+        #expect(viewModel.selectedShapeSupportsStrokeDecorations)
+        let historyCount = viewModel.document.history.count
+        viewModel.updateSelectedShapeProperties(
+            strokeStartDecoration: .filledCircle,
+            strokeEndDecoration: .openArrow
+        )
+        #expect(viewModel.selectedShapeStrokeStartDecoration == .filledCircle)
+        #expect(viewModel.selectedShapeStrokeEndDecoration == .openArrow)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        viewModel.updateSelectedShapeProperties(
+            strokeStartDecoration: .filledCircle,
+            strokeEndDecoration: .openArrow
+        )
+        #expect(viewModel.document.history.count == historyCount + 1)
+        viewModel.undo()
+        #expect(viewModel.selectedShapeStrokeStartDecoration == .none)
+        #expect(viewModel.selectedShapeStrokeEndDecoration == .none)
+        viewModel.redo()
+        #expect(viewModel.selectedShapeStrokeStartDecoration == .filledCircle)
+        #expect(viewModel.selectedShapeStrokeEndDecoration == .openArrow)
+    }
+
+    @Test func closedPathsIgnoreStrokeDecorationsAndFigmaCapsMapCompletely() throws {
+        let size = CGSize(width: 100, height: 80)
+        let base = ImageEditorShapeContent(
+            kind: .path,
+            fillColor: .clear,
+            fillOpacity: 0,
+            strokeColor: .black,
+            strokeWidth: 4,
+            strokeOpacity: 1,
+            pathAnchors: [
+                ImageEditorPathAnchor(point: CGPoint(x: 20, y: 20)),
+                ImageEditorPathAnchor(point: CGPoint(x: 80, y: 20)),
+                ImageEditorPathAnchor(point: CGPoint(x: 50, y: 60))
+            ],
+            isPathClosed: true
+        )
+        var decorated = base
+        decorated.strokeStartDecoration = .filledDiamond
+        decorated.strokeEndDecoration = .filledCircle
+        #expect(base.renderedImage(size: size).qingtuPNGData() == decorated.renderedImage(size: size).qingtuPNGData())
+
+        let mappings: [(String, ImageEditorStrokeDecoration)] = [
+            ("ARROW_LINES", .openArrow),
+            ("ARROW_EQUILATERAL", .filledArrow),
+            ("TRIANGLE_FILLED", .filledTriangle),
+            ("DIAMOND_FILLED", .filledDiamond),
+            ("CIRCLE_FILLED", .filledCircle)
+        ]
+        for (figmaValue, expected) in mappings {
+            #expect(ImageEditorStrokeDecoration(figmaValue: figmaValue) == expected)
+        }
+        #expect(ImageEditorStrokeDecoration(figmaValue: "ROUND") == .none)
+        #expect(ImageEditorStrokeDecoration(figmaValue: "FUTURE") == .none)
+    }
+
     @Test func dashPresetTitlesResolveAndCustomPatternRemainsReadOnly() throws {
         for preset in ImageEditorStrokeDashPreset.allCases {
             #expect(
@@ -1457,6 +1547,12 @@ struct ImageEditorShapeStyleTests {
             #expect(
                 join.title
                     == L10n.text("imageEditor.properties.shapeStrokeJoin.\(join.rawValue)")
+            )
+        }
+        for decoration in ImageEditorStrokeDecoration.allCases {
+            #expect(
+                decoration.title
+                    == L10n.text("imageEditor.properties.shapeStrokeDecoration.\(decoration.rawValue)")
             )
         }
 

@@ -82,6 +82,12 @@ extension ImageEditorStrokeCap {
     }
 }
 
+extension ImageEditorStrokeDecoration {
+    var title: String {
+        L10n.text("imageEditor.properties.shapeStrokeDecoration.\(rawValue)")
+    }
+}
+
 extension ImageEditorStrokeJoin {
     var title: String {
         L10n.text("imageEditor.properties.shapeStrokeJoin.\(rawValue)")
@@ -273,6 +279,19 @@ extension ImageEditorViewModel {
 
     var selectedShapeStrokeCap: ImageEditorStrokeCap {
         document.selectedLayer?.shapeContent?.strokeCap ?? .round
+    }
+
+    var selectedShapeStrokeStartDecoration: ImageEditorStrokeDecoration {
+        document.selectedLayer?.shapeContent?.strokeStartDecoration ?? .none
+    }
+
+    var selectedShapeStrokeEndDecoration: ImageEditorStrokeDecoration {
+        document.selectedLayer?.shapeContent?.strokeEndDecoration ?? .none
+    }
+
+    var selectedShapeSupportsStrokeDecorations: Bool {
+        guard let content = document.selectedLayer?.shapeContent else { return false }
+        return content.kind == .path && !content.isPathClosed
     }
 
     var selectedShapeStrokePosition: ImageEditorStrokePosition {
@@ -487,6 +506,14 @@ extension ImageEditorViewModel {
         updateSelectedShapeProperties(strokeCap: cap)
     }
 
+    func setSelectedShapeStrokeStartDecoration(_ decoration: ImageEditorStrokeDecoration) {
+        updateSelectedShapeProperties(strokeStartDecoration: decoration)
+    }
+
+    func setSelectedShapeStrokeEndDecoration(_ decoration: ImageEditorStrokeDecoration) {
+        updateSelectedShapeProperties(strokeEndDecoration: decoration)
+    }
+
     func setSelectedShapeStrokePosition(_ position: ImageEditorStrokePosition) {
         updateSelectedShapeProperties(strokePosition: position)
     }
@@ -525,6 +552,8 @@ extension ImageEditorViewModel {
         strokeWidth: Double? = nil,
         strokePosition: ImageEditorStrokePosition? = nil,
         strokeCap: ImageEditorStrokeCap? = nil,
+        strokeStartDecoration: ImageEditorStrokeDecoration? = nil,
+        strokeEndDecoration: ImageEditorStrokeDecoration? = nil,
         strokeJoin: ImageEditorStrokeJoin? = nil,
         strokeMiterLimit: Double? = nil,
         strokeDashPattern: [CGFloat]? = nil,
@@ -573,6 +602,10 @@ extension ImageEditorViewModel {
             }
             if let strokePosition { content.strokePosition = strokePosition }
             if let strokeCap { content.strokeCap = strokeCap }
+            if content.kind == .path, !content.isPathClosed {
+                if let strokeStartDecoration { content.strokeStartDecoration = strokeStartDecoration }
+                if let strokeEndDecoration { content.strokeEndDecoration = strokeEndDecoration }
+            }
             if let strokeJoin { content.strokeJoin = strokeJoin }
             if let strokeMiterLimit, strokeMiterLimit.isFinite {
                 content.strokeMiterLimit = CGFloat(
@@ -636,6 +669,8 @@ extension ImageEditorViewModel {
             && abs(lhs.strokeWidth - rhs.strokeWidth) <= 0.000_1
             && lhs.strokePosition == rhs.strokePosition
             && lhs.strokeCap == rhs.strokeCap
+            && lhs.strokeStartDecoration == rhs.strokeStartDecoration
+            && lhs.strokeEndDecoration == rhs.strokeEndDecoration
             && lhs.strokeJoin == rhs.strokeJoin
             && abs(lhs.strokeMiterLimit - rhs.strokeMiterLimit) <= 0.000_1
             && lhs.strokeDashPattern == rhs.strokeDashPattern

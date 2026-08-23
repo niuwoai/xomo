@@ -191,6 +191,40 @@ extension ImageEditorView {
                 .accessibilityIdentifier("image-editor-shape-stroke-cap")
             }
 
+            if viewModel.selectedShapeSupportsStrokeDecorations {
+                HStack(spacing: 8) {
+                    Text(L10n.text("imageEditor.properties.shapeStrokeStartDecoration"))
+                        .font(.system(size: 10, weight: .medium))
+                        .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                    Spacer(minLength: 4)
+                    Picker("", selection: selectedShapeStrokeStartDecorationBinding) {
+                        ForEach(ImageEditorStrokeDecoration.allCases) { decoration in
+                            Text(decoration.title).tag(decoration)
+                        }
+                    }
+                    .labelsHidden()
+                    .pickerStyle(.menu)
+                    .focusable(false)
+                    .accessibilityIdentifier("image-editor-shape-stroke-start-decoration")
+                }
+
+                HStack(spacing: 8) {
+                    Text(L10n.text("imageEditor.properties.shapeStrokeEndDecoration"))
+                        .font(.system(size: 10, weight: .medium))
+                        .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                    Spacer(minLength: 4)
+                    Picker("", selection: selectedShapeStrokeEndDecorationBinding) {
+                        ForEach(ImageEditorStrokeDecoration.allCases) { decoration in
+                            Text(decoration.title).tag(decoration)
+                        }
+                    }
+                    .labelsHidden()
+                    .pickerStyle(.menu)
+                    .focusable(false)
+                    .accessibilityIdentifier("image-editor-shape-stroke-end-decoration")
+                }
+            }
+
             HStack(spacing: 8) {
                 Text(L10n.text("imageEditor.properties.shapeStrokeJoin"))
                     .font(.system(size: 10, weight: .medium))
@@ -709,6 +743,22 @@ extension ImageEditorView {
             viewModel.selectedShapeStrokeCap
         } set: { cap in
             viewModel.setSelectedShapeStrokeCap(cap)
+        }
+    }
+
+    private var selectedShapeStrokeStartDecorationBinding: Binding<ImageEditorStrokeDecoration> {
+        Binding {
+            viewModel.selectedShapeStrokeStartDecoration
+        } set: { decoration in
+            viewModel.setSelectedShapeStrokeStartDecoration(decoration)
+        }
+    }
+
+    private var selectedShapeStrokeEndDecorationBinding: Binding<ImageEditorStrokeDecoration> {
+        Binding {
+            viewModel.selectedShapeStrokeEndDecoration
+        } set: { decoration in
+            viewModel.setSelectedShapeStrokeEndDecoration(decoration)
         }
     }
 

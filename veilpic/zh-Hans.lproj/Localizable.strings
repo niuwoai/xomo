@@ -1066,6 +1066,14 @@
 "imageEditor.properties.shapeStrokeCap.butt" = "平端";
 "imageEditor.properties.shapeStrokeCap.round" = "圆端";
 "imageEditor.properties.shapeStrokeCap.square" = "方端";
+"imageEditor.properties.shapeStrokeStartDecoration" = "起点装饰";
+"imageEditor.properties.shapeStrokeEndDecoration" = "终点装饰";
+"imageEditor.properties.shapeStrokeDecoration.none" = "无";
+"imageEditor.properties.shapeStrokeDecoration.openArrow" = "开放箭头";
+"imageEditor.properties.shapeStrokeDecoration.filledArrow" = "等边箭头";
+"imageEditor.properties.shapeStrokeDecoration.filledTriangle" = "实心三角";
+"imageEditor.properties.shapeStrokeDecoration.filledDiamond" = "实心菱形";
+"imageEditor.properties.shapeStrokeDecoration.filledCircle" = "实心圆";
 "imageEditor.properties.shapeStrokeJoin" = "连接";
 "imageEditor.properties.shapeStrokeJoin.miter" = "尖角";
 "imageEditor.properties.shapeStrokeJoin.round" = "圆角";

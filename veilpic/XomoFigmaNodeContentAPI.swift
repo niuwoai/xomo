@@ -1754,7 +1754,10 @@ enum XomoFigmaNodeImportMapper {
 
     private static func hasUnsupportedStrokeStyle(_ node: XomoFigmaNode) -> Bool {
         let supportedAlignments = ["INSIDE", "CENTER", "OUTSIDE"]
-        let supportedCaps = ["NONE", "ROUND", "SQUARE"]
+        let supportedCaps = [
+            "NONE", "ROUND", "SQUARE", "ARROW_LINES", "ARROW_EQUILATERAL",
+            "DIAMOND_FILLED", "TRIANGLE_FILLED", "CIRCLE_FILLED"
+        ]
         let supportedJoins = ["MITER", "ROUND", "BEVEL"]
         if let alignment = node.strokeAlign?.uppercased(),
            !supportedAlignments.contains(alignment) {
