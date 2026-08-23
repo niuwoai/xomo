@@ -3455,6 +3455,8 @@
 "imageEditor.option.cloneAligned" = "整列";
 "imageEditor.option.cloneSampleSource" = "サンプル";
 "imageEditor.option.cloneSourceSlot" = "クローンソーススロット";
+"imageEditor.accessibility.cloneSourceSlotPopulated" = "クローンソース %d、設定済み";
+"imageEditor.accessibility.cloneSourceSlotEmpty" = "クローンソース %d、空";
 "imageEditor.option.cloneSourceScale" = "スケール";
 "imageEditor.option.cloneSourceScaleWidth" = "幅";
 "imageEditor.option.cloneSourceScaleHeight" = "高さ";

@@ -3455,6 +3455,8 @@
 "imageEditor.option.cloneAligned" = "对齐";
 "imageEditor.option.cloneSampleSource" = "样本";
 "imageEditor.option.cloneSourceSlot" = "仿制源槽位";
+"imageEditor.accessibility.cloneSourceSlotPopulated" = "仿制源 %d，已设置";
+"imageEditor.accessibility.cloneSourceSlotEmpty" = "仿制源 %d，空";
 "imageEditor.option.cloneSourceScale" = "缩放";
 "imageEditor.option.cloneSourceScaleWidth" = "宽";
 "imageEditor.option.cloneSourceScaleHeight" = "高";

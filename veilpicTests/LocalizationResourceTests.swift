@@ -120,9 +120,9 @@ struct LocalizationResourceTests {
     @Test func cloneSourceSlotOptionIsLocalizedInEverySupportedLanguage() throws {
         let paths = try Self.repositoryPaths()
         let expectedValues = [
-            "zh-Hans": ["仿制源槽位", "宽", "高", "链接宽高", "角度", "显示叠加", "裁切到笔刷", "自动隐藏", "反相", "混合", "正常", "变暗", "变亮", "差值", "叠加", "水平翻转", "垂直翻转", "重置来源变换"],
-            "en": ["Clone Source Slot", "W", "H", "Link W/H", "Angle", "Show Overlay", "Clipped", "Auto Hide", "Invert", "Blend", "Normal", "Darken", "Lighten", "Difference", "Overlay", "Flip H", "Flip V", "Reset Source Transform"],
-            "ja": ["クローンソーススロット", "幅", "高さ", "縦横比をリンク", "角度", "オーバーレイを表示", "ブラシサイズで切り抜く", "自動的に隠す", "反転", "描画モード", "通常", "比較（暗）", "比較（明）", "差の絶対値", "オーバーレイ", "左右反転", "上下反転", "ソース変形をリセット"]
+            "zh-Hans": ["仿制源槽位", "仿制源 %d，已设置", "仿制源 %d，空", "宽", "高", "链接宽高", "角度", "显示叠加", "裁切到笔刷", "自动隐藏", "反相", "混合", "正常", "变暗", "变亮", "差值", "叠加", "水平翻转", "垂直翻转", "重置来源变换"],
+            "en": ["Clone Source Slot", "Clone Source %d, set", "Clone Source %d, empty", "W", "H", "Link W/H", "Angle", "Show Overlay", "Clipped", "Auto Hide", "Invert", "Blend", "Normal", "Darken", "Lighten", "Difference", "Overlay", "Flip H", "Flip V", "Reset Source Transform"],
+            "ja": ["クローンソーススロット", "クローンソース %d、設定済み", "クローンソース %d、空", "幅", "高さ", "縦横比をリンク", "角度", "オーバーレイを表示", "ブラシサイズで切り抜く", "自動的に隠す", "反転", "描画モード", "通常", "比較（暗）", "比較（明）", "差の絶対値", "オーバーレイ", "左右反転", "上下反転", "ソース変形をリセット"]
         ]
 
         for (localizationID, expectedValue) in expectedValues {
@@ -133,6 +133,8 @@ struct LocalizationResourceTests {
             )
             let keys = [
                 "imageEditor.option.cloneSourceSlot",
+                "imageEditor.accessibility.cloneSourceSlotPopulated",
+                "imageEditor.accessibility.cloneSourceSlotEmpty",
                 "imageEditor.option.cloneSourceScaleWidth",
                 "imageEditor.option.cloneSourceScaleHeight",
                 "imageEditor.option.cloneSourceScaleLink",

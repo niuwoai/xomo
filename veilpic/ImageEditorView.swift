@@ -1251,7 +1251,20 @@ struct ImageEditorView: View {
                     )
                 ) {
                     ForEach(0..<ImageEditorCloneSourceSlotState.maximumCount, id: \.self) { index in
-                        Text("\(index + 1)").tag(index)
+                        let isPopulated = viewModel.cloneSourceSlotIsPopulated(index)
+                        HStack(spacing: 3) {
+                            Text("\(index + 1)")
+                            Image(systemName: isPopulated ? "circle.fill" : "circle")
+                                .font(.system(size: 5, weight: .bold))
+                                .accessibilityHidden(true)
+                        }
+                        .accessibilityLabel(L10n.format(
+                            isPopulated
+                                ? "imageEditor.accessibility.cloneSourceSlotPopulated"
+                                : "imageEditor.accessibility.cloneSourceSlotEmpty",
+                            index + 1
+                        ))
+                        .tag(index)
                     }
                 }
                 .labelsHidden()

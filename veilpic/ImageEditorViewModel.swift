@@ -7159,6 +7159,11 @@ final class ImageEditorViewModel: ObservableObject {
         return true
     }
 
+    func cloneSourceSlotIsPopulated(_ index: Int) -> Bool {
+        guard cloneSourceSlots.indices.contains(index) else { return false }
+        return cloneSourceSlots[index].sourcePoint != nil
+    }
+
     func setCloneSourceFlipsHorizontally(_ flipsHorizontally: Bool) {
         cloneSourceSlots[activeCloneSourceSlotIndex].flipsHorizontally =
             flipsHorizontally

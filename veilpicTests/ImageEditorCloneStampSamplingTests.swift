@@ -104,6 +104,35 @@ struct ImageEditorCloneStampSamplingTests {
         #expect(viewModel.cloneSourcePoint == activePoint)
     }
 
+    @Test func cloneSourceSlotPopulationTracksOnlyRealSources() {
+        let viewModel = patternedCurrentLayerViewModel()
+        let historyCount = viewModel.document.history.count
+
+        for index in 0..<ImageEditorCloneSourceSlotState.maximumCount {
+            #expect(!viewModel.cloneSourceSlotIsPopulated(index))
+        }
+        #expect(!viewModel.cloneSourceSlotIsPopulated(-1))
+        #expect(!viewModel.cloneSourceSlotIsPopulated(ImageEditorCloneSourceSlotState.maximumCount))
+
+        viewModel.setCloneSourceScalePercent(175)
+        viewModel.setCloneSourceFlipsHorizontally(true)
+        #expect(!viewModel.cloneSourceSlotIsPopulated(0))
+
+        viewModel.setCloneSource(at: CGPoint(x: 10, y: 15))
+        #expect(viewModel.cloneSourceSlotIsPopulated(0))
+
+        #expect(viewModel.selectCloneSourceSlot(3))
+        #expect(!viewModel.cloneSourceSlotIsPopulated(3))
+        viewModel.setCloneSource(at: CGPoint(x: 30, y: 15))
+        #expect(viewModel.cloneSourceSlotIsPopulated(3))
+        #expect(viewModel.cloneSourceSlotIsPopulated(0))
+
+        viewModel.setCloneSource(at: nil)
+        #expect(!viewModel.cloneSourceSlotIsPopulated(3))
+        #expect(viewModel.cloneSourceSlotIsPopulated(0))
+        #expect(viewModel.document.history.count == historyCount)
+    }
+
     @Test func resettingActiveCloneTransformPreservesSourceAlignmentAndOtherSlots() throws {
         let viewModel = patternedCurrentLayerViewModel()
         viewModel.setCloneSourceScalePercent(200)
