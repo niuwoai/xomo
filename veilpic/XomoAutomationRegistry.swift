@@ -5639,6 +5639,19 @@ final class XomoAutomationRegistry {
         }
         if let feather = arguments["feather"]?.doubleValue { viewModel.feather = max(0, feather) }
         if action == "setCloneSource" || action == "cloneStamp" {
+            func validatedCloneScale(_ argumentName: String) throws -> CGFloat? {
+                guard let rawPercent = arguments[argumentName]?.doubleValue else { return nil }
+                guard rawPercent.isFinite,
+                      (Double(ImageEditorCloneSourceSlotState.minimumScalePercent)...Double(ImageEditorCloneSourceSlotState.maximumScalePercent))
+                        .contains(rawPercent)
+                else {
+                    throw XomoAutomationCallError.invalidArgument(
+                        "Clone \(argumentName) must be from \(Int(ImageEditorCloneSourceSlotState.minimumScalePercent)) through \(Int(ImageEditorCloneSourceSlotState.maximumScalePercent))"
+                    )
+                }
+                return CGFloat(rawPercent)
+            }
+
             var resolvedSourceSlotIndex: Int?
             if let rawSlot = arguments["sourceSlot"]?.doubleValue {
                 guard rawSlot.isFinite,
@@ -5651,23 +5664,30 @@ final class XomoAutomationRegistry {
                 }
                 resolvedSourceSlotIndex = Int(rawSlot) - 1
             }
-            var resolvedScalePercent: CGFloat?
-            if let rawScalePercent = arguments["scalePercent"]?.doubleValue {
-                guard rawScalePercent.isFinite,
-                      (Double(ImageEditorCloneSourceSlotState.minimumScalePercent)...Double(ImageEditorCloneSourceSlotState.maximumScalePercent))
-                        .contains(rawScalePercent)
-                else {
-                    throw XomoAutomationCallError.invalidArgument(
-                        "Clone scalePercent must be from \(Int(ImageEditorCloneSourceSlotState.minimumScalePercent)) through \(Int(ImageEditorCloneSourceSlotState.maximumScalePercent))"
-                    )
-                }
-                resolvedScalePercent = CGFloat(rawScalePercent)
+            let resolvedUniformScale = try validatedCloneScale("scalePercent")
+            let resolvedHorizontalScale = try validatedCloneScale("scaleXPercent")
+            let resolvedVerticalScale = try validatedCloneScale("scaleYPercent")
+            guard resolvedUniformScale == nil
+                    || (resolvedHorizontalScale == nil && resolvedVerticalScale == nil)
+            else {
+                throw XomoAutomationCallError.invalidArgument(
+                    "Clone scalePercent cannot be combined with scaleXPercent or scaleYPercent"
+                )
             }
             if let resolvedSourceSlotIndex {
                 _ = viewModel.selectCloneSourceSlot(resolvedSourceSlotIndex)
             }
-            if let resolvedScalePercent {
-                viewModel.setCloneSourceScalePercent(resolvedScalePercent)
+            if let resolvedUniformScale {
+                viewModel.setCloneSourceScalePercent(resolvedUniformScale)
+                if let linked = arguments["scaleLinked"]?.boolValue {
+                    viewModel.setCloneSourceScalesLinked(linked)
+                }
+            } else {
+                viewModel.configureCloneSourceScale(
+                    horizontalPercent: resolvedHorizontalScale,
+                    verticalPercent: resolvedVerticalScale,
+                    linked: arguments["scaleLinked"]?.boolValue
+                )
             }
             if let flipHorizontal = arguments["flipHorizontal"]?.boolValue {
                 viewModel.setCloneSourceFlipsHorizontally(flipHorizontal)
@@ -7261,6 +7281,9 @@ private extension XomoAutomationRegistry {
             "aligned": XomoAutomationSchema.boolean(description: "Keep the clone or healing source offset aligned across strokes"),
             "sourceSlot": XomoAutomationSchema.integer(description: "One-based clone source slot from 1 through 5", minimum: 1, maximum: 5),
             "scalePercent": XomoAutomationSchema.number(description: "Uniform scale for the active clone source from 25 through 400 percent", minimum: 25, maximum: 400),
+            "scaleXPercent": XomoAutomationSchema.number(description: "Horizontal scale for the active clone source from 25 through 400 percent", minimum: 25, maximum: 400),
+            "scaleYPercent": XomoAutomationSchema.number(description: "Vertical scale for the active clone source from 25 through 400 percent", minimum: 25, maximum: 400),
+            "scaleLinked": XomoAutomationSchema.boolean(description: "Link clone source width and height changes proportionally"),
             "flipHorizontal": XomoAutomationSchema.boolean(description: "Mirror the active clone source horizontally around its sampling origin"),
             "flipVertical": XomoAutomationSchema.boolean(description: "Mirror the active clone source vertically around its sampling origin"),
             "sampleSource": XomoAutomationSchema.string(description: "Clone or healing sampling layer range", values: ["currentLayer", "currentAndBelow", "allVisible"]),

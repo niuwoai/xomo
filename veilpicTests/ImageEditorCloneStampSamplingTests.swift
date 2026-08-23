@@ -291,6 +291,55 @@ struct ImageEditorCloneStampSamplingTests {
         #expect(colorsMatch(transformed, expected))
     }
 
+    @Test func verticalSourceScaleChangesOnlyTheVerticalSamplingAxis() throws {
+        let viewModel = verticallyMirroredSourceViewModel()
+        viewModel.isCloneStampAligned = false
+        viewModel.brushSize = 30
+        viewModel.hardness = 1
+        viewModel.opacity = 1
+        viewModel.setCloneSource(at: CGPoint(x: 20, y: 15))
+        viewModel.setCloneSourceScalesLinked(false)
+        viewModel.setCloneSourceVerticalScalePercent(200)
+        let expected = try color(
+            viewModel.document.selectedLayer?.image,
+            at: CGPoint(x: 20, y: 21)
+        )
+
+        viewModel.cloneStamp(points: [CGPoint(x: 60, y: 15)])
+
+        let scaledPixel = try color(
+            viewModel.document.selectedLayer?.image,
+            at: CGPoint(x: 60, y: 27)
+        )
+        #expect(colorsMatch(scaledPixel, expected))
+        #expect(viewModel.cloneSourceHorizontalScalePercent == 100)
+        #expect(viewModel.cloneSourceVerticalScalePercent == 200)
+    }
+
+    @Test func anisotropicScaleComposesWithHorizontalFlipWithoutScalingY() throws {
+        let viewModel = quadrantSourceViewModel()
+        viewModel.isCloneStampAligned = false
+        viewModel.brushSize = 30
+        viewModel.hardness = 1
+        viewModel.opacity = 1
+        viewModel.setCloneSource(at: CGPoint(x: 20, y: 20))
+        viewModel.setCloneSourceScalesLinked(false)
+        viewModel.setCloneSourceHorizontalScalePercent(200)
+        viewModel.setCloneSourceFlipsHorizontally(true)
+        let expected = try color(
+            viewModel.document.selectedLayer?.image,
+            at: CGPoint(x: 16, y: 28)
+        )
+
+        viewModel.cloneStamp(points: [CGPoint(x: 60, y: 20)])
+
+        let transformed = try color(
+            viewModel.document.selectedLayer?.image,
+            at: CGPoint(x: 68, y: 28)
+        )
+        #expect(colorsMatch(transformed, expected))
+    }
+
     @Test func bothSourceFlipsComposeWithUniformScaleAcrossBothAxes() throws {
         let viewModel = quadrantSourceViewModel()
         viewModel.isCloneStampAligned = false
@@ -340,25 +389,64 @@ struct ImageEditorCloneStampSamplingTests {
         #expect(viewModel.cloneSourceFlipsVertically)
     }
 
-    @Test func sourceScaleIsClampedRememberedPerSlotAndSurvivesResampling() {
+    @Test func sourceScalesLinkByRatioAndRemainIndependentPerSlot() {
         let viewModel = patternedCurrentLayerViewModel()
-        viewModel.setCloneSourceScalePercent(500)
+        viewModel.setCloneSourceHorizontalScalePercent(200)
+        #expect(viewModel.cloneSourceHorizontalScalePercent == 200)
+        #expect(viewModel.cloneSourceVerticalScalePercent == 200)
+
+        viewModel.setCloneSourceScalesLinked(false)
+        viewModel.setCloneSourceVerticalScalePercent(50)
+        #expect(viewModel.cloneSourceHorizontalScalePercent == 200)
+        #expect(viewModel.cloneSourceVerticalScalePercent == 50)
+
+        viewModel.setCloneSourceScalesLinked(true)
+        viewModel.setCloneSourceHorizontalScalePercent(400)
+        #expect(viewModel.cloneSourceHorizontalScalePercent == 400)
+        #expect(viewModel.cloneSourceVerticalScalePercent == 100)
+        viewModel.setCloneSourceVerticalScalePercent(400)
+        #expect(viewModel.cloneSourceHorizontalScalePercent == 400)
+        #expect(viewModel.cloneSourceVerticalScalePercent == 100)
         viewModel.setCloneSource(at: CGPoint(x: 10, y: 15))
-        #expect(viewModel.cloneSourceScalePercent == 400)
 
         #expect(viewModel.selectCloneSourceSlot(1))
-        #expect(viewModel.cloneSourceScalePercent == 100)
-        viewModel.setCloneSourceScalePercent(10)
+        #expect(viewModel.cloneSourceHorizontalScalePercent == 100)
+        #expect(viewModel.cloneSourceVerticalScalePercent == 100)
+        #expect(viewModel.cloneSourceScalesLinked)
+        viewModel.configureCloneSourceScale(
+            horizontalPercent: 75,
+            verticalPercent: 150,
+            linked: false
+        )
         viewModel.setCloneSource(at: CGPoint(x: 30, y: 15))
-        #expect(viewModel.cloneSourceScalePercent == 25)
+        #expect(viewModel.cloneSourceHorizontalScalePercent == 75)
+        #expect(viewModel.cloneSourceVerticalScalePercent == 150)
+        #expect(!viewModel.cloneSourceScalesLinked)
 
         #expect(viewModel.selectCloneSourceSlot(0))
-        #expect(viewModel.cloneSourceScalePercent == 400)
+        #expect(viewModel.cloneSourceHorizontalScalePercent == 400)
+        #expect(viewModel.cloneSourceVerticalScalePercent == 100)
+        #expect(viewModel.cloneSourceScalesLinked)
         viewModel.setCloneSource(at: CGPoint(x: 12, y: 15))
-        #expect(viewModel.cloneSourceScalePercent == 400)
+        #expect(viewModel.cloneSourceHorizontalScalePercent == 400)
+        #expect(viewModel.cloneSourceVerticalScalePercent == 100)
 
         #expect(viewModel.selectCloneSourceSlot(1))
-        #expect(viewModel.cloneSourceScalePercent == 25)
+        #expect(viewModel.cloneSourceHorizontalScalePercent == 75)
+        #expect(viewModel.cloneSourceVerticalScalePercent == 150)
+        #expect(!viewModel.cloneSourceScalesLinked)
+    }
+
+    @Test func uniformScaleCompatibilityClampsBothAxesTogether() {
+        let viewModel = patternedCurrentLayerViewModel()
+        viewModel.setCloneSourceScalesLinked(false)
+
+        viewModel.setCloneSourceScalePercent(500)
+        #expect(viewModel.cloneSourceHorizontalScalePercent == 400)
+        #expect(viewModel.cloneSourceVerticalScalePercent == 400)
+        viewModel.setCloneSourceScalePercent(10)
+        #expect(viewModel.cloneSourceHorizontalScalePercent == 25)
+        #expect(viewModel.cloneSourceVerticalScalePercent == 25)
     }
 
     @Test func samplingRangeDistinguishesCurrentBelowAndAllVisibleLayers() throws {

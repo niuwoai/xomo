@@ -247,8 +247,14 @@ final class ImageEditorViewModel: ObservableObject {
     var cloneSourceFlipsVertically: Bool {
         cloneSourceSlots[activeCloneSourceSlotIndex].flipsVertically
     }
-    var cloneSourceScalePercent: CGFloat {
-        cloneSourceSlots[activeCloneSourceSlotIndex].scalePercent
+    var cloneSourceHorizontalScalePercent: CGFloat {
+        cloneSourceSlots[activeCloneSourceSlotIndex].horizontalScalePercent
+    }
+    var cloneSourceVerticalScalePercent: CGFloat {
+        cloneSourceSlots[activeCloneSourceSlotIndex].verticalScalePercent
+    }
+    var cloneSourceScalesLinked: Bool {
+        cloneSourceSlots[activeCloneSourceSlotIndex].scalesLinked
     }
     @Published var isCloneStampAligned = true {
         didSet {
@@ -7151,9 +7157,30 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     func setCloneSourceScalePercent(_ scalePercent: CGFloat) {
-        cloneSourceSlots[activeCloneSourceSlotIndex].scalePercent = min(
-            ImageEditorCloneSourceSlotState.maximumScalePercent,
-            max(ImageEditorCloneSourceSlotState.minimumScalePercent, scalePercent)
+        cloneSourceSlots[activeCloneSourceSlotIndex].setUniformScalePercent(scalePercent)
+    }
+
+    func setCloneSourceHorizontalScalePercent(_ scalePercent: CGFloat) {
+        cloneSourceSlots[activeCloneSourceSlotIndex].setHorizontalScalePercent(scalePercent)
+    }
+
+    func setCloneSourceVerticalScalePercent(_ scalePercent: CGFloat) {
+        cloneSourceSlots[activeCloneSourceSlotIndex].setVerticalScalePercent(scalePercent)
+    }
+
+    func setCloneSourceScalesLinked(_ linked: Bool) {
+        cloneSourceSlots[activeCloneSourceSlotIndex].scalesLinked = linked
+    }
+
+    func configureCloneSourceScale(
+        horizontalPercent: CGFloat?,
+        verticalPercent: CGFloat?,
+        linked: Bool?
+    ) {
+        cloneSourceSlots[activeCloneSourceSlotIndex].configureScale(
+            horizontalPercent: horizontalPercent,
+            verticalPercent: verticalPercent,
+            linked: linked
         )
     }
 
@@ -7237,7 +7264,8 @@ final class ImageEditorViewModel: ObservableObject {
             sourceImage: samplingInput.image,
             flipSourceHorizontally: cloneSourceFlipsHorizontally,
             flipSourceVertically: cloneSourceFlipsVertically,
-            sourceScale: cloneSourceScalePercent / 100,
+            horizontalSourceScale: cloneSourceHorizontalScalePercent / 100,
+            verticalSourceScale: cloneSourceVerticalScalePercent / 100,
             width: rasterLocalBrushWidth(brushSize, layer: layer),
             opacity: opacity,
             hardness: hardness,
@@ -11066,7 +11094,8 @@ extension NSImage {
         sourceImage: NSImage,
         flipSourceHorizontally: Bool = false,
         flipSourceVertically: Bool = false,
-        sourceScale: CGFloat = 1,
+        horizontalSourceScale: CGFloat = 1,
+        verticalSourceScale: CGFloat = 1,
         width: CGFloat,
         opacity: CGFloat,
         hardness: CGFloat
@@ -11077,7 +11106,8 @@ extension NSImage {
             sourceImage: sourceImage,
             flipSourceHorizontally: flipSourceHorizontally,
             flipSourceVertically: flipSourceVertically,
-            sourceScale: sourceScale,
+            horizontalSourceScale: horizontalSourceScale,
+            verticalSourceScale: verticalSourceScale,
             width: width,
             opacity: opacity,
             hardness: hardness,
@@ -11092,7 +11122,8 @@ extension NSImage {
         sourceImage: NSImage,
         flipSourceHorizontally: Bool = false,
         flipSourceVertically: Bool = false,
-        sourceScale: CGFloat = 1,
+        horizontalSourceScale: CGFloat = 1,
+        verticalSourceScale: CGFloat = 1,
         width: CGFloat,
         opacity: CGFloat,
         hardness: CGFloat,
@@ -11101,14 +11132,19 @@ extension NSImage {
     ) -> NSImage? {
         guard !samples.isEmpty else { return nil }
 
-        let boundedSourceScale = sourceScale.isFinite ? max(0.01, sourceScale) : 1
+        let boundedHorizontalScale = horizontalSourceScale.isFinite
+            ? max(0.01, horizontalSourceScale)
+            : 1
+        let boundedVerticalScale = verticalSourceScale.isFinite
+            ? max(0.01, verticalSourceScale)
+            : 1
         let destinationReference = samples[0].point
         guard let shiftedSource = NSImage.rendered(size: size, actions: { _ in
             guard let context = NSGraphicsContext.current?.cgContext else { return }
             context.translateBy(x: destinationReference.x, y: destinationReference.y)
             context.scaleBy(
-                x: (flipSourceHorizontally ? -1 : 1) * boundedSourceScale,
-                y: (flipSourceVertically ? -1 : 1) * boundedSourceScale
+                x: (flipSourceHorizontally ? -1 : 1) * boundedHorizontalScale,
+                y: (flipSourceVertically ? -1 : 1) * boundedVerticalScale
             )
             context.translateBy(x: -destinationReference.x, y: -destinationReference.y)
             sourceImage.draw(

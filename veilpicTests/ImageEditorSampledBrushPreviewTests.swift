@@ -170,20 +170,22 @@ struct ImageEditorSampledBrushPreviewTests {
         #expect(nearby.connector == nil)
     }
 
-    @Test func cloneScaleShrinksTheSourceFootprintButKeepsTheDestinationFootprint() {
+    @Test func independentCloneScalesCreateAnEllipticalSourceFootprint() {
         let geometry = ImageEditorSampledBrushOverlayGeometry.resolve(
             sourcePoint: CGPoint(x: 10, y: 20),
             liveSourcePoint: CGPoint(x: 20, y: 30),
             currentDestination: CGPoint(x: 80, y: 30),
             isPickingSource: false,
             brushDiameter: 20,
-            sourceScale: 2,
+            horizontalSourceScale: 2,
+            verticalSourceScale: 1,
             pressure: nil,
             pressureControlsSize: false,
             pressureSensitivity: 0.5
         )
 
         #expect(geometry.diameter == 10)
+        #expect(geometry.sourceHeight == 20)
         #expect(geometry.destinationDiameter == 20)
         #expect(geometry.connector?.start == CGPoint(x: 25, y: 30))
         #expect(geometry.connector?.end == CGPoint(x: 70, y: 30))
@@ -213,9 +215,13 @@ struct ImageEditorSampledBrushPreviewTests {
         #expect(propertySource.contains("pressure: brushStrokeSamples.last?.pressure"))
         #expect(propertySource.contains("pressureControlsSize: viewModel.retouchPressureControlsSize"))
         #expect(propertySource.contains("viewModel.healingBrushMode == .source"))
+        #expect(propertySource.contains("viewModel.cloneSourceHorizontalScalePercent"))
+        #expect(propertySource.contains("viewModel.cloneSourceVerticalScalePercent"))
         #expect(overlaySource.contains("geometry.connector"))
         #expect(overlaySource.contains("StrokeStyle(lineWidth: 1, dash: [5, 4])"))
         #expect(overlaySource.contains("geometry.diameter * viewScale"))
+        #expect(overlaySource.contains("geometry.sourceHeight"))
+        #expect(overlaySource.contains("Ellipse()"))
     }
 
     private func sampledBrushViewModel() -> ImageEditorViewModel {

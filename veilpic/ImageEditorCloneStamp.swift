@@ -29,7 +29,72 @@ struct ImageEditorCloneSourceSlotState: Equatable {
     var alignedCanvasOffset: CGSize?
     var flipsHorizontally = false
     var flipsVertically = false
-    var scalePercent: CGFloat = 100
+    var horizontalScalePercent: CGFloat = 100
+    var verticalScalePercent: CGFloat = 100
+    var scalesLinked = true
+
+    mutating func setUniformScalePercent(_ percent: CGFloat) {
+        let bounded = Self.boundedScalePercent(percent)
+        horizontalScalePercent = bounded
+        verticalScalePercent = bounded
+    }
+
+    mutating func setHorizontalScalePercent(_ percent: CGFloat) {
+        guard scalesLinked else {
+            horizontalScalePercent = Self.boundedScalePercent(percent)
+            return
+        }
+        let ratio = verticalScalePercent / horizontalScalePercent
+        horizontalScalePercent = Self.boundedLinkedPrimaryScale(
+            percent,
+            secondaryRatio: ratio
+        )
+        verticalScalePercent = horizontalScalePercent * ratio
+    }
+
+    mutating func setVerticalScalePercent(_ percent: CGFloat) {
+        guard scalesLinked else {
+            verticalScalePercent = Self.boundedScalePercent(percent)
+            return
+        }
+        let ratio = horizontalScalePercent / verticalScalePercent
+        verticalScalePercent = Self.boundedLinkedPrimaryScale(
+            percent,
+            secondaryRatio: ratio
+        )
+        horizontalScalePercent = verticalScalePercent * ratio
+    }
+
+    mutating func configureScale(
+        horizontalPercent: CGFloat?,
+        verticalPercent: CGFloat?,
+        linked: Bool?
+    ) {
+        if let linked { scalesLinked = linked }
+        if let horizontalPercent, let verticalPercent {
+            horizontalScalePercent = Self.boundedScalePercent(horizontalPercent)
+            verticalScalePercent = Self.boundedScalePercent(verticalPercent)
+        } else if let horizontalPercent {
+            setHorizontalScalePercent(horizontalPercent)
+        } else if let verticalPercent {
+            setVerticalScalePercent(verticalPercent)
+        }
+    }
+
+    private static func boundedScalePercent(_ percent: CGFloat) -> CGFloat {
+        guard percent.isFinite else { return 100 }
+        return min(maximumScalePercent, max(minimumScalePercent, percent))
+    }
+
+    private static func boundedLinkedPrimaryScale(
+        _ percent: CGFloat,
+        secondaryRatio: CGFloat
+    ) -> CGFloat {
+        let boundedRatio = max(0.0001, secondaryRatio)
+        let lowerBound = max(minimumScalePercent, minimumScalePercent / boundedRatio)
+        let upperBound = min(maximumScalePercent, maximumScalePercent / boundedRatio)
+        return min(upperBound, max(lowerBound, boundedScalePercent(percent)))
+    }
 }
 
 struct ImageEditorSampledBrushOffsetResolution: Equatable {
@@ -70,6 +135,7 @@ struct ImageEditorSampledBrushOverlayGeometry: Equatable {
     var sourcePoint: CGPoint
     var destinationPoint: CGPoint?
     var diameter: CGFloat
+    var sourceHeight: CGFloat? = nil
     var destinationDiameter: CGFloat? = nil
 
     var connector: Connector? {
@@ -79,10 +145,15 @@ struct ImageEditorSampledBrushOverlayGeometry: Equatable {
             dy: destinationPoint.y - sourcePoint.y
         )
         let distance = hypot(delta.dx, delta.dy)
-        let sourceRadius = max(0, diameter) / 2
-        let destinationRadius = max(0, destinationDiameter ?? diameter) / 2
-        guard distance > sourceRadius + destinationRadius, distance > 0 else { return nil }
+        guard distance > 0 else { return nil }
         let unit = CGVector(dx: delta.dx / distance, dy: delta.dy / distance)
+        let sourceRadius = ellipseRadius(
+            width: diameter,
+            height: sourceHeight ?? diameter,
+            unit: unit
+        )
+        let destinationRadius = max(0, destinationDiameter ?? diameter) / 2
+        guard distance > sourceRadius + destinationRadius else { return nil }
         return Connector(
             start: CGPoint(
                 x: sourcePoint.x + unit.dx * sourceRadius,
@@ -95,13 +166,20 @@ struct ImageEditorSampledBrushOverlayGeometry: Equatable {
         )
     }
 
+    private func ellipseRadius(width: CGFloat, height: CGFloat, unit: CGVector) -> CGFloat {
+        let horizontalRadius = max(0.0001, width / 2)
+        let verticalRadius = max(0.0001, height / 2)
+        return 1 / hypot(unit.dx / horizontalRadius, unit.dy / verticalRadius)
+    }
+
     static func resolve(
         sourcePoint: CGPoint,
         liveSourcePoint: CGPoint?,
         currentDestination: CGPoint?,
         isPickingSource: Bool,
         brushDiameter: CGFloat,
-        sourceScale: CGFloat = 1,
+        horizontalSourceScale: CGFloat = 1,
+        verticalSourceScale: CGFloat = 1,
         pressure: CGFloat?,
         pressureControlsSize: Bool,
         pressureSensitivity: CGFloat
@@ -112,8 +190,14 @@ struct ImageEditorSampledBrushOverlayGeometry: Equatable {
             pressureControlsSize: pressureControlsSize,
             pressureSensitivity: pressureSensitivity
         )
-        let boundedSourceScale = sourceScale.isFinite ? max(0.01, sourceScale) : 1
-        let sourceDiameter = destinationDiameter / boundedSourceScale
+        let boundedHorizontalScale = horizontalSourceScale.isFinite
+            ? max(0.01, horizontalSourceScale)
+            : 1
+        let boundedVerticalScale = verticalSourceScale.isFinite
+            ? max(0.01, verticalSourceScale)
+            : 1
+        let sourceWidth = destinationDiameter / boundedHorizontalScale
+        let sourceHeight = destinationDiameter / boundedVerticalScale
 
         guard !isPickingSource,
               let liveSourcePoint,
@@ -121,7 +205,8 @@ struct ImageEditorSampledBrushOverlayGeometry: Equatable {
             return ImageEditorSampledBrushOverlayGeometry(
                 sourcePoint: sourcePoint,
                 destinationPoint: nil,
-                diameter: sourceDiameter,
+                diameter: sourceWidth,
+                sourceHeight: sourceHeight,
                 destinationDiameter: destinationDiameter
             )
         }
@@ -129,7 +214,8 @@ struct ImageEditorSampledBrushOverlayGeometry: Equatable {
         return ImageEditorSampledBrushOverlayGeometry(
             sourcePoint: liveSourcePoint,
             destinationPoint: currentDestination,
-            diameter: sourceDiameter,
+            diameter: sourceWidth,
+            sourceHeight: sourceHeight,
             destinationDiameter: destinationDiameter
         )
     }

@@ -1263,16 +1263,41 @@ struct ImageEditorView: View {
                 .accessibilityIdentifier("image-editor-clone-source-slot")
 
                 optionSlider(
-                    titleKey: "imageEditor.option.cloneSourceScale",
+                    titleKey: "imageEditor.option.cloneSourceScaleWidth",
                     value: Binding(
-                        get: { viewModel.cloneSourceScalePercent },
-                        set: { viewModel.setCloneSourceScalePercent($0) }
+                        get: { viewModel.cloneSourceHorizontalScalePercent },
+                        set: { viewModel.setCloneSourceHorizontalScalePercent($0) }
                     ),
                     range: ImageEditorCloneSourceSlotState.minimumScalePercent...ImageEditorCloneSourceSlotState.maximumScalePercent,
                     step: 1,
                     suffix: "%"
                 )
-                .accessibilityIdentifier("image-editor-clone-source-scale")
+                .accessibilityIdentifier("image-editor-clone-source-scale-width")
+
+                Toggle(
+                    L10n.text("imageEditor.option.cloneSourceScaleLink"),
+                    isOn: Binding(
+                        get: { viewModel.cloneSourceScalesLinked },
+                        set: { viewModel.setCloneSourceScalesLinked($0) }
+                    )
+                )
+                .toggleStyle(.checkbox)
+                .fixedSize()
+                .focusable(false)
+                .xomoFocusEffectDisabled()
+                .accessibilityIdentifier("image-editor-clone-source-scale-link")
+
+                optionSlider(
+                    titleKey: "imageEditor.option.cloneSourceScaleHeight",
+                    value: Binding(
+                        get: { viewModel.cloneSourceVerticalScalePercent },
+                        set: { viewModel.setCloneSourceVerticalScalePercent($0) }
+                    ),
+                    range: ImageEditorCloneSourceSlotState.minimumScalePercent...ImageEditorCloneSourceSlotState.maximumScalePercent,
+                    step: 1,
+                    suffix: "%"
+                )
+                .accessibilityIdentifier("image-editor-clone-source-scale-height")
 
                 Toggle(
                     L10n.text("imageEditor.option.cloneSourceFlipHorizontal"),
@@ -4757,7 +4782,8 @@ struct ImageEditorView: View {
             let imageRect = fittedImageRect(in: size)
             let viewScale = imageRect.width / max(1, viewModel.document.canvasSize.width)
             let sourcePoint = viewPoint(from: geometry.sourcePoint, in: size)
-            let diameter = max(1, geometry.diameter * viewScale)
+            let sourceWidth = max(1, geometry.diameter * viewScale)
+            let sourceHeight = max(1, (geometry.sourceHeight ?? geometry.diameter) * viewScale)
             ZStack {
                 if let connector = geometry.connector {
                     let start = viewPoint(from: connector.start, in: size)
@@ -4779,9 +4805,9 @@ struct ImageEditorView: View {
                         style: StrokeStyle(lineWidth: 1, dash: [5, 4])
                     )
                 }
-                Circle()
+                Ellipse()
                     .stroke(Color.white.opacity(0.92), lineWidth: 1)
-                    .frame(width: diameter, height: diameter)
+                    .frame(width: sourceWidth, height: sourceHeight)
                     .position(sourcePoint)
                 Rectangle()
                     .fill(Color.white.opacity(0.92))
@@ -4948,8 +4974,11 @@ struct ImageEditorView: View {
             currentDestination: currentDestination,
             isPickingSource: isSettingSampledBrushSourceGesture,
             brushDiameter: viewModel.brushSize,
-            sourceScale: canvasInteractionTool == .cloneStamp
-                ? viewModel.cloneSourceScalePercent / 100
+            horizontalSourceScale: canvasInteractionTool == .cloneStamp
+                ? viewModel.cloneSourceHorizontalScalePercent / 100
+                : 1,
+            verticalSourceScale: canvasInteractionTool == .cloneStamp
+                ? viewModel.cloneSourceVerticalScalePercent / 100
                 : 1,
             pressure: brushStrokeSamples.last?.pressure,
             pressureControlsSize: viewModel.retouchPressureControlsSize,
