@@ -990,13 +990,13 @@ enum XomoEditableSVGImporter {
 
     private static func functionalPaint(_ source: String) -> SVGPaint? {
         guard let open = source.firstIndex(of: "("), source.last == ")" else { return nil }
-        let values = source[source.index(after: open)..<source.index(before: source.endIndex)]
-            .split(separator: ",")
-            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-        let expectsAlpha = source.hasPrefix("rgba(")
-        guard values.count == (expectsAlpha ? 4 : 3) else { return nil }
+        let body = String(source[source.index(after: open)..<source.index(before: source.endIndex)])
+        guard let arguments = functionalPaintArguments(
+            body,
+            legacyFunctionExpectsAlpha: source.hasPrefix("rgba(")
+        ) else { return nil }
         var rgb: [CGFloat] = []
-        for component in values.prefix(3) {
+        for component in arguments.rgb {
             if component.hasSuffix("%"),
                let value = Double(component.dropLast()),
                value.isFinite,
@@ -1008,12 +1008,46 @@ enum XomoEditableSVGImporter {
                 return nil
             }
         }
-        let alpha = expectsAlpha ? unitInterval(values[3]) : 1
-        guard let alpha else { return nil }
+        let alpha: CGFloat
+        if let alphaSource = arguments.alpha {
+            guard let parsedAlpha = unitInterval(alphaSource) else { return nil }
+            alpha = parsedAlpha
+        } else {
+            alpha = 1
+        }
         return SVGPaint(
             color: NSColor(deviceRed: rgb[0], green: rgb[1], blue: rgb[2], alpha: 1),
             alpha: alpha
         )
+    }
+
+    private static func functionalPaintArguments(
+        _ body: String,
+        legacyFunctionExpectsAlpha: Bool
+    ) -> (rgb: [String], alpha: String?)? {
+        if body.contains(",") {
+            guard !body.contains("/") else { return nil }
+            let values = body
+                .split(separator: ",", omittingEmptySubsequences: false)
+                .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            guard values.allSatisfy({ !$0.isEmpty }),
+                  values.count == (legacyFunctionExpectsAlpha ? 4 : 3)
+            else { return nil }
+            return (Array(values.prefix(3)), legacyFunctionExpectsAlpha ? values[3] : nil)
+        }
+
+        let sections = body.split(separator: "/", omittingEmptySubsequences: false)
+        guard (1...2).contains(sections.count) else { return nil }
+        let rgb = sections[0]
+            .split(whereSeparator: \.isWhitespace)
+            .map(String.init)
+        guard rgb.count == 3 else { return nil }
+        guard sections.count == 2 else { return (rgb, nil) }
+        let alpha = sections[1]
+            .split(whereSeparator: \.isWhitespace)
+            .map(String.init)
+        guard alpha.count == 1 else { return nil }
+        return (rgb, alpha[0])
     }
 
     private static func bounds(of subpaths: [[ImageEditorPathAnchor]]) -> CGRect? {
