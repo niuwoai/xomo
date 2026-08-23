@@ -1312,6 +1312,29 @@ struct ImageEditorView: View {
                 .accessibilityIdentifier("image-editor-clone-source-rotation")
 
                 Toggle(
+                    L10n.text("imageEditor.option.cloneSourceShowOverlay"),
+                    isOn: $viewModel.cloneStampShowsOverlay
+                )
+                .toggleStyle(.checkbox)
+                .fixedSize()
+                .focusable(false)
+                .xomoFocusEffectDisabled()
+                .accessibilityIdentifier("image-editor-clone-source-show-overlay")
+
+                optionSlider(
+                    titleKey: "imageEditor.option.cloneSourceOverlayOpacity",
+                    value: Binding(
+                        get: { viewModel.cloneStampOverlayOpacityPercent },
+                        set: { viewModel.setCloneStampOverlayOpacityPercent($0) }
+                    ),
+                    range: 0...100,
+                    step: 5,
+                    suffix: "%"
+                )
+                .disabled(!viewModel.cloneStampShowsOverlay)
+                .accessibilityIdentifier("image-editor-clone-source-overlay-opacity")
+
+                Toggle(
                     L10n.text("imageEditor.option.cloneSourceFlipHorizontal"),
                     isOn: Binding(
                         get: { viewModel.cloneSourceFlipsHorizontally },
@@ -3450,6 +3473,7 @@ struct ImageEditorView: View {
                     deliverySelectionOverlay(in: geometry.size)
                     colorSamplerOverlay(in: geometry.size)
                     eyedropperSamplingRingOverlay(in: geometry.size)
+                    cloneStampPixelOverlay(in: geometry.size)
                     sampledBrushSourceOverlay(in: geometry.size)
                     paintAirbrushOverlay(in: geometry.size)
                     toneAirbrushOverlay(in: geometry.size)
@@ -4786,6 +4810,53 @@ struct ImageEditorView: View {
             _ = viewModel.updateHotspot(id: id, frame: deliveryDrag.previewFrame)
         }
         self.deliveryDrag = nil
+    }
+
+    @ViewBuilder
+    private func cloneStampPixelOverlay(in size: CGSize) -> some View {
+        if canvasInteractionTool == .cloneStamp,
+           isPointerInsideCanvas,
+           !isSettingSampledBrushSourceGesture,
+           let hoverViewPoint,
+           let hoverCanvasPoint = imagePoint(from: hoverViewPoint, in: size),
+           let preview = viewModel.cloneStampOverlayPreview(
+               destinationReference: dragPoints.first ?? hoverCanvasPoint
+           ) {
+            let imageRect = fittedImageRect(in: size)
+            let xScale = imageRect.width / max(1, viewModel.document.canvasSize.width)
+            let yScale = imageRect.height / max(1, viewModel.document.canvasSize.height)
+            let destinationViewPoint = viewPoint(
+                from: preview.geometry.destinationReference,
+                in: size
+            )
+            let sourceFrame = imageRect.offsetBy(
+                dx: -preview.geometry.canvasOffset.width * xScale,
+                dy: -preview.geometry.canvasOffset.height * yScale
+            )
+            let targetFrame = viewRect(from: preview.geometry.targetFrame, in: size)
+            Canvas { context, _ in
+                context.clip(to: Path(targetFrame))
+                context.opacity = Double(preview.opacity)
+                context.translateBy(
+                    x: destinationViewPoint.x,
+                    y: destinationViewPoint.y
+                )
+                context.rotate(by: .degrees(Double(preview.geometry.rotationDegrees)))
+                context.scaleBy(
+                    x: preview.geometry.horizontalScale
+                        * (preview.geometry.flipsHorizontally ? -1 : 1),
+                    y: preview.geometry.verticalScale
+                        * (preview.geometry.flipsVertically ? -1 : 1)
+                )
+                context.translateBy(
+                    x: -destinationViewPoint.x,
+                    y: -destinationViewPoint.y
+                )
+                context.draw(Image(nsImage: preview.sourceCanvas), in: sourceFrame)
+            }
+            .allowsHitTesting(false)
+            .accessibilityHidden(true)
+        }
     }
 
     @ViewBuilder

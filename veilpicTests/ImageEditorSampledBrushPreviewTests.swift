@@ -193,6 +193,30 @@ struct ImageEditorSampledBrushPreviewTests {
         #expect(geometry.connector?.end == CGPoint(x: 70, y: 30))
     }
 
+    @Test func cloneOverlayGeometryMapsSourcePixelsThroughTheSharedAffineOrder() {
+        let geometry = ImageEditorCloneStampOverlayGeometry(
+            canvasOffset: CGSize(width: -40, height: 0),
+            destinationReference: CGPoint(x: 60, y: 20),
+            targetFrame: CGRect(x: 0, y: 0, width: 100, height: 40),
+            horizontalScale: 2,
+            verticalScale: 0.5,
+            flipsHorizontally: true,
+            flipsVertically: false,
+            rotationDegrees: 90
+        )
+
+        #expect(
+            geometry.transformedCanvasPoint(
+                fromSourceCanvasPoint: CGPoint(x: 20, y: 20)
+            ) == CGPoint(x: 60, y: 20)
+        )
+        let transformed = geometry.transformedCanvasPoint(
+            fromSourceCanvasPoint: CGPoint(x: 16, y: 14)
+        )
+        #expect(abs(transformed.x - 63) < 0.0001)
+        #expect(abs(transformed.y - 28) < 0.0001)
+    }
+
     @Test func canvasOverlayUsesLiveStrokeEndpointsButNotSourceSetting() throws {
         let source = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
@@ -226,6 +250,11 @@ struct ImageEditorSampledBrushPreviewTests {
         #expect(overlaySource.contains("geometry.sourceHeight"))
         #expect(overlaySource.contains("geometry.sourceRotationDegrees"))
         #expect(overlaySource.contains(".rotationEffect("))
+        #expect(source.contains("cloneStampPixelOverlay(in: geometry.size)"))
+        #expect(source.contains("viewModel.cloneStampOverlayPreview("))
+        #expect(source.contains("context.clip(to: Path(targetFrame))"))
+        #expect(source.contains("context.opacity = Double(preview.opacity)"))
+        #expect(source.contains("context.draw(Image(nsImage: preview.sourceCanvas), in: sourceFrame)"))
         #expect(overlaySource.contains("Ellipse()"))
     }
 

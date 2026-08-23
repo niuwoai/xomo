@@ -267,6 +267,8 @@ final class ImageEditorViewModel: ObservableObject {
     }
     @Published var cloneStampSampleSource: ImageEditorCloneSampleSource = .currentLayer
     @Published var cloneStampIgnoresAdjustmentLayers = false
+    @Published var cloneStampShowsOverlay = true
+    @Published private(set) var cloneStampOverlayOpacityPercent: CGFloat = 50
     @Published private(set) var isSettingCloneSource = false
     @Published var healingSourcePoint: CGPoint?
     @Published var healingBrushMode: ImageEditorHealingBrushMode = .source {
@@ -533,6 +535,7 @@ final class ImageEditorViewModel: ObservableObject {
         ignoresAdjustmentLayers: Bool,
         image: NSImage
     )?
+    var cachedCloneStampOverlaySource: ImageEditorCloneStampOverlaySourceCache?
     private var cachedChannelPreviewImages: [String: NSImage] = [:]
     private var cachedAlphaChannelPreviewImages: [UUID: NSImage] = [:]
     private var cachedLayerMaskSoloPreviewImages: [UUID: NSImage] = [:]
@@ -634,7 +637,7 @@ final class ImageEditorViewModel: ObservableObject {
     var editingGradientOverlayMidpointOriginalStops: [ImageEditorGradientColorStop]?
     var copiedLayerStyle: ImageEditorLayerStyle?
     var copiedLayerStyleSourceID: UUID?
-    private var cloneStampAlignedCanvasOffset: CGSize? {
+    var cloneStampAlignedCanvasOffset: CGSize? {
         get {
             cloneSourceSlots[activeCloneSourceSlotIndex].alignedCanvasOffset
         }
@@ -7191,6 +7194,14 @@ final class ImageEditorViewModel: ObservableObject {
         cloneSourceSlots[activeCloneSourceSlotIndex].setRotationDegrees(degrees)
     }
 
+    func setCloneStampOverlayOpacityPercent(_ percent: CGFloat) {
+        guard percent.isFinite else {
+            cloneStampOverlayOpacityPercent = 50
+            return
+        }
+        cloneStampOverlayOpacityPercent = min(100, max(0, percent))
+    }
+
     private func resetCloneSourceAlignedOffsets() {
         for index in cloneSourceSlots.indices {
             cloneSourceSlots[index].alignedCanvasOffset = nil
@@ -11005,6 +11016,7 @@ final class ImageEditorViewModel: ObservableObject {
     private func invalidateRenderedImageCaches() {
         cachedCurrentImage = nil
         resetPointerSampleCache()
+        cachedCloneStampOverlaySource = nil
         cachedChannelPreviewImages.removeAll(keepingCapacity: true)
         cachedAlphaChannelPreviewImages.removeAll(keepingCapacity: true)
         cachedLayerMaskSoloPreviewImages.removeAll(keepingCapacity: true)

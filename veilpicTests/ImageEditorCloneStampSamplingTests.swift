@@ -521,6 +521,66 @@ struct ImageEditorCloneStampSamplingTests {
         #expect(viewModel.cloneSourceRotationDegrees == 37)
     }
 
+    @Test func cloneOverlayUsesTheConfiguredSourceRangeAndOpacity() throws {
+        let viewModel = layeredSamplingViewModel()
+        viewModel.cloneStampSampleSource = .currentAndBelow
+        viewModel.setCloneStampOverlayOpacityPercent(35)
+        viewModel.setCloneSource(at: CGPoint(x: 10, y: 15))
+
+        let preview = try #require(
+            viewModel.cloneStampOverlayPreview(
+                destinationReference: CGPoint(x: 60, y: 15)
+            )
+        )
+        let sourceColor = try color(preview.sourceCanvas, at: CGPoint(x: 10, y: 15))
+        #expect(sourceColor.redComponent > sourceColor.greenComponent + 0.25)
+        #expect(preview.opacity == 0.35)
+        #expect(
+            preview.geometry.transformedCanvasPoint(
+                fromSourceCanvasPoint: CGPoint(x: 10, y: 15)
+            ) == CGPoint(x: 60, y: 15)
+        )
+
+        viewModel.cloneStampShowsOverlay = false
+        #expect(
+            viewModel.cloneStampOverlayPreview(
+                destinationReference: CGPoint(x: 60, y: 15)
+            ) == nil
+        )
+        viewModel.setCloneStampOverlayOpacityPercent(-20)
+        #expect(viewModel.cloneStampOverlayOpacityPercent == 0)
+        viewModel.setCloneStampOverlayOpacityPercent(120)
+        #expect(viewModel.cloneStampOverlayOpacityPercent == 100)
+    }
+
+    @Test func cloneOverlaySourceCanvasIsCachedAcrossHoverAndInvalidatedByEdits() throws {
+        let viewModel = patternedCurrentLayerViewModel()
+        viewModel.isCloneStampAligned = false
+        viewModel.brushSize = 6
+        viewModel.opacity = 1
+        viewModel.setCloneSource(at: CGPoint(x: 10, y: 15))
+
+        let first = try #require(
+            viewModel.cloneStampOverlayPreview(
+                destinationReference: CGPoint(x: 50, y: 15)
+            )
+        )
+        let second = try #require(
+            viewModel.cloneStampOverlayPreview(
+                destinationReference: CGPoint(x: 70, y: 15)
+            )
+        )
+        #expect(first.sourceCanvas === second.sourceCanvas)
+
+        viewModel.cloneStamp(points: [CGPoint(x: 50, y: 15)])
+        let afterEdit = try #require(
+            viewModel.cloneStampOverlayPreview(
+                destinationReference: CGPoint(x: 70, y: 15)
+            )
+        )
+        #expect(afterEdit.sourceCanvas !== first.sourceCanvas)
+    }
+
     @Test func samplingRangeDistinguishesCurrentBelowAndAllVisibleLayers() throws {
         let current = layeredSamplingViewModel()
         current.cloneStampSampleSource = .currentLayer

@@ -5681,6 +5681,17 @@ final class XomoAutomationRegistry {
             } else {
                 resolvedRotationDegrees = nil
             }
+            let resolvedOverlayOpacityPercent: CGFloat?
+            if let rawPercent = arguments["overlayOpacityPercent"]?.doubleValue {
+                guard rawPercent.isFinite, (0...100).contains(rawPercent) else {
+                    throw XomoAutomationCallError.invalidArgument(
+                        "Clone overlayOpacityPercent must be from 0 through 100"
+                    )
+                }
+                resolvedOverlayOpacityPercent = CGFloat(rawPercent)
+            } else {
+                resolvedOverlayOpacityPercent = nil
+            }
             guard resolvedUniformScale == nil
                     || (resolvedHorizontalScale == nil && resolvedVerticalScale == nil)
             else {
@@ -5711,6 +5722,12 @@ final class XomoAutomationRegistry {
             }
             if let resolvedRotationDegrees {
                 viewModel.setCloneSourceRotationDegrees(resolvedRotationDegrees)
+            }
+            if let showOverlay = arguments["showOverlay"]?.boolValue {
+                viewModel.cloneStampShowsOverlay = showOverlay
+            }
+            if let resolvedOverlayOpacityPercent {
+                viewModel.setCloneStampOverlayOpacityPercent(resolvedOverlayOpacityPercent)
             }
             if let aligned = arguments["aligned"]?.boolValue {
                 viewModel.isCloneStampAligned = aligned
@@ -7302,6 +7319,8 @@ private extension XomoAutomationRegistry {
             "scaleYPercent": XomoAutomationSchema.number(description: "Vertical scale for the active clone source from 25 through 400 percent", minimum: 25, maximum: 400),
             "scaleLinked": XomoAutomationSchema.boolean(description: "Link clone source width and height changes proportionally"),
             "rotationDegrees": XomoAutomationSchema.number(description: "Clockwise clone source rotation from -180 through 180 degrees", minimum: -180, maximum: 180),
+            "showOverlay": XomoAutomationSchema.boolean(description: "Show transformed clone source pixels under the pointer before painting"),
+            "overlayOpacityPercent": XomoAutomationSchema.number(description: "Clone source overlay opacity from 0 through 100 percent", minimum: 0, maximum: 100),
             "flipHorizontal": XomoAutomationSchema.boolean(description: "Mirror the active clone source horizontally around its sampling origin"),
             "flipVertical": XomoAutomationSchema.boolean(description: "Mirror the active clone source vertically around its sampling origin"),
             "sampleSource": XomoAutomationSchema.string(description: "Clone or healing sampling layer range", values: ["currentLayer", "currentAndBelow", "allVisible"]),

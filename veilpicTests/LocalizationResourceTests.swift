@@ -120,9 +120,9 @@ struct LocalizationResourceTests {
     @Test func cloneSourceSlotOptionIsLocalizedInEverySupportedLanguage() throws {
         let paths = try Self.repositoryPaths()
         let expectedValues = [
-            "zh-Hans": ("仿制源槽位", "宽", "高", "链接宽高", "角度", "水平翻转", "垂直翻转"),
-            "en": ("Clone Source Slot", "W", "H", "Link W/H", "Angle", "Flip H", "Flip V"),
-            "ja": ("クローンソーススロット", "幅", "高さ", "縦横比をリンク", "角度", "左右反転", "上下反転")
+            "zh-Hans": ["仿制源槽位", "宽", "高", "链接宽高", "角度", "显示叠加", "叠加", "水平翻转", "垂直翻转"],
+            "en": ["Clone Source Slot", "W", "H", "Link W/H", "Angle", "Show Overlay", "Overlay", "Flip H", "Flip V"],
+            "ja": ["クローンソーススロット", "幅", "高さ", "縦横比をリンク", "角度", "オーバーレイを表示", "オーバーレイ", "左右反転", "上下反転"]
         ]
 
         for (localizationID, expectedValue) in expectedValues {
@@ -131,13 +131,18 @@ struct LocalizationResourceTests {
                 localizationID: localizationID,
                 appDirectory: paths.appDirectory
             )
-            #expect(strings["imageEditor.option.cloneSourceSlot"] == expectedValue.0)
-            #expect(strings["imageEditor.option.cloneSourceScaleWidth"] == expectedValue.1)
-            #expect(strings["imageEditor.option.cloneSourceScaleHeight"] == expectedValue.2)
-            #expect(strings["imageEditor.option.cloneSourceScaleLink"] == expectedValue.3)
-            #expect(strings["imageEditor.option.cloneSourceRotation"] == expectedValue.4)
-            #expect(strings["imageEditor.option.cloneSourceFlipHorizontal"] == expectedValue.5)
-            #expect(strings["imageEditor.option.cloneSourceFlipVertical"] == expectedValue.6)
+            let keys = [
+                "imageEditor.option.cloneSourceSlot",
+                "imageEditor.option.cloneSourceScaleWidth",
+                "imageEditor.option.cloneSourceScaleHeight",
+                "imageEditor.option.cloneSourceScaleLink",
+                "imageEditor.option.cloneSourceRotation",
+                "imageEditor.option.cloneSourceShowOverlay",
+                "imageEditor.option.cloneSourceOverlayOpacity",
+                "imageEditor.option.cloneSourceFlipHorizontal",
+                "imageEditor.option.cloneSourceFlipVertical"
+            ]
+            #expect(keys.compactMap { strings[$0] } == expectedValue)
         }
     }
 

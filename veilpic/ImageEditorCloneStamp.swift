@@ -267,8 +267,139 @@ struct ImageEditorSampledBrushInput {
     var localOffset: CGSize
 }
 
+struct ImageEditorCloneStampOverlayGeometry: Equatable {
+    var canvasOffset: CGSize
+    var destinationReference: CGPoint
+    var targetFrame: CGRect
+    var horizontalScale: CGFloat
+    var verticalScale: CGFloat
+    var flipsHorizontally: Bool
+    var flipsVertically: Bool
+    var rotationDegrees: CGFloat
+
+    func transformedCanvasPoint(fromSourceCanvasPoint sourcePoint: CGPoint) -> CGPoint {
+        let shifted = CGPoint(
+            x: sourcePoint.x - canvasOffset.width,
+            y: sourcePoint.y - canvasOffset.height
+        )
+        let local = CGVector(
+            dx: shifted.x - destinationReference.x,
+            dy: shifted.y - destinationReference.y
+        )
+        let scaled = CGVector(
+            dx: local.dx * horizontalScale * (flipsHorizontally ? -1 : 1),
+            dy: local.dy * verticalScale * (flipsVertically ? -1 : 1)
+        )
+        let radians = rotationDegrees * .pi / 180
+        let cosine = cos(radians)
+        let sine = sin(radians)
+        return CGPoint(
+            x: destinationReference.x + scaled.dx * cosine - scaled.dy * sine,
+            y: destinationReference.y + scaled.dx * sine + scaled.dy * cosine
+        )
+    }
+}
+
+struct ImageEditorCloneStampOverlayPreview {
+    var sourceCanvas: NSImage
+    var geometry: ImageEditorCloneStampOverlayGeometry
+    var opacity: CGFloat
+}
+
+struct ImageEditorCloneStampOverlaySourceCache {
+    var sampleSource: ImageEditorCloneSampleSource
+    var layerID: UUID
+    var ignoresAdjustmentLayers: Bool
+    var image: NSImage
+}
+
 @MainActor
 extension ImageEditorViewModel {
+    func cloneStampOverlayPreview(
+        destinationReference: CGPoint
+    ) -> ImageEditorCloneStampOverlayPreview? {
+        guard cloneStampShowsOverlay,
+              !isEditingLayerMask,
+              let sourcePoint = cloneSourcePoint,
+              let layer = document.selectedLayer,
+              !layer.isGroup,
+              !layer.isAdjustment,
+              !layer.isFilter,
+              !layer.isSolidColorFill,
+              !layer.isPatternFill,
+              !layer.isGradientFill,
+              !layer.isText,
+              !layer.isShape,
+              !document.isEffectivelyPixelsLocked(layer),
+              let sourceCanvas = cloneStampOverlaySourceCanvas(for: layer)
+        else { return nil }
+
+        let offset = ImageEditorSampledBrushOffsetResolution.resolve(
+            sourcePoint: sourcePoint,
+            destinationStart: destinationReference,
+            isAligned: isCloneStampAligned,
+            alignedOffset: cloneStampAlignedCanvasOffset
+        ).canvasOffset
+        let targetFrame = layer.frame.intersection(
+            CGRect(origin: .zero, size: document.canvasSize)
+        )
+        guard !targetFrame.isNull, targetFrame.width > 0, targetFrame.height > 0 else {
+            return nil
+        }
+        return ImageEditorCloneStampOverlayPreview(
+            sourceCanvas: sourceCanvas,
+            geometry: ImageEditorCloneStampOverlayGeometry(
+                canvasOffset: offset,
+                destinationReference: destinationReference,
+                targetFrame: targetFrame,
+                horizontalScale: cloneSourceHorizontalScalePercent / 100,
+                verticalScale: cloneSourceVerticalScalePercent / 100,
+                flipsHorizontally: cloneSourceFlipsHorizontally,
+                flipsVertically: cloneSourceFlipsVertically,
+                rotationDegrees: cloneSourceRotationDegrees
+            ),
+            opacity: cloneStampOverlayOpacityPercent / 100
+        )
+    }
+
+    private func cloneStampOverlaySourceCanvas(for layer: ImageEditorLayer) -> NSImage? {
+        if let cache = cachedCloneStampOverlaySource,
+           cache.sampleSource == cloneStampSampleSource,
+           cache.layerID == layer.id,
+           cache.ignoresAdjustmentLayers == cloneStampIgnoresAdjustmentLayers {
+            return cache.image
+        }
+
+        let image: NSImage?
+        switch cloneStampSampleSource {
+        case .currentLayer:
+            image = NSImage.rendered(size: document.canvasSize, actions: { _ in
+                layer.image.draw(
+                    in: layer.frame,
+                    from: CGRect(origin: .zero, size: layer.image.size),
+                    operation: .copy,
+                    fraction: 1
+                )
+            })
+        case .currentAndBelow, .allVisible:
+            let source: ImageEditorColorSamplerSource = cloneStampSampleSource == .currentAndBelow
+                ? .currentAndBelow
+                : .composite
+            image = document.colorSamplingLayerIDs(
+                for: source,
+                ignoringAdjustmentLayers: cloneStampIgnoresAdjustmentLayers
+            ).map { document.compositedImage(includingOnly: $0) }
+        }
+        guard let image else { return nil }
+        cachedCloneStampOverlaySource = ImageEditorCloneStampOverlaySourceCache(
+            sampleSource: cloneStampSampleSource,
+            layerID: layer.id,
+            ignoresAdjustmentLayers: cloneStampIgnoresAdjustmentLayers,
+            image: image
+        )
+        return image
+    }
+
     func sampledBrushInput(
         for layer: ImageEditorLayer,
         canvasOffset: CGSize,

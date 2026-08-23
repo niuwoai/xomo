@@ -156,6 +156,18 @@ struct XomoAutomationTests {
         #expect(cloneRotationSchema["maximum"] == .number(180))
         #expect(
             specialPaintTool["inputSchema"]?.objectValue?["properties"]?
+                .objectValue?["showOverlay"]?.objectValue?["type"]
+                == .string("boolean")
+        )
+        let overlayOpacitySchema = try #require(
+            specialPaintTool["inputSchema"]?.objectValue?["properties"]?
+                .objectValue?["overlayOpacityPercent"]?.objectValue
+        )
+        #expect(overlayOpacitySchema["type"] == .string("number"))
+        #expect(overlayOpacitySchema["minimum"] == .number(0))
+        #expect(overlayOpacitySchema["maximum"] == .number(100))
+        #expect(
+            specialPaintTool["inputSchema"]?.objectValue?["properties"]?
                 .objectValue?["flipHorizontal"]?.objectValue?["type"]
                 == .string("boolean")
         )
@@ -8996,6 +9008,8 @@ struct XomoAutomationTests {
                 "scaleYPercent": .number(50),
                 "scaleLinked": .bool(false),
                 "rotationDegrees": .number(37),
+                "showOverlay": .bool(false),
+                "overlayOpacityPercent": .number(35),
                 "flipHorizontal": .bool(true),
                 "flipVertical": .bool(true),
                 "aligned": .bool(false),
@@ -9011,6 +9025,8 @@ struct XomoAutomationTests {
         #expect(viewModel.cloneSourceVerticalScalePercent == 50)
         #expect(!viewModel.cloneSourceScalesLinked)
         #expect(viewModel.cloneSourceRotationDegrees == 37)
+        #expect(!viewModel.cloneStampShowsOverlay)
+        #expect(viewModel.cloneStampOverlayOpacityPercent == 35)
         #expect(viewModel.cloneSourceFlipsHorizontally)
         #expect(viewModel.cloneSourceFlipsVertically)
         #expect(!viewModel.isCloneStampAligned)
@@ -9034,6 +9050,8 @@ struct XomoAutomationTests {
         #expect(viewModel.cloneSourceVerticalScalePercent == 150)
         #expect(viewModel.cloneSourceScalesLinked)
         #expect(viewModel.cloneSourceRotationDegrees == 0)
+        #expect(!viewModel.cloneStampShowsOverlay)
+        #expect(viewModel.cloneStampOverlayOpacityPercent == 35)
         #expect(!viewModel.cloneSourceFlipsHorizontally)
         #expect(!viewModel.cloneSourceFlipsVertically)
         #expect(viewModel.selectCloneSourceSlot(2))
@@ -9042,6 +9060,8 @@ struct XomoAutomationTests {
         #expect(viewModel.cloneSourceVerticalScalePercent == 50)
         #expect(!viewModel.cloneSourceScalesLinked)
         #expect(viewModel.cloneSourceRotationDegrees == 37)
+        #expect(!viewModel.cloneStampShowsOverlay)
+        #expect(viewModel.cloneStampOverlayOpacityPercent == 35)
         #expect(viewModel.cloneSourceFlipsHorizontally)
         #expect(viewModel.cloneSourceFlipsVertically)
     }
@@ -9163,6 +9183,37 @@ struct XomoAutomationTests {
             #expect(viewModel.cloneSourceRotationDegrees == 0)
             #expect(!viewModel.cloneSourceFlipsHorizontally)
             #expect(viewModel.isCloneStampAligned)
+            #expect(viewModel.document.history.count == historyCount)
+        }
+    }
+
+    @Test func registryRejectsInvalidCloneOverlayOpacityAtomically() {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        let historyCount = viewModel.document.history.count
+
+        for opacityPercent in [-1.0, 101.0] {
+            let response = registry.execute(request(
+                operation: "call",
+                name: "xomo.paint.special",
+                arguments: [
+                    "action": .string("setCloneSource"),
+                    "sourceSlot": .number(3),
+                    "showOverlay": .bool(false),
+                    "overlayOpacityPercent": .number(opacityPercent),
+                    "rotationDegrees": .number(45),
+                    "x": .number(12),
+                    "y": .number(18)
+                ]
+            ))
+
+            #expect(!response.ok)
+            #expect(viewModel.activeCloneSourceSlotIndex == 0)
+            #expect(viewModel.cloneSourcePoint == nil)
+            #expect(viewModel.cloneSourceRotationDegrees == 0)
+            #expect(viewModel.cloneStampShowsOverlay)
+            #expect(viewModel.cloneStampOverlayOpacityPercent == 50)
             #expect(viewModel.document.history.count == historyCount)
         }
     }
