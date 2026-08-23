@@ -105,6 +105,52 @@ struct ImageEditorSVGImportTests {
         )) != nil)
     }
 
+    @Test func allStandardNamedColorsImportWithExactCaseInsensitiveRGBValues() throws {
+        let namedColors = XomoEditableSVGImporter.namedColorHexValues
+        #expect(namedColors.count == 148)
+        let canonicalTable = namedColors
+            .sorted(by: { $0.key < $1.key })
+            .map { String(format: "%@=%06x\n", $0.key, $0.value) }
+            .joined()
+        var tableFingerprint: UInt64 = 14_695_981_039_346_656_037
+        for byte in canonicalTable.utf8 {
+            tableFingerprint ^= UInt64(byte)
+            tableFingerprint &*= 1_099_511_628_211
+        }
+        #expect(tableFingerprint == 0x081B_BF6A_EC6E_4734)
+
+        for (name, value) in namedColors.sorted(by: { $0.key < $1.key }) {
+            let source = """
+            <svg><path d='M0 0 L20 0 L10 20 Z'
+                       fill='\(name.uppercased())' stroke='\(name)' stroke-width='2'/></svg>
+            """
+            let imported = try #require(XomoEditableSVGImporter.parse(Data(source.utf8)))
+            let fill = try #require(imported.content.fillColor.usingColorSpace(.deviceRGB))
+            let stroke = try #require(imported.content.strokeColor.usingColorSpace(.deviceRGB))
+            let expectedRed = CGFloat((value >> 16) & 0xFF) / 255
+            let expectedGreen = CGFloat((value >> 8) & 0xFF) / 255
+            let expectedBlue = CGFloat(value & 0xFF) / 255
+
+            #expect(abs(fill.redComponent - expectedRed) < 0.001)
+            #expect(abs(fill.greenComponent - expectedGreen) < 0.001)
+            #expect(abs(fill.blueComponent - expectedBlue) < 0.001)
+            #expect(abs(stroke.redComponent - expectedRed) < 0.001)
+            #expect(abs(stroke.greenComponent - expectedGreen) < 0.001)
+            #expect(abs(stroke.blueComponent - expectedBlue) < 0.001)
+        }
+
+        #expect(namedColors["aqua"] == namedColors["cyan"])
+        #expect(namedColors["fuchsia"] == namedColors["magenta"])
+        #expect(namedColors["gray"] == namedColors["grey"])
+        #expect(namedColors["darkslategray"] == namedColors["darkslategrey"])
+        #expect(namedColors["rebeccapurple"] == 0x663399)
+        #expect(namedColors["orange"] == 0xFFA500)
+
+        #expect(XomoEditableSVGImporter.parse(Data(
+            "<svg><path d='M0 0 L20 0 L10 20 Z' fill='not-a-standard-color'/></svg>".utf8
+        )) == nil)
+    }
+
     @Test func modernSpaceSeparatedRGBColorsPreservePercentagesAlphaAndCurrentColor() throws {
         let imported = try #require(XomoEditableSVGImporter.parse(Data(
             """

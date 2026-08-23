@@ -1,5 +1,19 @@
 # Changelog
 
+## 2.12.0-rc1215 - 2026-08-24
+
+### Added
+
+- 可编辑 SVG 导入补齐 W3C CSS Color 4 的 148 个不透明命名色，覆盖 `orange`、`rebeccapurple`、`slategray` 等网页、Sketch 与 Figma 资产常见关键字；名称大小写不敏感，并继续适用于 fill、stroke、currentColor 与内联 style。
+
+### Fixed
+
+- `green`、`gray`/`grey` 改用标准 `#008000` 与 `#808080`，不再以数学上的 0.5 近似 8-bit 通道；aqua/cyan、fuchsia/magenta 及 gray/grey 全部历史别名保持精确同值。全表数量和稳定指纹进入回归，未知名称仍原子拒绝。
+
+### Verification
+
+- 最终产品测试构建通过且未新增编译警告；SVG 可编辑导入专项 33/33（命名色用例逐项覆盖全部 148 色）、CLI/MCP 2/2、发布契约 7/7（21 项断言）、隔离测试运行器契约及差异检查通过；下一次周期完整门禁仍为 rc1240。
+
 ## 2.12.0-rc1214 - 2026-08-24
 
 ### Added
