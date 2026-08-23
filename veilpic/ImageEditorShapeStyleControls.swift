@@ -228,7 +228,9 @@ extension ImageEditorView {
                 Spacer(minLength: 4)
                 Picker("", selection: selectedShapeStrokeDashPresetBinding) {
                     ForEach(ImageEditorStrokeDashPreset.allCases) { preset in
-                        Text(preset.title).tag(preset)
+                        Text(preset.title)
+                            .tag(preset)
+                            .disabled(preset == .custom)
                     }
                 }
                 .labelsHidden()

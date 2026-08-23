@@ -32,7 +32,7 @@ enum ImageEditorStrokeDashPreset: String, CaseIterable, Identifiable {
     var id: String { rawValue }
 
     var title: String {
-        L10n.text("imageEditor.properties.shapeStrokeDash.(rawValue)")
+        L10n.text("imageEditor.properties.shapeStrokeDash.\(rawValue)")
     }
 
     var pattern: [CGFloat] {
@@ -465,6 +465,7 @@ extension ImageEditorViewModel {
     }
 
     func setSelectedShapeStrokeDashPreset(_ preset: ImageEditorStrokeDashPreset) {
+        // Custom represents an imported arbitrary pattern; it is not a destructive preset.
         guard preset != .custom else { return }
         updateSelectedShapeProperties(strokeDashPattern: preset.pattern)
     }

@@ -1440,6 +1440,36 @@ struct ImageEditorShapeStyleTests {
         )
     }
 
+    @Test func dashPresetTitlesResolveAndCustomPatternRemainsReadOnly() throws {
+        for preset in ImageEditorStrokeDashPreset.allCases {
+            #expect(
+                preset.title
+                    == L10n.text("imageEditor.properties.shapeStrokeDash.\(preset.rawValue)")
+            )
+        }
+
+        let viewModel = makeViewModel()
+        viewModel.drawShape(
+            from: CGPoint(x: 10, y: 10),
+            to: CGPoint(x: 70, y: 50),
+            ellipse: false
+        )
+        viewModel.updateSelectedShapeProperties(strokeDashPattern: [7, 3, 2, 3])
+        #expect(viewModel.selectedShapeStrokeDashPreset == .custom)
+        let historyCount = viewModel.document.history.count
+
+        viewModel.setSelectedShapeStrokeDashPreset(.custom)
+
+        #expect(viewModel.document.selectedLayer?.shapeContent?.strokeDashPattern == [7, 3, 2, 3])
+        #expect(viewModel.document.history.count == historyCount)
+
+        viewModel.setSelectedShapeStrokeDashPreset(.dash)
+        #expect(viewModel.document.selectedLayer?.shapeContent?.strokeDashPattern == [6, 3])
+        #expect(viewModel.document.history.count == historyCount + 1)
+        viewModel.undo()
+        #expect(viewModel.document.selectedLayer?.shapeContent?.strokeDashPattern == [7, 3, 2, 3])
+    }
+
     @Test func appearanceEditIsOneUndoableProjectPersistentChange() throws {
         let viewModel = makeViewModel()
         viewModel.drawShape(
@@ -1668,6 +1698,7 @@ struct ImageEditorShapeStyleTests {
         #expect(source.contains("viewModel.setSelectedShapeStrokeMiterLimit(limit)"))
         #expect(source.contains("selectedShapeStrokeDashOffsetBinding"))
         #expect(source.contains("imageEditor.properties.shapeStrokeDashOffsetValue"))
+        #expect(source.contains(".disabled(preset == .custom)"))
         #expect(source.contains("ImageEditorGradientStopTrackGeometry.logicalPosition"))
         #expect(source.contains("ImageEditorGradientStopTrackGeometry.midpoint"))
         #expect(source.contains("SpatialTapGesture("))
