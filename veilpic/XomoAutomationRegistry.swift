@@ -2614,6 +2614,9 @@ final class XomoAutomationRegistry {
             "strokeWidth": .number(content.strokeWidth),
             "strokePosition": .string(content.strokePosition.rawValue),
             "strokeCap": .string(content.strokeCap.rawValue),
+            "strokeStartDecoration": .string(content.strokeStartDecoration.rawValue),
+            "strokeEndDecoration": .string(content.strokeEndDecoration.rawValue),
+            "supportsStrokeDecorations": .bool(content.kind == .path && !content.isPathClosed),
             "strokeJoin": .string(content.strokeJoin.rawValue),
             "strokeMiterLimit": .number(content.strokeMiterLimit),
             "strokeDashPattern": .array(content.strokeDashPattern.map {
@@ -2655,6 +2658,18 @@ final class XomoAutomationRegistry {
         let fillKind = arguments["fillKind"]?.stringValue
         let strokePosition = try optionalShapeStrokePosition(arguments["strokePosition"]?.stringValue)
         let strokeCap = try optionalShapeStrokeCap(arguments["strokeCap"]?.stringValue)
+        let strokeStartDecoration = try optionalShapeStrokeDecoration(
+            arguments["strokeStartDecoration"]?.stringValue,
+            argumentName: "strokeStartDecoration"
+        )
+        let strokeEndDecoration = try optionalShapeStrokeDecoration(
+            arguments["strokeEndDecoration"]?.stringValue,
+            argumentName: "strokeEndDecoration"
+        )
+        try validateShapeStrokeDecorationTargets(
+            viewModel,
+            isRequested: strokeStartDecoration != nil || strokeEndDecoration != nil
+        )
         let strokeJoin = try optionalShapeStrokeJoin(arguments["strokeJoin"]?.stringValue)
         let strokeWidth = try optionalShapeStrokeWidth(arguments["strokeWidth"])
         let strokeMiterLimit = try optionalShapeStrokeMiterLimit(arguments["strokeMiterLimit"])
@@ -2692,6 +2707,8 @@ final class XomoAutomationRegistry {
             strokeWidth: strokeWidth,
             strokePosition: strokePosition,
             strokeCap: strokeCap,
+            strokeStartDecoration: strokeStartDecoration,
+            strokeEndDecoration: strokeEndDecoration,
             strokeJoin: strokeJoin,
             strokeMiterLimit: strokeMiterLimit,
             strokeDashPattern: strokeDashPattern,
@@ -2726,6 +2743,48 @@ final class XomoAutomationRegistry {
             )
         }
         return cap
+    }
+
+    private func optionalShapeStrokeDecoration(
+        _ value: String?,
+        argumentName: String
+    ) throws -> ImageEditorStrokeDecoration? {
+        guard let value else { return nil }
+        guard let decoration = ImageEditorStrokeDecoration(rawValue: value) else {
+            throw XomoAutomationCallError.invalidArgument(
+                "\(argumentName) must be none, openArrow, filledArrow, filledTriangle, filledDiamond, or filledCircle"
+            )
+        }
+        return decoration
+    }
+
+    private func validateShapeStrokeDecorationTargets(
+        _ viewModel: ImageEditorViewModel,
+        isRequested: Bool
+    ) throws {
+        guard isRequested else { return }
+        let selectedIDs: Set<UUID>
+        if viewModel.document.selectedLayerIDs.isEmpty,
+           let selectedLayerID = viewModel.document.selectedLayerID {
+            selectedIDs = [selectedLayerID]
+        } else {
+            selectedIDs = viewModel.document.selectedLayerIDs
+        }
+        let targets = viewModel.document.layers.filter { layer in
+            selectedIDs.contains(layer.id)
+                && layer.shapeContent != nil
+                && !viewModel.document.isEffectivelyPixelsLocked(layer)
+        }
+        guard !targets.isEmpty,
+              targets.allSatisfy({ layer in
+                  guard let content = layer.shapeContent else { return false }
+                  return content.kind == .path && !content.isPathClosed
+              })
+        else {
+            throw XomoAutomationCallError.invalidArgument(
+                "Stroke endpoint decorations require every editable shape target to be an open path"
+            )
+        }
     }
 
     private func optionalShapeStrokeJoin(_ value: String?) throws -> ImageEditorStrokeJoin? {
@@ -7429,8 +7488,8 @@ private extension XomoAutomationRegistry {
             "cornerRadii": rectangleCornerRadiiSchema,
             "cornerSmoothing": shapeUnitIntervalSchema(description: "Rectangle-only editable superellipse smoothing")
         ], required: ["kind", "x", "y", "width", "height"]),
-        tool("xomo.shape.get", "Inspect the selected editable shape layer."),
-        tool("xomo.shape.update", "Update only the specified fill, stroke, and rectangle corner properties of selected editable shapes.", [
+        tool("xomo.shape.get", "Inspect the selected editable shape layer, including open-path endpoint decorations."),
+        tool("xomo.shape.update", "Update only the specified fill, stroke, open-path endpoint decoration, and rectangle corner properties of selected editable shapes.", [
             "opacity": shapeUnitIntervalSchema(description: "Legacy shared fill and stroke opacity"),
             "fillKind": XomoAutomationSchema.string(
                 description: "Shape fill type",
@@ -7449,6 +7508,14 @@ private extension XomoAutomationRegistry {
             "strokeCap": XomoAutomationSchema.string(
                 description: "Stroke endpoint cap",
                 values: ImageEditorStrokeCap.allCases.map(\.rawValue)
+            ),
+            "strokeStartDecoration": XomoAutomationSchema.string(
+                description: "Open-path start marker",
+                values: ImageEditorStrokeDecoration.allCases.map(\.rawValue)
+            ),
+            "strokeEndDecoration": XomoAutomationSchema.string(
+                description: "Open-path end marker",
+                values: ImageEditorStrokeDecoration.allCases.map(\.rawValue)
             ),
             "strokeJoin": XomoAutomationSchema.string(
                 description: "Stroke corner join",

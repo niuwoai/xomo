@@ -1,5 +1,20 @@
 # Changelog
 
+## 2.12.0-rc1191 - 2026-08-24
+
+### Added
+
+- `xomo.shape.get` 新增 `strokeStartDecoration`、`strokeEndDecoration` 与 `supportsStrokeDecorations`，外部工作流可读取开放路径两端的原生装饰及适用性。
+- `xomo.shape.update` 新增起点/终点装饰更新，支持 none、开放箭头、等边箭头、实心三角、实心菱形和实心圆，并在工具 schema 与 CLI 清单中公开契约。
+
+### Changed
+
+- 端点装饰自动化先完整校验所有枚举再提交：非法起点与合法终点组合不会留下半次修改；重复值或闭合形状不写空 History。
+
+### Verification
+
+- 产品测试构建通过；端点装饰 get/update/schema、非法组合原子拒绝、闭合形状保护、幂等 History 与相邻 strokeCap 回归专项 2/2；CLI/MCP 2/2、发布契约 7/7（21 项断言）、测试运行器契约及差异检查通过。下一次周期完整编译、冒烟与 `/Applications` 覆盖门禁仍为 rc1200。
+
 ## 2.12.0-rc1190 - 2026-08-24
 
 ### Added

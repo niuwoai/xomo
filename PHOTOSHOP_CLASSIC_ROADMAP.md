@@ -1,6 +1,8 @@
 # Xomo 经典 Photoshop 能力路线图
 
-> 最后更新：2026-08-24 ｜ 当前版本：v2.12.0-rc1190 ｜ 目标：以经典 Photoshop 能力作为现代混合编辑器的可靠像素与图层底座
+> 最后更新：2026-08-24 ｜ 当前版本：v2.12.0-rc1191 ｜ 目标：以经典 Photoshop 能力作为现代混合编辑器的可靠像素与图层底座
+
+- `v2.12.0-rc1191`：补齐开放路径端点装饰的自动化闭环。`xomo.shape.get` 返回起点、终点与适用性，`xomo.shape.update` 可原子设置六种状态，工具 schema 和 CLI 清单同步公开；非法枚举不会留下半次更新，重复值与闭合形状不制造空 History。产品测试构建、专项 2/2、CLI/MCP 2/2、发布与运行器契约及差异检查通过；下一次周期完整编译、冒烟与 `/Applications` 覆盖门禁仍为 rc1200。
 
 - `v2.12.0-rc1190`：开放矢量路径新增 Sketch/Fireworks 风格独立起点与终点装饰，五种标记进入真实渲染、属性面板、工程保存和单步 Undo/Redo；Figma LINE/开放 VECTOR 的 `ARROW_LINES`、`ARROW_EQUILATERAL`、`TRIANGLE_FILLED`、`DIAMOND_FILLED`、`CIRCLE_FILLED` 全部原生映射，不再误报描边样式降级。闭合路径保留装饰数据但不渲染，避免闭环伪箭头。产品测试构建、专项 5/5、CLI/MCP 2/2、发布与运行器契约、三语资源格式及差异检查通过；下一次周期完整编译、冒烟与 `/Applications` 覆盖门禁仍为 rc1200。
 

@@ -7136,6 +7136,104 @@ struct XomoAutomationTests {
         )
     }
 
+    @Test func shapeStrokeDecorationAutomationUpdatesOpenPathsAndRejectsInvalidOrClosedTargets() throws {
+        let viewModel = makeViewModel()
+        viewModel.addPenPoint(CGPoint(x: 12, y: 24))
+        viewModel.addPenPoint(CGPoint(x: 84, y: 52))
+        viewModel.finishPenPath(closed: false)
+        let openPathID = try #require(viewModel.document.selectedLayerID)
+
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        let historyCount = viewModel.document.history.count
+        let updated = registry.execute(request(
+            operation: "call",
+            name: "xomo.shape.update",
+            arguments: [
+                "strokeStartDecoration": .string("filledCircle"),
+                "strokeEndDecoration": .string("openArrow")
+            ]
+        ))
+        #expect(updated.ok)
+        #expect(updated.result == .object(["updatedLayerCount": .number(1)]))
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.selectedLayer?.shapeContent?.strokeStartDecoration == .filledCircle)
+        #expect(viewModel.document.selectedLayer?.shapeContent?.strokeEndDecoration == .openArrow)
+
+        let inspected = registry.execute(request(operation: "call", name: "xomo.shape.get"))
+        #expect(inspected.result?.objectValue?["strokeStartDecoration"] == .string("filledCircle"))
+        #expect(inspected.result?.objectValue?["strokeEndDecoration"] == .string("openArrow"))
+        #expect(inspected.result?.objectValue?["supportsStrokeDecorations"] == .bool(true))
+
+        let repeatedHistoryCount = viewModel.document.history.count
+        let repeated = registry.execute(request(
+            operation: "call",
+            name: "xomo.shape.update",
+            arguments: [
+                "strokeStartDecoration": .string("filledCircle"),
+                "strokeEndDecoration": .string("openArrow")
+            ]
+        ))
+        #expect(!repeated.ok)
+        #expect(viewModel.document.history.count == repeatedHistoryCount)
+
+        let invalid = registry.execute(request(
+            operation: "call",
+            name: "xomo.shape.update",
+            arguments: [
+                "strokeStartDecoration": .string("mechanicalToolIcon"),
+                "strokeEndDecoration": .string("filledDiamond")
+            ]
+        ))
+        #expect(!invalid.ok)
+        #expect(viewModel.document.history.count == repeatedHistoryCount)
+        #expect(viewModel.document.selectedLayer?.shapeContent?.strokeEndDecoration == .openArrow)
+
+        viewModel.drawShape(
+            from: CGPoint(x: 20, y: 15),
+            to: CGPoint(x: 70, y: 55),
+            ellipse: false
+        )
+        let closedShapeID = try #require(viewModel.document.selectedLayerID)
+        viewModel.document.selectedLayerIDs = [openPathID, closedShapeID]
+        viewModel.document.selectedLayerID = closedShapeID
+        let closedHistoryCount = viewModel.document.history.count
+        let closedStrokeWidth = viewModel.document.selectedLayer?.shapeContent?.strokeWidth
+        let closed = registry.execute(request(
+            operation: "call",
+            name: "xomo.shape.update",
+            arguments: [
+                "strokeEndDecoration": .string("filledArrow"),
+                "strokeWidth": .number(9)
+            ]
+        ))
+        #expect(!closed.ok)
+        #expect(viewModel.document.history.count == closedHistoryCount)
+        #expect(viewModel.document.selectedLayer?.shapeContent?.strokeWidth == closedStrokeWidth)
+        #expect(
+            viewModel.document.layers.first { $0.id == openPathID }?
+                .shapeContent?.strokeEndDecoration == .openArrow
+        )
+        #expect(
+            viewModel.document.selectedLayer?.shapeContent?.strokeEndDecoration
+                == ImageEditorStrokeDecoration.none
+        )
+        let closedInspection = registry.execute(request(operation: "call", name: "xomo.shape.get"))
+        #expect(closedInspection.result?.objectValue?["supportsStrokeDecorations"] == .bool(false))
+
+        let toolsResponse = registry.execute(request(operation: "tools"))
+        let tools = try #require(toolsResponse.result?.arrayValue)
+        let updateTool = try #require(tools.compactMap(\.objectValue).first {
+            $0["name"] == .string("xomo.shape.update")
+        })
+        let properties = updateTool["inputSchema"]?.objectValue?["properties"]?.objectValue
+        let expectedValues: [XomoJSONValue] = ImageEditorStrokeDecoration.allCases.map {
+            .string($0.rawValue)
+        }
+        #expect(properties?["strokeStartDecoration"]?.objectValue?["enum"]?.arrayValue == expectedValues)
+        #expect(properties?["strokeEndDecoration"]?.objectValue?["enum"]?.arrayValue == expectedValues)
+    }
+
     @Test func registryCreatesInspectsUpdatesAndClearsShapeLinearGradient() throws {
         let viewModel = makeViewModel()
         let registry = XomoAutomationRegistry.shared
