@@ -3461,6 +3461,7 @@
 "imageEditor.option.cloneSourceScaleLink" = "縦横比をリンク";
 "imageEditor.option.cloneSourceRotation" = "角度";
 "imageEditor.option.cloneSourceShowOverlay" = "オーバーレイを表示";
+"imageEditor.option.cloneSourceOverlayClipped" = "ブラシサイズで切り抜く";
 "imageEditor.option.cloneSourceOverlayAutoHide" = "自動的に隠す";
 "imageEditor.option.cloneSourceOverlayInvert" = "反転";
 "imageEditor.option.cloneSourceOverlayOpacity" = "オーバーレイ";

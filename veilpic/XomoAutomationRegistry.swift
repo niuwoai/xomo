@@ -5726,6 +5726,9 @@ final class XomoAutomationRegistry {
             if let showOverlay = arguments["showOverlay"]?.boolValue {
                 viewModel.cloneStampShowsOverlay = showOverlay
             }
+            if let clipOverlayToBrush = arguments["clipOverlayToBrush"]?.boolValue {
+                viewModel.cloneStampOverlayClipsToBrush = clipOverlayToBrush
+            }
             if let autoHideOverlay = arguments["autoHideOverlay"]?.boolValue {
                 viewModel.cloneStampOverlayAutoHidesWhilePainting = autoHideOverlay
             }
@@ -7326,6 +7329,7 @@ private extension XomoAutomationRegistry {
             "scaleLinked": XomoAutomationSchema.boolean(description: "Link clone source width and height changes proportionally"),
             "rotationDegrees": XomoAutomationSchema.number(description: "Clockwise clone source rotation from -180 through 180 degrees", minimum: -180, maximum: 180),
             "showOverlay": XomoAutomationSchema.boolean(description: "Show transformed clone source pixels under the pointer before painting"),
+            "clipOverlayToBrush": XomoAutomationSchema.boolean(description: "Clip the clone source overlay to the pressure-adjusted brush footprint"),
             "autoHideOverlay": XomoAutomationSchema.boolean(description: "Hide the clone source overlay while a paint stroke is active"),
             "invertOverlay": XomoAutomationSchema.boolean(description: "Invert clone source overlay colors without changing sampled pixels"),
             "overlayOpacityPercent": XomoAutomationSchema.number(description: "Clone source overlay opacity from 0 through 100 percent", minimum: 0, maximum: 100),

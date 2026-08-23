@@ -301,10 +301,26 @@ struct ImageEditorCloneStampOverlayGeometry: Equatable {
 }
 
 struct ImageEditorCloneStampOverlayPreview {
+    struct BrushClip: Equatable {
+        var center: CGPoint
+        var diameter: CGFloat
+
+        var canvasRect: CGRect {
+            let boundedDiameter = max(1, diameter.isFinite ? diameter : 1)
+            return CGRect(
+                x: center.x - boundedDiameter / 2,
+                y: center.y - boundedDiameter / 2,
+                width: boundedDiameter,
+                height: boundedDiameter
+            )
+        }
+    }
+
     var sourceCanvas: NSImage
     var geometry: ImageEditorCloneStampOverlayGeometry
     var opacity: CGFloat
     var invertsColors: Bool
+    var brushClip: BrushClip?
 }
 
 struct ImageEditorCloneStampOverlaySourceCache {
@@ -318,7 +334,9 @@ struct ImageEditorCloneStampOverlaySourceCache {
 extension ImageEditorViewModel {
     func cloneStampOverlayPreview(
         destinationReference: CGPoint,
-        isPainting: Bool = false
+        isPainting: Bool = false,
+        brushCenter: CGPoint? = nil,
+        brushDiameter: CGFloat? = nil
     ) -> ImageEditorCloneStampOverlayPreview? {
         guard cloneStampShowsOverlay,
               !cloneStampOverlayAutoHidesWhilePainting || !isPainting,
@@ -349,6 +367,14 @@ extension ImageEditorViewModel {
         guard !targetFrame.isNull, targetFrame.width > 0, targetFrame.height > 0 else {
             return nil
         }
+        let brushClip: ImageEditorCloneStampOverlayPreview.BrushClip?
+        if cloneStampOverlayClipsToBrush,
+           let brushCenter,
+           let brushDiameter {
+            brushClip = .init(center: brushCenter, diameter: brushDiameter)
+        } else {
+            brushClip = nil
+        }
         return ImageEditorCloneStampOverlayPreview(
             sourceCanvas: sourceCanvas,
             geometry: ImageEditorCloneStampOverlayGeometry(
@@ -362,7 +388,8 @@ extension ImageEditorViewModel {
                 rotationDegrees: cloneSourceRotationDegrees
             ),
             opacity: cloneStampOverlayOpacityPercent / 100,
-            invertsColors: cloneStampOverlayInvertsColors
+            invertsColors: cloneStampOverlayInvertsColors,
+            brushClip: brushClip
         )
     }
 

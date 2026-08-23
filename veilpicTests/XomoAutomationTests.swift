@@ -161,6 +161,11 @@ struct XomoAutomationTests {
         )
         #expect(
             specialPaintTool["inputSchema"]?.objectValue?["properties"]?
+                .objectValue?["clipOverlayToBrush"]?.objectValue?["type"]
+                == .string("boolean")
+        )
+        #expect(
+            specialPaintTool["inputSchema"]?.objectValue?["properties"]?
                 .objectValue?["autoHideOverlay"]?.objectValue?["type"]
                 == .string("boolean")
         )
@@ -9019,6 +9024,7 @@ struct XomoAutomationTests {
                 "scaleLinked": .bool(false),
                 "rotationDegrees": .number(37),
                 "showOverlay": .bool(false),
+                "clipOverlayToBrush": .bool(true),
                 "autoHideOverlay": .bool(true),
                 "invertOverlay": .bool(true),
                 "overlayOpacityPercent": .number(35),
@@ -9038,6 +9044,7 @@ struct XomoAutomationTests {
         #expect(!viewModel.cloneSourceScalesLinked)
         #expect(viewModel.cloneSourceRotationDegrees == 37)
         #expect(!viewModel.cloneStampShowsOverlay)
+        #expect(viewModel.cloneStampOverlayClipsToBrush)
         #expect(viewModel.cloneStampOverlayAutoHidesWhilePainting)
         #expect(viewModel.cloneStampOverlayInvertsColors)
         #expect(viewModel.cloneStampOverlayOpacityPercent == 35)
@@ -9065,6 +9072,7 @@ struct XomoAutomationTests {
         #expect(viewModel.cloneSourceScalesLinked)
         #expect(viewModel.cloneSourceRotationDegrees == 0)
         #expect(!viewModel.cloneStampShowsOverlay)
+        #expect(viewModel.cloneStampOverlayClipsToBrush)
         #expect(viewModel.cloneStampOverlayAutoHidesWhilePainting)
         #expect(viewModel.cloneStampOverlayInvertsColors)
         #expect(viewModel.cloneStampOverlayOpacityPercent == 35)
@@ -9077,6 +9085,7 @@ struct XomoAutomationTests {
         #expect(!viewModel.cloneSourceScalesLinked)
         #expect(viewModel.cloneSourceRotationDegrees == 37)
         #expect(!viewModel.cloneStampShowsOverlay)
+        #expect(viewModel.cloneStampOverlayClipsToBrush)
         #expect(viewModel.cloneStampOverlayAutoHidesWhilePainting)
         #expect(viewModel.cloneStampOverlayInvertsColors)
         #expect(viewModel.cloneStampOverlayOpacityPercent == 35)
@@ -9219,6 +9228,7 @@ struct XomoAutomationTests {
                     "action": .string("setCloneSource"),
                     "sourceSlot": .number(3),
                     "showOverlay": .bool(false),
+                    "clipOverlayToBrush": .bool(true),
                     "autoHideOverlay": .bool(true),
                     "invertOverlay": .bool(true),
                     "overlayOpacityPercent": .number(opacityPercent),
@@ -9233,6 +9243,7 @@ struct XomoAutomationTests {
             #expect(viewModel.cloneSourcePoint == nil)
             #expect(viewModel.cloneSourceRotationDegrees == 0)
             #expect(viewModel.cloneStampShowsOverlay)
+            #expect(!viewModel.cloneStampOverlayClipsToBrush)
             #expect(!viewModel.cloneStampOverlayAutoHidesWhilePainting)
             #expect(!viewModel.cloneStampOverlayInvertsColors)
             #expect(viewModel.cloneStampOverlayOpacityPercent == 50)

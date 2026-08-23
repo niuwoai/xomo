@@ -268,6 +268,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var cloneStampSampleSource: ImageEditorCloneSampleSource = .currentLayer
     @Published var cloneStampIgnoresAdjustmentLayers = false
     @Published var cloneStampShowsOverlay = true
+    @Published var cloneStampOverlayClipsToBrush = false
     @Published var cloneStampOverlayAutoHidesWhilePainting = false
     @Published var cloneStampOverlayInvertsColors = false
     @Published private(set) var cloneStampOverlayOpacityPercent: CGFloat = 50

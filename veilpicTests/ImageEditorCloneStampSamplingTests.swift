@@ -611,6 +611,29 @@ struct ImageEditorCloneStampSamplingTests {
         )
     }
 
+    @Test func cloneOverlayClippedUsesTheLiveBrushFootprintWithoutRebuildingSource() throws {
+        let viewModel = patternedCurrentLayerViewModel()
+        viewModel.setCloneSource(at: CGPoint(x: 10, y: 15))
+        let destination = CGPoint(x: 60, y: 15)
+        let fullOverlay = try #require(
+            viewModel.cloneStampOverlayPreview(destinationReference: destination)
+        )
+        #expect(fullOverlay.brushClip == nil)
+
+        viewModel.cloneStampOverlayClipsToBrush = true
+        let clipped = try #require(viewModel.cloneStampOverlayPreview(
+            destinationReference: destination,
+            isPainting: true,
+            brushCenter: CGPoint(x: 66, y: 18),
+            brushDiameter: 14
+        ))
+
+        #expect(clipped.sourceCanvas === fullOverlay.sourceCanvas)
+        #expect(clipped.brushClip?.center == CGPoint(x: 66, y: 18))
+        #expect(clipped.brushClip?.diameter == 14)
+        #expect(clipped.brushClip?.canvasRect == CGRect(x: 59, y: 11, width: 14, height: 14))
+    }
+
     @Test func cloneOverlaySourceCanvasIsCachedAcrossHoverAndInvalidatedByEdits() throws {
         let viewModel = patternedCurrentLayerViewModel()
         viewModel.isCloneStampAligned = false

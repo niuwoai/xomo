@@ -3461,6 +3461,7 @@
 "imageEditor.option.cloneSourceScaleLink" = "链接宽高";
 "imageEditor.option.cloneSourceRotation" = "角度";
 "imageEditor.option.cloneSourceShowOverlay" = "显示叠加";
+"imageEditor.option.cloneSourceOverlayClipped" = "裁切到笔刷";
 "imageEditor.option.cloneSourceOverlayAutoHide" = "自动隐藏";
 "imageEditor.option.cloneSourceOverlayInvert" = "反相";
 "imageEditor.option.cloneSourceOverlayOpacity" = "叠加";

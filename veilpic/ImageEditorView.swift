@@ -1322,6 +1322,17 @@ struct ImageEditorView: View {
                 .accessibilityIdentifier("image-editor-clone-source-show-overlay")
 
                 Toggle(
+                    L10n.text("imageEditor.option.cloneSourceOverlayClipped"),
+                    isOn: $viewModel.cloneStampOverlayClipsToBrush
+                )
+                .toggleStyle(.checkbox)
+                .fixedSize()
+                .disabled(!viewModel.cloneStampShowsOverlay)
+                .focusable(false)
+                .xomoFocusEffectDisabled()
+                .accessibilityIdentifier("image-editor-clone-source-overlay-clipped")
+
+                Toggle(
                     L10n.text("imageEditor.option.cloneSourceOverlayAutoHide"),
                     isOn: $viewModel.cloneStampOverlayAutoHidesWhilePainting
                 )
@@ -4843,7 +4854,10 @@ struct ImageEditorView: View {
            let hoverCanvasPoint = imagePoint(from: hoverViewPoint, in: size),
            let preview = viewModel.cloneStampOverlayPreview(
                destinationReference: dragPoints.first ?? hoverCanvasPoint,
-               isPainting: !dragPoints.isEmpty
+               isPainting: !dragPoints.isEmpty,
+               brushCenter: dragPoints.last ?? hoverCanvasPoint,
+               brushDiameter: sampledBrushOverlayGeometry?.destinationDiameter
+                   ?? viewModel.brushSize
            ) {
             let imageRect = fittedImageRect(in: size)
             let xScale = imageRect.width / max(1, viewModel.document.canvasSize.width)
@@ -4859,6 +4873,11 @@ struct ImageEditorView: View {
             let targetFrame = viewRect(from: preview.geometry.targetFrame, in: size)
             Canvas { context, _ in
                 context.clip(to: Path(targetFrame))
+                if let brushClip = preview.brushClip {
+                    context.clip(to: Path(
+                        ellipseIn: viewRect(from: brushClip.canvasRect, in: size)
+                    ))
+                }
                 context.opacity = Double(preview.opacity)
                 if preview.invertsColors {
                     context.addFilter(.colorInvert(1))

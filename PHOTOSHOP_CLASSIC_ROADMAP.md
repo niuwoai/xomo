@@ -1,6 +1,8 @@
 # Xomo 经典 Photoshop 能力路线图
 
-> 最后更新：2026-08-23 ｜ 当前版本：v2.12.0-rc1181 ｜ 目标：以经典 Photoshop 能力作为现代混合编辑器的可靠像素与图层底座
+> 最后更新：2026-08-23 ｜ 当前版本：v2.12.0-rc1182 ｜ 目标：以经典 Photoshop 能力作为现代混合编辑器的可靠像素与图层底座
+
+- `v2.12.0-rc1182`：按 Adobe Clone Source 语义补齐 Clipped：选择后把真实来源叠加限制在当前目标笔刷大小内，取消则显示完整可用来源。裁切中心跟随实时笔尖，直径复用压力调整后的 retouch footprint，并在来源仿射前固定于目标空间，不会被 W/H、翻转或旋转带偏；选项栏与 `xomo.paint.special clipOverlayToBrush` 同义。产品测试构建、唯一专项 45/45、CLI/MCP 2/2、发布与运行器契约、三语资源格式及差异检查通过；下一次周期完整编译、冒烟与 `/Applications` 覆盖门禁仍为 rc1200。
 
 - `v2.12.0-rc1181`：为 Clone Source 真实像素叠加增加 Invert，仅反相屏幕参考纹理以增强相似背景上的定位对比，不改变缓存源图、真实采样或落笔结果。它通过 Canvas 滤镜与透明度、Auto Hide 和五槽仿射组合，选项栏及 `xomo.paint.special invertOverlay` 同义，仍不写工程或 History。产品测试构建、唯一专项 44/44、CLI/MCP 2/2、发布与运行器契约、三语资源格式及差异检查通过；下一次周期完整编译、冒烟与 `/Applications` 覆盖门禁仍为 rc1200。
 
