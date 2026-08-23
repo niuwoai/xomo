@@ -59,6 +59,25 @@ struct ImageEditorCloneSourceSlotState: Equatable {
     var scalesLinked = true
     var rotationDegrees: CGFloat = 0
 
+    var hasIdentityTransform: Bool {
+        !flipsHorizontally
+            && !flipsVertically
+            && horizontalScalePercent == 100
+            && verticalScalePercent == 100
+            && rotationDegrees == 0
+    }
+
+    @discardableResult
+    mutating func resetTransform() -> Bool {
+        guard !hasIdentityTransform else { return false }
+        flipsHorizontally = false
+        flipsVertically = false
+        horizontalScalePercent = 100
+        verticalScalePercent = 100
+        rotationDegrees = 0
+        return true
+    }
+
     mutating func setUniformScalePercent(_ percent: CGFloat) {
         let bounded = Self.boundedScalePercent(percent)
         horizontalScalePercent = bounded

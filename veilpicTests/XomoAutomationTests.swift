@@ -116,6 +116,11 @@ struct XomoAutomationTests {
         }.first { $0["name"] == .string("xomo.paint.special") })
         #expect(
             specialPaintTool["inputSchema"]?.objectValue?["properties"]?
+                .objectValue?["action"]?.objectValue?["enum"]?.arrayValue?
+                .contains(.string("resetCloneSourceTransform")) == true
+        )
+        #expect(
+            specialPaintTool["inputSchema"]?.objectValue?["properties"]?
                 .objectValue?["ignoresAdjustmentLayers"]?.objectValue?["type"]
                 == .string("boolean")
         )
@@ -9104,6 +9109,98 @@ struct XomoAutomationTests {
         #expect(viewModel.cloneStampOverlayOpacityPercent == 35)
         #expect(viewModel.cloneSourceFlipsHorizontally)
         #expect(viewModel.cloneSourceFlipsVertically)
+    }
+
+    @Test func registryResetsOnlyTheRequestedCloneSourceTransform() {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        let historyCount = viewModel.document.history.count
+
+        #expect(registry.execute(request(
+            operation: "call",
+            name: "xomo.paint.special",
+            arguments: [
+                "action": .string("setCloneSource"),
+                "sourceSlot": .number(1),
+                "x": .number(4),
+                "y": .number(5),
+                "scalePercent": .number(225),
+                "flipHorizontal": .bool(true)
+            ]
+        )).ok)
+        #expect(registry.execute(request(
+            operation: "call",
+            name: "xomo.paint.special",
+            arguments: [
+                "action": .string("setCloneSource"),
+                "sourceSlot": .number(3),
+                "x": .number(12),
+                "y": .number(18),
+                "scaleXPercent": .number(175),
+                "scaleYPercent": .number(60),
+                "scaleLinked": .bool(false),
+                "rotationDegrees": .number(37),
+                "flipHorizontal": .bool(true),
+                "flipVertical": .bool(true),
+                "showOverlay": .bool(false),
+                "overlayBlendMode": .string("difference")
+            ]
+        )).ok)
+        viewModel.cloneStampAlignedCanvasOffset = CGSize(width: -8, height: 3)
+
+        let response = registry.execute(request(
+            operation: "call",
+            name: "xomo.paint.special",
+            arguments: [
+                "action": .string("resetCloneSourceTransform"),
+                "sourceSlot": .number(3)
+            ]
+        ))
+
+        #expect(response.ok)
+        #expect(viewModel.activeCloneSourceSlotIndex == 2)
+        #expect(viewModel.cloneSourcePoint == CGPoint(x: 12, y: 18))
+        #expect(viewModel.cloneStampAlignedCanvasOffset == CGSize(width: -8, height: 3))
+        #expect(!viewModel.cloneSourceScalesLinked)
+        #expect(viewModel.cloneSourceHorizontalScalePercent == 100)
+        #expect(viewModel.cloneSourceVerticalScalePercent == 100)
+        #expect(viewModel.cloneSourceRotationDegrees == 0)
+        #expect(!viewModel.cloneSourceFlipsHorizontally)
+        #expect(!viewModel.cloneSourceFlipsVertically)
+        #expect(!viewModel.cloneStampShowsOverlay)
+        #expect(viewModel.cloneStampOverlayBlendMode == .difference)
+        #expect(viewModel.document.history.count == historyCount)
+
+        #expect(registry.execute(request(
+            operation: "call",
+            name: "xomo.paint.special",
+            arguments: [
+                "action": .string("resetCloneSourceTransform"),
+                "sourceSlot": .number(3)
+            ]
+        )).ok)
+        #expect(viewModel.document.history.count == historyCount)
+
+        #expect(viewModel.selectCloneSourceSlot(0))
+        #expect(viewModel.cloneSourcePoint == CGPoint(x: 4, y: 5))
+        #expect(viewModel.cloneSourceHorizontalScalePercent == 225)
+        #expect(viewModel.cloneSourceVerticalScalePercent == 225)
+        #expect(viewModel.cloneSourceFlipsHorizontally)
+
+        let invalid = registry.execute(request(
+            operation: "call",
+            name: "xomo.paint.special",
+            arguments: [
+                "action": .string("resetCloneSourceTransform"),
+                "sourceSlot": .number(6)
+            ]
+        ))
+        #expect(!invalid.ok)
+        #expect(viewModel.activeCloneSourceSlotIndex == 0)
+        #expect(viewModel.cloneSourceHorizontalScalePercent == 225)
+        #expect(viewModel.cloneSourceFlipsHorizontally)
+        #expect(viewModel.document.history.count == historyCount)
     }
 
     @Test func registryRejectsInvalidCloneSourceSlotsAtomically() {

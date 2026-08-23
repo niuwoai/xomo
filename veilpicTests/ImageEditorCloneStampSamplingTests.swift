@@ -104,6 +104,53 @@ struct ImageEditorCloneStampSamplingTests {
         #expect(viewModel.cloneSourcePoint == activePoint)
     }
 
+    @Test func resettingActiveCloneTransformPreservesSourceAlignmentAndOtherSlots() throws {
+        let viewModel = patternedCurrentLayerViewModel()
+        viewModel.setCloneSourceScalePercent(200)
+        viewModel.setCloneSourceFlipsHorizontally(true)
+
+        #expect(viewModel.selectCloneSourceSlot(2))
+        viewModel.setCloneSource(at: CGPoint(x: 10, y: 15))
+        viewModel.cloneStampAlignedCanvasOffset = CGSize(width: -40, height: -5)
+        viewModel.setCloneSourceScalesLinked(false)
+        viewModel.configureCloneSourceScale(
+            horizontalPercent: 175,
+            verticalPercent: 60,
+            linked: false
+        )
+        viewModel.setCloneSourceFlipsHorizontally(true)
+        viewModel.setCloneSourceFlipsVertically(true)
+        viewModel.setCloneSourceRotationDegrees(37)
+        let previewBeforeReset = try #require(
+            viewModel.cloneStampOverlayPreview(destinationReference: CGPoint(x: 60, y: 20))
+        )
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.canResetCloneSourceTransform)
+        #expect(viewModel.resetActiveCloneSourceTransform())
+        #expect(!viewModel.canResetCloneSourceTransform)
+        #expect(viewModel.cloneSourcePoint == CGPoint(x: 10, y: 15))
+        #expect(viewModel.cloneStampAlignedCanvasOffset == CGSize(width: -40, height: -5))
+        #expect(!viewModel.cloneSourceScalesLinked)
+        #expect(viewModel.cloneSourceHorizontalScalePercent == 100)
+        #expect(viewModel.cloneSourceVerticalScalePercent == 100)
+        #expect(viewModel.cloneSourceRotationDegrees == 0)
+        #expect(!viewModel.cloneSourceFlipsHorizontally)
+        #expect(!viewModel.cloneSourceFlipsVertically)
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(!viewModel.resetActiveCloneSourceTransform())
+
+        let previewAfterReset = try #require(
+            viewModel.cloneStampOverlayPreview(destinationReference: CGPoint(x: 60, y: 20))
+        )
+        #expect(previewAfterReset.sourceCanvas === previewBeforeReset.sourceCanvas)
+
+        #expect(viewModel.selectCloneSourceSlot(0))
+        #expect(viewModel.cloneSourceHorizontalScalePercent == 200)
+        #expect(viewModel.cloneSourceVerticalScalePercent == 200)
+        #expect(viewModel.cloneSourceFlipsHorizontally)
+    }
+
     @Test func horizontalSourceFlipMirrorsRealClonePixelsAroundTheSamplingOrigin() throws {
         let ordinary = mirroredSourceViewModel()
         let flipped = mirroredSourceViewModel()

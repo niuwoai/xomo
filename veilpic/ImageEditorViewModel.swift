@@ -259,6 +259,9 @@ final class ImageEditorViewModel: ObservableObject {
     var cloneSourceRotationDegrees: CGFloat {
         cloneSourceSlots[activeCloneSourceSlotIndex].rotationDegrees
     }
+    var canResetCloneSourceTransform: Bool {
+        !cloneSourceSlots[activeCloneSourceSlotIndex].hasIdentityTransform
+    }
     @Published var isCloneStampAligned = true {
         didSet {
             guard isCloneStampAligned != oldValue else { return }
@@ -7196,6 +7199,11 @@ final class ImageEditorViewModel: ObservableObject {
 
     func setCloneSourceRotationDegrees(_ degrees: CGFloat) {
         cloneSourceSlots[activeCloneSourceSlotIndex].setRotationDegrees(degrees)
+    }
+
+    @discardableResult
+    func resetActiveCloneSourceTransform() -> Bool {
+        cloneSourceSlots[activeCloneSourceSlotIndex].resetTransform()
     }
 
     func setCloneStampOverlayOpacityPercent(_ percent: CGFloat) {

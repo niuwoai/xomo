@@ -1412,6 +1412,21 @@ struct ImageEditorView: View {
                 .xomoFocusEffectDisabled()
                 .accessibilityIdentifier("image-editor-clone-source-flip-vertical")
 
+                Button {
+                    viewModel.resetActiveCloneSourceTransform()
+                } label: {
+                    Image(systemName: "arrow.counterclockwise")
+                        .font(.system(size: 11, weight: .semibold))
+                }
+                .buttonStyle(EditorIconButtonStyle(isSelected: false))
+                .frame(width: 28, height: 28)
+                .disabled(!viewModel.canResetCloneSourceTransform)
+                .focusable(false)
+                .xomoFocusEffectDisabled()
+                .help(L10n.text("imageEditor.action.cloneSourceResetTransform"))
+                .accessibilityLabel(L10n.text("imageEditor.action.cloneSourceResetTransform"))
+                .accessibilityIdentifier("image-editor-clone-source-reset-transform")
+
                 sampledBrushOptions(
                     isAligned: $viewModel.isCloneStampAligned,
                     sampleSource: $viewModel.cloneStampSampleSource,

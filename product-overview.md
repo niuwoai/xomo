@@ -1,6 +1,8 @@
 # 象墨（Xomo）产品概览
 
-> 最后更新：2026-08-23 | 当前版本：v2.12.0-rc1183
+> 最后更新：2026-08-23 | 当前版本：v2.12.0-rc1184
+
+v2.12.0-rc1184 为五组 Clone Source 增加当前槽一键重置变换：用户不必逐个把宽、高、角度和两轴翻转手工归零，按钮只在当前槽存在实际来源变换时启用。重置保留来源点、对齐笔触已经锁存的偏移和宽高链接偏好，也不碰其他四个槽位、Show Overlay、Clipped、Auto Hide、Invert、混合模式或透明度；来源像素缓存继续复用，文档、History 与 Undo/Redo 不变。`xomo.paint.special resetCloneSourceTransform` 提供同义动作并可指定一基槽位，非法索引原子失败。产品测试构建、唯一专项 38/38、CLI/MCP 2/2、发布与运行器契约、三语资源格式及差异检查通过；下一次周期完整编译、冒烟与 `/Applications` 覆盖门禁仍为 rc1200。
 
 v2.12.0-rc1183 为 Clone Source 像素叠加补齐 Normal、Darken、Lighten、Difference 四种对齐混合模式。Difference 会把匹配区域压向黑色、把错位纹理显出来；Darken 和 Lighten 适合只关注来源或目标较暗、较亮的一侧。实现把模式施加在来源 Canvas 与底层图像的真实合成边界，所以它确实与画面比较，而不是在透明层里空转；模式切换复用同一来源缓存，并继续与透明度、Invert、Clipped、Auto Hide、缩放、翻转和旋转组合。选项栏及 `xomo.paint.special overlayBlendMode` 同义，非法字符串在任何状态变化前原子拒绝；设置不写工程、History 或 Undo/Redo。产品测试构建、唯一专项 47/47、CLI/MCP 2/2、发布与运行器契约、三语资源格式及差异检查通过；下一次周期完整编译、冒烟与 `/Applications` 覆盖门禁仍为 rc1200。
 

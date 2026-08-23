@@ -1,6 +1,8 @@
 # Xomo 经典 Photoshop 能力路线图
 
-> 最后更新：2026-08-23 ｜ 当前版本：v2.12.0-rc1183 ｜ 目标：以经典 Photoshop 能力作为现代混合编辑器的可靠像素与图层底座
+> 最后更新：2026-08-23 ｜ 当前版本：v2.12.0-rc1184 ｜ 目标：以经典 Photoshop 能力作为现代混合编辑器的可靠像素与图层底座
+
+- `v2.12.0-rc1184`：为五组 Clone Source 补齐当前槽一键重置变换。动作只清除 H/V 翻转并恢复 W/H 100% 与 0°，保留来源点、已锁存对齐偏移、宽高链接偏好、其他槽位及全部叠加设置；无变化准确禁用且不写 History。选项栏与 `xomo.paint.special resetCloneSourceTransform` 同义，自动化可指定一基槽位并原子拒绝非法索引。产品测试构建、唯一专项 38/38、CLI/MCP 2/2、发布与运行器契约、三语资源格式及差异检查通过；下一次周期完整编译、冒烟与 `/Applications` 覆盖门禁仍为 rc1200。
 
 - `v2.12.0-rc1183`：补齐 Adobe Clone Source 叠加的 Normal、Darken、Lighten、Difference 四种混合模式。模式作用于来源 Canvas 与底层画布的真实 SwiftUI 合成边界，并继续与透明度、Invert、Clipped、Auto Hide 和五槽仿射组合；切换不重建缓存或影响落笔。选项栏与 `xomo.paint.special overlayBlendMode` 同义，非法值在任何状态变更前拒绝。产品测试构建、唯一专项 47/47、CLI/MCP 2/2、发布与运行器契约、三语资源格式及差异检查通过；下一次周期完整编译、冒烟与 `/Applications` 覆盖门禁仍为 rc1200。
 

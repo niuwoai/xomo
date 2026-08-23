@@ -5590,6 +5590,25 @@ final class XomoAutomationRegistry {
         viewModel: ImageEditorViewModel
     ) throws {
         let action = try requiredString("action", in: arguments)
+        func validatedCloneSourceSlotIndex() throws -> Int? {
+            guard let rawSlot = arguments["sourceSlot"]?.doubleValue else { return nil }
+            guard rawSlot.isFinite,
+                  rawSlot.rounded() == rawSlot,
+                  (1...Double(ImageEditorCloneSourceSlotState.maximumCount)).contains(rawSlot)
+            else {
+                throw XomoAutomationCallError.invalidArgument(
+                    "Clone sourceSlot must be an integer from 1 through \(ImageEditorCloneSourceSlotState.maximumCount)"
+                )
+            }
+            return Int(rawSlot) - 1
+        }
+        if action == "resetCloneSourceTransform" {
+            if let sourceSlotIndex = try validatedCloneSourceSlotIndex() {
+                _ = viewModel.selectCloneSourceSlot(sourceSlotIndex)
+            }
+            viewModel.resetActiveCloneSourceTransform()
+            return
+        }
         if let size = arguments["size"]?.doubleValue { viewModel.brushSize = size }
         let usesStrength = ["blur", "sharpen", "smudge"].contains(action)
         let usesExposure = ["dodge", "burn"].contains(action)
@@ -5652,18 +5671,7 @@ final class XomoAutomationRegistry {
                 return CGFloat(rawPercent)
             }
 
-            var resolvedSourceSlotIndex: Int?
-            if let rawSlot = arguments["sourceSlot"]?.doubleValue {
-                guard rawSlot.isFinite,
-                      rawSlot.rounded() == rawSlot,
-                      (1...Double(ImageEditorCloneSourceSlotState.maximumCount)).contains(rawSlot)
-                else {
-                    throw XomoAutomationCallError.invalidArgument(
-                        "Clone sourceSlot must be an integer from 1 through \(ImageEditorCloneSourceSlotState.maximumCount)"
-                    )
-                }
-                resolvedSourceSlotIndex = Int(rawSlot) - 1
-            }
+            let resolvedSourceSlotIndex = try validatedCloneSourceSlotIndex()
             let resolvedUniformScale = try validatedCloneScale("scalePercent")
             let resolvedHorizontalScale = try validatedCloneScale("scaleXPercent")
             let resolvedVerticalScale = try validatedCloneScale("scaleYPercent")
@@ -7310,7 +7318,7 @@ private extension XomoAutomationRegistry {
         ], required: ["points"]),
         tool("xomo.paint.gradient", "Paint a gradient between exactly two canvas points.", ["points": pointsSchema], required: ["points"]),
         tool("xomo.paint.special", "Use clone, tone, sponge, blur, sharpen, smudge, healing, red-eye, or paint-bucket tools.", [
-            "action": XomoAutomationSchema.string(description: "Paint action", values: ["setCloneSource", "cloneStamp", "setHealingSource", "healing", "patch", "dodge", "burn", "sponge", "blur", "sharpen", "smudge", "redEye", "paintBucket"]),
+            "action": XomoAutomationSchema.string(description: "Paint action", values: ["setCloneSource", "resetCloneSourceTransform", "cloneStamp", "setHealingSource", "healing", "patch", "dodge", "burn", "sponge", "blur", "sharpen", "smudge", "redEye", "paintBucket"]),
             "points": pointsSchema,
             "x": XomoAutomationSchema.number(description: "Canvas x coordinate for point actions"),
             "y": XomoAutomationSchema.number(description: "Canvas y coordinate for point actions"),

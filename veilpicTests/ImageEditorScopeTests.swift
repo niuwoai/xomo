@@ -5068,6 +5068,9 @@ struct ImageEditorScopeTests {
         #expect(cloneSource.contains("imageEditor.option.cloneSourceFlipVertical"))
         #expect(cloneSource.contains("viewModel.cloneSourceFlipsVertically"))
         #expect(cloneSource.contains("viewModel.setCloneSourceFlipsVertically($0)"))
+        #expect(cloneSource.contains("viewModel.resetActiveCloneSourceTransform()"))
+        #expect(cloneSource.contains("!viewModel.canResetCloneSourceTransform"))
+        #expect(cloneSource.contains("imageEditor.action.cloneSourceResetTransform"))
         #expect(cloneSource.contains(".focusable(false)"))
         #expect(cloneSource.contains("image-editor-clone-source-slot"))
         #expect(cloneSource.contains("image-editor-clone-source-scale-width"))
@@ -5082,6 +5085,7 @@ struct ImageEditorScopeTests {
         #expect(cloneSource.contains("image-editor-clone-source-overlay-opacity"))
         #expect(cloneSource.contains("image-editor-clone-source-flip-horizontal"))
         #expect(cloneSource.contains("image-editor-clone-source-flip-vertical"))
+        #expect(cloneSource.contains("image-editor-clone-source-reset-transform"))
     }
 
     @Test func pressureCursorGestureUsesTabletPressureAndResetsAfterRelease() throws {
