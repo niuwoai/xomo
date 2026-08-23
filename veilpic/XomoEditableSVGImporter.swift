@@ -169,7 +169,7 @@ enum XomoEditableSVGImporter {
         "svg", "g", "path", "rect", "circle", "ellipse", "line", "polyline", "polygon"
     ])
 
-    private struct SVGStyleSelector {
+    private struct SVGStyleCompoundSelector {
         var elementName: String?
         var idName: String?
         var classNames: [String]
@@ -191,6 +191,48 @@ enum XomoEditableSVGImporter {
             }
             let elementClasses = Set(XomoEditableSVGImporter.classNames(on: element))
             return classNames.allSatisfy(elementClasses.contains)
+        }
+    }
+
+    private enum SVGStyleCombinator {
+        case descendant
+        case child
+    }
+
+    private struct SVGStyleSelector {
+        var compounds: [SVGStyleCompoundSelector]
+        var combinators: [SVGStyleCombinator]
+
+        var specificity: Int {
+            compounds.reduce(0) { $0 + $1.specificity }
+        }
+
+        var classNames: [String] {
+            compounds.flatMap(\.classNames)
+        }
+
+        func matches(_ element: XMLElement) -> Bool {
+            guard !compounds.isEmpty else { return false }
+            return matches(compoundAt: compounds.count - 1, element: element)
+        }
+
+        private func matches(compoundAt index: Int, element: XMLElement) -> Bool {
+            guard compounds[index].matches(element) else { return false }
+            guard index > 0 else { return true }
+            switch combinators[index - 1] {
+            case .child:
+                guard let parent = element.parent as? XMLElement else { return false }
+                return matches(compoundAt: index - 1, element: parent)
+            case .descendant:
+                var ancestor = element.parent as? XMLElement
+                while let candidate = ancestor {
+                    if matches(compoundAt: index - 1, element: candidate) {
+                        return true
+                    }
+                    ancestor = candidate.parent as? XMLElement
+                }
+                return false
+            }
         }
     }
 
@@ -1157,6 +1199,45 @@ enum XomoEditableSVGImporter {
     private static func styleSelector(_ source: String) -> SVGStyleSelector? {
         guard !source.isEmpty else { return nil }
         var remainder = source[...]
+        var compounds: [SVGStyleCompoundSelector] = []
+        var combinators: [SVGStyleCombinator] = []
+
+        while !remainder.isEmpty {
+            let boundary = remainder.firstIndex(where: { $0.isWhitespace || $0 == ">" })
+                ?? remainder.endIndex
+            guard boundary != remainder.startIndex,
+                  let compound = styleCompoundSelector(String(remainder[..<boundary]))
+            else { return nil }
+            compounds.append(compound)
+            remainder = remainder[boundary...]
+
+            var consumedWhitespace = false
+            while let first = remainder.first, first.isWhitespace {
+                consumedWhitespace = true
+                remainder = remainder.dropFirst()
+            }
+            guard !remainder.isEmpty else { break }
+            if remainder.first == ">" {
+                remainder = remainder.dropFirst()
+                while let first = remainder.first, first.isWhitespace {
+                    remainder = remainder.dropFirst()
+                }
+                guard !remainder.isEmpty else { return nil }
+                combinators.append(.child)
+            } else if consumedWhitespace {
+                combinators.append(.descendant)
+            } else {
+                return nil
+            }
+        }
+
+        guard !compounds.isEmpty, combinators.count == compounds.count - 1 else { return nil }
+        return SVGStyleSelector(compounds: compounds, combinators: combinators)
+    }
+
+    private static func styleCompoundSelector(_ source: String) -> SVGStyleCompoundSelector? {
+        guard !source.isEmpty else { return nil }
+        var remainder = source[...]
         var elementName: String?
         var idName: String?
         var classNames: [String] = []
@@ -1187,7 +1268,7 @@ enum XomoEditableSVGImporter {
         }
 
         guard elementName != nil || idName != nil || !classNames.isEmpty else { return nil }
-        return SVGStyleSelector(
+        return SVGStyleCompoundSelector(
             elementName: elementName,
             idName: idName,
             classNames: classNames

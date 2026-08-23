@@ -388,11 +388,80 @@ struct ImageEditorSVGImportTests {
         #expect(partialMatch.content.strokeOpacity == 0)
     }
 
+    @Test func hierarchyStylesheetSelectorsDistinguishDescendantsFromDirectChildren() throws {
+        let directChild = try #require(XomoEditableSVGImporter.parse(Data(
+            """
+            <svg>
+              <style>
+                #theme path.icon { fill: steelblue; }
+                #theme > path.icon { stroke: gold; stroke-width: 4; }
+                #hero { fill: red; stroke: tomato; stroke-width: 2; }
+              </style>
+              <g id="theme">
+                <path id="hero" class="icon" d="M0 0 L20 0 L10 20 Z" />
+              </g>
+            </svg>
+            """.utf8
+        )))
+        let directFill = try #require(directChild.content.fillColor.usingColorSpace(.deviceRGB))
+        let directStroke = try #require(directChild.content.strokeColor.usingColorSpace(.deviceRGB))
+        #expect(abs(directFill.redComponent - (70.0 / 255.0)) < 0.001)
+        #expect(abs(directFill.greenComponent - (130.0 / 255.0)) < 0.001)
+        #expect(abs(directFill.blueComponent - (180.0 / 255.0)) < 0.001)
+        #expect(abs(directStroke.redComponent - 1) < 0.001)
+        #expect(abs(directStroke.greenComponent - (215.0 / 255.0)) < 0.001)
+        #expect(abs(directStroke.blueComponent) < 0.001)
+        #expect(directChild.content.strokeWidth == 4)
+
+        let nestedDescendant = try #require(XomoEditableSVGImporter.parse(Data(
+            """
+            <svg>
+              <style>
+                .theme path.icon { fill: gold; }
+                .theme > path.icon { fill: cyan; }
+              </style>
+              <g class="theme">
+                <g><path class="icon" d="M0 0 L20 0 L10 20 Z" /></g>
+              </g>
+            </svg>
+            """.utf8
+        )))
+        let nestedFill = try #require(
+            nestedDescendant.content.fillColor.usingColorSpace(.deviceRGB)
+        )
+        #expect(abs(nestedFill.redComponent - 1) < 0.001)
+        #expect(abs(nestedFill.greenComponent - (215.0 / 255.0)) < 0.001)
+        #expect(abs(nestedFill.blueComponent) < 0.001)
+
+        let backtrackedDescendant = try #require(XomoEditableSVGImporter.parse(Data(
+            """
+            <svg>
+              <style>.theme > .branch .icon { fill: cyan; }</style>
+              <g class="theme">
+                <g class="branch">
+                  <g class="branch">
+                    <path class="icon" d="M0 0 L20 0 L10 20 Z" />
+                  </g>
+                </g>
+              </g>
+            </svg>
+            """.utf8
+        )))
+        let backtrackedFill = try #require(
+            backtrackedDescendant.content.fillColor.usingColorSpace(.deviceRGB)
+        )
+        #expect(abs(backtrackedFill.redComponent) < 0.001)
+        #expect(abs(backtrackedFill.greenComponent - 1) < 0.001)
+        #expect(abs(backtrackedFill.blueComponent - 1) < 0.001)
+    }
+
     @Test func unsupportedStylesheetsAndUnresolvedClassesAreRejectedBeforeImport() {
         let invalidDocuments = [
             "<svg><style>path:hover { fill: red; }</style><path d='M0 0 L20 0 L10 20 Z'/></svg>",
-            "<svg><style>.art path { fill: red; }</style><path class='art' d='M0 0 L20 0 L10 20 Z'/></svg>",
             "<svg><style>path#one#two { fill: red; }</style><path id='one' d='M0 0 L20 0 L10 20 Z'/></svg>",
+            "<svg><style>g + path { fill: red; }</style><path d='M0 0 L20 0 L10 20 Z'/></svg>",
+            "<svg><style>g ~ path { fill: red; }</style><path d='M0 0 L20 0 L10 20 Z'/></svg>",
+            "<svg><style>g > > path { fill: red; }</style><path d='M0 0 L20 0 L10 20 Z'/></svg>",
             "<svg><style>@media (dark-mode) { path { fill: red; } }</style><path d='M0 0 L20 0 L10 20 Z'/></svg>",
             "<svg><style>.art { fill: red !important; }</style><path class='art' d='M0 0 L20 0 L10 20 Z'/></svg>",
             "<svg><style>.art { mix-blend-mode: multiply; }</style><path class='art' d='M0 0 L20 0 L10 20 Z'/></svg>",
