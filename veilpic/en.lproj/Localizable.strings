@@ -2274,7 +2274,7 @@
 "imageEditor.status.layerLabelColorCleared" = "Layer color label cleared";
 "imageEditor.status.layerImported" = "Imported image layer: %@";
 "imageEditor.status.editableSVGImported" = "Imported editable SVG shape: %@";
-"imageEditor.status.editableSVGImportFailed" = "SVG must contain exactly one supported path, line, rectangle, circle, or ellipse without CSS, transforms, or referenced resources";
+"imageEditor.status.editableSVGImportFailed" = "SVG must contain exactly one supported path, line, polyline, rectangle, circle, or ellipse without CSS, transforms, or referenced resources";
 "imageEditor.status.layerSmartObject" = "Converted to Smart Object";
 "imageEditor.status.layerSmartObjectReplaced" = "Replaced Smart Object contents: %@";
 "imageEditor.status.layerSmartObjectInstancesReplaced" = "Replaced contents for %d Smart Object instances: %@";

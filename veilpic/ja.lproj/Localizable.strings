@@ -2274,7 +2274,7 @@
 "imageEditor.status.layerLabelColorCleared" = "レイヤーカラーラベルをクリアしました";
 "imageEditor.status.layerImported" = "画像レイヤーを読み込みました：%@";
 "imageEditor.status.editableSVGImported" = "編集可能な SVG シェイプを読み込みました：%@";
-"imageEditor.status.editableSVGImportFailed" = "SVG は CSS、変形、参照リソースを含まない、対応済みの単一パス、直線、長方形、円または楕円である必要があります";
+"imageEditor.status.editableSVGImportFailed" = "SVG は CSS、変形、参照リソースを含まない、対応済みの単一パス、直線、折れ線、長方形、円または楕円である必要があります";
 "imageEditor.status.layerSmartObject" = "スマートオブジェクトに変換しました";
 "imageEditor.status.layerSmartObjectReplaced" = "スマートオブジェクトの内容を置換しました：%@";
 "imageEditor.status.layerSmartObjectInstancesReplaced" = "%d 個のスマートオブジェクトインスタンスの内容を置換しました：%@";

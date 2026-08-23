@@ -192,11 +192,13 @@ struct ImageEditorSVGImportTests {
         let roundPoint = try #require(XomoEditableSVGImporter.parse(Data(
             "<svg><line x1='5' y1='5' x2='5' y2='5' stroke='black' stroke-width='2' stroke-linecap='round'/></svg>".utf8
         )))
-        #expect(roundPoint.size == CGSize(width: 2, height: 2))
-        #expect(roundPoint.content.editablePathAnchors.map(\.point) == [
-            CGPoint(x: 1, y: 1),
-            CGPoint(x: 1, y: 1)
-        ])
+        #expect(abs(roundPoint.size.width - 2) < 0.000_001)
+        #expect(abs(roundPoint.size.height - 2) < 0.000_001)
+        let roundPoints = roundPoint.content.editablePathAnchors.map(\.point)
+        #expect(roundPoints.count == 2)
+        #expect(roundPoints.allSatisfy {
+            abs($0.x - 1) < 0.000_001 && abs($0.y - 1) < 0.000_001
+        })
 
         let minimumVertical = try #require(XomoEditableSVGImporter.parse(Data(
             "<svg><line x1='5' y1='0' x2='5' y2='10' stroke='black' stroke-width='0.1'/></svg>".utf8
@@ -207,6 +209,61 @@ struct ImageEditorSVGImportTests {
             CGPoint(x: 0.5, y: 0),
             CGPoint(x: 0.5, y: 10)
         ])
+    }
+
+    @Test func singlePolylineImportsAsNativeEditableOpenPath() throws {
+        let imported = try #require(XomoEditableSVGImporter.parse(Data(
+            """
+            <svg width="120" height="80" viewBox="0 0 60 40">
+              <g opacity="0.5" fill="none" stroke="rgba(32, 80, 240, 0.8)"
+                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                 stroke-dasharray="3 2">
+                <polyline points="1e1,5 30,5 30,3e1" />
+              </g>
+            </svg>
+            """.utf8
+        )))
+        let content = imported.content
+
+        #expect(content.kind == .path)
+        #expect(!content.isPathClosed)
+        #expect(imported.size == CGSize(width: 44, height: 54))
+        #expect(content.editablePathAnchors.map(\.point) == [
+            CGPoint(x: 2, y: 2),
+            CGPoint(x: 42, y: 2),
+            CGPoint(x: 42, y: 52)
+        ])
+        #expect(content.fillOpacity == 0)
+        #expect(abs(content.strokeOpacity - 0.4) < 0.001)
+        #expect(content.strokeWidth == 4)
+        #expect(content.strokeCap == .round)
+        #expect(content.strokeJoin == .round)
+        #expect(content.strokeDashPattern == [6, 4])
+
+        let zeroAreaFill = try #require(XomoEditableSVGImporter.parse(Data(
+            "<svg><polyline points='0,0 10,10 20,20' stroke='black'/></svg>".utf8
+        )))
+        #expect(zeroAreaFill.content.fillOpacity == 0)
+        #expect(zeroAreaFill.content.editablePathAnchors.count == 3)
+    }
+
+    @Test func polylinesThatCannotStayNativeAreRejectedBeforeImport() {
+        let unsupported = [
+            "<svg><polyline fill='none' stroke='black'/></svg>",
+            "<svg><polyline points='0,0' fill='none' stroke='black'/></svg>",
+            "<svg><polyline points='0,0 10' fill='none' stroke='black'/></svg>",
+            "<svg><polyline points='0,,0 10,10' fill='none' stroke='black'/></svg>",
+            "<svg><polyline points='0,0 10%,10' fill='none' stroke='black'/></svg>",
+            "<svg><polyline points='0,0 10,10' fill='none' stroke='black' pathLength='100'/></svg>",
+            "<svg><polyline points='0,0 10,0 5,10' stroke='black'/></svg>",
+            "<svg><polyline points='0,0 10,10' fill='none'/></svg>",
+            "<svg><polyline points='0,0 10,10' fill='none' stroke='black' stroke-width='0.05'/></svg>",
+            "<svg><polyline points='5,5 5,5' fill='none' stroke='black'/></svg>"
+        ]
+
+        for source in unsupported {
+            #expect(XomoEditableSVGImporter.parse(Data(source.utf8)) == nil)
+        }
     }
 
     @Test func viewportScalingAndFillRulesNeverSilentlyChangeEditableGeometry() throws {

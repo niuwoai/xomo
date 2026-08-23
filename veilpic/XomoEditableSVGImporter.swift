@@ -60,6 +60,12 @@ enum XomoEditableSVGImporter {
                 presentation: presentation,
                 viewportScale: viewportScale
             )
+        case "polyline":
+            return polylineImport(
+                geometry,
+                presentation: presentation,
+                viewportScale: viewportScale
+            )
         default:
             return nil
         }
@@ -265,6 +271,40 @@ enum XomoEditableSVGImporter {
             [ImageEditorPathAnchor(point: start), ImageEditorPathAnchor(point: end)],
             presentation: presentation
         )
+    }
+
+    private static func polylineImport(
+        _ polyline: XMLElement,
+        presentation: SVGPresentation,
+        viewportScale: CGFloat
+    ) -> XomoEditableSVGImport? {
+        guard polyline.attribute(forName: "pathLength") == nil,
+              let source = polyline.attribute(forName: "points")?.stringValue,
+              let points = svgPoints(source),
+              presentation.fillOpacity == 0 || !polylineCanEncloseArea(points),
+              presentation.hasVisibleStroke
+        else { return nil }
+
+        let anchors = points.map { point in
+            ImageEditorPathAnchor(
+                point: CGPoint(
+                    x: point.x * viewportScale,
+                    y: point.y * viewportScale
+                )
+            )
+        }
+        return openPathImport(anchors, presentation: presentation)
+    }
+
+    private static func polylineCanEncloseArea(_ points: [CGPoint]) -> Bool {
+        guard points.count >= 3,
+              let first = points.first,
+              let second = points.dropFirst().first(where: { $0 != first })
+        else { return false }
+        return points.contains { point in
+            (second.x - first.x) * (point.y - first.y)
+                != (second.y - first.y) * (point.x - first.x)
+        }
     }
 
     private static func openPathImport(
@@ -540,6 +580,33 @@ enum XomoEditableSVGImporter {
             trimmed.removeLast(2)
         }
         return svgNumber(trimmed)
+    }
+
+    private static func svgPoints(_ source: String) -> [CGPoint]? {
+        let scanner = Scanner(string: source)
+        scanner.charactersToBeSkipped = nil
+        scanner.locale = Locale(identifier: "en_US_POSIX")
+        let whitespace = CharacterSet.whitespacesAndNewlines
+        _ = scanner.scanCharacters(from: whitespace)
+
+        var values: [CGFloat] = []
+        while !scanner.isAtEnd {
+            guard let value = scanner.scanDouble(), value.isFinite else { return nil }
+            values.append(CGFloat(value))
+
+            let hadWhitespace = scanner.scanCharacters(from: whitespace) != nil
+            if scanner.scanString(",") != nil {
+                _ = scanner.scanCharacters(from: whitespace)
+                guard !scanner.isAtEnd else { return nil }
+            } else if !hadWhitespace, !scanner.isAtEnd {
+                return nil
+            }
+        }
+
+        guard values.count >= 4, values.count.isMultiple(of: 2) else { return nil }
+        return stride(from: 0, to: values.count, by: 2).map { index in
+            CGPoint(x: values[index], y: values[index + 1])
+        }
     }
 
     private static func viewportScale(_ root: XMLElement) -> CGFloat? {
