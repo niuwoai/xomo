@@ -272,16 +272,21 @@ enum XomoEditableSVGImporter {
         presentation: SVGPresentation
     ) -> XomoEditableSVGImport? {
         guard anchors.count >= 2,
-              let geometryBounds = bounds(of: [anchors])
+              let visualBounds = strokedOpenPathBounds(
+                anchors,
+                strokeWidth: presentation.strokeWidth,
+                strokeCap: presentation.strokeCap,
+                strokeJoin: presentation.strokeJoin,
+                strokeMiterLimit: presentation.strokeMiterLimit
+              )
         else { return nil }
-        let padding = presentation.strokeWidth / 2
         let size = CGSize(
-            width: max(1, geometryBounds.width + padding * 2),
-            height: max(1, geometryBounds.height + padding * 2)
+            width: max(1, visualBounds.width),
+            height: max(1, visualBounds.height)
         )
         let offset = CGSize(
-            width: padding - geometryBounds.minX,
-            height: padding - geometryBounds.minY
+            width: (size.width - visualBounds.width) / 2 - visualBounds.minX,
+            height: (size.height - visualBounds.height) / 2 - visualBounds.minY
         )
         let localAnchors = anchors.map { translated($0, by: offset) }
         let content = ImageEditorShapeContent(
@@ -302,6 +307,77 @@ enum XomoEditableSVGImporter {
             isPathClosed: false
         )
         return XomoEditableSVGImport(content: content, size: size)
+    }
+
+    private static func strokedOpenPathBounds(
+        _ anchors: [ImageEditorPathAnchor],
+        strokeWidth: CGFloat,
+        strokeCap: ImageEditorStrokeCap,
+        strokeJoin: ImageEditorStrokeJoin,
+        strokeMiterLimit: CGFloat
+    ) -> CGRect? {
+        guard let first = anchors.first,
+              strokeWidth > 0,
+              strokeWidth.isFinite
+        else { return nil }
+
+        let path = CGMutablePath()
+        path.move(to: first.point)
+        for index in anchors.indices.dropFirst() {
+            let previous = anchors[index - 1]
+            let current = anchors[index]
+            if previous.outControl != nil || current.inControl != nil {
+                path.addCurve(
+                    to: current.point,
+                    control1: previous.outControl ?? previous.point,
+                    control2: current.inControl ?? current.point
+                )
+            } else {
+                path.addLine(to: current.point)
+            }
+        }
+
+        let stroked = path.copy(
+            strokingWithWidth: strokeWidth,
+            lineCap: cgLineCap(strokeCap),
+            lineJoin: cgLineJoin(strokeJoin),
+            miterLimit: strokeMiterLimit
+        )
+        let bounds = stroked.boundingBoxOfPath
+        if bounds.isNull || bounds.isInfinite || bounds.isEmpty {
+            guard strokeCap != .butt,
+                  anchors.allSatisfy({ $0.point == first.point })
+            else { return nil }
+            let radius = strokeWidth / 2
+            return CGRect(
+                x: first.point.x - radius,
+                y: first.point.y - radius,
+                width: strokeWidth,
+                height: strokeWidth
+            )
+        }
+        guard bounds.minX.isFinite,
+              bounds.minY.isFinite,
+              bounds.width.isFinite,
+              bounds.height.isFinite
+        else { return nil }
+        return bounds
+    }
+
+    private static func cgLineCap(_ cap: ImageEditorStrokeCap) -> CGLineCap {
+        switch cap {
+        case .butt: return .butt
+        case .round: return .round
+        case .square: return .square
+        }
+    }
+
+    private static func cgLineJoin(_ join: ImageEditorStrokeJoin) -> CGLineJoin {
+        switch join {
+        case .miter: return .miter
+        case .round: return .round
+        case .bevel: return .bevel
+        }
     }
 
     private static func rectangleCornerRadius(

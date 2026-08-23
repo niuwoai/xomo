@@ -162,11 +162,14 @@ struct ImageEditorSVGImportTests {
 
         #expect(content.kind == .path)
         #expect(!content.isPathClosed)
-        #expect(imported.size == CGSize(width: 44, height: 24))
-        #expect(content.editablePathAnchors.map(\.point) == [
-            CGPoint(x: 2, y: 2),
-            CGPoint(x: 42, y: 22)
-        ])
+        #expect(abs(imported.size.width - 45.366_563) < 0.001)
+        #expect(abs(imported.size.height - 25.366_563) < 0.001)
+        let points = content.editablePathAnchors.map(\.point)
+        #expect(points.count == 2)
+        #expect(abs(points[0].x - 2.683_282) < 0.001)
+        #expect(abs(points[0].y - 2.683_282) < 0.001)
+        #expect(abs(points[1].x - 42.683_282) < 0.001)
+        #expect(abs(points[1].y - 22.683_282) < 0.001)
         #expect(content.fillOpacity == 0)
         #expect(abs(content.strokeOpacity - 0.4) < 0.001)
         #expect(content.strokeWidth == 4)
@@ -193,6 +196,16 @@ struct ImageEditorSVGImportTests {
         #expect(roundPoint.content.editablePathAnchors.map(\.point) == [
             CGPoint(x: 1, y: 1),
             CGPoint(x: 1, y: 1)
+        ])
+
+        let minimumVertical = try #require(XomoEditableSVGImporter.parse(Data(
+            "<svg><line x1='5' y1='0' x2='5' y2='10' stroke='black' stroke-width='0.1'/></svg>".utf8
+        )))
+        #expect(abs(minimumVertical.size.width - 1) < 0.000_001)
+        #expect(abs(minimumVertical.size.height - 10) < 0.000_001)
+        #expect(minimumVertical.content.editablePathAnchors.map(\.point) == [
+            CGPoint(x: 0.5, y: 0),
+            CGPoint(x: 0.5, y: 10)
         ])
     }
 
