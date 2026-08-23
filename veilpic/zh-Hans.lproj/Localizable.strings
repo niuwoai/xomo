@@ -3464,6 +3464,11 @@
 "imageEditor.option.cloneSourceOverlayClipped" = "裁切到笔刷";
 "imageEditor.option.cloneSourceOverlayAutoHide" = "自动隐藏";
 "imageEditor.option.cloneSourceOverlayInvert" = "反相";
+"imageEditor.option.cloneSourceOverlayBlendMode" = "混合";
+"imageEditor.cloneSourceOverlayBlendMode.normal" = "正常";
+"imageEditor.cloneSourceOverlayBlendMode.darken" = "变暗";
+"imageEditor.cloneSourceOverlayBlendMode.lighten" = "变亮";
+"imageEditor.cloneSourceOverlayBlendMode.difference" = "差值";
 "imageEditor.option.cloneSourceOverlayOpacity" = "叠加";
 "imageEditor.option.cloneSourceFlipHorizontal" = "水平翻转";
 "imageEditor.option.cloneSourceFlipVertical" = "垂直翻转";

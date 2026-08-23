@@ -1354,6 +1354,25 @@ struct ImageEditorView: View {
                 .xomoFocusEffectDisabled()
                 .accessibilityIdentifier("image-editor-clone-source-overlay-invert")
 
+                Picker(
+                    L10n.text("imageEditor.option.cloneSourceOverlayBlendMode"),
+                    selection: $viewModel.cloneStampOverlayBlendMode
+                ) {
+                    ForEach(ImageEditorCloneStampOverlayBlendMode.allCases) { mode in
+                        Text(mode.title).tag(mode)
+                    }
+                }
+                .labelsHidden()
+                .pickerStyle(.menu)
+                .environment(\.colorScheme, .dark)
+                .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
+                .frame(width: 105)
+                .disabled(!viewModel.cloneStampShowsOverlay)
+                .focusable(false)
+                .xomoFocusEffectDisabled()
+                .accessibilityLabel(L10n.text("imageEditor.option.cloneSourceOverlayBlendMode"))
+                .accessibilityIdentifier("image-editor-clone-source-overlay-blend-mode")
+
                 optionSlider(
                     titleKey: "imageEditor.option.cloneSourceOverlayOpacity",
                     value: Binding(
@@ -4899,6 +4918,7 @@ struct ImageEditorView: View {
                 )
                 context.draw(Image(nsImage: preview.sourceCanvas), in: sourceFrame)
             }
+            .blendMode(preview.blendMode.canvasBlendMode)
             .allowsHitTesting(false)
             .accessibilityHidden(true)
         }

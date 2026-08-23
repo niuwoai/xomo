@@ -1,6 +1,8 @@
 # 象墨（Xomo）产品概览
 
-> 最后更新：2026-08-23 | 当前版本：v2.12.0-rc1182
+> 最后更新：2026-08-23 | 当前版本：v2.12.0-rc1183
+
+v2.12.0-rc1183 为 Clone Source 像素叠加补齐 Normal、Darken、Lighten、Difference 四种对齐混合模式。Difference 会把匹配区域压向黑色、把错位纹理显出来；Darken 和 Lighten 适合只关注来源或目标较暗、较亮的一侧。实现把模式施加在来源 Canvas 与底层图像的真实合成边界，所以它确实与画面比较，而不是在透明层里空转；模式切换复用同一来源缓存，并继续与透明度、Invert、Clipped、Auto Hide、缩放、翻转和旋转组合。选项栏及 `xomo.paint.special overlayBlendMode` 同义，非法字符串在任何状态变化前原子拒绝；设置不写工程、History 或 Undo/Redo。产品测试构建、唯一专项 47/47、CLI/MCP 2/2、发布与运行器契约、三语资源格式及差异检查通过；下一次周期完整编译、冒烟与 `/Applications` 覆盖门禁仍为 rc1200。
 
 v2.12.0-rc1182 为 Clone Source 像素叠加补上 Adobe 意义上的 Clipped：开启后来源纹理只出现在当前目标笔刷圆内，关闭后才显示完整可用来源。裁切中心在悬停时跟随鼠标、绘制时跟随最新笔触点，直径与压力控制后的真实 retouch 笔尖一致；裁切先固定在目标画布空间，再对来源做 W/H 缩放、翻转和旋转，因此笔刷圆不会跟着来源纹理一起变形。它仍与 Auto Hide、Invert 和透明度组合，不修改真实采样、缓存源图、History 或工程格式；选项栏和 `xomo.paint.special clipOverlayToBrush` 共用会话状态。产品测试构建、唯一专项 45/45、CLI/MCP 2/2、发布与运行器契约、三语资源格式及差异检查通过；下一次周期完整编译、冒烟与 `/Applications` 覆盖门禁仍为 rc1200。
 

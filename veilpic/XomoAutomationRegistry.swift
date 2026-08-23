@@ -5692,6 +5692,17 @@ final class XomoAutomationRegistry {
             } else {
                 resolvedOverlayOpacityPercent = nil
             }
+            let resolvedOverlayBlendMode: ImageEditorCloneStampOverlayBlendMode?
+            if let rawMode = arguments["overlayBlendMode"]?.stringValue {
+                guard let mode = ImageEditorCloneStampOverlayBlendMode(rawValue: rawMode) else {
+                    throw XomoAutomationCallError.invalidArgument(
+                        "Clone overlayBlendMode must be normal, darken, lighten, or difference"
+                    )
+                }
+                resolvedOverlayBlendMode = mode
+            } else {
+                resolvedOverlayBlendMode = nil
+            }
             guard resolvedUniformScale == nil
                     || (resolvedHorizontalScale == nil && resolvedVerticalScale == nil)
             else {
@@ -5734,6 +5745,9 @@ final class XomoAutomationRegistry {
             }
             if let invertOverlay = arguments["invertOverlay"]?.boolValue {
                 viewModel.cloneStampOverlayInvertsColors = invertOverlay
+            }
+            if let resolvedOverlayBlendMode {
+                viewModel.cloneStampOverlayBlendMode = resolvedOverlayBlendMode
             }
             if let resolvedOverlayOpacityPercent {
                 viewModel.setCloneStampOverlayOpacityPercent(resolvedOverlayOpacityPercent)
@@ -7332,6 +7346,7 @@ private extension XomoAutomationRegistry {
             "clipOverlayToBrush": XomoAutomationSchema.boolean(description: "Clip the clone source overlay to the pressure-adjusted brush footprint"),
             "autoHideOverlay": XomoAutomationSchema.boolean(description: "Hide the clone source overlay while a paint stroke is active"),
             "invertOverlay": XomoAutomationSchema.boolean(description: "Invert clone source overlay colors without changing sampled pixels"),
+            "overlayBlendMode": XomoAutomationSchema.string(description: "Blend the clone source overlay with the canvas", values: ["normal", "darken", "lighten", "difference"]),
             "overlayOpacityPercent": XomoAutomationSchema.number(description: "Clone source overlay opacity from 0 through 100 percent", minimum: 0, maximum: 100),
             "flipHorizontal": XomoAutomationSchema.boolean(description: "Mirror the active clone source horizontally around its sampling origin"),
             "flipVertical": XomoAutomationSchema.boolean(description: "Mirror the active clone source vertically around its sampling origin"),

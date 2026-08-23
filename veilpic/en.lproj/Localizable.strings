@@ -3464,6 +3464,11 @@
 "imageEditor.option.cloneSourceOverlayClipped" = "Clipped";
 "imageEditor.option.cloneSourceOverlayAutoHide" = "Auto Hide";
 "imageEditor.option.cloneSourceOverlayInvert" = "Invert";
+"imageEditor.option.cloneSourceOverlayBlendMode" = "Blend";
+"imageEditor.cloneSourceOverlayBlendMode.normal" = "Normal";
+"imageEditor.cloneSourceOverlayBlendMode.darken" = "Darken";
+"imageEditor.cloneSourceOverlayBlendMode.lighten" = "Lighten";
+"imageEditor.cloneSourceOverlayBlendMode.difference" = "Difference";
 "imageEditor.option.cloneSourceOverlayOpacity" = "Overlay";
 "imageEditor.option.cloneSourceFlipHorizontal" = "Flip H";
 "imageEditor.option.cloneSourceFlipVertical" = "Flip V";

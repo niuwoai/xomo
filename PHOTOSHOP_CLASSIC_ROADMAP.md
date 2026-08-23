@@ -1,6 +1,8 @@
 # Xomo 经典 Photoshop 能力路线图
 
-> 最后更新：2026-08-23 ｜ 当前版本：v2.12.0-rc1182 ｜ 目标：以经典 Photoshop 能力作为现代混合编辑器的可靠像素与图层底座
+> 最后更新：2026-08-23 ｜ 当前版本：v2.12.0-rc1183 ｜ 目标：以经典 Photoshop 能力作为现代混合编辑器的可靠像素与图层底座
+
+- `v2.12.0-rc1183`：补齐 Adobe Clone Source 叠加的 Normal、Darken、Lighten、Difference 四种混合模式。模式作用于来源 Canvas 与底层画布的真实 SwiftUI 合成边界，并继续与透明度、Invert、Clipped、Auto Hide 和五槽仿射组合；切换不重建缓存或影响落笔。选项栏与 `xomo.paint.special overlayBlendMode` 同义，非法值在任何状态变更前拒绝。产品测试构建、唯一专项 47/47、CLI/MCP 2/2、发布与运行器契约、三语资源格式及差异检查通过；下一次周期完整编译、冒烟与 `/Applications` 覆盖门禁仍为 rc1200。
 
 - `v2.12.0-rc1182`：按 Adobe Clone Source 语义补齐 Clipped：选择后把真实来源叠加限制在当前目标笔刷大小内，取消则显示完整可用来源。裁切中心跟随实时笔尖，直径复用压力调整后的 retouch footprint，并在来源仿射前固定于目标空间，不会被 W/H、翻转或旋转带偏；选项栏与 `xomo.paint.special clipOverlayToBrush` 同义。产品测试构建、唯一专项 45/45、CLI/MCP 2/2、发布与运行器契约、三语资源格式及差异检查通过；下一次周期完整编译、冒烟与 `/Applications` 覆盖门禁仍为 rc1200。
 

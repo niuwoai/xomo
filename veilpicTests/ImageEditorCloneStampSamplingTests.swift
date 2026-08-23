@@ -6,6 +6,7 @@
 //
 
 import AppKit
+import SwiftUI
 import Testing
 @testable import musepic
 
@@ -632,6 +633,30 @@ struct ImageEditorCloneStampSamplingTests {
         #expect(clipped.brushClip?.center == CGPoint(x: 66, y: 18))
         #expect(clipped.brushClip?.diameter == 14)
         #expect(clipped.brushClip?.canvasRect == CGRect(x: 59, y: 11, width: 14, height: 14))
+    }
+
+    @Test func cloneOverlayBlendModesMapToCanvasAndReuseTheSourceCanvas() throws {
+        #expect(ImageEditorCloneStampOverlayBlendMode.normal.canvasBlendMode == .normal)
+        #expect(ImageEditorCloneStampOverlayBlendMode.darken.canvasBlendMode == .darken)
+        #expect(ImageEditorCloneStampOverlayBlendMode.lighten.canvasBlendMode == .lighten)
+        #expect(ImageEditorCloneStampOverlayBlendMode.difference.canvasBlendMode == .difference)
+        #expect(ImageEditorCloneStampOverlayBlendMode.allCases.map(\.rawValue) == [
+            "normal", "darken", "lighten", "difference"
+        ])
+
+        let viewModel = patternedCurrentLayerViewModel()
+        viewModel.setCloneSource(at: CGPoint(x: 10, y: 15))
+        let normal = try #require(
+            viewModel.cloneStampOverlayPreview(destinationReference: CGPoint(x: 60, y: 15))
+        )
+        #expect(normal.blendMode == .normal)
+
+        viewModel.cloneStampOverlayBlendMode = .difference
+        let difference = try #require(
+            viewModel.cloneStampOverlayPreview(destinationReference: CGPoint(x: 60, y: 15))
+        )
+        #expect(difference.blendMode == .difference)
+        #expect(difference.sourceCanvas === normal.sourceCanvas)
     }
 
     @Test func cloneOverlaySourceCanvasIsCachedAcrossHoverAndInvalidatedByEdits() throws {

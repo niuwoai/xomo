@@ -262,6 +262,7 @@ struct ImageEditorSampledBrushPreviewTests {
         #expect(source.contains("if preview.invertsColors"))
         #expect(source.contains("context.addFilter(.colorInvert(1))"))
         #expect(source.contains("context.draw(Image(nsImage: preview.sourceCanvas), in: sourceFrame)"))
+        #expect(source.contains(".blendMode(preview.blendMode.canvasBlendMode)"))
         #expect(overlaySource.contains("Ellipse()"))
     }
 

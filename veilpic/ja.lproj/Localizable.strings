@@ -3464,6 +3464,11 @@
 "imageEditor.option.cloneSourceOverlayClipped" = "ブラシサイズで切り抜く";
 "imageEditor.option.cloneSourceOverlayAutoHide" = "自動的に隠す";
 "imageEditor.option.cloneSourceOverlayInvert" = "反転";
+"imageEditor.option.cloneSourceOverlayBlendMode" = "描画モード";
+"imageEditor.cloneSourceOverlayBlendMode.normal" = "通常";
+"imageEditor.cloneSourceOverlayBlendMode.darken" = "比較（暗）";
+"imageEditor.cloneSourceOverlayBlendMode.lighten" = "比較（明）";
+"imageEditor.cloneSourceOverlayBlendMode.difference" = "差の絶対値";
 "imageEditor.option.cloneSourceOverlayOpacity" = "オーバーレイ";
 "imageEditor.option.cloneSourceFlipHorizontal" = "左右反転";
 "imageEditor.option.cloneSourceFlipVertical" = "上下反転";

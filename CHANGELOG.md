@@ -1,5 +1,20 @@
 # Changelog
 
+## 2.12.0-rc1183 - 2026-08-23
+
+### Added
+
+- Clone Source 像素叠加新增 Normal、Darken、Lighten、Difference 四种 Adobe 对齐混合模式；Difference 可直接观察来源与目标的差异，Darken/Lighten 便于在单侧明暗纹理上定位。
+- `xomo.paint.special` 新增 `overlayBlendMode`，接受 `normal/darken/lighten/difference`；非法模式会在槽位、来源点或任何叠加设置变化前原子拒绝。
+
+### Changed
+
+- 混合模式应用在整个来源 Canvas 与底层画布的合成边界，而不是透明 Canvas 内部；模式切换继续复用来源缓存，不改变真实采样、落笔像素、History 或工程格式。
+
+### Verification
+
+- 产品测试构建通过；Clone Source 混合模式、来源缓存与真实采样专项 31/31、预览几何和 Canvas 接线 10/10、界面/三语/MCP 契约 6/6，唯一专项合计 47/47；CLI/MCP 2/2、发布契约 7/7（21 项断言）、测试运行器契约、三语资源格式及差异检查通过。下一次周期完整编译、冒烟与 `/Applications` 覆盖门禁仍为 rc1200。
+
 ## 2.12.0-rc1182 - 2026-08-23
 
 ### Added

@@ -7,6 +7,7 @@
 
 import AppKit
 import Foundation
+import SwiftUI
 
 enum ImageEditorCloneSampleSource: String, CaseIterable, Identifiable {
     case currentLayer
@@ -17,6 +18,28 @@ enum ImageEditorCloneSampleSource: String, CaseIterable, Identifiable {
 
     var title: String {
         L10n.text("imageEditor.cloneSampleSource.\(rawValue)")
+    }
+}
+
+enum ImageEditorCloneStampOverlayBlendMode: String, CaseIterable, Identifiable {
+    case normal
+    case darken
+    case lighten
+    case difference
+
+    var id: String { rawValue }
+
+    var title: String {
+        L10n.text("imageEditor.cloneSourceOverlayBlendMode.\(rawValue)")
+    }
+
+    var canvasBlendMode: BlendMode {
+        switch self {
+        case .normal: .normal
+        case .darken: .darken
+        case .lighten: .lighten
+        case .difference: .difference
+        }
     }
 }
 
@@ -321,6 +344,7 @@ struct ImageEditorCloneStampOverlayPreview {
     var opacity: CGFloat
     var invertsColors: Bool
     var brushClip: BrushClip?
+    var blendMode: ImageEditorCloneStampOverlayBlendMode
 }
 
 struct ImageEditorCloneStampOverlaySourceCache {
@@ -389,7 +413,8 @@ extension ImageEditorViewModel {
             ),
             opacity: cloneStampOverlayOpacityPercent / 100,
             invertsColors: cloneStampOverlayInvertsColors,
-            brushClip: brushClip
+            brushClip: brushClip,
+            blendMode: cloneStampOverlayBlendMode
         )
     }
 

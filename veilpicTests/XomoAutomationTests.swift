@@ -174,6 +174,15 @@ struct XomoAutomationTests {
                 .objectValue?["invertOverlay"]?.objectValue?["type"]
                 == .string("boolean")
         )
+        let overlayBlendModeSchema = try #require(
+            specialPaintTool["inputSchema"]?.objectValue?["properties"]?
+                .objectValue?["overlayBlendMode"]?.objectValue
+        )
+        #expect(overlayBlendModeSchema["type"] == .string("string"))
+        #expect(overlayBlendModeSchema["enum"] == .array([
+            .string("normal"), .string("darken"),
+            .string("lighten"), .string("difference")
+        ]))
         let overlayOpacitySchema = try #require(
             specialPaintTool["inputSchema"]?.objectValue?["properties"]?
                 .objectValue?["overlayOpacityPercent"]?.objectValue
@@ -9027,6 +9036,7 @@ struct XomoAutomationTests {
                 "clipOverlayToBrush": .bool(true),
                 "autoHideOverlay": .bool(true),
                 "invertOverlay": .bool(true),
+                "overlayBlendMode": .string("difference"),
                 "overlayOpacityPercent": .number(35),
                 "flipHorizontal": .bool(true),
                 "flipVertical": .bool(true),
@@ -9047,6 +9057,7 @@ struct XomoAutomationTests {
         #expect(viewModel.cloneStampOverlayClipsToBrush)
         #expect(viewModel.cloneStampOverlayAutoHidesWhilePainting)
         #expect(viewModel.cloneStampOverlayInvertsColors)
+        #expect(viewModel.cloneStampOverlayBlendMode == .difference)
         #expect(viewModel.cloneStampOverlayOpacityPercent == 35)
         #expect(viewModel.cloneSourceFlipsHorizontally)
         #expect(viewModel.cloneSourceFlipsVertically)
@@ -9075,6 +9086,7 @@ struct XomoAutomationTests {
         #expect(viewModel.cloneStampOverlayClipsToBrush)
         #expect(viewModel.cloneStampOverlayAutoHidesWhilePainting)
         #expect(viewModel.cloneStampOverlayInvertsColors)
+        #expect(viewModel.cloneStampOverlayBlendMode == .difference)
         #expect(viewModel.cloneStampOverlayOpacityPercent == 35)
         #expect(!viewModel.cloneSourceFlipsHorizontally)
         #expect(!viewModel.cloneSourceFlipsVertically)
@@ -9088,6 +9100,7 @@ struct XomoAutomationTests {
         #expect(viewModel.cloneStampOverlayClipsToBrush)
         #expect(viewModel.cloneStampOverlayAutoHidesWhilePainting)
         #expect(viewModel.cloneStampOverlayInvertsColors)
+        #expect(viewModel.cloneStampOverlayBlendMode == .difference)
         #expect(viewModel.cloneStampOverlayOpacityPercent == 35)
         #expect(viewModel.cloneSourceFlipsHorizontally)
         #expect(viewModel.cloneSourceFlipsVertically)
@@ -9231,6 +9244,7 @@ struct XomoAutomationTests {
                     "clipOverlayToBrush": .bool(true),
                     "autoHideOverlay": .bool(true),
                     "invertOverlay": .bool(true),
+                    "overlayBlendMode": .string("difference"),
                     "overlayOpacityPercent": .number(opacityPercent),
                     "rotationDegrees": .number(45),
                     "x": .number(12),
@@ -9246,9 +9260,47 @@ struct XomoAutomationTests {
             #expect(!viewModel.cloneStampOverlayClipsToBrush)
             #expect(!viewModel.cloneStampOverlayAutoHidesWhilePainting)
             #expect(!viewModel.cloneStampOverlayInvertsColors)
+            #expect(viewModel.cloneStampOverlayBlendMode == .normal)
             #expect(viewModel.cloneStampOverlayOpacityPercent == 50)
             #expect(viewModel.document.history.count == historyCount)
         }
+    }
+
+    @Test func registryRejectsInvalidCloneOverlayBlendModesAtomically() {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        let historyCount = viewModel.document.history.count
+
+        let response = registry.execute(request(
+            operation: "call",
+            name: "xomo.paint.special",
+            arguments: [
+                "action": .string("setCloneSource"),
+                "sourceSlot": .number(3),
+                "x": .number(12),
+                "y": .number(18),
+                "showOverlay": .bool(false),
+                "clipOverlayToBrush": .bool(true),
+                "autoHideOverlay": .bool(true),
+                "invertOverlay": .bool(true),
+                "overlayBlendMode": .string("multiply"),
+                "overlayOpacityPercent": .number(35),
+                "rotationDegrees": .number(45)
+            ]
+        ))
+
+        #expect(!response.ok)
+        #expect(viewModel.activeCloneSourceSlotIndex == 0)
+        #expect(viewModel.cloneSourcePoint == nil)
+        #expect(viewModel.cloneSourceRotationDegrees == 0)
+        #expect(viewModel.cloneStampShowsOverlay)
+        #expect(!viewModel.cloneStampOverlayClipsToBrush)
+        #expect(!viewModel.cloneStampOverlayAutoHidesWhilePainting)
+        #expect(!viewModel.cloneStampOverlayInvertsColors)
+        #expect(viewModel.cloneStampOverlayBlendMode == .normal)
+        #expect(viewModel.cloneStampOverlayOpacityPercent == 50)
+        #expect(viewModel.document.history.count == historyCount)
     }
 
     @Test func registryConfiguresHealingBrushSourceAndSamplingOptions() {
