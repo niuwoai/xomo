@@ -28,7 +28,11 @@ extension ImageEditorViewModel {
 
     func chooseImageLayerFile() {
         let panel = NSOpenPanel()
-        panel.allowedContentTypes = [.png, .jpeg]
+        panel.allowedContentTypes = [
+            .png,
+            .jpeg,
+            UTType(filenameExtension: "svg") ?? .xml
+        ]
         panel.allowsMultipleSelection = false
         panel.canChooseDirectories = false
         panel.canChooseFiles = true
@@ -36,6 +40,14 @@ extension ImageEditorViewModel {
         panel.begin { [weak self] response in
             Task { @MainActor in
                 guard let self, response == .OK, let url = panel.url else { return }
+                if url.pathExtension.lowercased() == "svg" {
+                    guard let data = try? Data(contentsOf: url) else {
+                        self.statusText = L10n.text("imageEditor.status.editableSVGPathImportFailed")
+                        return
+                    }
+                    self.importEditableSVGPathLayer(data, sourceName: url.lastPathComponent)
+                    return
+                }
                 guard let image = NSImage(contentsOf: url) else {
                     self.statusText = L10n.text("imageEditor.status.layerImportFailed")
                     return
@@ -43,6 +55,31 @@ extension ImageEditorViewModel {
                 self.importImageLayer(image, sourceName: url.lastPathComponent)
             }
         }
+    }
+
+    @discardableResult
+    func importEditableSVGPathLayer(_ data: Data, sourceName: String) -> Bool {
+        guard let imported = XomoEditableSVGPathImporter.parse(data) else {
+            statusText = L10n.text("imageEditor.status.editableSVGPathImportFailed")
+            return false
+        }
+
+        let cleanName = cleanLayerName(from: sourceName)
+        pushUndo()
+        var layer = ImageEditorLayer.shape(
+            name: cleanName,
+            frame: centeredImportFrame(for: imported.size),
+            content: imported.content
+        )
+        layer.groupID = nil
+        layer.isClippingMask = false
+        document.layers.append(layer)
+        document.selectedLayerID = layer.id
+        document.selectedLayerIDs = [layer.id]
+        isEditingLayerMask = false
+        appendHistory(L10n.text("imageEditor.history.editableSVGPathImport"))
+        statusText = L10n.format("imageEditor.status.editableSVGPathImported", cleanName)
+        return true
     }
 
     func chooseSmartObjectReplacementFile() {

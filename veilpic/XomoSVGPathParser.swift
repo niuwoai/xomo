@@ -3,6 +3,7 @@ import Foundation
 
 nonisolated struct XomoSVGPathParseResult: Equatable {
     var subpaths: [[ImageEditorPathAnchor]]
+    var subpathClosedStates: [Bool]
     var isClosed: Bool
 }
 
@@ -93,7 +94,8 @@ nonisolated private struct XomoSVGPathTokenParser {
     var subpathStart = CGPoint.zero
     var currentAnchors: [ImageEditorPathAnchor] = []
     var subpaths: [[ImageEditorPathAnchor]] = []
-    var closedSubpathCount = 0
+    var subpathClosedStates: [Bool] = []
+    var isCurrentSubpathClosed = false
     var previousCommand: Character?
     var lastCubicControl: CGPoint?
     var lastQuadraticControl: CGPoint?
@@ -113,7 +115,8 @@ nonisolated private struct XomoSVGPathTokenParser {
         guard !subpaths.isEmpty else { return nil }
         return XomoSVGPathParseResult(
             subpaths: subpaths,
-            isClosed: closedSubpathCount == subpaths.count
+            subpathClosedStates: subpathClosedStates,
+            isClosed: subpathClosedStates.allSatisfy { $0 }
         )
     }
 
@@ -292,7 +295,7 @@ nonisolated private struct XomoSVGPathTokenParser {
 
     private mutating func consumeClose() -> Bool {
         guard !currentAnchors.isEmpty else { return false }
-        closedSubpathCount += 1
+        isCurrentSubpathClosed = true
         currentPoint = subpathStart
         resetControls()
         previousCommand = "Z"
@@ -334,8 +337,10 @@ nonisolated private struct XomoSVGPathTokenParser {
     private mutating func finishSubpath() {
         if currentAnchors.count >= 2 {
             subpaths.append(currentAnchors)
+            subpathClosedStates.append(isCurrentSubpathClosed)
         }
         currentAnchors = []
+        isCurrentSubpathClosed = false
     }
 
     private mutating func resetControls() {
