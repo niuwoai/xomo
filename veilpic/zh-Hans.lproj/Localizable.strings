@@ -1078,6 +1078,9 @@
 "imageEditor.properties.shapeStrokeDash.longDash" = "长划线";
 "imageEditor.properties.shapeStrokeDash.custom" = "自定义";
 "imageEditor.properties.shapeStrokeDashOffsetValue" = "虚线偏移 %.1f px";
+"imageEditor.properties.shapeStrokeDashPattern" = "虚线长度";
+"imageEditor.properties.shapeStrokeDashPatternPlaceholder" = "例如 6, 3, 2, 3";
+"imageEditor.properties.shapeStrokeDashPatternInvalid" = "请输入 2–16 个不大于 2048 的正数，并用逗号分隔。";
 "imageEditor.stackLayout.axis.horizontal" = "水平";
 "imageEditor.stackLayout.axis.vertical" = "垂直";
 "imageEditor.stackLayout.primary.start" = "起点";

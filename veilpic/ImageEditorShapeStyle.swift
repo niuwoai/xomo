@@ -45,15 +45,46 @@ enum ImageEditorStrokeDashPreset: String, CaseIterable, Identifiable {
     }
 }
 
+enum ImageEditorStrokeDashPatternText {
+    static func string(from pattern: [CGFloat]) -> String {
+        pattern
+            .map { value in
+                let text = String(Double(value))
+                return text.hasSuffix(".0") ? String(text.dropLast(2)) : text
+            }
+            .joined(separator: ", ")
+    }
+
+    static func pattern(from text: String) -> [CGFloat]? {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return [] }
+        let components = trimmed.split { character in
+            character == "," || character == ";" || character.isWhitespace
+        }
+        guard (2...16).contains(components.count) else { return nil }
+        var pattern: [CGFloat] = []
+        pattern.reserveCapacity(components.count)
+        for component in components {
+            guard let value = Double(component),
+                  value.isFinite,
+                  value > 0,
+                  value <= 2_048
+            else { return nil }
+            pattern.append(CGFloat(value))
+        }
+        return pattern
+    }
+}
+
 extension ImageEditorStrokeCap {
     var title: String {
-        L10n.text("imageEditor.properties.shapeStrokeCap.(rawValue)")
+        L10n.text("imageEditor.properties.shapeStrokeCap.\(rawValue)")
     }
 }
 
 extension ImageEditorStrokeJoin {
     var title: String {
-        L10n.text("imageEditor.properties.shapeStrokeJoin.(rawValue)")
+        L10n.text("imageEditor.properties.shapeStrokeJoin.\(rawValue)")
     }
 }
 
@@ -278,6 +309,10 @@ extension ImageEditorViewModel {
         Double(document.selectedLayer?.shapeContent?.strokeDashOffset ?? 0)
     }
 
+    var selectedShapeStrokeDashPattern: [CGFloat] {
+        document.selectedLayer?.shapeContent?.strokeDashPattern ?? []
+    }
+
     func setSelectedShapeFillColor(_ color: NSColor) {
         updateSelectedShapeProperties(fillColor: color)
     }
@@ -472,6 +507,10 @@ extension ImageEditorViewModel {
 
     func setSelectedShapeStrokeDashOffset(_ offset: Double) {
         updateSelectedShapeProperties(strokeDashOffset: offset)
+    }
+
+    func setSelectedShapeStrokeDashPattern(_ pattern: [CGFloat]) {
+        updateSelectedShapeProperties(strokeDashPattern: pattern)
     }
 
     @discardableResult

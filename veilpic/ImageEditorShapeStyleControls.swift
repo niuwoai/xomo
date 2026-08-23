@@ -240,6 +240,10 @@ extension ImageEditorView {
             }
 
             if viewModel.selectedShapeStrokeDashPreset != .solid {
+                ImageEditorStrokeDashPatternField(
+                    pattern: viewModel.selectedShapeStrokeDashPattern,
+                    onCommit: viewModel.setSelectedShapeStrokeDashPattern
+                )
                 Stepper(
                     L10n.format(
                         "imageEditor.properties.shapeStrokeDashOffsetValue",
@@ -746,5 +750,63 @@ extension ImageEditorView {
         } set: { offset in
             viewModel.setSelectedShapeStrokeDashOffset(offset)
         }
+    }
+}
+
+private struct ImageEditorStrokeDashPatternField: View {
+    let pattern: [CGFloat]
+    let onCommit: ([CGFloat]) -> Void
+
+    @State private var draft = ""
+    @State private var isInvalid = false
+    @FocusState private var isFocused: Bool
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 3) {
+            Text(L10n.text("imageEditor.properties.shapeStrokeDashPattern"))
+                .font(.system(size: 10, weight: .medium))
+                .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+            TextField(
+                L10n.text("imageEditor.properties.shapeStrokeDashPatternPlaceholder"),
+                text: $draft
+            )
+            .textFieldStyle(.roundedBorder)
+            .font(.system(size: 11, design: .monospaced))
+            .focused($isFocused)
+            .onSubmit { isFocused = false }
+            .overlay(
+                RoundedRectangle(cornerRadius: 4)
+                    .stroke(isInvalid ? Color.red : .clear, lineWidth: 1)
+            )
+            .accessibilityIdentifier("image-editor-shape-stroke-dash-pattern")
+            if isInvalid {
+                Text(L10n.text("imageEditor.properties.shapeStrokeDashPatternInvalid"))
+                    .font(.system(size: 9))
+                    .foregroundStyle(Color.red)
+                    .accessibilityIdentifier("image-editor-shape-stroke-dash-pattern-error")
+            }
+        }
+        .onAppear { synchronizeDraft() }
+        .onChange(of: pattern) { _ in
+            if !isFocused { synchronizeDraft() }
+        }
+        .onChange(of: isFocused) { focused in
+            if !focused { commitDraft() }
+        }
+    }
+
+    private func synchronizeDraft() {
+        draft = ImageEditorStrokeDashPatternText.string(from: pattern)
+        isInvalid = false
+    }
+
+    private func commitDraft() {
+        guard let parsed = ImageEditorStrokeDashPatternText.pattern(from: draft) else {
+            isInvalid = true
+            return
+        }
+        isInvalid = false
+        onCommit(parsed)
+        draft = ImageEditorStrokeDashPatternText.string(from: parsed)
     }
 }

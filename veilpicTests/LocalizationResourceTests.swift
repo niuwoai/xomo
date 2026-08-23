@@ -92,6 +92,32 @@ struct LocalizationResourceTests {
         }
     }
 
+    @Test func shapeDashPatternEditorIsLocalizedInEverySupportedLanguage() throws {
+        let paths = try Self.repositoryPaths()
+        let expectedValues = [
+            "zh-Hans": ("虚线长度", "例如 6, 3, 2, 3", "请输入 2–16 个不大于 2048 的正数，并用逗号分隔。"),
+            "en": ("Dash lengths", "e.g. 6, 3, 2, 3", "Enter 2–16 positive lengths up to 2048, separated by commas."),
+            "ja": ("破線の長さ", "例：6, 3, 2, 3", "2048 以下の正数をカンマ区切りで 2～16 個入力してください。")
+        ]
+
+        for (localizationID, expectedValue) in expectedValues {
+            let strings = try Self.stringTable(
+                tableName: "Localizable",
+                localizationID: localizationID,
+                appDirectory: paths.appDirectory
+            )
+            #expect(strings["imageEditor.properties.shapeStrokeDashPattern"] == expectedValue.0)
+            #expect(
+                strings["imageEditor.properties.shapeStrokeDashPatternPlaceholder"]
+                    == expectedValue.1
+            )
+            #expect(
+                strings["imageEditor.properties.shapeStrokeDashPatternInvalid"]
+                    == expectedValue.2
+            )
+        }
+    }
+
     @Test func currentAndBelowColorSamplingSourceIsLocalizedInEverySupportedLanguage() throws {
         let paths = try Self.repositoryPaths()
         let expectedValues = [

@@ -1447,6 +1447,18 @@ struct ImageEditorShapeStyleTests {
                     == L10n.text("imageEditor.properties.shapeStrokeDash.\(preset.rawValue)")
             )
         }
+        for cap in ImageEditorStrokeCap.allCases {
+            #expect(
+                cap.title
+                    == L10n.text("imageEditor.properties.shapeStrokeCap.\(cap.rawValue)")
+            )
+        }
+        for join in ImageEditorStrokeJoin.allCases {
+            #expect(
+                join.title
+                    == L10n.text("imageEditor.properties.shapeStrokeJoin.\(join.rawValue)")
+            )
+        }
 
         let viewModel = makeViewModel()
         viewModel.drawShape(
@@ -1468,6 +1480,40 @@ struct ImageEditorShapeStyleTests {
         #expect(viewModel.document.history.count == historyCount + 1)
         viewModel.undo()
         #expect(viewModel.document.selectedLayer?.shapeContent?.strokeDashPattern == [7, 3, 2, 3])
+    }
+
+    @Test func customDashTextParsesFormatsAndCommitsAsOneUndoableEdit() throws {
+        #expect(ImageEditorStrokeDashPatternText.string(from: [6, 3, 2.5, 0.125]) == "6, 3, 2.5, 0.125")
+        #expect(ImageEditorStrokeDashPatternText.pattern(from: "6, 3 2.5; 0.125") == [6, 3, 2.5, 0.125])
+        #expect(ImageEditorStrokeDashPatternText.pattern(from: "") == [])
+        for invalid in ["6", "6, 0", "6, -3", "6, nan", "6, 2049"] {
+            #expect(ImageEditorStrokeDashPatternText.pattern(from: invalid) == nil)
+        }
+        #expect(
+            ImageEditorStrokeDashPatternText.pattern(
+                from: Array(repeating: "1", count: 17).joined(separator: ",")
+            ) == nil
+        )
+
+        let viewModel = makeViewModel()
+        viewModel.drawShape(
+            from: CGPoint(x: 10, y: 10),
+            to: CGPoint(x: 70, y: 50),
+            ellipse: false
+        )
+        let original = viewModel.document.selectedLayer?.shapeContent?.strokeDashPattern
+        let historyCount = viewModel.document.history.count
+        let parsed = try #require(ImageEditorStrokeDashPatternText.pattern(from: "7, 3, 2, 3"))
+
+        viewModel.setSelectedShapeStrokeDashPattern(parsed)
+
+        #expect(viewModel.document.selectedLayer?.shapeContent?.strokeDashPattern == [7, 3, 2, 3])
+        #expect(viewModel.selectedShapeStrokeDashPreset == .custom)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        viewModel.setSelectedShapeStrokeDashPattern(parsed)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        viewModel.undo()
+        #expect(viewModel.document.selectedLayer?.shapeContent?.strokeDashPattern == original)
     }
 
     @Test func appearanceEditIsOneUndoableProjectPersistentChange() throws {
@@ -1689,6 +1735,7 @@ struct ImageEditorShapeStyleTests {
             "image-editor-shape-stroke-join",
             "image-editor-shape-stroke-miter-limit",
             "image-editor-shape-stroke-dash",
+            "image-editor-shape-stroke-dash-pattern",
             "image-editor-shape-stroke-dash-offset"
         ] {
             #expect(source.contains(identifier))
@@ -1699,6 +1746,9 @@ struct ImageEditorShapeStyleTests {
         #expect(source.contains("selectedShapeStrokeDashOffsetBinding"))
         #expect(source.contains("imageEditor.properties.shapeStrokeDashOffsetValue"))
         #expect(source.contains(".disabled(preset == .custom)"))
+        #expect(source.contains("ImageEditorStrokeDashPatternText.pattern(from: draft)"))
+        #expect(source.contains("onCommit(parsed)"))
+        #expect(source.contains("image-editor-shape-stroke-dash-pattern-error"))
         #expect(source.contains("ImageEditorGradientStopTrackGeometry.logicalPosition"))
         #expect(source.contains("ImageEditorGradientStopTrackGeometry.midpoint"))
         #expect(source.contains("SpatialTapGesture("))
