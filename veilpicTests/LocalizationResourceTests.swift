@@ -120,9 +120,9 @@ struct LocalizationResourceTests {
     @Test func cloneSourceSlotOptionIsLocalizedInEverySupportedLanguage() throws {
         let paths = try Self.repositoryPaths()
         let expectedValues = [
-            "zh-Hans": ["仿制源槽位", "宽", "高", "链接宽高", "角度", "显示叠加", "自动隐藏", "叠加", "水平翻转", "垂直翻转"],
-            "en": ["Clone Source Slot", "W", "H", "Link W/H", "Angle", "Show Overlay", "Auto Hide", "Overlay", "Flip H", "Flip V"],
-            "ja": ["クローンソーススロット", "幅", "高さ", "縦横比をリンク", "角度", "オーバーレイを表示", "自動的に隠す", "オーバーレイ", "左右反転", "上下反転"]
+            "zh-Hans": ["仿制源槽位", "宽", "高", "链接宽高", "角度", "显示叠加", "自动隐藏", "反相", "叠加", "水平翻转", "垂直翻转"],
+            "en": ["Clone Source Slot", "W", "H", "Link W/H", "Angle", "Show Overlay", "Auto Hide", "Invert", "Overlay", "Flip H", "Flip V"],
+            "ja": ["クローンソーススロット", "幅", "高さ", "縦横比をリンク", "角度", "オーバーレイを表示", "自動的に隠す", "反転", "オーバーレイ", "左右反転", "上下反転"]
         ]
 
         for (localizationID, expectedValue) in expectedValues {
@@ -139,6 +139,7 @@ struct LocalizationResourceTests {
                 "imageEditor.option.cloneSourceRotation",
                 "imageEditor.option.cloneSourceShowOverlay",
                 "imageEditor.option.cloneSourceOverlayAutoHide",
+                "imageEditor.option.cloneSourceOverlayInvert",
                 "imageEditor.option.cloneSourceOverlayOpacity",
                 "imageEditor.option.cloneSourceFlipHorizontal",
                 "imageEditor.option.cloneSourceFlipVertical"

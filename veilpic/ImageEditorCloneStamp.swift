@@ -304,6 +304,7 @@ struct ImageEditorCloneStampOverlayPreview {
     var sourceCanvas: NSImage
     var geometry: ImageEditorCloneStampOverlayGeometry
     var opacity: CGFloat
+    var invertsColors: Bool
 }
 
 struct ImageEditorCloneStampOverlaySourceCache {
@@ -360,7 +361,8 @@ extension ImageEditorViewModel {
                 flipsVertically: cloneSourceFlipsVertically,
                 rotationDegrees: cloneSourceRotationDegrees
             ),
-            opacity: cloneStampOverlayOpacityPercent / 100
+            opacity: cloneStampOverlayOpacityPercent / 100,
+            invertsColors: cloneStampOverlayInvertsColors
         )
     }
 

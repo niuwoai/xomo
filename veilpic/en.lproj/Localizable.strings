@@ -3462,6 +3462,7 @@
 "imageEditor.option.cloneSourceRotation" = "Angle";
 "imageEditor.option.cloneSourceShowOverlay" = "Show Overlay";
 "imageEditor.option.cloneSourceOverlayAutoHide" = "Auto Hide";
+"imageEditor.option.cloneSourceOverlayInvert" = "Invert";
 "imageEditor.option.cloneSourceOverlayOpacity" = "Overlay";
 "imageEditor.option.cloneSourceFlipHorizontal" = "Flip H";
 "imageEditor.option.cloneSourceFlipVertical" = "Flip V";

@@ -588,6 +588,29 @@ struct ImageEditorCloneStampSamplingTests {
         )
     }
 
+    @Test func cloneOverlayInvertReusesTheSourceCanvasWithoutChangingSampledPixels() throws {
+        let viewModel = patternedCurrentLayerViewModel()
+        viewModel.setCloneSource(at: CGPoint(x: 10, y: 15))
+        let destination = CGPoint(x: 60, y: 15)
+        let normal = try #require(
+            viewModel.cloneStampOverlayPreview(destinationReference: destination)
+        )
+        let sourceColor = try color(normal.sourceCanvas, at: CGPoint(x: 10, y: 15))
+        #expect(!normal.invertsColors)
+
+        viewModel.cloneStampOverlayInvertsColors = true
+        let inverted = try #require(
+            viewModel.cloneStampOverlayPreview(destinationReference: destination)
+        )
+
+        #expect(inverted.invertsColors)
+        #expect(inverted.sourceCanvas === normal.sourceCanvas)
+        #expect(
+            try color(inverted.sourceCanvas, at: CGPoint(x: 10, y: 15))
+                == sourceColor
+        )
+    }
+
     @Test func cloneOverlaySourceCanvasIsCachedAcrossHoverAndInvalidatedByEdits() throws {
         let viewModel = patternedCurrentLayerViewModel()
         viewModel.isCloneStampAligned = false

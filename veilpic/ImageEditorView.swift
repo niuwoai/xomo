@@ -1332,6 +1332,17 @@ struct ImageEditorView: View {
                 .xomoFocusEffectDisabled()
                 .accessibilityIdentifier("image-editor-clone-source-overlay-auto-hide")
 
+                Toggle(
+                    L10n.text("imageEditor.option.cloneSourceOverlayInvert"),
+                    isOn: $viewModel.cloneStampOverlayInvertsColors
+                )
+                .toggleStyle(.checkbox)
+                .fixedSize()
+                .disabled(!viewModel.cloneStampShowsOverlay)
+                .focusable(false)
+                .xomoFocusEffectDisabled()
+                .accessibilityIdentifier("image-editor-clone-source-overlay-invert")
+
                 optionSlider(
                     titleKey: "imageEditor.option.cloneSourceOverlayOpacity",
                     value: Binding(
@@ -4849,6 +4860,9 @@ struct ImageEditorView: View {
             Canvas { context, _ in
                 context.clip(to: Path(targetFrame))
                 context.opacity = Double(preview.opacity)
+                if preview.invertsColors {
+                    context.addFilter(.colorInvert(1))
+                }
                 context.translateBy(
                     x: destinationViewPoint.x,
                     y: destinationViewPoint.y
