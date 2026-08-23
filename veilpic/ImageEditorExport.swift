@@ -797,7 +797,17 @@ extension ImageEditorViewModel {
         else { return false }
 
         switch layer.kind {
-        case .text, .shape:
+        case .text:
+            return true
+        case let .shape(content):
+            if content.fillOpacity > 0,
+               let gradient = content.fillGradient,
+               content.kind != .path || content.isPathClosed {
+                let normalized = gradient.normalized()
+                guard !normalized.dither, normalized.style != .diamond else {
+                    return false
+                }
+            }
             return true
         case .pixel:
             return layer.image.nonTransparentPixelBounds() == nil
@@ -832,7 +842,12 @@ extension ImageEditorViewModel {
 
     private func svgShape(_ content: ImageEditorShapeContent, layer: ImageEditorLayer) -> String {
         let normalized = content.normalized(size: layer.image.size)
-        var attributes = svgPaintAttributes(content: normalized, layer: layer)
+        let gradient = svgFillGradient(content: normalized, layer: layer)
+        var attributes = svgPaintAttributes(
+            content: normalized,
+            layer: layer,
+            fillReference: gradient?.reference
+        )
         let markers = svgStrokeMarkers(content: normalized, layer: layer)
         if !markers.attributes.isEmpty {
             attributes += " \(markers.attributes)"
@@ -848,9 +863,12 @@ extension ImageEditorViewModel {
         case .path:
             element = "<path d=\"\(svgPathData(content: normalized, layer: layer))\" \(attributes) />"
         }
-        return markers.definitions.isEmpty
+        let definitions = [gradient?.definition, markers.definitions.isEmpty ? nil : markers.definitions]
+            .compactMap { $0 }
+            .joined(separator: "\n")
+        return definitions.isEmpty
             ? element
-            : "<defs>\n\(markers.definitions)\n</defs>\n\(element)"
+            : "<defs>\n\(definitions)\n</defs>\n\(element)"
     }
 
     private func svgText(_ content: ImageEditorTextContent, layer: ImageEditorLayer) -> String {
@@ -907,13 +925,19 @@ extension ImageEditorViewModel {
         }.joined(separator: " ")
     }
 
-    private func svgPaintAttributes(content: ImageEditorShapeContent, layer: ImageEditorLayer) -> String {
+    private func svgPaintAttributes(
+        content: ImageEditorShapeContent,
+        layer: ImageEditorLayer,
+        fillReference: String? = nil
+    ) -> String {
         let fill = svgColor(content.fillColor)
         let stroke = svgColor(content.strokeColor)
-        let fillValue = content.kind == .path && !content.isPathClosed ? "none" : fill.hex
+        let supportsFill = content.kind != .path || content.isPathClosed
+        let fillValue = supportsFill ? fillReference ?? fill.hex : "none"
+        let fillAlpha = fillReference == nil ? fill.alpha : 1
         var attributes = [
             "fill=\"\(fillValue)\"",
-            "fill-opacity=\"\(svgNumber(fill.alpha * content.fillOpacity * layer.opacity))\"",
+            "fill-opacity=\"\(svgNumber(fillAlpha * content.fillOpacity * layer.opacity))\"",
             "stroke=\"\(stroke.hex)\"",
             "stroke-opacity=\"\(svgNumber(stroke.alpha * content.strokeOpacity * layer.opacity))\"",
             "stroke-width=\"\(svgNumber(content.strokeWidth))\"",
@@ -931,6 +955,136 @@ extension ImageEditorViewModel {
             attributes.append("fill-rule=\"evenodd\"")
         }
         return attributes.joined(separator: " ")
+    }
+
+    private func svgFillGradient(
+        content: ImageEditorShapeContent,
+        layer: ImageEditorLayer
+    ) -> (definition: String, reference: String)? {
+        guard content.kind != .path || content.isPathClosed,
+              let gradient = content.fillGradient?.normalized(),
+              !gradient.dither,
+              gradient.style != .diamond else {
+            return nil
+        }
+        let identifier = layer.id.uuidString.replacingOccurrences(of: "-", with: "")
+        let gradientID = "xomo-fill-gradient-\(identifier)"
+        let localSize = CGSize(
+            width: max(layer.image.size.width, 1),
+            height: max(layer.image.size.height, 1)
+        )
+        let center = CGPoint(
+            x: localSize.width * content.fillGradientCenter.x - 0.5,
+            y: localSize.height * content.fillGradientCenter.y - 0.5
+        )
+        let transform = svgGradientTransform(layer: layer, localSize: localSize)
+        let ramp = svgGradientRamp(gradient)
+        let definition: String
+        switch gradient.style {
+        case .linear, .reflected:
+            let radians = gradient.angle * .pi / 180
+            let direction = CGVector(dx: cos(radians), dy: sin(radians))
+            let span = max(
+                1,
+                abs(direction.dx) * localSize.width + abs(direction.dy) * localSize.height
+            ) * gradient.scale
+            let halfSpan = span / 2
+            let start = CGPoint(
+                x: center.x - direction.dx * halfSpan,
+                y: center.y - direction.dy * halfSpan
+            )
+            let end = CGPoint(
+                x: center.x + direction.dx * halfSpan,
+                y: center.y + direction.dy * halfSpan
+            )
+            let stops = gradient.style == .reflected
+                ? svgReflectedGradientStops(ramp)
+                : svgGradientStops(ramp)
+            definition = "<linearGradient id=\"\(gradientID)\" gradientUnits=\"userSpaceOnUse\" x1=\"\(svgNumber(start.x))\" y1=\"\(svgNumber(start.y))\" x2=\"\(svgNumber(end.x))\" y2=\"\(svgNumber(end.y))\" gradientTransform=\"\(transform)\" spreadMethod=\"pad\" data-xomo-gradient-style=\"\(gradient.style.rawValue)\">\(stops)</linearGradient>"
+        case .radial:
+            let radius = max(
+                1,
+                hypot(localSize.width - 1, localSize.height - 1) / 2 * gradient.scale
+            )
+            definition = "<radialGradient id=\"\(gradientID)\" gradientUnits=\"userSpaceOnUse\" cx=\"\(svgNumber(center.x))\" cy=\"\(svgNumber(center.y))\" r=\"\(svgNumber(radius))\" fx=\"\(svgNumber(center.x))\" fy=\"\(svgNumber(center.y))\" gradientTransform=\"\(transform)\" spreadMethod=\"pad\" data-xomo-gradient-style=\"radial\">\(svgGradientStops(ramp))</radialGradient>"
+        case .diamond:
+            return nil
+        }
+        return (definition, "url(#\(gradientID))")
+    }
+
+    private func svgGradientTransform(layer: ImageEditorLayer, localSize: CGSize) -> String {
+        let scaleX = layer.frame.width / localSize.width
+        let scaleY = layer.frame.height / localSize.height
+        return "matrix(\(svgNumber(scaleX)) 0 0 \(svgNumber(scaleY)) \(svgNumber(layer.frame.minX)) \(svgNumber(layer.frame.minY)))"
+    }
+
+    private func svgGradientRamp(
+        _ gradient: ImageEditorGradientFillContent
+    ) -> [(position: Double, color: NSColor)] {
+        var stops = gradient.shapeColorStops
+        if gradient.reverse {
+            let forward = stops
+            stops = forward.indices.reversed().map { index in
+                let stop = forward[index]
+                return ImageEditorGradientColorStop(
+                    position: 1 - stop.position,
+                    red: stop.red,
+                    green: stop.green,
+                    blue: stop.blue,
+                    alpha: stop.alpha,
+                    midpoint: index > forward.startIndex
+                        ? 1 - forward[index - 1].midpoint
+                        : ImageEditorGradientColorStop.defaultMidpoint
+                )
+            }
+        }
+        guard let first = stops.first else { return [] }
+        var ramp: [(position: Double, color: NSColor)] = [(first.position, first.color)]
+        for index in stops.indices.dropFirst() {
+            let lower = stops[index - 1]
+            let upper = stops[index]
+            let distance = upper.position - lower.position
+            if distance > 0.000_001,
+               abs(lower.midpoint - ImageEditorGradientColorStop.defaultMidpoint) > 0.000_001 {
+                ramp.append((
+                    lower.position + distance * lower.midpoint,
+                    NSColor(
+                        deviceRed: (lower.red + upper.red) / 2,
+                        green: (lower.green + upper.green) / 2,
+                        blue: (lower.blue + upper.blue) / 2,
+                        alpha: (lower.alpha + upper.alpha) / 2
+                    )
+                ))
+            }
+            ramp.append((upper.position, upper.color))
+        }
+        return ramp
+    }
+
+    private func svgGradientStops(
+        _ ramp: [(position: Double, color: NSColor)]
+    ) -> String {
+        ramp.map { stop in
+            svgGradientStop(position: stop.position, color: stop.color)
+        }.joined()
+    }
+
+    private func svgReflectedGradientStops(
+        _ ramp: [(position: Double, color: NSColor)]
+    ) -> String {
+        let left = ramp.reversed().map { stop in
+            svgGradientStop(position: (1 - stop.position) / 2, color: stop.color)
+        }
+        let right = ramp.dropFirst().map { stop in
+            svgGradientStop(position: 0.5 + stop.position / 2, color: stop.color)
+        }
+        return (left + right).joined()
+    }
+
+    private func svgGradientStop(position: Double, color: NSColor) -> String {
+        let value = svgColor(color)
+        return "<stop offset=\"\(svgNumber(CGFloat(position)))\" stop-color=\"\(value.hex)\" stop-opacity=\"\(svgNumber(value.alpha))\" />"
     }
 
     private func svgStrokeMarkers(

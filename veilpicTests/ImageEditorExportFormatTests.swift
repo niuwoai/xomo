@@ -1317,6 +1317,156 @@ struct ImageEditorExportFormatTests {
         #expect(pathData.components(separatedBy: "Z").count - 1 == 2)
     }
 
+    @Test func editableSVGPreservesStandardShapeGradientFamiliesAndStops() throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "gradient-svg-canvas",
+            image: NSImage.transparent(size: CGSize(width: 360, height: 240))
+        ) { _ in }
+        let linear = ImageEditorGradientFillContent(
+            preset: .custom,
+            style: .linear,
+            angle: 30,
+            scale: 1.5,
+            colorStops: [
+                ImageEditorGradientColorStop(
+                    position: 0,
+                    red: 1,
+                    green: 0,
+                    blue: 0,
+                    alpha: 0.2,
+                    midpoint: 0.25
+                ),
+                ImageEditorGradientColorStop(
+                    position: 0.8,
+                    red: 0,
+                    green: 1,
+                    blue: 0,
+                    alpha: 0.6
+                ),
+                ImageEditorGradientColorStop(position: 1, color: .blue)
+            ]
+        )
+        var radial = ImageEditorGradientFillContent.shapeLinear(
+            startColor: .white,
+            endColor: .black,
+            scale: 0.75
+        )
+        radial.style = .radial
+        var reflected = ImageEditorGradientFillContent.shapeLinear(
+            startColor: .black,
+            endColor: .white,
+            angle: -45,
+            scale: 0.5
+        )
+        reflected.style = .reflected
+        reflected.reverse = true
+        let gradients = [linear, radial, reflected]
+        let kinds: [ImageEditorShapeKind] = [.rectangle, .ellipse, .rectangle]
+        for index in gradients.indices {
+            viewModel.document.layers.append(
+                .shape(
+                    name: "Gradient \(index)",
+                    frame: CGRect(x: 20 + CGFloat(index) * 105, y: 32, width: 90, height: 120),
+                    content: ImageEditorShapeContent(
+                        kind: kinds[index],
+                        fillColor: .clear,
+                        fillGradient: gradients[index],
+                        fillGradientCenter: CGPoint(x: 0.3 + CGFloat(index) * 0.2, y: 0.65),
+                        fillOpacity: 0.8,
+                        strokeColor: .black,
+                        strokeWidth: 2,
+                        strokeOpacity: 1
+                    )
+                )
+            )
+        }
+
+        #expect(viewModel.canExportSVG)
+        let data = try #require(
+            viewModel.exportData(settings: ImageEditorExportSettings(format: .svg))
+        )
+        let source = try #require(String(data: data, encoding: .utf8))
+        let xml = try XMLDocument(data: data, options: [])
+        let linearNodes = try xml.nodes(forXPath: "//*[local-name()='linearGradient']")
+        let radialNodes = try xml.nodes(forXPath: "//*[local-name()='radialGradient']")
+        let gradientFills = try xml.nodes(
+            forXPath: "//*[@fill and starts-with(@fill, 'url(#xomo-fill-gradient-')]"
+        )
+        let reflectedNode = try #require(
+            try xml.nodes(
+                forXPath: "//*[local-name()='linearGradient' and @data-xomo-gradient-style='reflected']"
+            ).first as? XMLElement
+        )
+        let reflectedStops = try reflectedNode.nodes(
+            forXPath: "./*[local-name()='stop']"
+        ).compactMap { $0 as? XMLElement }
+
+        #expect(linearNodes.count == 2)
+        #expect(radialNodes.count == 1)
+        #expect(gradientFills.count == 3)
+        #expect(reflectedStops.map { $0.attribute(forName: "offset")?.stringValue } == ["0", "0.500", "1"])
+        #expect(reflectedStops.map { $0.attribute(forName: "stop-color")?.stringValue } == [
+            "#000000", "#FFFFFF", "#000000"
+        ])
+        #expect(source.contains("data-xomo-gradient-style=\"linear\""))
+        #expect(source.contains("data-xomo-gradient-style=\"radial\""))
+        #expect(source.contains("data-xomo-gradient-style=\"reflected\""))
+        #expect(source.components(separatedBy: "gradientUnits=\"userSpaceOnUse\"").count - 1 == 3)
+        #expect(source.components(separatedBy: "gradientTransform=\"matrix(").count - 1 == 3)
+        #expect(source.contains("offset=\"0.200\" stop-color=\"#808000\" stop-opacity=\"0.400\""))
+        #expect(source.contains("offset=\"0.500\""))
+        #expect(source.contains("fill-opacity=\"0.800\""))
+    }
+
+    @Test func editableSVGRejectsGradientEffectsThatCannotRemainEditable() {
+        func makeViewModel(
+            style: ImageEditorGradientFillStyle,
+            dither: Bool,
+            fillOpacity: CGFloat = 1
+        ) -> ImageEditorViewModel {
+            let viewModel = ImageEditorViewModel(
+                sourceName: "unsupported-gradient-svg",
+                image: NSImage.transparent(size: CGSize(width: 160, height: 120))
+            ) { _ in }
+            var gradient = ImageEditorGradientFillContent.shapeLinear(
+                startColor: .systemPink,
+                endColor: .systemTeal
+            )
+            gradient.style = style
+            gradient.dither = dither
+            viewModel.document.layers.append(
+                .shape(
+                    name: "Unsupported gradient",
+                    frame: CGRect(x: 20, y: 20, width: 100, height: 72),
+                    content: ImageEditorShapeContent(
+                        kind: .rectangle,
+                        fillColor: .clear,
+                        fillGradient: gradient,
+                        fillOpacity: fillOpacity,
+                        strokeColor: .black,
+                        strokeWidth: 2,
+                        strokeOpacity: 1
+                    )
+                )
+            )
+            return viewModel
+        }
+
+        let diamond = makeViewModel(style: .diamond, dither: false)
+        #expect(!diamond.canExportSVG)
+        #expect(diamond.exportData(settings: ImageEditorExportSettings(format: .svg)) == nil)
+        #expect(diamond.exportData(settings: ImageEditorExportSettings(format: .pdf)) != nil)
+
+        let dithered = makeViewModel(style: .linear, dither: true)
+        #expect(!dithered.canExportSVG)
+        #expect(dithered.exportData(settings: ImageEditorExportSettings(format: .svg)) == nil)
+        #expect(dithered.exportData(settings: ImageEditorExportSettings(format: .pdf)) != nil)
+
+        let invisibleDiamond = makeViewModel(style: .diamond, dither: false, fillOpacity: 0)
+        #expect(invisibleDiamond.canExportSVG)
+        #expect(invisibleDiamond.exportData(settings: ImageEditorExportSettings(format: .svg)) != nil)
+    }
+
     @Test func mixedCanvasExportsPDFAndRejectsSVG() throws {
         let rasterImage = try #require(
             NSImage.rendered(size: CGSize(width: 96, height: 64)) { rect in
