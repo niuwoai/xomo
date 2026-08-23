@@ -147,6 +147,55 @@ struct ImageEditorSVGImportTests {
         }
     }
 
+    @Test func singleLineImportsAsNativeEditableOpenPath() throws {
+        let imported = try #require(XomoEditableSVGImporter.parse(Data(
+            """
+            <svg width="120" height="80" viewBox="0 0 60 40">
+              <g opacity="0.5" fill="red" stroke="rgba(32, 80, 240, 0.8)"
+                 stroke-width="2" stroke-linecap="square" stroke-dasharray="3">
+                <line x1="10" y1="5" x2="30" y2="15" />
+              </g>
+            </svg>
+            """.utf8
+        )))
+        let content = imported.content
+
+        #expect(content.kind == .path)
+        #expect(!content.isPathClosed)
+        #expect(imported.size == CGSize(width: 44, height: 24))
+        #expect(content.editablePathAnchors.map(\.point) == [
+            CGPoint(x: 2, y: 2),
+            CGPoint(x: 42, y: 22)
+        ])
+        #expect(content.fillOpacity == 0)
+        #expect(abs(content.strokeOpacity - 0.4) < 0.001)
+        #expect(content.strokeWidth == 4)
+        #expect(content.strokeCap == .square)
+        #expect(content.strokeDashPattern == [6, 6])
+    }
+
+    @Test func linesWithoutAnExactVisibleStrokeAreRejected() throws {
+        let unsupported = [
+            "<svg><line x1='0' y1='0' x2='10' y2='10'/></svg>",
+            "<svg><line x1='0' y1='0' x2='10' y2='10' stroke='black' pathLength='100'/></svg>",
+            "<svg><line x1='10%' y1='0' x2='10' y2='10' stroke='black'/></svg>",
+            "<svg><line x1='0' y1='0' x2='10' y2='10' stroke='black' stroke-width='0.05'/></svg>",
+            "<svg><line x1='5' y1='5' x2='5' y2='5' stroke='black'/></svg>"
+        ]
+        for source in unsupported {
+            #expect(XomoEditableSVGImporter.parse(Data(source.utf8)) == nil)
+        }
+
+        let roundPoint = try #require(XomoEditableSVGImporter.parse(Data(
+            "<svg><line x1='5' y1='5' x2='5' y2='5' stroke='black' stroke-width='2' stroke-linecap='round'/></svg>".utf8
+        )))
+        #expect(roundPoint.size == CGSize(width: 2, height: 2))
+        #expect(roundPoint.content.editablePathAnchors.map(\.point) == [
+            CGPoint(x: 1, y: 1),
+            CGPoint(x: 1, y: 1)
+        ])
+    }
+
     @Test func viewportScalingAndFillRulesNeverSilentlyChangeEditableGeometry() throws {
         let scaled = try #require(XomoEditableSVGImporter.parse(Data(
             """

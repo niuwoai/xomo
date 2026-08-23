@@ -54,6 +54,12 @@ enum XomoEditableSVGImporter {
                 presentation: presentation,
                 viewportScale: viewportScale
             )
+        case "line":
+            return lineImport(
+                geometry,
+                presentation: presentation,
+                viewportScale: viewportScale
+            )
         default:
             return nil
         }
@@ -96,8 +102,11 @@ enum XomoEditableSVGImporter {
         let strokeWidth = rawStrokeWidth * viewportScale
         let dashPattern = rawDashPattern.map { $0 * viewportScale }
         let dashOffset = rawDashOffset * viewportScale
+        let effectiveStrokeOpacity = strokePaint.alpha * strokeOpacity * overallOpacity
         guard strokeWidth >= 0,
               strokeWidth <= ImageEditorShapeContent.maximumStrokeWidth,
+              effectiveStrokeOpacity == 0
+                || strokeWidth >= ImageEditorShapeContent.minimumStrokeWidth,
               miterLimit >= ImageEditorShapeContent.minimumStrokeMiterLimit,
               miterLimit <= ImageEditorShapeContent.maximumStrokeMiterLimit,
               dashOffset >= ImageEditorShapeContent.minimumStrokeDashOffset,
@@ -108,7 +117,7 @@ enum XomoEditableSVGImporter {
             fillPaint: fillPaint,
             fillOpacity: fillPaint.alpha * fillOpacity * overallOpacity,
             strokePaint: strokePaint,
-            strokeOpacity: strokePaint.alpha * strokeOpacity * overallOpacity,
+            strokeOpacity: effectiveStrokeOpacity,
             strokeWidth: strokeWidth,
             strokeCap: strokeCap,
             strokeJoin: strokeJoin,
@@ -233,6 +242,65 @@ enum XomoEditableSVGImporter {
             strokeDashOffset: presentation.strokeDashOffset,
             cornerRadius: cornerRadius * viewportScale
         ).normalized(size: size)
+        return XomoEditableSVGImport(content: content, size: size)
+    }
+
+    private static func lineImport(
+        _ line: XMLElement,
+        presentation: SVGPresentation,
+        viewportScale: CGFloat
+    ) -> XomoEditableSVGImport? {
+        guard line.attribute(forName: "pathLength") == nil,
+              let x1 = svgLength(line.attribute(forName: "x1")?.stringValue ?? "0"),
+              let y1 = svgLength(line.attribute(forName: "y1")?.stringValue ?? "0"),
+              let x2 = svgLength(line.attribute(forName: "x2")?.stringValue ?? "0"),
+              let y2 = svgLength(line.attribute(forName: "y2")?.stringValue ?? "0"),
+              presentation.hasVisibleStroke
+        else { return nil }
+
+        let start = CGPoint(x: x1 * viewportScale, y: y1 * viewportScale)
+        let end = CGPoint(x: x2 * viewportScale, y: y2 * viewportScale)
+        if start == end, presentation.strokeCap == .butt { return nil }
+        return openPathImport(
+            [ImageEditorPathAnchor(point: start), ImageEditorPathAnchor(point: end)],
+            presentation: presentation
+        )
+    }
+
+    private static func openPathImport(
+        _ anchors: [ImageEditorPathAnchor],
+        presentation: SVGPresentation
+    ) -> XomoEditableSVGImport? {
+        guard anchors.count >= 2,
+              let geometryBounds = bounds(of: [anchors])
+        else { return nil }
+        let padding = presentation.strokeWidth / 2
+        let size = CGSize(
+            width: max(1, geometryBounds.width + padding * 2),
+            height: max(1, geometryBounds.height + padding * 2)
+        )
+        let offset = CGSize(
+            width: padding - geometryBounds.minX,
+            height: padding - geometryBounds.minY
+        )
+        let localAnchors = anchors.map { translated($0, by: offset) }
+        let content = ImageEditorShapeContent(
+            kind: .path,
+            fillColor: presentation.fillPaint.color,
+            fillOpacity: 0,
+            strokeColor: presentation.strokePaint.color,
+            strokeWidth: presentation.strokeWidth,
+            strokeOpacity: presentation.strokeOpacity,
+            strokePosition: .center,
+            strokeCap: presentation.strokeCap,
+            strokeJoin: presentation.strokeJoin,
+            strokeMiterLimit: presentation.strokeMiterLimit,
+            strokeDashPattern: presentation.strokeDashPattern,
+            strokeDashOffset: presentation.strokeDashOffset,
+            pathPoints: localAnchors.map(\.point),
+            pathAnchors: localAnchors,
+            isPathClosed: false
+        )
         return XomoEditableSVGImport(content: content, size: size)
     }
 
