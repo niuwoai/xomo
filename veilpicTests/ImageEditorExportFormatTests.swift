@@ -1170,6 +1170,99 @@ struct ImageEditorExportFormatTests {
         #expect(!source.contains("<image"))
     }
 
+    @Test func editableSVGPreservesTextCharacterStylesAndLocalLayout() throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "styled-text-svg",
+            image: NSImage.transparent(size: CGSize(width: 420, height: 260))
+        ) { _ in }
+        var uppercase = ImageEditorTextContent(
+            text: "hello & <world>\nnext",
+            color: .systemBlue,
+            fontSize: 20,
+            fontFamilyName: "Avenir \"Next\" & Co",
+            point: CGPoint(x: 4, y: 6)
+        )
+        uppercase.isUnderlined = true
+        uppercase.characterSpacing = 1.5
+        uppercase.lineSpacing = 3
+        uppercase.boxWidth = 180
+        uppercase.boxHeight = 96
+        uppercase.leftIndent = 8
+        uppercase.rightIndent = 6
+        uppercase.firstLineIndent = 4
+        uppercase.paragraphSpacing = 5
+        uppercase.textCase = .uppercase
+        uppercase.verticalAlignment = .bottom
+        var uppercaseLayer = ImageEditorLayer.text(
+            name: "Uppercase",
+            origin: CGPoint(x: 24, y: 30),
+            content: uppercase
+        )
+        uppercaseLayer.frame.size = CGSize(
+            width: uppercaseLayer.frame.width * 1.5,
+            height: uppercaseLayer.frame.height * 1.25
+        )
+
+        var smallCaps = ImageEditorTextContent(
+            text: "Ab c",
+            color: .white,
+            fontSize: 18,
+            fontFamilyName: "Helvetica Neue",
+            point: CGPoint(x: 4, y: 4)
+        )
+        smallCaps.isBold = true
+        smallCaps.isItalic = true
+        smallCaps.isUnderlined = true
+        smallCaps.isStruckThrough = true
+        smallCaps.textCase = .smallCaps
+        let smallCapsLayer = ImageEditorLayer.text(
+            name: "Small Caps",
+            origin: CGPoint(x: 40, y: 170),
+            content: smallCaps
+        )
+        viewModel.document.layers.append(uppercaseLayer)
+        viewModel.document.layers.append(smallCapsLayer)
+
+        let data = try #require(
+            viewModel.exportData(settings: ImageEditorExportSettings(format: .svg))
+        )
+        let source = try #require(String(data: data, encoding: .utf8))
+        let xml = try XMLDocument(data: data, options: [])
+        let uppercaseNode = try #require(
+            try xml.nodes(
+                forXPath: "//*[local-name()='text' and @data-xomo-text-case='uppercase']"
+            ).first as? XMLElement
+        )
+        let smallCapsNode = try #require(
+            try xml.nodes(
+                forXPath: "//*[local-name()='text' and @data-xomo-text-case='smallCaps']"
+            ).first as? XMLElement
+        )
+        let uppercaseLines = try uppercaseNode.nodes(
+            forXPath: "./*[local-name()='tspan']"
+        ).compactMap { $0 as? XMLElement }
+
+        #expect(uppercaseNode.attribute(forName: "font-family")?.stringValue == "Avenir \"Next\" & Co")
+        #expect(uppercaseNode.attribute(forName: "font-weight")?.stringValue == "normal")
+        #expect(uppercaseNode.attribute(forName: "font-style")?.stringValue == "normal")
+        #expect(uppercaseNode.attribute(forName: "text-decoration")?.stringValue == "underline")
+        #expect(uppercaseNode.attribute(forName: "data-xomo-vertical-alignment")?.stringValue == "bottom")
+        #expect(uppercaseNode.attribute(forName: "transform")?.stringValue?.hasPrefix("matrix(1.500 0 0 1.250") == true)
+        #expect(uppercaseLines.count == 2)
+        #expect(uppercaseLines[0].stringValue == "HELLO & <WORLD>")
+        #expect(uppercaseLines[1].stringValue == "NEXT")
+        #expect(uppercaseLines[1].attribute(forName: "dy")?.stringValue == "28")
+        #expect(uppercaseLines[0].attribute(forName: "x")?.stringValue != uppercaseLines[1].attribute(forName: "x")?.stringValue)
+
+        #expect(smallCapsNode.attribute(forName: "font-weight")?.stringValue == "bold")
+        #expect(smallCapsNode.attribute(forName: "font-style")?.stringValue == "italic")
+        #expect(smallCapsNode.attribute(forName: "text-decoration")?.stringValue == "underline line-through")
+        #expect(source.contains("font-size=\"14.400\""))
+        #expect(source.contains("A<tspan font-size=\"14.400\">B</tspan>"))
+        #expect(source.contains("&amp; &lt;WORLD&gt;"))
+        #expect(source.contains("font-family=\"Avenir &quot;Next&quot; &amp; Co\""))
+    }
+
     @Test func editableSVGPreservesOpenPathMarkersAndAdvancedStrokeStyle() throws {
         let viewModel = ImageEditorViewModel(
             sourceName: "marker-canvas",

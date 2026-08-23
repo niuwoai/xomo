@@ -873,32 +873,101 @@ extension ImageEditorViewModel {
 
     private func svgText(_ content: ImageEditorTextContent, layer: ImageEditorLayer) -> String {
         let color = svgColor(content.color)
-        let fontStyle = content.isItalic ? " font-style=\"italic\"" : ""
-        let fontWeight = content.isBold ? "bold" : "600"
+        let localSize = CGSize(
+            width: max(layer.image.size.width, 1),
+            height: max(layer.image.size.height, 1)
+        )
+        let drawingRect = content.drawingRect(in: localSize)
+        let fontStyle = content.isItalic ? "italic" : "normal"
+        let fontWeight = content.isBold ? "bold" : "normal"
+        let textDecoration = svgTextDecoration(content)
         let anchor: String
-        let x: CGFloat
         switch content.alignment {
         case .left:
             anchor = "start"
-            x = layer.frame.minX + content.point.x + ImageEditorTextContent.drawingPadding
         case .center:
             anchor = "middle"
-            x = layer.frame.minX + max(content.boxWidth, layer.frame.width) / 2
         case .right:
             anchor = "end"
-            x = layer.frame.maxX - ImageEditorTextContent.drawingPadding
         case .justified:
             anchor = "start"
-            x = layer.frame.minX + content.point.x + ImageEditorTextContent.drawingPadding + content.leftIndent
         }
-        let y = layer.frame.minY + content.point.y + content.fontSize
-        let lineHeight = content.fontSize + max(0, content.lineSpacing)
-        let lines = content.text.components(separatedBy: .newlines)
+        let y = drawingRect.minY + content.fontSize
+        let lineHeight = content.fontSize
+            + max(0, content.lineSpacing)
+            + max(0, content.paragraphSpacing)
+        let lines = (content.textCase == .smallCaps ? content.text : content.displayText)
+            .components(separatedBy: .newlines)
         let tspans = lines.enumerated().map { index, line in
             let verticalOffset = index == 0 ? "0" : svgNumber(lineHeight)
-            return "<tspan x=\"\(svgNumber(x))\" dy=\"\(verticalOffset)\">\(svgEscaped(line))</tspan>"
+            let x = svgTextLineX(content: content, drawingRect: drawingRect, lineIndex: index)
+            let value = content.textCase == .smallCaps
+                ? svgSmallCapsLine(line, fontSize: content.fontSize)
+                : svgEscaped(line)
+            return "<tspan x=\"\(svgNumber(x))\" dy=\"\(verticalOffset)\">\(value)</tspan>"
         }.joined()
-        return "<text x=\"\(svgNumber(x))\" y=\"\(svgNumber(y))\" text-anchor=\"\(anchor)\" font-family=\"-apple-system, BlinkMacSystemFont, sans-serif\" font-size=\"\(svgNumber(content.fontSize))\" font-weight=\"\(fontWeight)\" letter-spacing=\"\(svgNumber(content.characterSpacing))\" fill=\"\(color.hex)\" fill-opacity=\"\(svgNumber(color.alpha * layer.opacity))\"\(fontStyle)>\(tspans)</text>"
+        return "<text y=\"\(svgNumber(y))\" text-anchor=\"\(anchor)\" font-family=\"\(svgAttributeEscaped(content.fontFamilyName))\" font-size=\"\(svgNumber(content.fontSize))\" font-weight=\"\(fontWeight)\" font-style=\"\(fontStyle)\" letter-spacing=\"\(svgNumber(content.characterSpacing))\" text-decoration=\"\(textDecoration)\" fill=\"\(color.hex)\" fill-opacity=\"\(svgNumber(color.alpha * layer.opacity))\" transform=\"\(svgLayerTransform(layer: layer, localSize: localSize))\" data-xomo-text-case=\"\(content.textCase.rawValue)\" data-xomo-vertical-alignment=\"\(content.verticalAlignment.rawValue)\">\(tspans)</text>"
+    }
+
+    private func svgTextLineX(
+        content: ImageEditorTextContent,
+        drawingRect: CGRect,
+        lineIndex: Int
+    ) -> CGFloat {
+        let leftIndent = lineIndex == 0
+            ? max(0, content.leftIndent + content.firstLineIndent)
+            : max(0, content.leftIndent)
+        let left = drawingRect.minX + leftIndent
+        let right = drawingRect.maxX - max(0, content.rightIndent)
+        switch content.alignment {
+        case .left, .justified:
+            return left
+        case .center:
+            return (left + right) / 2
+        case .right:
+            return right
+        }
+    }
+
+    private func svgTextDecoration(_ content: ImageEditorTextContent) -> String {
+        var values: [String] = []
+        if content.isUnderlined { values.append("underline") }
+        if content.isStruckThrough { values.append("line-through") }
+        return values.isEmpty ? "none" : values.joined(separator: " ")
+    }
+
+    private func svgSmallCapsLine(_ line: String, fontSize: CGFloat) -> String {
+        var result = ""
+        var currentText = ""
+        var currentIsSmall: Bool?
+        func appendRun() {
+            guard !currentText.isEmpty, let currentIsSmall else { return }
+            let escaped = svgEscaped(currentText)
+            if currentIsSmall {
+                result += "<tspan font-size=\"\(svgNumber(max(6, fontSize * ImageEditorTextContent.smallCapsScale)))\">\(escaped)</tspan>"
+            } else {
+                result += escaped
+            }
+        }
+        for character in line {
+            let source = String(character)
+            let displayed = source.uppercased()
+            let isSmall = source != displayed && source == source.lowercased()
+            if currentIsSmall != isSmall {
+                appendRun()
+                currentText = ""
+                currentIsSmall = isSmall
+            }
+            currentText += displayed
+        }
+        appendRun()
+        return result
+    }
+
+    private func svgLayerTransform(layer: ImageEditorLayer, localSize: CGSize) -> String {
+        let scaleX = layer.frame.width / localSize.width
+        let scaleY = layer.frame.height / localSize.height
+        return "matrix(\(svgNumber(scaleX)) 0 0 \(svgNumber(scaleY)) \(svgNumber(layer.frame.minX)) \(svgNumber(layer.frame.minY)))"
     }
 
     private func svgPathData(content: ImageEditorShapeContent, layer: ImageEditorLayer) -> String {
@@ -977,7 +1046,7 @@ extension ImageEditorViewModel {
             x: localSize.width * content.fillGradientCenter.x - 0.5,
             y: localSize.height * content.fillGradientCenter.y - 0.5
         )
-        let transform = svgGradientTransform(layer: layer, localSize: localSize)
+        let transform = svgLayerTransform(layer: layer, localSize: localSize)
         let ramp = svgGradientRamp(gradient)
         let definition: String
         switch gradient.style {
@@ -1011,12 +1080,6 @@ extension ImageEditorViewModel {
             return nil
         }
         return (definition, "url(#\(gradientID))")
-    }
-
-    private func svgGradientTransform(layer: ImageEditorLayer, localSize: CGSize) -> String {
-        let scaleX = layer.frame.width / localSize.width
-        let scaleY = layer.frame.height / localSize.height
-        return "matrix(\(svgNumber(scaleX)) 0 0 \(svgNumber(scaleY)) \(svgNumber(layer.frame.minX)) \(svgNumber(layer.frame.minY)))"
     }
 
     private func svgGradientRamp(
@@ -1179,6 +1242,12 @@ extension ImageEditorViewModel {
             .replacingOccurrences(of: "&", with: "&amp;")
             .replacingOccurrences(of: "<", with: "&lt;")
             .replacingOccurrences(of: ">", with: "&gt;")
+    }
+
+    private func svgAttributeEscaped(_ value: String) -> String {
+        svgEscaped(value)
+            .replacingOccurrences(of: "\"", with: "&quot;")
+            .replacingOccurrences(of: "'", with: "&apos;")
     }
 }
 

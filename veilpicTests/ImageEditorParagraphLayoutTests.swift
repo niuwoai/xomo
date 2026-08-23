@@ -179,9 +179,16 @@ struct ImageEditorParagraphLayoutTests {
         let data = try #require(
             viewModel.exportData(settings: ImageEditorExportSettings(format: .svg))
         )
-        let source = try #require(String(data: data, encoding: .utf8))
-        #expect(source.contains("text-anchor=\"start\""))
-        #expect(source.contains("<text x=\"32\""))
+        let xml = try XMLDocument(data: data, options: [])
+        let text = try #require(
+            try xml.nodes(forXPath: "//*[local-name()='text']").first as? XMLElement
+        )
+        let line = try #require(
+            try text.nodes(forXPath: "./*[local-name()='tspan']").first as? XMLElement
+        )
+        #expect(text.attribute(forName: "text-anchor")?.stringValue == "start")
+        #expect(text.attribute(forName: "transform")?.stringValue?.contains("matrix(") == true)
+        #expect((Double(line.attribute(forName: "x")?.stringValue ?? "") ?? 0) > 0)
     }
 
     private func editor() -> ImageEditorViewModel {
