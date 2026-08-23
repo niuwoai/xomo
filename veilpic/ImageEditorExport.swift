@@ -797,7 +797,7 @@ extension ImageEditorViewModel {
 
     private func canSerializeAsSVGGroup(_ layer: ImageEditorLayer) -> Bool {
         guard layer.isGroup,
-              layer.blendMode == .passThrough,
+              layer.blendMode == .passThrough || layer.blendMode == .normal,
               layer.opacity.isFinite,
               (0...1).contains(layer.opacity),
               layer.fillOpacity == 1,
@@ -877,9 +877,7 @@ extension ImageEditorViewModel {
             guard layer.groupID == parentGroupID else { return nil }
             if exportLayerIDs.contains(layer.id) {
                 var effectiveLayer = layer
-                effectiveLayer.opacity *= document.ancestorGroups(for: layer).reduce(1) {
-                    $0 * $1.opacity
-                }
+                effectiveLayer.opacity *= svgPassThroughAncestorOpacity(for: layer)
                 let element: String
                 switch effectiveLayer.kind {
                 case let .shape(content):
@@ -905,6 +903,12 @@ extension ImageEditorViewModel {
         }
     }
 
+    private func svgPassThroughAncestorOpacity(for layer: ImageEditorLayer) -> Double {
+        document.ancestorGroups(for: layer)
+            .prefix { $0.blendMode == .passThrough }
+            .reduce(1) { $0 * $1.opacity }
+    }
+
     private func svgLayerGroup(_ content: String, layer: ImageEditorLayer) -> String {
         let identifier = layer.id.uuidString
         let name = svgAttributeEscaped(layer.name)
@@ -919,6 +923,10 @@ extension ImageEditorViewModel {
         var metadata = "data-xomo-layer-kind=\"\(kind)\""
         if layer.isGroup {
             metadata += " data-xomo-blend-mode=\"\(layer.blendMode.rawValue)\" data-xomo-opacity=\"\(svgNumber(CGFloat(layer.opacity)))\""
+            if layer.blendMode == .normal {
+                let opacity = layer.opacity * svgPassThroughAncestorOpacity(for: layer)
+                metadata += " opacity=\"\(svgNumber(CGFloat(opacity)))\" style=\"isolation:isolate\""
+            }
         }
         return "<g id=\"xomo-layer-\(identifier)\" data-xomo-layer-id=\"\(identifier)\" data-name=\"\(name)\" \(metadata)>\n<title>\(title)</title>\n\(content)\n</g>"
     }

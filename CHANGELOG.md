@@ -1,5 +1,20 @@
 # Changelog
 
+## 2.12.0-rc1199 - 2026-08-24
+
+### Added
+
+- 可编辑 SVG 现在支持 Photoshop/Sketch/Figma 常见的 `Normal` 隔离组：组使用标准 `opacity` 与 `isolation:isolate` 做一次离屏合成，重叠子层不会被错误地逐层乘上组透明度。
+- Normal 与 Pass Through 可在任意深度交错；叶子只吸收最近隔离组以内的 Pass Through 透明度，Normal 组则吸收其上方连续 Pass Through 祖先，再由外层 Normal 组继续合成，避免漏乘或双重透明。
+
+### Changed
+
+- 非 Normal/Pass Through 的组混合模式以及组蒙版、效果、Blend If、滤镜仍明确禁用 SVG；保护边界继续优先于生成视觉错误的“成功”文件。
+
+### Verification
+
+- 产品测试构建通过；Normal 隔离组/透明度边界与非标准组保护专项 2/2，全部 editable SVG 与基础纯矢量邻接回归 12/12；CLI/MCP 2/2、发布契约 7/7（21 项断言）、测试运行器契约及差异检查通过。rc1200 将执行周期完整编译、全量测试、真实冒烟与 `/Applications` 覆盖。
+
 ## 2.12.0-rc1198 - 2026-08-24
 
 ### Added

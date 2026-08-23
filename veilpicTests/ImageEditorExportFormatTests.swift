@@ -1360,16 +1360,23 @@ struct ImageEditorExportFormatTests {
         #expect(directTextNode.attribute(forName: "fill-opacity")?.stringValue == "0.300")
     }
 
-    @Test func editableSVGRejectsUnsupportedIsolatedGroupComposition() {
-        let unsupported = ImageEditorViewModel(
+    @Test func editableSVGPreservesNormalIsolatedGroupComposition() throws {
+        let viewModel = ImageEditorViewModel(
             sourceName: "isolated-svg-group",
             image: NSImage.transparent(size: CGSize(width: 120, height: 90))
         ) { _ in }
+        var passThroughParent = ImageEditorLayer.group(
+            name: "Pass Through Parent",
+            size: viewModel.document.canvasSize
+        )
+        passThroughParent.opacity = 0.8
         var isolatedGroup = ImageEditorLayer.group(
             name: "Isolated Group",
-            size: unsupported.document.canvasSize
+            size: viewModel.document.canvasSize
         )
         isolatedGroup.blendMode = .normal
+        isolatedGroup.opacity = 0.5
+        isolatedGroup.groupID = passThroughParent.id
         var isolatedChild = ImageEditorLayer.shape(
             name: "Child",
             frame: CGRect(x: 12, y: 12, width: 60, height: 44),
@@ -1382,9 +1389,75 @@ struct ImageEditorExportFormatTests {
                 strokeOpacity: 0
             )
         )
+        isolatedChild.opacity = 0.6
         isolatedChild.groupID = isolatedGroup.id
-        unsupported.document.layers.append(contentsOf: [isolatedChild, isolatedGroup])
-        #expect(!unsupported.canExportSVG)
+        viewModel.document.layers.append(contentsOf: [
+            isolatedChild,
+            isolatedGroup,
+            passThroughParent
+        ])
+
+        #expect(viewModel.canExportSVG)
+        let data = try #require(
+            viewModel.exportData(settings: ImageEditorExportSettings(format: .svg))
+        )
+        let xml = try XMLDocument(data: data, options: [])
+        let parentNode = try #require(
+            try xml.nodes(
+                forXPath: "//*[@data-xomo-layer-id='\(passThroughParent.id.uuidString)']"
+            ).first as? XMLElement
+        )
+        let isolatedNode = try #require(
+            try xml.nodes(
+                forXPath: "//*[@data-xomo-layer-id='\(isolatedGroup.id.uuidString)']"
+            ).first as? XMLElement
+        )
+        let childNode = try #require(
+            try xml.nodes(
+                forXPath: "//*[@data-xomo-layer-id='\(isolatedChild.id.uuidString)']/*[local-name()='rect']"
+            ).first as? XMLElement
+        )
+
+        #expect(parentNode.attribute(forName: "opacity") == nil)
+        #expect(parentNode.attribute(forName: "data-xomo-opacity")?.stringValue == "0.800")
+        #expect(isolatedNode.attribute(forName: "data-xomo-opacity")?.stringValue == "0.500")
+        #expect(isolatedNode.attribute(forName: "opacity")?.stringValue == "0.400")
+        #expect(isolatedNode.attribute(forName: "style")?.stringValue == "isolation:isolate")
+        #expect(childNode.attribute(forName: "fill-opacity")?.stringValue == "0.600")
+    }
+
+    @Test func editableSVGRejectsUnsupportedGroupBlendAndMask() {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "unsupported-svg-group",
+            image: NSImage.transparent(size: CGSize(width: 120, height: 90))
+        ) { _ in }
+        var group = ImageEditorLayer.group(
+            name: "Unsupported Group",
+            size: viewModel.document.canvasSize
+        )
+        group.blendMode = .multiply
+        var child = ImageEditorLayer.shape(
+            name: "Child",
+            frame: CGRect(x: 12, y: 12, width: 60, height: 44),
+            content: ImageEditorShapeContent(
+                kind: .rectangle,
+                fillColor: .systemRed,
+                fillOpacity: 1,
+                strokeColor: .clear,
+                strokeWidth: 0.1,
+                strokeOpacity: 0
+            )
+        )
+        child.groupID = group.id
+        viewModel.document.layers.append(contentsOf: [child, group])
+        #expect(!viewModel.canExportSVG)
+
+        let groupIndex = viewModel.document.layers.count - 1
+        viewModel.document.layers[groupIndex].blendMode = .normal
+        viewModel.document.layers[groupIndex].mask = NSImage.opaqueMask(
+            size: viewModel.document.canvasSize
+        )
+        #expect(!viewModel.canExportSVG)
     }
 
     @Test func editableSVGPreservesRoundedRectangleCornerGeometry() throws {
