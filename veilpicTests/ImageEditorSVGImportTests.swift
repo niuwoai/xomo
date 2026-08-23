@@ -266,6 +266,70 @@ struct ImageEditorSVGImportTests {
         }
     }
 
+    @Test func singlePolygonImportsAsNativeEditableClosedPath() throws {
+        let imported = try #require(XomoEditableSVGImporter.parse(Data(
+            """
+            <svg width="120" height="80" viewBox="0 0 60 40">
+              <g opacity="0.5" fill="rgba(32, 80, 240, 0.8)"
+                 stroke="rgba(240, 80, 32, 0.6)" stroke-width="2"
+                 stroke-linejoin="round" stroke-dasharray="3 2">
+                <polygon points="10,5 30,5 20,25" />
+              </g>
+            </svg>
+            """.utf8
+        )))
+        let content = imported.content
+        let points = content.editablePathAnchors.map(\.point)
+
+        #expect(content.kind == .path)
+        #expect(content.isPathClosed)
+        #expect(points.count == 3)
+        #expect(abs((points[1].x - points[0].x) - 40) < 0.001)
+        #expect(abs(points[1].y - points[0].y) < 0.001)
+        #expect(abs((points[2].x - points[0].x) - 20) < 0.001)
+        #expect(abs((points[2].y - points[0].y) - 40) < 0.001)
+        #expect(imported.size.width > 40)
+        #expect(imported.size.height > 40)
+        #expect(abs(content.fillOpacity - 0.4) < 0.001)
+        #expect(abs(content.strokeOpacity - 0.3) < 0.001)
+        #expect(content.strokeWidth == 4)
+        #expect(content.strokeJoin == .round)
+        #expect(content.strokeDashPattern == [6, 4])
+
+        let evenOdd = try #require(XomoEditableSVGImporter.parse(Data(
+            "<svg><polygon points='0,0 20,20 0,20 20,0' fill='red' fill-rule='evenodd'/></svg>".utf8
+        )))
+        #expect(evenOdd.content.isPathClosed)
+        #expect(evenOdd.content.fillOpacity == 1)
+        #expect(evenOdd.content.strokeOpacity == 0)
+        #expect(evenOdd.size == CGSize(width: 20, height: 20))
+
+        let sharpMiter = try #require(XomoEditableSVGImporter.parse(Data(
+            "<svg><polygon points='0,10 10,0 20,10' fill='none' stroke='black' stroke-width='4' stroke-linejoin='miter' stroke-miterlimit='10'/></svg>".utf8
+        )))
+        #expect(sharpMiter.content.strokeJoin == .miter)
+        #expect(sharpMiter.size.width > 24)
+    }
+
+    @Test func polygonsThatCannotStayNativeAreRejectedBeforeImport() {
+        let unsupported = [
+            "<svg><polygon fill='red'/></svg>",
+            "<svg><polygon points='0,0 10,10' fill='none' stroke='black'/></svg>",
+            "<svg><polygon points='0,0 10,0 5' fill='red'/></svg>",
+            "<svg><polygon points='0,,0 10,0 5,10' fill='red'/></svg>",
+            "<svg><polygon points='0,0 10%,0 5,10' fill='red'/></svg>",
+            "<svg><polygon points='0,0 10,0 5,10' fill='red' pathLength='100'/></svg>",
+            "<svg><polygon points='0,0 10,0 5,10' fill='none' stroke='none'/></svg>",
+            "<svg><polygon points='0,0 10,10 20,20' fill='red'/></svg>",
+            "<svg><polygon points='0,0 20,20 0,20 20,0' fill='red'/></svg>",
+            "<svg><polygon points='0,0 10,0 5,10' fill='red' fill-rule='banana'/></svg>"
+        ]
+
+        for source in unsupported {
+            #expect(XomoEditableSVGImporter.parse(Data(source.utf8)) == nil)
+        }
+    }
+
     @Test func viewportScalingAndFillRulesNeverSilentlyChangeEditableGeometry() throws {
         let scaled = try #require(XomoEditableSVGImporter.parse(Data(
             """
@@ -343,7 +407,7 @@ struct ImageEditorSVGImportTests {
         let originalSelectedLayerIDs = viewModel.document.selectedLayerIDs
 
         #expect(!viewModel.importEditableSVGLayer(
-            Data("<svg><polygon points='0,0 10,0 5,10'/></svg>".utf8),
+            Data("<svg><polygon points='0,0 10,0 5'/></svg>".utf8),
             sourceName: "unsupported.svg"
         ))
         #expect(viewModel.document.layers.map(\.id) == originalLayerIDs)

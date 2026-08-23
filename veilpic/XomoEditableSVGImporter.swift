@@ -66,6 +66,13 @@ enum XomoEditableSVGImporter {
                 presentation: presentation,
                 viewportScale: viewportScale
             )
+        case "polygon":
+            return polygonImport(
+                geometry,
+                lineage: lineage,
+                presentation: presentation,
+                viewportScale: viewportScale
+            )
         default:
             return nil
         }
@@ -281,7 +288,7 @@ enum XomoEditableSVGImporter {
         guard polyline.attribute(forName: "pathLength") == nil,
               let source = polyline.attribute(forName: "points")?.stringValue,
               let points = svgPoints(source),
-              presentation.fillOpacity == 0 || !polylineCanEncloseArea(points),
+              presentation.fillOpacity == 0 || !pointsCanEncloseArea(points),
               presentation.hasVisibleStroke
         else { return nil }
 
@@ -296,7 +303,7 @@ enum XomoEditableSVGImporter {
         return openPathImport(anchors, presentation: presentation)
     }
 
-    private static func polylineCanEncloseArea(_ points: [CGPoint]) -> Bool {
+    private static func pointsCanEncloseArea(_ points: [CGPoint]) -> Bool {
         guard points.count >= 3,
               let first = points.first,
               let second = points.dropFirst().first(where: { $0 != first })
@@ -307,17 +314,48 @@ enum XomoEditableSVGImporter {
         }
     }
 
+    private static func polygonImport(
+        _ polygon: XMLElement,
+        lineage: [XMLElement],
+        presentation: SVGPresentation,
+        viewportScale: CGFloat
+    ) -> XomoEditableSVGImport? {
+        guard polygon.attribute(forName: "pathLength") == nil,
+              let source = polygon.attribute(forName: "points")?.stringValue,
+              let points = svgPoints(source),
+              points.count >= 3,
+              presentation.hasVisibleStroke
+                || (presentation.fillOpacity > 0 && pointsCanEncloseArea(points))
+        else { return nil }
+
+        let anchors = points.map { point in
+            ImageEditorPathAnchor(
+                point: CGPoint(
+                    x: point.x * viewportScale,
+                    y: point.y * viewportScale
+                )
+            )
+        }
+        guard hasCompatibleFillRule(
+            inheritedAttribute("fill-rule", in: lineage),
+            subpaths: [anchors],
+            effectiveFillOpacity: presentation.fillOpacity
+        ) else { return nil }
+        return closedPathImport(anchors, presentation: presentation)
+    }
+
     private static func openPathImport(
         _ anchors: [ImageEditorPathAnchor],
         presentation: SVGPresentation
     ) -> XomoEditableSVGImport? {
         guard anchors.count >= 2,
-              let visualBounds = strokedOpenPathBounds(
+              let visualBounds = strokedPathBounds(
                 anchors,
                 strokeWidth: presentation.strokeWidth,
                 strokeCap: presentation.strokeCap,
                 strokeJoin: presentation.strokeJoin,
-                strokeMiterLimit: presentation.strokeMiterLimit
+                strokeMiterLimit: presentation.strokeMiterLimit,
+                isClosed: false
               )
         else { return nil }
         let size = CGSize(
@@ -349,34 +387,79 @@ enum XomoEditableSVGImporter {
         return XomoEditableSVGImport(content: content, size: size)
     }
 
-    private static func strokedOpenPathBounds(
+    private static func closedPathImport(
+        _ anchors: [ImageEditorPathAnchor],
+        presentation: SVGPresentation
+    ) -> XomoEditableSVGImport? {
+        guard anchors.count >= 3,
+              let visualBounds = closedPathVisualBounds(anchors, presentation: presentation)
+        else { return nil }
+        let size = CGSize(
+            width: max(1, visualBounds.width),
+            height: max(1, visualBounds.height)
+        )
+        let offset = CGSize(
+            width: (size.width - visualBounds.width) / 2 - visualBounds.minX,
+            height: (size.height - visualBounds.height) / 2 - visualBounds.minY
+        )
+        let localAnchors = anchors.map { translated($0, by: offset) }
+        let content = ImageEditorShapeContent(
+            kind: .path,
+            fillColor: presentation.fillPaint.color,
+            fillOpacity: presentation.fillOpacity,
+            strokeColor: presentation.strokePaint.color,
+            strokeWidth: max(ImageEditorShapeContent.minimumStrokeWidth, presentation.strokeWidth),
+            strokeOpacity: presentation.hasVisibleStroke ? presentation.strokeOpacity : 0,
+            strokePosition: .center,
+            strokeCap: presentation.strokeCap,
+            strokeJoin: presentation.strokeJoin,
+            strokeMiterLimit: presentation.strokeMiterLimit,
+            strokeDashPattern: presentation.strokeDashPattern,
+            strokeDashOffset: presentation.strokeDashOffset,
+            pathPoints: localAnchors.map(\.point),
+            pathAnchors: localAnchors,
+            isPathClosed: true
+        )
+        return XomoEditableSVGImport(content: content, size: size)
+    }
+
+    private static func closedPathVisualBounds(
+        _ anchors: [ImageEditorPathAnchor],
+        presentation: SVGPresentation
+    ) -> CGRect? {
+        let path = cgPath(anchors, isClosed: true)
+        var bounds: CGRect?
+        if presentation.fillOpacity > 0, !path.boundingBoxOfPath.isEmpty {
+            bounds = path.boundingBoxOfPath
+        }
+        if presentation.hasVisibleStroke,
+           let strokeBounds = strokedPathBounds(
+               anchors,
+               strokeWidth: presentation.strokeWidth,
+               strokeCap: presentation.strokeCap,
+               strokeJoin: presentation.strokeJoin,
+               strokeMiterLimit: presentation.strokeMiterLimit,
+               isClosed: true
+           ) {
+            bounds = bounds?.union(strokeBounds) ?? strokeBounds
+        }
+        return bounds
+    }
+
+    private static func strokedPathBounds(
         _ anchors: [ImageEditorPathAnchor],
         strokeWidth: CGFloat,
         strokeCap: ImageEditorStrokeCap,
         strokeJoin: ImageEditorStrokeJoin,
-        strokeMiterLimit: CGFloat
+        strokeMiterLimit: CGFloat,
+        isClosed: Bool
     ) -> CGRect? {
         guard let first = anchors.first,
               strokeWidth > 0,
               strokeWidth.isFinite
         else { return nil }
 
-        let path = CGMutablePath()
-        path.move(to: first.point)
-        for index in anchors.indices.dropFirst() {
-            let previous = anchors[index - 1]
-            let current = anchors[index]
-            if previous.outControl != nil || current.inControl != nil {
-                path.addCurve(
-                    to: current.point,
-                    control1: previous.outControl ?? previous.point,
-                    control2: current.inControl ?? current.point
-                )
-            } else {
-                path.addLine(to: current.point)
-            }
-        }
-
+        let path = cgPath(anchors, isClosed: isClosed)
         let stroked = path.copy(
             strokingWithWidth: strokeWidth,
             lineCap: cgLineCap(strokeCap),
@@ -385,7 +468,8 @@ enum XomoEditableSVGImporter {
         )
         let bounds = stroked.boundingBoxOfPath
         if bounds.isNull || bounds.isInfinite || bounds.isEmpty {
-            guard strokeCap != .butt,
+            guard !isClosed,
+                  strokeCap != .butt,
                   anchors.allSatisfy({ $0.point == first.point })
             else { return nil }
             let radius = strokeWidth / 2
@@ -402,6 +486,30 @@ enum XomoEditableSVGImporter {
               bounds.height.isFinite
         else { return nil }
         return bounds
+    }
+
+    private static func cgPath(
+        _ anchors: [ImageEditorPathAnchor],
+        isClosed: Bool
+    ) -> CGPath {
+        let path = CGMutablePath()
+        guard let first = anchors.first else { return path }
+        path.move(to: first.point)
+        for index in anchors.indices.dropFirst() {
+            let previous = anchors[index - 1]
+            let current = anchors[index]
+            if previous.outControl != nil || current.inControl != nil {
+                path.addCurve(
+                    to: current.point,
+                    control1: previous.outControl ?? previous.point,
+                    control2: current.inControl ?? current.point
+                )
+            } else {
+                path.addLine(to: current.point)
+            }
+        }
+        if isClosed { path.closeSubpath() }
+        return path
     }
 
     private static func cgLineCap(_ cap: ImageEditorStrokeCap) -> CGLineCap {
