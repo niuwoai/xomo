@@ -735,7 +735,14 @@ enum XomoEditableSVGImporter {
     }
 
     private static func inheritedAttribute(_ name: String, in lineage: [XMLElement]) -> String? {
-        lineage.reversed().compactMap { $0.attribute(forName: name)?.stringValue }.first
+        for element in lineage.reversed() {
+            guard let value = element.attribute(forName: name)?.stringValue else { continue }
+            if value.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() == "inherit" {
+                continue
+            }
+            return value
+        }
+        return nil
     }
 
     private static func inheritedOpacity(_ name: String, in lineage: [XMLElement]) -> CGFloat? {

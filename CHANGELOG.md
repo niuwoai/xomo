@@ -1,5 +1,19 @@
 # Changelog
 
+## 2.12.0-rc1211 - 2026-08-24
+
+### Added
+
+- 可编辑 SVG 导入支持 fill、stroke、fill/stroke opacity、stroke width/cap/join/miter/dash/offset 与 fill-rule 的显式 `inherit`；组件和图标即使把继承写明，也会继续解析祖先的原生可编辑样式。
+
+### Changed
+
+- 所有继承型 presentation attribute 统一通过同一层叠入口跳过 `inherit`，而不是逐属性打补丁；多层连续 inherit 会继续向根节点查找，没有祖先声明时 fill/stroke 分别回落 SVG 初始 black/none，复合 path 也能从祖先继承 evenodd。
+
+### Verification
+
+- 最终产品测试构建通过且未新增编译警告；SVG 可编辑导入专项 26/26、CLI/MCP 2/2、发布契约 7/7（21 项断言）、隔离测试运行器契约及差异检查通过；下一次周期完整门禁仍为 rc1240。
+
 ## 2.12.0-rc1210 - 2026-08-24
 
 ### Added

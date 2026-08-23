@@ -105,6 +105,66 @@ struct ImageEditorSVGImportTests {
         )) != nil)
     }
 
+    @Test func explicitInheritResolvesTheWholeInheritedPresentationFamily() throws {
+        let imported = try #require(XomoEditableSVGImporter.parse(Data(
+            """
+            <svg fill="#33669980" fill-opacity="0.8" fill-rule="evenodd"
+                 stroke="#f05020" stroke-opacity="0.75" stroke-width="4"
+                 stroke-linecap="square" stroke-linejoin="bevel" stroke-miterlimit="7"
+                 stroke-dasharray="5" stroke-dashoffset="-2">
+              <g fill="inherit" fill-opacity="inherit" fill-rule="inherit"
+                 stroke="inherit" stroke-opacity="inherit" stroke-width="inherit"
+                 stroke-linecap="inherit" stroke-linejoin="inherit"
+                 stroke-miterlimit="inherit" stroke-dasharray="inherit"
+                 stroke-dashoffset="inherit">
+                <path fill="inherit" fill-opacity="inherit" fill-rule="inherit"
+                      stroke="inherit" stroke-opacity="inherit" stroke-width="inherit"
+                      stroke-linecap="inherit" stroke-linejoin="inherit"
+                      stroke-miterlimit="inherit" stroke-dasharray="inherit"
+                      stroke-dashoffset="inherit"
+                      d="M0 0 L30 0 L30 30 L0 30 Z M10 10 L20 10 L20 20 L10 20 Z" />
+              </g>
+            </svg>
+            """.utf8
+        )))
+        let content = imported.content
+        let fill = try #require(content.fillColor.usingColorSpace(.deviceRGB))
+        let stroke = try #require(content.strokeColor.usingColorSpace(.deviceRGB))
+
+        #expect(content.allEditablePathSubpaths.count == 2)
+        #expect(abs(fill.redComponent - 0.2) < 0.001)
+        #expect(abs(fill.greenComponent - 0.4) < 0.001)
+        #expect(abs(fill.blueComponent - 0.6) < 0.001)
+        #expect(abs(content.fillOpacity - (128.0 / 255.0 * 0.8)) < 0.001)
+        #expect(abs(stroke.redComponent - (240.0 / 255.0)) < 0.001)
+        #expect(abs(stroke.greenComponent - (80.0 / 255.0)) < 0.001)
+        #expect(abs(stroke.blueComponent - (32.0 / 255.0)) < 0.001)
+        #expect(abs(content.strokeOpacity - 0.75) < 0.001)
+        #expect(content.strokeWidth == 4)
+        #expect(content.strokeCap == .square)
+        #expect(content.strokeJoin == .bevel)
+        #expect(content.strokeMiterLimit == 7)
+        #expect(content.strokeDashPattern == [5, 5])
+        #expect(content.strokeDashOffset == -2)
+    }
+
+    @Test func explicitPaintInheritFallsBackToSVGInitialValues() throws {
+        let imported = try #require(XomoEditableSVGImporter.parse(Data(
+            """
+            <svg>
+              <path d="M0 0 L20 0 L10 20 Z" fill="inherit" stroke="inherit" />
+            </svg>
+            """.utf8
+        )))
+        let fill = try #require(imported.content.fillColor.usingColorSpace(.deviceRGB))
+
+        #expect(fill.redComponent == 0)
+        #expect(fill.greenComponent == 0)
+        #expect(fill.blueComponent == 0)
+        #expect(imported.content.fillOpacity == 1)
+        #expect(imported.content.strokeOpacity == 0)
+    }
+
     @Test func singleRoundedRectangleImportsAsNativeEditableRectangle() throws {
         let data = Data(
             """
