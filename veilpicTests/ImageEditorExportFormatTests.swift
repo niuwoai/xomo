@@ -1170,6 +1170,122 @@ struct ImageEditorExportFormatTests {
         #expect(!source.contains("<image"))
     }
 
+    @Test func editableSVGPreservesRoundedRectangleCornerGeometry() throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "rounded-rectangle-svg",
+            image: NSImage.transparent(size: CGSize(width: 480, height: 260))
+        ) { _ in }
+        var uniformLayer = ImageEditorLayer.shape(
+            name: "Scaled uniform corners",
+            frame: CGRect(x: 20, y: 20, width: 120, height: 80),
+            content: ImageEditorShapeContent(
+                kind: .rectangle,
+                fillColor: .systemBlue,
+                fillOpacity: 1,
+                strokeColor: .black,
+                strokeWidth: 2,
+                strokeOpacity: 1,
+                cornerRadius: 18
+            )
+        )
+        uniformLayer.frame.size = CGSize(width: 180, height: 100)
+        let independentLayer = ImageEditorLayer.shape(
+            name: "Independent corners",
+            frame: CGRect(x: 230, y: 20, width: 120, height: 80),
+            content: ImageEditorShapeContent(
+                kind: .rectangle,
+                fillColor: .systemPurple,
+                fillOpacity: 1,
+                strokeColor: .clear,
+                strokeWidth: 0.1,
+                strokeOpacity: 0,
+                cornerRadii: ImageEditorRectangleCornerRadii(
+                    topLeft: 16,
+                    topRight: 4,
+                    bottomRight: 12,
+                    bottomLeft: 0
+                )
+            )
+        )
+        let smoothedLayer = ImageEditorLayer.shape(
+            name: "Smoothed corners",
+            frame: CGRect(x: 20, y: 140, width: 160, height: 90),
+            content: ImageEditorShapeContent(
+                kind: .rectangle,
+                fillColor: .systemOrange,
+                fillOpacity: 1,
+                strokeColor: .black,
+                strokeWidth: 2,
+                strokeOpacity: 1,
+                cornerRadius: 24,
+                cornerSmoothing: 0.75
+            )
+        )
+        let squareLayer = ImageEditorLayer.shape(
+            name: "Square corners",
+            frame: CGRect(x: 230, y: 140, width: 120, height: 80),
+            content: ImageEditorShapeContent(
+                kind: .rectangle,
+                fillColor: .white,
+                fillOpacity: 1,
+                strokeColor: .black,
+                strokeWidth: 2,
+                strokeOpacity: 1
+            )
+        )
+        viewModel.document.layers.append(contentsOf: [
+            uniformLayer,
+            independentLayer,
+            smoothedLayer,
+            squareLayer
+        ])
+
+        let data = try #require(
+            viewModel.exportData(settings: ImageEditorExportSettings(format: .svg))
+        )
+        let source = try #require(String(data: data, encoding: .utf8))
+        let xml = try XMLDocument(data: data, options: [])
+        let roundedPaths = try xml.nodes(
+            forXPath: "//*[local-name()='path' and @data-xomo-corner-radii]"
+        ).compactMap { $0 as? XMLElement }
+        let squareRects = try xml.nodes(forXPath: "//*[local-name()='rect']")
+
+        #expect(xml.rootElement()?.name == "svg")
+        #expect(roundedPaths.count == 3)
+        #expect(squareRects.count == 1)
+        #expect(!source.contains("<image"))
+
+        let uniform = try #require(
+            roundedPaths.first {
+                $0.attribute(forName: "data-xomo-corner-radii")?.stringValue == "18 18 18 18"
+            }
+        )
+        let uniformPath = try #require(uniform.attribute(forName: "d")?.stringValue)
+        #expect(uniform.attribute(forName: "data-xomo-corner-smoothing")?.stringValue == "0")
+        #expect(uniformPath.hasPrefix("M 48.500 21.250"))
+        #expect(uniformPath.components(separatedBy: "C ").count - 1 == 4)
+        #expect(uniformPath.hasSuffix("Z"))
+
+        let independent = try #require(
+            roundedPaths.first {
+                $0.attribute(forName: "data-xomo-corner-radii")?.stringValue == "16 4 12 0"
+            }
+        )
+        let independentPath = try #require(independent.attribute(forName: "d")?.stringValue)
+        #expect(independentPath.components(separatedBy: "C ").count - 1 == 4)
+        #expect(independentPath.hasSuffix("Z"))
+
+        let smoothed = try #require(
+            roundedPaths.first {
+                $0.attribute(forName: "data-xomo-corner-smoothing")?.stringValue == "0.750"
+            }
+        )
+        let smoothedPath = try #require(smoothed.attribute(forName: "d")?.stringValue)
+        #expect(smoothedPath.components(separatedBy: "L ").count - 1 == 100)
+        #expect(!smoothedPath.contains("C "))
+        #expect(smoothedPath.hasSuffix("Z"))
+    }
+
     @Test func editableSVGPreservesTextCharacterStylesAndLocalLayout() throws {
         let viewModel = ImageEditorViewModel(
             sourceName: "styled-text-svg",

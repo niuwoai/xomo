@@ -856,8 +856,28 @@ extension ImageEditorViewModel {
         switch normalized.kind {
         case .rectangle:
             let inset = normalized.strokeWidth / 2
-            let frame = layer.frame.insetBy(dx: inset, dy: inset)
-            element = "<rect x=\"\(svgNumber(frame.minX))\" y=\"\(svgNumber(frame.minY))\" width=\"\(svgNumber(frame.width))\" height=\"\(svgNumber(frame.height))\" \(attributes) />"
+            if normalized.effectiveCornerRadii.hasRoundedCorner {
+                let localSize = CGSize(
+                    width: max(layer.image.size.width, 1),
+                    height: max(layer.image.size.height, 1)
+                )
+                let localRect = CGRect(origin: .zero, size: localSize).insetBy(
+                    dx: inset,
+                    dy: inset
+                )
+                let radii = normalized.effectiveCornerRadii.normalized(size: localRect.size)
+                let radiiValue = [
+                    radii.topLeft,
+                    radii.topRight,
+                    radii.bottomRight,
+                    radii.bottomLeft
+                ].map(svgNumber).joined(separator: " ")
+                let path = normalized.rectangleBezierPath(in: localRect)
+                element = "<path d=\"\(svgBezierPathData(path, layer: layer))\" data-xomo-corner-radii=\"\(radiiValue)\" data-xomo-corner-smoothing=\"\(svgNumber(normalized.cornerSmoothing))\" \(attributes) />"
+            } else {
+                let frame = layer.frame.insetBy(dx: inset, dy: inset)
+                element = "<rect x=\"\(svgNumber(frame.minX))\" y=\"\(svgNumber(frame.minY))\" width=\"\(svgNumber(frame.width))\" height=\"\(svgNumber(frame.height))\" \(attributes) />"
+            }
         case .ellipse:
             element = "<ellipse cx=\"\(svgNumber(layer.frame.midX))\" cy=\"\(svgNumber(layer.frame.midY))\" rx=\"\(svgNumber(max(0, layer.frame.width - normalized.strokeWidth) / 2))\" ry=\"\(svgNumber(max(0, layer.frame.height - normalized.strokeWidth) / 2))\" \(attributes) />"
         case .path:
@@ -992,6 +1012,31 @@ extension ImageEditorViewModel {
             }
             return commands.joined(separator: " ")
         }.joined(separator: " ")
+    }
+
+    private func svgBezierPathData(_ path: NSBezierPath, layer: ImageEditorLayer) -> String {
+        var commands: [String] = []
+        var points = [NSPoint](repeating: .zero, count: 3)
+        for index in 0..<path.elementCount {
+            switch path.element(at: index, associatedPoints: &points) {
+            case .moveTo:
+                if index == path.elementCount - 1, commands.last == "Z" {
+                    continue
+                }
+                commands.append("M \(svgPoint(points[0], layer: layer))")
+            case .lineTo:
+                commands.append("L \(svgPoint(points[0], layer: layer))")
+            case .curveTo, .cubicCurveTo:
+                commands.append("C \(svgPoint(points[0], layer: layer)) \(svgPoint(points[1], layer: layer)) \(svgPoint(points[2], layer: layer))")
+            case .quadraticCurveTo:
+                commands.append("Q \(svgPoint(points[0], layer: layer)) \(svgPoint(points[1], layer: layer))")
+            case .closePath:
+                commands.append("Z")
+            @unknown default:
+                continue
+            }
+        }
+        return commands.joined(separator: " ")
     }
 
     private func svgPaintAttributes(
