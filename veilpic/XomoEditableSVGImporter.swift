@@ -1,15 +1,16 @@
 import AppKit
 import Foundation
 
-struct XomoEditableSVGPathImport {
+struct XomoEditableSVGImport {
     var content: ImageEditorShapeContent
     var size: CGSize
 }
 
-enum XomoEditableSVGPathImporter {
+/// Imports one safely representable SVG geometry node as a native editable shape.
+enum XomoEditableSVGImporter {
     static let maximumByteCount = 2 * 1_024 * 1_024
 
-    static func parse(_ data: Data) -> XomoEditableSVGPathImport? {
+    static func parse(_ data: Data) -> XomoEditableSVGImport? {
         guard !data.isEmpty,
               data.count <= maximumByteCount,
               let source = String(data: data, encoding: .utf8),
@@ -23,19 +24,57 @@ enum XomoEditableSVGPathImporter {
                 forXPath: ".//*[local-name()='path' or local-name()='rect' or local-name()='circle' or local-name()='ellipse' or local-name()='line' or local-name()='polyline' or local-name()='polygon' or local-name()='text' or local-name()='image' or local-name()='use']"
               ),
               geometryNodes.count == 1,
-              let path = geometryNodes.first as? XMLElement,
-              localName(of: path) == "path",
-              let pathData = path.attribute(forName: "d")?.stringValue,
-              let parsed = XomoSVGPathParser.parse(pathData),
-              !parsed.subpaths.isEmpty,
-              parsed.subpaths.count == parsed.subpathClosedStates.count
+              let geometry = geometryNodes.first as? XMLElement
         else { return nil }
 
-        let lineage = elementLineage(from: root, to: path)
+        let lineage = elementLineage(from: root, to: geometry)
         guard !lineage.isEmpty,
               !hasUnsupportedContainer(lineage),
               !hasUnsupportedPresentation(lineage),
-              let overallOpacity = multipliedOpacity("opacity", in: lineage),
+              let presentation = presentation(in: lineage, viewportScale: viewportScale)
+        else { return nil }
+
+        switch localName(of: geometry) {
+        case "path":
+            return pathImport(
+                geometry,
+                lineage: lineage,
+                presentation: presentation,
+                viewportScale: viewportScale
+            )
+        case "rect":
+            return rectangleImport(
+                geometry,
+                presentation: presentation,
+                viewportScale: viewportScale
+            )
+        default:
+            return nil
+        }
+    }
+
+    private struct SVGPresentation {
+        var fillPaint: SVGPaint
+        var fillOpacity: CGFloat
+        var strokePaint: SVGPaint
+        var strokeOpacity: CGFloat
+        var strokeWidth: CGFloat
+        var strokeCap: ImageEditorStrokeCap
+        var strokeJoin: ImageEditorStrokeJoin
+        var strokeMiterLimit: CGFloat
+        var strokeDashPattern: [CGFloat]
+        var strokeDashOffset: CGFloat
+
+        var hasVisibleStroke: Bool {
+            strokeOpacity > 0 && strokeWidth > 0
+        }
+    }
+
+    private static func presentation(
+        in lineage: [XMLElement],
+        viewportScale: CGFloat
+    ) -> SVGPresentation? {
+        guard let overallOpacity = multipliedOpacity("opacity", in: lineage),
               let fillOpacity = inheritedOpacity("fill-opacity", in: lineage),
               let strokeOpacity = inheritedOpacity("stroke-opacity", in: lineage),
               let fillPaint = paint(inheritedAttribute("fill", in: lineage) ?? "black"),
@@ -48,36 +87,63 @@ enum XomoEditableSVGPathImporter {
               let rawDashOffset = svgLength(inheritedAttribute("stroke-dashoffset", in: lineage) ?? "0")
         else { return nil }
 
-        let closedStates = Set(parsed.subpathClosedStates)
-        guard closedStates.count == 1, let pathsAreClosed = closedStates.first else { return nil }
-
-        let effectiveFillOpacity = fillPaint.alpha * fillOpacity * overallOpacity
-        let effectiveStrokeOpacity = strokePaint.alpha * strokeOpacity * overallOpacity
-        if !pathsAreClosed, effectiveFillOpacity > 0 { return nil }
-        guard hasCompatibleFillRule(
-            inheritedAttribute("fill-rule", in: lineage),
-            subpaths: parsed.subpaths,
-            effectiveFillOpacity: effectiveFillOpacity
-        ) else { return nil }
-
         let strokeWidth = rawStrokeWidth * viewportScale
         let dashPattern = rawDashPattern.map { $0 * viewportScale }
         let dashOffset = rawDashOffset * viewportScale
-        let scaledSubpaths = parsed.subpaths.map { subpath in
-            subpath.map { scaled($0, by: viewportScale) }
-        }
-        let hasVisibleStroke = effectiveStrokeOpacity > 0 && strokeWidth > 0
         guard strokeWidth >= 0,
               strokeWidth <= ImageEditorShapeContent.maximumStrokeWidth,
               miterLimit >= ImageEditorShapeContent.minimumStrokeMiterLimit,
               miterLimit <= ImageEditorShapeContent.maximumStrokeMiterLimit,
               dashOffset >= ImageEditorShapeContent.minimumStrokeDashOffset,
-              dashOffset <= ImageEditorShapeContent.maximumStrokeDashOffset,
-              let geometryBounds = bounds(of: scaledSubpaths),
-              hasVisibleStroke || (pathsAreClosed && effectiveFillOpacity > 0 && geometryBounds.width > 0 && geometryBounds.height > 0)
+              dashOffset <= ImageEditorShapeContent.maximumStrokeDashOffset
         else { return nil }
 
-        let padding = hasVisibleStroke ? strokeWidth / 2 : 0
+        return SVGPresentation(
+            fillPaint: fillPaint,
+            fillOpacity: fillPaint.alpha * fillOpacity * overallOpacity,
+            strokePaint: strokePaint,
+            strokeOpacity: strokePaint.alpha * strokeOpacity * overallOpacity,
+            strokeWidth: strokeWidth,
+            strokeCap: strokeCap,
+            strokeJoin: strokeJoin,
+            strokeMiterLimit: miterLimit,
+            strokeDashPattern: dashPattern,
+            strokeDashOffset: dashOffset
+        )
+    }
+
+    private static func pathImport(
+        _ path: XMLElement,
+        lineage: [XMLElement],
+        presentation: SVGPresentation,
+        viewportScale: CGFloat
+    ) -> XomoEditableSVGImport? {
+        guard let pathData = path.attribute(forName: "d")?.stringValue,
+              let parsed = XomoSVGPathParser.parse(pathData),
+              !parsed.subpaths.isEmpty,
+              parsed.subpaths.count == parsed.subpathClosedStates.count
+        else { return nil }
+
+        let closedStates = Set(parsed.subpathClosedStates)
+        guard closedStates.count == 1, let pathsAreClosed = closedStates.first else { return nil }
+
+        if !pathsAreClosed, presentation.fillOpacity > 0 { return nil }
+        guard hasCompatibleFillRule(
+            inheritedAttribute("fill-rule", in: lineage),
+            subpaths: parsed.subpaths,
+            effectiveFillOpacity: presentation.fillOpacity
+        ) else { return nil }
+
+        let scaledSubpaths = parsed.subpaths.map { subpath in
+            subpath.map { scaled($0, by: viewportScale) }
+        }
+        guard let geometryBounds = bounds(of: scaledSubpaths),
+              presentation.hasVisibleStroke
+                || (pathsAreClosed && presentation.fillOpacity > 0
+                    && geometryBounds.width > 0 && geometryBounds.height > 0)
+        else { return nil }
+
+        let padding = presentation.hasVisibleStroke ? presentation.strokeWidth / 2 : 0
         let size = CGSize(
             width: max(1, geometryBounds.width + padding * 2),
             height: max(1, geometryBounds.height + padding * 2)
@@ -93,23 +159,95 @@ enum XomoEditableSVGPathImporter {
 
         let content = ImageEditorShapeContent(
             kind: .path,
-            fillColor: fillPaint.color,
-            fillOpacity: pathsAreClosed ? effectiveFillOpacity : 0,
-            strokeColor: strokePaint.color,
-            strokeWidth: max(ImageEditorShapeContent.minimumStrokeWidth, strokeWidth),
-            strokeOpacity: hasVisibleStroke ? effectiveStrokeOpacity : 0,
+            fillColor: presentation.fillPaint.color,
+            fillOpacity: pathsAreClosed ? presentation.fillOpacity : 0,
+            strokeColor: presentation.strokePaint.color,
+            strokeWidth: max(ImageEditorShapeContent.minimumStrokeWidth, presentation.strokeWidth),
+            strokeOpacity: presentation.hasVisibleStroke ? presentation.strokeOpacity : 0,
             strokePosition: .center,
-            strokeCap: strokeCap,
-            strokeJoin: strokeJoin,
-            strokeMiterLimit: miterLimit,
-            strokeDashPattern: dashPattern,
-            strokeDashOffset: dashOffset,
+            strokeCap: presentation.strokeCap,
+            strokeJoin: presentation.strokeJoin,
+            strokeMiterLimit: presentation.strokeMiterLimit,
+            strokeDashPattern: presentation.strokeDashPattern,
+            strokeDashOffset: presentation.strokeDashOffset,
             pathPoints: primary.map(\.point),
             pathAnchors: primary,
             pathSubpaths: Array(localSubpaths.dropFirst()),
             isPathClosed: pathsAreClosed
         )
-        return XomoEditableSVGPathImport(content: content, size: size)
+        return XomoEditableSVGImport(content: content, size: size)
+    }
+
+    private static func rectangleImport(
+        _ rectangle: XMLElement,
+        presentation: SVGPresentation,
+        viewportScale: CGFloat
+    ) -> XomoEditableSVGImport? {
+        guard rectangle.attribute(forName: "pathLength") == nil,
+              let widthSource = rectangle.attribute(forName: "width")?.stringValue,
+              let heightSource = rectangle.attribute(forName: "height")?.stringValue,
+              let width = svgLength(widthSource),
+              let height = svgLength(heightSource),
+              width > 0,
+              height > 0,
+              svgLength(rectangle.attribute(forName: "x")?.stringValue ?? "0") != nil,
+              svgLength(rectangle.attribute(forName: "y")?.stringValue ?? "0") != nil,
+              let cornerRadius = rectangleCornerRadius(rectangle, width: width, height: height),
+              presentation.fillOpacity > 0 || presentation.hasVisibleStroke
+        else { return nil }
+
+        let scaledWidth = width * viewportScale
+        let scaledHeight = height * viewportScale
+        guard !presentation.hasVisibleStroke
+                || presentation.strokeWidth <= min(scaledWidth, scaledHeight)
+        else { return nil }
+        let padding = presentation.hasVisibleStroke ? presentation.strokeWidth / 2 : 0
+        let size = CGSize(
+            width: scaledWidth + padding * 2,
+            height: scaledHeight + padding * 2
+        )
+        guard size.width.isFinite,
+              size.height.isFinite,
+              size.width > 0,
+              size.height > 0
+        else { return nil }
+
+        let content = ImageEditorShapeContent(
+            kind: .rectangle,
+            fillColor: presentation.fillPaint.color,
+            fillOpacity: presentation.fillOpacity,
+            strokeColor: presentation.strokePaint.color,
+            strokeWidth: max(ImageEditorShapeContent.minimumStrokeWidth, presentation.strokeWidth),
+            strokeOpacity: presentation.hasVisibleStroke ? presentation.strokeOpacity : 0,
+            strokePosition: .center,
+            strokeCap: presentation.strokeCap,
+            strokeJoin: presentation.strokeJoin,
+            strokeMiterLimit: presentation.strokeMiterLimit,
+            strokeDashPattern: presentation.strokeDashPattern,
+            strokeDashOffset: presentation.strokeDashOffset,
+            cornerRadius: cornerRadius * viewportScale
+        ).normalized(size: size)
+        return XomoEditableSVGImport(content: content, size: size)
+    }
+
+    private static func rectangleCornerRadius(
+        _ rectangle: XMLElement,
+        width: CGFloat,
+        height: CGFloat
+    ) -> CGFloat? {
+        let rawX = rectangle.attribute(forName: "rx")?.stringValue.flatMap { svgLength($0) }
+        let rawY = rectangle.attribute(forName: "ry")?.stringValue.flatMap { svgLength($0) }
+        if rectangle.attribute(forName: "rx") != nil, rawX == nil { return nil }
+        if rectangle.attribute(forName: "ry") != nil, rawY == nil { return nil }
+        let radiusX = rawX ?? rawY ?? 0
+        let radiusY = rawY ?? rawX ?? 0
+        guard radiusX >= 0,
+              radiusY >= 0
+        else { return nil }
+        let clampedX = min(width / 2, radiusX)
+        let clampedY = min(height / 2, radiusY)
+        guard abs(clampedX - clampedY) <= 0.000_001 else { return nil }
+        return clampedX
     }
 
     private static func elementLineage(from root: XMLElement, to leaf: XMLElement) -> [XMLElement] {

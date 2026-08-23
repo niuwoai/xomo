@@ -42,10 +42,10 @@ extension ImageEditorViewModel {
                 guard let self, response == .OK, let url = panel.url else { return }
                 if url.pathExtension.lowercased() == "svg" {
                     guard let data = try? Data(contentsOf: url) else {
-                        self.statusText = L10n.text("imageEditor.status.editableSVGPathImportFailed")
+                        self.statusText = L10n.text("imageEditor.status.editableSVGImportFailed")
                         return
                     }
-                    self.importEditableSVGPathLayer(data, sourceName: url.lastPathComponent)
+                    self.importEditableSVGLayer(data, sourceName: url.lastPathComponent)
                     return
                 }
                 guard let image = NSImage(contentsOf: url) else {
@@ -58,9 +58,9 @@ extension ImageEditorViewModel {
     }
 
     @discardableResult
-    func importEditableSVGPathLayer(_ data: Data, sourceName: String) -> Bool {
-        guard let imported = XomoEditableSVGPathImporter.parse(data) else {
-            statusText = L10n.text("imageEditor.status.editableSVGPathImportFailed")
+    func importEditableSVGLayer(_ data: Data, sourceName: String) -> Bool {
+        guard let imported = XomoEditableSVGImporter.parse(data) else {
+            statusText = L10n.text("imageEditor.status.editableSVGImportFailed")
             return false
         }
 
@@ -77,8 +77,8 @@ extension ImageEditorViewModel {
         document.selectedLayerID = layer.id
         document.selectedLayerIDs = [layer.id]
         isEditingLayerMask = false
-        appendHistory(L10n.text("imageEditor.history.editableSVGPathImport"))
-        statusText = L10n.format("imageEditor.status.editableSVGPathImported", cleanName)
+        appendHistory(L10n.text("imageEditor.history.editableSVGImport"))
+        statusText = L10n.format("imageEditor.status.editableSVGImported", cleanName)
         return true
     }
 

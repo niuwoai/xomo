@@ -1731,7 +1731,7 @@
 "imageEditor.history.layerUnlink" = "Unlink Layers";
 "imageEditor.history.layerUnlinkAll" = "Unlink All Layers";
 "imageEditor.history.layerImport" = "Import Image Layer";
-"imageEditor.history.editableSVGPathImport" = "Import Editable SVG Path";
+"imageEditor.history.editableSVGImport" = "Import Editable SVG Shape";
 "imageEditor.history.clipboardPasteLayer" = "Paste Clipboard as Layer";
 "imageEditor.history.clipboardPasteIntoSelection" = "Paste Into Selection";
 "imageEditor.history.layerSmartObject" = "Convert to Smart Object";
@@ -2273,8 +2273,8 @@
 "imageEditor.status.layerLabelColor" = "Layer color label set: %@";
 "imageEditor.status.layerLabelColorCleared" = "Layer color label cleared";
 "imageEditor.status.layerImported" = "Imported image layer: %@";
-"imageEditor.status.editableSVGPathImported" = "Imported editable SVG path: %@";
-"imageEditor.status.editableSVGPathImportFailed" = "SVG must contain exactly one standard path without CSS, transforms, or referenced resources";
+"imageEditor.status.editableSVGImported" = "Imported editable SVG shape: %@";
+"imageEditor.status.editableSVGImportFailed" = "SVG must contain exactly one supported path or rectangle without CSS, transforms, or referenced resources";
 "imageEditor.status.layerSmartObject" = "Converted to Smart Object";
 "imageEditor.status.layerSmartObjectReplaced" = "Replaced Smart Object contents: %@";
 "imageEditor.status.layerSmartObjectInstancesReplaced" = "Replaced contents for %d Smart Object instances: %@";

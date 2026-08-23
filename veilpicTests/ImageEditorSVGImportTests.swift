@@ -19,7 +19,7 @@ struct ImageEditorSVGImportTests {
             """.utf8
         )
 
-        let imported = try #require(XomoEditableSVGPathImporter.parse(data))
+        let imported = try #require(XomoEditableSVGImporter.parse(data))
         let content = imported.content
         let fill = try #require(content.fillColor.usingColorSpace(.deviceRGB))
         let stroke = try #require(content.strokeColor.usingColorSpace(.deviceRGB))
@@ -52,17 +52,59 @@ struct ImageEditorSVGImportTests {
             "<svg><path d='M0 0 L10 0 Z M20 0 L30 0' fill='none' stroke='black'/></svg>",
             "<svg><path d='M0 0 L10 0 M20 0 L30 0' stroke='black'/></svg>",
             "<svg><path d='M0 0 L20 0 L20 20 Z M5 5 L10 5 L10 10 Z'/></svg>",
-            "<svg><rect x='0' y='0' width='10' height='10'/></svg>",
             "<!DOCTYPE svg [<!ENTITY xxe SYSTEM 'file:///etc/passwd'>]><svg><path d='M0 0 L10 0 Z'/></svg>"
         ]
 
         for source in unsupported {
-            #expect(XomoEditableSVGPathImporter.parse(Data(source.utf8)) == nil)
+            #expect(XomoEditableSVGImporter.parse(Data(source.utf8)) == nil)
+        }
+    }
+
+    @Test func singleRoundedRectangleImportsAsNativeEditableRectangle() throws {
+        let data = Data(
+            """
+            <svg width="240" height="120" viewBox="0 0 120 60">
+              <g opacity="0.5" fill="#336699" stroke="rgba(240, 80, 32, 0.8)"
+                 stroke-width="2" stroke-linejoin="bevel" stroke-dasharray="3">
+                <rect x="10" y="5" width="50" height="20" rx="4" />
+              </g>
+            </svg>
+            """.utf8
+        )
+
+        let imported = try #require(XomoEditableSVGImporter.parse(data))
+        let content = imported.content
+
+        #expect(content.kind == .rectangle)
+        #expect(imported.size == CGSize(width: 104, height: 44))
+        #expect(content.cornerRadius == 8)
+        #expect(content.cornerRadii == nil)
+        #expect(content.cornerSmoothing == 0)
+        #expect(content.fillOpacity == 0.5)
+        #expect(abs(content.strokeOpacity - 0.4) < 0.001)
+        #expect(content.strokeWidth == 4)
+        #expect(content.strokePosition == .center)
+        #expect(content.strokeJoin == .bevel)
+        #expect(content.strokeDashPattern == [6, 6])
+    }
+
+    @Test func rectanglesThatCannotStayNativeAreRejectedBeforeImport() {
+        let unsupported = [
+            "<svg><rect width='20' height='10' rx='4' ry='2'/></svg>",
+            "<svg><rect width='20' height='10' rx='-1'/></svg>",
+            "<svg><rect width='0' height='10'/></svg>",
+            "<svg><rect width='20' height='10' pathLength='100'/></svg>",
+            "<svg><rect width='20' height='10' fill='none' stroke='black' stroke-width='11'/></svg>",
+            "<svg><rect width='20' height='10' fill='none' stroke='none'/></svg>"
+        ]
+
+        for source in unsupported {
+            #expect(XomoEditableSVGImporter.parse(Data(source.utf8)) == nil)
         }
     }
 
     @Test func viewportScalingAndFillRulesNeverSilentlyChangeEditableGeometry() throws {
-        let scaled = try #require(XomoEditableSVGPathImporter.parse(Data(
+        let scaled = try #require(XomoEditableSVGImporter.parse(Data(
             """
             <svg width="200" height="100" viewBox="0 0 100 50">
               <path d="M0 0 L20 0" fill="none" stroke="black" stroke-width="2" />
@@ -76,7 +118,7 @@ struct ImageEditorSVGImportTests {
         ])
         #expect(scaled.content.strokeWidth == 4)
 
-        let simpleNonzero = XomoEditableSVGPathImporter.parse(Data(
+        let simpleNonzero = XomoEditableSVGImporter.parse(Data(
             "<svg><path d='M0 0 L20 0 L10 10 Z'/></svg>".utf8
         ))
         #expect(simpleNonzero != nil)
@@ -87,7 +129,7 @@ struct ImageEditorSVGImportTests {
             "<svg><path d='M0 0 L20 20 L0 20 L20 0 Z'/></svg>"
         ]
         for source in incompatible {
-            #expect(XomoEditableSVGPathImporter.parse(Data(source.utf8)) == nil)
+            #expect(XomoEditableSVGImporter.parse(Data(source.utf8)) == nil)
         }
     }
 
@@ -106,7 +148,7 @@ struct ImageEditorSVGImportTests {
             """.utf8
         )
 
-        #expect(viewModel.importEditableSVGPathLayer(data, sourceName: "Connector.svg"))
+        #expect(viewModel.importEditableSVGLayer(data, sourceName: "Connector.svg"))
         #expect(viewModel.document.layers.count == originalLayerCount + 1)
         #expect(viewModel.document.history.count == originalHistoryCount + 1)
         let layer = try #require(viewModel.document.layers.last)
@@ -120,7 +162,7 @@ struct ImageEditorSVGImportTests {
         #expect(!content.isPathClosed)
         #expect(content.fillOpacity == 0)
         #expect(viewModel.document.selectedLayerID == layer.id)
-        #expect(viewModel.statusText == L10n.format("imageEditor.status.editableSVGPathImported", "Connector"))
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.editableSVGImported", "Connector"))
 
         viewModel.undo()
         #expect(viewModel.document.layers.count == originalLayerCount)
@@ -137,7 +179,7 @@ struct ImageEditorSVGImportTests {
         let originalSelectedLayerID = viewModel.document.selectedLayerID
         let originalSelectedLayerIDs = viewModel.document.selectedLayerIDs
 
-        #expect(!viewModel.importEditableSVGPathLayer(
+        #expect(!viewModel.importEditableSVGLayer(
             Data("<svg><circle cx='5' cy='5' r='4'/></svg>".utf8),
             sourceName: "unsupported.svg"
         ))
@@ -145,7 +187,7 @@ struct ImageEditorSVGImportTests {
         #expect(viewModel.document.history == originalHistory)
         #expect(viewModel.document.selectedLayerID == originalSelectedLayerID)
         #expect(viewModel.document.selectedLayerIDs == originalSelectedLayerIDs)
-        #expect(viewModel.statusText == L10n.text("imageEditor.status.editableSVGPathImportFailed"))
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.editableSVGImportFailed"))
     }
 
     @Test func exportedSinglePathCanReturnAsEditableSVGShape() throws {
@@ -189,7 +231,7 @@ struct ImageEditorSVGImportTests {
         let data = try #require(
             viewModel.exportData(settings: ImageEditorExportSettings(format: .svg))
         )
-        let imported = try #require(XomoEditableSVGPathImporter.parse(data))
+        let imported = try #require(XomoEditableSVGImporter.parse(data))
         let restored = imported.content
         let fill = try #require(restored.fillColor.usingColorSpace(.deviceRGB))
 
@@ -203,7 +245,41 @@ struct ImageEditorSVGImportTests {
         #expect(abs(fill.blueComponent - 0.8) < 0.01)
     }
 
-    @Test func fileImportPanelRoutesSVGToEditablePathImporter() throws {
+    @Test func exportedPlainRectangleCanReturnAsNativeRectangle() throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "svg-rectangle-roundtrip",
+            image: NSImage.transparent(size: CGSize(width: 180, height: 120))
+        ) { _ in }
+        var layer = ImageEditorLayer.shape(
+            name: "Card",
+            frame: CGRect(x: 30, y: 20, width: 100, height: 60),
+            content: ImageEditorShapeContent(
+                kind: .rectangle,
+                fillColor: NSColor(deviceRed: 0.2, green: 0.4, blue: 0.8, alpha: 1),
+                fillOpacity: 0.7,
+                strokeColor: .white,
+                strokeWidth: 2,
+                strokeOpacity: 0.6,
+                strokePosition: .center
+            )
+        )
+        layer.opacity = 0.5
+        viewModel.document.layers.append(layer)
+
+        let data = try #require(
+            viewModel.exportData(settings: ImageEditorExportSettings(format: .svg))
+        )
+        let imported = try #require(XomoEditableSVGImporter.parse(data))
+
+        #expect(imported.content.kind == .rectangle)
+        #expect(imported.size == CGSize(width: 100, height: 60))
+        #expect(imported.content.cornerRadius == 0)
+        #expect(imported.content.strokeWidth == 2)
+        #expect(abs(imported.content.fillOpacity - 0.35) < 0.001)
+        #expect(abs(imported.content.strokeOpacity - 0.3) < 0.001)
+    }
+
+    @Test func fileImportPanelRoutesSVGToEditableShapeImporter() throws {
         let root = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()
             .deletingLastPathComponent()
@@ -213,13 +289,13 @@ struct ImageEditorSVGImportTests {
         )
         let chooserStart = try #require(source.range(of: "func chooseImageLayerFile()"))
         let chooserEnd = try #require(
-            source[chooserStart.upperBound...].range(of: "func importEditableSVGPathLayer")
+            source[chooserStart.upperBound...].range(of: "func importEditableSVGLayer")
         )
         let chooser = source[chooserStart.lowerBound..<chooserEnd.lowerBound]
 
         #expect(chooser.contains("UTType(filenameExtension: \"svg\")"))
         #expect(chooser.contains("url.pathExtension.lowercased() == \"svg\""))
-        #expect(chooser.contains("importEditableSVGPathLayer(data, sourceName: url.lastPathComponent)"))
+        #expect(chooser.contains("importEditableSVGLayer(data, sourceName: url.lastPathComponent)"))
         let svgRoute = try #require(chooser.range(of: "url.pathExtension.lowercased() == \"svg\""))
         let bitmapRoute = try #require(chooser.range(of: "NSImage(contentsOf: url)"))
         #expect(svgRoute.lowerBound < bitmapRoute.lowerBound)
