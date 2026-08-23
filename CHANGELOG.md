@@ -1,5 +1,19 @@
 # Changelog
 
+## 2.12.0-rc1210 - 2026-08-24
+
+### Added
+
+- 可编辑 SVG 导入支持标准 `currentColor`：path、rect、circle/ellipse、line、polyline 与 polygon 的 fill/stroke 可继承自身或祖先 `color`，适配设计系统图标、组件颜色和网页资产的常见表达。
+
+### Changed
+
+- `color="currentColor"` 与 `color="inherit"` 会继续沿祖先查找，未声明颜色按 SVG 初始黑色处理；被实际引用的非法颜色仍在写入文档前原子拒绝，未被 fill/stroke 使用的无关 color 不再妨碍安全导入。颜色自身 Alpha 与 fill/stroke opacity、组 opacity 继续按既有顺序相乘。
+
+### Verification
+
+- 最终产品测试构建通过且未新增编译警告；SVG 可编辑导入专项 24/24、CLI/MCP 2/2、发布契约 7/7（21 项断言）、隔离测试运行器契约及差异检查通过；下一次周期完整门禁仍为 rc1240。
+
 ## 2.12.0-rc1209 - 2026-08-24
 
 ### Fixed

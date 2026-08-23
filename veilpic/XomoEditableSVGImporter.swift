@@ -102,8 +102,14 @@ enum XomoEditableSVGImporter {
         guard let overallOpacity = multipliedOpacity("opacity", in: lineage),
               let fillOpacity = inheritedOpacity("fill-opacity", in: lineage),
               let strokeOpacity = inheritedOpacity("stroke-opacity", in: lineage),
-              let fillPaint = paint(inheritedAttribute("fill", in: lineage) ?? "black"),
-              let strokePaint = paint(inheritedAttribute("stroke", in: lineage) ?? "none"),
+              let fillPaint = presentationPaint(
+                  inheritedAttribute("fill", in: lineage) ?? "black",
+                  lineage: lineage
+              ),
+              let strokePaint = presentationPaint(
+                  inheritedAttribute("stroke", in: lineage) ?? "none",
+                  lineage: lineage
+              ),
               let rawStrokeWidth = svgLength(inheritedAttribute("stroke-width", in: lineage) ?? "1"),
               let miterLimit = svgNumber(inheritedAttribute("stroke-miterlimit", in: lineage) ?? "4"),
               let strokeCap = strokeCap(inheritedAttribute("stroke-linecap", in: lineage) ?? "butt"),
@@ -138,6 +144,24 @@ enum XomoEditableSVGImporter {
             strokeDashPattern: dashPattern,
             strokeDashOffset: dashOffset
         )
+    }
+
+    private static func presentationPaint(
+        _ source: String,
+        lineage: [XMLElement]
+    ) -> SVGPaint? {
+        let normalized = source.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        guard normalized == "currentcolor" else { return paint(source) }
+        for element in lineage.reversed() {
+            guard let colorSource = element.attribute(forName: "color")?.stringValue else { continue }
+            let normalizedColor = colorSource
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+                .lowercased()
+            if normalizedColor == "currentcolor" || normalizedColor == "inherit" { continue }
+            if normalizedColor == "none" { return nil }
+            return paint(colorSource)
+        }
+        return paint("black")
     }
 
     private static func pathImport(

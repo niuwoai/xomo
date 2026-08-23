@@ -63,6 +63,48 @@ struct ImageEditorSVGImportTests {
         }
     }
 
+    @Test func currentColorPaintInheritsThroughGroupsWithIndependentOpacity() throws {
+        let imported = try #require(XomoEditableSVGImporter.parse(Data(
+            """
+            <svg color="#33669980">
+              <g color="currentColor" opacity="0.5">
+                <path d="M 0 0 L 20 0 L 10 20 Z"
+                      fill="currentColor" fill-opacity="0.5"
+                      stroke="currentColor" stroke-opacity="0.25" stroke-width="2" />
+              </g>
+            </svg>
+            """.utf8
+        )))
+        let fill = try #require(imported.content.fillColor.usingColorSpace(.deviceRGB))
+        let stroke = try #require(imported.content.strokeColor.usingColorSpace(.deviceRGB))
+
+        #expect(abs(fill.redComponent - 0.2) < 0.001)
+        #expect(abs(fill.greenComponent - 0.4) < 0.001)
+        #expect(abs(fill.blueComponent - 0.6) < 0.001)
+        #expect(abs(stroke.redComponent - 0.2) < 0.001)
+        #expect(abs(stroke.greenComponent - 0.4) < 0.001)
+        #expect(abs(stroke.blueComponent - 0.6) < 0.001)
+        #expect(abs(imported.content.fillOpacity - (128.0 / 255.0 * 0.5 * 0.5)) < 0.001)
+        #expect(abs(imported.content.strokeOpacity - (128.0 / 255.0 * 0.25 * 0.5)) < 0.001)
+    }
+
+    @Test func currentColorUsesSVGBlackDefaultAndRejectsOnlyInvalidReferencedPaint() throws {
+        let defaultPaint = try #require(XomoEditableSVGImporter.parse(Data(
+            "<svg><path d='M0 0 L20 0 L10 20 Z' fill='currentColor'/></svg>".utf8
+        )))
+        let black = try #require(defaultPaint.content.fillColor.usingColorSpace(.deviceRGB))
+        #expect(black.redComponent == 0)
+        #expect(black.greenComponent == 0)
+        #expect(black.blueComponent == 0)
+
+        #expect(XomoEditableSVGImporter.parse(Data(
+            "<svg color='not-a-color'><path d='M0 0 L20 0 L10 20 Z' fill='currentColor'/></svg>".utf8
+        )) == nil)
+        #expect(XomoEditableSVGImporter.parse(Data(
+            "<svg color='not-a-color'><path d='M0 0 L20 0 L10 20 Z' fill='red'/></svg>".utf8
+        )) != nil)
+    }
+
     @Test func singleRoundedRectangleImportsAsNativeEditableRectangle() throws {
         let data = Data(
             """
