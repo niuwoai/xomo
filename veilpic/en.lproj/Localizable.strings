@@ -3459,6 +3459,7 @@
 "imageEditor.option.cloneSourceScaleWidth" = "W";
 "imageEditor.option.cloneSourceScaleHeight" = "H";
 "imageEditor.option.cloneSourceScaleLink" = "Link W/H";
+"imageEditor.option.cloneSourceRotation" = "Angle";
 "imageEditor.option.cloneSourceFlipHorizontal" = "Flip H";
 "imageEditor.option.cloneSourceFlipVertical" = "Flip V";
 "imageEditor.option.healingMode" = "Healing Mode";

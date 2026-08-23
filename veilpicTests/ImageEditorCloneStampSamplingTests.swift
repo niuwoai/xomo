@@ -340,6 +340,56 @@ struct ImageEditorCloneStampSamplingTests {
         #expect(colorsMatch(transformed, expected))
     }
 
+    @Test func sourceRotationTurnsRealClonePixelsClockwiseAroundTheStrokeOrigin() throws {
+        let viewModel = quadrantSourceViewModel()
+        viewModel.isCloneStampAligned = false
+        viewModel.brushSize = 30
+        viewModel.hardness = 1
+        viewModel.opacity = 1
+        viewModel.setCloneSource(at: CGPoint(x: 20, y: 20))
+        viewModel.setCloneSourceRotationDegrees(90)
+        let expected = try color(
+            viewModel.document.selectedLayer?.image,
+            at: CGPoint(x: 16, y: 14)
+        )
+
+        viewModel.cloneStamp(points: [CGPoint(x: 60, y: 20)])
+
+        let rotatedPixel = try color(
+            viewModel.document.selectedLayer?.image,
+            at: CGPoint(x: 66, y: 16)
+        )
+        #expect(colorsMatch(rotatedPixel, expected))
+    }
+
+    @Test func rotationComposesWithAnisotropicScaleAndFlipInOneTransform() throws {
+        let viewModel = quadrantSourceViewModel()
+        viewModel.isCloneStampAligned = false
+        viewModel.brushSize = 30
+        viewModel.hardness = 1
+        viewModel.opacity = 1
+        viewModel.setCloneSource(at: CGPoint(x: 20, y: 20))
+        viewModel.configureCloneSourceScale(
+            horizontalPercent: 200,
+            verticalPercent: 50,
+            linked: false
+        )
+        viewModel.setCloneSourceFlipsHorizontally(true)
+        viewModel.setCloneSourceRotationDegrees(90)
+        let expected = try color(
+            viewModel.document.selectedLayer?.image,
+            at: CGPoint(x: 16, y: 14)
+        )
+
+        viewModel.cloneStamp(points: [CGPoint(x: 60, y: 20)])
+
+        let transformedPixel = try color(
+            viewModel.document.selectedLayer?.image,
+            at: CGPoint(x: 63, y: 28)
+        )
+        #expect(colorsMatch(transformedPixel, expected))
+    }
+
     @Test func bothSourceFlipsComposeWithUniformScaleAcrossBothAxes() throws {
         let viewModel = quadrantSourceViewModel()
         viewModel.isCloneStampAligned = false
@@ -447,6 +497,28 @@ struct ImageEditorCloneStampSamplingTests {
         viewModel.setCloneSourceScalePercent(10)
         #expect(viewModel.cloneSourceHorizontalScalePercent == 25)
         #expect(viewModel.cloneSourceVerticalScalePercent == 25)
+    }
+
+    @Test func sourceRotationIsClampedRememberedPerSlotAndSurvivesResampling() {
+        let viewModel = patternedCurrentLayerViewModel()
+        viewModel.setCloneSourceRotationDegrees(270)
+        #expect(viewModel.cloneSourceRotationDegrees == 180)
+        viewModel.setCloneSource(at: CGPoint(x: 10, y: 15))
+
+        #expect(viewModel.selectCloneSourceSlot(1))
+        #expect(viewModel.cloneSourceRotationDegrees == 0)
+        viewModel.setCloneSourceRotationDegrees(-270)
+        #expect(viewModel.cloneSourceRotationDegrees == -180)
+        viewModel.setCloneSourceRotationDegrees(37)
+        viewModel.setCloneSource(at: CGPoint(x: 30, y: 15))
+
+        #expect(viewModel.selectCloneSourceSlot(0))
+        #expect(viewModel.cloneSourceRotationDegrees == 180)
+        viewModel.setCloneSource(at: CGPoint(x: 12, y: 15))
+        #expect(viewModel.cloneSourceRotationDegrees == 180)
+
+        #expect(viewModel.selectCloneSourceSlot(1))
+        #expect(viewModel.cloneSourceRotationDegrees == 37)
     }
 
     @Test func samplingRangeDistinguishesCurrentBelowAndAllVisibleLayers() throws {

@@ -256,6 +256,9 @@ final class ImageEditorViewModel: ObservableObject {
     var cloneSourceScalesLinked: Bool {
         cloneSourceSlots[activeCloneSourceSlotIndex].scalesLinked
     }
+    var cloneSourceRotationDegrees: CGFloat {
+        cloneSourceSlots[activeCloneSourceSlotIndex].rotationDegrees
+    }
     @Published var isCloneStampAligned = true {
         didSet {
             guard isCloneStampAligned != oldValue else { return }
@@ -7184,6 +7187,10 @@ final class ImageEditorViewModel: ObservableObject {
         )
     }
 
+    func setCloneSourceRotationDegrees(_ degrees: CGFloat) {
+        cloneSourceSlots[activeCloneSourceSlotIndex].setRotationDegrees(degrees)
+    }
+
     private func resetCloneSourceAlignedOffsets() {
         for index in cloneSourceSlots.indices {
             cloneSourceSlots[index].alignedCanvasOffset = nil
@@ -7266,6 +7273,7 @@ final class ImageEditorViewModel: ObservableObject {
             flipSourceVertically: cloneSourceFlipsVertically,
             horizontalSourceScale: cloneSourceHorizontalScalePercent / 100,
             verticalSourceScale: cloneSourceVerticalScalePercent / 100,
+            sourceRotationDegrees: cloneSourceRotationDegrees,
             width: rasterLocalBrushWidth(brushSize, layer: layer),
             opacity: opacity,
             hardness: hardness,
@@ -11096,6 +11104,7 @@ extension NSImage {
         flipSourceVertically: Bool = false,
         horizontalSourceScale: CGFloat = 1,
         verticalSourceScale: CGFloat = 1,
+        sourceRotationDegrees: CGFloat = 0,
         width: CGFloat,
         opacity: CGFloat,
         hardness: CGFloat
@@ -11108,6 +11117,7 @@ extension NSImage {
             flipSourceVertically: flipSourceVertically,
             horizontalSourceScale: horizontalSourceScale,
             verticalSourceScale: verticalSourceScale,
+            sourceRotationDegrees: sourceRotationDegrees,
             width: width,
             opacity: opacity,
             hardness: hardness,
@@ -11124,6 +11134,7 @@ extension NSImage {
         flipSourceVertically: Bool = false,
         horizontalSourceScale: CGFloat = 1,
         verticalSourceScale: CGFloat = 1,
+        sourceRotationDegrees: CGFloat = 0,
         width: CGFloat,
         opacity: CGFloat,
         hardness: CGFloat,
@@ -11142,6 +11153,10 @@ extension NSImage {
         guard let shiftedSource = NSImage.rendered(size: size, actions: { _ in
             guard let context = NSGraphicsContext.current?.cgContext else { return }
             context.translateBy(x: destinationReference.x, y: destinationReference.y)
+            let boundedRotationDegrees = sourceRotationDegrees.isFinite
+                ? sourceRotationDegrees
+                : 0
+            context.rotate(by: -boundedRotationDegrees * .pi / 180)
             context.scaleBy(
                 x: (flipSourceHorizontally ? -1 : 1) * boundedHorizontalScale,
                 y: (flipSourceVertically ? -1 : 1) * boundedVerticalScale

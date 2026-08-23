@@ -24,6 +24,8 @@ struct ImageEditorCloneSourceSlotState: Equatable {
     static let maximumCount = 5
     static let minimumScalePercent: CGFloat = 25
     static let maximumScalePercent: CGFloat = 400
+    static let minimumRotationDegrees: CGFloat = -180
+    static let maximumRotationDegrees: CGFloat = 180
 
     var sourcePoint: CGPoint?
     var alignedCanvasOffset: CGSize?
@@ -32,6 +34,7 @@ struct ImageEditorCloneSourceSlotState: Equatable {
     var horizontalScalePercent: CGFloat = 100
     var verticalScalePercent: CGFloat = 100
     var scalesLinked = true
+    var rotationDegrees: CGFloat = 0
 
     mutating func setUniformScalePercent(_ percent: CGFloat) {
         let bounded = Self.boundedScalePercent(percent)
@@ -79,6 +82,17 @@ struct ImageEditorCloneSourceSlotState: Equatable {
         } else if let verticalPercent {
             setVerticalScalePercent(verticalPercent)
         }
+    }
+
+    mutating func setRotationDegrees(_ degrees: CGFloat) {
+        guard degrees.isFinite else {
+            rotationDegrees = 0
+            return
+        }
+        rotationDegrees = min(
+            Self.maximumRotationDegrees,
+            max(Self.minimumRotationDegrees, degrees)
+        )
     }
 
     private static func boundedScalePercent(_ percent: CGFloat) -> CGFloat {
@@ -136,6 +150,7 @@ struct ImageEditorSampledBrushOverlayGeometry: Equatable {
     var destinationPoint: CGPoint?
     var diameter: CGFloat
     var sourceHeight: CGFloat? = nil
+    var sourceRotationDegrees: CGFloat = 0
     var destinationDiameter: CGFloat? = nil
 
     var connector: Connector? {
@@ -180,6 +195,7 @@ struct ImageEditorSampledBrushOverlayGeometry: Equatable {
         brushDiameter: CGFloat,
         horizontalSourceScale: CGFloat = 1,
         verticalSourceScale: CGFloat = 1,
+        sourceRotationDegrees: CGFloat = 0,
         pressure: CGFloat?,
         pressureControlsSize: Bool,
         pressureSensitivity: CGFloat
@@ -198,6 +214,9 @@ struct ImageEditorSampledBrushOverlayGeometry: Equatable {
             : 1
         let sourceWidth = destinationDiameter / boundedHorizontalScale
         let sourceHeight = destinationDiameter / boundedVerticalScale
+        let boundedRotationDegrees = sourceRotationDegrees.isFinite
+            ? sourceRotationDegrees
+            : 0
 
         guard !isPickingSource,
               let liveSourcePoint,
@@ -207,6 +226,7 @@ struct ImageEditorSampledBrushOverlayGeometry: Equatable {
                 destinationPoint: nil,
                 diameter: sourceWidth,
                 sourceHeight: sourceHeight,
+                sourceRotationDegrees: boundedRotationDegrees,
                 destinationDiameter: destinationDiameter
             )
         }
@@ -216,6 +236,7 @@ struct ImageEditorSampledBrushOverlayGeometry: Equatable {
             destinationPoint: currentDestination,
             diameter: sourceWidth,
             sourceHeight: sourceHeight,
+            sourceRotationDegrees: boundedRotationDegrees,
             destinationDiameter: destinationDiameter
         )
     }

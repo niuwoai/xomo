@@ -3459,6 +3459,7 @@
 "imageEditor.option.cloneSourceScaleWidth" = "幅";
 "imageEditor.option.cloneSourceScaleHeight" = "高さ";
 "imageEditor.option.cloneSourceScaleLink" = "縦横比をリンク";
+"imageEditor.option.cloneSourceRotation" = "角度";
 "imageEditor.option.cloneSourceFlipHorizontal" = "左右反転";
 "imageEditor.option.cloneSourceFlipVertical" = "上下反転";
 "imageEditor.option.healingMode" = "修復モード";

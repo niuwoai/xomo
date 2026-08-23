@@ -170,7 +170,7 @@ struct ImageEditorSampledBrushPreviewTests {
         #expect(nearby.connector == nil)
     }
 
-    @Test func independentCloneScalesCreateAnEllipticalSourceFootprint() {
+    @Test func independentCloneScalesAndRotationDescribeTheSourceFootprint() {
         let geometry = ImageEditorSampledBrushOverlayGeometry.resolve(
             sourcePoint: CGPoint(x: 10, y: 20),
             liveSourcePoint: CGPoint(x: 20, y: 30),
@@ -179,6 +179,7 @@ struct ImageEditorSampledBrushPreviewTests {
             brushDiameter: 20,
             horizontalSourceScale: 2,
             verticalSourceScale: 1,
+            sourceRotationDegrees: 37,
             pressure: nil,
             pressureControlsSize: false,
             pressureSensitivity: 0.5
@@ -186,6 +187,7 @@ struct ImageEditorSampledBrushPreviewTests {
 
         #expect(geometry.diameter == 10)
         #expect(geometry.sourceHeight == 20)
+        #expect(geometry.sourceRotationDegrees == 37)
         #expect(geometry.destinationDiameter == 20)
         #expect(geometry.connector?.start == CGPoint(x: 25, y: 30))
         #expect(geometry.connector?.end == CGPoint(x: 70, y: 30))
@@ -217,10 +219,13 @@ struct ImageEditorSampledBrushPreviewTests {
         #expect(propertySource.contains("viewModel.healingBrushMode == .source"))
         #expect(propertySource.contains("viewModel.cloneSourceHorizontalScalePercent"))
         #expect(propertySource.contains("viewModel.cloneSourceVerticalScalePercent"))
+        #expect(propertySource.contains("viewModel.cloneSourceRotationDegrees"))
         #expect(overlaySource.contains("geometry.connector"))
         #expect(overlaySource.contains("StrokeStyle(lineWidth: 1, dash: [5, 4])"))
         #expect(overlaySource.contains("geometry.diameter * viewScale"))
         #expect(overlaySource.contains("geometry.sourceHeight"))
+        #expect(overlaySource.contains("geometry.sourceRotationDegrees"))
+        #expect(overlaySource.contains(".rotationEffect("))
         #expect(overlaySource.contains("Ellipse()"))
     }
 

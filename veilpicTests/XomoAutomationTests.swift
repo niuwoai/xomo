@@ -147,6 +147,13 @@ struct XomoAutomationTests {
                 .objectValue?["scaleLinked"]?.objectValue?["type"]
                 == .string("boolean")
         )
+        let cloneRotationSchema = try #require(
+            specialPaintTool["inputSchema"]?.objectValue?["properties"]?
+                .objectValue?["rotationDegrees"]?.objectValue
+        )
+        #expect(cloneRotationSchema["type"] == .string("number"))
+        #expect(cloneRotationSchema["minimum"] == .number(-180))
+        #expect(cloneRotationSchema["maximum"] == .number(180))
         #expect(
             specialPaintTool["inputSchema"]?.objectValue?["properties"]?
                 .objectValue?["flipHorizontal"]?.objectValue?["type"]
@@ -8988,6 +8995,7 @@ struct XomoAutomationTests {
                 "scaleXPercent": .number(200),
                 "scaleYPercent": .number(50),
                 "scaleLinked": .bool(false),
+                "rotationDegrees": .number(37),
                 "flipHorizontal": .bool(true),
                 "flipVertical": .bool(true),
                 "aligned": .bool(false),
@@ -9002,6 +9010,7 @@ struct XomoAutomationTests {
         #expect(viewModel.cloneSourceHorizontalScalePercent == 200)
         #expect(viewModel.cloneSourceVerticalScalePercent == 50)
         #expect(!viewModel.cloneSourceScalesLinked)
+        #expect(viewModel.cloneSourceRotationDegrees == 37)
         #expect(viewModel.cloneSourceFlipsHorizontally)
         #expect(viewModel.cloneSourceFlipsVertically)
         #expect(!viewModel.isCloneStampAligned)
@@ -9024,6 +9033,7 @@ struct XomoAutomationTests {
         #expect(viewModel.cloneSourceHorizontalScalePercent == 150)
         #expect(viewModel.cloneSourceVerticalScalePercent == 150)
         #expect(viewModel.cloneSourceScalesLinked)
+        #expect(viewModel.cloneSourceRotationDegrees == 0)
         #expect(!viewModel.cloneSourceFlipsHorizontally)
         #expect(!viewModel.cloneSourceFlipsVertically)
         #expect(viewModel.selectCloneSourceSlot(2))
@@ -9031,6 +9041,7 @@ struct XomoAutomationTests {
         #expect(viewModel.cloneSourceHorizontalScalePercent == 200)
         #expect(viewModel.cloneSourceVerticalScalePercent == 50)
         #expect(!viewModel.cloneSourceScalesLinked)
+        #expect(viewModel.cloneSourceRotationDegrees == 37)
         #expect(viewModel.cloneSourceFlipsHorizontally)
         #expect(viewModel.cloneSourceFlipsVertically)
     }
@@ -9123,6 +9134,37 @@ struct XomoAutomationTests {
         #expect(viewModel.cloneSourceVerticalScalePercent == 100)
         #expect(viewModel.cloneSourceScalesLinked)
         #expect(viewModel.document.history.count == historyCount)
+    }
+
+    @Test func registryRejectsInvalidCloneSourceRotationAtomically() {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        let historyCount = viewModel.document.history.count
+
+        for rotationDegrees in [-181.0, 181.0] {
+            let response = registry.execute(request(
+                operation: "call",
+                name: "xomo.paint.special",
+                arguments: [
+                    "action": .string("setCloneSource"),
+                    "sourceSlot": .number(3),
+                    "rotationDegrees": .number(rotationDegrees),
+                    "flipHorizontal": .bool(true),
+                    "x": .number(12),
+                    "y": .number(18),
+                    "aligned": .bool(false)
+                ]
+            ))
+
+            #expect(!response.ok)
+            #expect(viewModel.activeCloneSourceSlotIndex == 0)
+            #expect(viewModel.cloneSourcePoint == nil)
+            #expect(viewModel.cloneSourceRotationDegrees == 0)
+            #expect(!viewModel.cloneSourceFlipsHorizontally)
+            #expect(viewModel.isCloneStampAligned)
+            #expect(viewModel.document.history.count == historyCount)
+        }
     }
 
     @Test func registryConfiguresHealingBrushSourceAndSamplingOptions() {

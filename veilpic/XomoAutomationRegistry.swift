@@ -5667,6 +5667,20 @@ final class XomoAutomationRegistry {
             let resolvedUniformScale = try validatedCloneScale("scalePercent")
             let resolvedHorizontalScale = try validatedCloneScale("scaleXPercent")
             let resolvedVerticalScale = try validatedCloneScale("scaleYPercent")
+            let resolvedRotationDegrees: CGFloat?
+            if let rawDegrees = arguments["rotationDegrees"]?.doubleValue {
+                guard rawDegrees.isFinite,
+                      (Double(ImageEditorCloneSourceSlotState.minimumRotationDegrees)...Double(ImageEditorCloneSourceSlotState.maximumRotationDegrees))
+                        .contains(rawDegrees)
+                else {
+                    throw XomoAutomationCallError.invalidArgument(
+                        "Clone rotationDegrees must be from \(Int(ImageEditorCloneSourceSlotState.minimumRotationDegrees)) through \(Int(ImageEditorCloneSourceSlotState.maximumRotationDegrees))"
+                    )
+                }
+                resolvedRotationDegrees = CGFloat(rawDegrees)
+            } else {
+                resolvedRotationDegrees = nil
+            }
             guard resolvedUniformScale == nil
                     || (resolvedHorizontalScale == nil && resolvedVerticalScale == nil)
             else {
@@ -5694,6 +5708,9 @@ final class XomoAutomationRegistry {
             }
             if let flipVertical = arguments["flipVertical"]?.boolValue {
                 viewModel.setCloneSourceFlipsVertically(flipVertical)
+            }
+            if let resolvedRotationDegrees {
+                viewModel.setCloneSourceRotationDegrees(resolvedRotationDegrees)
             }
             if let aligned = arguments["aligned"]?.boolValue {
                 viewModel.isCloneStampAligned = aligned
@@ -7284,6 +7301,7 @@ private extension XomoAutomationRegistry {
             "scaleXPercent": XomoAutomationSchema.number(description: "Horizontal scale for the active clone source from 25 through 400 percent", minimum: 25, maximum: 400),
             "scaleYPercent": XomoAutomationSchema.number(description: "Vertical scale for the active clone source from 25 through 400 percent", minimum: 25, maximum: 400),
             "scaleLinked": XomoAutomationSchema.boolean(description: "Link clone source width and height changes proportionally"),
+            "rotationDegrees": XomoAutomationSchema.number(description: "Clockwise clone source rotation from -180 through 180 degrees", minimum: -180, maximum: 180),
             "flipHorizontal": XomoAutomationSchema.boolean(description: "Mirror the active clone source horizontally around its sampling origin"),
             "flipVertical": XomoAutomationSchema.boolean(description: "Mirror the active clone source vertically around its sampling origin"),
             "sampleSource": XomoAutomationSchema.string(description: "Clone or healing sampling layer range", values: ["currentLayer", "currentAndBelow", "allVisible"]),

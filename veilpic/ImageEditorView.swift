@@ -1299,6 +1299,18 @@ struct ImageEditorView: View {
                 )
                 .accessibilityIdentifier("image-editor-clone-source-scale-height")
 
+                optionSlider(
+                    titleKey: "imageEditor.option.cloneSourceRotation",
+                    value: Binding(
+                        get: { viewModel.cloneSourceRotationDegrees },
+                        set: { viewModel.setCloneSourceRotationDegrees($0) }
+                    ),
+                    range: ImageEditorCloneSourceSlotState.minimumRotationDegrees...ImageEditorCloneSourceSlotState.maximumRotationDegrees,
+                    step: 1,
+                    suffix: "°"
+                )
+                .accessibilityIdentifier("image-editor-clone-source-rotation")
+
                 Toggle(
                     L10n.text("imageEditor.option.cloneSourceFlipHorizontal"),
                     isOn: Binding(
@@ -4811,6 +4823,12 @@ struct ImageEditorView: View {
                     .position(sourcePoint)
                 Rectangle()
                     .fill(Color.white.opacity(0.92))
+                    .frame(width: 1, height: max(5, min(sourceHeight / 2, 12)))
+                    .offset(y: -max(3, min(sourceHeight / 4, 6)))
+                    .rotationEffect(.degrees(Double(geometry.sourceRotationDegrees)))
+                    .position(sourcePoint)
+                Rectangle()
+                    .fill(Color.white.opacity(0.92))
                     .frame(width: 11, height: 1)
                     .position(sourcePoint)
                 Rectangle()
@@ -4980,6 +4998,9 @@ struct ImageEditorView: View {
             verticalSourceScale: canvasInteractionTool == .cloneStamp
                 ? viewModel.cloneSourceVerticalScalePercent / 100
                 : 1,
+            sourceRotationDegrees: canvasInteractionTool == .cloneStamp
+                ? viewModel.cloneSourceRotationDegrees
+                : 0,
             pressure: brushStrokeSamples.last?.pressure,
             pressureControlsSize: viewModel.retouchPressureControlsSize,
             pressureSensitivity: viewModel.retouchPressureSensitivity / 100

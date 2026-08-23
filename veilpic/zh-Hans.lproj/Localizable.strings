@@ -3459,6 +3459,7 @@
 "imageEditor.option.cloneSourceScaleWidth" = "宽";
 "imageEditor.option.cloneSourceScaleHeight" = "高";
 "imageEditor.option.cloneSourceScaleLink" = "链接宽高";
+"imageEditor.option.cloneSourceRotation" = "角度";
 "imageEditor.option.cloneSourceFlipHorizontal" = "水平翻转";
 "imageEditor.option.cloneSourceFlipVertical" = "垂直翻转";
 "imageEditor.option.healingMode" = "修复模式";
