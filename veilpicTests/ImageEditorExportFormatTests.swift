@@ -1170,6 +1170,67 @@ struct ImageEditorExportFormatTests {
         #expect(!source.contains("<image"))
     }
 
+    @Test func editableSVGPreservesLayerNamesIdentityAndStackOrder() throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "named-svg-layers",
+            image: NSImage.transparent(size: CGSize(width: 320, height: 180))
+        ) { _ in }
+        let shapeName = "Card \"A\" & <hero>"
+        let textName = "Title & \"Lead\""
+        let shapeLayer = ImageEditorLayer.shape(
+            name: shapeName,
+            frame: CGRect(x: 20, y: 24, width: 140, height: 72),
+            content: ImageEditorShapeContent(
+                kind: .rectangle,
+                fillColor: .systemBlue,
+                fillOpacity: 1,
+                strokeColor: .white,
+                strokeWidth: 2,
+                strokeOpacity: 1
+            )
+        )
+        let textLayer = ImageEditorLayer.text(
+            name: textName,
+            origin: CGPoint(x: 42, y: 48),
+            content: ImageEditorTextContent(
+                text: "Named layer",
+                color: .white,
+                fontSize: 18,
+                point: .zero
+            )
+        )
+        viewModel.document.layers.append(contentsOf: [shapeLayer, textLayer])
+
+        let data = try #require(
+            viewModel.exportData(settings: ImageEditorExportSettings(format: .svg))
+        )
+        let source = try #require(String(data: data, encoding: .utf8))
+        let xml = try XMLDocument(data: data, options: [])
+        let groups = try xml.nodes(
+            forXPath: "/*[local-name()='svg']/*[local-name()='g' and @data-xomo-layer-id]"
+        ).compactMap { $0 as? XMLElement }
+
+        #expect(groups.count == 2)
+        #expect(groups.map { $0.attribute(forName: "data-xomo-layer-id")?.stringValue } == [
+            shapeLayer.id.uuidString,
+            textLayer.id.uuidString
+        ])
+        #expect(groups.map { $0.attribute(forName: "id")?.stringValue } == [
+            "xomo-layer-\(shapeLayer.id.uuidString)",
+            "xomo-layer-\(textLayer.id.uuidString)"
+        ])
+        #expect(groups.map { $0.attribute(forName: "data-name")?.stringValue } == [
+            shapeName,
+            textName
+        ])
+        #expect(try groups[0].nodes(forXPath: "./*[local-name()='title']").first?.stringValue == shapeName)
+        #expect(try groups[1].nodes(forXPath: "./*[local-name()='title']").first?.stringValue == textName)
+        #expect(try groups[0].nodes(forXPath: "./*[local-name()='rect']").count == 1)
+        #expect(try groups[1].nodes(forXPath: "./*[local-name()='text']").count == 1)
+        #expect(source.contains("data-name=\"Card &quot;A&quot; &amp; &lt;hero&gt;\""))
+        #expect(source.contains("<title>Card \"A\" &amp; &lt;hero&gt;</title>"))
+    }
+
     @Test func editableSVGPreservesRoundedRectangleCornerGeometry() throws {
         let viewModel = ImageEditorViewModel(
             sourceName: "rounded-rectangle-svg",

@@ -822,14 +822,16 @@ extension ImageEditorViewModel {
         var elements: [String] = []
         elements.reserveCapacity(layers.count)
         for layer in layers {
+            let element: String
             switch layer.kind {
             case let .shape(content):
-                elements.append(svgShape(content, layer: layer))
+                element = svgShape(content, layer: layer)
             case let .text(content):
-                elements.append(svgText(content, layer: layer))
+                element = svgText(content, layer: layer)
             default:
                 continue
             }
+            elements.append(svgLayerGroup(element, layer: layer))
         }
         let source = [
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>",
@@ -838,6 +840,13 @@ extension ImageEditorViewModel {
             "</svg>"
         ].joined(separator: "\n")
         return source.data(using: .utf8)
+    }
+
+    private func svgLayerGroup(_ content: String, layer: ImageEditorLayer) -> String {
+        let identifier = layer.id.uuidString
+        let name = svgAttributeEscaped(layer.name)
+        let title = svgEscaped(layer.name)
+        return "<g id=\"xomo-layer-\(identifier)\" data-xomo-layer-id=\"\(identifier)\" data-name=\"\(name)\">\n<title>\(title)</title>\n\(content)\n</g>"
     }
 
     private func svgShape(_ content: ImageEditorShapeContent, layer: ImageEditorLayer) -> String {
