@@ -300,6 +300,70 @@ struct ImageEditorSVGImportTests {
         }
     }
 
+    @Test func simpleStylesheetSelectorsCascadeBySpecificitySourceOrderAndInheritance() throws {
+        let cascaded = try #require(XomoEditableSVGImporter.parse(Data(
+            """
+            <svg>
+              <style type="text/css"><![CDATA[
+                path { fill: orange; stroke: black; stroke-width: 2; }
+                .art, .alternate { fill: rebeccapurple; stroke: tomato; stroke-width: 4; }
+                .art { stroke: steelblue; }
+                #hero { fill: cyan; }
+              ]]></style>
+              <path id="hero" class="art" fill="red" stroke="red"
+                    d="M0 0 L20 0 L10 20 Z" />
+            </svg>
+            """.utf8
+        )))
+        let cascadedFill = try #require(cascaded.content.fillColor.usingColorSpace(.deviceRGB))
+        let cascadedStroke = try #require(cascaded.content.strokeColor.usingColorSpace(.deviceRGB))
+        #expect(abs(cascadedFill.redComponent) < 0.001)
+        #expect(abs(cascadedFill.greenComponent - 1) < 0.001)
+        #expect(abs(cascadedFill.blueComponent - 1) < 0.001)
+        #expect(abs(cascadedStroke.redComponent - (70.0 / 255.0)) < 0.001)
+        #expect(abs(cascadedStroke.greenComponent - (130.0 / 255.0)) < 0.001)
+        #expect(abs(cascadedStroke.blueComponent - (180.0 / 255.0)) < 0.001)
+        #expect(cascaded.content.strokeWidth == 4)
+
+        let inherited = try #require(XomoEditableSVGImporter.parse(Data(
+            """
+            <svg>
+              <style>
+                .theme { color: gold; opacity: 50%; }
+                path { fill: currentColor; }
+              </style>
+              <g class="theme">
+                <path d="M0 0 L20 0 L10 20 Z" />
+              </g>
+            </svg>
+            """.utf8
+        )))
+        let inheritedFill = try #require(inherited.content.fillColor.usingColorSpace(.deviceRGB))
+        #expect(abs(inheritedFill.redComponent - 1) < 0.001)
+        #expect(abs(inheritedFill.greenComponent - (215.0 / 255.0)) < 0.001)
+        #expect(abs(inheritedFill.blueComponent) < 0.001)
+        #expect(abs(inherited.content.fillOpacity - 0.5) < 0.001)
+    }
+
+    @Test func unsupportedStylesheetsAndUnresolvedClassesAreRejectedBeforeImport() {
+        let invalidDocuments = [
+            "<svg><style>path:hover { fill: red; }</style><path d='M0 0 L20 0 L10 20 Z'/></svg>",
+            "<svg><style>.art path { fill: red; }</style><path class='art' d='M0 0 L20 0 L10 20 Z'/></svg>",
+            "<svg><style>@media (dark-mode) { path { fill: red; } }</style><path d='M0 0 L20 0 L10 20 Z'/></svg>",
+            "<svg><style>.art { fill: red !important; }</style><path class='art' d='M0 0 L20 0 L10 20 Z'/></svg>",
+            "<svg><style>.art { mix-blend-mode: multiply; }</style><path class='art' d='M0 0 L20 0 L10 20 Z'/></svg>",
+            "<svg><style>.art { fill: red;</style><path class='art' d='M0 0 L20 0 L10 20 Z'/></svg>",
+            "<svg><path class='external-style' d='M0 0 L20 0 L10 20 Z'/></svg>",
+            "<svg><style>.known { fill: red; }</style><path class='unknown' d='M0 0 L20 0 L10 20 Z'/></svg>",
+            "<svg><style type='text/less'>path { fill: red; }</style><path d='M0 0 L20 0 L10 20 Z'/></svg>",
+            "<svg><link href='theme.css'/><path d='M0 0 L20 0 L10 20 Z'/></svg>",
+            "<?xml-stylesheet href='theme.css'?><svg><path d='M0 0 L20 0 L10 20 Z'/></svg>"
+        ]
+        for source in invalidDocuments {
+            #expect(XomoEditableSVGImporter.parse(Data(source.utf8)) == nil)
+        }
+    }
+
     @Test func explicitInheritResolvesTheWholeInheritedPresentationFamily() throws {
         let imported = try #require(XomoEditableSVGImporter.parse(Data(
             """

@@ -165,6 +165,40 @@ enum XomoEditableSVGImporter {
         "stroke-linejoin", "stroke-miterlimit", "stroke-dasharray",
         "stroke-dashoffset"
     ])
+    private static let supportedStyleElementNames = Set([
+        "svg", "g", "path", "rect", "circle", "ellipse", "line", "polyline", "polygon"
+    ])
+
+    private enum SVGStyleSelector {
+        case element(String)
+        case className(String)
+        case id(String)
+
+        var specificity: Int {
+            switch self {
+            case .element: 1
+            case .className: 10
+            case .id: 100
+            }
+        }
+
+        func matches(_ element: XMLElement) -> Bool {
+            switch self {
+            case let .element(name):
+                return XomoEditableSVGImporter.localName(of: element) == name
+            case let .className(name):
+                return XomoEditableSVGImporter.classNames(on: element).contains(name)
+            case let .id(name):
+                return element.attribute(forName: "id")?.stringValue == name
+            }
+        }
+    }
+
+    private struct SVGStyleRule {
+        var selector: SVGStyleSelector
+        var declarations: [String: String]
+        var sourceOrder: Int
+    }
 
     static func parse(_ data: Data) -> XomoEditableSVGImport? {
         guard !data.isEmpty,
@@ -172,9 +206,11 @@ enum XomoEditableSVGImporter {
               let source = String(data: data, encoding: .utf8),
               !source.localizedCaseInsensitiveContains("<!DOCTYPE"),
               !source.localizedCaseInsensitiveContains("<!ENTITY"),
+              !source.localizedCaseInsensitiveContains("<?xml-stylesheet"),
               let document = try? XMLDocument(data: data, options: []),
               let root = document.rootElement(),
               localName(of: root) == "svg",
+              let cssRules = stylesheetRules(in: root),
               let viewportScale = viewportScale(root),
               let geometryNodes = try? root.nodes(
                 forXPath: ".//*[local-name()='path' or local-name()='rect' or local-name()='circle' or local-name()='ellipse' or local-name()='line' or local-name()='polyline' or local-name()='polygon' or local-name()='text' or local-name()='image' or local-name()='use']"
@@ -186,8 +222,12 @@ enum XomoEditableSVGImporter {
         let lineage = elementLineage(from: root, to: geometry)
         guard !lineage.isEmpty,
               !hasUnsupportedContainer(lineage),
-              !hasUnsupportedPresentation(lineage),
-              let presentation = presentation(in: lineage, viewportScale: viewportScale)
+              !hasUnsupportedPresentation(lineage, cssRules: cssRules),
+              let presentation = presentation(
+                  in: lineage,
+                  viewportScale: viewportScale,
+                  cssRules: cssRules
+              )
         else { return nil }
 
         switch localName(of: geometry) {
@@ -196,7 +236,8 @@ enum XomoEditableSVGImporter {
                 geometry,
                 lineage: lineage,
                 presentation: presentation,
-                viewportScale: viewportScale
+                viewportScale: viewportScale,
+                cssRules: cssRules
             )
         case "rect":
             return rectangleImport(
@@ -227,7 +268,8 @@ enum XomoEditableSVGImporter {
                 geometry,
                 lineage: lineage,
                 presentation: presentation,
-                viewportScale: viewportScale
+                viewportScale: viewportScale,
+                cssRules: cssRules
             )
         default:
             return nil
@@ -253,25 +295,40 @@ enum XomoEditableSVGImporter {
 
     private static func presentation(
         in lineage: [XMLElement],
-        viewportScale: CGFloat
+        viewportScale: CGFloat,
+        cssRules: [SVGStyleRule]
     ) -> SVGPresentation? {
-        guard let overallOpacity = multipliedOpacity("opacity", in: lineage),
-              let fillOpacity = inheritedOpacity("fill-opacity", in: lineage),
-              let strokeOpacity = inheritedOpacity("stroke-opacity", in: lineage),
+        guard let overallOpacity = multipliedOpacity("opacity", in: lineage, cssRules: cssRules),
+              let fillOpacity = inheritedOpacity("fill-opacity", in: lineage, cssRules: cssRules),
+              let strokeOpacity = inheritedOpacity("stroke-opacity", in: lineage, cssRules: cssRules),
               let fillPaint = presentationPaint(
-                  inheritedAttribute("fill", in: lineage) ?? "black",
-                  lineage: lineage
+                  inheritedAttribute("fill", in: lineage, cssRules: cssRules) ?? "black",
+                  lineage: lineage,
+                  cssRules: cssRules
               ),
               let strokePaint = presentationPaint(
-                  inheritedAttribute("stroke", in: lineage) ?? "none",
-                  lineage: lineage
+                  inheritedAttribute("stroke", in: lineage, cssRules: cssRules) ?? "none",
+                  lineage: lineage,
+                  cssRules: cssRules
               ),
-              let rawStrokeWidth = svgLength(inheritedAttribute("stroke-width", in: lineage) ?? "1"),
-              let miterLimit = svgNumber(inheritedAttribute("stroke-miterlimit", in: lineage) ?? "4"),
-              let strokeCap = strokeCap(inheritedAttribute("stroke-linecap", in: lineage) ?? "butt"),
-              let strokeJoin = strokeJoin(inheritedAttribute("stroke-linejoin", in: lineage) ?? "miter"),
-              let rawDashPattern = dashPattern(inheritedAttribute("stroke-dasharray", in: lineage)),
-              let rawDashOffset = svgLength(inheritedAttribute("stroke-dashoffset", in: lineage) ?? "0")
+              let rawStrokeWidth = svgLength(
+                  inheritedAttribute("stroke-width", in: lineage, cssRules: cssRules) ?? "1"
+              ),
+              let miterLimit = svgNumber(
+                  inheritedAttribute("stroke-miterlimit", in: lineage, cssRules: cssRules) ?? "4"
+              ),
+              let strokeCap = strokeCap(
+                  inheritedAttribute("stroke-linecap", in: lineage, cssRules: cssRules) ?? "butt"
+              ),
+              let strokeJoin = strokeJoin(
+                  inheritedAttribute("stroke-linejoin", in: lineage, cssRules: cssRules) ?? "miter"
+              ),
+              let rawDashPattern = dashPattern(
+                  inheritedAttribute("stroke-dasharray", in: lineage, cssRules: cssRules)
+              ),
+              let rawDashOffset = svgLength(
+                  inheritedAttribute("stroke-dashoffset", in: lineage, cssRules: cssRules) ?? "0"
+              )
         else { return nil }
 
         let strokeWidth = rawStrokeWidth * viewportScale
@@ -304,12 +361,17 @@ enum XomoEditableSVGImporter {
 
     private static func presentationPaint(
         _ source: String,
-        lineage: [XMLElement]
+        lineage: [XMLElement],
+        cssRules: [SVGStyleRule]
     ) -> SVGPaint? {
         let normalized = source.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
         guard normalized == "currentcolor" else { return paint(source) }
         for element in lineage.reversed() {
-            guard let colorSource = specifiedPresentationValue("color", on: element) else { continue }
+            guard let colorSource = specifiedPresentationValue(
+                "color",
+                on: element,
+                cssRules: cssRules
+            ) else { continue }
             let normalizedColor = colorSource
                 .trimmingCharacters(in: .whitespacesAndNewlines)
                 .lowercased()
@@ -324,7 +386,8 @@ enum XomoEditableSVGImporter {
         _ path: XMLElement,
         lineage: [XMLElement],
         presentation: SVGPresentation,
-        viewportScale: CGFloat
+        viewportScale: CGFloat,
+        cssRules: [SVGStyleRule]
     ) -> XomoEditableSVGImport? {
         guard let pathData = path.attribute(forName: "d")?.stringValue,
               let parsed = XomoSVGPathParser.parse(pathData),
@@ -337,7 +400,7 @@ enum XomoEditableSVGImporter {
 
         if !pathsAreClosed, presentation.fillOpacity > 0 { return nil }
         guard hasCompatibleFillRule(
-            inheritedAttribute("fill-rule", in: lineage),
+            inheritedAttribute("fill-rule", in: lineage, cssRules: cssRules),
             subpaths: parsed.subpaths,
             effectiveFillOpacity: presentation.fillOpacity
         ) else { return nil }
@@ -552,7 +615,8 @@ enum XomoEditableSVGImporter {
         _ polygon: XMLElement,
         lineage: [XMLElement],
         presentation: SVGPresentation,
-        viewportScale: CGFloat
+        viewportScale: CGFloat,
+        cssRules: [SVGStyleRule]
     ) -> XomoEditableSVGImport? {
         guard polygon.attribute(forName: "pathLength") == nil,
               let source = polygon.attribute(forName: "points")?.stringValue,
@@ -571,7 +635,7 @@ enum XomoEditableSVGImporter {
             )
         }
         guard hasCompatibleFillRule(
-            inheritedAttribute("fill-rule", in: lineage),
+            inheritedAttribute("fill-rule", in: lineage, cssRules: cssRules),
             subpaths: [anchors],
             effectiveFillOpacity: presentation.fillOpacity
         ) else { return nil }
@@ -879,21 +943,37 @@ enum XomoEditableSVGImporter {
         return lineage.contains { unsupported.contains(localName(of: $0)) }
     }
 
-    private static func hasUnsupportedPresentation(_ lineage: [XMLElement]) -> Bool {
+    private static func hasUnsupportedPresentation(
+        _ lineage: [XMLElement],
+        cssRules: [SVGStyleRule]
+    ) -> Bool {
         let unsupportedAttributes = [
-            "class", "transform", "clip-path", "mask", "filter",
+            "transform", "clip-path", "mask", "filter",
             "marker", "marker-start", "marker-mid", "marker-end", "vector-effect",
             "paint-order", "display", "visibility"
         ]
+        let knownClassNames = Set(cssRules.compactMap { rule -> String? in
+            guard case let .className(name) = rule.selector else { return nil }
+            return name
+        })
         return lineage.contains { element in
             unsupportedAttributes.contains { element.attribute(forName: $0) != nil }
                 || inlineStyleDeclarations(on: element) == nil
+                || classNames(on: element).contains { !knownClassNames.contains($0) }
         }
     }
 
-    private static func inheritedAttribute(_ name: String, in lineage: [XMLElement]) -> String? {
+    private static func inheritedAttribute(
+        _ name: String,
+        in lineage: [XMLElement],
+        cssRules: [SVGStyleRule]
+    ) -> String? {
         for element in lineage.reversed() {
-            guard let value = specifiedPresentationValue(name, on: element) else { continue }
+            guard let value = specifiedPresentationValue(
+                name,
+                on: element,
+                cssRules: cssRules
+            ) else { continue }
             if value.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() == "inherit" {
                 continue
             }
@@ -902,32 +982,71 @@ enum XomoEditableSVGImporter {
         return nil
     }
 
-    private static func inheritedOpacity(_ name: String, in lineage: [XMLElement]) -> CGFloat? {
-        guard let value = inheritedAttribute(name, in: lineage) else { return 1 }
+    private static func inheritedOpacity(
+        _ name: String,
+        in lineage: [XMLElement],
+        cssRules: [SVGStyleRule]
+    ) -> CGFloat? {
+        guard let value = inheritedAttribute(name, in: lineage, cssRules: cssRules) else { return 1 }
         return unitInterval(value)
     }
 
-    private static func multipliedOpacity(_ name: String, in lineage: [XMLElement]) -> CGFloat? {
+    private static func multipliedOpacity(
+        _ name: String,
+        in lineage: [XMLElement],
+        cssRules: [SVGStyleRule]
+    ) -> CGFloat? {
         var result: CGFloat = 1
         for element in lineage {
-            guard let raw = specifiedPresentationValue(name, on: element) else { continue }
+            guard let raw = specifiedPresentationValue(
+                name,
+                on: element,
+                cssRules: cssRules
+            ) else { continue }
             guard let value = unitInterval(raw) else { return nil }
             result *= value
         }
         return result
     }
 
-    private static func specifiedPresentationValue(_ name: String, on element: XMLElement) -> String? {
+    private static func specifiedPresentationValue(
+        _ name: String,
+        on element: XMLElement,
+        cssRules: [SVGStyleRule]
+    ) -> String? {
         if element.attribute(forName: "style") != nil,
            let declarations = inlineStyleDeclarations(on: element),
            let value = declarations[name] {
             return value
         }
+        var stylesheetValue: (specificity: Int, sourceOrder: Int, value: String)?
+        for rule in cssRules where rule.selector.matches(element) {
+            guard let value = rule.declarations[name] else { continue }
+            let candidate = (
+                specificity: rule.selector.specificity,
+                sourceOrder: rule.sourceOrder,
+                value: value
+            )
+            if let current = stylesheetValue {
+                if candidate.specificity > current.specificity
+                    || (candidate.specificity == current.specificity
+                        && candidate.sourceOrder >= current.sourceOrder) {
+                    stylesheetValue = candidate
+                }
+            } else {
+                stylesheetValue = candidate
+            }
+        }
+        if let stylesheetValue { return stylesheetValue.value }
         return element.attribute(forName: name)?.stringValue
     }
 
     private static func inlineStyleDeclarations(on element: XMLElement) -> [String: String]? {
         guard let source = element.attribute(forName: "style")?.stringValue else { return [:] }
+        return styleDeclarations(source)
+    }
+
+    private static func styleDeclarations(_ source: String) -> [String: String]? {
         var result: [String: String] = [:]
         for rawDeclaration in source.split(separator: ";", omittingEmptySubsequences: false) {
             let declaration = rawDeclaration.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -945,6 +1064,104 @@ enum XomoEditableSVGImporter {
             result[name] = value
         }
         return result
+    }
+
+    private static func stylesheetRules(in root: XMLElement) -> [SVGStyleRule]? {
+        guard let linkedStylesheets = try? root.nodes(forXPath: ".//*[local-name()='link']"),
+              linkedStylesheets.isEmpty,
+              let nodes = try? root.nodes(forXPath: ".//*[local-name()='style']")
+        else { return nil }
+        var result: [SVGStyleRule] = []
+        var sourceOrder = 0
+        for node in nodes {
+            guard let element = node as? XMLElement,
+                  hasSupportedStyleElementAttributes(element),
+                  let rules = stylesheetRules(
+                      in: element.stringValue ?? "",
+                      sourceOrder: &sourceOrder
+                  )
+            else { return nil }
+            result.append(contentsOf: rules)
+        }
+        return result
+    }
+
+    private static func hasSupportedStyleElementAttributes(_ element: XMLElement) -> Bool {
+        guard (element.attributes ?? []).allSatisfy({ $0.name == "type" }) else { return false }
+        let type = element.attribute(forName: "type")?.stringValue?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .lowercased() ?? "text/css"
+        return type == "text/css"
+    }
+
+    private static func stylesheetRules(
+        in source: String,
+        sourceOrder: inout Int
+    ) -> [SVGStyleRule]? {
+        guard !source.contains("/*"), !source.contains("*/") else { return nil }
+        var result: [SVGStyleRule] = []
+        var remainder = source[...]
+        while true {
+            remainder = remainder.drop(while: { $0.isWhitespace })
+            guard !remainder.isEmpty else { return result }
+            guard let openingBrace = remainder.firstIndex(of: "{"),
+                  let closingBrace = remainder[remainder.index(after: openingBrace)...]
+                    .firstIndex(of: "}")
+            else { return nil }
+            let selectorSource = remainder[..<openingBrace]
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+            let declarationSource = remainder[remainder.index(after: openingBrace)..<closingBrace]
+            guard !selectorSource.isEmpty,
+                  !selectorSource.contains("}"),
+                  !declarationSource.contains("{"),
+                  let declarations = styleDeclarations(String(declarationSource))
+            else { return nil }
+            let rawSelectors = selectorSource.split(separator: ",", omittingEmptySubsequences: false)
+            guard !rawSelectors.isEmpty else { return nil }
+            let order = sourceOrder
+            sourceOrder += 1
+            for rawSelector in rawSelectors {
+                guard let selector = styleSelector(
+                    rawSelector.trimmingCharacters(in: .whitespacesAndNewlines)
+                ) else { return nil }
+                result.append(SVGStyleRule(
+                    selector: selector,
+                    declarations: declarations,
+                    sourceOrder: order
+                ))
+            }
+            remainder = remainder[remainder.index(after: closingBrace)...]
+        }
+    }
+
+    private static func styleSelector(_ source: String) -> SVGStyleSelector? {
+        guard !source.isEmpty else { return nil }
+        if source.first == "." {
+            let name = String(source.dropFirst())
+            guard isSimpleCSSIdentifier(name) else { return nil }
+            return .className(name)
+        }
+        if source.first == "#" {
+            let name = String(source.dropFirst())
+            guard isSimpleCSSIdentifier(name) else { return nil }
+            return .id(name)
+        }
+        let name = source.lowercased()
+        guard supportedStyleElementNames.contains(name) else { return nil }
+        return .element(name)
+    }
+
+    private static func isSimpleCSSIdentifier(_ source: String) -> Bool {
+        guard let first = source.unicodeScalars.first else { return false }
+        let firstCharacters = CharacterSet.letters.union(CharacterSet(charactersIn: "_-"))
+        let remainingCharacters = CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "_-"))
+        return firstCharacters.contains(first)
+            && source.unicodeScalars.allSatisfy(remainingCharacters.contains)
+    }
+
+    private static func classNames(on element: XMLElement) -> [String] {
+        guard let source = element.attribute(forName: "class")?.stringValue else { return [] }
+        return source.split(whereSeparator: \.isWhitespace).map(String.init)
     }
 
     private static func unitInterval(_ source: String) -> CGFloat? {

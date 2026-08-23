@@ -1,5 +1,19 @@
 # Changelog
 
+## 2.12.0-rc1216 - 2026-08-24
+
+### Added
+
+- 可编辑 SVG 导入支持内嵌 `<style>` 的严格本地样式表子集：简单元素、`.class`、`#id` 与逗号选择器可设置 rc1214 已支持的 13 项 presentation 属性，CDATA 与普通文本均可解析；class 规则也能在祖先组上提供 color、opacity、fill 与 stroke 继承。
+
+### Changed
+
+- 本地样式表按元素 1、class 10、id 100 的 specificity 及源码顺序级联，全部规则高于 presentation attribute、低于内联 style。复合/后代选择器、伪类、at-rule、注释、变量、important、未知属性、未解析 class、外部 link 与 xml-stylesheet 会在写入前原子拒绝，不再静默忽略 `<style>` 后导入成错误黑色。
+
+### Verification
+
+- 最终产品测试构建通过且无新增警告，SVG 导入 35/35、CLI/MCP 2/2、发布与运行器契约及差异检查通过；下一次周期完整门禁仍为 rc1240。
+
 ## 2.12.0-rc1215 - 2026-08-24
 
 ### Added
