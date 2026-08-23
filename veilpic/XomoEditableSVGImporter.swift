@@ -48,6 +48,12 @@ enum XomoEditableSVGImporter {
                 presentation: presentation,
                 viewportScale: viewportScale
             )
+        case "circle", "ellipse":
+            return ellipseImport(
+                geometry,
+                presentation: presentation,
+                viewportScale: viewportScale
+            )
         default:
             return nil
         }
@@ -248,6 +254,76 @@ enum XomoEditableSVGImporter {
         let clampedY = min(height / 2, radiusY)
         guard abs(clampedX - clampedY) <= 0.000_001 else { return nil }
         return clampedX
+    }
+
+    private static func ellipseImport(
+        _ ellipse: XMLElement,
+        presentation: SVGPresentation,
+        viewportScale: CGFloat
+    ) -> XomoEditableSVGImport? {
+        guard ellipse.attribute(forName: "pathLength") == nil,
+              svgLength(ellipse.attribute(forName: "cx")?.stringValue ?? "0") != nil,
+              svgLength(ellipse.attribute(forName: "cy")?.stringValue ?? "0") != nil,
+              let radii = ellipseRadii(ellipse),
+              presentation.fillOpacity > 0 || presentation.hasVisibleStroke
+        else { return nil }
+
+        let scaledWidth = radii.width * 2 * viewportScale
+        let scaledHeight = radii.height * 2 * viewportScale
+        guard !presentation.hasVisibleStroke
+                || presentation.strokeWidth <= min(scaledWidth, scaledHeight)
+        else { return nil }
+        let padding = presentation.hasVisibleStroke ? presentation.strokeWidth / 2 : 0
+        let size = CGSize(
+            width: scaledWidth + padding * 2,
+            height: scaledHeight + padding * 2
+        )
+        guard size.width.isFinite,
+              size.height.isFinite,
+              size.width > 0,
+              size.height > 0
+        else { return nil }
+
+        let content = ImageEditorShapeContent(
+            kind: .ellipse,
+            fillColor: presentation.fillPaint.color,
+            fillOpacity: presentation.fillOpacity,
+            strokeColor: presentation.strokePaint.color,
+            strokeWidth: max(ImageEditorShapeContent.minimumStrokeWidth, presentation.strokeWidth),
+            strokeOpacity: presentation.hasVisibleStroke ? presentation.strokeOpacity : 0,
+            strokePosition: .center,
+            strokeCap: presentation.strokeCap,
+            strokeJoin: presentation.strokeJoin,
+            strokeMiterLimit: presentation.strokeMiterLimit,
+            strokeDashPattern: presentation.strokeDashPattern,
+            strokeDashOffset: presentation.strokeDashOffset
+        ).normalized(size: size)
+        return XomoEditableSVGImport(content: content, size: size)
+    }
+
+    private static func ellipseRadii(_ ellipse: XMLElement) -> CGSize? {
+        switch localName(of: ellipse) {
+        case "circle":
+            guard let source = ellipse.attribute(forName: "r")?.stringValue,
+                  let radius = svgLength(source),
+                  radius > 0,
+                  ellipse.attribute(forName: "rx") == nil,
+                  ellipse.attribute(forName: "ry") == nil
+            else { return nil }
+            return CGSize(width: radius, height: radius)
+        case "ellipse":
+            guard let xSource = ellipse.attribute(forName: "rx")?.stringValue,
+                  let ySource = ellipse.attribute(forName: "ry")?.stringValue,
+                  let radiusX = svgLength(xSource),
+                  let radiusY = svgLength(ySource),
+                  radiusX > 0,
+                  radiusY > 0,
+                  ellipse.attribute(forName: "r") == nil
+            else { return nil }
+            return CGSize(width: radiusX, height: radiusY)
+        default:
+            return nil
+        }
     }
 
     private static func elementLineage(from root: XMLElement, to leaf: XMLElement) -> [XMLElement] {

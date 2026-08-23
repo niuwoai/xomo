@@ -103,6 +103,50 @@ struct ImageEditorSVGImportTests {
         }
     }
 
+    @Test func singleCircleAndEllipseImportAsNativeEditableEllipses() throws {
+        let circle = try #require(XomoEditableSVGImporter.parse(Data(
+            """
+            <svg width="120" height="80" viewBox="0 0 60 40">
+              <g opacity="0.5" fill="#336699" stroke="rgba(240, 80, 32, 0.8)"
+                 stroke-width="2" stroke-dasharray="3">
+                <circle cx="20" cy="20" r="10" />
+              </g>
+            </svg>
+            """.utf8
+        )))
+        #expect(circle.content.kind == .ellipse)
+        #expect(circle.size == CGSize(width: 44, height: 44))
+        #expect(circle.content.fillOpacity == 0.5)
+        #expect(abs(circle.content.strokeOpacity - 0.4) < 0.001)
+        #expect(circle.content.strokeWidth == 4)
+        #expect(circle.content.strokePosition == .center)
+        #expect(circle.content.strokeDashPattern == [6, 6])
+
+        let ellipse = try #require(XomoEditableSVGImporter.parse(Data(
+            "<svg><ellipse cx='14' cy='8' rx='12' ry='6' fill='blue'/></svg>".utf8
+        )))
+        #expect(ellipse.content.kind == .ellipse)
+        #expect(ellipse.size == CGSize(width: 24, height: 12))
+        #expect(ellipse.content.fillOpacity == 1)
+        #expect(ellipse.content.strokeOpacity == 0)
+    }
+
+    @Test func ellipsesThatCannotStayNativeAreRejectedBeforeImport() {
+        let unsupported = [
+            "<svg><circle r='0'/></svg>",
+            "<svg><circle r='-1'/></svg>",
+            "<svg><circle r='10' pathLength='100'/></svg>",
+            "<svg><ellipse rx='10'/></svg>",
+            "<svg><ellipse rx='10' ry='0'/></svg>",
+            "<svg><ellipse rx='10' ry='5' fill='none' stroke='black' stroke-width='11'/></svg>",
+            "<svg><ellipse rx='10' ry='5' fill='none' stroke='none'/></svg>"
+        ]
+
+        for source in unsupported {
+            #expect(XomoEditableSVGImporter.parse(Data(source.utf8)) == nil)
+        }
+    }
+
     @Test func viewportScalingAndFillRulesNeverSilentlyChangeEditableGeometry() throws {
         let scaled = try #require(XomoEditableSVGImporter.parse(Data(
             """
@@ -180,7 +224,7 @@ struct ImageEditorSVGImportTests {
         let originalSelectedLayerIDs = viewModel.document.selectedLayerIDs
 
         #expect(!viewModel.importEditableSVGLayer(
-            Data("<svg><circle cx='5' cy='5' r='4'/></svg>".utf8),
+            Data("<svg><polygon points='0,0 10,0 5,10'/></svg>".utf8),
             sourceName: "unsupported.svg"
         ))
         #expect(viewModel.document.layers.map(\.id) == originalLayerIDs)
@@ -274,6 +318,39 @@ struct ImageEditorSVGImportTests {
         #expect(imported.content.kind == .rectangle)
         #expect(imported.size == CGSize(width: 100, height: 60))
         #expect(imported.content.cornerRadius == 0)
+        #expect(imported.content.strokeWidth == 2)
+        #expect(abs(imported.content.fillOpacity - 0.35) < 0.001)
+        #expect(abs(imported.content.strokeOpacity - 0.3) < 0.001)
+    }
+
+    @Test func exportedEllipseCanReturnAsNativeEllipse() throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "svg-ellipse-roundtrip",
+            image: NSImage.transparent(size: CGSize(width: 180, height: 120))
+        ) { _ in }
+        var layer = ImageEditorLayer.shape(
+            name: "Badge",
+            frame: CGRect(x: 30, y: 20, width: 100, height: 60),
+            content: ImageEditorShapeContent(
+                kind: .ellipse,
+                fillColor: NSColor(deviceRed: 0.8, green: 0.3, blue: 0.2, alpha: 1),
+                fillOpacity: 0.7,
+                strokeColor: .white,
+                strokeWidth: 2,
+                strokeOpacity: 0.6,
+                strokePosition: .center
+            )
+        )
+        layer.opacity = 0.5
+        viewModel.document.layers.append(layer)
+
+        let data = try #require(
+            viewModel.exportData(settings: ImageEditorExportSettings(format: .svg))
+        )
+        let imported = try #require(XomoEditableSVGImporter.parse(data))
+
+        #expect(imported.content.kind == .ellipse)
+        #expect(imported.size == CGSize(width: 100, height: 60))
         #expect(imported.content.strokeWidth == 2)
         #expect(abs(imported.content.fillOpacity - 0.35) < 0.001)
         #expect(abs(imported.content.strokeOpacity - 0.3) < 0.001)
