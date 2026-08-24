@@ -6,7 +6,7 @@
 - 通过 Finder、“打开方式”或系统文件事件直接打开 PNG、JPEG、TIFF、HEIC、WebP 时，原图现在成为真正选中的可编辑图片层，透明背景只负责维持画布；不再把原图锁进背景却选中一个看似覆盖图片的空白层。普通 Delete 会删除用户眼前的图片并留下透明画布，Undo 可恢复原图、选择和层级。
 
 ### Verification
-- 最终产品测试构建通过；外部图片文档工厂、真实像素归属、PNG/JPEG/TIFF/HEIC/WebP、共享文件菜单与文档声明专项 11/11，普通导入 Delete、像素选区优先级和无附属窗口 keyDown 邻接 3/3，CLI/MCP 2/2、发布契约 7/7（21 项断言）、隔离测试运行器契约及差异检查通过。rc1240 周期安装版继续保留于 `/Applications/Xomo.app`，下一次周期完整门禁为 rc1280。
+- 最终产品测试构建通过；外部图片文档工厂、真实像素归属、PNG/JPEG/TIFF/HEIC/WebP、共享文件菜单与文档声明专项 11/11，普通导入 Delete、像素选区优先级和无附属窗口 keyDown 邻接 3/3，CLI/MCP 2/2、发布契约 7/7（21 项断言）、隔离测试运行器契约及差异检查通过。Universal Developer ID Release 归档与导出成功，`x86_64 + arm64` 严格验签通过并已覆盖 `/Applications/Xomo.app`；旧 rc1240 可恢复备份于 `/private/tmp/Xomo-rc1240-before-rc1241.app`。桌面自动化未获 Xomo 辅助功能授权，故 Delete/Undo 实操不虚报通过；DMG 已生成，但同名 Developer ID 证书歧义导致 DMG 签名步骤未完成。下一次周期完整门禁为 rc1280。
 
 ## 2.12.0-rc1240 - 2026-08-25
 
