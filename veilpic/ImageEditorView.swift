@@ -3610,10 +3610,10 @@ struct ImageEditorView: View {
                         return true
                     },
                     onFileDrop: { urls, location in
-                        guard let url = ImageEditorLayerFileImportPolicy.singleSupportedURL(from: urls),
+                        guard let urls = ImageEditorLayerFileImportPolicy.supportedURLs(from: urls),
                               let canvasPoint = imagePoint(from: location, in: geometry.size)
                         else { return false }
-                        return viewModel.importLayerFile(url, centeredAt: canvasPoint)
+                        return viewModel.importLayerFiles(urls, centeredAt: canvasPoint)
                     },
                     onMagnifyChanged: { magnification, location in
                         viewModel.magnifyCanvas(

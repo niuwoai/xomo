@@ -512,7 +512,7 @@ struct ImageEditorScopeTests {
         #expect(!dragSource.contains("draggable(payload"))
     }
 
-    @Test func canvasAcceptsFinderImageURLsThroughTheSharedLayerImporter() throws {
+    @Test func canvasAcceptsFinderImageURLBatchesThroughTheAtomicLayerImporter() throws {
         let repositoryRoot = Self.repositoryRoot()
         let editorSource = try String(
             contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
@@ -540,9 +540,19 @@ struct ImageEditorScopeTests {
         ).count - 1
         #expect(fileDropRegistrationCount == 2)
         #expect(interaction.contains("onFileDrop: { urls, location in"))
-        #expect(interaction.contains("ImageEditorLayerFileImportPolicy.singleSupportedURL(from: urls)"))
-        #expect(interaction.contains("viewModel.importLayerFile(url, centeredAt: canvasPoint)"))
+        #expect(interaction.contains("ImageEditorLayerFileImportPolicy.supportedURLs(from: urls)"))
+        #expect(interaction.contains("viewModel.importLayerFiles(urls, centeredAt: canvasPoint)"))
         #expect(importSource.contains("self.importLayerFile(url)"))
+        let batchStart = try #require(importSource.range(of: "func importLayerFiles("))
+        let batchEnd = try #require(
+            importSource[batchStart.upperBound...].range(of: "private func prepareLayerFileImport")
+        )
+        let batchSource = importSource[batchStart.lowerBound..<batchEnd.lowerBound]
+        let preparation = try #require(batchSource.range(of: "for url in urls"))
+        let transaction = try #require(batchSource.range(of: "pushUndo()"))
+        #expect(preparation.lowerBound < transaction.lowerBound)
+        #expect(batchSource.contains("document.layers.append(contentsOf: layers)"))
+        #expect(batchSource.contains("document.selectedLayerIDs = Set(layers.map(\\.id))"))
     }
 
     @Test func propertiesPanelPartitionsLargeViewBuilderForReleaseRuntime() throws {

@@ -1736,6 +1736,7 @@
 "imageEditor.history.layerUnlink" = "取消图层链接";
 "imageEditor.history.layerUnlinkAll" = "取消全部图层链接";
 "imageEditor.history.layerImport" = "导入图片图层";
+"imageEditor.history.layerBatchImport" = "导入多个图片图层";
 "imageEditor.history.editableSVGImport" = "导入可编辑 SVG 形状";
 "imageEditor.history.clipboardPasteLayer" = "从剪贴板粘贴为图层";
 "imageEditor.history.clipboardPasteIntoSelection" = "粘贴到选区";
@@ -2278,6 +2279,7 @@
 "imageEditor.status.layerLabelColor" = "已设置图层颜色标签：%@";
 "imageEditor.status.layerLabelColorCleared" = "已清除图层颜色标签";
 "imageEditor.status.layerImported" = "已导入图片图层：%@";
+"imageEditor.status.layersImported" = "已导入 %d 个图片图层";
 "imageEditor.status.editableSVGImported" = "已导入可编辑 SVG 形状：%@";
 "imageEditor.status.editableSVGImportFailed" = "SVG 必须只包含一个无 CSS、变换或引用资源的受支持路径、直线、折线、多边形、矩形、圆或椭圆";
 "imageEditor.status.layerSmartObject" = "已转换为智能对象";

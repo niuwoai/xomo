@@ -1736,6 +1736,7 @@
 "imageEditor.history.layerUnlink" = "レイヤーリンクを解除";
 "imageEditor.history.layerUnlinkAll" = "すべてのレイヤーリンクを解除";
 "imageEditor.history.layerImport" = "画像レイヤーを読み込み";
+"imageEditor.history.layerBatchImport" = "複数の画像レイヤーを読み込み";
 "imageEditor.history.editableSVGImport" = "編集可能な SVG シェイプを読み込み";
 "imageEditor.history.clipboardPasteLayer" = "クリップボードをレイヤーとしてペースト";
 "imageEditor.history.clipboardPasteIntoSelection" = "選択範囲内へペースト";
@@ -2278,6 +2279,7 @@
 "imageEditor.status.layerLabelColor" = "レイヤーカラーラベルを設定しました：%@";
 "imageEditor.status.layerLabelColorCleared" = "レイヤーカラーラベルをクリアしました";
 "imageEditor.status.layerImported" = "画像レイヤーを読み込みました：%@";
+"imageEditor.status.layersImported" = "%d 個の画像レイヤーを読み込みました";
 "imageEditor.status.editableSVGImported" = "編集可能な SVG シェイプを読み込みました：%@";
 "imageEditor.status.editableSVGImportFailed" = "SVG は CSS、変形、参照リソースを含まない、対応済みの単一パス、直線、折れ線、多角形、長方形、円または楕円である必要があります";
 "imageEditor.status.layerSmartObject" = "スマートオブジェクトに変換しました";

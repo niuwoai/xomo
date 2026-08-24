@@ -14,6 +14,8 @@ nonisolated enum ImageEditorLayerFileImportKind: Equatable {
 }
 
 nonisolated enum ImageEditorLayerFileImportPolicy {
+    static let batchSpacing: CGFloat = 16
+
     static func kind(for url: URL) -> ImageEditorLayerFileImportKind? {
         guard url.isFileURL else { return nil }
         switch url.pathExtension.lowercased() {
@@ -26,12 +28,9 @@ nonisolated enum ImageEditorLayerFileImportPolicy {
         }
     }
 
-    static func singleSupportedURL(from urls: [URL]) -> URL? {
-        guard urls.count == 1,
-              let url = urls.first,
-              kind(for: url) != nil
-        else { return nil }
-        return url
+    static func supportedURLs(from urls: [URL]) -> [URL]? {
+        guard !urls.isEmpty, urls.allSatisfy({ kind(for: $0) != nil }) else { return nil }
+        return urls
     }
 
     static func frame(for contentSize: CGSize, centeredAt point: CGPoint) -> CGRect {
@@ -45,6 +44,39 @@ nonisolated enum ImageEditorLayerFileImportPolicy {
             width: safeSize.width,
             height: safeSize.height
         )
+    }
+
+    static func batchFrames(for contentSizes: [CGSize], centeredAt point: CGPoint) -> [CGRect] {
+        guard !contentSizes.isEmpty else { return [] }
+        let safeSizes = contentSizes.map {
+            CGSize(width: max(1, $0.width), height: max(1, $0.height))
+        }
+        let contentWidth = safeSizes.reduce(CGFloat.zero) { $0 + $1.width }
+        let spacingWidth = batchSpacing * CGFloat(max(0, safeSizes.count - 1))
+        var nextX = point.x - (contentWidth + spacingWidth) / 2
+        return safeSizes.map { size in
+            defer { nextX += size.width + batchSpacing }
+            return CGRect(
+                x: nextX,
+                y: point.y - size.height / 2,
+                width: size.width,
+                height: size.height
+            )
+        }
+    }
+}
+
+private enum ImageEditorPreparedLayerFileImport {
+    case raster(sourceName: String, image: NSImage)
+    case editableSVG(sourceName: String, imported: XomoEditableSVGImport)
+
+    var size: CGSize {
+        switch self {
+        case .raster(_, let image):
+            return image.size
+        case .editableSVG(_, let imported):
+            return imported.size
+        }
     }
 }
 
@@ -87,9 +119,58 @@ extension ImageEditorViewModel {
 
     @discardableResult
     func importLayerFile(_ url: URL, centeredAt point: CGPoint? = nil) -> Bool {
-        guard let kind = ImageEditorLayerFileImportPolicy.kind(for: url) else {
+        guard let prepared = prepareLayerFileImport(url) else { return false }
+        switch prepared {
+        case .editableSVG(let sourceName, let imported):
+            return commitEditableSVGImport(imported, sourceName: sourceName, centeredAt: point)
+        case .raster(let sourceName, let image):
+            return commitImageLayerImport(image, sourceName: sourceName, centeredAt: point)
+        }
+    }
+
+    @discardableResult
+    func importLayerFiles(_ urls: [URL], centeredAt point: CGPoint) -> Bool {
+        guard let urls = ImageEditorLayerFileImportPolicy.supportedURLs(from: urls) else {
             statusText = L10n.text("imageEditor.status.layerImportFailed")
             return false
+        }
+        if urls.count == 1, let url = urls.first {
+            return importLayerFile(url, centeredAt: point)
+        }
+
+        var preparedImports: [ImageEditorPreparedLayerFileImport] = []
+        preparedImports.reserveCapacity(urls.count)
+        for url in urls {
+            guard let prepared = prepareLayerFileImport(url) else { return false }
+            preparedImports.append(prepared)
+        }
+
+        let frames = ImageEditorLayerFileImportPolicy.batchFrames(
+            for: preparedImports.map(\.size),
+            centeredAt: point
+        )
+        guard frames.count == preparedImports.count else {
+            statusText = L10n.text("imageEditor.status.layerImportFailed")
+            return false
+        }
+
+        pushUndo()
+        let layers = zip(preparedImports, frames).map { prepared, frame in
+            importedLayer(from: prepared, frame: frame)
+        }
+        document.layers.append(contentsOf: layers)
+        document.selectedLayerID = layers.last?.id
+        document.selectedLayerIDs = Set(layers.map(\.id))
+        isEditingLayerMask = false
+        appendHistory(L10n.text("imageEditor.history.layerBatchImport"))
+        statusText = L10n.format("imageEditor.status.layersImported", layers.count)
+        return true
+    }
+
+    private func prepareLayerFileImport(_ url: URL) -> ImageEditorPreparedLayerFileImport? {
+        guard let kind = ImageEditorLayerFileImportPolicy.kind(for: url) else {
+            statusText = L10n.text("imageEditor.status.layerImportFailed")
+            return nil
         }
 
         let isSecurityScoped = url.startAccessingSecurityScopedResource()
@@ -100,30 +181,58 @@ extension ImageEditorViewModel {
         }
         guard (try? url.resourceValues(forKeys: [.isRegularFileKey]).isRegularFile) == true else {
             statusText = L10n.text("imageEditor.status.layerImportFailed")
-            return false
+            return nil
         }
 
         switch kind {
         case .editableSVG:
-            guard let data = try? Data(contentsOf: url) else {
+            guard let data = try? Data(contentsOf: url),
+                  let imported = XomoEditableSVGImporter.parse(data)
+            else {
                 statusText = L10n.text("imageEditor.status.editableSVGImportFailed")
-                return false
+                return nil
             }
-            return importEditableSVGLayer(
-                data,
-                sourceName: url.lastPathComponent,
-                centeredAt: point
-            )
+            return .editableSVG(sourceName: url.lastPathComponent, imported: imported)
         case .rasterImage:
             guard let image = NSImage(contentsOf: url) else {
                 statusText = L10n.text("imageEditor.status.layerImportFailed")
-                return false
+                return nil
             }
-            return importImageLayer(
-                image,
-                sourceName: url.lastPathComponent,
-                centeredAt: point
+            let normalized = image.normalizedImportedBitmapImage()
+            guard normalized.size.width > 0, normalized.size.height > 0 else {
+                statusText = L10n.text("imageEditor.status.layerImportFailed")
+                return nil
+            }
+            return .raster(sourceName: url.lastPathComponent, image: normalized)
+        }
+    }
+
+    private func importedLayer(
+        from prepared: ImageEditorPreparedLayerFileImport,
+        frame: CGRect
+    ) -> ImageEditorLayer {
+        switch prepared {
+        case .editableSVG(let sourceName, let imported):
+            var layer = ImageEditorLayer.shape(
+                name: cleanLayerName(from: sourceName),
+                frame: frame,
+                content: imported.content
             )
+            layer.groupID = nil
+            layer.isClippingMask = false
+            return layer
+        case .raster(let sourceName, let image):
+            var layer = ImageEditorLayer.blank(
+                name: L10n.format("imageEditor.layer.importedName", cleanLayerName(from: sourceName)),
+                size: image.size
+            )
+            layer.image = image
+            layer.frame = frame
+            layer.opacity = 1
+            layer.blendMode = .normal
+            layer.groupID = nil
+            layer.isClippingMask = false
+            return layer
         }
     }
 
@@ -137,6 +246,15 @@ extension ImageEditorViewModel {
             statusText = L10n.text("imageEditor.status.editableSVGImportFailed")
             return false
         }
+
+        return commitEditableSVGImport(imported, sourceName: sourceName, centeredAt: point)
+    }
+
+    private func commitEditableSVGImport(
+        _ imported: XomoEditableSVGImport,
+        sourceName: String,
+        centeredAt point: CGPoint?
+    ) -> Bool {
 
         let cleanName = cleanLayerName(from: sourceName)
         pushUndo()
@@ -284,6 +402,25 @@ extension ImageEditorViewModel {
             statusText = L10n.text("imageEditor.status.layerImportFailed")
             return false
         }
+
+        return commitImageLayerImport(
+            normalized,
+            sourceName: sourceName,
+            historyTitle: historyTitle,
+            importedStatus: importedStatus,
+            frameOverride: frameOverride,
+            centeredAt: point
+        )
+    }
+
+    private func commitImageLayerImport(
+        _ normalized: NSImage,
+        sourceName: String,
+        historyTitle: String? = nil,
+        importedStatus: String? = nil,
+        frameOverride: CGRect? = nil,
+        centeredAt point: CGPoint? = nil
+    ) -> Bool {
 
         pushUndo()
         var layer = ImageEditorLayer.blank(

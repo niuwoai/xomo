@@ -6,7 +6,7 @@ import Testing
 @MainActor
 @Suite(.serialized)
 struct ImageEditorCanvasFileDropTests {
-    @Test func policyAcceptsOneLocalPNGJPEGOrSVGAndRejectsAmbiguousDrops() throws {
+    @Test func policyAcceptsLocalPNGJPEGOrSVGBatchesAndRejectsInvalidMembers() throws {
         let png = URL(fileURLWithPath: "/tmp/Poster.PNG")
         let jpg = URL(fileURLWithPath: "/tmp/photo.JpG")
         let jpeg = URL(fileURLWithPath: "/tmp/photo.jpeg")
@@ -19,9 +19,10 @@ struct ImageEditorCanvasFileDropTests {
         #expect(ImageEditorLayerFileImportPolicy.kind(for: svg) == .editableSVG)
         #expect(ImageEditorLayerFileImportPolicy.kind(for: URL(fileURLWithPath: "/tmp/file.psd")) == nil)
         #expect(ImageEditorLayerFileImportPolicy.kind(for: remote) == nil)
-        #expect(ImageEditorLayerFileImportPolicy.singleSupportedURL(from: [png]) == png)
-        #expect(ImageEditorLayerFileImportPolicy.singleSupportedURL(from: []) == nil)
-        #expect(ImageEditorLayerFileImportPolicy.singleSupportedURL(from: [png, jpg]) == nil)
+        #expect(ImageEditorLayerFileImportPolicy.supportedURLs(from: [png]) == [png])
+        #expect(ImageEditorLayerFileImportPolicy.supportedURLs(from: [png, jpg, svg]) == [png, jpg, svg])
+        #expect(ImageEditorLayerFileImportPolicy.supportedURLs(from: []) == nil)
+        #expect(ImageEditorLayerFileImportPolicy.supportedURLs(from: [png, remote]) == nil)
     }
 
     @Test func droppingRasterImageCreatesSelectedLayerAtPointerInOneUndoStep() throws {
@@ -106,6 +107,94 @@ struct ImageEditorCanvasFileDropTests {
         ) == CGRect(x: 3.5, y: 6.5, width: 1, height: 1))
     }
 
+    @Test func droppingMixedFilesCreatesSpacedSelectedLayersInOneUndoStep() throws {
+        let viewModel = makeViewModel()
+        let originalLayerIDs = viewModel.document.layers.map(\.id)
+        let originalHistoryCount = viewModel.document.history.count
+        let firstURL = temporaryURL(extension: "png")
+        let secondURL = temporaryURL(extension: "jpg")
+        let svgURL = temporaryURL(extension: "svg")
+        defer {
+            try? FileManager.default.removeItem(at: firstURL)
+            try? FileManager.default.removeItem(at: secondURL)
+            try? FileManager.default.removeItem(at: svgURL)
+        }
+        try writeRasterImage(size: CGSize(width: 20, height: 10), to: firstURL, color: .systemRed)
+        try writeRasterImage(size: CGSize(width: 30, height: 20), to: secondURL, color: .systemBlue)
+        try Data(
+            """
+            <svg xmlns="http://www.w3.org/2000/svg" width="40" height="10">
+              <rect width="40" height="10" fill="#33aa66" />
+            </svg>
+            """.utf8
+        ).write(to: svgURL, options: .atomic)
+
+        #expect(viewModel.importLayerFiles(
+            [firstURL, secondURL, svgURL],
+            centeredAt: CGPoint(x: 100, y: 80)
+        ))
+        let imported = Array(viewModel.document.layers.suffix(3))
+        #expect(imported.map(\.frame) == [
+            CGRect(x: 39, y: 75, width: 20, height: 10),
+            CGRect(x: 75, y: 70, width: 30, height: 20),
+            CGRect(x: 121, y: 75, width: 40, height: 10)
+        ])
+        #expect(imported[0].image.size == CGSize(width: 20, height: 10))
+        #expect(imported[1].image.size == CGSize(width: 30, height: 20))
+        #expect(imported[2].shapeContent != nil)
+        #expect(viewModel.document.selectedLayerIDs == Set(imported.map(\.id)))
+        #expect(viewModel.document.selectedLayerID == imported.last?.id)
+        #expect(viewModel.document.history.count == originalHistoryCount + 1)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerBatchImport"))
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.layersImported", 3))
+
+        viewModel.undo()
+        #expect(viewModel.document.layers.map(\.id) == originalLayerIDs)
+    }
+
+    @Test func corruptMemberRejectsTheWholeBatchAndPreservesExistingRedo() throws {
+        let viewModel = makeViewModel()
+        viewModel.addLayer()
+        viewModel.undo()
+        #expect(viewModel.canRedo)
+        let layerIDsBeforeDrop = viewModel.document.layers.map(\.id)
+        let historyBeforeDrop = viewModel.document.history
+        let validURL = temporaryURL(extension: "png")
+        let corruptURL = temporaryURL(extension: "svg")
+        defer {
+            try? FileManager.default.removeItem(at: validURL)
+            try? FileManager.default.removeItem(at: corruptURL)
+        }
+        try writeRasterImage(size: CGSize(width: 12, height: 8), to: validURL, color: .systemPurple)
+        try Data("<svg><path d='broken'/></svg>".utf8).write(to: corruptURL, options: .atomic)
+
+        #expect(!viewModel.importLayerFiles(
+            [validURL, corruptURL],
+            centeredAt: CGPoint(x: 50, y: 40)
+        ))
+        #expect(viewModel.document.layers.map(\.id) == layerIDsBeforeDrop)
+        #expect(viewModel.document.history == historyBeforeDrop)
+        #expect(viewModel.canRedo)
+
+        viewModel.redo()
+        #expect(viewModel.document.layers.count == layerIDsBeforeDrop.count + 1)
+    }
+
+    @Test func batchPlacementCentersTheWholeRowAndKeepsInputOrder() {
+        #expect(ImageEditorLayerFileImportPolicy.batchFrames(
+            for: [
+                CGSize(width: 20, height: 10),
+                CGSize(width: 30, height: 20),
+                CGSize(width: 40, height: 10)
+            ],
+            centeredAt: CGPoint(x: 100, y: 80)
+        ) == [
+            CGRect(x: 39, y: 75, width: 20, height: 10),
+            CGRect(x: 75, y: 70, width: 30, height: 20),
+            CGRect(x: 121, y: 75, width: 40, height: 10)
+        ])
+    }
+
     private func makeViewModel() -> ImageEditorViewModel {
         ImageEditorViewModel(
             sourceName: "drop-canvas.png",
@@ -117,5 +206,21 @@ struct ImageEditorCanvasFileDropTests {
         FileManager.default.temporaryDirectory
             .appendingPathComponent("xomo-canvas-drop-\(UUID().uuidString)")
             .appendingPathExtension(pathExtension)
+    }
+
+    private func writeRasterImage(size: CGSize, to url: URL, color: NSColor) throws {
+        let image = try #require(NSImage.rendered(size: size) { rect in
+            color.setFill()
+            rect.fill()
+        })
+        let data: Data
+        if url.pathExtension.lowercased() == "jpg" {
+            let representation = try #require(image.tiffRepresentation)
+            let bitmap = try #require(NSBitmapImageRep(data: representation))
+            data = try #require(bitmap.representation(using: .jpeg, properties: [:]))
+        } else {
+            data = try #require(image.qingtuPNGData())
+        }
+        try data.write(to: url, options: .atomic)
     }
 }
