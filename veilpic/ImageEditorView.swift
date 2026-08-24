@@ -16891,6 +16891,26 @@ struct ImageEditorKeyboardShortcutEventSignature: Equatable {
     }
 }
 
+enum ImageEditorKeyboardShortcutEventWindowPolicy {
+    static func belongsToEditorWindow(
+        eventWindow: AnyObject?,
+        eventWindowNumber: Int,
+        editorWindow: AnyObject,
+        editorWindowNumber: Int,
+        keyWindow: AnyObject?
+    ) -> Bool {
+        if eventWindow === editorWindow {
+            return true
+        }
+        if eventWindowNumber != 0, eventWindowNumber == editorWindowNumber {
+            return true
+        }
+        return eventWindow == nil
+            && eventWindowNumber == 0
+            && keyWindow === editorWindow
+    }
+}
+
 @MainActor
 enum ImageEditorKeyboardShortcutWindowRegistry {
     private static var activeCoordinatorByWindow: [ObjectIdentifier: ObjectIdentifier] = [:]
@@ -17139,7 +17159,13 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
 
         private func handle(_ event: NSEvent) -> NSEvent? {
             guard let window,
-                  event.window === window,
+                  ImageEditorKeyboardShortcutEventWindowPolicy.belongsToEditorWindow(
+                    eventWindow: event.window,
+                    eventWindowNumber: event.windowNumber,
+                    editorWindow: window,
+                    editorWindowNumber: window.windowNumber,
+                    keyWindow: NSApp.keyWindow
+                  ),
                   ImageEditorKeyboardShortcutWindowRegistry.isActive(coordinator: self, for: window)
             else { return event }
             setCanvasModifierFlags(event.modifierFlags.intersection([.shift, .option, .capsLock]))

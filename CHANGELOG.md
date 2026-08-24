@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.12.0-rc1235 - 2026-08-25
+
+### Fixed
+- 修复编辑器已是 key window、但 macOS 键盘事件未附带同一 `NSWindow` 对象时 Delete 被全局监听器丢弃的问题；导入后自动选中的图片图层现在可由实体 Delete 键删除，同时继续隔离其他窗口的事件。
+
+### Verification
+- rc1235 产品测试构建通过；窗口事件归属、导入图层 Delete/Undo、Delete 优先级路由各 1/1，CLI/MCP 2/2、发布契约 7/7（21 项断言）、隔离测试运行器契约与差异检查通过。真实界面完成 PNG 导入、Delete 删除、Command-Z 恢复，并将 ad-hoc 签名后的 `Xomo.app` 安装到 `/Applications`；下一次周期完整门禁仍为 rc1240。
+
 ## 2.12.0-rc1234 - 2026-08-25
 
 ### Added

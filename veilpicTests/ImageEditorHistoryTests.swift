@@ -516,6 +516,48 @@ struct ImageEditorHistoryTests {
     }
 
     @Test
+    func keyboardShortcutEventWindowPolicyAcceptsKeyWindowEventsWithoutAnAttachedWindow() {
+        let editorWindow = NSObject()
+        let otherWindow = NSObject()
+
+        #expect(ImageEditorKeyboardShortcutEventWindowPolicy.belongsToEditorWindow(
+            eventWindow: editorWindow,
+            eventWindowNumber: 42,
+            editorWindow: editorWindow,
+            editorWindowNumber: 42,
+            keyWindow: otherWindow
+        ))
+        #expect(ImageEditorKeyboardShortcutEventWindowPolicy.belongsToEditorWindow(
+            eventWindow: nil,
+            eventWindowNumber: 42,
+            editorWindow: editorWindow,
+            editorWindowNumber: 42,
+            keyWindow: otherWindow
+        ))
+        #expect(ImageEditorKeyboardShortcutEventWindowPolicy.belongsToEditorWindow(
+            eventWindow: nil,
+            eventWindowNumber: 0,
+            editorWindow: editorWindow,
+            editorWindowNumber: 42,
+            keyWindow: editorWindow
+        ))
+        #expect(!ImageEditorKeyboardShortcutEventWindowPolicy.belongsToEditorWindow(
+            eventWindow: otherWindow,
+            eventWindowNumber: 7,
+            editorWindow: editorWindow,
+            editorWindowNumber: 42,
+            keyWindow: editorWindow
+        ))
+        #expect(!ImageEditorKeyboardShortcutEventWindowPolicy.belongsToEditorWindow(
+            eventWindow: nil,
+            eventWindowNumber: 0,
+            editorWindow: editorWindow,
+            editorWindowNumber: 42,
+            keyWindow: otherWindow
+        ))
+    }
+
+    @Test
     func historyPanelUsesSearchFieldAndFilteredEntries() throws {
         let root = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()
