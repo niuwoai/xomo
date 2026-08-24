@@ -2316,6 +2316,20 @@ struct ImageEditorLayerStyleTests {
         #expect(abs(diamond.axisEndpoint.x - 50) < 0.000_001)
         #expect(abs(diamond.axisEndpoint.y - (25 + radius)) < 0.000_001)
 
+        let angle = try #require(
+            ImageEditorGradientOverlayAxisGeometry.canvasGeometry(
+                style: .angle,
+                center: center,
+                angle: 0,
+                scale: 1,
+                layerFrame: frame
+            )
+        )
+        #expect(angle.center == linear.center)
+        #expect(angle.axisStart == angle.center)
+        #expect(abs(angle.axisEndpoint.x - (50 + radius)) < 0.000_001)
+        #expect(abs(angle.axisEndpoint.y - 25) < 0.000_001)
+
         let snapped = try #require(
             ImageEditorGradientOverlayAxisGeometry.updatedAxis(
                 style: .linear,
@@ -2341,6 +2355,20 @@ struct ImageEditorLayerStyleTests {
         )
         #expect(radialUpdate.angle == 73)
         #expect(abs(radialUpdate.scale - 2) < 0.000_001)
+
+        let angleUpdate = try #require(
+            ImageEditorGradientOverlayAxisGeometry.updatedAxis(
+                style: .angle,
+                center: center,
+                currentAngle: 0,
+                currentScale: 1.7,
+                layerFrame: frame,
+                canvasPoint: CGPoint(x: 50, y: 25 + radius),
+                snappingAngle: true
+            )
+        )
+        #expect(angleUpdate.angle == 90)
+        #expect(abs(angleUpdate.scale - 1.7) < 0.000_001)
     }
 
     @Test func gradientOverlayCanvasStopsMapAcrossStylesAndReverse() throws {
@@ -2398,6 +2426,48 @@ struct ImageEditorLayerStyleTests {
                 canvasPoint: CGPoint(x: 25, y: 25)
             ) == 0.75
         )
+
+        let radius = hypot(CGFloat(50), CGFloat(25))
+        let angleHandles = ImageEditorGradientOverlayAxisGeometry.stopHandlePoints(
+            style: .angle,
+            center: center,
+            angle: 0,
+            scale: 1,
+            reverse: false,
+            stops: stops,
+            layerFrame: frame
+        )
+        #expect(angleHandles.count == 3)
+        #expect(abs(angleHandles[0].canvasPoint.x - (50 + radius)) < 0.000_001)
+        #expect(abs(angleHandles[0].canvasPoint.y - 25) < 0.000_001)
+        #expect(abs(angleHandles[1].canvasPoint.x - 50) < 0.000_001)
+        #expect(abs(angleHandles[1].canvasPoint.y - (25 + radius)) < 0.000_001)
+        #expect(abs(angleHandles[2].canvasPoint.x - angleHandles[0].canvasPoint.x) < 0.000_001)
+        #expect(abs(angleHandles[2].canvasPoint.y - angleHandles[0].canvasPoint.y) < 0.000_001)
+        let anglePosition = try #require(
+            ImageEditorGradientOverlayAxisGeometry.logicalStopPosition(
+                style: .angle,
+                center: center,
+                angle: 0,
+                scale: 1,
+                reverse: false,
+                layerFrame: frame,
+                canvasPoint: CGPoint(x: 50, y: 25 + radius)
+            )
+        )
+        #expect(abs(anglePosition - 0.25) < 0.000_001)
+        let reversedAnglePosition = try #require(
+            ImageEditorGradientOverlayAxisGeometry.logicalStopPosition(
+                style: .angle,
+                center: center,
+                angle: 0,
+                scale: 1,
+                reverse: true,
+                layerFrame: frame,
+                canvasPoint: CGPoint(x: 50, y: 25 + radius)
+            )
+        )
+        #expect(abs(reversedAnglePosition - 0.75) < 0.000_001)
 
         for style in [
             ImageEditorGradientFillStyle.radial,

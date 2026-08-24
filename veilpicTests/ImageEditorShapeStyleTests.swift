@@ -66,6 +66,33 @@ struct ImageEditorShapeStyleTests {
         #expect(reopened.selectedShapeGradientDither)
     }
 
+    @Test func angleGradientSweepsAroundItsCenterAndRotatesWithAngle() throws {
+        var gradient = ImageEditorGradientFillContent.shapeLinear(
+            startColor: .black,
+            endColor: .white,
+            angle: 0
+        )
+        gradient.style = .angle
+        let image = gradient.renderedImage(size: CGSize(width: 101, height: 101))
+        let right = try #require(image.color(at: CGPoint(x: 90, y: 50))).redComponent
+        let left = try #require(image.color(at: CGPoint(x: 10, y: 50))).redComponent
+        let vertical = try [CGPoint(x: 50, y: 10), CGPoint(x: 50, y: 90)].map {
+            try #require(image.color(at: $0)).redComponent
+        }.sorted()
+
+        #expect(right < 0.03)
+        #expect(abs(left - 0.5) < 0.03)
+        #expect(abs(vertical[0] - 0.25) < 0.03)
+        #expect(abs(vertical[1] - 0.75) < 0.03)
+
+        gradient.angle = 90
+        let rotated = gradient.renderedImage(size: CGSize(width: 101, height: 101))
+        let rotatedRight = try #require(
+            rotated.color(at: CGPoint(x: 90, y: 50))
+        ).redComponent
+        #expect(abs(rotatedRight - 0.75) < 0.03)
+    }
+
     @Test func gradientColorStopAlphaRendersAndPersistsAcrossProjects() throws {
         let gradient = ImageEditorGradientFillContent.shapeLinear(colorStops: [
             ImageEditorGradientColorStop(
@@ -277,7 +304,7 @@ struct ImageEditorShapeStyleTests {
             strokeOpacity: 0
         ).normalized(size: CGSize(width: 101, height: 101))
         #expect(content.fillGradient?.style == .radial)
-        for style in [ImageEditorGradientFillStyle.reflected, .diamond] {
+        for style in [ImageEditorGradientFillStyle.angle, .reflected, .diamond] {
             var alternateContent = content
             alternateContent.fillGradient?.style = style
             #expect(
@@ -1907,6 +1934,7 @@ struct ImageEditorShapeStyleTests {
 
         #expect(source.contains("image-editor-shape-fill-kind-\\(kind.rawValue)"))
         #expect(ImageEditorShapeFillKind.radialGradient.rawValue == "radialGradient")
+        #expect(ImageEditorShapeFillKind.angleGradient.rawValue == "angleGradient")
         #expect(ImageEditorShapeFillKind.reflectedGradient.rawValue == "reflectedGradient")
         #expect(ImageEditorShapeFillKind.diamondGradient.rawValue == "diamondGradient")
         #expect(source.contains("image-editor-shape-gradient-radius"))

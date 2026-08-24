@@ -1042,6 +1042,7 @@
 "imageEditor.properties.shapeFillKind.solid" = "纯色";
 "imageEditor.properties.shapeFillKind.linearGradient" = "线性渐变";
 "imageEditor.properties.shapeFillKind.radialGradient" = "径向渐变";
+"imageEditor.properties.shapeFillKind.angleGradient" = "角度渐变";
 "imageEditor.properties.shapeFillKind.reflectedGradient" = "对称渐变";
 "imageEditor.properties.shapeFillKind.diamondGradient" = "菱形渐变";
 "imageEditor.properties.shapeFillColor" = "填充颜色";
@@ -1374,6 +1375,7 @@
 "imageEditor.gradientFill.style" = "样式";
 "imageEditor.gradientFill.style.linear" = "线性";
 "imageEditor.gradientFill.style.radial" = "径向";
+"imageEditor.gradientFill.style.angle" = "角度";
 "imageEditor.gradientFill.style.reflected" = "反射";
 "imageEditor.gradientFill.style.diamond" = "菱形";
 "imageEditor.gradientFill.reverse" = "反向";

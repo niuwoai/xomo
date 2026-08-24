@@ -3963,6 +3963,7 @@ private extension ImageEditorGradientFillStyle {
         switch psdValue {
         case "Lnr ", "GrdL", "linear": self = .linear
         case "Rdl ", "radial": self = .radial
+        case "Angl", "angle": self = .angle
         case "Rflc", "reflected": self = .reflected
         case "Dmnd", "diamond": self = .diamond
         default: return nil
@@ -3973,6 +3974,7 @@ private extension ImageEditorGradientFillStyle {
         switch self {
         case .linear: "Lnr "
         case .radial: "Rdl "
+        case .angle: "Angl"
         case .reflected: "Rflc"
         case .diamond: "Dmnd"
         }

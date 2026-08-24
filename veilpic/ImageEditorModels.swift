@@ -1403,6 +1403,7 @@ enum ImageEditorGradientFillPreset: String, CaseIterable, Identifiable {
 enum ImageEditorGradientFillStyle: String, CaseIterable, Identifiable {
     case linear
     case radial
+    case angle
     case reflected
     case diamond
 
@@ -1781,6 +1782,11 @@ struct ImageEditorGradientFillContent: Equatable, Codable {
             return Self.zeroOne(0.5 + projection / span)
         case .radial:
             return Self.zeroOne(hypot(delta.x, delta.y) / cornerDistance)
+        case .angle:
+            guard abs(delta.x) > 0.000_001 || abs(delta.y) > 0.000_001 else { return 0 }
+            let startAngle = atan2(direction.y, direction.x)
+            let turns = (atan2(delta.y, delta.x) - startAngle) / (2 * Double.pi)
+            return turns - floor(turns)
         case .reflected:
             let projection = abs(simd_dot(delta, direction))
             return Self.zeroOne((projection * 2) / span)

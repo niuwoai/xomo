@@ -1042,6 +1042,7 @@
 "imageEditor.properties.shapeFillKind.solid" = "単色";
 "imageEditor.properties.shapeFillKind.linearGradient" = "線形グラデーション";
 "imageEditor.properties.shapeFillKind.radialGradient" = "放射グラデーション";
+"imageEditor.properties.shapeFillKind.angleGradient" = "角度グラデーション";
 "imageEditor.properties.shapeFillKind.reflectedGradient" = "反射グラデーション";
 "imageEditor.properties.shapeFillKind.diamondGradient" = "菱形グラデーション";
 "imageEditor.properties.shapeFillColor" = "塗りの色";
@@ -1374,6 +1375,7 @@
 "imageEditor.gradientFill.style" = "スタイル";
 "imageEditor.gradientFill.style.linear" = "線形";
 "imageEditor.gradientFill.style.radial" = "円形";
+"imageEditor.gradientFill.style.angle" = "角度";
 "imageEditor.gradientFill.style.reflected" = "反射";
 "imageEditor.gradientFill.style.diamond" = "菱形";
 "imageEditor.gradientFill.reverse" = "反転";

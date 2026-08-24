@@ -133,9 +133,10 @@
       "file": "modern-angle-vector-shape.psd",
       "sha256": "940346216abca9f268703265206821d4cf19356f94a918c5b3377257c164c615",
       "expected": [
-        "compatibility_report",
-        "raster_fallback",
-        "angle_gradient"
+        "editable_vector_shape",
+        "vscg",
+        "angle_gradient",
+        "vector_mask"
       ]
     },
     {

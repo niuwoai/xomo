@@ -1042,6 +1042,7 @@
 "imageEditor.properties.shapeFillKind.solid" = "Solid";
 "imageEditor.properties.shapeFillKind.linearGradient" = "Linear gradient";
 "imageEditor.properties.shapeFillKind.radialGradient" = "Radial gradient";
+"imageEditor.properties.shapeFillKind.angleGradient" = "Angle gradient";
 "imageEditor.properties.shapeFillKind.reflectedGradient" = "Reflected gradient";
 "imageEditor.properties.shapeFillKind.diamondGradient" = "Diamond gradient";
 "imageEditor.properties.shapeFillColor" = "Fill color";
@@ -1374,6 +1375,7 @@
 "imageEditor.gradientFill.style" = "Style";
 "imageEditor.gradientFill.style.linear" = "Linear";
 "imageEditor.gradientFill.style.radial" = "Radial";
+"imageEditor.gradientFill.style.angle" = "Angle";
 "imageEditor.gradientFill.style.reflected" = "Reflected";
 "imageEditor.gradientFill.style.diamond" = "Diamond";
 "imageEditor.gradientFill.reverse" = "Reverse";

@@ -1956,6 +1956,11 @@ struct ImageEditorExportFormatTests {
         #expect(diamond.exportData(settings: ImageEditorExportSettings(format: .svg)) == nil)
         #expect(diamond.exportData(settings: ImageEditorExportSettings(format: .pdf)) != nil)
 
+        let angle = makeViewModel(style: .angle, dither: false)
+        #expect(!angle.canExportSVG)
+        #expect(angle.exportData(settings: ImageEditorExportSettings(format: .svg)) == nil)
+        #expect(angle.exportData(settings: ImageEditorExportSettings(format: .pdf)) != nil)
+
         let dithered = makeViewModel(style: .linear, dither: true)
         #expect(!dithered.canExportSVG)
         #expect(dithered.exportData(settings: ImageEditorExportSettings(format: .svg)) == nil)

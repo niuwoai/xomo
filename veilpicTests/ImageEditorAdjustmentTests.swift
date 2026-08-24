@@ -632,13 +632,23 @@ struct ImageEditorAdjustmentTests {
         #expect(diamondContent.style == .diamond)
         #expect(diamondCenter.redComponent > diamondCorner.redComponent + 0.45)
         #expect(diamondCorner.blueComponent > diamondCenter.blueComponent + 0.45)
-        #expect(viewModel.selectedLayerGeometryText == L10n.format("imageEditor.properties.gradientFillLayerValue", diamondContent.preset.title, diamondContent.style.title, 0, 100))
+
+        viewModel.selectedGradientFillStyle = .angle
+        viewModel.gradientFillAngle = 90
+        viewModel.updateSelectedGradientFillLayer()
+
+        let angleContent = try #require(viewModel.document.selectedLayer?.gradientFillContent?.normalized())
+        let angleRight = try #require(viewModel.currentImage.color(at: CGPoint(x: 55, y: 30))?.usingColorSpace(.deviceRGB))
+        let angleLeft = try #require(viewModel.currentImage.color(at: CGPoint(x: 5, y: 30))?.usingColorSpace(.deviceRGB))
+        #expect(angleContent.style == .angle)
+        #expect(abs(angleRight.redComponent - angleLeft.redComponent) > 0.2)
+        #expect(viewModel.selectedLayerGeometryText == L10n.format("imageEditor.properties.gradientFillLayerValue", angleContent.preset.title, angleContent.style.title, 90, 100))
 
         let project = try ImageEditorProjectDocument(document: viewModel.document)
         let restoredDocument = try project.restoredDocument()
         let restoredLayer = try #require(restoredDocument.layers.first { $0.id == gradientLayer.id })
         let restoredContent = try #require(restoredLayer.gradientFillContent?.normalized())
-        #expect(restoredContent.style == .diamond)
+        #expect(restoredContent.style == .angle)
         #expect(restoredContent.preset == .custom)
         #expect(restoredContent.startRed == 1)
         #expect(restoredContent.endBlue == 1)

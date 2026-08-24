@@ -1495,18 +1495,36 @@ struct ImageEditorPSDTests {
         }
     }
 
-    @Test func unsupportedAngleVSCGReportsRasterFallback() throws {
+    @Test func modernVSCGAngleShapeBecomesEditableAndRoundTrips() throws {
         let data = try psdFixtureData("modern-angle-vector-shape.psd")
-        let report = try ImageEditorPSDCodec.compatibilityReport(data)
-        #expect(report.issues.contains { $0.kind == .fillLayerRasterized })
-
         let document = try ImageEditorPSDCodec.decode(
             data,
             sourceName: "modern-angle-vector-shape.psd"
         )
-        let layer = try #require(document.layers.first)
-        #expect(!layer.isShape)
-        #expect(layer.vectorMask != nil)
+        let shape = try #require(document.layers.first?.shapeContent)
+        let gradient = try #require(shape.fillGradient?.normalized())
+
+        #expect(shape.kind == .path)
+        #expect(shape.editablePathAnchors.count == 3)
+        #expect(gradient.style == .angle)
+        #expect(gradient.colorStops?.count == 2)
+
+        let report = try ImageEditorPSDCodec.compatibilityReport(data)
+        #expect(!report.issues.contains { $0.kind == .vectorRasterized })
+        #expect(!report.issues.contains { $0.kind == .fillLayerRasterized })
+
+        var exported = try ImageEditorPSDCodec.encode(document: document)
+        #expect(exported.range(of: Data("Angl".utf8)) != nil)
+        let legacyRange = try #require(exported.range(of: Data("8BIMGdFl".utf8)))
+        exported.replaceSubrange(
+            (legacyRange.upperBound - 4)..<legacyRange.upperBound,
+            with: Data("zzzz".utf8)
+        )
+        let restored = try ImageEditorPSDCodec.decode(
+            exported,
+            sourceName: "vscg-only-modern-angle-vector-shape.psd"
+        )
+        #expect(restored.layers.first?.shapeContent?.fillGradient?.normalized().style == .angle)
     }
 
     @Test func unsupportedVSCGContentReportsRasterFallback() throws {

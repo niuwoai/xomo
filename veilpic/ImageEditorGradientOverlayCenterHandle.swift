@@ -218,7 +218,7 @@ enum ImageEditorGradientOverlayAxisGeometry {
         switch style {
         case .linear, .reflected:
             length = span(angle: normalizedAngle, size: frame.size) * resolvedScale / 2
-        case .radial, .diamond:
+        case .radial, .angle, .diamond:
             length = referenceRadius(size: frame.size) * resolvedScale
         }
         let endpoint = CGPoint(
@@ -262,11 +262,13 @@ enum ImageEditorGradientOverlayAxisGeometry {
             let displayedPosition = reverse ? 1 - stop.position : stop.position
             return ImageEditorGradientOverlayStopHandlePoint(
                 index: index,
-                canvasPoint: point(
-                    at: displayedPosition,
-                    from: geometry.axisStart,
-                    to: geometry.axisEndpoint
-                ),
+                canvasPoint: style == .angle
+                    ? anglePoint(at: displayedPosition, geometry: geometry)
+                    : point(
+                        at: displayedPosition,
+                        from: geometry.axisStart,
+                        to: geometry.axisEndpoint
+                    ),
                 stop: stop,
                 isEndpoint: index == normalizedStops.startIndex
                     || index == normalizedStops.index(before: normalizedStops.endIndex)
@@ -301,11 +303,13 @@ enum ImageEditorGradientOverlayAxisGeometry {
             let displayedPosition = reverse ? 1 - logicalPosition : logicalPosition
             return ImageEditorGradientOverlayMidpointHandlePoint(
                 lowerStopIndex: index,
-                canvasPoint: point(
-                    at: displayedPosition,
-                    from: geometry.axisStart,
-                    to: geometry.axisEndpoint
-                ),
+                canvasPoint: style == .angle
+                    ? anglePoint(at: displayedPosition, geometry: geometry)
+                    : point(
+                        at: displayedPosition,
+                        from: geometry.axisStart,
+                        to: geometry.axisEndpoint
+                    ),
                 midpoint: lower.midpoint
             )
         }
@@ -330,6 +334,19 @@ enum ImageEditorGradientOverlayAxisGeometry {
                   layerFrame: layerFrame
               )
         else { return nil }
+        if style == .angle {
+            let startAngle = atan2(
+                geometry.axisEndpoint.y - geometry.center.y,
+                geometry.axisEndpoint.x - geometry.center.x
+            )
+            let pointerAngle = atan2(
+                canvasPoint.y - geometry.center.y,
+                canvasPoint.x - geometry.center.x
+            )
+            let turns = Double((pointerAngle - startAngle) / (2 * .pi))
+            let displayedPosition = turns - floor(turns)
+            return reverse ? 1 - displayedPosition : displayedPosition
+        }
         let axis = CGVector(
             dx: geometry.axisEndpoint.x - geometry.axisStart.x,
             dy: geometry.axisEndpoint.y - geometry.axisStart.y
@@ -387,10 +404,30 @@ enum ImageEditorGradientOverlayAxisGeometry {
         )
     }
 
+    private static func anglePoint(
+        at position: Double,
+        geometry: ImageEditorGradientOverlayCanvasGeometry
+    ) -> CGPoint {
+        let baseAngle = atan2(
+            geometry.axisEndpoint.y - geometry.center.y,
+            geometry.axisEndpoint.x - geometry.center.x
+        )
+        let radius = hypot(
+            geometry.axisEndpoint.x - geometry.center.x,
+            geometry.axisEndpoint.y - geometry.center.y
+        )
+        let angle = baseAngle + CGFloat(position) * 2 * .pi
+        return CGPoint(
+            x: geometry.center.x + cos(angle) * radius,
+            y: geometry.center.y + sin(angle) * radius
+        )
+    }
+
     static func updatedAxis(
         style: ImageEditorGradientFillStyle,
         center: CGPoint,
         currentAngle: CGFloat,
+        currentScale: CGFloat = 1,
         layerFrame: CGRect,
         canvasPoint: CGPoint,
         snappingAngle: Bool
@@ -424,11 +461,17 @@ enum ImageEditorGradientOverlayAxisGeometry {
             angle = (angle / angleSnapStep).rounded() * angleSnapStep
         }
         angle = normalizedAngle(angle)
+        if style == .angle {
+            return ImageEditorGradientOverlayAxisValues(
+                angle: angle,
+                scale: max(0.25, min(4, currentScale))
+            )
+        }
         let referenceLength: CGFloat
         switch style {
         case .linear, .reflected:
             referenceLength = span(angle: angle, size: frame.size) / 2
-        case .diamond:
+        case .angle, .diamond:
             referenceLength = referenceRadius(size: frame.size)
         case .radial:
             return nil
@@ -610,6 +653,7 @@ extension ImageEditorViewModel {
                   style: document.layers[index].style.gradientOverlayStyle,
                   center: document.layers[index].style.gradientOverlayCenter,
                   currentAngle: document.layers[index].style.gradientOverlayAngle,
+                  currentScale: document.layers[index].style.gradientOverlayScale,
                   layerFrame: document.layers[index].frame,
                   canvasPoint: canvasPoint,
                   snappingAngle: snappingAngle

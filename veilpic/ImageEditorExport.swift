@@ -837,7 +837,9 @@ extension ImageEditorViewModel {
                let gradient = content.fillGradient,
                content.kind != .path || content.isPathClosed {
                 let normalized = gradient.normalized()
-                guard !normalized.dither, normalized.style != .diamond else {
+                guard !normalized.dither,
+                      normalized.style != .diamond,
+                      normalized.style != .angle else {
                     return false
                 }
             }
@@ -1169,7 +1171,8 @@ extension ImageEditorViewModel {
         guard content.kind != .path || content.isPathClosed,
               let gradient = content.fillGradient?.normalized(),
               !gradient.dither,
-              gradient.style != .diamond else {
+              gradient.style != .diamond,
+              gradient.style != .angle else {
             return nil
         }
         let identifier = layer.id.uuidString.replacingOccurrences(of: "-", with: "")
@@ -1213,6 +1216,8 @@ extension ImageEditorViewModel {
             )
             definition = "<radialGradient id=\"\(gradientID)\" gradientUnits=\"userSpaceOnUse\" cx=\"\(svgNumber(center.x))\" cy=\"\(svgNumber(center.y))\" r=\"\(svgNumber(radius))\" fx=\"\(svgNumber(center.x))\" fy=\"\(svgNumber(center.y))\" gradientTransform=\"\(transform)\" spreadMethod=\"pad\" data-xomo-gradient-style=\"radial\">\(svgGradientStops(ramp))</radialGradient>"
         case .diamond:
+            return nil
+        case .angle:
             return nil
         }
         return (definition, "url(#\(gradientID))")

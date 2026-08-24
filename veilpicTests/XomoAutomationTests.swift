@@ -7549,6 +7549,15 @@ struct XomoAutomationTests {
         #expect(registry.execute(request(
             operation: "call",
             name: "xomo.shape.update",
+            arguments: ["fillKind": .string("angleGradient")]
+        )).ok)
+        #expect(viewModel.document.selectedLayer?.shapeContent?.fillGradient?.style == .angle)
+        let angle = registry.execute(request(operation: "call", name: "xomo.shape.get"))
+        #expect(angle.result?.objectValue?["fillKind"] == .string("angleGradient"))
+
+        #expect(registry.execute(request(
+            operation: "call",
+            name: "xomo.shape.update",
             arguments: [
                 "fillGradient": .object([
                     "startColor": .object([
@@ -7562,10 +7571,10 @@ struct XomoAutomationTests {
                 ])
             ]
         )).ok)
-        #expect(viewModel.document.selectedLayer?.shapeContent?.fillGradient?.style == .diamond)
+        #expect(viewModel.document.selectedLayer?.shapeContent?.fillGradient?.style == .angle)
         #expect(viewModel.document.selectedLayer?.shapeContent?.fillGradient?.scale == 0.9)
-        let diamond = registry.execute(request(operation: "call", name: "xomo.shape.get"))
-        #expect(diamond.result?.objectValue?["fillKind"] == .string("diamondGradient"))
+        let updatedAngle = registry.execute(request(operation: "call", name: "xomo.shape.get"))
+        #expect(updatedAngle.result?.objectValue?["fillKind"] == .string("angleGradient"))
 
         let tools = registry.execute(request(operation: "tools")).result?.arrayValue ?? []
         let updateTool = try #require(tools.compactMap(\.objectValue).first {
@@ -7578,6 +7587,7 @@ struct XomoAutomationTests {
                     .string("solid"),
                     .string("linearGradient"),
                     .string("radialGradient"),
+                    .string("angleGradient"),
                     .string("reflectedGradient"),
                     .string("diamondGradient")
                 ]

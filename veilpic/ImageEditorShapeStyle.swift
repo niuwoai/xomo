@@ -12,6 +12,7 @@ enum ImageEditorShapeFillKind: String, CaseIterable, Identifiable {
     case solid
     case linearGradient
     case radialGradient
+    case angleGradient
     case reflectedGradient
     case diamondGradient
 
@@ -228,6 +229,7 @@ extension ImageEditorViewModel {
         switch gradient.style {
         case .linear: return .linearGradient
         case .radial: return .radialGradient
+        case .angle: return .angleGradient
         case .reflected: return .reflectedGradient
         case .diamond: return .diamondGradient
         }
@@ -347,6 +349,10 @@ extension ImageEditorViewModel {
         case .radialGradient:
             var gradient = selectedShapeGradient
             gradient.style = .radial
+            updateSelectedShapeProperties(fillGradient: gradient)
+        case .angleGradient:
+            var gradient = selectedShapeGradient
+            gradient.style = .angle
             updateSelectedShapeProperties(fillGradient: gradient)
         case .reflectedGradient:
             var gradient = selectedShapeGradient

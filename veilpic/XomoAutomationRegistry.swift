@@ -2974,6 +2974,7 @@ final class XomoAutomationRegistry {
         switch gradient.style {
         case .linear: return "linearGradient"
         case .radial: return "radialGradient"
+        case .angle: return "angleGradient"
         case .reflected: return "reflectedGradient"
         case .diamond: return "diamondGradient"
         }
@@ -2983,6 +2984,7 @@ final class XomoAutomationRegistry {
         switch fillKind {
         case "linearGradient": return .linear
         case "radialGradient": return .radial
+        case "angleGradient": return .angle
         case "reflectedGradient": return .reflected
         case "diamondGradient": return .diamond
         default: return nil
@@ -3034,12 +3036,13 @@ final class XomoAutomationRegistry {
                   "solid",
                   "linearGradient",
                   "radialGradient",
+                  "angleGradient",
                   "reflectedGradient",
                   "diamondGradient"
               ].contains(fillKind)
         else {
             throw XomoAutomationCallError.invalidArgument(
-                "fillKind must be solid, linearGradient, radialGradient, reflectedGradient, or diamondGradient"
+                "fillKind must be solid, linearGradient, radialGradient, angleGradient, reflectedGradient, or diamondGradient"
             )
         }
         if fillKind == "solid", fillGradient != nil {
@@ -7456,7 +7459,7 @@ private extension XomoAutomationRegistry {
             "height": XomoAutomationSchema.number(description: "Height"),
             "fillKind": XomoAutomationSchema.string(
                 description: "Shape fill type",
-                values: ["solid", "linearGradient", "radialGradient", "reflectedGradient", "diamondGradient"]
+                values: ["solid", "linearGradient", "radialGradient", "angleGradient", "reflectedGradient", "diamondGradient"]
             ),
             "fillColor": shapeColorSchema,
             "fillGradient": shapeGradientSchema,
@@ -7493,7 +7496,7 @@ private extension XomoAutomationRegistry {
             "opacity": shapeUnitIntervalSchema(description: "Legacy shared fill and stroke opacity"),
             "fillKind": XomoAutomationSchema.string(
                 description: "Shape fill type",
-                values: ["solid", "linearGradient", "radialGradient", "reflectedGradient", "diamondGradient"]
+                values: ["solid", "linearGradient", "radialGradient", "angleGradient", "reflectedGradient", "diamondGradient"]
             ),
             "fillColor": shapeColorSchema,
             "fillGradient": shapeGradientSchema,

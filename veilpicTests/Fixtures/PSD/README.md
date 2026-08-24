@@ -25,7 +25,7 @@
 | `modern-radial-vector-shape.psd` | `GdFl` 的 `Rdl ` 类型，恢复为原生径向渐变矢量形状 |
 | `modern-reflected-vector-shape.psd` | `GdFl` 的 `Rflc` 类型，恢复为原生对称渐变矢量形状 |
 | `modern-diamond-vector-shape.psd` | `GdFl` 的 `Dmnd` 类型，恢复为原生菱形渐变矢量形状 |
-| `modern-angle-vector-shape.psd` | Xomo 尚无对应模型的 `Angl` 类型，验证兼容性报告与安全栅格降级 |
+| `modern-angle-vector-shape.psd` | `GdFl` 的 `Angl` 类型，恢复为原生角度渐变矢量形状并验证现代描述符往返 |
 | `path-resources.psd` | 外部生成的 Image Resources 路径资源，验证闭合路径和开放路径进入路径面板 |
 
 重新生成：
