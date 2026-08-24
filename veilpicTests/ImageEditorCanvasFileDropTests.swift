@@ -152,6 +152,33 @@ struct ImageEditorCanvasFileDropTests {
         #expect(viewModel.document.layers.map(\.id) == originalLayerIDs)
     }
 
+    @Test func menuBatchImportCentersTheWholeRowOnCanvasInOneUndoStep() throws {
+        let viewModel = makeViewModel()
+        let originalLayerIDs = viewModel.document.layers.map(\.id)
+        let originalHistoryCount = viewModel.document.history.count
+        let firstURL = temporaryURL(extension: "png")
+        let secondURL = temporaryURL(extension: "jpg")
+        defer {
+            try? FileManager.default.removeItem(at: firstURL)
+            try? FileManager.default.removeItem(at: secondURL)
+        }
+        try writeRasterImage(size: CGSize(width: 20, height: 10), to: firstURL, color: .systemOrange)
+        try writeRasterImage(size: CGSize(width: 30, height: 20), to: secondURL, color: .systemGreen)
+
+        #expect(viewModel.importLayerFiles([firstURL, secondURL]))
+        let imported = Array(viewModel.document.layers.suffix(2))
+        #expect(imported.map(\.frame) == [
+            CGRect(x: 67, y: 75, width: 20, height: 10),
+            CGRect(x: 103, y: 70, width: 30, height: 20)
+        ])
+        #expect(viewModel.document.selectedLayerIDs == Set(imported.map(\.id)))
+        #expect(viewModel.document.selectedLayerID == imported.last?.id)
+        #expect(viewModel.document.history.count == originalHistoryCount + 1)
+
+        viewModel.undo()
+        #expect(viewModel.document.layers.map(\.id) == originalLayerIDs)
+    }
+
     @Test func corruptMemberRejectsTheWholeBatchAndPreservesExistingRedo() throws {
         let viewModel = makeViewModel()
         viewModel.addLayer()

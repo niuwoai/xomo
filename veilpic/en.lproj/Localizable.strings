@@ -2709,7 +2709,7 @@
 "imageEditor.action.layerDistributeHorizontalSpacing" = "Distribute horizontal spacing";
 "imageEditor.action.layerDistributeVerticalSpacing" = "Distribute vertical spacing";
 "imageEditor.action.layerImport" = "Import Image as Layer";
-"imageEditor.action.fileImport" = "Import File…";
+"imageEditor.action.fileImport" = "Import Files…";
 "imageEditor.action.exportSelection" = "Export Selection / Slice…";
 "imageEditor.action.exportLayers" = "Export Selected Layers…";
 "imageEditor.action.canvasNewFromClipboard" = "New Canvas from Clipboard";

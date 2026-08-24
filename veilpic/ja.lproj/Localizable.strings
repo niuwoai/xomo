@@ -2709,7 +2709,7 @@
 "imageEditor.action.layerDistributeHorizontalSpacing" = "水平方向の間隔を分布";
 "imageEditor.action.layerDistributeVerticalSpacing" = "垂直方向の間隔を分布";
 "imageEditor.action.layerImport" = "画像をレイヤーとして読み込み";
-"imageEditor.action.fileImport" = "ファイルを読み込む…";
+"imageEditor.action.fileImport" = "複数ファイルを読み込む…";
 "imageEditor.action.exportSelection" = "選択範囲 / スライスを書き出す…";
 "imageEditor.action.exportLayers" = "選択レイヤーを書き出す…";
 "imageEditor.action.canvasNewFromClipboard" = "クリップボードから新規キャンバス";

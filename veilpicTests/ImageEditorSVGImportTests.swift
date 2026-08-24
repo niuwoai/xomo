@@ -1177,7 +1177,7 @@ struct ImageEditorSVGImportTests {
         #expect(abs(imported.content.strokeOpacity - 0.3) < 0.001)
     }
 
-    @Test func fileImportPanelRoutesSVGThroughSharedEditableShapeImporter() throws {
+    @Test func fileImportPanelRoutesMultipleSelectionsThroughAtomicSharedImporter() throws {
         let root = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()
             .deletingLastPathComponent()
@@ -1197,12 +1197,16 @@ struct ImageEditorSVGImportTests {
         let sharedImporter = source[sharedImporterStart..<sharedImporterEnd.lowerBound]
 
         #expect(chooser.contains("UTType(filenameExtension: \"svg\")"))
-        #expect(chooser.contains("self.importLayerFile(url)"))
+        #expect(chooser.contains("panel.allowsMultipleSelection = true"))
+        #expect(chooser.contains("!panel.urls.isEmpty"))
+        #expect(chooser.contains("self.importLayerFiles(panel.urls)"))
         #expect(sharedImporter.contains("ImageEditorLayerFileImportPolicy.kind(for: url)"))
         #expect(sharedImporter.contains("case .editableSVG:"))
-        #expect(sharedImporter.contains("importEditableSVGLayer("))
+        #expect(sharedImporter.contains("XomoEditableSVGImporter.parse(data)"))
         #expect(sharedImporter.contains("case .rasterImage:"))
         #expect(sharedImporter.contains("NSImage(contentsOf: url)"))
+        #expect(sharedImporter.contains("for url in urls"))
+        #expect(sharedImporter.contains("document.layers.append(contentsOf: layers)"))
         let svgRoute = try #require(sharedImporter.range(of: "case .editableSVG:"))
         let bitmapRoute = try #require(sharedImporter.range(of: "case .rasterImage:"))
         #expect(svgRoute.lowerBound < bitmapRoute.lowerBound)

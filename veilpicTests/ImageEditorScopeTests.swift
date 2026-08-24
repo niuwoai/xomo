@@ -542,7 +542,7 @@ struct ImageEditorScopeTests {
         #expect(interaction.contains("onFileDrop: { urls, location in"))
         #expect(interaction.contains("ImageEditorLayerFileImportPolicy.supportedURLs(from: urls)"))
         #expect(interaction.contains("viewModel.importLayerFiles(urls, centeredAt: canvasPoint)"))
-        #expect(importSource.contains("self.importLayerFile(url)"))
+        #expect(importSource.contains("self.importLayerFiles(panel.urls)"))
         let batchStart = try #require(importSource.range(of: "func importLayerFiles("))
         let batchEnd = try #require(
             importSource[batchStart.upperBound...].range(of: "private func prepareLayerFileImport")

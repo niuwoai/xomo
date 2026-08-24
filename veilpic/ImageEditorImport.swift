@@ -105,14 +105,14 @@ extension ImageEditorViewModel {
             .jpeg,
             UTType(filenameExtension: "svg") ?? .xml
         ]
-        panel.allowsMultipleSelection = false
+        panel.allowsMultipleSelection = true
         panel.canChooseDirectories = false
         panel.canChooseFiles = true
         panel.prompt = L10n.text("imageEditor.action.fileImport")
         panel.begin { [weak self] response in
             Task { @MainActor in
-                guard let self, response == .OK, let url = panel.url else { return }
-                self.importLayerFile(url)
+                guard let self, response == .OK, !panel.urls.isEmpty else { return }
+                self.importLayerFiles(panel.urls)
             }
         }
     }
@@ -129,7 +129,7 @@ extension ImageEditorViewModel {
     }
 
     @discardableResult
-    func importLayerFiles(_ urls: [URL], centeredAt point: CGPoint) -> Bool {
+    func importLayerFiles(_ urls: [URL], centeredAt point: CGPoint? = nil) -> Bool {
         guard let urls = ImageEditorLayerFileImportPolicy.supportedURLs(from: urls) else {
             statusText = L10n.text("imageEditor.status.layerImportFailed")
             return false
@@ -147,7 +147,10 @@ extension ImageEditorViewModel {
 
         let frames = ImageEditorLayerFileImportPolicy.batchFrames(
             for: preparedImports.map(\.size),
-            centeredAt: point
+            centeredAt: point ?? CGPoint(
+                x: max(document.canvasSize.width, 1) / 2,
+                y: max(document.canvasSize.height, 1) / 2
+            )
         )
         guard frames.count == preparedImports.count else {
             statusText = L10n.text("imageEditor.status.layerImportFailed")
