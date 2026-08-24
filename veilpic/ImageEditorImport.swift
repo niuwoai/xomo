@@ -72,6 +72,34 @@ nonisolated enum ImageEditorEmbeddedSmartObjectFilePolicy {
     }
 }
 
+nonisolated enum ImageEditorEmbeddedSmartObjectPlacementPolicy {
+    static func frame(for contentSize: CGSize, in canvasSize: CGSize) -> CGRect {
+        let safeContentSize = CGSize(
+            width: max(1, contentSize.width),
+            height: max(1, contentSize.height)
+        )
+        let safeCanvasSize = CGSize(
+            width: max(1, canvasSize.width),
+            height: max(1, canvasSize.height)
+        )
+        let scale = min(
+            1,
+            safeCanvasSize.width / safeContentSize.width,
+            safeCanvasSize.height / safeContentSize.height
+        )
+        let placedSize = CGSize(
+            width: safeContentSize.width * scale,
+            height: safeContentSize.height * scale
+        )
+        return CGRect(
+            x: (safeCanvasSize.width - placedSize.width) / 2,
+            y: (safeCanvasSize.height - placedSize.height) / 2,
+            width: placedSize.width,
+            height: placedSize.height
+        )
+    }
+}
+
 private enum ImageEditorPreparedLayerFileImport {
     case raster(sourceName: String, image: NSImage)
     case editableSVG(sourceName: String, imported: XomoEditableSVGImport)
@@ -157,7 +185,10 @@ extension ImageEditorViewModel {
         let cleanName = cleanLayerName(from: sourceName)
         let frame = point.map {
             ImageEditorLayerFileImportPolicy.frame(for: image.size, centeredAt: $0)
-        } ?? centeredImportFrame(for: image.size)
+        } ?? ImageEditorEmbeddedSmartObjectPlacementPolicy.frame(
+            for: image.size,
+            in: document.canvasSize
+        )
         var layer = ImageEditorLayer.smartObject(
             name: L10n.format("imageEditor.layer.smartObjectName", cleanName),
             image: image,

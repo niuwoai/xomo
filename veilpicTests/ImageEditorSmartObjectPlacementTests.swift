@@ -6,6 +6,21 @@ import Testing
 @MainActor
 @Suite(.serialized)
 struct ImageEditorSmartObjectPlacementTests {
+    @Test func placementFitsOnlyOversizedSourcesWithoutChangingAspectRatio() {
+        #expect(ImageEditorEmbeddedSmartObjectPlacementPolicy.frame(
+            for: CGSize(width: 400, height: 200),
+            in: CGSize(width: 200, height: 160)
+        ) == CGRect(x: 0, y: 30, width: 200, height: 100))
+        #expect(ImageEditorEmbeddedSmartObjectPlacementPolicy.frame(
+            for: CGSize(width: 100, height: 400),
+            in: CGSize(width: 200, height: 160)
+        ) == CGRect(x: 80, y: 0, width: 40, height: 160))
+        #expect(ImageEditorEmbeddedSmartObjectPlacementPolicy.frame(
+            for: CGSize(width: 40, height: 20),
+            in: CGSize(width: 200, height: 160)
+        ) == CGRect(x: 80, y: 70, width: 40, height: 20))
+    }
+
     @Test func policyAcceptsRasterSourcesWithoutSilentlyRasterizingSVG() throws {
         for path in [
             "/tmp/art.PNG",
@@ -98,6 +113,26 @@ struct ImageEditorSmartObjectPlacementTests {
 
         viewModel.redo()
         #expect(viewModel.document.layers.count == layerIDs.count + 1)
+    }
+
+    @Test func oversizedPlacementFitsCanvasWhileResetTransformRestoresSourceSize() throws {
+        let viewModel = makeViewModel()
+        let url = temporaryURL(extension: "png")
+        defer { try? FileManager.default.removeItem(at: url) }
+        try writePNG(size: CGSize(width: 400, height: 200), to: url)
+
+        #expect(viewModel.placeEmbeddedSmartObjectFile(url))
+        let placed = try #require(viewModel.document.selectedLayer)
+        #expect(placed.frame == CGRect(x: 0, y: 30, width: 200, height: 100))
+        #expect(placed.smartObjectContent?.originalSize == CGSize(width: 400, height: 200))
+
+        viewModel.resetSelectedSmartObjectTransform()
+        let reset = try #require(viewModel.document.selectedLayer)
+        #expect(reset.frame == CGRect(x: -100, y: -20, width: 400, height: 200))
+        #expect(reset.smartObjectContent?.originalSize == CGSize(width: 400, height: 200))
+
+        viewModel.undo()
+        #expect(viewModel.document.selectedLayer?.frame == placed.frame)
     }
 
     @Test func fileMenuActionUsesSingleSelectionRasterChooserAndSharedCommandCatalog() throws {
