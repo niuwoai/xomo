@@ -1325,7 +1325,7 @@ struct XomoFigmaNodeImportPlanTests {
         #expect((shape.fillGradient?.shapeColorStops[1].green ?? 0) > 0.95)
     }
 
-    @Test func orthogonalDiamondGradientsMapWhileDistortedAndAngularPaintsDegrade() throws {
+    @Test func orthogonalDiamondAndAngularGradientsMapWhileDistortedDiamondDegrades() throws {
         let response = try JSONDecoder().decode(
             XomoFigmaNodeResponse.self,
             from: Data(
@@ -1385,6 +1385,7 @@ struct XomoFigmaNodeImportPlanTests {
                             "absoluteBoundingBox": {"x": 280, "y": 20, "width": 80, "height": 80},
                             "fills": [{
                               "type": "GRADIENT_ANGULAR",
+                              "opacity": 0.75,
                               "gradientHandlePositions": [
                                 {"x": 0.5, "y": 0.5},
                                 {"x": 1, "y": 0.5},
@@ -1392,6 +1393,7 @@ struct XomoFigmaNodeImportPlanTests {
                               ],
                               "gradientStops": [
                                 {"position": 0, "color": {"r": 1, "g": 1, "b": 1, "a": 1}},
+                                {"position": 0.4, "color": {"r": 0, "g": 1, "b": 0, "a": 0.5}},
                                 {"position": 1, "color": {"r": 0, "g": 0, "b": 0, "a": 1}}
                               ]
                             }]
@@ -1413,6 +1415,7 @@ struct XomoFigmaNodeImportPlanTests {
         let distorted = try #require(plan.items.first { $0.sourceID == "2:43" })
         let angular = try #require(plan.items.first { $0.sourceID == "2:44" })
         let diamondFill = try #require(diamond.diamondGradientFill)
+        let angularFill = try #require(angular.angleGradientFill)
         #expect(diamond.fidelity == .exact)
         #expect(diamond.linearGradientFill == nil)
         #expect(diamond.radialGradientFill == nil)
@@ -1428,9 +1431,18 @@ struct XomoFigmaNodeImportPlanTests {
         #expect(distorted.fidelity == .partial)
         #expect(distorted.diamondGradientFill == nil)
         #expect(distorted.issues.contains(.unsupportedPaint))
-        #expect(angular.fidelity == .partial)
+        #expect(angular.fidelity == .exact)
+        #expect(angular.linearGradientFill == nil)
+        #expect(angular.radialGradientFill == nil)
         #expect(angular.diamondGradientFill == nil)
-        #expect(angular.issues.contains(.unsupportedPaint))
+        #expect(!angular.issues.contains(.unsupportedPaint))
+        #expect(abs(angularFill.angle) < 0.001)
+        #expect(abs(angularFill.centerX - 0.5) < 0.001)
+        #expect(abs(angularFill.centerY - 0.5) < 0.001)
+        #expect(angularFill.opacity == 0.75)
+        #expect(angularFill.colorStops.count == 3)
+        #expect(angularFill.colorStops[1].position == 0.4)
+        #expect(angularFill.colorStops[1].color.alpha == 0.5)
 
         let materialized = XomoFigmaNodeMaterializer.materialize(
             plan: plan,
@@ -1448,6 +1460,16 @@ struct XomoFigmaNodeImportPlanTests {
         #expect(shape.fillGradient?.shapeColorStops[1].alpha == 0.5)
         #expect(shape.fillGradient?.shapeColorStops.count == 3)
         #expect((shape.fillGradient?.shapeColorStops[1].green ?? 0) > 0.95)
+        let angularShape = try #require(
+            materialized.layers.first { $0.name == "Angular Gradient" }?.shapeContent
+        )
+        #expect(angularShape.fillGradient?.style == .angle)
+        #expect(abs((angularShape.fillGradient?.angle ?? 1) - angularFill.angle) < 0.001)
+        #expect(abs(angularShape.fillGradientCenter.x - 0.5) < 0.001)
+        #expect(abs(angularShape.fillGradientCenter.y - 0.5) < 0.001)
+        #expect(abs(angularShape.fillOpacity - 0.75) < 0.001)
+        #expect(angularShape.fillGradient?.shapeColorStops.count == 3)
+        #expect(angularShape.fillGradient?.shapeColorStops[1].alpha == 0.5)
 
         var document = ImageEditorDocument(
             sourceName: "figma-diamond.png",
@@ -1465,6 +1487,49 @@ struct XomoFigmaNodeImportPlanTests {
         #expect(abs(restoredShape.fillGradientCenter.x - 0.4) < 0.001)
         #expect(abs(restoredShape.fillGradientCenter.y - 0.5) < 0.001)
         #expect(restoredShape.fillGradient?.shapeColorStops.count == 3)
+        let restoredAngular = try #require(
+            restoredDocument.layers.first { $0.name == "Angular Gradient" }?.shapeContent
+        )
+        #expect(restoredAngular.fillGradient?.style == .angle)
+        #expect(abs((restoredAngular.fillGradient?.angle ?? 1) - angularFill.angle) < 0.001)
+        #expect(abs(restoredAngular.fillGradientCenter.x - 0.5) < 0.001)
+        #expect(abs(restoredAngular.fillGradientCenter.y - 0.5) < 0.001)
+        #expect(abs(restoredAngular.fillOpacity - 0.75) < 0.001)
+        #expect(restoredAngular.fillGradient?.shapeColorStops.count == 3)
+        #expect(restoredAngular.fillGradient?.shapeColorStops[1].alpha == 0.5)
+    }
+
+    @Test func distortedOrMirroredAngularGradientsDegradeInsteadOfChangingSweepGeometry() throws {
+        let response = try JSONDecoder().decode(
+            XomoFigmaNodeResponse.self,
+            from: Data(
+                #"{"name":"Distorted Angular","nodes":{"1:45":{"document":{"id":"1:45","name":"Distorted Angular","type":"RECTANGLE","absoluteBoundingBox":{"x":0,"y":0,"width":100,"height":80},"fills":[{"type":"GRADIENT_ANGULAR","gradientHandlePositions":[{"x":0.5,"y":0.5},{"x":0.9,"y":0.5},{"x":0.5,"y":0.75}],"gradientStops":[{"position":0,"color":{"r":1,"g":0,"b":0,"a":1}},{"position":1,"color":{"r":0,"g":0,"b":1,"a":1}}]}]}}}}"#.utf8
+            )
+        )
+
+        let plan = try XomoFigmaNodeImportMapper.makePlan(
+            response: response,
+            requestedNodeID: "1:45"
+        )
+        let item = try #require(plan.items.first)
+        #expect(item.fidelity == .partial)
+        #expect(item.angleGradientFill == nil)
+        #expect(item.issues.contains(.unsupportedPaint))
+
+        let mirroredResponse = try JSONDecoder().decode(
+            XomoFigmaNodeResponse.self,
+            from: Data(
+                #"{"name":"Mirrored Angular","nodes":{"1:46":{"document":{"id":"1:46","name":"Mirrored Angular","type":"ELLIPSE","absoluteBoundingBox":{"x":0,"y":0,"width":80,"height":80},"fills":[{"type":"GRADIENT_ANGULAR","gradientHandlePositions":[{"x":0.5,"y":0.5},{"x":1,"y":0.5},{"x":0.5,"y":0}],"gradientStops":[{"position":0,"color":{"r":1,"g":0,"b":0,"a":1}},{"position":1,"color":{"r":0,"g":0,"b":1,"a":1}}]}]}}}}"#.utf8
+            )
+        )
+        let mirroredPlan = try XomoFigmaNodeImportMapper.makePlan(
+            response: mirroredResponse,
+            requestedNodeID: "1:46"
+        )
+        let mirrored = try #require(mirroredPlan.items.first)
+        #expect(mirrored.fidelity == .partial)
+        #expect(mirrored.angleGradientFill == nil)
+        #expect(mirrored.issues.contains(.unsupportedPaint))
     }
 
     @Test func clientRequiresSpecificNodeAndUsesBoundedOfficialEndpoint() async throws {

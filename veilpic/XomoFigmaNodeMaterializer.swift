@@ -547,6 +547,7 @@ enum XomoFigmaNodeMaterializer {
                 || item.linearGradientFill != nil
                 || item.radialGradientFill != nil
                 || item.diamondGradientFill != nil
+                || item.angleGradientFill != nil
                 || item.solidStroke != nil,
               let frame = mappedFrame(item.frame, transform: transform)
         else { return nil }
@@ -802,17 +803,33 @@ enum XomoFigmaNodeMaterializer {
             gradient.style = .diamond
             return gradient
         }
-        let gradient = linearGradient ?? radialGradient ?? diamondGradient
+        let angleGradient = item.angleGradientFill.map { value in
+            var gradient = ImageEditorGradientFillContent.shapeLinear(
+                colorStops: value.colorStops.map { stop in
+                    ImageEditorGradientColorStop(
+                        position: stop.position,
+                        color: nsColor(stop.color, fallback: .clear)
+                    )
+                },
+                angle: CGFloat(value.angle)
+            )
+            gradient.style = .angle
+            return gradient
+        }
+        let gradient = linearGradient ?? radialGradient ?? diamondGradient ?? angleGradient
         let gradientCenter = item.linearGradientFill.map {
             CGPoint(x: $0.centerX, y: $0.centerY)
         } ?? item.radialGradientFill.map {
             CGPoint(x: $0.centerX, y: $0.centerY)
         } ?? item.diamondGradientFill.map {
             CGPoint(x: $0.centerX, y: $0.centerY)
+        } ?? item.angleGradientFill.map {
+            CGPoint(x: $0.centerX, y: $0.centerY)
         }
         let gradientOpacity = item.linearGradientFill?.opacity
             ?? item.radialGradientFill?.opacity
             ?? item.diamondGradientFill?.opacity
+            ?? item.angleGradientFill?.opacity
         return ImageEditorShapeContent(
             kind: kind,
             fillColor: fill,

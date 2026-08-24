@@ -167,6 +167,16 @@ struct XomoFigmaPlanDiamondGradient: Equatable, Sendable {
     var colorStops: [XomoFigmaPlanGradientStop]
 }
 
+struct XomoFigmaPlanAngleGradient: Equatable, Sendable {
+    var startColor: XomoFigmaPlanColor
+    var endColor: XomoFigmaPlanColor
+    var angle: Double
+    var centerX: Double
+    var centerY: Double
+    var opacity: Double
+    var colorStops: [XomoFigmaPlanGradientStop]
+}
+
 struct XomoFigmaPlanSize: Codable, Equatable, Sendable {
     var width: Double
     var height: Double
@@ -478,6 +488,7 @@ struct XomoFigmaNodeImportItem: Equatable, Identifiable, Sendable {
     var linearGradientFill: XomoFigmaPlanLinearGradient? = nil
     var radialGradientFill: XomoFigmaPlanRadialGradient? = nil
     var diamondGradientFill: XomoFigmaPlanDiamondGradient? = nil
+    var angleGradientFill: XomoFigmaPlanAngleGradient? = nil
     var solidStroke: XomoFigmaPlanColor?
     var strokeWeight: Double?
     var strokeAlign: String? = nil

@@ -435,6 +435,9 @@ enum XomoFigmaNodeImportMapper {
             diamondGradientFill: supportsGradientFill(node.type)
                 ? diamondGradient(in: node.fills, bounds: node.absoluteBoundingBox)
                 : nil,
+            angleGradientFill: supportsGradientFill(node.type)
+                ? angleGradient(in: node.fills, bounds: node.absoluteBoundingBox)
+                : nil,
             solidStroke: solidColor(in: node.strokes),
             strokeWeight: resolvedStrokeWeight(node),
             strokeAlign: node.strokeAlign,
@@ -1132,7 +1135,8 @@ enum XomoFigmaNodeImportMapper {
                 && !hasSupportedGradientCenter(paint)
         }
         let hasUnsupportedGradientScale = visiblePaints.contains { paint in
-            guard editableGradientPaintTypes.contains(paint.type),
+            guard paint.type != "GRADIENT_ANGULAR",
+                  editableGradientPaintTypes.contains(paint.type),
                   let scale = rawGradientScale(paint, bounds: node.absoluteBoundingBox)
             else { return false }
             return !gradientScaleRange.contains(scale)
@@ -1147,6 +1151,8 @@ enum XomoFigmaNodeImportMapper {
                 return radialGradient(in: [paint], bounds: node.absoluteBoundingBox) == nil
             case "GRADIENT_DIAMOND":
                 return diamondGradient(in: [paint], bounds: node.absoluteBoundingBox) == nil
+            case "GRADIENT_ANGULAR":
+                return angleGradient(in: [paint], bounds: node.absoluteBoundingBox) == nil
             default:
                 return true
             }
@@ -1206,7 +1212,9 @@ enum XomoFigmaNodeImportMapper {
         else { return false }
         let centerX: Double
         let centerY: Double
-        if paint.type == "GRADIENT_RADIAL" || paint.type == "GRADIENT_DIAMOND" {
+        if paint.type == "GRADIENT_RADIAL"
+            || paint.type == "GRADIENT_DIAMOND"
+            || paint.type == "GRADIENT_ANGULAR" {
             centerX = handles[0].x
             centerY = handles[0].y
         } else {
@@ -1415,6 +1423,63 @@ enum XomoFigmaNodeImportMapper {
         )
     }
 
+    private static func angleGradient(
+        in paints: [XomoFigmaPaint]?,
+        bounds: XomoFigmaRectangle?
+    ) -> XomoFigmaPlanAngleGradient? {
+        guard let paint = (paints ?? []).first(where: {
+            ($0.visible ?? true) && $0.type == "GRADIENT_ANGULAR"
+        }),
+        let bounds,
+        bounds.width.isFinite,
+        bounds.height.isFinite,
+        bounds.width > 0,
+        bounds.height > 0,
+        let handles = paint.gradientHandlePositions,
+        handles.count == 3,
+        handles.allSatisfy(\.isFinite),
+        let resolvedStops = resolvedGradientStops(paint)
+        else { return nil }
+
+        let center = handles[0]
+        let firstAxis = (
+            x: (handles[1].x - center.x) * bounds.width,
+            y: (handles[1].y - center.y) * bounds.height
+        )
+        let secondAxis = (
+            x: (handles[2].x - center.x) * bounds.width,
+            y: (handles[2].y - center.y) * bounds.height
+        )
+        let firstLength = hypot(firstAxis.x, firstAxis.y)
+        let secondLength = hypot(secondAxis.x, secondAxis.y)
+        let maximumLength = max(firstLength, secondLength)
+        let orientation = firstAxis.x * secondAxis.y - firstAxis.y * secondAxis.x
+        // Xomo's Angle model is a clockwise circular sweep. A stretched,
+        // skewed, or mirrored Figma basis would change that sweep geometry,
+        // so keep those paints on the explicit compatibility fallback path.
+        guard firstLength.isFinite,
+              secondLength.isFinite,
+              firstLength >= minimumGradientAxisLength,
+              secondLength >= minimumGradientAxisLength,
+              abs(firstLength - secondLength) <= maximumLength * circularGradientTolerance,
+              abs(firstAxis.x * secondAxis.x + firstAxis.y * secondAxis.y)
+                <= firstLength * secondLength * circularGradientTolerance,
+              orientation > 0
+        else { return nil }
+
+        let angle = atan2(firstAxis.y, firstAxis.x) * 180 / .pi
+        guard angle.isFinite else { return nil }
+        return XomoFigmaPlanAngleGradient(
+            startColor: resolvedStops.startColor,
+            endColor: resolvedStops.endColor,
+            angle: angle,
+            centerX: normalizedGradientCenter(center.x),
+            centerY: normalizedGradientCenter(center.y),
+            opacity: resolvedStops.opacity,
+            colorStops: resolvedStops.colorStops
+        )
+    }
+
     private static let minimumGradientAxisLength = 0.001
     private static let circularGradientTolerance = 0.001
     private static let gradientCenterRange = -4.0...5.0
@@ -1422,7 +1487,8 @@ enum XomoFigmaNodeImportMapper {
     private static let editableGradientPaintTypes: Set<String> = [
         "GRADIENT_LINEAR",
         "GRADIENT_RADIAL",
-        "GRADIENT_DIAMOND"
+        "GRADIENT_DIAMOND",
+        "GRADIENT_ANGULAR"
     ]
 
     private static func normalizedGradientCenter(_ value: Double) -> Double {
