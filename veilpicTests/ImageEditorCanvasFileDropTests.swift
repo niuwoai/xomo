@@ -8,13 +8,14 @@ import UniformTypeIdentifiers
 @MainActor
 @Suite(.serialized)
 struct ImageEditorCanvasFileDropTests {
-    @Test func policyAcceptsLocalPNGJPEGTIFFHEICOrSVGBatchesAndRejectsInvalidMembers() throws {
+    @Test func policyAcceptsLocalPNGJPEGTIFFHEICWebPOrSVGBatchesAndRejectsInvalidMembers() throws {
         let png = URL(fileURLWithPath: "/tmp/Poster.PNG")
         let jpg = URL(fileURLWithPath: "/tmp/photo.JpG")
         let jpeg = URL(fileURLWithPath: "/tmp/photo.jpeg")
         let tif = URL(fileURLWithPath: "/tmp/scan.TiF")
         let tiff = URL(fileURLWithPath: "/tmp/scan.tiff")
         let heic = URL(fileURLWithPath: "/tmp/photo.HEIC")
+        let webP = URL(fileURLWithPath: "/tmp/asset.WeBp")
         let svg = URL(fileURLWithPath: "/tmp/icon.SVG")
         let remote = try #require(URL(string: "https://example.com/icon.png"))
 
@@ -24,11 +25,12 @@ struct ImageEditorCanvasFileDropTests {
         #expect(ImageEditorLayerFileImportPolicy.kind(for: tif) == .rasterImage)
         #expect(ImageEditorLayerFileImportPolicy.kind(for: tiff) == .rasterImage)
         #expect(ImageEditorLayerFileImportPolicy.kind(for: heic) == .rasterImage)
+        #expect(ImageEditorLayerFileImportPolicy.kind(for: webP) == .rasterImage)
         #expect(ImageEditorLayerFileImportPolicy.kind(for: svg) == .editableSVG)
         #expect(ImageEditorLayerFileImportPolicy.kind(for: URL(fileURLWithPath: "/tmp/file.psd")) == nil)
         #expect(ImageEditorLayerFileImportPolicy.kind(for: remote) == nil)
         #expect(ImageEditorLayerFileImportPolicy.supportedURLs(from: [png]) == [png])
-        #expect(ImageEditorLayerFileImportPolicy.supportedURLs(from: [png, jpg, tiff, heic, svg]) == [png, jpg, tiff, heic, svg])
+        #expect(ImageEditorLayerFileImportPolicy.supportedURLs(from: [png, jpg, tiff, heic, webP, svg]) == [png, jpg, tiff, heic, webP, svg])
         #expect(ImageEditorLayerFileImportPolicy.supportedURLs(from: []) == nil)
         #expect(ImageEditorLayerFileImportPolicy.supportedURLs(from: [png, remote]) == nil)
     }
@@ -125,6 +127,20 @@ struct ImageEditorCanvasFileDropTests {
         let imported = try #require(viewModel.document.selectedLayer)
         #expect(imported.image.size == CGSize(width: 18, height: 13))
         #expect(imported.frame == CGRect(x: 61, y: 48.5, width: 18, height: 13))
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerImport"))
+    }
+
+    @Test func webPImageImportsAsASelectedLayerAtSourceDimensions() throws {
+        let viewModel = makeViewModel()
+        let url = temporaryURL(extension: "webp")
+        defer { try? FileManager.default.removeItem(at: url) }
+        let data = try #require(Data(base64Encoded: "UklGRh4AAABXRUJQVlA4TBEAAAAvBgABAAdQs840s/+BiOh/AAA="))
+        try data.write(to: url, options: .atomic)
+
+        #expect(viewModel.importLayerFile(url, centeredAt: CGPoint(x: 70, y: 55)))
+        let imported = try #require(viewModel.document.selectedLayer)
+        #expect(imported.image.size == CGSize(width: 7, height: 5))
+        #expect(imported.frame == CGRect(x: 66.5, y: 52.5, width: 7, height: 5))
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerImport"))
     }
 

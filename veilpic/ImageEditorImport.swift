@@ -19,7 +19,7 @@ nonisolated enum ImageEditorLayerFileImportPolicy {
     static func kind(for url: URL) -> ImageEditorLayerFileImportKind? {
         guard url.isFileURL else { return nil }
         switch url.pathExtension.lowercased() {
-        case "png", "jpg", "jpeg", "tif", "tiff", "heic":
+        case "png", "jpg", "jpeg", "tif", "tiff", "heic", "webp":
             return .rasterImage
         case "svg":
             return .editableSVG
@@ -105,6 +105,7 @@ extension ImageEditorViewModel {
             .jpeg,
             .tiff,
             .heic,
+            .webP,
             UTType(filenameExtension: "svg") ?? .xml
         ]
         panel.allowsMultipleSelection = true

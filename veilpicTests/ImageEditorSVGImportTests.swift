@@ -1199,6 +1199,7 @@ struct ImageEditorSVGImportTests {
         #expect(chooser.contains("UTType(filenameExtension: \"svg\")"))
         #expect(chooser.contains(".tiff"))
         #expect(chooser.contains(".heic"))
+        #expect(chooser.contains(".webP"))
         #expect(chooser.contains("panel.allowsMultipleSelection = true"))
         #expect(chooser.contains("!panel.urls.isEmpty"))
         #expect(chooser.contains("self.importLayerFiles(panel.urls)"))
