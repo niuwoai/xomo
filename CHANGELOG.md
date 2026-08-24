@@ -6,7 +6,9 @@
 - `xomo.layer.smart_object action=placeEmbedded path=...` 将本地 PNG、JPEG、TIFF、HEIC 或 WebP 置入为真实嵌入智能对象；自动化与系统/窗口文件菜单共享格式验证、超大素材等比适配、源像素保留、自动选中及单步 Undo，坏文件保持原子失败。
 
 ### Verification
-- rc1240 是周期完整门禁版本；专项、全量隔离测试、CLI/MCP、Debug/Release 构建、发布契约、真实界面冒烟及 `/Applications/Xomo.app` 覆盖安装将在本轮完成后记录实际结果。
+- rc1240 完成周期完整门禁：唯一完整测试产物覆盖 2598/2598 项；首轮 2595 项通过，门禁发现两条 Angle 渐变枚举和一条共享 Figma 文件菜单的过时测试契约，修正后原失败方法 3/3 独立复跑通过。CLI/MCP 2/2、发布契约 7/7（21 项断言）、隔离测试运行器契约及差异检查通过。
+- `arm64 + x86_64` Universal Release 归档与 Developer ID 导出成功；App 版本 `2.12.0-rc1240 (1240)`、显示名 `Xomo`、Bundle ID `im.some.xomo`、Hardened Runtime 与深度严格签名核验一致，已覆盖安装 `/Applications/Xomo.app`，旧 rc1235 可从 `/private/tmp/Xomo-rc1235-before-rc1240.app` 恢复。额外 DMG 制作因本机 `hdiutil` 报“资源忙”跳过；本地门禁未执行公证或任何外部发布。
+- 安装版 Computer Use 逐项确认系统与窗口文件菜单一致、文件导入面板可达、组件模式切换、系统箭头、可编辑组件插入、Undo、正常退出及无新增崩溃报告。Computer Use 确认策略阻止了文件面板最终打开本地 PNG，因此没有把该一步冒充为实操通过；导入图层 Delete/Undo 的模型、键盘窗口归属和路由测试已在完整门禁通过，上一安装版 rc1235 的同路径实操仍保留为邻接证据。下一次周期完整门禁为 rc1280。
 
 ## 2.12.0-rc1239 - 2026-08-25
 
