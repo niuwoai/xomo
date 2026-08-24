@@ -2437,7 +2437,8 @@ enum ImageEditorPSDCodec {
         }
         if let solidFillContent = record.solidFillContent,
            record.vectorMaskInfo?.isEnabled == true,
-           record.vectorMaskInfo?.isInverted == false,
+           record.vectorMaskInfo?.hasPathComponents == true,
+           record.vectorMaskInfo?.renderedInversion == false,
            let shapeContent = vectorMaskContent(record: record, size: CGSize(width: width, height: height)) {
             var shape = shapeContent
             shape.fillColor = solidFillContent.color
@@ -2464,7 +2465,8 @@ enum ImageEditorPSDCodec {
         }
         if let gradientFillContent = record.gradientFillContent?.normalized(),
            record.vectorMaskInfo?.isEnabled == true,
-           record.vectorMaskInfo?.isInverted == false,
+           record.vectorMaskInfo?.hasPathComponents == true,
+           record.vectorMaskInfo?.renderedInversion == false,
            let shapeContent = vectorMaskContent(record: record, size: CGSize(width: width, height: height)) {
             var shape = shapeContent
             shape.fillGradient = gradientFillContent
@@ -2577,7 +2579,7 @@ enum ImageEditorPSDCodec {
         else { return }
         layer.vectorMask = content
         layer.isVectorMaskEnabled = info.isEnabled
-        layer.isVectorMaskInverted = info.isInverted
+        layer.isVectorMaskInverted = info.renderedInversion
         layer.isMaskLinked = info.isLinked
     }
 
@@ -2586,17 +2588,28 @@ enum ImageEditorPSDCodec {
         size: CGSize
     ) -> ImageEditorShapeContent? {
         guard let info = record.vectorMaskInfo else { return nil }
-        let subpaths = info.subpaths.map { anchors in
-            anchors.map { anchor in
-                ImageEditorPathAnchor(
-                    point: CGPoint(x: anchor.point.x * size.width, y: anchor.point.y * size.height),
-                    inControl: anchor.inControl.map {
-                        CGPoint(x: $0.x * size.width, y: $0.y * size.height)
-                    },
-                    outControl: anchor.outControl.map {
-                        CGPoint(x: $0.x * size.width, y: $0.y * size.height)
-                    }
-                )
+        let subpaths: [[ImageEditorPathAnchor]]
+        if info.subpaths.isEmpty {
+            guard info.initialFillStartsWithAllPixels != nil else { return nil }
+            subpaths = [[
+                ImageEditorPathAnchor(point: .zero),
+                ImageEditorPathAnchor(point: CGPoint(x: size.width, y: 0)),
+                ImageEditorPathAnchor(point: CGPoint(x: size.width, y: size.height)),
+                ImageEditorPathAnchor(point: CGPoint(x: 0, y: size.height))
+            ]]
+        } else {
+            subpaths = info.subpaths.map { anchors in
+                anchors.map { anchor in
+                    ImageEditorPathAnchor(
+                        point: CGPoint(x: anchor.point.x * size.width, y: anchor.point.y * size.height),
+                        inControl: anchor.inControl.map {
+                            CGPoint(x: $0.x * size.width, y: $0.y * size.height)
+                        },
+                        outControl: anchor.outControl.map {
+                            CGPoint(x: $0.x * size.width, y: $0.y * size.height)
+                        }
+                    )
+                }
             }
         }
         guard let anchors = subpaths.first, anchors.count >= 3 else { return nil }
@@ -2639,6 +2652,7 @@ enum ImageEditorPSDCodec {
             var expectedKnotCount: Int?
             var currentSubpath: [ImageEditorPathAnchor] = []
             var subpaths: [[ImageEditorPathAnchor]] = []
+            var initialFillStartsWithAllPixels: Bool?
             while reader.offset + 26 <= data.count {
                 let selector = try reader.uint16()
                 let payload = try reader.data(count: 24)
@@ -2668,22 +2682,29 @@ enum ImageEditorPSDCodec {
                         currentSubpath = []
                         expectedKnotCount = nil
                     }
-                case 6, 7, 8:
+                case 6, 7:
                     continue
+                case 8:
+                    guard initialFillStartsWithAllPixels == nil else { return nil }
+                    let rawValue = UInt16(payload[payload.startIndex]) << 8
+                        | UInt16(payload[payload.startIndex + 1])
+                    guard rawValue <= 1 else { return nil }
+                    initialFillStartsWithAllPixels = rawValue == 1
                 default:
                     return nil
                 }
             }
             guard expectedKnotCount == nil,
                   currentSubpath.isEmpty,
-                  !subpaths.isEmpty,
+                  !subpaths.isEmpty || initialFillStartsWithAllPixels != nil,
                   subpaths.allSatisfy({ $0.count >= 3 })
             else { return nil }
             return PSDVectorMaskInfo(
                 subpaths: subpaths,
                 isInverted: flags & 0b001 != 0,
                 isEnabled: flags & 0b100 == 0,
-                isLinked: flags & 0b010 == 0
+                isLinked: flags & 0b010 == 0,
+                initialFillStartsWithAllPixels: initialFillStartsWithAllPixels
             )
         } catch {
             return nil
@@ -3113,6 +3134,19 @@ private struct PSDVectorMaskInfo {
     let isInverted: Bool
     let isEnabled: Bool
     let isLinked: Bool
+    let initialFillStartsWithAllPixels: Bool?
+
+    var hasPathComponents: Bool {
+        !subpaths.isEmpty
+    }
+
+    var renderedInversion: Bool {
+        guard subpaths.isEmpty,
+              let initialFillStartsWithAllPixels
+        else { return isInverted }
+        let baseIsInverted = !initialFillStartsWithAllPixels
+        return isInverted != baseIsInverted
+    }
 }
 
 private struct PSDVectorStrokeInfo {

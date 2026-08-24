@@ -1855,6 +1855,64 @@ struct ImageEditorPSDTests {
         #expect(psdMaskAlpha(try #require(reimportedLayer.effectiveMask), width: 4, height: 4) == alpha)
     }
 
+    @Test func externalEmptyVectorMasksPreserveInitialFillAndRoundTrip() throws {
+        let cases: [(file: String, startsVisible: Bool)] = [
+            ("vector-mask-empty-reveal.psd", true),
+            ("vector-mask-empty-hide.psd", false)
+        ]
+
+        for testCase in cases {
+            let data = try psdFixtureData(testCase.file)
+            let document = try ImageEditorPSDCodec.decode(data, sourceName: testCase.file)
+            let layer = try #require(document.layers.first)
+            let vectorMask = try #require(layer.vectorMask)
+            let alpha = psdMaskAlpha(try #require(layer.effectiveMask), width: 4, height: 4)
+
+            #expect(vectorMask.kind == .path)
+            #expect(vectorMask.isPathClosed)
+            #expect(vectorMask.editablePathAnchors.count == 4)
+            #expect(layer.isVectorMaskInverted == !testCase.startsVisible)
+            #expect(alpha.count == 16)
+            if testCase.startsVisible {
+                #expect(alpha.allSatisfy { $0 >= 254 })
+            } else {
+                #expect(alpha.allSatisfy { $0 <= 1 })
+            }
+
+            let report = try ImageEditorPSDCodec.compatibilityReport(data)
+            #expect(!report.issues.contains { $0.kind == .vectorRasterized })
+
+            let project = try ImageEditorProjectDocument(document: document)
+            let restoredProject = try project.restoredDocument()
+            let restoredLayer = try #require(restoredProject.layers.first)
+            #expect(restoredLayer.vectorMask?.editablePathAnchors == vectorMask.editablePathAnchors)
+            #expect(restoredLayer.isVectorMaskInverted == layer.isVectorMaskInverted)
+            #expect(psdMaskAlpha(try #require(restoredLayer.effectiveMask), width: 4, height: 4) == alpha)
+
+            let exported = try ImageEditorPSDCodec.encode(document: restoredProject)
+            let reimported = try ImageEditorPSDCodec.decode(exported, sourceName: "roundtrip-\(testCase.file)")
+            let reimportedLayer = try #require(reimported.layers.first)
+            #expect(reimportedLayer.vectorMask != nil)
+            #expect(reimportedLayer.isVectorMaskInverted == layer.isVectorMaskInverted)
+            #expect(psdMaskAlpha(try #require(reimportedLayer.effectiveMask), width: 4, height: 4) == alpha)
+        }
+    }
+
+    @Test func invalidEmptyVectorMaskInitialFillFallsBackSafely() throws {
+        var data = try psdFixtureData("vector-mask-empty-reveal.psd")
+        let keyRange = try #require(data.range(of: Data("vmsk".utf8)))
+        let payloadOffset = keyRange.upperBound + 4
+        let initialFillValueOffset = payloadOffset + 8 + 26 + 2
+        #expect(data[initialFillValueOffset] == 0)
+        #expect(data[initialFillValueOffset + 1] == 1)
+        data[initialFillValueOffset + 1] = 2
+
+        let document = try ImageEditorPSDCodec.decode(data, sourceName: "invalid-empty-vector-mask.psd")
+        #expect(document.layers.first?.vectorMask == nil)
+        let report = try ImageEditorPSDCodec.compatibilityReport(data)
+        #expect(report.issues.contains { $0.kind == .vectorRasterized })
+    }
+
     @Test func externalPathResourcesBecomeEditableSavedPathsAndRoundTrip() throws {
         let data = try psdFixtureData("path-resources.psd")
         let document = try ImageEditorPSDCodec.decode(data, sourceName: "path-resources.psd")

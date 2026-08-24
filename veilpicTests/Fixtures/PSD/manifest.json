@@ -186,6 +186,24 @@
       ]
     },
     {
+      "file": "vector-mask-empty-reveal.psd",
+      "sha256": "486547fa3a3591dfb4b7aac8f9ec9bb02856101b073972f65238907328bfbf2e",
+      "expected": [
+        "editable_vector_mask",
+        "initial_fill",
+        "reveal_all"
+      ]
+    },
+    {
+      "file": "vector-mask-empty-hide.psd",
+      "sha256": "dc8b8ff7de7d081b366fd81edf14029744be83b17a6a3c013bf0d42342ce75a3",
+      "expected": [
+        "editable_vector_mask",
+        "initial_fill",
+        "hide_all"
+      ]
+    },
+    {
       "file": "path-resources.psd",
       "sha256": "be2675d6e17186e02c4d1a9fcf712de46bd0876644e4081715278021c25b6c64",
       "expected": [

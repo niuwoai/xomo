@@ -112,6 +112,12 @@ def vector_mask_payload(flags: 0, include_hole: false)
   u32(3) + u32(flags) + fill_rule + paths.map { |points| subpath.call(points) }.join
 end
 
+def empty_vector_mask_payload(initial_fill:, flags: 0)
+  fill_rule = u16(6) + ("\0" * 24)
+  initial_fill_rule = u16(8) + u16(initial_fill ? 1 : 0) + ("\0" * 22)
+  u32(3) + u32(flags) + fill_rule + initial_fill_rule
+end
+
 def unsupported_vector_mask_payload
   payload = vector_mask_payload
   payload[0, 4] = u32(4)
@@ -710,6 +716,14 @@ def inverted_vector_mask_fixture
   vector_mask_fixture(payload: vector_mask_payload(flags: 1))
 end
 
+def empty_reveal_vector_mask_fixture
+  vector_mask_fixture(payload: empty_vector_mask_payload(initial_fill: true))
+end
+
+def empty_hide_vector_mask_fixture
+  vector_mask_fixture(payload: empty_vector_mask_payload(initial_fill: false))
+end
+
 def path_resource_fixture
   closed = path_resource_block(
     id: 2000,
@@ -770,6 +784,8 @@ fixtures = {
   "vector-mask.psd" => vector_mask_fixture,
   "vector-mask-multi.psd" => multi_vector_mask_fixture,
   "vector-mask-inverted.psd" => inverted_vector_mask_fixture,
+  "vector-mask-empty-reveal.psd" => empty_reveal_vector_mask_fixture,
+  "vector-mask-empty-hide.psd" => empty_hide_vector_mask_fixture,
   "path-resources.psd" => path_resource_fixture
 }
 fixtures.each do |name, bytes|
@@ -796,6 +812,8 @@ expectations = {
   "vector-mask.psd" => %w[editable_vector_mask closed_path bezier_points],
   "vector-mask-multi.psd" => %w[editable_vector_mask multiple_subpaths even_odd_hole],
   "vector-mask-inverted.psd" => %w[editable_vector_mask inverted_mask psd_round_trip],
+  "vector-mask-empty-reveal.psd" => %w[editable_vector_mask initial_fill reveal_all],
+  "vector-mask-empty-hide.psd" => %w[editable_vector_mask initial_fill hide_all],
   "path-resources.psd" => %w[saved_path closed_path open_path]
 }
 manifest = {
