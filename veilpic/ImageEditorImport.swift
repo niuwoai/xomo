@@ -610,11 +610,25 @@ extension ImageEditorViewModel {
         }
 
         let cleanSourceName = cleanLayerName(from: sourceName)
+        let replacementData = normalized.qingtuPNGData()
+        let replacementSourceIDs = sourceIDs.filter { sourceID in
+            !smartObjectSourceMatchesReplacement(
+                sourceID: sourceID,
+                image: normalized,
+                imageData: replacementData,
+                sourceName: cleanSourceName
+            )
+        }
+        guard !replacementSourceIDs.isEmpty else {
+            statusText = L10n.text("imageEditor.status.layerSmartObjectContentsUnchanged")
+            return
+        }
+
         pushUndo()
         var replacedCount = 0
         for layerIndex in document.layers.indices {
             guard let content = document.layers[layerIndex].smartObjectContent,
-                  sourceIDs.contains(content.sourceID)
+                  replacementSourceIDs.contains(content.sourceID)
             else { continue }
             document.layers[layerIndex].image = normalized
             document.layers[layerIndex].kind = .smartObject(
@@ -632,6 +646,26 @@ extension ImageEditorViewModel {
             statusText = L10n.format("imageEditor.status.layerSmartObjectInstancesReplaced", replacedCount, cleanSourceName)
         } else {
             statusText = L10n.format("imageEditor.status.layerSmartObjectReplaced", cleanSourceName)
+        }
+    }
+
+    private func smartObjectSourceMatchesReplacement(
+        sourceID: UUID,
+        image: NSImage,
+        imageData: Data?,
+        sourceName: String
+    ) -> Bool {
+        guard let imageData else { return false }
+        let instances = document.layers.filter { $0.smartObjectContent?.sourceID == sourceID }
+        guard !instances.isEmpty else { return false }
+        return instances.allSatisfy { layer in
+            guard let content = layer.smartObjectContent,
+                  content.sourceName == sourceName,
+                  content.originalSize == image.size,
+                  layer.image.size == image.size,
+                  let currentData = layer.image.qingtuPNGData()
+            else { return false }
+            return currentData == imageData
         }
     }
 

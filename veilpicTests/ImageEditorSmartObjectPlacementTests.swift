@@ -196,6 +196,81 @@ struct ImageEditorSmartObjectPlacementTests {
         #expect(viewModel.document.layers.first { $0.id == secondID }?.frame == fittedSecondFrame)
     }
 
+    @Test func identicalReplacementPreservesHistoryUndoAndExistingRedo() throws {
+        let viewModel = makeViewModel()
+        let url = temporaryURL(extension: "png")
+        defer { try? FileManager.default.removeItem(at: url) }
+        try writePNG(size: CGSize(width: 40, height: 20), to: url)
+
+        #expect(viewModel.placeEmbeddedSmartObjectFile(url))
+        let originalLayer = try #require(viewModel.document.selectedLayer)
+        let replacement = try #require(NSImage(contentsOf: url))
+        viewModel.renameSelectedLayer(to: "Renamed Smart Object")
+        viewModel.undo()
+        let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
+        let redoCount = viewModel.redoStack.count
+
+        viewModel.replaceSelectedSmartObjectContents(
+            replacement,
+            sourceName: url.lastPathComponent
+        )
+
+        #expect(viewModel.document.selectedLayer?.image.qingtuPNGData() == originalLayer.image.qingtuPNGData())
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.undoStack.count == undoCount)
+        #expect(viewModel.redoStack.count == redoCount)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.layerSmartObjectContentsUnchanged"))
+        #expect(viewModel.canRedo)
+
+        viewModel.redo()
+        #expect(viewModel.document.selectedLayer?.name == "Renamed Smart Object")
+    }
+
+    @Test func multiSourceReplacementSkipsEquivalentFamilies() throws {
+        let viewModel = makeViewModel()
+        let firstURL = temporaryURL(extension: "png")
+        let secondURL = temporaryURL(extension: "png")
+        defer {
+            try? FileManager.default.removeItem(at: firstURL)
+            try? FileManager.default.removeItem(at: secondURL)
+        }
+        try writePNG(size: CGSize(width: 40, height: 20), to: firstURL)
+        try writePNG(size: CGSize(width: 24, height: 16), to: secondURL)
+
+        #expect(viewModel.placeEmbeddedSmartObjectFile(firstURL))
+        let firstID = try #require(viewModel.document.selectedLayerID)
+        viewModel.duplicateSelectedLayer()
+        let sharedID = try #require(viewModel.document.selectedLayerID)
+        #expect(viewModel.placeEmbeddedSmartObjectFile(secondURL))
+        let differentID = try #require(viewModel.document.selectedLayerID)
+        let differentBefore = try #require(viewModel.document.selectedLayer)
+        viewModel.document.selectedLayerIDs = [firstID, differentID]
+        viewModel.document.selectedLayerID = differentID
+        let replacement = try #require(NSImage(contentsOf: firstURL))
+
+        viewModel.replaceSelectedSmartObjectContents(
+            replacement,
+            sourceName: firstURL.lastPathComponent
+        )
+
+        let first = try #require(viewModel.document.layers.first { $0.id == firstID })
+        let shared = try #require(viewModel.document.layers.first { $0.id == sharedID })
+        let replaced = try #require(viewModel.document.layers.first { $0.id == differentID })
+        #expect(first.smartObjectContent?.sourceName == firstURL.deletingPathExtension().lastPathComponent)
+        #expect(shared.smartObjectContent?.sourceID == first.smartObjectContent?.sourceID)
+        #expect(replaced.image.size == CGSize(width: 40, height: 20))
+        #expect(replaced.smartObjectContent?.sourceName == first.smartObjectContent?.sourceName)
+        #expect(viewModel.statusText == L10n.format(
+            "imageEditor.status.layerSmartObjectReplaced",
+            firstURL.deletingPathExtension().lastPathComponent
+        ))
+
+        viewModel.undo()
+        #expect(viewModel.document.layers.first { $0.id == differentID }?.image.size == differentBefore.image.size)
+        #expect(viewModel.document.layers.first { $0.id == differentID }?.smartObjectContent?.sourceName == differentBefore.smartObjectContent?.sourceName)
+    }
+
     @Test func fileMenuActionUsesSingleSelectionRasterChooserAndSharedCommandCatalog() throws {
         let root = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()

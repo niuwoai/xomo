@@ -2287,6 +2287,7 @@
 "imageEditor.status.layerSmartObjectReplaced" = "Replaced Smart Object contents: %@";
 "imageEditor.status.layerSmartObjectInstancesReplaced" = "Replaced contents for %d Smart Object instances: %@";
 "imageEditor.status.layerSmartObjectReplaceFailed" = "Failed to replace Smart Object contents";
+"imageEditor.status.layerSmartObjectContentsUnchanged" = "Smart Object contents are unchanged";
 "imageEditor.status.layerSmartObjectMadeUnique" = "Made the current Smart Object instance unique";
 "imageEditor.status.layerSmartObjectMadeUniqueSelected" = "Made %d Smart Object instances unique";
 "imageEditor.status.layerSmartObjectTransformReset" = "Reset Smart Object transform";

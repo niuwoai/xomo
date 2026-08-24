@@ -2287,6 +2287,7 @@
 "imageEditor.status.layerSmartObjectReplaced" = "スマートオブジェクトの内容を置換しました：%@";
 "imageEditor.status.layerSmartObjectInstancesReplaced" = "%d 個のスマートオブジェクトインスタンスの内容を置換しました：%@";
 "imageEditor.status.layerSmartObjectReplaceFailed" = "スマートオブジェクトの内容を置換できませんでした";
+"imageEditor.status.layerSmartObjectContentsUnchanged" = "スマートオブジェクトの内容は変更されていません";
 "imageEditor.status.layerSmartObjectMadeUnique" = "現在のスマートオブジェクトインスタンスを独立化しました";
 "imageEditor.status.layerSmartObjectMadeUniqueSelected" = "%d個のスマートオブジェクトインスタンスを独立化しました";
 "imageEditor.status.layerSmartObjectTransformReset" = "スマートオブジェクトの変形をリセットしました";

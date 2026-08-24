@@ -2287,6 +2287,7 @@
 "imageEditor.status.layerSmartObjectReplaced" = "已替换智能对象内容：%@";
 "imageEditor.status.layerSmartObjectInstancesReplaced" = "已替换 %d 个智能对象实例内容：%@";
 "imageEditor.status.layerSmartObjectReplaceFailed" = "替换智能对象内容失败";
+"imageEditor.status.layerSmartObjectContentsUnchanged" = "智能对象内容未变化";
 "imageEditor.status.layerSmartObjectMadeUnique" = "已让当前智能对象实例独立";
 "imageEditor.status.layerSmartObjectMadeUniqueSelected" = "已让 %d 个智能对象实例独立";
 "imageEditor.status.layerSmartObjectTransformReset" = "已重置智能对象变换";
