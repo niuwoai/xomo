@@ -1,17 +1,20 @@
 import AppKit
 import Foundation
+import ImageIO
 import Testing
+import UniformTypeIdentifiers
 @testable import musepic
 
 @MainActor
 @Suite(.serialized)
 struct ImageEditorCanvasFileDropTests {
-    @Test func policyAcceptsLocalPNGJPEGTIFFOrSVGBatchesAndRejectsInvalidMembers() throws {
+    @Test func policyAcceptsLocalPNGJPEGTIFFHEICOrSVGBatchesAndRejectsInvalidMembers() throws {
         let png = URL(fileURLWithPath: "/tmp/Poster.PNG")
         let jpg = URL(fileURLWithPath: "/tmp/photo.JpG")
         let jpeg = URL(fileURLWithPath: "/tmp/photo.jpeg")
         let tif = URL(fileURLWithPath: "/tmp/scan.TiF")
         let tiff = URL(fileURLWithPath: "/tmp/scan.tiff")
+        let heic = URL(fileURLWithPath: "/tmp/photo.HEIC")
         let svg = URL(fileURLWithPath: "/tmp/icon.SVG")
         let remote = try #require(URL(string: "https://example.com/icon.png"))
 
@@ -20,11 +23,12 @@ struct ImageEditorCanvasFileDropTests {
         #expect(ImageEditorLayerFileImportPolicy.kind(for: jpeg) == .rasterImage)
         #expect(ImageEditorLayerFileImportPolicy.kind(for: tif) == .rasterImage)
         #expect(ImageEditorLayerFileImportPolicy.kind(for: tiff) == .rasterImage)
+        #expect(ImageEditorLayerFileImportPolicy.kind(for: heic) == .rasterImage)
         #expect(ImageEditorLayerFileImportPolicy.kind(for: svg) == .editableSVG)
         #expect(ImageEditorLayerFileImportPolicy.kind(for: URL(fileURLWithPath: "/tmp/file.psd")) == nil)
         #expect(ImageEditorLayerFileImportPolicy.kind(for: remote) == nil)
         #expect(ImageEditorLayerFileImportPolicy.supportedURLs(from: [png]) == [png])
-        #expect(ImageEditorLayerFileImportPolicy.supportedURLs(from: [png, jpg, tiff, svg]) == [png, jpg, tiff, svg])
+        #expect(ImageEditorLayerFileImportPolicy.supportedURLs(from: [png, jpg, tiff, heic, svg]) == [png, jpg, tiff, heic, svg])
         #expect(ImageEditorLayerFileImportPolicy.supportedURLs(from: []) == nil)
         #expect(ImageEditorLayerFileImportPolicy.supportedURLs(from: [png, remote]) == nil)
     }
@@ -109,6 +113,19 @@ struct ImageEditorCanvasFileDropTests {
             for: .zero,
             centeredAt: CGPoint(x: 4, y: 7)
         ) == CGRect(x: 3.5, y: 6.5, width: 1, height: 1))
+    }
+
+    @Test func heicImageImportsAsASelectedLayerAtSourceDimensions() throws {
+        let viewModel = makeViewModel()
+        let url = temporaryURL(extension: "heic")
+        defer { try? FileManager.default.removeItem(at: url) }
+        try writeRasterImage(size: CGSize(width: 18, height: 13), to: url, color: .systemMint)
+
+        #expect(viewModel.importLayerFile(url, centeredAt: CGPoint(x: 70, y: 55)))
+        let imported = try #require(viewModel.document.selectedLayer)
+        #expect(imported.image.size == CGSize(width: 18, height: 13))
+        #expect(imported.frame == CGRect(x: 61, y: 48.5, width: 18, height: 13))
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerImport"))
     }
 
     @Test func droppingMixedFilesCreatesSpacedSelectedLayersInOneUndoStep() throws {
@@ -251,6 +268,18 @@ struct ImageEditorCanvasFileDropTests {
             data = try #require(bitmap.representation(using: .jpeg, properties: [:]))
         } else if ["tif", "tiff"].contains(url.pathExtension.lowercased()) {
             data = try #require(image.tiffRepresentation)
+        } else if url.pathExtension.lowercased() == "heic" {
+            let cgImage = try #require(image.cgImage(forProposedRect: nil, context: nil, hints: nil))
+            let encoded = NSMutableData()
+            let destination = try #require(CGImageDestinationCreateWithData(
+                encoded,
+                UTType.heic.identifier as CFString,
+                1,
+                nil
+            ))
+            CGImageDestinationAddImage(destination, cgImage, nil)
+            try #require(CGImageDestinationFinalize(destination))
+            data = encoded as Data
         } else {
             data = try #require(image.qingtuPNGData())
         }

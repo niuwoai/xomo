@@ -16,6 +16,7 @@
 				<string>jpeg</string>
 				<string>tif</string>
 				<string>tiff</string>
+				<string>heic</string>
 			</array>
 			<key>CFBundleTypeName</key>
 			<string>Image Document</string>
@@ -28,6 +29,7 @@
 				<string>public.png</string>
 				<string>public.jpeg</string>
 				<string>public.tiff</string>
+				<string>public.heic</string>
 			</array>
 		</dict>
 		<dict>
