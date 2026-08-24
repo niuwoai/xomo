@@ -1746,6 +1746,7 @@
 "imageEditor.history.layerSmartObjectMakeUniqueSelected" = "Make Selected Smart Objects Unique";
 "imageEditor.history.layerSmartObjectResetTransform" = "Reset Smart Object Transform";
 "imageEditor.history.layerSmartObjectResetTransformSelected" = "Reset Selected Smart Object Transforms";
+"imageEditor.history.placeEmbeddedSmartObject" = "Place Embedded Smart Object";
 "imageEditor.history.layerRasterize" = "Rasterize Layer";
 "imageEditor.history.layerRasterizeSelected" = "Rasterize Selected Layers";
 "imageEditor.history.layerRename" = "Rename Layer";
@@ -2290,6 +2291,8 @@
 "imageEditor.status.layerSmartObjectMadeUniqueSelected" = "Made %d Smart Object instances unique";
 "imageEditor.status.layerSmartObjectTransformReset" = "Reset Smart Object transform";
 "imageEditor.status.layerSmartObjectTransformResetSelected" = "Reset %d Smart Object transforms";
+"imageEditor.status.placeEmbeddedSmartObject" = "Placed embedded Smart Object: %@";
+"imageEditor.status.placeEmbeddedSmartObjectFailed" = "Failed to place embedded Smart Object";
 "imageEditor.status.layerImportFailed" = "Failed to import image";
 "imageEditor.status.layerRasterized" = "Layer rasterized";
 "imageEditor.status.layerRasterizedSelected" = "%d layers rasterized";
@@ -2710,6 +2713,7 @@
 "imageEditor.action.layerDistributeVerticalSpacing" = "Distribute vertical spacing";
 "imageEditor.action.layerImport" = "Import Image as Layer";
 "imageEditor.action.fileImport" = "Import Files…";
+"imageEditor.action.placeEmbeddedSmartObject" = "Place Embedded…";
 "imageEditor.action.exportSelection" = "Export Selection / Slice…";
 "imageEditor.action.exportLayers" = "Export Selected Layers…";
 "imageEditor.action.canvasNewFromClipboard" = "New Canvas from Clipboard";

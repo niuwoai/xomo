@@ -1746,6 +1746,7 @@
 "imageEditor.history.layerSmartObjectMakeUniqueSelected" = "選択スマートオブジェクトを独立化";
 "imageEditor.history.layerSmartObjectResetTransform" = "スマートオブジェクトの変形をリセット";
 "imageEditor.history.layerSmartObjectResetTransformSelected" = "選択スマートオブジェクトの変形をリセット";
+"imageEditor.history.placeEmbeddedSmartObject" = "埋め込みスマートオブジェクトを配置";
 "imageEditor.history.layerRasterize" = "レイヤーをラスタライズ";
 "imageEditor.history.layerRasterizeSelected" = "選択レイヤーをラスタライズ";
 "imageEditor.history.layerRename" = "レイヤー名を変更";
@@ -2290,6 +2291,8 @@
 "imageEditor.status.layerSmartObjectMadeUniqueSelected" = "%d個のスマートオブジェクトインスタンスを独立化しました";
 "imageEditor.status.layerSmartObjectTransformReset" = "スマートオブジェクトの変形をリセットしました";
 "imageEditor.status.layerSmartObjectTransformResetSelected" = "%d個のスマートオブジェクトの変形をリセットしました";
+"imageEditor.status.placeEmbeddedSmartObject" = "埋め込みスマートオブジェクトを配置しました：%@";
+"imageEditor.status.placeEmbeddedSmartObjectFailed" = "埋め込みスマートオブジェクトを配置できませんでした";
 "imageEditor.status.layerImportFailed" = "画像の読み込みに失敗しました";
 "imageEditor.status.layerRasterized" = "レイヤーをラスタライズしました";
 "imageEditor.status.layerRasterizedSelected" = "%d個のレイヤーをラスタライズしました";
@@ -2710,6 +2713,7 @@
 "imageEditor.action.layerDistributeVerticalSpacing" = "垂直方向の間隔を分布";
 "imageEditor.action.layerImport" = "画像をレイヤーとして読み込み";
 "imageEditor.action.fileImport" = "複数ファイルを読み込む…";
+"imageEditor.action.placeEmbeddedSmartObject" = "埋め込みを配置…";
 "imageEditor.action.exportSelection" = "選択範囲 / スライスを書き出す…";
 "imageEditor.action.exportLayers" = "選択レイヤーを書き出す…";
 "imageEditor.action.canvasNewFromClipboard" = "クリップボードから新規キャンバス";

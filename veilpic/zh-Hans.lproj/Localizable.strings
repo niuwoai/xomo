@@ -1746,6 +1746,7 @@
 "imageEditor.history.layerSmartObjectMakeUniqueSelected" = "所选智能对象实例独立化";
 "imageEditor.history.layerSmartObjectResetTransform" = "重置智能对象变换";
 "imageEditor.history.layerSmartObjectResetTransformSelected" = "重置所选智能对象变换";
+"imageEditor.history.placeEmbeddedSmartObject" = "置入嵌入对象";
 "imageEditor.history.layerRasterize" = "栅格化图层";
 "imageEditor.history.layerRasterizeSelected" = "栅格化所选图层";
 "imageEditor.history.layerRename" = "重命名图层";
@@ -2290,6 +2291,8 @@
 "imageEditor.status.layerSmartObjectMadeUniqueSelected" = "已让 %d 个智能对象实例独立";
 "imageEditor.status.layerSmartObjectTransformReset" = "已重置智能对象变换";
 "imageEditor.status.layerSmartObjectTransformResetSelected" = "已重置 %d 个智能对象变换";
+"imageEditor.status.placeEmbeddedSmartObject" = "已置入嵌入对象：%@";
+"imageEditor.status.placeEmbeddedSmartObjectFailed" = "置入嵌入对象失败";
 "imageEditor.status.layerImportFailed" = "导入图片失败";
 "imageEditor.status.layerRasterized" = "已栅格化当前图层";
 "imageEditor.status.layerRasterizedSelected" = "已栅格化 %d 个图层";
@@ -2710,6 +2713,7 @@
 "imageEditor.action.layerDistributeVerticalSpacing" = "均分垂直间距";
 "imageEditor.action.layerImport" = "导入图片为图层";
 "imageEditor.action.fileImport" = "导入文件…";
+"imageEditor.action.placeEmbeddedSmartObject" = "置入嵌入对象…";
 "imageEditor.action.exportSelection" = "导出选区 / 切片…";
 "imageEditor.action.exportLayers" = "导出所选图层…";
 "imageEditor.action.canvasNewFromClipboard" = "从剪贴板新建画布";

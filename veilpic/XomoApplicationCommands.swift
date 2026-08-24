@@ -16,6 +16,7 @@ struct XomoFileCommandActions {
     let showPSDCompatibilityReport: () -> Void
     let canShowPSDCompatibilityReport: Bool
     let importFile: () -> Void
+    let placeEmbeddedSmartObject: () -> Void
     let importFigmaLink: () -> Void
     let export: () -> Void
     let exportSelection: () -> Void
@@ -40,6 +41,7 @@ enum XomoFileMenuItem: CaseIterable, Hashable {
     case psdCompatibilityReport
     case importExportDivider
     case importFile
+    case placeEmbeddedSmartObject
     case importFigmaLink
     case export
     case exportSelection
@@ -123,6 +125,11 @@ struct XomoFileMenuItems: View {
         case .importFile:
             Button(L10n.text("imageEditor.action.fileImport")) {
                 actions?.importFile()
+            }
+            .disabled(actions == nil)
+        case .placeEmbeddedSmartObject:
+            Button(L10n.text("imageEditor.action.placeEmbeddedSmartObject")) {
+                actions?.placeEmbeddedSmartObject()
             }
             .disabled(actions == nil)
         case .importFigmaLink:

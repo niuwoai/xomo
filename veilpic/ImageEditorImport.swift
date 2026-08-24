@@ -66,6 +66,12 @@ nonisolated enum ImageEditorLayerFileImportPolicy {
     }
 }
 
+nonisolated enum ImageEditorEmbeddedSmartObjectFilePolicy {
+    static func supports(_ url: URL) -> Bool {
+        ImageEditorLayerFileImportPolicy.kind(for: url) == .rasterImage
+    }
+}
+
 private enum ImageEditorPreparedLayerFileImport {
     case raster(sourceName: String, image: NSImage)
     case editableSVG(sourceName: String, imported: XomoEditableSVGImport)
@@ -118,6 +124,57 @@ extension ImageEditorViewModel {
                 self.importLayerFiles(panel.urls)
             }
         }
+    }
+
+    func chooseEmbeddedSmartObjectFile() {
+        let panel = NSOpenPanel()
+        panel.allowedContentTypes = [.png, .jpeg, .tiff, .heic, .webP]
+        panel.allowsMultipleSelection = false
+        panel.canChooseDirectories = false
+        panel.canChooseFiles = true
+        panel.prompt = L10n.text("imageEditor.action.placeEmbeddedSmartObject")
+        panel.begin { [weak self] response in
+            Task { @MainActor in
+                guard let self, response == .OK, let url = panel.url else { return }
+                self.placeEmbeddedSmartObjectFile(url)
+            }
+        }
+    }
+
+    @discardableResult
+    func placeEmbeddedSmartObjectFile(
+        _ url: URL,
+        centeredAt point: CGPoint? = nil
+    ) -> Bool {
+        guard ImageEditorEmbeddedSmartObjectFilePolicy.supports(url),
+              let prepared = prepareLayerFileImport(url),
+              case .raster(let sourceName, let image) = prepared
+        else {
+            statusText = L10n.text("imageEditor.status.placeEmbeddedSmartObjectFailed")
+            return false
+        }
+
+        let cleanName = cleanLayerName(from: sourceName)
+        let frame = point.map {
+            ImageEditorLayerFileImportPolicy.frame(for: image.size, centeredAt: $0)
+        } ?? centeredImportFrame(for: image.size)
+        var layer = ImageEditorLayer.smartObject(
+            name: L10n.format("imageEditor.layer.smartObjectName", cleanName),
+            image: image,
+            sourceName: cleanName
+        )
+        layer.frame = frame
+        layer.groupID = nil
+        layer.isClippingMask = false
+
+        pushUndo()
+        document.layers.append(layer)
+        document.selectedLayerID = layer.id
+        document.selectedLayerIDs = [layer.id]
+        isEditingLayerMask = false
+        appendHistory(L10n.text("imageEditor.history.placeEmbeddedSmartObject"))
+        statusText = L10n.format("imageEditor.status.placeEmbeddedSmartObject", cleanName)
+        return true
     }
 
     @discardableResult

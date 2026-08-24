@@ -133,6 +133,7 @@ extension ImageEditorView {
             },
             canShowPSDCompatibilityReport: viewModel.psdCompatibilityReport != nil,
             importFile: { viewModel.chooseImageLayerFile() },
+            placeEmbeddedSmartObject: { viewModel.chooseEmbeddedSmartObjectFile() },
             importFigmaLink: { isFigmaLinkImportPresented = true },
             export: { viewModel.openExportPanel() },
             exportSelection: {
