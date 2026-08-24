@@ -5078,6 +5078,12 @@ final class XomoAutomationRegistry {
     ) throws {
         switch try requiredString("action", in: arguments) {
         case "convert": viewModel.convertSelectedLayerToSmartObject()
+        case "placeEmbedded":
+            let rawPath = try requiredString("path", in: arguments)
+            let url = URL(fileURLWithPath: NSString(string: rawPath).expandingTildeInPath)
+            guard viewModel.placeEmbeddedSmartObjectFile(url) else {
+                throw XomoAutomationCallError.operationFailed("Embedded Smart Object placement failed")
+            }
         case "resetTransform": viewModel.resetSelectedSmartObjectTransform()
         case "makeUnique": viewModel.makeSelectedSmartObjectUnique()
         default: throw XomoAutomationCallError.invalidArgument("Unknown smart object action")
@@ -7159,8 +7165,9 @@ private extension XomoAutomationRegistry {
         tool("xomo.layer.link", "Link, unlink, or select linked layers.", [
             "action": XomoAutomationSchema.string(description: "Layer link action", values: ["link", "unlink", "unlinkAll", "selectLinked"])
         ], required: ["action"]),
-        tool("xomo.layer.smart_object", "Convert and manage embedded smart object layers.", [
-            "action": XomoAutomationSchema.string(description: "Smart object action", values: ["convert", "resetTransform", "makeUnique"])
+        tool("xomo.layer.smart_object", "Place, convert, and manage embedded smart object layers.", [
+            "action": XomoAutomationSchema.string(description: "Smart object action", values: ["convert", "placeEmbedded", "resetTransform", "makeUnique"]),
+            "path": XomoAutomationSchema.string(description: "Local raster image path for placeEmbedded")
         ], required: ["action"]),
         tool("xomo.layer.properties", "Set fill, Blend If, mask, clipping, lock, label, and visibility properties.", [
             "property": XomoAutomationSchema.string(description: "Property group", values: ["fillOpacity", "blendIfSourceBlack", "blendIfSourceWhite", "blendIfUnderlyingBlack", "blendIfUnderlyingWhite", "maskDensity", "maskFeather", "clippingMask", "lock", "label", "visibility"]),

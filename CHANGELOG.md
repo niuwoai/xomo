@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.12.0-rc1240 - 2026-08-25
+
+### Added
+- `xomo.layer.smart_object action=placeEmbedded path=...` 将本地 PNG、JPEG、TIFF、HEIC 或 WebP 置入为真实嵌入智能对象；自动化与系统/窗口文件菜单共享格式验证、超大素材等比适配、源像素保留、自动选中及单步 Undo，坏文件保持原子失败。
+
+### Verification
+- rc1240 是周期完整门禁版本；专项、全量隔离测试、CLI/MCP、Debug/Release 构建、发布契约、真实界面冒烟及 `/Applications/Xomo.app` 覆盖安装将在本轮完成后记录实际结果。
+
 ## 2.12.0-rc1239 - 2026-08-25
 
 ### Fixed
