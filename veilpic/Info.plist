@@ -14,6 +14,8 @@
 				<string>png</string>
 				<string>jpg</string>
 				<string>jpeg</string>
+				<string>tif</string>
+				<string>tiff</string>
 			</array>
 			<key>CFBundleTypeName</key>
 			<string>Image Document</string>
@@ -25,6 +27,7 @@
 			<array>
 				<string>public.png</string>
 				<string>public.jpeg</string>
+				<string>public.tiff</string>
 			</array>
 		</dict>
 		<dict>

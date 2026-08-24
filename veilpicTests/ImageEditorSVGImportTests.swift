@@ -1197,6 +1197,7 @@ struct ImageEditorSVGImportTests {
         let sharedImporter = source[sharedImporterStart..<sharedImporterEnd.lowerBound]
 
         #expect(chooser.contains("UTType(filenameExtension: \"svg\")"))
+        #expect(chooser.contains(".tiff"))
         #expect(chooser.contains("panel.allowsMultipleSelection = true"))
         #expect(chooser.contains("!panel.urls.isEmpty"))
         #expect(chooser.contains("self.importLayerFiles(panel.urls)"))

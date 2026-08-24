@@ -6,21 +6,25 @@ import Testing
 @MainActor
 @Suite(.serialized)
 struct ImageEditorCanvasFileDropTests {
-    @Test func policyAcceptsLocalPNGJPEGOrSVGBatchesAndRejectsInvalidMembers() throws {
+    @Test func policyAcceptsLocalPNGJPEGTIFFOrSVGBatchesAndRejectsInvalidMembers() throws {
         let png = URL(fileURLWithPath: "/tmp/Poster.PNG")
         let jpg = URL(fileURLWithPath: "/tmp/photo.JpG")
         let jpeg = URL(fileURLWithPath: "/tmp/photo.jpeg")
+        let tif = URL(fileURLWithPath: "/tmp/scan.TiF")
+        let tiff = URL(fileURLWithPath: "/tmp/scan.tiff")
         let svg = URL(fileURLWithPath: "/tmp/icon.SVG")
         let remote = try #require(URL(string: "https://example.com/icon.png"))
 
         #expect(ImageEditorLayerFileImportPolicy.kind(for: png) == .rasterImage)
         #expect(ImageEditorLayerFileImportPolicy.kind(for: jpg) == .rasterImage)
         #expect(ImageEditorLayerFileImportPolicy.kind(for: jpeg) == .rasterImage)
+        #expect(ImageEditorLayerFileImportPolicy.kind(for: tif) == .rasterImage)
+        #expect(ImageEditorLayerFileImportPolicy.kind(for: tiff) == .rasterImage)
         #expect(ImageEditorLayerFileImportPolicy.kind(for: svg) == .editableSVG)
         #expect(ImageEditorLayerFileImportPolicy.kind(for: URL(fileURLWithPath: "/tmp/file.psd")) == nil)
         #expect(ImageEditorLayerFileImportPolicy.kind(for: remote) == nil)
         #expect(ImageEditorLayerFileImportPolicy.supportedURLs(from: [png]) == [png])
-        #expect(ImageEditorLayerFileImportPolicy.supportedURLs(from: [png, jpg, svg]) == [png, jpg, svg])
+        #expect(ImageEditorLayerFileImportPolicy.supportedURLs(from: [png, jpg, tiff, svg]) == [png, jpg, tiff, svg])
         #expect(ImageEditorLayerFileImportPolicy.supportedURLs(from: []) == nil)
         #expect(ImageEditorLayerFileImportPolicy.supportedURLs(from: [png, remote]) == nil)
     }
@@ -111,7 +115,7 @@ struct ImageEditorCanvasFileDropTests {
         let viewModel = makeViewModel()
         let originalLayerIDs = viewModel.document.layers.map(\.id)
         let originalHistoryCount = viewModel.document.history.count
-        let firstURL = temporaryURL(extension: "png")
+        let firstURL = temporaryURL(extension: "tiff")
         let secondURL = temporaryURL(extension: "jpg")
         let svgURL = temporaryURL(extension: "svg")
         defer {
@@ -245,6 +249,8 @@ struct ImageEditorCanvasFileDropTests {
             let representation = try #require(image.tiffRepresentation)
             let bitmap = try #require(NSBitmapImageRep(data: representation))
             data = try #require(bitmap.representation(using: .jpeg, properties: [:]))
+        } else if ["tif", "tiff"].contains(url.pathExtension.lowercased()) {
+            data = try #require(image.tiffRepresentation)
         } else {
             data = try #require(image.qingtuPNGData())
         }

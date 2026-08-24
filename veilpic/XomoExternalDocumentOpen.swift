@@ -22,7 +22,7 @@ nonisolated enum XomoExternalDocumentOpenPolicy {
         switch url.pathExtension.lowercased() {
         case "psd":
             .photoshop
-        case "png", "jpg", "jpeg":
+        case "png", "jpg", "jpeg", "tif", "tiff":
             .image
         default:
             nil
