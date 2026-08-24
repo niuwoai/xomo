@@ -3609,6 +3609,12 @@ struct ImageEditorView: View {
                         XomoComponentLibraryCursorPolicy.restoreArrow(for: .dropCompleted)
                         return true
                     },
+                    onFileDrop: { urls, location in
+                        guard let url = ImageEditorLayerFileImportPolicy.singleSupportedURL(from: urls),
+                              let canvasPoint = imagePoint(from: location, in: geometry.size)
+                        else { return false }
+                        return viewModel.importLayerFile(url, centeredAt: canvasPoint)
+                    },
                     onMagnifyChanged: { magnification, location in
                         viewModel.magnifyCanvas(
                             magnification,

@@ -1177,7 +1177,7 @@ struct ImageEditorSVGImportTests {
         #expect(abs(imported.content.strokeOpacity - 0.3) < 0.001)
     }
 
-    @Test func fileImportPanelRoutesSVGToEditableShapeImporter() throws {
+    @Test func fileImportPanelRoutesSVGThroughSharedEditableShapeImporter() throws {
         let root = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()
             .deletingLastPathComponent()
@@ -1187,15 +1187,24 @@ struct ImageEditorSVGImportTests {
         )
         let chooserStart = try #require(source.range(of: "func chooseImageLayerFile()"))
         let chooserEnd = try #require(
-            source[chooserStart.upperBound...].range(of: "func importEditableSVGLayer")
+            source[chooserStart.upperBound...].range(of: "func importLayerFile")
         )
         let chooser = source[chooserStart.lowerBound..<chooserEnd.lowerBound]
+        let sharedImporterStart = chooserEnd.lowerBound
+        let sharedImporterEnd = try #require(
+            source[sharedImporterStart...].range(of: "func importEditableSVGLayer")
+        )
+        let sharedImporter = source[sharedImporterStart..<sharedImporterEnd.lowerBound]
 
         #expect(chooser.contains("UTType(filenameExtension: \"svg\")"))
-        #expect(chooser.contains("url.pathExtension.lowercased() == \"svg\""))
-        #expect(chooser.contains("importEditableSVGLayer(data, sourceName: url.lastPathComponent)"))
-        let svgRoute = try #require(chooser.range(of: "url.pathExtension.lowercased() == \"svg\""))
-        let bitmapRoute = try #require(chooser.range(of: "NSImage(contentsOf: url)"))
+        #expect(chooser.contains("self.importLayerFile(url)"))
+        #expect(sharedImporter.contains("ImageEditorLayerFileImportPolicy.kind(for: url)"))
+        #expect(sharedImporter.contains("case .editableSVG:"))
+        #expect(sharedImporter.contains("importEditableSVGLayer("))
+        #expect(sharedImporter.contains("case .rasterImage:"))
+        #expect(sharedImporter.contains("NSImage(contentsOf: url)"))
+        let svgRoute = try #require(sharedImporter.range(of: "case .editableSVG:"))
+        let bitmapRoute = try #require(sharedImporter.range(of: "case .rasterImage:"))
         #expect(svgRoute.lowerBound < bitmapRoute.lowerBound)
     }
 }

@@ -512,6 +512,39 @@ struct ImageEditorScopeTests {
         #expect(!dragSource.contains("draggable(payload"))
     }
 
+    @Test func canvasAcceptsFinderImageURLsThroughTheSharedLayerImporter() throws {
+        let repositoryRoot = Self.repositoryRoot()
+        let editorSource = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let themeSource = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/Theme.swift"),
+            encoding: .utf8
+        )
+        let importSource = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorImport.swift"),
+            encoding: .utf8
+        )
+        let interactionStart = try #require(
+            editorSource.range(of: ".xomoCanvasPlatformInteractions(")
+        )
+        let interactionEnd = try #require(
+            editorSource[interactionStart.upperBound...].range(of: "onMagnifyChanged:")
+        )
+        let interaction = editorSource[interactionStart.lowerBound..<interactionEnd.lowerBound]
+
+        #expect(themeSource.contains("onFileDrop: @escaping ([URL], CGPoint) -> Bool"))
+        let fileDropRegistrationCount = themeSource.components(
+            separatedBy: "dropDestination(for: URL.self, action: onFileDrop)"
+        ).count - 1
+        #expect(fileDropRegistrationCount == 2)
+        #expect(interaction.contains("onFileDrop: { urls, location in"))
+        #expect(interaction.contains("ImageEditorLayerFileImportPolicy.singleSupportedURL(from: urls)"))
+        #expect(interaction.contains("viewModel.importLayerFile(url, centeredAt: canvasPoint)"))
+        #expect(importSource.contains("self.importLayerFile(url)"))
+    }
+
     @Test func propertiesPanelPartitionsLargeViewBuilderForReleaseRuntime() throws {
         let source = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),

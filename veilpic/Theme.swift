@@ -122,12 +122,14 @@ extension View {
     @ViewBuilder
     func xomoCanvasPlatformInteractions(
         onDrop: @escaping ([String], CGPoint) -> Bool,
+        onFileDrop: @escaping ([URL], CGPoint) -> Bool,
         onMagnifyChanged: @escaping (CGFloat, CGPoint?) -> Void,
         onMagnifyEnded: @escaping () -> Void,
         onHoverChanged: @escaping (Bool, CGPoint?) -> Void
     ) -> some View {
         if #available(macOS 14.0, *) {
             dropDestination(for: String.self, action: onDrop)
+                .dropDestination(for: URL.self, action: onFileDrop)
                 .simultaneousGesture(
                     MagnifyGesture()
                         .onChanged { value in
@@ -145,6 +147,7 @@ extension View {
                 }
         } else if #available(macOS 13.0, *) {
             dropDestination(for: String.self, action: onDrop)
+                .dropDestination(for: URL.self, action: onFileDrop)
                 .simultaneousGesture(
                     MagnificationGesture()
                         .onChanged { value in onMagnifyChanged(value, nil) }

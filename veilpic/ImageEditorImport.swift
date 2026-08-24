@@ -8,6 +8,46 @@
 import AppKit
 import UniformTypeIdentifiers
 
+nonisolated enum ImageEditorLayerFileImportKind: Equatable {
+    case rasterImage
+    case editableSVG
+}
+
+nonisolated enum ImageEditorLayerFileImportPolicy {
+    static func kind(for url: URL) -> ImageEditorLayerFileImportKind? {
+        guard url.isFileURL else { return nil }
+        switch url.pathExtension.lowercased() {
+        case "png", "jpg", "jpeg":
+            return .rasterImage
+        case "svg":
+            return .editableSVG
+        default:
+            return nil
+        }
+    }
+
+    static func singleSupportedURL(from urls: [URL]) -> URL? {
+        guard urls.count == 1,
+              let url = urls.first,
+              kind(for: url) != nil
+        else { return nil }
+        return url
+    }
+
+    static func frame(for contentSize: CGSize, centeredAt point: CGPoint) -> CGRect {
+        let safeSize = CGSize(
+            width: max(1, contentSize.width),
+            height: max(1, contentSize.height)
+        )
+        return CGRect(
+            x: point.x - safeSize.width / 2,
+            y: point.y - safeSize.height / 2,
+            width: safeSize.width,
+            height: safeSize.height
+        )
+    }
+}
+
 @MainActor
 extension ImageEditorViewModel {
     var canPasteClipboardImage: Bool {
@@ -40,25 +80,59 @@ extension ImageEditorViewModel {
         panel.begin { [weak self] response in
             Task { @MainActor in
                 guard let self, response == .OK, let url = panel.url else { return }
-                if url.pathExtension.lowercased() == "svg" {
-                    guard let data = try? Data(contentsOf: url) else {
-                        self.statusText = L10n.text("imageEditor.status.editableSVGImportFailed")
-                        return
-                    }
-                    self.importEditableSVGLayer(data, sourceName: url.lastPathComponent)
-                    return
-                }
-                guard let image = NSImage(contentsOf: url) else {
-                    self.statusText = L10n.text("imageEditor.status.layerImportFailed")
-                    return
-                }
-                self.importImageLayer(image, sourceName: url.lastPathComponent)
+                self.importLayerFile(url)
             }
         }
     }
 
     @discardableResult
-    func importEditableSVGLayer(_ data: Data, sourceName: String) -> Bool {
+    func importLayerFile(_ url: URL, centeredAt point: CGPoint? = nil) -> Bool {
+        guard let kind = ImageEditorLayerFileImportPolicy.kind(for: url) else {
+            statusText = L10n.text("imageEditor.status.layerImportFailed")
+            return false
+        }
+
+        let isSecurityScoped = url.startAccessingSecurityScopedResource()
+        defer {
+            if isSecurityScoped {
+                url.stopAccessingSecurityScopedResource()
+            }
+        }
+        guard (try? url.resourceValues(forKeys: [.isRegularFileKey]).isRegularFile) == true else {
+            statusText = L10n.text("imageEditor.status.layerImportFailed")
+            return false
+        }
+
+        switch kind {
+        case .editableSVG:
+            guard let data = try? Data(contentsOf: url) else {
+                statusText = L10n.text("imageEditor.status.editableSVGImportFailed")
+                return false
+            }
+            return importEditableSVGLayer(
+                data,
+                sourceName: url.lastPathComponent,
+                centeredAt: point
+            )
+        case .rasterImage:
+            guard let image = NSImage(contentsOf: url) else {
+                statusText = L10n.text("imageEditor.status.layerImportFailed")
+                return false
+            }
+            return importImageLayer(
+                image,
+                sourceName: url.lastPathComponent,
+                centeredAt: point
+            )
+        }
+    }
+
+    @discardableResult
+    func importEditableSVGLayer(
+        _ data: Data,
+        sourceName: String,
+        centeredAt point: CGPoint? = nil
+    ) -> Bool {
         guard let imported = XomoEditableSVGImporter.parse(data) else {
             statusText = L10n.text("imageEditor.status.editableSVGImportFailed")
             return false
@@ -68,7 +142,9 @@ extension ImageEditorViewModel {
         pushUndo()
         var layer = ImageEditorLayer.shape(
             name: cleanName,
-            frame: centeredImportFrame(for: imported.size),
+            frame: point.map {
+                ImageEditorLayerFileImportPolicy.frame(for: imported.size, centeredAt: $0)
+            } ?? centeredImportFrame(for: imported.size),
             content: imported.content
         )
         layer.groupID = nil
@@ -200,7 +276,8 @@ extension ImageEditorViewModel {
         sourceName: String,
         historyTitle: String? = nil,
         importedStatus: String? = nil,
-        frameOverride: CGRect? = nil
+        frameOverride: CGRect? = nil,
+        centeredAt point: CGPoint? = nil
     ) -> Bool {
         let normalized = image.normalizedImportedBitmapImage()
         guard normalized.size.width > 0, normalized.size.height > 0 else {
@@ -214,7 +291,9 @@ extension ImageEditorViewModel {
             size: normalized.size
         )
         layer.image = normalized
-        layer.frame = frameOverride ?? centeredImportFrame(for: normalized.size)
+        layer.frame = frameOverride
+            ?? point.map { ImageEditorLayerFileImportPolicy.frame(for: normalized.size, centeredAt: $0) }
+            ?? centeredImportFrame(for: normalized.size)
         layer.opacity = 1
         layer.blendMode = .normal
         layer.groupID = nil
