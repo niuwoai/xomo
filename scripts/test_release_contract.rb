@@ -11,13 +11,13 @@ class ReleaseContractTest < Minitest::Test
     result = XomoReleaseContract.collect(File.expand_path("..", __dir__))
 
     assert result["passed"], result.inspect
-    assert_equal "2.12.0-rc1223", result["version"]
-    assert_equal ["2.12.0-rc1223"], result["project_versions"]
-    assert_equal ["1223"], result["build_versions"]
+    assert_equal "2.12.0-rc1224", result["version"]
+    assert_equal ["2.12.0-rc1224"], result["project_versions"]
+    assert_equal ["1224"], result["build_versions"]
     assert result["checks"]["release_signing_requests_secure_timestamp"]
     assert result["checks"]["release_entitlements_are_hardened"]
-    assert result["checks"]["chinese_bundle_name_is_xiangmo"]
-    assert result["checks"]["chinese_app_name_is_xiangmo"]
+    assert result["checks"]["chinese_bundle_name_is_xomo"]
+    assert result["checks"]["chinese_app_name_is_xomo"]
   end
 
   def test_version_drift_fails_the_contract
@@ -82,8 +82,8 @@ class ReleaseContractTest < Minitest::Test
       result = XomoReleaseContract.collect(root)
 
       refute result["passed"]
-      refute result["checks"]["chinese_bundle_name_is_xiangmo"]
-      refute result["checks"]["chinese_app_name_is_xiangmo"]
+      refute result["checks"]["chinese_bundle_name_is_xomo"]
+      refute result["checks"]["chinese_app_name_is_xomo"]
     end
   end
 
@@ -101,7 +101,7 @@ class ReleaseContractTest < Minitest::Test
     build_version: version[/-rc(\d+)\z/, 1],
     release_debuggable: false,
     secure_timestamp: true,
-    chinese_brand: "象墨"
+    chinese_brand: "Xomo"
   )
     FileUtils.mkdir_p(File.join(root, "veilpic.xcodeproj"))
     FileUtils.mkdir_p(File.join(root, "veilpic"))

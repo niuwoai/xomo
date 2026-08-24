@@ -6500,7 +6500,7 @@ final class XomoAutomationRegistry {
     ) throws -> XomoJSONValue {
         let rawPath = try requiredString("path", in: arguments)
         let url = URL(fileURLWithPath: NSString(string: rawPath).expandingTildeInPath)
-        guard XomoExternalDocumentOpenPolicy.supports(url) else {
+        guard XomoExternalDocumentOpenPolicy.kind(for: url) == .photoshop else {
             throw XomoAutomationCallError.invalidArgument("PSD open requires a .psd file")
         }
         let attributes: [FileAttributeKey: Any]
@@ -6533,7 +6533,7 @@ final class XomoAutomationRegistry {
     ) throws -> XomoJSONValue {
         let rawPath = try requiredString("path", in: arguments)
         let url = URL(fileURLWithPath: NSString(string: rawPath).expandingTildeInPath)
-        guard XomoExternalDocumentOpenPolicy.supports(url) else {
+        guard XomoExternalDocumentOpenPolicy.kind(for: url) == .photoshop else {
             throw XomoAutomationCallError.invalidArgument("PSD save requires a .psd file")
         }
         if let attributes = try? FileManager.default.attributesOfItem(atPath: url.path),

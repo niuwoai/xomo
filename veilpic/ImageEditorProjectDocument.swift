@@ -1353,6 +1353,16 @@ extension ImageEditorViewModel {
         }
     }
 
+    func loadExternalImageDocument(_ document: ImageEditorDocument) {
+        self.document = document
+        psdCompatibilityReport = nil
+        psdCompatibilityFileName = ""
+        isPSDCompatibilityReportPresented = false
+        resetAfterExternalDocumentOpen()
+        appendHistory(L10n.text("imageEditor.history.imageOpen"))
+        statusText = L10n.format("imageEditor.status.imageOpened", document.sourceName)
+    }
+
     private func resetAfterExternalDocumentOpen() {
         clearUndoHistory()
         historySnapshots.removeAll()

@@ -9,12 +9,28 @@ import AppKit
 import Combine
 import Foundation
 
+nonisolated enum XomoExternalDocumentKind: Equatable {
+    case photoshop
+    case image
+}
+
 nonisolated enum XomoExternalDocumentOpenPolicy {
     static let immediateSplashFileSize = 12 * 1_024 * 1_024
     static let delayedSplashNanoseconds: UInt64 = 180_000_000
 
+    static func kind(for url: URL) -> XomoExternalDocumentKind? {
+        switch url.pathExtension.lowercased() {
+        case "psd":
+            .photoshop
+        case "png", "jpg", "jpeg":
+            .image
+        default:
+            nil
+        }
+    }
+
     static func supports(_ url: URL) -> Bool {
-        url.pathExtension.lowercased() == "psd"
+        kind(for: url) != nil
     }
 
     static func shouldShowImmediately(fileSize: Int?) -> Bool {
@@ -27,6 +43,7 @@ enum XomoDocumentLoadingStage: Equatable {
     case preparing
     case reading
     case decoding
+    case decodingImage
     case rendering
     case finishing
 }
@@ -43,6 +60,8 @@ struct XomoDocumentLoadingPresentation: Equatable {
             L10n.format("startup.loading.reading", fileName)
         case .decoding:
             L10n.text("startup.loading.decodingPSD")
+        case .decodingImage:
+            L10n.text("startup.loading.decodingImage")
         case .rendering:
             L10n.text("startup.loading.rendering")
         case .finishing:
@@ -142,6 +161,10 @@ final class XomoExternalDocumentOpenCoordinator: ObservableObject {
         requestID: UUID,
         viewModel: ImageEditorViewModel
     ) async {
+        guard let documentKind = XomoExternalDocumentOpenPolicy.kind(for: url) else {
+            finish(requestID: requestID)
+            return
+        }
         let hasSecurityScope = url.startAccessingSecurityScopedResource()
         defer {
             if hasSecurityScope {
@@ -155,6 +178,23 @@ final class XomoExternalDocumentOpenCoordinator: ObservableObject {
                 try Data(contentsOf: url, options: .mappedIfSafe)
             }.value
             try Task.checkCancellation()
+
+            if documentKind == .image {
+                updateStage(.decodingImage, requestID: requestID)
+                guard let image = NSImage(data: data) else {
+                    throw CocoaError(.fileReadCorruptFile)
+                }
+                try Task.checkCancellation()
+                updateStage(.finishing, requestID: requestID)
+                await Task.yield()
+                guard activeRequestID == requestID else { return }
+                viewModel.loadExternalImageDocument(
+                    ImageEditorDocument(sourceName: url.lastPathComponent, image: image)
+                )
+                activateOpenedDocumentWindow()
+                finish(requestID: requestID)
+                return
+            }
 
             updateStage(.decoding, requestID: requestID)
             let document: ImageEditorDocument
@@ -189,8 +229,7 @@ final class XomoExternalDocumentOpenCoordinator: ObservableObject {
                 openedFlattened: openedFlattened,
                 compatibilityReport: compatibilityReport
             )
-            NSApp.activate(ignoringOtherApps: true)
-            NSApp.keyWindow?.makeKeyAndOrderFront(nil)
+            activateOpenedDocumentWindow()
             finish(requestID: requestID)
         } catch is CancellationError {
             finish(requestID: requestID)
@@ -201,6 +240,11 @@ final class XomoExternalDocumentOpenCoordinator: ObservableObject {
             )
             finish(requestID: requestID)
         }
+    }
+
+    private func activateOpenedDocumentWindow() {
+        NSApp.activate(ignoringOtherApps: true)
+        NSApp.keyWindow?.makeKeyAndOrderFront(nil)
     }
 
     private func updateStage(_ stage: XomoDocumentLoadingStage, requestID: UUID) {

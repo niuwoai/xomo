@@ -545,9 +545,12 @@
 "imageEditor.history.psdOpenFlattened" = "Open PSD as composite";
 "imageEditor.status.psdOpened" = "Opened PSD: %@";
 "imageEditor.status.psdOpenedFlattened" = "This PSD uses unsupported layer features and was opened as a composite: %@";
+"imageEditor.history.imageOpen" = "Open image file";
+"imageEditor.status.imageOpened" = "Opened image: %@";
 "startup.loading.preparing" = "Preparing to open %@…";
 "startup.loading.reading" = "Reading %@…";
 "startup.loading.decodingPSD" = "Parsing PSD layers…";
+"startup.loading.decodingImage" = "Decoding image pixels…";
 "startup.loading.rendering" = "Building the editable canvas…";
 "startup.loading.finishing" = "Opening %@…";
 "imageEditor.export.scope" = "Scope";

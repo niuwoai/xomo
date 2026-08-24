@@ -1,4 +1,4 @@
-"app.name" = "象墨";
+"app.name" = "Xomo";
 "app.version" = "版本 %@";
 "someim.update.check" = "检查更新…";
 "annotation.tool.ellipse" = "椭圆";
@@ -545,9 +545,12 @@
 "imageEditor.history.psdOpenFlattened" = "以合成图打开 PSD";
 "imageEditor.status.psdOpened" = "已打开 PSD：%@";
 "imageEditor.status.psdOpenedFlattened" = "该 PSD 使用了暂不支持的图层特性，已以合成图打开：%@";
+"imageEditor.history.imageOpen" = "打开图像文件";
+"imageEditor.status.imageOpened" = "已打开图像：%@";
 "startup.loading.preparing" = "正在准备打开 %@…";
 "startup.loading.reading" = "正在读取 %@…";
 "startup.loading.decodingPSD" = "正在解析 PSD 图层…";
+"startup.loading.decodingImage" = "正在解码图像像素…";
 "startup.loading.rendering" = "正在生成可编辑画布…";
 "startup.loading.finishing" = "正在打开 %@…";
 "imageEditor.export.scope" = "范围";

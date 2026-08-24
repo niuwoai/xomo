@@ -5,7 +5,7 @@ require "rubygems"
 
 module XomoReleaseContract
   EXPECTED_BUNDLE_ID = "im.some.xomo"
-  EXPECTED_CHINESE_BRAND = "象墨"
+  EXPECTED_CHINESE_BRAND = "Xomo"
   MINIMUM_MACOS_VERSION = Gem::Version.new("13.0")
 
   module_function
@@ -37,10 +37,10 @@ module XomoReleaseContract
       "project_versions_match" => !project_versions.empty? && project_versions == [app_version],
       "build_version_matches_prerelease" => !expected_build_version.nil? && build_versions == [expected_build_version],
       "main_bundle_id" => bundle_ids.include?(EXPECTED_BUNDLE_ID),
-      "chinese_bundle_name_is_xiangmo" =>
+      "chinese_bundle_name_is_xomo" =>
         chinese_info.include?(%Q{"CFBundleDisplayName" = "#{EXPECTED_CHINESE_BRAND}";}) &&
         chinese_info.include?(%Q{"CFBundleName" = "#{EXPECTED_CHINESE_BRAND}";}),
-      "chinese_app_name_is_xiangmo" =>
+      "chinese_app_name_is_xomo" =>
         chinese_strings.include?(%Q{"app.name" = "#{EXPECTED_CHINESE_BRAND}";}),
       "test_bundle_ids" => bundle_ids.include?("#{EXPECTED_BUNDLE_ID}Tests") && bundle_ids.include?("#{EXPECTED_BUNDLE_ID}UITests"),
       "minimum_macos_13" => !deployment_targets.empty? && deployment_targets.all? { |value| Gem::Version.new(value) >= MINIMUM_MACOS_VERSION },
