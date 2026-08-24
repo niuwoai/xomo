@@ -118,76 +118,47 @@ extension ImageEditorView {
 
     @ViewBuilder
     private var fileMenu: some View {
-        Button(L10n.text("imageEditor.action.canvasNew")) {
-            viewModel.isNewCanvasSheetPresented = true
-        }
-        .keyboardShortcut("n", modifiers: [.command])
-        Button(L10n.text("imageEditor.action.canvasNewFromClipboard")) {
-            viewModel.createCanvasFromClipboard()
-        }
-        .keyboardShortcut("n", modifiers: [.command, .option])
-        .disabled(!viewModel.canCreateCanvasFromClipboard)
-        Button(L10n.text("imageEditor.action.projectOpen")) {
-            viewModel.openProjectDocument()
-        }
-        .keyboardShortcut("o", modifiers: [.command])
-        Button(L10n.text("imageEditor.action.projectSave")) {
-            viewModel.saveProjectDocument()
-        }
-        .keyboardShortcut("s", modifiers: [.command])
-        Button(L10n.text("imageEditor.action.psdCompatibilityReport")) {
-            viewModel.isPSDCompatibilityReportPresented = true
-        }
-        .disabled(viewModel.psdCompatibilityReport == nil)
-        Divider()
-        Button(L10n.text("imageEditor.action.fileImport")) {
-            viewModel.chooseImageLayerFile()
-        }
-        Button(L10n.text("imageEditor.action.figmaLinkImport")) {
-            isFigmaLinkImportPresented = true
-        }
-        .keyboardShortcut("f", modifiers: [.command, .option])
-        Button(L10n.text("imageEditor.action.export")) {
-            viewModel.openExportPanel()
-        }
-        .keyboardShortcut("s", modifiers: [.command, .shift, .option])
-        Button(L10n.text("imageEditor.action.exportSelection")) {
-            viewModel.exportSettings.scope = .selection
-            viewModel.openExportPanel()
-        }
-        .keyboardShortcut("e", modifiers: [.command, .option])
-        .disabled(!viewModel.canExportSelection)
-        Button(L10n.text("imageEditor.action.sliceCreate")) {
-            viewModel.createSliceFromCurrentSelection()
-        }
-        .keyboardShortcut("k", modifiers: [.command, .option])
-        .disabled(!viewModel.canCreateSliceFromSelection)
-        Button(L10n.text("imageEditor.action.hotspotCreate")) {
-            viewModel.createHotspotFromCurrentSelection()
-        }
-        .keyboardShortcut("h", modifiers: [.command, .option])
-        .disabled(!viewModel.canCreateHotspotFromSelection)
-        Button(L10n.text("imageEditor.action.hotspotHTMLExport")) {
-            viewModel.exportHotspotHTML()
-        }
-        .keyboardShortcut("h", modifiers: [.command, .option, .shift])
-        .disabled(!viewModel.canExportHotspotHTML)
-        Button(L10n.text("imageEditor.action.exportLayers")) {
-            guard let scope = viewModel.selectedLayersExportScope else { return }
-            viewModel.exportSettings.scope = scope
-            viewModel.openExportPanel()
-        }
-        .keyboardShortcut("l", modifiers: [.command, .option])
-        .disabled(viewModel.selectedLayersExportScope == nil)
-        Divider()
-        Button(L10n.text("imageEditor.action.apply")) {
-            viewModel.applyAndClose {
-                closeWindow()
-            }
-        }
-        Button(L10n.text("imageEditor.action.cancel")) {
-            closeWindow()
-        }
+        XomoFileMenuItems(actions: xomoFileCommandActions)
+    }
+
+    var xomoFileCommandActions: XomoFileCommandActions {
+        XomoFileCommandActions(
+            createCanvas: { viewModel.isNewCanvasSheetPresented = true },
+            createCanvasFromClipboard: { viewModel.createCanvasFromClipboard() },
+            canCreateCanvasFromClipboard: viewModel.canCreateCanvasFromClipboard,
+            openProject: { viewModel.openProjectDocument() },
+            saveProject: { viewModel.saveProjectDocument() },
+            showPSDCompatibilityReport: {
+                viewModel.isPSDCompatibilityReportPresented = true
+            },
+            canShowPSDCompatibilityReport: viewModel.psdCompatibilityReport != nil,
+            importFile: { viewModel.chooseImageLayerFile() },
+            importFigmaLink: { isFigmaLinkImportPresented = true },
+            export: { viewModel.openExportPanel() },
+            exportSelection: {
+                viewModel.exportSettings.scope = .selection
+                viewModel.openExportPanel()
+            },
+            canExportSelection: viewModel.canExportSelection,
+            createSlice: { viewModel.createSliceFromCurrentSelection() },
+            canCreateSlice: viewModel.canCreateSliceFromSelection,
+            createHotspot: { viewModel.createHotspotFromCurrentSelection() },
+            canCreateHotspot: viewModel.canCreateHotspotFromSelection,
+            exportHotspotHTML: { viewModel.exportHotspotHTML() },
+            canExportHotspotHTML: viewModel.canExportHotspotHTML,
+            exportSelectedLayers: {
+                guard let scope = viewModel.selectedLayersExportScope else { return }
+                viewModel.exportSettings.scope = scope
+                viewModel.openExportPanel()
+            },
+            canExportSelectedLayers: viewModel.selectedLayersExportScope != nil,
+            apply: {
+                viewModel.applyAndClose {
+                    closeWindow()
+                }
+            },
+            cancel: { closeWindow() }
+        )
     }
 
     private var canPresentSelectionFillPanel: Bool {

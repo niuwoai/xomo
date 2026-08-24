@@ -1877,24 +1877,23 @@ struct ImageEditorScopeTests {
     }
 
     @Test func fileMenuExposesClassicProjectAndExportShortcuts() throws {
-        let source = try String(
+        let menuBarSource = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),
             encoding: .utf8
         )
-        let fileMenuStart = try #require(source.range(of: "private var fileMenu: some View"))
-        let nextMenuStart = try #require(
-            source[fileMenuStart.upperBound...].range(of: "private var editMenu: some View")
+        let commandsSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/XomoApplicationCommands.swift"),
+            encoding: .utf8
         )
-        let fileMenuSource = source[fileMenuStart.lowerBound..<nextMenuStart.lowerBound]
 
-        #expect(fileMenuSource.contains("viewModel.openProjectDocument()"))
-        #expect(fileMenuSource.contains(".keyboardShortcut(\"o\", modifiers: [.command])"))
-        #expect(fileMenuSource.contains("viewModel.saveProjectDocument()"))
-        #expect(fileMenuSource.contains(".keyboardShortcut(\"s\", modifiers: [.command])"))
-        #expect(fileMenuSource.contains("viewModel.openExportPanel()"))
-        #expect(fileMenuSource.contains(".keyboardShortcut(\"s\", modifiers: [.command, .shift, .option])"))
-        #expect(fileMenuSource.contains("imageEditor.action.fileImport"))
-        #expect(fileMenuSource.contains("viewModel.chooseImageLayerFile()"))
+        #expect(menuBarSource.contains("viewModel.openProjectDocument()"))
+        #expect(commandsSource.contains(".keyboardShortcut(\"o\", modifiers: [.command])"))
+        #expect(menuBarSource.contains("viewModel.saveProjectDocument()"))
+        #expect(commandsSource.contains(".keyboardShortcut(\"s\", modifiers: [.command])"))
+        #expect(menuBarSource.contains("viewModel.openExportPanel()"))
+        #expect(commandsSource.contains(".keyboardShortcut(\"s\", modifiers: [.command, .shift, .option])"))
+        #expect(commandsSource.contains("imageEditor.action.fileImport"))
+        #expect(menuBarSource.contains("viewModel.chooseImageLayerFile()"))
     }
 
     @Test func layerMenuExposesSelectionLayerCommandsInPhotoshopStyleLocation() throws {
@@ -2484,20 +2483,19 @@ struct ImageEditorScopeTests {
     }
 
     @Test func fileMenuExposesClipboardCanvasCreation() throws {
-        let source = try String(
+        let menuBarSource = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),
             encoding: .utf8
         )
-        let fileMenuStart = try #require(source.range(of: "private var fileMenu: some View"))
-        let nextMenuStart = try #require(
-            source[fileMenuStart.upperBound...].range(of: "private var editMenu: some View")
+        let commandsSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/XomoApplicationCommands.swift"),
+            encoding: .utf8
         )
-        let fileMenuSource = source[fileMenuStart.lowerBound..<nextMenuStart.lowerBound]
 
-        #expect(fileMenuSource.contains("imageEditor.action.canvasNewFromClipboard"))
-        #expect(fileMenuSource.contains("viewModel.createCanvasFromClipboard()"))
-        #expect(fileMenuSource.contains(".keyboardShortcut(\"n\", modifiers: [.command, .option])"))
-        #expect(fileMenuSource.contains(".disabled(!viewModel.canCreateCanvasFromClipboard)"))
+        #expect(commandsSource.contains("imageEditor.action.canvasNewFromClipboard"))
+        #expect(menuBarSource.contains("viewModel.createCanvasFromClipboard()"))
+        #expect(commandsSource.contains(".keyboardShortcut(\"n\", modifiers: [.command, .option])"))
+        #expect(commandsSource.contains(".disabled(actions?.canCreateCanvasFromClipboard != true)"))
     }
 
     @Test func commandNOpensCanvasSheetInsteadOfWindowGroupWindow() throws {
@@ -2510,44 +2508,48 @@ struct ImageEditorScopeTests {
             contentsOf: root.appendingPathComponent("veilpic/ImageEditorView.swift"),
             encoding: .utf8
         )
+        let commandsSource = try String(
+            contentsOf: root.appendingPathComponent("veilpic/XomoApplicationCommands.swift"),
+            encoding: .utf8
+        )
 
-        #expect(appSource.contains("CommandGroup(replacing: .newItem) { }"))
+        #expect(appSource.contains("XomoFileCommands()"))
+        #expect(commandsSource.contains("CommandGroup(replacing: .newItem)"))
+        #expect(commandsSource.contains("actions?.createCanvas()"))
         #expect(editorSource.contains("case .newCanvas: viewModel.isNewCanvasSheetPresented = true"))
         #expect(editorSource.contains("if key == \"n\", relevantFlags == [.command] { return .newCanvas }"))
     }
 
     @Test func fileMenuExposesDirectSelectionSliceExport() throws {
-        let source = try String(
+        let menuBarSource = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),
             encoding: .utf8
         )
-        let fileMenuStart = try #require(source.range(of: "private var fileMenu: some View"))
-        let nextMenuStart = try #require(
-            source[fileMenuStart.upperBound...].range(of: "private var editMenu: some View")
+        let commandsSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/XomoApplicationCommands.swift"),
+            encoding: .utf8
         )
-        let fileMenuSource = source[fileMenuStart.lowerBound..<nextMenuStart.lowerBound]
 
-        #expect(fileMenuSource.contains("imageEditor.action.exportSelection"))
-        #expect(fileMenuSource.contains("viewModel.exportSettings.scope = .selection"))
-        #expect(fileMenuSource.contains(".keyboardShortcut(\"e\", modifiers: [.command, .option])"))
-        #expect(fileMenuSource.contains(".disabled(!viewModel.canExportSelection)"))
+        #expect(commandsSource.contains("imageEditor.action.exportSelection"))
+        #expect(menuBarSource.contains("viewModel.exportSettings.scope = .selection"))
+        #expect(commandsSource.contains(".keyboardShortcut(\"e\", modifiers: [.command, .option])"))
+        #expect(commandsSource.contains(".disabled(actions?.canExportSelection != true)"))
     }
 
     @Test func fileMenuExposesDirectSelectedLayerExport() throws {
-        let source = try String(
+        let menuBarSource = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),
             encoding: .utf8
         )
-        let fileMenuStart = try #require(source.range(of: "private var fileMenu: some View"))
-        let nextMenuStart = try #require(
-            source[fileMenuStart.upperBound...].range(of: "private var editMenu: some View")
+        let commandsSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/XomoApplicationCommands.swift"),
+            encoding: .utf8
         )
-        let fileMenuSource = source[fileMenuStart.lowerBound..<nextMenuStart.lowerBound]
 
-        #expect(fileMenuSource.contains("imageEditor.action.exportLayers"))
-        #expect(fileMenuSource.contains("viewModel.selectedLayersExportScope"))
-        #expect(fileMenuSource.contains(".keyboardShortcut(\"l\", modifiers: [.command, .option])"))
-        #expect(fileMenuSource.contains(".disabled(viewModel.selectedLayersExportScope == nil)"))
+        #expect(commandsSource.contains("imageEditor.action.exportLayers"))
+        #expect(menuBarSource.contains("viewModel.selectedLayersExportScope"))
+        #expect(commandsSource.contains(".keyboardShortcut(\"l\", modifiers: [.command, .option])"))
+        #expect(commandsSource.contains(".disabled(actions?.canExportSelectedLayers != true)"))
     }
 
     @Test func exportPanelUsesDarkReadableTextAndLocalizedSliceScope() throws {

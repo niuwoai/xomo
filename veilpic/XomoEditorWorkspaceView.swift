@@ -46,18 +46,6 @@ struct XomoEditorWorkspaceView: View {
                 externalOpenCoordinator.unregister(viewModel)
                 XomoAutomationRegistry.shared.unregister(viewModel)
             }
-            .focusedSceneValue(\.xomoFileCommandActions, fileCommandActions)
-    }
-
-    private var fileCommandActions: XomoFileCommandActions {
-        XomoFileCommandActions(
-            createCanvas: { viewModel.isNewCanvasSheetPresented = true },
-            createCanvasFromClipboard: { viewModel.createCanvasFromClipboard() },
-            canCreateCanvasFromClipboard: viewModel.canCreateCanvasFromClipboard,
-            openProject: { viewModel.openProjectDocument() },
-            saveProject: { viewModel.saveProjectDocument() },
-            importFile: { viewModel.chooseImageLayerFile() }
-        )
     }
 
     private func presentPresetManagerForUITestingIfRequested() {
