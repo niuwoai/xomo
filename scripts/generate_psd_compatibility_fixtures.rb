@@ -112,6 +112,12 @@ def vector_mask_payload(flags: 0, include_hole: false)
   u32(3) + u32(flags) + fill_rule + paths.map { |points| subpath.call(points) }.join
 end
 
+def unsupported_vector_mask_payload
+  payload = vector_mask_payload
+  payload[0, 4] = u32(4)
+  payload
+end
+
 def editable_text_engine_data
   text = "Hello Xomo"
   output = +"<<\n/EngineDict <<\n/Editor <<\n/Text "
@@ -447,7 +453,7 @@ def unsupported_features_fixture
   }
   blocks = [
     tagged_block("TySh", ""),
-    tagged_block("vmsk", vector_mask_payload(flags: 1)),
+    tagged_block("vmsk", unsupported_vector_mask_payload),
     tagged_block("SoLd", ""),
     tagged_block("lfx2", ""),
     tagged_block("SoCo", "")
@@ -700,6 +706,10 @@ def multi_vector_mask_fixture
   vector_mask_fixture(payload: vector_mask_payload(include_hole: true))
 end
 
+def inverted_vector_mask_fixture
+  vector_mask_fixture(payload: vector_mask_payload(flags: 1))
+end
+
 def path_resource_fixture
   closed = path_resource_block(
     id: 2000,
@@ -759,6 +769,7 @@ fixtures = {
   "gradient-fill.psd" => gradient_fill_fixture,
   "vector-mask.psd" => vector_mask_fixture,
   "vector-mask-multi.psd" => multi_vector_mask_fixture,
+  "vector-mask-inverted.psd" => inverted_vector_mask_fixture,
   "path-resources.psd" => path_resource_fixture
 }
 fixtures.each do |name, bytes|
@@ -784,6 +795,7 @@ expectations = {
   "gradient-fill.psd" => %w[editable_gradient_fill linear_color_stops],
   "vector-mask.psd" => %w[editable_vector_mask closed_path bezier_points],
   "vector-mask-multi.psd" => %w[editable_vector_mask multiple_subpaths even_odd_hole],
+  "vector-mask-inverted.psd" => %w[editable_vector_mask inverted_mask psd_round_trip],
   "path-resources.psd" => %w[saved_path closed_path open_path]
 }
 manifest = {

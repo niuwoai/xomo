@@ -10,6 +10,7 @@
 | `editable-text.psd` | 外部生成的 TySh 文字层，读取纯文本、字体、字号、颜色、基础段落对齐和字符样式 |
 | `vector-mask.psd` | 外部生成的 vmsk 简单闭合三点路径，导入为 Xomo 原生矢量蒙版 |
 | `vector-mask-multi.psd` | 外部生成的 vmsk 两个闭合子路径，验证 pathSubpaths 与偶奇填充孔洞 |
+| `vector-mask-inverted.psd` | 外部生成的 vmsk 反相矢量蒙版，验证原生反相渲染、项目持久化与 PSD 往返 |
 | `modern-solid-vector-shape.psd` | `vsms + vscg` version 16 的 `SoCo` 内容，恢复为原生实色矢量形状 |
 | `modern-gradient-vector-shape.psd` | `vsms + vscg` version 16 的 `GdFl` 内容，恢复为原生线性渐变矢量形状 |
 | `gradient-vector-shape.psd` | 外部生成的渐变矢量形状，包含 `[6, 3]` 虚线与 `5.5 pt` 非零虚线偏移 |

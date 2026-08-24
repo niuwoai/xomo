@@ -201,6 +201,7 @@ extension ImageEditorViewModel {
         output.maskDensity = 1
         output.maskFeather = 0
         output.isVectorMaskEnabled = true
+        output.isVectorMaskInverted = false
         output.style = ImageEditorLayerStyle()
         output.smartFilters = []
         output.fillOpacity = 1
@@ -219,6 +220,7 @@ extension ImageEditorViewModel {
         layer.isMaskEnabled = true
         layer.isMaskLinked = true
         layer.isVectorMaskEnabled = true
+        layer.isVectorMaskInverted = false
         layer.maskDensity = 1
         layer.maskFeather = 0
     }

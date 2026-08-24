@@ -4076,6 +4076,7 @@ struct ImageEditorVectorLayerTests {
         )
         viewModel.document.layers[sourceIndex].vectorMask = vectorMask.normalized(size: canvasSize)
         viewModel.document.layers[sourceIndex].isVectorMaskEnabled = false
+        viewModel.document.layers[sourceIndex].isVectorMaskInverted = true
         viewModel.document.layers[sourceIndex].isMaskLinked = false
 
         viewModel.addLayer()
@@ -4102,6 +4103,7 @@ struct ImageEditorVectorLayerTests {
         #expect(anchors[1].point == CGPoint(x: 50, y: 10))
         #expect(anchors[2].point == CGPoint(x: 30, y: 40))
         #expect(copiedLayer.isVectorMaskEnabled == false)
+        #expect(copiedLayer.isVectorMaskInverted)
         #expect(copiedLayer.isMaskLinked == false)
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.vectorMaskCopy"))
         #expect(viewModel.statusText == L10n.format("imageEditor.status.vectorMaskCopied", 1))
@@ -4138,6 +4140,7 @@ struct ImageEditorVectorLayerTests {
             isPathClosed: true
         )
         viewModel.document.layers[targetIndex].vectorMask = vectorMask.normalized(size: canvasSize)
+        viewModel.document.layers[targetIndex].isVectorMaskInverted = true
 
         let layerCountBeforeEdit = viewModel.document.layers.count
         #expect(viewModel.canEditSelectedVectorMaskAsPath)
@@ -4149,6 +4152,8 @@ struct ImageEditorVectorLayerTests {
 
         #expect(viewModel.document.layers.count == layerCountBeforeEdit + 1)
         #expect(targetAfterEdit.vectorMask == nil)
+        #expect(!targetAfterEdit.isVectorMaskInverted)
+        #expect(pathLayer.isVectorMaskInverted)
         #expect(pathContent.kind == .path)
         #expect(pathContent.isPathClosed)
         #expect(pathContent.editablePathAnchors.count == 3)
@@ -4165,6 +4170,7 @@ struct ImageEditorVectorLayerTests {
 
         #expect(viewModel.document.layers.count == layerCountBeforeEdit)
         #expect(targetAfterApply.id == targetID)
+        #expect(targetAfterApply.isVectorMaskInverted)
         #expect(reappliedMask.kind == .path)
         #expect(reappliedMask.isPathClosed)
         #expect(reappliedMask.editablePathAnchors.count == 3)

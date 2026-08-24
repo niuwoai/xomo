@@ -1352,12 +1352,7 @@ struct ImageEditorPSDTests {
     }
 
     @Test func compatibilityReportCountsUnsupportedVectorMaskStructure() throws {
-        var data = try psdFixtureData("solid-vector-shape.psd")
-        let keyRange = try #require(data.range(of: Data("vmsk".utf8)))
-        let flagsOffset = keyRange.upperBound + 8
-        #expect(data[flagsOffset + 3] == 0)
-        data[flagsOffset + 3] = 1
-
+        let data = try psdFixtureData("unsupported-features.psd")
         let report = try ImageEditorPSDCodec.compatibilityReport(data)
         #expect(report.maskCount == 1)
         #expect(report.issues.contains { $0.kind == .vectorRasterized })
@@ -1811,6 +1806,53 @@ struct ImageEditorPSDTests {
         let restoredProject = try project.restoredDocument()
         let restoredMask = try #require(restoredProject.layers.first?.vectorMask)
         #expect(restoredMask.editablePathSubpaths == vectorMask.editablePathSubpaths)
+    }
+
+    @Test func externalInvertedVectorMaskStaysEditableAndRoundTrips() throws {
+        let data = try psdFixtureData("vector-mask-inverted.psd")
+        let document = try ImageEditorPSDCodec.decode(data, sourceName: "vector-mask-inverted.psd")
+        let layer = try #require(document.layers.first)
+        let vectorMask = try #require(layer.vectorMask)
+
+        #expect(vectorMask.kind == .path)
+        #expect(vectorMask.editablePathAnchors.count == 3)
+        #expect(layer.isVectorMaskInverted)
+        let alpha = psdMaskAlpha(try #require(layer.effectiveMask), width: 4, height: 4)
+        #expect(alpha.count == 16)
+        let normalDocument = try ImageEditorPSDCodec.decode(
+            psdFixtureData("vector-mask.psd"),
+            sourceName: "vector-mask.psd"
+        )
+        let normalAlpha = psdMaskAlpha(
+            try #require(normalDocument.layers.first?.effectiveMask),
+            width: 4,
+            height: 4
+        )
+        #expect(normalAlpha.count == alpha.count)
+        #expect(zip(alpha, normalAlpha).allSatisfy { inverted, normal in
+            abs(Int(inverted) + Int(normal) - 255) <= 1
+        })
+        #expect(alpha != normalAlpha)
+
+        let report = try ImageEditorPSDCodec.compatibilityReport(data)
+        #expect(!report.issues.contains { $0.kind == .vectorRasterized })
+
+        let project = try ImageEditorProjectDocument(document: document)
+        let projectRestored = try project.restoredDocument()
+        let projectLayer = try #require(projectRestored.layers.first)
+        #expect(projectLayer.isVectorMaskInverted)
+        #expect(projectLayer.vectorMask?.editablePathAnchors == vectorMask.editablePathAnchors)
+        #expect(psdMaskAlpha(try #require(projectLayer.effectiveMask), width: 4, height: 4) == alpha)
+
+        let exported = try ImageEditorPSDCodec.encode(document: projectRestored)
+        let reimported = try ImageEditorPSDCodec.decode(
+            exported,
+            sourceName: "vector-mask-inverted-roundtrip.psd"
+        )
+        let reimportedLayer = try #require(reimported.layers.first)
+        #expect(reimportedLayer.isVectorMaskInverted)
+        #expect(reimportedLayer.vectorMask?.editablePathAnchors == vectorMask.editablePathAnchors)
+        #expect(psdMaskAlpha(try #require(reimportedLayer.effectiveMask), width: 4, height: 4) == alpha)
     }
 
     @Test func externalPathResourcesBecomeEditableSavedPathsAndRoundTrip() throws {

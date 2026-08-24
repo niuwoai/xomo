@@ -3705,6 +3705,29 @@ struct ImageEditorShapeContent {
         return path
     }
 
+    func renderedVectorMask(size: CGSize, inverted: Bool) -> NSImage? {
+        guard kind == .path,
+              isPathClosed,
+              editablePathAnchors.count >= 3,
+              size.width > 0,
+              size.height > 0
+        else { return nil }
+        return NSImage.rendered(size: size) { rect in
+            NSGraphicsContext.current?.withImageEditorTopLeftCoordinates(height: size.height) {
+                NSColor.white.setFill()
+                let path = pathBezierPath()
+                guard inverted else {
+                    path.fill()
+                    return
+                }
+                let inversePath = NSBezierPath(rect: rect)
+                inversePath.append(path)
+                inversePath.windingRule = .evenOdd
+                inversePath.fill()
+            }
+        }
+    }
+
     private func appendSubpath(_ anchors: [ImageEditorPathAnchor], to path: NSBezierPath) {
         guard let first = anchors.first else { return }
         path.move(to: first.point)
@@ -3885,6 +3908,7 @@ struct ImageEditorLayer: Identifiable {
     var maskFeather: Double = 0
     var vectorMask: ImageEditorShapeContent?
     var isVectorMaskEnabled = true
+    var isVectorMaskInverted = false
     var linkedLayerIDs: Set<UUID> = []
     var frame: CGRect
     var isVisible: Bool
@@ -4353,17 +4377,10 @@ struct ImageEditorLayer: Identifiable {
     }
 
     private func vectorMaskImage() -> NSImage? {
-        guard let vectorMask,
-              vectorMask.kind == .path,
-              vectorMask.isPathClosed,
-              vectorMask.editablePathAnchors.count >= 3
-        else { return nil }
-        return NSImage.rendered(size: image.size) { _ in
-            NSGraphicsContext.current?.withImageEditorTopLeftCoordinates(height: image.size.height) {
-                NSColor.white.setFill()
-                vectorMask.pathBezierPath().fill()
-            }
-        }
+        vectorMask?.renderedVectorMask(
+            size: image.size,
+            inverted: isVectorMaskInverted
+        )
     }
 
     var contentImage: NSImage {
@@ -5253,6 +5270,7 @@ struct ImageEditorLayerCompLayerState: Equatable, Codable {
     var hasMaskSnapshot: Bool
     var maskData: Data?
     var isVectorMaskEnabled: Bool
+    var isVectorMaskInverted: Bool
     var style: ImageEditorProjectLayerStyle
     var blendMode: ImageEditorBlendMode
     var kind: ImageEditorProjectLayerKind?
@@ -5288,6 +5306,7 @@ struct ImageEditorLayerCompLayerState: Equatable, Codable {
         case hasMaskSnapshot
         case maskData
         case isVectorMaskEnabled
+        case isVectorMaskInverted
         case style
         case blendMode
         case kind
@@ -5324,6 +5343,7 @@ struct ImageEditorLayerCompLayerState: Equatable, Codable {
         hasMaskSnapshot: Bool = false,
         maskData: Data? = nil,
         isVectorMaskEnabled: Bool,
+        isVectorMaskInverted: Bool = false,
         style: ImageEditorProjectLayerStyle,
         blendMode: ImageEditorBlendMode,
         kind: ImageEditorProjectLayerKind? = nil,
@@ -5358,6 +5378,7 @@ struct ImageEditorLayerCompLayerState: Equatable, Codable {
         self.hasMaskSnapshot = hasMaskSnapshot
         self.maskData = maskData
         self.isVectorMaskEnabled = isVectorMaskEnabled
+        self.isVectorMaskInverted = isVectorMaskInverted
         self.style = style
         self.blendMode = blendMode
         self.kind = kind
@@ -5395,6 +5416,7 @@ struct ImageEditorLayerCompLayerState: Equatable, Codable {
         hasMaskSnapshot = try container.decodeIfPresent(Bool.self, forKey: .hasMaskSnapshot) ?? false
         maskData = try container.decodeIfPresent(Data.self, forKey: .maskData)
         isVectorMaskEnabled = try container.decodeIfPresent(Bool.self, forKey: .isVectorMaskEnabled) ?? true
+        isVectorMaskInverted = try container.decodeIfPresent(Bool.self, forKey: .isVectorMaskInverted) ?? false
         style = try container.decodeIfPresent(ImageEditorProjectLayerStyle.self, forKey: .style)
             ?? ImageEditorProjectLayerStyle(style: ImageEditorLayerStyle())
         blendMode = try container.decode(ImageEditorBlendMode.self, forKey: .blendMode)
@@ -5488,6 +5510,7 @@ struct ImageEditorLayerComp: Identifiable, Equatable, Codable {
                     hasMaskSnapshot: true,
                     maskData: layer.mask?.qingtuPNGData(),
                     isVectorMaskEnabled: layer.isVectorMaskEnabled,
+                    isVectorMaskInverted: layer.isVectorMaskInverted,
                     style: ImageEditorProjectLayerStyle(style: layer.style),
                     blendMode: layer.blendMode,
                     kind: ImageEditorProjectLayerKind(kind: layer.kind),

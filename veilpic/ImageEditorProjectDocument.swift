@@ -288,6 +288,7 @@ struct ImageEditorProjectLayer: Codable {
     var maskFeather: Double
     var vectorMask: ImageEditorProjectShapeContent?
     var isVectorMaskEnabled: Bool
+    var isVectorMaskInverted: Bool?
     var linkedLayerIDs: Set<UUID>
     var frame: CGRect
     var isVisible: Bool
@@ -357,6 +358,7 @@ struct ImageEditorProjectLayer: Codable {
         maskFeather = layer.maskFeather
         vectorMask = layer.vectorMask.map(ImageEditorProjectShapeContent.init(content:))
         isVectorMaskEnabled = layer.isVectorMaskEnabled
+        isVectorMaskInverted = layer.isVectorMaskInverted
         linkedLayerIDs = layer.linkedLayerIDs
         frame = layer.frame
         isVisible = layer.isVisible
@@ -425,6 +427,7 @@ struct ImageEditorProjectLayer: Codable {
         layer.maskFeather = maskFeather
         layer.vectorMask = vectorMask?.content
         layer.isVectorMaskEnabled = isVectorMaskEnabled
+        layer.isVectorMaskInverted = isVectorMaskInverted ?? false
         layer.linkedLayerIDs = linkedLayerIDs
         layer.frame = frame
         layer.isVisible = isVisible

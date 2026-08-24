@@ -179,6 +179,7 @@ extension ImageEditorViewModel {
         for operation in operations {
             document.layers[operation.index].vectorMask = operation.vectorMask
             document.layers[operation.index].isVectorMaskEnabled = true
+            document.layers[operation.index].isVectorMaskInverted = false
         }
         isEditingLayerMask = false
 
@@ -321,6 +322,7 @@ extension ImageEditorViewModel {
                 ImageEditorProjectShapeContent(content: $0) == ImageEditorProjectShapeContent(content: targetMask)
             } == true
                 && targetLayer.isVectorMaskEnabled == sourceLayer.isVectorMaskEnabled
+                && targetLayer.isVectorMaskInverted == sourceLayer.isVectorMaskInverted
                 && targetLayer.isMaskLinked == sourceLayer.isMaskLinked
             return isEquivalent ? nil : (index, targetMask)
         }
@@ -335,6 +337,7 @@ extension ImageEditorViewModel {
             let index = operation.index
             document.layers[index].vectorMask = operation.mask
             document.layers[index].isVectorMaskEnabled = sourceLayer.isVectorMaskEnabled
+            document.layers[index].isVectorMaskInverted = sourceLayer.isVectorMaskInverted
             document.layers[index].isMaskLinked = sourceLayer.isMaskLinked
         }
         isEditingLayerMask = false
@@ -356,6 +359,7 @@ extension ImageEditorViewModel {
             document.layers[operation.index].isMaskEnabled = true
             document.layers[operation.index].isMaskLinked = true
             document.layers[operation.index].isVectorMaskEnabled = true
+            document.layers[operation.index].isVectorMaskInverted = false
             document.layers[operation.index].maskDensity = 1
             document.layers[operation.index].maskFeather = 0
         }
@@ -730,6 +734,7 @@ extension ImageEditorViewModel {
         for index in indices {
             document.layers[index].vectorMask = nil
             document.layers[index].isVectorMaskEnabled = true
+            document.layers[index].isVectorMaskInverted = false
         }
 
         if indices.count == 1 {
@@ -887,6 +892,7 @@ extension ImageEditorViewModel {
         } else {
             document.layers[index].vectorMask = nil
             document.layers[index].isVectorMaskEnabled = true
+            document.layers[index].isVectorMaskInverted = false
         }
     }
 
@@ -1174,16 +1180,10 @@ extension ImageEditorViewModel {
     }
 
     private func renderedVectorMask(_ vectorMask: ImageEditorShapeContent, layer: ImageEditorLayer) -> NSImage? {
-        guard vectorMask.kind == .path,
-              vectorMask.isPathClosed,
-              vectorMask.editablePathAnchors.count >= 3
-        else { return nil }
-        return NSImage.rendered(size: maskSize(for: layer)) { _ in
-            NSGraphicsContext.current?.withImageEditorTopLeftCoordinates(height: maskSize(for: layer).height) {
-                NSColor.white.setFill()
-                vectorMask.normalized(size: maskSize(for: layer)).pathBezierPath().fill()
-            }
-        }
+        let size = maskSize(for: layer)
+        return vectorMask
+            .normalized(size: size)
+            .renderedVectorMask(size: size, inverted: layer.isVectorMaskInverted)
     }
 
     func canvasMaskImage(fromLayerMask mask: NSImage, layer: ImageEditorLayer) -> NSImage? {

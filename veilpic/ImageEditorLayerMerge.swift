@@ -171,6 +171,7 @@ extension ImageEditorViewModel {
         layer.mask = nil
         layer.vectorMask = nil
         layer.isVectorMaskEnabled = true
+        layer.isVectorMaskInverted = false
         layer.style = ImageEditorLayerStyle()
         layer.smartFilters = []
         layer.kind = .pixel

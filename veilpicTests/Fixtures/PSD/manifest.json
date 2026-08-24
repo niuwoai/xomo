@@ -34,7 +34,7 @@
     },
     {
       "file": "unsupported-features.psd",
-      "sha256": "6b2874820d6029daebf9ed2a0c9a311fe736e9d92c66e43a3f9fdfe521243d09",
+      "sha256": "bf5fb597ae700060bf427dab3e25fcc0667045c71c5283b7039c7a0609da9880",
       "expected": [
         "compatibility_report",
         "unsupported_semantic_features"
@@ -174,6 +174,15 @@
         "editable_vector_mask",
         "multiple_subpaths",
         "even_odd_hole"
+      ]
+    },
+    {
+      "file": "vector-mask-inverted.psd",
+      "sha256": "c4cbb73f63c13f9b629fa64df55378d5eef0cdeb9b3390dbb60f6b9163cd05bc",
+      "expected": [
+        "editable_vector_mask",
+        "inverted_mask",
+        "psd_round_trip"
       ]
     },
     {

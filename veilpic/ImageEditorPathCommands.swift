@@ -1434,9 +1434,11 @@ extension ImageEditorViewModel {
         }
 
         let targetID = document.layers[targetIndex].id
+        let preservesImportedInversion = document.layers[sourceIndex].isVectorMaskInverted
         pushUndo()
         document.layers[targetIndex].vectorMask = vectorMask
         document.layers[targetIndex].isVectorMaskEnabled = true
+        document.layers[targetIndex].isVectorMaskInverted = preservesImportedInversion
         document.layers.remove(at: sourceIndex)
         document.selectedLayerID = targetID
         document.selectedLayerIDs = [targetID]
@@ -1483,6 +1485,7 @@ extension ImageEditorViewModel {
         pushUndo()
         document.layers[targetIndex].vectorMask = nil
         document.layers[targetIndex].isVectorMaskEnabled = true
+        document.layers[targetIndex].isVectorMaskInverted = false
         document.layers.insert(pathLayer, at: insertionIndex)
         document.selectedLayerID = pathLayer.id
         document.selectedLayerIDs = [pathLayer.id]
@@ -2666,6 +2669,7 @@ extension ImageEditorViewModel {
         )
         layer.opacity = 1
         layer.groupID = targetLayer.groupID
+        layer.isVectorMaskInverted = targetLayer.isVectorMaskInverted
         return layer
     }
 

@@ -3313,7 +3313,8 @@ struct veilpicTests {
             return layer
         }
 
-        let firstLayer = vectorMaskedLayer(named: "First Vector Mask")
+        var firstLayer = vectorMaskedLayer(named: "First Vector Mask")
+        firstLayer.isVectorMaskInverted = true
         let secondLayer = vectorMaskedLayer(named: "Second Vector Mask")
         var lockedLayer = vectorMaskedLayer(named: "Locked Vector Mask")
         lockedLayer.isLocked = true
@@ -3332,6 +3333,7 @@ struct veilpicTests {
         let deletedSecond = try #require(viewModel.document.layers.first { $0.id == secondLayerID })
         let skippedLockedLayer = try #require(viewModel.document.layers.first { $0.id == lockedLayerID })
         #expect(deletedFirst.vectorMask == nil)
+        #expect(!deletedFirst.isVectorMaskInverted)
         #expect(deletedFirst.mask != nil)
         #expect(deletedFirst.isVectorMaskEnabled)
         #expect(deletedSecond.vectorMask == nil)
@@ -3349,6 +3351,7 @@ struct veilpicTests {
         let restoredFirst = try #require(viewModel.document.layers.first { $0.id == firstLayerID })
         let restoredSecond = try #require(viewModel.document.layers.first { $0.id == secondLayerID })
         #expect(restoredFirst.vectorMask != nil)
+        #expect(restoredFirst.isVectorMaskInverted)
         #expect(restoredSecond.vectorMask != nil)
     }
 
@@ -3380,7 +3383,8 @@ struct veilpicTests {
             return layer
         }
 
-        let firstLayer = vectorMaskedLayer(named: "First Vector Mask")
+        var firstLayer = vectorMaskedLayer(named: "First Vector Mask")
+        firstLayer.isVectorMaskInverted = true
         let secondLayer = vectorMaskedLayer(named: "Second Vector Mask")
         var lockedLayer = vectorMaskedLayer(named: "Locked Vector Mask")
         lockedLayer.isLocked = true
@@ -3402,6 +3406,7 @@ struct veilpicTests {
         #expect(rasterizedFirst.mask != nil)
         #expect(rasterizedFirst.isMaskEnabled)
         #expect(rasterizedFirst.isVectorMaskEnabled)
+        #expect(!rasterizedFirst.isVectorMaskInverted)
         #expect(rasterizedSecond.vectorMask == nil)
         #expect(rasterizedSecond.mask != nil)
         #expect(rasterizedSecond.isMaskEnabled)
@@ -3419,6 +3424,7 @@ struct veilpicTests {
         let restoredFirst = try #require(viewModel.document.layers.first { $0.id == firstLayerID })
         let restoredSecond = try #require(viewModel.document.layers.first { $0.id == secondLayerID })
         #expect(restoredFirst.vectorMask != nil)
+        #expect(restoredFirst.isVectorMaskInverted)
         #expect(restoredFirst.mask == nil)
         #expect(restoredSecond.vectorMask != nil)
         #expect(restoredSecond.mask == nil)

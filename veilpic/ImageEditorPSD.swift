@@ -1264,6 +1264,7 @@ enum ImageEditorPSDCodec {
         var payload = Data()
         payload.appendUInt32(3)
         var flags: UInt32 = layer.isMaskLinked ? 0 : 2
+        if layer.vectorMask != nil, layer.isVectorMaskInverted { flags |= 1 }
         if !layer.isVectorMaskEnabled { flags |= 4 }
         payload.appendUInt32(flags)
         payload.appendUInt16(6)
@@ -2436,6 +2437,7 @@ enum ImageEditorPSDCodec {
         }
         if let solidFillContent = record.solidFillContent,
            record.vectorMaskInfo?.isEnabled == true,
+           record.vectorMaskInfo?.isInverted == false,
            let shapeContent = vectorMaskContent(record: record, size: CGSize(width: width, height: height)) {
             var shape = shapeContent
             shape.fillColor = solidFillContent.color
@@ -2462,6 +2464,7 @@ enum ImageEditorPSDCodec {
         }
         if let gradientFillContent = record.gradientFillContent?.normalized(),
            record.vectorMaskInfo?.isEnabled == true,
+           record.vectorMaskInfo?.isInverted == false,
            let shapeContent = vectorMaskContent(record: record, size: CGSize(width: width, height: height)) {
             var shape = shapeContent
             shape.fillGradient = gradientFillContent
@@ -2574,6 +2577,7 @@ enum ImageEditorPSDCodec {
         else { return }
         layer.vectorMask = content
         layer.isVectorMaskEnabled = info.isEnabled
+        layer.isVectorMaskInverted = info.isInverted
         layer.isMaskLinked = info.isLinked
     }
 
@@ -2632,7 +2636,6 @@ enum ImageEditorPSDCodec {
             var reader = PSDReader(data: data)
             guard try reader.uint32() == 3 else { return nil }
             let flags = try reader.uint32()
-            guard flags & 0b001 == 0 else { return nil }
             var expectedKnotCount: Int?
             var currentSubpath: [ImageEditorPathAnchor] = []
             var subpaths: [[ImageEditorPathAnchor]] = []
@@ -2678,6 +2681,7 @@ enum ImageEditorPSDCodec {
             else { return nil }
             return PSDVectorMaskInfo(
                 subpaths: subpaths,
+                isInverted: flags & 0b001 != 0,
                 isEnabled: flags & 0b100 == 0,
                 isLinked: flags & 0b010 == 0
             )
@@ -3106,6 +3110,7 @@ private struct PSDTextLayerInfo {
 
 private struct PSDVectorMaskInfo {
     let subpaths: [[ImageEditorPathAnchor]]
+    let isInverted: Bool
     let isEnabled: Bool
     let isLinked: Bool
 }

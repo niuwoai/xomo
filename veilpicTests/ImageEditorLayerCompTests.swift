@@ -165,6 +165,7 @@ struct ImageEditorLayerCompTests {
         legacyObject.removeValue(forKey: "hasMaskSnapshot")
         legacyObject.removeValue(forKey: "maskData")
         legacyObject.removeValue(forKey: "isVectorMaskEnabled")
+        legacyObject.removeValue(forKey: "isVectorMaskInverted")
         legacyObject.removeValue(forKey: "style")
         legacyObject.removeValue(forKey: "kind")
         legacyObject.removeValue(forKey: "smartFilters")
@@ -197,6 +198,7 @@ struct ImageEditorLayerCompTests {
         #expect(!decoded.hasMaskSnapshot)
         #expect(decoded.maskData == nil)
         #expect(decoded.isVectorMaskEnabled)
+        #expect(!decoded.isVectorMaskInverted)
         #expect(!decoded.style.layerStyle.hasEffects)
         #expect(decoded.blendMode == state.blendMode)
         #expect(decoded.kind == nil)
@@ -312,6 +314,7 @@ struct ImageEditorLayerCompTests {
             )
         ]
         viewModel.document.layers[editLayerIndex].vectorMask = originalVectorMask
+        viewModel.document.layers[editLayerIndex].isVectorMaskInverted = true
 
         var adjustmentSettings = ImageEditorAdjustmentSettings()
         adjustmentSettings.levelsBlackPoint = 0.2
@@ -351,6 +354,7 @@ struct ImageEditorLayerCompTests {
         )
         viewModel.document.layers[editLayerIndex].smartFilters = []
         viewModel.document.layers[editLayerIndex].vectorMask = nil
+        viewModel.document.layers[editLayerIndex].isVectorMaskInverted = false
         let adjustmentIndex = try #require(viewModel.document.layers.firstIndex { $0.id == adjustmentLayerID })
         viewModel.document.layers[adjustmentIndex].kind = .adjustment(.invert, 0.1)
         viewModel.document.layers[adjustmentIndex].adjustmentSettings = ImageEditorAdjustmentSettings()
@@ -369,6 +373,7 @@ struct ImageEditorLayerCompTests {
         #expect(restoredTextLayer.smartFilters.first?.kind == .gaussianBlur)
         #expect(restoredTextLayer.smartFilters.first?.intensity == 0.42)
         #expect(restoredTextLayer.vectorMask?.editablePathAnchors.count == 3)
+        #expect(restoredTextLayer.isVectorMaskInverted)
 
         let restoredAdjustmentLayer = try #require(viewModel.document.layers.first { $0.id == adjustmentLayerID })
         let restoredAdjustment = try #require(restoredAdjustmentLayer.adjustment)

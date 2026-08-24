@@ -90,6 +90,7 @@ extension ImageEditorViewModel {
                 }
             }
             document.layers[index].isVectorMaskEnabled = state.isVectorMaskEnabled
+            document.layers[index].isVectorMaskInverted = state.isVectorMaskInverted
             document.layers[index].style = state.style.layerStyle
             document.layers[index].blendMode = state.blendMode
             if let kind = state.kind {
