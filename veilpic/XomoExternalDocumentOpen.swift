@@ -39,6 +39,39 @@ nonisolated enum XomoExternalDocumentOpenPolicy {
     }
 }
 
+@MainActor
+enum XomoExternalImageDocumentFactory {
+    static func make(sourceName: String, image: NSImage) -> ImageEditorDocument {
+        let normalized = image.normalizedBitmapImage()
+        let transparentCanvas = NSImage.transparent(size: normalized.size)
+        var document = ImageEditorDocument(
+            sourceName: sourceName,
+            image: transparentCanvas
+        )
+        var imageLayer = ImageEditorLayer.blank(
+            name: editableLayerName(for: sourceName),
+            size: normalized.size
+        )
+        imageLayer.image = normalized
+        document.layers = [
+            .background(image: transparentCanvas),
+            imageLayer,
+        ]
+        document.selectedLayerID = imageLayer.id
+        document.selectedLayerIDs = [imageLayer.id]
+        return document
+    }
+
+    private static func editableLayerName(for sourceName: String) -> String {
+        let trimmedSourceName = sourceName.trimmingCharacters(in: .whitespacesAndNewlines)
+        let baseName = (trimmedSourceName as NSString).deletingPathExtension
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        return baseName.isEmpty
+            ? L10n.text("imageEditor.layer.importedFallbackName")
+            : baseName
+    }
+}
+
 enum XomoDocumentLoadingStage: Equatable {
     case preparing
     case reading
@@ -189,7 +222,10 @@ final class XomoExternalDocumentOpenCoordinator: ObservableObject {
                 await Task.yield()
                 guard activeRequestID == requestID else { return }
                 viewModel.loadExternalImageDocument(
-                    ImageEditorDocument(sourceName: url.lastPathComponent, image: image)
+                    XomoExternalImageDocumentFactory.make(
+                        sourceName: url.lastPathComponent,
+                        image: image
+                    )
                 )
                 activateOpenedDocumentWindow()
                 finish(requestID: requestID)
