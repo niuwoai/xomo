@@ -135,6 +135,67 @@ struct ImageEditorSmartObjectPlacementTests {
         #expect(viewModel.document.selectedLayer?.frame == placed.frame)
     }
 
+    @Test func repeatedResetIsDisabledAndPreservesExistingRedo() throws {
+        let viewModel = makeViewModel()
+        let url = temporaryURL(extension: "png")
+        defer { try? FileManager.default.removeItem(at: url) }
+        try writePNG(size: CGSize(width: 400, height: 200), to: url)
+
+        #expect(viewModel.placeEmbeddedSmartObjectFile(url))
+        #expect(viewModel.canResetSelectedSmartObjectTransform)
+        viewModel.resetSelectedSmartObjectTransform()
+        let resetLayer = try #require(viewModel.document.selectedLayer)
+        #expect(!viewModel.canResetSelectedSmartObjectTransform)
+
+        viewModel.renameSelectedLayer(to: "Renamed Smart Object")
+        viewModel.undo()
+        #expect(viewModel.canRedo)
+        let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
+        let redoCount = viewModel.redoStack.count
+
+        viewModel.resetSelectedSmartObjectTransform()
+
+        #expect(viewModel.document.selectedLayer?.frame == resetLayer.frame)
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.undoStack.count == undoCount)
+        #expect(viewModel.redoStack.count == redoCount)
+        #expect(viewModel.canRedo)
+
+        viewModel.redo()
+        #expect(viewModel.document.selectedLayer?.name == "Renamed Smart Object")
+    }
+
+    @Test func multiSelectionResetsOnlyObjectsThatActuallyDiffer() throws {
+        let viewModel = makeViewModel()
+        let url = temporaryURL(extension: "png")
+        defer { try? FileManager.default.removeItem(at: url) }
+        try writePNG(size: CGSize(width: 400, height: 200), to: url)
+
+        #expect(viewModel.placeEmbeddedSmartObjectFile(url))
+        let firstID = try #require(viewModel.document.selectedLayerID)
+        viewModel.resetSelectedSmartObjectTransform()
+        let nativeFirstFrame = try #require(viewModel.document.selectedLayer?.frame)
+
+        #expect(viewModel.placeEmbeddedSmartObjectFile(url))
+        let secondID = try #require(viewModel.document.selectedLayerID)
+        let fittedSecondFrame = try #require(viewModel.document.selectedLayer?.frame)
+        viewModel.document.selectedLayerIDs = [firstID, secondID]
+        viewModel.document.selectedLayerID = secondID
+
+        viewModel.resetSelectedSmartObjectTransform()
+
+        #expect(viewModel.document.layers.first { $0.id == firstID }?.frame == nativeFirstFrame)
+        #expect(viewModel.document.layers.first { $0.id == secondID }?.frame.size == CGSize(width: 400, height: 200))
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerSmartObjectResetTransform"))
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.layerSmartObjectTransformReset"))
+        #expect(!viewModel.canResetSelectedSmartObjectTransform)
+
+        viewModel.undo()
+        #expect(viewModel.document.layers.first { $0.id == firstID }?.frame == nativeFirstFrame)
+        #expect(viewModel.document.layers.first { $0.id == secondID }?.frame == fittedSecondFrame)
+    }
+
     @Test func fileMenuActionUsesSingleSelectionRasterChooserAndSharedCommandCatalog() throws {
         let root = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()

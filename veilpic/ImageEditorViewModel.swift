@@ -2991,7 +2991,7 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     var canResetSelectedSmartObjectTransform: Bool {
-        !smartObjectResetTransformTargetIndices().isEmpty
+        !smartObjectResetTransformPlans().isEmpty
     }
 
     var canMakeSelectedSmartObjectUnique: Bool {
@@ -5457,34 +5457,23 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     func resetSelectedSmartObjectTransform() {
-        let indices = smartObjectResetTransformTargetIndices()
-        guard !indices.isEmpty else {
+        let plans = smartObjectResetTransformPlans()
+        guard !plans.isEmpty else {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return
         }
 
         pushUndo()
-        for index in indices {
-            guard let content = document.layers[index].smartObjectContent else { continue }
-            let currentFrame = document.layers[index].frame.standardized
-            let resetSize = CGSize(
-                width: max(1, content.originalSize.width),
-                height: max(1, content.originalSize.height)
-            )
-            document.layers[index].frame = CGRect(
-                x: currentFrame.midX - resetSize.width / 2,
-                y: currentFrame.midY - resetSize.height / 2,
-                width: resetSize.width,
-                height: resetSize.height
-            )
+        for plan in plans {
+            document.layers[plan.index].frame = plan.frame
         }
 
-        if indices.count == 1 {
+        if plans.count == 1 {
             appendHistory(L10n.text("imageEditor.history.layerSmartObjectResetTransform"))
             statusText = L10n.text("imageEditor.status.layerSmartObjectTransformReset")
         } else {
             appendHistory(L10n.text("imageEditor.history.layerSmartObjectResetTransformSelected"))
-            statusText = L10n.format("imageEditor.status.layerSmartObjectTransformResetSelected", indices.count)
+            statusText = L10n.format("imageEditor.status.layerSmartObjectTransformResetSelected", plans.count)
         }
     }
 
@@ -10132,16 +10121,41 @@ final class ImageEditorViewModel: ObservableObject {
         })
     }
 
-    private func smartObjectResetTransformTargetIndices() -> [Int] {
+    private func smartObjectResetTransformPlans() -> [(index: Int, frame: CGRect)] {
         let selectedIDs = document.selectedLayerIDs.isEmpty
             ? Set(document.selectedLayerID.map { [$0] } ?? [])
             : document.selectedLayerIDs
-        return document.layers.indices.filter { index in
+        return document.layers.indices.compactMap { index in
             let layer = document.layers[index]
-            return selectedIDs.contains(layer.id)
-                && layer.smartObjectContent != nil
-                && !document.isEffectivelyPositionLocked(layer)
+            guard selectedIDs.contains(layer.id),
+                  let content = layer.smartObjectContent,
+                  !document.isEffectivelyPositionLocked(layer)
+            else { return nil }
+            let currentFrame = layer.frame.standardized
+            let resetSize = CGSize(
+                width: max(1, content.originalSize.width),
+                height: max(1, content.originalSize.height)
+            )
+            let resetFrame = CGRect(
+                x: currentFrame.midX - resetSize.width / 2,
+                y: currentFrame.midY - resetSize.height / 2,
+                width: resetSize.width,
+                height: resetSize.height
+            )
+            guard !smartObjectFramesMatch(currentFrame, resetFrame) else { return nil }
+            return (index, resetFrame)
         }
+    }
+
+    private func smartObjectFramesMatch(
+        _ lhs: CGRect,
+        _ rhs: CGRect,
+        epsilon: CGFloat = 0.000_001
+    ) -> Bool {
+        abs(lhs.minX - rhs.minX) <= epsilon
+            && abs(lhs.minY - rhs.minY) <= epsilon
+            && abs(lhs.width - rhs.width) <= epsilon
+            && abs(lhs.height - rhs.height) <= epsilon
     }
 
     var layerMaskAddIndices: [Int] {
