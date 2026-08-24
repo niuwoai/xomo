@@ -72,6 +72,19 @@ enum XomoExternalImageDocumentFactory {
     }
 }
 
+@MainActor
+enum XomoExternalPSDDocumentFactory {
+    static func makeFlattenedFallback(
+        sourceName: String,
+        image: NSImage
+    ) -> ImageEditorDocument {
+        XomoExternalImageDocumentFactory.make(
+            sourceName: sourceName,
+            image: image
+        )
+    }
+}
+
 enum XomoDocumentLoadingStage: Equatable {
     case preparing
     case reading
@@ -248,7 +261,7 @@ final class XomoExternalDocumentOpenCoordinator: ObservableObject {
             } catch {
                 try Task.checkCancellation()
                 guard let flattened = NSImage(contentsOf: url) else { throw error }
-                document = ImageEditorDocument(
+                document = XomoExternalPSDDocumentFactory.makeFlattenedFallback(
                     sourceName: url.lastPathComponent,
                     image: flattened
                 )
