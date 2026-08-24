@@ -1269,13 +1269,20 @@ enum ImageEditorPSDCodec {
         payload.appendUInt32(flags)
         payload.appendUInt16(6)
         payload.append(Data(repeating: 0, count: 24))
-        for anchors in subpaths {
+        if normalized.pathStartsWithAllPixels {
+            payload.appendUInt16(8)
+            payload.appendUInt16(1)
+            payload.append(Data(repeating: 0, count: 22))
+        }
+        let operations = normalized.resolvedPathComponentOperations
+        for (subpathIndex, anchors) in subpaths.enumerated() {
             guard let count = UInt16(exactly: anchors.count) else { return nil }
             payload.appendUInt16(0)
             payload.appendUInt16(count)
-            // A vector path length record is 26 bytes: selector (2),
-            // knot count (2), and 22 reserved bytes.
-            payload.append(Data(repeating: 0, count: 22))
+            payload.appendInt16(operations[subpathIndex].psdValue)
+            // Photoshop stores the component operation in the first two bytes
+            // of the otherwise undocumented 22-byte length-record payload.
+            payload.append(Data(repeating: 0, count: 20))
             for (index, anchor) in anchors.enumerated() {
                 payload.appendUInt16(index == 0 ? 1 : 2)
                 appendVectorPathPoint(anchor.inControl ?? anchor.point, size: size, to: &payload)
@@ -2623,6 +2630,10 @@ enum ImageEditorPSDCodec {
             pathPoints: anchors.map(\.point),
             pathAnchors: anchors,
             pathSubpaths: Array(subpaths.dropFirst()),
+            pathComponentOperations: info.subpaths.isEmpty ? [] : info.operations,
+            pathStartsWithAllPixels: info.subpaths.isEmpty
+                ? false
+                : info.initialFillStartsWithAllPixels ?? false,
             isPathClosed: true
         ).normalized(size: size)
     }
@@ -2650,8 +2661,10 @@ enum ImageEditorPSDCodec {
             guard try reader.uint32() == 3 else { return nil }
             let flags = try reader.uint32()
             var expectedKnotCount: Int?
+            var expectedOperation: ImageEditorPathComponentOperation?
             var currentSubpath: [ImageEditorPathAnchor] = []
             var subpaths: [[ImageEditorPathAnchor]] = []
+            var operations: [ImageEditorPathComponentOperation] = []
             var initialFillStartsWithAllPixels: Bool?
             while reader.offset + 26 <= data.count {
                 let selector = try reader.uint16()
@@ -2660,8 +2673,16 @@ enum ImageEditorPSDCodec {
                 case 0:
                     guard expectedKnotCount == nil else { return nil }
                     let count = Int(UInt16(payload[payload.startIndex]) << 8 | UInt16(payload[payload.startIndex + 1]))
-                    guard count >= 3 else { return nil }
+                    let rawOperation = Int16(bitPattern:
+                        UInt16(payload[payload.startIndex + 2]) << 8
+                            | UInt16(payload[payload.startIndex + 3])
+                    )
+                    guard count >= 3,
+                          let operation = ImageEditorPathComponentOperation(psdValue: rawOperation),
+                          !subpaths.isEmpty || operation != .continuePrevious
+                    else { return nil }
                     expectedKnotCount = count
+                    expectedOperation = operation
                     currentSubpath = []
                 case 1, 2:
                     guard let knotCount = expectedKnotCount,
@@ -2679,8 +2700,11 @@ enum ImageEditorPSDCodec {
                     )
                     if currentSubpath.count == knotCount {
                         subpaths.append(currentSubpath)
+                        guard let completedOperation = expectedOperation else { return nil }
+                        operations.append(completedOperation)
                         currentSubpath = []
                         expectedKnotCount = nil
+                        expectedOperation = nil
                     }
                 case 6, 7:
                     continue
@@ -2695,12 +2719,14 @@ enum ImageEditorPSDCodec {
                 }
             }
             guard expectedKnotCount == nil,
+                  expectedOperation == nil,
                   currentSubpath.isEmpty,
                   !subpaths.isEmpty || initialFillStartsWithAllPixels != nil,
                   subpaths.allSatisfy({ $0.count >= 3 })
             else { return nil }
             return PSDVectorMaskInfo(
                 subpaths: subpaths,
+                operations: operations,
                 isInverted: flags & 0b001 != 0,
                 isEnabled: flags & 0b100 == 0,
                 isLinked: flags & 0b010 == 0,
@@ -3131,6 +3157,7 @@ private struct PSDTextLayerInfo {
 
 private struct PSDVectorMaskInfo {
     let subpaths: [[ImageEditorPathAnchor]]
+    let operations: [ImageEditorPathComponentOperation]
     let isInverted: Bool
     let isEnabled: Bool
     let isLinked: Bool
@@ -3146,6 +3173,29 @@ private struct PSDVectorMaskInfo {
         else { return isInverted }
         let baseIsInverted = !initialFillStartsWithAllPixels
         return isInverted != baseIsInverted
+    }
+}
+
+private extension ImageEditorPathComponentOperation {
+    init?(psdValue: Int16) {
+        switch psdValue {
+        case -1: self = .continuePrevious
+        case 0: self = .exclude
+        case 1: self = .combine
+        case 2: self = .subtract
+        case 3: self = .intersect
+        default: return nil
+        }
+    }
+
+    var psdValue: Int16 {
+        switch self {
+        case .continuePrevious: -1
+        case .exclude: 0
+        case .combine: 1
+        case .subtract: 2
+        case .intersect: 3
+        }
     }
 }
 

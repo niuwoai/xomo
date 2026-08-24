@@ -4137,6 +4137,12 @@ struct ImageEditorVectorLayerTests {
                 ImageEditorPathAnchor(point: CGPoint(x: 96, y: 24)),
                 ImageEditorPathAnchor(point: CGPoint(x: 64, y: 72))
             ],
+            pathSubpaths: [[
+                ImageEditorPathAnchor(point: CGPoint(x: 45, y: 32)),
+                ImageEditorPathAnchor(point: CGPoint(x: 78, y: 35)),
+                ImageEditorPathAnchor(point: CGPoint(x: 62, y: 55))
+            ]],
+            pathComponentOperations: [.combine, .subtract],
             isPathClosed: true
         )
         viewModel.document.layers[targetIndex].vectorMask = vectorMask.normalized(size: canvasSize)
@@ -4157,6 +4163,8 @@ struct ImageEditorVectorLayerTests {
         #expect(pathContent.kind == .path)
         #expect(pathContent.isPathClosed)
         #expect(pathContent.editablePathAnchors.count == 3)
+        #expect(pathContent.editablePathSubpaths.count == 1)
+        #expect(pathContent.pathComponentOperations == [.combine, .subtract])
         #expect(pathLayer.name == L10n.text("imageEditor.layer.vectorMaskPathName"))
         #expect(viewModel.selectedPathAnchorCanvasPoint != nil)
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.vectorMaskEditPath"))
@@ -4174,6 +4182,8 @@ struct ImageEditorVectorLayerTests {
         #expect(reappliedMask.kind == .path)
         #expect(reappliedMask.isPathClosed)
         #expect(reappliedMask.editablePathAnchors.count == 3)
+        #expect(reappliedMask.editablePathSubpaths.count == 1)
+        #expect(reappliedMask.pathComponentOperations == [.combine, .subtract])
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.pathVectorMask"))
     }
 

@@ -761,13 +761,15 @@ struct ImageEditorProjectShapeContent: Equatable, Codable {
     var pathPoints: [CGPoint]
     var pathAnchors: [ImageEditorPathAnchor]
     var pathSubpaths: [[ImageEditorPathAnchor]]?
+    var pathComponentOperations: [ImageEditorPathComponentOperation]? = nil
+    var pathStartsWithAllPixels: Bool? = nil
     var isPathClosed: Bool
 
     enum CodingKeys: String, CodingKey {
         case kind, fillColor, fillGradient, fillGradientCenter, fillOpacity
         case strokeColor, strokeWidth, strokeOpacity, strokePosition, strokeCap, strokeStartDecoration, strokeEndDecoration, strokeJoin, strokeMiterLimit, strokeDashPattern, strokeDashOffset
         case cornerRadius, cornerRadii, cornerSmoothing, pathPoints, pathAnchors
-        case pathSubpaths, isPathClosed
+        case pathSubpaths, pathComponentOperations, pathStartsWithAllPixels, isPathClosed
     }
 
     init(from decoder: Decoder) throws {
@@ -795,6 +797,11 @@ struct ImageEditorProjectShapeContent: Equatable, Codable {
         pathPoints = try container.decode([CGPoint].self, forKey: .pathPoints)
         pathAnchors = try container.decode([ImageEditorPathAnchor].self, forKey: .pathAnchors)
         pathSubpaths = try container.decodeIfPresent([[ImageEditorPathAnchor]].self, forKey: .pathSubpaths)
+        pathComponentOperations = try container.decodeIfPresent(
+            [ImageEditorPathComponentOperation].self,
+            forKey: .pathComponentOperations
+        )
+        pathStartsWithAllPixels = try container.decodeIfPresent(Bool.self, forKey: .pathStartsWithAllPixels)
         isPathClosed = try container.decode(Bool.self, forKey: .isPathClosed)
     }
 
@@ -821,6 +828,8 @@ struct ImageEditorProjectShapeContent: Equatable, Codable {
         pathPoints = content.pathPoints
         pathAnchors = content.pathAnchors
         pathSubpaths = content.pathSubpaths
+        pathComponentOperations = content.pathComponentOperations
+        pathStartsWithAllPixels = content.pathStartsWithAllPixels
         isPathClosed = content.isPathClosed
     }
 
@@ -848,6 +857,8 @@ struct ImageEditorProjectShapeContent: Equatable, Codable {
             pathPoints: pathPoints,
             pathAnchors: pathAnchors,
             pathSubpaths: pathSubpaths ?? [],
+            pathComponentOperations: pathComponentOperations ?? [],
+            pathStartsWithAllPixels: pathStartsWithAllPixels ?? false,
             isPathClosed: isPathClosed
         )
     }

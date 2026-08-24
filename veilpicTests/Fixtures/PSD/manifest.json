@@ -204,6 +204,51 @@
       ]
     },
     {
+      "file": "vector-mask-combine.psd",
+      "sha256": "852ec7dbbdf46366b414c3679881fcb0a73924fa0d3486b63bc1198e81ca279b",
+      "expected": [
+        "editable_vector_mask",
+        "boolean_combine",
+        "overlapping_subpaths"
+      ]
+    },
+    {
+      "file": "vector-mask-subtract.psd",
+      "sha256": "03c106089a17e9e5af586566caaf7278e33b0f86324d5c952842535b7dfac038",
+      "expected": [
+        "editable_vector_mask",
+        "boolean_subtract",
+        "overlapping_subpaths"
+      ]
+    },
+    {
+      "file": "vector-mask-intersect.psd",
+      "sha256": "3b471fd2606353c403a3d875212b31f1dfeff123ceac74762220bed0ae7314ae",
+      "expected": [
+        "editable_vector_mask",
+        "boolean_intersect",
+        "overlapping_subpaths"
+      ]
+    },
+    {
+      "file": "vector-mask-exclude.psd",
+      "sha256": "2dbbcea61936ea572bdddc0ee83fa3e45de02e2928b3ccfaf7b7504dcf53e9f5",
+      "expected": [
+        "editable_vector_mask",
+        "boolean_exclude",
+        "overlapping_subpaths"
+      ]
+    },
+    {
+      "file": "vector-mask-continue.psd",
+      "sha256": "909058e10b2b7c5df3e7cb38dacd2d56a2f5a97b2e39501f876b2361766e23d4",
+      "expected": [
+        "editable_vector_mask",
+        "continued_component",
+        "even_odd_hole"
+      ]
+    },
+    {
       "file": "path-resources.psd",
       "sha256": "be2675d6e17186e02c4d1a9fcf712de46bd0876644e4081715278021c25b6c64",
       "expected": [

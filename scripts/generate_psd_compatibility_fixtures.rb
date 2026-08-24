@@ -85,18 +85,26 @@ def engine_string(value)
   "(" + "\xFE\xFF".b + value.encode("UTF-16BE").b + ")"
 end
 
-def vector_mask_payload(flags: 0, include_hole: false)
-  record = ->(selector, points) {
-    u16(selector) + points.map { |vertical, horizontal| fixed8_24(vertical) + fixed8_24(horizontal) }.join
+def vector_path_subpath(points, operation: 0)
+  record = ->(selector, path_points) {
+    u16(selector) + path_points.map { |vertical, horizontal| fixed8_24(vertical) + fixed8_24(horizontal) }.join
   }
+  length = u16(0) + u16(points.length) + i16(operation) + ("\0" * 20)
+  knots = points.each_with_index.map { |point, index| record.call(index.zero? ? 1 : 2, point) }.join
+  length + knots
+end
+
+def vector_rectangle_points(top, left, bottom, right)
+  [
+    [[top, left], [top, left], [top, left]],
+    [[top, right], [top, right], [top, right]],
+    [[bottom, right], [bottom, right], [bottom, right]],
+    [[bottom, left], [bottom, left], [bottom, left]]
+  ]
+end
+
+def vector_mask_payload(flags: 0, include_hole: false)
   fill_rule = u16(6) + ("\0" * 24)
-  subpath = lambda do |points|
-    # A vector path length record is 26 bytes: selector (2), knot count (2),
-    # and 22 reserved bytes.
-    length = u16(0) + u16(points.length) + ("\0" * 22)
-    knots = points.each_with_index.map { |point, index| record.call(index.zero? ? 1 : 2, point) }.join
-    length + knots
-  end
   outer = [
     [[0.10, 0.10], [0.10, 0.10], [0.10, 0.10]],
     [[0.10, 0.90], [0.10, 0.90], [0.10, 0.90]],
@@ -109,7 +117,21 @@ def vector_mask_payload(flags: 0, include_hole: false)
   ]
   paths = [outer]
   paths << inner if include_hole
-  u32(3) + u32(flags) + fill_rule + paths.map { |points| subpath.call(points) }.join
+  u32(3) + u32(flags) + fill_rule + paths.map { |points| vector_path_subpath(points) }.join
+end
+
+def vector_boolean_mask_payload(second_operation:)
+  fill_rule = u16(6) + ("\0" * 24)
+  first = vector_path_subpath(vector_rectangle_points(0.0, 0.0, 0.75, 0.75), operation: 1)
+  second = vector_path_subpath(vector_rectangle_points(0.25, 0.25, 1.0, 1.0), operation: second_operation)
+  u32(3) + u32(0) + fill_rule + first + second
+end
+
+def vector_continued_mask_payload
+  fill_rule = u16(6) + ("\0" * 24)
+  outer = vector_path_subpath(vector_rectangle_points(0.0, 0.0, 0.75, 0.75), operation: 1)
+  inner = vector_path_subpath(vector_rectangle_points(0.25, 0.25, 0.5, 0.5), operation: -1)
+  u32(3) + u32(0) + fill_rule + outer + inner
 end
 
 def empty_vector_mask_payload(initial_fill:, flags: 0)
@@ -724,6 +746,14 @@ def empty_hide_vector_mask_fixture
   vector_mask_fixture(payload: empty_vector_mask_payload(initial_fill: false))
 end
 
+def boolean_vector_mask_fixture(operation:)
+  vector_mask_fixture(payload: vector_boolean_mask_payload(second_operation: operation))
+end
+
+def continued_vector_mask_fixture
+  vector_mask_fixture(payload: vector_continued_mask_payload)
+end
+
 def path_resource_fixture
   closed = path_resource_block(
     id: 2000,
@@ -786,6 +816,11 @@ fixtures = {
   "vector-mask-inverted.psd" => inverted_vector_mask_fixture,
   "vector-mask-empty-reveal.psd" => empty_reveal_vector_mask_fixture,
   "vector-mask-empty-hide.psd" => empty_hide_vector_mask_fixture,
+  "vector-mask-combine.psd" => boolean_vector_mask_fixture(operation: 1),
+  "vector-mask-subtract.psd" => boolean_vector_mask_fixture(operation: 2),
+  "vector-mask-intersect.psd" => boolean_vector_mask_fixture(operation: 3),
+  "vector-mask-exclude.psd" => boolean_vector_mask_fixture(operation: 0),
+  "vector-mask-continue.psd" => continued_vector_mask_fixture,
   "path-resources.psd" => path_resource_fixture
 }
 fixtures.each do |name, bytes|
@@ -814,6 +849,11 @@ expectations = {
   "vector-mask-inverted.psd" => %w[editable_vector_mask inverted_mask psd_round_trip],
   "vector-mask-empty-reveal.psd" => %w[editable_vector_mask initial_fill reveal_all],
   "vector-mask-empty-hide.psd" => %w[editable_vector_mask initial_fill hide_all],
+  "vector-mask-combine.psd" => %w[editable_vector_mask boolean_combine overlapping_subpaths],
+  "vector-mask-subtract.psd" => %w[editable_vector_mask boolean_subtract overlapping_subpaths],
+  "vector-mask-intersect.psd" => %w[editable_vector_mask boolean_intersect overlapping_subpaths],
+  "vector-mask-exclude.psd" => %w[editable_vector_mask boolean_exclude overlapping_subpaths],
+  "vector-mask-continue.psd" => %w[editable_vector_mask continued_component even_odd_hole],
   "path-resources.psd" => %w[saved_path closed_path open_path]
 }
 manifest = {

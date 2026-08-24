@@ -2608,6 +2608,8 @@ extension ImageEditorViewModel {
             pathPoints: anchors.map(\.point),
             pathAnchors: anchors,
             pathSubpaths: Array(subpaths.dropFirst()),
+            pathComponentOperations: sourceContent.pathComponentOperations,
+            pathStartsWithAllPixels: sourceContent.pathStartsWithAllPixels,
             isPathClosed: true
         ).normalized(size: maskSize(for: targetLayer))
     }
@@ -2660,6 +2662,8 @@ extension ImageEditorViewModel {
             pathPoints: localAnchors.map(\.point),
             pathAnchors: localAnchors,
             pathSubpaths: Array(localSubpaths.dropFirst()),
+            pathComponentOperations: normalizedMask.pathComponentOperations,
+            pathStartsWithAllPixels: normalizedMask.pathStartsWithAllPixels,
             isPathClosed: true
         )
         var layer = ImageEditorLayer.shape(
@@ -2872,12 +2876,11 @@ extension ImageEditorViewModel {
             pathPoints: targetAnchors.map(\.point),
             pathAnchors: targetAnchors,
             pathSubpaths: Array(targetSubpaths.dropFirst()),
+            pathComponentOperations: sourceContent.pathComponentOperations,
+            pathStartsWithAllPixels: sourceContent.pathStartsWithAllPixels,
             isPathClosed: true
         )
-        return NSImage.rendered(size: maskSize(for: targetLayer)) { _ in
-            NSColor.white.setFill()
-            maskContent.pathBezierPath().fill()
-        }
+        return maskContent.renderedVectorMask(size: maskSize(for: targetLayer), inverted: false)
     }
 
     private func pathFillImage(

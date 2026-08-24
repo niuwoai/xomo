@@ -3489,6 +3489,14 @@ enum ImageEditorStrokeJoin: String, Codable, CaseIterable {
     }
 }
 
+nonisolated enum ImageEditorPathComponentOperation: String, Codable, Equatable, Sendable {
+    case exclude
+    case combine
+    case subtract
+    case intersect
+    case continuePrevious
+}
+
 private extension CGPoint {
     func clamped(to size: CGSize) -> CGPoint {
         CGPoint(
@@ -3529,6 +3537,8 @@ struct ImageEditorShapeContent {
     var pathPoints: [CGPoint] = []
     var pathAnchors: [ImageEditorPathAnchor] = []
     var pathSubpaths: [[ImageEditorPathAnchor]] = []
+    var pathComponentOperations: [ImageEditorPathComponentOperation] = []
+    var pathStartsWithAllPixels = false
     var isPathClosed = true
 
     func normalized(size: CGSize) -> ImageEditorShapeContent {
@@ -3618,6 +3628,37 @@ struct ImageEditorShapeContent {
     func renderedImage(size: CGSize) -> NSImage {
         let normalized = normalized(size: size)
         return NSImage.rendered(size: size) { rect in
+            let booleanMask = normalized.kind == .path
+                && normalized.isPathClosed
+                && normalized.hasExplicitPathComponentOperations
+                ? normalized.renderedPathComponentMask(size: size, inverted: false)
+                : nil
+            if let booleanMask {
+                if let gradient = normalized.fillGradient {
+                    gradient.renderedImage(
+                        size: size,
+                        centerNormalized: normalized.fillGradientCenter
+                    ).draw(
+                        in: rect,
+                        from: .zero,
+                        operation: .sourceOver,
+                        fraction: normalized.fillOpacity,
+                        respectFlipped: true,
+                        hints: nil
+                    )
+                } else {
+                    normalized.fillColor.withAlphaComponent(normalized.fillOpacity).setFill()
+                    rect.fill()
+                }
+                booleanMask.draw(
+                    in: rect,
+                    from: .zero,
+                    operation: .destinationIn,
+                    fraction: 1,
+                    respectFlipped: true,
+                    hints: nil
+                )
+            }
             NSGraphicsContext.current?.withImageEditorTopLeftCoordinates(height: size.height) {
                 let path: NSBezierPath
                 if normalized.kind == .path {
@@ -3633,21 +3674,23 @@ struct ImageEditorShapeContent {
                 }
                 if normalized.kind != .path || normalized.isPathClosed {
                     if let gradient = normalized.fillGradient {
-                        NSGraphicsContext.saveGraphicsState()
-                        path.addClip()
-                        gradient.renderedImage(
-                            size: size,
-                            centerNormalized: normalized.fillGradientCenter
-                        ).draw(
-                            in: rect,
-                            from: .zero,
-                            operation: .sourceOver,
-                            fraction: normalized.fillOpacity,
-                            respectFlipped: true,
-                            hints: nil
-                        )
-                        NSGraphicsContext.restoreGraphicsState()
-                    } else {
+                        if booleanMask == nil {
+                            NSGraphicsContext.saveGraphicsState()
+                            path.addClip()
+                            gradient.renderedImage(
+                                size: size,
+                                centerNormalized: normalized.fillGradientCenter
+                            ).draw(
+                                in: rect,
+                                from: .zero,
+                                operation: .sourceOver,
+                                fraction: normalized.fillOpacity,
+                                respectFlipped: true,
+                                hints: nil
+                            )
+                            NSGraphicsContext.restoreGraphicsState()
+                        }
+                    } else if booleanMask == nil {
                         normalized.fillColor.withAlphaComponent(normalized.fillOpacity).setFill()
                         path.fill()
                     }
@@ -3712,6 +3755,9 @@ struct ImageEditorShapeContent {
               size.width > 0,
               size.height > 0
         else { return nil }
+        if hasExplicitPathComponentOperations {
+            return renderedPathComponentMask(size: size, inverted: inverted)
+        }
         return NSImage.rendered(size: size) { rect in
             NSGraphicsContext.current?.withImageEditorTopLeftCoordinates(height: size.height) {
                 NSColor.white.setFill()

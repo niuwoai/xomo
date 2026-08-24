@@ -13,6 +13,11 @@
 | `vector-mask-inverted.psd` | 外部生成的 vmsk 反相矢量蒙版，验证原生反相渲染、项目持久化与 PSD 往返 |
 | `vector-mask-empty-reveal.psd` | 外部生成的空路径 vmsk，selector 8 初始填充为 1，验证“显示全部”仍保留为可编辑矢量蒙版 |
 | `vector-mask-empty-hide.psd` | 外部生成的空路径 vmsk，selector 8 初始填充为 0，验证“隐藏全部”仍保留为可编辑矢量蒙版 |
+| `vector-mask-combine.psd` | 两个重叠矩形子路径使用 Combine，验证重叠区域保持可见 |
+| `vector-mask-subtract.psd` | 第二个重叠矩形使用 Subtract，验证从第一组件中扣除重叠区域 |
+| `vector-mask-intersect.psd` | 第二个重叠矩形使用 Intersect，验证只保留共同区域 |
+| `vector-mask-exclude.psd` | 第二个重叠矩形使用 Exclude，验证重叠区域被排除、两侧保留 |
+| `vector-mask-continue.psd` | 内层矩形以 `-1` 延续前一组件，验证同一复合组件内的偶奇孔洞与运算身份往返 |
 | `modern-solid-vector-shape.psd` | `vsms + vscg` version 16 的 `SoCo` 内容，恢复为原生实色矢量形状 |
 | `modern-gradient-vector-shape.psd` | `vsms + vscg` version 16 的 `GdFl` 内容，恢复为原生线性渐变矢量形状 |
 | `gradient-vector-shape.psd` | 外部生成的渐变矢量形状，包含 `[6, 3]` 虚线与 `5.5 pt` 非零虚线偏移 |

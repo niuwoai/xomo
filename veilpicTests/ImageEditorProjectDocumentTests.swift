@@ -160,7 +160,7 @@ struct ImageEditorProjectDocumentTests {
         #expect(legacyContent.textContent.verticalAlignment == .top)
     }
 
-    @Test func shapeMiterLimitRoundTripsAndLegacyPayloadUsesNativeDefault() throws {
+    @Test func shapeAdvancedPathStateRoundTripsAndLegacyPayloadUsesNativeDefaults() throws {
         let content = ImageEditorShapeContent(
             kind: .path,
             fillColor: .clear,
@@ -171,20 +171,28 @@ struct ImageEditorProjectDocumentTests {
             strokeJoin: .miter,
             strokeMiterLimit: 4,
             strokeDashOffset: 5.5,
-            pathPoints: [CGPoint(x: 0, y: 10), CGPoint(x: 10, y: 0), CGPoint(x: 20, y: 10)]
+            pathPoints: [CGPoint(x: 0, y: 10), CGPoint(x: 10, y: 0), CGPoint(x: 20, y: 10)],
+            pathComponentOperations: [.combine],
+            pathStartsWithAllPixels: true
         )
         let encoded = try JSONEncoder().encode(ImageEditorProjectShapeContent(content: content))
         let restored = try JSONDecoder().decode(ImageEditorProjectShapeContent.self, from: encoded)
         #expect(restored.content.strokeMiterLimit == 4)
         #expect(restored.content.strokeDashOffset == 5.5)
+        #expect(restored.content.pathComponentOperations == [.combine])
+        #expect(restored.content.pathStartsWithAllPixels)
 
         var legacyObject = try #require(JSONSerialization.jsonObject(with: encoded) as? [String: Any])
         legacyObject.removeValue(forKey: "strokeMiterLimit")
         legacyObject.removeValue(forKey: "strokeDashOffset")
+        legacyObject.removeValue(forKey: "pathComponentOperations")
+        legacyObject.removeValue(forKey: "pathStartsWithAllPixels")
         let legacyData = try JSONSerialization.data(withJSONObject: legacyObject)
         let legacy = try JSONDecoder().decode(ImageEditorProjectShapeContent.self, from: legacyData)
         #expect(legacy.content.strokeMiterLimit == ImageEditorShapeContent.defaultStrokeMiterLimit)
         #expect(legacy.content.strokeDashOffset == 0)
+        #expect(legacy.content.pathComponentOperations.isEmpty)
+        #expect(!legacy.content.pathStartsWithAllPixels)
     }
 
     @Test
