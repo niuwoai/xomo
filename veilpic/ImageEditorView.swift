@@ -413,7 +413,10 @@ struct ImageEditorView: View {
                     if viewModel.deleteSelectedDeliveryObjectIfNeeded() {
                         return true
                     }
-                    return viewModel.deleteSelectedXomoObjectIfNeeded()
+                    if viewModel.deleteSelectedXomoObjectIfNeeded() {
+                        return true
+                    }
+                    return viewModel.deleteSelectedLayerFromKeyboardIfPossible()
                 },
                 finishPendingPenPath: {
                     let isUncommittedPenPointerSequence = ImageEditorPendingPenPointerPolicy

@@ -144,6 +144,40 @@ struct ImageEditorLayerDeletionTests {
         #expect(viewModel.document.history.count == historyCount)
     }
 
+    @Test func deleteKeyRemovesTheSelectedImportedImageLayerInOneUndoStep() throws {
+        let viewModel = makeViewModel()
+        let importedImage = NSImage.transparent(size: NSSize(width: 48, height: 36))
+        viewModel.importImageLayer(importedImage, sourceName: "poster.png")
+        let importedID = try #require(viewModel.document.selectedLayerID)
+        let originalLayerIDs = viewModel.document.layers.map(\.id)
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.document.selection == nil)
+        #expect(viewModel.deleteSelectedLayerFromKeyboardIfPossible())
+        #expect(!viewModel.document.layers.contains { $0.id == importedID })
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerDelete"))
+
+        viewModel.undo()
+        #expect(viewModel.document.layers.map(\.id) == originalLayerIDs)
+        #expect(viewModel.document.selectedLayerID == importedID)
+    }
+
+    @Test func deleteKeyLeavesTheLayerForPixelDeletionWhenASelectionExists() throws {
+        let viewModel = makeViewModel()
+        let importedImage = NSImage.transparent(size: NSSize(width: 48, height: 36))
+        viewModel.importImageLayer(importedImage, sourceName: "poster.png")
+        let importedID = try #require(viewModel.document.selectedLayerID)
+        viewModel.document.selection = .rectangle(CGRect(x: 2, y: 2, width: 12, height: 10))
+        let originalLayerIDs = viewModel.document.layers.map(\.id)
+        let historyCount = viewModel.document.history.count
+
+        #expect(!viewModel.deleteSelectedLayerFromKeyboardIfPossible())
+        #expect(viewModel.document.layers.map(\.id) == originalLayerIDs)
+        #expect(viewModel.document.selectedLayerID == importedID)
+        #expect(viewModel.document.history.count == historyCount)
+    }
+
     private func makeViewModel() -> ImageEditorViewModel {
         ImageEditorViewModel(
             sourceName: "deletion.png",

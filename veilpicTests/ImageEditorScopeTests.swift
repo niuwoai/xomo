@@ -3583,12 +3583,18 @@ struct ImageEditorScopeTests {
         )
         let pendingDelete = try #require(deleteSource.range(of: "viewModel.deletePendingPenPointIfNeeded()"))
         let documentDelete = try #require(deleteSource.range(of: "viewModel.deleteSelectedPathAnchor()"))
-        let layerDelete = try #require(deleteSource.range(of: "viewModel.deleteSelectedXomoObjectIfNeeded()"))
+        let componentDelete = try #require(
+            deleteSource.range(of: "viewModel.deleteSelectedXomoObjectIfNeeded()")
+        )
+        let layerDelete = try #require(
+            deleteSource.range(of: "viewModel.deleteSelectedLayerFromKeyboardIfPossible()")
+        )
         #expect(dragCancel.lowerBound < pointerPolicy.lowerBound)
         #expect(pointerPolicy.lowerBound < pointerLatch.lowerBound)
         #expect(pointerLatch.lowerBound < pendingDelete.lowerBound)
         #expect(pendingDelete.lowerBound < documentDelete.lowerBound)
-        #expect(documentDelete.lowerBound < layerDelete.lowerBound)
+        #expect(documentDelete.lowerBound < componentDelete.lowerBound)
+        #expect(componentDelete.lowerBound < layerDelete.lowerBound)
 
         let commandStart = try #require(pathSource.range(of: "func deletePendingPenPointIfNeeded()"))
         let commandEnd = try #require(

@@ -5549,6 +5549,15 @@ final class ImageEditorViewModel: ObservableObject {
         appendHistory(L10n.text("imageEditor.history.layerDelete"))
     }
 
+    /// A plain Delete key removes the selected layer only when Photoshop-style
+    /// pixel deletion does not own the key through an active selection.
+    @discardableResult
+    func deleteSelectedLayerFromKeyboardIfPossible() -> Bool {
+        guard document.selection == nil, canDeleteLayer else { return false }
+        deleteSelectedLayer()
+        return true
+    }
+
     func toggleLayerVisibility(_ id: UUID, applyingToSelection: Bool = false) {
         guard let index = document.layers.firstIndex(where: { $0.id == id }) else { return }
         let targetVisibility = !document.layers[index].isVisible
