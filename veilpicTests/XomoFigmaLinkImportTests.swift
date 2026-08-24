@@ -59,14 +59,20 @@ struct XomoFigmaLinkImportTests {
             contentsOf: root.appendingPathComponent("veilpic/ImageEditorView.swift"),
             encoding: .utf8
         )
+        let applicationCommands = try String(
+            contentsOf: root.appendingPathComponent("veilpic/XomoApplicationCommands.swift"),
+            encoding: .utf8
+        )
         let sheet = try String(
             contentsOf: root.appendingPathComponent("veilpic/XomoFigmaLinkImportSheet.swift"),
             encoding: .utf8
         )
 
-        #expect(menu.contains("imageEditor.action.figmaLinkImport"))
-        #expect(menu.contains("isFigmaLinkImportPresented = true"))
-        #expect(menu.contains(".keyboardShortcut(\"f\", modifiers: [.command, .option])"))
+        #expect(menu.contains("XomoFileMenuItems(actions: xomoFileCommandActions)"))
+        #expect(menu.contains("importFigmaLink: { isFigmaLinkImportPresented = true }"))
+        #expect(applicationCommands.contains("case .importFigmaLink:"))
+        #expect(applicationCommands.contains("imageEditor.action.figmaLinkImport"))
+        #expect(applicationCommands.contains(".keyboardShortcut(\"f\", modifiers: [.command, .option])"))
         #expect(editor.contains(".sheet(isPresented: $isFigmaLinkImportPresented)"))
         #expect(editor.contains("XomoFigmaLinkImportSheet(viewModel: viewModel)"))
         #expect(editor.contains("case .openFigmaLinkImport: isFigmaLinkImportPresented = true"))

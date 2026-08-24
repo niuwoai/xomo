@@ -17892,7 +17892,8 @@ struct XomoAutomationTests {
         let gradientSchema = try #require(properties["gradientStyle"]?.objectValue)
         #expect(propertySchema["enum"]?.arrayValue?.contains(.string("strokeGradientStyle")) == true)
         #expect(gradientSchema["enum"] == .array([
-            .string("linear"), .string("radial"), .string("reflected"), .string("diamond")
+            .string("linear"), .string("radial"), .string("angle"),
+            .string("reflected"), .string("diamond")
         ]))
     }
 
@@ -17936,7 +17937,8 @@ struct XomoAutomationTests {
         let styleSchema = try #require(properties["gradientOverlayStyle"]?.objectValue)
         #expect(propertySchema["enum"]?.arrayValue?.contains(.string("gradientOverlayStyle")) == true)
         #expect(styleSchema["enum"] == .array([
-            .string("linear"), .string("radial"), .string("reflected"), .string("diamond")
+            .string("linear"), .string("radial"), .string("angle"),
+            .string("reflected"), .string("diamond")
         ]))
     }
 
