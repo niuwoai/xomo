@@ -482,6 +482,10 @@
 "imageEditor.status.copySelectedLayersAsSVG" = "選択したベクター内容を SVG としてコピーしました";
 "imageEditor.status.copySelectedLayersAsSVGFailed" = "選択内容を編集可能な SVG としてコピーできません";
 "imageEditor.action.printDocument" = "プリント…";
+"imageEditor.action.pageSetup" = "ページ設定…";
+"imageEditor.status.pageSetupCompleted" = "ページ設定を更新しました";
+"imageEditor.status.pageSetupCancelled" = "ページ設定をキャンセルしました";
+"imageEditor.status.pageSetupFailed" = "現在のキャンバスのページを設定できません";
 "imageEditor.status.printCompleted" = "プリントジョブが完了しました";
 "imageEditor.status.printCancelled" = "プリントをキャンセルしました";
 "imageEditor.status.printFailed" = "現在のキャンバスをプリントできません";

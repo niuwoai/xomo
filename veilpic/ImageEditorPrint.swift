@@ -7,6 +7,32 @@
 
 import AppKit
 
+@MainActor
+final class ImageEditorPrintConfiguration {
+    private var printInfo: NSPrintInfo
+    private(set) var isCustomized = false
+
+    init(sourcePrintInfo: NSPrintInfo = .shared) {
+        printInfo = (sourcePrintInfo.copy() as? NSPrintInfo) ?? NSPrintInfo()
+    }
+
+    func candidate(for canvasSize: CGSize) -> NSPrintInfo? {
+        guard let candidate = printInfo.copy() as? NSPrintInfo else { return nil }
+        if !isCustomized {
+            candidate.orientation = canvasSize.width > canvasSize.height
+                ? .landscape
+                : .portrait
+        }
+        return candidate
+    }
+
+    func commit(_ candidate: NSPrintInfo) {
+        guard let committed = candidate.copy() as? NSPrintInfo else { return }
+        printInfo = committed
+        isCustomized = true
+    }
+}
+
 enum ImageEditorPrintLayout {
     static func fittedRect(for contentSize: CGSize, in pageRect: CGRect) -> CGRect? {
         let content = CGSize(
@@ -91,8 +117,34 @@ extension ImageEditorViewModel {
     }
 
     @discardableResult
+    func presentPageSetup(
+        pageLayoutRunner: @MainActor (NSPrintInfo) -> Bool = { printInfo in
+            NSPageLayout().runModal(with: printInfo)
+                == NSApplication.ModalResponse.OK.rawValue
+        }
+    ) -> Bool {
+        guard canPrintCompositedCanvas,
+              let candidate = printConfiguration.candidate(for: document.canvasSize)
+        else {
+            statusText = L10n.text("imageEditor.status.pageSetupFailed")
+            return false
+        }
+
+        let didChange = pageLayoutRunner(candidate)
+        if didChange {
+            printConfiguration.commit(candidate)
+        }
+        statusText = L10n.text(
+            didChange
+                ? "imageEditor.status.pageSetupCompleted"
+                : "imageEditor.status.pageSetupCancelled"
+        )
+        return didChange
+    }
+
+    @discardableResult
     func printCompositedCanvas(
-        printInfo sourcePrintInfo: NSPrintInfo = .shared,
+        printInfo sourcePrintInfo: NSPrintInfo? = nil,
         printRunner: @MainActor (ImageEditorPrintPageView, NSPrintInfo) -> Bool = { view, printInfo in
             let operation = NSPrintOperation(view: view, printInfo: printInfo)
             operation.showsPrintPanel = true
@@ -100,17 +152,26 @@ extension ImageEditorViewModel {
             return operation.run()
         }
     ) -> Bool {
-        guard canPrintCompositedCanvas,
-              let printInfo = sourcePrintInfo.copy() as? NSPrintInfo
+        guard canPrintCompositedCanvas else {
+            statusText = L10n.text("imageEditor.status.printFailed")
+            return false
+        }
+
+        let printInfo: NSPrintInfo?
+        if let sourcePrintInfo {
+            printInfo = sourcePrintInfo.copy() as? NSPrintInfo
+            printInfo?.orientation = document.canvasSize.width > document.canvasSize.height
+                ? .landscape
+                : .portrait
+        } else {
+            printInfo = printConfiguration.candidate(for: document.canvasSize)
+        }
+        guard let printInfo
         else {
             statusText = L10n.text("imageEditor.status.printFailed")
             return false
         }
 
-        let canvasSize = document.canvasSize
-        printInfo.orientation = canvasSize.width > canvasSize.height
-            ? .landscape
-            : .portrait
         printInfo.horizontalPagination = .fit
         printInfo.verticalPagination = .fit
         printInfo.isHorizontallyCentered = true

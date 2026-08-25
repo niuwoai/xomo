@@ -482,6 +482,10 @@
 "imageEditor.status.copySelectedLayersAsSVG" = "Copied the selected vector content as SVG";
 "imageEditor.status.copySelectedLayersAsSVGFailed" = "The selection cannot be copied as editable SVG";
 "imageEditor.action.printDocument" = "Print…";
+"imageEditor.action.pageSetup" = "Page Setup…";
+"imageEditor.status.pageSetupCompleted" = "Page setup updated";
+"imageEditor.status.pageSetupCancelled" = "Page setup cancelled";
+"imageEditor.status.pageSetupFailed" = "Could not configure the current canvas page";
 "imageEditor.status.printCompleted" = "Print job completed";
 "imageEditor.status.printCancelled" = "Printing cancelled";
 "imageEditor.status.printFailed" = "Could not print the current canvas";

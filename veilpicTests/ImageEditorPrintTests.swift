@@ -122,16 +122,107 @@ struct ImageEditorPrintTests {
         #expect(viewModel.statusText == L10n.text("imageEditor.status.printCancelled"))
     }
 
-    @Test func sharedFileMenuWiresPrintShortcutInEveryLanguage() throws {
+    @Test func pageSetupCommitsPaperChoicesWithoutChangingEditorState() throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "Page Setup.xomoproject",
+            image: solidImage(color: .systemGreen, size: CGSize(width: 14, height: 8))
+        ) { _ in }
+        viewModel.renameSelectedLayer(to: "Unsaved Page Setup Layer")
+        viewModel.exportSettings.format = .jpeg
+        let projectDataBeforeSetup = try viewModel.projectData()
+        let historyBeforeSetup = viewModel.document.history
+        let undoCountBeforeSetup = viewModel.undoStack.count
+        let redoCountBeforeSetup = viewModel.redoStack.count
+        let exportSettingsBeforeSetup = viewModel.exportSettings
+        var initialOrientation: NSPrintInfo.PaperOrientation?
+
+        let didChange = viewModel.presentPageSetup { printInfo in
+            initialOrientation = printInfo.orientation
+            printInfo.orientation = .portrait
+            printInfo.leftMargin = 17
+            printInfo.rightMargin = 19
+            printInfo.scalingFactor = 0.75
+            return true
+        }
+
+        #expect(didChange)
+        #expect(initialOrientation == .landscape)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.pageSetupCompleted"))
+        var capturedPrintInfo: NSPrintInfo?
+        let didPrint = viewModel.printCompositedCanvas { _, printInfo in
+            capturedPrintInfo = printInfo
+            return true
+        }
+        #expect(didPrint)
+        let printInfo = try #require(capturedPrintInfo)
+        #expect(printInfo.orientation == .portrait)
+        #expect(printInfo.leftMargin == 17)
+        #expect(printInfo.rightMargin == 19)
+        #expect(printInfo.scalingFactor == 0.75)
+        #expect(try viewModel.projectData() == projectDataBeforeSetup)
+        #expect(viewModel.document.history == historyBeforeSetup)
+        #expect(viewModel.undoStack.count == undoCountBeforeSetup)
+        #expect(viewModel.redoStack.count == redoCountBeforeSetup)
+        #expect(viewModel.exportSettings == exportSettingsBeforeSetup)
+        #expect(viewModel.hasUnsavedProjectChanges)
+    }
+
+    @Test func cancellingPageSetupDiscardsCandidatePaperChanges() throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "Cancel Page Setup.png",
+            image: solidImage(color: .systemPurple, size: CGSize(width: 8, height: 14))
+        ) { _ in }
+        let projectDataBeforeSetup = try viewModel.projectData()
+        let didConfigureInitialPage = viewModel.presentPageSetup { printInfo in
+            printInfo.orientation = .landscape
+            printInfo.leftMargin = 23
+            return true
+        }
+        #expect(didConfigureInitialPage)
+        var candidateOrientation: NSPrintInfo.PaperOrientation?
+        var candidateLeftMargin: CGFloat?
+
+        let didChange = viewModel.presentPageSetup { printInfo in
+            candidateOrientation = printInfo.orientation
+            candidateLeftMargin = printInfo.leftMargin
+            printInfo.orientation = .portrait
+            printInfo.leftMargin = 99
+            return false
+        }
+
+        #expect(!didChange)
+        #expect(candidateOrientation == .landscape)
+        #expect(candidateLeftMargin == 23)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.pageSetupCancelled"))
+        var capturedPrintInfo: NSPrintInfo?
+        let didPrint = viewModel.printCompositedCanvas { _, printInfo in
+            capturedPrintInfo = printInfo
+            return true
+        }
+        #expect(didPrint)
+        let printInfo = try #require(capturedPrintInfo)
+        #expect(printInfo.orientation == .landscape)
+        #expect(printInfo.leftMargin == 23)
+        #expect(try viewModel.projectData() == projectDataBeforeSetup)
+    }
+
+    @Test func sharedFileMenuWiresPageSetupAndPrintShortcutsInEveryLanguage() throws {
         let root = Self.repositoryRoot()
         let commands = try source("veilpic/XomoApplicationCommands.swift", root: root)
         let menuBar = try source("veilpic/ImageEditorMenuBar.swift", root: root)
 
+        #expect(commands.contains("case pageSetup"))
+        #expect(commands.contains("imageEditor.action.pageSetup"))
+        #expect(commands.contains("actions?.pageSetup()"))
+        #expect(commands.contains(".keyboardShortcut(\"p\", modifiers: [.command, .shift])"))
+        #expect(commands.contains("actions?.canConfigurePage != true"))
         #expect(commands.contains("case printDocument"))
         #expect(commands.contains("imageEditor.action.printDocument"))
         #expect(commands.contains("actions?.printDocument()"))
         #expect(commands.contains(".keyboardShortcut(\"p\", modifiers: [.command])"))
         #expect(commands.contains("actions?.canPrintDocument != true"))
+        #expect(menuBar.contains("pageSetup: { viewModel.presentPageSetup() }"))
+        #expect(menuBar.contains("canConfigurePage: viewModel.canPrintCompositedCanvas"))
         #expect(menuBar.contains("printDocument: { viewModel.printCompositedCanvas() }"))
         #expect(menuBar.contains("canPrintDocument: viewModel.canPrintCompositedCanvas"))
 
@@ -140,6 +231,10 @@ struct ImageEditorPrintTests {
                 "veilpic/\(locale).lproj/Localizable.strings",
                 root: root
             )
+            #expect(strings.contains("\"imageEditor.action.pageSetup\" ="))
+            #expect(strings.contains("\"imageEditor.status.pageSetupCompleted\" ="))
+            #expect(strings.contains("\"imageEditor.status.pageSetupCancelled\" ="))
+            #expect(strings.contains("\"imageEditor.status.pageSetupFailed\" ="))
             #expect(strings.contains("\"imageEditor.action.printDocument\" ="))
             #expect(strings.contains("\"imageEditor.status.printCompleted\" ="))
             #expect(strings.contains("\"imageEditor.status.printCancelled\" ="))

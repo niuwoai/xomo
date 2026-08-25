@@ -482,6 +482,10 @@
 "imageEditor.status.copySelectedLayersAsSVG" = "已将所选矢量内容复制为 SVG";
 "imageEditor.status.copySelectedLayersAsSVGFailed" = "所选内容无法复制为可编辑 SVG";
 "imageEditor.action.printDocument" = "打印…";
+"imageEditor.action.pageSetup" = "页面设置…";
+"imageEditor.status.pageSetupCompleted" = "页面设置已更新";
+"imageEditor.status.pageSetupCancelled" = "已取消页面设置";
+"imageEditor.status.pageSetupFailed" = "无法配置当前画布的页面";
 "imageEditor.status.printCompleted" = "打印任务已完成";
 "imageEditor.status.printCancelled" = "已取消打印";
 "imageEditor.status.printFailed" = "无法打印当前画布";

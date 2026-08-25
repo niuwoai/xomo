@@ -109,6 +109,7 @@ final class ImageEditorViewModel: ObservableObject {
     static let figmaImageFillScaleModes = ["FILL", "FIT", "CROP", "TILE", "STRETCH"]
 
     let canvasPointerCaptureState = ImageEditorCanvasPointerCaptureState()
+    let printConfiguration = ImageEditorPrintConfiguration()
     private var preservesRenderedImageCachesForNextDocumentMutation = false
 
     @Published var document: ImageEditorDocument {
