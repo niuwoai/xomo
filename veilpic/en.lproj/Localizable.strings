@@ -475,6 +475,9 @@
 "imageEditor.action.apply" = "Apply to Preview";
 "imageEditor.action.export" = "Export";
 "imageEditor.action.quickExportPNG" = "Quick Export PNG…";
+"imageEditor.action.copyQuickExportPNG" = "Copy as PNG";
+"imageEditor.status.copyQuickExportPNG" = "Copied the composited canvas as PNG";
+"imageEditor.status.copyQuickExportPNGFailed" = "Could not copy the composited canvas as PNG";
 "imageEditor.action.applySelection" = "Apply Selection";
 "imageEditor.action.projectOpen" = "Open File…";
 "imageEditor.action.openRecent" = "Open Recent";

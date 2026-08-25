@@ -164,6 +164,7 @@ extension ImageEditorView {
             canCopyMerged: viewModel.canCopyMergedToClipboard,
             copySelectedLayers: { viewModel.copySelectedLayersToClipboard() },
             canCopySelectedLayers: viewModel.canCopySelectedLayersToClipboard,
+            copyQuickExportPNG: { viewModel.copyQuickExportPNG() },
             pasteAsLayer: { viewModel.pasteClipboardAsLayer() },
             canPasteAsLayer: viewModel.canPasteClipboardImage,
             pasteIntoSelection: { viewModel.pasteClipboardIntoSelectionAsLayer() },

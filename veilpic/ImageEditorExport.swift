@@ -283,6 +283,28 @@ extension ImageEditorViewModel {
     }
 
     @discardableResult
+    func copyQuickExportPNG(to pasteboard: NSPasteboard = .general) -> Bool {
+        guard let data = quickExportPNGData(),
+              let image = NSImage(data: data)
+        else {
+            statusText = L10n.text("imageEditor.status.copyQuickExportPNGFailed")
+            return false
+        }
+        let didCopy = ClipboardImageWriter.copyPNGData(
+            data,
+            image: image,
+            preferredFileName: quickExportPNGFilename(),
+            to: pasteboard
+        )
+        statusText = L10n.text(
+            didCopy
+                ? "imageEditor.status.copyQuickExportPNG"
+                : "imageEditor.status.copyQuickExportPNGFailed"
+        )
+        return didCopy
+    }
+
+    @discardableResult
     func writeQuickExportPNG(
         to url: URL,
         dataWriter: (Data, URL) throws -> Void = { data, destination in

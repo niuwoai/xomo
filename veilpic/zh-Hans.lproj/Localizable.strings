@@ -475,6 +475,9 @@
 "imageEditor.action.apply" = "应用到预览";
 "imageEditor.action.export" = "导出";
 "imageEditor.action.quickExportPNG" = "快速导出 PNG…";
+"imageEditor.action.copyQuickExportPNG" = "复制为 PNG";
+"imageEditor.status.copyQuickExportPNG" = "已将合成画布复制为 PNG";
+"imageEditor.status.copyQuickExportPNGFailed" = "无法将合成画布复制为 PNG";
 "imageEditor.action.applySelection" = "应用选区";
 "imageEditor.action.projectOpen" = "打开文件…";
 "imageEditor.action.openRecent" = "打开最近使用";

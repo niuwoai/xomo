@@ -66,17 +66,31 @@ enum XomoClipboardLayerPayload {
 enum ClipboardImageWriter {
     static let clipboardCacheFolderName = "im.some.xomo/Clipboard"
 
-    static func copy(_ image: NSImage, preferredFileName: String, optimizeLosslessly: Bool = false) -> Bool {
+    static func copy(
+        _ image: NSImage,
+        preferredFileName: String,
+        optimizeLosslessly: Bool = false,
+        to pasteboard: NSPasteboard = .general
+    ) -> Bool {
         let pngData = image.qingtuPNGData().map { data in
             optimizeLosslessly
                 ? LosslessImageOptimizer.optimizedPNGData(data, image: image).optimizedData
                 : data
         }
-        return copyPNGData(pngData, image: image, preferredFileName: preferredFileName)
+        return copyPNGData(
+            pngData,
+            image: image,
+            preferredFileName: preferredFileName,
+            to: pasteboard
+        )
     }
 
-    static func copyPNGData(_ pngData: Data?, image: NSImage? = nil, preferredFileName: String) -> Bool {
-        let pasteboard = NSPasteboard.general
+    static func copyPNGData(
+        _ pngData: Data?,
+        image: NSImage? = nil,
+        preferredFileName: String,
+        to pasteboard: NSPasteboard = .general
+    ) -> Bool {
         pasteboard.clearContents()
 
         let imageItem = NSPasteboardItem()

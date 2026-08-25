@@ -105,6 +105,41 @@ struct ImageEditorQuickExportPNGTests {
         )
     }
 
+    @Test func copyAsPNGUsesOneTimesCompositeWithoutChangingEditorState() throws {
+        let viewModel = makeViewModel(sourceName: "Share Card.psd")
+        viewModel.renameSelectedLayer(to: "Unsaved Copy")
+        viewModel.exportSettings.format = .jpeg
+        viewModel.exportSettings.scope = .selectedLayer
+        viewModel.exportSettings.scale = 4
+        viewModel.exportSettings.batchScales = [2, 3, 4]
+        viewModel.exportSettings.namingRule = .sourceAndScope
+        let projectDataBeforeCopy = try viewModel.projectData()
+        let historyBeforeCopy = viewModel.document.history
+        let undoCountBeforeCopy = viewModel.undoStack.count
+        let redoCountBeforeCopy = viewModel.redoStack.count
+        let settingsBeforeCopy = viewModel.exportSettings
+        let pasteboard = NSPasteboard(
+            name: NSPasteboard.Name("xomo-tests.copy-quick-png.\(UUID().uuidString)")
+        )
+        pasteboard.clearContents()
+        defer { pasteboard.clearContents() }
+
+        #expect(viewModel.copyQuickExportPNG(to: pasteboard))
+
+        let pngData = try #require(pasteboard.data(forType: .png))
+        #expect(pngData.prefix(8) == Data([137, 80, 78, 71, 13, 10, 26, 10]))
+        let image = try #require(NSImage(data: pngData))
+        #expect(image.size == CGSize(width: 7, height: 5))
+        #expect(viewModel.quickExportPNGFilename() == "Share Card.png")
+        #expect(try viewModel.projectData() == projectDataBeforeCopy)
+        #expect(viewModel.document.history == historyBeforeCopy)
+        #expect(viewModel.undoStack.count == undoCountBeforeCopy)
+        #expect(viewModel.redoStack.count == redoCountBeforeCopy)
+        #expect(viewModel.exportSettings == settingsBeforeCopy)
+        #expect(viewModel.hasUnsavedProjectChanges)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.copyQuickExportPNG"))
+    }
+
     @Test func sharedFileMenuWiresQuickPNGExportInEveryLanguage() throws {
         let root = Self.repositoryRoot()
         let commands = try source("veilpic/XomoApplicationCommands.swift", root: root)
@@ -113,9 +148,13 @@ struct ImageEditorQuickExportPNGTests {
 
         #expect(commands.contains("imageEditor.action.quickExportPNG"))
         #expect(commands.contains("actions?.quickExportPNG()"))
+        #expect(commands.contains("imageEditor.action.copyQuickExportPNG"))
+        #expect(commands.contains("actions?.copyQuickExportPNG()"))
         #expect(menuBar.contains("quickExportPNG: { viewModel.quickExportPNG() }"))
+        #expect(menuBar.contains("copyQuickExportPNG: { viewModel.copyQuickExportPNG() }"))
         #expect(export.contains("panel.allowedContentTypes = [.png]"))
         #expect(export.contains("self.writeQuickExportPNG(to: url)"))
+        #expect(export.contains("func copyQuickExportPNG(to pasteboard: NSPasteboard = .general)"))
 
         for locale in ["zh-Hans", "en", "ja"] {
             let strings = try source(
@@ -123,6 +162,7 @@ struct ImageEditorQuickExportPNGTests {
                 root: root
             )
             #expect(strings.contains("\"imageEditor.action.quickExportPNG\" ="))
+            #expect(strings.contains("\"imageEditor.action.copyQuickExportPNG\" ="))
         }
     }
 

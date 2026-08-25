@@ -120,6 +120,7 @@ struct XomoEditCommandActions {
     let canCopyMerged: Bool
     let copySelectedLayers: () -> Void
     let canCopySelectedLayers: Bool
+    let copyQuickExportPNG: () -> Void
     let pasteAsLayer: () -> Void
     let canPasteAsLayer: Bool
     let pasteIntoSelection: () -> Void
@@ -218,6 +219,10 @@ struct XomoEditMenuItems: View {
         }
         .keyboardShortcut("c", modifiers: [.command, .option, .shift])
         .disabled(actions?.canCopySelectedLayers != true)
+        Button(L10n.text("imageEditor.action.copyQuickExportPNG")) {
+            actions?.copyQuickExportPNG()
+        }
+        .disabled(actions == nil)
         Button(L10n.text("imageEditor.action.pasteClipboardLayer")) {
             actions?.pasteAsLayer()
         }
