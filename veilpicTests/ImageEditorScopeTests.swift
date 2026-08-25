@@ -2040,53 +2040,55 @@ struct ImageEditorScopeTests {
     }
 
     @Test func imageMenuExposesClassicSizeShortcuts() throws {
-        let source = try String(
+        let menuBarSource = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),
             encoding: .utf8
         )
-        let imageMenuStart = try #require(source.range(of: "private var imageMenu: some View"))
-        let nextMenuStart = try #require(
-            source[imageMenuStart.upperBound...].range(of: "private var layerMenu: some View")
+        let commandsSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/XomoApplicationCommands.swift"),
+            encoding: .utf8
         )
-        let imageMenuSource = source[imageMenuStart.lowerBound..<nextMenuStart.lowerBound]
+        let appSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/veilpicApp.swift"),
+            encoding: .utf8
+        )
+        let viewSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let sharedMenuStart = try #require(
+            commandsSource.range(of: "struct XomoImageMenuItems: View")
+        )
+        let sharedMenuEnd = try #require(
+            commandsSource[sharedMenuStart.upperBound...].range(of: "struct XomoFileMenuItems: View")
+        )
+        let imageMenuSource = commandsSource[sharedMenuStart.lowerBound..<sharedMenuEnd.lowerBound]
 
-        #expect(imageMenuSource.contains("viewModel.resizeImageToControlSize()"))
         #expect(imageMenuSource.contains(".keyboardShortcut(\"i\", modifiers: [.command, .option])"))
-        #expect(imageMenuSource.contains("viewModel.resizeCanvasToControlSize()"))
         #expect(imageMenuSource.contains(".keyboardShortcut(\"c\", modifiers: [.command, .option])"))
-        #expect(imageMenuSource.contains("viewModel.selectAdjustment(.levels)"))
-        #expect(imageMenuSource.contains(".keyboardShortcut(\"l\", modifiers: [.command])"))
-        #expect(imageMenuSource.contains("viewModel.selectAdjustment(.curves)"))
-        #expect(imageMenuSource.contains(".keyboardShortcut(\"m\", modifiers: [.command])"))
-        #expect(imageMenuSource.contains("viewModel.selectAdjustment(.colorBalance)"))
-        #expect(imageMenuSource.contains(".keyboardShortcut(\"b\", modifiers: [.command])"))
-        #expect(imageMenuSource.contains("viewModel.selectAdjustment(.hueSaturation)"))
-        #expect(imageMenuSource.contains(".keyboardShortcut(\"u\", modifiers: [.command])"))
-        #expect(imageMenuSource.contains("viewModel.desaturateSelectedLayer()"))
+        #expect(imageMenuSource.contains("adjustmentButton(.levels, shortcut: \"l\", modifiers: [.command])"))
+        #expect(imageMenuSource.contains("adjustmentButton(.curves, shortcut: \"m\", modifiers: [.command])"))
+        #expect(imageMenuSource.contains("adjustmentButton(.colorBalance, shortcut: \"b\", modifiers: [.command])"))
+        #expect(imageMenuSource.contains("adjustmentButton(.hueSaturation, shortcut: \"u\", modifiers: [.command])"))
         #expect(imageMenuSource.contains(".keyboardShortcut(\"u\", modifiers: [.command, .shift])"))
-        #expect(imageMenuSource.contains("viewModel.canDesaturateSelectedLayer"))
-        #expect(imageMenuSource.contains("viewModel.invertCurrentEditingTarget()"))
         #expect(imageMenuSource.contains(".keyboardShortcut(\"i\", modifiers: [.command])"))
-        #expect(imageMenuSource.contains("viewModel.canInvertCurrentEditingTarget"))
-        #expect(imageMenuSource.contains("viewModel.autoLevelsSelectedLayer()"))
         #expect(imageMenuSource.contains(".keyboardShortcut(\"l\", modifiers: [.command, .shift])"))
-        #expect(imageMenuSource.contains("viewModel.autoContrastSelectedLayer()"))
         #expect(imageMenuSource.contains(".keyboardShortcut(\"l\", modifiers: [.command, .shift, .option])"))
-        #expect(imageMenuSource.contains("viewModel.autoColorSelectedLayer()"))
         #expect(imageMenuSource.contains(".keyboardShortcut(\"b\", modifiers: [.command, .shift])"))
         #expect(imageMenuSource.contains("imageEditor.menu.image.adjustments"))
-        #expect(imageMenuSource.contains("viewModel.selectAdjustment(.brightnessContrast)"))
-        #expect(imageMenuSource.contains("viewModel.selectAdjustment(.channelMixer)"))
-        #expect(imageMenuSource.contains("viewModel.selectAdjustment(.selectiveColor)"))
-        #expect(imageMenuSource.contains("viewModel.selectAdjustment(.gradientMap)"))
-        #expect(imageMenuSource.contains("viewModel.selectAdjustment(.posterize)"))
-        #expect(imageMenuSource.contains("viewModel.selectAdjustment(.threshold)"))
-        #expect(imageMenuSource.contains("viewModel.selectAdjustment(.exposure)"))
-        #expect(imageMenuSource.contains("viewModel.selectAdjustment(.vibrance)"))
-        #expect(imageMenuSource.contains("viewModel.selectAdjustment(.shadowsHighlights)"))
-        #expect(imageMenuSource.contains("viewModel.selectAdjustment(.blackWhite)"))
-        #expect(imageMenuSource.contains("viewModel.selectAdjustment(.photoFilter)"))
-        #expect(imageMenuSource.contains("viewModel.selectAdjustment(.colorLookup)"))
+        for adjustment in [
+            "brightnessContrast", "channelMixer", "selectiveColor", "gradientMap",
+            "posterize", "threshold", "exposure", "vibrance", "shadowsHighlights",
+            "blackWhite", "photoFilter", "colorLookup",
+        ] {
+            #expect(imageMenuSource.contains("adjustmentButton(.\(adjustment))"))
+        }
+        #expect(commandsSource.contains("CommandMenu(L10n.text(\"imageEditor.menu.image\"))"))
+        #expect(commandsSource.contains("XomoImageMenuItems(actions: actions)"))
+        #expect(menuBarSource.contains("XomoImageMenuItems(actions: xomoImageCommandActions)"))
+        #expect(menuBarSource.contains("selectAdjustment: { viewModel.selectAdjustment($0) }"))
+        #expect(appSource.contains("XomoImageCommands()"))
+        #expect(viewSource.contains(".focusedSceneValue(\\.xomoImageCommandActions, xomoImageCommandActions)"))
     }
 
     @Test func filterMenuExposesClassicLastFilterShortcut() throws {

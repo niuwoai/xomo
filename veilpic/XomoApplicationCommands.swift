@@ -302,6 +302,175 @@ struct XomoEditMenuItems: View {
     }
 }
 
+struct XomoImageCommandActions {
+    let resizeImage: () -> Void
+    let resizeCanvas: () -> Void
+    let selectAdjustment: (ImageEditorAdjustment) -> Void
+    let desaturate: () -> Void
+    let canDesaturate: Bool
+    let invert: () -> Void
+    let canInvert: Bool
+    let autoLevels: () -> Void
+    let canAutoLevels: Bool
+    let autoContrast: () -> Void
+    let canAutoContrast: Bool
+    let autoColor: () -> Void
+    let canAutoColor: Bool
+    let cropCenter: () -> Void
+    let cropToSelection: () -> Void
+    let canCropToSelection: Bool
+    let trimTransparentPixels: () -> Void
+    let revealAll: () -> Void
+    let canRevealAll: Bool
+    let rotateClockwise: () -> Void
+    let rotateCounterclockwise: () -> Void
+    let rotate180: () -> Void
+    let flipHorizontal: () -> Void
+    let flipVertical: () -> Void
+}
+
+private struct XomoImageCommandActionsKey: FocusedValueKey {
+    typealias Value = XomoImageCommandActions
+}
+
+extension FocusedValues {
+    var xomoImageCommandActions: XomoImageCommandActions? {
+        get { self[XomoImageCommandActionsKey.self] }
+        set { self[XomoImageCommandActionsKey.self] = newValue }
+    }
+}
+
+struct XomoImageCommands: Commands {
+    @FocusedValue(\.xomoImageCommandActions) private var actions
+
+    var body: some Commands {
+        CommandMenu(L10n.text("imageEditor.menu.image")) {
+            XomoImageMenuItems(actions: actions)
+        }
+    }
+}
+
+struct XomoImageMenuItems: View {
+    let actions: XomoImageCommandActions?
+
+    var body: some View {
+        Button(L10n.text("imageEditor.action.imageResize")) {
+            actions?.resizeImage()
+        }
+        .keyboardShortcut("i", modifiers: [.command, .option])
+        .disabled(actions == nil)
+        Button(L10n.text("imageEditor.action.canvasResize")) {
+            actions?.resizeCanvas()
+        }
+        .keyboardShortcut("c", modifiers: [.command, .option])
+        .disabled(actions == nil)
+        Divider()
+        adjustmentButton(.levels, shortcut: "l", modifiers: [.command])
+        adjustmentButton(.curves, shortcut: "m", modifiers: [.command])
+        adjustmentButton(.colorBalance, shortcut: "b", modifiers: [.command])
+        adjustmentButton(.hueSaturation, shortcut: "u", modifiers: [.command])
+        Button(L10n.text("imageEditor.action.desaturate")) {
+            actions?.desaturate()
+        }
+        .keyboardShortcut("u", modifiers: [.command, .shift])
+        .disabled(actions?.canDesaturate != true)
+        Button(ImageEditorAdjustment.invert.title) {
+            actions?.invert()
+        }
+        .keyboardShortcut("i", modifiers: [.command])
+        .disabled(actions?.canInvert != true)
+        Menu(L10n.text("imageEditor.menu.image.adjustments")) {
+            adjustmentButton(.brightnessContrast)
+            adjustmentButton(.channelMixer)
+            adjustmentButton(.selectiveColor)
+            adjustmentButton(.gradientMap)
+            adjustmentButton(.posterize)
+            adjustmentButton(.threshold)
+            Divider()
+            adjustmentButton(.exposure)
+            adjustmentButton(.vibrance)
+            adjustmentButton(.shadowsHighlights)
+            adjustmentButton(.blackWhite)
+            adjustmentButton(.photoFilter)
+            adjustmentButton(.colorLookup)
+        }
+        Divider()
+        Button(L10n.text("imageEditor.action.autoLevels")) {
+            actions?.autoLevels()
+        }
+        .keyboardShortcut("l", modifiers: [.command, .shift])
+        .disabled(actions?.canAutoLevels != true)
+        Button(L10n.text("imageEditor.action.autoContrast")) {
+            actions?.autoContrast()
+        }
+        .keyboardShortcut("l", modifiers: [.command, .shift, .option])
+        .disabled(actions?.canAutoContrast != true)
+        Button(L10n.text("imageEditor.action.autoColor")) {
+            actions?.autoColor()
+        }
+        .keyboardShortcut("b", modifiers: [.command, .shift])
+        .disabled(actions?.canAutoColor != true)
+        Divider()
+        Button(L10n.text("imageEditor.action.cropCenter")) {
+            actions?.cropCenter()
+        }
+        .disabled(actions == nil)
+        Button(L10n.text("imageEditor.action.cropSelection")) {
+            actions?.cropToSelection()
+        }
+        .disabled(actions?.canCropToSelection != true)
+        Button(L10n.text("imageEditor.action.trimTransparentPixels")) {
+            actions?.trimTransparentPixels()
+        }
+        .disabled(actions == nil)
+        Button(L10n.text("imageEditor.action.revealAll")) {
+            actions?.revealAll()
+        }
+        .disabled(actions?.canRevealAll != true)
+        Button(L10n.text("imageEditor.action.rotateClockwise")) {
+            actions?.rotateClockwise()
+        }
+        .disabled(actions == nil)
+        Button(L10n.text("imageEditor.action.rotateCounterclockwise")) {
+            actions?.rotateCounterclockwise()
+        }
+        .disabled(actions == nil)
+        Button(L10n.text("imageEditor.action.rotate180")) {
+            actions?.rotate180()
+        }
+        .disabled(actions == nil)
+        Button(L10n.text("imageEditor.action.flipH")) {
+            actions?.flipHorizontal()
+        }
+        .disabled(actions == nil)
+        Button(L10n.text("imageEditor.action.flipV")) {
+            actions?.flipVertical()
+        }
+        .disabled(actions == nil)
+    }
+
+    @ViewBuilder
+    private func adjustmentButton(_ adjustment: ImageEditorAdjustment) -> some View {
+        Button(adjustment.title) {
+            actions?.selectAdjustment(adjustment)
+        }
+        .disabled(actions == nil)
+    }
+
+    @ViewBuilder
+    private func adjustmentButton(
+        _ adjustment: ImageEditorAdjustment,
+        shortcut: KeyEquivalent,
+        modifiers: EventModifiers
+    ) -> some View {
+        Button(adjustment.title) {
+            actions?.selectAdjustment(adjustment)
+        }
+        .keyboardShortcut(shortcut, modifiers: modifiers)
+        .disabled(actions == nil)
+    }
+}
+
 struct XomoFileMenuItems: View {
     let actions: XomoFileCommandActions?
 

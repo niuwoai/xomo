@@ -232,126 +232,36 @@ extension ImageEditorView {
 
     @ViewBuilder
     private var imageMenu: some View {
-        Button(L10n.text("imageEditor.action.imageResize")) {
-            viewModel.resizeImageToControlSize()
-        }
-        .keyboardShortcut("i", modifiers: [.command, .option])
-        Button(L10n.text("imageEditor.action.canvasResize")) {
-            viewModel.resizeCanvasToControlSize()
-        }
-        .keyboardShortcut("c", modifiers: [.command, .option])
-        Divider()
-        Button(ImageEditorAdjustment.levels.title) {
-            viewModel.selectAdjustment(.levels)
-        }
-        .keyboardShortcut("l", modifiers: [.command])
-        Button(ImageEditorAdjustment.curves.title) {
-            viewModel.selectAdjustment(.curves)
-        }
-        .keyboardShortcut("m", modifiers: [.command])
-        Button(ImageEditorAdjustment.colorBalance.title) {
-            viewModel.selectAdjustment(.colorBalance)
-        }
-        .keyboardShortcut("b", modifiers: [.command])
-        Button(ImageEditorAdjustment.hueSaturation.title) {
-            viewModel.selectAdjustment(.hueSaturation)
-        }
-        .keyboardShortcut("u", modifiers: [.command])
-        Button(L10n.text("imageEditor.action.desaturate")) {
-            viewModel.desaturateSelectedLayer()
-        }
-        .keyboardShortcut("u", modifiers: [.command, .shift])
-        .disabled(!viewModel.canDesaturateSelectedLayer)
-        Button(ImageEditorAdjustment.invert.title) {
-            viewModel.invertCurrentEditingTarget()
-        }
-        .keyboardShortcut("i", modifiers: [.command])
-        .disabled(!viewModel.canInvertCurrentEditingTarget)
-        Menu(L10n.text("imageEditor.menu.image.adjustments")) {
-            Button(ImageEditorAdjustment.brightnessContrast.title) {
-                viewModel.selectAdjustment(.brightnessContrast)
-            }
-            Button(ImageEditorAdjustment.channelMixer.title) {
-                viewModel.selectAdjustment(.channelMixer)
-            }
-            Button(ImageEditorAdjustment.selectiveColor.title) {
-                viewModel.selectAdjustment(.selectiveColor)
-            }
-            Button(ImageEditorAdjustment.gradientMap.title) {
-                viewModel.selectAdjustment(.gradientMap)
-            }
-            Button(ImageEditorAdjustment.posterize.title) {
-                viewModel.selectAdjustment(.posterize)
-            }
-            Button(ImageEditorAdjustment.threshold.title) {
-                viewModel.selectAdjustment(.threshold)
-            }
-            Divider()
-            Button(ImageEditorAdjustment.exposure.title) {
-                viewModel.selectAdjustment(.exposure)
-            }
-            Button(ImageEditorAdjustment.vibrance.title) {
-                viewModel.selectAdjustment(.vibrance)
-            }
-            Button(ImageEditorAdjustment.shadowsHighlights.title) {
-                viewModel.selectAdjustment(.shadowsHighlights)
-            }
-            Button(ImageEditorAdjustment.blackWhite.title) {
-                viewModel.selectAdjustment(.blackWhite)
-            }
-            Button(ImageEditorAdjustment.photoFilter.title) {
-                viewModel.selectAdjustment(.photoFilter)
-            }
-            Button(ImageEditorAdjustment.colorLookup.title) {
-                viewModel.selectAdjustment(.colorLookup)
-            }
-        }
-        Divider()
-        Button(L10n.text("imageEditor.action.autoLevels")) {
-            viewModel.autoLevelsSelectedLayer()
-        }
-        .keyboardShortcut("l", modifiers: [.command, .shift])
-        .disabled(!viewModel.canAutoLevelsSelectedLayer)
-        Button(L10n.text("imageEditor.action.autoContrast")) {
-            viewModel.autoContrastSelectedLayer()
-        }
-        .keyboardShortcut("l", modifiers: [.command, .shift, .option])
-        .disabled(!viewModel.canAutoContrastSelectedLayer)
-        Button(L10n.text("imageEditor.action.autoColor")) {
-            viewModel.autoColorSelectedLayer()
-        }
-        .keyboardShortcut("b", modifiers: [.command, .shift])
-        .disabled(!viewModel.canAutoColorSelectedLayer)
-        Divider()
-        Button(L10n.text("imageEditor.action.cropCenter")) {
-            viewModel.cropCenter()
-        }
-        Button(L10n.text("imageEditor.action.cropSelection")) {
-            viewModel.cropToSelection()
-        }
-        .disabled(!viewModel.canCropToSelection)
-        Button(L10n.text("imageEditor.action.trimTransparentPixels")) {
-            viewModel.trimTransparentPixels()
-        }
-        Button(L10n.text("imageEditor.action.revealAll")) {
-            viewModel.revealAllLayers()
-        }
-        .disabled(!viewModel.canRevealAllLayers)
-        Button(L10n.text("imageEditor.action.rotateClockwise")) {
-            viewModel.rotateClockwise()
-        }
-        Button(L10n.text("imageEditor.action.rotateCounterclockwise")) {
-            viewModel.rotateCounterclockwise()
-        }
-        Button(L10n.text("imageEditor.action.rotate180")) {
-            viewModel.rotate180()
-        }
-        Button(L10n.text("imageEditor.action.flipH")) {
-            viewModel.flipHorizontal()
-        }
-        Button(L10n.text("imageEditor.action.flipV")) {
-            viewModel.flipVertical()
-        }
+        XomoImageMenuItems(actions: xomoImageCommandActions)
+    }
+
+    var xomoImageCommandActions: XomoImageCommandActions {
+        XomoImageCommandActions(
+            resizeImage: { viewModel.resizeImageToControlSize() },
+            resizeCanvas: { viewModel.resizeCanvasToControlSize() },
+            selectAdjustment: { viewModel.selectAdjustment($0) },
+            desaturate: { viewModel.desaturateSelectedLayer() },
+            canDesaturate: viewModel.canDesaturateSelectedLayer,
+            invert: { viewModel.invertCurrentEditingTarget() },
+            canInvert: viewModel.canInvertCurrentEditingTarget,
+            autoLevels: { viewModel.autoLevelsSelectedLayer() },
+            canAutoLevels: viewModel.canAutoLevelsSelectedLayer,
+            autoContrast: { viewModel.autoContrastSelectedLayer() },
+            canAutoContrast: viewModel.canAutoContrastSelectedLayer,
+            autoColor: { viewModel.autoColorSelectedLayer() },
+            canAutoColor: viewModel.canAutoColorSelectedLayer,
+            cropCenter: { viewModel.cropCenter() },
+            cropToSelection: { viewModel.cropToSelection() },
+            canCropToSelection: viewModel.canCropToSelection,
+            trimTransparentPixels: { viewModel.trimTransparentPixels() },
+            revealAll: { viewModel.revealAllLayers() },
+            canRevealAll: viewModel.canRevealAllLayers,
+            rotateClockwise: { viewModel.rotateClockwise() },
+            rotateCounterclockwise: { viewModel.rotateCounterclockwise() },
+            rotate180: { viewModel.rotate180() },
+            flipHorizontal: { viewModel.flipHorizontal() },
+            flipVertical: { viewModel.flipVertical() }
+        )
     }
 
     @ViewBuilder
