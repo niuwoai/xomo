@@ -141,6 +141,51 @@ struct ImageEditorProjectSaveTests {
         #expect(recentURLs == [currentURL.standardizedFileURL])
     }
 
+    @Test func revealingProjectInFinderUsesOnlyTheSavedURLWithoutCreatingAnEditTransaction() throws {
+        let viewModel = makeViewModel(sourceName: "poster.png")
+        let destination = URL(fileURLWithPath: "/tmp/Folder/../Poster.xomoproject")
+        var revealedURLs: [[URL]] = []
+
+        #expect(!viewModel.canRevealProjectInFinder)
+        let didRevealBeforeSave = viewModel.revealProjectInFinder { revealedURLs.append($0) }
+        #expect(!didRevealBeforeSave)
+        #expect(revealedURLs.isEmpty)
+
+        let didSave = viewModel.writeProjectDocument(
+            to: destination,
+            dataWriter: { _, _ in },
+            recentDocumentRegistrar: { _ in }
+        )
+        #expect(didSave)
+        viewModel.renameSelectedLayer(to: "Dirty Layer")
+        let projectDataBeforeReveal = try viewModel.projectData()
+        let historyBeforeReveal = viewModel.document.history
+        let undoCountBeforeReveal = viewModel.undoStack.count
+        let redoCountBeforeReveal = viewModel.redoStack.count
+        #expect(viewModel.hasUnsavedProjectChanges)
+
+        #expect(viewModel.canRevealProjectInFinder)
+        let didRevealSavedProject = viewModel.revealProjectInFinder { revealedURLs.append($0) }
+        #expect(didRevealSavedProject)
+        #expect(revealedURLs == [[destination.standardizedFileURL]])
+        #expect(try viewModel.projectData() == projectDataBeforeReveal)
+        #expect(viewModel.document.history == historyBeforeReveal)
+        #expect(viewModel.undoStack.count == undoCountBeforeReveal)
+        #expect(viewModel.redoStack.count == redoCountBeforeReveal)
+        #expect(viewModel.hasUnsavedProjectChanges)
+
+        viewModel.loadExternalImageDocument(
+            ImageEditorDocument(
+                sourceName: "replacement.png",
+                image: NSImage.transparent(size: CGSize(width: 8, height: 6))
+            )
+        )
+        #expect(!viewModel.canRevealProjectInFinder)
+        let didRevealReplacement = viewModel.revealProjectInFinder { revealedURLs.append($0) }
+        #expect(!didRevealReplacement)
+        #expect(revealedURLs.count == 1)
+    }
+
     @Test func fileMenuWiresSaveAndSaveAsWithClassicShortcutsAndLocalizedTitles() throws {
         let root = Self.repositoryRoot()
         let commands = try String(
@@ -160,6 +205,9 @@ struct ImageEditorProjectSaveTests {
         #expect(commands.contains(".keyboardShortcut(\"s\", modifiers: [.command, .shift])"))
         #expect(menuBar.contains("saveProject: { viewModel.saveProjectDocument() }"))
         #expect(menuBar.contains("saveProjectAs: { viewModel.saveProjectDocumentAs() }"))
+        #expect(menuBar.contains("revealProjectInFinder: { viewModel.revealProjectInFinder() }"))
+        #expect(commands.contains("actions?.revealProjectInFinder()"))
+        #expect(commands.contains("actions?.canRevealProjectInFinder != true"))
         #expect(project.contains("guard let currentProjectURL else"))
         #expect(project.contains("writeProjectDocument(to: currentProjectURL)"))
 
@@ -171,6 +219,7 @@ struct ImageEditorProjectSaveTests {
                 encoding: .utf8
             )
             #expect(strings.contains("\"imageEditor.action.projectSaveAs\" ="))
+            #expect(strings.contains("\"imageEditor.action.projectRevealInFinder\" ="))
         }
     }
 

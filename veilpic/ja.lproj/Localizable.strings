@@ -483,6 +483,7 @@
 "imageEditor.action.projectSave" = "プロジェクトを保存";
 "imageEditor.action.projectSaveAs" = "プロジェクトを別名で保存…";
 "imageEditor.action.projectRevert" = "保存済みバージョンに戻す…";
+"imageEditor.action.projectRevealInFinder" = "プロジェクトを Finder に表示";
 "imageEditor.action.projectRevertConfirm" = "戻す";
 "imageEditor.action.closeSave" = "保存";
 "imageEditor.action.closeDiscard" = "保存しない";

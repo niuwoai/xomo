@@ -483,6 +483,7 @@
 "imageEditor.action.projectSave" = "Save Project";
 "imageEditor.action.projectSaveAs" = "Save Project As…";
 "imageEditor.action.projectRevert" = "Revert to Saved…";
+"imageEditor.action.projectRevealInFinder" = "Show Project in Finder";
 "imageEditor.action.projectRevertConfirm" = "Revert";
 "imageEditor.action.closeSave" = "Save";
 "imageEditor.action.closeDiscard" = "Don't Save";

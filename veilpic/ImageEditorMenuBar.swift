@@ -75,6 +75,8 @@ extension ImageEditorView {
             saveProjectAs: { viewModel.saveProjectDocumentAs() },
             revertProject: { viewModel.presentProjectRevertConfirmation() },
             canRevertProject: viewModel.canRevertProjectDocument,
+            revealProjectInFinder: { viewModel.revealProjectInFinder() },
+            canRevealProjectInFinder: viewModel.canRevealProjectInFinder,
             showPSDCompatibilityReport: {
                 viewModel.isPSDCompatibilityReportPresented = true
             },

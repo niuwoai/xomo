@@ -483,6 +483,7 @@
 "imageEditor.action.projectSave" = "保存项目";
 "imageEditor.action.projectSaveAs" = "项目另存为…";
 "imageEditor.action.projectRevert" = "恢复到已保存版本…";
+"imageEditor.action.projectRevealInFinder" = "在 Finder 中显示项目";
 "imageEditor.action.projectRevertConfirm" = "恢复";
 "imageEditor.action.closeSave" = "保存";
 "imageEditor.action.closeDiscard" = "不保存";

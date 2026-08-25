@@ -1363,6 +1363,21 @@ extension ImageEditorViewModel {
         currentProjectURL != nil
     }
 
+    var canRevealProjectInFinder: Bool {
+        currentProjectURL != nil
+    }
+
+    @discardableResult
+    func revealProjectInFinder(
+        fileRevealer: @MainActor ([URL]) -> Void = {
+            NSWorkspace.shared.activateFileViewerSelecting($0)
+        }
+    ) -> Bool {
+        guard let currentProjectURL else { return false }
+        fileRevealer([currentProjectURL])
+        return true
+    }
+
     func resetProjectSaveBaseline() {
         updateProjectSaveBaseline(try? projectData())
     }

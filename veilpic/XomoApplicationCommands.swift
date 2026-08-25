@@ -19,6 +19,8 @@ struct XomoFileCommandActions {
     let saveProjectAs: () -> Void
     let revertProject: () -> Void
     let canRevertProject: Bool
+    let revealProjectInFinder: () -> Void
+    let canRevealProjectInFinder: Bool
     let showPSDCompatibilityReport: () -> Void
     let canShowPSDCompatibilityReport: Bool
     let importFile: () -> Void
@@ -47,6 +49,7 @@ enum XomoFileMenuItem: CaseIterable, Hashable {
     case saveProject
     case saveProjectAs
     case revertProject
+    case revealProjectInFinder
     case psdCompatibilityReport
     case importExportDivider
     case importFile
@@ -683,6 +686,11 @@ struct XomoFileMenuItems: View {
                 actions?.revertProject()
             }
             .disabled(actions?.canRevertProject != true)
+        case .revealProjectInFinder:
+            Button(L10n.text("imageEditor.action.projectRevealInFinder")) {
+                actions?.revealProjectInFinder()
+            }
+            .disabled(actions?.canRevealProjectInFinder != true)
         case .psdCompatibilityReport:
             Button(L10n.text("imageEditor.action.psdCompatibilityReport")) {
                 actions?.showPSDCompatibilityReport()
