@@ -428,6 +428,10 @@ extension ImageEditorView {
             viewModel.chooseSmartObjectReplacementFile()
         }
         .disabled(!viewModel.canReplaceSelectedSmartObjectContents)
+        Button(L10n.text("imageEditor.action.smartObjectSourcePNGExport")) {
+            viewModel.chooseSmartObjectSourcePNGDestination()
+        }
+        .disabled(!viewModel.canExportSelectedSmartObjectSourcePNG)
         Button(L10n.text("imageEditor.action.layerSmartObjectMakeUnique")) {
             viewModel.makeSelectedSmartObjectUnique()
         }

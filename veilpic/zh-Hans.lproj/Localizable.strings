@@ -2328,6 +2328,9 @@
 "imageEditor.status.editableSVGImportFailed" = "SVG 必须只包含一个受支持的路径、直线、折线、多边形、矩形、圆或椭圆；不支持的变换、脚本、外部资源或选择器会被拒绝";
 "imageEditor.status.layerSmartObject" = "已转换为智能对象";
 "imageEditor.status.layerSmartObjectCreatedViaCopy" = "已通过拷贝新建独立智能对象";
+"imageEditor.status.smartObjectSourcePNGExported" = "已导出智能对象源像素：%@";
+"imageEditor.status.smartObjectSourcePNGExportFailed" = "无法导出智能对象源像素 PNG";
+"imageEditor.status.smartObjectSourcePNGExportFailedWithReason" = "导出智能对象源像素失败：%@";
 "imageEditor.status.layerSmartObjectReplaced" = "已替换智能对象内容：%@";
 "imageEditor.status.layerSmartObjectInstancesReplaced" = "已替换 %d 个智能对象实例内容：%@";
 "imageEditor.status.layerSmartObjectReplaceFailed" = "替换智能对象内容失败";
@@ -2767,6 +2770,7 @@
 "imageEditor.action.layerSmartObject" = "转换为智能对象";
 "imageEditor.action.layerSmartObjectViaCopy" = "通过拷贝新建智能对象";
 "imageEditor.action.layerSmartObjectReplace" = "替换智能对象内容";
+"imageEditor.action.smartObjectSourcePNGExport" = "导出智能对象源像素 PNG…";
 "imageEditor.action.layerSmartObjectMakeUnique" = "让智能对象实例独立";
 "imageEditor.action.layerSmartObjectResetTransform" = "重置智能对象变换";
 "imageEditor.action.layerRasterize" = "栅格化";

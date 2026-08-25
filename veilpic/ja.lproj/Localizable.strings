@@ -2328,6 +2328,9 @@
 "imageEditor.status.editableSVGImportFailed" = "SVG には対応済みのパス、直線、折れ線、多角形、長方形、円または楕円を 1 つだけ含めてください。未対応の変形、スクリプト、外部リソース、セレクターは拒否されます";
 "imageEditor.status.layerSmartObject" = "スマートオブジェクトに変換しました";
 "imageEditor.status.layerSmartObjectCreatedViaCopy" = "コピーして独立したスマートオブジェクトを作成しました";
+"imageEditor.status.smartObjectSourcePNGExported" = "スマートオブジェクトのソースピクセルを書き出しました：%@";
+"imageEditor.status.smartObjectSourcePNGExportFailed" = "スマートオブジェクトのソースピクセルを PNG で書き出せませんでした";
+"imageEditor.status.smartObjectSourcePNGExportFailedWithReason" = "スマートオブジェクトのソースピクセルの書き出しに失敗しました：%@";
 "imageEditor.status.layerSmartObjectReplaced" = "スマートオブジェクトの内容を置換しました：%@";
 "imageEditor.status.layerSmartObjectInstancesReplaced" = "%d 個のスマートオブジェクトインスタンスの内容を置換しました：%@";
 "imageEditor.status.layerSmartObjectReplaceFailed" = "スマートオブジェクトの内容を置換できませんでした";
@@ -2767,6 +2770,7 @@
 "imageEditor.action.layerSmartObject" = "スマートオブジェクトに変換";
 "imageEditor.action.layerSmartObjectViaCopy" = "コピーして新規スマートオブジェクト";
 "imageEditor.action.layerSmartObjectReplace" = "スマートオブジェクトの内容を置換";
+"imageEditor.action.smartObjectSourcePNGExport" = "スマートオブジェクトのソースピクセルを PNG で書き出す…";
 "imageEditor.action.layerSmartObjectMakeUnique" = "スマートオブジェクトを独立化";
 "imageEditor.action.layerSmartObjectResetTransform" = "スマートオブジェクトの変形をリセット";
 "imageEditor.action.layerRasterize" = "ラスタライズ";

@@ -2328,6 +2328,9 @@
 "imageEditor.status.editableSVGImportFailed" = "SVG must contain one supported path, line, polyline, polygon, rectangle, circle, or ellipse; unsupported transforms, scripts, external resources, or selectors are rejected";
 "imageEditor.status.layerSmartObject" = "Converted to Smart Object";
 "imageEditor.status.layerSmartObjectCreatedViaCopy" = "Created an independent Smart Object via copy";
+"imageEditor.status.smartObjectSourcePNGExported" = "Exported Smart Object source pixels: %@";
+"imageEditor.status.smartObjectSourcePNGExportFailed" = "Could not export Smart Object source pixels as PNG";
+"imageEditor.status.smartObjectSourcePNGExportFailedWithReason" = "Failed to export Smart Object source pixels: %@";
 "imageEditor.status.layerSmartObjectReplaced" = "Replaced Smart Object contents: %@";
 "imageEditor.status.layerSmartObjectInstancesReplaced" = "Replaced contents for %d Smart Object instances: %@";
 "imageEditor.status.layerSmartObjectReplaceFailed" = "Failed to replace Smart Object contents";
@@ -2767,6 +2770,7 @@
 "imageEditor.action.layerSmartObject" = "Convert to Smart Object";
 "imageEditor.action.layerSmartObjectViaCopy" = "New Smart Object via Copy";
 "imageEditor.action.layerSmartObjectReplace" = "Replace Smart Object Contents";
+"imageEditor.action.smartObjectSourcePNGExport" = "Export Smart Object Source Pixels as PNG…";
 "imageEditor.action.layerSmartObjectMakeUnique" = "Make Smart Objects Unique";
 "imageEditor.action.layerSmartObjectResetTransform" = "Reset Smart Object Transform";
 "imageEditor.action.layerRasterize" = "Rasterize";
