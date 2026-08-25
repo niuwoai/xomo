@@ -162,151 +162,72 @@ extension ImageEditorView {
         )
     }
 
-    private var canPresentSelectionFillPanel: Bool {
-        guard case .tool = viewModel.workspaceInputMode else { return false }
-        return viewModel.canFillCurrentEditingTarget
-    }
-
     @ViewBuilder
     private var editMenu: some View {
-        Button(L10n.text("imageEditor.action.undo")) {
-            performUndo()
-        }
-        .keyboardShortcut("z", modifiers: [.command])
-        .disabled(!viewModel.canUndo)
-        Button(L10n.text("imageEditor.action.redo")) {
-            performRedo()
-        }
-        .keyboardShortcut("z", modifiers: [.command, .shift])
-        .disabled(!viewModel.canRedo)
-        Divider()
-        historySnapshotMenu
-        Button(L10n.text("imageEditor.action.historyClear")) {
-            viewModel.clearHistoryStates()
-        }
-        Divider()
-        Button(L10n.text("imageEditor.action.cutSelectionClipboard")) {
-            viewModel.cutSelectionToClipboard()
-        }
-        .keyboardShortcut("x", modifiers: [.command])
-        .disabled(!viewModel.canCutSelectionToClipboard)
-        Button(L10n.text("imageEditor.action.copySelectionClipboard")) {
-            viewModel.copySelectionToClipboard()
-        }
-        .keyboardShortcut("c", modifiers: [.command])
-        .disabled(!viewModel.canCopySelectionToClipboard)
-        Button(L10n.text("imageEditor.action.copyMergedClipboard")) {
-            viewModel.copyMergedToClipboard()
-        }
-        .keyboardShortcut("c", modifiers: [.command, .shift])
-        .disabled(!viewModel.canCopyMergedToClipboard)
-        Button(L10n.text("imageEditor.action.copySelectedLayersClipboard")) {
-            viewModel.copySelectedLayersToClipboard()
-        }
-        .keyboardShortcut("c", modifiers: [.command, .option, .shift])
-        .disabled(!viewModel.canCopySelectedLayersToClipboard)
-        Button(L10n.text("imageEditor.action.pasteClipboardLayer")) {
-            viewModel.pasteClipboardAsLayer()
-        }
-        .keyboardShortcut("v", modifiers: [.command])
-        .disabled(!viewModel.canPasteClipboardImage)
-        Button(L10n.text("imageEditor.action.pasteClipboardIntoSelection")) {
-            viewModel.pasteClipboardIntoSelectionAsLayer()
-        }
-        .keyboardShortcut("v", modifiers: [.command, .shift])
-        .disabled(!viewModel.canPasteClipboardImageIntoSelection)
-        Button(L10n.text("imageEditor.action.pasteClipboardInPlaceLayer")) {
-            viewModel.pasteClipboardInPlaceAsLayer()
-        }
-        .keyboardShortcut("v", modifiers: [.command, .option, .shift])
-        .disabled(!viewModel.canPasteClipboardImageInPlace)
-        Button(L10n.text("imageEditor.action.freeTransform")) {
-            viewModel.toggleTransformControlsVisible()
-        }
-        .keyboardShortcut("t", modifiers: [.command])
-        Divider()
-        Button(L10n.text("imageEditor.action.fillDialog")) {
-            viewModel.presentSelectionFillPanel()
-        }
-        .keyboardShortcut(KeyEquivalent("\u{F708}"), modifiers: [.shift])
-        .disabled(!canPresentSelectionFillPanel)
-        Button(L10n.text("imageEditor.action.fillSelection")) {
-            viewModel.fillSelection()
-        }
-        .keyboardShortcut(.delete, modifiers: [.option])
-        .disabled(!viewModel.canFillCurrentEditingTarget)
-        Button(L10n.text("imageEditor.action.fillSelectionBackground")) {
-            viewModel.fillSelectionWithBackgroundColor()
-        }
-        .keyboardShortcut(.delete, modifiers: [.command])
-        .disabled(!viewModel.canFillCurrentEditingTarget)
-        Button(L10n.text("imageEditor.action.fillSelectionHistory")) {
-            viewModel.fillSelectionFromHistory()
-        }
-        .keyboardShortcut(.delete, modifiers: [.command, .option])
-        .disabled(!viewModel.canFillSelectionFromHistory)
-        Button(L10n.text("imageEditor.action.contentAwareFillSelection")) {
-            viewModel.contentAwareFillSelection()
-        }
-        .disabled(!viewModel.canEditSelectionPixels)
-        Button(L10n.text("imageEditor.action.strokeSelection")) {
-            viewModel.strokeSelection()
-        }
-        .disabled(!viewModel.canEditSelectionPixels)
-        Button(L10n.text("imageEditor.action.selectionCopyLayer")) {
-            viewModel.copySelectionToNewLayer()
-        }
-        .disabled(!viewModel.canCopySelectionToNewLayer)
-        Button(L10n.text("imageEditor.action.selectionCopyMergedLayer")) {
-            viewModel.copyMergedToNewLayer()
-        }
-        .disabled(!viewModel.canCopyMergedToNewLayer)
-        Button(L10n.text("imageEditor.action.selectionCutLayer")) {
-            viewModel.cutSelectionToNewLayer()
-        }
-        .disabled(!viewModel.canCutSelectionToNewLayer)
-        Button(L10n.text("imageEditor.action.deleteSelectedObject")) {
-            deleteSelectedObjectFromKeyboard()
-        }
-        .keyboardShortcut(.delete, modifiers: [])
-        .disabled(
-            ImageEditorContextualDocumentDeletePolicy.resolve(
+        XomoEditMenuItems(actions: xomoEditCommandActions)
+    }
+
+    var xomoEditCommandActions: XomoEditCommandActions {
+        XomoEditCommandActions(
+            undo: performUndo,
+            canUndo: viewModel.canUndo,
+            redo: performRedo,
+            canRedo: viewModel.canRedo,
+            createHistorySnapshot: { viewModel.createHistorySnapshot() },
+            restoreSelectedHistorySnapshot: { viewModel.restoreSelectedHistorySnapshot() },
+            canRestoreSelectedHistorySnapshot: viewModel.canRestoreSelectedHistorySnapshot,
+            duplicateSelectedHistorySnapshot: { viewModel.duplicateSelectedHistorySnapshot() },
+            canDuplicateSelectedHistorySnapshot: viewModel.canDuplicateSelectedHistorySnapshot,
+            deleteSelectedHistorySnapshot: { viewModel.deleteSelectedHistorySnapshot() },
+            canDeleteSelectedHistorySnapshot: viewModel.canDeleteSelectedHistorySnapshot,
+            selectPreviousHistorySnapshot: { viewModel.selectPreviousHistorySnapshot() },
+            canSelectPreviousHistorySnapshot: viewModel.canSelectPreviousHistorySnapshot,
+            selectNextHistorySnapshot: { viewModel.selectNextHistorySnapshot() },
+            canSelectNextHistorySnapshot: viewModel.canSelectNextHistorySnapshot,
+            clearHistory: { viewModel.clearHistoryStates() },
+            cutSelection: { viewModel.cutSelectionToClipboard() },
+            canCutSelection: viewModel.canCutSelectionToClipboard,
+            copySelection: { viewModel.copySelectionToClipboard() },
+            canCopySelection: viewModel.canCopySelectionToClipboard,
+            copyMerged: { viewModel.copyMergedToClipboard() },
+            canCopyMerged: viewModel.canCopyMergedToClipboard,
+            copySelectedLayers: { viewModel.copySelectedLayersToClipboard() },
+            canCopySelectedLayers: viewModel.canCopySelectedLayersToClipboard,
+            pasteAsLayer: { viewModel.pasteClipboardAsLayer() },
+            canPasteAsLayer: viewModel.canPasteClipboardImage,
+            pasteIntoSelection: { viewModel.pasteClipboardIntoSelectionAsLayer() },
+            canPasteIntoSelection: viewModel.canPasteClipboardImageIntoSelection,
+            pasteInPlace: { viewModel.pasteClipboardInPlaceAsLayer() },
+            canPasteInPlace: viewModel.canPasteClipboardImageInPlace,
+            toggleFreeTransform: { viewModel.toggleTransformControlsVisible() },
+            presentFillDialog: { viewModel.presentSelectionFillPanel() },
+            canPresentFillDialog: canPresentSelectionFillPanel,
+            fillSelection: { viewModel.fillSelection() },
+            canFillSelection: viewModel.canFillCurrentEditingTarget,
+            fillSelectionWithBackground: { viewModel.fillSelectionWithBackgroundColor() },
+            fillSelectionFromHistory: { viewModel.fillSelectionFromHistory() },
+            canFillSelectionFromHistory: viewModel.canFillSelectionFromHistory,
+            contentAwareFill: { viewModel.contentAwareFillSelection() },
+            canEditSelectionPixels: viewModel.canEditSelectionPixels,
+            strokeSelection: { viewModel.strokeSelection() },
+            copySelectionToLayer: { viewModel.copySelectionToNewLayer() },
+            canCopySelectionToLayer: viewModel.canCopySelectionToNewLayer,
+            copyMergedToLayer: { viewModel.copyMergedToNewLayer() },
+            canCopyMergedToLayer: viewModel.canCopyMergedToNewLayer,
+            cutSelectionToLayer: { viewModel.cutSelectionToNewLayer() },
+            canCutSelectionToLayer: viewModel.canCutSelectionToNewLayer,
+            deleteSelectedObject: { deleteSelectedObjectFromKeyboard() },
+            canDeleteSelectedObject: ImageEditorContextualDocumentDeletePolicy.resolve(
                 hasSelection: viewModel.hasSelection,
                 canRemoveSelectionPixels: viewModel.canRemoveSelectionPixels,
                 canDeleteLayer: viewModel.canDeleteLayer
-            ) == nil
+            ) != nil
         )
     }
 
-    @ViewBuilder
-    private var historySnapshotMenu: some View {
-        Menu(L10n.text("imageEditor.menu.edit.historySnapshots")) {
-            Button(L10n.text("imageEditor.action.historySnapshotCreate")) {
-                viewModel.createHistorySnapshot()
-            }
-            Divider()
-            Button(L10n.text("imageEditor.action.historySnapshotRestoreSelected")) {
-                viewModel.restoreSelectedHistorySnapshot()
-            }
-            .disabled(!viewModel.canRestoreSelectedHistorySnapshot)
-            Button(L10n.text("imageEditor.action.historySnapshotDuplicate")) {
-                viewModel.duplicateSelectedHistorySnapshot()
-            }
-            .disabled(!viewModel.canDuplicateSelectedHistorySnapshot)
-            Button(L10n.text("imageEditor.action.historySnapshotDeleteSelected")) {
-                viewModel.deleteSelectedHistorySnapshot()
-            }
-            .disabled(!viewModel.canDeleteSelectedHistorySnapshot)
-            Divider()
-            Button(L10n.text("imageEditor.action.historySnapshotPrevious")) {
-                viewModel.selectPreviousHistorySnapshot()
-            }
-            .disabled(!viewModel.canSelectPreviousHistorySnapshot)
-            Button(L10n.text("imageEditor.action.historySnapshotNext")) {
-                viewModel.selectNextHistorySnapshot()
-            }
-            .disabled(!viewModel.canSelectNextHistorySnapshot)
-        }
+    private var canPresentSelectionFillPanel: Bool {
+        guard case .tool = viewModel.workspaceInputMode else { return false }
+        return viewModel.canFillCurrentEditingTarget
     }
 
     @ViewBuilder

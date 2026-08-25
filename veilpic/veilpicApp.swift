@@ -23,6 +23,7 @@ struct veilpicApp: App {
         .commands {
             SomeIMUpdateCommands()
             XomoFileCommands()
+            XomoEditCommands()
 
             CommandGroup(replacing: .appInfo) {
                 Button(L10n.text("about.menuItem")) {

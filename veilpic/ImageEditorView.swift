@@ -610,6 +610,7 @@ struct ImageEditorView: View {
             XomoFigmaLinkImportSheet(viewModel: viewModel)
         }
         .focusedSceneValue(\.xomoFileCommandActions, xomoFileCommandActions)
+        .focusedSceneValue(\.xomoEditCommandActions, xomoEditCommandActions)
     }
 
     @ViewBuilder

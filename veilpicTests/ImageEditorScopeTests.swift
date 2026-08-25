@@ -2155,53 +2155,56 @@ struct ImageEditorScopeTests {
     }
 
     @Test func editMenuExposesClassicEditingShortcuts() throws {
-        let source = try String(
+        let menuBarSource = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),
             encoding: .utf8
         )
-        let editMenuStart = try #require(source.range(of: "private var editMenu: some View"))
-        let nextMenuStart = try #require(
-            source[editMenuStart.upperBound...].range(of: "private var historySnapshotMenu: some View")
+        let commandsSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/XomoApplicationCommands.swift"),
+            encoding: .utf8
         )
-        let editMenuSource = source[editMenuStart.lowerBound..<nextMenuStart.lowerBound]
+        let appSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/veilpicApp.swift"),
+            encoding: .utf8
+        )
+        let viewSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let sharedMenuStart = try #require(
+            commandsSource.range(of: "struct XomoEditMenuItems: View")
+        )
+        let sharedMenuEnd = try #require(
+            commandsSource[sharedMenuStart.upperBound...].range(of: "struct XomoFileMenuItems: View")
+        )
+        let editMenuSource = commandsSource[sharedMenuStart.lowerBound..<sharedMenuEnd.lowerBound]
 
-        #expect(editMenuSource.contains("performUndo()"))
         #expect(editMenuSource.contains(".keyboardShortcut(\"z\", modifiers: [.command])"))
-        #expect(editMenuSource.contains("performRedo()"))
         #expect(editMenuSource.contains(".keyboardShortcut(\"z\", modifiers: [.command, .shift])"))
-        #expect(editMenuSource.contains("viewModel.copySelectionToClipboard()"))
         #expect(editMenuSource.contains(".keyboardShortcut(\"c\", modifiers: [.command])"))
-        #expect(editMenuSource.contains("viewModel.copyMergedToClipboard()"))
         #expect(editMenuSource.contains(".keyboardShortcut(\"c\", modifiers: [.command, .shift])"))
-        #expect(editMenuSource.contains("viewModel.copySelectedLayersToClipboard()"))
         #expect(editMenuSource.contains(".keyboardShortcut(\"c\", modifiers: [.command, .option, .shift])"))
-        #expect(editMenuSource.contains("viewModel.canCopySelectedLayersToClipboard"))
-        #expect(editMenuSource.contains("viewModel.pasteClipboardAsLayer()"))
         #expect(editMenuSource.contains(".keyboardShortcut(\"v\", modifiers: [.command])"))
-        #expect(editMenuSource.contains("viewModel.pasteClipboardIntoSelectionAsLayer()"))
         #expect(editMenuSource.contains(".keyboardShortcut(\"v\", modifiers: [.command, .shift])"))
         #expect(editMenuSource.contains("imageEditor.action.freeTransform"))
-        #expect(editMenuSource.contains("viewModel.toggleTransformControlsVisible()"))
         #expect(editMenuSource.contains(".keyboardShortcut(\"t\", modifiers: [.command])"))
-        #expect(editMenuSource.contains("viewModel.cutSelectionToClipboard()"))
         #expect(editMenuSource.contains(".keyboardShortcut(\"x\", modifiers: [.command])"))
-        #expect(editMenuSource.contains("viewModel.canCutSelectionToClipboard"))
         #expect(editMenuSource.contains("imageEditor.action.fillDialog"))
-        #expect(editMenuSource.contains("viewModel.presentSelectionFillPanel()"))
         #expect(editMenuSource.contains("KeyEquivalent(\"\\u{F708}\")"))
-        #expect(editMenuSource.contains("viewModel.fillSelection()"))
         #expect(editMenuSource.contains(".keyboardShortcut(.delete, modifiers: [.option])"))
-        #expect(editMenuSource.contains("viewModel.fillSelectionWithBackgroundColor()"))
         #expect(editMenuSource.contains(".keyboardShortcut(.delete, modifiers: [.command])"))
-        #expect(
-            String(editMenuSource).components(
-                separatedBy: ".disabled(!viewModel.canFillCurrentEditingTarget)"
-            ).count - 1 == 2
-        )
         #expect(editMenuSource.contains("imageEditor.action.deleteSelectedObject"))
-        #expect(editMenuSource.contains("deleteSelectedObjectFromKeyboard()"))
-        #expect(editMenuSource.contains("ImageEditorContextualDocumentDeletePolicy.resolve("))
         #expect(editMenuSource.contains(".keyboardShortcut(.delete, modifiers: [])"))
+        #expect(commandsSource.contains("CommandGroup(replacing: .undoRedo)"))
+        #expect(commandsSource.contains("CommandGroup(replacing: .pasteboard)"))
+        #expect(commandsSource.contains("CommandGroup(replacing: .textEditing)"))
+        #expect(commandsSource.contains("CommandGroup(replacing: .textFormatting)"))
+        #expect(commandsSource.contains("XomoEditMenuItems(actions: actions)"))
+        #expect(menuBarSource.contains("XomoEditMenuItems(actions: xomoEditCommandActions)"))
+        #expect(menuBarSource.contains("deleteSelectedObject: { deleteSelectedObjectFromKeyboard() }"))
+        #expect(menuBarSource.contains("ImageEditorContextualDocumentDeletePolicy.resolve("))
+        #expect(appSource.contains("XomoEditCommands()"))
+        #expect(viewSource.contains(".focusedSceneValue(\\.xomoEditCommandActions, xomoEditCommandActions)"))
     }
 
     @Test func fillDialogWiresNativePatternContentAndCanvasAlignment() throws {
