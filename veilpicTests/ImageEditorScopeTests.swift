@@ -2231,8 +2231,28 @@ struct ImageEditorScopeTests {
         #expect(commandsSource.contains("XomoImageMenuItems(actions: actions)"))
         #expect(menuBarSource.contains("var xomoImageCommandActions: XomoImageCommandActions"))
         #expect(menuBarSource.contains("selectAdjustment: { viewModel.selectAdjustment($0) }"))
+        #expect(menuBarSource.contains("desaturate: { performPixelCorrectionCommand(.desaturate) }"))
+        #expect(menuBarSource.contains("invert: { performPixelCorrectionCommand(.invert) }"))
+        #expect(menuBarSource.contains("autoLevels: { performPixelCorrectionCommand(.autoLevels) }"))
+        #expect(menuBarSource.contains("autoContrast: { performPixelCorrectionCommand(.autoContrast) }"))
+        #expect(menuBarSource.contains("autoColor: { performPixelCorrectionCommand(.autoColor) }"))
         #expect(appSource.contains("XomoImageCommands()"))
         #expect(viewSource.contains(".focusedSceneValue(\\.xomoImageCommandActions, xomoImageCommandActions)"))
+        let helperStart = try #require(viewSource.range(of: "func performPixelCorrectionCommand("))
+        let helperEnd = try #require(
+            viewSource[helperStart.upperBound...].range(of: "\n    }")
+        )
+        let helperSource = viewSource[helperStart.lowerBound..<helperEnd.upperBound]
+        let gate = try #require(
+            helperSource.range(of: "ImageEditorPixelCorrectionCommandDispatchGate.shouldDispatch")
+        )
+        let inversion = try #require(helperSource.range(of: "viewModel.invertCurrentEditingTarget()"))
+        #expect(gate.lowerBound < inversion.lowerBound)
+        #expect(viewSource.contains("case .desaturate: performPixelCorrectionCommand(.desaturate)"))
+        #expect(viewSource.contains("case .invertPixels: performPixelCorrectionCommand(.invert)"))
+        #expect(viewSource.contains("case .autoLevels: performPixelCorrectionCommand(.autoLevels)"))
+        #expect(viewSource.contains("case .autoContrast: performPixelCorrectionCommand(.autoContrast)"))
+        #expect(viewSource.contains("case .autoColor: performPixelCorrectionCommand(.autoColor)"))
     }
 
     @Test func systemAndEditorFilterMenusShareOneFocusedCommandTree() throws {

@@ -3265,11 +3265,11 @@ struct ImageEditorView: View {
         case .hueSaturation: viewModel.selectAdjustment(.hueSaturation)
         case .toneRange(let range): viewModel.applyToneRangeShortcut(range)
         case .spongeMode(let mode): viewModel.applySpongeModeShortcut(mode)
-        case .desaturate: viewModel.desaturateSelectedLayer()
-        case .invertPixels: viewModel.invertCurrentEditingTarget()
-        case .autoLevels: viewModel.autoLevelsSelectedLayer()
-        case .autoContrast: viewModel.autoContrastSelectedLayer()
-        case .autoColor: viewModel.autoColorSelectedLayer()
+        case .desaturate: performPixelCorrectionCommand(.desaturate)
+        case .invertPixels: performPixelCorrectionCommand(.invert)
+        case .autoLevels: performPixelCorrectionCommand(.autoLevels)
+        case .autoContrast: performPixelCorrectionCommand(.autoContrast)
+        case .autoColor: performPixelCorrectionCommand(.autoColor)
         case .newLayer: performNewLayer()
         case .duplicateSelectionOrLayer: viewModel.duplicateSelectionOrSelectedLayer()
         case .cutSelectionToLayer: viewModel.cutSelectionToNewLayer()
@@ -3428,6 +3428,20 @@ struct ImageEditorView: View {
         case .clear: viewModel.clearSelection()
         case .reselect: viewModel.reselectSelection()
         case .invert: viewModel.invertSelection()
+        }
+    }
+
+    func performPixelCorrectionCommand(_ action: ImageEditorPixelCorrectionCommandAction) {
+        guard ImageEditorPixelCorrectionCommandDispatchGate.shouldDispatch(
+            action,
+            event: .currentKeyEvent
+        ) else { return }
+        switch action {
+        case .desaturate: viewModel.desaturateSelectedLayer()
+        case .invert: viewModel.invertCurrentEditingTarget()
+        case .autoLevels: viewModel.autoLevelsSelectedLayer()
+        case .autoContrast: viewModel.autoContrastSelectedLayer()
+        case .autoColor: viewModel.autoColorSelectedLayer()
         }
     }
 
@@ -17312,6 +17326,39 @@ enum ImageEditorSelectionCommandDispatchGate {
 
     static func shouldDispatch(
         _ action: ImageEditorSelectionCommandAction,
+        event: ImageEditorKeyboardShortcutEventSignature?
+    ) -> Bool {
+        guard let event else { return true }
+        let dispatch = Dispatch(action: action, event: event)
+        guard dispatch != lastDispatch else { return false }
+        lastDispatch = dispatch
+        return true
+    }
+
+    static func reset() {
+        lastDispatch = nil
+    }
+}
+
+enum ImageEditorPixelCorrectionCommandAction: Equatable, CaseIterable {
+    case desaturate
+    case invert
+    case autoLevels
+    case autoContrast
+    case autoColor
+}
+
+@MainActor
+enum ImageEditorPixelCorrectionCommandDispatchGate {
+    private struct Dispatch: Equatable {
+        let action: ImageEditorPixelCorrectionCommandAction
+        let event: ImageEditorKeyboardShortcutEventSignature
+    }
+
+    private static var lastDispatch: Dispatch?
+
+    static func shouldDispatch(
+        _ action: ImageEditorPixelCorrectionCommandAction,
         event: ImageEditorKeyboardShortcutEventSignature?
     ) -> Bool {
         guard let event else { return true }

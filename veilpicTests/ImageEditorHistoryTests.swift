@@ -12,6 +12,44 @@ import Testing
 @MainActor
 @Suite(.serialized)
 struct ImageEditorHistoryTests {
+    @Test func onePhysicalPixelInvertShortcutCommitsOnlyOneCorrection() throws {
+        ImageEditorPixelCorrectionCommandDispatchGate.reset()
+        defer { ImageEditorPixelCorrectionCommandDispatchGate.reset() }
+
+        let image = testImage(color: .systemRed, size: NSSize(width: 24, height: 18))
+        let viewModel = ImageEditorViewModel(sourceName: "invert.png", image: image) { _ in }
+        viewModel.convertBackgroundToLayer()
+        let historyCount = viewModel.document.history.count
+        let event = ImageEditorKeyboardShortcutEventSignature(
+            windowNumber: 29,
+            eventNumber: 941,
+            timestamp: 94.1,
+            typeRawValue: NSEvent.EventType.keyDown.rawValue,
+            keyCode: 34
+        )
+
+        for _ in 0..<2 {
+            guard ImageEditorPixelCorrectionCommandDispatchGate.shouldDispatch(
+                .invert,
+                event: event
+            ) else { continue }
+            #expect(viewModel.invertCurrentEditingTarget())
+        }
+
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.invert"))
+    }
+
+    @Test func pixelCorrectionMouseMenuBoundariesRemainIndependentWithoutAKeyEvent() {
+        ImageEditorPixelCorrectionCommandDispatchGate.reset()
+        defer { ImageEditorPixelCorrectionCommandDispatchGate.reset() }
+
+        for action in ImageEditorPixelCorrectionCommandAction.allCases {
+            #expect(ImageEditorPixelCorrectionCommandDispatchGate.shouldDispatch(action, event: nil))
+            #expect(ImageEditorPixelCorrectionCommandDispatchGate.shouldDispatch(action, event: nil))
+        }
+    }
+
     @Test func onePhysicalSelectionInvertShortcutCommitsOnlyOneInversion() throws {
         ImageEditorSelectionCommandDispatchGate.reset()
         defer { ImageEditorSelectionCommandDispatchGate.reset() }

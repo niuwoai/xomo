@@ -615,7 +615,7 @@ struct ImageEditorLayerThumbnailSelectionTests {
         #expect(viewSource.contains("viewModel.canvasMaskOverlayImage"))
         #expect(viewSource.contains("canToggleLayerMaskRubylith: viewModel.canToggleSelectedLayerMaskRubylithPreview"))
         #expect(viewSource.contains("case .toggleLayerMaskRubylith: viewModel.toggleSelectedLayerMaskRubylithPreview()"))
-        #expect(viewSource.contains("case .invertPixels: viewModel.invertCurrentEditingTarget()"))
+        #expect(viewSource.contains("case .invertPixels: performPixelCorrectionCommand(.invert)"))
     }
 
     private func installSplitAlphaMask(
