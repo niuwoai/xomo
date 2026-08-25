@@ -104,6 +104,8 @@ extension ImageEditorView {
                 viewModel.openExportPanel()
             },
             canExportSelectedLayers: viewModel.selectedLayersExportScope != nil,
+            printDocument: { viewModel.printCompositedCanvas() },
+            canPrintDocument: viewModel.canPrintCompositedCanvas,
             apply: {
                 viewModel.applyAndClose {
                     closeWindow()

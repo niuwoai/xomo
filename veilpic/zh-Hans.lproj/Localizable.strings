@@ -481,6 +481,10 @@
 "imageEditor.action.copySelectedLayersAsSVG" = "复制所选内容为 SVG";
 "imageEditor.status.copySelectedLayersAsSVG" = "已将所选矢量内容复制为 SVG";
 "imageEditor.status.copySelectedLayersAsSVGFailed" = "所选内容无法复制为可编辑 SVG";
+"imageEditor.action.printDocument" = "打印…";
+"imageEditor.status.printCompleted" = "打印任务已完成";
+"imageEditor.status.printCancelled" = "已取消打印";
+"imageEditor.status.printFailed" = "无法打印当前画布";
 "imageEditor.action.applySelection" = "应用选区";
 "imageEditor.action.projectOpen" = "打开文件…";
 "imageEditor.action.openRecent" = "打开最近使用";

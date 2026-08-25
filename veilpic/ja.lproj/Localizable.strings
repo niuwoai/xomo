@@ -481,6 +481,10 @@
 "imageEditor.action.copySelectedLayersAsSVG" = "選択内容を SVG としてコピー";
 "imageEditor.status.copySelectedLayersAsSVG" = "選択したベクター内容を SVG としてコピーしました";
 "imageEditor.status.copySelectedLayersAsSVGFailed" = "選択内容を編集可能な SVG としてコピーできません";
+"imageEditor.action.printDocument" = "プリント…";
+"imageEditor.status.printCompleted" = "プリントジョブが完了しました";
+"imageEditor.status.printCancelled" = "プリントをキャンセルしました";
+"imageEditor.status.printFailed" = "現在のキャンバスをプリントできません";
 "imageEditor.action.applySelection" = "選択範囲を適用";
 "imageEditor.action.projectOpen" = "ファイルを開く…";
 "imageEditor.action.openRecent" = "最近使ったファイルを開く";

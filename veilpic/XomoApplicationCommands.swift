@@ -39,6 +39,8 @@ struct XomoFileCommandActions {
     let canExportHotspotHTML: Bool
     let exportSelectedLayers: () -> Void
     let canExportSelectedLayers: Bool
+    let printDocument: () -> Void
+    let canPrintDocument: Bool
     let apply: () -> Void
     let cancel: () -> Void
 }
@@ -65,6 +67,7 @@ enum XomoFileMenuItem: CaseIterable, Hashable {
     case createHotspot
     case exportHotspotHTML
     case exportSelectedLayers
+    case printDocument
     case completionDivider
     case apply
     case cancel
@@ -776,6 +779,12 @@ struct XomoFileMenuItems: View {
             }
             .keyboardShortcut("l", modifiers: [.command, .option])
             .disabled(actions?.canExportSelectedLayers != true)
+        case .printDocument:
+            Button(L10n.text("imageEditor.action.printDocument")) {
+                actions?.printDocument()
+            }
+            .keyboardShortcut("p", modifiers: [.command])
+            .disabled(actions?.canPrintDocument != true)
         case .apply:
             Button(L10n.text("imageEditor.action.apply")) {
                 actions?.apply()
