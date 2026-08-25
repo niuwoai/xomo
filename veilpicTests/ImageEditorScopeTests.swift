@@ -3651,7 +3651,7 @@ struct ImageEditorScopeTests {
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),
             encoding: .utf8
         )
-        let windowMenuStart = try #require(source.range(of: "private var windowMenu: some View"))
+        let windowMenuStart = try #require(source.range(of: "private var windowMenuItems: some View"))
         let nextMenuStart = try #require(
             source[windowMenuStart.upperBound...].range(of: "private var toolsActionsMenu: some View")
         )
@@ -3672,6 +3672,33 @@ struct ImageEditorScopeTests {
         #expect(windowMenuSource.contains("imageEditor.action.statusBarHide"))
         #expect(windowMenuSource.contains("imageEditor.action.statusBarShow"))
         #expect(windowMenuSource.contains("viewModel.toggleStatusBarVisibility()"))
+    }
+
+    @Test func systemWindowMenuExtendsNativeCommandsWithTheSharedEditorTree() throws {
+        let menuBarSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),
+            encoding: .utf8
+        )
+        let commandsSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/XomoApplicationCommands.swift"),
+            encoding: .utf8
+        )
+        let appSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/veilpicApp.swift"),
+            encoding: .utf8
+        )
+        let viewSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(commandsSource.contains("@FocusedValue(\\.xomoWindowCommandContent)"))
+        #expect(commandsSource.contains("CommandGroup(after: .windowArrangement)"))
+        #expect(!commandsSource.contains("CommandMenu(L10n.text(\"imageEditor.menu.window\"))"))
+        #expect(menuBarSource.contains("content: xomoWindowCommandContent,"))
+        #expect(menuBarSource.contains("XomoFocusedMenuContent(menuItems: AnyView(windowMenuItems))"))
+        #expect(appSource.contains("XomoWindowCommands()"))
+        #expect(viewSource.contains(".focusedSceneValue(\\.xomoWindowCommandContent, xomoWindowCommandContent)"))
     }
 
     @Test func topMenusExposeOneNonFocusableAccessibilityElementEach() throws {

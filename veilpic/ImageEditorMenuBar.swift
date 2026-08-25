@@ -1608,6 +1608,18 @@ extension ImageEditorView {
 
     @ViewBuilder
     private var windowMenu: some View {
+        XomoFocusedMenuItems(
+            content: xomoWindowCommandContent,
+            emptyActionTitleKey: "imageEditor.action.workspaceResetDefault"
+        )
+    }
+
+    var xomoWindowCommandContent: XomoFocusedMenuContent {
+        XomoFocusedMenuContent(menuItems: AnyView(windowMenuItems))
+    }
+
+    @ViewBuilder
+    private var windowMenuItems: some View {
         Button(L10n.text("imageEditor.action.workspaceResetDefault")) {
             viewModel.resetDefaultWorkspace()
             selectedLayerPanelTab = .layers

@@ -494,6 +494,10 @@ private struct XomoViewCommandContentKey: FocusedValueKey {
     typealias Value = XomoFocusedMenuContent
 }
 
+private struct XomoWindowCommandContentKey: FocusedValueKey {
+    typealias Value = XomoFocusedMenuContent
+}
+
 extension FocusedValues {
     var xomoLayerCommandContent: XomoFocusedMenuContent? {
         get { self[XomoLayerCommandContentKey.self] }
@@ -513,6 +517,11 @@ extension FocusedValues {
     var xomoViewCommandContent: XomoFocusedMenuContent? {
         get { self[XomoViewCommandContentKey.self] }
         set { self[XomoViewCommandContentKey.self] = newValue }
+    }
+
+    var xomoWindowCommandContent: XomoFocusedMenuContent? {
+        get { self[XomoWindowCommandContentKey.self] }
+        set { self[XomoWindowCommandContentKey.self] = newValue }
     }
 }
 
@@ -567,6 +576,19 @@ struct XomoViewCommands: Commands {
         }
         CommandGroup(replacing: .sidebar) {
             EmptyView()
+        }
+    }
+}
+
+struct XomoWindowCommands: Commands {
+    @FocusedValue(\.xomoWindowCommandContent) private var content
+
+    var body: some Commands {
+        CommandGroup(after: .windowArrangement) {
+            XomoFocusedMenuItems(
+                content: content,
+                emptyActionTitleKey: "imageEditor.action.workspaceResetDefault"
+            )
         }
     }
 }
