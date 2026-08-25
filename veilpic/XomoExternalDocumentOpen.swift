@@ -83,6 +83,32 @@ enum XomoExternalPSDDocumentFactory {
             image: image
         )
     }
+
+    static func compatibilityReportForFlattenedFallback(
+        parsedReport: ImageEditorPSDCompatibilityReport?,
+        image: NSImage
+    ) -> ImageEditorPSDCompatibilityReport {
+        if let parsedReport {
+            return parsedReport.addingFlattenedFallback()
+        }
+
+        // The source header could not be trusted. Report the normalized working
+        // copy instead of inventing metadata for the original PSD.
+        let normalized = image.normalizedBitmapImage()
+        return ImageEditorPSDCompatibilityReport(
+            width: max(1, Int(normalized.size.width.rounded())),
+            height: max(1, Int(normalized.size.height.rounded())),
+            bitDepth: 8,
+            colorMode: 3,
+            layerCount: 1,
+            groupCount: 0,
+            maskCount: 0,
+            compressions: [],
+            issues: [
+                ImageEditorPSDCompatibilityIssue(kind: .flattenedFallback, count: 1)
+            ]
+        )
+    }
 }
 
 enum XomoDocumentLoadingStage: Equatable {
@@ -266,7 +292,11 @@ final class XomoExternalDocumentOpenCoordinator: ObservableObject {
                     image: flattened
                 )
                 openedFlattened = true
-                compatibilityReport = compatibilityReport?.addingFlattenedFallback()
+                compatibilityReport = XomoExternalPSDDocumentFactory
+                    .compatibilityReportForFlattenedFallback(
+                        parsedReport: compatibilityReport,
+                        image: flattened
+                    )
             }
 
             try Task.checkCancellation()
