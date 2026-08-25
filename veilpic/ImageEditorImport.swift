@@ -8,6 +8,22 @@
 import AppKit
 import UniformTypeIdentifiers
 
+@MainActor
+enum ImageEditorFilePanelKeyboardFocusRestorer {
+    static func restore(to window: NSWindow?) {
+        restore(to: window, isApplicationActive: NSApp.isActive)
+    }
+
+    static func restore(
+        to window: NSWindow?,
+        isApplicationActive: Bool
+    ) {
+        guard isApplicationActive, let window, window.isVisible else { return }
+        window.makeKeyAndOrderFront(nil)
+        window.makeFirstResponder(nil)
+    }
+}
+
 nonisolated enum ImageEditorLayerFileImportKind: Equatable {
     case rasterImage
     case editableSVG
@@ -133,6 +149,7 @@ extension ImageEditorViewModel {
     }
 
     func chooseImageLayerFile() {
+        let originatingWindow = NSApp.keyWindow
         let panel = NSOpenPanel()
         panel.allowedContentTypes = [
             .png,
@@ -148,6 +165,9 @@ extension ImageEditorViewModel {
         panel.prompt = L10n.text("imageEditor.action.fileImport")
         panel.begin { [weak self] response in
             Task { @MainActor in
+                defer {
+                    ImageEditorFilePanelKeyboardFocusRestorer.restore(to: originatingWindow)
+                }
                 guard let self, response == .OK, !panel.urls.isEmpty else { return }
                 self.importLayerFiles(panel.urls)
             }
