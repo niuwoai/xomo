@@ -73,6 +73,7 @@ extension ImageEditorView {
             clearRecentDocuments: { recentDocumentStore.clear() },
             saveProject: { viewModel.saveProjectDocument() },
             saveProjectAs: { viewModel.saveProjectDocumentAs() },
+            saveProjectCopy: { viewModel.saveProjectDocumentCopy() },
             revertProject: { viewModel.presentProjectRevertConfirmation() },
             canRevertProject: viewModel.canRevertProjectDocument,
             revealProjectInFinder: { viewModel.revealProjectInFinder() },

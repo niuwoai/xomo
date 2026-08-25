@@ -82,6 +82,132 @@ struct ImageEditorProjectSaveTests {
         )
     }
 
+    @Test func savingProjectCopyPreservesCurrentIdentityBaselineAndEditTransactions() throws {
+        let viewModel = makeViewModel(sourceName: "poster.png")
+        let currentURL = URL(fileURLWithPath: "/tmp/Current.xomoproject")
+        let copyURL = URL(fileURLWithPath: "/tmp/archive/../Current Copy.xomoproject")
+        let didSaveCurrent = viewModel.writeProjectDocument(
+            to: currentURL,
+            dataWriter: { _, _ in },
+            recentDocumentRegistrar: { _ in }
+        )
+        #expect(didSaveCurrent)
+        viewModel.renameSelectedLayer(to: "Unsaved Copy Content")
+        let projectDataBeforeCopy = try viewModel.projectData()
+        let historyBeforeCopy = viewModel.document.history
+        let undoCountBeforeCopy = viewModel.undoStack.count
+        let redoCountBeforeCopy = viewModel.redoStack.count
+        var copiedData: Data?
+        var copiedURL: URL?
+
+        let didSaveCopy = viewModel.writeProjectDocumentCopy(
+            to: copyURL,
+            dataWriter: { data, url in
+                copiedData = data
+                copiedURL = url
+            }
+        )
+
+        #expect(didSaveCopy)
+        #expect(copiedData == projectDataBeforeCopy)
+        #expect(copiedURL == copyURL.standardizedFileURL)
+        #expect(viewModel.currentProjectURL == currentURL.standardizedFileURL)
+        #expect(try viewModel.projectData() == projectDataBeforeCopy)
+        #expect(viewModel.document.history == historyBeforeCopy)
+        #expect(viewModel.undoStack.count == undoCountBeforeCopy)
+        #expect(viewModel.redoStack.count == redoCountBeforeCopy)
+        #expect(viewModel.hasUnsavedProjectChanges)
+        #expect(
+            viewModel.statusText
+                == L10n.format(
+                    "imageEditor.status.projectCopySaved",
+                    copyURL.standardizedFileURL.lastPathComponent
+                )
+        )
+    }
+
+    @Test func projectCopyRejectsTheCurrentDestinationBeforeWriting() throws {
+        let viewModel = makeViewModel(sourceName: "poster.png")
+        let currentURL = URL(fileURLWithPath: "/tmp/Current.xomoproject")
+        let didSaveCurrent = viewModel.writeProjectDocument(
+            to: currentURL,
+            dataWriter: { _, _ in },
+            recentDocumentRegistrar: { _ in }
+        )
+        #expect(didSaveCurrent)
+        viewModel.renameSelectedLayer(to: "Still Dirty")
+        let projectDataBeforeCopy = try viewModel.projectData()
+        let undoCountBeforeCopy = viewModel.undoStack.count
+        var writeCount = 0
+
+        let didSaveCopy = viewModel.writeProjectDocumentCopy(
+            to: URL(fileURLWithPath: "/tmp/folder/../Current.xomoproject"),
+            dataWriter: { _, _ in writeCount += 1 }
+        )
+
+        #expect(!didSaveCopy)
+        #expect(writeCount == 0)
+        #expect(viewModel.currentProjectURL == currentURL.standardizedFileURL)
+        #expect(try viewModel.projectData() == projectDataBeforeCopy)
+        #expect(viewModel.undoStack.count == undoCountBeforeCopy)
+        #expect(viewModel.hasUnsavedProjectChanges)
+        #expect(
+            viewModel.statusText
+                == L10n.text("imageEditor.status.projectCopySameDestination")
+        )
+    }
+
+    @Test func failedProjectCopyKeepsUnnamedDocumentAndTransactionsIntact() throws {
+        let viewModel = makeViewModel(sourceName: "draft.png")
+        viewModel.renameSelectedLayer(to: "Unsaved Draft")
+        let projectDataBeforeCopy = try viewModel.projectData()
+        let historyBeforeCopy = viewModel.document.history
+        let undoCountBeforeCopy = viewModel.undoStack.count
+        let redoCountBeforeCopy = viewModel.redoStack.count
+
+        let didSaveCopy = viewModel.writeProjectDocumentCopy(
+            to: URL(fileURLWithPath: "/tmp/Rejected Copy.xomoproject"),
+            dataWriter: { _, _ in throw SaveFailure.denied }
+        )
+
+        #expect(!didSaveCopy)
+        #expect(viewModel.currentProjectURL == nil)
+        #expect(try viewModel.projectData() == projectDataBeforeCopy)
+        #expect(viewModel.document.history == historyBeforeCopy)
+        #expect(viewModel.undoStack.count == undoCountBeforeCopy)
+        #expect(viewModel.redoStack.count == redoCountBeforeCopy)
+        #expect(viewModel.hasUnsavedProjectChanges)
+        #expect(
+            viewModel.statusText
+                == L10n.format(
+                    "imageEditor.status.projectCopyFailedWithReason",
+                    SaveFailure.denied.localizedDescription
+                )
+        )
+    }
+
+    @Test func projectCopyFilenameUsesSourceThenCurrentProjectIdentity() {
+        let viewModel = makeViewModel(sourceName: "Poster Draft.png")
+        let formatter: (String) -> String = { "\($0) COPY" }
+
+        #expect(
+            viewModel.projectCopyFilename(copyNameFormatter: formatter)
+                == "Poster Draft COPY.xomoproject"
+        )
+
+        let currentURL = URL(fileURLWithPath: "/tmp/Named Project.xomoproject")
+        let didSave = viewModel.writeProjectDocument(
+            to: currentURL,
+            dataWriter: { _, _ in },
+            recentDocumentRegistrar: { _ in }
+        )
+        #expect(didSave)
+        #expect(
+            viewModel.projectCopyFilename(copyNameFormatter: formatter)
+                == "Named Project COPY.xomoproject"
+        )
+    }
+
     @Test func nativeProjectOpenSetsTheSaveDestinationAndReplacementDocumentsClearIt() throws {
         let source = makeViewModel(sourceName: "saved.png")
         let projectURL = FileManager.default.temporaryDirectory
@@ -203,8 +329,12 @@ struct ImageEditorProjectSaveTests {
 
         #expect(commands.contains("imageEditor.action.projectSaveAs"))
         #expect(commands.contains(".keyboardShortcut(\"s\", modifiers: [.command, .shift])"))
+        #expect(commands.contains("imageEditor.action.projectSaveCopy"))
+        #expect(commands.contains(".keyboardShortcut(\"s\", modifiers: [.command, .option])"))
         #expect(menuBar.contains("saveProject: { viewModel.saveProjectDocument() }"))
         #expect(menuBar.contains("saveProjectAs: { viewModel.saveProjectDocumentAs() }"))
+        #expect(menuBar.contains("saveProjectCopy: { viewModel.saveProjectDocumentCopy() }"))
+        #expect(commands.contains("actions?.saveProjectCopy()"))
         #expect(menuBar.contains("revealProjectInFinder: { viewModel.revealProjectInFinder() }"))
         #expect(commands.contains("actions?.revealProjectInFinder()"))
         #expect(commands.contains("actions?.canRevealProjectInFinder != true"))
@@ -219,6 +349,11 @@ struct ImageEditorProjectSaveTests {
                 encoding: .utf8
             )
             #expect(strings.contains("\"imageEditor.action.projectSaveAs\" ="))
+            #expect(strings.contains("\"imageEditor.action.projectSaveCopy\" ="))
+            #expect(strings.contains("\"imageEditor.status.projectCopySaved\" ="))
+            #expect(strings.contains("\"imageEditor.status.projectCopySameDestination\" ="))
+            #expect(strings.contains("\"imageEditor.status.projectCopyFailedWithReason\" ="))
+            #expect(strings.contains("\"imageEditor.project.copyFilename\" ="))
             #expect(strings.contains("\"imageEditor.action.projectRevealInFinder\" ="))
         }
     }

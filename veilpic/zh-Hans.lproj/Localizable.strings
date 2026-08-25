@@ -482,6 +482,7 @@
 "imageEditor.action.fileOpenConfirm" = "打开";
 "imageEditor.action.projectSave" = "保存项目";
 "imageEditor.action.projectSaveAs" = "项目另存为…";
+"imageEditor.action.projectSaveCopy" = "存储项目副本…";
 "imageEditor.action.projectRevert" = "恢复到已保存版本…";
 "imageEditor.action.projectRevealInFinder" = "在 Finder 中显示项目";
 "imageEditor.action.projectRevertConfirm" = "恢复";
@@ -2142,6 +2143,10 @@
 "imageEditor.status.exportSVGRequiresVector" = "SVG 仅支持没有位图图层、蒙版、滤镜或图层特效的纯矢量画布";
 "imageEditor.status.projectOpened" = "已打开项目：%@";
 "imageEditor.status.projectSaved" = "已保存项目：%@";
+"imageEditor.status.projectCopySaved" = "已存储项目副本：%@";
+"imageEditor.status.projectCopySameDestination" = "项目副本不能覆盖当前项目，请选择其他位置";
+"imageEditor.status.projectCopyFailedWithReason" = "存储项目副本失败：%@";
+"imageEditor.project.copyFilename" = "%@ 副本";
 "imageEditor.status.projectReverted" = "已恢复到已保存版本：%@";
 "imageEditor.status.projectRevertUnavailable" = "当前文档还没有可恢复的已保存项目版本";
 "imageEditor.status.projectRevertFailedWithReason" = "恢复已保存版本失败：%@";

@@ -482,6 +482,7 @@
 "imageEditor.action.fileOpenConfirm" = "Open";
 "imageEditor.action.projectSave" = "Save Project";
 "imageEditor.action.projectSaveAs" = "Save Project As…";
+"imageEditor.action.projectSaveCopy" = "Save a Copy…";
 "imageEditor.action.projectRevert" = "Revert to Saved…";
 "imageEditor.action.projectRevealInFinder" = "Show Project in Finder";
 "imageEditor.action.projectRevertConfirm" = "Revert";
@@ -2142,6 +2143,10 @@
 "imageEditor.status.exportSVGRequiresVector" = "SVG export requires a pure vector canvas without raster layers, masks, filters, or effects";
 "imageEditor.status.projectOpened" = "Project opened: %@";
 "imageEditor.status.projectSaved" = "Project saved: %@";
+"imageEditor.status.projectCopySaved" = "Project copy saved: %@";
+"imageEditor.status.projectCopySameDestination" = "A project copy cannot replace the current project. Choose another location.";
+"imageEditor.status.projectCopyFailedWithReason" = "Save project copy failed: %@";
+"imageEditor.project.copyFilename" = "%@ copy";
 "imageEditor.status.projectReverted" = "Reverted to saved project: %@";
 "imageEditor.status.projectRevertUnavailable" = "This document does not have a saved project version to revert to";
 "imageEditor.status.projectRevertFailedWithReason" = "Revert to saved project failed: %@";

@@ -1328,6 +1328,26 @@ extension ImageEditorViewModel {
         }
     }
 
+    func saveProjectDocumentCopy() {
+        saveProjectDocumentCopy(completion: nil)
+    }
+
+    func saveProjectDocumentCopy(completion: (@MainActor (Bool) -> Void)?) {
+        let panel = NSSavePanel()
+        panel.allowedContentTypes = [Self.projectContentType]
+        panel.canCreateDirectories = true
+        panel.nameFieldStringValue = projectCopyFilename()
+        panel.begin { [weak self] response in
+            Task { @MainActor in
+                guard let self, response == .OK, let url = panel.url else {
+                    completion?(false)
+                    return
+                }
+                completion?(self.writeProjectDocumentCopy(to: url))
+            }
+        }
+    }
+
     @discardableResult
     func writeProjectDocument(
         to url: URL,
@@ -1353,6 +1373,35 @@ extension ImageEditorViewModel {
         } catch {
             statusText = L10n.format(
                 "imageEditor.status.projectSaveFailedWithReason",
+                error.localizedDescription
+            )
+            return false
+        }
+    }
+
+    @discardableResult
+    func writeProjectDocumentCopy(
+        to url: URL,
+        dataWriter: (Data, URL) throws -> Void = { data, destination in
+            try data.write(to: destination, options: .atomic)
+        }
+    ) -> Bool {
+        let standardizedURL = url.standardizedFileURL
+        guard standardizedURL != currentProjectURL else {
+            statusText = L10n.text("imageEditor.status.projectCopySameDestination")
+            return false
+        }
+
+        do {
+            try dataWriter(projectData(), standardizedURL)
+            statusText = L10n.format(
+                "imageEditor.status.projectCopySaved",
+                standardizedURL.lastPathComponent
+            )
+            return true
+        } catch {
+            statusText = L10n.format(
+                "imageEditor.status.projectCopyFailedWithReason",
                 error.localizedDescription
             )
             return false
@@ -1558,5 +1607,17 @@ extension ImageEditorViewModel {
         let base = (document.sourceName as NSString).deletingPathExtension
         let cleaned = base.trimmingCharacters(in: .whitespacesAndNewlines)
         return "\((cleaned.isEmpty ? "image" : cleaned)).\(ImageEditorProjectDocument.fileExtension)"
+    }
+
+    func projectCopyFilename(
+        copyNameFormatter: (String) -> String = {
+            L10n.format("imageEditor.project.copyFilename", $0)
+        }
+    ) -> String {
+        let filename = currentProjectURL?.lastPathComponent ?? projectFilename()
+        let base = (filename as NSString).deletingPathExtension
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        let copyBase = copyNameFormatter(base.isEmpty ? "image" : base)
+        return "\(copyBase).\(ImageEditorProjectDocument.fileExtension)"
     }
 }

@@ -482,6 +482,7 @@
 "imageEditor.action.fileOpenConfirm" = "開く";
 "imageEditor.action.projectSave" = "プロジェクトを保存";
 "imageEditor.action.projectSaveAs" = "プロジェクトを別名で保存…";
+"imageEditor.action.projectSaveCopy" = "コピーを保存…";
 "imageEditor.action.projectRevert" = "保存済みバージョンに戻す…";
 "imageEditor.action.projectRevealInFinder" = "プロジェクトを Finder に表示";
 "imageEditor.action.projectRevertConfirm" = "戻す";
@@ -2142,6 +2143,10 @@
 "imageEditor.status.exportSVGRequiresVector" = "SVG は、ラスター画像、マスク、フィルター、レイヤー効果を含まない純粋なベクターキャンバスでのみ書き出せます";
 "imageEditor.status.projectOpened" = "プロジェクトを開きました：%@";
 "imageEditor.status.projectSaved" = "プロジェクトを保存しました：%@";
+"imageEditor.status.projectCopySaved" = "プロジェクトのコピーを保存しました：%@";
+"imageEditor.status.projectCopySameDestination" = "プロジェクトのコピーで現在のプロジェクトを置き換えることはできません。別の場所を選択してください。";
+"imageEditor.status.projectCopyFailedWithReason" = "プロジェクトのコピーを保存できませんでした：%@";
+"imageEditor.project.copyFilename" = "%@ のコピー";
 "imageEditor.status.projectReverted" = "保存済みプロジェクトに戻しました：%@";
 "imageEditor.status.projectRevertUnavailable" = "この書類には戻せる保存済みプロジェクトがありません";
 "imageEditor.status.projectRevertFailedWithReason" = "保存済みプロジェクトに戻せませんでした：%@";
