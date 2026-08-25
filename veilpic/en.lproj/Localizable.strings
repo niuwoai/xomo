@@ -482,6 +482,8 @@
 "imageEditor.action.fileOpenConfirm" = "Open";
 "imageEditor.action.projectSave" = "Save Project";
 "imageEditor.action.projectSaveAs" = "Save Project As…";
+"imageEditor.action.projectRevert" = "Revert to Saved…";
+"imageEditor.action.projectRevertConfirm" = "Revert";
 "imageEditor.action.undo" = "Undo";
 "imageEditor.action.cloneSourcePick" = "Set Clone Source";
 "imageEditor.action.colorSamplerClear" = "Clear Samples";
@@ -2137,6 +2139,11 @@
 "imageEditor.status.exportSVGRequiresVector" = "SVG export requires a pure vector canvas without raster layers, masks, filters, or effects";
 "imageEditor.status.projectOpened" = "Project opened: %@";
 "imageEditor.status.projectSaved" = "Project saved: %@";
+"imageEditor.status.projectReverted" = "Reverted to saved project: %@";
+"imageEditor.status.projectRevertUnavailable" = "This document does not have a saved project version to revert to";
+"imageEditor.status.projectRevertFailedWithReason" = "Revert to saved project failed: %@";
+"imageEditor.confirmation.projectRevertTitle" = "Revert Project?";
+"imageEditor.confirmation.projectRevertMessage" = "Unsaved changes will be discarded and the project version on disk will be reloaded. This cannot be undone.";
 "imageEditor.status.projectOpenFailedWithReason" = "Open file failed: %@";
 "imageEditor.status.projectSaveFailedWithReason" = "Save project failed: %@";
 "imageEditor.project.error.imageEncoding" = "Could not encode layer image: %@";

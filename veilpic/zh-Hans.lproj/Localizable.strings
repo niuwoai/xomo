@@ -482,6 +482,8 @@
 "imageEditor.action.fileOpenConfirm" = "打开";
 "imageEditor.action.projectSave" = "保存项目";
 "imageEditor.action.projectSaveAs" = "项目另存为…";
+"imageEditor.action.projectRevert" = "恢复到已保存版本…";
+"imageEditor.action.projectRevertConfirm" = "恢复";
 "imageEditor.action.undo" = "撤销";
 "imageEditor.action.cloneSourcePick" = "设置图章取样点";
 "imageEditor.action.colorSamplerClear" = "清除取样点";
@@ -2137,6 +2139,11 @@
 "imageEditor.status.exportSVGRequiresVector" = "SVG 仅支持没有位图图层、蒙版、滤镜或图层特效的纯矢量画布";
 "imageEditor.status.projectOpened" = "已打开项目：%@";
 "imageEditor.status.projectSaved" = "已保存项目：%@";
+"imageEditor.status.projectReverted" = "已恢复到已保存版本：%@";
+"imageEditor.status.projectRevertUnavailable" = "当前文档还没有可恢复的已保存项目版本";
+"imageEditor.status.projectRevertFailedWithReason" = "恢复已保存版本失败：%@";
+"imageEditor.confirmation.projectRevertTitle" = "恢复项目？";
+"imageEditor.confirmation.projectRevertMessage" = "当前未保存的更改将被丢弃，并重新载入磁盘上的项目版本。此操作无法撤销。";
 "imageEditor.status.projectOpenFailedWithReason" = "打开文件失败：%@";
 "imageEditor.status.projectSaveFailedWithReason" = "保存项目失败：%@";
 "imageEditor.project.error.imageEncoding" = "无法编码图层图片：%@";

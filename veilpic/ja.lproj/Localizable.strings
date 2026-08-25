@@ -482,6 +482,8 @@
 "imageEditor.action.fileOpenConfirm" = "開く";
 "imageEditor.action.projectSave" = "プロジェクトを保存";
 "imageEditor.action.projectSaveAs" = "プロジェクトを別名で保存…";
+"imageEditor.action.projectRevert" = "保存済みバージョンに戻す…";
+"imageEditor.action.projectRevertConfirm" = "戻す";
 "imageEditor.action.undo" = "取り消す";
 "imageEditor.action.cloneSourcePick" = "スタンプのサンプル元を設定";
 "imageEditor.action.colorSamplerClear" = "サンプルを消去";
@@ -2137,6 +2139,11 @@
 "imageEditor.status.exportSVGRequiresVector" = "SVG は、ラスター画像、マスク、フィルター、レイヤー効果を含まない純粋なベクターキャンバスでのみ書き出せます";
 "imageEditor.status.projectOpened" = "プロジェクトを開きました：%@";
 "imageEditor.status.projectSaved" = "プロジェクトを保存しました：%@";
+"imageEditor.status.projectReverted" = "保存済みプロジェクトに戻しました：%@";
+"imageEditor.status.projectRevertUnavailable" = "この書類には戻せる保存済みプロジェクトがありません";
+"imageEditor.status.projectRevertFailedWithReason" = "保存済みプロジェクトに戻せませんでした：%@";
+"imageEditor.confirmation.projectRevertTitle" = "プロジェクトを元に戻しますか？";
+"imageEditor.confirmation.projectRevertMessage" = "未保存の変更を破棄し、ディスク上のプロジェクトを再読み込みします。この操作は取り消せません。";
 "imageEditor.status.projectOpenFailedWithReason" = "ファイルを開けませんでした：%@";
 "imageEditor.status.projectSaveFailedWithReason" = "プロジェクトを保存できませんでした：%@";
 "imageEditor.project.error.imageEncoding" = "レイヤー画像をエンコードできません：%@";

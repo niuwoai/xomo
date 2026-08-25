@@ -1346,6 +1346,64 @@ extension ImageEditorViewModel {
         }
     }
 
+    var canRevertProjectDocument: Bool {
+        currentProjectURL != nil
+    }
+
+    func presentProjectRevertConfirmation() {
+        guard canRevertProjectDocument else {
+            statusText = L10n.text("imageEditor.status.projectRevertUnavailable")
+            return
+        }
+
+        let alert = NSAlert()
+        alert.alertStyle = .warning
+        alert.messageText = L10n.text("imageEditor.confirmation.projectRevertTitle")
+        alert.informativeText = L10n.text("imageEditor.confirmation.projectRevertMessage")
+        alert.addButton(withTitle: L10n.text("imageEditor.action.projectRevertConfirm"))
+        alert.addButton(withTitle: L10n.text("button.cancel"))
+
+        guard let window = NSApplication.shared.keyWindow else {
+            if alert.runModal() == .alertFirstButtonReturn {
+                revertProjectDocument()
+            }
+            return
+        }
+        alert.beginSheetModal(for: window) { [weak self] response in
+            Task { @MainActor in
+                guard response == .alertFirstButtonReturn else { return }
+                self?.revertProjectDocument()
+            }
+        }
+    }
+
+    @discardableResult
+    func revertProjectDocument(
+        dataReader: (URL) throws -> Data = { try Data(contentsOf: $0) }
+    ) -> Bool {
+        guard let currentProjectURL else {
+            statusText = L10n.text("imageEditor.status.projectRevertUnavailable")
+            return false
+        }
+
+        do {
+            let data = try dataReader(currentProjectURL)
+            try loadProjectData(data)
+            updateCurrentProjectURL(currentProjectURL)
+            statusText = L10n.format(
+                "imageEditor.status.projectReverted",
+                currentProjectURL.lastPathComponent
+            )
+            return true
+        } catch {
+            statusText = L10n.format(
+                "imageEditor.status.projectRevertFailedWithReason",
+                error.localizedDescription
+            )
+            return false
+        }
+    }
+
     func openProjectDocument() {
         let panel = NSOpenPanel()
         panel.allowedContentTypes = Self.openDocumentContentTypes
