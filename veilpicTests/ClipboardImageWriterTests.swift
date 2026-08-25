@@ -6,6 +6,46 @@ import Testing
 @MainActor
 @Suite(.serialized)
 struct ClipboardImageWriterTests {
+    @Test func onePhysicalCommandVCreatesOnlyOnePastedLayer() throws {
+        ImageEditorClipboardCommandDispatchGate.reset()
+        defer { ImageEditorClipboardCommandDispatchGate.reset() }
+
+        let pasteboard = NSPasteboard.general
+        pasteboard.clearContents()
+        defer { pasteboard.clearContents() }
+        #expect(
+            pasteboard.writeObjects([
+                solidImage(color: .systemOrange, size: CGSize(width: 12, height: 8))
+            ])
+        )
+        let viewModel = ImageEditorViewModel(
+            sourceName: "clipboard-gate.png",
+            image: solidImage(color: .white, size: CGSize(width: 40, height: 30))
+        ) { _ in }
+        let layerCount = viewModel.document.layers.count
+        let historyCount = viewModel.document.history.count
+        let originalLayerID = viewModel.document.selectedLayerID
+        let event = ImageEditorKeyboardShortcutEventSignature(
+            windowNumber: 41,
+            eventNumber: 971,
+            timestamp: 97.1,
+            typeRawValue: NSEvent.EventType.keyDown.rawValue,
+            keyCode: 9
+        )
+
+        for _ in 0..<2 {
+            guard ImageEditorClipboardCommandDispatchGate.shouldDispatch(
+                .pasteAsLayer,
+                event: event
+            ) else { continue }
+            viewModel.pasteClipboardAsLayer()
+        }
+
+        #expect(viewModel.document.layers.count == layerCount + 1)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.selectedLayerID != originalLayerID)
+    }
+
     @Test func clipboardFilesUseWritableTemporaryStorageInsteadOfDownloads() {
         let fileManager = FileManager.default
         let cacheDirectory = ClipboardImageWriter.clipboardCacheDirectory(fileManager: fileManager)

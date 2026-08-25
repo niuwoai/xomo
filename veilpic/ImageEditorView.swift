@@ -3236,13 +3236,13 @@ struct ImageEditorView: View {
         case .openFigmaLinkImport: isFigmaLinkImportPresented = true
         case .undo: performUndo()
         case .redo: performRedo()
-        case .cutSelectionClipboard: viewModel.cutSelectionToClipboard()
-        case .copySelectionClipboard: viewModel.copySelectionToClipboard()
-        case .copyMergedClipboard: viewModel.copyMergedToClipboard()
-        case .copySelectedLayersClipboard: viewModel.copySelectedLayersToClipboard()
-        case .pasteClipboardLayer: viewModel.pasteClipboardAsLayer()
-        case .pasteClipboardIntoSelection: viewModel.pasteClipboardIntoSelectionAsLayer()
-        case .pasteClipboardInPlaceLayer: viewModel.pasteClipboardInPlaceAsLayer()
+        case .cutSelectionClipboard: performClipboardCommand(.cutSelection)
+        case .copySelectionClipboard: performClipboardCommand(.copySelection)
+        case .copyMergedClipboard: performClipboardCommand(.copyMerged)
+        case .copySelectedLayersClipboard: performClipboardCommand(.copySelectedLayers)
+        case .pasteClipboardLayer: performClipboardCommand(.pasteAsLayer)
+        case .pasteClipboardIntoSelection: performClipboardCommand(.pasteIntoSelection)
+        case .pasteClipboardInPlaceLayer: performClipboardCommand(.pasteInPlace)
         case .toggleTransformControls: viewModel.toggleTransformControlsVisible()
         case .openSelectionFill:
             if case .tool = viewModel.workspaceInputMode {
@@ -3337,6 +3337,22 @@ struct ImageEditorView: View {
             event: .currentKeyEvent
         ) else { return }
         viewModel.addLayer()
+    }
+
+    func performClipboardCommand(_ action: ImageEditorClipboardCommandAction) {
+        guard ImageEditorClipboardCommandDispatchGate.shouldDispatch(
+            action,
+            event: .currentKeyEvent
+        ) else { return }
+        switch action {
+        case .cutSelection: viewModel.cutSelectionToClipboard()
+        case .copySelection: viewModel.copySelectionToClipboard()
+        case .copyMerged: viewModel.copyMergedToClipboard()
+        case .copySelectedLayers: viewModel.copySelectedLayersToClipboard()
+        case .pasteAsLayer: viewModel.pasteClipboardAsLayer()
+        case .pasteIntoSelection: viewModel.pasteClipboardIntoSelectionAsLayer()
+        case .pasteInPlace: viewModel.pasteClipboardInPlaceAsLayer()
+        }
     }
 
     func performDuplicateSelectionOrLayer() {
@@ -17208,6 +17224,41 @@ enum ImageEditorNewLayerCommandDispatchGate {
 
     static func reset() {
         lastEvent = nil
+    }
+}
+
+enum ImageEditorClipboardCommandAction: Equatable, CaseIterable {
+    case cutSelection
+    case copySelection
+    case copyMerged
+    case copySelectedLayers
+    case pasteAsLayer
+    case pasteIntoSelection
+    case pasteInPlace
+}
+
+@MainActor
+enum ImageEditorClipboardCommandDispatchGate {
+    private struct Dispatch: Equatable {
+        let action: ImageEditorClipboardCommandAction
+        let event: ImageEditorKeyboardShortcutEventSignature
+    }
+
+    private static var lastDispatch: Dispatch?
+
+    static func shouldDispatch(
+        _ action: ImageEditorClipboardCommandAction,
+        event: ImageEditorKeyboardShortcutEventSignature?
+    ) -> Bool {
+        guard let event else { return true }
+        let dispatch = Dispatch(action: action, event: event)
+        guard dispatch != lastDispatch else { return false }
+        lastDispatch = dispatch
+        return true
+    }
+
+    static func reset() {
+        lastDispatch = nil
     }
 }
 

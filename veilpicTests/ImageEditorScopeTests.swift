@@ -2430,10 +2430,53 @@ struct ImageEditorScopeTests {
         #expect(commandsSource.contains("CommandGroup(replacing: .textFormatting)"))
         #expect(commandsSource.contains("XomoEditMenuItems(actions: actions)"))
         #expect(menuBarSource.contains("var xomoEditCommandActions: XomoEditCommandActions"))
+        for (field, action) in [
+            ("cutSelection", "cutSelection"),
+            ("copySelection", "copySelection"),
+            ("copyMerged", "copyMerged"),
+            ("copySelectedLayers", "copySelectedLayers"),
+            ("pasteAsLayer", "pasteAsLayer"),
+            ("pasteIntoSelection", "pasteIntoSelection"),
+            ("pasteInPlace", "pasteInPlace"),
+        ] {
+            #expect(
+                menuBarSource.contains(
+                    "\(field): { performClipboardCommand(.\(action)) }"
+                )
+            )
+        }
         #expect(menuBarSource.contains("deleteSelectedObject: { deleteSelectedObjectFromKeyboard() }"))
         #expect(menuBarSource.contains("ImageEditorContextualDocumentDeletePolicy.resolve("))
         #expect(appSource.contains("XomoEditCommands()"))
         #expect(viewSource.contains(".focusedSceneValue(\\.xomoEditCommandActions, xomoEditCommandActions)"))
+
+        let helperStart = try #require(
+            viewSource.range(of: "func performClipboardCommand(")
+        )
+        let helperEnd = try #require(
+            viewSource[helperStart.upperBound...].range(of: "\n    }")
+        )
+        let helperSource = viewSource[helperStart.lowerBound..<helperEnd.upperBound]
+        let gate = try #require(
+            helperSource.range(of: "ImageEditorClipboardCommandDispatchGate.shouldDispatch")
+        )
+        let paste = try #require(helperSource.range(of: "viewModel.pasteClipboardAsLayer()"))
+        #expect(gate.lowerBound < paste.lowerBound)
+        for (shortcutCase, action) in [
+            ("cutSelectionClipboard", "cutSelection"),
+            ("copySelectionClipboard", "copySelection"),
+            ("copyMergedClipboard", "copyMerged"),
+            ("copySelectedLayersClipboard", "copySelectedLayers"),
+            ("pasteClipboardLayer", "pasteAsLayer"),
+            ("pasteClipboardIntoSelection", "pasteIntoSelection"),
+            ("pasteClipboardInPlaceLayer", "pasteInPlace"),
+        ] {
+            #expect(
+                viewSource.contains(
+                    "case .\(shortcutCase): performClipboardCommand(.\(action))"
+                )
+            )
+        }
     }
 
     @Test func fillDialogWiresNativePatternContentAndCanvasAlignment() throws {

@@ -12,6 +12,16 @@ import Testing
 @MainActor
 @Suite(.serialized)
 struct ImageEditorHistoryTests {
+    @Test func clipboardMouseMenuBoundariesRemainIndependentWithoutAKeyEvent() {
+        ImageEditorClipboardCommandDispatchGate.reset()
+        defer { ImageEditorClipboardCommandDispatchGate.reset() }
+
+        for action in ImageEditorClipboardCommandAction.allCases {
+            #expect(ImageEditorClipboardCommandDispatchGate.shouldDispatch(action, event: nil))
+            #expect(ImageEditorClipboardCommandDispatchGate.shouldDispatch(action, event: nil))
+        }
+    }
+
     @Test func onePhysicalCommandJCreatesOnlyOneLayerCopy() {
         ImageEditorLayerDuplicateCommandDispatchGate.reset()
         defer { ImageEditorLayerDuplicateCommandDispatchGate.reset() }
