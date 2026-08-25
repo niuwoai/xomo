@@ -425,6 +425,162 @@ struct ImageEditorSmartObjectPlacementTests {
         }
     }
 
+    @Test func smartObjectViaCopyCreatesIndependentSelectedSourceInOneUndoStep() throws {
+        let viewModel = makeViewModel()
+        let sourceImage = try #require(NSImage.rendered(
+            size: CGSize(width: 36, height: 24)
+        ) { rect in
+            NSColor.systemOrange.setFill()
+            rect.fill()
+        })
+        var original = ImageEditorLayer.smartObject(
+            name: "Shared Logo",
+            image: sourceImage,
+            sourceName: "shared-logo.png"
+        )
+        original.frame = CGRect(x: 32, y: 38, width: 72, height: 48)
+        original.opacity = 0.62
+        original.style.strokeEnabled = true
+        original.style.strokeWidth = 3
+        original.mask = NSImage.opaqueMask(size: sourceImage.size)
+        original.smartFilters = [
+            ImageEditorSmartFilter(kind: .gaussianBlur, intensity: 0.28)
+        ]
+        viewModel.document.layers = [original]
+        viewModel.document.selectedLayerID = original.id
+        viewModel.document.selectedLayerIDs = [original.id]
+        let originalSourceID = try #require(original.smartObjectContent?.sourceID)
+        let originalImageData = try #require(original.image.qingtuPNGData())
+        let originalMaskData = try #require(original.mask?.qingtuPNGData())
+        let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
+
+        #expect(viewModel.canCreateSmartObjectViaCopy)
+        #expect(viewModel.createSmartObjectViaCopy())
+        let copy = try #require(viewModel.document.selectedLayer)
+        let copyContent = try #require(copy.smartObjectContent)
+
+        #expect(viewModel.document.layers.count == 2)
+        #expect(copy.id != original.id)
+        #expect(copyContent.sourceID != originalSourceID)
+        #expect(copyContent.sourceName == original.smartObjectContent?.sourceName)
+        #expect(copyContent.originalSize == original.smartObjectContent?.originalSize)
+        #expect(copy.frame == original.frame)
+        #expect(copy.opacity == original.opacity)
+        #expect(copy.style.strokeEnabled == original.style.strokeEnabled)
+        #expect(copy.style.strokeWidth == original.style.strokeWidth)
+        #expect(copy.smartFilters == original.smartFilters)
+        #expect(copy.mask?.qingtuPNGData() == originalMaskData)
+        #expect(copy.name == L10n.format("imageEditor.layer.copyName", original.name))
+        #expect(copy.image.qingtuPNGData() == originalImageData)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.undoStack.count == undoCount + 1)
+        #expect(viewModel.document.history.last?.title == L10n.text(
+            "imageEditor.history.layerSmartObjectViaCopy"
+        ))
+        #expect(viewModel.statusText == L10n.text(
+            "imageEditor.status.layerSmartObjectCreatedViaCopy"
+        ))
+
+        viewModel.undo()
+        #expect(viewModel.document.layers.map(\.id) == [original.id])
+        #expect(viewModel.document.selectedLayerID == original.id)
+        viewModel.redo()
+        let restoredCopy = try #require(viewModel.document.selectedLayer)
+        #expect(restoredCopy.id == copy.id)
+        #expect(restoredCopy.smartObjectContent?.sourceID == copyContent.sourceID)
+
+        let replacement = try #require(NSImage.rendered(
+            size: CGSize(width: 18, height: 12)
+        ) { rect in
+            NSColor.systemPurple.setFill()
+            rect.fill()
+        })
+        viewModel.replaceSelectedSmartObjectContents(
+            replacement,
+            sourceName: "independent-logo.png"
+        )
+        let untouchedOriginal = try #require(
+            viewModel.document.layers.first { $0.id == original.id }
+        )
+        #expect(untouchedOriginal.smartObjectContent?.sourceID == originalSourceID)
+        #expect(untouchedOriginal.image.qingtuPNGData() == originalImageData)
+        #expect(viewModel.document.selectedLayer?.smartObjectContent?.sourceName == "independent-logo")
+    }
+
+    @Test func smartObjectViaCopyRejectsOrdinaryOrMultiLayerSelectionAtomically() throws {
+        let viewModel = makeViewModel()
+        viewModel.addLayer()
+        viewModel.undo()
+        #expect(viewModel.canRedo)
+        let layerIDs = viewModel.document.layers.map(\.id)
+        let history = viewModel.document.history
+        let undoCount = viewModel.undoStack.count
+        let redoCount = viewModel.redoStack.count
+
+        #expect(!viewModel.canCreateSmartObjectViaCopy)
+        #expect(!viewModel.createSmartObjectViaCopy())
+        #expect(viewModel.document.layers.map(\.id) == layerIDs)
+        #expect(viewModel.document.history == history)
+        #expect(viewModel.undoStack.count == undoCount)
+        #expect(viewModel.redoStack.count == redoCount)
+
+        let smartImage = try #require(NSImage.rendered(
+            size: CGSize(width: 20, height: 14)
+        ) { rect in
+            NSColor.systemGreen.setFill()
+            rect.fill()
+        })
+        let smart = ImageEditorLayer.smartObject(
+            name: "Smart",
+            image: smartImage,
+            sourceName: "smart.png"
+        )
+        viewModel.document.layers.append(smart)
+        viewModel.document.selectedLayerID = smart.id
+        viewModel.document.selectedLayerIDs = [layerIDs[0], smart.id]
+        #expect(!viewModel.canCreateSmartObjectViaCopy)
+        #expect(!viewModel.createSmartObjectViaCopy())
+        #expect(viewModel.document.layers.count == layerIDs.count + 1)
+    }
+
+    @Test func smartObjectViaCopyIsSharedByLayerMenusAndLocalized() throws {
+        let root = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let menuSource = try String(
+            contentsOf: root.appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),
+            encoding: .utf8
+        )
+        let panelSource = try String(
+            contentsOf: root.appendingPathComponent("veilpic/ImageEditorLayerPanel.swift"),
+            encoding: .utf8
+        )
+        let modelSource = try String(
+            contentsOf: root.appendingPathComponent("veilpic/ImageEditorViewModel.swift"),
+            encoding: .utf8
+        )
+
+        for source in [menuSource, panelSource] {
+            #expect(source.contains("imageEditor.action.layerSmartObjectViaCopy"))
+            #expect(source.contains("viewModel.createSmartObjectViaCopy()"))
+            #expect(source.contains("!viewModel.canCreateSmartObjectViaCopy"))
+        }
+        #expect(modelSource.contains("func createSmartObjectViaCopy() -> Bool"))
+        #expect(modelSource.contains("sourceID: UUID()"))
+        for locale in ["zh-Hans", "en", "ja"] {
+            let strings = try String(
+                contentsOf: root.appendingPathComponent(
+                    "veilpic/\(locale).lproj/Localizable.strings"
+                ),
+                encoding: .utf8
+            )
+            #expect(strings.contains("\"imageEditor.action.layerSmartObjectViaCopy\" ="))
+            #expect(strings.contains("\"imageEditor.history.layerSmartObjectViaCopy\" ="))
+            #expect(strings.contains("\"imageEditor.status.layerSmartObjectCreatedViaCopy\" ="))
+        }
+    }
+
     @Test func fileMenuActionUsesSingleSelectionRasterChooserAndSharedCommandCatalog() throws {
         let root = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()

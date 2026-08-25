@@ -1771,6 +1771,7 @@
 "imageEditor.history.clipboardPasteIntoSelection" = "Paste Into Selection";
 "imageEditor.history.clipboardPasteSmartObject" = "Paste as Smart Object";
 "imageEditor.history.layerSmartObject" = "Convert to Smart Object";
+"imageEditor.history.layerSmartObjectViaCopy" = "New Smart Object via Copy";
 "imageEditor.history.layerSmartObjectReplace" = "Replace Smart Object Contents";
 "imageEditor.history.layerSmartObjectMakeUnique" = "Make Smart Object Unique";
 "imageEditor.history.layerSmartObjectMakeUniqueSelected" = "Make Selected Smart Objects Unique";
@@ -2326,6 +2327,7 @@
 "imageEditor.status.editableSVGImported" = "Imported editable SVG shape: %@";
 "imageEditor.status.editableSVGImportFailed" = "SVG must contain one supported path, line, polyline, polygon, rectangle, circle, or ellipse; unsupported transforms, scripts, external resources, or selectors are rejected";
 "imageEditor.status.layerSmartObject" = "Converted to Smart Object";
+"imageEditor.status.layerSmartObjectCreatedViaCopy" = "Created an independent Smart Object via copy";
 "imageEditor.status.layerSmartObjectReplaced" = "Replaced Smart Object contents: %@";
 "imageEditor.status.layerSmartObjectInstancesReplaced" = "Replaced contents for %d Smart Object instances: %@";
 "imageEditor.status.layerSmartObjectReplaceFailed" = "Failed to replace Smart Object contents";
@@ -2763,6 +2765,7 @@
 "imageEditor.action.exportLayers" = "Export Selected Layers…";
 "imageEditor.action.canvasNewFromClipboard" = "New Canvas from Clipboard";
 "imageEditor.action.layerSmartObject" = "Convert to Smart Object";
+"imageEditor.action.layerSmartObjectViaCopy" = "New Smart Object via Copy";
 "imageEditor.action.layerSmartObjectReplace" = "Replace Smart Object Contents";
 "imageEditor.action.layerSmartObjectMakeUnique" = "Make Smart Objects Unique";
 "imageEditor.action.layerSmartObjectResetTransform" = "Reset Smart Object Transform";

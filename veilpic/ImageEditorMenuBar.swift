@@ -420,6 +420,10 @@ extension ImageEditorView {
         }
         .disabled(!viewModel.canClearSmartFiltersFromSelectedLayer)
         Divider()
+        Button(L10n.text("imageEditor.action.layerSmartObjectViaCopy")) {
+            viewModel.createSmartObjectViaCopy()
+        }
+        .disabled(!viewModel.canCreateSmartObjectViaCopy)
         Button(L10n.text("imageEditor.action.layerSmartObjectReplace")) {
             viewModel.chooseSmartObjectReplacementFile()
         }

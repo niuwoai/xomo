@@ -1771,6 +1771,7 @@
 "imageEditor.history.clipboardPasteIntoSelection" = "粘贴到选区";
 "imageEditor.history.clipboardPasteSmartObject" = "粘贴为智能对象";
 "imageEditor.history.layerSmartObject" = "转换为智能对象";
+"imageEditor.history.layerSmartObjectViaCopy" = "通过拷贝新建智能对象";
 "imageEditor.history.layerSmartObjectReplace" = "替换智能对象内容";
 "imageEditor.history.layerSmartObjectMakeUnique" = "智能对象实例独立化";
 "imageEditor.history.layerSmartObjectMakeUniqueSelected" = "所选智能对象实例独立化";
@@ -2326,6 +2327,7 @@
 "imageEditor.status.editableSVGImported" = "已导入可编辑 SVG 形状：%@";
 "imageEditor.status.editableSVGImportFailed" = "SVG 必须只包含一个受支持的路径、直线、折线、多边形、矩形、圆或椭圆；不支持的变换、脚本、外部资源或选择器会被拒绝";
 "imageEditor.status.layerSmartObject" = "已转换为智能对象";
+"imageEditor.status.layerSmartObjectCreatedViaCopy" = "已通过拷贝新建独立智能对象";
 "imageEditor.status.layerSmartObjectReplaced" = "已替换智能对象内容：%@";
 "imageEditor.status.layerSmartObjectInstancesReplaced" = "已替换 %d 个智能对象实例内容：%@";
 "imageEditor.status.layerSmartObjectReplaceFailed" = "替换智能对象内容失败";
@@ -2763,6 +2765,7 @@
 "imageEditor.action.exportLayers" = "导出所选图层…";
 "imageEditor.action.canvasNewFromClipboard" = "从剪贴板新建画布";
 "imageEditor.action.layerSmartObject" = "转换为智能对象";
+"imageEditor.action.layerSmartObjectViaCopy" = "通过拷贝新建智能对象";
 "imageEditor.action.layerSmartObjectReplace" = "替换智能对象内容";
 "imageEditor.action.layerSmartObjectMakeUnique" = "让智能对象实例独立";
 "imageEditor.action.layerSmartObjectResetTransform" = "重置智能对象变换";

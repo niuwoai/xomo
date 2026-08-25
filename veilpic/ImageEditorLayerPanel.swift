@@ -1670,6 +1670,10 @@ extension ImageEditorView {
             Divider()
             Button(L10n.text("imageEditor.action.layerSmartObject")) { viewModel.convertSelectedLayerToSmartObject() }
                 .disabled(!viewModel.canConvertSelectedLayerToSmartObject)
+            Button(L10n.text("imageEditor.action.layerSmartObjectViaCopy")) {
+                viewModel.createSmartObjectViaCopy()
+            }
+            .disabled(!viewModel.canCreateSmartObjectViaCopy)
             Button(L10n.text("imageEditor.action.layerSmartObjectReplace")) {
                 viewModel.chooseSmartObjectReplacementFile()
             }

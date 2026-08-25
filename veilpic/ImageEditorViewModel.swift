@@ -3019,6 +3019,20 @@ final class ImageEditorViewModel: ObservableObject {
         !smartObjectUniqueTargetIndices().isEmpty
     }
 
+    var canCreateSmartObjectViaCopy: Bool {
+        let selectedIDs = document.selectedLayerIDs.isEmpty
+            ? Set(document.selectedLayerID.map { [$0] } ?? [])
+            : document.selectedLayerIDs
+        guard selectedIDs.count == 1,
+              let selectedID = selectedIDs.first,
+              document.layers.first(where: { $0.id == selectedID })?.isSmartObject == true
+        else { return false }
+        return ImageEditorLayerHierarchyDuplication.duplicableRootIDs(
+            in: document.layers,
+            selectedIDs: selectedIDs
+        ) == selectedIDs
+    }
+
     var colorText: String {
         rgbText(for: foregroundColor)
     }
@@ -5467,6 +5481,47 @@ final class ImageEditorViewModel: ObservableObject {
         layerSelectionAnchorID = plan.primarySelectionID
         isEditingLayerMask = false
         appendHistory(L10n.text("imageEditor.history.layerDuplicate"))
+    }
+
+    @discardableResult
+    func createSmartObjectViaCopy() -> Bool {
+        let selectedIDs = document.selectedLayerIDs.isEmpty
+            ? Set(document.selectedLayerID.map { [$0] } ?? [])
+            : document.selectedLayerIDs
+        guard canCreateSmartObjectViaCopy,
+              var plan = ImageEditorLayerHierarchyDuplication.duplicationPlan(
+                  layers: document.layers,
+                  selectedIDs: selectedIDs,
+                  primarySelectionID: document.selectedLayerID,
+                  duplicateName: { L10n.format("imageEditor.layer.copyName", $0) },
+                  isEffectivelyVisible: { document.isEffectivelyVisible($0) }
+              ),
+              let copyID = plan.primarySelectionID,
+              let copyIndex = plan.layers.firstIndex(where: { $0.id == copyID }),
+              let content = plan.layers[copyIndex].smartObjectContent
+        else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return false
+        }
+
+        plan.layers[copyIndex].kind = .smartObject(
+            ImageEditorSmartObjectContent(
+                sourceName: content.sourceName,
+                originalSize: content.originalSize,
+                sourceID: UUID()
+            )
+        )
+        pushUndo()
+        document.layers = plan.layers
+        normalizeLayerLinks()
+        normalizeClippingMasks()
+        document.selectedLayerIDs = plan.selectedLayerIDs
+        document.selectedLayerID = copyID
+        layerSelectionAnchorID = copyID
+        isEditingLayerMask = false
+        appendHistory(L10n.text("imageEditor.history.layerSmartObjectViaCopy"))
+        statusText = L10n.text("imageEditor.status.layerSmartObjectCreatedViaCopy")
+        return true
     }
 
     func convertSelectedLayerToSmartObject() {

@@ -1771,6 +1771,7 @@
 "imageEditor.history.clipboardPasteIntoSelection" = "選択範囲内へペースト";
 "imageEditor.history.clipboardPasteSmartObject" = "スマートオブジェクトとしてペースト";
 "imageEditor.history.layerSmartObject" = "スマートオブジェクトに変換";
+"imageEditor.history.layerSmartObjectViaCopy" = "コピーして新規スマートオブジェクト";
 "imageEditor.history.layerSmartObjectReplace" = "スマートオブジェクトの内容を置換";
 "imageEditor.history.layerSmartObjectMakeUnique" = "スマートオブジェクトインスタンスを独立化";
 "imageEditor.history.layerSmartObjectMakeUniqueSelected" = "選択スマートオブジェクトを独立化";
@@ -2326,6 +2327,7 @@
 "imageEditor.status.editableSVGImported" = "編集可能な SVG シェイプを読み込みました：%@";
 "imageEditor.status.editableSVGImportFailed" = "SVG には対応済みのパス、直線、折れ線、多角形、長方形、円または楕円を 1 つだけ含めてください。未対応の変形、スクリプト、外部リソース、セレクターは拒否されます";
 "imageEditor.status.layerSmartObject" = "スマートオブジェクトに変換しました";
+"imageEditor.status.layerSmartObjectCreatedViaCopy" = "コピーして独立したスマートオブジェクトを作成しました";
 "imageEditor.status.layerSmartObjectReplaced" = "スマートオブジェクトの内容を置換しました：%@";
 "imageEditor.status.layerSmartObjectInstancesReplaced" = "%d 個のスマートオブジェクトインスタンスの内容を置換しました：%@";
 "imageEditor.status.layerSmartObjectReplaceFailed" = "スマートオブジェクトの内容を置換できませんでした";
@@ -2763,6 +2765,7 @@
 "imageEditor.action.exportLayers" = "選択レイヤーを書き出す…";
 "imageEditor.action.canvasNewFromClipboard" = "クリップボードから新規キャンバス";
 "imageEditor.action.layerSmartObject" = "スマートオブジェクトに変換";
+"imageEditor.action.layerSmartObjectViaCopy" = "コピーして新規スマートオブジェクト";
 "imageEditor.action.layerSmartObjectReplace" = "スマートオブジェクトの内容を置換";
 "imageEditor.action.layerSmartObjectMakeUnique" = "スマートオブジェクトを独立化";
 "imageEditor.action.layerSmartObjectResetTransform" = "スマートオブジェクトの変形をリセット";
