@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.12.0-rc1279 - 2026-08-26
+
+### Added
+- `xomo.layer.smart_object` 自动化新增 `replaceContents` 动作，接受本地 PNG、JPEG、TIFF、HEIC 或 WebP，并复用桌面端智能对象内容替换事务。
+- 替换按共享 source ID 更新全部关联实例，同时保持各实例 frame、变换、外观和 source ID；整个家族只写一条 History/Undo，Undo/Redo 可完整往返。
+- 合法但像素、尺寸和源名称均相同的请求按幂等成功处理，不制造空历史或清除已有 Redo；损坏文件、错误类型、锁定或无效选择明确失败并保持文档原子不变。
+
+### Verification
+- 增量产品测试构建通过；智能对象自动化 8/8、桌面置入/替换与菜单邻接 17/17，合计产品专项 25/25；CLI/MCP 2/2、发布契约 7/7（21 项）、测试运行器契约及差异检查全部通过。本版本不触发周期安装，rc1280 执行完整门禁并覆盖 `/Applications/Xomo.app`。
+
 ## 2.12.0-rc1278 - 2026-08-26
 
 ### Added

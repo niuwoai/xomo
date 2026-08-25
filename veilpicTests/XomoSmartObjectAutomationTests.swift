@@ -54,6 +54,9 @@ struct XomoSmartObjectAutomationTests {
             .string("placeEmbedded")
         ) == true)
         #expect(properties["action"]?.objectValue?["enum"]?.arrayValue?.contains(
+            .string("replaceContents")
+        ) == true)
+        #expect(properties["action"]?.objectValue?["enum"]?.arrayValue?.contains(
             .string("newViaCopy")
         ) == true)
         #expect(properties["action"]?.objectValue?["enum"]?.arrayValue?.contains(
@@ -142,6 +145,122 @@ struct XomoSmartObjectAutomationTests {
 
         #expect(!response.ok)
         #expect(viewModel.document.layers.map(\.id) == layerIDs)
+        #expect(viewModel.document.history == history)
+        #expect(viewModel.undoStack.count == undoCount)
+        #expect(viewModel.redoStack.count == redoCount)
+        #expect(viewModel.canRedo)
+    }
+
+    @Test func replaceContentsAutomationUpdatesSharedInstancesInOneUndoAndIsIdempotent() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        defer { registry.unregister(viewModel) }
+        let originalURL = temporaryURL(extension: "png")
+        let replacementURL = temporaryURL(extension: "png")
+        defer {
+            try? FileManager.default.removeItem(at: originalURL)
+            try? FileManager.default.removeItem(at: replacementURL)
+        }
+        try writePNG(size: CGSize(width: 40, height: 20), to: originalURL)
+        try writePNG(size: CGSize(width: 24, height: 36), to: replacementURL)
+        #expect(viewModel.placeEmbeddedSmartObjectFile(originalURL))
+        let first = try #require(viewModel.document.selectedLayer)
+        viewModel.duplicateSelectedLayer()
+        let second = try #require(viewModel.document.selectedLayer)
+        let sharedSourceID = try #require(first.smartObjectContent?.sourceID)
+        #expect(second.smartObjectContent?.sourceID == sharedSourceID)
+        let firstIndex = try #require(viewModel.document.layers.firstIndex { $0.id == first.id })
+        let secondIndex = try #require(viewModel.document.layers.firstIndex { $0.id == second.id })
+        let firstFrame = CGRect(x: 12, y: 20, width: 80, height: 40)
+        let secondFrame = CGRect(x: 120, y: 36, width: 60, height: 30)
+        viewModel.document.layers[firstIndex].frame = firstFrame
+        viewModel.document.layers[secondIndex].frame = secondFrame
+        let originalData = viewModel.document.layers[firstIndex].image.qingtuPNGData()
+        let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
+        let expectedSourceName = replacementURL.deletingPathExtension().lastPathComponent
+
+        let response = registry.execute(request(arguments: [
+            "action": .string("replaceContents"),
+            "path": .string(replacementURL.path)
+        ]))
+
+        #expect(response.ok)
+        #expect(viewModel.document.layers[firstIndex].image.size == CGSize(width: 24, height: 36))
+        #expect(viewModel.document.layers[secondIndex].image.size == CGSize(width: 24, height: 36))
+        #expect(viewModel.document.layers[firstIndex].smartObjectContent?.sourceID == sharedSourceID)
+        #expect(viewModel.document.layers[secondIndex].smartObjectContent?.sourceID == sharedSourceID)
+        #expect(viewModel.document.layers[firstIndex].smartObjectContent?.sourceName == expectedSourceName)
+        #expect(viewModel.document.layers[firstIndex].frame == firstFrame)
+        #expect(viewModel.document.layers[secondIndex].frame == secondFrame)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.undoStack.count == undoCount + 1)
+
+        viewModel.undo()
+        #expect(viewModel.document.layers[firstIndex].image.qingtuPNGData() == originalData)
+        #expect(viewModel.document.layers[secondIndex].image.qingtuPNGData() == originalData)
+        viewModel.redo()
+        #expect(viewModel.document.layers[firstIndex].image.size == CGSize(width: 24, height: 36))
+
+        viewModel.renameSelectedLayer(to: "Renamed Shared Instance")
+        viewModel.undo()
+        #expect(viewModel.canRedo)
+        let unchangedHistory = viewModel.document.history
+        let unchangedUndoCount = viewModel.undoStack.count
+        let unchangedRedoCount = viewModel.redoStack.count
+
+        let unchangedResponse = registry.execute(request(arguments: [
+            "action": .string("replaceContents"),
+            "path": .string(replacementURL.path)
+        ]))
+
+        #expect(unchangedResponse.ok)
+        #expect(viewModel.document.history == unchangedHistory)
+        #expect(viewModel.undoStack.count == unchangedUndoCount)
+        #expect(viewModel.redoStack.count == unchangedRedoCount)
+        #expect(viewModel.canRedo)
+    }
+
+    @Test func replaceContentsAutomationRejectsCorruptFileWithoutConsumingRedo() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        defer { registry.unregister(viewModel) }
+        let sourceImage = try #require(NSImage.rendered(
+            size: CGSize(width: 32, height: 18)
+        ) { rect in
+            NSColor.systemTeal.setFill()
+            rect.fill()
+        })
+        let smartObject = ImageEditorLayer.smartObject(
+            name: "Protected Source",
+            image: sourceImage,
+            sourceName: "protected-source.png"
+        )
+        viewModel.document.layers = [smartObject]
+        viewModel.document.selectedLayerID = smartObject.id
+        viewModel.document.selectedLayerIDs = [smartObject.id]
+        viewModel.addLayer()
+        viewModel.undo()
+        #expect(viewModel.canRedo)
+        let corruptURL = temporaryURL(extension: "png")
+        defer { try? FileManager.default.removeItem(at: corruptURL) }
+        try Data([0x58, 0x4F, 0x4D, 0x4F]).write(to: corruptURL, options: .atomic)
+        let sourceData = viewModel.document.selectedLayer?.image.qingtuPNGData()
+        let layerIDs = viewModel.document.layers.map(\.id)
+        let history = viewModel.document.history
+        let undoCount = viewModel.undoStack.count
+        let redoCount = viewModel.redoStack.count
+
+        let response = registry.execute(request(arguments: [
+            "action": .string("replaceContents"),
+            "path": .string(corruptURL.path)
+        ]))
+
+        #expect(!response.ok)
+        #expect(viewModel.document.layers.map(\.id) == layerIDs)
+        #expect(viewModel.document.selectedLayer?.image.qingtuPNGData() == sourceData)
         #expect(viewModel.document.history == history)
         #expect(viewModel.undoStack.count == undoCount)
         #expect(viewModel.redoStack.count == redoCount)

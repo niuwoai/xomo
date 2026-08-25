@@ -107,6 +107,16 @@ nonisolated enum ImageEditorEmbeddedSmartObjectFilePolicy {
     }
 }
 
+nonisolated enum ImageEditorSmartObjectReplacementResult: Equatable {
+    case changed
+    case unchanged
+    case failed
+
+    var succeeded: Bool {
+        self != .failed
+    }
+}
+
 nonisolated enum ImageEditorEmbeddedSmartObjectPlacementPolicy {
     static func frame(for contentSize: CGSize, in canvasSize: CGSize) -> CGRect {
         let safeContentSize = CGSize(
@@ -459,7 +469,7 @@ extension ImageEditorViewModel {
 
     func chooseSmartObjectReplacementFile() {
         let panel = NSOpenPanel()
-        panel.allowedContentTypes = [.image]
+        panel.allowedContentTypes = [.png, .jpeg, .tiff, .heic, .webP]
         panel.allowsMultipleSelection = false
         panel.canChooseDirectories = false
         panel.canChooseFiles = true
@@ -467,11 +477,7 @@ extension ImageEditorViewModel {
         panel.begin { [weak self] response in
             Task { @MainActor in
                 guard let self, response == .OK, let url = panel.url else { return }
-                guard let image = NSImage(contentsOf: url) else {
-                    self.statusText = L10n.text("imageEditor.status.layerSmartObjectReplaceFailed")
-                    return
-                }
-                self.replaceSelectedSmartObjectContents(image, sourceName: url.lastPathComponent)
+                self.replaceSelectedSmartObjectContentsFile(url)
             }
         }
     }
@@ -684,17 +690,37 @@ extension ImageEditorViewModel {
         return true
     }
 
-    func replaceSelectedSmartObjectContents(_ image: NSImage, sourceName: String) {
+    @discardableResult
+    func replaceSelectedSmartObjectContentsFile(
+        _ url: URL
+    ) -> ImageEditorSmartObjectReplacementResult {
+        guard ImageEditorEmbeddedSmartObjectFilePolicy.supports(url),
+              let image = NSImage(contentsOf: url)
+        else {
+            statusText = L10n.text("imageEditor.status.layerSmartObjectReplaceFailed")
+            return .failed
+        }
+        return replaceSelectedSmartObjectContents(
+            image,
+            sourceName: url.lastPathComponent
+        )
+    }
+
+    @discardableResult
+    func replaceSelectedSmartObjectContents(
+        _ image: NSImage,
+        sourceName: String
+    ) -> ImageEditorSmartObjectReplacementResult {
         let sourceIDs = smartObjectReplacementTargetSourceIDs()
         guard !sourceIDs.isEmpty else {
             statusText = L10n.text("imageEditor.status.operationFailed")
-            return
+            return .failed
         }
 
         let normalized = image.normalizedImportedBitmapImage()
         guard normalized.size.width > 0, normalized.size.height > 0 else {
             statusText = L10n.text("imageEditor.status.layerSmartObjectReplaceFailed")
-            return
+            return .failed
         }
 
         let cleanSourceName = cleanLayerName(from: sourceName)
@@ -709,7 +735,7 @@ extension ImageEditorViewModel {
         }
         guard !replacementSourceIDs.isEmpty else {
             statusText = L10n.text("imageEditor.status.layerSmartObjectContentsUnchanged")
-            return
+            return .unchanged
         }
 
         pushUndo()
@@ -735,6 +761,7 @@ extension ImageEditorViewModel {
         } else {
             statusText = L10n.format("imageEditor.status.layerSmartObjectReplaced", cleanSourceName)
         }
+        return .changed
     }
 
     private func smartObjectSourceMatchesReplacement(

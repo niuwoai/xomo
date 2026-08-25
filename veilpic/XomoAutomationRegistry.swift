@@ -5084,6 +5084,14 @@ final class XomoAutomationRegistry {
             guard viewModel.placeEmbeddedSmartObjectFile(url) else {
                 throw XomoAutomationCallError.operationFailed("Embedded Smart Object placement failed")
             }
+        case "replaceContents":
+            let rawPath = try requiredString("path", in: arguments)
+            let url = URL(fileURLWithPath: NSString(string: rawPath).expandingTildeInPath)
+            guard viewModel.replaceSelectedSmartObjectContentsFile(url).succeeded else {
+                throw XomoAutomationCallError.operationFailed(
+                    "Smart Object content replacement failed"
+                )
+            }
         case "resetTransform": viewModel.resetSelectedSmartObjectTransform()
         case "makeUnique": viewModel.makeSelectedSmartObjectUnique()
         case "newViaCopy":
@@ -7180,8 +7188,8 @@ private extension XomoAutomationRegistry {
             "action": XomoAutomationSchema.string(description: "Layer link action", values: ["link", "unlink", "unlinkAll", "selectLinked"])
         ], required: ["action"]),
         tool("xomo.layer.smart_object", "Place, convert, and manage embedded smart object layers.", [
-            "action": XomoAutomationSchema.string(description: "Smart object action", values: ["convert", "placeEmbedded", "resetTransform", "makeUnique", "newViaCopy", "exportSourcePNG"]),
-            "path": XomoAutomationSchema.string(description: "Local path used by placeEmbedded and exportSourcePNG; exportSourcePNG requires a .png destination")
+            "action": XomoAutomationSchema.string(description: "Smart object action", values: ["convert", "placeEmbedded", "replaceContents", "resetTransform", "makeUnique", "newViaCopy", "exportSourcePNG"]),
+            "path": XomoAutomationSchema.string(description: "Local path used by placeEmbedded, replaceContents, and exportSourcePNG; exportSourcePNG requires a .png destination")
         ], required: ["action"]),
         tool("xomo.layer.properties", "Set fill, Blend If, mask, clipping, lock, label, and visibility properties.", [
             "property": XomoAutomationSchema.string(description: "Property group", values: ["fillOpacity", "blendIfSourceBlack", "blendIfSourceWhite", "blendIfUnderlyingBlack", "blendIfUnderlyingWhite", "maskDensity", "maskFeather", "clippingMask", "lock", "label", "visibility"]),
