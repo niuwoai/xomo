@@ -1063,7 +1063,7 @@ extension ImageEditorView {
         .keyboardShortcut("i", modifiers: [.command, .shift])
         .disabled(!viewModel.hasSelection)
         Button(L10n.text("imageEditor.action.quickMask")) {
-            viewModel.toggleQuickMaskMode()
+            performToggleQuickMask()
         }
         .keyboardShortcut("q", modifiers: [])
         Divider()

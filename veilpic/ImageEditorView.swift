@@ -3283,7 +3283,7 @@ struct ImageEditorView: View {
         case .reselectSelection: viewModel.reselectSelection()
         case .invertSelection: viewModel.invertSelection()
         case .featherSelection: viewModel.featherSelection()
-        case .toggleQuickMask: viewModel.toggleQuickMaskMode()
+        case .toggleQuickMask: performToggleQuickMask()
         case .toggleQuickMaskGrayscalePreview: viewModel.toggleQuickMaskGrayscalePreview()
         case .toggleLayerMaskRubylith: viewModel.toggleSelectedLayerMaskRubylithPreview()
         case .applyLastFilter: viewModel.applyLastFilter()
@@ -3403,6 +3403,13 @@ struct ImageEditorView: View {
             event: .currentKeyEvent
         ) else { return }
         viewModel.moveSelectedLayerToBottom(inVisibleOrder: filteredVisibleLayerRowIDs)
+    }
+
+    func performToggleQuickMask() {
+        guard ImageEditorQuickMaskCommandDispatchGate.shouldDispatch(
+            event: .currentKeyEvent
+        ) else { return }
+        viewModel.toggleQuickMaskMode()
     }
 
     func performRedo() {
@@ -17195,6 +17202,24 @@ enum ImageEditorLayerOrderCommandDispatchGate {
 
     static func reset() {
         lastDispatch = nil
+    }
+}
+
+@MainActor
+enum ImageEditorQuickMaskCommandDispatchGate {
+    private static var lastEvent: ImageEditorKeyboardShortcutEventSignature?
+
+    static func shouldDispatch(
+        event: ImageEditorKeyboardShortcutEventSignature?
+    ) -> Bool {
+        guard let event else { return true }
+        guard event != lastEvent else { return false }
+        lastEvent = event
+        return true
+    }
+
+    static func reset() {
+        lastEvent = nil
     }
 }
 

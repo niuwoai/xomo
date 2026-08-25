@@ -12,6 +12,40 @@ import Testing
 @MainActor
 @Suite(.serialized)
 struct ImageEditorSelectionOperationTests {
+    @Test func onePhysicalQuickMaskShortcutTogglesOnlyOnce() {
+        ImageEditorQuickMaskCommandDispatchGate.reset()
+        defer { ImageEditorQuickMaskCommandDispatchGate.reset() }
+
+        let canvasSize = NSSize(width: 8, height: 6)
+        let viewModel = ImageEditorViewModel(
+            sourceName: "quick-mask-shortcut.png",
+            image: testImage(size: canvasSize)
+        ) { _ in }
+        let firstEvent = quickMaskEvent(number: 801, timestamp: 80)
+        let secondEvent = quickMaskEvent(number: 802, timestamp: 80.2)
+
+        func dispatch(event: ImageEditorKeyboardShortcutEventSignature?) {
+            guard ImageEditorQuickMaskCommandDispatchGate.shouldDispatch(
+                event: event
+            ) else { return }
+            viewModel.toggleQuickMaskMode()
+        }
+
+        dispatch(event: firstEvent)
+        dispatch(event: firstEvent)
+        #expect(viewModel.isQuickMaskMode)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.quickMaskEnabled"))
+
+        dispatch(event: secondEvent)
+        #expect(!viewModel.isQuickMaskMode)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.quickMaskDisabled"))
+
+        dispatch(event: nil)
+        #expect(viewModel.isQuickMaskMode)
+        dispatch(event: nil)
+        #expect(!viewModel.isQuickMaskMode)
+    }
+
     @Test func informationPanelReportsSelectionGeometryAndInvertedCanvasBounds() {
         let canvasSize = NSSize(width: 80, height: 60)
         let viewModel = ImageEditorViewModel(
@@ -259,6 +293,19 @@ struct ImageEditorSelectionOperationTests {
         #expect(maskAlpha(mask, x: 8, y: 6) == 0)
         #expect(maskAlpha(mask, x: 1, y: 1) == UInt8.max)
         #expect(!viewModel.isQuickMaskMode)
+    }
+
+    private func quickMaskEvent(
+        number: Int,
+        timestamp: TimeInterval
+    ) -> ImageEditorKeyboardShortcutEventSignature {
+        ImageEditorKeyboardShortcutEventSignature(
+            windowNumber: 15,
+            eventNumber: number,
+            timestamp: timestamp,
+            typeRawValue: NSEvent.EventType.keyDown.rawValue,
+            keyCode: 12
+        )
     }
 
     @Test func currentTargetInvertChangesQuickMaskSelectionBeforeAStaleLayerMaskTarget() throws {

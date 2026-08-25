@@ -329,9 +329,21 @@ struct ImageEditorScopeTests {
             menuSource[quickMaskStart.upperBound...].range(of: "Divider()")
         )
         let quickMaskMenuSource = menuSource[quickMaskStart.lowerBound..<quickMaskEnd.lowerBound]
-        #expect(quickMaskMenuSource.contains("viewModel.toggleQuickMaskMode()"))
+        #expect(quickMaskMenuSource.contains("performToggleQuickMask()"))
         #expect(quickMaskMenuSource.contains(".keyboardShortcut(\"q\", modifiers: [])"))
         #expect(!quickMaskMenuSource.contains(".disabled"))
+
+        let helperStart = try #require(viewSource.range(of: "func performToggleQuickMask()"))
+        let helperEnd = try #require(
+            viewSource[helperStart.upperBound...].range(of: "\n    }")
+        )
+        let helperSource = viewSource[helperStart.lowerBound..<helperEnd.upperBound]
+        let dispatchGate = try #require(
+            helperSource.range(of: "ImageEditorQuickMaskCommandDispatchGate.shouldDispatch")
+        )
+        let mutation = try #require(helperSource.range(of: "viewModel.toggleQuickMaskMode()"))
+        #expect(dispatchGate.lowerBound < mutation.lowerBound)
+        #expect(viewSource.contains("case .toggleQuickMask: performToggleQuickMask()"))
     }
 
     @Test func quickMaskGrayscalePreviewSharesOptionsAndKeyboardEntryPoints() throws {
@@ -3732,7 +3744,7 @@ struct ImageEditorScopeTests {
         )
         #expect(selectMenuSource.contains("viewModel.clearSelection()"))
         #expect(selectMenuSource.contains("viewModel.invertSelection()"))
-        #expect(selectMenuSource.contains("viewModel.toggleQuickMaskMode()"))
+        #expect(selectMenuSource.contains("performToggleQuickMask()"))
     }
 
     @Test func windowMenuExposesChannelPanelActionsInPhotoshopStyleLocation() throws {
