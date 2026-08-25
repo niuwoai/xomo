@@ -30,12 +30,7 @@ struct veilpicApp: App {
             XomoFilterCommands()
             XomoViewCommands()
             XomoWindowCommands()
-
-            CommandGroup(replacing: .appInfo) {
-                Button(L10n.text("about.menuItem")) {
-                    AboutWindowPresenter.shared.open()
-                }
-            }
+            XomoSupportCommands()
         }
     }
 }
