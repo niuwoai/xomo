@@ -121,6 +121,8 @@ struct XomoEditCommandActions {
     let copySelectedLayers: () -> Void
     let canCopySelectedLayers: Bool
     let copyQuickExportPNG: () -> Void
+    let copySelectedLayersAsSVG: () -> Void
+    let canCopySelectedLayersAsSVG: Bool
     let pasteAsLayer: () -> Void
     let canPasteAsLayer: Bool
     let pasteIntoSelection: () -> Void
@@ -223,6 +225,10 @@ struct XomoEditMenuItems: View {
             actions?.copyQuickExportPNG()
         }
         .disabled(actions == nil)
+        Button(L10n.text("imageEditor.action.copySelectedLayersAsSVG")) {
+            actions?.copySelectedLayersAsSVG()
+        }
+        .disabled(actions?.canCopySelectedLayersAsSVG != true)
         Button(L10n.text("imageEditor.action.pasteClipboardLayer")) {
             actions?.pasteAsLayer()
         }

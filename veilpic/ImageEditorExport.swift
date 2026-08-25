@@ -9,6 +9,11 @@ import AppKit
 import ImageIO
 import UniformTypeIdentifiers
 
+private typealias ImageEditorSVGExportPlan = (
+    layers: [ImageEditorLayer],
+    groupIDs: Set<UUID>
+)
+
 enum ImageEditorExportFormat: String, CaseIterable, Identifiable, Codable, Sendable {
     case png
     case jpeg
@@ -221,6 +226,10 @@ extension ImageEditorViewModel {
         svgExportPlan != nil
     }
 
+    var canCopySelectedLayersAsSVG: Bool {
+        selectedLayersSVGExportPlan != nil
+    }
+
     func openExportPanel() {
         isPreviewSheetPresented = false
         if exportSettings.format == .svg, !canExportSVG {
@@ -302,6 +311,38 @@ extension ImageEditorViewModel {
                 : "imageEditor.status.copyQuickExportPNGFailed"
         )
         return didCopy
+    }
+
+    @discardableResult
+    func copySelectedLayersAsSVG(to pasteboard: NSPasteboard = .general) -> Bool {
+        guard let data = selectedLayersSVGData() else {
+            statusText = L10n.text("imageEditor.status.copySelectedLayersAsSVGFailed")
+            return false
+        }
+        let baseName = (document.sourceName as NSString).deletingPathExtension
+        let preferredFileName = "\(baseName.isEmpty ? "image" : baseName)-selected.svg"
+        let didCopy = ClipboardImageWriter.copySVGData(
+            data,
+            preferredFileName: preferredFileName,
+            to: pasteboard
+        )
+        statusText = L10n.text(
+            didCopy
+                ? "imageEditor.status.copySelectedLayersAsSVG"
+                : "imageEditor.status.copySelectedLayersAsSVGFailed"
+        )
+        return didCopy
+    }
+
+    func selectedLayersSVGData() -> Data? {
+        guard let plan = selectedLayersSVGExportPlan,
+              let bounds = plan.layers
+                .map(\.frame)
+                .map(\.standardized)
+                .filter({ !$0.isEmpty && !$0.isNull && !$0.isInfinite })
+                .reduce(nil, { result, frame in result?.union(frame) ?? frame })
+        else { return nil }
+        return svgData(plan: plan, viewport: bounds)
     }
 
     @discardableResult
@@ -847,8 +888,22 @@ extension ImageEditorViewModel {
             || document.ancestorGroups(for: layer).contains { includedLayerIDs.contains($0.id) }
     }
 
-    private var svgExportPlan: (layers: [ImageEditorLayer], groupIDs: Set<UUID>)? {
-        let visibleLayers = document.layers.filter(document.shouldComposite)
+    private var svgExportPlan: ImageEditorSVGExportPlan? {
+        svgExportPlan(includingOnly: nil)
+    }
+
+    private var selectedLayersSVGExportPlan: ImageEditorSVGExportPlan? {
+        guard !document.selectedLayerIDs.isEmpty else { return nil }
+        return svgExportPlan(includingOnly: document.selectedLayerIDs)
+    }
+
+    private func svgExportPlan(
+        includingOnly includedLayerIDs: Set<UUID>?
+    ) -> ImageEditorSVGExportPlan? {
+        let visibleLayers = document.layers.filter { layer in
+            document.shouldComposite(layer)
+                && includedLayerIDs.map { isLayer(layer, includedIn: $0) } != false
+        }
         for layer in visibleLayers {
             guard canSerializeAsSVG(layer) else { return nil }
         }
@@ -873,6 +928,7 @@ extension ImageEditorViewModel {
                 groupIDs.insert(group.id)
             }
         }
+        guard includedLayerIDs == nil || !exportLayers.isEmpty else { return nil }
         return (exportLayers, groupIDs)
     }
 
@@ -935,6 +991,24 @@ extension ImageEditorViewModel {
     private func svgData() -> Data? {
         guard let plan = svgExportPlan else { return nil }
         let size = document.canvasSize
+        return svgData(
+            plan: plan,
+            viewport: CGRect(origin: .zero, size: size)
+        )
+    }
+
+    private func svgData(
+        plan: ImageEditorSVGExportPlan,
+        viewport: CGRect
+    ) -> Data? {
+        let bounds = viewport.standardized
+        guard bounds.width > 0,
+              bounds.height > 0,
+              bounds.minX.isFinite,
+              bounds.minY.isFinite,
+              bounds.width.isFinite,
+              bounds.height.isFinite
+        else { return nil }
         let elements = svgHierarchyElements(
             exportLayerIDs: Set(plan.layers.map(\.id)),
             exportGroupIDs: plan.groupIDs,
@@ -943,7 +1017,7 @@ extension ImageEditorViewModel {
         )
         let source = [
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>",
-            "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"\(svgNumber(size.width))\" height=\"\(svgNumber(size.height))\" viewBox=\"0 0 \(svgNumber(size.width)) \(svgNumber(size.height))\">",
+            "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"\(svgNumber(bounds.width))\" height=\"\(svgNumber(bounds.height))\" viewBox=\"\(svgNumber(bounds.minX)) \(svgNumber(bounds.minY)) \(svgNumber(bounds.width)) \(svgNumber(bounds.height))\">",
             elements.joined(separator: "\n"),
             "</svg>"
         ].joined(separator: "\n")

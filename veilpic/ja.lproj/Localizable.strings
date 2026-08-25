@@ -478,6 +478,9 @@
 "imageEditor.action.copyQuickExportPNG" = "PNG としてコピー";
 "imageEditor.status.copyQuickExportPNG" = "合成キャンバスを PNG としてコピーしました";
 "imageEditor.status.copyQuickExportPNGFailed" = "合成キャンバスを PNG としてコピーできませんでした";
+"imageEditor.action.copySelectedLayersAsSVG" = "選択内容を SVG としてコピー";
+"imageEditor.status.copySelectedLayersAsSVG" = "選択したベクター内容を SVG としてコピーしました";
+"imageEditor.status.copySelectedLayersAsSVGFailed" = "選択内容を編集可能な SVG としてコピーできません";
 "imageEditor.action.applySelection" = "選択範囲を適用";
 "imageEditor.action.projectOpen" = "ファイルを開く…";
 "imageEditor.action.openRecent" = "最近使ったファイルを開く";

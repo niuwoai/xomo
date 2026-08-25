@@ -65,6 +65,7 @@ enum XomoClipboardLayerPayload {
 
 enum ClipboardImageWriter {
     static let clipboardCacheFolderName = "im.some.xomo/Clipboard"
+    static let svgPasteboardType = NSPasteboard.PasteboardType("public.svg-image")
 
     static func copy(
         _ image: NSImage,
@@ -108,7 +109,12 @@ enum ClipboardImageWriter {
         if hasImageData {
             objects.append(imageItem)
         }
-        if let pngData, let fileURL = writeClipboardPNG(data: pngData, preferredFileName: preferredFileName) {
+        if let pngData,
+           let fileURL = writeClipboardData(
+               pngData,
+               preferredFileName: preferredFileName,
+               requiredExtension: "png"
+           ) {
             objects.append(fileURL as NSURL)
         }
 
@@ -119,12 +125,47 @@ enum ClipboardImageWriter {
         return pasteboard.writeObjects(objects)
     }
 
-    private static func writeClipboardPNG(data: Data, preferredFileName: String) -> URL? {
+    static func copySVGData(
+        _ svgData: Data?,
+        preferredFileName: String,
+        to pasteboard: NSPasteboard = .general
+    ) -> Bool {
+        guard let svgData,
+              !svgData.isEmpty,
+              let source = String(data: svgData, encoding: .utf8)
+        else { return false }
+
+        pasteboard.clearContents()
+        let svgItem = NSPasteboardItem()
+        svgItem.setData(svgData, forType: svgPasteboardType)
+        svgItem.setString(source, forType: .string)
+
+        var objects: [NSPasteboardWriting] = [svgItem]
+        if let fileURL = writeClipboardData(
+            svgData,
+            preferredFileName: preferredFileName,
+            requiredExtension: "svg"
+        ) {
+            objects.append(fileURL as NSURL)
+        }
+        return pasteboard.writeObjects(objects)
+    }
+
+    private static func writeClipboardData(
+        _ data: Data,
+        preferredFileName: String,
+        requiredExtension: String
+    ) -> URL? {
         let directory = clipboardCacheDirectory()
         do {
             try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
             cleanupClipboardCache(in: directory)
-            let url = directory.appendingPathComponent(sanitizedFileName(preferredFileName))
+            let url = directory.appendingPathComponent(
+                sanitizedFileName(
+                    preferredFileName,
+                    requiredExtension: requiredExtension
+                )
+            )
             try data.write(to: url, options: .atomic)
             return url
         } catch {
@@ -137,7 +178,10 @@ enum ClipboardImageWriter {
         return base.appendingPathComponent(clipboardCacheFolderName, isDirectory: true)
     }
 
-    private static func sanitizedFileName(_ preferredFileName: String) -> String {
+    private static func sanitizedFileName(
+        _ preferredFileName: String,
+        requiredExtension: String
+    ) -> String {
         let allowed = CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "-_."))
         let sanitized = preferredFileName
             .unicodeScalars
@@ -146,10 +190,11 @@ enum ClipboardImageWriter {
             .split(separator: "-")
             .joined(separator: "-")
         let basename = sanitized.isEmpty ? "musepicClipboard" : sanitized
-        if basename.lowercased().hasSuffix(".png") {
+        let suffix = ".\(requiredExtension.lowercased())"
+        if basename.lowercased().hasSuffix(suffix) {
             return basename
         }
-        return "\(basename).png"
+        return "\(basename)\(suffix)"
     }
 
     private static func cleanupClipboardCache(in directory: URL) {

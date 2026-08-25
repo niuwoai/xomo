@@ -478,6 +478,9 @@
 "imageEditor.action.copyQuickExportPNG" = "Copy as PNG";
 "imageEditor.status.copyQuickExportPNG" = "Copied the composited canvas as PNG";
 "imageEditor.status.copyQuickExportPNGFailed" = "Could not copy the composited canvas as PNG";
+"imageEditor.action.copySelectedLayersAsSVG" = "Copy Selected as SVG";
+"imageEditor.status.copySelectedLayersAsSVG" = "Copied the selected vector content as SVG";
+"imageEditor.status.copySelectedLayersAsSVGFailed" = "The selection cannot be copied as editable SVG";
 "imageEditor.action.applySelection" = "Apply Selection";
 "imageEditor.action.projectOpen" = "Open File…";
 "imageEditor.action.openRecent" = "Open Recent";
