@@ -14,7 +14,7 @@ extension ImageEditorView {
             Spacer()
 
             Button(L10n.text("imageEditor.action.projectOpen")) {
-                viewModel.openProjectDocument()
+                openProjectDocumentSafely()
             }
             .buttonStyle(EditorMenuActionButtonStyle())
             .focusable(false)
@@ -56,12 +56,20 @@ extension ImageEditorView {
 
     var xomoFileCommandActions: XomoFileCommandActions {
         XomoFileCommandActions(
-            createCanvas: { viewModel.isNewCanvasSheetPresented = true },
-            createCanvasFromClipboard: { viewModel.createCanvasFromClipboard() },
+            createCanvas: {
+                requestDocumentReplacement {
+                    viewModel.isNewCanvasSheetPresented = true
+                }
+            },
+            createCanvasFromClipboard: {
+                requestDocumentReplacement {
+                    viewModel.createCanvasFromClipboard()
+                }
+            },
             canCreateCanvasFromClipboard: viewModel.canCreateCanvasFromClipboard,
-            openProject: { viewModel.openProjectDocument() },
+            openProject: { openProjectDocumentSafely() },
             recentDocuments: recentDocumentStore.urls,
-            openRecentDocument: { viewModel.openDocument(at: $0) },
+            openRecentDocument: { openRecentDocumentSafely(at: $0) },
             clearRecentDocuments: { recentDocumentStore.clear() },
             saveProject: { viewModel.saveProjectDocument() },
             saveProjectAs: { viewModel.saveProjectDocumentAs() },
@@ -99,6 +107,31 @@ extension ImageEditorView {
             },
             cancel: { closeWindow() }
         )
+    }
+
+    func requestDocumentReplacement(
+        _ replacement: @escaping @MainActor () -> Void
+    ) {
+        XomoDocumentReplacementCoordinator.shared.requestReplacement(
+            for: viewModel,
+            replacement: replacement
+        )
+    }
+
+    func openProjectDocumentSafely() {
+        viewModel.openProjectDocument { replacement in
+            requestDocumentReplacement(replacement)
+        }
+    }
+
+    func openRecentDocumentSafely(at url: URL) {
+        guard !ImageEditorViewModel.routesThroughExternalDocumentCoordinator(url) else {
+            viewModel.openDocument(at: url)
+            return
+        }
+        requestDocumentReplacement {
+            viewModel.openDocument(at: url)
+        }
     }
 
     var xomoEditCommandActions: XomoEditCommandActions {

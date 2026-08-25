@@ -2147,6 +2147,7 @@
 "imageEditor.confirmation.projectRevertTitle" = "恢复项目？";
 "imageEditor.confirmation.projectRevertMessage" = "当前未保存的更改将被丢弃，并重新载入磁盘上的项目版本。此操作无法撤销。";
 "imageEditor.confirmation.unsavedCloseTitle" = "关闭前保存更改？";
+"imageEditor.confirmation.unsavedReplaceTitle" = "替换当前文档前保存更改？";
 "imageEditor.confirmation.unsavedCloseMessage" = "如果不保存，对“%@”的更改将会丢失。";
 "imageEditor.status.projectOpenFailedWithReason" = "打开文件失败：%@";
 "imageEditor.status.projectSaveFailedWithReason" = "保存项目失败：%@";

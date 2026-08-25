@@ -204,10 +204,88 @@ struct XomoDocumentCloseGuardTests {
 
         coordinator.install(on: window)
         #expect(registry.terminationCandidates.map(\.viewModel.document.sourceName) == ["first.png"])
+        #expect(registry.window(for: first) === window)
         coordinator.viewModel = second
         #expect(registry.terminationCandidates.map(\.viewModel.document.sourceName) == ["second.png"])
+        #expect(registry.window(for: first) == nil)
+        #expect(registry.window(for: second) === window)
         coordinator.uninstall()
         #expect(registry.terminationCandidates.isEmpty)
+    }
+
+    @Test func cleanDocumentReplacementRunsImmediatelyWithoutConfirmation() {
+        let viewModel = makeViewModel(sourceName: "clean.png")
+        var replacementCount = 0
+        var presentationCount = 0
+        let coordinator = XomoDocumentReplacementCoordinator(
+            windowProvider: { _ in nil },
+            confirmationPresenter: { _, _, _ in presentationCount += 1 }
+        )
+
+        let result = coordinator.requestReplacement(for: viewModel) {
+            replacementCount += 1
+        }
+
+        #expect(result == .performed)
+        #expect(replacementCount == 1)
+        #expect(presentationCount == 0)
+    }
+
+    @Test func dirtyDocumentReplacementWaitsForApprovalAndRejectsDuplicateRequests() {
+        let viewModel = makeViewModel(sourceName: "dirty.png")
+        viewModel.renameSelectedLayer(to: "Dirty")
+        let window = makeWindow()
+        var confirmation: (@MainActor (Bool) -> Void)?
+        var replacementCount = 0
+        let coordinator = XomoDocumentReplacementCoordinator(
+            windowProvider: { candidate in candidate === viewModel ? window : nil },
+            confirmationPresenter: { presentedWindow, candidate, completion in
+                #expect(presentedWindow === window)
+                #expect(candidate === viewModel)
+                confirmation = completion
+            }
+        )
+
+        #expect(
+            coordinator.requestReplacement(for: viewModel) {
+                replacementCount += 1
+            } == .confirmationPresented
+        )
+        #expect(
+            coordinator.requestReplacement(for: viewModel) {
+                Issue.record("等待确认时不应接受第二个替换动作")
+            } == .blocked
+        )
+        #expect(replacementCount == 0)
+        confirmation?(false)
+        #expect(replacementCount == 0)
+
+        #expect(
+            coordinator.requestReplacement(for: viewModel) {
+                replacementCount += 1
+            } == .confirmationPresented
+        )
+        confirmation?(true)
+        #expect(replacementCount == 1)
+    }
+
+    @Test func dirtyDocumentReplacementWithoutAnOwningWindowFailsClosed() {
+        let viewModel = makeViewModel(sourceName: "detached.png")
+        viewModel.renameSelectedLayer(to: "Dirty")
+        var replacementCount = 0
+        let coordinator = XomoDocumentReplacementCoordinator(
+            windowProvider: { _ in nil },
+            confirmationPresenter: { _, _, _ in
+                Issue.record("没有所属窗口时不能伪造确认")
+            }
+        )
+
+        let result = coordinator.requestReplacement(for: viewModel) {
+            replacementCount += 1
+        }
+
+        #expect(result == .blocked)
+        #expect(replacementCount == 0)
     }
 
     @Test func workspaceAndAllExplicitCloseButtonsUseTheWindowGuardWithLocalizedChoices() throws {
@@ -217,6 +295,7 @@ struct XomoDocumentCloseGuardTests {
         let editor = try source("veilpic/ImageEditorView.swift", root: root)
         let menuBar = try source("veilpic/ImageEditorMenuBar.swift", root: root)
         let project = try source("veilpic/ImageEditorProjectDocument.swift", root: root)
+        let externalOpen = try source("veilpic/XomoExternalDocumentOpen.swift", root: root)
 
         #expect(workspace.contains("XomoDocumentCloseGuard(viewModel: viewModel)"))
         #expect(editor.contains("keyWindow?.performClose(nil)"))
@@ -236,11 +315,18 @@ struct XomoDocumentCloseGuardTests {
         #expect(app.contains("reply(toApplicationShouldTerminate: shouldTerminate)"))
         #expect(guardSource.contains("XomoDocumentWindowRegistry.shared.register"))
         #expect(guardSource.contains("XomoDocumentWindowRegistry.shared.unregister"))
+        #expect(menuBar.contains("requestDocumentReplacement"))
+        #expect(menuBar.contains("openProjectDocumentSafely()"))
+        #expect(menuBar.contains("openRecentDocumentSafely(at:"))
+        #expect(menuBar.contains("viewModel.createCanvasFromClipboard()"))
+        #expect(project.contains("requestProjectReplacement"))
+        #expect(externalOpen.contains("XomoDocumentReplacementCoordinator.shared.requestReplacement"))
 
         let keys = [
             "imageEditor.action.closeSave",
             "imageEditor.action.closeDiscard",
             "imageEditor.confirmation.unsavedCloseTitle",
+            "imageEditor.confirmation.unsavedReplaceTitle",
             "imageEditor.confirmation.unsavedCloseMessage",
         ]
         for locale in ["zh-Hans", "en", "ja"] {

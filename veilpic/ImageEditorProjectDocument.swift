@@ -1426,7 +1426,11 @@ extension ImageEditorViewModel {
         }
     }
 
-    func openProjectDocument() {
+    func openProjectDocument(
+        requestProjectReplacement: @escaping XomoDocumentReplacementRequester = {
+            replacement in replacement()
+        }
+    ) {
         let panel = NSOpenPanel()
         panel.allowedContentTypes = Self.openDocumentContentTypes
         panel.allowsMultipleSelection = false
@@ -1436,7 +1440,13 @@ extension ImageEditorViewModel {
         panel.begin { [weak self] response in
             Task { @MainActor in
                 guard let self, response == .OK, let url = panel.url else { return }
-                self.openDocument(at: url)
+                guard !Self.routesThroughExternalDocumentCoordinator(url) else {
+                    self.openDocument(at: url)
+                    return
+                }
+                requestProjectReplacement {
+                    self.openDocument(at: url)
+                }
             }
         }
     }

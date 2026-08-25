@@ -3220,8 +3220,11 @@ struct ImageEditorView: View {
         ) != .ignore else { return }
 
         switch action {
-        case .newCanvas: viewModel.isNewCanvasSheetPresented = true
-        case .openProject: viewModel.openProjectDocument()
+        case .newCanvas:
+            requestDocumentReplacement {
+                viewModel.isNewCanvasSheetPresented = true
+            }
+        case .openProject: openProjectDocumentSafely()
         case .saveProject: viewModel.saveProjectDocument()
         case .export: viewModel.openExportPanel()
         case .openFigmaLinkImport: isFigmaLinkImportPresented = true

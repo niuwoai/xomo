@@ -188,8 +188,14 @@ struct XomoDocumentLoadingPresentation: Equatable {
 final class XomoExternalDocumentOpenCoordinator: ObservableObject {
     static let shared = XomoExternalDocumentOpenCoordinator()
 
+    typealias ReplacementRequester = @MainActor (
+        ImageEditorViewModel,
+        @escaping @MainActor () -> Void
+    ) -> Void
+
     @Published private(set) var presentation: XomoDocumentLoadingPresentation?
 
+    private let replacementRequester: ReplacementRequester
     private weak var viewModel: ImageEditorViewModel?
     private var pendingURL: URL?
     private var activeRequestID: UUID?
@@ -197,6 +203,17 @@ final class XomoExternalDocumentOpenCoordinator: ObservableObject {
     private var activeStage: XomoDocumentLoadingStage = .preparing
     private var loadTask: Task<Void, Never>?
     private var delayedPresentationTask: Task<Void, Never>?
+
+    init(
+        replacementRequester: @escaping ReplacementRequester = { viewModel, replacement in
+            XomoDocumentReplacementCoordinator.shared.requestReplacement(
+                for: viewModel,
+                replacement: replacement
+            )
+        }
+    ) {
+        self.replacementRequester = replacementRequester
+    }
 
     func register(_ viewModel: ImageEditorViewModel) {
         self.viewModel = viewModel
@@ -216,6 +233,16 @@ final class XomoExternalDocumentOpenCoordinator: ObservableObject {
     func open(_ url: URL) {
         guard XomoExternalDocumentOpenPolicy.supports(url) else { return }
 
+        guard let viewModel else {
+            beginOpen(url)
+            return
+        }
+        replacementRequester(viewModel) { [weak self] in
+            self?.beginOpen(url)
+        }
+    }
+
+    private func beginOpen(_ url: URL) {
         loadTask?.cancel()
         loadTask = nil
         delayedPresentationTask?.cancel()

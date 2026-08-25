@@ -2147,6 +2147,7 @@
 "imageEditor.confirmation.projectRevertTitle" = "Revert Project?";
 "imageEditor.confirmation.projectRevertMessage" = "Unsaved changes will be discarded and the project version on disk will be reloaded. This cannot be undone.";
 "imageEditor.confirmation.unsavedCloseTitle" = "Save Changes Before Closing?";
+"imageEditor.confirmation.unsavedReplaceTitle" = "Save Changes Before Replacing This Document?";
 "imageEditor.confirmation.unsavedCloseMessage" = "If you don't save, changes to “%@” will be lost.";
 "imageEditor.status.projectOpenFailedWithReason" = "Open file failed: %@";
 "imageEditor.status.projectSaveFailedWithReason" = "Save project failed: %@";

@@ -1929,7 +1929,7 @@ struct ImageEditorScopeTests {
             encoding: .utf8
         )
 
-        #expect(menuBarSource.contains("viewModel.openProjectDocument()"))
+        #expect(menuBarSource.contains("openProjectDocumentSafely()"))
         #expect(commandsSource.contains(".keyboardShortcut(\"o\", modifiers: [.command])"))
         #expect(menuBarSource.contains("viewModel.saveProjectDocument()"))
         #expect(commandsSource.contains(".keyboardShortcut(\"s\", modifiers: [.command])"))
@@ -2621,7 +2621,9 @@ struct ImageEditorScopeTests {
         #expect(appSource.contains("XomoFileCommands()"))
         #expect(commandsSource.contains("CommandGroup(replacing: .newItem)"))
         #expect(commandsSource.contains("actions?.createCanvas()"))
-        #expect(editorSource.contains("case .newCanvas: viewModel.isNewCanvasSheetPresented = true"))
+        #expect(editorSource.contains("case .newCanvas:"))
+        #expect(editorSource.contains("requestDocumentReplacement"))
+        #expect(editorSource.contains("viewModel.isNewCanvasSheetPresented = true"))
         #expect(editorSource.contains("if key == \"n\", relevantFlags == [.command] { return .newCanvas }"))
     }
 

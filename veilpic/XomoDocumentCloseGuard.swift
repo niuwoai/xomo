@@ -8,6 +8,10 @@
 import AppKit
 import SwiftUI
 
+typealias XomoDocumentReplacementRequester = @MainActor (
+    @escaping @MainActor () -> Void
+) -> Void
+
 enum XomoDocumentCloseGateAction: Equatable {
     case allow
     case requestConfirmation
@@ -38,11 +42,12 @@ enum XomoUnsavedDocumentCloseAlert {
     static func present(
         for window: NSWindow,
         viewModel: ImageEditorViewModel,
+        titleKey: String = "imageEditor.confirmation.unsavedCloseTitle",
         completion: @escaping @MainActor (Bool) -> Void
     ) {
         let alert = NSAlert()
         alert.alertStyle = .warning
-        alert.messageText = L10n.text("imageEditor.confirmation.unsavedCloseTitle")
+        alert.messageText = L10n.text(titleKey)
         alert.informativeText = L10n.format(
             "imageEditor.confirmation.unsavedCloseMessage",
             viewModel.document.sourceName
@@ -96,6 +101,10 @@ final class XomoDocumentWindowRegistry {
         entries.removeValue(forKey: ObjectIdentifier(window))
     }
 
+    func window(for viewModel: ImageEditorViewModel) -> NSWindow? {
+        terminationCandidates.first(where: { $0.viewModel === viewModel })?.window
+    }
+
     var terminationCandidates: [XomoDocumentTerminationCandidate] {
         entries = entries.filter { _, entry in
             entry.window != nil && entry.viewModel != nil
@@ -108,6 +117,77 @@ final class XomoDocumentWindowRegistry {
 
     func resetForTesting() {
         entries.removeAll()
+    }
+}
+
+enum XomoDocumentReplacementRequestResult: Equatable {
+    case performed
+    case confirmationPresented
+    case blocked
+}
+
+@MainActor
+final class XomoDocumentReplacementCoordinator {
+    static let shared = XomoDocumentReplacementCoordinator()
+
+    typealias WindowProvider = @MainActor (ImageEditorViewModel) -> NSWindow?
+    typealias ConfirmationPresenter = @MainActor (
+        NSWindow,
+        ImageEditorViewModel,
+        @escaping @MainActor (Bool) -> Void
+    ) -> Void
+
+    private let windowProvider: WindowProvider
+    private let confirmationPresenter: ConfirmationPresenter
+    private var pendingViewModelIDs: Set<ObjectIdentifier> = []
+
+    convenience init() {
+        self.init(
+            windowProvider: { viewModel in
+                XomoDocumentWindowRegistry.shared.window(for: viewModel)
+            },
+            confirmationPresenter: { window, viewModel, completion in
+                XomoUnsavedDocumentCloseAlert.present(
+                    for: window,
+                    viewModel: viewModel,
+                    titleKey: "imageEditor.confirmation.unsavedReplaceTitle",
+                    completion: completion
+                )
+            }
+        )
+    }
+
+    init(
+        windowProvider: @escaping WindowProvider,
+        confirmationPresenter: @escaping ConfirmationPresenter
+    ) {
+        self.windowProvider = windowProvider
+        self.confirmationPresenter = confirmationPresenter
+    }
+
+    @discardableResult
+    func requestReplacement(
+        for viewModel: ImageEditorViewModel,
+        replacement: @escaping @MainActor () -> Void
+    ) -> XomoDocumentReplacementRequestResult {
+        guard viewModel.hasUnsavedProjectChanges else {
+            replacement()
+            return .performed
+        }
+
+        let viewModelID = ObjectIdentifier(viewModel)
+        guard !pendingViewModelIDs.contains(viewModelID),
+              let window = windowProvider(viewModel)
+        else { return .blocked }
+
+        pendingViewModelIDs.insert(viewModelID)
+        confirmationPresenter(window, viewModel) { [weak self, weak viewModel] approved in
+            guard let self else { return }
+            self.pendingViewModelIDs.remove(viewModelID)
+            guard approved, viewModel != nil else { return }
+            replacement()
+        }
+        return .confirmationPresented
     }
 }
 
