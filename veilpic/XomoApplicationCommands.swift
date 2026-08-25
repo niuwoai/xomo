@@ -490,6 +490,10 @@ private struct XomoFilterCommandContentKey: FocusedValueKey {
     typealias Value = XomoFocusedMenuContent
 }
 
+private struct XomoViewCommandContentKey: FocusedValueKey {
+    typealias Value = XomoFocusedMenuContent
+}
+
 extension FocusedValues {
     var xomoLayerCommandContent: XomoFocusedMenuContent? {
         get { self[XomoLayerCommandContentKey.self] }
@@ -504,6 +508,11 @@ extension FocusedValues {
     var xomoFilterCommandContent: XomoFocusedMenuContent? {
         get { self[XomoFilterCommandContentKey.self] }
         set { self[XomoFilterCommandContentKey.self] = newValue }
+    }
+
+    var xomoViewCommandContent: XomoFocusedMenuContent? {
+        get { self[XomoViewCommandContentKey.self] }
+        set { self[XomoViewCommandContentKey.self] = newValue }
     }
 }
 
@@ -542,6 +551,22 @@ struct XomoFilterCommands: Commands {
                 content: content,
                 emptyActionTitleKey: "imageEditor.action.lastFilter"
             )
+        }
+    }
+}
+
+struct XomoViewCommands: Commands {
+    @FocusedValue(\.xomoViewCommandContent) private var content
+
+    var body: some Commands {
+        CommandGroup(replacing: .toolbar) {
+            XomoFocusedMenuItems(
+                content: content,
+                emptyActionTitleKey: "imageEditor.action.extrasVisible"
+            )
+        }
+        CommandGroup(replacing: .sidebar) {
+            EmptyView()
         }
     }
 }

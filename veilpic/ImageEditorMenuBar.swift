@@ -1531,6 +1531,18 @@ extension ImageEditorView {
 
     @ViewBuilder
     private var viewMenu: some View {
+        XomoFocusedMenuItems(
+            content: xomoViewCommandContent,
+            emptyActionTitleKey: "imageEditor.action.extrasVisible"
+        )
+    }
+
+    var xomoViewCommandContent: XomoFocusedMenuContent {
+        XomoFocusedMenuContent(menuItems: AnyView(viewMenuItems))
+    }
+
+    @ViewBuilder
+    private var viewMenuItems: some View {
         Button(L10n.text("imageEditor.action.extrasVisible")) {
             viewModel.toggleExtrasVisible()
         }

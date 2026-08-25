@@ -4229,12 +4229,40 @@ struct ImageEditorScopeTests {
         #expect(viewSource.contains("isConverting: penIsConverting || pathHandleIsBreaking"))
     }
 
+    @Test func systemViewMenuReusesEditorCommandsWithoutCreatingADuplicateMenu() throws {
+        let menuBarSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),
+            encoding: .utf8
+        )
+        let commandsSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/XomoApplicationCommands.swift"),
+            encoding: .utf8
+        )
+        let appSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/veilpicApp.swift"),
+            encoding: .utf8
+        )
+        let viewSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(commandsSource.contains("@FocusedValue(\\.xomoViewCommandContent)"))
+        #expect(commandsSource.contains("CommandGroup(replacing: .toolbar)"))
+        #expect(commandsSource.contains("CommandGroup(replacing: .sidebar)"))
+        #expect(!commandsSource.contains("CommandMenu(L10n.text(\"imageEditor.menu.view\"))"))
+        #expect(menuBarSource.contains("content: xomoViewCommandContent,"))
+        #expect(menuBarSource.contains("XomoFocusedMenuContent(menuItems: AnyView(viewMenuItems))"))
+        #expect(appSource.contains("XomoViewCommands()"))
+        #expect(viewSource.contains(".focusedSceneValue(\\.xomoViewCommandContent, xomoViewCommandContent)"))
+    }
+
     @Test func viewMenuExposesClassicZoomShortcuts() throws {
         let source = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),
             encoding: .utf8
         )
-        let viewMenuStart = try #require(source.range(of: "private var viewMenu: some View"))
+        let viewMenuStart = try #require(source.range(of: "private var viewMenuItems: some View"))
         let nextMenuStart = try #require(
             source[viewMenuStart.upperBound...].range(of: "private var windowMenu: some View")
         )
