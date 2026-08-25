@@ -614,6 +614,7 @@ struct ImageEditorView: View {
         .focusedSceneValue(\.xomoImageCommandActions, xomoImageCommandActions)
         .focusedSceneValue(\.xomoLayerCommandContent, xomoLayerCommandContent)
         .focusedSceneValue(\.xomoSelectCommandContent, xomoSelectCommandContent)
+        .focusedSceneValue(\.xomoFilterCommandContent, xomoFilterCommandContent)
     }
 
     @ViewBuilder

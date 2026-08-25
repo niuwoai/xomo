@@ -1382,6 +1382,18 @@ extension ImageEditorView {
 
     @ViewBuilder
     private var filterMenu: some View {
+        XomoFocusedMenuItems(
+            content: xomoFilterCommandContent,
+            emptyActionTitleKey: "imageEditor.action.lastFilter"
+        )
+    }
+
+    var xomoFilterCommandContent: XomoFocusedMenuContent {
+        XomoFocusedMenuContent(menuItems: AnyView(filterMenuItems))
+    }
+
+    @ViewBuilder
+    private var filterMenuItems: some View {
         Button(L10n.text("imageEditor.action.lastFilter")) {
             viewModel.applyLastFilter()
         }

@@ -2119,12 +2119,39 @@ struct ImageEditorScopeTests {
         #expect(viewSource.contains(".focusedSceneValue(\\.xomoImageCommandActions, xomoImageCommandActions)"))
     }
 
+    @Test func systemAndEditorFilterMenusShareOneFocusedCommandTree() throws {
+        let menuBarSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),
+            encoding: .utf8
+        )
+        let commandsSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/XomoApplicationCommands.swift"),
+            encoding: .utf8
+        )
+        let appSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/veilpicApp.swift"),
+            encoding: .utf8
+        )
+        let viewSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(commandsSource.contains("CommandMenu(L10n.text(\"imageEditor.menu.filter\"))"))
+        #expect(commandsSource.contains("@FocusedValue(\\.xomoFilterCommandContent)"))
+        #expect(menuBarSource.contains("content: xomoFilterCommandContent,"))
+        #expect(menuBarSource.contains("XomoFocusedMenuContent(menuItems: AnyView(filterMenuItems))"))
+        #expect(menuBarSource.contains("private var filterMenuItems: some View"))
+        #expect(appSource.contains("XomoFilterCommands()"))
+        #expect(viewSource.contains(".focusedSceneValue(\\.xomoFilterCommandContent, xomoFilterCommandContent)"))
+    }
+
     @Test func filterMenuExposesClassicLastFilterShortcut() throws {
         let source = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),
             encoding: .utf8
         )
-        let filterMenuStart = try #require(source.range(of: "private var filterMenu: some View"))
+        let filterMenuStart = try #require(source.range(of: "private var filterMenuItems: some View"))
         let nextMenuStart = try #require(
             source[filterMenuStart.upperBound...].range(of: "private var viewMenu: some View")
         )
@@ -2170,7 +2197,7 @@ struct ImageEditorScopeTests {
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),
             encoding: .utf8
         )
-        let filterMenuStart = try #require(source.range(of: "private var filterMenu: some View"))
+        let filterMenuStart = try #require(source.range(of: "private var filterMenuItems: some View"))
         let nextMenuStart = try #require(
             source[filterMenuStart.upperBound...].range(of: "private var viewMenu: some View")
         )

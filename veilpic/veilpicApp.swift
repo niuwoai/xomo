@@ -27,6 +27,7 @@ struct veilpicApp: App {
             XomoImageCommands()
             XomoLayerCommands()
             XomoSelectCommands()
+            XomoFilterCommands()
 
             CommandGroup(replacing: .appInfo) {
                 Button(L10n.text("about.menuItem")) {
