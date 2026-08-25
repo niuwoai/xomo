@@ -294,7 +294,7 @@ struct ImageEditorView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            menuBar
+            quickActionBar
             if viewModel.isOptionsBarVisible {
                 optionBar
                 Divider().overlay(editorBorder)

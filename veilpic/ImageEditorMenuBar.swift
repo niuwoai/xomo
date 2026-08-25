@@ -9,57 +9,8 @@ import SwiftUI
 import AppKit
 
 extension ImageEditorView {
-    var menuBar: some View {
+    var quickActionBar: some View {
         HStack(spacing: 14) {
-            Menu { fileMenu } label: { editorMenuLabel("imageEditor.menu.file") }
-                .buttonStyle(.plain)
-                .focusable(false)
-                .accessibilityElement(children: .combine)
-                .accessibilityLabel(L10n.text("imageEditor.menu.file"))
-                .accessibilityIdentifier("image-editor-menu-file")
-            Menu { editMenu } label: { editorMenuLabel("imageEditor.menu.edit") }
-                .buttonStyle(.plain)
-                .focusable(false)
-                .accessibilityElement(children: .combine)
-                .accessibilityLabel(L10n.text("imageEditor.menu.edit"))
-                .accessibilityIdentifier("image-editor-menu-edit")
-            Menu { imageMenu } label: { editorMenuLabel("imageEditor.menu.image") }
-                .buttonStyle(.plain)
-                .focusable(false)
-                .accessibilityElement(children: .combine)
-                .accessibilityLabel(L10n.text("imageEditor.menu.image"))
-                .accessibilityIdentifier("image-editor-menu-image")
-            Menu { layerMenu } label: { editorMenuLabel("imageEditor.menu.layer") }
-                .buttonStyle(.plain)
-                .focusable(false)
-                .accessibilityElement(children: .combine)
-                .accessibilityLabel(L10n.text("imageEditor.menu.layer"))
-                .accessibilityIdentifier("image-editor-menu-layer")
-            Menu { selectMenu } label: { editorMenuLabel("imageEditor.menu.select") }
-                .buttonStyle(.plain)
-                .focusable(false)
-                .accessibilityElement(children: .combine)
-                .accessibilityLabel(L10n.text("imageEditor.menu.select"))
-                .accessibilityIdentifier("image-editor-menu-select")
-            Menu { filterMenu } label: { editorMenuLabel("imageEditor.menu.filter") }
-                .buttonStyle(.plain)
-                .focusable(false)
-                .accessibilityElement(children: .combine)
-                .accessibilityLabel(L10n.text("imageEditor.menu.filter"))
-                .accessibilityIdentifier("image-editor-menu-filter")
-            Menu { viewMenu } label: { editorMenuLabel("imageEditor.menu.view") }
-                .buttonStyle(.plain)
-                .focusable(false)
-                .accessibilityElement(children: .combine)
-                .accessibilityLabel(L10n.text("imageEditor.menu.view"))
-                .accessibilityIdentifier("image-editor-menu-view")
-            Menu { windowMenu } label: { editorMenuLabel("imageEditor.menu.window") }
-                .buttonStyle(.plain)
-                .focusable(false)
-                .accessibilityElement(children: .combine)
-                .accessibilityLabel(L10n.text("imageEditor.menu.window"))
-                .accessibilityIdentifier("image-editor-menu-window")
-
             Spacer()
 
             Button(L10n.text("imageEditor.action.projectOpen")) {
@@ -103,24 +54,6 @@ extension ImageEditorView {
         .background(Color(nsColor: ImageEditorTheme.chrome))
     }
 
-    private func editorMenuLabel(_ key: String) -> some View {
-        HStack(spacing: 5) {
-            Text(L10n.text(key))
-            Image(systemName: "chevron.down")
-                .font(.system(size: 8, weight: .bold))
-        }
-        .font(.system(size: 12, weight: .semibold))
-        .foregroundColor(Color(nsColor: ImageEditorTheme.menuText))
-        .padding(.horizontal, 6)
-        .frame(height: 28)
-        .contentShape(RoundedRectangle(cornerRadius: 5, style: .continuous))
-    }
-
-    @ViewBuilder
-    private var fileMenu: some View {
-        XomoFileMenuItems(actions: xomoFileCommandActions)
-    }
-
     var xomoFileCommandActions: XomoFileCommandActions {
         XomoFileCommandActions(
             createCanvas: { viewModel.isNewCanvasSheetPresented = true },
@@ -160,11 +93,6 @@ extension ImageEditorView {
             },
             cancel: { closeWindow() }
         )
-    }
-
-    @ViewBuilder
-    private var editMenu: some View {
-        XomoEditMenuItems(actions: xomoEditCommandActions)
     }
 
     var xomoEditCommandActions: XomoEditCommandActions {
@@ -230,11 +158,6 @@ extension ImageEditorView {
         return viewModel.canFillCurrentEditingTarget
     }
 
-    @ViewBuilder
-    private var imageMenu: some View {
-        XomoImageMenuItems(actions: xomoImageCommandActions)
-    }
-
     var xomoImageCommandActions: XomoImageCommandActions {
         XomoImageCommandActions(
             resizeImage: { viewModel.resizeImageToControlSize() },
@@ -261,14 +184,6 @@ extension ImageEditorView {
             rotate180: { viewModel.rotate180() },
             flipHorizontal: { viewModel.flipHorizontal() },
             flipVertical: { viewModel.flipVertical() }
-        )
-    }
-
-    @ViewBuilder
-    private var layerMenu: some View {
-        XomoFocusedMenuItems(
-            content: xomoLayerCommandContent,
-            emptyActionTitleKey: "imageEditor.action.layerNew"
         )
     }
 
@@ -1061,14 +976,6 @@ extension ImageEditorView {
         }
     }
 
-    @ViewBuilder
-    private var selectMenu: some View {
-        XomoFocusedMenuItems(
-            content: xomoSelectCommandContent,
-            emptyActionTitleKey: "imageEditor.action.selectAll"
-        )
-    }
-
     var xomoSelectCommandContent: XomoFocusedMenuContent {
         XomoFocusedMenuContent(menuItems: AnyView(selectMenuItems))
     }
@@ -1380,14 +1287,6 @@ extension ImageEditorView {
         .disabled(!viewModel.canSelectNextAlphaChannel)
     }
 
-    @ViewBuilder
-    private var filterMenu: some View {
-        XomoFocusedMenuItems(
-            content: xomoFilterCommandContent,
-            emptyActionTitleKey: "imageEditor.action.lastFilter"
-        )
-    }
-
     var xomoFilterCommandContent: XomoFocusedMenuContent {
         XomoFocusedMenuContent(menuItems: AnyView(filterMenuItems))
     }
@@ -1529,14 +1428,6 @@ extension ImageEditorView {
         .disabled(!viewModel.canUpdateLoadedSmartFilterOnSelectedLayer)
     }
 
-    @ViewBuilder
-    private var viewMenu: some View {
-        XomoFocusedMenuItems(
-            content: xomoViewCommandContent,
-            emptyActionTitleKey: "imageEditor.action.extrasVisible"
-        )
-    }
-
     var xomoViewCommandContent: XomoFocusedMenuContent {
         XomoFocusedMenuContent(menuItems: AnyView(viewMenuItems))
     }
@@ -1604,14 +1495,6 @@ extension ImageEditorView {
             viewModel.fitZoom()
         }
         .keyboardShortcut("0", modifiers: [.command])
-    }
-
-    @ViewBuilder
-    private var windowMenu: some View {
-        XomoFocusedMenuItems(
-            content: xomoWindowCommandContent,
-            emptyActionTitleKey: "imageEditor.action.workspaceResetDefault"
-        )
     }
 
     var xomoWindowCommandContent: XomoFocusedMenuContent {

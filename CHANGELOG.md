@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.12.0-rc1255 - 2026-08-25
+
+### Changed
+- macOS 编辑窗口移除 File/Edit/Image/Layer/Select/Filter/View/Window 八个重复下拉菜单，命令只在系统菜单栏保留一份，消除两排菜单同时出现却让用户猜入口的结构。
+- 原窗口顶部保留为紧凑快捷操作栏，继续提供打开、保存、取消、预览和导出五个高频按钮；全部系统菜单仍使用 rc1247–rc1254 建立的当前窗口焦点命令与动态权限。
+
+### Verification
+- 产品测试构建通过；原生菜单单一入口、五项快捷操作、File/Edit/Image/Layer/Select/Filter/View/Window 与 Figma 当前窗口接线及旧菜单分段边界专项 14/14。CLI/MCP 2/2、发布契约 7/7（21 项断言）、隔离测试运行器契约及差异检查全部通过。本版本不触发周期安装，下一次完整门禁与 `/Applications/Xomo.app` 覆盖为 rc1280。
+
 ## 2.12.0-rc1254 - 2026-08-25
 
 ### Changed

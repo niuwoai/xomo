@@ -1426,7 +1426,7 @@ struct ImageEditorCanvasCursorTests {
         )
         let layerMenuStart = try #require(menuSource.range(of: "private var layerMenuItems: some View"))
         let selectMenuStart = try #require(
-            menuSource[layerMenuStart.upperBound...].range(of: "private var selectMenu: some View")
+            menuSource[layerMenuStart.upperBound...].range(of: "private var selectMenuItems: some View")
         )
         let layerMenuSource = menuSource[layerMenuStart.lowerBound..<selectMenuStart.lowerBound]
         #expect(!layerMenuSource.contains(".keyboardShortcut(\"j\""))

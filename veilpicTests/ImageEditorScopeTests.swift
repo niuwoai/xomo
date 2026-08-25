@@ -2039,7 +2039,7 @@ struct ImageEditorScopeTests {
         #expect(commandsSource.contains("CommandMenu(L10n.text(\"imageEditor.menu.layer\"))"))
         #expect(commandsSource.contains("XomoFocusedMenuItems("))
         #expect(commandsSource.contains("content: content,"))
-        #expect(menuBarSource.contains("content: xomoLayerCommandContent,"))
+        #expect(menuBarSource.contains("var xomoLayerCommandContent: XomoFocusedMenuContent"))
         #expect(menuBarSource.contains("XomoFocusedMenuContent(menuItems: AnyView(layerMenuItems))"))
         #expect(menuBarSource.contains("private var layerMenuItems: some View"))
         #expect(appSource.contains("XomoLayerCommands()"))
@@ -2113,7 +2113,7 @@ struct ImageEditorScopeTests {
         }
         #expect(commandsSource.contains("CommandMenu(L10n.text(\"imageEditor.menu.image\"))"))
         #expect(commandsSource.contains("XomoImageMenuItems(actions: actions)"))
-        #expect(menuBarSource.contains("XomoImageMenuItems(actions: xomoImageCommandActions)"))
+        #expect(menuBarSource.contains("var xomoImageCommandActions: XomoImageCommandActions"))
         #expect(menuBarSource.contains("selectAdjustment: { viewModel.selectAdjustment($0) }"))
         #expect(appSource.contains("XomoImageCommands()"))
         #expect(viewSource.contains(".focusedSceneValue(\\.xomoImageCommandActions, xomoImageCommandActions)"))
@@ -2139,7 +2139,7 @@ struct ImageEditorScopeTests {
 
         #expect(commandsSource.contains("CommandMenu(L10n.text(\"imageEditor.menu.filter\"))"))
         #expect(commandsSource.contains("@FocusedValue(\\.xomoFilterCommandContent)"))
-        #expect(menuBarSource.contains("content: xomoFilterCommandContent,"))
+        #expect(menuBarSource.contains("var xomoFilterCommandContent: XomoFocusedMenuContent"))
         #expect(menuBarSource.contains("XomoFocusedMenuContent(menuItems: AnyView(filterMenuItems))"))
         #expect(menuBarSource.contains("private var filterMenuItems: some View"))
         #expect(appSource.contains("XomoFilterCommands()"))
@@ -2153,7 +2153,7 @@ struct ImageEditorScopeTests {
         )
         let filterMenuStart = try #require(source.range(of: "private var filterMenuItems: some View"))
         let nextMenuStart = try #require(
-            source[filterMenuStart.upperBound...].range(of: "private var viewMenu: some View")
+            source[filterMenuStart.upperBound...].range(of: "private var viewMenuItems: some View")
         )
         let filterMenuSource = source[filterMenuStart.lowerBound..<nextMenuStart.lowerBound]
 
@@ -2199,7 +2199,7 @@ struct ImageEditorScopeTests {
         )
         let filterMenuStart = try #require(source.range(of: "private var filterMenuItems: some View"))
         let nextMenuStart = try #require(
-            source[filterMenuStart.upperBound...].range(of: "private var viewMenu: some View")
+            source[filterMenuStart.upperBound...].range(of: "private var viewMenuItems: some View")
         )
         let filterMenuSource = source[filterMenuStart.lowerBound..<nextMenuStart.lowerBound]
 
@@ -2257,7 +2257,7 @@ struct ImageEditorScopeTests {
         #expect(commandsSource.contains("CommandGroup(replacing: .textEditing)"))
         #expect(commandsSource.contains("CommandGroup(replacing: .textFormatting)"))
         #expect(commandsSource.contains("XomoEditMenuItems(actions: actions)"))
-        #expect(menuBarSource.contains("XomoEditMenuItems(actions: xomoEditCommandActions)"))
+        #expect(menuBarSource.contains("var xomoEditCommandActions: XomoEditCommandActions"))
         #expect(menuBarSource.contains("deleteSelectedObject: { deleteSelectedObjectFromKeyboard() }"))
         #expect(menuBarSource.contains("ImageEditorContextualDocumentDeletePolicy.resolve("))
         #expect(appSource.contains("XomoEditCommands()"))
@@ -3516,7 +3516,7 @@ struct ImageEditorScopeTests {
 
         #expect(commandsSource.contains("CommandMenu(L10n.text(\"imageEditor.menu.select\"))"))
         #expect(commandsSource.contains("@FocusedValue(\\.xomoSelectCommandContent)"))
-        #expect(menuBarSource.contains("content: xomoSelectCommandContent,"))
+        #expect(menuBarSource.contains("var xomoSelectCommandContent: XomoFocusedMenuContent"))
         #expect(menuBarSource.contains("XomoFocusedMenuContent(menuItems: AnyView(selectMenuItems))"))
         #expect(menuBarSource.contains("private var selectMenuItems: some View"))
         #expect(appSource.contains("XomoSelectCommands()"))
@@ -3695,29 +3695,35 @@ struct ImageEditorScopeTests {
         #expect(commandsSource.contains("@FocusedValue(\\.xomoWindowCommandContent)"))
         #expect(commandsSource.contains("CommandGroup(after: .windowArrangement)"))
         #expect(!commandsSource.contains("CommandMenu(L10n.text(\"imageEditor.menu.window\"))"))
-        #expect(menuBarSource.contains("content: xomoWindowCommandContent,"))
+        #expect(menuBarSource.contains("var xomoWindowCommandContent: XomoFocusedMenuContent"))
         #expect(menuBarSource.contains("XomoFocusedMenuContent(menuItems: AnyView(windowMenuItems))"))
         #expect(appSource.contains("XomoWindowCommands()"))
         #expect(viewSource.contains(".focusedSceneValue(\\.xomoWindowCommandContent, xomoWindowCommandContent)"))
     }
 
-    @Test func topMenusExposeOneNonFocusableAccessibilityElementEach() throws {
-        let source = try String(
+    @Test func macOSUsesNativeMenusAndWindowChromeKeepsOnlyQuickActions() throws {
+        let menuBarSource = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),
             encoding: .utf8
         )
-        let menuBarStart = try #require(source.range(of: "var menuBar: some View"))
-        let menuBarEnd = try #require(
-            source[menuBarStart.upperBound...].range(of: "private func editorMenuLabel")
+        let viewSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
         )
-        let menuBarSource = source[menuBarStart.lowerBound..<menuBarEnd.lowerBound]
+        let actionBarStart = try #require(menuBarSource.range(of: "var quickActionBar: some View"))
+        let actionBarEnd = try #require(
+            menuBarSource[actionBarStart.upperBound...].range(of: "var xomoFileCommandActions: XomoFileCommandActions")
+        )
+        let actionBarSource = menuBarSource[actionBarStart.lowerBound..<actionBarEnd.lowerBound]
 
-        #expect(menuBarSource.components(separatedBy: ".accessibilityElement(children: .combine)").count - 1 == 8)
-        #expect(menuBarSource.components(separatedBy: ".focusable(false)").count - 1 >= 8)
-        for menu in ["file", "edit", "image", "layer", "select", "filter", "view", "window"] {
-            #expect(menuBarSource.contains("image-editor-menu-\(menu)"))
-            #expect(menuBarSource.contains("imageEditor.menu.\(menu)"))
+        #expect(!actionBarSource.contains("Menu {"))
+        #expect(!actionBarSource.contains("image-editor-menu-"))
+        #expect(viewSource.contains("quickActionBar"))
+        #expect(!viewSource.contains("\n            menuBar\n"))
+        for action in ["project-open", "project-save", "cancel", "preview", "export"] {
+            #expect(actionBarSource.contains("image-editor-action-\(action)"))
         }
+        #expect(actionBarSource.components(separatedBy: ".focusable(false)").count - 1 == 5)
     }
 
     @Test func deleteKeysPrioritizePendingPenPathBeforeDocumentObjects() throws {
@@ -4278,7 +4284,7 @@ struct ImageEditorScopeTests {
         #expect(commandsSource.contains("CommandGroup(replacing: .toolbar)"))
         #expect(commandsSource.contains("CommandGroup(replacing: .sidebar)"))
         #expect(!commandsSource.contains("CommandMenu(L10n.text(\"imageEditor.menu.view\"))"))
-        #expect(menuBarSource.contains("content: xomoViewCommandContent,"))
+        #expect(menuBarSource.contains("var xomoViewCommandContent: XomoFocusedMenuContent"))
         #expect(menuBarSource.contains("XomoFocusedMenuContent(menuItems: AnyView(viewMenuItems))"))
         #expect(appSource.contains("XomoViewCommands()"))
         #expect(viewSource.contains(".focusedSceneValue(\\.xomoViewCommandContent, xomoViewCommandContent)"))
@@ -4291,7 +4297,7 @@ struct ImageEditorScopeTests {
         )
         let viewMenuStart = try #require(source.range(of: "private var viewMenuItems: some View"))
         let nextMenuStart = try #require(
-            source[viewMenuStart.upperBound...].range(of: "private var windowMenu: some View")
+            source[viewMenuStart.upperBound...].range(of: "private var windowMenuItems: some View")
         )
         let viewMenuSource = source[viewMenuStart.lowerBound..<nextMenuStart.lowerBound]
 

@@ -68,7 +68,7 @@ struct XomoFigmaLinkImportTests {
             encoding: .utf8
         )
 
-        #expect(menu.contains("XomoFileMenuItems(actions: xomoFileCommandActions)"))
+        #expect(menu.contains("var xomoFileCommandActions: XomoFileCommandActions"))
         #expect(menu.contains("importFigmaLink: { isFigmaLinkImportPresented = true }"))
         #expect(applicationCommands.contains("case .importFigmaLink:"))
         #expect(applicationCommands.contains("imageEditor.action.figmaLinkImport"))
