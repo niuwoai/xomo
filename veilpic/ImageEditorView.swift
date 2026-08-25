@@ -3287,11 +3287,11 @@ struct ImageEditorView: View {
         case .toggleQuickMaskGrayscalePreview: viewModel.toggleQuickMaskGrayscalePreview()
         case .toggleLayerMaskRubylith: viewModel.toggleSelectedLayerMaskRubylithPreview()
         case .applyLastFilter: viewModel.applyLastFilter()
-        case .toggleRulers: viewModel.toggleRulersVisible()
-        case .toggleGuides: viewModel.toggleGuidesVisible()
-        case .toggleGuideSnapping: viewModel.toggleGuideSnapping()
-        case .toggleGuidesLocked: viewModel.toggleGuidesLocked()
-        case .toggleGrid: viewModel.toggleGridVisible()
+        case .toggleRulers: performCanvasAidCommand(.rulers)
+        case .toggleGuides: performCanvasAidCommand(.guides)
+        case .toggleGuideSnapping: performCanvasAidCommand(.guideSnapping)
+        case .toggleGuidesLocked: performCanvasAidCommand(.guidesLocked)
+        case .toggleGrid: performCanvasAidCommand(.grid)
         case .zoomIn: viewModel.zoomIn()
         case .zoomOut: viewModel.zoomOut()
         case .actualPixels: viewModel.zoomActualPixels()
@@ -3410,6 +3410,20 @@ struct ImageEditorView: View {
             event: .currentKeyEvent
         ) else { return }
         viewModel.toggleQuickMaskMode()
+    }
+
+    func performCanvasAidCommand(_ action: ImageEditorCanvasAidCommandAction) {
+        guard ImageEditorCanvasAidCommandDispatchGate.shouldDispatch(
+            action,
+            event: .currentKeyEvent
+        ) else { return }
+        switch action {
+        case .rulers: viewModel.toggleRulersVisible()
+        case .guides: viewModel.toggleGuidesVisible()
+        case .guideSnapping: viewModel.toggleGuideSnapping()
+        case .guidesLocked: viewModel.toggleGuidesLocked()
+        case .grid: viewModel.toggleGridVisible()
+        }
     }
 
     func performRedo() {
@@ -17220,6 +17234,39 @@ enum ImageEditorQuickMaskCommandDispatchGate {
 
     static func reset() {
         lastEvent = nil
+    }
+}
+
+enum ImageEditorCanvasAidCommandAction: Equatable {
+    case rulers
+    case guides
+    case guideSnapping
+    case guidesLocked
+    case grid
+}
+
+@MainActor
+enum ImageEditorCanvasAidCommandDispatchGate {
+    private struct Dispatch: Equatable {
+        let action: ImageEditorCanvasAidCommandAction
+        let event: ImageEditorKeyboardShortcutEventSignature
+    }
+
+    private static var lastDispatch: Dispatch?
+
+    static func shouldDispatch(
+        _ action: ImageEditorCanvasAidCommandAction,
+        event: ImageEditorKeyboardShortcutEventSignature?
+    ) -> Bool {
+        guard let event else { return true }
+        let dispatch = Dispatch(action: action, event: event)
+        guard dispatch != lastDispatch else { return false }
+        lastDispatch = dispatch
+        return true
+    }
+
+    static func reset() {
+        lastDispatch = nil
     }
 }
 

@@ -12,6 +12,82 @@ import Testing
 @MainActor
 @Suite(.serialized)
 struct ImageEditorHistoryTests {
+    @Test func onePhysicalCanvasAidShortcutTogglesOnlyOneStateTransition() {
+        ImageEditorCanvasAidCommandDispatchGate.reset()
+        defer { ImageEditorCanvasAidCommandDispatchGate.reset() }
+
+        let image = NSImage(size: NSSize(width: 32, height: 24))
+        let viewModel = ImageEditorViewModel(sourceName: "canvas-aids.png", image: image) { _ in }
+        let event = ImageEditorKeyboardShortcutEventSignature(
+            windowNumber: 17,
+            eventNumber: 901,
+            timestamp: 90,
+            typeRawValue: NSEvent.EventType.keyDown.rawValue,
+            keyCode: 15
+        )
+        let nextEvent = ImageEditorKeyboardShortcutEventSignature(
+            windowNumber: 17,
+            eventNumber: 902,
+            timestamp: 90.2,
+            typeRawValue: NSEvent.EventType.keyDown.rawValue,
+            keyCode: 15
+        )
+        let historyCount = viewModel.document.history.count
+
+        func dispatch(_ action: ImageEditorCanvasAidCommandAction, event: ImageEditorKeyboardShortcutEventSignature?) {
+            guard ImageEditorCanvasAidCommandDispatchGate.shouldDispatch(
+                action,
+                event: event
+            ) else { return }
+            switch action {
+            case .rulers: viewModel.toggleRulersVisible()
+            case .guides: viewModel.toggleGuidesVisible()
+            case .guideSnapping: viewModel.toggleGuideSnapping()
+            case .guidesLocked: viewModel.toggleGuidesLocked()
+            case .grid: viewModel.toggleGridVisible()
+            }
+        }
+
+        for action in [
+            ImageEditorCanvasAidCommandAction.rulers,
+            .guides,
+            .guideSnapping,
+            .guidesLocked,
+            .grid
+        ] {
+            ImageEditorCanvasAidCommandDispatchGate.reset()
+            dispatch(action, event: event)
+            dispatch(action, event: event)
+        }
+
+        #expect(!viewModel.document.areRulersVisible)
+        #expect(!viewModel.document.areGuidesVisible)
+        #expect(!viewModel.document.isGuideSnappingEnabled)
+        #expect(viewModel.document.areGuidesLocked)
+        #expect(viewModel.document.isGridVisible)
+        #expect(viewModel.document.history.count == historyCount + 5)
+
+        dispatch(.grid, event: nextEvent)
+        #expect(!viewModel.document.isGridVisible)
+        #expect(viewModel.document.history.count == historyCount + 6)
+    }
+
+    @Test func canvasAidMouseMenuBoundariesRemainIndependent() {
+        ImageEditorCanvasAidCommandDispatchGate.reset()
+        defer { ImageEditorCanvasAidCommandDispatchGate.reset() }
+
+        for action in [
+            ImageEditorCanvasAidCommandAction.rulers,
+            .guides,
+            .guideSnapping,
+            .guidesLocked,
+            .grid
+        ] {
+            #expect(ImageEditorCanvasAidCommandDispatchGate.shouldDispatch(action, event: nil))
+            #expect(ImageEditorCanvasAidCommandDispatchGate.shouldDispatch(action, event: nil))
+        }
+    }
+
     @Test func onePhysicalHistoryShortcutAdvancesOnlyOneUndoStep() {
         ImageEditorHistoryCommandDispatchGate.reset()
         defer { ImageEditorHistoryCommandDispatchGate.reset() }

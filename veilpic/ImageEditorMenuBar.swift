@@ -1499,19 +1499,19 @@ extension ImageEditorView {
         }
         Divider()
         Button(L10n.text("imageEditor.action.rulersVisible")) {
-            viewModel.toggleRulersVisible()
+            performCanvasAidCommand(.rulers)
         }
         .keyboardShortcut("r", modifiers: [.command])
         Button(L10n.text("imageEditor.action.guidesVisible")) {
-            viewModel.toggleGuidesVisible()
+            performCanvasAidCommand(.guides)
         }
         .keyboardShortcut(";", modifiers: [.command])
         Button(L10n.text("imageEditor.action.guidesSnap")) {
-            viewModel.toggleGuideSnapping()
+            performCanvasAidCommand(.guideSnapping)
         }
         .keyboardShortcut(";", modifiers: [.command, .shift])
         Button(L10n.text("imageEditor.action.guidesLocked")) {
-            viewModel.toggleGuidesLocked()
+            performCanvasAidCommand(.guidesLocked)
         }
         .keyboardShortcut(";", modifiers: [.command, .option])
         Button(L10n.text("imageEditor.action.selectionEdgesVisible")) {
@@ -1521,7 +1521,7 @@ extension ImageEditorView {
             viewModel.toggleTransformControlsVisible()
         }
         Button(L10n.text("imageEditor.action.gridVisible")) {
-            viewModel.toggleGridVisible()
+            performCanvasAidCommand(.grid)
         }
         .keyboardShortcut("'", modifiers: [.command])
         Button(L10n.text("imageEditor.action.gridSnap")) {

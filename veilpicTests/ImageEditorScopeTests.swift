@@ -4443,22 +4443,41 @@ struct ImageEditorScopeTests {
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),
             encoding: .utf8
         )
+        let viewSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
         let viewMenuStart = try #require(source.range(of: "private var viewMenuItems: some View"))
         let nextMenuStart = try #require(
             source[viewMenuStart.upperBound...].range(of: "private var windowMenuItems: some View")
         )
         let viewMenuSource = source[viewMenuStart.lowerBound..<nextMenuStart.lowerBound]
 
-        #expect(viewMenuSource.contains("viewModel.toggleRulersVisible()"))
+        #expect(viewMenuSource.contains("performCanvasAidCommand(.rulers)"))
         #expect(viewMenuSource.contains(".keyboardShortcut(\"r\", modifiers: [.command])"))
-        #expect(viewMenuSource.contains("viewModel.toggleGuidesVisible()"))
+        #expect(viewMenuSource.contains("performCanvasAidCommand(.guides)"))
         #expect(viewMenuSource.contains(".keyboardShortcut(\";\", modifiers: [.command])"))
-        #expect(viewMenuSource.contains("viewModel.toggleGuideSnapping()"))
+        #expect(viewMenuSource.contains("performCanvasAidCommand(.guideSnapping)"))
         #expect(viewMenuSource.contains(".keyboardShortcut(\";\", modifiers: [.command, .shift])"))
-        #expect(viewMenuSource.contains("viewModel.toggleGuidesLocked()"))
+        #expect(viewMenuSource.contains("performCanvasAidCommand(.guidesLocked)"))
         #expect(viewMenuSource.contains(".keyboardShortcut(\";\", modifiers: [.command, .option])"))
-        #expect(viewMenuSource.contains("viewModel.toggleGridVisible()"))
+        #expect(viewMenuSource.contains("performCanvasAidCommand(.grid)"))
         #expect(viewMenuSource.contains(".keyboardShortcut(\"'\", modifiers: [.command])"))
+        let helperStart = try #require(viewSource.range(of: "func performCanvasAidCommand("))
+        let helperEnd = try #require(
+            viewSource[helperStart.upperBound...].range(of: "\n    }")
+        )
+        let helperSource = viewSource[helperStart.lowerBound..<helperEnd.upperBound]
+        let dispatchGate = try #require(
+            helperSource.range(of: "ImageEditorCanvasAidCommandDispatchGate.shouldDispatch")
+        )
+        let actionSwitch = try #require(helperSource.range(of: "switch action"))
+        #expect(dispatchGate.lowerBound < actionSwitch.lowerBound)
+        #expect(viewSource.contains("case .toggleRulers: performCanvasAidCommand(.rulers)"))
+        #expect(viewSource.contains("case .toggleGuides: performCanvasAidCommand(.guides)"))
+        #expect(viewSource.contains("case .toggleGuideSnapping: performCanvasAidCommand(.guideSnapping)"))
+        #expect(viewSource.contains("case .toggleGuidesLocked: performCanvasAidCommand(.guidesLocked)"))
+        #expect(viewSource.contains("case .toggleGrid: performCanvasAidCommand(.grid)"))
         #expect(viewMenuSource.contains("viewModel.zoomIn()"))
         #expect(viewMenuSource.contains(".keyboardShortcut(\"+\", modifiers: [.command])"))
         #expect(viewMenuSource.contains("viewModel.zoomOut()"))
