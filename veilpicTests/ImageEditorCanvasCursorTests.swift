@@ -4,6 +4,66 @@ import Testing
 
 @MainActor
 struct ImageEditorCanvasCursorTests {
+    @Test func keyboardResponderDeleteUsesObjectThenHistoryPriority() {
+        var calls: [String] = []
+
+        #expect(ImageEditorKeyboardDeleteCommandDispatcher.perform(
+            deleteSelectedObject: {
+                calls.append("object")
+                return true
+            },
+            deleteSelectedHistory: {
+                calls.append("history")
+                return true
+            }
+        ))
+        #expect(calls == ["object"])
+
+        calls.removeAll()
+        #expect(ImageEditorKeyboardDeleteCommandDispatcher.perform(
+            deleteSelectedObject: {
+                calls.append("object")
+                return false
+            },
+            deleteSelectedHistory: {
+                calls.append("history")
+                return true
+            }
+        ))
+        #expect(calls == ["object", "history"])
+
+        calls.removeAll()
+        #expect(!ImageEditorKeyboardDeleteCommandDispatcher.perform(
+            deleteSelectedObject: {
+                calls.append("object")
+                return false
+            },
+            deleteSelectedHistory: {
+                calls.append("history")
+                return false
+            }
+        ))
+        #expect(calls == ["object", "history"])
+    }
+
+    @Test func keyboardResponderOwnsBackwardAndForwardDeleteFallbacks() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let responderStart = try #require(
+            source.range(of: "final class KeyboardShortcutMonitorNSView")
+        )
+        let responderSource = source[responderStart.lowerBound...]
+
+        #expect(responderSource.contains("override func deleteBackward(_ sender: Any?)"))
+        #expect(responderSource.contains("override func deleteForward(_ sender: Any?)"))
+        #expect(responderSource.contains("performDeleteCommandFromKeyboardResponder()"))
+    }
+
     @Test func layerChooserUsesNativeRightClickAndMacControlClickOnly() {
         #expect(ImageEditorCanvasLayerChooserEventPolicy.shouldOpen(
             eventType: .rightMouseDown,

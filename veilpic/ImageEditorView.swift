@@ -17564,14 +17564,7 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
                isDelete,
                relevantFlags.isEmpty,
                !isTextInputActive,
-               deleteSelectedObject() {
-                return nil
-            }
-            if event.type == .keyDown,
-               isDelete,
-               relevantFlags.isEmpty,
-               !isTextInputActive,
-               deleteSelectedHistory() {
+               performDeleteCommandFromKeyboardResponder() {
                 return nil
             }
 
@@ -17603,6 +17596,14 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
             return event
         }
 
+        @discardableResult
+        func performDeleteCommandFromKeyboardResponder() -> Bool {
+            ImageEditorKeyboardDeleteCommandDispatcher.perform(
+                deleteSelectedObject: deleteSelectedObject,
+                deleteSelectedHistory: deleteSelectedHistory
+            )
+        }
+
         private var isTextInputActive: Bool {
             window?.firstResponder is NSTextView || window?.firstResponder is NSTextField
         }
@@ -17619,6 +17620,18 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
                 setCanvasModifierFlags([])
             }
         }
+    }
+}
+
+enum ImageEditorKeyboardDeleteCommandDispatcher {
+    static func perform(
+        deleteSelectedObject: () -> Bool,
+        deleteSelectedHistory: () -> Bool
+    ) -> Bool {
+        if deleteSelectedObject() {
+            return true
+        }
+        return deleteSelectedHistory()
     }
 }
 
@@ -17642,6 +17655,16 @@ final class KeyboardShortcutMonitorNSView: ImageEditorKeyboardShortcutResponderN
     override func viewDidMoveToWindow() {
         super.viewDidMoveToWindow()
         coordinator?.attach(to: window)
+    }
+
+    override func deleteBackward(_ sender: Any?) {
+        guard coordinator?.performDeleteCommandFromKeyboardResponder() != true else { return }
+        super.deleteBackward(sender)
+    }
+
+    override func deleteForward(_ sender: Any?) {
+        guard coordinator?.performDeleteCommandFromKeyboardResponder() != true else { return }
+        super.deleteForward(sender)
     }
 
     override func hitTest(_ point: NSPoint) -> NSView? {
