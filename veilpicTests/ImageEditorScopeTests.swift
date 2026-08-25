@@ -552,7 +552,23 @@ struct ImageEditorScopeTests {
         let transaction = try #require(batchSource.range(of: "pushUndo()"))
         #expect(preparation.lowerBound < transaction.lowerBound)
         #expect(batchSource.contains("document.layers.append(contentsOf: layers)"))
-        #expect(batchSource.contains("document.selectedLayerIDs = Set(layers.map(\\.id))"))
+        #expect(batchSource.contains(
+            "selectImportedLayers(layers.map(\\.id), primaryLayerID: layers.last?.id)"
+        ))
+
+        let selectionStart = try #require(
+            importSource.range(of: "private func selectImportedLayers(")
+        )
+        let selectionEnd = try #require(
+            importSource[selectionStart.upperBound...].range(of: "@discardableResult")
+        )
+        let selectionSource = importSource[
+            selectionStart.lowerBound..<selectionEnd.lowerBound
+        ]
+        #expect(selectionSource.contains("document.selectedLayerID = primaryLayerID"))
+        #expect(selectionSource.contains("document.selectedLayerIDs = Set(layerIDs)"))
+        #expect(selectionSource.contains("selectedHotspotID = nil"))
+        #expect(selectionSource.contains("if exportSettings.scope == .slice"))
     }
 
     @Test func propertiesPanelPartitionsLargeViewBuilderForReleaseRuntime() throws {
@@ -3162,6 +3178,9 @@ struct ImageEditorScopeTests {
                 source[helperStart.upperBound...].range(of: "\n    }")
             )
             let helperSource = source[helperStart.lowerBound..<helperEnd.upperBound]
+            let dispatchGate = try #require(
+                helperSource.range(of: "ImageEditorHistoryCommandDispatchGate.shouldDispatch")
+            )
             let activeCheck = try #require(helperSource.range(of: "viewModel.hasActivePathAnchorMoveTransaction"))
             let latch = try #require(
                 helperSource[activeCheck.upperBound...].range(of: "isPathAnchorDragCancelled = true")
@@ -3169,6 +3188,7 @@ struct ImageEditorScopeTests {
             let modelCall = try #require(
                 helperSource.range(of: helperName == "performUndo" ? "viewModel.undo()" : "viewModel.redo()")
             )
+            #expect(dispatchGate.lowerBound < activeCheck.lowerBound)
             #expect(activeCheck.lowerBound < latch.lowerBound)
             #expect(latch.lowerBound < modelCall.lowerBound)
         }

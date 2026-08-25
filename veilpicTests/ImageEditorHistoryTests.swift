@@ -12,6 +12,66 @@ import Testing
 @MainActor
 @Suite(.serialized)
 struct ImageEditorHistoryTests {
+    @Test func onePhysicalHistoryShortcutAdvancesOnlyOneUndoStep() {
+        ImageEditorHistoryCommandDispatchGate.reset()
+        defer { ImageEditorHistoryCommandDispatchGate.reset() }
+
+        let image = NSImage(size: NSSize(width: 32, height: 24))
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        viewModel.addLayer()
+        viewModel.addLayer()
+        viewModel.addLayer()
+        let initialLayerCount = viewModel.document.layers.count
+        let firstEvent = ImageEditorKeyboardShortcutEventSignature(
+            windowNumber: 7,
+            eventNumber: 101,
+            timestamp: 30,
+            typeRawValue: NSEvent.EventType.keyDown.rawValue,
+            keyCode: 6
+        )
+        let secondEvent = ImageEditorKeyboardShortcutEventSignature(
+            windowNumber: 7,
+            eventNumber: 102,
+            timestamp: 30.2,
+            typeRawValue: NSEvent.EventType.keyDown.rawValue,
+            keyCode: 6
+        )
+
+        func dispatchUndo(event: ImageEditorKeyboardShortcutEventSignature?) {
+            guard ImageEditorHistoryCommandDispatchGate.shouldDispatch(
+                event: event
+            ) else { return }
+            viewModel.undo()
+        }
+
+        dispatchUndo(event: firstEvent)
+        dispatchUndo(event: firstEvent)
+        #expect(viewModel.document.layers.count == initialLayerCount - 1)
+
+        dispatchUndo(event: secondEvent)
+        #expect(viewModel.document.layers.count == initialLayerCount - 2)
+
+        dispatchUndo(event: nil)
+        #expect(viewModel.document.layers.count == initialLayerCount - 3)
+    }
+
+    @Test func everyHistoryRouteSharesOnePhysicalEventBoundary() {
+        ImageEditorHistoryCommandDispatchGate.reset()
+        defer { ImageEditorHistoryCommandDispatchGate.reset() }
+        let event = ImageEditorKeyboardShortcutEventSignature(
+            windowNumber: 9,
+            eventNumber: 203,
+            timestamp: 44,
+            typeRawValue: NSEvent.EventType.keyDown.rawValue,
+            keyCode: 6
+        )
+
+        #expect(ImageEditorHistoryCommandDispatchGate.shouldDispatch(event: event))
+        #expect(!ImageEditorHistoryCommandDispatchGate.shouldDispatch(event: event))
+        #expect(ImageEditorHistoryCommandDispatchGate.shouldDispatch(event: nil))
+        #expect(ImageEditorHistoryCommandDispatchGate.shouldDispatch(event: nil))
+    }
+
     @Test func penPointConstraintUsesNearestFortyFiveDegreeDirectionAndCanvasBoundary() {
         let horizontal = ImageEditorPenPointGeometry.constrainedPoint(
             from: CGPoint(x: 50, y: 50),

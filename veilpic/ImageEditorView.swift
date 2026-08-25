@@ -3309,6 +3309,9 @@ struct ImageEditorView: View {
     }
 
     func performUndo() {
+        guard ImageEditorHistoryCommandDispatchGate.shouldDispatch(
+            event: .currentKeyEvent
+        ) else { return }
         if ImageEditorPendingPenPointerPolicy.ownsUncommittedPoint(
             tool: canvasInteractionTool,
             isPointerSequenceActive: isPenPointerSequenceActive,
@@ -3324,6 +3327,9 @@ struct ImageEditorView: View {
     }
 
     func performRedo() {
+        guard ImageEditorHistoryCommandDispatchGate.shouldDispatch(
+            event: .currentKeyEvent
+        ) else { return }
         if ImageEditorPendingPenPointerPolicy.ownsUncommittedPoint(
             tool: canvasInteractionTool,
             isPointerSequenceActive: isPenPointerSequenceActive,
@@ -16982,6 +16988,24 @@ enum ImageEditorKeyboardShortcutWindowRegistry {
 enum ImageEditorPanelToggleAction: Equatable {
     case workspaceChrome
     case rightDock
+}
+
+@MainActor
+enum ImageEditorHistoryCommandDispatchGate {
+    private static var lastEvent: ImageEditorKeyboardShortcutEventSignature?
+
+    static func shouldDispatch(
+        event: ImageEditorKeyboardShortcutEventSignature?
+    ) -> Bool {
+        guard let event else { return true }
+        guard event != lastEvent else { return false }
+        lastEvent = event
+        return true
+    }
+
+    static func reset() {
+        lastEvent = nil
+    }
 }
 
 @MainActor
