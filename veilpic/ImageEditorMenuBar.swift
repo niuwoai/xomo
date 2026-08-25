@@ -265,11 +265,17 @@ extension ImageEditorView {
             viewModel.cutSelectionToNewLayer()
         }
         .disabled(!viewModel.canCutSelectionToNewLayer)
-        Button(L10n.text("imageEditor.action.clearSelectionPixels")) {
-            viewModel.clearSelectionPixels()
+        Button(L10n.text("imageEditor.action.deleteSelectedObject")) {
+            deleteSelectedObjectFromKeyboard()
         }
         .keyboardShortcut(.delete, modifiers: [])
-        .disabled(!viewModel.canRemoveSelectionPixels)
+        .disabled(
+            ImageEditorContextualDocumentDeletePolicy.resolve(
+                hasSelection: viewModel.hasSelection,
+                canRemoveSelectionPixels: viewModel.canRemoveSelectionPixels,
+                canDeleteLayer: viewModel.canDeleteLayer
+            ) == nil
+        )
     }
 
     @ViewBuilder

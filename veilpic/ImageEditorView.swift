@@ -377,47 +377,7 @@ struct ImageEditorView: View {
                         by: CGSize(width: displayedDelta * 100, height: 0)
                     )
                 },
-                deleteSelectedObject: {
-                    if cancelPathAnchorDragForKeyboardCommand() {
-                        return true
-                    }
-                    if cancelGradientOverlayCanvasHandleDragForLifecycle() {
-                        return true
-                    }
-                    if ImageEditorPendingPenPointerPolicy.ownsUncommittedPoint(
-                        tool: canvasInteractionTool,
-                        isPointerSequenceActive: isPenPointerSequenceActive,
-                        isMovingPathAnchor: isMovingPathAnchor
-                    ) {
-                        isPathAnchorDragCancelled = true
-                        return true
-                    }
-                    if viewModel.deletePendingPenPointIfNeeded() {
-                        return true
-                    }
-                    guard !viewModel.hasActiveLayerMoveTransaction else { return false }
-                    if deleteSelectedGradientOverlayStopIfNeeded() {
-                        return true
-                    }
-                    if resetSelectedGradientOverlayMidpointIfNeeded() {
-                        return true
-                    }
-                    if deleteSelectedShapeGradientStopIfNeeded() {
-                        return true
-                    }
-                    if viewModel.selectedTool == .pen || viewModel.selectedTool == .directSelection,
-                       viewModel.canDeleteSelectedPathAnchor {
-                        viewModel.deleteSelectedPathAnchor()
-                        return true
-                    }
-                    if viewModel.deleteSelectedDeliveryObjectIfNeeded() {
-                        return true
-                    }
-                    if viewModel.deleteSelectedXomoObjectIfNeeded() {
-                        return true
-                    }
-                    return viewModel.deleteSelectedLayerFromKeyboardIfPossible()
-                },
+                deleteSelectedObject: deleteSelectedObjectFromKeyboard,
                 finishPendingPenPath: {
                     let isUncommittedPenPointerSequence = ImageEditorPendingPenPointerPolicy
                         .ownsUncommittedPoint(
@@ -3186,6 +3146,62 @@ struct ImageEditorView: View {
             hasActivePathAnchorMoveTransaction: viewModel.hasActivePathAnchorMoveTransaction
         ) else { return }
         action()
+    }
+
+    @discardableResult
+    func deleteSelectedObjectFromKeyboard() -> Bool {
+        if cancelPathAnchorDragForKeyboardCommand() {
+            return true
+        }
+        if cancelGradientOverlayCanvasHandleDragForLifecycle() {
+            return true
+        }
+        if ImageEditorPendingPenPointerPolicy.ownsUncommittedPoint(
+            tool: canvasInteractionTool,
+            isPointerSequenceActive: isPenPointerSequenceActive,
+            isMovingPathAnchor: isMovingPathAnchor
+        ) {
+            isPathAnchorDragCancelled = true
+            return true
+        }
+        if viewModel.deletePendingPenPointIfNeeded() {
+            return true
+        }
+        guard !viewModel.hasActiveLayerMoveTransaction else { return false }
+        if deleteSelectedGradientOverlayStopIfNeeded() {
+            return true
+        }
+        if resetSelectedGradientOverlayMidpointIfNeeded() {
+            return true
+        }
+        if deleteSelectedShapeGradientStopIfNeeded() {
+            return true
+        }
+        if viewModel.selectedTool == .pen || viewModel.selectedTool == .directSelection,
+           viewModel.canDeleteSelectedPathAnchor {
+            viewModel.deleteSelectedPathAnchor()
+            return true
+        }
+        if viewModel.deleteSelectedDeliveryObjectIfNeeded() {
+            return true
+        }
+        if viewModel.deleteSelectedXomoObjectIfNeeded() {
+            return true
+        }
+
+        switch ImageEditorContextualDocumentDeletePolicy.resolve(
+            hasSelection: viewModel.hasSelection,
+            canRemoveSelectionPixels: viewModel.canRemoveSelectionPixels,
+            canDeleteLayer: viewModel.canDeleteLayer
+        ) {
+        case .clearSelectionPixels:
+            viewModel.clearSelectionPixels()
+            return true
+        case .deleteSelectedLayer:
+            return viewModel.deleteSelectedLayerFromKeyboardIfPossible()
+        case .none:
+            return false
+        }
     }
 
     private func performKeyboardShortcut(_ action: ImageEditorKeyboardShortcutAction) {
@@ -16422,6 +16438,24 @@ enum ImageEditorArrowNudge {
         default:
             return nil
         }
+    }
+}
+
+enum ImageEditorContextualDocumentDeleteAction: Equatable {
+    case clearSelectionPixels
+    case deleteSelectedLayer
+}
+
+enum ImageEditorContextualDocumentDeletePolicy {
+    static func resolve(
+        hasSelection: Bool,
+        canRemoveSelectionPixels: Bool,
+        canDeleteLayer: Bool
+    ) -> ImageEditorContextualDocumentDeleteAction? {
+        if hasSelection {
+            return canRemoveSelectionPixels ? .clearSelectionPixels : nil
+        }
+        return canDeleteLayer ? .deleteSelectedLayer : nil
     }
 }
 

@@ -2929,6 +2929,7 @@
 "imageEditor.action.pasteClipboardInPlaceLayer" = "同じ位置にペースト";
 "imageEditor.action.freeTransform" = "自由変形";
 "imageEditor.action.clearSelectionPixels" = "選択ピクセルを消去";
+"imageEditor.action.deleteSelectedObject" = "選択項目を削除";
 "imageEditor.action.saveSelection" = "選択範囲を保存";
 "imageEditor.action.restoreSelection" = "選択範囲を復元";
 "imageEditor.action.reselectSelection" = "再選択";

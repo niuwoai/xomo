@@ -2929,6 +2929,7 @@
 "imageEditor.action.pasteClipboardInPlaceLayer" = "Paste in Place";
 "imageEditor.action.freeTransform" = "Free Transform";
 "imageEditor.action.clearSelectionPixels" = "Clear Pixels";
+"imageEditor.action.deleteSelectedObject" = "Delete Selected";
 "imageEditor.action.saveSelection" = "Save Selection";
 "imageEditor.action.restoreSelection" = "Restore Selection";
 "imageEditor.action.reselectSelection" = "Reselect";

@@ -3,6 +3,37 @@ import Testing
 @testable import musepic
 
 struct ImageEditorTextInputShortcutTests {
+    @Test func contextualDeleteClearsPixelsBeforeDeletingASelectedLayer() {
+        #expect(
+            ImageEditorContextualDocumentDeletePolicy.resolve(
+                hasSelection: true,
+                canRemoveSelectionPixels: true,
+                canDeleteLayer: true
+            ) == .clearSelectionPixels
+        )
+        #expect(
+            ImageEditorContextualDocumentDeletePolicy.resolve(
+                hasSelection: true,
+                canRemoveSelectionPixels: false,
+                canDeleteLayer: true
+            ) == nil
+        )
+        #expect(
+            ImageEditorContextualDocumentDeletePolicy.resolve(
+                hasSelection: false,
+                canRemoveSelectionPixels: false,
+                canDeleteLayer: true
+            ) == .deleteSelectedLayer
+        )
+        #expect(
+            ImageEditorContextualDocumentDeletePolicy.resolve(
+                hasSelection: false,
+                canRemoveSelectionPixels: false,
+                canDeleteLayer: false
+            ) == nil
+        )
+    }
+
     @Test func standardTextEditingShortcutsRemainOwnedByTheActiveTextInput() {
         let standardActions: [(String, NSEvent.ModifierFlags, ImageEditorKeyboardShortcutAction)] = [
             ("a", [.command], .selectAll),

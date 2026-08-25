@@ -2198,7 +2198,9 @@ struct ImageEditorScopeTests {
                 separatedBy: ".disabled(!viewModel.canFillCurrentEditingTarget)"
             ).count - 1 == 2
         )
-        #expect(editMenuSource.contains("viewModel.clearSelectionPixels()"))
+        #expect(editMenuSource.contains("imageEditor.action.deleteSelectedObject"))
+        #expect(editMenuSource.contains("deleteSelectedObjectFromKeyboard()"))
+        #expect(editMenuSource.contains("ImageEditorContextualDocumentDeletePolicy.resolve("))
         #expect(editMenuSource.contains(".keyboardShortcut(.delete, modifiers: [])"))
     }
 
@@ -3614,9 +3616,12 @@ struct ImageEditorScopeTests {
             encoding: .utf8
         )
 
-        let deleteStart = try #require(viewSource.range(of: "deleteSelectedObject: {"))
+        #expect(viewSource.contains("deleteSelectedObject: deleteSelectedObjectFromKeyboard"))
+        let deleteStart = try #require(
+            viewSource.range(of: "func deleteSelectedObjectFromKeyboard() -> Bool")
+        )
         let deleteEnd = try #require(
-            viewSource[deleteStart.upperBound...].range(of: "cancelSelectedObject: {")
+            viewSource[deleteStart.upperBound...].range(of: "private func performKeyboardShortcut(")
         )
         let deleteSource = viewSource[deleteStart.lowerBound..<deleteEnd.lowerBound]
         let dragCancel = try #require(deleteSource.range(of: "cancelPathAnchorDragForKeyboardCommand()"))
@@ -3632,12 +3637,16 @@ struct ImageEditorScopeTests {
         let layerDelete = try #require(
             deleteSource.range(of: "viewModel.deleteSelectedLayerFromKeyboardIfPossible()")
         )
+        let documentPolicy = try #require(
+            deleteSource.range(of: "ImageEditorContextualDocumentDeletePolicy.resolve(")
+        )
         #expect(dragCancel.lowerBound < pointerPolicy.lowerBound)
         #expect(pointerPolicy.lowerBound < pointerLatch.lowerBound)
         #expect(pointerLatch.lowerBound < pendingDelete.lowerBound)
         #expect(pendingDelete.lowerBound < documentDelete.lowerBound)
         #expect(documentDelete.lowerBound < componentDelete.lowerBound)
-        #expect(componentDelete.lowerBound < layerDelete.lowerBound)
+        #expect(componentDelete.lowerBound < documentPolicy.lowerBound)
+        #expect(documentPolicy.lowerBound < layerDelete.lowerBound)
 
         let commandStart = try #require(pathSource.range(of: "func deletePendingPenPointIfNeeded()"))
         let commandEnd = try #require(
