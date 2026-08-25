@@ -167,6 +167,10 @@ extension ImageEditorViewModel {
         canPasteClipboardImage && XomoClipboardLayerPayload.frame(from: .general) != nil
     }
 
+    var canPasteClipboardImageAsSmartObject: Bool {
+        canPasteClipboardImage
+    }
+
     func chooseImageLayerFile() {
         let originatingWindow = NSApp.keyWindow
         let panel = NSOpenPanel()
@@ -221,16 +225,58 @@ extension ImageEditorViewModel {
             return false
         }
 
+        guard let cleanName = commitEmbeddedSmartObjectPlacement(
+            image,
+            sourceName: sourceName,
+            centeredAt: point,
+            historyTitle: L10n.text("imageEditor.history.placeEmbeddedSmartObject")
+        ) else {
+            statusText = L10n.text("imageEditor.status.placeEmbeddedSmartObjectFailed")
+            return false
+        }
+        statusText = L10n.format("imageEditor.status.placeEmbeddedSmartObject", cleanName)
+        return true
+    }
+
+    @discardableResult
+    func pasteClipboardAsSmartObject(
+        from pasteboard: NSPasteboard = .general
+    ) -> Bool {
+        guard let image = pasteboard.readImage() else {
+            statusText = L10n.text("imageEditor.status.clipboardImageMissing")
+            return false
+        }
+        guard commitEmbeddedSmartObjectPlacement(
+            image,
+            sourceName: L10n.text("source.clipboard"),
+            historyTitle: L10n.text("imageEditor.history.clipboardPasteSmartObject")
+        ) != nil else {
+            statusText = L10n.text("imageEditor.status.clipboardPasteSmartObjectFailed")
+            return false
+        }
+        statusText = L10n.text("imageEditor.status.clipboardPastedAsSmartObject")
+        return true
+    }
+
+    private func commitEmbeddedSmartObjectPlacement(
+        _ image: NSImage,
+        sourceName: String,
+        centeredAt point: CGPoint? = nil,
+        historyTitle: String
+    ) -> String? {
+        let normalized = image.normalizedImportedBitmapImage()
+        guard normalized.size.width > 0, normalized.size.height > 0 else { return nil }
+
         let cleanName = cleanLayerName(from: sourceName)
         let frame = point.map {
-            ImageEditorLayerFileImportPolicy.frame(for: image.size, centeredAt: $0)
+            ImageEditorLayerFileImportPolicy.frame(for: normalized.size, centeredAt: $0)
         } ?? ImageEditorEmbeddedSmartObjectPlacementPolicy.frame(
-            for: image.size,
+            for: normalized.size,
             in: document.canvasSize
         )
         var layer = ImageEditorLayer.smartObject(
             name: L10n.format("imageEditor.layer.smartObjectName", cleanName),
-            image: image,
+            image: normalized,
             sourceName: cleanName
         )
         layer.frame = frame
@@ -243,9 +289,8 @@ extension ImageEditorViewModel {
         document.selectedLayerID = layer.id
         document.selectedLayerIDs = [layer.id]
         isEditingLayerMask = false
-        appendHistory(L10n.text("imageEditor.history.placeEmbeddedSmartObject"))
-        statusText = L10n.format("imageEditor.status.placeEmbeddedSmartObject", cleanName)
-        return true
+        appendHistory(historyTitle)
+        return cleanName
     }
 
     @discardableResult

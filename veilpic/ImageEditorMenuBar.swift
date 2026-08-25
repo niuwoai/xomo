@@ -177,6 +177,8 @@ extension ImageEditorView {
             canPasteIntoSelection: viewModel.canPasteClipboardImageIntoSelection,
             pasteInPlace: { viewModel.pasteClipboardInPlaceAsLayer() },
             canPasteInPlace: viewModel.canPasteClipboardImageInPlace,
+            pasteAsSmartObject: { viewModel.pasteClipboardAsSmartObject() },
+            canPasteAsSmartObject: viewModel.canPasteClipboardImageAsSmartObject,
             toggleFreeTransform: { viewModel.toggleTransformControlsVisible() },
             presentFillDialog: { viewModel.presentSelectionFillPanel() },
             canPresentFillDialog: canPresentSelectionFillPanel,

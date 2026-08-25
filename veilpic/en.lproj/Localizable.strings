@@ -1769,6 +1769,7 @@
 "imageEditor.history.editableSVGImport" = "Import Editable SVG Shape";
 "imageEditor.history.clipboardPasteLayer" = "Paste Clipboard as Layer";
 "imageEditor.history.clipboardPasteIntoSelection" = "Paste Into Selection";
+"imageEditor.history.clipboardPasteSmartObject" = "Paste as Smart Object";
 "imageEditor.history.layerSmartObject" = "Convert to Smart Object";
 "imageEditor.history.layerSmartObjectReplace" = "Replace Smart Object Contents";
 "imageEditor.history.layerSmartObjectMakeUnique" = "Make Smart Object Unique";
@@ -2438,6 +2439,8 @@
 "imageEditor.status.clipboardPastedToLayer" = "Clipboard image pasted as a new layer";
 "imageEditor.status.clipboardPastedIntoSelection" = "Clipboard image pasted into the selection as a masked layer";
 "imageEditor.status.clipboardPastedInPlace" = "Clipboard layer pasted in place";
+"imageEditor.status.clipboardPastedAsSmartObject" = "Clipboard image pasted as a Smart Object";
+"imageEditor.status.clipboardPasteSmartObjectFailed" = "Could not paste the clipboard image as a Smart Object";
 "imageEditor.status.clipboardLayerPositionMissing" = "This clipboard image has no Xomo layer position";
 "imageEditor.status.clipboardCanvasCreated" = "Created a %d × %d canvas from Clipboard";
 "imageEditor.status.selectionPixelsCleared" = "Selection pixels cleared";
@@ -2964,6 +2967,7 @@
 "imageEditor.action.pasteClipboardLayer" = "Paste as Layer";
 "imageEditor.action.pasteClipboardIntoSelection" = "Paste Into Selection";
 "imageEditor.action.pasteClipboardInPlaceLayer" = "Paste in Place";
+"imageEditor.action.pasteClipboardAsSmartObject" = "Paste as Smart Object";
 "imageEditor.action.freeTransform" = "Free Transform";
 "imageEditor.action.clearSelectionPixels" = "Clear Pixels";
 "imageEditor.action.deleteSelectedObject" = "Delete Selected";

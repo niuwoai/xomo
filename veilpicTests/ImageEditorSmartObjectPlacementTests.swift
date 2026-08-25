@@ -278,6 +278,153 @@ struct ImageEditorSmartObjectPlacementTests {
         #expect(viewModel.document.layers.first { $0.id == differentID }?.smartObjectContent?.sourceName == differentBefore.smartObjectContent?.sourceName)
     }
 
+    @Test func pastingClipboardImageCreatesSelectedSmartObjectInOneUndoStep() throws {
+        let viewModel = makeViewModel()
+        let originalLayerIDs = viewModel.document.layers.map(\.id)
+        let historyCount = viewModel.document.history.count
+        let originalSelection = ImageEditorSelection.rectangle(
+            CGRect(x: 12, y: 14, width: 30, height: 20)
+        )
+        viewModel.document.selection = originalSelection
+        let pasteboard = NSPasteboard(
+            name: NSPasteboard.Name("xomo-tests.paste-smart-object.\(UUID().uuidString)")
+        )
+        pasteboard.clearContents()
+        defer { pasteboard.clearContents() }
+        let image = try #require(NSImage.rendered(size: CGSize(width: 24, height: 16)) { rect in
+            NSColor.systemIndigo.setFill()
+            rect.fill()
+        })
+        #expect(pasteboard.writeObjects([image]))
+
+        #expect(viewModel.pasteClipboardAsSmartObject(from: pasteboard))
+        let pasted = try #require(viewModel.document.selectedLayer)
+        let content = try #require(pasted.smartObjectContent)
+        let clipboardName = L10n.text("source.clipboard")
+
+        #expect(viewModel.document.selectedLayerIDs == [pasted.id])
+        #expect(viewModel.document.selection == nil)
+        #expect(viewModel.reselectableSelection == originalSelection)
+        #expect(pasted.isSmartObject)
+        #expect(pasted.name == L10n.format("imageEditor.layer.smartObjectName", clipboardName))
+        #expect(pasted.frame == CGRect(x: 88, y: 72, width: 24, height: 16))
+        #expect(pasted.image.size == CGSize(width: 24, height: 16))
+        #expect(content.originalSize == CGSize(width: 24, height: 16))
+        #expect(content.sourceName == clipboardName)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.history.last?.title == L10n.text(
+            "imageEditor.history.clipboardPasteSmartObject"
+        ))
+        #expect(viewModel.statusText == L10n.text(
+            "imageEditor.status.clipboardPastedAsSmartObject"
+        ))
+
+        viewModel.undo()
+        #expect(viewModel.document.layers.map(\.id) == originalLayerIDs)
+        #expect(viewModel.document.selection == originalSelection)
+        viewModel.redo()
+        #expect(viewModel.document.selectedLayer?.smartObjectContent?.sourceID == content.sourceID)
+    }
+
+    @Test func oversizedClipboardSmartObjectFitsCanvasAndKeepsNativeResetSize() throws {
+        let viewModel = makeViewModel()
+        let pasteboard = NSPasteboard(
+            name: NSPasteboard.Name("xomo-tests.paste-large-smart-object.\(UUID().uuidString)")
+        )
+        pasteboard.clearContents()
+        defer { pasteboard.clearContents() }
+        let image = try #require(NSImage.rendered(size: CGSize(width: 400, height: 200)) { rect in
+            NSColor.systemPink.setFill()
+            rect.fill()
+        })
+        #expect(pasteboard.writeObjects([image]))
+
+        #expect(viewModel.pasteClipboardAsSmartObject(from: pasteboard))
+        let pasted = try #require(viewModel.document.selectedLayer)
+        #expect(pasted.frame == CGRect(x: 0, y: 30, width: 200, height: 100))
+        #expect(pasted.smartObjectContent?.originalSize == CGSize(width: 400, height: 200))
+        #expect(viewModel.canResetSelectedSmartObjectTransform)
+
+        viewModel.resetSelectedSmartObjectTransform()
+        #expect(viewModel.document.selectedLayer?.frame == CGRect(
+            x: -100,
+            y: -20,
+            width: 400,
+            height: 200
+        ))
+        viewModel.undo()
+        #expect(viewModel.document.selectedLayer?.frame == pasted.frame)
+    }
+
+    @Test func emptyClipboardSmartObjectPastePreservesDocumentAndExistingRedo() {
+        let viewModel = makeViewModel()
+        viewModel.addLayer()
+        viewModel.undo()
+        #expect(viewModel.canRedo)
+        let pasteboard = NSPasteboard(
+            name: NSPasteboard.Name("xomo-tests.empty-smart-object.\(UUID().uuidString)")
+        )
+        pasteboard.clearContents()
+        defer { pasteboard.clearContents() }
+        let layerIDs = viewModel.document.layers.map(\.id)
+        let history = viewModel.document.history
+        let undoCount = viewModel.undoStack.count
+        let redoCount = viewModel.redoStack.count
+
+        #expect(!viewModel.pasteClipboardAsSmartObject(from: pasteboard))
+        #expect(viewModel.document.layers.map(\.id) == layerIDs)
+        #expect(viewModel.document.history == history)
+        #expect(viewModel.undoStack.count == undoCount)
+        #expect(viewModel.redoStack.count == redoCount)
+        #expect(viewModel.canRedo)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.clipboardImageMissing"))
+
+        viewModel.redo()
+        #expect(viewModel.document.layers.count == layerIDs.count + 1)
+    }
+
+    @Test func editMenuWiresClipboardSmartObjectPasteInEveryLanguage() throws {
+        let root = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let importSource = try String(
+            contentsOf: root.appendingPathComponent("veilpic/ImageEditorImport.swift"),
+            encoding: .utf8
+        )
+        let commandsSource = try String(
+            contentsOf: root.appendingPathComponent("veilpic/XomoApplicationCommands.swift"),
+            encoding: .utf8
+        )
+        let menuSource = try String(
+            contentsOf: root.appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),
+            encoding: .utf8
+        )
+
+        #expect(importSource.contains("func pasteClipboardAsSmartObject("))
+        #expect(importSource.contains("commitEmbeddedSmartObjectPlacement("))
+        #expect(commandsSource.contains("imageEditor.action.pasteClipboardAsSmartObject"))
+        #expect(commandsSource.contains("actions?.pasteAsSmartObject()"))
+        #expect(commandsSource.contains("actions?.canPasteAsSmartObject != true"))
+        #expect(menuSource.contains(
+            "pasteAsSmartObject: { viewModel.pasteClipboardAsSmartObject() }"
+        ))
+        #expect(menuSource.contains(
+            "canPasteAsSmartObject: viewModel.canPasteClipboardImageAsSmartObject"
+        ))
+        for locale in ["zh-Hans", "en", "ja"] {
+            let strings = try String(
+                contentsOf: root.appendingPathComponent(
+                    "veilpic/\(locale).lproj/Localizable.strings"
+                ),
+                encoding: .utf8
+            )
+            #expect(strings.contains("\"imageEditor.action.pasteClipboardAsSmartObject\" ="))
+            #expect(strings.contains("\"imageEditor.history.clipboardPasteSmartObject\" ="))
+            #expect(strings.contains("\"imageEditor.status.clipboardPastedAsSmartObject\" ="))
+            #expect(strings.contains("\"imageEditor.status.clipboardPasteSmartObjectFailed\" ="))
+        }
+    }
+
     @Test func fileMenuActionUsesSingleSelectionRasterChooserAndSharedCommandCatalog() throws {
         let root = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()

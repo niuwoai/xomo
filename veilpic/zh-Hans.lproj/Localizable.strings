@@ -1769,6 +1769,7 @@
 "imageEditor.history.editableSVGImport" = "导入可编辑 SVG 形状";
 "imageEditor.history.clipboardPasteLayer" = "从剪贴板粘贴为图层";
 "imageEditor.history.clipboardPasteIntoSelection" = "粘贴到选区";
+"imageEditor.history.clipboardPasteSmartObject" = "粘贴为智能对象";
 "imageEditor.history.layerSmartObject" = "转换为智能对象";
 "imageEditor.history.layerSmartObjectReplace" = "替换智能对象内容";
 "imageEditor.history.layerSmartObjectMakeUnique" = "智能对象实例独立化";
@@ -2438,6 +2439,8 @@
 "imageEditor.status.clipboardPastedToLayer" = "已从剪贴板粘贴为新图层";
 "imageEditor.status.clipboardPastedIntoSelection" = "已将剪贴板图像粘贴到选区并生成蒙版图层";
 "imageEditor.status.clipboardPastedInPlace" = "已将剪贴板图层原位粘贴";
+"imageEditor.status.clipboardPastedAsSmartObject" = "已将剪贴板图像粘贴为智能对象";
+"imageEditor.status.clipboardPasteSmartObjectFailed" = "无法将剪贴板图像粘贴为智能对象";
 "imageEditor.status.clipboardLayerPositionMissing" = "该剪贴板图像没有象墨图层位置信息";
 "imageEditor.status.clipboardCanvasCreated" = "已从剪贴板新建 %d × %d 画布";
 "imageEditor.status.selectionPixelsCleared" = "已清除当前选区内像素";
@@ -2964,6 +2967,7 @@
 "imageEditor.action.pasteClipboardLayer" = "粘贴为图层";
 "imageEditor.action.pasteClipboardIntoSelection" = "粘贴到选区";
 "imageEditor.action.pasteClipboardInPlaceLayer" = "原位粘贴";
+"imageEditor.action.pasteClipboardAsSmartObject" = "粘贴为智能对象";
 "imageEditor.action.freeTransform" = "自由变换";
 "imageEditor.action.clearSelectionPixels" = "清除选区像素";
 "imageEditor.action.deleteSelectedObject" = "删除所选对象";

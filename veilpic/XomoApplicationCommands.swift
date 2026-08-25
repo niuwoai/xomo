@@ -135,6 +135,8 @@ struct XomoEditCommandActions {
     let canPasteIntoSelection: Bool
     let pasteInPlace: () -> Void
     let canPasteInPlace: Bool
+    let pasteAsSmartObject: () -> Void
+    let canPasteAsSmartObject: Bool
     let toggleFreeTransform: () -> Void
     let presentFillDialog: () -> Void
     let canPresentFillDialog: Bool
@@ -250,6 +252,10 @@ struct XomoEditMenuItems: View {
         }
         .keyboardShortcut("v", modifiers: [.command, .option, .shift])
         .disabled(actions?.canPasteInPlace != true)
+        Button(L10n.text("imageEditor.action.pasteClipboardAsSmartObject")) {
+            actions?.pasteAsSmartObject()
+        }
+        .disabled(actions?.canPasteAsSmartObject != true)
         Button(L10n.text("imageEditor.action.freeTransform")) {
             actions?.toggleFreeTransform()
         }
