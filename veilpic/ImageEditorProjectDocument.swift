@@ -1235,6 +1235,7 @@ extension ImageEditorViewModel {
             .tiff,
             .heic,
             .webP,
+            UTType(filenameExtension: "svg") ?? .xml,
         ]
     }
 
@@ -1386,6 +1387,16 @@ extension ImageEditorViewModel {
         resetAfterExternalDocumentOpen()
         appendHistory(L10n.text("imageEditor.history.imageOpen"))
         statusText = L10n.format("imageEditor.status.imageOpened", document.sourceName)
+    }
+
+    func loadExternalSVGDocument(_ document: ImageEditorDocument) {
+        self.document = document
+        psdCompatibilityReport = nil
+        psdCompatibilityFileName = ""
+        isPSDCompatibilityReportPresented = false
+        resetAfterExternalDocumentOpen()
+        appendHistory(L10n.text("imageEditor.history.editableSVGOpen"))
+        statusText = L10n.format("imageEditor.status.editableSVGOpened", document.sourceName)
     }
 
     private func resetAfterExternalDocumentOpen() {

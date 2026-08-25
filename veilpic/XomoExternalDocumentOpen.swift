@@ -12,6 +12,18 @@ import Foundation
 nonisolated enum XomoExternalDocumentKind: Equatable {
     case photoshop
     case image
+    case editableSVG
+}
+
+nonisolated enum XomoExternalDocumentOpenError: LocalizedError {
+    case unsupportedEditableSVG
+
+    var errorDescription: String? {
+        switch self {
+        case .unsupportedEditableSVG:
+            L10n.text("imageEditor.status.editableSVGImportFailed")
+        }
+    }
 }
 
 nonisolated enum XomoExternalDocumentOpenPolicy {
@@ -24,6 +36,8 @@ nonisolated enum XomoExternalDocumentOpenPolicy {
             .photoshop
         case "png", "jpg", "jpeg", "tif", "tiff", "heic", "webp":
             .image
+        case "svg":
+            .editableSVG
         default:
             nil
         }
@@ -62,13 +76,37 @@ enum XomoExternalImageDocumentFactory {
         return document
     }
 
-    private static func editableLayerName(for sourceName: String) -> String {
+    fileprivate static func editableLayerName(for sourceName: String) -> String {
         let trimmedSourceName = sourceName.trimmingCharacters(in: .whitespacesAndNewlines)
         let baseName = (trimmedSourceName as NSString).deletingPathExtension
             .trimmingCharacters(in: .whitespacesAndNewlines)
         return baseName.isEmpty
             ? L10n.text("imageEditor.layer.importedFallbackName")
             : baseName
+    }
+}
+
+@MainActor
+enum XomoExternalSVGDocumentFactory {
+    static func make(sourceName: String, data: Data) -> ImageEditorDocument? {
+        guard let imported = XomoEditableSVGImporter.parse(data) else { return nil }
+        let transparentCanvas = NSImage.transparent(size: imported.size)
+        var document = ImageEditorDocument(
+            sourceName: sourceName,
+            image: transparentCanvas
+        )
+        let shapeLayer = ImageEditorLayer.shape(
+            name: XomoExternalImageDocumentFactory.editableLayerName(for: sourceName),
+            frame: CGRect(origin: .zero, size: imported.size),
+            content: imported.content
+        )
+        document.layers = [
+            .background(image: transparentCanvas),
+            shapeLayer,
+        ]
+        document.selectedLayerID = shapeLayer.id
+        document.selectedLayerIDs = [shapeLayer.id]
+        return document
     }
 }
 
@@ -117,6 +155,7 @@ enum XomoDocumentLoadingStage: Equatable {
     case reading
     case decoding
     case decodingImage
+    case decodingVector
     case rendering
     case finishing
 }
@@ -135,6 +174,8 @@ struct XomoDocumentLoadingPresentation: Equatable {
             L10n.text("startup.loading.decodingPSD")
         case .decodingImage:
             L10n.text("startup.loading.decodingImage")
+        case .decodingVector:
+            L10n.text("startup.loading.decodingSVG")
         case .rendering:
             L10n.text("startup.loading.rendering")
         case .finishing:
@@ -267,6 +308,24 @@ final class XomoExternalDocumentOpenCoordinator: ObservableObject {
                         image: image
                     )
                 )
+                activateOpenedDocumentWindow()
+                finish(requestID: requestID)
+                return
+            }
+
+            if documentKind == .editableSVG {
+                updateStage(.decodingVector, requestID: requestID)
+                guard let document = XomoExternalSVGDocumentFactory.make(
+                    sourceName: url.lastPathComponent,
+                    data: data
+                ) else {
+                    throw XomoExternalDocumentOpenError.unsupportedEditableSVG
+                }
+                try Task.checkCancellation()
+                updateStage(.finishing, requestID: requestID)
+                await Task.yield()
+                guard activeRequestID == requestID else { return }
+                viewModel.loadExternalSVGDocument(document)
                 activateOpenedDocumentWindow()
                 finish(requestID: requestID)
                 return

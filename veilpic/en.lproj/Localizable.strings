@@ -548,10 +548,13 @@
 "imageEditor.status.psdOpenedFlattened" = "This PSD uses unsupported layer features and was opened as a composite: %@";
 "imageEditor.history.imageOpen" = "Open image file";
 "imageEditor.status.imageOpened" = "Opened image: %@";
+"imageEditor.history.editableSVGOpen" = "Open Editable SVG";
+"imageEditor.status.editableSVGOpened" = "Opened editable SVG: %@";
 "startup.loading.preparing" = "Preparing to open %@…";
 "startup.loading.reading" = "Reading %@…";
 "startup.loading.decodingPSD" = "Parsing PSD layers…";
 "startup.loading.decodingImage" = "Decoding image pixels…";
+"startup.loading.decodingSVG" = "Parsing SVG vectors…";
 "startup.loading.rendering" = "Building the editable canvas…";
 "startup.loading.finishing" = "Opening %@…";
 "imageEditor.export.scope" = "Scope";
@@ -2130,7 +2133,7 @@
 "imageEditor.status.exportSVGRequiresVector" = "SVG export requires a pure vector canvas without raster layers, masks, filters, or effects";
 "imageEditor.status.projectOpened" = "Project opened: %@";
 "imageEditor.status.projectSaved" = "Project saved: %@";
-"imageEditor.status.projectOpenFailedWithReason" = "Open project failed: %@";
+"imageEditor.status.projectOpenFailedWithReason" = "Open file failed: %@";
 "imageEditor.status.projectSaveFailedWithReason" = "Save project failed: %@";
 "imageEditor.project.error.imageEncoding" = "Could not encode layer image: %@";
 "imageEditor.project.error.imageDecoding" = "Could not decode layer image: %@";
@@ -2283,7 +2286,7 @@
 "imageEditor.status.layerImported" = "Imported image layer: %@";
 "imageEditor.status.layersImported" = "Imported %d image layers";
 "imageEditor.status.editableSVGImported" = "Imported editable SVG shape: %@";
-"imageEditor.status.editableSVGImportFailed" = "SVG must contain exactly one supported path, line, polyline, polygon, rectangle, circle, or ellipse without CSS, transforms, or referenced resources";
+"imageEditor.status.editableSVGImportFailed" = "SVG must contain one supported path, line, polyline, polygon, rectangle, circle, or ellipse; unsupported transforms, scripts, external resources, or selectors are rejected";
 "imageEditor.status.layerSmartObject" = "Converted to Smart Object";
 "imageEditor.status.layerSmartObjectReplaced" = "Replaced Smart Object contents: %@";
 "imageEditor.status.layerSmartObjectInstancesReplaced" = "Replaced contents for %d Smart Object instances: %@";

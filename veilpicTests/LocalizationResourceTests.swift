@@ -69,6 +69,27 @@ struct LocalizationResourceTests {
         }
     }
 
+    @Test func editableSVGOpenFlowIsLocalizedInEverySupportedLanguage() throws {
+        let paths = try Self.repositoryPaths()
+        let expectedValues = [
+            "zh-Hans": ("打开可编辑 SVG", "已打开可编辑 SVG：%@", "正在解析 SVG 矢量…", "打开文件失败：%@"),
+            "en": ("Open Editable SVG", "Opened editable SVG: %@", "Parsing SVG vectors…", "Open file failed: %@"),
+            "ja": ("編集可能な SVG を開く", "編集可能な SVG を開きました：%@", "SVG ベクターを解析しています…", "ファイルを開けませんでした：%@")
+        ]
+
+        for (localizationID, expectedValue) in expectedValues {
+            let strings = try Self.stringTable(
+                tableName: "Localizable",
+                localizationID: localizationID,
+                appDirectory: paths.appDirectory
+            )
+            #expect(strings["imageEditor.history.editableSVGOpen"] == expectedValue.0)
+            #expect(strings["imageEditor.status.editableSVGOpened"] == expectedValue.1)
+            #expect(strings["startup.loading.decodingSVG"] == expectedValue.2)
+            #expect(strings["imageEditor.status.projectOpenFailedWithReason"] == expectedValue.3)
+        }
+    }
+
     @Test func eyedropperSamplingRingIsLocalizedInEverySupportedLanguage() throws {
         let paths = try Self.repositoryPaths()
         let expectedValues = [

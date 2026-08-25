@@ -266,6 +266,10 @@ enum XomoEditableSVGImporter {
               let document = try? XMLDocument(data: data, options: []),
               let root = document.rootElement(),
               localName(of: root) == "svg",
+              let runtimeNodes = try? root.nodes(
+                  forXPath: ".//*[local-name()='script' or local-name()='foreignObject' or local-name()='animate' or local-name()='animateMotion' or local-name()='animateTransform' or local-name()='set']"
+              ),
+              runtimeNodes.isEmpty,
               let cssRules = stylesheetRules(in: root),
               let viewportScale = viewportScale(root),
               let geometryNodes = try? root.nodes(

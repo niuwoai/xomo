@@ -548,10 +548,13 @@
 "imageEditor.status.psdOpenedFlattened" = "该 PSD 使用了暂不支持的图层特性，已以合成图打开：%@";
 "imageEditor.history.imageOpen" = "打开图像文件";
 "imageEditor.status.imageOpened" = "已打开图像：%@";
+"imageEditor.history.editableSVGOpen" = "打开可编辑 SVG";
+"imageEditor.status.editableSVGOpened" = "已打开可编辑 SVG：%@";
 "startup.loading.preparing" = "正在准备打开 %@…";
 "startup.loading.reading" = "正在读取 %@…";
 "startup.loading.decodingPSD" = "正在解析 PSD 图层…";
 "startup.loading.decodingImage" = "正在解码图像像素…";
+"startup.loading.decodingSVG" = "正在解析 SVG 矢量…";
 "startup.loading.rendering" = "正在生成可编辑画布…";
 "startup.loading.finishing" = "正在打开 %@…";
 "imageEditor.export.scope" = "范围";
@@ -2130,7 +2133,7 @@
 "imageEditor.status.exportSVGRequiresVector" = "SVG 仅支持没有位图图层、蒙版、滤镜或图层特效的纯矢量画布";
 "imageEditor.status.projectOpened" = "已打开项目：%@";
 "imageEditor.status.projectSaved" = "已保存项目：%@";
-"imageEditor.status.projectOpenFailedWithReason" = "打开项目失败：%@";
+"imageEditor.status.projectOpenFailedWithReason" = "打开文件失败：%@";
 "imageEditor.status.projectSaveFailedWithReason" = "保存项目失败：%@";
 "imageEditor.project.error.imageEncoding" = "无法编码图层图片：%@";
 "imageEditor.project.error.imageDecoding" = "无法解码图层图片：%@";
@@ -2283,7 +2286,7 @@
 "imageEditor.status.layerImported" = "已导入图片图层：%@";
 "imageEditor.status.layersImported" = "已导入 %d 个图片图层";
 "imageEditor.status.editableSVGImported" = "已导入可编辑 SVG 形状：%@";
-"imageEditor.status.editableSVGImportFailed" = "SVG 必须只包含一个无 CSS、变换或引用资源的受支持路径、直线、折线、多边形、矩形、圆或椭圆";
+"imageEditor.status.editableSVGImportFailed" = "SVG 必须只包含一个受支持的路径、直线、折线、多边形、矩形、圆或椭圆；不支持的变换、脚本、外部资源或选择器会被拒绝";
 "imageEditor.status.layerSmartObject" = "已转换为智能对象";
 "imageEditor.status.layerSmartObjectReplaced" = "已替换智能对象内容：%@";
 "imageEditor.status.layerSmartObjectInstancesReplaced" = "已替换 %d 个智能对象实例内容：%@";

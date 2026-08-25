@@ -50,6 +50,9 @@ struct ImageEditorSVGImportTests {
     @Test func unsupportedSVGStructuresFailWithoutPartialImport() {
         let unsupported = [
             "<svg><path d='M0 0 L10 10' fill='none' stroke='black'/><path d='M20 20 L30 30' fill='none' stroke='black'/></svg>",
+            "<svg><script>alert(1)</script><rect width='20' height='10'/></svg>",
+            "<svg><rect width='20' height='10'><animate attributeName='x' from='0' to='10'/></rect></svg>",
+            "<svg><foreignObject width='20' height='10'><body>HTML</body></foreignObject><rect width='20' height='10'/></svg>",
             "<svg><g transform='translate(10 10)'><path d='M0 0 L10 10' fill='none' stroke='black'/></g></svg>",
             "<svg><path style='mix-blend-mode:multiply' d='M0 0 L10 0 L10 10 Z'/></svg>",
             "<svg><path d='M0 0 L10 0 Z M20 0 L30 0' fill='none' stroke='black'/></svg>",

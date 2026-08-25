@@ -548,10 +548,13 @@
 "imageEditor.status.psdOpenedFlattened" = "未対応のレイヤー機能があるため、合成画像として開きました：%@";
 "imageEditor.history.imageOpen" = "画像ファイルを開く";
 "imageEditor.status.imageOpened" = "画像を開きました：%@";
+"imageEditor.history.editableSVGOpen" = "編集可能な SVG を開く";
+"imageEditor.status.editableSVGOpened" = "編集可能な SVG を開きました：%@";
 "startup.loading.preparing" = "%@ を開く準備をしています…";
 "startup.loading.reading" = "%@ を読み込んでいます…";
 "startup.loading.decodingPSD" = "PSD レイヤーを解析しています…";
 "startup.loading.decodingImage" = "画像ピクセルをデコードしています…";
+"startup.loading.decodingSVG" = "SVG ベクターを解析しています…";
 "startup.loading.rendering" = "編集可能なキャンバスを生成しています…";
 "startup.loading.finishing" = "%@ を開いています…";
 "imageEditor.export.scope" = "範囲";
@@ -2130,7 +2133,7 @@
 "imageEditor.status.exportSVGRequiresVector" = "SVG は、ラスター画像、マスク、フィルター、レイヤー効果を含まない純粋なベクターキャンバスでのみ書き出せます";
 "imageEditor.status.projectOpened" = "プロジェクトを開きました：%@";
 "imageEditor.status.projectSaved" = "プロジェクトを保存しました：%@";
-"imageEditor.status.projectOpenFailedWithReason" = "プロジェクトを開けませんでした：%@";
+"imageEditor.status.projectOpenFailedWithReason" = "ファイルを開けませんでした：%@";
 "imageEditor.status.projectSaveFailedWithReason" = "プロジェクトを保存できませんでした：%@";
 "imageEditor.project.error.imageEncoding" = "レイヤー画像をエンコードできません：%@";
 "imageEditor.project.error.imageDecoding" = "レイヤー画像をデコードできません：%@";
@@ -2283,7 +2286,7 @@
 "imageEditor.status.layerImported" = "画像レイヤーを読み込みました：%@";
 "imageEditor.status.layersImported" = "%d 個の画像レイヤーを読み込みました";
 "imageEditor.status.editableSVGImported" = "編集可能な SVG シェイプを読み込みました：%@";
-"imageEditor.status.editableSVGImportFailed" = "SVG は CSS、変形、参照リソースを含まない、対応済みの単一パス、直線、折れ線、多角形、長方形、円または楕円である必要があります";
+"imageEditor.status.editableSVGImportFailed" = "SVG には対応済みのパス、直線、折れ線、多角形、長方形、円または楕円を 1 つだけ含めてください。未対応の変形、スクリプト、外部リソース、セレクターは拒否されます";
 "imageEditor.status.layerSmartObject" = "スマートオブジェクトに変換しました";
 "imageEditor.status.layerSmartObjectReplaced" = "スマートオブジェクトの内容を置換しました：%@";
 "imageEditor.status.layerSmartObjectInstancesReplaced" = "%d 個のスマートオブジェクトインスタンスの内容を置換しました：%@";
