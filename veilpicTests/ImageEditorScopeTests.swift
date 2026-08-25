@@ -282,9 +282,22 @@ struct ImageEditorScopeTests {
         #expect(nudgeShortcutSource.contains("nudgeShortcutButton(.upArrow, delta: CGSize(width: 0, height: -5), modifiers: [.option])"))
         #expect(nudgeShortcutSource.contains("nudgeShortcutButton(.downArrow, delta: CGSize(width: 0, height: 5), modifiers: [.option])"))
         #expect(nudgeShortcutSource.contains("nudgeShortcutButton(.leftArrow, delta: CGSize(width: -10, height: 0), modifiers: [.shift])"))
-        #expect(nudgeShortcutSource.contains("viewModel.nudgeSelectionOrSelectedLayer(by: delta)"))
+        #expect(nudgeShortcutSource.contains("performNudgeCommand(delta)"))
         #expect(nudgeShortcutSource.contains("performDirectShortcut"))
         #expect(nudgeShortcutSource.contains("ImageEditorLiveMoveShortcutPolicy.allowsDirectShortcut"))
+        #expect(source.contains("nudgeSelected: performNudgeCommand"))
+        let nudgeHelperStart = try #require(source.range(of: "func performNudgeCommand("))
+        let nudgeHelperEnd = try #require(
+            source[nudgeHelperStart.upperBound...].range(of: "\n    }")
+        )
+        let nudgeHelperSource = source[nudgeHelperStart.lowerBound..<nudgeHelperEnd.upperBound]
+        let nudgeDispatchGate = try #require(
+            nudgeHelperSource.range(of: "ImageEditorNudgeCommandDispatchGate.shouldDispatch")
+        )
+        let nudgeModelCommand = try #require(
+            nudgeHelperSource.range(of: "viewModel.nudgeSelectionOrSelectedLayer(by: delta)")
+        )
+        #expect(nudgeDispatchGate.lowerBound < nudgeModelCommand.lowerBound)
 
         let transformSource = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorTransform.swift"),
@@ -3510,17 +3523,22 @@ struct ImageEditorScopeTests {
             encoding: .utf8
         )
 
-        let monitorStart = try #require(viewSource.range(of: "ImageEditorKeyboardShortcutMonitor("))
-        let monitorEnd = try #require(viewSource[monitorStart.upperBound...].range(of: ".allowsHitTesting(false)"))
-        let monitorSource = viewSource[monitorStart.lowerBound..<monitorEnd.lowerBound]
-        let nudgeStart = try #require(monitorSource.range(of: "nudgeSelected: { delta in"))
-        let nudgeSource = monitorSource[nudgeStart.lowerBound...]
+        #expect(viewSource.contains("nudgeSelected: performNudgeCommand"))
+        let nudgeStart = try #require(viewSource.range(of: "func performNudgeCommand("))
+        let nudgeEnd = try #require(
+            viewSource[nudgeStart.upperBound...].range(of: "\n    }")
+        )
+        let nudgeSource = viewSource[nudgeStart.lowerBound..<nudgeEnd.upperBound]
+        let nudgeGate = try #require(
+            nudgeSource.range(of: "ImageEditorNudgeCommandDispatchGate.shouldDispatch")
+        )
         let nudgeCancel = try #require(
             nudgeSource.range(of: "cancelPathAnchorDragForKeyboardCommand()")
         )
         let nudgeCommand = try #require(
             nudgeSource.range(of: "viewModel.nudgeSelectionOrSelectedLayer(by: delta)")
         )
+        #expect(nudgeGate.lowerBound < nudgeCancel.lowerBound)
         #expect(nudgeCancel.lowerBound < nudgeCommand.lowerBound)
 
         let deleteStart = try #require(

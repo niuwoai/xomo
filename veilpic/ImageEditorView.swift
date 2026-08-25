@@ -348,20 +348,7 @@ struct ImageEditorView: View {
                 activeTool: viewModel.canvasInteractionTool,
                 canToggleQuickMaskGrayscalePreview: viewModel.isQuickMaskMode,
                 canToggleLayerMaskRubylith: viewModel.canToggleSelectedLayerMaskRubylithPreview,
-                nudgeSelected: { delta in
-                    if cancelPathAnchorDragForKeyboardCommand() {
-                        return
-                    }
-                    if cancelGradientOverlayCanvasHandleDragForLifecycle() {
-                        return
-                    }
-                    if nudgeSelectedGradientOverlayHandleIfNeeded(by: delta) {
-                        return
-                    }
-                    if !viewModel.nudgeSelectedDeliveryObject(by: delta) {
-                        viewModel.nudgeSelectionOrSelectedLayer(by: delta)
-                    }
-                },
+                nudgeSelected: performNudgeCommand,
                 selectNextCanvasHandle: { movesBackward in
                     if cancelGradientOverlayCanvasHandleDragForLifecycle() {
                         return true
@@ -3140,7 +3127,7 @@ struct ImageEditorView: View {
 
     private func nudgeShortcutButton(_ key: KeyEquivalent, delta: CGSize, modifiers: EventModifiers) -> some View {
         Button {
-            performDirectShortcut { viewModel.nudgeSelectionOrSelectedLayer(by: delta) }
+            performDirectShortcut { performNudgeCommand(delta) }
         } label: {
             EmptyView()
         }
@@ -3154,6 +3141,25 @@ struct ImageEditorView: View {
             hasActivePathAnchorMoveTransaction: viewModel.hasActivePathAnchorMoveTransaction
         ) else { return }
         action()
+    }
+
+    func performNudgeCommand(_ delta: CGSize) {
+        guard ImageEditorNudgeCommandDispatchGate.shouldDispatch(
+            delta,
+            event: .currentKeyEvent
+        ) else { return }
+        if cancelPathAnchorDragForKeyboardCommand() {
+            return
+        }
+        if cancelGradientOverlayCanvasHandleDragForLifecycle() {
+            return
+        }
+        if nudgeSelectedGradientOverlayHandleIfNeeded(by: delta) {
+            return
+        }
+        if !viewModel.nudgeSelectedDeliveryObject(by: delta) {
+            viewModel.nudgeSelectionOrSelectedLayer(by: delta)
+        }
     }
 
     @discardableResult
@@ -16568,6 +16574,31 @@ enum ImageEditorArrowNudge {
         default:
             return nil
         }
+    }
+}
+
+@MainActor
+enum ImageEditorNudgeCommandDispatchGate {
+    private struct Dispatch: Equatable {
+        let delta: CGSize
+        let event: ImageEditorKeyboardShortcutEventSignature
+    }
+
+    private static var lastDispatch: Dispatch?
+
+    static func shouldDispatch(
+        _ delta: CGSize,
+        event: ImageEditorKeyboardShortcutEventSignature?
+    ) -> Bool {
+        guard let event else { return true }
+        let dispatch = Dispatch(delta: delta, event: event)
+        guard dispatch != lastDispatch else { return false }
+        lastDispatch = dispatch
+        return true
+    }
+
+    static func reset() {
+        lastDispatch = nil
     }
 }
 

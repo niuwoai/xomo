@@ -12,6 +12,68 @@ import Testing
 @MainActor
 @Suite(.serialized)
 struct ImageEditorHistoryTests {
+    @Test func onePhysicalArrowShortcutNudgesOnlyOneDistanceStep() throws {
+        ImageEditorNudgeCommandDispatchGate.reset()
+        defer { ImageEditorNudgeCommandDispatchGate.reset() }
+
+        let canvas = try #require(NSImage.rendered(size: NSSize(width: 64, height: 64)) { rect in
+            NSColor.white.setFill()
+            rect.fill()
+        })
+        let importedImage = try #require(NSImage.rendered(size: NSSize(width: 16, height: 16)) { rect in
+            NSColor.systemBlue.setFill()
+            rect.fill()
+        })
+        let viewModel = ImageEditorViewModel(sourceName: "nudge.png", image: canvas) { _ in }
+        #expect(viewModel.importImageLayer(
+            importedImage,
+            sourceName: "object.png"
+        ))
+        let selectedID = try #require(viewModel.document.selectedLayerID)
+        let initialFrame = try #require(
+            viewModel.document.layers.first(where: { $0.id == selectedID })?.frame
+        )
+        let historyCount = viewModel.document.history.count
+        let deltas = [
+            CGSize(width: 1, height: 0),
+            CGSize(width: 5, height: 0),
+            CGSize(width: 10, height: 0)
+        ]
+
+        for (index, delta) in deltas.enumerated() {
+            let event = ImageEditorKeyboardShortcutEventSignature(
+                windowNumber: 19,
+                eventNumber: 920 + index,
+                timestamp: 92 + Double(index) / 10,
+                typeRawValue: NSEvent.EventType.keyDown.rawValue,
+                keyCode: 124
+            )
+            for _ in 0..<2 {
+                guard ImageEditorNudgeCommandDispatchGate.shouldDispatch(
+                    delta,
+                    event: event
+                ) else { continue }
+                viewModel.nudgeSelectionOrSelectedLayer(by: delta)
+            }
+        }
+
+        let finalFrame = try #require(
+            viewModel.document.layers.first(where: { $0.id == selectedID })?.frame
+        )
+        #expect(finalFrame.origin.x == initialFrame.origin.x + 16)
+        #expect(finalFrame.origin.y == initialFrame.origin.y)
+        #expect(viewModel.document.history.count == historyCount + 3)
+    }
+
+    @Test func nudgeFallbackBoundariesRemainIndependentWithoutAKeyEvent() {
+        ImageEditorNudgeCommandDispatchGate.reset()
+        defer { ImageEditorNudgeCommandDispatchGate.reset() }
+
+        let delta = CGSize(width: 1, height: 0)
+        #expect(ImageEditorNudgeCommandDispatchGate.shouldDispatch(delta, event: nil))
+        #expect(ImageEditorNudgeCommandDispatchGate.shouldDispatch(delta, event: nil))
+    }
+
     @Test func onePhysicalZoomShortcutAdvancesOnlyOneZoomStep() {
         ImageEditorZoomCommandDispatchGate.reset()
         defer { ImageEditorZoomCommandDispatchGate.reset() }
