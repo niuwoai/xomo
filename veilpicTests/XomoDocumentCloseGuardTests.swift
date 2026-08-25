@@ -124,6 +124,60 @@ struct XomoDocumentCloseGuardTests {
         #expect(window.delegate === previousDelegate)
     }
 
+    @Test func windowCoordinatorSynchronizesNativeDocumentIdentityAndRestoresHostMetadata() async {
+        let viewModel = makeViewModel(sourceName: "poster.png")
+        let window = makeWindow()
+        let hostURL = URL(fileURLWithPath: "/tmp/Host.xomoproject")
+        window.title = "Host Window"
+        window.representedURL = hostURL
+        window.isDocumentEdited = true
+        let coordinator = XomoDocumentCloseGuardCoordinator(viewModel: viewModel)
+
+        coordinator.install(on: window)
+        #expect(window.title == "poster.png")
+        #expect(window.representedURL == nil)
+        #expect(!window.isDocumentEdited)
+
+        viewModel.renameSelectedLayer(to: "Changed")
+        await drainMainQueue()
+        #expect(window.isDocumentEdited)
+
+        let projectURL = URL(fileURLWithPath: "/tmp/Poster Project.xomoproject")
+        let didSave = viewModel.writeProjectDocument(
+            to: projectURL,
+            dataWriter: { _, _ in },
+            recentDocumentRegistrar: { _ in }
+        )
+        #expect(didSave)
+        await drainMainQueue()
+        #expect(window.title == projectURL.lastPathComponent)
+        #expect(window.representedURL == projectURL.standardizedFileURL)
+        #expect(!window.isDocumentEdited)
+
+        viewModel.renameSelectedLayer(to: "Changed Again")
+        await drainMainQueue()
+        #expect(window.isDocumentEdited)
+        viewModel.undo()
+        await drainMainQueue()
+        #expect(!window.isDocumentEdited)
+
+        viewModel.loadExternalImageDocument(
+            ImageEditorDocument(
+                sourceName: "photo.png",
+                image: NSImage.transparent(size: CGSize(width: 20, height: 14))
+            )
+        )
+        await drainMainQueue()
+        #expect(window.title == "photo.png")
+        #expect(window.representedURL == nil)
+        #expect(!window.isDocumentEdited)
+
+        coordinator.uninstall()
+        #expect(window.title == "Host Window")
+        #expect(window.representedURL == hostURL)
+        #expect(window.isDocumentEdited)
+    }
+
     @Test func cleanApplicationTerminationDoesNotDeferOrPresentConfirmation() {
         let clean = makeViewModel(sourceName: "clean.png")
         let candidate = XomoDocumentTerminationCandidate(
@@ -304,6 +358,9 @@ struct XomoDocumentCloseGuardTests {
         #expect(menuBar.contains("viewModel.applyAndClose"))
         #expect(guardSource.contains("func windowShouldClose(_ sender: NSWindow) -> Bool"))
         #expect(guardSource.contains("viewModel.hasUnsavedProjectChanges"))
+        #expect(guardSource.contains("Publishers.MergeMany(publishers)"))
+        #expect(guardSource.contains("window.representedURL = representedURL"))
+        #expect(guardSource.contains("window.isDocumentEdited = isDocumentEdited"))
         #expect(guardSource.contains("viewModel.saveProjectDocument(completion: completion)"))
         #expect(guardSource.contains("case .alertSecondButtonReturn:"))
         #expect(guardSource.contains("gate.approveNextClose()"))
@@ -363,6 +420,14 @@ struct XomoDocumentCloseGuardTests {
             window: makeWindow(),
             viewModel: viewModel
         )
+    }
+
+    private func drainMainQueue() async {
+        await withCheckedContinuation { continuation in
+            DispatchQueue.main.async {
+                continuation.resume()
+            }
+        }
     }
 
     private func source(_ relativePath: String, root: URL) throws -> String {

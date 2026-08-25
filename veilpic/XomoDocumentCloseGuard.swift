@@ -6,6 +6,7 @@
 //
 
 import AppKit
+import Combine
 import SwiftUI
 
 typealias XomoDocumentReplacementRequester = @MainActor (
@@ -34,6 +35,33 @@ struct XomoDocumentCloseGate {
 
     mutating func cancelPendingApproval() {
         allowsNextClose = false
+    }
+}
+
+struct XomoDocumentWindowMetadata: Equatable {
+    let title: String
+    let representedURL: URL?
+    let isDocumentEdited: Bool
+
+    @MainActor
+    init(viewModel: ImageEditorViewModel) {
+        representedURL = viewModel.currentProjectURL
+        title = representedURL?.lastPathComponent ?? viewModel.document.sourceName
+        isDocumentEdited = viewModel.hasUnsavedProjectChanges
+    }
+
+    @MainActor
+    init(window: NSWindow) {
+        title = window.title
+        representedURL = window.representedURL
+        isDocumentEdited = window.isDocumentEdited
+    }
+
+    @MainActor
+    func apply(to window: NSWindow) {
+        window.title = title
+        window.representedURL = representedURL
+        window.isDocumentEdited = isDocumentEdited
     }
 }
 
@@ -273,14 +301,20 @@ final class XomoApplicationTerminationCoordinator {
 final class XomoDocumentCloseGuardCoordinator: NSObject, NSWindowDelegate {
     var viewModel: ImageEditorViewModel {
         didSet {
+            guard oldValue !== viewModel else { return }
             if let window {
                 XomoDocumentWindowRegistry.shared.register(window: window, viewModel: viewModel)
+                observePersistentProjectState()
+                synchronizeWindowMetadata()
             }
         }
     }
 
     private weak var window: NSWindow?
     private var previousDelegate: (any NSWindowDelegate)?
+    private var previousWindowMetadata: XomoDocumentWindowMetadata?
+    private var persistentStateCancellable: AnyCancellable?
+    private var isMetadataSynchronizationScheduled = false
     private var gate = XomoDocumentCloseGate()
     private var isPresentingConfirmation = false
 
@@ -294,8 +328,11 @@ final class XomoDocumentCloseGuardCoordinator: NSObject, NSWindowDelegate {
         guard let window else { return }
         self.window = window
         previousDelegate = window.delegate
+        previousWindowMetadata = XomoDocumentWindowMetadata(window: window)
         window.delegate = self
         XomoDocumentWindowRegistry.shared.register(window: window, viewModel: viewModel)
+        observePersistentProjectState()
+        synchronizeWindowMetadata()
     }
 
     func uninstall() {
@@ -305,10 +342,21 @@ final class XomoDocumentCloseGuardCoordinator: NSObject, NSWindowDelegate {
         if let window, window.delegate === self {
             window.delegate = previousDelegate
         }
+        if let window, let previousWindowMetadata {
+            previousWindowMetadata.apply(to: window)
+        }
         window = nil
         previousDelegate = nil
+        previousWindowMetadata = nil
+        persistentStateCancellable = nil
+        isMetadataSynchronizationScheduled = false
         isPresentingConfirmation = false
         gate.cancelPendingApproval()
+    }
+
+    func synchronizeWindowMetadata() {
+        guard let window else { return }
+        XomoDocumentWindowMetadata(viewModel: viewModel).apply(to: window)
     }
 
     func windowShouldClose(_ sender: NSWindow) -> Bool {
@@ -350,6 +398,34 @@ final class XomoDocumentCloseGuardCoordinator: NSObject, NSWindowDelegate {
             }
             self.gate.approveNextClose()
             window.performClose(nil)
+        }
+    }
+
+    private func observePersistentProjectState() {
+        let publishers: [AnyPublisher<Void, Never>] = [
+            viewModel.$document.map { _ in () }.eraseToAnyPublisher(),
+            viewModel.$currentProjectURL.map { _ in () }.eraseToAnyPublisher(),
+            viewModel.$xomoComponentTheme.map { _ in () }.eraseToAnyPublisher(),
+            viewModel.$xomoLocalThemeTokenSnapshot.map { _ in () }.eraseToAnyPublisher(),
+            viewModel.$colorSamplerPoints.map { _ in () }.eraseToAnyPublisher(),
+            viewModel.$selectedColorSamplerReadoutMode.map { _ in () }.eraseToAnyPublisher(),
+            viewModel.$selectedColorSamplerSampleSize.map { _ in () }.eraseToAnyPublisher(),
+            viewModel.$selectedColorSamplerSource.map { _ in () }.eraseToAnyPublisher(),
+            viewModel.$colorSamplerIgnoresAdjustmentLayers.map { _ in () }.eraseToAnyPublisher(),
+        ]
+        persistentStateCancellable = Publishers.MergeMany(publishers)
+            .sink { [weak self] in
+                self?.scheduleWindowMetadataSynchronization()
+            }
+    }
+
+    private func scheduleWindowMetadataSynchronization() {
+        guard !isMetadataSynchronizationScheduled else { return }
+        isMetadataSynchronizationScheduled = true
+        DispatchQueue.main.async { @MainActor [weak self] in
+            guard let self else { return }
+            self.isMetadataSynchronizationScheduled = false
+            self.synchronizeWindowMetadata()
         }
     }
 }
