@@ -196,6 +196,46 @@ struct ImageEditorLayerDeletionTests {
         #expect(viewModel.document.selection == originalSelection)
     }
 
+    @Test func importedImageTakesDeleteOwnershipFromAStaleSliceSelection() throws {
+        let viewModel = makeViewModel()
+        let staleSlice = ImageEditorSlice(
+            name: "Old Slice",
+            frame: CGRect(x: 2, y: 3, width: 12, height: 10)
+        )
+        viewModel.document.slices = [staleSlice]
+        viewModel.exportSettings.scope = .slice
+        viewModel.exportSettings.sliceID = staleSlice.id
+
+        #expect(viewModel.importImageLayer(.transparent(size: CGSize(width: 48, height: 36)), sourceName: "poster.png"))
+        let importedID = try #require(viewModel.document.selectedLayerID)
+
+        #expect(viewModel.exportSettings.scope == .selectedLayer)
+        #expect(!viewModel.deleteSelectedDeliveryObjectIfNeeded())
+        #expect(viewModel.document.slices.map(\.id) == [staleSlice.id])
+        #expect(viewModel.deleteSelectedLayerFromKeyboardIfPossible())
+        #expect(!viewModel.document.layers.contains { $0.id == importedID })
+    }
+
+    @Test func importedImageTakesDeleteOwnershipFromAStaleHotspotSelection() throws {
+        let viewModel = makeViewModel()
+        let staleHotspot = ImageEditorHotspot(
+            name: "Old Hotspot",
+            frame: CGRect(x: 2, y: 3, width: 12, height: 10),
+            url: "https://example.com"
+        )
+        viewModel.document.hotspots = [staleHotspot]
+        viewModel.selectedHotspotID = staleHotspot.id
+
+        #expect(viewModel.importImageLayer(.transparent(size: CGSize(width: 48, height: 36)), sourceName: "poster.png"))
+        let importedID = try #require(viewModel.document.selectedLayerID)
+
+        #expect(viewModel.selectedHotspotID == nil)
+        #expect(!viewModel.deleteSelectedDeliveryObjectIfNeeded())
+        #expect(viewModel.document.hotspots.map(\.id) == [staleHotspot.id])
+        #expect(viewModel.deleteSelectedLayerFromKeyboardIfPossible())
+        #expect(!viewModel.document.layers.contains { $0.id == importedID })
+    }
+
     @Test func deleteKeyLeavesTheLayerForPixelDeletionWhenASelectionExists() throws {
         let viewModel = makeViewModel()
         let importedImage = NSImage.transparent(size: NSSize(width: 48, height: 36))

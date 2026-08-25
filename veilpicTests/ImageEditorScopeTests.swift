@@ -1973,16 +1973,19 @@ struct ImageEditorScopeTests {
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
             encoding: .utf8
         )
+        let commandSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent(
+                "veilpic/XomoApplicationCommands.swift"
+            ),
+            encoding: .utf8
+        )
 
-        for source in [menuSource, viewSource] {
-            let actionRange = try #require(source.range(
-                of: "viewModel.clearSelectionPixels()",
-                options: .backwards
-            ))
-            let tail = source[actionRange.lowerBound...]
-            let disabledRange = try #require(tail.range(of: ".disabled(!viewModel.canRemoveSelectionPixels)"))
-            #expect(tail.distance(from: tail.startIndex, to: disabledRange.lowerBound) < 240)
-        }
+        #expect(viewSource.contains("viewModel.clearSelectionPixels()"))
+        #expect(viewSource.contains(".disabled(!viewModel.canRemoveSelectionPixels)"))
+        #expect(menuSource.contains("canRemoveSelectionPixels: viewModel.canRemoveSelectionPixels"))
+        #expect(menuSource.contains("canDeleteSelectedObject: ImageEditorContextualDocumentDeletePolicy.resolve("))
+        #expect(commandSource.contains("actions?.deleteSelectedObject()"))
+        #expect(commandSource.contains(".disabled(actions?.canDeleteSelectedObject != true)"))
     }
 
     @Test func layerMenuExposesClassicLayerShortcuts() throws {
@@ -2331,6 +2334,12 @@ struct ImageEditorScopeTests {
             ),
             encoding: .utf8
         )
+        let applicationCommandSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent(
+                "veilpic/XomoApplicationCommands.swift"
+            ),
+            encoding: .utf8
+        )
 
         #expect(editorSource.contains("viewModel.setHistoryFillSource(entryID: entry.id)"))
         #expect(editorSource.contains("viewModel.setHistoryFillSource(snapshotID: snapshot.id)"))
@@ -2340,8 +2349,14 @@ struct ImageEditorScopeTests {
         #expect(panelSource.contains("viewModel.historyFillSourceTitle"))
         #expect(commandSource.contains("sourceDocument.layers.first(where: { $0.id == layer.id"))
         #expect(commandSource.contains("func historyFilled("))
-        #expect(menuSource.contains(".keyboardShortcut(.delete, modifiers: [.command, .option])"))
-        #expect(menuSource.contains(".disabled(!viewModel.canFillSelectionFromHistory)"))
+        #expect(menuSource.contains("fillSelectionFromHistory: { viewModel.fillSelectionFromHistory() }"))
+        #expect(menuSource.contains("canFillSelectionFromHistory: viewModel.canFillSelectionFromHistory"))
+        #expect(applicationCommandSource.contains(
+            ".keyboardShortcut(.delete, modifiers: [.command, .option])"
+        ))
+        #expect(applicationCommandSource.contains(
+            ".disabled(actions?.canFillSelectionFromHistory != true)"
+        ))
     }
 
     @Test func historyBrushWiresTheSharedSourceIntoNativePaintingAndOptions() throws {
@@ -3195,6 +3210,12 @@ struct ImageEditorScopeTests {
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),
             encoding: .utf8
         )
+        let applicationCommandSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent(
+                "veilpic/XomoApplicationCommands.swift"
+            ),
+            encoding: .utf8
+        )
 
         let cancelStart = try #require(viewSource.range(of: "cancelSelectedObject: {"))
         let cancelEnd = try #require(
@@ -3251,8 +3272,14 @@ struct ImageEditorScopeTests {
         #expect(viewSource.contains("beginCanvasPointerSequence()"))
         #expect(viewSource.contains("viewModel.selectedTool == .pen || viewModel.hasPendingPenPathTransaction"))
         #expect(viewSource.contains(".disabled(!viewModel.hasPendingPenPathTransaction)"))
-        #expect(menuSource.contains("Button(L10n.text(\"imageEditor.action.undo\")) {\n            performUndo()"))
-        #expect(menuSource.contains("Button(L10n.text(\"imageEditor.action.redo\")) {\n            performRedo()"))
+        #expect(menuSource.contains("undo: performUndo"))
+        #expect(menuSource.contains("redo: performRedo"))
+        #expect(applicationCommandSource.contains(
+            "Button(L10n.text(\"imageEditor.action.undo\")) {\n            actions?.undo()"
+        ))
+        #expect(applicationCommandSource.contains(
+            "Button(L10n.text(\"imageEditor.action.redo\")) {\n            actions?.redo()"
+        ))
     }
 
     @Test func canvasLifecycleInterruptionsCancelPathDragAndFreshMouseDownReleasesLatch() throws {
@@ -3382,15 +3409,30 @@ struct ImageEditorScopeTests {
         let monitorStart = try #require(viewSource.range(of: "ImageEditorKeyboardShortcutMonitor("))
         let monitorEnd = try #require(viewSource[monitorStart.upperBound...].range(of: ".allowsHitTesting(false)"))
         let monitorSource = viewSource[monitorStart.lowerBound..<monitorEnd.lowerBound]
-        for commandLabel in ["nudgeSelected: { delta in", "deleteSelectedObject: {"] {
-            let commandStart = try #require(monitorSource.range(of: commandLabel))
-            let commandSource = monitorSource[commandStart.lowerBound...]
-            let cancel = try #require(commandSource.range(of: "cancelPathAnchorDragForKeyboardCommand()"))
-            let nextCommand = try #require(commandSource.range(of: commandLabel.hasPrefix("nudge")
-                ? "viewModel.nudgeSelectionOrSelectedLayer(by: delta)"
-                : "viewModel.deleteSelectedPathAnchor()"))
-            #expect(cancel.lowerBound < nextCommand.lowerBound)
-        }
+        let nudgeStart = try #require(monitorSource.range(of: "nudgeSelected: { delta in"))
+        let nudgeSource = monitorSource[nudgeStart.lowerBound...]
+        let nudgeCancel = try #require(
+            nudgeSource.range(of: "cancelPathAnchorDragForKeyboardCommand()")
+        )
+        let nudgeCommand = try #require(
+            nudgeSource.range(of: "viewModel.nudgeSelectionOrSelectedLayer(by: delta)")
+        )
+        #expect(nudgeCancel.lowerBound < nudgeCommand.lowerBound)
+
+        let deleteStart = try #require(
+            viewSource.range(of: "func deleteSelectedObjectFromKeyboard() -> Bool")
+        )
+        let deleteEnd = try #require(
+            viewSource[deleteStart.upperBound...].range(of: "private func performKeyboardShortcut(")
+        )
+        let deleteSource = viewSource[deleteStart.lowerBound..<deleteEnd.lowerBound]
+        let deleteCancel = try #require(
+            deleteSource.range(of: "cancelPathAnchorDragForKeyboardCommand()")
+        )
+        let deleteCommand = try #require(
+            deleteSource.range(of: "viewModel.deleteSelectedPathAnchor()")
+        )
+        #expect(deleteCancel.lowerBound < deleteCommand.lowerBound)
 
         let helperStart = try #require(
             viewSource.range(of: "private func cancelPathAnchorDragForKeyboardCommand() -> Bool")

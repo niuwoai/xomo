@@ -296,9 +296,7 @@ extension ImageEditorViewModel {
         pushUndo()
         endPixelSelectionForImportedObject()
         document.layers.append(layer)
-        document.selectedLayerID = layer.id
-        document.selectedLayerIDs = [layer.id]
-        isEditingLayerMask = false
+        selectImportedLayers([layer.id], primaryLayerID: layer.id)
         appendHistory(historyTitle)
         return cleanName
     }
@@ -349,9 +347,7 @@ extension ImageEditorViewModel {
             importedLayer(from: prepared, frame: frame)
         }
         document.layers.append(contentsOf: layers)
-        document.selectedLayerID = layers.last?.id
-        document.selectedLayerIDs = Set(layers.map(\.id))
-        isEditingLayerMask = false
+        selectImportedLayers(layers.map(\.id), primaryLayerID: layers.last?.id)
         appendHistory(L10n.text("imageEditor.history.layerBatchImport"))
         statusText = L10n.format("imageEditor.status.layersImported", layers.count)
         return true
@@ -426,6 +422,20 @@ extension ImageEditorViewModel {
         }
     }
 
+    private func selectImportedLayers(_ layerIDs: [UUID], primaryLayerID: UUID?) {
+        document.selectedLayerID = primaryLayerID
+        document.selectedLayerIDs = Set(layerIDs)
+        isEditingLayerMask = false
+
+        // Imported objects must own the next contextual Delete. Otherwise a
+        // stale slice or hotspot selection can consume the key while the
+        // visibly selected imported layer remains on the canvas.
+        selectedHotspotID = nil
+        if exportSettings.scope == .slice {
+            exportSettings.scope = layerIDs.count > 1 ? .selectedLayers : .selectedLayer
+        }
+    }
+
     @discardableResult
     func importEditableSVGLayer(
         _ data: Data,
@@ -459,9 +469,7 @@ extension ImageEditorViewModel {
         layer.groupID = nil
         layer.isClippingMask = false
         document.layers.append(layer)
-        document.selectedLayerID = layer.id
-        document.selectedLayerIDs = [layer.id]
-        isEditingLayerMask = false
+        selectImportedLayers([layer.id], primaryLayerID: layer.id)
         appendHistory(L10n.text("imageEditor.history.editableSVGImport"))
         statusText = L10n.format("imageEditor.status.editableSVGImported", cleanName)
         return true
@@ -624,9 +632,7 @@ extension ImageEditorViewModel {
         layer.groupID = nil
         layer.isClippingMask = false
         document.layers.append(layer)
-        document.selectedLayerID = layer.id
-        document.selectedLayerIDs = [layer.id]
-        isEditingLayerMask = false
+        selectImportedLayers([layer.id], primaryLayerID: layer.id)
         appendHistory(historyTitle ?? L10n.text("imageEditor.history.layerImport"))
         statusText = importedStatus ?? L10n.format("imageEditor.status.layerImported", cleanLayerName(from: sourceName))
         return true
@@ -682,9 +688,7 @@ extension ImageEditorViewModel {
         layer.groupID = nil
         layer.isClippingMask = false
         document.layers.append(layer)
-        document.selectedLayerID = layer.id
-        document.selectedLayerIDs = [layer.id]
-        isEditingLayerMask = false
+        selectImportedLayers([layer.id], primaryLayerID: layer.id)
         appendHistory(historyTitle ?? L10n.text("imageEditor.history.clipboardPasteIntoSelection"))
         statusText = importedStatus ?? L10n.format("imageEditor.status.layerImported", cleanLayerName(from: sourceName))
         return true

@@ -1,5 +1,20 @@
 # Changelog
 
+## 2.12.0-rc1280 - 2026-08-26
+
+### Changed
+- 执行每 40 个小版本一次的完整质量门禁，统一 App、CLI、Xcode targets 与发布契约版本为 `2.12.0-rc1280`（build 1280）。
+- 本周期重点验收系统/窗口文件菜单一致性、PNG/JPEG 导入与 Delete、Finder 文件类型关联、组件库箭头、智能对象共享源自动化、Figma 链接导入及高频画布编辑回归。
+- 通过完整测试、Universal Release、Developer ID 签名与安装版真实冒烟后，以准确的 `Xomo.app` 名称覆盖 `/Applications/Xomo.app`。
+
+### Fixed
+- 修复导入图片已成为当前选中图层时，后台遗留的切片或热点选择仍会优先消费 Delete 的问题；普通图片、批量图片/SVG、可编辑 SVG、导入到选区与嵌入智能对象统一让新对象接管上下文删除命令，第一下 Delete 直接删除可见选中对象。
+
+### Verification
+- 完整产品测试构建通过；全量隔离测试以安全串行分组覆盖 2684/2684，六条过时源码接线契约修正后受影响套件 291/291 全绿；新增 Delete 所有权 11/11、画布文件导入 10/10、智能对象置入 17/17、SVG 导入 39/39 通过。CLI/MCP 2/2、发布契约 7/7（21 项）、测试运行器契约及差异检查通过。
+- Universal Release 产物为 `x86_64 + arm64`，Developer ID 深度签名与 Designated Requirement 校验通过；最终安装包以 `Xomo.app` 覆盖 `/Applications/Xomo.app`，简体中文 `CFBundleName/CFBundleDisplayName` 均为 `Xomo`，并重新注册 PNG/JPEG 等文档类型。
+- 安装版真实界面确认 macOS 系统菜单栏应用名与“文件”菜单正确，PNG 可从图层面板导入并成为当前图层，键帽 Delete 立即删除，工具栏单步 Undo 完整恢复；丢弃临时冒烟画布后正常退出，最近 30 分钟未产生新的 Xomo 崩溃报告。本地发布按本轮授权跳过公证、上传、更新元数据与 GitHub Release。
+
 ## 2.12.0-rc1279 - 2026-08-26
 
 ### Added
