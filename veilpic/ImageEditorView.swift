@@ -3292,10 +3292,10 @@ struct ImageEditorView: View {
         case .toggleGuideSnapping: performCanvasAidCommand(.guideSnapping)
         case .toggleGuidesLocked: performCanvasAidCommand(.guidesLocked)
         case .toggleGrid: performCanvasAidCommand(.grid)
-        case .zoomIn: viewModel.zoomIn()
-        case .zoomOut: viewModel.zoomOut()
-        case .actualPixels: viewModel.zoomActualPixels()
-        case .fitOnScreen: viewModel.fitZoom()
+        case .zoomIn: performZoomCommand(.zoomIn)
+        case .zoomOut: performZoomCommand(.zoomOut)
+        case .actualPixels: performZoomCommand(.actualPixels)
+        case .fitOnScreen: performZoomCommand(.fitOnScreen)
         case .toggleWorkspaceChrome: viewModel.toggleWorkspaceChromeVisibility()
         case .toggleRightDock: viewModel.toggleRightDockVisibility()
         case .showInfoSummary:
@@ -3423,6 +3423,19 @@ struct ImageEditorView: View {
         case .guideSnapping: viewModel.toggleGuideSnapping()
         case .guidesLocked: viewModel.toggleGuidesLocked()
         case .grid: viewModel.toggleGridVisible()
+        }
+    }
+
+    func performZoomCommand(_ action: ImageEditorZoomCommandAction) {
+        guard ImageEditorZoomCommandDispatchGate.shouldDispatch(
+            action,
+            event: .currentKeyEvent
+        ) else { return }
+        switch action {
+        case .zoomIn: viewModel.zoomIn()
+        case .zoomOut: viewModel.zoomOut()
+        case .actualPixels: viewModel.zoomActualPixels()
+        case .fitOnScreen: viewModel.fitZoom()
         }
     }
 
@@ -17243,6 +17256,38 @@ enum ImageEditorCanvasAidCommandAction: Equatable {
     case guideSnapping
     case guidesLocked
     case grid
+}
+
+enum ImageEditorZoomCommandAction: Equatable {
+    case zoomIn
+    case zoomOut
+    case actualPixels
+    case fitOnScreen
+}
+
+@MainActor
+enum ImageEditorZoomCommandDispatchGate {
+    private struct Dispatch: Equatable {
+        let action: ImageEditorZoomCommandAction
+        let event: ImageEditorKeyboardShortcutEventSignature
+    }
+
+    private static var lastDispatch: Dispatch?
+
+    static func shouldDispatch(
+        _ action: ImageEditorZoomCommandAction,
+        event: ImageEditorKeyboardShortcutEventSignature?
+    ) -> Bool {
+        guard let event else { return true }
+        let dispatch = Dispatch(action: action, event: event)
+        guard dispatch != lastDispatch else { return false }
+        lastDispatch = dispatch
+        return true
+    }
+
+    static func reset() {
+        lastDispatch = nil
+    }
 }
 
 @MainActor

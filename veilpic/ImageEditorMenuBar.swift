@@ -1540,19 +1540,19 @@ extension ImageEditorView {
         .disabled(viewModel.document.guides.isEmpty)
         Divider()
         Button(L10n.text("imageEditor.menu.view.zoomIn")) {
-            viewModel.zoomIn()
+            performZoomCommand(.zoomIn)
         }
         .keyboardShortcut("+", modifiers: [.command])
         Button(L10n.text("imageEditor.menu.view.zoomOut")) {
-            viewModel.zoomOut()
+            performZoomCommand(.zoomOut)
         }
         .keyboardShortcut("-", modifiers: [.command])
         Button(L10n.text("imageEditor.menu.view.actualPixels")) {
-            viewModel.zoomActualPixels()
+            performZoomCommand(.actualPixels)
         }
         .keyboardShortcut("1", modifiers: [.command])
         Button(L10n.text("imageEditor.menu.view.fit")) {
-            viewModel.fitZoom()
+            performZoomCommand(.fitOnScreen)
         }
         .keyboardShortcut("0", modifiers: [.command])
     }

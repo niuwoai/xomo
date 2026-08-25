@@ -12,6 +12,83 @@ import Testing
 @MainActor
 @Suite(.serialized)
 struct ImageEditorHistoryTests {
+    @Test func onePhysicalZoomShortcutAdvancesOnlyOneZoomStep() {
+        ImageEditorZoomCommandDispatchGate.reset()
+        defer { ImageEditorZoomCommandDispatchGate.reset() }
+
+        let image = NSImage(size: NSSize(width: 32, height: 24))
+        let viewModel = ImageEditorViewModel(sourceName: "zoom.png", image: image) { _ in }
+        let firstEvent = ImageEditorKeyboardShortcutEventSignature(
+            windowNumber: 17,
+            eventNumber: 911,
+            timestamp: 91,
+            typeRawValue: NSEvent.EventType.keyDown.rawValue,
+            keyCode: 24
+        )
+        let secondEvent = ImageEditorKeyboardShortcutEventSignature(
+            windowNumber: 17,
+            eventNumber: 912,
+            timestamp: 91.2,
+            typeRawValue: NSEvent.EventType.keyDown.rawValue,
+            keyCode: 24
+        )
+        let initialZoom = viewModel.zoom
+
+        func dispatch(
+            _ action: ImageEditorZoomCommandAction,
+            event: ImageEditorKeyboardShortcutEventSignature?
+        ) {
+            guard ImageEditorZoomCommandDispatchGate.shouldDispatch(
+                action,
+                event: event
+            ) else { return }
+            switch action {
+            case .zoomIn: viewModel.zoomIn()
+            case .zoomOut: viewModel.zoomOut()
+            case .actualPixels: viewModel.zoomActualPixels()
+            case .fitOnScreen: viewModel.fitZoom()
+            }
+        }
+
+        dispatch(.zoomIn, event: firstEvent)
+        dispatch(.zoomIn, event: firstEvent)
+        #expect(abs(viewModel.zoom - initialZoom * 1.2) < 0.000_001)
+
+        dispatch(.zoomIn, event: secondEvent)
+        #expect(abs(viewModel.zoom - initialZoom * 1.44) < 0.000_001)
+
+        ImageEditorZoomCommandDispatchGate.reset()
+        viewModel.setZoom(initialZoom)
+        dispatch(.zoomOut, event: firstEvent)
+        dispatch(.zoomOut, event: firstEvent)
+        #expect(abs(viewModel.zoom - initialZoom / 1.2) < 0.000_001)
+    }
+
+    @Test func zoomMouseMenuBoundariesAndActionsRemainIndependent() {
+        ImageEditorZoomCommandDispatchGate.reset()
+        defer { ImageEditorZoomCommandDispatchGate.reset() }
+
+        let event = ImageEditorKeyboardShortcutEventSignature(
+            windowNumber: 17,
+            eventNumber: 913,
+            timestamp: 91.4,
+            typeRawValue: NSEvent.EventType.keyDown.rawValue,
+            keyCode: 24
+        )
+        for action in [
+            ImageEditorZoomCommandAction.zoomIn,
+            .zoomOut,
+            .actualPixels,
+            .fitOnScreen
+        ] {
+            ImageEditorZoomCommandDispatchGate.reset()
+            #expect(ImageEditorZoomCommandDispatchGate.shouldDispatch(action, event: event))
+            #expect(!ImageEditorZoomCommandDispatchGate.shouldDispatch(action, event: event))
+            #expect(ImageEditorZoomCommandDispatchGate.shouldDispatch(action, event: nil))
+            #expect(ImageEditorZoomCommandDispatchGate.shouldDispatch(action, event: nil))
+        }
+    }
+
     @Test func onePhysicalCanvasAidShortcutTogglesOnlyOneStateTransition() {
         ImageEditorCanvasAidCommandDispatchGate.reset()
         defer { ImageEditorCanvasAidCommandDispatchGate.reset() }
