@@ -1262,7 +1262,9 @@ extension ImageEditorViewModel {
     func loadProjectData(_ data: Data) throws {
         let decoder = JSONDecoder()
         let project = try decoder.decode(ImageEditorProjectDocument.self, from: data)
-        document = try project.restoredDocument()
+        let restoredDocument = try project.restoredDocument()
+        updateCurrentProjectURL(nil)
+        document = restoredDocument
         psdCompatibilityReport = nil
         psdCompatibilityFileName = ""
         isPSDCompatibilityReportPresented = false
@@ -1294,6 +1296,14 @@ extension ImageEditorViewModel {
     }
 
     func saveProjectDocument() {
+        guard let currentProjectURL else {
+            saveProjectDocumentAs()
+            return
+        }
+        writeProjectDocument(to: currentProjectURL)
+    }
+
+    func saveProjectDocumentAs() {
         let panel = NSSavePanel()
         panel.allowedContentTypes = [Self.projectContentType]
         panel.canCreateDirectories = true
@@ -1301,19 +1311,38 @@ extension ImageEditorViewModel {
         panel.begin { [weak self] response in
             Task { @MainActor in
                 guard let self, response == .OK, let url = panel.url else { return }
-                do {
-                    let data = try self.projectData()
-                    try data.write(to: url, options: .atomic)
-                    XomoRecentDocumentStore.shared.noteOpened(url)
-                    self.appendHistory(L10n.text("imageEditor.history.projectSave"))
-                    self.statusText = L10n.format("imageEditor.status.projectSaved", url.lastPathComponent)
-                } catch {
-                    self.statusText = L10n.format(
-                        "imageEditor.status.projectSaveFailedWithReason",
-                        error.localizedDescription
-                    )
-                }
+                self.writeProjectDocument(to: url)
             }
+        }
+    }
+
+    @discardableResult
+    func writeProjectDocument(
+        to url: URL,
+        dataWriter: (Data, URL) throws -> Void = { data, destination in
+            try data.write(to: destination, options: .atomic)
+        },
+        recentDocumentRegistrar: @MainActor (URL) -> Void = {
+            XomoRecentDocumentStore.shared.noteOpened($0)
+        }
+    ) -> Bool {
+        do {
+            let data = try projectData()
+            try dataWriter(data, url)
+            let standardizedURL = url.standardizedFileURL
+            updateCurrentProjectURL(standardizedURL)
+            recentDocumentRegistrar(standardizedURL)
+            statusText = L10n.format(
+                "imageEditor.status.projectSaved",
+                standardizedURL.lastPathComponent
+            )
+            return true
+        } catch {
+            statusText = L10n.format(
+                "imageEditor.status.projectSaveFailedWithReason",
+                error.localizedDescription
+            )
+            return false
         }
     }
 
@@ -1351,6 +1380,7 @@ extension ImageEditorViewModel {
         do {
             let data = try Data(contentsOf: url)
             try loadProjectData(data)
+            updateCurrentProjectURL(url)
             appendHistory(L10n.text("imageEditor.history.projectOpen"))
             statusText = L10n.format("imageEditor.status.projectOpened", url.lastPathComponent)
             recentDocumentRegistrar(url)
@@ -1405,6 +1435,7 @@ extension ImageEditorViewModel {
     }
 
     private func resetAfterExternalDocumentOpen() {
+        updateCurrentProjectURL(nil)
         clearUndoHistory()
         historySnapshots.removeAll()
         document.history.forEach { entry in historySnapshots[entry.id] = document }

@@ -64,6 +64,7 @@ extension ImageEditorView {
             openRecentDocument: { viewModel.openDocument(at: $0) },
             clearRecentDocuments: { recentDocumentStore.clear() },
             saveProject: { viewModel.saveProjectDocument() },
+            saveProjectAs: { viewModel.saveProjectDocumentAs() },
             showPSDCompatibilityReport: {
                 viewModel.isPSDCompatibilityReportPresented = true
             },

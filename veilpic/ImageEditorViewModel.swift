@@ -528,6 +528,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var isPSDCompatibilityReportPresented = false
     @Published var psdCompatibilityReport: ImageEditorPSDCompatibilityReport?
     @Published var psdCompatibilityFileName = ""
+    @Published private(set) var currentProjectURL: URL?
     @Published var namedHistorySnapshots: [ImageEditorHistorySnapshot] = []
     @Published var selectedHistorySnapshotID: UUID?
     @Published var selectedHistoryEntryID: UUID?
@@ -663,6 +664,10 @@ final class ImageEditorViewModel: ObservableObject {
     private var isBrushWorkspacePersistenceEnabled = false
     private var selectionEdgeGeometrySource: ImageEditorSelection?
     private var selectionEdgeGeometryCanvasSize: CGSize = .zero
+
+    func updateCurrentProjectURL(_ url: URL?) {
+        currentProjectURL = url?.standardizedFileURL
+    }
 
     init(
         sourceName: String,
@@ -852,6 +857,7 @@ final class ImageEditorViewModel: ObservableObject {
         newDocument.designCanvasMetadata = XomoDesignCanvasMetadata(draft: draft)
 
         leaveQuickMaskMode()
+        updateCurrentProjectURL(nil)
         document = newDocument
         clearLayerMaskSoloPreview()
         colorSamplerPoints.removeAll()
@@ -894,6 +900,7 @@ final class ImageEditorViewModel: ObservableObject {
         }
 
         leaveQuickMaskMode()
+        updateCurrentProjectURL(nil)
         document = ImageEditorDocument(
             sourceName: L10n.text("source.clipboard"),
             image: normalized

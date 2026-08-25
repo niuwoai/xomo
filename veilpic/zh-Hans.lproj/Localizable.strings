@@ -481,6 +481,7 @@
 "imageEditor.action.clearRecent" = "清除菜单";
 "imageEditor.action.fileOpenConfirm" = "打开";
 "imageEditor.action.projectSave" = "保存项目";
+"imageEditor.action.projectSaveAs" = "项目另存为…";
 "imageEditor.action.undo" = "撤销";
 "imageEditor.action.cloneSourcePick" = "设置图章取样点";
 "imageEditor.action.colorSamplerClear" = "清除取样点";

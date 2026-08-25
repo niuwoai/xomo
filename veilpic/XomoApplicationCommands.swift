@@ -16,6 +16,7 @@ struct XomoFileCommandActions {
     let openRecentDocument: (URL) -> Void
     let clearRecentDocuments: () -> Void
     let saveProject: () -> Void
+    let saveProjectAs: () -> Void
     let showPSDCompatibilityReport: () -> Void
     let canShowPSDCompatibilityReport: Bool
     let importFile: () -> Void
@@ -42,6 +43,7 @@ enum XomoFileMenuItem: CaseIterable, Hashable {
     case openProject
     case openRecent
     case saveProject
+    case saveProjectAs
     case psdCompatibilityReport
     case importExportDivider
     case importFile
@@ -666,6 +668,12 @@ struct XomoFileMenuItems: View {
                 actions?.saveProject()
             }
             .keyboardShortcut("s", modifiers: [.command])
+            .disabled(actions == nil)
+        case .saveProjectAs:
+            Button(L10n.text("imageEditor.action.projectSaveAs")) {
+                actions?.saveProjectAs()
+            }
+            .keyboardShortcut("s", modifiers: [.command, .shift])
             .disabled(actions == nil)
         case .psdCompatibilityReport:
             Button(L10n.text("imageEditor.action.psdCompatibilityReport")) {

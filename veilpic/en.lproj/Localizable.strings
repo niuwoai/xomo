@@ -481,6 +481,7 @@
 "imageEditor.action.clearRecent" = "Clear Menu";
 "imageEditor.action.fileOpenConfirm" = "Open";
 "imageEditor.action.projectSave" = "Save Project";
+"imageEditor.action.projectSaveAs" = "Save Project As…";
 "imageEditor.action.undo" = "Undo";
 "imageEditor.action.cloneSourcePick" = "Set Clone Source";
 "imageEditor.action.colorSamplerClear" = "Clear Samples";
