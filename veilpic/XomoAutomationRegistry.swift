@@ -5092,6 +5092,14 @@ final class XomoAutomationRegistry {
                     "New Smart Object via Copy requires one selected Smart Object"
                 )
             }
+        case "exportSourcePNG":
+            let rawPath = try requiredString("path", in: arguments)
+            let url = URL(fileURLWithPath: NSString(string: rawPath).expandingTildeInPath)
+            guard viewModel.writeSelectedSmartObjectSourcePNG(to: url) else {
+                throw XomoAutomationCallError.operationFailed(
+                    "Smart Object source PNG export failed"
+                )
+            }
         default: throw XomoAutomationCallError.invalidArgument("Unknown smart object action")
         }
     }
@@ -7172,8 +7180,8 @@ private extension XomoAutomationRegistry {
             "action": XomoAutomationSchema.string(description: "Layer link action", values: ["link", "unlink", "unlinkAll", "selectLinked"])
         ], required: ["action"]),
         tool("xomo.layer.smart_object", "Place, convert, and manage embedded smart object layers.", [
-            "action": XomoAutomationSchema.string(description: "Smart object action", values: ["convert", "placeEmbedded", "resetTransform", "makeUnique", "newViaCopy"]),
-            "path": XomoAutomationSchema.string(description: "Local raster image path for placeEmbedded")
+            "action": XomoAutomationSchema.string(description: "Smart object action", values: ["convert", "placeEmbedded", "resetTransform", "makeUnique", "newViaCopy", "exportSourcePNG"]),
+            "path": XomoAutomationSchema.string(description: "Local path used by placeEmbedded and exportSourcePNG; exportSourcePNG requires a .png destination")
         ], required: ["action"]),
         tool("xomo.layer.properties", "Set fill, Blend If, mask, clipping, lock, label, and visibility properties.", [
             "property": XomoAutomationSchema.string(description: "Property group", values: ["fillOpacity", "blendIfSourceBlack", "blendIfSourceWhite", "blendIfUnderlyingBlack", "blendIfUnderlyingWhite", "maskDensity", "maskFeather", "clippingMask", "lock", "label", "visibility"]),

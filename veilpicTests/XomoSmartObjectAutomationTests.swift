@@ -56,6 +56,9 @@ struct XomoSmartObjectAutomationTests {
         #expect(properties["action"]?.objectValue?["enum"]?.arrayValue?.contains(
             .string("newViaCopy")
         ) == true)
+        #expect(properties["action"]?.objectValue?["enum"]?.arrayValue?.contains(
+            .string("exportSourcePNG")
+        ) == true)
         #expect(properties["path"]?.objectValue?["type"] == .string("string"))
 
         let historyCount = viewModel.document.history.count
@@ -138,6 +141,89 @@ struct XomoSmartObjectAutomationTests {
         ]))
 
         #expect(!response.ok)
+        #expect(viewModel.document.layers.map(\.id) == layerIDs)
+        #expect(viewModel.document.history == history)
+        #expect(viewModel.undoStack.count == undoCount)
+        #expect(viewModel.redoStack.count == redoCount)
+        #expect(viewModel.canRedo)
+    }
+
+    @Test func exportSourcePNGAutomationWritesExactSourcePixelsWithoutEditingDocument() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        defer { registry.unregister(viewModel) }
+        let sourceImage = try #require(NSImage.rendered(
+            size: CGSize(width: 44, height: 28)
+        ) { rect in
+            NSColor.systemOrange.setFill()
+            rect.fill()
+        })
+        var smartObject = ImageEditorLayer.smartObject(
+            name: "Automation Source",
+            image: sourceImage,
+            sourceName: "automation-source.jpeg"
+        )
+        smartObject.frame = CGRect(x: 20, y: 30, width: 132, height: 84)
+        smartObject.opacity = 0.4
+        smartObject.smartFilters = [
+            ImageEditorSmartFilter(kind: .gaussianBlur, intensity: 0.5)
+        ]
+        viewModel.document.layers = [smartObject]
+        viewModel.document.selectedLayerID = smartObject.id
+        viewModel.document.selectedLayerIDs = [smartObject.id]
+        let expectedData = try #require(sourceImage.qingtuPNGData())
+        let history = viewModel.document.history
+        let undoCount = viewModel.undoStack.count
+        let redoCount = viewModel.redoStack.count
+        let destination = temporaryURL(extension: "png")
+        defer { try? FileManager.default.removeItem(at: destination) }
+
+        let response = registry.execute(request(arguments: [
+            "action": .string("exportSourcePNG"),
+            "path": .string(destination.path)
+        ]))
+
+        #expect(response.ok)
+        let exportedData = try Data(contentsOf: destination)
+        let bitmap = try #require(NSBitmapImageRep(data: exportedData))
+        #expect(exportedData == expectedData)
+        #expect(bitmap.pixelsWide == 44)
+        #expect(bitmap.pixelsHigh == 28)
+        #expect(viewModel.document.layers.count == 1)
+        #expect(viewModel.document.selectedLayer?.id == smartObject.id)
+        #expect(viewModel.document.selectedLayer?.frame == smartObject.frame)
+        #expect(viewModel.document.selectedLayer?.smartObjectContent?.sourceID ==
+            smartObject.smartObjectContent?.sourceID)
+        #expect(viewModel.document.history == history)
+        #expect(viewModel.undoStack.count == undoCount)
+        #expect(viewModel.redoStack.count == redoCount)
+    }
+
+    @Test func exportSourcePNGAutomationFailurePreservesExistingFileAndRedo() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        defer { registry.unregister(viewModel) }
+        viewModel.addLayer()
+        viewModel.undo()
+        #expect(viewModel.canRedo)
+        let marker = Data([0x58, 0x4F, 0x4D, 0x4F])
+        let destination = temporaryURL(extension: "png")
+        defer { try? FileManager.default.removeItem(at: destination) }
+        try marker.write(to: destination, options: .atomic)
+        let layerIDs = viewModel.document.layers.map(\.id)
+        let history = viewModel.document.history
+        let undoCount = viewModel.undoStack.count
+        let redoCount = viewModel.redoStack.count
+
+        let response = registry.execute(request(arguments: [
+            "action": .string("exportSourcePNG"),
+            "path": .string(destination.path)
+        ]))
+
+        #expect(!response.ok)
+        #expect(try Data(contentsOf: destination) == marker)
         #expect(viewModel.document.layers.map(\.id) == layerIDs)
         #expect(viewModel.document.history == history)
         #expect(viewModel.undoStack.count == undoCount)
