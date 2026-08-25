@@ -20,7 +20,26 @@ enum ImageEditorFilePanelKeyboardFocusRestorer {
     ) {
         guard isApplicationActive, let window, window.isVisible else { return }
         window.makeKeyAndOrderFront(nil)
-        window.makeFirstResponder(nil)
+        if let keyboardResponder = keyboardResponder(in: window.contentView) {
+            window.makeFirstResponder(keyboardResponder)
+        } else {
+            window.makeFirstResponder(nil)
+        }
+    }
+
+    private static func keyboardResponder(
+        in view: NSView?
+    ) -> ImageEditorKeyboardShortcutResponderNSView? {
+        guard let view else { return nil }
+        if let responder = view as? ImageEditorKeyboardShortcutResponderNSView {
+            return responder
+        }
+        for subview in view.subviews {
+            if let responder = keyboardResponder(in: subview) {
+                return responder
+            }
+        }
+        return nil
     }
 }
 

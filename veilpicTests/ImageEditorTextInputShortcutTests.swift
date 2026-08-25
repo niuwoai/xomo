@@ -4,7 +4,35 @@ import Testing
 
 struct ImageEditorTextInputShortcutTests {
     @MainActor
-    @Test func filePanelCompletionReturnsDeleteOwnershipToTheOriginatingEditorWindow() {
+    @Test func filePanelCompletionReturnsDeleteOwnershipToTheEditorKeyboardResponder() {
+        let window = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 320, height: 200),
+            styleMask: [.titled],
+            backing: .buffered,
+            defer: false
+        )
+        let searchField = NSTextField(frame: NSRect(x: 20, y: 20, width: 160, height: 24))
+        let keyboardResponder = ImageEditorKeyboardShortcutResponderNSView(
+            frame: NSRect(x: 0, y: 0, width: 1, height: 1)
+        )
+        window.contentView = NSView(frame: window.contentLayoutRect)
+        window.contentView?.addSubview(searchField)
+        window.contentView?.addSubview(keyboardResponder)
+        window.orderFront(nil)
+        #expect(window.makeFirstResponder(searchField))
+        #expect(window.firstResponder is NSTextView || window.firstResponder is NSTextField)
+
+        ImageEditorFilePanelKeyboardFocusRestorer.restore(
+            to: window,
+            isApplicationActive: true
+        )
+
+        #expect(window.firstResponder === keyboardResponder)
+        window.orderOut(nil)
+    }
+
+    @MainActor
+    @Test func filePanelFocusRestorerFallsBackSafelyWithoutAKeyboardHost() {
         let window = NSWindow(
             contentRect: NSRect(x: 0, y: 0, width: 320, height: 200),
             styleMask: [.titled],
@@ -16,7 +44,6 @@ struct ImageEditorTextInputShortcutTests {
         window.contentView?.addSubview(searchField)
         window.orderFront(nil)
         #expect(window.makeFirstResponder(searchField))
-        #expect(window.firstResponder is NSTextView || window.firstResponder is NSTextField)
 
         ImageEditorFilePanelKeyboardFocusRestorer.restore(
             to: window,

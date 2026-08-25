@@ -17336,7 +17336,11 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
     }
 }
 
-final class KeyboardShortcutMonitorNSView: NSView {
+class ImageEditorKeyboardShortcutResponderNSView: NSView {
+    override var acceptsFirstResponder: Bool { true }
+}
+
+final class KeyboardShortcutMonitorNSView: ImageEditorKeyboardShortcutResponderNSView {
     private weak var coordinator: ImageEditorKeyboardShortcutMonitor.Coordinator?
 
     init(coordinator: ImageEditorKeyboardShortcutMonitor.Coordinator) {
