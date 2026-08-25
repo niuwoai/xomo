@@ -2037,9 +2037,10 @@ struct ImageEditorScopeTests {
         )
 
         #expect(commandsSource.contains("CommandMenu(L10n.text(\"imageEditor.menu.layer\"))"))
-        #expect(commandsSource.contains("XomoLayerMenuItems(content: content)"))
-        #expect(menuBarSource.contains("XomoLayerMenuItems(content: xomoLayerCommandContent)"))
-        #expect(menuBarSource.contains("XomoLayerCommandContent(menuItems: AnyView(layerMenuItems))"))
+        #expect(commandsSource.contains("XomoFocusedMenuItems("))
+        #expect(commandsSource.contains("content: content,"))
+        #expect(menuBarSource.contains("content: xomoLayerCommandContent,"))
+        #expect(menuBarSource.contains("XomoFocusedMenuContent(menuItems: AnyView(layerMenuItems))"))
         #expect(menuBarSource.contains("private var layerMenuItems: some View"))
         #expect(appSource.contains("XomoLayerCommands()"))
         #expect(viewSource.contains(".focusedSceneValue(\\.xomoLayerCommandContent, xomoLayerCommandContent)"))
@@ -3468,12 +3469,39 @@ struct ImageEditorScopeTests {
         #expect(layerRowSource.contains("viewModel.openExportPanel()"))
     }
 
+    @Test func systemAndEditorSelectMenusShareOneFocusedCommandTree() throws {
+        let menuBarSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),
+            encoding: .utf8
+        )
+        let commandsSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/XomoApplicationCommands.swift"),
+            encoding: .utf8
+        )
+        let appSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/veilpicApp.swift"),
+            encoding: .utf8
+        )
+        let viewSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(commandsSource.contains("CommandMenu(L10n.text(\"imageEditor.menu.select\"))"))
+        #expect(commandsSource.contains("@FocusedValue(\\.xomoSelectCommandContent)"))
+        #expect(menuBarSource.contains("content: xomoSelectCommandContent,"))
+        #expect(menuBarSource.contains("XomoFocusedMenuContent(menuItems: AnyView(selectMenuItems))"))
+        #expect(menuBarSource.contains("private var selectMenuItems: some View"))
+        #expect(appSource.contains("XomoSelectCommands()"))
+        #expect(viewSource.contains(".focusedSceneValue(\\.xomoSelectCommandContent, xomoSelectCommandContent)"))
+    }
+
     @Test func selectMenuExposesSavedSelectionCommandsInPhotoshopStyleLocation() throws {
         let source = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),
             encoding: .utf8
         )
-        let selectMenuStart = try #require(source.range(of: "private var selectMenu: some View"))
+        let selectMenuStart = try #require(source.range(of: "private var selectMenuItems: some View"))
         let nextMenuStart = try #require(
             source[selectMenuStart.upperBound...].range(of: "private var alphaChannelMenu: some View")
         )
@@ -3495,7 +3523,7 @@ struct ImageEditorScopeTests {
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),
             encoding: .utf8
         )
-        let selectMenuStart = try #require(source.range(of: "private var selectMenu: some View"))
+        let selectMenuStart = try #require(source.range(of: "private var selectMenuItems: some View"))
         let nextMenuStart = try #require(
             source[selectMenuStart.upperBound...].range(of: "private var alphaChannelMenu: some View")
         )
@@ -3518,7 +3546,7 @@ struct ImageEditorScopeTests {
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),
             encoding: .utf8
         )
-        let selectMenuStart = try #require(source.range(of: "private var selectMenu: some View"))
+        let selectMenuStart = try #require(source.range(of: "private var selectMenuItems: some View"))
         let nextMenuStart = try #require(
             source[selectMenuStart.upperBound...].range(of: "private var alphaChannelMenu: some View")
         )

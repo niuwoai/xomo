@@ -266,11 +266,14 @@ extension ImageEditorView {
 
     @ViewBuilder
     private var layerMenu: some View {
-        XomoLayerMenuItems(content: xomoLayerCommandContent)
+        XomoFocusedMenuItems(
+            content: xomoLayerCommandContent,
+            emptyActionTitleKey: "imageEditor.action.layerNew"
+        )
     }
 
-    var xomoLayerCommandContent: XomoLayerCommandContent {
-        XomoLayerCommandContent(menuItems: AnyView(layerMenuItems))
+    var xomoLayerCommandContent: XomoFocusedMenuContent {
+        XomoFocusedMenuContent(menuItems: AnyView(layerMenuItems))
     }
 
     @ViewBuilder
@@ -1060,6 +1063,18 @@ extension ImageEditorView {
 
     @ViewBuilder
     private var selectMenu: some View {
+        XomoFocusedMenuItems(
+            content: xomoSelectCommandContent,
+            emptyActionTitleKey: "imageEditor.action.selectAll"
+        )
+    }
+
+    var xomoSelectCommandContent: XomoFocusedMenuContent {
+        XomoFocusedMenuContent(menuItems: AnyView(selectMenuItems))
+    }
+
+    @ViewBuilder
+    private var selectMenuItems: some View {
         let canModifySelectionGeometry = viewModel.canModifySelectionGeometry
         Button(L10n.text("imageEditor.action.selectAll")) {
             viewModel.selectAll()

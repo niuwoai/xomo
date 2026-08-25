@@ -471,21 +471,30 @@ struct XomoImageMenuItems: View {
     }
 }
 
-/// The layer command tree is intentionally type-erased only at the focused-scene
-/// boundary. Its single source remains `ImageEditorView.layerMenuItems`, so the
-/// macOS menu bar and the editor chrome cannot drift into separate command lists.
-struct XomoLayerCommandContent {
+/// Large editor command trees are type-erased only at the focused-scene boundary.
+/// Each menu keeps one source in `ImageEditorView`, so the macOS menu bar and the
+/// editor chrome cannot drift into separate command lists.
+struct XomoFocusedMenuContent {
     let menuItems: AnyView
 }
 
 private struct XomoLayerCommandContentKey: FocusedValueKey {
-    typealias Value = XomoLayerCommandContent
+    typealias Value = XomoFocusedMenuContent
+}
+
+private struct XomoSelectCommandContentKey: FocusedValueKey {
+    typealias Value = XomoFocusedMenuContent
 }
 
 extension FocusedValues {
-    var xomoLayerCommandContent: XomoLayerCommandContent? {
+    var xomoLayerCommandContent: XomoFocusedMenuContent? {
         get { self[XomoLayerCommandContentKey.self] }
         set { self[XomoLayerCommandContentKey.self] = newValue }
+    }
+
+    var xomoSelectCommandContent: XomoFocusedMenuContent? {
+        get { self[XomoSelectCommandContentKey.self] }
+        set { self[XomoSelectCommandContentKey.self] = newValue }
     }
 }
 
@@ -494,20 +503,37 @@ struct XomoLayerCommands: Commands {
 
     var body: some Commands {
         CommandMenu(L10n.text("imageEditor.menu.layer")) {
-            XomoLayerMenuItems(content: content)
+            XomoFocusedMenuItems(
+                content: content,
+                emptyActionTitleKey: "imageEditor.action.layerNew"
+            )
         }
     }
 }
 
-struct XomoLayerMenuItems: View {
-    let content: XomoLayerCommandContent?
+struct XomoSelectCommands: Commands {
+    @FocusedValue(\.xomoSelectCommandContent) private var content
+
+    var body: some Commands {
+        CommandMenu(L10n.text("imageEditor.menu.select")) {
+            XomoFocusedMenuItems(
+                content: content,
+                emptyActionTitleKey: "imageEditor.action.selectAll"
+            )
+        }
+    }
+}
+
+struct XomoFocusedMenuItems: View {
+    let content: XomoFocusedMenuContent?
+    let emptyActionTitleKey: String
 
     @ViewBuilder
     var body: some View {
         if let content {
             content.menuItems
         } else {
-            Button(L10n.text("imageEditor.action.layerNew")) {}
+            Button(L10n.text(emptyActionTitleKey)) {}
                 .disabled(true)
         }
     }
