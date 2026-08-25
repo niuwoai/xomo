@@ -475,7 +475,8 @@
 "imageEditor.action.apply" = "应用到预览";
 "imageEditor.action.export" = "导出";
 "imageEditor.action.applySelection" = "应用选区";
-"imageEditor.action.projectOpen" = "打开项目";
+"imageEditor.action.projectOpen" = "打开文件…";
+"imageEditor.action.fileOpenConfirm" = "打开";
 "imageEditor.action.projectSave" = "保存项目";
 "imageEditor.action.undo" = "撤销";
 "imageEditor.action.cloneSourcePick" = "设置图章取样点";

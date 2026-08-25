@@ -1224,6 +1224,24 @@ extension ImageEditorViewModel {
         UTType(filenameExtension: ImageEditorProjectDocument.legacyFileExtension) ?? .json
     }
 
+    static var openDocumentContentTypes: [UTType] {
+        [
+            projectContentType,
+            legacyProjectContentType,
+            .json,
+            ImageEditorPSDCodec.contentType,
+            .png,
+            .jpeg,
+            .tiff,
+            .heic,
+            .webP,
+        ]
+    }
+
+    static func routesThroughExternalDocumentCoordinator(_ url: URL) -> Bool {
+        XomoExternalDocumentOpenPolicy.supports(url)
+    }
+
     func projectData() throws -> Data {
         let project = try ImageEditorProjectDocument(
             document: document,
@@ -1299,35 +1317,42 @@ extension ImageEditorViewModel {
 
     func openProjectDocument() {
         let panel = NSOpenPanel()
-        panel.allowedContentTypes = [
-            Self.projectContentType,
-            Self.legacyProjectContentType,
-            .json,
-            ImageEditorPSDCodec.contentType
-        ]
+        panel.allowedContentTypes = Self.openDocumentContentTypes
         panel.allowsMultipleSelection = false
         panel.canChooseDirectories = false
         panel.canChooseFiles = true
-        panel.prompt = L10n.text("imageEditor.action.projectOpen")
+        panel.prompt = L10n.text("imageEditor.action.fileOpenConfirm")
         panel.begin { [weak self] response in
             Task { @MainActor in
                 guard let self, response == .OK, let url = panel.url else { return }
-                do {
-                    if url.pathExtension.lowercased() == "psd" {
-                        XomoExternalDocumentOpenCoordinator.shared.open(url)
-                        return
-                    }
-                    let data = try Data(contentsOf: url)
-                    try self.loadProjectData(data)
-                    self.appendHistory(L10n.text("imageEditor.history.projectOpen"))
-                    self.statusText = L10n.format("imageEditor.status.projectOpened", url.lastPathComponent)
-                } catch {
-                    self.statusText = L10n.format(
-                        "imageEditor.status.projectOpenFailedWithReason",
-                        error.localizedDescription
-                    )
-                }
+                self.openDocument(at: url)
             }
+        }
+    }
+
+    func openDocument(
+        at url: URL,
+        externalDocumentOpener: ((URL) -> Void)? = nil
+    ) {
+        if Self.routesThroughExternalDocumentCoordinator(url) {
+            if let externalDocumentOpener {
+                externalDocumentOpener(url)
+            } else {
+                XomoExternalDocumentOpenCoordinator.shared.open(url)
+            }
+            return
+        }
+
+        do {
+            let data = try Data(contentsOf: url)
+            try loadProjectData(data)
+            appendHistory(L10n.text("imageEditor.history.projectOpen"))
+            statusText = L10n.format("imageEditor.status.projectOpened", url.lastPathComponent)
+        } catch {
+            statusText = L10n.format(
+                "imageEditor.status.projectOpenFailedWithReason",
+                error.localizedDescription
+            )
         }
     }
 

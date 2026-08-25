@@ -475,7 +475,8 @@
 "imageEditor.action.apply" = "プレビューへ適用";
 "imageEditor.action.export" = "書き出し";
 "imageEditor.action.applySelection" = "選択範囲を適用";
-"imageEditor.action.projectOpen" = "プロジェクトを開く";
+"imageEditor.action.projectOpen" = "ファイルを開く…";
+"imageEditor.action.fileOpenConfirm" = "開く";
 "imageEditor.action.projectSave" = "プロジェクトを保存";
 "imageEditor.action.undo" = "取り消す";
 "imageEditor.action.cloneSourcePick" = "スタンプのサンプル元を設定";

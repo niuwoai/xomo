@@ -475,7 +475,8 @@
 "imageEditor.action.apply" = "Apply to Preview";
 "imageEditor.action.export" = "Export";
 "imageEditor.action.applySelection" = "Apply Selection";
-"imageEditor.action.projectOpen" = "Open Project";
+"imageEditor.action.projectOpen" = "Open File…";
+"imageEditor.action.fileOpenConfirm" = "Open";
 "imageEditor.action.projectSave" = "Save Project";
 "imageEditor.action.undo" = "Undo";
 "imageEditor.action.cloneSourcePick" = "Set Clone Source";

@@ -50,6 +50,25 @@ struct LocalizationResourceTests {
         }
     }
 
+    @Test func openFileActionDescribesTheExpandedDocumentCatalog() throws {
+        let paths = try Self.repositoryPaths()
+        let expectedValues = [
+            "zh-Hans": ("打开文件…", "打开"),
+            "en": ("Open File…", "Open"),
+            "ja": ("ファイルを開く…", "開く")
+        ]
+
+        for (localizationID, expectedValue) in expectedValues {
+            let strings = try Self.stringTable(
+                tableName: "Localizable",
+                localizationID: localizationID,
+                appDirectory: paths.appDirectory
+            )
+            #expect(strings["imageEditor.action.projectOpen"] == expectedValue.0)
+            #expect(strings["imageEditor.action.fileOpenConfirm"] == expectedValue.1)
+        }
+    }
+
     @Test func eyedropperSamplingRingIsLocalizedInEverySupportedLanguage() throws {
         let paths = try Self.repositoryPaths()
         let expectedValues = [
