@@ -13,6 +13,80 @@ import Testing
 @MainActor
 @Suite(.serialized)
 struct ImageEditorLayerMergeHierarchyTests {
+    @Test func onePhysicalMergeDownShortcutConsumesOnlyOneNeighbor() {
+        ImageEditorLayerMergeCommandDispatchGate.reset()
+        defer { ImageEditorLayerMergeCommandDispatchGate.reset() }
+
+        let viewModel = makeViewModel()
+        let lower = layer("Lower", in: viewModel)
+        let middle = layer("Middle", in: viewModel)
+        let upper = layer("Upper", in: viewModel)
+        viewModel.document.layers = [lower, middle, upper]
+        select([upper.id], primary: upper.id, in: viewModel)
+        let initialHistoryCount = viewModel.document.history.count
+        let firstEvent = mergeEvent(number: 601, timestamp: 60)
+        let secondEvent = mergeEvent(number: 602, timestamp: 60.2)
+
+        func dispatch(event: ImageEditorKeyboardShortcutEventSignature?) {
+            guard ImageEditorLayerMergeCommandDispatchGate.shouldDispatch(
+                .mergeDown,
+                event: event
+            ) else { return }
+            viewModel.mergeSelectedLayerDown()
+        }
+
+        dispatch(event: firstEvent)
+        dispatch(event: firstEvent)
+        #expect(viewModel.document.layers.count == 2)
+        #expect(viewModel.document.history.count == initialHistoryCount + 1)
+
+        dispatch(event: secondEvent)
+        #expect(viewModel.document.layers.count == 1)
+        #expect(viewModel.document.history.count == initialHistoryCount + 2)
+    }
+
+    @Test func onePhysicalStampVisibleShortcutCreatesOnlyOneComposite() {
+        ImageEditorLayerMergeCommandDispatchGate.reset()
+        defer { ImageEditorLayerMergeCommandDispatchGate.reset() }
+
+        let viewModel = makeViewModel()
+        let lower = layer("Lower", in: viewModel)
+        let upper = layer("Upper", in: viewModel)
+        viewModel.document.layers = [lower, upper]
+        select([upper.id], primary: upper.id, in: viewModel)
+        let initialHistoryCount = viewModel.document.history.count
+        let firstEvent = mergeEvent(number: 603, timestamp: 60.4)
+        let secondEvent = mergeEvent(number: 604, timestamp: 60.6)
+
+        func dispatch(event: ImageEditorKeyboardShortcutEventSignature?) {
+            guard ImageEditorLayerMergeCommandDispatchGate.shouldDispatch(
+                .stampVisible,
+                event: event
+            ) else { return }
+            viewModel.stampVisibleLayers()
+        }
+
+        dispatch(event: firstEvent)
+        dispatch(event: firstEvent)
+        #expect(viewModel.document.layers.count == 3)
+        #expect(viewModel.document.history.count == initialHistoryCount + 1)
+
+        dispatch(event: secondEvent)
+        #expect(viewModel.document.layers.count == 4)
+        #expect(viewModel.document.history.count == initialHistoryCount + 2)
+    }
+
+    @Test func mergeVisibleEventAndMouseMenuBoundariesRemainExplicit() {
+        ImageEditorLayerMergeCommandDispatchGate.reset()
+        defer { ImageEditorLayerMergeCommandDispatchGate.reset() }
+        let event = mergeEvent(number: 605, timestamp: 60.8)
+
+        #expect(ImageEditorLayerMergeCommandDispatchGate.shouldDispatch(.mergeVisible, event: event))
+        #expect(!ImageEditorLayerMergeCommandDispatchGate.shouldDispatch(.mergeVisible, event: event))
+        #expect(ImageEditorLayerMergeCommandDispatchGate.shouldDispatch(.mergeVisible, event: nil))
+        #expect(ImageEditorLayerMergeCommandDispatchGate.shouldDispatch(.mergeVisible, event: nil))
+    }
+
     @Test func mergeDownRejectsAnArrayNeighborFromAnotherParent() {
         let viewModel = makeViewModel()
         let unrelatedRoot = layer("Unrelated Root", in: viewModel)
@@ -234,5 +308,18 @@ struct ImageEditorLayerMergeHierarchyTests {
     ) {
         viewModel.document.selectedLayerIDs = ids
         viewModel.document.selectedLayerID = primary
+    }
+
+    private func mergeEvent(
+        number: Int,
+        timestamp: TimeInterval
+    ) -> ImageEditorKeyboardShortcutEventSignature {
+        ImageEditorKeyboardShortcutEventSignature(
+            windowNumber: 13,
+            eventNumber: number,
+            timestamp: timestamp,
+            typeRawValue: NSEvent.EventType.keyDown.rawValue,
+            keyCode: 14
+        )
     }
 }

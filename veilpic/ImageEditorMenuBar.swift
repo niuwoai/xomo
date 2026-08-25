@@ -480,7 +480,7 @@ extension ImageEditorView {
         .disabled(!viewModel.canShowAllLayers)
         Divider()
         Button(L10n.text(viewModel.mergeDownActionTitleKey)) {
-            viewModel.mergeSelectedLayerDown()
+            performMergeDown()
         }
         .keyboardShortcut("e", modifiers: [.command])
         .disabled(!viewModel.canMergeSelectedLayerDown)
@@ -489,7 +489,7 @@ extension ImageEditorView {
         }
         .disabled(!viewModel.canMergeSelectedLayers)
         Button(L10n.text("imageEditor.action.layerStampVisible")) {
-            viewModel.stampVisibleLayers()
+            performStampVisible()
         }
         .keyboardShortcut("e", modifiers: [.command, .shift, .option])
         .disabled(!viewModel.canStampVisibleLayers)
@@ -498,7 +498,7 @@ extension ImageEditorView {
         }
         .disabled(!viewModel.canStampSelectedLayers)
         Button(L10n.text("imageEditor.action.layerMergeVisible")) {
-            viewModel.mergeVisibleLayers()
+            performMergeVisible()
         }
         .keyboardShortcut("e", modifiers: [.command, .shift])
         .disabled(!viewModel.canMergeVisibleLayers)
@@ -2055,7 +2055,7 @@ extension ImageEditorView {
             Divider()
             Button(L10n.text(viewModel.mergeDownActionTitleKey)) {
                 selectedLayerPanelTab = .layers
-                viewModel.mergeSelectedLayerDown()
+                performMergeDown()
             }
             .disabled(!viewModel.canMergeSelectedLayerDown)
             Button(L10n.text("imageEditor.action.layerFlatten")) {

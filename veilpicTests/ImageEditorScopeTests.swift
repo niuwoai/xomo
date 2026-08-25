@@ -2029,11 +2029,11 @@ struct ImageEditorScopeTests {
         #expect(layerMenuSource.contains(".keyboardShortcut(\"g\", modifiers: [.command])"))
         #expect(layerMenuSource.contains("performUngroupSelectedLayers()"))
         #expect(layerMenuSource.contains(".keyboardShortcut(\"g\", modifiers: [.command, .shift])"))
-        #expect(layerMenuSource.contains("viewModel.mergeSelectedLayerDown()"))
+        #expect(layerMenuSource.contains("performMergeDown()"))
         #expect(layerMenuSource.contains(".keyboardShortcut(\"e\", modifiers: [.command])"))
-        #expect(layerMenuSource.contains("viewModel.mergeVisibleLayers()"))
+        #expect(layerMenuSource.contains("performMergeVisible()"))
         #expect(layerMenuSource.contains(".keyboardShortcut(\"e\", modifiers: [.command, .shift])"))
-        #expect(layerMenuSource.contains("viewModel.stampVisibleLayers()"))
+        #expect(layerMenuSource.contains("performStampVisible()"))
         #expect(layerMenuSource.contains(".keyboardShortcut(\"e\", modifiers: [.command, .shift, .option])"))
 
         let helperStart = try #require(viewSource.range(of: "func performNewLayer()"))
@@ -2065,6 +2065,26 @@ struct ImageEditorScopeTests {
         }
         #expect(viewSource.contains("case .groupSelectedLayer: performGroupSelectedLayer()"))
         #expect(viewSource.contains("case .ungroupSelectedLayers: performUngroupSelectedLayers()"))
+
+        for (helperName, action, modelCall) in [
+            ("performMergeDown", ".mergeDown", "viewModel.mergeSelectedLayerDown()"),
+            ("performStampVisible", ".stampVisible", "viewModel.stampVisibleLayers()"),
+            ("performMergeVisible", ".mergeVisible", "viewModel.mergeVisibleLayers()")
+        ] {
+            let start = try #require(viewSource.range(of: "func \(helperName)()"))
+            let end = try #require(viewSource[start.upperBound...].range(of: "\n    }"))
+            let source = viewSource[start.lowerBound..<end.upperBound]
+            let dispatchGate = try #require(
+                source.range(of: "ImageEditorLayerMergeCommandDispatchGate.shouldDispatch")
+            )
+            let actionArgument = try #require(source.range(of: action))
+            let mutation = try #require(source.range(of: modelCall))
+            #expect(dispatchGate.lowerBound < actionArgument.lowerBound)
+            #expect(actionArgument.lowerBound < mutation.lowerBound)
+        }
+        #expect(viewSource.contains("case .mergeDown: performMergeDown()"))
+        #expect(viewSource.contains("case .stampVisible: performStampVisible()"))
+        #expect(viewSource.contains("case .mergeVisible: performMergeVisible()"))
     }
 
     @Test func systemAndEditorLayerMenusShareOneFocusedCommandTree() throws {
@@ -6054,7 +6074,7 @@ struct ImageEditorScopeTests {
         #expect(layerMenuSource.contains("performGroupSelectedLayer()"))
         #expect(layerMenuSource.contains("viewModel.canGroupSelectedLayer"))
         #expect(layerMenuSource.contains("viewModel.mergeDownActionTitleKey"))
-        #expect(layerMenuSource.contains("viewModel.mergeSelectedLayerDown()"))
+        #expect(layerMenuSource.contains("performMergeDown()"))
         #expect(layerMenuSource.contains("viewModel.canMergeSelectedLayerDown"))
         #expect(layerMenuSource.contains("imageEditor.action.layerFlatten"))
         #expect(layerMenuSource.contains("viewModel.flattenImage()"))

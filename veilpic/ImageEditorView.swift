@@ -3269,9 +3269,9 @@ struct ImageEditorView: View {
         case .cutSelectionToLayer: viewModel.cutSelectionToNewLayer()
         case .groupSelectedLayer: performGroupSelectedLayer()
         case .ungroupSelectedLayers: performUngroupSelectedLayers()
-        case .mergeDown: viewModel.mergeSelectedLayerDown()
-        case .stampVisible: viewModel.stampVisibleLayers()
-        case .mergeVisible: viewModel.mergeVisibleLayers()
+        case .mergeDown: performMergeDown()
+        case .stampVisible: performStampVisible()
+        case .mergeVisible: performMergeVisible()
         case .layerTop: viewModel.moveSelectedLayerToTop(inVisibleOrder: filteredVisibleLayerRowIDs)
         case .layerUp: viewModel.moveSelectedLayerUp(inVisibleOrder: filteredVisibleLayerRowIDs)
         case .layerDown: viewModel.moveSelectedLayerDown(inVisibleOrder: filteredVisibleLayerRowIDs)
@@ -3347,6 +3347,30 @@ struct ImageEditorView: View {
             event: .currentKeyEvent
         ) else { return }
         viewModel.ungroupSelectedLayers()
+    }
+
+    func performMergeDown() {
+        guard ImageEditorLayerMergeCommandDispatchGate.shouldDispatch(
+            .mergeDown,
+            event: .currentKeyEvent
+        ) else { return }
+        viewModel.mergeSelectedLayerDown()
+    }
+
+    func performStampVisible() {
+        guard ImageEditorLayerMergeCommandDispatchGate.shouldDispatch(
+            .stampVisible,
+            event: .currentKeyEvent
+        ) else { return }
+        viewModel.stampVisibleLayers()
+    }
+
+    func performMergeVisible() {
+        guard ImageEditorLayerMergeCommandDispatchGate.shouldDispatch(
+            .mergeVisible,
+            event: .currentKeyEvent
+        ) else { return }
+        viewModel.mergeVisibleLayers()
     }
 
     func performRedo() {
@@ -17065,6 +17089,37 @@ enum ImageEditorLayerGroupingCommandDispatchGate {
 
     static func shouldDispatch(
         _ action: ImageEditorLayerGroupingCommandAction,
+        event: ImageEditorKeyboardShortcutEventSignature?
+    ) -> Bool {
+        guard let event else { return true }
+        let dispatch = Dispatch(action: action, event: event)
+        guard dispatch != lastDispatch else { return false }
+        lastDispatch = dispatch
+        return true
+    }
+
+    static func reset() {
+        lastDispatch = nil
+    }
+}
+
+enum ImageEditorLayerMergeCommandAction: Equatable {
+    case mergeDown
+    case stampVisible
+    case mergeVisible
+}
+
+@MainActor
+enum ImageEditorLayerMergeCommandDispatchGate {
+    private struct Dispatch: Equatable {
+        let action: ImageEditorLayerMergeCommandAction
+        let event: ImageEditorKeyboardShortcutEventSignature
+    }
+
+    private static var lastDispatch: Dispatch?
+
+    static func shouldDispatch(
+        _ action: ImageEditorLayerMergeCommandAction,
         event: ImageEditorKeyboardShortcutEventSignature?
     ) -> Bool {
         guard let event else { return true }
