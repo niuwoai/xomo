@@ -67,8 +67,137 @@ enum XomoUnsavedDocumentCloseAlert {
 }
 
 @MainActor
+struct XomoDocumentTerminationCandidate {
+    let window: NSWindow
+    let viewModel: ImageEditorViewModel
+}
+
+@MainActor
+final class XomoDocumentWindowRegistry {
+    static let shared = XomoDocumentWindowRegistry()
+
+    private final class Entry {
+        weak var window: NSWindow?
+        weak var viewModel: ImageEditorViewModel?
+
+        init(window: NSWindow, viewModel: ImageEditorViewModel) {
+            self.window = window
+            self.viewModel = viewModel
+        }
+    }
+
+    private var entries: [ObjectIdentifier: Entry] = [:]
+
+    func register(window: NSWindow, viewModel: ImageEditorViewModel) {
+        entries[ObjectIdentifier(window)] = Entry(window: window, viewModel: viewModel)
+    }
+
+    func unregister(window: NSWindow) {
+        entries.removeValue(forKey: ObjectIdentifier(window))
+    }
+
+    var terminationCandidates: [XomoDocumentTerminationCandidate] {
+        entries = entries.filter { _, entry in
+            entry.window != nil && entry.viewModel != nil
+        }
+        return entries.values.compactMap { entry in
+            guard let window = entry.window, let viewModel = entry.viewModel else { return nil }
+            return XomoDocumentTerminationCandidate(window: window, viewModel: viewModel)
+        }
+    }
+
+    func resetForTesting() {
+        entries.removeAll()
+    }
+}
+
+@MainActor
+final class XomoApplicationTerminationCoordinator {
+    typealias CandidateProvider = @MainActor () -> [XomoDocumentTerminationCandidate]
+    typealias ConfirmationPresenter = @MainActor (
+        XomoDocumentTerminationCandidate,
+        @escaping @MainActor (Bool) -> Void
+    ) -> Void
+
+    private let candidateProvider: CandidateProvider
+    private let confirmationPresenter: ConfirmationPresenter
+    private var pendingCandidates: [XomoDocumentTerminationCandidate] = []
+    private var replyHandler: (@MainActor (Bool) -> Void)?
+
+    convenience init() {
+        self.init(
+            candidateProvider: {
+                XomoDocumentWindowRegistry.shared.terminationCandidates
+            },
+            confirmationPresenter: { candidate, completion in
+                XomoUnsavedDocumentCloseAlert.present(
+                    for: candidate.window,
+                    viewModel: candidate.viewModel,
+                    completion: completion
+                )
+            }
+        )
+    }
+
+    init(
+        candidateProvider: @escaping CandidateProvider,
+        confirmationPresenter: @escaping ConfirmationPresenter
+    ) {
+        self.candidateProvider = candidateProvider
+        self.confirmationPresenter = confirmationPresenter
+    }
+
+    func requestTermination(
+        reply: @escaping @MainActor (Bool) -> Void
+    ) -> NSApplication.TerminateReply {
+        guard replyHandler == nil else { return .terminateLater }
+        let dirtyCandidates = candidateProvider().filter(\.viewModel.hasUnsavedProjectChanges)
+        guard !dirtyCandidates.isEmpty else { return .terminateNow }
+
+        pendingCandidates = dirtyCandidates
+        replyHandler = reply
+        presentNextConfirmation()
+        return .terminateLater
+    }
+
+    private func presentNextConfirmation() {
+        while let candidate = pendingCandidates.first {
+            pendingCandidates.removeFirst()
+            guard candidate.viewModel.hasUnsavedProjectChanges else { continue }
+            confirmationPresenter(candidate) { [weak self] approved in
+                self?.resolveCurrentConfirmation(approved: approved)
+            }
+            return
+        }
+        finish(shouldTerminate: true)
+    }
+
+    private func resolveCurrentConfirmation(approved: Bool) {
+        guard approved else {
+            pendingCandidates.removeAll()
+            finish(shouldTerminate: false)
+            return
+        }
+        presentNextConfirmation()
+    }
+
+    private func finish(shouldTerminate: Bool) {
+        let reply = replyHandler
+        replyHandler = nil
+        pendingCandidates.removeAll()
+        reply?(shouldTerminate)
+    }
+}
+
+@MainActor
 final class XomoDocumentCloseGuardCoordinator: NSObject, NSWindowDelegate {
-    var viewModel: ImageEditorViewModel
+    var viewModel: ImageEditorViewModel {
+        didSet {
+            if let window {
+                XomoDocumentWindowRegistry.shared.register(window: window, viewModel: viewModel)
+            }
+        }
+    }
 
     private weak var window: NSWindow?
     private var previousDelegate: (any NSWindowDelegate)?
@@ -86,9 +215,13 @@ final class XomoDocumentCloseGuardCoordinator: NSObject, NSWindowDelegate {
         self.window = window
         previousDelegate = window.delegate
         window.delegate = self
+        XomoDocumentWindowRegistry.shared.register(window: window, viewModel: viewModel)
     }
 
     func uninstall() {
+        if let window {
+            XomoDocumentWindowRegistry.shared.unregister(window: window)
+        }
         if let window, window.delegate === self {
             window.delegate = previousDelegate
         }

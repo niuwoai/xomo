@@ -38,11 +38,19 @@ struct veilpicApp: App {
 
 @MainActor
 final class XomoApplicationDelegate: NSObject, NSApplicationDelegate {
+    private let terminationCoordinator = XomoApplicationTerminationCoordinator()
+
     func application(_ application: NSApplication, open urls: [URL]) {
         XomoExternalDocumentOpenCoordinator.shared.open(urls)
     }
 
     func applicationWillTerminate(_ notification: Notification) {
         XomoAutomationServer.shared.stop()
+    }
+
+    func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
+        terminationCoordinator.requestTermination { shouldTerminate in
+            sender.reply(toApplicationShouldTerminate: shouldTerminate)
+        }
     }
 }
