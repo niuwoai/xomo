@@ -27,6 +27,7 @@ struct XomoFileCommandActions {
     let importFile: () -> Void
     let placeEmbeddedSmartObject: () -> Void
     let importFigmaLink: () -> Void
+    let quickExportPNG: () -> Void
     let export: () -> Void
     let exportSelection: () -> Void
     let canExportSelection: Bool
@@ -57,6 +58,7 @@ enum XomoFileMenuItem: CaseIterable, Hashable {
     case importFile
     case placeEmbeddedSmartObject
     case importFigmaLink
+    case quickExportPNG
     case export
     case exportSelection
     case createSlice
@@ -721,6 +723,11 @@ struct XomoFileMenuItems: View {
                 actions?.importFigmaLink()
             }
             .keyboardShortcut("f", modifiers: [.command, .option])
+            .disabled(actions == nil)
+        case .quickExportPNG:
+            Button(L10n.text("imageEditor.action.quickExportPNG")) {
+                actions?.quickExportPNG()
+            }
             .disabled(actions == nil)
         case .export:
             Button(L10n.text("imageEditor.action.export")) {

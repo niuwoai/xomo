@@ -85,6 +85,7 @@ extension ImageEditorView {
             importFile: { viewModel.chooseImageLayerFile() },
             placeEmbeddedSmartObject: { viewModel.chooseEmbeddedSmartObjectFile() },
             importFigmaLink: { isFigmaLinkImportPresented = true },
+            quickExportPNG: { viewModel.quickExportPNG() },
             export: { viewModel.openExportPanel() },
             exportSelection: {
                 viewModel.exportSettings.scope = .selection

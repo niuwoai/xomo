@@ -474,6 +474,7 @@
 "imageEditor.action.cropCancel" = "Cancel Crop";
 "imageEditor.action.apply" = "Apply to Preview";
 "imageEditor.action.export" = "Export";
+"imageEditor.action.quickExportPNG" = "Quick Export PNG…";
 "imageEditor.action.applySelection" = "Apply Selection";
 "imageEditor.action.projectOpen" = "Open File…";
 "imageEditor.action.openRecent" = "Open Recent";

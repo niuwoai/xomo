@@ -261,6 +261,65 @@ extension ImageEditorViewModel {
         openExportPanel()
     }
 
+    func quickExportPNG() {
+        let panel = NSSavePanel()
+        panel.allowedContentTypes = [.png]
+        panel.canCreateDirectories = true
+        panel.nameFieldStringValue = quickExportPNGFilename()
+        panel.begin { [weak self] response in
+            Task { @MainActor in
+                guard let self, response == .OK, let url = panel.url else { return }
+                self.writeQuickExportPNG(to: url)
+            }
+        }
+    }
+
+    func quickExportPNGData() -> Data? {
+        exportData(settings: quickExportPNGSettings)
+    }
+
+    func quickExportPNGFilename() -> String {
+        exportFilenames(settings: quickExportPNGSettings).first ?? "image.png"
+    }
+
+    @discardableResult
+    func writeQuickExportPNG(
+        to url: URL,
+        dataWriter: (Data, URL) throws -> Void = { data, destination in
+            try data.write(to: destination, options: .atomic)
+        }
+    ) -> Bool {
+        guard let data = quickExportPNGData() else {
+            statusText = L10n.text("imageEditor.status.exportFailed")
+            return false
+        }
+        let standardizedURL = url.standardizedFileURL
+        do {
+            try dataWriter(data, standardizedURL)
+            statusText = L10n.format(
+                "imageEditor.status.exported",
+                standardizedURL.lastPathComponent
+            )
+            return true
+        } catch {
+            statusText = L10n.format(
+                "imageEditor.status.exportFailedWithReason",
+                error.localizedDescription
+            )
+            return false
+        }
+    }
+
+    private var quickExportPNGSettings: ImageEditorExportSettings {
+        var settings = ImageEditorExportSettings()
+        settings.format = .png
+        settings.scope = .composited
+        settings.scale = 1
+        settings.batchScales = []
+        settings.namingRule = .sourceName
+        return settings
+    }
+
     func exportData(settings: ImageEditorExportSettings) -> Data? {
         let normalized = normalizedExportSettings(settings)
         let image = exportImage(for: normalized.scope, sliceID: normalized.sliceID)
