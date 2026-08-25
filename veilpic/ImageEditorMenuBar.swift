@@ -1354,7 +1354,7 @@ extension ImageEditorView {
     @ViewBuilder
     private var filterMenuItems: some View {
         Button(L10n.text("imageEditor.action.lastFilter")) {
-            viewModel.applyLastFilter()
+            performLastFilter()
         }
         .keyboardShortcut("f", modifiers: [.command])
         .disabled(!viewModel.canApplyLastFilter)

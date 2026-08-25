@@ -2294,7 +2294,7 @@ struct ImageEditorScopeTests {
         let filterMenuSource = source[filterMenuStart.lowerBound..<nextMenuStart.lowerBound]
 
         #expect(filterMenuSource.contains("imageEditor.action.lastFilter"))
-        #expect(filterMenuSource.contains("viewModel.applyLastFilter()"))
+        #expect(filterMenuSource.contains("performLastFilter()"))
         #expect(filterMenuSource.contains(".keyboardShortcut(\"f\", modifiers: [.command])"))
         #expect(filterMenuSource.contains("viewModel.canApplyLastFilter"))
         #expect(filterMenuSource.contains("imageEditor.menu.filter.blur"))
@@ -2326,6 +2326,22 @@ struct ImageEditorScopeTests {
         #expect(filterMenuSource.contains("viewModel.selectFilter(.liquifyPuckerBloat)"))
         #expect(filterMenuSource.contains("imageEditor.menu.filter.other"))
         #expect(filterMenuSource.contains("viewModel.selectFilter(.highPass)"))
+
+        let viewSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let helperStart = try #require(viewSource.range(of: "func performLastFilter()"))
+        let helperEnd = try #require(
+            viewSource[helperStart.upperBound...].range(of: "\n    }")
+        )
+        let helperSource = viewSource[helperStart.lowerBound..<helperEnd.upperBound]
+        let gate = try #require(
+            helperSource.range(of: "ImageEditorLastFilterCommandDispatchGate.shouldDispatch")
+        )
+        let filter = try #require(helperSource.range(of: "viewModel.applyLastFilter()"))
+        #expect(gate.lowerBound < filter.lowerBound)
+        #expect(viewSource.contains("case .applyLastFilter: performLastFilter()"))
     }
 
     @Test func filterMenuExposesEveryFilterCase() throws {

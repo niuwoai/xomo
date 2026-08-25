@@ -3292,7 +3292,7 @@ struct ImageEditorView: View {
         case .toggleQuickMask: performToggleQuickMask()
         case .toggleQuickMaskGrayscalePreview: viewModel.toggleQuickMaskGrayscalePreview()
         case .toggleLayerMaskRubylith: viewModel.toggleSelectedLayerMaskRubylithPreview()
-        case .applyLastFilter: viewModel.applyLastFilter()
+        case .applyLastFilter: performLastFilter()
         case .toggleRulers: performCanvasAidCommand(.rulers)
         case .toggleGuides: performCanvasAidCommand(.guides)
         case .toggleGuideSnapping: performCanvasAidCommand(.guideSnapping)
@@ -3443,6 +3443,13 @@ struct ImageEditorView: View {
         case .autoContrast: viewModel.autoContrastSelectedLayer()
         case .autoColor: viewModel.autoColorSelectedLayer()
         }
+    }
+
+    func performLastFilter() {
+        guard ImageEditorLastFilterCommandDispatchGate.shouldDispatch(
+            event: .currentKeyEvent
+        ) else { return }
+        viewModel.applyLastFilter()
     }
 
     func performCanvasAidCommand(_ action: ImageEditorCanvasAidCommandAction) {
@@ -17370,6 +17377,24 @@ enum ImageEditorPixelCorrectionCommandDispatchGate {
 
     static func reset() {
         lastDispatch = nil
+    }
+}
+
+@MainActor
+enum ImageEditorLastFilterCommandDispatchGate {
+    private static var lastEvent: ImageEditorKeyboardShortcutEventSignature?
+
+    static func shouldDispatch(
+        event: ImageEditorKeyboardShortcutEventSignature?
+    ) -> Bool {
+        guard let event else { return true }
+        guard event != lastEvent else { return false }
+        lastEvent = event
+        return true
+    }
+
+    static func reset() {
+        lastEvent = nil
     }
 }
 

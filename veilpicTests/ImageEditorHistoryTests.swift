@@ -12,6 +12,50 @@ import Testing
 @MainActor
 @Suite(.serialized)
 struct ImageEditorHistoryTests {
+    @Test func onePhysicalRepeatLastFilterShortcutCommitsOnlyOneFilter() {
+        ImageEditorLastFilterCommandDispatchGate.reset()
+        defer { ImageEditorLastFilterCommandDispatchGate.reset() }
+
+        let image = testImage(color: .systemRed, size: NSSize(width: 24, height: 18))
+        let viewModel = ImageEditorViewModel(sourceName: "filter.png", image: image) { _ in }
+        viewModel.convertBackgroundToLayer()
+        viewModel.selectedFilter = .gaussianBlur
+        viewModel.filterIntensity = 0.35
+        viewModel.applySelectedFilter()
+        let historyCount = viewModel.document.history.count
+        let event = ImageEditorKeyboardShortcutEventSignature(
+            windowNumber: 31,
+            eventNumber: 951,
+            timestamp: 95.1,
+            typeRawValue: NSEvent.EventType.keyDown.rawValue,
+            keyCode: 3
+        )
+
+        for _ in 0..<2 {
+            guard ImageEditorLastFilterCommandDispatchGate.shouldDispatch(
+                event: event
+            ) else { continue }
+            viewModel.applyLastFilter()
+        }
+
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(
+            viewModel.document.history.last?.title
+                == L10n.format(
+                    "imageEditor.history.filter",
+                    ImageEditorFilter.gaussianBlur.title
+                )
+        )
+    }
+
+    @Test func repeatLastFilterMouseMenuBoundariesRemainIndependentWithoutAKeyEvent() {
+        ImageEditorLastFilterCommandDispatchGate.reset()
+        defer { ImageEditorLastFilterCommandDispatchGate.reset() }
+
+        #expect(ImageEditorLastFilterCommandDispatchGate.shouldDispatch(event: nil))
+        #expect(ImageEditorLastFilterCommandDispatchGate.shouldDispatch(event: nil))
+    }
+
     @Test func onePhysicalPixelInvertShortcutCommitsOnlyOneCorrection() throws {
         ImageEditorPixelCorrectionCommandDispatchGate.reset()
         defer { ImageEditorPixelCorrectionCommandDispatchGate.reset() }
