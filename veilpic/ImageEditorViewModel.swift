@@ -4327,6 +4327,18 @@ final class ImageEditorViewModel: ObservableObject {
         statusText = L10n.text("imageEditor.status.selectionCleared")
     }
 
+    /// A newly imported layer becomes the active object. End any previous
+    /// pixel-selection context inside the import's existing undo transaction
+    /// so a plain Delete addresses that object instead of invisible old pixels.
+    func endPixelSelectionForImportedObject() {
+        leaveQuickMaskMode()
+        guard let selection = document.selection else { return }
+        reselectableSelection = selection.effectiveSelectedBounds(in: document.canvasSize) == nil
+            ? nil
+            : selection
+        document.selection = nil
+    }
+
     func toggleQuickMaskMode() {
         if isQuickMaskMode {
             leaveQuickMaskMode()

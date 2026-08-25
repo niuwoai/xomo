@@ -238,6 +238,7 @@ extension ImageEditorViewModel {
         layer.isClippingMask = false
 
         pushUndo()
+        endPixelSelectionForImportedObject()
         document.layers.append(layer)
         document.selectedLayerID = layer.id
         document.selectedLayerIDs = [layer.id]
@@ -288,6 +289,7 @@ extension ImageEditorViewModel {
         }
 
         pushUndo()
+        endPixelSelectionForImportedObject()
         let layers = zip(preparedImports, frames).map { prepared, frame in
             importedLayer(from: prepared, frame: frame)
         }
@@ -391,6 +393,7 @@ extension ImageEditorViewModel {
 
         let cleanName = cleanLayerName(from: sourceName)
         pushUndo()
+        endPixelSelectionForImportedObject()
         var layer = ImageEditorLayer.shape(
             name: cleanName,
             frame: point.map {
@@ -556,6 +559,7 @@ extension ImageEditorViewModel {
     ) -> Bool {
 
         pushUndo()
+        endPixelSelectionForImportedObject()
         var layer = ImageEditorLayer.blank(
             name: L10n.format("imageEditor.layer.importedName", cleanLayerName(from: sourceName)),
             size: normalized.size

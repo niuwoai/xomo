@@ -992,6 +992,10 @@ struct ImageEditorSVGImportTests {
         ) { _ in }
         let originalLayerCount = viewModel.document.layers.count
         let originalHistoryCount = viewModel.document.history.count
+        let originalSelection = ImageEditorSelection.rectangle(
+            CGRect(x: 4, y: 5, width: 20, height: 12)
+        )
+        viewModel.document.selection = originalSelection
         let data = Data(
             """
             <svg xmlns="http://www.w3.org/2000/svg">
@@ -1018,11 +1022,14 @@ struct ImageEditorSVGImportTests {
         #expect(!content.isPathClosed)
         #expect(content.fillOpacity == 0)
         #expect(viewModel.document.selectedLayerID == layer.id)
+        #expect(viewModel.document.selection == nil)
+        #expect(viewModel.reselectableSelection == originalSelection)
         #expect(viewModel.statusText == L10n.format("imageEditor.status.editableSVGImported", "Connector"))
 
         viewModel.undo()
         #expect(viewModel.document.layers.count == originalLayerCount)
         #expect(viewModel.document.history.count == originalHistoryCount)
+        #expect(viewModel.document.selection == originalSelection)
     }
 
     @Test func invalidSVGDoesNotMutateDocumentOrHistory() {

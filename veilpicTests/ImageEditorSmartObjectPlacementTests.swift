@@ -49,6 +49,10 @@ struct ImageEditorSmartObjectPlacementTests {
         let viewModel = makeViewModel()
         let originalLayerIDs = viewModel.document.layers.map(\.id)
         let historyCount = viewModel.document.history.count
+        let originalSelection = ImageEditorSelection.rectangle(
+            CGRect(x: 5, y: 6, width: 16, height: 10)
+        )
+        viewModel.document.selection = originalSelection
         let url = temporaryURL(extension: "png")
         defer { try? FileManager.default.removeItem(at: url) }
         try writePNG(size: CGSize(width: 24, height: 16), to: url)
@@ -61,6 +65,8 @@ struct ImageEditorSmartObjectPlacementTests {
         let content = try #require(placed.smartObjectContent)
 
         #expect(viewModel.document.selectedLayerIDs == [placed.id])
+        #expect(viewModel.document.selection == nil)
+        #expect(viewModel.reselectableSelection == originalSelection)
         #expect(placed.isSmartObject)
         #expect(placed.name == L10n.format(
             "imageEditor.layer.smartObjectName",
@@ -81,6 +87,7 @@ struct ImageEditorSmartObjectPlacementTests {
 
         viewModel.undo()
         #expect(viewModel.document.layers.map(\.id) == originalLayerIDs)
+        #expect(viewModel.document.selection == originalSelection)
         viewModel.redo()
         #expect(viewModel.document.selectedLayer?.smartObjectContent?.sourceID == content.sourceID)
     }

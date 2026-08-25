@@ -148,6 +148,10 @@ struct ImageEditorCanvasFileDropTests {
         let viewModel = makeViewModel()
         let originalLayerIDs = viewModel.document.layers.map(\.id)
         let originalHistoryCount = viewModel.document.history.count
+        let originalSelection = ImageEditorSelection.rectangle(
+            CGRect(x: 2, y: 3, width: 14, height: 9)
+        )
+        viewModel.document.selection = originalSelection
         let firstURL = temporaryURL(extension: "tiff")
         let secondURL = temporaryURL(extension: "jpg")
         let svgURL = temporaryURL(extension: "svg")
@@ -181,12 +185,15 @@ struct ImageEditorCanvasFileDropTests {
         #expect(imported[2].shapeContent != nil)
         #expect(viewModel.document.selectedLayerIDs == Set(imported.map(\.id)))
         #expect(viewModel.document.selectedLayerID == imported.last?.id)
+        #expect(viewModel.document.selection == nil)
+        #expect(viewModel.reselectableSelection == originalSelection)
         #expect(viewModel.document.history.count == originalHistoryCount + 1)
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerBatchImport"))
         #expect(viewModel.statusText == L10n.format("imageEditor.status.layersImported", 3))
 
         viewModel.undo()
         #expect(viewModel.document.layers.map(\.id) == originalLayerIDs)
+        #expect(viewModel.document.selection == originalSelection)
     }
 
     @Test func menuBatchImportCentersTheWholeRowOnCanvasInOneUndoStep() throws {

@@ -163,6 +163,39 @@ struct ImageEditorLayerDeletionTests {
         #expect(viewModel.document.selectedLayerID == importedID)
     }
 
+    @Test func importedImageEndsOldPixelSelectionSoDeleteOwnsTheNewObject() throws {
+        let viewModel = makeViewModel()
+        let originalLayerIDs = viewModel.document.layers.map(\.id)
+        let originalSelection = ImageEditorSelection.rectangle(
+            CGRect(x: 3, y: 4, width: 18, height: 12)
+        )
+        viewModel.document.selection = originalSelection
+        let historyCount = viewModel.document.history.count
+
+        let importedImage = NSImage.rendered(size: CGSize(width: 48, height: 36)) { rect in
+            NSColor.systemOrange.setFill()
+            rect.fill()
+        } ?? NSImage.transparent(size: CGSize(width: 48, height: 36))
+        #expect(viewModel.importImageLayer(importedImage, sourceName: "poster.png"))
+        let importedID = try #require(viewModel.document.selectedLayerID)
+
+        #expect(viewModel.document.selection == nil)
+        #expect(viewModel.reselectableSelection == originalSelection)
+        #expect(viewModel.document.selectedLayerIDs == [importedID])
+        #expect(viewModel.deleteSelectedLayerFromKeyboardIfPossible())
+        #expect(!viewModel.document.layers.contains { $0.id == importedID })
+        #expect(viewModel.document.history.count == historyCount + 2)
+
+        viewModel.undo()
+        #expect(viewModel.document.layers.contains { $0.id == importedID })
+        #expect(viewModel.document.selectedLayerID == importedID)
+        #expect(viewModel.document.selection == nil)
+
+        viewModel.undo()
+        #expect(viewModel.document.layers.map(\.id) == originalLayerIDs)
+        #expect(viewModel.document.selection == originalSelection)
+    }
+
     @Test func deleteKeyLeavesTheLayerForPixelDeletionWhenASelectionExists() throws {
         let viewModel = makeViewModel()
         let importedImage = NSImage.transparent(size: NSSize(width: 48, height: 36))
