@@ -351,7 +351,7 @@ extension ImageEditorView {
             viewModel.addLayerGroup()
         }
         Button(L10n.text("imageEditor.action.layerGroupSelected")) {
-            viewModel.groupSelectedLayer()
+            performGroupSelectedLayer()
         }
         .keyboardShortcut("g", modifiers: [.command])
         .disabled(!viewModel.canGroupSelectedLayer)
@@ -384,7 +384,7 @@ extension ImageEditorView {
         }
         .disabled(!viewModel.canMoveSelectedLayersOutOfGroup)
         Button(L10n.text("imageEditor.action.layerUngroup")) {
-            viewModel.ungroupSelectedLayers()
+            performUngroupSelectedLayers()
         }
         .keyboardShortcut("g", modifiers: [.command, .shift])
         .disabled(!viewModel.canUngroupSelectedLayers)
@@ -2049,7 +2049,7 @@ extension ImageEditorView {
             }
             Button(L10n.text("imageEditor.action.layerGroupSelected")) {
                 selectedLayerPanelTab = .layers
-                viewModel.groupSelectedLayer()
+                performGroupSelectedLayer()
             }
             .disabled(!viewModel.canGroupSelectedLayer)
             Divider()

@@ -12,6 +12,89 @@ import Testing
 
 @MainActor
 struct ImageEditorLayerGroupingConsistencyTests {
+    @Test func onePhysicalGroupingShortcutMutatesOnlyOneHierarchyLevel() {
+        ImageEditorLayerGroupingCommandDispatchGate.reset()
+        defer { ImageEditorLayerGroupingCommandDispatchGate.reset() }
+
+        let viewModel = makeViewModel()
+        let initialGroupCount = viewModel.document.layers.filter(\.isGroup).count
+        let initialHistoryCount = viewModel.document.history.count
+        let groupEvent = ImageEditorKeyboardShortcutEventSignature(
+            windowNumber: 11,
+            eventNumber: 501,
+            timestamp: 50,
+            typeRawValue: NSEvent.EventType.keyDown.rawValue,
+            keyCode: 5
+        )
+        let nextGroupEvent = ImageEditorKeyboardShortcutEventSignature(
+            windowNumber: 11,
+            eventNumber: 502,
+            timestamp: 50.2,
+            typeRawValue: NSEvent.EventType.keyDown.rawValue,
+            keyCode: 5
+        )
+
+        func dispatchGroup(event: ImageEditorKeyboardShortcutEventSignature?) {
+            guard ImageEditorLayerGroupingCommandDispatchGate.shouldDispatch(
+                .group,
+                event: event
+            ) else { return }
+            viewModel.groupSelectedLayer()
+        }
+
+        dispatchGroup(event: groupEvent)
+        dispatchGroup(event: groupEvent)
+        #expect(viewModel.document.layers.filter(\.isGroup).count == initialGroupCount + 1)
+        #expect(viewModel.document.history.count == initialHistoryCount + 1)
+
+        dispatchGroup(event: nextGroupEvent)
+        #expect(viewModel.document.layers.filter(\.isGroup).count == initialGroupCount + 2)
+        #expect(viewModel.document.history.count == initialHistoryCount + 2)
+
+        ImageEditorLayerGroupingCommandDispatchGate.reset()
+        let ungroupEvent = ImageEditorKeyboardShortcutEventSignature(
+            windowNumber: 11,
+            eventNumber: 503,
+            timestamp: 50.4,
+            typeRawValue: NSEvent.EventType.keyDown.rawValue,
+            keyCode: 5
+        )
+        let nextUngroupEvent = ImageEditorKeyboardShortcutEventSignature(
+            windowNumber: 11,
+            eventNumber: 504,
+            timestamp: 50.6,
+            typeRawValue: NSEvent.EventType.keyDown.rawValue,
+            keyCode: 5
+        )
+
+        func dispatchUngroup(event: ImageEditorKeyboardShortcutEventSignature?) {
+            guard ImageEditorLayerGroupingCommandDispatchGate.shouldDispatch(
+                .ungroup,
+                event: event
+            ) else { return }
+            viewModel.ungroupSelectedLayers()
+        }
+
+        dispatchUngroup(event: ungroupEvent)
+        dispatchUngroup(event: ungroupEvent)
+        #expect(viewModel.document.layers.filter(\.isGroup).count == initialGroupCount + 1)
+        #expect(viewModel.document.history.count == initialHistoryCount + 3)
+
+        dispatchUngroup(event: nextUngroupEvent)
+        #expect(viewModel.document.layers.filter(\.isGroup).count == initialGroupCount)
+        #expect(viewModel.document.history.count == initialHistoryCount + 4)
+    }
+
+    @Test func groupingMenuClicksRemainIndependentWithoutAKeyboardEvent() {
+        ImageEditorLayerGroupingCommandDispatchGate.reset()
+        defer { ImageEditorLayerGroupingCommandDispatchGate.reset() }
+
+        #expect(ImageEditorLayerGroupingCommandDispatchGate.shouldDispatch(.group, event: nil))
+        #expect(ImageEditorLayerGroupingCommandDispatchGate.shouldDispatch(.group, event: nil))
+        #expect(ImageEditorLayerGroupingCommandDispatchGate.shouldDispatch(.ungroup, event: nil))
+        #expect(ImageEditorLayerGroupingCommandDispatchGate.shouldDispatch(.ungroup, event: nil))
+    }
+
     @Test func groupingNoncontiguousSiblingsCreatesOneContiguousSubtree() throws {
         let viewModel = makeViewModel()
         let bottom = layer("Bottom", in: viewModel)

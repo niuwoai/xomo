@@ -3267,8 +3267,8 @@ struct ImageEditorView: View {
         case .newLayer: performNewLayer()
         case .duplicateSelectionOrLayer: viewModel.duplicateSelectionOrSelectedLayer()
         case .cutSelectionToLayer: viewModel.cutSelectionToNewLayer()
-        case .groupSelectedLayer: viewModel.groupSelectedLayer()
-        case .ungroupSelectedLayers: viewModel.ungroupSelectedLayers()
+        case .groupSelectedLayer: performGroupSelectedLayer()
+        case .ungroupSelectedLayers: performUngroupSelectedLayers()
         case .mergeDown: viewModel.mergeSelectedLayerDown()
         case .stampVisible: viewModel.stampVisibleLayers()
         case .mergeVisible: viewModel.mergeVisibleLayers()
@@ -3331,6 +3331,22 @@ struct ImageEditorView: View {
             event: .currentKeyEvent
         ) else { return }
         viewModel.addLayer()
+    }
+
+    func performGroupSelectedLayer() {
+        guard ImageEditorLayerGroupingCommandDispatchGate.shouldDispatch(
+            .group,
+            event: .currentKeyEvent
+        ) else { return }
+        viewModel.groupSelectedLayer()
+    }
+
+    func performUngroupSelectedLayers() {
+        guard ImageEditorLayerGroupingCommandDispatchGate.shouldDispatch(
+            .ungroup,
+            event: .currentKeyEvent
+        ) else { return }
+        viewModel.ungroupSelectedLayers()
     }
 
     func performRedo() {
@@ -17030,6 +17046,36 @@ enum ImageEditorNewLayerCommandDispatchGate {
 
     static func reset() {
         lastEvent = nil
+    }
+}
+
+enum ImageEditorLayerGroupingCommandAction: Equatable {
+    case group
+    case ungroup
+}
+
+@MainActor
+enum ImageEditorLayerGroupingCommandDispatchGate {
+    private struct Dispatch: Equatable {
+        let action: ImageEditorLayerGroupingCommandAction
+        let event: ImageEditorKeyboardShortcutEventSignature
+    }
+
+    private static var lastDispatch: Dispatch?
+
+    static func shouldDispatch(
+        _ action: ImageEditorLayerGroupingCommandAction,
+        event: ImageEditorKeyboardShortcutEventSignature?
+    ) -> Bool {
+        guard let event else { return true }
+        let dispatch = Dispatch(action: action, event: event)
+        guard dispatch != lastDispatch else { return false }
+        lastDispatch = dispatch
+        return true
+    }
+
+    static func reset() {
+        lastDispatch = nil
     }
 }
 

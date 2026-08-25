@@ -2025,9 +2025,9 @@ struct ImageEditorScopeTests {
         #expect(layerMenuSource.contains("viewModel.canDuplicateSelectionOrSelectedLayer"))
         #expect(viewSource.contains("if key == \"j\", relevantFlags == [.command] { return .duplicateSelectionOrLayer }"))
         #expect(viewSource.contains("case .duplicateSelectionOrLayer: viewModel.duplicateSelectionOrSelectedLayer()"))
-        #expect(layerMenuSource.contains("viewModel.groupSelectedLayer()"))
+        #expect(layerMenuSource.contains("performGroupSelectedLayer()"))
         #expect(layerMenuSource.contains(".keyboardShortcut(\"g\", modifiers: [.command])"))
-        #expect(layerMenuSource.contains("viewModel.ungroupSelectedLayers()"))
+        #expect(layerMenuSource.contains("performUngroupSelectedLayers()"))
         #expect(layerMenuSource.contains(".keyboardShortcut(\"g\", modifiers: [.command, .shift])"))
         #expect(layerMenuSource.contains("viewModel.mergeSelectedLayerDown()"))
         #expect(layerMenuSource.contains(".keyboardShortcut(\"e\", modifiers: [.command])"))
@@ -2047,6 +2047,24 @@ struct ImageEditorScopeTests {
         let addLayer = try #require(helperSource.range(of: "viewModel.addLayer()"))
         #expect(dispatchGate.lowerBound < addLayer.lowerBound)
         #expect(viewSource.contains("case .newLayer: performNewLayer()"))
+
+        for (helperName, action, modelCall) in [
+            ("performGroupSelectedLayer", ".group", "viewModel.groupSelectedLayer()"),
+            ("performUngroupSelectedLayers", ".ungroup", "viewModel.ungroupSelectedLayers()")
+        ] {
+            let start = try #require(viewSource.range(of: "func \(helperName)()"))
+            let end = try #require(viewSource[start.upperBound...].range(of: "\n    }"))
+            let source = viewSource[start.lowerBound..<end.upperBound]
+            let dispatchGate = try #require(
+                source.range(of: "ImageEditorLayerGroupingCommandDispatchGate.shouldDispatch")
+            )
+            let actionArgument = try #require(source.range(of: action))
+            let mutation = try #require(source.range(of: modelCall))
+            #expect(dispatchGate.lowerBound < actionArgument.lowerBound)
+            #expect(actionArgument.lowerBound < mutation.lowerBound)
+        }
+        #expect(viewSource.contains("case .groupSelectedLayer: performGroupSelectedLayer()"))
+        #expect(viewSource.contains("case .ungroupSelectedLayers: performUngroupSelectedLayers()"))
     }
 
     @Test func systemAndEditorLayerMenusShareOneFocusedCommandTree() throws {
@@ -6033,7 +6051,7 @@ struct ImageEditorScopeTests {
         #expect(layerMenuSource.contains("imageEditor.action.layerGroupNew"))
         #expect(layerMenuSource.contains("viewModel.addLayerGroup()"))
         #expect(layerMenuSource.contains("imageEditor.action.layerGroupSelected"))
-        #expect(layerMenuSource.contains("viewModel.groupSelectedLayer()"))
+        #expect(layerMenuSource.contains("performGroupSelectedLayer()"))
         #expect(layerMenuSource.contains("viewModel.canGroupSelectedLayer"))
         #expect(layerMenuSource.contains("viewModel.mergeDownActionTitleKey"))
         #expect(layerMenuSource.contains("viewModel.mergeSelectedLayerDown()"))
