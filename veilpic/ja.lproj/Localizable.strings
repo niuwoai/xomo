@@ -3776,6 +3776,7 @@
 "imageEditor.psd.compatibility.colorMode.duotone" = "ダブルトーン";
 "imageEditor.psd.compatibility.colorMode.lab" = "Lab";
 "imageEditor.psd.compatibility.colorMode.unknown" = "不明なカラーモード";
+"imageEditor.psd.compatibility.flattenedMetadataNotice" = "文書情報は現在の統合済み作業コピーを示し、元の PSD ヘッダー情報ではありません。";
 "imageEditor.psd.compatibility.issue.unsupportedVersion" = "未対応の PSD/PSB バージョンです。統合画像として開く処理を試みます";
 "imageEditor.psd.compatibility.issue.unsupportedBitDepth" = "ネイティブ対応は 8-bit のみです。統合画像として開く処理を試みます";
 "imageEditor.psd.compatibility.issue.unsupportedColorMode" = "ネイティブ対応は RGB のみです。統合画像として開く処理を試みます";

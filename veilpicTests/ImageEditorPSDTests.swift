@@ -2039,6 +2039,8 @@ struct ImageEditorPSDTests {
         )
 
         #expect(viewModel.psdCompatibilityReport == report)
+        #expect(report.metadataSource == .sourceDocument)
+        #expect(report.metadataNoticeKey == nil)
         #expect(viewModel.psdCompatibilityFileName == "unsupported-features.psd")
         #expect(viewModel.isPSDCompatibilityReportPresented)
     }

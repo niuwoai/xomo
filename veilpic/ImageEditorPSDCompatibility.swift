@@ -59,6 +59,11 @@ struct ImageEditorPSDCompatibilityIssue: Identifiable, Hashable, Sendable {
     var id: ImageEditorPSDCompatibilityIssueKind { kind }
 }
 
+enum ImageEditorPSDCompatibilityMetadataSource: Equatable, Sendable {
+    case sourceDocument
+    case flattenedWorkingCopy
+}
+
 struct ImageEditorPSDCompatibilityReport: Equatable, Sendable {
     let width: Int
     let height: Int
@@ -69,8 +74,15 @@ struct ImageEditorPSDCompatibilityReport: Equatable, Sendable {
     let maskCount: Int
     let compressions: Set<ImageEditorPSDCompression>
     var issues: [ImageEditorPSDCompatibilityIssue]
+    var metadataSource: ImageEditorPSDCompatibilityMetadataSource = .sourceDocument
 
     var requiresAttention: Bool { !issues.isEmpty }
+
+    var metadataNoticeKey: String? {
+        metadataSource == .flattenedWorkingCopy
+            ? "imageEditor.psd.compatibility.flattenedMetadataNotice"
+            : nil
+    }
 
     var colorModeTitleKey: String {
         switch colorMode {
@@ -115,6 +127,15 @@ struct ImageEditorPSDCompatibilityReportView: View {
             }
 
             metadataGrid
+
+            if let metadataNoticeKey = report.metadataNoticeKey {
+                Label(
+                    L10n.text(metadataNoticeKey),
+                    systemImage: "info.circle"
+                )
+                .font(.callout)
+                .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+            }
 
             if report.issues.isEmpty {
                 Label(

@@ -3776,6 +3776,7 @@
 "imageEditor.psd.compatibility.colorMode.duotone" = "双色调";
 "imageEditor.psd.compatibility.colorMode.lab" = "Lab";
 "imageEditor.psd.compatibility.colorMode.unknown" = "未知色彩模式";
+"imageEditor.psd.compatibility.flattenedMetadataNotice" = "文档信息来自当前扁平化工作副本，不代表原 PSD 的头信息。";
 "imageEditor.psd.compatibility.issue.unsupportedVersion" = "该文件是尚未支持的 PSD/PSB 版本，将尝试扁平化打开";
 "imageEditor.psd.compatibility.issue.unsupportedBitDepth" = "当前仅原生支持 8-bit 通道，将尝试扁平化打开";
 "imageEditor.psd.compatibility.issue.unsupportedColorMode" = "当前仅原生支持 RGB 色彩模式，将尝试扁平化打开";

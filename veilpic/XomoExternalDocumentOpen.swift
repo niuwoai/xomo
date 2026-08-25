@@ -106,7 +106,8 @@ enum XomoExternalPSDDocumentFactory {
             compressions: [],
             issues: [
                 ImageEditorPSDCompatibilityIssue(kind: .flattenedFallback, count: 1)
-            ]
+            ],
+            metadataSource: .flattenedWorkingCopy
         )
     }
 }

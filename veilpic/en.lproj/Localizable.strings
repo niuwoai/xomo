@@ -3776,6 +3776,7 @@
 "imageEditor.psd.compatibility.colorMode.duotone" = "Duotone";
 "imageEditor.psd.compatibility.colorMode.lab" = "Lab";
 "imageEditor.psd.compatibility.colorMode.unknown" = "Unknown color mode";
+"imageEditor.psd.compatibility.flattenedMetadataNotice" = "Document details describe the current flattened working copy, not the original PSD header.";
 "imageEditor.psd.compatibility.issue.unsupportedVersion" = "This PSD/PSB version is not supported yet; Xomo will try to open a flattened copy";
 "imageEditor.psd.compatibility.issue.unsupportedBitDepth" = "Only 8-bit channels are supported natively; Xomo will try to open a flattened copy";
 "imageEditor.psd.compatibility.issue.unsupportedColorMode" = "Only RGB is supported natively; Xomo will try to open a flattened copy";
