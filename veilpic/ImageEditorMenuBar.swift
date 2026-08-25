@@ -266,6 +266,15 @@ extension ImageEditorView {
 
     @ViewBuilder
     private var layerMenu: some View {
+        XomoLayerMenuItems(content: xomoLayerCommandContent)
+    }
+
+    var xomoLayerCommandContent: XomoLayerCommandContent {
+        XomoLayerCommandContent(menuItems: AnyView(layerMenuItems))
+    }
+
+    @ViewBuilder
+    private var layerMenuItems: some View {
         Button(L10n.text("imageEditor.action.layerNew")) {
             viewModel.addLayer()
         }

@@ -471,6 +471,48 @@ struct XomoImageMenuItems: View {
     }
 }
 
+/// The layer command tree is intentionally type-erased only at the focused-scene
+/// boundary. Its single source remains `ImageEditorView.layerMenuItems`, so the
+/// macOS menu bar and the editor chrome cannot drift into separate command lists.
+struct XomoLayerCommandContent {
+    let menuItems: AnyView
+}
+
+private struct XomoLayerCommandContentKey: FocusedValueKey {
+    typealias Value = XomoLayerCommandContent
+}
+
+extension FocusedValues {
+    var xomoLayerCommandContent: XomoLayerCommandContent? {
+        get { self[XomoLayerCommandContentKey.self] }
+        set { self[XomoLayerCommandContentKey.self] = newValue }
+    }
+}
+
+struct XomoLayerCommands: Commands {
+    @FocusedValue(\.xomoLayerCommandContent) private var content
+
+    var body: some Commands {
+        CommandMenu(L10n.text("imageEditor.menu.layer")) {
+            XomoLayerMenuItems(content: content)
+        }
+    }
+}
+
+struct XomoLayerMenuItems: View {
+    let content: XomoLayerCommandContent?
+
+    @ViewBuilder
+    var body: some View {
+        if let content {
+            content.menuItems
+        } else {
+            Button(L10n.text("imageEditor.action.layerNew")) {}
+                .disabled(true)
+        }
+    }
+}
+
 struct XomoFileMenuItems: View {
     let actions: XomoFileCommandActions?
 

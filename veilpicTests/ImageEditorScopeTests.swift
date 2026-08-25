@@ -1948,7 +1948,7 @@ struct ImageEditorScopeTests {
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
             encoding: .utf8
         )
-        let layerMenuStart = try #require(source.range(of: "private var layerMenu: some View"))
+        let layerMenuStart = try #require(source.range(of: "private var layerMenuItems: some View"))
         let nextMenuStart = try #require(
             source[layerMenuStart.upperBound...].range(of: "private var layerSelectAttributeMenu: some View")
         )
@@ -1994,7 +1994,7 @@ struct ImageEditorScopeTests {
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
             encoding: .utf8
         )
-        let layerMenuStart = try #require(source.range(of: "private var layerMenu: some View"))
+        let layerMenuStart = try #require(source.range(of: "private var layerMenuItems: some View"))
         let nextMenuStart = try #require(
             source[layerMenuStart.upperBound...].range(of: "private var layerSelectAttributeMenu: some View")
         )
@@ -2016,6 +2016,33 @@ struct ImageEditorScopeTests {
         #expect(layerMenuSource.contains(".keyboardShortcut(\"e\", modifiers: [.command, .shift])"))
         #expect(layerMenuSource.contains("viewModel.stampVisibleLayers()"))
         #expect(layerMenuSource.contains(".keyboardShortcut(\"e\", modifiers: [.command, .shift, .option])"))
+    }
+
+    @Test func systemAndEditorLayerMenusShareOneFocusedCommandTree() throws {
+        let menuBarSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),
+            encoding: .utf8
+        )
+        let commandsSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/XomoApplicationCommands.swift"),
+            encoding: .utf8
+        )
+        let appSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/veilpicApp.swift"),
+            encoding: .utf8
+        )
+        let viewSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(commandsSource.contains("CommandMenu(L10n.text(\"imageEditor.menu.layer\"))"))
+        #expect(commandsSource.contains("XomoLayerMenuItems(content: content)"))
+        #expect(menuBarSource.contains("XomoLayerMenuItems(content: xomoLayerCommandContent)"))
+        #expect(menuBarSource.contains("XomoLayerCommandContent(menuItems: AnyView(layerMenuItems))"))
+        #expect(menuBarSource.contains("private var layerMenuItems: some View"))
+        #expect(appSource.contains("XomoLayerCommands()"))
+        #expect(viewSource.contains(".focusedSceneValue(\\.xomoLayerCommandContent, xomoLayerCommandContent)"))
     }
 
     @Test func layerOrderMenuExposesClassicLayerOrderShortcuts() throws {

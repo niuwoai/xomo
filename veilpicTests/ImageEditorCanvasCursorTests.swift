@@ -1424,7 +1424,7 @@ struct ImageEditorCanvasCursorTests {
                 .appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),
             encoding: .utf8
         )
-        let layerMenuStart = try #require(menuSource.range(of: "private var layerMenu: some View"))
+        let layerMenuStart = try #require(menuSource.range(of: "private var layerMenuItems: some View"))
         let selectMenuStart = try #require(
             menuSource[layerMenuStart.upperBound...].range(of: "private var selectMenu: some View")
         )
