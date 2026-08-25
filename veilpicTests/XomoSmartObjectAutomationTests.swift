@@ -53,6 +53,9 @@ struct XomoSmartObjectAutomationTests {
         #expect(properties["action"]?.objectValue?["enum"]?.arrayValue?.contains(
             .string("placeEmbedded")
         ) == true)
+        #expect(properties["action"]?.objectValue?["enum"]?.arrayValue?.contains(
+            .string("newViaCopy")
+        ) == true)
         #expect(properties["path"]?.objectValue?["type"] == .string("string"))
 
         let historyCount = viewModel.document.history.count
@@ -71,6 +74,75 @@ struct XomoSmartObjectAutomationTests {
         #expect(viewModel.document.layers.count == layerCount)
         #expect(viewModel.document.history.count == historyCount)
         #expect(viewModel.undoStack.count == undoCount)
+    }
+
+    @Test func newViaCopyAutomationCreatesIndependentSourceAndSupportsOneUndo() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        defer { registry.unregister(viewModel) }
+        let image = try #require(NSImage.rendered(size: CGSize(width: 44, height: 28)) { rect in
+            NSColor.systemOrange.setFill()
+            rect.fill()
+        })
+        var original = ImageEditorLayer.smartObject(
+            name: "Automation Logo",
+            image: image,
+            sourceName: "automation-logo.png"
+        )
+        original.frame = CGRect(x: 40, y: 52, width: 88, height: 56)
+        viewModel.document.layers = [original]
+        viewModel.document.selectedLayerID = original.id
+        viewModel.document.selectedLayerIDs = [original.id]
+        let originalSourceID = try #require(original.smartObjectContent?.sourceID)
+        let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
+
+        let response = registry.execute(request(arguments: [
+            "action": .string("newViaCopy")
+        ]))
+
+        #expect(response.ok)
+        let copy = try #require(viewModel.document.selectedLayer)
+        #expect(viewModel.document.layers.count == 2)
+        #expect(copy.id != original.id)
+        #expect(copy.smartObjectContent?.sourceID != originalSourceID)
+        #expect(copy.smartObjectContent?.sourceName == original.smartObjectContent?.sourceName)
+        #expect(copy.frame == original.frame)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.undoStack.count == undoCount + 1)
+        #expect(viewModel.document.history.last?.title == L10n.text(
+            "imageEditor.history.layerSmartObjectViaCopy"
+        ))
+
+        viewModel.undo()
+        #expect(viewModel.document.layers.map(\.id) == [original.id])
+        #expect(viewModel.document.selectedLayerID == original.id)
+    }
+
+    @Test func newViaCopyAutomationRejectsInvalidSelectionWithoutConsumingRedo() {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        defer { registry.unregister(viewModel) }
+        viewModel.addLayer()
+        viewModel.undo()
+        #expect(viewModel.canRedo)
+        let layerIDs = viewModel.document.layers.map(\.id)
+        let history = viewModel.document.history
+        let undoCount = viewModel.undoStack.count
+        let redoCount = viewModel.redoStack.count
+
+        let response = registry.execute(request(arguments: [
+            "action": .string("newViaCopy")
+        ]))
+
+        #expect(!response.ok)
+        #expect(viewModel.document.layers.map(\.id) == layerIDs)
+        #expect(viewModel.document.history == history)
+        #expect(viewModel.undoStack.count == undoCount)
+        #expect(viewModel.redoStack.count == redoCount)
+        #expect(viewModel.canRedo)
     }
 
     private func makeViewModel() -> ImageEditorViewModel {

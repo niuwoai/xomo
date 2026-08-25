@@ -5086,6 +5086,12 @@ final class XomoAutomationRegistry {
             }
         case "resetTransform": viewModel.resetSelectedSmartObjectTransform()
         case "makeUnique": viewModel.makeSelectedSmartObjectUnique()
+        case "newViaCopy":
+            guard viewModel.createSmartObjectViaCopy() else {
+                throw XomoAutomationCallError.operationFailed(
+                    "New Smart Object via Copy requires one selected Smart Object"
+                )
+            }
         default: throw XomoAutomationCallError.invalidArgument("Unknown smart object action")
         }
     }
@@ -7166,7 +7172,7 @@ private extension XomoAutomationRegistry {
             "action": XomoAutomationSchema.string(description: "Layer link action", values: ["link", "unlink", "unlinkAll", "selectLinked"])
         ], required: ["action"]),
         tool("xomo.layer.smart_object", "Place, convert, and manage embedded smart object layers.", [
-            "action": XomoAutomationSchema.string(description: "Smart object action", values: ["convert", "placeEmbedded", "resetTransform", "makeUnique"]),
+            "action": XomoAutomationSchema.string(description: "Smart object action", values: ["convert", "placeEmbedded", "resetTransform", "makeUnique", "newViaCopy"]),
             "path": XomoAutomationSchema.string(description: "Local raster image path for placeEmbedded")
         ], required: ["action"]),
         tool("xomo.layer.properties", "Set fill, Blend If, mask, clipping, lock, label, and visibility properties.", [

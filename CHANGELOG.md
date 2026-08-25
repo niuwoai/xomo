@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.12.0-rc1276 - 2026-08-26
+
+### Added
+- `xomo.layer.smart_object` 自动化新增 `newViaCopy` 动作，让脚本、MCP 智能体和批处理流程可调用与共享图层菜单完全相同的“通过拷贝新建智能对象”事务。
+- 自动化副本沿用 rc1275 的独立 source ID、完整图层外观、单步 History/Undo 与原选择恢复语义；没有复制一套模型逻辑，未来 Figma/批量工作流与桌面 UI 不会分叉。
+- 非智能对象、无选择或多选调用返回明确失败，并在写入前保留文档、History、Undo/Redo 及已有 Redo；工具 schema 同步公开 `newViaCopy` 枚举值。
+
+### Verification
+- 增量产品测试构建通过；智能对象自动化与 schema 4/4、共享模型/菜单邻接 3/3，合计产品专项 7/7；CLI/MCP 2/2、发布契约 7/7（21 项）、测试运行器契约及差异检查全部通过。本版本不触发周期安装，下一次完整门禁与 `/Applications/Xomo.app` 覆盖仍为 rc1280。
+
 ## 2.12.0-rc1275 - 2026-08-26
 
 ### Added
