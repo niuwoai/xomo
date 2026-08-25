@@ -2085,6 +2085,28 @@ struct ImageEditorScopeTests {
         #expect(viewSource.contains("case .mergeDown: performMergeDown()"))
         #expect(viewSource.contains("case .stampVisible: performStampVisible()"))
         #expect(viewSource.contains("case .mergeVisible: performMergeVisible()"))
+
+        for (helperName, action, modelCall) in [
+            ("performLayerTop", ".top", "viewModel.moveSelectedLayerToTop(inVisibleOrder: filteredVisibleLayerRowIDs)"),
+            ("performLayerUp", ".up", "viewModel.moveSelectedLayerUp(inVisibleOrder: filteredVisibleLayerRowIDs)"),
+            ("performLayerDown", ".down", "viewModel.moveSelectedLayerDown(inVisibleOrder: filteredVisibleLayerRowIDs)"),
+            ("performLayerBottom", ".bottom", "viewModel.moveSelectedLayerToBottom(inVisibleOrder: filteredVisibleLayerRowIDs)")
+        ] {
+            let start = try #require(viewSource.range(of: "func \(helperName)()"))
+            let end = try #require(viewSource[start.upperBound...].range(of: "\n    }"))
+            let source = viewSource[start.lowerBound..<end.upperBound]
+            let dispatchGate = try #require(
+                source.range(of: "ImageEditorLayerOrderCommandDispatchGate.shouldDispatch")
+            )
+            let actionArgument = try #require(source.range(of: action))
+            let mutation = try #require(source.range(of: modelCall))
+            #expect(dispatchGate.lowerBound < actionArgument.lowerBound)
+            #expect(actionArgument.lowerBound < mutation.lowerBound)
+        }
+        #expect(viewSource.contains("case .layerTop: performLayerTop()"))
+        #expect(viewSource.contains("case .layerUp: performLayerUp()"))
+        #expect(viewSource.contains("case .layerDown: performLayerDown()"))
+        #expect(viewSource.contains("case .layerBottom: performLayerBottom()"))
     }
 
     @Test func systemAndEditorLayerMenusShareOneFocusedCommandTree() throws {
@@ -2126,13 +2148,13 @@ struct ImageEditorScopeTests {
         )
         let orderMenuSource = source[orderMenuStart.lowerBound..<nextMenuStart.lowerBound]
 
-        #expect(orderMenuSource.contains("viewModel.moveSelectedLayerToTop(inVisibleOrder: filteredVisibleLayerRowIDs)"))
+        #expect(orderMenuSource.contains("performLayerTop()"))
         #expect(orderMenuSource.contains(".keyboardShortcut(\"]\", modifiers: [.command, .shift])"))
-        #expect(orderMenuSource.contains("viewModel.moveSelectedLayerUp(inVisibleOrder: filteredVisibleLayerRowIDs)"))
+        #expect(orderMenuSource.contains("performLayerUp()"))
         #expect(orderMenuSource.contains(".keyboardShortcut(\"]\", modifiers: [.command])"))
-        #expect(orderMenuSource.contains("viewModel.moveSelectedLayerDown(inVisibleOrder: filteredVisibleLayerRowIDs)"))
+        #expect(orderMenuSource.contains("performLayerDown()"))
         #expect(orderMenuSource.contains(".keyboardShortcut(\"[\", modifiers: [.command])"))
-        #expect(orderMenuSource.contains("viewModel.moveSelectedLayerToBottom(inVisibleOrder: filteredVisibleLayerRowIDs)"))
+        #expect(orderMenuSource.contains("performLayerBottom()"))
         #expect(orderMenuSource.contains(".keyboardShortcut(\"[\", modifiers: [.command, .shift])"))
     }
 

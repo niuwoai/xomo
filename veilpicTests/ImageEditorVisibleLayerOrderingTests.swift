@@ -11,7 +11,60 @@ import Testing
 @testable import musepic
 
 @MainActor
+@Suite(.serialized)
 struct ImageEditorVisibleLayerOrderingTests {
+    @Test func onePhysicalLayerDownShortcutMovesOnlyOneVisibleStep() {
+        ImageEditorLayerOrderCommandDispatchGate.reset()
+        defer { ImageEditorLayerOrderCommandDispatchGate.reset() }
+
+        let viewModel = makeViewModel()
+        let bottom = layer("Bottom", in: viewModel)
+        let lowerMiddle = layer("Lower Middle", in: viewModel)
+        let upperMiddle = layer("Upper Middle", in: viewModel)
+        let top = layer("Top", in: viewModel)
+        viewModel.document.layers = [bottom, lowerMiddle, upperMiddle, top]
+        select(top.id, in: viewModel)
+        let initialHistoryCount = viewModel.document.history.count
+        let firstEvent = layerOrderEvent(number: 701, timestamp: 70)
+        let secondEvent = layerOrderEvent(number: 702, timestamp: 70.2)
+
+        func dispatchDown(event: ImageEditorKeyboardShortcutEventSignature?) {
+            guard ImageEditorLayerOrderCommandDispatchGate.shouldDispatch(
+                .down,
+                event: event
+            ) else { return }
+            viewModel.moveSelectedLayerDown(inVisibleOrder: viewModel.visibleLayerRows.map(\.id))
+        }
+
+        dispatchDown(event: firstEvent)
+        dispatchDown(event: firstEvent)
+        #expect(viewModel.visibleLayerRows.map(\.id) == [upperMiddle.id, top.id, lowerMiddle.id, bottom.id])
+        #expect(viewModel.document.history.count == initialHistoryCount + 1)
+
+        dispatchDown(event: secondEvent)
+        #expect(viewModel.visibleLayerRows.map(\.id) == [upperMiddle.id, lowerMiddle.id, top.id, bottom.id])
+        #expect(viewModel.document.history.count == initialHistoryCount + 2)
+    }
+
+    @Test func layerOrderActionsAndMouseMenuBoundariesRemainExplicit() {
+        ImageEditorLayerOrderCommandDispatchGate.reset()
+        defer { ImageEditorLayerOrderCommandDispatchGate.reset() }
+        let event = layerOrderEvent(number: 703, timestamp: 70.4)
+
+        for action in [
+            ImageEditorLayerOrderCommandAction.top,
+            .up,
+            .down,
+            .bottom
+        ] {
+            ImageEditorLayerOrderCommandDispatchGate.reset()
+            #expect(ImageEditorLayerOrderCommandDispatchGate.shouldDispatch(action, event: event))
+            #expect(!ImageEditorLayerOrderCommandDispatchGate.shouldDispatch(action, event: event))
+            #expect(ImageEditorLayerOrderCommandDispatchGate.shouldDispatch(action, event: nil))
+            #expect(ImageEditorLayerOrderCommandDispatchGate.shouldDispatch(action, event: nil))
+        }
+    }
+
     @Test func filteredMoveSkipsHiddenRowsAndUndoRestoresExactOrder() {
         let viewModel = makeViewModel()
         let matchBottom = layer("Match Bottom", in: viewModel)
@@ -173,8 +226,8 @@ struct ImageEditorVisibleLayerOrderingTests {
 
         #expect(panel.contains("moveSelectedLayerUp(inVisibleOrder: filteredVisibleLayerRowIDs)"))
         #expect(panel.contains("moveSelectedLayerDown(inVisibleOrder: filteredVisibleLayerRowIDs)"))
-        #expect(menu.contains("moveSelectedLayerToTop(inVisibleOrder: filteredVisibleLayerRowIDs)"))
-        #expect(menu.contains("moveSelectedLayerToBottom(inVisibleOrder: filteredVisibleLayerRowIDs)"))
+        #expect(menu.contains("performLayerTop()"))
+        #expect(menu.contains("performLayerBottom()"))
     }
 
     private func makeViewModel() -> ImageEditorViewModel {
@@ -192,5 +245,18 @@ struct ImageEditorVisibleLayerOrderingTests {
     private func select(_ layerID: UUID, in viewModel: ImageEditorViewModel) {
         viewModel.document.selectedLayerID = layerID
         viewModel.document.selectedLayerIDs = [layerID]
+    }
+
+    private func layerOrderEvent(
+        number: Int,
+        timestamp: TimeInterval
+    ) -> ImageEditorKeyboardShortcutEventSignature {
+        ImageEditorKeyboardShortcutEventSignature(
+            windowNumber: 13,
+            eventNumber: number,
+            timestamp: timestamp,
+            typeRawValue: NSEvent.EventType.keyDown.rawValue,
+            keyCode: 33
+        )
     }
 }

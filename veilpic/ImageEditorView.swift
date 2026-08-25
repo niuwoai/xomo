@@ -3272,10 +3272,10 @@ struct ImageEditorView: View {
         case .mergeDown: performMergeDown()
         case .stampVisible: performStampVisible()
         case .mergeVisible: performMergeVisible()
-        case .layerTop: viewModel.moveSelectedLayerToTop(inVisibleOrder: filteredVisibleLayerRowIDs)
-        case .layerUp: viewModel.moveSelectedLayerUp(inVisibleOrder: filteredVisibleLayerRowIDs)
-        case .layerDown: viewModel.moveSelectedLayerDown(inVisibleOrder: filteredVisibleLayerRowIDs)
-        case .layerBottom: viewModel.moveSelectedLayerToBottom(inVisibleOrder: filteredVisibleLayerRowIDs)
+        case .layerTop: performLayerTop()
+        case .layerUp: performLayerUp()
+        case .layerDown: performLayerDown()
+        case .layerBottom: performLayerBottom()
         case .navigateLayerSelection(let navigation): viewModel.navigateLayerSelection(navigation)
         case .selectAllLayers: viewModel.selectAllWorkspaceObjects()
         case .selectAll: viewModel.selectAll()
@@ -3371,6 +3371,38 @@ struct ImageEditorView: View {
             event: .currentKeyEvent
         ) else { return }
         viewModel.mergeVisibleLayers()
+    }
+
+    func performLayerTop() {
+        guard ImageEditorLayerOrderCommandDispatchGate.shouldDispatch(
+            .top,
+            event: .currentKeyEvent
+        ) else { return }
+        viewModel.moveSelectedLayerToTop(inVisibleOrder: filteredVisibleLayerRowIDs)
+    }
+
+    func performLayerUp() {
+        guard ImageEditorLayerOrderCommandDispatchGate.shouldDispatch(
+            .up,
+            event: .currentKeyEvent
+        ) else { return }
+        viewModel.moveSelectedLayerUp(inVisibleOrder: filteredVisibleLayerRowIDs)
+    }
+
+    func performLayerDown() {
+        guard ImageEditorLayerOrderCommandDispatchGate.shouldDispatch(
+            .down,
+            event: .currentKeyEvent
+        ) else { return }
+        viewModel.moveSelectedLayerDown(inVisibleOrder: filteredVisibleLayerRowIDs)
+    }
+
+    func performLayerBottom() {
+        guard ImageEditorLayerOrderCommandDispatchGate.shouldDispatch(
+            .bottom,
+            event: .currentKeyEvent
+        ) else { return }
+        viewModel.moveSelectedLayerToBottom(inVisibleOrder: filteredVisibleLayerRowIDs)
     }
 
     func performRedo() {
@@ -17120,6 +17152,38 @@ enum ImageEditorLayerMergeCommandDispatchGate {
 
     static func shouldDispatch(
         _ action: ImageEditorLayerMergeCommandAction,
+        event: ImageEditorKeyboardShortcutEventSignature?
+    ) -> Bool {
+        guard let event else { return true }
+        let dispatch = Dispatch(action: action, event: event)
+        guard dispatch != lastDispatch else { return false }
+        lastDispatch = dispatch
+        return true
+    }
+
+    static func reset() {
+        lastDispatch = nil
+    }
+}
+
+enum ImageEditorLayerOrderCommandAction: Equatable {
+    case top
+    case up
+    case down
+    case bottom
+}
+
+@MainActor
+enum ImageEditorLayerOrderCommandDispatchGate {
+    private struct Dispatch: Equatable {
+        let action: ImageEditorLayerOrderCommandAction
+        let event: ImageEditorKeyboardShortcutEventSignature
+    }
+
+    private static var lastDispatch: Dispatch?
+
+    static func shouldDispatch(
+        _ action: ImageEditorLayerOrderCommandAction,
         event: ImageEditorKeyboardShortcutEventSignature?
     ) -> Bool {
         guard let event else { return true }
