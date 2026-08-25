@@ -308,8 +308,7 @@ final class XomoExternalDocumentOpenCoordinator: ObservableObject {
                         image: image
                     )
                 )
-                activateOpenedDocumentWindow()
-                finish(requestID: requestID)
+                finishSuccessfulOpen(url: url, requestID: requestID)
                 return
             }
 
@@ -326,8 +325,7 @@ final class XomoExternalDocumentOpenCoordinator: ObservableObject {
                 await Task.yield()
                 guard activeRequestID == requestID else { return }
                 viewModel.loadExternalSVGDocument(document)
-                activateOpenedDocumentWindow()
-                finish(requestID: requestID)
+                finishSuccessfulOpen(url: url, requestID: requestID)
                 return
             }
 
@@ -368,8 +366,7 @@ final class XomoExternalDocumentOpenCoordinator: ObservableObject {
                 openedFlattened: openedFlattened,
                 compatibilityReport: compatibilityReport
             )
-            activateOpenedDocumentWindow()
-            finish(requestID: requestID)
+            finishSuccessfulOpen(url: url, requestID: requestID)
         } catch is CancellationError {
             finish(requestID: requestID)
         } catch {
@@ -384,6 +381,12 @@ final class XomoExternalDocumentOpenCoordinator: ObservableObject {
     private func activateOpenedDocumentWindow() {
         NSApp.activate(ignoringOtherApps: true)
         NSApp.keyWindow?.makeKeyAndOrderFront(nil)
+    }
+
+    private func finishSuccessfulOpen(url: URL, requestID: UUID) {
+        XomoRecentDocumentStore.shared.noteOpened(url)
+        activateOpenedDocumentWindow()
+        finish(requestID: requestID)
     }
 
     private func updateStage(_ stage: XomoDocumentLoadingStage, requestID: UUID) {

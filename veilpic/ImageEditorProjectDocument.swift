@@ -1304,6 +1304,7 @@ extension ImageEditorViewModel {
                 do {
                     let data = try self.projectData()
                     try data.write(to: url, options: .atomic)
+                    XomoRecentDocumentStore.shared.noteOpened(url)
                     self.appendHistory(L10n.text("imageEditor.history.projectSave"))
                     self.statusText = L10n.format("imageEditor.status.projectSaved", url.lastPathComponent)
                 } catch {
@@ -1333,7 +1334,10 @@ extension ImageEditorViewModel {
 
     func openDocument(
         at url: URL,
-        externalDocumentOpener: ((URL) -> Void)? = nil
+        externalDocumentOpener: ((URL) -> Void)? = nil,
+        recentDocumentRegistrar: @MainActor (URL) -> Void = {
+            XomoRecentDocumentStore.shared.noteOpened($0)
+        }
     ) {
         if Self.routesThroughExternalDocumentCoordinator(url) {
             if let externalDocumentOpener {
@@ -1349,6 +1353,7 @@ extension ImageEditorViewModel {
             try loadProjectData(data)
             appendHistory(L10n.text("imageEditor.history.projectOpen"))
             statusText = L10n.format("imageEditor.status.projectOpened", url.lastPathComponent)
+            recentDocumentRegistrar(url)
         } catch {
             statusText = L10n.format(
                 "imageEditor.status.projectOpenFailedWithReason",

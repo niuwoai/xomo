@@ -12,6 +12,9 @@ struct XomoFileCommandActions {
     let createCanvasFromClipboard: () -> Void
     let canCreateCanvasFromClipboard: Bool
     let openProject: () -> Void
+    let recentDocuments: [URL]
+    let openRecentDocument: (URL) -> Void
+    let clearRecentDocuments: () -> Void
     let saveProject: () -> Void
     let showPSDCompatibilityReport: () -> Void
     let canShowPSDCompatibilityReport: Bool
@@ -37,6 +40,7 @@ enum XomoFileMenuItem: CaseIterable, Hashable {
     case createCanvas
     case createCanvasFromClipboard
     case openProject
+    case openRecent
     case saveProject
     case psdCompatibilityReport
     case importExportDivider
@@ -637,6 +641,25 @@ struct XomoFileMenuItems: View {
                 actions?.openProject()
             }
             .keyboardShortcut("o", modifiers: [.command])
+            .disabled(actions == nil)
+        case .openRecent:
+            Menu(L10n.text("imageEditor.action.openRecent")) {
+                if let actions, !actions.recentDocuments.isEmpty {
+                    ForEach(actions.recentDocuments, id: \.path) { url in
+                        Button(url.lastPathComponent) {
+                            actions.openRecentDocument(url)
+                        }
+                        .help(url.path)
+                    }
+                    Divider()
+                    Button(L10n.text("imageEditor.action.clearRecent")) {
+                        actions.clearRecentDocuments()
+                    }
+                } else {
+                    Button(L10n.text("imageEditor.action.noRecent")) {}
+                        .disabled(true)
+                }
+            }
             .disabled(actions == nil)
         case .saveProject:
             Button(L10n.text("imageEditor.action.projectSave")) {

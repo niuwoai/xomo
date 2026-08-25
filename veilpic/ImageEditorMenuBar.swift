@@ -60,6 +60,9 @@ extension ImageEditorView {
             createCanvasFromClipboard: { viewModel.createCanvasFromClipboard() },
             canCreateCanvasFromClipboard: viewModel.canCreateCanvasFromClipboard,
             openProject: { viewModel.openProjectDocument() },
+            recentDocuments: recentDocumentStore.urls,
+            openRecentDocument: { viewModel.openDocument(at: $0) },
+            clearRecentDocuments: { recentDocumentStore.clear() },
             saveProject: { viewModel.saveProjectDocument() },
             showPSDCompatibilityReport: {
                 viewModel.isPSDCompatibilityReportPresented = true

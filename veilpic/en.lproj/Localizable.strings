@@ -476,6 +476,9 @@
 "imageEditor.action.export" = "Export";
 "imageEditor.action.applySelection" = "Apply Selection";
 "imageEditor.action.projectOpen" = "Open File…";
+"imageEditor.action.openRecent" = "Open Recent";
+"imageEditor.action.noRecent" = "No Recent Files";
+"imageEditor.action.clearRecent" = "Clear Menu";
 "imageEditor.action.fileOpenConfirm" = "Open";
 "imageEditor.action.projectSave" = "Save Project";
 "imageEditor.action.undo" = "Undo";

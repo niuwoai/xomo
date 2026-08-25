@@ -476,6 +476,9 @@
 "imageEditor.action.export" = "导出";
 "imageEditor.action.applySelection" = "应用选区";
 "imageEditor.action.projectOpen" = "打开文件…";
+"imageEditor.action.openRecent" = "打开最近使用";
+"imageEditor.action.noRecent" = "没有最近使用的文件";
+"imageEditor.action.clearRecent" = "清除菜单";
 "imageEditor.action.fileOpenConfirm" = "打开";
 "imageEditor.action.projectSave" = "保存项目";
 "imageEditor.action.undo" = "撤销";

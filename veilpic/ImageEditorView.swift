@@ -161,6 +161,7 @@ private struct ImageEditorObjectSelectionBoxDrag: Equatable {
 struct ImageEditorView: View {
     @Environment(\.locale) private var locale
     @StateObject var viewModel: ImageEditorViewModel
+    @StateObject var recentDocumentStore = XomoRecentDocumentStore.shared
     @State private var dragPoints: [CGPoint] = []
     @State private var brushStrokeSamples: [ImageEditorBrushStrokeSample] = []
     @State private var isTemporaryEyedropperGestureActive = false

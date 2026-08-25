@@ -476,6 +476,9 @@
 "imageEditor.action.export" = "書き出し";
 "imageEditor.action.applySelection" = "選択範囲を適用";
 "imageEditor.action.projectOpen" = "ファイルを開く…";
+"imageEditor.action.openRecent" = "最近使ったファイルを開く";
+"imageEditor.action.noRecent" = "最近使ったファイルはありません";
+"imageEditor.action.clearRecent" = "メニューを消去";
 "imageEditor.action.fileOpenConfirm" = "開く";
 "imageEditor.action.projectSave" = "プロジェクトを保存";
 "imageEditor.action.undo" = "取り消す";
