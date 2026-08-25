@@ -35,6 +35,10 @@ struct XomoEditorWorkspaceView: View {
                     .transition(.opacity)
             }
         }
+            .background(
+                XomoDocumentCloseGuard(viewModel: viewModel)
+                    .frame(width: 0, height: 0)
+            )
             .animation(.easeInOut(duration: 0.18), value: externalOpenCoordinator.presentation != nil)
             .onAppear {
                 externalOpenCoordinator.register(viewModel)

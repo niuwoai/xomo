@@ -1293,25 +1293,37 @@ extension ImageEditorViewModel {
         clearLayerMaskSoloPreview()
         isEditingLayerMask = false
         statusText = L10n.format("imageEditor.status.projectOpened", document.sourceName)
+        resetProjectSaveBaseline()
     }
 
     func saveProjectDocument() {
+        saveProjectDocument(completion: nil)
+    }
+
+    func saveProjectDocument(completion: (@MainActor (Bool) -> Void)?) {
         guard let currentProjectURL else {
-            saveProjectDocumentAs()
+            saveProjectDocumentAs(completion: completion)
             return
         }
-        writeProjectDocument(to: currentProjectURL)
+        completion?(writeProjectDocument(to: currentProjectURL))
     }
 
     func saveProjectDocumentAs() {
+        saveProjectDocumentAs(completion: nil)
+    }
+
+    func saveProjectDocumentAs(completion: (@MainActor (Bool) -> Void)?) {
         let panel = NSSavePanel()
         panel.allowedContentTypes = [Self.projectContentType]
         panel.canCreateDirectories = true
         panel.nameFieldStringValue = projectFilename()
         panel.begin { [weak self] response in
             Task { @MainActor in
-                guard let self, response == .OK, let url = panel.url else { return }
-                self.writeProjectDocument(to: url)
+                guard let self, response == .OK, let url = panel.url else {
+                    completion?(false)
+                    return
+                }
+                completion?(self.writeProjectDocument(to: url))
             }
         }
     }
@@ -1331,6 +1343,7 @@ extension ImageEditorViewModel {
             try dataWriter(data, url)
             let standardizedURL = url.standardizedFileURL
             updateCurrentProjectURL(standardizedURL)
+            updateProjectSaveBaseline(data)
             recentDocumentRegistrar(standardizedURL)
             statusText = L10n.format(
                 "imageEditor.status.projectSaved",
@@ -1348,6 +1361,15 @@ extension ImageEditorViewModel {
 
     var canRevertProjectDocument: Bool {
         currentProjectURL != nil
+    }
+
+    func resetProjectSaveBaseline() {
+        updateProjectSaveBaseline(try? projectData())
+    }
+
+    var hasUnsavedProjectChanges: Bool {
+        guard let currentData = try? projectData() else { return true }
+        return !projectDataMatchesSaveBaseline(currentData)
     }
 
     func presentProjectRevertConfirmation() {
@@ -1442,6 +1464,7 @@ extension ImageEditorViewModel {
             appendHistory(L10n.text("imageEditor.history.projectOpen"))
             statusText = L10n.format("imageEditor.status.projectOpened", url.lastPathComponent)
             recentDocumentRegistrar(url)
+            resetProjectSaveBaseline()
         } catch {
             statusText = L10n.format(
                 "imageEditor.status.projectOpenFailedWithReason",
@@ -1470,6 +1493,7 @@ extension ImageEditorViewModel {
             appendHistory(L10n.text("imageEditor.history.psdOpen"))
             statusText = L10n.format("imageEditor.status.psdOpened", document.sourceName)
         }
+        resetProjectSaveBaseline()
     }
 
     func loadExternalImageDocument(_ document: ImageEditorDocument) {
@@ -1480,6 +1504,7 @@ extension ImageEditorViewModel {
         resetAfterExternalDocumentOpen()
         appendHistory(L10n.text("imageEditor.history.imageOpen"))
         statusText = L10n.format("imageEditor.status.imageOpened", document.sourceName)
+        resetProjectSaveBaseline()
     }
 
     func loadExternalSVGDocument(_ document: ImageEditorDocument) {
@@ -1490,6 +1515,7 @@ extension ImageEditorViewModel {
         resetAfterExternalDocumentOpen()
         appendHistory(L10n.text("imageEditor.history.editableSVGOpen"))
         statusText = L10n.format("imageEditor.status.editableSVGOpened", document.sourceName)
+        resetProjectSaveBaseline()
     }
 
     private func resetAfterExternalDocumentOpen() {

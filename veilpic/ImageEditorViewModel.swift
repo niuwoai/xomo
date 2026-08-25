@@ -664,9 +664,18 @@ final class ImageEditorViewModel: ObservableObject {
     private var isBrushWorkspacePersistenceEnabled = false
     private var selectionEdgeGeometrySource: ImageEditorSelection?
     private var selectionEdgeGeometryCanvasSize: CGSize = .zero
+    private var projectSaveBaselineData: Data?
 
     func updateCurrentProjectURL(_ url: URL?) {
         currentProjectURL = url?.standardizedFileURL
+    }
+
+    func updateProjectSaveBaseline(_ data: Data?) {
+        projectSaveBaselineData = data
+    }
+
+    func projectDataMatchesSaveBaseline(_ data: Data) -> Bool {
+        projectSaveBaselineData == data
     }
 
     init(
@@ -748,6 +757,7 @@ final class ImageEditorViewModel: ObservableObject {
         recordCurrentHistorySnapshot()
         updateStatus()
         isBrushWorkspacePersistenceEnabled = true
+        resetProjectSaveBaseline()
     }
 
     init(
@@ -829,6 +839,7 @@ final class ImageEditorViewModel: ObservableObject {
         recordCurrentHistorySnapshot()
         updateStatus()
         isBrushWorkspacePersistenceEnabled = true
+        resetProjectSaveBaseline()
     }
 
     var currentImage: NSImage {
@@ -881,6 +892,7 @@ final class ImageEditorViewModel: ObservableObject {
             Int(canvasSize.height),
             draft.clampedExportScale
         )
+        resetProjectSaveBaseline()
     }
 
     var canCreateCanvasFromClipboard: Bool {
@@ -930,6 +942,7 @@ final class ImageEditorViewModel: ObservableObject {
             Int(normalized.size.width),
             Int(normalized.size.height)
         )
+        resetProjectSaveBaseline()
     }
 
     var previewImage: NSImage {

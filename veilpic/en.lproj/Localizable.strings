@@ -484,6 +484,8 @@
 "imageEditor.action.projectSaveAs" = "Save Project As…";
 "imageEditor.action.projectRevert" = "Revert to Saved…";
 "imageEditor.action.projectRevertConfirm" = "Revert";
+"imageEditor.action.closeSave" = "Save";
+"imageEditor.action.closeDiscard" = "Don't Save";
 "imageEditor.action.undo" = "Undo";
 "imageEditor.action.cloneSourcePick" = "Set Clone Source";
 "imageEditor.action.colorSamplerClear" = "Clear Samples";
@@ -2144,6 +2146,8 @@
 "imageEditor.status.projectRevertFailedWithReason" = "Revert to saved project failed: %@";
 "imageEditor.confirmation.projectRevertTitle" = "Revert Project?";
 "imageEditor.confirmation.projectRevertMessage" = "Unsaved changes will be discarded and the project version on disk will be reloaded. This cannot be undone.";
+"imageEditor.confirmation.unsavedCloseTitle" = "Save Changes Before Closing?";
+"imageEditor.confirmation.unsavedCloseMessage" = "If you don't save, changes to “%@” will be lost.";
 "imageEditor.status.projectOpenFailedWithReason" = "Open file failed: %@";
 "imageEditor.status.projectSaveFailedWithReason" = "Save project failed: %@";
 "imageEditor.project.error.imageEncoding" = "Could not encode layer image: %@";

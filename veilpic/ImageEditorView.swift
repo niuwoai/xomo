@@ -14050,7 +14050,7 @@ struct ImageEditorView: View {
     }
 
     func closeWindow() {
-        NSApplication.shared.keyWindow?.close()
+        NSApplication.shared.keyWindow?.performClose(nil)
     }
 }
 
