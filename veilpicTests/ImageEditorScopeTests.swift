@@ -3712,26 +3712,45 @@ struct ImageEditorScopeTests {
     }
 
     @Test func selectMenuExposesClassicSelectionShortcuts() throws {
-        let source = try String(
+        let menuSource = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),
             encoding: .utf8
         )
-        let selectMenuStart = try #require(source.range(of: "private var selectMenuItems: some View"))
-        let nextMenuStart = try #require(
-            source[selectMenuStart.upperBound...].range(of: "private var alphaChannelMenu: some View")
+        let viewSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
         )
-        let selectMenuSource = source[selectMenuStart.lowerBound..<nextMenuStart.lowerBound]
+        let selectMenuStart = try #require(menuSource.range(of: "private var selectMenuItems: some View"))
+        let nextMenuStart = try #require(
+            menuSource[selectMenuStart.upperBound...].range(of: "private var alphaChannelMenu: some View")
+        )
+        let selectMenuSource = menuSource[selectMenuStart.lowerBound..<nextMenuStart.lowerBound]
 
-        #expect(selectMenuSource.contains("viewModel.selectAll()"))
+        #expect(selectMenuSource.contains("performSelectionCommand(.selectAll)"))
         #expect(selectMenuSource.contains(".keyboardShortcut(\"a\", modifiers: [.command])"))
-        #expect(selectMenuSource.contains("viewModel.clearSelection()"))
+        #expect(selectMenuSource.contains("performSelectionCommand(.clear)"))
         #expect(selectMenuSource.contains(".keyboardShortcut(\"d\", modifiers: [.command])"))
-        #expect(selectMenuSource.contains("viewModel.reselectSelection()"))
+        #expect(selectMenuSource.contains("performSelectionCommand(.reselect)"))
         #expect(selectMenuSource.contains(".keyboardShortcut(\"d\", modifiers: [.command, .shift])"))
-        #expect(selectMenuSource.contains("viewModel.invertSelection()"))
+        #expect(selectMenuSource.contains("performSelectionCommand(.invert)"))
         #expect(selectMenuSource.contains(".keyboardShortcut(\"i\", modifiers: [.command, .shift])"))
         #expect(selectMenuSource.contains("viewModel.featherSelection()"))
         #expect(selectMenuSource.contains(".keyboardShortcut(\"d\", modifiers: [.command, .option])"))
+
+        let helperStart = try #require(viewSource.range(of: "func performSelectionCommand("))
+        let helperEnd = try #require(
+            viewSource[helperStart.upperBound...].range(of: "\n    }")
+        )
+        let helperSource = viewSource[helperStart.lowerBound..<helperEnd.upperBound]
+        let gate = try #require(
+            helperSource.range(of: "ImageEditorSelectionCommandDispatchGate.shouldDispatch")
+        )
+        let inversion = try #require(helperSource.range(of: "viewModel.invertSelection()"))
+        #expect(gate.lowerBound < inversion.lowerBound)
+        #expect(viewSource.contains("case .selectAll: performSelectionCommand(.selectAll)"))
+        #expect(viewSource.contains("case .clearSelection: performSelectionCommand(.clear)"))
+        #expect(viewSource.contains("case .reselectSelection: performSelectionCommand(.reselect)"))
+        #expect(viewSource.contains("case .invertSelection: performSelectionCommand(.invert)"))
     }
 
     @Test func selectMenuSeparatesStructuralSelectionActionsFromPixelGeometry() throws {
@@ -3760,8 +3779,8 @@ struct ImageEditorScopeTests {
                 separatedBy: ".disabled(!viewModel.hasSelection)"
             ).count - 1 == 2
         )
-        #expect(selectMenuSource.contains("viewModel.clearSelection()"))
-        #expect(selectMenuSource.contains("viewModel.invertSelection()"))
+        #expect(selectMenuSource.contains("performSelectionCommand(.clear)"))
+        #expect(selectMenuSource.contains("performSelectionCommand(.invert)"))
         #expect(selectMenuSource.contains("performToggleQuickMask()"))
     }
 

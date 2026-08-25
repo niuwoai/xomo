@@ -3284,10 +3284,10 @@ struct ImageEditorView: View {
         case .layerBottom: performLayerBottom()
         case .navigateLayerSelection(let navigation): viewModel.navigateLayerSelection(navigation)
         case .selectAllLayers: viewModel.selectAllWorkspaceObjects()
-        case .selectAll: viewModel.selectAll()
-        case .clearSelection: viewModel.clearSelection()
-        case .reselectSelection: viewModel.reselectSelection()
-        case .invertSelection: viewModel.invertSelection()
+        case .selectAll: performSelectionCommand(.selectAll)
+        case .clearSelection: performSelectionCommand(.clear)
+        case .reselectSelection: performSelectionCommand(.reselect)
+        case .invertSelection: performSelectionCommand(.invert)
         case .featherSelection: viewModel.featherSelection()
         case .toggleQuickMask: performToggleQuickMask()
         case .toggleQuickMaskGrayscalePreview: viewModel.toggleQuickMaskGrayscalePreview()
@@ -3416,6 +3416,19 @@ struct ImageEditorView: View {
             event: .currentKeyEvent
         ) else { return }
         viewModel.toggleQuickMaskMode()
+    }
+
+    func performSelectionCommand(_ action: ImageEditorSelectionCommandAction) {
+        guard ImageEditorSelectionCommandDispatchGate.shouldDispatch(
+            action,
+            event: .currentKeyEvent
+        ) else { return }
+        switch action {
+        case .selectAll: viewModel.selectAll()
+        case .clear: viewModel.clearSelection()
+        case .reselect: viewModel.reselectSelection()
+        case .invert: viewModel.invertSelection()
+        }
     }
 
     func performCanvasAidCommand(_ action: ImageEditorCanvasAidCommandAction) {
@@ -17278,6 +17291,38 @@ enum ImageEditorQuickMaskCommandDispatchGate {
 
     static func reset() {
         lastEvent = nil
+    }
+}
+
+enum ImageEditorSelectionCommandAction: Equatable, CaseIterable {
+    case selectAll
+    case clear
+    case reselect
+    case invert
+}
+
+@MainActor
+enum ImageEditorSelectionCommandDispatchGate {
+    private struct Dispatch: Equatable {
+        let action: ImageEditorSelectionCommandAction
+        let event: ImageEditorKeyboardShortcutEventSignature
+    }
+
+    private static var lastDispatch: Dispatch?
+
+    static func shouldDispatch(
+        _ action: ImageEditorSelectionCommandAction,
+        event: ImageEditorKeyboardShortcutEventSignature?
+    ) -> Bool {
+        guard let event else { return true }
+        let dispatch = Dispatch(action: action, event: event)
+        guard dispatch != lastDispatch else { return false }
+        lastDispatch = dispatch
+        return true
+    }
+
+    static func reset() {
+        lastDispatch = nil
     }
 }
 

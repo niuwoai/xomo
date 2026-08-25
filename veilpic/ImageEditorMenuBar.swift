@@ -1044,21 +1044,21 @@ extension ImageEditorView {
     private var selectMenuItems: some View {
         let canModifySelectionGeometry = viewModel.canModifySelectionGeometry
         Button(L10n.text("imageEditor.action.selectAll")) {
-            viewModel.selectAll()
+            performSelectionCommand(.selectAll)
         }
         .keyboardShortcut("a", modifiers: [.command])
         Button(L10n.text("imageEditor.action.clearSelection")) {
-            viewModel.clearSelection()
+            performSelectionCommand(.clear)
         }
         .keyboardShortcut("d", modifiers: [.command])
         .disabled(!viewModel.hasSelection)
         Button(L10n.text("imageEditor.action.reselectSelection")) {
-            viewModel.reselectSelection()
+            performSelectionCommand(.reselect)
         }
         .keyboardShortcut("d", modifiers: [.command, .shift])
         .disabled(!viewModel.canReselectSelection)
         Button(L10n.text("imageEditor.action.invertSelection")) {
-            viewModel.invertSelection()
+            performSelectionCommand(.invert)
         }
         .keyboardShortcut("i", modifiers: [.command, .shift])
         .disabled(!viewModel.hasSelection)

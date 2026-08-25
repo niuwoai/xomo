@@ -12,6 +12,56 @@ import Testing
 @MainActor
 @Suite(.serialized)
 struct ImageEditorHistoryTests {
+    @Test func onePhysicalSelectionInvertShortcutCommitsOnlyOneInversion() throws {
+        ImageEditorSelectionCommandDispatchGate.reset()
+        defer { ImageEditorSelectionCommandDispatchGate.reset() }
+
+        let canvas = try #require(NSImage.rendered(size: NSSize(width: 40, height: 30)) { rect in
+            NSColor.white.setFill()
+            rect.fill()
+        })
+        let viewModel = ImageEditorViewModel(sourceName: "selection.png", image: canvas) { _ in }
+        let originalSelection = ImageEditorSelection.rectangle(
+            CGRect(x: 3, y: 4, width: 11, height: 9)
+        )
+        viewModel.document.selection = originalSelection
+        let historyCount = viewModel.document.history.count
+        let event = ImageEditorKeyboardShortcutEventSignature(
+            windowNumber: 23,
+            eventNumber: 931,
+            timestamp: 93.1,
+            typeRawValue: NSEvent.EventType.keyDown.rawValue,
+            keyCode: 34
+        )
+
+        for _ in 0..<2 {
+            guard ImageEditorSelectionCommandDispatchGate.shouldDispatch(
+                .invert,
+                event: event
+            ) else { continue }
+            viewModel.invertSelection()
+        }
+
+        let selection = try #require(viewModel.document.selection)
+        #expect(selection.bounds == originalSelection.bounds)
+        #expect(selection.isInverted)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(
+            viewModel.document.history.last?.title
+                == L10n.text("imageEditor.history.selectionInverted")
+        )
+    }
+
+    @Test func selectionMouseMenuBoundariesRemainIndependentWithoutAKeyEvent() {
+        ImageEditorSelectionCommandDispatchGate.reset()
+        defer { ImageEditorSelectionCommandDispatchGate.reset() }
+
+        for action in ImageEditorSelectionCommandAction.allCases {
+            #expect(ImageEditorSelectionCommandDispatchGate.shouldDispatch(action, event: nil))
+            #expect(ImageEditorSelectionCommandDispatchGate.shouldDispatch(action, event: nil))
+        }
+    }
+
     @Test func onePhysicalArrowShortcutNudgesOnlyOneDistanceStep() throws {
         ImageEditorNudgeCommandDispatchGate.reset()
         defer { ImageEditorNudgeCommandDispatchGate.reset() }
