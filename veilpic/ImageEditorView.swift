@@ -3271,7 +3271,7 @@ struct ImageEditorView: View {
         case .autoContrast: performPixelCorrectionCommand(.autoContrast)
         case .autoColor: performPixelCorrectionCommand(.autoColor)
         case .newLayer: performNewLayer()
-        case .duplicateSelectionOrLayer: viewModel.duplicateSelectionOrSelectedLayer()
+        case .duplicateSelectionOrLayer: performDuplicateSelectionOrLayer()
         case .cutSelectionToLayer: viewModel.cutSelectionToNewLayer()
         case .groupSelectedLayer: performGroupSelectedLayer()
         case .ungroupSelectedLayers: performUngroupSelectedLayers()
@@ -3337,6 +3337,13 @@ struct ImageEditorView: View {
             event: .currentKeyEvent
         ) else { return }
         viewModel.addLayer()
+    }
+
+    func performDuplicateSelectionOrLayer() {
+        guard ImageEditorLayerDuplicateCommandDispatchGate.shouldDispatch(
+            event: .currentKeyEvent
+        ) else { return }
+        viewModel.duplicateSelectionOrSelectedLayer()
     }
 
     func performGroupSelectedLayer() {
@@ -17188,6 +17195,24 @@ enum ImageEditorHistoryCommandDispatchGate {
 
 @MainActor
 enum ImageEditorNewLayerCommandDispatchGate {
+    private static var lastEvent: ImageEditorKeyboardShortcutEventSignature?
+
+    static func shouldDispatch(
+        event: ImageEditorKeyboardShortcutEventSignature?
+    ) -> Bool {
+        guard let event else { return true }
+        guard event != lastEvent else { return false }
+        lastEvent = event
+        return true
+    }
+
+    static func reset() {
+        lastEvent = nil
+    }
+}
+
+@MainActor
+enum ImageEditorLayerDuplicateCommandDispatchGate {
     private static var lastEvent: ImageEditorKeyboardShortcutEventSignature?
 
     static func shouldDispatch(

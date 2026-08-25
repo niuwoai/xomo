@@ -2046,10 +2046,11 @@ struct ImageEditorScopeTests {
 
         #expect(layerMenuSource.contains("performNewLayer()"))
         #expect(layerMenuSource.contains(".keyboardShortcut(\"n\", modifiers: [.command, .shift])"))
-        #expect(layerMenuSource.contains("viewModel.duplicateSelectionOrSelectedLayer()"))
+        #expect(layerMenuSource.contains("performDuplicateSelectionOrLayer()"))
+        #expect(layerMenuSource.contains(".keyboardShortcut(\"j\", modifiers: [.command])"))
         #expect(layerMenuSource.contains("viewModel.canDuplicateSelectionOrSelectedLayer"))
         #expect(viewSource.contains("if key == \"j\", relevantFlags == [.command] { return .duplicateSelectionOrLayer }"))
-        #expect(viewSource.contains("case .duplicateSelectionOrLayer: viewModel.duplicateSelectionOrSelectedLayer()"))
+        #expect(viewSource.contains("case .duplicateSelectionOrLayer: performDuplicateSelectionOrLayer()"))
         #expect(layerMenuSource.contains("performGroupSelectedLayer()"))
         #expect(layerMenuSource.contains(".keyboardShortcut(\"g\", modifiers: [.command])"))
         #expect(layerMenuSource.contains("performUngroupSelectedLayers()"))
@@ -2071,6 +2072,25 @@ struct ImageEditorScopeTests {
         )
         let addLayer = try #require(helperSource.range(of: "viewModel.addLayer()"))
         #expect(dispatchGate.lowerBound < addLayer.lowerBound)
+
+        let duplicateHelperStart = try #require(
+            viewSource.range(of: "func performDuplicateSelectionOrLayer()")
+        )
+        let duplicateHelperEnd = try #require(
+            viewSource[duplicateHelperStart.upperBound...].range(of: "\n    }")
+        )
+        let duplicateHelperSource = viewSource[
+            duplicateHelperStart.lowerBound..<duplicateHelperEnd.upperBound
+        ]
+        let duplicateGate = try #require(
+            duplicateHelperSource.range(
+                of: "ImageEditorLayerDuplicateCommandDispatchGate.shouldDispatch"
+            )
+        )
+        let duplicate = try #require(
+            duplicateHelperSource.range(of: "viewModel.duplicateSelectionOrSelectedLayer()")
+        )
+        #expect(duplicateGate.lowerBound < duplicate.lowerBound)
         #expect(viewSource.contains("case .newLayer: performNewLayer()"))
 
         for (helperName, action, modelCall) in [

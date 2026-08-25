@@ -12,6 +12,46 @@ import Testing
 @MainActor
 @Suite(.serialized)
 struct ImageEditorHistoryTests {
+    @Test func onePhysicalCommandJCreatesOnlyOneLayerCopy() {
+        ImageEditorLayerDuplicateCommandDispatchGate.reset()
+        defer { ImageEditorLayerDuplicateCommandDispatchGate.reset() }
+
+        let image = testImage(color: .systemBlue, size: NSSize(width: 24, height: 18))
+        let viewModel = ImageEditorViewModel(sourceName: "duplicate.png", image: image) { _ in }
+        viewModel.convertBackgroundToLayer()
+        let layerCount = viewModel.document.layers.count
+        let historyCount = viewModel.document.history.count
+        let event = ImageEditorKeyboardShortcutEventSignature(
+            windowNumber: 37,
+            eventNumber: 961,
+            timestamp: 96.1,
+            typeRawValue: NSEvent.EventType.keyDown.rawValue,
+            keyCode: 38
+        )
+
+        for _ in 0..<2 {
+            guard ImageEditorLayerDuplicateCommandDispatchGate.shouldDispatch(
+                event: event
+            ) else { continue }
+            viewModel.duplicateSelectionOrSelectedLayer()
+        }
+
+        #expect(viewModel.document.layers.count == layerCount + 1)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(
+            viewModel.document.history.last?.title
+                == L10n.text("imageEditor.history.layerDuplicate")
+        )
+    }
+
+    @Test func layerDuplicateMouseMenuBoundariesRemainIndependentWithoutAKeyEvent() {
+        ImageEditorLayerDuplicateCommandDispatchGate.reset()
+        defer { ImageEditorLayerDuplicateCommandDispatchGate.reset() }
+
+        #expect(ImageEditorLayerDuplicateCommandDispatchGate.shouldDispatch(event: nil))
+        #expect(ImageEditorLayerDuplicateCommandDispatchGate.shouldDispatch(event: nil))
+    }
+
     @Test func onePhysicalRepeatLastFilterShortcutCommitsOnlyOneFilter() {
         ImageEditorLastFilterCommandDispatchGate.reset()
         defer { ImageEditorLastFilterCommandDispatchGate.reset() }
