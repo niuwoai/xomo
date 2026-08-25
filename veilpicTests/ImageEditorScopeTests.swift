@@ -2019,7 +2019,7 @@ struct ImageEditorScopeTests {
         )
         let layerMenuSource = source[layerMenuStart.lowerBound..<nextMenuStart.lowerBound]
 
-        #expect(layerMenuSource.contains("viewModel.addLayer()"))
+        #expect(layerMenuSource.contains("performNewLayer()"))
         #expect(layerMenuSource.contains(".keyboardShortcut(\"n\", modifiers: [.command, .shift])"))
         #expect(layerMenuSource.contains("viewModel.duplicateSelectionOrSelectedLayer()"))
         #expect(layerMenuSource.contains("viewModel.canDuplicateSelectionOrSelectedLayer"))
@@ -2035,6 +2035,18 @@ struct ImageEditorScopeTests {
         #expect(layerMenuSource.contains(".keyboardShortcut(\"e\", modifiers: [.command, .shift])"))
         #expect(layerMenuSource.contains("viewModel.stampVisibleLayers()"))
         #expect(layerMenuSource.contains(".keyboardShortcut(\"e\", modifiers: [.command, .shift, .option])"))
+
+        let helperStart = try #require(viewSource.range(of: "func performNewLayer()"))
+        let helperEnd = try #require(
+            viewSource[helperStart.upperBound...].range(of: "\n    }")
+        )
+        let helperSource = viewSource[helperStart.lowerBound..<helperEnd.upperBound]
+        let dispatchGate = try #require(
+            helperSource.range(of: "ImageEditorNewLayerCommandDispatchGate.shouldDispatch")
+        )
+        let addLayer = try #require(helperSource.range(of: "viewModel.addLayer()"))
+        #expect(dispatchGate.lowerBound < addLayer.lowerBound)
+        #expect(viewSource.contains("case .newLayer: performNewLayer()"))
     }
 
     @Test func systemAndEditorLayerMenusShareOneFocusedCommandTree() throws {

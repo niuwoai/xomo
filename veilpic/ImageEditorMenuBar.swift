@@ -246,7 +246,7 @@ extension ImageEditorView {
     @ViewBuilder
     private var layerMenuItems: some View {
         Button(L10n.text("imageEditor.action.layerNew")) {
-            viewModel.addLayer()
+            performNewLayer()
         }
         .keyboardShortcut("n", modifiers: [.command, .shift])
         Button(L10n.text("imageEditor.action.layerDuplicate")) {

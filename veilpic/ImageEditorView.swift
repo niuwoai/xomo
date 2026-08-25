@@ -3264,7 +3264,7 @@ struct ImageEditorView: View {
         case .autoLevels: viewModel.autoLevelsSelectedLayer()
         case .autoContrast: viewModel.autoContrastSelectedLayer()
         case .autoColor: viewModel.autoColorSelectedLayer()
-        case .newLayer: viewModel.addLayer()
+        case .newLayer: performNewLayer()
         case .duplicateSelectionOrLayer: viewModel.duplicateSelectionOrSelectedLayer()
         case .cutSelectionToLayer: viewModel.cutSelectionToNewLayer()
         case .groupSelectedLayer: viewModel.groupSelectedLayer()
@@ -3324,6 +3324,13 @@ struct ImageEditorView: View {
             isPathAnchorDragCancelled = true
         }
         viewModel.undo()
+    }
+
+    func performNewLayer() {
+        guard ImageEditorNewLayerCommandDispatchGate.shouldDispatch(
+            event: .currentKeyEvent
+        ) else { return }
+        viewModel.addLayer()
     }
 
     func performRedo() {
@@ -16992,6 +16999,24 @@ enum ImageEditorPanelToggleAction: Equatable {
 
 @MainActor
 enum ImageEditorHistoryCommandDispatchGate {
+    private static var lastEvent: ImageEditorKeyboardShortcutEventSignature?
+
+    static func shouldDispatch(
+        event: ImageEditorKeyboardShortcutEventSignature?
+    ) -> Bool {
+        guard let event else { return true }
+        guard event != lastEvent else { return false }
+        lastEvent = event
+        return true
+    }
+
+    static func reset() {
+        lastEvent = nil
+    }
+}
+
+@MainActor
+enum ImageEditorNewLayerCommandDispatchGate {
     private static var lastEvent: ImageEditorKeyboardShortcutEventSignature?
 
     static func shouldDispatch(

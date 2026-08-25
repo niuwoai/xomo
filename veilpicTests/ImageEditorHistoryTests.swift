@@ -72,6 +72,47 @@ struct ImageEditorHistoryTests {
         #expect(ImageEditorHistoryCommandDispatchGate.shouldDispatch(event: nil))
     }
 
+    @Test func onePhysicalNewLayerShortcutCreatesOnlyOneLayer() {
+        ImageEditorNewLayerCommandDispatchGate.reset()
+        defer { ImageEditorNewLayerCommandDispatchGate.reset() }
+
+        let image = NSImage(size: NSSize(width: 32, height: 24))
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        let initialLayerCount = viewModel.document.layers.count
+        let firstEvent = ImageEditorKeyboardShortcutEventSignature(
+            windowNumber: 7,
+            eventNumber: 301,
+            timestamp: 45,
+            typeRawValue: NSEvent.EventType.keyDown.rawValue,
+            keyCode: 45
+        )
+        let secondEvent = ImageEditorKeyboardShortcutEventSignature(
+            windowNumber: 7,
+            eventNumber: 302,
+            timestamp: 45.2,
+            typeRawValue: NSEvent.EventType.keyDown.rawValue,
+            keyCode: 45
+        )
+
+        func dispatchNewLayer(event: ImageEditorKeyboardShortcutEventSignature?) {
+            guard ImageEditorNewLayerCommandDispatchGate.shouldDispatch(
+                event: event
+            ) else { return }
+            viewModel.addLayer()
+        }
+
+        dispatchNewLayer(event: firstEvent)
+        dispatchNewLayer(event: firstEvent)
+        #expect(viewModel.document.layers.count == initialLayerCount + 1)
+
+        dispatchNewLayer(event: secondEvent)
+        #expect(viewModel.document.layers.count == initialLayerCount + 2)
+
+        dispatchNewLayer(event: nil)
+        dispatchNewLayer(event: nil)
+        #expect(viewModel.document.layers.count == initialLayerCount + 4)
+    }
+
     @Test func penPointConstraintUsesNearestFortyFiveDegreeDirectionAndCanvasBoundary() {
         let horizontal = ImageEditorPenPointGeometry.constrainedPoint(
             from: CGPoint(x: 50, y: 50),
