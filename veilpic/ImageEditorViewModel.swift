@@ -2005,9 +2005,15 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     var selectedLayerOpenableFigmaSourceURL: URL? {
-        XomoFigmaSourceOpenPolicy.canonicalURL(
-            from: selectedLayerFigmaSourceURL,
-            selectingNodeID: selectedLayerFigmaSourceID
+        guard let selectedLayerID = document.selectedLayerID else { return nil }
+        return openableFigmaSourceURL(for: selectedLayerID)
+    }
+
+    func openableFigmaSourceURL(for layerID: UUID) -> URL? {
+        guard let layer = document.layers.first(where: { $0.id == layerID }) else { return nil }
+        return XomoFigmaSourceOpenPolicy.canonicalURL(
+            from: layer.xomoFigmaSourceURL,
+            selectingNodeID: layer.xomoFigmaSourceID
         )
     }
 

@@ -2205,6 +2205,31 @@ extension ImageEditorView {
                     )
                 }
                 .disabled(layer.isAdjustment || layer.isFilter)
+
+                if viewModel.openableFigmaSourceURL(for: layer.id) != nil {
+                    Divider()
+                    Button {
+                        viewModel.selectLayer(layer.id)
+                        viewModel.openSelectedFigmaSourceURL()
+                    } label: {
+                        Label(
+                            L10n.text("imageEditor.action.openFigmaSourceURL"),
+                            systemImage: "arrow.up.right.square"
+                        )
+                    }
+                    .accessibilityIdentifier("image-editor-layer-open-figma-source-\(layer.id.uuidString)")
+
+                    Button {
+                        viewModel.selectLayer(layer.id)
+                        viewModel.copySelectedFigmaSourceURL()
+                    } label: {
+                        Label(
+                            L10n.text("imageEditor.action.copyFigmaSourceURL"),
+                            systemImage: "doc.on.doc"
+                        )
+                    }
+                    .accessibilityIdentifier("image-editor-layer-copy-figma-source-\(layer.id.uuidString)")
+                }
             }
 
             layerDropBand(layer, placement: .below)

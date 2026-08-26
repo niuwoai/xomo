@@ -1187,7 +1187,7 @@ final class XomoAutomationRegistry {
             "fileKey": sourcePreview.map { .string($0.fileKey) } ?? .null,
             "resourceType": sourcePreview.map { .string($0.resourceType.rawValue) } ?? .null,
             "importScope": sourcePreview.map { .string($0.plannedImportScope.rawValue) } ?? .null,
-            "url": layer.xomoFigmaSourceURL.map { .string($0.absoluteString) } ?? .null,
+            "url": sourcePreview.map { .string($0.canonicalURL.absoluteString) } ?? .null,
             "nodeType": layer.xomoFigmaNodeType.map(XomoJSONValue.string) ?? .null,
             "componentRole": layer.xomoFigmaComponentRole.map {
                 .string($0.rawValue)
@@ -1196,7 +1196,10 @@ final class XomoAutomationRegistry {
     }
 
     private func figmaSourcePreview(for layer: ImageEditorLayer) -> XomoFigmaLinkPreview? {
-        guard let sourceURL = layer.xomoFigmaSourceURL,
+        guard let sourceURL = XomoFigmaSourceOpenPolicy.canonicalURL(
+            from: layer.xomoFigmaSourceURL,
+            selectingNodeID: layer.xomoFigmaSourceID
+        ),
               let preview = try? XomoFigmaLinkParser.parse(sourceURL.absoluteString)
         else { return nil }
         return preview
@@ -6985,7 +6988,7 @@ private extension XomoAutomationRegistry {
         tool("xomo.tool.select", "Select the active editor tool.", [
             "tool": XomoAutomationSchema.string(description: "Tool identifier", values: ImageEditorTool.allCases.map(\.rawValue))
         ], required: ["tool"]),
-        tool("xomo.layer.list", "List layers with hierarchy, bounds, visibility, locks, opacity, blend mode, and preserved Figma source, bindings, and size constraints, with optional filters.", [
+        tool("xomo.layer.list", "List layers with hierarchy, bounds, visibility, locks, opacity, blend mode, and preserved Figma source, including each layer's validated canonical node URL, bindings, and size constraints, with optional filters.", [
             "figmaBindings": XomoAutomationSchema.string(description: "Filter by preserved Figma variable bindings", values: ["all", "bound", "unbound"]),
             "figmaConstraints": XomoAutomationSchema.string(description: "Filter by effective Figma size constraints", values: ["all", "constrained", "overridden", "conflicted"]),
             "figmaSource": XomoAutomationSchema.string(description: "Filter by retained Figma source identity", values: ["all", "imported", "local"]),

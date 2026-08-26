@@ -146,6 +146,42 @@ struct ImageEditorFigmaProvenanceTests {
         #expect(source.contains("image-editor-open-figma-source-url"))
     }
 
+    @Test func layerPanelSourceActionsResolveTheClickedLayerWithoutChangingSelectionDuringInspection() throws {
+        let image = NSImage.transparent(size: CGSize(width: 20, height: 20))
+        var document = ImageEditorDocument(sourceName: "figma-layers.png", image: image)
+        let selectedLayerID = document.layers[0].id
+        var sourceLayer = ImageEditorLayer.blank(name: "Imported child", size: image.size)
+        sourceLayer.frame.origin = CGPoint(x: 30, y: 30)
+        sourceLayer.xomoFigmaSourceID = "44:5"
+        sourceLayer.xomoFigmaSourceURL = URL(
+            string: "https://figma.com/design/abc123/Checkout?node-id=10-20&utm_source=mail"
+        )
+        document.layers.append(sourceLayer)
+        document.selectedLayerID = selectedLayerID
+        document.selectedLayerIDs = [selectedLayerID]
+        let viewModel = ImageEditorViewModel(document: document) { _ in }
+
+        #expect(
+            viewModel.openableFigmaSourceURL(for: sourceLayer.id)?.absoluteString ==
+                "https://www.figma.com/design/abc123/Checkout?node-id=44-5"
+        )
+        #expect(viewModel.document.selectedLayerID == selectedLayerID)
+        #expect(viewModel.openableFigmaSourceURL(for: UUID()) == nil)
+
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let panel = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorLayerPanel.swift"),
+            encoding: .utf8
+        )
+        #expect(panel.contains("if viewModel.openableFigmaSourceURL(for: layer.id) != nil"))
+        #expect(panel.contains("viewModel.selectLayer(layer.id)\n                        viewModel.openSelectedFigmaSourceURL()"))
+        #expect(panel.contains("viewModel.selectLayer(layer.id)\n                        viewModel.copySelectedFigmaSourceURL()"))
+        #expect(panel.contains("image-editor-layer-open-figma-source-\\(layer.id.uuidString)"))
+        #expect(panel.contains("image-editor-layer-copy-figma-source-\\(layer.id.uuidString)"))
+    }
+
     @Test func componentPropertyLocalOverrideUsesUndoAndRedo() throws {
         let image = NSImage.transparent(size: CGSize(width: 20, height: 20))
         var document = ImageEditorDocument(sourceName: "figma-component.png", image: image)

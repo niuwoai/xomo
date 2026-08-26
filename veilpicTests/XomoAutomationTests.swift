@@ -4123,7 +4123,7 @@ struct XomoAutomationTests {
         )
         viewModel.document.layers[layerIndex].xomoFigmaSourceID = "12:34"
         viewModel.document.layers[layerIndex].xomoFigmaSourceURL = URL(
-            string: "https://www.figma.com/design/abc123/Checkout?node-id=12-34"
+            string: "https://figma.com/design/abc123/Checkout?node-id=1-2&utm_source=mail"
         )
         viewModel.document.layers[layerIndex].xomoFigmaNodeType = "TEXT"
         viewModel.document.layers[layerIndex].xomoFigmaComponentRole = .instance
