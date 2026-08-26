@@ -250,6 +250,9 @@ struct ImageEditorView: View {
     @State var layerCompNameDrafts: [UUID: String] = [:]
     @State var savedPathNameDrafts: [UUID: String] = [:]
     @State var historySnapshotNameDrafts: [UUID: String] = [:]
+    @State var inlineLayerNameDraft = ""
+    @State var renamingLayerID: UUID?
+    @FocusState var focusedInlineLayerNameID: UUID?
     @State var selectedLayerPanelTab: ImageEditorLayerPanelTab = .layers
     @State var targetedLayerDropTarget: ImageEditorLayerDropTarget?
     @State var targetedSavedPathDropTarget: ImageEditorSavedPathDropTarget?

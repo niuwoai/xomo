@@ -5700,17 +5700,26 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     func renameSelectedLayer(to proposedName: String) {
-        guard let index = document.selectedLayerIndex else { return }
+        guard let selectedLayerID = document.selectedLayerID else { return }
+        _ = renameLayer(selectedLayerID, to: proposedName)
+    }
+
+    @discardableResult
+    func renameLayer(_ layerID: UUID, to proposedName: String) -> Bool {
+        guard let index = document.layers.firstIndex(where: { $0.id == layerID }) else {
+            return false
+        }
         let trimmedName = proposedName.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedName.isEmpty else {
             statusText = L10n.text("imageEditor.status.layerNameInvalid")
-            return
+            return false
         }
-        guard document.layers[index].name != trimmedName else { return }
+        guard document.layers[index].name != trimmedName else { return false }
         pushUndo()
         document.layers[index].name = trimmedName
         appendHistory(L10n.text("imageEditor.history.layerRename"))
         statusText = L10n.text("imageEditor.status.layerRenamed")
+        return true
     }
 
     func deleteSelectedLayer() {

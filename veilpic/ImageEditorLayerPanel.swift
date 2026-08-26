@@ -2192,6 +2192,17 @@ extension ImageEditorView {
             .accessibilityIdentifier("image-editor-layer-row-\(layer.id.uuidString)")
             .contextMenu {
                 Button {
+                    beginLayerInlineRename(layer)
+                } label: {
+                    Label(
+                        L10n.text("imageEditor.action.layerRename"),
+                        systemImage: "pencil"
+                    )
+                }
+                .accessibilityIdentifier("image-editor-layer-context-rename-\(layer.id.uuidString)")
+
+                Divider()
+                Button {
                     viewModel.prepareLayerContextSelection(for: layer.id)
                     viewModel.cutSelectedLayersToClipboard()
                 } label: {
@@ -2496,11 +2507,67 @@ extension ImageEditorView {
 
     @ViewBuilder
     private func layerNameEditor(_ layer: ImageEditorLayer) -> some View {
-        Text(layer.name)
+        if renamingLayerID == layer.id {
+            TextField(
+                L10n.text("imageEditor.properties.layerNamePlaceholder"),
+                text: $inlineLayerNameDraft
+            )
+            .textFieldStyle(.plain)
             .font(.system(size: 12, weight: .semibold))
             .lineLimit(1)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .contentShape(Rectangle())
+            .focused($focusedInlineLayerNameID, equals: layer.id)
+            .onSubmit {
+                commitLayerInlineRename(layer.id)
+            }
+            .onExitCommand {
+                cancelLayerInlineRename(layer.id)
+            }
+            .onChange(of: focusedInlineLayerNameID) { focusedID in
+                if focusedID != layer.id, renamingLayerID == layer.id {
+                    commitLayerInlineRename(layer.id)
+                }
+            }
+            .accessibilityIdentifier("image-editor-layer-inline-name-\(layer.id.uuidString)")
+        } else {
+            Text(layer.name)
+                .font(.system(size: 12, weight: .semibold))
+                .lineLimit(1)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .contentShape(Rectangle())
+                .onTapGesture(count: 2) {
+                    beginLayerInlineRename(layer)
+                }
+        }
+    }
+
+    private func beginLayerInlineRename(_ layer: ImageEditorLayer) {
+        viewModel.selectLayer(layer.id)
+        inlineLayerNameDraft = layer.name
+        renamingLayerID = layer.id
+        Task { @MainActor in
+            await Task.yield()
+            guard renamingLayerID == layer.id else { return }
+            focusedInlineLayerNameID = layer.id
+        }
+    }
+
+    private func commitLayerInlineRename(_ layerID: UUID) {
+        guard renamingLayerID == layerID else { return }
+        let proposedName = inlineLayerNameDraft
+        renamingLayerID = nil
+        focusedInlineLayerNameID = nil
+        guard !proposedName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            return
+        }
+        _ = viewModel.renameLayer(layerID, to: proposedName)
+    }
+
+    private func cancelLayerInlineRename(_ layerID: UUID) {
+        guard renamingLayerID == layerID else { return }
+        renamingLayerID = nil
+        focusedInlineLayerNameID = nil
+        inlineLayerNameDraft = ""
     }
 
     @ViewBuilder

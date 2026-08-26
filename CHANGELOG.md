@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.12.0-rc1323 - 2026-08-26
+
+### Added
+- 图层列表新增 Photoshop/Sketch/Figma 式原位重命名：双击图层名称或使用图层行右键“重命名”即可进入单行编辑，Return 提交、Escape 取消，点击别处会提交有效草稿。
+
+### Changed
+- 图层重命名命令现在可按稳定图层 ID 精确命中右键目标；名称会继续去除首尾空白，空名称、相同名称及失效目标不创建 Undo/History 或清空 Redo，真实改名仍保持单步撤销。
+
+### Verification
+- 增量 `build-for-testing` 通过；图层行删除、上下文与重命名专项 20/20、既有重命名回归 1/1、CLI/MCP 2/2、发布契约 7/7（21 条断言）及隔离测试运行器契约通过，`git diff --check` 无格式问题。本版本不覆盖 `/Applications/Xomo.app`，下一次完整门禁为 rc1360。
+
 ## 2.12.0-rc1322 - 2026-08-26
 
 ### Added

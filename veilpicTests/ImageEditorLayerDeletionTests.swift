@@ -455,6 +455,57 @@ struct ImageEditorLayerDeletionTests {
         #expect(viewModel.document.selectedLayerIDs == [editable.id])
     }
 
+    @Test func targetedLayerRenameTrimsTheNameAndPreservesNoOpRedo() throws {
+        let viewModel = makeViewModel()
+        let first = layer("First", in: viewModel)
+        let second = layer("Second", in: viewModel)
+        viewModel.document.layers = [first, second]
+        select([second.id], primary: second.id, in: viewModel)
+
+        viewModel.addLayer()
+        viewModel.undo()
+        let historyCount = viewModel.document.history.count
+        #expect(viewModel.canRedo)
+
+        #expect(!viewModel.renameLayer(first.id, to: "  First  "))
+        #expect(!viewModel.renameLayer(first.id, to: "   "))
+        #expect(!viewModel.renameLayer(UUID(), to: "Missing"))
+        #expect(viewModel.canRedo)
+        #expect(viewModel.document.history.count == historyCount)
+
+        #expect(viewModel.renameLayer(first.id, to: "  Hero Artwork  "))
+        #expect(viewModel.document.layers.first { $0.id == first.id }?.name == "Hero Artwork")
+        #expect(viewModel.document.selectedLayerID == second.id)
+        #expect(viewModel.document.selectedLayerIDs == [second.id])
+        #expect(!viewModel.canRedo)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerRename"))
+
+        viewModel.undo()
+        #expect(viewModel.document.layers.first { $0.id == first.id }?.name == "First")
+        #expect(viewModel.document.selectedLayerID == second.id)
+    }
+
+    @Test func layerRowsWireDoubleClickContextSubmitBlurAndEscapeToOneInlineRenameEditor() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorLayerPanel.swift"),
+            encoding: .utf8
+        )
+
+        #expect(source.contains(".onTapGesture(count: 2)"))
+        #expect(source.contains("beginLayerInlineRename(layer)"))
+        #expect(source.contains(".focused($focusedInlineLayerNameID, equals: layer.id)"))
+        #expect(source.contains("commitLayerInlineRename(layer.id)"))
+        #expect(source.contains("cancelLayerInlineRename(layer.id)"))
+        #expect(source.contains("if focusedID != layer.id, renamingLayerID == layer.id"))
+        #expect(source.contains("_ = viewModel.renameLayer(layerID, to: proposedName)"))
+        #expect(source.contains("image-editor-layer-context-rename-\(layer.id.uuidString)"))
+        #expect(source.contains("image-editor-layer-inline-name-\(layer.id.uuidString)"))
+    }
+
     @Test func layerRowContextMenuWiresClipboardDuplicateAndDestructiveDeleteThroughContextPolicy() throws {
         let repositoryRoot = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()
