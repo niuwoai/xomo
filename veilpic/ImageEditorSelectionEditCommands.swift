@@ -316,20 +316,7 @@ extension ImageEditorViewModel {
     }
 
     var canCutSelectedLayersToClipboard: Bool {
-        guard !hasActiveLayerMoveTransaction,
-              canDeleteLayer,
-              canCopySelectedLayersToClipboard
-        else { return false }
-        let rootIDs = ImageEditorLayerHierarchyDuplication.duplicableRootIDs(
-            in: document.layers,
-            selectedIDs: document.selectedLayerIDs
-        )
-        let deletableIDs = ImageEditorLayerHierarchyDeletion.deletableLayerIDs(
-            in: document.layers,
-            selectedIDs: document.selectedLayerIDs,
-            isEffectivelyLocked: { document.isEffectivelyLocked($0) }
-        )
-        return !rootIDs.isEmpty && rootIDs.isSubset(of: deletableIDs)
+        canCutLayerSelectionToClipboard(document.selectedLayerIDs)
     }
 
     var canCopyMergedToClipboard: Bool {
@@ -337,10 +324,7 @@ extension ImageEditorViewModel {
     }
 
     var canCopySelectedLayersToClipboard: Bool {
-        !ImageEditorLayerHierarchyDuplication.duplicableRootIDs(
-            in: document.layers,
-            selectedIDs: document.selectedLayerIDs
-        ).isEmpty
+        canCopyLayerSelectionToClipboard(document.selectedLayerIDs)
     }
 
     var canCopyMergedToNewLayer: Bool {

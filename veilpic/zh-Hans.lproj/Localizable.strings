@@ -2714,6 +2714,8 @@
 "imageEditor.action.vectorMaskSelect" = "选择矢量蒙版图层";
 "imageEditor.action.vectorMaskEditPath" = "编辑矢量蒙版路径";
 "imageEditor.action.layerDuplicate" = "复制图层";
+"imageEditor.action.layerCut" = "剪切图层";
+"imageEditor.action.layerCopy" = "拷贝图层";
 "imageEditor.action.layerIsolateSelected" = "隔离显示所选图层";
 "imageEditor.action.layerShowSelected" = "显示所选图层";
 "imageEditor.action.layerHideSelected" = "隐藏所选图层";

@@ -2714,6 +2714,8 @@
 "imageEditor.action.vectorMaskSelect" = "ベクターマスクレイヤーを選択";
 "imageEditor.action.vectorMaskEditPath" = "ベクターマスクパスを編集";
 "imageEditor.action.layerDuplicate" = "レイヤーを複製";
+"imageEditor.action.layerCut" = "レイヤーをカット";
+"imageEditor.action.layerCopy" = "レイヤーをコピー";
 "imageEditor.action.layerIsolateSelected" = "選択レイヤーを単独表示";
 "imageEditor.action.layerShowSelected" = "選択レイヤーを表示";
 "imageEditor.action.layerHideSelected" = "選択レイヤーを非表示";

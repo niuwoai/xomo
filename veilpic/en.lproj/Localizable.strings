@@ -2714,6 +2714,8 @@
 "imageEditor.action.vectorMaskSelect" = "Select vector mask layer";
 "imageEditor.action.vectorMaskEditPath" = "Edit Vector Mask Path";
 "imageEditor.action.layerDuplicate" = "Duplicate Layer";
+"imageEditor.action.layerCut" = "Cut Layers";
+"imageEditor.action.layerCopy" = "Copy Layers";
 "imageEditor.action.layerIsolateSelected" = "Isolate Selected Layers";
 "imageEditor.action.layerShowSelected" = "Show Selected Layers";
 "imageEditor.action.layerHideSelected" = "Hide Selected Layers";

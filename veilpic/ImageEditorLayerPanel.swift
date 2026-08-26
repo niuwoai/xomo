@@ -2193,6 +2193,31 @@ extension ImageEditorView {
             .contextMenu {
                 Button {
                     viewModel.prepareLayerContextSelection(for: layer.id)
+                    viewModel.cutSelectedLayersToClipboard()
+                } label: {
+                    Label(
+                        L10n.text("imageEditor.action.layerCut"),
+                        systemImage: "scissors"
+                    )
+                }
+                .disabled(!viewModel.canCutLayersFromContext(layer.id))
+                .accessibilityIdentifier("image-editor-layer-context-cut-\(layer.id.uuidString)")
+
+                Button {
+                    viewModel.prepareLayerContextSelection(for: layer.id)
+                    viewModel.copySelectedLayersToClipboard()
+                } label: {
+                    Label(
+                        L10n.text("imageEditor.action.layerCopy"),
+                        systemImage: "doc.on.clipboard"
+                    )
+                }
+                .disabled(!viewModel.canCopyLayersFromContext(layer.id))
+                .accessibilityIdentifier("image-editor-layer-context-copy-\(layer.id.uuidString)")
+
+                Divider()
+                Button {
+                    viewModel.prepareLayerContextSelection(for: layer.id)
                     viewModel.duplicateSelectedLayer()
                 } label: {
                     Label(
@@ -2203,6 +2228,7 @@ extension ImageEditorView {
                 .disabled(!viewModel.canDuplicateLayersFromContext(layer.id))
                 .accessibilityIdentifier("image-editor-layer-context-duplicate-\(layer.id.uuidString)")
 
+                Divider()
                 Button(role: .destructive) {
                     viewModel.prepareLayerContextSelection(for: layer.id)
                     viewModel.deleteSelectedLayer()

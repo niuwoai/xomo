@@ -2898,6 +2898,14 @@ final class ImageEditorViewModel: ObservableObject {
         return !deletionIDs.isEmpty && document.layers.count - deletionIDs.count >= 1
     }
 
+    func canCopyLayersFromContext(_ clickedLayerID: UUID) -> Bool {
+        canCopyLayerSelectionToClipboard(layerContextSelectionIDs(for: clickedLayerID))
+    }
+
+    func canCutLayersFromContext(_ clickedLayerID: UUID) -> Bool {
+        canCutLayerSelectionToClipboard(layerContextSelectionIDs(for: clickedLayerID))
+    }
+
     var canMergeSelectedLayerDown: Bool {
         hierarchyMergeDownPlan != nil
     }
@@ -5040,6 +5048,29 @@ final class ImageEditorViewModel: ObservableObject {
             ? Set(document.selectedLayerID.map { [$0] } ?? [])
             : document.selectedLayerIDs
         return selectedIDs.contains(clickedLayerID) ? selectedIDs : [clickedLayerID]
+    }
+
+    func canCopyLayerSelectionToClipboard(_ selectedIDs: Set<UUID>) -> Bool {
+        !ImageEditorLayerHierarchyDuplication.duplicableRootIDs(
+            in: document.layers,
+            selectedIDs: selectedIDs
+        ).isEmpty
+    }
+
+    func canCutLayerSelectionToClipboard(_ selectedIDs: Set<UUID>) -> Bool {
+        guard !hasActiveLayerMoveTransaction else { return false }
+        let rootIDs = ImageEditorLayerHierarchyDuplication.duplicableRootIDs(
+            in: document.layers,
+            selectedIDs: selectedIDs
+        )
+        let deletableIDs = ImageEditorLayerHierarchyDeletion.deletableLayerIDs(
+            in: document.layers,
+            selectedIDs: selectedIDs,
+            isEffectivelyLocked: { document.isEffectivelyLocked($0) }
+        )
+        return !rootIDs.isEmpty
+            && rootIDs.isSubset(of: deletableIDs)
+            && document.layers.count - deletableIDs.count >= 1
     }
 
     func selectLayer(_ id: UUID, editingMask: Bool = false, extendingSelection: Bool = false) {

@@ -330,11 +330,14 @@ struct ClipboardImageWriterTests {
             solidImage(color: .systemGreen, size: CGSize(width: 30, height: 20)),
             sourceName: "moving-object.png"
         ))
+        let movingLayerID = try #require(movingViewModel.document.selectedLayerID)
         #expect(movingViewModel.beginMovingSelectedLayer())
         #expect(!movingViewModel.canCutSelectedLayersToClipboard)
         #expect(!movingViewModel.canCutSelectionToClipboard)
+        #expect(!movingViewModel.canCutLayersFromContext(movingLayerID))
         #expect(movingViewModel.cancelMovingSelectedLayer())
         #expect(movingViewModel.canCutSelectedLayersToClipboard)
+        #expect(movingViewModel.canCutLayersFromContext(movingLayerID))
     }
 
     @Test func transparentObjectCutUsesTheEditableArchiveAndRemainsUndoable() throws {

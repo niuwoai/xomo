@@ -388,6 +388,39 @@ struct ImageEditorLayerDeletionTests {
         #expect(viewModel.document.layers.map(\.id) == [first.id, second.id])
     }
 
+    @Test func layerRowContextClipboardPreservesMultiSelectionAndTargetsAnUnselectedRow() throws {
+        let viewModel = makeViewModel()
+        let first = layer("First", in: viewModel)
+        let second = layer("Second", in: viewModel)
+        let third = layer("Third", in: viewModel)
+        viewModel.document.layers = [first, second, third]
+        select([first.id, second.id], primary: second.id, in: viewModel)
+        let historyCount = viewModel.document.history.count
+        let pasteboard = NSPasteboard(name: .init("im.some.xomo.tests.layer-context.\(UUID())"))
+        pasteboard.clearContents()
+        defer { pasteboard.clearContents() }
+
+        #expect(viewModel.canCopyLayersFromContext(first.id))
+        #expect(viewModel.canCutLayersFromContext(first.id))
+        viewModel.prepareLayerContextSelection(for: first.id)
+        #expect(viewModel.document.selectedLayerIDs == [first.id, second.id])
+        #expect(viewModel.copySelectedLayersToClipboard(to: pasteboard))
+        #expect(pasteboard.data(forType: XomoLayerClipboardArchive.pasteboardType) != nil)
+        #expect(viewModel.document.history.count == historyCount)
+
+        #expect(viewModel.canCopyLayersFromContext(third.id))
+        #expect(viewModel.canCutLayersFromContext(third.id))
+        viewModel.prepareLayerContextSelection(for: third.id)
+        #expect(viewModel.document.selectedLayerIDs == [third.id])
+        #expect(viewModel.cutSelectedLayersToClipboard(to: pasteboard))
+        #expect(viewModel.document.layers.map(\.id) == [first.id, second.id])
+        #expect(viewModel.document.history.count == historyCount + 1)
+
+        viewModel.undo()
+        #expect(viewModel.document.layers.map(\.id) == [first.id, second.id, third.id])
+        #expect(viewModel.document.selectedLayerIDs == [third.id])
+    }
+
     @Test func layerRowContextDeleteHonorsLocksLastLayerAndUnknownRows() {
         let viewModel = makeViewModel()
         let editable = layer("Editable", in: viewModel)
@@ -397,22 +430,32 @@ struct ImageEditorLayerDeletionTests {
         select([editable.id], primary: editable.id, in: viewModel)
 
         #expect(!viewModel.canDeleteLayersFromContext(locked.id))
+        #expect(viewModel.canCopyLayersFromContext(locked.id))
+        #expect(!viewModel.canCutLayersFromContext(locked.id))
         #expect(!viewModel.canDeleteLayersFromContext(UUID()))
         #expect(!viewModel.canDuplicateLayersFromContext(UUID()))
+        #expect(!viewModel.canCopyLayersFromContext(UUID()))
+        #expect(!viewModel.canCutLayersFromContext(UUID()))
         viewModel.prepareLayerContextSelection(for: UUID())
         #expect(viewModel.document.selectedLayerIDs == [editable.id])
+
+        select([editable.id, locked.id], primary: editable.id, in: viewModel)
+        #expect(viewModel.canCopyLayersFromContext(locked.id))
+        #expect(!viewModel.canCutLayersFromContext(locked.id))
 
         viewModel.document.layers = [editable]
         select([editable.id], primary: editable.id, in: viewModel)
         #expect(!viewModel.canDeleteLayersFromContext(editable.id))
         #expect(viewModel.canDuplicateLayersFromContext(editable.id))
+        #expect(viewModel.canCopyLayersFromContext(editable.id))
+        #expect(!viewModel.canCutLayersFromContext(editable.id))
 
         viewModel.document.selectedLayerIDs = []
         viewModel.prepareLayerContextSelection(for: editable.id)
         #expect(viewModel.document.selectedLayerIDs == [editable.id])
     }
 
-    @Test func layerRowContextMenuWiresDuplicateAndDestructiveDeleteThroughContextPolicy() throws {
+    @Test func layerRowContextMenuWiresClipboardDuplicateAndDestructiveDeleteThroughContextPolicy() throws {
         let repositoryRoot = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()
             .deletingLastPathComponent()
@@ -422,9 +465,13 @@ struct ImageEditorLayerDeletionTests {
         )
 
         #expect(source.contains("viewModel.prepareLayerContextSelection(for: layer.id)"))
+        #expect(source.contains("viewModel.canCutLayersFromContext(layer.id)"))
+        #expect(source.contains("viewModel.canCopyLayersFromContext(layer.id)"))
         #expect(source.contains("viewModel.canDuplicateLayersFromContext(layer.id)"))
         #expect(source.contains("viewModel.canDeleteLayersFromContext(layer.id)"))
         #expect(source.contains("Button(role: .destructive)"))
+        #expect(source.contains("image-editor-layer-context-cut-\\(layer.id.uuidString)"))
+        #expect(source.contains("image-editor-layer-context-copy-\\(layer.id.uuidString)"))
         #expect(source.contains("image-editor-layer-context-duplicate-\\(layer.id.uuidString)"))
         #expect(source.contains("image-editor-layer-context-delete-\\(layer.id.uuidString)"))
     }
