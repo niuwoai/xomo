@@ -2660,6 +2660,11 @@ extension ImageEditorView {
             Divider()
             layerContextLayerMaskButtons(
                 layer,
+                actions: ImageEditorLayerMaskContextAction.selectionActions
+            )
+            Divider()
+            layerContextLayerMaskButtons(
+                layer,
                 actions: ImageEditorLayerMaskContextAction.managementActions
             )
         }

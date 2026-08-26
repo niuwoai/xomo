@@ -13,6 +13,10 @@ enum ImageEditorLayerMaskContextAction: String, CaseIterable, Identifiable {
     case hideAll
     case revealSelection
     case hideSelection
+    case revealSelectionOnMask
+    case hideSelectionOnMask
+    case intersectSelectionOnMask
+    case loadSelection
     case edit
     case toggleEnabled
     case toggleLinked
@@ -38,12 +42,23 @@ enum ImageEditorLayerMaskContextAction: String, CaseIterable, Identifiable {
         .delete
     ]
 
+    static let selectionActions: [Self] = [
+        .revealSelectionOnMask,
+        .hideSelectionOnMask,
+        .intersectSelectionOnMask,
+        .loadSelection
+    ]
+
     var actionTitleKey: String {
         switch self {
         case .revealAll: "imageEditor.action.layerMaskAdd"
         case .hideAll: "imageEditor.action.layerMaskHideAll"
         case .revealSelection: "imageEditor.action.layerMaskFromSelection"
         case .hideSelection: "imageEditor.action.layerMaskHideSelection"
+        case .revealSelectionOnMask: "imageEditor.action.layerMaskRevealSelection"
+        case .hideSelectionOnMask: "imageEditor.action.layerMaskHideSelectionFromMask"
+        case .intersectSelectionOnMask: "imageEditor.action.layerMaskIntersectSelection"
+        case .loadSelection: "imageEditor.action.layerMaskLoadSelection"
         case .edit: "imageEditor.action.layerMaskEdit"
         case .toggleEnabled: "imageEditor.action.layerMaskToggle"
         case .toggleLinked: "imageEditor.action.layerMaskLinkToggle"
@@ -59,12 +74,27 @@ enum ImageEditorLayerMaskContextAction: String, CaseIterable, Identifiable {
         case .hideAll: "circle.fill"
         case .revealSelection: "circle.lefthalf.filled"
         case .hideSelection: "circle.dashed.inset.filled"
+        case .revealSelectionOnMask: "rectangle.dashed.badge.plus"
+        case .hideSelectionOnMask: "rectangle.dashed.badge.minus"
+        case .intersectSelectionOnMask: "rectangle.intersection.angled"
+        case .loadSelection: "selection.pin.in.out"
         case .edit: "paintbrush"
         case .toggleEnabled: "circle.slash"
         case .toggleLinked: "link"
         case .invert: "arrow.triangle.2.circlepath"
         case .apply: "checkmark.square"
         case .delete: "xmark.square"
+        }
+    }
+}
+
+fileprivate extension ImageEditorLayerMaskContextAction {
+    var layerMaskSelectionCombination: ImageEditorLayerMaskSelectionCombination? {
+        switch self {
+        case .revealSelectionOnMask: .reveal
+        case .hideSelectionOnMask: .hide
+        case .intersectSelectionOnMask: .intersect
+        default: nil
         }
     }
 }
@@ -142,6 +172,25 @@ extension ImageEditorViewModel {
                 hidingSelection: action == .hideSelection,
                 selectedIDs: selectedIDs
             ).isEmpty
+        case .revealSelectionOnMask, .hideSelectionOnMask, .intersectSelectionOnMask:
+            guard let selection = document.selection,
+                  let combination = action.layerMaskSelectionCombination
+            else { return false }
+            let operations = layerMaskSelectionCombinationOperations(
+                selection,
+                combination: combination,
+                selectedIDs: selectedIDs
+            )
+            return operations.contains { operation in
+                document.layers[operation.index].mask?.hasEquivalentAlphaMask(
+                    to: operation.mask
+                ) != true
+            }
+        case .loadSelection:
+            return canLoadSelectionFromLayerMask(
+                layerID: clickedLayerID,
+                mode: selectionMode
+            )
         case .edit:
             return document.layers.contains {
                 $0.id == clickedLayerID && $0.mask != nil
@@ -191,6 +240,17 @@ extension ImageEditorViewModel {
             addLayerMaskFromSelection()
         case .hideSelection:
             addLayerMaskHidingSelection()
+        case .revealSelectionOnMask:
+            revealSelectionOnLayerMask()
+        case .hideSelectionOnMask:
+            hideSelectionOnLayerMask()
+        case .intersectSelectionOnMask:
+            intersectLayerMaskWithSelection()
+        case .loadSelection:
+            return loadSelectionFromLayerMask(
+                layerID: clickedLayerID,
+                mode: selectionMode
+            )
         case .edit:
             document.selectedLayerID = clickedLayerID
             editLayerMask()
@@ -206,6 +266,27 @@ extension ImageEditorViewModel {
             deleteLayerMask()
         }
         return true
+    }
+
+    private func canLoadSelectionFromLayerMask(
+        layerID: UUID,
+        mode: ImageEditorSelectionMode
+    ) -> Bool {
+        guard let layer = document.layers.first(where: { $0.id == layerID }),
+              let mask = layer.mask,
+              let candidate = selectionFromLayerMask(mask, layer: layer)
+        else { return false }
+        let existing = document.selection
+        guard existing != nil || mode == .replace || mode == .add else {
+            return false
+        }
+        let next = ImageEditorSelection.combined(
+            current: existing,
+            candidate: candidate,
+            mode: mode,
+            canvasSize: document.canvasSize
+        )
+        return !selectionsAreEquivalent(next, existing)
     }
 
     var canCreateLayerMaskFromSelection: Bool {
@@ -1091,14 +1172,15 @@ extension ImageEditorViewModel {
 
     private func layerMaskSelectionCombinationOperations(
         _ selection: ImageEditorSelection,
-        combination: ImageEditorLayerMaskSelectionCombination
+        combination: ImageEditorLayerMaskSelectionCombination,
+        selectedIDs explicitSelectedIDs: Set<UUID>? = nil
     ) -> [(index: Int, mask: NSImage)] {
         guard selection.effectiveSelectedBounds(in: document.canvasSize) != nil else {
             return []
         }
-        let selectedIDs = document.selectedLayerIDs.isEmpty
+        let selectedIDs = explicitSelectedIDs ?? (document.selectedLayerIDs.isEmpty
             ? Set(document.selectedLayerID.map { [$0] } ?? [])
-            : document.selectedLayerIDs
+            : document.selectedLayerIDs)
         return document.layers.indices.compactMap { index in
             let layer = document.layers[index]
             guard selectedIDs.contains(layer.id),

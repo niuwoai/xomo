@@ -208,6 +208,117 @@ struct ImageEditorLayerMaskContextTests {
         #expect(viewModel.document.layers.allSatisfy { $0.mask != nil })
     }
 
+    @Test func selectionCombinationActionsBatchOnlyRealEditableMaskChanges() throws {
+        let cases: [(ImageEditorLayerMaskContextAction, Bool)] = [
+            (.revealSelectionOnMask, false),
+            (.hideSelectionOnMask, true),
+            (.intersectSelectionOnMask, true)
+        ]
+
+        for (action, startsOpaque) in cases {
+            let viewModel = makeViewModel()
+            var first = layer(named: "First", in: viewModel)
+            var second = layer(named: "Second", in: viewModel)
+            var locked = layer(named: "Locked", in: viewModel)
+            let initialMask = startsOpaque
+                ? NSImage.opaqueMask(size: first.image.size)
+                : NSImage.transparent(size: first.image.size)
+            first.mask = initialMask
+            second.mask = initialMask
+            locked.mask = initialMask
+            locked.isLocked = true
+            viewModel.document.layers = [first, second, locked]
+            select(
+                [first.id, second.id, locked.id],
+                primary: second.id,
+                in: viewModel
+            )
+            viewModel.createRectSelection(
+                from: CGPoint(x: 12, y: 8),
+                to: CGPoint(x: 48, y: 38)
+            )
+            let historyCount = viewModel.document.history.count
+
+            #expect(viewModel.canPerformLayerMaskActionFromContext(
+                first.id,
+                action: action
+            ))
+            #expect(viewModel.performLayerMaskActionFromContext(
+                first.id,
+                action: action
+            ))
+            let firstResult = try #require(viewModel.document.layers[0].mask)
+            let secondResult = try #require(viewModel.document.layers[1].mask)
+            let lockedResult = try #require(viewModel.document.layers[2].mask)
+            #expect(!firstResult.hasEquivalentAlphaMask(to: initialMask))
+            #expect(secondResult.hasEquivalentAlphaMask(to: firstResult))
+            #expect(lockedResult.hasEquivalentAlphaMask(to: initialMask))
+            #expect(viewModel.document.history.count == historyCount + 1)
+            #expect(viewModel.document.selectedLayerIDs == [
+                first.id,
+                second.id,
+                locked.id
+            ])
+
+            viewModel.undo()
+            #expect(viewModel.document.layers.allSatisfy { layer in
+                layer.mask?.hasEquivalentAlphaMask(to: initialMask) == true
+            })
+        }
+    }
+
+    @Test func loadSelectionUsesOnlyClickedMaskAndEquivalentReloadPreservesRedo() throws {
+        let viewModel = makeViewModel()
+        var left = layer(named: "Left", in: viewModel)
+        var right = layer(named: "Right", in: viewModel)
+        left.mask = mask(
+            size: left.image.size,
+            selectedRect: CGRect(x: 0, y: 0, width: 24, height: 48)
+        )
+        right.mask = mask(
+            size: right.image.size,
+            selectedRect: CGRect(x: 40, y: 0, width: 24, height: 48)
+        )
+        viewModel.document.layers = [left, right]
+        select([left.id, right.id], primary: left.id, in: viewModel)
+        viewModel.selectionMode = .replace
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.canPerformLayerMaskActionFromContext(
+            right.id,
+            action: .loadSelection
+        ))
+        #expect(viewModel.performLayerMaskActionFromContext(
+            right.id,
+            action: .loadSelection
+        ))
+        let bounds = try #require(viewModel.document.selection?
+            .effectiveSelectedBounds(in: viewModel.document.canvasSize))
+        #expect(bounds.minX >= 39)
+        #expect(bounds.maxX >= 63)
+        #expect(viewModel.document.selectedLayerIDs == [left.id, right.id])
+        #expect(viewModel.document.selectedLayerID == left.id)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.history.last?.title == L10n.text(
+            "imageEditor.history.selectionFromLayerMask"
+        ))
+
+        viewModel.setSelectedLayersLabelColor(.purple)
+        viewModel.undo()
+        let historyBeforeReload = viewModel.document.history
+        #expect(viewModel.canRedo)
+        #expect(!viewModel.canPerformLayerMaskActionFromContext(
+            right.id,
+            action: .loadSelection
+        ))
+        #expect(!viewModel.performLayerMaskActionFromContext(
+            right.id,
+            action: .loadSelection
+        ))
+        #expect(viewModel.document.history == historyBeforeReload)
+        #expect(viewModel.canRedo)
+    }
+
     @Test func layerPanelWiresEveryMaskContextActionThroughSharedPolicy() throws {
         let testsDirectory = URL(fileURLWithPath: #filePath).deletingLastPathComponent()
         let sourceURL = testsDirectory
@@ -217,6 +328,7 @@ struct ImageEditorLayerMaskContextTests {
 
         #expect(source.contains("layerContextLayerMaskMenu(layer)"))
         #expect(source.contains("ImageEditorLayerMaskContextAction.creationActions"))
+        #expect(source.contains("ImageEditorLayerMaskContextAction.selectionActions"))
         #expect(source.contains("ImageEditorLayerMaskContextAction.managementActions"))
         #expect(source.contains("viewModel.performLayerMaskActionFromContext("))
         #expect(source.contains("viewModel.canPerformLayerMaskActionFromContext("))
@@ -237,6 +349,16 @@ struct ImageEditorLayerMaskContextTests {
         in viewModel: ImageEditorViewModel
     ) -> ImageEditorLayer {
         ImageEditorLayer.blank(name: name, size: viewModel.document.canvasSize)
+    }
+
+    private func mask(
+        size: CGSize,
+        selectedRect: CGRect
+    ) -> NSImage {
+        NSImage.rendered(size: size) { _ in
+            NSColor.white.setFill()
+            selectedRect.fill()
+        } ?? NSImage(size: size)
     }
 
     private func select(
