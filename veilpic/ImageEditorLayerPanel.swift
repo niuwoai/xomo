@@ -2653,30 +2653,46 @@ extension ImageEditorView {
 
     private func layerContextLayerMaskMenu(_ layer: ImageEditorLayer) -> some View {
         Menu(L10n.text("imageEditor.menu.layer.mask")) {
-            ForEach(ImageEditorLayerMaskContextAction.allCases) { action in
-                Button {
-                    viewModel.performLayerMaskActionFromContext(
-                        layer.id,
-                        action: action
-                    )
-                } label: {
-                    Label(
-                        L10n.text(action.actionTitleKey),
-                        systemImage: action.systemImage
-                    )
-                }
-                .disabled(!viewModel.canPerformLayerMaskActionFromContext(
-                    layer.id,
-                    action: action
-                ))
-                .accessibilityIdentifier(
-                    "image-editor-layer-context-mask-\(action.rawValue)-\(layer.id.uuidString)"
-                )
-            }
+            layerContextLayerMaskButtons(
+                layer,
+                actions: ImageEditorLayerMaskContextAction.creationActions
+            )
+            Divider()
+            layerContextLayerMaskButtons(
+                layer,
+                actions: ImageEditorLayerMaskContextAction.managementActions
+            )
         }
         .accessibilityIdentifier(
             "image-editor-layer-context-mask-\(layer.id.uuidString)"
         )
+    }
+
+    @ViewBuilder
+    private func layerContextLayerMaskButtons(
+        _ layer: ImageEditorLayer,
+        actions: [ImageEditorLayerMaskContextAction]
+    ) -> some View {
+        ForEach(actions) { action in
+            Button {
+                viewModel.performLayerMaskActionFromContext(
+                    layer.id,
+                    action: action
+                )
+            } label: {
+                Label(
+                    L10n.text(action.actionTitleKey),
+                    systemImage: action.systemImage
+                )
+            }
+            .disabled(!viewModel.canPerformLayerMaskActionFromContext(
+                layer.id,
+                action: action
+            ))
+            .accessibilityIdentifier(
+                "image-editor-layer-context-mask-\(action.rawValue)-\(layer.id.uuidString)"
+            )
+        }
     }
 
     private func layerContextOrderingMenu(_ layer: ImageEditorLayer) -> some View {

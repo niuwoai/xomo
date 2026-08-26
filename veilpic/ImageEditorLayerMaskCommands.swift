@@ -13,8 +13,30 @@ enum ImageEditorLayerMaskContextAction: String, CaseIterable, Identifiable {
     case hideAll
     case revealSelection
     case hideSelection
+    case edit
+    case toggleEnabled
+    case toggleLinked
+    case invert
+    case apply
+    case delete
 
     var id: String { rawValue }
+
+    static let creationActions: [Self] = [
+        .revealAll,
+        .hideAll,
+        .revealSelection,
+        .hideSelection
+    ]
+
+    static let managementActions: [Self] = [
+        .edit,
+        .toggleEnabled,
+        .toggleLinked,
+        .invert,
+        .apply,
+        .delete
+    ]
 
     var actionTitleKey: String {
         switch self {
@@ -22,6 +44,12 @@ enum ImageEditorLayerMaskContextAction: String, CaseIterable, Identifiable {
         case .hideAll: "imageEditor.action.layerMaskHideAll"
         case .revealSelection: "imageEditor.action.layerMaskFromSelection"
         case .hideSelection: "imageEditor.action.layerMaskHideSelection"
+        case .edit: "imageEditor.action.layerMaskEdit"
+        case .toggleEnabled: "imageEditor.action.layerMaskToggle"
+        case .toggleLinked: "imageEditor.action.layerMaskLinkToggle"
+        case .invert: "imageEditor.action.layerMaskInvert"
+        case .apply: "imageEditor.action.layerMaskApply"
+        case .delete: "imageEditor.action.layerMaskDelete"
         }
     }
 
@@ -31,6 +59,12 @@ enum ImageEditorLayerMaskContextAction: String, CaseIterable, Identifiable {
         case .hideAll: "circle.fill"
         case .revealSelection: "circle.lefthalf.filled"
         case .hideSelection: "circle.dashed.inset.filled"
+        case .edit: "paintbrush"
+        case .toggleEnabled: "circle.slash"
+        case .toggleLinked: "link"
+        case .invert: "arrow.triangle.2.circlepath"
+        case .apply: "checkmark.square"
+        case .delete: "xmark.square"
         }
     }
 }
@@ -108,6 +142,33 @@ extension ImageEditorViewModel {
                 hidingSelection: action == .hideSelection,
                 selectedIDs: selectedIDs
             ).isEmpty
+        case .edit:
+            return document.layers.contains {
+                $0.id == clickedLayerID && $0.mask != nil
+            }
+        case .toggleEnabled, .delete:
+            return document.layers.contains { layer in
+                selectedIDs.contains(layer.id)
+                    && !document.isEffectivelyLocked(layer)
+                    && layer.mask != nil
+            }
+        case .invert:
+            return document.layers.contains { layer in
+                selectedIDs.contains(layer.id)
+                    && !document.isEffectivelyLocked(layer)
+                    && layer.mask?.invertedAlphaMask() != nil
+            }
+        case .toggleLinked:
+            return document.layers.contains { layer in
+                selectedIDs.contains(layer.id)
+                    && !document.isEffectivelyLocked(layer)
+                    && (layer.mask != nil || layer.vectorMask != nil)
+            }
+        case .apply:
+            return !maskApplyIndices(
+                target: .raster,
+                selectedIDs: selectedIDs
+            ).isEmpty
         }
     }
 
@@ -130,6 +191,19 @@ extension ImageEditorViewModel {
             addLayerMaskFromSelection()
         case .hideSelection:
             addLayerMaskHidingSelection()
+        case .edit:
+            document.selectedLayerID = clickedLayerID
+            editLayerMask()
+        case .toggleEnabled:
+            toggleLayerMaskEnabled()
+        case .toggleLinked:
+            toggleLayerMaskLinked()
+        case .invert:
+            invertLayerMask()
+        case .apply:
+            applyLayerMask()
+        case .delete:
+            deleteLayerMask()
         }
         return true
     }
@@ -821,10 +895,13 @@ extension ImageEditorViewModel {
         }
     }
 
-    private func maskApplyIndices(target: ImageEditorMaskApplicationTarget) -> [Int] {
-        let selectedIDs = document.selectedLayerIDs.isEmpty
+    private func maskApplyIndices(
+        target: ImageEditorMaskApplicationTarget,
+        selectedIDs explicitSelectedIDs: Set<UUID>? = nil
+    ) -> [Int] {
+        let selectedIDs = explicitSelectedIDs ?? (document.selectedLayerIDs.isEmpty
             ? Set(document.selectedLayerID.map { [$0] } ?? [])
-            : document.selectedLayerIDs
+            : document.selectedLayerIDs)
         return document.layers.indices.filter { index in
             selectedIDs.contains(document.layers[index].id)
                 && canApplyMask(to: document.layers[index], target: target)
