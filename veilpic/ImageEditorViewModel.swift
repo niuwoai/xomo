@@ -3162,6 +3162,10 @@ final class ImageEditorViewModel: ObservableObject {
         let selectedIDs = document.selectedLayerIDs.isEmpty
             ? Set(document.selectedLayerID.map { [$0] } ?? [])
             : document.selectedLayerIDs
+        return canCreateSmartObjectViaCopy(selectedIDs: selectedIDs)
+    }
+
+    func canCreateSmartObjectViaCopy(selectedIDs: Set<UUID>) -> Bool {
         guard selectedIDs.count == 1,
               let selectedID = selectedIDs.first,
               document.layers.first(where: { $0.id == selectedID })?.isSmartObject == true
@@ -10505,6 +10509,10 @@ final class ImageEditorViewModel: ObservableObject {
         let selectedIDs = document.selectedLayerIDs.isEmpty
             ? Set(document.selectedLayerID.map { [$0] } ?? [])
             : document.selectedLayerIDs
+        return smartObjectUniqueTargetIndices(selectedIDs: selectedIDs)
+    }
+
+    func smartObjectUniqueTargetIndices(selectedIDs: Set<UUID>) -> [Int] {
         return document.layers.indices.filter { index in
             let layer = document.layers[index]
             guard selectedIDs.contains(layer.id),
@@ -10534,6 +10542,12 @@ final class ImageEditorViewModel: ObservableObject {
         let selectedIDs = document.selectedLayerIDs.isEmpty
             ? Set(document.selectedLayerID.map { [$0] } ?? [])
             : document.selectedLayerIDs
+        return smartObjectResetTransformPlans(selectedIDs: selectedIDs)
+    }
+
+    func smartObjectResetTransformPlans(
+        selectedIDs: Set<UUID>
+    ) -> [(index: Int, frame: CGRect)] {
         return document.layers.indices.compactMap { index in
             let layer = document.layers[index]
             guard selectedIDs.contains(layer.id),

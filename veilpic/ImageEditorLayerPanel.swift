@@ -2309,16 +2309,7 @@ extension ImageEditorView {
 
                 layerContextClippingMaskButton(layer)
 
-                Button {
-                    viewModel.convertLayersFromContext(layer.id)
-                } label: {
-                    Label(
-                        L10n.text("imageEditor.action.layerSmartObject"),
-                        systemImage: "cube.transparent"
-                    )
-                }
-                .disabled(!viewModel.canConvertLayersFromContext(layer.id))
-                .accessibilityIdentifier("image-editor-layer-context-smart-object-\(layer.id.uuidString)")
+                layerContextSmartObjectMenu(layer)
 
                 Menu(L10n.text("imageEditor.action.layerRasterize")) {
                     ForEach(ImageEditorRasterizeTarget.allCases) { target in
@@ -2628,6 +2619,34 @@ extension ImageEditorView {
         }
         .disabled(action == nil)
         .accessibilityIdentifier("image-editor-layer-context-clipping-mask-\(layer.id.uuidString)")
+    }
+
+    private func layerContextSmartObjectMenu(_ layer: ImageEditorLayer) -> some View {
+        Menu(L10n.text("imageEditor.menu.layer.smartObject")) {
+            ForEach(ImageEditorSmartObjectContextAction.allCases) { action in
+                Button {
+                    viewModel.performSmartObjectActionFromContext(
+                        layer.id,
+                        action: action
+                    )
+                } label: {
+                    Label(
+                        L10n.text(action.actionTitleKey),
+                        systemImage: action.systemImage
+                    )
+                }
+                .disabled(!viewModel.canPerformSmartObjectActionFromContext(
+                    layer.id,
+                    action: action
+                ))
+                .accessibilityIdentifier(
+                    "image-editor-layer-context-smart-object-\(action.rawValue)-\(layer.id.uuidString)"
+                )
+            }
+        }
+        .accessibilityIdentifier(
+            "image-editor-layer-context-smart-object-\(layer.id.uuidString)"
+        )
     }
 
     private func layerContextOrderingMenu(_ layer: ImageEditorLayer) -> some View {

@@ -2782,6 +2782,7 @@
 "imageEditor.action.smartObjectSourcePNGExport" = "导出智能对象源像素 PNG…";
 "imageEditor.action.layerSmartObjectMakeUnique" = "让智能对象实例独立";
 "imageEditor.action.layerSmartObjectResetTransform" = "重置智能对象变换";
+"imageEditor.menu.layer.smartObject" = "智能对象";
 "imageEditor.action.layerRasterize" = "栅格化";
 "imageEditor.action.layerRasterize.type" = "文字";
 "imageEditor.action.layerRasterize.shape" = "形状";

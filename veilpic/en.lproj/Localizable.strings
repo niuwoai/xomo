@@ -2782,6 +2782,7 @@
 "imageEditor.action.smartObjectSourcePNGExport" = "Export Smart Object Source Pixels as PNG…";
 "imageEditor.action.layerSmartObjectMakeUnique" = "Make Smart Objects Unique";
 "imageEditor.action.layerSmartObjectResetTransform" = "Reset Smart Object Transform";
+"imageEditor.menu.layer.smartObject" = "Smart Object";
 "imageEditor.action.layerRasterize" = "Rasterize";
 "imageEditor.action.layerRasterize.type" = "Type";
 "imageEditor.action.layerRasterize.shape" = "Shape";
