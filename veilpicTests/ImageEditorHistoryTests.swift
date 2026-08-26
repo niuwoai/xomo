@@ -12,6 +12,42 @@ import Testing
 @MainActor
 @Suite(.serialized)
 struct ImageEditorHistoryTests {
+    @Test func onePhysicalFileShortcutDispatchesEachActionOnlyOnce() {
+        let event = ImageEditorKeyboardShortcutEventSignature(
+            windowNumber: 43,
+            eventNumber: 981,
+            timestamp: 98.1,
+            typeRawValue: NSEvent.EventType.keyDown.rawValue,
+            keyCode: 1
+        )
+
+        for action in ImageEditorFileCommandAction.allCases {
+            ImageEditorFileCommandDispatchGate.reset()
+            var dispatchCount = 0
+            for _ in 0..<2 where ImageEditorFileCommandDispatchGate.shouldDispatch(
+                action,
+                event: event
+            ) {
+                dispatchCount += 1
+            }
+            #expect(dispatchCount == 1)
+        }
+
+        ImageEditorFileCommandDispatchGate.reset()
+        #expect(ImageEditorFileCommandDispatchGate.shouldDispatch(.createCanvas, event: event))
+        #expect(ImageEditorFileCommandDispatchGate.shouldDispatch(.openProject, event: event))
+    }
+
+    @Test func fileMouseAndQuickActionBoundariesRemainIndependentWithoutAKeyEvent() {
+        ImageEditorFileCommandDispatchGate.reset()
+        defer { ImageEditorFileCommandDispatchGate.reset() }
+
+        for action in ImageEditorFileCommandAction.allCases {
+            #expect(ImageEditorFileCommandDispatchGate.shouldDispatch(action, event: nil))
+            #expect(ImageEditorFileCommandDispatchGate.shouldDispatch(action, event: nil))
+        }
+    }
+
     @Test func clipboardMouseMenuBoundariesRemainIndependentWithoutAKeyEvent() {
         ImageEditorClipboardCommandDispatchGate.reset()
         defer { ImageEditorClipboardCommandDispatchGate.reset() }

@@ -3226,14 +3226,11 @@ struct ImageEditorView: View {
         ) != .ignore else { return }
 
         switch action {
-        case .newCanvas:
-            requestDocumentReplacement {
-                viewModel.isNewCanvasSheetPresented = true
-            }
-        case .openProject: openProjectDocumentSafely()
-        case .saveProject: viewModel.saveProjectDocument()
-        case .export: viewModel.openExportPanel()
-        case .openFigmaLinkImport: isFigmaLinkImportPresented = true
+        case .newCanvas: performFileCommand(.createCanvas)
+        case .openProject: performFileCommand(.openProject)
+        case .saveProject: performFileCommand(.saveProject)
+        case .export: performFileCommand(.export)
+        case .openFigmaLinkImport: performFileCommand(.importFigmaLink)
         case .undo: performUndo()
         case .redo: performRedo()
         case .cutSelectionClipboard: performClipboardCommand(.cutSelection)
@@ -17206,6 +17203,39 @@ enum ImageEditorHistoryCommandDispatchGate {
 
     static func reset() {
         lastEvent = nil
+    }
+}
+
+enum ImageEditorFileCommandAction: Equatable, CaseIterable {
+    case createCanvas
+    case openProject
+    case saveProject
+    case export
+    case importFigmaLink
+}
+
+@MainActor
+enum ImageEditorFileCommandDispatchGate {
+    private struct Dispatch: Equatable {
+        let action: ImageEditorFileCommandAction
+        let event: ImageEditorKeyboardShortcutEventSignature
+    }
+
+    private static var lastDispatch: Dispatch?
+
+    static func shouldDispatch(
+        _ action: ImageEditorFileCommandAction,
+        event: ImageEditorKeyboardShortcutEventSignature?
+    ) -> Bool {
+        guard let event else { return true }
+        let dispatch = Dispatch(action: action, event: event)
+        guard dispatch != lastDispatch else { return false }
+        lastDispatch = dispatch
+        return true
+    }
+
+    static func reset() {
+        lastDispatch = nil
     }
 }
 

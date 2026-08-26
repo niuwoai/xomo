@@ -14,14 +14,14 @@ extension ImageEditorView {
             Spacer()
 
             Button(L10n.text("imageEditor.action.projectOpen")) {
-                openProjectDocumentSafely()
+                performFileCommand(.openProject)
             }
             .buttonStyle(EditorMenuActionButtonStyle())
             .focusable(false)
             .accessibilityIdentifier("image-editor-action-project-open")
 
             Button(L10n.text("imageEditor.action.projectSave")) {
-                viewModel.saveProjectDocument()
+                performFileCommand(.saveProject)
             }
             .buttonStyle(EditorMenuActionButtonStyle())
             .focusable(false)
@@ -43,7 +43,7 @@ extension ImageEditorView {
             .accessibilityLabel(L10n.text("imageEditor.action.preview"))
 
             Button(L10n.text("imageEditor.action.export")) {
-                viewModel.openExportPanel()
+                performFileCommand(.export)
             }
             .buttonStyle(EditorExportButtonStyle())
             .focusable(false)
@@ -56,22 +56,18 @@ extension ImageEditorView {
 
     var xomoFileCommandActions: XomoFileCommandActions {
         XomoFileCommandActions(
-            createCanvas: {
-                requestDocumentReplacement {
-                    viewModel.isNewCanvasSheetPresented = true
-                }
-            },
+            createCanvas: { performFileCommand(.createCanvas) },
             createCanvasFromClipboard: {
                 requestDocumentReplacement {
                     viewModel.createCanvasFromClipboard()
                 }
             },
             canCreateCanvasFromClipboard: viewModel.canCreateCanvasFromClipboard,
-            openProject: { openProjectDocumentSafely() },
+            openProject: { performFileCommand(.openProject) },
             recentDocuments: recentDocumentStore.urls,
             openRecentDocument: { openRecentDocumentSafely(at: $0) },
             clearRecentDocuments: { recentDocumentStore.clear() },
-            saveProject: { viewModel.saveProjectDocument() },
+            saveProject: { performFileCommand(.saveProject) },
             saveProjectAs: { viewModel.saveProjectDocumentAs() },
             saveProjectCopy: { viewModel.saveProjectDocumentCopy() },
             revertProject: { viewModel.presentProjectRevertConfirmation() },
@@ -84,9 +80,9 @@ extension ImageEditorView {
             canShowPSDCompatibilityReport: viewModel.psdCompatibilityReport != nil,
             importFile: { viewModel.chooseImageLayerFile() },
             placeEmbeddedSmartObject: { viewModel.chooseEmbeddedSmartObjectFile() },
-            importFigmaLink: { isFigmaLinkImportPresented = true },
+            importFigmaLink: { performFileCommand(.importFigmaLink) },
             quickExportPNG: { viewModel.quickExportPNG() },
-            export: { viewModel.openExportPanel() },
+            export: { performFileCommand(.export) },
             exportSelection: {
                 viewModel.exportSettings.scope = .selection
                 viewModel.openExportPanel()
@@ -115,6 +111,27 @@ extension ImageEditorView {
             },
             cancel: { closeWindow() }
         )
+    }
+
+    func performFileCommand(_ action: ImageEditorFileCommandAction) {
+        guard ImageEditorFileCommandDispatchGate.shouldDispatch(
+            action,
+            event: .currentKeyEvent
+        ) else { return }
+        switch action {
+        case .createCanvas:
+            requestDocumentReplacement {
+                viewModel.isNewCanvasSheetPresented = true
+            }
+        case .openProject:
+            openProjectDocumentSafely()
+        case .saveProject:
+            viewModel.saveProjectDocument()
+        case .export:
+            viewModel.openExportPanel()
+        case .importFigmaLink:
+            isFigmaLinkImportPresented = true
+        }
     }
 
     func requestDocumentReplacement(

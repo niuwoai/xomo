@@ -69,13 +69,19 @@ struct XomoFigmaLinkImportTests {
         )
 
         #expect(menu.contains("var xomoFileCommandActions: XomoFileCommandActions"))
-        #expect(menu.contains("importFigmaLink: { isFigmaLinkImportPresented = true }"))
+        #expect(menu.contains("importFigmaLink: { performFileCommand(.importFigmaLink) }"))
+        #expect(menu.contains("case .importFigmaLink:"))
+        #expect(menu.contains("isFigmaLinkImportPresented = true"))
         #expect(applicationCommands.contains("case .importFigmaLink:"))
         #expect(applicationCommands.contains("imageEditor.action.figmaLinkImport"))
         #expect(applicationCommands.contains(".keyboardShortcut(\"f\", modifiers: [.command, .option])"))
         #expect(editor.contains(".sheet(isPresented: $isFigmaLinkImportPresented)"))
         #expect(editor.contains("XomoFigmaLinkImportSheet(viewModel: viewModel)"))
-        #expect(editor.contains("case .openFigmaLinkImport: isFigmaLinkImportPresented = true"))
+        #expect(
+            editor.contains(
+                "case .openFigmaLinkImport: performFileCommand(.importFigmaLink)"
+            )
+        )
         #expect(sheet.contains("xomo-figma-link-input"))
         #expect(sheet.contains("xomo-figma-copy-canonical-link"))
         #expect(sheet.contains("XomoFigmaLinkImportDraft"))

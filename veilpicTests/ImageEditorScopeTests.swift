@@ -1969,6 +1969,10 @@ struct ImageEditorScopeTests {
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/XomoApplicationCommands.swift"),
             encoding: .utf8
         )
+        let viewSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
 
         #expect(menuBarSource.contains("openProjectDocumentSafely()"))
         #expect(commandsSource.contains(".keyboardShortcut(\"o\", modifiers: [.command])"))
@@ -1978,6 +1982,44 @@ struct ImageEditorScopeTests {
         #expect(commandsSource.contains(".keyboardShortcut(\"s\", modifiers: [.command, .shift, .option])"))
         #expect(commandsSource.contains("imageEditor.action.fileImport"))
         #expect(menuBarSource.contains("viewModel.chooseImageLayerFile()"))
+
+        let helperStart = try #require(menuBarSource.range(of: "func performFileCommand("))
+        let helperEnd = try #require(
+            menuBarSource[helperStart.upperBound...].range(of: "\n    }")
+        )
+        let helperSource = menuBarSource[helperStart.lowerBound..<helperEnd.upperBound]
+        let gate = try #require(
+            helperSource.range(of: "ImageEditorFileCommandDispatchGate.shouldDispatch")
+        )
+        let save = try #require(helperSource.range(of: "viewModel.saveProjectDocument()"))
+        #expect(gate.lowerBound < save.lowerBound)
+
+        for (field, action) in [
+            ("createCanvas", "createCanvas"),
+            ("openProject", "openProject"),
+            ("saveProject", "saveProject"),
+            ("importFigmaLink", "importFigmaLink"),
+            ("export", "export"),
+        ] {
+            #expect(
+                menuBarSource.contains(
+                    "\(field): { performFileCommand(.\(action)) }"
+                )
+            )
+        }
+        for (shortcutCase, action) in [
+            ("newCanvas", "createCanvas"),
+            ("openProject", "openProject"),
+            ("saveProject", "saveProject"),
+            ("export", "export"),
+            ("openFigmaLinkImport", "importFigmaLink"),
+        ] {
+            #expect(
+                viewSource.contains(
+                    "case .\(shortcutCase): performFileCommand(.\(action))"
+                )
+            )
+        }
     }
 
     @Test func layerMenuExposesSelectionLayerCommandsInPhotoshopStyleLocation() throws {
@@ -2840,6 +2882,10 @@ struct ImageEditorScopeTests {
             contentsOf: root.appendingPathComponent("veilpic/ImageEditorView.swift"),
             encoding: .utf8
         )
+        let menuBarSource = try String(
+            contentsOf: root.appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),
+            encoding: .utf8
+        )
         let commandsSource = try String(
             contentsOf: root.appendingPathComponent("veilpic/XomoApplicationCommands.swift"),
             encoding: .utf8
@@ -2848,9 +2894,10 @@ struct ImageEditorScopeTests {
         #expect(appSource.contains("XomoFileCommands()"))
         #expect(commandsSource.contains("CommandGroup(replacing: .newItem)"))
         #expect(commandsSource.contains("actions?.createCanvas()"))
-        #expect(editorSource.contains("case .newCanvas:"))
-        #expect(editorSource.contains("requestDocumentReplacement"))
-        #expect(editorSource.contains("viewModel.isNewCanvasSheetPresented = true"))
+        #expect(editorSource.contains("case .newCanvas: performFileCommand(.createCanvas)"))
+        #expect(menuBarSource.contains("case .createCanvas:"))
+        #expect(menuBarSource.contains("requestDocumentReplacement"))
+        #expect(menuBarSource.contains("viewModel.isNewCanvasSheetPresented = true"))
         #expect(editorSource.contains("if key == \"n\", relevantFlags == [.command] { return .newCanvas }"))
     }
 
