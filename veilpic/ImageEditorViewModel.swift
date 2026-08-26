@@ -10646,9 +10646,12 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     private func isolatedLayerVisibilityIDs() -> Set<UUID> {
-        var visibleIDs = document.selectedLayerIDs
-        for index in selectedLayerIndices {
-            let layer = document.layers[index]
+        isolatedLayerVisibilityIDs(for: document.selectedLayerIDs)
+    }
+
+    func isolatedLayerVisibilityIDs(for selectedIDs: Set<UUID>) -> Set<UUID> {
+        var visibleIDs = selectedIDs
+        for layer in document.layers where selectedIDs.contains(layer.id) {
             if layer.isGroup {
                 visibleIDs.formUnion(groupDescendantIDs(for: layer.id))
             }

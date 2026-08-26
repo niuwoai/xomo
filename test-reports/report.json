@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-27 04:23:46 +0800",
+  "generated_at": "2026-08-27 04:34:23 +0800",
   "total": 3,
   "passed": 3,
   "failed": 0,
@@ -9,40 +9,40 @@
   "jobs": 1,
   "results": [
     {
-      "suite": "ImageEditorLayerVisibilityContextTests",
-      "method": "selectedContextShowsMixedSelectionOnceAndPreservesRedoOnRepeat",
-      "identifier": "veilpicTests/ImageEditorLayerVisibilityContextTests/selectedContextShowsMixedSelectionOnceAndPreservesRedoOnRepeat()",
-      "file": "ImageEditorLayerVisibilityContextTests.swift",
+      "suite": "ImageEditorLayerVisibilityFocusContextTests",
+      "method": "selectedGroupContextIsolationIncludesDescendantsAndRepeatPreservesRedo",
+      "identifier": "veilpicTests/ImageEditorLayerVisibilityFocusContextTests/selectedGroupContextIsolationIncludesDescendantsAndRepeatPreservesRedo()",
+      "file": "ImageEditorLayerVisibilityFocusContextTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.478,
+      "duration": 3.133,
       "infrastructure_retries": 0,
       "issues": [],
-      "log": "ImageEditorLayerVisibilityContextTests.selectedContextShowsMixedSelectionOnceAndPreservesRedoOnRepeat.log"
+      "log": "ImageEditorLayerVisibilityFocusContextTests.selectedGroupContextIsolationIncludesDescendantsAndRepeatPreservesRedo.log"
     },
     {
-      "suite": "ImageEditorLayerVisibilityContextTests",
-      "method": "unknownContextVisibilityIsAnAtomicNoOp",
-      "identifier": "veilpicTests/ImageEditorLayerVisibilityContextTests/unknownContextVisibilityIsAnAtomicNoOp()",
-      "file": "ImageEditorLayerVisibilityContextTests.swift",
+      "suite": "ImageEditorLayerVisibilityFocusContextTests",
+      "method": "showAllFromContextIsGlobalKeepsSelectionAndRejectsInvalidOrRepeat",
+      "identifier": "veilpicTests/ImageEditorLayerVisibilityFocusContextTests/showAllFromContextIsGlobalKeepsSelectionAndRejectsInvalidOrRepeat()",
+      "file": "ImageEditorLayerVisibilityFocusContextTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.136,
+      "duration": 3.142,
       "infrastructure_retries": 0,
       "issues": [],
-      "log": "ImageEditorLayerVisibilityContextTests.unknownContextVisibilityIsAnAtomicNoOp.log"
+      "log": "ImageEditorLayerVisibilityFocusContextTests.showAllFromContextIsGlobalKeepsSelectionAndRejectsInvalidOrRepeat.log"
     },
     {
-      "suite": "ImageEditorLayerVisibilityContextTests",
-      "method": "unselectedContextHidesOnlyClickedLayerAndBecomesItsSelection",
-      "identifier": "veilpicTests/ImageEditorLayerVisibilityContextTests/unselectedContextHidesOnlyClickedLayerAndBecomesItsSelection()",
-      "file": "ImageEditorLayerVisibilityContextTests.swift",
+      "suite": "ImageEditorLayerVisibilityFocusContextTests",
+      "method": "unselectedChildContextIsolationKeepsItsAncestorAndHidesSibling",
+      "identifier": "veilpicTests/ImageEditorLayerVisibilityFocusContextTests/unselectedChildContextIsolationKeepsItsAncestorAndHidesSibling()",
+      "file": "ImageEditorLayerVisibilityFocusContextTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.127,
+      "duration": 3.164,
       "infrastructure_retries": 0,
       "issues": [],
-      "log": "ImageEditorLayerVisibilityContextTests.unselectedContextHidesOnlyClickedLayerAndBecomesItsSelection.log"
+      "log": "ImageEditorLayerVisibilityFocusContextTests.unselectedChildContextIsolationKeepsItsAncestorAndHidesSibling.log"
     }
   ]
 }

@@ -2810,6 +2810,34 @@ extension ImageEditorView {
             .accessibilityIdentifier(
                 "image-editor-layer-context-visibility-hide-\(layer.id.uuidString)"
             )
+
+            Divider()
+
+            Button {
+                viewModel.isolateLayersFromContext(layer.id)
+            } label: {
+                Label(
+                    L10n.text("imageEditor.action.layerIsolateSelected"),
+                    systemImage: "eye.trianglebadge.exclamationmark"
+                )
+            }
+            .disabled(!viewModel.canIsolateLayersFromContext(layer.id))
+            .accessibilityIdentifier(
+                "image-editor-layer-context-visibility-isolate-\(layer.id.uuidString)"
+            )
+
+            Button {
+                viewModel.showAllLayersFromContext(layer.id)
+            } label: {
+                Label(
+                    L10n.text("imageEditor.action.layerShowAll"),
+                    systemImage: "eye.fill"
+                )
+            }
+            .disabled(!viewModel.canShowAllLayersFromContext(layer.id))
+            .accessibilityIdentifier(
+                "image-editor-layer-context-visibility-show-all-\(layer.id.uuidString)"
+            )
         }
         .accessibilityIdentifier(
             "image-editor-layer-context-visibility-\(layer.id.uuidString)"
