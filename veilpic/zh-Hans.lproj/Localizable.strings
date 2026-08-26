@@ -2976,6 +2976,7 @@
 "imageEditor.action.copySelectionClipboard" = "复制到剪贴板";
 "imageEditor.action.copyMergedClipboard" = "复制合并图像";
 "imageEditor.action.pasteClipboardLayer" = "粘贴为图层";
+"imageEditor.action.pasteFigmaLink" = "粘贴 Figma 链接…";
 "imageEditor.action.pasteClipboardIntoSelection" = "粘贴到选区";
 "imageEditor.action.pasteClipboardInPlaceLayer" = "原位粘贴";
 "imageEditor.action.pasteClipboardAsSmartObject" = "粘贴为智能对象";

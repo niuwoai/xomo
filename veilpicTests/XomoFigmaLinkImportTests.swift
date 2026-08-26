@@ -30,6 +30,50 @@ struct XomoFigmaLinkImportTests {
         #expect(draft.error == nil)
     }
 
+    @Test func draftCanStartWithACanonicalClipboardLink() throws {
+        let draft = XomoFigmaLinkImportDraft(
+            input: "https://www.figma.com/design/abc123DEF456/Checkout?node-id=1-2"
+        )
+
+        let preview = try #require(draft.preview)
+        #expect(draft.input == preview.canonicalURL.absoluteString)
+        #expect(preview.fileKey == "abc123DEF456")
+        #expect(preview.nodeID == "1:2")
+    }
+
+    @Test func contextualPastePrefersLayerPayloadAndAcceptsOnlyTrustedFigmaLinks() {
+        let copiedLink = " https://www.figma.com/design/abc123DEF456/Checkout?node-id=1-2&token=discarded "
+
+        #expect(
+            XomoFigmaClipboardPastePolicy.resolve(
+                hasLayerPayload: true,
+                clipboardText: copiedLink
+            ) == .layerPayload
+        )
+        #expect(
+            XomoFigmaClipboardPastePolicy.resolve(
+                hasLayerPayload: false,
+                clipboardText: copiedLink
+            ) == .figmaLink(
+                "https://www.figma.com/design/abc123DEF456/Checkout?node-id=1-2"
+            )
+        )
+
+        for rejectedText in [
+            nil,
+            "ordinary layer name",
+            "http://www.figma.com/design/abc123DEF456/Checkout",
+            "https://figma.example/design/abc123DEF456/Checkout"
+        ] as [String?] {
+            #expect(
+                XomoFigmaClipboardPastePolicy.resolve(
+                    hasLayerPayload: false,
+                    clipboardText: rejectedText
+                ) == .unavailable
+            )
+        }
+    }
+
     @Test func everyParserErrorHasUniqueLocalizedPresentationKey() {
         let keys = XomoFigmaLinkParserError.allCases.map(\.localizationKey)
 
@@ -75,8 +119,14 @@ struct XomoFigmaLinkImportTests {
         #expect(applicationCommands.contains("case .importFigmaLink:"))
         #expect(applicationCommands.contains("imageEditor.action.figmaLinkImport"))
         #expect(applicationCommands.contains(".keyboardShortcut(\"f\", modifiers: [.command, .option])"))
-        #expect(editor.contains(".sheet(isPresented: $isFigmaLinkImportPresented)"))
-        #expect(editor.contains("XomoFigmaLinkImportSheet(viewModel: viewModel)"))
+        #expect(editor.contains("pendingFigmaLinkImportInput = nil"))
+        #expect(editor.contains("initialLink: pendingFigmaLinkImportInput"))
+        #expect(editor.contains("case .pasteAsLayer: performContextualPasteAsLayer()"))
+        #expect(editor.contains("XomoFigmaClipboardPastePolicy.resolve("))
+        #expect(editor.contains("pendingFigmaLinkImportInput = canonicalURL"))
+        #expect(menu.contains("pasteAsLayerTitleKey: contextualPasteAsLayerTitleKey"))
+        #expect(menu.contains("return \"imageEditor.action.pasteFigmaLink\""))
+        #expect(applicationCommands.contains("actions?.pasteAsLayerTitleKey"))
         #expect(
             editor.contains(
                 "case .openFigmaLinkImport: performFileCommand(.importFigmaLink)"
@@ -86,6 +136,7 @@ struct XomoFigmaLinkImportTests {
         #expect(sheet.contains("xomo-figma-copy-canonical-link"))
         #expect(sheet.contains("XomoFigmaLinkImportDraft"))
         #expect(sheet.contains("NSPasteboard.general"))
+        #expect(sheet.contains("init(viewModel: ImageEditorViewModel, initialLink: String? = nil)"))
     }
 
     @Test func keyboardShortcutOpensFigmaLinkImportWithoutConflictingWithImageResize() {

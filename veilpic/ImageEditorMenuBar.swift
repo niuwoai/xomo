@@ -189,7 +189,8 @@ extension ImageEditorView {
             copySelectedLayersAsSVG: { viewModel.copySelectedLayersAsSVG() },
             canCopySelectedLayersAsSVG: viewModel.canCopySelectedLayersAsSVG,
             pasteAsLayer: { performClipboardCommand(.pasteAsLayer) },
-            canPasteAsLayer: viewModel.canPasteClipboardImage,
+            pasteAsLayerTitleKey: contextualPasteAsLayerTitleKey,
+            canPasteAsLayer: contextualPasteAsLayerRoute != .unavailable,
             pasteIntoSelection: { performClipboardCommand(.pasteIntoSelection) },
             canPasteIntoSelection: viewModel.canPasteClipboardImageIntoSelection,
             pasteInPlace: { performClipboardCommand(.pasteInPlace) },
@@ -216,6 +217,20 @@ extension ImageEditorView {
             deleteSelectedObject: { deleteSelectedObjectFromKeyboard() },
             canDeleteSelectedObject: canDeleteSelectedObjectFromEditMenu
         )
+    }
+
+    private var contextualPasteAsLayerRoute: XomoFigmaClipboardPasteRoute {
+        XomoFigmaClipboardPastePolicy.resolve(
+            hasLayerPayload: viewModel.canPasteClipboardImage,
+            clipboardText: NSPasteboard.general.string(forType: .string)
+        )
+    }
+
+    private var contextualPasteAsLayerTitleKey: String {
+        if case .figmaLink = contextualPasteAsLayerRoute {
+            return "imageEditor.action.pasteFigmaLink"
+        }
+        return "imageEditor.action.pasteClipboardLayer"
     }
 
     private var canDeleteSelectedObjectFromEditMenu: Bool {

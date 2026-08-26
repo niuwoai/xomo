@@ -10,6 +10,11 @@ struct XomoFigmaLinkImportSheet: View {
     @StateObject private var metadataController = XomoFigmaAuthorizedMetadataController()
     @StateObject private var nodeImportController = XomoFigmaNodeImportController()
 
+    init(viewModel: ImageEditorViewModel, initialLink: String? = nil) {
+        self.viewModel = viewModel
+        _draft = State(initialValue: XomoFigmaLinkImportDraft(input: initialLink ?? ""))
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             ScrollView {

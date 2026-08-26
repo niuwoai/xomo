@@ -276,6 +276,7 @@ struct ImageEditorView: View {
     @State private var hoveredTool: ImageEditorTool?
     @State private var isQuickMaskOptionsPresented = false
     @State var isFigmaLinkImportPresented = false
+    @State var pendingFigmaLinkImportInput: String?
     @State var isBrushPresetRenamePresented = false
     @State var brushPresetNameDraft = ""
     @State private var canvasTextEditingOrigin: CGPoint?
@@ -594,8 +595,13 @@ struct ImageEditorView: View {
                 )
             }
         }
-        .sheet(isPresented: $isFigmaLinkImportPresented) {
-            XomoFigmaLinkImportSheet(viewModel: viewModel)
+        .sheet(isPresented: $isFigmaLinkImportPresented, onDismiss: {
+            pendingFigmaLinkImportInput = nil
+        }) {
+            XomoFigmaLinkImportSheet(
+                viewModel: viewModel,
+                initialLink: pendingFigmaLinkImportInput
+            )
         }
         .focusedSceneValue(\.xomoFileCommandActions, xomoFileCommandActions)
         .focusedSceneValue(\.xomoEditCommandActions, xomoEditCommandActions)
@@ -3351,9 +3357,26 @@ struct ImageEditorView: View {
         case .copySelection: viewModel.copySelectionToClipboard()
         case .copyMerged: viewModel.copyMergedToClipboard()
         case .copySelectedLayers: viewModel.copySelectedLayersToClipboard()
-        case .pasteAsLayer: viewModel.pasteClipboardAsLayer()
+        case .pasteAsLayer: performContextualPasteAsLayer()
         case .pasteIntoSelection: viewModel.pasteClipboardIntoSelectionAsLayer()
         case .pasteInPlace: viewModel.pasteClipboardInPlaceAsLayer()
+        }
+    }
+
+    func performContextualPasteAsLayer(
+        pasteboard: NSPasteboard = .general
+    ) {
+        switch XomoFigmaClipboardPastePolicy.resolve(
+            hasLayerPayload: viewModel.canPasteClipboardImage(from: pasteboard),
+            clipboardText: pasteboard.string(forType: .string)
+        ) {
+        case .layerPayload:
+            viewModel.pasteClipboardAsLayer(from: pasteboard)
+        case let .figmaLink(canonicalURL):
+            pendingFigmaLinkImportInput = canonicalURL
+            isFigmaLinkImportPresented = true
+        case .unavailable:
+            viewModel.pasteClipboardAsLayer(from: pasteboard)
         }
     }
 

@@ -2645,8 +2645,13 @@ struct ImageEditorScopeTests {
         let gate = try #require(
             helperSource.range(of: "ImageEditorClipboardCommandDispatchGate.shouldDispatch")
         )
-        let paste = try #require(helperSource.range(of: "viewModel.pasteClipboardAsLayer()"))
+        let paste = try #require(helperSource.range(of: "performContextualPasteAsLayer()"))
         #expect(gate.lowerBound < paste.lowerBound)
+        #expect(viewSource.contains("func performContextualPasteAsLayer("))
+        #expect(viewSource.contains("XomoFigmaClipboardPastePolicy.resolve("))
+        #expect(viewSource.contains("case .layerPayload:"))
+        #expect(viewSource.contains("viewModel.pasteClipboardAsLayer(from: pasteboard)"))
+        #expect(viewSource.contains("case let .figmaLink(canonicalURL):"))
         for (shortcutCase, action) in [
             ("cutSelectionClipboard", "cutSelection"),
             ("copySelectionClipboard", "copySelection"),

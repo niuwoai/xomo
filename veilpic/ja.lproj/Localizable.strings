@@ -2976,6 +2976,7 @@
 "imageEditor.action.copySelectionClipboard" = "クリップボードへコピー";
 "imageEditor.action.copyMergedClipboard" = "結合部分をコピー";
 "imageEditor.action.pasteClipboardLayer" = "レイヤーとしてペースト";
+"imageEditor.action.pasteFigmaLink" = "Figmaリンクをペースト…";
 "imageEditor.action.pasteClipboardIntoSelection" = "選択範囲内へペースト";
 "imageEditor.action.pasteClipboardInPlaceLayer" = "同じ位置にペースト";
 "imageEditor.action.pasteClipboardAsSmartObject" = "スマートオブジェクトとしてペースト";

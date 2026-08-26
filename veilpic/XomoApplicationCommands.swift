@@ -130,6 +130,7 @@ struct XomoEditCommandActions {
     let copySelectedLayersAsSVG: () -> Void
     let canCopySelectedLayersAsSVG: Bool
     let pasteAsLayer: () -> Void
+    let pasteAsLayerTitleKey: String
     let canPasteAsLayer: Bool
     let pasteIntoSelection: () -> Void
     let canPasteIntoSelection: Bool
@@ -237,7 +238,7 @@ struct XomoEditMenuItems: View {
             actions?.copySelectedLayersAsSVG()
         }
         .disabled(actions?.canCopySelectedLayersAsSVG != true)
-        Button(L10n.text("imageEditor.action.pasteClipboardLayer")) {
+        Button(L10n.text(actions?.pasteAsLayerTitleKey ?? "imageEditor.action.pasteClipboardLayer")) {
             actions?.pasteAsLayer()
         }
         .keyboardShortcut("v", modifiers: [.command])

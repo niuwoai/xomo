@@ -2976,6 +2976,7 @@
 "imageEditor.action.copySelectionClipboard" = "Copy to Clipboard";
 "imageEditor.action.copyMergedClipboard" = "Copy Merged";
 "imageEditor.action.pasteClipboardLayer" = "Paste as Layer";
+"imageEditor.action.pasteFigmaLink" = "Paste Figma Link…";
 "imageEditor.action.pasteClipboardIntoSelection" = "Paste Into Selection";
 "imageEditor.action.pasteClipboardInPlaceLayer" = "Paste in Place";
 "imageEditor.action.pasteClipboardAsSmartObject" = "Paste as Smart Object";

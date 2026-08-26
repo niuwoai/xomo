@@ -147,6 +147,10 @@ struct XomoFigmaLinkImportDraft: Equatable {
     private(set) var input = ""
     private(set) var state: XomoFigmaLinkImportState = .empty
 
+    init(input: String = "") {
+        updateInput(input)
+    }
+
     var preview: XomoFigmaLinkPreview? {
         guard case let .valid(preview) = state else { return nil }
         return preview
@@ -175,6 +179,25 @@ struct XomoFigmaLinkImportDraft: Equatable {
             assertionFailure("Unexpected Figma link parser error: \(error)")
             state = .invalid(.malformedURL)
         }
+    }
+}
+
+enum XomoFigmaClipboardPasteRoute: Equatable {
+    case layerPayload
+    case figmaLink(String)
+    case unavailable
+}
+
+enum XomoFigmaClipboardPastePolicy {
+    static func resolve(
+        hasLayerPayload: Bool,
+        clipboardText: String?
+    ) -> XomoFigmaClipboardPasteRoute {
+        guard !hasLayerPayload else { return .layerPayload }
+        guard let clipboardText,
+              let preview = try? XomoFigmaLinkParser.parse(clipboardText)
+        else { return .unavailable }
+        return .figmaLink(preview.canonicalURL.absoluteString)
     }
 }
 

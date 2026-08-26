@@ -190,8 +190,12 @@ private enum ImageEditorPreparedLayerFileImport {
 @MainActor
 extension ImageEditorViewModel {
     var canPasteClipboardImage: Bool {
-        XomoLayerClipboardArchive.containsSupportedData(in: .general)
-            || NSPasteboard.general.readImage() != nil
+        canPasteClipboardImage(from: .general)
+    }
+
+    func canPasteClipboardImage(from pasteboard: NSPasteboard) -> Bool {
+        XomoLayerClipboardArchive.containsSupportedData(in: pasteboard)
+            || pasteboard.readImage() != nil
     }
 
     var canPasteClipboardImageIntoSelection: Bool {
