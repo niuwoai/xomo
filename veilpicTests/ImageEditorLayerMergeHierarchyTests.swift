@@ -129,6 +129,87 @@ struct ImageEditorLayerMergeHierarchyTests {
         #expect(viewModel.document.layers.map(\.id) == [outside.id, lower.id, upper.id, group.id])
     }
 
+    @Test func layerRowContextMergeChoosesSelectedDownOrGroupWithoutRetargeting() throws {
+        let viewModel = makeViewModel()
+        let lower = layer("Lower", in: viewModel)
+        let middle = layer("Middle", in: viewModel)
+        let upper = layer("Upper", in: viewModel)
+        let outside = layer("Outside", in: viewModel)
+        viewModel.document.layers = [lower, middle, upper, outside]
+        select([middle.id, upper.id], primary: upper.id, in: viewModel)
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.layerMergeActionFromContext(middle.id) == .selected)
+        #expect(viewModel.applyLayerMergeActionFromContext(middle.id))
+        let selectedMerged = try #require(viewModel.document.selectedLayer)
+        #expect(viewModel.document.layers.map(\.id) == [lower.id, selectedMerged.id, outside.id])
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerMergeSelected"))
+
+        viewModel.undo()
+        #expect(viewModel.document.selectedLayerIDs == [middle.id, upper.id])
+        viewModel.selectLayer(outside.id)
+        #expect(viewModel.layerMergeActionFromContext(upper.id) == .down)
+        #expect(viewModel.applyLayerMergeActionFromContext(upper.id))
+        let downMerged = try #require(viewModel.document.selectedLayer)
+        #expect(viewModel.document.layers.map(\.id) == [lower.id, downMerged.id, outside.id])
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerMergeDown"))
+
+        viewModel.undo()
+        #expect(viewModel.layerMergeActionFromContext(lower.id) == nil)
+        let upperIndex = try #require(viewModel.document.layers.firstIndex { $0.id == upper.id })
+        viewModel.document.layers[upperIndex].isLocked = true
+        #expect(viewModel.layerMergeActionFromContext(upper.id) == nil)
+        #expect(
+            viewModel.layerMergeTitleKeyFromContext(upper.id)
+                == "imageEditor.action.layerMergeDown"
+        )
+        #expect(!viewModel.applyLayerMergeActionFromContext(upper.id))
+        #expect(viewModel.layerMergeActionFromContext(UUID()) == nil)
+
+        var child = layer("Child", in: viewModel)
+        let group = ImageEditorLayer.group(name: "Group", size: viewModel.document.canvasSize)
+        let survivor = layer("Survivor", in: viewModel)
+        child.groupID = group.id
+        viewModel.document.layers = [child, group, survivor]
+        select([survivor.id], primary: survivor.id, in: viewModel)
+        #expect(viewModel.layerMergeActionFromContext(group.id) == .group)
+        #expect(
+            viewModel.layerMergeTitleKeyFromContext(group.id)
+                == "imageEditor.action.layerMergeGroup"
+        )
+        #expect(viewModel.applyLayerMergeActionFromContext(group.id))
+        let groupMerged = try #require(viewModel.document.selectedLayer)
+        #expect(groupMerged.name == group.name)
+        #expect(viewModel.document.layers.map(\.id) == [groupMerged.id, survivor.id])
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerMergeGroup"))
+
+        var selectedChild = layer("Selected Child", in: viewModel)
+        let selectedGroup = ImageEditorLayer.group(
+            name: "Selected Group",
+            size: viewModel.document.canvasSize
+        )
+        var lockedSurvivor = layer("Locked Survivor", in: viewModel)
+        selectedChild.groupID = selectedGroup.id
+        lockedSurvivor.isLocked = true
+        viewModel.document.layers = [selectedChild, selectedGroup, lockedSurvivor]
+        select(
+            [selectedGroup.id, lockedSurvivor.id],
+            primary: selectedGroup.id,
+            in: viewModel
+        )
+        #expect(viewModel.layerMergeActionFromContext(selectedGroup.id) == .selected)
+        #expect(
+            viewModel.layerMergeTitleKeyFromContext(selectedGroup.id)
+                == "imageEditor.action.layerMergeSelected"
+        )
+        #expect(viewModel.applyLayerMergeActionFromContext(selectedGroup.id))
+        let selectedGroupMerged = try #require(viewModel.document.selectedLayer)
+        #expect(viewModel.document.layers.map(\.id) == [selectedGroupMerged.id, lockedSurvivor.id])
+        #expect(viewModel.document.selectedLayerIDs == [selectedGroupMerged.id, lockedSurvivor.id])
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerMergeSelected"))
+    }
+
     @Test func selectingAGroupMergesItsCompleteNestedSubtree() throws {
         let viewModel = makeViewModel()
         var leaf = layer("Leaf", in: viewModel)

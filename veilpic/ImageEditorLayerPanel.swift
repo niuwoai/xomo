@@ -2315,6 +2315,8 @@ extension ImageEditorView {
                 }
                 .accessibilityIdentifier("image-editor-layer-context-rasterize-\(layer.id.uuidString)")
 
+                layerContextMergeButton(layer)
+
                 Divider()
                 Button(role: .destructive) {
                     viewModel.prepareLayerContextSelection(for: layer.id)
@@ -2604,6 +2606,20 @@ extension ImageEditorView {
         }
         .disabled(action == nil)
         .accessibilityIdentifier("image-editor-layer-context-clipping-mask-\(layer.id.uuidString)")
+    }
+
+    private func layerContextMergeButton(_ layer: ImageEditorLayer) -> some View {
+        let action = viewModel.layerMergeActionFromContext(layer.id)
+        return Button {
+            viewModel.applyLayerMergeActionFromContext(layer.id)
+        } label: {
+            Label(
+                L10n.text(viewModel.layerMergeTitleKeyFromContext(layer.id)),
+                systemImage: "square.stack.3d.down.right"
+            )
+        }
+        .disabled(action == nil)
+        .accessibilityIdentifier("image-editor-layer-context-merge-\(layer.id.uuidString)")
     }
 
     private func beginLayerInlineRename(_ layer: ImageEditorLayer) {
