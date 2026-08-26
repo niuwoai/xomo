@@ -135,6 +135,63 @@ struct XomoLayerClipboardTests {
         #expect(viewModel.document.selectedLayerID == originalRoot.id)
     }
 
+    @Test func editablePasteUsesTheSelectedSiblingOrGroupAsItsInsertionContext() throws {
+        let canvasSize = CGSize(width: 180, height: 140)
+        let viewModel = ImageEditorViewModel(
+            sourceName: "contextual-paste.xomo",
+            image: .transparent(size: canvasSize)
+        ) { _ in }
+        var child = ImageEditorLayer.blank(name: "Existing child", size: CGSize(width: 20, height: 16))
+        var group = ImageEditorLayer.group(name: "Container", size: canvasSize)
+        group.isGroupExpanded = false
+        child.groupID = group.id
+        let source = ImageEditorLayer.shape(
+            name: "Editable source",
+            frame: CGRect(x: 36, y: 28, width: 44, height: 30),
+            content: ImageEditorShapeContent(
+                kind: .rectangle,
+                fillColor: .systemPurple,
+                fillOpacity: 1,
+                strokeColor: .clear,
+                strokeWidth: 0,
+                strokeOpacity: 0,
+                cornerRadius: 6
+            )
+        )
+        let survivor = ImageEditorLayer.blank(name: "Top survivor", size: canvasSize)
+        viewModel.document.layers = [child, group, source, survivor]
+        viewModel.document.selectedLayerID = source.id
+        viewModel.document.selectedLayerIDs = [source.id]
+        let pasteboard = NSPasteboard(name: .init("im.some.xomo.tests.contextual-paste.\(UUID())"))
+        pasteboard.clearContents()
+        defer { pasteboard.clearContents() }
+        #expect(viewModel.copySelectedLayersToClipboard(to: pasteboard))
+        #expect(viewModel.canPasteClipboardImageInPlace(from: pasteboard))
+
+        viewModel.selectLayer(child.id)
+        #expect(viewModel.pasteClipboardAsLayer(from: pasteboard))
+        let siblingPaste = try #require(viewModel.document.selectedLayer)
+        #expect(siblingPaste.id != source.id)
+        #expect(siblingPaste.groupID == group.id)
+        #expect(siblingPaste.frame == source.frame.offsetBy(dx: 10, dy: 10))
+        #expect(Array(viewModel.document.layers.map(\.id).prefix(3)) == [child.id, siblingPaste.id, group.id])
+        #expect(viewModel.document.layers.first { $0.id == group.id }?.isGroupExpanded == true)
+        #expect(layerKindName(siblingPaste.kind) == "shape")
+
+        viewModel.undo()
+        viewModel.selectLayer(group.id)
+        #expect(viewModel.pasteClipboardInPlaceAsLayer(from: pasteboard))
+        let childPaste = try #require(viewModel.document.selectedLayer)
+        #expect(childPaste.groupID == group.id)
+        #expect(childPaste.frame == source.frame)
+        #expect(Array(viewModel.document.layers.map(\.id).prefix(3)) == [child.id, childPaste.id, group.id])
+        #expect(viewModel.document.layers.first { $0.id == group.id }?.isGroupExpanded == true)
+
+        viewModel.undo()
+        #expect(viewModel.document.layers.map(\.id) == [child.id, group.id, source.id, survivor.id])
+        #expect(viewModel.document.layers.first { $0.id == group.id }?.isGroupExpanded == false)
+    }
+
     @Test func archiveDropsExternalHierarchyLinksMastersAndOrphanClipping() throws {
         var layer = ImageEditorLayer.blank(
             name: "Detached object",

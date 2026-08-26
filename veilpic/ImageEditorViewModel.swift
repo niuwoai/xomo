@@ -10401,12 +10401,12 @@ final class ImageEditorViewModel: ObservableObject {
         return .pixel
     }
 
-    private struct NewLayerInsertionContext {
+    struct NewLayerInsertionContext {
         var parentGroupID: UUID?
         var index: Int
     }
 
-    private func newLayerInsertionContext() -> NewLayerInsertionContext {
+    func newLayerInsertionContext() -> NewLayerInsertionContext {
         guard let selectedLayerID = document.selectedLayerID,
               let selectedIndex = document.layers.firstIndex(where: { $0.id == selectedLayerID })
         else {
@@ -10431,7 +10431,7 @@ final class ImageEditorViewModel: ObservableObject {
         )
     }
 
-    private func expandGroupIfNeeded(_ groupID: UUID?) {
+    func expandGroupIfNeeded(_ groupID: UUID?) {
         guard let groupID,
               let groupIndex = document.layers.firstIndex(where: { $0.id == groupID && $0.isGroup })
         else { return }

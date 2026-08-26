@@ -207,9 +207,13 @@ extension ImageEditorViewModel {
     }
 
     var canPasteClipboardImageInPlace: Bool {
-        XomoLayerClipboardArchive.containsSupportedData(in: .general)
-            || (NSPasteboard.general.readImage() != nil
-                && XomoClipboardLayerPayload.frame(from: .general) != nil)
+        canPasteClipboardImageInPlace(from: .general)
+    }
+
+    func canPasteClipboardImageInPlace(from pasteboard: NSPasteboard) -> Bool {
+        XomoLayerClipboardArchive.containsSupportedData(in: pasteboard)
+            || (pasteboard.readImage() != nil
+                && XomoClipboardLayerPayload.frame(from: pasteboard) != nil)
     }
 
     var canPasteClipboardImageAsSmartObject: Bool {
@@ -584,7 +588,8 @@ extension ImageEditorViewModel {
             image,
             sourceName: L10n.text("source.clipboard"),
             historyTitle: L10n.text("imageEditor.history.clipboardPasteLayer"),
-            importedStatus: L10n.text("imageEditor.status.clipboardPastedToLayer")
+            importedStatus: L10n.text("imageEditor.status.clipboardPastedToLayer"),
+            insertsNearSelection: true
         )
     }
 
@@ -603,7 +608,8 @@ extension ImageEditorViewModel {
             image,
             sourceName: L10n.text("source.clipboard"),
             historyTitle: L10n.text("imageEditor.history.clipboardPasteIntoSelection"),
-            importedStatus: L10n.text("imageEditor.status.clipboardPastedIntoSelection")
+            importedStatus: L10n.text("imageEditor.status.clipboardPastedIntoSelection"),
+            insertsNearSelection: true
         )
     }
 
@@ -632,7 +638,8 @@ extension ImageEditorViewModel {
             sourceName: L10n.text("source.clipboard"),
             historyTitle: L10n.text("imageEditor.history.clipboardPasteLayer"),
             importedStatus: L10n.text("imageEditor.status.clipboardPastedInPlace"),
-            frameOverride: frame
+            frameOverride: frame,
+            insertsNearSelection: true
         )
     }
 
@@ -643,9 +650,15 @@ extension ImageEditorViewModel {
         guard !archive.layers.isEmpty,
               !archive.selectedRootIDs.isEmpty
         else { return false }
+        let insertionContext = newLayerInsertionContext()
+        var layers = archive.layers
+        for index in layers.indices where archive.selectedRootIDs.contains(layers[index].id) {
+            layers[index].groupID = insertionContext.parentGroupID
+        }
         pushUndo()
         endPixelSelectionForImportedObject()
-        document.layers.append(contentsOf: archive.layers)
+        document.layers.insert(contentsOf: layers, at: insertionContext.index)
+        expandGroupIfNeeded(insertionContext.parentGroupID)
         normalizeLayerLinks()
         normalizeClippingMasks()
         selectImportedLayers(
@@ -664,7 +677,8 @@ extension ImageEditorViewModel {
         historyTitle: String? = nil,
         importedStatus: String? = nil,
         frameOverride: CGRect? = nil,
-        centeredAt point: CGPoint? = nil
+        centeredAt point: CGPoint? = nil,
+        insertsNearSelection: Bool = false
     ) -> Bool {
         let normalized = image.normalizedImportedBitmapImage()
         guard normalized.size.width > 0, normalized.size.height > 0 else {
@@ -678,7 +692,8 @@ extension ImageEditorViewModel {
             historyTitle: historyTitle,
             importedStatus: importedStatus,
             frameOverride: frameOverride,
-            centeredAt: point
+            centeredAt: point,
+            insertsNearSelection: insertsNearSelection
         )
     }
 
@@ -688,7 +703,8 @@ extension ImageEditorViewModel {
         historyTitle: String? = nil,
         importedStatus: String? = nil,
         frameOverride: CGRect? = nil,
-        centeredAt point: CGPoint? = nil
+        centeredAt point: CGPoint? = nil,
+        insertsNearSelection: Bool = false
     ) -> Bool {
 
         pushUndo()
@@ -703,9 +719,15 @@ extension ImageEditorViewModel {
             ?? centeredImportFrame(for: normalized.size)
         layer.opacity = 1
         layer.blendMode = .normal
-        layer.groupID = nil
+        let insertionContext = insertsNearSelection ? newLayerInsertionContext() : nil
+        layer.groupID = insertionContext?.parentGroupID
         layer.isClippingMask = false
-        document.layers.append(layer)
+        if let insertionContext {
+            document.layers.insert(layer, at: insertionContext.index)
+            expandGroupIfNeeded(insertionContext.parentGroupID)
+        } else {
+            document.layers.append(layer)
+        }
         selectImportedLayers([layer.id], primaryLayerID: layer.id)
         appendHistory(historyTitle ?? L10n.text("imageEditor.history.layerImport"))
         statusText = importedStatus ?? L10n.format("imageEditor.status.layerImported", cleanLayerName(from: sourceName))
@@ -717,7 +739,8 @@ extension ImageEditorViewModel {
         _ image: NSImage,
         sourceName: String,
         historyTitle: String? = nil,
-        importedStatus: String? = nil
+        importedStatus: String? = nil,
+        insertsNearSelection: Bool = false
     ) -> Bool {
         guard let selection = document.selection else {
             statusText = L10n.text("imageEditor.status.noSelection")
@@ -759,9 +782,15 @@ extension ImageEditorViewModel {
         layer.maskFeather = 0
         layer.opacity = 1
         layer.blendMode = .normal
-        layer.groupID = nil
+        let insertionContext = insertsNearSelection ? newLayerInsertionContext() : nil
+        layer.groupID = insertionContext?.parentGroupID
         layer.isClippingMask = false
-        document.layers.append(layer)
+        if let insertionContext {
+            document.layers.insert(layer, at: insertionContext.index)
+            expandGroupIfNeeded(insertionContext.parentGroupID)
+        } else {
+            document.layers.append(layer)
+        }
         selectImportedLayers([layer.id], primaryLayerID: layer.id)
         appendHistory(historyTitle ?? L10n.text("imageEditor.history.clipboardPasteIntoSelection"))
         statusText = importedStatus ?? L10n.format("imageEditor.status.layerImported", cleanLayerName(from: sourceName))

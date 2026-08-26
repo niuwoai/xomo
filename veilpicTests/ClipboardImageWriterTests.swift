@@ -107,6 +107,46 @@ struct ClipboardImageWriterTests {
         #expect(downloadsDirectory.map { !cacheDirectory.path.hasPrefix($0.path + "/") } ?? true)
     }
 
+    @Test func bitmapPasteAndPasteIntoSelectionStayBesideTheSelectedGroupChild() throws {
+        let canvasSize = CGSize(width: 100, height: 80)
+        let viewModel = ImageEditorViewModel(
+            sourceName: "bitmap-context-paste.png",
+            image: solidImage(color: .white, size: canvasSize)
+        ) { _ in }
+        var child = ImageEditorLayer.blank(name: "Child", size: CGSize(width: 24, height: 18))
+        var group = ImageEditorLayer.group(name: "Group", size: canvasSize)
+        group.isGroupExpanded = false
+        child.groupID = group.id
+        let survivor = ImageEditorLayer.blank(name: "Survivor", size: canvasSize)
+        viewModel.document.layers = [child, group, survivor]
+        viewModel.document.selectedLayerID = child.id
+        viewModel.document.selectedLayerIDs = [child.id]
+        let pasteboard = NSPasteboard(name: .init("im.some.xomo.tests.bitmap-context.\(UUID())"))
+        pasteboard.clearContents()
+        defer { pasteboard.clearContents() }
+        #expect(pasteboard.writeObjects([
+            solidImage(color: .systemOrange, size: CGSize(width: 16, height: 12))
+        ]))
+
+        #expect(viewModel.pasteClipboardAsLayer(from: pasteboard))
+        let ordinaryPaste = try #require(viewModel.document.selectedLayer)
+        #expect(ordinaryPaste.groupID == group.id)
+        #expect(Array(viewModel.document.layers.map(\.id).prefix(3)) == [child.id, ordinaryPaste.id, group.id])
+        #expect(viewModel.document.layers.first { $0.id == group.id }?.isGroupExpanded == true)
+
+        viewModel.undo()
+        viewModel.document.selection = .rectangle(CGRect(x: 20, y: 18, width: 30, height: 24))
+        #expect(viewModel.pasteClipboardIntoSelectionAsLayer(from: pasteboard))
+        let selectionPaste = try #require(viewModel.document.selectedLayer)
+        #expect(selectionPaste.groupID == group.id)
+        #expect(selectionPaste.mask != nil)
+        #expect(Array(viewModel.document.layers.map(\.id).prefix(3)) == [child.id, selectionPaste.id, group.id])
+
+        viewModel.undo()
+        #expect(viewModel.document.layers.map(\.id) == [child.id, group.id, survivor.id])
+        #expect(viewModel.document.layers.first { $0.id == group.id }?.isGroupExpanded == false)
+    }
+
     @Test func emptyAdditionalClipboardDataDoesNotEraseExistingContents() {
         let pasteboard = NSPasteboard(
             name: .init("im.some.xomo.tests.empty-additional-data.\(UUID())")

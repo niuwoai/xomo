@@ -344,6 +344,9 @@ struct ImageEditorView: View {
         .background(colorShortcutButtons)
         .background(alternateZoomShortcutButtons)
         .background(nudgeShortcutButtons)
+        .onDeleteCommand {
+            _ = deleteSelectedObjectFromKeyboard()
+        }
         .background(
             ImageEditorKeyboardShortcutMonitor(
                 perform: performKeyboardShortcut,

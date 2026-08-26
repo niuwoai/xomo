@@ -4270,6 +4270,8 @@ struct ImageEditorScopeTests {
 
         #expect(viewSource.contains("let isDelete = event.keyCode == 51 || event.keyCode == 117"))
         #expect(viewSource.contains("deleteSelectedObject()"))
+        #expect(viewSource.contains(".onDeleteCommand {"))
+        #expect(viewSource.contains("_ = deleteSelectedObjectFromKeyboard()"))
     }
 
     @Test func returnAndKeypadEnterFinishPendingPenPathBeforeWindowDefaults() throws {

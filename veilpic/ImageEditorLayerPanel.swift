@@ -2218,6 +2218,31 @@ extension ImageEditorView {
                 Divider()
                 Button {
                     viewModel.prepareLayerContextSelection(for: layer.id)
+                    viewModel.pasteClipboardAsLayer()
+                } label: {
+                    Label(
+                        L10n.text("imageEditor.action.pasteClipboardLayer"),
+                        systemImage: "doc.on.clipboard"
+                    )
+                }
+                .disabled(!viewModel.canPasteClipboardImage)
+                .accessibilityIdentifier("image-editor-layer-context-paste-\(layer.id.uuidString)")
+
+                Button {
+                    viewModel.prepareLayerContextSelection(for: layer.id)
+                    viewModel.pasteClipboardInPlaceAsLayer()
+                } label: {
+                    Label(
+                        L10n.text("imageEditor.action.pasteClipboardInPlaceLayer"),
+                        systemImage: "arrow.down.doc"
+                    )
+                }
+                .disabled(!viewModel.canPasteClipboardImageInPlace)
+                .accessibilityIdentifier("image-editor-layer-context-paste-in-place-\(layer.id.uuidString)")
+
+                Divider()
+                Button {
+                    viewModel.prepareLayerContextSelection(for: layer.id)
                     viewModel.duplicateSelectedLayer()
                 } label: {
                     Label(
