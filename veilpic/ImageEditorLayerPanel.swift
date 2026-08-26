@@ -2201,6 +2201,17 @@ extension ImageEditorView {
                 }
                 .accessibilityIdentifier("image-editor-layer-context-rename-\(layer.id.uuidString)")
 
+                Button {
+                    viewModel.selectSimilarLayersFromContext(layer.id)
+                } label: {
+                    Label(
+                        L10n.text("imageEditor.action.layerSelectSimilar"),
+                        systemImage: "square.stack.3d.up"
+                    )
+                }
+                .disabled(!viewModel.canSelectSimilarLayersFromContext(layer.id))
+                .accessibilityIdentifier("image-editor-layer-context-select-similar-\(layer.id.uuidString)")
+
                 Divider()
                 Button {
                     viewModel.prepareLayerContextSelection(for: layer.id)

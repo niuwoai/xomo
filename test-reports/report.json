@@ -1,36 +1,24 @@
 {
-  "generated_at": "2026-08-27 02:47:12 +0800",
-  "total": 2,
-  "passed": 2,
+  "generated_at": "2026-08-27 03:01:30 +0800",
+  "total": 1,
+  "passed": 1,
   "failed": 0,
-  "total_tests": 2,
-  "passed_tests": 2,
+  "total_tests": 1,
+  "passed_tests": 1,
   "failed_tests_in_failed_groups": 0,
   "jobs": 1,
   "results": [
     {
-      "suite": "ImageEditorLayerStyleTests",
-      "method": "layerStyleContextActionsUseClickedSourceAndContextSelectionWithoutEmptyTransactions",
-      "identifier": "veilpicTests/ImageEditorLayerStyleTests/layerStyleContextActionsUseClickedSourceAndContextSelectionWithoutEmptyTransactions()",
-      "file": "ImageEditorLayerStyleTests.swift",
+      "suite": "ImageEditorLayerRangeSelectionTests",
+      "method": "contextSelectSimilarUsesClickedRowInsteadOfCurrentPrimaryLayer",
+      "identifier": "veilpicTests/ImageEditorLayerRangeSelectionTests/contextSelectSimilarUsesClickedRowInsteadOfCurrentPrimaryLayer()",
+      "file": "ImageEditorLayerRangeSelectionTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 8.278,
+      "duration": 8.001,
       "infrastructure_retries": 0,
       "issues": [],
-      "log": "ImageEditorLayerStyleTests.layerStyleContextActionsUseClickedSourceAndContextSelectionWithoutEmptyTransactions.log"
-    },
-    {
-      "suite": "ImageEditorLayerStyleTests",
-      "method": "layerStyleContextPasteAndClearBatchEditableTargetsOnly",
-      "identifier": "veilpicTests/ImageEditorLayerStyleTests/layerStyleContextPasteAndClearBatchEditableTargetsOnly()",
-      "file": "ImageEditorLayerStyleTests.swift",
-      "test_count": 1,
-      "passed": true,
-      "duration": 4.031,
-      "infrastructure_retries": 0,
-      "issues": [],
-      "log": "ImageEditorLayerStyleTests.layerStyleContextPasteAndClearBatchEditableTargetsOnly.log"
+      "log": "ImageEditorLayerRangeSelectionTests.contextSelectSimilarUsesClickedRowInsteadOfCurrentPrimaryLayer.log"
     }
   ]
 }

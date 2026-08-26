@@ -2740,6 +2740,10 @@ final class ImageEditorViewModel: ObservableObject {
         document.selectedLayer != nil
     }
 
+    func canSelectSimilarLayersFromContext(_ clickedLayerID: UUID) -> Bool {
+        document.layers.contains { $0.id == clickedLayerID }
+    }
+
     var canSelectLayersWithSameBlendMode: Bool {
         document.selectedLayer != nil
     }
@@ -5332,13 +5336,27 @@ final class ImageEditorViewModel: ObservableObject {
 
     func selectSimilarLayers() {
         guard let selectedLayer = document.selectedLayer else { return }
-        let selectedKind = layerKindFilter(for: selectedLayer)
+        selectSimilarLayers(referenceLayer: selectedLayer)
+    }
+
+    @discardableResult
+    func selectSimilarLayersFromContext(_ clickedLayerID: UUID) -> Bool {
+        guard let clickedLayer = document.layers.first(where: { $0.id == clickedLayerID }) else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return false
+        }
+        return selectSimilarLayers(referenceLayer: clickedLayer)
+    }
+
+    @discardableResult
+    private func selectSimilarLayers(referenceLayer: ImageEditorLayer) -> Bool {
+        let selectedKind = layerKindFilter(for: referenceLayer)
         let layerIDs = Set(document.layers.filter { layer in
             selectedKind.matches(layer)
-                && layer.blendMode == selectedLayer.blendMode
-                && layer.labelColor == selectedLayer.labelColor
+                && layer.blendMode == referenceLayer.blendMode
+                && layer.labelColor == referenceLayer.labelColor
         }.map(\.id))
-        guard !layerIDs.isEmpty else { return }
+        guard !layerIDs.isEmpty else { return false }
         document.selectedLayerIDs = layerIDs
         document.selectedLayerID = topmostSelectedLayerID()
         isEditingLayerMask = false
@@ -5347,8 +5365,9 @@ final class ImageEditorViewModel: ObservableObject {
             "imageEditor.status.layerSelectSimilar",
             layerIDs.count,
             selectedKind.title,
-            selectedLayer.blendMode.title
+            referenceLayer.blendMode.title
         )
+        return true
     }
 
     func selectLayersWithSameBlendMode() {

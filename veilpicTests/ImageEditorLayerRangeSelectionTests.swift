@@ -272,6 +272,54 @@ struct ImageEditorLayerRangeSelectionTests {
         #expect(viewModel.cancelMovingSelectedLayer())
     }
 
+    @Test func contextSelectSimilarUsesClickedRowInsteadOfCurrentPrimaryLayer() {
+        let fixture = makeFixture()
+        let viewModel = fixture.viewModel
+        var layers = fixture.layers
+        layers[0].blendMode = .normal
+        layers[0].labelColor = nil
+        layers[1].blendMode = .multiply
+        layers[1].labelColor = .green
+        layers[2].blendMode = .multiply
+        layers[2].labelColor = .green
+        layers[3].blendMode = .screen
+        layers[3].labelColor = .green
+        layers[4].blendMode = .multiply
+        layers[4].labelColor = .blue
+        viewModel.document.layers = layers
+        viewModel.document.selectedLayerID = layers[0].id
+        viewModel.document.selectedLayerIDs = [layers[0].id, layers[1].id]
+        let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
+
+        #expect(viewModel.canSelectSimilarLayersFromContext(layers[1].id))
+        #expect(viewModel.selectSimilarLayersFromContext(layers[1].id))
+        #expect(viewModel.document.selectedLayerIDs == [layers[1].id, layers[2].id])
+        #expect(viewModel.document.selectedLayerID == layers[2].id)
+        #expect(
+            viewModel.statusText == L10n.format(
+                "imageEditor.status.layerSelectSimilar",
+                2,
+                ImageEditorLayerKindFilter.solidColorFill.title,
+                ImageEditorBlendMode.multiply.title
+            )
+        )
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.undoStack.count == undoCount)
+
+        #expect(viewModel.selectSimilarLayersFromContext(layers[4].id))
+        #expect(viewModel.document.selectedLayerIDs == [layers[4].id])
+        #expect(viewModel.document.selectedLayerID == layers[4].id)
+
+        let selectionBeforeInvalidAction = viewModel.document.selectedLayerIDs
+        let invalidID = UUID()
+        #expect(!viewModel.canSelectSimilarLayersFromContext(invalidID))
+        #expect(!viewModel.selectSimilarLayersFromContext(invalidID))
+        #expect(viewModel.document.selectedLayerIDs == selectionBeforeInvalidAction)
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.undoStack.count == undoCount)
+    }
+
     private struct Fixture {
         let viewModel: ImageEditorViewModel
         let layers: [ImageEditorLayer]
