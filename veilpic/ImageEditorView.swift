@@ -3376,7 +3376,10 @@ struct ImageEditorView: View {
         case .layerPayload:
             viewModel.pasteClipboardAsLayer(from: pasteboard)
         case let .figmaLink(canonicalURL):
-            presentFigmaLinkImport(canonicalURL: canonicalURL)
+            presentFigmaLinkImport(
+                canonicalURL: canonicalURL,
+                placementCenter: viewModel.visibleCanvasCenter
+            )
         case .unavailable:
             viewModel.pasteClipboardAsLayer(from: pasteboard)
         }

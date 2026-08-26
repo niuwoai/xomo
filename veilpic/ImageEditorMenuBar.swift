@@ -130,7 +130,7 @@ extension ImageEditorView {
         case .export:
             viewModel.openExportPanel()
         case .importFigmaLink:
-            presentFigmaLinkImport()
+            presentFigmaLinkImport(placementCenter: viewModel.visibleCanvasCenter)
         }
     }
 

@@ -77,6 +77,49 @@ struct ImageEditorCanvasGeometryTests {
     }
 
     @Test
+    func visibleCanvasCenterTracksZoomAndPanAndStaysInsideCanvas() {
+        let canvasSize = CGSize(width: 400, height: 200)
+        let viewportSize = CGSize(width: 1_000, height: 600)
+
+        assertEqual(
+            ImageEditorCanvasGeometry.visibleCanvasCenter(
+                canvasSize: canvasSize,
+                viewportSize: viewportSize,
+                zoom: 1,
+                canvasOffset: .zero
+            ),
+            CGPoint(x: 200, y: 100)
+        )
+        assertEqual(
+            ImageEditorCanvasGeometry.visibleCanvasCenter(
+                canvasSize: canvasSize,
+                viewportSize: viewportSize,
+                zoom: 2,
+                canvasOffset: CGSize(width: -120, height: 40)
+            ),
+            CGPoint(x: 232.432_432, y: 89.189_189)
+        )
+        assertEqual(
+            ImageEditorCanvasGeometry.visibleCanvasCenter(
+                canvasSize: canvasSize,
+                viewportSize: viewportSize,
+                zoom: 2,
+                canvasOffset: CGSize(width: 10_000, height: -10_000)
+            ),
+            CGPoint(x: 0, y: 200)
+        )
+        assertEqual(
+            ImageEditorCanvasGeometry.visibleCanvasCenter(
+                canvasSize: canvasSize,
+                viewportSize: .zero,
+                zoom: 2,
+                canvasOffset: CGSize(width: 100, height: 100)
+            ),
+            CGPoint(x: 200, y: 100)
+        )
+    }
+
+    @Test
     func marchingAntsDashPhaseWrapsAndHandlesNegativeTime() {
         let patternLength = ImageEditorSelectionMarchingAnts.patternLength
         #expect(ImageEditorSelectionMarchingAnts.dashPhase(at: 0) == 0)

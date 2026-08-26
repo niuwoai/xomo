@@ -4019,6 +4019,15 @@ final class ImageEditorViewModel: ObservableObject {
         canvasViewportSize = size
     }
 
+    var visibleCanvasCenter: CGPoint {
+        ImageEditorCanvasGeometry.visibleCanvasCenter(
+            canvasSize: document.canvasSize,
+            viewportSize: canvasViewportSize,
+            zoom: zoom,
+            canvasOffset: canvasOffset
+        )
+    }
+
     func actualPixelsZoomFactor(for viewportSize: CGSize) -> CGFloat? {
         let imageSize = currentImage.size
         guard imageSize.width > 0,

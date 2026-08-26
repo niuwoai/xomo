@@ -291,6 +291,36 @@ enum ImageEditorCanvasGeometry {
         )
     }
 
+    static func visibleCanvasCenter(
+        canvasSize: CGSize,
+        viewportSize: CGSize,
+        zoom: CGFloat,
+        canvasOffset: CGSize
+    ) -> CGPoint {
+        let canvasCenter = CGPoint(
+            x: max(0, canvasSize.width) / 2,
+            y: max(0, canvasSize.height) / 2
+        )
+        guard canvasSize.width > 0,
+              canvasSize.height > 0,
+              viewportSize.width > 0,
+              viewportSize.height > 0,
+              zoom.isFinite,
+              zoom > 0
+        else { return canvasCenter }
+        let imageRect = fittedImageRect(
+            canvasSize: canvasSize,
+            viewportSize: viewportSize,
+            zoom: zoom,
+            canvasOffset: canvasOffset
+        )
+        return boundedImagePoint(
+            from: CGPoint(x: viewportSize.width / 2, y: viewportSize.height / 2),
+            imageRect: imageRect,
+            canvasSize: canvasSize
+        )
+    }
+
     static func viewPoint(
         from imagePoint: CGPoint,
         imageRect: CGRect,

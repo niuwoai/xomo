@@ -209,6 +209,8 @@ struct XomoFigmaLinkImportTests {
         #expect(editor.contains("placementCenter: canvasPoint"))
         #expect(menu.contains("func presentFigmaLinkImport("))
         #expect(menu.contains("pendingFigmaLinkImportPlacementCenter = placementCenter"))
+        #expect(menu.contains("presentFigmaLinkImport(placementCenter: viewModel.visibleCanvasCenter)"))
+        #expect(editor.contains("placementCenter: viewModel.visibleCanvasCenter"))
         #expect(menu.contains("pasteAsLayerTitleKey: contextualPasteAsLayerTitleKey"))
         #expect(menu.contains("return \"imageEditor.action.pasteFigmaLink\""))
         #expect(applicationCommands.contains("actions?.pasteAsLayerTitleKey"))
