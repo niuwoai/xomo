@@ -3285,7 +3285,7 @@ struct ImageEditorView: View {
         case .clearSelection: performSelectionCommand(.clear)
         case .reselectSelection: performSelectionCommand(.reselect)
         case .invertSelection: performSelectionCommand(.invert)
-        case .featherSelection: viewModel.featherSelection()
+        case .featherSelection: performSelectionCommand(.feather)
         case .toggleQuickMask: performToggleQuickMask()
         case .toggleQuickMaskGrayscalePreview: viewModel.toggleQuickMaskGrayscalePreview()
         case .toggleLayerMaskRubylith: viewModel.toggleSelectedLayerMaskRubylithPreview()
@@ -3455,6 +3455,7 @@ struct ImageEditorView: View {
         case .clear: viewModel.clearSelection()
         case .reselect: viewModel.reselectSelection()
         case .invert: viewModel.invertSelection()
+        case .feather: viewModel.featherSelection()
         }
     }
 
@@ -17449,6 +17450,7 @@ enum ImageEditorSelectionCommandAction: Equatable, CaseIterable {
     case clear
     case reselect
     case invert
+    case feather
 }
 
 @MainActor

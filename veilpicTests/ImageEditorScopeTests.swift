@@ -3908,7 +3908,7 @@ struct ImageEditorScopeTests {
         #expect(selectMenuSource.contains(".keyboardShortcut(\"d\", modifiers: [.command, .shift])"))
         #expect(selectMenuSource.contains("performSelectionCommand(.invert)"))
         #expect(selectMenuSource.contains(".keyboardShortcut(\"i\", modifiers: [.command, .shift])"))
-        #expect(selectMenuSource.contains("viewModel.featherSelection()"))
+        #expect(selectMenuSource.contains("performSelectionCommand(.feather)"))
         #expect(selectMenuSource.contains(".keyboardShortcut(\"d\", modifiers: [.command, .option])"))
 
         let helperStart = try #require(viewSource.range(of: "func performSelectionCommand("))
@@ -3925,6 +3925,8 @@ struct ImageEditorScopeTests {
         #expect(viewSource.contains("case .clearSelection: performSelectionCommand(.clear)"))
         #expect(viewSource.contains("case .reselectSelection: performSelectionCommand(.reselect)"))
         #expect(viewSource.contains("case .invertSelection: performSelectionCommand(.invert)"))
+        #expect(viewSource.contains("case .featherSelection: performSelectionCommand(.feather)"))
+        #expect(helperSource.contains("case .feather: viewModel.featherSelection()"))
     }
 
     @Test func selectMenuSeparatesStructuralSelectionActionsFromPixelGeometry() throws {

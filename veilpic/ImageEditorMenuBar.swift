@@ -1128,7 +1128,7 @@ extension ImageEditorView {
         }
         .disabled(!canModifySelectionGeometry)
         Button(L10n.text("imageEditor.action.featherSelection")) {
-            viewModel.featherSelection()
+            performSelectionCommand(.feather)
         }
         .keyboardShortcut("d", modifiers: [.command, .option])
         .disabled(!canModifySelectionGeometry)

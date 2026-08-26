@@ -258,6 +258,54 @@ struct ImageEditorHistoryTests {
         )
     }
 
+    @Test func onePhysicalSelectionFeatherShortcutAppliesOnlyOneRadiusPass() throws {
+        ImageEditorSelectionCommandDispatchGate.reset()
+        defer { ImageEditorSelectionCommandDispatchGate.reset() }
+
+        let canvasSize = NSSize(width: 40, height: 30)
+        let canvas = testImage(color: .white, size: canvasSize)
+        let originalSelection = ImageEditorSelection.rectangle(
+            CGRect(x: 10, y: 8, width: 10, height: 10)
+        )
+        let expected = ImageEditorViewModel(
+            sourceName: "expected-feather.png",
+            image: canvas
+        ) { _ in }
+        expected.document.selection = originalSelection
+        expected.selectionModifyAmount = 3
+        expected.featherSelection()
+
+        let viewModel = ImageEditorViewModel(
+            sourceName: "shortcut-feather.png",
+            image: canvas
+        ) { _ in }
+        viewModel.document.selection = originalSelection
+        viewModel.selectionModifyAmount = 3
+        let historyCount = viewModel.document.history.count
+        let event = ImageEditorKeyboardShortcutEventSignature(
+            windowNumber: 31,
+            eventNumber: 951,
+            timestamp: 95.1,
+            typeRawValue: NSEvent.EventType.keyDown.rawValue,
+            keyCode: 2
+        )
+
+        for _ in 0..<2 {
+            guard ImageEditorSelectionCommandDispatchGate.shouldDispatch(
+                .feather,
+                event: event
+            ) else { continue }
+            viewModel.featherSelection()
+        }
+
+        #expect(viewModel.document.selection == expected.document.selection)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(
+            viewModel.document.history.last?.title
+                == L10n.text("imageEditor.history.selectionFeather")
+        )
+    }
+
     @Test func selectionMouseMenuBoundariesRemainIndependentWithoutAKeyEvent() {
         ImageEditorSelectionCommandDispatchGate.reset()
         defer { ImageEditorSelectionCommandDispatchGate.reset() }
