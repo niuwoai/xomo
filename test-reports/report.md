@@ -1,6 +1,6 @@
 # veilpicTests 独立进程测试报告
 
-- 生成时间：2026-08-27 05:09:45 +0800
+- 生成时间：2026-08-27 05:17:43 +0800
 - 执行组：**3**，通过：**3**，失败：**0**
 - 覆盖测试：**3**，通过组内测试：**3**，失败组内测试：**0**
 - 并行度（jobs）：1
@@ -11,4 +11,4 @@
 
 | 套件 | 通过/总数 |
 |---|---|
-| ImageEditorLayerCanvasAlignmentContextTests | 3/3 |
+| ImageEditorLayerSelectionAlignmentContextTests | 3/3 |

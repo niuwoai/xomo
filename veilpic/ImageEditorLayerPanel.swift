@@ -2274,7 +2274,7 @@ extension ImageEditorView {
 
                 layerContextOrderingMenu(layer)
 
-                layerContextCanvasAlignmentMenu(layer)
+                layerContextAlignmentMenu(layer)
 
                 Divider()
                 Button {
@@ -2656,32 +2656,77 @@ extension ImageEditorView {
         )
     }
 
-    private func layerContextCanvasAlignmentMenu(_ layer: ImageEditorLayer) -> some View {
+    private func layerContextAlignmentMenu(_ layer: ImageEditorLayer) -> some View {
         Menu(L10n.text("imageEditor.menu.layer.align")) {
+            layerContextAlignmentTargetMenu(layer, target: .canvas)
+            layerContextAlignmentTargetMenu(layer, target: .pixelSelection)
+        }
+        .accessibilityIdentifier(
+            "image-editor-layer-context-align-\(layer.id.uuidString)"
+        )
+    }
+
+    private func layerContextAlignmentTargetMenu(
+        _ layer: ImageEditorLayer,
+        target: ImageEditorMoveAlignmentTarget
+    ) -> some View {
+        Menu(target.title) {
             ForEach(ImageEditorLayerAlignment.allCases) { alignment in
                 Button {
-                    viewModel.alignLayersFromContextToCanvas(
-                        layer.id,
-                        alignment: alignment
-                    )
+                    switch target {
+                    case .canvas:
+                        viewModel.alignLayersFromContextToCanvas(
+                            layer.id,
+                            alignment: alignment
+                        )
+                    case .pixelSelection:
+                        viewModel.alignLayersFromContextToSelection(
+                            layer.id,
+                            alignment: alignment
+                        )
+                    case .selectedLayers:
+                        break
+                    }
                 } label: {
                     Label(
-                        L10n.text(alignment.actionTitleKey(for: .canvas)),
+                        L10n.text(alignment.actionTitleKey(for: target)),
                         systemImage: alignment.optionBarSystemImage
                     )
                 }
-                .disabled(!viewModel.canAlignLayersFromContextToCanvas(
+                .disabled(!canAlignLayersFromContext(
                     layer.id,
-                    alignment: alignment
+                    alignment: alignment,
+                    target: target
                 ))
                 .accessibilityIdentifier(
-                    "image-editor-layer-context-align-canvas-\(alignment.contextIdentifier)-\(layer.id.uuidString)"
+                    "image-editor-layer-context-align-\(target.rawValue)-\(alignment.contextIdentifier)-\(layer.id.uuidString)"
                 )
             }
         }
         .accessibilityIdentifier(
-            "image-editor-layer-context-align-canvas-\(layer.id.uuidString)"
+            "image-editor-layer-context-align-\(target.rawValue)-\(layer.id.uuidString)"
         )
+    }
+
+    private func canAlignLayersFromContext(
+        _ layerID: UUID,
+        alignment: ImageEditorLayerAlignment,
+        target: ImageEditorMoveAlignmentTarget
+    ) -> Bool {
+        switch target {
+        case .canvas:
+            viewModel.canAlignLayersFromContextToCanvas(
+                layerID,
+                alignment: alignment
+            )
+        case .pixelSelection:
+            viewModel.canAlignLayersFromContextToSelection(
+                layerID,
+                alignment: alignment
+            )
+        case .selectedLayers:
+            false
+        }
     }
 
     @ViewBuilder

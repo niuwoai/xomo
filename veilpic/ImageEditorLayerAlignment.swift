@@ -183,14 +183,12 @@ extension ImageEditorViewModel {
         _ clickedLayerID: UUID,
         alignment: ImageEditorLayerAlignment
     ) -> Bool {
-        let selectedIDs = layerContextSelectionIDs(for: clickedLayerID)
-        let indices = editableTransformLayerIndices(for: selectedIDs)
-        guard !indices.isEmpty else { return false }
         let canvasBounds = CGRect(origin: .zero, size: document.canvasSize)
-        return indices.contains { index in
-            let frame = document.layers[index].frame.standardized
-            return alignedFrame(frame, to: canvasBounds, alignment: alignment) != frame
-        }
+        return canAlignLayersFromContext(
+            clickedLayerID,
+            alignment: alignment,
+            targetBounds: canvasBounds
+        )
     }
 
     @discardableResult
@@ -204,6 +202,31 @@ extension ImageEditorViewModel {
         ) else { return false }
         prepareLayerContextSelection(for: clickedLayerID)
         alignSelectedLayersToCanvas(alignment)
+        return true
+    }
+
+    func canAlignLayersFromContextToSelection(
+        _ clickedLayerID: UUID,
+        alignment: ImageEditorLayerAlignment
+    ) -> Bool {
+        canAlignLayersFromContext(
+            clickedLayerID,
+            alignment: alignment,
+            targetBounds: selectionAlignmentTargetBounds()
+        )
+    }
+
+    @discardableResult
+    func alignLayersFromContextToSelection(
+        _ clickedLayerID: UUID,
+        alignment: ImageEditorLayerAlignment
+    ) -> Bool {
+        guard canAlignLayersFromContextToSelection(
+            clickedLayerID,
+            alignment: alignment
+        ) else { return false }
+        prepareLayerContextSelection(for: clickedLayerID)
+        alignSelectedLayersToSelection(alignment)
         return true
     }
 
@@ -453,6 +476,21 @@ extension ImageEditorViewModel {
         let bounds = selectedBounds.standardized
         guard !bounds.isNull, bounds.width > 0.1, bounds.height > 0.1 else { return nil }
         return bounds
+    }
+
+    private func canAlignLayersFromContext(
+        _ clickedLayerID: UUID,
+        alignment: ImageEditorLayerAlignment,
+        targetBounds: CGRect?
+    ) -> Bool {
+        guard let targetBounds else { return false }
+        let selectedIDs = layerContextSelectionIDs(for: clickedLayerID)
+        let indices = editableTransformLayerIndices(for: selectedIDs)
+        guard !indices.isEmpty else { return false }
+        return indices.contains { index in
+            let frame = document.layers[index].frame.standardized
+            return alignedFrame(frame, to: targetBounds, alignment: alignment) != frame
+        }
     }
 
     private func alignedFrame(
