@@ -2537,7 +2537,7 @@ struct ImageEditorScopeTests {
         )
         #expect(
             selectionEditSource.contains(
-                "guard copySelectedLayersToClipboard() else { return false }"
+                "guard copySelectedLayersToClipboard(to: pasteboard) else { return false }"
             )
         )
         for (field, action) in [

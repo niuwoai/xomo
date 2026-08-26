@@ -265,6 +265,7 @@ struct XomoAutomationTests {
             .string("pasteInPlace"),
             .string("copySelection"),
             .string("cutSelection"),
+            .string("cutSelectedLayers"),
             .string("copyMerged"),
             .string("copySelectedLayers")
         ]))
@@ -1150,8 +1151,12 @@ struct XomoAutomationTests {
         ))
 
         #expect(response.ok)
+        #expect(viewModel.document.selectedLayerID != viewModel.document.layers[layerIndex].id)
         #expect(viewModel.document.selectedLayer?.frame == frame)
-        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.clipboardPasteLayer"))
+        #expect(
+            viewModel.document.history.last?.title
+                == L10n.text("imageEditor.history.clipboardPasteObjects")
+        )
     }
 
     @Test func registryClipboardActionsRequireTheirOwnResourcesAndPreserveCopyFallbacks() throws {
@@ -1191,6 +1196,7 @@ struct XomoAutomationTests {
             "pasteInPlace",
             "copySelection",
             "cutSelection",
+            "cutSelectedLayers",
             "copySelectedLayers"
         ]
 
@@ -1268,7 +1274,7 @@ struct XomoAutomationTests {
         #expect(fallbackViewModel.document.layers.count == layerCountBeforeRejectedPaste + 1)
     }
 
-    @Test func registryClipboardCopyActionsReportTransparentOutputFailures() throws {
+    @Test func registryClipboardCopiesTransparentObjectsAsNativeEditableContent() throws {
         let viewModel = makeViewModel()
         let selectedLayerID = try #require(viewModel.document.selectedLayerID)
         let selectedLayerIndex = try #require(viewModel.document.selectedLayerIndex)
@@ -1277,6 +1283,9 @@ struct XomoAutomationTests {
         )
         let historyCountBeforeRequests = viewModel.document.history.count
         let undoCountBeforeRequests = viewModel.undoStack.count
+        let pasteboard = NSPasteboard.general
+        pasteboard.clearContents()
+        defer { pasteboard.clearContents() }
         let registry = XomoAutomationRegistry.shared
         registry.register(viewModel)
 
@@ -1288,8 +1297,13 @@ struct XomoAutomationTests {
                 name: "xomo.clipboard.action",
                 arguments: ["action": .string(action)]
             ))
-            #expect(!response.ok)
-            #expect(response.error?.contains("did not produce clipboard content") == true)
+            #expect(response.ok)
+            #expect(
+                pasteboard.data(
+                    forType: XomoLayerClipboardArchive.pasteboardType
+                ) != nil
+            )
+            #expect(pasteboard.data(forType: .png) == nil)
         }
 
         viewModel.selectAll()
@@ -1314,6 +1328,56 @@ struct XomoAutomationTests {
         #expect(undoCountAfterSelection == undoCountBeforeRequests + 1)
         #expect(viewModel.document.history.count == historyCountAfterSelection)
         #expect(viewModel.undoStack.count == undoCountAfterSelection)
+    }
+
+    @Test func registryExplicitlyCutsSelectedEditableObjectsDespiteAPixelSelection() throws {
+        let viewModel = makeViewModel()
+        let baseLayerID = try #require(viewModel.document.selectedLayerID)
+        let baseImageData = try #require(viewModel.document.selectedLayer?.image.qingtuPNGData())
+        let shape = ImageEditorLayer.shape(
+            name: "Automation badge",
+            frame: CGRect(x: 30, y: 24, width: 54, height: 28),
+            content: ImageEditorShapeContent(
+                kind: .rectangle,
+                fillColor: .systemIndigo,
+                fillOpacity: 1,
+                strokeColor: .white,
+                strokeWidth: 0,
+                strokeOpacity: 0,
+                cornerRadius: 7
+            )
+        )
+        viewModel.document.layers.append(shape)
+        viewModel.document.selectedLayerID = shape.id
+        viewModel.document.selectedLayerIDs = [shape.id]
+        viewModel.document.selection = .rectangle(CGRect(x: 2, y: 3, width: 8, height: 6))
+        let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
+        let pasteboard = NSPasteboard.general
+        pasteboard.clearContents()
+        defer { pasteboard.clearContents() }
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+
+        let response = registry.execute(request(
+            operation: "call",
+            name: "xomo.clipboard.action",
+            arguments: ["action": .string("cutSelectedLayers")]
+        ))
+
+        #expect(response.ok)
+        #expect(!viewModel.document.layers.contains { $0.id == shape.id })
+        #expect(viewModel.document.layers.contains { $0.id == baseLayerID })
+        #expect(viewModel.document.layers.first { $0.id == baseLayerID }?.image.qingtuPNGData() == baseImageData)
+        #expect(viewModel.document.selection != nil)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.undoStack.count == undoCount + 1)
+        #expect(pasteboard.data(forType: XomoLayerClipboardArchive.pasteboardType) != nil)
+        #expect(pasteboard.data(forType: .png) != nil)
+
+        viewModel.undo()
+        #expect(viewModel.document.layers.contains { $0.id == shape.id })
+        #expect(viewModel.document.selectedLayerID == shape.id)
     }
 
     @Test func registryAppliesExplicitSelectionFeatherRadius() throws {

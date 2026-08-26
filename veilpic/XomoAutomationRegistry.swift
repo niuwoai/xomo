@@ -5499,6 +5499,8 @@ final class XomoAutomationRegistry {
             try requireClipboardOutput(viewModel.copySelectionToClipboard(), action: action)
         case "cutSelection":
             try requireClipboardOutput(viewModel.cutSelectionToClipboard(), action: action)
+        case "cutSelectedLayers":
+            try requireClipboardOutput(viewModel.cutSelectedLayersToClipboard(), action: action)
         case "copyMerged":
             try requireClipboardOutput(viewModel.copyMergedToClipboard(), action: action)
         case "copySelectedLayers":
@@ -5531,7 +5533,15 @@ final class XomoAutomationRegistry {
                 "an active copyable selection or selected layers"
             )
         case "cutSelection":
-            requirement = (viewModel.canCutSelectionToClipboard, "a removable pixel selection")
+            requirement = (
+                viewModel.canCutSelectionToClipboard,
+                "a removable pixel selection or removable selected objects"
+            )
+        case "cutSelectedLayers":
+            requirement = (
+                viewModel.canCutSelectedLayersToClipboard,
+                "removable selected objects"
+            )
         case "copyMerged":
             requirement = (viewModel.canCopyMergedToClipboard, "a non-empty canvas")
         case "copySelectedLayers":
@@ -7306,8 +7316,8 @@ private extension XomoAutomationRegistry {
             "points": pointsSchema,
             "reveal": XomoAutomationSchema.boolean(description: "Reveal selected areas instead of masking them while painting")
         ], required: ["action"]),
-        tool("xomo.clipboard.action", "Copy or cut selected pixels and paste clipboard images as editable layers, including Xomo in-place paste.", [
-            "action": XomoAutomationSchema.string(description: "Clipboard action", values: ["pasteAsLayer", "pasteIntoSelection", "pasteInPlace", "copySelection", "cutSelection", "copyMerged", "copySelectedLayers"])
+        tool("xomo.clipboard.action", "Copy or cut pixel selections and native editable objects, then paste clipboard images or Xomo object archives as editable layers, including in-place paste.", [
+            "action": XomoAutomationSchema.string(description: "Clipboard action", values: ["pasteAsLayer", "pasteIntoSelection", "pasteInPlace", "copySelection", "cutSelection", "cutSelectedLayers", "copyMerged", "copySelectedLayers"])
         ], required: ["action"]),
         tool("xomo.channel.list", "List alpha channels."),
         tool("xomo.channel.create", "Create a blank alpha channel."),

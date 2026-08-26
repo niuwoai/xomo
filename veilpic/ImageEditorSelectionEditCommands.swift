@@ -1300,12 +1300,14 @@ extension ImageEditorViewModel {
     }
 
     @discardableResult
-    private func cutSelectedLayersToClipboard() -> Bool {
+    func cutSelectedLayersToClipboard(
+        to pasteboard: NSPasteboard = .general
+    ) -> Bool {
         guard canCutSelectedLayersToClipboard else {
             statusText = L10n.text("imageEditor.status.selectedLayerCutToClipboardFailed")
             return false
         }
-        guard copySelectedLayersToClipboard() else { return false }
+        guard copySelectedLayersToClipboard(to: pasteboard) else { return false }
         guard deleteSelectedLayer(
             historyTitle: L10n.text("imageEditor.history.selectedLayerCutToClipboard")
         ) else {
