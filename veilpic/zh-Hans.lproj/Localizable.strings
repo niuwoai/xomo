@@ -3628,8 +3628,11 @@
 "imageEditor.status.figmaSizeConstraintConflictsResolved" = "已修复全部 Figma 尺寸约束冲突";
 "imageEditor.properties.figmaComponentRole" = "组件语义";
 "imageEditor.action.copyFigmaSource" = "复制源节点引用";
+"imageEditor.action.openFigmaSourceURL" = "在 Figma 中打开";
 "imageEditor.action.copyFigmaSourceURL" = "复制 Figma 链接";
 "imageEditor.status.figmaSourceCopied" = "已复制 Figma 源节点引用";
+"imageEditor.status.figmaSourceOpened" = "已在 Figma 中打开源节点";
+"imageEditor.status.figmaSourceOpenFailed" = "无法打开安全的 Figma 源节点链接";
 "imageEditor.status.figmaSourceURLCopied" = "已复制 Figma 源节点链接";
 "imageEditor.properties.figmaImageFill" = "Figma 图片填充";
 "imageEditor.properties.figmaImageReference" = "图片引用";

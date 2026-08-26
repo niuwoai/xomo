@@ -3628,8 +3628,11 @@
 "imageEditor.status.figmaSizeConstraintConflictsResolved" = "Resolved all Figma size constraint conflicts";
 "imageEditor.properties.figmaComponentRole" = "Component role";
 "imageEditor.action.copyFigmaSource" = "Copy source reference";
+"imageEditor.action.openFigmaSourceURL" = "Open in Figma";
 "imageEditor.action.copyFigmaSourceURL" = "Copy Figma link";
 "imageEditor.status.figmaSourceCopied" = "Figma source reference copied";
+"imageEditor.status.figmaSourceOpened" = "Opened the source node in Figma";
+"imageEditor.status.figmaSourceOpenFailed" = "Could not open a trusted Figma source link";
 "imageEditor.status.figmaSourceURLCopied" = "Figma source link copied";
 "imageEditor.properties.figmaImageFill" = "Figma image fill";
 "imageEditor.properties.figmaImageReference" = "Image reference";

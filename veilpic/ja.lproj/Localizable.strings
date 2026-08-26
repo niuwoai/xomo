@@ -3628,8 +3628,11 @@
 "imageEditor.status.figmaSizeConstraintConflictsResolved" = "Figma サイズ制約の競合をすべて解決しました";
 "imageEditor.properties.figmaComponentRole" = "コンポーネントの役割";
 "imageEditor.action.copyFigmaSource" = "ソース参照をコピー";
+"imageEditor.action.openFigmaSourceURL" = "Figma で開く";
 "imageEditor.action.copyFigmaSourceURL" = "Figma リンクをコピー";
 "imageEditor.status.figmaSourceCopied" = "Figma ソース参照をコピーしました";
+"imageEditor.status.figmaSourceOpened" = "Figma でソースノードを開きました";
+"imageEditor.status.figmaSourceOpenFailed" = "信頼できる Figma ソースリンクを開けませんでした";
 "imageEditor.status.figmaSourceURLCopied" = "Figma ソースリンクをコピーしました";
 "imageEditor.properties.figmaImageFill" = "Figma 画像塗りつぶし";
 "imageEditor.properties.figmaImageReference" = "画像参照";

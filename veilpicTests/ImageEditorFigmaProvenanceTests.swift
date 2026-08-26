@@ -77,6 +77,67 @@ struct ImageEditorFigmaProvenanceTests {
         #expect(restored.layers.first?.xomoFigmaSizeConstraintDefaults == layer.xomoFigmaSizeConstraintDefaults)
     }
 
+    @Test func selectedFigmaSourceOpensOnlyItsRevalidatedCanonicalURL() throws {
+        let image = NSImage.transparent(size: CGSize(width: 20, height: 20))
+        var document = ImageEditorDocument(sourceName: "figma-source.png", image: image)
+        document.layers[0].xomoFigmaSourceURL = URL(
+            string: "https://figma.com/design/abc123/Checkout?node-id=1-60&utm_source=mail"
+        )
+        document.selectedLayerID = document.layers[0].id
+        document.selectedLayerIDs = [document.layers[0].id]
+        let viewModel = ImageEditorViewModel(document: document) { _ in }
+        var openedURLs: [URL] = []
+
+        #expect(viewModel.openSelectedFigmaSourceURL { url in
+            openedURLs.append(url)
+            return true
+        })
+        #expect(openedURLs.map(\.absoluteString) == [
+            "https://www.figma.com/design/abc123/Checkout?node-id=1-60"
+        ])
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.figmaSourceOpened"))
+
+        viewModel.document.layers[0].xomoFigmaSourceURL = URL(
+            string: "https://www.figma.com.evil.example/design/abc123/Checkout?node-id=1-60"
+        )
+        #expect(viewModel.selectedLayerOpenableFigmaSourceURL == nil)
+        #expect(!viewModel.openSelectedFigmaSourceURL { _ in
+            Issue.record("Untrusted source URL reached the system opener")
+            return true
+        })
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.figmaSourceOpenFailed"))
+    }
+
+    @Test func selectedFigmaSourceReportsSystemOpenFailureAndPropertyPanelUsesTheSafeRoute() throws {
+        let image = NSImage.transparent(size: CGSize(width: 20, height: 20))
+        var document = ImageEditorDocument(sourceName: "figma-source.png", image: image)
+        document.layers[0].xomoFigmaSourceURL = URL(
+            string: "https://www.figma.com/design/abc123/Checkout?node-id=1-60"
+        )
+        document.selectedLayerID = document.layers[0].id
+        document.selectedLayerIDs = [document.layers[0].id]
+        let viewModel = ImageEditorViewModel(document: document) { _ in }
+
+        var attemptedURL: URL?
+        #expect(!viewModel.openSelectedFigmaSourceURL { url in
+            attemptedURL = url
+            return false
+        })
+        #expect(attemptedURL?.absoluteString == "https://www.figma.com/design/abc123/Checkout?node-id=1-60")
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.figmaSourceOpenFailed"))
+
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        #expect(source.contains("if viewModel.selectedLayerOpenableFigmaSourceURL != nil"))
+        #expect(source.contains("viewModel.openSelectedFigmaSourceURL()"))
+        #expect(source.contains("image-editor-open-figma-source-url"))
+    }
+
     @Test func componentPropertyLocalOverrideUsesUndoAndRedo() throws {
         let image = NSImage.transparent(size: CGSize(width: 20, height: 20))
         var document = ImageEditorDocument(sourceName: "figma-component.png", image: image)

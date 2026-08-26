@@ -11216,6 +11216,14 @@ struct ImageEditorView: View {
                             .buttonStyle(EditorTextButtonStyle())
                             .focusable(false)
                             .accessibilityIdentifier("image-editor-copy-figma-source")
+                            if viewModel.selectedLayerOpenableFigmaSourceURL != nil {
+                                Button(L10n.text("imageEditor.action.openFigmaSourceURL")) {
+                                    viewModel.openSelectedFigmaSourceURL()
+                                }
+                                .buttonStyle(EditorTextButtonStyle())
+                                .focusable(false)
+                                .accessibilityIdentifier("image-editor-open-figma-source-url")
+                            }
                             if viewModel.selectedLayerFigmaSourceURL != nil {
                                 Button(L10n.text("imageEditor.action.copyFigmaSourceURL")) {
                                     viewModel.copySelectedFigmaSourceURL()

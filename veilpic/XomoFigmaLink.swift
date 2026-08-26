@@ -201,6 +201,15 @@ enum XomoFigmaClipboardPastePolicy {
     }
 }
 
+enum XomoFigmaSourceOpenPolicy {
+    static func canonicalURL(from candidate: URL?) -> URL? {
+        guard let candidate,
+              let preview = try? XomoFigmaLinkParser.parse(candidate.absoluteString)
+        else { return nil }
+        return preview.canonicalURL
+    }
+}
+
 enum XomoCanvasURLDropRoute: Equatable {
     case localFiles([URL])
     case figmaLink(String)
