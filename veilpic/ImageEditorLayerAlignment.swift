@@ -297,6 +297,34 @@ extension ImageEditorViewModel {
         return true
     }
 
+    func canDistributeLayerSpacingFromContext(
+        _ clickedLayerID: UUID,
+        distribution: ImageEditorLayerSpacingDistribution
+    ) -> Bool {
+        let selectedIDs = layerContextSelectionIDs(for: clickedLayerID)
+        let indices = editableTransformLayerIndices(for: selectedIDs)
+        guard let frames = distributedLayerSpacingFrames(
+            for: indices,
+            selectedIDs: selectedIDs,
+            distribution: distribution
+        ) else { return false }
+        return layerFramesContainChange(frames)
+    }
+
+    @discardableResult
+    func distributeLayerSpacingFromContext(
+        _ clickedLayerID: UUID,
+        distribution: ImageEditorLayerSpacingDistribution
+    ) -> Bool {
+        guard canDistributeLayerSpacingFromContext(
+            clickedLayerID,
+            distribution: distribution
+        ) else { return false }
+        prepareLayerContextSelection(for: clickedLayerID)
+        distributeSelectedLayerSpacing(distribution)
+        return true
+    }
+
     func alignSelectedLayers(_ alignment: ImageEditorLayerAlignment) {
         let indices = editableTransformLayerIndices()
         guard indices.count >= 2,
@@ -413,40 +441,16 @@ extension ImageEditorViewModel {
 
     func distributeSelectedLayerSpacing(_ distribution: ImageEditorLayerSpacingDistribution) {
         let indices = editableTransformLayerIndices()
-        guard indices.count >= 3 else {
+        guard let distributedFrames = distributedLayerSpacingFrames(
+            for: indices,
+            selectedIDs: document.selectedLayerIDs,
+            distribution: distribution
+        ) else {
             statusText = L10n.text("imageEditor.status.layerLocked")
             return
         }
 
-        let sortedLayers = indices
-            .map { document.layers[$0] }
-            .sorted { lhs, rhs in
-                distribution.sortValue(for: lhs.frame.standardized) < distribution.sortValue(for: rhs.frame.standardized)
-            }
-
-        guard let bounds = transformFrame(for: indices) else { return }
-        let totalLength = sortedLayers.reduce(CGFloat.zero) { partialResult, layer in
-            partialResult + distribution.length(of: layer.frame.standardized)
-        }
-        let availableLength = distribution.length(of: bounds)
-        let spacing = (availableLength - totalLength) / CGFloat(sortedLayers.count - 1)
-
-        var cursor = distribution.minimum(of: sortedLayers[0].frame.standardized)
-        var distributedFrames: [UUID: CGRect] = [:]
-        for offset in 0..<sortedLayers.count {
-            let layer = sortedLayers[offset]
-            var frame = layer.frame.standardized
-            if offset > 0 && offset < sortedLayers.count - 1 {
-                distribution.apply(origin: cursor, to: &frame)
-                distributedFrames[layer.id] = frame
-            }
-            cursor += distribution.length(of: frame) + spacing
-        }
-
-        guard distributedFrames.contains(where: { item in
-            guard let current = document.layers.first(where: { $0.id == item.key })?.frame.standardized else { return false }
-            return current != item.value
-        }) else { return }
+        guard layerFramesContainChange(distributedFrames) else { return }
 
         pushUndo()
         for index in document.layers.indices {
@@ -592,6 +596,42 @@ extension ImageEditorViewModel {
             else { return false }
             return current != item.value
         }
+    }
+
+    private func distributedLayerSpacingFrames(
+        for indices: [Int],
+        selectedIDs: Set<UUID>,
+        distribution: ImageEditorLayerSpacingDistribution
+    ) -> [UUID: CGRect]? {
+        guard indices.count >= 3 else { return nil }
+        let sortedLayers = indices
+            .map { document.layers[$0] }
+            .sorted { lhs, rhs in
+                distribution.sortValue(for: lhs.frame.standardized)
+                    < distribution.sortValue(for: rhs.frame.standardized)
+            }
+        guard let bounds = transformFrame(
+            for: indices,
+            selectedIDs: selectedIDs
+        ) else { return nil }
+        let totalLength = sortedLayers.reduce(CGFloat.zero) { partialResult, layer in
+            partialResult + distribution.length(of: layer.frame.standardized)
+        }
+        let spacing = (
+            distribution.length(of: bounds) - totalLength
+        ) / CGFloat(sortedLayers.count - 1)
+        var cursor = distribution.minimum(of: sortedLayers[0].frame.standardized)
+        var frames: [UUID: CGRect] = [:]
+        for offset in sortedLayers.indices {
+            let layer = sortedLayers[offset]
+            var frame = layer.frame.standardized
+            if offset > 0 && offset < sortedLayers.count - 1 {
+                distribution.apply(origin: cursor, to: &frame)
+                frames[layer.id] = frame
+            }
+            cursor += distribution.length(of: frame) + spacing
+        }
+        return frames
     }
 }
 

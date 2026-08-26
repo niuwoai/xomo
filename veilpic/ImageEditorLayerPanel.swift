@@ -2760,6 +2760,29 @@ extension ImageEditorView {
                     "image-editor-layer-context-distribute-\(distribution.rawValue)-\(layer.id.uuidString)"
                 )
             }
+
+            Divider()
+
+            ForEach(ImageEditorLayerSpacingDistribution.allCases) { distribution in
+                Button {
+                    viewModel.distributeLayerSpacingFromContext(
+                        layer.id,
+                        distribution: distribution
+                    )
+                } label: {
+                    Label(
+                        L10n.text(distribution.actionTitleKey),
+                        systemImage: distribution.optionBarSystemImage
+                    )
+                }
+                .disabled(!viewModel.canDistributeLayerSpacingFromContext(
+                    layer.id,
+                    distribution: distribution
+                ))
+                .accessibilityIdentifier(
+                    "image-editor-layer-context-distribute-spacing-\(distribution.rawValue)-\(layer.id.uuidString)"
+                )
+            }
         }
         .accessibilityIdentifier(
             "image-editor-layer-context-distribute-\(layer.id.uuidString)"
