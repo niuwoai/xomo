@@ -3164,6 +3164,13 @@ struct ImageEditorView: View {
 
     @discardableResult
     func deleteSelectedObjectFromKeyboard() -> Bool {
+        guard ImageEditorDeleteCommandDispatchGate.shouldDispatch(
+            event: .currentKeyEvent
+        ) else {
+            // A second AppKit route for the same physical Delete must remain
+            // consumed so it cannot fall through to history or text deletion.
+            return true
+        }
         if cancelPathAnchorDragForKeyboardCommand() {
             return true
         }
@@ -16717,6 +16724,24 @@ enum ImageEditorContextualDocumentDeletePolicy {
             return canRemoveSelectionPixels ? .clearSelectionPixels : nil
         }
         return canDeleteLayer ? .deleteSelectedLayer : nil
+    }
+}
+
+@MainActor
+enum ImageEditorDeleteCommandDispatchGate {
+    private static var lastDispatch: ImageEditorKeyboardShortcutEventSignature?
+
+    static func shouldDispatch(
+        event: ImageEditorKeyboardShortcutEventSignature?
+    ) -> Bool {
+        guard let event else { return true }
+        guard event != lastDispatch else { return false }
+        lastDispatch = event
+        return true
+    }
+
+    static func reset() {
+        lastDispatch = nil
     }
 }
 

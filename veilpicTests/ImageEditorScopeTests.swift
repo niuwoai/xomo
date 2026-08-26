@@ -4185,6 +4185,9 @@ struct ImageEditorScopeTests {
             viewSource[deleteStart.upperBound...].range(of: "private func performKeyboardShortcut(")
         )
         let deleteSource = viewSource[deleteStart.lowerBound..<deleteEnd.lowerBound]
+        let dispatchGate = try #require(
+            deleteSource.range(of: "ImageEditorDeleteCommandDispatchGate.shouldDispatch")
+        )
         let dragCancel = try #require(deleteSource.range(of: "cancelPathAnchorDragForKeyboardCommand()"))
         let pointerPolicy = try #require(deleteSource.range(of: "ImageEditorPendingPenPointerPolicy"))
         let pointerLatch = try #require(
@@ -4201,6 +4204,7 @@ struct ImageEditorScopeTests {
         let documentPolicy = try #require(
             deleteSource.range(of: "ImageEditorContextualDocumentDeletePolicy.resolve(")
         )
+        #expect(dispatchGate.lowerBound < dragCancel.lowerBound)
         #expect(dragCancel.lowerBound < pointerPolicy.lowerBound)
         #expect(pointerPolicy.lowerBound < pointerLatch.lowerBound)
         #expect(pointerLatch.lowerBound < pendingDelete.lowerBound)

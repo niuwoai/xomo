@@ -163,6 +163,71 @@ struct ImageEditorLayerDeletionTests {
         #expect(viewModel.document.selectedLayerID == importedID)
     }
 
+    @Test func onePhysicalDeleteEventRemovesOnlyTheFrontImportedLayer() throws {
+        ImageEditorDeleteCommandDispatchGate.reset()
+        defer { ImageEditorDeleteCommandDispatchGate.reset() }
+
+        let viewModel = makeViewModel()
+        #expect(viewModel.importImageLayer(
+            .transparent(size: CGSize(width: 32, height: 24)),
+            sourceName: "first.png"
+        ))
+        let firstImportedID = try #require(viewModel.document.selectedLayerID)
+        #expect(viewModel.importImageLayer(
+            .transparent(size: CGSize(width: 28, height: 20)),
+            sourceName: "front.png"
+        ))
+        let frontImportedID = try #require(viewModel.document.selectedLayerID)
+        let originalLayerCount = viewModel.document.layers.count
+        let historyCount = viewModel.document.history.count
+        let event = ImageEditorKeyboardShortcutEventSignature(
+            windowNumber: 63,
+            eventNumber: 1041,
+            timestamp: 104.1,
+            typeRawValue: NSEvent.EventType.keyDown.rawValue,
+            keyCode: 51
+        )
+
+        for _ in 0..<2 {
+            guard ImageEditorDeleteCommandDispatchGate.shouldDispatch(event: event) else {
+                continue
+            }
+            #expect(viewModel.deleteSelectedLayerFromKeyboardIfPossible())
+        }
+
+        #expect(viewModel.document.layers.count == originalLayerCount - 1)
+        #expect(!viewModel.document.layers.contains { $0.id == frontImportedID })
+        #expect(viewModel.document.layers.contains { $0.id == firstImportedID })
+        #expect(viewModel.document.selectedLayerID == firstImportedID)
+        #expect(viewModel.document.history.count == historyCount + 1)
+    }
+
+    @Test func independentDeleteEventsAndMouseCommandsRemainIndependent() {
+        ImageEditorDeleteCommandDispatchGate.reset()
+        defer { ImageEditorDeleteCommandDispatchGate.reset() }
+
+        let first = ImageEditorKeyboardShortcutEventSignature(
+            windowNumber: 63,
+            eventNumber: 1042,
+            timestamp: 104.2,
+            typeRawValue: NSEvent.EventType.keyDown.rawValue,
+            keyCode: 51
+        )
+        let second = ImageEditorKeyboardShortcutEventSignature(
+            windowNumber: 63,
+            eventNumber: 1043,
+            timestamp: 104.3,
+            typeRawValue: NSEvent.EventType.keyDown.rawValue,
+            keyCode: 51
+        )
+
+        #expect(ImageEditorDeleteCommandDispatchGate.shouldDispatch(event: first))
+        #expect(!ImageEditorDeleteCommandDispatchGate.shouldDispatch(event: first))
+        #expect(ImageEditorDeleteCommandDispatchGate.shouldDispatch(event: second))
+        #expect(ImageEditorDeleteCommandDispatchGate.shouldDispatch(event: nil))
+        #expect(ImageEditorDeleteCommandDispatchGate.shouldDispatch(event: nil))
+    }
+
     @Test func importedImageEndsOldPixelSelectionSoDeleteOwnsTheNewObject() throws {
         let viewModel = makeViewModel()
         let originalLayerIDs = viewModel.document.layers.map(\.id)
