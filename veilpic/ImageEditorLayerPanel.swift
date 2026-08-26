@@ -2658,6 +2658,7 @@ extension ImageEditorView {
 
     private func layerContextAlignmentMenu(_ layer: ImageEditorLayer) -> some View {
         Menu(L10n.text("imageEditor.menu.layer.align")) {
+            layerContextAlignmentTargetMenu(layer, target: .selectedLayers)
             layerContextAlignmentTargetMenu(layer, target: .canvas)
             layerContextAlignmentTargetMenu(layer, target: .pixelSelection)
         }
@@ -2674,6 +2675,11 @@ extension ImageEditorView {
             ForEach(ImageEditorLayerAlignment.allCases) { alignment in
                 Button {
                     switch target {
+                    case .selectedLayers:
+                        viewModel.alignLayersFromContextToSelectedLayers(
+                            layer.id,
+                            alignment: alignment
+                        )
                     case .canvas:
                         viewModel.alignLayersFromContextToCanvas(
                             layer.id,
@@ -2684,8 +2690,6 @@ extension ImageEditorView {
                             layer.id,
                             alignment: alignment
                         )
-                    case .selectedLayers:
-                        break
                     }
                 } label: {
                     Label(
@@ -2714,6 +2718,11 @@ extension ImageEditorView {
         target: ImageEditorMoveAlignmentTarget
     ) -> Bool {
         switch target {
+        case .selectedLayers:
+            viewModel.canAlignLayersFromContextToSelectedLayers(
+                layerID,
+                alignment: alignment
+            )
         case .canvas:
             viewModel.canAlignLayersFromContextToCanvas(
                 layerID,
@@ -2724,8 +2733,6 @@ extension ImageEditorView {
                 layerID,
                 alignment: alignment
             )
-        case .selectedLayers:
-            false
         }
     }
 

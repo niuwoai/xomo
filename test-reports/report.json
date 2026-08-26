@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-27 05:17:43 +0800",
+  "generated_at": "2026-08-27 05:31:42 +0800",
   "total": 3,
   "passed": 3,
   "failed": 0,
@@ -9,40 +9,40 @@
   "jobs": 1,
   "results": [
     {
-      "suite": "ImageEditorLayerSelectionAlignmentContextTests",
-      "method": "missingEmptyLockedInvalidAndRepeatedTargetsAreAtomicNoOps",
-      "identifier": "veilpicTests/ImageEditorLayerSelectionAlignmentContextTests/missingEmptyLockedInvalidAndRepeatedTargetsAreAtomicNoOps()",
-      "file": "ImageEditorLayerSelectionAlignmentContextTests.swift",
+      "suite": "ImageEditorLayerPeerAlignmentContextTests",
+      "method": "selectedContextAlignsLayersToTheirSharedBoundsAndUndoRestoresFrames",
+      "identifier": "veilpicTests/ImageEditorLayerPeerAlignmentContextTests/selectedContextAlignsLayersToTheirSharedBoundsAndUndoRestoresFrames()",
+      "file": "ImageEditorLayerPeerAlignmentContextTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.16,
+      "duration": 3.573,
       "infrastructure_retries": 0,
       "issues": [],
-      "log": "ImageEditorLayerSelectionAlignmentContextTests.missingEmptyLockedInvalidAndRepeatedTargetsAreAtomicNoOps.log"
+      "log": "ImageEditorLayerPeerAlignmentContextTests.selectedContextAlignsLayersToTheirSharedBoundsAndUndoRestoresFrames.log"
     },
     {
-      "suite": "ImageEditorLayerSelectionAlignmentContextTests",
-      "method": "selectedContextAlignsEverySelectedLayerToPixelSelection",
-      "identifier": "veilpicTests/ImageEditorLayerSelectionAlignmentContextTests/selectedContextAlignsEverySelectedLayerToPixelSelection()",
-      "file": "ImageEditorLayerSelectionAlignmentContextTests.swift",
+      "suite": "ImageEditorLayerPeerAlignmentContextTests",
+      "method": "singleInvalidLockedAndRepeatedTargetsAreAtomicNoOps",
+      "identifier": "veilpicTests/ImageEditorLayerPeerAlignmentContextTests/singleInvalidLockedAndRepeatedTargetsAreAtomicNoOps()",
+      "file": "ImageEditorLayerPeerAlignmentContextTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.139,
+      "duration": 3.211,
       "infrastructure_retries": 0,
       "issues": [],
-      "log": "ImageEditorLayerSelectionAlignmentContextTests.selectedContextAlignsEverySelectedLayerToPixelSelection.log"
+      "log": "ImageEditorLayerPeerAlignmentContextTests.singleInvalidLockedAndRepeatedTargetsAreAtomicNoOps.log"
     },
     {
-      "suite": "ImageEditorLayerSelectionAlignmentContextTests",
-      "method": "unselectedContextUsesRasterPixelBoundsAndUndoRestoresFrame",
-      "identifier": "veilpicTests/ImageEditorLayerSelectionAlignmentContextTests/unselectedContextUsesRasterPixelBoundsAndUndoRestoresFrame()",
-      "file": "ImageEditorLayerSelectionAlignmentContextTests.swift",
+      "suite": "ImageEditorLayerPeerAlignmentContextTests",
+      "method": "unselectedGroupContextAlignsItsExpandedChildrenOnly",
+      "identifier": "veilpicTests/ImageEditorLayerPeerAlignmentContextTests/unselectedGroupContextAlignsItsExpandedChildrenOnly()",
+      "file": "ImageEditorLayerPeerAlignmentContextTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.152,
+      "duration": 3.168,
       "infrastructure_retries": 0,
       "issues": [],
-      "log": "ImageEditorLayerSelectionAlignmentContextTests.unselectedContextUsesRasterPixelBoundsAndUndoRestoresFrame.log"
+      "log": "ImageEditorLayerPeerAlignmentContextTests.unselectedGroupContextAlignsItsExpandedChildrenOnly.log"
     }
   ]
 }

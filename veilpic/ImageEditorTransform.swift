@@ -991,7 +991,14 @@ extension ImageEditorViewModel {
     }
 
     func transformFrame(for indices: [Int]) -> CGRect? {
-        let shouldUseLayerFrameFallback = document.selectedLayerIDs.contains { selectedID in
+        transformFrame(for: indices, selectedIDs: document.selectedLayerIDs)
+    }
+
+    func transformFrame(
+        for indices: [Int],
+        selectedIDs: Set<UUID>
+    ) -> CGRect? {
+        let shouldUseLayerFrameFallback = selectedIDs.contains { selectedID in
             document.layers.contains { $0.id == selectedID && $0.isGroup }
         } || indices.contains { index in
             let layer = document.layers[index]

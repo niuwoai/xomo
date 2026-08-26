@@ -179,6 +179,38 @@ extension ImageEditorViewModel {
         !editableTransformLayerIndices().isEmpty
     }
 
+    func canAlignLayersFromContextToSelectedLayers(
+        _ clickedLayerID: UUID,
+        alignment: ImageEditorLayerAlignment
+    ) -> Bool {
+        let selectedIDs = layerContextSelectionIDs(for: clickedLayerID)
+        let indices = editableTransformLayerIndices(for: selectedIDs)
+        guard indices.count >= 2,
+              let targetBounds = transformFrame(
+                  for: indices,
+                  selectedIDs: selectedIDs
+              )
+        else { return false }
+        return indices.contains { index in
+            let frame = document.layers[index].frame.standardized
+            return alignedFrame(frame, to: targetBounds, alignment: alignment) != frame
+        }
+    }
+
+    @discardableResult
+    func alignLayersFromContextToSelectedLayers(
+        _ clickedLayerID: UUID,
+        alignment: ImageEditorLayerAlignment
+    ) -> Bool {
+        guard canAlignLayersFromContextToSelectedLayers(
+            clickedLayerID,
+            alignment: alignment
+        ) else { return false }
+        prepareLayerContextSelection(for: clickedLayerID)
+        alignSelectedLayers(alignment)
+        return true
+    }
+
     func canAlignLayersFromContextToCanvas(
         _ clickedLayerID: UUID,
         alignment: ImageEditorLayerAlignment
