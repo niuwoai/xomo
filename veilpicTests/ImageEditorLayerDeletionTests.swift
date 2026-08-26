@@ -301,6 +301,48 @@ struct ImageEditorLayerDeletionTests {
         #expect(!viewModel.document.layers.contains { $0.id == importedID })
     }
 
+    @Test func deliveryObjectsKeepGlobalDeleteAvailableWhenTheLastLayerCannotBeRemoved() {
+        let viewModel = makeViewModel()
+        let onlyLayer = layer("Only", in: viewModel)
+        viewModel.document.layers = [onlyLayer]
+        select([onlyLayer.id], primary: onlyLayer.id, in: viewModel)
+        let historyCount = viewModel.document.history.count
+        #expect(!viewModel.canDeleteLayer)
+
+        let slice = ImageEditorSlice(
+            name: "Hero slice",
+            frame: CGRect(x: 4, y: 5, width: 20, height: 16)
+        )
+        viewModel.document.slices = [slice]
+        viewModel.exportSettings.scope = .slice
+        viewModel.exportSettings.sliceID = slice.id
+        #expect(viewModel.canDeleteSelectedDeliveryObject)
+        #expect(viewModel.deleteSelectedDeliveryObjectIfNeeded())
+        #expect(viewModel.document.slices.isEmpty)
+        #expect(!viewModel.canDeleteSelectedDeliveryObject)
+
+        let hotspot = ImageEditorHotspot(
+            name: "Hero link",
+            frame: CGRect(x: 7, y: 8, width: 18, height: 14),
+            url: "https://example.com"
+        )
+        viewModel.document.hotspots = [hotspot]
+        viewModel.selectedHotspotID = hotspot.id
+        #expect(viewModel.canDeleteSelectedDeliveryObject)
+        #expect(viewModel.deleteSelectedDeliveryObjectIfNeeded())
+        #expect(viewModel.document.hotspots.isEmpty)
+        #expect(!viewModel.canDeleteSelectedDeliveryObject)
+        #expect(viewModel.document.layers.map(\.id) == [onlyLayer.id])
+        #expect(viewModel.document.history.count == historyCount + 2)
+
+        viewModel.selectedHotspotID = UUID()
+        #expect(!viewModel.canDeleteSelectedDeliveryObject)
+        viewModel.selectedHotspotID = nil
+        viewModel.exportSettings.scope = .slice
+        viewModel.exportSettings.sliceID = UUID()
+        #expect(!viewModel.canDeleteSelectedDeliveryObject)
+    }
+
     @Test func deleteKeyLeavesTheLayerForPixelDeletionWhenASelectionExists() throws {
         let viewModel = makeViewModel()
         let importedImage = NSImage.transparent(size: NSSize(width: 48, height: 36))

@@ -214,12 +214,17 @@ extension ImageEditorView {
             cutSelectionToLayer: { performCutSelectionToLayer() },
             canCutSelectionToLayer: viewModel.canCutSelectionToNewLayer,
             deleteSelectedObject: { deleteSelectedObjectFromKeyboard() },
-            canDeleteSelectedObject: ImageEditorContextualDocumentDeletePolicy.resolve(
+            canDeleteSelectedObject: canDeleteSelectedObjectFromEditMenu
+        )
+    }
+
+    private var canDeleteSelectedObjectFromEditMenu: Bool {
+        viewModel.canDeleteSelectedDeliveryObject
+            || ImageEditorContextualDocumentDeletePolicy.resolve(
                 hasSelection: viewModel.hasSelection,
                 canRemoveSelectionPixels: viewModel.canRemoveSelectionPixels,
                 canDeleteLayer: viewModel.canDeleteLayer
             ) != nil
-        )
     }
 
     private var canPresentSelectionFillPanel: Bool {

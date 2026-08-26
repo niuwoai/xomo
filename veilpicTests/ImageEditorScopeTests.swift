@@ -2077,7 +2077,9 @@ struct ImageEditorScopeTests {
         #expect(viewSource.contains("viewModel.clearSelectionPixels()"))
         #expect(viewSource.contains(".disabled(!viewModel.canRemoveSelectionPixels)"))
         #expect(menuSource.contains("canRemoveSelectionPixels: viewModel.canRemoveSelectionPixels"))
-        #expect(menuSource.contains("canDeleteSelectedObject: ImageEditorContextualDocumentDeletePolicy.resolve("))
+        #expect(menuSource.contains("canDeleteSelectedObject: canDeleteSelectedObjectFromEditMenu"))
+        #expect(menuSource.contains("viewModel.canDeleteSelectedDeliveryObject"))
+        #expect(menuSource.contains("ImageEditorContextualDocumentDeletePolicy.resolve("))
         #expect(commandSource.contains("actions?.deleteSelectedObject()"))
         #expect(commandSource.contains(".disabled(actions?.canDeleteSelectedObject != true)"))
     }
