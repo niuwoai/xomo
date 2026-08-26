@@ -2205,6 +2205,8 @@ extension ImageEditorView {
 
                 layerContextLinksMenu(layer)
 
+                layerContextLockMenu(layer)
+
                 Divider()
                 Button {
                     viewModel.prepareLayerContextSelection(for: layer.id)
@@ -2680,6 +2682,97 @@ extension ImageEditorView {
             .accessibilityIdentifier("image-editor-layer-context-unlink-\(layer.id.uuidString)")
         }
         .accessibilityIdentifier("image-editor-layer-context-links-\(layer.id.uuidString)")
+    }
+
+    private func layerContextLockMenu(_ layer: ImageEditorLayer) -> some View {
+        Menu(L10n.text("imageEditor.menu.layer.lock")) {
+            layerContextLockButton(
+                layer,
+                kind: .full,
+                isLocked: true,
+                titleKey: "imageEditor.action.layerLockSelected",
+                systemImage: "lock.fill"
+            )
+            layerContextLockButton(
+                layer,
+                kind: .full,
+                isLocked: false,
+                titleKey: "imageEditor.action.layerUnlockSelected",
+                systemImage: "lock.open"
+            )
+            Divider()
+            layerContextLockButton(
+                layer,
+                kind: .pixels,
+                isLocked: true,
+                titleKey: "imageEditor.action.layerPixelsLockSelected",
+                systemImage: "photo.fill"
+            )
+            layerContextLockButton(
+                layer,
+                kind: .pixels,
+                isLocked: false,
+                titleKey: "imageEditor.action.layerPixelsUnlockSelected",
+                systemImage: "photo"
+            )
+            Divider()
+            layerContextLockButton(
+                layer,
+                kind: .position,
+                isLocked: true,
+                titleKey: "imageEditor.action.layerPositionLockSelected",
+                systemImage: "arrow.up.left.and.arrow.down.right.circle.fill"
+            )
+            layerContextLockButton(
+                layer,
+                kind: .position,
+                isLocked: false,
+                titleKey: "imageEditor.action.layerPositionUnlockSelected",
+                systemImage: "arrow.up.left.and.arrow.down.right.circle"
+            )
+            Divider()
+            layerContextLockButton(
+                layer,
+                kind: .transparentPixels,
+                isLocked: true,
+                titleKey: "imageEditor.action.layerTransparentPixelsLockSelected",
+                systemImage: "square.split.2x2.fill"
+            )
+            layerContextLockButton(
+                layer,
+                kind: .transparentPixels,
+                isLocked: false,
+                titleKey: "imageEditor.action.layerTransparentPixelsUnlockSelected",
+                systemImage: "square.split.2x2"
+            )
+        }
+        .accessibilityIdentifier("image-editor-layer-context-locks-\(layer.id.uuidString)")
+    }
+
+    private func layerContextLockButton(
+        _ layer: ImageEditorLayer,
+        kind: ImageEditorLayerLockKind,
+        isLocked: Bool,
+        titleKey: String,
+        systemImage: String
+    ) -> some View {
+        Button {
+            viewModel.setLayersLockFromContext(
+                layer.id,
+                kind: kind,
+                isLocked: isLocked
+            )
+        } label: {
+            Label(L10n.text(titleKey), systemImage: systemImage)
+        }
+        .disabled(!viewModel.canSetLayersLockFromContext(
+            layer.id,
+            kind: kind,
+            isLocked: isLocked
+        ))
+        .accessibilityIdentifier(
+            "image-editor-layer-context-lock-\(kind.rawValue)-\(isLocked ? "on" : "off")-\(layer.id.uuidString)"
+        )
     }
 
     private func layerContextStyleMenu(_ layer: ImageEditorLayer) -> some View {

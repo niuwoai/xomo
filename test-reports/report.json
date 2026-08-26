@@ -1,24 +1,48 @@
 {
-  "generated_at": "2026-08-27 03:54:47 +0800",
-  "total": 1,
-  "passed": 1,
+  "generated_at": "2026-08-27 04:12:09 +0800",
+  "total": 3,
+  "passed": 3,
   "failed": 0,
-  "total_tests": 1,
-  "passed_tests": 1,
+  "total_tests": 3,
+  "passed_tests": 3,
   "failed_tests_in_failed_groups": 0,
   "jobs": 1,
   "results": [
     {
-      "suite": "ImageEditorLayerDeletionTests",
-      "method": "onePhysicalDeleteEventRemovesOnlyTheFrontImportedLayer",
-      "identifier": "veilpicTests/ImageEditorLayerDeletionTests/onePhysicalDeleteEventRemovesOnlyTheFrontImportedLayer()",
-      "file": "ImageEditorLayerDeletionTests.swift",
+      "suite": "ImageEditorLayerLockContextTests",
+      "method": "selectedContextLocksSupportedPropertiesInOneTransactionAndRejectsNoOp",
+      "identifier": "veilpicTests/ImageEditorLayerLockContextTests/selectedContextLocksSupportedPropertiesInOneTransactionAndRejectsNoOp()",
+      "file": "ImageEditorLayerLockContextTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.918,
+      "duration": 3.455,
       "infrastructure_retries": 0,
       "issues": [],
-      "log": "ImageEditorLayerDeletionTests.onePhysicalDeleteEventRemovesOnlyTheFrontImportedLayer.log"
+      "log": "ImageEditorLayerLockContextTests.selectedContextLocksSupportedPropertiesInOneTransactionAndRejectsNoOp.log"
+    },
+    {
+      "suite": "ImageEditorLayerLockContextTests",
+      "method": "unselectedContextTargetsOnlyClickedLayerAndFullUnlockClearsEveryLock",
+      "identifier": "veilpicTests/ImageEditorLayerLockContextTests/unselectedContextTargetsOnlyClickedLayerAndFullUnlockClearsEveryLock()",
+      "file": "ImageEditorLayerLockContextTests.swift",
+      "test_count": 1,
+      "passed": true,
+      "duration": 3.291,
+      "infrastructure_retries": 0,
+      "issues": [],
+      "log": "ImageEditorLayerLockContextTests.unselectedContextTargetsOnlyClickedLayerAndFullUnlockClearsEveryLock.log"
+    },
+    {
+      "suite": "ImageEditorLayerLockContextTests",
+      "method": "unsupportedAndUnknownContextLocksAreAtomicNoOps",
+      "identifier": "veilpicTests/ImageEditorLayerLockContextTests/unsupportedAndUnknownContextLocksAreAtomicNoOps()",
+      "file": "ImageEditorLayerLockContextTests.swift",
+      "test_count": 1,
+      "passed": true,
+      "duration": 3.121,
+      "infrastructure_retries": 0,
+      "issues": [],
+      "log": "ImageEditorLayerLockContextTests.unsupportedAndUnknownContextLocksAreAtomicNoOps.log"
     }
   ]
 }

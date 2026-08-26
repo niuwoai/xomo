@@ -10167,15 +10167,15 @@ final class ImageEditorViewModel: ObservableObject {
         )
     }
 
-    private func canToggleTransparentPixelsLock(for layer: ImageEditorLayer) -> Bool {
+    func canToggleTransparentPixelsLock(for layer: ImageEditorLayer) -> Bool {
         !layer.isGroup && !layer.isAdjustment && !layer.isFilter && !layer.isSolidColorFill && !layer.isPatternFill && !layer.isGradientFill && !layer.isText && !layer.isShape
     }
 
-    private func canTogglePixelsLock(for layer: ImageEditorLayer) -> Bool {
+    func canTogglePixelsLock(for layer: ImageEditorLayer) -> Bool {
         !layer.isAdjustment && !layer.isFilter && !layer.isSolidColorFill && !layer.isPatternFill && !layer.isGradientFill
     }
 
-    private func canTogglePositionLock(for layer: ImageEditorLayer) -> Bool {
+    func canTogglePositionLock(for layer: ImageEditorLayer) -> Bool {
         !layer.isAdjustment && !layer.isFilter && !layer.isSolidColorFill && !layer.isPatternFill && !layer.isGradientFill
     }
 
