@@ -50,6 +50,58 @@ struct ImageEditorHistoryTests {
         #expect(ImageEditorTransformControlsCommandDispatchGate.shouldDispatch(event: nil))
     }
 
+    @Test func onePhysicalLayerViaCutShortcutCreatesOnlyOneLayer() {
+        ImageEditorLayerCutCommandDispatchGate.reset()
+        defer { ImageEditorLayerCutCommandDispatchGate.reset() }
+
+        let canvasSize = NSSize(width: 48, height: 36)
+        let image = testImage(color: .systemPink, size: canvasSize)
+        let viewModel = ImageEditorViewModel(
+            sourceName: "layer-via-cut.png",
+            image: image
+        ) { _ in }
+        viewModel.replaceSelectedLayerImageForTesting(
+            image,
+            historyTitle: L10n.text("imageEditor.history.brush")
+        )
+        viewModel.createRectSelection(
+            from: CGPoint(x: 8, y: 6),
+            to: CGPoint(x: 28, y: 22)
+        )
+        #expect(viewModel.canCutSelectionToNewLayer)
+        let layerCount = viewModel.document.layers.count
+        let historyCount = viewModel.document.history.count
+        let event = ImageEditorKeyboardShortcutEventSignature(
+            windowNumber: 53,
+            eventNumber: 1001,
+            timestamp: 100.1,
+            typeRawValue: NSEvent.EventType.keyDown.rawValue,
+            keyCode: 38
+        )
+
+        for _ in 0..<2 {
+            guard ImageEditorLayerCutCommandDispatchGate.shouldDispatch(
+                event: event
+            ) else { continue }
+            viewModel.cutSelectionToNewLayer()
+        }
+
+        #expect(viewModel.document.layers.count == layerCount + 1)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(
+            viewModel.document.history.last?.title
+                == L10n.text("imageEditor.history.selectionCutLayer")
+        )
+    }
+
+    @Test func layerViaCutMouseBoundariesRemainIndependentWithoutAKeyEvent() {
+        ImageEditorLayerCutCommandDispatchGate.reset()
+        defer { ImageEditorLayerCutCommandDispatchGate.reset() }
+
+        #expect(ImageEditorLayerCutCommandDispatchGate.shouldDispatch(event: nil))
+        #expect(ImageEditorLayerCutCommandDispatchGate.shouldDispatch(event: nil))
+    }
+
     @Test func onePhysicalFileShortcutDispatchesEachActionOnlyOnce() {
         let event = ImageEditorKeyboardShortcutEventSignature(
             windowNumber: 43,

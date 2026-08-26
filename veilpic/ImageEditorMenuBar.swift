@@ -211,7 +211,7 @@ extension ImageEditorView {
             canCopySelectionToLayer: viewModel.canCopySelectionToNewLayer,
             copyMergedToLayer: { viewModel.copyMergedToNewLayer() },
             canCopyMergedToLayer: viewModel.canCopyMergedToNewLayer,
-            cutSelectionToLayer: { viewModel.cutSelectionToNewLayer() },
+            cutSelectionToLayer: { performCutSelectionToLayer() },
             canCutSelectionToLayer: viewModel.canCutSelectionToNewLayer,
             deleteSelectedObject: { deleteSelectedObjectFromKeyboard() },
             canDeleteSelectedObject: ImageEditorContextualDocumentDeletePolicy.resolve(
@@ -276,8 +276,9 @@ extension ImageEditorView {
         }
         .disabled(!viewModel.canCopySelectionToNewLayer)
         Button(L10n.text("imageEditor.action.selectionCutLayer")) {
-            viewModel.cutSelectionToNewLayer()
+            performCutSelectionToLayer()
         }
+        .keyboardShortcut("j", modifiers: [.command, .shift])
         .disabled(!viewModel.canCutSelectionToNewLayer)
         Button(L10n.text("imageEditor.action.layerDelete")) {
             viewModel.deleteSelectedLayer()

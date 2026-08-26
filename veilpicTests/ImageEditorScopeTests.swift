@@ -2041,10 +2041,21 @@ struct ImageEditorScopeTests {
         #expect(layerMenuSource.contains("viewModel.copySelectionToNewLayer()"))
         #expect(layerMenuSource.contains("viewModel.canCopySelectionToNewLayer"))
         #expect(layerMenuSource.contains("imageEditor.action.selectionCutLayer"))
-        #expect(layerMenuSource.contains("viewModel.cutSelectionToNewLayer()"))
+        #expect(layerMenuSource.contains("performCutSelectionToLayer()"))
+        #expect(layerMenuSource.contains(".keyboardShortcut(\"j\", modifiers: [.command, .shift])"))
         #expect(layerMenuSource.contains("viewModel.canCutSelectionToNewLayer"))
         #expect(viewSource.contains("if key == \"j\", relevantFlags == [.command, .shift] { return .cutSelectionToLayer }"))
-        #expect(viewSource.contains("case .cutSelectionToLayer: viewModel.cutSelectionToNewLayer()"))
+        #expect(viewSource.contains("case .cutSelectionToLayer: performCutSelectionToLayer()"))
+        let helperStart = try #require(viewSource.range(of: "func performCutSelectionToLayer()"))
+        let helperEnd = try #require(
+            viewSource[helperStart.upperBound...].range(of: "\n    }")
+        )
+        let helperSource = viewSource[helperStart.lowerBound..<helperEnd.upperBound]
+        let gate = try #require(
+            helperSource.range(of: "ImageEditorLayerCutCommandDispatchGate.shouldDispatch")
+        )
+        let cut = try #require(helperSource.range(of: "viewModel.cutSelectionToNewLayer()"))
+        #expect(gate.lowerBound < cut.lowerBound)
     }
 
     @Test func clearSelectionControlsUseRemovalPermissionInsteadOfGeneralPixelEditing() throws {
@@ -2490,6 +2501,11 @@ struct ImageEditorScopeTests {
         #expect(
             menuBarSource.contains(
                 "toggleFreeTransform: { performToggleTransformControls() }"
+            )
+        )
+        #expect(
+            menuBarSource.contains(
+                "cutSelectionToLayer: { performCutSelectionToLayer() }"
             )
         )
         #expect(
