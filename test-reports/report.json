@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-27 04:34:23 +0800",
+  "generated_at": "2026-08-27 04:46:34 +0800",
   "total": 3,
   "passed": 3,
   "failed": 0,
@@ -9,40 +9,40 @@
   "jobs": 1,
   "results": [
     {
-      "suite": "ImageEditorLayerVisibilityFocusContextTests",
-      "method": "selectedGroupContextIsolationIncludesDescendantsAndRepeatPreservesRedo",
-      "identifier": "veilpicTests/ImageEditorLayerVisibilityFocusContextTests/selectedGroupContextIsolationIncludesDescendantsAndRepeatPreservesRedo()",
-      "file": "ImageEditorLayerVisibilityFocusContextTests.swift",
+      "suite": "ImageEditorLayerGroupExpansionContextTests",
+      "method": "ordinaryInvalidAndRepeatedContextExpansionAreAtomicNoOps",
+      "identifier": "veilpicTests/ImageEditorLayerGroupExpansionContextTests/ordinaryInvalidAndRepeatedContextExpansionAreAtomicNoOps()",
+      "file": "ImageEditorLayerGroupExpansionContextTests.swift",
       "test_count": 1,
       "passed": true,
       "duration": 3.133,
       "infrastructure_retries": 0,
       "issues": [],
-      "log": "ImageEditorLayerVisibilityFocusContextTests.selectedGroupContextIsolationIncludesDescendantsAndRepeatPreservesRedo.log"
+      "log": "ImageEditorLayerGroupExpansionContextTests.ordinaryInvalidAndRepeatedContextExpansionAreAtomicNoOps.log"
     },
     {
-      "suite": "ImageEditorLayerVisibilityFocusContextTests",
-      "method": "showAllFromContextIsGlobalKeepsSelectionAndRejectsInvalidOrRepeat",
-      "identifier": "veilpicTests/ImageEditorLayerVisibilityFocusContextTests/showAllFromContextIsGlobalKeepsSelectionAndRejectsInvalidOrRepeat()",
-      "file": "ImageEditorLayerVisibilityFocusContextTests.swift",
+      "suite": "ImageEditorLayerGroupExpansionContextTests",
+      "method": "selectedGroupContextPreservesVisiblePeerAndExpandsWholeBranch",
+      "identifier": "veilpicTests/ImageEditorLayerGroupExpansionContextTests/selectedGroupContextPreservesVisiblePeerAndExpandsWholeBranch()",
+      "file": "ImageEditorLayerGroupExpansionContextTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.142,
+      "duration": 3.133,
       "infrastructure_retries": 0,
       "issues": [],
-      "log": "ImageEditorLayerVisibilityFocusContextTests.showAllFromContextIsGlobalKeepsSelectionAndRejectsInvalidOrRepeat.log"
+      "log": "ImageEditorLayerGroupExpansionContextTests.selectedGroupContextPreservesVisiblePeerAndExpandsWholeBranch.log"
     },
     {
-      "suite": "ImageEditorLayerVisibilityFocusContextTests",
-      "method": "unselectedChildContextIsolationKeepsItsAncestorAndHidesSibling",
-      "identifier": "veilpicTests/ImageEditorLayerVisibilityFocusContextTests/unselectedChildContextIsolationKeepsItsAncestorAndHidesSibling()",
-      "file": "ImageEditorLayerVisibilityFocusContextTests.swift",
+      "suite": "ImageEditorLayerGroupExpansionContextTests",
+      "method": "unselectedGroupContextRecursivelyCollapsesOnlyClickedBranch",
+      "identifier": "veilpicTests/ImageEditorLayerGroupExpansionContextTests/unselectedGroupContextRecursivelyCollapsesOnlyClickedBranch()",
+      "file": "ImageEditorLayerGroupExpansionContextTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.164,
+      "duration": 3.144,
       "infrastructure_retries": 0,
       "issues": [],
-      "log": "ImageEditorLayerVisibilityFocusContextTests.unselectedChildContextIsolationKeepsItsAncestorAndHidesSibling.log"
+      "log": "ImageEditorLayerGroupExpansionContextTests.unselectedGroupContextRecursivelyCollapsesOnlyClickedBranch.log"
     }
   ]
 }

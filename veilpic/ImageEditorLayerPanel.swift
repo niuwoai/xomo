@@ -2297,6 +2297,8 @@ extension ImageEditorView {
                 .disabled(!viewModel.canUngroupLayersFromContext(layer.id))
                 .accessibilityIdentifier("image-editor-layer-context-ungroup-\(layer.id.uuidString)")
 
+                layerContextGroupExpansionButtons(layer)
+
                 layerContextClippingMaskButton(layer)
 
                 Button {
@@ -2618,6 +2620,49 @@ extension ImageEditorView {
         }
         .disabled(action == nil)
         .accessibilityIdentifier("image-editor-layer-context-clipping-mask-\(layer.id.uuidString)")
+    }
+
+    @ViewBuilder
+    private func layerContextGroupExpansionButtons(_ layer: ImageEditorLayer) -> some View {
+        if layer.isGroup {
+            Button {
+                viewModel.setLayerGroupsExpansionFromContext(
+                    layer.id,
+                    expanded: true
+                )
+            } label: {
+                Label(
+                    L10n.text("imageEditor.action.layerGroupsExpandSelected"),
+                    systemImage: "chevron.down.square"
+                )
+            }
+            .disabled(!viewModel.canSetLayerGroupsExpansionFromContext(
+                layer.id,
+                expanded: true
+            ))
+            .accessibilityIdentifier(
+                "image-editor-layer-context-groups-expand-\(layer.id.uuidString)"
+            )
+
+            Button {
+                viewModel.setLayerGroupsExpansionFromContext(
+                    layer.id,
+                    expanded: false
+                )
+            } label: {
+                Label(
+                    L10n.text("imageEditor.action.layerGroupsCollapseSelected"),
+                    systemImage: "chevron.right.square"
+                )
+            }
+            .disabled(!viewModel.canSetLayerGroupsExpansionFromContext(
+                layer.id,
+                expanded: false
+            ))
+            .accessibilityIdentifier(
+                "image-editor-layer-context-groups-collapse-\(layer.id.uuidString)"
+            )
+        }
     }
 
     private func layerContextMergeButton(_ layer: ImageEditorLayer) -> some View {

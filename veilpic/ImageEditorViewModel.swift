@@ -10374,8 +10374,12 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     private func selectedLayerGroupBranchIDs() -> Set<UUID> {
-        selectedLayerIndices.reduce(into: Set<UUID>()) { result, index in
-            let layer = document.layers[index]
+        layerGroupBranchIDs(for: document.selectedLayerIDs)
+    }
+
+    func layerGroupBranchIDs(for selectedIDs: Set<UUID>) -> Set<UUID> {
+        document.layers.reduce(into: Set<UUID>()) { result, layer in
+            guard selectedIDs.contains(layer.id) else { return }
             guard layer.isGroup else { return }
             result.formUnion(layerGroupBranchIDs(rootedAt: layer.id))
         }
