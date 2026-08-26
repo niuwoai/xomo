@@ -2317,6 +2317,8 @@ extension ImageEditorView {
 
                 layerContextMergeButton(layer)
 
+                layerContextStyleMenu(layer)
+
                 layerContextLabelColorMenu(layer)
 
                 Divider()
@@ -2622,6 +2624,31 @@ extension ImageEditorView {
         }
         .disabled(action == nil)
         .accessibilityIdentifier("image-editor-layer-context-merge-\(layer.id.uuidString)")
+    }
+
+    private func layerContextStyleMenu(_ layer: ImageEditorLayer) -> some View {
+        Menu(L10n.text("imageEditor.menu.layer.style")) {
+            Button(L10n.text("imageEditor.action.layerStyleCopy")) {
+                viewModel.copyLayerStyleFromContext(layer.id)
+            }
+            .disabled(!viewModel.canCopyLayerStyleFromContext(layer.id))
+            .accessibilityIdentifier("image-editor-layer-context-style-copy-\(layer.id.uuidString)")
+
+            Button(L10n.text("imageEditor.action.layerStylePaste")) {
+                viewModel.pasteLayerStyleFromContext(layer.id)
+            }
+            .disabled(!viewModel.canPasteLayerStyleFromContext(layer.id))
+            .accessibilityIdentifier("image-editor-layer-context-style-paste-\(layer.id.uuidString)")
+
+            Divider()
+
+            Button(L10n.text("imageEditor.action.layerStyleClear")) {
+                viewModel.clearLayerStylesFromContext(layer.id)
+            }
+            .disabled(!viewModel.canClearLayerStylesFromContext(layer.id))
+            .accessibilityIdentifier("image-editor-layer-context-style-clear-\(layer.id.uuidString)")
+        }
+        .accessibilityIdentifier("image-editor-layer-context-style-\(layer.id.uuidString)")
     }
 
     private func layerContextLabelColorMenu(_ layer: ImageEditorLayer) -> some View {

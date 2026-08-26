@@ -200,6 +200,107 @@ struct ImageEditorLayerStyleTests {
         #expect(viewModel.statusText == L10n.text("imageEditor.status.operationFailed"))
     }
 
+    @Test func layerStyleContextActionsUseClickedSourceAndContextSelectionWithoutEmptyTransactions() throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "source.png",
+            image: solidImage(color: .black, size: NSSize(width: 32, height: 24))
+        ) { _ in }
+        let sourceID = try #require(viewModel.document.selectedLayerID)
+        let sourceIndex = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[sourceIndex].style.strokeEnabled = true
+        viewModel.document.layers[sourceIndex].style.strokeWidth = 13
+
+        viewModel.addLayer()
+        let primaryID = try #require(viewModel.document.selectedLayerID)
+        let primaryIndex = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[primaryIndex].style.shadowEnabled = true
+        viewModel.document.selectedLayerIDs = [sourceID, primaryID]
+
+        #expect(viewModel.canCopyLayerStyleFromContext(sourceID))
+        #expect(viewModel.copyLayerStyleFromContext(sourceID))
+        #expect(viewModel.document.selectedLayerID == primaryID)
+        #expect(viewModel.document.selectedLayerIDs == [sourceID, primaryID])
+
+        viewModel.addLayer()
+        let targetID = try #require(viewModel.document.selectedLayerID)
+        viewModel.selectLayer(primaryID)
+        #expect(viewModel.canPasteLayerStyleFromContext(targetID))
+        #expect(viewModel.pasteLayerStyleFromContext(targetID) == 1)
+        let targetIndex = try #require(viewModel.document.layers.firstIndex { $0.id == targetID })
+        #expect(viewModel.document.layers[targetIndex].style.strokeEnabled)
+        #expect(viewModel.document.layers[targetIndex].style.strokeWidth == 13)
+        #expect(!viewModel.document.layers[targetIndex].style.shadowEnabled)
+        #expect(viewModel.document.selectedLayerIDs == [targetID])
+
+        viewModel.undo()
+        #expect(viewModel.canRedo)
+        let historyAfterUndo = viewModel.document.history.count
+        let restoredTargetIndex = try #require(viewModel.document.layers.firstIndex { $0.id == targetID })
+        let restoredSourceIndex = try #require(viewModel.document.layers.firstIndex { $0.id == sourceID })
+        viewModel.document.layers[restoredTargetIndex].style = viewModel.document.layers[restoredSourceIndex].style
+        #expect(!viewModel.canPasteLayerStyleFromContext(targetID))
+        #expect(viewModel.pasteLayerStyleFromContext(targetID) == 0)
+        #expect(viewModel.document.history.count == historyAfterUndo)
+        #expect(viewModel.canRedo)
+
+        let invalidID = UUID()
+        let selectedLayerIDBeforeInvalidAction = viewModel.document.selectedLayerID
+        let selectedLayerIDsBeforeInvalidAction = viewModel.document.selectedLayerIDs
+        let layerIDsBeforeInvalidAction = viewModel.document.layers.map(\.id)
+        let historyCountBeforeInvalidAction = viewModel.document.history.count
+        #expect(!viewModel.canCopyLayerStyleFromContext(invalidID))
+        #expect(!viewModel.canPasteLayerStyleFromContext(invalidID))
+        #expect(!viewModel.canClearLayerStylesFromContext(invalidID))
+        #expect(!viewModel.copyLayerStyleFromContext(invalidID))
+        #expect(viewModel.pasteLayerStyleFromContext(invalidID) == 0)
+        #expect(viewModel.clearLayerStylesFromContext(invalidID) == 0)
+        #expect(viewModel.document.selectedLayerID == selectedLayerIDBeforeInvalidAction)
+        #expect(viewModel.document.selectedLayerIDs == selectedLayerIDsBeforeInvalidAction)
+        #expect(viewModel.document.layers.map(\.id) == layerIDsBeforeInvalidAction)
+        #expect(viewModel.document.history.count == historyCountBeforeInvalidAction)
+    }
+
+    @Test func layerStyleContextPasteAndClearBatchEditableTargetsOnly() throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "source.png",
+            image: solidImage(color: .black, size: NSSize(width: 32, height: 24))
+        ) { _ in }
+        let sourceID = try #require(viewModel.document.selectedLayerID)
+        let sourceIndex = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[sourceIndex].style.outerGlowEnabled = true
+        #expect(viewModel.copyLayerStyleFromContext(sourceID))
+
+        viewModel.addLayer()
+        let firstID = try #require(viewModel.document.selectedLayerID)
+        viewModel.addLayer()
+        let secondID = try #require(viewModel.document.selectedLayerID)
+        viewModel.addLayer()
+        let lockedID = try #require(viewModel.document.selectedLayerID)
+        let lockedIndex = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[lockedIndex].style.shadowEnabled = true
+        viewModel.document.layers[lockedIndex].isLocked = true
+        viewModel.document.selectedLayerID = secondID
+        viewModel.document.selectedLayerIDs = [firstID, secondID, lockedID]
+
+        let historyBeforePaste = viewModel.document.history.count
+        #expect(viewModel.canPasteLayerStyleFromContext(firstID))
+        #expect(viewModel.pasteLayerStyleFromContext(firstID) == 2)
+        #expect(viewModel.document.history.count == historyBeforePaste + 1)
+        #expect(viewModel.document.selectedLayerIDs == [firstID, secondID, lockedID])
+        #expect(viewModel.document.layers.first { $0.id == firstID }?.style.outerGlowEnabled == true)
+        #expect(viewModel.document.layers.first { $0.id == secondID }?.style.outerGlowEnabled == true)
+        #expect(viewModel.document.layers.first { $0.id == lockedID }?.style.shadowEnabled == true)
+        #expect(viewModel.document.layers.first { $0.id == lockedID }?.style.outerGlowEnabled == false)
+
+        let historyBeforeClear = viewModel.document.history.count
+        #expect(viewModel.canClearLayerStylesFromContext(secondID))
+        #expect(viewModel.clearLayerStylesFromContext(secondID) == 2)
+        #expect(viewModel.document.history.count == historyBeforeClear + 1)
+        #expect(viewModel.document.layers.first { $0.id == firstID }?.style.hasConfiguredEffects == false)
+        #expect(viewModel.document.layers.first { $0.id == secondID }?.style.hasConfiguredEffects == false)
+        #expect(viewModel.document.layers.first { $0.id == lockedID }?.style.shadowEnabled == true)
+    }
+
     @Test func imageEditorBlendIfUnderlyingHidesLayerOverBackdropLuminanceOutsideRange() async throws {
         let canvasSize = NSSize(width: 16, height: 8)
         let viewModel = ImageEditorViewModel(

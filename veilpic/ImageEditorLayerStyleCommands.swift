@@ -168,6 +168,26 @@ extension ImageEditorViewModel {
         selectedLayerStyleTargetIndices().contains { document.layers[$0].style.hasConfiguredEffects }
     }
 
+    func canCopyLayerStyleFromContext(_ clickedLayerID: UUID) -> Bool {
+        guard let layer = document.layers.first(where: { $0.id == clickedLayerID }) else { return false }
+        return canCopyLayerStyle(layer)
+    }
+
+    func canPasteLayerStyleFromContext(_ clickedLayerID: UUID) -> Bool {
+        guard let copiedLayerStyle else { return false }
+        let selectedIDs = layerContextSelectionIDs(for: clickedLayerID)
+        guard !selectedIDs.isEmpty else { return false }
+        return !layerStylePasteTargetIndices(for: copiedLayerStyle, selectedIDs: selectedIDs).isEmpty
+    }
+
+    func canClearLayerStylesFromContext(_ clickedLayerID: UUID) -> Bool {
+        let selectedIDs = layerContextSelectionIDs(for: clickedLayerID)
+        guard !selectedIDs.isEmpty else { return false }
+        return layerStyleTargetIndices(selectedIDs: selectedIDs).contains {
+            document.layers[$0].style.hasConfiguredEffects
+        }
+    }
+
     var canEditSelectedLayerStyle: Bool {
         !selectedLayerStyleTargetIndices().isEmpty
     }
@@ -976,13 +996,29 @@ extension ImageEditorViewModel {
     @discardableResult
     func copySelectedLayerStyle() -> Bool {
         guard canCopySelectedLayerStyle,
-              let style = document.selectedLayer?.style
+              let layer = document.selectedLayer
         else {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return false
         }
+        return copyLayerStyle(layer.style, sourceID: layer.id)
+    }
+
+    @discardableResult
+    func copyLayerStyleFromContext(_ clickedLayerID: UUID) -> Bool {
+        guard let layer = document.layers.first(where: { $0.id == clickedLayerID }),
+              canCopyLayerStyle(layer)
+        else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return false
+        }
+        prepareLayerContextSelection(for: clickedLayerID)
+        return copyLayerStyle(layer.style, sourceID: layer.id)
+    }
+
+    private func copyLayerStyle(_ style: ImageEditorLayerStyle, sourceID: UUID) -> Bool {
         copiedLayerStyle = style
-        copiedLayerStyleSourceID = document.selectedLayerID
+        copiedLayerStyleSourceID = sourceID
         statusText = L10n.text("imageEditor.status.layerStyleCopied")
         return true
     }
@@ -999,6 +1035,33 @@ extension ImageEditorViewModel {
             return 0
         }
 
+        pushUndo()
+        for index in targetIndices {
+            document.layers[index].style = style
+        }
+        appendHistory(L10n.text("imageEditor.history.layerStylePaste"))
+        statusText = L10n.format("imageEditor.status.layerStylePasted", targetIndices.count)
+        return targetIndices.count
+    }
+
+    @discardableResult
+    func pasteLayerStyleFromContext(_ clickedLayerID: UUID) -> Int {
+        guard let style = copiedLayerStyle else {
+            statusText = L10n.text("imageEditor.status.layerStyleClipboardEmpty")
+            return 0
+        }
+        let selectedIDs = layerContextSelectionIDs(for: clickedLayerID)
+        guard !selectedIDs.isEmpty else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return 0
+        }
+        let targetIndices = layerStylePasteTargetIndices(for: style, selectedIDs: selectedIDs)
+        guard !targetIndices.isEmpty else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return 0
+        }
+
+        prepareLayerContextSelection(for: clickedLayerID)
         pushUndo()
         for index in targetIndices {
             document.layers[index].style = style
@@ -1098,6 +1161,31 @@ extension ImageEditorViewModel {
             return 0
         }
 
+        pushUndo()
+        for index in targetIndices {
+            document.layers[index].style = ImageEditorLayerStyle()
+        }
+        appendHistory(L10n.text("imageEditor.history.layerStyleClear"))
+        statusText = L10n.format("imageEditor.status.layerStyleCleared", targetIndices.count)
+        return targetIndices.count
+    }
+
+    @discardableResult
+    func clearLayerStylesFromContext(_ clickedLayerID: UUID) -> Int {
+        let selectedIDs = layerContextSelectionIDs(for: clickedLayerID)
+        guard !selectedIDs.isEmpty else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return 0
+        }
+        let targetIndices = layerStyleTargetIndices(selectedIDs: selectedIDs).filter {
+            document.layers[$0].style.hasConfiguredEffects
+        }
+        guard !targetIndices.isEmpty else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return 0
+        }
+
+        prepareLayerContextSelection(for: clickedLayerID)
         pushUndo()
         for index in targetIndices {
             document.layers[index].style = ImageEditorLayerStyle()
@@ -2331,8 +2419,12 @@ extension ImageEditorViewModel {
     }
 
     private func selectedLayerStyleTargetIndices() -> [Int] {
+        layerStyleTargetIndices(selectedIDs: document.selectedLayerIDs)
+    }
+
+    private func layerStyleTargetIndices(selectedIDs: Set<UUID>) -> [Int] {
         document.layers.indices.filter { index in
-            document.selectedLayerIDs.contains(document.layers[index].id)
+            selectedIDs.contains(document.layers[index].id)
                 && canEditLayerStyle(document.layers[index])
         }
     }
@@ -2340,8 +2432,15 @@ extension ImageEditorViewModel {
     private func selectedLayerStylePasteTargetIndices(
         for copiedStyle: ImageEditorLayerStyle
     ) -> [Int] {
+        layerStylePasteTargetIndices(for: copiedStyle, selectedIDs: document.selectedLayerIDs)
+    }
+
+    private func layerStylePasteTargetIndices(
+        for copiedStyle: ImageEditorLayerStyle,
+        selectedIDs: Set<UUID>
+    ) -> [Int] {
         let copiedProjectStyle = ImageEditorProjectLayerStyle(style: copiedStyle)
-        return selectedLayerStyleTargetIndices().filter { index in
+        return layerStyleTargetIndices(selectedIDs: selectedIDs).filter { index in
             document.layers[index].id != copiedLayerStyleSourceID
                 && ImageEditorProjectLayerStyle(style: document.layers[index].style) != copiedProjectStyle
         }
