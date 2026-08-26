@@ -694,6 +694,9 @@ struct ImageEditorLayerDeletionTests {
         #expect(source.contains("viewModel.alignLayersFromContextToCanvas("))
         #expect(source.contains("viewModel.canAlignLayersFromContextToSelection("))
         #expect(source.contains("viewModel.alignLayersFromContextToSelection("))
+        #expect(source.contains("layerContextDistributionMenu(layer)"))
+        #expect(source.contains("viewModel.canDistributeLayersFromContext("))
+        #expect(source.contains("viewModel.distributeLayersFromContext("))
         #expect(source.contains("viewModel.canGroupLayersFromContext(layer.id)"))
         #expect(source.contains("viewModel.canUngroupLayersFromContext(layer.id)"))
         #expect(source.contains("layerContextGroupExpansionButtons(layer)"))
@@ -795,6 +798,8 @@ struct ImageEditorLayerDeletionTests {
         #expect(source.contains("image-editor-layer-context-align-\\(target.rawValue)-\\(alignment.contextIdentifier)-\\(layer.id.uuidString)"))
         #expect(source.contains("image-editor-layer-context-align-\\(target.rawValue)-\\(layer.id.uuidString)"))
         #expect(source.contains("image-editor-layer-context-align-\\(layer.id.uuidString)"))
+        #expect(source.contains("image-editor-layer-context-distribute-\\(distribution.rawValue)-\\(layer.id.uuidString)"))
+        #expect(source.contains("image-editor-layer-context-distribute-\\(layer.id.uuidString)"))
         #expect(source.contains("image-editor-layer-context-delete-\\(layer.id.uuidString)"))
     }
 

@@ -270,6 +270,33 @@ extension ImageEditorViewModel {
         editableTransformLayerIndices().count >= 3
     }
 
+    func canDistributeLayersFromContext(
+        _ clickedLayerID: UUID,
+        distribution: ImageEditorLayerDistribution
+    ) -> Bool {
+        let selectedIDs = layerContextSelectionIDs(for: clickedLayerID)
+        let indices = editableTransformLayerIndices(for: selectedIDs)
+        guard let frames = distributedLayerFrames(
+            for: indices,
+            distribution: distribution
+        ) else { return false }
+        return layerFramesContainChange(frames)
+    }
+
+    @discardableResult
+    func distributeLayersFromContext(
+        _ clickedLayerID: UUID,
+        distribution: ImageEditorLayerDistribution
+    ) -> Bool {
+        guard canDistributeLayersFromContext(
+            clickedLayerID,
+            distribution: distribution
+        ) else { return false }
+        prepareLayerContextSelection(for: clickedLayerID)
+        distributeSelectedLayers(distribution)
+        return true
+    }
+
     func alignSelectedLayers(_ alignment: ImageEditorLayerAlignment) {
         let indices = editableTransformLayerIndices()
         guard indices.count >= 2,
@@ -364,36 +391,15 @@ extension ImageEditorViewModel {
 
     func distributeSelectedLayers(_ distribution: ImageEditorLayerDistribution) {
         let indices = editableTransformLayerIndices()
-        guard indices.count >= 3 else {
+        guard let distributedFrames = distributedLayerFrames(
+            for: indices,
+            distribution: distribution
+        ) else {
             statusText = L10n.text("imageEditor.status.layerLocked")
             return
         }
 
-        let sortedLayers = indices
-            .map { document.layers[$0] }
-            .sorted { lhs, rhs in
-                distribution.anchorValue(for: lhs.frame.standardized) < distribution.anchorValue(for: rhs.frame.standardized)
-            }
-
-        let firstFrame = sortedLayers[0].frame.standardized
-        let lastFrame = sortedLayers[sortedLayers.count - 1].frame.standardized
-        let firstAnchor = distribution.anchorValue(for: firstFrame)
-        let lastAnchor = distribution.anchorValue(for: lastFrame)
-
-        let step = (lastAnchor - firstAnchor) / CGFloat(sortedLayers.count - 1)
-        var distributedFrames: [UUID: CGRect] = [:]
-        for offset in 1..<(sortedLayers.count - 1) {
-            let layer = sortedLayers[offset]
-            var frame = layer.frame.standardized
-            let targetAnchor = firstAnchor + CGFloat(offset) * step
-            distribution.apply(anchor: targetAnchor, to: &frame)
-            distributedFrames[layer.id] = frame
-        }
-
-        guard distributedFrames.contains(where: { item in
-            guard let current = document.layers.first(where: { $0.id == item.key })?.frame.standardized else { return false }
-            return current != item.value
-        }) else { return }
+        guard layerFramesContainChange(distributedFrames) else { return }
 
         pushUndo()
         for index in document.layers.indices {
@@ -546,6 +552,46 @@ extension ImageEditorViewModel {
             result.origin.y = targetBounds.minY
         }
         return result
+    }
+
+    private func distributedLayerFrames(
+        for indices: [Int],
+        distribution: ImageEditorLayerDistribution
+    ) -> [UUID: CGRect]? {
+        guard indices.count >= 3 else { return nil }
+        let sortedLayers = indices
+            .map { document.layers[$0] }
+            .sorted { lhs, rhs in
+                distribution.anchorValue(for: lhs.frame.standardized)
+                    < distribution.anchorValue(for: rhs.frame.standardized)
+            }
+        let firstAnchor = distribution.anchorValue(
+            for: sortedLayers[0].frame.standardized
+        )
+        let lastAnchor = distribution.anchorValue(
+            for: sortedLayers[sortedLayers.count - 1].frame.standardized
+        )
+        let step = (lastAnchor - firstAnchor) / CGFloat(sortedLayers.count - 1)
+        var frames: [UUID: CGRect] = [:]
+        for offset in 1..<(sortedLayers.count - 1) {
+            let layer = sortedLayers[offset]
+            var frame = layer.frame.standardized
+            distribution.apply(
+                anchor: firstAnchor + CGFloat(offset) * step,
+                to: &frame
+            )
+            frames[layer.id] = frame
+        }
+        return frames
+    }
+
+    private func layerFramesContainChange(_ frames: [UUID: CGRect]) -> Bool {
+        frames.contains { item in
+            guard let current = document.layers.first(where: { $0.id == item.key })?
+                .frame.standardized
+            else { return false }
+            return current != item.value
+        }
     }
 }
 

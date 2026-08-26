@@ -2276,6 +2276,8 @@ extension ImageEditorView {
 
                 layerContextAlignmentMenu(layer)
 
+                layerContextDistributionMenu(layer)
+
                 Divider()
                 Button {
                     viewModel.prepareLayerContextSelection(for: layer.id)
@@ -2734,6 +2736,34 @@ extension ImageEditorView {
                 alignment: alignment
             )
         }
+    }
+
+    private func layerContextDistributionMenu(_ layer: ImageEditorLayer) -> some View {
+        Menu(L10n.text("imageEditor.menu.layer.distribute")) {
+            ForEach(ImageEditorLayerDistribution.allCases) { distribution in
+                Button {
+                    viewModel.distributeLayersFromContext(
+                        layer.id,
+                        distribution: distribution
+                    )
+                } label: {
+                    Label(
+                        L10n.text(distribution.actionTitleKey),
+                        systemImage: distribution.optionBarSystemImage
+                    )
+                }
+                .disabled(!viewModel.canDistributeLayersFromContext(
+                    layer.id,
+                    distribution: distribution
+                ))
+                .accessibilityIdentifier(
+                    "image-editor-layer-context-distribute-\(distribution.rawValue)-\(layer.id.uuidString)"
+                )
+            }
+        }
+        .accessibilityIdentifier(
+            "image-editor-layer-context-distribute-\(layer.id.uuidString)"
+        )
     }
 
     @ViewBuilder

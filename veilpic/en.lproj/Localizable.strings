@@ -346,6 +346,7 @@
 "imageEditor.menu.layer.order" = "Arrange";
 "imageEditor.menu.layer.transform" = "Transform";
 "imageEditor.menu.layer.align" = "Align";
+"imageEditor.menu.layer.distribute" = "Distribute";
 "imageEditor.menu.layer.mask" = "Layer Mask";
 "imageEditor.menu.layer.style" = "Layer Style";
 "imageEditor.menu.layer.stylePresets" = "Style Presets";

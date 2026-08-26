@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-27 05:31:42 +0800",
+  "generated_at": "2026-08-27 05:41:05 +0800",
   "total": 3,
   "passed": 3,
   "failed": 0,
@@ -9,40 +9,40 @@
   "jobs": 1,
   "results": [
     {
-      "suite": "ImageEditorLayerPeerAlignmentContextTests",
-      "method": "selectedContextAlignsLayersToTheirSharedBoundsAndUndoRestoresFrames",
-      "identifier": "veilpicTests/ImageEditorLayerPeerAlignmentContextTests/selectedContextAlignsLayersToTheirSharedBoundsAndUndoRestoresFrames()",
-      "file": "ImageEditorLayerPeerAlignmentContextTests.swift",
+      "suite": "ImageEditorLayerDistributionContextTests",
+      "method": "insufficientInvalidLockedAndRepeatedDistributionsAreAtomicNoOps",
+      "identifier": "veilpicTests/ImageEditorLayerDistributionContextTests/insufficientInvalidLockedAndRepeatedDistributionsAreAtomicNoOps()",
+      "file": "ImageEditorLayerDistributionContextTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.573,
+      "duration": 3.145,
       "infrastructure_retries": 0,
       "issues": [],
-      "log": "ImageEditorLayerPeerAlignmentContextTests.selectedContextAlignsLayersToTheirSharedBoundsAndUndoRestoresFrames.log"
+      "log": "ImageEditorLayerDistributionContextTests.insufficientInvalidLockedAndRepeatedDistributionsAreAtomicNoOps.log"
     },
     {
-      "suite": "ImageEditorLayerPeerAlignmentContextTests",
-      "method": "singleInvalidLockedAndRepeatedTargetsAreAtomicNoOps",
-      "identifier": "veilpicTests/ImageEditorLayerPeerAlignmentContextTests/singleInvalidLockedAndRepeatedTargetsAreAtomicNoOps()",
-      "file": "ImageEditorLayerPeerAlignmentContextTests.swift",
+      "suite": "ImageEditorLayerDistributionContextTests",
+      "method": "selectedContextDistributesIntermediateLayerAndUndoRestoresFrame",
+      "identifier": "veilpicTests/ImageEditorLayerDistributionContextTests/selectedContextDistributesIntermediateLayerAndUndoRestoresFrame()",
+      "file": "ImageEditorLayerDistributionContextTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.211,
+      "duration": 3.196,
       "infrastructure_retries": 0,
       "issues": [],
-      "log": "ImageEditorLayerPeerAlignmentContextTests.singleInvalidLockedAndRepeatedTargetsAreAtomicNoOps.log"
+      "log": "ImageEditorLayerDistributionContextTests.selectedContextDistributesIntermediateLayerAndUndoRestoresFrame.log"
     },
     {
-      "suite": "ImageEditorLayerPeerAlignmentContextTests",
-      "method": "unselectedGroupContextAlignsItsExpandedChildrenOnly",
-      "identifier": "veilpicTests/ImageEditorLayerPeerAlignmentContextTests/unselectedGroupContextAlignsItsExpandedChildrenOnly()",
-      "file": "ImageEditorLayerPeerAlignmentContextTests.swift",
+      "suite": "ImageEditorLayerDistributionContextTests",
+      "method": "unselectedGroupContextDistributesItsExpandedChildrenOnly",
+      "identifier": "veilpicTests/ImageEditorLayerDistributionContextTests/unselectedGroupContextDistributesItsExpandedChildrenOnly()",
+      "file": "ImageEditorLayerDistributionContextTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.168,
+      "duration": 3.247,
       "infrastructure_retries": 0,
       "issues": [],
-      "log": "ImageEditorLayerPeerAlignmentContextTests.unselectedGroupContextAlignsItsExpandedChildrenOnly.log"
+      "log": "ImageEditorLayerDistributionContextTests.unselectedGroupContextDistributesItsExpandedChildrenOnly.log"
     }
   ]
 }

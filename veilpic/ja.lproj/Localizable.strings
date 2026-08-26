@@ -346,6 +346,7 @@
 "imageEditor.menu.layer.order" = "重ね順";
 "imageEditor.menu.layer.transform" = "変形";
 "imageEditor.menu.layer.align" = "整列";
+"imageEditor.menu.layer.distribute" = "分布";
 "imageEditor.menu.layer.mask" = "レイヤーマスク";
 "imageEditor.menu.layer.style" = "レイヤースタイル";
 "imageEditor.menu.layer.stylePresets" = "スタイルプリセット";

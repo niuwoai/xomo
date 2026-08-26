@@ -346,6 +346,7 @@
 "imageEditor.menu.layer.order" = "排列";
 "imageEditor.menu.layer.transform" = "变换";
 "imageEditor.menu.layer.align" = "对齐";
+"imageEditor.menu.layer.distribute" = "分布";
 "imageEditor.menu.layer.mask" = "图层蒙版";
 "imageEditor.menu.layer.style" = "图层样式";
 "imageEditor.menu.layer.stylePresets" = "样式预设";
