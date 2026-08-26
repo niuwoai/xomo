@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-27 04:46:34 +0800",
+  "generated_at": "2026-08-27 04:57:29 +0800",
   "total": 3,
   "passed": 3,
   "failed": 0,
@@ -9,40 +9,40 @@
   "jobs": 1,
   "results": [
     {
-      "suite": "ImageEditorLayerGroupExpansionContextTests",
-      "method": "ordinaryInvalidAndRepeatedContextExpansionAreAtomicNoOps",
-      "identifier": "veilpicTests/ImageEditorLayerGroupExpansionContextTests/ordinaryInvalidAndRepeatedContextExpansionAreAtomicNoOps()",
-      "file": "ImageEditorLayerGroupExpansionContextTests.swift",
+      "suite": "ImageEditorLayerOrderingContextTests",
+      "method": "filteredBoundaryRepeatLockedAndInvalidContextsAreAtomicNoOps",
+      "identifier": "veilpicTests/ImageEditorLayerOrderingContextTests/filteredBoundaryRepeatLockedAndInvalidContextsAreAtomicNoOps()",
+      "file": "ImageEditorLayerOrderingContextTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.133,
+      "duration": 3.136,
       "infrastructure_retries": 0,
       "issues": [],
-      "log": "ImageEditorLayerGroupExpansionContextTests.ordinaryInvalidAndRepeatedContextExpansionAreAtomicNoOps.log"
+      "log": "ImageEditorLayerOrderingContextTests.filteredBoundaryRepeatLockedAndInvalidContextsAreAtomicNoOps.log"
     },
     {
-      "suite": "ImageEditorLayerGroupExpansionContextTests",
-      "method": "selectedGroupContextPreservesVisiblePeerAndExpandsWholeBranch",
-      "identifier": "veilpicTests/ImageEditorLayerGroupExpansionContextTests/selectedGroupContextPreservesVisiblePeerAndExpandsWholeBranch()",
-      "file": "ImageEditorLayerGroupExpansionContextTests.swift",
+      "suite": "ImageEditorLayerOrderingContextTests",
+      "method": "selectedContextMovesWholeNoncontiguousSelectionOneStep",
+      "identifier": "veilpicTests/ImageEditorLayerOrderingContextTests/selectedContextMovesWholeNoncontiguousSelectionOneStep()",
+      "file": "ImageEditorLayerOrderingContextTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.133,
+      "duration": 3.147,
       "infrastructure_retries": 0,
       "issues": [],
-      "log": "ImageEditorLayerGroupExpansionContextTests.selectedGroupContextPreservesVisiblePeerAndExpandsWholeBranch.log"
+      "log": "ImageEditorLayerOrderingContextTests.selectedContextMovesWholeNoncontiguousSelectionOneStep.log"
     },
     {
-      "suite": "ImageEditorLayerGroupExpansionContextTests",
-      "method": "unselectedGroupContextRecursivelyCollapsesOnlyClickedBranch",
-      "identifier": "veilpicTests/ImageEditorLayerGroupExpansionContextTests/unselectedGroupContextRecursivelyCollapsesOnlyClickedBranch()",
-      "file": "ImageEditorLayerGroupExpansionContextTests.swift",
+      "suite": "ImageEditorLayerOrderingContextTests",
+      "method": "unselectedContextMovesClickedLayerToTopAndUndoRestoresOrder",
+      "identifier": "veilpicTests/ImageEditorLayerOrderingContextTests/unselectedContextMovesClickedLayerToTopAndUndoRestoresOrder()",
+      "file": "ImageEditorLayerOrderingContextTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.144,
+      "duration": 3.139,
       "infrastructure_retries": 0,
       "issues": [],
-      "log": "ImageEditorLayerGroupExpansionContextTests.unselectedGroupContextRecursivelyCollapsesOnlyClickedBranch.log"
+      "log": "ImageEditorLayerOrderingContextTests.unselectedContextMovesClickedLayerToTopAndUndoRestoresOrder.log"
     }
   ]
 }

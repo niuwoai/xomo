@@ -14,6 +14,31 @@ nonisolated enum ImageEditorLayerSelectionNavigation: Equatable {
     case bottom
 }
 
+nonisolated enum ImageEditorLayerStackContextAction: String, CaseIterable {
+    case top
+    case up
+    case down
+    case bottom
+
+    var actionTitleKey: String {
+        switch self {
+        case .top: "imageEditor.action.layerTop"
+        case .up: "imageEditor.action.layerUp"
+        case .down: "imageEditor.action.layerDown"
+        case .bottom: "imageEditor.action.layerBottom"
+        }
+    }
+
+    var systemImage: String {
+        switch self {
+        case .top: "arrow.up.to.line"
+        case .up: "arrow.up"
+        case .down: "arrow.down"
+        case .bottom: "arrow.down.to.line"
+        }
+    }
+}
+
 private enum ImageEditorLayerStackDirection {
     case up
     case down
@@ -91,7 +116,8 @@ extension ImageEditorViewModel {
         reorderedLayers(
             moving: .up,
             toBoundary: nil,
-            visibleRowIDs: visibleRowIDs
+            visibleRowIDs: visibleRowIDs,
+            selectedIDs: document.selectedLayerIDs
         ) != nil
     }
 
@@ -99,7 +125,8 @@ extension ImageEditorViewModel {
         reorderedLayers(
             moving: .down,
             toBoundary: nil,
-            visibleRowIDs: visibleRowIDs
+            visibleRowIDs: visibleRowIDs,
+            selectedIDs: document.selectedLayerIDs
         ) != nil
     }
 
@@ -107,7 +134,8 @@ extension ImageEditorViewModel {
         reorderedLayers(
             moving: .up,
             toBoundary: .top,
-            visibleRowIDs: visibleRowIDs
+            visibleRowIDs: visibleRowIDs,
+            selectedIDs: document.selectedLayerIDs
         ) != nil
     }
 
@@ -115,8 +143,64 @@ extension ImageEditorViewModel {
         reorderedLayers(
             moving: .down,
             toBoundary: .bottom,
-            visibleRowIDs: visibleRowIDs
+            visibleRowIDs: visibleRowIDs,
+            selectedIDs: document.selectedLayerIDs
         ) != nil
+    }
+
+    func canMoveLayersFromContext(
+        _ clickedLayerID: UUID,
+        action: ImageEditorLayerStackContextAction,
+        visibleRowIDs: [UUID]
+    ) -> Bool {
+        let selectedIDs = layerContextSelectionIDs(for: clickedLayerID)
+        let direction: ImageEditorLayerStackDirection
+        let boundary: ImageEditorLayerStackBoundary?
+        switch action {
+        case .top:
+            direction = .up
+            boundary = .top
+        case .up:
+            direction = .up
+            boundary = nil
+        case .down:
+            direction = .down
+            boundary = nil
+        case .bottom:
+            direction = .down
+            boundary = .bottom
+        }
+        return reorderedLayers(
+            moving: direction,
+            toBoundary: boundary,
+            visibleRowIDs: visibleRowIDs,
+            selectedIDs: selectedIDs
+        ) != nil
+    }
+
+    @discardableResult
+    func moveLayersFromContext(
+        _ clickedLayerID: UUID,
+        action: ImageEditorLayerStackContextAction,
+        visibleRowIDs: [UUID]
+    ) -> Bool {
+        guard canMoveLayersFromContext(
+            clickedLayerID,
+            action: action,
+            visibleRowIDs: visibleRowIDs
+        ) else { return false }
+        prepareLayerContextSelection(for: clickedLayerID)
+        switch action {
+        case .top:
+            moveSelectedLayerToTop(inVisibleOrder: visibleRowIDs)
+        case .up:
+            moveSelectedLayerUp(inVisibleOrder: visibleRowIDs)
+        case .down:
+            moveSelectedLayerDown(inVisibleOrder: visibleRowIDs)
+        case .bottom:
+            moveSelectedLayerToBottom(inVisibleOrder: visibleRowIDs)
+        }
+        return true
     }
 
     func moveSelectedLayerUp() {
@@ -207,7 +291,8 @@ extension ImageEditorViewModel {
         guard let layers = reorderedLayers(
             moving: direction,
             toBoundary: boundary,
-            visibleRowIDs: visibleRowIDs
+            visibleRowIDs: visibleRowIDs,
+            selectedIDs: document.selectedLayerIDs
         ) else { return }
 
         pushUndo()
@@ -220,7 +305,8 @@ extension ImageEditorViewModel {
     private func reorderedLayers(
         moving direction: ImageEditorLayerStackDirection,
         toBoundary boundary: ImageEditorLayerStackBoundary?,
-        visibleRowIDs: [UUID]
+        visibleRowIDs: [UUID],
+        selectedIDs: Set<UUID>
     ) -> [ImageEditorLayer]? {
         let initiallyVisibleIDs = Set(orderingVisibleLayerIDs(in: document.layers))
         let allowedVisibleIDs = Set(visibleRowIDs).intersection(initiallyVisibleIDs)
@@ -237,6 +323,7 @@ extension ImageEditorViewModel {
             let operations = visibleLayerMoveOperations(
                 direction: direction,
                 visibleRowIDs: currentVisibleIDs,
+                selectedIDs: selectedIDs,
                 layers: workingLayers
             )
             var changedThisPass = false
@@ -262,10 +349,11 @@ extension ImageEditorViewModel {
     private func visibleLayerMoveOperations(
         direction: ImageEditorLayerStackDirection,
         visibleRowIDs: [UUID],
+        selectedIDs: Set<UUID>,
         layers: [ImageEditorLayer]
     ) -> [ImageEditorVisibleLayerMove] {
         let visibleIDSet = Set(visibleRowIDs)
-        let selectedVisibleIDs = document.selectedLayerIDs.intersection(visibleIDSet)
+        let selectedVisibleIDs = selectedIDs.intersection(visibleIDSet)
         let rootSourceIDs = orderingMovableRootLayerIDs(
             for: selectedVisibleIDs,
             layers: layers

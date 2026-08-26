@@ -2272,6 +2272,8 @@ extension ImageEditorView {
                 .disabled(!viewModel.canDuplicateLayersFromContext(layer.id))
                 .accessibilityIdentifier("image-editor-layer-context-duplicate-\(layer.id.uuidString)")
 
+                layerContextOrderingMenu(layer)
+
                 Divider()
                 Button {
                     viewModel.prepareLayerContextSelection(for: layer.id)
@@ -2620,6 +2622,36 @@ extension ImageEditorView {
         }
         .disabled(action == nil)
         .accessibilityIdentifier("image-editor-layer-context-clipping-mask-\(layer.id.uuidString)")
+    }
+
+    private func layerContextOrderingMenu(_ layer: ImageEditorLayer) -> some View {
+        Menu(L10n.text("imageEditor.menu.layer.order")) {
+            ForEach(ImageEditorLayerStackContextAction.allCases, id: \.self) { action in
+                Button {
+                    viewModel.moveLayersFromContext(
+                        layer.id,
+                        action: action,
+                        visibleRowIDs: filteredVisibleLayerRowIDs
+                    )
+                } label: {
+                    Label(
+                        L10n.text(action.actionTitleKey),
+                        systemImage: action.systemImage
+                    )
+                }
+                .disabled(!viewModel.canMoveLayersFromContext(
+                    layer.id,
+                    action: action,
+                    visibleRowIDs: filteredVisibleLayerRowIDs
+                ))
+                .accessibilityIdentifier(
+                    "image-editor-layer-context-order-\(action.rawValue)-\(layer.id.uuidString)"
+                )
+            }
+        }
+        .accessibilityIdentifier(
+            "image-editor-layer-context-order-\(layer.id.uuidString)"
+        )
     }
 
     @ViewBuilder
