@@ -2192,6 +2192,31 @@ extension ImageEditorView {
             .accessibilityIdentifier("image-editor-layer-row-\(layer.id.uuidString)")
             .contextMenu {
                 Button {
+                    viewModel.prepareLayerContextSelection(for: layer.id)
+                    viewModel.duplicateSelectedLayer()
+                } label: {
+                    Label(
+                        L10n.text("imageEditor.action.layerDuplicate"),
+                        systemImage: "doc.on.doc"
+                    )
+                }
+                .disabled(!viewModel.canDuplicateLayersFromContext(layer.id))
+                .accessibilityIdentifier("image-editor-layer-context-duplicate-\(layer.id.uuidString)")
+
+                Button(role: .destructive) {
+                    viewModel.prepareLayerContextSelection(for: layer.id)
+                    viewModel.deleteSelectedLayer()
+                } label: {
+                    Label(
+                        L10n.text("imageEditor.action.layerDelete"),
+                        systemImage: "trash"
+                    )
+                }
+                .disabled(!viewModel.canDeleteLayersFromContext(layer.id))
+                .accessibilityIdentifier("image-editor-layer-context-delete-\(layer.id.uuidString)")
+
+                Divider()
+                Button {
                     if !viewModel.isLayerSelected(layer.id) {
                         viewModel.selectLayer(layer.id)
                     }

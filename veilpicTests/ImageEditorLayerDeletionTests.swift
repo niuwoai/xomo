@@ -358,6 +358,77 @@ struct ImageEditorLayerDeletionTests {
         #expect(viewModel.document.history.count == historyCount)
     }
 
+    @Test func layerRowContextActionsPreserveSelectedSetsAndTargetUnselectedRows() {
+        let viewModel = makeViewModel()
+        let first = layer("First", in: viewModel)
+        let second = layer("Second", in: viewModel)
+        let third = layer("Third", in: viewModel)
+        viewModel.document.layers = [first, second, third]
+        select([first.id, second.id], primary: second.id, in: viewModel)
+        let originalIDs = viewModel.document.layers.map(\.id)
+
+        #expect(viewModel.canDuplicateLayersFromContext(first.id))
+        viewModel.prepareLayerContextSelection(for: first.id)
+        #expect(viewModel.document.selectedLayerIDs == [first.id, second.id])
+        #expect(viewModel.document.selectedLayerID == second.id)
+        viewModel.duplicateSelectedLayer()
+        #expect(viewModel.document.layers.count == 5)
+        #expect(viewModel.document.selectedLayerIDs.count == 2)
+        #expect(viewModel.document.selectedLayerIDs.isDisjoint(with: [first.id, second.id]))
+
+        viewModel.undo()
+        #expect(viewModel.document.layers.map(\.id) == originalIDs)
+        #expect(viewModel.document.selectedLayerIDs == [first.id, second.id])
+
+        viewModel.prepareLayerContextSelection(for: third.id)
+        #expect(viewModel.document.selectedLayerIDs == [third.id])
+        #expect(viewModel.document.selectedLayerID == third.id)
+        #expect(viewModel.canDeleteLayersFromContext(third.id))
+        viewModel.deleteSelectedLayer()
+        #expect(viewModel.document.layers.map(\.id) == [first.id, second.id])
+    }
+
+    @Test func layerRowContextDeleteHonorsLocksLastLayerAndUnknownRows() {
+        let viewModel = makeViewModel()
+        let editable = layer("Editable", in: viewModel)
+        var locked = layer("Locked", in: viewModel)
+        locked.isLocked = true
+        viewModel.document.layers = [editable, locked]
+        select([editable.id], primary: editable.id, in: viewModel)
+
+        #expect(!viewModel.canDeleteLayersFromContext(locked.id))
+        #expect(!viewModel.canDeleteLayersFromContext(UUID()))
+        #expect(!viewModel.canDuplicateLayersFromContext(UUID()))
+        viewModel.prepareLayerContextSelection(for: UUID())
+        #expect(viewModel.document.selectedLayerIDs == [editable.id])
+
+        viewModel.document.layers = [editable]
+        select([editable.id], primary: editable.id, in: viewModel)
+        #expect(!viewModel.canDeleteLayersFromContext(editable.id))
+        #expect(viewModel.canDuplicateLayersFromContext(editable.id))
+
+        viewModel.document.selectedLayerIDs = []
+        viewModel.prepareLayerContextSelection(for: editable.id)
+        #expect(viewModel.document.selectedLayerIDs == [editable.id])
+    }
+
+    @Test func layerRowContextMenuWiresDuplicateAndDestructiveDeleteThroughContextPolicy() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorLayerPanel.swift"),
+            encoding: .utf8
+        )
+
+        #expect(source.contains("viewModel.prepareLayerContextSelection(for: layer.id)"))
+        #expect(source.contains("viewModel.canDuplicateLayersFromContext(layer.id)"))
+        #expect(source.contains("viewModel.canDeleteLayersFromContext(layer.id)"))
+        #expect(source.contains("Button(role: .destructive)"))
+        #expect(source.contains("image-editor-layer-context-duplicate-\\(layer.id.uuidString)"))
+        #expect(source.contains("image-editor-layer-context-delete-\\(layer.id.uuidString)"))
+    }
+
     private func makeViewModel() -> ImageEditorViewModel {
         ImageEditorViewModel(
             sourceName: "deletion.png",

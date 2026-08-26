@@ -2889,6 +2889,15 @@ final class ImageEditorViewModel: ObservableObject {
         return !deletionIDs.isEmpty && document.layers.count - deletionIDs.count >= 1
     }
 
+    func canDeleteLayersFromContext(_ clickedLayerID: UUID) -> Bool {
+        let deletionIDs = ImageEditorLayerHierarchyDeletion.deletableLayerIDs(
+            in: document.layers,
+            selectedIDs: layerContextSelectionIDs(for: clickedLayerID),
+            isEffectivelyLocked: { document.isEffectivelyLocked($0) }
+        )
+        return !deletionIDs.isEmpty && document.layers.count - deletionIDs.count >= 1
+    }
+
     var canMergeSelectedLayerDown: Bool {
         hierarchyMergeDownPlan != nil
     }
@@ -5019,6 +5028,20 @@ final class ImageEditorViewModel: ObservableObject {
         document.selectedLayerID == id
     }
 
+    func prepareLayerContextSelection(for clickedLayerID: UUID) {
+        guard document.layers.contains(where: { $0.id == clickedLayerID }) else { return }
+        guard !document.selectedLayerIDs.contains(clickedLayerID) else { return }
+        selectLayer(clickedLayerID)
+    }
+
+    private func layerContextSelectionIDs(for clickedLayerID: UUID) -> Set<UUID> {
+        guard document.layers.contains(where: { $0.id == clickedLayerID }) else { return [] }
+        let selectedIDs = document.selectedLayerIDs.isEmpty
+            ? Set(document.selectedLayerID.map { [$0] } ?? [])
+            : document.selectedLayerIDs
+        return selectedIDs.contains(clickedLayerID) ? selectedIDs : [clickedLayerID]
+    }
+
     func selectLayer(_ id: UUID, editingMask: Bool = false, extendingSelection: Bool = false) {
         guard document.layers.contains(where: { $0.id == id }) else { return }
         if !editingMask || previewedLayerMaskID != id {
@@ -5506,6 +5529,13 @@ final class ImageEditorViewModel: ObservableObject {
         !ImageEditorLayerHierarchyDuplication.duplicableRootIDs(
             in: document.layers,
             selectedIDs: document.selectedLayerIDs
+        ).isEmpty
+    }
+
+    func canDuplicateLayersFromContext(_ clickedLayerID: UUID) -> Bool {
+        !ImageEditorLayerHierarchyDuplication.duplicableRootIDs(
+            in: document.layers,
+            selectedIDs: layerContextSelectionIDs(for: clickedLayerID)
         ).isEmpty
     }
 
