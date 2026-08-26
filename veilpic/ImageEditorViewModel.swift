@@ -38,6 +38,20 @@ enum ImageEditorClippingMaskSelectionState: Equatable {
     }
 }
 
+enum ImageEditorLayerClippingMaskContextAction: Equatable {
+    case create
+    case release
+
+    var titleKey: String {
+        switch self {
+        case .create:
+            "imageEditor.action.layerClippingMaskCreateSelected"
+        case .release:
+            "imageEditor.action.layerClippingMaskReleaseSelected"
+        }
+    }
+}
+
 enum ImageEditorSmartFilterValueState<Value: Equatable>: Equatable {
     case unavailable
     case value(Value)
@@ -3025,6 +3039,19 @@ final class ImageEditorViewModel: ObservableObject {
 
     var canReleaseSelectedClippingMasks: Bool {
         !selectedLayerClippingReleaseIndices().isEmpty
+    }
+
+    func clippingMaskActionFromContext(
+        _ clickedLayerID: UUID
+    ) -> ImageEditorLayerClippingMaskContextAction? {
+        let selectedIDs = layerContextSelectionIDs(for: clickedLayerID)
+        if !layerClippingCreationIndices(selectedIDs: selectedIDs).isEmpty {
+            return .create
+        }
+        if !layerClippingReleaseIndices(selectedIDs: selectedIDs).isEmpty {
+            return .release
+        }
+        return nil
     }
 
     var canAddSmartFilterToSelectedLayer: Bool {
@@ -6570,6 +6597,19 @@ final class ImageEditorViewModel: ObservableObject {
         isEditingLayerMask = false
         appendHistory(L10n.text("imageEditor.history.layerClippingMaskReleaseSelected"))
         statusText = L10n.format("imageEditor.status.layerClippingMaskReleasedSelected", indices.count)
+    }
+
+    @discardableResult
+    func applyClippingMaskActionFromContext(_ clickedLayerID: UUID) -> Bool {
+        guard let action = clippingMaskActionFromContext(clickedLayerID) else { return false }
+        prepareLayerContextSelection(for: clickedLayerID)
+        switch action {
+        case .create:
+            createClippingMasksForSelectedLayers()
+        case .release:
+            releaseSelectedClippingMasks()
+        }
+        return true
     }
 
     func mergeSelectedLayerDown() {
@@ -10503,9 +10543,14 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     private func selectedLayerClippingCreationIndices() -> [Int] {
-        selectedLayerIndices.filter { index in
+        layerClippingCreationIndices(selectedIDs: document.selectedLayerIDs)
+    }
+
+    private func layerClippingCreationIndices(selectedIDs: Set<UUID>) -> [Int] {
+        document.layers.indices.filter { index in
             let layer = document.layers[index]
-            return !layer.isGroup
+            return selectedIDs.contains(layer.id)
+                && !layer.isGroup
                 && !layer.isClippingMask
                 && !document.isEffectivelyLocked(layer)
                 && clippingBaseExists(below: index, groupID: layer.groupID)
@@ -10513,9 +10558,15 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     private func selectedLayerClippingReleaseIndices() -> [Int] {
-        selectedLayerIndices.filter { index in
+        layerClippingReleaseIndices(selectedIDs: document.selectedLayerIDs)
+    }
+
+    private func layerClippingReleaseIndices(selectedIDs: Set<UUID>) -> [Int] {
+        document.layers.indices.filter { index in
             let layer = document.layers[index]
-            return layer.isClippingMask && !document.isEffectivelyLocked(layer)
+            return selectedIDs.contains(layer.id)
+                && layer.isClippingMask
+                && !document.isEffectivelyLocked(layer)
         }
     }
 

@@ -2289,6 +2289,8 @@ extension ImageEditorView {
                 .disabled(!viewModel.canUngroupLayersFromContext(layer.id))
                 .accessibilityIdentifier("image-editor-layer-context-ungroup-\(layer.id.uuidString)")
 
+                layerContextClippingMaskButton(layer)
+
                 Divider()
                 Button(role: .destructive) {
                     viewModel.prepareLayerContextSelection(for: layer.id)
@@ -2564,6 +2566,20 @@ extension ImageEditorView {
                     beginLayerInlineRename(layer)
                 }
         }
+    }
+
+    private func layerContextClippingMaskButton(_ layer: ImageEditorLayer) -> some View {
+        let action = viewModel.clippingMaskActionFromContext(layer.id)
+        return Button {
+            viewModel.applyClippingMaskActionFromContext(layer.id)
+        } label: {
+            Label(
+                L10n.text((action ?? .create).titleKey),
+                systemImage: "arrow.down.to.line.compact"
+            )
+        }
+        .disabled(action == nil)
+        .accessibilityIdentifier("image-editor-layer-context-clipping-mask-\(layer.id.uuidString)")
     }
 
     private func beginLayerInlineRename(_ layer: ImageEditorLayer) {

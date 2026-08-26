@@ -551,6 +551,39 @@ struct ImageEditorLayerDeletionTests {
         #expect(source.contains("image-editor-layer-inline-name-\\(layer.id.uuidString)"))
     }
 
+    @Test func layerRowContextClippingMaskTargetsItsRowAndPreservesSelectedBatches() throws {
+        let viewModel = makeViewModel()
+        let base = layer("Base", in: viewModel)
+        let first = layer("First", in: viewModel)
+        let second = layer("Second", in: viewModel)
+        let outside = layer("Outside", in: viewModel)
+        viewModel.document.layers = [base, first, second, outside]
+        select([first.id, second.id], primary: second.id, in: viewModel)
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.clippingMaskActionFromContext(first.id) == .create)
+        #expect(viewModel.applyClippingMaskActionFromContext(first.id))
+        #expect(viewModel.document.layers.first { $0.id == first.id }?.isClippingMask == true)
+        #expect(viewModel.document.layers.first { $0.id == second.id }?.isClippingMask == true)
+        #expect(viewModel.document.layers.first { $0.id == base.id }?.isClippingMask == false)
+        #expect(viewModel.document.selectedLayerIDs == [first.id, second.id])
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.clippingMaskActionFromContext(first.id) == .release)
+
+        viewModel.selectLayer(outside.id)
+        #expect(viewModel.clippingMaskActionFromContext(first.id) == .release)
+        #expect(viewModel.applyClippingMaskActionFromContext(first.id))
+        #expect(viewModel.document.selectedLayerIDs == [first.id])
+        #expect(viewModel.document.layers.first { $0.id == first.id }?.isClippingMask == false)
+        #expect(viewModel.document.layers.first { $0.id == second.id }?.isClippingMask == true)
+
+        let firstIndex = try #require(viewModel.document.layers.firstIndex { $0.id == first.id })
+        viewModel.document.layers[firstIndex].isLocked = true
+        #expect(viewModel.clippingMaskActionFromContext(first.id) == nil)
+        #expect(!viewModel.applyClippingMaskActionFromContext(first.id))
+        #expect(viewModel.clippingMaskActionFromContext(UUID()) == nil)
+    }
+
     @Test func layerRowContextMenuWiresClipboardDuplicateAndDestructiveDeleteThroughContextPolicy() throws {
         let repositoryRoot = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()
@@ -567,8 +600,12 @@ struct ImageEditorLayerDeletionTests {
         #expect(source.contains("viewModel.canUngroupLayersFromContext(layer.id)"))
         #expect(source.contains("viewModel.groupSelectedLayer()"))
         #expect(source.contains("viewModel.ungroupSelectedLayers()"))
+        #expect(source.contains("layerContextClippingMaskButton(layer)"))
+        #expect(source.contains("viewModel.clippingMaskActionFromContext(layer.id)"))
+        #expect(source.contains("viewModel.applyClippingMaskActionFromContext(layer.id)"))
         #expect(source.contains("image-editor-layer-context-group-\\(layer.id.uuidString)"))
         #expect(source.contains("image-editor-layer-context-ungroup-\\(layer.id.uuidString)"))
+        #expect(source.contains("image-editor-layer-context-clipping-mask-\\(layer.id.uuidString)"))
         #expect(source.contains("viewModel.pasteClipboardAsLayer()"))
         #expect(source.contains("viewModel.pasteClipboardInPlaceAsLayer()"))
         #expect(source.contains("viewModel.canPasteClipboardImage"))
