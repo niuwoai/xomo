@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-27 03:01:30 +0800",
+  "generated_at": "2026-08-27 03:15:32 +0800",
   "total": 1,
   "passed": 1,
   "failed": 0,
@@ -10,15 +10,15 @@
   "results": [
     {
       "suite": "ImageEditorLayerRangeSelectionTests",
-      "method": "contextSelectSimilarUsesClickedRowInsteadOfCurrentPrimaryLayer",
-      "identifier": "veilpicTests/ImageEditorLayerRangeSelectionTests/contextSelectSimilarUsesClickedRowInsteadOfCurrentPrimaryLayer()",
+      "method": "contextMatchingSelectionFamilyUsesClickedRowForKindBlendAndLabel",
+      "identifier": "veilpicTests/ImageEditorLayerRangeSelectionTests/contextMatchingSelectionFamilyUsesClickedRowForKindBlendAndLabel()",
       "file": "ImageEditorLayerRangeSelectionTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 8.001,
+      "duration": 3.357,
       "infrastructure_retries": 0,
       "issues": [],
-      "log": "ImageEditorLayerRangeSelectionTests.contextSelectSimilarUsesClickedRowInsteadOfCurrentPrimaryLayer.log"
+      "log": "ImageEditorLayerRangeSelectionTests.contextMatchingSelectionFamilyUsesClickedRowForKindBlendAndLabel.log"
     }
   ]
 }

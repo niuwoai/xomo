@@ -2736,6 +2736,10 @@ final class ImageEditorViewModel: ObservableObject {
         document.selectedLayer != nil
     }
 
+    func canSelectLayersWithSameKindFromContext(_ clickedLayerID: UUID) -> Bool {
+        document.layers.contains { $0.id == clickedLayerID }
+    }
+
     var canSelectSimilarLayers: Bool {
         document.selectedLayer != nil
     }
@@ -2748,8 +2752,16 @@ final class ImageEditorViewModel: ObservableObject {
         document.selectedLayer != nil
     }
 
+    func canSelectLayersWithSameBlendModeFromContext(_ clickedLayerID: UUID) -> Bool {
+        document.layers.contains { $0.id == clickedLayerID }
+    }
+
     var canSelectLayersWithSameLabelColor: Bool {
         document.selectedLayer?.labelColor != nil
+    }
+
+    func canSelectLayersWithSameLabelColorFromContext(_ clickedLayerID: UUID) -> Bool {
+        document.layers.first(where: { $0.id == clickedLayerID })?.labelColor != nil
     }
 
     var canSetSelectedLayerLabelColor: Bool {
@@ -5320,9 +5332,20 @@ final class ImageEditorViewModel: ObservableObject {
 
     func selectLayersWithSameKind() {
         guard let selectedLayer = document.selectedLayer else { return }
-        let selectedKind = layerKindFilter(for: selectedLayer)
+        selectLayersWithSameKind(referenceLayer: selectedLayer)
+    }
+
+    @discardableResult
+    func selectLayersWithSameKindFromContext(_ clickedLayerID: UUID) -> Bool {
+        guard let clickedLayer = contextSelectionReferenceLayer(clickedLayerID) else { return false }
+        return selectLayersWithSameKind(referenceLayer: clickedLayer)
+    }
+
+    @discardableResult
+    private func selectLayersWithSameKind(referenceLayer: ImageEditorLayer) -> Bool {
+        let selectedKind = layerKindFilter(for: referenceLayer)
         let layerIDs = Set(document.layers.filter { selectedKind.matches($0) }.map(\.id))
-        guard !layerIDs.isEmpty else { return }
+        guard !layerIDs.isEmpty else { return false }
         document.selectedLayerIDs = layerIDs
         document.selectedLayerID = topmostSelectedLayerID()
         isEditingLayerMask = false
@@ -5332,6 +5355,7 @@ final class ImageEditorViewModel: ObservableObject {
             layerIDs.count,
             selectedKind.title
         )
+        return true
     }
 
     func selectSimilarLayers() {
@@ -5371,9 +5395,21 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     func selectLayersWithSameBlendMode() {
-        guard let blendMode = document.selectedLayer?.blendMode else { return }
+        guard let selectedLayer = document.selectedLayer else { return }
+        selectLayersWithSameBlendMode(referenceLayer: selectedLayer)
+    }
+
+    @discardableResult
+    func selectLayersWithSameBlendModeFromContext(_ clickedLayerID: UUID) -> Bool {
+        guard let clickedLayer = contextSelectionReferenceLayer(clickedLayerID) else { return false }
+        return selectLayersWithSameBlendMode(referenceLayer: clickedLayer)
+    }
+
+    @discardableResult
+    private func selectLayersWithSameBlendMode(referenceLayer: ImageEditorLayer) -> Bool {
+        let blendMode = referenceLayer.blendMode
         let layerIDs = Set(document.layers.filter { $0.blendMode == blendMode }.map(\.id))
-        guard !layerIDs.isEmpty else { return }
+        guard !layerIDs.isEmpty else { return false }
         document.selectedLayerIDs = layerIDs
         document.selectedLayerID = topmostSelectedLayerID()
         isEditingLayerMask = false
@@ -5383,12 +5419,30 @@ final class ImageEditorViewModel: ObservableObject {
             layerIDs.count,
             blendMode.title
         )
+        return true
     }
 
     func selectLayersWithSameLabelColor() {
-        guard let labelColor = document.selectedLayer?.labelColor else { return }
+        guard let selectedLayer = document.selectedLayer,
+              selectedLayer.labelColor != nil
+        else { return }
+        selectLayersWithSameLabelColor(referenceLayer: selectedLayer)
+    }
+
+    @discardableResult
+    func selectLayersWithSameLabelColorFromContext(_ clickedLayerID: UUID) -> Bool {
+        guard let clickedLayer = contextSelectionReferenceLayer(clickedLayerID) else { return false }
+        return selectLayersWithSameLabelColor(referenceLayer: clickedLayer)
+    }
+
+    @discardableResult
+    private func selectLayersWithSameLabelColor(referenceLayer: ImageEditorLayer) -> Bool {
+        guard let labelColor = referenceLayer.labelColor else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return false
+        }
         let layerIDs = Set(document.layers.filter { $0.labelColor == labelColor }.map(\.id))
-        guard !layerIDs.isEmpty else { return }
+        guard !layerIDs.isEmpty else { return false }
         document.selectedLayerIDs = layerIDs
         document.selectedLayerID = topmostSelectedLayerID()
         isEditingLayerMask = false
@@ -5398,6 +5452,15 @@ final class ImageEditorViewModel: ObservableObject {
             layerIDs.count,
             labelColor.title
         )
+        return true
+    }
+
+    private func contextSelectionReferenceLayer(_ clickedLayerID: UUID) -> ImageEditorLayer? {
+        guard let layer = document.layers.first(where: { $0.id == clickedLayerID }) else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return nil
+        }
+        return layer
     }
 
     private func selectLayerIDs(_ layerIDs: Set<UUID>, statusKey: String) {

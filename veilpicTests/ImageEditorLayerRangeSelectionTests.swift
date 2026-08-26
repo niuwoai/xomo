@@ -320,6 +320,72 @@ struct ImageEditorLayerRangeSelectionTests {
         #expect(viewModel.undoStack.count == undoCount)
     }
 
+    @Test func contextMatchingSelectionFamilyUsesClickedRowForKindBlendAndLabel() {
+        let fixture = makeFixture()
+        let viewModel = fixture.viewModel
+        var layers = fixture.layers
+        layers[1].blendMode = .multiply
+        layers[1].labelColor = .green
+        layers[2].blendMode = .multiply
+        layers[2].labelColor = .blue
+        layers[3].blendMode = .screen
+        layers[3].labelColor = .green
+        layers[4].blendMode = .screen
+        var primaryText = ImageEditorLayer.text(
+            name: "Primary",
+            origin: CGPoint(x: 10, y: 12),
+            content: ImageEditorTextContent(
+                text: "Primary",
+                color: .white,
+                fontSize: 16,
+                point: CGPoint(x: 0, y: 0)
+            )
+        )
+        primaryText.blendMode = .normal
+        viewModel.document.layers = layers + [primaryText]
+        let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
+
+        func restoreReferenceSelection() {
+            viewModel.document.selectedLayerID = primaryText.id
+            viewModel.document.selectedLayerIDs = [primaryText.id, layers[1].id]
+        }
+
+        restoreReferenceSelection()
+        #expect(viewModel.canSelectLayersWithSameKindFromContext(layers[1].id))
+        #expect(viewModel.selectLayersWithSameKindFromContext(layers[1].id))
+        #expect(viewModel.document.selectedLayerIDs == Set(layers.map(\.id)))
+        #expect(viewModel.document.selectedLayerID == layers[4].id)
+
+        restoreReferenceSelection()
+        #expect(viewModel.canSelectLayersWithSameBlendModeFromContext(layers[1].id))
+        #expect(viewModel.selectLayersWithSameBlendModeFromContext(layers[1].id))
+        #expect(viewModel.document.selectedLayerIDs == [layers[1].id, layers[2].id])
+        #expect(viewModel.document.selectedLayerID == layers[2].id)
+
+        restoreReferenceSelection()
+        #expect(viewModel.canSelectLayersWithSameLabelColorFromContext(layers[1].id))
+        #expect(viewModel.selectLayersWithSameLabelColorFromContext(layers[1].id))
+        #expect(viewModel.document.selectedLayerIDs == [layers[1].id, layers[3].id])
+        #expect(viewModel.document.selectedLayerID == layers[3].id)
+
+        restoreReferenceSelection()
+        #expect(!viewModel.canSelectLayersWithSameLabelColorFromContext(primaryText.id))
+        #expect(!viewModel.selectLayersWithSameLabelColorFromContext(primaryText.id))
+        #expect(viewModel.document.selectedLayerIDs == [primaryText.id, layers[1].id])
+
+        let invalidID = UUID()
+        #expect(!viewModel.canSelectLayersWithSameKindFromContext(invalidID))
+        #expect(!viewModel.canSelectLayersWithSameBlendModeFromContext(invalidID))
+        #expect(!viewModel.canSelectLayersWithSameLabelColorFromContext(invalidID))
+        #expect(!viewModel.selectLayersWithSameKindFromContext(invalidID))
+        #expect(!viewModel.selectLayersWithSameBlendModeFromContext(invalidID))
+        #expect(!viewModel.selectLayersWithSameLabelColorFromContext(invalidID))
+        #expect(viewModel.document.selectedLayerIDs == [primaryText.id, layers[1].id])
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.undoStack.count == undoCount)
+    }
+
     private struct Fixture {
         let viewModel: ImageEditorViewModel
         let layers: [ImageEditorLayer]

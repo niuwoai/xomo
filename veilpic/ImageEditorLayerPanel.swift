@@ -2201,16 +2201,7 @@ extension ImageEditorView {
                 }
                 .accessibilityIdentifier("image-editor-layer-context-rename-\(layer.id.uuidString)")
 
-                Button {
-                    viewModel.selectSimilarLayersFromContext(layer.id)
-                } label: {
-                    Label(
-                        L10n.text("imageEditor.action.layerSelectSimilar"),
-                        systemImage: "square.stack.3d.up"
-                    )
-                }
-                .disabled(!viewModel.canSelectSimilarLayersFromContext(layer.id))
-                .accessibilityIdentifier("image-editor-layer-context-select-similar-\(layer.id.uuidString)")
+                layerContextMatchingSelectionMenu(layer)
 
                 Divider()
                 Button {
@@ -2635,6 +2626,35 @@ extension ImageEditorView {
         }
         .disabled(action == nil)
         .accessibilityIdentifier("image-editor-layer-context-merge-\(layer.id.uuidString)")
+    }
+
+    private func layerContextMatchingSelectionMenu(_ layer: ImageEditorLayer) -> some View {
+        Menu(L10n.text("imageEditor.menu.layer.selectAttribute")) {
+            Button(L10n.text("imageEditor.action.layerSelectSimilar")) {
+                viewModel.selectSimilarLayersFromContext(layer.id)
+            }
+            .disabled(!viewModel.canSelectSimilarLayersFromContext(layer.id))
+            .accessibilityIdentifier("image-editor-layer-context-select-similar-\(layer.id.uuidString)")
+
+            Button(L10n.text("imageEditor.action.layerSelectSameKind")) {
+                viewModel.selectLayersWithSameKindFromContext(layer.id)
+            }
+            .disabled(!viewModel.canSelectLayersWithSameKindFromContext(layer.id))
+            .accessibilityIdentifier("image-editor-layer-context-select-same-kind-\(layer.id.uuidString)")
+
+            Button(L10n.text("imageEditor.action.layerSelectSameBlendMode")) {
+                viewModel.selectLayersWithSameBlendModeFromContext(layer.id)
+            }
+            .disabled(!viewModel.canSelectLayersWithSameBlendModeFromContext(layer.id))
+            .accessibilityIdentifier("image-editor-layer-context-select-same-blend-\(layer.id.uuidString)")
+
+            Button(L10n.text("imageEditor.action.layerSelectSameLabelColor")) {
+                viewModel.selectLayersWithSameLabelColorFromContext(layer.id)
+            }
+            .disabled(!viewModel.canSelectLayersWithSameLabelColorFromContext(layer.id))
+            .accessibilityIdentifier("image-editor-layer-context-select-same-label-\(layer.id.uuidString)")
+        }
+        .accessibilityIdentifier("image-editor-layer-context-select-attribute-\(layer.id.uuidString)")
     }
 
     private func layerContextStyleMenu(_ layer: ImageEditorLayer) -> some View {
