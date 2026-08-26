@@ -48,5 +48,9 @@ assert(help_stdout.include?('--test-timeout SECONDS'), '运行器必须暴露单
 runner_source = File.read(RUNNER, encoding: 'UTF-8')
 assert(runner_source.include?('terminate_process_group(wait_thread) if wait_thread.alive?'), '中断或异常退出时必须回收整个 Xcode 进程组')
 assert(runner_source.include?('XOMO_TEST_INFRASTRUCTURE_TIMEOUT'), '超时必须被归类为可重试的基础设施错误')
+assert(
+  runner_source.include?("'-parallel-testing-enabled', 'NO'"),
+  'Xcode 内建多宿主并发必须关闭，只允许 --jobs 控制独立进程并发'
+)
 
 puts 'run_tests_isolated contract: PASS'

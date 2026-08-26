@@ -1617,9 +1617,11 @@ struct veilpicTests {
 
         let pastedLayer = try #require(viewModel.document.selectedLayer)
         #expect(pastedLayer.frame == originalFrame)
+        #expect(pastedLayer.kind.isPixel)
+        #expect(pastedLayer.name == viewModel.document.layers[layerIndex].name)
         #expect(viewModel.document.layers.count == 3)
-        #expect(viewModel.statusText == L10n.text("imageEditor.status.clipboardPastedInPlace"))
-        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.clipboardPasteLayer"))
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.clipboardObjectsPastedInPlace"))
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.clipboardPasteObjects"))
     }
 
     @MainActor

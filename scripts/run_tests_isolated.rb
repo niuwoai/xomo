@@ -14,8 +14,9 @@
 #   worker，管不到 Swift Testing 的进程内并行。
 #
 #   已验证：把每个测试放进各自独立的 xcodebuild 进程里运行（进程之间内存隔离，
-#   不共享那块全局绘图状态），整套即可稳定全绿。本脚本就是做这件事，并输出
-#   JSON + Markdown 两份报告。
+#   不共享那块全局绘图状态），整套即可稳定全绿。本脚本同时关闭 Xcode 自己的
+#   多测试宿主并发，统一只由 --jobs 控制进程并发，避免全局剪贴板等 AppKit 资源
+#   在同一执行组内被两个宿主争用，并输出 JSON + Markdown 两份报告。
 #
 # 用法：
 #   ruby scripts/run_tests_isolated.rb                 # 串行，最稳（默认）
@@ -176,6 +177,7 @@ def run_one(test, logs_dir, timeout_seconds)
     "-only-testing:#{identifier}",
     '-resultBundlePath', result_bundle_path,
     '-enableCodeCoverage', 'NO',
+    '-parallel-testing-enabled', 'NO',
   ]
   started = Time.now
   attempts = 0
