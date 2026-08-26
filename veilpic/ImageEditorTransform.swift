@@ -18,6 +18,7 @@ enum ImageEditorLayerTransformContextAction: String, CaseIterable, Identifiable 
     case fillCanvas
     case fitSelection
     case fillSelection
+    case trimTransparentPixels
 
     var id: String { rawValue }
 
@@ -39,6 +40,10 @@ enum ImageEditorLayerTransformContextAction: String, CaseIterable, Identifiable 
         .fillSelection
     ]
 
+    static let pixelContentActions: [Self] = [
+        .trimTransparentPixels
+    ]
+
     var actionTitleKey: String {
         switch self {
         case .rotateLeft90: "imageEditor.action.layerRotate90Left"
@@ -50,6 +55,7 @@ enum ImageEditorLayerTransformContextAction: String, CaseIterable, Identifiable 
         case .fillCanvas: "imageEditor.action.layerFillCanvas"
         case .fitSelection: "imageEditor.action.layerFitSelection"
         case .fillSelection: "imageEditor.action.layerFillSelection"
+        case .trimTransparentPixels: "imageEditor.action.layerTrimTransparentPixels"
         }
     }
 
@@ -64,6 +70,7 @@ enum ImageEditorLayerTransformContextAction: String, CaseIterable, Identifiable 
         case .fillCanvas: "arrow.up.left.and.arrow.down.right"
         case .fitSelection: "rectangle.dashed"
         case .fillSelection: "rectangle.fill"
+        case .trimTransparentPixels: "crop"
         }
     }
 }
@@ -377,6 +384,9 @@ extension ImageEditorViewModel {
     ) -> Bool {
         guard !isEditingLayerMask else { return false }
         let selectedIDs = layerContextSelectionIDs(for: clickedLayerID)
+        if action == .trimTransparentPixels {
+            return transparentPixelTrimBounds(for: selectedIDs) != nil
+        }
         let indices = editableTransformLayerIndices(for: selectedIDs)
         guard !indices.isEmpty,
               indices.allSatisfy({
@@ -417,6 +427,8 @@ extension ImageEditorViewModel {
             ).isApproximatelyEqual(to: transformFrame)
         case .rotateLeft90, .rotateRight90, .rotate180, .flipHorizontal, .flipVertical:
             return true
+        case .trimTransparentPixels:
+            return false
         }
     }
 
@@ -448,6 +460,8 @@ extension ImageEditorViewModel {
             return fitSelectedLayerToSelection()
         case .fillSelection:
             return fillSelectedLayerToSelection()
+        case .trimTransparentPixels:
+            return trimSelectedLayersTransparentPixels()
         }
     }
 
@@ -1080,25 +1094,108 @@ extension ImageEditorViewModel {
             return
         }
 
-        guard let croppedImage = layer.image.cropped(to: alphaBounds) else {
+        guard let trimmedLayer = layerTrimmingTransparentPixels(
+            layer,
+            to: alphaBounds
+        ) else {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return
         }
-
-        var trimmedLayer = layer
-        trimmedLayer.image = croppedImage.normalizedBitmapImage()
-        trimmedLayer.mask = trimmedLayer.mask?.cropped(to: alphaBounds)?.normalizedBitmapImage()
-        if let vectorMask = trimmedLayer.vectorMask {
-            trimmedLayer.vectorMask = vectorMask.offsetPath(
-                by: CGSize(width: -alphaBounds.minX, height: -alphaBounds.minY)
-            )
-        }
-        trimmedLayer.frame = layer.frame.frameMappingLocalRect(alphaBounds, imageSize: layer.image.size)
 
         pushUndo()
         document.layers[index] = trimmedLayer
         appendHistory(L10n.text("imageEditor.history.layerTrimTransparentPixels"))
         statusText = L10n.text("imageEditor.status.layerTrimTransparentPixels")
+    }
+
+    @discardableResult
+    private func trimSelectedLayersTransparentPixels() -> Bool {
+        let selectedIDs = document.selectedLayerIDs.isEmpty
+            ? Set(document.selectedLayerID.map { [$0] } ?? [])
+            : document.selectedLayerIDs
+        guard let trimBounds = transparentPixelTrimBounds(for: selectedIDs) else {
+            return false
+        }
+
+        var trimmedLayers: [UUID: ImageEditorLayer] = [:]
+        for (layerID, alphaBounds) in trimBounds {
+            guard let layer = document.layers.first(where: { $0.id == layerID }),
+                  let trimmedLayer = layerTrimmingTransparentPixels(
+                      layer,
+                      to: alphaBounds
+                  )
+            else {
+                statusText = L10n.text("imageEditor.status.operationFailed")
+                return false
+            }
+            trimmedLayers[layerID] = trimmedLayer
+        }
+
+        pushUndo()
+        for index in document.layers.indices {
+            let layerID = document.layers[index].id
+            if let trimmedLayer = trimmedLayers[layerID] {
+                document.layers[index] = trimmedLayer
+            }
+        }
+        appendHistory(L10n.text("imageEditor.history.layerTrimTransparentPixels"))
+        statusText = L10n.text("imageEditor.status.layerTrimTransparentPixels")
+        return true
+    }
+
+    private func transparentPixelTrimBounds(
+        for selectedIDs: Set<UUID>
+    ) -> [UUID: CGRect]? {
+        guard !selectedIDs.isEmpty else { return nil }
+        var result: [UUID: CGRect] = [:]
+        for layerID in selectedIDs {
+            guard let layer = document.layers.first(where: { $0.id == layerID }),
+                  isLayerEligibleForTransparentPixelTrim(layer),
+                  let alphaBounds = layer.image.nonTransparentPixelBounds()
+            else { return nil }
+            let imageBounds = CGRect(origin: .zero, size: layer.image.size)
+            if !alphaBounds.isApproximatelyEqual(to: imageBounds) {
+                result[layerID] = alphaBounds
+            }
+        }
+        return result.isEmpty ? nil : result
+    }
+
+    private func isLayerEligibleForTransparentPixelTrim(
+        _ layer: ImageEditorLayer
+    ) -> Bool {
+        !isEditingLayerMask
+            && !layer.isGroup
+            && !layer.isAdjustment
+            && !layer.isFilter
+            && layer.kind.isPixel
+            && document.isEffectivelyVisible(layer)
+            && !document.isEffectivelyPixelsLocked(layer)
+            && !document.isEffectivelyPositionLocked(layer)
+    }
+
+    private func layerTrimmingTransparentPixels(
+        _ layer: ImageEditorLayer,
+        to alphaBounds: CGRect
+    ) -> ImageEditorLayer? {
+        guard let croppedImage = layer.image.cropped(to: alphaBounds) else {
+            return nil
+        }
+        var trimmedLayer = layer
+        trimmedLayer.image = croppedImage.normalizedBitmapImage()
+        trimmedLayer.mask = trimmedLayer.mask?
+            .cropped(to: alphaBounds)?
+            .normalizedBitmapImage()
+        if let vectorMask = trimmedLayer.vectorMask {
+            trimmedLayer.vectorMask = vectorMask.offsetPath(
+                by: CGSize(width: -alphaBounds.minX, height: -alphaBounds.minY)
+            )
+        }
+        trimmedLayer.frame = layer.frame.frameMappingLocalRect(
+            alphaBounds,
+            imageSize: layer.image.size
+        )
+        return trimmedLayer
     }
 
     var selectedTransformableLayerIndices: [Int] {

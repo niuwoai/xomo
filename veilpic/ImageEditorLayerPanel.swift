@@ -2677,6 +2677,12 @@ extension ImageEditorView {
             ForEach(ImageEditorLayerTransformContextAction.selectionSizingActions) { action in
                 layerContextTransformButton(layer, action: action)
             }
+
+            Divider()
+
+            ForEach(ImageEditorLayerTransformContextAction.pixelContentActions) { action in
+                layerContextTransformButton(layer, action: action)
+            }
         }
         .accessibilityIdentifier(
             "image-editor-layer-context-transform-\(layer.id.uuidString)"

@@ -184,6 +184,7 @@ struct ImageEditorLayerTransformContextTests {
         #expect(Set(ImageEditorLayerTransformContextAction.directionalActions)
             .union(ImageEditorLayerTransformContextAction.canvasSizingActions)
             .union(ImageEditorLayerTransformContextAction.selectionSizingActions)
+            .union(ImageEditorLayerTransformContextAction.pixelContentActions)
             == Set(ImageEditorLayerTransformContextAction.allCases))
         for action in ImageEditorLayerTransformContextAction.canvasSizingActions {
             #expect(!viewModel.canTransformLayersFromContext(
@@ -299,6 +300,133 @@ struct ImageEditorLayerTransformContextTests {
         #expect(viewModel.canRedo)
     }
 
+    @Test func unselectedContextTrimsOnlyClickedLayerAndUndoRestoresPixels() throws {
+        let viewModel = makeViewModel()
+        let selectedID = try addPixelLayer(
+            frame: CGRect(x: 12, y: 14, width: 22, height: 16),
+            color: .systemBlue,
+            to: viewModel
+        )
+        let clickedID = try addTransparentPixelLayer(
+            frame: CGRect(x: 10, y: 20, width: 40, height: 20),
+            imageSize: CGSize(width: 20, height: 10),
+            contentRect: CGRect(x: 5, y: 2, width: 10, height: 6),
+            color: .systemRed,
+            to: viewModel
+        )
+        viewModel.selectLayer(selectedID)
+        let selectedFrame = frame(of: selectedID, in: viewModel)
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.canTransformLayersFromContext(
+            clickedID,
+            action: .trimTransparentPixels
+        ))
+        #expect(viewModel.transformLayersFromContext(
+            clickedID,
+            action: .trimTransparentPixels
+        ))
+        let trimmedLayer = try #require(
+            viewModel.document.layers.first { $0.id == clickedID }
+        )
+        #expect(trimmedLayer.image.size == CGSize(width: 10, height: 6))
+        #expect(trimmedLayer.frame == CGRect(x: 20, y: 24, width: 20, height: 12))
+        #expect(frame(of: selectedID, in: viewModel) == selectedFrame)
+        #expect(viewModel.document.selectedLayerIDs == [clickedID])
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.history.last?.title == L10n.text(
+            "imageEditor.history.layerTrimTransparentPixels"
+        ))
+
+        viewModel.undo()
+        let restoredLayer = try #require(
+            viewModel.document.layers.first { $0.id == clickedID }
+        )
+        #expect(restoredLayer.image.size == CGSize(width: 20, height: 10))
+        #expect(restoredLayer.frame == CGRect(x: 10, y: 20, width: 40, height: 20))
+    }
+
+    @Test func selectedContextTrimsMultiplePixelLayersInOneUndoStep() throws {
+        let viewModel = makeViewModel()
+        let firstID = try addTransparentPixelLayer(
+            frame: CGRect(x: 10, y: 20, width: 40, height: 20),
+            imageSize: CGSize(width: 20, height: 10),
+            contentRect: CGRect(x: 5, y: 2, width: 10, height: 6),
+            color: .systemRed,
+            to: viewModel
+        )
+        let secondID = try addTransparentPixelLayer(
+            frame: CGRect(x: 60, y: 20, width: 32, height: 24),
+            imageSize: CGSize(width: 16, height: 12),
+            contentRect: CGRect(x: 2, y: 3, width: 8, height: 6),
+            color: .systemGreen,
+            to: viewModel
+        )
+        viewModel.selectLayer(firstID)
+        viewModel.selectLayer(secondID, extendingSelection: true)
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.transformLayersFromContext(
+            firstID,
+            action: .trimTransparentPixels
+        ))
+        #expect(frame(of: firstID, in: viewModel) == CGRect(
+            x: 20,
+            y: 24,
+            width: 20,
+            height: 12
+        ))
+        #expect(frame(of: secondID, in: viewModel) == CGRect(
+            x: 64,
+            y: 26,
+            width: 16,
+            height: 12
+        ))
+        #expect(viewModel.document.selectedLayerIDs == [firstID, secondID])
+        #expect(viewModel.document.history.count == historyCount + 1)
+
+        viewModel.undo()
+        #expect(frame(of: firstID, in: viewModel) == CGRect(
+            x: 10,
+            y: 20,
+            width: 40,
+            height: 20
+        ))
+        #expect(frame(of: secondID, in: viewModel) == CGRect(
+            x: 60,
+            y: 20,
+            width: 32,
+            height: 24
+        ))
+    }
+
+    @Test func opaqueContextTrimPreservesRedoAndHistory() throws {
+        let viewModel = makeViewModel()
+        let layerID = try addPixelLayer(
+            frame: CGRect(x: 20, y: 18, width: 36, height: 24),
+            color: .systemTeal,
+            to: viewModel
+        )
+        viewModel.selectLayer(layerID)
+        viewModel.setSelectedLayersLabelColor(.purple)
+        viewModel.undo()
+        let historyBefore = viewModel.document.history
+        let frameBefore = frame(of: layerID, in: viewModel)
+
+        #expect(viewModel.canRedo)
+        #expect(!viewModel.canTransformLayersFromContext(
+            layerID,
+            action: .trimTransparentPixels
+        ))
+        #expect(!viewModel.transformLayersFromContext(
+            layerID,
+            action: .trimTransparentPixels
+        ))
+        #expect(frame(of: layerID, in: viewModel) == frameBefore)
+        #expect(viewModel.document.history == historyBefore)
+        #expect(viewModel.canRedo)
+    }
+
     @Test func invalidAndLockedContextTransformsAreAtomicNoOps() throws {
         let viewModel = makeViewModel()
         let layerID = try addPixelLayer(
@@ -361,6 +489,26 @@ struct ImageEditorLayerTransformContextTests {
         )
         viewModel.document.layers[index].frame = frame
         viewModel.document.layers[index].image = image(color: color, size: frame.size)
+        return id
+    }
+
+    private func addTransparentPixelLayer(
+        frame: CGRect,
+        imageSize: CGSize,
+        contentRect: CGRect,
+        color: NSColor,
+        to viewModel: ImageEditorViewModel
+    ) throws -> UUID {
+        viewModel.addLayer()
+        let id = try #require(viewModel.document.selectedLayerID)
+        let index = try #require(
+            viewModel.document.layers.firstIndex { $0.id == id }
+        )
+        viewModel.document.layers[index].frame = frame
+        viewModel.document.layers[index].image = NSImage.rendered(size: imageSize) { _ in
+            color.setFill()
+            contentRect.fill()
+        } ?? NSImage.transparent(size: imageSize)
         return id
     }
 
