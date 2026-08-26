@@ -565,7 +565,8 @@ struct ImageEditorScopeTests {
         ).count - 1
         #expect(fileDropRegistrationCount == 2)
         #expect(interaction.contains("onFileDrop: { urls, location in"))
-        #expect(interaction.contains("ImageEditorLayerFileImportPolicy.supportedURLs(from: urls)"))
+        #expect(interaction.contains("XomoCanvasURLDropPolicy.resolve(urls)"))
+        #expect(interaction.contains("case let .localFiles(urls):"))
         #expect(interaction.contains("viewModel.importLayerFiles(urls, centeredAt: canvasPoint)"))
         #expect(importSource.contains("self.importLayerFiles(panel.urls)"))
         let batchStart = try #require(importSource.range(of: "func importLayerFiles("))

@@ -201,6 +201,25 @@ enum XomoFigmaClipboardPastePolicy {
     }
 }
 
+enum XomoCanvasURLDropRoute: Equatable {
+    case localFiles([URL])
+    case figmaLink(String)
+    case unavailable
+}
+
+enum XomoCanvasURLDropPolicy {
+    static func resolve(_ urls: [URL]) -> XomoCanvasURLDropRoute {
+        if let localFiles = ImageEditorLayerFileImportPolicy.supportedURLs(from: urls) {
+            return .localFiles(localFiles)
+        }
+        guard urls.count == 1,
+              let url = urls.first,
+              let preview = try? XomoFigmaLinkParser.parse(url.absoluteString)
+        else { return .unavailable }
+        return .figmaLink(preview.canonicalURL.absoluteString)
+    }
+}
+
 enum XomoFigmaLinkParser {
     static let maximumInputLength = 4_096
     private static let expectedPathComponentCount = 4

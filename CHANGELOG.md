@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.12.0-rc1312 - 2026-08-26
+
+### Added
+- 可将浏览器或 Figma 中的单个受信任 `design`、`file`、`proto`、`board` 链接直接拖到画布，Xomo 会复用现有安全解析器规范化 URL，并打开已预填的 Figma 导入面板。
+
+### Changed
+- 画布 URL 拖放现在明确区分本地可导入文件与远程 Figma 链接：PNG/JPG/TIFF/HEIC/WebP/SVG 批量拖入行为保持不变；多条远程链接、本地文件与远程链接混合、HTTP、伪造域名及格式错误的 URL 均不接管拖放。
+
+### Verification
+- 增量测试构建通过；Figma 链接导入与 URL 路由 12/12、画布图片/SVG 拖放 10/10、系统菜单/编辑器接线 193/193，合计产品专项 215/215。CLI/MCP 2/2、发布契约 7/7（21 项）、测试运行器契约与差异检查通过。本版本不覆盖 `/Applications/Xomo.app`，下一次完整门禁仍为 rc1320。
+
 ## 2.12.0-rc1311 - 2026-08-26
 
 ### Added

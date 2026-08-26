@@ -74,6 +74,43 @@ struct XomoFigmaLinkImportTests {
         }
     }
 
+    @Test func canvasURLDropKeepsLocalFilesAndAcceptsOneTrustedFigmaLink() throws {
+        let png = URL(fileURLWithPath: "/tmp/Poster.PNG")
+        let svg = URL(fileURLWithPath: "/tmp/Icon.svg")
+        let figma = try #require(URL(
+            string: "https://www.figma.com/design/abc123DEF456/Checkout?node-id=1-2&tracking=discarded"
+        ))
+
+        #expect(XomoCanvasURLDropPolicy.resolve([png, svg]) == .localFiles([png, svg]))
+        #expect(
+            XomoCanvasURLDropPolicy.resolve([figma]) == .figmaLink(
+                "https://www.figma.com/design/abc123DEF456/Checkout?node-id=1-2"
+            )
+        )
+    }
+
+    @Test func canvasURLDropRejectsAmbiguousOrUntrustedRemoteURLs() throws {
+        let png = URL(fileURLWithPath: "/tmp/Poster.PNG")
+        let figma = try #require(URL(
+            string: "https://www.figma.com/design/abc123DEF456/Checkout"
+        ))
+        let secondFigma = try #require(URL(
+            string: "https://www.figma.com/file/XYZ789abc012/Library"
+        ))
+        let insecure = try #require(URL(
+            string: "http://www.figma.com/design/abc123DEF456/Checkout"
+        ))
+        let impostor = try #require(URL(
+            string: "https://figma.example/design/abc123DEF456/Checkout"
+        ))
+
+        #expect(XomoCanvasURLDropPolicy.resolve([]) == .unavailable)
+        #expect(XomoCanvasURLDropPolicy.resolve([figma, secondFigma]) == .unavailable)
+        #expect(XomoCanvasURLDropPolicy.resolve([png, figma]) == .unavailable)
+        #expect(XomoCanvasURLDropPolicy.resolve([insecure]) == .unavailable)
+        #expect(XomoCanvasURLDropPolicy.resolve([impostor]) == .unavailable)
+    }
+
     @Test func everyParserErrorHasUniqueLocalizedPresentationKey() {
         let keys = XomoFigmaLinkParserError.allCases.map(\.localizationKey)
 
@@ -123,6 +160,8 @@ struct XomoFigmaLinkImportTests {
         #expect(editor.contains("initialLink: pendingFigmaLinkImportInput"))
         #expect(editor.contains("case .pasteAsLayer: performContextualPasteAsLayer()"))
         #expect(editor.contains("XomoFigmaClipboardPastePolicy.resolve("))
+        #expect(editor.contains("XomoCanvasURLDropPolicy.resolve(urls)"))
+        #expect(editor.contains("case let .figmaLink(canonicalURL):"))
         #expect(editor.contains("pendingFigmaLinkImportInput = canonicalURL"))
         #expect(menu.contains("pasteAsLayerTitleKey: contextualPasteAsLayerTitleKey"))
         #expect(menu.contains("return \"imageEditor.action.pasteFigmaLink\""))

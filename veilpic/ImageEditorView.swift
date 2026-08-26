@@ -3892,10 +3892,20 @@ struct ImageEditorView: View {
                         return true
                     },
                     onFileDrop: { urls, location in
-                        guard let urls = ImageEditorLayerFileImportPolicy.supportedURLs(from: urls),
-                              let canvasPoint = imagePoint(from: location, in: geometry.size)
-                        else { return false }
-                        return viewModel.importLayerFiles(urls, centeredAt: canvasPoint)
+                        switch XomoCanvasURLDropPolicy.resolve(urls) {
+                        case let .localFiles(urls):
+                            guard let canvasPoint = imagePoint(
+                                from: location,
+                                in: geometry.size
+                            ) else { return false }
+                            return viewModel.importLayerFiles(urls, centeredAt: canvasPoint)
+                        case let .figmaLink(canonicalURL):
+                            pendingFigmaLinkImportInput = canonicalURL
+                            isFigmaLinkImportPresented = true
+                            return true
+                        case .unavailable:
+                            return false
+                        }
                     },
                     onMagnifyChanged: { magnification, location in
                         viewModel.magnifyCanvas(
