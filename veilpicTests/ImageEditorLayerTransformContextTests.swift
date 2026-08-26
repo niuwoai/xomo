@@ -1,0 +1,196 @@
+import AppKit
+import Testing
+@testable import musepic
+
+@MainActor
+struct ImageEditorLayerTransformContextTests {
+    @Test func unselectedContextRotatesOnlyClickedLayerAndUndoRestoresGeometry() throws {
+        let viewModel = makeViewModel()
+        let selectedID = try addPixelLayer(
+            frame: CGRect(x: 12, y: 18, width: 24, height: 16),
+            color: .systemBlue,
+            to: viewModel
+        )
+        let clickedID = try addPixelLayer(
+            frame: CGRect(x: 82, y: 42, width: 30, height: 12),
+            color: .systemOrange,
+            to: viewModel
+        )
+        viewModel.selectLayer(selectedID)
+        let selectedFrame = frame(of: selectedID, in: viewModel)
+        let clickedFrame = try #require(frame(of: clickedID, in: viewModel))
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.canTransformLayersFromContext(
+            clickedID,
+            action: .rotateRight90
+        ))
+        #expect(viewModel.transformLayersFromContext(
+            clickedID,
+            action: .rotateRight90
+        ))
+        let rotatedFrame = try #require(frame(of: clickedID, in: viewModel))
+        #expect(abs(rotatedFrame.midX - clickedFrame.midX) < 0.01)
+        #expect(abs(rotatedFrame.midY - clickedFrame.midY) < 0.01)
+        #expect(abs(rotatedFrame.width - clickedFrame.height) < 0.01)
+        #expect(abs(rotatedFrame.height - clickedFrame.width) < 0.01)
+        #expect(frame(of: selectedID, in: viewModel) == selectedFrame)
+        #expect(viewModel.document.selectedLayerIDs == [clickedID])
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerRotate"))
+
+        viewModel.undo()
+        #expect(frame(of: clickedID, in: viewModel) == clickedFrame)
+        #expect(frame(of: selectedID, in: viewModel) == selectedFrame)
+    }
+
+    @Test func selectedContextFlipsSelectionAndLinkedPeersInOneUndoStep() throws {
+        let viewModel = makeViewModel()
+        let firstID = try addPixelLayer(
+            frame: CGRect(x: 10, y: 20, width: 20, height: 12),
+            color: .systemRed,
+            to: viewModel
+        )
+        let linkedID = try addPixelLayer(
+            frame: CGRect(x: 46, y: 36, width: 14, height: 10),
+            color: .systemGreen,
+            to: viewModel
+        )
+        let secondID = try addPixelLayer(
+            frame: CGRect(x: 80, y: 18, width: 30, height: 16),
+            color: .systemPurple,
+            to: viewModel
+        )
+        link(firstID, linkedID, in: viewModel)
+        viewModel.selectLayer(firstID)
+        viewModel.selectLayer(secondID, extendingSelection: true)
+        let originalFrames = [firstID, linkedID, secondID].map {
+            frame(of: $0, in: viewModel)
+        }
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.transformLayersFromContext(
+            firstID,
+            action: .flipHorizontal
+        ))
+        #expect(frame(of: firstID, in: viewModel) == CGRect(
+            x: 90,
+            y: 20,
+            width: 20,
+            height: 12
+        ))
+        #expect(frame(of: linkedID, in: viewModel) == CGRect(
+            x: 60,
+            y: 36,
+            width: 14,
+            height: 10
+        ))
+        #expect(frame(of: secondID, in: viewModel) == CGRect(
+            x: 10,
+            y: 18,
+            width: 30,
+            height: 16
+        ))
+        #expect(viewModel.document.selectedLayerIDs == [firstID, secondID])
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.history.last?.title == L10n.text(
+            "imageEditor.history.layerFlipHorizontal"
+        ))
+
+        viewModel.undo()
+        #expect([firstID, linkedID, secondID].map {
+            frame(of: $0, in: viewModel)
+        } == originalFrames)
+    }
+
+    @Test func invalidAndLockedContextTransformsAreAtomicNoOps() throws {
+        let viewModel = makeViewModel()
+        let layerID = try addPixelLayer(
+            frame: CGRect(x: 24, y: 18, width: 36, height: 20),
+            color: .systemTeal,
+            to: viewModel
+        )
+        viewModel.selectLayer(layerID)
+        viewModel.setSelectedLayersLabelColor(.purple)
+        viewModel.undo()
+        let historyBefore = viewModel.document.history
+        let frameBefore = frame(of: layerID, in: viewModel)
+        let unknownID = UUID()
+        let index = try #require(
+            viewModel.document.layers.firstIndex { $0.id == layerID }
+        )
+        viewModel.document.layers[index].locksPixels = true
+
+        #expect(viewModel.canRedo)
+        for action in ImageEditorLayerTransformContextAction.allCases {
+            #expect(!viewModel.canTransformLayersFromContext(
+                layerID,
+                action: action
+            ))
+            #expect(!viewModel.transformLayersFromContext(
+                layerID,
+                action: action
+            ))
+            #expect(!viewModel.canTransformLayersFromContext(
+                unknownID,
+                action: action
+            ))
+            #expect(!viewModel.transformLayersFromContext(
+                unknownID,
+                action: action
+            ))
+        }
+
+        #expect(frame(of: layerID, in: viewModel) == frameBefore)
+        #expect(viewModel.document.history == historyBefore)
+        #expect(viewModel.canRedo)
+    }
+
+    private func makeViewModel() -> ImageEditorViewModel {
+        ImageEditorViewModel(
+            sourceName: "transform-context.png",
+            image: image(color: .systemGray, size: NSSize(width: 160, height: 100))
+        ) { _ in }
+    }
+
+    private func addPixelLayer(
+        frame: CGRect,
+        color: NSColor,
+        to viewModel: ImageEditorViewModel
+    ) throws -> UUID {
+        viewModel.addLayer()
+        let id = try #require(viewModel.document.selectedLayerID)
+        let index = try #require(
+            viewModel.document.layers.firstIndex { $0.id == id }
+        )
+        viewModel.document.layers[index].frame = frame
+        viewModel.document.layers[index].image = image(color: color, size: frame.size)
+        return id
+    }
+
+    private func link(
+        _ firstID: UUID,
+        _ secondID: UUID,
+        in viewModel: ImageEditorViewModel
+    ) {
+        guard let firstIndex = viewModel.document.layers.firstIndex(where: { $0.id == firstID }),
+              let secondIndex = viewModel.document.layers.firstIndex(where: { $0.id == secondID })
+        else { return }
+        viewModel.document.layers[firstIndex].linkedLayerIDs = [secondID]
+        viewModel.document.layers[secondIndex].linkedLayerIDs = [firstID]
+    }
+
+    private func frame(
+        of id: UUID,
+        in viewModel: ImageEditorViewModel
+    ) -> CGRect? {
+        viewModel.document.layers.first { $0.id == id }?.frame.standardized
+    }
+
+    private func image(color: NSColor, size: NSSize) -> NSImage {
+        NSImage.rendered(size: size) { rect in
+            color.setFill()
+            rect.fill()
+        } ?? NSImage.transparent(size: size)
+    }
+}

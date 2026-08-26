@@ -2274,6 +2274,8 @@ extension ImageEditorView {
 
                 layerContextOrderingMenu(layer)
 
+                layerContextTransformMenu(layer)
+
                 layerContextAlignmentMenu(layer)
 
                 layerContextDistributionMenu(layer)
@@ -2655,6 +2657,31 @@ extension ImageEditorView {
         }
         .accessibilityIdentifier(
             "image-editor-layer-context-order-\(layer.id.uuidString)"
+        )
+    }
+
+    private func layerContextTransformMenu(_ layer: ImageEditorLayer) -> some View {
+        Menu(L10n.text("imageEditor.menu.layer.transform")) {
+            ForEach(ImageEditorLayerTransformContextAction.allCases) { action in
+                Button {
+                    viewModel.transformLayersFromContext(layer.id, action: action)
+                } label: {
+                    Label(
+                        L10n.text(action.actionTitleKey),
+                        systemImage: action.systemImage
+                    )
+                }
+                .disabled(!viewModel.canTransformLayersFromContext(
+                    layer.id,
+                    action: action
+                ))
+                .accessibilityIdentifier(
+                    "image-editor-layer-context-transform-\(action.rawValue)-\(layer.id.uuidString)"
+                )
+            }
+        }
+        .accessibilityIdentifier(
+            "image-editor-layer-context-transform-\(layer.id.uuidString)"
         )
     }
 

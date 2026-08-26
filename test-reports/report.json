@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-27 05:50:24 +0800",
+  "generated_at": "2026-08-27 06:08:02 +0800",
   "total": 3,
   "passed": 3,
   "failed": 0,
@@ -9,40 +9,40 @@
   "jobs": 1,
   "results": [
     {
-      "suite": "ImageEditorLayerSpacingDistributionContextTests",
-      "method": "insufficientInvalidLockedAndRepeatedSpacingAreAtomicNoOps",
-      "identifier": "veilpicTests/ImageEditorLayerSpacingDistributionContextTests/insufficientInvalidLockedAndRepeatedSpacingAreAtomicNoOps()",
-      "file": "ImageEditorLayerSpacingDistributionContextTests.swift",
+      "suite": "ImageEditorLayerTransformContextTests",
+      "method": "invalidAndLockedContextTransformsAreAtomicNoOps",
+      "identifier": "veilpicTests/ImageEditorLayerTransformContextTests/invalidAndLockedContextTransformsAreAtomicNoOps()",
+      "file": "ImageEditorLayerTransformContextTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.163,
+      "duration": 3.182,
       "infrastructure_retries": 0,
       "issues": [],
-      "log": "ImageEditorLayerSpacingDistributionContextTests.insufficientInvalidLockedAndRepeatedSpacingAreAtomicNoOps.log"
+      "log": "ImageEditorLayerTransformContextTests.invalidAndLockedContextTransformsAreAtomicNoOps.log"
     },
     {
-      "suite": "ImageEditorLayerSpacingDistributionContextTests",
-      "method": "selectedContextDistributesHorizontalGapsAndUndoRestoresFrame",
-      "identifier": "veilpicTests/ImageEditorLayerSpacingDistributionContextTests/selectedContextDistributesHorizontalGapsAndUndoRestoresFrame()",
-      "file": "ImageEditorLayerSpacingDistributionContextTests.swift",
+      "suite": "ImageEditorLayerTransformContextTests",
+      "method": "selectedContextFlipsSelectionAndLinkedPeersInOneUndoStep",
+      "identifier": "veilpicTests/ImageEditorLayerTransformContextTests/selectedContextFlipsSelectionAndLinkedPeersInOneUndoStep()",
+      "file": "ImageEditorLayerTransformContextTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.204,
+      "duration": 3.158,
       "infrastructure_retries": 0,
       "issues": [],
-      "log": "ImageEditorLayerSpacingDistributionContextTests.selectedContextDistributesHorizontalGapsAndUndoRestoresFrame.log"
+      "log": "ImageEditorLayerTransformContextTests.selectedContextFlipsSelectionAndLinkedPeersInOneUndoStep.log"
     },
     {
-      "suite": "ImageEditorLayerSpacingDistributionContextTests",
-      "method": "unselectedGroupContextDistributesVerticalGapsInsideGroupOnly",
-      "identifier": "veilpicTests/ImageEditorLayerSpacingDistributionContextTests/unselectedGroupContextDistributesVerticalGapsInsideGroupOnly()",
-      "file": "ImageEditorLayerSpacingDistributionContextTests.swift",
+      "suite": "ImageEditorLayerTransformContextTests",
+      "method": "unselectedContextRotatesOnlyClickedLayerAndUndoRestoresGeometry",
+      "identifier": "veilpicTests/ImageEditorLayerTransformContextTests/unselectedContextRotatesOnlyClickedLayerAndUndoRestoresGeometry()",
+      "file": "ImageEditorLayerTransformContextTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.164,
+      "duration": 4.677,
       "infrastructure_retries": 0,
       "issues": [],
-      "log": "ImageEditorLayerSpacingDistributionContextTests.unselectedGroupContextDistributesVerticalGapsInsideGroupOnly.log"
+      "log": "ImageEditorLayerTransformContextTests.unselectedContextRotatesOnlyClickedLayerAndUndoRestoresGeometry.log"
     }
   ]
 }

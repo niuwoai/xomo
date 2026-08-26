@@ -8,6 +8,36 @@
 import AppKit
 import Foundation
 
+enum ImageEditorLayerTransformContextAction: String, CaseIterable, Identifiable {
+    case rotateLeft90
+    case rotateRight90
+    case rotate180
+    case flipHorizontal
+    case flipVertical
+
+    var id: String { rawValue }
+
+    var actionTitleKey: String {
+        switch self {
+        case .rotateLeft90: "imageEditor.action.layerRotate90Left"
+        case .rotateRight90: "imageEditor.action.layerRotate90Right"
+        case .rotate180: "imageEditor.action.layerRotate180"
+        case .flipHorizontal: "imageEditor.action.layerFlipHorizontal"
+        case .flipVertical: "imageEditor.action.layerFlipVertical"
+        }
+    }
+
+    var systemImage: String {
+        switch self {
+        case .rotateLeft90: "rotate.left"
+        case .rotateRight90: "rotate.right"
+        case .rotate180: "arrow.triangle.2.circlepath"
+        case .flipHorizontal: "arrow.left.and.right"
+        case .flipVertical: "arrow.up.and.down"
+        }
+    }
+}
+
 @MainActor
 extension ImageEditorViewModel {
     var isResizingSelectedLayer: Bool {
@@ -309,6 +339,44 @@ extension ImageEditorViewModel {
 
     var canFlipSelectedLayer: Bool {
         canResizeSelectedLayer
+    }
+
+    func canTransformLayersFromContext(
+        _ clickedLayerID: UUID,
+        action _: ImageEditorLayerTransformContextAction
+    ) -> Bool {
+        guard !isEditingLayerMask else { return false }
+        let selectedIDs = layerContextSelectionIDs(for: clickedLayerID)
+        let indices = editableTransformLayerIndices(for: selectedIDs)
+        guard !indices.isEmpty,
+              indices.allSatisfy({
+                  !document.isEffectivelyPixelsLocked(document.layers[$0])
+              })
+        else { return false }
+        return transformFrame(for: indices, selectedIDs: selectedIDs) != nil
+    }
+
+    @discardableResult
+    func transformLayersFromContext(
+        _ clickedLayerID: UUID,
+        action: ImageEditorLayerTransformContextAction
+    ) -> Bool {
+        guard canTransformLayersFromContext(clickedLayerID, action: action) else {
+            return false
+        }
+        prepareLayerContextSelection(for: clickedLayerID)
+        switch action {
+        case .rotateLeft90:
+            return rotateSelectedLayerLeft90()
+        case .rotateRight90:
+            return rotateSelectedLayerRight90()
+        case .rotate180:
+            return rotateSelectedLayer180()
+        case .flipHorizontal:
+            return flipSelectedLayerHorizontal()
+        case .flipVertical:
+            return flipSelectedLayerVertical()
+        }
     }
 
     var canFitSelectedLayerToCanvas: Bool {
@@ -803,18 +871,19 @@ extension ImageEditorViewModel {
         appendHistory(L10n.text("imageEditor.history.layerScale"))
     }
 
-    func rotateSelectedLayer(degrees: CGFloat) {
-        guard abs(degrees) > 0.01 else { return }
+    @discardableResult
+    func rotateSelectedLayer(degrees: CGFloat) -> Bool {
+        guard abs(degrees) > 0.01 else { return false }
         guard canRotateSelectedLayer else {
             statusText = L10n.text("imageEditor.status.layerLocked")
-            return
+            return false
         }
         let indices = editableTransformLayerIndices()
         guard !indices.isEmpty,
               let transformFrame = transformFrame(for: indices)
         else {
             statusText = L10n.text("imageEditor.status.layerLocked")
-            return
+            return false
         }
 
         pushUndo()
@@ -825,29 +894,35 @@ extension ImageEditorViewModel {
         let referencePoint = selectedLayerTransformReferencePoint
             ?? CGPoint(x: transformFrame.midX, y: transformFrame.midY)
         guard applyRotation(degrees: degrees, from: originalLayers, around: referencePoint) else {
+            _ = discardLastUndoSnapshot()
             statusText = L10n.text("imageEditor.status.operationFailed")
-            return
+            return false
         }
         if shouldPreserveReferencePoint {
             setSelectedLayerTransformReferencePoint(referencePoint)
         }
         appendHistory(L10n.text("imageEditor.history.layerRotate"))
         statusText = L10n.text("imageEditor.status.layerRotated")
+        return true
     }
 
-    func rotateSelectedLayerLeft90() {
+    @discardableResult
+    func rotateSelectedLayerLeft90() -> Bool {
         rotateSelectedLayer(degrees: -90)
     }
 
-    func rotateSelectedLayerRight90() {
+    @discardableResult
+    func rotateSelectedLayerRight90() -> Bool {
         rotateSelectedLayer(degrees: 90)
     }
 
-    func rotateSelectedLayer180() {
+    @discardableResult
+    func rotateSelectedLayer180() -> Bool {
         rotateSelectedLayer(degrees: 180)
     }
 
-    func flipSelectedLayerHorizontal() {
+    @discardableResult
+    func flipSelectedLayerHorizontal() -> Bool {
         flipSelectedLayer(
             horizontal: true,
             historyTitle: L10n.text("imageEditor.history.layerFlipHorizontal"),
@@ -855,7 +930,8 @@ extension ImageEditorViewModel {
         )
     }
 
-    func flipSelectedLayerVertical() {
+    @discardableResult
+    func flipSelectedLayerVertical() -> Bool {
         flipSelectedLayer(
             horizontal: false,
             historyTitle: L10n.text("imageEditor.history.layerFlipVertical"),
@@ -1148,17 +1224,21 @@ extension ImageEditorViewModel {
         return changed
     }
 
-    private func flipSelectedLayer(horizontal: Bool, historyTitle: String, status: String) {
+    private func flipSelectedLayer(
+        horizontal: Bool,
+        historyTitle: String,
+        status: String
+    ) -> Bool {
         guard canFlipSelectedLayer else {
             statusText = L10n.text("imageEditor.status.layerLocked")
-            return
+            return false
         }
         let indices = editableTransformLayerIndices()
         guard !indices.isEmpty,
               let transformFrame = transformFrame(for: indices)
         else {
             statusText = L10n.text("imageEditor.status.layerLocked")
-            return
+            return false
         }
 
         pushUndo()
@@ -1168,11 +1248,12 @@ extension ImageEditorViewModel {
         guard applyFlip(horizontal: horizontal, from: originalLayers, around: transformFrame) else {
             _ = discardLastUndoSnapshot()
             statusText = L10n.text("imageEditor.status.operationFailed")
-            return
+            return false
         }
 
         appendHistory(historyTitle)
         statusText = status
+        return true
     }
 
     private func applyFlip(
