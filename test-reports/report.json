@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-27 04:57:29 +0800",
+  "generated_at": "2026-08-27 05:09:45 +0800",
   "total": 3,
   "passed": 3,
   "failed": 0,
@@ -9,40 +9,40 @@
   "jobs": 1,
   "results": [
     {
-      "suite": "ImageEditorLayerOrderingContextTests",
-      "method": "filteredBoundaryRepeatLockedAndInvalidContextsAreAtomicNoOps",
-      "identifier": "veilpicTests/ImageEditorLayerOrderingContextTests/filteredBoundaryRepeatLockedAndInvalidContextsAreAtomicNoOps()",
-      "file": "ImageEditorLayerOrderingContextTests.swift",
+      "suite": "ImageEditorLayerCanvasAlignmentContextTests",
+      "method": "boundaryLockedInvalidAndRepeatedAlignmentAreAtomicNoOps",
+      "identifier": "veilpicTests/ImageEditorLayerCanvasAlignmentContextTests/boundaryLockedInvalidAndRepeatedAlignmentAreAtomicNoOps()",
+      "file": "ImageEditorLayerCanvasAlignmentContextTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.136,
+      "duration": 3.175,
       "infrastructure_retries": 0,
       "issues": [],
-      "log": "ImageEditorLayerOrderingContextTests.filteredBoundaryRepeatLockedAndInvalidContextsAreAtomicNoOps.log"
+      "log": "ImageEditorLayerCanvasAlignmentContextTests.boundaryLockedInvalidAndRepeatedAlignmentAreAtomicNoOps.log"
     },
     {
-      "suite": "ImageEditorLayerOrderingContextTests",
-      "method": "selectedContextMovesWholeNoncontiguousSelectionOneStep",
-      "identifier": "veilpicTests/ImageEditorLayerOrderingContextTests/selectedContextMovesWholeNoncontiguousSelectionOneStep()",
-      "file": "ImageEditorLayerOrderingContextTests.swift",
+      "suite": "ImageEditorLayerCanvasAlignmentContextTests",
+      "method": "selectedContextAlignsEverySelectedLayerToCanvasCenter",
+      "identifier": "veilpicTests/ImageEditorLayerCanvasAlignmentContextTests/selectedContextAlignsEverySelectedLayerToCanvasCenter()",
+      "file": "ImageEditorLayerCanvasAlignmentContextTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.147,
+      "duration": 3.164,
       "infrastructure_retries": 0,
       "issues": [],
-      "log": "ImageEditorLayerOrderingContextTests.selectedContextMovesWholeNoncontiguousSelectionOneStep.log"
+      "log": "ImageEditorLayerCanvasAlignmentContextTests.selectedContextAlignsEverySelectedLayerToCanvasCenter.log"
     },
     {
-      "suite": "ImageEditorLayerOrderingContextTests",
-      "method": "unselectedContextMovesClickedLayerToTopAndUndoRestoresOrder",
-      "identifier": "veilpicTests/ImageEditorLayerOrderingContextTests/unselectedContextMovesClickedLayerToTopAndUndoRestoresOrder()",
-      "file": "ImageEditorLayerOrderingContextTests.swift",
+      "suite": "ImageEditorLayerCanvasAlignmentContextTests",
+      "method": "unselectedContextAlignsOnlyClickedLayerAndUndoRestoresFrame",
+      "identifier": "veilpicTests/ImageEditorLayerCanvasAlignmentContextTests/unselectedContextAlignsOnlyClickedLayerAndUndoRestoresFrame()",
+      "file": "ImageEditorLayerCanvasAlignmentContextTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.139,
+      "duration": 3.152,
       "infrastructure_retries": 0,
       "issues": [],
-      "log": "ImageEditorLayerOrderingContextTests.unselectedContextMovesClickedLayerToTopAndUndoRestoresOrder.log"
+      "log": "ImageEditorLayerCanvasAlignmentContextTests.unselectedContextAlignsOnlyClickedLayerAndUndoRestoresFrame.log"
     }
   ]
 }

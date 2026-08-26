@@ -72,6 +72,17 @@ enum ImageEditorLayerAlignment: CaseIterable, Hashable, Identifiable {
         case .bottom: "image-editor-move-align-bottom"
         }
     }
+
+    var contextIdentifier: String {
+        switch self {
+        case .left: "left"
+        case .horizontalCenter: "horizontal-center"
+        case .right: "right"
+        case .top: "top"
+        case .verticalCenter: "vertical-center"
+        case .bottom: "bottom"
+        }
+    }
 }
 
 enum ImageEditorLayerDistribution: String, CaseIterable, Identifiable {
@@ -168,6 +179,34 @@ extension ImageEditorViewModel {
         !editableTransformLayerIndices().isEmpty
     }
 
+    func canAlignLayersFromContextToCanvas(
+        _ clickedLayerID: UUID,
+        alignment: ImageEditorLayerAlignment
+    ) -> Bool {
+        let selectedIDs = layerContextSelectionIDs(for: clickedLayerID)
+        let indices = editableTransformLayerIndices(for: selectedIDs)
+        guard !indices.isEmpty else { return false }
+        let canvasBounds = CGRect(origin: .zero, size: document.canvasSize)
+        return indices.contains { index in
+            let frame = document.layers[index].frame.standardized
+            return alignedFrame(frame, to: canvasBounds, alignment: alignment) != frame
+        }
+    }
+
+    @discardableResult
+    func alignLayersFromContextToCanvas(
+        _ clickedLayerID: UUID,
+        alignment: ImageEditorLayerAlignment
+    ) -> Bool {
+        guard canAlignLayersFromContextToCanvas(
+            clickedLayerID,
+            alignment: alignment
+        ) else { return false }
+        prepareLayerContextSelection(for: clickedLayerID)
+        alignSelectedLayersToCanvas(alignment)
+        return true
+    }
+
     var canAlignSelectedLayersToSelection: Bool {
         !editableTransformLayerIndices().isEmpty && selectionAlignmentTargetBounds() != nil
     }
@@ -232,22 +271,11 @@ extension ImageEditorViewModel {
         var alignedFrames: [UUID: CGRect] = [:]
         for index in indices {
             let layer = document.layers[index]
-            var frame = layer.frame.standardized
-            switch alignment {
-            case .left:
-                frame.origin.x = canvasBounds.minX
-            case .horizontalCenter:
-                frame.origin.x = canvasBounds.midX - frame.width / 2
-            case .right:
-                frame.origin.x = canvasBounds.maxX - frame.width
-            case .top:
-                frame.origin.y = canvasBounds.maxY - frame.height
-            case .verticalCenter:
-                frame.origin.y = canvasBounds.midY - frame.height / 2
-            case .bottom:
-                frame.origin.y = canvasBounds.minY
-            }
-            alignedFrames[layer.id] = frame
+            alignedFrames[layer.id] = alignedFrame(
+                layer.frame.standardized,
+                to: canvasBounds,
+                alignment: alignment
+            )
         }
 
         guard alignedFrames.contains(where: { item in
@@ -425,6 +453,29 @@ extension ImageEditorViewModel {
         let bounds = selectedBounds.standardized
         guard !bounds.isNull, bounds.width > 0.1, bounds.height > 0.1 else { return nil }
         return bounds
+    }
+
+    private func alignedFrame(
+        _ frame: CGRect,
+        to targetBounds: CGRect,
+        alignment: ImageEditorLayerAlignment
+    ) -> CGRect {
+        var result = frame.standardized
+        switch alignment {
+        case .left:
+            result.origin.x = targetBounds.minX
+        case .horizontalCenter:
+            result.origin.x = targetBounds.midX - result.width / 2
+        case .right:
+            result.origin.x = targetBounds.maxX - result.width
+        case .top:
+            result.origin.y = targetBounds.maxY - result.height
+        case .verticalCenter:
+            result.origin.y = targetBounds.midY - result.height / 2
+        case .bottom:
+            result.origin.y = targetBounds.minY
+        }
+        return result
     }
 }
 

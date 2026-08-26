@@ -950,8 +950,12 @@ extension ImageEditorViewModel {
     }
 
     var selectedTransformableLayerIndices: [Int] {
+        transformableLayerIndices(for: document.selectedLayerIDs)
+    }
+
+    func transformableLayerIndices(for selectedIDs: Set<UUID>) -> [Int] {
         let transformLayerIDs = transformLayerIDsExpandingLinkedGroups(
-            startingFrom: document.selectedLayerIDs
+            startingFrom: selectedIDs
         )
         return document.layers.indices.filter { index in
             let layer = document.layers[index]
@@ -975,7 +979,11 @@ extension ImageEditorViewModel {
     }
 
     func editableTransformLayerIndices() -> [Int] {
-        let indices = selectedTransformableLayerIndices
+        editableTransformLayerIndices(for: document.selectedLayerIDs)
+    }
+
+    func editableTransformLayerIndices(for selectedIDs: Set<UUID>) -> [Int] {
+        let indices = transformableLayerIndices(for: selectedIDs)
         guard !indices.isEmpty,
               indices.allSatisfy({ !document.isEffectivelyPositionLocked(document.layers[$0]) })
         else { return [] }

@@ -2274,6 +2274,8 @@ extension ImageEditorView {
 
                 layerContextOrderingMenu(layer)
 
+                layerContextCanvasAlignmentMenu(layer)
+
                 Divider()
                 Button {
                     viewModel.prepareLayerContextSelection(for: layer.id)
@@ -2651,6 +2653,34 @@ extension ImageEditorView {
         }
         .accessibilityIdentifier(
             "image-editor-layer-context-order-\(layer.id.uuidString)"
+        )
+    }
+
+    private func layerContextCanvasAlignmentMenu(_ layer: ImageEditorLayer) -> some View {
+        Menu(L10n.text("imageEditor.menu.layer.align")) {
+            ForEach(ImageEditorLayerAlignment.allCases) { alignment in
+                Button {
+                    viewModel.alignLayersFromContextToCanvas(
+                        layer.id,
+                        alignment: alignment
+                    )
+                } label: {
+                    Label(
+                        L10n.text(alignment.actionTitleKey(for: .canvas)),
+                        systemImage: alignment.optionBarSystemImage
+                    )
+                }
+                .disabled(!viewModel.canAlignLayersFromContextToCanvas(
+                    layer.id,
+                    alignment: alignment
+                ))
+                .accessibilityIdentifier(
+                    "image-editor-layer-context-align-canvas-\(alignment.contextIdentifier)-\(layer.id.uuidString)"
+                )
+            }
+        }
+        .accessibilityIdentifier(
+            "image-editor-layer-context-align-canvas-\(layer.id.uuidString)"
         )
     }
 
