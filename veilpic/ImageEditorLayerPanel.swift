@@ -2291,6 +2291,17 @@ extension ImageEditorView {
 
                 layerContextClippingMaskButton(layer)
 
+                Button {
+                    viewModel.convertLayersFromContext(layer.id)
+                } label: {
+                    Label(
+                        L10n.text("imageEditor.action.layerSmartObject"),
+                        systemImage: "cube.transparent"
+                    )
+                }
+                .disabled(!viewModel.canConvertLayersFromContext(layer.id))
+                .accessibilityIdentifier("image-editor-layer-context-smart-object-\(layer.id.uuidString)")
+
                 Divider()
                 Button(role: .destructive) {
                     viewModel.prepareLayerContextSelection(for: layer.id)

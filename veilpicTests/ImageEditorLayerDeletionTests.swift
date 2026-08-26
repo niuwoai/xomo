@@ -584,6 +584,44 @@ struct ImageEditorLayerDeletionTests {
         #expect(viewModel.clippingMaskActionFromContext(UUID()) == nil)
     }
 
+    @Test func layerRowContextSmartObjectConversionPreservesSelectionOrTargetsOneRow() throws {
+        let viewModel = makeViewModel()
+        let first = layer("First", in: viewModel)
+        let second = layer("Second", in: viewModel)
+        let outside = layer("Outside", in: viewModel)
+        viewModel.document.layers = [first, second, outside]
+        select([first.id, second.id], primary: second.id, in: viewModel)
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.canConvertLayersFromContext(first.id))
+        #expect(viewModel.convertLayersFromContext(first.id))
+        let combinedSmartObject = try #require(viewModel.document.selectedLayer)
+        #expect(combinedSmartObject.isSmartObject)
+        #expect(!viewModel.document.layers.contains { $0.id == first.id })
+        #expect(!viewModel.document.layers.contains { $0.id == second.id })
+        #expect(viewModel.document.layers.contains { $0.id == outside.id })
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerSmartObject"))
+
+        viewModel.undo()
+        #expect(viewModel.document.selectedLayerIDs == [first.id, second.id])
+        viewModel.selectLayer(first.id)
+        #expect(viewModel.canConvertLayersFromContext(outside.id))
+        #expect(viewModel.convertLayersFromContext(outside.id))
+        let rowSmartObject = try #require(viewModel.document.selectedLayer)
+        #expect(rowSmartObject.isSmartObject)
+        #expect(viewModel.document.layers.contains { $0.id == first.id })
+        #expect(viewModel.document.layers.contains { $0.id == second.id })
+        #expect(!viewModel.document.layers.contains { $0.id == outside.id })
+
+        let firstIndex = try #require(viewModel.document.layers.firstIndex { $0.id == first.id })
+        viewModel.document.layers[firstIndex].isLocked = true
+        #expect(!viewModel.canConvertLayersFromContext(first.id))
+        #expect(!viewModel.convertLayersFromContext(first.id))
+        #expect(!viewModel.canConvertLayersFromContext(rowSmartObject.id))
+        #expect(!viewModel.canConvertLayersFromContext(UUID()))
+    }
+
     @Test func layerRowContextMenuWiresClipboardDuplicateAndDestructiveDeleteThroughContextPolicy() throws {
         let repositoryRoot = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()
@@ -603,9 +641,12 @@ struct ImageEditorLayerDeletionTests {
         #expect(source.contains("layerContextClippingMaskButton(layer)"))
         #expect(source.contains("viewModel.clippingMaskActionFromContext(layer.id)"))
         #expect(source.contains("viewModel.applyClippingMaskActionFromContext(layer.id)"))
+        #expect(source.contains("viewModel.canConvertLayersFromContext(layer.id)"))
+        #expect(source.contains("viewModel.convertLayersFromContext(layer.id)"))
         #expect(source.contains("image-editor-layer-context-group-\\(layer.id.uuidString)"))
         #expect(source.contains("image-editor-layer-context-ungroup-\\(layer.id.uuidString)"))
         #expect(source.contains("image-editor-layer-context-clipping-mask-\\(layer.id.uuidString)"))
+        #expect(source.contains("image-editor-layer-context-smart-object-\\(layer.id.uuidString)"))
         #expect(source.contains("viewModel.pasteClipboardAsLayer()"))
         #expect(source.contains("viewModel.pasteClipboardInPlaceAsLayer()"))
         #expect(source.contains("viewModel.canPasteClipboardImage"))

@@ -3100,7 +3100,13 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     var canConvertSelectedLayerToSmartObject: Bool {
-        smartObjectConversionCandidate() != nil
+        smartObjectConversionCandidate(selectedIDs: document.selectedLayerIDs) != nil
+    }
+
+    func canConvertLayersFromContext(_ clickedLayerID: UUID) -> Bool {
+        smartObjectConversionCandidate(
+            selectedIDs: layerContextSelectionIDs(for: clickedLayerID)
+        ) != nil
     }
 
     var canReplaceSelectedSmartObjectContents: Bool {
@@ -5673,11 +5679,12 @@ final class ImageEditorViewModel: ObservableObject {
         return true
     }
 
-    func convertSelectedLayerToSmartObject() {
+    @discardableResult
+    func convertSelectedLayerToSmartObject() -> Bool {
         guard let plan = smartObjectConversionPlan()
         else {
             statusText = L10n.text("imageEditor.status.operationFailed")
-            return
+            return false
         }
 
         pushUndo()
@@ -5691,6 +5698,14 @@ final class ImageEditorViewModel: ObservableObject {
         isEditingLayerMask = false
         appendHistory(L10n.text("imageEditor.history.layerSmartObject"))
         statusText = L10n.text("imageEditor.status.layerSmartObject")
+        return true
+    }
+
+    @discardableResult
+    func convertLayersFromContext(_ clickedLayerID: UUID) -> Bool {
+        guard canConvertLayersFromContext(clickedLayerID) else { return false }
+        prepareLayerContextSelection(for: clickedLayerID)
+        return convertSelectedLayerToSmartObject()
     }
 
     func resetSelectedSmartObjectTransform() {
@@ -9889,8 +9904,10 @@ final class ImageEditorViewModel: ObservableObject {
         else { appendHistory(L10n.text(selectedHistory)); statusText = L10n.format(selectedStatus, indices.count) }
     }
 
-    private func smartObjectConversionCandidate() -> ImageEditorSmartObjectConversionCandidate? {
-        let rootIndices = smartObjectConversionRootIndices()
+    private func smartObjectConversionCandidate(
+        selectedIDs: Set<UUID>
+    ) -> ImageEditorSmartObjectConversionCandidate? {
+        let rootIndices = smartObjectConversionRootIndices(selectedIDs: selectedIDs)
         guard !rootIndices.isEmpty else { return nil }
 
         let rootLayers = rootIndices.map { document.layers[$0] }
@@ -9942,7 +9959,9 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     private func smartObjectConversionPlan() -> ImageEditorSmartObjectConversionPlan? {
-        guard let candidate = smartObjectConversionCandidate() else { return nil }
+        guard let candidate = smartObjectConversionCandidate(
+            selectedIDs: document.selectedLayerIDs
+        ) else { return nil }
         var sourceDocument = document
         sourceDocument.layers = document.layers.filter { candidate.removedLayerIDs.contains($0.id) }
         sourceDocument.selectedLayerID = nil
@@ -9981,8 +10000,10 @@ final class ImageEditorViewModel: ObservableObject {
         )
     }
 
-    private func smartObjectConversionRootIndices() -> [Int] {
-        let selectedIndices = selectedLayerIndices.sorted()
+    private func smartObjectConversionRootIndices(selectedIDs: Set<UUID>) -> [Int] {
+        let selectedIndices = document.layers.indices.filter {
+            selectedIDs.contains(document.layers[$0].id)
+        }
         let selectedGroupIDs = Set(selectedIndices.compactMap { index in
             let layer = document.layers[index]
             return layer.isGroup ? layer.id : nil
