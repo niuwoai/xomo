@@ -277,6 +277,7 @@ struct ImageEditorView: View {
     @State private var isQuickMaskOptionsPresented = false
     @State var isFigmaLinkImportPresented = false
     @State var pendingFigmaLinkImportInput: String?
+    @State var pendingFigmaLinkImportPlacementCenter: CGPoint?
     @State var isBrushPresetRenamePresented = false
     @State var brushPresetNameDraft = ""
     @State private var canvasTextEditingOrigin: CGPoint?
@@ -597,10 +598,12 @@ struct ImageEditorView: View {
         }
         .sheet(isPresented: $isFigmaLinkImportPresented, onDismiss: {
             pendingFigmaLinkImportInput = nil
+            pendingFigmaLinkImportPlacementCenter = nil
         }) {
             XomoFigmaLinkImportSheet(
                 viewModel: viewModel,
-                initialLink: pendingFigmaLinkImportInput
+                initialLink: pendingFigmaLinkImportInput,
+                placementCenter: pendingFigmaLinkImportPlacementCenter
             )
         }
         .focusedSceneValue(\.xomoFileCommandActions, xomoFileCommandActions)
@@ -3373,8 +3376,7 @@ struct ImageEditorView: View {
         case .layerPayload:
             viewModel.pasteClipboardAsLayer(from: pasteboard)
         case let .figmaLink(canonicalURL):
-            pendingFigmaLinkImportInput = canonicalURL
-            isFigmaLinkImportPresented = true
+            presentFigmaLinkImport(canonicalURL: canonicalURL)
         case .unavailable:
             viewModel.pasteClipboardAsLayer(from: pasteboard)
         }
@@ -3901,8 +3903,14 @@ struct ImageEditorView: View {
                             XomoComponentLibraryCursorPolicy.restoreArrow(for: .dropCompleted)
                             return true
                         case let .figmaLink(canonicalURL):
-                            pendingFigmaLinkImportInput = canonicalURL
-                            isFigmaLinkImportPresented = true
+                            guard let canvasPoint = imagePoint(
+                                from: location,
+                                in: geometry.size
+                            ) else { return false }
+                            presentFigmaLinkImport(
+                                canonicalURL: canonicalURL,
+                                placementCenter: canvasPoint
+                            )
                             return true
                         case .unavailable:
                             return false
@@ -3917,8 +3925,14 @@ struct ImageEditorView: View {
                             ) else { return false }
                             return viewModel.importLayerFiles(urls, centeredAt: canvasPoint)
                         case let .figmaLink(canonicalURL):
-                            pendingFigmaLinkImportInput = canonicalURL
-                            isFigmaLinkImportPresented = true
+                            guard let canvasPoint = imagePoint(
+                                from: location,
+                                in: geometry.size
+                            ) else { return false }
+                            presentFigmaLinkImport(
+                                canonicalURL: canonicalURL,
+                                placementCenter: canvasPoint
+                            )
                             return true
                         case .unavailable:
                             return false

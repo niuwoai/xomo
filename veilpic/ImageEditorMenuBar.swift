@@ -130,8 +130,17 @@ extension ImageEditorView {
         case .export:
             viewModel.openExportPanel()
         case .importFigmaLink:
-            isFigmaLinkImportPresented = true
+            presentFigmaLinkImport()
         }
+    }
+
+    func presentFigmaLinkImport(
+        canonicalURL: String? = nil,
+        placementCenter: CGPoint? = nil
+    ) {
+        pendingFigmaLinkImportInput = canonicalURL
+        pendingFigmaLinkImportPlacementCenter = placementCenter
+        isFigmaLinkImportPresented = true
     }
 
     func requestDocumentReplacement(

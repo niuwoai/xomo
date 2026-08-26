@@ -9,9 +9,15 @@ struct XomoFigmaLinkImportSheet: View {
     @State private var didImportNodePlan = false
     @StateObject private var metadataController = XomoFigmaAuthorizedMetadataController()
     @StateObject private var nodeImportController = XomoFigmaNodeImportController()
+    let placementCenter: CGPoint?
 
-    init(viewModel: ImageEditorViewModel, initialLink: String? = nil) {
+    init(
+        viewModel: ImageEditorViewModel,
+        initialLink: String? = nil,
+        placementCenter: CGPoint? = nil
+    ) {
         self.viewModel = viewModel
+        self.placementCenter = placementCenter
         _draft = State(initialValue: XomoFigmaLinkImportDraft(input: initialLink ?? ""))
     }
 
@@ -456,7 +462,10 @@ struct XomoFigmaLinkImportSheet: View {
                 }
                 Spacer()
                 Button(L10n.text("xomo.figma.node.importLayers")) {
-                    didImportNodePlan = viewModel.importFigmaNodePlan(plan)
+                    didImportNodePlan = viewModel.importFigmaNodePlan(
+                        plan,
+                        centeredAt: placementCenter
+                    )
                 }
                 .buttonStyle(.borderedProminent)
                 .focusable(false)

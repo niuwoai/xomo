@@ -37,7 +37,8 @@ enum XomoFigmaNodeMaterializer {
 
     static func materialize(
         plan: XomoFigmaNodeImportPlan,
-        canvasSize: CGSize
+        canvasSize: CGSize,
+        destinationCenter: CGPoint? = nil
     ) -> XomoFigmaNodeMaterializationResult {
         let itemByID = Dictionary(uniqueKeysWithValues: plan.items.map { ($0.sourceID, $0) })
         let childrenByParent = Dictionary(grouping: plan.items) { $0.parentSourceID }
@@ -45,7 +46,11 @@ enum XomoFigmaNodeMaterializer {
             item.targetKind == .group ? (item.sourceID, UUID()) : nil
         })
         let sourceBounds = importBounds(plan: plan)
-        let transform = importTransform(sourceBounds: sourceBounds, canvasSize: canvasSize)
+        let transform = importTransform(
+            sourceBounds: sourceBounds,
+            canvasSize: canvasSize,
+            destinationCenter: destinationCenter
+        )
         var layers: [ImageEditorLayer] = []
         var slices: [ImageEditorSlice] = []
         var layerIDsBySource: [String: UUID] = [:]
@@ -919,7 +924,8 @@ enum XomoFigmaNodeMaterializer {
 
     private static func importTransform(
         sourceBounds: CGRect,
-        canvasSize: CGSize
+        canvasSize: CGSize,
+        destinationCenter: CGPoint?
     ) -> XomoFigmaImportTransform {
         let availableWidth = max(1, canvasSize.width * canvasInsetRatio)
         let availableHeight = max(1, canvasSize.height * canvasInsetRatio)
@@ -929,13 +935,29 @@ enum XomoFigmaNodeMaterializer {
             availableHeight / max(1, sourceBounds.height)
         )
         let scaledSize = CGSize(width: sourceBounds.width * scale, height: sourceBounds.height * scale)
+        let resolvedCenter = resolvedDestinationCenter(destinationCenter, canvasSize: canvasSize)
         return XomoFigmaImportTransform(
             sourceOrigin: sourceBounds.origin,
             destinationOrigin: CGPoint(
-                x: (canvasSize.width - scaledSize.width) / 2,
-                y: (canvasSize.height - scaledSize.height) / 2
+                x: resolvedCenter.x - scaledSize.width / 2,
+                y: resolvedCenter.y - scaledSize.height / 2
             ),
             scale: scale
+        )
+    }
+
+    private static func resolvedDestinationCenter(
+        _ candidate: CGPoint?,
+        canvasSize: CGSize
+    ) -> CGPoint {
+        let canvasCenter = CGPoint(x: canvasSize.width / 2, y: canvasSize.height / 2)
+        guard let candidate,
+              candidate.x.isFinite,
+              candidate.y.isFinite
+        else { return canvasCenter }
+        return CGPoint(
+            x: min(max(0, candidate.x), canvasSize.width),
+            y: min(max(0, candidate.y), canvasSize.height)
         )
     }
 
@@ -1009,8 +1031,15 @@ private struct XomoFigmaImportTransform {
 
 extension ImageEditorViewModel {
     @discardableResult
-    func importFigmaNodePlan(_ plan: XomoFigmaNodeImportPlan) -> Bool {
-        let result = XomoFigmaNodeMaterializer.materialize(plan: plan, canvasSize: document.canvasSize)
+    func importFigmaNodePlan(
+        _ plan: XomoFigmaNodeImportPlan,
+        centeredAt destinationCenter: CGPoint? = nil
+    ) -> Bool {
+        let result = XomoFigmaNodeMaterializer.materialize(
+            plan: plan,
+            canvasSize: document.canvasSize,
+            destinationCenter: destinationCenter
+        )
         let availableSliceCapacity = max(0, ImageEditorSlice.maximumCount - document.slices.count)
         let importedSlices = Array(result.slices.prefix(availableSliceCapacity))
         let skippedSliceCount = result.slices.count - importedSlices.count

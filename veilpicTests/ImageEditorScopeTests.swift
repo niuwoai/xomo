@@ -567,6 +567,7 @@ struct ImageEditorScopeTests {
         #expect(interaction.contains("XomoCanvasStringDropPolicy.resolve("))
         #expect(interaction.contains("knownComponentPayloads: Set(XomoComponentKind.allCases.map(\\.rawValue))"))
         #expect(interaction.contains("case let .componentPayload(rawValue):"))
+        #expect(interaction.components(separatedBy: "placementCenter: canvasPoint").count - 1 == 2)
         #expect(interaction.contains("onFileDrop: { urls, location in"))
         #expect(interaction.contains("XomoCanvasURLDropPolicy.resolve(urls)"))
         #expect(interaction.contains("case let .localFiles(urls):"))

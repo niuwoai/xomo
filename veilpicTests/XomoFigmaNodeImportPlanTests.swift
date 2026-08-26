@@ -2918,7 +2918,7 @@ struct XomoFigmaNodeImportPlanTests {
         #expect(sheet.contains("xomo-figma-read-node-plan"))
         #expect(sheet.contains("preview.nodeID == nil"))
         #expect(sheet.contains("await nodeImportController.fetchPlan(preview: preview)"))
-        #expect(sheet.contains("viewModel.importFigmaNodePlan(plan)"))
+        #expect(sheet.contains("centeredAt: placementCenter"))
         #expect(sheet.contains("xomo-figma-import-node-plan"))
         #expect(!sheet.contains(".onChange(of: draft.preview) { await nodeImportController.fetchPlan"))
     }
@@ -3392,6 +3392,77 @@ struct XomoFigmaNodeImportPlanTests {
         #expect(component.stackLayout?.crossAlignment == .end)
         #expect(component.stackLayout?.primarySizingMode == .hug)
         #expect(component.stackLayout?.crossSizingMode == .hug)
+    }
+
+    @Test func droppedPlanCentersTheWholeHierarchyAtTheCanvasDropPoint() throws {
+        let plan = try Self.decodedPlan()
+        let canvasSize = CGSize(width: 600, height: 1_000)
+        let dropPoint = CGPoint(x: 420, y: 300)
+        let centered = XomoFigmaNodeMaterializer.materialize(
+            plan: plan,
+            canvasSize: canvasSize
+        )
+        let dropped = XomoFigmaNodeMaterializer.materialize(
+            plan: plan,
+            canvasSize: canvasSize,
+            destinationCenter: dropPoint
+        )
+        let centeredRoot = try #require(centered.layers.first { $0.name == "Checkout Frame" })
+        let droppedRoot = try #require(dropped.layers.first { $0.name == "Checkout Frame" })
+        let centeredText = try #require(centered.layers.first { $0.name == "Continue Label" })
+        let droppedText = try #require(dropped.layers.first { $0.name == "Continue Label" })
+        let expectedDelta = CGPoint(
+            x: dropPoint.x - canvasSize.width / 2,
+            y: dropPoint.y - canvasSize.height / 2
+        )
+
+        #expect(droppedRoot.frame.midX == dropPoint.x)
+        #expect(droppedRoot.frame.midY == dropPoint.y)
+        #expect(droppedRoot.frame.size == centeredRoot.frame.size)
+        #expect(droppedText.frame.origin == CGPoint(
+            x: centeredText.frame.origin.x + expectedDelta.x,
+            y: centeredText.frame.origin.y + expectedDelta.y
+        ))
+
+        let viewModel = ImageEditorViewModel(
+            sourceName: "figma-drop.png",
+            image: NSImage.transparent(size: canvasSize)
+        ) { _ in }
+        let initialLayerCount = viewModel.document.layers.count
+        let historyCount = viewModel.document.history.count
+        #expect(viewModel.importFigmaNodePlan(plan, centeredAt: dropPoint))
+        #expect(viewModel.document.selectedLayer?.frame.midX == dropPoint.x)
+        #expect(viewModel.document.selectedLayer?.frame.midY == dropPoint.y)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        viewModel.undo()
+        #expect(viewModel.document.layers.count == initialLayerCount)
+        #expect(viewModel.document.history.count == historyCount)
+    }
+
+    @Test func invalidOrOutOfCanvasPlacementCentersSafely() throws {
+        let plan = try Self.decodedPlan()
+        let canvasSize = CGSize(width: 600, height: 1_000)
+        let centered = XomoFigmaNodeMaterializer.materialize(
+            plan: plan,
+            canvasSize: canvasSize
+        )
+        let invalid = XomoFigmaNodeMaterializer.materialize(
+            plan: plan,
+            canvasSize: canvasSize,
+            destinationCenter: CGPoint(x: CGFloat.nan, y: 20)
+        )
+        let clamped = XomoFigmaNodeMaterializer.materialize(
+            plan: plan,
+            canvasSize: canvasSize,
+            destinationCenter: CGPoint(x: -40, y: 1_200)
+        )
+        let centeredRoot = try #require(centered.layers.first { $0.name == "Checkout Frame" })
+        let invalidRoot = try #require(invalid.layers.first { $0.name == "Checkout Frame" })
+        let clampedRoot = try #require(clamped.layers.first { $0.name == "Checkout Frame" })
+
+        #expect(invalidRoot.frame == centeredRoot.frame)
+        #expect(clampedRoot.frame.midX == 0)
+        #expect(clampedRoot.frame.midY == canvasSize.height)
     }
 
     @Test func viewModelImportsPlanAsSingleUndoableHistoryStep() throws {
