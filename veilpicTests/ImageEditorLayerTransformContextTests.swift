@@ -183,8 +183,107 @@ struct ImageEditorLayerTransformContextTests {
         #expect(viewModel.canRedo)
         #expect(Set(ImageEditorLayerTransformContextAction.directionalActions)
             .union(ImageEditorLayerTransformContextAction.canvasSizingActions)
+            .union(ImageEditorLayerTransformContextAction.selectionSizingActions)
             == Set(ImageEditorLayerTransformContextAction.allCases))
         for action in ImageEditorLayerTransformContextAction.canvasSizingActions {
+            #expect(!viewModel.canTransformLayersFromContext(
+                layerID,
+                action: action
+            ))
+            #expect(!viewModel.transformLayersFromContext(
+                layerID,
+                action: action
+            ))
+        }
+
+        #expect(frame(of: layerID, in: viewModel) == frameBefore)
+        #expect(viewModel.document.history == historyBefore)
+        #expect(viewModel.canRedo)
+    }
+
+    @Test func unselectedContextFitsAndFillsOnlyClickedLayerToSelection() throws {
+        let viewModel = makeViewModel()
+        let selectedID = try addPixelLayer(
+            frame: CGRect(x: 12, y: 14, width: 22, height: 16),
+            color: .systemBlue,
+            to: viewModel
+        )
+        let clickedID = try addPixelLayer(
+            frame: CGRect(x: 76, y: 36, width: 40, height: 20),
+            color: .systemOrange,
+            to: viewModel
+        )
+        viewModel.document.selection = .rectangle(
+            CGRect(x: 20, y: 10, width: 60, height: 60)
+        )
+        viewModel.selectLayer(selectedID)
+        let selectedFrame = frame(of: selectedID, in: viewModel)
+        let clickedFrame = frame(of: clickedID, in: viewModel)
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.canTransformLayersFromContext(
+            clickedID,
+            action: .fitSelection
+        ))
+        #expect(viewModel.transformLayersFromContext(
+            clickedID,
+            action: .fitSelection
+        ))
+        #expect(frame(of: clickedID, in: viewModel) == CGRect(
+            x: 20,
+            y: 25,
+            width: 60,
+            height: 30
+        ))
+        #expect(frame(of: selectedID, in: viewModel) == selectedFrame)
+        #expect(viewModel.document.selectedLayerIDs == [clickedID])
+        #expect(!viewModel.canTransformLayersFromContext(
+            clickedID,
+            action: .fitSelection
+        ))
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.history.last?.title == L10n.text(
+            "imageEditor.history.layerFitSelection"
+        ))
+
+        viewModel.undo()
+        #expect(frame(of: clickedID, in: viewModel) == clickedFrame)
+        #expect(viewModel.canTransformLayersFromContext(
+            clickedID,
+            action: .fillSelection
+        ))
+        #expect(viewModel.transformLayersFromContext(
+            clickedID,
+            action: .fillSelection
+        ))
+        #expect(frame(of: clickedID, in: viewModel) == CGRect(
+            x: -10,
+            y: 10,
+            width: 120,
+            height: 60
+        ))
+        #expect(frame(of: selectedID, in: viewModel) == selectedFrame)
+        #expect(viewModel.document.history.last?.title == L10n.text(
+            "imageEditor.history.layerFillSelection"
+        ))
+    }
+
+    @Test func missingSelectionContextActionsPreserveRedoAndHistory() throws {
+        let viewModel = makeViewModel()
+        let layerID = try addPixelLayer(
+            frame: CGRect(x: 20, y: 18, width: 36, height: 24),
+            color: .systemTeal,
+            to: viewModel
+        )
+        viewModel.selectLayer(layerID)
+        viewModel.setSelectedLayersLabelColor(.purple)
+        viewModel.undo()
+        let historyBefore = viewModel.document.history
+        let frameBefore = frame(of: layerID, in: viewModel)
+
+        #expect(viewModel.document.selection == nil)
+        #expect(viewModel.canRedo)
+        for action in ImageEditorLayerTransformContextAction.selectionSizingActions {
             #expect(!viewModel.canTransformLayersFromContext(
                 layerID,
                 action: action

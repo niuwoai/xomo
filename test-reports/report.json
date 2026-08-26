@@ -1,10 +1,10 @@
 {
-  "generated_at": "2026-08-27 06:19:01 +0800",
-  "total": 5,
-  "passed": 5,
+  "generated_at": "2026-08-27 06:28:22 +0800",
+  "total": 7,
+  "passed": 7,
   "failed": 0,
-  "total_tests": 5,
-  "passed_tests": 5,
+  "total_tests": 7,
+  "passed_tests": 7,
   "failed_tests_in_failed_groups": 0,
   "jobs": 1,
   "results": [
@@ -15,10 +15,22 @@
       "file": "ImageEditorLayerTransformContextTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.136,
+      "duration": 3.146,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorLayerTransformContextTests.invalidAndLockedContextTransformsAreAtomicNoOps.log"
+    },
+    {
+      "suite": "ImageEditorLayerTransformContextTests",
+      "method": "missingSelectionContextActionsPreserveRedoAndHistory",
+      "identifier": "veilpicTests/ImageEditorLayerTransformContextTests/missingSelectionContextActionsPreserveRedoAndHistory()",
+      "file": "ImageEditorLayerTransformContextTests.swift",
+      "test_count": 1,
+      "passed": true,
+      "duration": 3.128,
+      "infrastructure_retries": 0,
+      "issues": [],
+      "log": "ImageEditorLayerTransformContextTests.missingSelectionContextActionsPreserveRedoAndHistory.log"
     },
     {
       "suite": "ImageEditorLayerTransformContextTests",
@@ -27,7 +39,7 @@
       "file": "ImageEditorLayerTransformContextTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.137,
+      "duration": 3.109,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorLayerTransformContextTests.repeatedCanvasSizingContextActionsPreserveRedoAndHistory.log"
@@ -39,7 +51,7 @@
       "file": "ImageEditorLayerTransformContextTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.144,
+      "duration": 3.14,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorLayerTransformContextTests.selectedContextFlipsSelectionAndLinkedPeersInOneUndoStep.log"
@@ -51,10 +63,22 @@
       "file": "ImageEditorLayerTransformContextTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.192,
+      "duration": 3.152,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorLayerTransformContextTests.unselectedContextFitsAndFillsOnlyClickedLayerToCanvas.log"
+    },
+    {
+      "suite": "ImageEditorLayerTransformContextTests",
+      "method": "unselectedContextFitsAndFillsOnlyClickedLayerToSelection",
+      "identifier": "veilpicTests/ImageEditorLayerTransformContextTests/unselectedContextFitsAndFillsOnlyClickedLayerToSelection()",
+      "file": "ImageEditorLayerTransformContextTests.swift",
+      "test_count": 1,
+      "passed": true,
+      "duration": 3.158,
+      "infrastructure_retries": 0,
+      "issues": [],
+      "log": "ImageEditorLayerTransformContextTests.unselectedContextFitsAndFillsOnlyClickedLayerToSelection.log"
     },
     {
       "suite": "ImageEditorLayerTransformContextTests",
@@ -63,7 +87,7 @@
       "file": "ImageEditorLayerTransformContextTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 6.548,
+      "duration": 6.206,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorLayerTransformContextTests.unselectedContextRotatesOnlyClickedLayerAndUndoRestoresGeometry.log"

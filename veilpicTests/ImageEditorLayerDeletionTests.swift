@@ -687,6 +687,7 @@ struct ImageEditorLayerDeletionTests {
         #expect(source.contains("layerContextTransformMenu(layer)"))
         #expect(source.contains("ImageEditorLayerTransformContextAction.directionalActions"))
         #expect(source.contains("ImageEditorLayerTransformContextAction.canvasSizingActions"))
+        #expect(source.contains("ImageEditorLayerTransformContextAction.selectionSizingActions"))
         #expect(source.contains("layerContextTransformButton(layer, action: action)"))
         #expect(source.contains("viewModel.canTransformLayersFromContext("))
         #expect(source.contains("viewModel.transformLayersFromContext("))

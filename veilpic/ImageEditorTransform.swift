@@ -16,6 +16,8 @@ enum ImageEditorLayerTransformContextAction: String, CaseIterable, Identifiable 
     case flipVertical
     case fitCanvas
     case fillCanvas
+    case fitSelection
+    case fillSelection
 
     var id: String { rawValue }
 
@@ -32,6 +34,11 @@ enum ImageEditorLayerTransformContextAction: String, CaseIterable, Identifiable 
         .fillCanvas
     ]
 
+    static let selectionSizingActions: [Self] = [
+        .fitSelection,
+        .fillSelection
+    ]
+
     var actionTitleKey: String {
         switch self {
         case .rotateLeft90: "imageEditor.action.layerRotate90Left"
@@ -41,6 +48,8 @@ enum ImageEditorLayerTransformContextAction: String, CaseIterable, Identifiable 
         case .flipVertical: "imageEditor.action.layerFlipVertical"
         case .fitCanvas: "imageEditor.action.layerFitCanvas"
         case .fillCanvas: "imageEditor.action.layerFillCanvas"
+        case .fitSelection: "imageEditor.action.layerFitSelection"
+        case .fillSelection: "imageEditor.action.layerFillSelection"
         }
     }
 
@@ -53,6 +62,8 @@ enum ImageEditorLayerTransformContextAction: String, CaseIterable, Identifiable 
         case .flipVertical: "arrow.up.and.down"
         case .fitCanvas: "arrow.down.right.and.arrow.up.left"
         case .fillCanvas: "arrow.up.left.and.arrow.down.right"
+        case .fitSelection: "rectangle.dashed"
+        case .fillSelection: "rectangle.fill"
         }
     }
 }
@@ -390,6 +401,20 @@ extension ImageEditorViewModel {
                 in: canvasBounds,
                 mode: .fill
             ).isApproximatelyEqual(to: transformFrame)
+        case .fitSelection:
+            guard let selectionBounds = selectionTargetBounds() else { return false }
+            return !fittedTransformFrame(
+                for: transformFrame,
+                in: selectionBounds,
+                mode: .fit
+            ).isApproximatelyEqual(to: transformFrame)
+        case .fillSelection:
+            guard let selectionBounds = selectionTargetBounds() else { return false }
+            return !fittedTransformFrame(
+                for: transformFrame,
+                in: selectionBounds,
+                mode: .fill
+            ).isApproximatelyEqual(to: transformFrame)
         case .rotateLeft90, .rotateRight90, .rotate180, .flipHorizontal, .flipVertical:
             return true
         }
@@ -419,6 +444,10 @@ extension ImageEditorViewModel {
             return fitSelectedLayerToCanvas()
         case .fillCanvas:
             return fillSelectedLayerToCanvas()
+        case .fitSelection:
+            return fitSelectedLayerToSelection()
+        case .fillSelection:
+            return fillSelectedLayerToSelection()
         }
     }
 
@@ -1002,12 +1031,13 @@ extension ImageEditorViewModel {
         )
     }
 
-    func fitSelectedLayerToSelection() {
+    @discardableResult
+    func fitSelectedLayerToSelection() -> Bool {
         guard let targetBounds = selectionTargetBounds() else {
             statusText = L10n.text("imageEditor.status.noSelection")
-            return
+            return false
         }
-        transformSelectedLayer(
+        return transformSelectedLayer(
             to: targetBounds,
             mode: .fit,
             historyTitle: L10n.text("imageEditor.history.layerFitSelection"),
@@ -1015,12 +1045,13 @@ extension ImageEditorViewModel {
         )
     }
 
-    func fillSelectedLayerToSelection() {
+    @discardableResult
+    func fillSelectedLayerToSelection() -> Bool {
         guard let targetBounds = selectionTargetBounds() else {
             statusText = L10n.text("imageEditor.status.noSelection")
-            return
+            return false
         }
-        transformSelectedLayer(
+        return transformSelectedLayer(
             to: targetBounds,
             mode: .fill,
             historyTitle: L10n.text("imageEditor.history.layerFillSelection"),
