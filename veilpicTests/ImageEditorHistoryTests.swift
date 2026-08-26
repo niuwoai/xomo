@@ -368,6 +368,66 @@ struct ImageEditorHistoryTests {
         }
     }
 
+    @Test func onePhysicalForegroundFillShortcutAppliesOpacityOnlyOnce() throws {
+        ImageEditorSelectionFillCommandDispatchGate.reset()
+        defer { ImageEditorSelectionFillCommandDispatchGate.reset() }
+
+        let canvasSize = NSSize(width: 24, height: 18)
+        let image = testImage(color: .clear, size: canvasSize)
+        let expected = ImageEditorViewModel(
+            sourceName: "expected-fill.png",
+            image: image
+        ) { _ in }
+        expected.selectAll()
+        expected.foregroundColor = .systemRed
+        expected.opacity = 0.5
+        expected.fillSelection()
+        let expectedPixels = try #require(
+            expected.document.selectedLayer?.image.qingtuPNGData()
+        )
+
+        let viewModel = ImageEditorViewModel(
+            sourceName: "shortcut-fill.png",
+            image: image
+        ) { _ in }
+        viewModel.selectAll()
+        viewModel.foregroundColor = .systemRed
+        viewModel.opacity = 0.5
+        let historyCount = viewModel.document.history.count
+        let event = ImageEditorKeyboardShortcutEventSignature(
+            windowNumber: 59,
+            eventNumber: 1011,
+            timestamp: 101.1,
+            typeRawValue: NSEvent.EventType.keyDown.rawValue,
+            keyCode: 51
+        )
+
+        for _ in 0..<2 {
+            guard ImageEditorSelectionFillCommandDispatchGate.shouldDispatch(
+                .foreground,
+                event: event
+            ) else { continue }
+            viewModel.fillSelection()
+        }
+
+        #expect(try #require(viewModel.document.selectedLayer?.image.qingtuPNGData()) == expectedPixels)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(
+            viewModel.document.history.last?.title
+                == L10n.text("imageEditor.history.selectionFill")
+        )
+    }
+
+    @Test func selectionFillMouseBoundariesRemainIndependentWithoutAKeyEvent() {
+        ImageEditorSelectionFillCommandDispatchGate.reset()
+        defer { ImageEditorSelectionFillCommandDispatchGate.reset() }
+
+        for action in ImageEditorSelectionFillCommandAction.allCases {
+            #expect(ImageEditorSelectionFillCommandDispatchGate.shouldDispatch(action, event: nil))
+            #expect(ImageEditorSelectionFillCommandDispatchGate.shouldDispatch(action, event: nil))
+        }
+    }
+
     @Test func onePhysicalArrowShortcutNudgesOnlyOneDistanceStep() throws {
         ImageEditorNudgeCommandDispatchGate.reset()
         defer { ImageEditorNudgeCommandDispatchGate.reset() }

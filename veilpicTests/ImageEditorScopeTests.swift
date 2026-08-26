@@ -2508,6 +2508,48 @@ struct ImageEditorScopeTests {
                 "cutSelectionToLayer: { performCutSelectionToLayer() }"
             )
         )
+        for (field, action) in [
+            ("presentFillDialog", "dialog"),
+            ("fillSelection", "foreground"),
+            ("fillSelectionWithBackground", "background"),
+            ("fillSelectionFromHistory", "history"),
+        ] {
+            #expect(
+                menuBarSource.contains(
+                    "\(field): { performSelectionFillCommand(.\(action)) }"
+                )
+            )
+        }
+        let fillHelperStart = try #require(
+            viewSource.range(of: "func performSelectionFillCommand(")
+        )
+        let fillHelperEnd = try #require(
+            viewSource[fillHelperStart.upperBound...].range(of: "\n    }")
+        )
+        let fillHelperSource = viewSource[fillHelperStart.lowerBound..<fillHelperEnd.upperBound]
+        let fillGate = try #require(
+            fillHelperSource.range(of: "ImageEditorSelectionFillCommandDispatchGate.shouldDispatch")
+        )
+        let fillSwitch = try #require(fillHelperSource.range(of: "switch action"))
+        #expect(fillGate.lowerBound < fillSwitch.lowerBound)
+        for (shortcutCase, action) in [
+            ("openSelectionFill", "dialog"),
+            ("fillSelection", "foreground"),
+            ("fillSelectionPreservingTransparency", "foregroundPreservingTransparency"),
+            ("fillSelectionBackground", "background"),
+            ("fillSelectionBackgroundPreservingTransparency", "backgroundPreservingTransparency"),
+            ("fillSelectionHistory", "history"),
+            ("fillSelectionHistoryPreservingTransparency", "historyPreservingTransparency"),
+        ] {
+            #expect(
+                viewSource.contains(
+                    "case .\(shortcutCase): performSelectionFillCommand(.\(action))"
+                )
+                || viewSource.contains(
+                    "case .\(shortcutCase):\n            performSelectionFillCommand(.\(action))"
+                )
+            )
+        }
         #expect(
             viewSource.contains(
                 "case .toggleTransformControls: performToggleTransformControls()"
@@ -2641,13 +2683,13 @@ struct ImageEditorScopeTests {
 
         #expect(editorSource.contains("viewModel.setHistoryFillSource(entryID: entry.id)"))
         #expect(editorSource.contains("viewModel.setHistoryFillSource(snapshotID: snapshot.id)"))
-        #expect(editorSource.contains("case .fillSelectionHistory: viewModel.fillSelectionFromHistory()"))
+        #expect(editorSource.contains("case .fillSelectionHistory: performSelectionFillCommand(.history)"))
         #expect(editorSource.contains("relevantFlags == [.command, .option]"))
         #expect(panelSource.contains("selectionFillContents == .history"))
         #expect(panelSource.contains("viewModel.historyFillSourceTitle"))
         #expect(commandSource.contains("sourceDocument.layers.first(where: { $0.id == layer.id"))
         #expect(commandSource.contains("func historyFilled("))
-        #expect(menuSource.contains("fillSelectionFromHistory: { viewModel.fillSelectionFromHistory() }"))
+        #expect(menuSource.contains("fillSelectionFromHistory: { performSelectionFillCommand(.history) }"))
         #expect(menuSource.contains("canFillSelectionFromHistory: viewModel.canFillSelectionFromHistory"))
         #expect(applicationCommandSource.contains(
             ".keyboardShortcut(.delete, modifiers: [.command, .option])"

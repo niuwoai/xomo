@@ -3241,18 +3241,16 @@ struct ImageEditorView: View {
         case .pasteClipboardIntoSelection: performClipboardCommand(.pasteIntoSelection)
         case .pasteClipboardInPlaceLayer: performClipboardCommand(.pasteInPlace)
         case .toggleTransformControls: performToggleTransformControls()
-        case .openSelectionFill:
-            if case .tool = viewModel.workspaceInputMode {
-                viewModel.presentSelectionFillPanel()
-            }
-        case .fillSelection: viewModel.fillSelection()
-        case .fillSelectionPreservingTransparency: viewModel.fillSelectionPreservingTransparency()
-        case .fillSelectionBackground: viewModel.fillSelectionWithBackgroundColor()
+        case .openSelectionFill: performSelectionFillCommand(.dialog)
+        case .fillSelection: performSelectionFillCommand(.foreground)
+        case .fillSelectionPreservingTransparency:
+            performSelectionFillCommand(.foregroundPreservingTransparency)
+        case .fillSelectionBackground: performSelectionFillCommand(.background)
         case .fillSelectionBackgroundPreservingTransparency:
-            viewModel.fillSelectionWithBackgroundColorPreservingTransparency()
-        case .fillSelectionHistory: viewModel.fillSelectionFromHistory()
+            performSelectionFillCommand(.backgroundPreservingTransparency)
+        case .fillSelectionHistory: performSelectionFillCommand(.history)
         case .fillSelectionHistoryPreservingTransparency:
-            viewModel.fillSelectionFromHistoryPreservingTransparency()
+            performSelectionFillCommand(.historyPreservingTransparency)
         case .clearSelectionPixels: viewModel.clearSelectionPixels()
         case .resizeImage: viewModel.resizeImageToControlSize()
         case .resizeCanvas: viewModel.resizeCanvasToControlSize()
@@ -3463,6 +3461,28 @@ struct ImageEditorView: View {
         case .reselect: viewModel.reselectSelection()
         case .invert: viewModel.invertSelection()
         case .feather: viewModel.featherSelection()
+        }
+    }
+
+    func performSelectionFillCommand(_ action: ImageEditorSelectionFillCommandAction) {
+        guard ImageEditorSelectionFillCommandDispatchGate.shouldDispatch(
+            action,
+            event: .currentKeyEvent
+        ) else { return }
+        switch action {
+        case .dialog:
+            if case .tool = viewModel.workspaceInputMode {
+                viewModel.presentSelectionFillPanel()
+            }
+        case .foreground: viewModel.fillSelection()
+        case .foregroundPreservingTransparency:
+            viewModel.fillSelectionPreservingTransparency()
+        case .background: viewModel.fillSelectionWithBackgroundColor()
+        case .backgroundPreservingTransparency:
+            viewModel.fillSelectionWithBackgroundColorPreservingTransparency()
+        case .history: viewModel.fillSelectionFromHistory()
+        case .historyPreservingTransparency:
+            viewModel.fillSelectionFromHistoryPreservingTransparency()
         }
     }
 
@@ -17489,6 +17509,41 @@ enum ImageEditorSelectionCommandDispatchGate {
 
     static func shouldDispatch(
         _ action: ImageEditorSelectionCommandAction,
+        event: ImageEditorKeyboardShortcutEventSignature?
+    ) -> Bool {
+        guard let event else { return true }
+        let dispatch = Dispatch(action: action, event: event)
+        guard dispatch != lastDispatch else { return false }
+        lastDispatch = dispatch
+        return true
+    }
+
+    static func reset() {
+        lastDispatch = nil
+    }
+}
+
+enum ImageEditorSelectionFillCommandAction: Equatable, CaseIterable {
+    case dialog
+    case foreground
+    case foregroundPreservingTransparency
+    case background
+    case backgroundPreservingTransparency
+    case history
+    case historyPreservingTransparency
+}
+
+@MainActor
+enum ImageEditorSelectionFillCommandDispatchGate {
+    private struct Dispatch: Equatable {
+        let action: ImageEditorSelectionFillCommandAction
+        let event: ImageEditorKeyboardShortcutEventSignature
+    }
+
+    private static var lastDispatch: Dispatch?
+
+    static func shouldDispatch(
+        _ action: ImageEditorSelectionFillCommandAction,
         event: ImageEditorKeyboardShortcutEventSignature?
     ) -> Bool {
         guard let event else { return true }
