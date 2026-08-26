@@ -620,6 +620,7 @@ struct ImageEditorVectorLayerTests {
             overlayHandleOwnership: .absent,
             canDeleteShapeGradientStop: false,
             canDeleteDeliveryObject: false,
+            canDeleteXomoObject: false,
             canDeletePathPoint: viewModel.canDeletePendingPenPoint,
             documentAction: nil
         ))
@@ -632,6 +633,7 @@ struct ImageEditorVectorLayerTests {
             overlayHandleOwnership: .absent,
             canDeleteShapeGradientStop: false,
             canDeleteDeliveryObject: false,
+            canDeleteXomoObject: false,
             canDeletePathPoint: viewModel.canDeletePendingPenPoint,
             documentAction: nil
         ))
@@ -642,6 +644,7 @@ struct ImageEditorVectorLayerTests {
             overlayHandleOwnership: .absent,
             canDeleteShapeGradientStop: true,
             canDeleteDeliveryObject: true,
+            canDeleteXomoObject: true,
             canDeletePathPoint: viewModel.canDeletePendingPenPoint,
             documentAction: .deleteSelectedLayer
         ))
@@ -2062,6 +2065,7 @@ struct ImageEditorVectorLayerTests {
             overlayHandleOwnership: .absent,
             canDeleteShapeGradientStop: false,
             canDeleteDeliveryObject: false,
+            canDeleteXomoObject: false,
             canDeletePathPoint: viewModel.canDeleteSelectedPathAnchor,
             documentAction: nil
         ))

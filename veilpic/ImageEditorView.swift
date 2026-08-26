@@ -16739,6 +16739,7 @@ enum ImageEditorEditMenuDeleteAvailabilityPolicy {
         overlayHandleOwnership: ImageEditorDeleteMenuOwnedContext,
         canDeleteShapeGradientStop: Bool,
         canDeleteDeliveryObject: Bool,
+        canDeleteXomoObject: Bool,
         canDeletePathPoint: Bool,
         documentAction: ImageEditorContextualDocumentDeleteAction?
     ) -> Bool {
@@ -16761,6 +16762,7 @@ enum ImageEditorEditMenuDeleteAvailabilityPolicy {
         return canDeleteShapeGradientStop
             || canDeletePathPoint
             || canDeleteDeliveryObject
+            || canDeleteXomoObject
             || documentAction != nil
     }
 }

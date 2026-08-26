@@ -225,6 +225,7 @@ extension ImageEditorView {
             overlayHandleOwnership: gradientContext.overlayOwnership,
             canDeleteShapeGradientStop: gradientContext.canDeleteShapeStop,
             canDeleteDeliveryObject: viewModel.canDeleteSelectedDeliveryObject,
+            canDeleteXomoObject: viewModel.canDeleteSelectedXomoObject,
             canDeletePathPoint: canDeleteSelectedPathPointFromEditMenu,
             documentAction: ImageEditorContextualDocumentDeletePolicy.resolve(
                 hasSelection: viewModel.hasSelection,

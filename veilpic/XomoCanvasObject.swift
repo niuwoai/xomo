@@ -235,6 +235,15 @@ extension ImageEditorViewModel {
         selectedXomoObjectKind != nil && selectedXomoObjectFrame != nil
     }
 
+    var canDeleteSelectedXomoObject: Bool {
+        guard !hasActiveLayerMoveTransaction,
+              let selected = document.selectedLayer,
+              selected.isGroup,
+              selected.xomoComponentInstance != nil
+        else { return false }
+        return canDeleteLayer
+    }
+
     var selectedXomoObjectKind: XomoComponentKind? {
         guard let selectedLayer = document.selectedLayer,
               selectedLayer.isGroup
@@ -1082,11 +1091,8 @@ extension ImageEditorViewModel {
     }
 
     func deleteSelectedXomoObjectIfNeeded() -> Bool {
-        guard !hasActiveLayerMoveTransaction,
-              let selected = document.selectedLayer,
-              selected.isGroup,
-              let kind = selected.xomoComponentInstance?.kind,
-              canDeleteLayer
+        guard canDeleteSelectedXomoObject,
+              let kind = document.selectedLayer?.xomoComponentInstance?.kind
         else { return false }
 
         deleteSelectedLayer()

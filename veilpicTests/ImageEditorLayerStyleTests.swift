@@ -2960,6 +2960,7 @@ struct ImageEditorLayerStyleTests {
             overlayHandleOwnership: .deletes,
             canDeleteShapeGradientStop: true,
             canDeleteDeliveryObject: false,
+            canDeleteXomoObject: false,
             canDeletePathPoint: false,
             documentAction: nil
         ))
@@ -2968,6 +2969,7 @@ struct ImageEditorLayerStyleTests {
             overlayHandleOwnership: .consumesOnly,
             canDeleteShapeGradientStop: true,
             canDeleteDeliveryObject: true,
+            canDeleteXomoObject: true,
             canDeletePathPoint: true,
             documentAction: .deleteSelectedLayer
         ))
@@ -2976,6 +2978,7 @@ struct ImageEditorLayerStyleTests {
             overlayHandleOwnership: .deletes,
             canDeleteShapeGradientStop: true,
             canDeleteDeliveryObject: true,
+            canDeleteXomoObject: true,
             canDeletePathPoint: true,
             documentAction: .deleteSelectedLayer
         ))
@@ -2984,6 +2987,7 @@ struct ImageEditorLayerStyleTests {
             overlayHandleOwnership: .absent,
             canDeleteShapeGradientStop: true,
             canDeleteDeliveryObject: false,
+            canDeleteXomoObject: false,
             canDeletePathPoint: false,
             documentAction: nil
         ))

@@ -1815,6 +1815,36 @@ struct XomoCanvasObjectTests {
         #expect(!viewModel.document.layers.contains { childIDs.contains($0.id) })
     }
 
+    @Test func selectedComponentKeepsEditMenuDeleteAvailableWhenPixelSelectionCannotBeCleared() {
+        let viewModel = makeViewModel()
+        viewModel.insertXomoComponent(.button, at: CGPoint(x: 80, y: 90))
+        let groupID = viewModel.document.selectedLayerID
+        viewModel.document.selection = .rectangle(
+            CGRect(x: 12, y: 10, width: 28, height: 20)
+        )
+
+        #expect(viewModel.canDeleteSelectedXomoObject)
+        #expect(!viewModel.canRemoveSelectionPixels)
+        let documentAction = ImageEditorContextualDocumentDeletePolicy.resolve(
+            hasSelection: viewModel.hasSelection,
+            canRemoveSelectionPixels: viewModel.canRemoveSelectionPixels,
+            canDeleteLayer: viewModel.canDeleteLayer
+        )
+        #expect(documentAction == nil)
+        #expect(ImageEditorEditMenuDeleteAvailabilityPolicy.resolve(
+            pendingPenOwnership: .absent,
+            overlayHandleOwnership: .absent,
+            canDeleteShapeGradientStop: false,
+            canDeleteDeliveryObject: false,
+            canDeleteXomoObject: viewModel.canDeleteSelectedXomoObject,
+            canDeletePathPoint: false,
+            documentAction: documentAction
+        ))
+        #expect(viewModel.deleteSelectedXomoObjectIfNeeded())
+        #expect(!viewModel.document.layers.contains { $0.id == groupID })
+        #expect(viewModel.hasSelection)
+    }
+
     @Test func deleteWaitsForAnActivePointerMoveToFinishOrCancel() throws {
         let viewModel = makeViewModel()
         viewModel.insertXomoComponent(.button, at: CGPoint(x: 80, y: 90))
@@ -1825,6 +1855,7 @@ struct XomoCanvasObjectTests {
         #expect(viewModel.beginMovingSelectedLayer())
         viewModel.moveSelectedLayer(by: CGSize(width: 16, height: 8), snapping: false)
         #expect(viewModel.hasActiveLayerMoveTransaction)
+        #expect(!viewModel.canDeleteSelectedXomoObject)
         #expect(!viewModel.deleteSelectedXomoObjectIfNeeded())
         #expect(viewModel.document.layers.contains { $0.id == group.id })
         #expect(viewModel.document.history.count == initialHistoryCount)

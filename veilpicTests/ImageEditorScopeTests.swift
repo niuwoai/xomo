@@ -2079,6 +2079,7 @@ struct ImageEditorScopeTests {
         #expect(menuSource.contains("canRemoveSelectionPixels: viewModel.canRemoveSelectionPixels"))
         #expect(menuSource.contains("canDeleteSelectedObject: canDeleteSelectedObjectFromEditMenu"))
         #expect(menuSource.contains("viewModel.canDeleteSelectedDeliveryObject"))
+        #expect(menuSource.contains("canDeleteXomoObject: viewModel.canDeleteSelectedXomoObject"))
         #expect(menuSource.contains("canDeletePathPoint: canDeleteSelectedPathPointFromEditMenu"))
         #expect(menuSource.contains("pendingPenOwnership: pendingPenDeleteMenuOwnership"))
         #expect(menuSource.contains("overlayHandleOwnership: gradientContext.overlayOwnership"))
