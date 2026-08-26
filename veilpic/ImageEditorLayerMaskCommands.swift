@@ -8,6 +8,33 @@
 import AppKit
 import Foundation
 
+enum ImageEditorLayerMaskContextAction: String, CaseIterable, Identifiable {
+    case revealAll
+    case hideAll
+    case revealSelection
+    case hideSelection
+
+    var id: String { rawValue }
+
+    var actionTitleKey: String {
+        switch self {
+        case .revealAll: "imageEditor.action.layerMaskAdd"
+        case .hideAll: "imageEditor.action.layerMaskHideAll"
+        case .revealSelection: "imageEditor.action.layerMaskFromSelection"
+        case .hideSelection: "imageEditor.action.layerMaskHideSelection"
+        }
+    }
+
+    var systemImage: String {
+        switch self {
+        case .revealAll: "circle.dashed"
+        case .hideAll: "circle.fill"
+        case .revealSelection: "circle.lefthalf.filled"
+        case .hideSelection: "circle.dashed.inset.filled"
+        }
+    }
+}
+
 fileprivate enum ImageEditorLayerMaskSelectionCombination {
     case reveal
     case hide
@@ -65,6 +92,48 @@ fileprivate enum ImageEditorMaskApplicationTarget: Equatable {
 
 @MainActor
 extension ImageEditorViewModel {
+    func canPerformLayerMaskActionFromContext(
+        _ clickedLayerID: UUID,
+        action: ImageEditorLayerMaskContextAction
+    ) -> Bool {
+        let selectedIDs = layerContextSelectionIDs(for: clickedLayerID)
+        guard !selectedIDs.isEmpty else { return false }
+        switch action {
+        case .revealAll, .hideAll:
+            return !layerMaskAddIndices(selectedIDs: selectedIDs).isEmpty
+        case .revealSelection, .hideSelection:
+            guard let selection = document.selection else { return false }
+            return !layerMaskCreationOperations(
+                selection,
+                hidingSelection: action == .hideSelection,
+                selectedIDs: selectedIDs
+            ).isEmpty
+        }
+    }
+
+    @discardableResult
+    func performLayerMaskActionFromContext(
+        _ clickedLayerID: UUID,
+        action: ImageEditorLayerMaskContextAction
+    ) -> Bool {
+        guard canPerformLayerMaskActionFromContext(
+            clickedLayerID,
+            action: action
+        ) else { return false }
+        prepareLayerContextSelection(for: clickedLayerID)
+        switch action {
+        case .revealAll:
+            addLayerMask()
+        case .hideAll:
+            addLayerMaskHidingAll()
+        case .revealSelection:
+            addLayerMaskFromSelection()
+        case .hideSelection:
+            addLayerMaskHidingSelection()
+        }
+        return true
+    }
+
     var canCreateLayerMaskFromSelection: Bool {
         guard let selection = document.selection else { return false }
         return !layerMaskCreationOperations(selection, hidingSelection: false).isEmpty
@@ -967,14 +1036,15 @@ extension ImageEditorViewModel {
 
     private func layerMaskCreationOperations(
         _ selection: ImageEditorSelection,
-        hidingSelection: Bool
+        hidingSelection: Bool,
+        selectedIDs explicitSelectedIDs: Set<UUID>? = nil
     ) -> [(index: Int, mask: NSImage)] {
         guard selection.effectiveSelectedBounds(in: document.canvasSize) != nil else {
             return []
         }
-        let selectedIDs = document.selectedLayerIDs.isEmpty
+        let selectedIDs = explicitSelectedIDs ?? (document.selectedLayerIDs.isEmpty
             ? Set(document.selectedLayerID.map { [$0] } ?? [])
-            : document.selectedLayerIDs
+            : document.selectedLayerIDs)
         return document.layers.indices.compactMap { index in
             let layer = document.layers[index]
             guard selectedIDs.contains(layer.id),
@@ -985,6 +1055,15 @@ extension ImageEditorViewModel {
             let mask = hidingSelection ? selectionMask.invertedAlphaMask() : selectionMask
             guard let mask else { return nil }
             return (index, mask)
+        }
+    }
+
+    private func layerMaskAddIndices(selectedIDs: Set<UUID>) -> [Int] {
+        document.layers.indices.filter { index in
+            let layer = document.layers[index]
+            return selectedIDs.contains(layer.id)
+                && !document.isEffectivelyLocked(layer)
+                && layer.mask == nil
         }
     }
 

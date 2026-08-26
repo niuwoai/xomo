@@ -2309,6 +2309,8 @@ extension ImageEditorView {
 
                 layerContextClippingMaskButton(layer)
 
+                layerContextLayerMaskMenu(layer)
+
                 layerContextSmartObjectMenu(layer)
 
                 Menu(L10n.text("imageEditor.action.layerRasterize")) {
@@ -2646,6 +2648,34 @@ extension ImageEditorView {
         }
         .accessibilityIdentifier(
             "image-editor-layer-context-smart-object-\(layer.id.uuidString)"
+        )
+    }
+
+    private func layerContextLayerMaskMenu(_ layer: ImageEditorLayer) -> some View {
+        Menu(L10n.text("imageEditor.menu.layer.mask")) {
+            ForEach(ImageEditorLayerMaskContextAction.allCases) { action in
+                Button {
+                    viewModel.performLayerMaskActionFromContext(
+                        layer.id,
+                        action: action
+                    )
+                } label: {
+                    Label(
+                        L10n.text(action.actionTitleKey),
+                        systemImage: action.systemImage
+                    )
+                }
+                .disabled(!viewModel.canPerformLayerMaskActionFromContext(
+                    layer.id,
+                    action: action
+                ))
+                .accessibilityIdentifier(
+                    "image-editor-layer-context-mask-\(action.rawValue)-\(layer.id.uuidString)"
+                )
+            }
+        }
+        .accessibilityIdentifier(
+            "image-editor-layer-context-mask-\(layer.id.uuidString)"
         )
     }
 
