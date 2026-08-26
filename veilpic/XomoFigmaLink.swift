@@ -220,6 +220,28 @@ enum XomoCanvasURLDropPolicy {
     }
 }
 
+enum XomoCanvasStringDropRoute: Equatable {
+    case componentPayload(String)
+    case figmaLink(String)
+    case unavailable
+}
+
+enum XomoCanvasStringDropPolicy {
+    static func resolve(
+        _ values: [String],
+        knownComponentPayloads: Set<String>
+    ) -> XomoCanvasStringDropRoute {
+        guard values.count == 1, let value = values.first else { return .unavailable }
+        if knownComponentPayloads.contains(value) {
+            return .componentPayload(value)
+        }
+        guard let preview = try? XomoFigmaLinkParser.parse(value) else {
+            return .unavailable
+        }
+        return .figmaLink(preview.canonicalURL.absoluteString)
+    }
+}
+
 enum XomoFigmaLinkParser {
     static let maximumInputLength = 4_096
     private static let expectedPathComponentCount = 4

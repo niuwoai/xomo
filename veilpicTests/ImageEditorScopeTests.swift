@@ -564,6 +564,9 @@ struct ImageEditorScopeTests {
             separatedBy: "dropDestination(for: URL.self, action: onFileDrop)"
         ).count - 1
         #expect(fileDropRegistrationCount == 2)
+        #expect(interaction.contains("XomoCanvasStringDropPolicy.resolve("))
+        #expect(interaction.contains("knownComponentPayloads: Set(XomoComponentKind.allCases.map(\\.rawValue))"))
+        #expect(interaction.contains("case let .componentPayload(rawValue):"))
         #expect(interaction.contains("onFileDrop: { urls, location in"))
         #expect(interaction.contains("XomoCanvasURLDropPolicy.resolve(urls)"))
         #expect(interaction.contains("case let .localFiles(urls):"))

@@ -3879,17 +3879,34 @@ struct ImageEditorView: View {
                 ))
                 .accessibilityIdentifier("image-editor-canvas")
                 .xomoCanvasPlatformInteractions(
-                    onDrop: { components, location in
-                        guard let rawValue = components.first,
-                              let component = XomoComponentKind(rawValue: rawValue),
-                              let canvasPoint = imagePoint(from: location, in: geometry.size)
-                        else { return false }
-                        viewModel.insertXomoComponent(
-                            component,
-                            at: viewModel.xomoComponentDropOrigin(component, centeredAt: canvasPoint)
-                        )
-                        XomoComponentLibraryCursorPolicy.restoreArrow(for: .dropCompleted)
-                        return true
+                    onDrop: { values, location in
+                        switch XomoCanvasStringDropPolicy.resolve(
+                            values,
+                            knownComponentPayloads: Set(XomoComponentKind.allCases.map(\.rawValue))
+                        ) {
+                        case let .componentPayload(rawValue):
+                            guard let component = XomoComponentKind(rawValue: rawValue),
+                                  let canvasPoint = imagePoint(
+                                      from: location,
+                                      in: geometry.size
+                                  )
+                            else { return false }
+                            viewModel.insertXomoComponent(
+                                component,
+                                at: viewModel.xomoComponentDropOrigin(
+                                    component,
+                                    centeredAt: canvasPoint
+                                )
+                            )
+                            XomoComponentLibraryCursorPolicy.restoreArrow(for: .dropCompleted)
+                            return true
+                        case let .figmaLink(canonicalURL):
+                            pendingFigmaLinkImportInput = canonicalURL
+                            isFigmaLinkImportPresented = true
+                            return true
+                        case .unavailable:
+                            return false
+                        }
                     },
                     onFileDrop: { urls, location in
                         switch XomoCanvasURLDropPolicy.resolve(urls) {

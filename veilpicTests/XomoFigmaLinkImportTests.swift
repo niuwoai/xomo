@@ -111,6 +111,46 @@ struct XomoFigmaLinkImportTests {
         #expect(XomoCanvasURLDropPolicy.resolve([impostor]) == .unavailable)
     }
 
+    @Test func canvasStringDropKeepsComponentsAheadOfTrustedFigmaLinks() {
+        let componentPayloads: Set<String> = ["button", "image"]
+        let figma = " https://www.figma.com/design/abc123DEF456/Checkout?node-id=1-2&tracking=discarded "
+
+        #expect(
+            XomoCanvasStringDropPolicy.resolve(
+                ["button"],
+                knownComponentPayloads: componentPayloads
+            ) == .componentPayload("button")
+        )
+        #expect(
+            XomoCanvasStringDropPolicy.resolve(
+                [figma],
+                knownComponentPayloads: componentPayloads
+            ) == .figmaLink(
+                "https://www.figma.com/design/abc123DEF456/Checkout?node-id=1-2"
+            )
+        )
+    }
+
+    @Test func canvasStringDropRejectsMultipleValuesOrdinaryTextAndUnsafeLinks() {
+        let componentPayloads: Set<String> = ["button"]
+        let figma = "https://www.figma.com/design/abc123DEF456/Checkout"
+
+        for values in [
+            [],
+            ["button", figma],
+            ["ordinary layer name"],
+            ["http://www.figma.com/design/abc123DEF456/Checkout"],
+            ["https://figma.example/design/abc123DEF456/Checkout"]
+        ] {
+            #expect(
+                XomoCanvasStringDropPolicy.resolve(
+                    values,
+                    knownComponentPayloads: componentPayloads
+                ) == .unavailable
+            )
+        }
+    }
+
     @Test func everyParserErrorHasUniqueLocalizedPresentationKey() {
         let keys = XomoFigmaLinkParserError.allCases.map(\.localizationKey)
 
@@ -160,6 +200,8 @@ struct XomoFigmaLinkImportTests {
         #expect(editor.contains("initialLink: pendingFigmaLinkImportInput"))
         #expect(editor.contains("case .pasteAsLayer: performContextualPasteAsLayer()"))
         #expect(editor.contains("XomoFigmaClipboardPastePolicy.resolve("))
+        #expect(editor.contains("XomoCanvasStringDropPolicy.resolve("))
+        #expect(editor.contains("case let .componentPayload(rawValue):"))
         #expect(editor.contains("XomoCanvasURLDropPolicy.resolve(urls)"))
         #expect(editor.contains("case let .figmaLink(canonicalURL):"))
         #expect(editor.contains("pendingFigmaLinkImportInput = canonicalURL"))
