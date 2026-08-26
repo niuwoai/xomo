@@ -2662,26 +2662,39 @@ extension ImageEditorView {
 
     private func layerContextTransformMenu(_ layer: ImageEditorLayer) -> some View {
         Menu(L10n.text("imageEditor.menu.layer.transform")) {
-            ForEach(ImageEditorLayerTransformContextAction.allCases) { action in
-                Button {
-                    viewModel.transformLayersFromContext(layer.id, action: action)
-                } label: {
-                    Label(
-                        L10n.text(action.actionTitleKey),
-                        systemImage: action.systemImage
-                    )
-                }
-                .disabled(!viewModel.canTransformLayersFromContext(
-                    layer.id,
-                    action: action
-                ))
-                .accessibilityIdentifier(
-                    "image-editor-layer-context-transform-\(action.rawValue)-\(layer.id.uuidString)"
-                )
+            ForEach(ImageEditorLayerTransformContextAction.directionalActions) { action in
+                layerContextTransformButton(layer, action: action)
+            }
+
+            Divider()
+
+            ForEach(ImageEditorLayerTransformContextAction.canvasSizingActions) { action in
+                layerContextTransformButton(layer, action: action)
             }
         }
         .accessibilityIdentifier(
             "image-editor-layer-context-transform-\(layer.id.uuidString)"
+        )
+    }
+
+    private func layerContextTransformButton(
+        _ layer: ImageEditorLayer,
+        action: ImageEditorLayerTransformContextAction
+    ) -> some View {
+        Button {
+            viewModel.transformLayersFromContext(layer.id, action: action)
+        } label: {
+            Label(
+                L10n.text(action.actionTitleKey),
+                systemImage: action.systemImage
+            )
+        }
+        .disabled(!viewModel.canTransformLayersFromContext(
+            layer.id,
+            action: action
+        ))
+        .accessibilityIdentifier(
+            "image-editor-layer-context-transform-\(action.rawValue)-\(layer.id.uuidString)"
         )
     }
 

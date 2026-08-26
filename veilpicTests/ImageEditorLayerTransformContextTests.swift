@@ -103,6 +103,103 @@ struct ImageEditorLayerTransformContextTests {
         } == originalFrames)
     }
 
+    @Test func unselectedContextFitsAndFillsOnlyClickedLayerToCanvas() throws {
+        let viewModel = makeViewModel()
+        let selectedID = try addPixelLayer(
+            frame: CGRect(x: 18, y: 16, width: 24, height: 18),
+            color: .systemBlue,
+            to: viewModel
+        )
+        let clickedID = try addPixelLayer(
+            frame: CGRect(x: 68, y: 34, width: 40, height: 20),
+            color: .systemOrange,
+            to: viewModel
+        )
+        viewModel.selectLayer(selectedID)
+        let selectedFrame = frame(of: selectedID, in: viewModel)
+        let clickedFrame = frame(of: clickedID, in: viewModel)
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.canTransformLayersFromContext(
+            clickedID,
+            action: .fitCanvas
+        ))
+        #expect(viewModel.transformLayersFromContext(
+            clickedID,
+            action: .fitCanvas
+        ))
+        #expect(frame(of: clickedID, in: viewModel) == CGRect(
+            x: 0,
+            y: 10,
+            width: 160,
+            height: 80
+        ))
+        #expect(frame(of: selectedID, in: viewModel) == selectedFrame)
+        #expect(viewModel.document.selectedLayerIDs == [clickedID])
+        #expect(!viewModel.canTransformLayersFromContext(
+            clickedID,
+            action: .fitCanvas
+        ))
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.history.last?.title == L10n.text(
+            "imageEditor.history.layerFitCanvas"
+        ))
+
+        viewModel.undo()
+        #expect(frame(of: clickedID, in: viewModel) == clickedFrame)
+        #expect(viewModel.canTransformLayersFromContext(
+            clickedID,
+            action: .fillCanvas
+        ))
+        #expect(viewModel.transformLayersFromContext(
+            clickedID,
+            action: .fillCanvas
+        ))
+        #expect(frame(of: clickedID, in: viewModel) == CGRect(
+            x: -20,
+            y: 0,
+            width: 200,
+            height: 100
+        ))
+        #expect(frame(of: selectedID, in: viewModel) == selectedFrame)
+        #expect(viewModel.document.history.last?.title == L10n.text(
+            "imageEditor.history.layerFillCanvas"
+        ))
+    }
+
+    @Test func repeatedCanvasSizingContextActionsPreserveRedoAndHistory() throws {
+        let viewModel = makeViewModel()
+        let layerID = try addPixelLayer(
+            frame: CGRect(x: 0, y: 0, width: 160, height: 100),
+            color: .systemTeal,
+            to: viewModel
+        )
+        viewModel.selectLayer(layerID)
+        viewModel.setSelectedLayersLabelColor(.purple)
+        viewModel.undo()
+        let historyBefore = viewModel.document.history
+        let frameBefore = frame(of: layerID, in: viewModel)
+
+        #expect(viewModel.canRedo)
+        #expect(Set(ImageEditorLayerTransformContextAction.directionalActions)
+            .union(ImageEditorLayerTransformContextAction.canvasSizingActions)
+            == Set(ImageEditorLayerTransformContextAction.allCases))
+        for action in ImageEditorLayerTransformContextAction.canvasSizingActions {
+            #expect(!viewModel.canTransformLayersFromContext(
+                layerID,
+                action: action
+            ))
+            #expect(!viewModel.transformLayersFromContext(
+                layerID,
+                action: action
+            ))
+        }
+
+        #expect(frame(of: layerID, in: viewModel) == frameBefore)
+        #expect(viewModel.document.history == historyBefore)
+        #expect(viewModel.canRedo)
+    }
+
     @Test func invalidAndLockedContextTransformsAreAtomicNoOps() throws {
         let viewModel = makeViewModel()
         let layerID = try addPixelLayer(

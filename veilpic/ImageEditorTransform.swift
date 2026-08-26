@@ -14,8 +14,23 @@ enum ImageEditorLayerTransformContextAction: String, CaseIterable, Identifiable 
     case rotate180
     case flipHorizontal
     case flipVertical
+    case fitCanvas
+    case fillCanvas
 
     var id: String { rawValue }
+
+    static let directionalActions: [Self] = [
+        .rotateLeft90,
+        .rotateRight90,
+        .rotate180,
+        .flipHorizontal,
+        .flipVertical
+    ]
+
+    static let canvasSizingActions: [Self] = [
+        .fitCanvas,
+        .fillCanvas
+    ]
 
     var actionTitleKey: String {
         switch self {
@@ -24,6 +39,8 @@ enum ImageEditorLayerTransformContextAction: String, CaseIterable, Identifiable 
         case .rotate180: "imageEditor.action.layerRotate180"
         case .flipHorizontal: "imageEditor.action.layerFlipHorizontal"
         case .flipVertical: "imageEditor.action.layerFlipVertical"
+        case .fitCanvas: "imageEditor.action.layerFitCanvas"
+        case .fillCanvas: "imageEditor.action.layerFillCanvas"
         }
     }
 
@@ -34,6 +51,8 @@ enum ImageEditorLayerTransformContextAction: String, CaseIterable, Identifiable 
         case .rotate180: "arrow.triangle.2.circlepath"
         case .flipHorizontal: "arrow.left.and.right"
         case .flipVertical: "arrow.up.and.down"
+        case .fitCanvas: "arrow.down.right.and.arrow.up.left"
+        case .fillCanvas: "arrow.up.left.and.arrow.down.right"
         }
     }
 }
@@ -343,7 +362,7 @@ extension ImageEditorViewModel {
 
     func canTransformLayersFromContext(
         _ clickedLayerID: UUID,
-        action _: ImageEditorLayerTransformContextAction
+        action: ImageEditorLayerTransformContextAction
     ) -> Bool {
         guard !isEditingLayerMask else { return false }
         let selectedIDs = layerContextSelectionIDs(for: clickedLayerID)
@@ -353,7 +372,27 @@ extension ImageEditorViewModel {
                   !document.isEffectivelyPixelsLocked(document.layers[$0])
               })
         else { return false }
-        return transformFrame(for: indices, selectedIDs: selectedIDs) != nil
+        guard let transformFrame = transformFrame(
+            for: indices,
+            selectedIDs: selectedIDs
+        ) else { return false }
+        let canvasBounds = CGRect(origin: .zero, size: document.canvasSize)
+        switch action {
+        case .fitCanvas:
+            return !fittedTransformFrame(
+                for: transformFrame,
+                in: canvasBounds,
+                mode: .fit
+            ).isApproximatelyEqual(to: transformFrame)
+        case .fillCanvas:
+            return !fittedTransformFrame(
+                for: transformFrame,
+                in: canvasBounds,
+                mode: .fill
+            ).isApproximatelyEqual(to: transformFrame)
+        case .rotateLeft90, .rotateRight90, .rotate180, .flipHorizontal, .flipVertical:
+            return true
+        }
     }
 
     @discardableResult
@@ -376,6 +415,10 @@ extension ImageEditorViewModel {
             return flipSelectedLayerHorizontal()
         case .flipVertical:
             return flipSelectedLayerVertical()
+        case .fitCanvas:
+            return fitSelectedLayerToCanvas()
+        case .fillCanvas:
+            return fillSelectedLayerToCanvas()
         }
     }
 
@@ -939,7 +982,8 @@ extension ImageEditorViewModel {
         )
     }
 
-    func fitSelectedLayerToCanvas() {
+    @discardableResult
+    func fitSelectedLayerToCanvas() -> Bool {
         transformSelectedLayer(
             to: CGRect(origin: .zero, size: document.canvasSize),
             mode: .fit,
@@ -948,7 +992,8 @@ extension ImageEditorViewModel {
         )
     }
 
-    func fillSelectedLayerToCanvas() {
+    @discardableResult
+    func fillSelectedLayerToCanvas() -> Bool {
         transformSelectedLayer(
             to: CGRect(origin: .zero, size: document.canvasSize),
             mode: .fill,
@@ -1303,28 +1348,29 @@ extension ImageEditorViewModel {
         return true
     }
 
+    @discardableResult
     private func transformSelectedLayer(
         to targetBounds: CGRect,
         mode: ImageEditorLayerFitMode,
         historyTitle: String,
         status: String
-    ) {
+    ) -> Bool {
         guard canResizeSelectedLayer else {
             statusText = L10n.text("imageEditor.status.layerLocked")
-            return
+            return false
         }
         let indices = editableTransformLayerIndices()
         guard !indices.isEmpty,
               let transformFrame = transformFrame(for: indices)
         else {
             statusText = L10n.text("imageEditor.status.layerLocked")
-            return
+            return false
         }
 
         let boundedTarget = targetBounds.standardized
         guard boundedTarget.width > 0.1, boundedTarget.height > 0.1 else {
             statusText = L10n.text("imageEditor.status.operationFailed")
-            return
+            return false
         }
 
         let originalFrames = indices.reduce(into: [:]) { frames, index in
@@ -1340,11 +1386,12 @@ extension ImageEditorViewModel {
         ) else {
             _ = discardLastUndoSnapshot()
             updateStatus()
-            return
+            return false
         }
 
         appendHistory(historyTitle)
         statusText = status
+        return true
     }
 
     private func selectionTargetBounds() -> CGRect? {
