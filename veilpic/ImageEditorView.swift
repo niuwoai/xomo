@@ -16727,6 +16727,16 @@ enum ImageEditorContextualDocumentDeletePolicy {
     }
 }
 
+enum ImageEditorEditMenuDeleteAvailabilityPolicy {
+    static func resolve(
+        canDeleteDeliveryObject: Bool,
+        canDeletePathPoint: Bool,
+        documentAction: ImageEditorContextualDocumentDeleteAction?
+    ) -> Bool {
+        canDeleteDeliveryObject || canDeletePathPoint || documentAction != nil
+    }
+}
+
 @MainActor
 enum ImageEditorDeleteCommandDispatchGate {
     private static var lastDispatch: ImageEditorKeyboardShortcutEventSignature?

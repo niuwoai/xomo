@@ -1142,7 +1142,7 @@ final class ImageEditorViewModel: ObservableObject {
 
     var canUndo: Bool {
         if hasPendingPenPathTransaction {
-            return pendingPenPathAnchors.count > pendingPenContinuationInitialAnchorCount
+            return canDeletePendingPenPoint
         }
         return !undoStack.isEmpty
     }
@@ -1167,6 +1167,10 @@ final class ImageEditorViewModel: ObservableObject {
 
     var hasPendingPenPathTransaction: Bool {
         !pendingPenPathAnchors.isEmpty || !undonePendingPenPathAnchors.isEmpty
+    }
+
+    var canDeletePendingPenPoint: Bool {
+        pendingPenPathAnchors.count > pendingPenContinuationInitialAnchorCount
     }
 
     var historyStateSummary: String {

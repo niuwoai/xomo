@@ -219,12 +219,25 @@ extension ImageEditorView {
     }
 
     private var canDeleteSelectedObjectFromEditMenu: Bool {
-        viewModel.canDeleteSelectedDeliveryObject
-            || ImageEditorContextualDocumentDeletePolicy.resolve(
+        ImageEditorEditMenuDeleteAvailabilityPolicy.resolve(
+            canDeleteDeliveryObject: viewModel.canDeleteSelectedDeliveryObject,
+            canDeletePathPoint: canDeleteSelectedPathPointFromEditMenu,
+            documentAction: ImageEditorContextualDocumentDeletePolicy.resolve(
                 hasSelection: viewModel.hasSelection,
                 canRemoveSelectionPixels: viewModel.canRemoveSelectionPixels,
                 canDeleteLayer: viewModel.canDeleteLayer
-            ) != nil
+            )
+        )
+    }
+
+    private var canDeleteSelectedPathPointFromEditMenu: Bool {
+        if viewModel.canDeletePendingPenPoint {
+            return true
+        }
+        guard viewModel.selectedTool == .pen || viewModel.selectedTool == .directSelection else {
+            return false
+        }
+        return viewModel.canDeleteSelectedPathAnchor
     }
 
     private var canPresentSelectionFillPanel: Bool {

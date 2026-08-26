@@ -574,13 +574,17 @@ struct ImageEditorVectorLayerTests {
             CGPoint(x: 70, y: 78)
         ]
         viewModel.selectTool(.pen)
+        #expect(!viewModel.canDeletePendingPenPoint)
         points.forEach(viewModel.addPenPoint)
+        #expect(viewModel.canDeletePendingPenPoint)
 
         for expectedCount in stride(from: points.count - 1, through: 0, by: -1) {
+            #expect(viewModel.canDeletePendingPenPoint)
             #expect(viewModel.deletePendingPenPointIfNeeded())
             #expect(viewModel.pendingPenPathPoints.count == expectedCount)
         }
         #expect(viewModel.undonePendingPenPathPoints == Array(points.reversed()))
+        #expect(!viewModel.canDeletePendingPenPoint)
 
         // The transient branch still owns Delete after its visible points are
         // exhausted, so another key press cannot reach a selected path/layer.
@@ -597,6 +601,42 @@ struct ImageEditorVectorLayerTests {
         #expect(!viewModel.deletePendingPenPointIfNeeded())
         #expect(!viewModel.hasPendingPenPathTransaction)
         #expect(viewModel.canRedo)
+    }
+
+    @Test func pendingPenPointKeepsEditMenuDeleteAvailableOnTheLastLayer() throws {
+        let canvasSize = NSSize(width: 140, height: 100)
+        let image = testBitmapImage(size: canvasSize, background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        let onlyLayer = try #require(viewModel.document.selectedLayer)
+        viewModel.document.layers = [onlyLayer]
+        viewModel.document.selectedLayerID = onlyLayer.id
+        viewModel.document.selectedLayerIDs = [onlyLayer.id]
+        viewModel.selectTool(.pen)
+
+        #expect(!viewModel.canDeleteLayer)
+        #expect(!viewModel.canDeletePendingPenPoint)
+        #expect(!ImageEditorEditMenuDeleteAvailabilityPolicy.resolve(
+            canDeleteDeliveryObject: false,
+            canDeletePathPoint: viewModel.canDeletePendingPenPoint,
+            documentAction: nil
+        ))
+
+        viewModel.addPenPoint(CGPoint(x: 20, y: 20))
+
+        #expect(viewModel.canDeletePendingPenPoint)
+        #expect(ImageEditorEditMenuDeleteAvailabilityPolicy.resolve(
+            canDeleteDeliveryObject: false,
+            canDeletePathPoint: viewModel.canDeletePendingPenPoint,
+            documentAction: nil
+        ))
+        #expect(viewModel.deletePendingPenPointIfNeeded())
+        #expect(!viewModel.canDeletePendingPenPoint)
+        #expect(!ImageEditorEditMenuDeleteAvailabilityPolicy.resolve(
+            canDeleteDeliveryObject: false,
+            canDeletePathPoint: viewModel.canDeletePendingPenPoint,
+            documentAction: nil
+        ))
+        #expect(viewModel.document.layers.map(\.id) == [onlyLayer.id])
     }
 
     @Test func returnKeyFinishesOpenPenPathAndConsumesIncompleteTransientBranch() async throws {
@@ -2001,9 +2041,18 @@ struct ImageEditorVectorLayerTests {
 
         var pathLayer = try #require(viewModel.document.selectedLayer)
         var pathContent = try #require(pathLayer.shapeContent)
+        viewModel.document.layers = [pathLayer]
+        viewModel.document.selectedLayerID = pathLayer.id
+        viewModel.document.selectedLayerIDs = [pathLayer.id]
         #expect(pathContent.isPathClosed)
         #expect(pathContent.editablePathAnchors.count == 3)
+        #expect(!viewModel.canDeleteLayer)
         #expect(viewModel.canDeleteSelectedPathAnchor)
+        #expect(ImageEditorEditMenuDeleteAvailabilityPolicy.resolve(
+            canDeleteDeliveryObject: false,
+            canDeletePathPoint: viewModel.canDeleteSelectedPathAnchor,
+            documentAction: nil
+        ))
 
         viewModel.deleteSelectedPathAnchor()
 
