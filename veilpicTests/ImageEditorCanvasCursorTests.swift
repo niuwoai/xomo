@@ -1463,7 +1463,7 @@ struct ImageEditorCanvasCursorTests {
         #expect(viewSource.contains("The parent canvas gesture is simultaneous"))
     }
 
-    @Test func commandJUsesOnlyTheWindowShortcutMonitor() throws {
+    @Test func commandJUsesSharedMenuAndWindowDispatchGate() throws {
         #expect(
             ImageEditorKeyboardShortcutAction.resolve(
                 charactersIgnoringModifiers: "j",
@@ -1489,7 +1489,24 @@ struct ImageEditorCanvasCursorTests {
             menuSource[layerMenuStart.upperBound...].range(of: "private var selectMenuItems: some View")
         )
         let layerMenuSource = menuSource[layerMenuStart.lowerBound..<selectMenuStart.lowerBound]
-        #expect(!layerMenuSource.contains(".keyboardShortcut(\"j\""))
+        #expect(layerMenuSource.contains("performDuplicateSelectionOrLayer()"))
+        #expect(layerMenuSource.contains(".keyboardShortcut(\"j\", modifiers: [.command])"))
+
+        let viewSource = try String(
+            contentsOf: URL(fileURLWithPath: #filePath)
+                .deletingLastPathComponent()
+                .deletingLastPathComponent()
+                .appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        #expect(
+            viewSource.contains(
+                "case .duplicateSelectionOrLayer: performDuplicateSelectionOrLayer()"
+            )
+        )
+        #expect(
+            viewSource.contains("ImageEditorLayerDuplicateCommandDispatchGate.shouldDispatch")
+        )
     }
 
     @Test func componentTilesDoNotCombineNativeButtonTrackingWithDragSources() throws {

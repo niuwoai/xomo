@@ -12,6 +12,44 @@ import Testing
 @MainActor
 @Suite(.serialized)
 struct ImageEditorHistoryTests {
+    @Test func onePhysicalCommandTTogglesTransformControlsOnlyOnce() {
+        ImageEditorTransformControlsCommandDispatchGate.reset()
+        defer { ImageEditorTransformControlsCommandDispatchGate.reset() }
+
+        let image = testImage(color: .systemGreen, size: NSSize(width: 32, height: 24))
+        let viewModel = ImageEditorViewModel(sourceName: "transform-controls.png", image: image) { _ in }
+        let historyCount = viewModel.document.history.count
+        let event = ImageEditorKeyboardShortcutEventSignature(
+            windowNumber: 47,
+            eventNumber: 991,
+            timestamp: 99.1,
+            typeRawValue: NSEvent.EventType.keyDown.rawValue,
+            keyCode: 17
+        )
+
+        for _ in 0..<2 {
+            guard ImageEditorTransformControlsCommandDispatchGate.shouldDispatch(
+                event: event
+            ) else { continue }
+            viewModel.toggleTransformControlsVisible()
+        }
+
+        #expect(!viewModel.document.areTransformControlsVisible)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(
+            viewModel.document.history.last?.title
+                == L10n.text("imageEditor.history.transformControlsVisibility")
+        )
+    }
+
+    @Test func transformControlsMouseBoundariesRemainIndependentWithoutAKeyEvent() {
+        ImageEditorTransformControlsCommandDispatchGate.reset()
+        defer { ImageEditorTransformControlsCommandDispatchGate.reset() }
+
+        #expect(ImageEditorTransformControlsCommandDispatchGate.shouldDispatch(event: nil))
+        #expect(ImageEditorTransformControlsCommandDispatchGate.shouldDispatch(event: nil))
+    }
+
     @Test func onePhysicalFileShortcutDispatchesEachActionOnlyOnce() {
         let event = ImageEditorKeyboardShortcutEventSignature(
             windowNumber: 43,

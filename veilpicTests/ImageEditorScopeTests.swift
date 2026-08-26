@@ -2487,6 +2487,34 @@ struct ImageEditorScopeTests {
                 )
             )
         }
+        #expect(
+            menuBarSource.contains(
+                "toggleFreeTransform: { performToggleTransformControls() }"
+            )
+        )
+        #expect(
+            viewSource.contains(
+                "case .toggleTransformControls: performToggleTransformControls()"
+            )
+        )
+        let transformHelperStart = try #require(
+            viewSource.range(of: "func performToggleTransformControls()")
+        )
+        let transformHelperEnd = try #require(
+            viewSource[transformHelperStart.upperBound...].range(of: "\n    }")
+        )
+        let transformHelperSource = viewSource[
+            transformHelperStart.lowerBound..<transformHelperEnd.upperBound
+        ]
+        let transformGate = try #require(
+            transformHelperSource.range(
+                of: "ImageEditorTransformControlsCommandDispatchGate.shouldDispatch"
+            )
+        )
+        let transformToggle = try #require(
+            transformHelperSource.range(of: "viewModel.toggleTransformControlsVisible()")
+        )
+        #expect(transformGate.lowerBound < transformToggle.lowerBound)
         #expect(menuBarSource.contains("deleteSelectedObject: { deleteSelectedObjectFromKeyboard() }"))
         #expect(menuBarSource.contains("ImageEditorContextualDocumentDeletePolicy.resolve("))
         #expect(appSource.contains("XomoEditCommands()"))
@@ -4683,7 +4711,7 @@ struct ImageEditorScopeTests {
         #expect(viewSource.contains("case .zoomOut: performZoomCommand(.zoomOut)"))
         #expect(viewSource.contains("case .actualPixels: performZoomCommand(.actualPixels)"))
         #expect(viewSource.contains("case .fitOnScreen: performZoomCommand(.fitOnScreen)"))
-        #expect(viewMenuSource.contains("viewModel.toggleTransformControlsVisible()"))
+        #expect(viewMenuSource.contains("performToggleTransformControls()"))
         #expect(!viewMenuSource.contains(".keyboardShortcut(\"t\", modifiers: [.command])"))
     }
 

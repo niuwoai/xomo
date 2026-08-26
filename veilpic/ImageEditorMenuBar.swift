@@ -196,7 +196,7 @@ extension ImageEditorView {
             canPasteInPlace: viewModel.canPasteClipboardImageInPlace,
             pasteAsSmartObject: { viewModel.pasteClipboardAsSmartObject() },
             canPasteAsSmartObject: viewModel.canPasteClipboardImageAsSmartObject,
-            toggleFreeTransform: { viewModel.toggleTransformControlsVisible() },
+            toggleFreeTransform: { performToggleTransformControls() },
             presentFillDialog: { viewModel.presentSelectionFillPanel() },
             canPresentFillDialog: canPresentSelectionFillPanel,
             fillSelection: { viewModel.fillSelection() },
@@ -1533,7 +1533,7 @@ extension ImageEditorView {
             viewModel.toggleSelectionEdgesVisible()
         }
         Button(L10n.text("imageEditor.action.transformControlsVisible")) {
-            viewModel.toggleTransformControlsVisible()
+            performToggleTransformControls()
         }
         Button(L10n.text("imageEditor.action.gridVisible")) {
             performCanvasAidCommand(.grid)

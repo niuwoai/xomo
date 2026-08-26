@@ -3240,7 +3240,7 @@ struct ImageEditorView: View {
         case .pasteClipboardLayer: performClipboardCommand(.pasteAsLayer)
         case .pasteClipboardIntoSelection: performClipboardCommand(.pasteIntoSelection)
         case .pasteClipboardInPlaceLayer: performClipboardCommand(.pasteInPlace)
-        case .toggleTransformControls: viewModel.toggleTransformControlsVisible()
+        case .toggleTransformControls: performToggleTransformControls()
         case .openSelectionFill:
             if case .tool = viewModel.workspaceInputMode {
                 viewModel.presentSelectionFillPanel()
@@ -3350,6 +3350,13 @@ struct ImageEditorView: View {
         case .pasteIntoSelection: viewModel.pasteClipboardIntoSelectionAsLayer()
         case .pasteInPlace: viewModel.pasteClipboardInPlaceAsLayer()
         }
+    }
+
+    func performToggleTransformControls() {
+        guard ImageEditorTransformControlsCommandDispatchGate.shouldDispatch(
+            event: .currentKeyEvent
+        ) else { return }
+        viewModel.toggleTransformControlsVisible()
     }
 
     func performDuplicateSelectionOrLayer() {
@@ -17236,6 +17243,22 @@ enum ImageEditorFileCommandDispatchGate {
 
     static func reset() {
         lastDispatch = nil
+    }
+}
+
+@MainActor
+enum ImageEditorTransformControlsCommandDispatchGate {
+    private static var lastEvent: ImageEditorKeyboardShortcutEventSignature?
+
+    static func shouldDispatch(event: ImageEditorKeyboardShortcutEventSignature?) -> Bool {
+        guard let event else { return true }
+        guard event != lastEvent else { return false }
+        lastEvent = event
+        return true
+    }
+
+    static func reset() {
+        lastEvent = nil
     }
 }
 
