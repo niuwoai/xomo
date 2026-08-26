@@ -3634,6 +3634,7 @@
 "imageEditor.status.figmaSourceOpened" = "Figma でソースノードを開きました";
 "imageEditor.status.figmaSourceOpenFailed" = "信頼できる Figma ソースリンクを開けませんでした";
 "imageEditor.status.figmaSourceURLCopied" = "Figma ソースリンクをコピーしました";
+"imageEditor.status.figmaSourceURLCopyFailed" = "信頼できる Figma ソースリンクをコピーできませんでした";
 "imageEditor.properties.figmaImageFill" = "Figma 画像塗りつぶし";
 "imageEditor.properties.figmaImageReference" = "画像参照";
 "imageEditor.properties.figmaImageScaleMode" = "拡大縮小モード";

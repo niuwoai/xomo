@@ -2005,7 +2005,10 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     var selectedLayerOpenableFigmaSourceURL: URL? {
-        XomoFigmaSourceOpenPolicy.canonicalURL(from: selectedLayerFigmaSourceURL)
+        XomoFigmaSourceOpenPolicy.canonicalURL(
+            from: selectedLayerFigmaSourceURL,
+            selectingNodeID: selectedLayerFigmaSourceID
+        )
     }
 
     func copySelectedFigmaSourceReference() {
@@ -2019,11 +2022,16 @@ final class ImageEditorViewModel: ObservableObject {
         statusText = L10n.text("imageEditor.status.figmaSourceCopied")
     }
 
-    func copySelectedFigmaSourceURL() {
-        guard let url = selectedLayerFigmaSourceURL else { return }
+    @discardableResult
+    func copySelectedFigmaSourceURL() -> Bool {
+        guard let url = selectedLayerOpenableFigmaSourceURL else {
+            statusText = L10n.text("imageEditor.status.figmaSourceURLCopyFailed")
+            return false
+        }
         NSPasteboard.general.clearContents()
         NSPasteboard.general.setString(url.absoluteString, forType: .string)
         statusText = L10n.text("imageEditor.status.figmaSourceURLCopied")
+        return true
     }
 
     @discardableResult

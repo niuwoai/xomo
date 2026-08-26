@@ -81,8 +81,9 @@ struct ImageEditorFigmaProvenanceTests {
         let image = NSImage.transparent(size: CGSize(width: 20, height: 20))
         var document = ImageEditorDocument(sourceName: "figma-source.png", image: image)
         document.layers[0].xomoFigmaSourceURL = URL(
-            string: "https://figma.com/design/abc123/Checkout?node-id=1-60&utm_source=mail"
+            string: "https://figma.com/design/abc123/Checkout?node-id=10-20&version-id=7&utm_source=mail"
         )
+        document.layers[0].xomoFigmaSourceID = "I32:9;44:5"
         document.selectedLayerID = document.layers[0].id
         document.selectedLayerIDs = [document.layers[0].id]
         let viewModel = ImageEditorViewModel(document: document) { _ in }
@@ -93,19 +94,25 @@ struct ImageEditorFigmaProvenanceTests {
             return true
         })
         #expect(openedURLs.map(\.absoluteString) == [
-            "https://www.figma.com/design/abc123/Checkout?node-id=1-60"
+            "https://www.figma.com/design/abc123/Checkout?node-id=I32-9%3B44-5&version-id=7"
         ])
         #expect(viewModel.statusText == L10n.text("imageEditor.status.figmaSourceOpened"))
 
-        viewModel.document.layers[0].xomoFigmaSourceURL = URL(
-            string: "https://www.figma.com.evil.example/design/abc123/Checkout?node-id=1-60"
+        #expect(viewModel.copySelectedFigmaSourceURL())
+        #expect(
+            NSPasteboard.general.string(forType: .string) ==
+                "https://www.figma.com/design/abc123/Checkout?node-id=I32-9%3B44-5&version-id=7"
         )
+
+        viewModel.document.layers[0].xomoFigmaSourceID = "../../outside"
         #expect(viewModel.selectedLayerOpenableFigmaSourceURL == nil)
         #expect(!viewModel.openSelectedFigmaSourceURL { _ in
             Issue.record("Untrusted source URL reached the system opener")
             return true
         })
         #expect(viewModel.statusText == L10n.text("imageEditor.status.figmaSourceOpenFailed"))
+        #expect(!viewModel.copySelectedFigmaSourceURL())
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.figmaSourceURLCopyFailed"))
     }
 
     @Test func selectedFigmaSourceReportsSystemOpenFailureAndPropertyPanelUsesTheSafeRoute() throws {
@@ -114,6 +121,7 @@ struct ImageEditorFigmaProvenanceTests {
         document.layers[0].xomoFigmaSourceURL = URL(
             string: "https://www.figma.com/design/abc123/Checkout?node-id=1-60"
         )
+        document.layers[0].xomoFigmaSourceID = "1:60"
         document.selectedLayerID = document.layers[0].id
         document.selectedLayerIDs = [document.layers[0].id]
         let viewModel = ImageEditorViewModel(document: document) { _ in }

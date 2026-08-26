@@ -3634,6 +3634,7 @@
 "imageEditor.status.figmaSourceOpened" = "Opened the source node in Figma";
 "imageEditor.status.figmaSourceOpenFailed" = "Could not open a trusted Figma source link";
 "imageEditor.status.figmaSourceURLCopied" = "Figma source link copied";
+"imageEditor.status.figmaSourceURLCopyFailed" = "Could not copy a trusted Figma source link";
 "imageEditor.properties.figmaImageFill" = "Figma image fill";
 "imageEditor.properties.figmaImageReference" = "Image reference";
 "imageEditor.properties.figmaImageScaleMode" = "Scale mode";

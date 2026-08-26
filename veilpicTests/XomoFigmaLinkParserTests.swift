@@ -64,6 +64,30 @@ struct XomoFigmaLinkParserTests {
         )
     }
 
+    @Test func sourceOpenPolicyRetargetsCanonicalLinkToTheSelectedLayerNode() throws {
+        let sourceURL = try #require(URL(
+            string: "https://figma.com/design/abc123/Checkout?node-id=10-20&version-id=7&utm_source=mail"
+        ))
+
+        #expect(
+            XomoFigmaSourceOpenPolicy.canonicalURL(
+                from: sourceURL,
+                selectingNodeID: "I32:9;44:5"
+            )?.absoluteString ==
+                "https://www.figma.com/design/abc123/Checkout?node-id=I32-9%3B44-5&version-id=7"
+        )
+        #expect(
+            XomoFigmaSourceOpenPolicy.canonicalURL(from: sourceURL)?.absoluteString ==
+                "https://www.figma.com/design/abc123/Checkout?node-id=10-20&version-id=7"
+        )
+        #expect(
+            XomoFigmaSourceOpenPolicy.canonicalURL(
+                from: sourceURL,
+                selectingNodeID: "../../outside"
+            ) == nil
+        )
+    }
+
     @Test func rejectsInsecureSpoofedCredentialAndCustomPortURLs() {
         let unsafeURLs = [
             "http://www.figma.com/design/abc123DEF456/File",

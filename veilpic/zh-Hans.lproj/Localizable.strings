@@ -3634,6 +3634,7 @@
 "imageEditor.status.figmaSourceOpened" = "已在 Figma 中打开源节点";
 "imageEditor.status.figmaSourceOpenFailed" = "无法打开安全的 Figma 源节点链接";
 "imageEditor.status.figmaSourceURLCopied" = "已复制 Figma 源节点链接";
+"imageEditor.status.figmaSourceURLCopyFailed" = "无法复制安全的 Figma 源节点链接";
 "imageEditor.properties.figmaImageFill" = "Figma 图片填充";
 "imageEditor.properties.figmaImageReference" = "图片引用";
 "imageEditor.properties.figmaImageScaleMode" = "缩放模式";

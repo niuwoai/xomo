@@ -202,11 +202,28 @@ enum XomoFigmaClipboardPastePolicy {
 }
 
 enum XomoFigmaSourceOpenPolicy {
-    static func canonicalURL(from candidate: URL?) -> URL? {
+    static func canonicalURL(
+        from candidate: URL?,
+        selectingNodeID selectedNodeID: String? = nil
+    ) -> URL? {
         guard let candidate,
               let preview = try? XomoFigmaLinkParser.parse(candidate.absoluteString)
         else { return nil }
-        return preview.canonicalURL
+        guard let selectedNodeID else { return preview.canonicalURL }
+        guard var components = URLComponents(
+            url: preview.canonicalURL,
+            resolvingAgainstBaseURL: false
+        ) else { return nil }
+        var queryItems = components.queryItems?.filter { $0.name != "node-id" } ?? []
+        queryItems.append(URLQueryItem(
+            name: "node-id",
+            value: selectedNodeID.replacingOccurrences(of: ":", with: "-")
+        ))
+        components.queryItems = queryItems
+        guard let retargetedURL = components.url,
+              let retargetedPreview = try? XomoFigmaLinkParser.parse(retargetedURL.absoluteString)
+        else { return nil }
+        return retargetedPreview.canonicalURL
     }
 }
 
