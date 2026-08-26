@@ -2935,6 +2935,59 @@ struct ImageEditorLayerStyleTests {
         let historyCount = viewModel.document.history.count
         let undoCount = viewModel.undoStack.count
 
+        #expect(ImageEditorGradientStopDeleteAvailabilityPolicy.resolve(
+            selectedIndex: 1,
+            stopCount: 4,
+            isInteractionAvailable: true
+        ))
+        #expect(!ImageEditorGradientStopDeleteAvailabilityPolicy.resolve(
+            selectedIndex: 0,
+            stopCount: 4,
+            isInteractionAvailable: true
+        ))
+        #expect(!ImageEditorGradientStopDeleteAvailabilityPolicy.resolve(
+            selectedIndex: 3,
+            stopCount: 4,
+            isInteractionAvailable: true
+        ))
+        #expect(!ImageEditorGradientStopDeleteAvailabilityPolicy.resolve(
+            selectedIndex: 1,
+            stopCount: 4,
+            isInteractionAvailable: false
+        ))
+        #expect(ImageEditorEditMenuDeleteAvailabilityPolicy.resolve(
+            pendingPenOwnership: .absent,
+            overlayHandleOwnership: .deletes,
+            canDeleteShapeGradientStop: true,
+            canDeleteDeliveryObject: false,
+            canDeletePathPoint: false,
+            documentAction: nil
+        ))
+        #expect(!ImageEditorEditMenuDeleteAvailabilityPolicy.resolve(
+            pendingPenOwnership: .absent,
+            overlayHandleOwnership: .consumesOnly,
+            canDeleteShapeGradientStop: true,
+            canDeleteDeliveryObject: true,
+            canDeletePathPoint: true,
+            documentAction: .deleteSelectedLayer
+        ))
+        #expect(!ImageEditorEditMenuDeleteAvailabilityPolicy.resolve(
+            pendingPenOwnership: .consumesOnly,
+            overlayHandleOwnership: .deletes,
+            canDeleteShapeGradientStop: true,
+            canDeleteDeliveryObject: true,
+            canDeletePathPoint: true,
+            documentAction: .deleteSelectedLayer
+        ))
+        #expect(ImageEditorEditMenuDeleteAvailabilityPolicy.resolve(
+            pendingPenOwnership: .absent,
+            overlayHandleOwnership: .absent,
+            canDeleteShapeGradientStop: true,
+            canDeleteDeliveryObject: false,
+            canDeletePathPoint: false,
+            documentAction: nil
+        ))
+
         let result = try #require(
             viewModel.removeSelectedLayerGradientOverlayCanvasStop(at: 1)
         )
@@ -4595,10 +4648,12 @@ struct ImageEditorLayerStyleTests {
         )
         #expect(cancelPosition.lowerBound < removalPosition.lowerBound)
 
-        let nudgeStart = try #require(source.range(of: "nudgeSelected: { delta in"))
+        let nudgeStart = try #require(
+            source.range(of: "func performNudgeCommand(_ delta: CGSize)")
+        )
         let nudgeEnd = try #require(
             source.range(
-                of: "selectNextCanvasHandle:",
+                of: "func deleteSelectedObjectFromKeyboard() -> Bool",
                 range: nudgeStart.upperBound..<source.endIndex
             )
         )

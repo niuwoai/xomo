@@ -16727,13 +16727,97 @@ enum ImageEditorContextualDocumentDeletePolicy {
     }
 }
 
+enum ImageEditorDeleteMenuOwnedContext {
+    case absent
+    case consumesOnly
+    case deletes
+}
+
 enum ImageEditorEditMenuDeleteAvailabilityPolicy {
     static func resolve(
+        pendingPenOwnership: ImageEditorDeleteMenuOwnedContext,
+        overlayHandleOwnership: ImageEditorDeleteMenuOwnedContext,
+        canDeleteShapeGradientStop: Bool,
         canDeleteDeliveryObject: Bool,
         canDeletePathPoint: Bool,
         documentAction: ImageEditorContextualDocumentDeleteAction?
     ) -> Bool {
-        canDeleteDeliveryObject || canDeletePathPoint || documentAction != nil
+        switch pendingPenOwnership {
+        case .deletes:
+            return true
+        case .consumesOnly:
+            return false
+        case .absent:
+            break
+        }
+        switch overlayHandleOwnership {
+        case .deletes:
+            return true
+        case .consumesOnly:
+            return false
+        case .absent:
+            break
+        }
+        return canDeleteShapeGradientStop
+            || canDeletePathPoint
+            || canDeleteDeliveryObject
+            || documentAction != nil
+    }
+}
+
+enum ImageEditorGradientStopDeleteAvailabilityPolicy {
+    static func resolve(
+        selectedIndex: Int?,
+        stopCount: Int,
+        isInteractionAvailable: Bool
+    ) -> Bool {
+        guard isInteractionAvailable, let selectedIndex else { return false }
+        return selectedIndex > 0 && selectedIndex < stopCount - 1
+    }
+}
+
+extension ImageEditorView {
+    var selectedGradientDeleteMenuContext: (
+        overlayOwnership: ImageEditorDeleteMenuOwnedContext,
+        canDeleteShapeStop: Bool
+    ) {
+        let overlayInteractionIsAvailable = viewModel.selectedLeftSidebarTab == .tools
+            && canvasInteractionTool == .move
+            && viewModel.document.areExtrasVisible
+            && viewModel.canEditSelectedLayerGradientOverlayCanvasCenter
+        let selectedOverlayStop = overlayInteractionIsAvailable
+            ? viewModel.selectedLayerGradientOverlayCanvasStopHandlePoints.first(where: {
+                $0.index == selectedGradientOverlayStopIndex
+            })
+            : nil
+        let overlayMidpointIsSelected = overlayInteractionIsAvailable
+            && selectedGradientOverlayMidpointIndex.map { selectedIndex in
+                viewModel.selectedLayerGradientOverlayCanvasMidpointHandlePoints.contains {
+                    $0.lowerStopIndex == selectedIndex
+                }
+            } == true
+        let overlayStopCanDelete = ImageEditorGradientStopDeleteAvailabilityPolicy.resolve(
+            selectedIndex: selectedOverlayStop?.index,
+            stopCount: viewModel.selectedLayerGradientOverlayColorStops.count,
+            isInteractionAvailable: selectedOverlayStop != nil
+        )
+        let shapeStopCanDelete = ImageEditorGradientStopDeleteAvailabilityPolicy.resolve(
+            selectedIndex: selectedShapeGradientStopIndex,
+            stopCount: viewModel.selectedShapeGradientColorStops.count,
+            isInteractionAvailable: canvasInteractionTool == .move
+                && viewModel.document.areExtrasVisible
+                && viewModel.canEditSelectedShapeGradientStops
+                && !viewModel.selectedShapeGradientCanvasStopHandlePoints.isEmpty
+        )
+        let overlayOwnership: ImageEditorDeleteMenuOwnedContext
+        if selectedOverlayStop != nil {
+            overlayOwnership = overlayStopCanDelete ? .deletes : .consumesOnly
+        } else if overlayMidpointIsSelected {
+            overlayOwnership = .consumesOnly
+        } else {
+            overlayOwnership = .absent
+        }
+        return (overlayOwnership, shapeStopCanDelete)
     }
 }
 

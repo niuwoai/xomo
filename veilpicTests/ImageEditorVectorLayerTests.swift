@@ -616,6 +616,9 @@ struct ImageEditorVectorLayerTests {
         #expect(!viewModel.canDeleteLayer)
         #expect(!viewModel.canDeletePendingPenPoint)
         #expect(!ImageEditorEditMenuDeleteAvailabilityPolicy.resolve(
+            pendingPenOwnership: .absent,
+            overlayHandleOwnership: .absent,
+            canDeleteShapeGradientStop: false,
             canDeleteDeliveryObject: false,
             canDeletePathPoint: viewModel.canDeletePendingPenPoint,
             documentAction: nil
@@ -625,6 +628,9 @@ struct ImageEditorVectorLayerTests {
 
         #expect(viewModel.canDeletePendingPenPoint)
         #expect(ImageEditorEditMenuDeleteAvailabilityPolicy.resolve(
+            pendingPenOwnership: .deletes,
+            overlayHandleOwnership: .absent,
+            canDeleteShapeGradientStop: false,
             canDeleteDeliveryObject: false,
             canDeletePathPoint: viewModel.canDeletePendingPenPoint,
             documentAction: nil
@@ -632,9 +638,12 @@ struct ImageEditorVectorLayerTests {
         #expect(viewModel.deletePendingPenPointIfNeeded())
         #expect(!viewModel.canDeletePendingPenPoint)
         #expect(!ImageEditorEditMenuDeleteAvailabilityPolicy.resolve(
-            canDeleteDeliveryObject: false,
+            pendingPenOwnership: .consumesOnly,
+            overlayHandleOwnership: .absent,
+            canDeleteShapeGradientStop: true,
+            canDeleteDeliveryObject: true,
             canDeletePathPoint: viewModel.canDeletePendingPenPoint,
-            documentAction: nil
+            documentAction: .deleteSelectedLayer
         ))
         #expect(viewModel.document.layers.map(\.id) == [onlyLayer.id])
     }
@@ -2049,6 +2058,9 @@ struct ImageEditorVectorLayerTests {
         #expect(!viewModel.canDeleteLayer)
         #expect(viewModel.canDeleteSelectedPathAnchor)
         #expect(ImageEditorEditMenuDeleteAvailabilityPolicy.resolve(
+            pendingPenOwnership: .absent,
+            overlayHandleOwnership: .absent,
+            canDeleteShapeGradientStop: false,
             canDeleteDeliveryObject: false,
             canDeletePathPoint: viewModel.canDeleteSelectedPathAnchor,
             documentAction: nil

@@ -219,7 +219,11 @@ extension ImageEditorView {
     }
 
     private var canDeleteSelectedObjectFromEditMenu: Bool {
-        ImageEditorEditMenuDeleteAvailabilityPolicy.resolve(
+        let gradientContext = selectedGradientDeleteMenuContext
+        return ImageEditorEditMenuDeleteAvailabilityPolicy.resolve(
+            pendingPenOwnership: pendingPenDeleteMenuOwnership,
+            overlayHandleOwnership: gradientContext.overlayOwnership,
+            canDeleteShapeGradientStop: gradientContext.canDeleteShapeStop,
             canDeleteDeliveryObject: viewModel.canDeleteSelectedDeliveryObject,
             canDeletePathPoint: canDeleteSelectedPathPointFromEditMenu,
             documentAction: ImageEditorContextualDocumentDeletePolicy.resolve(
@@ -228,6 +232,11 @@ extension ImageEditorView {
                 canDeleteLayer: viewModel.canDeleteLayer
             )
         )
+    }
+
+    private var pendingPenDeleteMenuOwnership: ImageEditorDeleteMenuOwnedContext {
+        guard viewModel.hasPendingPenPathTransaction else { return .absent }
+        return viewModel.canDeletePendingPenPoint ? .deletes : .consumesOnly
     }
 
     private var canDeleteSelectedPathPointFromEditMenu: Bool {

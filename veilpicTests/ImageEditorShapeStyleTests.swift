@@ -1415,6 +1415,21 @@ struct ImageEditorShapeStyleTests {
             viewModel.addSelectedShapeGradientStop(atCanvasPoint: insertionPoint)
         )
         let historyBeforeRemove = viewModel.document.history.count
+        #expect(ImageEditorGradientStopDeleteAvailabilityPolicy.resolve(
+            selectedIndex: reinsertedIndex,
+            stopCount: viewModel.selectedShapeGradientColorStops.count,
+            isInteractionAvailable: true
+        ))
+        #expect(!ImageEditorGradientStopDeleteAvailabilityPolicy.resolve(
+            selectedIndex: 0,
+            stopCount: viewModel.selectedShapeGradientColorStops.count,
+            isInteractionAvailable: true
+        ))
+        #expect(!ImageEditorGradientStopDeleteAvailabilityPolicy.resolve(
+            selectedIndex: viewModel.selectedShapeGradientColorStops.count - 1,
+            stopCount: viewModel.selectedShapeGradientColorStops.count,
+            isInteractionAvailable: true
+        ))
         #expect(viewModel.removeSelectedShapeGradientCanvasStop(at: reinsertedIndex) != nil)
         #expect(viewModel.selectedShapeGradientColorStops.count == 2)
         #expect(viewModel.document.history.count == historyBeforeRemove + 1)
