@@ -309,7 +309,19 @@ extension ImageEditorViewModel {
     }
 
     var canCutSelectionToClipboard: Bool {
-        canCopySelectionToClipboard && canCutSelectionToNewLayer
+        if hasSelection {
+            return canCopySelectionToClipboard && canCutSelectionToNewLayer
+        }
+        return canCutSelectedPixelLayerToClipboard
+    }
+
+    var canCutSelectedPixelLayerToClipboard: Bool {
+        guard !hasActiveLayerMoveTransaction,
+              selectedLayerCount == 1,
+              let layer = document.selectedLayer,
+              layer.kind.isPixel
+        else { return false }
+        return canDeleteLayer && canCopySelectedLayersToClipboard
     }
 
     var canCopyMergedToClipboard: Bool {
@@ -1221,6 +1233,10 @@ extension ImageEditorViewModel {
 
     @discardableResult
     func cutSelectionToClipboard() -> Bool {
+        guard hasSelection else {
+            return cutSelectedPixelLayerToClipboard()
+        }
+
         guard let selection = document.selection else {
             statusText = L10n.text("imageEditor.status.noSelection")
             return false
@@ -1269,6 +1285,23 @@ extension ImageEditorViewModel {
         document.layers[index].image = output.normalizedBitmapImage()
         appendHistory(L10n.text("imageEditor.history.selectionCutClipboard"))
         statusText = L10n.text("imageEditor.status.selectionCutToClipboard")
+        return true
+    }
+
+    @discardableResult
+    private func cutSelectedPixelLayerToClipboard() -> Bool {
+        guard canCutSelectedPixelLayerToClipboard else {
+            statusText = L10n.text("imageEditor.status.selectedLayerCutToClipboardFailed")
+            return false
+        }
+        guard copySelectedLayersToClipboard() else { return false }
+        guard deleteSelectedLayer(
+            historyTitle: L10n.text("imageEditor.history.selectedLayerCutToClipboard")
+        ) else {
+            statusText = L10n.text("imageEditor.status.selectedLayerCutToClipboardFailed")
+            return false
+        }
+        statusText = L10n.text("imageEditor.status.selectedLayerCutToClipboard")
         return true
     }
 

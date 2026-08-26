@@ -69,6 +69,27 @@ struct LocalizationResourceTests {
         }
     }
 
+    @Test func contextualCutUsesAnObjectNeutralMenuLabel() throws {
+        let paths = try Self.repositoryPaths()
+        let expectedValues = [
+            "zh-Hans": "剪切",
+            "en": "Cut",
+            "ja": "カット"
+        ]
+
+        for (localizationID, expectedValue) in expectedValues {
+            let strings = try Self.stringTable(
+                tableName: "Localizable",
+                localizationID: localizationID,
+                appDirectory: paths.appDirectory
+            )
+            #expect(
+                strings["imageEditor.action.cutSelectionClipboard"]
+                    == expectedValue
+            )
+        }
+    }
+
     @Test func editableSVGOpenFlowIsLocalizedInEverySupportedLanguage() throws {
         let paths = try Self.repositoryPaths()
         let expectedValues = [

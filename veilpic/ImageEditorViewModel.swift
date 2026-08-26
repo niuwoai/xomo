@@ -5612,6 +5612,13 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     func deleteSelectedLayer() {
+        _ = deleteSelectedLayer(
+            historyTitle: L10n.text("imageEditor.history.layerDelete")
+        )
+    }
+
+    @discardableResult
+    func deleteSelectedLayer(historyTitle: String) -> Bool {
         guard let plan = ImageEditorLayerHierarchyDeletion.deletionPlan(
             layers: document.layers,
             selectedIDs: document.selectedLayerIDs,
@@ -5619,7 +5626,7 @@ final class ImageEditorViewModel: ObservableObject {
             visibleLayerIDs: visibleLayerRows.map(\.id),
             isEffectivelyLocked: { document.isEffectivelyLocked($0) },
             isEffectivelyVisible: { document.isEffectivelyVisible($0) }
-        ) else { return }
+        ) else { return false }
         pushUndo()
         document.layers = plan.layers
         document.selectedLayerIDs = plan.selectedLayerIDs
@@ -5627,7 +5634,8 @@ final class ImageEditorViewModel: ObservableObject {
         layerSelectionAnchorID = plan.primarySelectionID
         isEditingLayerMask = false
         syncControlsFromLayerSelection()
-        appendHistory(L10n.text("imageEditor.history.layerDelete"))
+        appendHistory(historyTitle)
+        return true
     }
 
     /// A plain Delete key removes the selected layer only when Photoshop-style

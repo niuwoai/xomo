@@ -2489,6 +2489,12 @@ struct ImageEditorScopeTests {
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
             encoding: .utf8
         )
+        let selectionEditSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent(
+                "veilpic/ImageEditorSelectionEditCommands.swift"
+            ),
+            encoding: .utf8
+        )
         let sharedMenuStart = try #require(
             commandsSource.range(of: "struct XomoEditMenuItems: View")
         )
@@ -2519,6 +2525,21 @@ struct ImageEditorScopeTests {
         #expect(commandsSource.contains("CommandGroup(replacing: .textFormatting)"))
         #expect(commandsSource.contains("XomoEditMenuItems(actions: actions)"))
         #expect(menuBarSource.contains("var xomoEditCommandActions: XomoEditCommandActions"))
+        #expect(
+            menuBarSource.contains(
+                "canCutSelection: viewModel.canCutSelectionToClipboard"
+            )
+        )
+        #expect(
+            selectionEditSource.contains(
+                "guard hasSelection else {\n            return cutSelectedPixelLayerToClipboard()"
+            )
+        )
+        #expect(
+            selectionEditSource.contains(
+                "guard copySelectedLayersToClipboard() else { return false }"
+            )
+        )
         for (field, action) in [
             ("cutSelection", "cutSelection"),
             ("copySelection", "copySelection"),

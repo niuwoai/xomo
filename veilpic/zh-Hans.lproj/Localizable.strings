@@ -2030,6 +2030,7 @@
 "imageEditor.history.selectionCopyMergedLayer" = "通过合成拷贝新建图层";
 "imageEditor.history.selectionCutLayer" = "通过剪切新建图层";
 "imageEditor.history.selectionCutClipboard" = "剪切选区";
+"imageEditor.history.selectedLayerCutToClipboard" = "剪切图层";
 "imageEditor.history.selectionClearPixels" = "清除选区像素";
 "imageEditor.history.selectionClearPixelsSelected" = "清除所选图层选区像素";
 "imageEditor.history.selectionInverted" = "反选选区";
@@ -2968,7 +2969,7 @@
 "imageEditor.action.selectionCopyLayer" = "选区复制为层";
 "imageEditor.action.selectionCopyMergedLayer" = "合成复制为层";
 "imageEditor.action.selectionCutLayer" = "选区剪切为层";
-"imageEditor.action.cutSelectionClipboard" = "剪切选区到剪贴板";
+"imageEditor.action.cutSelectionClipboard" = "剪切";
 "imageEditor.action.copySelectionClipboard" = "复制到剪贴板";
 "imageEditor.action.copyMergedClipboard" = "复制合并图像";
 "imageEditor.action.pasteClipboardLayer" = "粘贴为图层";
@@ -3866,6 +3867,8 @@
 "imageEditor.action.copySelectedLayersClipboard" = "复制所选图层到剪贴板";
 "imageEditor.status.selectedLayersCopiedToClipboard" = "已将所选图层复制到剪贴板";
 "imageEditor.status.selectedLayersCopyToClipboardFailed" = "复制所选图层到剪贴板失败";
+"imageEditor.status.selectedLayerCutToClipboard" = "已将像素图层剪切到剪贴板";
+"imageEditor.status.selectedLayerCutToClipboardFailed" = "无法将像素图层剪切到剪贴板";
 "imageEditor.action.sliceCreate" = "从当前选区创建切片";
 "imageEditor.export.slice" = "命名切片";
 "imageEditor.history.sliceCreated" = "创建切片：%@";

@@ -2030,6 +2030,7 @@
 "imageEditor.history.selectionCopyMergedLayer" = "結合コピーで新規レイヤー";
 "imageEditor.history.selectionCutLayer" = "カットして新規レイヤー";
 "imageEditor.history.selectionCutClipboard" = "選択範囲をカット";
+"imageEditor.history.selectedLayerCutToClipboard" = "レイヤーをカット";
 "imageEditor.history.selectionClearPixels" = "選択範囲のピクセルを消去";
 "imageEditor.history.selectionClearPixelsSelected" = "選択レイヤーの選択範囲ピクセルを消去";
 "imageEditor.history.selectionInverted" = "選択範囲を反転";
@@ -2968,7 +2969,7 @@
 "imageEditor.action.selectionCopyLayer" = "コピーしてレイヤー";
 "imageEditor.action.selectionCopyMergedLayer" = "結合コピーでレイヤー";
 "imageEditor.action.selectionCutLayer" = "カットしてレイヤー";
-"imageEditor.action.cutSelectionClipboard" = "選択範囲をクリップボードへカット";
+"imageEditor.action.cutSelectionClipboard" = "カット";
 "imageEditor.action.copySelectionClipboard" = "クリップボードへコピー";
 "imageEditor.action.copyMergedClipboard" = "結合部分をコピー";
 "imageEditor.action.pasteClipboardLayer" = "レイヤーとしてペースト";
@@ -3866,6 +3867,8 @@
 "imageEditor.action.copySelectedLayersClipboard" = "選択したレイヤーをクリップボードへコピー";
 "imageEditor.status.selectedLayersCopiedToClipboard" = "選択したレイヤーをクリップボードへコピーしました";
 "imageEditor.status.selectedLayersCopyToClipboardFailed" = "選択したレイヤーをクリップボードへコピーできませんでした";
+"imageEditor.status.selectedLayerCutToClipboard" = "ピクセルレイヤーをクリップボードへカットしました";
+"imageEditor.status.selectedLayerCutToClipboardFailed" = "ピクセルレイヤーをクリップボードへカットできませんでした";
 "imageEditor.action.sliceCreate" = "現在の選択範囲からスライスを作成";
 "imageEditor.export.slice" = "名前付きスライス";
 "imageEditor.history.sliceCreated" = "スライスを作成：%@";

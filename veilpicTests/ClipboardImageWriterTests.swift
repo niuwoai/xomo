@@ -6,6 +6,53 @@ import Testing
 @MainActor
 @Suite(.serialized)
 struct ClipboardImageWriterTests {
+    @Test func onePhysicalCommandXCutsOnlyTheFrontImportedPixelLayer() throws {
+        ImageEditorClipboardCommandDispatchGate.reset()
+        defer { ImageEditorClipboardCommandDispatchGate.reset() }
+
+        let canvasSize = CGSize(width: 80, height: 60)
+        let viewModel = ImageEditorViewModel(
+            sourceName: "object-cut-gate.png",
+            image: solidImage(color: .white, size: canvasSize)
+        ) { _ in }
+        #expect(viewModel.importImageLayer(
+            solidImage(color: .systemBlue, size: CGSize(width: 30, height: 20)),
+            sourceName: "lower.png"
+        ))
+        let lowerID = try #require(viewModel.document.selectedLayerID)
+        #expect(viewModel.importImageLayer(
+            solidImage(color: .systemOrange, size: CGSize(width: 24, height: 16)),
+            sourceName: "front.png"
+        ))
+        let frontID = try #require(viewModel.document.selectedLayerID)
+        let layerCount = viewModel.document.layers.count
+        let historyCount = viewModel.document.history.count
+        let event = ImageEditorKeyboardShortcutEventSignature(
+            windowNumber: 41,
+            eventNumber: 970,
+            timestamp: 97,
+            typeRawValue: NSEvent.EventType.keyDown.rawValue,
+            keyCode: 7
+        )
+        let pasteboard = NSPasteboard.general
+        pasteboard.clearContents()
+        defer { pasteboard.clearContents() }
+
+        for _ in 0..<2 {
+            guard ImageEditorClipboardCommandDispatchGate.shouldDispatch(
+                .cutSelection,
+                event: event
+            ) else { continue }
+            #expect(viewModel.cutSelectionToClipboard())
+        }
+
+        #expect(viewModel.document.layers.count == layerCount - 1)
+        #expect(!viewModel.document.layers.contains { $0.id == frontID })
+        #expect(viewModel.document.layers.contains { $0.id == lowerID })
+        #expect(viewModel.document.selectedLayerID == lowerID)
+        #expect(viewModel.document.history.count == historyCount + 1)
+    }
+
     @Test func onePhysicalCommandVCreatesOnlyOnePastedLayer() throws {
         ImageEditorClipboardCommandDispatchGate.reset()
         defer { ImageEditorClipboardCommandDispatchGate.reset() }
@@ -193,6 +240,122 @@ struct ClipboardImageWriterTests {
         #expect(XomoClipboardLayerPayload.frame(from: pasteboard) == selectionFrame)
         viewModel.pasteClipboardInPlaceAsLayer()
         #expect(viewModel.document.selectedLayer?.frame == selectionFrame)
+    }
+
+    @Test func commandXWithoutSelectionCutsTheSelectedImportedPixelLayer() throws {
+        let canvasSize = CGSize(width: 120, height: 90)
+        let importedImage = solidImage(
+            color: .systemOrange,
+            size: CGSize(width: 31, height: 19)
+        )
+        let viewModel = ImageEditorViewModel(
+            sourceName: "canvas.png",
+            image: solidImage(color: .white, size: canvasSize)
+        ) { _ in }
+        #expect(viewModel.importImageLayer(importedImage, sourceName: "poster.png"))
+        let importedLayer = try #require(viewModel.document.selectedLayer)
+        let importedID = importedLayer.id
+        let importedFrame = importedLayer.frame
+        let importedPNG = try #require(importedLayer.image.qingtuPNGData())
+        let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
+        let pasteboard = NSPasteboard.general
+        pasteboard.clearContents()
+        defer { pasteboard.clearContents() }
+
+        #expect(viewModel.document.selection == nil)
+        #expect(viewModel.canCutSelectedPixelLayerToClipboard)
+        #expect(viewModel.canCutSelectionToClipboard)
+        #expect(viewModel.cutSelectionToClipboard())
+
+        #expect(!viewModel.document.layers.contains { $0.id == importedID })
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.undoStack.count == undoCount + 1)
+        #expect(
+            viewModel.document.history.last?.title
+                == L10n.text("imageEditor.history.selectedLayerCutToClipboard")
+        )
+        #expect(
+            viewModel.statusText
+                == L10n.text("imageEditor.status.selectedLayerCutToClipboard")
+        )
+        #expect(XomoClipboardLayerPayload.frame(from: pasteboard) == importedFrame)
+        #expect(NSImage(pasteboard: pasteboard)?.size == importedFrame.size)
+
+        viewModel.undo()
+        let restored = try #require(
+            viewModel.document.layers.first { $0.id == importedID }
+        )
+        #expect(restored.frame == importedFrame)
+        #expect(restored.image.qingtuPNGData() == importedPNG)
+    }
+
+    @Test func objectCutRejectsUnsafeLayerKindsAndActiveMoves() throws {
+        let canvasSize = CGSize(width: 100, height: 70)
+        let lastLayerViewModel = ImageEditorViewModel(
+            sourceName: "last-layer.png",
+            image: solidImage(color: .systemBlue, size: canvasSize)
+        ) { _ in }
+        let onlyLayer = try #require(lastLayerViewModel.document.selectedLayer)
+        lastLayerViewModel.document.layers = [onlyLayer]
+        lastLayerViewModel.document.selectedLayerID = onlyLayer.id
+        lastLayerViewModel.document.selectedLayerIDs = [onlyLayer.id]
+        #expect(!lastLayerViewModel.canCutSelectedPixelLayerToClipboard)
+        #expect(!lastLayerViewModel.canCutSelectionToClipboard)
+
+        let componentViewModel = ImageEditorViewModel(
+            sourceName: "component-cut.png",
+            image: .transparent(size: canvasSize)
+        ) { _ in }
+        componentViewModel.insertXomoComponent(.button, at: CGPoint(x: 40, y: 35))
+        #expect(componentViewModel.document.selectedLayer?.isGroup == true)
+        #expect(!componentViewModel.canCutSelectedPixelLayerToClipboard)
+        #expect(!componentViewModel.canCutSelectionToClipboard)
+
+        let movingViewModel = ImageEditorViewModel(
+            sourceName: "moving-layer.png",
+            image: solidImage(color: .white, size: canvasSize)
+        ) { _ in }
+        #expect(movingViewModel.importImageLayer(
+            solidImage(color: .systemGreen, size: CGSize(width: 30, height: 20)),
+            sourceName: "moving-object.png"
+        ))
+        #expect(movingViewModel.beginMovingSelectedLayer())
+        #expect(!movingViewModel.canCutSelectedPixelLayerToClipboard)
+        #expect(!movingViewModel.canCutSelectionToClipboard)
+        #expect(movingViewModel.cancelMovingSelectedLayer())
+        #expect(movingViewModel.canCutSelectedPixelLayerToClipboard)
+    }
+
+    @Test func failedObjectCutLeavesTheTransparentPixelLayerAndHistoryUntouched() throws {
+        let canvasSize = CGSize(width: 80, height: 60)
+        let viewModel = ImageEditorViewModel(
+            sourceName: "transparent-cut.png",
+            image: solidImage(color: .white, size: canvasSize)
+        ) { _ in }
+        #expect(viewModel.importImageLayer(
+            .transparent(size: CGSize(width: 20, height: 14)),
+            sourceName: "empty.png"
+        ))
+        let importedID = try #require(viewModel.document.selectedLayerID)
+        let layerIDs = viewModel.document.layers.map(\.id)
+        let history = viewModel.document.history
+        let undoCount = viewModel.undoStack.count
+        let pasteboard = NSPasteboard.general
+        pasteboard.clearContents()
+        defer { pasteboard.clearContents() }
+
+        #expect(viewModel.canCutSelectedPixelLayerToClipboard)
+        #expect(!viewModel.cutSelectionToClipboard())
+
+        #expect(viewModel.document.layers.map(\.id) == layerIDs)
+        #expect(viewModel.document.selectedLayerID == importedID)
+        #expect(viewModel.document.history == history)
+        #expect(viewModel.undoStack.count == undoCount)
+        #expect(
+            viewModel.statusText
+                == L10n.text("imageEditor.status.selectedLayersCopyToClipboardFailed")
+        )
     }
 
     @Test func copyingSeparatedSelectedLayersPreservesUnionFrameForPasteInPlace() throws {
