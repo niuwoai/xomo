@@ -342,6 +342,7 @@
 "imageEditor.menu.window" = "ウィンドウ";
 "imageEditor.menu.layer.lock" = "ロック";
 "imageEditor.menu.layer.selectAttribute" = "属性で選択";
+"imageEditor.menu.layer.links" = "レイヤーリンク";
 "imageEditor.menu.layer.order" = "重ね順";
 "imageEditor.menu.layer.transform" = "変形";
 "imageEditor.menu.layer.align" = "整列";
@@ -2594,6 +2595,7 @@
 "imageEditor.status.layerShapeUpdatedSelected" = "%d個のシェイプレイヤーを更新しました";
 "imageEditor.status.globalLight" = "グローバルライト角度を %d° に設定しました";
 "imageEditor.status.layerLinkNeedsSelection" = "リンクするには 2 つ以上のレイヤーを選択してください";
+"imageEditor.status.layerAlreadyLinked" = "選択中のレイヤーはすべて相互にリンク済みです";
 "imageEditor.status.layerNoLinks" = "選択中のレイヤーにリンクはありません";
 "imageEditor.status.layerGroupEmpty" = "選択中のグループに選択できるメンバーがありません";
 "imageEditor.status.layerGroupMembersSelected" = "グループ内レイヤーを %d 個選択しました";

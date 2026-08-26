@@ -342,6 +342,7 @@
 "imageEditor.menu.window" = "Window";
 "imageEditor.menu.layer.lock" = "Lock";
 "imageEditor.menu.layer.selectAttribute" = "Select by Attribute";
+"imageEditor.menu.layer.links" = "Layer Links";
 "imageEditor.menu.layer.order" = "Arrange";
 "imageEditor.menu.layer.transform" = "Transform";
 "imageEditor.menu.layer.align" = "Align";
@@ -2594,6 +2595,7 @@
 "imageEditor.status.layerShapeUpdatedSelected" = "Updated %d shape layers";
 "imageEditor.status.globalLight" = "Global light angle set to %d°";
 "imageEditor.status.layerLinkNeedsSelection" = "Select at least two layers to link";
+"imageEditor.status.layerAlreadyLinked" = "All selected layers are already linked";
 "imageEditor.status.layerNoLinks" = "Selected layers are not linked";
 "imageEditor.status.layerGroupEmpty" = "The selected group has no selectable members";
 "imageEditor.status.layerGroupMembersSelected" = "%d group members selected";

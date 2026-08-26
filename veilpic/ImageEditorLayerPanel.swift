@@ -2203,6 +2203,8 @@ extension ImageEditorView {
 
                 layerContextMatchingSelectionMenu(layer)
 
+                layerContextLinksMenu(layer)
+
                 Divider()
                 Button {
                     viewModel.prepareLayerContextSelection(for: layer.id)
@@ -2655,6 +2657,29 @@ extension ImageEditorView {
             .accessibilityIdentifier("image-editor-layer-context-select-same-label-\(layer.id.uuidString)")
         }
         .accessibilityIdentifier("image-editor-layer-context-select-attribute-\(layer.id.uuidString)")
+    }
+
+    private func layerContextLinksMenu(_ layer: ImageEditorLayer) -> some View {
+        Menu(L10n.text("imageEditor.menu.layer.links")) {
+            Button(L10n.text("imageEditor.action.layerLink")) {
+                viewModel.linkLayersFromContext(layer.id)
+            }
+            .disabled(!viewModel.canLinkLayersFromContext(layer.id))
+            .accessibilityIdentifier("image-editor-layer-context-link-\(layer.id.uuidString)")
+
+            Button(L10n.text("imageEditor.action.layerSelectLinked")) {
+                viewModel.selectLinkedLayersFromContext(layer.id)
+            }
+            .disabled(!viewModel.canSelectLinkedLayersFromContext(layer.id))
+            .accessibilityIdentifier("image-editor-layer-context-select-linked-\(layer.id.uuidString)")
+
+            Button(L10n.text("imageEditor.action.layerUnlink")) {
+                viewModel.unlinkLayersFromContext(layer.id)
+            }
+            .disabled(!viewModel.canUnlinkLayersFromContext(layer.id))
+            .accessibilityIdentifier("image-editor-layer-context-unlink-\(layer.id.uuidString)")
+        }
+        .accessibilityIdentifier("image-editor-layer-context-links-\(layer.id.uuidString)")
     }
 
     private func layerContextStyleMenu(_ layer: ImageEditorLayer) -> some View {

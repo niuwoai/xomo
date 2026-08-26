@@ -342,6 +342,7 @@
 "imageEditor.menu.window" = "窗口";
 "imageEditor.menu.layer.lock" = "锁定";
 "imageEditor.menu.layer.selectAttribute" = "按属性选择";
+"imageEditor.menu.layer.links" = "图层链接";
 "imageEditor.menu.layer.order" = "排列";
 "imageEditor.menu.layer.transform" = "变换";
 "imageEditor.menu.layer.align" = "对齐";
@@ -2594,6 +2595,7 @@
 "imageEditor.status.layerShapeUpdatedSelected" = "已更新 %d 个形状图层";
 "imageEditor.status.globalLight" = "全局光角度已设为 %d°";
 "imageEditor.status.layerLinkNeedsSelection" = "请至少选择两个图层进行链接";
+"imageEditor.status.layerAlreadyLinked" = "所选图层已经全部互相链接";
 "imageEditor.status.layerNoLinks" = "所选图层没有链接关系";
 "imageEditor.status.layerGroupEmpty" = "当前图层组没有可选择的成员";
 "imageEditor.status.layerGroupMembersSelected" = "已选择 %d 个组内图层";

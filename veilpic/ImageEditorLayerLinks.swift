@@ -10,7 +10,7 @@ import Foundation
 @MainActor
 extension ImageEditorViewModel {
     var canLinkSelectedLayers: Bool {
-        selectedLayerIDs.intersection(Set(document.layers.map(\.id))).count >= 2
+        linkSelectionNeedsChange(selectedLayerIDs)
     }
 
     var canUnlinkSelectedLayers: Bool {
@@ -29,6 +29,18 @@ extension ImageEditorViewModel {
         document.selectedLayerIDs
     }
 
+    func canLinkLayersFromContext(_ clickedLayerID: UUID) -> Bool {
+        linkSelectionNeedsChange(layerContextSelectionIDs(for: clickedLayerID))
+    }
+
+    func canSelectLinkedLayersFromContext(_ clickedLayerID: UUID) -> Bool {
+        isLayerLinked(clickedLayerID)
+    }
+
+    func canUnlinkLayersFromContext(_ clickedLayerID: UUID) -> Bool {
+        layerContextSelectionIDs(for: clickedLayerID).contains(where: isLayerLinked)
+    }
+
     func isLayerLinked(_ id: UUID) -> Bool {
         guard let layer = layer(with: id) else { return false }
         let existingIDs = Set(document.layers.map(\.id))
@@ -39,10 +51,30 @@ extension ImageEditorViewModel {
     }
 
     func linkSelectedLayers() {
-        let selectedIDs = selectedLayerIDs.intersection(Set(document.layers.map(\.id)))
+        _ = linkLayers(selectedIDs: selectedLayerIDs)
+    }
+
+    @discardableResult
+    func linkLayersFromContext(_ clickedLayerID: UUID) -> Bool {
+        let contextIDs = layerContextSelectionIDs(for: clickedLayerID)
+        guard !contextIDs.isEmpty else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return false
+        }
+        prepareLayerContextSelection(for: clickedLayerID)
+        return linkLayers(selectedIDs: contextIDs)
+    }
+
+    @discardableResult
+    private func linkLayers(selectedIDs requestedIDs: Set<UUID>) -> Bool {
+        let selectedIDs = requestedIDs.intersection(Set(document.layers.map(\.id)))
         guard selectedIDs.count >= 2 else {
             statusText = L10n.text("imageEditor.status.layerLinkNeedsSelection")
-            return
+            return false
+        }
+        guard linkSelectionNeedsChange(selectedIDs) else {
+            statusText = L10n.text("imageEditor.status.layerAlreadyLinked")
+            return false
         }
 
         pushUndo()
@@ -52,14 +84,31 @@ extension ImageEditorViewModel {
         }
         normalizeLayerLinks()
         appendHistory(L10n.text("imageEditor.history.layerLink"))
+        return true
     }
 
     func unlinkSelectedLayers() {
-        let selectedIDs = selectedLayerIDs.intersection(Set(document.layers.map(\.id)))
-        guard !selectedIDs.isEmpty else { return }
+        _ = unlinkLayers(selectedIDs: selectedLayerIDs)
+    }
+
+    @discardableResult
+    func unlinkLayersFromContext(_ clickedLayerID: UUID) -> Bool {
+        let contextIDs = layerContextSelectionIDs(for: clickedLayerID)
+        guard !contextIDs.isEmpty else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return false
+        }
+        prepareLayerContextSelection(for: clickedLayerID)
+        return unlinkLayers(selectedIDs: contextIDs)
+    }
+
+    @discardableResult
+    private func unlinkLayers(selectedIDs requestedIDs: Set<UUID>) -> Bool {
+        let selectedIDs = requestedIDs.intersection(Set(document.layers.map(\.id)))
+        guard !selectedIDs.isEmpty else { return false }
         guard selectedIDs.contains(where: isLayerLinked) else {
             statusText = L10n.text("imageEditor.status.layerNoLinks")
-            return
+            return false
         }
 
         pushUndo()
@@ -72,6 +121,7 @@ extension ImageEditorViewModel {
         }
         normalizeLayerLinks()
         appendHistory(L10n.text("imageEditor.history.layerUnlink"))
+        return true
     }
 
     func unlinkAllLayers() {
@@ -89,16 +139,31 @@ extension ImageEditorViewModel {
 
     func selectLinkedLayers() {
         let selectedIDs = selectedLayerIDs.intersection(Set(document.layers.map(\.id)))
+        _ = selectLinkedLayers(startingFrom: selectedIDs)
+    }
+
+    @discardableResult
+    func selectLinkedLayersFromContext(_ clickedLayerID: UUID) -> Bool {
+        guard document.layers.contains(where: { $0.id == clickedLayerID }) else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return false
+        }
+        return selectLinkedLayers(startingFrom: [clickedLayerID])
+    }
+
+    @discardableResult
+    private func selectLinkedLayers(startingFrom selectedIDs: Set<UUID>) -> Bool {
         let linkedIDs = linkedTransformLayerIDs(startingFrom: selectedIDs)
         guard linkedIDs.count > selectedIDs.count else {
             statusText = L10n.text("imageEditor.status.layerNoLinks")
-            return
+            return false
         }
 
         document.selectedLayerIDs = linkedIDs
         document.selectedLayerID = document.layers.reversed().first { linkedIDs.contains($0.id) }?.id
         isEditingLayerMask = false
         updateStatus()
+        return true
     }
 
     func linkedTransformLayerIDs(startingFrom baseIDs: Set<UUID>) -> Set<UUID> {
@@ -138,6 +203,16 @@ extension ImageEditorViewModel {
                 guard let linkedIndex = document.layers.firstIndex(where: { $0.id == linkedID }) else { continue }
                 document.layers[linkedIndex].linkedLayerIDs.insert(id)
             }
+        }
+    }
+
+    private func linkSelectionNeedsChange(_ requestedIDs: Set<UUID>) -> Bool {
+        let existingIDs = Set(document.layers.map(\.id))
+        let selectedIDs = requestedIDs.intersection(existingIDs)
+        guard selectedIDs.count >= 2 else { return false }
+        return selectedIDs.contains { id in
+            guard let layer = layer(with: id) else { return false }
+            return !selectedIDs.subtracting([id]).isSubset(of: layer.linkedLayerIDs)
         }
     }
 }

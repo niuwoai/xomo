@@ -1,24 +1,36 @@
 {
-  "generated_at": "2026-08-27 03:15:32 +0800",
-  "total": 1,
-  "passed": 1,
+  "generated_at": "2026-08-27 03:30:30 +0800",
+  "total": 2,
+  "passed": 2,
   "failed": 0,
-  "total_tests": 1,
-  "passed_tests": 1,
+  "total_tests": 2,
+  "passed_tests": 2,
   "failed_tests_in_failed_groups": 0,
   "jobs": 1,
   "results": [
     {
-      "suite": "ImageEditorLayerRangeSelectionTests",
-      "method": "contextMatchingSelectionFamilyUsesClickedRowForKindBlendAndLabel",
-      "identifier": "veilpicTests/ImageEditorLayerRangeSelectionTests/contextMatchingSelectionFamilyUsesClickedRowForKindBlendAndLabel()",
-      "file": "ImageEditorLayerRangeSelectionTests.swift",
+      "suite": "ImageEditorLayerLinksContextTests",
+      "method": "contextLinkPreservesMultiSelectionAndRejectsAnAlreadyLinkedNoOp",
+      "identifier": "veilpicTests/ImageEditorLayerLinksContextTests/contextLinkPreservesMultiSelectionAndRejectsAnAlreadyLinkedNoOp()",
+      "file": "ImageEditorLayerLinksContextTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.357,
+      "duration": 3.655,
       "infrastructure_retries": 0,
       "issues": [],
-      "log": "ImageEditorLayerRangeSelectionTests.contextMatchingSelectionFamilyUsesClickedRowForKindBlendAndLabel.log"
+      "log": "ImageEditorLayerLinksContextTests.contextLinkPreservesMultiSelectionAndRejectsAnAlreadyLinkedNoOp.log"
+    },
+    {
+      "suite": "ImageEditorLayerLinksContextTests",
+      "method": "contextSelectLinkedUsesClickedRowAndUnlinkTargetsItsContext",
+      "identifier": "veilpicTests/ImageEditorLayerLinksContextTests/contextSelectLinkedUsesClickedRowAndUnlinkTargetsItsContext()",
+      "file": "ImageEditorLayerLinksContextTests.swift",
+      "test_count": 1,
+      "passed": true,
+      "duration": 3.909,
+      "infrastructure_retries": 0,
+      "issues": [],
+      "log": "ImageEditorLayerLinksContextTests.contextSelectLinkedUsesClickedRowAndUnlinkTargetsItsContext.log"
     }
   ]
 }
