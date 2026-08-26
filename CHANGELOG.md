@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.12.0-rc1334 - 2026-08-27
+
+### Fixed
+- Delete/Backspace 不再只依赖固定硬件键码；外接键盘、远程控制与键位映射只要发送标准 AppKit 删除字符，也能删除当前选中的导入图片或图层。
+- 带 Command、Option、Shift 或 Control 的删除组合键继续交给填充等既有快捷键，文本输入框仍优先删除文字。
+
+### Verification
+- 增量 `build-for-testing` 通过；Delete 字符兼容、导入图层单步删除/撤销、同一物理按键去重及生产接线回归 4/4，CLI/MCP 2/2、发布契约 7/7（21 条断言）与隔离测试运行器契约通过，`git diff --check` 无格式问题。本版本不覆盖 `/Applications/Xomo.app`，下一次完整门禁为 rc1360。
+
 ## 2.12.0-rc1333 - 2026-08-27
 
 ### Added

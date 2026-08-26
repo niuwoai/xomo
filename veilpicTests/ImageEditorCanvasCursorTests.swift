@@ -4,6 +4,35 @@ import Testing
 
 @MainActor
 struct ImageEditorCanvasCursorTests {
+    @Test func deleteKeyPolicyAcceptsHardwareAndSemanticDeleteEvents() {
+        for keyCode: UInt16 in [51, 117] {
+            #expect(ImageEditorDeleteKeyPolicy.matches(
+                keyCode: keyCode,
+                charactersIgnoringModifiers: nil,
+                modifierFlags: []
+            ))
+        }
+
+        for characters in ["\u{7F}", "\u{8}", "\u{F728}"] {
+            #expect(ImageEditorDeleteKeyPolicy.matches(
+                keyCode: 0,
+                charactersIgnoringModifiers: characters,
+                modifierFlags: []
+            ))
+        }
+
+        #expect(!ImageEditorDeleteKeyPolicy.matches(
+            keyCode: 0,
+            charactersIgnoringModifiers: "x",
+            modifierFlags: []
+        ))
+        #expect(!ImageEditorDeleteKeyPolicy.matches(
+            keyCode: 51,
+            charactersIgnoringModifiers: "\u{7F}",
+            modifierFlags: [.command]
+        ))
+    }
+
     @Test func keyboardResponderDeleteUsesObjectThenHistoryPriority() {
         var calls: [String] = []
 

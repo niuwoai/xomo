@@ -4268,7 +4268,9 @@ struct ImageEditorScopeTests {
         #expect(ownership.lowerBound < transientDelete.lowerBound)
         #expect(commandSource.contains("return true"))
 
-        #expect(viewSource.contains("let isDelete = event.keyCode == 51 || event.keyCode == 117"))
+        #expect(viewSource.contains("let isDelete = ImageEditorDeleteKeyPolicy.matches("))
+        #expect(viewSource.contains("charactersIgnoringModifiers: event.charactersIgnoringModifiers"))
+        #expect(viewSource.contains("modifierFlags: event.modifierFlags"))
         #expect(viewSource.contains("deleteSelectedObject()"))
         #expect(viewSource.contains(".onDeleteCommand {"))
         #expect(viewSource.contains("_ = deleteSelectedObjectFromKeyboard()"))

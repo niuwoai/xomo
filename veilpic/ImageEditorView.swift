@@ -18157,7 +18157,11 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
                     return nil
                 }
             }
-            let isDelete = event.keyCode == 51 || event.keyCode == 117
+            let isDelete = ImageEditorDeleteKeyPolicy.matches(
+                keyCode: event.keyCode,
+                charactersIgnoringModifiers: event.charactersIgnoringModifiers,
+                modifierFlags: event.modifierFlags
+            )
             if event.type == .keyDown,
                ImageEditorGradientOverlayCanvasTabKeyPolicy.matches(
                 keyCode: event.keyCode,
@@ -18277,6 +18281,28 @@ enum ImageEditorKeyboardDeleteCommandDispatcher {
             return true
         }
         return deleteSelectedHistory()
+    }
+}
+
+enum ImageEditorDeleteKeyPolicy {
+    private static let backwardDeleteKeyCode: UInt16 = 51
+    private static let forwardDeleteKeyCode: UInt16 = 117
+    private static let backwardDeleteCharacters: Set<String> = ["\u{7F}", "\u{8}"]
+    private static let forwardDeleteCharacter = "\u{F728}"
+
+    static func matches(
+        keyCode: UInt16,
+        charactersIgnoringModifiers: String?,
+        modifierFlags: NSEvent.ModifierFlags
+    ) -> Bool {
+        let relevantFlags = modifierFlags.intersection([.command, .option, .shift, .control])
+        guard relevantFlags.isEmpty else { return false }
+        if keyCode == backwardDeleteKeyCode || keyCode == forwardDeleteKeyCode {
+            return true
+        }
+        guard let charactersIgnoringModifiers else { return false }
+        return backwardDeleteCharacters.contains(charactersIgnoringModifiers)
+            || charactersIgnoringModifiers == forwardDeleteCharacter
     }
 }
 
