@@ -2207,6 +2207,8 @@ extension ImageEditorView {
 
                 layerContextLockMenu(layer)
 
+                layerContextVisibilityMenu(layer)
+
                 Divider()
                 Button {
                     viewModel.prepareLayerContextSelection(for: layer.id)
@@ -2772,6 +2774,45 @@ extension ImageEditorView {
         ))
         .accessibilityIdentifier(
             "image-editor-layer-context-lock-\(kind.rawValue)-\(isLocked ? "on" : "off")-\(layer.id.uuidString)"
+        )
+    }
+
+    private func layerContextVisibilityMenu(_ layer: ImageEditorLayer) -> some View {
+        Menu(L10n.text("imageEditor.action.layerVisibility")) {
+            Button {
+                viewModel.setLayersVisibilityFromContext(layer.id, isVisible: true)
+            } label: {
+                Label(
+                    L10n.text("imageEditor.action.layerShowSelected"),
+                    systemImage: "eye"
+                )
+            }
+            .disabled(!viewModel.canSetLayersVisibilityFromContext(
+                layer.id,
+                isVisible: true
+            ))
+            .accessibilityIdentifier(
+                "image-editor-layer-context-visibility-show-\(layer.id.uuidString)"
+            )
+
+            Button {
+                viewModel.setLayersVisibilityFromContext(layer.id, isVisible: false)
+            } label: {
+                Label(
+                    L10n.text("imageEditor.action.layerHideSelected"),
+                    systemImage: "eye.slash"
+                )
+            }
+            .disabled(!viewModel.canSetLayersVisibilityFromContext(
+                layer.id,
+                isVisible: false
+            ))
+            .accessibilityIdentifier(
+                "image-editor-layer-context-visibility-hide-\(layer.id.uuidString)"
+            )
+        }
+        .accessibilityIdentifier(
+            "image-editor-layer-context-visibility-\(layer.id.uuidString)"
         )
     }
 

@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-27 04:12:09 +0800",
+  "generated_at": "2026-08-27 04:23:46 +0800",
   "total": 3,
   "passed": 3,
   "failed": 0,
@@ -9,40 +9,40 @@
   "jobs": 1,
   "results": [
     {
-      "suite": "ImageEditorLayerLockContextTests",
-      "method": "selectedContextLocksSupportedPropertiesInOneTransactionAndRejectsNoOp",
-      "identifier": "veilpicTests/ImageEditorLayerLockContextTests/selectedContextLocksSupportedPropertiesInOneTransactionAndRejectsNoOp()",
-      "file": "ImageEditorLayerLockContextTests.swift",
+      "suite": "ImageEditorLayerVisibilityContextTests",
+      "method": "selectedContextShowsMixedSelectionOnceAndPreservesRedoOnRepeat",
+      "identifier": "veilpicTests/ImageEditorLayerVisibilityContextTests/selectedContextShowsMixedSelectionOnceAndPreservesRedoOnRepeat()",
+      "file": "ImageEditorLayerVisibilityContextTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.455,
+      "duration": 3.478,
       "infrastructure_retries": 0,
       "issues": [],
-      "log": "ImageEditorLayerLockContextTests.selectedContextLocksSupportedPropertiesInOneTransactionAndRejectsNoOp.log"
+      "log": "ImageEditorLayerVisibilityContextTests.selectedContextShowsMixedSelectionOnceAndPreservesRedoOnRepeat.log"
     },
     {
-      "suite": "ImageEditorLayerLockContextTests",
-      "method": "unselectedContextTargetsOnlyClickedLayerAndFullUnlockClearsEveryLock",
-      "identifier": "veilpicTests/ImageEditorLayerLockContextTests/unselectedContextTargetsOnlyClickedLayerAndFullUnlockClearsEveryLock()",
-      "file": "ImageEditorLayerLockContextTests.swift",
+      "suite": "ImageEditorLayerVisibilityContextTests",
+      "method": "unknownContextVisibilityIsAnAtomicNoOp",
+      "identifier": "veilpicTests/ImageEditorLayerVisibilityContextTests/unknownContextVisibilityIsAnAtomicNoOp()",
+      "file": "ImageEditorLayerVisibilityContextTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.291,
+      "duration": 3.136,
       "infrastructure_retries": 0,
       "issues": [],
-      "log": "ImageEditorLayerLockContextTests.unselectedContextTargetsOnlyClickedLayerAndFullUnlockClearsEveryLock.log"
+      "log": "ImageEditorLayerVisibilityContextTests.unknownContextVisibilityIsAnAtomicNoOp.log"
     },
     {
-      "suite": "ImageEditorLayerLockContextTests",
-      "method": "unsupportedAndUnknownContextLocksAreAtomicNoOps",
-      "identifier": "veilpicTests/ImageEditorLayerLockContextTests/unsupportedAndUnknownContextLocksAreAtomicNoOps()",
-      "file": "ImageEditorLayerLockContextTests.swift",
+      "suite": "ImageEditorLayerVisibilityContextTests",
+      "method": "unselectedContextHidesOnlyClickedLayerAndBecomesItsSelection",
+      "identifier": "veilpicTests/ImageEditorLayerVisibilityContextTests/unselectedContextHidesOnlyClickedLayerAndBecomesItsSelection()",
+      "file": "ImageEditorLayerVisibilityContextTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.121,
+      "duration": 3.127,
       "infrastructure_retries": 0,
       "issues": [],
-      "log": "ImageEditorLayerLockContextTests.unsupportedAndUnknownContextLocksAreAtomicNoOps.log"
+      "log": "ImageEditorLayerVisibilityContextTests.unselectedContextHidesOnlyClickedLayerAndBecomesItsSelection.log"
     }
   ]
 }
