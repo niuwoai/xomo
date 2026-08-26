@@ -118,7 +118,11 @@ extension ImageEditorViewModel {
     }
 
     var canRasterizeSelectedVectorMask: Bool {
-        !vectorMaskRasterizeOperations().isEmpty
+        !vectorMaskRasterizeOperations(selectedIDs: selectedLayerIDsForVectorMaskRasterization).isEmpty
+    }
+
+    func canRasterizeVectorMasks(selectedIDs: Set<UUID>) -> Bool {
+        !vectorMaskRasterizeOperations(selectedIDs: selectedIDs).isEmpty
     }
 
     var canLoadSelectionFromLayerMask: Bool {
@@ -346,7 +350,9 @@ extension ImageEditorViewModel {
     }
 
     func rasterizeSelectedVectorMask() {
-        let operations = vectorMaskRasterizeOperations()
+        let operations = vectorMaskRasterizeOperations(
+            selectedIDs: selectedLayerIDsForVectorMaskRasterization
+        )
         guard !operations.isEmpty else {
             statusText = L10n.text("imageEditor.status.vectorMaskRasterizeFailed")
             return
@@ -816,10 +822,15 @@ extension ImageEditorViewModel {
         }
     }
 
-    private func vectorMaskRasterizeOperations() -> [(index: Int, mask: NSImage)] {
-        let selectedIDs = document.selectedLayerIDs.isEmpty
+    private var selectedLayerIDsForVectorMaskRasterization: Set<UUID> {
+        document.selectedLayerIDs.isEmpty
             ? Set(document.selectedLayerID.map { [$0] } ?? [])
             : document.selectedLayerIDs
+    }
+
+    private func vectorMaskRasterizeOperations(
+        selectedIDs: Set<UUID>
+    ) -> [(index: Int, mask: NSImage)] {
         return document.layers.indices.compactMap { index in
             let layer = document.layers[index]
             guard selectedIDs.contains(layer.id),

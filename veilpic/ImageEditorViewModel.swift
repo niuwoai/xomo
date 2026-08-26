@@ -5091,7 +5091,7 @@ final class ImageEditorViewModel: ObservableObject {
         selectLayer(clickedLayerID)
     }
 
-    private func layerContextSelectionIDs(for clickedLayerID: UUID) -> Set<UUID> {
+    func layerContextSelectionIDs(for clickedLayerID: UUID) -> Set<UUID> {
         guard document.layers.contains(where: { $0.id == clickedLayerID }) else { return [] }
         let selectedIDs = document.selectedLayerIDs.isEmpty
             ? Set(document.selectedLayerID.map { [$0] } ?? [])

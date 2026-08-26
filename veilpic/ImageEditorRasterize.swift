@@ -33,7 +33,21 @@ extension ImageEditorViewModel {
         if target == .vectorMask {
             return canRasterizeSelectedVectorMask
         }
-        return !rasterizableSelectedLayerIndices(for: target).isEmpty
+        return !rasterizableLayerIndices(
+            for: target,
+            selectedIDs: selectedLayerIDsForRasterization
+        ).isEmpty
+    }
+
+    func canRasterizeLayersFromContext(
+        _ clickedLayerID: UUID,
+        target: ImageEditorRasterizeTarget
+    ) -> Bool {
+        let selectedIDs = layerContextSelectionIDs(for: clickedLayerID)
+        if target == .vectorMask {
+            return canRasterizeVectorMasks(selectedIDs: selectedIDs)
+        }
+        return !rasterizableLayerIndices(for: target, selectedIDs: selectedIDs).isEmpty
     }
 
     func rasterizeSelectedLayer() {
@@ -46,7 +60,10 @@ extension ImageEditorViewModel {
             return
         }
 
-        let indices = rasterizableSelectedLayerIndices(for: target)
+        let indices = rasterizableLayerIndices(
+            for: target,
+            selectedIDs: selectedLayerIDsForRasterization
+        )
         guard !indices.isEmpty else {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return
@@ -61,10 +78,29 @@ extension ImageEditorViewModel {
         recordRasterizationResult(target: target, count: indices.count)
     }
 
-    private func rasterizableSelectedLayerIndices(for target: ImageEditorRasterizeTarget) -> [Int] {
-        let selectedIDs = document.selectedLayerIDs.isEmpty
+    @discardableResult
+    func rasterizeLayersFromContext(
+        _ clickedLayerID: UUID,
+        target: ImageEditorRasterizeTarget
+    ) -> Bool {
+        guard canRasterizeLayersFromContext(clickedLayerID, target: target) else {
+            return false
+        }
+        prepareLayerContextSelection(for: clickedLayerID)
+        rasterizeSelectedLayers(target)
+        return true
+    }
+
+    private var selectedLayerIDsForRasterization: Set<UUID> {
+        document.selectedLayerIDs.isEmpty
             ? Set(document.selectedLayerID.map { [$0] } ?? [])
             : document.selectedLayerIDs
+    }
+
+    private func rasterizableLayerIndices(
+        for target: ImageEditorRasterizeTarget,
+        selectedIDs: Set<UUID>
+    ) -> [Int] {
         return document.layers.indices.filter { index in
             selectedIDs.contains(document.layers[index].id)
                 && isLayerRasterizable(document.layers[index], target: target)

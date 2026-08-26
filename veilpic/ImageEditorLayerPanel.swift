@@ -2302,6 +2302,19 @@ extension ImageEditorView {
                 .disabled(!viewModel.canConvertLayersFromContext(layer.id))
                 .accessibilityIdentifier("image-editor-layer-context-smart-object-\(layer.id.uuidString)")
 
+                Menu(L10n.text("imageEditor.action.layerRasterize")) {
+                    ForEach(ImageEditorRasterizeTarget.allCases) { target in
+                        Button(L10n.text(target.actionTitleKey)) {
+                            viewModel.rasterizeLayersFromContext(layer.id, target: target)
+                        }
+                        .disabled(!viewModel.canRasterizeLayersFromContext(layer.id, target: target))
+                        .accessibilityIdentifier(
+                            "image-editor-layer-context-rasterize-\(target.rawValue)-\(layer.id.uuidString)"
+                        )
+                    }
+                }
+                .accessibilityIdentifier("image-editor-layer-context-rasterize-\(layer.id.uuidString)")
+
                 Divider()
                 Button(role: .destructive) {
                     viewModel.prepareLayerContextSelection(for: layer.id)

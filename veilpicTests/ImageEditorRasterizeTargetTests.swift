@@ -208,6 +208,83 @@ struct ImageEditorRasterizeTargetTests {
         #expect(viewModel.document.selectedLayer?.smartFilters.count == 1)
     }
 
+    @Test func layerRowContextRasterizationPreservesSelectedSetOrTargetsOneRow() throws {
+        let viewModel = makeViewModel()
+        let first = ImageEditorLayer.shape(
+            name: "First",
+            frame: CGRect(x: 8, y: 8, width: 24, height: 20),
+            content: shapeContent(kind: .rectangle, color: .systemPink)
+        )
+        let second = ImageEditorLayer.shape(
+            name: "Second",
+            frame: CGRect(x: 36, y: 10, width: 24, height: 20),
+            content: shapeContent(kind: .ellipse, color: .systemGreen)
+        )
+        let outside = ImageEditorLayer.shape(
+            name: "Outside",
+            frame: CGRect(x: 64, y: 12, width: 24, height: 20),
+            content: shapeContent(kind: .rectangle, color: .systemBlue)
+        )
+        var locked = ImageEditorLayer.shape(
+            name: "Locked",
+            frame: CGRect(x: 20, y: 40, width: 24, height: 20),
+            content: shapeContent(kind: .ellipse, color: .systemOrange)
+        )
+        locked.isLocked = true
+        viewModel.document.layers = [first, second, outside, locked]
+        viewModel.document.selectedLayerID = second.id
+        viewModel.document.selectedLayerIDs = [first.id, second.id]
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.canRasterizeLayersFromContext(first.id, target: .shape))
+        #expect(!viewModel.canRasterizeLayersFromContext(first.id, target: .type))
+        #expect(viewModel.rasterizeLayersFromContext(first.id, target: .shape))
+        #expect(viewModel.document.layers.first { $0.id == first.id }?.kind.isPixel == true)
+        #expect(viewModel.document.layers.first { $0.id == second.id }?.kind.isPixel == true)
+        #expect(viewModel.document.layers.first { $0.id == outside.id }?.isShape == true)
+        #expect(viewModel.document.layers.first { $0.id == locked.id }?.isShape == true)
+        #expect(viewModel.document.selectedLayerIDs == [first.id, second.id])
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerRasterizeSelected"))
+
+        viewModel.undo()
+        #expect(viewModel.document.selectedLayerIDs == [first.id, second.id])
+        viewModel.selectLayer(first.id)
+        #expect(viewModel.canRasterizeLayersFromContext(outside.id, target: .shape))
+        #expect(viewModel.rasterizeLayersFromContext(outside.id, target: .shape))
+        #expect(viewModel.document.layers.first { $0.id == first.id }?.isShape == true)
+        #expect(viewModel.document.layers.first { $0.id == second.id }?.isShape == true)
+        #expect(viewModel.document.layers.first { $0.id == outside.id }?.kind.isPixel == true)
+        #expect(viewModel.document.selectedLayerIDs == [outside.id])
+        #expect(!viewModel.canRasterizeLayersFromContext(outside.id, target: .shape))
+        #expect(!viewModel.canRasterizeLayersFromContext(locked.id, target: .shape))
+        #expect(!viewModel.rasterizeLayersFromContext(locked.id, target: .shape))
+        #expect(!viewModel.canRasterizeLayersFromContext(UUID(), target: .shape))
+    }
+
+    @Test func layerRowContextVectorMaskRasterizationUsesMaskSpecificLockRules() throws {
+        let viewModel = makeViewModel()
+        var masked = ImageEditorLayer.blank(name: "Masked", size: canvasSize)
+        masked.vectorMask = triangularVectorMask(size: canvasSize)
+        masked.locksPixels = true
+        var locked = masked
+        locked.id = UUID()
+        locked.name = "Locked"
+        locked.isLocked = true
+        viewModel.document.layers = [masked, locked]
+        viewModel.selectLayer(locked.id)
+
+        #expect(viewModel.canRasterizeLayersFromContext(masked.id, target: .vectorMask))
+        #expect(!viewModel.canRasterizeLayersFromContext(locked.id, target: .vectorMask))
+        #expect(viewModel.rasterizeLayersFromContext(masked.id, target: .vectorMask))
+        let rasterized = try #require(viewModel.document.selectedLayer)
+        #expect(rasterized.id == masked.id)
+        #expect(rasterized.vectorMask == nil)
+        #expect(rasterized.mask != nil)
+        #expect(rasterized.locksPixels)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.vectorMaskRasterize"))
+    }
+
     @Test func layerRasterizationIgnoresPixelStylesButConvertsVectorDataAndPreservesClipping() throws {
         let viewModel = makeViewModel()
         var styledPixel = ImageEditorLayer.blank(name: "Styled Pixel", size: canvasSize)
