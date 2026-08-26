@@ -10,11 +10,39 @@ import UniformTypeIdentifiers
 
 @MainActor
 enum ImageEditorFilePanelKeyboardFocusRestorer {
+    typealias DeferredRestoreScheduler = (@escaping @MainActor () -> Void) -> Void
+
     static func restore(to window: NSWindow?) {
-        restore(to: window, isApplicationActive: NSApp.isActive)
+        restore(
+            to: window,
+            isApplicationActive: NSApp.isActive,
+            deferredApplicationActivity: { NSApp.isActive },
+            scheduleDeferredRestore: { action in
+                RunLoop.main.perform {
+                    MainActor.assumeIsolated {
+                        action()
+                    }
+                }
+            }
+        )
     }
 
     static func restore(
+        to window: NSWindow?,
+        isApplicationActive: Bool,
+        deferredApplicationActivity: @escaping @MainActor () -> Bool = { NSApp.isActive },
+        scheduleDeferredRestore: DeferredRestoreScheduler? = nil
+    ) {
+        restoreImmediately(to: window, isApplicationActive: isApplicationActive)
+        scheduleDeferredRestore? { [weak window] in
+            restoreImmediately(
+                to: window,
+                isApplicationActive: deferredApplicationActivity()
+            )
+        }
+    }
+
+    private static func restoreImmediately(
         to window: NSWindow?,
         isApplicationActive: Bool
     ) {
