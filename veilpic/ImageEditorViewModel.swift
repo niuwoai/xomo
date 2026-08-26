@@ -2752,6 +2752,27 @@ final class ImageEditorViewModel: ObservableObject {
         selectedLayerCount > 0
     }
 
+    func canSetLayersLabelColorFromContext(
+        _ clickedLayerID: UUID,
+        labelColor: ImageEditorLayerLabelColor?
+    ) -> Bool {
+        let selectedIDs = layerContextSelectionIDs(for: clickedLayerID)
+        return document.layers.contains { layer in
+            selectedIDs.contains(layer.id) && layer.labelColor != labelColor
+        }
+    }
+
+    func layersFromContextHaveLabelColor(
+        _ clickedLayerID: UUID,
+        labelColor: ImageEditorLayerLabelColor?
+    ) -> Bool {
+        let selectedIDs = layerContextSelectionIDs(for: clickedLayerID)
+        guard !selectedIDs.isEmpty else { return false }
+        return selectedIDs.allSatisfy { id in
+            document.layers.first(where: { $0.id == id })?.labelColor == labelColor
+        }
+    }
+
     var canIsolateSelectedLayers: Bool {
         let visibleIDs = isolatedLayerVisibilityIDs()
         guard !visibleIDs.isEmpty else { return false }
@@ -6163,6 +6184,20 @@ final class ImageEditorViewModel: ObservableObject {
         appendHistory(L10n.text("imageEditor.history.layerLabelColor"))
         statusText = labelColor.map { L10n.format("imageEditor.status.layerLabelColor", $0.title) }
             ?? L10n.text("imageEditor.status.layerLabelColorCleared")
+    }
+
+    @discardableResult
+    func setLayersLabelColorFromContext(
+        _ clickedLayerID: UUID,
+        labelColor: ImageEditorLayerLabelColor?
+    ) -> Bool {
+        guard canSetLayersLabelColorFromContext(
+            clickedLayerID,
+            labelColor: labelColor
+        ) else { return false }
+        prepareLayerContextSelection(for: clickedLayerID)
+        setSelectedLayersLabelColor(labelColor)
+        return true
     }
 
     func setSelectedLayerOpacity(_ opacity: Double) {

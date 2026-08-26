@@ -622,6 +622,53 @@ struct ImageEditorLayerDeletionTests {
         #expect(!viewModel.canConvertLayersFromContext(UUID()))
     }
 
+    @Test func layerRowContextLabelsPreserveSelectionTargetLocksAndNoOpRedo() throws {
+        let viewModel = makeViewModel()
+        let first = layer("First", in: viewModel)
+        let second = layer("Second", in: viewModel)
+        var outside = layer("Outside", in: viewModel)
+        outside.isLocked = true
+        viewModel.document.layers = [first, second, outside]
+        select([first.id, second.id], primary: second.id, in: viewModel)
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.canSetLayersLabelColorFromContext(first.id, labelColor: .green))
+        #expect(!viewModel.layersFromContextHaveLabelColor(first.id, labelColor: .green))
+        #expect(viewModel.setLayersLabelColorFromContext(first.id, labelColor: .green))
+        #expect(viewModel.document.layers.first { $0.id == first.id }?.labelColor == .green)
+        #expect(viewModel.document.layers.first { $0.id == second.id }?.labelColor == .green)
+        #expect(viewModel.document.layers.first { $0.id == outside.id }?.labelColor == nil)
+        #expect(viewModel.document.selectedLayerIDs == [first.id, second.id])
+        #expect(viewModel.layersFromContextHaveLabelColor(first.id, labelColor: .green))
+        #expect(viewModel.document.history.count == historyCount + 1)
+
+        viewModel.undo()
+        #expect(viewModel.document.selectedLayerIDs == [first.id, second.id])
+        #expect(viewModel.canRedo)
+        #expect(viewModel.layersFromContextHaveLabelColor(first.id, labelColor: nil))
+        #expect(!viewModel.canSetLayersLabelColorFromContext(first.id, labelColor: nil))
+        #expect(!viewModel.setLayersLabelColorFromContext(first.id, labelColor: nil))
+        #expect(viewModel.canRedo)
+        #expect(viewModel.document.history.count == historyCount)
+
+        #expect(viewModel.canSetLayersLabelColorFromContext(outside.id, labelColor: .purple))
+        #expect(viewModel.setLayersLabelColorFromContext(outside.id, labelColor: .purple))
+        let labeledOutside = try #require(
+            viewModel.document.layers.first { $0.id == outside.id }
+        )
+        #expect(labeledOutside.labelColor == .purple)
+        #expect(labeledOutside.isLocked)
+        #expect(viewModel.document.layers.first { $0.id == first.id }?.labelColor == nil)
+        #expect(viewModel.document.layers.first { $0.id == second.id }?.labelColor == nil)
+        #expect(viewModel.document.selectedLayerIDs == [outside.id])
+        #expect(viewModel.layersFromContextHaveLabelColor(outside.id, labelColor: .purple))
+        #expect(!viewModel.canSetLayersLabelColorFromContext(outside.id, labelColor: .purple))
+
+        #expect(!viewModel.canSetLayersLabelColorFromContext(UUID(), labelColor: .red))
+        #expect(!viewModel.layersFromContextHaveLabelColor(UUID(), labelColor: nil))
+        #expect(!viewModel.setLayersLabelColorFromContext(UUID(), labelColor: .red))
+    }
+
     @Test func layerRowContextMenuWiresClipboardDuplicateAndDestructiveDeleteThroughContextPolicy() throws {
         let repositoryRoot = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()
@@ -649,12 +696,18 @@ struct ImageEditorLayerDeletionTests {
         #expect(source.contains("viewModel.layerMergeActionFromContext(layer.id)"))
         #expect(source.contains("viewModel.layerMergeTitleKeyFromContext(layer.id)"))
         #expect(source.contains("viewModel.applyLayerMergeActionFromContext(layer.id)"))
+        #expect(source.contains("layerContextLabelColorMenu(layer)"))
+        #expect(source.contains("viewModel.canSetLayersLabelColorFromContext"))
+        #expect(source.contains("viewModel.layersFromContextHaveLabelColor"))
+        #expect(source.contains("viewModel.setLayersLabelColorFromContext"))
         #expect(source.contains("image-editor-layer-context-group-\\(layer.id.uuidString)"))
         #expect(source.contains("image-editor-layer-context-ungroup-\\(layer.id.uuidString)"))
         #expect(source.contains("image-editor-layer-context-clipping-mask-\\(layer.id.uuidString)"))
         #expect(source.contains("image-editor-layer-context-smart-object-\\(layer.id.uuidString)"))
         #expect(source.contains("image-editor-layer-context-rasterize-\\(target.rawValue)-\\(layer.id.uuidString)"))
         #expect(source.contains("image-editor-layer-context-merge-\\(layer.id.uuidString)"))
+        #expect(source.contains("image-editor-layer-context-label-none-\\(layer.id.uuidString)"))
+        #expect(source.contains("image-editor-layer-context-label-\\(labelColor.rawValue)-\\(layer.id.uuidString)"))
         #expect(source.contains("viewModel.pasteClipboardAsLayer()"))
         #expect(source.contains("viewModel.pasteClipboardInPlaceAsLayer()"))
         #expect(source.contains("viewModel.canPasteClipboardImage"))

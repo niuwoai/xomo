@@ -2317,6 +2317,8 @@ extension ImageEditorView {
 
                 layerContextMergeButton(layer)
 
+                layerContextLabelColorMenu(layer)
+
                 Divider()
                 Button(role: .destructive) {
                     viewModel.prepareLayerContextSelection(for: layer.id)
@@ -2620,6 +2622,52 @@ extension ImageEditorView {
         }
         .disabled(action == nil)
         .accessibilityIdentifier("image-editor-layer-context-merge-\(layer.id.uuidString)")
+    }
+
+    private func layerContextLabelColorMenu(_ layer: ImageEditorLayer) -> some View {
+        Menu(L10n.text("imageEditor.action.layerLabelColor")) {
+            Button {
+                viewModel.setLayersLabelColorFromContext(layer.id, labelColor: nil)
+            } label: {
+                Label(
+                    L10n.text("imageEditor.action.layerLabelNone"),
+                    systemImage: viewModel.layersFromContextHaveLabelColor(
+                        layer.id,
+                        labelColor: nil
+                    ) ? "checkmark" : "tag.slash"
+                )
+            }
+            .disabled(!viewModel.canSetLayersLabelColorFromContext(layer.id, labelColor: nil))
+            .accessibilityIdentifier(
+                "image-editor-layer-context-label-none-\(layer.id.uuidString)"
+            )
+
+            Divider()
+
+            ForEach(ImageEditorLayerLabelColor.allCases) { labelColor in
+                Button {
+                    viewModel.setLayersLabelColorFromContext(layer.id, labelColor: labelColor)
+                } label: {
+                    Label(
+                        labelColor.title,
+                        systemImage: viewModel.layersFromContextHaveLabelColor(
+                            layer.id,
+                            labelColor: labelColor
+                        ) ? "checkmark" : "tag.fill"
+                    )
+                }
+                .disabled(
+                    !viewModel.canSetLayersLabelColorFromContext(
+                        layer.id,
+                        labelColor: labelColor
+                    )
+                )
+                .accessibilityIdentifier(
+                    "image-editor-layer-context-label-\(labelColor.rawValue)-\(layer.id.uuidString)"
+                )
+            }
+        }
+        .accessibilityIdentifier("image-editor-layer-context-label-\(layer.id.uuidString)")
     }
 
     private func beginLayerInlineRename(_ layer: ImageEditorLayer) {
