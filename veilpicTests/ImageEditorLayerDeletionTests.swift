@@ -486,6 +486,51 @@ struct ImageEditorLayerDeletionTests {
         #expect(viewModel.document.selectedLayerID == second.id)
     }
 
+    @Test func layerRowContextGroupingPreservesSelectedSetsAndTargetsUnselectedGroups() throws {
+        let viewModel = makeViewModel()
+        let first = layer("First", in: viewModel)
+        let second = layer("Second", in: viewModel)
+        let outside = layer("Outside", in: viewModel)
+        viewModel.document.layers = [first, second, outside]
+        select([first.id, second.id], primary: second.id, in: viewModel)
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.canGroupLayersFromContext(first.id))
+        #expect(!viewModel.canGroupLayersFromContext(UUID()))
+        viewModel.document.layers[2].isLocked = true
+        #expect(!viewModel.canGroupLayersFromContext(outside.id))
+        viewModel.document.layers[2].isLocked = false
+        viewModel.prepareLayerContextSelection(for: first.id)
+        #expect(viewModel.document.selectedLayerIDs == [first.id, second.id])
+        viewModel.groupSelectedLayer()
+
+        let group = try #require(viewModel.document.selectedLayer)
+        #expect(group.isGroup)
+        #expect(viewModel.document.layers.first { $0.id == first.id }?.groupID == group.id)
+        #expect(viewModel.document.layers.first { $0.id == second.id }?.groupID == group.id)
+        #expect(viewModel.document.layers.first { $0.id == outside.id }?.groupID == nil)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerGroupSelected"))
+
+        viewModel.selectLayer(outside.id)
+        #expect(viewModel.canUngroupLayersFromContext(group.id))
+        #expect(!viewModel.canUngroupLayersFromContext(outside.id))
+        let groupIndex = try #require(viewModel.document.layers.firstIndex { $0.id == group.id })
+        viewModel.document.layers[groupIndex].isLocked = true
+        #expect(!viewModel.canUngroupLayersFromContext(group.id))
+        viewModel.document.layers[groupIndex].isLocked = false
+        viewModel.prepareLayerContextSelection(for: group.id)
+        #expect(viewModel.document.selectedLayerIDs == [group.id])
+        viewModel.ungroupSelectedLayers()
+
+        #expect(!viewModel.document.layers.contains { $0.id == group.id })
+        #expect(viewModel.document.layers.first { $0.id == first.id }?.groupID == nil)
+        #expect(viewModel.document.layers.first { $0.id == second.id }?.groupID == nil)
+        #expect(viewModel.document.layers.first { $0.id == outside.id }?.groupID == nil)
+        #expect(viewModel.document.selectedLayerIDs == [first.id, second.id])
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerUngroup"))
+    }
+
     @Test func layerRowsWireDoubleClickContextSubmitBlurAndEscapeToOneInlineRenameEditor() throws {
         let repositoryRoot = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()
@@ -502,8 +547,8 @@ struct ImageEditorLayerDeletionTests {
         #expect(source.contains("cancelLayerInlineRename(layer.id)"))
         #expect(source.contains("if focusedID != layer.id, renamingLayerID == layer.id"))
         #expect(source.contains("_ = viewModel.renameLayer(layerID, to: proposedName)"))
-        #expect(source.contains("image-editor-layer-context-rename-\(layer.id.uuidString)"))
-        #expect(source.contains("image-editor-layer-inline-name-\(layer.id.uuidString)"))
+        #expect(source.contains("image-editor-layer-context-rename-\\(layer.id.uuidString)"))
+        #expect(source.contains("image-editor-layer-inline-name-\\(layer.id.uuidString)"))
     }
 
     @Test func layerRowContextMenuWiresClipboardDuplicateAndDestructiveDeleteThroughContextPolicy() throws {
@@ -518,6 +563,12 @@ struct ImageEditorLayerDeletionTests {
         #expect(source.contains("viewModel.prepareLayerContextSelection(for: layer.id)"))
         #expect(source.contains("viewModel.canCutLayersFromContext(layer.id)"))
         #expect(source.contains("viewModel.canCopyLayersFromContext(layer.id)"))
+        #expect(source.contains("viewModel.canGroupLayersFromContext(layer.id)"))
+        #expect(source.contains("viewModel.canUngroupLayersFromContext(layer.id)"))
+        #expect(source.contains("viewModel.groupSelectedLayer()"))
+        #expect(source.contains("viewModel.ungroupSelectedLayers()"))
+        #expect(source.contains("image-editor-layer-context-group-\\(layer.id.uuidString)"))
+        #expect(source.contains("image-editor-layer-context-ungroup-\\(layer.id.uuidString)"))
         #expect(source.contains("viewModel.pasteClipboardAsLayer()"))
         #expect(source.contains("viewModel.pasteClipboardInPlaceAsLayer()"))
         #expect(source.contains("viewModel.canPasteClipboardImage"))

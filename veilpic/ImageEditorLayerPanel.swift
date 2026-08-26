@@ -2265,6 +2265,31 @@ extension ImageEditorView {
                 .accessibilityIdentifier("image-editor-layer-context-duplicate-\(layer.id.uuidString)")
 
                 Divider()
+                Button {
+                    viewModel.prepareLayerContextSelection(for: layer.id)
+                    viewModel.groupSelectedLayer()
+                } label: {
+                    Label(
+                        L10n.text("imageEditor.action.layerGroupSelected"),
+                        systemImage: "folder.badge.plus"
+                    )
+                }
+                .disabled(!viewModel.canGroupLayersFromContext(layer.id))
+                .accessibilityIdentifier("image-editor-layer-context-group-\(layer.id.uuidString)")
+
+                Button {
+                    viewModel.prepareLayerContextSelection(for: layer.id)
+                    viewModel.ungroupSelectedLayers()
+                } label: {
+                    Label(
+                        L10n.text("imageEditor.action.layerUngroup"),
+                        systemImage: "folder.badge.minus"
+                    )
+                }
+                .disabled(!viewModel.canUngroupLayersFromContext(layer.id))
+                .accessibilityIdentifier("image-editor-layer-context-ungroup-\(layer.id.uuidString)")
+
+                Divider()
                 Button(role: .destructive) {
                     viewModel.prepareLayerContextSelection(for: layer.id)
                     viewModel.deleteSelectedLayer()

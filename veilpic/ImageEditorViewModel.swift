@@ -2931,6 +2931,14 @@ final class ImageEditorViewModel: ObservableObject {
         ) != nil
     }
 
+    func canGroupLayersFromContext(_ clickedLayerID: UUID) -> Bool {
+        ImageEditorLayerHierarchyGrouping.groupableRootIDs(
+            in: document.layers,
+            selectedIDs: layerContextSelectionIDs(for: clickedLayerID),
+            isEffectivelyLocked: { document.isEffectivelyLocked($0) }
+        ) != nil
+    }
+
     var canSelectSelectedGroupMembers: Bool {
         guard selectedLayerCount == 1,
               let layer = document.selectedLayer,
@@ -2968,6 +2976,14 @@ final class ImageEditorViewModel: ObservableObject {
         !ImageEditorLayerHierarchyGrouping.ungroupableGroupIDs(
             in: document.layers,
             selectedIDs: document.selectedLayerIDs,
+            isEffectivelyLocked: { document.isEffectivelyLocked($0) }
+        ).isEmpty
+    }
+
+    func canUngroupLayersFromContext(_ clickedLayerID: UUID) -> Bool {
+        !ImageEditorLayerHierarchyGrouping.ungroupableGroupIDs(
+            in: document.layers,
+            selectedIDs: layerContextSelectionIDs(for: clickedLayerID),
             isEffectivelyLocked: { document.isEffectivelyLocked($0) }
         ).isEmpty
     }
