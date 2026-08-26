@@ -21,6 +21,10 @@ extension ImageEditorViewModel {
         selectedSmartObjectSourceExportLayer() != nil
     }
 
+    func canExportSmartObjectSourcePNG(selectedIDs: Set<UUID>) -> Bool {
+        smartObjectSourceExportLayer(selectedIDs: selectedIDs) != nil
+    }
+
     func selectedSmartObjectSourcePNGData() -> Data? {
         selectedSmartObjectSourceExportLayer()?.image.qingtuPNGData()
     }
@@ -35,10 +39,19 @@ extension ImageEditorViewModel {
     }
 
     func chooseSmartObjectSourcePNGDestination() {
-        guard let filename = selectedSmartObjectSourcePNGFilename() else {
+        guard let data = selectedSmartObjectSourcePNGData(),
+              let filename = selectedSmartObjectSourcePNGFilename()
+        else {
             statusText = L10n.text("imageEditor.status.smartObjectSourcePNGExportFailed")
             return
         }
+        chooseSmartObjectSourcePNGDestination(data: data, filename: filename)
+    }
+
+    func chooseSmartObjectSourcePNGDestination(
+        data: Data,
+        filename: String
+    ) {
         let originatingWindow = NSApp.keyWindow
         let panel = NSSavePanel()
         panel.allowedContentTypes = [.png]
@@ -51,7 +64,10 @@ extension ImageEditorViewModel {
                     ImageEditorFilePanelKeyboardFocusRestorer.restore(to: originatingWindow)
                 }
                 guard let self, response == .OK, let url = panel.url else { return }
-                self.writeSelectedSmartObjectSourcePNG(to: url)
+                self.writeSmartObjectSourcePNG(
+                    data,
+                    to: url
+                )
             }
         }
     }
@@ -63,9 +79,22 @@ extension ImageEditorViewModel {
             try data.write(to: destination, options: .atomic)
         }
     ) -> Bool {
-        guard ImageEditorSmartObjectSourcePNGExportPolicy.supports(url),
-              let data = selectedSmartObjectSourcePNGData()
-        else {
+        guard let data = selectedSmartObjectSourcePNGData() else {
+            statusText = L10n.text("imageEditor.status.smartObjectSourcePNGExportFailed")
+            return false
+        }
+        return writeSmartObjectSourcePNG(data, to: url, dataWriter: dataWriter)
+    }
+
+    @discardableResult
+    func writeSmartObjectSourcePNG(
+        _ data: Data,
+        to url: URL,
+        dataWriter: (Data, URL) throws -> Void = { data, destination in
+            try data.write(to: destination, options: .atomic)
+        }
+    ) -> Bool {
+        guard ImageEditorSmartObjectSourcePNGExportPolicy.supports(url) else {
             statusText = L10n.text("imageEditor.status.smartObjectSourcePNGExportFailed")
             return false
         }
@@ -90,6 +119,12 @@ extension ImageEditorViewModel {
         let selectedIDs = document.selectedLayerIDs.isEmpty
             ? Set(document.selectedLayerID.map { [$0] } ?? [])
             : document.selectedLayerIDs
+        return smartObjectSourceExportLayer(selectedIDs: selectedIDs)
+    }
+
+    private func smartObjectSourceExportLayer(
+        selectedIDs: Set<UUID>
+    ) -> ImageEditorLayer? {
         guard selectedIDs.count == 1, let selectedID = selectedIDs.first else { return nil }
         return document.layers.first { layer in
             layer.id == selectedID && layer.isSmartObject

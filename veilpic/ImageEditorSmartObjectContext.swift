@@ -3,6 +3,8 @@ import Foundation
 enum ImageEditorSmartObjectContextAction: String, CaseIterable, Identifiable {
     case convert
     case newViaCopy
+    case replaceContents
+    case exportSourcePNG
     case makeUnique
     case resetTransform
 
@@ -12,6 +14,8 @@ enum ImageEditorSmartObjectContextAction: String, CaseIterable, Identifiable {
         switch self {
         case .convert: "imageEditor.action.layerSmartObject"
         case .newViaCopy: "imageEditor.action.layerSmartObjectViaCopy"
+        case .replaceContents: "imageEditor.action.layerSmartObjectReplace"
+        case .exportSourcePNG: "imageEditor.action.smartObjectSourcePNGExport"
         case .makeUnique: "imageEditor.action.layerSmartObjectMakeUnique"
         case .resetTransform: "imageEditor.action.layerSmartObjectResetTransform"
         }
@@ -21,6 +25,8 @@ enum ImageEditorSmartObjectContextAction: String, CaseIterable, Identifiable {
         switch self {
         case .convert: "cube.transparent"
         case .newViaCopy: "doc.on.doc"
+        case .replaceContents: "arrow.triangle.2.circlepath"
+        case .exportSourcePNG: "square.and.arrow.up"
         case .makeUnique: "point.3.connected.trianglepath.dotted"
         case .resetTransform: "arrow.counterclockwise"
         }
@@ -40,6 +46,12 @@ extension ImageEditorViewModel {
             return canConvertLayersFromContext(clickedLayerID)
         case .newViaCopy:
             return canCreateSmartObjectViaCopy(selectedIDs: selectedIDs)
+        case .replaceContents:
+            return !smartObjectReplacementTargetSourceIDs(
+                selectedIDs: selectedIDs
+            ).isEmpty
+        case .exportSourcePNG:
+            return canExportSmartObjectSourcePNG(selectedIDs: selectedIDs)
         case .makeUnique:
             return !smartObjectUniqueTargetIndices(selectedIDs: selectedIDs).isEmpty
         case .resetTransform:
@@ -50,7 +62,9 @@ extension ImageEditorViewModel {
     @discardableResult
     func performSmartObjectActionFromContext(
         _ clickedLayerID: UUID,
-        action: ImageEditorSmartObjectContextAction
+        action: ImageEditorSmartObjectContextAction,
+        chooseReplacement: ((Set<UUID>) -> Void)? = nil,
+        chooseSourcePNGDestination: ((Data, String) -> Void)? = nil
     ) -> Bool {
         guard canPerformSmartObjectActionFromContext(
             clickedLayerID,
@@ -66,6 +80,27 @@ extension ImageEditorViewModel {
             return false
         case .newViaCopy:
             return createSmartObjectViaCopy()
+        case .replaceContents:
+            let sourceIDs = smartObjectReplacementTargetSourceIDs()
+            if let chooseReplacement {
+                chooseReplacement(sourceIDs)
+            } else {
+                chooseSmartObjectReplacementFile(targetSourceIDs: sourceIDs)
+            }
+            return true
+        case .exportSourcePNG:
+            guard let data = selectedSmartObjectSourcePNGData(),
+                  let filename = selectedSmartObjectSourcePNGFilename()
+            else { return false }
+            if let chooseSourcePNGDestination {
+                chooseSourcePNGDestination(data, filename)
+            } else {
+                chooseSmartObjectSourcePNGDestination(
+                    data: data,
+                    filename: filename
+                )
+            }
+            return true
         case .makeUnique:
             makeSelectedSmartObjectUnique()
             return true

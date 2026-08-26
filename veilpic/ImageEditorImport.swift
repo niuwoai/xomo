@@ -515,6 +515,16 @@ extension ImageEditorViewModel {
     }
 
     func chooseSmartObjectReplacementFile() {
+        chooseSmartObjectReplacementFile(
+            targetSourceIDs: smartObjectReplacementTargetSourceIDs()
+        )
+    }
+
+    func chooseSmartObjectReplacementFile(targetSourceIDs: Set<UUID>) {
+        guard !targetSourceIDs.isEmpty else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return
+        }
         let panel = NSOpenPanel()
         panel.allowedContentTypes = [.png, .jpeg, .tiff, .heic, .webP]
         panel.allowsMultipleSelection = false
@@ -524,7 +534,10 @@ extension ImageEditorViewModel {
         panel.begin { [weak self] response in
             Task { @MainActor in
                 guard let self, response == .OK, let url = panel.url else { return }
-                self.replaceSelectedSmartObjectContentsFile(url)
+                self.replaceSmartObjectContentsFile(
+                    url,
+                    targetSourceIDs: targetSourceIDs
+                )
             }
         }
     }
@@ -801,15 +814,27 @@ extension ImageEditorViewModel {
     func replaceSelectedSmartObjectContentsFile(
         _ url: URL
     ) -> ImageEditorSmartObjectReplacementResult {
+        replaceSmartObjectContentsFile(
+            url,
+            targetSourceIDs: smartObjectReplacementTargetSourceIDs()
+        )
+    }
+
+    @discardableResult
+    func replaceSmartObjectContentsFile(
+        _ url: URL,
+        targetSourceIDs: Set<UUID>
+    ) -> ImageEditorSmartObjectReplacementResult {
         guard ImageEditorEmbeddedSmartObjectFilePolicy.supports(url),
               let image = NSImage(contentsOf: url)
         else {
             statusText = L10n.text("imageEditor.status.layerSmartObjectReplaceFailed")
             return .failed
         }
-        return replaceSelectedSmartObjectContents(
+        return replaceSmartObjectContents(
             image,
-            sourceName: url.lastPathComponent
+            sourceName: url.lastPathComponent,
+            targetSourceIDs: targetSourceIDs
         )
     }
 
@@ -818,8 +843,20 @@ extension ImageEditorViewModel {
         _ image: NSImage,
         sourceName: String
     ) -> ImageEditorSmartObjectReplacementResult {
-        let sourceIDs = smartObjectReplacementTargetSourceIDs()
-        guard !sourceIDs.isEmpty else {
+        replaceSmartObjectContents(
+            image,
+            sourceName: sourceName,
+            targetSourceIDs: smartObjectReplacementTargetSourceIDs()
+        )
+    }
+
+    @discardableResult
+    func replaceSmartObjectContents(
+        _ image: NSImage,
+        sourceName: String,
+        targetSourceIDs: Set<UUID>
+    ) -> ImageEditorSmartObjectReplacementResult {
+        guard !targetSourceIDs.isEmpty else {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return .failed
         }
@@ -832,7 +869,7 @@ extension ImageEditorViewModel {
 
         let cleanSourceName = cleanLayerName(from: sourceName)
         let replacementData = normalized.qingtuPNGData()
-        let replacementSourceIDs = sourceIDs.filter { sourceID in
+        let replacementSourceIDs = targetSourceIDs.filter { sourceID in
             !smartObjectSourceMatchesReplacement(
                 sourceID: sourceID,
                 image: normalized,

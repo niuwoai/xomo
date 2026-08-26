@@ -1,13 +1,25 @@
 {
-  "generated_at": "2026-08-27 06:52:34 +0800",
-  "total": 3,
-  "passed": 3,
+  "generated_at": "2026-08-27 07:14:32 +0800",
+  "total": 4,
+  "passed": 4,
   "failed": 0,
-  "total_tests": 3,
-  "passed_tests": 3,
+  "total_tests": 4,
+  "passed_tests": 4,
   "failed_tests_in_failed_groups": 0,
   "jobs": 1,
   "results": [
+    {
+      "suite": "ImageEditorSmartObjectContextTests",
+      "method": "fileActionsPrepareClickedTargetBeforePresentingPanels",
+      "identifier": "veilpicTests/ImageEditorSmartObjectContextTests/fileActionsPrepareClickedTargetBeforePresentingPanels()",
+      "file": "ImageEditorSmartObjectContextTests.swift",
+      "test_count": 1,
+      "passed": true,
+      "duration": 3.172,
+      "infrastructure_retries": 0,
+      "issues": [],
+      "log": "ImageEditorSmartObjectContextTests.fileActionsPrepareClickedTargetBeforePresentingPanels.log"
+    },
     {
       "suite": "ImageEditorSmartObjectContextTests",
       "method": "resetTransformTargetsClickedObjectAndNoOpPreservesRedo",
@@ -15,7 +27,7 @@
       "file": "ImageEditorSmartObjectContextTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.549,
+      "duration": 3.199,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorSmartObjectContextTests.resetTransformTargetsClickedObjectAndNoOpPreservesRedo.log"
@@ -27,7 +39,7 @@
       "file": "ImageEditorSmartObjectContextTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.524,
+      "duration": 3.153,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorSmartObjectContextTests.selectedContextMakesSharedInstancesUniqueInOneUndoStep.log"
@@ -39,7 +51,7 @@
       "file": "ImageEditorSmartObjectContextTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 4.74,
+      "duration": 4.099,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorSmartObjectContextTests.unselectedContextCreatesIndependentSmartObjectCopy.log"

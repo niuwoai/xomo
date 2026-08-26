@@ -10529,6 +10529,12 @@ final class ImageEditorViewModel: ObservableObject {
         let selectedIDs = document.selectedLayerIDs.isEmpty
             ? Set(document.selectedLayerID.map { [$0] } ?? [])
             : document.selectedLayerIDs
+        return smartObjectReplacementTargetSourceIDs(selectedIDs: selectedIDs)
+    }
+
+    func smartObjectReplacementTargetSourceIDs(
+        selectedIDs: Set<UUID>
+    ) -> Set<UUID> {
         return Set(document.layers.compactMap { layer in
             guard selectedIDs.contains(layer.id),
                   let content = layer.smartObjectContent,
