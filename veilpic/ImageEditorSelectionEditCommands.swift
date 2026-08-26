@@ -312,16 +312,24 @@ extension ImageEditorViewModel {
         if hasSelection {
             return canCopySelectionToClipboard && canCutSelectionToNewLayer
         }
-        return canCutSelectedPixelLayerToClipboard
+        return canCutSelectedLayersToClipboard
     }
 
-    var canCutSelectedPixelLayerToClipboard: Bool {
+    var canCutSelectedLayersToClipboard: Bool {
         guard !hasActiveLayerMoveTransaction,
-              selectedLayerCount == 1,
-              let layer = document.selectedLayer,
-              layer.kind.isPixel
+              canDeleteLayer,
+              canCopySelectedLayersToClipboard
         else { return false }
-        return canDeleteLayer && canCopySelectedLayersToClipboard
+        let rootIDs = ImageEditorLayerHierarchyDuplication.duplicableRootIDs(
+            in: document.layers,
+            selectedIDs: document.selectedLayerIDs
+        )
+        let deletableIDs = ImageEditorLayerHierarchyDeletion.deletableLayerIDs(
+            in: document.layers,
+            selectedIDs: document.selectedLayerIDs,
+            isEffectivelyLocked: { document.isEffectivelyLocked($0) }
+        )
+        return !rootIDs.isEmpty && rootIDs.isSubset(of: deletableIDs)
     }
 
     var canCopyMergedToClipboard: Bool {
@@ -329,7 +337,10 @@ extension ImageEditorViewModel {
     }
 
     var canCopySelectedLayersToClipboard: Bool {
-        selectedLayersExportScope != nil
+        !ImageEditorLayerHierarchyDuplication.duplicableRootIDs(
+            in: document.layers,
+            selectedIDs: document.selectedLayerIDs
+        ).isEmpty
     }
 
     var canCopyMergedToNewLayer: Bool {
@@ -1234,7 +1245,7 @@ extension ImageEditorViewModel {
     @discardableResult
     func cutSelectionToClipboard() -> Bool {
         guard hasSelection else {
-            return cutSelectedPixelLayerToClipboard()
+            return cutSelectedLayersToClipboard()
         }
 
         guard let selection = document.selection else {
@@ -1289,8 +1300,8 @@ extension ImageEditorViewModel {
     }
 
     @discardableResult
-    private func cutSelectedPixelLayerToClipboard() -> Bool {
-        guard canCutSelectedPixelLayerToClipboard else {
+    private func cutSelectedLayersToClipboard() -> Bool {
+        guard canCutSelectedLayersToClipboard else {
             statusText = L10n.text("imageEditor.status.selectedLayerCutToClipboardFailed")
             return false
         }
@@ -1350,8 +1361,16 @@ extension ImageEditorViewModel {
     }
 
     @discardableResult
-    func copySelectedLayersToClipboard() -> Bool {
-        guard selectedLayersExportScope != nil else {
+    func copySelectedLayersToClipboard(
+        to pasteboard: NSPasteboard = .general
+    ) -> Bool {
+        guard canCopySelectedLayersToClipboard,
+              let archiveData = XomoLayerClipboardArchive.data(
+                  layers: document.layers,
+                  selectedIDs: document.selectedLayerIDs,
+                  primarySelectionID: document.selectedLayerID
+              )
+        else {
             statusText = L10n.text("imageEditor.status.selectedLayersCopyToClipboardFailed")
             return false
         }
@@ -1359,18 +1378,15 @@ extension ImageEditorViewModel {
         let renderedImage = document.compositedImage(
             includingOnly: document.selectedLayerIDs
         )
-        guard let bitmapContentBounds = renderedImage.nonTransparentPixelBounds(),
-              let image = renderedImage.croppedUsingImagePixelCoordinates(
-                to: bitmapContentBounds
-              )
-        else {
-            statusText = L10n.text("imageEditor.status.selectedLayersCopyToClipboardFailed")
-            return false
+        let bitmapContentBounds = renderedImage.nonTransparentPixelBounds()
+        let image = bitmapContentBounds.flatMap {
+            renderedImage.croppedUsingImagePixelCoordinates(to: $0)
         }
-
-        guard let clipboardData = image.qingtuPNGData() else {
-            statusText = L10n.text("imageEditor.status.selectedLayersCopyToClipboardFailed")
-            return false
+        let clipboardData = image?.qingtuPNGData()
+        var additionalData = [XomoLayerClipboardArchive.pasteboardType: archiveData]
+        if let bitmapContentBounds,
+           let frameData = XomoClipboardLayerPayload.data(for: bitmapContentBounds) {
+            additionalData[XomoClipboardLayerPayload.pasteboardType] = frameData
         }
 
         let baseName = (document.sourceName as NSString).deletingPathExtension
@@ -1378,11 +1394,10 @@ extension ImageEditorViewModel {
         let didCopy = ClipboardImageWriter.copyPNGData(
             clipboardData,
             image: image,
-            preferredFileName: preferredFileName
+            preferredFileName: preferredFileName,
+            additionalData: additionalData,
+            to: pasteboard
         )
-        if didCopy {
-            XomoClipboardLayerPayload.write(frame: bitmapContentBounds)
-        }
         statusText = didCopy
             ? L10n.text("imageEditor.status.selectedLayersCopiedToClipboard")
             : L10n.text("imageEditor.status.selectedLayersCopyToClipboardFailed")

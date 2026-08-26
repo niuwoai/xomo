@@ -107,6 +107,25 @@ struct ClipboardImageWriterTests {
         #expect(downloadsDirectory.map { !cacheDirectory.path.hasPrefix($0.path + "/") } ?? true)
     }
 
+    @Test func emptyAdditionalClipboardDataDoesNotEraseExistingContents() {
+        let pasteboard = NSPasteboard(
+            name: .init("im.some.xomo.tests.empty-additional-data.\(UUID())")
+        )
+        pasteboard.clearContents()
+        defer { pasteboard.clearContents() }
+        #expect(pasteboard.setString("keep me", forType: .string))
+
+        let didCopy = ClipboardImageWriter.copyPNGData(
+            nil,
+            preferredFileName: "empty.png",
+            additionalData: [.init("im.some.xomo.tests.empty"): Data()],
+            to: pasteboard
+        )
+
+        #expect(!didCopy)
+        #expect(pasteboard.string(forType: .string) == "keep me")
+    }
+
     @Test func copyingSelectionCropsToSelectionFrameForPasteInPlace() throws {
         let canvas = solidImage(color: .black, size: CGSize(width: 120, height: 90))
         let viewModel = ImageEditorViewModel(sourceName: "selection-copy.png", image: canvas) { _ in }
@@ -264,7 +283,7 @@ struct ClipboardImageWriterTests {
         defer { pasteboard.clearContents() }
 
         #expect(viewModel.document.selection == nil)
-        #expect(viewModel.canCutSelectedPixelLayerToClipboard)
+        #expect(viewModel.canCutSelectedLayersToClipboard)
         #expect(viewModel.canCutSelectionToClipboard)
         #expect(viewModel.cutSelectionToClipboard())
 
@@ -290,7 +309,7 @@ struct ClipboardImageWriterTests {
         #expect(restored.image.qingtuPNGData() == importedPNG)
     }
 
-    @Test func objectCutRejectsUnsafeLayerKindsAndActiveMoves() throws {
+    @Test func objectCutRejectsTheLastLayerAndActiveMoves() throws {
         let canvasSize = CGSize(width: 100, height: 70)
         let lastLayerViewModel = ImageEditorViewModel(
             sourceName: "last-layer.png",
@@ -300,17 +319,8 @@ struct ClipboardImageWriterTests {
         lastLayerViewModel.document.layers = [onlyLayer]
         lastLayerViewModel.document.selectedLayerID = onlyLayer.id
         lastLayerViewModel.document.selectedLayerIDs = [onlyLayer.id]
-        #expect(!lastLayerViewModel.canCutSelectedPixelLayerToClipboard)
+        #expect(!lastLayerViewModel.canCutSelectedLayersToClipboard)
         #expect(!lastLayerViewModel.canCutSelectionToClipboard)
-
-        let componentViewModel = ImageEditorViewModel(
-            sourceName: "component-cut.png",
-            image: .transparent(size: canvasSize)
-        ) { _ in }
-        componentViewModel.insertXomoComponent(.button, at: CGPoint(x: 40, y: 35))
-        #expect(componentViewModel.document.selectedLayer?.isGroup == true)
-        #expect(!componentViewModel.canCutSelectedPixelLayerToClipboard)
-        #expect(!componentViewModel.canCutSelectionToClipboard)
 
         let movingViewModel = ImageEditorViewModel(
             sourceName: "moving-layer.png",
@@ -321,13 +331,13 @@ struct ClipboardImageWriterTests {
             sourceName: "moving-object.png"
         ))
         #expect(movingViewModel.beginMovingSelectedLayer())
-        #expect(!movingViewModel.canCutSelectedPixelLayerToClipboard)
+        #expect(!movingViewModel.canCutSelectedLayersToClipboard)
         #expect(!movingViewModel.canCutSelectionToClipboard)
         #expect(movingViewModel.cancelMovingSelectedLayer())
-        #expect(movingViewModel.canCutSelectedPixelLayerToClipboard)
+        #expect(movingViewModel.canCutSelectedLayersToClipboard)
     }
 
-    @Test func failedObjectCutLeavesTheTransparentPixelLayerAndHistoryUntouched() throws {
+    @Test func transparentObjectCutUsesTheEditableArchiveAndRemainsUndoable() throws {
         let canvasSize = CGSize(width: 80, height: 60)
         let viewModel = ImageEditorViewModel(
             sourceName: "transparent-cut.png",
@@ -338,27 +348,26 @@ struct ClipboardImageWriterTests {
             sourceName: "empty.png"
         ))
         let importedID = try #require(viewModel.document.selectedLayerID)
-        let layerIDs = viewModel.document.layers.map(\.id)
-        let history = viewModel.document.history
+        let historyCount = viewModel.document.history.count
         let undoCount = viewModel.undoStack.count
         let pasteboard = NSPasteboard.general
         pasteboard.clearContents()
         defer { pasteboard.clearContents() }
 
-        #expect(viewModel.canCutSelectedPixelLayerToClipboard)
-        #expect(!viewModel.cutSelectionToClipboard())
+        #expect(viewModel.canCutSelectedLayersToClipboard)
+        #expect(viewModel.cutSelectionToClipboard())
 
-        #expect(viewModel.document.layers.map(\.id) == layerIDs)
+        #expect(!viewModel.document.layers.contains { $0.id == importedID })
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.undoStack.count == undoCount + 1)
+        #expect(pasteboard.data(forType: XomoLayerClipboardArchive.pasteboardType) != nil)
+        #expect(pasteboard.data(forType: .png) == nil)
+        viewModel.undo()
         #expect(viewModel.document.selectedLayerID == importedID)
-        #expect(viewModel.document.history == history)
-        #expect(viewModel.undoStack.count == undoCount)
-        #expect(
-            viewModel.statusText
-                == L10n.text("imageEditor.status.selectedLayersCopyToClipboardFailed")
-        )
+        #expect(viewModel.document.layers.contains { $0.id == importedID })
     }
 
-    @Test func copyingSeparatedSelectedLayersPreservesUnionFrameForPasteInPlace() throws {
+    @Test func copyingSeparatedSelectedLayersPreservesUnionFrameAndEditableLayersForPasteInPlace() throws {
         let canvasSize = CGSize(width: 120, height: 100)
         let viewModel = ImageEditorViewModel(
             sourceName: "selected-layers-copy.png",
@@ -403,8 +412,21 @@ struct ClipboardImageWriterTests {
         #expect(gapPixel.alphaComponent < 0.05)
         #expect(secondPixel.alphaComponent > 0.95)
 
+        let layerCount = viewModel.document.layers.count
+        let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
         viewModel.pasteClipboardInPlaceAsLayer()
-        #expect(viewModel.document.selectedLayer?.frame == expectedFrame)
+
+        let pastedIDs = viewModel.document.selectedLayerIDs
+        let pastedLayers = viewModel.document.layers.filter { pastedIDs.contains($0.id) }
+        #expect(viewModel.document.layers.count == layerCount + 2)
+        #expect(pastedIDs.count == 2)
+        #expect(!pastedIDs.contains(firstID))
+        #expect(!pastedIDs.contains(secondLayer.id))
+        #expect(pastedLayers.contains { $0.frame == firstFrame })
+        #expect(pastedLayers.contains { $0.frame == secondFrame })
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.undoStack.count == undoCount + 1)
     }
 
     @Test func ordinaryPasteKeepsNativeSizeWhenClipboardImageExceedsCanvas() throws {

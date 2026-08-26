@@ -1770,6 +1770,7 @@
 "imageEditor.history.clipboardPasteLayer" = "从剪贴板粘贴为图层";
 "imageEditor.history.clipboardPasteIntoSelection" = "粘贴到选区";
 "imageEditor.history.clipboardPasteSmartObject" = "粘贴为智能对象";
+"imageEditor.history.clipboardPasteObjects" = "粘贴可编辑对象";
 "imageEditor.history.layerSmartObject" = "转换为智能对象";
 "imageEditor.history.layerSmartObjectViaCopy" = "通过拷贝新建智能对象";
 "imageEditor.history.layerSmartObjectReplace" = "替换智能对象内容";
@@ -2445,6 +2446,8 @@
 "imageEditor.status.clipboardPastedToLayer" = "已从剪贴板粘贴为新图层";
 "imageEditor.status.clipboardPastedIntoSelection" = "已将剪贴板图像粘贴到选区并生成蒙版图层";
 "imageEditor.status.clipboardPastedInPlace" = "已将剪贴板图层原位粘贴";
+"imageEditor.status.clipboardObjectsPasted" = "已粘贴剪贴板中的可编辑对象";
+"imageEditor.status.clipboardObjectsPastedInPlace" = "已原位粘贴剪贴板中的可编辑对象";
 "imageEditor.status.clipboardPastedAsSmartObject" = "已将剪贴板图像粘贴为智能对象";
 "imageEditor.status.clipboardPasteSmartObjectFailed" = "无法将剪贴板图像粘贴为智能对象";
 "imageEditor.status.clipboardLayerPositionMissing" = "该剪贴板图像没有象墨图层位置信息";
@@ -3867,8 +3870,8 @@
 "imageEditor.action.copySelectedLayersClipboard" = "复制所选图层到剪贴板";
 "imageEditor.status.selectedLayersCopiedToClipboard" = "已将所选图层复制到剪贴板";
 "imageEditor.status.selectedLayersCopyToClipboardFailed" = "复制所选图层到剪贴板失败";
-"imageEditor.status.selectedLayerCutToClipboard" = "已将像素图层剪切到剪贴板";
-"imageEditor.status.selectedLayerCutToClipboardFailed" = "无法将像素图层剪切到剪贴板";
+"imageEditor.status.selectedLayerCutToClipboard" = "已将所选对象剪切到剪贴板";
+"imageEditor.status.selectedLayerCutToClipboardFailed" = "无法将所选对象剪切到剪贴板";
 "imageEditor.action.sliceCreate" = "从当前选区创建切片";
 "imageEditor.export.slice" = "命名切片";
 "imageEditor.history.sliceCreated" = "创建切片：%@";

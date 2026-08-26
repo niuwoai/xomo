@@ -1770,6 +1770,7 @@
 "imageEditor.history.clipboardPasteLayer" = "Paste Clipboard as Layer";
 "imageEditor.history.clipboardPasteIntoSelection" = "Paste Into Selection";
 "imageEditor.history.clipboardPasteSmartObject" = "Paste as Smart Object";
+"imageEditor.history.clipboardPasteObjects" = "Paste Editable Objects";
 "imageEditor.history.layerSmartObject" = "Convert to Smart Object";
 "imageEditor.history.layerSmartObjectViaCopy" = "New Smart Object via Copy";
 "imageEditor.history.layerSmartObjectReplace" = "Replace Smart Object Contents";
@@ -2445,6 +2446,8 @@
 "imageEditor.status.clipboardPastedToLayer" = "Clipboard image pasted as a new layer";
 "imageEditor.status.clipboardPastedIntoSelection" = "Clipboard image pasted into the selection as a masked layer";
 "imageEditor.status.clipboardPastedInPlace" = "Clipboard layer pasted in place";
+"imageEditor.status.clipboardObjectsPasted" = "Editable clipboard objects pasted";
+"imageEditor.status.clipboardObjectsPastedInPlace" = "Editable clipboard objects pasted in place";
 "imageEditor.status.clipboardPastedAsSmartObject" = "Clipboard image pasted as a Smart Object";
 "imageEditor.status.clipboardPasteSmartObjectFailed" = "Could not paste the clipboard image as a Smart Object";
 "imageEditor.status.clipboardLayerPositionMissing" = "This clipboard image has no Xomo layer position";
@@ -3867,8 +3870,8 @@
 "imageEditor.action.copySelectedLayersClipboard" = "Copy Selected Layers to Clipboard";
 "imageEditor.status.selectedLayersCopiedToClipboard" = "Selected layers copied to Clipboard";
 "imageEditor.status.selectedLayersCopyToClipboardFailed" = "Failed to copy selected layers to Clipboard";
-"imageEditor.status.selectedLayerCutToClipboard" = "Pixel layer cut to Clipboard";
-"imageEditor.status.selectedLayerCutToClipboardFailed" = "Failed to cut pixel layer to Clipboard";
+"imageEditor.status.selectedLayerCutToClipboard" = "Selected objects cut to Clipboard";
+"imageEditor.status.selectedLayerCutToClipboardFailed" = "Failed to cut selected objects to Clipboard";
 "imageEditor.action.sliceCreate" = "Create Slice from Current Selection";
 "imageEditor.export.slice" = "Named Slice";
 "imageEditor.history.sliceCreated" = "Create Slice: %@";

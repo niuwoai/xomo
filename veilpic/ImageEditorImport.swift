@@ -162,7 +162,8 @@ private enum ImageEditorPreparedLayerFileImport {
 @MainActor
 extension ImageEditorViewModel {
     var canPasteClipboardImage: Bool {
-        NSPasteboard.general.readImage() != nil
+        XomoLayerClipboardArchive.containsSupportedData(in: .general)
+            || NSPasteboard.general.readImage() != nil
     }
 
     var canPasteClipboardImageIntoSelection: Bool {
@@ -174,7 +175,9 @@ extension ImageEditorViewModel {
     }
 
     var canPasteClipboardImageInPlace: Bool {
-        canPasteClipboardImage && XomoClipboardLayerPayload.frame(from: .general) != nil
+        XomoLayerClipboardArchive.containsSupportedData(in: .general)
+            || (NSPasteboard.general.readImage() != nil
+                && XomoClipboardLayerPayload.frame(from: .general) != nil)
     }
 
     var canPasteClipboardImageAsSmartObject: Bool {
@@ -531,6 +534,15 @@ extension ImageEditorViewModel {
 
     @discardableResult
     func pasteClipboardAsLayer(from pasteboard: NSPasteboard = .general) -> Bool {
+        if let archive = XomoLayerClipboardArchive.restoredCopy(
+            from: pasteboard,
+            offset: XomoLayerClipboardArchive.normalPasteOffset
+        ) {
+            return commitLayerClipboardArchive(
+                archive,
+                status: L10n.text("imageEditor.status.clipboardObjectsPasted")
+            )
+        }
         guard let image = pasteboard.readImage() else {
             statusText = L10n.text("imageEditor.status.clipboardImageMissing")
             return false
@@ -565,6 +577,15 @@ extension ImageEditorViewModel {
 
     @discardableResult
     func pasteClipboardInPlaceAsLayer(from pasteboard: NSPasteboard = .general) -> Bool {
+        if let archive = XomoLayerClipboardArchive.restoredCopy(
+            from: pasteboard,
+            offset: .zero
+        ) {
+            return commitLayerClipboardArchive(
+                archive,
+                status: L10n.text("imageEditor.status.clipboardObjectsPastedInPlace")
+            )
+        }
         guard let image = pasteboard.readImage() else {
             statusText = L10n.text("imageEditor.status.clipboardImageMissing")
             return false
@@ -581,6 +602,27 @@ extension ImageEditorViewModel {
             importedStatus: L10n.text("imageEditor.status.clipboardPastedInPlace"),
             frameOverride: frame
         )
+    }
+
+    private func commitLayerClipboardArchive(
+        _ archive: XomoRestoredLayerClipboardArchive,
+        status: String
+    ) -> Bool {
+        guard !archive.layers.isEmpty,
+              !archive.selectedRootIDs.isEmpty
+        else { return false }
+        pushUndo()
+        endPixelSelectionForImportedObject()
+        document.layers.append(contentsOf: archive.layers)
+        normalizeLayerLinks()
+        normalizeClippingMasks()
+        selectImportedLayers(
+            Array(archive.selectedRootIDs),
+            primaryLayerID: archive.primaryRootID
+        )
+        appendHistory(L10n.text("imageEditor.history.clipboardPasteObjects"))
+        statusText = status
+        return true
     }
 
     @discardableResult

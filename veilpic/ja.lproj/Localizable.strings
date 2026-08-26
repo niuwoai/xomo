@@ -1770,6 +1770,7 @@
 "imageEditor.history.clipboardPasteLayer" = "クリップボードをレイヤーとしてペースト";
 "imageEditor.history.clipboardPasteIntoSelection" = "選択範囲内へペースト";
 "imageEditor.history.clipboardPasteSmartObject" = "スマートオブジェクトとしてペースト";
+"imageEditor.history.clipboardPasteObjects" = "編集可能なオブジェクトをペースト";
 "imageEditor.history.layerSmartObject" = "スマートオブジェクトに変換";
 "imageEditor.history.layerSmartObjectViaCopy" = "コピーして新規スマートオブジェクト";
 "imageEditor.history.layerSmartObjectReplace" = "スマートオブジェクトの内容を置換";
@@ -2445,6 +2446,8 @@
 "imageEditor.status.clipboardPastedToLayer" = "クリップボードの画像を新規レイヤーとしてペーストしました";
 "imageEditor.status.clipboardPastedIntoSelection" = "クリップボード画像を選択範囲内へペーストし、マスク付きレイヤーを作成しました";
 "imageEditor.status.clipboardPastedInPlace" = "クリップボードのレイヤーを同じ位置にペーストしました";
+"imageEditor.status.clipboardObjectsPasted" = "クリップボードの編集可能なオブジェクトをペーストしました";
+"imageEditor.status.clipboardObjectsPastedInPlace" = "クリップボードの編集可能なオブジェクトを同じ位置にペーストしました";
 "imageEditor.status.clipboardPastedAsSmartObject" = "クリップボード画像をスマートオブジェクトとしてペーストしました";
 "imageEditor.status.clipboardPasteSmartObjectFailed" = "クリップボード画像をスマートオブジェクトとしてペーストできませんでした";
 "imageEditor.status.clipboardLayerPositionMissing" = "このクリップボード画像にはXomoのレイヤー位置情報がありません";
@@ -3867,8 +3870,8 @@
 "imageEditor.action.copySelectedLayersClipboard" = "選択したレイヤーをクリップボードへコピー";
 "imageEditor.status.selectedLayersCopiedToClipboard" = "選択したレイヤーをクリップボードへコピーしました";
 "imageEditor.status.selectedLayersCopyToClipboardFailed" = "選択したレイヤーをクリップボードへコピーできませんでした";
-"imageEditor.status.selectedLayerCutToClipboard" = "ピクセルレイヤーをクリップボードへカットしました";
-"imageEditor.status.selectedLayerCutToClipboardFailed" = "ピクセルレイヤーをクリップボードへカットできませんでした";
+"imageEditor.status.selectedLayerCutToClipboard" = "選択したオブジェクトをクリップボードへカットしました";
+"imageEditor.status.selectedLayerCutToClipboardFailed" = "選択したオブジェクトをクリップボードへカットできませんでした";
 "imageEditor.action.sliceCreate" = "現在の選択範囲からスライスを作成";
 "imageEditor.export.slice" = "名前付きスライス";
 "imageEditor.history.sliceCreated" = "スライスを作成：%@";

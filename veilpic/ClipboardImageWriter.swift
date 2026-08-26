@@ -71,6 +71,7 @@ enum ClipboardImageWriter {
         _ image: NSImage,
         preferredFileName: String,
         optimizeLosslessly: Bool = false,
+        additionalData: [NSPasteboard.PasteboardType: Data] = [:],
         to pasteboard: NSPasteboard = .general
     ) -> Bool {
         let pngData = image.qingtuPNGData().map { data in
@@ -82,6 +83,7 @@ enum ClipboardImageWriter {
             pngData,
             image: image,
             preferredFileName: preferredFileName,
+            additionalData: additionalData,
             to: pasteboard
         )
     }
@@ -90,10 +92,9 @@ enum ClipboardImageWriter {
         _ pngData: Data?,
         image: NSImage? = nil,
         preferredFileName: String,
+        additionalData: [NSPasteboard.PasteboardType: Data] = [:],
         to pasteboard: NSPasteboard = .general
     ) -> Bool {
-        pasteboard.clearContents()
-
         let imageItem = NSPasteboardItem()
         var hasImageData = false
         if let pngData {
@@ -104,9 +105,13 @@ enum ClipboardImageWriter {
             imageItem.setData(tiffData, forType: .tiff)
             hasImageData = true
         }
+        let nonEmptyAdditionalData = additionalData.filter { !$0.value.isEmpty }
+        for (type, data) in nonEmptyAdditionalData {
+            imageItem.setData(data, forType: type)
+        }
 
         var objects: [NSPasteboardWriting] = []
-        if hasImageData {
+        if hasImageData || !nonEmptyAdditionalData.isEmpty {
             objects.append(imageItem)
         }
         if let pngData,
@@ -120,8 +125,10 @@ enum ClipboardImageWriter {
 
         guard !objects.isEmpty else {
             guard let image else { return false }
+            pasteboard.clearContents()
             return pasteboard.writeObjects([image])
         }
+        pasteboard.clearContents()
         return pasteboard.writeObjects(objects)
     }
 
