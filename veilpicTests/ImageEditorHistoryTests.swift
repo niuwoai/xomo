@@ -428,6 +428,66 @@ struct ImageEditorHistoryTests {
         }
     }
 
+    @Test func onePhysicalImageGeometryShortcutKeepsTheSuccessfulResizeStatus() {
+        ImageEditorImageGeometryCommandDispatchGate.reset()
+        defer { ImageEditorImageGeometryCommandDispatchGate.reset() }
+
+        let cases: [(
+            action: ImageEditorImageGeometryCommandAction,
+            targetSize: CGSize,
+            historyKey: String
+        )] = [
+            (.resizeImage, CGSize(width: 84, height: 66), "imageEditor.history.imageResize"),
+            (.resizeCanvas, CGSize(width: 92, height: 70), "imageEditor.history.canvasResize"),
+        ]
+
+        for (index, testCase) in cases.enumerated() {
+            ImageEditorImageGeometryCommandDispatchGate.reset()
+            let viewModel = ImageEditorViewModel(
+                sourceName: "geometry-\(index).png",
+                image: testImage(color: .systemBlue, size: NSSize(width: 64, height: 48))
+            ) { _ in }
+            viewModel.targetImageWidth = Double(testCase.targetSize.width)
+            viewModel.targetImageHeight = Double(testCase.targetSize.height)
+            viewModel.targetCanvasWidth = Double(testCase.targetSize.width)
+            viewModel.targetCanvasHeight = Double(testCase.targetSize.height)
+            let historyCount = viewModel.document.history.count
+            let event = ImageEditorKeyboardShortcutEventSignature(
+                windowNumber: 61,
+                eventNumber: 1030 + index,
+                timestamp: 103 + Double(index) / 10,
+                typeRawValue: NSEvent.EventType.keyDown.rawValue,
+                keyCode: testCase.action == .resizeImage ? 34 : 8
+            )
+
+            for _ in 0..<2 {
+                guard ImageEditorImageGeometryCommandDispatchGate.shouldDispatch(
+                    testCase.action,
+                    event: event
+                ) else { continue }
+                switch testCase.action {
+                case .resizeImage: viewModel.resizeImageToControlSize()
+                case .resizeCanvas: viewModel.resizeCanvasToControlSize()
+                }
+            }
+
+            #expect(viewModel.document.canvasSize == testCase.targetSize)
+            #expect(viewModel.document.history.count == historyCount + 1)
+            #expect(viewModel.document.history.last?.title == L10n.text(testCase.historyKey))
+            #expect(viewModel.statusText != L10n.text("imageEditor.status.resizeInvalid"))
+        }
+    }
+
+    @Test func imageGeometryMouseBoundariesRemainIndependentWithoutAKeyEvent() {
+        ImageEditorImageGeometryCommandDispatchGate.reset()
+        defer { ImageEditorImageGeometryCommandDispatchGate.reset() }
+
+        for action in ImageEditorImageGeometryCommandAction.allCases {
+            #expect(ImageEditorImageGeometryCommandDispatchGate.shouldDispatch(action, event: nil))
+            #expect(ImageEditorImageGeometryCommandDispatchGate.shouldDispatch(action, event: nil))
+        }
+    }
+
     @Test func onePhysicalArrowShortcutNudgesOnlyOneDistanceStep() throws {
         ImageEditorNudgeCommandDispatchGate.reset()
         defer { ImageEditorNudgeCommandDispatchGate.reset() }

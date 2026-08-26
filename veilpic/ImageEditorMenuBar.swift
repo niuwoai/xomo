@@ -229,8 +229,8 @@ extension ImageEditorView {
 
     var xomoImageCommandActions: XomoImageCommandActions {
         XomoImageCommandActions(
-            resizeImage: { viewModel.resizeImageToControlSize() },
-            resizeCanvas: { viewModel.resizeCanvasToControlSize() },
+            resizeImage: { performImageGeometryCommand(.resizeImage) },
+            resizeCanvas: { performImageGeometryCommand(.resizeCanvas) },
             selectAdjustment: { viewModel.selectAdjustment($0) },
             desaturate: { performPixelCorrectionCommand(.desaturate) },
             canDesaturate: viewModel.canDesaturateSelectedLayer,

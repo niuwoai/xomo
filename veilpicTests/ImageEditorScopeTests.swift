@@ -2303,6 +2303,8 @@ struct ImageEditorScopeTests {
         #expect(commandsSource.contains("CommandMenu(L10n.text(\"imageEditor.menu.image\"))"))
         #expect(commandsSource.contains("XomoImageMenuItems(actions: actions)"))
         #expect(menuBarSource.contains("var xomoImageCommandActions: XomoImageCommandActions"))
+        #expect(menuBarSource.contains("resizeImage: { performImageGeometryCommand(.resizeImage) }"))
+        #expect(menuBarSource.contains("resizeCanvas: { performImageGeometryCommand(.resizeCanvas) }"))
         #expect(menuBarSource.contains("selectAdjustment: { viewModel.selectAdjustment($0) }"))
         #expect(menuBarSource.contains("desaturate: { performPixelCorrectionCommand(.desaturate) }"))
         #expect(menuBarSource.contains("invert: { performPixelCorrectionCommand(.invert) }"))
@@ -2311,6 +2313,26 @@ struct ImageEditorScopeTests {
         #expect(menuBarSource.contains("autoColor: { performPixelCorrectionCommand(.autoColor) }"))
         #expect(appSource.contains("XomoImageCommands()"))
         #expect(viewSource.contains(".focusedSceneValue(\\.xomoImageCommandActions, xomoImageCommandActions)"))
+        let geometryHelperStart = try #require(
+            viewSource.range(of: "func performImageGeometryCommand(")
+        )
+        let geometryHelperEnd = try #require(
+            viewSource[geometryHelperStart.upperBound...].range(of: "\n    }")
+        )
+        let geometryHelperSource = viewSource[
+            geometryHelperStart.lowerBound..<geometryHelperEnd.upperBound
+        ]
+        let geometryGate = try #require(
+            geometryHelperSource.range(
+                of: "ImageEditorImageGeometryCommandDispatchGate.shouldDispatch"
+            )
+        )
+        let geometryMutation = try #require(
+            geometryHelperSource.range(of: "viewModel.resizeImageToControlSize()")
+        )
+        #expect(geometryGate.lowerBound < geometryMutation.lowerBound)
+        #expect(viewSource.contains("case .resizeImage: performImageGeometryCommand(.resizeImage)"))
+        #expect(viewSource.contains("case .resizeCanvas: performImageGeometryCommand(.resizeCanvas)"))
         let helperStart = try #require(viewSource.range(of: "func performPixelCorrectionCommand("))
         let helperEnd = try #require(
             viewSource[helperStart.upperBound...].range(of: "\n    }")

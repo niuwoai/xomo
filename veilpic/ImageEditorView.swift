@@ -3252,8 +3252,8 @@ struct ImageEditorView: View {
         case .fillSelectionHistoryPreservingTransparency:
             performSelectionFillCommand(.historyPreservingTransparency)
         case .clearSelectionPixels: viewModel.clearSelectionPixels()
-        case .resizeImage: viewModel.resizeImageToControlSize()
-        case .resizeCanvas: viewModel.resizeCanvasToControlSize()
+        case .resizeImage: performImageGeometryCommand(.resizeImage)
+        case .resizeCanvas: performImageGeometryCommand(.resizeCanvas)
         case .levels: viewModel.selectAdjustment(.levels)
         case .curves: viewModel.selectAdjustment(.curves)
         case .colorBalance: viewModel.selectAdjustment(.colorBalance)
@@ -3483,6 +3483,17 @@ struct ImageEditorView: View {
         case .history: viewModel.fillSelectionFromHistory()
         case .historyPreservingTransparency:
             viewModel.fillSelectionFromHistoryPreservingTransparency()
+        }
+    }
+
+    func performImageGeometryCommand(_ action: ImageEditorImageGeometryCommandAction) {
+        guard ImageEditorImageGeometryCommandDispatchGate.shouldDispatch(
+            action,
+            event: .currentKeyEvent
+        ) else { return }
+        switch action {
+        case .resizeImage: viewModel.resizeImageToControlSize()
+        case .resizeCanvas: viewModel.resizeCanvasToControlSize()
         }
     }
 
@@ -17544,6 +17555,36 @@ enum ImageEditorSelectionFillCommandDispatchGate {
 
     static func shouldDispatch(
         _ action: ImageEditorSelectionFillCommandAction,
+        event: ImageEditorKeyboardShortcutEventSignature?
+    ) -> Bool {
+        guard let event else { return true }
+        let dispatch = Dispatch(action: action, event: event)
+        guard dispatch != lastDispatch else { return false }
+        lastDispatch = dispatch
+        return true
+    }
+
+    static func reset() {
+        lastDispatch = nil
+    }
+}
+
+enum ImageEditorImageGeometryCommandAction: Equatable, CaseIterable {
+    case resizeImage
+    case resizeCanvas
+}
+
+@MainActor
+enum ImageEditorImageGeometryCommandDispatchGate {
+    private struct Dispatch: Equatable {
+        let action: ImageEditorImageGeometryCommandAction
+        let event: ImageEditorKeyboardShortcutEventSignature
+    }
+
+    private static var lastDispatch: Dispatch?
+
+    static func shouldDispatch(
+        _ action: ImageEditorImageGeometryCommandAction,
         event: ImageEditorKeyboardShortcutEventSignature?
     ) -> Bool {
         guard let event else { return true }
