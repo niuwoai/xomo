@@ -3180,6 +3180,7 @@
 "imageEditor.action.layerCompApply" = "レイヤーコンプを適用";
 "imageEditor.action.layerCompUpdate" = "レイヤーコンプを更新";
 "imageEditor.action.layerCompDuplicate" = "レイヤーコンプを複製";
+"imageEditor.action.layerCompDragReorder" = "ドラッグしてレイヤーコンプの順序を変更";
 "imageEditor.action.layerCompMoveToTop" = "リストの先頭へ移動";
 "imageEditor.action.layerCompMoveUp" = "レイヤーコンプを上へ移動";
 "imageEditor.action.layerCompMoveDown" = "レイヤーコンプを下へ移動";
@@ -3209,6 +3210,7 @@
 "imageEditor.status.layerCompMovedUp" = "レイヤーコンプを上へ移動しました：%@";
 "imageEditor.status.layerCompMovedDown" = "レイヤーコンプを下へ移動しました：%@";
 "imageEditor.status.layerCompMovedToBottom" = "レイヤーコンプをリストの末尾へ移動しました：%@";
+"imageEditor.status.layerCompMoved" = "レイヤーコンプを移動しました：%@";
 "imageEditor.status.layerCompRenamed" = "レイヤーコンプ名を変更しました：%@";
 "imageEditor.status.layerCompDeleted" = "レイヤーコンプを削除しました：%@";
 "imageEditor.status.layerCompSelected" = "レイヤーコンプを選択しました：%@";

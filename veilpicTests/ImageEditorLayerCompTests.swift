@@ -79,6 +79,86 @@ struct ImageEditorLayerCompTests {
         #expect(contextSource.contains("viewModel.canMoveLayerCompToBottom(comp.id)"))
         #expect(contextSource.contains("viewModel.deleteLayerComp(comp.id)"))
         #expect(contextSource.contains("Button(role: .destructive)"))
+
+        #expect(source.contains("layerCompDraggableRow(comp)"))
+        #expect(source.contains("layerCompDropBand(comp, placement: .above)"))
+        #expect(source.contains("layerCompDropBand(comp, placement: .below)"))
+        #expect(source.contains("ImageEditorPanelListDropDelegate("))
+        #expect(source.contains("handleLayerCompDrop(sourceID, on: comp, placement: placement)"))
+        #expect(source.contains("viewModel.moveLayerComp(sourceID, toIndex: destinationIndex)"))
+
+        let viewSource = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        #expect(viewSource.contains(
+            "@State var targetedLayerCompDropTarget: ImageEditorLayerCompDropTarget?"
+        ))
+    }
+
+    @Test
+    func layerCompDropGeometryAccountsForRemovalAndUsesTheSameAtomicMove() throws {
+        #expect(ImageEditorLayerCompDropGeometry.destinationIndex(
+            sourceIndex: 0,
+            targetIndex: 2,
+            placement: .above,
+            count: 4
+        ) == 1)
+        #expect(ImageEditorLayerCompDropGeometry.destinationIndex(
+            sourceIndex: 0,
+            targetIndex: 2,
+            placement: .below,
+            count: 4
+        ) == 2)
+        #expect(ImageEditorLayerCompDropGeometry.destinationIndex(
+            sourceIndex: 3,
+            targetIndex: 1,
+            placement: .above,
+            count: 4
+        ) == 1)
+        #expect(ImageEditorLayerCompDropGeometry.destinationIndex(
+            sourceIndex: 3,
+            targetIndex: 1,
+            placement: .below,
+            count: 4
+        ) == 2)
+        #expect(ImageEditorLayerCompDropGeometry.destinationIndex(
+            sourceIndex: 2,
+            targetIndex: 2,
+            placement: .above,
+            count: 4
+        ) == nil)
+        #expect(ImageEditorLayerCompDropGeometry.destinationIndex(
+            sourceIndex: -1,
+            targetIndex: 2,
+            placement: .above,
+            count: 4
+        ) == nil)
+
+        let viewModel = ImageEditorViewModel(
+            sourceName: "source.png",
+            image: testImage(color: .systemPurple, size: NSSize(width: 100, height: 80))
+        ) { _ in }
+        for name in ["First", "Second", "Third", "Fourth"] {
+            viewModel.addLayerComp(named: name)
+        }
+        let ids = viewModel.document.layerComps.map(\.id)
+        let historyCount = viewModel.document.history.count
+        let destinationIndex = try #require(ImageEditorLayerCompDropGeometry.destinationIndex(
+            sourceIndex: 0,
+            targetIndex: 2,
+            placement: .below,
+            count: 4
+        ))
+
+        #expect(viewModel.moveLayerComp(ids[0], toIndex: destinationIndex))
+        #expect(viewModel.document.layerComps.map(\.id) == [ids[1], ids[2], ids[0], ids[3]])
+        #expect(viewModel.document.selectedLayerCompID == ids[0])
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.layerCompMoved", "First"))
+
+        viewModel.undo()
+        #expect(viewModel.document.layerComps.map(\.id) == ids)
     }
 
     @Test

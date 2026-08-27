@@ -8,6 +8,39 @@
 import AppKit
 import Foundation
 
+enum ImageEditorLayerCompDropPlacement: Equatable {
+    case above
+    case below
+}
+
+struct ImageEditorLayerCompDropTarget: Equatable {
+    var layerCompID: UUID
+    var placement: ImageEditorLayerCompDropPlacement
+}
+
+enum ImageEditorLayerCompDropGeometry {
+    static func destinationIndex(
+        sourceIndex: Int,
+        targetIndex: Int,
+        placement: ImageEditorLayerCompDropPlacement,
+        count: Int
+    ) -> Int? {
+        guard count > 1,
+              (0..<count).contains(sourceIndex),
+              (0..<count).contains(targetIndex)
+        else { return nil }
+
+        var destinationIndex = targetIndex + (placement == .below ? 1 : 0)
+        if sourceIndex < destinationIndex {
+            destinationIndex -= 1
+        }
+        guard destinationIndex != sourceIndex,
+              (0..<count).contains(destinationIndex)
+        else { return nil }
+        return destinationIndex
+    }
+}
+
 @MainActor
 extension ImageEditorViewModel {
     var selectedLayerComp: ImageEditorLayerComp? {
@@ -292,6 +325,15 @@ extension ImageEditorViewModel {
             id,
             destinationIndex: document.layerComps.index(before: document.layerComps.endIndex),
             statusKey: "imageEditor.status.layerCompMovedToBottom"
+        )
+    }
+
+    @discardableResult
+    func moveLayerComp(_ id: UUID, toIndex destinationIndex: Int) -> Bool {
+        moveLayerComp(
+            id,
+            destinationIndex: destinationIndex,
+            statusKey: "imageEditor.status.layerCompMoved"
         )
     }
 

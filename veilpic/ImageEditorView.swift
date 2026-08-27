@@ -255,6 +255,7 @@ struct ImageEditorView: View {
     @FocusState var focusedInlineLayerNameID: UUID?
     @State var selectedLayerPanelTab: ImageEditorLayerPanelTab = .layers
     @State var targetedLayerDropTarget: ImageEditorLayerDropTarget?
+    @State var targetedLayerCompDropTarget: ImageEditorLayerCompDropTarget?
     @State var targetedSavedPathDropTarget: ImageEditorSavedPathDropTarget?
     @State var isLayerAdvancedControlsExpanded = false
     @State private var isLayersDockExpanded = true

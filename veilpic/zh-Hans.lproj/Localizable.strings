@@ -3180,6 +3180,7 @@
 "imageEditor.action.layerCompApply" = "应用图层复合";
 "imageEditor.action.layerCompUpdate" = "更新图层复合";
 "imageEditor.action.layerCompDuplicate" = "复制图层复合";
+"imageEditor.action.layerCompDragReorder" = "拖拽调整图层复合顺序";
 "imageEditor.action.layerCompMoveToTop" = "移到列表顶部";
 "imageEditor.action.layerCompMoveUp" = "上移图层复合";
 "imageEditor.action.layerCompMoveDown" = "下移图层复合";
@@ -3209,6 +3210,7 @@
 "imageEditor.status.layerCompMovedUp" = "已上移图层复合：%@";
 "imageEditor.status.layerCompMovedDown" = "已下移图层复合：%@";
 "imageEditor.status.layerCompMovedToBottom" = "已将图层复合移到列表底部：%@";
+"imageEditor.status.layerCompMoved" = "已移动图层复合：%@";
 "imageEditor.status.layerCompRenamed" = "已重命名图层复合：%@";
 "imageEditor.status.layerCompDeleted" = "已删除图层复合：%@";
 "imageEditor.status.layerCompSelected" = "已选择图层复合：%@";

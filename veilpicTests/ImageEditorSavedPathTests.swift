@@ -888,7 +888,7 @@ struct ImageEditorSavedPathTests {
         #expect(panel.contains("viewModel.moveSavedPathDown"))
         #expect(panel.contains("viewModel.moveSavedPathToTop"))
         #expect(panel.contains("viewModel.moveSavedPathToBottom"))
-        #expect(panel.contains("ImageEditorSavedPathDropDelegate"))
+        #expect(panel.contains("ImageEditorPanelListDropDelegate"))
         #expect(panel.contains("savedPathDropBand"))
         #expect(panel.contains("viewModel.moveSavedPath(sourceID, toIndex: destinationIndex)"))
         #expect(panel.contains("text: savedPathNameBinding(savedPath)"))

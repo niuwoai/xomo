@@ -1070,7 +1070,7 @@ extension ImageEditorView {
                 ScrollView {
                     VStack(spacing: 5) {
                         ForEach(viewModel.document.layerComps) { comp in
-                            layerCompRow(comp)
+                            layerCompDraggableRow(comp)
                         }
                     }
                 }
@@ -1080,6 +1080,20 @@ extension ImageEditorView {
                 .font(.system(size: 10, weight: .medium))
                 .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
                 .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
+    private func layerCompDraggableRow(_ comp: ImageEditorLayerComp) -> some View {
+        VStack(spacing: 2) {
+            layerCompDropBand(comp, placement: .above)
+            layerCompRow(comp)
+                .onDrag {
+                    viewModel.selectLayerComp(comp.id)
+                    syncLayerCompNameDraft(comp)
+                    return NSItemProvider(object: comp.id.uuidString as NSString)
+                }
+                .help(L10n.text("imageEditor.action.layerCompDragReorder"))
+            layerCompDropBand(comp, placement: .below)
         }
     }
 
@@ -1207,6 +1221,50 @@ extension ImageEditorView {
         }
         .buttonStyle(EditorIconButtonStyle(isSelected: false))
         .help(L10n.text(helpKey))
+    }
+
+    private func layerCompDropBand(
+        _ comp: ImageEditorLayerComp,
+        placement: ImageEditorLayerCompDropPlacement
+    ) -> some View {
+        let target = ImageEditorLayerCompDropTarget(
+            layerCompID: comp.id,
+            placement: placement
+        )
+        let isTargeted = targetedLayerCompDropTarget == target
+        return Rectangle()
+            .fill(isTargeted ? Color(nsColor: ImageEditorTheme.selected) : Color.clear)
+            .frame(height: 6)
+            .clipShape(RoundedRectangle(cornerRadius: 3, style: .continuous))
+            .onDrop(
+                of: [UTType.plainText],
+                delegate: ImageEditorPanelListDropDelegate(
+                    onTargetChange: { isTargeted in
+                        targetedLayerCompDropTarget = isTargeted ? target : nil
+                    },
+                    onDrop: { sourceID in
+                        _ = handleLayerCompDrop(sourceID, on: comp, placement: placement)
+                    }
+                )
+            )
+    }
+
+    private func handleLayerCompDrop(
+        _ sourceIDString: String,
+        on targetComp: ImageEditorLayerComp,
+        placement: ImageEditorLayerCompDropPlacement
+    ) -> Bool {
+        guard let sourceID = UUID(uuidString: sourceIDString),
+              let sourceIndex = viewModel.document.layerComps.firstIndex(where: { $0.id == sourceID }),
+              let targetIndex = viewModel.document.layerComps.firstIndex(where: { $0.id == targetComp.id }),
+              let destinationIndex = ImageEditorLayerCompDropGeometry.destinationIndex(
+                  sourceIndex: sourceIndex,
+                  targetIndex: targetIndex,
+                  placement: placement,
+                  count: viewModel.document.layerComps.count
+              )
+        else { return false }
+        return viewModel.moveLayerComp(sourceID, toIndex: destinationIndex)
     }
 
     private func layerCompNameBinding(_ comp: ImageEditorLayerComp) -> Binding<String> {
@@ -1422,7 +1480,7 @@ extension ImageEditorView {
             .clipShape(RoundedRectangle(cornerRadius: 3, style: .continuous))
             .onDrop(
                 of: [UTType.plainText],
-                delegate: ImageEditorSavedPathDropDelegate(
+                delegate: ImageEditorPanelListDropDelegate(
                     onTargetChange: { isTargeted in
                         targetedSavedPathDropTarget = isTargeted ? target : nil
                     },
@@ -3837,7 +3895,7 @@ private struct ImageEditorLayerDropDelegate: DropDelegate {
     }
 }
 
-private struct ImageEditorSavedPathDropDelegate: DropDelegate {
+private struct ImageEditorPanelListDropDelegate: DropDelegate {
     let onTargetChange: (Bool) -> Void
     let onDrop: (String) -> Void
 
