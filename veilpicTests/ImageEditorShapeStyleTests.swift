@@ -1910,7 +1910,7 @@ struct ImageEditorShapeStyleTests {
         #expect(canvasSource.contains("deleteSelectedShapeGradientStopIfNeeded"))
         #expect(canvasSource.contains("SpatialTapGesture"))
         #expect(canvasSource.contains("!isTextInputActive"))
-        #expect(canvasSource.contains("deleteSelectedObject() {"))
+        #expect(canvasSource.contains("deleteSelectedObject(event)"))
         #expect(canvasSource.contains("activeShapeGradientStopIndex"))
         #expect(canvasSource.contains("activeShapeGradientMidpointIndex"))
         #expect(canvasSource.contains("image-editor-shape-gradient-midpoint-"))

@@ -4736,7 +4736,7 @@ struct ImageEditorLayerStyleTests {
         #expect(consumedDelete.lowerBound < actualRemoval.lowerBound)
 
         let deleteStart = try #require(
-            source.range(of: "func deleteSelectedObjectFromKeyboard() -> Bool")
+            source.range(of: "func deleteSelectedObjectFromKeyboard(")
         )
         let deleteEnd = try #require(
             source.range(
@@ -4758,7 +4758,7 @@ struct ImageEditorLayerStyleTests {
         )
         let nudgeEnd = try #require(
             source.range(
-                of: "func deleteSelectedObjectFromKeyboard() -> Bool",
+                of: "func deleteSelectedObjectFromKeyboard(",
                 range: nudgeStart.upperBound..<source.endIndex
             )
         )

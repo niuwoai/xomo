@@ -3841,7 +3841,7 @@ struct ImageEditorScopeTests {
         #expect(nudgeCancel.lowerBound < nudgeCommand.lowerBound)
 
         let deleteStart = try #require(
-            viewSource.range(of: "func deleteSelectedObjectFromKeyboard() -> Bool")
+            viewSource.range(of: "func deleteSelectedObjectFromKeyboard(")
         )
         let deleteEnd = try #require(
             viewSource[deleteStart.upperBound...].range(of: "private func performKeyboardShortcut(")
