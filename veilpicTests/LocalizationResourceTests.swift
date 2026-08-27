@@ -50,6 +50,22 @@ struct LocalizationResourceTests {
         }
     }
 
+    @Test func simplifiedChineseUsesTheXomoBrandEverywhere() throws {
+        let paths = try Self.repositoryPaths()
+        let strings = try Self.stringTable(
+            tableName: "Localizable",
+            localizationID: "zh-Hans",
+            appDirectory: paths.appDirectory
+        )
+
+        #expect(strings.values.allSatisfy { !$0.contains("象墨") && !$0.contains("像界") })
+        #expect(strings["app.name"] == "Xomo")
+        #expect(strings["about.menuItem"] == "关于 Xomo")
+        #expect(strings["settings.title"] == "Xomo 设置")
+        #expect(strings["xomo.component.topNavigation.defaultBrand"] == "Xomo")
+        #expect(strings["xomo.librarySource.xomoOriginal"] == "Xomo 原创")
+    }
+
     @Test func openFileActionDescribesTheExpandedDocumentCatalog() throws {
         let paths = try Self.repositoryPaths()
         let expectedValues = [
