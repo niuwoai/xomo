@@ -182,8 +182,10 @@ extension ImageEditorViewModel {
             }
             document.layers[index].isVectorMaskEnabled = state.isVectorMaskEnabled
             document.layers[index].isVectorMaskInverted = state.isVectorMaskInverted
-            document.layers[index].style = state.style.layerStyle
-            document.layers[index].blendMode = state.blendMode
+            if comp.capturesAppearance {
+                document.layers[index].style = state.style.layerStyle
+                document.layers[index].blendMode = state.blendMode
+            }
             if let kind = state.kind {
                 document.layers[index].kind = kind.layerKind
             }
@@ -247,6 +249,7 @@ extension ImageEditorViewModel {
         updated.comment = document.layerComps[index].comment
         updated.capturesVisibility = document.layerComps[index].capturesVisibility
         updated.capturesPosition = document.layerComps[index].capturesPosition
+        updated.capturesAppearance = document.layerComps[index].capturesAppearance
         updated.createdAt = document.layerComps[index].createdAt
         document.layerComps[index] = updated
         document.selectedLayerCompID = id
@@ -359,6 +362,24 @@ extension ImageEditorViewModel {
             enabled
                 ? "imageEditor.status.layerCompCapturePositionEnabled"
                 : "imageEditor.status.layerCompCapturePositionDisabled",
+            document.layerComps[index].name
+        )
+        return true
+    }
+
+    @discardableResult
+    func setLayerCompCapturesAppearance(_ id: UUID, enabled: Bool) -> Bool {
+        guard let index = document.layerComps.firstIndex(where: { $0.id == id }),
+              document.layerComps[index].capturesAppearance != enabled
+        else { return false }
+        pushUndo()
+        document.layerComps[index].capturesAppearance = enabled
+        document.selectedLayerCompID = id
+        appendHistory(L10n.text("imageEditor.history.layerCompCaptureAppearance"))
+        statusText = L10n.format(
+            enabled
+                ? "imageEditor.status.layerCompCaptureAppearanceEnabled"
+                : "imageEditor.status.layerCompCaptureAppearanceDisabled",
             document.layerComps[index].name
         )
         return true

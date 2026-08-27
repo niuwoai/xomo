@@ -3193,6 +3193,11 @@
 "imageEditor.history.layerCompCapturePosition" = "Change Layer Comp Position Capture";
 "imageEditor.status.layerCompCapturePositionEnabled" = "“%@” now captures layer position.";
 "imageEditor.status.layerCompCapturePositionDisabled" = "“%@” now preserves current layer position.";
+"imageEditor.layerComp.appearanceNotCaptured" = "Layer styles and blend modes are not captured by this layer comp";
+"imageEditor.action.layerCompCaptureAppearance" = "Capture Appearance";
+"imageEditor.history.layerCompCaptureAppearance" = "Change Layer Comp Appearance Capture";
+"imageEditor.status.layerCompCaptureAppearanceEnabled" = "“%@” now captures layer styles and blend modes.";
+"imageEditor.status.layerCompCaptureAppearanceDisabled" = "“%@” now preserves current layer styles and blend modes.";
 "imageEditor.action.layerCompMoveToTop" = "Move to List Top";
 "imageEditor.action.layerCompMoveUp" = "Move Layer Comp Up";
 "imageEditor.action.layerCompMoveDown" = "Move Layer Comp Down";

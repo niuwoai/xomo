@@ -3193,6 +3193,11 @@
 "imageEditor.history.layerCompCapturePosition" = "レイヤーカンプの位置記録を変更";
 "imageEditor.status.layerCompCapturePositionEnabled" = "「%@」はレイヤーの位置を記録するようになりました。";
 "imageEditor.status.layerCompCapturePositionDisabled" = "「%@」は現在のレイヤー位置を保持するようになりました。";
+"imageEditor.layerComp.appearanceNotCaptured" = "このレイヤーカンプはレイヤースタイルと描画モードを記録しません";
+"imageEditor.action.layerCompCaptureAppearance" = "外観を記録";
+"imageEditor.history.layerCompCaptureAppearance" = "レイヤーカンプの外観記録を変更";
+"imageEditor.status.layerCompCaptureAppearanceEnabled" = "「%@」はレイヤースタイルと描画モードを記録するようになりました。";
+"imageEditor.status.layerCompCaptureAppearanceDisabled" = "「%@」は現在のレイヤースタイルと描画モードを保持するようになりました。";
 "imageEditor.action.layerCompMoveToTop" = "リストの先頭へ移動";
 "imageEditor.action.layerCompMoveUp" = "レイヤーコンプを上へ移動";
 "imageEditor.action.layerCompMoveDown" = "レイヤーコンプを下へ移動";

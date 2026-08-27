@@ -3193,6 +3193,11 @@
 "imageEditor.history.layerCompCapturePosition" = "更改图层复合位置记录";
 "imageEditor.status.layerCompCapturePositionEnabled" = "“%@”现在会记录图层位置。";
 "imageEditor.status.layerCompCapturePositionDisabled" = "“%@”现在会保留当前图层位置。";
+"imageEditor.layerComp.appearanceNotCaptured" = "此图层复合不记录图层样式和混合模式";
+"imageEditor.action.layerCompCaptureAppearance" = "记录外观";
+"imageEditor.history.layerCompCaptureAppearance" = "更改图层复合外观记录";
+"imageEditor.status.layerCompCaptureAppearanceEnabled" = "“%@”现在会记录图层样式和混合模式。";
+"imageEditor.status.layerCompCaptureAppearanceDisabled" = "“%@”现在会保留当前图层样式和混合模式。";
 "imageEditor.action.layerCompMoveToTop" = "移到列表顶部";
 "imageEditor.action.layerCompMoveUp" = "上移图层复合";
 "imageEditor.action.layerCompMoveDown" = "下移图层复合";
