@@ -1979,6 +1979,12 @@
 "imageEditor.history.vectorMaskDisable" = "Disable Vector Mask";
 "imageEditor.history.vectorMaskEnableSelected" = "Enable Selected Vector Masks";
 "imageEditor.history.vectorMaskDisableSelected" = "Disable Selected Vector Masks";
+"imageEditor.history.vectorMaskLink" = "Link Vector Mask";
+"imageEditor.history.vectorMaskUnlink" = "Unlink Vector Mask";
+"imageEditor.history.vectorMaskLinkSelected" = "Link Selected Vector Masks";
+"imageEditor.history.vectorMaskUnlinkSelected" = "Unlink Selected Vector Masks";
+"imageEditor.history.vectorMaskInvert" = "Invert Vector Mask";
+"imageEditor.history.vectorMaskInvertSelected" = "Invert Selected Vector Masks";
 "imageEditor.history.vectorMaskCopy" = "Copy Vector Mask";
 "imageEditor.history.vectorMaskDelete" = "Delete Vector Mask";
 "imageEditor.history.vectorMaskDeleteSelected" = "Delete Selected Vector Masks";
@@ -2407,6 +2413,12 @@
 "imageEditor.status.vectorMaskDisabled" = "Vector mask disabled";
 "imageEditor.status.vectorMaskEnabledSelected" = "%d vector masks enabled";
 "imageEditor.status.vectorMaskDisabledSelected" = "%d vector masks disabled";
+"imageEditor.status.vectorMaskLinked" = "Current vector mask moves with the layer contents";
+"imageEditor.status.vectorMaskUnlinked" = "Current vector mask moves independently from layer contents";
+"imageEditor.status.vectorMaskLinkedSelected" = "%d vector masks linked to layer contents";
+"imageEditor.status.vectorMaskUnlinkedSelected" = "%d vector masks unlinked from layer contents";
+"imageEditor.status.vectorMaskInverted" = "Current vector mask inverted";
+"imageEditor.status.vectorMaskInvertedSelected" = "%d vector masks inverted";
 "imageEditor.status.vectorMaskCopied" = "Vector mask copied to %d layers";
 "imageEditor.status.vectorMaskDeleted" = "Vector mask deleted";
 "imageEditor.status.vectorMaskDeletedSelected" = "%d vector masks deleted";
@@ -2711,6 +2723,8 @@
 "imageEditor.action.savedPathMoveToBottom" = "Move Path to List Bottom";
 "imageEditor.action.savedPathDragReorder" = "Drag to Reorder Path";
 "imageEditor.action.vectorMaskToggle" = "Toggle Vector Mask";
+"imageEditor.action.vectorMaskLinkToggle" = "Link / Unlink Vector Mask";
+"imageEditor.action.vectorMaskInvert" = "Invert Vector Masks";
 "imageEditor.action.vectorMaskCopyToSelected" = "Copy Vector Mask to Selected Layers";
 "imageEditor.action.vectorMaskDelete" = "Delete Vector Masks";
 "imageEditor.action.vectorMaskRasterize" = "Rasterize Vector Masks";

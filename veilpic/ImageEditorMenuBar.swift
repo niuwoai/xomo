@@ -1077,6 +1077,14 @@ extension ImageEditorView {
                 viewModel.toggleVectorMaskEnabled()
             }
             .disabled(!viewModel.canToggleVectorMaskEnabled)
+            Button(L10n.text("imageEditor.action.vectorMaskLinkToggle")) {
+                viewModel.toggleVectorMaskLinked()
+            }
+            .disabled(!viewModel.canToggleVectorMaskLinked)
+            Button(L10n.text("imageEditor.action.vectorMaskInvert")) {
+                viewModel.invertVectorMask()
+            }
+            .disabled(!viewModel.canInvertVectorMask)
             Button(L10n.text("imageEditor.action.vectorMaskEditPath")) {
                 viewModel.editSelectedVectorMaskAsPath()
             }

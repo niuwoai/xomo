@@ -95,6 +95,8 @@ enum ImageEditorLayerMaskContextAction: String, CaseIterable, Identifiable {
 enum ImageEditorVectorMaskContextAction: String, CaseIterable, Identifiable {
     case createFromSelection
     case toggleEnabled
+    case toggleLinked
+    case invert
     case editPath
     case loadSelection
     case copyToSelected
@@ -108,6 +110,8 @@ enum ImageEditorVectorMaskContextAction: String, CaseIterable, Identifiable {
         switch self {
         case .createFromSelection: "imageEditor.action.vectorMaskFromSelection"
         case .toggleEnabled: "imageEditor.action.vectorMaskToggle"
+        case .toggleLinked: "imageEditor.action.vectorMaskLinkToggle"
+        case .invert: "imageEditor.action.vectorMaskInvert"
         case .editPath: "imageEditor.action.vectorMaskEditPath"
         case .loadSelection: "imageEditor.action.vectorMaskLoadSelection"
         case .copyToSelected: "imageEditor.action.vectorMaskCopyToSelected"
@@ -121,6 +125,8 @@ enum ImageEditorVectorMaskContextAction: String, CaseIterable, Identifiable {
         switch self {
         case .createFromSelection: "point.topleft.down.curvedto.point.bottomright.up"
         case .toggleEnabled: "circle.slash"
+        case .toggleLinked: "link"
+        case .invert: "arrow.triangle.2.circlepath"
         case .editPath: "point.3.filled.connected.trianglepath.dotted"
         case .loadSelection: "rectangle.dashed"
         case .copyToSelected: "doc.on.doc"
@@ -357,6 +363,14 @@ extension ImageEditorViewModel {
             return !vectorMaskToggleEnabledIndices(
                 selectedIDs: selectedIDs
             ).isEmpty
+        case .toggleLinked:
+            return !vectorMaskToggleLinkedIndices(
+                selectedIDs: selectedIDs
+            ).isEmpty
+        case .invert:
+            return !vectorMaskInvertIndices(
+                selectedIDs: selectedIDs
+            ).isEmpty
         case .editPath:
             guard let layer = document.layers.first(where: { $0.id == clickedLayerID }),
                   let vectorMask = layer.vectorMask
@@ -406,6 +420,10 @@ extension ImageEditorViewModel {
             addVectorMaskFromSelection()
         case .toggleEnabled:
             toggleVectorMaskEnabled()
+        case .toggleLinked:
+            toggleVectorMaskLinked()
+        case .invert:
+            invertVectorMask()
         case .editPath:
             selectLayer(clickedLayerID)
             editSelectedVectorMaskAsPath()
@@ -497,6 +515,14 @@ extension ImageEditorViewModel {
 
     var canToggleVectorMaskEnabled: Bool {
         !vectorMaskToggleEnabledIndices().isEmpty
+    }
+
+    var canToggleVectorMaskLinked: Bool {
+        !vectorMaskToggleLinkedIndices().isEmpty
+    }
+
+    var canInvertVectorMask: Bool {
+        !vectorMaskInvertIndices().isEmpty
     }
 
     var canDeleteVectorMask: Bool {
@@ -1056,6 +1082,72 @@ extension ImageEditorViewModel {
         }
     }
 
+    func toggleVectorMaskLinked() {
+        let indices = vectorMaskToggleLinkedIndices()
+        guard !indices.isEmpty else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return
+        }
+
+        let linksMasks = !indices.contains { document.layers[$0].isMaskLinked }
+        let changedIndices = indices.filter {
+            document.layers[$0].isMaskLinked != linksMasks
+        }
+        pushUndo()
+        for index in changedIndices {
+            document.layers[index].isMaskLinked = linksMasks
+        }
+
+        if indices.count == 1 {
+            appendHistory(L10n.text(
+                linksMasks
+                    ? "imageEditor.history.vectorMaskLink"
+                    : "imageEditor.history.vectorMaskUnlink"
+            ))
+            statusText = L10n.text(
+                linksMasks
+                    ? "imageEditor.status.vectorMaskLinked"
+                    : "imageEditor.status.vectorMaskUnlinked"
+            )
+        } else {
+            appendHistory(L10n.text(
+                linksMasks
+                    ? "imageEditor.history.vectorMaskLinkSelected"
+                    : "imageEditor.history.vectorMaskUnlinkSelected"
+            ))
+            statusText = L10n.format(
+                linksMasks
+                    ? "imageEditor.status.vectorMaskLinkedSelected"
+                    : "imageEditor.status.vectorMaskUnlinkedSelected",
+                changedIndices.count
+            )
+        }
+    }
+
+    func invertVectorMask() {
+        let indices = vectorMaskInvertIndices()
+        guard !indices.isEmpty else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return
+        }
+
+        pushUndo()
+        for index in indices {
+            document.layers[index].isVectorMaskInverted.toggle()
+        }
+
+        if indices.count == 1 {
+            appendHistory(L10n.text("imageEditor.history.vectorMaskInvert"))
+            statusText = L10n.text("imageEditor.status.vectorMaskInverted")
+        } else {
+            appendHistory(L10n.text("imageEditor.history.vectorMaskInvertSelected"))
+            statusText = L10n.format(
+                "imageEditor.status.vectorMaskInvertedSelected",
+                indices.count
+            )
+        }
+    }
+
     @discardableResult
     func toggleVectorMaskEnabled(layerID: UUID) -> Bool {
         guard let index = document.layers.firstIndex(where: { $0.id == layerID }),
@@ -1155,6 +1247,32 @@ extension ImageEditorViewModel {
     }
 
     private func vectorMaskToggleEnabledIndices(
+        selectedIDs explicitSelectedIDs: Set<UUID>? = nil
+    ) -> [Int] {
+        let selectedIDs = explicitSelectedIDs ?? (document.selectedLayerIDs.isEmpty
+            ? Set(document.selectedLayerID.map { [$0] } ?? [])
+            : document.selectedLayerIDs)
+        return document.layers.indices.filter { index in
+            let layer = document.layers[index]
+            return selectedIDs.contains(layer.id)
+                && !document.isEffectivelyLocked(layer)
+                && layer.vectorMask != nil
+        }
+    }
+
+    private func vectorMaskToggleLinkedIndices(
+        selectedIDs explicitSelectedIDs: Set<UUID>? = nil
+    ) -> [Int] {
+        vectorMaskEditableIndices(selectedIDs: explicitSelectedIDs)
+    }
+
+    private func vectorMaskInvertIndices(
+        selectedIDs explicitSelectedIDs: Set<UUID>? = nil
+    ) -> [Int] {
+        vectorMaskEditableIndices(selectedIDs: explicitSelectedIDs)
+    }
+
+    private func vectorMaskEditableIndices(
         selectedIDs explicitSelectedIDs: Set<UUID>? = nil
     ) -> [Int] {
         let selectedIDs = explicitSelectedIDs ?? (document.selectedLayerIDs.isEmpty

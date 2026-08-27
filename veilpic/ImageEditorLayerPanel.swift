@@ -1901,6 +1901,18 @@ extension ImageEditorView {
                 viewModel.toggleVectorMaskEnabled()
             }
             .disabled(!viewModel.canToggleVectorMaskEnabled)
+            layerActionButton(
+                systemImage: viewModel.document.selectedLayer?.isMaskLinked == false ? "link.slash" : "link",
+                helpKey: "imageEditor.action.vectorMaskLinkToggle",
+                isSelected: viewModel.document.selectedLayer?.isMaskLinked == false
+            ) {
+                viewModel.toggleVectorMaskLinked()
+            }
+            .disabled(!viewModel.canToggleVectorMaskLinked)
+            layerActionButton(systemImage: "arrow.triangle.2.circlepath", helpKey: "imageEditor.action.vectorMaskInvert") {
+                viewModel.invertVectorMask()
+            }
+            .disabled(!viewModel.canInvertVectorMask)
             layerActionButton(systemImage: "checkmark.square.fill", helpKey: "imageEditor.action.vectorMaskApply") { viewModel.applyVectorMask() }
                 .disabled(!viewModel.canApplyVectorMask)
             layerActionButton(systemImage: "square.grid.3x3", helpKey: "imageEditor.action.vectorMaskRasterize") { viewModel.rasterizeSelectedVectorMask() }

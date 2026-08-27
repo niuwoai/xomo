@@ -170,6 +170,100 @@ struct ImageEditorLayerMaskContextTests {
         #expect(viewModel.document.layers.allSatisfy { $0.isVectorMaskEnabled })
     }
 
+    @Test func vectorMaskLinkAndInvertBatchEditableSelectionWithOneUndoStep() {
+        let viewModel = makeViewModel()
+        var first = layer(named: "First Vector State", in: viewModel)
+        var second = layer(named: "Second Vector State", in: viewModel)
+        var locked = layer(named: "Locked Vector State", in: viewModel)
+        first.vectorMask = vectorMask(size: first.image.size)
+        second.vectorMask = vectorMask(size: second.image.size)
+        locked.vectorMask = vectorMask(size: locked.image.size)
+        first.isMaskLinked = true
+        second.isMaskLinked = false
+        locked.isMaskLinked = true
+        first.isVectorMaskInverted = false
+        second.isVectorMaskInverted = true
+        locked.isVectorMaskInverted = false
+        locked.isLocked = true
+        viewModel.document.layers = [first, second, locked]
+        select(
+            [first.id, second.id, locked.id],
+            primary: second.id,
+            in: viewModel
+        )
+        let selectionBefore = viewModel.document.selectedLayerIDs
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.canPerformVectorMaskActionFromContext(
+            first.id,
+            action: .toggleLinked
+        ))
+        #expect(viewModel.performVectorMaskActionFromContext(
+            first.id,
+            action: .toggleLinked
+        ))
+        #expect(viewModel.document.layers[0].isMaskLinked == false)
+        #expect(viewModel.document.layers[1].isMaskLinked == false)
+        #expect(viewModel.document.layers[2].isMaskLinked)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.history.last?.title == L10n.text(
+            "imageEditor.history.vectorMaskUnlinkSelected"
+        ))
+        #expect(viewModel.document.selectedLayerIDs == selectionBefore)
+
+        viewModel.undo()
+        #expect(viewModel.document.layers[0].isMaskLinked)
+        #expect(viewModel.document.layers[1].isMaskLinked == false)
+        #expect(viewModel.document.layers[2].isMaskLinked)
+
+        #expect(viewModel.canPerformVectorMaskActionFromContext(
+            second.id,
+            action: .invert
+        ))
+        #expect(viewModel.performVectorMaskActionFromContext(
+            second.id,
+            action: .invert
+        ))
+        #expect(viewModel.document.layers[0].isVectorMaskInverted)
+        #expect(viewModel.document.layers[1].isVectorMaskInverted == false)
+        #expect(viewModel.document.layers[2].isVectorMaskInverted == false)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.history.last?.title == L10n.text(
+            "imageEditor.history.vectorMaskInvertSelected"
+        ))
+        #expect(viewModel.document.selectedLayerIDs == selectionBefore)
+
+        viewModel.undo()
+        #expect(viewModel.document.layers[0].isVectorMaskInverted == false)
+        #expect(viewModel.document.layers[1].isVectorMaskInverted)
+        #expect(viewModel.document.layers[2].isVectorMaskInverted == false)
+    }
+
+    @Test func unselectedVectorMaskStateContextTargetsOnlyClickedLayer() {
+        let viewModel = makeViewModel()
+        var selected = layer(named: "Selected Vector", in: viewModel)
+        var clicked = layer(named: "Clicked Vector", in: viewModel)
+        selected.vectorMask = vectorMask(size: selected.image.size)
+        clicked.vectorMask = vectorMask(size: clicked.image.size)
+        viewModel.document.layers = [selected, clicked]
+        select([selected.id], primary: selected.id, in: viewModel)
+
+        #expect(viewModel.performVectorMaskActionFromContext(
+            clicked.id,
+            action: .invert
+        ))
+        #expect(viewModel.document.layers[0].isVectorMaskInverted == false)
+        #expect(viewModel.document.layers[1].isVectorMaskInverted)
+        #expect(viewModel.document.selectedLayerIDs == [clicked.id])
+        #expect(viewModel.document.selectedLayerID == clicked.id)
+
+        viewModel.undo()
+        #expect(viewModel.document.layers.allSatisfy {
+            $0.isVectorMaskInverted == false
+        })
+        #expect(viewModel.document.selectedLayerIDs == [clicked.id])
+    }
+
     @Test func vectorMaskEditUsesClickedLayerAndCreatesEditablePathInOneUndo() throws {
         let viewModel = makeViewModel()
         var first = layer(named: "First Vector", in: viewModel)
@@ -718,6 +812,12 @@ struct ImageEditorLayerMaskContextTests {
             .deletingLastPathComponent()
             .appendingPathComponent("veilpic/ImageEditorLayerPanel.swift")
         let source = try String(contentsOf: sourceURL, encoding: .utf8)
+        let menuSource = try String(
+            contentsOf: testsDirectory
+                .deletingLastPathComponent()
+                .appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),
+            encoding: .utf8
+        )
 
         #expect(source.contains("layerContextLayerMaskMenu(layer)"))
         #expect(source.contains("ImageEditorLayerMaskContextAction.creationActions"))
@@ -729,6 +829,12 @@ struct ImageEditorLayerMaskContextTests {
         #expect(source.contains("ImageEditorVectorMaskContextAction.allCases"))
         #expect(source.contains("viewModel.performVectorMaskActionFromContext("))
         #expect(source.contains("viewModel.canPerformVectorMaskActionFromContext("))
+        #expect(source.contains("viewModel.toggleVectorMaskLinked()"))
+        #expect(source.contains("viewModel.invertVectorMask()"))
+        #expect(menuSource.contains("viewModel.toggleVectorMaskLinked()"))
+        #expect(menuSource.contains("viewModel.canToggleVectorMaskLinked"))
+        #expect(menuSource.contains("viewModel.invertVectorMask()"))
+        #expect(menuSource.contains("viewModel.canInvertVectorMask"))
         #expect(source.contains("image-editor-layer-context-mask-\\(action.rawValue)-\\(layer.id.uuidString)"))
     }
 

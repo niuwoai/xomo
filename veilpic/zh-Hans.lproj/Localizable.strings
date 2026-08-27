@@ -1979,6 +1979,12 @@
 "imageEditor.history.vectorMaskDisable" = "停用矢量蒙版";
 "imageEditor.history.vectorMaskEnableSelected" = "启用所选矢量蒙版";
 "imageEditor.history.vectorMaskDisableSelected" = "停用所选矢量蒙版";
+"imageEditor.history.vectorMaskLink" = "链接矢量蒙版";
+"imageEditor.history.vectorMaskUnlink" = "取消链接矢量蒙版";
+"imageEditor.history.vectorMaskLinkSelected" = "链接所选矢量蒙版";
+"imageEditor.history.vectorMaskUnlinkSelected" = "取消链接所选矢量蒙版";
+"imageEditor.history.vectorMaskInvert" = "反相矢量蒙版";
+"imageEditor.history.vectorMaskInvertSelected" = "反相所选矢量蒙版";
 "imageEditor.history.vectorMaskCopy" = "复制矢量蒙版";
 "imageEditor.history.vectorMaskDelete" = "删除矢量蒙版";
 "imageEditor.history.vectorMaskDeleteSelected" = "删除所选矢量蒙版";
@@ -2407,6 +2413,12 @@
 "imageEditor.status.vectorMaskDisabled" = "已停用矢量蒙版";
 "imageEditor.status.vectorMaskEnabledSelected" = "已启用 %d 个矢量蒙版";
 "imageEditor.status.vectorMaskDisabledSelected" = "已停用 %d 个矢量蒙版";
+"imageEditor.status.vectorMaskLinked" = "当前矢量蒙版会跟随图层内容移动";
+"imageEditor.status.vectorMaskUnlinked" = "当前矢量蒙版已独立于图层内容移动";
+"imageEditor.status.vectorMaskLinkedSelected" = "已将 %d 个矢量蒙版链接到图层内容";
+"imageEditor.status.vectorMaskUnlinkedSelected" = "已将 %d 个矢量蒙版取消链接";
+"imageEditor.status.vectorMaskInverted" = "已反相当前矢量蒙版";
+"imageEditor.status.vectorMaskInvertedSelected" = "已反相 %d 个矢量蒙版";
 "imageEditor.status.vectorMaskCopied" = "已将矢量蒙版复制到 %d 个图层";
 "imageEditor.status.vectorMaskDeleted" = "已删除矢量蒙版";
 "imageEditor.status.vectorMaskDeletedSelected" = "已删除 %d 个矢量蒙版";
@@ -2711,6 +2723,8 @@
 "imageEditor.action.savedPathMoveToBottom" = "移到列表底部";
 "imageEditor.action.savedPathDragReorder" = "拖拽重排路径";
 "imageEditor.action.vectorMaskToggle" = "切换矢量蒙版";
+"imageEditor.action.vectorMaskLinkToggle" = "链接 / 取消链接矢量蒙版";
+"imageEditor.action.vectorMaskInvert" = "反相所选矢量蒙版";
 "imageEditor.action.vectorMaskCopyToSelected" = "复制矢量蒙版到所选图层";
 "imageEditor.action.vectorMaskDelete" = "删除所选矢量蒙版";
 "imageEditor.action.vectorMaskRasterize" = "栅格化所选矢量蒙版";

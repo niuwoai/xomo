@@ -333,6 +333,7 @@ struct ImageEditorProjectDocumentTests {
             ],
             isPathClosed: true
         )
+        pixelLayer.isMaskLinked = false
         pixelLayer.isVectorMaskInverted = true
 
         let textContent = ImageEditorTextContent(
@@ -453,6 +454,7 @@ struct ImageEditorProjectDocumentTests {
         #expect(restoredPixel.mask != nil)
         #expect(restoredPixel.vectorMask?.kind == .path)
         #expect(restoredPixel.vectorMask?.editablePathAnchors.count == 3)
+        #expect(restoredPixel.isMaskLinked == false)
         #expect(restoredPixel.isVectorMaskInverted)
         #expect(restoredPixel.style.strokeEnabled)
         #expect(restoredPixel.style.strokeWidth == 5)

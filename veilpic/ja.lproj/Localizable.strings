@@ -1979,6 +1979,12 @@
 "imageEditor.history.vectorMaskDisable" = "ベクターマスクを無効化";
 "imageEditor.history.vectorMaskEnableSelected" = "選択ベクターマスクを有効化";
 "imageEditor.history.vectorMaskDisableSelected" = "選択ベクターマスクを無効化";
+"imageEditor.history.vectorMaskLink" = "ベクターマスクをリンク";
+"imageEditor.history.vectorMaskUnlink" = "ベクターマスクのリンクを解除";
+"imageEditor.history.vectorMaskLinkSelected" = "選択ベクターマスクをリンク";
+"imageEditor.history.vectorMaskUnlinkSelected" = "選択ベクターマスクのリンクを解除";
+"imageEditor.history.vectorMaskInvert" = "ベクターマスクを反転";
+"imageEditor.history.vectorMaskInvertSelected" = "選択ベクターマスクを反転";
 "imageEditor.history.vectorMaskCopy" = "ベクターマスクをコピー";
 "imageEditor.history.vectorMaskDelete" = "ベクターマスクを削除";
 "imageEditor.history.vectorMaskDeleteSelected" = "選択ベクターマスクを削除";
@@ -2407,6 +2413,12 @@
 "imageEditor.status.vectorMaskDisabled" = "ベクターマスクを無効にしました";
 "imageEditor.status.vectorMaskEnabledSelected" = "%d個のベクターマスクを有効にしました";
 "imageEditor.status.vectorMaskDisabledSelected" = "%d個のベクターマスクを無効にしました";
+"imageEditor.status.vectorMaskLinked" = "現在のベクターマスクはレイヤー内容に追従して移動します";
+"imageEditor.status.vectorMaskUnlinked" = "現在のベクターマスクはレイヤー内容と独立して移動します";
+"imageEditor.status.vectorMaskLinkedSelected" = "%d個のベクターマスクをレイヤー内容にリンクしました";
+"imageEditor.status.vectorMaskUnlinkedSelected" = "%d個のベクターマスクのリンクを解除しました";
+"imageEditor.status.vectorMaskInverted" = "現在のベクターマスクを反転しました";
+"imageEditor.status.vectorMaskInvertedSelected" = "%d個のベクターマスクを反転しました";
 "imageEditor.status.vectorMaskCopied" = "ベクターマスクを %d 個のレイヤーにコピーしました";
 "imageEditor.status.vectorMaskDeleted" = "ベクターマスクを削除しました";
 "imageEditor.status.vectorMaskDeletedSelected" = "%d個のベクターマスクを削除しました";
@@ -2711,6 +2723,8 @@
 "imageEditor.action.savedPathMoveToBottom" = "リストの末尾へ移動";
 "imageEditor.action.savedPathDragReorder" = "ドラッグしてパスを並べ替え";
 "imageEditor.action.vectorMaskToggle" = "ベクターマスクを切り替え";
+"imageEditor.action.vectorMaskLinkToggle" = "ベクターマスクのリンク / 解除";
+"imageEditor.action.vectorMaskInvert" = "選択ベクターマスクを反転";
 "imageEditor.action.vectorMaskCopyToSelected" = "ベクターマスクを選択レイヤーへコピー";
 "imageEditor.action.vectorMaskDelete" = "選択ベクターマスクを削除";
 "imageEditor.action.vectorMaskRasterize" = "選択ベクターマスクをラスタライズ";
