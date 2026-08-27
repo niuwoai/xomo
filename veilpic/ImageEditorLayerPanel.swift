@@ -1088,6 +1088,25 @@ extension ImageEditorView {
                 .accessibilityIdentifier("image-editor-layer-comp-creation-options")
             }
 
+            Button {
+                _ = viewModel.restoreLastDocumentLayerCompState()
+            } label: {
+                Label(
+                    L10n.text("imageEditor.layerComp.lastDocumentState"),
+                    systemImage: "clock.arrow.circlepath"
+                )
+                .font(.system(size: 11, weight: .semibold))
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .buttonStyle(.plain)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 6)
+            .background(Color.white.opacity(0.04))
+            .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
+            .disabled(!viewModel.canRestoreLastDocumentLayerCompState)
+            .help(L10n.text("imageEditor.action.layerCompRestoreLastDocumentState"))
+            .accessibilityIdentifier("image-editor-layer-comp-last-document-state")
+
             if viewModel.document.layerComps.isEmpty {
                 Text(L10n.text("imageEditor.layerComp.empty"))
                     .font(.system(size: 11, weight: .medium))

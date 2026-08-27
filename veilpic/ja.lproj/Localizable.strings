@@ -3199,6 +3199,10 @@
 "imageEditor.status.layerCompCaptureAppearanceEnabled" = "「%@」はレイヤースタイルと描画モードを記録するようになりました。";
 "imageEditor.status.layerCompCaptureAppearanceDisabled" = "「%@」は現在のレイヤースタイルと描画モードを保持するようになりました。";
 "imageEditor.action.layerCompCreationOptions" = "新規レイヤーカンプのオプション";
+"imageEditor.layerComp.lastDocumentState" = "最後のドキュメント状態";
+"imageEditor.action.layerCompRestoreLastDocumentState" = "最後のドキュメント状態を復元";
+"imageEditor.history.layerCompRestoreLastDocumentState" = "最後のドキュメント状態を復元";
+"imageEditor.status.layerCompRestoredLastDocumentState" = "レイヤーカンプ適用前のドキュメント状態を復元しました。";
 "imageEditor.action.layerCompMoveToTop" = "リストの先頭へ移動";
 "imageEditor.action.layerCompMoveUp" = "レイヤーコンプを上へ移動";
 "imageEditor.action.layerCompMoveDown" = "レイヤーコンプを下へ移動";

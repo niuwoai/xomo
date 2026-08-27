@@ -972,6 +972,11 @@ extension ImageEditorView {
                 viewModel.addLayerComp(captureOptions: .storedDefaults)
             }
             Divider()
+            Button(L10n.text("imageEditor.action.layerCompRestoreLastDocumentState")) {
+                _ = viewModel.restoreLastDocumentLayerCompState()
+            }
+            .disabled(!viewModel.canRestoreLastDocumentLayerCompState)
+            Divider()
             Button(L10n.text("imageEditor.action.layerCompApply")) {
                 viewModel.applySelectedLayerComp()
             }
@@ -2154,6 +2159,11 @@ extension ImageEditorView {
                 selectedLayerPanelTab = .comps
                 viewModel.addLayerComp(captureOptions: .storedDefaults)
             }
+            Button(L10n.text("imageEditor.action.layerCompRestoreLastDocumentState")) {
+                selectedLayerPanelTab = .comps
+                _ = viewModel.restoreLastDocumentLayerCompState()
+            }
+            .disabled(!viewModel.canRestoreLastDocumentLayerCompState)
             Button(L10n.text("imageEditor.action.layerCompApply")) {
                 selectedLayerPanelTab = .comps
                 viewModel.applySelectedLayerComp()

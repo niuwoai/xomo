@@ -114,6 +114,9 @@ struct ImageEditorLayerCompTests {
         #expect(source.contains("isOn: $defaultLayerCompCapturesVisibility"))
         #expect(source.contains("isOn: $defaultLayerCompCapturesPosition"))
         #expect(source.contains("isOn: $defaultLayerCompCapturesAppearance"))
+        #expect(source.contains("viewModel.restoreLastDocumentLayerCompState()"))
+        #expect(source.contains("viewModel.canRestoreLastDocumentLayerCompState"))
+        #expect(source.contains("image-editor-layer-comp-last-document-state"))
 
         let viewSource = try String(
             contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
@@ -141,6 +144,19 @@ struct ImageEditorLayerCompTests {
         #expect(menuSource.components(
             separatedBy: "viewModel.addLayerComp(captureOptions: .storedDefaults)"
         ).count - 1 == 2)
+        #expect(menuSource.components(
+            separatedBy: "viewModel.restoreLastDocumentLayerCompState()"
+        ).count - 1 == 2)
+        let viewModelSource = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorViewModel.swift"),
+            encoding: .utf8
+        )
+        #expect(viewModelSource.contains(
+            "@Published var lastDocumentLayerCompState: ImageEditorLayerComp?"
+        ))
+        #expect(viewModelSource.components(
+            separatedBy: "lastDocumentLayerCompState = nil"
+        ).count - 1 >= 2)
     }
 
     @Test
@@ -510,6 +526,68 @@ struct ImageEditorLayerCompTests {
             capturesPosition: true,
             capturesAppearance: false
         ))
+    }
+
+    @Test
+    func lastDocumentStateSurvivesCompCyclingAndPreservesCompDefinitions() throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "source.png",
+            image: testImage(color: .systemBlue, size: NSSize(width: 90, height: 70))
+        ) { _ in }
+        let layerID = try #require(viewModel.document.selectedLayerID)
+        let originalFrame = try #require(viewModel.document.layers.first?.frame)
+        viewModel.addLayerComp(named: "Baseline")
+        let baselineID = try #require(viewModel.document.selectedLayerCompID)
+
+        let layerIndex = try #require(viewModel.document.layers.firstIndex { $0.id == layerID })
+        viewModel.document.layers[layerIndex].isVisible = false
+        viewModel.document.layers[layerIndex].frame.origin = CGPoint(x: 19, y: 23)
+        viewModel.document.layers[layerIndex].style.strokeEnabled = true
+        viewModel.document.layers[layerIndex].style.strokeWidth = 8
+        viewModel.document.layers[layerIndex].blendMode = .screen
+        let lastFrame = viewModel.document.layers[layerIndex].frame
+        viewModel.addLayerComp(named: "Presentation")
+        let presentationID = try #require(viewModel.document.selectedLayerCompID)
+
+        viewModel.applyLayerComp(baselineID)
+        let lastStateID = try #require(viewModel.lastDocumentLayerCompState?.id)
+        #expect(viewModel.canRestoreLastDocumentLayerCompState)
+        #expect(viewModel.document.layers[layerIndex].frame == originalFrame)
+        #expect(viewModel.document.layers[layerIndex].isVisible)
+
+        viewModel.applyLayerComp(presentationID)
+        #expect(viewModel.lastDocumentLayerCompState?.id == lastStateID)
+        #expect(viewModel.document.layers[layerIndex].frame == lastFrame)
+        viewModel.applyLayerComp(baselineID)
+
+        viewModel.renameLayerComp(presentationID, to: "Client presentation")
+        viewModel.addLayerComp(named: "Added after apply")
+        let compsBeforeRestore = viewModel.document.layerComps
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.restoreLastDocumentLayerCompState())
+        #expect(viewModel.document.layers[layerIndex].frame == lastFrame)
+        #expect(viewModel.document.layers[layerIndex].isVisible == false)
+        #expect(viewModel.document.layers[layerIndex].style.strokeEnabled)
+        #expect(viewModel.document.layers[layerIndex].style.strokeWidth == 8)
+        #expect(viewModel.document.layers[layerIndex].blendMode == .screen)
+        #expect(viewModel.document.layerComps == compsBeforeRestore)
+        #expect(viewModel.document.selectedLayerCompID == nil)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.history.last?.title == L10n.text(
+            "imageEditor.history.layerCompRestoreLastDocumentState"
+        ))
+        #expect(!viewModel.canRestoreLastDocumentLayerCompState)
+        #expect(!viewModel.restoreLastDocumentLayerCompState())
+
+        viewModel.undo()
+        #expect(viewModel.document.layers[layerIndex].frame == originalFrame)
+        #expect(viewModel.document.layers[layerIndex].isVisible)
+        #expect(viewModel.document.layerComps == compsBeforeRestore)
+        viewModel.redo()
+        #expect(viewModel.document.layers[layerIndex].frame == lastFrame)
+        #expect(viewModel.document.layers[layerIndex].isVisible == false)
+        #expect(!viewModel.canRestoreLastDocumentLayerCompState)
     }
 
     @Test

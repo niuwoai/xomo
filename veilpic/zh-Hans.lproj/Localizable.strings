@@ -3199,6 +3199,10 @@
 "imageEditor.status.layerCompCaptureAppearanceEnabled" = "“%@”现在会记录图层样式和混合模式。";
 "imageEditor.status.layerCompCaptureAppearanceDisabled" = "“%@”现在会保留当前图层样式和混合模式。";
 "imageEditor.action.layerCompCreationOptions" = "新建图层复合选项";
+"imageEditor.layerComp.lastDocumentState" = "上次文档状态";
+"imageEditor.action.layerCompRestoreLastDocumentState" = "恢复上次文档状态";
+"imageEditor.history.layerCompRestoreLastDocumentState" = "恢复上次文档状态";
+"imageEditor.status.layerCompRestoredLastDocumentState" = "已恢复应用图层复合前的文档状态。";
 "imageEditor.action.layerCompMoveToTop" = "移到列表顶部";
 "imageEditor.action.layerCompMoveUp" = "上移图层复合";
 "imageEditor.action.layerCompMoveDown" = "下移图层复合";

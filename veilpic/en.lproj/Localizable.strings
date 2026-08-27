@@ -3199,6 +3199,10 @@
 "imageEditor.status.layerCompCaptureAppearanceEnabled" = "“%@” now captures layer styles and blend modes.";
 "imageEditor.status.layerCompCaptureAppearanceDisabled" = "“%@” now preserves current layer styles and blend modes.";
 "imageEditor.action.layerCompCreationOptions" = "New Layer Comp Options";
+"imageEditor.layerComp.lastDocumentState" = "Last Document State";
+"imageEditor.action.layerCompRestoreLastDocumentState" = "Restore Last Document State";
+"imageEditor.history.layerCompRestoreLastDocumentState" = "Restore Last Document State";
+"imageEditor.status.layerCompRestoredLastDocumentState" = "Restored the document state from before layer comps were applied.";
 "imageEditor.action.layerCompMoveToTop" = "Move to List Top";
 "imageEditor.action.layerCompMoveUp" = "Move Layer Comp Up";
 "imageEditor.action.layerCompMoveDown" = "Move Layer Comp Down";

@@ -132,6 +132,10 @@ extension ImageEditorViewModel {
         selectedLayerComp != nil
     }
 
+    var canRestoreLastDocumentLayerCompState: Bool {
+        lastDocumentLayerCompState != nil
+    }
+
     var canMoveSelectedLayerCompToTop: Bool {
         selectedLayerComp.map { canMoveLayerCompToTop($0.id) } ?? false
     }
@@ -174,12 +178,48 @@ extension ImageEditorViewModel {
 
     func applyLayerComp(_ id: UUID) {
         guard let comp = document.layerComps.first(where: { $0.id == id }) else { return }
-        let statesByLayerID = Dictionary(uniqueKeysWithValues: comp.layerStates.map { ($0.layerID, $0) })
-        guard document.layers.contains(where: { statesByLayerID[$0.id] != nil }) else {
+        guard layerCompHasMatchingLayers(comp) else {
             statusText = L10n.text("imageEditor.status.layerCompNoMatchingLayers")
             return
         }
+        if lastDocumentLayerCompState == nil {
+            lastDocumentLayerCompState = ImageEditorLayerComp.capture(
+                name: L10n.text("imageEditor.layerComp.lastDocumentState"),
+                document: document
+            )
+        }
+        applyLayerCompState(
+            comp,
+            selectedLayerCompID: comp.id,
+            historyKey: "imageEditor.history.layerCompApply",
+            statusText: L10n.format("imageEditor.status.layerCompApplied", comp.name)
+        )
+    }
 
+    @discardableResult
+    func restoreLastDocumentLayerCompState() -> Bool {
+        guard let state = lastDocumentLayerCompState else { return false }
+        guard layerCompHasMatchingLayers(state) else {
+            statusText = L10n.text("imageEditor.status.layerCompNoMatchingLayers")
+            return false
+        }
+        applyLayerCompState(
+            state,
+            selectedLayerCompID: nil,
+            historyKey: "imageEditor.history.layerCompRestoreLastDocumentState",
+            statusText: L10n.text("imageEditor.status.layerCompRestoredLastDocumentState")
+        )
+        lastDocumentLayerCompState = nil
+        return true
+    }
+
+    private func applyLayerCompState(
+        _ comp: ImageEditorLayerComp,
+        selectedLayerCompID: UUID?,
+        historyKey: String,
+        statusText finalStatusText: String
+    ) {
+        let statesByLayerID = Dictionary(uniqueKeysWithValues: comp.layerStates.map { ($0.layerID, $0) })
         pushUndo()
         let existingLayerIDs = Set(document.layers.map(\.id))
         let existingGroupIDs = Set(document.layers.filter(\.isGroup).map(\.id))
@@ -265,10 +305,10 @@ extension ImageEditorViewModel {
         if let selectedLayerID = document.selectedLayerID {
             document.selectedLayerIDs.insert(selectedLayerID)
         }
-        document.selectedLayerCompID = comp.id
+        document.selectedLayerCompID = selectedLayerCompID
         isEditingLayerMask = false
-        appendHistory(L10n.text("imageEditor.history.layerCompApply"))
-        statusText = L10n.format("imageEditor.status.layerCompApplied", comp.name)
+        appendHistory(L10n.text(historyKey))
+        statusText = finalStatusText
     }
 
     func applySelectedLayerComp() {
@@ -537,6 +577,11 @@ extension ImageEditorViewModel {
     private var selectedLayerCompIndex: Int? {
         guard let selectedLayerCompID = document.selectedLayerCompID else { return nil }
         return document.layerComps.firstIndex { $0.id == selectedLayerCompID }
+    }
+
+    private func layerCompHasMatchingLayers(_ comp: ImageEditorLayerComp) -> Bool {
+        let capturedLayerIDs = Set(comp.layerStates.map(\.layerID))
+        return document.layers.contains { capturedLayerIDs.contains($0.id) }
     }
 
     private func duplicateLayerCompName(for sourceName: String) -> String {

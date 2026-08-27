@@ -544,6 +544,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var psdCompatibilityReport: ImageEditorPSDCompatibilityReport?
     @Published var psdCompatibilityFileName = ""
     @Published private(set) var currentProjectURL: URL?
+    @Published var lastDocumentLayerCompState: ImageEditorLayerComp?
     @Published var namedHistorySnapshots: [ImageEditorHistorySnapshot] = []
     @Published var selectedHistorySnapshotID: UUID?
     @Published var selectedHistoryEntryID: UUID?
@@ -4265,6 +4266,7 @@ final class ImageEditorViewModel: ObservableObject {
         }
         guard !cancelMovingSelectedLayer() else { return }
         guard let previous = undoStack.popLast() else { return }
+        lastDocumentLayerCompState = nil
         clearSelectedLayerTransformReferencePoint()
         let previousThemeState = undoXomoThemeStates.popLast() ?? currentXomoThemeUndoState
         redoStack.append(document)
@@ -4297,6 +4299,7 @@ final class ImageEditorViewModel: ObservableObject {
         }
         guard !cancelMovingSelectedLayer() else { return }
         guard let next = redoStack.popLast() else { return }
+        lastDocumentLayerCompState = nil
         clearSelectedLayerTransformReferencePoint()
         let nextThemeState = redoXomoThemeStates.popLast() ?? currentXomoThemeUndoState
         undoStack.append(document)
