@@ -97,6 +97,10 @@ enum ImageEditorVectorMaskContextAction: String, CaseIterable, Identifiable {
     case toggleEnabled
     case editPath
     case loadSelection
+    case copyToSelected
+    case apply
+    case rasterize
+    case delete
 
     var id: String { rawValue }
 
@@ -106,6 +110,10 @@ enum ImageEditorVectorMaskContextAction: String, CaseIterable, Identifiable {
         case .toggleEnabled: "imageEditor.action.vectorMaskToggle"
         case .editPath: "imageEditor.action.vectorMaskEditPath"
         case .loadSelection: "imageEditor.action.vectorMaskLoadSelection"
+        case .copyToSelected: "imageEditor.action.vectorMaskCopyToSelected"
+        case .apply: "imageEditor.action.vectorMaskApply"
+        case .rasterize: "imageEditor.action.vectorMaskRasterize"
+        case .delete: "imageEditor.action.vectorMaskDelete"
         }
     }
 
@@ -115,6 +123,10 @@ enum ImageEditorVectorMaskContextAction: String, CaseIterable, Identifiable {
         case .toggleEnabled: "circle.slash"
         case .editPath: "point.3.filled.connected.trianglepath.dotted"
         case .loadSelection: "rectangle.dashed"
+        case .copyToSelected: "doc.on.doc"
+        case .apply: "checkmark.square"
+        case .rasterize: "square.grid.3x3"
+        case .delete: "xmark.square"
         }
     }
 }
@@ -358,6 +370,24 @@ extension ImageEditorViewModel {
                 layerID: clickedLayerID,
                 mode: selectionMode
             )
+        case .copyToSelected:
+            return vectorMaskCopyOperations(
+                sourceID: clickedLayerID,
+                selectedIDs: selectedIDs
+            )?.operations.isEmpty == false
+        case .apply:
+            return !maskApplyIndices(
+                target: .vector,
+                selectedIDs: selectedIDs
+            ).isEmpty
+        case .rasterize:
+            return !vectorMaskRasterizeOperations(
+                selectedIDs: selectedIDs
+            ).isEmpty
+        case .delete:
+            return !vectorMaskDeleteIndices(
+                selectedIDs: selectedIDs
+            ).isEmpty
         }
     }
 
@@ -384,6 +414,15 @@ extension ImageEditorViewModel {
                 layerID: clickedLayerID,
                 mode: selectionMode
             )
+        case .copyToSelected:
+            document.selectedLayerID = clickedLayerID
+            copyVectorMaskToSelectedLayers()
+        case .apply:
+            applyVectorMask()
+        case .rasterize:
+            rasterizeSelectedVectorMask()
+        case .delete:
+            deleteVectorMask()
         }
         return true
     }
@@ -633,43 +672,25 @@ extension ImageEditorViewModel {
     }
 
     func copyVectorMaskToSelectedLayers() {
-        guard canCopyVectorMaskToSelectedLayers,
-              let sourceID = document.selectedLayerID,
-              let sourceIndex = document.layers.firstIndex(where: { $0.id == sourceID }),
-              let sourceMask = document.layers[sourceIndex].vectorMask
+        guard let sourceID = document.selectedLayerID,
+              let plan = vectorMaskCopyOperations(
+                sourceID: sourceID,
+                selectedIDs: document.selectedLayerIDs
+              )
         else {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return
         }
 
-        let sourceLayer = document.layers[sourceIndex]
-        let sourceSize = maskSize(for: sourceLayer)
-        let targetIndices = layerMaskCopyTargetIndices(sourceID: sourceID)
-        guard !targetIndices.isEmpty else {
-            statusText = L10n.text("imageEditor.status.operationFailed")
-            return
-        }
-
-        let operations: [(index: Int, mask: ImageEditorShapeContent)] = targetIndices.compactMap { index in
-            let targetLayer = document.layers[index]
-            let targetSize = maskSize(for: targetLayer)
-            let targetMask = scaledVectorMask(sourceMask, from: sourceSize, to: targetSize)
-            let isEquivalent = targetLayer.vectorMask.map {
-                ImageEditorProjectShapeContent(content: $0) == ImageEditorProjectShapeContent(content: targetMask)
-            } == true
-                && targetLayer.isVectorMaskEnabled == sourceLayer.isVectorMaskEnabled
-                && targetLayer.isVectorMaskInverted == sourceLayer.isVectorMaskInverted
-                && targetLayer.isMaskLinked == sourceLayer.isMaskLinked
-            return isEquivalent ? nil : (index, targetMask)
-        }
-        guard !operations.isEmpty else {
+        guard !plan.operations.isEmpty else {
             isEditingLayerMask = false
             statusText = L10n.text("imageEditor.status.vectorMaskCopyUnchanged")
             return
         }
 
+        let sourceLayer = document.layers[plan.sourceIndex]
         pushUndo()
-        for operation in operations {
+        for operation in plan.operations {
             let index = operation.index
             document.layers[index].vectorMask = operation.mask
             document.layers[index].isVectorMaskEnabled = sourceLayer.isVectorMaskEnabled
@@ -678,7 +699,7 @@ extension ImageEditorViewModel {
         }
         isEditingLayerMask = false
         appendHistory(L10n.text("imageEditor.history.vectorMaskCopy"))
-        statusText = L10n.format("imageEditor.status.vectorMaskCopied", operations.count)
+        statusText = L10n.format("imageEditor.status.vectorMaskCopied", plan.operations.count)
     }
 
     func rasterizeSelectedVectorMask() {
@@ -1147,10 +1168,12 @@ extension ImageEditorViewModel {
         }
     }
 
-    private func vectorMaskDeleteIndices() -> [Int] {
-        let selectedIDs = document.selectedLayerIDs.isEmpty
+    private func vectorMaskDeleteIndices(
+        selectedIDs explicitSelectedIDs: Set<UUID>? = nil
+    ) -> [Int] {
+        let selectedIDs = explicitSelectedIDs ?? (document.selectedLayerIDs.isEmpty
             ? Set(document.selectedLayerID.map { [$0] } ?? [])
-            : document.selectedLayerIDs
+            : document.selectedLayerIDs)
         return document.layers.indices.filter { index in
             let layer = document.layers[index]
             return selectedIDs.contains(layer.id)
@@ -1521,6 +1544,47 @@ extension ImageEditorViewModel {
             let layer = document.layers[index]
             return targetIDs.contains(layer.id) && !document.isEffectivelyLocked(layer)
         }
+    }
+
+    private func vectorMaskCopyOperations(
+        sourceID: UUID,
+        selectedIDs: Set<UUID>
+    ) -> (
+        sourceIndex: Int,
+        operations: [(index: Int, mask: ImageEditorShapeContent)]
+    )? {
+        guard let sourceIndex = document.layers.firstIndex(where: { $0.id == sourceID }),
+              let sourceMask = document.layers[sourceIndex].vectorMask
+        else { return nil }
+        let targetIndices = layerMaskCopyTargetIndices(
+            sourceID: sourceID,
+            selectedIDs: selectedIDs
+        )
+        guard !targetIndices.isEmpty else { return nil }
+
+        let sourceLayer = document.layers[sourceIndex]
+        let sourceSize = maskSize(for: sourceLayer)
+        let operations = targetIndices.compactMap { index -> (
+            index: Int,
+            mask: ImageEditorShapeContent
+        )? in
+            let targetLayer = document.layers[index]
+            let targetSize = maskSize(for: targetLayer)
+            let targetMask = scaledVectorMask(
+                sourceMask,
+                from: sourceSize,
+                to: targetSize
+            )
+            let isEquivalent = targetLayer.vectorMask.map {
+                ImageEditorProjectShapeContent(content: $0)
+                    == ImageEditorProjectShapeContent(content: targetMask)
+            } == true
+                && targetLayer.isVectorMaskEnabled == sourceLayer.isVectorMaskEnabled
+                && targetLayer.isVectorMaskInverted == sourceLayer.isVectorMaskInverted
+                && targetLayer.isMaskLinked == sourceLayer.isMaskLinked
+            return isEquivalent ? nil : (index, targetMask)
+        }
+        return (sourceIndex, operations)
     }
 
     private func scaledVectorMask(

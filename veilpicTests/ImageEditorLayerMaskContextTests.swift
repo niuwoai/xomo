@@ -238,6 +238,136 @@ struct ImageEditorLayerMaskContextTests {
         ))
     }
 
+    @Test func vectorMaskCopyUsesClickedSourceAndSkipsLockedTargets() throws {
+        let viewModel = makeViewModel()
+        var source = layer(named: "Vector Source", in: viewModel)
+        var target = layer(named: "Vector Target", in: viewModel)
+        var locked = layer(named: "Locked Vector Target", in: viewModel)
+        source.vectorMask = vectorMask(
+            size: source.image.size,
+            rect: CGRect(x: 8, y: 6, width: 40, height: 30)
+        )
+        source.isVectorMaskEnabled = false
+        source.isVectorMaskInverted = true
+        source.isMaskLinked = false
+        target.image = NSImage.transparent(size: CGSize(width: 32, height: 24))
+        target.frame.size = target.image.size
+        locked.isLocked = true
+        viewModel.document.layers = [source, target, locked]
+        select(
+            [source.id, target.id, locked.id],
+            primary: target.id,
+            in: viewModel
+        )
+        let selectionBefore = viewModel.document.selectedLayerIDs
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.canPerformVectorMaskActionFromContext(
+            source.id,
+            action: .copyToSelected
+        ))
+        #expect(viewModel.performVectorMaskActionFromContext(
+            source.id,
+            action: .copyToSelected
+        ))
+        let copiedMask = try #require(viewModel.document.layers[1].vectorMask)
+        #expect(copiedMask.editablePathAnchors.map(\.point) == [
+            CGPoint(x: 4, y: 3),
+            CGPoint(x: 24, y: 3),
+            CGPoint(x: 24, y: 18),
+            CGPoint(x: 4, y: 18)
+        ])
+        #expect(viewModel.document.layers[1].isVectorMaskEnabled == false)
+        #expect(viewModel.document.layers[1].isVectorMaskInverted)
+        #expect(viewModel.document.layers[1].isMaskLinked == false)
+        #expect(viewModel.document.layers[2].vectorMask == nil)
+        #expect(viewModel.document.selectedLayerIDs == selectionBefore)
+        #expect(viewModel.document.selectedLayerID == source.id)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.history.last?.title == L10n.text(
+            "imageEditor.history.vectorMaskCopy"
+        ))
+
+        viewModel.undo()
+        #expect(viewModel.document.layers[0].vectorMask != nil)
+        #expect(viewModel.document.layers[1].vectorMask == nil)
+        #expect(viewModel.document.layers[2].vectorMask == nil)
+    }
+
+    @Test func equivalentVectorMaskCopyIsUnavailableAndPreservesRedo() {
+        let viewModel = makeViewModel()
+        var source = layer(named: "Vector Source", in: viewModel)
+        var target = layer(named: "Equivalent Vector Target", in: viewModel)
+        let sharedMask = vectorMask(size: source.image.size)
+        source.vectorMask = sharedMask
+        target.vectorMask = sharedMask
+        viewModel.document.layers = [source, target]
+        select([source.id, target.id], primary: target.id, in: viewModel)
+        viewModel.setSelectedLayersLabelColor(.green)
+        viewModel.undo()
+        let historyBefore = viewModel.document.history
+        #expect(viewModel.canRedo)
+
+        #expect(!viewModel.canPerformVectorMaskActionFromContext(
+            source.id,
+            action: .copyToSelected
+        ))
+        #expect(!viewModel.performVectorMaskActionFromContext(
+            source.id,
+            action: .copyToSelected
+        ))
+        #expect(viewModel.document.selectedLayerID == target.id)
+        #expect(viewModel.document.selectedLayerIDs == [source.id, target.id])
+        #expect(viewModel.document.history == historyBefore)
+        #expect(viewModel.canRedo)
+    }
+
+    @Test func vectorMaskDestructiveContextActionsSkipLockedLayersAndUndoAtomically() {
+        let actions: [ImageEditorVectorMaskContextAction] = [
+            .apply,
+            .rasterize,
+            .delete
+        ]
+
+        for action in actions {
+            let viewModel = makeViewModel()
+            var editable = layer(named: "Editable Vector", in: viewModel)
+            var locked = layer(named: "Locked Vector", in: viewModel)
+            editable.vectorMask = vectorMask(size: editable.image.size)
+            locked.vectorMask = vectorMask(size: locked.image.size)
+            locked.isLocked = true
+            viewModel.document.layers = [editable, locked]
+            select(
+                [editable.id, locked.id],
+                primary: editable.id,
+                in: viewModel
+            )
+            let historyCount = viewModel.document.history.count
+
+            #expect(viewModel.canPerformVectorMaskActionFromContext(
+                editable.id,
+                action: action
+            ))
+            #expect(viewModel.performVectorMaskActionFromContext(
+                editable.id,
+                action: action
+            ))
+            #expect(viewModel.document.layers[0].vectorMask == nil)
+            #expect(viewModel.document.layers[1].vectorMask != nil)
+            if action == .rasterize {
+                #expect(viewModel.document.layers[0].mask != nil)
+            } else {
+                #expect(viewModel.document.layers[0].mask == nil)
+            }
+            #expect(viewModel.document.history.count == historyCount + 1)
+
+            viewModel.undo()
+            #expect(viewModel.document.layers.allSatisfy { $0.vectorMask != nil })
+            #expect(viewModel.document.layers.allSatisfy { $0.mask == nil })
+            #expect(viewModel.document.history.count == historyCount)
+        }
+    }
+
     @Test func unavailableContextActionsDoNotMutateSelectionOrHistory() {
         let viewModel = makeViewModel()
         let selected = layer(named: "Selected", in: viewModel)
