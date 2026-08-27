@@ -3211,6 +3211,11 @@
 "imageEditor.status.layerCompMissingLayers" = "“%@” cannot be restored completely because %d captured layer(s) no longer exist.";
 "imageEditor.status.layerCompWarningCleared" = "Cleared the warning for “%@”; remaining layers were left unchanged.";
 "imageEditor.status.layerCompAllWarningsCleared" = "Cleared warnings for %d layer comp(s); remaining layers were left unchanged.";
+"imageEditor.action.exportLayerComps" = "Export Layer Comps to Files…";
+"imageEditor.export.layerCompsFormat" = "Format:";
+"imageEditor.status.exportedLayerComps" = "Exported %d layer comp(s) to %@.";
+"imageEditor.status.exportLayerCompConflicts" = "%d layer comp file(s) already exist. Nothing was exported.";
+"imageEditor.status.exportLayerCompsFailed" = "Layer comps could not be exported. Update comps that no longer match any layer and try again.";
 "imageEditor.action.layerCompMoveToTop" = "Move to List Top";
 "imageEditor.action.layerCompMoveUp" = "Move Layer Comp Up";
 "imageEditor.action.layerCompMoveDown" = "Move Layer Comp Down";

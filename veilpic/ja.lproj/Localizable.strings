@@ -3211,6 +3211,11 @@
 "imageEditor.status.layerCompMissingLayers" = "「%@」は記録された %d 個のレイヤーが存在しないため、完全には復元できません。";
 "imageEditor.status.layerCompWarningCleared" = "「%@」の警告を消去しました。残りのレイヤーは変更されていません。";
 "imageEditor.status.layerCompAllWarningsCleared" = "%d 個のレイヤーカンプ警告を消去しました。残りのレイヤーは変更されていません。";
+"imageEditor.action.exportLayerComps" = "レイヤーカンプをファイルに書き出し…";
+"imageEditor.export.layerCompsFormat" = "形式：";
+"imageEditor.status.exportedLayerComps" = "%d 個のレイヤーカンプを %@ に書き出しました。";
+"imageEditor.status.exportLayerCompConflicts" = "%d 個のレイヤーカンプファイルがすでに存在します。何も書き出されませんでした。";
+"imageEditor.status.exportLayerCompsFailed" = "レイヤーカンプを書き出せませんでした。一致するレイヤーがないカンプを更新してから、もう一度お試しください。";
 "imageEditor.action.layerCompMoveToTop" = "リストの先頭へ移動";
 "imageEditor.action.layerCompMoveUp" = "レイヤーコンプを上へ移動";
 "imageEditor.action.layerCompMoveDown" = "レイヤーコンプを下へ移動";

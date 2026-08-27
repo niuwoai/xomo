@@ -109,6 +109,126 @@ enum ImageEditorLayerCompDropGeometry {
     }
 }
 
+enum ImageEditorLayerCompApplication {
+    static func hasMatchingLayers(
+        _ comp: ImageEditorLayerComp,
+        in document: ImageEditorDocument
+    ) -> Bool {
+        let capturedLayerIDs = Set(comp.layerStates.map(\.layerID))
+        return document.layers.contains { capturedLayerIDs.contains($0.id) }
+    }
+
+    static func apply(
+        _ comp: ImageEditorLayerComp,
+        to document: inout ImageEditorDocument,
+        selectedLayerCompID: UUID?
+    ) {
+        let statesByLayerID = Dictionary(uniqueKeysWithValues: comp.layerStates.map { ($0.layerID, $0) })
+        let existingLayerIDs = Set(document.layers.map(\.id))
+        let existingGroupIDs = Set(document.layers.filter(\.isGroup).map(\.id))
+        for index in document.layers.indices {
+            guard let state = statesByLayerID[document.layers[index].id] else { continue }
+            if comp.capturesVisibility {
+                document.layers[index].isVisible = state.isVisible
+            }
+            if comp.capturesPosition {
+                document.layers[index].frame = state.frame
+            }
+            document.layers[index].opacity = max(0, min(1, state.opacity))
+            document.layers[index].fillOpacity = max(0, min(1, state.fillOpacity))
+            document.layers[index].isMaskLinked = state.isMaskLinked
+            document.layers[index].blendIfSourceBlack = max(0, min(1, state.blendIfSourceBlack))
+            document.layers[index].blendIfSourceWhite = max(
+                document.layers[index].blendIfSourceBlack,
+                min(1, state.blendIfSourceWhite)
+            )
+            document.layers[index].blendIfUnderlyingBlack = max(0, min(1, state.blendIfUnderlyingBlack))
+            document.layers[index].blendIfUnderlyingWhite = max(
+                document.layers[index].blendIfUnderlyingBlack,
+                min(1, state.blendIfUnderlyingWhite)
+            )
+            document.layers[index].isMaskEnabled = state.isMaskEnabled
+            document.layers[index].maskDensity = max(0, min(1, state.maskDensity))
+            document.layers[index].maskFeather = max(0, min(80, state.maskFeather))
+            if state.hasMaskSnapshot {
+                if let maskData = state.maskData {
+                    if let mask = NSImage(data: maskData)?.normalizedBitmapImage() {
+                        document.layers[index].mask = mask
+                    }
+                } else {
+                    document.layers[index].mask = nil
+                }
+            }
+            document.layers[index].isVectorMaskEnabled = state.isVectorMaskEnabled
+            document.layers[index].isVectorMaskInverted = state.isVectorMaskInverted
+            if comp.capturesAppearance {
+                document.layers[index].style = state.style.layerStyle
+                document.layers[index].blendMode = state.blendMode
+            }
+            if let kind = state.kind {
+                document.layers[index].kind = kind.layerKind
+            }
+            if let smartFilters = state.smartFilters {
+                document.layers[index].smartFilters = smartFilters
+            }
+            if let adjustmentSettings = state.adjustmentSettings {
+                document.layers[index].adjustmentSettings = adjustmentSettings.normalized()
+            }
+            if let filterSettings = state.filterSettings {
+                document.layers[index].filterSettings = filterSettings.normalized()
+            }
+            if state.hasVectorMaskSnapshot {
+                document.layers[index].vectorMask = state.vectorMask?.content
+            }
+            document.layers[index].linkedLayerIDs = state.linkedLayerIDs
+                .intersection(existingLayerIDs)
+                .subtracting([document.layers[index].id])
+            if let groupID = state.groupID,
+               groupID != document.layers[index].id,
+               existingGroupIDs.contains(groupID) {
+                document.layers[index].groupID = groupID
+            } else {
+                document.layers[index].groupID = nil
+            }
+            document.layers[index].isLocked = state.isLocked
+            document.layers[index].locksPixels = state.locksPixels
+            document.layers[index].locksPosition = state.locksPosition
+            document.layers[index].locksTransparentPixels = state.locksTransparentPixels
+            document.layers[index].isGroupExpanded = state.isGroupExpanded
+            document.layers[index].isClippingMask = state.isClippingMask
+            document.layers[index].labelColor = state.labelColor
+        }
+
+        restoreLayerOrder(comp.layerOrder, in: &document)
+        let remainingLayerIDs = Set(document.layers.map(\.id))
+        document.selectedLayerID = comp.selectedLayerID.flatMap { remainingLayerIDs.contains($0) ? $0 : nil }
+            ?? document.selectedLayerID.flatMap { remainingLayerIDs.contains($0) ? $0 : nil }
+            ?? document.layers.last?.id
+        document.selectedLayerIDs = comp.selectedLayerIDs.intersection(remainingLayerIDs)
+        if let selectedLayerID = document.selectedLayerID {
+            document.selectedLayerIDs.insert(selectedLayerID)
+        }
+        document.selectedLayerCompID = selectedLayerCompID
+    }
+
+    private static func restoreLayerOrder(
+        _ layerOrder: [UUID],
+        in document: inout ImageEditorDocument
+    ) {
+        let orderIndexByID = Dictionary(uniqueKeysWithValues: layerOrder.enumerated().map {
+            ($0.element, $0.offset)
+        })
+        guard !orderIndexByID.isEmpty else { return }
+        let capturedLayers = document.layers
+            .filter { orderIndexByID[$0.id] != nil }
+            .sorted { left, right in
+                (orderIndexByID[left.id] ?? Int.max) < (orderIndexByID[right.id] ?? Int.max)
+            }
+        let uncapturedLayers = document.layers.filter { orderIndexByID[$0.id] == nil }
+        document.layers = capturedLayers + uncapturedLayers
+    }
+}
+
 @MainActor
 extension ImageEditorViewModel {
     var selectedLayerComp: ImageEditorLayerComp? {
@@ -227,93 +347,12 @@ extension ImageEditorViewModel {
         historyKey: String,
         statusText finalStatusText: String
     ) {
-        let statesByLayerID = Dictionary(uniqueKeysWithValues: comp.layerStates.map { ($0.layerID, $0) })
         pushUndo()
-        let existingLayerIDs = Set(document.layers.map(\.id))
-        let existingGroupIDs = Set(document.layers.filter(\.isGroup).map(\.id))
-        for index in document.layers.indices {
-            guard let state = statesByLayerID[document.layers[index].id] else { continue }
-            if comp.capturesVisibility {
-                document.layers[index].isVisible = state.isVisible
-            }
-            if comp.capturesPosition {
-                document.layers[index].frame = state.frame
-            }
-            document.layers[index].opacity = max(0, min(1, state.opacity))
-            document.layers[index].fillOpacity = max(0, min(1, state.fillOpacity))
-            document.layers[index].isMaskLinked = state.isMaskLinked
-            document.layers[index].blendIfSourceBlack = max(0, min(1, state.blendIfSourceBlack))
-            document.layers[index].blendIfSourceWhite = max(
-                document.layers[index].blendIfSourceBlack,
-                min(1, state.blendIfSourceWhite)
-            )
-            document.layers[index].blendIfUnderlyingBlack = max(0, min(1, state.blendIfUnderlyingBlack))
-            document.layers[index].blendIfUnderlyingWhite = max(
-                document.layers[index].blendIfUnderlyingBlack,
-                min(1, state.blendIfUnderlyingWhite)
-            )
-            document.layers[index].isMaskEnabled = state.isMaskEnabled
-            document.layers[index].maskDensity = max(0, min(1, state.maskDensity))
-            document.layers[index].maskFeather = max(0, min(80, state.maskFeather))
-            if state.hasMaskSnapshot {
-                if let maskData = state.maskData {
-                    if let mask = NSImage(data: maskData)?.normalizedBitmapImage() {
-                        document.layers[index].mask = mask
-                    }
-                } else {
-                    document.layers[index].mask = nil
-                }
-            }
-            document.layers[index].isVectorMaskEnabled = state.isVectorMaskEnabled
-            document.layers[index].isVectorMaskInverted = state.isVectorMaskInverted
-            if comp.capturesAppearance {
-                document.layers[index].style = state.style.layerStyle
-                document.layers[index].blendMode = state.blendMode
-            }
-            if let kind = state.kind {
-                document.layers[index].kind = kind.layerKind
-            }
-            if let smartFilters = state.smartFilters {
-                document.layers[index].smartFilters = smartFilters
-            }
-            if let adjustmentSettings = state.adjustmentSettings {
-                document.layers[index].adjustmentSettings = adjustmentSettings.normalized()
-            }
-            if let filterSettings = state.filterSettings {
-                document.layers[index].filterSettings = filterSettings.normalized()
-            }
-            if state.hasVectorMaskSnapshot {
-                document.layers[index].vectorMask = state.vectorMask?.content
-            }
-            document.layers[index].linkedLayerIDs = state.linkedLayerIDs
-                .intersection(existingLayerIDs)
-                .subtracting([document.layers[index].id])
-            if let groupID = state.groupID,
-               groupID != document.layers[index].id,
-               existingGroupIDs.contains(groupID) {
-                document.layers[index].groupID = groupID
-            } else {
-                document.layers[index].groupID = nil
-            }
-            document.layers[index].isLocked = state.isLocked
-            document.layers[index].locksPixels = state.locksPixels
-            document.layers[index].locksPosition = state.locksPosition
-            document.layers[index].locksTransparentPixels = state.locksTransparentPixels
-            document.layers[index].isGroupExpanded = state.isGroupExpanded
-            document.layers[index].isClippingMask = state.isClippingMask
-            document.layers[index].labelColor = state.labelColor
-        }
-        restoreLayerOrder(from: comp.layerOrder)
-
-        let existingIDs = Set(document.layers.map(\.id))
-        document.selectedLayerID = comp.selectedLayerID.flatMap { existingIDs.contains($0) ? $0 : nil }
-            ?? document.selectedLayerID.flatMap { existingIDs.contains($0) ? $0 : nil }
-            ?? document.layers.last?.id
-        document.selectedLayerIDs = comp.selectedLayerIDs.intersection(existingIDs)
-        if let selectedLayerID = document.selectedLayerID {
-            document.selectedLayerIDs.insert(selectedLayerID)
-        }
-        document.selectedLayerCompID = selectedLayerCompID
+        ImageEditorLayerCompApplication.apply(
+            comp,
+            to: &document,
+            selectedLayerCompID: selectedLayerCompID
+        )
         isEditingLayerMask = false
         appendHistory(L10n.text(historyKey))
         statusText = finalStatusText
@@ -648,8 +687,7 @@ extension ImageEditorViewModel {
     }
 
     private func layerCompHasMatchingLayers(_ comp: ImageEditorLayerComp) -> Bool {
-        let capturedLayerIDs = Set(comp.layerStates.map(\.layerID))
-        return document.layers.contains { capturedLayerIDs.contains($0.id) }
+        ImageEditorLayerCompApplication.hasMatchingLayers(comp, in: document)
     }
 
     private func duplicateLayerCompName(for sourceName: String) -> String {
@@ -687,16 +725,4 @@ extension ImageEditorViewModel {
         return true
     }
 
-    private func restoreLayerOrder(from layerOrder: [UUID]) {
-        let orderIndexByID = Dictionary(uniqueKeysWithValues: layerOrder.enumerated().map { ($0.element, $0.offset) })
-        guard !orderIndexByID.isEmpty else { return }
-
-        let capturedLayers = document.layers
-            .filter { orderIndexByID[$0.id] != nil }
-            .sorted { left, right in
-                (orderIndexByID[left.id] ?? Int.max) < (orderIndexByID[right.id] ?? Int.max)
-            }
-        let uncapturedLayers = document.layers.filter { orderIndexByID[$0.id] == nil }
-        document.layers = capturedLayers + uncapturedLayers
-    }
 }

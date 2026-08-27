@@ -3211,6 +3211,11 @@
 "imageEditor.status.layerCompMissingLayers" = "“%@”中记录的 %d 个图层已不存在，无法完整恢复。";
 "imageEditor.status.layerCompWarningCleared" = "已清除“%@”的警告，其余图层保持不变。";
 "imageEditor.status.layerCompAllWarningsCleared" = "已清除 %d 个图层复合的警告，其余图层保持不变。";
+"imageEditor.action.exportLayerComps" = "将图层复合导出到文件…";
+"imageEditor.export.layerCompsFormat" = "格式：";
+"imageEditor.status.exportedLayerComps" = "已将 %d 个图层复合导出到 %@。";
+"imageEditor.status.exportLayerCompConflicts" = "%d 个图层复合文件已存在，本次未导出任何文件。";
+"imageEditor.status.exportLayerCompsFailed" = "无法导出图层复合。请先更新已经无法匹配任何图层的复合，然后重试。";
 "imageEditor.action.layerCompMoveToTop" = "移到列表顶部";
 "imageEditor.action.layerCompMoveUp" = "上移图层复合";
 "imageEditor.action.layerCompMoveDown" = "下移图层复合";

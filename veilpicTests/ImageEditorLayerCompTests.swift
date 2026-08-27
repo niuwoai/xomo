@@ -691,6 +691,98 @@ struct ImageEditorLayerCompTests {
     }
 
     @Test
+    func layerCompBatchExportUsesIsolatedSnapshotsUniqueNamesAndAtomicConflictPreflight() throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "campaign/design.png",
+            image: testImage(color: .systemBlue, size: NSSize(width: 48, height: 36))
+        ) { _ in }
+        let layerID = try #require(viewModel.document.layers.first?.id)
+        viewModel.addLayerComp(named: "Client/Home")
+        viewModel.toggleLayerVisibility(layerID)
+        viewModel.addLayerComp(named: "Client/Home")
+        let projectDataBeforeExport = try viewModel.projectData()
+        let historyBeforeExport = viewModel.document.history
+        let undoCountBeforeExport = viewModel.undoStack.count
+        let redoCountBeforeExport = viewModel.redoStack.count
+        let canUndoBeforeExport = viewModel.canUndo
+        let canRedoBeforeExport = viewModel.canRedo
+        let lastDocumentStateBeforeExport = viewModel.lastDocumentLayerCompState
+
+        let plan = viewModel.layerCompExportPlan(format: .png)
+        #expect(plan.map(\.filename) == [
+            "campaign-design-Client-Home.png",
+            "campaign-design-Client-Home-2.png"
+        ])
+        #expect(viewModel.layerCompExportPlan(format: .svg).isEmpty)
+
+        let artifacts = try #require(viewModel.layerCompExportArtifacts(format: .png))
+        #expect(artifacts.map(\.variant) == plan)
+        let visibleImage = try #require(NSImage(data: artifacts[0].data))
+        _ = try #require(NSImage(data: artifacts[1].data))
+        let visiblePixel = try #require(
+            visibleImage.color(at: CGPoint(x: 20, y: 18))?.usingColorSpace(.deviceRGB)
+        )
+        #expect(visiblePixel.blueComponent > 0.8)
+        #expect(visiblePixel.alphaComponent > 0.99)
+        #expect(artifacts[0].data != artifacts[1].data)
+        var hiddenDocument = viewModel.document
+        ImageEditorLayerCompApplication.apply(
+            viewModel.document.layerComps[1],
+            to: &hiddenDocument,
+            selectedLayerCompID: viewModel.document.layerComps[1].id
+        )
+        #expect(hiddenDocument.layers.first { $0.id == layerID }?.isVisible == false)
+        #expect(try viewModel.projectData() == projectDataBeforeExport)
+        #expect(viewModel.document.history == historyBeforeExport)
+        #expect(viewModel.undoStack.count == undoCountBeforeExport)
+        #expect(viewModel.redoStack.count == redoCountBeforeExport)
+        #expect(viewModel.canUndo == canUndoBeforeExport)
+        #expect(viewModel.canRedo == canRedoBeforeExport)
+        #expect(viewModel.lastDocumentLayerCompState == lastDocumentStateBeforeExport)
+
+        let directory = URL(fileURLWithPath: "/tmp/xomo-layer-comp-export", isDirectory: true)
+        var writtenURLs: [URL] = []
+        let exportedCount = viewModel.exportLayerComps(
+            format: .png,
+            to: directory,
+            fileExists: { _ in false },
+            dataWriter: { data, destination in
+                #expect(!data.isEmpty)
+                writtenURLs.append(destination)
+            }
+        )
+        #expect(exportedCount == 2)
+        #expect(writtenURLs.map(\.lastPathComponent) == plan.map(\.filename))
+        #expect(try viewModel.projectData() == projectDataBeforeExport)
+        #expect(viewModel.document.history == historyBeforeExport)
+        #expect(viewModel.undoStack.count == undoCountBeforeExport)
+        #expect(viewModel.redoStack.count == redoCountBeforeExport)
+        #expect(viewModel.statusText == L10n.format(
+            "imageEditor.status.exportedLayerComps",
+            2,
+            "xomo-layer-comp-export"
+        ))
+
+        writtenURLs.removeAll()
+        let conflictCount = viewModel.exportLayerComps(
+            format: .png,
+            to: directory,
+            fileExists: { $0.lastPathComponent == plan[1].filename },
+            dataWriter: { _, destination in writtenURLs.append(destination) }
+        )
+        #expect(conflictCount == 0)
+        #expect(writtenURLs.isEmpty)
+        #expect(try viewModel.projectData() == projectDataBeforeExport)
+        #expect(viewModel.document.history == historyBeforeExport)
+        #expect(viewModel.undoStack.count == undoCountBeforeExport)
+        #expect(viewModel.redoStack.count == redoCountBeforeExport)
+        #expect(viewModel.statusText == L10n.format(
+            "imageEditor.status.exportLayerCompConflicts",
+            1
+        ))
+    }
+
+    @Test
     func legacyLayerCompWithoutOptionalMetadataUsesClassicCaptureDefaults() throws {
         let viewModel = ImageEditorViewModel(
             sourceName: "source.png",

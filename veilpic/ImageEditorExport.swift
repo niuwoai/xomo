@@ -134,6 +134,16 @@ struct ImageEditorSliceExportArtifact {
     let data: Data
 }
 
+struct ImageEditorLayerCompExportVariant: Equatable {
+    let layerCompID: UUID
+    let filename: String
+}
+
+struct ImageEditorLayerCompExportArtifact {
+    let variant: ImageEditorLayerCompExportVariant
+    let data: Data
+}
+
 enum ImageEditorSliceExportConflictPolicy: String, CaseIterable, Identifiable {
     case abort
     case skipExisting
@@ -182,6 +192,18 @@ enum ImageEditorSliceExportConflictPolicy: String, CaseIterable, Identifiable {
 
 @MainActor
 extension ImageEditorViewModel {
+    static let layerCompExportFormats: [ImageEditorExportFormat] = [
+        .png,
+        .jpeg,
+        .webp,
+        .pdf,
+        .psd
+    ]
+
+    var canExportLayerComps: Bool {
+        !document.layerComps.isEmpty
+    }
+
     var exportSizeText: String {
         let scale = exportSettings.usesScale ? exportSettings.scale : 1
         let size = exportImage(for: exportSettings.scope, sliceID: exportSettings.sliceID).size.scaled(by: scale)
@@ -575,6 +597,165 @@ extension ImageEditorViewModel {
                 guard let self, response == .OK, let directory = panel.url else { return }
                 self.exportAllSlices(settings: settings, to: directory)
             }
+        }
+    }
+
+    func chooseLayerCompExportDirectory() {
+        guard canExportLayerComps else { return }
+        let formats = Self.layerCompExportFormats
+        let selectedFormat = formats.contains(exportSettings.format) ? exportSettings.format : .png
+        let formatPicker = NSPopUpButton(frame: NSRect(x: 0, y: 0, width: 150, height: 26))
+        for format in formats {
+            formatPicker.addItem(withTitle: format.title)
+        }
+        formatPicker.selectItem(at: formats.firstIndex(of: selectedFormat) ?? 0)
+        let formatLabel = NSTextField(labelWithString: L10n.text("imageEditor.export.layerCompsFormat"))
+        let accessory = NSStackView(views: [formatLabel, formatPicker])
+        accessory.orientation = .horizontal
+        accessory.spacing = 8
+        accessory.edgeInsets = NSEdgeInsets(top: 4, left: 8, bottom: 4, right: 8)
+        accessory.frame = NSRect(x: 0, y: 0, width: 310, height: 34)
+
+        let panel = NSOpenPanel()
+        panel.canChooseFiles = false
+        panel.canChooseDirectories = true
+        panel.canCreateDirectories = true
+        panel.allowsMultipleSelection = false
+        panel.prompt = L10n.text("imageEditor.export.chooseFolder")
+        panel.accessoryView = accessory
+        panel.begin { [weak self] response in
+            Task { @MainActor in
+                guard let self, response == .OK, let directory = panel.url else { return }
+                let index = formatPicker.indexOfSelectedItem
+                guard formats.indices.contains(index) else { return }
+                let format = formats[index]
+                self.exportSettings.format = format
+                _ = self.exportLayerComps(
+                    format: format,
+                    quality: self.exportSettings.quality,
+                    to: directory
+                )
+            }
+        }
+    }
+
+    func layerCompExportPlan(format: ImageEditorExportFormat) -> [ImageEditorLayerCompExportVariant] {
+        guard Self.layerCompExportFormats.contains(format) else { return [] }
+        let rawSourceName = (document.sourceName as NSString).deletingPathExtension
+        let sourceName = Self.sanitizedExportBasename(rawSourceName, fallback: "image")
+        var usedFilenames: Set<String> = []
+        return document.layerComps.enumerated().map { index, comp in
+            let compName = Self.sanitizedExportBasename(
+                comp.name,
+                fallback: "layer-comp-\(index + 1)"
+            )
+            let filename = Self.uniqueExportFilename(
+                "\(sourceName)-\(compName).\(format.filenameExtension)",
+                usedFilenames: &usedFilenames
+            )
+            return ImageEditorLayerCompExportVariant(
+                layerCompID: comp.id,
+                filename: filename
+            )
+        }
+    }
+
+    func layerCompExportArtifacts(
+        format: ImageEditorExportFormat,
+        quality: Double = 0.9
+    ) -> [ImageEditorLayerCompExportArtifact]? {
+        let plan = layerCompExportPlan(format: format)
+        guard !plan.isEmpty else { return nil }
+        let compsByID = Dictionary(uniqueKeysWithValues: document.layerComps.map { ($0.id, $0) })
+        var artifacts: [ImageEditorLayerCompExportArtifact] = []
+        artifacts.reserveCapacity(plan.count)
+        for variant in plan {
+            guard let comp = compsByID[variant.layerCompID],
+                  ImageEditorLayerCompApplication.hasMatchingLayers(comp, in: document)
+            else { return nil }
+            var exportDocument = document
+            ImageEditorLayerCompApplication.apply(
+                comp,
+                to: &exportDocument,
+                selectedLayerCompID: comp.id
+            )
+            guard let data = layerCompExportData(
+                document: exportDocument,
+                format: format,
+                quality: quality
+            ) else { return nil }
+            artifacts.append(ImageEditorLayerCompExportArtifact(variant: variant, data: data))
+        }
+        return artifacts
+    }
+
+    @discardableResult
+    func exportLayerComps(
+        format: ImageEditorExportFormat,
+        quality: Double = 0.9,
+        to directory: URL,
+        fileExists: (URL) -> Bool = { FileManager.default.fileExists(atPath: $0.path) },
+        dataWriter: (Data, URL) throws -> Void = { data, destination in
+            try data.write(to: destination, options: .withoutOverwriting)
+        }
+    ) -> Int {
+        guard let artifacts = layerCompExportArtifacts(format: format, quality: quality) else {
+            statusText = L10n.text("imageEditor.status.exportLayerCompsFailed")
+            return 0
+        }
+        let standardizedDirectory = directory.standardizedFileURL
+        let destinations = artifacts.map { artifact in
+            standardizedDirectory.appendingPathComponent(artifact.variant.filename, isDirectory: false)
+        }
+        let conflictCount = destinations.filter(fileExists).count
+        guard conflictCount == 0 else {
+            statusText = L10n.format("imageEditor.status.exportLayerCompConflicts", conflictCount)
+            return 0
+        }
+        do {
+            for (artifact, destination) in zip(artifacts, destinations) {
+                try dataWriter(artifact.data, destination)
+            }
+            statusText = L10n.format(
+                "imageEditor.status.exportedLayerComps",
+                artifacts.count,
+                standardizedDirectory.lastPathComponent
+            )
+            return artifacts.count
+        } catch {
+            statusText = L10n.format(
+                "imageEditor.status.exportFailedWithReason",
+                error.localizedDescription
+            )
+            return 0
+        }
+    }
+
+    private func layerCompExportData(
+        document: ImageEditorDocument,
+        format: ImageEditorExportFormat,
+        quality: Double
+    ) -> Data? {
+        let normalizedQuality = min(1, max(0.1, quality))
+        switch format {
+        case .png:
+            return document.compositedImage.qingtuPNGData()
+        case .jpeg:
+            return document.compositedImage
+                .flattened(on: .white)
+                .bitmapData(type: .jpeg, quality: normalizedQuality)
+        case .webp:
+            guard NSImage.canWriteImage(typeIdentifier: UTType.webP.identifier) else { return nil }
+            return document.compositedImage.bitmapData(
+                typeIdentifier: UTType.webP.identifier,
+                quality: normalizedQuality
+            )
+        case .pdf:
+            return document.compositedImage.pdfData()
+        case .psd:
+            return try? ImageEditorPSDCodec.encode(document: document)
+        case .svg:
+            return nil
         }
     }
 
