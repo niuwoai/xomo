@@ -5495,6 +5495,7 @@ struct ImageEditorLayerComp: Identifiable, Equatable, Codable {
     var name: String
     var comment: String
     var capturesVisibility: Bool
+    var capturesPosition: Bool
     var layerOrder: [UUID]
     var layerStates: [ImageEditorLayerCompLayerState]
     var selectedLayerID: UUID?
@@ -5506,6 +5507,7 @@ struct ImageEditorLayerComp: Identifiable, Equatable, Codable {
         case name
         case comment
         case capturesVisibility
+        case capturesPosition
         case layerOrder
         case layerStates
         case selectedLayerID
@@ -5518,6 +5520,7 @@ struct ImageEditorLayerComp: Identifiable, Equatable, Codable {
         name: String,
         comment: String = "",
         capturesVisibility: Bool = true,
+        capturesPosition: Bool = true,
         layerOrder: [UUID],
         layerStates: [ImageEditorLayerCompLayerState],
         selectedLayerID: UUID?,
@@ -5528,6 +5531,7 @@ struct ImageEditorLayerComp: Identifiable, Equatable, Codable {
         self.name = name
         self.comment = comment
         self.capturesVisibility = capturesVisibility
+        self.capturesPosition = capturesPosition
         self.layerOrder = layerOrder
         self.layerStates = layerStates
         self.selectedLayerID = selectedLayerID
@@ -5543,6 +5547,10 @@ struct ImageEditorLayerComp: Identifiable, Equatable, Codable {
         capturesVisibility = try container.decodeIfPresent(
             Bool.self,
             forKey: .capturesVisibility
+        ) ?? true
+        capturesPosition = try container.decodeIfPresent(
+            Bool.self,
+            forKey: .capturesPosition
         ) ?? true
         layerStates = try container.decode([ImageEditorLayerCompLayerState].self, forKey: .layerStates)
         layerOrder = try container.decodeIfPresent([UUID].self, forKey: .layerOrder)

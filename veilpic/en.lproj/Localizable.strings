@@ -3188,6 +3188,11 @@
 "imageEditor.history.layerCompCaptureVisibility" = "Change Layer Comp Visibility Capture";
 "imageEditor.status.layerCompCaptureVisibilityEnabled" = "“%@” now captures layer visibility.";
 "imageEditor.status.layerCompCaptureVisibilityDisabled" = "“%@” now preserves current layer visibility.";
+"imageEditor.layerComp.positionNotCaptured" = "Position is not captured by this layer comp";
+"imageEditor.action.layerCompCapturePosition" = "Capture Position";
+"imageEditor.history.layerCompCapturePosition" = "Change Layer Comp Position Capture";
+"imageEditor.status.layerCompCapturePositionEnabled" = "“%@” now captures layer position.";
+"imageEditor.status.layerCompCapturePositionDisabled" = "“%@” now preserves current layer position.";
 "imageEditor.action.layerCompMoveToTop" = "Move to List Top";
 "imageEditor.action.layerCompMoveUp" = "Move Layer Comp Up";
 "imageEditor.action.layerCompMoveDown" = "Move Layer Comp Down";

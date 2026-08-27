@@ -101,6 +101,10 @@ struct ImageEditorLayerCompTests {
         #expect(source.contains("imageEditor.layerComp.visibilityNotCaptured"))
         #expect(source.contains("imageEditor.action.layerCompCaptureVisibility"))
         #expect(source.contains("viewModel.setLayerCompCapturesVisibility("))
+        #expect(source.contains("if !comp.capturesPosition"))
+        #expect(source.contains("imageEditor.layerComp.positionNotCaptured"))
+        #expect(source.contains("imageEditor.action.layerCompCapturePosition"))
+        #expect(source.contains("viewModel.setLayerCompCapturesPosition("))
 
         let viewSource = try String(
             contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
@@ -340,6 +344,52 @@ struct ImageEditorLayerCompTests {
     }
 
     @Test
+    func layerCompPositionCaptureCanBeDisabledWithoutChangingCurrentFrame() throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "source.png",
+            image: testImage(color: .systemPink, size: NSSize(width: 80, height: 60))
+        ) { _ in }
+        let layerID = try #require(viewModel.document.selectedLayerID)
+        viewModel.addLayerComp(named: "Appearance only")
+        let compID = try #require(viewModel.document.selectedLayerCompID)
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.setLayerCompCapturesPosition(compID, enabled: false))
+        #expect(viewModel.document.layerComps.first?.capturesPosition == false)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.history.last?.title == L10n.text(
+            "imageEditor.history.layerCompCapturePosition"
+        ))
+        #expect(viewModel.statusText == L10n.format(
+            "imageEditor.status.layerCompCapturePositionDisabled",
+            "Appearance only"
+        ))
+
+        viewModel.undo()
+        #expect(viewModel.document.layerComps.first?.capturesPosition == true)
+        #expect(viewModel.canRedo)
+        let historyAfterUndo = viewModel.document.history
+        #expect(!viewModel.setLayerCompCapturesPosition(compID, enabled: true))
+        #expect(viewModel.document.history == historyAfterUndo)
+        #expect(viewModel.canRedo)
+        viewModel.redo()
+
+        let duplicate = try #require(viewModel.duplicateLayerComp(compID))
+        #expect(duplicate.capturesPosition == false)
+        viewModel.undo()
+        let layerIndex = try #require(viewModel.document.layers.firstIndex { $0.id == layerID })
+        viewModel.document.layers[layerIndex].frame.origin = CGPoint(x: 23, y: 17)
+        let movedFrame = viewModel.document.layers[layerIndex].frame
+        viewModel.document.layers[layerIndex].opacity = 0.35
+        viewModel.applyLayerComp(compID)
+        #expect(viewModel.document.layers[layerIndex].frame == movedFrame)
+        #expect(viewModel.document.layers[layerIndex].opacity == 1)
+
+        viewModel.updateLayerComp(compID)
+        #expect(viewModel.document.layerComps.first?.capturesPosition == false)
+    }
+
+    @Test
     func legacyLayerCompWithoutOptionalMetadataUsesClassicCaptureDefaults() throws {
         let viewModel = ImageEditorViewModel(
             sourceName: "source.png",
@@ -351,6 +401,7 @@ struct ImageEditorLayerCompTests {
         var object = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
         object.removeValue(forKey: "comment")
         object.removeValue(forKey: "capturesVisibility")
+        object.removeValue(forKey: "capturesPosition")
         let legacyData = try JSONSerialization.data(withJSONObject: object)
 
         let decoded = try JSONDecoder().decode(ImageEditorLayerComp.self, from: legacyData)
@@ -358,6 +409,7 @@ struct ImageEditorLayerCompTests {
         #expect(decoded.name == comp.name)
         #expect(decoded.comment.isEmpty)
         #expect(decoded.capturesVisibility)
+        #expect(decoded.capturesPosition)
     }
 
     @Test
@@ -823,6 +875,7 @@ struct ImageEditorLayerCompTests {
         let compID = try #require(viewModel.document.layerComps.first?.id)
         #expect(viewModel.updateLayerCompComment(compID, to: "Client-approved mobile state"))
         #expect(viewModel.setLayerCompCapturesVisibility(compID, enabled: false))
+        #expect(viewModel.setLayerCompCapturesPosition(compID, enabled: false))
 
         let data = try viewModel.projectData()
         let restoredViewModel = ImageEditorViewModel(
@@ -836,6 +889,7 @@ struct ImageEditorLayerCompTests {
         #expect(restoredComp.name == "Small detail")
         #expect(restoredComp.comment == "Client-approved mobile state")
         #expect(restoredComp.capturesVisibility == false)
+        #expect(restoredComp.capturesPosition == false)
         #expect(restoredComp.layerStates.count == viewModel.document.layers.count)
         #expect(restoredComp.layerOrder == layerOrder)
         #expect(restoredComp.layerStates.contains { $0.isClippingMask })

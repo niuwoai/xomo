@@ -1144,6 +1144,10 @@ extension ImageEditorView {
                         Image(systemName: "eye.slash")
                             .help(L10n.text("imageEditor.layerComp.visibilityNotCaptured"))
                     }
+                    if !comp.capturesPosition {
+                        Image(systemName: "move.3d")
+                            .help(L10n.text("imageEditor.layerComp.positionNotCaptured"))
+                    }
                 }
                 .font(.system(size: 10, weight: .medium))
                 .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
@@ -1218,6 +1222,17 @@ extension ImageEditorView {
             Label(
                 L10n.text("imageEditor.action.layerCompCaptureVisibility"),
                 systemImage: comp.capturesVisibility ? "checkmark.square.fill" : "square"
+            )
+        }
+        Button {
+            _ = viewModel.setLayerCompCapturesPosition(
+                comp.id,
+                enabled: !comp.capturesPosition
+            )
+        } label: {
+            Label(
+                L10n.text("imageEditor.action.layerCompCapturePosition"),
+                systemImage: comp.capturesPosition ? "checkmark.square.fill" : "square"
             )
         }
         Divider()

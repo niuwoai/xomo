@@ -152,7 +152,9 @@ extension ImageEditorViewModel {
             if comp.capturesVisibility {
                 document.layers[index].isVisible = state.isVisible
             }
-            document.layers[index].frame = state.frame
+            if comp.capturesPosition {
+                document.layers[index].frame = state.frame
+            }
             document.layers[index].opacity = max(0, min(1, state.opacity))
             document.layers[index].fillOpacity = max(0, min(1, state.fillOpacity))
             document.layers[index].isMaskLinked = state.isMaskLinked
@@ -244,6 +246,7 @@ extension ImageEditorViewModel {
         updated.id = id
         updated.comment = document.layerComps[index].comment
         updated.capturesVisibility = document.layerComps[index].capturesVisibility
+        updated.capturesPosition = document.layerComps[index].capturesPosition
         updated.createdAt = document.layerComps[index].createdAt
         document.layerComps[index] = updated
         document.selectedLayerCompID = id
@@ -338,6 +341,24 @@ extension ImageEditorViewModel {
             enabled
                 ? "imageEditor.status.layerCompCaptureVisibilityEnabled"
                 : "imageEditor.status.layerCompCaptureVisibilityDisabled",
+            document.layerComps[index].name
+        )
+        return true
+    }
+
+    @discardableResult
+    func setLayerCompCapturesPosition(_ id: UUID, enabled: Bool) -> Bool {
+        guard let index = document.layerComps.firstIndex(where: { $0.id == id }),
+              document.layerComps[index].capturesPosition != enabled
+        else { return false }
+        pushUndo()
+        document.layerComps[index].capturesPosition = enabled
+        document.selectedLayerCompID = id
+        appendHistory(L10n.text("imageEditor.history.layerCompCapturePosition"))
+        statusText = L10n.format(
+            enabled
+                ? "imageEditor.status.layerCompCapturePositionEnabled"
+                : "imageEditor.status.layerCompCapturePositionDisabled",
             document.layerComps[index].name
         )
         return true
