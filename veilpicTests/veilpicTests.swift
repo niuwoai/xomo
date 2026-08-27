@@ -290,11 +290,11 @@ struct veilpicTests {
         #expect(viewModel.canSelectPreviousLayerComp)
         #expect(!viewModel.canSelectNextLayerComp)
 
-        viewModel.selectPreviousLayerComp()
+        viewModel.applyPreviousLayerComp()
         #expect(viewModel.document.selectedLayerCompID == visibleCompID)
-        #expect(viewModel.statusText == L10n.format("imageEditor.status.layerCompSelected", "Visible detail"))
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.layerCompApplied", "Visible detail"))
 
-        viewModel.selectNextLayerComp()
+        viewModel.applyNextLayerComp()
         #expect(viewModel.document.selectedLayerCompID == hiddenCompID)
 
         viewModel.duplicateSelectedLayerComp()

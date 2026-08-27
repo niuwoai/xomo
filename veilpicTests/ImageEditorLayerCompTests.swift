@@ -12,6 +12,49 @@ import Testing
 @MainActor
 struct ImageEditorLayerCompTests {
     @Test
+    func previousAndNextCycleApplyCanvasStatesAndPreserveTheInitialDocumentState() throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "source.png",
+            image: testImage(color: .systemBlue, size: NSSize(width: 100, height: 80))
+        ) { _ in }
+        viewModel.addLayer()
+        let detailID = try #require(viewModel.document.selectedLayerID)
+
+        viewModel.addLayerComp(named: "Visible detail")
+        let visibleCompID = try #require(viewModel.document.selectedLayerCompID)
+        viewModel.toggleLayerVisibility(detailID)
+        viewModel.addLayerComp(named: "Hidden detail")
+        let hiddenCompID = try #require(viewModel.document.selectedLayerCompID)
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.applyPreviousLayerComp())
+        #expect(viewModel.document.selectedLayerCompID == visibleCompID)
+        #expect(viewModel.document.layers.first { $0.id == detailID }?.isVisible == true)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.lastDocumentLayerCompState?.layerStates.first {
+            $0.layerID == detailID
+        }?.isVisible == false)
+
+        let boundaryHistoryCount = viewModel.document.history.count
+        #expect(!viewModel.applyPreviousLayerComp())
+        #expect(viewModel.document.selectedLayerCompID == visibleCompID)
+        #expect(viewModel.document.history.count == boundaryHistoryCount)
+
+        #expect(viewModel.applyNextLayerComp())
+        #expect(viewModel.document.selectedLayerCompID == hiddenCompID)
+        #expect(viewModel.document.layers.first { $0.id == detailID }?.isVisible == false)
+        #expect(viewModel.document.history.count == boundaryHistoryCount + 1)
+        #expect(viewModel.lastDocumentLayerCompState?.layerStates.first {
+            $0.layerID == detailID
+        }?.isVisible == false)
+
+        #expect(viewModel.restoreLastDocumentLayerCompState())
+        #expect(viewModel.document.selectedLayerCompID == nil)
+        #expect(viewModel.document.layers.first { $0.id == detailID }?.isVisible == false)
+        #expect(viewModel.lastDocumentLayerCompState == nil)
+    }
+
+    @Test
     func layerCompContextOperationsUseTheExplicitRowInsteadOfTheCurrentSelection() throws {
         let viewModel = ImageEditorViewModel(
             sourceName: "source.png",
@@ -122,6 +165,10 @@ struct ImageEditorLayerCompTests {
         #expect(source.contains("viewModel.clearLayerCompWarning(comp.id)"))
         #expect(source.contains("viewModel.clearAllLayerCompWarnings()"))
         #expect(source.contains("image-editor-layer-comp-warning-\\(comp.id.uuidString)"))
+        #expect(source.contains("viewModel.applyPreviousLayerComp()"))
+        #expect(source.contains("viewModel.applyNextLayerComp()"))
+        #expect(source.contains("image-editor-layer-comp-previous"))
+        #expect(source.contains("image-editor-layer-comp-next"))
 
         let viewSource = try String(
             contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
@@ -157,6 +204,12 @@ struct ImageEditorLayerCompTests {
         ).count - 1 == 2)
         #expect(menuSource.components(
             separatedBy: "viewModel.clearAllLayerCompWarnings()"
+        ).count - 1 == 2)
+        #expect(menuSource.components(
+            separatedBy: "viewModel.applyPreviousLayerComp()"
+        ).count - 1 == 2)
+        #expect(menuSource.components(
+            separatedBy: "viewModel.applyNextLayerComp()"
         ).count - 1 == 2)
         let viewModelSource = try String(
             contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorViewModel.swift"),

@@ -5218,8 +5218,8 @@ final class XomoAutomationRegistry {
         case "duplicate":
             viewModel.selectLayerComp(try requiredUUID("id", in: arguments))
             viewModel.duplicateSelectedLayerComp()
-        case "previous": viewModel.selectPreviousLayerComp()
-        case "next": viewModel.selectNextLayerComp()
+        case "previous": viewModel.applyPreviousLayerComp()
+        case "next": viewModel.applyNextLayerComp()
         default: throw XomoAutomationCallError.invalidArgument("Unknown layer comp action")
         }
     }
@@ -7216,7 +7216,7 @@ private extension XomoAutomationRegistry {
             "action": XomoAutomationSchema.string(description: "Layer action", values: ["backgroundToLayer", "layerToBackground", "moveIntoGroup", "moveOutOfGroup", "expandSelectedGroups", "collapseSelectedGroups", "createClippingMasks", "releaseClippingMasks", "toggleClippingMask", "stampSelected"])
         ], required: ["action"]),
         tool("xomo.layer_comp.list", "List saved layer composition states."),
-        tool("xomo.layer_comp.action", "Create, select, apply, update, rename, duplicate, or delete layer comps.", [
+        tool("xomo.layer_comp.action", "Create, select, apply, update, rename, duplicate, delete, or cycle through layer comps.", [
             "action": XomoAutomationSchema.string(description: "Layer comp action", values: ["create", "select", "apply", "update", "rename", "delete", "duplicate", "previous", "next"]),
             "id": XomoAutomationSchema.string(description: "Layer comp UUID"),
             "name": XomoAutomationSchema.string(description: "Layer comp name")

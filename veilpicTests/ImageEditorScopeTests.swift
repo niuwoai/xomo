@@ -6612,7 +6612,9 @@ struct ImageEditorScopeTests {
         #expect(layerCompMenuSource.contains("viewModel.isLayersPanelVisible = true"))
         #expect(layerCompMenuSource.contains("selectedLayerPanelTab = .comps"))
         #expect(layerCompMenuSource.contains("imageEditor.action.layerCompNew"))
-        #expect(layerCompMenuSource.contains("viewModel.addLayerComp()"))
+        #expect(layerCompMenuSource.contains(
+            "viewModel.addLayerComp(captureOptions: .storedDefaults)"
+        ))
         #expect(layerCompMenuSource.contains("imageEditor.action.layerCompApply"))
         #expect(layerCompMenuSource.contains("viewModel.applySelectedLayerComp()"))
         #expect(layerCompMenuSource.contains("viewModel.canApplySelectedLayerComp"))
@@ -6638,10 +6640,10 @@ struct ImageEditorScopeTests {
         #expect(layerCompMenuSource.contains("viewModel.deleteSelectedLayerComp()"))
         #expect(layerCompMenuSource.contains("viewModel.canDeleteSelectedLayerComp"))
         #expect(layerCompMenuSource.contains("imageEditor.action.layerCompPrevious"))
-        #expect(layerCompMenuSource.contains("viewModel.selectPreviousLayerComp()"))
+        #expect(layerCompMenuSource.contains("viewModel.applyPreviousLayerComp()"))
         #expect(layerCompMenuSource.contains("viewModel.canSelectPreviousLayerComp"))
         #expect(layerCompMenuSource.contains("imageEditor.action.layerCompNext"))
-        #expect(layerCompMenuSource.contains("viewModel.selectNextLayerComp()"))
+        #expect(layerCompMenuSource.contains("viewModel.applyNextLayerComp()"))
         #expect(layerCompMenuSource.contains("viewModel.canSelectNextLayerComp"))
     }
 

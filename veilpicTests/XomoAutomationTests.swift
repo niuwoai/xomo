@@ -8653,11 +8653,18 @@ struct XomoAutomationTests {
         let viewModel = makeViewModel()
         let registry = XomoAutomationRegistry.shared
         registry.register(viewModel)
+        let layerID = try #require(viewModel.document.selectedLayerID)
 
         #expect(registry.execute(request(
             operation: "call",
             name: "xomo.layer_comp.action",
             arguments: ["action": .string("create"), "name": .string("Desktop")]
+        )).ok)
+        viewModel.toggleLayerVisibility(layerID)
+        #expect(registry.execute(request(
+            operation: "call",
+            name: "xomo.layer_comp.action",
+            arguments: ["action": .string("create"), "name": .string("Hidden")]
         )).ok)
         let response = registry.execute(request(operation: "call", name: "xomo.layer_comp.list"))
         #expect(response.ok)
@@ -8665,7 +8672,18 @@ struct XomoAutomationTests {
             Issue.record("Expected layer comp array")
             return
         }
-        #expect(comps.count == 1)
+        #expect(comps.count == 2)
+
+        #expect(registry.execute(request(
+            operation: "call",
+            name: "xomo.layer_comp.action",
+            arguments: ["action": .string("previous")]
+        )).ok)
+        #expect(viewModel.document.layers.first { $0.id == layerID }?.isVisible == true)
+        #expect(viewModel.statusText == L10n.format(
+            "imageEditor.status.layerCompApplied",
+            "Desktop"
+        ))
     }
 
     @Test func registryRoundTripsCompleteProjectData() throws {

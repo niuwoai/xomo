@@ -304,11 +304,12 @@ extension ImageEditorViewModel {
         statusText = L10n.format("imageEditor.status.layerCompSaved", comp.name)
     }
 
-    func applyLayerComp(_ id: UUID) {
-        guard let comp = document.layerComps.first(where: { $0.id == id }) else { return }
+    @discardableResult
+    func applyLayerComp(_ id: UUID) -> Bool {
+        guard let comp = document.layerComps.first(where: { $0.id == id }) else { return false }
         guard layerCompHasMatchingLayers(comp) else {
             statusText = L10n.text("imageEditor.status.layerCompNoMatchingLayers")
-            return
+            return false
         }
         if lastDocumentLayerCompState == nil {
             lastDocumentLayerCompState = ImageEditorLayerComp.capture(
@@ -322,6 +323,7 @@ extension ImageEditorViewModel {
             historyKey: "imageEditor.history.layerCompApply",
             statusText: L10n.format("imageEditor.status.layerCompApplied", comp.name)
         )
+        return true
     }
 
     @discardableResult
@@ -659,14 +661,16 @@ extension ImageEditorViewModel {
         statusText = L10n.format("imageEditor.status.layerCompSelected", comp.name)
     }
 
-    func selectPreviousLayerComp() {
-        guard canSelectPreviousLayerComp, let selectedLayerCompIndex else { return }
-        selectLayerComp(document.layerComps[selectedLayerCompIndex - 1].id)
+    @discardableResult
+    func applyPreviousLayerComp() -> Bool {
+        guard canSelectPreviousLayerComp, let selectedLayerCompIndex else { return false }
+        return applyLayerComp(document.layerComps[selectedLayerCompIndex - 1].id)
     }
 
-    func selectNextLayerComp() {
-        guard canSelectNextLayerComp, let selectedLayerCompIndex else { return }
-        selectLayerComp(document.layerComps[selectedLayerCompIndex + 1].id)
+    @discardableResult
+    func applyNextLayerComp() -> Bool {
+        guard canSelectNextLayerComp, let selectedLayerCompIndex else { return false }
+        return applyLayerComp(document.layerComps[selectedLayerCompIndex + 1].id)
     }
 
     func layerCompSummary(_ comp: ImageEditorLayerComp) -> String {

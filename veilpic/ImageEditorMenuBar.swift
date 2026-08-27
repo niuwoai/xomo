@@ -1006,11 +1006,11 @@ extension ImageEditorView {
             .disabled(!viewModel.canDeleteSelectedLayerComp)
             Divider()
             Button(L10n.text("imageEditor.action.layerCompPrevious")) {
-                viewModel.selectPreviousLayerComp()
+                viewModel.applyPreviousLayerComp()
             }
             .disabled(!viewModel.canSelectPreviousLayerComp)
             Button(L10n.text("imageEditor.action.layerCompNext")) {
-                viewModel.selectNextLayerComp()
+                viewModel.applyNextLayerComp()
             }
             .disabled(!viewModel.canSelectNextLayerComp)
         }
@@ -2235,12 +2235,12 @@ extension ImageEditorView {
             Divider()
             Button(L10n.text("imageEditor.action.layerCompPrevious")) {
                 selectedLayerPanelTab = .comps
-                viewModel.selectPreviousLayerComp()
+                viewModel.applyPreviousLayerComp()
             }
             .disabled(!viewModel.canSelectPreviousLayerComp)
             Button(L10n.text("imageEditor.action.layerCompNext")) {
                 selectedLayerPanelTab = .comps
-                viewModel.selectNextLayerComp()
+                viewModel.applyNextLayerComp()
             }
             .disabled(!viewModel.canSelectNextLayerComp)
         }

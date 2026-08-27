@@ -1127,6 +1127,28 @@ extension ImageEditorView {
                 }
             }
 
+            HStack(spacing: 6) {
+                layerCompIconButton(
+                    "chevron.left",
+                    "imageEditor.action.layerCompPrevious"
+                ) {
+                    viewModel.applyPreviousLayerComp()
+                }
+                .disabled(!viewModel.canSelectPreviousLayerComp)
+                .accessibilityIdentifier("image-editor-layer-comp-previous")
+
+                layerCompIconButton(
+                    "chevron.right",
+                    "imageEditor.action.layerCompNext"
+                ) {
+                    viewModel.applyNextLayerComp()
+                }
+                .disabled(!viewModel.canSelectNextLayerComp)
+                .accessibilityIdentifier("image-editor-layer-comp-next")
+
+                Spacer()
+            }
+
             Text(L10n.text("imageEditor.layerComp.hint"))
                 .font(.system(size: 10, weight: .medium))
                 .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
