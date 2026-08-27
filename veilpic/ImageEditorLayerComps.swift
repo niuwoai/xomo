@@ -167,19 +167,25 @@ extension ImageEditorViewModel {
 
     func duplicateSelectedLayerComp() {
         guard let selectedLayerComp else { return }
-        pushUndo()
-        var duplicated = selectedLayerComp
-        duplicated.id = UUID()
-        duplicated.name = duplicateLayerCompName(for: selectedLayerComp.name)
-        duplicated.createdAt = Date()
-        if let selectedIndex = selectedLayerCompIndex {
-            document.layerComps.insert(duplicated, at: selectedIndex + 1)
-        } else {
-            document.layerComps.append(duplicated)
+        _ = duplicateLayerComp(selectedLayerComp.id)
+    }
+
+    @discardableResult
+    func duplicateLayerComp(_ id: UUID) -> ImageEditorLayerComp? {
+        guard let sourceIndex = document.layerComps.firstIndex(where: { $0.id == id }) else {
+            return nil
         }
+        let source = document.layerComps[sourceIndex]
+        pushUndo()
+        var duplicated = source
+        duplicated.id = UUID()
+        duplicated.name = duplicateLayerCompName(for: source.name)
+        duplicated.createdAt = Date()
+        document.layerComps.insert(duplicated, at: sourceIndex + 1)
         document.selectedLayerCompID = duplicated.id
         appendHistory(L10n.text("imageEditor.history.layerCompDuplicate"))
         statusText = L10n.format("imageEditor.status.layerCompDuplicated", duplicated.name)
+        return duplicated
     }
 
     func renameLayerComp(_ id: UUID, to proposedName: String) {

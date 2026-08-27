@@ -1138,6 +1138,37 @@ extension ImageEditorView {
         .padding(.vertical, 6)
         .background(isSelected ? Color(nsColor: ImageEditorTheme.selected).opacity(0.28) : Color.white.opacity(0.04))
         .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
+        .contextMenu {
+            layerCompContextMenu(comp)
+        }
+    }
+
+    @ViewBuilder
+    private func layerCompContextMenu(_ comp: ImageEditorLayerComp) -> some View {
+        Button {
+            viewModel.applyLayerComp(comp.id)
+        } label: {
+            Label(L10n.text("imageEditor.action.layerCompApply"), systemImage: "play.fill")
+        }
+        Button {
+            viewModel.updateLayerComp(comp.id)
+        } label: {
+            Label(
+                L10n.text("imageEditor.action.layerCompUpdate"),
+                systemImage: "arrow.triangle.2.circlepath"
+            )
+        }
+        Button {
+            _ = viewModel.duplicateLayerComp(comp.id)
+        } label: {
+            Label(L10n.text("imageEditor.action.layerCompDuplicate"), systemImage: "doc.on.doc")
+        }
+        Divider()
+        Button(role: .destructive) {
+            viewModel.deleteLayerComp(comp.id)
+        } label: {
+            Label(L10n.text("imageEditor.action.layerCompDelete"), systemImage: "trash")
+        }
     }
 
     private func layerCompIconButton(_ systemImage: String, _ helpKey: String, action: @escaping () -> Void) -> some View {

@@ -12,6 +12,70 @@ import Testing
 @MainActor
 struct ImageEditorLayerCompTests {
     @Test
+    func layerCompContextOperationsUseTheExplicitRowInsteadOfTheCurrentSelection() throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "source.png",
+            image: testImage(color: .systemBlue, size: NSSize(width: 100, height: 80))
+        ) { _ in }
+        let layerID = try #require(viewModel.document.selectedLayerID)
+
+        viewModel.addLayerComp(named: "Visible")
+        let visibleCompID = try #require(viewModel.document.selectedLayerCompID)
+        viewModel.toggleLayerVisibility(layerID)
+        viewModel.addLayerComp(named: "Hidden")
+        let hiddenCompID = try #require(viewModel.document.selectedLayerCompID)
+
+        let duplicated = try #require(viewModel.duplicateLayerComp(visibleCompID))
+        #expect(viewModel.document.layerComps.map(\.id) == [
+            visibleCompID,
+            duplicated.id,
+            hiddenCompID
+        ])
+        #expect(duplicated.layerStates == viewModel.document.layerComps[0].layerStates)
+        #expect(duplicated.name == L10n.format("imageEditor.layerComp.copyName", "Visible"))
+        #expect(viewModel.document.selectedLayerCompID == duplicated.id)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerCompDuplicate"))
+
+        viewModel.selectLayerComp(hiddenCompID)
+        let historyCount = viewModel.document.history.count
+        let compIDs = viewModel.document.layerComps.map(\.id)
+        #expect(viewModel.duplicateLayerComp(UUID()) == nil)
+        #expect(viewModel.document.layerComps.map(\.id) == compIDs)
+        #expect(viewModel.document.selectedLayerCompID == hiddenCompID)
+        #expect(viewModel.document.history.count == historyCount)
+
+        viewModel.deleteLayerComp(visibleCompID)
+        #expect(!viewModel.document.layerComps.contains { $0.id == visibleCompID })
+        #expect(viewModel.document.selectedLayerCompID == hiddenCompID)
+    }
+
+    @Test
+    func layerCompRowsExposeTheSameExplicitContextActionsAsTheirInlineControls() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorLayerPanel.swift"),
+            encoding: .utf8
+        )
+        let contextStart = try #require(source.range(
+            of: "private func layerCompContextMenu(_ comp: ImageEditorLayerComp)"
+        ))
+        let contextEnd = try #require(source.range(
+            of: "private func layerCompIconButton",
+            range: contextStart.upperBound..<source.endIndex
+        ))
+        let contextSource = source[contextStart.lowerBound..<contextEnd.lowerBound]
+
+        #expect(source.contains(".contextMenu {\n            layerCompContextMenu(comp)"))
+        #expect(contextSource.contains("viewModel.applyLayerComp(comp.id)"))
+        #expect(contextSource.contains("viewModel.updateLayerComp(comp.id)"))
+        #expect(contextSource.contains("viewModel.duplicateLayerComp(comp.id)"))
+        #expect(contextSource.contains("viewModel.deleteLayerComp(comp.id)"))
+        #expect(contextSource.contains("Button(role: .destructive)"))
+    }
+
+    @Test
     func layerCompAppliesCapturedLayerState() throws {
         let viewModel = ImageEditorViewModel(
             sourceName: "source.png",
