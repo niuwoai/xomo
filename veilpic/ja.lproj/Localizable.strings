@@ -348,6 +348,7 @@
 "imageEditor.menu.layer.align" = "整列";
 "imageEditor.menu.layer.distribute" = "分布";
 "imageEditor.menu.layer.mask" = "レイヤーマスク";
+"imageEditor.menu.layer.vectorMask" = "ベクトルマスク";
 "imageEditor.menu.layer.style" = "レイヤースタイル";
 "imageEditor.menu.layer.stylePresets" = "スタイルプリセット";
 "imageEditor.menu.layer.comps" = "レイヤーコンプ";

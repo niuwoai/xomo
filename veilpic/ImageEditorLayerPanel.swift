@@ -2311,6 +2311,8 @@ extension ImageEditorView {
 
                 layerContextLayerMaskMenu(layer)
 
+                layerContextVectorMaskMenu(layer)
+
                 layerContextSmartObjectMenu(layer)
 
                 Menu(L10n.text("imageEditor.action.layerRasterize")) {
@@ -2698,6 +2700,34 @@ extension ImageEditorView {
                 "image-editor-layer-context-mask-\(action.rawValue)-\(layer.id.uuidString)"
             )
         }
+    }
+
+    private func layerContextVectorMaskMenu(_ layer: ImageEditorLayer) -> some View {
+        Menu(L10n.text("imageEditor.menu.layer.vectorMask")) {
+            ForEach(ImageEditorVectorMaskContextAction.allCases) { action in
+                Button {
+                    viewModel.performVectorMaskActionFromContext(
+                        layer.id,
+                        action: action
+                    )
+                } label: {
+                    Label(
+                        L10n.text(action.actionTitleKey),
+                        systemImage: action.systemImage
+                    )
+                }
+                .disabled(!viewModel.canPerformVectorMaskActionFromContext(
+                    layer.id,
+                    action: action
+                ))
+                .accessibilityIdentifier(
+                    "image-editor-layer-context-vector-mask-\(action.rawValue)-\(layer.id.uuidString)"
+                )
+            }
+        }
+        .accessibilityIdentifier(
+            "image-editor-layer-context-vector-mask-\(layer.id.uuidString)"
+        )
     }
 
     private func layerContextOrderingMenu(_ layer: ImageEditorLayer) -> some View {

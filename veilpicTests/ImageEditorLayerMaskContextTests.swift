@@ -86,13 +86,13 @@ struct ImageEditorLayerMaskContextTests {
         )
         let historyCount = viewModel.document.history.count
 
-        #expect(viewModel.canPerformLayerMaskActionFromContext(
+        #expect(viewModel.canPerformVectorMaskActionFromContext(
             first.id,
-            action: .vectorFromSelection
+            action: .createFromSelection
         ))
-        #expect(viewModel.performLayerMaskActionFromContext(
+        #expect(viewModel.performVectorMaskActionFromContext(
             first.id,
-            action: .vectorFromSelection
+            action: .createFromSelection
         ))
         #expect(viewModel.document.layers[0].vectorMask?.kind == .path)
         #expect(viewModel.document.layers[0].vectorMask?.isPathClosed == true)
@@ -124,15 +124,118 @@ struct ImageEditorLayerMaskContextTests {
             to: CGPoint(x: 46, y: 36)
         )
 
-        #expect(viewModel.performLayerMaskActionFromContext(
+        #expect(viewModel.performVectorMaskActionFromContext(
             clicked.id,
-            action: .vectorFromSelection
+            action: .createFromSelection
         ))
         #expect(viewModel.document.layers[0].vectorMask == nil)
         #expect(viewModel.document.layers[1].vectorMask != nil)
         #expect(viewModel.document.layers[2].vectorMask == nil)
         #expect(viewModel.document.selectedLayerIDs == [clicked.id])
         #expect(viewModel.document.selectedLayerID == clicked.id)
+    }
+
+    @Test func vectorMaskToggleBatchesEditableSelectionAndSkipsLockedLayer() {
+        let viewModel = makeViewModel()
+        var first = layer(named: "First Vector", in: viewModel)
+        var second = layer(named: "Second Vector", in: viewModel)
+        var locked = layer(named: "Locked Vector", in: viewModel)
+        first.vectorMask = vectorMask(size: first.image.size)
+        second.vectorMask = vectorMask(size: second.image.size)
+        locked.vectorMask = vectorMask(size: locked.image.size)
+        locked.isLocked = true
+        viewModel.document.layers = [first, second, locked]
+        select(
+            [first.id, second.id, locked.id],
+            primary: second.id,
+            in: viewModel
+        )
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.performVectorMaskActionFromContext(
+            first.id,
+            action: .toggleEnabled
+        ))
+        #expect(viewModel.document.layers[0].isVectorMaskEnabled == false)
+        #expect(viewModel.document.layers[1].isVectorMaskEnabled == false)
+        #expect(viewModel.document.layers[2].isVectorMaskEnabled)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.selectedLayerIDs == [
+            first.id,
+            second.id,
+            locked.id
+        ])
+
+        viewModel.undo()
+        #expect(viewModel.document.layers.allSatisfy { $0.isVectorMaskEnabled })
+    }
+
+    @Test func vectorMaskEditUsesClickedLayerAndCreatesEditablePathInOneUndo() throws {
+        let viewModel = makeViewModel()
+        var first = layer(named: "First Vector", in: viewModel)
+        var clicked = layer(named: "Clicked Vector", in: viewModel)
+        first.vectorMask = vectorMask(size: first.image.size)
+        clicked.vectorMask = vectorMask(size: clicked.image.size)
+        viewModel.document.layers = [first, clicked]
+        select([first.id, clicked.id], primary: first.id, in: viewModel)
+        let originalLayerCount = viewModel.document.layers.count
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.canPerformVectorMaskActionFromContext(
+            clicked.id,
+            action: .editPath
+        ))
+        #expect(viewModel.performVectorMaskActionFromContext(
+            clicked.id,
+            action: .editPath
+        ))
+        let clickedAfter = try #require(viewModel.document.layers.first {
+            $0.id == clicked.id
+        })
+        let pathLayer = try #require(viewModel.document.selectedLayer)
+        #expect(clickedAfter.vectorMask == nil)
+        #expect(pathLayer.id != clicked.id)
+        #expect(pathLayer.shapeContent?.kind == .path)
+        #expect(viewModel.document.selectedLayerIDs == [pathLayer.id])
+        #expect(viewModel.document.layers.count == originalLayerCount + 1)
+        #expect(viewModel.document.history.count == historyCount + 1)
+
+        viewModel.undo()
+        #expect(viewModel.document.layers.count == originalLayerCount)
+        #expect(viewModel.document.layers.first { $0.id == clicked.id }?.vectorMask != nil)
+        #expect(viewModel.document.selectedLayerIDs == [clicked.id])
+    }
+
+    @Test func vectorMaskLoadSelectionUsesClickedTargetAndRejectsEquivalentReload() throws {
+        let viewModel = makeViewModel()
+        var left = layer(named: "Left Vector", in: viewModel)
+        var right = layer(named: "Right Vector", in: viewModel)
+        left.vectorMask = vectorMask(
+            size: left.image.size,
+            rect: CGRect(x: 2, y: 4, width: 20, height: 38)
+        )
+        right.vectorMask = vectorMask(
+            size: right.image.size,
+            rect: CGRect(x: 42, y: 4, width: 20, height: 38)
+        )
+        viewModel.document.layers = [left, right]
+        select([left.id, right.id], primary: left.id, in: viewModel)
+        viewModel.selectionMode = .replace
+
+        #expect(viewModel.performVectorMaskActionFromContext(
+            right.id,
+            action: .loadSelection
+        ))
+        let bounds = try #require(viewModel.document.selection?
+            .effectiveSelectedBounds(in: viewModel.document.canvasSize))
+        #expect(bounds.minX >= 41)
+        #expect(bounds.maxX >= 61)
+        #expect(viewModel.document.selectedLayerIDs == [left.id, right.id])
+        #expect(viewModel.document.selectedLayerID == left.id)
+        #expect(!viewModel.canPerformVectorMaskActionFromContext(
+            right.id,
+            action: .loadSelection
+        ))
     }
 
     @Test func unavailableContextActionsDoNotMutateSelectionOrHistory() {
@@ -154,6 +257,16 @@ struct ImageEditorLayerMaskContextTests {
                 action: action
             ))
             #expect(!viewModel.performLayerMaskActionFromContext(
+                locked.id,
+                action: action
+            ))
+        }
+        for action in ImageEditorVectorMaskContextAction.allCases {
+            #expect(!viewModel.canPerformVectorMaskActionFromContext(
+                locked.id,
+                action: action
+            ))
+            #expect(!viewModel.performVectorMaskActionFromContext(
                 locked.id,
                 action: action
             ))
@@ -482,6 +595,10 @@ struct ImageEditorLayerMaskContextTests {
         #expect(source.contains("ImageEditorLayerMaskContextAction.managementActions"))
         #expect(source.contains("viewModel.performLayerMaskActionFromContext("))
         #expect(source.contains("viewModel.canPerformLayerMaskActionFromContext("))
+        #expect(source.contains("layerContextVectorMaskMenu(layer)"))
+        #expect(source.contains("ImageEditorVectorMaskContextAction.allCases"))
+        #expect(source.contains("viewModel.performVectorMaskActionFromContext("))
+        #expect(source.contains("viewModel.canPerformVectorMaskActionFromContext("))
         #expect(source.contains("image-editor-layer-context-mask-\\(action.rawValue)-\\(layer.id.uuidString)"))
     }
 
@@ -509,6 +626,35 @@ struct ImageEditorLayerMaskContextTests {
             NSColor.white.setFill()
             selectedRect.fill()
         } ?? NSImage(size: size)
+    }
+
+    private func vectorMask(
+        size: CGSize,
+        rect: CGRect? = nil
+    ) -> ImageEditorShapeContent {
+        let pathRect = rect ?? CGRect(
+            x: 8,
+            y: 6,
+            width: max(1, size.width - 16),
+            height: max(1, size.height - 12)
+        )
+        let points = [
+            CGPoint(x: pathRect.minX, y: pathRect.minY),
+            CGPoint(x: pathRect.maxX, y: pathRect.minY),
+            CGPoint(x: pathRect.maxX, y: pathRect.maxY),
+            CGPoint(x: pathRect.minX, y: pathRect.maxY)
+        ]
+        return ImageEditorShapeContent(
+            kind: .path,
+            fillColor: .white,
+            fillOpacity: 1,
+            strokeColor: .white,
+            strokeWidth: 1,
+            strokeOpacity: 0,
+            pathPoints: points,
+            pathAnchors: points.map { ImageEditorPathAnchor(point: $0) },
+            isPathClosed: true
+        ).normalized(size: size)
     }
 
     private func select(

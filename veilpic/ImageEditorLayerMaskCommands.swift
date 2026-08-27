@@ -13,7 +13,6 @@ enum ImageEditorLayerMaskContextAction: String, CaseIterable, Identifiable {
     case hideAll
     case revealSelection
     case hideSelection
-    case vectorFromSelection
     case revealSelectionOnMask
     case hideSelectionOnMask
     case intersectSelectionOnMask
@@ -32,8 +31,7 @@ enum ImageEditorLayerMaskContextAction: String, CaseIterable, Identifiable {
         .revealAll,
         .hideAll,
         .revealSelection,
-        .hideSelection,
-        .vectorFromSelection
+        .hideSelection
     ]
 
     static let managementActions: [Self] = [
@@ -59,7 +57,6 @@ enum ImageEditorLayerMaskContextAction: String, CaseIterable, Identifiable {
         case .hideAll: "imageEditor.action.layerMaskHideAll"
         case .revealSelection: "imageEditor.action.layerMaskFromSelection"
         case .hideSelection: "imageEditor.action.layerMaskHideSelection"
-        case .vectorFromSelection: "imageEditor.action.vectorMaskFromSelection"
         case .revealSelectionOnMask: "imageEditor.action.layerMaskRevealSelection"
         case .hideSelectionOnMask: "imageEditor.action.layerMaskHideSelectionFromMask"
         case .intersectSelectionOnMask: "imageEditor.action.layerMaskIntersectSelection"
@@ -80,7 +77,6 @@ enum ImageEditorLayerMaskContextAction: String, CaseIterable, Identifiable {
         case .hideAll: "circle.fill"
         case .revealSelection: "circle.lefthalf.filled"
         case .hideSelection: "circle.dashed.inset.filled"
-        case .vectorFromSelection: "point.topleft.down.curvedto.point.bottomright.up"
         case .revealSelectionOnMask: "rectangle.dashed.badge.plus"
         case .hideSelectionOnMask: "rectangle.dashed.badge.minus"
         case .intersectSelectionOnMask: "rectangle.intersection.angled"
@@ -92,6 +88,33 @@ enum ImageEditorLayerMaskContextAction: String, CaseIterable, Identifiable {
         case .copyToSelected: "doc.on.doc"
         case .apply: "checkmark.square"
         case .delete: "xmark.square"
+        }
+    }
+}
+
+enum ImageEditorVectorMaskContextAction: String, CaseIterable, Identifiable {
+    case createFromSelection
+    case toggleEnabled
+    case editPath
+    case loadSelection
+
+    var id: String { rawValue }
+
+    var actionTitleKey: String {
+        switch self {
+        case .createFromSelection: "imageEditor.action.vectorMaskFromSelection"
+        case .toggleEnabled: "imageEditor.action.vectorMaskToggle"
+        case .editPath: "imageEditor.action.vectorMaskEditPath"
+        case .loadSelection: "imageEditor.action.vectorMaskLoadSelection"
+        }
+    }
+
+    var systemImage: String {
+        switch self {
+        case .createFromSelection: "point.topleft.down.curvedto.point.bottomright.up"
+        case .toggleEnabled: "circle.slash"
+        case .editPath: "point.3.filled.connected.trianglepath.dotted"
+        case .loadSelection: "rectangle.dashed"
         }
     }
 }
@@ -180,12 +203,6 @@ extension ImageEditorViewModel {
                 hidingSelection: action == .hideSelection,
                 selectedIDs: selectedIDs
             ).isEmpty
-        case .vectorFromSelection:
-            guard let selection = document.selection else { return false }
-            return !vectorMaskCreationOperations(
-                selection,
-                selectedIDs: selectedIDs
-            ).isEmpty
         case .revealSelectionOnMask, .hideSelectionOnMask, .intersectSelectionOnMask:
             guard let selection = document.selection,
                   let combination = action.layerMaskSelectionCombination
@@ -259,8 +276,6 @@ extension ImageEditorViewModel {
             addLayerMaskFromSelection()
         case .hideSelection:
             addLayerMaskHidingSelection()
-        case .vectorFromSelection:
-            addVectorMaskFromSelection()
         case .revealSelectionOnMask:
             revealSelectionOnLayerMask()
         case .hideSelectionOnMask:
@@ -299,6 +314,90 @@ extension ImageEditorViewModel {
         guard let layer = document.layers.first(where: { $0.id == layerID }),
               let mask = layer.mask,
               let candidate = selectionFromLayerMask(mask, layer: layer)
+        else { return false }
+        let existing = document.selection
+        guard existing != nil || mode == .replace || mode == .add else {
+            return false
+        }
+        let next = ImageEditorSelection.combined(
+            current: existing,
+            candidate: candidate,
+            mode: mode,
+            canvasSize: document.canvasSize
+        )
+        return !selectionsAreEquivalent(next, existing)
+    }
+
+    func canPerformVectorMaskActionFromContext(
+        _ clickedLayerID: UUID,
+        action: ImageEditorVectorMaskContextAction
+    ) -> Bool {
+        let selectedIDs = layerContextSelectionIDs(for: clickedLayerID)
+        guard !selectedIDs.isEmpty else { return false }
+        switch action {
+        case .createFromSelection:
+            guard let selection = document.selection else { return false }
+            return !vectorMaskCreationOperations(
+                selection,
+                selectedIDs: selectedIDs
+            ).isEmpty
+        case .toggleEnabled:
+            return !vectorMaskToggleEnabledIndices(
+                selectedIDs: selectedIDs
+            ).isEmpty
+        case .editPath:
+            guard let layer = document.layers.first(where: { $0.id == clickedLayerID }),
+                  let vectorMask = layer.vectorMask
+            else { return false }
+            return !document.isEffectivelyLocked(layer)
+                && vectorMask.kind == .path
+                && vectorMask.isPathClosed
+                && vectorMask.editablePathAnchors.count >= 3
+        case .loadSelection:
+            return canLoadSelectionFromVectorMask(
+                layerID: clickedLayerID,
+                mode: selectionMode
+            )
+        }
+    }
+
+    @discardableResult
+    func performVectorMaskActionFromContext(
+        _ clickedLayerID: UUID,
+        action: ImageEditorVectorMaskContextAction
+    ) -> Bool {
+        guard canPerformVectorMaskActionFromContext(
+            clickedLayerID,
+            action: action
+        ) else { return false }
+        prepareLayerContextSelection(for: clickedLayerID)
+        switch action {
+        case .createFromSelection:
+            addVectorMaskFromSelection()
+        case .toggleEnabled:
+            toggleVectorMaskEnabled()
+        case .editPath:
+            selectLayer(clickedLayerID)
+            editSelectedVectorMaskAsPath()
+        case .loadSelection:
+            return loadSelectionFromVectorMask(
+                layerID: clickedLayerID,
+                mode: selectionMode
+            )
+        }
+        return true
+    }
+
+    private func canLoadSelectionFromVectorMask(
+        layerID: UUID,
+        mode: ImageEditorSelectionMode
+    ) -> Bool {
+        guard let layer = document.layers.first(where: { $0.id == layerID }),
+              let vectorMask = layer.vectorMask,
+              vectorMask.kind == .path,
+              vectorMask.isPathClosed,
+              vectorMask.editablePathAnchors.count >= 3,
+              let candidate = selectionFromVectorMask(vectorMask, layer: layer)
         else { return false }
         let existing = document.selection
         guard existing != nil || mode == .replace || mode == .add else {
@@ -1034,10 +1133,12 @@ extension ImageEditorViewModel {
         }
     }
 
-    private func vectorMaskToggleEnabledIndices() -> [Int] {
-        let selectedIDs = document.selectedLayerIDs.isEmpty
+    private func vectorMaskToggleEnabledIndices(
+        selectedIDs explicitSelectedIDs: Set<UUID>? = nil
+    ) -> [Int] {
+        let selectedIDs = explicitSelectedIDs ?? (document.selectedLayerIDs.isEmpty
             ? Set(document.selectedLayerID.map { [$0] } ?? [])
-            : document.selectedLayerIDs
+            : document.selectedLayerIDs)
         return document.layers.indices.filter { index in
             let layer = document.layers[index]
             return selectedIDs.contains(layer.id)

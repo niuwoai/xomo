@@ -348,6 +348,7 @@
 "imageEditor.menu.layer.align" = "Align";
 "imageEditor.menu.layer.distribute" = "Distribute";
 "imageEditor.menu.layer.mask" = "Layer Mask";
+"imageEditor.menu.layer.vectorMask" = "Vector Mask";
 "imageEditor.menu.layer.style" = "Layer Style";
 "imageEditor.menu.layer.stylePresets" = "Style Presets";
 "imageEditor.menu.layer.comps" = "Layer Comps";
