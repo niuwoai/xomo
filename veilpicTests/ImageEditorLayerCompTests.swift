@@ -109,6 +109,11 @@ struct ImageEditorLayerCompTests {
         #expect(source.contains("imageEditor.layerComp.appearanceNotCaptured"))
         #expect(source.contains("imageEditor.action.layerCompCaptureAppearance"))
         #expect(source.contains("viewModel.setLayerCompCapturesAppearance("))
+        #expect(source.contains("viewModel.addLayerComp(captureOptions: layerCompCreationOptions)"))
+        #expect(source.contains("imageEditor.action.layerCompCreationOptions"))
+        #expect(source.contains("isOn: $defaultLayerCompCapturesVisibility"))
+        #expect(source.contains("isOn: $defaultLayerCompCapturesPosition"))
+        #expect(source.contains("isOn: $defaultLayerCompCapturesAppearance"))
 
         let viewSource = try String(
             contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
@@ -120,6 +125,22 @@ struct ImageEditorLayerCompTests {
         #expect(viewSource.contains(
             "@State var layerCompCommentDrafts: [UUID: String] = [:]"
         ))
+        #expect(viewSource.contains(
+            "@AppStorage(ImageEditorLayerCompCaptureDefaults.visibilityKey)"
+        ))
+        #expect(viewSource.contains(
+            "@AppStorage(ImageEditorLayerCompCaptureDefaults.positionKey)"
+        ))
+        #expect(viewSource.contains(
+            "@AppStorage(ImageEditorLayerCompCaptureDefaults.appearanceKey)"
+        ))
+        let menuSource = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),
+            encoding: .utf8
+        )
+        #expect(menuSource.components(
+            separatedBy: "viewModel.addLayerComp(captureOptions: .storedDefaults)"
+        ).count - 1 == 2)
     }
 
     @Test
@@ -441,6 +462,54 @@ struct ImageEditorLayerCompTests {
 
         viewModel.updateLayerComp(compID)
         #expect(viewModel.document.layerComps.first?.capturesAppearance == false)
+    }
+
+    @Test
+    func newLayerCompUsesProvidedCaptureOptionsAndKeepsClassicDefaultsIndependent() throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "source.png",
+            image: testImage(color: .systemMint, size: NSSize(width: 80, height: 60))
+        ) { _ in }
+        let historyCount = viewModel.document.history.count
+        let customOptions = ImageEditorLayerCompCaptureOptions(
+            capturesVisibility: false,
+            capturesPosition: true,
+            capturesAppearance: false
+        )
+
+        viewModel.addLayerComp(named: "Review layout", captureOptions: customOptions)
+        let customComp = try #require(viewModel.document.layerComps.first)
+        #expect(customComp.name == "Review layout")
+        #expect(customComp.comment.isEmpty)
+        #expect(customComp.capturesVisibility == false)
+        #expect(customComp.capturesPosition)
+        #expect(customComp.capturesAppearance == false)
+        #expect(viewModel.document.history.count == historyCount + 1)
+
+        viewModel.addLayerComp(named: "Classic")
+        let classicComp = try #require(viewModel.document.layerComps.last)
+        #expect(classicComp.capturesVisibility)
+        #expect(classicComp.capturesPosition)
+        #expect(classicComp.capturesAppearance)
+        #expect(viewModel.document.history.count == historyCount + 2)
+        #expect(ImageEditorLayerCompCaptureOptions.classic == ImageEditorLayerCompCaptureOptions())
+    }
+
+    @Test
+    func layerCompCaptureDefaultsLoadClassicValuesAndStoredChoices() throws {
+        let suiteName = "ImageEditorLayerCompTests.captureDefaults.\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+
+        #expect(ImageEditorLayerCompCaptureDefaults.load(from: defaults) == .classic)
+        defaults.set(false, forKey: ImageEditorLayerCompCaptureDefaults.visibilityKey)
+        defaults.set(true, forKey: ImageEditorLayerCompCaptureDefaults.positionKey)
+        defaults.set(false, forKey: ImageEditorLayerCompCaptureDefaults.appearanceKey)
+        #expect(ImageEditorLayerCompCaptureDefaults.load(from: defaults) == ImageEditorLayerCompCaptureOptions(
+            capturesVisibility: false,
+            capturesPosition: true,
+            capturesAppearance: false
+        ))
     }
 
     @Test

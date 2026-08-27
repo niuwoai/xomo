@@ -249,6 +249,12 @@ struct ImageEditorView: View {
     @State var alphaChannelNameDrafts: [UUID: String] = [:]
     @State var layerCompNameDrafts: [UUID: String] = [:]
     @State var layerCompCommentDrafts: [UUID: String] = [:]
+    @AppStorage(ImageEditorLayerCompCaptureDefaults.visibilityKey)
+    var defaultLayerCompCapturesVisibility = true
+    @AppStorage(ImageEditorLayerCompCaptureDefaults.positionKey)
+    var defaultLayerCompCapturesPosition = true
+    @AppStorage(ImageEditorLayerCompCaptureDefaults.appearanceKey)
+    var defaultLayerCompCapturesAppearance = true
     @State var savedPathNameDrafts: [UUID: String] = [:]
     @State var historySnapshotNameDrafts: [UUID: String] = [:]
     @State var inlineLayerNameDraft = ""

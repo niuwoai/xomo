@@ -1047,19 +1047,46 @@ extension ImageEditorView {
 
     private var layerCompsPanelContent: some View {
         VStack(spacing: 8) {
-            Button {
-                viewModel.addLayerComp()
-            } label: {
-                Label(L10n.text("imageEditor.action.layerCompNew"), systemImage: "rectangle.stack.badge.plus")
+            HStack(spacing: 6) {
+                Button {
+                    viewModel.addLayerComp(captureOptions: layerCompCreationOptions)
+                } label: {
+                    Label(
+                        L10n.text("imageEditor.action.layerCompNew"),
+                        systemImage: "rectangle.stack.badge.plus"
+                    )
                     .font(.system(size: 11, weight: .semibold))
                     .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                .buttonStyle(.plain)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 7)
+                .background(Color.white.opacity(0.08))
+                .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
+                .help(L10n.text("imageEditor.action.layerCompNew"))
+
+                Menu {
+                    Toggle(
+                        L10n.text("imageEditor.action.layerCompCaptureVisibility"),
+                        isOn: $defaultLayerCompCapturesVisibility
+                    )
+                    Toggle(
+                        L10n.text("imageEditor.action.layerCompCapturePosition"),
+                        isOn: $defaultLayerCompCapturesPosition
+                    )
+                    Toggle(
+                        L10n.text("imageEditor.action.layerCompCaptureAppearance"),
+                        isOn: $defaultLayerCompCapturesAppearance
+                    )
+                } label: {
+                    Image(systemName: "slider.horizontal.3")
+                        .font(.system(size: 11, weight: .semibold))
+                        .frame(width: 28, height: 28)
+                }
+                .menuStyle(.borderlessButton)
+                .help(L10n.text("imageEditor.action.layerCompCreationOptions"))
+                .accessibilityIdentifier("image-editor-layer-comp-creation-options")
             }
-            .buttonStyle(.plain)
-            .padding(.horizontal, 10)
-            .padding(.vertical, 7)
-            .background(Color.white.opacity(0.08))
-            .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
-            .help(L10n.text("imageEditor.action.layerCompNew"))
 
             if viewModel.document.layerComps.isEmpty {
                 Text(L10n.text("imageEditor.layerComp.empty"))
@@ -1081,6 +1108,14 @@ extension ImageEditorView {
                 .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
+    }
+
+    private var layerCompCreationOptions: ImageEditorLayerCompCaptureOptions {
+        ImageEditorLayerCompCaptureOptions(
+            capturesVisibility: defaultLayerCompCapturesVisibility,
+            capturesPosition: defaultLayerCompCapturesPosition,
+            capturesAppearance: defaultLayerCompCapturesAppearance
+        )
     }
 
     private func layerCompDraggableRow(_ comp: ImageEditorLayerComp) -> some View {

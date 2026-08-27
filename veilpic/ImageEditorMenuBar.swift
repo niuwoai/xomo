@@ -969,7 +969,7 @@ extension ImageEditorView {
     private var layerCompMenu: some View {
         Menu(L10n.text("imageEditor.menu.layer.comps")) {
             Button(L10n.text("imageEditor.action.layerCompNew")) {
-                viewModel.addLayerComp()
+                viewModel.addLayerComp(captureOptions: .storedDefaults)
             }
             Divider()
             Button(L10n.text("imageEditor.action.layerCompApply")) {
@@ -2152,7 +2152,7 @@ extension ImageEditorView {
             Divider()
             Button(L10n.text("imageEditor.action.layerCompNew")) {
                 selectedLayerPanelTab = .comps
-                viewModel.addLayerComp()
+                viewModel.addLayerComp(captureOptions: .storedDefaults)
             }
             Button(L10n.text("imageEditor.action.layerCompApply")) {
                 selectedLayerPanelTab = .comps

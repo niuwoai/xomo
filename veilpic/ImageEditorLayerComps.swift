@@ -47,6 +47,36 @@ struct ImageEditorLayerCompDropTarget: Equatable {
     var placement: ImageEditorLayerCompDropPlacement
 }
 
+struct ImageEditorLayerCompCaptureOptions: Equatable {
+    var capturesVisibility = true
+    var capturesPosition = true
+    var capturesAppearance = true
+
+    static let classic = ImageEditorLayerCompCaptureOptions()
+
+    static var storedDefaults: ImageEditorLayerCompCaptureOptions {
+        ImageEditorLayerCompCaptureDefaults.load()
+    }
+}
+
+enum ImageEditorLayerCompCaptureDefaults {
+    static let visibilityKey = "xomo.imageEditor.layerComp.defaultCapturesVisibility"
+    static let positionKey = "xomo.imageEditor.layerComp.defaultCapturesPosition"
+    static let appearanceKey = "xomo.imageEditor.layerComp.defaultCapturesAppearance"
+
+    static func load(from defaults: UserDefaults = .standard) -> ImageEditorLayerCompCaptureOptions {
+        ImageEditorLayerCompCaptureOptions(
+            capturesVisibility: bool(forKey: visibilityKey, from: defaults),
+            capturesPosition: bool(forKey: positionKey, from: defaults),
+            capturesAppearance: bool(forKey: appearanceKey, from: defaults)
+        )
+    }
+
+    private static func bool(forKey key: String, from defaults: UserDefaults) -> Bool {
+        defaults.object(forKey: key).map { _ in defaults.bool(forKey: key) } ?? true
+    }
+}
+
 enum ImageEditorLayerCompDropGeometry {
     static func destinationIndex(
         sourceIndex: Int,
@@ -126,10 +156,16 @@ extension ImageEditorViewModel {
         selectedLayerCompIndex.map { $0 < document.layerComps.count - 1 } ?? false
     }
 
-    func addLayerComp(named proposedName: String? = nil) {
+    func addLayerComp(
+        named proposedName: String? = nil,
+        captureOptions: ImageEditorLayerCompCaptureOptions = .classic
+    ) {
         let name = normalizedLayerCompName(proposedName, fallbackIndex: document.layerComps.count + 1)
         pushUndo()
-        let comp = ImageEditorLayerComp.capture(name: name, document: document)
+        var comp = ImageEditorLayerComp.capture(name: name, document: document)
+        comp.capturesVisibility = captureOptions.capturesVisibility
+        comp.capturesPosition = captureOptions.capturesPosition
+        comp.capturesAppearance = captureOptions.capturesAppearance
         document.layerComps.append(comp)
         document.selectedLayerCompID = comp.id
         appendHistory(L10n.text("imageEditor.history.layerCompNew"))

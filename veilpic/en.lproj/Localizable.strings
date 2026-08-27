@@ -3198,6 +3198,7 @@
 "imageEditor.history.layerCompCaptureAppearance" = "Change Layer Comp Appearance Capture";
 "imageEditor.status.layerCompCaptureAppearanceEnabled" = "“%@” now captures layer styles and blend modes.";
 "imageEditor.status.layerCompCaptureAppearanceDisabled" = "“%@” now preserves current layer styles and blend modes.";
+"imageEditor.action.layerCompCreationOptions" = "New Layer Comp Options";
 "imageEditor.action.layerCompMoveToTop" = "Move to List Top";
 "imageEditor.action.layerCompMoveUp" = "Move Layer Comp Up";
 "imageEditor.action.layerCompMoveDown" = "Move Layer Comp Down";
