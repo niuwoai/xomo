@@ -93,6 +93,10 @@ struct ImageEditorLayerCompTests {
         #expect(source.contains("viewModel.duplicateLayerComp("))
         #expect(source.contains("payload.layerCompID,"))
         #expect(source.contains("toIndex: destinationIndex"))
+        #expect(source.contains("imageEditor.layerComp.commentPlaceholder"))
+        #expect(source.contains("text: layerCompCommentBinding(comp)"))
+        #expect(source.contains("commitLayerCompCommentDraft(comp)"))
+        #expect(source.contains("viewModel.updateLayerCompComment("))
 
         let viewSource = try String(
             contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
@@ -100,6 +104,9 @@ struct ImageEditorLayerCompTests {
         )
         #expect(viewSource.contains(
             "@State var targetedLayerCompDropTarget: ImageEditorLayerCompDropTarget?"
+        ))
+        #expect(viewSource.contains(
+            "@State var layerCompCommentDrafts: [UUID: String] = [:]"
         ))
     }
 
@@ -239,6 +246,66 @@ struct ImageEditorLayerCompTests {
         #expect(viewModel.duplicateLayerComp(originalComps[0].id, toIndex: -1) == nil)
         #expect(viewModel.document.history == historyAfterUndo)
         #expect(viewModel.canRedo)
+    }
+
+    @Test
+    func layerCompCommentIsAtomicCopiedAndPreservedBySnapshotUpdates() throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "source.png",
+            image: testImage(color: .systemTeal, size: NSSize(width: 100, height: 80))
+        ) { _ in }
+        viewModel.addLayerComp(named: "Review")
+        let compID = try #require(viewModel.document.selectedLayerCompID)
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.updateLayerCompComment(compID, to: "  Mobile handoff  "))
+        #expect(viewModel.document.layerComps.first?.comment == "Mobile handoff")
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerCompComment"))
+        #expect(viewModel.statusText == L10n.format(
+            "imageEditor.status.layerCompCommentUpdated",
+            "Review"
+        ))
+
+        viewModel.undo()
+        #expect(viewModel.document.layerComps.first?.comment.isEmpty == true)
+        #expect(viewModel.canRedo)
+        let historyAfterUndo = viewModel.document.history
+        #expect(!viewModel.updateLayerCompComment(compID, to: "  "))
+        #expect(viewModel.document.history == historyAfterUndo)
+        #expect(viewModel.canRedo)
+        viewModel.redo()
+
+        let duplicate = try #require(viewModel.duplicateLayerComp(compID))
+        #expect(duplicate.comment == "Mobile handoff")
+        viewModel.toggleLayerVisibility(try #require(viewModel.document.selectedLayerID))
+        viewModel.updateLayerComp(compID)
+        #expect(viewModel.document.layerComps.first { $0.id == compID }?.comment == "Mobile handoff")
+
+        #expect(viewModel.updateLayerCompComment(compID, to: ""))
+        #expect(viewModel.statusText == L10n.format(
+            "imageEditor.status.layerCompCommentCleared",
+            "Review"
+        ))
+    }
+
+    @Test
+    func legacyLayerCompWithoutCommentDecodesAnEmptyComment() throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "source.png",
+            image: testImage(color: .systemBrown, size: NSSize(width: 40, height: 30))
+        ) { _ in }
+        viewModel.addLayerComp(named: "Legacy")
+        let comp = try #require(viewModel.document.layerComps.first)
+        let data = try JSONEncoder().encode(comp)
+        var object = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
+        object.removeValue(forKey: "comment")
+        let legacyData = try JSONSerialization.data(withJSONObject: object)
+
+        let decoded = try JSONDecoder().decode(ImageEditorLayerComp.self, from: legacyData)
+        #expect(decoded.id == comp.id)
+        #expect(decoded.name == comp.name)
+        #expect(decoded.comment.isEmpty)
     }
 
     @Test
@@ -702,6 +769,7 @@ struct ImageEditorLayerCompTests {
         let layerOrder = viewModel.document.layers.map(\.id)
         viewModel.addLayerComp(named: "Small detail")
         let compID = try #require(viewModel.document.layerComps.first?.id)
+        #expect(viewModel.updateLayerCompComment(compID, to: "Client-approved mobile state"))
 
         let data = try viewModel.projectData()
         let restoredViewModel = ImageEditorViewModel(
@@ -713,6 +781,7 @@ struct ImageEditorLayerCompTests {
         let restoredComp = try #require(restoredViewModel.document.layerComps.first)
         #expect(restoredComp.id == compID)
         #expect(restoredComp.name == "Small detail")
+        #expect(restoredComp.comment == "Client-approved mobile state")
         #expect(restoredComp.layerStates.count == viewModel.document.layers.count)
         #expect(restoredComp.layerOrder == layerOrder)
         #expect(restoredComp.layerStates.contains { $0.isClippingMask })

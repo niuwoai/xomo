@@ -5493,6 +5493,7 @@ struct ImageEditorLayerCompLayerState: Equatable, Codable {
 struct ImageEditorLayerComp: Identifiable, Equatable, Codable {
     var id = UUID()
     var name: String
+    var comment: String
     var layerOrder: [UUID]
     var layerStates: [ImageEditorLayerCompLayerState]
     var selectedLayerID: UUID?
@@ -5502,6 +5503,7 @@ struct ImageEditorLayerComp: Identifiable, Equatable, Codable {
     enum CodingKeys: String, CodingKey {
         case id
         case name
+        case comment
         case layerOrder
         case layerStates
         case selectedLayerID
@@ -5512,6 +5514,7 @@ struct ImageEditorLayerComp: Identifiable, Equatable, Codable {
     init(
         id: UUID = UUID(),
         name: String,
+        comment: String = "",
         layerOrder: [UUID],
         layerStates: [ImageEditorLayerCompLayerState],
         selectedLayerID: UUID?,
@@ -5520,6 +5523,7 @@ struct ImageEditorLayerComp: Identifiable, Equatable, Codable {
     ) {
         self.id = id
         self.name = name
+        self.comment = comment
         self.layerOrder = layerOrder
         self.layerStates = layerStates
         self.selectedLayerID = selectedLayerID
@@ -5531,6 +5535,7 @@ struct ImageEditorLayerComp: Identifiable, Equatable, Codable {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         id = try container.decodeIfPresent(UUID.self, forKey: .id) ?? UUID()
         name = try container.decode(String.self, forKey: .name)
+        comment = try container.decodeIfPresent(String.self, forKey: .comment) ?? ""
         layerStates = try container.decode([ImageEditorLayerCompLayerState].self, forKey: .layerStates)
         layerOrder = try container.decodeIfPresent([UUID].self, forKey: .layerOrder)
             ?? layerStates.map(\.layerID)

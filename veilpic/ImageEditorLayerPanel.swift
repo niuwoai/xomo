@@ -1090,6 +1090,7 @@ extension ImageEditorView {
                 .onDrag {
                     viewModel.selectLayerComp(comp.id)
                     syncLayerCompNameDraft(comp)
+                    syncLayerCompCommentDraft(comp)
                     let operation: ImageEditorLayerCompDragOperation = NSEvent.modifierFlags
                         .contains(.option) ? .copy : .move
                     let payload = ImageEditorLayerCompDragPayload(
@@ -1140,6 +1141,25 @@ extension ImageEditorView {
                     .font(.system(size: 10, weight: .medium))
                     .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
                     .lineLimit(1)
+
+                TextField(
+                    L10n.text("imageEditor.layerComp.commentPlaceholder"),
+                    text: layerCompCommentBinding(comp)
+                )
+                .textFieldStyle(.plain)
+                .font(.system(size: 10, weight: .medium))
+                .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                .lineLimit(1)
+                .onSubmit {
+                    commitLayerCompCommentDraft(comp)
+                }
+                .onAppear {
+                    syncLayerCompCommentDraft(comp)
+                }
+                .onChange(of: comp.comment) { _ in
+                    syncLayerCompCommentDraft(comp)
+                }
+                .accessibilityIdentifier("image-editor-layer-comp-comment-\(comp.id.uuidString)")
             }
 
             Spacer()
@@ -1306,6 +1326,28 @@ extension ImageEditorView {
         viewModel.renameLayerComp(comp.id, to: layerCompNameDrafts[comp.id] ?? comp.name)
         if let updatedComp = viewModel.document.layerComps.first(where: { $0.id == comp.id }) {
             syncLayerCompNameDraft(updatedComp)
+        }
+    }
+
+    private func layerCompCommentBinding(_ comp: ImageEditorLayerComp) -> Binding<String> {
+        Binding {
+            layerCompCommentDrafts[comp.id] ?? comp.comment
+        } set: { value in
+            layerCompCommentDrafts[comp.id] = value
+        }
+    }
+
+    private func syncLayerCompCommentDraft(_ comp: ImageEditorLayerComp) {
+        layerCompCommentDrafts[comp.id] = comp.comment
+    }
+
+    private func commitLayerCompCommentDraft(_ comp: ImageEditorLayerComp) {
+        _ = viewModel.updateLayerCompComment(
+            comp.id,
+            to: layerCompCommentDrafts[comp.id] ?? comp.comment
+        )
+        if let updatedComp = viewModel.document.layerComps.first(where: { $0.id == comp.id }) {
+            syncLayerCompCommentDraft(updatedComp)
         }
     }
 

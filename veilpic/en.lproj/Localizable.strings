@@ -3182,6 +3182,7 @@
 "imageEditor.action.layerCompDuplicate" = "Duplicate Layer Comp";
 "imageEditor.action.layerCompDragReorder" = "Drag to Reorder Layer Comp";
 "imageEditor.action.layerCompDragReorderOrCopy" = "Drag to Reorder; Option-Drag to Duplicate";
+"imageEditor.layerComp.commentPlaceholder" = "Add Comment";
 "imageEditor.action.layerCompMoveToTop" = "Move to List Top";
 "imageEditor.action.layerCompMoveUp" = "Move Layer Comp Up";
 "imageEditor.action.layerCompMoveDown" = "Move Layer Comp Down";
@@ -3200,6 +3201,7 @@
 "imageEditor.history.layerCompApply" = "Apply Layer Comp";
 "imageEditor.history.layerCompUpdate" = "Update Layer Comp";
 "imageEditor.history.layerCompDuplicate" = "Duplicate Layer Comp";
+"imageEditor.history.layerCompComment" = "Edit Layer Comp Comment";
 "imageEditor.history.layerCompReorder" = "Reorder Layer Comps";
 "imageEditor.history.layerCompRename" = "Rename Layer Comp";
 "imageEditor.history.layerCompDelete" = "Delete Layer Comp";
@@ -3207,6 +3209,8 @@
 "imageEditor.status.layerCompApplied" = "Applied layer comp: %@";
 "imageEditor.status.layerCompUpdated" = "Updated layer comp: %@";
 "imageEditor.status.layerCompDuplicated" = "Duplicated layer comp: %@";
+"imageEditor.status.layerCompCommentUpdated" = "Updated layer comp comment: %@";
+"imageEditor.status.layerCompCommentCleared" = "Cleared layer comp comment: %@";
 "imageEditor.status.layerCompMovedToTop" = "Moved layer comp to the top of the list: %@";
 "imageEditor.status.layerCompMovedUp" = "Moved layer comp up: %@";
 "imageEditor.status.layerCompMovedDown" = "Moved layer comp down: %@";

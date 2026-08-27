@@ -240,6 +240,7 @@ extension ImageEditorViewModel {
         pushUndo()
         var updated = ImageEditorLayerComp.capture(name: name, document: document)
         updated.id = id
+        updated.comment = document.layerComps[index].comment
         updated.createdAt = document.layerComps[index].createdAt
         document.layerComps[index] = updated
         document.selectedLayerCompID = id
@@ -299,6 +300,26 @@ extension ImageEditorViewModel {
         document.selectedLayerCompID = id
         appendHistory(L10n.text("imageEditor.history.layerCompRename"))
         statusText = L10n.format("imageEditor.status.layerCompRenamed", trimmedName)
+    }
+
+    @discardableResult
+    func updateLayerCompComment(_ id: UUID, to proposedComment: String) -> Bool {
+        guard let index = document.layerComps.firstIndex(where: { $0.id == id }) else {
+            return false
+        }
+        let comment = proposedComment.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard document.layerComps[index].comment != comment else { return false }
+        pushUndo()
+        document.layerComps[index].comment = comment
+        document.selectedLayerCompID = id
+        appendHistory(L10n.text("imageEditor.history.layerCompComment"))
+        statusText = L10n.format(
+            comment.isEmpty
+                ? "imageEditor.status.layerCompCommentCleared"
+                : "imageEditor.status.layerCompCommentUpdated",
+            document.layerComps[index].name
+        )
+        return true
     }
 
     func deleteLayerComp(_ id: UUID) {

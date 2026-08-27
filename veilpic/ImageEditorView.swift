@@ -248,6 +248,7 @@ struct ImageEditorView: View {
     @State var selectedLayerAttributeFilter: ImageEditorLayerAttributeFilter = .all
     @State var alphaChannelNameDrafts: [UUID: String] = [:]
     @State var layerCompNameDrafts: [UUID: String] = [:]
+    @State var layerCompCommentDrafts: [UUID: String] = [:]
     @State var savedPathNameDrafts: [UUID: String] = [:]
     @State var historySnapshotNameDrafts: [UUID: String] = [:]
     @State var inlineLayerNameDraft = ""
