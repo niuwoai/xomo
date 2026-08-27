@@ -3181,6 +3181,7 @@
 "imageEditor.action.layerCompUpdate" = "レイヤーコンプを更新";
 "imageEditor.action.layerCompDuplicate" = "レイヤーコンプを複製";
 "imageEditor.action.layerCompDragReorder" = "ドラッグしてレイヤーコンプの順序を変更";
+"imageEditor.action.layerCompDragReorderOrCopy" = "ドラッグで並べ替え、Option＋ドラッグで複製";
 "imageEditor.action.layerCompMoveToTop" = "リストの先頭へ移動";
 "imageEditor.action.layerCompMoveUp" = "レイヤーコンプを上へ移動";
 "imageEditor.action.layerCompMoveDown" = "レイヤーコンプを下へ移動";

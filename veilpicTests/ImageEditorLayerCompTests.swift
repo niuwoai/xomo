@@ -84,8 +84,15 @@ struct ImageEditorLayerCompTests {
         #expect(source.contains("layerCompDropBand(comp, placement: .above)"))
         #expect(source.contains("layerCompDropBand(comp, placement: .below)"))
         #expect(source.contains("ImageEditorPanelListDropDelegate("))
-        #expect(source.contains("handleLayerCompDrop(sourceID, on: comp, placement: placement)"))
-        #expect(source.contains("viewModel.moveLayerComp(sourceID, toIndex: destinationIndex)"))
+        #expect(source.contains("handleLayerCompDrop(payload, on: comp, placement: placement)"))
+        #expect(source.contains("NSEvent.modifierFlags"))
+        #expect(source.contains(".contains(.option) ? .copy : .move"))
+        #expect(source.contains("payload.serialized as NSString"))
+        #expect(source.contains("ImageEditorLayerCompDragPayload.parse(serializedPayload)"))
+        #expect(source.contains("viewModel.moveLayerComp(payload.layerCompID, toIndex: destinationIndex)"))
+        #expect(source.contains("viewModel.duplicateLayerComp("))
+        #expect(source.contains("payload.layerCompID,"))
+        #expect(source.contains("toIndex: destinationIndex"))
 
         let viewSource = try String(
             contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
@@ -159,6 +166,79 @@ struct ImageEditorLayerCompTests {
 
         viewModel.undo()
         #expect(viewModel.document.layerComps.map(\.id) == ids)
+    }
+
+    @Test
+    func optionDragPayloadDuplicatesAtTheDropBandInOneUndoStep() throws {
+        let sourceID = UUID()
+        let movePayload = ImageEditorLayerCompDragPayload(
+            layerCompID: sourceID,
+            operation: .move
+        )
+        let copyPayload = ImageEditorLayerCompDragPayload(
+            layerCompID: sourceID,
+            operation: .copy
+        )
+        #expect(ImageEditorLayerCompDragPayload.parse(movePayload.serialized) == movePayload)
+        #expect(ImageEditorLayerCompDragPayload.parse(copyPayload.serialized) == copyPayload)
+        #expect(ImageEditorLayerCompDragPayload.parse(sourceID.uuidString) == nil)
+        #expect(ImageEditorLayerCompDragPayload.parse("xomo-layer-comp:copy:not-a-uuid") == nil)
+
+        #expect(ImageEditorLayerCompDropGeometry.copyInsertionIndex(
+            targetIndex: 2,
+            placement: .above,
+            count: 4
+        ) == 2)
+        #expect(ImageEditorLayerCompDropGeometry.copyInsertionIndex(
+            targetIndex: 2,
+            placement: .below,
+            count: 4
+        ) == 3)
+        #expect(ImageEditorLayerCompDropGeometry.copyInsertionIndex(
+            targetIndex: 4,
+            placement: .below,
+            count: 4
+        ) == nil)
+
+        let viewModel = ImageEditorViewModel(
+            sourceName: "source.png",
+            image: testImage(color: .systemIndigo, size: NSSize(width: 100, height: 80))
+        ) { _ in }
+        for name in ["First", "Second", "Third", "Fourth"] {
+            viewModel.addLayerComp(named: name)
+        }
+        let originalComps = viewModel.document.layerComps
+        let historyCount = viewModel.document.history.count
+        let destinationIndex = try #require(ImageEditorLayerCompDropGeometry.copyInsertionIndex(
+            targetIndex: 2,
+            placement: .below,
+            count: originalComps.count
+        ))
+
+        let duplicate = try #require(viewModel.duplicateLayerComp(
+            originalComps[0].id,
+            toIndex: destinationIndex
+        ))
+        #expect(viewModel.document.layerComps.map(\.id) == [
+            originalComps[0].id,
+            originalComps[1].id,
+            originalComps[2].id,
+            duplicate.id,
+            originalComps[3].id
+        ])
+        #expect(duplicate.layerStates == originalComps[0].layerStates)
+        #expect(duplicate.name == L10n.format("imageEditor.layerComp.copyName", "First"))
+        #expect(viewModel.document.selectedLayerCompID == duplicate.id)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerCompDuplicate"))
+
+        viewModel.undo()
+        #expect(viewModel.document.layerComps == originalComps)
+        #expect(viewModel.canRedo)
+        let historyAfterUndo = viewModel.document.history
+        #expect(viewModel.duplicateLayerComp(originalComps[0].id, toIndex: -1) == nil)
+        #expect(viewModel.document.history == historyAfterUndo)
+        #expect(viewModel.canRedo)
     }
 
     @Test

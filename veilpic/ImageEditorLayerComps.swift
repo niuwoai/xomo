@@ -13,6 +13,35 @@ enum ImageEditorLayerCompDropPlacement: Equatable {
     case below
 }
 
+enum ImageEditorLayerCompDragOperation: String, Equatable {
+    case move
+    case copy
+}
+
+struct ImageEditorLayerCompDragPayload: Equatable {
+    private static let prefix = "xomo-layer-comp"
+
+    var layerCompID: UUID
+    var operation: ImageEditorLayerCompDragOperation
+
+    var serialized: String {
+        "\(Self.prefix):\(operation.rawValue):\(layerCompID.uuidString)"
+    }
+
+    static func parse(_ value: String) -> ImageEditorLayerCompDragPayload? {
+        let parts = value.split(separator: ":", omittingEmptySubsequences: false)
+        guard parts.count == 3,
+              String(parts[0]) == prefix,
+              let operation = ImageEditorLayerCompDragOperation(rawValue: String(parts[1])),
+              let layerCompID = UUID(uuidString: String(parts[2]))
+        else { return nil }
+        return ImageEditorLayerCompDragPayload(
+            layerCompID: layerCompID,
+            operation: operation
+        )
+    }
+}
+
 struct ImageEditorLayerCompDropTarget: Equatable {
     var layerCompID: UUID
     var placement: ImageEditorLayerCompDropPlacement
@@ -38,6 +67,15 @@ enum ImageEditorLayerCompDropGeometry {
               (0..<count).contains(destinationIndex)
         else { return nil }
         return destinationIndex
+    }
+
+    static func copyInsertionIndex(
+        targetIndex: Int,
+        placement: ImageEditorLayerCompDropPlacement,
+        count: Int
+    ) -> Int? {
+        guard count > 0, (0..<count).contains(targetIndex) else { return nil }
+        return targetIndex + (placement == .below ? 1 : 0)
     }
 }
 
@@ -224,13 +262,24 @@ extension ImageEditorViewModel {
         guard let sourceIndex = document.layerComps.firstIndex(where: { $0.id == id }) else {
             return nil
         }
+        return duplicateLayerComp(id, toIndex: sourceIndex + 1)
+    }
+
+    @discardableResult
+    func duplicateLayerComp(
+        _ id: UUID,
+        toIndex destinationIndex: Int
+    ) -> ImageEditorLayerComp? {
+        guard let sourceIndex = document.layerComps.firstIndex(where: { $0.id == id }),
+              (0...document.layerComps.count).contains(destinationIndex)
+        else { return nil }
         let source = document.layerComps[sourceIndex]
         pushUndo()
         var duplicated = source
         duplicated.id = UUID()
         duplicated.name = duplicateLayerCompName(for: source.name)
         duplicated.createdAt = Date()
-        document.layerComps.insert(duplicated, at: sourceIndex + 1)
+        document.layerComps.insert(duplicated, at: destinationIndex)
         document.selectedLayerCompID = duplicated.id
         appendHistory(L10n.text("imageEditor.history.layerCompDuplicate"))
         statusText = L10n.format("imageEditor.status.layerCompDuplicated", duplicated.name)

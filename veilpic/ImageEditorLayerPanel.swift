@@ -1090,9 +1090,15 @@ extension ImageEditorView {
                 .onDrag {
                     viewModel.selectLayerComp(comp.id)
                     syncLayerCompNameDraft(comp)
-                    return NSItemProvider(object: comp.id.uuidString as NSString)
+                    let operation: ImageEditorLayerCompDragOperation = NSEvent.modifierFlags
+                        .contains(.option) ? .copy : .move
+                    let payload = ImageEditorLayerCompDragPayload(
+                        layerCompID: comp.id,
+                        operation: operation
+                    )
+                    return NSItemProvider(object: payload.serialized as NSString)
                 }
-                .help(L10n.text("imageEditor.action.layerCompDragReorder"))
+                .help(L10n.text("imageEditor.action.layerCompDragReorderOrCopy"))
             layerCompDropBand(comp, placement: .below)
         }
     }
@@ -1242,29 +1248,46 @@ extension ImageEditorView {
                     onTargetChange: { isTargeted in
                         targetedLayerCompDropTarget = isTargeted ? target : nil
                     },
-                    onDrop: { sourceID in
-                        _ = handleLayerCompDrop(sourceID, on: comp, placement: placement)
+                    onDrop: { payload in
+                        _ = handleLayerCompDrop(payload, on: comp, placement: placement)
                     }
                 )
             )
     }
 
     private func handleLayerCompDrop(
-        _ sourceIDString: String,
+        _ serializedPayload: String,
         on targetComp: ImageEditorLayerComp,
         placement: ImageEditorLayerCompDropPlacement
     ) -> Bool {
-        guard let sourceID = UUID(uuidString: sourceIDString),
-              let sourceIndex = viewModel.document.layerComps.firstIndex(where: { $0.id == sourceID }),
+        guard let payload = ImageEditorLayerCompDragPayload.parse(serializedPayload),
+              let sourceIndex = viewModel.document.layerComps.firstIndex(where: {
+                  $0.id == payload.layerCompID
+              }),
               let targetIndex = viewModel.document.layerComps.firstIndex(where: { $0.id == targetComp.id }),
-              let destinationIndex = ImageEditorLayerCompDropGeometry.destinationIndex(
-                  sourceIndex: sourceIndex,
-                  targetIndex: targetIndex,
-                  placement: placement,
-                  count: viewModel.document.layerComps.count
-              )
+              sourceIndex != targetIndex || placement == .below || payload.operation == .copy
         else { return false }
-        return viewModel.moveLayerComp(sourceID, toIndex: destinationIndex)
+
+        switch payload.operation {
+        case .move:
+            guard let destinationIndex = ImageEditorLayerCompDropGeometry.destinationIndex(
+                sourceIndex: sourceIndex,
+                targetIndex: targetIndex,
+                placement: placement,
+                count: viewModel.document.layerComps.count
+            ) else { return false }
+            return viewModel.moveLayerComp(payload.layerCompID, toIndex: destinationIndex)
+        case .copy:
+            guard let destinationIndex = ImageEditorLayerCompDropGeometry.copyInsertionIndex(
+                targetIndex: targetIndex,
+                placement: placement,
+                count: viewModel.document.layerComps.count
+            ) else { return false }
+            return viewModel.duplicateLayerComp(
+                payload.layerCompID,
+                toIndex: destinationIndex
+            ) != nil
+        }
     }
 
     private func layerCompNameBinding(_ comp: ImageEditorLayerComp) -> Binding<String> {

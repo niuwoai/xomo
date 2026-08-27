@@ -3181,6 +3181,7 @@
 "imageEditor.action.layerCompUpdate" = "Update Layer Comp";
 "imageEditor.action.layerCompDuplicate" = "Duplicate Layer Comp";
 "imageEditor.action.layerCompDragReorder" = "Drag to Reorder Layer Comp";
+"imageEditor.action.layerCompDragReorderOrCopy" = "Drag to Reorder; Option-Drag to Duplicate";
 "imageEditor.action.layerCompMoveToTop" = "Move to List Top";
 "imageEditor.action.layerCompMoveUp" = "Move Layer Comp Up";
 "imageEditor.action.layerCompMoveDown" = "Move Layer Comp Down";

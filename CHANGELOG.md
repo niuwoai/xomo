@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.12.0-rc1365 - 2026-08-27
+
+### Added
+- 图层复合支持 Sketch/Figma 式 Option 拖拽复制：普通拖拽继续排序，按住 Option 起拖则把完整复合快照复制到目标插入带。
+- 拖放 payload 固化起拖时的移动/复制意图并使用图层复合专属前缀，避免修饰键时序变化或已保存路径的 UUID 文本被误接收。
+
+### Changed
+- 新增“复制到指定索引”的原子事务，Option 拖拽的复制与落位只写一步 Undo/History；无效 payload、来源或目标索引保持 Redo 与文档不变。
+
+### Verification
+- 增量测试构建通过；Option 拖放 payload、复制插入几何、原子 Undo/History、生产接线及完整图层复合专项 11/11，已保存路径隔离回归 1/1，三语资源 43/43；CLI/MCP 2/2、发布契约 7/7（21 条断言）、隔离测试运行器契约与 `git diff --check` 均通过。本版本不覆盖 `/Applications/Xomo.app`，下一次 40 版本完整门禁为 rc1400。
+
 ## 2.12.0-rc1364 - 2026-08-27
 
 ### Added
