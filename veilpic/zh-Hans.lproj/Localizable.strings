@@ -3203,6 +3203,14 @@
 "imageEditor.action.layerCompRestoreLastDocumentState" = "恢复上次文档状态";
 "imageEditor.history.layerCompRestoreLastDocumentState" = "恢复上次文档状态";
 "imageEditor.status.layerCompRestoredLastDocumentState" = "已恢复应用图层复合前的文档状态。";
+"imageEditor.layerComp.missingLayerWarning" = "此图层复合引用了已经不存在的图层。";
+"imageEditor.action.layerCompClearWarning" = "清除图层复合警告";
+"imageEditor.action.layerCompClearAllWarnings" = "清除全部图层复合警告";
+"imageEditor.history.layerCompClearWarning" = "清除图层复合警告";
+"imageEditor.history.layerCompClearAllWarnings" = "清除全部图层复合警告";
+"imageEditor.status.layerCompMissingLayers" = "“%@”中记录的 %d 个图层已不存在，无法完整恢复。";
+"imageEditor.status.layerCompWarningCleared" = "已清除“%@”的警告，其余图层保持不变。";
+"imageEditor.status.layerCompAllWarningsCleared" = "已清除 %d 个图层复合的警告，其余图层保持不变。";
 "imageEditor.action.layerCompMoveToTop" = "移到列表顶部";
 "imageEditor.action.layerCompMoveUp" = "上移图层复合";
 "imageEditor.action.layerCompMoveDown" = "下移图层复合";

@@ -117,6 +117,11 @@ struct ImageEditorLayerCompTests {
         #expect(source.contains("viewModel.restoreLastDocumentLayerCompState()"))
         #expect(source.contains("viewModel.canRestoreLastDocumentLayerCompState"))
         #expect(source.contains("image-editor-layer-comp-last-document-state"))
+        #expect(source.contains("viewModel.layerCompHasWarning(comp)"))
+        #expect(source.contains("viewModel.showLayerCompWarning(comp.id)"))
+        #expect(source.contains("viewModel.clearLayerCompWarning(comp.id)"))
+        #expect(source.contains("viewModel.clearAllLayerCompWarnings()"))
+        #expect(source.contains("image-editor-layer-comp-warning-\\(comp.id.uuidString)"))
 
         let viewSource = try String(
             contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
@@ -146,6 +151,12 @@ struct ImageEditorLayerCompTests {
         ).count - 1 == 2)
         #expect(menuSource.components(
             separatedBy: "viewModel.restoreLastDocumentLayerCompState()"
+        ).count - 1 == 2)
+        #expect(menuSource.components(
+            separatedBy: "viewModel.clearLayerCompWarning(id)"
+        ).count - 1 == 2)
+        #expect(menuSource.components(
+            separatedBy: "viewModel.clearAllLayerCompWarnings()"
         ).count - 1 == 2)
         let viewModelSource = try String(
             contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorViewModel.swift"),
@@ -591,6 +602,95 @@ struct ImageEditorLayerCompTests {
     }
 
     @Test
+    func missingLayerWarningsCanBeClearedAtomicallyAndReturnForNewMissingLayers() throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "source.png",
+            image: testImage(color: .systemIndigo, size: NSSize(width: 90, height: 70))
+        ) { _ in }
+        let survivorID = try #require(viewModel.document.selectedLayerID)
+        viewModel.duplicateSelectedLayer()
+        let firstMissingID = try #require(viewModel.document.selectedLayerID)
+        #expect(firstMissingID != survivorID)
+
+        viewModel.addLayerComp(named: "Desktop")
+        let desktopID = try #require(viewModel.document.selectedLayerCompID)
+        viewModel.addLayerComp(named: "Mobile")
+        let mobileID = try #require(viewModel.document.selectedLayerCompID)
+        viewModel.deleteSelectedLayer()
+
+        let desktop = try #require(viewModel.document.layerComps.first { $0.id == desktopID })
+        let mobile = try #require(viewModel.document.layerComps.first { $0.id == mobileID })
+        #expect(viewModel.unresolvedMissingLayerIDs(for: desktop) == [firstMissingID])
+        #expect(viewModel.layerCompHasWarning(desktop))
+        #expect(viewModel.layerCompHasWarning(mobile))
+        #expect(viewModel.canClearAllLayerCompWarnings)
+
+        viewModel.updateLayerComp(desktopID)
+        let updatedDesktop = try #require(
+            viewModel.document.layerComps.first { $0.id == desktopID }
+        )
+        #expect(!viewModel.layerCompHasWarning(updatedDesktop))
+        #expect(updatedDesktop.acknowledgedMissingLayerIDs.isEmpty)
+        viewModel.undo()
+        #expect(viewModel.layerCompHasWarning(try #require(
+            viewModel.document.layerComps.first { $0.id == desktopID }
+        )))
+
+        viewModel.showLayerCompWarning(desktopID)
+        #expect(viewModel.document.selectedLayerCompID == desktopID)
+        #expect(viewModel.statusText == L10n.format(
+            "imageEditor.status.layerCompMissingLayers",
+            "Desktop",
+            1
+        ))
+
+        let historyBeforeClear = viewModel.document.history.count
+        #expect(viewModel.clearLayerCompWarning(desktopID))
+        #expect(viewModel.document.history.count == historyBeforeClear + 1)
+        #expect(!viewModel.canClearSelectedLayerCompWarning)
+        #expect(viewModel.document.layerComps.first { $0.id == desktopID }?
+            .acknowledgedMissingLayerIDs == [firstMissingID])
+        let clearedDesktop = try #require(
+            viewModel.document.layerComps.first { $0.id == desktopID }
+        )
+        let roundTrippedDesktop = try JSONDecoder().decode(
+            ImageEditorLayerComp.self,
+            from: JSONEncoder().encode(clearedDesktop)
+        )
+        #expect(roundTrippedDesktop.acknowledgedMissingLayerIDs == [firstMissingID])
+        #expect(!viewModel.layerCompHasWarning(try #require(
+            viewModel.document.layerComps.first { $0.id == desktopID }
+        )))
+        #expect(viewModel.layerCompHasWarning(try #require(
+            viewModel.document.layerComps.first { $0.id == mobileID }
+        )))
+
+        viewModel.undo()
+        #expect(viewModel.canClearSelectedLayerCompWarning)
+        #expect(viewModel.canRedo)
+        viewModel.redo()
+        #expect(!viewModel.canClearSelectedLayerCompWarning)
+
+        let historyBeforeClearAll = viewModel.document.history.count
+        #expect(viewModel.clearAllLayerCompWarnings())
+        #expect(viewModel.document.history.count == historyBeforeClearAll + 1)
+        #expect(!viewModel.canClearAllLayerCompWarnings)
+        viewModel.undo()
+        #expect(viewModel.canClearAllLayerCompWarnings)
+        viewModel.redo()
+        #expect(!viewModel.canClearAllLayerCompWarnings)
+
+        viewModel.selectLayer(survivorID)
+        viewModel.deleteSelectedLayer()
+        for comp in viewModel.document.layerComps {
+            #expect(viewModel.unresolvedMissingLayerIDs(for: comp) == [survivorID])
+            #expect(viewModel.layerCompHasWarning(comp))
+        }
+        #expect(viewModel.clearAllLayerCompWarnings())
+        #expect(!viewModel.clearAllLayerCompWarnings())
+    }
+
+    @Test
     func legacyLayerCompWithoutOptionalMetadataUsesClassicCaptureDefaults() throws {
         let viewModel = ImageEditorViewModel(
             sourceName: "source.png",
@@ -604,6 +704,7 @@ struct ImageEditorLayerCompTests {
         object.removeValue(forKey: "capturesVisibility")
         object.removeValue(forKey: "capturesPosition")
         object.removeValue(forKey: "capturesAppearance")
+        object.removeValue(forKey: "acknowledgedMissingLayerIDs")
         let legacyData = try JSONSerialization.data(withJSONObject: object)
 
         let decoded = try JSONDecoder().decode(ImageEditorLayerComp.self, from: legacyData)
@@ -613,6 +714,7 @@ struct ImageEditorLayerCompTests {
         #expect(decoded.capturesVisibility)
         #expect(decoded.capturesPosition)
         #expect(decoded.capturesAppearance)
+        #expect(decoded.acknowledgedMissingLayerIDs.isEmpty)
     }
 
     @Test

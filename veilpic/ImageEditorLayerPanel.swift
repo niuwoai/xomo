@@ -1078,6 +1078,11 @@ extension ImageEditorView {
                         L10n.text("imageEditor.action.layerCompCaptureAppearance"),
                         isOn: $defaultLayerCompCapturesAppearance
                     )
+                    Divider()
+                    Button(L10n.text("imageEditor.action.layerCompClearAllWarnings")) {
+                        _ = viewModel.clearAllLayerCompWarnings()
+                    }
+                    .disabled(!viewModel.canClearAllLayerCompWarnings)
                 } label: {
                     Image(systemName: "slider.horizontal.3")
                         .font(.system(size: 11, weight: .semibold))
@@ -1172,6 +1177,20 @@ extension ImageEditorView {
             .buttonStyle(.plain)
             .help(L10n.text("imageEditor.action.layerCompSelect"))
 
+            if viewModel.layerCompHasWarning(comp) {
+                Button {
+                    viewModel.showLayerCompWarning(comp.id)
+                } label: {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .font(.system(size: 12, weight: .semibold))
+                        .frame(width: 18)
+                        .foregroundStyle(Color.yellow)
+                }
+                .buttonStyle(.plain)
+                .help(L10n.text("imageEditor.layerComp.missingLayerWarning"))
+                .accessibilityIdentifier("image-editor-layer-comp-warning-\(comp.id.uuidString)")
+            }
+
             VStack(alignment: .leading, spacing: 2) {
                 TextField(
                     L10n.text("imageEditor.layerComp.namePlaceholder"),
@@ -1265,6 +1284,25 @@ extension ImageEditorView {
                 L10n.text("imageEditor.action.layerCompUpdate"),
                 systemImage: "arrow.triangle.2.circlepath"
             )
+        }
+        if viewModel.layerCompHasWarning(comp) {
+            Button {
+                _ = viewModel.clearLayerCompWarning(comp.id)
+            } label: {
+                Label(
+                    L10n.text("imageEditor.action.layerCompClearWarning"),
+                    systemImage: "exclamationmark.triangle"
+                )
+            }
+            Button {
+                _ = viewModel.clearAllLayerCompWarnings()
+            } label: {
+                Label(
+                    L10n.text("imageEditor.action.layerCompClearAllWarnings"),
+                    systemImage: "checkmark.circle"
+                )
+            }
+            .disabled(!viewModel.canClearAllLayerCompWarnings)
         }
         Button {
             _ = viewModel.duplicateLayerComp(comp.id)

@@ -5497,6 +5497,7 @@ struct ImageEditorLayerComp: Identifiable, Equatable, Codable {
     var capturesVisibility: Bool
     var capturesPosition: Bool
     var capturesAppearance: Bool
+    var acknowledgedMissingLayerIDs: Set<UUID>
     var layerOrder: [UUID]
     var layerStates: [ImageEditorLayerCompLayerState]
     var selectedLayerID: UUID?
@@ -5510,6 +5511,7 @@ struct ImageEditorLayerComp: Identifiable, Equatable, Codable {
         case capturesVisibility
         case capturesPosition
         case capturesAppearance
+        case acknowledgedMissingLayerIDs
         case layerOrder
         case layerStates
         case selectedLayerID
@@ -5524,6 +5526,7 @@ struct ImageEditorLayerComp: Identifiable, Equatable, Codable {
         capturesVisibility: Bool = true,
         capturesPosition: Bool = true,
         capturesAppearance: Bool = true,
+        acknowledgedMissingLayerIDs: Set<UUID> = [],
         layerOrder: [UUID],
         layerStates: [ImageEditorLayerCompLayerState],
         selectedLayerID: UUID?,
@@ -5536,6 +5539,7 @@ struct ImageEditorLayerComp: Identifiable, Equatable, Codable {
         self.capturesVisibility = capturesVisibility
         self.capturesPosition = capturesPosition
         self.capturesAppearance = capturesAppearance
+        self.acknowledgedMissingLayerIDs = acknowledgedMissingLayerIDs
         self.layerOrder = layerOrder
         self.layerStates = layerStates
         self.selectedLayerID = selectedLayerID
@@ -5560,6 +5564,10 @@ struct ImageEditorLayerComp: Identifiable, Equatable, Codable {
             Bool.self,
             forKey: .capturesAppearance
         ) ?? true
+        acknowledgedMissingLayerIDs = try container.decodeIfPresent(
+            Set<UUID>.self,
+            forKey: .acknowledgedMissingLayerIDs
+        ) ?? []
         layerStates = try container.decode([ImageEditorLayerCompLayerState].self, forKey: .layerStates)
         layerOrder = try container.decodeIfPresent([UUID].self, forKey: .layerOrder)
             ?? layerStates.map(\.layerID)

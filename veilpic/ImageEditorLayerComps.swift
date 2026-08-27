@@ -136,6 +136,14 @@ extension ImageEditorViewModel {
         lastDocumentLayerCompState != nil
     }
 
+    var canClearSelectedLayerCompWarning: Bool {
+        selectedLayerComp.map { !unresolvedMissingLayerIDs(for: $0).isEmpty } ?? false
+    }
+
+    var canClearAllLayerCompWarnings: Bool {
+        document.layerComps.contains { !unresolvedMissingLayerIDs(for: $0).isEmpty }
+    }
+
     var canMoveSelectedLayerCompToTop: Bool {
         selectedLayerComp.map { canMoveLayerCompToTop($0.id) } ?? false
     }
@@ -326,6 +334,7 @@ extension ImageEditorViewModel {
         updated.capturesVisibility = document.layerComps[index].capturesVisibility
         updated.capturesPosition = document.layerComps[index].capturesPosition
         updated.capturesAppearance = document.layerComps[index].capturesAppearance
+        updated.acknowledgedMissingLayerIDs = []
         updated.createdAt = document.layerComps[index].createdAt
         document.layerComps[index] = updated
         document.selectedLayerCompID = id
@@ -457,6 +466,65 @@ extension ImageEditorViewModel {
                 ? "imageEditor.status.layerCompCaptureAppearanceEnabled"
                 : "imageEditor.status.layerCompCaptureAppearanceDisabled",
             document.layerComps[index].name
+        )
+        return true
+    }
+
+    func unresolvedMissingLayerIDs(for comp: ImageEditorLayerComp) -> Set<UUID> {
+        let currentLayerIDs = Set(document.layers.map(\.id))
+        return Set(comp.layerStates.map(\.layerID))
+            .subtracting(currentLayerIDs)
+            .subtracting(comp.acknowledgedMissingLayerIDs)
+    }
+
+    func layerCompHasWarning(_ comp: ImageEditorLayerComp) -> Bool {
+        !unresolvedMissingLayerIDs(for: comp).isEmpty
+    }
+
+    func showLayerCompWarning(_ id: UUID) {
+        guard let comp = document.layerComps.first(where: { $0.id == id }) else { return }
+        let missingCount = unresolvedMissingLayerIDs(for: comp).count
+        guard missingCount > 0 else { return }
+        document.selectedLayerCompID = id
+        statusText = L10n.format(
+            "imageEditor.status.layerCompMissingLayers",
+            comp.name,
+            missingCount
+        )
+    }
+
+    @discardableResult
+    func clearLayerCompWarning(_ id: UUID) -> Bool {
+        guard let index = document.layerComps.firstIndex(where: { $0.id == id }) else {
+            return false
+        }
+        let missingLayerIDs = unresolvedMissingLayerIDs(for: document.layerComps[index])
+        guard !missingLayerIDs.isEmpty else { return false }
+        pushUndo()
+        document.layerComps[index].acknowledgedMissingLayerIDs.formUnion(missingLayerIDs)
+        document.selectedLayerCompID = id
+        appendHistory(L10n.text("imageEditor.history.layerCompClearWarning"))
+        statusText = L10n.format(
+            "imageEditor.status.layerCompWarningCleared",
+            document.layerComps[index].name
+        )
+        return true
+    }
+
+    @discardableResult
+    func clearAllLayerCompWarnings() -> Bool {
+        let unresolvedByIndex = document.layerComps.indices.map { index in
+            (index, unresolvedMissingLayerIDs(for: document.layerComps[index]))
+        }.filter { !$0.1.isEmpty }
+        guard !unresolvedByIndex.isEmpty else { return false }
+        pushUndo()
+        for (index, missingLayerIDs) in unresolvedByIndex {
+            document.layerComps[index].acknowledgedMissingLayerIDs.formUnion(missingLayerIDs)
+        }
+        appendHistory(L10n.text("imageEditor.history.layerCompClearAllWarnings"))
+        statusText = L10n.format(
+            "imageEditor.status.layerCompAllWarningsCleared",
+            unresolvedByIndex.count
         )
         return true
     }

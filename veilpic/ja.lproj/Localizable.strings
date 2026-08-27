@@ -3203,6 +3203,14 @@
 "imageEditor.action.layerCompRestoreLastDocumentState" = "最後のドキュメント状態を復元";
 "imageEditor.history.layerCompRestoreLastDocumentState" = "最後のドキュメント状態を復元";
 "imageEditor.status.layerCompRestoredLastDocumentState" = "レイヤーカンプ適用前のドキュメント状態を復元しました。";
+"imageEditor.layerComp.missingLayerWarning" = "このレイヤーカンプは存在しなくなったレイヤーを参照しています。";
+"imageEditor.action.layerCompClearWarning" = "レイヤーカンプの警告を消去";
+"imageEditor.action.layerCompClearAllWarnings" = "すべてのレイヤーカンプ警告を消去";
+"imageEditor.history.layerCompClearWarning" = "レイヤーカンプの警告を消去";
+"imageEditor.history.layerCompClearAllWarnings" = "すべてのレイヤーカンプ警告を消去";
+"imageEditor.status.layerCompMissingLayers" = "「%@」は記録された %d 個のレイヤーが存在しないため、完全には復元できません。";
+"imageEditor.status.layerCompWarningCleared" = "「%@」の警告を消去しました。残りのレイヤーは変更されていません。";
+"imageEditor.status.layerCompAllWarningsCleared" = "%d 個のレイヤーカンプ警告を消去しました。残りのレイヤーは変更されていません。";
 "imageEditor.action.layerCompMoveToTop" = "リストの先頭へ移動";
 "imageEditor.action.layerCompMoveUp" = "レイヤーコンプを上へ移動";
 "imageEditor.action.layerCompMoveDown" = "レイヤーコンプを下へ移動";

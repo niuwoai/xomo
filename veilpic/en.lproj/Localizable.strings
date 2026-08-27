@@ -3203,6 +3203,14 @@
 "imageEditor.action.layerCompRestoreLastDocumentState" = "Restore Last Document State";
 "imageEditor.history.layerCompRestoreLastDocumentState" = "Restore Last Document State";
 "imageEditor.status.layerCompRestoredLastDocumentState" = "Restored the document state from before layer comps were applied.";
+"imageEditor.layerComp.missingLayerWarning" = "This layer comp references layers that no longer exist.";
+"imageEditor.action.layerCompClearWarning" = "Clear Layer Comp Warning";
+"imageEditor.action.layerCompClearAllWarnings" = "Clear All Layer Comp Warnings";
+"imageEditor.history.layerCompClearWarning" = "Clear Layer Comp Warning";
+"imageEditor.history.layerCompClearAllWarnings" = "Clear All Layer Comp Warnings";
+"imageEditor.status.layerCompMissingLayers" = "“%@” cannot be restored completely because %d captured layer(s) no longer exist.";
+"imageEditor.status.layerCompWarningCleared" = "Cleared the warning for “%@”; remaining layers were left unchanged.";
+"imageEditor.status.layerCompAllWarningsCleared" = "Cleared warnings for %d layer comp(s); remaining layers were left unchanged.";
 "imageEditor.action.layerCompMoveToTop" = "Move to List Top";
 "imageEditor.action.layerCompMoveUp" = "Move Layer Comp Up";
 "imageEditor.action.layerCompMoveDown" = "Move Layer Comp Down";

@@ -985,6 +985,15 @@ extension ImageEditorView {
                 viewModel.updateSelectedLayerComp()
             }
             .disabled(!viewModel.canUpdateSelectedLayerComp)
+            Button(L10n.text("imageEditor.action.layerCompClearWarning")) {
+                guard let id = viewModel.document.selectedLayerCompID else { return }
+                _ = viewModel.clearLayerCompWarning(id)
+            }
+            .disabled(!viewModel.canClearSelectedLayerCompWarning)
+            Button(L10n.text("imageEditor.action.layerCompClearAllWarnings")) {
+                _ = viewModel.clearAllLayerCompWarnings()
+            }
+            .disabled(!viewModel.canClearAllLayerCompWarnings)
             Button(L10n.text("imageEditor.action.layerCompDuplicate")) {
                 viewModel.duplicateSelectedLayerComp()
             }
@@ -2174,6 +2183,17 @@ extension ImageEditorView {
                 viewModel.updateSelectedLayerComp()
             }
             .disabled(!viewModel.canUpdateSelectedLayerComp)
+            Button(L10n.text("imageEditor.action.layerCompClearWarning")) {
+                guard let id = viewModel.document.selectedLayerCompID else { return }
+                selectedLayerPanelTab = .comps
+                _ = viewModel.clearLayerCompWarning(id)
+            }
+            .disabled(!viewModel.canClearSelectedLayerCompWarning)
+            Button(L10n.text("imageEditor.action.layerCompClearAllWarnings")) {
+                selectedLayerPanelTab = .comps
+                _ = viewModel.clearAllLayerCompWarnings()
+            }
+            .disabled(!viewModel.canClearAllLayerCompWarnings)
             Button(L10n.text("imageEditor.action.layerCompDuplicate")) {
                 selectedLayerPanelTab = .comps
                 viewModel.duplicateSelectedLayerComp()
