@@ -35,9 +35,19 @@ struct ImageEditorCanvasCursorTests {
 
     @Test func keyboardResponderDeleteUsesObjectThenHistoryPriority() {
         var calls: [String] = []
+        var receivedEvents: [ImageEditorKeyboardShortcutEventSignature?] = []
+        let event = ImageEditorKeyboardShortcutEventSignature(
+            windowNumber: 17,
+            eventNumber: 42,
+            timestamp: 4.2,
+            typeRawValue: NSEvent.EventType.keyDown.rawValue,
+            keyCode: 51
+        )
 
         #expect(ImageEditorKeyboardDeleteCommandDispatcher.perform(
-            deleteSelectedObject: {
+            event: event,
+            deleteSelectedObject: { receivedEvent in
+                receivedEvents.append(receivedEvent)
                 calls.append("object")
                 return true
             },
@@ -47,10 +57,14 @@ struct ImageEditorCanvasCursorTests {
             }
         ))
         #expect(calls == ["object"])
+        #expect(receivedEvents == [event])
 
         calls.removeAll()
+        receivedEvents.removeAll()
         #expect(ImageEditorKeyboardDeleteCommandDispatcher.perform(
-            deleteSelectedObject: {
+            event: nil,
+            deleteSelectedObject: { receivedEvent in
+                receivedEvents.append(receivedEvent)
                 calls.append("object")
                 return false
             },
@@ -60,10 +74,13 @@ struct ImageEditorCanvasCursorTests {
             }
         ))
         #expect(calls == ["object", "history"])
+        #expect(receivedEvents.count == 1)
+        #expect(receivedEvents[0] == nil)
 
         calls.removeAll()
         #expect(!ImageEditorKeyboardDeleteCommandDispatcher.perform(
-            deleteSelectedObject: {
+            event: event,
+            deleteSelectedObject: { _ in
                 calls.append("object")
                 return false
             },
@@ -90,7 +107,12 @@ struct ImageEditorCanvasCursorTests {
 
         #expect(responderSource.contains("override func deleteBackward(_ sender: Any?)"))
         #expect(responderSource.contains("override func deleteForward(_ sender: Any?)"))
-        #expect(responderSource.contains("performDeleteCommandFromKeyboardResponder()"))
+        #expect(responderSource.contains("performDeleteCommandFromKeyboardResponder("))
+        #expect(responderSource.contains("event: .currentKeyEvent"))
+        #expect(source.contains(
+            "event: ImageEditorKeyboardShortcutEventSignature(event: event)"
+        ))
+        #expect(source.contains("deleteSelectedObjectFromKeyboard(event: event)"))
     }
 
     @Test func layerChooserUsesNativeRightClickAndMacControlClickOnly() {

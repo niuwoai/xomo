@@ -4222,9 +4222,9 @@ struct ImageEditorScopeTests {
             encoding: .utf8
         )
 
-        #expect(viewSource.contains("deleteSelectedObject: deleteSelectedObjectFromKeyboard"))
+        #expect(viewSource.contains("deleteSelectedObjectFromKeyboard(event: event)"))
         let deleteStart = try #require(
-            viewSource.range(of: "func deleteSelectedObjectFromKeyboard() -> Bool")
+            viewSource.range(of: "func deleteSelectedObjectFromKeyboard(")
         )
         let deleteEnd = try #require(
             viewSource[deleteStart.upperBound...].range(of: "private func performKeyboardShortcut(")
@@ -4271,7 +4271,10 @@ struct ImageEditorScopeTests {
         #expect(viewSource.contains("let isDelete = ImageEditorDeleteKeyPolicy.matches("))
         #expect(viewSource.contains("charactersIgnoringModifiers: event.charactersIgnoringModifiers"))
         #expect(viewSource.contains("modifierFlags: event.modifierFlags"))
-        #expect(viewSource.contains("deleteSelectedObject()"))
+        #expect(viewSource.contains("deleteSelectedObject(event)"))
+        #expect(viewSource.contains(
+            "event: ImageEditorKeyboardShortcutEventSignature(event: event)"
+        ))
         #expect(viewSource.contains(".onDeleteCommand {"))
         #expect(viewSource.contains("_ = deleteSelectedObjectFromKeyboard()"))
     }

@@ -373,7 +373,9 @@ struct ImageEditorView: View {
                         by: CGSize(width: displayedDelta * 100, height: 0)
                     )
                 },
-                deleteSelectedObject: deleteSelectedObjectFromKeyboard,
+                deleteSelectedObject: { event in
+                    deleteSelectedObjectFromKeyboard(event: event)
+                },
                 finishPendingPenPath: {
                     let isUncommittedPenPointerSequence = ImageEditorPendingPenPointerPolicy
                         .ownsUncommittedPoint(
@@ -3178,9 +3180,11 @@ struct ImageEditorView: View {
     }
 
     @discardableResult
-    func deleteSelectedObjectFromKeyboard() -> Bool {
+    func deleteSelectedObjectFromKeyboard(
+        event: ImageEditorKeyboardShortcutEventSignature? = .currentKeyEvent
+    ) -> Bool {
         guard ImageEditorDeleteCommandDispatchGate.shouldDispatch(
-            event: .currentKeyEvent
+            event: event
         ) else {
             // A second AppKit route for the same physical Delete must remain
             // consumed so it cannot fall through to history or text deletion.
@@ -17980,7 +17984,7 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
     let nudgeSelected: (CGSize) -> Void
     let selectNextCanvasHandle: (Bool) -> Bool
     let moveSelectedCanvasHandleToBoundary: (Double) -> Bool
-    let deleteSelectedObject: () -> Bool
+    let deleteSelectedObject: (ImageEditorKeyboardShortcutEventSignature?) -> Bool
     let finishPendingPenPath: () -> Bool
     let enterSelectedGroup: () -> Bool
     let cancelSelectedObject: () -> Bool
@@ -18040,7 +18044,7 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
         var nudgeSelected: (CGSize) -> Void
         var selectNextCanvasHandle: (Bool) -> Bool
         var moveSelectedCanvasHandleToBoundary: (Double) -> Bool
-        var deleteSelectedObject: () -> Bool
+        var deleteSelectedObject: (ImageEditorKeyboardShortcutEventSignature?) -> Bool
         var finishPendingPenPath: () -> Bool
         var enterSelectedGroup: () -> Bool
         var cancelSelectedObject: () -> Bool
@@ -18061,7 +18065,7 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
             nudgeSelected: @escaping (CGSize) -> Void,
             selectNextCanvasHandle: @escaping (Bool) -> Bool,
             moveSelectedCanvasHandleToBoundary: @escaping (Double) -> Bool,
-            deleteSelectedObject: @escaping () -> Bool,
+            deleteSelectedObject: @escaping (ImageEditorKeyboardShortcutEventSignature?) -> Bool,
             finishPendingPenPath: @escaping () -> Bool,
             enterSelectedGroup: @escaping () -> Bool,
             cancelSelectedObject: @escaping () -> Bool,
@@ -18213,7 +18217,9 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
                isDelete,
                relevantFlags.isEmpty,
                !isTextInputActive,
-               performDeleteCommandFromKeyboardResponder() {
+               performDeleteCommandFromKeyboardResponder(
+                   event: ImageEditorKeyboardShortcutEventSignature(event: event)
+               ) {
                 return nil
             }
 
@@ -18246,8 +18252,11 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
         }
 
         @discardableResult
-        func performDeleteCommandFromKeyboardResponder() -> Bool {
+        func performDeleteCommandFromKeyboardResponder(
+            event: ImageEditorKeyboardShortcutEventSignature?
+        ) -> Bool {
             ImageEditorKeyboardDeleteCommandDispatcher.perform(
+                event: event,
                 deleteSelectedObject: deleteSelectedObject,
                 deleteSelectedHistory: deleteSelectedHistory
             )
@@ -18274,10 +18283,11 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
 
 enum ImageEditorKeyboardDeleteCommandDispatcher {
     static func perform(
-        deleteSelectedObject: () -> Bool,
+        event: ImageEditorKeyboardShortcutEventSignature?,
+        deleteSelectedObject: (ImageEditorKeyboardShortcutEventSignature?) -> Bool,
         deleteSelectedHistory: () -> Bool
     ) -> Bool {
-        if deleteSelectedObject() {
+        if deleteSelectedObject(event) {
             return true
         }
         return deleteSelectedHistory()
@@ -18329,12 +18339,16 @@ final class KeyboardShortcutMonitorNSView: ImageEditorKeyboardShortcutResponderN
     }
 
     override func deleteBackward(_ sender: Any?) {
-        guard coordinator?.performDeleteCommandFromKeyboardResponder() != true else { return }
+        guard coordinator?.performDeleteCommandFromKeyboardResponder(
+            event: .currentKeyEvent
+        ) != true else { return }
         super.deleteBackward(sender)
     }
 
     override func deleteForward(_ sender: Any?) {
-        guard coordinator?.performDeleteCommandFromKeyboardResponder() != true else { return }
+        guard coordinator?.performDeleteCommandFromKeyboardResponder(
+            event: .currentKeyEvent
+        ) != true else { return }
         super.deleteForward(sender)
     }
 
