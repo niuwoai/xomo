@@ -68,6 +68,73 @@ struct ImageEditorLayerMaskContextTests {
         ))
     }
 
+    @Test func selectedContextCreatesVectorMasksAndSkipsLockedLayers() throws {
+        let viewModel = makeViewModel()
+        let first = layer(named: "First Vector Target", in: viewModel)
+        let second = layer(named: "Second Vector Target", in: viewModel)
+        var locked = layer(named: "Locked Vector Target", in: viewModel)
+        locked.isLocked = true
+        viewModel.document.layers = [first, second, locked]
+        select(
+            [first.id, second.id, locked.id],
+            primary: second.id,
+            in: viewModel
+        )
+        viewModel.createRectSelection(
+            from: CGPoint(x: 10, y: 7),
+            to: CGPoint(x: 52, y: 40)
+        )
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.canPerformLayerMaskActionFromContext(
+            first.id,
+            action: .vectorFromSelection
+        ))
+        #expect(viewModel.performLayerMaskActionFromContext(
+            first.id,
+            action: .vectorFromSelection
+        ))
+        #expect(viewModel.document.layers[0].vectorMask?.kind == .path)
+        #expect(viewModel.document.layers[0].vectorMask?.isPathClosed == true)
+        #expect(viewModel.document.layers[1].vectorMask?.kind == .path)
+        #expect(viewModel.document.layers[2].vectorMask == nil)
+        #expect(viewModel.document.selectedLayerIDs == [
+            first.id,
+            second.id,
+            locked.id
+        ])
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.history.last?.title == L10n.text(
+            "imageEditor.history.vectorMaskFromSelectionSelected"
+        ))
+
+        viewModel.undo()
+        #expect(viewModel.document.layers.allSatisfy { $0.vectorMask == nil })
+    }
+
+    @Test func unselectedVectorMaskContextTargetsOnlyClickedLayer() {
+        let viewModel = makeViewModel()
+        let selected = layer(named: "Selected", in: viewModel)
+        let clicked = layer(named: "Clicked", in: viewModel)
+        let peer = layer(named: "Peer", in: viewModel)
+        viewModel.document.layers = [selected, clicked, peer]
+        select([selected.id, peer.id], primary: peer.id, in: viewModel)
+        viewModel.createRectSelection(
+            from: CGPoint(x: 9, y: 8),
+            to: CGPoint(x: 46, y: 36)
+        )
+
+        #expect(viewModel.performLayerMaskActionFromContext(
+            clicked.id,
+            action: .vectorFromSelection
+        ))
+        #expect(viewModel.document.layers[0].vectorMask == nil)
+        #expect(viewModel.document.layers[1].vectorMask != nil)
+        #expect(viewModel.document.layers[2].vectorMask == nil)
+        #expect(viewModel.document.selectedLayerIDs == [clicked.id])
+        #expect(viewModel.document.selectedLayerID == clicked.id)
+    }
+
     @Test func unavailableContextActionsDoNotMutateSelectionOrHistory() {
         let viewModel = makeViewModel()
         let selected = layer(named: "Selected", in: viewModel)

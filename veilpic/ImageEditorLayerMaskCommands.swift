@@ -13,6 +13,7 @@ enum ImageEditorLayerMaskContextAction: String, CaseIterable, Identifiable {
     case hideAll
     case revealSelection
     case hideSelection
+    case vectorFromSelection
     case revealSelectionOnMask
     case hideSelectionOnMask
     case intersectSelectionOnMask
@@ -31,7 +32,8 @@ enum ImageEditorLayerMaskContextAction: String, CaseIterable, Identifiable {
         .revealAll,
         .hideAll,
         .revealSelection,
-        .hideSelection
+        .hideSelection,
+        .vectorFromSelection
     ]
 
     static let managementActions: [Self] = [
@@ -57,6 +59,7 @@ enum ImageEditorLayerMaskContextAction: String, CaseIterable, Identifiable {
         case .hideAll: "imageEditor.action.layerMaskHideAll"
         case .revealSelection: "imageEditor.action.layerMaskFromSelection"
         case .hideSelection: "imageEditor.action.layerMaskHideSelection"
+        case .vectorFromSelection: "imageEditor.action.vectorMaskFromSelection"
         case .revealSelectionOnMask: "imageEditor.action.layerMaskRevealSelection"
         case .hideSelectionOnMask: "imageEditor.action.layerMaskHideSelectionFromMask"
         case .intersectSelectionOnMask: "imageEditor.action.layerMaskIntersectSelection"
@@ -77,6 +80,7 @@ enum ImageEditorLayerMaskContextAction: String, CaseIterable, Identifiable {
         case .hideAll: "circle.fill"
         case .revealSelection: "circle.lefthalf.filled"
         case .hideSelection: "circle.dashed.inset.filled"
+        case .vectorFromSelection: "point.topleft.down.curvedto.point.bottomright.up"
         case .revealSelectionOnMask: "rectangle.dashed.badge.plus"
         case .hideSelectionOnMask: "rectangle.dashed.badge.minus"
         case .intersectSelectionOnMask: "rectangle.intersection.angled"
@@ -176,6 +180,12 @@ extension ImageEditorViewModel {
                 hidingSelection: action == .hideSelection,
                 selectedIDs: selectedIDs
             ).isEmpty
+        case .vectorFromSelection:
+            guard let selection = document.selection else { return false }
+            return !vectorMaskCreationOperations(
+                selection,
+                selectedIDs: selectedIDs
+            ).isEmpty
         case .revealSelectionOnMask, .hideSelectionOnMask, .intersectSelectionOnMask:
             guard let selection = document.selection,
                   let combination = action.layerMaskSelectionCombination
@@ -249,6 +259,8 @@ extension ImageEditorViewModel {
             addLayerMaskFromSelection()
         case .hideSelection:
             addLayerMaskHidingSelection()
+        case .vectorFromSelection:
+            addVectorMaskFromSelection()
         case .revealSelectionOnMask:
             revealSelectionOnLayerMask()
         case .hideSelectionOnMask:
@@ -1341,12 +1353,13 @@ extension ImageEditorViewModel {
     }
 
     private func vectorMaskCreationOperations(
-        _ selection: ImageEditorSelection
+        _ selection: ImageEditorSelection,
+        selectedIDs explicitSelectedIDs: Set<UUID>? = nil
     ) -> [(index: Int, vectorMask: ImageEditorShapeContent)] {
         guard !selection.isInverted, selection.points.count >= 3 else { return [] }
-        let selectedIDs = document.selectedLayerIDs.isEmpty
+        let selectedIDs = explicitSelectedIDs ?? (document.selectedLayerIDs.isEmpty
             ? Set(document.selectedLayerID.map { [$0] } ?? [])
-            : document.selectedLayerIDs
+            : document.selectedLayerIDs)
         return document.layers.indices.compactMap { index in
             let layer = document.layers[index]
             guard selectedIDs.contains(layer.id),
