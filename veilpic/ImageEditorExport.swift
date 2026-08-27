@@ -639,6 +639,26 @@ extension ImageEditorViewModel {
         }
     }
 
+    func chooseLayerCompPDFDestination() {
+        guard canExportLayerComps else { return }
+        let panel = NSSavePanel()
+        panel.allowedContentTypes = [.pdf]
+        panel.canCreateDirectories = true
+        panel.nameFieldStringValue = layerCompPDFExportFilename
+        panel.begin { [weak self] response in
+            Task { @MainActor in
+                guard let self, response == .OK, let destination = panel.url else { return }
+                _ = self.exportLayerCompsPDF(to: destination)
+            }
+        }
+    }
+
+    var layerCompPDFExportFilename: String {
+        let rawSourceName = (document.sourceName as NSString).deletingPathExtension
+        let sourceName = Self.sanitizedExportBasename(rawSourceName, fallback: "image")
+        return "\(sourceName)-layer-comps.pdf"
+    }
+
     func layerCompExportPlan(format: ImageEditorExportFormat) -> [ImageEditorLayerCompExportVariant] {
         guard Self.layerCompExportFormats.contains(format) else { return [] }
         let rawSourceName = (document.sourceName as NSString).deletingPathExtension
@@ -665,20 +685,13 @@ extension ImageEditorViewModel {
         quality: Double = 0.9
     ) -> [ImageEditorLayerCompExportArtifact]? {
         let plan = layerCompExportPlan(format: format)
-        guard !plan.isEmpty else { return nil }
-        let compsByID = Dictionary(uniqueKeysWithValues: document.layerComps.map { ($0.id, $0) })
+        guard !plan.isEmpty,
+              let exportDocuments = layerCompExportDocuments(),
+              exportDocuments.count == plan.count
+        else { return nil }
         var artifacts: [ImageEditorLayerCompExportArtifact] = []
         artifacts.reserveCapacity(plan.count)
-        for variant in plan {
-            guard let comp = compsByID[variant.layerCompID],
-                  ImageEditorLayerCompApplication.hasMatchingLayers(comp, in: document)
-            else { return nil }
-            var exportDocument = document
-            ImageEditorLayerCompApplication.apply(
-                comp,
-                to: &exportDocument,
-                selectedLayerCompID: comp.id
-            )
+        for (variant, exportDocument) in zip(plan, exportDocuments) {
             guard let data = layerCompExportData(
                 document: exportDocument,
                 format: format,
@@ -687,6 +700,64 @@ extension ImageEditorViewModel {
             artifacts.append(ImageEditorLayerCompExportArtifact(variant: variant, data: data))
         }
         return artifacts
+    }
+
+    func layerCompExportDocuments() -> [ImageEditorDocument]? {
+        guard !document.layerComps.isEmpty else { return nil }
+        var exportDocuments: [ImageEditorDocument] = []
+        exportDocuments.reserveCapacity(document.layerComps.count)
+        for comp in document.layerComps {
+            guard ImageEditorLayerCompApplication.hasMatchingLayers(comp, in: document) else {
+                return nil
+            }
+            var exportDocument = document
+            ImageEditorLayerCompApplication.apply(
+                comp,
+                to: &exportDocument,
+                selectedLayerCompID: comp.id
+            )
+            exportDocuments.append(exportDocument)
+        }
+        return exportDocuments
+    }
+
+    func layerCompMultipagePDFData() -> Data? {
+        guard let exportDocuments = layerCompExportDocuments() else { return nil }
+        return NSImage.pdfData(pages: exportDocuments.map(\.compositedImage))
+    }
+
+    @discardableResult
+    func exportLayerCompsPDF(
+        to destination: URL,
+        fileExists: (URL) -> Bool = { FileManager.default.fileExists(atPath: $0.path) },
+        dataWriter: (Data, URL) throws -> Void = { data, destination in
+            try data.write(to: destination, options: .withoutOverwriting)
+        }
+    ) -> Bool {
+        guard let data = layerCompMultipagePDFData() else {
+            statusText = L10n.text("imageEditor.status.exportLayerCompsFailed")
+            return false
+        }
+        let standardizedDestination = destination.standardizedFileURL
+        guard !fileExists(standardizedDestination) else {
+            statusText = L10n.format("imageEditor.status.exportLayerCompConflicts", 1)
+            return false
+        }
+        do {
+            try dataWriter(data, standardizedDestination)
+            statusText = L10n.format(
+                "imageEditor.status.exportedLayerComps",
+                document.layerComps.count,
+                standardizedDestination.lastPathComponent
+            )
+            return true
+        } catch {
+            statusText = L10n.format(
+                "imageEditor.status.exportFailedWithReason",
+                error.localizedDescription
+            )
+            return false
+        }
     }
 
     @discardableResult
@@ -1849,28 +1920,36 @@ private extension NSImage {
     }
 
     func pdfData() -> Data? {
-        let output = NSMutableData()
-        guard let consumer = CGDataConsumer(data: output),
-              size.width > 0,
-              size.height > 0
+        Self.pdfData(pages: [self])
+    }
+
+    static func pdfData(pages: [NSImage]) -> Data? {
+        guard let firstPage = pages.first,
+              firstPage.size.width > 0,
+              firstPage.size.height > 0,
+              pages.allSatisfy({ $0.size == firstPage.size })
         else { return nil }
-        var mediaBox = CGRect(origin: .zero, size: size)
+        let output = NSMutableData()
+        guard let consumer = CGDataConsumer(data: output) else { return nil }
+        var mediaBox = CGRect(origin: .zero, size: firstPage.size)
         guard let context = CGContext(consumer: consumer, mediaBox: &mediaBox, nil) else { return nil }
-        context.beginPDFPage(nil)
-        context.saveGState()
-        context.translateBy(x: 0, y: size.height)
-        context.scaleBy(x: 1, y: -1)
-        NSGraphicsContext.saveGraphicsState()
-        NSGraphicsContext.current = NSGraphicsContext(cgContext: context, flipped: true)
-        draw(
-            in: CGRect(origin: .zero, size: size),
-            from: CGRect(origin: .zero, size: size),
-            operation: .sourceOver,
-            fraction: 1
-        )
-        NSGraphicsContext.restoreGraphicsState()
-        context.restoreGState()
-        context.endPDFPage()
+        for page in pages {
+            context.beginPDFPage(nil)
+            context.saveGState()
+            context.translateBy(x: 0, y: page.size.height)
+            context.scaleBy(x: 1, y: -1)
+            NSGraphicsContext.saveGraphicsState()
+            NSGraphicsContext.current = NSGraphicsContext(cgContext: context, flipped: true)
+            page.draw(
+                in: CGRect(origin: .zero, size: page.size),
+                from: CGRect(origin: .zero, size: page.size),
+                operation: .sourceOver,
+                fraction: 1
+            )
+            NSGraphicsContext.restoreGraphicsState()
+            context.restoreGState()
+            context.endPDFPage()
+        }
         context.closePDF()
         return output as Data
     }

@@ -3212,6 +3212,7 @@
 "imageEditor.status.layerCompWarningCleared" = "已清除“%@”的警告，其余图层保持不变。";
 "imageEditor.status.layerCompAllWarningsCleared" = "已清除 %d 个图层复合的警告，其余图层保持不变。";
 "imageEditor.action.exportLayerComps" = "将图层复合导出到文件…";
+"imageEditor.action.exportLayerCompsPDF" = "将图层复合导出为 PDF…";
 "imageEditor.export.layerCompsFormat" = "格式：";
 "imageEditor.status.exportedLayerComps" = "已将 %d 个图层复合导出到 %@。";
 "imageEditor.status.exportLayerCompConflicts" = "%d 个图层复合文件已存在，本次未导出任何文件。";

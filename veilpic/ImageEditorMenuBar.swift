@@ -102,6 +102,7 @@ extension ImageEditorView {
             canExportSelectedLayers: viewModel.selectedLayersExportScope != nil,
             exportLayerComps: { viewModel.chooseLayerCompExportDirectory() },
             canExportLayerComps: viewModel.canExportLayerComps,
+            exportLayerCompsPDF: { viewModel.chooseLayerCompPDFDestination() },
             pageSetup: { viewModel.presentPageSetup() },
             canConfigurePage: viewModel.canPrintCompositedCanvas,
             printDocument: { viewModel.printCompositedCanvas() },

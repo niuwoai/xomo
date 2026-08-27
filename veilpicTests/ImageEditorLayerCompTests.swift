@@ -836,6 +836,82 @@ struct ImageEditorLayerCompTests {
     }
 
     @Test
+    func layerCompMultipagePDFUsesOneIsolatedSnapshotPerPageWithoutMutatingTheEditor() throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "campaign/design.png",
+            image: testImage(color: .systemBlue, size: NSSize(width: 48, height: 36))
+        ) { _ in }
+        let layerID = try #require(viewModel.document.layers.first?.id)
+        viewModel.addLayerComp(named: "Visible")
+        viewModel.toggleLayerVisibility(layerID)
+        viewModel.addLayerComp(named: "Hidden")
+        let projectDataBeforeExport = try viewModel.projectData()
+        let historyBeforeExport = viewModel.document.history
+        let undoCountBeforeExport = viewModel.undoStack.count
+        let redoCountBeforeExport = viewModel.redoStack.count
+        let lastDocumentStateBeforeExport = viewModel.lastDocumentLayerCompState
+
+        #expect(viewModel.layerCompPDFExportFilename == "campaign-design-layer-comps.pdf")
+        let exportDocuments = try #require(viewModel.layerCompExportDocuments())
+        #expect(exportDocuments.count == 2)
+        #expect(exportDocuments.map(\.selectedLayerCompID) == viewModel.document.layerComps.map(\.id))
+        #expect(exportDocuments[0].layers.first { $0.id == layerID }?.isVisible == true)
+        #expect(exportDocuments[1].layers.first { $0.id == layerID }?.isVisible == false)
+
+        let data = try #require(viewModel.layerCompMultipagePDFData())
+        let provider = try #require(CGDataProvider(data: data as CFData))
+        let pdf = try #require(CGPDFDocument(provider))
+        #expect(pdf.numberOfPages == 2)
+        for pageNumber in 1...pdf.numberOfPages {
+            let page = try #require(pdf.page(at: pageNumber))
+            let mediaBox = page.getBoxRect(.mediaBox)
+            #expect(mediaBox.width == 48)
+            #expect(mediaBox.height == 36)
+        }
+        #expect(try viewModel.projectData() == projectDataBeforeExport)
+        #expect(viewModel.document.history == historyBeforeExport)
+        #expect(viewModel.undoStack.count == undoCountBeforeExport)
+        #expect(viewModel.redoStack.count == redoCountBeforeExport)
+        #expect(viewModel.lastDocumentLayerCompState == lastDocumentStateBeforeExport)
+
+        let destination = URL(fileURLWithPath: "/tmp/campaign-design-layer-comps.pdf")
+        var writes: [(Data, URL)] = []
+        #expect(viewModel.exportLayerCompsPDF(
+            to: destination,
+            fileExists: { _ in false },
+            dataWriter: { writes.append(($0, $1)) }
+        ))
+        #expect(writes.count == 1)
+        #expect(writes.first?.1 == destination)
+        let writtenData = try #require(writes.first?.0)
+        let writtenProvider = try #require(CGDataProvider(data: writtenData as CFData))
+        let writtenPDF = try #require(CGPDFDocument(writtenProvider))
+        #expect(writtenPDF.numberOfPages == 2)
+        #expect(viewModel.statusText == L10n.format(
+            "imageEditor.status.exportedLayerComps",
+            2,
+            destination.lastPathComponent
+        ))
+
+        writes.removeAll()
+        #expect(!viewModel.exportLayerCompsPDF(
+            to: destination,
+            fileExists: { _ in true },
+            dataWriter: { writes.append(($0, $1)) }
+        ))
+        #expect(writes.isEmpty)
+        #expect(viewModel.statusText == L10n.format(
+            "imageEditor.status.exportLayerCompConflicts",
+            1
+        ))
+        #expect(try viewModel.projectData() == projectDataBeforeExport)
+        #expect(viewModel.document.history == historyBeforeExport)
+        #expect(viewModel.undoStack.count == undoCountBeforeExport)
+        #expect(viewModel.redoStack.count == redoCountBeforeExport)
+        #expect(viewModel.lastDocumentLayerCompState == lastDocumentStateBeforeExport)
+    }
+
+    @Test
     func legacyLayerCompWithoutOptionalMetadataUsesClassicCaptureDefaults() throws {
         let viewModel = ImageEditorViewModel(
             sourceName: "source.png",
