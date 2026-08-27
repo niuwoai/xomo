@@ -158,6 +158,7 @@ enum ImageEditorLayerSearchAppearance {
 struct ImageEditorLayerSearchField: NSViewRepresentable {
     let placeholder: String
     @Binding var text: String
+    var identifier = "image-editor-layer-search-field"
 
     func makeCoordinator() -> Coordinator {
         Coordinator(text: $text)
@@ -167,6 +168,7 @@ struct ImageEditorLayerSearchField: NSViewRepresentable {
         let field = NSTextField(string: text)
         field.delegate = context.coordinator
         ImageEditorLayerSearchAppearance.configure(field, placeholder: placeholder)
+        field.identifier = NSUserInterfaceItemIdentifier(identifier)
         return field
     }
 
@@ -176,6 +178,7 @@ struct ImageEditorLayerSearchField: NSViewRepresentable {
             field.stringValue = text
         }
         ImageEditorLayerSearchAppearance.configure(field, placeholder: placeholder)
+        field.identifier = NSUserInterfaceItemIdentifier(identifier)
     }
 
     final class Coordinator: NSObject, NSTextFieldDelegate {
@@ -1112,15 +1115,22 @@ extension ImageEditorView {
             .help(L10n.text("imageEditor.action.layerCompRestoreLastDocumentState"))
             .accessibilityIdentifier("image-editor-layer-comp-last-document-state")
 
+            layerCompSearchField
+
             if viewModel.document.layerComps.isEmpty {
                 Text(L10n.text("imageEditor.layerComp.empty"))
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            } else if filteredLayerComps.isEmpty {
+                Text(L10n.text("imageEditor.layerComp.noSearchResults"))
                     .font(.system(size: 11, weight: .medium))
                     .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
                     .frame(maxWidth: .infinity, alignment: .leading)
             } else {
                 ScrollView {
                     VStack(spacing: 5) {
-                        ForEach(viewModel.document.layerComps) { comp in
+                        ForEach(filteredLayerComps) { comp in
                             layerCompDraggableRow(comp)
                         }
                     }
@@ -1132,18 +1142,24 @@ extension ImageEditorView {
                     "chevron.left",
                     "imageEditor.action.layerCompPrevious"
                 ) {
-                    viewModel.applyPreviousLayerComp()
+                    viewModel.applyPreviousLayerComp(matching: layerCompSearchQuery)
                 }
-                .disabled(!viewModel.canSelectPreviousLayerComp)
+                .disabled(viewModel.layerCompNavigationTarget(
+                    .previous,
+                    matching: layerCompSearchQuery
+                ) == nil)
                 .accessibilityIdentifier("image-editor-layer-comp-previous")
 
                 layerCompIconButton(
                     "chevron.right",
                     "imageEditor.action.layerCompNext"
                 ) {
-                    viewModel.applyNextLayerComp()
+                    viewModel.applyNextLayerComp(matching: layerCompSearchQuery)
                 }
-                .disabled(!viewModel.canSelectNextLayerComp)
+                .disabled(viewModel.layerCompNavigationTarget(
+                    .next,
+                    matching: layerCompSearchQuery
+                ) == nil)
                 .accessibilityIdentifier("image-editor-layer-comp-next")
 
                 Spacer()
@@ -1162,6 +1178,49 @@ extension ImageEditorView {
             capturesPosition: defaultLayerCompCapturesPosition,
             capturesAppearance: defaultLayerCompCapturesAppearance
         )
+    }
+
+    private var filteredLayerComps: [ImageEditorLayerComp] {
+        ImageEditorLayerCompSearch.filtered(
+            viewModel.document.layerComps,
+            matching: layerCompSearchQuery
+        )
+    }
+
+    private var layerCompSearchField: some View {
+        HStack(spacing: 6) {
+            Image(systemName: "magnifyingglass")
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+
+            ImageEditorLayerSearchField(
+                placeholder: L10n.text("imageEditor.layerComp.searchPlaceholder"),
+                text: $layerCompSearchQuery,
+                identifier: "image-editor-layer-comp-search-field"
+            )
+            .frame(minHeight: 16)
+
+            if !layerCompSearchQuery.isEmpty {
+                Button {
+                    layerCompSearchQuery = ""
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.system(size: 11, weight: .semibold))
+                        .frame(width: 18, height: 18)
+                }
+                .buttonStyle(.plain)
+                .help(L10n.text("imageEditor.action.layerCompSearchClear"))
+            }
+        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 6)
+        .background(Color.white.opacity(0.06))
+        .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 4, style: .continuous)
+                .stroke(Color.white.opacity(0.08), lineWidth: 1)
+        )
+        .accessibilityIdentifier("image-editor-layer-comp-search")
     }
 
     private func layerCompDraggableRow(_ comp: ImageEditorLayerComp) -> some View {

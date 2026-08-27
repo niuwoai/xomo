@@ -77,6 +77,49 @@ enum ImageEditorLayerCompCaptureDefaults {
     }
 }
 
+enum ImageEditorLayerCompNavigationDirection: Equatable {
+    case previous
+    case next
+}
+
+enum ImageEditorLayerCompSearch {
+    static func filtered(
+        _ layerComps: [ImageEditorLayerComp],
+        matching query: String
+    ) -> [ImageEditorLayerComp] {
+        let trimmedQuery = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedQuery.isEmpty else { return layerComps }
+        let options: String.CompareOptions = [.caseInsensitive, .diacriticInsensitive, .widthInsensitive]
+        return layerComps.filter { comp in
+            comp.name.range(of: trimmedQuery, options: options) != nil
+                || comp.comment.range(of: trimmedQuery, options: options) != nil
+        }
+    }
+
+    static func navigationTarget(
+        direction: ImageEditorLayerCompNavigationDirection,
+        layerComps: [ImageEditorLayerComp],
+        query: String,
+        selectedLayerCompID: UUID?
+    ) -> UUID? {
+        guard let selectedLayerCompID else { return nil }
+        let filteredIDs = filtered(layerComps, matching: query).map(\.id)
+        guard !filteredIDs.isEmpty else { return nil }
+        guard let selectedIndex = filteredIDs.firstIndex(of: selectedLayerCompID) else {
+            return direction == .previous ? filteredIDs.last : filteredIDs.first
+        }
+        switch direction {
+        case .previous:
+            guard selectedIndex > filteredIDs.startIndex else { return nil }
+            return filteredIDs[filteredIDs.index(before: selectedIndex)]
+        case .next:
+            let nextIndex = filteredIDs.index(after: selectedIndex)
+            guard nextIndex < filteredIDs.endIndex else { return nil }
+            return filteredIDs[nextIndex]
+        }
+    }
+}
+
 enum ImageEditorLayerCompDropGeometry {
     static func destinationIndex(
         sourceIndex: Int,
@@ -281,11 +324,11 @@ extension ImageEditorViewModel {
     }
 
     var canSelectPreviousLayerComp: Bool {
-        selectedLayerCompIndex.map { $0 > 0 } ?? false
+        layerCompNavigationTarget(.previous, matching: "") != nil
     }
 
     var canSelectNextLayerComp: Bool {
-        selectedLayerCompIndex.map { $0 < document.layerComps.count - 1 } ?? false
+        layerCompNavigationTarget(.next, matching: "") != nil
     }
 
     func addLayerComp(
@@ -662,15 +705,31 @@ extension ImageEditorViewModel {
     }
 
     @discardableResult
-    func applyPreviousLayerComp() -> Bool {
-        guard canSelectPreviousLayerComp, let selectedLayerCompIndex else { return false }
-        return applyLayerComp(document.layerComps[selectedLayerCompIndex - 1].id)
+    func applyPreviousLayerComp(matching query: String = "") -> Bool {
+        guard let targetID = layerCompNavigationTarget(.previous, matching: query) else {
+            return false
+        }
+        return applyLayerComp(targetID)
     }
 
     @discardableResult
-    func applyNextLayerComp() -> Bool {
-        guard canSelectNextLayerComp, let selectedLayerCompIndex else { return false }
-        return applyLayerComp(document.layerComps[selectedLayerCompIndex + 1].id)
+    func applyNextLayerComp(matching query: String = "") -> Bool {
+        guard let targetID = layerCompNavigationTarget(.next, matching: query) else {
+            return false
+        }
+        return applyLayerComp(targetID)
+    }
+
+    func layerCompNavigationTarget(
+        _ direction: ImageEditorLayerCompNavigationDirection,
+        matching query: String
+    ) -> UUID? {
+        ImageEditorLayerCompSearch.navigationTarget(
+            direction: direction,
+            layerComps: document.layerComps,
+            query: query,
+            selectedLayerCompID: document.selectedLayerCompID
+        )
     }
 
     func layerCompSummary(_ comp: ImageEditorLayerComp) -> String {
@@ -683,11 +742,6 @@ extension ImageEditorViewModel {
             return L10n.format("imageEditor.layerComp.defaultName", fallbackIndex)
         }
         return trimmedName
-    }
-
-    private var selectedLayerCompIndex: Int? {
-        guard let selectedLayerCompID = document.selectedLayerCompID else { return nil }
-        return document.layerComps.firstIndex { $0.id == selectedLayerCompID }
     }
 
     private func layerCompHasMatchingLayers(_ comp: ImageEditorLayerComp) -> Bool {

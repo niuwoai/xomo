@@ -3225,6 +3225,9 @@
 "imageEditor.action.layerCompPrevious" = "上一个图层复合";
 "imageEditor.action.layerCompNext" = "下一个图层复合";
 "imageEditor.layerComp.empty" = "还没有保存图层复合";
+"imageEditor.layerComp.searchPlaceholder" = "搜索名称或备注";
+"imageEditor.layerComp.noSearchResults" = "没有匹配的图层复合";
+"imageEditor.action.layerCompSearchClear" = "清除图层复合搜索";
 "imageEditor.layerComp.hint" = "图层复合会记录图层显隐、位置、不透明度、混合模式和选中状态。";
 "imageEditor.layerComp.namePlaceholder" = "图层复合名称";
 "imageEditor.layerComp.defaultName" = "图层复合 %d";

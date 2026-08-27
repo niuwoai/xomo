@@ -249,6 +249,7 @@ struct ImageEditorView: View {
     @State var alphaChannelNameDrafts: [UUID: String] = [:]
     @State var layerCompNameDrafts: [UUID: String] = [:]
     @State var layerCompCommentDrafts: [UUID: String] = [:]
+    @State var layerCompSearchQuery = ""
     @AppStorage(ImageEditorLayerCompCaptureDefaults.visibilityKey)
     var defaultLayerCompCapturesVisibility = true
     @AppStorage(ImageEditorLayerCompCaptureDefaults.positionKey)

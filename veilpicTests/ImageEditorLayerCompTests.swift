@@ -55,6 +55,72 @@ struct ImageEditorLayerCompTests {
     }
 
     @Test
+    func layerCompSearchMatchesNamesAndCommentsAndNavigatesOnlyFilteredResults() throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "source.png",
+            image: testImage(color: .systemBlue, size: NSSize(width: 100, height: 80))
+        ) { _ in }
+        let layerID = try #require(viewModel.document.selectedLayerID)
+
+        viewModel.addLayerComp(named: "Desktop Élite")
+        let desktopID = try #require(viewModel.document.selectedLayerCompID)
+        viewModel.toggleLayerVisibility(layerID)
+        viewModel.addLayerComp(named: "Mobile Draft")
+        let mobileID = try #require(viewModel.document.selectedLayerCompID)
+        viewModel.toggleLayerVisibility(layerID)
+        viewModel.addLayerComp(named: "Tablet Final")
+        let tabletID = try #require(viewModel.document.selectedLayerCompID)
+        #expect(viewModel.updateLayerCompComment(desktopID, to: "Client approved"))
+        #expect(viewModel.updateLayerCompComment(mobileID, to: "Needs review"))
+        #expect(viewModel.updateLayerCompComment(tabletID, to: "Approved handoff"))
+        viewModel.selectLayerComp(mobileID)
+
+        let projectDataBeforeSearch = try viewModel.projectData()
+        let historyBeforeSearch = viewModel.document.history
+        let undoCountBeforeSearch = viewModel.undoStack.count
+        let redoCountBeforeSearch = viewModel.redoStack.count
+        #expect(ImageEditorLayerCompSearch.filtered(
+            viewModel.document.layerComps,
+            matching: "  elite  "
+        ).map(\.id) == [desktopID])
+        #expect(ImageEditorLayerCompSearch.filtered(
+            viewModel.document.layerComps,
+            matching: "APPROVED"
+        ).map(\.id) == [desktopID, tabletID])
+        #expect(ImageEditorLayerCompSearch.filtered(
+            viewModel.document.layerComps,
+            matching: "   "
+        ).map(\.id) == [desktopID, mobileID, tabletID])
+        #expect(viewModel.layerCompNavigationTarget(
+            .previous,
+            matching: "approved"
+        ) == tabletID)
+        #expect(viewModel.layerCompNavigationTarget(
+            .next,
+            matching: "approved"
+        ) == desktopID)
+        #expect(viewModel.layerCompNavigationTarget(
+            .next,
+            matching: "missing"
+        ) == nil)
+        #expect(!viewModel.applyNextLayerComp(matching: "missing"))
+        #expect(try viewModel.projectData() == projectDataBeforeSearch)
+        #expect(viewModel.document.history == historyBeforeSearch)
+        #expect(viewModel.undoStack.count == undoCountBeforeSearch)
+        #expect(viewModel.redoStack.count == redoCountBeforeSearch)
+
+        #expect(viewModel.applyNextLayerComp(matching: "approved"))
+        #expect(viewModel.document.selectedLayerCompID == desktopID)
+        #expect(viewModel.document.layers.first { $0.id == layerID }?.isVisible == true)
+        #expect(viewModel.applyNextLayerComp(matching: "approved"))
+        #expect(viewModel.document.selectedLayerCompID == tabletID)
+        #expect(viewModel.document.layers.first { $0.id == layerID }?.isVisible == true)
+        let boundaryHistoryCount = viewModel.document.history.count
+        #expect(!viewModel.applyNextLayerComp(matching: "approved"))
+        #expect(viewModel.document.history.count == boundaryHistoryCount)
+    }
+
+    @Test
     func layerCompContextOperationsUseTheExplicitRowInsteadOfTheCurrentSelection() throws {
         let viewModel = ImageEditorViewModel(
             sourceName: "source.png",
@@ -165,8 +231,13 @@ struct ImageEditorLayerCompTests {
         #expect(source.contains("viewModel.clearLayerCompWarning(comp.id)"))
         #expect(source.contains("viewModel.clearAllLayerCompWarnings()"))
         #expect(source.contains("image-editor-layer-comp-warning-\\(comp.id.uuidString)"))
-        #expect(source.contains("viewModel.applyPreviousLayerComp()"))
-        #expect(source.contains("viewModel.applyNextLayerComp()"))
+        #expect(source.contains("viewModel.applyPreviousLayerComp(matching: layerCompSearchQuery)"))
+        #expect(source.contains("viewModel.applyNextLayerComp(matching: layerCompSearchQuery)"))
+        #expect(source.contains("ImageEditorLayerCompSearch.filtered("))
+        #expect(source.contains("imageEditor.layerComp.searchPlaceholder"))
+        #expect(source.contains("imageEditor.layerComp.noSearchResults"))
+        #expect(source.contains("imageEditor.action.layerCompSearchClear"))
+        #expect(source.contains("image-editor-layer-comp-search-field"))
         #expect(source.contains("image-editor-layer-comp-previous"))
         #expect(source.contains("image-editor-layer-comp-next"))
 
@@ -180,6 +251,7 @@ struct ImageEditorLayerCompTests {
         #expect(viewSource.contains(
             "@State var layerCompCommentDrafts: [UUID: String] = [:]"
         ))
+        #expect(viewSource.contains("@State var layerCompSearchQuery = \"\""))
         #expect(viewSource.contains(
             "@AppStorage(ImageEditorLayerCompCaptureDefaults.visibilityKey)"
         ))
