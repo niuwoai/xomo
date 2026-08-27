@@ -3183,6 +3183,11 @@
 "imageEditor.action.layerCompDragReorder" = "ドラッグしてレイヤーコンプの順序を変更";
 "imageEditor.action.layerCompDragReorderOrCopy" = "ドラッグで並べ替え、Option＋ドラッグで複製";
 "imageEditor.layerComp.commentPlaceholder" = "コメントを追加";
+"imageEditor.layerComp.visibilityNotCaptured" = "このレイヤーカンプは表示状態を記録しません";
+"imageEditor.action.layerCompCaptureVisibility" = "表示状態を記録";
+"imageEditor.history.layerCompCaptureVisibility" = "レイヤーカンプの表示状態記録を変更";
+"imageEditor.status.layerCompCaptureVisibilityEnabled" = "「%@」はレイヤーの表示状態を記録するようになりました。";
+"imageEditor.status.layerCompCaptureVisibilityDisabled" = "「%@」は現在のレイヤー表示状態を保持するようになりました。";
 "imageEditor.action.layerCompMoveToTop" = "リストの先頭へ移動";
 "imageEditor.action.layerCompMoveUp" = "レイヤーコンプを上へ移動";
 "imageEditor.action.layerCompMoveDown" = "レイヤーコンプを下へ移動";

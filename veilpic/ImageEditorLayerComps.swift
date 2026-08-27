@@ -149,7 +149,9 @@ extension ImageEditorViewModel {
         let existingGroupIDs = Set(document.layers.filter(\.isGroup).map(\.id))
         for index in document.layers.indices {
             guard let state = statesByLayerID[document.layers[index].id] else { continue }
-            document.layers[index].isVisible = state.isVisible
+            if comp.capturesVisibility {
+                document.layers[index].isVisible = state.isVisible
+            }
             document.layers[index].frame = state.frame
             document.layers[index].opacity = max(0, min(1, state.opacity))
             document.layers[index].fillOpacity = max(0, min(1, state.fillOpacity))
@@ -241,6 +243,7 @@ extension ImageEditorViewModel {
         var updated = ImageEditorLayerComp.capture(name: name, document: document)
         updated.id = id
         updated.comment = document.layerComps[index].comment
+        updated.capturesVisibility = document.layerComps[index].capturesVisibility
         updated.createdAt = document.layerComps[index].createdAt
         document.layerComps[index] = updated
         document.selectedLayerCompID = id
@@ -317,6 +320,24 @@ extension ImageEditorViewModel {
             comment.isEmpty
                 ? "imageEditor.status.layerCompCommentCleared"
                 : "imageEditor.status.layerCompCommentUpdated",
+            document.layerComps[index].name
+        )
+        return true
+    }
+
+    @discardableResult
+    func setLayerCompCapturesVisibility(_ id: UUID, enabled: Bool) -> Bool {
+        guard let index = document.layerComps.firstIndex(where: { $0.id == id }),
+              document.layerComps[index].capturesVisibility != enabled
+        else { return false }
+        pushUndo()
+        document.layerComps[index].capturesVisibility = enabled
+        document.selectedLayerCompID = id
+        appendHistory(L10n.text("imageEditor.history.layerCompCaptureVisibility"))
+        statusText = L10n.format(
+            enabled
+                ? "imageEditor.status.layerCompCaptureVisibilityEnabled"
+                : "imageEditor.status.layerCompCaptureVisibilityDisabled",
             document.layerComps[index].name
         )
         return true

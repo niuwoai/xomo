@@ -1137,10 +1137,16 @@ extension ImageEditorView {
                     syncLayerCompNameDraft(comp)
                 }
 
-                Text(viewModel.layerCompSummary(comp))
-                    .font(.system(size: 10, weight: .medium))
-                    .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
-                    .lineLimit(1)
+                HStack(spacing: 4) {
+                    Text(viewModel.layerCompSummary(comp))
+                        .lineLimit(1)
+                    if !comp.capturesVisibility {
+                        Image(systemName: "eye.slash")
+                            .help(L10n.text("imageEditor.layerComp.visibilityNotCaptured"))
+                    }
+                }
+                .font(.system(size: 10, weight: .medium))
+                .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
 
                 TextField(
                     L10n.text("imageEditor.layerComp.commentPlaceholder"),
@@ -1202,6 +1208,17 @@ extension ImageEditorView {
             _ = viewModel.duplicateLayerComp(comp.id)
         } label: {
             Label(L10n.text("imageEditor.action.layerCompDuplicate"), systemImage: "doc.on.doc")
+        }
+        Button {
+            _ = viewModel.setLayerCompCapturesVisibility(
+                comp.id,
+                enabled: !comp.capturesVisibility
+            )
+        } label: {
+            Label(
+                L10n.text("imageEditor.action.layerCompCaptureVisibility"),
+                systemImage: comp.capturesVisibility ? "checkmark.square.fill" : "square"
+            )
         }
         Divider()
         Button {

@@ -3183,6 +3183,11 @@
 "imageEditor.action.layerCompDragReorder" = "Drag to Reorder Layer Comp";
 "imageEditor.action.layerCompDragReorderOrCopy" = "Drag to Reorder; Option-Drag to Duplicate";
 "imageEditor.layerComp.commentPlaceholder" = "Add Comment";
+"imageEditor.layerComp.visibilityNotCaptured" = "Visibility is not captured by this layer comp";
+"imageEditor.action.layerCompCaptureVisibility" = "Capture Visibility";
+"imageEditor.history.layerCompCaptureVisibility" = "Change Layer Comp Visibility Capture";
+"imageEditor.status.layerCompCaptureVisibilityEnabled" = "“%@” now captures layer visibility.";
+"imageEditor.status.layerCompCaptureVisibilityDisabled" = "“%@” now preserves current layer visibility.";
 "imageEditor.action.layerCompMoveToTop" = "Move to List Top";
 "imageEditor.action.layerCompMoveUp" = "Move Layer Comp Up";
 "imageEditor.action.layerCompMoveDown" = "Move Layer Comp Down";

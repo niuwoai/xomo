@@ -3183,6 +3183,11 @@
 "imageEditor.action.layerCompDragReorder" = "拖拽调整图层复合顺序";
 "imageEditor.action.layerCompDragReorderOrCopy" = "拖拽调整顺序；按住 Option 拖拽复制";
 "imageEditor.layerComp.commentPlaceholder" = "添加备注";
+"imageEditor.layerComp.visibilityNotCaptured" = "此图层复合不记录可见性";
+"imageEditor.action.layerCompCaptureVisibility" = "记录可见性";
+"imageEditor.history.layerCompCaptureVisibility" = "更改图层复合可见性记录";
+"imageEditor.status.layerCompCaptureVisibilityEnabled" = "“%@”现在会记录图层可见性。";
+"imageEditor.status.layerCompCaptureVisibilityDisabled" = "“%@”现在会保留当前图层可见性。";
 "imageEditor.action.layerCompMoveToTop" = "移到列表顶部";
 "imageEditor.action.layerCompMoveUp" = "上移图层复合";
 "imageEditor.action.layerCompMoveDown" = "下移图层复合";
