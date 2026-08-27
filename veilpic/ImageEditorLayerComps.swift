@@ -31,6 +31,22 @@ extension ImageEditorViewModel {
         selectedLayerComp != nil
     }
 
+    var canMoveSelectedLayerCompToTop: Bool {
+        selectedLayerComp.map { canMoveLayerCompToTop($0.id) } ?? false
+    }
+
+    var canMoveSelectedLayerCompUp: Bool {
+        selectedLayerComp.map { canMoveLayerCompUp($0.id) } ?? false
+    }
+
+    var canMoveSelectedLayerCompDown: Bool {
+        selectedLayerComp.map { canMoveLayerCompDown($0.id) } ?? false
+    }
+
+    var canMoveSelectedLayerCompToBottom: Bool {
+        selectedLayerComp.map { canMoveLayerCompToBottom($0.id) } ?? false
+    }
+
     var canSelectPreviousLayerComp: Bool {
         selectedLayerCompIndex.map { $0 > 0 } ?? false
     }
@@ -219,6 +235,66 @@ extension ImageEditorViewModel {
         deleteLayerComp(selectedLayerComp.id)
     }
 
+    func canMoveLayerCompToTop(_ id: UUID) -> Bool {
+        document.layerComps.firstIndex { $0.id == id }.map { $0 > 0 } ?? false
+    }
+
+    func canMoveLayerCompUp(_ id: UUID) -> Bool {
+        canMoveLayerCompToTop(id)
+    }
+
+    func canMoveLayerCompDown(_ id: UUID) -> Bool {
+        document.layerComps.firstIndex { $0.id == id }
+            .map { $0 < document.layerComps.count - 1 } ?? false
+    }
+
+    func canMoveLayerCompToBottom(_ id: UUID) -> Bool {
+        canMoveLayerCompDown(id)
+    }
+
+    @discardableResult
+    func moveLayerCompToTop(_ id: UUID) -> Bool {
+        moveLayerComp(
+            id,
+            destinationIndex: document.layerComps.startIndex,
+            statusKey: "imageEditor.status.layerCompMovedToTop"
+        )
+    }
+
+    @discardableResult
+    func moveLayerCompUp(_ id: UUID) -> Bool {
+        guard let sourceIndex = document.layerComps.firstIndex(where: { $0.id == id }) else {
+            return false
+        }
+        return moveLayerComp(
+            id,
+            destinationIndex: sourceIndex - 1,
+            statusKey: "imageEditor.status.layerCompMovedUp"
+        )
+    }
+
+    @discardableResult
+    func moveLayerCompDown(_ id: UUID) -> Bool {
+        guard let sourceIndex = document.layerComps.firstIndex(where: { $0.id == id }) else {
+            return false
+        }
+        return moveLayerComp(
+            id,
+            destinationIndex: sourceIndex + 1,
+            statusKey: "imageEditor.status.layerCompMovedDown"
+        )
+    }
+
+    @discardableResult
+    func moveLayerCompToBottom(_ id: UUID) -> Bool {
+        guard !document.layerComps.isEmpty else { return false }
+        return moveLayerComp(
+            id,
+            destinationIndex: document.layerComps.index(before: document.layerComps.endIndex),
+            statusKey: "imageEditor.status.layerCompMovedToBottom"
+        )
+    }
+
     func selectLayerComp(_ id: UUID) {
         guard let comp = document.layerComps.first(where: { $0.id == id }) else { return }
         document.selectedLayerCompID = id
@@ -265,6 +341,26 @@ extension ImageEditorViewModel {
             }
             suffix += 1
         }
+    }
+
+    private func moveLayerComp(
+        _ id: UUID,
+        destinationIndex: Int,
+        statusKey: String
+    ) -> Bool {
+        guard let sourceIndex = document.layerComps.firstIndex(where: { $0.id == id }),
+              document.layerComps.indices.contains(destinationIndex),
+              sourceIndex != destinationIndex
+        else { return false }
+        let name = document.layerComps[sourceIndex].name
+
+        pushUndo()
+        let comp = document.layerComps.remove(at: sourceIndex)
+        document.layerComps.insert(comp, at: destinationIndex)
+        document.selectedLayerCompID = id
+        appendHistory(L10n.text("imageEditor.history.layerCompReorder"))
+        statusText = L10n.format(statusKey, name)
+        return true
     }
 
     private func restoreLayerOrder(from layerOrder: [UUID]) {

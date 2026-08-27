@@ -1164,6 +1164,34 @@ extension ImageEditorView {
             Label(L10n.text("imageEditor.action.layerCompDuplicate"), systemImage: "doc.on.doc")
         }
         Divider()
+        Button {
+            viewModel.moveLayerCompToTop(comp.id)
+        } label: {
+            Label(L10n.text("imageEditor.action.layerCompMoveToTop"), systemImage: "arrow.up.to.line")
+        }
+        .disabled(!viewModel.canMoveLayerCompToTop(comp.id))
+        Button {
+            viewModel.moveLayerCompUp(comp.id)
+        } label: {
+            Label(L10n.text("imageEditor.action.layerCompMoveUp"), systemImage: "arrow.up")
+        }
+        .disabled(!viewModel.canMoveLayerCompUp(comp.id))
+        Button {
+            viewModel.moveLayerCompDown(comp.id)
+        } label: {
+            Label(L10n.text("imageEditor.action.layerCompMoveDown"), systemImage: "arrow.down")
+        }
+        .disabled(!viewModel.canMoveLayerCompDown(comp.id))
+        Button {
+            viewModel.moveLayerCompToBottom(comp.id)
+        } label: {
+            Label(
+                L10n.text("imageEditor.action.layerCompMoveToBottom"),
+                systemImage: "arrow.down.to.line"
+            )
+        }
+        .disabled(!viewModel.canMoveLayerCompToBottom(comp.id))
+        Divider()
         Button(role: .destructive) {
             viewModel.deleteLayerComp(comp.id)
         } label: {

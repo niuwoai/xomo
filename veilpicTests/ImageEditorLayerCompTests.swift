@@ -71,8 +71,62 @@ struct ImageEditorLayerCompTests {
         #expect(contextSource.contains("viewModel.applyLayerComp(comp.id)"))
         #expect(contextSource.contains("viewModel.updateLayerComp(comp.id)"))
         #expect(contextSource.contains("viewModel.duplicateLayerComp(comp.id)"))
+        #expect(contextSource.contains("viewModel.moveLayerCompToTop(comp.id)"))
+        #expect(contextSource.contains("viewModel.moveLayerCompUp(comp.id)"))
+        #expect(contextSource.contains("viewModel.moveLayerCompDown(comp.id)"))
+        #expect(contextSource.contains("viewModel.moveLayerCompToBottom(comp.id)"))
+        #expect(contextSource.contains("viewModel.canMoveLayerCompToTop(comp.id)"))
+        #expect(contextSource.contains("viewModel.canMoveLayerCompToBottom(comp.id)"))
         #expect(contextSource.contains("viewModel.deleteLayerComp(comp.id)"))
         #expect(contextSource.contains("Button(role: .destructive)"))
+    }
+
+    @Test
+    func layerCompOrderMovesAtomicallyAndRejectsEdgesWithoutClearingRedo() throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "source.png",
+            image: testImage(color: .systemOrange, size: NSSize(width: 100, height: 80))
+        ) { _ in }
+        for name in ["First", "Second", "Third", "Fourth"] {
+            viewModel.addLayerComp(named: name)
+        }
+        let ids = viewModel.document.layerComps.map(\.id)
+        let thirdID = ids[2]
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.canMoveLayerCompToTop(thirdID))
+        #expect(viewModel.canMoveLayerCompToBottom(thirdID))
+        #expect(viewModel.moveLayerCompToTop(thirdID))
+        #expect(viewModel.document.layerComps.map(\.id) == [ids[2], ids[0], ids[1], ids[3]])
+        #expect(viewModel.document.selectedLayerCompID == thirdID)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerCompReorder"))
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.layerCompMovedToTop", "Third"))
+
+        viewModel.undo()
+        #expect(viewModel.document.layerComps.map(\.id) == ids)
+        #expect(viewModel.canRedo)
+        let historyAfterUndo = viewModel.document.history
+        #expect(!viewModel.moveLayerCompToTop(ids[0]))
+        #expect(viewModel.document.history == historyAfterUndo)
+        #expect(viewModel.canRedo)
+        viewModel.redo()
+        #expect(viewModel.document.layerComps.map(\.id) == [ids[2], ids[0], ids[1], ids[3]])
+
+        #expect(viewModel.moveLayerCompToBottom(thirdID))
+        #expect(viewModel.document.layerComps.map(\.id) == [ids[0], ids[1], ids[3], ids[2]])
+        #expect(viewModel.moveLayerCompUp(thirdID))
+        #expect(viewModel.document.layerComps.map(\.id) == ids)
+        #expect(viewModel.moveLayerCompDown(thirdID))
+        #expect(viewModel.document.layerComps.map(\.id) == [ids[0], ids[1], ids[3], ids[2]])
+
+        let finalOrder = viewModel.document.layerComps
+        let finalHistory = viewModel.document.history
+        #expect(!viewModel.moveLayerCompDown(thirdID))
+        #expect(!viewModel.moveLayerCompToBottom(thirdID))
+        #expect(!viewModel.moveLayerCompUp(UUID()))
+        #expect(viewModel.document.layerComps == finalOrder)
+        #expect(viewModel.document.history == finalHistory)
     }
 
     @Test

@@ -2169,6 +2169,32 @@ extension ImageEditorView {
                 viewModel.duplicateSelectedLayerComp()
             }
             .disabled(!viewModel.canDuplicateSelectedLayerComp)
+            Divider()
+            Button(L10n.text("imageEditor.action.layerCompMoveToTop")) {
+                guard let id = viewModel.document.selectedLayerCompID else { return }
+                selectedLayerPanelTab = .comps
+                viewModel.moveLayerCompToTop(id)
+            }
+            .disabled(!viewModel.canMoveSelectedLayerCompToTop)
+            Button(L10n.text("imageEditor.action.layerCompMoveUp")) {
+                guard let id = viewModel.document.selectedLayerCompID else { return }
+                selectedLayerPanelTab = .comps
+                viewModel.moveLayerCompUp(id)
+            }
+            .disabled(!viewModel.canMoveSelectedLayerCompUp)
+            Button(L10n.text("imageEditor.action.layerCompMoveDown")) {
+                guard let id = viewModel.document.selectedLayerCompID else { return }
+                selectedLayerPanelTab = .comps
+                viewModel.moveLayerCompDown(id)
+            }
+            .disabled(!viewModel.canMoveSelectedLayerCompDown)
+            Button(L10n.text("imageEditor.action.layerCompMoveToBottom")) {
+                guard let id = viewModel.document.selectedLayerCompID else { return }
+                selectedLayerPanelTab = .comps
+                viewModel.moveLayerCompToBottom(id)
+            }
+            .disabled(!viewModel.canMoveSelectedLayerCompToBottom)
+            Divider()
             Button(L10n.text("imageEditor.action.layerCompDelete")) {
                 selectedLayerPanelTab = .comps
                 viewModel.deleteSelectedLayerComp()
