@@ -319,6 +319,89 @@ struct ImageEditorLayerMaskContextTests {
         #expect(viewModel.canRedo)
     }
 
+    @Test func copyActionUsesClickedMaskAsSourceAndSkipsLockedTargets() throws {
+        let viewModel = makeViewModel()
+        var source = layer(named: "Source Mask", in: viewModel)
+        let target = layer(named: "Target", in: viewModel)
+        var locked = layer(named: "Locked Target", in: viewModel)
+        source.mask = mask(
+            size: source.image.size,
+            selectedRect: CGRect(x: 8, y: 6, width: 34, height: 28)
+        )
+        source.isMaskEnabled = false
+        source.isMaskLinked = false
+        source.maskDensity = 0.42
+        source.maskFeather = 3
+        locked.isLocked = true
+        viewModel.document.layers = [source, target, locked]
+        select(
+            [source.id, target.id, locked.id],
+            primary: target.id,
+            in: viewModel
+        )
+        let selectionBefore = viewModel.document.selectedLayerIDs
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.canPerformLayerMaskActionFromContext(
+            source.id,
+            action: .copyToSelected
+        ))
+        #expect(viewModel.performLayerMaskActionFromContext(
+            source.id,
+            action: .copyToSelected
+        ))
+        let sourceResult = try #require(viewModel.document.layers[0].mask)
+        let targetResult = try #require(viewModel.document.layers[1].mask)
+        #expect(targetResult.hasEquivalentAlphaMask(to: sourceResult))
+        #expect(viewModel.document.layers[1].isMaskEnabled == false)
+        #expect(viewModel.document.layers[1].isMaskLinked == false)
+        #expect(viewModel.document.layers[1].maskDensity == 0.42)
+        #expect(viewModel.document.layers[1].maskFeather == 3)
+        #expect(viewModel.document.layers[2].mask == nil)
+        #expect(viewModel.document.selectedLayerIDs == selectionBefore)
+        #expect(viewModel.document.selectedLayerID == source.id)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.history.last?.title == L10n.text(
+            "imageEditor.history.layerMaskCopy"
+        ))
+
+        viewModel.undo()
+        #expect(viewModel.document.layers[0].mask != nil)
+        #expect(viewModel.document.layers[1].mask == nil)
+        #expect(viewModel.document.layers[2].mask == nil)
+    }
+
+    @Test func equivalentMaskCopyIsUnavailableAndPreservesRedoAndPrimaryTarget() throws {
+        let viewModel = makeViewModel()
+        var source = layer(named: "Source", in: viewModel)
+        var target = layer(named: "Equivalent Target", in: viewModel)
+        let sharedMask = mask(
+            size: source.image.size,
+            selectedRect: CGRect(x: 10, y: 8, width: 30, height: 24)
+        )
+        source.mask = sharedMask
+        target.mask = sharedMask
+        viewModel.document.layers = [source, target]
+        select([source.id, target.id], primary: target.id, in: viewModel)
+        viewModel.setSelectedLayersLabelColor(.orange)
+        viewModel.undo()
+        let historyBefore = viewModel.document.history
+        #expect(viewModel.canRedo)
+
+        #expect(!viewModel.canPerformLayerMaskActionFromContext(
+            source.id,
+            action: .copyToSelected
+        ))
+        #expect(!viewModel.performLayerMaskActionFromContext(
+            source.id,
+            action: .copyToSelected
+        ))
+        #expect(viewModel.document.selectedLayerID == target.id)
+        #expect(viewModel.document.selectedLayerIDs == [source.id, target.id])
+        #expect(viewModel.document.history == historyBefore)
+        #expect(viewModel.canRedo)
+    }
+
     @Test func layerPanelWiresEveryMaskContextActionThroughSharedPolicy() throws {
         let testsDirectory = URL(fileURLWithPath: #filePath).deletingLastPathComponent()
         let sourceURL = testsDirectory

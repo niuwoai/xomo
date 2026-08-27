@@ -21,6 +21,7 @@ enum ImageEditorLayerMaskContextAction: String, CaseIterable, Identifiable {
     case toggleEnabled
     case toggleLinked
     case invert
+    case copyToSelected
     case apply
     case delete
 
@@ -38,6 +39,7 @@ enum ImageEditorLayerMaskContextAction: String, CaseIterable, Identifiable {
         .toggleEnabled,
         .toggleLinked,
         .invert,
+        .copyToSelected,
         .apply,
         .delete
     ]
@@ -63,6 +65,7 @@ enum ImageEditorLayerMaskContextAction: String, CaseIterable, Identifiable {
         case .toggleEnabled: "imageEditor.action.layerMaskToggle"
         case .toggleLinked: "imageEditor.action.layerMaskLinkToggle"
         case .invert: "imageEditor.action.layerMaskInvert"
+        case .copyToSelected: "imageEditor.action.layerMaskCopyToSelected"
         case .apply: "imageEditor.action.layerMaskApply"
         case .delete: "imageEditor.action.layerMaskDelete"
         }
@@ -82,6 +85,7 @@ enum ImageEditorLayerMaskContextAction: String, CaseIterable, Identifiable {
         case .toggleEnabled: "circle.slash"
         case .toggleLinked: "link"
         case .invert: "arrow.triangle.2.circlepath"
+        case .copyToSelected: "doc.on.doc"
         case .apply: "checkmark.square"
         case .delete: "xmark.square"
         }
@@ -207,6 +211,11 @@ extension ImageEditorViewModel {
                     && !document.isEffectivelyLocked(layer)
                     && layer.mask?.invertedAlphaMask() != nil
             }
+        case .copyToSelected:
+            return layerMaskCopyOperations(
+                sourceID: clickedLayerID,
+                selectedIDs: selectedIDs
+            )?.operations.isEmpty == false
         case .toggleLinked:
             return document.layers.contains { layer in
                 selectedIDs.contains(layer.id)
@@ -260,6 +269,9 @@ extension ImageEditorViewModel {
             toggleLayerMaskLinked()
         case .invert:
             invertLayerMask()
+        case .copyToSelected:
+            document.selectedLayerID = clickedLayerID
+            copyLayerMaskToSelectedLayers()
         case .apply:
             applyLayerMask()
         case .delete:
@@ -479,39 +491,24 @@ extension ImageEditorViewModel {
     func copyLayerMaskToSelectedLayers() {
         guard canCopyLayerMaskToSelectedLayers,
               let sourceID = document.selectedLayerID,
-              let sourceIndex = document.layers.firstIndex(where: { $0.id == sourceID }),
-              let sourceMask = document.layers[sourceIndex].mask
+              let plan = layerMaskCopyOperations(
+                sourceID: sourceID,
+                selectedIDs: document.selectedLayerIDs
+              )
         else {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return
         }
 
-        let targetIndices = layerMaskCopyTargetIndices(sourceID: sourceID)
-        guard !targetIndices.isEmpty else {
-            statusText = L10n.text("imageEditor.status.operationFailed")
-            return
-        }
-
-        let sourceLayer = document.layers[sourceIndex]
-        let operations: [(index: Int, mask: NSImage)] = targetIndices.compactMap { index in
-            let targetLayer = document.layers[index]
-            let targetSize = maskSize(for: targetLayer)
-            let targetMask = (sourceMask.resized(to: targetSize) ?? sourceMask).normalizedBitmapImage()
-            let isEquivalent = targetLayer.mask?.hasEquivalentAlphaMask(to: targetMask) == true
-                && targetLayer.isMaskEnabled == sourceLayer.isMaskEnabled
-                && targetLayer.isMaskLinked == sourceLayer.isMaskLinked
-                && targetLayer.maskDensity == sourceLayer.maskDensity
-                && targetLayer.maskFeather == sourceLayer.maskFeather
-            return isEquivalent ? nil : (index, targetMask)
-        }
-        guard !operations.isEmpty else {
+        guard !plan.operations.isEmpty else {
             isEditingLayerMask = false
             statusText = L10n.text("imageEditor.status.layerMaskCopyUnchanged")
             return
         }
 
+        let sourceLayer = document.layers[plan.sourceIndex]
         pushUndo()
-        for operation in operations {
+        for operation in plan.operations {
             let index = operation.index
             document.layers[index].mask = operation.mask
             document.layers[index].isMaskEnabled = sourceLayer.isMaskEnabled
@@ -521,7 +518,7 @@ extension ImageEditorViewModel {
         }
         isEditingLayerMask = false
         appendHistory(L10n.text("imageEditor.history.layerMaskCopy"))
-        statusText = L10n.format("imageEditor.status.layerMaskCopied", operations.count)
+        statusText = L10n.format("imageEditor.status.layerMaskCopied", plan.operations.count)
     }
 
     func copyVectorMaskToSelectedLayers() {
@@ -1374,8 +1371,38 @@ extension ImageEditorViewModel {
         )
     }
 
-    private func layerMaskCopyTargetIndices(sourceID: UUID) -> [Int] {
-        let targetIDs = document.selectedLayerIDs.subtracting([sourceID])
+    private func layerMaskCopyOperations(
+        sourceID: UUID,
+        selectedIDs: Set<UUID>
+    ) -> (sourceIndex: Int, operations: [(index: Int, mask: NSImage)])? {
+        guard let sourceIndex = document.layers.firstIndex(where: { $0.id == sourceID }),
+              let sourceMask = document.layers[sourceIndex].mask
+        else { return nil }
+        let sourceLayer = document.layers[sourceIndex]
+        let targetIndices = layerMaskCopyTargetIndices(
+            sourceID: sourceID,
+            selectedIDs: selectedIDs
+        )
+        let operations = targetIndices.compactMap { index -> (index: Int, mask: NSImage)? in
+            let targetLayer = document.layers[index]
+            let targetSize = maskSize(for: targetLayer)
+            let targetMask = (sourceMask.resized(to: targetSize) ?? sourceMask).normalizedBitmapImage()
+            let isEquivalent = targetLayer.mask?.hasEquivalentAlphaMask(to: targetMask) == true
+                && targetLayer.isMaskEnabled == sourceLayer.isMaskEnabled
+                && targetLayer.isMaskLinked == sourceLayer.isMaskLinked
+                && targetLayer.maskDensity == sourceLayer.maskDensity
+                && targetLayer.maskFeather == sourceLayer.maskFeather
+            return isEquivalent ? nil : (index, targetMask)
+        }
+        return (sourceIndex, operations)
+    }
+
+    private func layerMaskCopyTargetIndices(
+        sourceID: UUID,
+        selectedIDs explicitSelectedIDs: Set<UUID>? = nil
+    ) -> [Int] {
+        let selectedIDs = explicitSelectedIDs ?? document.selectedLayerIDs
+        let targetIDs = selectedIDs.subtracting([sourceID])
         return document.layers.indices.filter { index in
             let layer = document.layers[index]
             return targetIDs.contains(layer.id) && !document.isEffectivelyLocked(layer)
