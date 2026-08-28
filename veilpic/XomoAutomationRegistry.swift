@@ -6256,6 +6256,16 @@ final class XomoAutomationRegistry {
             case "bulgeAmount": viewModel.filterLiquifyBulgeAmount = try numericSetting(value, key: key)
             case "offsetX": viewModel.filterOffsetX = try numericSetting(value, key: key)
             case "offsetY": viewModel.filterOffsetY = try numericSetting(value, key: key)
+            case "offsetUndefinedAreaMode":
+                guard
+                    let rawValue = value.stringValue,
+                    let mode = ImageEditorOffsetUndefinedAreaMode(rawValue: rawValue)
+                else {
+                    throw XomoAutomationCallError.invalidArgument(
+                        "offsetUndefinedAreaMode must be a supported string"
+                    )
+                }
+                viewModel.filterOffsetUndefinedAreaMode = mode
             case "waveAmplitude": viewModel.filterWaveAmplitude = try numericSetting(value, key: key)
             case "waveFrequency": viewModel.filterWaveFrequency = try numericSetting(value, key: key)
             case "rippleAmount": viewModel.filterRippleAmount = try numericSetting(value, key: key)
@@ -7960,6 +7970,10 @@ private extension XomoAutomationRegistry {
         "bulgeAmount": XomoAutomationSchema.number(description: "Bulge amount"),
         "offsetX": XomoAutomationSchema.number(description: "Horizontal offset"),
         "offsetY": XomoAutomationSchema.number(description: "Vertical offset"),
+        "offsetUndefinedAreaMode": XomoAutomationSchema.string(
+            description: "How Offset fills pixels shifted beyond the canvas",
+            values: ImageEditorOffsetUndefinedAreaMode.allCases.map(\.rawValue)
+        ),
         "waveAmplitude": XomoAutomationSchema.number(description: "Wave amplitude"),
         "waveFrequency": XomoAutomationSchema.number(description: "Wave frequency"),
         "rippleAmount": XomoAutomationSchema.number(description: "Ripple amount"),

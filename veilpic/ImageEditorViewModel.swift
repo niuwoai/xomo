@@ -488,6 +488,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var filterLiquifyBulgeAmount: Double = 0.5
     @Published var filterOffsetX: Double = 0.25
     @Published var filterOffsetY: Double = 0
+    @Published var filterOffsetUndefinedAreaMode = ImageEditorOffsetUndefinedAreaMode.wrapAround
     @Published var filterWaveAmplitude: Double = 0.5
     @Published var filterWaveFrequency: Double = 0.25
     @Published var filterRippleAmount: Double = 0.5
@@ -2647,7 +2648,8 @@ final class ImageEditorViewModel: ObservableObject {
                 filter.kind.title,
                 Int((filter.normalizedIntensity * 100).rounded()),
                 Int((settings.offsetX * 100).rounded()),
-                Int((settings.offsetY * 100).rounded())
+                Int((settings.offsetY * 100).rounded()),
+                settings.offsetUndefinedAreaMode.title
             )
             guard !filter.isEnabled else { return title }
             return L10n.format("imageEditor.properties.smartFilterDisabled", title)
@@ -9445,6 +9447,7 @@ final class ImageEditorViewModel: ObservableObject {
             liquifyBulgeAmount: filterLiquifyBulgeAmount,
             offsetX: filterOffsetX,
             offsetY: filterOffsetY,
+            offsetUndefinedAreaMode: filterOffsetUndefinedAreaMode,
             waveAmplitude: filterWaveAmplitude,
             waveFrequency: filterWaveFrequency,
             rippleAmount: filterRippleAmount,
@@ -11286,6 +11289,7 @@ final class ImageEditorViewModel: ObservableObject {
         filterLiquifyBulgeAmount = normalized.liquifyBulgeAmount
         filterOffsetX = normalized.offsetX
         filterOffsetY = normalized.offsetY
+        filterOffsetUndefinedAreaMode = normalized.offsetUndefinedAreaMode
         filterWaveAmplitude = normalized.waveAmplitude
         filterWaveFrequency = normalized.waveFrequency
         filterRippleAmount = normalized.rippleAmount

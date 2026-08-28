@@ -11995,6 +11995,22 @@ struct ImageEditorView: View {
                             .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
                             .frame(width: 44, alignment: .trailing)
                     }
+                    HStack {
+                        Text(L10n.text("imageEditor.filter.offsetUndefinedAreas"))
+                            .font(.system(size: 10, weight: .medium))
+                            .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                        Spacer(minLength: 8)
+                        Picker("", selection: $viewModel.filterOffsetUndefinedAreaMode) {
+                            ForEach(ImageEditorOffsetUndefinedAreaMode.allCases) { mode in
+                                Text(mode.title).tag(mode)
+                            }
+                        }
+                        .labelsHidden()
+                        .pickerStyle(.menu)
+                        .controlSize(.small)
+                        .frame(width: 176)
+                        .accessibilityIdentifier("image-editor-filter-offset-undefined-area-mode")
+                    }
                 }
 
                 })

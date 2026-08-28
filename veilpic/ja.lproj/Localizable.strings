@@ -984,6 +984,10 @@
 "imageEditor.filter.offsetX" = "水平オフセット";
 "imageEditor.filter.offsetY" = "垂直オフセット";
 "imageEditor.filter.offsetValue" = "%d";
+"imageEditor.filter.offsetUndefinedAreas" = "未定義領域";
+"imageEditor.filter.offsetUndefinedArea.wrapAround" = "ラップアラウンド";
+"imageEditor.filter.offsetUndefinedArea.repeatEdgePixels" = "端のピクセルを繰り返す";
+"imageEditor.filter.offsetUndefinedArea.transparent" = "透明";
 "imageEditor.filter.waveAmplitude" = "振幅";
 "imageEditor.filter.waveAmplitudeValue" = "%d";
 "imageEditor.filter.waveFrequency" = "周波数";
@@ -1216,7 +1220,7 @@
 "imageEditor.properties.smartFilterLiquifyTwirlItem" = "%@ %d%% · 回転 %d";
 "imageEditor.properties.smartFilterLiquifyPuckerBloatItem" = "%@ %d%% · 収縮/膨張 %d";
 "imageEditor.properties.smartFilterWaveItem" = "%@ %d%% · 振幅 %d · 周波数 %d";
-"imageEditor.properties.smartFilterOffsetItem" = "%@ %d%% · X %d · Y %d";
+"imageEditor.properties.smartFilterOffsetItem" = "%@ %d%% · X %d · Y %d · %@";
 "imageEditor.properties.smartFilterRippleItem" = "%@ %d%% · 量 %d · 周波数 %d";
 "imageEditor.properties.smartFilterPinchItem" = "%@ %d%% · 量 %d";
 "imageEditor.properties.smartFilterSpherizeItem" = "%@ %d%% · 量 %d";

@@ -2406,6 +2406,18 @@ enum ImageEditorFilter: String, CaseIterable, Identifiable {
     }
 }
 
+enum ImageEditorOffsetUndefinedAreaMode: String, CaseIterable, Identifiable, Codable {
+    case wrapAround
+    case repeatEdgePixels
+    case transparent
+
+    var id: String { rawValue }
+
+    var title: String {
+        L10n.text("imageEditor.filter.offsetUndefinedArea.\(rawValue)")
+    }
+}
+
 struct ImageEditorFilterApplication: Equatable {
     var kind: ImageEditorFilter
     var intensity: Double
@@ -2515,6 +2527,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
     var liquifyBulgeAmount: Double = 0.5
     var offsetX: Double = 0.25
     var offsetY: Double = 0
+    var offsetUndefinedAreaMode = ImageEditorOffsetUndefinedAreaMode.wrapAround
     var waveAmplitude: Double = 0.5
     var waveFrequency: Double = 0.25
     var rippleAmount: Double = 0.5
@@ -2535,6 +2548,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         liquifyBulgeAmount: Double = 0.5,
         offsetX: Double = 0.25,
         offsetY: Double = 0,
+        offsetUndefinedAreaMode: ImageEditorOffsetUndefinedAreaMode = .wrapAround,
         waveAmplitude: Double = 0.5,
         waveFrequency: Double = 0.25,
         rippleAmount: Double = 0.5,
@@ -2554,6 +2568,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         self.liquifyBulgeAmount = liquifyBulgeAmount
         self.offsetX = offsetX
         self.offsetY = offsetY
+        self.offsetUndefinedAreaMode = offsetUndefinedAreaMode
         self.waveAmplitude = waveAmplitude
         self.waveFrequency = waveFrequency
         self.rippleAmount = rippleAmount
@@ -2576,6 +2591,10 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         liquifyBulgeAmount = try container.decodeIfPresent(Double.self, forKey: .liquifyBulgeAmount) ?? 0.5
         offsetX = try container.decodeIfPresent(Double.self, forKey: .offsetX) ?? 0.25
         offsetY = try container.decodeIfPresent(Double.self, forKey: .offsetY) ?? 0
+        offsetUndefinedAreaMode = try container.decodeIfPresent(
+            ImageEditorOffsetUndefinedAreaMode.self,
+            forKey: .offsetUndefinedAreaMode
+        ) ?? .wrapAround
         waveAmplitude = try container.decodeIfPresent(Double.self, forKey: .waveAmplitude) ?? 0.5
         waveFrequency = try container.decodeIfPresent(Double.self, forKey: .waveFrequency) ?? 0.25
         rippleAmount = try container.decodeIfPresent(Double.self, forKey: .rippleAmount) ?? 0.5
@@ -2598,6 +2617,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         try container.encode(liquifyBulgeAmount, forKey: .liquifyBulgeAmount)
         try container.encode(offsetX, forKey: .offsetX)
         try container.encode(offsetY, forKey: .offsetY)
+        try container.encode(offsetUndefinedAreaMode, forKey: .offsetUndefinedAreaMode)
         try container.encode(waveAmplitude, forKey: .waveAmplitude)
         try container.encode(waveFrequency, forKey: .waveFrequency)
         try container.encode(rippleAmount, forKey: .rippleAmount)
@@ -2620,6 +2640,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
             liquifyBulgeAmount: max(-1, min(1, liquifyBulgeAmount)),
             offsetX: max(-1, min(1, offsetX)),
             offsetY: max(-1, min(1, offsetY)),
+            offsetUndefinedAreaMode: offsetUndefinedAreaMode,
             waveAmplitude: max(-1, min(1, waveAmplitude)),
             waveFrequency: max(0, min(1, waveFrequency)),
             rippleAmount: max(-1, min(1, rippleAmount)),
@@ -2642,6 +2663,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         case liquifyBulgeAmount
         case offsetX
         case offsetY
+        case offsetUndefinedAreaMode
         case waveAmplitude
         case waveFrequency
         case rippleAmount

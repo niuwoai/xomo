@@ -886,15 +886,40 @@ extension NSImage {
         return pixelSampledFromBuffer { x, y, width, height, pixels, bytesPerRow, bytesPerPixel in
             let shiftX = normalizedSettings.offsetX * Double(width) * 0.5 * clampedIntensity
             let shiftY = normalizedSettings.offsetY * Double(height) * 0.5 * clampedIntensity
-            return Self.wrappedSamplePixel(
-                x: Double(x) - shiftX,
-                y: Double(y) - shiftY,
-                width: width,
-                height: height,
-                pixels: pixels,
-                bytesPerRow: bytesPerRow,
-                bytesPerPixel: bytesPerPixel
-            )
+            let sourceX = Double(x) - shiftX
+            let sourceY = Double(y) - shiftY
+            switch normalizedSettings.offsetUndefinedAreaMode {
+            case .wrapAround:
+                return Self.wrappedSamplePixel(
+                    x: sourceX,
+                    y: sourceY,
+                    width: width,
+                    height: height,
+                    pixels: pixels,
+                    bytesPerRow: bytesPerRow,
+                    bytesPerPixel: bytesPerPixel
+                )
+            case .repeatEdgePixels:
+                return Self.samplePixel(
+                    x: sourceX,
+                    y: sourceY,
+                    width: width,
+                    height: height,
+                    pixels: pixels,
+                    bytesPerRow: bytesPerRow,
+                    bytesPerPixel: bytesPerPixel
+                )
+            case .transparent:
+                return Self.transparentSamplePixel(
+                    x: sourceX,
+                    y: sourceY,
+                    width: width,
+                    height: height,
+                    pixels: pixels,
+                    bytesPerRow: bytesPerRow,
+                    bytesPerPixel: bytesPerPixel
+                )
+            }
         }
     }
 
@@ -1419,6 +1444,39 @@ extension NSImage {
         let bottomRight = pixelComponents(x: x1, y: y1, pixels: pixels, bytesPerRow: bytesPerRow, bytesPerPixel: bytesPerPixel)
         let top = mix(topLeft, topRight, tx)
         let bottom = mix(bottomLeft, bottomRight, tx)
+        return mix(top, bottom, ty)
+    }
+
+    private static func transparentSamplePixel(
+        x: Double,
+        y: Double,
+        width: Int,
+        height: Int,
+        pixels: [UInt8],
+        bytesPerRow: Int,
+        bytesPerPixel: Int
+    ) -> (Double, Double, Double, Double) {
+        let x0 = Int(floor(x))
+        let y0 = Int(floor(y))
+        let x1 = x0 + 1
+        let y1 = y0 + 1
+        let tx = x - Double(x0)
+        let ty = y - Double(y0)
+        let clear = (0.0, 0.0, 0.0, 0.0)
+        func sample(_ sampleX: Int, _ sampleY: Int) -> (Double, Double, Double, Double) {
+            guard (0..<width).contains(sampleX), (0..<height).contains(sampleY) else {
+                return clear
+            }
+            return pixelComponents(
+                x: sampleX,
+                y: sampleY,
+                pixels: pixels,
+                bytesPerRow: bytesPerRow,
+                bytesPerPixel: bytesPerPixel
+            )
+        }
+        let top = mix(sample(x0, y0), sample(x1, y0), tx)
+        let bottom = mix(sample(x0, y1), sample(x1, y1), tx)
         return mix(top, bottom, ty)
     }
 
