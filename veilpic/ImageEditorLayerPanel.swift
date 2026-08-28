@@ -159,9 +159,11 @@ struct ImageEditorLayerSearchField: NSViewRepresentable {
     let placeholder: String
     @Binding var text: String
     var identifier = "image-editor-layer-search-field"
+    var onSubmit: (() -> Void)?
+    var onCancel: (() -> Void)?
 
     func makeCoordinator() -> Coordinator {
-        Coordinator(text: $text)
+        Coordinator(text: $text, onSubmit: onSubmit, onCancel: onCancel)
     }
 
     func makeNSView(context: Context) -> NSTextField {
@@ -174,6 +176,8 @@ struct ImageEditorLayerSearchField: NSViewRepresentable {
 
     func updateNSView(_ field: NSTextField, context: Context) {
         context.coordinator.text = $text
+        context.coordinator.onSubmit = onSubmit
+        context.coordinator.onCancel = onCancel
         if field.stringValue != text {
             field.stringValue = text
         }
@@ -183,14 +187,38 @@ struct ImageEditorLayerSearchField: NSViewRepresentable {
 
     final class Coordinator: NSObject, NSTextFieldDelegate {
         var text: Binding<String>
+        var onSubmit: (() -> Void)?
+        var onCancel: (() -> Void)?
 
-        init(text: Binding<String>) {
+        init(
+            text: Binding<String>,
+            onSubmit: (() -> Void)?,
+            onCancel: (() -> Void)?
+        ) {
             self.text = text
+            self.onSubmit = onSubmit
+            self.onCancel = onCancel
         }
 
         func controlTextDidChange(_ notification: Notification) {
             guard let field = notification.object as? NSTextField else { return }
             text.wrappedValue = field.stringValue
+        }
+
+        func control(
+            _ control: NSControl,
+            textView: NSTextView,
+            doCommandBy commandSelector: Selector
+        ) -> Bool {
+            if commandSelector == #selector(NSResponder.insertNewline(_:)), let onSubmit {
+                onSubmit()
+                return true
+            }
+            if commandSelector == #selector(NSResponder.cancelOperation(_:)), let onCancel {
+                onCancel()
+                return true
+            }
+            return false
         }
     }
 }
@@ -1212,7 +1240,15 @@ extension ImageEditorView {
             ImageEditorLayerSearchField(
                 placeholder: L10n.text("imageEditor.layerComp.searchPlaceholder"),
                 text: $layerCompSearchQuery,
-                identifier: "image-editor-layer-comp-search-field"
+                identifier: "image-editor-layer-comp-search-field",
+                onSubmit: {
+                    _ = viewModel.applyPreferredLayerCompSearchResult(
+                        matching: layerCompSearchQuery
+                    )
+                },
+                onCancel: layerCompSearchQuery.isEmpty ? nil : {
+                    layerCompSearchQuery = ""
+                }
             )
             .frame(minHeight: 16)
 

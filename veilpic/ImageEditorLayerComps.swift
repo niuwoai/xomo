@@ -120,6 +120,20 @@ enum ImageEditorLayerCompSearch {
             return filteredIDs[nextIndex]
         }
     }
+
+    static func preferredResultID(
+        in layerComps: [ImageEditorLayerComp],
+        matching query: String,
+        selectedLayerCompID: UUID?
+    ) -> UUID? {
+        guard query.contains(where: { !$0.isWhitespace }) else { return nil }
+        let results = filtered(layerComps, matching: query)
+        if let selectedLayerCompID,
+           results.contains(where: { $0.id == selectedLayerCompID }) {
+            return selectedLayerCompID
+        }
+        return results.first?.id
+    }
 }
 
 enum ImageEditorLayerCompDropGeometry {
@@ -889,6 +903,16 @@ extension ImageEditorViewModel {
             query: query,
             selectedLayerCompID: document.selectedLayerCompID
         )
+    }
+
+    @discardableResult
+    func applyPreferredLayerCompSearchResult(matching query: String) -> Bool {
+        guard let id = ImageEditorLayerCompSearch.preferredResultID(
+            in: document.layerComps,
+            matching: query,
+            selectedLayerCompID: document.selectedLayerCompID
+        ) else { return false }
+        return applyLayerComp(id)
     }
 
     func layerCompSummary(_ comp: ImageEditorLayerComp) -> String {
