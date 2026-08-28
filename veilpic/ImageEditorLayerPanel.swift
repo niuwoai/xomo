@@ -161,9 +161,17 @@ struct ImageEditorLayerSearchField: NSViewRepresentable {
     var identifier = "image-editor-layer-search-field"
     var onSubmit: (() -> Void)?
     var onCancel: (() -> Void)?
+    var onMovePrevious: (() -> Void)?
+    var onMoveNext: (() -> Void)?
 
     func makeCoordinator() -> Coordinator {
-        Coordinator(text: $text, onSubmit: onSubmit, onCancel: onCancel)
+        Coordinator(
+            text: $text,
+            onSubmit: onSubmit,
+            onCancel: onCancel,
+            onMovePrevious: onMovePrevious,
+            onMoveNext: onMoveNext
+        )
     }
 
     func makeNSView(context: Context) -> NSTextField {
@@ -178,6 +186,8 @@ struct ImageEditorLayerSearchField: NSViewRepresentable {
         context.coordinator.text = $text
         context.coordinator.onSubmit = onSubmit
         context.coordinator.onCancel = onCancel
+        context.coordinator.onMovePrevious = onMovePrevious
+        context.coordinator.onMoveNext = onMoveNext
         if field.stringValue != text {
             field.stringValue = text
         }
@@ -189,15 +199,21 @@ struct ImageEditorLayerSearchField: NSViewRepresentable {
         var text: Binding<String>
         var onSubmit: (() -> Void)?
         var onCancel: (() -> Void)?
+        var onMovePrevious: (() -> Void)?
+        var onMoveNext: (() -> Void)?
 
         init(
             text: Binding<String>,
             onSubmit: (() -> Void)?,
-            onCancel: (() -> Void)?
+            onCancel: (() -> Void)?,
+            onMovePrevious: (() -> Void)? = nil,
+            onMoveNext: (() -> Void)? = nil
         ) {
             self.text = text
             self.onSubmit = onSubmit
             self.onCancel = onCancel
+            self.onMovePrevious = onMovePrevious
+            self.onMoveNext = onMoveNext
         }
 
         func controlTextDidChange(_ notification: Notification) {
@@ -216,6 +232,14 @@ struct ImageEditorLayerSearchField: NSViewRepresentable {
             }
             if commandSelector == #selector(NSResponder.cancelOperation(_:)), let onCancel {
                 onCancel()
+                return true
+            }
+            if commandSelector == #selector(NSResponder.moveUp(_:)), let onMovePrevious {
+                onMovePrevious()
+                return true
+            }
+            if commandSelector == #selector(NSResponder.moveDown(_:)), let onMoveNext {
+                onMoveNext()
                 return true
             }
             return false
@@ -1168,11 +1192,20 @@ extension ImageEditorView {
                     .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
                     .frame(maxWidth: .infinity, alignment: .leading)
             } else {
-                ScrollView {
-                    VStack(spacing: 5) {
-                        ForEach(filteredLayerComps) { comp in
-                            layerCompDraggableRow(comp)
+                ScrollViewReader { proxy in
+                    ScrollView {
+                        VStack(spacing: 5) {
+                            ForEach(filteredLayerComps) { comp in
+                                layerCompDraggableRow(comp)
+                                    .id(comp.id)
+                            }
                         }
+                    }
+                    .onChange(of: viewModel.document.selectedLayerCompID) { selectedID in
+                        guard let selectedID,
+                              filteredLayerComps.contains(where: { $0.id == selectedID })
+                        else { return }
+                        proxy.scrollTo(selectedID, anchor: .center)
                     }
                 }
             }
@@ -1248,6 +1281,18 @@ extension ImageEditorView {
                 },
                 onCancel: layerCompSearchQuery.isEmpty ? nil : {
                     layerCompSearchQuery = ""
+                },
+                onMovePrevious: {
+                    _ = viewModel.selectAdjacentLayerCompSearchResult(
+                        .previous,
+                        matching: layerCompSearchQuery
+                    )
+                },
+                onMoveNext: {
+                    _ = viewModel.selectAdjacentLayerCompSearchResult(
+                        .next,
+                        matching: layerCompSearchQuery
+                    )
                 }
             )
             .frame(minHeight: 16)

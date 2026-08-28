@@ -189,17 +189,60 @@ struct ImageEditorLayerCompTests {
     }
 
     @Test
+    func arrowKeysSelectAdjacentSearchResultsWithoutApplyingTheCanvas() throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "source.png",
+            image: testImage(color: .systemPurple, size: NSSize(width: 100, height: 80))
+        ) { _ in }
+        let layerID = try #require(viewModel.document.selectedLayerID)
+        viewModel.addLayerComp(named: "Desktop Approved")
+        let desktopID = try #require(viewModel.document.selectedLayerCompID)
+        viewModel.toggleLayerVisibility(layerID)
+        viewModel.addLayerComp(named: "Tablet Approved")
+        let tabletID = try #require(viewModel.document.selectedLayerCompID)
+        viewModel.toggleLayerVisibility(layerID)
+        viewModel.addLayerComp(named: "Mobile Draft")
+        let mobileID = try #require(viewModel.document.selectedLayerCompID)
+        let history = viewModel.document.history
+        let undoCount = viewModel.undoStack.count
+        let redoCount = viewModel.redoStack.count
+
+        #expect(viewModel.selectAdjacentLayerCompSearchResult(.next, matching: "approved"))
+        #expect(viewModel.document.selectedLayerCompID == desktopID)
+        #expect(viewModel.document.layers.first { $0.id == layerID }?.isVisible == true)
+        #expect(viewModel.selectAdjacentLayerCompSearchResult(.next, matching: "approved"))
+        #expect(viewModel.document.selectedLayerCompID == tabletID)
+        #expect(!viewModel.selectAdjacentLayerCompSearchResult(.next, matching: "approved"))
+        #expect(viewModel.selectAdjacentLayerCompSearchResult(.previous, matching: "approved"))
+        #expect(viewModel.document.selectedLayerCompID == desktopID)
+
+        viewModel.selectLayerComp(mobileID)
+        #expect(viewModel.selectAdjacentLayerCompSearchResult(.previous, matching: "approved"))
+        #expect(viewModel.document.selectedLayerCompID == tabletID)
+        #expect(!viewModel.selectAdjacentLayerCompSearchResult(.next, matching: "missing"))
+        #expect(!viewModel.selectAdjacentLayerCompSearchResult(.next, matching: "   "))
+        #expect(viewModel.document.layers.first { $0.id == layerID }?.isVisible == true)
+        #expect(viewModel.document.history == history)
+        #expect(viewModel.undoStack.count == undoCount)
+        #expect(viewModel.redoStack.count == redoCount)
+    }
+
+    @Test
     func nativeLayerSearchFieldConsumesOnlyConfiguredSubmitAndCancelCommands() {
         var text = "approved"
         var submitCount = 0
         var cancelCount = 0
+        var previousCount = 0
+        var nextCount = 0
         let coordinator = ImageEditorLayerSearchField.Coordinator(
             text: Binding(
                 get: { text },
                 set: { text = $0 }
             ),
             onSubmit: { submitCount += 1 },
-            onCancel: { cancelCount += 1 }
+            onCancel: { cancelCount += 1 },
+            onMovePrevious: { previousCount += 1 },
+            onMoveNext: { nextCount += 1 }
         )
         let field = NSTextField(string: text)
         let textView = NSTextView()
@@ -216,10 +259,22 @@ struct ImageEditorLayerCompTests {
             doCommandBy: #selector(NSResponder.cancelOperation(_:))
         ))
         #expect(cancelCount == 1)
-        #expect(!coordinator.control(
+        #expect(coordinator.control(
             field,
             textView: textView,
             doCommandBy: #selector(NSResponder.moveUp(_:))
+        ))
+        #expect(previousCount == 1)
+        #expect(coordinator.control(
+            field,
+            textView: textView,
+            doCommandBy: #selector(NSResponder.moveDown(_:))
+        ))
+        #expect(nextCount == 1)
+        #expect(!coordinator.control(
+            field,
+            textView: textView,
+            doCommandBy: #selector(NSResponder.moveLeft(_:))
         ))
 
         let passiveCoordinator = ImageEditorLayerSearchField.Coordinator(
@@ -236,6 +291,16 @@ struct ImageEditorLayerCompTests {
             field,
             textView: textView,
             doCommandBy: #selector(NSResponder.cancelOperation(_:))
+        ))
+        #expect(!passiveCoordinator.control(
+            field,
+            textView: textView,
+            doCommandBy: #selector(NSResponder.moveUp(_:))
+        ))
+        #expect(!passiveCoordinator.control(
+            field,
+            textView: textView,
+            doCommandBy: #selector(NSResponder.moveDown(_:))
         ))
     }
 
@@ -404,6 +469,11 @@ struct ImageEditorLayerCompTests {
         #expect(source.contains("viewModel.applyPreferredLayerCompSearchResult("))
         #expect(source.contains("#selector(NSResponder.insertNewline(_:))"))
         #expect(source.contains("#selector(NSResponder.cancelOperation(_:))"))
+        #expect(source.contains("viewModel.selectAdjacentLayerCompSearchResult("))
+        #expect(source.contains("#selector(NSResponder.moveUp(_:))"))
+        #expect(source.contains("#selector(NSResponder.moveDown(_:))"))
+        #expect(source.contains("ScrollViewReader { proxy in"))
+        #expect(source.contains("proxy.scrollTo(selectedID, anchor: .center)"))
         #expect(contextSource.contains("viewModel.applyLayerComp(comp.id)"))
         #expect(contextSource.contains("viewModel.updateLayerComp(comp.id)"))
         #expect(contextSource.contains("viewModel.duplicateLayerComp(comp.id)"))

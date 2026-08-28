@@ -134,6 +134,31 @@ enum ImageEditorLayerCompSearch {
         }
         return results.first?.id
     }
+
+    static func selectionTarget(
+        direction: ImageEditorLayerCompNavigationDirection,
+        layerComps: [ImageEditorLayerComp],
+        query: String,
+        selectedLayerCompID: UUID?
+    ) -> UUID? {
+        guard query.contains(where: { !$0.isWhitespace }) else { return nil }
+        let filteredIDs = filtered(layerComps, matching: query).map(\.id)
+        guard !filteredIDs.isEmpty else { return nil }
+        guard let selectedLayerCompID,
+              let selectedIndex = filteredIDs.firstIndex(of: selectedLayerCompID)
+        else {
+            return direction == .previous ? filteredIDs.last : filteredIDs.first
+        }
+        switch direction {
+        case .previous:
+            guard selectedIndex > filteredIDs.startIndex else { return nil }
+            return filteredIDs[filteredIDs.index(before: selectedIndex)]
+        case .next:
+            let nextIndex = filteredIDs.index(after: selectedIndex)
+            guard nextIndex < filteredIDs.endIndex else { return nil }
+            return filteredIDs[nextIndex]
+        }
+    }
 }
 
 enum ImageEditorLayerCompDropGeometry {
@@ -913,6 +938,21 @@ extension ImageEditorViewModel {
             selectedLayerCompID: document.selectedLayerCompID
         ) else { return false }
         return applyLayerComp(id)
+    }
+
+    @discardableResult
+    func selectAdjacentLayerCompSearchResult(
+        _ direction: ImageEditorLayerCompNavigationDirection,
+        matching query: String
+    ) -> Bool {
+        guard let id = ImageEditorLayerCompSearch.selectionTarget(
+            direction: direction,
+            layerComps: document.layerComps,
+            query: query,
+            selectedLayerCompID: document.selectedLayerCompID
+        ) else { return false }
+        selectLayerComp(id)
+        return true
     }
 
     func layerCompSummary(_ comp: ImageEditorLayerComp) -> String {
