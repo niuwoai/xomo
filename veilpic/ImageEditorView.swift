@@ -18321,6 +18321,36 @@ enum ImageEditorKeyboardDeleteCommandDispatcher {
     }
 }
 
+enum ImageEditorKeyboardResponderDeleteDispatcher {
+    static func perform(
+        event: NSEvent,
+        deleteSelectedObject: (ImageEditorKeyboardShortcutEventSignature?) -> Bool
+    ) -> Bool {
+        perform(
+            keyCode: event.keyCode,
+            charactersIgnoringModifiers: event.charactersIgnoringModifiers,
+            modifierFlags: event.modifierFlags,
+            eventSignature: ImageEditorKeyboardShortcutEventSignature(event: event),
+            deleteSelectedObject: deleteSelectedObject
+        )
+    }
+
+    static func perform(
+        keyCode: UInt16,
+        charactersIgnoringModifiers: String?,
+        modifierFlags: NSEvent.ModifierFlags,
+        eventSignature: ImageEditorKeyboardShortcutEventSignature?,
+        deleteSelectedObject: (ImageEditorKeyboardShortcutEventSignature?) -> Bool
+    ) -> Bool {
+        guard ImageEditorDeleteKeyPolicy.matches(
+            keyCode: keyCode,
+            charactersIgnoringModifiers: charactersIgnoringModifiers,
+            modifierFlags: modifierFlags
+        ) else { return false }
+        return deleteSelectedObject(eventSignature)
+    }
+}
+
 enum ImageEditorDeleteKeyPolicy {
     private static let backwardDeleteKeyCode: UInt16 = 51
     private static let forwardDeleteKeyCode: UInt16 = 117
@@ -18363,6 +18393,18 @@ final class KeyboardShortcutMonitorNSView: ImageEditorKeyboardShortcutResponderN
     override func viewDidMoveToWindow() {
         super.viewDidMoveToWindow()
         coordinator?.attach(to: window)
+    }
+
+    override func keyDown(with event: NSEvent) {
+        if ImageEditorKeyboardResponderDeleteDispatcher.perform(
+            event: event,
+            deleteSelectedObject: { event in
+                coordinator?.performDeleteCommandFromKeyboardResponder(event: event) == true
+            }
+        ) {
+            return
+        }
+        super.keyDown(with: event)
     }
 
     override func deleteBackward(_ sender: Any?) {

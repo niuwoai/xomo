@@ -105,6 +105,8 @@ struct ImageEditorCanvasCursorTests {
         )
         let responderSource = source[responderStart.lowerBound...]
 
+        #expect(responderSource.contains("override func keyDown(with event: NSEvent)"))
+        #expect(responderSource.contains("ImageEditorKeyboardResponderDeleteDispatcher.perform("))
         #expect(responderSource.contains("override func deleteBackward(_ sender: Any?)"))
         #expect(responderSource.contains("override func deleteForward(_ sender: Any?)"))
         #expect(responderSource.contains("performDeleteCommandFromKeyboardResponder("))
@@ -113,6 +115,30 @@ struct ImageEditorCanvasCursorTests {
             "event: ImageEditorKeyboardShortcutEventSignature(event: event)"
         ))
         #expect(source.contains("deleteSelectedObjectFromKeyboard(event: event)"))
+    }
+
+    @Test func keyboardResponderDispatchesRawDeleteKeyDownDirectly() {
+        var receivedEvents: [ImageEditorKeyboardShortcutEventSignature?] = []
+        let eventSignature = ImageEditorKeyboardShortcutEventSignature(
+            windowNumber: 0,
+            eventNumber: 23,
+            timestamp: 7.5,
+            typeRawValue: NSEvent.EventType.keyDown.rawValue,
+            keyCode: 51
+        )
+
+        #expect(ImageEditorKeyboardResponderDeleteDispatcher.perform(
+            keyCode: 51,
+            charactersIgnoringModifiers: "\u{7F}",
+            modifierFlags: [],
+            eventSignature: eventSignature,
+            deleteSelectedObject: { receivedEvent in
+                receivedEvents.append(receivedEvent)
+                return true
+            }
+        ))
+
+        #expect(receivedEvents == [eventSignature])
     }
 
     @Test func layerChooserUsesNativeRightClickAndMacControlClickOnly() {

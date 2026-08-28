@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.12.0-rc1393 - 2026-08-28
+
+### Fixed
+- 编辑器键盘承载视图现在直接处理 AppKit `keyDown` 的 Delete/Forward Delete，再交给现有“对象 → 历史”删除优先级，不再只依赖局部事件监听或 responder selector 翻译。
+- 导入图片并选中图层后，即使文件面板返回的首个 Delete 以原始按键事件进入 responder，也能删除图片图层；文本输入仍由现有焦点保护，不会误删画布对象。
+
+### Verification
+- 增量测试构建通过；Delete 响应链与图层删除专项 6/6、CLI/MCP 2/2、发布契约 7/7（21 条断言）、隔离测试运行器契约及 `git diff --check` 均通过。本版本不覆盖 `/Applications/Xomo.app`，下一次 40 版本完整门禁为 rc1400。
+
 ## 2.12.0-rc1392 - 2026-08-28
 
 ### Added
