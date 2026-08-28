@@ -3859,6 +3859,11 @@
 "xomo.figma.node.planOnly" = "Review, then import";
 "xomo.figma.node.scopeNotice" = "Official node APIs are called only after you choose Read. Image fills also use the official Tier 2 image manifest and download only current-node references; temporary image requests carry no token. The token needs file_content:read; nodes are limited to 6 levels, 2,000 items, and 10 MB with no auto-refresh. Confirming Import creates one undoable layer batch.";
 "xomo.figma.node.selectionRequired" = "Use a Figma node link that includes node-id.";
+"xomo.figma.node.nodeIDInputLabel" = "Choose or change node ID";
+"xomo.figma.node.nodeIDInputPlaceholder" = "For example, 32:9 or 32-9";
+"xomo.figma.node.useNodeID" = "Use Node";
+"xomo.figma.node.nodeIDInvalid" = "Enter a valid Figma node ID.";
+"xomo.figma.node.nodeIDApplied" = "The canonical link now targets this node.";
 "xomo.figma.node.credentialRequired" = "Save a personal token above first.";
 "xomo.figma.node.readPlan" = "Read node and build plan";
 "xomo.figma.node.loading" = "Reading the selected node, downloading available images, and analyzing local layer mappings…";

@@ -6,6 +6,8 @@ struct XomoFigmaLinkImportSheet: View {
     @ObservedObject var viewModel: ImageEditorViewModel
     @State private var draft = XomoFigmaLinkImportDraft()
     @State private var transientMessageKey: String?
+    @State private var nodeIDDraft = ""
+    @State private var nodeSelectionMessageKey: String?
     @State private var didImportNodePlan = false
     @StateObject private var metadataController = XomoFigmaAuthorizedMetadataController()
     @StateObject private var nodeImportController = XomoFigmaNodeImportController()
@@ -394,6 +396,8 @@ struct XomoFigmaLinkImportSheet: View {
                 .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
             }
 
+            nodeSelectionControls
+
             HStack {
                 Spacer()
                 Button(L10n.text("xomo.figma.node.readPlan")) {
@@ -417,6 +421,47 @@ struct XomoFigmaLinkImportSheet: View {
         .padding(12)
         .background(Color(nsColor: ImageEditorTheme.panelRaised).opacity(0.72))
         .clipShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
+    }
+
+    private var nodeSelectionControls: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(L10n.text("xomo.figma.node.nodeIDInputLabel"))
+                .font(.system(size: 10, weight: .semibold))
+                .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+            HStack(spacing: 8) {
+                TextField(
+                    "",
+                    text: $nodeIDDraft,
+                    prompt: Text(L10n.text("xomo.figma.node.nodeIDInputPlaceholder"))
+                        .foregroundColor(Color(nsColor: ImageEditorTheme.mutedText))
+                )
+                .textFieldStyle(.plain)
+                .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
+                .padding(.horizontal, 10)
+                .frame(height: 30)
+                .background(Color.black.opacity(0.16))
+                .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+                .accessibilityIdentifier("xomo-figma-node-id-input")
+
+                Button(L10n.text("xomo.figma.node.useNodeID")) {
+                    applyNodeSelection()
+                }
+                .buttonStyle(.bordered)
+                .focusable(false)
+                .disabled(nodeIDDraft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                .accessibilityIdentifier("xomo-figma-use-node-id")
+            }
+
+            if let nodeSelectionMessageKey {
+                Text(L10n.text(nodeSelectionMessageKey))
+                    .font(.system(size: 9, weight: .semibold))
+                    .foregroundStyle(
+                        nodeSelectionMessageKey == "xomo.figma.node.nodeIDInvalid"
+                            ? Color.orange
+                            : Color(nsColor: ImageEditorTheme.mutedText)
+                    )
+            }
+        }
     }
 
     @ViewBuilder
@@ -576,6 +621,8 @@ struct XomoFigmaLinkImportSheet: View {
             draft.input
         } set: { value in
             transientMessageKey = nil
+            nodeIDDraft = ""
+            nodeSelectionMessageKey = nil
             didImportNodePlan = false
             metadataController.clearMetadata()
             nodeImportController.clear()
@@ -589,6 +636,8 @@ struct XomoFigmaLinkImportSheet: View {
             return
         }
         transientMessageKey = nil
+        nodeIDDraft = ""
+        nodeSelectionMessageKey = nil
         didImportNodePlan = false
         metadataController.clearMetadata()
         nodeImportController.clear()
@@ -605,5 +654,19 @@ struct XomoFigmaLinkImportSheet: View {
     private func useCanonicalURL() {
         guard draft.useCanonicalURL() else { return }
         transientMessageKey = "xomo.figma.message.canonicalURLApplied"
+    }
+
+    private func applyNodeSelection() {
+        let previousNodeID = draft.preview?.nodeID
+        guard draft.retarget(toNodeID: nodeIDDraft) else {
+            nodeSelectionMessageKey = "xomo.figma.node.nodeIDInvalid"
+            return
+        }
+        nodeIDDraft = ""
+        nodeSelectionMessageKey = "xomo.figma.node.nodeIDApplied"
+        if draft.preview?.nodeID != previousNodeID {
+            didImportNodePlan = false
+            nodeImportController.clear()
+        }
     }
 }

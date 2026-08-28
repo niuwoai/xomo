@@ -180,6 +180,19 @@ struct XomoFigmaLinkImportDraft: Equatable {
         return true
     }
 
+    @discardableResult
+    mutating func retarget(toNodeID nodeID: String) -> Bool {
+        let trimmedNodeID = nodeID.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let sourceURL = preview?.canonicalURL,
+              let retargetedURL = XomoFigmaSourceOpenPolicy.canonicalURL(
+                from: sourceURL,
+                selectingNodeID: trimmedNodeID
+              )
+        else { return false }
+        updateInput(retargetedURL.absoluteString)
+        return true
+    }
+
     mutating func updateInput(_ value: String) {
         input = value
         guard !value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
