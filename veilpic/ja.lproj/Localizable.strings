@@ -3180,6 +3180,9 @@
 "imageEditor.action.layerCompApply" = "レイヤーコンプを適用";
 "imageEditor.action.layerCompUpdate" = "レイヤーコンプを更新";
 "imageEditor.action.layerCompDuplicate" = "レイヤーコンプを複製";
+"imageEditor.action.layerCompAddFavorite" = "レイヤーコンプをお気に入りに追加";
+"imageEditor.action.layerCompRemoveFavorite" = "レイヤーコンプをお気に入りから削除";
+"imageEditor.action.layerCompFavoritesOnly" = "お気に入りのレイヤーコンプのみ表示";
 "imageEditor.action.layerCompDragReorder" = "ドラッグしてレイヤーコンプの順序を変更";
 "imageEditor.action.layerCompDragReorderOrCopy" = "ドラッグで並べ替え、Option＋ドラッグで複製";
 "imageEditor.layerComp.commentPlaceholder" = "コメントを追加";
@@ -3245,6 +3248,8 @@
 "imageEditor.history.layerCompApply" = "レイヤーコンプを適用";
 "imageEditor.history.layerCompUpdate" = "レイヤーコンプを更新";
 "imageEditor.history.layerCompDuplicate" = "レイヤーコンプを複製";
+"imageEditor.history.layerCompFavoriteAdd" = "レイヤーコンプをお気に入りに追加";
+"imageEditor.history.layerCompFavoriteRemove" = "レイヤーコンプをお気に入りから削除";
 "imageEditor.history.layerCompComment" = "レイヤーコンプのコメントを編集";
 "imageEditor.history.layerCompReorder" = "レイヤーコンプの順序を変更";
 "imageEditor.history.layerCompRename" = "レイヤーコンプ名を変更";
@@ -3253,6 +3258,8 @@
 "imageEditor.status.layerCompApplied" = "レイヤーコンプを適用しました：%@";
 "imageEditor.status.layerCompUpdated" = "レイヤーコンプを更新しました：%@";
 "imageEditor.status.layerCompDuplicated" = "レイヤーコンプを複製しました：%@";
+"imageEditor.status.layerCompFavoriteAdded" = "レイヤーコンプをお気に入りに追加しました：%@";
+"imageEditor.status.layerCompFavoriteRemoved" = "レイヤーコンプをお気に入りから削除しました：%@";
 "imageEditor.status.layerCompCommentUpdated" = "レイヤーコンプのコメントを更新しました：%@";
 "imageEditor.status.layerCompCommentCleared" = "レイヤーコンプのコメントを消去しました：%@";
 "imageEditor.status.layerCompMovedToTop" = "レイヤーコンプをリストの先頭へ移動しました：%@";

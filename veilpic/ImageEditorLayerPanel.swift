@@ -1217,13 +1217,15 @@ extension ImageEditorView {
                 ) {
                     viewModel.applyPreviousLayerComp(
                         matching: layerCompSearchQuery,
-                        scope: layerCompSearchScope
+                        scope: layerCompSearchScope,
+                        favoritesOnly: showsFavoriteLayerCompsOnly
                     )
                 }
                 .disabled(viewModel.layerCompNavigationTarget(
                     .previous,
                     matching: layerCompSearchQuery,
-                    scope: layerCompSearchScope
+                    scope: layerCompSearchScope,
+                    favoritesOnly: showsFavoriteLayerCompsOnly
                 ) == nil)
                 .accessibilityIdentifier("image-editor-layer-comp-previous")
 
@@ -1233,13 +1235,15 @@ extension ImageEditorView {
                 ) {
                     viewModel.applyNextLayerComp(
                         matching: layerCompSearchQuery,
-                        scope: layerCompSearchScope
+                        scope: layerCompSearchScope,
+                        favoritesOnly: showsFavoriteLayerCompsOnly
                     )
                 }
                 .disabled(viewModel.layerCompNavigationTarget(
                     .next,
                     matching: layerCompSearchQuery,
-                    scope: layerCompSearchScope
+                    scope: layerCompSearchScope,
+                    favoritesOnly: showsFavoriteLayerCompsOnly
                 ) == nil)
                 .accessibilityIdentifier("image-editor-layer-comp-next")
 
@@ -1265,12 +1269,14 @@ extension ImageEditorView {
         ImageEditorLayerCompSearch.filtered(
             viewModel.document.layerComps,
             matching: layerCompSearchQuery,
-            scope: layerCompSearchScope
+            scope: layerCompSearchScope,
+            favoritesOnly: showsFavoriteLayerCompsOnly
         )
     }
 
     private var hasLayerCompSearchQuery: Bool {
         ImageEditorLayerCompSearch.hasTerms(layerCompSearchQuery)
+            || showsFavoriteLayerCompsOnly
     }
 
     private var layerCompSearchField: some View {
@@ -1286,7 +1292,8 @@ extension ImageEditorView {
                 onSubmit: {
                     _ = viewModel.applyPreferredLayerCompSearchResult(
                         matching: layerCompSearchQuery,
-                        scope: layerCompSearchScope
+                        scope: layerCompSearchScope,
+                        favoritesOnly: showsFavoriteLayerCompsOnly
                     )
                 },
                 onCancel: layerCompSearchQuery.isEmpty ? nil : {
@@ -1296,14 +1303,16 @@ extension ImageEditorView {
                     _ = viewModel.selectAdjacentLayerCompSearchResult(
                         .previous,
                         matching: layerCompSearchQuery,
-                        scope: layerCompSearchScope
+                        scope: layerCompSearchScope,
+                        favoritesOnly: showsFavoriteLayerCompsOnly
                     )
                 },
                 onMoveNext: {
                     _ = viewModel.selectAdjacentLayerCompSearchResult(
                         .next,
                         matching: layerCompSearchQuery,
-                        scope: layerCompSearchScope
+                        scope: layerCompSearchScope,
+                        favoritesOnly: showsFavoriteLayerCompsOnly
                     )
                 }
             )
@@ -1332,6 +1341,20 @@ extension ImageEditorView {
             .menuStyle(.borderlessButton)
             .help(L10n.text("imageEditor.layerComp.searchScopeHelp"))
             .accessibilityIdentifier("image-editor-layer-comp-search-scope")
+
+            Button {
+                showsFavoriteLayerCompsOnly.toggle()
+            } label: {
+                Image(systemName: showsFavoriteLayerCompsOnly ? "star.fill" : "star")
+                    .font(.system(size: 11, weight: .semibold))
+                    .frame(width: 18, height: 18)
+                    .foregroundStyle(showsFavoriteLayerCompsOnly
+                        ? Color.accentColor
+                        : Color(nsColor: ImageEditorTheme.mutedText))
+            }
+            .buttonStyle(.plain)
+            .help(L10n.text("imageEditor.action.layerCompFavoritesOnly"))
+            .accessibilityIdentifier("image-editor-layer-comp-favorites-only")
 
             if !layerCompSearchQuery.isEmpty {
                 Button {
@@ -1404,6 +1427,24 @@ extension ImageEditorView {
             }
             .buttonStyle(.plain)
             .help(L10n.text("imageEditor.action.layerCompSelect"))
+
+            Button {
+                _ = viewModel.setLayerCompFavorite(comp.id, isFavorite: !comp.isFavorite)
+            } label: {
+                Image(systemName: comp.isFavorite ? "star.fill" : "star")
+                    .font(.system(size: 11, weight: .semibold))
+                    .frame(width: 16)
+                    .foregroundStyle(comp.isFavorite
+                        ? Color.yellow
+                        : Color(nsColor: ImageEditorTheme.mutedText))
+            }
+            .buttonStyle(.plain)
+            .help(L10n.text(
+                comp.isFavorite
+                    ? "imageEditor.action.layerCompRemoveFavorite"
+                    : "imageEditor.action.layerCompAddFavorite"
+            ))
+            .accessibilityIdentifier("image-editor-layer-comp-favorite-\(comp.id.uuidString)")
 
             if isApplied {
                 Image(systemName: "checkmark.circle.fill")
@@ -1548,6 +1589,18 @@ extension ImageEditorView {
             _ = viewModel.duplicateLayerComp(comp.id)
         } label: {
             Label(L10n.text("imageEditor.action.layerCompDuplicate"), systemImage: "doc.on.doc")
+        }
+        Button {
+            _ = viewModel.setLayerCompFavorite(comp.id, isFavorite: !comp.isFavorite)
+        } label: {
+            Label(
+                L10n.text(
+                    comp.isFavorite
+                        ? "imageEditor.action.layerCompRemoveFavorite"
+                        : "imageEditor.action.layerCompAddFavorite"
+                ),
+                systemImage: comp.isFavorite ? "star.slash" : "star"
+            )
         }
         Button {
             _ = viewModel.setLayerCompCapturesVisibility(

@@ -75,6 +75,8 @@ struct ImageEditorLayerCompTests {
         #expect(viewModel.updateLayerCompComment(mobileID, to: "Needs review"))
         #expect(viewModel.updateLayerCompComment(tabletID, to: "Approved handoff"))
         viewModel.selectLayerComp(mobileID)
+        viewModel.document.layerComps[0].isFavorite = true
+        viewModel.document.layerComps[2].isFavorite = true
 
         let projectDataBeforeSearch = try viewModel.projectData()
         let historyBeforeSearch = viewModel.document.history
@@ -173,6 +175,39 @@ struct ImageEditorLayerCompTests {
             matching: "-review",
             scope: .comment
         ).map(\.id) == [desktopID, tabletID])
+        var favoriteComps = viewModel.document.layerComps
+        favoriteComps[0].isFavorite = true
+        favoriteComps[2].isFavorite = true
+        #expect(ImageEditorLayerCompSearch.filtered(
+            favoriteComps,
+            matching: "",
+            favoritesOnly: true
+        ).map(\.id) == [desktopID, tabletID])
+        #expect(ImageEditorLayerCompSearch.filtered(
+            favoriteComps,
+            matching: "client",
+            scope: .comment,
+            favoritesOnly: true
+        ).map(\.id) == [desktopID])
+        #expect(ImageEditorLayerCompSearch.filtered(
+            favoriteComps,
+            matching: "review",
+            scope: .comment,
+            favoritesOnly: true
+        ).isEmpty)
+        #expect(ImageEditorLayerCompSearch.preferredResultID(
+            in: favoriteComps,
+            matching: "",
+            favoritesOnly: true,
+            selectedLayerCompID: mobileID
+        ) == desktopID)
+        #expect(ImageEditorLayerCompSearch.selectionTarget(
+            direction: .previous,
+            layerComps: favoriteComps,
+            query: "",
+            favoritesOnly: true,
+            selectedLayerCompID: mobileID
+        ) == tabletID)
         #expect(ImageEditorLayerCompSearch.filtered(
             viewModel.document.layerComps,
             matching: "-"
@@ -231,6 +266,11 @@ struct ImageEditorLayerCompTests {
             .next,
             matching: "approved",
             scope: .comment
+        ) == desktopID)
+        #expect(viewModel.layerCompNavigationTarget(
+            .next,
+            matching: "",
+            favoritesOnly: true
         ) == desktopID)
         #expect(!viewModel.applyNextLayerComp(matching: "missing"))
         #expect(try viewModel.projectData() == projectDataBeforeSearch)
@@ -572,6 +612,11 @@ struct ImageEditorLayerCompTests {
         #expect(source.contains("imageEditor.layerComp.searchScopeHelp"))
         #expect(source.contains("image-editor-layer-comp-search-scope"))
         #expect(source.contains("scope: layerCompSearchScope"))
+        #expect(source.contains("favoritesOnly: showsFavoriteLayerCompsOnly"))
+        #expect(source.contains("imageEditor.action.layerCompFavoritesOnly"))
+        #expect(source.contains("image-editor-layer-comp-favorites-only"))
+        #expect(source.contains("viewModel.setLayerCompFavorite("))
+        #expect(source.contains("image-editor-layer-comp-favorite-\\(comp.id.uuidString)"))
         #expect(source.contains("viewModel.applyPreferredLayerCompSearchResult("))
         #expect(source.contains("#selector(NSResponder.insertNewline(_:))"))
         #expect(source.contains("#selector(NSResponder.cancelOperation(_:))"))
@@ -583,6 +628,7 @@ struct ImageEditorLayerCompTests {
         #expect(contextSource.contains("viewModel.applyLayerComp(comp.id)"))
         #expect(contextSource.contains("viewModel.updateLayerComp(comp.id)"))
         #expect(contextSource.contains("viewModel.duplicateLayerComp(comp.id)"))
+        #expect(contextSource.contains("viewModel.setLayerCompFavorite(comp.id"))
         #expect(contextSource.contains("viewModel.moveLayerCompToTop(comp.id)"))
         #expect(contextSource.contains("viewModel.moveLayerCompUp(comp.id)"))
         #expect(contextSource.contains("viewModel.moveLayerCompDown(comp.id)"))
@@ -658,6 +704,7 @@ struct ImageEditorLayerCompTests {
         #expect(viewSource.contains(
             "@State var layerCompSearchScope: ImageEditorLayerCompSearchScope = .all"
         ))
+        #expect(viewSource.contains("@State var showsFavoriteLayerCompsOnly = false"))
         #expect(viewSource.contains(
             "@AppStorage(ImageEditorLayerCompCaptureDefaults.visibilityKey)"
         ))
@@ -878,6 +925,70 @@ struct ImageEditorLayerCompTests {
             "imageEditor.status.layerCompCommentCleared",
             "Review"
         ))
+    }
+
+    @Test
+    func layerCompFavoritesAreAtomicSearchableAndPersisted() throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "source.png",
+            image: testImage(color: .systemYellow, size: NSSize(width: 100, height: 80))
+        ) { _ in }
+        viewModel.addLayerComp(named: "Desktop Approved")
+        let desktopID = try #require(viewModel.document.selectedLayerCompID)
+        viewModel.addLayerComp(named: "Mobile Draft")
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.setLayerCompFavorite(desktopID, isFavorite: true))
+        #expect(viewModel.document.layerComps.first { $0.id == desktopID }?.isFavorite == true)
+        #expect(viewModel.document.selectedLayerCompID == desktopID)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.history.last?.title == L10n.text(
+            "imageEditor.history.layerCompFavoriteAdd"
+        ))
+        #expect(viewModel.statusText == L10n.format(
+            "imageEditor.status.layerCompFavoriteAdded",
+            "Desktop Approved"
+        ))
+
+        viewModel.undo()
+        #expect(viewModel.document.layerComps.first { $0.id == desktopID }?.isFavorite == false)
+        #expect(viewModel.canRedo)
+        let historyAfterUndo = viewModel.document.history
+        #expect(!viewModel.setLayerCompFavorite(desktopID, isFavorite: false))
+        #expect(viewModel.document.history == historyAfterUndo)
+        #expect(viewModel.canRedo)
+        viewModel.redo()
+
+        let duplicate = try #require(viewModel.duplicateLayerComp(desktopID))
+        #expect(duplicate.isFavorite)
+        viewModel.updateLayerComp(desktopID)
+        #expect(viewModel.document.layerComps.first { $0.id == desktopID }?.isFavorite == true)
+        #expect(ImageEditorLayerCompSearch.filtered(
+            viewModel.document.layerComps,
+            matching: "desktop",
+            favoritesOnly: true
+        ).map(\.id) == [desktopID, duplicate.id])
+
+        let data = try viewModel.projectData()
+        let restored = ImageEditorViewModel(
+            sourceName: "empty.png",
+            image: testImage(color: .black, size: NSSize(width: 12, height: 12))
+        ) { _ in }
+        try restored.loadProjectData(data)
+        #expect(restored.document.layerComps.filter(\.isFavorite).map(\.id) == [
+            desktopID,
+            duplicate.id
+        ])
+
+        #expect(viewModel.setLayerCompFavorite(desktopID, isFavorite: false))
+        #expect(viewModel.document.history.last?.title == L10n.text(
+            "imageEditor.history.layerCompFavoriteRemove"
+        ))
+        #expect(viewModel.statusText == L10n.format(
+            "imageEditor.status.layerCompFavoriteRemoved",
+            "Desktop Approved"
+        ))
+        #expect(!viewModel.setLayerCompFavorite(UUID(), isFavorite: true))
     }
 
     @Test
@@ -1400,6 +1511,7 @@ struct ImageEditorLayerCompTests {
         let data = try JSONEncoder().encode(comp)
         var object = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
         object.removeValue(forKey: "comment")
+        object.removeValue(forKey: "isFavorite")
         object.removeValue(forKey: "capturesVisibility")
         object.removeValue(forKey: "capturesPosition")
         object.removeValue(forKey: "capturesAppearance")
@@ -1410,6 +1522,7 @@ struct ImageEditorLayerCompTests {
         #expect(decoded.id == comp.id)
         #expect(decoded.name == comp.name)
         #expect(decoded.comment.isEmpty)
+        #expect(!decoded.isFavorite)
         #expect(decoded.capturesVisibility)
         #expect(decoded.capturesPosition)
         #expect(decoded.capturesAppearance)
@@ -1878,6 +1991,7 @@ struct ImageEditorLayerCompTests {
         viewModel.addLayerComp(named: "Small detail")
         let compID = try #require(viewModel.document.layerComps.first?.id)
         #expect(viewModel.updateLayerCompComment(compID, to: "Client-approved mobile state"))
+        #expect(viewModel.setLayerCompFavorite(compID, isFavorite: true))
         #expect(viewModel.setLayerCompCapturesVisibility(compID, enabled: false))
         #expect(viewModel.setLayerCompCapturesPosition(compID, enabled: false))
         #expect(viewModel.setLayerCompCapturesAppearance(compID, enabled: false))
@@ -1893,6 +2007,7 @@ struct ImageEditorLayerCompTests {
         #expect(restoredComp.id == compID)
         #expect(restoredComp.name == "Small detail")
         #expect(restoredComp.comment == "Client-approved mobile state")
+        #expect(restoredComp.isFavorite)
         #expect(restoredComp.capturesVisibility == false)
         #expect(restoredComp.capturesPosition == false)
         #expect(restoredComp.capturesAppearance == false)

@@ -251,6 +251,7 @@ struct ImageEditorView: View {
     @State var layerCompCommentDrafts: [UUID: String] = [:]
     @State var layerCompSearchQuery = ""
     @State var layerCompSearchScope: ImageEditorLayerCompSearchScope = .all
+    @State var showsFavoriteLayerCompsOnly = false
     @AppStorage(ImageEditorLayerCompCaptureDefaults.visibilityKey)
     var defaultLayerCompCapturesVisibility = true
     @AppStorage(ImageEditorLayerCompCaptureDefaults.positionKey)

@@ -3180,6 +3180,9 @@
 "imageEditor.action.layerCompApply" = "应用图层复合";
 "imageEditor.action.layerCompUpdate" = "更新图层复合";
 "imageEditor.action.layerCompDuplicate" = "复制图层复合";
+"imageEditor.action.layerCompAddFavorite" = "收藏图层复合";
+"imageEditor.action.layerCompRemoveFavorite" = "取消收藏图层复合";
+"imageEditor.action.layerCompFavoritesOnly" = "仅显示收藏的图层复合";
 "imageEditor.action.layerCompDragReorder" = "拖拽调整图层复合顺序";
 "imageEditor.action.layerCompDragReorderOrCopy" = "拖拽调整顺序；按住 Option 拖拽复制";
 "imageEditor.layerComp.commentPlaceholder" = "添加备注";
@@ -3245,6 +3248,8 @@
 "imageEditor.history.layerCompApply" = "应用图层复合";
 "imageEditor.history.layerCompUpdate" = "更新图层复合";
 "imageEditor.history.layerCompDuplicate" = "复制图层复合";
+"imageEditor.history.layerCompFavoriteAdd" = "收藏图层复合";
+"imageEditor.history.layerCompFavoriteRemove" = "取消收藏图层复合";
 "imageEditor.history.layerCompComment" = "编辑图层复合备注";
 "imageEditor.history.layerCompReorder" = "调整图层复合顺序";
 "imageEditor.history.layerCompRename" = "重命名图层复合";
@@ -3253,6 +3258,8 @@
 "imageEditor.status.layerCompApplied" = "已应用图层复合：%@";
 "imageEditor.status.layerCompUpdated" = "已更新图层复合：%@";
 "imageEditor.status.layerCompDuplicated" = "已复制图层复合：%@";
+"imageEditor.status.layerCompFavoriteAdded" = "已收藏图层复合：%@";
+"imageEditor.status.layerCompFavoriteRemoved" = "已取消收藏图层复合：%@";
 "imageEditor.status.layerCompCommentUpdated" = "已更新图层复合备注：%@";
 "imageEditor.status.layerCompCommentCleared" = "已清除图层复合备注：%@";
 "imageEditor.status.layerCompMovedToTop" = "已将图层复合移到列表顶部：%@";

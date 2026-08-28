@@ -105,12 +105,16 @@ enum ImageEditorLayerCompSearch {
     static func filtered(
         _ layerComps: [ImageEditorLayerComp],
         matching query: String,
-        scope: ImageEditorLayerCompSearchScope = .all
+        scope: ImageEditorLayerCompSearchScope = .all,
+        favoritesOnly: Bool = false
     ) -> [ImageEditorLayerComp] {
+        let eligibleLayerComps = favoritesOnly
+            ? layerComps.filter(\.isFavorite)
+            : layerComps
         let terms = terms(in: query, defaultScope: scope)
-        guard !terms.isEmpty else { return layerComps }
+        guard !terms.isEmpty else { return eligibleLayerComps }
         let options: String.CompareOptions = [.caseInsensitive, .diacriticInsensitive, .widthInsensitive]
-        return layerComps.filter { comp in
+        return eligibleLayerComps.filter { comp in
             return terms.allSatisfy { term in
                 let searchableText: String
                 switch term.scope {
@@ -132,10 +136,16 @@ enum ImageEditorLayerCompSearch {
         layerComps: [ImageEditorLayerComp],
         query: String,
         scope: ImageEditorLayerCompSearchScope = .all,
+        favoritesOnly: Bool = false,
         selectedLayerCompID: UUID?
     ) -> UUID? {
         guard let selectedLayerCompID else { return nil }
-        let filteredIDs = filtered(layerComps, matching: query, scope: scope).map(\.id)
+        let filteredIDs = filtered(
+            layerComps,
+            matching: query,
+            scope: scope,
+            favoritesOnly: favoritesOnly
+        ).map(\.id)
         guard !filteredIDs.isEmpty else { return nil }
         guard let selectedIndex = filteredIDs.firstIndex(of: selectedLayerCompID) else {
             return direction == .previous ? filteredIDs.last : filteredIDs.first
@@ -155,10 +165,16 @@ enum ImageEditorLayerCompSearch {
         in layerComps: [ImageEditorLayerComp],
         matching query: String,
         scope: ImageEditorLayerCompSearchScope = .all,
+        favoritesOnly: Bool = false,
         selectedLayerCompID: UUID?
     ) -> UUID? {
-        guard hasTerms(query) else { return nil }
-        let results = filtered(layerComps, matching: query, scope: scope)
+        guard hasTerms(query) || favoritesOnly else { return nil }
+        let results = filtered(
+            layerComps,
+            matching: query,
+            scope: scope,
+            favoritesOnly: favoritesOnly
+        )
         if let selectedLayerCompID,
            results.contains(where: { $0.id == selectedLayerCompID }) {
             return selectedLayerCompID
@@ -171,10 +187,16 @@ enum ImageEditorLayerCompSearch {
         layerComps: [ImageEditorLayerComp],
         query: String,
         scope: ImageEditorLayerCompSearchScope = .all,
+        favoritesOnly: Bool = false,
         selectedLayerCompID: UUID?
     ) -> UUID? {
-        guard hasTerms(query) else { return nil }
-        let filteredIDs = filtered(layerComps, matching: query, scope: scope).map(\.id)
+        guard hasTerms(query) || favoritesOnly else { return nil }
+        let filteredIDs = filtered(
+            layerComps,
+            matching: query,
+            scope: scope,
+            favoritesOnly: favoritesOnly
+        ).map(\.id)
         guard !filteredIDs.isEmpty else { return nil }
         guard let selectedLayerCompID,
               let selectedIndex = filteredIDs.firstIndex(of: selectedLayerCompID)
@@ -701,6 +723,7 @@ extension ImageEditorViewModel {
         var updated = ImageEditorLayerComp.capture(name: name, document: document)
         updated.id = id
         updated.comment = document.layerComps[index].comment
+        updated.isFavorite = document.layerComps[index].isFavorite
         updated.capturesVisibility = document.layerComps[index].capturesVisibility
         updated.capturesPosition = document.layerComps[index].capturesPosition
         updated.capturesAppearance = document.layerComps[index].capturesAppearance
@@ -781,6 +804,28 @@ extension ImageEditorViewModel {
             comment.isEmpty
                 ? "imageEditor.status.layerCompCommentCleared"
                 : "imageEditor.status.layerCompCommentUpdated",
+            document.layerComps[index].name
+        )
+        return true
+    }
+
+    @discardableResult
+    func setLayerCompFavorite(_ id: UUID, isFavorite: Bool) -> Bool {
+        guard let index = document.layerComps.firstIndex(where: { $0.id == id }),
+              document.layerComps[index].isFavorite != isFavorite
+        else { return false }
+        pushUndo()
+        document.layerComps[index].isFavorite = isFavorite
+        document.selectedLayerCompID = id
+        appendHistory(L10n.text(
+            isFavorite
+                ? "imageEditor.history.layerCompFavoriteAdd"
+                : "imageEditor.history.layerCompFavoriteRemove"
+        ))
+        statusText = L10n.format(
+            isFavorite
+                ? "imageEditor.status.layerCompFavoriteAdded"
+                : "imageEditor.status.layerCompFavoriteRemoved",
             document.layerComps[index].name
         )
         return true
@@ -993,12 +1038,14 @@ extension ImageEditorViewModel {
     @discardableResult
     func applyPreviousLayerComp(
         matching query: String = "",
-        scope: ImageEditorLayerCompSearchScope = .all
+        scope: ImageEditorLayerCompSearchScope = .all,
+        favoritesOnly: Bool = false
     ) -> Bool {
         guard let targetID = layerCompNavigationTarget(
             .previous,
             matching: query,
-            scope: scope
+            scope: scope,
+            favoritesOnly: favoritesOnly
         ) else {
             return false
         }
@@ -1008,12 +1055,14 @@ extension ImageEditorViewModel {
     @discardableResult
     func applyNextLayerComp(
         matching query: String = "",
-        scope: ImageEditorLayerCompSearchScope = .all
+        scope: ImageEditorLayerCompSearchScope = .all,
+        favoritesOnly: Bool = false
     ) -> Bool {
         guard let targetID = layerCompNavigationTarget(
             .next,
             matching: query,
-            scope: scope
+            scope: scope,
+            favoritesOnly: favoritesOnly
         ) else {
             return false
         }
@@ -1023,13 +1072,15 @@ extension ImageEditorViewModel {
     func layerCompNavigationTarget(
         _ direction: ImageEditorLayerCompNavigationDirection,
         matching query: String,
-        scope: ImageEditorLayerCompSearchScope = .all
+        scope: ImageEditorLayerCompSearchScope = .all,
+        favoritesOnly: Bool = false
     ) -> UUID? {
         ImageEditorLayerCompSearch.navigationTarget(
             direction: direction,
             layerComps: document.layerComps,
             query: query,
             scope: scope,
+            favoritesOnly: favoritesOnly,
             selectedLayerCompID: document.selectedLayerCompID
         )
     }
@@ -1037,12 +1088,14 @@ extension ImageEditorViewModel {
     @discardableResult
     func applyPreferredLayerCompSearchResult(
         matching query: String,
-        scope: ImageEditorLayerCompSearchScope = .all
+        scope: ImageEditorLayerCompSearchScope = .all,
+        favoritesOnly: Bool = false
     ) -> Bool {
         guard let id = ImageEditorLayerCompSearch.preferredResultID(
             in: document.layerComps,
             matching: query,
             scope: scope,
+            favoritesOnly: favoritesOnly,
             selectedLayerCompID: document.selectedLayerCompID
         ) else { return false }
         return applyLayerComp(id)
@@ -1052,13 +1105,15 @@ extension ImageEditorViewModel {
     func selectAdjacentLayerCompSearchResult(
         _ direction: ImageEditorLayerCompNavigationDirection,
         matching query: String,
-        scope: ImageEditorLayerCompSearchScope = .all
+        scope: ImageEditorLayerCompSearchScope = .all,
+        favoritesOnly: Bool = false
     ) -> Bool {
         guard let id = ImageEditorLayerCompSearch.selectionTarget(
             direction: direction,
             layerComps: document.layerComps,
             query: query,
             scope: scope,
+            favoritesOnly: favoritesOnly,
             selectedLayerCompID: document.selectedLayerCompID
         ) else { return false }
         selectLayerComp(id)
