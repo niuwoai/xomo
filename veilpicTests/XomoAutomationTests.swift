@@ -5653,6 +5653,7 @@ struct XomoAutomationTests {
                     "intensity": .number(0.2),
                     "unsharpAmountPercent": .number(700),
                     "unsharpRadiusPixels": .number(999),
+                    "unsharpThresholdLevels": .number(300),
                     "unsharpRadius": .number(2),
                     "unsharpThreshold": .number(0.2)
                 ])
@@ -5665,6 +5666,7 @@ struct XomoAutomationTests {
         #expect(filter.normalizedIntensity == 0.2)
         #expect(filter.normalizedSettings.unsharpAmountPercent == 500)
         #expect(filter.normalizedSettings.unsharpRadiusPixels == 250)
+        #expect(filter.normalizedSettings.unsharpThresholdLevels == 255)
         #expect(filter.normalizedSettings.unsharpRadius == 2)
         #expect(filter.normalizedSettings.unsharpThreshold == 0.2)
 
@@ -5678,6 +5680,7 @@ struct XomoAutomationTests {
         let settingsProperties = try #require(settingsSchema["properties"]?.objectValue)
         #expect(settingsProperties["unsharpAmountPercent"]?.objectValue?["type"] == .string("number"))
         #expect(settingsProperties["unsharpRadiusPixels"]?.objectValue?["type"] == .string("number"))
+        #expect(settingsProperties["unsharpThresholdLevels"]?.objectValue?["type"] == .string("number"))
 
         let historyCount = viewModel.document.history.count
         let invalidResponse = registry.execute(request(
@@ -5687,7 +5690,7 @@ struct XomoAutomationTests {
                 "filter": .string(ImageEditorFilter.unsharpMask.rawValue),
                 "action": .string("addSmartFilter"),
                 "settings": .object([
-                    "unsharpRadiusPixels": .string("wide")
+                    "unsharpThresholdLevels": .string("many")
                 ])
             ]
         ))

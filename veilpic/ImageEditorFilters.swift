@@ -546,6 +546,8 @@ extension NSImage {
         let upperRadius = preciseRadius.map { max(1, Int(ceil($0))) } ?? legacyRadius
         let radiusFraction = preciseRadius.map { $0 - floor($0) } ?? 0
         let amount = (normalizedSettings.unsharpAmountPercent ?? (60 + clampedIntensity * 180)) / 100
+        let threshold = normalizedSettings.unsharpThresholdLevels.map { $0 / 255 }
+            ?? normalizedSettings.unsharpThreshold
         var output = source.values
         for y in 0..<height {
             for x in 0..<width {
@@ -576,7 +578,7 @@ extension NSImage {
                     abs(green - blurred.green),
                     abs(blue - blurred.blue)
                 )
-                guard edgeDelta >= normalizedSettings.unsharpThreshold else { continue }
+                guard edgeDelta >= threshold else { continue }
                 output[offset] = Self.byte(Self.premultipliedChannel(
                     red + (red - blurred.red) * amount,
                     alpha: alpha

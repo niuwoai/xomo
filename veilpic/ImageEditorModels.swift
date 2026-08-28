@@ -2566,6 +2566,8 @@ struct ImageEditorFilterSettings: Equatable, Codable {
     var unsharpAmountPercent: Double?
     /// Precise Unsharp Mask radius from 0.1 to 250 pixels. Nil preserves legacy rounded-radius rendering.
     var unsharpRadiusPixels: Double?
+    /// Precise Unsharp Mask threshold from 0 to 255 levels. Nil preserves the legacy normalized threshold.
+    var unsharpThresholdLevels: Double?
     var unsharpRadius: Double = 1
     var unsharpThreshold: Double = 0
     var liquifyPushX: Double = 0.25
@@ -2605,6 +2607,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         oilPaintLightingEnabled: Bool? = nil,
         unsharpAmountPercent: Double? = nil,
         unsharpRadiusPixels: Double? = nil,
+        unsharpThresholdLevels: Double? = nil,
         unsharpRadius: Double = 1,
         unsharpThreshold: Double = 0,
         liquifyPushX: Double = 0.25,
@@ -2643,6 +2646,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         self.oilPaintLightingEnabled = oilPaintLightingEnabled
         self.unsharpAmountPercent = unsharpAmountPercent
         self.unsharpRadiusPixels = unsharpRadiusPixels
+        self.unsharpThresholdLevels = unsharpThresholdLevels
         self.unsharpRadius = unsharpRadius
         self.unsharpThreshold = unsharpThreshold
         self.liquifyPushX = liquifyPushX
@@ -2687,6 +2691,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         oilPaintLightingEnabled = try container.decodeIfPresent(Bool.self, forKey: .oilPaintLightingEnabled)
         unsharpAmountPercent = try container.decodeIfPresent(Double.self, forKey: .unsharpAmountPercent)
         unsharpRadiusPixels = try container.decodeIfPresent(Double.self, forKey: .unsharpRadiusPixels)
+        unsharpThresholdLevels = try container.decodeIfPresent(Double.self, forKey: .unsharpThresholdLevels)
         unsharpRadius = try container.decodeIfPresent(Double.self, forKey: .unsharpRadius) ?? 1
         unsharpThreshold = try container.decodeIfPresent(Double.self, forKey: .unsharpThreshold) ?? 0
         liquifyPushX = try container.decodeIfPresent(Double.self, forKey: .liquifyPushX) ?? 0.25
@@ -2731,6 +2736,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         try container.encodeIfPresent(oilPaintLightingEnabled, forKey: .oilPaintLightingEnabled)
         try container.encodeIfPresent(unsharpAmountPercent, forKey: .unsharpAmountPercent)
         try container.encodeIfPresent(unsharpRadiusPixels, forKey: .unsharpRadiusPixels)
+        try container.encodeIfPresent(unsharpThresholdLevels, forKey: .unsharpThresholdLevels)
         try container.encode(unsharpRadius, forKey: .unsharpRadius)
         try container.encode(unsharpThreshold, forKey: .unsharpThreshold)
         try container.encode(liquifyPushX, forKey: .liquifyPushX)
@@ -2772,6 +2778,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
             oilPaintLightingEnabled: oilPaintLightingEnabled,
             unsharpAmountPercent: unsharpAmountPercent.map { max(1, min(500, $0)) },
             unsharpRadiusPixels: unsharpRadiusPixels.map { max(0.1, min(250, $0)) },
+            unsharpThresholdLevels: unsharpThresholdLevels.map { max(0, min(255, $0)) },
             unsharpRadius: max(0.5, min(5, unsharpRadius)),
             unsharpThreshold: max(0, min(1, unsharpThreshold)),
             liquifyPushX: max(-1, min(1, liquifyPushX)),
@@ -2813,6 +2820,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         case oilPaintLightingEnabled
         case unsharpAmountPercent
         case unsharpRadiusPixels
+        case unsharpThresholdLevels
         case unsharpRadius
         case unsharpThreshold
         case liquifyPushX

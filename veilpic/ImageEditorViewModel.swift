@@ -472,6 +472,7 @@ final class ImageEditorViewModel: ObservableObject {
                 filterGaussianBlurRadius = nil
                 filterUnsharpAmountPercent = nil
                 filterUnsharpRadiusPixels = nil
+                filterUnsharpThresholdLevels = nil
             }
         }
     }
@@ -500,6 +501,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var filterOilPaintLightingEnabled = true
     @Published var filterUnsharpAmountPercent: Double?
     @Published var filterUnsharpRadiusPixels: Double?
+    @Published var filterUnsharpThresholdLevels: Double?
 
     var filterGaussianBlurEffectiveRadius: Double {
         get {
@@ -527,6 +529,15 @@ final class ImageEditorViewModel: ObservableObject {
         }
         set {
             filterUnsharpRadiusPixels = max(0.1, min(250, newValue))
+        }
+    }
+
+    var filterUnsharpEffectiveThresholdLevels: Double {
+        get {
+            filterUnsharpThresholdLevels ?? filterUnsharpThreshold * 255
+        }
+        set {
+            filterUnsharpThresholdLevels = max(0, min(255, newValue))
         }
     }
     @Published var filterUnsharpRadius: Double = 1
@@ -2614,12 +2625,14 @@ final class ImageEditorViewModel: ObservableObject {
             let amountPercent = settings.unsharpAmountPercent
                 ?? max(1, min(500, 60 + filter.normalizedIntensity * 180))
             let radiusPixels = settings.unsharpRadiusPixels ?? settings.unsharpRadius
+            let thresholdLevels = settings.unsharpThresholdLevels
+                ?? settings.unsharpThreshold * 255
             let title = L10n.format(
                 "imageEditor.properties.smartFilterUnsharpItem",
                 filter.kind.title,
                 Int(amountPercent.rounded()),
                 String(format: "%.1f", radiusPixels),
-                Int((settings.unsharpThreshold * 255).rounded())
+                Int(thresholdLevels.rounded())
             )
             guard !filter.isEnabled else { return title }
             return L10n.format("imageEditor.properties.smartFilterDisabled", title)
@@ -9611,6 +9624,7 @@ final class ImageEditorViewModel: ObservableObject {
             oilPaintLightingEnabled: selectedFilter == .oilPaint ? filterOilPaintLightingEnabled : nil,
             unsharpAmountPercent: selectedFilter == .unsharpMask ? filterUnsharpAmountPercent : nil,
             unsharpRadiusPixels: selectedFilter == .unsharpMask ? filterUnsharpRadiusPixels : nil,
+            unsharpThresholdLevels: selectedFilter == .unsharpMask ? filterUnsharpThresholdLevels : nil,
             unsharpRadius: filterUnsharpRadius,
             unsharpThreshold: filterUnsharpThreshold,
             liquifyPushX: filterLiquifyPushX,
@@ -11475,6 +11489,7 @@ final class ImageEditorViewModel: ObservableObject {
         filterOilPaintLightingEnabled = normalized.oilPaintLightingEnabled ?? true
         filterUnsharpAmountPercent = normalized.unsharpAmountPercent
         filterUnsharpRadiusPixels = normalized.unsharpRadiusPixels
+        filterUnsharpThresholdLevels = normalized.unsharpThresholdLevels
         filterUnsharpRadius = normalized.unsharpRadius
         filterUnsharpThreshold = normalized.unsharpThreshold
         filterLiquifyPushX = normalized.liquifyPushX

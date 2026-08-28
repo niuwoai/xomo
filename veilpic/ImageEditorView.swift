@@ -12148,12 +12148,23 @@ struct ImageEditorView: View {
                         Text(L10n.text("imageEditor.filter.unsharpThreshold"))
                             .font(.system(size: 10, weight: .medium))
                             .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
-                        Slider(value: $viewModel.filterUnsharpThreshold, in: 0...1, step: 0.05)
-                        Text(L10n.format("imageEditor.filter.unsharpThresholdValue", Int((viewModel.filterUnsharpThreshold * 255).rounded())))
+                        Slider(
+                            value: Binding(
+                                get: { viewModel.filterUnsharpEffectiveThresholdLevels },
+                                set: { viewModel.filterUnsharpEffectiveThresholdLevels = $0 }
+                            ),
+                            in: 0...255,
+                            step: 1
+                        )
+                        Text(L10n.format(
+                            "imageEditor.filter.unsharpThresholdValue",
+                            Int(viewModel.filterUnsharpEffectiveThresholdLevels.rounded())
+                        ))
                             .font(.system(size: 10, weight: .semibold))
                             .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
                             .frame(width: 44, alignment: .trailing)
                     }
+                    .accessibilityIdentifier("image-editor-filter-unsharp-threshold")
                 }
                 if viewModel.selectedFilter == .highPass {
                     HStack {

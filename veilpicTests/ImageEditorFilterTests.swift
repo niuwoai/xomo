@@ -1525,6 +1525,7 @@ struct ImageEditorFilterTests {
         )
         #expect(legacySettings.unsharpAmountPercent == nil)
         #expect(legacySettings.unsharpRadiusPixels == nil)
+        #expect(legacySettings.unsharpThresholdLevels == nil)
         let legacyAmount = try #require(sourceImage.filtered(
             kind: .unsharpMask,
             intensity: 0.5,
@@ -1559,6 +1560,17 @@ struct ImageEditorFilterTests {
             settings: ImageEditorFilterSettings(unsharpRadiusPixels: 250)
         ))
         #expect(maximumRadius.qingtuPNGData() != explicitRoundedRadius.qingtuPNGData())
+        let legacyThreshold = try #require(sourceImage.filtered(
+            kind: .unsharpMask,
+            intensity: 0.5,
+            settings: ImageEditorFilterSettings(unsharpThreshold: 0.2)
+        ))
+        let explicitThreshold = try #require(sourceImage.filtered(
+            kind: .unsharpMask,
+            intensity: 0.5,
+            settings: ImageEditorFilterSettings(unsharpThresholdLevels: 51)
+        ))
+        #expect(legacyThreshold.qingtuPNGData() == explicitThreshold.qingtuPNGData())
 
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: sourceImage) { _ in }
         viewModel.replaceSelectedLayerImageForTesting(sourceImage, historyTitle: L10n.text("imageEditor.history.brush"))
@@ -1571,6 +1583,7 @@ struct ImageEditorFilterTests {
         viewModel.filterIntensity = 1
         viewModel.filterUnsharpAmountPercent = 325
         viewModel.filterUnsharpRadiusPixels = 37.5
+        viewModel.filterUnsharpThresholdLevels = 17
         viewModel.filterUnsharpRadius = 2
         viewModel.filterUnsharpThreshold = 0
         viewModel.addFilterLayer()
@@ -1583,6 +1596,7 @@ struct ImageEditorFilterTests {
         #expect(filterLayer.filter?.kind == .unsharpMask)
         #expect(filterLayer.filterSettings.normalized().unsharpAmountPercent == 325)
         #expect(filterLayer.filterSettings.normalized().unsharpRadiusPixels == 37.5)
+        #expect(filterLayer.filterSettings.normalized().unsharpThresholdLevels == 17)
         #expect(filterLayer.filterSettings.normalized().unsharpRadius == 2)
         #expect(filterLayer.filterSettings.normalized().unsharpThreshold == 0)
         #expect(viewModel.document.layers.first { $0.id == baseLayerID }?.image.qingtuPNGData() == basePixelsBefore)
@@ -1597,6 +1611,7 @@ struct ImageEditorFilterTests {
         smartViewModel.filterIntensity = 1
         smartViewModel.filterUnsharpAmountPercent = 325
         smartViewModel.filterUnsharpRadiusPixels = 37.5
+        smartViewModel.filterUnsharpThresholdLevels = 17
         smartViewModel.filterUnsharpRadius = 2
         smartViewModel.filterUnsharpThreshold = 0
         smartViewModel.addSmartFilterToSelectedLayer()
@@ -1606,6 +1621,7 @@ struct ImageEditorFilterTests {
         #expect(smartLayer.smartFilters.first?.kind == .unsharpMask)
         #expect(smartLayer.smartFilters.first?.normalizedSettings.unsharpAmountPercent == 325)
         #expect(smartLayer.smartFilters.first?.normalizedSettings.unsharpRadiusPixels == 37.5)
+        #expect(smartLayer.smartFilters.first?.normalizedSettings.unsharpThresholdLevels == 17)
         #expect(smartLayer.smartFilters.first?.normalizedSettings.unsharpRadius == 2)
         #expect(smartLayer.smartFilters.first?.normalizedSettings.unsharpThreshold == 0)
         #expect(smartLayer.image.qingtuPNGData() == smartBasePixelsBefore)
@@ -1617,12 +1633,13 @@ struct ImageEditorFilterTests {
             ImageEditorFilter.unsharpMask.title,
             325,
             "37.5",
-            0
+            17
         ))
         let project = try ImageEditorProjectDocument(document: smartViewModel.document)
         let restored = try project.restoredDocument()
         #expect(restored.selectedLayer?.smartFilters.first?.normalizedSettings.unsharpAmountPercent == 325)
         #expect(restored.selectedLayer?.smartFilters.first?.normalizedSettings.unsharpRadiusPixels == 37.5)
+        #expect(restored.selectedLayer?.smartFilters.first?.normalizedSettings.unsharpThresholdLevels == 17)
 
         let thresholdFiltered = try #require(
             sourceImage.filtered(
@@ -1643,6 +1660,7 @@ struct ImageEditorFilterTests {
         )
         #expect(viewSource.contains("image-editor-filter-unsharp-amount"))
         #expect(viewSource.contains("image-editor-filter-unsharp-radius"))
+        #expect(viewSource.contains("image-editor-filter-unsharp-threshold"))
         #expect(viewSource.contains("viewModel.selectedFilter != .unsharpMask"))
     }
 
