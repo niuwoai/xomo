@@ -18351,6 +18351,39 @@ enum ImageEditorKeyboardDeleteCommandDispatcher {
 }
 
 enum ImageEditorKeyboardResponderDeleteDispatcher {
+    static func performKeyEquivalent(
+        event: NSEvent,
+        isTextInputActive: Bool,
+        deleteSelectedObject: (ImageEditorKeyboardShortcutEventSignature?) -> Bool
+    ) -> Bool {
+        performKeyEquivalent(
+            keyCode: event.keyCode,
+            charactersIgnoringModifiers: event.charactersIgnoringModifiers,
+            modifierFlags: event.modifierFlags,
+            eventSignature: ImageEditorKeyboardShortcutEventSignature(event: event),
+            isTextInputActive: isTextInputActive,
+            deleteSelectedObject: deleteSelectedObject
+        )
+    }
+
+    static func performKeyEquivalent(
+        keyCode: UInt16,
+        charactersIgnoringModifiers: String?,
+        modifierFlags: NSEvent.ModifierFlags,
+        eventSignature: ImageEditorKeyboardShortcutEventSignature?,
+        isTextInputActive: Bool,
+        deleteSelectedObject: (ImageEditorKeyboardShortcutEventSignature?) -> Bool
+    ) -> Bool {
+        guard !isTextInputActive else { return false }
+        return perform(
+            keyCode: keyCode,
+            charactersIgnoringModifiers: charactersIgnoringModifiers,
+            modifierFlags: modifierFlags,
+            eventSignature: eventSignature,
+            deleteSelectedObject: deleteSelectedObject
+        )
+    }
+
     static func perform(
         event: NSEvent,
         deleteSelectedObject: (ImageEditorKeyboardShortcutEventSignature?) -> Bool
@@ -18434,6 +18467,21 @@ final class KeyboardShortcutMonitorNSView: ImageEditorKeyboardShortcutResponderN
             return
         }
         super.keyDown(with: event)
+    }
+
+    override func performKeyEquivalent(with event: NSEvent) -> Bool {
+        let isTextInputActive = window?.firstResponder is NSTextView
+            || window?.firstResponder is NSTextField
+        if ImageEditorKeyboardResponderDeleteDispatcher.performKeyEquivalent(
+            event: event,
+            isTextInputActive: isTextInputActive,
+            deleteSelectedObject: { event in
+                coordinator?.performDeleteCommandFromKeyboardResponder(event: event) == true
+            }
+        ) {
+            return true
+        }
+        return super.performKeyEquivalent(with: event)
     }
 
     override func deleteBackward(_ sender: Any?) {

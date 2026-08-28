@@ -106,7 +106,9 @@ struct ImageEditorCanvasCursorTests {
         let responderSource = source[responderStart.lowerBound...]
 
         #expect(responderSource.contains("override func keyDown(with event: NSEvent)"))
+        #expect(responderSource.contains("override func performKeyEquivalent(with event: NSEvent)"))
         #expect(responderSource.contains("ImageEditorKeyboardResponderDeleteDispatcher.perform("))
+        #expect(responderSource.contains("ImageEditorKeyboardResponderDeleteDispatcher.performKeyEquivalent("))
         #expect(responderSource.contains("override func deleteBackward(_ sender: Any?)"))
         #expect(responderSource.contains("override func deleteForward(_ sender: Any?)"))
         #expect(responderSource.contains("performDeleteCommandFromKeyboardResponder("))
@@ -139,6 +141,46 @@ struct ImageEditorCanvasCursorTests {
         ))
 
         #expect(receivedEvents == [eventSignature])
+    }
+
+    @Test func keyboardResponderKeyEquivalentDeletesObjectsButPreservesTextEditing() {
+        let eventSignature = ImageEditorKeyboardShortcutEventSignature(
+            windowNumber: 8,
+            eventNumber: 24,
+            timestamp: 8.25,
+            typeRawValue: NSEvent.EventType.keyDown.rawValue,
+            keyCode: 51
+        )
+        var receivedEvents: [ImageEditorKeyboardShortcutEventSignature?] = []
+
+        for (keyCode, characters) in [(UInt16(51), "\u{7F}"), (UInt16(117), "\u{F728}")] {
+            #expect(ImageEditorKeyboardResponderDeleteDispatcher.performKeyEquivalent(
+                keyCode: keyCode,
+                charactersIgnoringModifiers: characters,
+                modifierFlags: [],
+                eventSignature: eventSignature,
+                isTextInputActive: false,
+                deleteSelectedObject: { receivedEvent in
+                    receivedEvents.append(receivedEvent)
+                    return true
+                }
+            ))
+        }
+        #expect(receivedEvents == [eventSignature, eventSignature])
+
+        receivedEvents.removeAll()
+        #expect(!ImageEditorKeyboardResponderDeleteDispatcher.performKeyEquivalent(
+            keyCode: 51,
+            charactersIgnoringModifiers: "\u{7F}",
+            modifierFlags: [],
+            eventSignature: eventSignature,
+            isTextInputActive: true,
+            deleteSelectedObject: { receivedEvent in
+                receivedEvents.append(receivedEvent)
+                return true
+            }
+        ))
+        #expect(receivedEvents.isEmpty)
     }
 
     @Test func layerChooserUsesNativeRightClickAndMacControlClickOnly() {

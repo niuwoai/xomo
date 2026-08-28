@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.12.0-rc1395 - 2026-08-29
+
+### Fixed
+- 导入 PNG/JPEG 等图片并自动选中图层后，编辑器的 AppKit 键盘宿主新增窗口级 `performKeyEquivalent` Delete/Forward Delete 路由；文件面板归还焦点后即使按键先进入菜单等价键路径，也会复用统一的上下文删除事务。
+- 窗口级兜底显式让位于 `NSTextView`/`NSTextField`，图层搜索、重命名及其他文本编辑中的 Delete 继续删除文字，不会误删画布对象；同一物理事件仍由既有门禁去重。
+
+### Verification
+- 增量测试构建通过；Delete 路由、文本焦点与导入图层删除专项 135/135、CLI/MCP 2/2、发布契约 7/7（21 条断言）及共享发布器契约 12/12（94 条断言）通过。Developer ID Universal Release 归档与导出成功，App/DMG 签名有效，`x86_64 + arm64` 的 rc1395/build 1395 已覆盖安装到 `/Applications/Xomo.app`。安装版实机确认 PNG 导入后自动选中，系统“编辑 → 删除所选对象”可删除并由 Undo 恢复；Computer Use 的按键注入在本机不会可靠送入 Xomo，因此实体 Delete 由窗口路由单测覆盖，下一次 40 版本完整门禁仍为 rc1400。
+
 ## 2.12.0-rc1394 - 2026-08-28
 
 ### Added
