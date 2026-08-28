@@ -480,6 +480,8 @@ final class ImageEditorViewModel: ObservableObject {
     @Published private(set) var filterGaussianBlurRadius: Double?
     @Published var filterHighPassRadius: Double = 6
     @Published var filterMorphologyRadius: Double = 3
+    @Published var filterEmbossAngleDegrees: Double = 135
+    @Published var filterEmbossHeight: Double = 3
     @Published var filterUnsharpRadius: Double = 1
     @Published var filterUnsharpThreshold: Double = 0
     @Published var filterLiquifyPushX: Double = 0.25
@@ -2653,6 +2655,20 @@ final class ImageEditorViewModel: ObservableObject {
             )
             guard !filter.isEnabled else { return title }
             return L10n.format("imageEditor.properties.smartFilterDisabled", title)
+        }
+        if filter.kind == .emboss {
+            let settings = filter.normalizedSettings
+            if let angle = settings.embossAngleDegrees, let height = settings.embossHeight {
+                let title = L10n.format(
+                    "imageEditor.properties.smartFilterEmbossItem",
+                    filter.kind.title,
+                    Int((filter.normalizedIntensity * 100).rounded()),
+                    Int(angle.rounded()),
+                    Int(height.rounded())
+                )
+                guard !filter.isEnabled else { return title }
+                return L10n.format("imageEditor.properties.smartFilterDisabled", title)
+            }
         }
         if filter.kind == .ripple {
             let settings = filter.normalizedSettings
@@ -9439,6 +9455,8 @@ final class ImageEditorViewModel: ObservableObject {
             morphologyRadius: selectedFilter == .minimum || selectedFilter == .maximum
                 ? filterMorphologyRadius
                 : nil,
+            embossAngleDegrees: selectedFilter == .emboss ? filterEmbossAngleDegrees : nil,
+            embossHeight: selectedFilter == .emboss ? filterEmbossHeight : nil,
             unsharpRadius: filterUnsharpRadius,
             unsharpThreshold: filterUnsharpThreshold,
             liquifyPushX: filterLiquifyPushX,
@@ -11281,6 +11299,8 @@ final class ImageEditorViewModel: ObservableObject {
             ?? max(1, min(256, (1 + filterIntensity * 9).rounded()))
         filterMorphologyRadius = normalized.morphologyRadius
             ?? max(1, min(256, (1 + filterIntensity * 4).rounded()))
+        filterEmbossAngleDegrees = normalized.embossAngleDegrees ?? 135
+        filterEmbossHeight = normalized.embossHeight ?? 3
         filterUnsharpRadius = normalized.unsharpRadius
         filterUnsharpThreshold = normalized.unsharpThreshold
         filterLiquifyPushX = normalized.liquifyPushX

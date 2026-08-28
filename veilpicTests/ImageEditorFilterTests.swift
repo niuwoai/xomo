@@ -1897,6 +1897,8 @@ struct ImageEditorFilterTests {
 
         viewModel.selectedFilter = .emboss
         viewModel.filterIntensity = 0.75
+        viewModel.filterEmbossAngleDegrees = 0
+        viewModel.filterEmbossHeight = 2
         viewModel.addFilterLayer()
 
         let filterLayer = try #require(viewModel.document.selectedLayer)
@@ -1905,6 +1907,8 @@ struct ImageEditorFilterTests {
 
         #expect(filterLayer.isFilter)
         #expect(filterLayer.filter?.kind == .emboss)
+        #expect(filterLayer.filterSettings.normalized().embossAngleDegrees == 0)
+        #expect(filterLayer.filterSettings.normalized().embossHeight == 2)
         #expect(viewModel.document.layers.first { $0.id == baseLayerID }?.image.qingtuPNGData() == basePixelsBefore)
         #expect(abs(flatLeft.redComponent - 0.5) < 0.04)
         #expect(abs(flatLeft.redComponent - flatLeft.greenComponent) < 0.002)
@@ -1919,20 +1923,87 @@ struct ImageEditorFilterTests {
 
         smartViewModel.selectedFilter = .emboss
         smartViewModel.filterIntensity = 0.75
+        smartViewModel.filterEmbossAngleDegrees = 0
+        smartViewModel.filterEmbossHeight = 2
         smartViewModel.addSmartFilterToSelectedLayer()
 
         var smartLayer = try #require(smartViewModel.document.selectedLayer)
         let smartFilterID = try #require(smartLayer.smartFilters.first?.id)
         let smartEdgeHighlight = try #require(smartViewModel.currentImage.color(at: CGPoint(x: 35, y: 24))?.usingColorSpace(.deviceRGB))
         #expect(smartLayer.smartFilters.first?.kind == .emboss)
+        #expect(smartLayer.smartFilters.first?.normalizedSettings.embossAngleDegrees == 0)
+        #expect(smartLayer.smartFilters.first?.normalizedSettings.embossHeight == 2)
         #expect(smartLayer.image.qingtuPNGData() == smartBasePixelsBefore)
         #expect(smartEdgeHighlight.redComponent > 0.85)
+        #expect(smartViewModel.smartFilterLabel(try #require(smartLayer.smartFilters.first)) == L10n.format(
+            "imageEditor.properties.smartFilterEmbossItem",
+            ImageEditorFilter.emboss.title,
+            75,
+            0,
+            2
+        ))
         #expect(smartViewModel.document.history.last?.title == L10n.text("imageEditor.history.layerSmartFilterAdd"))
+
+        let project = try ImageEditorProjectDocument(document: smartViewModel.document)
+        let restored = try project.restoredDocument()
+        let restoredFilter = try #require(restored.selectedLayer?.smartFilters.first)
+        #expect(restoredFilter.normalizedSettings.embossAngleDegrees == 0)
+        #expect(restoredFilter.normalizedSettings.embossHeight == 2)
 
         smartViewModel.toggleSmartFilterOnSelectedLayer(smartFilterID)
         smartLayer = try #require(smartViewModel.document.selectedLayer)
         #expect(smartLayer.smartFilters.first?.isEnabled == false)
         #expect(try #require(smartViewModel.currentImage.qingtuPNGData()) == smartPreviewBefore)
+    }
+
+    @Test func embossAngleAndHeightControlReliefDirectionAndPreserveLegacyProjects() throws {
+        let sourceImage = verticalEdgeImage(size: NSSize(width: 72, height: 48))
+
+        func color(x: CGFloat, angle: Double, height: Double) throws -> NSColor {
+            let output = try #require(sourceImage.filtered(
+                kind: .emboss,
+                intensity: 0.75,
+                settings: ImageEditorFilterSettings(
+                    embossAngleDegrees: angle,
+                    embossHeight: height
+                )
+            ))
+            return try #require(
+                output.color(at: CGPoint(x: x, y: 24))?.usingColorSpace(.deviceRGB)
+            )
+        }
+
+        let rightFacing = try color(x: 35, angle: 0, height: 1)
+        let leftFacing = try color(x: 35, angle: 180, height: 1)
+        let shallow = try color(x: 34, angle: 0, height: 1)
+        let tall = try color(x: 34, angle: 0, height: 3)
+        #expect(rightFacing.redComponent > 0.85)
+        #expect(leftFacing.redComponent < 0.15)
+        #expect(tall.redComponent > shallow.redComponent + 0.3)
+
+        let legacySettings = try JSONDecoder().decode(
+            ImageEditorFilterSettings.self,
+            from: Data("{}".utf8)
+        )
+        #expect(legacySettings.embossAngleDegrees == nil)
+        #expect(legacySettings.embossHeight == nil)
+
+        let root = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let viewSource = try String(
+            contentsOf: root.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let viewModelSource = try String(
+            contentsOf: root.appendingPathComponent("veilpic/ImageEditorViewModel.swift"),
+            encoding: .utf8
+        )
+        #expect(viewSource.contains("image-editor-filter-emboss-angle"))
+        #expect(viewSource.contains("image-editor-filter-emboss-height"))
+        #expect(viewSource.contains("image-editor-filter-emboss-amount"))
+        #expect(viewModelSource.contains("embossAngleDegrees: selectedFilter == .emboss"))
+        #expect(viewModelSource.contains("embossHeight: selectedFilter == .emboss"))
     }
 
     @Test func imageEditorFindEdgesFilterLayerAndSmartFilterAreNonDestructive() async throws {

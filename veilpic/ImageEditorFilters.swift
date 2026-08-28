@@ -38,7 +38,7 @@ extension NSImage {
             return highPassed(intensity: clamped, settings: settings)
         }
         if kind == .emboss {
-            return embossed(intensity: clamped)
+            return embossed(intensity: clamped, settings: settings)
         }
         if kind == .findEdges {
             return findingEdges(intensity: clamped)
@@ -119,7 +119,7 @@ extension NSImage {
         case .highPass:
             return highPassed(intensity: clamped, settings: settings)
         case .emboss:
-            return embossed(intensity: clamped)
+            return embossed(intensity: clamped, settings: settings)
         case .findEdges:
             return findingEdges(intensity: clamped)
         case .minimum:
@@ -600,10 +600,51 @@ extension NSImage {
         )
     }
 
-    private func embossed(intensity: Double) -> NSImage? {
+    private func embossed(intensity: Double, settings: ImageEditorFilterSettings) -> NSImage? {
         let clampedIntensity = max(0, min(1, intensity))
         let strength = 1.2 + clampedIntensity * 2.6
+        let normalizedSettings = settings.normalized()
+        guard normalizedSettings.embossAngleDegrees != nil || normalizedSettings.embossHeight != nil else {
+            return legacyEmbossed(strength: strength)
+        }
+        let angle = (normalizedSettings.embossAngleDegrees ?? 135) * .pi / 180
+        let height = normalizedSettings.embossHeight ?? 3
+        let sampleX = cos(angle) * height
+        let sampleY = -sin(angle) * height
         return pixelMappedFromBuffer { x, y, width, height, pixels, bytesPerRow, bytesPerPixel in
+            let offset = y * bytesPerRow + x * bytesPerPixel
+            let alpha = Double(pixels[offset + 3]) / 255
+            let shadow = Self.sampledLuminance(
+                x: Double(x) - sampleX,
+                y: Double(y) - sampleY,
+                width: width,
+                height: height,
+                pixels: pixels,
+                bytesPerRow: bytesPerRow,
+                bytesPerPixel: bytesPerPixel
+            )
+            let highlight = Self.sampledLuminance(
+                x: Double(x) + sampleX,
+                y: Double(y) + sampleY,
+                width: width,
+                height: height,
+                pixels: pixels,
+                bytesPerRow: bytesPerRow,
+                bytesPerPixel: bytesPerPixel
+            )
+            let relief = (highlight - shadow) * strength
+            let value = 0.5 * alpha + relief
+            return (
+                Self.premultipliedChannel(value, alpha: alpha),
+                Self.premultipliedChannel(value, alpha: alpha),
+                Self.premultipliedChannel(value, alpha: alpha),
+                alpha
+            )
+        }
+    }
+
+    private func legacyEmbossed(strength: Double) -> NSImage? {
+        pixelMappedFromBuffer { x, y, width, height, pixels, bytesPerRow, bytesPerPixel in
             let offset = y * bytesPerRow + x * bytesPerPixel
             let alpha = Double(pixels[offset + 3]) / 255
             let shadow = Self.luminance(
@@ -1393,6 +1434,27 @@ extension NSImage {
         let green = Double(pixels[offset + 1]) / 255
         let blue = Double(pixels[offset + 2]) / 255
         return red * 0.299 + green * 0.587 + blue * 0.114
+    }
+
+    private static func sampledLuminance(
+        x: Double,
+        y: Double,
+        width: Int,
+        height: Int,
+        pixels: [UInt8],
+        bytesPerRow: Int,
+        bytesPerPixel: Int
+    ) -> Double {
+        let sample = samplePixel(
+            x: x,
+            y: y,
+            width: width,
+            height: height,
+            pixels: pixels,
+            bytesPerRow: bytesPerRow,
+            bytesPerPixel: bytesPerPixel
+        )
+        return sample.0 * 0.299 + sample.1 * 0.587 + sample.2 * 0.114
     }
 
     private static func samplePixel(

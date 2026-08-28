@@ -6248,6 +6248,8 @@ final class XomoAutomationRegistry {
             case "intensity": viewModel.filterIntensity = try numericSetting(value, key: key)
             case "highPassRadius": viewModel.filterHighPassRadius = try numericSetting(value, key: key)
             case "morphologyRadius": viewModel.filterMorphologyRadius = try numericSetting(value, key: key)
+            case "embossAngleDegrees": viewModel.filterEmbossAngleDegrees = try numericSetting(value, key: key)
+            case "embossHeight": viewModel.filterEmbossHeight = try numericSetting(value, key: key)
             case "unsharpRadius": viewModel.filterUnsharpRadius = try numericSetting(value, key: key)
             case "unsharpThreshold": viewModel.filterUnsharpThreshold = try numericSetting(value, key: key)
             case "liquifyPushX": viewModel.filterLiquifyPushX = try numericSetting(value, key: key)
@@ -7962,6 +7964,8 @@ private extension XomoAutomationRegistry {
         "intensity": XomoAutomationSchema.number(description: "Filter intensity"),
         "highPassRadius": XomoAutomationSchema.number(description: "High Pass radius in pixels"),
         "morphologyRadius": XomoAutomationSchema.number(description: "Minimum or Maximum radius in pixels"),
+        "embossAngleDegrees": XomoAutomationSchema.number(description: "Emboss light angle in degrees"),
+        "embossHeight": XomoAutomationSchema.number(description: "Emboss relief height in pixels"),
         "unsharpRadius": XomoAutomationSchema.number(description: "Unsharp radius"),
         "unsharpThreshold": XomoAutomationSchema.number(description: "Unsharp threshold"),
         "liquifyPushX": XomoAutomationSchema.number(description: "Liquify horizontal push"),

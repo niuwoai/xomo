@@ -11871,7 +11871,9 @@ struct ImageEditorView: View {
                         Text(filter.title).tag(filter)
                     }
                 }
-                if viewModel.selectedFilter != .minimum && viewModel.selectedFilter != .maximum {
+                if viewModel.selectedFilter != .minimum
+                    && viewModel.selectedFilter != .maximum
+                    && viewModel.selectedFilter != .emboss {
                     Slider(value: $viewModel.filterIntensity, in: 0...1, step: 0.05)
                 }
                 if viewModel.selectedFilter == .unsharpMask {
@@ -11927,6 +11929,50 @@ struct ImageEditorView: View {
                             .frame(width: 54, alignment: .trailing)
                     }
                     .accessibilityIdentifier("image-editor-filter-morphology-radius")
+                }
+                if viewModel.selectedFilter == .emboss {
+                    HStack {
+                        Text(L10n.text("imageEditor.filter.embossAngle"))
+                            .font(.system(size: 10, weight: .medium))
+                            .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                        Slider(value: $viewModel.filterEmbossAngleDegrees, in: -180...180, step: 1)
+                        Text(L10n.format(
+                            "imageEditor.filter.embossAngleValue",
+                            Int(viewModel.filterEmbossAngleDegrees.rounded())
+                        ))
+                            .font(.system(size: 10, weight: .semibold))
+                            .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
+                            .frame(width: 54, alignment: .trailing)
+                    }
+                    .accessibilityIdentifier("image-editor-filter-emboss-angle")
+                    HStack {
+                        Text(L10n.text("imageEditor.filter.embossHeight"))
+                            .font(.system(size: 10, weight: .medium))
+                            .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                        Slider(value: $viewModel.filterEmbossHeight, in: 1...10, step: 1)
+                        Text(L10n.format(
+                            "imageEditor.filter.embossHeightValue",
+                            Int(viewModel.filterEmbossHeight.rounded())
+                        ))
+                            .font(.system(size: 10, weight: .semibold))
+                            .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
+                            .frame(width: 54, alignment: .trailing)
+                    }
+                    .accessibilityIdentifier("image-editor-filter-emboss-height")
+                    HStack {
+                        Text(L10n.text("imageEditor.filter.embossAmount"))
+                            .font(.system(size: 10, weight: .medium))
+                            .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                        Slider(value: $viewModel.filterIntensity, in: 0...1, step: 0.05)
+                        Text(L10n.format(
+                            "imageEditor.filter.embossAmountValue",
+                            Int((viewModel.filterIntensity * 100).rounded())
+                        ))
+                            .font(.system(size: 10, weight: .semibold))
+                            .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
+                            .frame(width: 54, alignment: .trailing)
+                    }
+                    .accessibilityIdentifier("image-editor-filter-emboss-amount")
                 }
                 if viewModel.selectedFilter == .liquifyPush {
                     HStack {
