@@ -482,6 +482,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var filterMorphologyRadius: Double = 3
     @Published var filterPixelateCellSize: Double = 18
     @Published var filterAddNoiseMonochromatic = true
+    @Published var filterAddNoiseDistribution = ImageEditorAddNoiseDistribution.uniform
     @Published var filterMotionBlurAngleDegrees: Double = 0
     @Published var filterMotionBlurDistance: Double = 14
     @Published var filterEmbossAngleDegrees: Double = 135
@@ -2588,13 +2589,15 @@ final class ImageEditorViewModel: ObservableObject {
             return L10n.format("imageEditor.properties.smartFilterDisabled", title)
         }
         if filter.kind == .addNoise {
-            let mode = (filter.normalizedSettings.addNoiseMonochromatic ?? true)
+            let settings = filter.normalizedSettings
+            let mode = (settings.addNoiseMonochromatic ?? true)
                 ? L10n.text("imageEditor.filter.addNoiseMonochromatic")
                 : L10n.text("imageEditor.filter.addNoiseColor")
             let title = L10n.format(
                 "imageEditor.properties.smartFilterAddNoiseItem",
                 filter.kind.title,
                 Int((filter.normalizedIntensity * 100).rounded()),
+                (settings.addNoiseDistribution ?? .uniform).title,
                 mode
             )
             guard !filter.isEnabled else { return title }
@@ -9496,6 +9499,7 @@ final class ImageEditorViewModel: ObservableObject {
                 : nil,
             pixelateCellSize: selectedFilter == .pixelate ? filterPixelateCellSize : nil,
             addNoiseMonochromatic: selectedFilter == .addNoise ? filterAddNoiseMonochromatic : nil,
+            addNoiseDistribution: selectedFilter == .addNoise ? filterAddNoiseDistribution : nil,
             motionBlurAngleDegrees: selectedFilter == .motionBlur ? filterMotionBlurAngleDegrees : nil,
             motionBlurDistance: selectedFilter == .motionBlur ? filterMotionBlurDistance : nil,
             embossAngleDegrees: selectedFilter == .emboss ? filterEmbossAngleDegrees : nil,
@@ -11345,6 +11349,7 @@ final class ImageEditorViewModel: ObservableObject {
         filterPixelateCellSize = normalized.pixelateCellSize
             ?? max(2, min(200, (2 + filterIntensity * 32).rounded()))
         filterAddNoiseMonochromatic = normalized.addNoiseMonochromatic ?? true
+        filterAddNoiseDistribution = normalized.addNoiseDistribution ?? .uniform
         filterMotionBlurAngleDegrees = normalized.motionBlurAngleDegrees ?? 0
         filterMotionBlurDistance = normalized.motionBlurDistance
             ?? max(1, min(999, (filterIntensity * 28).rounded()))

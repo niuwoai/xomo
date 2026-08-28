@@ -11895,6 +11895,17 @@ struct ImageEditorView: View {
                     .accessibilityIdentifier("image-editor-filter-pixelate-cell-size")
                 }
                 if viewModel.selectedFilter == .addNoise {
+                    Picker(
+                        L10n.text("imageEditor.filter.addNoiseDistribution"),
+                        selection: $viewModel.filterAddNoiseDistribution
+                    ) {
+                        ForEach(ImageEditorAddNoiseDistribution.allCases) { distribution in
+                            Text(distribution.title).tag(distribution)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                    .font(.system(size: 10))
+                    .accessibilityIdentifier("image-editor-filter-add-noise-distribution")
                     Toggle(
                         L10n.text("imageEditor.filter.addNoiseMonochromatic"),
                         isOn: $viewModel.filterAddNoiseMonochromatic

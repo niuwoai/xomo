@@ -5732,7 +5732,7 @@ struct XomoAutomationTests {
         #expect(viewModel.document.selectedLayer?.smartFilters.count == 1)
     }
 
-    @Test func registryConfiguresAddNoiseMonochromaticModeThroughTheSharedFilterPipeline() throws {
+    @Test func registryConfiguresAddNoiseModesThroughTheSharedFilterPipeline() throws {
         let viewModel = makeViewModel()
         let registry = XomoAutomationRegistry.shared
         registry.register(viewModel)
@@ -5746,7 +5746,8 @@ struct XomoAutomationTests {
                 "action": .string("addSmartFilter"),
                 "settings": .object([
                     "intensity": .number(0.7),
-                    "addNoiseMonochromatic": .bool(false)
+                    "addNoiseMonochromatic": .bool(false),
+                    "addNoiseDistribution": .string(ImageEditorAddNoiseDistribution.gaussian.rawValue)
                 ])
             ]
         ))
@@ -5756,6 +5757,7 @@ struct XomoAutomationTests {
         let filter = try #require(viewModel.document.selectedLayer?.smartFilters.last)
         #expect(filter.kind == .addNoise)
         #expect(filter.normalizedSettings.addNoiseMonochromatic == false)
+        #expect(filter.normalizedSettings.addNoiseDistribution == .gaussian)
 
         let tools = registry.execute(request(operation: "tools"))
         let configureTool = try #require(
@@ -5766,6 +5768,10 @@ struct XomoAutomationTests {
         )
         let settingsProperties = try #require(settingsSchema["properties"]?.objectValue)
         #expect(settingsProperties["addNoiseMonochromatic"]?.objectValue?["type"] == .string("boolean"))
+        #expect(
+            settingsProperties["addNoiseDistribution"]?.objectValue?["enum"]?.arrayValue
+                == ImageEditorAddNoiseDistribution.allCases.map { .string($0.rawValue) }
+        )
 
         let historyCount = viewModel.document.history.count
         let invalidResponse = registry.execute(request(
@@ -5775,7 +5781,7 @@ struct XomoAutomationTests {
                 "filter": .string(ImageEditorFilter.addNoise.rawValue),
                 "action": .string("addSmartFilter"),
                 "settings": .object([
-                    "addNoiseMonochromatic": .string("sometimes")
+                    "addNoiseDistribution": .string("poisson")
                 ])
             ]
         ))

@@ -359,15 +359,32 @@ extension NSImage {
         settings: ImageEditorFilterSettings
     ) -> NSImage? {
         let amount = max(0, min(1, intensity)) * 0.45
-        let monochromatic = settings.normalized().addNoiseMonochromatic ?? true
+        let normalized = settings.normalized()
+        let monochromatic = normalized.addNoiseMonochromatic ?? true
+        let distribution = normalized.addNoiseDistribution ?? .uniform
         return pixelMappedByCoordinate { x, y, red, green, blue, alpha in
-            let redNoise = Self.coordinateNoise(x: x, y: y, channel: 0) * amount * alpha
+            let redNoise = Self.coordinateNoise(
+                x: x,
+                y: y,
+                channel: 0,
+                distribution: distribution
+            ) * amount * alpha
             let greenNoise = monochromatic
                 ? redNoise
-                : Self.coordinateNoise(x: x, y: y, channel: 1) * amount * alpha
+                : Self.coordinateNoise(
+                    x: x,
+                    y: y,
+                    channel: 1,
+                    distribution: distribution
+                ) * amount * alpha
             let blueNoise = monochromatic
                 ? redNoise
-                : Self.coordinateNoise(x: x, y: y, channel: 2) * amount * alpha
+                : Self.coordinateNoise(
+                    x: x,
+                    y: y,
+                    channel: 2,
+                    distribution: distribution
+                ) * amount * alpha
             return (
                 Self.premultipliedChannel(red + redNoise, alpha: alpha),
                 Self.premultipliedChannel(green + greenNoise, alpha: alpha),
@@ -1396,6 +1413,26 @@ extension NSImage {
         value ^= value >> 33
         let unit = Double(value & 0xFFFF) / 65_535
         return unit * 2 - 1
+    }
+
+    private static func coordinateNoise(
+        x: Int,
+        y: Int,
+        channel: Int,
+        distribution: ImageEditorAddNoiseDistribution
+    ) -> Double {
+        guard distribution == .gaussian else {
+            return coordinateNoise(x: x, y: y, channel: channel)
+        }
+        let firstChannel = channel * 2 + 17
+        let secondChannel = firstChannel + 1
+        let firstUnit = max(
+            1.0 / 65_536,
+            (coordinateNoise(x: x, y: y, channel: firstChannel) + 1) / 2
+        )
+        let secondUnit = (coordinateNoise(x: x, y: y, channel: secondChannel) + 1) / 2
+        let standardNormal = sqrt(-2 * log(firstUnit)) * cos(2 * Double.pi * secondUnit)
+        return max(-1, min(1, standardNormal / 3))
     }
 
     private static func premultipliedChannel(_ value: Double, alpha: Double) -> Double {

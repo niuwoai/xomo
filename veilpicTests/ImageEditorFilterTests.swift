@@ -1672,7 +1672,7 @@ struct ImageEditorFilterTests {
         #expect(try #require(smartViewModel.currentImage.qingtuPNGData()) == smartPreviewBefore)
     }
 
-    @Test func addNoiseMonochromaticModePreservesLegacyPixelsAndSupportsColorNoise() throws {
+    @Test func addNoiseModesPreserveLegacyUniformPixelsAndSupportGaussianColorNoise() throws {
         let sourceImage = solidImage(
             size: NSSize(width: 72, height: 48),
             color: NSColor(calibratedWhite: 0.5, alpha: 1)
@@ -1682,6 +1682,7 @@ struct ImageEditorFilterTests {
             from: Data("{}".utf8)
         )
         #expect(legacySettings.addNoiseMonochromatic == nil)
+        #expect(legacySettings.addNoiseDistribution == nil)
 
         let legacy = try #require(sourceImage.filtered(
             kind: .addNoise,
@@ -1691,7 +1692,10 @@ struct ImageEditorFilterTests {
         let explicitMonochromatic = try #require(sourceImage.filtered(
             kind: .addNoise,
             intensity: 0.7,
-            settings: ImageEditorFilterSettings(addNoiseMonochromatic: true)
+            settings: ImageEditorFilterSettings(
+                addNoiseMonochromatic: true,
+                addNoiseDistribution: .uniform
+            )
         ))
         #expect(legacy.qingtuPNGData() == explicitMonochromatic.qingtuPNGData())
 
@@ -1699,6 +1703,14 @@ struct ImageEditorFilterTests {
             kind: .addNoise,
             intensity: 0.7,
             settings: ImageEditorFilterSettings(addNoiseMonochromatic: false)
+        ))
+        let gaussianNoise = try #require(sourceImage.filtered(
+            kind: .addNoise,
+            intensity: 0.7,
+            settings: ImageEditorFilterSettings(
+                addNoiseMonochromatic: false,
+                addNoiseDistribution: .gaussian
+            )
         ))
         let monochromaticPixel = try #require(
             explicitMonochromatic.color(at: CGPoint(x: 12, y: 24))?.usingColorSpace(.deviceRGB)
@@ -1711,6 +1723,17 @@ struct ImageEditorFilterTests {
             max(colorPixel.redComponent, colorPixel.greenComponent, colorPixel.blueComponent)
                 - min(colorPixel.redComponent, colorPixel.greenComponent, colorPixel.blueComponent) > 0.02
         )
+        #expect(gaussianNoise.qingtuPNGData() != colorNoise.qingtuPNGData())
+        let uniformBytes = try #require(imageEditorRGBABytes(colorNoise, width: 72, height: 48))
+        let gaussianBytes = try #require(imageEditorRGBABytes(gaussianNoise, width: 72, height: 48))
+        let redOffsets = stride(from: 0, to: uniformBytes.count, by: 4)
+        let uniformMeanDeviation = redOffsets.reduce(0.0) {
+            $0 + abs(Double(uniformBytes[$1]) - 128)
+        } / Double(uniformBytes.count / 4)
+        let gaussianMeanDeviation = redOffsets.reduce(0.0) {
+            $0 + abs(Double(gaussianBytes[$1]) - 128)
+        } / Double(gaussianBytes.count / 4)
+        #expect(gaussianMeanDeviation < uniformMeanDeviation * 0.75)
 
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: sourceImage) { _ in }
         viewModel.replaceSelectedLayerImageForTesting(
@@ -1720,19 +1743,23 @@ struct ImageEditorFilterTests {
         viewModel.selectedFilter = .addNoise
         viewModel.filterIntensity = 0.7
         viewModel.filterAddNoiseMonochromatic = false
+        viewModel.filterAddNoiseDistribution = .gaussian
         viewModel.addSmartFilterToSelectedLayer()
 
         let smartFilter = try #require(viewModel.document.selectedLayer?.smartFilters.last)
         #expect(smartFilter.normalizedSettings.addNoiseMonochromatic == false)
+        #expect(smartFilter.normalizedSettings.addNoiseDistribution == .gaussian)
         #expect(viewModel.smartFilterLabel(smartFilter) == L10n.format(
             "imageEditor.properties.smartFilterAddNoiseItem",
             ImageEditorFilter.addNoise.title,
             70,
+            ImageEditorAddNoiseDistribution.gaussian.title,
             L10n.text("imageEditor.filter.addNoiseColor")
         ))
         let project = try ImageEditorProjectDocument(document: viewModel.document)
         let restored = try project.restoredDocument()
         #expect(restored.selectedLayer?.smartFilters.last?.normalizedSettings.addNoiseMonochromatic == false)
+        #expect(restored.selectedLayer?.smartFilters.last?.normalizedSettings.addNoiseDistribution == .gaussian)
 
         let root = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()
@@ -1742,6 +1769,7 @@ struct ImageEditorFilterTests {
             encoding: .utf8
         )
         #expect(viewSource.contains("image-editor-filter-add-noise-monochromatic"))
+        #expect(viewSource.contains("image-editor-filter-add-noise-distribution"))
     }
 
     @Test func imageEditorMotionBlurFilterLayerAndSmartFilterAreNonDestructive() async throws {

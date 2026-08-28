@@ -950,7 +950,10 @@
 "imageEditor.filter.pixelateCellSizeValue" = "%d px";
 "imageEditor.filter.addNoiseMonochromatic" = "单色";
 "imageEditor.filter.addNoiseColor" = "彩色";
-"imageEditor.properties.smartFilterAddNoiseItem" = "%1$@ · %2$d%% · %3$@";
+"imageEditor.filter.addNoiseDistribution" = "分布";
+"imageEditor.filter.addNoiseDistribution.uniform" = "均匀";
+"imageEditor.filter.addNoiseDistribution.gaussian" = "高斯";
+"imageEditor.properties.smartFilterAddNoiseItem" = "%1$@ · %2$d%% · %3$@ · %4$@";
 "imageEditor.filter.motionBlur" = "动感模糊";
 "imageEditor.filter.motionBlurAngle" = "角度";
 "imageEditor.filter.motionBlurAngleValue" = "%d°";

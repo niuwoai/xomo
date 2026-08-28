@@ -2418,6 +2418,17 @@ enum ImageEditorOffsetUndefinedAreaMode: String, CaseIterable, Identifiable, Cod
     }
 }
 
+enum ImageEditorAddNoiseDistribution: String, CaseIterable, Identifiable, Codable {
+    case uniform
+    case gaussian
+
+    var id: String { rawValue }
+
+    var title: String {
+        L10n.text("imageEditor.filter.addNoiseDistribution.\(rawValue)")
+    }
+}
+
 struct ImageEditorFilterApplication: Equatable {
     var kind: ImageEditorFilter
     var intensity: Double
@@ -2523,6 +2534,8 @@ struct ImageEditorFilterSettings: Equatable, Codable {
     var pixelateCellSize: Double?
     /// Whether Add Noise uses one shared value for RGB. Nil preserves the legacy monochromatic result.
     var addNoiseMonochromatic: Bool?
+    /// Nil preserves the legacy uniform Add Noise distribution.
+    var addNoiseDistribution: ImageEditorAddNoiseDistribution?
     /// Explicit Motion Blur angle in degrees. Nil preserves the legacy horizontal direction.
     var motionBlurAngleDegrees: Double?
     /// Explicit Motion Blur distance in pixels. Nil preserves the legacy intensity-derived distance.
@@ -2554,6 +2567,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         morphologyRadius: Double? = nil,
         pixelateCellSize: Double? = nil,
         addNoiseMonochromatic: Bool? = nil,
+        addNoiseDistribution: ImageEditorAddNoiseDistribution? = nil,
         motionBlurAngleDegrees: Double? = nil,
         motionBlurDistance: Double? = nil,
         embossAngleDegrees: Double? = nil,
@@ -2580,6 +2594,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         self.morphologyRadius = morphologyRadius
         self.pixelateCellSize = pixelateCellSize
         self.addNoiseMonochromatic = addNoiseMonochromatic
+        self.addNoiseDistribution = addNoiseDistribution
         self.motionBlurAngleDegrees = motionBlurAngleDegrees
         self.motionBlurDistance = motionBlurDistance
         self.embossAngleDegrees = embossAngleDegrees
@@ -2609,6 +2624,10 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         morphologyRadius = try container.decodeIfPresent(Double.self, forKey: .morphologyRadius)
         pixelateCellSize = try container.decodeIfPresent(Double.self, forKey: .pixelateCellSize)
         addNoiseMonochromatic = try container.decodeIfPresent(Bool.self, forKey: .addNoiseMonochromatic)
+        addNoiseDistribution = try container.decodeIfPresent(
+            ImageEditorAddNoiseDistribution.self,
+            forKey: .addNoiseDistribution
+        )
         motionBlurAngleDegrees = try container.decodeIfPresent(Double.self, forKey: .motionBlurAngleDegrees)
         motionBlurDistance = try container.decodeIfPresent(Double.self, forKey: .motionBlurDistance)
         embossAngleDegrees = try container.decodeIfPresent(Double.self, forKey: .embossAngleDegrees)
@@ -2641,6 +2660,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         try container.encodeIfPresent(morphologyRadius, forKey: .morphologyRadius)
         try container.encodeIfPresent(pixelateCellSize, forKey: .pixelateCellSize)
         try container.encodeIfPresent(addNoiseMonochromatic, forKey: .addNoiseMonochromatic)
+        try container.encodeIfPresent(addNoiseDistribution, forKey: .addNoiseDistribution)
         try container.encodeIfPresent(motionBlurAngleDegrees, forKey: .motionBlurAngleDegrees)
         try container.encodeIfPresent(motionBlurDistance, forKey: .motionBlurDistance)
         try container.encodeIfPresent(embossAngleDegrees, forKey: .embossAngleDegrees)
@@ -2670,6 +2690,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
             morphologyRadius: morphologyRadius.map { max(1, min(256, $0)) },
             pixelateCellSize: pixelateCellSize.map { max(2, min(200, $0)) },
             addNoiseMonochromatic: addNoiseMonochromatic,
+            addNoiseDistribution: addNoiseDistribution,
             motionBlurAngleDegrees: motionBlurAngleDegrees.map { max(-180, min(180, $0)) },
             motionBlurDistance: motionBlurDistance.map { max(1, min(999, $0)) },
             embossAngleDegrees: embossAngleDegrees.map { max(-180, min(180, $0)) },
@@ -2699,6 +2720,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         case morphologyRadius
         case pixelateCellSize
         case addNoiseMonochromatic
+        case addNoiseDistribution
         case motionBlurAngleDegrees
         case motionBlurDistance
         case embossAngleDegrees
