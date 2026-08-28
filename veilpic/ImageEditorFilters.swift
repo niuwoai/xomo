@@ -854,6 +854,7 @@ extension NSImage {
             Int((normalizedSettings.oilPaintTonalLevels ?? (18 - clampedIntensity * 10)).rounded())
         )
         let stylization = (normalizedSettings.oilPaintStylization ?? 10) / 10
+        let cleanliness = (normalizedSettings.oilPaintCleanliness ?? 0) / 10
         if stylization <= 0 {
             return self
         }
@@ -878,7 +879,16 @@ extension NSImage {
                     buckets[bucketIndex].blue += sampleBlue
                 }
             }
-            guard let dominant = buckets.max(by: { $0.count < $1.count }),
+            guard let dominantIndex = buckets.indices.max(by: { buckets[$0].count < buckets[$1].count }) else {
+                return (
+                    Double(pixels[offset]) / 255,
+                    Double(pixels[offset + 1]) / 255,
+                    Double(pixels[offset + 2]) / 255,
+                    alpha
+                )
+            }
+            let dominant = buckets[dominantIndex]
+            guard
                   dominant.count > 0
             else {
                 return (
@@ -889,12 +899,47 @@ extension NSImage {
                 )
             }
             let count = Double(dominant.count)
+            let dominantRed = dominant.red / count
+            let dominantGreen = dominant.green / count
+            let dominantBlue = dominant.blue / count
+            let cleanedColor: (red: Double, green: Double, blue: Double)
+            if cleanliness <= 0 {
+                cleanedColor = (dominantRed, dominantGreen, dominantBlue)
+            } else {
+                let cleanRange = max(0, dominantIndex - 1)...min(bucketCount - 1, dominantIndex + 1)
+                let clean = cleanRange.reduce(
+                    into: (count: 0, red: 0.0, green: 0.0, blue: 0.0)
+                ) { result, index in
+                    result.count += buckets[index].count
+                    result.red += buckets[index].red
+                    result.green += buckets[index].green
+                    result.blue += buckets[index].blue
+                }
+                let cleanCount = Double(clean.count)
+                let cleanRed = cleanCount > 0 ? clean.red / cleanCount : dominantRed
+                let cleanGreen = cleanCount > 0 ? clean.green / cleanCount : dominantGreen
+                let cleanBlue = cleanCount > 0 ? clean.blue / cleanCount : dominantBlue
+                cleanedColor = (
+                    dominantRed + (cleanRed - dominantRed) * cleanliness,
+                    dominantGreen + (cleanGreen - dominantGreen) * cleanliness,
+                    dominantBlue + (cleanBlue - dominantBlue) * cleanliness
+                )
+            }
             let sourceRed = Double(pixels[offset]) / 255
             let sourceGreen = Double(pixels[offset + 1]) / 255
             let sourceBlue = Double(pixels[offset + 2]) / 255
-            let paintedRed = Self.premultipliedChannel(dominant.red / count, alpha: alpha)
-            let paintedGreen = Self.premultipliedChannel(dominant.green / count, alpha: alpha)
-            let paintedBlue = Self.premultipliedChannel(dominant.blue / count, alpha: alpha)
+            let paintedRed = Self.premultipliedChannel(
+                cleanedColor.red,
+                alpha: alpha
+            )
+            let paintedGreen = Self.premultipliedChannel(
+                cleanedColor.green,
+                alpha: alpha
+            )
+            let paintedBlue = Self.premultipliedChannel(
+                cleanedColor.blue,
+                alpha: alpha
+            )
             if stylization >= 1 {
                 return (paintedRed, paintedGreen, paintedBlue, alpha)
             }

@@ -491,6 +491,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var filterOilPaintRadius: Double = 4
     @Published var filterOilPaintTonalLevels: Double = 13
     @Published var filterOilPaintStylization: Double = 10
+    @Published var filterOilPaintCleanliness: Double = 0
     @Published var filterUnsharpRadius: Double = 1
     @Published var filterUnsharpThreshold: Double = 0
     @Published var filterLiquifyPushX: Double = 0.25
@@ -2661,12 +2662,14 @@ final class ImageEditorViewModel: ObservableObject {
             let tonalLevels = settings.oilPaintTonalLevels
                 ?? (18 - filter.normalizedIntensity * 10)
             let stylization = settings.oilPaintStylization ?? 10
+            let cleanliness = settings.oilPaintCleanliness ?? 0
             let title = L10n.format(
                 "imageEditor.properties.smartFilterOilPaintItem",
                 filter.kind.title,
                 Int(radius.rounded()),
                 Int(tonalLevels.rounded()),
-                String(format: "%.1f", stylization)
+                String(format: "%.1f", stylization),
+                String(format: "%.1f", cleanliness)
             )
             guard !filter.isEnabled else { return title }
             return L10n.format("imageEditor.properties.smartFilterDisabled", title)
@@ -9549,6 +9552,7 @@ final class ImageEditorViewModel: ObservableObject {
             oilPaintRadius: selectedFilter == .oilPaint ? filterOilPaintRadius : nil,
             oilPaintTonalLevels: selectedFilter == .oilPaint ? filterOilPaintTonalLevels : nil,
             oilPaintStylization: selectedFilter == .oilPaint ? filterOilPaintStylization : nil,
+            oilPaintCleanliness: selectedFilter == .oilPaint ? filterOilPaintCleanliness : nil,
             unsharpRadius: filterUnsharpRadius,
             unsharpThreshold: filterUnsharpThreshold,
             liquifyPushX: filterLiquifyPushX,
@@ -11406,6 +11410,7 @@ final class ImageEditorViewModel: ObservableObject {
         filterOilPaintTonalLevels = normalized.oilPaintTonalLevels
             ?? max(6, min(18, (18 - filterIntensity * 10).rounded()))
         filterOilPaintStylization = normalized.oilPaintStylization ?? 10
+        filterOilPaintCleanliness = normalized.oilPaintCleanliness ?? 0
         filterUnsharpRadius = normalized.unsharpRadius
         filterUnsharpThreshold = normalized.unsharpThreshold
         filterLiquifyPushX = normalized.liquifyPushX

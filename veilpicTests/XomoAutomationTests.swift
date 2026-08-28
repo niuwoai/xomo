@@ -5841,7 +5841,7 @@ struct XomoAutomationTests {
         #expect(viewModel.document.selectedLayer?.smartFilters.count == 1)
     }
 
-    @Test func registryConfiguresOilPaintRadiusTonalLevelsAndStylizationThroughTheSharedFilterPipeline() throws {
+    @Test func registryConfiguresOilPaintRadiusTonalLevelsStylizationAndCleanlinessThroughTheSharedFilterPipeline() throws {
         let viewModel = makeViewModel()
         let registry = XomoAutomationRegistry.shared
         registry.register(viewModel)
@@ -5857,7 +5857,8 @@ struct XomoAutomationTests {
                     "intensity": .number(0.75),
                     "oilPaintRadius": .number(8),
                     "oilPaintTonalLevels": .number(11),
-                    "oilPaintStylization": .number(7.5)
+                    "oilPaintStylization": .number(7.5),
+                    "oilPaintCleanliness": .number(6.5)
                 ])
             ]
         ))
@@ -5868,6 +5869,7 @@ struct XomoAutomationTests {
         #expect(filter.normalizedSettings.oilPaintRadius == 8)
         #expect(filter.normalizedSettings.oilPaintTonalLevels == 11)
         #expect(filter.normalizedSettings.oilPaintStylization == 7.5)
+        #expect(filter.normalizedSettings.oilPaintCleanliness == 6.5)
 
         let tools = registry.execute(request(operation: "tools"))
         let configureTool = try #require(
@@ -5880,6 +5882,7 @@ struct XomoAutomationTests {
         #expect(settingsProperties["oilPaintRadius"]?.objectValue?["type"] == .string("number"))
         #expect(settingsProperties["oilPaintTonalLevels"]?.objectValue?["type"] == .string("number"))
         #expect(settingsProperties["oilPaintStylization"]?.objectValue?["type"] == .string("number"))
+        #expect(settingsProperties["oilPaintCleanliness"]?.objectValue?["type"] == .string("number"))
 
         let historyCount = viewModel.document.history.count
         let invalidResponse = registry.execute(request(
@@ -5889,7 +5892,7 @@ struct XomoAutomationTests {
                 "filter": .string(ImageEditorFilter.oilPaint.rawValue),
                 "action": .string("addSmartFilter"),
                 "settings": .object([
-                    "oilPaintStylization": .string("strong")
+                    "oilPaintCleanliness": .string("polished")
                 ])
             ]
         ))

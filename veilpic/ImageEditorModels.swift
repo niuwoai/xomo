@@ -2552,6 +2552,8 @@ struct ImageEditorFilterSettings: Equatable, Codable {
     var oilPaintTonalLevels: Double?
     /// Oil Paint stylization from 0 to 10. Nil preserves the legacy fully stylized result.
     var oilPaintStylization: Double?
+    /// Oil Paint cleanliness from 0 to 10. Nil preserves the legacy dominant-bucket result.
+    var oilPaintCleanliness: Double?
     var unsharpRadius: Double = 1
     var unsharpThreshold: Double = 0
     var liquifyPushX: Double = 0.25
@@ -2584,6 +2586,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         oilPaintRadius: Double? = nil,
         oilPaintTonalLevels: Double? = nil,
         oilPaintStylization: Double? = nil,
+        oilPaintCleanliness: Double? = nil,
         unsharpRadius: Double = 1,
         unsharpThreshold: Double = 0,
         liquifyPushX: Double = 0.25,
@@ -2615,6 +2618,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         self.oilPaintRadius = oilPaintRadius
         self.oilPaintTonalLevels = oilPaintTonalLevels
         self.oilPaintStylization = oilPaintStylization
+        self.oilPaintCleanliness = oilPaintCleanliness
         self.unsharpRadius = unsharpRadius
         self.unsharpThreshold = unsharpThreshold
         self.liquifyPushX = liquifyPushX
@@ -2652,6 +2656,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         oilPaintRadius = try container.decodeIfPresent(Double.self, forKey: .oilPaintRadius)
         oilPaintTonalLevels = try container.decodeIfPresent(Double.self, forKey: .oilPaintTonalLevels)
         oilPaintStylization = try container.decodeIfPresent(Double.self, forKey: .oilPaintStylization)
+        oilPaintCleanliness = try container.decodeIfPresent(Double.self, forKey: .oilPaintCleanliness)
         unsharpRadius = try container.decodeIfPresent(Double.self, forKey: .unsharpRadius) ?? 1
         unsharpThreshold = try container.decodeIfPresent(Double.self, forKey: .unsharpThreshold) ?? 0
         liquifyPushX = try container.decodeIfPresent(Double.self, forKey: .liquifyPushX) ?? 0.25
@@ -2689,6 +2694,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         try container.encodeIfPresent(oilPaintRadius, forKey: .oilPaintRadius)
         try container.encodeIfPresent(oilPaintTonalLevels, forKey: .oilPaintTonalLevels)
         try container.encodeIfPresent(oilPaintStylization, forKey: .oilPaintStylization)
+        try container.encodeIfPresent(oilPaintCleanliness, forKey: .oilPaintCleanliness)
         try container.encode(unsharpRadius, forKey: .unsharpRadius)
         try container.encode(unsharpThreshold, forKey: .unsharpThreshold)
         try container.encode(liquifyPushX, forKey: .liquifyPushX)
@@ -2723,6 +2729,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
             oilPaintRadius: oilPaintRadius.map { max(1, min(10, $0)) },
             oilPaintTonalLevels: oilPaintTonalLevels.map { max(6, min(18, $0)) },
             oilPaintStylization: oilPaintStylization.map { max(0, min(10, $0)) },
+            oilPaintCleanliness: oilPaintCleanliness.map { max(0, min(10, $0)) },
             unsharpRadius: max(0.5, min(5, unsharpRadius)),
             unsharpThreshold: max(0, min(1, unsharpThreshold)),
             liquifyPushX: max(-1, min(1, liquifyPushX)),
@@ -2757,6 +2764,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         case oilPaintRadius
         case oilPaintTonalLevels
         case oilPaintStylization
+        case oilPaintCleanliness
         case unsharpRadius
         case unsharpThreshold
         case liquifyPushX

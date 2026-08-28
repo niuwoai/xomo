@@ -11981,6 +11981,20 @@ struct ImageEditorView: View {
                             .frame(width: 48, alignment: .trailing)
                     }
                     .accessibilityIdentifier("image-editor-filter-oil-paint-stylization")
+                    HStack {
+                        Text(L10n.text("imageEditor.filter.oilPaintCleanliness"))
+                            .font(.system(size: 10, weight: .medium))
+                            .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                        Slider(value: $viewModel.filterOilPaintCleanliness, in: 0...10, step: 0.1)
+                        Text(L10n.format(
+                            "imageEditor.filter.oilPaintCleanlinessValue",
+                            String(format: "%.1f", viewModel.filterOilPaintCleanliness)
+                        ))
+                            .font(.system(size: 10, weight: .semibold))
+                            .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
+                            .frame(width: 48, alignment: .trailing)
+                    }
+                    .accessibilityIdentifier("image-editor-filter-oil-paint-cleanliness")
                 }
                 if viewModel.selectedFilter == .motionBlur {
                     HStack {
