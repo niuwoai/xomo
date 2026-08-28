@@ -470,6 +470,7 @@ final class ImageEditorViewModel: ObservableObject {
         didSet {
             if oldValue != selectedFilter {
                 filterGaussianBlurRadius = nil
+                filterSharpenAmountPercent = nil
                 filterUnsharpAmountPercent = nil
                 filterUnsharpRadiusPixels = nil
                 filterUnsharpThresholdLevels = nil
@@ -481,6 +482,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published private(set) var loadedSmartFilterID: UUID?
     @Published var filterIntensity: Double = 0.5
     @Published var filterGaussianBlurRadius: Double?
+    @Published var filterSharpenAmountPercent: Double?
     @Published var filterHighPassRadius: Double = 6
     @Published var filterMorphologyRadius: Double = 3
     @Published var filterPixelateCellSize: Double = 18
@@ -510,6 +512,16 @@ final class ImageEditorViewModel: ObservableObject {
         }
         set {
             filterGaussianBlurRadius = max(0, min(256, newValue))
+        }
+    }
+
+    var filterSharpenEffectiveAmountPercent: Double {
+        get {
+            filterSharpenAmountPercent
+                ?? max(0, min(200, filterIntensity * 150))
+        }
+        set {
+            filterSharpenAmountPercent = max(0, min(200, newValue))
         }
     }
 
@@ -2608,6 +2620,17 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     func smartFilterLabel(_ filter: ImageEditorSmartFilter) -> String {
+        if filter.kind == .sharpen {
+            let amountPercent = filter.normalizedSettings.sharpenAmountPercent
+                ?? (filter.normalizedIntensity * 150)
+            let title = L10n.format(
+                "imageEditor.properties.smartFilterItem",
+                filter.kind.title,
+                Int(amountPercent.rounded())
+            )
+            guard !filter.isEnabled else { return title }
+            return L10n.format("imageEditor.properties.smartFilterDisabled", title)
+        }
         if filter.kind == .gaussianBlur,
            let radius = filter.normalizedSettings.gaussianBlurRadius {
             let title = L10n.format(
@@ -9602,6 +9625,7 @@ final class ImageEditorViewModel: ObservableObject {
     private func currentFilterSettings() -> ImageEditorFilterSettings {
         ImageEditorFilterSettings(
             gaussianBlurRadius: selectedFilter == .gaussianBlur ? filterGaussianBlurRadius : nil,
+            sharpenAmountPercent: selectedFilter == .sharpen ? filterSharpenAmountPercent : nil,
             highPassRadius: selectedFilter == .highPass ? filterHighPassRadius : nil,
             morphologyRadius: selectedFilter == .minimum || selectedFilter == .maximum
                 ? filterMorphologyRadius
@@ -11463,6 +11487,7 @@ final class ImageEditorViewModel: ObservableObject {
     private func syncFilterSettings(_ settings: ImageEditorFilterSettings) {
         let normalized = settings.normalized()
         filterGaussianBlurRadius = normalized.gaussianBlurRadius
+        filterSharpenAmountPercent = normalized.sharpenAmountPercent
         filterHighPassRadius = normalized.highPassRadius
             ?? max(1, min(256, (1 + filterIntensity * 9).rounded()))
         filterMorphologyRadius = normalized.morphologyRadius

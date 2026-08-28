@@ -24,7 +24,13 @@ extension NSImage {
         settings: ImageEditorFilterSettings = ImageEditorFilterSettings()
     ) -> NSImage? {
         let clamped = max(0, min(1, intensity))
-        guard clamped > 0 else { return self }
+        let normalizedSettings = settings.normalized()
+        if kind == .sharpen, normalizedSettings.sharpenAmountPercent == 0 {
+            return self
+        }
+        let hasExplicitSharpenAmount = kind == .sharpen
+            && normalizedSettings.sharpenAmountPercent.map { $0 > 0 } == true
+        guard clamped > 0 || hasExplicitSharpenAmount else { return self }
         if kind == .addNoise {
             return addingDeterministicNoise(intensity: clamped, settings: settings)
         }
@@ -96,7 +102,7 @@ extension NSImage {
         case .sharpen:
             let filter = CIFilter.sharpenLuminance()
             filter.inputImage = ciImage
-            filter.sharpness = Float(clamped * 1.5)
+            filter.sharpness = Float((normalizedSettings.sharpenAmountPercent ?? (clamped * 150)) / 100)
             output = filter.outputImage
         case .pixelate:
             let filter = CIFilter.pixellate()
@@ -165,7 +171,13 @@ extension NSImage {
         opacity: Double = 1,
         blendMode: ImageEditorBlendMode = .normal
     ) -> NSImage? {
-        guard intensity > 0 else { return self }
+        let normalizedSettings = settings.normalized()
+        if kind == .sharpen, normalizedSettings.sharpenAmountPercent == 0 {
+            return self
+        }
+        let hasExplicitSharpenAmount = kind == .sharpen
+            && normalizedSettings.sharpenAmountPercent.map { $0 > 0 } == true
+        guard intensity > 0 || hasExplicitSharpenAmount else { return self }
         let normalizedOpacity = max(0, min(1, opacity))
         guard normalizedOpacity > 0 else { return self }
         guard let filtered = filtered(kind: kind, intensity: intensity, settings: settings) else { return nil }

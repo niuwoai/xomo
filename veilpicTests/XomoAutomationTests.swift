@@ -5637,6 +5637,58 @@ struct XomoAutomationTests {
         #expect(settingsProperties["highPassRadius"]?.objectValue?["type"] == .string("number"))
     }
 
+    @Test func registryConfiguresSharpenAmountThroughTheSharedFilterPipeline() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        defer { registry.unregister(viewModel) }
+
+        let response = registry.execute(request(
+            operation: "call",
+            name: "xomo.filter.configure",
+            arguments: [
+                "filter": .string(ImageEditorFilter.sharpen.rawValue),
+                "action": .string("addSmartFilter"),
+                "settings": .object([
+                    "intensity": .number(0),
+                    "sharpenAmountPercent": .number(500)
+                ])
+            ]
+        ))
+
+        #expect(response.ok)
+        let filter = try #require(viewModel.document.selectedLayer?.smartFilters.last)
+        #expect(filter.kind == .sharpen)
+        #expect(filter.normalizedIntensity == 0)
+        #expect(filter.normalizedSettings.sharpenAmountPercent == 200)
+
+        let tools = registry.execute(request(operation: "tools"))
+        let configureTool = try #require(
+            automationTool(named: "xomo.filter.configure", in: tools)
+        )
+        let settingsSchema = try #require(
+            configureTool["inputSchema"]?.objectValue?["properties"]?.objectValue?["settings"]?.objectValue
+        )
+        let settingsProperties = try #require(settingsSchema["properties"]?.objectValue)
+        #expect(settingsProperties["sharpenAmountPercent"]?.objectValue?["type"] == .string("number"))
+
+        let historyCount = viewModel.document.history.count
+        let invalidResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.filter.configure",
+            arguments: [
+                "filter": .string(ImageEditorFilter.sharpen.rawValue),
+                "action": .string("addSmartFilter"),
+                "settings": .object([
+                    "sharpenAmountPercent": .string("strong")
+                ])
+            ]
+        ))
+        #expect(!invalidResponse.ok)
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.document.selectedLayer?.smartFilters.count == 1)
+    }
+
     @Test func registryConfiguresUnsharpAmountThroughTheSharedFilterPipeline() throws {
         let viewModel = makeViewModel()
         let registry = XomoAutomationRegistry.shared

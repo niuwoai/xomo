@@ -1516,6 +1516,94 @@ struct ImageEditorFilterTests {
         #expect(abs(blurredColor.redComponent - blurredColor.blueComponent) < 0.02)
     }
 
+    @Test func imageEditorSharpenAmountIsExplicitAndBackwardCompatible() async throws {
+        let canvasSize = NSSize(width: 48, height: 48)
+        let sourceImage = softEdgeImage(size: canvasSize)
+        let legacySettings = try JSONDecoder().decode(
+            ImageEditorFilterSettings.self,
+            from: Data("{}".utf8)
+        )
+        #expect(legacySettings.sharpenAmountPercent == nil)
+
+        let legacy = try #require(sourceImage.filtered(
+            kind: .sharpen,
+            intensity: 0.5,
+            settings: legacySettings
+        ))
+        let explicitLegacyAmount = try #require(sourceImage.filtered(
+            kind: .sharpen,
+            intensity: 0,
+            settings: ImageEditorFilterSettings(sharpenAmountPercent: 75)
+        ))
+        let maximumAmount = try #require(sourceImage.filtered(
+            kind: .sharpen,
+            intensity: 0,
+            settings: ImageEditorFilterSettings(sharpenAmountPercent: 400)
+        ))
+        let zeroAmount = try #require(sourceImage.filtered(
+            kind: .sharpen,
+            intensity: 1,
+            settings: ImageEditorFilterSettings(sharpenAmountPercent: 0)
+        ))
+        #expect(legacy.qingtuPNGData() == explicitLegacyAmount.qingtuPNGData())
+        #expect(maximumAmount.qingtuPNGData() != explicitLegacyAmount.qingtuPNGData())
+        #expect(zeroAmount.qingtuPNGData() == sourceImage.qingtuPNGData())
+        #expect(ImageEditorFilterSettings(sharpenAmountPercent: -20).normalized().sharpenAmountPercent == 0)
+        #expect(ImageEditorFilterSettings(sharpenAmountPercent: 400).normalized().sharpenAmountPercent == 200)
+
+        let filterViewModel = ImageEditorViewModel(sourceName: "source.png", image: sourceImage) { _ in }
+        let baseLayerID = try #require(filterViewModel.document.selectedLayerID)
+        let basePixels = try #require(filterViewModel.document.selectedLayer?.image.qingtuPNGData())
+        filterViewModel.selectedFilter = .sharpen
+        filterViewModel.filterIntensity = 0
+        filterViewModel.filterSharpenAmountPercent = 180
+        filterViewModel.addFilterLayer()
+
+        let filterLayer = try #require(filterViewModel.document.selectedLayer)
+        #expect(filterLayer.filter?.kind == .sharpen)
+        #expect(filterLayer.filterSettings.normalized().sharpenAmountPercent == 180)
+        #expect(filterViewModel.document.layers.first { $0.id == baseLayerID }?.image.qingtuPNGData() == basePixels)
+        #expect(filterViewModel.currentImage.qingtuPNGData() != sourceImage.qingtuPNGData())
+
+        let smartViewModel = ImageEditorViewModel(sourceName: "source.png", image: sourceImage) { _ in }
+        smartViewModel.replaceSelectedLayerImageForTesting(
+            sourceImage,
+            historyTitle: L10n.text("imageEditor.history.brush")
+        )
+        let smartBasePixels = try #require(smartViewModel.document.selectedLayer?.image.qingtuPNGData())
+        smartViewModel.selectedFilter = .sharpen
+        smartViewModel.filterIntensity = 0
+        smartViewModel.filterSharpenAmountPercent = 180
+        #expect(smartViewModel.addSmartFilterToSelectedLayer() == 1)
+
+        let smartLayer = try #require(smartViewModel.document.selectedLayer)
+        let smartFilter = try #require(smartLayer.smartFilters.first)
+        #expect(smartFilter.kind == .sharpen)
+        #expect(smartFilter.normalizedSettings.sharpenAmountPercent == 180)
+        #expect(smartLayer.image.qingtuPNGData() == smartBasePixels)
+        #expect(smartLayer.contentImage.qingtuPNGData() != sourceImage.qingtuPNGData())
+        #expect(smartViewModel.currentImage.qingtuPNGData() != sourceImage.qingtuPNGData())
+        #expect(smartViewModel.smartFilterLabel(smartFilter) == L10n.format(
+            "imageEditor.properties.smartFilterItem",
+            ImageEditorFilter.sharpen.title,
+            180
+        ))
+
+        let project = try ImageEditorProjectDocument(document: smartViewModel.document)
+        let restored = try project.restoredDocument()
+        #expect(restored.selectedLayer?.smartFilters.first?.normalizedSettings.sharpenAmountPercent == 180)
+
+        let root = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let viewSource = try String(
+            contentsOf: root.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        #expect(viewSource.contains("image-editor-filter-sharpen-amount"))
+        #expect(viewSource.contains("viewModel.selectedFilter != .sharpen"))
+    }
+
     @Test func imageEditorUnsharpMaskFilterLayerAndSmartFilterAreNonDestructive() async throws {
         let canvasSize = NSSize(width: 48, height: 48)
         let sourceImage = softEdgeImage(size: canvasSize)

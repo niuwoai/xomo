@@ -6247,6 +6247,7 @@ final class XomoAutomationRegistry {
             switch key {
             case "intensity": viewModel.filterIntensity = try numericSetting(value, key: key)
             case "gaussianBlurRadius": viewModel.filterGaussianBlurRadius = try numericSetting(value, key: key)
+            case "sharpenAmountPercent": viewModel.filterSharpenAmountPercent = try numericSetting(value, key: key)
             case "highPassRadius": viewModel.filterHighPassRadius = try numericSetting(value, key: key)
             case "morphologyRadius": viewModel.filterMorphologyRadius = try numericSetting(value, key: key)
             case "pixelateCellSize": viewModel.filterPixelateCellSize = try numericSetting(value, key: key)
@@ -7990,6 +7991,7 @@ private extension XomoAutomationRegistry {
     static let filterSettingsSchema = XomoAutomationSchema.object(properties: [
         "intensity": XomoAutomationSchema.number(description: "Filter intensity"),
         "gaussianBlurRadius": XomoAutomationSchema.number(description: "Gaussian Blur radius in pixels"),
+        "sharpenAmountPercent": XomoAutomationSchema.number(description: "Sharpen amount from 0 to 200 percent"),
         "highPassRadius": XomoAutomationSchema.number(description: "High Pass radius in pixels"),
         "morphologyRadius": XomoAutomationSchema.number(description: "Minimum or Maximum radius in pixels"),
         "pixelateCellSize": XomoAutomationSchema.number(description: "Pixelate or Mosaic cell size in pixels"),

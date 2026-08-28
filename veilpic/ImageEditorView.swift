@@ -11878,6 +11878,7 @@ struct ImageEditorView: View {
                     }
                 }
                 if viewModel.selectedFilter != .gaussianBlur
+                    && viewModel.selectedFilter != .sharpen
                     && viewModel.selectedFilter != .minimum
                     && viewModel.selectedFilter != .maximum
                     && viewModel.selectedFilter != .pixelate
@@ -11909,6 +11910,29 @@ struct ImageEditorView: View {
                             .frame(width: 60, alignment: .trailing)
                     }
                     .accessibilityIdentifier("image-editor-filter-gaussian-blur-radius")
+                }
+                if viewModel.selectedFilter == .sharpen {
+                    HStack {
+                        Text(L10n.text("imageEditor.filter.unsharpAmount"))
+                            .font(.system(size: 10, weight: .medium))
+                            .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                        Slider(
+                            value: Binding(
+                                get: { viewModel.filterSharpenEffectiveAmountPercent },
+                                set: { viewModel.filterSharpenEffectiveAmountPercent = $0 }
+                            ),
+                            in: 0...200,
+                            step: 1
+                        )
+                        Text(L10n.format(
+                            "imageEditor.filter.unsharpAmountValue",
+                            Int(viewModel.filterSharpenEffectiveAmountPercent.rounded())
+                        ))
+                            .font(.system(size: 10, weight: .semibold))
+                            .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
+                            .frame(width: 54, alignment: .trailing)
+                    }
+                    .accessibilityIdentifier("image-editor-filter-sharpen-amount")
                 }
                 if viewModel.selectedFilter == .pixelate {
                     HStack {

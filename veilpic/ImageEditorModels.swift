@@ -2526,6 +2526,8 @@ struct ImageEditorFilterSettings: Equatable, Codable {
     /// When present, Gaussian blur uses this pixel radius instead of the UI's normalized intensity.
     /// Figma layer-blur imports use this to retain the source radius across project round-trips.
     var gaussianBlurRadius: Double?
+    /// Explicit Sharpen amount from 0% to 200%. Nil preserves the legacy intensity-derived amount.
+    var sharpenAmountPercent: Double?
     /// Explicit High Pass radius in pixels. Nil preserves the legacy intensity-derived radius.
     var highPassRadius: Double?
     /// Explicit Minimum/Maximum radius in pixels. Nil preserves the legacy intensity-derived radius.
@@ -2587,6 +2589,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
 
     init(
         gaussianBlurRadius: Double? = nil,
+        sharpenAmountPercent: Double? = nil,
         highPassRadius: Double? = nil,
         morphologyRadius: Double? = nil,
         pixelateCellSize: Double? = nil,
@@ -2626,6 +2629,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         lensDistortion: Double = 0.35
     ) {
         self.gaussianBlurRadius = gaussianBlurRadius
+        self.sharpenAmountPercent = sharpenAmountPercent
         self.highPassRadius = highPassRadius
         self.morphologyRadius = morphologyRadius
         self.pixelateCellSize = pixelateCellSize
@@ -2668,6 +2672,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         gaussianBlurRadius = try container.decodeIfPresent(Double.self, forKey: .gaussianBlurRadius)
+        sharpenAmountPercent = try container.decodeIfPresent(Double.self, forKey: .sharpenAmountPercent)
         highPassRadius = try container.decodeIfPresent(Double.self, forKey: .highPassRadius)
         morphologyRadius = try container.decodeIfPresent(Double.self, forKey: .morphologyRadius)
         pixelateCellSize = try container.decodeIfPresent(Double.self, forKey: .pixelateCellSize)
@@ -2716,6 +2721,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encodeIfPresent(gaussianBlurRadius, forKey: .gaussianBlurRadius)
+        try container.encodeIfPresent(sharpenAmountPercent, forKey: .sharpenAmountPercent)
         try container.encodeIfPresent(highPassRadius, forKey: .highPassRadius)
         try container.encodeIfPresent(morphologyRadius, forKey: .morphologyRadius)
         try container.encodeIfPresent(pixelateCellSize, forKey: .pixelateCellSize)
@@ -2758,6 +2764,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
     func normalized() -> ImageEditorFilterSettings {
         ImageEditorFilterSettings(
             gaussianBlurRadius: gaussianBlurRadius.map { max(0, min(256, $0)) },
+            sharpenAmountPercent: sharpenAmountPercent.map { max(0, min(200, $0)) },
             highPassRadius: highPassRadius.map { max(1, min(256, $0)) },
             morphologyRadius: morphologyRadius.map { max(1, min(256, $0)) },
             pixelateCellSize: pixelateCellSize.map { max(2, min(200, $0)) },
@@ -2800,6 +2807,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
 
     private enum CodingKeys: String, CodingKey {
         case gaussianBlurRadius
+        case sharpenAmountPercent
         case highPassRadius
         case morphologyRadius
         case pixelateCellSize
