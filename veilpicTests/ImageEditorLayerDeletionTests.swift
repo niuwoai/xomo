@@ -129,19 +129,32 @@ struct ImageEditorLayerDeletionTests {
         #expect(remainingB.linkedLayerIDs == [survivorA.id])
     }
 
-    @Test func deletionCannotRemoveTheLastRemainingLayer() {
+    @Test func deletingTheLastImportedImageLeavesASelectedTransparentLayerAndCanUndo() throws {
         let viewModel = makeViewModel()
-        let onlyLayer = layer("Only", in: viewModel)
-        viewModel.document.layers = [onlyLayer]
-        select([onlyLayer.id], primary: onlyLayer.id, in: viewModel)
+        var importedLayer = layer("Imported poster", in: viewModel)
+        importedLayer.image = NSImage.rendered(size: viewModel.document.canvasSize) { rect in
+            NSColor.systemPink.setFill()
+            rect.fill()
+        } ?? importedLayer.image
+        viewModel.document.layers = [importedLayer]
+        select([importedLayer.id], primary: importedLayer.id, in: viewModel)
         let historyCount = viewModel.document.history.count
 
-        #expect(!viewModel.canDeleteLayer)
-        viewModel.deleteSelectedLayer()
+        #expect(viewModel.canDeleteLayer)
+        #expect(viewModel.deleteSelectedLayerFromKeyboardIfPossible())
 
-        #expect(viewModel.document.layers.map(\.id) == [onlyLayer.id])
-        #expect(viewModel.document.selectedLayerIDs == [onlyLayer.id])
-        #expect(viewModel.document.history.count == historyCount)
+        let replacement = try #require(viewModel.document.selectedLayer)
+        #expect(viewModel.document.layers.count == 1)
+        #expect(replacement.id != importedLayer.id)
+        #expect(replacement.image.nonTransparentPixelBounds() == nil)
+        #expect(viewModel.document.selectedLayerIDs == [replacement.id])
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerDelete"))
+
+        viewModel.undo()
+        #expect(viewModel.document.layers.map(\.id) == [importedLayer.id])
+        #expect(viewModel.document.selectedLayerID == importedLayer.id)
+        #expect(viewModel.document.selectedLayer?.image.nonTransparentPixelBounds() != nil)
     }
 
     @Test func deleteKeyRemovesTheSelectedImportedImageLayerInOneUndoStep() throws {
@@ -193,6 +206,7 @@ struct ImageEditorLayerDeletionTests {
                 continue
             }
             #expect(viewModel.deleteSelectedLayerFromKeyboardIfPossible())
+            ImageEditorDeleteCommandDispatchGate.recordDispatch(event: event)
         }
 
         #expect(viewModel.document.layers.count == originalLayerCount - 1)
@@ -222,10 +236,31 @@ struct ImageEditorLayerDeletionTests {
         )
 
         #expect(ImageEditorDeleteCommandDispatchGate.shouldDispatch(event: first))
+        ImageEditorDeleteCommandDispatchGate.recordDispatch(event: first)
         #expect(!ImageEditorDeleteCommandDispatchGate.shouldDispatch(event: first))
         #expect(ImageEditorDeleteCommandDispatchGate.shouldDispatch(event: second))
+        ImageEditorDeleteCommandDispatchGate.recordDispatch(event: second)
         #expect(ImageEditorDeleteCommandDispatchGate.shouldDispatch(event: nil))
         #expect(ImageEditorDeleteCommandDispatchGate.shouldDispatch(event: nil))
+    }
+
+    @Test func unhandledCoordinatorLeavesTheDeleteEventAvailableForTheNextMountedHost() {
+        ImageEditorDeleteCommandDispatchGate.reset()
+        defer { ImageEditorDeleteCommandDispatchGate.reset() }
+        let event = ImageEditorKeyboardShortcutEventSignature(
+            windowNumber: 63,
+            eventNumber: 1044,
+            timestamp: 104.4,
+            typeRawValue: NSEvent.EventType.keyDown.rawValue,
+            keyCode: 51
+        )
+
+        #expect(ImageEditorDeleteCommandDispatchGate.shouldDispatch(event: event))
+        // The first mounted host reports no contextual deletion and therefore
+        // must not consume the event before a current host can handle it.
+        #expect(ImageEditorDeleteCommandDispatchGate.shouldDispatch(event: event))
+        ImageEditorDeleteCommandDispatchGate.recordDispatch(event: event)
+        #expect(!ImageEditorDeleteCommandDispatchGate.shouldDispatch(event: event))
     }
 
     @Test func importedImageEndsOldPixelSelectionSoDeleteOwnsTheNewObject() throws {
@@ -301,13 +336,13 @@ struct ImageEditorLayerDeletionTests {
         #expect(!viewModel.document.layers.contains { $0.id == importedID })
     }
 
-    @Test func deliveryObjectsKeepGlobalDeleteAvailableWhenTheLastLayerCannotBeRemoved() {
+    @Test func deliveryObjectsKeepDeletePriorityWhenTheLastLayerCanBecomeBlank() {
         let viewModel = makeViewModel()
         let onlyLayer = layer("Only", in: viewModel)
         viewModel.document.layers = [onlyLayer]
         select([onlyLayer.id], primary: onlyLayer.id, in: viewModel)
         let historyCount = viewModel.document.history.count
-        #expect(!viewModel.canDeleteLayer)
+        #expect(viewModel.canDeleteLayer)
 
         let slice = ImageEditorSlice(
             name: "Hero slice",
@@ -421,7 +456,7 @@ struct ImageEditorLayerDeletionTests {
         #expect(viewModel.document.selectedLayerIDs == [third.id])
     }
 
-    @Test func layerRowContextDeleteHonorsLocksLastLayerAndUnknownRows() {
+    @Test func layerRowContextDeleteHonorsLocksAndUnknownRowsAndAllowsBlankFallback() {
         let viewModel = makeViewModel()
         let editable = layer("Editable", in: viewModel)
         var locked = layer("Locked", in: viewModel)
@@ -445,7 +480,7 @@ struct ImageEditorLayerDeletionTests {
 
         viewModel.document.layers = [editable]
         select([editable.id], primary: editable.id, in: viewModel)
-        #expect(!viewModel.canDeleteLayersFromContext(editable.id))
+        #expect(viewModel.canDeleteLayersFromContext(editable.id))
         #expect(viewModel.canDuplicateLayersFromContext(editable.id))
         #expect(viewModel.canCopyLayersFromContext(editable.id))
         #expect(!viewModel.canCutLayersFromContext(editable.id))

@@ -613,7 +613,7 @@ struct ImageEditorVectorLayerTests {
         viewModel.document.selectedLayerIDs = [onlyLayer.id]
         viewModel.selectTool(.pen)
 
-        #expect(!viewModel.canDeleteLayer)
+        #expect(viewModel.canDeleteLayer)
         #expect(!viewModel.canDeletePendingPenPoint)
         #expect(!ImageEditorEditMenuDeleteAvailabilityPolicy.resolve(
             pendingPenOwnership: .absent,
@@ -2058,7 +2058,7 @@ struct ImageEditorVectorLayerTests {
         viewModel.document.selectedLayerIDs = [pathLayer.id]
         #expect(pathContent.isPathClosed)
         #expect(pathContent.editablePathAnchors.count == 3)
-        #expect(!viewModel.canDeleteLayer)
+        #expect(viewModel.canDeleteLayer)
         #expect(viewModel.canDeleteSelectedPathAnchor)
         #expect(ImageEditorEditMenuDeleteAvailabilityPolicy.resolve(
             pendingPenOwnership: .absent,

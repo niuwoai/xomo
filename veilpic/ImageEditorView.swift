@@ -3201,11 +3201,17 @@ struct ImageEditorView: View {
             // consumed so it cannot fall through to history or text deletion.
             return true
         }
+        func finishDispatch(_ didHandle: Bool) -> Bool {
+            if didHandle {
+                ImageEditorDeleteCommandDispatchGate.recordDispatch(event: event)
+            }
+            return didHandle
+        }
         if cancelPathAnchorDragForKeyboardCommand() {
-            return true
+            return finishDispatch(true)
         }
         if cancelGradientOverlayCanvasHandleDragForLifecycle() {
-            return true
+            return finishDispatch(true)
         }
         if ImageEditorPendingPenPointerPolicy.ownsUncommittedPoint(
             tool: canvasInteractionTool,
@@ -3213,31 +3219,31 @@ struct ImageEditorView: View {
             isMovingPathAnchor: isMovingPathAnchor
         ) {
             isPathAnchorDragCancelled = true
-            return true
+            return finishDispatch(true)
         }
         if viewModel.deletePendingPenPointIfNeeded() {
-            return true
+            return finishDispatch(true)
         }
         guard !viewModel.hasActiveLayerMoveTransaction else { return false }
         if deleteSelectedGradientOverlayStopIfNeeded() {
-            return true
+            return finishDispatch(true)
         }
         if resetSelectedGradientOverlayMidpointIfNeeded() {
-            return true
+            return finishDispatch(true)
         }
         if deleteSelectedShapeGradientStopIfNeeded() {
-            return true
+            return finishDispatch(true)
         }
         if viewModel.selectedTool == .pen || viewModel.selectedTool == .directSelection,
            viewModel.canDeleteSelectedPathAnchor {
             viewModel.deleteSelectedPathAnchor()
-            return true
+            return finishDispatch(true)
         }
         if viewModel.deleteSelectedDeliveryObjectIfNeeded() {
-            return true
+            return finishDispatch(true)
         }
         if viewModel.deleteSelectedXomoObjectIfNeeded() {
-            return true
+            return finishDispatch(true)
         }
 
         switch ImageEditorContextualDocumentDeletePolicy.resolve(
@@ -3247,9 +3253,9 @@ struct ImageEditorView: View {
         ) {
         case .clearSelectionPixels:
             viewModel.clearSelectionPixels()
-            return true
+            return finishDispatch(true)
         case .deleteSelectedLayer:
-            return viewModel.deleteSelectedLayerFromKeyboardIfPossible()
+            return finishDispatch(viewModel.deleteSelectedLayerFromKeyboardIfPossible())
         case .none:
             return false
         }
@@ -17111,19 +17117,22 @@ extension ImageEditorView {
 
 @MainActor
 enum ImageEditorDeleteCommandDispatchGate {
-    private static var lastDispatch: ImageEditorKeyboardShortcutEventSignature?
+    private static var lastHandledDispatch: ImageEditorKeyboardShortcutEventSignature?
 
     static func shouldDispatch(
         event: ImageEditorKeyboardShortcutEventSignature?
     ) -> Bool {
         guard let event else { return true }
-        guard event != lastDispatch else { return false }
-        lastDispatch = event
-        return true
+        return event != lastHandledDispatch
+    }
+
+    static func recordDispatch(event: ImageEditorKeyboardShortcutEventSignature?) {
+        guard let event else { return }
+        lastHandledDispatch = event
     }
 
     static func reset() {
-        lastDispatch = nil
+        lastHandledDispatch = nil
     }
 }
 
@@ -17648,7 +17657,7 @@ enum ImageEditorKeyboardShortcutWindowRegistry {
         }
     }
 
-    static func isActive(coordinator: AnyObject, for window: AnyObject) -> Bool {
+    static func isRegistered(coordinator: AnyObject, for window: AnyObject) -> Bool {
         let windowID = ObjectIdentifier(window)
         guard var coordinators = coordinatorsByWindow[windowID] else { return false }
         coordinators.removeAll { $0.value == nil }
@@ -17657,7 +17666,7 @@ enum ImageEditorKeyboardShortcutWindowRegistry {
             return false
         }
         coordinatorsByWindow[windowID] = coordinators
-        return coordinators.last?.value === coordinator
+        return coordinators.contains { $0.value === coordinator }
     }
 
     static func reset() {
@@ -18378,7 +18387,10 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
                     editorWindowNumber: window.windowNumber,
                     keyWindow: NSApp.keyWindow
                   ),
-                  ImageEditorKeyboardShortcutWindowRegistry.isActive(coordinator: self, for: window)
+                  ImageEditorKeyboardShortcutWindowRegistry.isRegistered(
+                      coordinator: self,
+                      for: window
+                  )
             else { return event }
             setCanvasModifierFlags(event.modifierFlags.intersection([.shift, .option, .capsLock]))
             let relevantFlags = event.modifierFlags.intersection([.command, .option, .shift, .control])

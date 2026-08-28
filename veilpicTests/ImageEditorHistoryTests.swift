@@ -1260,7 +1260,7 @@ struct ImageEditorHistoryTests {
     }
 
     @Test
-    func keyboardShortcutWindowRegistryKeepsOneActiveCoordinatorPerWindow() {
+    func keyboardShortcutWindowRegistryTracksEveryMountedCoordinatorPerWindow() {
         ImageEditorKeyboardShortcutWindowRegistry.reset()
         defer { ImageEditorKeyboardShortcutWindowRegistry.reset() }
         let window = NSObject()
@@ -1271,7 +1271,7 @@ struct ImageEditorHistoryTests {
             coordinator: firstCoordinator,
             for: window
         )
-        #expect(ImageEditorKeyboardShortcutWindowRegistry.isActive(
+        #expect(ImageEditorKeyboardShortcutWindowRegistry.isRegistered(
             coordinator: firstCoordinator,
             for: window
         ))
@@ -1280,11 +1280,11 @@ struct ImageEditorHistoryTests {
             coordinator: latestCoordinator,
             for: window
         )
-        #expect(!ImageEditorKeyboardShortcutWindowRegistry.isActive(
+        #expect(ImageEditorKeyboardShortcutWindowRegistry.isRegistered(
             coordinator: firstCoordinator,
             for: window
         ))
-        #expect(ImageEditorKeyboardShortcutWindowRegistry.isActive(
+        #expect(ImageEditorKeyboardShortcutWindowRegistry.isRegistered(
             coordinator: latestCoordinator,
             for: window
         ))
@@ -1293,7 +1293,11 @@ struct ImageEditorHistoryTests {
             coordinator: firstCoordinator,
             from: window
         )
-        #expect(ImageEditorKeyboardShortcutWindowRegistry.isActive(
+        #expect(!ImageEditorKeyboardShortcutWindowRegistry.isRegistered(
+            coordinator: firstCoordinator,
+            for: window
+        ))
+        #expect(ImageEditorKeyboardShortcutWindowRegistry.isRegistered(
             coordinator: latestCoordinator,
             for: window
         ))
@@ -1301,14 +1305,14 @@ struct ImageEditorHistoryTests {
             coordinator: latestCoordinator,
             from: window
         )
-        #expect(!ImageEditorKeyboardShortcutWindowRegistry.isActive(
+        #expect(!ImageEditorKeyboardShortcutWindowRegistry.isRegistered(
             coordinator: latestCoordinator,
             for: window
         ))
     }
 
     @Test
-    func keyboardShortcutWindowRegistryFallsBackWhenReplacementCoordinatorDisappears() {
+    func keyboardShortcutWindowRegistryKeepsEveryMountedCoordinatorEligible() {
         ImageEditorKeyboardShortcutWindowRegistry.reset()
         defer { ImageEditorKeyboardShortcutWindowRegistry.reset() }
         let window = NSObject()
@@ -1323,7 +1327,11 @@ struct ImageEditorHistoryTests {
             coordinator: transientReplacement,
             for: window
         )
-        #expect(ImageEditorKeyboardShortcutWindowRegistry.isActive(
+        #expect(ImageEditorKeyboardShortcutWindowRegistry.isRegistered(
+            coordinator: mountedCoordinator,
+            for: window
+        ))
+        #expect(ImageEditorKeyboardShortcutWindowRegistry.isRegistered(
             coordinator: transientReplacement,
             for: window
         ))
@@ -1333,8 +1341,12 @@ struct ImageEditorHistoryTests {
             from: window
         )
 
-        #expect(ImageEditorKeyboardShortcutWindowRegistry.isActive(
+        #expect(ImageEditorKeyboardShortcutWindowRegistry.isRegistered(
             coordinator: mountedCoordinator,
+            for: window
+        ))
+        #expect(!ImageEditorKeyboardShortcutWindowRegistry.isRegistered(
+            coordinator: transientReplacement,
             for: window
         ))
     }

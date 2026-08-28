@@ -3035,7 +3035,7 @@ final class ImageEditorViewModel: ObservableObject {
             selectedIDs: document.selectedLayerIDs,
             isEffectivelyLocked: { document.isEffectivelyLocked($0) }
         )
-        return !deletionIDs.isEmpty && document.layers.count - deletionIDs.count >= 1
+        return !deletionIDs.isEmpty
     }
 
     func canDeleteLayersFromContext(_ clickedLayerID: UUID) -> Bool {
@@ -3044,7 +3044,7 @@ final class ImageEditorViewModel: ObservableObject {
             selectedIDs: layerContextSelectionIDs(for: clickedLayerID),
             isEffectivelyLocked: { document.isEffectivelyLocked($0) }
         )
-        return !deletionIDs.isEmpty && document.layers.count - deletionIDs.count >= 1
+        return !deletionIDs.isEmpty
     }
 
     func canCopyLayersFromContext(_ clickedLayerID: UUID) -> Bool {
@@ -5995,7 +5995,7 @@ final class ImageEditorViewModel: ObservableObject {
 
     @discardableResult
     func deleteSelectedLayer(historyTitle: String) -> Bool {
-        guard let plan = ImageEditorLayerHierarchyDeletion.deletionPlan(
+        guard var plan = ImageEditorLayerHierarchyDeletion.deletionPlan(
             layers: document.layers,
             selectedIDs: document.selectedLayerIDs,
             primarySelectionID: document.selectedLayerID,
@@ -6004,6 +6004,15 @@ final class ImageEditorViewModel: ObservableObject {
             isEffectivelyVisible: { document.isEffectivelyVisible($0) }
         ) else { return false }
         pushUndo()
+        if plan.layers.isEmpty {
+            let replacement = ImageEditorLayer.blank(
+                name: L10n.format("imageEditor.layer.newName", 1),
+                size: document.canvasSize
+            )
+            plan.layers = [replacement]
+            plan.selectedLayerIDs = [replacement.id]
+            plan.primarySelectionID = replacement.id
+        }
         document.layers = plan.layers
         document.selectedLayerIDs = plan.selectedLayerIDs
         document.selectedLayerID = plan.primarySelectionID

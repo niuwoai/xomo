@@ -43,7 +43,7 @@ enum ImageEditorLayerHierarchyDeletion {
             selectedIDs: selectedIDs,
             isEffectivelyLocked: isEffectivelyLocked
         )
-        guard !deletionIDs.isEmpty, layers.count > deletionIDs.count else { return nil }
+        guard !deletionIDs.isEmpty else { return nil }
 
         let clippingBaseIDs = clippingBaseIDs(
             in: layers,
