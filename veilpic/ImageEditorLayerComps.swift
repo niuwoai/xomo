@@ -83,10 +83,20 @@ enum ImageEditorLayerCompNavigationDirection: Equatable {
 }
 
 enum ImageEditorLayerCompSearch {
+    private enum Field: Equatable {
+        case any
+        case name
+        case comment
+    }
+
     private struct Term: Equatable {
         var value: String
         var isExcluded: Bool
+        var field: Field
     }
+
+    private static let namePrefix = "name:"
+    private static let commentPrefix = "comment:"
 
     static func hasTerms(_ query: String) -> Bool {
         !terms(in: query).isEmpty
@@ -100,8 +110,16 @@ enum ImageEditorLayerCompSearch {
         guard !terms.isEmpty else { return layerComps }
         let options: String.CompareOptions = [.caseInsensitive, .diacriticInsensitive, .widthInsensitive]
         return layerComps.filter { comp in
-            let searchableText = "\(comp.name)\n\(comp.comment)"
             return terms.allSatisfy { term in
+                let searchableText: String
+                switch term.field {
+                case .any:
+                    searchableText = "\(comp.name)\n\(comp.comment)"
+                case .name:
+                    searchableText = comp.name
+                case .comment:
+                    searchableText = comp.comment
+                }
                 let containsTerm = searchableText.range(of: term.value, options: options) != nil
                 return term.isExcluded ? !containsTerm : containsTerm
             }
@@ -206,8 +224,20 @@ enum ImageEditorLayerCompSearch {
                 value.removeFirst()
             }
             value = value.trimmingCharacters(in: .whitespacesAndNewlines)
+            let field: Field
+            let lowercaseValue = value.lowercased()
+            if lowercaseValue.hasPrefix(namePrefix) {
+                value.removeFirst(namePrefix.count)
+                field = .name
+            } else if lowercaseValue.hasPrefix(commentPrefix) {
+                value.removeFirst(commentPrefix.count)
+                field = .comment
+            } else {
+                field = .any
+            }
+            value = value.trimmingCharacters(in: .whitespacesAndNewlines)
             guard !value.isEmpty, value != "-" else { return nil }
-            return Term(value: value, isExcluded: isExcluded)
+            return Term(value: value, isExcluded: isExcluded, field: field)
         }
     }
 }

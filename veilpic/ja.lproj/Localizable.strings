@@ -3226,7 +3226,7 @@
 "imageEditor.action.layerCompNext" = "次のレイヤーコンプ";
 "imageEditor.layerComp.empty" = "保存済みレイヤーコンプはありません";
 "imageEditor.layerComp.searchPlaceholder" = "名前またはコメントを検索";
-"imageEditor.layerComp.searchSyntaxHelp" = "単語、“引用フレーズ”、-除外語を使用できます";
+"imageEditor.layerComp.searchSyntaxHelp" = "name:、comment:、“引用フレーズ”、-除外語を使用できます";
 "imageEditor.layerComp.noSearchResults" = "一致するレイヤーコンプはありません";
 "imageEditor.layerComp.searchResultsCount" = "%d / %d 件のレイヤーコンプ";
 "imageEditor.action.layerCompSearchClear" = "レイヤーコンプ検索を消去";

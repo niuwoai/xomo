@@ -122,9 +122,38 @@ struct ImageEditorLayerCompTests {
         ).map(\.id) == [mobileID])
         #expect(ImageEditorLayerCompSearch.filtered(
             viewModel.document.layerComps,
+            matching: "name:desktop"
+        ).map(\.id) == [desktopID])
+        #expect(ImageEditorLayerCompSearch.filtered(
+            viewModel.document.layerComps,
+            matching: "NAME:tablet"
+        ).map(\.id) == [tabletID])
+        #expect(ImageEditorLayerCompSearch.filtered(
+            viewModel.document.layerComps,
+            matching: "comment:approved"
+        ).map(\.id) == [desktopID, tabletID])
+        #expect(ImageEditorLayerCompSearch.filtered(
+            viewModel.document.layerComps,
+            matching: "name:approved"
+        ).isEmpty)
+        #expect(ImageEditorLayerCompSearch.filtered(
+            viewModel.document.layerComps,
+            matching: "comment:\"client approved\""
+        ).map(\.id) == [desktopID])
+        #expect(ImageEditorLayerCompSearch.filtered(
+            viewModel.document.layerComps,
+            matching: "approved -comment:client"
+        ).map(\.id) == [tabletID])
+        #expect(ImageEditorLayerCompSearch.filtered(
+            viewModel.document.layerComps,
+            matching: "-name:mobile"
+        ).map(\.id) == [desktopID, tabletID])
+        #expect(ImageEditorLayerCompSearch.filtered(
+            viewModel.document.layerComps,
             matching: "-"
         ).map(\.id) == [desktopID, mobileID, tabletID])
         #expect(!ImageEditorLayerCompSearch.hasTerms("\"\" -"))
+        #expect(!ImageEditorLayerCompSearch.hasTerms("name: comment:"))
         var quotedComp = try #require(viewModel.document.layerComps.first)
         quotedComp.id = UUID()
         quotedComp.name = "Review \"Alpha\""
@@ -141,6 +170,11 @@ struct ImageEditorLayerCompTests {
             in: viewModel.document.layerComps,
             matching: "approved",
             selectedLayerCompID: tabletID
+        ) == tabletID)
+        #expect(ImageEditorLayerCompSearch.preferredResultID(
+            in: viewModel.document.layerComps,
+            matching: "comment:handoff",
+            selectedLayerCompID: mobileID
         ) == tabletID)
         #expect(ImageEditorLayerCompSearch.preferredResultID(
             in: viewModel.document.layerComps,

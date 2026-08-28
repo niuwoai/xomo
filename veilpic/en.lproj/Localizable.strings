@@ -3226,7 +3226,7 @@
 "imageEditor.action.layerCompNext" = "Next Layer Comp";
 "imageEditor.layerComp.empty" = "No layer comps saved";
 "imageEditor.layerComp.searchPlaceholder" = "Search names or comments";
-"imageEditor.layerComp.searchSyntaxHelp" = "Use words, “quoted phrases”, and -excluded terms";
+"imageEditor.layerComp.searchSyntaxHelp" = "Use name:, comment:, “quoted phrases”, and -excluded terms";
 "imageEditor.layerComp.noSearchResults" = "No matching layer comps";
 "imageEditor.layerComp.searchResultsCount" = "%d of %d layer comps";
 "imageEditor.action.layerCompSearchClear" = "Clear layer comp search";

@@ -3226,7 +3226,7 @@
 "imageEditor.action.layerCompNext" = "下一个图层复合";
 "imageEditor.layerComp.empty" = "还没有保存图层复合";
 "imageEditor.layerComp.searchPlaceholder" = "搜索名称或备注";
-"imageEditor.layerComp.searchSyntaxHelp" = "支持关键词、“完整短语”和 -排除词";
+"imageEditor.layerComp.searchSyntaxHelp" = "支持 name:、comment:、“完整短语”和 -排除词";
 "imageEditor.layerComp.noSearchResults" = "没有匹配的图层复合";
 "imageEditor.layerComp.searchResultsCount" = "显示 %d / %d 个图层复合";
 "imageEditor.action.layerCompSearchClear" = "清除图层复合搜索";
