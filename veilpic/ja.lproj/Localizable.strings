@@ -3823,9 +3823,11 @@
 "xomo.figma.value.latest" = "最新バージョン";
 "xomo.figma.action.paste" = "ペースト";
 "xomo.figma.action.copyCanonicalURL" = "正規化リンクをコピー";
+"xomo.figma.action.useCanonicalURL" = "正規化リンクを使用";
 "xomo.figma.action.done" = "完了";
 "xomo.figma.clipboard.empty" = "クリップボードにテキストリンクがありません。";
 "xomo.figma.clipboard.copied" = "正規化リンクをコピーしました。";
+"xomo.figma.message.canonicalURLApplied" = "この読み込みでは、整理済みの正規化リンクを使用します。";
 "xomo.figma.metadata.title" = "Figma 公式メタデータ";
 "xomo.figma.metadata.readOnly" = "読み取り専用";
 "xomo.figma.metadata.scopeNotice" = "ローカル個人接続：読み取りを選んだ場合のみ api.figma.com に接続します。メタデータには file_metadata:read、下のノード読み取りには file_content:read も必要です。複数ユーザー向け OAuth はまだ接続されていません。";

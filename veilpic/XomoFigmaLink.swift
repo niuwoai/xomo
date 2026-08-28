@@ -165,6 +165,21 @@ struct XomoFigmaLinkImportDraft: Equatable {
         preview != nil
     }
 
+    var canUseCanonicalURL: Bool {
+        guard let canonicalURL = preview?.canonicalURL.absoluteString else { return false }
+        return input != canonicalURL
+    }
+
+    @discardableResult
+    mutating func useCanonicalURL() -> Bool {
+        guard let preview, canUseCanonicalURL else { return false }
+        input = preview.canonicalURL.absoluteString
+        var canonicalPreview = preview
+        canonicalPreview.discardedQueryItemCount = 0
+        state = .valid(canonicalPreview)
+        return true
+    }
+
     mutating func updateInput(_ value: String) {
         input = value
         guard !value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {

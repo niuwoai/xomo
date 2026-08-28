@@ -172,9 +172,19 @@ struct XomoFigmaLinkImportSheet: View {
             }
 
             VStack(alignment: .leading, spacing: 5) {
-                Text(L10n.text("xomo.figma.preview.canonicalURL"))
-                    .font(.system(size: 10, weight: .semibold))
-                    .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                HStack(spacing: 8) {
+                    Text(L10n.text("xomo.figma.preview.canonicalURL"))
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                    Spacer()
+                    Button(L10n.text("xomo.figma.action.useCanonicalURL")) {
+                        useCanonicalURL()
+                    }
+                    .buttonStyle(.borderless)
+                    .focusable(false)
+                    .disabled(!draft.canUseCanonicalURL)
+                    .accessibilityIdentifier("xomo-figma-use-canonical-link")
+                }
                 Text(preview.canonicalURL.absoluteString)
                     .font(.system(size: 10, design: .monospaced))
                     .textSelection(.enabled)
@@ -590,5 +600,10 @@ struct XomoFigmaLinkImportSheet: View {
         NSPasteboard.general.clearContents()
         NSPasteboard.general.setString(canonicalURL, forType: .string)
         transientMessageKey = "xomo.figma.clipboard.copied"
+    }
+
+    private func useCanonicalURL() {
+        guard draft.useCanonicalURL() else { return }
+        transientMessageKey = "xomo.figma.message.canonicalURLApplied"
     }
 }

@@ -19,11 +19,30 @@ struct XomoFigmaLinkImportTests {
         #expect(preview.nodeID == "1:2")
         #expect(preview.discardedQueryItemCount == 1)
         #expect(draft.canCopyCanonicalURL)
+        #expect(draft.canUseCanonicalURL)
+
+        let originalPreview = preview
+        let didUseCanonicalURL = draft.useCanonicalURL()
+        #expect(didUseCanonicalURL)
+        #expect(draft.input == preview.canonicalURL.absoluteString)
+        #expect(draft.preview?.resourceType == originalPreview.resourceType)
+        #expect(draft.preview?.fileKey == originalPreview.fileKey)
+        #expect(draft.preview?.nodeID == originalPreview.nodeID)
+        #expect(draft.preview?.startingPointNodeID == originalPreview.startingPointNodeID)
+        #expect(draft.preview?.versionID == originalPreview.versionID)
+        #expect(draft.preview?.canonicalURL == originalPreview.canonicalURL)
+        #expect(draft.preview?.discardedQueryItemCount == 0)
+        #expect(!draft.canUseCanonicalURL)
+        let didReuseCanonicalURL = draft.useCanonicalURL()
+        #expect(!didReuseCanonicalURL)
 
         draft.updateInput("https://figma.example/design/abc123DEF456/Checkout")
         #expect(draft.preview == nil)
         #expect(draft.error == .untrustedHost)
         #expect(!draft.canCopyCanonicalURL)
+        #expect(!draft.canUseCanonicalURL)
+        let didUseInvalidURL = draft.useCanonicalURL()
+        #expect(!didUseInvalidURL)
 
         draft.updateInput("   ")
         #expect(draft.state == .empty)
@@ -39,6 +58,7 @@ struct XomoFigmaLinkImportTests {
         #expect(draft.input == preview.canonicalURL.absoluteString)
         #expect(preview.fileKey == "abc123DEF456")
         #expect(preview.nodeID == "1:2")
+        #expect(!draft.canUseCanonicalURL)
     }
 
     @Test func contextualPastePrefersLayerPayloadAndAcceptsOnlyTrustedFigmaLinks() {
@@ -221,6 +241,9 @@ struct XomoFigmaLinkImportTests {
         )
         #expect(sheet.contains("xomo-figma-link-input"))
         #expect(sheet.contains("xomo-figma-copy-canonical-link"))
+        #expect(sheet.contains("xomo-figma-use-canonical-link"))
+        #expect(sheet.contains("draft.useCanonicalURL()"))
+        #expect(sheet.contains("xomo.figma.message.canonicalURLApplied"))
         #expect(sheet.contains("XomoFigmaLinkImportDraft"))
         #expect(sheet.contains("NSPasteboard.general"))
         #expect(sheet.contains("placementCenter: CGPoint? = nil"))
