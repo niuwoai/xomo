@@ -181,12 +181,15 @@ struct XomoFigmaLinkImportDraft: Equatable {
     }
 
     @discardableResult
-    mutating func retarget(toNodeID nodeID: String) -> Bool {
-        let trimmedNodeID = nodeID.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard let sourceURL = preview?.canonicalURL,
+    mutating func retarget(toNodeInput nodeInput: String) -> Bool {
+        guard let preview,
+              let nodeID = XomoFigmaNodeSelectionInput.nodeID(
+                from: nodeInput,
+                matchingFileKey: preview.fileKey
+              ),
               let retargetedURL = XomoFigmaSourceOpenPolicy.canonicalURL(
-                from: sourceURL,
-                selectingNodeID: trimmedNodeID
+                from: preview.canonicalURL,
+                selectingNodeID: nodeID
               )
         else { return false }
         updateInput(retargetedURL.absoluteString)
@@ -207,6 +210,19 @@ struct XomoFigmaLinkImportDraft: Equatable {
             assertionFailure("Unexpected Figma link parser error: \(error)")
             state = .invalid(.malformedURL)
         }
+    }
+}
+
+enum XomoFigmaNodeSelectionInput {
+    static func nodeID(from input: String, matchingFileKey fileKey: String) -> String? {
+        let trimmedInput = input.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedInput.isEmpty else { return nil }
+        guard trimmedInput.contains("://") else { return trimmedInput }
+        guard let linkedPreview = try? XomoFigmaLinkParser.parse(trimmedInput),
+              linkedPreview.fileKey == fileKey,
+              let nodeID = linkedPreview.nodeID
+        else { return nil }
+        return nodeID
     }
 }
 

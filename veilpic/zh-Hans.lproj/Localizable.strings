@@ -3859,8 +3859,8 @@
 "xomo.figma.node.planOnly" = "先预检，再导入";
 "xomo.figma.node.scopeNotice" = "仅在点击读取时调用官方节点接口；遇到图片填充时还会读取官方 Tier 2 图片清单并下载当前节点引用，临时图片请求不携带令牌。令牌需要 file_content:read；节点最多 6 层、2000 项和 10 MB，绝不自动刷新。确认导入后才会一次性创建可撤销图层。";
 "xomo.figma.node.selectionRequired" = "请使用包含 node-id 的 Figma 节点链接。";
-"xomo.figma.node.nodeIDInputLabel" = "指定或更换节点 ID";
-"xomo.figma.node.nodeIDInputPlaceholder" = "例如 32:9 或 32-9";
+"xomo.figma.node.nodeIDInputLabel" = "指定或更换节点";
+"xomo.figma.node.nodeIDInputPlaceholder" = "节点 ID 或当前文件的节点链接";
 "xomo.figma.node.useNodeID" = "使用节点";
 "xomo.figma.node.nodeIDInvalid" = "请输入有效的 Figma 节点 ID。";
 "xomo.figma.node.nodeIDApplied" = "规范化链接现已指向该节点。";

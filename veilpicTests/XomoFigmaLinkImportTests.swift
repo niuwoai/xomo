@@ -67,12 +67,12 @@ struct XomoFigmaLinkImportTests {
         )
         let originalInput = draft.input
 
-        let didRejectUnsafeNode = draft.retarget(toNodeID: "../../outside")
+        let didRejectUnsafeNode = draft.retarget(toNodeInput: "../../outside")
         #expect(!didRejectUnsafeNode)
         #expect(draft.input == originalInput)
         #expect(draft.preview?.nodeID == nil)
 
-        let didSelectNode = draft.retarget(toNodeID: "  I32:9;44:5  ")
+        let didSelectNode = draft.retarget(toNodeInput: "  I32:9;44:5  ")
         #expect(didSelectNode)
         #expect(draft.preview?.fileKey == "abc123DEF456")
         #expect(draft.preview?.nodeID == "I32:9;44:5")
@@ -85,16 +85,46 @@ struct XomoFigmaLinkImportTests {
                 "https://www.figma.com/design/abc123DEF456/Checkout?node-id=I32-9%3B44-5&starting-point-node-id=0-3&version-id=42"
         )
 
-        let didReplaceNode = draft.retarget(toNodeID: "64-7")
+        let didReplaceNode = draft.retarget(toNodeInput: "64-7")
         #expect(didReplaceNode)
         #expect(draft.preview?.nodeID == "64:7")
         #expect(draft.preview?.startingPointNodeID == "0:3")
         #expect(draft.preview?.versionID == "42")
 
         let stableDraft = draft
-        let didReuseNode = draft.retarget(toNodeID: "64:7")
+        let didReuseNode = draft.retarget(toNodeInput: "64:7")
         #expect(didReuseNode)
         #expect(draft == stableDraft)
+    }
+
+    @Test func draftAcceptsOnlyTrustedSameFileNodeLinksAsNodeInput() {
+        var draft = XomoFigmaLinkImportDraft(
+            input: "https://www.figma.com/design/abc123DEF456/Checkout?version-id=42"
+        )
+
+        let didUseNodeLink = draft.retarget(
+            toNodeInput: " https://figma.com/proto/abc123DEF456/Another-Name?node-id=9-8&version-id=99&utm_source=mail "
+        )
+        #expect(didUseNodeLink)
+        #expect(draft.preview?.resourceType == .design)
+        #expect(draft.preview?.fileSlug == "Checkout")
+        #expect(draft.preview?.nodeID == "9:8")
+        #expect(draft.preview?.versionID == "42")
+        #expect(
+            draft.input ==
+                "https://www.figma.com/design/abc123DEF456/Checkout?node-id=9-8&version-id=42"
+        )
+
+        let stableDraft = draft
+        for rejectedInput in [
+            "https://www.figma.com/design/otherFile999/Other?node-id=1-2",
+            "https://www.figma.com/design/abc123DEF456/Checkout",
+            "https://figma.example/design/abc123DEF456/Checkout?node-id=1-2"
+        ] {
+            let didRetarget = draft.retarget(toNodeInput: rejectedInput)
+            #expect(!didRetarget)
+            #expect(draft == stableDraft)
+        }
     }
 
     @Test func contextualPastePrefersLayerPayloadAndAcceptsOnlyTrustedFigmaLinks() {
@@ -282,7 +312,7 @@ struct XomoFigmaLinkImportTests {
         #expect(sheet.contains("xomo.figma.message.canonicalURLApplied"))
         #expect(sheet.contains("xomo-figma-node-id-input"))
         #expect(sheet.contains("xomo-figma-use-node-id"))
-        #expect(sheet.contains("draft.retarget(toNodeID: nodeIDDraft)"))
+        #expect(sheet.contains("draft.retarget(toNodeInput: nodeIDDraft)"))
         #expect(sheet.contains("draft.preview?.nodeID != previousNodeID"))
         #expect(sheet.contains("nodeImportController.clear()"))
         #expect(sheet.contains("XomoFigmaLinkImportDraft"))

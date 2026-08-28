@@ -658,7 +658,7 @@ struct XomoFigmaLinkImportSheet: View {
 
     private func applyNodeSelection() {
         let previousNodeID = draft.preview?.nodeID
-        guard draft.retarget(toNodeID: nodeIDDraft) else {
+        guard draft.retarget(toNodeInput: nodeIDDraft) else {
             nodeSelectionMessageKey = "xomo.figma.node.nodeIDInvalid"
             return
         }

@@ -3859,8 +3859,8 @@
 "xomo.figma.node.planOnly" = "確認してから読み込み";
 "xomo.figma.node.scopeNotice" = "読み取りを選んだ場合のみ公式ノード API を呼び出します。画像塗りは公式 Tier 2 画像マニフェストも読み取り、現在のノードが参照する画像だけをダウンロードします。画像の一時リクエストにトークンは付けません。トークンには file_content:read が必要で、ノードは最大 6 階層、2,000 項目、10 MB、自動更新なしです。読み込み確認後に一括で取り消し可能なレイヤーを作成します。";
 "xomo.figma.node.selectionRequired" = "node-id を含む Figma ノードリンクを使用してください。";
-"xomo.figma.node.nodeIDInputLabel" = "ノード ID を指定または変更";
-"xomo.figma.node.nodeIDInputPlaceholder" = "例：32:9 または 32-9";
+"xomo.figma.node.nodeIDInputLabel" = "ノードを指定または変更";
+"xomo.figma.node.nodeIDInputPlaceholder" = "ノード ID または同じファイルのノードリンク";
 "xomo.figma.node.useNodeID" = "ノードを使用";
 "xomo.figma.node.nodeIDInvalid" = "有効な Figma ノード ID を入力してください。";
 "xomo.figma.node.nodeIDApplied" = "正規化リンクがこのノードを参照するようになりました。";
