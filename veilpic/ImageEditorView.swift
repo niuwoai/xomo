@@ -11883,6 +11883,7 @@ struct ImageEditorView: View {
                     && viewModel.selectedFilter != .pixelate
                     && viewModel.selectedFilter != .motionBlur
                     && viewModel.selectedFilter != .emboss
+                    && viewModel.selectedFilter != .unsharpMask
                     && viewModel.selectedFilter != .oilPaint {
                     Slider(value: $viewModel.filterIntensity, in: 0...1, step: 0.05)
                 }
@@ -12101,6 +12102,27 @@ struct ImageEditorView: View {
                     .accessibilityIdentifier("image-editor-filter-motion-blur-distance")
                 }
                 if viewModel.selectedFilter == .unsharpMask {
+                    HStack {
+                        Text(L10n.text("imageEditor.filter.unsharpAmount"))
+                            .font(.system(size: 10, weight: .medium))
+                            .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                        Slider(
+                            value: Binding(
+                                get: { viewModel.filterUnsharpEffectiveAmountPercent },
+                                set: { viewModel.filterUnsharpEffectiveAmountPercent = $0 }
+                            ),
+                            in: 1...500,
+                            step: 1
+                        )
+                        Text(L10n.format(
+                            "imageEditor.filter.unsharpAmountValue",
+                            Int(viewModel.filterUnsharpEffectiveAmountPercent.rounded())
+                        ))
+                            .font(.system(size: 10, weight: .semibold))
+                            .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
+                            .frame(width: 54, alignment: .trailing)
+                    }
+                    .accessibilityIdentifier("image-editor-filter-unsharp-amount")
                     HStack {
                         Text(L10n.text("imageEditor.filter.unsharpRadius"))
                             .font(.system(size: 10, weight: .medium))

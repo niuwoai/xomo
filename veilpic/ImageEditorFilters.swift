@@ -506,7 +506,7 @@ extension NSImage {
         guard clampedIntensity > 0 else { return self }
         return pixelMappedFromBuffer { x, y, width, height, pixels, bytesPerRow, bytesPerPixel in
             let radius = max(1, Int(normalizedSettings.unsharpRadius.rounded()))
-            let amount = 0.6 + clampedIntensity * 1.8
+            let amount = (normalizedSettings.unsharpAmountPercent ?? (60 + clampedIntensity * 180)) / 100
             let offset = y * bytesPerRow + x * bytesPerPixel
             let alpha = Double(pixels[offset + 3]) / 255
             let red = Double(pixels[offset]) / 255

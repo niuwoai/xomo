@@ -470,6 +470,7 @@ final class ImageEditorViewModel: ObservableObject {
         didSet {
             if oldValue != selectedFilter {
                 filterGaussianBlurRadius = nil
+                filterUnsharpAmountPercent = nil
             }
         }
     }
@@ -496,6 +497,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var filterOilPaintShine: Double = 0
     @Published var filterOilPaintLightingAngleDegrees: Double = 135
     @Published var filterOilPaintLightingEnabled = true
+    @Published var filterUnsharpAmountPercent: Double?
 
     var filterGaussianBlurEffectiveRadius: Double {
         get {
@@ -504,6 +506,16 @@ final class ImageEditorViewModel: ObservableObject {
         }
         set {
             filterGaussianBlurRadius = max(0, min(256, newValue))
+        }
+    }
+
+    var filterUnsharpEffectiveAmountPercent: Double {
+        get {
+            filterUnsharpAmountPercent
+                ?? max(1, min(500, 60 + filterIntensity * 180))
+        }
+        set {
+            filterUnsharpAmountPercent = max(1, min(500, newValue))
         }
     }
     @Published var filterUnsharpRadius: Double = 1
@@ -2588,10 +2600,12 @@ final class ImageEditorViewModel: ObservableObject {
         }
         if filter.kind == .unsharpMask {
             let settings = filter.normalizedSettings
+            let amountPercent = settings.unsharpAmountPercent
+                ?? max(1, min(500, 60 + filter.normalizedIntensity * 180))
             let title = L10n.format(
                 "imageEditor.properties.smartFilterUnsharpItem",
                 filter.kind.title,
-                Int((filter.normalizedIntensity * 100).rounded()),
+                Int(amountPercent.rounded()),
                 String(format: "%.1f", settings.unsharpRadius),
                 Int((settings.unsharpThreshold * 255).rounded())
             )
@@ -9583,6 +9597,7 @@ final class ImageEditorViewModel: ObservableObject {
             oilPaintShine: selectedFilter == .oilPaint ? filterOilPaintShine : nil,
             oilPaintLightingAngleDegrees: selectedFilter == .oilPaint ? filterOilPaintLightingAngleDegrees : nil,
             oilPaintLightingEnabled: selectedFilter == .oilPaint ? filterOilPaintLightingEnabled : nil,
+            unsharpAmountPercent: selectedFilter == .unsharpMask ? filterUnsharpAmountPercent : nil,
             unsharpRadius: filterUnsharpRadius,
             unsharpThreshold: filterUnsharpThreshold,
             liquifyPushX: filterLiquifyPushX,
@@ -11445,6 +11460,7 @@ final class ImageEditorViewModel: ObservableObject {
         filterOilPaintShine = normalized.oilPaintShine ?? 0
         filterOilPaintLightingAngleDegrees = normalized.oilPaintLightingAngleDegrees ?? 135
         filterOilPaintLightingEnabled = normalized.oilPaintLightingEnabled ?? true
+        filterUnsharpAmountPercent = normalized.unsharpAmountPercent
         filterUnsharpRadius = normalized.unsharpRadius
         filterUnsharpThreshold = normalized.unsharpThreshold
         filterLiquifyPushX = normalized.liquifyPushX

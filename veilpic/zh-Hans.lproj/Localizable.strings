@@ -1013,6 +1013,8 @@
 "imageEditor.filter.liquifyPuckerBloat" = "液化收缩/膨胀";
 "imageEditor.filter.unsharpRadius" = "半径";
 "imageEditor.filter.unsharpRadiusValue" = "%@ px";
+"imageEditor.filter.unsharpAmount" = "数量";
+"imageEditor.filter.unsharpAmountValue" = "%d%%";
 "imageEditor.filter.unsharpThreshold" = "阈值";
 "imageEditor.filter.unsharpThresholdValue" = "%d";
 "imageEditor.filter.liquifyPushX" = "水平推移";

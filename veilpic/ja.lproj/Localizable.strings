@@ -1013,6 +1013,8 @@
 "imageEditor.filter.liquifyPuckerBloat" = "ゆがみ収縮/膨張";
 "imageEditor.filter.unsharpRadius" = "半径";
 "imageEditor.filter.unsharpRadiusValue" = "%@ px";
+"imageEditor.filter.unsharpAmount" = "量";
+"imageEditor.filter.unsharpAmountValue" = "%d%%";
 "imageEditor.filter.unsharpThreshold" = "しきい値";
 "imageEditor.filter.unsharpThresholdValue" = "%d";
 "imageEditor.filter.liquifyPushX" = "水平プッシュ";
