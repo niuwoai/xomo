@@ -1672,6 +1672,78 @@ struct ImageEditorFilterTests {
         #expect(try #require(smartViewModel.currentImage.qingtuPNGData()) == smartPreviewBefore)
     }
 
+    @Test func addNoiseMonochromaticModePreservesLegacyPixelsAndSupportsColorNoise() throws {
+        let sourceImage = solidImage(
+            size: NSSize(width: 72, height: 48),
+            color: NSColor(calibratedWhite: 0.5, alpha: 1)
+        )
+        let legacySettings = try JSONDecoder().decode(
+            ImageEditorFilterSettings.self,
+            from: Data("{}".utf8)
+        )
+        #expect(legacySettings.addNoiseMonochromatic == nil)
+
+        let legacy = try #require(sourceImage.filtered(
+            kind: .addNoise,
+            intensity: 0.7,
+            settings: legacySettings
+        ))
+        let explicitMonochromatic = try #require(sourceImage.filtered(
+            kind: .addNoise,
+            intensity: 0.7,
+            settings: ImageEditorFilterSettings(addNoiseMonochromatic: true)
+        ))
+        #expect(legacy.qingtuPNGData() == explicitMonochromatic.qingtuPNGData())
+
+        let colorNoise = try #require(sourceImage.filtered(
+            kind: .addNoise,
+            intensity: 0.7,
+            settings: ImageEditorFilterSettings(addNoiseMonochromatic: false)
+        ))
+        let monochromaticPixel = try #require(
+            explicitMonochromatic.color(at: CGPoint(x: 12, y: 24))?.usingColorSpace(.deviceRGB)
+        )
+        let colorPixel = try #require(
+            colorNoise.color(at: CGPoint(x: 12, y: 24))?.usingColorSpace(.deviceRGB)
+        )
+        #expect(abs(monochromaticPixel.redComponent - monochromaticPixel.greenComponent) < 0.002)
+        #expect(
+            max(colorPixel.redComponent, colorPixel.greenComponent, colorPixel.blueComponent)
+                - min(colorPixel.redComponent, colorPixel.greenComponent, colorPixel.blueComponent) > 0.02
+        )
+
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: sourceImage) { _ in }
+        viewModel.replaceSelectedLayerImageForTesting(
+            sourceImage,
+            historyTitle: L10n.text("imageEditor.history.brush")
+        )
+        viewModel.selectedFilter = .addNoise
+        viewModel.filterIntensity = 0.7
+        viewModel.filterAddNoiseMonochromatic = false
+        viewModel.addSmartFilterToSelectedLayer()
+
+        let smartFilter = try #require(viewModel.document.selectedLayer?.smartFilters.last)
+        #expect(smartFilter.normalizedSettings.addNoiseMonochromatic == false)
+        #expect(viewModel.smartFilterLabel(smartFilter) == L10n.format(
+            "imageEditor.properties.smartFilterAddNoiseItem",
+            ImageEditorFilter.addNoise.title,
+            70,
+            L10n.text("imageEditor.filter.addNoiseColor")
+        ))
+        let project = try ImageEditorProjectDocument(document: viewModel.document)
+        let restored = try project.restoredDocument()
+        #expect(restored.selectedLayer?.smartFilters.last?.normalizedSettings.addNoiseMonochromatic == false)
+
+        let root = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let viewSource = try String(
+            contentsOf: root.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        #expect(viewSource.contains("image-editor-filter-add-noise-monochromatic"))
+    }
+
     @Test func imageEditorMotionBlurFilterLayerAndSmartFilterAreNonDestructive() async throws {
         let canvasSize = NSSize(width: 72, height: 48)
         let sourceImage = verticalEdgeImage(size: canvasSize)

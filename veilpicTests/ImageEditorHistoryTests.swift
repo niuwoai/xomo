@@ -1308,6 +1308,38 @@ struct ImageEditorHistoryTests {
     }
 
     @Test
+    func keyboardShortcutWindowRegistryFallsBackWhenReplacementCoordinatorDisappears() {
+        ImageEditorKeyboardShortcutWindowRegistry.reset()
+        defer { ImageEditorKeyboardShortcutWindowRegistry.reset() }
+        let window = NSObject()
+        let mountedCoordinator = NSObject()
+        let transientReplacement = NSObject()
+
+        ImageEditorKeyboardShortcutWindowRegistry.register(
+            coordinator: mountedCoordinator,
+            for: window
+        )
+        ImageEditorKeyboardShortcutWindowRegistry.register(
+            coordinator: transientReplacement,
+            for: window
+        )
+        #expect(ImageEditorKeyboardShortcutWindowRegistry.isActive(
+            coordinator: transientReplacement,
+            for: window
+        ))
+
+        ImageEditorKeyboardShortcutWindowRegistry.unregister(
+            coordinator: transientReplacement,
+            from: window
+        )
+
+        #expect(ImageEditorKeyboardShortcutWindowRegistry.isActive(
+            coordinator: mountedCoordinator,
+            for: window
+        ))
+    }
+
+    @Test
     func keyboardShortcutEventWindowPolicyAcceptsKeyWindowEventsWithoutAnAttachedWindow() {
         let editorWindow = NSObject()
         let otherWindow = NSObject()

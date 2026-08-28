@@ -11894,6 +11894,16 @@ struct ImageEditorView: View {
                     }
                     .accessibilityIdentifier("image-editor-filter-pixelate-cell-size")
                 }
+                if viewModel.selectedFilter == .addNoise {
+                    Toggle(
+                        L10n.text("imageEditor.filter.addNoiseMonochromatic"),
+                        isOn: $viewModel.filterAddNoiseMonochromatic
+                    )
+                    .toggleStyle(.switch)
+                    .font(.system(size: 10))
+                    .focusable(false)
+                    .accessibilityIdentifier("image-editor-filter-add-noise-monochromatic")
+                }
                 if viewModel.selectedFilter == .motionBlur {
                     HStack {
                         Text(L10n.text("imageEditor.filter.motionBlurAngle"))
@@ -17578,24 +17588,53 @@ enum ImageEditorKeyboardShortcutEventWindowPolicy {
 
 @MainActor
 enum ImageEditorKeyboardShortcutWindowRegistry {
-    private static var activeCoordinatorByWindow: [ObjectIdentifier: ObjectIdentifier] = [:]
+    private final class WeakCoordinator {
+        weak var value: AnyObject?
+
+        init(_ value: AnyObject) {
+            self.value = value
+        }
+    }
+
+    private static var coordinatorsByWindow: [ObjectIdentifier: [WeakCoordinator]] = [:]
 
     static func register(coordinator: AnyObject, for window: AnyObject) {
-        activeCoordinatorByWindow[ObjectIdentifier(window)] = ObjectIdentifier(coordinator)
+        let windowID = ObjectIdentifier(window)
+        var coordinators = coordinatorsByWindow[windowID] ?? []
+        coordinators.removeAll { entry in
+            entry.value == nil || entry.value === coordinator
+        }
+        coordinators.append(WeakCoordinator(coordinator))
+        coordinatorsByWindow[windowID] = coordinators
     }
 
     static func unregister(coordinator: AnyObject, from window: AnyObject) {
         let windowID = ObjectIdentifier(window)
-        guard activeCoordinatorByWindow[windowID] == ObjectIdentifier(coordinator) else { return }
-        activeCoordinatorByWindow.removeValue(forKey: windowID)
+        guard var coordinators = coordinatorsByWindow[windowID] else { return }
+        coordinators.removeAll { entry in
+            entry.value == nil || entry.value === coordinator
+        }
+        if coordinators.isEmpty {
+            coordinatorsByWindow.removeValue(forKey: windowID)
+        } else {
+            coordinatorsByWindow[windowID] = coordinators
+        }
     }
 
     static func isActive(coordinator: AnyObject, for window: AnyObject) -> Bool {
-        activeCoordinatorByWindow[ObjectIdentifier(window)] == ObjectIdentifier(coordinator)
+        let windowID = ObjectIdentifier(window)
+        guard var coordinators = coordinatorsByWindow[windowID] else { return false }
+        coordinators.removeAll { $0.value == nil }
+        if coordinators.isEmpty {
+            coordinatorsByWindow.removeValue(forKey: windowID)
+            return false
+        }
+        coordinatorsByWindow[windowID] = coordinators
+        return coordinators.last?.value === coordinator
     }
 
     static func reset() {
-        activeCoordinatorByWindow.removeAll()
+        coordinatorsByWindow.removeAll()
     }
 }
 

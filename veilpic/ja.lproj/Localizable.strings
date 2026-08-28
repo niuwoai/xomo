@@ -948,6 +948,9 @@
 "imageEditor.filter.pixelate" = "ピクセレート";
 "imageEditor.filter.pixelateCellSize" = "セルサイズ";
 "imageEditor.filter.pixelateCellSizeValue" = "%d px";
+"imageEditor.filter.addNoiseMonochromatic" = "単色";
+"imageEditor.filter.addNoiseColor" = "カラー";
+"imageEditor.properties.smartFilterAddNoiseItem" = "%1$@ · %2$d%% · %3$@";
 "imageEditor.filter.motionBlur" = "モーションブラー";
 "imageEditor.filter.motionBlurAngle" = "角度";
 "imageEditor.filter.motionBlurAngleValue" = "%d°";

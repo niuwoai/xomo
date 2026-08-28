@@ -2521,6 +2521,8 @@ struct ImageEditorFilterSettings: Equatable, Codable {
     var morphologyRadius: Double?
     /// Explicit Pixelate/Mosaic cell size in pixels. Nil preserves the legacy intensity-derived scale.
     var pixelateCellSize: Double?
+    /// Whether Add Noise uses one shared value for RGB. Nil preserves the legacy monochromatic result.
+    var addNoiseMonochromatic: Bool?
     /// Explicit Motion Blur angle in degrees. Nil preserves the legacy horizontal direction.
     var motionBlurAngleDegrees: Double?
     /// Explicit Motion Blur distance in pixels. Nil preserves the legacy intensity-derived distance.
@@ -2551,6 +2553,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         highPassRadius: Double? = nil,
         morphologyRadius: Double? = nil,
         pixelateCellSize: Double? = nil,
+        addNoiseMonochromatic: Bool? = nil,
         motionBlurAngleDegrees: Double? = nil,
         motionBlurDistance: Double? = nil,
         embossAngleDegrees: Double? = nil,
@@ -2576,6 +2579,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         self.highPassRadius = highPassRadius
         self.morphologyRadius = morphologyRadius
         self.pixelateCellSize = pixelateCellSize
+        self.addNoiseMonochromatic = addNoiseMonochromatic
         self.motionBlurAngleDegrees = motionBlurAngleDegrees
         self.motionBlurDistance = motionBlurDistance
         self.embossAngleDegrees = embossAngleDegrees
@@ -2604,6 +2608,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         highPassRadius = try container.decodeIfPresent(Double.self, forKey: .highPassRadius)
         morphologyRadius = try container.decodeIfPresent(Double.self, forKey: .morphologyRadius)
         pixelateCellSize = try container.decodeIfPresent(Double.self, forKey: .pixelateCellSize)
+        addNoiseMonochromatic = try container.decodeIfPresent(Bool.self, forKey: .addNoiseMonochromatic)
         motionBlurAngleDegrees = try container.decodeIfPresent(Double.self, forKey: .motionBlurAngleDegrees)
         motionBlurDistance = try container.decodeIfPresent(Double.self, forKey: .motionBlurDistance)
         embossAngleDegrees = try container.decodeIfPresent(Double.self, forKey: .embossAngleDegrees)
@@ -2635,6 +2640,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         try container.encodeIfPresent(highPassRadius, forKey: .highPassRadius)
         try container.encodeIfPresent(morphologyRadius, forKey: .morphologyRadius)
         try container.encodeIfPresent(pixelateCellSize, forKey: .pixelateCellSize)
+        try container.encodeIfPresent(addNoiseMonochromatic, forKey: .addNoiseMonochromatic)
         try container.encodeIfPresent(motionBlurAngleDegrees, forKey: .motionBlurAngleDegrees)
         try container.encodeIfPresent(motionBlurDistance, forKey: .motionBlurDistance)
         try container.encodeIfPresent(embossAngleDegrees, forKey: .embossAngleDegrees)
@@ -2663,6 +2669,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
             highPassRadius: highPassRadius.map { max(1, min(256, $0)) },
             morphologyRadius: morphologyRadius.map { max(1, min(256, $0)) },
             pixelateCellSize: pixelateCellSize.map { max(2, min(200, $0)) },
+            addNoiseMonochromatic: addNoiseMonochromatic,
             motionBlurAngleDegrees: motionBlurAngleDegrees.map { max(-180, min(180, $0)) },
             motionBlurDistance: motionBlurDistance.map { max(1, min(999, $0)) },
             embossAngleDegrees: embossAngleDegrees.map { max(-180, min(180, $0)) },
@@ -2691,6 +2698,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         case highPassRadius
         case morphologyRadius
         case pixelateCellSize
+        case addNoiseMonochromatic
         case motionBlurAngleDegrees
         case motionBlurDistance
         case embossAngleDegrees

@@ -222,6 +222,31 @@ final class veilpicUITests: XCTestCase {
     }
 
     @MainActor
+    func testDeleteKeyRemovesSelectedEditableLayerAndUndoRestoresIt() throws {
+        let app = XCUIApplication()
+        app.launchArguments += ["-AppleLanguages", "(zh-Hans)", "-AppleLocale", "zh_CN"]
+        app.launch()
+
+        let editableLayer = app.buttons
+            .matching(NSPredicate(format: "label BEGINSWITH %@", "编辑图层"))
+            .firstMatch
+        XCTAssertTrue(editableLayer.waitForExistence(timeout: 8))
+        editableLayer.click()
+
+        app.typeKey(.delete, modifierFlags: [])
+        XCTAssertTrue(
+            editableLayer.waitForNonExistence(timeout: 5),
+            "Delete 应删除当前选中的可编辑图片图层"
+        )
+
+        app.typeKey("z", modifierFlags: .command)
+        XCTAssertTrue(
+            editableLayer.waitForExistence(timeout: 5),
+            "撤销应恢复刚被 Delete 删除的图片图层"
+        )
+    }
+
+    @MainActor
     func testLaunchPerformance() throws {
         // This measures how long it takes to launch your application.
         measure(metrics: [XCTApplicationLaunchMetric()]) {

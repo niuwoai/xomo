@@ -26,7 +26,7 @@ extension NSImage {
         let clamped = max(0, min(1, intensity))
         guard clamped > 0 else { return self }
         if kind == .addNoise {
-            return addingDeterministicNoise(intensity: clamped)
+            return addingDeterministicNoise(intensity: clamped, settings: settings)
         }
         if kind == .median {
             return medianDenoised(intensity: clamped)
@@ -112,7 +112,7 @@ extension NSImage {
             filter.angle = Float((normalized.motionBlurAngleDegrees ?? 0) * .pi / 180)
             output = filter.outputImage?.cropped(to: ciImage.extent)
         case .addNoise:
-            return addingDeterministicNoise(intensity: clamped)
+            return addingDeterministicNoise(intensity: clamped, settings: settings)
         case .median:
             return medianDenoised(intensity: clamped)
         case .unsharpMask:
@@ -354,14 +354,24 @@ extension NSImage {
         return NSImage(cgImage: image, size: displaySize)
     }
 
-    private func addingDeterministicNoise(intensity: Double) -> NSImage? {
+    private func addingDeterministicNoise(
+        intensity: Double,
+        settings: ImageEditorFilterSettings
+    ) -> NSImage? {
         let amount = max(0, min(1, intensity)) * 0.45
+        let monochromatic = settings.normalized().addNoiseMonochromatic ?? true
         return pixelMappedByCoordinate { x, y, red, green, blue, alpha in
-            let noise = Self.coordinateNoise(x: x, y: y) * amount * alpha
+            let redNoise = Self.coordinateNoise(x: x, y: y, channel: 0) * amount * alpha
+            let greenNoise = monochromatic
+                ? redNoise
+                : Self.coordinateNoise(x: x, y: y, channel: 1) * amount * alpha
+            let blueNoise = monochromatic
+                ? redNoise
+                : Self.coordinateNoise(x: x, y: y, channel: 2) * amount * alpha
             return (
-                Self.premultipliedChannel(red + noise, alpha: alpha),
-                Self.premultipliedChannel(green + noise, alpha: alpha),
-                Self.premultipliedChannel(blue + noise, alpha: alpha),
+                Self.premultipliedChannel(red + redNoise, alpha: alpha),
+                Self.premultipliedChannel(green + greenNoise, alpha: alpha),
+                Self.premultipliedChannel(blue + blueNoise, alpha: alpha),
                 alpha
             )
         }
@@ -1373,12 +1383,14 @@ extension NSImage {
         return NSImage(cgImage: output, size: size)
     }
 
-    private static func coordinateNoise(x: Int, y: Int) -> Double {
+    private static func coordinateNoise(x: Int, y: Int, channel: Int) -> Double {
         let xMultiplier: UInt64 = 0x9E3779B185EBCA87
         let yMultiplier: UInt64 = 0xC2B2AE3D27D4EB4F
+        let channelMultiplier: UInt64 = 0x165667B19E3779F9
         let avalancheMultiplier: UInt64 = 0xFF51AFD7ED558CCD
         var value = UInt64(x + 1) &* xMultiplier
         value ^= UInt64(y + 1) &* yMultiplier
+        value ^= UInt64(channel) &* channelMultiplier
         value ^= value >> 33
         value = value &* avalancheMultiplier
         value ^= value >> 33

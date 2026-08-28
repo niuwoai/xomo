@@ -6249,6 +6249,7 @@ final class XomoAutomationRegistry {
             case "highPassRadius": viewModel.filterHighPassRadius = try numericSetting(value, key: key)
             case "morphologyRadius": viewModel.filterMorphologyRadius = try numericSetting(value, key: key)
             case "pixelateCellSize": viewModel.filterPixelateCellSize = try numericSetting(value, key: key)
+            case "addNoiseMonochromatic": viewModel.filterAddNoiseMonochromatic = try booleanSetting(value, key: key)
             case "motionBlurAngleDegrees": viewModel.filterMotionBlurAngleDegrees = try numericSetting(value, key: key)
             case "motionBlurDistance": viewModel.filterMotionBlurDistance = try numericSetting(value, key: key)
             case "embossAngleDegrees": viewModel.filterEmbossAngleDegrees = try numericSetting(value, key: key)
@@ -7968,6 +7969,7 @@ private extension XomoAutomationRegistry {
         "highPassRadius": XomoAutomationSchema.number(description: "High Pass radius in pixels"),
         "morphologyRadius": XomoAutomationSchema.number(description: "Minimum or Maximum radius in pixels"),
         "pixelateCellSize": XomoAutomationSchema.number(description: "Pixelate or Mosaic cell size in pixels"),
+        "addNoiseMonochromatic": XomoAutomationSchema.boolean(description: "Use one shared Add Noise value for RGB channels"),
         "motionBlurAngleDegrees": XomoAutomationSchema.number(description: "Motion Blur angle in degrees"),
         "motionBlurDistance": XomoAutomationSchema.number(description: "Motion Blur distance in pixels"),
         "embossAngleDegrees": XomoAutomationSchema.number(description: "Emboss light angle in degrees"),
