@@ -3227,6 +3227,7 @@
 "imageEditor.layerComp.empty" = "保存済みレイヤーコンプはありません";
 "imageEditor.layerComp.searchPlaceholder" = "名前またはコメントを検索";
 "imageEditor.layerComp.noSearchResults" = "一致するレイヤーコンプはありません";
+"imageEditor.layerComp.searchResultsCount" = "%d / %d 件のレイヤーコンプ";
 "imageEditor.action.layerCompSearchClear" = "レイヤーコンプ検索を消去";
 "imageEditor.layerComp.currentlyApplied" = "このレイヤーコンプは現在のドキュメントと一致しています";
 "imageEditor.layerComp.hint" = "レイヤーコンプは表示、位置、不透明度、描画モード、選択状態を記録します。";

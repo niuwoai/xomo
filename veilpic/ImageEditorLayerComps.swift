@@ -87,12 +87,14 @@ enum ImageEditorLayerCompSearch {
         _ layerComps: [ImageEditorLayerComp],
         matching query: String
     ) -> [ImageEditorLayerComp] {
-        let trimmedQuery = query.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmedQuery.isEmpty else { return layerComps }
+        let tokens = query.split { $0.isWhitespace }.map(String.init)
+        guard !tokens.isEmpty else { return layerComps }
         let options: String.CompareOptions = [.caseInsensitive, .diacriticInsensitive, .widthInsensitive]
         return layerComps.filter { comp in
-            comp.name.range(of: trimmedQuery, options: options) != nil
-                || comp.comment.range(of: trimmedQuery, options: options) != nil
+            let searchableText = "\(comp.name)\n\(comp.comment)"
+            return tokens.allSatisfy { token in
+                searchableText.range(of: token, options: options) != nil
+            }
         }
     }
 

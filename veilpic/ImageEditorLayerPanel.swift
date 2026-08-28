@@ -1117,6 +1117,18 @@ extension ImageEditorView {
 
             layerCompSearchField
 
+            if hasLayerCompSearchQuery, !viewModel.document.layerComps.isEmpty {
+                Text(L10n.format(
+                    "imageEditor.layerComp.searchResultsCount",
+                    filteredLayerComps.count,
+                    viewModel.document.layerComps.count
+                ))
+                .font(.system(size: 10, weight: .medium))
+                .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .accessibilityIdentifier("image-editor-layer-comp-search-results-count")
+            }
+
             if viewModel.document.layerComps.isEmpty {
                 Text(L10n.text("imageEditor.layerComp.empty"))
                     .font(.system(size: 11, weight: .medium))
@@ -1185,6 +1197,10 @@ extension ImageEditorView {
             viewModel.document.layerComps,
             matching: layerCompSearchQuery
         )
+    }
+
+    private var hasLayerCompSearchQuery: Bool {
+        !layerCompSearchQuery.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
     private var layerCompSearchField: some View {

@@ -3227,6 +3227,7 @@
 "imageEditor.layerComp.empty" = "No layer comps saved";
 "imageEditor.layerComp.searchPlaceholder" = "Search names or comments";
 "imageEditor.layerComp.noSearchResults" = "No matching layer comps";
+"imageEditor.layerComp.searchResultsCount" = "%d of %d layer comps";
 "imageEditor.action.layerCompSearchClear" = "Clear layer comp search";
 "imageEditor.layerComp.currentlyApplied" = "This layer comp matches the current document";
 "imageEditor.layerComp.hint" = "Layer comps capture visibility, position, opacity, blend mode, and selection state.";

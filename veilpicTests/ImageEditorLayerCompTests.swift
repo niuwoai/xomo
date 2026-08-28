@@ -89,6 +89,18 @@ struct ImageEditorLayerCompTests {
         ).map(\.id) == [desktopID, tabletID])
         #expect(ImageEditorLayerCompSearch.filtered(
             viewModel.document.layerComps,
+            matching: "  mobile\n review  "
+        ).map(\.id) == [mobileID])
+        #expect(ImageEditorLayerCompSearch.filtered(
+            viewModel.document.layerComps,
+            matching: "TABLET approved"
+        ).map(\.id) == [tabletID])
+        #expect(ImageEditorLayerCompSearch.filtered(
+            viewModel.document.layerComps,
+            matching: "approved review"
+        ).isEmpty)
+        #expect(ImageEditorLayerCompSearch.filtered(
+            viewModel.document.layerComps,
             matching: "   "
         ).map(\.id) == [desktopID, mobileID, tabletID])
         #expect(viewModel.layerCompNavigationTarget(
@@ -280,6 +292,8 @@ struct ImageEditorLayerCompTests {
         #expect(source.contains("imageEditor.layerComp.currentlyApplied"))
         #expect(source.contains("image-editor-layer-comp-applied-"))
         #expect(source.components(separatedBy: ".disabled(isApplied)").count == 3)
+        #expect(source.contains("imageEditor.layerComp.searchResultsCount"))
+        #expect(source.contains("image-editor-layer-comp-search-results-count"))
         #expect(contextSource.contains("viewModel.applyLayerComp(comp.id)"))
         #expect(contextSource.contains("viewModel.updateLayerComp(comp.id)"))
         #expect(contextSource.contains("viewModel.duplicateLayerComp(comp.id)"))
