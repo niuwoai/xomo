@@ -3227,6 +3227,8 @@
 "imageEditor.action.layerCompDelete" = "删除图层复合";
 "imageEditor.action.layerCompPrevious" = "上一个图层复合";
 "imageEditor.action.layerCompNext" = "下一个图层复合";
+"imageEditor.action.layerCompPreviousFavorite" = "上一个收藏的图层复合";
+"imageEditor.action.layerCompNextFavorite" = "下一个收藏的图层复合";
 "imageEditor.layerComp.empty" = "还没有保存图层复合";
 "imageEditor.layerComp.searchPlaceholder" = "搜索名称或备注";
 "imageEditor.layerComp.searchSyntaxHelp" = "支持 name:、comment:、“完整短语”和 -排除词";

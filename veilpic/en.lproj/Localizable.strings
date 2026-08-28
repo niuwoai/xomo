@@ -3227,6 +3227,8 @@
 "imageEditor.action.layerCompDelete" = "Delete Layer Comp";
 "imageEditor.action.layerCompPrevious" = "Previous Layer Comp";
 "imageEditor.action.layerCompNext" = "Next Layer Comp";
+"imageEditor.action.layerCompPreviousFavorite" = "Previous Favorite Layer Comp";
+"imageEditor.action.layerCompNextFavorite" = "Next Favorite Layer Comp";
 "imageEditor.layerComp.empty" = "No layer comps saved";
 "imageEditor.layerComp.searchPlaceholder" = "Search names or comments";
 "imageEditor.layerComp.searchSyntaxHelp" = "Use name:, comment:, “quoted phrases”, and -excluded terms";

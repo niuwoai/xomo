@@ -3227,6 +3227,8 @@
 "imageEditor.action.layerCompDelete" = "レイヤーコンプを削除";
 "imageEditor.action.layerCompPrevious" = "前のレイヤーコンプ";
 "imageEditor.action.layerCompNext" = "次のレイヤーコンプ";
+"imageEditor.action.layerCompPreviousFavorite" = "前のお気に入りレイヤーコンプ";
+"imageEditor.action.layerCompNextFavorite" = "次のお気に入りレイヤーコンプ";
 "imageEditor.layerComp.empty" = "保存済みレイヤーコンプはありません";
 "imageEditor.layerComp.searchPlaceholder" = "名前またはコメントを検索";
 "imageEditor.layerComp.searchSyntaxHelp" = "name:、comment:、“引用フレーズ”、-除外語を使用できます";

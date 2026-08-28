@@ -1001,6 +1001,14 @@ extension ImageEditorView {
                 viewModel.duplicateSelectedLayerComp()
             }
             .disabled(!viewModel.canDuplicateSelectedLayerComp)
+            Button(L10n.text(
+                viewModel.isSelectedLayerCompFavorite
+                    ? "imageEditor.action.layerCompRemoveFavorite"
+                    : "imageEditor.action.layerCompAddFavorite"
+            )) {
+                _ = viewModel.toggleSelectedLayerCompFavorite()
+            }
+            .disabled(!viewModel.canToggleSelectedLayerCompFavorite)
             Button(L10n.text("imageEditor.action.layerCompDelete")) {
                 viewModel.deleteSelectedLayerComp()
             }
@@ -1014,6 +1022,15 @@ extension ImageEditorView {
                 viewModel.applyNextLayerComp()
             }
             .disabled(!viewModel.canSelectNextLayerComp)
+            Divider()
+            Button(L10n.text("imageEditor.action.layerCompPreviousFavorite")) {
+                viewModel.applyPreviousFavoriteLayerComp()
+            }
+            .disabled(!viewModel.canSelectPreviousFavoriteLayerComp)
+            Button(L10n.text("imageEditor.action.layerCompNextFavorite")) {
+                viewModel.applyNextFavoriteLayerComp()
+            }
+            .disabled(!viewModel.canSelectNextFavoriteLayerComp)
         }
     }
 
@@ -2202,6 +2219,15 @@ extension ImageEditorView {
                 viewModel.duplicateSelectedLayerComp()
             }
             .disabled(!viewModel.canDuplicateSelectedLayerComp)
+            Button(L10n.text(
+                viewModel.isSelectedLayerCompFavorite
+                    ? "imageEditor.action.layerCompRemoveFavorite"
+                    : "imageEditor.action.layerCompAddFavorite"
+            )) {
+                selectedLayerPanelTab = .comps
+                _ = viewModel.toggleSelectedLayerCompFavorite()
+            }
+            .disabled(!viewModel.canToggleSelectedLayerCompFavorite)
             Divider()
             Button(L10n.text("imageEditor.action.layerCompMoveToTop")) {
                 guard let id = viewModel.document.selectedLayerCompID else { return }
@@ -2244,6 +2270,17 @@ extension ImageEditorView {
                 viewModel.applyNextLayerComp()
             }
             .disabled(!viewModel.canSelectNextLayerComp)
+            Divider()
+            Button(L10n.text("imageEditor.action.layerCompPreviousFavorite")) {
+                selectedLayerPanelTab = .comps
+                viewModel.applyPreviousFavoriteLayerComp()
+            }
+            .disabled(!viewModel.canSelectPreviousFavoriteLayerComp)
+            Button(L10n.text("imageEditor.action.layerCompNextFavorite")) {
+                selectedLayerPanelTab = .comps
+                viewModel.applyNextFavoriteLayerComp()
+            }
+            .disabled(!viewModel.canSelectNextFavoriteLayerComp)
         }
     }
 

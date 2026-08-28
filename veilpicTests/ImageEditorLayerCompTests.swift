@@ -736,6 +736,21 @@ struct ImageEditorLayerCompTests {
         #expect(menuSource.components(
             separatedBy: "viewModel.applyNextLayerComp()"
         ).count - 1 == 2)
+        #expect(menuSource.components(
+            separatedBy: "viewModel.toggleSelectedLayerCompFavorite()"
+        ).count - 1 == 2)
+        #expect(menuSource.components(
+            separatedBy: "viewModel.applyPreviousFavoriteLayerComp()"
+        ).count - 1 == 2)
+        #expect(menuSource.components(
+            separatedBy: "viewModel.applyNextFavoriteLayerComp()"
+        ).count - 1 == 2)
+        #expect(menuSource.components(
+            separatedBy: "viewModel.canSelectPreviousFavoriteLayerComp"
+        ).count - 1 == 2)
+        #expect(menuSource.components(
+            separatedBy: "viewModel.canSelectNextFavoriteLayerComp"
+        ).count - 1 == 2)
         let viewModelSource = try String(
             contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorViewModel.swift"),
             encoding: .utf8
@@ -968,6 +983,17 @@ struct ImageEditorLayerCompTests {
             matching: "desktop",
             favoritesOnly: true
         ).map(\.id) == [desktopID, duplicate.id])
+        #expect(!viewModel.canSelectPreviousFavoriteLayerComp)
+        #expect(viewModel.canSelectNextFavoriteLayerComp)
+        #expect(viewModel.applyNextFavoriteLayerComp())
+        #expect(viewModel.document.selectedLayerCompID == duplicate.id)
+        #expect(viewModel.canSelectPreviousFavoriteLayerComp)
+        #expect(!viewModel.canSelectNextFavoriteLayerComp)
+        let boundaryHistoryCount = viewModel.document.history.count
+        #expect(!viewModel.applyNextFavoriteLayerComp())
+        #expect(viewModel.document.history.count == boundaryHistoryCount)
+        #expect(viewModel.applyPreviousFavoriteLayerComp())
+        #expect(viewModel.document.selectedLayerCompID == desktopID)
 
         let data = try viewModel.projectData()
         let restored = ImageEditorViewModel(
@@ -988,7 +1014,15 @@ struct ImageEditorLayerCompTests {
             "imageEditor.status.layerCompFavoriteRemoved",
             "Desktop Approved"
         ))
+        #expect(!viewModel.isSelectedLayerCompFavorite)
+        #expect(viewModel.toggleSelectedLayerCompFavorite())
+        #expect(viewModel.isSelectedLayerCompFavorite)
+        #expect(viewModel.toggleSelectedLayerCompFavorite())
+        #expect(!viewModel.isSelectedLayerCompFavorite)
         #expect(!viewModel.setLayerCompFavorite(UUID(), isFavorite: true))
+        viewModel.document.selectedLayerCompID = nil
+        #expect(!viewModel.canToggleSelectedLayerCompFavorite)
+        #expect(!viewModel.toggleSelectedLayerCompFavorite())
     }
 
     @Test

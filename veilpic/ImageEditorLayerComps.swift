@@ -636,6 +636,30 @@ extension ImageEditorViewModel {
         layerCompNavigationTarget(.next, matching: "") != nil
     }
 
+    var isSelectedLayerCompFavorite: Bool {
+        selectedLayerComp?.isFavorite == true
+    }
+
+    var canToggleSelectedLayerCompFavorite: Bool {
+        selectedLayerComp != nil
+    }
+
+    var canSelectPreviousFavoriteLayerComp: Bool {
+        layerCompNavigationTarget(
+            .previous,
+            matching: "",
+            favoritesOnly: true
+        ) != nil
+    }
+
+    var canSelectNextFavoriteLayerComp: Bool {
+        layerCompNavigationTarget(
+            .next,
+            matching: "",
+            favoritesOnly: true
+        ) != nil
+    }
+
     func addLayerComp(
         named proposedName: String? = nil,
         captureOptions: ImageEditorLayerCompCaptureOptions = .classic
@@ -829,6 +853,15 @@ extension ImageEditorViewModel {
             document.layerComps[index].name
         )
         return true
+    }
+
+    @discardableResult
+    func toggleSelectedLayerCompFavorite() -> Bool {
+        guard let selectedLayerComp else { return false }
+        return setLayerCompFavorite(
+            selectedLayerComp.id,
+            isFavorite: !selectedLayerComp.isFavorite
+        )
     }
 
     @discardableResult
@@ -1067,6 +1100,16 @@ extension ImageEditorViewModel {
             return false
         }
         return applyLayerComp(targetID)
+    }
+
+    @discardableResult
+    func applyPreviousFavoriteLayerComp() -> Bool {
+        applyPreviousLayerComp(favoritesOnly: true)
+    }
+
+    @discardableResult
+    func applyNextFavoriteLayerComp() -> Bool {
+        applyNextLayerComp(favoritesOnly: true)
     }
 
     func layerCompNavigationTarget(
