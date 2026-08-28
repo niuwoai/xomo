@@ -441,6 +441,11 @@ struct XomoFigmaLinkImportSheet: View {
                 .frame(height: 30)
                 .background(Color.black.opacity(0.16))
                 .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+                .submitLabel(.done)
+                .onSubmit {
+                    guard canApplyNodeSelection else { return }
+                    applyNodeSelection()
+                }
                 .accessibilityIdentifier("xomo-figma-node-id-input")
 
                 Button(L10n.text("xomo.figma.node.useNodeID")) {
@@ -448,7 +453,7 @@ struct XomoFigmaLinkImportSheet: View {
                 }
                 .buttonStyle(.bordered)
                 .focusable(false)
-                .disabled(nodeIDDraft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                .disabled(!canApplyNodeSelection)
                 .accessibilityIdentifier("xomo-figma-use-node-id")
             }
 
@@ -628,6 +633,10 @@ struct XomoFigmaLinkImportSheet: View {
             nodeImportController.clear()
             draft.updateInput(value)
         }
+    }
+
+    private var canApplyNodeSelection: Bool {
+        !nodeIDDraft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
     private func pasteLink() {
