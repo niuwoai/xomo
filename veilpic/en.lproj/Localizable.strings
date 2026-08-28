@@ -992,7 +992,10 @@
 "imageEditor.filter.oilPaintShineValue" = "%@";
 "imageEditor.filter.oilPaintLightingAngle" = "Lighting Angle";
 "imageEditor.filter.oilPaintLightingAngleValue" = "%d°";
-"imageEditor.properties.smartFilterOilPaintItem" = "%1$@ · radius %2$d px · %3$d tonal levels · stylization %4$@ · cleanliness %5$@ · bristle detail %6$@ · shine %7$@ · angle %8$d°";
+"imageEditor.filter.oilPaintLightingEnabled" = "Lighting";
+"imageEditor.filter.oilPaintLightingOn" = "on";
+"imageEditor.filter.oilPaintLightingOff" = "off";
+"imageEditor.properties.smartFilterOilPaintItem" = "%1$@ · radius %2$d px · %3$d tonal levels · stylization %4$@ · cleanliness %5$@ · bristle detail %6$@ · shine %7$@ · angle %8$d° · lighting %9$@";
 "imageEditor.filter.vignette" = "Vignette";
 "imageEditor.filter.vignetteMidpoint" = "Midpoint";
 "imageEditor.filter.vignetteMidpointValue" = "%d%%";

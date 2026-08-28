@@ -12009,6 +12009,12 @@ struct ImageEditorView: View {
                             .frame(width: 48, alignment: .trailing)
                     }
                     .accessibilityIdentifier("image-editor-filter-oil-paint-bristle-detail")
+                    Toggle(
+                        L10n.text("imageEditor.filter.oilPaintLightingEnabled"),
+                        isOn: $viewModel.filterOilPaintLightingEnabled
+                    )
+                    .toggleStyle(.checkbox)
+                    .accessibilityIdentifier("image-editor-filter-oil-paint-lighting-enabled")
                     HStack {
                         Text(L10n.text("imageEditor.filter.oilPaintShine"))
                             .font(.system(size: 10, weight: .medium))
@@ -12023,6 +12029,7 @@ struct ImageEditorView: View {
                             .frame(width: 48, alignment: .trailing)
                     }
                     .accessibilityIdentifier("image-editor-filter-oil-paint-shine")
+                    .disabled(!viewModel.filterOilPaintLightingEnabled)
                     HStack {
                         Text(L10n.text("imageEditor.filter.oilPaintLightingAngle"))
                             .font(.system(size: 10, weight: .medium))
@@ -12037,6 +12044,7 @@ struct ImageEditorView: View {
                             .frame(width: 48, alignment: .trailing)
                     }
                     .accessibilityIdentifier("image-editor-filter-oil-paint-lighting-angle")
+                    .disabled(!viewModel.filterOilPaintLightingEnabled)
                 }
                 if viewModel.selectedFilter == .motionBlur {
                     HStack {

@@ -858,6 +858,7 @@ extension NSImage {
         let bristleDetail = (normalizedSettings.oilPaintBristleDetail ?? 0) / 10
         let shine = (normalizedSettings.oilPaintShine ?? 0) / 10
         let lightingAngleDegrees = normalizedSettings.oilPaintLightingAngleDegrees ?? 135
+        let lightingEnabled = normalizedSettings.oilPaintLightingEnabled ?? true
         let lightingOffset: (x: Double, y: Double)
         if abs(lightingAngleDegrees - 135) < 0.000_001 {
             lightingOffset = (1, -1)
@@ -961,7 +962,7 @@ extension NSImage {
                 )
             }
             var litColor = detailedColor
-            if shine > 0 {
+            if lightingEnabled && shine > 0 {
                 let light = Self.samplePixel(
                     x: Double(x) + lightingOffset.x,
                     y: Double(y) + lightingOffset.y,

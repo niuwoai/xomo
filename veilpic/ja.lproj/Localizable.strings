@@ -992,7 +992,10 @@
 "imageEditor.filter.oilPaintShineValue" = "%@";
 "imageEditor.filter.oilPaintLightingAngle" = "光源角度";
 "imageEditor.filter.oilPaintLightingAngleValue" = "%d°";
-"imageEditor.properties.smartFilterOilPaintItem" = "%1$@ · 半径 %2$d px · 階調 %3$d レベル · スタイライズ %4$@ · クリーン度 %5$@ · 毛先 %6$@ · 光沢 %7$@ · 角度 %8$d°";
+"imageEditor.filter.oilPaintLightingEnabled" = "照明";
+"imageEditor.filter.oilPaintLightingOn" = "オン";
+"imageEditor.filter.oilPaintLightingOff" = "オフ";
+"imageEditor.properties.smartFilterOilPaintItem" = "%1$@ · 半径 %2$d px · 階調 %3$d レベル · スタイライズ %4$@ · クリーン度 %5$@ · 毛先 %6$@ · 光沢 %7$@ · 角度 %8$d° · 照明 %9$@";
 "imageEditor.filter.vignette" = "周辺光量";
 "imageEditor.filter.vignetteMidpoint" = "中間点";
 "imageEditor.filter.vignetteMidpointValue" = "%d%%";

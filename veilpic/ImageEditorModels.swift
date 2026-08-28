@@ -2560,6 +2560,8 @@ struct ImageEditorFilterSettings: Equatable, Codable {
     var oilPaintShine: Double?
     /// Oil Paint lighting angle in degrees. Nil preserves the legacy fixed 135-degree direction.
     var oilPaintLightingAngleDegrees: Double?
+    /// Whether Oil Paint lighting is active. Nil preserves the legacy enabled behavior.
+    var oilPaintLightingEnabled: Bool?
     var unsharpRadius: Double = 1
     var unsharpThreshold: Double = 0
     var liquifyPushX: Double = 0.25
@@ -2596,6 +2598,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         oilPaintBristleDetail: Double? = nil,
         oilPaintShine: Double? = nil,
         oilPaintLightingAngleDegrees: Double? = nil,
+        oilPaintLightingEnabled: Bool? = nil,
         unsharpRadius: Double = 1,
         unsharpThreshold: Double = 0,
         liquifyPushX: Double = 0.25,
@@ -2631,6 +2634,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         self.oilPaintBristleDetail = oilPaintBristleDetail
         self.oilPaintShine = oilPaintShine
         self.oilPaintLightingAngleDegrees = oilPaintLightingAngleDegrees
+        self.oilPaintLightingEnabled = oilPaintLightingEnabled
         self.unsharpRadius = unsharpRadius
         self.unsharpThreshold = unsharpThreshold
         self.liquifyPushX = liquifyPushX
@@ -2672,6 +2676,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         oilPaintBristleDetail = try container.decodeIfPresent(Double.self, forKey: .oilPaintBristleDetail)
         oilPaintShine = try container.decodeIfPresent(Double.self, forKey: .oilPaintShine)
         oilPaintLightingAngleDegrees = try container.decodeIfPresent(Double.self, forKey: .oilPaintLightingAngleDegrees)
+        oilPaintLightingEnabled = try container.decodeIfPresent(Bool.self, forKey: .oilPaintLightingEnabled)
         unsharpRadius = try container.decodeIfPresent(Double.self, forKey: .unsharpRadius) ?? 1
         unsharpThreshold = try container.decodeIfPresent(Double.self, forKey: .unsharpThreshold) ?? 0
         liquifyPushX = try container.decodeIfPresent(Double.self, forKey: .liquifyPushX) ?? 0.25
@@ -2713,6 +2718,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         try container.encodeIfPresent(oilPaintBristleDetail, forKey: .oilPaintBristleDetail)
         try container.encodeIfPresent(oilPaintShine, forKey: .oilPaintShine)
         try container.encodeIfPresent(oilPaintLightingAngleDegrees, forKey: .oilPaintLightingAngleDegrees)
+        try container.encodeIfPresent(oilPaintLightingEnabled, forKey: .oilPaintLightingEnabled)
         try container.encode(unsharpRadius, forKey: .unsharpRadius)
         try container.encode(unsharpThreshold, forKey: .unsharpThreshold)
         try container.encode(liquifyPushX, forKey: .liquifyPushX)
@@ -2751,6 +2757,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
             oilPaintBristleDetail: oilPaintBristleDetail.map { max(0, min(10, $0)) },
             oilPaintShine: oilPaintShine.map { max(0, min(10, $0)) },
             oilPaintLightingAngleDegrees: oilPaintLightingAngleDegrees.map { max(-180, min(180, $0)) },
+            oilPaintLightingEnabled: oilPaintLightingEnabled,
             unsharpRadius: max(0.5, min(5, unsharpRadius)),
             unsharpThreshold: max(0, min(1, unsharpThreshold)),
             liquifyPushX: max(-1, min(1, liquifyPushX)),
@@ -2789,6 +2796,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         case oilPaintBristleDetail
         case oilPaintShine
         case oilPaintLightingAngleDegrees
+        case oilPaintLightingEnabled
         case unsharpRadius
         case unsharpThreshold
         case liquifyPushX
