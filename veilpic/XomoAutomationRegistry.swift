@@ -6275,6 +6275,7 @@ final class XomoAutomationRegistry {
             case "oilPaintLightingAngleDegrees": viewModel.filterOilPaintLightingAngleDegrees = try numericSetting(value, key: key)
             case "oilPaintLightingEnabled": viewModel.filterOilPaintLightingEnabled = try booleanSetting(value, key: key)
             case "unsharpAmountPercent": viewModel.filterUnsharpAmountPercent = try numericSetting(value, key: key)
+            case "unsharpRadiusPixels": viewModel.filterUnsharpRadiusPixels = try numericSetting(value, key: key)
             case "unsharpRadius": viewModel.filterUnsharpRadius = try numericSetting(value, key: key)
             case "unsharpThreshold": viewModel.filterUnsharpThreshold = try numericSetting(value, key: key)
             case "liquifyPushX": viewModel.filterLiquifyPushX = try numericSetting(value, key: key)
@@ -8010,6 +8011,7 @@ private extension XomoAutomationRegistry {
         "oilPaintLightingAngleDegrees": XomoAutomationSchema.number(description: "Oil Paint lighting angle in degrees"),
         "oilPaintLightingEnabled": XomoAutomationSchema.boolean(description: "Whether Oil Paint lighting is enabled"),
         "unsharpAmountPercent": XomoAutomationSchema.number(description: "Unsharp Mask amount from 1 to 500 percent"),
+        "unsharpRadiusPixels": XomoAutomationSchema.number(description: "Precise Unsharp Mask radius from 0.1 to 250 pixels"),
         "unsharpRadius": XomoAutomationSchema.number(description: "Unsharp radius"),
         "unsharpThreshold": XomoAutomationSchema.number(description: "Unsharp threshold"),
         "liquifyPushX": XomoAutomationSchema.number(description: "Liquify horizontal push"),

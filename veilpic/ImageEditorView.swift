@@ -12127,12 +12127,23 @@ struct ImageEditorView: View {
                         Text(L10n.text("imageEditor.filter.unsharpRadius"))
                             .font(.system(size: 10, weight: .medium))
                             .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
-                        Slider(value: $viewModel.filterUnsharpRadius, in: 0.5...5, step: 0.5)
-                        Text(L10n.format("imageEditor.filter.unsharpRadiusValue", String(format: "%.1f", viewModel.filterUnsharpRadius)))
+                        Slider(
+                            value: Binding(
+                                get: { viewModel.filterUnsharpEffectiveRadiusPixels },
+                                set: { viewModel.filterUnsharpEffectiveRadiusPixels = $0 }
+                            ),
+                            in: 0.1...250,
+                            step: 0.1
+                        )
+                        Text(L10n.format(
+                            "imageEditor.filter.unsharpRadiusValue",
+                            String(format: "%.1f", viewModel.filterUnsharpEffectiveRadiusPixels)
+                        ))
                             .font(.system(size: 10, weight: .semibold))
                             .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
                             .frame(width: 44, alignment: .trailing)
                     }
+                    .accessibilityIdentifier("image-editor-filter-unsharp-radius")
                     HStack {
                         Text(L10n.text("imageEditor.filter.unsharpThreshold"))
                             .font(.system(size: 10, weight: .medium))

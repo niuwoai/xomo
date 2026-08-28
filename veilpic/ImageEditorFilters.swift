@@ -504,39 +504,94 @@ extension NSImage {
         let clampedIntensity = max(0, min(1, intensity))
         let normalizedSettings = settings.normalized()
         guard clampedIntensity > 0 else { return self }
-        return pixelMappedFromBuffer { x, y, width, height, pixels, bytesPerRow, bytesPerPixel in
-            let radius = max(1, Int(normalizedSettings.unsharpRadius.rounded()))
-            let amount = (normalizedSettings.unsharpAmountPercent ?? (60 + clampedIntensity * 180)) / 100
-            let offset = y * bytesPerRow + x * bytesPerPixel
-            let alpha = Double(pixels[offset + 3]) / 255
-            let red = Double(pixels[offset]) / 255
-            let green = Double(pixels[offset + 1]) / 255
-            let blue = Double(pixels[offset + 2]) / 255
-            let blurred = Self.averageColor(
-                x: x,
-                y: y,
-                radius: radius,
-                width: width,
-                height: height,
-                pixels: pixels,
-                bytesPerRow: bytesPerRow,
-                bytesPerPixel: bytesPerPixel
-            )
-            let edgeDelta = max(
-                abs(red - blurred.red),
-                abs(green - blurred.green),
-                abs(blue - blurred.blue)
-            )
-            guard edgeDelta >= normalizedSettings.unsharpThreshold else {
-                return (red, green, blue, alpha)
+        guard let source = filterRGBAPlane() else { return nil }
+        let width = source.width
+        let height = source.height
+        let integralWidth = width + 1
+        let integralCount = integralWidth * (height + 1)
+        var integrals = Array(
+            repeating: [Int64](repeating: 0, count: integralCount),
+            count: 3
+        )
+        for y in 0..<height {
+            var rowSums = [Int64](repeating: 0, count: 3)
+            for x in 0..<width {
+                let sourceOffset = (y * width + x) * 4
+                let integralOffset = (y + 1) * integralWidth + x + 1
+                let previousRowOffset = y * integralWidth + x + 1
+                for component in 0..<3 {
+                    rowSums[component] += Int64(source.values[sourceOffset + component])
+                    integrals[component][integralOffset] = integrals[component][previousRowOffset]
+                        + rowSums[component]
+                }
             }
-            return (
-                Self.premultipliedChannel(red + (red - blurred.red) * amount, alpha: alpha),
-                Self.premultipliedChannel(green + (green - blurred.green) * amount, alpha: alpha),
-                Self.premultipliedChannel(blue + (blue - blurred.blue) * amount, alpha: alpha),
-                alpha
-            )
         }
+
+        func average(_ integral: [Int64], x: Int, y: Int, radius: Int) -> Double {
+            let minX = max(0, x - radius)
+            let maxX = min(width - 1, x + radius)
+            let minY = max(0, y - radius)
+            let maxY = min(height - 1, y + radius)
+            let bottomRight = integral[(maxY + 1) * integralWidth + maxX + 1]
+            let topRight = integral[minY * integralWidth + maxX + 1]
+            let bottomLeft = integral[(maxY + 1) * integralWidth + minX]
+            let topLeft = integral[minY * integralWidth + minX]
+            let count = Double((maxX - minX + 1) * (maxY - minY + 1))
+            return Double(bottomRight - topRight - bottomLeft + topLeft) / count / 255
+        }
+
+        let preciseRadius = normalizedSettings.unsharpRadiusPixels
+        let legacyRadius = max(1, Int(normalizedSettings.unsharpRadius.rounded()))
+        let lowerRadius = preciseRadius.map { max(0, Int(floor($0))) } ?? legacyRadius
+        let upperRadius = preciseRadius.map { max(1, Int(ceil($0))) } ?? legacyRadius
+        let radiusFraction = preciseRadius.map { $0 - floor($0) } ?? 0
+        let amount = (normalizedSettings.unsharpAmountPercent ?? (60 + clampedIntensity * 180)) / 100
+        var output = source.values
+        for y in 0..<height {
+            for x in 0..<width {
+                let offset = (y * width + x) * 4
+                let alpha = Double(source.values[offset + 3]) / 255
+                let red = Double(source.values[offset]) / 255
+                let green = Double(source.values[offset + 1]) / 255
+                let blue = Double(source.values[offset + 2]) / 255
+                let lowerBlurred = (
+                    red: average(integrals[0], x: x, y: y, radius: lowerRadius),
+                    green: average(integrals[1], x: x, y: y, radius: lowerRadius),
+                    blue: average(integrals[2], x: x, y: y, radius: lowerRadius)
+                )
+                let upperBlurred = radiusFraction > 0
+                    ? (
+                        red: average(integrals[0], x: x, y: y, radius: upperRadius),
+                        green: average(integrals[1], x: x, y: y, radius: upperRadius),
+                        blue: average(integrals[2], x: x, y: y, radius: upperRadius)
+                    )
+                    : lowerBlurred
+                let blurred = (
+                    red: lowerBlurred.red + (upperBlurred.red - lowerBlurred.red) * radiusFraction,
+                    green: lowerBlurred.green + (upperBlurred.green - lowerBlurred.green) * radiusFraction,
+                    blue: lowerBlurred.blue + (upperBlurred.blue - lowerBlurred.blue) * radiusFraction
+                )
+                let edgeDelta = max(
+                    abs(red - blurred.red),
+                    abs(green - blurred.green),
+                    abs(blue - blurred.blue)
+                )
+                guard edgeDelta >= normalizedSettings.unsharpThreshold else { continue }
+                output[offset] = Self.byte(Self.premultipliedChannel(
+                    red + (red - blurred.red) * amount,
+                    alpha: alpha
+                ))
+                output[offset + 1] = Self.byte(Self.premultipliedChannel(
+                    green + (green - blurred.green) * amount,
+                    alpha: alpha
+                ))
+                output[offset + 2] = Self.byte(Self.premultipliedChannel(
+                    blue + (blue - blurred.blue) * amount,
+                    alpha: alpha
+                ))
+            }
+        }
+        return Self.filterRGBAImage(width: width, height: height, values: output, displaySize: size)
     }
 
     private func highPassed(
