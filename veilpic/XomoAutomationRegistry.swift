@@ -6270,6 +6270,7 @@ final class XomoAutomationRegistry {
             case "oilPaintStylization": viewModel.filterOilPaintStylization = try numericSetting(value, key: key)
             case "oilPaintCleanliness": viewModel.filterOilPaintCleanliness = try numericSetting(value, key: key)
             case "oilPaintBristleDetail": viewModel.filterOilPaintBristleDetail = try numericSetting(value, key: key)
+            case "oilPaintShine": viewModel.filterOilPaintShine = try numericSetting(value, key: key)
             case "unsharpRadius": viewModel.filterUnsharpRadius = try numericSetting(value, key: key)
             case "unsharpThreshold": viewModel.filterUnsharpThreshold = try numericSetting(value, key: key)
             case "liquifyPushX": viewModel.filterLiquifyPushX = try numericSetting(value, key: key)
@@ -8000,6 +8001,7 @@ private extension XomoAutomationRegistry {
         "oilPaintStylization": XomoAutomationSchema.number(description: "Oil Paint stylization from 0 to 10"),
         "oilPaintCleanliness": XomoAutomationSchema.number(description: "Oil Paint cleanliness from 0 to 10"),
         "oilPaintBristleDetail": XomoAutomationSchema.number(description: "Oil Paint bristle detail from 0 to 10"),
+        "oilPaintShine": XomoAutomationSchema.number(description: "Oil Paint directional shine from 0 to 10"),
         "unsharpRadius": XomoAutomationSchema.number(description: "Unsharp radius"),
         "unsharpThreshold": XomoAutomationSchema.number(description: "Unsharp threshold"),
         "liquifyPushX": XomoAutomationSchema.number(description: "Liquify horizontal push"),

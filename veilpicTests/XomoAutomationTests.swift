@@ -5859,7 +5859,8 @@ struct XomoAutomationTests {
                     "oilPaintTonalLevels": .number(11),
                     "oilPaintStylization": .number(7.5),
                     "oilPaintCleanliness": .number(6.5),
-                    "oilPaintBristleDetail": .number(8.5)
+                    "oilPaintBristleDetail": .number(8.5),
+                    "oilPaintShine": .number(9.5)
                 ])
             ]
         ))
@@ -5872,6 +5873,7 @@ struct XomoAutomationTests {
         #expect(filter.normalizedSettings.oilPaintStylization == 7.5)
         #expect(filter.normalizedSettings.oilPaintCleanliness == 6.5)
         #expect(filter.normalizedSettings.oilPaintBristleDetail == 8.5)
+        #expect(filter.normalizedSettings.oilPaintShine == 9.5)
 
         let tools = registry.execute(request(operation: "tools"))
         let configureTool = try #require(
@@ -5886,6 +5888,7 @@ struct XomoAutomationTests {
         #expect(settingsProperties["oilPaintStylization"]?.objectValue?["type"] == .string("number"))
         #expect(settingsProperties["oilPaintCleanliness"]?.objectValue?["type"] == .string("number"))
         #expect(settingsProperties["oilPaintBristleDetail"]?.objectValue?["type"] == .string("number"))
+        #expect(settingsProperties["oilPaintShine"]?.objectValue?["type"] == .string("number"))
 
         let historyCount = viewModel.document.history.count
         let invalidResponse = registry.execute(request(
@@ -5895,7 +5898,7 @@ struct XomoAutomationTests {
                 "filter": .string(ImageEditorFilter.oilPaint.rawValue),
                 "action": .string("addSmartFilter"),
                 "settings": .object([
-                    "oilPaintBristleDetail": .string("visible")
+                    "oilPaintShine": .string("glossy")
                 ])
             ]
         ))

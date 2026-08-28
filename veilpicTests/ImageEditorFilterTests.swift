@@ -2493,6 +2493,7 @@ struct ImageEditorFilterTests {
         #expect(legacySettings.oilPaintStylization == nil)
         #expect(legacySettings.oilPaintCleanliness == nil)
         #expect(legacySettings.oilPaintBristleDetail == nil)
+        #expect(legacySettings.oilPaintShine == nil)
         let legacyPaint = try #require(sourceImage.filtered(
             kind: .oilPaint,
             intensity: 0.75,
@@ -2506,7 +2507,8 @@ struct ImageEditorFilterTests {
                 oilPaintTonalLevels: 11,
                 oilPaintStylization: 10,
                 oilPaintCleanliness: 0,
-                oilPaintBristleDetail: 0
+                oilPaintBristleDetail: 0,
+                oilPaintShine: 0
             )
         ))
         #expect(legacyPaint.qingtuPNGData() == explicitLegacyPaint.qingtuPNGData())
@@ -2579,6 +2581,21 @@ struct ImageEditorFilterTests {
         #expect(legacyCleanliness.qingtuPNGData() != fullBristleDetail.qingtuPNGData())
         #expect(ImageEditorFilterSettings(oilPaintBristleDetail: -2).normalized().oilPaintBristleDetail == 0)
 
+        let fullShine = try #require(tonalSource.filtered(
+            kind: .oilPaint,
+            intensity: 0.75,
+            settings: ImageEditorFilterSettings(
+                oilPaintRadius: 4,
+                oilPaintTonalLevels: 11,
+                oilPaintStylization: 10,
+                oilPaintCleanliness: 0,
+                oilPaintBristleDetail: 0,
+                oilPaintShine: 10
+            )
+        ))
+        #expect(legacyCleanliness.qingtuPNGData() != fullShine.qingtuPNGData())
+        #expect(ImageEditorFilterSettings(oilPaintShine: 12).normalized().oilPaintShine == 10)
+
         let finePaint = try #require(sourceImage.filtered(
             kind: .oilPaint,
             intensity: 0.75,
@@ -2613,6 +2630,7 @@ struct ImageEditorFilterTests {
         viewModel.filterOilPaintStylization = 10
         viewModel.filterOilPaintCleanliness = 6.5
         viewModel.filterOilPaintBristleDetail = 7.5
+        viewModel.filterOilPaintShine = 5.5
         viewModel.addFilterLayer()
 
         let filterLayer = try #require(viewModel.document.selectedLayer)
@@ -2624,6 +2642,7 @@ struct ImageEditorFilterTests {
         #expect(filterLayer.filterSettings.normalized().oilPaintStylization == 10)
         #expect(filterLayer.filterSettings.normalized().oilPaintCleanliness == 6.5)
         #expect(filterLayer.filterSettings.normalized().oilPaintBristleDetail == 7.5)
+        #expect(filterLayer.filterSettings.normalized().oilPaintShine == 5.5)
         #expect(viewModel.document.layers.first { $0.id == baseLayerID }?.image.qingtuPNGData() == basePixelsBefore)
         #expect(blueSpotBefore.blueComponent > 0.85)
         #expect(paintedCenter.redComponent > 0.65)
@@ -2642,6 +2661,7 @@ struct ImageEditorFilterTests {
         smartViewModel.filterOilPaintStylization = 10
         smartViewModel.filterOilPaintCleanliness = 6.5
         smartViewModel.filterOilPaintBristleDetail = 7.5
+        smartViewModel.filterOilPaintShine = 5.5
         smartViewModel.addSmartFilterToSelectedLayer()
 
         var smartLayer = try #require(smartViewModel.document.selectedLayer)
@@ -2653,6 +2673,7 @@ struct ImageEditorFilterTests {
         #expect(smartLayer.smartFilters.first?.normalizedSettings.oilPaintStylization == 10)
         #expect(smartLayer.smartFilters.first?.normalizedSettings.oilPaintCleanliness == 6.5)
         #expect(smartLayer.smartFilters.first?.normalizedSettings.oilPaintBristleDetail == 7.5)
+        #expect(smartLayer.smartFilters.first?.normalizedSettings.oilPaintShine == 5.5)
         #expect(smartLayer.image.qingtuPNGData() == smartBasePixelsBefore)
         #expect(smartPaintedCenter.redComponent > 0.65)
         #expect(smartPaintedCenter.blueComponent > 0.25)
@@ -2664,7 +2685,8 @@ struct ImageEditorFilterTests {
             11,
             "10.0",
             "6.5",
-            "7.5"
+            "7.5",
+            "5.5"
         ))
         #expect(smartViewModel.document.history.last?.title == L10n.text("imageEditor.history.layerSmartFilterAdd"))
 
@@ -2675,6 +2697,7 @@ struct ImageEditorFilterTests {
         #expect(restored.selectedLayer?.smartFilters.first?.normalizedSettings.oilPaintStylization == 10)
         #expect(restored.selectedLayer?.smartFilters.first?.normalizedSettings.oilPaintCleanliness == 6.5)
         #expect(restored.selectedLayer?.smartFilters.first?.normalizedSettings.oilPaintBristleDetail == 7.5)
+        #expect(restored.selectedLayer?.smartFilters.first?.normalizedSettings.oilPaintShine == 5.5)
 
         let root = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()
@@ -2688,6 +2711,7 @@ struct ImageEditorFilterTests {
         #expect(viewSource.contains("image-editor-filter-oil-paint-stylization"))
         #expect(viewSource.contains("image-editor-filter-oil-paint-cleanliness"))
         #expect(viewSource.contains("image-editor-filter-oil-paint-bristle-detail"))
+        #expect(viewSource.contains("image-editor-filter-oil-paint-shine"))
 
         smartViewModel.toggleSmartFilterOnSelectedLayer(smartFilterID)
         smartLayer = try #require(smartViewModel.document.selectedLayer)

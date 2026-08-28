@@ -856,6 +856,7 @@ extension NSImage {
         let stylization = (normalizedSettings.oilPaintStylization ?? 10) / 10
         let cleanliness = (normalizedSettings.oilPaintCleanliness ?? 0) / 10
         let bristleDetail = (normalizedSettings.oilPaintBristleDetail ?? 0) / 10
+        let shine = (normalizedSettings.oilPaintShine ?? 0) / 10
         if stylization <= 0 {
             return self
         }
@@ -889,9 +890,7 @@ extension NSImage {
                 )
             }
             let dominant = buckets[dominantIndex]
-            guard
-                  dominant.count > 0
-            else {
+            guard dominant.count > 0 else {
                 return (
                     Double(pixels[offset]) / 255,
                     Double(pixels[offset + 1]) / 255,
@@ -950,16 +949,37 @@ extension NSImage {
                     cleanedColor.blue + (sourceBlue - detailBlue / detailCount) * bristleDetail
                 )
             }
+            var litColor = detailedColor
+            if shine > 0 {
+                let lightOffset = max(0, y - 1) * bytesPerRow + min(width - 1, x + 1) * bytesPerPixel
+                let shadowOffset = min(height - 1, y + 1) * bytesPerRow + max(0, x - 1) * bytesPerPixel
+                let lightLuminance = (
+                    Double(pixels[lightOffset]) * 0.299
+                        + Double(pixels[lightOffset + 1]) * 0.587
+                        + Double(pixels[lightOffset + 2]) * 0.114
+                ) / 255
+                let shadowLuminance = (
+                    Double(pixels[shadowOffset]) * 0.299
+                        + Double(pixels[shadowOffset + 1]) * 0.587
+                        + Double(pixels[shadowOffset + 2]) * 0.114
+                ) / 255
+                let relief = (lightLuminance - shadowLuminance) * shine * 0.5
+                litColor = (
+                    detailedColor.red + relief,
+                    detailedColor.green + relief,
+                    detailedColor.blue + relief
+                )
+            }
             let paintedRed = Self.premultipliedChannel(
-                detailedColor.red,
+                litColor.red,
                 alpha: alpha
             )
             let paintedGreen = Self.premultipliedChannel(
-                detailedColor.green,
+                litColor.green,
                 alpha: alpha
             )
             let paintedBlue = Self.premultipliedChannel(
-                detailedColor.blue,
+                litColor.blue,
                 alpha: alpha
             )
             if stylization >= 1 {

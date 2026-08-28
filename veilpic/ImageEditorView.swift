@@ -12009,6 +12009,20 @@ struct ImageEditorView: View {
                             .frame(width: 48, alignment: .trailing)
                     }
                     .accessibilityIdentifier("image-editor-filter-oil-paint-bristle-detail")
+                    HStack {
+                        Text(L10n.text("imageEditor.filter.oilPaintShine"))
+                            .font(.system(size: 10, weight: .medium))
+                            .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                        Slider(value: $viewModel.filterOilPaintShine, in: 0...10, step: 0.1)
+                        Text(L10n.format(
+                            "imageEditor.filter.oilPaintShineValue",
+                            String(format: "%.1f", viewModel.filterOilPaintShine)
+                        ))
+                            .font(.system(size: 10, weight: .semibold))
+                            .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
+                            .frame(width: 48, alignment: .trailing)
+                    }
+                    .accessibilityIdentifier("image-editor-filter-oil-paint-shine")
                 }
                 if viewModel.selectedFilter == .motionBlur {
                     HStack {
