@@ -3227,6 +3227,10 @@
 "imageEditor.layerComp.empty" = "保存済みレイヤーコンプはありません";
 "imageEditor.layerComp.searchPlaceholder" = "名前またはコメントを検索";
 "imageEditor.layerComp.searchSyntaxHelp" = "name:、comment:、“引用フレーズ”、-除外語を使用できます";
+"imageEditor.layerComp.searchScopeHelp" = "レイヤーコンプの既定の検索フィールドを選択";
+"imageEditor.layerComp.searchScope.all" = "すべてのフィールド";
+"imageEditor.layerComp.searchScope.name" = "名前のみ";
+"imageEditor.layerComp.searchScope.comment" = "コメントのみ";
 "imageEditor.layerComp.noSearchResults" = "一致するレイヤーコンプはありません";
 "imageEditor.layerComp.searchResultsCount" = "%d / %d 件のレイヤーコンプ";
 "imageEditor.action.layerCompSearchClear" = "レイヤーコンプ検索を消去";

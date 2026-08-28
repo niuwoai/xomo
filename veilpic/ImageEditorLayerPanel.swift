@@ -1215,11 +1215,15 @@ extension ImageEditorView {
                     "chevron.left",
                     "imageEditor.action.layerCompPrevious"
                 ) {
-                    viewModel.applyPreviousLayerComp(matching: layerCompSearchQuery)
+                    viewModel.applyPreviousLayerComp(
+                        matching: layerCompSearchQuery,
+                        scope: layerCompSearchScope
+                    )
                 }
                 .disabled(viewModel.layerCompNavigationTarget(
                     .previous,
-                    matching: layerCompSearchQuery
+                    matching: layerCompSearchQuery,
+                    scope: layerCompSearchScope
                 ) == nil)
                 .accessibilityIdentifier("image-editor-layer-comp-previous")
 
@@ -1227,11 +1231,15 @@ extension ImageEditorView {
                     "chevron.right",
                     "imageEditor.action.layerCompNext"
                 ) {
-                    viewModel.applyNextLayerComp(matching: layerCompSearchQuery)
+                    viewModel.applyNextLayerComp(
+                        matching: layerCompSearchQuery,
+                        scope: layerCompSearchScope
+                    )
                 }
                 .disabled(viewModel.layerCompNavigationTarget(
                     .next,
-                    matching: layerCompSearchQuery
+                    matching: layerCompSearchQuery,
+                    scope: layerCompSearchScope
                 ) == nil)
                 .accessibilityIdentifier("image-editor-layer-comp-next")
 
@@ -1256,7 +1264,8 @@ extension ImageEditorView {
     private var filteredLayerComps: [ImageEditorLayerComp] {
         ImageEditorLayerCompSearch.filtered(
             viewModel.document.layerComps,
-            matching: layerCompSearchQuery
+            matching: layerCompSearchQuery,
+            scope: layerCompSearchScope
         )
     }
 
@@ -1276,7 +1285,8 @@ extension ImageEditorView {
                 identifier: "image-editor-layer-comp-search-field",
                 onSubmit: {
                     _ = viewModel.applyPreferredLayerCompSearchResult(
-                        matching: layerCompSearchQuery
+                        matching: layerCompSearchQuery,
+                        scope: layerCompSearchScope
                     )
                 },
                 onCancel: layerCompSearchQuery.isEmpty ? nil : {
@@ -1285,18 +1295,43 @@ extension ImageEditorView {
                 onMovePrevious: {
                     _ = viewModel.selectAdjacentLayerCompSearchResult(
                         .previous,
-                        matching: layerCompSearchQuery
+                        matching: layerCompSearchQuery,
+                        scope: layerCompSearchScope
                     )
                 },
                 onMoveNext: {
                     _ = viewModel.selectAdjacentLayerCompSearchResult(
                         .next,
-                        matching: layerCompSearchQuery
+                        matching: layerCompSearchQuery,
+                        scope: layerCompSearchScope
                     )
                 }
             )
             .frame(minHeight: 16)
             .help(L10n.text("imageEditor.layerComp.searchSyntaxHelp"))
+
+            Menu {
+                ForEach(ImageEditorLayerCompSearchScope.allCases, id: \.self) { scope in
+                    Button {
+                        layerCompSearchScope = scope
+                    } label: {
+                        Label(
+                            L10n.text(layerCompSearchScopeLabelKey(scope)),
+                            systemImage: layerCompSearchScope == scope ? "checkmark" : "circle"
+                        )
+                    }
+                }
+            } label: {
+                Image(systemName: "line.3.horizontal.decrease.circle")
+                    .font(.system(size: 11, weight: .semibold))
+                    .frame(width: 18, height: 18)
+                    .foregroundStyle(layerCompSearchScope == .all
+                        ? Color(nsColor: ImageEditorTheme.mutedText)
+                        : Color.accentColor)
+            }
+            .menuStyle(.borderlessButton)
+            .help(L10n.text("imageEditor.layerComp.searchScopeHelp"))
+            .accessibilityIdentifier("image-editor-layer-comp-search-scope")
 
             if !layerCompSearchQuery.isEmpty {
                 Button {
@@ -1319,6 +1354,19 @@ extension ImageEditorView {
                 .stroke(Color.white.opacity(0.08), lineWidth: 1)
         )
         .accessibilityIdentifier("image-editor-layer-comp-search")
+    }
+
+    private func layerCompSearchScopeLabelKey(
+        _ scope: ImageEditorLayerCompSearchScope
+    ) -> String {
+        switch scope {
+        case .all:
+            return "imageEditor.layerComp.searchScope.all"
+        case .name:
+            return "imageEditor.layerComp.searchScope.name"
+        case .comment:
+            return "imageEditor.layerComp.searchScope.comment"
+        }
     }
 
     private func layerCompDraggableRow(_ comp: ImageEditorLayerComp) -> some View {

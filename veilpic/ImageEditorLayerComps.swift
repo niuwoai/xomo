@@ -82,17 +82,17 @@ enum ImageEditorLayerCompNavigationDirection: Equatable {
     case next
 }
 
-enum ImageEditorLayerCompSearch {
-    private enum Field: Equatable {
-        case any
-        case name
-        case comment
-    }
+enum ImageEditorLayerCompSearchScope: CaseIterable, Equatable, Hashable {
+    case all
+    case name
+    case comment
+}
 
+enum ImageEditorLayerCompSearch {
     private struct Term: Equatable {
         var value: String
         var isExcluded: Bool
-        var field: Field
+        var scope: ImageEditorLayerCompSearchScope
     }
 
     private static let namePrefix = "name:"
@@ -104,16 +104,17 @@ enum ImageEditorLayerCompSearch {
 
     static func filtered(
         _ layerComps: [ImageEditorLayerComp],
-        matching query: String
+        matching query: String,
+        scope: ImageEditorLayerCompSearchScope = .all
     ) -> [ImageEditorLayerComp] {
-        let terms = terms(in: query)
+        let terms = terms(in: query, defaultScope: scope)
         guard !terms.isEmpty else { return layerComps }
         let options: String.CompareOptions = [.caseInsensitive, .diacriticInsensitive, .widthInsensitive]
         return layerComps.filter { comp in
             return terms.allSatisfy { term in
                 let searchableText: String
-                switch term.field {
-                case .any:
+                switch term.scope {
+                case .all:
                     searchableText = "\(comp.name)\n\(comp.comment)"
                 case .name:
                     searchableText = comp.name
@@ -130,10 +131,11 @@ enum ImageEditorLayerCompSearch {
         direction: ImageEditorLayerCompNavigationDirection,
         layerComps: [ImageEditorLayerComp],
         query: String,
+        scope: ImageEditorLayerCompSearchScope = .all,
         selectedLayerCompID: UUID?
     ) -> UUID? {
         guard let selectedLayerCompID else { return nil }
-        let filteredIDs = filtered(layerComps, matching: query).map(\.id)
+        let filteredIDs = filtered(layerComps, matching: query, scope: scope).map(\.id)
         guard !filteredIDs.isEmpty else { return nil }
         guard let selectedIndex = filteredIDs.firstIndex(of: selectedLayerCompID) else {
             return direction == .previous ? filteredIDs.last : filteredIDs.first
@@ -152,10 +154,11 @@ enum ImageEditorLayerCompSearch {
     static func preferredResultID(
         in layerComps: [ImageEditorLayerComp],
         matching query: String,
+        scope: ImageEditorLayerCompSearchScope = .all,
         selectedLayerCompID: UUID?
     ) -> UUID? {
         guard hasTerms(query) else { return nil }
-        let results = filtered(layerComps, matching: query)
+        let results = filtered(layerComps, matching: query, scope: scope)
         if let selectedLayerCompID,
            results.contains(where: { $0.id == selectedLayerCompID }) {
             return selectedLayerCompID
@@ -167,10 +170,11 @@ enum ImageEditorLayerCompSearch {
         direction: ImageEditorLayerCompNavigationDirection,
         layerComps: [ImageEditorLayerComp],
         query: String,
+        scope: ImageEditorLayerCompSearchScope = .all,
         selectedLayerCompID: UUID?
     ) -> UUID? {
         guard hasTerms(query) else { return nil }
-        let filteredIDs = filtered(layerComps, matching: query).map(\.id)
+        let filteredIDs = filtered(layerComps, matching: query, scope: scope).map(\.id)
         guard !filteredIDs.isEmpty else { return nil }
         guard let selectedLayerCompID,
               let selectedIndex = filteredIDs.firstIndex(of: selectedLayerCompID)
@@ -188,7 +192,10 @@ enum ImageEditorLayerCompSearch {
         }
     }
 
-    private static func terms(in query: String) -> [Term] {
+    private static func terms(
+        in query: String,
+        defaultScope: ImageEditorLayerCompSearchScope = .all
+    ) -> [Term] {
         var rawTerms: [String] = []
         var current = ""
         var isInsideQuotes = false
@@ -224,20 +231,20 @@ enum ImageEditorLayerCompSearch {
                 value.removeFirst()
             }
             value = value.trimmingCharacters(in: .whitespacesAndNewlines)
-            let field: Field
+            let scope: ImageEditorLayerCompSearchScope
             let lowercaseValue = value.lowercased()
             if lowercaseValue.hasPrefix(namePrefix) {
                 value.removeFirst(namePrefix.count)
-                field = .name
+                scope = .name
             } else if lowercaseValue.hasPrefix(commentPrefix) {
                 value.removeFirst(commentPrefix.count)
-                field = .comment
+                scope = .comment
             } else {
-                field = .any
+                scope = defaultScope
             }
             value = value.trimmingCharacters(in: .whitespacesAndNewlines)
             guard !value.isEmpty, value != "-" else { return nil }
-            return Term(value: value, isExcluded: isExcluded, field: field)
+            return Term(value: value, isExcluded: isExcluded, scope: scope)
         }
     }
 }
@@ -984,16 +991,30 @@ extension ImageEditorViewModel {
     }
 
     @discardableResult
-    func applyPreviousLayerComp(matching query: String = "") -> Bool {
-        guard let targetID = layerCompNavigationTarget(.previous, matching: query) else {
+    func applyPreviousLayerComp(
+        matching query: String = "",
+        scope: ImageEditorLayerCompSearchScope = .all
+    ) -> Bool {
+        guard let targetID = layerCompNavigationTarget(
+            .previous,
+            matching: query,
+            scope: scope
+        ) else {
             return false
         }
         return applyLayerComp(targetID)
     }
 
     @discardableResult
-    func applyNextLayerComp(matching query: String = "") -> Bool {
-        guard let targetID = layerCompNavigationTarget(.next, matching: query) else {
+    func applyNextLayerComp(
+        matching query: String = "",
+        scope: ImageEditorLayerCompSearchScope = .all
+    ) -> Bool {
+        guard let targetID = layerCompNavigationTarget(
+            .next,
+            matching: query,
+            scope: scope
+        ) else {
             return false
         }
         return applyLayerComp(targetID)
@@ -1001,21 +1022,27 @@ extension ImageEditorViewModel {
 
     func layerCompNavigationTarget(
         _ direction: ImageEditorLayerCompNavigationDirection,
-        matching query: String
+        matching query: String,
+        scope: ImageEditorLayerCompSearchScope = .all
     ) -> UUID? {
         ImageEditorLayerCompSearch.navigationTarget(
             direction: direction,
             layerComps: document.layerComps,
             query: query,
+            scope: scope,
             selectedLayerCompID: document.selectedLayerCompID
         )
     }
 
     @discardableResult
-    func applyPreferredLayerCompSearchResult(matching query: String) -> Bool {
+    func applyPreferredLayerCompSearchResult(
+        matching query: String,
+        scope: ImageEditorLayerCompSearchScope = .all
+    ) -> Bool {
         guard let id = ImageEditorLayerCompSearch.preferredResultID(
             in: document.layerComps,
             matching: query,
+            scope: scope,
             selectedLayerCompID: document.selectedLayerCompID
         ) else { return false }
         return applyLayerComp(id)
@@ -1024,12 +1051,14 @@ extension ImageEditorViewModel {
     @discardableResult
     func selectAdjacentLayerCompSearchResult(
         _ direction: ImageEditorLayerCompNavigationDirection,
-        matching query: String
+        matching query: String,
+        scope: ImageEditorLayerCompSearchScope = .all
     ) -> Bool {
         guard let id = ImageEditorLayerCompSearch.selectionTarget(
             direction: direction,
             layerComps: document.layerComps,
             query: query,
+            scope: scope,
             selectedLayerCompID: document.selectedLayerCompID
         ) else { return false }
         selectLayerComp(id)

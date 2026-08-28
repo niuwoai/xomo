@@ -250,6 +250,7 @@ struct ImageEditorView: View {
     @State var layerCompNameDrafts: [UUID: String] = [:]
     @State var layerCompCommentDrafts: [UUID: String] = [:]
     @State var layerCompSearchQuery = ""
+    @State var layerCompSearchScope: ImageEditorLayerCompSearchScope = .all
     @AppStorage(ImageEditorLayerCompCaptureDefaults.visibilityKey)
     var defaultLayerCompCapturesVisibility = true
     @AppStorage(ImageEditorLayerCompCaptureDefaults.positionKey)

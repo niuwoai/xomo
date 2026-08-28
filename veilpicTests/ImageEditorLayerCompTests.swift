@@ -150,6 +150,31 @@ struct ImageEditorLayerCompTests {
         ).map(\.id) == [desktopID, tabletID])
         #expect(ImageEditorLayerCompSearch.filtered(
             viewModel.document.layerComps,
+            matching: "approved",
+            scope: .name
+        ).isEmpty)
+        #expect(ImageEditorLayerCompSearch.filtered(
+            viewModel.document.layerComps,
+            matching: "approved",
+            scope: .comment
+        ).map(\.id) == [desktopID, tabletID])
+        #expect(ImageEditorLayerCompSearch.filtered(
+            viewModel.document.layerComps,
+            matching: "desktop elite",
+            scope: .name
+        ).map(\.id) == [desktopID])
+        #expect(ImageEditorLayerCompSearch.filtered(
+            viewModel.document.layerComps,
+            matching: "name:mobile",
+            scope: .comment
+        ).map(\.id) == [mobileID])
+        #expect(ImageEditorLayerCompSearch.filtered(
+            viewModel.document.layerComps,
+            matching: "-review",
+            scope: .comment
+        ).map(\.id) == [desktopID, tabletID])
+        #expect(ImageEditorLayerCompSearch.filtered(
+            viewModel.document.layerComps,
             matching: "-"
         ).map(\.id) == [desktopID, mobileID, tabletID])
         #expect(!ImageEditorLayerCompSearch.hasTerms("\"\" -"))
@@ -197,6 +222,16 @@ struct ImageEditorLayerCompTests {
             .next,
             matching: "missing"
         ) == nil)
+        #expect(viewModel.layerCompNavigationTarget(
+            .next,
+            matching: "approved",
+            scope: .name
+        ) == nil)
+        #expect(viewModel.layerCompNavigationTarget(
+            .next,
+            matching: "approved",
+            scope: .comment
+        ) == desktopID)
         #expect(!viewModel.applyNextLayerComp(matching: "missing"))
         #expect(try viewModel.projectData() == projectDataBeforeSearch)
         #expect(viewModel.document.history == historyBeforeSearch)
@@ -533,6 +568,10 @@ struct ImageEditorLayerCompTests {
         #expect(source.contains("imageEditor.layerComp.searchResultsCount"))
         #expect(source.contains("image-editor-layer-comp-search-results-count"))
         #expect(source.contains("imageEditor.layerComp.searchSyntaxHelp"))
+        #expect(source.contains("ImageEditorLayerCompSearchScope.allCases"))
+        #expect(source.contains("imageEditor.layerComp.searchScopeHelp"))
+        #expect(source.contains("image-editor-layer-comp-search-scope"))
+        #expect(source.contains("scope: layerCompSearchScope"))
         #expect(source.contains("viewModel.applyPreferredLayerCompSearchResult("))
         #expect(source.contains("#selector(NSResponder.insertNewline(_:))"))
         #expect(source.contains("#selector(NSResponder.cancelOperation(_:))"))
@@ -595,8 +634,8 @@ struct ImageEditorLayerCompTests {
         #expect(source.contains("viewModel.clearLayerCompWarning(comp.id)"))
         #expect(source.contains("viewModel.clearAllLayerCompWarnings()"))
         #expect(source.contains("image-editor-layer-comp-warning-\\(comp.id.uuidString)"))
-        #expect(source.contains("viewModel.applyPreviousLayerComp(matching: layerCompSearchQuery)"))
-        #expect(source.contains("viewModel.applyNextLayerComp(matching: layerCompSearchQuery)"))
+        #expect(source.contains("viewModel.applyPreviousLayerComp("))
+        #expect(source.contains("viewModel.applyNextLayerComp("))
         #expect(source.contains("ImageEditorLayerCompSearch.filtered("))
         #expect(source.contains("imageEditor.layerComp.searchPlaceholder"))
         #expect(source.contains("imageEditor.layerComp.noSearchResults"))
@@ -616,6 +655,9 @@ struct ImageEditorLayerCompTests {
             "@State var layerCompCommentDrafts: [UUID: String] = [:]"
         ))
         #expect(viewSource.contains("@State var layerCompSearchQuery = \"\""))
+        #expect(viewSource.contains(
+            "@State var layerCompSearchScope: ImageEditorLayerCompSearchScope = .all"
+        ))
         #expect(viewSource.contains(
             "@AppStorage(ImageEditorLayerCompCaptureDefaults.visibilityKey)"
         ))
