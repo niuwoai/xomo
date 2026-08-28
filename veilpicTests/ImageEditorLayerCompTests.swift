@@ -121,6 +121,66 @@ struct ImageEditorLayerCompTests {
     }
 
     @Test
+    func appliedLayerCompMarkerTracksRestorableStateWithoutCreatingTransactions() throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "source.png",
+            image: testImage(color: .systemBlue, size: NSSize(width: 100, height: 80))
+        ) { _ in }
+        viewModel.addLayer()
+        let detailID = try #require(viewModel.document.selectedLayerID)
+        viewModel.addLayerComp(named: "Baseline")
+        let compID = try #require(viewModel.document.selectedLayerCompID)
+
+        let projectData = try viewModel.projectData()
+        let history = viewModel.document.history
+        let undoCount = viewModel.undoStack.count
+        let redoCount = viewModel.redoStack.count
+        #expect(viewModel.isLayerCompApplied(compID))
+        #expect(viewModel.isLayerCompApplied(compID))
+        #expect(try viewModel.projectData() == projectData)
+        #expect(viewModel.document.history == history)
+        #expect(viewModel.undoStack.count == undoCount)
+        #expect(viewModel.redoStack.count == redoCount)
+
+        viewModel.toggleLayerVisibility(detailID)
+        #expect(!viewModel.isLayerCompApplied(compID))
+        #expect(viewModel.applyLayerComp(compID))
+        #expect(viewModel.isLayerCompApplied(compID))
+
+        let otherLayerID = try #require(viewModel.document.layers.first { $0.id != detailID }?.id)
+        viewModel.selectLayer(otherLayerID)
+        #expect(!viewModel.isLayerCompApplied(compID))
+        #expect(viewModel.applyLayerComp(compID))
+        #expect(viewModel.isLayerCompApplied(compID))
+
+        #expect(viewModel.setLayerCompCapturesVisibility(compID, enabled: false))
+        viewModel.toggleLayerVisibility(detailID)
+        #expect(viewModel.isLayerCompApplied(compID))
+
+        #expect(viewModel.setLayerCompCapturesPosition(compID, enabled: false))
+        let detailIndex = try #require(viewModel.document.layers.firstIndex { $0.id == detailID })
+        viewModel.document.layers[detailIndex].frame.origin.x += 7
+        #expect(viewModel.isLayerCompApplied(compID))
+
+        #expect(viewModel.setLayerCompCapturesAppearance(compID, enabled: false))
+        viewModel.document.layers[detailIndex].blendMode = .multiply
+        #expect(viewModel.isLayerCompApplied(compID))
+
+        viewModel.document.layers[detailIndex].opacity = 0.42
+        #expect(!viewModel.isLayerCompApplied(compID))
+        #expect(viewModel.applyLayerComp(compID))
+        #expect(viewModel.isLayerCompApplied(compID))
+
+        viewModel.document.layers.swapAt(0, 1)
+        #expect(!viewModel.isLayerCompApplied(compID))
+        #expect(viewModel.applyLayerComp(compID))
+        #expect(viewModel.isLayerCompApplied(compID))
+
+        viewModel.document.layers.removeAll { $0.id == detailID }
+        #expect(!viewModel.isLayerCompApplied(compID))
+    }
+
+    @Test
     func layerCompContextOperationsUseTheExplicitRowInsteadOfTheCurrentSelection() throws {
         let viewModel = ImageEditorViewModel(
             sourceName: "source.png",
@@ -177,6 +237,9 @@ struct ImageEditorLayerCompTests {
         let contextSource = source[contextStart.lowerBound..<contextEnd.lowerBound]
 
         #expect(source.contains(".contextMenu {\n            layerCompContextMenu(comp)"))
+        #expect(source.contains("viewModel.isLayerCompApplied(comp.id)"))
+        #expect(source.contains("imageEditor.layerComp.currentlyApplied"))
+        #expect(source.contains("image-editor-layer-comp-applied-"))
         #expect(contextSource.contains("viewModel.applyLayerComp(comp.id)"))
         #expect(contextSource.contains("viewModel.updateLayerComp(comp.id)"))
         #expect(contextSource.contains("viewModel.duplicateLayerComp(comp.id)"))

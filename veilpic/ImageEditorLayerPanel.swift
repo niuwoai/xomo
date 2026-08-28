@@ -1246,6 +1246,7 @@ extension ImageEditorView {
 
     private func layerCompRow(_ comp: ImageEditorLayerComp) -> some View {
         let isSelected = viewModel.document.selectedLayerCompID == comp.id
+        let isApplied = viewModel.isLayerCompApplied(comp.id)
         return HStack(spacing: 6) {
             Button {
                 viewModel.selectLayerComp(comp.id)
@@ -1257,6 +1258,15 @@ extension ImageEditorView {
             }
             .buttonStyle(.plain)
             .help(L10n.text("imageEditor.action.layerCompSelect"))
+
+            if isApplied {
+                Image(systemName: "checkmark.circle.fill")
+                    .font(.system(size: 11, weight: .semibold))
+                    .frame(width: 16)
+                    .foregroundStyle(Color(nsColor: ImageEditorTheme.selected))
+                    .help(L10n.text("imageEditor.layerComp.currentlyApplied"))
+                    .accessibilityIdentifier("image-editor-layer-comp-applied-\(comp.id.uuidString)")
+            }
 
             if viewModel.layerCompHasWarning(comp) {
                 Button {

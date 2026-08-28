@@ -153,12 +153,49 @@ enum ImageEditorLayerCompDropGeometry {
 }
 
 enum ImageEditorLayerCompApplication {
+    private static let scalarTolerance = 0.000_001
+
     static func hasMatchingLayers(
         _ comp: ImageEditorLayerComp,
         in document: ImageEditorDocument
     ) -> Bool {
         let capturedLayerIDs = Set(comp.layerStates.map(\.layerID))
         return document.layers.contains { capturedLayerIDs.contains($0.id) }
+    }
+
+    static func matchesCurrentDocument(
+        _ comp: ImageEditorLayerComp,
+        in document: ImageEditorDocument
+    ) -> Bool {
+        guard document.selectedLayerCompID == comp.id else { return false }
+        let layersByID = Dictionary(uniqueKeysWithValues: document.layers.map { ($0.id, $0) })
+        let existingLayerIDs = Set(layersByID.keys)
+        let existingGroupIDs = Set(document.layers.filter(\.isGroup).map(\.id))
+        guard comp.layerStates.allSatisfy({ state in
+            guard let layer = layersByID[state.layerID] else { return false }
+            return layerMatches(
+                layer,
+                state: state,
+                comp: comp,
+                existingLayerIDs: existingLayerIDs,
+                existingGroupIDs: existingGroupIDs
+            )
+        }) else { return false }
+        guard expectedLayerOrder(comp.layerOrder, in: document) == document.layers.map(\.id) else {
+            return false
+        }
+
+        let expectedSelectedLayerID = comp.selectedLayerID.flatMap {
+            existingLayerIDs.contains($0) ? $0 : nil
+        } ?? document.selectedLayerID.flatMap {
+            existingLayerIDs.contains($0) ? $0 : nil
+        } ?? document.layers.last?.id
+        var expectedSelectedLayerIDs = comp.selectedLayerIDs.intersection(existingLayerIDs)
+        if let expectedSelectedLayerID {
+            expectedSelectedLayerIDs.insert(expectedSelectedLayerID)
+        }
+        return document.selectedLayerID == expectedSelectedLayerID
+            && document.selectedLayerIDs == expectedSelectedLayerIDs
     }
 
     static func apply(
@@ -270,6 +307,112 @@ enum ImageEditorLayerCompApplication {
         let uncapturedLayers = document.layers.filter { orderIndexByID[$0.id] == nil }
         document.layers = capturedLayers + uncapturedLayers
     }
+
+    private static func expectedLayerOrder(
+        _ layerOrder: [UUID],
+        in document: ImageEditorDocument
+    ) -> [UUID] {
+        let orderIndexByID = Dictionary(uniqueKeysWithValues: layerOrder.enumerated().map {
+            ($0.element, $0.offset)
+        })
+        guard !orderIndexByID.isEmpty else { return document.layers.map(\.id) }
+        let capturedIDs = document.layers
+            .filter { orderIndexByID[$0.id] != nil }
+            .sorted { left, right in
+                (orderIndexByID[left.id] ?? Int.max) < (orderIndexByID[right.id] ?? Int.max)
+            }
+            .map(\.id)
+        let uncapturedIDs = document.layers.filter { orderIndexByID[$0.id] == nil }.map(\.id)
+        return capturedIDs + uncapturedIDs
+    }
+
+    private static func layerMatches(
+        _ layer: ImageEditorLayer,
+        state: ImageEditorLayerCompLayerState,
+        comp: ImageEditorLayerComp,
+        existingLayerIDs: Set<UUID>,
+        existingGroupIDs: Set<UUID>
+    ) -> Bool {
+        if comp.capturesVisibility, layer.isVisible != state.isVisible { return false }
+        if comp.capturesPosition, !rectMatches(layer.frame, state.frame) { return false }
+        guard scalarMatches(layer.opacity, max(0, min(1, state.opacity))),
+              scalarMatches(layer.fillOpacity, max(0, min(1, state.fillOpacity))),
+              layer.isMaskLinked == state.isMaskLinked,
+              scalarMatches(layer.blendIfSourceBlack, max(0, min(1, state.blendIfSourceBlack))),
+              scalarMatches(
+                  layer.blendIfSourceWhite,
+                  max(layer.blendIfSourceBlack, min(1, state.blendIfSourceWhite))
+              ),
+              scalarMatches(
+                  layer.blendIfUnderlyingBlack,
+                  max(0, min(1, state.blendIfUnderlyingBlack))
+              ),
+              scalarMatches(
+                  layer.blendIfUnderlyingWhite,
+                  max(layer.blendIfUnderlyingBlack, min(1, state.blendIfUnderlyingWhite))
+              ),
+              layer.isMaskEnabled == state.isMaskEnabled,
+              scalarMatches(layer.maskDensity, max(0, min(1, state.maskDensity))),
+              scalarMatches(layer.maskFeather, max(0, min(80, state.maskFeather))),
+              maskMatches(layer.mask, state: state),
+              layer.isVectorMaskEnabled == state.isVectorMaskEnabled,
+              layer.isVectorMaskInverted == state.isVectorMaskInverted
+        else { return false }
+        if comp.capturesAppearance {
+            guard ImageEditorProjectLayerStyle(style: layer.style) == state.style,
+                  layer.blendMode == state.blendMode
+            else { return false }
+        }
+        if let kind = state.kind, ImageEditorProjectLayerKind(kind: layer.kind) != kind { return false }
+        if let smartFilters = state.smartFilters, layer.smartFilters != smartFilters { return false }
+        if let adjustmentSettings = state.adjustmentSettings,
+           layer.adjustmentSettings != adjustmentSettings.normalized() {
+            return false
+        }
+        if let filterSettings = state.filterSettings,
+           layer.filterSettings != filterSettings.normalized() {
+            return false
+        }
+        if state.hasVectorMaskSnapshot,
+           layer.vectorMask.map(ImageEditorProjectShapeContent.init(content:)) != state.vectorMask {
+            return false
+        }
+        let expectedLinkedLayerIDs = state.linkedLayerIDs
+            .intersection(existingLayerIDs)
+            .subtracting([layer.id])
+        let expectedGroupID = state.groupID.flatMap { groupID in
+            groupID != layer.id && existingGroupIDs.contains(groupID) ? groupID : nil
+        }
+        return layer.linkedLayerIDs == expectedLinkedLayerIDs
+            && layer.groupID == expectedGroupID
+            && layer.isLocked == state.isLocked
+            && layer.locksPixels == state.locksPixels
+            && layer.locksPosition == state.locksPosition
+            && layer.locksTransparentPixels == state.locksTransparentPixels
+            && layer.isGroupExpanded == state.isGroupExpanded
+            && layer.isClippingMask == state.isClippingMask
+            && layer.labelColor == state.labelColor
+    }
+
+    private static func maskMatches(
+        _ mask: NSImage?,
+        state: ImageEditorLayerCompLayerState
+    ) -> Bool {
+        guard state.hasMaskSnapshot else { return true }
+        guard let stateData = state.maskData else { return mask == nil }
+        return mask?.qingtuPNGData() == stateData
+    }
+
+    private static func scalarMatches(_ lhs: Double, _ rhs: Double) -> Bool {
+        abs(lhs - rhs) <= scalarTolerance
+    }
+
+    private static func rectMatches(_ lhs: CGRect, _ rhs: CGRect) -> Bool {
+        scalarMatches(Double(lhs.origin.x), Double(rhs.origin.x))
+            && scalarMatches(Double(lhs.origin.y), Double(rhs.origin.y))
+            && scalarMatches(Double(lhs.size.width), Double(rhs.size.width))
+            && scalarMatches(Double(lhs.size.height), Double(rhs.size.height))
+    }
 }
 
 @MainActor
@@ -297,6 +440,13 @@ extension ImageEditorViewModel {
 
     var canRestoreLastDocumentLayerCompState: Bool {
         lastDocumentLayerCompState != nil
+    }
+
+    func isLayerCompApplied(_ id: UUID) -> Bool {
+        guard document.selectedLayerCompID == id,
+              let comp = document.layerComps.first(where: { $0.id == id })
+        else { return false }
+        return ImageEditorLayerCompApplication.matchesCurrentDocument(comp, in: document)
     }
 
     var canClearSelectedLayerCompWarning: Bool {
