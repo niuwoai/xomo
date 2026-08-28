@@ -1684,6 +1684,8 @@ struct ImageEditorFilterTests {
 
         viewModel.selectedFilter = .motionBlur
         viewModel.filterIntensity = 0.9
+        viewModel.filterMotionBlurAngleDegrees = 0
+        viewModel.filterMotionBlurDistance = 25
         viewModel.addFilterLayer()
 
         let filterLayer = try #require(viewModel.document.selectedLayer)
@@ -1692,6 +1694,8 @@ struct ImageEditorFilterTests {
 
         #expect(filterLayer.isFilter)
         #expect(filterLayer.filter?.kind == .motionBlur)
+        #expect(filterLayer.filterSettings.normalized().motionBlurAngleDegrees == 0)
+        #expect(filterLayer.filterSettings.normalized().motionBlurDistance == 25)
         #expect(viewModel.document.layers.first { $0.id == baseLayerID }?.image.qingtuPNGData() == basePixelsBefore)
         #expect(blurredDarkSide.redComponent > beforeDarkSide.redComponent + 0.08)
         #expect(blurredLightSide.redComponent < beforeLightSide.redComponent - 0.08)
@@ -1702,14 +1706,92 @@ struct ImageEditorFilterTests {
         let smartBasePixelsBefore = try #require(smartViewModel.document.selectedLayer?.image.qingtuPNGData())
         smartViewModel.selectedFilter = .motionBlur
         smartViewModel.filterIntensity = 0.9
+        smartViewModel.filterMotionBlurAngleDegrees = 0
+        smartViewModel.filterMotionBlurDistance = 25
         smartViewModel.addSmartFilterToSelectedLayer()
 
         let smartLayer = try #require(smartViewModel.document.selectedLayer)
         let smartBlurredDarkSide = try #require(smartViewModel.currentImage.color(at: CGPoint(x: 35, y: 24))?.usingColorSpace(.deviceRGB))
         #expect(smartLayer.smartFilters.first?.kind == .motionBlur)
+        #expect(smartLayer.smartFilters.first?.normalizedSettings.motionBlurAngleDegrees == 0)
+        #expect(smartLayer.smartFilters.first?.normalizedSettings.motionBlurDistance == 25)
         #expect(smartLayer.image.qingtuPNGData() == smartBasePixelsBefore)
         #expect(smartBlurredDarkSide.redComponent > beforeDarkSide.redComponent + 0.08)
+        #expect(smartViewModel.smartFilterLabel(try #require(smartLayer.smartFilters.first)) == L10n.format(
+            "imageEditor.properties.smartFilterMotionBlurItem",
+            ImageEditorFilter.motionBlur.title,
+            0,
+            25
+        ))
         #expect(smartViewModel.document.history.last?.title == L10n.text("imageEditor.history.layerSmartFilterAdd"))
+
+        let project = try ImageEditorProjectDocument(document: smartViewModel.document)
+        let restored = try project.restoredDocument()
+        let restoredFilter = try #require(restored.selectedLayer?.smartFilters.first)
+        #expect(restoredFilter.normalizedSettings.motionBlurAngleDegrees == 0)
+        #expect(restoredFilter.normalizedSettings.motionBlurDistance == 25)
+    }
+
+    @Test func motionBlurAngleAndDistanceControlDirectionAndPreserveLegacyProjects() throws {
+        let sourceImage = verticalEdgeImage(size: NSSize(width: 72, height: 48))
+
+        func red(x: CGFloat, angle: Double, distance: Double) throws -> CGFloat {
+            let output = try #require(sourceImage.filtered(
+                kind: .motionBlur,
+                intensity: 0.9,
+                settings: ImageEditorFilterSettings(
+                    motionBlurAngleDegrees: angle,
+                    motionBlurDistance: distance
+                )
+            ))
+            return try #require(
+                output.color(at: CGPoint(x: x, y: 24))?.usingColorSpace(.deviceRGB)
+            ).redComponent
+        }
+
+        let horizontal = try red(x: 35, angle: 0, distance: 20)
+        let vertical = try red(x: 35, angle: 90, distance: 20)
+        let short = try red(x: 30, angle: 0, distance: 2)
+        let long = try red(x: 30, angle: 0, distance: 20)
+        #expect(horizontal > vertical + 0.15)
+        #expect(long > short + 0.08)
+
+        let legacySettings = try JSONDecoder().decode(
+            ImageEditorFilterSettings.self,
+            from: Data("{}".utf8)
+        )
+        #expect(legacySettings.motionBlurAngleDegrees == nil)
+        #expect(legacySettings.motionBlurDistance == nil)
+        let legacy = try #require(sourceImage.filtered(
+            kind: .motionBlur,
+            intensity: 0.9,
+            settings: legacySettings
+        ))
+        let equivalentExplicit = try #require(sourceImage.filtered(
+            kind: .motionBlur,
+            intensity: 0.9,
+            settings: ImageEditorFilterSettings(
+                motionBlurAngleDegrees: 0,
+                motionBlurDistance: 0.9 * 28
+            )
+        ))
+        #expect(legacy.qingtuPNGData() == equivalentExplicit.qingtuPNGData())
+
+        let root = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let viewSource = try String(
+            contentsOf: root.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let viewModelSource = try String(
+            contentsOf: root.appendingPathComponent("veilpic/ImageEditorViewModel.swift"),
+            encoding: .utf8
+        )
+        #expect(viewSource.contains("image-editor-filter-motion-blur-angle"))
+        #expect(viewSource.contains("image-editor-filter-motion-blur-distance"))
+        #expect(viewModelSource.contains("motionBlurAngleDegrees: selectedFilter == .motionBlur"))
+        #expect(viewModelSource.contains("motionBlurDistance: selectedFilter == .motionBlur"))
     }
 
     @Test func imageEditorPixelateFilterLayerAndSmartFilterAreNonDestructive() async throws {

@@ -107,8 +107,9 @@ extension NSImage {
         case .motionBlur:
             let filter = CIFilter.motionBlur()
             filter.inputImage = ciImage.clampedToExtent()
-            filter.radius = Float(clamped * 28)
-            filter.angle = 0
+            let normalized = settings.normalized()
+            filter.radius = Float(normalized.motionBlurDistance ?? (clamped * 28))
+            filter.angle = Float((normalized.motionBlurAngleDegrees ?? 0) * .pi / 180)
             output = filter.outputImage?.cropped(to: ciImage.extent)
         case .addNoise:
             return addingDeterministicNoise(intensity: clamped)

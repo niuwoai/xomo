@@ -947,6 +947,10 @@
 "imageEditor.filter.sharpen" = "Sharpen";
 "imageEditor.filter.pixelate" = "Pixelate";
 "imageEditor.filter.motionBlur" = "Motion Blur";
+"imageEditor.filter.motionBlurAngle" = "Angle";
+"imageEditor.filter.motionBlurAngleValue" = "%d°";
+"imageEditor.filter.motionBlurDistance" = "Distance";
+"imageEditor.filter.motionBlurDistanceValue" = "%d px";
 "imageEditor.filter.addNoise" = "Add Noise";
 "imageEditor.filter.median" = "Median";
 "imageEditor.filter.unsharpMask" = "Unsharp Mask";
@@ -1221,6 +1225,7 @@
 "imageEditor.properties.smartFilterHighPassItem" = "%@ %d%% · Radius %d px";
 "imageEditor.properties.smartFilterMorphologyItem" = "%@ · Radius %d px";
 "imageEditor.properties.smartFilterEmbossItem" = "%@ %d%% · Angle %d° · Height %d px";
+"imageEditor.properties.smartFilterMotionBlurItem" = "%@ · Angle %d° · Distance %d px";
 "imageEditor.properties.smartFilterBackgroundBlurItem" = "%@ · Backdrop radius %@ px";
 "imageEditor.properties.smartFilterUnsharpItem" = "%@ %d%% · Radius %@ · Threshold %d";
 "imageEditor.properties.smartFilterLiquifyPushItem" = "%@ %d%% · X %d · Y %d";

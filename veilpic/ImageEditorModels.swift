@@ -2519,6 +2519,10 @@ struct ImageEditorFilterSettings: Equatable, Codable {
     var highPassRadius: Double?
     /// Explicit Minimum/Maximum radius in pixels. Nil preserves the legacy intensity-derived radius.
     var morphologyRadius: Double?
+    /// Explicit Motion Blur angle in degrees. Nil preserves the legacy horizontal direction.
+    var motionBlurAngleDegrees: Double?
+    /// Explicit Motion Blur distance in pixels. Nil preserves the legacy intensity-derived distance.
+    var motionBlurDistance: Double?
     /// Explicit Emboss light angle in degrees. Nil preserves the legacy fixed diagonal kernel.
     var embossAngleDegrees: Double?
     /// Explicit Emboss relief height in pixels. Nil preserves the legacy one-pixel diagonal kernel.
@@ -2544,6 +2548,8 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         gaussianBlurRadius: Double? = nil,
         highPassRadius: Double? = nil,
         morphologyRadius: Double? = nil,
+        motionBlurAngleDegrees: Double? = nil,
+        motionBlurDistance: Double? = nil,
         embossAngleDegrees: Double? = nil,
         embossHeight: Double? = nil,
         unsharpRadius: Double = 1,
@@ -2566,6 +2572,8 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         self.gaussianBlurRadius = gaussianBlurRadius
         self.highPassRadius = highPassRadius
         self.morphologyRadius = morphologyRadius
+        self.motionBlurAngleDegrees = motionBlurAngleDegrees
+        self.motionBlurDistance = motionBlurDistance
         self.embossAngleDegrees = embossAngleDegrees
         self.embossHeight = embossHeight
         self.unsharpRadius = unsharpRadius
@@ -2591,6 +2599,8 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         gaussianBlurRadius = try container.decodeIfPresent(Double.self, forKey: .gaussianBlurRadius)
         highPassRadius = try container.decodeIfPresent(Double.self, forKey: .highPassRadius)
         morphologyRadius = try container.decodeIfPresent(Double.self, forKey: .morphologyRadius)
+        motionBlurAngleDegrees = try container.decodeIfPresent(Double.self, forKey: .motionBlurAngleDegrees)
+        motionBlurDistance = try container.decodeIfPresent(Double.self, forKey: .motionBlurDistance)
         embossAngleDegrees = try container.decodeIfPresent(Double.self, forKey: .embossAngleDegrees)
         embossHeight = try container.decodeIfPresent(Double.self, forKey: .embossHeight)
         unsharpRadius = try container.decodeIfPresent(Double.self, forKey: .unsharpRadius) ?? 1
@@ -2619,6 +2629,8 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         try container.encodeIfPresent(gaussianBlurRadius, forKey: .gaussianBlurRadius)
         try container.encodeIfPresent(highPassRadius, forKey: .highPassRadius)
         try container.encodeIfPresent(morphologyRadius, forKey: .morphologyRadius)
+        try container.encodeIfPresent(motionBlurAngleDegrees, forKey: .motionBlurAngleDegrees)
+        try container.encodeIfPresent(motionBlurDistance, forKey: .motionBlurDistance)
         try container.encodeIfPresent(embossAngleDegrees, forKey: .embossAngleDegrees)
         try container.encodeIfPresent(embossHeight, forKey: .embossHeight)
         try container.encode(unsharpRadius, forKey: .unsharpRadius)
@@ -2644,6 +2656,8 @@ struct ImageEditorFilterSettings: Equatable, Codable {
             gaussianBlurRadius: gaussianBlurRadius.map { max(0, min(256, $0)) },
             highPassRadius: highPassRadius.map { max(1, min(256, $0)) },
             morphologyRadius: morphologyRadius.map { max(1, min(256, $0)) },
+            motionBlurAngleDegrees: motionBlurAngleDegrees.map { max(-180, min(180, $0)) },
+            motionBlurDistance: motionBlurDistance.map { max(1, min(999, $0)) },
             embossAngleDegrees: embossAngleDegrees.map { max(-180, min(180, $0)) },
             embossHeight: embossHeight.map { max(1, min(10, $0)) },
             unsharpRadius: max(0.5, min(5, unsharpRadius)),
@@ -2669,6 +2683,8 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         case gaussianBlurRadius
         case highPassRadius
         case morphologyRadius
+        case motionBlurAngleDegrees
+        case motionBlurDistance
         case embossAngleDegrees
         case embossHeight
         case unsharpRadius

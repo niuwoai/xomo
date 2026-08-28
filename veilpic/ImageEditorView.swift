@@ -11873,8 +11873,39 @@ struct ImageEditorView: View {
                 }
                 if viewModel.selectedFilter != .minimum
                     && viewModel.selectedFilter != .maximum
+                    && viewModel.selectedFilter != .motionBlur
                     && viewModel.selectedFilter != .emboss {
                     Slider(value: $viewModel.filterIntensity, in: 0...1, step: 0.05)
+                }
+                if viewModel.selectedFilter == .motionBlur {
+                    HStack {
+                        Text(L10n.text("imageEditor.filter.motionBlurAngle"))
+                            .font(.system(size: 10, weight: .medium))
+                            .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                        Slider(value: $viewModel.filterMotionBlurAngleDegrees, in: -180...180, step: 1)
+                        Text(L10n.format(
+                            "imageEditor.filter.motionBlurAngleValue",
+                            Int(viewModel.filterMotionBlurAngleDegrees.rounded())
+                        ))
+                            .font(.system(size: 10, weight: .semibold))
+                            .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
+                            .frame(width: 54, alignment: .trailing)
+                    }
+                    .accessibilityIdentifier("image-editor-filter-motion-blur-angle")
+                    HStack {
+                        Text(L10n.text("imageEditor.filter.motionBlurDistance"))
+                            .font(.system(size: 10, weight: .medium))
+                            .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                        Slider(value: $viewModel.filterMotionBlurDistance, in: 1...999, step: 1)
+                        Text(L10n.format(
+                            "imageEditor.filter.motionBlurDistanceValue",
+                            Int(viewModel.filterMotionBlurDistance.rounded())
+                        ))
+                            .font(.system(size: 10, weight: .semibold))
+                            .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
+                            .frame(width: 54, alignment: .trailing)
+                    }
+                    .accessibilityIdentifier("image-editor-filter-motion-blur-distance")
                 }
                 if viewModel.selectedFilter == .unsharpMask {
                     HStack {

@@ -480,6 +480,8 @@ final class ImageEditorViewModel: ObservableObject {
     @Published private(set) var filterGaussianBlurRadius: Double?
     @Published var filterHighPassRadius: Double = 6
     @Published var filterMorphologyRadius: Double = 3
+    @Published var filterMotionBlurAngleDegrees: Double = 0
+    @Published var filterMotionBlurDistance: Double = 14
     @Published var filterEmbossAngleDegrees: Double = 135
     @Published var filterEmbossHeight: Double = 3
     @Published var filterUnsharpRadius: Double = 1
@@ -2573,6 +2575,19 @@ final class ImageEditorViewModel: ObservableObject {
             )
             guard !filter.isEnabled else { return title }
             return L10n.format("imageEditor.properties.smartFilterDisabled", title)
+        }
+        if filter.kind == .motionBlur {
+            let settings = filter.normalizedSettings
+            if let angle = settings.motionBlurAngleDegrees, let distance = settings.motionBlurDistance {
+                let title = L10n.format(
+                    "imageEditor.properties.smartFilterMotionBlurItem",
+                    filter.kind.title,
+                    Int(angle.rounded()),
+                    Int(distance.rounded())
+                )
+                guard !filter.isEnabled else { return title }
+                return L10n.format("imageEditor.properties.smartFilterDisabled", title)
+            }
         }
         if filter.kind == .highPass {
             let radius = filter.normalizedSettings.highPassRadius
@@ -9455,6 +9470,8 @@ final class ImageEditorViewModel: ObservableObject {
             morphologyRadius: selectedFilter == .minimum || selectedFilter == .maximum
                 ? filterMorphologyRadius
                 : nil,
+            motionBlurAngleDegrees: selectedFilter == .motionBlur ? filterMotionBlurAngleDegrees : nil,
+            motionBlurDistance: selectedFilter == .motionBlur ? filterMotionBlurDistance : nil,
             embossAngleDegrees: selectedFilter == .emboss ? filterEmbossAngleDegrees : nil,
             embossHeight: selectedFilter == .emboss ? filterEmbossHeight : nil,
             unsharpRadius: filterUnsharpRadius,
@@ -11299,6 +11316,9 @@ final class ImageEditorViewModel: ObservableObject {
             ?? max(1, min(256, (1 + filterIntensity * 9).rounded()))
         filterMorphologyRadius = normalized.morphologyRadius
             ?? max(1, min(256, (1 + filterIntensity * 4).rounded()))
+        filterMotionBlurAngleDegrees = normalized.motionBlurAngleDegrees ?? 0
+        filterMotionBlurDistance = normalized.motionBlurDistance
+            ?? max(1, min(999, (filterIntensity * 28).rounded()))
         filterEmbossAngleDegrees = normalized.embossAngleDegrees ?? 135
         filterEmbossHeight = normalized.embossHeight ?? 3
         filterUnsharpRadius = normalized.unsharpRadius
