@@ -944,6 +944,8 @@
 "imageEditor.adjustment.blur" = "ぼかし";
 "imageEditor.adjustment.sharpen" = "シャープ";
 "imageEditor.filter.gaussianBlur" = "ガウスぼかし";
+"imageEditor.filter.gaussianBlurRadius" = "半径";
+"imageEditor.filter.gaussianBlurRadiusValue" = "%@ px";
 "imageEditor.filter.sharpen" = "シャープ";
 "imageEditor.filter.pixelate" = "ピクセレート";
 "imageEditor.filter.pixelateCellSize" = "セルサイズ";

@@ -944,6 +944,8 @@
 "imageEditor.adjustment.blur" = "模糊";
 "imageEditor.adjustment.sharpen" = "锐化";
 "imageEditor.filter.gaussianBlur" = "高斯模糊";
+"imageEditor.filter.gaussianBlurRadius" = "半径";
+"imageEditor.filter.gaussianBlurRadiusValue" = "%@ px";
 "imageEditor.filter.sharpen" = "锐化";
 "imageEditor.filter.pixelate" = "像素化";
 "imageEditor.filter.pixelateCellSize" = "单元格大小";

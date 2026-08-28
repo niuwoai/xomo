@@ -1772,6 +1772,56 @@ struct ImageEditorFilterTests {
         #expect(viewSource.contains("image-editor-filter-add-noise-distribution"))
     }
 
+    @Test func gaussianBlurRadiusPreservesLegacyPixelsAndRoundTripsExactPixels() throws {
+        let sourceImage = gradientImage(size: NSSize(width: 72, height: 48))
+        let legacySettings = try JSONDecoder().decode(
+            ImageEditorFilterSettings.self,
+            from: Data("{}".utf8)
+        )
+        #expect(legacySettings.gaussianBlurRadius == nil)
+
+        let legacy = try #require(sourceImage.filtered(
+            kind: .gaussianBlur,
+            intensity: 0.5,
+            settings: legacySettings
+        ))
+        let explicitLegacyRadius = try #require(sourceImage.filtered(
+            kind: .gaussianBlur,
+            intensity: 0.5,
+            settings: ImageEditorFilterSettings(gaussianBlurRadius: 9)
+        ))
+        #expect(legacy.qingtuPNGData() == explicitLegacyRadius.qingtuPNGData())
+
+        let viewModel = ImageEditorViewModel(sourceName: "blur-radius.png", image: sourceImage) { _ in }
+        viewModel.selectedFilter = .gaussianBlur
+        viewModel.filterIntensity = 0.5
+        #expect(viewModel.filterGaussianBlurRadius == nil)
+        #expect(viewModel.filterGaussianBlurEffectiveRadius == 9)
+        viewModel.filterGaussianBlurEffectiveRadius = 37.5
+        viewModel.addSmartFilterToSelectedLayer()
+
+        let smartFilter = try #require(viewModel.document.selectedLayer?.smartFilters.last)
+        #expect(smartFilter.normalizedSettings.gaussianBlurRadius == 37.5)
+        #expect(viewModel.smartFilterLabel(smartFilter) == L10n.format(
+            "imageEditor.properties.smartFilterGaussianBlurItem",
+            ImageEditorFilter.gaussianBlur.title,
+            "37.5"
+        ))
+        let project = try ImageEditorProjectDocument(document: viewModel.document)
+        let restored = try project.restoredDocument()
+        #expect(restored.selectedLayer?.smartFilters.last?.normalizedSettings.gaussianBlurRadius == 37.5)
+
+        let root = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let viewSource = try String(
+            contentsOf: root.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        #expect(viewSource.contains("image-editor-filter-gaussian-blur-radius"))
+        #expect(viewSource.contains("viewModel.selectedFilter != .gaussianBlur"))
+    }
+
     @Test func imageEditorMotionBlurFilterLayerAndSmartFilterAreNonDestructive() async throws {
         let canvasSize = NSSize(width: 72, height: 48)
         let sourceImage = verticalEdgeImage(size: canvasSize)

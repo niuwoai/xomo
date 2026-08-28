@@ -944,6 +944,8 @@
 "imageEditor.adjustment.blur" = "Blur";
 "imageEditor.adjustment.sharpen" = "Sharpen";
 "imageEditor.filter.gaussianBlur" = "Gaussian Blur";
+"imageEditor.filter.gaussianBlurRadius" = "Radius";
+"imageEditor.filter.gaussianBlurRadiusValue" = "%@ px";
 "imageEditor.filter.sharpen" = "Sharpen";
 "imageEditor.filter.pixelate" = "Pixelate";
 "imageEditor.filter.pixelateCellSize" = "Cell Size";

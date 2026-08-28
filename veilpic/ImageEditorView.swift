@@ -11877,13 +11877,37 @@ struct ImageEditorView: View {
                         Text(filter.title).tag(filter)
                     }
                 }
-                if viewModel.selectedFilter != .minimum
+                if viewModel.selectedFilter != .gaussianBlur
+                    && viewModel.selectedFilter != .minimum
                     && viewModel.selectedFilter != .maximum
                     && viewModel.selectedFilter != .pixelate
                     && viewModel.selectedFilter != .motionBlur
                     && viewModel.selectedFilter != .emboss
                     && viewModel.selectedFilter != .oilPaint {
                     Slider(value: $viewModel.filterIntensity, in: 0...1, step: 0.05)
+                }
+                if viewModel.selectedFilter == .gaussianBlur {
+                    HStack {
+                        Text(L10n.text("imageEditor.filter.gaussianBlurRadius"))
+                            .font(.system(size: 10, weight: .medium))
+                            .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                        Slider(
+                            value: Binding(
+                                get: { viewModel.filterGaussianBlurEffectiveRadius },
+                                set: { viewModel.filterGaussianBlurEffectiveRadius = $0 }
+                            ),
+                            in: 0...256,
+                            step: 0.1
+                        )
+                        Text(L10n.format(
+                            "imageEditor.filter.gaussianBlurRadiusValue",
+                            String(format: "%.1f", viewModel.filterGaussianBlurEffectiveRadius)
+                        ))
+                            .font(.system(size: 10, weight: .semibold))
+                            .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
+                            .frame(width: 60, alignment: .trailing)
+                    }
+                    .accessibilityIdentifier("image-editor-filter-gaussian-blur-radius")
                 }
                 if viewModel.selectedFilter == .pixelate {
                     HStack {

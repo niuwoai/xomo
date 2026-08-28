@@ -477,7 +477,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published private(set) var lastAppliedFilter: ImageEditorFilterApplication?
     @Published private(set) var loadedSmartFilterID: UUID?
     @Published var filterIntensity: Double = 0.5
-    @Published private(set) var filterGaussianBlurRadius: Double?
+    @Published var filterGaussianBlurRadius: Double?
     @Published var filterHighPassRadius: Double = 6
     @Published var filterMorphologyRadius: Double = 3
     @Published var filterPixelateCellSize: Double = 18
@@ -496,6 +496,16 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var filterOilPaintShine: Double = 0
     @Published var filterOilPaintLightingAngleDegrees: Double = 135
     @Published var filterOilPaintLightingEnabled = true
+
+    var filterGaussianBlurEffectiveRadius: Double {
+        get {
+            filterGaussianBlurRadius
+                ?? max(0, min(256, filterIntensity * 18))
+        }
+        set {
+            filterGaussianBlurRadius = max(0, min(256, newValue))
+        }
+    }
     @Published var filterUnsharpRadius: Double = 1
     @Published var filterUnsharpThreshold: Double = 0
     @Published var filterLiquifyPushX: Double = 0.25
