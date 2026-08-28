@@ -978,6 +978,9 @@
 "imageEditor.filter.minimum" = "明るさの最小値";
 "imageEditor.filter.maximum" = "明るさの最大値";
 "imageEditor.filter.oilPaint" = "油彩";
+"imageEditor.filter.oilPaintRadius" = "ブラシ半径";
+"imageEditor.filter.oilPaintRadiusValue" = "%d px";
+"imageEditor.properties.smartFilterOilPaintItem" = "%1$@ · 強度 %2$d%% · 半径 %3$d px";
 "imageEditor.filter.vignette" = "周辺光量";
 "imageEditor.filter.vignetteMidpoint" = "中間点";
 "imageEditor.filter.vignetteMidpointValue" = "%d%%";

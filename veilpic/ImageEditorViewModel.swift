@@ -488,6 +488,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var filterEmbossAngleDegrees: Double = 135
     @Published var filterEmbossHeight: Double = 3
     @Published var filterVignetteMidpoint: Double = 0.28
+    @Published var filterOilPaintRadius: Double = 4
     @Published var filterUnsharpRadius: Double = 1
     @Published var filterUnsharpThreshold: Double = 0
     @Published var filterLiquifyPushX: Double = 0.25
@@ -2647,6 +2648,18 @@ final class ImageEditorViewModel: ObservableObject {
                 filter.kind.title,
                 Int((filter.normalizedIntensity * 100).rounded()),
                 Int((midpoint * 100).rounded())
+            )
+            guard !filter.isEnabled else { return title }
+            return L10n.format("imageEditor.properties.smartFilterDisabled", title)
+        }
+        if filter.kind == .oilPaint {
+            let radius = filter.normalizedSettings.oilPaintRadius
+                ?? (1 + filter.normalizedIntensity * 5)
+            let title = L10n.format(
+                "imageEditor.properties.smartFilterOilPaintItem",
+                filter.kind.title,
+                Int((filter.normalizedIntensity * 100).rounded()),
+                Int(radius.rounded())
             )
             guard !filter.isEnabled else { return title }
             return L10n.format("imageEditor.properties.smartFilterDisabled", title)
@@ -9526,6 +9539,7 @@ final class ImageEditorViewModel: ObservableObject {
             embossAngleDegrees: selectedFilter == .emboss ? filterEmbossAngleDegrees : nil,
             embossHeight: selectedFilter == .emboss ? filterEmbossHeight : nil,
             vignetteMidpoint: selectedFilter == .vignette ? filterVignetteMidpoint : nil,
+            oilPaintRadius: selectedFilter == .oilPaint ? filterOilPaintRadius : nil,
             unsharpRadius: filterUnsharpRadius,
             unsharpThreshold: filterUnsharpThreshold,
             liquifyPushX: filterLiquifyPushX,
@@ -11378,6 +11392,8 @@ final class ImageEditorViewModel: ObservableObject {
         filterEmbossAngleDegrees = normalized.embossAngleDegrees ?? 135
         filterEmbossHeight = normalized.embossHeight ?? 3
         filterVignetteMidpoint = normalized.vignetteMidpoint ?? 0.28
+        filterOilPaintRadius = normalized.oilPaintRadius
+            ?? max(1, min(10, (1 + filterIntensity * 5).rounded()))
         filterUnsharpRadius = normalized.unsharpRadius
         filterUnsharpThreshold = normalized.unsharpThreshold
         filterLiquifyPushX = normalized.liquifyPushX

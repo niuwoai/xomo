@@ -2546,6 +2546,8 @@ struct ImageEditorFilterSettings: Equatable, Codable {
     var embossHeight: Double?
     /// Vignette feather start as a normalized radius. Nil preserves the legacy 28% midpoint.
     var vignetteMidpoint: Double?
+    /// Oil Paint neighborhood radius in pixels. Nil preserves the legacy intensity-derived radius.
+    var oilPaintRadius: Double?
     var unsharpRadius: Double = 1
     var unsharpThreshold: Double = 0
     var liquifyPushX: Double = 0.25
@@ -2575,6 +2577,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         embossAngleDegrees: Double? = nil,
         embossHeight: Double? = nil,
         vignetteMidpoint: Double? = nil,
+        oilPaintRadius: Double? = nil,
         unsharpRadius: Double = 1,
         unsharpThreshold: Double = 0,
         liquifyPushX: Double = 0.25,
@@ -2603,6 +2606,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         self.embossAngleDegrees = embossAngleDegrees
         self.embossHeight = embossHeight
         self.vignetteMidpoint = vignetteMidpoint
+        self.oilPaintRadius = oilPaintRadius
         self.unsharpRadius = unsharpRadius
         self.unsharpThreshold = unsharpThreshold
         self.liquifyPushX = liquifyPushX
@@ -2637,6 +2641,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         embossAngleDegrees = try container.decodeIfPresent(Double.self, forKey: .embossAngleDegrees)
         embossHeight = try container.decodeIfPresent(Double.self, forKey: .embossHeight)
         vignetteMidpoint = try container.decodeIfPresent(Double.self, forKey: .vignetteMidpoint)
+        oilPaintRadius = try container.decodeIfPresent(Double.self, forKey: .oilPaintRadius)
         unsharpRadius = try container.decodeIfPresent(Double.self, forKey: .unsharpRadius) ?? 1
         unsharpThreshold = try container.decodeIfPresent(Double.self, forKey: .unsharpThreshold) ?? 0
         liquifyPushX = try container.decodeIfPresent(Double.self, forKey: .liquifyPushX) ?? 0.25
@@ -2671,6 +2676,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         try container.encodeIfPresent(embossAngleDegrees, forKey: .embossAngleDegrees)
         try container.encodeIfPresent(embossHeight, forKey: .embossHeight)
         try container.encodeIfPresent(vignetteMidpoint, forKey: .vignetteMidpoint)
+        try container.encodeIfPresent(oilPaintRadius, forKey: .oilPaintRadius)
         try container.encode(unsharpRadius, forKey: .unsharpRadius)
         try container.encode(unsharpThreshold, forKey: .unsharpThreshold)
         try container.encode(liquifyPushX, forKey: .liquifyPushX)
@@ -2702,6 +2708,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
             embossAngleDegrees: embossAngleDegrees.map { max(-180, min(180, $0)) },
             embossHeight: embossHeight.map { max(1, min(10, $0)) },
             vignetteMidpoint: vignetteMidpoint.map { max(0, min(0.95, $0)) },
+            oilPaintRadius: oilPaintRadius.map { max(1, min(10, $0)) },
             unsharpRadius: max(0.5, min(5, unsharpRadius)),
             unsharpThreshold: max(0, min(1, unsharpThreshold)),
             liquifyPushX: max(-1, min(1, liquifyPushX)),
@@ -2733,6 +2740,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         case embossAngleDegrees
         case embossHeight
         case vignetteMidpoint
+        case oilPaintRadius
         case unsharpRadius
         case unsharpThreshold
         case liquifyPushX

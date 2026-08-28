@@ -978,6 +978,9 @@
 "imageEditor.filter.minimum" = "Minimum";
 "imageEditor.filter.maximum" = "Maximum";
 "imageEditor.filter.oilPaint" = "Oil Paint";
+"imageEditor.filter.oilPaintRadius" = "Brush Radius";
+"imageEditor.filter.oilPaintRadiusValue" = "%d px";
+"imageEditor.properties.smartFilterOilPaintItem" = "%1$@ · %2$d%% · radius %3$d px";
 "imageEditor.filter.vignette" = "Vignette";
 "imageEditor.filter.vignetteMidpoint" = "Midpoint";
 "imageEditor.filter.vignetteMidpointValue" = "%d%%";

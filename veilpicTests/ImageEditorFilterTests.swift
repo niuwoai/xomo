@@ -2484,6 +2484,44 @@ struct ImageEditorFilterTests {
             spot: NSColor(calibratedRed: 0.05, green: 0.2, blue: 0.95, alpha: 1),
             spotSize: 3
         )
+        let legacySettings = try JSONDecoder().decode(
+            ImageEditorFilterSettings.self,
+            from: Data("{}".utf8)
+        )
+        #expect(legacySettings.oilPaintRadius == nil)
+        let legacyPaint = try #require(sourceImage.filtered(
+            kind: .oilPaint,
+            intensity: 0.75,
+            settings: legacySettings
+        ))
+        let explicitLegacyPaint = try #require(sourceImage.filtered(
+            kind: .oilPaint,
+            intensity: 0.75,
+            settings: ImageEditorFilterSettings(oilPaintRadius: 5)
+        ))
+        #expect(legacyPaint.qingtuPNGData() == explicitLegacyPaint.qingtuPNGData())
+
+        let finePaint = try #require(sourceImage.filtered(
+            kind: .oilPaint,
+            intensity: 0.75,
+            settings: ImageEditorFilterSettings(oilPaintRadius: 1)
+        ))
+        let broadPaint = try #require(sourceImage.filtered(
+            kind: .oilPaint,
+            intensity: 0.75,
+            settings: ImageEditorFilterSettings(oilPaintRadius: 8)
+        ))
+        let fineCenter = try #require(
+            finePaint.color(at: CGPoint(x: 24, y: 24))?.usingColorSpace(.deviceRGB)
+        )
+        let broadCenter = try #require(
+            broadPaint.color(at: CGPoint(x: 24, y: 24))?.usingColorSpace(.deviceRGB)
+        )
+        #expect(fineCenter.blueComponent > broadCenter.blueComponent + 0.2)
+        #expect(broadCenter.redComponent > 0.75)
+        #expect(broadCenter.blueComponent < 0.25)
+        #expect(finePaint.qingtuPNGData() != broadPaint.qingtuPNGData())
+
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: sourceImage) { _ in }
         viewModel.replaceSelectedLayerImageForTesting(sourceImage, historyTitle: L10n.text("imageEditor.history.brush"))
         let baseLayerID = try #require(viewModel.document.selectedLayerID)
@@ -2492,12 +2530,14 @@ struct ImageEditorFilterTests {
 
         viewModel.selectedFilter = .oilPaint
         viewModel.filterIntensity = 0.75
+        viewModel.filterOilPaintRadius = 8
         viewModel.addFilterLayer()
 
         let filterLayer = try #require(viewModel.document.selectedLayer)
         let paintedCenter = try #require(viewModel.currentImage.color(at: CGPoint(x: 24, y: 24))?.usingColorSpace(.deviceRGB))
         #expect(filterLayer.isFilter)
         #expect(filterLayer.filter?.kind == .oilPaint)
+        #expect(filterLayer.filterSettings.normalized().oilPaintRadius == 8)
         #expect(viewModel.document.layers.first { $0.id == baseLayerID }?.image.qingtuPNGData() == basePixelsBefore)
         #expect(blueSpotBefore.blueComponent > 0.85)
         #expect(paintedCenter.redComponent > 0.75)
@@ -2510,15 +2550,36 @@ struct ImageEditorFilterTests {
         let smartPreviewBefore = try #require(smartViewModel.currentImage.qingtuPNGData())
         smartViewModel.selectedFilter = .oilPaint
         smartViewModel.filterIntensity = 0.75
+        smartViewModel.filterOilPaintRadius = 8
         smartViewModel.addSmartFilterToSelectedLayer()
 
         var smartLayer = try #require(smartViewModel.document.selectedLayer)
         let smartFilterID = try #require(smartLayer.smartFilters.first?.id)
         let smartPaintedCenter = try #require(smartViewModel.currentImage.color(at: CGPoint(x: 24, y: 24))?.usingColorSpace(.deviceRGB))
         #expect(smartLayer.smartFilters.first?.kind == .oilPaint)
+        #expect(smartLayer.smartFilters.first?.normalizedSettings.oilPaintRadius == 8)
         #expect(smartLayer.image.qingtuPNGData() == smartBasePixelsBefore)
         #expect(smartPaintedCenter.redComponent > 0.75)
+        #expect(smartViewModel.smartFilterLabel(try #require(smartLayer.smartFilters.first)) == L10n.format(
+            "imageEditor.properties.smartFilterOilPaintItem",
+            ImageEditorFilter.oilPaint.title,
+            75,
+            8
+        ))
         #expect(smartViewModel.document.history.last?.title == L10n.text("imageEditor.history.layerSmartFilterAdd"))
+
+        let project = try ImageEditorProjectDocument(document: smartViewModel.document)
+        let restored = try project.restoredDocument()
+        #expect(restored.selectedLayer?.smartFilters.first?.normalizedSettings.oilPaintRadius == 8)
+
+        let root = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let viewSource = try String(
+            contentsOf: root.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        #expect(viewSource.contains("image-editor-filter-oil-paint-radius"))
 
         smartViewModel.toggleSmartFilterOnSelectedLayer(smartFilterID)
         smartLayer = try #require(smartViewModel.document.selectedLayer)

@@ -11937,6 +11937,22 @@ struct ImageEditorView: View {
                     }
                     .accessibilityIdentifier("image-editor-filter-vignette-midpoint")
                 }
+                if viewModel.selectedFilter == .oilPaint {
+                    HStack {
+                        Text(L10n.text("imageEditor.filter.oilPaintRadius"))
+                            .font(.system(size: 10, weight: .medium))
+                            .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                        Slider(value: $viewModel.filterOilPaintRadius, in: 1...10, step: 1)
+                        Text(L10n.format(
+                            "imageEditor.filter.oilPaintRadiusValue",
+                            Int(viewModel.filterOilPaintRadius.rounded())
+                        ))
+                            .font(.system(size: 10, weight: .semibold))
+                            .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
+                            .frame(width: 48, alignment: .trailing)
+                    }
+                    .accessibilityIdentifier("image-editor-filter-oil-paint-radius")
+                }
                 if viewModel.selectedFilter == .motionBlur {
                     HStack {
                         Text(L10n.text("imageEditor.filter.motionBlurAngle"))

@@ -50,7 +50,7 @@ extension NSImage {
             return morphologyFiltered(intensity: clamped, settings: settings, useMaximum: true)
         }
         if kind == .oilPaint {
-            return oilPainted(intensity: clamped)
+            return oilPainted(intensity: clamped, settings: settings)
         }
         if kind == .vignette {
             return vignetted(intensity: clamped, settings: settings)
@@ -128,7 +128,7 @@ extension NSImage {
         case .maximum:
             return morphologyFiltered(intensity: clamped, settings: settings, useMaximum: true)
         case .oilPaint:
-            return oilPainted(intensity: clamped)
+            return oilPainted(intensity: clamped, settings: settings)
         case .vignette:
             return vignetted(intensity: clamped, settings: settings)
         case .offset:
@@ -839,9 +839,15 @@ extension NSImage {
         }
     }
 
-    private func oilPainted(intensity: Double) -> NSImage? {
+    private func oilPainted(
+        intensity: Double,
+        settings: ImageEditorFilterSettings
+    ) -> NSImage? {
         let clampedIntensity = max(0, min(1, intensity))
-        let radius = max(1, Int((1 + clampedIntensity * 5).rounded()))
+        let radius = max(
+            1,
+            Int((settings.normalized().oilPaintRadius ?? (1 + clampedIntensity * 5)).rounded())
+        )
         let bucketCount = max(6, Int((18 - clampedIntensity * 10).rounded()))
         return pixelMappedFromBuffer { x, y, width, height, pixels, bytesPerRow, bytesPerPixel in
             let offset = y * bytesPerRow + x * bytesPerPixel
