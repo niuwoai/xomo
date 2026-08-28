@@ -5841,7 +5841,7 @@ struct XomoAutomationTests {
         #expect(viewModel.document.selectedLayer?.smartFilters.count == 1)
     }
 
-    @Test func registryConfiguresOilPaintRadiusAndTonalLevelsThroughTheSharedFilterPipeline() throws {
+    @Test func registryConfiguresOilPaintRadiusTonalLevelsAndStylizationThroughTheSharedFilterPipeline() throws {
         let viewModel = makeViewModel()
         let registry = XomoAutomationRegistry.shared
         registry.register(viewModel)
@@ -5856,7 +5856,8 @@ struct XomoAutomationTests {
                 "settings": .object([
                     "intensity": .number(0.75),
                     "oilPaintRadius": .number(8),
-                    "oilPaintTonalLevels": .number(11)
+                    "oilPaintTonalLevels": .number(11),
+                    "oilPaintStylization": .number(7.5)
                 ])
             ]
         ))
@@ -5866,6 +5867,7 @@ struct XomoAutomationTests {
         #expect(filter.kind == .oilPaint)
         #expect(filter.normalizedSettings.oilPaintRadius == 8)
         #expect(filter.normalizedSettings.oilPaintTonalLevels == 11)
+        #expect(filter.normalizedSettings.oilPaintStylization == 7.5)
 
         let tools = registry.execute(request(operation: "tools"))
         let configureTool = try #require(
@@ -5877,6 +5879,7 @@ struct XomoAutomationTests {
         let settingsProperties = try #require(settingsSchema["properties"]?.objectValue)
         #expect(settingsProperties["oilPaintRadius"]?.objectValue?["type"] == .string("number"))
         #expect(settingsProperties["oilPaintTonalLevels"]?.objectValue?["type"] == .string("number"))
+        #expect(settingsProperties["oilPaintStylization"]?.objectValue?["type"] == .string("number"))
 
         let historyCount = viewModel.document.history.count
         let invalidResponse = registry.execute(request(
@@ -5886,7 +5889,7 @@ struct XomoAutomationTests {
                 "filter": .string(ImageEditorFilter.oilPaint.rawValue),
                 "action": .string("addSmartFilter"),
                 "settings": .object([
-                    "oilPaintTonalLevels": .string("many")
+                    "oilPaintStylization": .string("strong")
                 ])
             ]
         ))

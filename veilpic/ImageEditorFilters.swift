@@ -844,14 +844,19 @@ extension NSImage {
         settings: ImageEditorFilterSettings
     ) -> NSImage? {
         let clampedIntensity = max(0, min(1, intensity))
+        let normalizedSettings = settings.normalized()
         let radius = max(
             1,
-            Int((settings.normalized().oilPaintRadius ?? (1 + clampedIntensity * 5)).rounded())
+            Int((normalizedSettings.oilPaintRadius ?? (1 + clampedIntensity * 5)).rounded())
         )
         let bucketCount = max(
             6,
-            Int((settings.normalized().oilPaintTonalLevels ?? (18 - clampedIntensity * 10)).rounded())
+            Int((normalizedSettings.oilPaintTonalLevels ?? (18 - clampedIntensity * 10)).rounded())
         )
+        let stylization = (normalizedSettings.oilPaintStylization ?? 10) / 10
+        if stylization <= 0 {
+            return self
+        }
         return pixelMappedFromBuffer { x, y, width, height, pixels, bytesPerRow, bytesPerPixel in
             let offset = y * bytesPerRow + x * bytesPerPixel
             let alpha = Double(pixels[offset + 3]) / 255
@@ -884,10 +889,19 @@ extension NSImage {
                 )
             }
             let count = Double(dominant.count)
+            let sourceRed = Double(pixels[offset]) / 255
+            let sourceGreen = Double(pixels[offset + 1]) / 255
+            let sourceBlue = Double(pixels[offset + 2]) / 255
+            let paintedRed = Self.premultipliedChannel(dominant.red / count, alpha: alpha)
+            let paintedGreen = Self.premultipliedChannel(dominant.green / count, alpha: alpha)
+            let paintedBlue = Self.premultipliedChannel(dominant.blue / count, alpha: alpha)
+            if stylization >= 1 {
+                return (paintedRed, paintedGreen, paintedBlue, alpha)
+            }
             return (
-                Self.premultipliedChannel(dominant.red / count, alpha: alpha),
-                Self.premultipliedChannel(dominant.green / count, alpha: alpha),
-                Self.premultipliedChannel(dominant.blue / count, alpha: alpha),
+                sourceRed + (paintedRed - sourceRed) * stylization,
+                sourceGreen + (paintedGreen - sourceGreen) * stylization,
+                sourceBlue + (paintedBlue - sourceBlue) * stylization,
                 alpha
             )
         }

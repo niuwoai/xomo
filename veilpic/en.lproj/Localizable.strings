@@ -982,7 +982,9 @@
 "imageEditor.filter.oilPaintRadiusValue" = "%d px";
 "imageEditor.filter.oilPaintTonalLevels" = "Tonal Levels";
 "imageEditor.filter.oilPaintTonalLevelsValue" = "%d";
-"imageEditor.properties.smartFilterOilPaintItem" = "%1$@ · radius %2$d px · %3$d tonal levels";
+"imageEditor.filter.oilPaintStylization" = "Stylization";
+"imageEditor.filter.oilPaintStylizationValue" = "%@";
+"imageEditor.properties.smartFilterOilPaintItem" = "%1$@ · radius %2$d px · %3$d tonal levels · stylization %4$@";
 "imageEditor.filter.vignette" = "Vignette";
 "imageEditor.filter.vignetteMidpoint" = "Midpoint";
 "imageEditor.filter.vignetteMidpointValue" = "%d%%";

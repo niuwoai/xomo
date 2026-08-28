@@ -11967,6 +11967,20 @@ struct ImageEditorView: View {
                             .frame(width: 48, alignment: .trailing)
                     }
                     .accessibilityIdentifier("image-editor-filter-oil-paint-tonal-levels")
+                    HStack {
+                        Text(L10n.text("imageEditor.filter.oilPaintStylization"))
+                            .font(.system(size: 10, weight: .medium))
+                            .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                        Slider(value: $viewModel.filterOilPaintStylization, in: 0...10, step: 0.1)
+                        Text(L10n.format(
+                            "imageEditor.filter.oilPaintStylizationValue",
+                            String(format: "%.1f", viewModel.filterOilPaintStylization)
+                        ))
+                            .font(.system(size: 10, weight: .semibold))
+                            .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
+                            .frame(width: 48, alignment: .trailing)
+                    }
+                    .accessibilityIdentifier("image-editor-filter-oil-paint-stylization")
                 }
                 if viewModel.selectedFilter == .motionBlur {
                     HStack {

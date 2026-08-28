@@ -982,7 +982,9 @@
 "imageEditor.filter.oilPaintRadiusValue" = "%d px";
 "imageEditor.filter.oilPaintTonalLevels" = "階調レベル";
 "imageEditor.filter.oilPaintTonalLevelsValue" = "%d";
-"imageEditor.properties.smartFilterOilPaintItem" = "%1$@ · 半径 %2$d px · 階調 %3$d レベル";
+"imageEditor.filter.oilPaintStylization" = "スタイライズ";
+"imageEditor.filter.oilPaintStylizationValue" = "%@";
+"imageEditor.properties.smartFilterOilPaintItem" = "%1$@ · 半径 %2$d px · 階調 %3$d レベル · スタイライズ %4$@";
 "imageEditor.filter.vignette" = "周辺光量";
 "imageEditor.filter.vignetteMidpoint" = "中間点";
 "imageEditor.filter.vignetteMidpointValue" = "%d%%";
