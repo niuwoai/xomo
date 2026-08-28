@@ -11995,6 +11995,20 @@ struct ImageEditorView: View {
                             .frame(width: 48, alignment: .trailing)
                     }
                     .accessibilityIdentifier("image-editor-filter-oil-paint-cleanliness")
+                    HStack {
+                        Text(L10n.text("imageEditor.filter.oilPaintBristleDetail"))
+                            .font(.system(size: 10, weight: .medium))
+                            .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                        Slider(value: $viewModel.filterOilPaintBristleDetail, in: 0...10, step: 0.1)
+                        Text(L10n.format(
+                            "imageEditor.filter.oilPaintBristleDetailValue",
+                            String(format: "%.1f", viewModel.filterOilPaintBristleDetail)
+                        ))
+                            .font(.system(size: 10, weight: .semibold))
+                            .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
+                            .frame(width: 48, alignment: .trailing)
+                    }
+                    .accessibilityIdentifier("image-editor-filter-oil-paint-bristle-detail")
                 }
                 if viewModel.selectedFilter == .motionBlur {
                     HStack {

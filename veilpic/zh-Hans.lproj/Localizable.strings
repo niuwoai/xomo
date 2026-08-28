@@ -986,7 +986,9 @@
 "imageEditor.filter.oilPaintStylizationValue" = "%@";
 "imageEditor.filter.oilPaintCleanliness" = "洁净度";
 "imageEditor.filter.oilPaintCleanlinessValue" = "%@";
-"imageEditor.properties.smartFilterOilPaintItem" = "%1$@ · 半径 %2$d px · 色调 %3$d 级 · 风格化 %4$@ · 洁净度 %5$@";
+"imageEditor.filter.oilPaintBristleDetail" = "鬃毛细节";
+"imageEditor.filter.oilPaintBristleDetailValue" = "%@";
+"imageEditor.properties.smartFilterOilPaintItem" = "%1$@ · 半径 %2$d px · 色调 %3$d 级 · 风格化 %4$@ · 洁净度 %5$@ · 鬃毛细节 %6$@";
 "imageEditor.filter.vignette" = "暗角";
 "imageEditor.filter.vignetteMidpoint" = "中点";
 "imageEditor.filter.vignetteMidpointValue" = "%d%%";
