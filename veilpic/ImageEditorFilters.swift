@@ -35,7 +35,7 @@ extension NSImage {
             return unsharpMasked(intensity: clamped, settings: settings)
         }
         if kind == .highPass {
-            return highPassed(intensity: clamped)
+            return highPassed(intensity: clamped, settings: settings)
         }
         if kind == .emboss {
             return embossed(intensity: clamped)
@@ -117,7 +117,7 @@ extension NSImage {
         case .unsharpMask:
             return unsharpMasked(intensity: clamped, settings: settings)
         case .highPass:
-            return highPassed(intensity: clamped)
+            return highPassed(intensity: clamped, settings: settings)
         case .emboss:
             return embossed(intensity: clamped)
         case .findEdges:
@@ -511,34 +511,93 @@ extension NSImage {
         }
     }
 
-    private func highPassed(intensity: Double) -> NSImage? {
+    private func highPassed(
+        intensity: Double,
+        settings: ImageEditorFilterSettings
+    ) -> NSImage? {
         let clampedIntensity = max(0, min(1, intensity))
-        let radius = max(1, Int((1 + clampedIntensity * 9).rounded()))
+        let radius = max(
+            1,
+            Int(
+                (settings.normalized().highPassRadius ?? (1 + clampedIntensity * 9))
+                    .rounded()
+            )
+        )
         let contrast = 1.4 + clampedIntensity * 2.4
-        return pixelMappedFromBuffer { x, y, width, height, pixels, bytesPerRow, bytesPerPixel in
-            let offset = y * bytesPerRow + x * bytesPerPixel
-            let alpha = Double(pixels[offset + 3]) / 255
-            let red = Double(pixels[offset]) / 255
-            let green = Double(pixels[offset + 1]) / 255
-            let blue = Double(pixels[offset + 2]) / 255
-            let blurred = Self.averageColor(
-                x: x,
-                y: y,
-                radius: radius,
-                width: width,
-                height: height,
-                pixels: pixels,
-                bytesPerRow: bytesPerRow,
-                bytesPerPixel: bytesPerPixel
-            )
-            let neutral = 0.5 * alpha
-            return (
-                Self.premultipliedChannel(neutral + (red - blurred.red) * contrast, alpha: alpha),
-                Self.premultipliedChannel(neutral + (green - blurred.green) * contrast, alpha: alpha),
-                Self.premultipliedChannel(neutral + (blue - blurred.blue) * contrast, alpha: alpha),
-                alpha
-            )
+        guard let source = filterRGBAPlane() else { return nil }
+        let width = source.width
+        let height = source.height
+        let integralWidth = width + 1
+        let integralCount = integralWidth * (height + 1)
+        var redIntegral = [Int64](repeating: 0, count: integralCount)
+        var greenIntegral = [Int64](repeating: 0, count: integralCount)
+        var blueIntegral = [Int64](repeating: 0, count: integralCount)
+
+        for y in 0..<height {
+            var rowRed: Int64 = 0
+            var rowGreen: Int64 = 0
+            var rowBlue: Int64 = 0
+            for x in 0..<width {
+                let sourceOffset = (y * width + x) * 4
+                rowRed += Int64(source.values[sourceOffset])
+                rowGreen += Int64(source.values[sourceOffset + 1])
+                rowBlue += Int64(source.values[sourceOffset + 2])
+                let integralOffset = (y + 1) * integralWidth + x + 1
+                let previousRowOffset = y * integralWidth + x + 1
+                redIntegral[integralOffset] = redIntegral[previousRowOffset] + rowRed
+                greenIntegral[integralOffset] = greenIntegral[previousRowOffset] + rowGreen
+                blueIntegral[integralOffset] = blueIntegral[previousRowOffset] + rowBlue
+            }
         }
+
+        func average(
+            _ integral: [Int64],
+            minX: Int,
+            minY: Int,
+            maxX: Int,
+            maxY: Int
+        ) -> Double {
+            let bottomRight = integral[(maxY + 1) * integralWidth + maxX + 1]
+            let topRight = integral[minY * integralWidth + maxX + 1]
+            let bottomLeft = integral[(maxY + 1) * integralWidth + minX]
+            let topLeft = integral[minY * integralWidth + minX]
+            let count = Double((maxX - minX + 1) * (maxY - minY + 1))
+            return Double(bottomRight - topRight - bottomLeft + topLeft) / count / 255
+        }
+
+        var output = source.values
+        for y in 0..<height {
+            let minY = max(0, y - radius)
+            let maxY = min(height - 1, y + radius)
+            for x in 0..<width {
+                let minX = max(0, x - radius)
+                let maxX = min(width - 1, x + radius)
+                let offset = (y * width + x) * 4
+                let alpha = Double(source.values[offset + 3]) / 255
+                let neutral = 0.5 * alpha
+                let red = Double(source.values[offset]) / 255
+                let green = Double(source.values[offset + 1]) / 255
+                let blue = Double(source.values[offset + 2]) / 255
+                output[offset] = Self.byte(Self.premultipliedChannel(
+                    neutral + (red - average(redIntegral, minX: minX, minY: minY, maxX: maxX, maxY: maxY)) * contrast,
+                    alpha: alpha
+                ))
+                output[offset + 1] = Self.byte(Self.premultipliedChannel(
+                    neutral + (green - average(greenIntegral, minX: minX, minY: minY, maxX: maxX, maxY: maxY)) * contrast,
+                    alpha: alpha
+                ))
+                output[offset + 2] = Self.byte(Self.premultipliedChannel(
+                    neutral + (blue - average(blueIntegral, minX: minX, minY: minY, maxX: maxX, maxY: maxY)) * contrast,
+                    alpha: alpha
+                ))
+            }
+        }
+        return Self.filterRGBAImage(
+            width: width,
+            height: height,
+            values: output,
+            displaySize: size
+        )
     }
 
     private func embossed(intensity: Double) -> NSImage? {

@@ -94,7 +94,7 @@ extension XomoAutomationRegistry {
         let expectedKeys = try encodedFilterJSONValue(
             ImageEditorFilterSettings()
         ).objectValue.map { Set($0.keys) } ?? []
-        let optionalKeys: Set<String> = ["gaussianBlurRadius"]
+        let optionalKeys: Set<String> = ["gaussianBlurRadius", "highPassRadius"]
         guard
             Set(object.keys).subtracting(optionalKeys) == expectedKeys,
             Set(object.keys).isSubset(of: expectedKeys.union(optionalKeys))

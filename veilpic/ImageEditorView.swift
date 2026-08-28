@@ -11883,6 +11883,22 @@ struct ImageEditorView: View {
                             .frame(width: 44, alignment: .trailing)
                     }
                 }
+                if viewModel.selectedFilter == .highPass {
+                    HStack {
+                        Text(L10n.text("imageEditor.filter.highPassRadius"))
+                            .font(.system(size: 10, weight: .medium))
+                            .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                        Slider(value: $viewModel.filterHighPassRadius, in: 1...256, step: 1)
+                        Text(L10n.format(
+                            "imageEditor.filter.highPassRadiusValue",
+                            Int(viewModel.filterHighPassRadius.rounded())
+                        ))
+                            .font(.system(size: 10, weight: .semibold))
+                            .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
+                            .frame(width: 54, alignment: .trailing)
+                    }
+                    .accessibilityIdentifier("image-editor-filter-high-pass-radius")
+                }
                 if viewModel.selectedFilter == .liquifyPush {
                     HStack {
                         Text(L10n.text("imageEditor.filter.liquifyPushX"))

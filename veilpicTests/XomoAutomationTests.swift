@@ -5548,6 +5548,43 @@ struct XomoAutomationTests {
         #expect(viewModel.document.history.count == noOpHistoryCount)
     }
 
+    @Test func registryConfiguresHighPassRadiusThroughTheSharedFilterPipeline() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        defer { registry.unregister(viewModel) }
+
+        let response = registry.execute(request(
+            operation: "call",
+            name: "xomo.filter.configure",
+            arguments: [
+                "filter": .string(ImageEditorFilter.highPass.rawValue),
+                "action": .string("addSmartFilter"),
+                "settings": .object([
+                    "intensity": .number(0.7),
+                    "highPassRadius": .number(999)
+                ])
+            ]
+        ))
+
+        #expect(response.ok)
+        #expect(response.result?.objectValue?["addedLayerCount"] == .number(1))
+        let filter = try #require(viewModel.document.selectedLayer?.smartFilters.last)
+        #expect(filter.kind == .highPass)
+        #expect(filter.normalizedIntensity == 0.7)
+        #expect(filter.normalizedSettings.highPassRadius == 256)
+
+        let tools = registry.execute(request(operation: "tools"))
+        let configureTool = try #require(
+            automationTool(named: "xomo.filter.configure", in: tools)
+        )
+        let settingsSchema = try #require(
+            configureTool["inputSchema"]?.objectValue?["properties"]?.objectValue?["settings"]?.objectValue
+        )
+        let settingsProperties = try #require(settingsSchema["properties"]?.objectValue)
+        #expect(settingsProperties["highPassRadius"]?.objectValue?["type"] == .string("number"))
+    }
+
     @Test func registryReadsAndReplacesCompleteSelectedFilterLayerSettings() throws {
         let viewModel = makeViewModel()
         let registry = XomoAutomationRegistry.shared

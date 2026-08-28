@@ -478,6 +478,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published private(set) var loadedSmartFilterID: UUID?
     @Published var filterIntensity: Double = 0.5
     @Published private(set) var filterGaussianBlurRadius: Double?
+    @Published var filterHighPassRadius: Double = 6
     @Published var filterUnsharpRadius: Double = 1
     @Published var filterUnsharpThreshold: Double = 0
     @Published var filterLiquifyPushX: Double = 0.25
@@ -2565,6 +2566,18 @@ final class ImageEditorViewModel: ObservableObject {
                 Int((filter.normalizedIntensity * 100).rounded()),
                 String(format: "%.1f", settings.unsharpRadius),
                 Int((settings.unsharpThreshold * 255).rounded())
+            )
+            guard !filter.isEnabled else { return title }
+            return L10n.format("imageEditor.properties.smartFilterDisabled", title)
+        }
+        if filter.kind == .highPass {
+            let radius = filter.normalizedSettings.highPassRadius
+                ?? (1 + filter.normalizedIntensity * 9)
+            let title = L10n.format(
+                "imageEditor.properties.smartFilterHighPassItem",
+                filter.kind.title,
+                Int((filter.normalizedIntensity * 100).rounded()),
+                Int(radius.rounded())
             )
             guard !filter.isEnabled else { return title }
             return L10n.format("imageEditor.properties.smartFilterDisabled", title)
@@ -9408,6 +9421,7 @@ final class ImageEditorViewModel: ObservableObject {
     private func currentFilterSettings() -> ImageEditorFilterSettings {
         ImageEditorFilterSettings(
             gaussianBlurRadius: selectedFilter == .gaussianBlur ? filterGaussianBlurRadius : nil,
+            highPassRadius: selectedFilter == .highPass ? filterHighPassRadius : nil,
             unsharpRadius: filterUnsharpRadius,
             unsharpThreshold: filterUnsharpThreshold,
             liquifyPushX: filterLiquifyPushX,
@@ -11245,6 +11259,8 @@ final class ImageEditorViewModel: ObservableObject {
     private func syncFilterSettings(_ settings: ImageEditorFilterSettings) {
         let normalized = settings.normalized()
         filterGaussianBlurRadius = normalized.gaussianBlurRadius
+        filterHighPassRadius = normalized.highPassRadius
+            ?? max(1, min(256, (1 + filterIntensity * 9).rounded()))
         filterUnsharpRadius = normalized.unsharpRadius
         filterUnsharpThreshold = normalized.unsharpThreshold
         filterLiquifyPushX = normalized.liquifyPushX

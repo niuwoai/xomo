@@ -1813,6 +1813,80 @@ struct ImageEditorFilterTests {
         #expect(try #require(smartViewModel.currentImage.qingtuPNGData()) == smartPreviewBefore)
     }
 
+    @Test func highPassUsesAnExplicitPixelRadiusAndPersistsItNonDestructively() throws {
+        let sourceImage = verticalEdgeImage(size: NSSize(width: 72, height: 48))
+        let narrow = try #require(sourceImage.filtered(
+            kind: .highPass,
+            intensity: 0.65,
+            settings: ImageEditorFilterSettings(highPassRadius: 2)
+        ))
+        let wide = try #require(sourceImage.filtered(
+            kind: .highPass,
+            intensity: 0.65,
+            settings: ImageEditorFilterSettings(highPassRadius: 14)
+        ))
+        let samplePoint = CGPoint(x: 26, y: 24)
+        let narrowSample = try #require(narrow.color(at: samplePoint)?.usingColorSpace(.deviceRGB))
+        let wideSample = try #require(wide.color(at: samplePoint)?.usingColorSpace(.deviceRGB))
+        #expect(abs(narrowSample.redComponent - 0.5) < 0.04)
+        #expect(abs(wideSample.redComponent - 0.5) > 0.12)
+
+        #expect(ImageEditorFilterSettings(highPassRadius: -20).normalized().highPassRadius == 1)
+        #expect(ImageEditorFilterSettings(highPassRadius: 900).normalized().highPassRadius == 256)
+
+        let viewModel = ImageEditorViewModel(sourceName: "high-pass-radius.png", image: sourceImage) { _ in }
+        viewModel.selectedFilter = .highPass
+        viewModel.filterIntensity = 0.65
+        viewModel.filterHighPassRadius = 14
+        viewModel.addSmartFilterToSelectedLayer()
+
+        let smartFilter = try #require(viewModel.document.selectedLayer?.smartFilters.first)
+        #expect(smartFilter.normalizedSettings.highPassRadius == 14)
+        #expect(
+            viewModel.smartFilterLabel(smartFilter)
+                == L10n.format(
+                    "imageEditor.properties.smartFilterHighPassItem",
+                    smartFilter.kind.title,
+                    65,
+                    14
+                )
+        )
+
+        let project = try ImageEditorProjectDocument(document: viewModel.document)
+        let restored = try project.restoredDocument()
+        #expect(restored.selectedLayer?.smartFilters.first?.normalizedSettings.highPassRadius == 14)
+
+        let legacySettings = try JSONDecoder().decode(
+            ImageEditorFilterSettings.self,
+            from: Data("{}".utf8)
+        )
+        #expect(legacySettings.highPassRadius == nil)
+    }
+
+    @Test func highPassRadiusControlUsesTheSameSettingForEveryFilterDestination() throws {
+        let root = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let viewSource = try String(
+            contentsOf: root.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let viewModelSource = try String(
+            contentsOf: root.appendingPathComponent("veilpic/ImageEditorViewModel.swift"),
+            encoding: .utf8
+        )
+
+        #expect(viewSource.contains("image-editor-filter-high-pass-radius"))
+        #expect(viewSource.contains("$viewModel.filterHighPassRadius"))
+        #expect(viewSource.contains("in: 1...256, step: 1"))
+        #expect(
+            viewModelSource.contains(
+                "highPassRadius: selectedFilter == .highPass ? filterHighPassRadius : nil"
+            )
+        )
+        #expect(viewModelSource.contains("filterHighPassRadius = normalized.highPassRadius"))
+    }
+
     @Test func imageEditorEmbossFilterLayerAndSmartFilterAreNonDestructive() async throws {
         let canvasSize = NSSize(width: 72, height: 48)
         let sourceImage = verticalEdgeImage(size: canvasSize)

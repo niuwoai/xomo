@@ -951,6 +951,8 @@
 "imageEditor.filter.median" = "中值";
 "imageEditor.filter.unsharpMask" = "USM 锐化";
 "imageEditor.filter.highPass" = "高反差保留";
+"imageEditor.filter.highPassRadius" = "半径";
+"imageEditor.filter.highPassRadiusValue" = "%d px";
 "imageEditor.filter.emboss" = "浮雕";
 "imageEditor.filter.findEdges" = "查找边缘";
 "imageEditor.filter.minimum" = "最小值";
@@ -1204,6 +1206,7 @@
 "imageEditor.properties.smartFilterBlendMode" = "混合模式";
 "imageEditor.properties.smartFilterItem" = "%@ %d%%";
 "imageEditor.properties.smartFilterGaussianBlurItem" = "%@ · 半径 %@ px";
+"imageEditor.properties.smartFilterHighPassItem" = "%@ %d%% · 半径 %d px";
 "imageEditor.properties.smartFilterBackgroundBlurItem" = "%@ · 背景半径 %@ px";
 "imageEditor.properties.smartFilterUnsharpItem" = "%@ %d%% · 半径 %@ · 阈值 %d";
 "imageEditor.properties.smartFilterLiquifyPushItem" = "%@ %d%% · X %d · Y %d";
