@@ -100,6 +100,38 @@ struct ImageEditorLayerCompTests {
             viewModel.document.layerComps,
             matching: "approved review"
         ).isEmpty)
+        #expect(ImageEditorLayerCompSearch.filtered(
+            viewModel.document.layerComps,
+            matching: "\"client approved\""
+        ).map(\.id) == [desktopID])
+        #expect(ImageEditorLayerCompSearch.filtered(
+            viewModel.document.layerComps,
+            matching: "\"client approved"
+        ).map(\.id) == [desktopID])
+        #expect(ImageEditorLayerCompSearch.filtered(
+            viewModel.document.layerComps,
+            matching: "approved -desktop"
+        ).map(\.id) == [tabletID])
+        #expect(ImageEditorLayerCompSearch.filtered(
+            viewModel.document.layerComps,
+            matching: "approved -\"client approved\""
+        ).map(\.id) == [tabletID])
+        #expect(ImageEditorLayerCompSearch.filtered(
+            viewModel.document.layerComps,
+            matching: "-approved"
+        ).map(\.id) == [mobileID])
+        #expect(ImageEditorLayerCompSearch.filtered(
+            viewModel.document.layerComps,
+            matching: "-"
+        ).map(\.id) == [desktopID, mobileID, tabletID])
+        #expect(!ImageEditorLayerCompSearch.hasTerms("\"\" -"))
+        var quotedComp = try #require(viewModel.document.layerComps.first)
+        quotedComp.id = UUID()
+        quotedComp.name = "Review \"Alpha\""
+        #expect(ImageEditorLayerCompSearch.filtered(
+            [quotedComp],
+            matching: "\"Review \\\"Alpha\\\"\""
+        ).map(\.id) == [quotedComp.id])
         #expect(ImageEditorLayerCompSearch.preferredResultID(
             in: viewModel.document.layerComps,
             matching: "approved",
@@ -466,6 +498,7 @@ struct ImageEditorLayerCompTests {
         #expect(source.components(separatedBy: ".disabled(isApplied)").count == 3)
         #expect(source.contains("imageEditor.layerComp.searchResultsCount"))
         #expect(source.contains("image-editor-layer-comp-search-results-count"))
+        #expect(source.contains("imageEditor.layerComp.searchSyntaxHelp"))
         #expect(source.contains("viewModel.applyPreferredLayerCompSearchResult("))
         #expect(source.contains("#selector(NSResponder.insertNewline(_:))"))
         #expect(source.contains("#selector(NSResponder.cancelOperation(_:))"))

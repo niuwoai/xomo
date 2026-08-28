@@ -83,17 +83,27 @@ enum ImageEditorLayerCompNavigationDirection: Equatable {
 }
 
 enum ImageEditorLayerCompSearch {
+    private struct Term: Equatable {
+        var value: String
+        var isExcluded: Bool
+    }
+
+    static func hasTerms(_ query: String) -> Bool {
+        !terms(in: query).isEmpty
+    }
+
     static func filtered(
         _ layerComps: [ImageEditorLayerComp],
         matching query: String
     ) -> [ImageEditorLayerComp] {
-        let tokens = query.split { $0.isWhitespace }.map(String.init)
-        guard !tokens.isEmpty else { return layerComps }
+        let terms = terms(in: query)
+        guard !terms.isEmpty else { return layerComps }
         let options: String.CompareOptions = [.caseInsensitive, .diacriticInsensitive, .widthInsensitive]
         return layerComps.filter { comp in
             let searchableText = "\(comp.name)\n\(comp.comment)"
-            return tokens.allSatisfy { token in
-                searchableText.range(of: token, options: options) != nil
+            return terms.allSatisfy { term in
+                let containsTerm = searchableText.range(of: term.value, options: options) != nil
+                return term.isExcluded ? !containsTerm : containsTerm
             }
         }
     }
@@ -126,7 +136,7 @@ enum ImageEditorLayerCompSearch {
         matching query: String,
         selectedLayerCompID: UUID?
     ) -> UUID? {
-        guard query.contains(where: { !$0.isWhitespace }) else { return nil }
+        guard hasTerms(query) else { return nil }
         let results = filtered(layerComps, matching: query)
         if let selectedLayerCompID,
            results.contains(where: { $0.id == selectedLayerCompID }) {
@@ -141,7 +151,7 @@ enum ImageEditorLayerCompSearch {
         query: String,
         selectedLayerCompID: UUID?
     ) -> UUID? {
-        guard query.contains(where: { !$0.isWhitespace }) else { return nil }
+        guard hasTerms(query) else { return nil }
         let filteredIDs = filtered(layerComps, matching: query).map(\.id)
         guard !filteredIDs.isEmpty else { return nil }
         guard let selectedLayerCompID,
@@ -157,6 +167,47 @@ enum ImageEditorLayerCompSearch {
             let nextIndex = filteredIDs.index(after: selectedIndex)
             guard nextIndex < filteredIDs.endIndex else { return nil }
             return filteredIDs[nextIndex]
+        }
+    }
+
+    private static func terms(in query: String) -> [Term] {
+        var rawTerms: [String] = []
+        var current = ""
+        var isInsideQuotes = false
+        var isEscaping = false
+        for character in query {
+            if isEscaping {
+                current.append(character)
+                isEscaping = false
+            } else if character == "\\" {
+                isEscaping = true
+            } else if character == "\"" {
+                isInsideQuotes.toggle()
+            } else if character.isWhitespace, !isInsideQuotes {
+                if !current.isEmpty {
+                    rawTerms.append(current)
+                    current = ""
+                }
+            } else {
+                current.append(character)
+            }
+        }
+        if isEscaping {
+            current.append("\\")
+        }
+        if !current.isEmpty {
+            rawTerms.append(current)
+        }
+
+        return rawTerms.compactMap { rawTerm in
+            var value = rawTerm
+            let isExcluded = value.first == "-" && value.count > 1
+            if isExcluded {
+                value.removeFirst()
+            }
+            value = value.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !value.isEmpty, value != "-" else { return nil }
+            return Term(value: value, isExcluded: isExcluded)
         }
     }
 }

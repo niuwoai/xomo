@@ -1261,7 +1261,7 @@ extension ImageEditorView {
     }
 
     private var hasLayerCompSearchQuery: Bool {
-        !layerCompSearchQuery.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        ImageEditorLayerCompSearch.hasTerms(layerCompSearchQuery)
     }
 
     private var layerCompSearchField: some View {
@@ -1296,6 +1296,7 @@ extension ImageEditorView {
                 }
             )
             .frame(minHeight: 16)
+            .help(L10n.text("imageEditor.layerComp.searchSyntaxHelp"))
 
             if !layerCompSearchQuery.isEmpty {
                 Button {
