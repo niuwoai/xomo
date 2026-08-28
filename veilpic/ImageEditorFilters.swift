@@ -857,6 +857,17 @@ extension NSImage {
         let cleanliness = (normalizedSettings.oilPaintCleanliness ?? 0) / 10
         let bristleDetail = (normalizedSettings.oilPaintBristleDetail ?? 0) / 10
         let shine = (normalizedSettings.oilPaintShine ?? 0) / 10
+        let lightingAngleDegrees = normalizedSettings.oilPaintLightingAngleDegrees ?? 135
+        let lightingOffset: (x: Double, y: Double)
+        if abs(lightingAngleDegrees - 135) < 0.000_001 {
+            lightingOffset = (1, -1)
+        } else {
+            let radians = lightingAngleDegrees * .pi / 180
+            lightingOffset = (
+                -cos(radians) * sqrt(2),
+                -sin(radians) * sqrt(2)
+            )
+        }
         if stylization <= 0 {
             return self
         }
@@ -951,18 +962,26 @@ extension NSImage {
             }
             var litColor = detailedColor
             if shine > 0 {
-                let lightOffset = max(0, y - 1) * bytesPerRow + min(width - 1, x + 1) * bytesPerPixel
-                let shadowOffset = min(height - 1, y + 1) * bytesPerRow + max(0, x - 1) * bytesPerPixel
-                let lightLuminance = (
-                    Double(pixels[lightOffset]) * 0.299
-                        + Double(pixels[lightOffset + 1]) * 0.587
-                        + Double(pixels[lightOffset + 2]) * 0.114
-                ) / 255
-                let shadowLuminance = (
-                    Double(pixels[shadowOffset]) * 0.299
-                        + Double(pixels[shadowOffset + 1]) * 0.587
-                        + Double(pixels[shadowOffset + 2]) * 0.114
-                ) / 255
+                let light = Self.samplePixel(
+                    x: Double(x) + lightingOffset.x,
+                    y: Double(y) + lightingOffset.y,
+                    width: width,
+                    height: height,
+                    pixels: pixels,
+                    bytesPerRow: bytesPerRow,
+                    bytesPerPixel: bytesPerPixel
+                )
+                let shadow = Self.samplePixel(
+                    x: Double(x) - lightingOffset.x,
+                    y: Double(y) - lightingOffset.y,
+                    width: width,
+                    height: height,
+                    pixels: pixels,
+                    bytesPerRow: bytesPerRow,
+                    bytesPerPixel: bytesPerPixel
+                )
+                let lightLuminance = light.0 * 0.299 + light.1 * 0.587 + light.2 * 0.114
+                let shadowLuminance = shadow.0 * 0.299 + shadow.1 * 0.587 + shadow.2 * 0.114
                 let relief = (lightLuminance - shadowLuminance) * shine * 0.5
                 litColor = (
                     detailedColor.red + relief,

@@ -2494,6 +2494,7 @@ struct ImageEditorFilterTests {
         #expect(legacySettings.oilPaintCleanliness == nil)
         #expect(legacySettings.oilPaintBristleDetail == nil)
         #expect(legacySettings.oilPaintShine == nil)
+        #expect(legacySettings.oilPaintLightingAngleDegrees == nil)
         let legacyPaint = try #require(sourceImage.filtered(
             kind: .oilPaint,
             intensity: 0.75,
@@ -2508,7 +2509,8 @@ struct ImageEditorFilterTests {
                 oilPaintStylization: 10,
                 oilPaintCleanliness: 0,
                 oilPaintBristleDetail: 0,
-                oilPaintShine: 0
+                oilPaintShine: 0,
+                oilPaintLightingAngleDegrees: 135
             )
         ))
         #expect(legacyPaint.qingtuPNGData() == explicitLegacyPaint.qingtuPNGData())
@@ -2596,6 +2598,39 @@ struct ImageEditorFilterTests {
         #expect(legacyCleanliness.qingtuPNGData() != fullShine.qingtuPNGData())
         #expect(ImageEditorFilterSettings(oilPaintShine: 12).normalized().oilPaintShine == 10)
 
+        let explicitLegacyAngle = try #require(tonalSource.filtered(
+            kind: .oilPaint,
+            intensity: 0.75,
+            settings: ImageEditorFilterSettings(
+                oilPaintRadius: 4,
+                oilPaintTonalLevels: 11,
+                oilPaintStylization: 10,
+                oilPaintCleanliness: 0,
+                oilPaintBristleDetail: 0,
+                oilPaintShine: 10,
+                oilPaintLightingAngleDegrees: 135
+            )
+        ))
+        #expect(fullShine.qingtuPNGData() == explicitLegacyAngle.qingtuPNGData())
+        let oppositeLightingAngle = try #require(tonalSource.filtered(
+            kind: .oilPaint,
+            intensity: 0.75,
+            settings: ImageEditorFilterSettings(
+                oilPaintRadius: 4,
+                oilPaintTonalLevels: 11,
+                oilPaintStylization: 10,
+                oilPaintCleanliness: 0,
+                oilPaintBristleDetail: 0,
+                oilPaintShine: 10,
+                oilPaintLightingAngleDegrees: -45
+            )
+        ))
+        #expect(explicitLegacyAngle.qingtuPNGData() != oppositeLightingAngle.qingtuPNGData())
+        #expect(
+            ImageEditorFilterSettings(oilPaintLightingAngleDegrees: 220)
+                .normalized().oilPaintLightingAngleDegrees == 180
+        )
+
         let finePaint = try #require(sourceImage.filtered(
             kind: .oilPaint,
             intensity: 0.75,
@@ -2631,6 +2666,7 @@ struct ImageEditorFilterTests {
         viewModel.filterOilPaintCleanliness = 6.5
         viewModel.filterOilPaintBristleDetail = 7.5
         viewModel.filterOilPaintShine = 5.5
+        viewModel.filterOilPaintLightingAngleDegrees = -45
         viewModel.addFilterLayer()
 
         let filterLayer = try #require(viewModel.document.selectedLayer)
@@ -2643,6 +2679,7 @@ struct ImageEditorFilterTests {
         #expect(filterLayer.filterSettings.normalized().oilPaintCleanliness == 6.5)
         #expect(filterLayer.filterSettings.normalized().oilPaintBristleDetail == 7.5)
         #expect(filterLayer.filterSettings.normalized().oilPaintShine == 5.5)
+        #expect(filterLayer.filterSettings.normalized().oilPaintLightingAngleDegrees == -45)
         #expect(viewModel.document.layers.first { $0.id == baseLayerID }?.image.qingtuPNGData() == basePixelsBefore)
         #expect(blueSpotBefore.blueComponent > 0.85)
         #expect(paintedCenter.redComponent > 0.65)
@@ -2662,6 +2699,7 @@ struct ImageEditorFilterTests {
         smartViewModel.filterOilPaintCleanliness = 6.5
         smartViewModel.filterOilPaintBristleDetail = 7.5
         smartViewModel.filterOilPaintShine = 5.5
+        smartViewModel.filterOilPaintLightingAngleDegrees = -45
         smartViewModel.addSmartFilterToSelectedLayer()
 
         var smartLayer = try #require(smartViewModel.document.selectedLayer)
@@ -2674,6 +2712,7 @@ struct ImageEditorFilterTests {
         #expect(smartLayer.smartFilters.first?.normalizedSettings.oilPaintCleanliness == 6.5)
         #expect(smartLayer.smartFilters.first?.normalizedSettings.oilPaintBristleDetail == 7.5)
         #expect(smartLayer.smartFilters.first?.normalizedSettings.oilPaintShine == 5.5)
+        #expect(smartLayer.smartFilters.first?.normalizedSettings.oilPaintLightingAngleDegrees == -45)
         #expect(smartLayer.image.qingtuPNGData() == smartBasePixelsBefore)
         #expect(smartPaintedCenter.redComponent > 0.65)
         #expect(smartPaintedCenter.blueComponent > 0.25)
@@ -2686,7 +2725,8 @@ struct ImageEditorFilterTests {
             "10.0",
             "6.5",
             "7.5",
-            "5.5"
+            "5.5",
+            -45
         ))
         #expect(smartViewModel.document.history.last?.title == L10n.text("imageEditor.history.layerSmartFilterAdd"))
 
@@ -2698,6 +2738,7 @@ struct ImageEditorFilterTests {
         #expect(restored.selectedLayer?.smartFilters.first?.normalizedSettings.oilPaintCleanliness == 6.5)
         #expect(restored.selectedLayer?.smartFilters.first?.normalizedSettings.oilPaintBristleDetail == 7.5)
         #expect(restored.selectedLayer?.smartFilters.first?.normalizedSettings.oilPaintShine == 5.5)
+        #expect(restored.selectedLayer?.smartFilters.first?.normalizedSettings.oilPaintLightingAngleDegrees == -45)
 
         let root = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()
@@ -2712,6 +2753,7 @@ struct ImageEditorFilterTests {
         #expect(viewSource.contains("image-editor-filter-oil-paint-cleanliness"))
         #expect(viewSource.contains("image-editor-filter-oil-paint-bristle-detail"))
         #expect(viewSource.contains("image-editor-filter-oil-paint-shine"))
+        #expect(viewSource.contains("image-editor-filter-oil-paint-lighting-angle"))
 
         smartViewModel.toggleSmartFilterOnSelectedLayer(smartFilterID)
         smartLayer = try #require(smartViewModel.document.selectedLayer)

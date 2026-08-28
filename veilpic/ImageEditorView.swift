@@ -12023,6 +12023,20 @@ struct ImageEditorView: View {
                             .frame(width: 48, alignment: .trailing)
                     }
                     .accessibilityIdentifier("image-editor-filter-oil-paint-shine")
+                    HStack {
+                        Text(L10n.text("imageEditor.filter.oilPaintLightingAngle"))
+                            .font(.system(size: 10, weight: .medium))
+                            .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                        Slider(value: $viewModel.filterOilPaintLightingAngleDegrees, in: -180...180, step: 1)
+                        Text(L10n.format(
+                            "imageEditor.filter.oilPaintLightingAngleValue",
+                            Int(viewModel.filterOilPaintLightingAngleDegrees.rounded())
+                        ))
+                            .font(.system(size: 10, weight: .semibold))
+                            .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
+                            .frame(width: 48, alignment: .trailing)
+                    }
+                    .accessibilityIdentifier("image-editor-filter-oil-paint-lighting-angle")
                 }
                 if viewModel.selectedFilter == .motionBlur {
                     HStack {

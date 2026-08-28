@@ -494,6 +494,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var filterOilPaintCleanliness: Double = 0
     @Published var filterOilPaintBristleDetail: Double = 0
     @Published var filterOilPaintShine: Double = 0
+    @Published var filterOilPaintLightingAngleDegrees: Double = 135
     @Published var filterUnsharpRadius: Double = 1
     @Published var filterUnsharpThreshold: Double = 0
     @Published var filterLiquifyPushX: Double = 0.25
@@ -2667,6 +2668,7 @@ final class ImageEditorViewModel: ObservableObject {
             let cleanliness = settings.oilPaintCleanliness ?? 0
             let bristleDetail = settings.oilPaintBristleDetail ?? 0
             let shine = settings.oilPaintShine ?? 0
+            let lightingAngleDegrees = settings.oilPaintLightingAngleDegrees ?? 135
             let title = L10n.format(
                 "imageEditor.properties.smartFilterOilPaintItem",
                 filter.kind.title,
@@ -2675,7 +2677,8 @@ final class ImageEditorViewModel: ObservableObject {
                 String(format: "%.1f", stylization),
                 String(format: "%.1f", cleanliness),
                 String(format: "%.1f", bristleDetail),
-                String(format: "%.1f", shine)
+                String(format: "%.1f", shine),
+                Int(lightingAngleDegrees.rounded())
             )
             guard !filter.isEnabled else { return title }
             return L10n.format("imageEditor.properties.smartFilterDisabled", title)
@@ -9561,6 +9564,7 @@ final class ImageEditorViewModel: ObservableObject {
             oilPaintCleanliness: selectedFilter == .oilPaint ? filterOilPaintCleanliness : nil,
             oilPaintBristleDetail: selectedFilter == .oilPaint ? filterOilPaintBristleDetail : nil,
             oilPaintShine: selectedFilter == .oilPaint ? filterOilPaintShine : nil,
+            oilPaintLightingAngleDegrees: selectedFilter == .oilPaint ? filterOilPaintLightingAngleDegrees : nil,
             unsharpRadius: filterUnsharpRadius,
             unsharpThreshold: filterUnsharpThreshold,
             liquifyPushX: filterLiquifyPushX,
@@ -11421,6 +11425,7 @@ final class ImageEditorViewModel: ObservableObject {
         filterOilPaintCleanliness = normalized.oilPaintCleanliness ?? 0
         filterOilPaintBristleDetail = normalized.oilPaintBristleDetail ?? 0
         filterOilPaintShine = normalized.oilPaintShine ?? 0
+        filterOilPaintLightingAngleDegrees = normalized.oilPaintLightingAngleDegrees ?? 135
         filterUnsharpRadius = normalized.unsharpRadius
         filterUnsharpThreshold = normalized.unsharpThreshold
         filterLiquifyPushX = normalized.liquifyPushX
