@@ -2053,6 +2053,110 @@ struct ImageEditorFilterTests {
         #expect(try #require(smartViewModel.currentImage.qingtuPNGData()) == smartPreviewBefore)
     }
 
+    @Test func minimumAndMaximumUseAnExplicitPixelRadiusAndPersistItNonDestructively() throws {
+        let canvasSize = NSSize(width: 48, height: 48)
+        let whiteSpot = binarySpotImage(
+            size: canvasSize,
+            background: .black,
+            spot: .white,
+            spotSize: 5
+        )
+        let narrowMaximum = try #require(whiteSpot.filtered(
+            kind: .maximum,
+            intensity: 0.5,
+            settings: ImageEditorFilterSettings(morphologyRadius: 1)
+        ))
+        let wideMaximum = try #require(whiteSpot.filtered(
+            kind: .maximum,
+            intensity: 0.5,
+            settings: ImageEditorFilterSettings(morphologyRadius: 8)
+        ))
+        let samplePoint = CGPoint(x: 30, y: 24)
+        let narrowLight = try #require(narrowMaximum.color(at: samplePoint)?.usingColorSpace(.deviceRGB))
+        let wideLight = try #require(wideMaximum.color(at: samplePoint)?.usingColorSpace(.deviceRGB))
+        #expect(narrowLight.redComponent < 0.05)
+        #expect(wideLight.redComponent > 0.95)
+
+        let blackSpot = binarySpotImage(
+            size: canvasSize,
+            background: .white,
+            spot: .black,
+            spotSize: 5
+        )
+        let narrowMinimum = try #require(blackSpot.filtered(
+            kind: .minimum,
+            intensity: 0.5,
+            settings: ImageEditorFilterSettings(morphologyRadius: 1)
+        ))
+        let wideMinimum = try #require(blackSpot.filtered(
+            kind: .minimum,
+            intensity: 0.5,
+            settings: ImageEditorFilterSettings(morphologyRadius: 8)
+        ))
+        let narrowDark = try #require(narrowMinimum.color(at: samplePoint)?.usingColorSpace(.deviceRGB))
+        let wideDark = try #require(wideMinimum.color(at: samplePoint)?.usingColorSpace(.deviceRGB))
+        #expect(narrowDark.redComponent > 0.95)
+        #expect(wideDark.redComponent < 0.05)
+
+        #expect(ImageEditorFilterSettings(morphologyRadius: -12).normalized().morphologyRadius == 1)
+        #expect(ImageEditorFilterSettings(morphologyRadius: 900).normalized().morphologyRadius == 256)
+
+        let viewModel = ImageEditorViewModel(sourceName: "morphology-radius.png", image: whiteSpot) { _ in }
+        viewModel.selectedFilter = .maximum
+        viewModel.filterMorphologyRadius = 18
+        viewModel.addSmartFilterToSelectedLayer()
+
+        let smartFilter = try #require(viewModel.document.selectedLayer?.smartFilters.first)
+        #expect(smartFilter.normalizedSettings.morphologyRadius == 18)
+        #expect(
+            viewModel.smartFilterLabel(smartFilter)
+                == L10n.format(
+                    "imageEditor.properties.smartFilterMorphologyItem",
+                    smartFilter.kind.title,
+                    18
+                )
+        )
+
+        let project = try ImageEditorProjectDocument(document: viewModel.document)
+        let restored = try project.restoredDocument()
+        #expect(restored.selectedLayer?.smartFilters.first?.normalizedSettings.morphologyRadius == 18)
+
+        let legacySettings = try JSONDecoder().decode(
+            ImageEditorFilterSettings.self,
+            from: Data("{}".utf8)
+        )
+        #expect(legacySettings.morphologyRadius == nil)
+    }
+
+    @Test func morphologyRadiusControlUsesTheSameSettingForEveryFilterDestination() throws {
+        let root = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let viewSource = try String(
+            contentsOf: root.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let viewModelSource = try String(
+            contentsOf: root.appendingPathComponent("veilpic/ImageEditorViewModel.swift"),
+            encoding: .utf8
+        )
+        let filterSource = try String(
+            contentsOf: root.appendingPathComponent("veilpic/ImageEditorFilters.swift"),
+            encoding: .utf8
+        )
+
+        #expect(viewSource.contains("image-editor-filter-morphology-radius"))
+        #expect(viewSource.contains("$viewModel.filterMorphologyRadius"))
+        #expect(viewSource.contains("in: 1...256, step: 1"))
+        #expect(
+            viewModelSource.contains(
+                "morphologyRadius: selectedFilter == .minimum || selectedFilter == .maximum"
+            )
+        )
+        #expect(viewModelSource.contains("filterMorphologyRadius = normalized.morphologyRadius"))
+        #expect(filterSource.contains("writeSlidingExtrema("))
+    }
+
     @Test func imageEditorOilPaintFilterLayerAndSmartFilterAreNonDestructive() async throws {
         let canvasSize = NSSize(width: 48, height: 48)
         let sourceImage = colorSpotImage(

@@ -479,6 +479,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var filterIntensity: Double = 0.5
     @Published private(set) var filterGaussianBlurRadius: Double?
     @Published var filterHighPassRadius: Double = 6
+    @Published var filterMorphologyRadius: Double = 3
     @Published var filterUnsharpRadius: Double = 1
     @Published var filterUnsharpThreshold: Double = 0
     @Published var filterLiquifyPushX: Double = 0.25
@@ -2577,6 +2578,17 @@ final class ImageEditorViewModel: ObservableObject {
                 "imageEditor.properties.smartFilterHighPassItem",
                 filter.kind.title,
                 Int((filter.normalizedIntensity * 100).rounded()),
+                Int(radius.rounded())
+            )
+            guard !filter.isEnabled else { return title }
+            return L10n.format("imageEditor.properties.smartFilterDisabled", title)
+        }
+        if filter.kind == .minimum || filter.kind == .maximum {
+            let radius = filter.normalizedSettings.morphologyRadius
+                ?? (1 + filter.normalizedIntensity * 4)
+            let title = L10n.format(
+                "imageEditor.properties.smartFilterMorphologyItem",
+                filter.kind.title,
                 Int(radius.rounded())
             )
             guard !filter.isEnabled else { return title }
@@ -9422,6 +9434,9 @@ final class ImageEditorViewModel: ObservableObject {
         ImageEditorFilterSettings(
             gaussianBlurRadius: selectedFilter == .gaussianBlur ? filterGaussianBlurRadius : nil,
             highPassRadius: selectedFilter == .highPass ? filterHighPassRadius : nil,
+            morphologyRadius: selectedFilter == .minimum || selectedFilter == .maximum
+                ? filterMorphologyRadius
+                : nil,
             unsharpRadius: filterUnsharpRadius,
             unsharpThreshold: filterUnsharpThreshold,
             liquifyPushX: filterLiquifyPushX,
@@ -11261,6 +11276,8 @@ final class ImageEditorViewModel: ObservableObject {
         filterGaussianBlurRadius = normalized.gaussianBlurRadius
         filterHighPassRadius = normalized.highPassRadius
             ?? max(1, min(256, (1 + filterIntensity * 9).rounded()))
+        filterMorphologyRadius = normalized.morphologyRadius
+            ?? max(1, min(256, (1 + filterIntensity * 4).rounded()))
         filterUnsharpRadius = normalized.unsharpRadius
         filterUnsharpThreshold = normalized.unsharpThreshold
         filterLiquifyPushX = normalized.liquifyPushX

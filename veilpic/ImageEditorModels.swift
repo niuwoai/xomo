@@ -2505,6 +2505,8 @@ struct ImageEditorFilterSettings: Equatable, Codable {
     var gaussianBlurRadius: Double?
     /// Explicit High Pass radius in pixels. Nil preserves the legacy intensity-derived radius.
     var highPassRadius: Double?
+    /// Explicit Minimum/Maximum radius in pixels. Nil preserves the legacy intensity-derived radius.
+    var morphologyRadius: Double?
     var unsharpRadius: Double = 1
     var unsharpThreshold: Double = 0
     var liquifyPushX: Double = 0.25
@@ -2524,6 +2526,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
     init(
         gaussianBlurRadius: Double? = nil,
         highPassRadius: Double? = nil,
+        morphologyRadius: Double? = nil,
         unsharpRadius: Double = 1,
         unsharpThreshold: Double = 0,
         liquifyPushX: Double = 0.25,
@@ -2542,6 +2545,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
     ) {
         self.gaussianBlurRadius = gaussianBlurRadius
         self.highPassRadius = highPassRadius
+        self.morphologyRadius = morphologyRadius
         self.unsharpRadius = unsharpRadius
         self.unsharpThreshold = unsharpThreshold
         self.liquifyPushX = liquifyPushX
@@ -2563,6 +2567,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         gaussianBlurRadius = try container.decodeIfPresent(Double.self, forKey: .gaussianBlurRadius)
         highPassRadius = try container.decodeIfPresent(Double.self, forKey: .highPassRadius)
+        morphologyRadius = try container.decodeIfPresent(Double.self, forKey: .morphologyRadius)
         unsharpRadius = try container.decodeIfPresent(Double.self, forKey: .unsharpRadius) ?? 1
         unsharpThreshold = try container.decodeIfPresent(Double.self, forKey: .unsharpThreshold) ?? 0
         liquifyPushX = try container.decodeIfPresent(Double.self, forKey: .liquifyPushX) ?? 0.25
@@ -2584,6 +2589,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encodeIfPresent(gaussianBlurRadius, forKey: .gaussianBlurRadius)
         try container.encodeIfPresent(highPassRadius, forKey: .highPassRadius)
+        try container.encodeIfPresent(morphologyRadius, forKey: .morphologyRadius)
         try container.encode(unsharpRadius, forKey: .unsharpRadius)
         try container.encode(unsharpThreshold, forKey: .unsharpThreshold)
         try container.encode(liquifyPushX, forKey: .liquifyPushX)
@@ -2605,6 +2611,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         ImageEditorFilterSettings(
             gaussianBlurRadius: gaussianBlurRadius.map { max(0, min(256, $0)) },
             highPassRadius: highPassRadius.map { max(1, min(256, $0)) },
+            morphologyRadius: morphologyRadius.map { max(1, min(256, $0)) },
             unsharpRadius: max(0.5, min(5, unsharpRadius)),
             unsharpThreshold: max(0, min(1, unsharpThreshold)),
             liquifyPushX: max(-1, min(1, liquifyPushX)),
@@ -2626,6 +2633,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
     private enum CodingKeys: String, CodingKey {
         case gaussianBlurRadius
         case highPassRadius
+        case morphologyRadius
         case unsharpRadius
         case unsharpThreshold
         case liquifyPushX

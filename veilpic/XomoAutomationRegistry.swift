@@ -6247,6 +6247,7 @@ final class XomoAutomationRegistry {
             switch key {
             case "intensity": viewModel.filterIntensity = try numericSetting(value, key: key)
             case "highPassRadius": viewModel.filterHighPassRadius = try numericSetting(value, key: key)
+            case "morphologyRadius": viewModel.filterMorphologyRadius = try numericSetting(value, key: key)
             case "unsharpRadius": viewModel.filterUnsharpRadius = try numericSetting(value, key: key)
             case "unsharpThreshold": viewModel.filterUnsharpThreshold = try numericSetting(value, key: key)
             case "liquifyPushX": viewModel.filterLiquifyPushX = try numericSetting(value, key: key)
@@ -7950,6 +7951,7 @@ private extension XomoAutomationRegistry {
     static let filterSettingsSchema = XomoAutomationSchema.object(properties: [
         "intensity": XomoAutomationSchema.number(description: "Filter intensity"),
         "highPassRadius": XomoAutomationSchema.number(description: "High Pass radius in pixels"),
+        "morphologyRadius": XomoAutomationSchema.number(description: "Minimum or Maximum radius in pixels"),
         "unsharpRadius": XomoAutomationSchema.number(description: "Unsharp radius"),
         "unsharpThreshold": XomoAutomationSchema.number(description: "Unsharp threshold"),
         "liquifyPushX": XomoAutomationSchema.number(description: "Liquify horizontal push"),

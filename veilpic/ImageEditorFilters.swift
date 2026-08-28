@@ -44,10 +44,10 @@ extension NSImage {
             return findingEdges(intensity: clamped)
         }
         if kind == .minimum {
-            return morphologyFiltered(intensity: clamped, useMaximum: false)
+            return morphologyFiltered(intensity: clamped, settings: settings, useMaximum: false)
         }
         if kind == .maximum {
-            return morphologyFiltered(intensity: clamped, useMaximum: true)
+            return morphologyFiltered(intensity: clamped, settings: settings, useMaximum: true)
         }
         if kind == .oilPaint {
             return oilPainted(intensity: clamped)
@@ -123,9 +123,9 @@ extension NSImage {
         case .findEdges:
             return findingEdges(intensity: clamped)
         case .minimum:
-            return morphologyFiltered(intensity: clamped, useMaximum: false)
+            return morphologyFiltered(intensity: clamped, settings: settings, useMaximum: false)
         case .maximum:
-            return morphologyFiltered(intensity: clamped, useMaximum: true)
+            return morphologyFiltered(intensity: clamped, settings: settings, useMaximum: true)
         case .oilPaint:
             return oilPainted(intensity: clamped)
         case .vignette:
@@ -662,32 +662,111 @@ extension NSImage {
         }
     }
 
-    private func morphologyFiltered(intensity: Double, useMaximum: Bool) -> NSImage? {
+    private func morphologyFiltered(
+        intensity: Double,
+        settings: ImageEditorFilterSettings,
+        useMaximum: Bool
+    ) -> NSImage? {
         let clampedIntensity = max(0, min(1, intensity))
-        let radius = max(1, Int((1 + clampedIntensity * 4).rounded()))
-        return pixelMappedFromBuffer { x, y, width, height, pixels, bytesPerRow, bytesPerPixel in
-            let offset = y * bytesPerRow + x * bytesPerPixel
-            let alpha = Double(pixels[offset + 3]) / 255
-            var red = useMaximum ? 0.0 : 1.0
-            var green = useMaximum ? 0.0 : 1.0
-            var blue = useMaximum ? 0.0 : 1.0
-            for sampleY in max(0, y - radius)...min(height - 1, y + radius) {
-                for sampleX in max(0, x - radius)...min(width - 1, x + radius) {
-                    let sampleOffset = sampleY * bytesPerRow + sampleX * bytesPerPixel
-                    let sampleRed = Double(pixels[sampleOffset]) / 255
-                    let sampleGreen = Double(pixels[sampleOffset + 1]) / 255
-                    let sampleBlue = Double(pixels[sampleOffset + 2]) / 255
-                    red = useMaximum ? max(red, sampleRed) : min(red, sampleRed)
-                    green = useMaximum ? max(green, sampleGreen) : min(green, sampleGreen)
-                    blue = useMaximum ? max(blue, sampleBlue) : min(blue, sampleBlue)
-                }
-            }
-            return (
-                Self.premultipliedChannel(red, alpha: alpha),
-                Self.premultipliedChannel(green, alpha: alpha),
-                Self.premultipliedChannel(blue, alpha: alpha),
-                alpha
+        let radius = max(
+            1,
+            Int(
+                (settings.normalized().morphologyRadius ?? (1 + clampedIntensity * 4))
+                    .rounded()
             )
+        )
+        guard let source = filterRGBAPlane() else { return nil }
+        let width = source.width
+        let height = source.height
+        var horizontal = source.values
+        var output = source.values
+
+        for y in 0..<height {
+            for component in 0..<3 {
+                Self.writeSlidingExtrema(
+                    source: source.values,
+                    sourceStart: y * width * 4 + component,
+                    sourceStride: 4,
+                    count: width,
+                    radius: radius,
+                    useMaximum: useMaximum,
+                    destination: &horizontal,
+                    destinationStart: y * width * 4 + component,
+                    destinationStride: 4
+                )
+            }
+        }
+        for x in 0..<width {
+            for component in 0..<3 {
+                Self.writeSlidingExtrema(
+                    source: horizontal,
+                    sourceStart: x * 4 + component,
+                    sourceStride: width * 4,
+                    count: height,
+                    radius: radius,
+                    useMaximum: useMaximum,
+                    destination: &output,
+                    destinationStart: x * 4 + component,
+                    destinationStride: width * 4
+                )
+            }
+        }
+        for pixelIndex in 0..<(width * height) {
+            let offset = pixelIndex * 4
+            let alpha = source.values[offset + 3]
+            output[offset] = min(output[offset], alpha)
+            output[offset + 1] = min(output[offset + 1], alpha)
+            output[offset + 2] = min(output[offset + 2], alpha)
+        }
+        return Self.filterRGBAImage(
+            width: width,
+            height: height,
+            values: output,
+            displaySize: size
+        )
+    }
+
+    private static func writeSlidingExtrema(
+        source: [UInt8],
+        sourceStart: Int,
+        sourceStride: Int,
+        count: Int,
+        radius: Int,
+        useMaximum: Bool,
+        destination: inout [UInt8],
+        destinationStart: Int,
+        destinationStride: Int
+    ) {
+        guard count > 0 else { return }
+        var deque = [Int](repeating: 0, count: count)
+        var head = 0
+        var tail = 0
+        var nextIndex = 0
+
+        func value(at index: Int) -> UInt8 {
+            source[sourceStart + index * sourceStride]
+        }
+        func isPreferred(_ candidate: UInt8, over current: UInt8) -> Bool {
+            useMaximum ? candidate >= current : candidate <= current
+        }
+
+        for index in 0..<count {
+            let right = min(count - 1, index + radius)
+            while nextIndex <= right {
+                let candidate = value(at: nextIndex)
+                while tail > head, isPreferred(candidate, over: value(at: deque[tail - 1])) {
+                    tail -= 1
+                }
+                deque[tail] = nextIndex
+                tail += 1
+                nextIndex += 1
+            }
+
+            let left = max(0, index - radius)
+            while tail > head, deque[head] < left {
+                head += 1
+            }
+            destination[destinationStart + index * destinationStride] = value(at: deque[head])
         }
     }
 

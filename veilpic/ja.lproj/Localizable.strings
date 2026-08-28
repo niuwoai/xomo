@@ -953,6 +953,8 @@
 "imageEditor.filter.highPass" = "ハイパス";
 "imageEditor.filter.highPassRadius" = "半径";
 "imageEditor.filter.highPassRadiusValue" = "%d px";
+"imageEditor.filter.morphologyRadius" = "半径";
+"imageEditor.filter.morphologyRadiusValue" = "%d px";
 "imageEditor.filter.emboss" = "エンボス";
 "imageEditor.filter.findEdges" = "輪郭検出";
 "imageEditor.filter.minimum" = "明るさの最小値";
@@ -1207,6 +1209,7 @@
 "imageEditor.properties.smartFilterItem" = "%@ %d%%";
 "imageEditor.properties.smartFilterGaussianBlurItem" = "%@ · 半径 %@ px";
 "imageEditor.properties.smartFilterHighPassItem" = "%@ %d%% · 半径 %d px";
+"imageEditor.properties.smartFilterMorphologyItem" = "%@ · 半径 %d px";
 "imageEditor.properties.smartFilterBackgroundBlurItem" = "%@ · 背景半径 %@ px";
 "imageEditor.properties.smartFilterUnsharpItem" = "%@ %d%% · 半径 %@ · しきい値 %d";
 "imageEditor.properties.smartFilterLiquifyPushItem" = "%@ %d%% · X %d · Y %d";

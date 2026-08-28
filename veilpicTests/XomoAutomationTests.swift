@@ -5585,6 +5585,42 @@ struct XomoAutomationTests {
         #expect(settingsProperties["highPassRadius"]?.objectValue?["type"] == .string("number"))
     }
 
+    @Test func registryConfiguresMorphologyRadiusThroughTheSharedFilterPipeline() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        defer { registry.unregister(viewModel) }
+
+        let response = registry.execute(request(
+            operation: "call",
+            name: "xomo.filter.configure",
+            arguments: [
+                "filter": .string(ImageEditorFilter.maximum.rawValue),
+                "action": .string("addSmartFilter"),
+                "settings": .object([
+                    "intensity": .number(0.5),
+                    "morphologyRadius": .number(999)
+                ])
+            ]
+        ))
+
+        #expect(response.ok)
+        #expect(response.result?.objectValue?["addedLayerCount"] == .number(1))
+        let filter = try #require(viewModel.document.selectedLayer?.smartFilters.last)
+        #expect(filter.kind == .maximum)
+        #expect(filter.normalizedSettings.morphologyRadius == 256)
+
+        let tools = registry.execute(request(operation: "tools"))
+        let configureTool = try #require(
+            automationTool(named: "xomo.filter.configure", in: tools)
+        )
+        let settingsSchema = try #require(
+            configureTool["inputSchema"]?.objectValue?["properties"]?.objectValue?["settings"]?.objectValue
+        )
+        let settingsProperties = try #require(settingsSchema["properties"]?.objectValue)
+        #expect(settingsProperties["morphologyRadius"]?.objectValue?["type"] == .string("number"))
+    }
+
     @Test func registryReadsAndReplacesCompleteSelectedFilterLayerSettings() throws {
         let viewModel = makeViewModel()
         let registry = XomoAutomationRegistry.shared

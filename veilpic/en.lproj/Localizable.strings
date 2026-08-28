@@ -953,6 +953,8 @@
 "imageEditor.filter.highPass" = "High Pass";
 "imageEditor.filter.highPassRadius" = "Radius";
 "imageEditor.filter.highPassRadiusValue" = "%d px";
+"imageEditor.filter.morphologyRadius" = "Radius";
+"imageEditor.filter.morphologyRadiusValue" = "%d px";
 "imageEditor.filter.emboss" = "Emboss";
 "imageEditor.filter.findEdges" = "Find Edges";
 "imageEditor.filter.minimum" = "Minimum";
@@ -1207,6 +1209,7 @@
 "imageEditor.properties.smartFilterItem" = "%@ %d%%";
 "imageEditor.properties.smartFilterGaussianBlurItem" = "%@ · Radius %@ px";
 "imageEditor.properties.smartFilterHighPassItem" = "%@ %d%% · Radius %d px";
+"imageEditor.properties.smartFilterMorphologyItem" = "%@ · Radius %d px";
 "imageEditor.properties.smartFilterBackgroundBlurItem" = "%@ · Backdrop radius %@ px";
 "imageEditor.properties.smartFilterUnsharpItem" = "%@ %d%% · Radius %@ · Threshold %d";
 "imageEditor.properties.smartFilterLiquifyPushItem" = "%@ %d%% · X %d · Y %d";

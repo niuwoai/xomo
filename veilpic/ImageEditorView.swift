@@ -7603,14 +7603,25 @@ struct ImageEditorView: View {
             .accessibilityIdentifier("image-editor-filter-picker")
 
             HStack(spacing: 8) {
-                Text("\(Int((viewModel.filterIntensity * 100).rounded()))%")
-                    .font(.system(size: 11, weight: .semibold).monospacedDigit())
-                    .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
-                    .frame(width: 36, alignment: .leading)
-                Slider(value: $viewModel.filterIntensity, in: 0...1, step: 0.05)
-                    .focusable(false)
-                    .accessibilityLabel(L10n.text("imageEditor.option.strength"))
-                    .accessibilityIdentifier("image-editor-filter-intensity")
+                if viewModel.selectedFilter == .minimum || viewModel.selectedFilter == .maximum {
+                    Text("\(Int(viewModel.filterMorphologyRadius.rounded())) px")
+                        .font(.system(size: 11, weight: .semibold).monospacedDigit())
+                        .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                        .frame(width: 52, alignment: .leading)
+                    Slider(value: $viewModel.filterMorphologyRadius, in: 1...256, step: 1)
+                        .focusable(false)
+                        .accessibilityLabel(L10n.text("imageEditor.filter.morphologyRadius"))
+                        .accessibilityIdentifier("image-editor-filter-quick-morphology-radius")
+                } else {
+                    Text("\(Int((viewModel.filterIntensity * 100).rounded()))%")
+                        .font(.system(size: 11, weight: .semibold).monospacedDigit())
+                        .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                        .frame(width: 36, alignment: .leading)
+                    Slider(value: $viewModel.filterIntensity, in: 0...1, step: 0.05)
+                        .focusable(false)
+                        .accessibilityLabel(L10n.text("imageEditor.option.strength"))
+                        .accessibilityIdentifier("image-editor-filter-intensity")
+                }
             }
 
             VStack(spacing: 8) {
@@ -11860,7 +11871,9 @@ struct ImageEditorView: View {
                         Text(filter.title).tag(filter)
                     }
                 }
-                Slider(value: $viewModel.filterIntensity, in: 0...1, step: 0.05)
+                if viewModel.selectedFilter != .minimum && viewModel.selectedFilter != .maximum {
+                    Slider(value: $viewModel.filterIntensity, in: 0...1, step: 0.05)
+                }
                 if viewModel.selectedFilter == .unsharpMask {
                     HStack {
                         Text(L10n.text("imageEditor.filter.unsharpRadius"))
@@ -11898,6 +11911,22 @@ struct ImageEditorView: View {
                             .frame(width: 54, alignment: .trailing)
                     }
                     .accessibilityIdentifier("image-editor-filter-high-pass-radius")
+                }
+                if viewModel.selectedFilter == .minimum || viewModel.selectedFilter == .maximum {
+                    HStack {
+                        Text(L10n.text("imageEditor.filter.morphologyRadius"))
+                            .font(.system(size: 10, weight: .medium))
+                            .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                        Slider(value: $viewModel.filterMorphologyRadius, in: 1...256, step: 1)
+                        Text(L10n.format(
+                            "imageEditor.filter.morphologyRadiusValue",
+                            Int(viewModel.filterMorphologyRadius.rounded())
+                        ))
+                            .font(.system(size: 10, weight: .semibold))
+                            .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
+                            .frame(width: 54, alignment: .trailing)
+                    }
+                    .accessibilityIdentifier("image-editor-filter-morphology-radius")
                 }
                 if viewModel.selectedFilter == .liquifyPush {
                     HStack {
