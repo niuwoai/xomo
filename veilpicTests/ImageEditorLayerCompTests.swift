@@ -1374,6 +1374,8 @@ struct ImageEditorLayerCompTests {
         ) { _ in }
         let layerID = try #require(viewModel.document.layers.first?.id)
         viewModel.addLayerComp(named: "Client/Home")
+        let favoriteID = try #require(viewModel.document.selectedLayerCompID)
+        #expect(viewModel.setLayerCompFavorite(favoriteID, isFavorite: true))
         viewModel.toggleLayerVisibility(layerID)
         viewModel.addLayerComp(named: "Client/Home")
         let projectDataBeforeExport = try viewModel.projectData()
@@ -1389,6 +1391,10 @@ struct ImageEditorLayerCompTests {
             "campaign-design-Client-Home.png",
             "campaign-design-Client-Home-2.png"
         ])
+        let favoritePlan = viewModel.layerCompExportPlan(format: .png, scope: .favorites)
+        #expect(favoritePlan.map(\.layerCompID) == [favoriteID])
+        #expect(favoritePlan.map(\.filename) == ["campaign-design-Client-Home.png"])
+        #expect(viewModel.canExportFavoriteLayerComps)
         #expect(viewModel.layerCompExportPlan(format: .svg).isEmpty)
 
         let artifacts = try #require(viewModel.layerCompExportArtifacts(format: .png))
@@ -1401,6 +1407,12 @@ struct ImageEditorLayerCompTests {
         #expect(visiblePixel.blueComponent > 0.8)
         #expect(visiblePixel.alphaComponent > 0.99)
         #expect(artifacts[0].data != artifacts[1].data)
+        let favoriteArtifacts = try #require(viewModel.layerCompExportArtifacts(
+            format: .png,
+            scope: .favorites
+        ))
+        #expect(favoriteArtifacts.map(\.variant) == favoritePlan)
+        #expect(favoriteArtifacts.map(\.data) == [artifacts[0].data])
         var hiddenDocument = viewModel.document
         ImageEditorLayerCompApplication.apply(
             viewModel.document.layerComps[1],
@@ -1440,6 +1452,26 @@ struct ImageEditorLayerCompTests {
         ))
 
         writtenURLs.removeAll()
+        let favoriteCount = viewModel.exportLayerComps(
+            format: .png,
+            to: directory,
+            scope: .favorites,
+            fileExists: { _ in false },
+            dataWriter: { _, destination in writtenURLs.append(destination) }
+        )
+        #expect(favoriteCount == 1)
+        #expect(writtenURLs.map(\.lastPathComponent) == favoritePlan.map(\.filename))
+        #expect(viewModel.statusText == L10n.format(
+            "imageEditor.status.exportedLayerComps",
+            1,
+            "xomo-layer-comp-export"
+        ))
+        #expect(try viewModel.projectData() == projectDataBeforeExport)
+        #expect(viewModel.document.history == historyBeforeExport)
+        #expect(viewModel.undoStack.count == undoCountBeforeExport)
+        #expect(viewModel.redoStack.count == redoCountBeforeExport)
+
+        writtenURLs.removeAll()
         let conflictCount = viewModel.exportLayerComps(
             format: .png,
             to: directory,
@@ -1466,6 +1498,8 @@ struct ImageEditorLayerCompTests {
         ) { _ in }
         let layerID = try #require(viewModel.document.layers.first?.id)
         viewModel.addLayerComp(named: "Visible")
+        let favoriteID = try #require(viewModel.document.selectedLayerCompID)
+        #expect(viewModel.setLayerCompFavorite(favoriteID, isFavorite: true))
         viewModel.toggleLayerVisibility(layerID)
         viewModel.addLayerComp(named: "Hidden")
         let projectDataBeforeExport = try viewModel.projectData()
@@ -1475,11 +1509,17 @@ struct ImageEditorLayerCompTests {
         let lastDocumentStateBeforeExport = viewModel.lastDocumentLayerCompState
 
         #expect(viewModel.layerCompPDFExportFilename == "campaign-design-layer-comps.pdf")
+        #expect(viewModel.layerCompPDFExportFilename(
+            scope: .favorites
+        ) == "campaign-design-favorite-layer-comps.pdf")
         let exportDocuments = try #require(viewModel.layerCompExportDocuments())
         #expect(exportDocuments.count == 2)
         #expect(exportDocuments.map(\.selectedLayerCompID) == viewModel.document.layerComps.map(\.id))
         #expect(exportDocuments[0].layers.first { $0.id == layerID }?.isVisible == true)
         #expect(exportDocuments[1].layers.first { $0.id == layerID }?.isVisible == false)
+        let favoriteDocuments = try #require(viewModel.layerCompExportDocuments(scope: .favorites))
+        #expect(favoriteDocuments.map(\.selectedLayerCompID) == [favoriteID])
+        #expect(favoriteDocuments[0].layers.first { $0.id == layerID }?.isVisible == true)
 
         let data = try #require(viewModel.layerCompMultipagePDFData())
         let provider = try #require(CGDataProvider(data: data as CFData))
@@ -1491,6 +1531,10 @@ struct ImageEditorLayerCompTests {
             #expect(mediaBox.width == 48)
             #expect(mediaBox.height == 36)
         }
+        let favoriteData = try #require(viewModel.layerCompMultipagePDFData(scope: .favorites))
+        let favoriteProvider = try #require(CGDataProvider(data: favoriteData as CFData))
+        let favoritePDF = try #require(CGPDFDocument(favoriteProvider))
+        #expect(favoritePDF.numberOfPages == 1)
         #expect(try viewModel.projectData() == projectDataBeforeExport)
         #expect(viewModel.document.history == historyBeforeExport)
         #expect(viewModel.undoStack.count == undoCountBeforeExport)
@@ -1514,6 +1558,29 @@ struct ImageEditorLayerCompTests {
             "imageEditor.status.exportedLayerComps",
             2,
             destination.lastPathComponent
+        ))
+
+        writes.removeAll()
+        let favoriteDestination = URL(
+            fileURLWithPath: "/tmp/campaign-design-favorite-layer-comps.pdf"
+        )
+        #expect(viewModel.exportLayerCompsPDF(
+            to: favoriteDestination,
+            scope: .favorites,
+            fileExists: { _ in false },
+            dataWriter: { writes.append(($0, $1)) }
+        ))
+        #expect(writes.count == 1)
+        #expect(writes.first?.1 == favoriteDestination)
+        let favoriteWrittenData = try #require(writes.first?.0)
+        let favoriteWrittenProvider = try #require(CGDataProvider(
+            data: favoriteWrittenData as CFData
+        ))
+        #expect(CGPDFDocument(favoriteWrittenProvider)?.numberOfPages == 1)
+        #expect(viewModel.statusText == L10n.format(
+            "imageEditor.status.exportedLayerComps",
+            1,
+            favoriteDestination.lastPathComponent
         ))
 
         writes.removeAll()

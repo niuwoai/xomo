@@ -103,6 +103,13 @@ extension ImageEditorView {
             exportLayerComps: { viewModel.chooseLayerCompExportDirectory() },
             canExportLayerComps: viewModel.canExportLayerComps,
             exportLayerCompsPDF: { viewModel.chooseLayerCompPDFDestination() },
+            exportFavoriteLayerComps: {
+                viewModel.chooseLayerCompExportDirectory(scope: .favorites)
+            },
+            canExportFavoriteLayerComps: viewModel.canExportFavoriteLayerComps,
+            exportFavoriteLayerCompsPDF: {
+                viewModel.chooseLayerCompPDFDestination(scope: .favorites)
+            },
             pageSetup: { viewModel.presentPageSetup() },
             canConfigurePage: viewModel.canPrintCompositedCanvas,
             printDocument: { viewModel.printCompositedCanvas() },

@@ -42,6 +42,9 @@ struct XomoFileCommandActions {
     let exportLayerComps: () -> Void
     let canExportLayerComps: Bool
     let exportLayerCompsPDF: () -> Void
+    let exportFavoriteLayerComps: () -> Void
+    let canExportFavoriteLayerComps: Bool
+    let exportFavoriteLayerCompsPDF: () -> Void
     let pageSetup: () -> Void
     let canConfigurePage: Bool
     let printDocument: () -> Void
@@ -74,6 +77,8 @@ enum XomoFileMenuItem: CaseIterable, Hashable {
     case exportSelectedLayers
     case exportLayerComps
     case exportLayerCompsPDF
+    case exportFavoriteLayerComps
+    case exportFavoriteLayerCompsPDF
     case pageSetup
     case printDocument
     case completionDivider
@@ -804,6 +809,16 @@ struct XomoFileMenuItems: View {
                 actions?.exportLayerCompsPDF()
             }
             .disabled(actions?.canExportLayerComps != true)
+        case .exportFavoriteLayerComps:
+            Button(L10n.text("imageEditor.action.exportFavoriteLayerComps")) {
+                actions?.exportFavoriteLayerComps()
+            }
+            .disabled(actions?.canExportFavoriteLayerComps != true)
+        case .exportFavoriteLayerCompsPDF:
+            Button(L10n.text("imageEditor.action.exportFavoriteLayerCompsPDF")) {
+                actions?.exportFavoriteLayerCompsPDF()
+            }
+            .disabled(actions?.canExportFavoriteLayerComps != true)
         case .pageSetup:
             Button(L10n.text("imageEditor.action.pageSetup")) {
                 actions?.pageSetup()

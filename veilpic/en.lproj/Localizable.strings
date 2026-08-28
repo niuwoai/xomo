@@ -3216,6 +3216,8 @@
 "imageEditor.status.layerCompAllWarningsCleared" = "Cleared warnings for %d layer comp(s); remaining layers were left unchanged.";
 "imageEditor.action.exportLayerComps" = "Export Layer Comps to Files…";
 "imageEditor.action.exportLayerCompsPDF" = "Export Layer Comps to PDF…";
+"imageEditor.action.exportFavoriteLayerComps" = "Export Favorite Layer Comps to Files…";
+"imageEditor.action.exportFavoriteLayerCompsPDF" = "Export Favorite Layer Comps to PDF…";
 "imageEditor.export.layerCompsFormat" = "Format:";
 "imageEditor.status.exportedLayerComps" = "Exported %d layer comp(s) to %@.";
 "imageEditor.status.exportLayerCompConflicts" = "%d layer comp file(s) already exist. Nothing was exported.";

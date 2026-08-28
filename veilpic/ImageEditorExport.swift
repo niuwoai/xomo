@@ -83,6 +83,11 @@ enum ImageEditorExportScope: String, CaseIterable, Identifiable {
     }
 }
 
+enum ImageEditorLayerCompExportScope: Equatable {
+    case all
+    case favorites
+}
+
 enum ImageEditorExportNamingRule: String, CaseIterable, Identifiable {
     case sourceName
     case sourceAndScope
@@ -202,6 +207,10 @@ extension ImageEditorViewModel {
 
     var canExportLayerComps: Bool {
         !document.layerComps.isEmpty
+    }
+
+    var canExportFavoriteLayerComps: Bool {
+        document.layerComps.contains { $0.isFavorite }
     }
 
     var exportSizeText: String {
@@ -600,8 +609,10 @@ extension ImageEditorViewModel {
         }
     }
 
-    func chooseLayerCompExportDirectory() {
-        guard canExportLayerComps else { return }
+    func chooseLayerCompExportDirectory(
+        scope: ImageEditorLayerCompExportScope = .all
+    ) {
+        guard !layerCompsForExport(scope: scope).isEmpty else { return }
         let formats = Self.layerCompExportFormats
         let selectedFormat = formats.contains(exportSettings.format) ? exportSettings.format : .png
         let formatPicker = NSPopUpButton(frame: NSRect(x: 0, y: 0, width: 150, height: 26))
@@ -633,38 +644,50 @@ extension ImageEditorViewModel {
                 _ = self.exportLayerComps(
                     format: format,
                     quality: self.exportSettings.quality,
-                    to: directory
+                    to: directory,
+                    scope: scope
                 )
             }
         }
     }
 
-    func chooseLayerCompPDFDestination() {
-        guard canExportLayerComps else { return }
+    func chooseLayerCompPDFDestination(
+        scope: ImageEditorLayerCompExportScope = .all
+    ) {
+        guard !layerCompsForExport(scope: scope).isEmpty else { return }
         let panel = NSSavePanel()
         panel.allowedContentTypes = [.pdf]
         panel.canCreateDirectories = true
-        panel.nameFieldStringValue = layerCompPDFExportFilename
+        panel.nameFieldStringValue = layerCompPDFExportFilename(scope: scope)
         panel.begin { [weak self] response in
             Task { @MainActor in
                 guard let self, response == .OK, let destination = panel.url else { return }
-                _ = self.exportLayerCompsPDF(to: destination)
+                _ = self.exportLayerCompsPDF(to: destination, scope: scope)
             }
         }
     }
 
     var layerCompPDFExportFilename: String {
-        let rawSourceName = (document.sourceName as NSString).deletingPathExtension
-        let sourceName = Self.sanitizedExportBasename(rawSourceName, fallback: "image")
-        return "\(sourceName)-layer-comps.pdf"
+        layerCompPDFExportFilename(scope: .all)
     }
 
-    func layerCompExportPlan(format: ImageEditorExportFormat) -> [ImageEditorLayerCompExportVariant] {
+    func layerCompPDFExportFilename(scope: ImageEditorLayerCompExportScope) -> String {
+        let rawSourceName = (document.sourceName as NSString).deletingPathExtension
+        let sourceName = Self.sanitizedExportBasename(rawSourceName, fallback: "image")
+        let suffix = scope == .favorites ? "favorite-layer-comps" : "layer-comps"
+        return "\(sourceName)-\(suffix).pdf"
+    }
+
+    func layerCompExportPlan(
+        format: ImageEditorExportFormat,
+        scope: ImageEditorLayerCompExportScope = .all
+    ) -> [ImageEditorLayerCompExportVariant] {
         guard Self.layerCompExportFormats.contains(format) else { return [] }
+        let layerComps = layerCompsForExport(scope: scope)
         let rawSourceName = (document.sourceName as NSString).deletingPathExtension
         let sourceName = Self.sanitizedExportBasename(rawSourceName, fallback: "image")
         var usedFilenames: Set<String> = []
-        return document.layerComps.enumerated().map { index, comp in
+        return layerComps.enumerated().map { index, comp in
             let compName = Self.sanitizedExportBasename(
                 comp.name,
                 fallback: "layer-comp-\(index + 1)"
@@ -682,11 +705,12 @@ extension ImageEditorViewModel {
 
     func layerCompExportArtifacts(
         format: ImageEditorExportFormat,
-        quality: Double = 0.9
+        quality: Double = 0.9,
+        scope: ImageEditorLayerCompExportScope = .all
     ) -> [ImageEditorLayerCompExportArtifact]? {
-        let plan = layerCompExportPlan(format: format)
+        let plan = layerCompExportPlan(format: format, scope: scope)
         guard !plan.isEmpty,
-              let exportDocuments = layerCompExportDocuments(),
+              let exportDocuments = layerCompExportDocuments(scope: scope),
               exportDocuments.count == plan.count
         else { return nil }
         var artifacts: [ImageEditorLayerCompExportArtifact] = []
@@ -702,11 +726,14 @@ extension ImageEditorViewModel {
         return artifacts
     }
 
-    func layerCompExportDocuments() -> [ImageEditorDocument]? {
-        guard !document.layerComps.isEmpty else { return nil }
+    func layerCompExportDocuments(
+        scope: ImageEditorLayerCompExportScope = .all
+    ) -> [ImageEditorDocument]? {
+        let layerComps = layerCompsForExport(scope: scope)
+        guard !layerComps.isEmpty else { return nil }
         var exportDocuments: [ImageEditorDocument] = []
-        exportDocuments.reserveCapacity(document.layerComps.count)
-        for comp in document.layerComps {
+        exportDocuments.reserveCapacity(layerComps.count)
+        for comp in layerComps {
             guard ImageEditorLayerCompApplication.hasMatchingLayers(comp, in: document) else {
                 return nil
             }
@@ -721,20 +748,24 @@ extension ImageEditorViewModel {
         return exportDocuments
     }
 
-    func layerCompMultipagePDFData() -> Data? {
-        guard let exportDocuments = layerCompExportDocuments() else { return nil }
+    func layerCompMultipagePDFData(
+        scope: ImageEditorLayerCompExportScope = .all
+    ) -> Data? {
+        guard let exportDocuments = layerCompExportDocuments(scope: scope) else { return nil }
         return NSImage.pdfData(pages: exportDocuments.map(\.compositedImage))
     }
 
     @discardableResult
     func exportLayerCompsPDF(
         to destination: URL,
+        scope: ImageEditorLayerCompExportScope = .all,
         fileExists: (URL) -> Bool = { FileManager.default.fileExists(atPath: $0.path) },
         dataWriter: (Data, URL) throws -> Void = { data, destination in
             try data.write(to: destination, options: .withoutOverwriting)
         }
     ) -> Bool {
-        guard let data = layerCompMultipagePDFData() else {
+        let layerCompCount = layerCompsForExport(scope: scope).count
+        guard let data = layerCompMultipagePDFData(scope: scope) else {
             statusText = L10n.text("imageEditor.status.exportLayerCompsFailed")
             return false
         }
@@ -747,7 +778,7 @@ extension ImageEditorViewModel {
             try dataWriter(data, standardizedDestination)
             statusText = L10n.format(
                 "imageEditor.status.exportedLayerComps",
-                document.layerComps.count,
+                layerCompCount,
                 standardizedDestination.lastPathComponent
             )
             return true
@@ -765,12 +796,17 @@ extension ImageEditorViewModel {
         format: ImageEditorExportFormat,
         quality: Double = 0.9,
         to directory: URL,
+        scope: ImageEditorLayerCompExportScope = .all,
         fileExists: (URL) -> Bool = { FileManager.default.fileExists(atPath: $0.path) },
         dataWriter: (Data, URL) throws -> Void = { data, destination in
             try data.write(to: destination, options: .withoutOverwriting)
         }
     ) -> Int {
-        guard let artifacts = layerCompExportArtifacts(format: format, quality: quality) else {
+        guard let artifacts = layerCompExportArtifacts(
+            format: format,
+            quality: quality,
+            scope: scope
+        ) else {
             statusText = L10n.text("imageEditor.status.exportLayerCompsFailed")
             return 0
         }
@@ -799,6 +835,17 @@ extension ImageEditorViewModel {
                 error.localizedDescription
             )
             return 0
+        }
+    }
+
+    private func layerCompsForExport(
+        scope: ImageEditorLayerCompExportScope
+    ) -> [ImageEditorLayerComp] {
+        switch scope {
+        case .all:
+            return document.layerComps
+        case .favorites:
+            return document.layerComps.filter(\.isFavorite)
         }
     }
 
