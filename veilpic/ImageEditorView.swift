@@ -11873,9 +11873,26 @@ struct ImageEditorView: View {
                 }
                 if viewModel.selectedFilter != .minimum
                     && viewModel.selectedFilter != .maximum
+                    && viewModel.selectedFilter != .pixelate
                     && viewModel.selectedFilter != .motionBlur
                     && viewModel.selectedFilter != .emboss {
                     Slider(value: $viewModel.filterIntensity, in: 0...1, step: 0.05)
+                }
+                if viewModel.selectedFilter == .pixelate {
+                    HStack {
+                        Text(L10n.text("imageEditor.filter.pixelateCellSize"))
+                            .font(.system(size: 10, weight: .medium))
+                            .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                        Slider(value: $viewModel.filterPixelateCellSize, in: 2...200, step: 1)
+                        Text(L10n.format(
+                            "imageEditor.filter.pixelateCellSizeValue",
+                            Int(viewModel.filterPixelateCellSize.rounded())
+                        ))
+                            .font(.system(size: 10, weight: .semibold))
+                            .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
+                            .frame(width: 54, alignment: .trailing)
+                    }
+                    .accessibilityIdentifier("image-editor-filter-pixelate-cell-size")
                 }
                 if viewModel.selectedFilter == .motionBlur {
                     HStack {

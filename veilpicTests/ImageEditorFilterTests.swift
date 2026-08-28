@@ -1806,6 +1806,7 @@ struct ImageEditorFilterTests {
 
         viewModel.selectedFilter = .pixelate
         viewModel.filterIntensity = 0.9
+        viewModel.filterPixelateCellSize = 32
         viewModel.addFilterLayer()
 
         let filterLayer = try #require(viewModel.document.selectedLayer)
@@ -1814,6 +1815,7 @@ struct ImageEditorFilterTests {
 
         #expect(filterLayer.isFilter)
         #expect(filterLayer.filter?.kind == .pixelate)
+        #expect(filterLayer.filterSettings.normalized().pixelateCellSize == 32)
         #expect(viewModel.document.layers.first { $0.id == baseLayerID }?.image.qingtuPNGData() == basePixelsBefore)
         #expect(abs(beforeNearA.redComponent - beforeNearB.redComponent) > 0.01)
         #expect(abs(filterLayerNearA.redComponent - filterLayerNearB.redComponent) < 0.004)
@@ -1826,6 +1828,7 @@ struct ImageEditorFilterTests {
 
         smartViewModel.selectedFilter = .pixelate
         smartViewModel.filterIntensity = 0.9
+        smartViewModel.filterPixelateCellSize = 32
         #expect(smartViewModel.canAddSmartFilterToSelectedLayer)
         smartViewModel.addSmartFilterToSelectedLayer()
 
@@ -1835,16 +1838,79 @@ struct ImageEditorFilterTests {
         let smartNearB = try #require(smartViewModel.currentImage.color(at: CGPoint(x: 14, y: 24))?.usingColorSpace(.deviceRGB))
 
         #expect(smartLayer.smartFilters.first?.kind == .pixelate)
+        #expect(smartLayer.smartFilters.first?.normalizedSettings.pixelateCellSize == 32)
         #expect(smartLayer.image.qingtuPNGData() == smartBasePixelsBefore)
         #expect(abs(smartNearA.redComponent - smartNearB.redComponent) < 0.004)
         #expect(try #require(smartViewModel.currentImage.qingtuPNGData()) != smartPreviewBefore)
+        #expect(smartViewModel.smartFilterLabel(try #require(smartLayer.smartFilters.first)) == L10n.format(
+            "imageEditor.properties.smartFilterPixelateItem",
+            ImageEditorFilter.pixelate.title,
+            32
+        ))
         #expect(smartViewModel.document.history.last?.title == L10n.text("imageEditor.history.layerSmartFilterAdd"))
+
+        let project = try ImageEditorProjectDocument(document: smartViewModel.document)
+        let restored = try project.restoredDocument()
+        #expect(restored.selectedLayer?.smartFilters.first?.normalizedSettings.pixelateCellSize == 32)
 
         smartViewModel.toggleSmartFilterOnSelectedLayer(smartFilterID)
         smartLayer = try #require(smartViewModel.document.selectedLayer)
         #expect(smartLayer.smartFilters.first?.isEnabled == false)
         #expect(try #require(smartViewModel.currentImage.qingtuPNGData()) == smartPreviewBefore)
         #expect(smartViewModel.document.history.last?.title == L10n.text("imageEditor.history.layerSmartFilterToggle"))
+    }
+
+    @Test func pixelateCellSizeControlsMosaicScaleAndPreservesLegacyProjects() throws {
+        let sourceImage = gradientImage(size: NSSize(width: 72, height: 48))
+
+        func distinctRedValues(cellSize: Double) throws -> Set<Int> {
+            let output = try #require(sourceImage.filtered(
+                kind: .pixelate,
+                intensity: 0.9,
+                settings: ImageEditorFilterSettings(pixelateCellSize: cellSize)
+            ))
+            return try Set(stride(from: CGFloat(4), through: 68, by: 2).map { x in
+                let color = try #require(
+                    output.color(at: CGPoint(x: x, y: 24))?.usingColorSpace(.deviceRGB)
+                )
+                return Int((color.redComponent * 255).rounded())
+            })
+        }
+
+        let fineValues = try distinctRedValues(cellSize: 2)
+        let coarseValues = try distinctRedValues(cellSize: 40)
+        #expect(fineValues.count > coarseValues.count + 8)
+
+        let legacySettings = try JSONDecoder().decode(
+            ImageEditorFilterSettings.self,
+            from: Data("{}".utf8)
+        )
+        #expect(legacySettings.pixelateCellSize == nil)
+        let legacy = try #require(sourceImage.filtered(
+            kind: .pixelate,
+            intensity: 0.9,
+            settings: legacySettings
+        ))
+        let equivalentExplicit = try #require(sourceImage.filtered(
+            kind: .pixelate,
+            intensity: 0.9,
+            settings: ImageEditorFilterSettings(pixelateCellSize: 2 + 0.9 * 32)
+        ))
+        #expect(legacy.qingtuPNGData() == equivalentExplicit.qingtuPNGData())
+
+        let root = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let viewSource = try String(
+            contentsOf: root.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let viewModelSource = try String(
+            contentsOf: root.appendingPathComponent("veilpic/ImageEditorViewModel.swift"),
+            encoding: .utf8
+        )
+        #expect(viewSource.contains("image-editor-filter-pixelate-cell-size"))
+        #expect(viewModelSource.contains("pixelateCellSize: selectedFilter == .pixelate"))
     }
 
     @Test func imageEditorHighPassFilterLayerAndSmartFilterAreNonDestructive() async throws {

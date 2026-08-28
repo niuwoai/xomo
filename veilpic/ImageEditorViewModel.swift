@@ -480,6 +480,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published private(set) var filterGaussianBlurRadius: Double?
     @Published var filterHighPassRadius: Double = 6
     @Published var filterMorphologyRadius: Double = 3
+    @Published var filterPixelateCellSize: Double = 18
     @Published var filterMotionBlurAngleDegrees: Double = 0
     @Published var filterMotionBlurDistance: Double = 14
     @Published var filterEmbossAngleDegrees: Double = 135
@@ -2572,6 +2573,15 @@ final class ImageEditorViewModel: ObservableObject {
                 Int((filter.normalizedIntensity * 100).rounded()),
                 String(format: "%.1f", settings.unsharpRadius),
                 Int((settings.unsharpThreshold * 255).rounded())
+            )
+            guard !filter.isEnabled else { return title }
+            return L10n.format("imageEditor.properties.smartFilterDisabled", title)
+        }
+        if filter.kind == .pixelate, let cellSize = filter.normalizedSettings.pixelateCellSize {
+            let title = L10n.format(
+                "imageEditor.properties.smartFilterPixelateItem",
+                filter.kind.title,
+                Int(cellSize.rounded())
             )
             guard !filter.isEnabled else { return title }
             return L10n.format("imageEditor.properties.smartFilterDisabled", title)
@@ -9470,6 +9480,7 @@ final class ImageEditorViewModel: ObservableObject {
             morphologyRadius: selectedFilter == .minimum || selectedFilter == .maximum
                 ? filterMorphologyRadius
                 : nil,
+            pixelateCellSize: selectedFilter == .pixelate ? filterPixelateCellSize : nil,
             motionBlurAngleDegrees: selectedFilter == .motionBlur ? filterMotionBlurAngleDegrees : nil,
             motionBlurDistance: selectedFilter == .motionBlur ? filterMotionBlurDistance : nil,
             embossAngleDegrees: selectedFilter == .emboss ? filterEmbossAngleDegrees : nil,
@@ -11316,6 +11327,8 @@ final class ImageEditorViewModel: ObservableObject {
             ?? max(1, min(256, (1 + filterIntensity * 9).rounded()))
         filterMorphologyRadius = normalized.morphologyRadius
             ?? max(1, min(256, (1 + filterIntensity * 4).rounded()))
+        filterPixelateCellSize = normalized.pixelateCellSize
+            ?? max(2, min(200, (2 + filterIntensity * 32).rounded()))
         filterMotionBlurAngleDegrees = normalized.motionBlurAngleDegrees ?? 0
         filterMotionBlurDistance = normalized.motionBlurDistance
             ?? max(1, min(999, (filterIntensity * 28).rounded()))

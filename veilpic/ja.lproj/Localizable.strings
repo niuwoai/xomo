@@ -946,6 +946,8 @@
 "imageEditor.filter.gaussianBlur" = "ガウスぼかし";
 "imageEditor.filter.sharpen" = "シャープ";
 "imageEditor.filter.pixelate" = "ピクセレート";
+"imageEditor.filter.pixelateCellSize" = "セルサイズ";
+"imageEditor.filter.pixelateCellSizeValue" = "%d px";
 "imageEditor.filter.motionBlur" = "モーションブラー";
 "imageEditor.filter.motionBlurAngle" = "角度";
 "imageEditor.filter.motionBlurAngleValue" = "%d°";
@@ -1226,6 +1228,7 @@
 "imageEditor.properties.smartFilterMorphologyItem" = "%@ · 半径 %d px";
 "imageEditor.properties.smartFilterEmbossItem" = "%@ %d%% · 角度 %d° · 高さ %d px";
 "imageEditor.properties.smartFilterMotionBlurItem" = "%@ · 角度 %d° · 距離 %d px";
+"imageEditor.properties.smartFilterPixelateItem" = "%@ · セルサイズ %d px";
 "imageEditor.properties.smartFilterBackgroundBlurItem" = "%@ · 背景半径 %@ px";
 "imageEditor.properties.smartFilterUnsharpItem" = "%@ %d%% · 半径 %@ · しきい値 %d";
 "imageEditor.properties.smartFilterLiquifyPushItem" = "%@ %d%% · X %d · Y %d";

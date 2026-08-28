@@ -946,6 +946,8 @@
 "imageEditor.filter.gaussianBlur" = "高斯模糊";
 "imageEditor.filter.sharpen" = "锐化";
 "imageEditor.filter.pixelate" = "像素化";
+"imageEditor.filter.pixelateCellSize" = "单元格大小";
+"imageEditor.filter.pixelateCellSizeValue" = "%d px";
 "imageEditor.filter.motionBlur" = "动感模糊";
 "imageEditor.filter.motionBlurAngle" = "角度";
 "imageEditor.filter.motionBlurAngleValue" = "%d°";
@@ -1226,6 +1228,7 @@
 "imageEditor.properties.smartFilterMorphologyItem" = "%@ · 半径 %d px";
 "imageEditor.properties.smartFilterEmbossItem" = "%@ %d%% · 角度 %d° · 高度 %d px";
 "imageEditor.properties.smartFilterMotionBlurItem" = "%@ · 角度 %d° · 距离 %d px";
+"imageEditor.properties.smartFilterPixelateItem" = "%@ · 单元格 %d px";
 "imageEditor.properties.smartFilterBackgroundBlurItem" = "%@ · 背景半径 %@ px";
 "imageEditor.properties.smartFilterUnsharpItem" = "%@ %d%% · 半径 %@ · 阈值 %d";
 "imageEditor.properties.smartFilterLiquifyPushItem" = "%@ %d%% · X %d · Y %d";

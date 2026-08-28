@@ -102,7 +102,7 @@ extension NSImage {
             let filter = CIFilter.pixellate()
             filter.inputImage = ciImage
             filter.center = CGPoint(x: size.width / 2, y: size.height / 2)
-            filter.scale = Float(2 + clamped * 32)
+            filter.scale = Float(settings.normalized().pixelateCellSize ?? (2 + clamped * 32))
             output = filter.outputImage?.cropped(to: ciImage.extent)
         case .motionBlur:
             let filter = CIFilter.motionBlur()

@@ -5680,6 +5680,58 @@ struct XomoAutomationTests {
         #expect(viewModel.document.selectedLayer?.smartFilters.count == 1)
     }
 
+    @Test func registryConfiguresPixelateCellSizeThroughTheSharedFilterPipeline() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        defer { registry.unregister(viewModel) }
+
+        let response = registry.execute(request(
+            operation: "call",
+            name: "xomo.filter.configure",
+            arguments: [
+                "filter": .string(ImageEditorFilter.pixelate.rawValue),
+                "action": .string("addSmartFilter"),
+                "settings": .object([
+                    "intensity": .number(1),
+                    "pixelateCellSize": .number(48)
+                ])
+            ]
+        ))
+
+        #expect(response.ok)
+        #expect(response.result?.objectValue?["addedLayerCount"] == .number(1))
+        let filter = try #require(viewModel.document.selectedLayer?.smartFilters.last)
+        #expect(filter.kind == .pixelate)
+        #expect(filter.normalizedSettings.pixelateCellSize == 48)
+
+        let tools = registry.execute(request(operation: "tools"))
+        let configureTool = try #require(
+            automationTool(named: "xomo.filter.configure", in: tools)
+        )
+        let settingsSchema = try #require(
+            configureTool["inputSchema"]?.objectValue?["properties"]?.objectValue?["settings"]?.objectValue
+        )
+        let settingsProperties = try #require(settingsSchema["properties"]?.objectValue)
+        #expect(settingsProperties["pixelateCellSize"]?.objectValue?["type"] == .string("number"))
+
+        let historyCount = viewModel.document.history.count
+        let invalidResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.filter.configure",
+            arguments: [
+                "filter": .string(ImageEditorFilter.pixelate.rawValue),
+                "action": .string("addSmartFilter"),
+                "settings": .object([
+                    "pixelateCellSize": .string("large")
+                ])
+            ]
+        ))
+        #expect(!invalidResponse.ok)
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.document.selectedLayer?.smartFilters.count == 1)
+    }
+
     @Test func registryConfiguresMotionBlurAngleAndDistanceThroughTheSharedFilterPipeline() throws {
         let viewModel = makeViewModel()
         let registry = XomoAutomationRegistry.shared
