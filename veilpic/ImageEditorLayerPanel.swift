@@ -1345,6 +1345,7 @@ extension ImageEditorView {
             layerCompIconButton("play.fill", "imageEditor.action.layerCompApply") {
                 viewModel.applyLayerComp(comp.id)
             }
+            .disabled(isApplied)
             layerCompIconButton("arrow.triangle.2.circlepath", "imageEditor.action.layerCompUpdate") {
                 viewModel.updateLayerComp(comp.id)
             }
@@ -1363,11 +1364,13 @@ extension ImageEditorView {
 
     @ViewBuilder
     private func layerCompContextMenu(_ comp: ImageEditorLayerComp) -> some View {
+        let isApplied = viewModel.isLayerCompApplied(comp.id)
         Button {
             viewModel.applyLayerComp(comp.id)
         } label: {
             Label(L10n.text("imageEditor.action.layerCompApply"), systemImage: "play.fill")
         }
+        .disabled(isApplied)
         Button {
             viewModel.updateLayerComp(comp.id)
         } label: {

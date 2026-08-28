@@ -423,7 +423,11 @@ extension ImageEditorViewModel {
     }
 
     var canApplySelectedLayerComp: Bool {
-        selectedLayerComp != nil
+        guard let selectedLayerComp else { return false }
+        return !ImageEditorLayerCompApplication.matchesCurrentDocument(
+            selectedLayerComp,
+            in: document
+        )
     }
 
     var canUpdateSelectedLayerComp: Bool {
@@ -502,6 +506,9 @@ extension ImageEditorViewModel {
         guard let comp = document.layerComps.first(where: { $0.id == id }) else { return false }
         guard layerCompHasMatchingLayers(comp) else {
             statusText = L10n.text("imageEditor.status.layerCompNoMatchingLayers")
+            return false
+        }
+        guard !ImageEditorLayerCompApplication.matchesCurrentDocument(comp, in: document) else {
             return false
         }
         if lastDocumentLayerCompState == nil {

@@ -181,6 +181,45 @@ struct ImageEditorLayerCompTests {
     }
 
     @Test
+    func reapplyingCurrentLayerCompIsANoOpAndPreservesRedo() throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "source.png",
+            image: testImage(color: .systemIndigo, size: NSSize(width: 100, height: 80))
+        ) { _ in }
+        let layerID = try #require(viewModel.document.selectedLayerID)
+        viewModel.addLayerComp(named: "Baseline")
+        let compID = try #require(viewModel.document.selectedLayerCompID)
+
+        viewModel.toggleLayerVisibility(layerID)
+        viewModel.undo()
+        #expect(viewModel.isLayerCompApplied(compID))
+        #expect(!viewModel.canApplySelectedLayerComp)
+        #expect(viewModel.canRedo)
+        #expect(viewModel.lastDocumentLayerCompState == nil)
+        let projectData = try viewModel.projectData()
+        let history = viewModel.document.history
+        let undoCount = viewModel.undoStack.count
+        let redoCount = viewModel.redoStack.count
+
+        #expect(!viewModel.applyLayerComp(compID))
+        #expect(try viewModel.projectData() == projectData)
+        #expect(viewModel.document.history == history)
+        #expect(viewModel.undoStack.count == undoCount)
+        #expect(viewModel.redoStack.count == redoCount)
+        #expect(viewModel.canRedo)
+        #expect(viewModel.lastDocumentLayerCompState == nil)
+
+        viewModel.redo()
+        #expect(viewModel.canApplySelectedLayerComp)
+        #expect(viewModel.applyLayerComp(compID))
+        #expect(viewModel.isLayerCompApplied(compID))
+        #expect(!viewModel.canApplySelectedLayerComp)
+        let appliedHistoryCount = viewModel.document.history.count
+        #expect(!viewModel.applyLayerComp(compID))
+        #expect(viewModel.document.history.count == appliedHistoryCount)
+    }
+
+    @Test
     func layerCompContextOperationsUseTheExplicitRowInsteadOfTheCurrentSelection() throws {
         let viewModel = ImageEditorViewModel(
             sourceName: "source.png",
@@ -240,6 +279,7 @@ struct ImageEditorLayerCompTests {
         #expect(source.contains("viewModel.isLayerCompApplied(comp.id)"))
         #expect(source.contains("imageEditor.layerComp.currentlyApplied"))
         #expect(source.contains("image-editor-layer-comp-applied-"))
+        #expect(source.components(separatedBy: ".disabled(isApplied)").count == 3)
         #expect(contextSource.contains("viewModel.applyLayerComp(comp.id)"))
         #expect(contextSource.contains("viewModel.updateLayerComp(comp.id)"))
         #expect(contextSource.contains("viewModel.duplicateLayerComp(comp.id)"))

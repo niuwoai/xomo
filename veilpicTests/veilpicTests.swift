@@ -302,7 +302,7 @@ struct veilpicTests {
         #expect(viewModel.document.layerComps.count == 3)
         #expect(viewModel.document.layerComps.first { $0.id == duplicatedCompID }?.name == L10n.format("imageEditor.layerComp.copyName", "Hidden detail"))
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerCompDuplicate"))
-        #expect(viewModel.canApplySelectedLayerComp)
+        #expect(!viewModel.canApplySelectedLayerComp)
         #expect(viewModel.canUpdateSelectedLayerComp)
         #expect(viewModel.canDeleteSelectedLayerComp)
 
