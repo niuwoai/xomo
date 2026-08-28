@@ -489,6 +489,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var filterEmbossHeight: Double = 3
     @Published var filterVignetteMidpoint: Double = 0.28
     @Published var filterOilPaintRadius: Double = 4
+    @Published var filterOilPaintTonalLevels: Double = 13
     @Published var filterUnsharpRadius: Double = 1
     @Published var filterUnsharpThreshold: Double = 0
     @Published var filterLiquifyPushX: Double = 0.25
@@ -2653,13 +2654,16 @@ final class ImageEditorViewModel: ObservableObject {
             return L10n.format("imageEditor.properties.smartFilterDisabled", title)
         }
         if filter.kind == .oilPaint {
-            let radius = filter.normalizedSettings.oilPaintRadius
+            let settings = filter.normalizedSettings
+            let radius = settings.oilPaintRadius
                 ?? (1 + filter.normalizedIntensity * 5)
+            let tonalLevels = settings.oilPaintTonalLevels
+                ?? (18 - filter.normalizedIntensity * 10)
             let title = L10n.format(
                 "imageEditor.properties.smartFilterOilPaintItem",
                 filter.kind.title,
-                Int((filter.normalizedIntensity * 100).rounded()),
-                Int(radius.rounded())
+                Int(radius.rounded()),
+                Int(tonalLevels.rounded())
             )
             guard !filter.isEnabled else { return title }
             return L10n.format("imageEditor.properties.smartFilterDisabled", title)
@@ -9540,6 +9544,7 @@ final class ImageEditorViewModel: ObservableObject {
             embossHeight: selectedFilter == .emboss ? filterEmbossHeight : nil,
             vignetteMidpoint: selectedFilter == .vignette ? filterVignetteMidpoint : nil,
             oilPaintRadius: selectedFilter == .oilPaint ? filterOilPaintRadius : nil,
+            oilPaintTonalLevels: selectedFilter == .oilPaint ? filterOilPaintTonalLevels : nil,
             unsharpRadius: filterUnsharpRadius,
             unsharpThreshold: filterUnsharpThreshold,
             liquifyPushX: filterLiquifyPushX,
@@ -11394,6 +11399,8 @@ final class ImageEditorViewModel: ObservableObject {
         filterVignetteMidpoint = normalized.vignetteMidpoint ?? 0.28
         filterOilPaintRadius = normalized.oilPaintRadius
             ?? max(1, min(10, (1 + filterIntensity * 5).rounded()))
+        filterOilPaintTonalLevels = normalized.oilPaintTonalLevels
+            ?? max(6, min(18, (18 - filterIntensity * 10).rounded()))
         filterUnsharpRadius = normalized.unsharpRadius
         filterUnsharpThreshold = normalized.unsharpThreshold
         filterLiquifyPushX = normalized.liquifyPushX

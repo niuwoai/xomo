@@ -848,7 +848,10 @@ extension NSImage {
             1,
             Int((settings.normalized().oilPaintRadius ?? (1 + clampedIntensity * 5)).rounded())
         )
-        let bucketCount = max(6, Int((18 - clampedIntensity * 10).rounded()))
+        let bucketCount = max(
+            6,
+            Int((settings.normalized().oilPaintTonalLevels ?? (18 - clampedIntensity * 10)).rounded())
+        )
         return pixelMappedFromBuffer { x, y, width, height, pixels, bytesPerRow, bytesPerPixel in
             let offset = y * bytesPerRow + x * bytesPerPixel
             let alpha = Double(pixels[offset + 3]) / 255

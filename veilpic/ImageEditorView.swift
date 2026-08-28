@@ -11881,7 +11881,8 @@ struct ImageEditorView: View {
                     && viewModel.selectedFilter != .maximum
                     && viewModel.selectedFilter != .pixelate
                     && viewModel.selectedFilter != .motionBlur
-                    && viewModel.selectedFilter != .emboss {
+                    && viewModel.selectedFilter != .emboss
+                    && viewModel.selectedFilter != .oilPaint {
                     Slider(value: $viewModel.filterIntensity, in: 0...1, step: 0.05)
                 }
                 if viewModel.selectedFilter == .pixelate {
@@ -11952,6 +11953,20 @@ struct ImageEditorView: View {
                             .frame(width: 48, alignment: .trailing)
                     }
                     .accessibilityIdentifier("image-editor-filter-oil-paint-radius")
+                    HStack {
+                        Text(L10n.text("imageEditor.filter.oilPaintTonalLevels"))
+                            .font(.system(size: 10, weight: .medium))
+                            .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                        Slider(value: $viewModel.filterOilPaintTonalLevels, in: 6...18, step: 1)
+                        Text(L10n.format(
+                            "imageEditor.filter.oilPaintTonalLevelsValue",
+                            Int(viewModel.filterOilPaintTonalLevels.rounded())
+                        ))
+                            .font(.system(size: 10, weight: .semibold))
+                            .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
+                            .frame(width: 48, alignment: .trailing)
+                    }
+                    .accessibilityIdentifier("image-editor-filter-oil-paint-tonal-levels")
                 }
                 if viewModel.selectedFilter == .motionBlur {
                     HStack {

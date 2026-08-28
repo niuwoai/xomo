@@ -5841,7 +5841,7 @@ struct XomoAutomationTests {
         #expect(viewModel.document.selectedLayer?.smartFilters.count == 1)
     }
 
-    @Test func registryConfiguresOilPaintRadiusThroughTheSharedFilterPipeline() throws {
+    @Test func registryConfiguresOilPaintRadiusAndTonalLevelsThroughTheSharedFilterPipeline() throws {
         let viewModel = makeViewModel()
         let registry = XomoAutomationRegistry.shared
         registry.register(viewModel)
@@ -5855,7 +5855,8 @@ struct XomoAutomationTests {
                 "action": .string("addSmartFilter"),
                 "settings": .object([
                     "intensity": .number(0.75),
-                    "oilPaintRadius": .number(8)
+                    "oilPaintRadius": .number(8),
+                    "oilPaintTonalLevels": .number(11)
                 ])
             ]
         ))
@@ -5864,6 +5865,7 @@ struct XomoAutomationTests {
         let filter = try #require(viewModel.document.selectedLayer?.smartFilters.last)
         #expect(filter.kind == .oilPaint)
         #expect(filter.normalizedSettings.oilPaintRadius == 8)
+        #expect(filter.normalizedSettings.oilPaintTonalLevels == 11)
 
         let tools = registry.execute(request(operation: "tools"))
         let configureTool = try #require(
@@ -5874,6 +5876,7 @@ struct XomoAutomationTests {
         )
         let settingsProperties = try #require(settingsSchema["properties"]?.objectValue)
         #expect(settingsProperties["oilPaintRadius"]?.objectValue?["type"] == .string("number"))
+        #expect(settingsProperties["oilPaintTonalLevels"]?.objectValue?["type"] == .string("number"))
 
         let historyCount = viewModel.document.history.count
         let invalidResponse = registry.execute(request(
@@ -5883,7 +5886,7 @@ struct XomoAutomationTests {
                 "filter": .string(ImageEditorFilter.oilPaint.rawValue),
                 "action": .string("addSmartFilter"),
                 "settings": .object([
-                    "oilPaintRadius": .string("wide")
+                    "oilPaintTonalLevels": .string("many")
                 ])
             ]
         ))

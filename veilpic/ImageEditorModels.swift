@@ -2548,6 +2548,8 @@ struct ImageEditorFilterSettings: Equatable, Codable {
     var vignetteMidpoint: Double?
     /// Oil Paint neighborhood radius in pixels. Nil preserves the legacy intensity-derived radius.
     var oilPaintRadius: Double?
+    /// Oil Paint luminance bucket count. Nil preserves the legacy intensity-derived count.
+    var oilPaintTonalLevels: Double?
     var unsharpRadius: Double = 1
     var unsharpThreshold: Double = 0
     var liquifyPushX: Double = 0.25
@@ -2578,6 +2580,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         embossHeight: Double? = nil,
         vignetteMidpoint: Double? = nil,
         oilPaintRadius: Double? = nil,
+        oilPaintTonalLevels: Double? = nil,
         unsharpRadius: Double = 1,
         unsharpThreshold: Double = 0,
         liquifyPushX: Double = 0.25,
@@ -2607,6 +2610,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         self.embossHeight = embossHeight
         self.vignetteMidpoint = vignetteMidpoint
         self.oilPaintRadius = oilPaintRadius
+        self.oilPaintTonalLevels = oilPaintTonalLevels
         self.unsharpRadius = unsharpRadius
         self.unsharpThreshold = unsharpThreshold
         self.liquifyPushX = liquifyPushX
@@ -2642,6 +2646,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         embossHeight = try container.decodeIfPresent(Double.self, forKey: .embossHeight)
         vignetteMidpoint = try container.decodeIfPresent(Double.self, forKey: .vignetteMidpoint)
         oilPaintRadius = try container.decodeIfPresent(Double.self, forKey: .oilPaintRadius)
+        oilPaintTonalLevels = try container.decodeIfPresent(Double.self, forKey: .oilPaintTonalLevels)
         unsharpRadius = try container.decodeIfPresent(Double.self, forKey: .unsharpRadius) ?? 1
         unsharpThreshold = try container.decodeIfPresent(Double.self, forKey: .unsharpThreshold) ?? 0
         liquifyPushX = try container.decodeIfPresent(Double.self, forKey: .liquifyPushX) ?? 0.25
@@ -2677,6 +2682,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         try container.encodeIfPresent(embossHeight, forKey: .embossHeight)
         try container.encodeIfPresent(vignetteMidpoint, forKey: .vignetteMidpoint)
         try container.encodeIfPresent(oilPaintRadius, forKey: .oilPaintRadius)
+        try container.encodeIfPresent(oilPaintTonalLevels, forKey: .oilPaintTonalLevels)
         try container.encode(unsharpRadius, forKey: .unsharpRadius)
         try container.encode(unsharpThreshold, forKey: .unsharpThreshold)
         try container.encode(liquifyPushX, forKey: .liquifyPushX)
@@ -2709,6 +2715,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
             embossHeight: embossHeight.map { max(1, min(10, $0)) },
             vignetteMidpoint: vignetteMidpoint.map { max(0, min(0.95, $0)) },
             oilPaintRadius: oilPaintRadius.map { max(1, min(10, $0)) },
+            oilPaintTonalLevels: oilPaintTonalLevels.map { max(6, min(18, $0)) },
             unsharpRadius: max(0.5, min(5, unsharpRadius)),
             unsharpThreshold: max(0, min(1, unsharpThreshold)),
             liquifyPushX: max(-1, min(1, liquifyPushX)),
@@ -2741,6 +2748,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         case embossHeight
         case vignetteMidpoint
         case oilPaintRadius
+        case oilPaintTonalLevels
         case unsharpRadius
         case unsharpThreshold
         case liquifyPushX

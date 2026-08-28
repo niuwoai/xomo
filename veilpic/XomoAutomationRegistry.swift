@@ -6266,6 +6266,7 @@ final class XomoAutomationRegistry {
             case "embossHeight": viewModel.filterEmbossHeight = try numericSetting(value, key: key)
             case "vignetteMidpoint": viewModel.filterVignetteMidpoint = try numericSetting(value, key: key)
             case "oilPaintRadius": viewModel.filterOilPaintRadius = try numericSetting(value, key: key)
+            case "oilPaintTonalLevels": viewModel.filterOilPaintTonalLevels = try numericSetting(value, key: key)
             case "unsharpRadius": viewModel.filterUnsharpRadius = try numericSetting(value, key: key)
             case "unsharpThreshold": viewModel.filterUnsharpThreshold = try numericSetting(value, key: key)
             case "liquifyPushX": viewModel.filterLiquifyPushX = try numericSetting(value, key: key)
@@ -7992,6 +7993,7 @@ private extension XomoAutomationRegistry {
         "embossHeight": XomoAutomationSchema.number(description: "Emboss relief height in pixels"),
         "vignetteMidpoint": XomoAutomationSchema.number(description: "Vignette midpoint from 0 to 0.95"),
         "oilPaintRadius": XomoAutomationSchema.number(description: "Oil Paint brush radius in pixels"),
+        "oilPaintTonalLevels": XomoAutomationSchema.number(description: "Oil Paint tonal aggregation levels"),
         "unsharpRadius": XomoAutomationSchema.number(description: "Unsharp radius"),
         "unsharpThreshold": XomoAutomationSchema.number(description: "Unsharp threshold"),
         "liquifyPushX": XomoAutomationSchema.number(description: "Liquify horizontal push"),

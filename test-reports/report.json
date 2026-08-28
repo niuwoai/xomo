@@ -1,60 +1,48 @@
 {
-  "generated_at": "2026-08-27 07:14:32 +0800",
-  "total": 4,
-  "passed": 4,
+  "generated_at": "2026-08-29 05:01:21 +0800",
+  "total": 3,
+  "passed": 3,
   "failed": 0,
-  "total_tests": 4,
-  "passed_tests": 4,
+  "total_tests": 3,
+  "passed_tests": 3,
   "failed_tests_in_failed_groups": 0,
   "jobs": 1,
   "results": [
     {
-      "suite": "ImageEditorSmartObjectContextTests",
-      "method": "fileActionsPrepareClickedTargetBeforePresentingPanels",
-      "identifier": "veilpicTests/ImageEditorSmartObjectContextTests/fileActionsPrepareClickedTargetBeforePresentingPanels()",
-      "file": "ImageEditorSmartObjectContextTests.swift",
+      "suite": "ImageEditorTextInputShortcutTests",
+      "method": "filePanelCompletionReturnsDeleteOwnershipToTheEditorKeyboardResponder",
+      "identifier": "veilpicTests/ImageEditorTextInputShortcutTests/filePanelCompletionReturnsDeleteOwnershipToTheEditorKeyboardResponder()",
+      "file": "ImageEditorTextInputShortcutTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.172,
+      "duration": 3.213,
       "infrastructure_retries": 0,
       "issues": [],
-      "log": "ImageEditorSmartObjectContextTests.fileActionsPrepareClickedTargetBeforePresentingPanels.log"
+      "log": "ImageEditorTextInputShortcutTests.filePanelCompletionReturnsDeleteOwnershipToTheEditorKeyboardResponder.log"
     },
     {
-      "suite": "ImageEditorSmartObjectContextTests",
-      "method": "resetTransformTargetsClickedObjectAndNoOpPreservesRedo",
-      "identifier": "veilpicTests/ImageEditorSmartObjectContextTests/resetTransformTargetsClickedObjectAndNoOpPreservesRedo()",
-      "file": "ImageEditorSmartObjectContextTests.swift",
+      "suite": "ImageEditorTextInputShortcutTests",
+      "method": "filePanelFocusRestorerFallsBackSafelyWithoutAKeyboardHost",
+      "identifier": "veilpicTests/ImageEditorTextInputShortcutTests/filePanelFocusRestorerFallsBackSafelyWithoutAKeyboardHost()",
+      "file": "ImageEditorTextInputShortcutTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.199,
+      "duration": 3.254,
       "infrastructure_retries": 0,
       "issues": [],
-      "log": "ImageEditorSmartObjectContextTests.resetTransformTargetsClickedObjectAndNoOpPreservesRedo.log"
+      "log": "ImageEditorTextInputShortcutTests.filePanelFocusRestorerFallsBackSafelyWithoutAKeyboardHost.log"
     },
     {
-      "suite": "ImageEditorSmartObjectContextTests",
-      "method": "selectedContextMakesSharedInstancesUniqueInOneUndoStep",
-      "identifier": "veilpicTests/ImageEditorSmartObjectContextTests/selectedContextMakesSharedInstancesUniqueInOneUndoStep()",
-      "file": "ImageEditorSmartObjectContextTests.swift",
+      "suite": "ImageEditorTextInputShortcutTests",
+      "method": "filePanelTeardownCannotStealDeleteFromTheImportedObject",
+      "identifier": "veilpicTests/ImageEditorTextInputShortcutTests/filePanelTeardownCannotStealDeleteFromTheImportedObject()",
+      "file": "ImageEditorTextInputShortcutTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 3.153,
+      "duration": 3.194,
       "infrastructure_retries": 0,
       "issues": [],
-      "log": "ImageEditorSmartObjectContextTests.selectedContextMakesSharedInstancesUniqueInOneUndoStep.log"
-    },
-    {
-      "suite": "ImageEditorSmartObjectContextTests",
-      "method": "unselectedContextCreatesIndependentSmartObjectCopy",
-      "identifier": "veilpicTests/ImageEditorSmartObjectContextTests/unselectedContextCreatesIndependentSmartObjectCopy()",
-      "file": "ImageEditorSmartObjectContextTests.swift",
-      "test_count": 1,
-      "passed": true,
-      "duration": 4.099,
-      "infrastructure_retries": 0,
-      "issues": [],
-      "log": "ImageEditorSmartObjectContextTests.unselectedContextCreatesIndependentSmartObjectCopy.log"
+      "log": "ImageEditorTextInputShortcutTests.filePanelTeardownCannotStealDeleteFromTheImportedObject.log"
     }
   ]
 }
