@@ -979,6 +979,9 @@
 "imageEditor.filter.maximum" = "最大值";
 "imageEditor.filter.oilPaint" = "油画";
 "imageEditor.filter.vignette" = "暗角";
+"imageEditor.filter.vignetteMidpoint" = "中点";
+"imageEditor.filter.vignetteMidpointValue" = "%d%%";
+"imageEditor.properties.smartFilterVignetteItem" = "%1$@ · 强度 %2$d%% · 中点 %3$d%%";
 "imageEditor.filter.offset" = "位移";
 "imageEditor.filter.wave" = "波浪";
 "imageEditor.filter.ripple" = "波纹";

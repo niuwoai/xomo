@@ -53,7 +53,7 @@ extension NSImage {
             return oilPainted(intensity: clamped)
         }
         if kind == .vignette {
-            return vignetted(intensity: clamped)
+            return vignetted(intensity: clamped, settings: settings)
         }
         if kind == .offset {
             return offset(intensity: clamped, settings: settings)
@@ -130,7 +130,7 @@ extension NSImage {
         case .oilPaint:
             return oilPainted(intensity: clamped)
         case .vignette:
-            return vignetted(intensity: clamped)
+            return vignetted(intensity: clamped, settings: settings)
         case .offset:
             return offset(intensity: clamped, settings: settings)
         case .wave:
@@ -884,10 +884,14 @@ extension NSImage {
         }
     }
 
-    private func vignetted(intensity: Double) -> NSImage? {
+    private func vignetted(
+        intensity: Double,
+        settings: ImageEditorFilterSettings
+    ) -> NSImage? {
         let clampedIntensity = max(0, min(1, intensity))
         guard clampedIntensity > 0 else { return self }
         let strength = 0.85 * clampedIntensity
+        let featherStart = settings.normalized().vignetteMidpoint ?? 0.28
         return pixelMappedFromBuffer { x, y, width, height, pixels, bytesPerRow, bytesPerPixel in
             let offset = y * bytesPerRow + x * bytesPerPixel
             let alpha = Double(pixels[offset + 3]) / 255
@@ -896,7 +900,6 @@ extension NSImage {
             let normalizedX = (Double(x) - centerX) / max(centerX, 1)
             let normalizedY = (Double(y) - centerY) / max(centerY, 1)
             let radialDistance = min(1, hypot(normalizedX, normalizedY) / sqrt(2))
-            let featherStart = 0.28
             let feather = max(0, min(1, (radialDistance - featherStart) / (1 - featherStart)))
             let falloff = pow(feather, 1.8)
             let factor = 1 - falloff * strength

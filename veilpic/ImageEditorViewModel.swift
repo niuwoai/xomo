@@ -487,6 +487,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var filterMotionBlurDistance: Double = 14
     @Published var filterEmbossAngleDegrees: Double = 135
     @Published var filterEmbossHeight: Double = 3
+    @Published var filterVignetteMidpoint: Double = 0.28
     @Published var filterUnsharpRadius: Double = 1
     @Published var filterUnsharpThreshold: Double = 0
     @Published var filterLiquifyPushX: Double = 0.25
@@ -2635,6 +2636,17 @@ final class ImageEditorViewModel: ObservableObject {
                 "imageEditor.properties.smartFilterMorphologyItem",
                 filter.kind.title,
                 Int(radius.rounded())
+            )
+            guard !filter.isEnabled else { return title }
+            return L10n.format("imageEditor.properties.smartFilterDisabled", title)
+        }
+        if filter.kind == .vignette {
+            let midpoint = filter.normalizedSettings.vignetteMidpoint ?? 0.28
+            let title = L10n.format(
+                "imageEditor.properties.smartFilterVignetteItem",
+                filter.kind.title,
+                Int((filter.normalizedIntensity * 100).rounded()),
+                Int((midpoint * 100).rounded())
             )
             guard !filter.isEnabled else { return title }
             return L10n.format("imageEditor.properties.smartFilterDisabled", title)
@@ -9504,6 +9516,7 @@ final class ImageEditorViewModel: ObservableObject {
             motionBlurDistance: selectedFilter == .motionBlur ? filterMotionBlurDistance : nil,
             embossAngleDegrees: selectedFilter == .emboss ? filterEmbossAngleDegrees : nil,
             embossHeight: selectedFilter == .emboss ? filterEmbossHeight : nil,
+            vignetteMidpoint: selectedFilter == .vignette ? filterVignetteMidpoint : nil,
             unsharpRadius: filterUnsharpRadius,
             unsharpThreshold: filterUnsharpThreshold,
             liquifyPushX: filterLiquifyPushX,
@@ -11355,6 +11368,7 @@ final class ImageEditorViewModel: ObservableObject {
             ?? max(1, min(999, (filterIntensity * 28).rounded()))
         filterEmbossAngleDegrees = normalized.embossAngleDegrees ?? 135
         filterEmbossHeight = normalized.embossHeight ?? 3
+        filterVignetteMidpoint = normalized.vignetteMidpoint ?? 0.28
         filterUnsharpRadius = normalized.unsharpRadius
         filterUnsharpThreshold = normalized.unsharpThreshold
         filterLiquifyPushX = normalized.liquifyPushX

@@ -11915,6 +11915,22 @@ struct ImageEditorView: View {
                     .focusable(false)
                     .accessibilityIdentifier("image-editor-filter-add-noise-monochromatic")
                 }
+                if viewModel.selectedFilter == .vignette {
+                    HStack {
+                        Text(L10n.text("imageEditor.filter.vignetteMidpoint"))
+                            .font(.system(size: 10, weight: .medium))
+                            .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                        Slider(value: $viewModel.filterVignetteMidpoint, in: 0...0.95, step: 0.01)
+                        Text(L10n.format(
+                            "imageEditor.filter.vignetteMidpointValue",
+                            Int((viewModel.filterVignetteMidpoint * 100).rounded())
+                        ))
+                            .font(.system(size: 10, weight: .semibold))
+                            .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
+                            .frame(width: 48, alignment: .trailing)
+                    }
+                    .accessibilityIdentifier("image-editor-filter-vignette-midpoint")
+                }
                 if viewModel.selectedFilter == .motionBlur {
                     HStack {
                         Text(L10n.text("imageEditor.filter.motionBlurAngle"))

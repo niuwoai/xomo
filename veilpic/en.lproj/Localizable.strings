@@ -979,6 +979,9 @@
 "imageEditor.filter.maximum" = "Maximum";
 "imageEditor.filter.oilPaint" = "Oil Paint";
 "imageEditor.filter.vignette" = "Vignette";
+"imageEditor.filter.vignetteMidpoint" = "Midpoint";
+"imageEditor.filter.vignetteMidpointValue" = "%d%%";
+"imageEditor.properties.smartFilterVignetteItem" = "%1$@ · %2$d%% · midpoint %3$d%%";
 "imageEditor.filter.offset" = "Offset";
 "imageEditor.filter.wave" = "Wave";
 "imageEditor.filter.ripple" = "Ripple";
