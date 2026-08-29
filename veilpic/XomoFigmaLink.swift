@@ -320,12 +320,14 @@ enum XomoFigmaClipboardWriter {
         _ candidate: URL?,
         to pasteboard: NSPasteboard = .general
     ) -> Bool {
-        guard let canonicalURL = XomoFigmaSourceOpenPolicy.canonicalURL(from: candidate) else {
+        guard let canonicalURL = XomoFigmaSourceOpenPolicy.canonicalURL(from: candidate),
+              let preview = try? XomoFigmaLinkParser.parse(canonicalURL.absoluteString)
+        else {
             return false
         }
         let value = canonicalURL.absoluteString
         let linkedString = NSAttributedString(
-            string: value,
+            string: preview.displayName,
             attributes: [.link: canonicalURL]
         )
         let fullRange = NSRange(location: 0, length: linkedString.length)

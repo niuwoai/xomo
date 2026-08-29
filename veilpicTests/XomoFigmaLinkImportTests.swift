@@ -257,18 +257,30 @@ struct XomoFigmaLinkImportTests {
         )
         pasteboard.clearContents()
         let source = try #require(URL(
-            string: "https://figma.com/design/abc123DEF456/Checkout?node-id=1-2&utm_source=xomo"
+            string: "https://figma.com/design/abc123DEF456/Checkout-Review?node-id=1-2&utm_source=xomo"
         ))
-        let canonical = "https://www.figma.com/design/abc123DEF456/Checkout?node-id=1-2"
+        let canonical = "https://www.figma.com/design/abc123DEF456/Checkout-Review?node-id=1-2"
 
         #expect(XomoFigmaClipboardWriter.writeCanonicalURL(source, to: pasteboard))
         #expect(pasteboard.pasteboardItems?.count == 1)
         #expect(pasteboard.string(forType: .string) == canonical)
         #expect(pasteboard.string(forType: .URL) == canonical)
-        #expect(pasteboard.data(forType: .html) != nil)
-        #expect(pasteboard.data(forType: .rtf) != nil)
+        let htmlData = try #require(pasteboard.data(forType: .html))
+        let rtfData = try #require(pasteboard.data(forType: .rtf))
         let itemTypes = Set(pasteboard.pasteboardItems?.first?.types ?? [])
         #expect(Set([.string, .URL, .html, .rtf]).isSubset(of: itemTypes))
+        let htmlLink = try NSAttributedString(
+            data: htmlData,
+            options: [.documentType: NSAttributedString.DocumentType.html],
+            documentAttributes: nil
+        )
+        let rtfLink = try NSAttributedString(
+            data: rtfData,
+            options: [.documentType: NSAttributedString.DocumentType.rtf],
+            documentAttributes: nil
+        )
+        #expect(htmlLink.string.trimmingCharacters(in: .newlines) == "Checkout Review")
+        #expect(rtfLink.string == "Checkout Review")
         #expect(XomoFigmaRichClipboardLinkExtractor.targets(from: pasteboard) == [canonical])
         #expect(
             XomoFigmaClipboardPastePolicy.resolve(
