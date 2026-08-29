@@ -3190,7 +3190,7 @@ struct ImageEditorCanvasCursorTests {
     @Test func toolCursorsUseFamiliarPrecisionAndBrushConventions() {
         #expect(ImageEditorCanvasCursor.family(for: .paintBucket) == .paintBucket)
         #expect(ImageEditorCanvasCursor.family(for: .eyedropper) == .eyedropper)
-        #expect(ImageEditorCanvasCursor.family(for: .redEye) == .redEye)
+        #expect(ImageEditorCanvasCursor.family(for: .redEye) == .redCastNeutralization)
         #expect(ImageEditorCanvasCursor.family(for: .quickSelection) == .paintedRegionSelection)
         #expect(ImageEditorCanvasCursor.family(for: .cloneStamp) == .sampledPixelTransfer)
         #expect(ImageEditorCanvasCursor.family(for: .healingBrush) == .sampledRepairBlend)
@@ -3232,7 +3232,7 @@ struct ImageEditorCanvasCursorTests {
         #expect(Set(standardRepresentations).count == 1)
 
         let resultPreviewTools: [ImageEditorTool] = [
-            .historyBrush, .pencil, .eraser, .cloneStamp, .healingBrush, .dodge, .burn, .sponge, .blur, .sharpen, .smudge
+            .historyBrush, .pencil, .eraser, .cloneStamp, .healingBrush, .dodge, .burn, .sponge, .blur, .sharpen, .smudge, .redEye
         ]
         let resultPreviewRepresentations = resultPreviewTools.compactMap {
             ImageEditorCanvasCursor.cursor(for: $0, brushDiameter: 18).image.tiffRepresentation
@@ -3383,14 +3383,18 @@ struct ImageEditorCanvasCursorTests {
         ) === NSCursor.arrow)
     }
 
-    @Test func redEyeCursorShowsTheRealTreatmentFootprintAndHonorsHigherModes() {
+    @Test func redEyeCursorPreviewsRedCastNeutralizationAcrossItsRealFootprint() {
         let small = ImageEditorCanvasCursor.cursor(for: .redEye, brushDiameter: 12)
         let large = ImageEditorCanvasCursor.cursor(for: .redEye, brushDiameter: 48)
         let brushFootprint = ImageEditorCanvasCursor.cursor(for: .brush, brushDiameter: 12)
 
+        #expect(ImageEditorCanvasCursor.family(for: .redEye) == .redCastNeutralization)
         #expect(small !== NSCursor.crosshair)
-        #expect(large.image.size.width > small.image.size.width)
-        #expect(small.image.tiffRepresentation == brushFootprint.image.tiffRepresentation)
+        #expect(small.image.size == NSSize(width: 36, height: 36))
+        #expect(small.hotSpot == NSPoint(x: 18, y: 18))
+        #expect(large.image.size == NSSize(width: 66, height: 66))
+        #expect(large.hotSpot == NSPoint(x: 33, y: 33))
+        #expect(small.image.tiffRepresentation != brushFootprint.image.tiffRepresentation)
         #expect(ImageEditorCanvasCursor.cursor(
             for: .components,
             selectedTool: .redEye,

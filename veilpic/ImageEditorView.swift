@@ -15466,7 +15466,7 @@ enum ImageEditorCanvasCursorFamily: Equatable {
     case ellipseOutline
     case paintBucket
     case eyedropper
-    case redEye
+    case redCastNeutralization
     case samplingScope
     case vectorPen
     case zoomViewportScale
@@ -16446,7 +16446,7 @@ enum ImageEditorCanvasCursor {
         case .eyedropper:
             .eyedropper
         case .redEye:
-            .redEye
+            .redCastNeutralization
         case .pen:
             .vectorPen
         case .pathSelection:
@@ -16596,15 +16596,10 @@ enum ImageEditorCanvasCursor {
             return regionFillCursor()
         case .eyedropper:
             return eyedropperCursor(target: eyedropperTarget)
-        case .redEye:
-            // Red-eye correction changes a circular area derived from the
-            // current brush diameter. Show that real treatment footprint and
-            // its precise center instead of reviving the old oversized eye
-            // pictogram. Caps Lock retains Photoshop's familiar temporary
-            // precision mode when the full ring would obscure a small pupil.
+        case .redCastNeutralization:
             return modifierFlags.contains(.capsLock)
                 ? .crosshair
-                : familiarBrushCursor(diameter: brushDiameter)
+                : redCastNeutralizationCursor(diameter: brushDiameter)
         case .samplingScope:
             // A Color Sampler click creates a persistent canvas marker rather
             // than merely reading one transient pixel. Preview that result
@@ -16940,6 +16935,85 @@ enum ImageEditorCanvasCursor {
         (restoringHistory ? NSColor.systemGreen : NSColor.systemPink).setStroke()
         change.lineWidth = 1.2
         change.stroke()
+
+        image.unlockFocus()
+        return cache(
+            NSCursor(image: image, hotSpot: NSPoint(x: center.x, y: side - center.y)),
+            for: cacheKey
+        )
+    }
+
+    private static func redCastNeutralizationCursor(
+        diameter requestedDiameter: CGFloat
+    ) -> NSCursor {
+        let diameter = max(3, min(256, requestedDiameter.rounded()))
+        let cacheKey = "red-cast-neutralization:\(Int(diameter))"
+        if let cachedCursor = cursorCache[cacheKey] {
+            return cachedCursor
+        }
+
+        let side = max(36, diameter + 18)
+        let center = NSPoint(x: side / 2, y: side / 2)
+        let image = NSImage(size: NSSize(width: side, height: side))
+        image.lockFocus()
+
+        let footprint = NSBezierPath(ovalIn: NSRect(
+            x: center.x - diameter / 2,
+            y: center.y - diameter / 2,
+            width: diameter,
+            height: diameter
+        ))
+        NSColor.black.withAlphaComponent(0.95).setStroke()
+        footprint.lineWidth = 3.5
+        footprint.stroke()
+        NSColor.white.withAlphaComponent(0.98).setStroke()
+        footprint.lineWidth = 1.4
+        footprint.stroke()
+
+        // Red-eye reduction only lowers red-dominant pixels inside the real
+        // circular treatment area. Two compact color samples and a forward
+        // arrow preview that red-to-neutral result without drawing an eye or
+        // reproducing the toolbox icon under the pointer.
+        let sampleDiameter = max(3.4, min(6.2, diameter * 0.2))
+        let spacing = max(4.8, min(8.8, diameter * 0.29))
+        let redRect = NSRect(
+            x: center.x - spacing - sampleDiameter / 2,
+            y: center.y - sampleDiameter / 2,
+            width: sampleDiameter,
+            height: sampleDiameter
+        )
+        let neutralRect = NSRect(
+            x: center.x + spacing - sampleDiameter / 2,
+            y: center.y - sampleDiameter / 2,
+            width: sampleDiameter,
+            height: sampleDiameter
+        )
+        NSColor.systemRed.setFill()
+        NSBezierPath(ovalIn: redRect).fill()
+        NSColor(deviceWhite: 0.28, alpha: 1).setFill()
+        NSBezierPath(ovalIn: neutralRect).fill()
+        NSColor.black.withAlphaComponent(0.95).setStroke()
+        for rect in [redRect, neutralRect] {
+            let outline = NSBezierPath(ovalIn: rect)
+            outline.lineWidth = 0.85
+            outline.stroke()
+        }
+
+        let arrowY = center.y - spacing * 0.72
+        let endpoint = NSPoint(x: neutralRect.minX, y: arrowY)
+        let neutralize = NSBezierPath()
+        neutralize.move(to: NSPoint(x: redRect.maxX, y: arrowY))
+        neutralize.line(to: endpoint)
+        neutralize.move(to: endpoint)
+        neutralize.line(to: NSPoint(x: endpoint.x - 3.2, y: endpoint.y + 2.6))
+        neutralize.move(to: endpoint)
+        neutralize.line(to: NSPoint(x: endpoint.x - 3.2, y: endpoint.y - 2.6))
+        NSColor.black.withAlphaComponent(0.95).setStroke()
+        neutralize.lineWidth = 3.5
+        neutralize.stroke()
+        NSColor.systemBlue.setStroke()
+        neutralize.lineWidth = 1.2
+        neutralize.stroke()
 
         image.unlockFocus()
         return cache(

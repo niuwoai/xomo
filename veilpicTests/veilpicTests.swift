@@ -6785,7 +6785,7 @@ struct veilpicTests {
             (.ellipseOutline, [.ellipse]),
             (.paintBucket, [.paintBucket]),
             (.eyedropper, [.eyedropper]),
-            (.redEye, [.redEye]),
+            (.redCastNeutralization, [.redEye]),
             (.samplingScope, [.colorSampler]),
             (.vectorPen, [.pen]),
             (.zoomViewportScale, [.zoom]),
