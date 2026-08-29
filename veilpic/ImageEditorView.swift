@@ -11895,6 +11895,7 @@ struct ImageEditorView: View {
                     && viewModel.selectedFilter != .ripple
                     && viewModel.selectedFilter != .wave
                     && viewModel.selectedFilter != .liquifyTwirl
+                    && viewModel.selectedFilter != .liquifyPush
                     && viewModel.selectedFilter != .offset {
                     Slider(value: $viewModel.filterIntensity, in: 0...1, step: 0.05)
                 }
@@ -12323,8 +12324,19 @@ struct ImageEditorView: View {
                         Text(L10n.text("imageEditor.filter.liquifyPushX"))
                             .font(.system(size: 10, weight: .medium))
                             .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
-                        Slider(value: $viewModel.filterLiquifyPushX, in: -1...1, step: 0.05)
-                        Text(L10n.format("imageEditor.filter.liquifyPushValue", Int((viewModel.filterLiquifyPushX * 100).rounded())))
+                        Slider(
+                            value: Binding(
+                                get: { viewModel.filterLiquifyPushEffectiveXPixels },
+                                set: { viewModel.filterLiquifyPushEffectiveXPixels = $0 }
+                            ),
+                            in: -9_999...9_999,
+                            step: 1
+                        )
+                        .accessibilityIdentifier("image-editor-filter-liquify-push-x-pixels")
+                        Text(L10n.format(
+                            "imageEditor.filter.liquifyPushValue",
+                            String(format: "%+d", Int(viewModel.filterLiquifyPushEffectiveXPixels.rounded()))
+                        ))
                             .font(.system(size: 10, weight: .semibold))
                             .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
                             .frame(width: 44, alignment: .trailing)
@@ -12333,8 +12345,19 @@ struct ImageEditorView: View {
                         Text(L10n.text("imageEditor.filter.liquifyPushY"))
                             .font(.system(size: 10, weight: .medium))
                             .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
-                        Slider(value: $viewModel.filterLiquifyPushY, in: -1...1, step: 0.05)
-                        Text(L10n.format("imageEditor.filter.liquifyPushValue", Int((viewModel.filterLiquifyPushY * 100).rounded())))
+                        Slider(
+                            value: Binding(
+                                get: { viewModel.filterLiquifyPushEffectiveYPixels },
+                                set: { viewModel.filterLiquifyPushEffectiveYPixels = $0 }
+                            ),
+                            in: -9_999...9_999,
+                            step: 1
+                        )
+                        .accessibilityIdentifier("image-editor-filter-liquify-push-y-pixels")
+                        Text(L10n.format(
+                            "imageEditor.filter.liquifyPushValue",
+                            String(format: "%+d", Int(viewModel.filterLiquifyPushEffectiveYPixels.rounded()))
+                        ))
                             .font(.system(size: 10, weight: .semibold))
                             .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
                             .frame(width: 44, alignment: .trailing)

@@ -480,6 +480,8 @@ final class ImageEditorViewModel: ObservableObject {
                 filterRippleAmountPercent = nil
                 filterWaveAmplitudePercent = nil
                 filterLiquifyTwirlAngleDegrees = nil
+                filterLiquifyPushXPixels = nil
+                filterLiquifyPushYPixels = nil
                 filterOffsetXPixels = nil
                 filterOffsetYPixels = nil
                 filterUnsharpAmountPercent = nil
@@ -644,6 +646,33 @@ final class ImageEditorViewModel: ObservableObject {
         }
     }
 
+    private var filterLiquifyPushLegacyMaximumShift: Double {
+        max(
+            2,
+            min(Double(document.canvasSize.width), Double(document.canvasSize.height)) * 0.45
+        ) * 0.42 * filterIntensity
+    }
+
+    var filterLiquifyPushEffectiveXPixels: Double {
+        get {
+            filterLiquifyPushXPixels
+                ?? max(-9_999, min(9_999, filterLiquifyPushX * filterLiquifyPushLegacyMaximumShift))
+        }
+        set {
+            filterLiquifyPushXPixels = max(-9_999, min(9_999, newValue))
+        }
+    }
+
+    var filterLiquifyPushEffectiveYPixels: Double {
+        get {
+            filterLiquifyPushYPixels
+                ?? max(-9_999, min(9_999, filterLiquifyPushY * filterLiquifyPushLegacyMaximumShift))
+        }
+        set {
+            filterLiquifyPushYPixels = max(-9_999, min(9_999, newValue))
+        }
+    }
+
     var filterOffsetEffectiveYPixels: Double {
         get {
             filterOffsetYPixels
@@ -689,6 +718,8 @@ final class ImageEditorViewModel: ObservableObject {
     }
     @Published var filterUnsharpRadius: Double = 1
     @Published var filterUnsharpThreshold: Double = 0
+    @Published var filterLiquifyPushXPixels: Double?
+    @Published var filterLiquifyPushYPixels: Double?
     @Published var filterLiquifyPushX: Double = 0.25
     @Published var filterLiquifyPushY: Double = 0
     @Published var filterLiquifyTwirlAngleDegrees: Double?
@@ -2912,12 +2943,20 @@ final class ImageEditorViewModel: ObservableObject {
         }
         if filter.kind == .liquifyPush {
             let settings = filter.normalizedSettings
+            let sourceSize = document.selectedLayer?.image.size ?? document.canvasSize
+            let legacyMaximumShift = max(
+                2,
+                min(Double(sourceSize.width), Double(sourceSize.height)) * 0.45
+            ) * 0.42 * filter.normalizedIntensity
+            let shiftX = settings.liquifyPushXPixels
+                ?? (settings.liquifyPushX * legacyMaximumShift)
+            let shiftY = settings.liquifyPushYPixels
+                ?? (settings.liquifyPushY * legacyMaximumShift)
             let title = L10n.format(
                 "imageEditor.properties.smartFilterLiquifyPushItem",
                 filter.kind.title,
-                Int((filter.normalizedIntensity * 100).rounded()),
-                Int((settings.liquifyPushX * 100).rounded()),
-                Int((settings.liquifyPushY * 100).rounded())
+                String(format: "%+d", Int(shiftX.rounded())),
+                String(format: "%+d", Int(shiftY.rounded()))
             )
             guard !filter.isEnabled else { return title }
             return L10n.format("imageEditor.properties.smartFilterDisabled", title)
@@ -9811,6 +9850,8 @@ final class ImageEditorViewModel: ObservableObject {
             unsharpThresholdLevels: selectedFilter == .unsharpMask ? filterUnsharpThresholdLevels : nil,
             unsharpRadius: filterUnsharpRadius,
             unsharpThreshold: filterUnsharpThreshold,
+            liquifyPushXPixels: selectedFilter == .liquifyPush ? filterLiquifyPushXPixels : nil,
+            liquifyPushYPixels: selectedFilter == .liquifyPush ? filterLiquifyPushYPixels : nil,
             liquifyPushX: filterLiquifyPushX,
             liquifyPushY: filterLiquifyPushY,
             liquifyTwirlAngleDegrees: selectedFilter == .liquifyTwirl
@@ -11694,6 +11735,8 @@ final class ImageEditorViewModel: ObservableObject {
         filterUnsharpThresholdLevels = normalized.unsharpThresholdLevels
         filterUnsharpRadius = normalized.unsharpRadius
         filterUnsharpThreshold = normalized.unsharpThreshold
+        filterLiquifyPushXPixels = normalized.liquifyPushXPixels
+        filterLiquifyPushYPixels = normalized.liquifyPushYPixels
         filterLiquifyPushX = normalized.liquifyPushX
         filterLiquifyPushY = normalized.liquifyPushY
         filterLiquifyTwirlAngleDegrees = normalized.liquifyTwirlAngleDegrees

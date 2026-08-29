@@ -2577,6 +2577,12 @@ struct ImageEditorFilterSettings: Equatable, Codable {
     var unsharpThresholdLevels: Double?
     var unsharpRadius: Double = 1
     var unsharpThreshold: Double = 0
+    /// Explicit horizontal Liquify Push displacement at the effect center in pixels.
+    /// Nil preserves legacy normalized X × intensity × effect radius.
+    var liquifyPushXPixels: Double?
+    /// Explicit vertical Liquify Push displacement at the effect center in pixels.
+    /// Nil preserves legacy normalized Y × intensity × effect radius.
+    var liquifyPushYPixels: Double?
     var liquifyPushX: Double = 0.25
     var liquifyPushY: Double = 0
     /// Twirl angle from -999° to 999°. Nil preserves legacy angle × intensity × 270°.
@@ -2638,6 +2644,8 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         unsharpThresholdLevels: Double? = nil,
         unsharpRadius: Double = 1,
         unsharpThreshold: Double = 0,
+        liquifyPushXPixels: Double? = nil,
+        liquifyPushYPixels: Double? = nil,
         liquifyPushX: Double = 0.25,
         liquifyPushY: Double = 0,
         liquifyTwirlAngleDegrees: Double? = nil,
@@ -2689,6 +2697,8 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         self.unsharpThresholdLevels = unsharpThresholdLevels
         self.unsharpRadius = unsharpRadius
         self.unsharpThreshold = unsharpThreshold
+        self.liquifyPushXPixels = liquifyPushXPixels
+        self.liquifyPushYPixels = liquifyPushYPixels
         self.liquifyPushX = liquifyPushX
         self.liquifyPushY = liquifyPushY
         self.liquifyTwirlAngleDegrees = liquifyTwirlAngleDegrees
@@ -2746,6 +2756,8 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         unsharpThresholdLevels = try container.decodeIfPresent(Double.self, forKey: .unsharpThresholdLevels)
         unsharpRadius = try container.decodeIfPresent(Double.self, forKey: .unsharpRadius) ?? 1
         unsharpThreshold = try container.decodeIfPresent(Double.self, forKey: .unsharpThreshold) ?? 0
+        liquifyPushXPixels = try container.decodeIfPresent(Double.self, forKey: .liquifyPushXPixels)
+        liquifyPushYPixels = try container.decodeIfPresent(Double.self, forKey: .liquifyPushYPixels)
         liquifyPushX = try container.decodeIfPresent(Double.self, forKey: .liquifyPushX) ?? 0.25
         liquifyPushY = try container.decodeIfPresent(Double.self, forKey: .liquifyPushY) ?? 0
         liquifyTwirlAngleDegrees = try container.decodeIfPresent(Double.self, forKey: .liquifyTwirlAngleDegrees)
@@ -2806,6 +2818,8 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         try container.encodeIfPresent(unsharpThresholdLevels, forKey: .unsharpThresholdLevels)
         try container.encode(unsharpRadius, forKey: .unsharpRadius)
         try container.encode(unsharpThreshold, forKey: .unsharpThreshold)
+        try container.encodeIfPresent(liquifyPushXPixels, forKey: .liquifyPushXPixels)
+        try container.encodeIfPresent(liquifyPushYPixels, forKey: .liquifyPushYPixels)
         try container.encode(liquifyPushX, forKey: .liquifyPushX)
         try container.encode(liquifyPushY, forKey: .liquifyPushY)
         try container.encodeIfPresent(liquifyTwirlAngleDegrees, forKey: .liquifyTwirlAngleDegrees)
@@ -2860,6 +2874,8 @@ struct ImageEditorFilterSettings: Equatable, Codable {
             unsharpThresholdLevels: unsharpThresholdLevels.map { max(0, min(255, $0)) },
             unsharpRadius: max(0.5, min(5, unsharpRadius)),
             unsharpThreshold: max(0, min(1, unsharpThreshold)),
+            liquifyPushXPixels: liquifyPushXPixels.map { max(-9_999, min(9_999, $0)) },
+            liquifyPushYPixels: liquifyPushYPixels.map { max(-9_999, min(9_999, $0)) },
             liquifyPushX: max(-1, min(1, liquifyPushX)),
             liquifyPushY: max(-1, min(1, liquifyPushY)),
             liquifyTwirlAngleDegrees: liquifyTwirlAngleDegrees.map { max(-999, min(999, $0)) },
@@ -2914,6 +2930,8 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         case unsharpThresholdLevels
         case unsharpRadius
         case unsharpThreshold
+        case liquifyPushXPixels
+        case liquifyPushYPixels
         case liquifyPushX
         case liquifyPushY
         case liquifyTwirlAngleDegrees

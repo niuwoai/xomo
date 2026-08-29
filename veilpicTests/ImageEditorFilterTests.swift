@@ -3170,9 +3170,41 @@ struct ImageEditorFilterTests {
         #expect(viewSource.contains("viewModel.selectedFilter != .vignette"))
     }
 
-    @Test func imageEditorLiquifyPushFilterLayerAndSmartFilterAreNonDestructive() async throws {
+    @Test func imageEditorLiquifyPushPixelsSupportLegacyValuesLayersAndSmartFilters() async throws {
         let canvasSize = NSSize(width: 48, height: 48)
         let sourceImage = splitColorImage(size: canvasSize, left: .systemRed, right: .systemBlue)
+        let legacySettings = try JSONDecoder().decode(
+            ImageEditorFilterSettings.self,
+            from: Data("{}".utf8)
+        )
+        #expect(legacySettings.liquifyPushXPixels == nil)
+        #expect(legacySettings.liquifyPushYPixels == nil)
+        #expect(legacySettings.liquifyPushX == 0.25)
+        #expect(legacySettings.liquifyPushY == 0)
+        let legacyMaximumShift = 48 * 0.45 * 0.42
+        let legacyPush = try #require(sourceImage.filtered(
+            kind: .liquifyPush,
+            intensity: 1,
+            settings: legacySettings
+        ))
+        let explicitLegacyPush = try #require(sourceImage.filtered(
+            kind: .liquifyPush,
+            intensity: 0,
+            settings: ImageEditorFilterSettings(
+                liquifyPushXPixels: legacyMaximumShift * 0.25,
+                liquifyPushYPixels: 0
+            )
+        ))
+        #expect(legacyPush.qingtuPNGData() == explicitLegacyPush.qingtuPNGData())
+        #expect(ImageEditorFilterSettings(liquifyPushXPixels: -15_000).normalized().liquifyPushXPixels == -9_999)
+        #expect(ImageEditorFilterSettings(liquifyPushYPixels: 15_000).normalized().liquifyPushYPixels == 9_999)
+        let zeroPush = try #require(sourceImage.filtered(
+            kind: .liquifyPush,
+            intensity: 1,
+            settings: ImageEditorFilterSettings(liquifyPushXPixels: 0, liquifyPushYPixels: 0)
+        ))
+        #expect(zeroPush.qingtuPNGData() == sourceImage.qingtuPNGData())
+
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: sourceImage) { _ in }
         viewModel.replaceSelectedLayerImageForTesting(sourceImage, historyTitle: L10n.text("imageEditor.history.brush"))
         let baseLayerID = try #require(viewModel.document.selectedLayerID)
@@ -3180,17 +3212,17 @@ struct ImageEditorFilterTests {
         let centerBefore = try #require(viewModel.currentImage.color(at: CGPoint(x: 24, y: 24))?.usingColorSpace(.deviceRGB))
 
         viewModel.selectedFilter = .liquifyPush
-        viewModel.filterIntensity = 1
-        viewModel.filterLiquifyPushX = 1
-        viewModel.filterLiquifyPushY = 0
+        viewModel.filterIntensity = 0
+        viewModel.filterLiquifyPushXPixels = 10
+        viewModel.filterLiquifyPushYPixels = 0
         viewModel.addFilterLayer()
 
         let filterLayer = try #require(viewModel.document.selectedLayer)
         let centerAfter = try #require(viewModel.currentImage.color(at: CGPoint(x: 24, y: 24))?.usingColorSpace(.deviceRGB))
         #expect(filterLayer.isFilter)
         #expect(filterLayer.filter?.kind == .liquifyPush)
-        #expect(filterLayer.filterSettings.normalized().liquifyPushX == 1)
-        #expect(filterLayer.filterSettings.normalized().liquifyPushY == 0)
+        #expect(filterLayer.filterSettings.normalized().liquifyPushXPixels == 10)
+        #expect(filterLayer.filterSettings.normalized().liquifyPushYPixels == 0)
         #expect(viewModel.document.layers.first { $0.id == baseLayerID }?.image.qingtuPNGData() == basePixelsBefore)
         #expect(centerBefore.blueComponent > centerBefore.redComponent + 0.4)
         #expect(centerAfter.redComponent > centerAfter.blueComponent + 0.4)
@@ -3200,20 +3232,20 @@ struct ImageEditorFilterTests {
         smartViewModel.replaceSelectedLayerImageForTesting(sourceImage, historyTitle: L10n.text("imageEditor.history.brush"))
         let smartBasePixelsBefore = try #require(smartViewModel.document.selectedLayer?.image.qingtuPNGData())
         smartViewModel.selectedFilter = .liquifyPush
-        smartViewModel.filterIntensity = 1
-        smartViewModel.filterLiquifyPushX = 1
-        smartViewModel.filterLiquifyPushY = 0
+        smartViewModel.filterIntensity = 0
+        smartViewModel.filterLiquifyPushXPixels = 10
+        smartViewModel.filterLiquifyPushYPixels = 0
         smartViewModel.addSmartFilterToSelectedLayer()
 
         let smartLayer = try #require(smartViewModel.document.selectedLayer)
         let smartFilter = try #require(smartLayer.smartFilters.first)
         let smartCenterAfter = try #require(smartViewModel.currentImage.color(at: CGPoint(x: 24, y: 24))?.usingColorSpace(.deviceRGB))
         #expect(smartFilter.kind == .liquifyPush)
-        #expect(smartFilter.normalizedSettings.liquifyPushX == 1)
-        #expect(smartFilter.normalizedSettings.liquifyPushY == 0)
+        #expect(smartFilter.normalizedSettings.liquifyPushXPixels == 10)
+        #expect(smartFilter.normalizedSettings.liquifyPushYPixels == 0)
         #expect(smartLayer.image.qingtuPNGData() == smartBasePixelsBefore)
         #expect(smartCenterAfter.redComponent > smartCenterAfter.blueComponent + 0.4)
-        #expect(smartViewModel.smartFilterLabel(smartFilter) == L10n.format("imageEditor.properties.smartFilterLiquifyPushItem", smartFilter.kind.title, 100, 100, 0))
+        #expect(smartViewModel.smartFilterLabel(smartFilter) == L10n.format("imageEditor.properties.smartFilterLiquifyPushItem", smartFilter.kind.title, "+10", "+0"))
         #expect(smartViewModel.document.history.last?.title == L10n.text("imageEditor.history.layerSmartFilterAdd"))
 
         let project = try ImageEditorProjectDocument(document: smartViewModel.document)
@@ -3221,8 +3253,19 @@ struct ImageEditorFilterTests {
         let restoredLayer = try #require(restoredDocument.layers.first { $0.id == smartLayer.id })
         let restoredFilter = try #require(restoredLayer.smartFilters.first)
         #expect(restoredFilter.kind == .liquifyPush)
-        #expect(restoredFilter.normalizedSettings.liquifyPushX == 1)
-        #expect(restoredFilter.normalizedSettings.liquifyPushY == 0)
+        #expect(restoredFilter.normalizedSettings.liquifyPushXPixels == 10)
+        #expect(restoredFilter.normalizedSettings.liquifyPushYPixels == 0)
+
+        let root = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let viewSource = try String(
+            contentsOf: root.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        #expect(viewSource.contains("image-editor-filter-liquify-push-x-pixels"))
+        #expect(viewSource.contains("image-editor-filter-liquify-push-y-pixels"))
+        #expect(viewSource.contains("viewModel.selectedFilter != .liquifyPush"))
     }
 
     @Test func imageEditorLiquifyTwirlAngleSupportsLegacyAndSignedDegrees() async throws {

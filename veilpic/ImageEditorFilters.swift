@@ -57,6 +57,11 @@ extension NSImage {
            normalizedSettings.offsetYPixels == 0 {
             return self
         }
+        if kind == .liquifyPush,
+           normalizedSettings.liquifyPushXPixels == 0,
+           normalizedSettings.liquifyPushYPixels == 0 {
+            return self
+        }
         let hasExplicitFilterAmount = (
             kind == .sharpen
                 && normalizedSettings.sharpenAmountPercent.map { $0 > 0 } == true
@@ -92,6 +97,12 @@ extension NSImage {
                 && (
                     normalizedSettings.offsetXPixels.map { $0 != 0 } == true
                         || normalizedSettings.offsetYPixels.map { $0 != 0 } == true
+                )
+        ) || (
+            kind == .liquifyPush
+                && (
+                    normalizedSettings.liquifyPushXPixels.map { $0 != 0 } == true
+                        || normalizedSettings.liquifyPushYPixels.map { $0 != 0 } == true
                 )
         )
         guard clamped > 0 || hasExplicitFilterAmount else { return self }
@@ -268,6 +279,11 @@ extension NSImage {
            normalizedSettings.offsetYPixels == 0 {
             return self
         }
+        if kind == .liquifyPush,
+           normalizedSettings.liquifyPushXPixels == 0,
+           normalizedSettings.liquifyPushYPixels == 0 {
+            return self
+        }
         let hasExplicitFilterAmount = (
             kind == .sharpen
                 && normalizedSettings.sharpenAmountPercent.map { $0 > 0 } == true
@@ -303,6 +319,12 @@ extension NSImage {
                 && (
                     normalizedSettings.offsetXPixels.map { $0 != 0 } == true
                         || normalizedSettings.offsetYPixels.map { $0 != 0 } == true
+                )
+        ) || (
+            kind == .liquifyPush
+                && (
+                    normalizedSettings.liquifyPushXPixels.map { $0 != 0 } == true
+                        || normalizedSettings.liquifyPushYPixels.map { $0 != 0 } == true
                 )
         )
         guard intensity > 0 || hasExplicitFilterAmount else { return self }
@@ -1244,7 +1266,6 @@ extension NSImage {
 
     private func liquifyPushed(intensity: Double, settings: ImageEditorFilterSettings) -> NSImage? {
         let clampedIntensity = max(0, min(1, intensity))
-        guard clampedIntensity > 0 else { return self }
         let normalizedSettings = settings.normalized()
         return pixelSampledFromBuffer { x, y, width, height, pixels, bytesPerRow, bytesPerPixel in
             let centerX = Double(max(width - 1, 1)) / 2
@@ -1267,8 +1288,23 @@ extension NSImage {
 
             let falloff = pow(1 - distance / radius, 2)
             let maxShift = radius * 0.42 * clampedIntensity
-            let sourceX = Double(x) - normalizedSettings.liquifyPushX * maxShift * falloff
-            let sourceY = Double(y) - normalizedSettings.liquifyPushY * maxShift * falloff
+            let shiftX = normalizedSettings.liquifyPushXPixels
+                ?? (normalizedSettings.liquifyPushX * maxShift)
+            let shiftY = normalizedSettings.liquifyPushYPixels
+                ?? (normalizedSettings.liquifyPushY * maxShift)
+            guard abs(shiftX) > 0.000_1 || abs(shiftY) > 0.000_1 else {
+                return Self.samplePixel(
+                    x: Double(x),
+                    y: Double(y),
+                    width: width,
+                    height: height,
+                    pixels: pixels,
+                    bytesPerRow: bytesPerRow,
+                    bytesPerPixel: bytesPerPixel
+                )
+            }
+            let sourceX = Double(x) - shiftX * falloff
+            let sourceY = Double(y) - shiftY * falloff
             return Self.samplePixel(
                 x: sourceX,
                 y: sourceY,

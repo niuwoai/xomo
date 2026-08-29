@@ -6282,6 +6282,8 @@ final class XomoAutomationRegistry {
             case "unsharpThresholdLevels": viewModel.filterUnsharpThresholdLevels = try numericSetting(value, key: key)
             case "unsharpRadius": viewModel.filterUnsharpRadius = try numericSetting(value, key: key)
             case "unsharpThreshold": viewModel.filterUnsharpThreshold = try numericSetting(value, key: key)
+            case "liquifyPushXPixels": viewModel.filterLiquifyPushXPixels = try numericSetting(value, key: key)
+            case "liquifyPushYPixels": viewModel.filterLiquifyPushYPixels = try numericSetting(value, key: key)
             case "liquifyPushX": viewModel.filterLiquifyPushX = try numericSetting(value, key: key)
             case "liquifyPushY": viewModel.filterLiquifyPushY = try numericSetting(value, key: key)
             case "liquifyTwirlAngleDegrees": viewModel.filterLiquifyTwirlAngleDegrees = try numericSetting(value, key: key)
@@ -8031,6 +8033,8 @@ private extension XomoAutomationRegistry {
         "unsharpThresholdLevels": XomoAutomationSchema.number(description: "Precise Unsharp Mask threshold from 0 to 255 levels"),
         "unsharpRadius": XomoAutomationSchema.number(description: "Unsharp radius"),
         "unsharpThreshold": XomoAutomationSchema.number(description: "Unsharp threshold"),
+        "liquifyPushXPixels": XomoAutomationSchema.number(description: "Horizontal Liquify Push displacement from -9999 to 9999 pixels"),
+        "liquifyPushYPixels": XomoAutomationSchema.number(description: "Vertical Liquify Push displacement from -9999 to 9999 pixels"),
         "liquifyPushX": XomoAutomationSchema.number(description: "Liquify horizontal push"),
         "liquifyPushY": XomoAutomationSchema.number(description: "Liquify vertical push"),
         "liquifyTwirlAngleDegrees": XomoAutomationSchema.number(description: "Twirl angle from -999 to 999 degrees"),

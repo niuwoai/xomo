@@ -1023,7 +1023,7 @@
 "imageEditor.filter.unsharpThresholdValue" = "%d";
 "imageEditor.filter.liquifyPushX" = "Push X";
 "imageEditor.filter.liquifyPushY" = "Push Y";
-"imageEditor.filter.liquifyPushValue" = "%d";
+"imageEditor.filter.liquifyPushValue" = "%@ px";
 "imageEditor.filter.liquifyTwirlAngle" = "Twirl";
 "imageEditor.filter.liquifyTwirlValue" = "%@°";
 "imageEditor.filter.liquifyBulgeAmount" = "Pucker/Bloat";
@@ -1266,7 +1266,7 @@
 "imageEditor.properties.smartFilterPixelateItem" = "%@ · Cell Size %d px";
 "imageEditor.properties.smartFilterBackgroundBlurItem" = "%@ · Backdrop radius %@ px";
 "imageEditor.properties.smartFilterUnsharpItem" = "%@ %d%% · Radius %@ · Threshold %d";
-"imageEditor.properties.smartFilterLiquifyPushItem" = "%@ %d%% · X %d · Y %d";
+"imageEditor.properties.smartFilterLiquifyPushItem" = "%@ · X %@ px · Y %@ px";
 "imageEditor.properties.smartFilterLiquifyTwirlItem" = "%@ · Twirl %@°";
 "imageEditor.properties.smartFilterLiquifyPuckerBloatItem" = "%@ · Pucker/Bloat %@%%";
 "imageEditor.properties.smartFilterWaveItem" = "%@ · Amp %@%% · Freq %d";
