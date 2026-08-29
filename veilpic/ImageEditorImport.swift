@@ -11,6 +11,7 @@ import UniformTypeIdentifiers
 @MainActor
 enum ImageEditorFilePanelKeyboardFocusRestorer {
     typealias DeferredRestoreScheduler = (@escaping @MainActor () -> Void) -> Void
+    private static let deferredRestorePassCount = 2
 
     static func restore(to window: NSWindow?) {
         restore(
@@ -34,10 +35,31 @@ enum ImageEditorFilePanelKeyboardFocusRestorer {
         scheduleDeferredRestore: DeferredRestoreScheduler? = nil
     ) {
         restoreImmediately(to: window, isApplicationActive: isApplicationActive)
-        scheduleDeferredRestore? { [weak window] in
+        scheduleDeferredRestores(
+            to: window,
+            remainingPasses: deferredRestorePassCount,
+            deferredApplicationActivity: deferredApplicationActivity,
+            scheduler: scheduleDeferredRestore
+        )
+    }
+
+    private static func scheduleDeferredRestores(
+        to window: NSWindow?,
+        remainingPasses: Int,
+        deferredApplicationActivity: @escaping @MainActor () -> Bool,
+        scheduler: DeferredRestoreScheduler?
+    ) {
+        guard remainingPasses > 0, let scheduler else { return }
+        scheduler { [weak window] in
             restoreImmediately(
                 to: window,
                 isApplicationActive: deferredApplicationActivity()
+            )
+            scheduleDeferredRestores(
+                to: window,
+                remainingPasses: remainingPasses - 1,
+                deferredApplicationActivity: deferredApplicationActivity,
+                scheduler: scheduler
             )
         }
     }

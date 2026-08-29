@@ -96,23 +96,33 @@ struct ImageEditorTextInputShortcutTests {
         window.orderFront(nil)
         #expect(window.makeFirstResponder(staleField))
 
-        var deferredRestore: (@MainActor () -> Void)?
+        var deferredRestores: [@MainActor () -> Void] = []
         ImageEditorFilePanelKeyboardFocusRestorer.restore(
             to: window,
             isApplicationActive: true,
             deferredApplicationActivity: { true },
-            scheduleDeferredRestore: { deferredRestore = $0 }
+            scheduleDeferredRestore: { deferredRestores.append($0) }
         )
         #expect(window.firstResponder === keyboardResponder)
+        #expect(deferredRestores.count == 1)
 
         // AppKit may complete panel teardown after the completion handler and
         // restore the field editor that owned focus before the import.
         #expect(window.makeFirstResponder(staleField))
         #expect(window.firstResponder is NSTextView || window.firstResponder is NSTextField)
 
-        let restoreAfterTeardown = try #require(deferredRestore)
+        let restoreAfterTeardown = try #require(deferredRestores.first)
         restoreAfterTeardown()
         #expect(window.firstResponder === keyboardResponder)
+        #expect(deferredRestores.count == 2)
+
+        // A second AppKit run-loop turn can still restore the panel's former
+        // field editor. The final pass must return Delete to the imported layer.
+        #expect(window.makeFirstResponder(staleField))
+        let restoreAfterLateTeardown = try #require(deferredRestores.last)
+        restoreAfterLateTeardown()
+        #expect(window.firstResponder === keyboardResponder)
+        #expect(deferredRestores.count == 2)
         window.orderOut(nil)
     }
 
