@@ -2588,6 +2588,8 @@ struct ImageEditorFilterSettings: Equatable, Codable {
     var waveFrequency: Double = 0.25
     var rippleAmount: Double = 0.5
     var rippleFrequency: Double = 0.25
+    /// Pinch amount from -100% to 100%. Nil preserves legacy amount × intensity.
+    var pinchAmountPercent: Double?
     var pinchAmount: Double = 0.5
     var spherizeAmount: Double = 0.5
     /// Lens distortion amount from -100% to 100%. Nil preserves legacy distortion × intensity.
@@ -2633,6 +2635,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         waveFrequency: Double = 0.25,
         rippleAmount: Double = 0.5,
         rippleFrequency: Double = 0.25,
+        pinchAmountPercent: Double? = nil,
         pinchAmount: Double = 0.5,
         spherizeAmount: Double = 0.5,
         lensDistortionAmountPercent: Double? = nil,
@@ -2676,6 +2679,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         self.waveFrequency = waveFrequency
         self.rippleAmount = rippleAmount
         self.rippleFrequency = rippleFrequency
+        self.pinchAmountPercent = pinchAmountPercent
         self.pinchAmount = pinchAmount
         self.spherizeAmount = spherizeAmount
         self.lensDistortionAmountPercent = lensDistortionAmountPercent
@@ -2728,6 +2732,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         waveFrequency = try container.decodeIfPresent(Double.self, forKey: .waveFrequency) ?? 0.25
         rippleAmount = try container.decodeIfPresent(Double.self, forKey: .rippleAmount) ?? 0.5
         rippleFrequency = try container.decodeIfPresent(Double.self, forKey: .rippleFrequency) ?? 0.25
+        pinchAmountPercent = try container.decodeIfPresent(Double.self, forKey: .pinchAmountPercent)
         pinchAmount = try container.decodeIfPresent(Double.self, forKey: .pinchAmount) ?? 0.5
         spherizeAmount = try container.decodeIfPresent(Double.self, forKey: .spherizeAmount) ?? 0.5
         lensDistortionAmountPercent = try container.decodeIfPresent(
@@ -2777,6 +2782,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         try container.encode(waveFrequency, forKey: .waveFrequency)
         try container.encode(rippleAmount, forKey: .rippleAmount)
         try container.encode(rippleFrequency, forKey: .rippleFrequency)
+        try container.encodeIfPresent(pinchAmountPercent, forKey: .pinchAmountPercent)
         try container.encode(pinchAmount, forKey: .pinchAmount)
         try container.encode(spherizeAmount, forKey: .spherizeAmount)
         try container.encodeIfPresent(lensDistortionAmountPercent, forKey: .lensDistortionAmountPercent)
@@ -2823,6 +2829,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
             waveFrequency: max(0, min(1, waveFrequency)),
             rippleAmount: max(-1, min(1, rippleAmount)),
             rippleFrequency: max(0, min(1, rippleFrequency)),
+            pinchAmountPercent: pinchAmountPercent.map { max(-100, min(100, $0)) },
             pinchAmount: max(-1, min(1, pinchAmount)),
             spherizeAmount: max(-1, min(1, spherizeAmount)),
             lensDistortionAmountPercent: lensDistortionAmountPercent.map { max(-100, min(100, $0)) },
@@ -2869,6 +2876,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         case waveFrequency
         case rippleAmount
         case rippleFrequency
+        case pinchAmountPercent
         case pinchAmount
         case spherizeAmount
         case lensDistortionAmountPercent

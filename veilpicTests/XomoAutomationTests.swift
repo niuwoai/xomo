@@ -6067,6 +6067,58 @@ struct XomoAutomationTests {
         #expect(viewModel.document.selectedLayer?.smartFilters.count == 1)
     }
 
+    @Test func registryConfiguresPinchAmountThroughTheSharedFilterPipeline() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        defer { registry.unregister(viewModel) }
+
+        let response = registry.execute(request(
+            operation: "call",
+            name: "xomo.filter.configure",
+            arguments: [
+                "filter": .string(ImageEditorFilter.pinch.rawValue),
+                "action": .string("addSmartFilter"),
+                "settings": .object([
+                    "intensity": .number(0),
+                    "pinchAmountPercent": .number(-160)
+                ])
+            ]
+        ))
+
+        #expect(response.ok)
+        let filter = try #require(viewModel.document.selectedLayer?.smartFilters.last)
+        #expect(filter.kind == .pinch)
+        #expect(filter.normalizedIntensity == 0)
+        #expect(filter.normalizedSettings.pinchAmountPercent == -100)
+
+        let tools = registry.execute(request(operation: "tools"))
+        let configureTool = try #require(
+            automationTool(named: "xomo.filter.configure", in: tools)
+        )
+        let settingsSchema = try #require(
+            configureTool["inputSchema"]?.objectValue?["properties"]?.objectValue?["settings"]?.objectValue
+        )
+        let settingsProperties = try #require(settingsSchema["properties"]?.objectValue)
+        #expect(settingsProperties["pinchAmountPercent"]?.objectValue?["type"] == .string("number"))
+
+        let historyCount = viewModel.document.history.count
+        let invalidResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.filter.configure",
+            arguments: [
+                "filter": .string(ImageEditorFilter.pinch.rawValue),
+                "action": .string("addSmartFilter"),
+                "settings": .object([
+                    "pinchAmountPercent": .string("inflate")
+                ])
+            ]
+        ))
+        #expect(!invalidResponse.ok)
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.document.selectedLayer?.smartFilters.count == 1)
+    }
+
     @Test func registryConfiguresOilPaintControlsThroughTheSharedFilterPipeline() throws {
         let viewModel = makeViewModel()
         let registry = XomoAutomationRegistry.shared

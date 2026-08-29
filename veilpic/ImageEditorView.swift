@@ -11888,7 +11888,8 @@ struct ImageEditorView: View {
                     && viewModel.selectedFilter != .unsharpMask
                     && viewModel.selectedFilter != .oilPaint
                     && viewModel.selectedFilter != .vignette
-                    && viewModel.selectedFilter != .lensCorrection {
+                    && viewModel.selectedFilter != .lensCorrection
+                    && viewModel.selectedFilter != .pinch {
                     Slider(value: $viewModel.filterIntensity, in: 0...1, step: 0.05)
                 }
                 if viewModel.selectedFilter == .gaussianBlur {
@@ -12449,12 +12450,23 @@ struct ImageEditorView: View {
                         Text(L10n.text("imageEditor.filter.pinchAmount"))
                             .font(.system(size: 10, weight: .medium))
                             .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
-                        Slider(value: $viewModel.filterPinchAmount, in: -1...1, step: 0.05)
-                        Text(L10n.format("imageEditor.filter.pinchAmountValue", Int((viewModel.filterPinchAmount * 100).rounded())))
+                        Slider(
+                            value: Binding(
+                                get: { viewModel.filterPinchEffectiveAmountPercent },
+                                set: { viewModel.filterPinchEffectiveAmountPercent = $0 }
+                            ),
+                            in: -100...100,
+                            step: 1
+                        )
+                        Text(L10n.format(
+                            "imageEditor.filter.pinchAmountValue",
+                            String(format: "%+d", Int(viewModel.filterPinchEffectiveAmountPercent.rounded()))
+                        ))
                             .font(.system(size: 10, weight: .semibold))
                             .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
-                            .frame(width: 44, alignment: .trailing)
+                            .frame(width: 52, alignment: .trailing)
                     }
+                    .accessibilityIdentifier("image-editor-filter-pinch-amount")
                 }
                 if viewModel.selectedFilter == .spherize {
                     HStack {

@@ -34,6 +34,9 @@ extension NSImage {
         if kind == .lensCorrection, normalizedSettings.lensDistortionAmountPercent == 0 {
             return self
         }
+        if kind == .pinch, normalizedSettings.pinchAmountPercent == 0 {
+            return self
+        }
         let hasExplicitFilterAmount = (
             kind == .sharpen
                 && normalizedSettings.sharpenAmountPercent.map { $0 > 0 } == true
@@ -46,6 +49,9 @@ extension NSImage {
         ) || (
             kind == .lensCorrection
                 && normalizedSettings.lensDistortionAmountPercent.map { $0 != 0 } == true
+        ) || (
+            kind == .pinch
+                && normalizedSettings.pinchAmountPercent.map { $0 != 0 } == true
         )
         guard clamped > 0 || hasExplicitFilterAmount else { return self }
         if kind == .addNoise {
@@ -198,6 +204,9 @@ extension NSImage {
         if kind == .lensCorrection, normalizedSettings.lensDistortionAmountPercent == 0 {
             return self
         }
+        if kind == .pinch, normalizedSettings.pinchAmountPercent == 0 {
+            return self
+        }
         let hasExplicitFilterAmount = (
             kind == .sharpen
                 && normalizedSettings.sharpenAmountPercent.map { $0 > 0 } == true
@@ -210,6 +219,9 @@ extension NSImage {
         ) || (
             kind == .lensCorrection
                 && normalizedSettings.lensDistortionAmountPercent.map { $0 != 0 } == true
+        ) || (
+            kind == .pinch
+                && normalizedSettings.pinchAmountPercent.map { $0 != 0 } == true
         )
         guard intensity > 0 || hasExplicitFilterAmount else { return self }
         let normalizedOpacity = max(0, min(1, opacity))
@@ -1295,8 +1307,10 @@ extension NSImage {
 
     private func pinched(intensity: Double, settings: ImageEditorFilterSettings) -> NSImage? {
         let clampedIntensity = max(0, min(1, intensity))
-        guard clampedIntensity > 0 else { return self }
         let normalizedSettings = settings.normalized()
+        let amount = normalizedSettings.pinchAmountPercent.map { $0 / 100 }
+            ?? (normalizedSettings.pinchAmount * clampedIntensity)
+        guard abs(amount) > 0.000_1 else { return self }
         return pixelSampledFromBuffer { x, y, width, height, pixels, bytesPerRow, bytesPerPixel in
             let centerX = Double(max(width - 1, 1)) / 2
             let centerY = Double(max(height - 1, 1)) / 2
@@ -1318,7 +1332,7 @@ extension NSImage {
             let radius = max(1, min(Double(width), Double(height)) * 0.5)
             let normalizedDistance = min(1, distance / radius)
             let falloff = pow(1 - normalizedDistance, 2)
-            let scale = max(0.05, 1 + normalizedSettings.pinchAmount * clampedIntensity * falloff * 0.9)
+            let scale = max(0.05, 1 + amount * falloff * 0.9)
             let sourceDistance = min(radius, distance * scale)
             let sourceX = centerX + dx / distance * sourceDistance
             let sourceY = centerY + dy / distance * sourceDistance

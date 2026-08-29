@@ -6302,6 +6302,7 @@ final class XomoAutomationRegistry {
             case "waveFrequency": viewModel.filterWaveFrequency = try numericSetting(value, key: key)
             case "rippleAmount": viewModel.filterRippleAmount = try numericSetting(value, key: key)
             case "rippleFrequency": viewModel.filterRippleFrequency = try numericSetting(value, key: key)
+            case "pinchAmountPercent": viewModel.filterPinchAmountPercent = try numericSetting(value, key: key)
             case "pinchAmount": viewModel.filterPinchAmount = try numericSetting(value, key: key)
             case "spherizeAmount": viewModel.filterSpherizeAmount = try numericSetting(value, key: key)
             case "lensDistortionAmountPercent": viewModel.filterLensDistortionAmountPercent = try numericSetting(value, key: key)
@@ -8037,6 +8038,7 @@ private extension XomoAutomationRegistry {
         "waveFrequency": XomoAutomationSchema.number(description: "Wave frequency"),
         "rippleAmount": XomoAutomationSchema.number(description: "Ripple amount"),
         "rippleFrequency": XomoAutomationSchema.number(description: "Ripple frequency"),
+        "pinchAmountPercent": XomoAutomationSchema.number(description: "Pinch amount from -100 to 100 percent"),
         "pinchAmount": XomoAutomationSchema.number(description: "Pinch amount"),
         "spherizeAmount": XomoAutomationSchema.number(description: "Spherize amount"),
         "lensDistortionAmountPercent": XomoAutomationSchema.number(description: "Lens distortion amount from -100 to 100 percent"),
