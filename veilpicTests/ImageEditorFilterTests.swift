@@ -3376,10 +3376,40 @@ struct ImageEditorFilterTests {
         #expect(viewSource.contains("viewModel.selectedFilter != .liquifyPuckerBloat"))
     }
 
-    @Test func imageEditorWaveFilterLayerAndSmartFilterWarpHorizontalPixels() async throws {
+    @Test func imageEditorWaveAmplitudeSupportsLegacyAndSignedHorizontalWarp() async throws {
         let canvasSize = NSSize(width: 48, height: 48)
         let sourceImage = splitColorImage(size: canvasSize, left: .systemRed, right: .systemBlue)
         let positiveWavePoint = CGPoint(x: 24, y: 12)
+        let legacySettings = try JSONDecoder().decode(
+            ImageEditorFilterSettings.self,
+            from: Data("{}".utf8)
+        )
+        #expect(legacySettings.waveAmplitudePercent == nil)
+        #expect(legacySettings.waveAmplitude == 0.5)
+        #expect(legacySettings.waveFrequency == 0.25)
+        let legacyWave = try #require(sourceImage.filtered(
+            kind: .wave,
+            intensity: 1,
+            settings: legacySettings
+        ))
+        let explicitLegacyWave = try #require(sourceImage.filtered(
+            kind: .wave,
+            intensity: 0,
+            settings: ImageEditorFilterSettings(
+                waveAmplitudePercent: 50,
+                waveFrequency: 0.25
+            )
+        ))
+        #expect(legacyWave.qingtuPNGData() == explicitLegacyWave.qingtuPNGData())
+        #expect(ImageEditorFilterSettings(waveAmplitudePercent: -200).normalized().waveAmplitudePercent == -100)
+        #expect(ImageEditorFilterSettings(waveAmplitudePercent: 200).normalized().waveAmplitudePercent == 100)
+        let zeroWave = try #require(sourceImage.filtered(
+            kind: .wave,
+            intensity: 1,
+            settings: ImageEditorFilterSettings(waveAmplitudePercent: 0)
+        ))
+        #expect(zeroWave.qingtuPNGData() == sourceImage.qingtuPNGData())
+
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: sourceImage) { _ in }
         viewModel.replaceSelectedLayerImageForTesting(sourceImage, historyTitle: L10n.text("imageEditor.history.brush"))
         let baseLayerID = try #require(viewModel.document.selectedLayerID)
@@ -3387,8 +3417,8 @@ struct ImageEditorFilterTests {
         let sampleBefore = try #require(viewModel.currentImage.color(at: positiveWavePoint)?.usingColorSpace(.deviceRGB))
 
         viewModel.selectedFilter = .wave
-        viewModel.filterIntensity = 1
-        viewModel.filterWaveAmplitude = 1
+        viewModel.filterIntensity = 0
+        viewModel.filterWaveAmplitudePercent = 100
         viewModel.filterWaveFrequency = 0
         viewModel.addFilterLayer()
 
@@ -3396,7 +3426,7 @@ struct ImageEditorFilterTests {
         let wavedSample = try #require(viewModel.currentImage.color(at: positiveWavePoint)?.usingColorSpace(.deviceRGB))
         #expect(filterLayer.isFilter)
         #expect(filterLayer.filter?.kind == .wave)
-        #expect(filterLayer.filterSettings.normalized().waveAmplitude == 1)
+        #expect(filterLayer.filterSettings.normalized().waveAmplitudePercent == 100)
         #expect(filterLayer.filterSettings.normalized().waveFrequency == 0)
         #expect(viewModel.document.layers.first { $0.id == baseLayerID }?.image.qingtuPNGData() == basePixelsBefore)
         #expect(sampleBefore.blueComponent > sampleBefore.redComponent + 0.4)
@@ -3409,8 +3439,8 @@ struct ImageEditorFilterTests {
         let smartBasePixelsBefore = try #require(smartViewModel.document.selectedLayer?.image.qingtuPNGData())
         let smartSampleBefore = try #require(smartViewModel.currentImage.color(at: negativeWavePoint)?.usingColorSpace(.deviceRGB))
         smartViewModel.selectedFilter = .wave
-        smartViewModel.filterIntensity = 1
-        smartViewModel.filterWaveAmplitude = -1
+        smartViewModel.filterIntensity = 0
+        smartViewModel.filterWaveAmplitudePercent = -100
         smartViewModel.filterWaveFrequency = 0
         smartViewModel.addSmartFilterToSelectedLayer()
 
@@ -3418,12 +3448,12 @@ struct ImageEditorFilterTests {
         let smartFilter = try #require(smartLayer.smartFilters.first)
         let smartSampleAfter = try #require(smartViewModel.currentImage.color(at: negativeWavePoint)?.usingColorSpace(.deviceRGB))
         #expect(smartFilter.kind == .wave)
-        #expect(smartFilter.normalizedSettings.waveAmplitude == -1)
+        #expect(smartFilter.normalizedSettings.waveAmplitudePercent == -100)
         #expect(smartFilter.normalizedSettings.waveFrequency == 0)
         #expect(smartLayer.image.qingtuPNGData() == smartBasePixelsBefore)
         #expect(smartSampleBefore.redComponent > smartSampleBefore.blueComponent + 0.4)
         #expect(smartSampleAfter.blueComponent > smartSampleAfter.redComponent + 0.25)
-        #expect(smartViewModel.smartFilterLabel(smartFilter) == L10n.format("imageEditor.properties.smartFilterWaveItem", smartFilter.kind.title, 100, -100, 0))
+        #expect(smartViewModel.smartFilterLabel(smartFilter) == L10n.format("imageEditor.properties.smartFilterWaveItem", smartFilter.kind.title, "-100", 0))
         #expect(smartViewModel.document.history.last?.title == L10n.text("imageEditor.history.layerSmartFilterAdd"))
 
         let project = try ImageEditorProjectDocument(document: smartViewModel.document)
@@ -3431,8 +3461,18 @@ struct ImageEditorFilterTests {
         let restoredLayer = try #require(restoredDocument.layers.first { $0.id == smartLayer.id })
         let restoredFilter = try #require(restoredLayer.smartFilters.first)
         #expect(restoredFilter.kind == .wave)
-        #expect(restoredFilter.normalizedSettings.waveAmplitude == -1)
+        #expect(restoredFilter.normalizedSettings.waveAmplitudePercent == -100)
         #expect(restoredFilter.normalizedSettings.waveFrequency == 0)
+
+        let root = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let viewSource = try String(
+            contentsOf: root.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        #expect(viewSource.contains("image-editor-filter-wave-amplitude"))
+        #expect(viewSource.contains("viewModel.selectedFilter != .wave"))
     }
 
     @Test func imageEditorOffsetFilterLayerAndSmartFilterWrapPixels() async throws {

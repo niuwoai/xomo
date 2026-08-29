@@ -11892,7 +11892,8 @@ struct ImageEditorView: View {
                     && viewModel.selectedFilter != .pinch
                     && viewModel.selectedFilter != .spherize
                     && viewModel.selectedFilter != .liquifyPuckerBloat
-                    && viewModel.selectedFilter != .ripple {
+                    && viewModel.selectedFilter != .ripple
+                    && viewModel.selectedFilter != .wave {
                     Slider(value: $viewModel.filterIntensity, in: 0...1, step: 0.05)
                 }
                 if viewModel.selectedFilter == .gaussianBlur {
@@ -12420,8 +12421,19 @@ struct ImageEditorView: View {
                         Text(L10n.text("imageEditor.filter.waveAmplitude"))
                             .font(.system(size: 10, weight: .medium))
                             .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
-                        Slider(value: $viewModel.filterWaveAmplitude, in: -1...1, step: 0.05)
-                        Text(L10n.format("imageEditor.filter.waveAmplitudeValue", Int((viewModel.filterWaveAmplitude * 100).rounded())))
+                        Slider(
+                            value: Binding(
+                                get: { viewModel.filterWaveEffectiveAmplitudePercent },
+                                set: { viewModel.filterWaveEffectiveAmplitudePercent = $0 }
+                            ),
+                            in: -100...100,
+                            step: 1
+                        )
+                        .accessibilityIdentifier("image-editor-filter-wave-amplitude")
+                        Text(L10n.format(
+                            "imageEditor.filter.waveAmplitudeValue",
+                            String(format: "%+d", Int(viewModel.filterWaveEffectiveAmplitudePercent.rounded()))
+                        ))
                             .font(.system(size: 10, weight: .semibold))
                             .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
                             .frame(width: 44, alignment: .trailing)

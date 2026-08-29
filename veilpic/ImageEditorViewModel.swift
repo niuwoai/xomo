@@ -478,6 +478,7 @@ final class ImageEditorViewModel: ObservableObject {
                 filterSpherizeAmountPercent = nil
                 filterLiquifyBulgeAmountPercent = nil
                 filterRippleAmountPercent = nil
+                filterWaveAmplitudePercent = nil
                 filterUnsharpAmountPercent = nil
                 filterUnsharpRadiusPixels = nil
                 filterUnsharpThresholdLevels = nil
@@ -604,6 +605,16 @@ final class ImageEditorViewModel: ObservableObject {
         }
     }
 
+    var filterWaveEffectiveAmplitudePercent: Double {
+        get {
+            filterWaveAmplitudePercent
+                ?? max(-100, min(100, filterWaveAmplitude * filterIntensity * 100))
+        }
+        set {
+            filterWaveAmplitudePercent = max(-100, min(100, newValue))
+        }
+    }
+
     var filterUnsharpEffectiveAmountPercent: Double {
         get {
             filterUnsharpAmountPercent
@@ -641,6 +652,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var filterOffsetX: Double = 0.25
     @Published var filterOffsetY: Double = 0
     @Published var filterOffsetUndefinedAreaMode = ImageEditorOffsetUndefinedAreaMode.wrapAround
+    @Published var filterWaveAmplitudePercent: Double?
     @Published var filterWaveAmplitude: Double = 0.5
     @Published var filterWaveFrequency: Double = 0.25
     @Published var filterRippleAmountPercent: Double?
@@ -2887,11 +2899,12 @@ final class ImageEditorViewModel: ObservableObject {
         }
         if filter.kind == .wave {
             let settings = filter.normalizedSettings
+            let amplitude = settings.waveAmplitudePercent
+                ?? (settings.waveAmplitude * filter.normalizedIntensity * 100)
             let title = L10n.format(
                 "imageEditor.properties.smartFilterWaveItem",
                 filter.kind.title,
-                Int((filter.normalizedIntensity * 100).rounded()),
-                Int((settings.waveAmplitude * 100).rounded()),
+                String(format: "%+d", Int(amplitude.rounded())),
                 Int((settings.waveFrequency * 100).rounded())
             )
             guard !filter.isEnabled else { return title }
@@ -9756,6 +9769,7 @@ final class ImageEditorViewModel: ObservableObject {
             offsetX: filterOffsetX,
             offsetY: filterOffsetY,
             offsetUndefinedAreaMode: filterOffsetUndefinedAreaMode,
+            waveAmplitudePercent: selectedFilter == .wave ? filterWaveAmplitudePercent : nil,
             waveAmplitude: filterWaveAmplitude,
             waveFrequency: filterWaveFrequency,
             rippleAmountPercent: selectedFilter == .ripple ? filterRippleAmountPercent : nil,
@@ -11631,6 +11645,7 @@ final class ImageEditorViewModel: ObservableObject {
         filterOffsetX = normalized.offsetX
         filterOffsetY = normalized.offsetY
         filterOffsetUndefinedAreaMode = normalized.offsetUndefinedAreaMode
+        filterWaveAmplitudePercent = normalized.waveAmplitudePercent
         filterWaveAmplitude = normalized.waveAmplitude
         filterWaveFrequency = normalized.waveFrequency
         filterRippleAmountPercent = normalized.rippleAmountPercent

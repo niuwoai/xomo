@@ -46,6 +46,9 @@ extension NSImage {
         if kind == .ripple, normalizedSettings.rippleAmountPercent == 0 {
             return self
         }
+        if kind == .wave, normalizedSettings.waveAmplitudePercent == 0 {
+            return self
+        }
         let hasExplicitFilterAmount = (
             kind == .sharpen
                 && normalizedSettings.sharpenAmountPercent.map { $0 > 0 } == true
@@ -70,6 +73,9 @@ extension NSImage {
         ) || (
             kind == .ripple
                 && normalizedSettings.rippleAmountPercent.map { $0 != 0 } == true
+        ) || (
+            kind == .wave
+                && normalizedSettings.waveAmplitudePercent.map { $0 != 0 } == true
         )
         guard clamped > 0 || hasExplicitFilterAmount else { return self }
         if kind == .addNoise {
@@ -234,6 +240,9 @@ extension NSImage {
         if kind == .ripple, normalizedSettings.rippleAmountPercent == 0 {
             return self
         }
+        if kind == .wave, normalizedSettings.waveAmplitudePercent == 0 {
+            return self
+        }
         let hasExplicitFilterAmount = (
             kind == .sharpen
                 && normalizedSettings.sharpenAmountPercent.map { $0 > 0 } == true
@@ -258,6 +267,9 @@ extension NSImage {
         ) || (
             kind == .ripple
                 && normalizedSettings.rippleAmountPercent.map { $0 != 0 } == true
+        ) || (
+            kind == .wave
+                && normalizedSettings.waveAmplitudePercent.map { $0 != 0 } == true
         )
         guard intensity > 0 || hasExplicitFilterAmount else { return self }
         let normalizedOpacity = max(0, min(1, opacity))
@@ -1281,13 +1293,15 @@ extension NSImage {
 
     private func waved(intensity: Double, settings: ImageEditorFilterSettings) -> NSImage? {
         let clampedIntensity = max(0, min(1, intensity))
-        guard clampedIntensity > 0 else { return self }
         let normalizedSettings = settings.normalized()
+        let amplitude = normalizedSettings.waveAmplitudePercent.map { $0 / 100 }
+            ?? (normalizedSettings.waveAmplitude * clampedIntensity)
+        guard abs(amplitude) > 0.000_1 else { return self }
         return pixelSampledFromBuffer { x, y, width, height, pixels, bytesPerRow, bytesPerPixel in
             let cycles = 1 + normalizedSettings.waveFrequency * 5
-            let maxShift = min(Double(width), Double(height)) * 0.18 * clampedIntensity
+            let maxShift = min(Double(width), Double(height)) * 0.18
             let phase = Double(y) / Double(max(height - 1, 1)) * cycles * Double.pi * 2
-            let sourceX = Double(x) - sin(phase) * normalizedSettings.waveAmplitude * maxShift
+            let sourceX = Double(x) - sin(phase) * amplitude * maxShift
             return Self.samplePixel(
                 x: sourceX,
                 y: Double(y),

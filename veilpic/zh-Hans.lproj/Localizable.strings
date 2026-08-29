@@ -1036,7 +1036,7 @@
 "imageEditor.filter.offsetUndefinedArea.repeatEdgePixels" = "重复边缘像素";
 "imageEditor.filter.offsetUndefinedArea.transparent" = "透明";
 "imageEditor.filter.waveAmplitude" = "振幅";
-"imageEditor.filter.waveAmplitudeValue" = "%d";
+"imageEditor.filter.waveAmplitudeValue" = "%@%%";
 "imageEditor.filter.waveFrequency" = "频率";
 "imageEditor.filter.waveFrequencyValue" = "%d";
 "imageEditor.filter.rippleAmount" = "数量";
@@ -1269,7 +1269,7 @@
 "imageEditor.properties.smartFilterLiquifyPushItem" = "%@ %d%% · X %d · Y %d";
 "imageEditor.properties.smartFilterLiquifyTwirlItem" = "%@ %d%% · 旋转 %d";
 "imageEditor.properties.smartFilterLiquifyPuckerBloatItem" = "%@ · 收缩/膨胀 %@%%";
-"imageEditor.properties.smartFilterWaveItem" = "%@ %d%% · 振幅 %d · 频率 %d";
+"imageEditor.properties.smartFilterWaveItem" = "%@ · 振幅 %@%% · 频率 %d";
 "imageEditor.properties.smartFilterOffsetItem" = "%@ %d%% · X %d · Y %d · %@";
 "imageEditor.properties.smartFilterRippleItem" = "%@ · 数量 %@%% · 频率 %d";
 "imageEditor.properties.smartFilterPinchItem" = "%1$@ · 数量 %2$@%%";

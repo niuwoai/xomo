@@ -6299,6 +6299,7 @@ final class XomoAutomationRegistry {
                     )
                 }
                 viewModel.filterOffsetUndefinedAreaMode = mode
+            case "waveAmplitudePercent": viewModel.filterWaveAmplitudePercent = try numericSetting(value, key: key)
             case "waveAmplitude": viewModel.filterWaveAmplitude = try numericSetting(value, key: key)
             case "waveFrequency": viewModel.filterWaveFrequency = try numericSetting(value, key: key)
             case "rippleAmountPercent": viewModel.filterRippleAmountPercent = try numericSetting(value, key: key)
@@ -8038,6 +8039,7 @@ private extension XomoAutomationRegistry {
             description: "How Offset fills pixels shifted beyond the canvas",
             values: ImageEditorOffsetUndefinedAreaMode.allCases.map(\.rawValue)
         ),
+        "waveAmplitudePercent": XomoAutomationSchema.number(description: "Wave amplitude from -100 to 100 percent"),
         "waveAmplitude": XomoAutomationSchema.number(description: "Wave amplitude"),
         "waveFrequency": XomoAutomationSchema.number(description: "Wave frequency"),
         "rippleAmountPercent": XomoAutomationSchema.number(description: "Ripple amount from -100 to 100 percent"),

@@ -2586,6 +2586,8 @@ struct ImageEditorFilterSettings: Equatable, Codable {
     var offsetX: Double = 0.25
     var offsetY: Double = 0
     var offsetUndefinedAreaMode = ImageEditorOffsetUndefinedAreaMode.wrapAround
+    /// Wave amplitude from -100% to 100%. Nil preserves legacy amplitude × intensity.
+    var waveAmplitudePercent: Double?
     var waveAmplitude: Double = 0.5
     var waveFrequency: Double = 0.25
     /// Ripple amount from -100% to 100%. Nil preserves legacy amount × intensity.
@@ -2638,6 +2640,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         offsetX: Double = 0.25,
         offsetY: Double = 0,
         offsetUndefinedAreaMode: ImageEditorOffsetUndefinedAreaMode = .wrapAround,
+        waveAmplitudePercent: Double? = nil,
         waveAmplitude: Double = 0.5,
         waveFrequency: Double = 0.25,
         rippleAmountPercent: Double? = nil,
@@ -2685,6 +2688,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         self.offsetX = offsetX
         self.offsetY = offsetY
         self.offsetUndefinedAreaMode = offsetUndefinedAreaMode
+        self.waveAmplitudePercent = waveAmplitudePercent
         self.waveAmplitude = waveAmplitude
         self.waveFrequency = waveFrequency
         self.rippleAmountPercent = rippleAmountPercent
@@ -2741,6 +2745,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
             ImageEditorOffsetUndefinedAreaMode.self,
             forKey: .offsetUndefinedAreaMode
         ) ?? .wrapAround
+        waveAmplitudePercent = try container.decodeIfPresent(Double.self, forKey: .waveAmplitudePercent)
         waveAmplitude = try container.decodeIfPresent(Double.self, forKey: .waveAmplitude) ?? 0.5
         waveFrequency = try container.decodeIfPresent(Double.self, forKey: .waveFrequency) ?? 0.25
         rippleAmountPercent = try container.decodeIfPresent(Double.self, forKey: .rippleAmountPercent)
@@ -2794,6 +2799,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         try container.encode(offsetX, forKey: .offsetX)
         try container.encode(offsetY, forKey: .offsetY)
         try container.encode(offsetUndefinedAreaMode, forKey: .offsetUndefinedAreaMode)
+        try container.encodeIfPresent(waveAmplitudePercent, forKey: .waveAmplitudePercent)
         try container.encode(waveAmplitude, forKey: .waveAmplitude)
         try container.encode(waveFrequency, forKey: .waveFrequency)
         try container.encodeIfPresent(rippleAmountPercent, forKey: .rippleAmountPercent)
@@ -2844,6 +2850,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
             offsetX: max(-1, min(1, offsetX)),
             offsetY: max(-1, min(1, offsetY)),
             offsetUndefinedAreaMode: offsetUndefinedAreaMode,
+            waveAmplitudePercent: waveAmplitudePercent.map { max(-100, min(100, $0)) },
             waveAmplitude: max(-1, min(1, waveAmplitude)),
             waveFrequency: max(0, min(1, waveFrequency)),
             rippleAmountPercent: rippleAmountPercent.map { max(-100, min(100, $0)) },
@@ -2894,6 +2901,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         case offsetX
         case offsetY
         case offsetUndefinedAreaMode
+        case waveAmplitudePercent
         case waveAmplitude
         case waveFrequency
         case rippleAmountPercent
