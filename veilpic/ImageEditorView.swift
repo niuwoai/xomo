@@ -4453,6 +4453,14 @@ struct ImageEditorView: View {
                             isPointerOverBlockedContent: contentHit.isBlocked,
                             moveToolUsesBoxSelection: viewModel.moveToolAutoSelectsCanvasTarget,
                             moveToolHoverSelectionIntent: moveToolHoverSelectionIntent,
+                            isPointerOverEditableText:
+                                canvasInteractionTool == .text
+                                    && canvasPoint.map {
+                                        viewModel.hasEditableTextLayer(
+                                            at: $0,
+                                            hitTolerance: canvasTextHitTolerance(in: geometry.size)
+                                        )
+                                    } == true,
                             isPointerOverColorSamplerPoint:
                                 canvasInteractionTool == .colorSampler
                                     && hoverViewPoint.map {
@@ -6782,6 +6790,14 @@ struct ImageEditorView: View {
             isPointerOverBlockedContent: contentHit.isBlocked,
             moveToolUsesBoxSelection: viewModel.moveToolAutoSelectsCanvasTarget,
             moveToolHoverSelectionIntent: moveToolHoverSelectionIntent,
+            isPointerOverEditableText:
+                canvasInteractionTool == .text
+                    && canvasPoint.map {
+                        viewModel.hasEditableTextLayer(
+                            at: $0,
+                            hitTolerance: canvasTextHitTolerance(in: size)
+                        )
+                    } == true,
             isPointerOverColorSamplerPoint:
                 canvasInteractionTool == .colorSampler
                     && colorSamplerPointID(at: viewPoint, in: size) != nil,
@@ -15696,6 +15712,7 @@ enum ImageEditorCanvasCursor {
         isPointerOverBlockedContent: Bool = false,
         moveToolUsesBoxSelection: Bool = false,
         moveToolHoverSelectionIntent: ImageEditorMoveToolHoverSelectionIntent = .none,
+        isPointerOverEditableText: Bool = false,
         isPointerOverColorSamplerPoint: Bool = false,
         penIsClosing: Bool = false,
         penIsConverting: Bool = false,
@@ -15802,6 +15819,7 @@ enum ImageEditorCanvasCursor {
                 brushTiltControlsShape: brushTiltControlsShape,
                 brushTipRoundness: brushTipRoundness,
                 brushTipAngleDegrees: brushTipAngleDegrees,
+                isPointerOverEditableText: isPointerOverEditableText,
                 penIsClosing: penIsClosing,
                 penIsConverting: penIsConverting,
                 penConversionIsBlocked: penConversionIsBlocked,
@@ -16149,6 +16167,58 @@ enum ImageEditorCanvasCursor {
         )
     }
 
+    /// Blank canvas is a creation target for the Text tool: a click creates
+    /// point text and a drag creates a paragraph box. Keep the insertion beam
+    /// small and precise, then add only a quiet dashed corner to communicate
+    /// the optional box gesture. Existing editable text continues to use the
+    /// native I-beam.
+    private static func textCreationCursor() -> NSCursor {
+        let cacheKey = "text-creation"
+        if let cachedCursor = cursorCache[cacheKey] {
+            return cachedCursor
+        }
+
+        let side: CGFloat = 32
+        let insertionPoint = NSPoint(x: 9, y: 18)
+        let image = NSImage(size: NSSize(width: side, height: side))
+        image.lockFocus()
+
+        let beam = NSBezierPath()
+        beam.move(to: NSPoint(x: insertionPoint.x, y: 7))
+        beam.line(to: NSPoint(x: insertionPoint.x, y: 29))
+        beam.move(to: NSPoint(x: 5, y: 7))
+        beam.line(to: NSPoint(x: 13, y: 7))
+        beam.move(to: NSPoint(x: 5, y: 29))
+        beam.line(to: NSPoint(x: 13, y: 29))
+        NSColor.white.withAlphaComponent(0.98).setStroke()
+        beam.lineWidth = 3
+        beam.stroke()
+        NSColor.black.withAlphaComponent(0.96).setStroke()
+        beam.lineWidth = 1.2
+        beam.stroke()
+
+        let paragraphCorner = NSBezierPath()
+        paragraphCorner.move(to: NSPoint(x: 16, y: 25))
+        paragraphCorner.line(to: NSPoint(x: 27, y: 25))
+        paragraphCorner.line(to: NSPoint(x: 27, y: 14))
+        paragraphCorner.setLineDash([2, 2], count: 2, phase: 0)
+        NSColor.black.withAlphaComponent(0.94).setStroke()
+        paragraphCorner.lineWidth = 3
+        paragraphCorner.stroke()
+        NSColor.white.withAlphaComponent(0.98).setStroke()
+        paragraphCorner.lineWidth = 1
+        paragraphCorner.stroke()
+
+        image.unlockFocus()
+        return cache(
+            NSCursor(
+                image: image,
+                hotSpot: NSPoint(x: insertionPoint.x, y: side - insertionPoint.y)
+            ),
+            for: cacheKey
+        )
+    }
+
     /// Photoshop's Path Selection tool uses a black arrow. Add a compact
     /// Bézier-node badge so it remains distinct from both the system pointer
     /// used by component-library mode and the white Direct Selection arrow.
@@ -16351,6 +16421,7 @@ enum ImageEditorCanvasCursor {
         brushTiltControlsShape: Bool = false,
         brushTipRoundness: CGFloat = 1,
         brushTipAngleDegrees: CGFloat = 0,
+        isPointerOverEditableText: Bool = false,
         penIsClosing: Bool = false,
         penIsConverting: Bool = false,
         penConversionIsBlocked: Bool = false,
@@ -16388,7 +16459,7 @@ enum ImageEditorCanvasCursor {
         case .grab:
             return handIsDragging ? .closedHand : .openHand
         case .textInsertion:
-            return .iBeam
+            return isPointerOverEditableText ? .iBeam : textCreationCursor()
         case .selectionMarquee:
             return selectionMode == .replace
                 ? .crosshair

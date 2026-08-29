@@ -50,6 +50,35 @@ struct ImageEditorTextHitTestingTests {
     }
 
     @Test @MainActor
+    func editableTextHoverHitTestingIsPassiveAndRespectsEditability() throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "passive-text-hover-hit-testing",
+            image: NSImage.transparent(size: CGSize(width: 640, height: 480))
+        ) { _ in }
+        let backgroundID = try #require(viewModel.document.layers.first?.id)
+        viewModel.textValue = "Hover target"
+        viewModel.addText(at: CGPoint(x: 140, y: 120))
+        let textLayer = try #require(viewModel.document.selectedLayer)
+        let hitPoint = CGPoint(x: textLayer.frame.midX, y: textLayer.frame.midY)
+        viewModel.selectLayer(backgroundID)
+
+        #expect(viewModel.hasEditableTextLayer(at: hitPoint, hitTolerance: 0))
+        #expect(viewModel.document.selectedLayerID == backgroundID)
+
+        let textIndex = try #require(
+            viewModel.document.layers.firstIndex(where: { $0.id == textLayer.id })
+        )
+        viewModel.document.layers[textIndex].locksPixels = true
+        #expect(!viewModel.hasEditableTextLayer(at: hitPoint, hitTolerance: 0))
+        #expect(viewModel.document.selectedLayerID == backgroundID)
+
+        viewModel.document.layers[textIndex].locksPixels = false
+        viewModel.document.layers[textIndex].isVisible = false
+        #expect(!viewModel.hasEditableTextLayer(at: hitPoint, hitTolerance: 0))
+        #expect(viewModel.document.selectedLayerID == backgroundID)
+    }
+
+    @Test @MainActor
     func moveToolDoubleClickTargetIsPassiveAndRespectsTextLocksAndVisibility() throws {
         let viewModel = ImageEditorViewModel(
             sourceName: "passive-text-hit-testing",

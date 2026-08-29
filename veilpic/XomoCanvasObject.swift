@@ -1026,6 +1026,22 @@ extension ImageEditorViewModel {
         return true
     }
 
+    /// Mirrors the Text tool's editable-layer hit test without changing the
+    /// current selection. Cursor resolution uses this so an existing text
+    /// layer advertises insertion/editing while blank canvas advertises a new
+    /// point- or paragraph-text target.
+    func hasEditableTextLayer(
+        at point: CGPoint,
+        excluding excludedLayerID: UUID? = nil,
+        hitTolerance: CGFloat = ImageEditorTextHitTesting.viewTolerance
+    ) -> Bool {
+        editableTextLayer(
+            at: point,
+            excluding: excludedLayerID,
+            hitTolerance: hitTolerance
+        ) != nil
+    }
+
     /// Resolves one foreground target for a plain Move-tool double-click.
     /// Text keeps a small frame tolerance for whitespace and edge editing,
     /// while ordinary layers require a visible pixel and therefore prevent

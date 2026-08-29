@@ -2715,6 +2715,39 @@ struct ImageEditorCanvasCursorTests {
         #expect(ImageEditorCanvasCursor.cursor(for: .pen, brushDiameter: 18) !== NSCursor.crosshair)
     }
 
+    @Test func textCursorDistinguishesCreationFromExistingTextAndComponents() throws {
+        #expect(ImageEditorCanvasCursor.family(for: .text) == .textInsertion)
+
+        let creation = ImageEditorCanvasCursor.cursor(
+            for: .text,
+            brushDiameter: 18,
+            isPointerOverEditableText: false
+        )
+        let editing = ImageEditorCanvasCursor.cursor(
+            for: .text,
+            brushDiameter: 18,
+            isPointerOverEditableText: true
+        )
+        #expect(creation !== NSCursor.iBeam)
+        #expect(creation.image.tiffRepresentation != NSCursor.iBeam.image.tiffRepresentation)
+        #expect(editing === NSCursor.iBeam)
+        #expect(ImageEditorCanvasCursor.cursor(
+            for: .components,
+            selectedTool: .text,
+            brushDiameter: 18,
+            isPointerOverEditableText: true
+        ) === NSCursor.arrow)
+
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        #expect(source.components(separatedBy: "viewModel.hasEditableTextLayer(").count == 3)
+    }
+
     @Test func penCursorDistinguishesConstrainedPlacementAndCloseTarget() {
         let ordinary = ImageEditorCanvasCursor.cursor(for: .pen, brushDiameter: 18)
         let constrained = ImageEditorCanvasCursor.cursor(
