@@ -16530,13 +16530,9 @@ enum ImageEditorCanvasCursor {
         case .eraserTool:
             return modifierFlags.contains(.capsLock)
                 ? .crosshair
-                : familiarBrushCursor(
+                : eraserResultCursor(
                     diameter: brushDiameter,
-                    tilt: brushTilt,
-                    tiltControlsShape: brushTiltControlsShape,
-                    tipRoundness: brushTipRoundness,
-                    tipAngleDegrees: brushTipAngleDegrees,
-                    symbolName: isErasingToHistory ? "clock.arrow.circlepath" : ""
+                    restoringHistory: isErasingToHistory
                 )
         case .localExposureLighten:
             return modifierFlags.contains(.capsLock)
@@ -16717,6 +16713,98 @@ enum ImageEditorCanvasCursor {
             NSCursor(image: image, hotSpot: NSPoint(x: center.x, y: side - center.y)),
             for: cacheKey
         )
+    }
+
+    private static func eraserResultCursor(
+        diameter requestedDiameter: CGFloat,
+        restoringHistory: Bool
+    ) -> NSCursor {
+        let diameter = max(3, min(256, requestedDiameter.rounded()))
+        let mode = restoringHistory ? "restore" : "transparent"
+        let cacheKey = "eraser-result-\(mode):\(Int(diameter))"
+        if let cachedCursor = cursorCache[cacheKey] {
+            return cachedCursor
+        }
+
+        let side = max(36, diameter + 18)
+        let center = NSPoint(x: side / 2, y: side / 2)
+        let image = NSImage(size: NSSize(width: side, height: side))
+        image.lockFocus()
+
+        let footprint = NSBezierPath(ovalIn: NSRect(
+            x: center.x - diameter / 2,
+            y: center.y - diameter / 2,
+            width: diameter,
+            height: diameter
+        ))
+        NSColor.black.withAlphaComponent(0.95).setStroke()
+        footprint.lineWidth = 3.5
+        footprint.stroke()
+        NSColor.white.withAlphaComponent(0.98).setStroke()
+        footprint.lineWidth = 1.4
+        footprint.stroke()
+
+        let sampleSize = max(3.2, min(6, diameter * 0.19))
+        let spacing = max(4.8, min(8.5, diameter * 0.28))
+        let leftRect = NSRect(
+            x: center.x - spacing - sampleSize / 2,
+            y: center.y - sampleSize / 2,
+            width: sampleSize,
+            height: sampleSize
+        )
+        let rightRect = NSRect(
+            x: center.x + spacing - sampleSize / 2,
+            y: center.y - sampleSize / 2,
+            width: sampleSize,
+            height: sampleSize
+        )
+        let transparencyRect = restoringHistory ? leftRect : rightRect
+        let pixelRect = restoringHistory ? rightRect : leftRect
+        drawTransparencySample(in: transparencyRect)
+        NSColor.systemBlue.setFill()
+        NSBezierPath(rect: pixelRect).fill()
+        NSColor.black.withAlphaComponent(0.9).setStroke()
+        for rect in [leftRect, rightRect] {
+            let outline = NSBezierPath(rect: rect)
+            outline.lineWidth = 0.8
+            outline.stroke()
+        }
+
+        let endpoint = NSPoint(x: rightRect.minX, y: center.y - spacing * 0.72)
+        let change = NSBezierPath()
+        change.move(to: NSPoint(x: leftRect.maxX, y: center.y - spacing * 0.72))
+        change.line(to: endpoint)
+        change.move(to: endpoint)
+        change.line(to: NSPoint(x: endpoint.x - 3.2, y: endpoint.y + 2.6))
+        change.move(to: endpoint)
+        change.line(to: NSPoint(x: endpoint.x - 3.2, y: endpoint.y - 2.6))
+        NSColor.black.withAlphaComponent(0.95).setStroke()
+        change.lineWidth = 3.5
+        change.stroke()
+        (restoringHistory ? NSColor.systemGreen : NSColor.systemPink).setStroke()
+        change.lineWidth = 1.2
+        change.stroke()
+
+        image.unlockFocus()
+        return cache(
+            NSCursor(image: image, hotSpot: NSPoint(x: center.x, y: side - center.y)),
+            for: cacheKey
+        )
+    }
+
+    private static func drawTransparencySample(in rect: NSRect) {
+        let halfWidth = rect.width / 2
+        let halfHeight = rect.height / 2
+        let tiles = [
+            NSRect(x: rect.minX, y: rect.minY, width: halfWidth, height: halfHeight),
+            NSRect(x: rect.midX, y: rect.midY, width: halfWidth, height: halfHeight)
+        ]
+        NSColor.white.setFill()
+        NSBezierPath(rect: rect).fill()
+        NSColor.systemGray.withAlphaComponent(0.72).setFill()
+        for tile in tiles {
+            NSBezierPath(rect: tile).fill()
+        }
     }
 
     private static func paintToolCursor(for tool: ImageEditorTool, diameter requestedDiameter: CGFloat) -> NSCursor {

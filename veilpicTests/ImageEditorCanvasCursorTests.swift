@@ -1838,34 +1838,56 @@ struct ImageEditorCanvasCursorTests {
         #expect(ImageEditorCanvasCursor.cursor(for: .healingBrush, brushDiameter: 18) !== NSCursor.crosshair)
     }
 
-    @Test func eraseToHistoryAddsACompactBadgeWithoutBreakingCursorPriority() {
+    @Test func eraserCursorPreviewsTransparencyOrHistoryRestorationAcrossItsRealFootprint() {
         let ordinary = ImageEditorCanvasCursor.cursor(
             for: .eraser,
-            brushDiameter: 18
+            brushDiameter: 12
         )
         let restoring = ImageEditorCanvasCursor.cursor(
             for: .eraser,
-            brushDiameter: 18,
+            brushDiameter: 12,
             isErasingToHistory: true
+        )
+        let large = ImageEditorCanvasCursor.cursor(
+            for: .eraser,
+            brushDiameter: 48
+        )
+        let brush = ImageEditorCanvasCursor.cursor(
+            for: .brush,
+            brushDiameter: 12
         )
         let precision = ImageEditorCanvasCursor.cursor(
             for: .eraser,
-            brushDiameter: 18,
+            brushDiameter: 12,
             isErasingToHistory: true,
             modifierFlags: [.capsLock]
         )
         let components = ImageEditorCanvasCursor.cursor(
             for: .components,
             selectedTool: .eraser,
-            brushDiameter: 18,
+            brushDiameter: 12,
+            isErasingToHistory: true
+        )
+        let outsideCanvas = ImageEditorCanvasCursor.cursor(
+            for: .tools,
+            selectedTool: .eraser,
+            brushDiameter: 12,
+            isPointerOverCanvas: false,
             isErasingToHistory: true
         )
 
+        #expect(ImageEditorCanvasCursor.family(for: .eraser) == .eraserTool)
+        #expect(ordinary.image.size == NSSize(width: 36, height: 36))
+        #expect(ordinary.hotSpot == NSPoint(x: 18, y: 18))
+        #expect(large.image.size == NSSize(width: 66, height: 66))
+        #expect(large.hotSpot == NSPoint(x: 33, y: 33))
         #expect(restoring.hotSpot == ordinary.hotSpot)
         #expect(restoring.image.size == ordinary.image.size)
         #expect(restoring.image.tiffRepresentation != ordinary.image.tiffRepresentation)
+        #expect(ordinary.image.tiffRepresentation != brush.image.tiffRepresentation)
         #expect(precision === NSCursor.crosshair)
         #expect(components === NSCursor.arrow)
+        #expect(outsideCanvas === NSCursor.arrow)
     }
 
     @Test func sampledBrushSourcePickingUsesPrecisionCursorWithoutChangingPaintFootprints() {
@@ -3113,7 +3135,7 @@ struct ImageEditorCanvasCursorTests {
         }
 
         let standardFootprintTools: [ImageEditorTool] = [
-            .brush, .pencil, .eraser
+            .brush, .pencil, .historyBrush
         ]
         let standardRepresentations = standardFootprintTools.compactMap {
             ImageEditorCanvasCursor.cursor(for: $0, brushDiameter: 18).image.tiffRepresentation
@@ -3122,7 +3144,7 @@ struct ImageEditorCanvasCursorTests {
         #expect(Set(standardRepresentations).count == 1)
 
         let resultPreviewTools: [ImageEditorTool] = [
-            .cloneStamp, .healingBrush, .dodge, .burn, .sponge, .blur, .sharpen, .smudge
+            .eraser, .cloneStamp, .healingBrush, .dodge, .burn, .sponge, .blur, .sharpen, .smudge
         ]
         let resultPreviewRepresentations = resultPreviewTools.compactMap {
             ImageEditorCanvasCursor.cursor(for: $0, brushDiameter: 18).image.tiffRepresentation
