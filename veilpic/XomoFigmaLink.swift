@@ -1,3 +1,4 @@
+import AppKit
 import Foundation
 
 enum XomoFigmaResourceType: String, CaseIterable, Codable, Sendable {
@@ -266,6 +267,26 @@ enum XomoFigmaClipboardLinkPolicy {
         }
 
         return textPreview?.canonicalURL.absoluteString
+    }
+}
+
+enum XomoFigmaClipboardWriter {
+    @discardableResult
+    static func writeCanonicalURL(
+        _ candidate: URL?,
+        to pasteboard: NSPasteboard = .general
+    ) -> Bool {
+        guard let canonicalURL = XomoFigmaSourceOpenPolicy.canonicalURL(from: candidate) else {
+            return false
+        }
+        let value = canonicalURL.absoluteString
+        let item = NSPasteboardItem()
+        guard item.setString(value, forType: .string),
+              item.setString(value, forType: .URL)
+        else { return false }
+
+        pasteboard.clearContents()
+        return pasteboard.writeObjects([item])
     }
 }
 

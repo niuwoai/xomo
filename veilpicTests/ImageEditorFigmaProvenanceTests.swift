@@ -57,6 +57,7 @@ struct ImageEditorFigmaProvenanceTests {
 
         viewModel.copySelectedFigmaSourceURL()
         #expect(NSPasteboard.general.string(forType: .string) == "https://www.figma.com/design/abc123/Checkout?node-id=1-60")
+        #expect(NSPasteboard.general.string(forType: .URL) == "https://www.figma.com/design/abc123/Checkout?node-id=1-60")
 
         viewModel.copySelectedFigmaComponentProperties()
         let copied = try #require(NSPasteboard.general.string(forType: .string))
@@ -101,6 +102,10 @@ struct ImageEditorFigmaProvenanceTests {
         #expect(viewModel.copySelectedFigmaSourceURL())
         #expect(
             NSPasteboard.general.string(forType: .string) ==
+                "https://www.figma.com/design/abc123/Checkout?node-id=I32-9%3B44-5&version-id=7"
+        )
+        #expect(
+            NSPasteboard.general.string(forType: .URL) ==
                 "https://www.figma.com/design/abc123/Checkout?node-id=I32-9%3B44-5&version-id=7"
         )
 

@@ -251,6 +251,31 @@ struct XomoFigmaLinkImportTests {
         )
     }
 
+    @Test func canonicalLinkCopyWritesTextAndURLAsOneTrustedPasteboardItem() throws {
+        let pasteboard = NSPasteboard(
+            name: NSPasteboard.Name("im.some.xomo.tests.figma-link.\(UUID().uuidString)")
+        )
+        pasteboard.clearContents()
+        let source = try #require(URL(
+            string: "https://figma.com/design/abc123DEF456/Checkout?node-id=1-2&utm_source=xomo"
+        ))
+        let canonical = "https://www.figma.com/design/abc123DEF456/Checkout?node-id=1-2"
+
+        #expect(XomoFigmaClipboardWriter.writeCanonicalURL(source, to: pasteboard))
+        #expect(pasteboard.pasteboardItems?.count == 1)
+        #expect(pasteboard.string(forType: .string) == canonical)
+        #expect(pasteboard.string(forType: .URL) == canonical)
+
+        pasteboard.clearContents()
+        #expect(pasteboard.setString("keep me", forType: .string))
+        let untrusted = try #require(URL(
+            string: "https://www.figma.com.evil.example/design/abc123DEF456/Checkout"
+        ))
+        #expect(!XomoFigmaClipboardWriter.writeCanonicalURL(untrusted, to: pasteboard))
+        #expect(pasteboard.string(forType: .string) == "keep me")
+        #expect(pasteboard.string(forType: .URL) == nil)
+    }
+
     @Test func canvasURLDropKeepsLocalFilesAndAcceptsOneTrustedFigmaLink() throws {
         let png = URL(fileURLWithPath: "/tmp/Poster.PNG")
         let svg = URL(fileURLWithPath: "/tmp/Icon.svg")
@@ -403,6 +428,7 @@ struct XomoFigmaLinkImportTests {
         )
         #expect(sheet.contains("xomo-figma-link-input"))
         #expect(sheet.contains("xomo-figma-copy-canonical-link"))
+        #expect(sheet.contains("XomoFigmaClipboardWriter.writeCanonicalURL(draft.preview?.canonicalURL)"))
         #expect(sheet.contains("xomo-figma-use-canonical-link"))
         #expect(sheet.contains("draft.useCanonicalURL()"))
         #expect(sheet.contains("xomo.figma.message.canonicalURLApplied"))

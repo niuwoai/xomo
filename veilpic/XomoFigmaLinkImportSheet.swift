@@ -670,9 +670,7 @@ struct XomoFigmaLinkImportSheet: View {
     }
 
     private func copyCanonicalURL() {
-        guard let canonicalURL = draft.preview?.canonicalURL.absoluteString else { return }
-        NSPasteboard.general.clearContents()
-        NSPasteboard.general.setString(canonicalURL, forType: .string)
+        guard XomoFigmaClipboardWriter.writeCanonicalURL(draft.preview?.canonicalURL) else { return }
         transientMessageKey = "xomo.figma.clipboard.copied"
     }
 

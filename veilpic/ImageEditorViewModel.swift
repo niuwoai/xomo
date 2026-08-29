@@ -2304,8 +2304,10 @@ final class ImageEditorViewModel: ObservableObject {
             statusText = L10n.text("imageEditor.status.figmaSourceURLCopyFailed")
             return false
         }
-        NSPasteboard.general.clearContents()
-        NSPasteboard.general.setString(url.absoluteString, forType: .string)
+        guard XomoFigmaClipboardWriter.writeCanonicalURL(url) else {
+            statusText = L10n.text("imageEditor.status.figmaSourceURLCopyFailed")
+            return false
+        }
         statusText = L10n.text("imageEditor.status.figmaSourceURLCopied")
         return true
     }
