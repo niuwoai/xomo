@@ -6771,7 +6771,7 @@ struct veilpicTests {
             (.similarColorSelection, [.magicWand]),
             (.paintedRegionSelection, [.quickSelection]),
             (.cloneStamp, [.cloneStamp]),
-            (.healingBrush, [.healingBrush]),
+            (.sampledRepairBlend, [.healingBrush]),
             (.crop, [.crop]),
             (.patch, [.patchTool]),
             (.gradient, [.gradient]),

@@ -15446,7 +15446,7 @@ enum ImageEditorCanvasCursorFamily: Equatable {
     case similarColorSelection
     case paintedRegionSelection
     case cloneStamp
-    case healingBrush
+    case sampledRepairBlend
     case crop
     case patch
     case gradient
@@ -16394,7 +16394,7 @@ enum ImageEditorCanvasCursor {
         case .cloneStamp:
             .cloneStamp
         case .healingBrush:
-            .healingBrush
+            .sampledRepairBlend
         case .crop:
             .crop
         case .patchTool:
@@ -16492,10 +16492,10 @@ enum ImageEditorCanvasCursor {
             return modifierFlags.contains(.capsLock) || isPickingSampledBrushSource
                 ? .crosshair
                 : familiarBrushCursor(diameter: brushDiameter)
-        case .healingBrush:
+        case .sampledRepairBlend:
             return modifierFlags.contains(.capsLock) || isPickingSampledBrushSource
                 ? .crosshair
-                : familiarBrushCursor(diameter: brushDiameter)
+                : repairBlendCursor(diameter: brushDiameter)
         case .brushTool:
             return modifierFlags.contains(.capsLock)
                 ? .crosshair
@@ -17359,64 +17359,97 @@ enum ImageEditorCanvasCursor {
         )
     }
 
-    private static func healingBrushCursor() -> NSCursor {
-        let cacheKey = "healing-brush"
+    private static func repairBlendCursor(diameter requestedDiameter: CGFloat) -> NSCursor {
+        let diameter = max(3, min(256, requestedDiameter.rounded()))
+        let cacheKey = "sampled-repair-blend:\(Int(diameter))"
         if let cachedCursor = cursorCache[cacheKey] {
             return cachedCursor
         }
 
-        let side: CGFloat = 36
+        let side = max(36, diameter + 18)
+        let center = NSPoint(x: side / 2, y: side / 2)
         let image = NSImage(size: NSSize(width: side, height: side))
         image.lockFocus()
 
-        let bandage = NSBezierPath()
-        bandage.move(to: NSPoint(x: 6, y: 14))
-        bandage.curve(
-            to: NSPoint(x: 17, y: 4),
-            controlPoint1: NSPoint(x: 8, y: 10),
-            controlPoint2: NSPoint(x: 13, y: 5)
-        )
-        bandage.curve(
-            to: NSPoint(x: 28, y: 15),
-            controlPoint1: NSPoint(x: 21, y: 4),
-            controlPoint2: NSPoint(x: 25, y: 9)
-        )
-        bandage.curve(
-            to: NSPoint(x: 17, y: 26),
-            controlPoint1: NSPoint(x: 26, y: 20),
-            controlPoint2: NSPoint(x: 21, y: 25)
-        )
-        bandage.curve(
-            to: NSPoint(x: 6, y: 14),
-            controlPoint1: NSPoint(x: 13, y: 25),
-            controlPoint2: NSPoint(x: 9, y: 20)
-        )
-        bandage.close()
+        // The outer ring is the actual repair footprint. The inner dashed
+        // boundary and texture samples preview the operation's result:
+        // sampled detail is transferred, then blended into the destination.
+        let footprint = NSBezierPath(ovalIn: NSRect(
+            x: center.x - diameter / 2,
+            y: center.y - diameter / 2,
+            width: diameter,
+            height: diameter
+        ))
         NSColor.black.withAlphaComponent(0.95).setStroke()
-        bandage.lineWidth = 4
-        bandage.stroke()
-        NSColor.white.withAlphaComponent(0.98).setFill()
-        bandage.fill()
+        footprint.lineWidth = 3.5
+        footprint.stroke()
+        NSColor.white.withAlphaComponent(0.98).setStroke()
+        footprint.lineWidth = 1.4
+        footprint.stroke()
 
-        let seam = NSBezierPath()
-        seam.move(to: NSPoint(x: 10, y: 12)); seam.line(to: NSPoint(x: 18, y: 20))
+        let blendDiameter = max(2, diameter * 0.64)
+        let blendBoundary = NSBezierPath(ovalIn: NSRect(
+            x: center.x - blendDiameter / 2,
+            y: center.y - blendDiameter / 2,
+            width: blendDiameter,
+            height: blendDiameter
+        ))
+        blendBoundary.setLineDash([2.5, 2], count: 2, phase: 0)
+        NSColor.black.withAlphaComponent(0.9).setStroke()
+        blendBoundary.lineWidth = 3
+        blendBoundary.stroke()
         NSColor.systemBlue.setStroke()
-        seam.lineWidth = 1.4
-        seam.stroke()
+        blendBoundary.lineWidth = 1
+        blendBoundary.stroke()
 
-        let source = NSBezierPath()
-        source.move(to: NSPoint(x: 27, y: 7)); source.line(to: NSPoint(x: 27, y: 17))
-        source.move(to: NSPoint(x: 22, y: 12)); source.line(to: NSPoint(x: 32, y: 12))
+        let transferDistance = max(2.5, min(8, diameter * 0.28))
+        let transfer = NSBezierPath()
+        transfer.move(to: NSPoint(
+            x: center.x - transferDistance,
+            y: center.y + transferDistance
+        ))
+        transfer.line(to: NSPoint(x: center.x - 1.5, y: center.y + 1.5))
+        transfer.move(to: NSPoint(x: center.x - 1.5, y: center.y + 1.5))
+        transfer.line(to: NSPoint(x: center.x - 5, y: center.y + 1.5))
+        transfer.move(to: NSPoint(x: center.x - 1.5, y: center.y + 1.5))
+        transfer.line(to: NSPoint(x: center.x - 1.5, y: center.y + 5))
         NSColor.black.withAlphaComponent(0.95).setStroke()
-        source.lineWidth = 3
-        source.stroke()
-        NSColor.white.setStroke()
-        source.lineWidth = 1
-        source.stroke()
+        transfer.lineWidth = 3
+        transfer.stroke()
+        NSColor.systemBlue.setStroke()
+        transfer.lineWidth = 1
+        transfer.stroke()
+
+        let textureOffsets = [
+            NSPoint(x: -transferDistance * 0.55, y: transferDistance * 0.45),
+            NSPoint(x: transferDistance * 0.5, y: -transferDistance * 0.35),
+            NSPoint(x: transferDistance * 0.25, y: transferDistance * 0.6)
+        ]
+        for offset in textureOffsets {
+            let sampleCenter = NSPoint(x: center.x + offset.x, y: center.y + offset.y)
+            NSColor.black.withAlphaComponent(0.95).setFill()
+            NSBezierPath(ovalIn: NSRect(
+                x: sampleCenter.x - 2.25,
+                y: sampleCenter.y - 2.25,
+                width: 4.5,
+                height: 4.5
+            )).fill()
+            let texturePoint = NSBezierPath(ovalIn: NSRect(
+                x: sampleCenter.x - 1,
+                y: sampleCenter.y - 1,
+                width: 2,
+                height: 2
+            ))
+            NSColor.white.setStroke()
+            texturePoint.lineWidth = 0.75
+            texturePoint.stroke()
+            NSColor.systemBlue.setFill()
+            texturePoint.fill()
+        }
 
         image.unlockFocus()
         return cache(
-            NSCursor(image: image, hotSpot: NSPoint(x: 27, y: side - 12)),
+            NSCursor(image: image, hotSpot: NSPoint(x: center.x, y: side - center.y)),
             for: cacheKey
         )
     }
