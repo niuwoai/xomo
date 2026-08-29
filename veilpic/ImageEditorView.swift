@@ -7814,6 +7814,25 @@ struct ImageEditorView: View {
                         .focusable(false)
                         .accessibilityLabel(L10n.text("imageEditor.filter.liquifyBulgeAmount"))
                         .accessibilityIdentifier("image-editor-filter-quick-liquify-bulge-amount")
+                } else if viewModel.selectedFilter == .pinch {
+                    Text(L10n.format(
+                        "imageEditor.filter.pinchAmountValue",
+                        String(format: "%+d", Int(viewModel.filterPinchEffectiveAmountPercent.rounded()))
+                    ))
+                        .font(.system(size: 11, weight: .semibold).monospacedDigit())
+                        .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                        .frame(width: 52, alignment: .leading)
+                    Slider(
+                        value: Binding(
+                            get: { viewModel.filterPinchEffectiveAmountPercent },
+                            set: { viewModel.filterPinchEffectiveAmountPercent = $0 }
+                        ),
+                        in: -100...100,
+                        step: 1
+                    )
+                        .focusable(false)
+                        .accessibilityLabel(L10n.text("imageEditor.filter.pinchAmount"))
+                        .accessibilityIdentifier("image-editor-filter-quick-pinch-amount")
                 } else if viewModel.selectedFilter == .spherize {
                     Text(L10n.format(
                         "imageEditor.filter.spherizeAmountValue",

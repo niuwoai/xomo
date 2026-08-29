@@ -2390,7 +2390,7 @@ struct ImageEditorFilterTests {
         )
         let puckerBloatEnd = try #require(
             panelSource[puckerBloatStart.upperBound...].range(
-                of: "else if viewModel.selectedFilter == .spherize"
+                of: "else if viewModel.selectedFilter == .pinch"
             )
         )
         let puckerBloatSource = panelSource[puckerBloatStart.lowerBound..<puckerBloatEnd.lowerBound]
@@ -2401,6 +2401,37 @@ struct ImageEditorFilterTests {
         #expect(puckerBloatSource.contains("imageEditor.filter.liquifyBulgeAmount"))
         #expect(puckerBloatSource.contains("image-editor-filter-quick-liquify-bulge-amount"))
         #expect(!puckerBloatSource.contains("viewModel.filterIntensity"))
+    }
+
+    @Test func pinchQuickPanelUsesAmountInsteadOfLegacyIntensity() throws {
+        let root = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let viewSource = try String(
+            contentsOf: root.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let panelStart = try #require(viewSource.range(of: "private var filtersQuickPanel: some View"))
+        let panelEnd = try #require(
+            viewSource[panelStart.upperBound...].range(of: "private func historySnapshotRow")
+        )
+        let panelSource = viewSource[panelStart.lowerBound..<panelEnd.lowerBound]
+        let pinchStart = try #require(
+            panelSource.range(of: "else if viewModel.selectedFilter == .pinch")
+        )
+        let pinchEnd = try #require(
+            panelSource[pinchStart.upperBound...].range(
+                of: "else if viewModel.selectedFilter == .spherize"
+            )
+        )
+        let pinchSource = panelSource[pinchStart.lowerBound..<pinchEnd.lowerBound]
+
+        #expect(pinchSource.contains("viewModel.filterPinchEffectiveAmountPercent"))
+        #expect(pinchSource.contains("in: -100...100"))
+        #expect(pinchSource.contains("step: 1"))
+        #expect(pinchSource.contains("imageEditor.filter.pinchAmount"))
+        #expect(pinchSource.contains("image-editor-filter-quick-pinch-amount"))
+        #expect(!pinchSource.contains("viewModel.filterIntensity"))
     }
 
     @Test func spherizeQuickPanelUsesAmountInsteadOfLegacyIntensity() throws {
