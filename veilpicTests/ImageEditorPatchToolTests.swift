@@ -12,6 +12,45 @@ import Testing
 @MainActor
 @Suite(.serialized)
 struct ImageEditorPatchToolTests {
+    @Test func shiftConstrainedDragLocksPreviewAndCommitToTheDominantAxis() {
+        let start = CGPoint(x: 20, y: 30)
+        let horizontal = ImageEditorPatchDragConstraint.resolve(
+            start: start,
+            proposedEnd: CGPoint(x: 56, y: 42),
+            existingAxis: nil,
+            isConstrained: true
+        )
+        #expect(horizontal.axis == .horizontal)
+        #expect(horizontal.endPoint == CGPoint(x: 56, y: 30))
+
+        let latchedHorizontal = ImageEditorPatchDragConstraint.resolve(
+            start: start,
+            proposedEnd: CGPoint(x: 25, y: 70),
+            existingAxis: horizontal.axis,
+            isConstrained: true
+        )
+        #expect(latchedHorizontal.axis == .horizontal)
+        #expect(latchedHorizontal.endPoint == CGPoint(x: 25, y: 30))
+
+        let vertical = ImageEditorPatchDragConstraint.resolve(
+            start: start,
+            proposedEnd: CGPoint(x: 27, y: 68),
+            existingAxis: nil,
+            isConstrained: true
+        )
+        #expect(vertical.axis == .vertical)
+        #expect(vertical.endPoint == CGPoint(x: 20, y: 68))
+
+        let released = ImageEditorPatchDragConstraint.resolve(
+            start: start,
+            proposedEnd: CGPoint(x: 27, y: 68),
+            existingAxis: vertical.axis,
+            isConstrained: false
+        )
+        #expect(released.axis == nil)
+        #expect(released.endPoint == CGPoint(x: 27, y: 68))
+    }
+
     @Test func transferGuideSwapsSourceAndTargetWithoutChangingSelectionGeometry() throws {
         let selection = ImageEditorSelection.rectangle(
             CGRect(x: 10, y: 12, width: 20, height: 14)

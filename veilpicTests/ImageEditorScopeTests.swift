@@ -5744,7 +5744,9 @@ struct ImageEditorScopeTests {
         #expect(source.contains("patchTransferGuideOverlay(in: geometry.size)"))
         #expect(source.contains("let guide = ImageEditorPatchTransferGuide.make("))
         #expect(source.contains("mode: viewModel.patchMode"))
-        #expect(source.contains("viewModel.patchSelection(from: dragStart, to: endImagePoint)"))
+        #expect(source.contains("updatePatchDrag("))
+        #expect(source.contains("ImageEditorPatchDragConstraint.resolve("))
+        #expect(source.contains("to: constrainedEnd.endPoint"))
     }
 
     @Test func healingBrushExposesNonFocusableSourceAndSpotModes() throws {

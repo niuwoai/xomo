@@ -175,6 +175,8 @@ struct ImageEditorView: View {
     @State private var dragEnd: CGPoint?
     @State private var primaryToolViewStart: CGPoint?
     @State private var patchPreviewImage: NSImage?
+    @State private var patchRawDragEnd: CGPoint?
+    @State private var patchDragConstraintAxis: ImageEditorObjectDragAxis?
     @State private var isDrawingPatchSelection = false
     @State private var isPatchGestureBlocked = false
     @State private var lastPatchPreviewUpdateTime: TimeInterval = 0
@@ -563,6 +565,8 @@ struct ImageEditorView: View {
                 isMarqueeShapeMenuPresented = false
             }
             patchPreviewImage = nil
+            patchRawDragEnd = nil
+            patchDragConstraintAxis = nil
             isDrawingPatchSelection = false
             isPatchGestureBlocked = false
             lastPatchPreviewUpdateTime = 0
@@ -4652,7 +4656,16 @@ struct ImageEditorView: View {
                 .onChange(of: isSpacebarPanning) { _ in
                     refreshCanvasCursor(in: geometry.size)
                 }
-                .onChange(of: canvasModifierFlags) { _ in
+                .onChange(of: canvasModifierFlags) { flags in
+                    if let patchRawDragEnd,
+                       canvasInteractionTool == .patchTool,
+                       !isDrawingPatchSelection {
+                        updatePatchDrag(
+                            to: patchRawDragEnd,
+                            modifierFlags: flags,
+                            forcesPreview: true
+                        )
+                    }
                     refreshCanvasCursor(in: geometry.size)
                 }
                 .onChange(of: viewModel.isSettingCloneSource) { _ in
@@ -5983,28 +5996,35 @@ struct ImageEditorView: View {
                         ) {
                         case .dragSelection:
                             dragStart = startImagePoint
-                            dragEnd = pointerImagePoint
+                            patchRawDragEnd = pointerImagePoint
+                            patchDragConstraintAxis = nil
+                            if let pointerImagePoint {
+                                updatePatchDrag(
+                                    to: pointerImagePoint,
+                                    modifierFlags: NSEvent.modifierFlags,
+                                    forcesPreview: true
+                                )
+                            }
                             isDrawingPatchSelection = false
                         case .drawSelection:
+                            patchRawDragEnd = nil
+                            patchDragConstraintAxis = nil
                             isDrawingPatchSelection = true
                             dragPoints = [boundedPoint]
                         case .blocked:
+                            patchRawDragEnd = nil
+                            patchDragConstraintAxis = nil
                             isDrawingPatchSelection = false
                             isPatchGestureBlocked = true
                         }
                     }
                     if isDrawingPatchSelection {
                         dragPoints.append(boundedPoint)
-                    } else if dragStart != nil {
-                        dragEnd = pointerImagePoint
-                        let updateTime = ProcessInfo.processInfo.systemUptime
-                        if patchPreviewImage == nil || updateTime - lastPatchPreviewUpdateTime >= 1.0 / 30.0 {
-                            patchPreviewImage = viewModel.patchPreviewImage(
-                                from: dragStart,
-                                to: pointerImagePoint
-                            )
-                            lastPatchPreviewUpdateTime = updateTime
-                        }
+                    } else if dragStart != nil, let pointerImagePoint {
+                        updatePatchDrag(
+                            to: pointerImagePoint,
+                            modifierFlags: NSEvent.modifierFlags
+                        )
                     }
                     updateCanvasCursor(at: value.location, in: size)
                 case .pen:
@@ -6381,8 +6401,18 @@ struct ImageEditorView: View {
                     if isDrawingPatchSelection {
                         dragPoints.append(boundedImagePoint(from: value.location, in: size))
                         viewModel.createPatchSelection(points: dragPoints)
-                    } else {
-                        viewModel.patchSelection(from: dragStart, to: endImagePoint)
+                    } else if let dragStart,
+                              let proposedEnd = endImagePoint ?? patchRawDragEnd ?? dragEnd {
+                        let constrainedEnd = ImageEditorPatchDragConstraint.resolve(
+                            start: dragStart,
+                            proposedEnd: proposedEnd,
+                            existingAxis: patchDragConstraintAxis,
+                            isConstrained: NSEvent.modifierFlags.contains(.shift)
+                        )
+                        viewModel.patchSelection(
+                            from: dragStart,
+                            to: constrainedEnd.endPoint
+                        )
                     }
                 case .redEye:
                     viewModel.reduceRedEye(at: endImagePoint)
@@ -6542,6 +6572,8 @@ struct ImageEditorView: View {
                 dragStart = nil
                 dragEnd = nil
                 patchPreviewImage = nil
+                patchRawDragEnd = nil
+                patchDragConstraintAxis = nil
                 isDrawingPatchSelection = false
                 isPatchGestureBlocked = false
                 lastPatchPreviewUpdateTime = 0
@@ -6574,6 +6606,35 @@ struct ImageEditorView: View {
         )
         viewModel.nudgeCanvas(by: delta)
         lastPanTranslation = translation
+    }
+
+    private func updatePatchDrag(
+        to proposedEnd: CGPoint,
+        modifierFlags: NSEvent.ModifierFlags,
+        forcesPreview: Bool = false
+    ) {
+        guard let dragStart else { return }
+        let constrainedEnd = ImageEditorPatchDragConstraint.resolve(
+            start: dragStart,
+            proposedEnd: proposedEnd,
+            existingAxis: patchDragConstraintAxis,
+            isConstrained: modifierFlags.contains(.shift)
+        )
+        patchRawDragEnd = proposedEnd
+        patchDragConstraintAxis = constrainedEnd.axis
+        dragEnd = constrainedEnd.endPoint
+        viewModel.updatePointer(constrainedEnd.endPoint)
+
+        let updateTime = ProcessInfo.processInfo.systemUptime
+        guard forcesPreview
+                || patchPreviewImage == nil
+                || updateTime - lastPatchPreviewUpdateTime >= 1.0 / 30.0
+        else { return }
+        patchPreviewImage = viewModel.patchPreviewImage(
+            from: dragStart,
+            to: constrainedEnd.endPoint
+        )
+        lastPatchPreviewUpdateTime = updateTime
     }
 
     @discardableResult

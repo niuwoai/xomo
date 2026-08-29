@@ -255,3 +255,38 @@ struct ImageEditorPatchTransferGuide: Equatable {
         }
     }
 }
+
+struct ImageEditorPatchDragConstraintResult: Equatable {
+    var endPoint: CGPoint
+    var axis: ImageEditorObjectDragAxis?
+}
+
+enum ImageEditorPatchDragConstraint {
+    static func resolve(
+        start: CGPoint,
+        proposedEnd: CGPoint,
+        existingAxis: ImageEditorObjectDragAxis?,
+        isConstrained: Bool
+    ) -> ImageEditorPatchDragConstraintResult {
+        let translation = CGSize(
+            width: proposedEnd.x - start.x,
+            height: proposedEnd.y - start.y
+        )
+        let axis = ImageEditorObjectDragConstraint.resolvedAxis(
+            for: translation,
+            existingAxis: existingAxis,
+            isConstrained: isConstrained
+        )
+        let constrainedTranslation = ImageEditorObjectDragConstraint.constrainedDelta(
+            translation,
+            to: axis
+        )
+        return ImageEditorPatchDragConstraintResult(
+            endPoint: CGPoint(
+                x: start.x + constrainedTranslation.width,
+                y: start.y + constrainedTranslation.height
+            ),
+            axis: axis
+        )
+    }
+}
