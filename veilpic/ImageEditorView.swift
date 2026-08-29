@@ -15442,7 +15442,7 @@ enum ImageEditorCanvasCursorFamily: Equatable {
     case toneBrush
     case retouchBrush
     case selectionMarquee
-    case lasso
+    case freeformSelectionPath
     case similarColorSelection
     case quickSelection
     case cloneStamp
@@ -16386,7 +16386,7 @@ enum ImageEditorCanvasCursor {
         case .marquee:
             .selectionMarquee
         case .lasso:
-            .lasso
+            .freeformSelectionPath
         case .magicWand:
             .similarColorSelection
         case .quickSelection:
@@ -16482,8 +16482,8 @@ enum ImageEditorCanvasCursor {
             return selectionMode == .replace
                 ? .crosshair
                 : familiarSelectionCursor(mode: selectionMode, shape: marqueeShape)
-        case .lasso:
-            return lassoCursor(mode: selectionMode)
+        case .freeformSelectionPath:
+            return freeformSelectionPathCursor(mode: selectionMode)
         case .similarColorSelection:
             return similarColorSelectionCursor(mode: selectionMode)
         case .quickSelection:
@@ -16529,7 +16529,7 @@ enum ImageEditorCanvasCursor {
         case .patch:
             switch patchPhase {
             case .drawingSelection:
-                return lassoCursor(mode: .replace)
+                return freeformSelectionPathCursor(mode: .replace)
             case .readyToDrag:
                 return .arrow
             case .draggingSelection:
@@ -16967,31 +16967,90 @@ enum ImageEditorCanvasCursor {
         )
     }
 
-    private static func lassoCursor(mode: ImageEditorSelectionCursorMode) -> NSCursor {
-        let cacheKey = "lasso:\(mode.rawValue)"
+    private static func freeformSelectionPathCursor(
+        mode: ImageEditorSelectionCursorMode
+    ) -> NSCursor {
+        let cacheKey = "freeform-selection-path:\(mode.rawValue)"
         if let cachedCursor = cursorCache[cacheKey] {
             return cachedCursor
         }
-        let side: CGFloat = 34
+        let side: CGFloat = 36
+        let origin = NSPoint(x: 8, y: 10)
         let image = NSImage(size: NSSize(width: side, height: side))
         image.lockFocus()
-        let loop = NSBezierPath(ovalIn: NSRect(x: 3, y: 8, width: 17, height: 14))
-        loop.move(to: NSPoint(x: 16, y: 10))
-        loop.curve(
-            to: NSPoint(x: 28, y: 3),
-            controlPoint1: NSPoint(x: 21, y: 10),
-            controlPoint2: NSPoint(x: 25, y: 4)
+
+        // Show the path the pointer will draw, plus the closure that happens
+        // on release. A rope loop describes the tool name; this describes the
+        // actual freehand selection transaction.
+        let freeformPath = NSBezierPath()
+        freeformPath.move(to: origin)
+        freeformPath.curve(
+            to: NSPoint(x: 14, y: 4),
+            controlPoint1: NSPoint(x: 8, y: 6),
+            controlPoint2: NSPoint(x: 10, y: 4)
         )
+        freeformPath.curve(
+            to: NSPoint(x: 23, y: 7),
+            controlPoint1: NSPoint(x: 18, y: 3),
+            controlPoint2: NSPoint(x: 22, y: 4)
+        )
+        freeformPath.curve(
+            to: NSPoint(x: 21, y: 16),
+            controlPoint1: NSPoint(x: 26, y: 10),
+            controlPoint2: NSPoint(x: 24, y: 14)
+        )
+        freeformPath.curve(
+            to: NSPoint(x: 12, y: 21),
+            controlPoint1: NSPoint(x: 18, y: 20),
+            controlPoint2: NSPoint(x: 15, y: 21)
+        )
+        freeformPath.curve(
+            to: NSPoint(x: 5, y: 15),
+            controlPoint1: NSPoint(x: 8, y: 21),
+            controlPoint2: NSPoint(x: 5, y: 18)
+        )
+        freeformPath.setLineDash([2.5, 2], count: 2, phase: 0)
         NSColor.black.withAlphaComponent(0.95).setStroke()
-        loop.lineWidth = 3.5
-        loop.stroke()
+        freeformPath.lineWidth = 3
+        freeformPath.stroke()
         NSColor.white.setStroke()
-        loop.lineWidth = 1.3
-        loop.stroke()
+        freeformPath.lineWidth = 1
+        freeformPath.stroke()
+
+        let closureGuide = NSBezierPath()
+        closureGuide.move(to: NSPoint(x: 5, y: 15))
+        closureGuide.line(to: origin)
+        closureGuide.move(to: origin)
+        closureGuide.line(to: NSPoint(x: 5.5, y: 9))
+        closureGuide.move(to: origin)
+        closureGuide.line(to: NSPoint(x: 7, y: 12.5))
+        NSColor.black.withAlphaComponent(0.95).setStroke()
+        closureGuide.lineWidth = 3
+        closureGuide.stroke()
+        NSColor.systemBlue.setStroke()
+        closureGuide.lineWidth = 1
+        closureGuide.stroke()
+
+        let startRing = NSBezierPath(ovalIn: NSRect(
+            x: origin.x - 3,
+            y: origin.y - 3,
+            width: 6,
+            height: 6
+        ))
+        NSColor.black.withAlphaComponent(0.95).setFill()
+        startRing.fill()
+        let startPoint = NSBezierPath(ovalIn: NSRect(
+            x: origin.x - 1.5,
+            y: origin.y - 1.5,
+            width: 3,
+            height: 3
+        ))
+        NSColor.systemBlue.setFill()
+        startPoint.fill()
         drawSelectionModifierBadge(mode, side: side)
         image.unlockFocus()
         return cache(
-            NSCursor(image: image, hotSpot: NSPoint(x: 9, y: side - 15)),
+            NSCursor(image: image, hotSpot: NSPoint(x: origin.x, y: side - origin.y)),
             for: cacheKey
         )
     }

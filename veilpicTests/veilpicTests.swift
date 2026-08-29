@@ -6767,7 +6767,7 @@ struct veilpicTests {
             (.toneBrush, [.dodge, .burn, .sponge]),
             (.retouchBrush, [.blur, .sharpen, .smudge]),
             (.selectionMarquee, [.marquee]),
-            (.lasso, [.lasso]),
+            (.freeformSelectionPath, [.lasso]),
             (.similarColorSelection, [.magicWand]),
             (.quickSelection, [.quickSelection]),
             (.cloneStamp, [.cloneStamp]),
