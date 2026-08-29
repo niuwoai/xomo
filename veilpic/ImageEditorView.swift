@@ -16641,7 +16641,10 @@ enum ImageEditorCanvasCursor {
             case .drawingSelection:
                 return freeformSelectionPathCursor(mode: .replace)
             case .readyToDrag:
-                return .arrow
+                // Hovering the selected patch is already an actionable move
+                // target. Preview that operation before mouse-down instead of
+                // falling back to an inert system arrow.
+                return objectMoveCursor()
             case .draggingSelection:
                 return objectMoveCursor()
             case .blocked:

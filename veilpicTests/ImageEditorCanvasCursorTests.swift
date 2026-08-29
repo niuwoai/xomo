@@ -2812,7 +2812,7 @@ struct ImageEditorCanvasCursorTests {
         ) == .drawSelection)
     }
 
-    @Test func patchCursorUsesLassoArrowMoveAndForbiddenActionSemantics() {
+    @Test func patchCursorPreviewsMoveBeforeDraggingAndKeepsForbiddenSemantics() {
         let drawing = ImageEditorCanvasCursor.cursor(for: .patchTool, brushDiameter: 18)
         let lasso = ImageEditorCanvasCursor.cursor(for: .lasso, brushDiameter: 18)
         let ready = ImageEditorCanvasCursor.cursor(
@@ -2832,8 +2832,10 @@ struct ImageEditorCanvasCursorTests {
         )
 
         #expect(drawing.image.tiffRepresentation == lasso.image.tiffRepresentation)
-        #expect(ready === NSCursor.arrow)
+        #expect(ready !== NSCursor.arrow)
+        #expect(ready.image.tiffRepresentation == ImageEditorCanvasCursor.objectMoveCursor().image.tiffRepresentation)
         #expect(dragging.image.tiffRepresentation == ImageEditorCanvasCursor.objectMoveCursor().image.tiffRepresentation)
+        #expect(ready.image.tiffRepresentation == dragging.image.tiffRepresentation)
         #expect(blocked === NSCursor.operationNotAllowed)
     }
 
