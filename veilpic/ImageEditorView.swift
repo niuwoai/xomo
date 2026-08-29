@@ -7659,6 +7659,25 @@ struct ImageEditorView: View {
                         .focusable(false)
                         .accessibilityLabel(L10n.text("imageEditor.filter.pixelateCellSize"))
                         .accessibilityIdentifier("image-editor-filter-quick-pixelate-cell-size")
+                } else if viewModel.selectedFilter == .addNoise {
+                    Text(L10n.format(
+                        "imageEditor.filter.addNoiseAmountValue",
+                        String(format: "%.1f", viewModel.filterAddNoiseEffectiveAmountPercent)
+                    ))
+                        .font(.system(size: 11, weight: .semibold).monospacedDigit())
+                        .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                        .frame(width: 62, alignment: .leading)
+                    Slider(
+                        value: Binding(
+                            get: { viewModel.filterAddNoiseEffectiveAmountPercent },
+                            set: { viewModel.filterAddNoiseEffectiveAmountPercent = $0 }
+                        ),
+                        in: 0.1...400,
+                        step: 0.1
+                    )
+                        .focusable(false)
+                        .accessibilityLabel(L10n.text("imageEditor.filter.addNoiseAmount"))
+                        .accessibilityIdentifier("image-editor-filter-quick-add-noise-amount")
                 } else if viewModel.selectedFilter == .minimum || viewModel.selectedFilter == .maximum {
                     Text("\(Int(viewModel.filterMorphologyRadius.rounded())) px")
                         .font(.system(size: 11, weight: .semibold).monospacedDigit())
