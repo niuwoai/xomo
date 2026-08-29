@@ -2482,7 +2482,7 @@ struct ImageEditorFilterTests {
             panelSource.range(of: "else if viewModel.selectedFilter == .lensCorrection")
         )
         let lensCorrectionEnd = try #require(
-            panelSource[lensCorrectionStart.upperBound...].range(of: "} else {")
+            panelSource[lensCorrectionStart.upperBound...].range(of: "else if viewModel.selectedFilter == .ripple")
         )
         let lensCorrectionSource = panelSource[lensCorrectionStart.lowerBound..<lensCorrectionEnd.lowerBound]
 
@@ -2492,6 +2492,35 @@ struct ImageEditorFilterTests {
         #expect(lensCorrectionSource.contains("imageEditor.filter.lensDistortion"))
         #expect(lensCorrectionSource.contains("image-editor-filter-quick-lens-distortion-amount"))
         #expect(!lensCorrectionSource.contains("viewModel.filterIntensity"))
+    }
+
+    @Test func rippleQuickPanelUsesAmountInsteadOfLegacyIntensity() throws {
+        let root = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let viewSource = try String(
+            contentsOf: root.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let panelStart = try #require(viewSource.range(of: "private var filtersQuickPanel: some View"))
+        let panelEnd = try #require(
+            viewSource[panelStart.upperBound...].range(of: "private func historySnapshotRow")
+        )
+        let panelSource = viewSource[panelStart.lowerBound..<panelEnd.lowerBound]
+        let rippleStart = try #require(
+            panelSource.range(of: "else if viewModel.selectedFilter == .ripple")
+        )
+        let rippleEnd = try #require(
+            panelSource[rippleStart.upperBound...].range(of: "} else {")
+        )
+        let rippleSource = panelSource[rippleStart.lowerBound..<rippleEnd.lowerBound]
+
+        #expect(rippleSource.contains("viewModel.filterRippleEffectiveAmountPercent"))
+        #expect(rippleSource.contains("in: -100...100"))
+        #expect(rippleSource.contains("step: 1"))
+        #expect(rippleSource.contains("imageEditor.filter.rippleAmount"))
+        #expect(rippleSource.contains("image-editor-filter-quick-ripple-amount"))
+        #expect(!rippleSource.contains("viewModel.filterIntensity"))
     }
 
     @Test func imageEditorMotionBlurFilterLayerAndSmartFilterAreNonDestructive() async throws {
