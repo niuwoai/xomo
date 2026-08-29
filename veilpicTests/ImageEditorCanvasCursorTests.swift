@@ -2997,10 +2997,18 @@ struct ImageEditorCanvasCursorTests {
         #expect(componentLibrary === NSCursor.arrow)
     }
 
-    @Test func pathSelectionUsesTheFamiliarSystemArrowAndPhotoshopShortcut() {
-        #expect(ImageEditorCanvasCursor.family(for: .pathSelection) == .systemArrow)
-        #expect(ImageEditorCanvasCursor.cursor(for: .pathSelection, brushDiameter: 18) === NSCursor.arrow)
+    @Test func pathSelectionUsesABlackPathArrowWithoutLeakingIntoComponentMode() {
+        #expect(ImageEditorCanvasCursor.family(for: .pathSelection) == .pathSelection)
+        let pathSelection = ImageEditorCanvasCursor.cursor(for: .pathSelection, brushDiameter: 18)
+        #expect(pathSelection !== NSCursor.arrow)
+        #expect(pathSelection.image.tiffRepresentation != NSCursor.arrow.image.tiffRepresentation)
         #expect(ImageEditorTool.classicShortcutGroup(for: "a")?.primaryTool == .pathSelection)
+
+        #expect(ImageEditorCanvasCursor.cursor(
+            for: .components,
+            selectedTool: .pathSelection,
+            brushDiameter: 18
+        ) === NSCursor.arrow)
 
         #expect(ImageEditorCanvasCursor.cursor(
             for: .tools,

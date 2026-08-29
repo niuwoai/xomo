@@ -15402,6 +15402,7 @@ private struct EditorMarqueeShapeActionRow: View {
 
 enum ImageEditorCanvasCursorFamily: Equatable {
     case systemArrow
+    case pathSelection
     case directSelection
     case moveTool
     case grab
@@ -16148,9 +16149,69 @@ enum ImageEditorCanvasCursor {
         )
     }
 
-    /// Photoshop's Direct Selection tool uses a white node-editing arrow,
-    /// while Path Selection keeps the native black pointer. Keeping that
-    /// distinction visible makes the two tools understandable at a glance.
+    /// Photoshop's Path Selection tool uses a black arrow. Add a compact
+    /// Bézier-node badge so it remains distinct from both the system pointer
+    /// used by component-library mode and the white Direct Selection arrow.
+    private static func pathSelectionCursor() -> NSCursor {
+        let cacheKey = "path-selection"
+        if let cachedCursor = cursorCache[cacheKey] {
+            return cachedCursor
+        }
+
+        let side: CGFloat = 36
+        let image = NSImage(size: NSSize(width: side, height: side))
+        image.lockFocus()
+
+        let pointer = NSBezierPath()
+        pointer.move(to: NSPoint(x: 8, y: 30))
+        pointer.line(to: NSPoint(x: 8, y: 5))
+        pointer.line(to: NSPoint(x: 28, y: 19))
+        pointer.line(to: NSPoint(x: 19, y: 20))
+        pointer.line(to: NSPoint(x: 24, y: 29))
+        pointer.line(to: NSPoint(x: 18, y: 32))
+        pointer.line(to: NSPoint(x: 13, y: 22))
+        pointer.close()
+        NSColor.white.withAlphaComponent(0.98).setStroke()
+        pointer.lineWidth = 3
+        pointer.stroke()
+        NSColor.black.withAlphaComponent(0.96).setFill()
+        pointer.fill()
+        NSColor.black.setStroke()
+        pointer.lineWidth = 1
+        pointer.stroke()
+
+        let path = NSBezierPath()
+        path.move(to: NSPoint(x: 22, y: 7))
+        path.curve(
+            to: NSPoint(x: 33, y: 10),
+            controlPoint1: NSPoint(x: 25, y: 14),
+            controlPoint2: NSPoint(x: 30, y: 3)
+        )
+        NSColor.black.withAlphaComponent(0.95).setStroke()
+        path.lineWidth = 3
+        path.stroke()
+        NSColor.white.setStroke()
+        path.lineWidth = 1
+        path.stroke()
+        for point in [NSPoint(x: 22, y: 7), NSPoint(x: 33, y: 10)] {
+            let anchor = NSBezierPath(rect: NSRect(x: point.x - 2, y: point.y - 2, width: 4, height: 4))
+            NSColor.black.setFill()
+            anchor.fill()
+            NSColor.white.setStroke()
+            anchor.lineWidth = 1
+            anchor.stroke()
+        }
+
+        image.unlockFocus()
+        return cache(
+            NSCursor(image: image, hotSpot: NSPoint(x: 8, y: side - 30)),
+            for: cacheKey
+        )
+    }
+
+    /// Photoshop's Direct Selection tool uses a white node-editing arrow.
+    /// Keeping the black/white distinction visible makes the two path tools
+    /// understandable at a glance.
     private static func directSelectionCursor(isBreakingSmoothHandle: Bool = false) -> NSCursor {
         let cacheKey = "direct-selection:\(isBreakingSmoothHandle)"
         if let cachedCursor = cursorCache[cacheKey] {
@@ -16275,7 +16336,7 @@ enum ImageEditorCanvasCursor {
         case .pen:
             .vectorPen
         case .pathSelection:
-            .systemArrow
+            .pathSelection
         case .directSelection:
             .directSelection
         case .zoom:
@@ -16318,6 +16379,8 @@ enum ImageEditorCanvasCursor {
         switch family(for: tool) {
         case .systemArrow:
             return .arrow
+        case .pathSelection:
+            return pathSelectionCursor()
         case .directSelection:
             return directSelectionCursor(isBreakingSmoothHandle: pathHandleIsBreaking)
         case .moveTool:
