@@ -2389,7 +2389,9 @@ struct ImageEditorFilterTests {
             panelSource.range(of: "else if viewModel.selectedFilter == .liquifyPuckerBloat")
         )
         let puckerBloatEnd = try #require(
-            panelSource[puckerBloatStart.upperBound...].range(of: "} else {")
+            panelSource[puckerBloatStart.upperBound...].range(
+                of: "else if viewModel.selectedFilter == .spherize"
+            )
         )
         let puckerBloatSource = panelSource[puckerBloatStart.lowerBound..<puckerBloatEnd.lowerBound]
 
@@ -2399,6 +2401,35 @@ struct ImageEditorFilterTests {
         #expect(puckerBloatSource.contains("imageEditor.filter.liquifyBulgeAmount"))
         #expect(puckerBloatSource.contains("image-editor-filter-quick-liquify-bulge-amount"))
         #expect(!puckerBloatSource.contains("viewModel.filterIntensity"))
+    }
+
+    @Test func spherizeQuickPanelUsesAmountInsteadOfLegacyIntensity() throws {
+        let root = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let viewSource = try String(
+            contentsOf: root.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let panelStart = try #require(viewSource.range(of: "private var filtersQuickPanel: some View"))
+        let panelEnd = try #require(
+            viewSource[panelStart.upperBound...].range(of: "private func historySnapshotRow")
+        )
+        let panelSource = viewSource[panelStart.lowerBound..<panelEnd.lowerBound]
+        let spherizeStart = try #require(
+            panelSource.range(of: "else if viewModel.selectedFilter == .spherize")
+        )
+        let spherizeEnd = try #require(
+            panelSource[spherizeStart.upperBound...].range(of: "} else {")
+        )
+        let spherizeSource = panelSource[spherizeStart.lowerBound..<spherizeEnd.lowerBound]
+
+        #expect(spherizeSource.contains("viewModel.filterSpherizeEffectiveAmountPercent"))
+        #expect(spherizeSource.contains("in: -100...100"))
+        #expect(spherizeSource.contains("step: 1"))
+        #expect(spherizeSource.contains("imageEditor.filter.spherizeAmount"))
+        #expect(spherizeSource.contains("image-editor-filter-quick-spherize-amount"))
+        #expect(!spherizeSource.contains("viewModel.filterIntensity"))
     }
 
     @Test func imageEditorMotionBlurFilterLayerAndSmartFilterAreNonDestructive() async throws {
