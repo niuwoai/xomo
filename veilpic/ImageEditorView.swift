@@ -15448,6 +15448,7 @@ enum ImageEditorCanvasCursorFamily: Equatable {
     case sampledPixelTransfer
     case sampledRepairBlend
     case localExposureLighten
+    case localExposureDarken
     case crop
     case patch
     case gradient
@@ -16412,7 +16413,9 @@ enum ImageEditorCanvasCursor {
             .eraserTool
         case .dodge:
             .localExposureLighten
-        case .burn, .sponge:
+        case .burn:
+            .localExposureDarken
+        case .sponge:
             .toneBrush
         case .blur, .sharpen, .smudge:
             .retouchBrush
@@ -16523,7 +16526,11 @@ enum ImageEditorCanvasCursor {
         case .localExposureLighten:
             return modifierFlags.contains(.capsLock)
                 ? .crosshair
-                : exposureLightenCursor(diameter: brushDiameter)
+                : localExposureCursor(diameter: brushDiameter, lightening: true)
+        case .localExposureDarken:
+            return modifierFlags.contains(.capsLock)
+                ? .crosshair
+                : localExposureCursor(diameter: brushDiameter, lightening: false)
         case .toneBrush, .retouchBrush:
             return modifierFlags.contains(.capsLock)
                 ? .crosshair
@@ -16762,9 +16769,13 @@ enum ImageEditorCanvasCursor {
         )
     }
 
-    private static func exposureLightenCursor(diameter requestedDiameter: CGFloat) -> NSCursor {
+    private static func localExposureCursor(
+        diameter requestedDiameter: CGFloat,
+        lightening: Bool
+    ) -> NSCursor {
         let diameter = max(3, min(256, requestedDiameter.rounded()))
-        let cacheKey = "local-exposure-lighten:\(Int(diameter))"
+        let operation = lightening ? "lighten" : "darken"
+        let cacheKey = "local-exposure-\(operation):\(Int(diameter))"
         if let cachedCursor = cursorCache[cacheKey] {
             return cachedCursor
         }
@@ -16775,8 +16786,8 @@ enum ImageEditorCanvasCursor {
         image.lockFocus()
 
         // Show the actual affected footprint and a compact tonal ramp. The
-        // arrow moves from a dark sample toward a lighter sample, previewing
-        // the local exposure lift instead of reproducing a sun-shaped icon.
+        // arrow follows the exposure change instead of reproducing a sun or
+        // flame-shaped toolbox icon.
         let footprint = NSBezierPath(ovalIn: NSRect(
             x: center.x - diameter / 2,
             y: center.y - diameter / 2,
@@ -16792,11 +16803,9 @@ enum ImageEditorCanvasCursor {
 
         let sampleSide = max(2, min(4, diameter * 0.14))
         let sampleSpacing = max(3, min(7, diameter * 0.24))
-        let samples: [(offset: CGFloat, white: CGFloat)] = [
-            (-sampleSpacing, 0.2),
-            (0, 0.58),
-            (sampleSpacing, 0.94)
-        ]
+        let samples: [(offset: CGFloat, white: CGFloat)] = lightening
+            ? [(-sampleSpacing, 0.2), (0, 0.58), (sampleSpacing, 0.94)]
+            : [(-sampleSpacing, 0.94), (0, 0.58), (sampleSpacing, 0.2)]
         for sample in samples {
             let rect = NSRect(
                 x: center.x + sample.offset - sampleSide / 2,
@@ -16812,26 +16821,33 @@ enum ImageEditorCanvasCursor {
             outline.stroke()
         }
 
-        let lift = NSBezierPath()
-        lift.move(to: NSPoint(
-            x: center.x - sampleSpacing,
-            y: center.y - sampleSpacing * 0.35
+        let direction: CGFloat = lightening ? 1 : -1
+        let exposureChange = NSBezierPath()
+        exposureChange.move(to: NSPoint(
+            x: center.x - sampleSpacing * direction,
+            y: center.y - sampleSpacing * 0.35 * direction
         ))
         let endpoint = NSPoint(
-            x: center.x + sampleSpacing,
-            y: center.y + sampleSpacing * 0.85
+            x: center.x + sampleSpacing * direction,
+            y: center.y + sampleSpacing * 0.85 * direction
         )
-        lift.line(to: endpoint)
-        lift.move(to: endpoint)
-        lift.line(to: NSPoint(x: endpoint.x - 4.5, y: endpoint.y - 0.5))
-        lift.move(to: endpoint)
-        lift.line(to: NSPoint(x: endpoint.x - 0.5, y: endpoint.y - 4.5))
+        exposureChange.line(to: endpoint)
+        exposureChange.move(to: endpoint)
+        exposureChange.line(to: NSPoint(
+            x: endpoint.x - 4.5 * direction,
+            y: endpoint.y - 0.5 * direction
+        ))
+        exposureChange.move(to: endpoint)
+        exposureChange.line(to: NSPoint(
+            x: endpoint.x - 0.5 * direction,
+            y: endpoint.y - 4.5 * direction
+        ))
         NSColor.black.withAlphaComponent(0.95).setStroke()
-        lift.lineWidth = 3.5
-        lift.stroke()
-        NSColor.systemYellow.setStroke()
-        lift.lineWidth = 1.2
-        lift.stroke()
+        exposureChange.lineWidth = 3.5
+        exposureChange.stroke()
+        (lightening ? NSColor.systemYellow : NSColor.systemIndigo).setStroke()
+        exposureChange.lineWidth = 1.2
+        exposureChange.stroke()
 
         image.unlockFocus()
         return cache(
