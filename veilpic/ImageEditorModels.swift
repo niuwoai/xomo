@@ -2854,7 +2854,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
 
     func normalized() -> ImageEditorFilterSettings {
         ImageEditorFilterSettings(
-            gaussianBlurRadius: gaussianBlurRadius.map { max(0, min(256, $0)) },
+            gaussianBlurRadius: gaussianBlurRadius.map { max(0, min(1_000, $0)) },
             sharpenAmountPercent: sharpenAmountPercent.map { max(0, min(200, $0)) },
             highPassRadius: highPassRadius.map { max(1, min(1_000, $0)) },
             highPassGainPercent: highPassGainPercent.map { max(0, min(400, $0)) },

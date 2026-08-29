@@ -5562,7 +5562,7 @@ struct XomoAutomationTests {
                 "action": .string("addSmartFilter"),
                 "settings": .object([
                     "intensity": .number(0.2),
-                    "gaussianBlurRadius": .number(384)
+                    "gaussianBlurRadius": .number(2_000)
                 ])
             ]
         ))
@@ -5571,7 +5571,7 @@ struct XomoAutomationTests {
         let filter = try #require(viewModel.document.selectedLayer?.smartFilters.last)
         #expect(filter.kind == .gaussianBlur)
         #expect(filter.normalizedIntensity == 0.2)
-        #expect(filter.normalizedSettings.gaussianBlurRadius == 256)
+        #expect(filter.normalizedSettings.gaussianBlurRadius == 1_000)
 
         let tools = registry.execute(request(operation: "tools"))
         let configureTool = try #require(

@@ -11911,7 +11911,7 @@ struct ImageEditorView: View {
                                 get: { viewModel.filterGaussianBlurEffectiveRadius },
                                 set: { viewModel.filterGaussianBlurEffectiveRadius = $0 }
                             ),
-                            in: 0...256,
+                            in: 0.1...1_000,
                             step: 0.1
                         )
                         Text(L10n.format(

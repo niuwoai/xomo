@@ -25,6 +25,9 @@ extension NSImage {
     ) -> NSImage? {
         let clamped = max(0, min(1, intensity))
         let normalizedSettings = settings.normalized()
+        if kind == .gaussianBlur, normalizedSettings.gaussianBlurRadius == 0 {
+            return self
+        }
         if kind == .sharpen, normalizedSettings.sharpenAmountPercent == 0 {
             return self
         }
@@ -63,6 +66,9 @@ extension NSImage {
             return self
         }
         let hasExplicitFilterAmount = (
+            kind == .gaussianBlur
+                && normalizedSettings.gaussianBlurRadius.map { $0 > 0 } == true
+        ) || (
             kind == .sharpen
                 && normalizedSettings.sharpenAmountPercent.map { $0 > 0 } == true
         ) || (
@@ -175,7 +181,7 @@ extension NSImage {
             let filter = CIFilter.gaussianBlur()
             filter.inputImage = ciImage.clampedToExtent()
             let radius = settings.normalized().gaussianBlurRadius ?? clamped * 18
-            filter.radius = Float(max(0, min(256, radius)))
+            filter.radius = Float(max(0, min(1_000, radius)))
             output = filter.outputImage?.cropped(to: ciImage.extent)
         case .sharpen:
             let filter = CIFilter.sharpenLuminance()
@@ -250,6 +256,9 @@ extension NSImage {
         blendMode: ImageEditorBlendMode = .normal
     ) -> NSImage? {
         let normalizedSettings = settings.normalized()
+        if kind == .gaussianBlur, normalizedSettings.gaussianBlurRadius == 0 {
+            return self
+        }
         if kind == .sharpen, normalizedSettings.sharpenAmountPercent == 0 {
             return self
         }
@@ -288,6 +297,9 @@ extension NSImage {
             return self
         }
         let hasExplicitFilterAmount = (
+            kind == .gaussianBlur
+                && normalizedSettings.gaussianBlurRadius.map { $0 > 0 } == true
+        ) || (
             kind == .sharpen
                 && normalizedSettings.sharpenAmountPercent.map { $0 > 0 } == true
         ) || (

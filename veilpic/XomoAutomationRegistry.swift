@@ -8004,7 +8004,7 @@ private extension XomoAutomationRegistry {
     ])
     static let filterSettingsSchema = XomoAutomationSchema.object(properties: [
         "intensity": XomoAutomationSchema.number(description: "Filter intensity"),
-        "gaussianBlurRadius": XomoAutomationSchema.number(description: "Gaussian Blur radius in pixels"),
+        "gaussianBlurRadius": XomoAutomationSchema.number(description: "Gaussian Blur radius from 0 to 1000 pixels; the UI uses 0.1 to 1000"),
         "sharpenAmountPercent": XomoAutomationSchema.number(description: "Sharpen amount from 0 to 200 percent"),
         "highPassRadius": XomoAutomationSchema.number(description: "High Pass radius from 1 to 1000 pixels"),
         "highPassGainPercent": XomoAutomationSchema.number(description: "High Pass detail gain from 0 to 400 percent; new UI filters use 100 percent"),

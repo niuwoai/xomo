@@ -528,10 +528,10 @@ final class ImageEditorViewModel: ObservableObject {
     var filterGaussianBlurEffectiveRadius: Double {
         get {
             filterGaussianBlurRadius
-                ?? max(0, min(256, filterIntensity * 18))
+                ?? max(0, min(1_000, filterIntensity * 18))
         }
         set {
-            filterGaussianBlurRadius = max(0, min(256, newValue))
+            filterGaussianBlurRadius = max(0.1, min(1_000, newValue))
         }
     }
 
