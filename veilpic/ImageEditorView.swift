@@ -7752,6 +7752,18 @@ struct ImageEditorView: View {
                         .focusable(false)
                         .accessibilityLabel(L10n.text("imageEditor.filter.unsharpAmount"))
                         .accessibilityIdentifier("image-editor-filter-quick-unsharp-amount")
+                } else if viewModel.selectedFilter == .emboss {
+                    Text(L10n.format(
+                        "imageEditor.filter.embossHeightValue",
+                        Int(viewModel.filterEmbossHeight.rounded())
+                    ))
+                        .font(.system(size: 11, weight: .semibold).monospacedDigit())
+                        .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                        .frame(width: 52, alignment: .leading)
+                    Slider(value: $viewModel.filterEmbossHeight, in: 1...10, step: 1)
+                        .focusable(false)
+                        .accessibilityLabel(L10n.text("imageEditor.filter.embossHeight"))
+                        .accessibilityIdentifier("image-editor-filter-quick-emboss-height")
                 } else if viewModel.selectedFilter == .minimum || viewModel.selectedFilter == .maximum {
                     Text("\(Int(viewModel.filterMorphologyRadius.rounded())) px")
                         .font(.system(size: 11, weight: .semibold).monospacedDigit())

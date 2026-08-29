@@ -2297,7 +2297,7 @@ struct ImageEditorFilterTests {
         )
         let unsharpEnd = try #require(
             panelSource[unsharpStart.upperBound...].range(
-                of: "else if viewModel.selectedFilter == .minimum"
+                of: "else if viewModel.selectedFilter == .emboss"
             )
         )
         let unsharpSource = panelSource[unsharpStart.lowerBound..<unsharpEnd.lowerBound]
@@ -2308,6 +2308,37 @@ struct ImageEditorFilterTests {
         #expect(unsharpSource.contains("imageEditor.filter.unsharpAmount"))
         #expect(unsharpSource.contains("image-editor-filter-quick-unsharp-amount"))
         #expect(!unsharpSource.contains("viewModel.filterIntensity"))
+    }
+
+    @Test func embossQuickPanelUsesHeightInsteadOfLegacyIntensity() throws {
+        let root = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let viewSource = try String(
+            contentsOf: root.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let panelStart = try #require(viewSource.range(of: "private var filtersQuickPanel: some View"))
+        let panelEnd = try #require(
+            viewSource[panelStart.upperBound...].range(of: "private func historySnapshotRow")
+        )
+        let panelSource = viewSource[panelStart.lowerBound..<panelEnd.lowerBound]
+        let embossStart = try #require(
+            panelSource.range(of: "else if viewModel.selectedFilter == .emboss")
+        )
+        let embossEnd = try #require(
+            panelSource[embossStart.upperBound...].range(
+                of: "else if viewModel.selectedFilter == .minimum"
+            )
+        )
+        let embossSource = panelSource[embossStart.lowerBound..<embossEnd.lowerBound]
+
+        #expect(embossSource.contains("viewModel.filterEmbossHeight"))
+        #expect(embossSource.contains("in: 1...10"))
+        #expect(embossSource.contains("step: 1"))
+        #expect(embossSource.contains("imageEditor.filter.embossHeight"))
+        #expect(embossSource.contains("image-editor-filter-quick-emboss-height"))
+        #expect(!embossSource.contains("viewModel.filterIntensity"))
     }
 
     @Test func imageEditorMotionBlurFilterLayerAndSmartFilterAreNonDestructive() async throws {

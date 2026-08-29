@@ -1105,7 +1105,12 @@ struct ImageEditorScopeTests {
         #expect(filterSource.contains("image-editor-filter-layer-new"))
         #expect(filterSource.contains("image-editor-filter-smart-add"))
         #expect(source.contains("image-editor-filter-add-noise-monochromatic"))
-        #expect(filterSource.components(separatedBy: ".focusable(false)").count - 1 == 6)
+        let sliderSources = filterSource.components(separatedBy: "Slider(").dropFirst()
+        #expect(!sliderSources.isEmpty)
+        for sliderSource in sliderSources {
+            let controlSource = sliderSource.components(separatedBy: ".accessibilityIdentifier(").first ?? sliderSource
+            #expect(controlSource.contains(".focusable(false)"))
+        }
         #expect(controlSource.contains("final class ImageEditorFilterPopUpButton: NSPopUpButton"))
         #expect(controlSource.contains("final class ImageEditorFilterPickerHost: NSView"))
         #expect(controlSource.components(separatedBy: "override var acceptsFirstResponder: Bool { false }").count - 1 >= 3)
