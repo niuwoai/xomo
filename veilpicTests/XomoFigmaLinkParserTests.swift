@@ -66,6 +66,31 @@ struct XomoFigmaLinkParserTests {
         )
     }
 
+    @Test func sharedTextExtractsExactlyOneTrustedFigmaLink() throws {
+        let preview = try #require(XomoFigmaSharedTextInput.preview(in: """
+        请查看登录页设计：https://www.figma.com/design/abc123DEF456/Login?node-id=10-20&utm_source=chat
+        """))
+
+        #expect(preview.fileKey == "abc123DEF456")
+        #expect(preview.nodeID == "10:20")
+        #expect(
+            preview.canonicalURL.absoluteString ==
+                "https://www.figma.com/design/abc123DEF456/Login?node-id=10-20"
+        )
+    }
+
+    @Test func sharedTextRejectsAmbiguousAndUntrustedLinks() {
+        let figma = "https://www.figma.com/design/abc123DEF456/Login"
+
+        #expect(XomoFigmaSharedTextInput.preview(in: "\(figma) https://example.com/spec") == nil)
+        #expect(XomoFigmaSharedTextInput.preview(in: "\(figma) \(figma)") == nil)
+        #expect(
+            XomoFigmaSharedTextInput.preview(
+                in: "请查看 https://www.figma.com.evil.example/design/abc123DEF456/Login"
+            ) == nil
+        )
+    }
+
     @Test func previewOnlyResourcesDoNotExposeAuthorizedFileOrNodeImportControls() throws {
         let repositoryRoot = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()

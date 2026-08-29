@@ -61,6 +61,34 @@ struct XomoFigmaLinkImportTests {
         #expect(!draft.canUseCanonicalURL)
     }
 
+    @Test func draftAndContextualPasteAcceptOneFigmaLinkInsideSharedText() throws {
+        let sharedText = """
+        Checkout review
+        https://www.figma.com/design/abc123DEF456/Checkout?node-id=1-2&utm_source=chat
+        """
+        let draft = XomoFigmaLinkImportDraft(input: sharedText)
+
+        #expect(draft.input == sharedText)
+        #expect(draft.preview?.nodeID == "1:2")
+        #expect(draft.canUseCanonicalURL)
+        #expect(
+            XomoFigmaClipboardPastePolicy.resolve(
+                hasLayerPayload: false,
+                clipboardText: sharedText
+            ) == .figmaLink(
+                "https://www.figma.com/design/abc123DEF456/Checkout?node-id=1-2"
+            )
+        )
+        #expect(
+            XomoCanvasStringDropPolicy.resolve(
+                [sharedText],
+                knownComponentPayloads: []
+            ) == .figmaLink(
+                "https://www.figma.com/design/abc123DEF456/Checkout?node-id=1-2"
+            )
+        )
+    }
+
     @Test func draftCanRetargetAFileLinkWithoutLosingVersionIdentity() throws {
         var draft = XomoFigmaLinkImportDraft(
             input: "https://www.figma.com/design/abc123DEF456/Checkout?starting-point-node-id=0-3&version-id=42&utm_source=mail"

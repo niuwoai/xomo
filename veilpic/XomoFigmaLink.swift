@@ -212,7 +212,11 @@ struct XomoFigmaLinkImportDraft: Equatable {
         do {
             state = .valid(try XomoFigmaLinkParser.parse(value))
         } catch let parserError as XomoFigmaLinkParserError {
-            state = .invalid(parserError)
+            if let sharedTextPreview = XomoFigmaSharedTextInput.preview(in: value) {
+                state = .valid(sharedTextPreview)
+            } else {
+                state = .invalid(parserError)
+            }
         } catch {
             assertionFailure("Unexpected Figma link parser error: \(error)")
             state = .invalid(.malformedURL)
@@ -246,9 +250,32 @@ enum XomoFigmaClipboardPastePolicy {
     ) -> XomoFigmaClipboardPasteRoute {
         guard !hasLayerPayload else { return .layerPayload }
         guard let clipboardText,
-              let preview = try? XomoFigmaLinkParser.parse(clipboardText)
+              let preview = XomoFigmaSharedTextInput.preview(in: clipboardText)
         else { return .unavailable }
         return .figmaLink(preview.canonicalURL.absoluteString)
+    }
+}
+
+enum XomoFigmaSharedTextInput {
+    static func preview(in input: String) -> XomoFigmaLinkPreview? {
+        if let exactPreview = try? XomoFigmaLinkParser.parse(input) {
+            return exactPreview
+        }
+
+        let trimmedInput = input.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedInput.isEmpty,
+              trimmedInput.count <= XomoFigmaLinkParser.maximumInputLength,
+              let detector = try? NSDataDetector(
+                types: NSTextCheckingResult.CheckingType.link.rawValue
+              )
+        else { return nil }
+
+        let range = NSRange(trimmedInput.startIndex..., in: trimmedInput)
+        let links = detector.matches(in: trimmedInput, options: [], range: range)
+        guard links.count == 1,
+              let detectedURL = links.first?.url
+        else { return nil }
+        return try? XomoFigmaLinkParser.parse(detectedURL.absoluteString)
     }
 }
 
@@ -312,7 +339,7 @@ enum XomoCanvasStringDropPolicy {
         if knownComponentPayloads.contains(value) {
             return .componentPayload(value)
         }
-        guard let preview = try? XomoFigmaLinkParser.parse(value) else {
+        guard let preview = XomoFigmaSharedTextInput.preview(in: value) else {
             return .unavailable
         }
         return .figmaLink(preview.canonicalURL.absoluteString)
