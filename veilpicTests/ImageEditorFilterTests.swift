@@ -2080,7 +2080,7 @@ struct ImageEditorFilterTests {
         )
         let sharpenEnd = try #require(
             panelSource[sharpenStart.upperBound...].range(
-                of: "else if viewModel.selectedFilter == .minimum"
+                of: "else if viewModel.selectedFilter == .pixelate"
             )
         )
         let sharpenSource = panelSource[sharpenStart.lowerBound..<sharpenEnd.lowerBound]
@@ -2091,6 +2091,37 @@ struct ImageEditorFilterTests {
         #expect(sharpenSource.contains("imageEditor.filter.unsharpAmount"))
         #expect(sharpenSource.contains("image-editor-filter-quick-sharpen-amount"))
         #expect(!sharpenSource.contains("viewModel.filterIntensity"))
+    }
+
+    @Test func pixelateQuickPanelUsesCellSizeInsteadOfLegacyIntensity() throws {
+        let root = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let viewSource = try String(
+            contentsOf: root.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let panelStart = try #require(viewSource.range(of: "private var filtersQuickPanel: some View"))
+        let panelEnd = try #require(
+            viewSource[panelStart.upperBound...].range(of: "private func historySnapshotRow")
+        )
+        let panelSource = viewSource[panelStart.lowerBound..<panelEnd.lowerBound]
+        let pixelateStart = try #require(
+            panelSource.range(of: "else if viewModel.selectedFilter == .pixelate")
+        )
+        let pixelateEnd = try #require(
+            panelSource[pixelateStart.upperBound...].range(
+                of: "else if viewModel.selectedFilter == .minimum"
+            )
+        )
+        let pixelateSource = panelSource[pixelateStart.lowerBound..<pixelateEnd.lowerBound]
+
+        #expect(pixelateSource.contains("viewModel.filterPixelateCellSize"))
+        #expect(pixelateSource.contains("in: 2...200"))
+        #expect(pixelateSource.contains("step: 1"))
+        #expect(pixelateSource.contains("imageEditor.filter.pixelateCellSize"))
+        #expect(pixelateSource.contains("image-editor-filter-quick-pixelate-cell-size"))
+        #expect(!pixelateSource.contains("viewModel.filterIntensity"))
     }
 
     @Test func imageEditorMotionBlurFilterLayerAndSmartFilterAreNonDestructive() async throws {

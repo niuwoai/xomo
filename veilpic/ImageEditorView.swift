@@ -7647,6 +7647,18 @@ struct ImageEditorView: View {
                         .focusable(false)
                         .accessibilityLabel(L10n.text("imageEditor.filter.unsharpAmount"))
                         .accessibilityIdentifier("image-editor-filter-quick-sharpen-amount")
+                } else if viewModel.selectedFilter == .pixelate {
+                    Text(L10n.format(
+                        "imageEditor.filter.pixelateCellSizeValue",
+                        Int(viewModel.filterPixelateCellSize.rounded())
+                    ))
+                        .font(.system(size: 11, weight: .semibold).monospacedDigit())
+                        .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                        .frame(width: 52, alignment: .leading)
+                    Slider(value: $viewModel.filterPixelateCellSize, in: 2...200, step: 1)
+                        .focusable(false)
+                        .accessibilityLabel(L10n.text("imageEditor.filter.pixelateCellSize"))
+                        .accessibilityIdentifier("image-editor-filter-quick-pixelate-cell-size")
                 } else if viewModel.selectedFilter == .minimum || viewModel.selectedFilter == .maximum {
                     Text("\(Int(viewModel.filterMorphologyRadius.rounded())) px")
                         .font(.system(size: 11, weight: .semibold).monospacedDigit())
