@@ -2235,7 +2235,7 @@ struct ImageEditorFilterTests {
         )
         let highPassEnd = try #require(
             panelSource[highPassStart.upperBound...].range(
-                of: "else if viewModel.selectedFilter == .minimum"
+                of: "else if viewModel.selectedFilter == .motionBlur"
             )
         )
         let highPassSource = panelSource[highPassStart.lowerBound..<highPassEnd.lowerBound]
@@ -2246,6 +2246,37 @@ struct ImageEditorFilterTests {
         #expect(highPassSource.contains("imageEditor.filter.highPassRadius"))
         #expect(highPassSource.contains("image-editor-filter-quick-high-pass-radius"))
         #expect(!highPassSource.contains("viewModel.filterIntensity"))
+    }
+
+    @Test func motionBlurQuickPanelUsesDistanceInsteadOfLegacyIntensity() throws {
+        let root = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let viewSource = try String(
+            contentsOf: root.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let panelStart = try #require(viewSource.range(of: "private var filtersQuickPanel: some View"))
+        let panelEnd = try #require(
+            viewSource[panelStart.upperBound...].range(of: "private func historySnapshotRow")
+        )
+        let panelSource = viewSource[panelStart.lowerBound..<panelEnd.lowerBound]
+        let motionBlurStart = try #require(
+            panelSource.range(of: "else if viewModel.selectedFilter == .motionBlur")
+        )
+        let motionBlurEnd = try #require(
+            panelSource[motionBlurStart.upperBound...].range(
+                of: "else if viewModel.selectedFilter == .minimum"
+            )
+        )
+        let motionBlurSource = panelSource[motionBlurStart.lowerBound..<motionBlurEnd.lowerBound]
+
+        #expect(motionBlurSource.contains("viewModel.filterMotionBlurDistance"))
+        #expect(motionBlurSource.contains("in: 1...999"))
+        #expect(motionBlurSource.contains("step: 1"))
+        #expect(motionBlurSource.contains("imageEditor.filter.motionBlurDistance"))
+        #expect(motionBlurSource.contains("image-editor-filter-quick-motion-blur-distance"))
+        #expect(!motionBlurSource.contains("viewModel.filterIntensity"))
     }
 
     @Test func imageEditorMotionBlurFilterLayerAndSmartFilterAreNonDestructive() async throws {

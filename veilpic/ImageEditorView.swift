@@ -7721,6 +7721,18 @@ struct ImageEditorView: View {
                         .focusable(false)
                         .accessibilityLabel(L10n.text("imageEditor.filter.highPassRadius"))
                         .accessibilityIdentifier("image-editor-filter-quick-high-pass-radius")
+                } else if viewModel.selectedFilter == .motionBlur {
+                    Text(L10n.format(
+                        "imageEditor.filter.motionBlurDistanceValue",
+                        Int(viewModel.filterMotionBlurDistance.rounded())
+                    ))
+                        .font(.system(size: 11, weight: .semibold).monospacedDigit())
+                        .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                        .frame(width: 62, alignment: .leading)
+                    Slider(value: $viewModel.filterMotionBlurDistance, in: 1...999, step: 1)
+                        .focusable(false)
+                        .accessibilityLabel(L10n.text("imageEditor.filter.motionBlurDistance"))
+                        .accessibilityIdentifier("image-editor-filter-quick-motion-blur-distance")
                 } else if viewModel.selectedFilter == .minimum || viewModel.selectedFilter == .maximum {
                     Text("\(Int(viewModel.filterMorphologyRadius.rounded())) px")
                         .font(.system(size: 11, weight: .semibold).monospacedDigit())
