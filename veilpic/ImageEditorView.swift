@@ -162,6 +162,7 @@ struct ImageEditorView: View {
     @Environment(\.locale) private var locale
     @StateObject var viewModel: ImageEditorViewModel
     @StateObject var recentDocumentStore = XomoRecentDocumentStore.shared
+    @ObservedObject private var externalOpenCoordinator = XomoExternalDocumentOpenCoordinator.shared
     @State private var dragPoints: [CGPoint] = []
     @State private var brushStrokeSamples: [ImageEditorBrushStrokeSample] = []
     @State private var isTemporaryEyedropperGestureActive = false
@@ -507,10 +508,14 @@ struct ImageEditorView: View {
             syncFigmaComponentPropertyDrafts()
             syncFigmaSizeConstraintDrafts()
             viewModel.syncSizeControlsFromDocument()
+            restoreKeyboardFocusAfterExternalOpenIfNeeded()
             guard !isRightDockMounted else { return }
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) {
                 isRightDockMounted = true
             }
+        }
+        .onChange(of: externalOpenCoordinator.editorKeyboardFocusRequestID) { _ in
+            restoreKeyboardFocusAfterExternalOpenIfNeeded()
         }
         .onChange(of: viewModel.document.selectedLayerIDs) { _ in
             syncLayerNameDraft()
@@ -3188,6 +3193,16 @@ struct ImageEditorView: View {
         if !viewModel.nudgeSelectedDeliveryObject(by: delta) {
             viewModel.nudgeSelectionOrSelectedLayer(by: delta)
         }
+    }
+
+    private func restoreKeyboardFocusAfterExternalOpenIfNeeded() {
+        guard let requestID = externalOpenCoordinator.editorKeyboardFocusRequestID else {
+            return
+        }
+        ImageEditorFilePanelKeyboardFocusRestorer.restore(
+            to: NSApp.keyWindow ?? NSApp.mainWindow
+        )
+        externalOpenCoordinator.fulfillEditorKeyboardFocusRequest(requestID)
     }
 
     @discardableResult

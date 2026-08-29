@@ -31,6 +31,24 @@ struct ImageEditorTextInputShortcutTests {
         window.orderOut(nil)
     }
 
+    @Test func externalOpenFocusRequestIsWiredToEditorAppearanceAndChanges() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(source.contains("restoreKeyboardFocusAfterExternalOpenIfNeeded()"))
+        #expect(source.contains(
+            ".onChange(of: externalOpenCoordinator.editorKeyboardFocusRequestID)"
+        ))
+        #expect(source.contains(
+            "externalOpenCoordinator.fulfillEditorKeyboardFocusRequest(requestID)"
+        ))
+    }
+
     @MainActor
     @Test func filePanelFocusRestorerFallsBackSafelyWithoutAKeyboardHost() {
         let window = NSWindow(

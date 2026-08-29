@@ -192,10 +192,15 @@ final class XomoExternalDocumentOpenCoordinator: ObservableObject {
         ImageEditorViewModel,
         @escaping @MainActor () -> Void
     ) -> Void
+    typealias RecentDocumentRegistrar = @MainActor (URL) -> Void
+    typealias OpenedDocumentWindowActivator = @MainActor () -> Void
 
     @Published private(set) var presentation: XomoDocumentLoadingPresentation?
+    @Published private(set) var editorKeyboardFocusRequestID: UUID?
 
     private let replacementRequester: ReplacementRequester
+    private let recentDocumentRegistrar: RecentDocumentRegistrar
+    private let openedDocumentWindowActivator: OpenedDocumentWindowActivator
     private weak var viewModel: ImageEditorViewModel?
     private var pendingURL: URL?
     private var activeRequestID: UUID?
@@ -210,9 +215,18 @@ final class XomoExternalDocumentOpenCoordinator: ObservableObject {
                 for: viewModel,
                 replacement: replacement
             )
+        },
+        recentDocumentRegistrar: @escaping RecentDocumentRegistrar = {
+            XomoRecentDocumentStore.shared.noteOpened($0)
+        },
+        openedDocumentWindowActivator: @escaping OpenedDocumentWindowActivator = {
+            NSApp.activate(ignoringOtherApps: true)
+            NSApp.keyWindow?.makeKeyAndOrderFront(nil)
         }
     ) {
         self.replacementRequester = replacementRequester
+        self.recentDocumentRegistrar = recentDocumentRegistrar
+        self.openedDocumentWindowActivator = openedDocumentWindowActivator
     }
 
     func register(_ viewModel: ImageEditorViewModel) {
@@ -223,6 +237,11 @@ final class XomoExternalDocumentOpenCoordinator: ObservableObject {
     func unregister(_ viewModel: ImageEditorViewModel) {
         guard self.viewModel === viewModel else { return }
         self.viewModel = nil
+    }
+
+    func fulfillEditorKeyboardFocusRequest(_ requestID: UUID) {
+        guard editorKeyboardFocusRequestID == requestID else { return }
+        editorKeyboardFocusRequestID = nil
     }
 
     func open(_ urls: [URL]) {
@@ -248,6 +267,7 @@ final class XomoExternalDocumentOpenCoordinator: ObservableObject {
         delayedPresentationTask?.cancel()
         delayedPresentationTask = nil
         pendingURL = url
+        editorKeyboardFocusRequestID = nil
         activeRequestID = nil
         activeFileName = url.lastPathComponent
         activeStage = .preparing
@@ -405,15 +425,12 @@ final class XomoExternalDocumentOpenCoordinator: ObservableObject {
         }
     }
 
-    private func activateOpenedDocumentWindow() {
-        NSApp.activate(ignoringOtherApps: true)
-        NSApp.keyWindow?.makeKeyAndOrderFront(nil)
-    }
-
     private func finishSuccessfulOpen(url: URL, requestID: UUID) {
-        XomoRecentDocumentStore.shared.noteOpened(url)
-        activateOpenedDocumentWindow()
+        recentDocumentRegistrar(url)
+        openedDocumentWindowActivator()
         finish(requestID: requestID)
+        guard activeRequestID == nil else { return }
+        editorKeyboardFocusRequestID = UUID()
     }
 
     private func updateStage(_ stage: XomoDocumentLoadingStage, requestID: UUID) {
