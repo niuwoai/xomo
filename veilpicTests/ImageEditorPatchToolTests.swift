@@ -305,25 +305,57 @@ struct ImageEditorPatchToolTests {
         #expect(viewModel.document.selection == selectionBefore)
     }
 
-    @Test func patchToolCanCreateAReplacementLassoBeforeDragging() throws {
-        let fixture = makeFixture()
-        let viewModel = fixture.viewModel
-        viewModel.selectionMode = .add
-        viewModel.createRectSelection(from: CGPoint(x: 2, y: 2), to: CGPoint(x: 8, y: 8))
+    @Test func patchLassoHonorsReplaceAddSubtractAndIntersectSelectionModes() throws {
+        #expect(ImageEditorTool.patchTool.supportsSelectionMode)
         let points = [
-            CGPoint(x: 30, y: 20),
-            CGPoint(x: 50, y: 20),
-            CGPoint(x: 50, y: 40),
-            CGPoint(x: 30, y: 40)
+            CGPoint(x: 20, y: 10),
+            CGPoint(x: 40, y: 10),
+            CGPoint(x: 40, y: 30),
+            CGPoint(x: 20, y: 30)
         ]
+        let canvasSize = CGSize(width: 80, height: 60)
 
-        viewModel.createPatchSelection(points: points)
+        func resolvedSelection(for mode: ImageEditorSelectionMode) throws -> ImageEditorSelection {
+            let viewModel = makeFixture().viewModel
+            viewModel.selectionMode = .replace
+            viewModel.createRectSelection(
+                from: CGPoint(x: 10, y: 10),
+                to: CGPoint(x: 30, y: 30)
+            )
+            viewModel.selectionMode = mode
+            viewModel.createPatchSelection(points: points)
+            #expect(viewModel.selectionMode == mode)
+            #expect(viewModel.statusText == L10n.text("imageEditor.status.patchSelectionReady"))
+            return try #require(viewModel.document.selection)
+        }
 
-        #expect(viewModel.selectionMode == .add)
-        #expect(viewModel.document.selection?.bounds == CGRect(x: 30, y: 20, width: 20, height: 20))
-        #expect(viewModel.canBeginPatch(at: CGPoint(x: 40, y: 30)))
-        #expect(!viewModel.canBeginPatch(at: CGPoint(x: 4, y: 4)))
-        #expect(viewModel.statusText == L10n.text("imageEditor.status.patchSelectionReady"))
+        let replace = try resolvedSelection(for: .replace)
+        #expect(!replace.contains(CGPoint(x: 15, y: 20), canvasSize: canvasSize))
+        #expect(replace.contains(CGPoint(x: 25, y: 20), canvasSize: canvasSize))
+        #expect(replace.contains(CGPoint(x: 35, y: 20), canvasSize: canvasSize))
+
+        let add = try resolvedSelection(for: .add)
+        #expect(add.contains(CGPoint(x: 15, y: 20), canvasSize: canvasSize))
+        #expect(add.contains(CGPoint(x: 25, y: 20), canvasSize: canvasSize))
+        #expect(add.contains(CGPoint(x: 35, y: 20), canvasSize: canvasSize))
+
+        let subtract = try resolvedSelection(for: .subtract)
+        #expect(subtract.contains(CGPoint(x: 15, y: 20), canvasSize: canvasSize))
+        #expect(!subtract.contains(CGPoint(x: 25, y: 20), canvasSize: canvasSize))
+        #expect(!subtract.contains(CGPoint(x: 35, y: 20), canvasSize: canvasSize))
+
+        let intersect = try resolvedSelection(for: .intersect)
+        #expect(!intersect.contains(CGPoint(x: 15, y: 20), canvasSize: canvasSize))
+        #expect(intersect.contains(CGPoint(x: 25, y: 20), canvasSize: canvasSize))
+        #expect(!intersect.contains(CGPoint(x: 35, y: 20), canvasSize: canvasSize))
+
+        let emptiedViewModel = makeFixture().viewModel
+        emptiedViewModel.selectionMode = .replace
+        emptiedViewModel.createPatchSelection(points: points)
+        emptiedViewModel.selectionMode = .subtract
+        emptiedViewModel.createPatchSelection(points: points)
+        #expect(emptiedViewModel.document.selection == nil)
+        #expect(emptiedViewModel.statusText == L10n.text("imageEditor.status.selectionEmpty"))
     }
 
     @Test func patchHoverHitTestingHandlesGeometryRasterMasksAndInversionWithoutRendering() throws {

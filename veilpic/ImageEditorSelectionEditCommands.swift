@@ -882,12 +882,9 @@ extension ImageEditorViewModel {
     }
 
     func createPatchSelection(points: [CGPoint]) {
-        let previousMode = selectionMode
         let previousSelection = document.selection
-        selectionMode = .replace
         createLassoSelection(points: points)
-        selectionMode = previousMode
-        if document.selection != previousSelection {
+        if document.selection != previousSelection, document.selection != nil {
             statusText = L10n.text("imageEditor.status.patchSelectionReady")
         }
     }

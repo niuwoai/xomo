@@ -2797,7 +2797,7 @@ struct ImageEditorCanvasCursorTests {
         ) == .blocked)
     }
 
-    @Test func patchGestureStartRejectsBlockedSelectionsButStillAllowsReplacementLasso() {
+    @Test func patchGestureStartDragsOnlyInReplaceModeAndDrawsSelectionOperandsOtherwise() {
         #expect(ImageEditorPatchGestureStartAction.resolve(
             isPointerOverSelection: true,
             canEditSelectionPixels: true
@@ -2810,10 +2810,36 @@ struct ImageEditorCanvasCursorTests {
             isPointerOverSelection: false,
             canEditSelectionPixels: false
         ) == .drawSelection)
+        for mode in [
+            ImageEditorSelectionMode.add,
+            .subtract,
+            .intersect
+        ] {
+            #expect(ImageEditorPatchGestureStartAction.resolve(
+                isPointerOverSelection: true,
+                canEditSelectionPixels: false,
+                selectionMode: mode
+            ) == .drawSelection)
+        }
     }
 
     @Test func patchCursorPreviewsSourceAndDestinationTransferBeforeDragging() {
         let drawing = ImageEditorCanvasCursor.cursor(for: .patchTool, brushDiameter: 18)
+        let additiveDrawing = ImageEditorCanvasCursor.cursor(
+            for: .patchTool,
+            brushDiameter: 18,
+            patchSelectionMode: .add
+        )
+        let subtractiveDrawing = ImageEditorCanvasCursor.cursor(
+            for: .patchTool,
+            brushDiameter: 18,
+            patchSelectionMode: .subtract
+        )
+        let intersectingDrawing = ImageEditorCanvasCursor.cursor(
+            for: .patchTool,
+            brushDiameter: 18,
+            patchSelectionMode: .intersect
+        )
         let lasso = ImageEditorCanvasCursor.cursor(for: .lasso, brushDiameter: 18)
         let sourceReady = ImageEditorCanvasCursor.cursor(
             for: .patchTool,
@@ -2840,6 +2866,11 @@ struct ImageEditorCanvasCursorTests {
         )
 
         #expect(drawing.image.tiffRepresentation == lasso.image.tiffRepresentation)
+        #expect(additiveDrawing.image.tiffRepresentation != drawing.image.tiffRepresentation)
+        #expect(subtractiveDrawing.image.tiffRepresentation != drawing.image.tiffRepresentation)
+        #expect(intersectingDrawing.image.tiffRepresentation != drawing.image.tiffRepresentation)
+        #expect(additiveDrawing.image.tiffRepresentation != subtractiveDrawing.image.tiffRepresentation)
+        #expect(subtractiveDrawing.image.tiffRepresentation != intersectingDrawing.image.tiffRepresentation)
         #expect(sourceReady !== NSCursor.arrow)
         #expect(sourceReady.image.tiffRepresentation == sourceDragging.image.tiffRepresentation)
         #expect(sourceReady.image.tiffRepresentation != destinationReady.image.tiffRepresentation)
@@ -2882,10 +2913,13 @@ struct ImageEditorCanvasCursorTests {
 
         #expect(source.components(separatedBy: "patchPhase: patchCursorPhase(at:").count == 4)
         #expect(source.components(separatedBy: "patchMode: viewModel.patchMode").count == 4)
+        #expect(source.components(separatedBy: "patchSelectionMode: viewModel.selectionMode").count == 4)
         #expect(source.contains(".onChange(of: viewModel.patchMode)"))
+        #expect(source.contains(".onChange(of: viewModel.selectionMode)"))
         #expect(source.contains("isDrawingSelection: isDrawingPatchSelection"))
         #expect(source.contains("canEditSelectionPixels: viewModel.canEditSelectionPixels"))
         #expect(source.contains("switch ImageEditorPatchGestureStartAction.resolve("))
+        #expect(source.contains("selectionMode: viewModel.selectionMode"))
         #expect(source.contains("imagePoint(from: value.startLocation, in: size)"))
         #expect(source.contains("!isPatchGestureBlocked"))
         #expect(source.contains("isPatchGestureBlocked = true"))

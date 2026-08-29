@@ -1225,9 +1225,6 @@ struct ImageEditorView: View {
                 if viewModel.selectedTool.supportsSelectionMode {
                     optionSlider(titleKey: "imageEditor.option.feather", value: $viewModel.feather, range: 0...40, step: 1, suffix: "px")
                 }
-                if viewModel.selectedTool == .patchTool {
-                    optionSlider(titleKey: "imageEditor.option.feather", value: $viewModel.feather, range: 0...40, step: 1, suffix: "px")
-                }
             }
             if viewModel.selectedTool.supportsTolerance {
                 optionSlider(titleKey: "imageEditor.option.tolerance", value: $viewModel.tolerance, range: 0...1, step: 0.02, suffix: "")
@@ -4584,6 +4581,7 @@ struct ImageEditorView: View {
                             isErasingToHistory: isEraserHistoryCursorActive,
                             patchPhase: patchCursorPhase(at: canvasPoint),
                             patchMode: viewModel.patchMode,
+                            patchSelectionMode: viewModel.selectionMode,
                             modifierFlags: canvasModifierFlags,
                             marqueeShape: viewModel.marqueeShape,
                             cropHandle: cropHandle,
@@ -4609,6 +4607,9 @@ struct ImageEditorView: View {
                     refreshCanvasCursor(in: geometry.size)
                 }
                 .onChange(of: viewModel.patchMode) { _ in
+                    refreshCanvasCursor(in: geometry.size)
+                }
+                .onChange(of: viewModel.selectionMode) { _ in
                     refreshCanvasCursor(in: geometry.size)
                 }
                 .onChange(of: viewModel.selectedLeftSidebarTab) { tab in
@@ -5995,7 +5996,8 @@ struct ImageEditorView: View {
                         let startImagePoint = imagePoint(from: value.startLocation, in: size)
                         switch ImageEditorPatchGestureStartAction.resolve(
                             isPointerOverSelection: viewModel.canBeginPatch(at: startImagePoint),
-                            canEditSelectionPixels: viewModel.canEditSelectionPixels
+                            canEditSelectionPixels: viewModel.canEditSelectionPixels,
+                            selectionMode: viewModel.selectionMode
                         ) {
                         case .dragSelection:
                             dragStart = startImagePoint
@@ -7005,6 +7007,7 @@ struct ImageEditorView: View {
             isErasingToHistory: isEraserHistoryCursorActive,
             patchPhase: patchCursorPhase(at: canvasPoint),
             patchMode: viewModel.patchMode,
+            patchSelectionMode: viewModel.selectionMode,
             modifierFlags: NSEvent.modifierFlags,
             marqueeShape: viewModel.marqueeShape,
             cropHandle: cropInteractionHandle(at: viewPoint, in: size),
@@ -7058,6 +7061,7 @@ struct ImageEditorView: View {
             isErasingToHistory: isEraserHistoryCursorActive,
             patchPhase: patchCursorPhase(at: nil),
             patchMode: viewModel.patchMode,
+            patchSelectionMode: viewModel.selectionMode,
             modifierFlags: canvasModifierFlags,
             marqueeShape: viewModel.marqueeShape,
             cropHandle: nil,
@@ -15818,6 +15822,19 @@ enum ImageEditorSelectionCursorMode: String, Equatable, CaseIterable {
             return .replace
         }
     }
+
+    static func from(selectionMode: ImageEditorSelectionMode) -> Self {
+        switch selectionMode {
+        case .replace:
+            .replace
+        case .add:
+            .add
+        case .subtract:
+            .subtract
+        case .intersect:
+            .intersect
+        }
+    }
 }
 
 enum ImageEditorZoomDirection: Equatable {
@@ -15921,8 +15938,10 @@ enum ImageEditorPatchGestureStartAction: Equatable {
 
     static func resolve(
         isPointerOverSelection: Bool,
-        canEditSelectionPixels: Bool
+        canEditSelectionPixels: Bool,
+        selectionMode: ImageEditorSelectionMode = .replace
     ) -> Self {
+        guard selectionMode == .replace else { return .drawSelection }
         guard isPointerOverSelection else { return .drawSelection }
         return canEditSelectionPixels ? .dragSelection : .blocked
     }
@@ -16030,6 +16049,7 @@ enum ImageEditorCanvasCursor {
         isErasingToHistory: Bool = false,
         patchPhase: ImageEditorPatchCursorPhase = .drawingSelection,
         patchMode: ImageEditorPatchMode = .source,
+        patchSelectionMode: ImageEditorSelectionMode = .replace,
         modifierFlags: NSEvent.ModifierFlags = [],
         marqueeShape: ImageEditorMarqueeShape = .rectangle,
         cropHandle: ImageEditorCropHandle? = nil,
@@ -16135,6 +16155,7 @@ enum ImageEditorCanvasCursor {
                 isErasingToHistory: isErasingToHistory,
                 patchPhase: patchPhase,
                 patchMode: patchMode,
+                patchSelectionMode: patchSelectionMode,
                 modifierFlags: modifierFlags,
                 marqueeShape: marqueeShape,
                 cropHandle: cropHandle
@@ -16751,6 +16772,7 @@ enum ImageEditorCanvasCursor {
         isErasingToHistory: Bool = false,
         patchPhase: ImageEditorPatchCursorPhase = .drawingSelection,
         patchMode: ImageEditorPatchMode = .source,
+        patchSelectionMode: ImageEditorSelectionMode = .replace,
         modifierFlags: NSEvent.ModifierFlags = [],
         marqueeShape: ImageEditorMarqueeShape = .rectangle,
         cropHandle: ImageEditorCropHandle? = nil
@@ -16848,7 +16870,9 @@ enum ImageEditorCanvasCursor {
         case .patch:
             switch patchPhase {
             case .drawingSelection:
-                return freeformSelectionPathCursor(mode: .replace)
+                return freeformSelectionPathCursor(
+                    mode: ImageEditorSelectionCursorMode.from(selectionMode: patchSelectionMode)
+                )
             case .readyToDrag:
                 return patchTransferCursor(mode: patchMode)
             case .draggingSelection:

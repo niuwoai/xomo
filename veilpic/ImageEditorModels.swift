@@ -586,7 +586,7 @@ enum ImageEditorTool: String, CaseIterable, Identifiable {
 
     var supportsSelectionMode: Bool {
         switch self {
-        case .marquee, .lasso, .magicWand, .quickSelection:
+        case .marquee, .lasso, .magicWand, .quickSelection, .patchTool:
             true
         default:
             false
