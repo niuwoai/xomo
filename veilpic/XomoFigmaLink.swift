@@ -244,6 +244,12 @@ enum XomoFigmaClipboardPasteRoute: Equatable {
     case unavailable
 }
 
+enum XomoFigmaClipboardInputRoute: Equatable {
+    case input(String)
+    case empty
+    case rejected
+}
+
 enum XomoFigmaClipboardLinkPolicy {
     static func canonicalURL(
         clipboardText: String?,
@@ -267,6 +273,25 @@ enum XomoFigmaClipboardLinkPolicy {
         }
 
         return textPreview?.canonicalURL.absoluteString
+    }
+}
+
+enum XomoFigmaClipboardInputPolicy {
+    static func resolve(
+        clipboardText: String?,
+        clipboardURLString: String? = nil
+    ) -> XomoFigmaClipboardInputRoute {
+        if let clipboardURLString,
+           !clipboardURLString.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            guard let canonicalURL = XomoFigmaClipboardLinkPolicy.canonicalURL(
+                clipboardText: clipboardText,
+                clipboardURLString: clipboardURLString
+            ) else { return .rejected }
+            return .input(canonicalURL)
+        }
+
+        guard let clipboardText, !clipboardText.isEmpty else { return .empty }
+        return .input(clipboardText)
     }
 }
 

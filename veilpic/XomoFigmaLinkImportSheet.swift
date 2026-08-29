@@ -656,8 +656,19 @@ struct XomoFigmaLinkImportSheet: View {
     }
 
     private func pasteLink() {
-        guard let value = NSPasteboard.general.string(forType: .string), !value.isEmpty else {
+        let route = XomoFigmaClipboardInputPolicy.resolve(
+            clipboardText: NSPasteboard.general.string(forType: .string),
+            clipboardURLString: NSPasteboard.general.string(forType: .URL)
+        )
+        let value: String
+        switch route {
+        case let .input(input):
+            value = input
+        case .empty:
             transientMessageKey = "xomo.figma.clipboard.empty"
+            return
+        case .rejected:
+            transientMessageKey = "xomo.figma.clipboard.untrusted"
             return
         }
         transientMessageKey = nil

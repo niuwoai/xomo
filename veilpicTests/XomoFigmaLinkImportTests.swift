@@ -276,6 +276,46 @@ struct XomoFigmaLinkImportTests {
         #expect(pasteboard.string(forType: .URL) == nil)
     }
 
+    @Test func clipboardPasteButtonReadsURLRepresentationsWithoutBypassingTextValidation() {
+        let figma = "https://figma.com/design/abc123DEF456/Checkout?node-id=1-2&utm_source=mail"
+        let canonical = "https://www.figma.com/design/abc123DEF456/Checkout?node-id=1-2"
+
+        #expect(
+            XomoFigmaClipboardInputPolicy.resolve(
+                clipboardText: nil,
+                clipboardURLString: figma
+            ) == .input(canonical)
+        )
+        #expect(
+            XomoFigmaClipboardInputPolicy.resolve(
+                clipboardText: "查看设计",
+                clipboardURLString: figma
+            ) == .input(canonical)
+        )
+        #expect(
+            XomoFigmaClipboardInputPolicy.resolve(
+                clipboardText: "not a link"
+            ) == .input("not a link")
+        )
+        #expect(
+            XomoFigmaClipboardInputPolicy.resolve(
+                clipboardText: nil
+            ) == .empty
+        )
+        #expect(
+            XomoFigmaClipboardInputPolicy.resolve(
+                clipboardText: canonical,
+                clipboardURLString: "https://www.figma.com/design/otherFile999/Other"
+            ) == .rejected
+        )
+        #expect(
+            XomoFigmaClipboardInputPolicy.resolve(
+                clipboardText: "查看设计",
+                clipboardURLString: "https://www.figma.com.evil.example/design/abc123DEF456/Checkout"
+            ) == .rejected
+        )
+    }
+
     @Test func canvasURLDropKeepsLocalFilesAndAcceptsOneTrustedFigmaLink() throws {
         let png = URL(fileURLWithPath: "/tmp/Poster.PNG")
         let svg = URL(fileURLWithPath: "/tmp/Icon.svg")
@@ -427,6 +467,10 @@ struct XomoFigmaLinkImportTests {
             )
         )
         #expect(sheet.contains("xomo-figma-link-input"))
+        #expect(sheet.contains("XomoFigmaClipboardInputPolicy.resolve("))
+        #expect(sheet.contains("clipboardURLString: NSPasteboard.general.string(forType: .URL)"))
+        #expect(sheet.contains("case .rejected:"))
+        #expect(sheet.contains("xomo.figma.clipboard.untrusted"))
         #expect(sheet.contains("xomo-figma-copy-canonical-link"))
         #expect(sheet.contains("XomoFigmaClipboardWriter.writeCanonicalURL(draft.preview?.canonicalURL)"))
         #expect(sheet.contains("xomo-figma-use-canonical-link"))

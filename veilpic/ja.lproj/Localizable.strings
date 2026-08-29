@@ -3890,6 +3890,7 @@
 "xomo.figma.action.useCanonicalURL" = "正規化リンクを使用";
 "xomo.figma.action.done" = "完了";
 "xomo.figma.clipboard.empty" = "クリップボードにテキストリンクがありません。";
+"xomo.figma.clipboard.untrusted" = "クリップボードのリンクが信頼できないか、表示テキストと実際のリンク先が一致しません。";
 "xomo.figma.clipboard.copied" = "正規化リンクをコピーしました。";
 "xomo.figma.message.canonicalURLApplied" = "この読み込みでは、整理済みの正規化リンクを使用します。";
 "xomo.figma.message.openFailed" = "ブラウザまたは Figma でこのリンクを開けませんでした。";

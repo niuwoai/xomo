@@ -3890,6 +3890,7 @@
 "xomo.figma.action.useCanonicalURL" = "使用规范化链接";
 "xomo.figma.action.done" = "完成";
 "xomo.figma.clipboard.empty" = "剪贴板中没有文本链接。";
+"xomo.figma.clipboard.untrusted" = "剪贴板中的链接不可信，或显示文字与真实目标不一致。";
 "xomo.figma.clipboard.copied" = "已复制规范化链接。";
 "xomo.figma.message.canonicalURLApplied" = "本次导入已改用清理后的规范化链接。";
 "xomo.figma.message.openFailed" = "无法在浏览器或 Figma 中打开这个链接。";

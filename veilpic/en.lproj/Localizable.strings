@@ -3890,6 +3890,7 @@
 "xomo.figma.action.useCanonicalURL" = "Use Canonical Link";
 "xomo.figma.action.done" = "Done";
 "xomo.figma.clipboard.empty" = "The clipboard does not contain a text link.";
+"xomo.figma.clipboard.untrusted" = "The clipboard link is untrusted, or its visible text conflicts with the actual target.";
 "xomo.figma.clipboard.copied" = "Canonical link copied.";
 "xomo.figma.message.canonicalURLApplied" = "The cleaned canonical link is now used for this import.";
 "xomo.figma.message.openFailed" = "This link could not be opened in a browser or Figma.";
