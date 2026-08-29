@@ -2077,6 +2077,57 @@ struct ImageEditorCanvasCursorTests {
         ) === NSCursor.arrow)
     }
 
+    @Test func spongeCursorPreviewsSelectedSaturationModeAcrossItsRealFootprint() {
+        let saturate = ImageEditorCanvasCursor.cursor(
+            for: .sponge,
+            brushDiameter: 12,
+            spongeMode: .saturate
+        )
+        let largeSaturate = ImageEditorCanvasCursor.cursor(
+            for: .sponge,
+            brushDiameter: 48,
+            spongeMode: .saturate
+        )
+        let desaturate = ImageEditorCanvasCursor.cursor(
+            for: .sponge,
+            brushDiameter: 12,
+            spongeMode: .desaturate
+        )
+        let routedDesaturate = ImageEditorCanvasCursor.cursor(
+            for: .tools,
+            selectedTool: .sponge,
+            brushDiameter: 12,
+            spongeMode: .desaturate
+        )
+
+        #expect(ImageEditorCanvasCursor.family(for: .sponge) == .localSaturationAdjust)
+        #expect(saturate.image.size == NSSize(width: 36, height: 36))
+        #expect(saturate.hotSpot == NSPoint(x: 18, y: 18))
+        #expect(largeSaturate.image.size == NSSize(width: 66, height: 66))
+        #expect(largeSaturate.hotSpot == NSPoint(x: 33, y: 33))
+        #expect(saturate.image.tiffRepresentation != desaturate.image.tiffRepresentation)
+        #expect(routedDesaturate.image.tiffRepresentation == desaturate.image.tiffRepresentation)
+        #expect(ImageEditorCanvasCursor.cursor(
+            for: .sponge,
+            brushDiameter: 12,
+            spongeMode: .desaturate,
+            modifierFlags: [.capsLock]
+        ) === NSCursor.crosshair)
+        #expect(ImageEditorCanvasCursor.cursor(
+            for: .components,
+            selectedTool: .sponge,
+            brushDiameter: 12,
+            spongeMode: .desaturate
+        ) === NSCursor.arrow)
+        #expect(ImageEditorCanvasCursor.cursor(
+            for: .tools,
+            selectedTool: .sponge,
+            brushDiameter: 12,
+            spongeMode: .desaturate,
+            isPointerOverCanvas: false
+        ) === NSCursor.arrow)
+    }
+
     @Test func sampledBrushSourcePolicyKeepsSpotHealingInPaintMode() {
         #expect(ImageEditorSampledBrushCursorPolicy.isPickingSource(
             tool: .cloneStamp,
@@ -2913,7 +2964,7 @@ struct ImageEditorCanvasCursorTests {
         #expect(ImageEditorCanvasCursor.family(for: .ellipse) == .ellipseOutline)
         #expect(ImageEditorCanvasCursor.family(for: .dodge) == .localExposureLighten)
         #expect(ImageEditorCanvasCursor.family(for: .burn) == .localExposureDarken)
-        #expect(ImageEditorCanvasCursor.family(for: .sponge) == .toneBrush)
+        #expect(ImageEditorCanvasCursor.family(for: .sponge) == .localSaturationAdjust)
         #expect(ImageEditorCanvasCursor.family(for: .blur) == .retouchBrush)
         #expect(ImageEditorCanvasCursor.family(for: .sharpen) == .retouchBrush)
         #expect(ImageEditorCanvasCursor.family(for: .smudge) == .retouchBrush)
@@ -2934,7 +2985,7 @@ struct ImageEditorCanvasCursorTests {
 
         let standardFootprintTools: [ImageEditorTool] = [
             .brush, .pencil, .eraser,
-            .sponge, .blur, .sharpen, .smudge
+            .blur, .sharpen, .smudge
         ]
         let standardRepresentations = standardFootprintTools.compactMap {
             ImageEditorCanvasCursor.cursor(for: $0, brushDiameter: 18).image.tiffRepresentation
@@ -2943,7 +2994,7 @@ struct ImageEditorCanvasCursorTests {
         #expect(Set(standardRepresentations).count == 1)
 
         let resultPreviewTools: [ImageEditorTool] = [
-            .cloneStamp, .healingBrush, .dodge, .burn
+            .cloneStamp, .healingBrush, .dodge, .burn, .sponge
         ]
         let resultPreviewRepresentations = resultPreviewTools.compactMap {
             ImageEditorCanvasCursor.cursor(for: $0, brushDiameter: 18).image.tiffRepresentation

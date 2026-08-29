@@ -6766,7 +6766,7 @@ struct veilpicTests {
             (.eraserTool, [.eraser]),
             (.localExposureLighten, [.dodge]),
             (.localExposureDarken, [.burn]),
-            (.toneBrush, [.sponge]),
+            (.localSaturationAdjust, [.sponge]),
             (.retouchBrush, [.blur, .sharpen, .smudge]),
             (.selectionMarquee, [.marquee]),
             (.freeformSelectionPath, [.lasso]),

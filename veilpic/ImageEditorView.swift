@@ -4454,6 +4454,7 @@ struct ImageEditorView: View {
                             for: viewModel.selectedLeftSidebarTab,
                             selectedTool: viewModel.selectedTool,
                             brushDiameter: displayedBrushDiameter,
+                            spongeMode: viewModel.spongeMode,
                             brushTilt: activeBrushTilt,
                             brushTiltControlsShape: viewModel.brushTiltControlsShape,
                             brushTipRoundness: viewModel.brushTipRoundness / 100,
@@ -4534,6 +4535,9 @@ struct ImageEditorView: View {
                     if tool != .text {
                         commitCanvasTextEditingIfNeeded()
                     }
+                    refreshCanvasCursor(in: geometry.size)
+                }
+                .onChange(of: viewModel.spongeMode) { _ in
                     refreshCanvasCursor(in: geometry.size)
                 }
                 .onChange(of: viewModel.selectedLeftSidebarTab) { tab in
@@ -6793,6 +6797,7 @@ struct ImageEditorView: View {
             for: viewModel.selectedLeftSidebarTab,
             selectedTool: viewModel.selectedTool,
             brushDiameter: displayedBrushDiameter,
+            spongeMode: viewModel.spongeMode,
             brushTilt: activeBrushTilt,
             brushTiltControlsShape: viewModel.brushTiltControlsShape,
             brushTipRoundness: viewModel.brushTipRoundness / 100,
@@ -6886,6 +6891,7 @@ struct ImageEditorView: View {
             for: viewModel.selectedLeftSidebarTab,
             selectedTool: viewModel.selectedTool,
             brushDiameter: viewModel.brushSize,
+            spongeMode: viewModel.spongeMode,
             isPointerOverCanvas: false,
             isPointerOverMovableContent: false,
             moveToolUsesBoxSelection: viewModel.moveToolAutoSelectsCanvasTarget,
@@ -15439,7 +15445,6 @@ enum ImageEditorCanvasCursorFamily: Equatable {
     case textInsertion
     case brushTool
     case eraserTool
-    case toneBrush
     case retouchBrush
     case selectionMarquee
     case freeformSelectionPath
@@ -15449,6 +15454,7 @@ enum ImageEditorCanvasCursorFamily: Equatable {
     case sampledRepairBlend
     case localExposureLighten
     case localExposureDarken
+    case localSaturationAdjust
     case crop
     case patch
     case gradient
@@ -15719,6 +15725,7 @@ enum ImageEditorCanvasCursor {
         for sidebarTab: XomoLeftSidebarTab,
         selectedTool: ImageEditorTool,
         brushDiameter: CGFloat,
+        spongeMode: ImageEditorSpongeMode = .saturate,
         brushTilt: ImageEditorStylusTilt? = nil,
         brushTiltControlsShape: Bool = false,
         brushTipRoundness: CGFloat = 1,
@@ -15835,6 +15842,7 @@ enum ImageEditorCanvasCursor {
             return cursor(
                 for: selectedTool,
                 brushDiameter: brushDiameter,
+                spongeMode: spongeMode,
                 brushTilt: brushTilt,
                 brushTiltControlsShape: brushTiltControlsShape,
                 brushTipRoundness: brushTipRoundness,
@@ -16416,7 +16424,7 @@ enum ImageEditorCanvasCursor {
         case .burn:
             .localExposureDarken
         case .sponge:
-            .toneBrush
+            .localSaturationAdjust
         case .blur, .sharpen, .smudge:
             .retouchBrush
         case .paintBucket:
@@ -16441,6 +16449,7 @@ enum ImageEditorCanvasCursor {
     static func cursor(
         for tool: ImageEditorTool,
         brushDiameter: CGFloat,
+        spongeMode: ImageEditorSpongeMode = .saturate,
         brushTilt: ImageEditorStylusTilt? = nil,
         brushTiltControlsShape: Bool = false,
         brushTipRoundness: CGFloat = 1,
@@ -16531,7 +16540,11 @@ enum ImageEditorCanvasCursor {
             return modifierFlags.contains(.capsLock)
                 ? .crosshair
                 : localExposureCursor(diameter: brushDiameter, lightening: false)
-        case .toneBrush, .retouchBrush:
+        case .localSaturationAdjust:
+            return modifierFlags.contains(.capsLock)
+                ? .crosshair
+                : localSaturationCursor(diameter: brushDiameter, mode: spongeMode)
+        case .retouchBrush:
             return modifierFlags.contains(.capsLock)
                 ? .crosshair
                 : familiarBrushCursor(diameter: brushDiameter)
@@ -16848,6 +16861,90 @@ enum ImageEditorCanvasCursor {
         (lightening ? NSColor.systemYellow : NSColor.systemIndigo).setStroke()
         exposureChange.lineWidth = 1.2
         exposureChange.stroke()
+
+        image.unlockFocus()
+        return cache(
+            NSCursor(image: image, hotSpot: NSPoint(x: center.x, y: side - center.y)),
+            for: cacheKey
+        )
+    }
+
+    private static func localSaturationCursor(
+        diameter requestedDiameter: CGFloat,
+        mode: ImageEditorSpongeMode
+    ) -> NSCursor {
+        let diameter = max(3, min(256, requestedDiameter.rounded()))
+        let cacheKey = "local-saturation-\(mode.rawValue):\(Int(diameter))"
+        if let cachedCursor = cursorCache[cacheKey] {
+            return cachedCursor
+        }
+
+        let side = max(36, diameter + 18)
+        let center = NSPoint(x: side / 2, y: side / 2)
+        let image = NSImage(size: NSSize(width: side, height: side))
+        image.lockFocus()
+
+        let footprint = NSBezierPath(ovalIn: NSRect(
+            x: center.x - diameter / 2,
+            y: center.y - diameter / 2,
+            width: diameter,
+            height: diameter
+        ))
+        NSColor.black.withAlphaComponent(0.95).setStroke()
+        footprint.lineWidth = 3.5
+        footprint.stroke()
+        NSColor.white.withAlphaComponent(0.98).setStroke()
+        footprint.lineWidth = 1.4
+        footprint.stroke()
+
+        // A fixed hue moving between gray and vivid color previews the actual
+        // saturation result without shrinking a sponge-shaped toolbox icon.
+        let sampleDiameter = max(2.5, min(5, diameter * 0.16))
+        let sampleSpacing = max(4, min(8, diameter * 0.27))
+        let saturations: [CGFloat] = mode == .saturate
+            ? [0.08, 0.48, 0.95]
+            : [0.95, 0.48, 0.08]
+        for (index, saturation) in saturations.enumerated() {
+            let offset = CGFloat(index - 1) * sampleSpacing
+            let rect = NSRect(
+                x: center.x + offset - sampleDiameter / 2,
+                y: center.y + sampleSpacing * 0.2 - sampleDiameter / 2,
+                width: sampleDiameter,
+                height: sampleDiameter
+            )
+            NSColor(
+                calibratedHue: 0.58,
+                saturation: saturation,
+                brightness: 0.9,
+                alpha: 1
+            ).setFill()
+            NSBezierPath(ovalIn: rect).fill()
+            NSColor.black.withAlphaComponent(0.9).setStroke()
+            let outline = NSBezierPath(ovalIn: rect)
+            outline.lineWidth = 0.8
+            outline.stroke()
+        }
+
+        let endpoint = NSPoint(
+            x: center.x + sampleSpacing,
+            y: center.y - sampleSpacing * 0.65
+        )
+        let change = NSBezierPath()
+        change.move(to: NSPoint(
+            x: center.x - sampleSpacing,
+            y: center.y - sampleSpacing * 0.65
+        ))
+        change.line(to: endpoint)
+        change.move(to: endpoint)
+        change.line(to: NSPoint(x: endpoint.x - 3.5, y: endpoint.y + 2.8))
+        change.move(to: endpoint)
+        change.line(to: NSPoint(x: endpoint.x - 3.5, y: endpoint.y - 2.8))
+        NSColor.black.withAlphaComponent(0.95).setStroke()
+        change.lineWidth = 3.5
+        change.stroke()
+        (mode == .saturate ? NSColor.systemBlue : NSColor.systemGray).setStroke()
+        change.lineWidth = 1.2
+        change.stroke()
 
         image.unlockFocus()
         return cache(
