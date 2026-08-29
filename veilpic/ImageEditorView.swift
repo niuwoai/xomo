@@ -7733,6 +7733,25 @@ struct ImageEditorView: View {
                         .focusable(false)
                         .accessibilityLabel(L10n.text("imageEditor.filter.motionBlurDistance"))
                         .accessibilityIdentifier("image-editor-filter-quick-motion-blur-distance")
+                } else if viewModel.selectedFilter == .unsharpMask {
+                    Text(L10n.format(
+                        "imageEditor.filter.unsharpAmountValue",
+                        Int(viewModel.filterUnsharpEffectiveAmountPercent.rounded())
+                    ))
+                        .font(.system(size: 11, weight: .semibold).monospacedDigit())
+                        .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                        .frame(width: 52, alignment: .leading)
+                    Slider(
+                        value: Binding(
+                            get: { viewModel.filterUnsharpEffectiveAmountPercent },
+                            set: { viewModel.filterUnsharpEffectiveAmountPercent = $0 }
+                        ),
+                        in: 1...500,
+                        step: 1
+                    )
+                        .focusable(false)
+                        .accessibilityLabel(L10n.text("imageEditor.filter.unsharpAmount"))
+                        .accessibilityIdentifier("image-editor-filter-quick-unsharp-amount")
                 } else if viewModel.selectedFilter == .minimum || viewModel.selectedFilter == .maximum {
                     Text("\(Int(viewModel.filterMorphologyRadius.rounded())) px")
                         .font(.system(size: 11, weight: .semibold).monospacedDigit())

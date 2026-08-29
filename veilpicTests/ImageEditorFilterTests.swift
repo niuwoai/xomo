@@ -2266,7 +2266,7 @@ struct ImageEditorFilterTests {
         )
         let motionBlurEnd = try #require(
             panelSource[motionBlurStart.upperBound...].range(
-                of: "else if viewModel.selectedFilter == .minimum"
+                of: "else if viewModel.selectedFilter == .unsharpMask"
             )
         )
         let motionBlurSource = panelSource[motionBlurStart.lowerBound..<motionBlurEnd.lowerBound]
@@ -2277,6 +2277,37 @@ struct ImageEditorFilterTests {
         #expect(motionBlurSource.contains("imageEditor.filter.motionBlurDistance"))
         #expect(motionBlurSource.contains("image-editor-filter-quick-motion-blur-distance"))
         #expect(!motionBlurSource.contains("viewModel.filterIntensity"))
+    }
+
+    @Test func unsharpQuickPanelUsesAmountInsteadOfLegacyIntensity() throws {
+        let root = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let viewSource = try String(
+            contentsOf: root.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let panelStart = try #require(viewSource.range(of: "private var filtersQuickPanel: some View"))
+        let panelEnd = try #require(
+            viewSource[panelStart.upperBound...].range(of: "private func historySnapshotRow")
+        )
+        let panelSource = viewSource[panelStart.lowerBound..<panelEnd.lowerBound]
+        let unsharpStart = try #require(
+            panelSource.range(of: "else if viewModel.selectedFilter == .unsharpMask")
+        )
+        let unsharpEnd = try #require(
+            panelSource[unsharpStart.upperBound...].range(
+                of: "else if viewModel.selectedFilter == .minimum"
+            )
+        )
+        let unsharpSource = panelSource[unsharpStart.lowerBound..<unsharpEnd.lowerBound]
+
+        #expect(unsharpSource.contains("viewModel.filterUnsharpEffectiveAmountPercent"))
+        #expect(unsharpSource.contains("in: 1...500"))
+        #expect(unsharpSource.contains("step: 1"))
+        #expect(unsharpSource.contains("imageEditor.filter.unsharpAmount"))
+        #expect(unsharpSource.contains("image-editor-filter-quick-unsharp-amount"))
+        #expect(!unsharpSource.contains("viewModel.filterIntensity"))
     }
 
     @Test func imageEditorMotionBlurFilterLayerAndSmartFilterAreNonDestructive() async throws {
