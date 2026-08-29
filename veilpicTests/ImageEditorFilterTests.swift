@@ -3288,10 +3288,36 @@ struct ImageEditorFilterTests {
         #expect(restoredFilter.normalizedSettings.liquifyTwirlAngle == 1)
     }
 
-    @Test func imageEditorLiquifyPuckerBloatFilterLayerAndSmartFilterWarpRadialPixels() async throws {
+    @Test func imageEditorLiquifyPuckerBloatAmountSupportsLegacyAndSignedRadialWarp() async throws {
         let canvasSize = NSSize(width: 48, height: 48)
         let sourceImage = radialRampImage(size: canvasSize)
         let samplePoint = CGPoint(x: 31, y: 24)
+        let legacySettings = try JSONDecoder().decode(
+            ImageEditorFilterSettings.self,
+            from: Data("{}".utf8)
+        )
+        #expect(legacySettings.liquifyBulgeAmountPercent == nil)
+        #expect(legacySettings.liquifyBulgeAmount == 0.5)
+        let legacyBloat = try #require(sourceImage.filtered(
+            kind: .liquifyPuckerBloat,
+            intensity: 1,
+            settings: legacySettings
+        ))
+        let explicitLegacyBloat = try #require(sourceImage.filtered(
+            kind: .liquifyPuckerBloat,
+            intensity: 0,
+            settings: ImageEditorFilterSettings(liquifyBulgeAmountPercent: 50)
+        ))
+        #expect(legacyBloat.qingtuPNGData() == explicitLegacyBloat.qingtuPNGData())
+        #expect(ImageEditorFilterSettings(liquifyBulgeAmountPercent: -200).normalized().liquifyBulgeAmountPercent == -100)
+        #expect(ImageEditorFilterSettings(liquifyBulgeAmountPercent: 200).normalized().liquifyBulgeAmountPercent == 100)
+        let zeroAmount = try #require(sourceImage.filtered(
+            kind: .liquifyPuckerBloat,
+            intensity: 1,
+            settings: ImageEditorFilterSettings(liquifyBulgeAmountPercent: 0)
+        ))
+        #expect(zeroAmount.qingtuPNGData() == sourceImage.qingtuPNGData())
+
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: sourceImage) { _ in }
         viewModel.replaceSelectedLayerImageForTesting(sourceImage, historyTitle: L10n.text("imageEditor.history.brush"))
         let baseLayerID = try #require(viewModel.document.selectedLayerID)
@@ -3299,8 +3325,8 @@ struct ImageEditorFilterTests {
         let sampleBefore = try #require(viewModel.currentImage.color(at: samplePoint)?.usingColorSpace(.deviceRGB))
 
         viewModel.selectedFilter = .liquifyPuckerBloat
-        viewModel.filterIntensity = 1
-        viewModel.filterLiquifyBulgeAmount = 1
+        viewModel.filterIntensity = 0
+        viewModel.filterLiquifyBulgeAmountPercent = 100
         viewModel.addFilterLayer()
 
         let filterLayer = try #require(viewModel.document.selectedLayer)
@@ -3308,7 +3334,7 @@ struct ImageEditorFilterTests {
         let farEdge = try #require(viewModel.currentImage.color(at: CGPoint(x: 47, y: 24))?.usingColorSpace(.deviceRGB))
         #expect(filterLayer.isFilter)
         #expect(filterLayer.filter?.kind == .liquifyPuckerBloat)
-        #expect(filterLayer.filterSettings.normalized().liquifyBulgeAmount == 1)
+        #expect(filterLayer.filterSettings.normalized().liquifyBulgeAmountPercent == 100)
         #expect(viewModel.document.layers.first { $0.id == baseLayerID }?.image.qingtuPNGData() == basePixelsBefore)
         #expect(bloatedSample.redComponent < sampleBefore.redComponent - 0.05)
         #expect(farEdge.redComponent > 0.88)
@@ -3318,18 +3344,18 @@ struct ImageEditorFilterTests {
         smartViewModel.replaceSelectedLayerImageForTesting(sourceImage, historyTitle: L10n.text("imageEditor.history.brush"))
         let smartBasePixelsBefore = try #require(smartViewModel.document.selectedLayer?.image.qingtuPNGData())
         smartViewModel.selectedFilter = .liquifyPuckerBloat
-        smartViewModel.filterIntensity = 1
-        smartViewModel.filterLiquifyBulgeAmount = -1
+        smartViewModel.filterIntensity = 0
+        smartViewModel.filterLiquifyBulgeAmountPercent = -100
         smartViewModel.addSmartFilterToSelectedLayer()
 
         let smartLayer = try #require(smartViewModel.document.selectedLayer)
         let smartFilter = try #require(smartLayer.smartFilters.first)
         let puckeredSample = try #require(smartViewModel.currentImage.color(at: samplePoint)?.usingColorSpace(.deviceRGB))
         #expect(smartFilter.kind == .liquifyPuckerBloat)
-        #expect(smartFilter.normalizedSettings.liquifyBulgeAmount == -1)
+        #expect(smartFilter.normalizedSettings.liquifyBulgeAmountPercent == -100)
         #expect(smartLayer.image.qingtuPNGData() == smartBasePixelsBefore)
         #expect(puckeredSample.redComponent > sampleBefore.redComponent + 0.05)
-        #expect(smartViewModel.smartFilterLabel(smartFilter) == L10n.format("imageEditor.properties.smartFilterLiquifyPuckerBloatItem", smartFilter.kind.title, 100, -100))
+        #expect(smartViewModel.smartFilterLabel(smartFilter) == L10n.format("imageEditor.properties.smartFilterLiquifyPuckerBloatItem", smartFilter.kind.title, "-100"))
         #expect(smartViewModel.document.history.last?.title == L10n.text("imageEditor.history.layerSmartFilterAdd"))
 
         let project = try ImageEditorProjectDocument(document: smartViewModel.document)
@@ -3337,7 +3363,17 @@ struct ImageEditorFilterTests {
         let restoredLayer = try #require(restoredDocument.layers.first { $0.id == smartLayer.id })
         let restoredFilter = try #require(restoredLayer.smartFilters.first)
         #expect(restoredFilter.kind == .liquifyPuckerBloat)
-        #expect(restoredFilter.normalizedSettings.liquifyBulgeAmount == -1)
+        #expect(restoredFilter.normalizedSettings.liquifyBulgeAmountPercent == -100)
+
+        let root = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let viewSource = try String(
+            contentsOf: root.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        #expect(viewSource.contains("image-editor-filter-liquify-bulge-amount"))
+        #expect(viewSource.contains("viewModel.selectedFilter != .liquifyPuckerBloat"))
     }
 
     @Test func imageEditorWaveFilterLayerAndSmartFilterWarpHorizontalPixels() async throws {

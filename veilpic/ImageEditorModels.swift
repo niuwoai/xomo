@@ -2580,6 +2580,8 @@ struct ImageEditorFilterSettings: Equatable, Codable {
     var liquifyPushX: Double = 0.25
     var liquifyPushY: Double = 0
     var liquifyTwirlAngle: Double = 0.5
+    /// Pucker/Bloat amount from -100% to 100%. Nil preserves legacy amount × intensity.
+    var liquifyBulgeAmountPercent: Double?
     var liquifyBulgeAmount: Double = 0.5
     var offsetX: Double = 0.25
     var offsetY: Double = 0
@@ -2629,6 +2631,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         liquifyPushX: Double = 0.25,
         liquifyPushY: Double = 0,
         liquifyTwirlAngle: Double = 0.5,
+        liquifyBulgeAmountPercent: Double? = nil,
         liquifyBulgeAmount: Double = 0.5,
         offsetX: Double = 0.25,
         offsetY: Double = 0,
@@ -2674,6 +2677,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         self.liquifyPushX = liquifyPushX
         self.liquifyPushY = liquifyPushY
         self.liquifyTwirlAngle = liquifyTwirlAngle
+        self.liquifyBulgeAmountPercent = liquifyBulgeAmountPercent
         self.liquifyBulgeAmount = liquifyBulgeAmount
         self.offsetX = offsetX
         self.offsetY = offsetY
@@ -2725,6 +2729,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         liquifyPushX = try container.decodeIfPresent(Double.self, forKey: .liquifyPushX) ?? 0.25
         liquifyPushY = try container.decodeIfPresent(Double.self, forKey: .liquifyPushY) ?? 0
         liquifyTwirlAngle = try container.decodeIfPresent(Double.self, forKey: .liquifyTwirlAngle) ?? 0.5
+        liquifyBulgeAmountPercent = try container.decodeIfPresent(Double.self, forKey: .liquifyBulgeAmountPercent)
         liquifyBulgeAmount = try container.decodeIfPresent(Double.self, forKey: .liquifyBulgeAmount) ?? 0.5
         offsetX = try container.decodeIfPresent(Double.self, forKey: .offsetX) ?? 0.25
         offsetY = try container.decodeIfPresent(Double.self, forKey: .offsetY) ?? 0
@@ -2779,6 +2784,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         try container.encode(liquifyPushX, forKey: .liquifyPushX)
         try container.encode(liquifyPushY, forKey: .liquifyPushY)
         try container.encode(liquifyTwirlAngle, forKey: .liquifyTwirlAngle)
+        try container.encodeIfPresent(liquifyBulgeAmountPercent, forKey: .liquifyBulgeAmountPercent)
         try container.encode(liquifyBulgeAmount, forKey: .liquifyBulgeAmount)
         try container.encode(offsetX, forKey: .offsetX)
         try container.encode(offsetY, forKey: .offsetY)
@@ -2827,6 +2833,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
             liquifyPushX: max(-1, min(1, liquifyPushX)),
             liquifyPushY: max(-1, min(1, liquifyPushY)),
             liquifyTwirlAngle: max(-1, min(1, liquifyTwirlAngle)),
+            liquifyBulgeAmountPercent: liquifyBulgeAmountPercent.map { max(-100, min(100, $0)) },
             liquifyBulgeAmount: max(-1, min(1, liquifyBulgeAmount)),
             offsetX: max(-1, min(1, offsetX)),
             offsetY: max(-1, min(1, offsetY)),
@@ -2875,6 +2882,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         case liquifyPushX
         case liquifyPushY
         case liquifyTwirlAngle
+        case liquifyBulgeAmountPercent
         case liquifyBulgeAmount
         case offsetX
         case offsetY

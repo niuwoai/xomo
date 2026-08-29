@@ -40,6 +40,9 @@ extension NSImage {
         if kind == .spherize, normalizedSettings.spherizeAmountPercent == 0 {
             return self
         }
+        if kind == .liquifyPuckerBloat, normalizedSettings.liquifyBulgeAmountPercent == 0 {
+            return self
+        }
         let hasExplicitFilterAmount = (
             kind == .sharpen
                 && normalizedSettings.sharpenAmountPercent.map { $0 > 0 } == true
@@ -58,6 +61,9 @@ extension NSImage {
         ) || (
             kind == .spherize
                 && normalizedSettings.spherizeAmountPercent.map { $0 != 0 } == true
+        ) || (
+            kind == .liquifyPuckerBloat
+                && normalizedSettings.liquifyBulgeAmountPercent.map { $0 != 0 } == true
         )
         guard clamped > 0 || hasExplicitFilterAmount else { return self }
         if kind == .addNoise {
@@ -216,6 +222,9 @@ extension NSImage {
         if kind == .spherize, normalizedSettings.spherizeAmountPercent == 0 {
             return self
         }
+        if kind == .liquifyPuckerBloat, normalizedSettings.liquifyBulgeAmountPercent == 0 {
+            return self
+        }
         let hasExplicitFilterAmount = (
             kind == .sharpen
                 && normalizedSettings.sharpenAmountPercent.map { $0 > 0 } == true
@@ -234,6 +243,9 @@ extension NSImage {
         ) || (
             kind == .spherize
                 && normalizedSettings.spherizeAmountPercent.map { $0 != 0 } == true
+        ) || (
+            kind == .liquifyPuckerBloat
+                && normalizedSettings.liquifyBulgeAmountPercent.map { $0 != 0 } == true
         )
         guard intensity > 0 || hasExplicitFilterAmount else { return self }
         let normalizedOpacity = max(0, min(1, opacity))
@@ -1489,8 +1501,10 @@ extension NSImage {
 
     private func liquifyBulged(intensity: Double, settings: ImageEditorFilterSettings) -> NSImage? {
         let clampedIntensity = max(0, min(1, intensity))
-        guard clampedIntensity > 0 else { return self }
         let normalizedSettings = settings.normalized()
+        let amount = normalizedSettings.liquifyBulgeAmountPercent.map { $0 / 100 }
+            ?? (normalizedSettings.liquifyBulgeAmount * clampedIntensity)
+        guard abs(amount) > 0.000_1 else { return self }
         return pixelSampledFromBuffer { x, y, width, height, pixels, bytesPerRow, bytesPerPixel in
             let centerX = Double(max(width - 1, 1)) / 2
             let centerY = Double(max(height - 1, 1)) / 2
@@ -1511,7 +1525,6 @@ extension NSImage {
             }
 
             let falloff = pow(1 - distance / radius, 2)
-            let amount = normalizedSettings.liquifyBulgeAmount * clampedIntensity
             let scale = max(0.18, 1 - amount * falloff * 0.78)
             let sourceX = centerX + dx * scale
             let sourceY = centerY + dy * scale

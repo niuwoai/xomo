@@ -476,6 +476,7 @@ final class ImageEditorViewModel: ObservableObject {
                 filterLensDistortionAmountPercent = nil
                 filterPinchAmountPercent = nil
                 filterSpherizeAmountPercent = nil
+                filterLiquifyBulgeAmountPercent = nil
                 filterUnsharpAmountPercent = nil
                 filterUnsharpRadiusPixels = nil
                 filterUnsharpThresholdLevels = nil
@@ -582,6 +583,16 @@ final class ImageEditorViewModel: ObservableObject {
         }
     }
 
+    var filterLiquifyBulgeEffectiveAmountPercent: Double {
+        get {
+            filterLiquifyBulgeAmountPercent
+                ?? max(-100, min(100, filterLiquifyBulgeAmount * filterIntensity * 100))
+        }
+        set {
+            filterLiquifyBulgeAmountPercent = max(-100, min(100, newValue))
+        }
+    }
+
     var filterUnsharpEffectiveAmountPercent: Double {
         get {
             filterUnsharpAmountPercent
@@ -614,6 +625,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var filterLiquifyPushX: Double = 0.25
     @Published var filterLiquifyPushY: Double = 0
     @Published var filterLiquifyTwirlAngle: Double = 0.5
+    @Published var filterLiquifyBulgeAmountPercent: Double?
     @Published var filterLiquifyBulgeAmount: Double = 0.5
     @Published var filterOffsetX: Double = 0.25
     @Published var filterOffsetY: Double = 0
@@ -2851,11 +2863,12 @@ final class ImageEditorViewModel: ObservableObject {
         }
         if filter.kind == .liquifyPuckerBloat {
             let settings = filter.normalizedSettings
+            let amount = settings.liquifyBulgeAmountPercent
+                ?? (settings.liquifyBulgeAmount * filter.normalizedIntensity * 100)
             let title = L10n.format(
                 "imageEditor.properties.smartFilterLiquifyPuckerBloatItem",
                 filter.kind.title,
-                Int((filter.normalizedIntensity * 100).rounded()),
-                Int((settings.liquifyBulgeAmount * 100).rounded())
+                String(format: "%+d", Int(amount.rounded()))
             )
             guard !filter.isEnabled else { return title }
             return L10n.format("imageEditor.properties.smartFilterDisabled", title)
@@ -9723,6 +9736,9 @@ final class ImageEditorViewModel: ObservableObject {
             liquifyPushX: filterLiquifyPushX,
             liquifyPushY: filterLiquifyPushY,
             liquifyTwirlAngle: filterLiquifyTwirlAngle,
+            liquifyBulgeAmountPercent: selectedFilter == .liquifyPuckerBloat
+                ? filterLiquifyBulgeAmountPercent
+                : nil,
             liquifyBulgeAmount: filterLiquifyBulgeAmount,
             offsetX: filterOffsetX,
             offsetY: filterOffsetY,
@@ -11596,6 +11612,7 @@ final class ImageEditorViewModel: ObservableObject {
         filterLiquifyPushX = normalized.liquifyPushX
         filterLiquifyPushY = normalized.liquifyPushY
         filterLiquifyTwirlAngle = normalized.liquifyTwirlAngle
+        filterLiquifyBulgeAmountPercent = normalized.liquifyBulgeAmountPercent
         filterLiquifyBulgeAmount = normalized.liquifyBulgeAmount
         filterOffsetX = normalized.offsetX
         filterOffsetY = normalized.offsetY

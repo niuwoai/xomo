@@ -6285,6 +6285,7 @@ final class XomoAutomationRegistry {
             case "liquifyPushX": viewModel.filterLiquifyPushX = try numericSetting(value, key: key)
             case "liquifyPushY": viewModel.filterLiquifyPushY = try numericSetting(value, key: key)
             case "twirlAngle": viewModel.filterLiquifyTwirlAngle = try numericSetting(value, key: key)
+            case "liquifyBulgeAmountPercent": viewModel.filterLiquifyBulgeAmountPercent = try numericSetting(value, key: key)
             case "bulgeAmount": viewModel.filterLiquifyBulgeAmount = try numericSetting(value, key: key)
             case "offsetX": viewModel.filterOffsetX = try numericSetting(value, key: key)
             case "offsetY": viewModel.filterOffsetY = try numericSetting(value, key: key)
@@ -8028,6 +8029,7 @@ private extension XomoAutomationRegistry {
         "liquifyPushX": XomoAutomationSchema.number(description: "Liquify horizontal push"),
         "liquifyPushY": XomoAutomationSchema.number(description: "Liquify vertical push"),
         "twirlAngle": XomoAutomationSchema.number(description: "Twirl angle"),
+        "liquifyBulgeAmountPercent": XomoAutomationSchema.number(description: "Pucker/Bloat amount from -100 to 100 percent"),
         "bulgeAmount": XomoAutomationSchema.number(description: "Bulge amount"),
         "offsetX": XomoAutomationSchema.number(description: "Horizontal offset"),
         "offsetY": XomoAutomationSchema.number(description: "Vertical offset"),

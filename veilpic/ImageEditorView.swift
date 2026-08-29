@@ -11890,7 +11890,8 @@ struct ImageEditorView: View {
                     && viewModel.selectedFilter != .vignette
                     && viewModel.selectedFilter != .lensCorrection
                     && viewModel.selectedFilter != .pinch
-                    && viewModel.selectedFilter != .spherize {
+                    && viewModel.selectedFilter != .spherize
+                    && viewModel.selectedFilter != .liquifyPuckerBloat {
                     Slider(value: $viewModel.filterIntensity, in: 0...1, step: 0.05)
                 }
                 if viewModel.selectedFilter == .gaussianBlur {
@@ -12352,8 +12353,19 @@ struct ImageEditorView: View {
                         Text(L10n.text("imageEditor.filter.liquifyBulgeAmount"))
                             .font(.system(size: 10, weight: .medium))
                             .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
-                        Slider(value: $viewModel.filterLiquifyBulgeAmount, in: -1...1, step: 0.05)
-                        Text(L10n.format("imageEditor.filter.liquifyBulgeValue", Int((viewModel.filterLiquifyBulgeAmount * 100).rounded())))
+                        Slider(
+                            value: Binding(
+                                get: { viewModel.filterLiquifyBulgeEffectiveAmountPercent },
+                                set: { viewModel.filterLiquifyBulgeEffectiveAmountPercent = $0 }
+                            ),
+                            in: -100...100,
+                            step: 1
+                        )
+                        .accessibilityIdentifier("image-editor-filter-liquify-bulge-amount")
+                        Text(L10n.format(
+                            "imageEditor.filter.liquifyBulgeValue",
+                            String(format: "%+d", Int(viewModel.filterLiquifyBulgeEffectiveAmountPercent.rounded()))
+                        ))
                             .font(.system(size: 10, weight: .semibold))
                             .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
                             .frame(width: 44, alignment: .trailing)

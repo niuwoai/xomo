@@ -1027,7 +1027,7 @@
 "imageEditor.filter.liquifyTwirlAngle" = "旋转";
 "imageEditor.filter.liquifyTwirlValue" = "%d";
 "imageEditor.filter.liquifyBulgeAmount" = "收缩/膨胀";
-"imageEditor.filter.liquifyBulgeValue" = "%d";
+"imageEditor.filter.liquifyBulgeValue" = "%@%%";
 "imageEditor.filter.offsetX" = "水平位移";
 "imageEditor.filter.offsetY" = "垂直位移";
 "imageEditor.filter.offsetValue" = "%d";
@@ -1268,7 +1268,7 @@
 "imageEditor.properties.smartFilterUnsharpItem" = "%@ %d%% · 半径 %@ · 阈值 %d";
 "imageEditor.properties.smartFilterLiquifyPushItem" = "%@ %d%% · X %d · Y %d";
 "imageEditor.properties.smartFilterLiquifyTwirlItem" = "%@ %d%% · 旋转 %d";
-"imageEditor.properties.smartFilterLiquifyPuckerBloatItem" = "%@ %d%% · 收缩/膨胀 %d";
+"imageEditor.properties.smartFilterLiquifyPuckerBloatItem" = "%@ · 收缩/膨胀 %@%%";
 "imageEditor.properties.smartFilterWaveItem" = "%@ %d%% · 振幅 %d · 频率 %d";
 "imageEditor.properties.smartFilterOffsetItem" = "%@ %d%% · X %d · Y %d · %@";
 "imageEditor.properties.smartFilterRippleItem" = "%@ %d%% · 数量 %d · 频率 %d";
