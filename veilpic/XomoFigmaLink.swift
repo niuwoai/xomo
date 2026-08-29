@@ -324,9 +324,25 @@ enum XomoFigmaClipboardWriter {
             return false
         }
         let value = canonicalURL.absoluteString
+        let linkedString = NSAttributedString(
+            string: value,
+            attributes: [.link: canonicalURL]
+        )
+        let fullRange = NSRange(location: 0, length: linkedString.length)
+        guard let htmlData = try? linkedString.data(
+            from: fullRange,
+            documentAttributes: [.documentType: NSAttributedString.DocumentType.html]
+        ),
+        let rtfData = try? linkedString.data(
+            from: fullRange,
+            documentAttributes: [.documentType: NSAttributedString.DocumentType.rtf]
+        ) else { return false }
+
         let item = NSPasteboardItem()
         guard item.setString(value, forType: .string),
-              item.setString(value, forType: .URL)
+              item.setString(value, forType: .URL),
+              item.setData(htmlData, forType: .html),
+              item.setData(rtfData, forType: .rtf)
         else { return false }
 
         pasteboard.clearContents()

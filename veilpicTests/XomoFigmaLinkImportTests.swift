@@ -251,7 +251,7 @@ struct XomoFigmaLinkImportTests {
         )
     }
 
-    @Test func canonicalLinkCopyWritesTextAndURLAsOneTrustedPasteboardItem() throws {
+    @Test func canonicalLinkCopyWritesFourInteroperableRepresentationsAsOneTrustedItem() throws {
         let pasteboard = NSPasteboard(
             name: NSPasteboard.Name("im.some.xomo.tests.figma-link.\(UUID().uuidString)")
         )
@@ -265,6 +265,21 @@ struct XomoFigmaLinkImportTests {
         #expect(pasteboard.pasteboardItems?.count == 1)
         #expect(pasteboard.string(forType: .string) == canonical)
         #expect(pasteboard.string(forType: .URL) == canonical)
+        #expect(pasteboard.data(forType: .html) != nil)
+        #expect(pasteboard.data(forType: .rtf) != nil)
+        let itemTypes = Set(pasteboard.pasteboardItems?.first?.types ?? [])
+        #expect(Set([.string, .URL, .html, .rtf]).isSubset(of: itemTypes))
+        #expect(XomoFigmaRichClipboardLinkExtractor.targets(from: pasteboard) == [canonical])
+        #expect(
+            XomoFigmaClipboardPastePolicy.resolve(
+                hasLayerPayload: false,
+                clipboardText: pasteboard.string(forType: .string),
+                clipboardURLString: pasteboard.string(forType: .URL),
+                clipboardRichLinkTargets: XomoFigmaRichClipboardLinkExtractor.targets(
+                    from: pasteboard
+                )
+            ) == .figmaLink(canonical)
+        )
 
         pasteboard.clearContents()
         #expect(pasteboard.setString("keep me", forType: .string))
@@ -274,6 +289,8 @@ struct XomoFigmaLinkImportTests {
         #expect(!XomoFigmaClipboardWriter.writeCanonicalURL(untrusted, to: pasteboard))
         #expect(pasteboard.string(forType: .string) == "keep me")
         #expect(pasteboard.string(forType: .URL) == nil)
+        #expect(pasteboard.data(forType: .html) == nil)
+        #expect(pasteboard.data(forType: .rtf) == nil)
     }
 
     @Test func clipboardPasteButtonReadsURLRepresentationsWithoutBypassingTextValidation() {
