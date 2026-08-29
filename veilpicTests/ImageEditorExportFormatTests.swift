@@ -2795,6 +2795,8 @@ struct ImageEditorExportFormatTests {
         #expect(plan.map(\.filename) == ["Hero@2x.png", "Hero-wide.jpg", "Hero-print.pdf"])
         #expect(plan.map(\.settings.format) == [.png, .jpeg, .pdf])
         #expect(!plan.contains { $0.sliceID == otherSlice.id })
+        viewModel.exportSettings.scope = .composited
+        #expect(viewModel.canExportSelectedSlicePresets)
 
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent(
             "xomo-tests.selected-slice-presets.\(UUID().uuidString)",

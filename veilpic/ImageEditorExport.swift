@@ -460,8 +460,7 @@ extension ImageEditorViewModel {
     }
 
     var canExportSelectedSlicePresets: Bool {
-        guard exportSettings.scope == .slice,
-              let sliceID = exportSettings.sliceID,
+        guard let sliceID = exportSettings.sliceID,
               let selectedSlice = slice(with: sliceID)
         else { return false }
         return (selectedSlice.exportPresets ?? []).compactMap {

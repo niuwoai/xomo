@@ -583,7 +583,11 @@ struct ImageEditorScopeTests {
         #expect(interaction.contains("XomoCanvasRichLinkDropPolicy.resolve("))
         #expect(interaction.contains("htmlData: htmlData"))
         #expect(interaction.contains("rtfData: rtfData"))
-        #expect(importSource.contains("self.importLayerFiles(panel.urls)"))
+        #expect(importSource.contains("switch ImageEditorFilePanelImportPolicy.resolve(panel.urls)"))
+        #expect(importSource.contains("case let .localFiles(urls):"))
+        #expect(importSource.contains("self.importLayerFiles(urls)"))
+        #expect(importSource.contains("case let .figmaLink(canonicalURL):"))
+        #expect(importSource.contains("onFigmaLink(canonicalURL)"))
         let batchStart = try #require(importSource.range(of: "func importLayerFiles("))
         let batchEnd = try #require(
             importSource[batchStart.upperBound...].range(of: "private func prepareLayerFileImport")
@@ -3181,22 +3185,38 @@ struct ImageEditorScopeTests {
         }
     }
 
-    @Test func slicesMenuOffersDirectAllSlicesDelivery() throws {
-        let source = try String(
+    @Test func nativeAndWindowSliceMenusOfferTheSameDirectDeliveryActions() throws {
+        let menuBarSource = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent(
                 "veilpic/ImageEditorMenuBar.swift"
             ),
             encoding: .utf8
         )
-        let menuStart = try #require(source.range(of: "private var slicesActionsMenu"))
-        let menuEnd = try #require(
-            source[menuStart.upperBound...].range(of: "private var toolsActionsMenu")
+        let commandsSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent(
+                "veilpic/XomoApplicationCommands.swift"
+            ),
+            encoding: .utf8
         )
-        let menuSource = source[menuStart.lowerBound..<menuEnd.lowerBound]
+        let menuStart = try #require(menuBarSource.range(of: "private var slicesActionsMenu"))
+        let menuEnd = try #require(
+            menuBarSource[menuStart.upperBound...].range(of: "private var toolsActionsMenu")
+        )
+        let menuSource = menuBarSource[menuStart.lowerBound..<menuEnd.lowerBound]
 
+        #expect(menuSource.contains("imageEditor.export.saveSelectedSlicePresets"))
+        #expect(menuSource.contains("viewModel.runExportSelectedSlicePresets()"))
+        #expect(menuSource.contains(".disabled(!viewModel.canExportSelectedSlicePresets)"))
         #expect(menuSource.contains("imageEditor.action.exportAllSlices"))
         #expect(menuSource.contains("viewModel.runExportAllSlices()"))
         #expect(menuSource.contains(".disabled(!viewModel.canExportNamedSlice)"))
+        #expect(commandsSource.contains("case exportSelectedSlicePresets"))
+        #expect(commandsSource.contains("actions?.exportSelectedSlicePresets()"))
+        #expect(commandsSource.contains(".disabled(actions?.canExportSelectedSlicePresets != true)"))
+        #expect(commandsSource.contains("case exportAllSlices"))
+        #expect(commandsSource.contains("actions?.exportAllSlices()"))
+        #expect(commandsSource.contains(".disabled(actions?.canExportAllSlices != true)"))
+        #expect(menuBarSource.contains("exportAllSlices: { viewModel.runExportAllSlices() }"))
 
         for locale in ["en", "ja", "zh-Hans"] {
             let localization = try String(
@@ -3205,6 +3225,7 @@ struct ImageEditorScopeTests {
                 ),
                 encoding: .utf8
             )
+            #expect(localization.contains("\"imageEditor.export.saveSelectedSlicePresets\""))
             #expect(localization.contains("\"imageEditor.action.exportAllSlices\""))
         }
     }

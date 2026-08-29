@@ -33,6 +33,10 @@ struct XomoFileCommandActions {
     let canExportSelection: Bool
     let createSlice: () -> Void
     let canCreateSlice: Bool
+    let exportSelectedSlicePresets: () -> Void
+    let canExportSelectedSlicePresets: Bool
+    let exportAllSlices: () -> Void
+    let canExportAllSlices: Bool
     let createHotspot: () -> Void
     let canCreateHotspot: Bool
     let exportHotspotHTML: () -> Void
@@ -72,6 +76,8 @@ enum XomoFileMenuItem: CaseIterable, Hashable {
     case export
     case exportSelection
     case createSlice
+    case exportSelectedSlicePresets
+    case exportAllSlices
     case createHotspot
     case exportHotspotHTML
     case exportSelectedLayers
@@ -781,6 +787,16 @@ struct XomoFileMenuItems: View {
             }
             .keyboardShortcut("k", modifiers: [.command, .option])
             .disabled(actions?.canCreateSlice != true)
+        case .exportSelectedSlicePresets:
+            Button(L10n.text("imageEditor.export.saveSelectedSlicePresets")) {
+                actions?.exportSelectedSlicePresets()
+            }
+            .disabled(actions?.canExportSelectedSlicePresets != true)
+        case .exportAllSlices:
+            Button(L10n.text("imageEditor.action.exportAllSlices")) {
+                actions?.exportAllSlices()
+            }
+            .disabled(actions?.canExportAllSlices != true)
         case .createHotspot:
             Button(L10n.text("imageEditor.action.hotspotCreate")) {
                 actions?.createHotspot()

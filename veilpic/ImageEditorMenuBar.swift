@@ -97,6 +97,13 @@ extension ImageEditorView {
             canExportSelection: viewModel.canExportSelection,
             createSlice: { viewModel.createSliceFromCurrentSelection() },
             canCreateSlice: viewModel.canCreateSliceFromSelection,
+            exportSelectedSlicePresets: {
+                viewModel.exportSettings.scope = .slice
+                viewModel.runExportSelectedSlicePresets()
+            },
+            canExportSelectedSlicePresets: viewModel.canExportSelectedSlicePresets,
+            exportAllSlices: { viewModel.runExportAllSlices() },
+            canExportAllSlices: viewModel.canExportNamedSlice,
             createHotspot: { viewModel.createHotspotFromCurrentSelection() },
             canCreateHotspot: viewModel.canCreateHotspotFromSelection,
             exportHotspotHTML: { viewModel.exportHotspotHTML() },
@@ -1783,6 +1790,11 @@ extension ImageEditorView {
                 viewModel.openExportPanel()
             }
             .disabled(!viewModel.canExportNamedSlice)
+            Button(L10n.text("imageEditor.export.saveSelectedSlicePresets")) {
+                viewModel.exportSettings.scope = .slice
+                viewModel.runExportSelectedSlicePresets()
+            }
+            .disabled(!viewModel.canExportSelectedSlicePresets)
             Button(L10n.text("imageEditor.action.exportAllSlices")) {
                 viewModel.runExportAllSlices()
             }
