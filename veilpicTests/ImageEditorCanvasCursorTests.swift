@@ -2812,18 +2812,26 @@ struct ImageEditorCanvasCursorTests {
         ) == .drawSelection)
     }
 
-    @Test func patchCursorPreviewsMoveBeforeDraggingAndKeepsForbiddenSemantics() {
+    @Test func patchCursorPreviewsSourceAndDestinationTransferBeforeDragging() {
         let drawing = ImageEditorCanvasCursor.cursor(for: .patchTool, brushDiameter: 18)
         let lasso = ImageEditorCanvasCursor.cursor(for: .lasso, brushDiameter: 18)
-        let ready = ImageEditorCanvasCursor.cursor(
+        let sourceReady = ImageEditorCanvasCursor.cursor(
             for: .patchTool,
             brushDiameter: 18,
-            patchPhase: .readyToDrag
+            patchPhase: .readyToDrag,
+            patchMode: .source
         )
-        let dragging = ImageEditorCanvasCursor.cursor(
+        let sourceDragging = ImageEditorCanvasCursor.cursor(
             for: .patchTool,
             brushDiameter: 18,
-            patchPhase: .draggingSelection
+            patchPhase: .draggingSelection,
+            patchMode: .source
+        )
+        let destinationReady = ImageEditorCanvasCursor.cursor(
+            for: .patchTool,
+            brushDiameter: 18,
+            patchPhase: .readyToDrag,
+            patchMode: .destination
         )
         let blocked = ImageEditorCanvasCursor.cursor(
             for: .patchTool,
@@ -2832,10 +2840,10 @@ struct ImageEditorCanvasCursorTests {
         )
 
         #expect(drawing.image.tiffRepresentation == lasso.image.tiffRepresentation)
-        #expect(ready !== NSCursor.arrow)
-        #expect(ready.image.tiffRepresentation == ImageEditorCanvasCursor.objectMoveCursor().image.tiffRepresentation)
-        #expect(dragging.image.tiffRepresentation == ImageEditorCanvasCursor.objectMoveCursor().image.tiffRepresentation)
-        #expect(ready.image.tiffRepresentation == dragging.image.tiffRepresentation)
+        #expect(sourceReady !== NSCursor.arrow)
+        #expect(sourceReady.image.tiffRepresentation == sourceDragging.image.tiffRepresentation)
+        #expect(sourceReady.image.tiffRepresentation != destinationReady.image.tiffRepresentation)
+        #expect(sourceReady.image.tiffRepresentation != ImageEditorCanvasCursor.objectMoveCursor().image.tiffRepresentation)
         #expect(blocked === NSCursor.operationNotAllowed)
     }
 
@@ -2873,6 +2881,8 @@ struct ImageEditorCanvasCursorTests {
         )
 
         #expect(source.components(separatedBy: "patchPhase: patchCursorPhase(at:").count == 4)
+        #expect(source.components(separatedBy: "patchMode: viewModel.patchMode").count == 4)
+        #expect(source.contains(".onChange(of: viewModel.patchMode)"))
         #expect(source.contains("isDrawingSelection: isDrawingPatchSelection"))
         #expect(source.contains("canEditSelectionPixels: viewModel.canEditSelectionPixels"))
         #expect(source.contains("switch ImageEditorPatchGestureStartAction.resolve("))

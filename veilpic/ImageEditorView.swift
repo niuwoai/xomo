@@ -4575,6 +4575,7 @@ struct ImageEditorView: View {
                             eyedropperTarget: eyedropperCursorTarget,
                             isErasingToHistory: isEraserHistoryCursorActive,
                             patchPhase: patchCursorPhase(at: canvasPoint),
+                            patchMode: viewModel.patchMode,
                             modifierFlags: canvasModifierFlags,
                             marqueeShape: viewModel.marqueeShape,
                             cropHandle: cropHandle,
@@ -4597,6 +4598,9 @@ struct ImageEditorView: View {
                     refreshCanvasCursor(in: geometry.size)
                 }
                 .onChange(of: viewModel.spongeMode) { _ in
+                    refreshCanvasCursor(in: geometry.size)
+                }
+                .onChange(of: viewModel.patchMode) { _ in
                     refreshCanvasCursor(in: geometry.size)
                 }
                 .onChange(of: viewModel.selectedLeftSidebarTab) { tab in
@@ -6912,6 +6916,7 @@ struct ImageEditorView: View {
             eyedropperTarget: eyedropperCursorTarget,
             isErasingToHistory: isEraserHistoryCursorActive,
             patchPhase: patchCursorPhase(at: canvasPoint),
+            patchMode: viewModel.patchMode,
             modifierFlags: NSEvent.modifierFlags,
             marqueeShape: viewModel.marqueeShape,
             cropHandle: cropInteractionHandle(at: viewPoint, in: size),
@@ -6964,6 +6969,7 @@ struct ImageEditorView: View {
             eyedropperTarget: eyedropperCursorTarget,
             isErasingToHistory: isEraserHistoryCursorActive,
             patchPhase: patchCursorPhase(at: nil),
+            patchMode: viewModel.patchMode,
             modifierFlags: canvasModifierFlags,
             marqueeShape: viewModel.marqueeShape,
             cropHandle: nil,
@@ -15823,6 +15829,7 @@ enum ImageEditorCanvasCursor {
         eyedropperTarget: ImageEditorColorSampleTarget = .foreground,
         isErasingToHistory: Bool = false,
         patchPhase: ImageEditorPatchCursorPhase = .drawingSelection,
+        patchMode: ImageEditorPatchMode = .source,
         modifierFlags: NSEvent.ModifierFlags = [],
         marqueeShape: ImageEditorMarqueeShape = .rectangle,
         cropHandle: ImageEditorCropHandle? = nil,
@@ -15927,6 +15934,7 @@ enum ImageEditorCanvasCursor {
                 eyedropperTarget: eyedropperTarget,
                 isErasingToHistory: isErasingToHistory,
                 patchPhase: patchPhase,
+                patchMode: patchMode,
                 modifierFlags: modifierFlags,
                 marqueeShape: marqueeShape,
                 cropHandle: cropHandle
@@ -16542,6 +16550,7 @@ enum ImageEditorCanvasCursor {
         eyedropperTarget: ImageEditorColorSampleTarget = .foreground,
         isErasingToHistory: Bool = false,
         patchPhase: ImageEditorPatchCursorPhase = .drawingSelection,
+        patchMode: ImageEditorPatchMode = .source,
         modifierFlags: NSEvent.ModifierFlags = [],
         marqueeShape: ImageEditorMarqueeShape = .rectangle,
         cropHandle: ImageEditorCropHandle? = nil
@@ -16641,12 +16650,9 @@ enum ImageEditorCanvasCursor {
             case .drawingSelection:
                 return freeformSelectionPathCursor(mode: .replace)
             case .readyToDrag:
-                // Hovering the selected patch is already an actionable move
-                // target. Preview that operation before mouse-down instead of
-                // falling back to an inert system arrow.
-                return objectMoveCursor()
+                return patchTransferCursor(mode: patchMode)
             case .draggingSelection:
-                return objectMoveCursor()
+                return patchTransferCursor(mode: patchMode)
             case .blocked:
                 return .operationNotAllowed
             }
@@ -18306,24 +18312,71 @@ enum ImageEditorCanvasCursor {
         )
     }
 
-    private static func patchCursor() -> NSCursor {
-        let cacheKey = "patch"
+    /// The Patch tool has two opposite data-flow modes. Source samples the
+    /// drag endpoint back into the selected target; Destination copies the
+    /// selected source outward to the endpoint. Show that transfer direction
+    /// rather than a generic four-way move or a mechanical patch-tool icon.
+    static func patchTransferCursor(mode: ImageEditorPatchMode) -> NSCursor {
+        let cacheKey = "patch-transfer:\(mode.rawValue)"
         if let cachedCursor = cursorCache[cacheKey] {
             return cachedCursor
         }
-        let side: CGFloat = 34
+
+        let side: CGFloat = 38
         let image = NSImage(size: NSSize(width: side, height: side))
         image.lockFocus()
-        let patch = NSBezierPath(roundedRect: NSRect(x: 4, y: 5, width: 18, height: 16), xRadius: 3, yRadius: 3)
-        patch.setLineDash([3, 2], count: 2, phase: 0)
-        NSColor.black.withAlphaComponent(0.95).setStroke(); patch.lineWidth = 3.5; patch.stroke()
-        NSColor.white.setStroke(); patch.lineWidth = 1.2; patch.stroke()
+
+        let selectedTile = NSRect(x: 2, y: 13, width: 12, height: 12)
+        let endpointTile = NSRect(x: 24, y: 13, width: 12, height: 12)
+        let sourceTile = mode == .source ? endpointTile : selectedTile
+        let targetTile = mode == .source ? selectedTile : endpointTile
+
+        let source = NSBezierPath(roundedRect: sourceTile, xRadius: 2.5, yRadius: 2.5)
+        NSColor.black.withAlphaComponent(0.96).setFill()
+        source.fill()
+        NSColor.white.withAlphaComponent(0.98).setStroke()
+        source.lineWidth = 1.2
+        source.stroke()
+        NSColor.systemBlue.withAlphaComponent(0.95).setFill()
+        NSBezierPath(
+            roundedRect: sourceTile.insetBy(dx: 3.2, dy: 3.2),
+            xRadius: 1.2,
+            yRadius: 1.2
+        ).fill()
+
+        let target = NSBezierPath(roundedRect: targetTile, xRadius: 2.5, yRadius: 2.5)
+        target.setLineDash([2.2, 1.6], count: 2, phase: 0)
+        NSColor.black.withAlphaComponent(0.96).setStroke()
+        target.lineWidth = 3.2
+        target.stroke()
+        NSColor.white.withAlphaComponent(0.98).setStroke()
+        target.lineWidth = 1.1
+        target.stroke()
+
+        let arrowStart = mode == .source
+            ? NSPoint(x: endpointTile.minX - 1, y: endpointTile.midY)
+            : NSPoint(x: selectedTile.maxX + 1, y: selectedTile.midY)
+        let arrowEnd = mode == .source
+            ? NSPoint(x: selectedTile.maxX + 1, y: selectedTile.midY)
+            : NSPoint(x: endpointTile.minX - 1, y: endpointTile.midY)
         let arrow = NSBezierPath()
-        arrow.move(to: NSPoint(x: 22, y: 24)); arrow.line(to: NSPoint(x: 30, y: 24)); arrow.line(to: NSPoint(x: 26, y: 28))
-        NSColor.black.withAlphaComponent(0.95).setStroke(); arrow.lineWidth = 3; arrow.stroke()
-        NSColor.white.setStroke(); arrow.lineWidth = 1; arrow.stroke()
+        arrow.move(to: arrowStart)
+        arrow.line(to: arrowEnd)
+        let direction: CGFloat = arrowEnd.x >= arrowStart.x ? 1 : -1
+        arrow.move(to: arrowEnd)
+        arrow.line(to: NSPoint(x: arrowEnd.x - direction * 4.5, y: arrowEnd.y + 3.5))
+        arrow.move(to: arrowEnd)
+        arrow.line(to: NSPoint(x: arrowEnd.x - direction * 4.5, y: arrowEnd.y - 3.5))
+        NSColor.black.withAlphaComponent(0.96).setStroke()
+        arrow.lineWidth = 3.4
+        arrow.stroke()
+        NSColor.white.withAlphaComponent(0.98).setStroke()
+        arrow.lineWidth = 1.1
+        arrow.stroke()
+
         image.unlockFocus()
-        return cache(NSCursor(image: image, hotSpot: NSPoint(x: 8, y: side - 8)), for: cacheKey)
+        let hotSpot = NSPoint(x: selectedTile.midX, y: side - selectedTile.midY)
+        return cache(NSCursor(image: image, hotSpot: hotSpot), for: cacheKey)
     }
 
     private static func gradientCursor(isConstrained: Bool) -> NSCursor {
