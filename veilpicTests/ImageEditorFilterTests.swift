@@ -2511,7 +2511,7 @@ struct ImageEditorFilterTests {
             panelSource.range(of: "else if viewModel.selectedFilter == .ripple")
         )
         let rippleEnd = try #require(
-            panelSource[rippleStart.upperBound...].range(of: "} else {")
+            panelSource[rippleStart.upperBound...].range(of: "else if viewModel.selectedFilter == .wave")
         )
         let rippleSource = panelSource[rippleStart.lowerBound..<rippleEnd.lowerBound]
 
@@ -2521,6 +2521,35 @@ struct ImageEditorFilterTests {
         #expect(rippleSource.contains("imageEditor.filter.rippleAmount"))
         #expect(rippleSource.contains("image-editor-filter-quick-ripple-amount"))
         #expect(!rippleSource.contains("viewModel.filterIntensity"))
+    }
+
+    @Test func waveQuickPanelUsesAmplitudeInsteadOfLegacyIntensity() throws {
+        let root = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let viewSource = try String(
+            contentsOf: root.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let panelStart = try #require(viewSource.range(of: "private var filtersQuickPanel: some View"))
+        let panelEnd = try #require(
+            viewSource[panelStart.upperBound...].range(of: "private func historySnapshotRow")
+        )
+        let panelSource = viewSource[panelStart.lowerBound..<panelEnd.lowerBound]
+        let waveStart = try #require(
+            panelSource.range(of: "else if viewModel.selectedFilter == .wave")
+        )
+        let waveEnd = try #require(
+            panelSource[waveStart.upperBound...].range(of: "} else {")
+        )
+        let waveSource = panelSource[waveStart.lowerBound..<waveEnd.lowerBound]
+
+        #expect(waveSource.contains("viewModel.filterWaveEffectiveAmplitudePercent"))
+        #expect(waveSource.contains("in: -100...100"))
+        #expect(waveSource.contains("step: 1"))
+        #expect(waveSource.contains("imageEditor.filter.waveAmplitude"))
+        #expect(waveSource.contains("image-editor-filter-quick-wave-amplitude"))
+        #expect(!waveSource.contains("viewModel.filterIntensity"))
     }
 
     @Test func imageEditorMotionBlurFilterLayerAndSmartFilterAreNonDestructive() async throws {

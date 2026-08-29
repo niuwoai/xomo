@@ -7890,6 +7890,25 @@ struct ImageEditorView: View {
                         .focusable(false)
                         .accessibilityLabel(L10n.text("imageEditor.filter.rippleAmount"))
                         .accessibilityIdentifier("image-editor-filter-quick-ripple-amount")
+                } else if viewModel.selectedFilter == .wave {
+                    Text(L10n.format(
+                        "imageEditor.filter.waveAmplitudeValue",
+                        String(format: "%+d", Int(viewModel.filterWaveEffectiveAmplitudePercent.rounded()))
+                    ))
+                        .font(.system(size: 11, weight: .semibold).monospacedDigit())
+                        .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                        .frame(width: 52, alignment: .leading)
+                    Slider(
+                        value: Binding(
+                            get: { viewModel.filterWaveEffectiveAmplitudePercent },
+                            set: { viewModel.filterWaveEffectiveAmplitudePercent = $0 }
+                        ),
+                        in: -100...100,
+                        step: 1
+                    )
+                        .focusable(false)
+                        .accessibilityLabel(L10n.text("imageEditor.filter.waveAmplitude"))
+                        .accessibilityIdentifier("image-editor-filter-quick-wave-amplitude")
                 } else {
                     Text("\(Int((viewModel.filterIntensity * 100).rounded()))%")
                         .font(.system(size: 11, weight: .semibold).monospacedDigit())
