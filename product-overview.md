@@ -1,6 +1,8 @@
 # Xomo 产品概览
 
-> 最后更新：2026-08-30 | 当前版本：v2.12.0-rc1478
+> 最后更新：2026-08-30 | 当前版本：v2.12.0-rc1479
+
+v2.12.0-rc1479 扩展 Figma 链接入口到 Community 文件资源页：`/community/file/<resource-id>/<slug>` 会被识别、校验并规范化，分享追踪参数和疑似 token 不会进入预览、剪贴板或持久化状态。社区资源 ID 并不是官方文件 API 所需的 file key，因此 Community、Slides、Sites、Buzz、Make 等 preview-only 类型只提供可信链接预览，不再显示会必然失败或误导用户的元数据/节点导入控件；在 Figma 打开或复制资源后，可继续使用获得真实 file key 的 Design/Board 链接进行节点导入。标准 Debug 构建、Figma 链接解析专项 11/11、既有导入流程回归 16/16、CLI/MCP 2/2 与静态契约均通过。下一版 rc1480 执行周期完整门禁、覆盖 `/Applications/Xomo.app`，并重点冒烟系统/窗口菜单、PNG/JPG 导入、Delete/Undo 与 Figma 链接。
 
 v2.12.0-rc1478 加固导入图片后的 Delete 焦点所有权：文件面板完成导入后，编辑器除了立即恢复焦点，还会跨两个连续主运行循环回合再次确认 first responder，覆盖 AppKit 在首轮恢复后又把旧文本 field editor 设回前台的退场时序。选中的导入图片因此可直接 Delete 并一步撤销，用户主动进行文字编辑时仍由文本控件处理删除键。标准 Debug 构建、焦点专项 11/11、图层删除与导入 Delete/Undo 回归 25/25、CLI/MCP 2/2 与静态契约均通过。下一次周期完整门禁为 rc1480。当前安装版仍为 rc1400；它早于 rc1462 的首轮焦点修复及本版加固，待 rc1480 安全覆盖后进行“导入 PNG → Delete → Undo”真实冒烟。
 

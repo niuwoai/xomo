@@ -10,6 +10,7 @@ enum XomoFigmaResourceType: String, CaseIterable, Codable, Sendable {
     case site
     case buzz
     case make
+    case communityFile = "community/file"
 
     var plannedImportScope: XomoFigmaPlannedImportScope {
         switch self {
@@ -17,7 +18,7 @@ enum XomoFigmaResourceType: String, CaseIterable, Codable, Sendable {
             .designDocument
         case .figJam:
             .figJamBoard
-        case .slides, .slideDeck, .site, .buzz, .make:
+        case .slides, .slideDeck, .site, .buzz, .make, .communityFile:
             .previewOnly
         }
     }
@@ -42,6 +43,8 @@ enum XomoFigmaResourceType: String, CaseIterable, Codable, Sendable {
             "xomo.figma.resource.buzz"
         case .make:
             "xomo.figma.resource.make"
+        case .communityFile:
+            "xomo.figma.resource.communityFile"
         }
     }
 }
@@ -314,7 +317,8 @@ enum XomoCanvasStringDropPolicy {
 
 enum XomoFigmaLinkParser {
     static let maximumInputLength = 4_096
-    private static let expectedPathComponentCount = 4
+    private static let standardPathComponentCount = 4
+    private static let communityPathComponentCount = 5
     private static let minimumFileKeyLength = 6
     private static let maximumIdentifierLength = 128
     private static let maximumFileSlugLength = 200
@@ -366,14 +370,31 @@ enum XomoFigmaLinkParser {
 
     private static func parseIdentity(_ percentEncodedPath: String) throws -> FigmaIdentity {
         let encodedSegments = percentEncodedPath.split(separator: "/", omittingEmptySubsequences: false)
-        guard encodedSegments.count == expectedPathComponentCount, encodedSegments.first?.isEmpty == true,
-              let resourcePath = String(encodedSegments[1]).removingPercentEncoding,
-              let fileKey = String(encodedSegments[2]).removingPercentEncoding,
-              let fileSlug = String(encodedSegments[3]).removingPercentEncoding
-        else { throw XomoFigmaLinkParserError.malformedURL }
-        guard let resourceType = XomoFigmaResourceType(rawValue: resourcePath) else {
-            throw XomoFigmaLinkParserError.unsupportedResourceType
+        guard encodedSegments.first?.isEmpty == true else {
+            throw XomoFigmaLinkParserError.malformedURL
         }
+
+        let resourceType: XomoFigmaResourceType
+        let encodedFileKey: Substring
+        let encodedFileSlug: Substring
+        if encodedSegments.count == communityPathComponentCount,
+           encodedSegments[1] == "community",
+           encodedSegments[2] == "file" {
+            resourceType = .communityFile
+            encodedFileKey = encodedSegments[3]
+            encodedFileSlug = encodedSegments[4]
+        } else {
+            guard encodedSegments.count == standardPathComponentCount,
+                  let resourcePath = String(encodedSegments[1]).removingPercentEncoding,
+                  let standardResourceType = XomoFigmaResourceType(rawValue: resourcePath)
+            else { throw XomoFigmaLinkParserError.unsupportedResourceType }
+            resourceType = standardResourceType
+            encodedFileKey = encodedSegments[2]
+            encodedFileSlug = encodedSegments[3]
+        }
+        guard let fileKey = String(encodedFileKey).removingPercentEncoding,
+              let fileSlug = String(encodedFileSlug).removingPercentEncoding
+        else { throw XomoFigmaLinkParserError.malformedURL }
         guard isSafeIdentifier(fileKey, minimumLength: minimumFileKeyLength) else {
             throw XomoFigmaLinkParserError.invalidFileKey
         }

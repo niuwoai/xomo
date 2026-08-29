@@ -3846,6 +3846,7 @@
 "xomo.figma.resource.site" = "Figma Sites";
 "xomo.figma.resource.buzz" = "Figma Buzz";
 "xomo.figma.resource.make" = "Figma Make";
+"xomo.figma.resource.communityFile" = "Figma 社区文件";
 "xomo.figma.scope.designDocument" = "计划映射为设计文档";
 "xomo.figma.scope.figJamBoard" = "计划映射为白板文档";
 "xomo.figma.scope.previewOnly" = "当前仅支持链接预览";

@@ -50,6 +50,39 @@ struct XomoFigmaLinkParserTests {
         }
     }
 
+    @Test func recognizesCommunityFileResourcePagesAsSanitizedPreviewOnlyLinks() throws {
+        let preview = try XomoFigmaLinkParser.parse(
+            "https://figma.com/community/file/1380235722331273046/simple-design-system?utm_source=share&token=discard-me"
+        )
+
+        #expect(preview.resourceType == .communityFile)
+        #expect(preview.fileKey == "1380235722331273046")
+        #expect(preview.fileSlug == "simple-design-system")
+        #expect(preview.plannedImportScope == .previewOnly)
+        #expect(preview.discardedQueryItemCount == 2)
+        #expect(
+            preview.canonicalURL.absoluteString ==
+                "https://www.figma.com/community/file/1380235722331273046/simple-design-system"
+        )
+    }
+
+    @Test func previewOnlyResourcesDoNotExposeAuthorizedFileOrNodeImportControls() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent(
+                "veilpic/XomoFigmaLinkImportSheet.swift"
+            ),
+            encoding: .utf8
+        )
+
+        #expect(source.contains("if preview.plannedImportScope == .previewOnly"))
+        #expect(source.contains("messageKey: \"xomo.figma.scope.previewOnly\""))
+        #expect(source.contains("authorizedMetadataSection(preview)"))
+        #expect(source.contains("authorizedNodeImportSection(preview)"))
+    }
+
     @Test func parsesPrototypeStartingPointAndNormalizesNestedNodeIDs() throws {
         let preview = try XomoFigmaLinkParser.parse(
             "https://www.figma.com/proto/abc123DEF456/Checkout?node-id=I32-9%3B44-5&starting-point-node-id=0-3"
@@ -105,7 +138,9 @@ struct XomoFigmaLinkParserTests {
 
     @Test func rejectsUnsupportedRoutesAndMalformedFileIdentity() {
         let invalidURLs = [
-            "https://www.figma.com/community/file/abc123DEF456/File",
+            "https://www.figma.com/community/plugin/abc123DEF456/Plugin",
+            "https://www.figma.com/community/file/abc123DEF456",
+            "https://www.figma.com/community/file/abc123DEF456/File/extra",
             "https://www.figma.com/design/short/File",
             "https://www.figma.com/design/abc123DEF456",
             "https://www.figma.com/design/abc123DEF456/File/extra",

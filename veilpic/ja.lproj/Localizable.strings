@@ -3846,6 +3846,7 @@
 "xomo.figma.resource.site" = "Figma Sites";
 "xomo.figma.resource.buzz" = "Figma Buzz";
 "xomo.figma.resource.make" = "Figma Make";
+"xomo.figma.resource.communityFile" = "Figma コミュニティファイル";
 "xomo.figma.scope.designDocument" = "デザイン文書へのマッピング予定";
 "xomo.figma.scope.figJamBoard" = "ボード文書へのマッピング予定";
 "xomo.figma.scope.previewOnly" = "現在はリンクプレビューのみ";

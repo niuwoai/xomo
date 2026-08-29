@@ -1,5 +1,18 @@
 # Changelog
 
+## 2.12.0-rc1479 - 2026-08-30
+
+### Added
+- Figma 链接入口现在识别官方 `/community/file/<resource-id>/<slug>` 社区文件资源页，保留社区资源 ID 与名称并生成可信 `www.figma.com` 规范链接。
+
+### Changed
+- 社区文件、Slides、Sites、Buzz、Make 等 `previewOnly` 资源只显示安全链接预览，不再误开放需要文件 key 的官方元数据和节点导入控件；用户可先在 Figma 中打开或复制资源，再导入获得实际文件 key 的 Design/Board 链接。
+- 社区链接继续执行 HTTPS、可信主机、无凭据/端口/片段、严格路径段与标识符校验，并清除分享追踪参数和疑似 token。
+
+### Tests
+- 新增社区文件规范化、追踪参数清理、preview-only 能力边界及畸形/额外路径拒绝回归。
+- 标准 Debug `build-for-testing` 通过；Figma 链接解析专项 11/11、既有 Figma 导入流程回归 16/16、CLI/MCP 2/2、图层面板样式、隔离测试器及两组发布契约均通过。
+
 ## 2.12.0-rc1478 - 2026-08-30
 
 ### Fixed

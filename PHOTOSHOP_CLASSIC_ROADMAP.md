@@ -1,6 +1,8 @@
 # Xomo 经典 Photoshop 能力路线图
 
-> 最后更新：2026-08-30 ｜ 当前版本：v2.12.0-rc1478 ｜ 目标：以经典 Photoshop 能力作为现代混合编辑器的可靠像素与图层底座
+> 最后更新：2026-08-30 ｜ 当前版本：v2.12.0-rc1479 ｜ 目标：以经典 Photoshop 能力作为现代混合编辑器的可靠像素与图层底座
+
+- `v2.12.0-rc1479`：Figma 链接入口识别官方 Community 文件资源页，安全规范化 `/community/file/<resource-id>/<slug>` 并清除追踪/token 参数；Community、Slides、Sites、Buzz、Make 等 preview-only 资源不再误开放需要真实文件 key 的 API 读取/节点导入控件。标准 Debug 构建、Figma 链接解析专项 11/11、既有导入流程回归 16/16、CLI/MCP 2/2 与静态契约均通过。下一版 rc1480 执行周期完整门禁、安装和真实冒烟。
 
 - `v2.12.0-rc1478`：导入图片的文件面板关闭后，编辑器跨两个连续主运行循环回合重新取得键盘焦点，抵御 AppKit 首轮恢复后再次复活旧 field editor 的时序；选中导入图片可直接 Delete，文字编辑与一步撤销语义不变。标准 Debug 构建、焦点专项 11/11、图层删除与导入 Delete/Undo 回归 25/25、CLI/MCP 2/2 与静态契约均通过。下一次周期完整门禁仍为 rc1480。
 

@@ -31,8 +31,16 @@ struct XomoFigmaLinkImportSheet: View {
                     inputSection
                     previewSection
                     if let preview = draft.preview {
-                        authorizedMetadataSection(preview)
-                        authorizedNodeImportSection(preview)
+                        if preview.plannedImportScope == .previewOnly {
+                            statusCard(
+                                symbol: "eye",
+                                messageKey: "xomo.figma.scope.previewOnly",
+                                color: Color(nsColor: ImageEditorTheme.mutedText)
+                            )
+                        } else {
+                            authorizedMetadataSection(preview)
+                            authorizedNodeImportSection(preview)
+                        }
                     }
                     securityNotice
                 }
