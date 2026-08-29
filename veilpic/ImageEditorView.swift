@@ -3399,7 +3399,10 @@ struct ImageEditorView: View {
         switch XomoFigmaClipboardPastePolicy.resolve(
             hasLayerPayload: viewModel.canPasteClipboardImage(from: pasteboard),
             clipboardText: pasteboard.string(forType: .string),
-            clipboardURLString: pasteboard.string(forType: .URL)
+            clipboardURLString: pasteboard.string(forType: .URL),
+            clipboardRichLinkTargets: XomoFigmaRichClipboardLinkExtractor.targets(
+                from: pasteboard
+            )
         ) {
         case .layerPayload:
             viewModel.pasteClipboardAsLayer(from: pasteboard)

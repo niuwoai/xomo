@@ -253,7 +253,8 @@ enum XomoFigmaClipboardInputRoute: Equatable {
 enum XomoFigmaClipboardLinkPolicy {
     static func canonicalURL(
         clipboardText: String?,
-        clipboardURLString: String? = nil
+        clipboardURLString: String? = nil,
+        clipboardRichLinkTargets: [String] = []
     ) -> String? {
         let textPreview: XomoFigmaLinkPreview?
         if let clipboardText {
@@ -261,31 +262,49 @@ enum XomoFigmaClipboardLinkPolicy {
         } else {
             textPreview = nil
         }
+
+        var declaredLinkPreviews: [XomoFigmaLinkPreview] = []
         if let clipboardURLString,
            !clipboardURLString.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             guard let urlPreview = XomoFigmaSharedTextInput.preview(in: clipboardURLString) else {
                 return nil
             }
-            guard textPreview == nil || textPreview?.canonicalURL == urlPreview.canonicalURL else {
-                return nil
-            }
-            return urlPreview.canonicalURL.absoluteString
+            declaredLinkPreviews.append(urlPreview)
         }
 
-        return textPreview?.canonicalURL.absoluteString
+        for richLinkTarget in clipboardRichLinkTargets {
+            guard let richLinkPreview = XomoFigmaSharedTextInput.preview(in: richLinkTarget) else {
+                return nil
+            }
+            declaredLinkPreviews.append(richLinkPreview)
+        }
+
+        let declaredCanonicalURLs = Set(declaredLinkPreviews.map(\.canonicalURL))
+        guard declaredCanonicalURLs.count <= 1 else { return nil }
+        if let textPreview,
+           let declaredCanonicalURL = declaredCanonicalURLs.first,
+           textPreview.canonicalURL != declaredCanonicalURL {
+            return nil
+        }
+
+        return declaredCanonicalURLs.first?.absoluteString ?? textPreview?.canonicalURL.absoluteString
     }
 }
 
 enum XomoFigmaClipboardInputPolicy {
     static func resolve(
         clipboardText: String?,
-        clipboardURLString: String? = nil
+        clipboardURLString: String? = nil,
+        clipboardRichLinkTargets: [String] = []
     ) -> XomoFigmaClipboardInputRoute {
-        if let clipboardURLString,
-           !clipboardURLString.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+        let hasDeclaredLinkTarget = clipboardURLString?.trimmingCharacters(
+            in: .whitespacesAndNewlines
+        ).isEmpty == false || !clipboardRichLinkTargets.isEmpty
+        if hasDeclaredLinkTarget {
             guard let canonicalURL = XomoFigmaClipboardLinkPolicy.canonicalURL(
                 clipboardText: clipboardText,
-                clipboardURLString: clipboardURLString
+                clipboardURLString: clipboardURLString,
+                clipboardRichLinkTargets: clipboardRichLinkTargets
             ) else { return .rejected }
             return .input(canonicalURL)
         }
@@ -319,14 +338,77 @@ enum XomoFigmaClipboardPastePolicy {
     static func resolve(
         hasLayerPayload: Bool,
         clipboardText: String?,
-        clipboardURLString: String? = nil
+        clipboardURLString: String? = nil,
+        clipboardRichLinkTargets: [String] = []
     ) -> XomoFigmaClipboardPasteRoute {
         guard !hasLayerPayload else { return .layerPayload }
         guard let canonicalURL = XomoFigmaClipboardLinkPolicy.canonicalURL(
             clipboardText: clipboardText,
-            clipboardURLString: clipboardURLString
+            clipboardURLString: clipboardURLString,
+            clipboardRichLinkTargets: clipboardRichLinkTargets
         ) else { return .unavailable }
         return .figmaLink(canonicalURL)
+    }
+}
+
+enum XomoFigmaRichClipboardLinkExtractor {
+    static func targets(from pasteboard: NSPasteboard) -> [String] {
+        targets(
+            htmlData: pasteboard.data(forType: .html),
+            rtfData: pasteboard.data(forType: .rtf)
+        )
+    }
+
+    static func targets(
+        htmlData: Data? = nil,
+        rtfData: Data? = nil
+    ) -> [String] {
+        var targets: [String] = []
+        if let htmlData {
+            appendTargets(
+                from: htmlData,
+                documentType: .html,
+                to: &targets
+            )
+        }
+        if let rtfData {
+            appendTargets(
+                from: rtfData,
+                documentType: .rtf,
+                to: &targets
+            )
+        }
+        return targets
+    }
+
+    private static func appendTargets(
+        from data: Data,
+        documentType: NSAttributedString.DocumentType,
+        to targets: inout [String]
+    ) {
+        guard let attributedString = try? NSAttributedString(
+            data: data,
+            options: [.documentType: documentType],
+            documentAttributes: nil
+        ) else { return }
+
+        let fullRange = NSRange(location: 0, length: attributedString.length)
+        attributedString.enumerateAttribute(.link, in: fullRange) { value, _, _ in
+            let target: String?
+            switch value {
+            case let url as URL:
+                target = url.absoluteString
+            case let string as String:
+                target = string
+            default:
+                target = nil
+            }
+            guard let target,
+                  !target.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+                  !targets.contains(target)
+            else { return }
+            targets.append(target)
+        }
     }
 }
 

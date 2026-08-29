@@ -143,7 +143,10 @@ extension ImageEditorView {
             presentFigmaLinkImport(
                 canonicalURL: XomoFigmaClipboardLinkPolicy.canonicalURL(
                     clipboardText: NSPasteboard.general.string(forType: .string),
-                    clipboardURLString: NSPasteboard.general.string(forType: .URL)
+                    clipboardURLString: NSPasteboard.general.string(forType: .URL),
+                    clipboardRichLinkTargets: XomoFigmaRichClipboardLinkExtractor.targets(
+                        from: .general
+                    )
                 ),
                 placementCenter: viewModel.visibleCanvasCenter
             )
@@ -248,7 +251,8 @@ extension ImageEditorView {
         XomoFigmaClipboardPastePolicy.resolve(
             hasLayerPayload: viewModel.canPasteClipboardImage,
             clipboardText: NSPasteboard.general.string(forType: .string),
-            clipboardURLString: NSPasteboard.general.string(forType: .URL)
+            clipboardURLString: NSPasteboard.general.string(forType: .URL),
+            clipboardRichLinkTargets: XomoFigmaRichClipboardLinkExtractor.targets(from: .general)
         )
     }
 

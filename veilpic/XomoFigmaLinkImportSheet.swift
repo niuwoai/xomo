@@ -658,7 +658,8 @@ struct XomoFigmaLinkImportSheet: View {
     private func pasteLink() {
         let route = XomoFigmaClipboardInputPolicy.resolve(
             clipboardText: NSPasteboard.general.string(forType: .string),
-            clipboardURLString: NSPasteboard.general.string(forType: .URL)
+            clipboardURLString: NSPasteboard.general.string(forType: .URL),
+            clipboardRichLinkTargets: XomoFigmaRichClipboardLinkExtractor.targets(from: .general)
         )
         let value: String
         switch route {

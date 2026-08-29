@@ -316,6 +316,89 @@ struct XomoFigmaLinkImportTests {
         )
     }
 
+    @Test func clipboardRoutesReadHTMLAndRTFLinkTargetsAndRejectConflicts() throws {
+        let figma = "https://figma.com/design/abc123DEF456/Checkout?node-id=1-2&utm_source=mail"
+        let canonical = "https://www.figma.com/design/abc123DEF456/Checkout?node-id=1-2"
+        let htmlData = try #require(
+            "<p><a href=\"\(figma)\">查看设计</a></p>".data(using: .utf8)
+        )
+        let attributedString = NSMutableAttributedString(string: "View in Figma")
+        attributedString.addAttribute(
+            .link,
+            value: figma,
+            range: NSRange(location: 0, length: attributedString.length)
+        )
+        let rtfData = try attributedString.data(
+            from: NSRange(location: 0, length: attributedString.length),
+            documentAttributes: [.documentType: NSAttributedString.DocumentType.rtf]
+        )
+
+        let sharedTargets = XomoFigmaRichClipboardLinkExtractor.targets(
+            htmlData: htmlData,
+            rtfData: rtfData
+        )
+        #expect(sharedTargets == [figma])
+        let pasteboard = NSPasteboard(name: .init("xomo-figma-rich-link-\(UUID().uuidString)"))
+        pasteboard.declareTypes([.html, .rtf], owner: nil)
+        #expect(pasteboard.setData(htmlData, forType: .html))
+        #expect(pasteboard.setData(rtfData, forType: .rtf))
+        #expect(XomoFigmaRichClipboardLinkExtractor.targets(from: pasteboard) == [figma])
+        #expect(
+            XomoFigmaClipboardLinkPolicy.canonicalURL(
+                clipboardText: "查看设计",
+                clipboardRichLinkTargets: sharedTargets
+            ) == canonical
+        )
+        #expect(
+            XomoFigmaClipboardInputPolicy.resolve(
+                clipboardText: "查看设计",
+                clipboardRichLinkTargets: sharedTargets
+            ) == .input(canonical)
+        )
+        #expect(
+            XomoFigmaClipboardPastePolicy.resolve(
+                hasLayerPayload: false,
+                clipboardText: "View in Figma",
+                clipboardRichLinkTargets: sharedTargets
+            ) == .figmaLink(canonical)
+        )
+
+        let conflictingHTMLData = try #require(
+            """
+            <a href="https://www.figma.com/design/abc123DEF456/Checkout">First</a>
+            <a href="https://www.figma.com/design/otherFile999/Other">Second</a>
+            """.data(using: .utf8)
+        )
+        let conflictingTargets = XomoFigmaRichClipboardLinkExtractor.targets(
+            htmlData: conflictingHTMLData
+        )
+        #expect(conflictingTargets.count == 2)
+        #expect(
+            XomoFigmaClipboardInputPolicy.resolve(
+                clipboardText: "Two designs",
+                clipboardRichLinkTargets: conflictingTargets
+            ) == .rejected
+        )
+        #expect(
+            XomoFigmaClipboardPastePolicy.resolve(
+                hasLayerPayload: false,
+                clipboardText: canonical,
+                clipboardRichLinkTargets: [
+                    "https://www.figma.com.evil.example/design/abc123DEF456/Checkout"
+                ]
+            ) == .unavailable
+        )
+        #expect(
+            XomoFigmaClipboardLinkPolicy.canonicalURL(
+                clipboardText: canonical,
+                clipboardURLString: canonical,
+                clipboardRichLinkTargets: [
+                    "https://www.figma.com/design/otherFile999/Other"
+                ]
+            ) == nil
+        )
+    }
+
     @Test func canvasURLDropKeepsLocalFilesAndAcceptsOneTrustedFigmaLink() throws {
         let png = URL(fileURLWithPath: "/tmp/Poster.PNG")
         let svg = URL(fileURLWithPath: "/tmp/Icon.svg")
@@ -435,6 +518,7 @@ struct XomoFigmaLinkImportTests {
         #expect(menu.contains("importFigmaLink: { performFileCommand(.importFigmaLink) }"))
         #expect(menu.contains("case .importFigmaLink:"))
         #expect(menu.contains("canonicalURL: XomoFigmaClipboardLinkPolicy.canonicalURL("))
+        #expect(menu.contains("clipboardRichLinkTargets: XomoFigmaRichClipboardLinkExtractor.targets("))
         #expect(menu.contains("clipboardText: NSPasteboard.general.string(forType: .string)"))
         #expect(menu.contains("clipboardURLString: NSPasteboard.general.string(forType: .URL)"))
         #expect(menu.contains("isFigmaLinkImportPresented = true"))
@@ -447,6 +531,7 @@ struct XomoFigmaLinkImportTests {
         #expect(editor.contains("placementCenter: pendingFigmaLinkImportPlacementCenter"))
         #expect(editor.contains("case .pasteAsLayer: performContextualPasteAsLayer()"))
         #expect(editor.contains("XomoFigmaClipboardPastePolicy.resolve("))
+        #expect(editor.contains("XomoFigmaRichClipboardLinkExtractor.targets("))
         #expect(editor.contains("clipboardURLString: pasteboard.string(forType: .URL)"))
         #expect(editor.contains("XomoCanvasStringDropPolicy.resolve("))
         #expect(editor.contains("case let .componentPayload(rawValue):"))
@@ -469,6 +554,7 @@ struct XomoFigmaLinkImportTests {
         #expect(sheet.contains("xomo-figma-link-input"))
         #expect(sheet.contains("XomoFigmaClipboardInputPolicy.resolve("))
         #expect(sheet.contains("clipboardURLString: NSPasteboard.general.string(forType: .URL)"))
+        #expect(sheet.contains("clipboardRichLinkTargets: XomoFigmaRichClipboardLinkExtractor.targets("))
         #expect(sheet.contains("case .rejected:"))
         #expect(sheet.contains("xomo.figma.clipboard.untrusted"))
         #expect(sheet.contains("xomo-figma-copy-canonical-link"))
