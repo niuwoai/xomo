@@ -116,6 +116,82 @@ struct ImageEditorTextInputShortcutTests {
     }
 
     @MainActor
+    @Test func selectedImportedLayerReclaimsDeleteWithoutStealingExplicitEditors() {
+        let window = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 320, height: 200),
+            styleMask: [.titled],
+            backing: .buffered,
+            defer: false
+        )
+        let staleField = NSTextField(frame: NSRect(x: 20, y: 20, width: 160, height: 24))
+        let keyboardResponder = ImageEditorKeyboardShortcutResponderNSView(
+            frame: NSRect(x: 0, y: 0, width: 1, height: 1)
+        )
+        window.contentView = NSView(frame: window.contentLayoutRect)
+        window.contentView?.addSubview(staleField)
+        window.contentView?.addSubview(keyboardResponder)
+        window.orderFront(nil)
+
+        for editingState in [
+            (canvas: true, inlineName: false, constraint: false),
+            (canvas: false, inlineName: true, constraint: false),
+            (canvas: false, inlineName: false, constraint: true)
+        ] {
+            #expect(window.makeFirstResponder(staleField))
+            #expect(!ImageEditorLayerSelectionKeyboardFocusRestorer.reclaimIfNeeded(
+                in: window,
+                hasSelectedLayers: true,
+                isCanvasTextEditing: editingState.canvas,
+                isInlineLayerNameEditing: editingState.inlineName,
+                isFigmaSizeConstraintEditing: editingState.constraint
+            ))
+            #expect(window.firstResponder is NSTextView || window.firstResponder is NSTextField)
+        }
+
+        #expect(!ImageEditorLayerSelectionKeyboardFocusRestorer.reclaimIfNeeded(
+            in: window,
+            hasSelectedLayers: false,
+            isCanvasTextEditing: false,
+            isInlineLayerNameEditing: false,
+            isFigmaSizeConstraintEditing: false
+        ))
+        #expect(window.firstResponder is NSTextView || window.firstResponder is NSTextField)
+
+        #expect(ImageEditorLayerSelectionKeyboardFocusRestorer.reclaimIfNeeded(
+            in: window,
+            hasSelectedLayers: true,
+            isCanvasTextEditing: false,
+            isInlineLayerNameEditing: false,
+            isFigmaSizeConstraintEditing: false
+        ))
+        #expect(window.firstResponder === keyboardResponder)
+        window.orderOut(nil)
+    }
+
+    @Test func layerSelectionChangesWireKeyboardFocusRecoveryIntoTheEditor() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(source.contains(
+            ".onChange(of: viewModel.document.selectedLayerIDs) { selectedLayerIDs in"
+        ))
+        #expect(source.contains(
+            "ImageEditorLayerSelectionKeyboardFocusRestorer.reclaimIfNeeded("
+        ))
+        #expect(source.contains("hasSelectedLayers: !selectedLayerIDs.isEmpty"))
+        #expect(source.contains("isCanvasTextEditing: isCanvasTextEditorFocused"))
+        #expect(source.contains("isInlineLayerNameEditing: focusedInlineLayerNameID != nil"))
+        #expect(source.contains(
+            "isFigmaSizeConstraintEditing: focusedFigmaSizeConstraintField != nil"
+        ))
+    }
+
+    @MainActor
     @Test func filePanelTeardownCannotStealDeleteFromTheImportedObject() throws {
         let window = NSWindow(
             contentRect: NSRect(x: 0, y: 0, width: 320, height: 200),

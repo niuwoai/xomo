@@ -122,6 +122,30 @@ enum ImageEditorFilePanelKeyboardFocusRestorer {
     }
 }
 
+@MainActor
+enum ImageEditorLayerSelectionKeyboardFocusRestorer {
+    /// A selected canvas object must own unmodified editor shortcuts even when
+    /// SwiftUI leaves a panel field editor in the responder chain. Explicit
+    /// canvas text, inline-name and constraint editing remain authoritative.
+    @discardableResult
+    static func reclaimIfNeeded(
+        in window: NSWindow?,
+        hasSelectedLayers: Bool,
+        isCanvasTextEditing: Bool,
+        isInlineLayerNameEditing: Bool,
+        isFigmaSizeConstraintEditing: Bool
+    ) -> Bool {
+        guard hasSelectedLayers,
+              !isCanvasTextEditing,
+              !isInlineLayerNameEditing,
+              !isFigmaSizeConstraintEditing
+        else { return false }
+        return ImageEditorFilePanelKeyboardFocusRestorer.claimEditorResponder(
+            in: window
+        )
+    }
+}
+
 nonisolated enum ImageEditorLayerFileImportKind: Equatable {
     case rasterImage
     case editableSVG

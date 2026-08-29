@@ -521,7 +521,7 @@ struct ImageEditorView: View {
         .onChange(of: externalOpenCoordinator.figmaLinkImportRequest?.id) { _ in
             presentExternalFigmaLinkImportIfNeeded()
         }
-        .onChange(of: viewModel.document.selectedLayerIDs) { _ in
+        .onChange(of: viewModel.document.selectedLayerIDs) { selectedLayerIDs in
             syncLayerNameDraft()
             syncFigmaComponentPropertyDrafts()
             syncFigmaSizeConstraintDrafts()
@@ -531,6 +531,13 @@ struct ImageEditorView: View {
             isTransformReferencePointDragCancelled = false
             selectedGradientOverlayStopIndex = nil
             selectedGradientOverlayMidpointIndex = nil
+            ImageEditorLayerSelectionKeyboardFocusRestorer.reclaimIfNeeded(
+                in: NSApp.keyWindow ?? NSApp.mainWindow,
+                hasSelectedLayers: !selectedLayerIDs.isEmpty,
+                isCanvasTextEditing: isCanvasTextEditorFocused,
+                isInlineLayerNameEditing: focusedInlineLayerNameID != nil,
+                isFigmaSizeConstraintEditing: focusedFigmaSizeConstraintField != nil
+            )
         }
         .onChange(of: viewModel.selectedLayerFigmaComponentProperties) { _ in
             syncFigmaComponentPropertyDrafts()
