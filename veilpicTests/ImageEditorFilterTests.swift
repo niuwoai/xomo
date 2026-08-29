@@ -2142,7 +2142,7 @@ struct ImageEditorFilterTests {
         )
         let addNoiseEnd = try #require(
             panelSource[addNoiseStart.upperBound...].range(
-                of: "else if viewModel.selectedFilter == .minimum"
+                of: "else if viewModel.selectedFilter == .vignette"
             )
         )
         let addNoiseSource = panelSource[addNoiseStart.lowerBound..<addNoiseEnd.lowerBound]
@@ -2153,6 +2153,37 @@ struct ImageEditorFilterTests {
         #expect(addNoiseSource.contains("imageEditor.filter.addNoiseAmount"))
         #expect(addNoiseSource.contains("image-editor-filter-quick-add-noise-amount"))
         #expect(!addNoiseSource.contains("viewModel.filterIntensity"))
+    }
+
+    @Test func vignetteQuickPanelUsesSignedAmountInsteadOfLegacyIntensity() throws {
+        let root = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let viewSource = try String(
+            contentsOf: root.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let panelStart = try #require(viewSource.range(of: "private var filtersQuickPanel: some View"))
+        let panelEnd = try #require(
+            viewSource[panelStart.upperBound...].range(of: "private func historySnapshotRow")
+        )
+        let panelSource = viewSource[panelStart.lowerBound..<panelEnd.lowerBound]
+        let vignetteStart = try #require(
+            panelSource.range(of: "else if viewModel.selectedFilter == .vignette")
+        )
+        let vignetteEnd = try #require(
+            panelSource[vignetteStart.upperBound...].range(
+                of: "else if viewModel.selectedFilter == .minimum"
+            )
+        )
+        let vignetteSource = panelSource[vignetteStart.lowerBound..<vignetteEnd.lowerBound]
+
+        #expect(vignetteSource.contains("viewModel.filterVignetteEffectiveAmountPercent"))
+        #expect(vignetteSource.contains("in: -100...100"))
+        #expect(vignetteSource.contains("step: 1"))
+        #expect(vignetteSource.contains("imageEditor.filter.vignetteAmount"))
+        #expect(vignetteSource.contains("image-editor-filter-quick-vignette-amount"))
+        #expect(!vignetteSource.contains("viewModel.filterIntensity"))
     }
 
     @Test func imageEditorMotionBlurFilterLayerAndSmartFilterAreNonDestructive() async throws {

@@ -7678,6 +7678,25 @@ struct ImageEditorView: View {
                         .focusable(false)
                         .accessibilityLabel(L10n.text("imageEditor.filter.addNoiseAmount"))
                         .accessibilityIdentifier("image-editor-filter-quick-add-noise-amount")
+                } else if viewModel.selectedFilter == .vignette {
+                    Text(L10n.format(
+                        "imageEditor.filter.vignetteAmountValue",
+                        String(format: "%+d", Int(viewModel.filterVignetteEffectiveAmountPercent.rounded()))
+                    ))
+                        .font(.system(size: 11, weight: .semibold).monospacedDigit())
+                        .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                        .frame(width: 52, alignment: .leading)
+                    Slider(
+                        value: Binding(
+                            get: { viewModel.filterVignetteEffectiveAmountPercent },
+                            set: { viewModel.filterVignetteEffectiveAmountPercent = $0 }
+                        ),
+                        in: -100...100,
+                        step: 1
+                    )
+                        .focusable(false)
+                        .accessibilityLabel(L10n.text("imageEditor.filter.vignetteAmount"))
+                        .accessibilityIdentifier("image-editor-filter-quick-vignette-amount")
                 } else if viewModel.selectedFilter == .minimum || viewModel.selectedFilter == .maximum {
                     Text("\(Int(viewModel.filterMorphologyRadius.rounded())) px")
                         .font(.system(size: 11, weight: .semibold).monospacedDigit())
