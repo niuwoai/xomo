@@ -2530,6 +2530,9 @@ struct ImageEditorFilterSettings: Equatable, Codable {
     var sharpenAmountPercent: Double?
     /// Explicit High Pass radius in pixels. Nil preserves the legacy intensity-derived radius.
     var highPassRadius: Double?
+    /// High Pass detail gain from 0% to 400%. Nil preserves the legacy intensity-derived gain.
+    /// New UI-created filters persist 100% for Photoshop-style radius-only behavior.
+    var highPassGainPercent: Double?
     /// Explicit Minimum/Maximum radius in pixels. Nil preserves the legacy intensity-derived radius.
     var morphologyRadius: Double?
     /// Explicit Pixelate/Mosaic cell size in pixels. Nil preserves the legacy intensity-derived scale.
@@ -2620,6 +2623,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         gaussianBlurRadius: Double? = nil,
         sharpenAmountPercent: Double? = nil,
         highPassRadius: Double? = nil,
+        highPassGainPercent: Double? = nil,
         morphologyRadius: Double? = nil,
         pixelateCellSize: Double? = nil,
         addNoiseAmountPercent: Double? = nil,
@@ -2673,6 +2677,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         self.gaussianBlurRadius = gaussianBlurRadius
         self.sharpenAmountPercent = sharpenAmountPercent
         self.highPassRadius = highPassRadius
+        self.highPassGainPercent = highPassGainPercent
         self.morphologyRadius = morphologyRadius
         self.pixelateCellSize = pixelateCellSize
         self.addNoiseAmountPercent = addNoiseAmountPercent
@@ -2729,6 +2734,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         gaussianBlurRadius = try container.decodeIfPresent(Double.self, forKey: .gaussianBlurRadius)
         sharpenAmountPercent = try container.decodeIfPresent(Double.self, forKey: .sharpenAmountPercent)
         highPassRadius = try container.decodeIfPresent(Double.self, forKey: .highPassRadius)
+        highPassGainPercent = try container.decodeIfPresent(Double.self, forKey: .highPassGainPercent)
         morphologyRadius = try container.decodeIfPresent(Double.self, forKey: .morphologyRadius)
         pixelateCellSize = try container.decodeIfPresent(Double.self, forKey: .pixelateCellSize)
         addNoiseAmountPercent = try container.decodeIfPresent(Double.self, forKey: .addNoiseAmountPercent)
@@ -2794,6 +2800,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         try container.encodeIfPresent(gaussianBlurRadius, forKey: .gaussianBlurRadius)
         try container.encodeIfPresent(sharpenAmountPercent, forKey: .sharpenAmountPercent)
         try container.encodeIfPresent(highPassRadius, forKey: .highPassRadius)
+        try container.encodeIfPresent(highPassGainPercent, forKey: .highPassGainPercent)
         try container.encodeIfPresent(morphologyRadius, forKey: .morphologyRadius)
         try container.encodeIfPresent(pixelateCellSize, forKey: .pixelateCellSize)
         try container.encodeIfPresent(addNoiseAmountPercent, forKey: .addNoiseAmountPercent)
@@ -2849,7 +2856,8 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         ImageEditorFilterSettings(
             gaussianBlurRadius: gaussianBlurRadius.map { max(0, min(256, $0)) },
             sharpenAmountPercent: sharpenAmountPercent.map { max(0, min(200, $0)) },
-            highPassRadius: highPassRadius.map { max(1, min(256, $0)) },
+            highPassRadius: highPassRadius.map { max(1, min(1_000, $0)) },
+            highPassGainPercent: highPassGainPercent.map { max(0, min(400, $0)) },
             morphologyRadius: morphologyRadius.map { max(1, min(256, $0)) },
             pixelateCellSize: pixelateCellSize.map { max(2, min(200, $0)) },
             addNoiseAmountPercent: addNoiseAmountPercent.map { max(0.1, min(400, $0)) },
@@ -2906,6 +2914,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         case gaussianBlurRadius
         case sharpenAmountPercent
         case highPassRadius
+        case highPassGainPercent
         case morphologyRadius
         case pixelateCellSize
         case addNoiseAmountPercent

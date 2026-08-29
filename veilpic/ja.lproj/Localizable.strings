@@ -1260,6 +1260,7 @@
 "imageEditor.properties.smartFilterItem" = "%@ %d%%";
 "imageEditor.properties.smartFilterGaussianBlurItem" = "%@ · 半径 %@ px";
 "imageEditor.properties.smartFilterHighPassItem" = "%@ %d%% · 半径 %d px";
+"imageEditor.properties.smartFilterHighPassRadiusItem" = "%@ · 半径 %d px";
 "imageEditor.properties.smartFilterMorphologyItem" = "%@ · 半径 %d px";
 "imageEditor.properties.smartFilterEmbossItem" = "%@ %d%% · 角度 %d° · 高さ %d px";
 "imageEditor.properties.smartFilterMotionBlurItem" = "%@ · 角度 %d° · 距離 %d px";

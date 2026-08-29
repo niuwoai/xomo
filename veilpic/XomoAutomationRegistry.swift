@@ -6249,6 +6249,7 @@ final class XomoAutomationRegistry {
             case "gaussianBlurRadius": viewModel.filterGaussianBlurRadius = try numericSetting(value, key: key)
             case "sharpenAmountPercent": viewModel.filterSharpenAmountPercent = try numericSetting(value, key: key)
             case "highPassRadius": viewModel.filterHighPassRadius = try numericSetting(value, key: key)
+            case "highPassGainPercent": viewModel.filterHighPassGainPercent = try numericSetting(value, key: key)
             case "morphologyRadius": viewModel.filterMorphologyRadius = try numericSetting(value, key: key)
             case "pixelateCellSize": viewModel.filterPixelateCellSize = try numericSetting(value, key: key)
             case "addNoiseAmountPercent": viewModel.filterAddNoiseAmountPercent = try numericSetting(value, key: key)
@@ -8005,7 +8006,8 @@ private extension XomoAutomationRegistry {
         "intensity": XomoAutomationSchema.number(description: "Filter intensity"),
         "gaussianBlurRadius": XomoAutomationSchema.number(description: "Gaussian Blur radius in pixels"),
         "sharpenAmountPercent": XomoAutomationSchema.number(description: "Sharpen amount from 0 to 200 percent"),
-        "highPassRadius": XomoAutomationSchema.number(description: "High Pass radius in pixels"),
+        "highPassRadius": XomoAutomationSchema.number(description: "High Pass radius from 1 to 1000 pixels"),
+        "highPassGainPercent": XomoAutomationSchema.number(description: "High Pass detail gain from 0 to 400 percent; new UI filters use 100 percent"),
         "morphologyRadius": XomoAutomationSchema.number(description: "Minimum or Maximum radius in pixels"),
         "pixelateCellSize": XomoAutomationSchema.number(description: "Pixelate or Mosaic cell size in pixels"),
         "addNoiseAmountPercent": XomoAutomationSchema.number(description: "Add Noise amount from 0.1 to 400 percent"),

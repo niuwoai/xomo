@@ -2276,6 +2276,7 @@ struct ImageEditorFilterTests {
 
         #expect(filterLayer.isFilter)
         #expect(filterLayer.filter?.kind == .highPass)
+        #expect(filterLayer.filterSettings.normalized().highPassGainPercent == 100)
         #expect(viewModel.document.layers.first { $0.id == baseLayerID }?.image.qingtuPNGData() == basePixelsBefore)
         #expect(abs(flatLeft.redComponent - 0.5) < 0.04)
         #expect(edgeDarkSide.redComponent < 0.20)
@@ -2295,6 +2296,7 @@ struct ImageEditorFilterTests {
         let smartFilterID = try #require(smartLayer.smartFilters.first?.id)
         let smartEdgeLightSide = try #require(smartViewModel.currentImage.color(at: CGPoint(x: 37, y: 24))?.usingColorSpace(.deviceRGB))
         #expect(smartLayer.smartFilters.first?.kind == .highPass)
+        #expect(smartLayer.smartFilters.first?.normalizedSettings.highPassGainPercent == 100)
         #expect(smartLayer.image.qingtuPNGData() == smartBasePixelsBefore)
         #expect(smartEdgeLightSide.redComponent > 0.80)
         #expect(smartViewModel.document.history.last?.title == L10n.text("imageEditor.history.layerSmartFilterAdd"))
@@ -2305,17 +2307,34 @@ struct ImageEditorFilterTests {
         #expect(try #require(smartViewModel.currentImage.qingtuPNGData()) == smartPreviewBefore)
     }
 
-    @Test func highPassUsesAnExplicitPixelRadiusAndPersistsItNonDestructively() throws {
+    @Test func highPassRadiusAndCanonicalGainPreserveLegacyRenderingAndPersistNonDestructively() throws {
         let sourceImage = verticalEdgeImage(size: NSSize(width: 72, height: 48))
+        let legacyIntensity = 0.65
+        let legacySettings = ImageEditorFilterSettings(highPassRadius: 14)
+        let legacy = try #require(sourceImage.filtered(
+            kind: .highPass,
+            intensity: legacyIntensity,
+            settings: legacySettings
+        ))
+        let explicitLegacyGain = try #require(sourceImage.filtered(
+            kind: .highPass,
+            intensity: 0,
+            settings: ImageEditorFilterSettings(
+                highPassRadius: 14,
+                highPassGainPercent: (1.4 + legacyIntensity * 2.4) * 100
+            )
+        ))
+        #expect(legacy.qingtuPNGData() == explicitLegacyGain.qingtuPNGData())
+
         let narrow = try #require(sourceImage.filtered(
             kind: .highPass,
-            intensity: 0.65,
-            settings: ImageEditorFilterSettings(highPassRadius: 2)
+            intensity: 0,
+            settings: ImageEditorFilterSettings(highPassRadius: 2, highPassGainPercent: 100)
         ))
         let wide = try #require(sourceImage.filtered(
             kind: .highPass,
-            intensity: 0.65,
-            settings: ImageEditorFilterSettings(highPassRadius: 14)
+            intensity: 0,
+            settings: ImageEditorFilterSettings(highPassRadius: 14, highPassGainPercent: 100)
         ))
         let samplePoint = CGPoint(x: 26, y: 24)
         let narrowSample = try #require(narrow.color(at: samplePoint)?.usingColorSpace(.deviceRGB))
@@ -2324,22 +2343,23 @@ struct ImageEditorFilterTests {
         #expect(abs(wideSample.redComponent - 0.5) > 0.12)
 
         #expect(ImageEditorFilterSettings(highPassRadius: -20).normalized().highPassRadius == 1)
-        #expect(ImageEditorFilterSettings(highPassRadius: 900).normalized().highPassRadius == 256)
+        #expect(ImageEditorFilterSettings(highPassRadius: 2_000).normalized().highPassRadius == 1_000)
+        #expect(ImageEditorFilterSettings(highPassGainPercent: -20).normalized().highPassGainPercent == 0)
+        #expect(ImageEditorFilterSettings(highPassGainPercent: 900).normalized().highPassGainPercent == 400)
 
         let viewModel = ImageEditorViewModel(sourceName: "high-pass-radius.png", image: sourceImage) { _ in }
         viewModel.selectedFilter = .highPass
-        viewModel.filterIntensity = 0.65
         viewModel.filterHighPassRadius = 14
         viewModel.addSmartFilterToSelectedLayer()
 
         let smartFilter = try #require(viewModel.document.selectedLayer?.smartFilters.first)
         #expect(smartFilter.normalizedSettings.highPassRadius == 14)
+        #expect(smartFilter.normalizedSettings.highPassGainPercent == 100)
         #expect(
             viewModel.smartFilterLabel(smartFilter)
                 == L10n.format(
-                    "imageEditor.properties.smartFilterHighPassItem",
+                    "imageEditor.properties.smartFilterHighPassRadiusItem",
                     smartFilter.kind.title,
-                    65,
                     14
                 )
         )
@@ -2347,12 +2367,14 @@ struct ImageEditorFilterTests {
         let project = try ImageEditorProjectDocument(document: viewModel.document)
         let restored = try project.restoredDocument()
         #expect(restored.selectedLayer?.smartFilters.first?.normalizedSettings.highPassRadius == 14)
+        #expect(restored.selectedLayer?.smartFilters.first?.normalizedSettings.highPassGainPercent == 100)
 
-        let legacySettings = try JSONDecoder().decode(
+        let decodedLegacySettings = try JSONDecoder().decode(
             ImageEditorFilterSettings.self,
             from: Data("{}".utf8)
         )
-        #expect(legacySettings.highPassRadius == nil)
+        #expect(decodedLegacySettings.highPassRadius == nil)
+        #expect(decodedLegacySettings.highPassGainPercent == nil)
     }
 
     @Test func highPassRadiusControlUsesTheSameSettingForEveryFilterDestination() throws {
@@ -2370,13 +2392,20 @@ struct ImageEditorFilterTests {
 
         #expect(viewSource.contains("image-editor-filter-high-pass-radius"))
         #expect(viewSource.contains("$viewModel.filterHighPassRadius"))
-        #expect(viewSource.contains("in: 1...256, step: 1"))
+        #expect(viewSource.contains("in: 1...1_000, step: 1"))
+        #expect(viewSource.contains("viewModel.selectedFilter != .highPass"))
         #expect(
             viewModelSource.contains(
                 "highPassRadius: selectedFilter == .highPass ? filterHighPassRadius : nil"
             )
         )
+        #expect(
+            viewModelSource.contains(
+                "highPassGainPercent: selectedFilter == .highPass ? filterHighPassGainPercent : nil"
+            )
+        )
         #expect(viewModelSource.contains("filterHighPassRadius = normalized.highPassRadius"))
+        #expect(viewModelSource.contains("filterHighPassGainPercent = normalized.highPassGainPercent"))
     }
 
     @Test func imageEditorEmbossFilterLayerAndSmartFilterAreNonDestructive() async throws {

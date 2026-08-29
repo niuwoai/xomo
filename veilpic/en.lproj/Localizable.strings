@@ -1260,6 +1260,7 @@
 "imageEditor.properties.smartFilterItem" = "%@ %d%%";
 "imageEditor.properties.smartFilterGaussianBlurItem" = "%@ · Radius %@ px";
 "imageEditor.properties.smartFilterHighPassItem" = "%@ %d%% · Radius %d px";
+"imageEditor.properties.smartFilterHighPassRadiusItem" = "%@ · Radius %d px";
 "imageEditor.properties.smartFilterMorphologyItem" = "%@ · Radius %d px";
 "imageEditor.properties.smartFilterEmbossItem" = "%@ %d%% · Angle %d° · Height %d px";
 "imageEditor.properties.smartFilterMotionBlurItem" = "%@ · Angle %d° · Distance %d px";

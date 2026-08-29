@@ -471,6 +471,7 @@ final class ImageEditorViewModel: ObservableObject {
             if oldValue != selectedFilter {
                 filterGaussianBlurRadius = nil
                 filterSharpenAmountPercent = nil
+                filterHighPassGainPercent = selectedFilter == .highPass ? 100 : nil
                 filterAddNoiseAmountPercent = nil
                 filterVignetteAmountPercent = nil
                 filterLensDistortionAmountPercent = nil
@@ -497,6 +498,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var filterGaussianBlurRadius: Double?
     @Published var filterSharpenAmountPercent: Double?
     @Published var filterHighPassRadius: Double = 6
+    @Published var filterHighPassGainPercent: Double?
     @Published var filterMorphologyRadius: Double = 3
     @Published var filterPixelateCellSize: Double = 18
     @Published var filterAddNoiseAmountPercent: Double?
@@ -2875,14 +2877,24 @@ final class ImageEditorViewModel: ObservableObject {
             }
         }
         if filter.kind == .highPass {
-            let radius = filter.normalizedSettings.highPassRadius
+            let settings = filter.normalizedSettings
+            let radius = settings.highPassRadius
                 ?? (1 + filter.normalizedIntensity * 9)
-            let title = L10n.format(
-                "imageEditor.properties.smartFilterHighPassItem",
-                filter.kind.title,
-                Int((filter.normalizedIntensity * 100).rounded()),
-                Int(radius.rounded())
-            )
+            let title: String
+            if settings.highPassGainPercent != nil {
+                title = L10n.format(
+                    "imageEditor.properties.smartFilterHighPassRadiusItem",
+                    filter.kind.title,
+                    Int(radius.rounded())
+                )
+            } else {
+                title = L10n.format(
+                    "imageEditor.properties.smartFilterHighPassItem",
+                    filter.kind.title,
+                    Int((filter.normalizedIntensity * 100).rounded()),
+                    Int(radius.rounded())
+                )
+            }
             guard !filter.isEnabled else { return title }
             return L10n.format("imageEditor.properties.smartFilterDisabled", title)
         }
@@ -9824,6 +9836,7 @@ final class ImageEditorViewModel: ObservableObject {
             gaussianBlurRadius: selectedFilter == .gaussianBlur ? filterGaussianBlurRadius : nil,
             sharpenAmountPercent: selectedFilter == .sharpen ? filterSharpenAmountPercent : nil,
             highPassRadius: selectedFilter == .highPass ? filterHighPassRadius : nil,
+            highPassGainPercent: selectedFilter == .highPass ? filterHighPassGainPercent : nil,
             morphologyRadius: selectedFilter == .minimum || selectedFilter == .maximum
                 ? filterMorphologyRadius
                 : nil,
@@ -11705,7 +11718,8 @@ final class ImageEditorViewModel: ObservableObject {
         filterGaussianBlurRadius = normalized.gaussianBlurRadius
         filterSharpenAmountPercent = normalized.sharpenAmountPercent
         filterHighPassRadius = normalized.highPassRadius
-            ?? max(1, min(256, (1 + filterIntensity * 9).rounded()))
+            ?? max(1, min(1_000, (1 + filterIntensity * 9).rounded()))
+        filterHighPassGainPercent = normalized.highPassGainPercent
         filterMorphologyRadius = normalized.morphologyRadius
             ?? max(1, min(256, (1 + filterIntensity * 4).rounded()))
         filterPixelateCellSize = normalized.pixelateCellSize

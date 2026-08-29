@@ -66,6 +66,9 @@ extension NSImage {
             kind == .sharpen
                 && normalizedSettings.sharpenAmountPercent.map { $0 > 0 } == true
         ) || (
+            kind == .highPass
+                && normalizedSettings.highPassGainPercent != nil
+        ) || (
             kind == .addNoise
                 && normalizedSettings.addNoiseAmountPercent != nil
         ) || (
@@ -287,6 +290,9 @@ extension NSImage {
         let hasExplicitFilterAmount = (
             kind == .sharpen
                 && normalizedSettings.sharpenAmountPercent.map { $0 > 0 } == true
+        ) || (
+            kind == .highPass
+                && normalizedSettings.highPassGainPercent != nil
         ) || (
             kind == .addNoise
                 && normalizedSettings.addNoiseAmountPercent != nil
@@ -765,14 +771,16 @@ extension NSImage {
         settings: ImageEditorFilterSettings
     ) -> NSImage? {
         let clampedIntensity = max(0, min(1, intensity))
+        let normalizedSettings = settings.normalized()
         let radius = max(
             1,
             Int(
-                (settings.normalized().highPassRadius ?? (1 + clampedIntensity * 9))
+                (normalizedSettings.highPassRadius ?? (1 + clampedIntensity * 9))
                     .rounded()
             )
         )
-        let contrast = 1.4 + clampedIntensity * 2.4
+        let contrast = normalizedSettings.highPassGainPercent.map { $0 / 100 }
+            ?? (1.4 + clampedIntensity * 2.4)
         guard let source = filterRGBAPlane() else { return nil }
         let width = source.width
         let height = source.height

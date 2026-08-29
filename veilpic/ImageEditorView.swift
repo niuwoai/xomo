@@ -11881,6 +11881,7 @@ struct ImageEditorView: View {
                     && viewModel.selectedFilter != .sharpen
                     && viewModel.selectedFilter != .minimum
                     && viewModel.selectedFilter != .maximum
+                    && viewModel.selectedFilter != .highPass
                     && viewModel.selectedFilter != .pixelate
                     && viewModel.selectedFilter != .motionBlur
                     && viewModel.selectedFilter != .emboss
@@ -12248,7 +12249,7 @@ struct ImageEditorView: View {
                         Text(L10n.text("imageEditor.filter.highPassRadius"))
                             .font(.system(size: 10, weight: .medium))
                             .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
-                        Slider(value: $viewModel.filterHighPassRadius, in: 1...256, step: 1)
+                        Slider(value: $viewModel.filterHighPassRadius, in: 1...1_000, step: 1)
                         Text(L10n.format(
                             "imageEditor.filter.highPassRadiusValue",
                             Int(viewModel.filterHighPassRadius.rounded())

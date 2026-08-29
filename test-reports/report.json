@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-29 10:20:16 +0800",
+  "generated_at": "2026-08-29 10:41:34 +0800",
   "total": 44,
   "passed": 44,
   "failed": 0,
@@ -15,7 +15,7 @@
       "file": "ImageEditorSmartObjectSourceExportTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 4.984,
+      "duration": 3.877,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "ImageEditorSmartObjectSourceExportTests.filenamePolicyMenusPanelAndLocalizationsShareThePNGContract.log"
@@ -27,7 +27,7 @@
       "file": "LocalizationResourceTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 4.89,
+      "duration": 3.88,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "LocalizationResourceTests.alphaChannelScaleStatusEscapesLiteralPercentInEverySupportedLanguage.log"
@@ -39,7 +39,7 @@
       "file": "LocalizationResourceTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 4.87,
+      "duration": 3.866,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "LocalizationResourceTests.appShipsOnlyChineseEnglishAndJapaneseLocalizations.log"
@@ -51,7 +51,7 @@
       "file": "LocalizationResourceTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 4.948,
+      "duration": 3.821,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "LocalizationResourceTests.blurSharpenPressureSizeHelpIsLocalizedInEverySupportedLanguage.log"
@@ -63,7 +63,7 @@
       "file": "LocalizationResourceTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 4.882,
+      "duration": 3.914,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "LocalizationResourceTests.clippingToolbarMixedStateIsLocalizedInEverySupportedLanguage.log"
@@ -75,7 +75,7 @@
       "file": "LocalizationResourceTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 4.884,
+      "duration": 4.31,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "LocalizationResourceTests.cloneSourceSlotOptionIsLocalizedInEverySupportedLanguage.log"
@@ -87,7 +87,7 @@
       "file": "LocalizationResourceTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 4.919,
+      "duration": 4.06,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "LocalizationResourceTests.contextualCutUsesAnObjectNeutralMenuLabel.log"
@@ -99,7 +99,7 @@
       "file": "LocalizationResourceTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 4.902,
+      "duration": 3.92,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "LocalizationResourceTests.currentAndBelowColorSamplingSourceIsLocalizedInEverySupportedLanguage.log"
@@ -111,7 +111,7 @@
       "file": "LocalizationResourceTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 4.891,
+      "duration": 4.102,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "LocalizationResourceTests.dodgeBurnAirbrushIsLocalizedInEverySupportedLanguage.log"
@@ -123,7 +123,7 @@
       "file": "LocalizationResourceTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 4.895,
+      "duration": 3.812,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "LocalizationResourceTests.dodgeBurnExposureLabelIsLocalizedInEverySupportedLanguage.log"
@@ -135,7 +135,7 @@
       "file": "LocalizationResourceTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 4.891,
+      "duration": 3.831,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "LocalizationResourceTests.dodgeBurnProtectTonesIsLocalizedInEverySupportedLanguage.log"
@@ -147,7 +147,7 @@
       "file": "LocalizationResourceTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 4.91,
+      "duration": 3.865,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "LocalizationResourceTests.dodgeBurnToneRangeShortcutsAreLocalizedInEverySupportedLanguage.log"
@@ -159,7 +159,7 @@
       "file": "LocalizationResourceTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 4.947,
+      "duration": 3.828,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "LocalizationResourceTests.dodgeBurnToneRangesAreLocalizedInEverySupportedLanguage.log"
@@ -171,7 +171,7 @@
       "file": "LocalizationResourceTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 4.892,
+      "duration": 4.591,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "LocalizationResourceTests.editableSVGOpenFlowIsLocalizedInEverySupportedLanguage.log"
@@ -183,7 +183,7 @@
       "file": "LocalizationResourceTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 4.893,
+      "duration": 3.977,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "LocalizationResourceTests.eyedropperSamplingRingIsLocalizedInEverySupportedLanguage.log"
@@ -195,7 +195,7 @@
       "file": "LocalizationResourceTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 4.903,
+      "duration": 3.863,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "LocalizationResourceTests.filterApplyActionIsLocalizedInEverySupportedLanguage.log"
@@ -207,7 +207,7 @@
       "file": "LocalizationResourceTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 4.906,
+      "duration": 3.841,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "LocalizationResourceTests.fingerPaintingIsLocalizedInEverySupportedLanguage.log"
@@ -219,7 +219,7 @@
       "file": "LocalizationResourceTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 4.894,
+      "duration": 4.422,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "LocalizationResourceTests.ignoreAdjustmentSamplingOptionIsLocalizedInEverySupportedLanguage.log"
@@ -231,7 +231,7 @@
       "file": "LocalizationResourceTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 4.899,
+      "duration": 3.736,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "LocalizationResourceTests.layerStyleGlobalLightStateReusesLocalizedSelectionValues.log"
@@ -243,7 +243,7 @@
       "file": "LocalizationResourceTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 4.897,
+      "duration": 3.832,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "LocalizationResourceTests.layerStyleMixedInnerGlowSourceIsLocalizedInEverySupportedLanguage.log"
@@ -255,7 +255,7 @@
       "file": "LocalizationResourceTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 4.902,
+      "duration": 3.822,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "LocalizationResourceTests.layerStylePatternOverlayOffsetsAreLocalizedInEverySupportedLanguage.log"
@@ -267,7 +267,7 @@
       "file": "LocalizationResourceTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 4.881,
+      "duration": 3.702,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "LocalizationResourceTests.layerStyleSatinInvertTriStateIsLocalizedInEverySupportedLanguage.log"
@@ -279,7 +279,7 @@
       "file": "LocalizationResourceTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 4.874,
+      "duration": 3.768,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "LocalizationResourceTests.layerStyleStrokeFillTypeMixedValueIsLocalizedInEverySupportedLanguage.log"
@@ -291,7 +291,7 @@
       "file": "LocalizationResourceTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 4.885,
+      "duration": 3.945,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "LocalizationResourceTests.layerStyleStrokeGradientStyleMixedValueIsLocalizedInEverySupportedLanguage.log"
@@ -303,7 +303,7 @@
       "file": "LocalizationResourceTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 4.887,
+      "duration": 3.88,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "LocalizationResourceTests.layerStyleStrokePatternColorIsLocalizedInEverySupportedLanguage.log"
@@ -315,7 +315,7 @@
       "file": "LocalizationResourceTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 4.882,
+      "duration": 3.867,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "LocalizationResourceTests.layerStyleStrokePatternKindMixedValueIsLocalizedInEverySupportedLanguage.log"
@@ -327,7 +327,7 @@
       "file": "LocalizationResourceTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 4.898,
+      "duration": 3.751,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "LocalizationResourceTests.layerStyleStrokePatternOffsetsAreLocalizedInEverySupportedLanguage.log"
@@ -339,7 +339,7 @@
       "file": "LocalizationResourceTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 4.903,
+      "duration": 3.864,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "LocalizationResourceTests.layerStyleStrokePositionMixedValueIsLocalizedInEverySupportedLanguage.log"
@@ -351,7 +351,7 @@
       "file": "LocalizationResourceTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 4.893,
+      "duration": 3.705,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "LocalizationResourceTests.layerStyleToolbarEffectStateIsLocalizedInEverySupportedLanguage.log"
@@ -363,7 +363,7 @@
       "file": "LocalizationResourceTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 4.897,
+      "duration": 3.722,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "LocalizationResourceTests.openFileActionDescribesTheExpandedDocumentCatalog.log"
@@ -375,7 +375,7 @@
       "file": "LocalizationResourceTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 4.886,
+      "duration": 3.74,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "LocalizationResourceTests.retouchPressureSensitivityHelpIsLocalizedInEverySupportedLanguage.log"
@@ -387,7 +387,7 @@
       "file": "LocalizationResourceTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 4.897,
+      "duration": 4.199,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "LocalizationResourceTests.sampleAllLayersIsLocalizedInEverySupportedLanguage.log"
@@ -399,7 +399,7 @@
       "file": "LocalizationResourceTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 4.908,
+      "duration": 3.808,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "LocalizationResourceTests.sampledBrushPressureSizeHelpIsLocalizedInEverySupportedLanguage.log"
@@ -411,7 +411,7 @@
       "file": "LocalizationResourceTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 4.894,
+      "duration": 3.98,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "LocalizationResourceTests.shapeDashOffsetIsLocalizedInEverySupportedLanguage.log"
@@ -423,7 +423,7 @@
       "file": "LocalizationResourceTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 4.89,
+      "duration": 3.913,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "LocalizationResourceTests.shapeDashPatternEditorIsLocalizedInEverySupportedLanguage.log"
@@ -435,7 +435,7 @@
       "file": "LocalizationResourceTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 4.881,
+      "duration": 3.958,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "LocalizationResourceTests.simplifiedChineseUsesTheXomoBrandEverywhere.log"
@@ -447,7 +447,7 @@
       "file": "LocalizationResourceTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 4.874,
+      "duration": 3.687,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "LocalizationResourceTests.smudgePressureSizeHelpIsLocalizedInEverySupportedLanguage.log"
@@ -459,7 +459,7 @@
       "file": "LocalizationResourceTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 4.926,
+      "duration": 3.856,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "LocalizationResourceTests.smudgeStrengthLabelIsLocalizedInEverySupportedLanguage.log"
@@ -471,7 +471,7 @@
       "file": "LocalizationResourceTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 4.882,
+      "duration": 3.847,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "LocalizationResourceTests.spongeFlowSummaryIsLocalizedInEverySupportedLanguage.log"
@@ -483,7 +483,7 @@
       "file": "LocalizationResourceTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 4.888,
+      "duration": 3.826,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "LocalizationResourceTests.spongeModeShortcutsAreLocalizedInEverySupportedLanguage.log"
@@ -495,7 +495,7 @@
       "file": "LocalizationResourceTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 4.883,
+      "duration": 3.7,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "LocalizationResourceTests.spongePressureSizeHelpIsLocalizedInEverySupportedLanguage.log"
@@ -507,7 +507,7 @@
       "file": "LocalizationResourceTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 4.913,
+      "duration": 3.75,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "LocalizationResourceTests.spongeVibranceIsLocalizedInEverySupportedLanguage.log"
@@ -519,7 +519,7 @@
       "file": "LocalizationResourceTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 4.875,
+      "duration": 4.787,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "LocalizationResourceTests.supportedLocalizationDirectoriesShipOnlyTrackedStringTables.log"
@@ -531,7 +531,7 @@
       "file": "LocalizationResourceTests.swift",
       "test_count": 1,
       "passed": true,
-      "duration": 4.928,
+      "duration": 4.269,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "LocalizationResourceTests.supportedLocalizationTablesKeepMatchingKeys.log"

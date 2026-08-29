@@ -5600,7 +5600,7 @@ struct XomoAutomationTests {
         #expect(viewModel.document.selectedLayer?.smartFilters.count == 1)
     }
 
-    @Test func registryConfiguresHighPassRadiusThroughTheSharedFilterPipeline() throws {
+    @Test func registryConfiguresHighPassRadiusAndGainThroughTheSharedFilterPipeline() throws {
         let viewModel = makeViewModel()
         let registry = XomoAutomationRegistry.shared
         registry.register(viewModel)
@@ -5613,8 +5613,9 @@ struct XomoAutomationTests {
                 "filter": .string(ImageEditorFilter.highPass.rawValue),
                 "action": .string("addSmartFilter"),
                 "settings": .object([
-                    "intensity": .number(0.7),
-                    "highPassRadius": .number(999)
+                    "intensity": .number(0),
+                    "highPassRadius": .number(2_000),
+                    "highPassGainPercent": .number(900)
                 ])
             ]
         ))
@@ -5623,8 +5624,9 @@ struct XomoAutomationTests {
         #expect(response.result?.objectValue?["addedLayerCount"] == .number(1))
         let filter = try #require(viewModel.document.selectedLayer?.smartFilters.last)
         #expect(filter.kind == .highPass)
-        #expect(filter.normalizedIntensity == 0.7)
-        #expect(filter.normalizedSettings.highPassRadius == 256)
+        #expect(filter.normalizedIntensity == 0)
+        #expect(filter.normalizedSettings.highPassRadius == 1_000)
+        #expect(filter.normalizedSettings.highPassGainPercent == 400)
 
         let tools = registry.execute(request(operation: "tools"))
         let configureTool = try #require(
@@ -5635,6 +5637,23 @@ struct XomoAutomationTests {
         )
         let settingsProperties = try #require(settingsSchema["properties"]?.objectValue)
         #expect(settingsProperties["highPassRadius"]?.objectValue?["type"] == .string("number"))
+        #expect(settingsProperties["highPassGainPercent"]?.objectValue?["type"] == .string("number"))
+
+        let historyCount = viewModel.document.history.count
+        let invalidResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.filter.configure",
+            arguments: [
+                "filter": .string(ImageEditorFilter.highPass.rawValue),
+                "action": .string("addSmartFilter"),
+                "settings": .object([
+                    "highPassGainPercent": .string("strong")
+                ])
+            ]
+        ))
+        #expect(!invalidResponse.ok)
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.document.selectedLayer?.smartFilters.count == 1)
     }
 
     @Test func registryConfiguresSharpenAmountThroughTheSharedFilterPipeline() throws {
