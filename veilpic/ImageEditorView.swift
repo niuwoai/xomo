@@ -9991,6 +9991,24 @@ struct ImageEditorView: View {
             }
             .allowsHitTesting(false)
             .accessibilityHidden(true)
+
+            let delta = CGSize(
+                width: dragEnd.x - dragStart.x,
+                height: dragEnd.y - dragStart.y
+            )
+            let movingBounds = selection.bounds.offsetBy(
+                dx: delta.width,
+                dy: delta.height
+            )
+            transformHUDOverlay(
+                frame: movingBounds,
+                viewRect: viewRect(from: movingBounds, in: size),
+                mode: .patchTransfer(
+                    delta: delta,
+                    constrainedAxis: patchDragConstraintAxis
+                ),
+                canvasSize: size
+            )
         }
     }
 

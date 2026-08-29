@@ -12,6 +12,7 @@ enum ImageEditorTransformHUDMode: Equatable {
     case move(delta: CGSize?)
     case resize(scalePercent: CGSize?)
     case rotate(degrees: CGFloat)
+    case patchTransfer(delta: CGSize, constrainedAxis: ImageEditorObjectDragAxis?)
 }
 
 /// Pure presentation geometry for the lightweight transform readout shown by
@@ -40,6 +41,16 @@ enum ImageEditorTransformHUD {
             return "\(size)  ·  W \(format(scalePercent.width))%  H \(format(scalePercent.height))%"
         case let .rotate(degrees):
             return "\(format(degrees))°"
+        case let .patchTransfer(delta, constrainedAxis):
+            let offset = "ΔX \(format(delta.width))  ΔY \(format(delta.height))"
+            switch constrainedAxis {
+            case .horizontal:
+                return "⇧↔  \(offset)"
+            case .vertical:
+                return "⇧↕  \(offset)"
+            case nil:
+                return "\(offset)  ·  D \(format(hypot(delta.width, delta.height)))"
+            }
         }
     }
 

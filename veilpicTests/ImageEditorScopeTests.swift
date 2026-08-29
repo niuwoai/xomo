@@ -5747,6 +5747,8 @@ struct ImageEditorScopeTests {
         #expect(source.contains("updatePatchDrag("))
         #expect(source.contains("ImageEditorPatchDragConstraint.resolve("))
         #expect(source.contains("to: constrainedEnd.endPoint"))
+        #expect(source.contains("mode: .patchTransfer("))
+        #expect(source.contains("constrainedAxis: patchDragConstraintAxis"))
     }
 
     @Test func healingBrushExposesNonFocusableSourceAndSpotModes() throws {

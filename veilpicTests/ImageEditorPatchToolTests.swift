@@ -12,6 +12,37 @@ import Testing
 @MainActor
 @Suite(.serialized)
 struct ImageEditorPatchToolTests {
+    @Test func transferHUDShowsFreeDistanceAndShiftConstraintDirection() {
+        let frame = CGRect(x: 10, y: 12, width: 20, height: 14)
+        #expect(
+            ImageEditorTransformHUD.displayText(
+                frame: frame,
+                mode: .patchTransfer(
+                    delta: CGSize(width: 30, height: 40),
+                    constrainedAxis: nil
+                )
+            ) == "ΔX 30  ΔY 40  ·  D 50"
+        )
+        #expect(
+            ImageEditorTransformHUD.displayText(
+                frame: frame,
+                mode: .patchTransfer(
+                    delta: CGSize(width: -18.5, height: 0),
+                    constrainedAxis: .horizontal
+                )
+            ) == "⇧↔  ΔX -18.5  ΔY 0"
+        )
+        #expect(
+            ImageEditorTransformHUD.displayText(
+                frame: frame,
+                mode: .patchTransfer(
+                    delta: CGSize(width: 0, height: 27.25),
+                    constrainedAxis: .vertical
+                )
+            ) == "⇧↕  ΔX 0  ΔY 27.3"
+        )
+    }
+
     @Test func shiftConstrainedDragLocksPreviewAndCommitToTheDominantAxis() {
         let start = CGPoint(x: 20, y: 30)
         let horizontal = ImageEditorPatchDragConstraint.resolve(
