@@ -7765,7 +7765,10 @@ struct ImageEditorView: View {
                         .accessibilityLabel(L10n.text("imageEditor.filter.embossHeight"))
                         .accessibilityIdentifier("image-editor-filter-quick-emboss-height")
                 } else if viewModel.selectedFilter == .minimum || viewModel.selectedFilter == .maximum {
-                    Text("\(Int(viewModel.filterMorphologyRadius.rounded())) px")
+                    Text(L10n.format(
+                        "imageEditor.filter.morphologyRadiusValue",
+                        Int(viewModel.filterMorphologyRadius.rounded())
+                    ))
                         .font(.system(size: 11, weight: .semibold).monospacedDigit())
                         .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
                         .frame(width: 52, alignment: .leading)
@@ -7773,6 +7776,25 @@ struct ImageEditorView: View {
                         .focusable(false)
                         .accessibilityLabel(L10n.text("imageEditor.filter.morphologyRadius"))
                         .accessibilityIdentifier("image-editor-filter-quick-morphology-radius")
+                } else if viewModel.selectedFilter == .liquifyTwirl {
+                    Text(L10n.format(
+                        "imageEditor.filter.liquifyTwirlValue",
+                        String(format: "%+d", Int(viewModel.filterLiquifyTwirlEffectiveAngleDegrees.rounded()))
+                    ))
+                        .font(.system(size: 11, weight: .semibold).monospacedDigit())
+                        .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                        .frame(width: 52, alignment: .leading)
+                    Slider(
+                        value: Binding(
+                            get: { viewModel.filterLiquifyTwirlEffectiveAngleDegrees },
+                            set: { viewModel.filterLiquifyTwirlEffectiveAngleDegrees = $0 }
+                        ),
+                        in: -999...999,
+                        step: 1
+                    )
+                        .focusable(false)
+                        .accessibilityLabel(L10n.text("imageEditor.filter.liquifyTwirlAngle"))
+                        .accessibilityIdentifier("image-editor-filter-quick-liquify-twirl-angle")
                 } else {
                     Text("\(Int((viewModel.filterIntensity * 100).rounded()))%")
                         .font(.system(size: 11, weight: .semibold).monospacedDigit())
