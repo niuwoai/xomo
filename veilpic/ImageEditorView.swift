@@ -11882,6 +11882,7 @@ struct ImageEditorView: View {
                     && viewModel.selectedFilter != .minimum
                     && viewModel.selectedFilter != .maximum
                     && viewModel.selectedFilter != .highPass
+                    && viewModel.selectedFilter != .findEdges
                     && viewModel.selectedFilter != .pixelate
                     && viewModel.selectedFilter != .motionBlur
                     && viewModel.selectedFilter != .emboss

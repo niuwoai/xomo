@@ -5656,6 +5656,41 @@ struct XomoAutomationTests {
         #expect(viewModel.document.selectedLayer?.smartFilters.count == 1)
     }
 
+    @Test func registryDefaultsFindEdgesToFullStrengthAndHonorsExplicitLegacyIntensity() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        defer { registry.unregister(viewModel) }
+
+        let defaultResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.filter.configure",
+            arguments: [
+                "filter": .string(ImageEditorFilter.findEdges.rawValue),
+                "action": .string("addSmartFilter")
+            ]
+        ))
+        #expect(defaultResponse.ok)
+        #expect(viewModel.document.selectedLayer?.smartFilters.last?.kind == .findEdges)
+        #expect(viewModel.document.selectedLayer?.smartFilters.last?.normalizedIntensity == 1)
+
+        let explicitResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.filter.configure",
+            arguments: [
+                "filter": .string(ImageEditorFilter.findEdges.rawValue),
+                "action": .string("addSmartFilter"),
+                "settings": .object([
+                    "intensity": .number(0.35)
+                ])
+            ]
+        ))
+        #expect(explicitResponse.ok)
+        #expect(viewModel.document.selectedLayer?.smartFilters.last?.kind == .findEdges)
+        #expect(viewModel.document.selectedLayer?.smartFilters.last?.normalizedIntensity == 0.35)
+        #expect(viewModel.document.selectedLayer?.smartFilters.count == 2)
+    }
+
     @Test func registryConfiguresSharpenAmountThroughTheSharedFilterPipeline() throws {
         let viewModel = makeViewModel()
         let registry = XomoAutomationRegistry.shared

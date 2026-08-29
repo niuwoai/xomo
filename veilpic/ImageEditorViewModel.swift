@@ -469,6 +469,9 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var selectedFilter: ImageEditorFilter = .gaussianBlur {
         didSet {
             if oldValue != selectedFilter {
+                if selectedFilter == .findEdges {
+                    filterIntensity = 1
+                }
                 filterGaussianBlurRadius = nil
                 filterSharpenAmountPercent = nil
                 filterHighPassGainPercent = selectedFilter == .highPass ? 100 : nil
@@ -2895,6 +2898,11 @@ final class ImageEditorViewModel: ObservableObject {
                     Int(radius.rounded())
                 )
             }
+            guard !filter.isEnabled else { return title }
+            return L10n.format("imageEditor.properties.smartFilterDisabled", title)
+        }
+        if filter.kind == .findEdges, filter.normalizedIntensity == 1 {
+            let title = filter.kind.title
             guard !filter.isEnabled else { return title }
             return L10n.format("imageEditor.properties.smartFilterDisabled", title)
         }

@@ -2536,7 +2536,7 @@ struct ImageEditorFilterTests {
         let basePixelsBefore = try #require(viewModel.document.selectedLayer?.image.qingtuPNGData())
 
         viewModel.selectedFilter = .findEdges
-        viewModel.filterIntensity = 1
+        #expect(viewModel.filterIntensity == 1)
         viewModel.addFilterLayer()
 
         let filterLayer = try #require(viewModel.document.selectedLayer)
@@ -2559,16 +2559,52 @@ struct ImageEditorFilterTests {
         let smartPreviewBefore = try #require(smartViewModel.currentImage.qingtuPNGData())
 
         smartViewModel.selectedFilter = .findEdges
-        smartViewModel.filterIntensity = 1
+        #expect(smartViewModel.filterIntensity == 1)
         smartViewModel.addSmartFilterToSelectedLayer()
 
         var smartLayer = try #require(smartViewModel.document.selectedLayer)
         let smartFilterID = try #require(smartLayer.smartFilters.first?.id)
         let smartDetectedEdge = try #require(smartViewModel.currentImage.color(at: CGPoint(x: 35, y: 24))?.usingColorSpace(.deviceRGB))
         #expect(smartLayer.smartFilters.first?.kind == .findEdges)
+        #expect(smartLayer.smartFilters.first?.normalizedIntensity == 1)
         #expect(smartLayer.image.qingtuPNGData() == smartBasePixelsBefore)
         #expect(smartDetectedEdge.redComponent < 0.08)
+        #expect(smartViewModel.smartFilterLabel(try #require(smartLayer.smartFilters.first)) == ImageEditorFilter.findEdges.title)
         #expect(smartViewModel.document.history.last?.title == L10n.text("imageEditor.history.layerSmartFilterAdd"))
+
+        let project = try ImageEditorProjectDocument(document: smartViewModel.document)
+        let restoredDocument = try project.restoredDocument()
+        #expect(restoredDocument.selectedLayer?.smartFilters.first?.normalizedIntensity == 1)
+
+        let legacyFilter = ImageEditorSmartFilter(kind: .findEdges, intensity: 0.35)
+        #expect(
+            smartViewModel.smartFilterLabel(legacyFilter)
+                == L10n.format(
+                    "imageEditor.properties.smartFilterItem",
+                    legacyFilter.kind.title,
+                    35
+                )
+        )
+        let legacyViewModel = ImageEditorViewModel(sourceName: "legacy.png", image: sourceImage) { _ in }
+        let legacyLayerIndex = try #require(legacyViewModel.document.selectedLayerIndex)
+        legacyViewModel.document.layers[legacyLayerIndex].smartFilters = [legacyFilter]
+        #expect(legacyViewModel.loadSmartFilterIntoControls(legacyFilter.id))
+        #expect(legacyViewModel.selectedFilter == .findEdges)
+        #expect(legacyViewModel.filterIntensity == 0.35)
+
+        let root = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let viewSource = try String(
+            contentsOf: root.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let viewModelSource = try String(
+            contentsOf: root.appendingPathComponent("veilpic/ImageEditorViewModel.swift"),
+            encoding: .utf8
+        )
+        #expect(viewSource.contains("viewModel.selectedFilter != .findEdges"))
+        #expect(viewModelSource.contains("if selectedFilter == .findEdges"))
 
         smartViewModel.toggleSmartFilterOnSelectedLayer(smartFilterID)
         smartLayer = try #require(smartViewModel.document.selectedLayer)
