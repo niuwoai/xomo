@@ -2451,7 +2451,9 @@ struct ImageEditorFilterTests {
             panelSource.range(of: "else if viewModel.selectedFilter == .spherize")
         )
         let spherizeEnd = try #require(
-            panelSource[spherizeStart.upperBound...].range(of: "} else {")
+            panelSource[spherizeStart.upperBound...].range(
+                of: "else if viewModel.selectedFilter == .lensCorrection"
+            )
         )
         let spherizeSource = panelSource[spherizeStart.lowerBound..<spherizeEnd.lowerBound]
 
@@ -2461,6 +2463,35 @@ struct ImageEditorFilterTests {
         #expect(spherizeSource.contains("imageEditor.filter.spherizeAmount"))
         #expect(spherizeSource.contains("image-editor-filter-quick-spherize-amount"))
         #expect(!spherizeSource.contains("viewModel.filterIntensity"))
+    }
+
+    @Test func lensCorrectionQuickPanelUsesDistortionInsteadOfLegacyIntensity() throws {
+        let root = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let viewSource = try String(
+            contentsOf: root.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let panelStart = try #require(viewSource.range(of: "private var filtersQuickPanel: some View"))
+        let panelEnd = try #require(
+            viewSource[panelStart.upperBound...].range(of: "private func historySnapshotRow")
+        )
+        let panelSource = viewSource[panelStart.lowerBound..<panelEnd.lowerBound]
+        let lensCorrectionStart = try #require(
+            panelSource.range(of: "else if viewModel.selectedFilter == .lensCorrection")
+        )
+        let lensCorrectionEnd = try #require(
+            panelSource[lensCorrectionStart.upperBound...].range(of: "} else {")
+        )
+        let lensCorrectionSource = panelSource[lensCorrectionStart.lowerBound..<lensCorrectionEnd.lowerBound]
+
+        #expect(lensCorrectionSource.contains("viewModel.filterLensDistortionEffectiveAmountPercent"))
+        #expect(lensCorrectionSource.contains("in: -100...100"))
+        #expect(lensCorrectionSource.contains("step: 1"))
+        #expect(lensCorrectionSource.contains("imageEditor.filter.lensDistortion"))
+        #expect(lensCorrectionSource.contains("image-editor-filter-quick-lens-distortion-amount"))
+        #expect(!lensCorrectionSource.contains("viewModel.filterIntensity"))
     }
 
     @Test func imageEditorMotionBlurFilterLayerAndSmartFilterAreNonDestructive() async throws {

@@ -7852,6 +7852,25 @@ struct ImageEditorView: View {
                         .focusable(false)
                         .accessibilityLabel(L10n.text("imageEditor.filter.spherizeAmount"))
                         .accessibilityIdentifier("image-editor-filter-quick-spherize-amount")
+                } else if viewModel.selectedFilter == .lensCorrection {
+                    Text(L10n.format(
+                        "imageEditor.filter.lensDistortionValue",
+                        String(format: "%+d", Int(viewModel.filterLensDistortionEffectiveAmountPercent.rounded()))
+                    ))
+                        .font(.system(size: 11, weight: .semibold).monospacedDigit())
+                        .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                        .frame(width: 52, alignment: .leading)
+                    Slider(
+                        value: Binding(
+                            get: { viewModel.filterLensDistortionEffectiveAmountPercent },
+                            set: { viewModel.filterLensDistortionEffectiveAmountPercent = $0 }
+                        ),
+                        in: -100...100,
+                        step: 1
+                    )
+                        .focusable(false)
+                        .accessibilityLabel(L10n.text("imageEditor.filter.lensDistortion"))
+                        .accessibilityIdentifier("image-editor-filter-quick-lens-distortion-amount")
                 } else {
                     Text("\(Int((viewModel.filterIntensity * 100).rounded()))%")
                         .font(.system(size: 11, weight: .semibold).monospacedDigit())
