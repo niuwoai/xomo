@@ -241,7 +241,8 @@ extension ImageEditorView {
     private var contextualPasteAsLayerRoute: XomoFigmaClipboardPasteRoute {
         XomoFigmaClipboardPastePolicy.resolve(
             hasLayerPayload: viewModel.canPasteClipboardImage,
-            clipboardText: NSPasteboard.general.string(forType: .string)
+            clipboardText: NSPasteboard.general.string(forType: .string),
+            clipboardURLString: NSPasteboard.general.string(forType: .URL)
         )
     }
 

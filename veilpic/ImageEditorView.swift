@@ -3398,7 +3398,8 @@ struct ImageEditorView: View {
     ) {
         switch XomoFigmaClipboardPastePolicy.resolve(
             hasLayerPayload: viewModel.canPasteClipboardImage(from: pasteboard),
-            clipboardText: pasteboard.string(forType: .string)
+            clipboardText: pasteboard.string(forType: .string),
+            clipboardURLString: pasteboard.string(forType: .URL)
         ) {
         case .layerPayload:
             viewModel.pasteClipboardAsLayer(from: pasteboard)

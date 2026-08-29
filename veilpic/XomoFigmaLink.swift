@@ -246,13 +246,30 @@ enum XomoFigmaClipboardPasteRoute: Equatable {
 enum XomoFigmaClipboardPastePolicy {
     static func resolve(
         hasLayerPayload: Bool,
-        clipboardText: String?
+        clipboardText: String?,
+        clipboardURLString: String? = nil
     ) -> XomoFigmaClipboardPasteRoute {
         guard !hasLayerPayload else { return .layerPayload }
-        guard let clipboardText,
-              let preview = XomoFigmaSharedTextInput.preview(in: clipboardText)
-        else { return .unavailable }
-        return .figmaLink(preview.canonicalURL.absoluteString)
+
+        let textPreview: XomoFigmaLinkPreview?
+        if let clipboardText {
+            textPreview = XomoFigmaSharedTextInput.preview(in: clipboardText)
+        } else {
+            textPreview = nil
+        }
+        if let clipboardURLString,
+           !clipboardURLString.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            guard let urlPreview = XomoFigmaSharedTextInput.preview(in: clipboardURLString) else {
+                return .unavailable
+            }
+            guard textPreview == nil || textPreview?.canonicalURL == urlPreview.canonicalURL else {
+                return .unavailable
+            }
+            return .figmaLink(urlPreview.canonicalURL.absoluteString)
+        }
+
+        guard let textPreview else { return .unavailable }
+        return .figmaLink(textPreview.canonicalURL.absoluteString)
     }
 }
 

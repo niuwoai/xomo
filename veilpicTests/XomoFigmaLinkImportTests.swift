@@ -188,6 +188,40 @@ struct XomoFigmaLinkImportTests {
         }
     }
 
+    @Test func contextualPasteReadsRichLinkTargetsAndRejectsSpoofedOrConflictingRepresentations() {
+        let figma = "https://www.figma.com/design/abc123DEF456/Checkout?node-id=1-2&utm_source=mail"
+        let canonical = "https://www.figma.com/design/abc123DEF456/Checkout?node-id=1-2"
+
+        #expect(
+            XomoFigmaClipboardPastePolicy.resolve(
+                hasLayerPayload: false,
+                clipboardText: "查看设计",
+                clipboardURLString: figma
+            ) == .figmaLink(canonical)
+        )
+        #expect(
+            XomoFigmaClipboardPastePolicy.resolve(
+                hasLayerPayload: true,
+                clipboardText: "查看设计",
+                clipboardURLString: figma
+            ) == .layerPayload
+        )
+        #expect(
+            XomoFigmaClipboardPastePolicy.resolve(
+                hasLayerPayload: false,
+                clipboardText: canonical,
+                clipboardURLString: "https://www.figma.com.evil.example/design/abc123DEF456/Checkout"
+            ) == .unavailable
+        )
+        #expect(
+            XomoFigmaClipboardPastePolicy.resolve(
+                hasLayerPayload: false,
+                clipboardText: canonical,
+                clipboardURLString: "https://www.figma.com/design/otherFile999/Other"
+            ) == .unavailable
+        )
+    }
+
     @Test func canvasURLDropKeepsLocalFilesAndAcceptsOneTrustedFigmaLink() throws {
         let png = URL(fileURLWithPath: "/tmp/Poster.PNG")
         let svg = URL(fileURLWithPath: "/tmp/Icon.svg")
@@ -316,6 +350,7 @@ struct XomoFigmaLinkImportTests {
         #expect(editor.contains("placementCenter: pendingFigmaLinkImportPlacementCenter"))
         #expect(editor.contains("case .pasteAsLayer: performContextualPasteAsLayer()"))
         #expect(editor.contains("XomoFigmaClipboardPastePolicy.resolve("))
+        #expect(editor.contains("clipboardURLString: pasteboard.string(forType: .URL)"))
         #expect(editor.contains("XomoCanvasStringDropPolicy.resolve("))
         #expect(editor.contains("case let .componentPayload(rawValue):"))
         #expect(editor.contains("XomoCanvasURLDropPolicy.resolve(urls)"))
@@ -327,6 +362,7 @@ struct XomoFigmaLinkImportTests {
         #expect(editor.contains("placementCenter: viewModel.visibleCanvasCenter"))
         #expect(menu.contains("pasteAsLayerTitleKey: contextualPasteAsLayerTitleKey"))
         #expect(menu.contains("return \"imageEditor.action.pasteFigmaLink\""))
+        #expect(menu.contains("clipboardURLString: NSPasteboard.general.string(forType: .URL)"))
         #expect(applicationCommands.contains("actions?.pasteAsLayerTitleKey"))
         #expect(
             editor.contains(
