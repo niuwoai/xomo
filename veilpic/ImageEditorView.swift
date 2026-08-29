@@ -7628,6 +7628,25 @@ struct ImageEditorView: View {
                         .focusable(false)
                         .accessibilityLabel(L10n.text("imageEditor.filter.gaussianBlurRadius"))
                         .accessibilityIdentifier("image-editor-filter-quick-gaussian-blur-radius")
+                } else if viewModel.selectedFilter == .sharpen {
+                    Text(L10n.format(
+                        "imageEditor.filter.unsharpAmountValue",
+                        Int(viewModel.filterSharpenEffectiveAmountPercent.rounded())
+                    ))
+                        .font(.system(size: 11, weight: .semibold).monospacedDigit())
+                        .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                        .frame(width: 52, alignment: .leading)
+                    Slider(
+                        value: Binding(
+                            get: { viewModel.filterSharpenEffectiveAmountPercent },
+                            set: { viewModel.filterSharpenEffectiveAmountPercent = $0 }
+                        ),
+                        in: 0...200,
+                        step: 1
+                    )
+                        .focusable(false)
+                        .accessibilityLabel(L10n.text("imageEditor.filter.unsharpAmount"))
+                        .accessibilityIdentifier("image-editor-filter-quick-sharpen-amount")
                 } else if viewModel.selectedFilter == .minimum || viewModel.selectedFilter == .maximum {
                     Text("\(Int(viewModel.filterMorphologyRadius.rounded())) px")
                         .font(.system(size: 11, weight: .semibold).monospacedDigit())

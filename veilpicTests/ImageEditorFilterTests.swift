@@ -2049,7 +2049,7 @@ struct ImageEditorFilterTests {
         )
         let gaussianEnd = try #require(
             panelSource[gaussianStart.upperBound...].range(
-                of: "else if viewModel.selectedFilter == .minimum"
+                of: "else if viewModel.selectedFilter == .sharpen"
             )
         )
         let gaussianSource = panelSource[gaussianStart.lowerBound..<gaussianEnd.lowerBound]
@@ -2060,6 +2060,37 @@ struct ImageEditorFilterTests {
         #expect(gaussianSource.contains("imageEditor.filter.gaussianBlurRadius"))
         #expect(gaussianSource.contains("image-editor-filter-quick-gaussian-blur-radius"))
         #expect(!gaussianSource.contains("viewModel.filterIntensity"))
+    }
+
+    @Test func sharpenQuickPanelUsesExplicitAmountInsteadOfLegacyIntensity() throws {
+        let root = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let viewSource = try String(
+            contentsOf: root.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let panelStart = try #require(viewSource.range(of: "private var filtersQuickPanel: some View"))
+        let panelEnd = try #require(
+            viewSource[panelStart.upperBound...].range(of: "private func historySnapshotRow")
+        )
+        let panelSource = viewSource[panelStart.lowerBound..<panelEnd.lowerBound]
+        let sharpenStart = try #require(
+            panelSource.range(of: "else if viewModel.selectedFilter == .sharpen")
+        )
+        let sharpenEnd = try #require(
+            panelSource[sharpenStart.upperBound...].range(
+                of: "else if viewModel.selectedFilter == .minimum"
+            )
+        )
+        let sharpenSource = panelSource[sharpenStart.lowerBound..<sharpenEnd.lowerBound]
+
+        #expect(sharpenSource.contains("viewModel.filterSharpenEffectiveAmountPercent"))
+        #expect(sharpenSource.contains("in: 0...200"))
+        #expect(sharpenSource.contains("step: 1"))
+        #expect(sharpenSource.contains("imageEditor.filter.unsharpAmount"))
+        #expect(sharpenSource.contains("image-editor-filter-quick-sharpen-amount"))
+        #expect(!sharpenSource.contains("viewModel.filterIntensity"))
     }
 
     @Test func imageEditorMotionBlurFilterLayerAndSmartFilterAreNonDestructive() async throws {
