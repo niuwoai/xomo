@@ -48,11 +48,19 @@ enum ImageEditorFilePanelKeyboardFocusRestorer {
     ) {
         guard isApplicationActive, let window, window.isVisible else { return }
         window.makeKeyAndOrderFront(nil)
+        claimEditorResponder(in: window)
+    }
+
+    /// Release a stale field editor before plain Delete addresses the selected
+    /// canvas object. Unlike panel restoration, this does not activate or
+    /// raise the window and is therefore safe during ordinary canvas input.
+    @discardableResult
+    static func claimEditorResponder(in window: NSWindow?) -> Bool {
+        guard let window else { return false }
         if let keyboardResponder = keyboardResponder(in: window.contentView) {
-            window.makeFirstResponder(keyboardResponder)
-        } else {
-            window.makeFirstResponder(nil)
+            return window.makeFirstResponder(keyboardResponder)
         }
+        return window.makeFirstResponder(nil)
     }
 
     private static func keyboardResponder(

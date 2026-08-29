@@ -257,6 +257,7 @@ struct ScrollWheelZoomView: NSViewRepresentable {
     let pointerCaptureState: ImageEditorCanvasPointerCaptureState
     let pointerCaptureKind: ImageEditorPrimaryToolPointerCapture.Kind
     let capturesPrimaryPointer: Bool
+    let claimsKeyboardFocusOnPointerDown: Bool
     /// A physical mouse-down starts a fresh pointer generation. SwiftUI uses
     /// this boundary to release cancellation latches left behind when the
     /// matching mouse-up was swallowed by an app/window transition.
@@ -330,6 +331,7 @@ struct ScrollWheelZoomView: NSViewRepresentable {
         view.pointerCaptureState = pointerCaptureState
         view.pointerCaptureKind = pointerCaptureKind
         view.capturesPrimaryPointer = capturesPrimaryPointer
+        view.claimsKeyboardFocusOnPointerDown = claimsKeyboardFocusOnPointerDown
         view.onCanvasPointerSequenceBegan = onCanvasPointerSequenceBegan
         view.onCanvasLifecycleInterrupted = onCanvasLifecycleInterrupted
         view.onZoom = onZoom
@@ -366,6 +368,7 @@ struct ScrollWheelZoomView: NSViewRepresentable {
         nsView.pointerCaptureState = pointerCaptureState
         nsView.pointerCaptureKind = pointerCaptureKind
         nsView.capturesPrimaryPointer = capturesPrimaryPointer
+        nsView.claimsKeyboardFocusOnPointerDown = claimsKeyboardFocusOnPointerDown
         nsView.onCanvasPointerSequenceBegan = onCanvasPointerSequenceBegan
         nsView.onCanvasLifecycleInterrupted = onCanvasLifecycleInterrupted
         nsView.onZoom = onZoom
@@ -485,6 +488,7 @@ final class ScrollWheelZoomNSView: NSView {
     var pointerCaptureState = ImageEditorCanvasPointerCaptureState()
     var pointerCaptureKind: ImageEditorPrimaryToolPointerCapture.Kind = .none
     var capturesPrimaryPointer = false
+    var claimsKeyboardFocusOnPointerDown = true
     var onCanvasPointerSequenceBegan: (() -> Void)?
     var onCanvasLifecycleInterrupted: ((ImageEditorCanvasLifecycleInterruption) -> Void)?
     var onZoom: ((CGFloat, CGPoint, CGSize) -> Void)?
@@ -892,6 +896,9 @@ final class ScrollWheelZoomNSView: NSView {
             let location = convert(event.locationInWindow, from: nil)
             guard bounds.contains(location) else {
                 return false
+            }
+            if claimsKeyboardFocusOnPointerDown {
+                ImageEditorFilePanelKeyboardFocusRestorer.claimEditorResponder(in: window)
             }
             onCanvasPointerSequenceBegan?()
             // Remote desktops, accessibility clients and pointer warps can

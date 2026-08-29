@@ -56,6 +56,29 @@ struct ImageEditorTextInputShortcutTests {
     }
 
     @MainActor
+    @Test func canvasInteractionReclaimsDeleteFromAStaleTextField() {
+        let window = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 320, height: 200),
+            styleMask: [.titled],
+            backing: .buffered,
+            defer: false
+        )
+        let staleField = NSTextField(frame: NSRect(x: 20, y: 20, width: 160, height: 24))
+        let keyboardResponder = ImageEditorKeyboardShortcutResponderNSView(
+            frame: NSRect(x: 0, y: 0, width: 1, height: 1)
+        )
+        window.contentView = NSView(frame: window.contentLayoutRect)
+        window.contentView?.addSubview(staleField)
+        window.contentView?.addSubview(keyboardResponder)
+        window.orderFront(nil)
+        #expect(window.makeFirstResponder(staleField))
+
+        #expect(ImageEditorFilePanelKeyboardFocusRestorer.claimEditorResponder(in: window))
+        #expect(window.firstResponder === keyboardResponder)
+        window.orderOut(nil)
+    }
+
+    @MainActor
     @Test func filePanelTeardownCannotStealDeleteFromTheImportedObject() throws {
         let window = NSWindow(
             contentRect: NSRect(x: 0, y: 0, width: 320, height: 200),

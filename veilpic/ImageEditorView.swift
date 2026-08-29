@@ -3953,7 +3953,16 @@ struct ImageEditorView: View {
                                 from: location,
                                 in: geometry.size
                             ) else { return false }
-                            return viewModel.importLayerFiles(urls, centeredAt: canvasPoint)
+                            let didImport = viewModel.importLayerFiles(
+                                urls,
+                                centeredAt: canvasPoint
+                            )
+                            if didImport {
+                                ImageEditorFilePanelKeyboardFocusRestorer.claimEditorResponder(
+                                    in: NSApp.keyWindow ?? NSApp.mainWindow
+                                )
+                            }
+                            return didImport
                         case let .figmaLink(canonicalURL):
                             guard let canvasPoint = imagePoint(
                                 from: location,
@@ -4015,6 +4024,7 @@ struct ImageEditorView: View {
                             tool: canvasInteractionTool,
                             isCanvasTextEditing: canvasTextEditingOrigin != nil
                         ),
+                        claimsKeyboardFocusOnPointerDown: canvasTextEditingOrigin == nil,
                         onCanvasPointerSequenceBegan: {
                             beginCanvasPointerSequence()
                         },

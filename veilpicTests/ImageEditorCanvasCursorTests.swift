@@ -1290,6 +1290,30 @@ struct ImageEditorCanvasCursorTests {
         #expect(interruptions.count == 3)
     }
 
+    @Test func canvasBridgeReclaimsKeyboardFocusWithoutInterruptingTextEditing() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let bridgeSource = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorScrollZoom.swift"),
+            encoding: .utf8
+        )
+        let viewSource = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(bridgeSource.contains("if claimsKeyboardFocusOnPointerDown"))
+        #expect(bridgeSource.contains(
+            "ImageEditorFilePanelKeyboardFocusRestorer.claimEditorResponder(in: window)"
+        ))
+        #expect(viewSource.contains(
+            "claimsKeyboardFocusOnPointerDown: canvasTextEditingOrigin == nil"
+        ))
+        #expect(viewSource.contains("if didImport"))
+        #expect(viewSource.contains("in: NSApp.keyWindow ?? NSApp.mainWindow"))
+    }
+
     @Test func appAndWindowDeactivationEndNativeMiddleMousePanning() throws {
         let repositoryRoot = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()
