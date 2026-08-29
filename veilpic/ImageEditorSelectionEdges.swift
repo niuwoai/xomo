@@ -16,6 +16,14 @@ struct ImageEditorSelectionEdgeSegment: Equatable {
 struct ImageEditorSelectionEdgeGeometry: Equatable {
     var contours: [[CGPoint]]
 
+    func offsetBy(dx: CGFloat, dy: CGFloat) -> ImageEditorSelectionEdgeGeometry {
+        ImageEditorSelectionEdgeGeometry(
+            contours: contours.map { contour in
+                contour.map { CGPoint(x: $0.x + dx, y: $0.y + dy) }
+            }
+        )
+    }
+
     var segments: [ImageEditorSelectionEdgeSegment] {
         contours.flatMap { contour in
             zip(contour, contour.dropFirst()).map {
@@ -191,5 +199,59 @@ struct ImageEditorSelectionEdgeGeometry: Equatable {
         }
         simplified.append(closed[closed.count - 1])
         return simplified
+    }
+}
+
+/// A non-destructive canvas guide for the Patch tool's two transfer modes.
+/// The selected contour stays at its real document position while its offset
+/// counterpart and the arrow make the pixel flow explicit before commit.
+struct ImageEditorPatchTransferGuide: Equatable {
+    var sourceEdges: ImageEditorSelectionEdgeGeometry
+    var targetEdges: ImageEditorSelectionEdgeGeometry
+    var sourceAnchor: CGPoint
+    var targetAnchor: CGPoint
+
+    static func make(
+        selectionEdges: ImageEditorSelectionEdgeGeometry,
+        selectionBounds: CGRect,
+        dragStart: CGPoint,
+        dragEnd: CGPoint,
+        mode: ImageEditorPatchMode
+    ) -> ImageEditorPatchTransferGuide? {
+        guard selectionBounds.width.isFinite,
+              selectionBounds.height.isFinite,
+              selectionBounds.midX.isFinite,
+              selectionBounds.midY.isFinite,
+              dragStart.x.isFinite,
+              dragStart.y.isFinite,
+              dragEnd.x.isFinite,
+              dragEnd.y.isFinite
+        else { return nil }
+
+        let deltaX = dragEnd.x - dragStart.x
+        let deltaY = dragEnd.y - dragStart.y
+        let selectedAnchor = CGPoint(x: selectionBounds.midX, y: selectionBounds.midY)
+        let offsetAnchor = CGPoint(
+            x: selectedAnchor.x + deltaX,
+            y: selectedAnchor.y + deltaY
+        )
+        let offsetEdges = selectionEdges.offsetBy(dx: deltaX, dy: deltaY)
+
+        switch mode {
+        case .source:
+            return ImageEditorPatchTransferGuide(
+                sourceEdges: offsetEdges,
+                targetEdges: selectionEdges,
+                sourceAnchor: offsetAnchor,
+                targetAnchor: selectedAnchor
+            )
+        case .destination:
+            return ImageEditorPatchTransferGuide(
+                sourceEdges: selectionEdges,
+                targetEdges: offsetEdges,
+                sourceAnchor: selectedAnchor,
+                targetAnchor: offsetAnchor
+            )
+        }
     }
 }

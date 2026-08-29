@@ -3920,6 +3920,7 @@ struct ImageEditorView: View {
                     guideInteractionOverlay(in: geometry.size)
                     maskColorOverlay(in: geometry.size)
                     selectionOverlay(in: geometry.size)
+                    patchTransferGuideOverlay(in: geometry.size)
                     moveToolHoverOutlineOverlay(in: geometry.size)
                     objectSelectionBoxOverlay(in: geometry.size)
                     savedPathOverlay(in: geometry.size)
@@ -9848,6 +9849,87 @@ struct ImageEditorView: View {
                 }
                 .allowsHitTesting(false)
             }
+        }
+    }
+
+    @ViewBuilder
+    private func patchTransferGuideOverlay(in size: CGSize) -> some View {
+        if canvasInteractionTool == .patchTool,
+           !isDrawingPatchSelection,
+           let selection = viewModel.selection,
+           let selectionEdges = viewModel.selectionEdgeGeometry,
+           let dragStart,
+           let dragEnd,
+           let guide = ImageEditorPatchTransferGuide.make(
+                selectionEdges: selectionEdges,
+                selectionBounds: selection.bounds,
+                dragStart: dragStart,
+                dragEnd: dragEnd,
+                mode: viewModel.patchMode
+           ) {
+            Canvas { context, _ in
+                func canvasPath(for geometry: ImageEditorSelectionEdgeGeometry) -> Path {
+                    var path = Path()
+                    for contour in geometry.contours {
+                        guard let first = contour.first else { continue }
+                        path.move(to: viewPoint(from: first, in: size))
+                        for point in contour.dropFirst() {
+                            path.addLine(to: viewPoint(from: point, in: size))
+                        }
+                    }
+                    return path
+                }
+
+                let sourcePath = canvasPath(for: guide.sourceEdges)
+                context.stroke(
+                    sourcePath,
+                    with: .color(Color(nsColor: ImageEditorTheme.selected).opacity(0.96)),
+                    style: StrokeStyle(lineWidth: 2.4)
+                )
+                context.stroke(
+                    canvasPath(for: guide.targetEdges),
+                    with: .color(Color.white.opacity(0.94)),
+                    style: StrokeStyle(lineWidth: 2, dash: [5, 4])
+                )
+
+                let arrowStart = viewPoint(from: guide.sourceAnchor, in: size)
+                let arrowEnd = viewPoint(from: guide.targetAnchor, in: size)
+                let deltaX = arrowEnd.x - arrowStart.x
+                let deltaY = arrowEnd.y - arrowStart.y
+                let length = hypot(deltaX, deltaY)
+                if length >= 8 {
+                    let unitX = deltaX / length
+                    let unitY = deltaY / length
+                    let arrowHeadLength = min(CGFloat(10), max(CGFloat(6), length * 0.22))
+                    let arrowHeadWidth = arrowHeadLength * 0.62
+                    let arrowBase = CGPoint(
+                        x: arrowEnd.x - unitX * arrowHeadLength,
+                        y: arrowEnd.y - unitY * arrowHeadLength
+                    )
+                    let perpendicularX = -unitY
+                    let perpendicularY = unitX
+                    var arrow = Path()
+                    arrow.move(to: arrowStart)
+                    arrow.addLine(to: arrowEnd)
+                    arrow.move(to: arrowEnd)
+                    arrow.addLine(to: CGPoint(
+                        x: arrowBase.x + perpendicularX * arrowHeadWidth,
+                        y: arrowBase.y + perpendicularY * arrowHeadWidth
+                    ))
+                    arrow.move(to: arrowEnd)
+                    arrow.addLine(to: CGPoint(
+                        x: arrowBase.x - perpendicularX * arrowHeadWidth,
+                        y: arrowBase.y - perpendicularY * arrowHeadWidth
+                    ))
+                    context.stroke(
+                        arrow,
+                        with: .color(Color(nsColor: ImageEditorTheme.selected).opacity(0.96)),
+                        style: StrokeStyle(lineWidth: 2.2, lineCap: .round, lineJoin: .round)
+                    )
+                }
+            }
+            .allowsHitTesting(false)
+            .accessibilityHidden(true)
         }
     }
 

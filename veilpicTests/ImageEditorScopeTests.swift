@@ -5741,6 +5741,9 @@ struct ImageEditorScopeTests {
         #expect(source.contains("viewModel.createPatchSelection(points: dragPoints)"))
         #expect(source.contains("patchPreviewImage = viewModel.patchPreviewImage("))
         #expect(source.contains("if canvasInteractionTool == .patchTool, let patchPreviewImage"))
+        #expect(source.contains("patchTransferGuideOverlay(in: geometry.size)"))
+        #expect(source.contains("let guide = ImageEditorPatchTransferGuide.make("))
+        #expect(source.contains("mode: viewModel.patchMode"))
         #expect(source.contains("viewModel.patchSelection(from: dragStart, to: endImagePoint)"))
     }
 

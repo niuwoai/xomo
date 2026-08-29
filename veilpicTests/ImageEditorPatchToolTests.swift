@@ -12,6 +12,48 @@ import Testing
 @MainActor
 @Suite(.serialized)
 struct ImageEditorPatchToolTests {
+    @Test func transferGuideSwapsSourceAndTargetWithoutChangingSelectionGeometry() throws {
+        let selection = ImageEditorSelection.rectangle(
+            CGRect(x: 10, y: 12, width: 20, height: 14)
+        )
+        let selectionEdges = ImageEditorSelectionEdgeGeometry.make(
+            selection: selection,
+            canvasSize: CGSize(width: 100, height: 80)
+        )
+        let dragStart = CGPoint(x: 18, y: 18)
+        let dragEnd = CGPoint(x: 48, y: 38)
+
+        let sourceGuide = try #require(ImageEditorPatchTransferGuide.make(
+            selectionEdges: selectionEdges,
+            selectionBounds: selection.bounds,
+            dragStart: dragStart,
+            dragEnd: dragEnd,
+            mode: .source
+        ))
+        let destinationGuide = try #require(ImageEditorPatchTransferGuide.make(
+            selectionEdges: selectionEdges,
+            selectionBounds: selection.bounds,
+            dragStart: dragStart,
+            dragEnd: dragEnd,
+            mode: .destination
+        ))
+
+        #expect(sourceGuide.targetEdges == selectionEdges)
+        #expect(destinationGuide.sourceEdges == selectionEdges)
+        #expect(sourceGuide.sourceEdges == destinationGuide.targetEdges)
+        #expect(sourceGuide.sourceAnchor == CGPoint(x: 50, y: 39))
+        #expect(sourceGuide.targetAnchor == CGPoint(x: 20, y: 19))
+        #expect(destinationGuide.sourceAnchor == sourceGuide.targetAnchor)
+        #expect(destinationGuide.targetAnchor == sourceGuide.sourceAnchor)
+        #expect(ImageEditorPatchTransferGuide.make(
+            selectionEdges: selectionEdges,
+            selectionBounds: selection.bounds,
+            dragStart: dragStart,
+            dragEnd: CGPoint(x: CGFloat.infinity, y: 38),
+            mode: .source
+        ) == nil)
+    }
+
     @Test func sourceModePreviewIsNonDestructiveAndCommitSupportsUndo() throws {
         let fixture = makeFixture()
         let viewModel = fixture.viewModel
