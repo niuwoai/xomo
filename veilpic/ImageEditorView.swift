@@ -7709,6 +7709,18 @@ struct ImageEditorView: View {
                         .focusable(false)
                         .accessibilityLabel(L10n.text("imageEditor.filter.oilPaintRadius"))
                         .accessibilityIdentifier("image-editor-filter-quick-oil-paint-radius")
+                } else if viewModel.selectedFilter == .highPass {
+                    Text(L10n.format(
+                        "imageEditor.filter.highPassRadiusValue",
+                        Int(viewModel.filterHighPassRadius.rounded())
+                    ))
+                        .font(.system(size: 11, weight: .semibold).monospacedDigit())
+                        .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                        .frame(width: 62, alignment: .leading)
+                    Slider(value: $viewModel.filterHighPassRadius, in: 1...1_000, step: 1)
+                        .focusable(false)
+                        .accessibilityLabel(L10n.text("imageEditor.filter.highPassRadius"))
+                        .accessibilityIdentifier("image-editor-filter-quick-high-pass-radius")
                 } else if viewModel.selectedFilter == .minimum || viewModel.selectedFilter == .maximum {
                     Text("\(Int(viewModel.filterMorphologyRadius.rounded())) px")
                         .font(.system(size: 11, weight: .semibold).monospacedDigit())

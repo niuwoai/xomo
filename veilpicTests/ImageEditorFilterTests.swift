@@ -2204,7 +2204,7 @@ struct ImageEditorFilterTests {
         )
         let oilPaintEnd = try #require(
             panelSource[oilPaintStart.upperBound...].range(
-                of: "else if viewModel.selectedFilter == .minimum"
+                of: "else if viewModel.selectedFilter == .highPass"
             )
         )
         let oilPaintSource = panelSource[oilPaintStart.lowerBound..<oilPaintEnd.lowerBound]
@@ -2215,6 +2215,37 @@ struct ImageEditorFilterTests {
         #expect(oilPaintSource.contains("imageEditor.filter.oilPaintRadius"))
         #expect(oilPaintSource.contains("image-editor-filter-quick-oil-paint-radius"))
         #expect(!oilPaintSource.contains("viewModel.filterIntensity"))
+    }
+
+    @Test func highPassQuickPanelUsesRadiusInsteadOfLegacyIntensity() throws {
+        let root = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let viewSource = try String(
+            contentsOf: root.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let panelStart = try #require(viewSource.range(of: "private var filtersQuickPanel: some View"))
+        let panelEnd = try #require(
+            viewSource[panelStart.upperBound...].range(of: "private func historySnapshotRow")
+        )
+        let panelSource = viewSource[panelStart.lowerBound..<panelEnd.lowerBound]
+        let highPassStart = try #require(
+            panelSource.range(of: "else if viewModel.selectedFilter == .highPass")
+        )
+        let highPassEnd = try #require(
+            panelSource[highPassStart.upperBound...].range(
+                of: "else if viewModel.selectedFilter == .minimum"
+            )
+        )
+        let highPassSource = panelSource[highPassStart.lowerBound..<highPassEnd.lowerBound]
+
+        #expect(highPassSource.contains("viewModel.filterHighPassRadius"))
+        #expect(highPassSource.contains("in: 1...1_000"))
+        #expect(highPassSource.contains("step: 1"))
+        #expect(highPassSource.contains("imageEditor.filter.highPassRadius"))
+        #expect(highPassSource.contains("image-editor-filter-quick-high-pass-radius"))
+        #expect(!highPassSource.contains("viewModel.filterIntensity"))
     }
 
     @Test func imageEditorMotionBlurFilterLayerAndSmartFilterAreNonDestructive() async throws {
