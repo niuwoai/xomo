@@ -11893,7 +11893,8 @@ struct ImageEditorView: View {
                     && viewModel.selectedFilter != .spherize
                     && viewModel.selectedFilter != .liquifyPuckerBloat
                     && viewModel.selectedFilter != .ripple
-                    && viewModel.selectedFilter != .wave {
+                    && viewModel.selectedFilter != .wave
+                    && viewModel.selectedFilter != .liquifyTwirl {
                     Slider(value: $viewModel.filterIntensity, in: 0...1, step: 0.05)
                 }
                 if viewModel.selectedFilter == .gaussianBlur {
@@ -12343,8 +12344,19 @@ struct ImageEditorView: View {
                         Text(L10n.text("imageEditor.filter.liquifyTwirlAngle"))
                             .font(.system(size: 10, weight: .medium))
                             .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
-                        Slider(value: $viewModel.filterLiquifyTwirlAngle, in: -1...1, step: 0.05)
-                        Text(L10n.format("imageEditor.filter.liquifyTwirlValue", Int((viewModel.filterLiquifyTwirlAngle * 100).rounded())))
+                        Slider(
+                            value: Binding(
+                                get: { viewModel.filterLiquifyTwirlEffectiveAngleDegrees },
+                                set: { viewModel.filterLiquifyTwirlEffectiveAngleDegrees = $0 }
+                            ),
+                            in: -999...999,
+                            step: 1
+                        )
+                        .accessibilityIdentifier("image-editor-filter-liquify-twirl-angle")
+                        Text(L10n.format(
+                            "imageEditor.filter.liquifyTwirlValue",
+                            String(format: "%+d", Int(viewModel.filterLiquifyTwirlEffectiveAngleDegrees.rounded()))
+                        ))
                             .font(.system(size: 10, weight: .semibold))
                             .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
                             .frame(width: 44, alignment: .trailing)

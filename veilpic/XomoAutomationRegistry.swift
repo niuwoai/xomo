@@ -6284,6 +6284,7 @@ final class XomoAutomationRegistry {
             case "unsharpThreshold": viewModel.filterUnsharpThreshold = try numericSetting(value, key: key)
             case "liquifyPushX": viewModel.filterLiquifyPushX = try numericSetting(value, key: key)
             case "liquifyPushY": viewModel.filterLiquifyPushY = try numericSetting(value, key: key)
+            case "liquifyTwirlAngleDegrees": viewModel.filterLiquifyTwirlAngleDegrees = try numericSetting(value, key: key)
             case "twirlAngle": viewModel.filterLiquifyTwirlAngle = try numericSetting(value, key: key)
             case "liquifyBulgeAmountPercent": viewModel.filterLiquifyBulgeAmountPercent = try numericSetting(value, key: key)
             case "bulgeAmount": viewModel.filterLiquifyBulgeAmount = try numericSetting(value, key: key)
@@ -8030,6 +8031,7 @@ private extension XomoAutomationRegistry {
         "unsharpThreshold": XomoAutomationSchema.number(description: "Unsharp threshold"),
         "liquifyPushX": XomoAutomationSchema.number(description: "Liquify horizontal push"),
         "liquifyPushY": XomoAutomationSchema.number(description: "Liquify vertical push"),
+        "liquifyTwirlAngleDegrees": XomoAutomationSchema.number(description: "Twirl angle from -999 to 999 degrees"),
         "twirlAngle": XomoAutomationSchema.number(description: "Twirl angle"),
         "liquifyBulgeAmountPercent": XomoAutomationSchema.number(description: "Pucker/Bloat amount from -100 to 100 percent"),
         "bulgeAmount": XomoAutomationSchema.number(description: "Bulge amount"),

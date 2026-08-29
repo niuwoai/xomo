@@ -49,6 +49,9 @@ extension NSImage {
         if kind == .wave, normalizedSettings.waveAmplitudePercent == 0 {
             return self
         }
+        if kind == .liquifyTwirl, normalizedSettings.liquifyTwirlAngleDegrees == 0 {
+            return self
+        }
         let hasExplicitFilterAmount = (
             kind == .sharpen
                 && normalizedSettings.sharpenAmountPercent.map { $0 > 0 } == true
@@ -76,6 +79,9 @@ extension NSImage {
         ) || (
             kind == .wave
                 && normalizedSettings.waveAmplitudePercent.map { $0 != 0 } == true
+        ) || (
+            kind == .liquifyTwirl
+                && normalizedSettings.liquifyTwirlAngleDegrees.map { $0 != 0 } == true
         )
         guard clamped > 0 || hasExplicitFilterAmount else { return self }
         if kind == .addNoise {
@@ -243,6 +249,9 @@ extension NSImage {
         if kind == .wave, normalizedSettings.waveAmplitudePercent == 0 {
             return self
         }
+        if kind == .liquifyTwirl, normalizedSettings.liquifyTwirlAngleDegrees == 0 {
+            return self
+        }
         let hasExplicitFilterAmount = (
             kind == .sharpen
                 && normalizedSettings.sharpenAmountPercent.map { $0 > 0 } == true
@@ -270,6 +279,9 @@ extension NSImage {
         ) || (
             kind == .wave
                 && normalizedSettings.waveAmplitudePercent.map { $0 != 0 } == true
+        ) || (
+            kind == .liquifyTwirl
+                && normalizedSettings.liquifyTwirlAngleDegrees.map { $0 != 0 } == true
         )
         guard intensity > 0 || hasExplicitFilterAmount else { return self }
         let normalizedOpacity = max(0, min(1, opacity))
@@ -1489,8 +1501,10 @@ extension NSImage {
 
     private func liquifyTwirled(intensity: Double, settings: ImageEditorFilterSettings) -> NSImage? {
         let clampedIntensity = max(0, min(1, intensity))
-        guard clampedIntensity > 0 else { return self }
         let normalizedSettings = settings.normalized()
+        let angleDegrees = normalizedSettings.liquifyTwirlAngleDegrees
+            ?? (normalizedSettings.liquifyTwirlAngle * clampedIntensity * 270)
+        guard abs(angleDegrees) > 0.000_1 else { return self }
         return pixelSampledFromBuffer { x, y, width, height, pixels, bytesPerRow, bytesPerPixel in
             let centerX = Double(max(width - 1, 1)) / 2
             let centerY = Double(max(height - 1, 1)) / 2
@@ -1511,7 +1525,7 @@ extension NSImage {
             }
 
             let falloff = pow(1 - distance / radius, 2)
-            let twist = normalizedSettings.liquifyTwirlAngle * Double.pi * 1.5 * clampedIntensity * falloff
+            let twist = angleDegrees * Double.pi / 180 * falloff
             let sourceAngle = atan2(dy, dx) - twist
             let sourceX = centerX + cos(sourceAngle) * distance
             let sourceY = centerY + sin(sourceAngle) * distance

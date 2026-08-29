@@ -479,6 +479,7 @@ final class ImageEditorViewModel: ObservableObject {
                 filterLiquifyBulgeAmountPercent = nil
                 filterRippleAmountPercent = nil
                 filterWaveAmplitudePercent = nil
+                filterLiquifyTwirlAngleDegrees = nil
                 filterUnsharpAmountPercent = nil
                 filterUnsharpRadiusPixels = nil
                 filterUnsharpThresholdLevels = nil
@@ -615,6 +616,16 @@ final class ImageEditorViewModel: ObservableObject {
         }
     }
 
+    var filterLiquifyTwirlEffectiveAngleDegrees: Double {
+        get {
+            filterLiquifyTwirlAngleDegrees
+                ?? max(-999, min(999, filterLiquifyTwirlAngle * filterIntensity * 270))
+        }
+        set {
+            filterLiquifyTwirlAngleDegrees = max(-999, min(999, newValue))
+        }
+    }
+
     var filterUnsharpEffectiveAmountPercent: Double {
         get {
             filterUnsharpAmountPercent
@@ -646,6 +657,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var filterUnsharpThreshold: Double = 0
     @Published var filterLiquifyPushX: Double = 0.25
     @Published var filterLiquifyPushY: Double = 0
+    @Published var filterLiquifyTwirlAngleDegrees: Double?
     @Published var filterLiquifyTwirlAngle: Double = 0.5
     @Published var filterLiquifyBulgeAmountPercent: Double?
     @Published var filterLiquifyBulgeAmount: Double = 0.5
@@ -2876,11 +2888,12 @@ final class ImageEditorViewModel: ObservableObject {
         }
         if filter.kind == .liquifyTwirl {
             let settings = filter.normalizedSettings
+            let angleDegrees = settings.liquifyTwirlAngleDegrees
+                ?? (settings.liquifyTwirlAngle * filter.normalizedIntensity * 270)
             let title = L10n.format(
                 "imageEditor.properties.smartFilterLiquifyTwirlItem",
                 filter.kind.title,
-                Int((filter.normalizedIntensity * 100).rounded()),
-                Int((settings.liquifyTwirlAngle * 100).rounded())
+                String(format: "%+d", Int(angleDegrees.rounded()))
             )
             guard !filter.isEnabled else { return title }
             return L10n.format("imageEditor.properties.smartFilterDisabled", title)
@@ -9761,6 +9774,9 @@ final class ImageEditorViewModel: ObservableObject {
             unsharpThreshold: filterUnsharpThreshold,
             liquifyPushX: filterLiquifyPushX,
             liquifyPushY: filterLiquifyPushY,
+            liquifyTwirlAngleDegrees: selectedFilter == .liquifyTwirl
+                ? filterLiquifyTwirlAngleDegrees
+                : nil,
             liquifyTwirlAngle: filterLiquifyTwirlAngle,
             liquifyBulgeAmountPercent: selectedFilter == .liquifyPuckerBloat
                 ? filterLiquifyBulgeAmountPercent
@@ -11639,6 +11655,7 @@ final class ImageEditorViewModel: ObservableObject {
         filterUnsharpThreshold = normalized.unsharpThreshold
         filterLiquifyPushX = normalized.liquifyPushX
         filterLiquifyPushY = normalized.liquifyPushY
+        filterLiquifyTwirlAngleDegrees = normalized.liquifyTwirlAngleDegrees
         filterLiquifyTwirlAngle = normalized.liquifyTwirlAngle
         filterLiquifyBulgeAmountPercent = normalized.liquifyBulgeAmountPercent
         filterLiquifyBulgeAmount = normalized.liquifyBulgeAmount
