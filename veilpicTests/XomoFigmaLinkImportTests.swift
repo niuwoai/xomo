@@ -222,6 +222,35 @@ struct XomoFigmaLinkImportTests {
         )
     }
 
+    @Test func fileImportPrefillAcceptsTrustedClipboardLinksAndRejectsConflictingRepresentations() {
+        let figma = "https://www.figma.com/design/abc123DEF456/Checkout?node-id=1-2&utm_source=mail"
+        let canonical = "https://www.figma.com/design/abc123DEF456/Checkout?node-id=1-2"
+
+        #expect(
+            XomoFigmaClipboardLinkPolicy.canonicalURL(
+                clipboardText: "查看设计",
+                clipboardURLString: figma
+            ) == canonical
+        )
+        #expect(
+            XomoFigmaClipboardLinkPolicy.canonicalURL(
+                clipboardText: "设计链接：\(figma)"
+            ) == canonical
+        )
+        #expect(
+            XomoFigmaClipboardLinkPolicy.canonicalURL(
+                clipboardText: canonical,
+                clipboardURLString: "https://www.figma.com/design/otherFile999/Other"
+            ) == nil
+        )
+        #expect(
+            XomoFigmaClipboardLinkPolicy.canonicalURL(
+                clipboardText: "普通文字",
+                clipboardURLString: "https://www.figma.com.evil.example/design/abc123DEF456/Checkout"
+            ) == nil
+        )
+    }
+
     @Test func canvasURLDropKeepsLocalFilesAndAcceptsOneTrustedFigmaLink() throws {
         let png = URL(fileURLWithPath: "/tmp/Poster.PNG")
         let svg = URL(fileURLWithPath: "/tmp/Icon.svg")
@@ -340,6 +369,9 @@ struct XomoFigmaLinkImportTests {
         #expect(menu.contains("var xomoFileCommandActions: XomoFileCommandActions"))
         #expect(menu.contains("importFigmaLink: { performFileCommand(.importFigmaLink) }"))
         #expect(menu.contains("case .importFigmaLink:"))
+        #expect(menu.contains("canonicalURL: XomoFigmaClipboardLinkPolicy.canonicalURL("))
+        #expect(menu.contains("clipboardText: NSPasteboard.general.string(forType: .string)"))
+        #expect(menu.contains("clipboardURLString: NSPasteboard.general.string(forType: .URL)"))
         #expect(menu.contains("isFigmaLinkImportPresented = true"))
         #expect(applicationCommands.contains("case .importFigmaLink:"))
         #expect(applicationCommands.contains("imageEditor.action.figmaLinkImport"))
@@ -358,7 +390,7 @@ struct XomoFigmaLinkImportTests {
         #expect(editor.contains("placementCenter: canvasPoint"))
         #expect(menu.contains("func presentFigmaLinkImport("))
         #expect(menu.contains("pendingFigmaLinkImportPlacementCenter = placementCenter"))
-        #expect(menu.contains("presentFigmaLinkImport(placementCenter: viewModel.visibleCanvasCenter)"))
+        #expect(menu.contains("placementCenter: viewModel.visibleCanvasCenter"))
         #expect(editor.contains("placementCenter: viewModel.visibleCanvasCenter"))
         #expect(menu.contains("pasteAsLayerTitleKey: contextualPasteAsLayerTitleKey"))
         #expect(menu.contains("return \"imageEditor.action.pasteFigmaLink\""))

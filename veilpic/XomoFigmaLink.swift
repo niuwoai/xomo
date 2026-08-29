@@ -243,14 +243,11 @@ enum XomoFigmaClipboardPasteRoute: Equatable {
     case unavailable
 }
 
-enum XomoFigmaClipboardPastePolicy {
-    static func resolve(
-        hasLayerPayload: Bool,
+enum XomoFigmaClipboardLinkPolicy {
+    static func canonicalURL(
         clipboardText: String?,
         clipboardURLString: String? = nil
-    ) -> XomoFigmaClipboardPasteRoute {
-        guard !hasLayerPayload else { return .layerPayload }
-
+    ) -> String? {
         let textPreview: XomoFigmaLinkPreview?
         if let clipboardText {
             textPreview = XomoFigmaSharedTextInput.preview(in: clipboardText)
@@ -260,16 +257,30 @@ enum XomoFigmaClipboardPastePolicy {
         if let clipboardURLString,
            !clipboardURLString.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             guard let urlPreview = XomoFigmaSharedTextInput.preview(in: clipboardURLString) else {
-                return .unavailable
+                return nil
             }
             guard textPreview == nil || textPreview?.canonicalURL == urlPreview.canonicalURL else {
-                return .unavailable
+                return nil
             }
-            return .figmaLink(urlPreview.canonicalURL.absoluteString)
+            return urlPreview.canonicalURL.absoluteString
         }
 
-        guard let textPreview else { return .unavailable }
-        return .figmaLink(textPreview.canonicalURL.absoluteString)
+        return textPreview?.canonicalURL.absoluteString
+    }
+}
+
+enum XomoFigmaClipboardPastePolicy {
+    static func resolve(
+        hasLayerPayload: Bool,
+        clipboardText: String?,
+        clipboardURLString: String? = nil
+    ) -> XomoFigmaClipboardPasteRoute {
+        guard !hasLayerPayload else { return .layerPayload }
+        guard let canonicalURL = XomoFigmaClipboardLinkPolicy.canonicalURL(
+            clipboardText: clipboardText,
+            clipboardURLString: clipboardURLString
+        ) else { return .unavailable }
+        return .figmaLink(canonicalURL)
     }
 }
 

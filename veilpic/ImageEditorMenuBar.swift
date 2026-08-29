@@ -140,7 +140,13 @@ extension ImageEditorView {
         case .export:
             viewModel.openExportPanel()
         case .importFigmaLink:
-            presentFigmaLinkImport(placementCenter: viewModel.visibleCanvasCenter)
+            presentFigmaLinkImport(
+                canonicalURL: XomoFigmaClipboardLinkPolicy.canonicalURL(
+                    clipboardText: NSPasteboard.general.string(forType: .string),
+                    clipboardURLString: NSPasteboard.general.string(forType: .URL)
+                ),
+                placementCenter: viewModel.visibleCanvasCenter
+            )
         }
     }
 
