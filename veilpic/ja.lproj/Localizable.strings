@@ -736,6 +736,8 @@
 "imageEditor.option.patchMode" = "パッチモード";
 "imageEditor.patchMode.source" = "ソース";
 "imageEditor.patchMode.destination" = "適用先";
+"imageEditor.option.patchTransparent" = "透明";
+"imageEditor.option.patchTransparent.help" = "サンプル領域のテクスチャだけを抽出し、適用先の色と透明度を保持します。";
 "imageEditor.option.brushPreset" = "ブラシプリセット";
 "imageEditor.help.brushPreset" = "プリセットを選択するか、現在のブラシ設定を保存します";
 "imageEditor.action.brushPresetCreate" = "現在の設定からプリセットを作成";

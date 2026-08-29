@@ -736,6 +736,8 @@
 "imageEditor.option.patchMode" = "Patch Mode";
 "imageEditor.patchMode.source" = "Source";
 "imageEditor.patchMode.destination" = "Destination";
+"imageEditor.option.patchTransparent" = "Transparent";
+"imageEditor.option.patchTransparent.help" = "Extract only sampled texture while preserving the target color and transparency.";
 "imageEditor.option.brushPreset" = "Brush Presets";
 "imageEditor.help.brushPreset" = "Choose a preset or save the current brush settings";
 "imageEditor.action.brushPresetCreate" = "Create Preset from Current Settings";

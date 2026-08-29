@@ -918,6 +918,15 @@ struct ImageEditorView: View {
 
             if viewModel.selectedTool == .patchTool {
                 patchModePicker
+                Toggle(
+                    L10n.text("imageEditor.option.patchTransparent"),
+                    isOn: $viewModel.patchTransparentEnabled
+                )
+                .toggleStyle(.checkbox)
+                .focusable(false)
+                .fixedSize()
+                .help(L10n.text("imageEditor.option.patchTransparent.help"))
+                .accessibilityIdentifier("image-editor-patch-transparent")
             }
 
             if viewModel.selectedTool == .sponge {
@@ -4619,7 +4628,11 @@ struct ImageEditorView: View {
                     refreshCanvasCursor(in: geometry.size)
                 }
                 .onChange(of: viewModel.patchMode) { _ in
+                    refreshActivePatchPreview()
                     refreshCanvasCursor(in: geometry.size)
+                }
+                .onChange(of: viewModel.patchTransparentEnabled) { _ in
+                    refreshActivePatchPreview()
                 }
                 .onChange(of: viewModel.selectionMode) { _ in
                     refreshCanvasCursor(in: geometry.size)
@@ -6675,6 +6688,15 @@ struct ImageEditorView: View {
             to: constrainedEnd.endPoint
         )
         lastPatchPreviewUpdateTime = updateTime
+    }
+
+    private func refreshActivePatchPreview() {
+        guard let proposedEnd = patchRawDragEnd ?? dragEnd else { return }
+        updatePatchDrag(
+            to: proposedEnd,
+            modifierFlags: canvasModifierFlags,
+            forcesPreview: true
+        )
     }
 
     @discardableResult

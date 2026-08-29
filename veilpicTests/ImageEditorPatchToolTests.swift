@@ -305,6 +305,63 @@ struct ImageEditorPatchToolTests {
         #expect(viewModel.document.selection == selectionBefore)
     }
 
+    @Test func transparentModeTransfersTextureWithoutReplacingTargetColorOrAlpha() throws {
+        let canvasSize = NSSize(width: 80, height: 60)
+        let sampleRect = CGRect(x: 12, y: 22, width: 16, height: 16)
+        let targetRect = CGRect(x: 32, y: 22, width: 16, height: 16)
+        let textureMark = CGRect(x: 18, y: 28, width: 4, height: 4)
+        let targetColor = NSColor(deviceRed: 0.2, green: 0.4, blue: 0.6, alpha: 0.7)
+        let image = bitmapImage(
+            size: canvasSize,
+            background: targetColor,
+            fills: [
+                (sampleRect, NSColor(deviceWhite: 0.5, alpha: 1)),
+                (textureMark, NSColor(deviceWhite: 1, alpha: 1))
+            ]
+        )
+
+        func patchedCenter(transparent: Bool) throws -> NSColor {
+            let viewModel = ImageEditorViewModel(
+                sourceName: "transparent-texture-patch.png",
+                image: image
+            ) { _ in }
+            viewModel.replaceSelectedLayerImageForTesting(
+                image,
+                historyTitle: L10n.text("imageEditor.history.brush")
+            )
+            viewModel.patchTransparentEnabled = transparent
+            viewModel.createRectSelection(from: targetRect.origin, to: targetRect.bottomRight)
+            viewModel.patchSelection(from: targetRect.center, to: sampleRect.center)
+            return try color(in: viewModel, at: targetRect.center)
+        }
+
+        let opaqueReplacement = try patchedCenter(transparent: false)
+        #expect(abs(opaqueReplacement.redComponent - opaqueReplacement.greenComponent) < 0.03)
+        #expect(abs(opaqueReplacement.greenComponent - opaqueReplacement.blueComponent) < 0.03)
+        #expect(opaqueReplacement.alphaComponent > 0.95)
+
+        let transparentTexture = try patchedCenter(transparent: true)
+        #expect(transparentTexture.redComponent < transparentTexture.greenComponent)
+        #expect(transparentTexture.greenComponent < transparentTexture.blueComponent)
+        #expect(transparentTexture.redComponent > targetColor.redComponent)
+        #expect(abs(transparentTexture.alphaComponent - targetColor.alphaComponent) < 0.03)
+    }
+
+    @Test func transparentOptionIsWiredToTheOptionsBarAndLivePreview() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(source.contains("isOn: $viewModel.patchTransparentEnabled"))
+        #expect(source.contains(".accessibilityIdentifier(\"image-editor-patch-transparent\")"))
+        #expect(source.contains(".onChange(of: viewModel.patchTransparentEnabled)"))
+        #expect(source.contains("refreshActivePatchPreview()"))
+    }
+
     @Test func patchLassoHonorsReplaceAddSubtractAndIntersectSelectionModes() throws {
         #expect(ImageEditorTool.patchTool.supportsSelectionMode)
         let points = [

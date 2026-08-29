@@ -212,6 +212,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var favoriteLayerStylePresetIDs: [String] = []
     @Published var recentLayerStylePresetIDs: [String] = []
     @Published var patchMode: ImageEditorPatchMode = .source
+    @Published var patchTransparentEnabled = false
     @Published var feather: CGFloat = 0
     @Published var selectionModifyAmount: CGFloat = 4
     @Published var tolerance: CGFloat = 0.22

@@ -207,6 +207,53 @@ private struct ImageEditorPatchEditResult {
     let resultingSelection: ImageEditorSelection
 }
 
+private struct PatchTransparentTextureSampler {
+    /// A compact local baseline separates sampled texture from its background
+    /// color. The residual is then applied over the target instead of replacing
+    /// it, matching the Patch tool's transparent-texture editing contract.
+    static let textureRadius: CGFloat = 3
+    private let pixels: [UInt8]
+    private let localBaselinePixels: [UInt8]
+    private let width: Int
+
+    init(pixels: [UInt8], localBaselinePixels: [UInt8], width: Int) {
+        self.pixels = pixels
+        self.localBaselinePixels = localBaselinePixels
+        self.width = width
+    }
+
+    func applyTexture(
+        fromX sourceX: Int,
+        sourceY: Int,
+        to targetPixels: inout [UInt8],
+        targetOffset: Int,
+        maskAlpha: CGFloat
+    ) {
+        let sourceOffset = (sourceY * width + sourceX) * 4
+        let sourceAlphaByte = Double(pixels[sourceOffset + 3])
+        let targetAlphaByte = Double(targetPixels[targetOffset + 3])
+        guard sourceAlphaByte > 0, targetAlphaByte > 0 else { return }
+
+        let localAlphaByte = Double(localBaselinePixels[sourceOffset + 3])
+        guard localAlphaByte > 0 else { return }
+        let blendAlpha = Double(maskAlpha) * sourceAlphaByte / 255
+        guard blendAlpha > 0 else { return }
+
+        for channel in 0..<3 {
+            let sourceStraight = Double(pixels[sourceOffset + channel]) / sourceAlphaByte
+            let localMean = Double(localBaselinePixels[sourceOffset + channel]) / localAlphaByte
+            let targetStraight = Double(targetPixels[targetOffset + channel]) / targetAlphaByte
+            let texturedStraight = max(0, min(1, targetStraight + sourceStraight - localMean))
+            let texturedPremultiplied = texturedStraight * targetAlphaByte
+            let original = Double(targetPixels[targetOffset + channel])
+            targetPixels[targetOffset + channel] = UInt8(max(
+                0,
+                min(255, (original * (1 - blendAlpha) + texturedPremultiplied * blendAlpha).rounded())
+            ))
+        }
+    }
+}
+
 private enum ImageEditorSelectionCropMetrics {
     /// Core Image's Gaussian blur has a visible tail beyond the nominal
     /// radius. Three radii retain the feather while keeping clipboard and
@@ -960,7 +1007,8 @@ extension ImageEditorViewModel {
             canvasSize: document.canvasSize,
             offsetInCanvas: sampleOffset,
             opacity: opacity,
-            feather: feather
+            feather: feather,
+            extractsTextureTransparently: patchTransparentEnabled
         ) else { return nil }
         let protectedOutput = document.isEffectivelyTransparencyLocked(layer)
             ? (output.preservingAlpha(from: layer.image) ?? output)
@@ -1979,7 +2027,8 @@ private extension NSImage {
         canvasSize: CGSize,
         offsetInCanvas: CGSize,
         opacity: CGFloat,
-        feather: CGFloat
+        feather: CGFloat,
+        extractsTextureTransparently: Bool = false
     ) -> NSImage? {
         guard layerFrame.width > 0,
               layerFrame.height > 0,
@@ -2005,6 +2054,19 @@ private extension NSImage {
         let sourceDeltaX = Int((offsetInCanvas.width * CGFloat(width) / layerFrame.width).rounded())
         let sourceDeltaY = Int((offsetInCanvas.height * CGFloat(height) / layerFrame.height).rounded())
         let normalizedOpacity = max(0, min(1, opacity))
+        let textureSampler: PatchTransparentTextureSampler?
+        if extractsTextureTransparently {
+            guard let localBaselinePixels = blurred(
+                radius: PatchTransparentTextureSampler.textureRadius
+            )?.rgbaPixels(width: width, height: height) else { return nil }
+            textureSampler = PatchTransparentTextureSampler(
+                pixels: sourcePixels,
+                localBaselinePixels: localBaselinePixels,
+                width: width
+            )
+        } else {
+            textureSampler = nil
+        }
 
         for y in 0..<height {
             for x in 0..<width {
@@ -2022,6 +2084,16 @@ private extension NSImage {
 
                 let offset = y * bytesPerRow + x * bytesPerPixel
                 let sourceOffset = sourceY * bytesPerRow + sourceX * bytesPerPixel
+                if let textureSampler {
+                    textureSampler.applyTexture(
+                        fromX: sourceX,
+                        sourceY: sourceY,
+                        to: &pixels,
+                        targetOffset: offset,
+                        maskAlpha: maskAlpha
+                    )
+                    continue
+                }
                 let inverseAlpha = 1 - maskAlpha
                 pixels[offset] = blendedByte(original: pixels[offset], replacement: CGFloat(sourcePixels[sourceOffset]), alpha: maskAlpha, inverseAlpha: inverseAlpha)
                 pixels[offset + 1] = blendedByte(original: pixels[offset + 1], replacement: CGFloat(sourcePixels[sourceOffset + 1]), alpha: maskAlpha, inverseAlpha: inverseAlpha)
