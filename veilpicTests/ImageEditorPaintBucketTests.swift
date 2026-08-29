@@ -12,6 +12,28 @@ import Testing
 @MainActor
 @Suite(.serialized)
 struct ImageEditorPaintBucketTests {
+    @Test func paintBucketSeedAvailabilityMirrorsLayerAndSelectionGuards() throws {
+        let canvasSize = NSSize(width: 80, height: 50)
+        let viewModel = ImageEditorViewModel(
+            sourceName: "availability.png",
+            image: splitImage(size: canvasSize)
+        ) { _ in }
+
+        #expect(viewModel.isPaintBucketSeedAvailable(at: CGPoint(x: 10, y: 25)))
+        #expect(!viewModel.isPaintBucketSeedAvailable(at: CGPoint(x: 90, y: 25)))
+
+        viewModel.createRectSelection(
+            from: CGPoint(x: 0, y: 0),
+            to: CGPoint(x: 20, y: 50)
+        )
+        #expect(viewModel.isPaintBucketSeedAvailable(at: CGPoint(x: 10, y: 25)))
+        #expect(!viewModel.isPaintBucketSeedAvailable(at: CGPoint(x: 65, y: 25)))
+
+        let selectedIndex = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[selectedIndex].locksPixels = true
+        #expect(!viewModel.isPaintBucketSeedAvailable(at: CGPoint(x: 10, y: 25)))
+    }
+
     @Test func imageEditorPaintBucketFillsContiguousColorOnly() async throws {
         let canvasSize = NSSize(width: 80, height: 50)
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: splitImage(size: canvasSize)) { _ in }

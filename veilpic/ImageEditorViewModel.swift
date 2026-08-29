@@ -8572,6 +8572,17 @@ final class ImageEditorViewModel: ObservableObject {
         )
     }
 
+    /// Mirrors the paint-bucket command guards without mutating status or
+    /// history so the canvas can preview whether the current seed is valid.
+    func isPaintBucketSeedAvailable(at point: CGPoint?) -> Bool {
+        guard let point,
+              !isEditingLayerMask,
+              let layer = editableSelectedLayer(),
+              layer.frame.standardized.contains(point)
+        else { return false }
+        return selectionAllowsPaintBucketSeed(at: point)
+    }
+
     private func paintBucketPixelsEqual(_ lhs: NSImage, _ rhs: NSImage) -> Bool {
         guard lhs.size == rhs.size,
               let lhsPixels = paintBucketPixelBytes(lhs),

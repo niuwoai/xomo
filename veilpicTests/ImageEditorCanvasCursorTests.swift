@@ -3117,6 +3117,39 @@ struct ImageEditorCanvasCursorTests {
         ) === NSCursor.arrow)
     }
 
+    @Test func paintBucketCursorPreviewsRegionSpreadAndRejectsBlockedSeeds() {
+        let available = ImageEditorCanvasCursor.cursor(
+            for: .tools,
+            selectedTool: .paintBucket,
+            brushDiameter: 18
+        )
+        let blocked = ImageEditorCanvasCursor.cursor(
+            for: .tools,
+            selectedTool: .paintBucket,
+            brushDiameter: 18,
+            paintBucketSeedIsBlocked: true
+        )
+
+        #expect(available !== NSCursor.crosshair)
+        #expect(available !== NSCursor.operationNotAllowed)
+        #expect(available.image.size == NSSize(width: 36, height: 36))
+        #expect(available.hotSpot == NSPoint(x: 8, y: 28))
+        #expect(blocked === NSCursor.operationNotAllowed)
+        #expect(ImageEditorCanvasCursor.cursor(
+            for: .components,
+            selectedTool: .paintBucket,
+            brushDiameter: 18,
+            paintBucketSeedIsBlocked: true
+        ) === NSCursor.arrow)
+        #expect(ImageEditorCanvasCursor.cursor(
+            for: .tools,
+            selectedTool: .paintBucket,
+            brushDiameter: 18,
+            isPointerOverCanvas: false,
+            paintBucketSeedIsBlocked: true
+        ) === NSCursor.arrow)
+    }
+
     @Test func pathSelectionUsesABlackPathArrowWithoutLeakingIntoComponentMode() {
         #expect(ImageEditorCanvasCursor.family(for: .pathSelection) == .pathSelection)
         let pathSelection = ImageEditorCanvasCursor.cursor(for: .pathSelection, brushDiameter: 18)

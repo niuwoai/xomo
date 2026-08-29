@@ -4469,6 +4469,8 @@ struct ImageEditorView: View {
                                             in: geometry.size
                                         ) != nil
                                     } == true,
+                            paintBucketSeedIsBlocked: canvasInteractionTool == .paintBucket
+                                && !viewModel.isPaintBucketSeedAvailable(at: canvasPoint),
                             penIsClosing: canvasInteractionTool == .pen
                                 && viewModel.isPenCloseCandidate(at: canvasPoint),
                             penIsConverting: isPenAnchorConversionGestureActive
@@ -6801,6 +6803,8 @@ struct ImageEditorView: View {
             isPointerOverColorSamplerPoint:
                 canvasInteractionTool == .colorSampler
                     && colorSamplerPointID(at: viewPoint, in: size) != nil,
+            paintBucketSeedIsBlocked: canvasInteractionTool == .paintBucket
+                && !viewModel.isPaintBucketSeedAvailable(at: canvasPoint),
             penIsClosing: canvasInteractionTool == .pen && viewModel.isPenCloseCandidate(at: canvasPoint),
             penIsConverting: isPenAnchorConversionGestureActive
                 || (canvasInteractionTool == .pen
@@ -15714,6 +15718,7 @@ enum ImageEditorCanvasCursor {
         moveToolHoverSelectionIntent: ImageEditorMoveToolHoverSelectionIntent = .none,
         isPointerOverEditableText: Bool = false,
         isPointerOverColorSamplerPoint: Bool = false,
+        paintBucketSeedIsBlocked: Bool = false,
         penIsClosing: Bool = false,
         penIsConverting: Bool = false,
         penConversionIsBlocked: Bool = false,
@@ -15784,6 +15789,9 @@ enum ImageEditorCanvasCursor {
                 return modifierFlags.contains(.option)
                     ? colorSamplerRemovalCursor()
                     : objectMoveCursor()
+            }
+            if selectedTool == .paintBucket, paintBucketSeedIsBlocked {
+                return .operationNotAllowed
             }
             if selectedTool == .move, isPointerOverBlockedContent {
                 return .operationNotAllowed
@@ -16524,7 +16532,7 @@ enum ImageEditorCanvasCursor {
         case .rectangleOutline, .ellipseOutline:
             return .crosshair
         case .paintBucket:
-            return paintBucketCursor()
+            return regionFillCursor()
         case .eyedropper:
             return eyedropperCursor(target: eyedropperTarget)
         case .redEye:
@@ -17481,8 +17489,8 @@ enum ImageEditorCanvasCursor {
         NSColor.white.setStroke(); cross.lineWidth = 1; cross.stroke()
     }
 
-    private static func paintBucketCursor() -> NSCursor {
-        let cacheKey = "paint-bucket"
+    private static func regionFillCursor() -> NSCursor {
+        let cacheKey = "region-fill-seed"
         if let cachedCursor = cursorCache[cacheKey] {
             return cachedCursor
         }
@@ -17491,46 +17499,58 @@ enum ImageEditorCanvasCursor {
         let image = NSImage(size: NSSize(width: side, height: side))
         image.lockFocus()
 
-        let bucket = NSBezierPath()
-        bucket.move(to: NSPoint(x: 8, y: 8))
-        bucket.line(to: NSPoint(x: 27, y: 8))
-        bucket.line(to: NSPoint(x: 23, y: 24))
-        bucket.curve(
-            to: NSPoint(x: 12, y: 24),
-            controlPoint1: NSPoint(x: 21, y: 27),
-            controlPoint2: NSPoint(x: 14, y: 27)
+        let seed = NSPoint(x: 8, y: 8)
+        let innerWave = NSBezierPath()
+        innerWave.move(to: NSPoint(x: 13, y: 6))
+        innerWave.curve(
+            to: NSPoint(x: 17, y: 15),
+            controlPoint1: NSPoint(x: 18, y: 7),
+            controlPoint2: NSPoint(x: 20, y: 12)
         )
-        bucket.close()
-        NSColor.black.withAlphaComponent(0.92).setStroke()
-        bucket.lineWidth = 3.5
-        bucket.stroke()
-        NSColor.white.withAlphaComponent(0.96).setFill()
-        bucket.fill()
-
-        let handle = NSBezierPath()
-        handle.move(to: NSPoint(x: 11, y: 23))
-        handle.curve(
-            to: NSPoint(x: 27, y: 27),
-            controlPoint1: NSPoint(x: 13, y: 31),
-            controlPoint2: NSPoint(x: 24, y: 32)
+        innerWave.curve(
+            to: NSPoint(x: 7, y: 18),
+            controlPoint1: NSPoint(x: 14, y: 19),
+            controlPoint2: NSPoint(x: 10, y: 20)
         )
-        NSColor.black.withAlphaComponent(0.92).setStroke()
-        handle.lineWidth = 3
-        handle.stroke()
-        NSColor.white.withAlphaComponent(0.92).setStroke()
-        handle.lineWidth = 1
-        handle.stroke()
-
-        let drop = NSBezierPath(ovalIn: NSRect(x: 24, y: 3, width: 7, height: 9))
-        NSColor.systemBlue.setFill()
-        drop.fill()
+        NSColor.black.withAlphaComponent(0.95).setStroke()
+        innerWave.lineWidth = 4
+        innerWave.stroke()
         NSColor.white.setStroke()
-        drop.lineWidth = 1
-        drop.stroke()
+        innerWave.lineWidth = 1.3
+        innerWave.stroke()
+
+        let outerWave = NSBezierPath()
+        outerWave.move(to: NSPoint(x: 17, y: 4))
+        outerWave.curve(
+            to: NSPoint(x: 29, y: 18),
+            controlPoint1: NSPoint(x: 28, y: 4),
+            controlPoint2: NSPoint(x: 32, y: 10)
+        )
+        outerWave.curve(
+            to: NSPoint(x: 9, y: 30),
+            controlPoint1: NSPoint(x: 27, y: 27),
+            controlPoint2: NSPoint(x: 18, y: 32)
+        )
+        outerWave.setLineDash([3, 2], count: 2, phase: 0)
+        NSColor.black.withAlphaComponent(0.95).setStroke()
+        outerWave.lineWidth = 4
+        outerWave.stroke()
+        NSColor.white.setStroke()
+        outerWave.lineWidth = 1.3
+        outerWave.stroke()
+
+        let seedRing = NSBezierPath(ovalIn: NSRect(x: 3, y: 3, width: 10, height: 10))
+        NSColor.black.withAlphaComponent(0.95).setFill()
+        seedRing.fill()
+        NSColor.white.setStroke()
+        seedRing.lineWidth = 1.2
+        seedRing.stroke()
+        NSColor.systemBlue.setFill()
+        NSBezierPath(ovalIn: NSRect(x: 6, y: 6, width: 4, height: 4)).fill()
 
         image.unlockFocus()
         return cache(
-            NSCursor(image: image, hotSpot: NSPoint(x: 6, y: side - 6)),
+            NSCursor(image: image, hotSpot: NSPoint(x: seed.x, y: side - seed.y)),
             for: cacheKey
         )
     }
