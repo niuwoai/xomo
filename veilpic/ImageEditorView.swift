@@ -16528,7 +16528,11 @@ enum ImageEditorCanvasCursor {
         case .eyedropper:
             return eyedropperCursor(target: eyedropperTarget)
         case .redEye:
-            return .crosshair
+            // Red-eye correction changes a circular area derived from the
+            // current brush diameter. Show that real treatment footprint and
+            // its precise center instead of reviving the old oversized eye
+            // pictogram or hiding the radius behind a generic crosshair.
+            return familiarBrushCursor(diameter: brushDiameter)
         case .samplingScope:
             return .crosshair
         case .vectorPen:
@@ -17576,61 +17580,6 @@ enum ImageEditorCanvasCursor {
         image.unlockFocus()
         return cache(
             NSCursor(image: image, hotSpot: NSPoint(x: 7, y: side - 7)),
-            for: cacheKey
-        )
-    }
-
-    private static func redEyeCursor() -> NSCursor {
-        let cacheKey = "red-eye"
-        if let cachedCursor = cursorCache[cacheKey] {
-            return cachedCursor
-        }
-
-        let side: CGFloat = 34
-        let image = NSImage(size: NSSize(width: side, height: side))
-        image.lockFocus()
-
-        let eye = NSBezierPath()
-        eye.move(to: NSPoint(x: 3, y: 12))
-        eye.curve(
-            to: NSPoint(x: 20, y: 12),
-            controlPoint1: NSPoint(x: 7, y: 23),
-            controlPoint2: NSPoint(x: 16, y: 23)
-        )
-        eye.curve(
-            to: NSPoint(x: 3, y: 12),
-            controlPoint1: NSPoint(x: 16, y: 1),
-            controlPoint2: NSPoint(x: 7, y: 1)
-        )
-        NSColor.black.withAlphaComponent(0.95).setStroke()
-        eye.lineWidth = 4
-        eye.stroke()
-        NSColor.white.withAlphaComponent(0.98).setStroke()
-        eye.lineWidth = 1.4
-        eye.stroke()
-
-        let iris = NSBezierPath(ovalIn: NSRect(x: 8, y: 7, width: 8, height: 10))
-        NSColor.systemRed.setFill()
-        iris.fill()
-        NSColor.black.setStroke()
-        iris.lineWidth = 1
-        iris.stroke()
-        NSColor.white.setFill()
-        NSBezierPath(ovalIn: NSRect(x: 11, y: 10, width: 2, height: 4)).fill()
-
-        let cross = NSBezierPath()
-        cross.move(to: NSPoint(x: 24, y: 7)); cross.line(to: NSPoint(x: 24, y: 17))
-        cross.move(to: NSPoint(x: 19, y: 12)); cross.line(to: NSPoint(x: 29, y: 12))
-        NSColor.black.withAlphaComponent(0.95).setStroke()
-        cross.lineWidth = 3
-        cross.stroke()
-        NSColor.white.setStroke()
-        cross.lineWidth = 1
-        cross.stroke()
-
-        image.unlockFocus()
-        return cache(
-            NSCursor(image: image, hotSpot: NSPoint(x: 24, y: side - 12)),
             for: cacheKey
         )
     }

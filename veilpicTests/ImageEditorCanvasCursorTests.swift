@@ -2686,7 +2686,7 @@ struct ImageEditorCanvasCursorTests {
         #expect(ImageEditorCanvasCursor.family(for: .smudge) == .retouchBrush)
 
         let precisionTools: [ImageEditorTool] = [
-            .marquee, .crop, .gradient, .rectangle, .ellipse, .redEye, .colorSampler
+            .marquee, .crop, .gradient, .rectangle, .ellipse, .colorSampler
         ]
         for tool in precisionTools {
             #expect(ImageEditorCanvasCursor.cursor(for: tool, brushDiameter: 18) === NSCursor.crosshair)
@@ -2713,6 +2713,27 @@ struct ImageEditorCanvasCursorTests {
         #expect(ImageEditorCanvasCursor.cursor(for: .paintBucket, brushDiameter: 18) !== NSCursor.crosshair)
         #expect(ImageEditorCanvasCursor.cursor(for: .eyedropper, brushDiameter: 18) !== NSCursor.crosshair)
         #expect(ImageEditorCanvasCursor.cursor(for: .pen, brushDiameter: 18) !== NSCursor.crosshair)
+    }
+
+    @Test func redEyeCursorShowsTheRealTreatmentFootprintAndHonorsHigherModes() {
+        let small = ImageEditorCanvasCursor.cursor(for: .redEye, brushDiameter: 12)
+        let large = ImageEditorCanvasCursor.cursor(for: .redEye, brushDiameter: 48)
+        let brushFootprint = ImageEditorCanvasCursor.cursor(for: .brush, brushDiameter: 12)
+
+        #expect(small !== NSCursor.crosshair)
+        #expect(large.image.size.width > small.image.size.width)
+        #expect(small.image.tiffRepresentation == brushFootprint.image.tiffRepresentation)
+        #expect(ImageEditorCanvasCursor.cursor(
+            for: .components,
+            selectedTool: .redEye,
+            brushDiameter: 48
+        ) === NSCursor.arrow)
+        #expect(ImageEditorCanvasCursor.cursor(
+            for: .tools,
+            selectedTool: .redEye,
+            brushDiameter: 48,
+            isPointerOverCanvas: false
+        ) === NSCursor.arrow)
     }
 
     @Test func textCursorDistinguishesCreationFromExistingTextAndComponents() throws {
