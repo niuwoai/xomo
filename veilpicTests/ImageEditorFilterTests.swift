@@ -2569,7 +2569,7 @@ struct ImageEditorFilterTests {
             panelSource.range(of: "else if viewModel.selectedFilter == .offset")
         )
         let offsetEnd = try #require(
-            panelSource[offsetStart.upperBound...].range(of: "else if viewModel.selectedFilter == .findEdges")
+            panelSource[offsetStart.upperBound...].range(of: "else if viewModel.selectedFilter == .liquifyPush")
         )
         let offsetSource = panelSource[offsetStart.lowerBound..<offsetEnd.lowerBound]
 
@@ -2582,6 +2582,38 @@ struct ImageEditorFilterTests {
         #expect(offsetSource.contains("image-editor-filter-quick-offset-x-pixels"))
         #expect(offsetSource.contains("image-editor-filter-quick-offset-y-pixels"))
         #expect(!offsetSource.contains("viewModel.filterIntensity"))
+    }
+
+    @Test func liquifyPushQuickPanelUsesTwoPixelAxesInsteadOfLegacyIntensity() throws {
+        let root = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let viewSource = try String(
+            contentsOf: root.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let panelStart = try #require(viewSource.range(of: "private var filtersQuickPanel: some View"))
+        let panelEnd = try #require(
+            viewSource[panelStart.upperBound...].range(of: "private func historySnapshotRow")
+        )
+        let panelSource = viewSource[panelStart.lowerBound..<panelEnd.lowerBound]
+        let liquifyPushStart = try #require(
+            panelSource.range(of: "else if viewModel.selectedFilter == .liquifyPush")
+        )
+        let liquifyPushEnd = try #require(
+            panelSource[liquifyPushStart.upperBound...].range(of: "else if viewModel.selectedFilter == .findEdges")
+        )
+        let liquifyPushSource = panelSource[liquifyPushStart.lowerBound..<liquifyPushEnd.lowerBound]
+
+        #expect(liquifyPushSource.contains("viewModel.filterLiquifyPushEffectiveXPixels"))
+        #expect(liquifyPushSource.contains("viewModel.filterLiquifyPushEffectiveYPixels"))
+        #expect(liquifyPushSource.components(separatedBy: "in: -9_999...9_999").count == 3)
+        #expect(liquifyPushSource.components(separatedBy: "step: 1").count == 3)
+        #expect(liquifyPushSource.contains("imageEditor.filter.liquifyPushX"))
+        #expect(liquifyPushSource.contains("imageEditor.filter.liquifyPushY"))
+        #expect(liquifyPushSource.contains("image-editor-filter-quick-liquify-push-x-pixels"))
+        #expect(liquifyPushSource.contains("image-editor-filter-quick-liquify-push-y-pixels"))
+        #expect(!liquifyPushSource.contains("viewModel.filterIntensity"))
     }
 
     @Test func findEdgesQuickPanelDeclaresNoAdjustableParameters() throws {

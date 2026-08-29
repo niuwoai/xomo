@@ -7960,6 +7960,57 @@ struct ImageEditorView: View {
                                 .frame(width: 62, alignment: .trailing)
                         }
                     }
+                } else if viewModel.selectedFilter == .liquifyPush {
+                    VStack(spacing: 6) {
+                        HStack(spacing: 8) {
+                            Text(L10n.text("imageEditor.filter.liquifyPushX"))
+                                .font(.system(size: 10, weight: .medium))
+                                .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                                .frame(width: 58, alignment: .leading)
+                            Slider(
+                                value: Binding(
+                                    get: { viewModel.filterLiquifyPushEffectiveXPixels },
+                                    set: { viewModel.filterLiquifyPushEffectiveXPixels = $0 }
+                                ),
+                                in: -9_999...9_999,
+                                step: 1
+                            )
+                                .focusable(false)
+                                .accessibilityLabel(L10n.text("imageEditor.filter.liquifyPushX"))
+                                .accessibilityIdentifier("image-editor-filter-quick-liquify-push-x-pixels")
+                            Text(L10n.format(
+                                "imageEditor.filter.liquifyPushValue",
+                                String(format: "%+d", Int(viewModel.filterLiquifyPushEffectiveXPixels.rounded()))
+                            ))
+                                .font(.system(size: 10, weight: .semibold).monospacedDigit())
+                                .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                                .frame(width: 62, alignment: .trailing)
+                        }
+                        HStack(spacing: 8) {
+                            Text(L10n.text("imageEditor.filter.liquifyPushY"))
+                                .font(.system(size: 10, weight: .medium))
+                                .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                                .frame(width: 58, alignment: .leading)
+                            Slider(
+                                value: Binding(
+                                    get: { viewModel.filterLiquifyPushEffectiveYPixels },
+                                    set: { viewModel.filterLiquifyPushEffectiveYPixels = $0 }
+                                ),
+                                in: -9_999...9_999,
+                                step: 1
+                            )
+                                .focusable(false)
+                                .accessibilityLabel(L10n.text("imageEditor.filter.liquifyPushY"))
+                                .accessibilityIdentifier("image-editor-filter-quick-liquify-push-y-pixels")
+                            Text(L10n.format(
+                                "imageEditor.filter.liquifyPushValue",
+                                String(format: "%+d", Int(viewModel.filterLiquifyPushEffectiveYPixels.rounded()))
+                            ))
+                                .font(.system(size: 10, weight: .semibold).monospacedDigit())
+                                .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                                .frame(width: 62, alignment: .trailing)
+                        }
+                    }
                 } else if viewModel.selectedFilter == .findEdges {
                     Text(L10n.text("imageEditor.filter.noAdjustableParameters"))
                         .font(.system(size: 11, weight: .medium))
