@@ -2685,16 +2685,15 @@ struct ImageEditorCanvasCursorTests {
         #expect(ImageEditorCanvasCursor.family(for: .sharpen) == .retouchBrush)
         #expect(ImageEditorCanvasCursor.family(for: .smudge) == .retouchBrush)
 
-        let precisionTools: [ImageEditorTool] = [
-            .marquee, .crop, .rectangle, .ellipse
-        ]
+        let precisionTools: [ImageEditorTool] = [.marquee, .crop]
         for tool in precisionTools {
             #expect(ImageEditorCanvasCursor.cursor(for: tool, brushDiameter: 18) === NSCursor.crosshair)
         }
 
         let familiarSpecificTools: [ImageEditorTool] = [
             .lasso, .magicWand, .quickSelection, .patchTool, .pen,
-            .paintBucket, .gradient, .eyedropper, .colorSampler, .zoom
+            .paintBucket, .gradient, .rectangle, .ellipse,
+            .eyedropper, .colorSampler, .zoom
         ]
         for tool in familiarSpecificTools {
             #expect(ImageEditorCanvasCursor.cursor(for: tool, brushDiameter: 18) !== NSCursor.crosshair)
@@ -3147,6 +3146,38 @@ struct ImageEditorCanvasCursorTests {
             brushDiameter: 18,
             isPointerOverCanvas: false,
             paintBucketSeedIsBlocked: true
+        ) === NSCursor.arrow)
+    }
+
+    @Test func shapeCreationCursorsPreviewDragResultsWithoutEscapingToolsMode() {
+        let rectangle = ImageEditorCanvasCursor.cursor(
+            for: .tools,
+            selectedTool: .rectangle,
+            brushDiameter: 18
+        )
+        let ellipse = ImageEditorCanvasCursor.cursor(
+            for: .tools,
+            selectedTool: .ellipse,
+            brushDiameter: 18
+        )
+
+        #expect(rectangle !== NSCursor.crosshair)
+        #expect(ellipse !== NSCursor.crosshair)
+        #expect(rectangle.image.size == NSSize(width: 36, height: 36))
+        #expect(ellipse.image.size == NSSize(width: 36, height: 36))
+        #expect(rectangle.hotSpot == NSPoint(x: 7, y: 29))
+        #expect(ellipse.hotSpot == NSPoint(x: 7, y: 29))
+        #expect(rectangle.image.tiffRepresentation != ellipse.image.tiffRepresentation)
+        #expect(ImageEditorCanvasCursor.cursor(
+            for: .components,
+            selectedTool: .rectangle,
+            brushDiameter: 18
+        ) === NSCursor.arrow)
+        #expect(ImageEditorCanvasCursor.cursor(
+            for: .tools,
+            selectedTool: .ellipse,
+            brushDiameter: 18,
+            isPointerOverCanvas: false
         ) === NSCursor.arrow)
     }
 

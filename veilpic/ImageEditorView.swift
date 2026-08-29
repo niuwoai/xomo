@@ -16530,7 +16530,7 @@ enum ImageEditorCanvasCursor {
         case .gradient:
             return gradientCursor(isConstrained: modifierFlags.contains(.shift))
         case .rectangleOutline, .ellipseOutline:
-            return .crosshair
+            return shapeCreationCursor(for: tool)
         case .paintBucket:
             return regionFillCursor()
         case .eyedropper:
@@ -17464,29 +17464,89 @@ enum ImageEditorCanvasCursor {
         )
     }
 
-    private static func shapeCursor(for tool: ImageEditorTool) -> NSCursor {
-        let cacheKey = "shape:\(tool.rawValue)"
+    private static func shapeCreationCursor(for tool: ImageEditorTool) -> NSCursor {
+        let cacheKey = "shape-creation:\(tool.rawValue)"
         if let cachedCursor = cursorCache[cacheKey] {
             return cachedCursor
         }
-        let side: CGFloat = 34
+
+        let side: CGFloat = 36
+        let origin = NSPoint(x: 7, y: 7)
+        let destination = NSPoint(x: 29, y: 27)
         let image = NSImage(size: NSSize(width: side, height: side))
         image.lockFocus()
-        let shapeRect = NSRect(x: 4, y: 4, width: 17, height: 17)
-        let shape = tool == .ellipse ? NSBezierPath(ovalIn: shapeRect) : NSBezierPath(rect: shapeRect)
-        NSColor.black.withAlphaComponent(0.95).setStroke(); shape.lineWidth = 3.5; shape.stroke()
-        NSColor.white.setStroke(); shape.lineWidth = 1.2; shape.stroke()
-        drawCursorCrosshair(center: NSPoint(x: 12, y: 12))
+
+        // The hot spot is the real drag origin. The dashed outline previews
+        // the vector result, while the diagonal guide explains that dragging
+        // away from the seed controls both dimensions. This communicates the
+        // pending action instead of reproducing a miniature toolbox glyph.
+        let shapeBounds = NSRect(
+            x: origin.x,
+            y: origin.y,
+            width: destination.x - origin.x,
+            height: destination.y - origin.y
+        )
+        let outline = tool == .ellipse
+            ? NSBezierPath(ovalIn: shapeBounds)
+            : NSBezierPath(rect: shapeBounds)
+        outline.setLineDash([3, 2], count: 2, phase: 0)
+        NSColor.black.withAlphaComponent(0.95).setStroke()
+        outline.lineWidth = 3.5
+        outline.stroke()
+        NSColor.white.setStroke()
+        outline.lineWidth = 1.2
+        outline.stroke()
+
+        let dimensionGuide = NSBezierPath()
+        dimensionGuide.move(to: NSPoint(x: 11, y: 11))
+        dimensionGuide.line(to: NSPoint(x: 26, y: 24))
+        dimensionGuide.setLineDash([2.5, 2], count: 2, phase: 0)
+        NSColor.black.withAlphaComponent(0.92).setStroke()
+        dimensionGuide.lineWidth = 3
+        dimensionGuide.stroke()
+        NSColor.systemBlue.setStroke()
+        dimensionGuide.lineWidth = 1.2
+        dimensionGuide.stroke()
+
+        let arrowhead = NSBezierPath()
+        arrowhead.move(to: NSPoint(x: 21, y: 24))
+        arrowhead.line(to: destination)
+        arrowhead.line(to: NSPoint(x: 27, y: 19))
+        NSColor.black.withAlphaComponent(0.92).setStroke()
+        arrowhead.lineWidth = 3
+        arrowhead.stroke()
+        NSColor.systemBlue.setStroke()
+        arrowhead.lineWidth = 1.2
+        arrowhead.stroke()
+
+        let originRing = NSBezierPath(ovalIn: NSRect(x: 2, y: 2, width: 10, height: 10))
+        NSColor.black.withAlphaComponent(0.95).setFill()
+        originRing.fill()
+        NSColor.white.setStroke()
+        originRing.lineWidth = 1.2
+        originRing.stroke()
+        NSColor.systemBlue.setFill()
+        NSBezierPath(ovalIn: NSRect(x: 5, y: 5, width: 4, height: 4)).fill()
+
         image.unlockFocus()
-        return cache(NSCursor(image: image, hotSpot: NSPoint(x: 12, y: side - 12)), for: cacheKey)
+        return cache(
+            NSCursor(image: image, hotSpot: NSPoint(x: origin.x, y: side - origin.y)),
+            for: cacheKey
+        )
     }
 
     private static func drawCursorCrosshair(center: NSPoint) {
         let cross = NSBezierPath()
-        cross.move(to: NSPoint(x: center.x - 4, y: center.y)); cross.line(to: NSPoint(x: center.x + 4, y: center.y))
-        cross.move(to: NSPoint(x: center.x, y: center.y - 4)); cross.line(to: NSPoint(x: center.x, y: center.y + 4))
-        NSColor.black.withAlphaComponent(0.95).setStroke(); cross.lineWidth = 2.5; cross.stroke()
-        NSColor.white.setStroke(); cross.lineWidth = 1; cross.stroke()
+        cross.move(to: NSPoint(x: center.x - 4, y: center.y))
+        cross.line(to: NSPoint(x: center.x + 4, y: center.y))
+        cross.move(to: NSPoint(x: center.x, y: center.y - 4))
+        cross.line(to: NSPoint(x: center.x, y: center.y + 4))
+        NSColor.black.withAlphaComponent(0.95).setStroke()
+        cross.lineWidth = 2.5
+        cross.stroke()
+        NSColor.white.setStroke()
+        cross.lineWidth = 1
+        cross.stroke()
     }
 
     private static func regionFillCursor() -> NSCursor {
