@@ -1828,7 +1828,7 @@ struct ImageEditorCanvasCursorTests {
         )
 
         #expect(brush !== NSCursor.crosshair)
-        #expect(historyBrush.image.tiffRepresentation == brush.image.tiffRepresentation)
+        #expect(historyBrush.image.tiffRepresentation != brush.image.tiffRepresentation)
         #expect(historyPrecision === NSCursor.crosshair)
         #expect(precision === NSCursor.crosshair)
         #expect(eraserPrecision === NSCursor.crosshair)
@@ -1836,6 +1836,50 @@ struct ImageEditorCanvasCursorTests {
         #expect(healingPrecision === NSCursor.crosshair)
         #expect(ImageEditorCanvasCursor.cursor(for: .cloneStamp, brushDiameter: 18) !== NSCursor.crosshair)
         #expect(ImageEditorCanvasCursor.cursor(for: .healingBrush, brushDiameter: 18) !== NSCursor.crosshair)
+    }
+
+    @Test func historyBrushCursorPreviewsSnapshotPixelsReturningAcrossItsRealFootprint() {
+        let small = ImageEditorCanvasCursor.cursor(
+            for: .historyBrush,
+            brushDiameter: 12
+        )
+        let large = ImageEditorCanvasCursor.cursor(
+            for: .historyBrush,
+            brushDiameter: 48
+        )
+        let brush = ImageEditorCanvasCursor.cursor(
+            for: .brush,
+            brushDiameter: 12
+        )
+        let historyEraser = ImageEditorCanvasCursor.cursor(
+            for: .eraser,
+            brushDiameter: 12,
+            isErasingToHistory: true
+        )
+
+        #expect(ImageEditorCanvasCursor.family(for: .historyBrush) == .historicalPixelRestore)
+        #expect(small.image.size == NSSize(width: 36, height: 36))
+        #expect(small.hotSpot == NSPoint(x: 18, y: 18))
+        #expect(large.image.size == NSSize(width: 66, height: 66))
+        #expect(large.hotSpot == NSPoint(x: 33, y: 33))
+        #expect(small.image.tiffRepresentation != brush.image.tiffRepresentation)
+        #expect(small.image.tiffRepresentation != historyEraser.image.tiffRepresentation)
+        #expect(ImageEditorCanvasCursor.cursor(
+            for: .historyBrush,
+            brushDiameter: 12,
+            modifierFlags: [.capsLock]
+        ) === NSCursor.crosshair)
+        #expect(ImageEditorCanvasCursor.cursor(
+            for: .components,
+            selectedTool: .historyBrush,
+            brushDiameter: 12
+        ) === NSCursor.arrow)
+        #expect(ImageEditorCanvasCursor.cursor(
+            for: .tools,
+            selectedTool: .historyBrush,
+            brushDiameter: 12,
+            isPointerOverCanvas: false
+        ) === NSCursor.arrow)
     }
 
     @Test func eraserCursorPreviewsTransparencyOrHistoryRestorationAcrossItsRealFootprint() {
@@ -3152,6 +3196,7 @@ struct ImageEditorCanvasCursorTests {
         #expect(ImageEditorCanvasCursor.family(for: .healingBrush) == .sampledRepairBlend)
         #expect(ImageEditorCanvasCursor.family(for: .colorSampler) == .samplingScope)
         #expect(ImageEditorCanvasCursor.family(for: .brush) == .brushTool)
+        #expect(ImageEditorCanvasCursor.family(for: .historyBrush) == .historicalPixelRestore)
         #expect(ImageEditorCanvasCursor.family(for: .pencil) == .pencilTool)
         #expect(ImageEditorCanvasCursor.family(for: .eraser) == .eraserTool)
         #expect(ImageEditorCanvasCursor.family(for: .rectangle) == .rectangleOutline)
@@ -3178,7 +3223,7 @@ struct ImageEditorCanvasCursorTests {
         }
 
         let standardFootprintTools: [ImageEditorTool] = [
-            .brush, .historyBrush
+            .brush
         ]
         let standardRepresentations = standardFootprintTools.compactMap {
             ImageEditorCanvasCursor.cursor(for: $0, brushDiameter: 18).image.tiffRepresentation
@@ -3187,7 +3232,7 @@ struct ImageEditorCanvasCursorTests {
         #expect(Set(standardRepresentations).count == 1)
 
         let resultPreviewTools: [ImageEditorTool] = [
-            .pencil, .eraser, .cloneStamp, .healingBrush, .dodge, .burn, .sponge, .blur, .sharpen, .smudge
+            .historyBrush, .pencil, .eraser, .cloneStamp, .healingBrush, .dodge, .burn, .sponge, .blur, .sharpen, .smudge
         ]
         let resultPreviewRepresentations = resultPreviewTools.compactMap {
             ImageEditorCanvasCursor.cursor(for: $0, brushDiameter: 18).image.tiffRepresentation

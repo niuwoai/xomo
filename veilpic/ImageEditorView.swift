@@ -15444,6 +15444,7 @@ enum ImageEditorCanvasCursorFamily: Equatable {
     case grab
     case textInsertion
     case brushTool
+    case historicalPixelRestore
     case pencilTool
     case eraserTool
     case selectionMarquee
@@ -16418,8 +16419,10 @@ enum ImageEditorCanvasCursor {
             .rectangleOutline
         case .ellipse:
             .ellipseOutline
-        case .brush, .historyBrush:
+        case .brush:
             .brushTool
+        case .historyBrush:
+            .historicalPixelRestore
         case .pencil:
             .pencilTool
         case .eraser:
@@ -16530,6 +16533,10 @@ enum ImageEditorCanvasCursor {
                     tipRoundness: brushTipRoundness,
                     tipAngleDegrees: brushTipAngleDegrees
                 )
+        case .historicalPixelRestore:
+            return modifierFlags.contains(.capsLock)
+                ? .crosshair
+                : historicalPixelRestoreCursor(diameter: brushDiameter)
         case .pencilTool:
             return modifierFlags.contains(.capsLock)
                 ? .crosshair
@@ -16643,8 +16650,7 @@ enum ImageEditorCanvasCursor {
         tilt: ImageEditorStylusTilt? = nil,
         tiltControlsShape: Bool = false,
         tipRoundness: CGFloat = 1,
-        tipAngleDegrees: CGFloat = 0,
-        symbolName: String = ""
+        tipAngleDegrees: CGFloat = 0
     ) -> NSCursor {
         brushCursor(
             footprint: ImageEditorBrushCursorFootprint(
@@ -16653,17 +16659,15 @@ enum ImageEditorCanvasCursor {
                 tiltControlsShape: tiltControlsShape,
                 tipRoundness: tipRoundness,
                 tipAngleDegrees: tipAngleDegrees
-            ),
-            symbolName: symbolName
+            )
         )
     }
 
     private static func brushCursor(
-        footprint: ImageEditorBrushCursorFootprint,
-        symbolName: String
+        footprint: ImageEditorBrushCursorFootprint
     ) -> NSCursor {
         let diameter = footprint.majorDiameter
-        let cacheKey = "brush:\(symbolName):\(footprint.cacheKey)"
+        let cacheKey = "brush:\(footprint.cacheKey)"
         if let cachedCursor = cursorCache[cacheKey] {
             return cachedCursor
         }
@@ -16706,15 +16710,106 @@ enum ImageEditorCanvasCursor {
         cross.lineWidth = 1
         cross.stroke()
 
-        if !symbolName.isEmpty {
-            drawSymbolBadge(
-                named: symbolName,
-                origin: NSPoint(
-                    x: min(max(center.x + diameter / 2 - 4, 1), side - 18),
-                    y: min(max(center.y - diameter / 2 - 8, 1), side - 18)
-                )
-            )
+        image.unlockFocus()
+        return cache(
+            NSCursor(image: image, hotSpot: NSPoint(x: center.x, y: side - center.y)),
+            for: cacheKey
+        )
+    }
+
+    private static func historicalPixelRestoreCursor(
+        diameter requestedDiameter: CGFloat
+    ) -> NSCursor {
+        let diameter = max(3, min(256, requestedDiameter.rounded()))
+        let cacheKey = "historical-pixel-restore:\(Int(diameter))"
+        if let cachedCursor = cursorCache[cacheKey] {
+            return cachedCursor
         }
+
+        let side = max(36, diameter + 18)
+        let center = NSPoint(x: side / 2, y: side / 2)
+        let image = NSImage(size: NSSize(width: side, height: side))
+        image.lockFocus()
+
+        let footprint = NSBezierPath(ovalIn: NSRect(
+            x: center.x - diameter / 2,
+            y: center.y - diameter / 2,
+            width: diameter,
+            height: diameter
+        ))
+        NSColor.black.withAlphaComponent(0.95).setStroke()
+        footprint.lineWidth = 3.5
+        footprint.stroke()
+        NSColor.white.withAlphaComponent(0.98).setStroke()
+        footprint.lineWidth = 1.4
+        footprint.stroke()
+
+        // The right swatch is the altered current pixel; the colorful left
+        // swatch is the chosen history source. A reverse arrow previews
+        // painting snapshot pixels back into the real brush footprint without
+        // shrinking a clock or history-brush toolbox icon onto the pointer.
+        let sampleSize = max(3.2, min(6, diameter * 0.19))
+        let spacing = max(4.8, min(8.5, diameter * 0.28))
+        let historyRect = NSRect(
+            x: center.x - spacing - sampleSize / 2,
+            y: center.y - sampleSize / 2,
+            width: sampleSize,
+            height: sampleSize
+        )
+        let currentRect = NSRect(
+            x: center.x + spacing - sampleSize / 2,
+            y: center.y - sampleSize / 2,
+            width: sampleSize,
+            height: sampleSize
+        )
+
+        NSColor.systemGray.withAlphaComponent(0.85).setFill()
+        NSBezierPath(rect: currentRect).fill()
+        let fadedDetail = NSBezierPath()
+        fadedDetail.move(to: NSPoint(x: currentRect.minX + 1, y: currentRect.minY + 1))
+        fadedDetail.line(to: NSPoint(x: currentRect.maxX - 1, y: currentRect.maxY - 1))
+        NSColor.white.withAlphaComponent(0.8).setStroke()
+        fadedDetail.lineWidth = 1
+        fadedDetail.stroke()
+
+        NSColor.systemCyan.setFill()
+        NSBezierPath(rect: NSRect(
+            x: historyRect.minX,
+            y: historyRect.minY,
+            width: historyRect.width / 2,
+            height: historyRect.height
+        )).fill()
+        NSColor.systemOrange.setFill()
+        NSBezierPath(rect: NSRect(
+            x: historyRect.midX,
+            y: historyRect.minY,
+            width: historyRect.width / 2,
+            height: historyRect.height
+        )).fill()
+
+        NSColor.black.withAlphaComponent(0.9).setStroke()
+        for rect in [historyRect, currentRect] {
+            let outline = NSBezierPath(rect: rect)
+            outline.lineWidth = 0.8
+            outline.stroke()
+        }
+
+        let arrowY = center.y - spacing * 0.72
+        let endpoint = NSPoint(x: historyRect.maxX, y: arrowY)
+        let restore = NSBezierPath()
+        restore.move(to: NSPoint(x: currentRect.minX, y: arrowY))
+        restore.line(to: endpoint)
+        restore.move(to: endpoint)
+        restore.line(to: NSPoint(x: endpoint.x + 3.2, y: endpoint.y + 2.6))
+        restore.move(to: endpoint)
+        restore.line(to: NSPoint(x: endpoint.x + 3.2, y: endpoint.y - 2.6))
+        NSColor.black.withAlphaComponent(0.95).setStroke()
+        restore.lineWidth = 3.5
+        restore.stroke()
+        NSColor.systemGreen.setStroke()
+        restore.lineWidth = 1.2
+        restore.stroke()
+
         image.unlockFocus()
         return cache(
             NSCursor(image: image, hotSpot: NSPoint(x: center.x, y: side - center.y)),
@@ -16866,83 +16961,6 @@ enum ImageEditorCanvasCursor {
         for tile in tiles {
             NSBezierPath(rect: tile).fill()
         }
-    }
-
-    private static func paintToolCursor(for tool: ImageEditorTool, diameter requestedDiameter: CGFloat) -> NSCursor {
-        let diameter = max(3, min(256, requestedDiameter.rounded()))
-        let cacheKey = "paint-tool:\(tool.rawValue):\(Int(diameter))"
-        if let cachedCursor = cursorCache[cacheKey] {
-            return cachedCursor
-        }
-
-        let side = max(36, diameter + 20)
-        let image = NSImage(size: NSSize(width: side, height: side))
-        image.lockFocus()
-
-        let center = NSPoint(x: side / 2, y: side / 2)
-        let ringRect = NSRect(
-            x: center.x - diameter / 2,
-            y: center.y - diameter / 2,
-            width: diameter,
-            height: diameter
-        )
-        let ring = NSBezierPath(ovalIn: ringRect)
-        NSColor.black.withAlphaComponent(0.9).setStroke()
-        ring.lineWidth = 3.5
-        ring.stroke()
-        NSColor.white.withAlphaComponent(0.98).setStroke()
-        ring.lineWidth = 1.4
-        ring.stroke()
-        drawCursorCrosshair(center: center)
-
-        let markOrigin = NSPoint(x: min(side - 28, center.x + diameter / 2 - 3), y: min(side - 28, center.y - diameter / 2 - 3))
-        switch tool {
-        case .brush, .pencil:
-            let handle = NSBezierPath()
-            handle.move(to: NSPoint(x: markOrigin.x + 5, y: markOrigin.y + 4))
-            handle.line(to: NSPoint(x: markOrigin.x + 19, y: markOrigin.y + 18))
-            NSColor.black.withAlphaComponent(0.95).setStroke()
-            handle.lineWidth = 5
-            handle.stroke()
-            NSColor.systemBlue.setStroke()
-            handle.lineWidth = 2
-            handle.stroke()
-
-            let ferrule = NSBezierPath(rect: NSRect(x: markOrigin.x + 2, y: markOrigin.y + 2, width: 8, height: 7))
-            NSColor.black.withAlphaComponent(0.95).setStroke()
-            ferrule.lineWidth = 3
-            ferrule.stroke()
-            NSColor.white.setStroke()
-            ferrule.lineWidth = 1
-            ferrule.stroke()
-        case .eraser:
-            let eraser = NSBezierPath()
-            eraser.move(to: NSPoint(x: markOrigin.x + 3, y: markOrigin.y + 8))
-            eraser.line(to: NSPoint(x: markOrigin.x + 12, y: markOrigin.y + 1))
-            eraser.line(to: NSPoint(x: markOrigin.x + 23, y: markOrigin.y + 13))
-            eraser.line(to: NSPoint(x: markOrigin.x + 14, y: markOrigin.y + 21))
-            eraser.close()
-            NSColor.black.withAlphaComponent(0.95).setStroke()
-            eraser.lineWidth = 3.5
-            eraser.stroke()
-            NSColor.systemPink.withAlphaComponent(0.9).setFill()
-            eraser.fill()
-
-            let seam = NSBezierPath()
-            seam.move(to: NSPoint(x: markOrigin.x + 8, y: markOrigin.y + 5))
-            seam.line(to: NSPoint(x: markOrigin.x + 18, y: markOrigin.y + 16))
-            NSColor.white.withAlphaComponent(0.9).setStroke()
-            seam.lineWidth = 1.2
-            seam.stroke()
-        default:
-            break
-        }
-
-        image.unlockFocus()
-        return cache(
-            NSCursor(image: image, hotSpot: NSPoint(x: center.x, y: side - center.y)),
-            for: cacheKey
-        )
     }
 
     private static func localExposureCursor(
@@ -18712,20 +18730,6 @@ enum ImageEditorCanvasCursor {
         return cursor
     }
 
-    private static func drawSymbolBadge(named symbolName: String, origin: NSPoint) {
-        let badgeRect = NSRect(origin: origin, size: NSSize(width: 17, height: 17))
-        NSColor.white.withAlphaComponent(0.96).setFill()
-        NSBezierPath(roundedRect: badgeRect, xRadius: 3, yRadius: 3).fill()
-        NSColor.black.withAlphaComponent(0.90).setStroke()
-        let border = NSBezierPath(roundedRect: badgeRect, xRadius: 3, yRadius: 3)
-        border.lineWidth = 1.25
-        border.stroke()
-        let configuration = NSImage.SymbolConfiguration(pointSize: 10, weight: .semibold)
-        guard let symbol = NSImage(systemSymbolName: symbolName, accessibilityDescription: nil)?
-            .withSymbolConfiguration(configuration)
-        else { return }
-        symbol.draw(in: badgeRect.insetBy(dx: 3, dy: 3), from: .zero, operation: .sourceOver, fraction: 1)
-    }
 }
 
 struct ImageEditorCursorRectView: NSViewRepresentable {
