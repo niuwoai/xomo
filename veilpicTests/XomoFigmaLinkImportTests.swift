@@ -489,6 +489,72 @@ struct XomoFigmaLinkImportTests {
         )
     }
 
+    @Test func canvasURLDropReadsOnlyBoundedTrustedFigmaWebLocations() throws {
+        let figma = "https://figma.com/design/abc123DEF456/Checkout?node-id=1-2&utm_source=finder"
+        let canonical = "https://www.figma.com/design/abc123DEF456/Checkout?node-id=1-2"
+        let xmlData = try PropertyListSerialization.data(
+            fromPropertyList: ["URL": figma],
+            format: .xml,
+            options: 0
+        )
+        let binaryData = try PropertyListSerialization.data(
+            fromPropertyList: ["URL": figma],
+            format: .binary,
+            options: 0
+        )
+
+        #expect(XomoFigmaWebLocationPolicy.canonicalURL(from: xmlData) == canonical)
+        #expect(XomoFigmaWebLocationPolicy.canonicalURL(from: binaryData) == canonical)
+        #expect(
+            XomoFigmaWebLocationPolicy.canonicalURL(
+                from: try PropertyListSerialization.data(
+                    fromPropertyList: [
+                        "URL": "https://www.figma.com.evil.example/design/abc123DEF456/Checkout"
+                    ],
+                    format: .xml,
+                    options: 0
+                )
+            ) == nil
+        )
+        #expect(
+            XomoFigmaWebLocationPolicy.canonicalURL(
+                from: try PropertyListSerialization.data(
+                    fromPropertyList: ["URL": "Open this design: \(figma)"],
+                    format: .xml,
+                    options: 0
+                )
+            ) == nil
+        )
+        #expect(XomoFigmaWebLocationPolicy.canonicalURL(from: Data("not a plist".utf8)) == nil)
+        #expect(
+            XomoFigmaWebLocationPolicy.canonicalURL(
+                from: Data(repeating: 0, count: XomoFigmaWebLocationPolicy.maximumDataLength + 1)
+            ) == nil
+        )
+
+        let webLocationURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString)
+            .appendingPathExtension("WeBlOc")
+        let disguisedTextURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString)
+            .appendingPathExtension("txt")
+        defer {
+            try? FileManager.default.removeItem(at: webLocationURL)
+            try? FileManager.default.removeItem(at: disguisedTextURL)
+        }
+        try xmlData.write(to: webLocationURL, options: .atomic)
+        try xmlData.write(to: disguisedTextURL, options: .atomic)
+
+        #expect(XomoCanvasURLDropPolicy.resolve([webLocationURL]) == .figmaLink(canonical))
+        #expect(XomoCanvasURLDropPolicy.resolve([disguisedTextURL]) == .unavailable)
+        #expect(
+            XomoCanvasURLDropPolicy.resolve([
+                webLocationURL,
+                URL(fileURLWithPath: "/tmp/Poster.png")
+            ]) == .unavailable
+        )
+    }
+
     @Test func canvasURLDropRejectsAmbiguousOrUntrustedRemoteURLs() throws {
         let png = URL(fileURLWithPath: "/tmp/Poster.PNG")
         let figma = try #require(URL(

@@ -485,15 +485,58 @@ enum XomoCanvasURLDropRoute: Equatable {
     case unavailable
 }
 
+enum XomoFigmaWebLocationPolicy {
+    static let maximumDataLength = 64 * 1_024
+
+    static func canonicalURL(from data: Data) -> String? {
+        guard !data.isEmpty, data.count <= maximumDataLength,
+              let propertyList = try? PropertyListSerialization.propertyList(
+                from: data,
+                options: [],
+                format: nil
+              ),
+              let values = propertyList as? [String: Any],
+              let rawURL = values["URL"] as? String,
+              let preview = try? XomoFigmaLinkParser.parse(rawURL)
+        else { return nil }
+        return preview.canonicalURL.absoluteString
+    }
+
+    static func canonicalURL(fromFile url: URL) -> String? {
+        guard url.isFileURL,
+              url.pathExtension.caseInsensitiveCompare("webloc") == .orderedSame
+        else { return nil }
+
+        let didStartSecurityScope = url.startAccessingSecurityScopedResource()
+        defer {
+            if didStartSecurityScope {
+                url.stopAccessingSecurityScopedResource()
+            }
+        }
+
+        guard let fileHandle = try? FileHandle(forReadingFrom: url) else { return nil }
+        defer { try? fileHandle.close() }
+        guard let data = try? fileHandle.read(upToCount: maximumDataLength + 1) else {
+            return nil
+        }
+        return canonicalURL(from: data)
+    }
+}
+
 enum XomoCanvasURLDropPolicy {
     static func resolve(_ urls: [URL]) -> XomoCanvasURLDropRoute {
         if let localFiles = ImageEditorLayerFileImportPolicy.supportedURLs(from: urls) {
             return .localFiles(localFiles)
         }
         guard urls.count == 1,
-              let url = urls.first,
-              let preview = try? XomoFigmaLinkParser.parse(url.absoluteString)
+              let url = urls.first
         else { return .unavailable }
+        if let canonicalURL = XomoFigmaWebLocationPolicy.canonicalURL(fromFile: url) {
+            return .figmaLink(canonicalURL)
+        }
+        guard let preview = try? XomoFigmaLinkParser.parse(url.absoluteString) else {
+            return .unavailable
+        }
         return .figmaLink(preview.canonicalURL.absoluteString)
     }
 }
