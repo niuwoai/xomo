@@ -6267,6 +6267,7 @@ final class XomoAutomationRegistry {
             case "motionBlurDistance": viewModel.filterMotionBlurDistance = try numericSetting(value, key: key)
             case "embossAngleDegrees": viewModel.filterEmbossAngleDegrees = try numericSetting(value, key: key)
             case "embossHeight": viewModel.filterEmbossHeight = try numericSetting(value, key: key)
+            case "vignetteAmountPercent": viewModel.filterVignetteAmountPercent = try numericSetting(value, key: key)
             case "vignetteMidpoint": viewModel.filterVignetteMidpoint = try numericSetting(value, key: key)
             case "oilPaintRadius": viewModel.filterOilPaintRadius = try numericSetting(value, key: key)
             case "oilPaintTonalLevels": viewModel.filterOilPaintTonalLevels = try numericSetting(value, key: key)
@@ -8006,6 +8007,7 @@ private extension XomoAutomationRegistry {
         "motionBlurDistance": XomoAutomationSchema.number(description: "Motion Blur distance in pixels"),
         "embossAngleDegrees": XomoAutomationSchema.number(description: "Emboss light angle in degrees"),
         "embossHeight": XomoAutomationSchema.number(description: "Emboss relief height in pixels"),
+        "vignetteAmountPercent": XomoAutomationSchema.number(description: "Vignette amount from -100 to 100 percent"),
         "vignetteMidpoint": XomoAutomationSchema.number(description: "Vignette midpoint from 0 to 0.95"),
         "oilPaintRadius": XomoAutomationSchema.number(description: "Oil Paint brush radius in pixels"),
         "oilPaintTonalLevels": XomoAutomationSchema.number(description: "Oil Paint tonal aggregation levels"),

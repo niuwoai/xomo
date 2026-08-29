@@ -1003,7 +1003,9 @@
 "imageEditor.filter.vignette" = "Vignette";
 "imageEditor.filter.vignetteMidpoint" = "Midpoint";
 "imageEditor.filter.vignetteMidpointValue" = "%d%%";
-"imageEditor.properties.smartFilterVignetteItem" = "%1$@ · %2$d%% · midpoint %3$d%%";
+"imageEditor.filter.vignetteAmount" = "Amount";
+"imageEditor.filter.vignetteAmountValue" = "%@%%";
+"imageEditor.properties.smartFilterVignetteItem" = "%1$@ · amount %2$@%% · midpoint %3$d%%";
 "imageEditor.filter.offset" = "Offset";
 "imageEditor.filter.wave" = "Wave";
 "imageEditor.filter.ripple" = "Ripple";

@@ -28,12 +28,18 @@ extension NSImage {
         if kind == .sharpen, normalizedSettings.sharpenAmountPercent == 0 {
             return self
         }
+        if kind == .vignette, normalizedSettings.vignetteAmountPercent == 0 {
+            return self
+        }
         let hasExplicitFilterAmount = (
             kind == .sharpen
                 && normalizedSettings.sharpenAmountPercent.map { $0 > 0 } == true
         ) || (
             kind == .addNoise
                 && normalizedSettings.addNoiseAmountPercent != nil
+        ) || (
+            kind == .vignette
+                && normalizedSettings.vignetteAmountPercent.map { $0 != 0 } == true
         )
         guard clamped > 0 || hasExplicitFilterAmount else { return self }
         if kind == .addNoise {
@@ -180,12 +186,18 @@ extension NSImage {
         if kind == .sharpen, normalizedSettings.sharpenAmountPercent == 0 {
             return self
         }
+        if kind == .vignette, normalizedSettings.vignetteAmountPercent == 0 {
+            return self
+        }
         let hasExplicitFilterAmount = (
             kind == .sharpen
                 && normalizedSettings.sharpenAmountPercent.map { $0 > 0 } == true
         ) || (
             kind == .addNoise
                 && normalizedSettings.addNoiseAmountPercent != nil
+        ) || (
+            kind == .vignette
+                && normalizedSettings.vignetteAmountPercent.map { $0 != 0 } == true
         )
         guard intensity > 0 || hasExplicitFilterAmount else { return self }
         let normalizedOpacity = max(0, min(1, opacity))
@@ -1100,9 +1112,10 @@ extension NSImage {
         settings: ImageEditorFilterSettings
     ) -> NSImage? {
         let clampedIntensity = max(0, min(1, intensity))
-        guard clampedIntensity > 0 else { return self }
-        let strength = 0.85 * clampedIntensity
-        let featherStart = settings.normalized().vignetteMidpoint ?? 0.28
+        let normalizedSettings = settings.normalized()
+        let amountPercent = normalizedSettings.vignetteAmountPercent ?? (-85 * clampedIntensity)
+        guard abs(amountPercent) > 0.000_001 else { return self }
+        let featherStart = normalizedSettings.vignetteMidpoint ?? 0.28
         return pixelMappedFromBuffer { x, y, width, height, pixels, bytesPerRow, bytesPerPixel in
             let offset = y * bytesPerRow + x * bytesPerPixel
             let alpha = Double(pixels[offset + 3]) / 255
@@ -1113,7 +1126,7 @@ extension NSImage {
             let radialDistance = min(1, hypot(normalizedX, normalizedY) / sqrt(2))
             let feather = max(0, min(1, (radialDistance - featherStart) / (1 - featherStart)))
             let falloff = pow(feather, 1.8)
-            let factor = 1 - falloff * strength
+            let factor = 1 + falloff * amountPercent / 100
             return (
                 Self.premultipliedChannel(Double(pixels[offset]) / 255 * factor, alpha: alpha),
                 Self.premultipliedChannel(Double(pixels[offset + 1]) / 255 * factor, alpha: alpha),

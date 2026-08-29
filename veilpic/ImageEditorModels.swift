@@ -2548,6 +2548,9 @@ struct ImageEditorFilterSettings: Equatable, Codable {
     var embossAngleDegrees: Double?
     /// Explicit Emboss relief height in pixels. Nil preserves the legacy one-pixel diagonal kernel.
     var embossHeight: Double?
+    /// Vignette amount from -100% (darken edges) to 100% (lighten edges).
+    /// Nil preserves the legacy intensity-derived darkening amount.
+    var vignetteAmountPercent: Double?
     /// Vignette feather start as a normalized radius. Nil preserves the legacy 28% midpoint.
     var vignetteMidpoint: Double?
     /// Oil Paint neighborhood radius in pixels. Nil preserves the legacy intensity-derived radius.
@@ -2602,6 +2605,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         motionBlurDistance: Double? = nil,
         embossAngleDegrees: Double? = nil,
         embossHeight: Double? = nil,
+        vignetteAmountPercent: Double? = nil,
         vignetteMidpoint: Double? = nil,
         oilPaintRadius: Double? = nil,
         oilPaintTonalLevels: Double? = nil,
@@ -2643,6 +2647,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         self.motionBlurDistance = motionBlurDistance
         self.embossAngleDegrees = embossAngleDegrees
         self.embossHeight = embossHeight
+        self.vignetteAmountPercent = vignetteAmountPercent
         self.vignetteMidpoint = vignetteMidpoint
         self.oilPaintRadius = oilPaintRadius
         self.oilPaintTonalLevels = oilPaintTonalLevels
@@ -2690,6 +2695,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         motionBlurDistance = try container.decodeIfPresent(Double.self, forKey: .motionBlurDistance)
         embossAngleDegrees = try container.decodeIfPresent(Double.self, forKey: .embossAngleDegrees)
         embossHeight = try container.decodeIfPresent(Double.self, forKey: .embossHeight)
+        vignetteAmountPercent = try container.decodeIfPresent(Double.self, forKey: .vignetteAmountPercent)
         vignetteMidpoint = try container.decodeIfPresent(Double.self, forKey: .vignetteMidpoint)
         oilPaintRadius = try container.decodeIfPresent(Double.self, forKey: .oilPaintRadius)
         oilPaintTonalLevels = try container.decodeIfPresent(Double.self, forKey: .oilPaintTonalLevels)
@@ -2737,6 +2743,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         try container.encodeIfPresent(motionBlurDistance, forKey: .motionBlurDistance)
         try container.encodeIfPresent(embossAngleDegrees, forKey: .embossAngleDegrees)
         try container.encodeIfPresent(embossHeight, forKey: .embossHeight)
+        try container.encodeIfPresent(vignetteAmountPercent, forKey: .vignetteAmountPercent)
         try container.encodeIfPresent(vignetteMidpoint, forKey: .vignetteMidpoint)
         try container.encodeIfPresent(oilPaintRadius, forKey: .oilPaintRadius)
         try container.encodeIfPresent(oilPaintTonalLevels, forKey: .oilPaintTonalLevels)
@@ -2781,6 +2788,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
             motionBlurDistance: motionBlurDistance.map { max(1, min(999, $0)) },
             embossAngleDegrees: embossAngleDegrees.map { max(-180, min(180, $0)) },
             embossHeight: embossHeight.map { max(1, min(10, $0)) },
+            vignetteAmountPercent: vignetteAmountPercent.map { max(-100, min(100, $0)) },
             vignetteMidpoint: vignetteMidpoint.map { max(0, min(0.95, $0)) },
             oilPaintRadius: oilPaintRadius.map { max(1, min(10, $0)) },
             oilPaintTonalLevels: oilPaintTonalLevels.map { max(6, min(18, $0)) },
@@ -2825,6 +2833,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         case motionBlurDistance
         case embossAngleDegrees
         case embossHeight
+        case vignetteAmountPercent
         case vignetteMidpoint
         case oilPaintRadius
         case oilPaintTonalLevels

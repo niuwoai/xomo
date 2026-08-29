@@ -11886,7 +11886,8 @@ struct ImageEditorView: View {
                     && viewModel.selectedFilter != .emboss
                     && viewModel.selectedFilter != .addNoise
                     && viewModel.selectedFilter != .unsharpMask
-                    && viewModel.selectedFilter != .oilPaint {
+                    && viewModel.selectedFilter != .oilPaint
+                    && viewModel.selectedFilter != .vignette {
                     Slider(value: $viewModel.filterIntensity, in: 0...1, step: 0.05)
                 }
                 if viewModel.selectedFilter == .gaussianBlur {
@@ -11994,6 +11995,27 @@ struct ImageEditorView: View {
                     .accessibilityIdentifier("image-editor-filter-add-noise-monochromatic")
                 }
                 if viewModel.selectedFilter == .vignette {
+                    HStack {
+                        Text(L10n.text("imageEditor.filter.vignetteAmount"))
+                            .font(.system(size: 10, weight: .medium))
+                            .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                        Slider(
+                            value: Binding(
+                                get: { viewModel.filterVignetteEffectiveAmountPercent },
+                                set: { viewModel.filterVignetteEffectiveAmountPercent = $0 }
+                            ),
+                            in: -100...100,
+                            step: 1
+                        )
+                        Text(L10n.format(
+                            "imageEditor.filter.vignetteAmountValue",
+                            String(format: "%+d", Int(viewModel.filterVignetteEffectiveAmountPercent.rounded()))
+                        ))
+                            .font(.system(size: 10, weight: .semibold))
+                            .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
+                            .frame(width: 52, alignment: .trailing)
+                    }
+                    .accessibilityIdentifier("image-editor-filter-vignette-amount")
                     HStack {
                         Text(L10n.text("imageEditor.filter.vignetteMidpoint"))
                             .font(.system(size: 10, weight: .medium))

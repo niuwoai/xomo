@@ -472,6 +472,7 @@ final class ImageEditorViewModel: ObservableObject {
                 filterGaussianBlurRadius = nil
                 filterSharpenAmountPercent = nil
                 filterAddNoiseAmountPercent = nil
+                filterVignetteAmountPercent = nil
                 filterUnsharpAmountPercent = nil
                 filterUnsharpRadiusPixels = nil
                 filterUnsharpThresholdLevels = nil
@@ -494,6 +495,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var filterMotionBlurDistance: Double = 14
     @Published var filterEmbossAngleDegrees: Double = 135
     @Published var filterEmbossHeight: Double = 3
+    @Published var filterVignetteAmountPercent: Double?
     @Published var filterVignetteMidpoint: Double = 0.28
     @Published var filterOilPaintRadius: Double = 4
     @Published var filterOilPaintTonalLevels: Double = 13
@@ -534,6 +536,16 @@ final class ImageEditorViewModel: ObservableObject {
         }
         set {
             filterAddNoiseAmountPercent = max(0.1, min(400, newValue))
+        }
+    }
+
+    var filterVignetteEffectiveAmountPercent: Double {
+        get {
+            filterVignetteAmountPercent
+                ?? max(-100, min(100, -85 * filterIntensity))
+        }
+        set {
+            filterVignetteAmountPercent = max(-100, min(100, newValue))
         }
     }
 
@@ -2735,11 +2747,13 @@ final class ImageEditorViewModel: ObservableObject {
             return L10n.format("imageEditor.properties.smartFilterDisabled", title)
         }
         if filter.kind == .vignette {
-            let midpoint = filter.normalizedSettings.vignetteMidpoint ?? 0.28
+            let settings = filter.normalizedSettings
+            let amount = settings.vignetteAmountPercent ?? (-85 * filter.normalizedIntensity)
+            let midpoint = settings.vignetteMidpoint ?? 0.28
             let title = L10n.format(
                 "imageEditor.properties.smartFilterVignetteItem",
                 filter.kind.title,
-                Int((filter.normalizedIntensity * 100).rounded()),
+                String(format: "%+d", Int(amount.rounded())),
                 Int((midpoint * 100).rounded())
             )
             guard !filter.isEnabled else { return title }
@@ -9652,6 +9666,7 @@ final class ImageEditorViewModel: ObservableObject {
             motionBlurDistance: selectedFilter == .motionBlur ? filterMotionBlurDistance : nil,
             embossAngleDegrees: selectedFilter == .emboss ? filterEmbossAngleDegrees : nil,
             embossHeight: selectedFilter == .emboss ? filterEmbossHeight : nil,
+            vignetteAmountPercent: selectedFilter == .vignette ? filterVignetteAmountPercent : nil,
             vignetteMidpoint: selectedFilter == .vignette ? filterVignetteMidpoint : nil,
             oilPaintRadius: selectedFilter == .oilPaint ? filterOilPaintRadius : nil,
             oilPaintTonalLevels: selectedFilter == .oilPaint ? filterOilPaintTonalLevels : nil,
@@ -11517,6 +11532,7 @@ final class ImageEditorViewModel: ObservableObject {
             ?? max(1, min(999, (filterIntensity * 28).rounded()))
         filterEmbossAngleDegrees = normalized.embossAngleDegrees ?? 135
         filterEmbossHeight = normalized.embossHeight ?? 3
+        filterVignetteAmountPercent = normalized.vignetteAmountPercent
         filterVignetteMidpoint = normalized.vignetteMidpoint ?? 0.28
         filterOilPaintRadius = normalized.oilPaintRadius
             ?? max(1, min(10, (1 + filterIntensity * 5).rounded()))

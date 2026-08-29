@@ -5960,7 +5960,7 @@ struct XomoAutomationTests {
         #expect(viewModel.document.selectedLayer?.smartFilters.count == 1)
     }
 
-    @Test func registryConfiguresVignetteMidpointThroughTheSharedFilterPipeline() throws {
+    @Test func registryConfiguresVignetteAmountAndMidpointThroughTheSharedFilterPipeline() throws {
         let viewModel = makeViewModel()
         let registry = XomoAutomationRegistry.shared
         registry.register(viewModel)
@@ -5973,7 +5973,8 @@ struct XomoAutomationTests {
                 "filter": .string(ImageEditorFilter.vignette.rawValue),
                 "action": .string("addSmartFilter"),
                 "settings": .object([
-                    "intensity": .number(0.8),
+                    "intensity": .number(0),
+                    "vignetteAmountPercent": .number(-160),
                     "vignetteMidpoint": .number(0.75)
                 ])
             ]
@@ -5982,6 +5983,8 @@ struct XomoAutomationTests {
         #expect(response.ok)
         let filter = try #require(viewModel.document.selectedLayer?.smartFilters.last)
         #expect(filter.kind == .vignette)
+        #expect(filter.normalizedIntensity == 0)
+        #expect(filter.normalizedSettings.vignetteAmountPercent == -100)
         #expect(filter.normalizedSettings.vignetteMidpoint == 0.75)
 
         let tools = registry.execute(request(operation: "tools"))
@@ -5992,6 +5995,7 @@ struct XomoAutomationTests {
             configureTool["inputSchema"]?.objectValue?["properties"]?.objectValue?["settings"]?.objectValue
         )
         let settingsProperties = try #require(settingsSchema["properties"]?.objectValue)
+        #expect(settingsProperties["vignetteAmountPercent"]?.objectValue?["type"] == .string("number"))
         #expect(settingsProperties["vignetteMidpoint"]?.objectValue?["type"] == .string("number"))
 
         let historyCount = viewModel.document.history.count
@@ -6002,7 +6006,7 @@ struct XomoAutomationTests {
                 "filter": .string(ImageEditorFilter.vignette.rawValue),
                 "action": .string("addSmartFilter"),
                 "settings": .object([
-                    "vignetteMidpoint": .string("wide")
+                    "vignetteAmountPercent": .string("dark")
                 ])
             ]
         ))

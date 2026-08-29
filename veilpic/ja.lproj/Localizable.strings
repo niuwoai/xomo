@@ -1003,7 +1003,9 @@
 "imageEditor.filter.vignette" = "周辺光量";
 "imageEditor.filter.vignetteMidpoint" = "中間点";
 "imageEditor.filter.vignetteMidpointValue" = "%d%%";
-"imageEditor.properties.smartFilterVignetteItem" = "%1$@ · 強度 %2$d%% · 中間点 %3$d%%";
+"imageEditor.filter.vignetteAmount" = "量";
+"imageEditor.filter.vignetteAmountValue" = "%@%%";
+"imageEditor.properties.smartFilterVignetteItem" = "%1$@ · 量 %2$@%% · 中間点 %3$d%%";
 "imageEditor.filter.offset" = "オフセット";
 "imageEditor.filter.wave" = "波形";
 "imageEditor.filter.ripple" = "波紋";

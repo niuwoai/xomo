@@ -3029,13 +3029,14 @@ struct ImageEditorFilterTests {
         #expect(try #require(smartViewModel.currentImage.qingtuPNGData()) == smartPreviewBefore)
     }
 
-    @Test func imageEditorVignetteFilterLayerAndSmartFilterAreNonDestructive() async throws {
+    @Test func imageEditorVignetteAmountAndMidpointSupportDarkAndLightEdges() async throws {
         let canvasSize = NSSize(width: 48, height: 48)
         let sourceImage = solidImage(size: canvasSize, color: NSColor(calibratedWhite: 0.8, alpha: 1))
         let legacySettings = try JSONDecoder().decode(
             ImageEditorFilterSettings.self,
             from: Data("{}".utf8)
         )
+        #expect(legacySettings.vignetteAmountPercent == nil)
         #expect(legacySettings.vignetteMidpoint == nil)
         let legacyVignette = try #require(sourceImage.filtered(
             kind: .vignette,
@@ -3044,10 +3045,43 @@ struct ImageEditorFilterTests {
         ))
         let explicitLegacyVignette = try #require(sourceImage.filtered(
             kind: .vignette,
-            intensity: 1,
-            settings: ImageEditorFilterSettings(vignetteMidpoint: 0.28)
+            intensity: 0,
+            settings: ImageEditorFilterSettings(
+                vignetteAmountPercent: -85,
+                vignetteMidpoint: 0.28
+            )
         ))
         #expect(legacyVignette.qingtuPNGData() == explicitLegacyVignette.qingtuPNGData())
+        #expect(ImageEditorFilterSettings(vignetteAmountPercent: -200).normalized().vignetteAmountPercent == -100)
+        #expect(ImageEditorFilterSettings(vignetteAmountPercent: 200).normalized().vignetteAmountPercent == 100)
+        let zeroVignette = try #require(sourceImage.filtered(
+            kind: .vignette,
+            intensity: 1,
+            settings: ImageEditorFilterSettings(vignetteAmountPercent: 0)
+        ))
+        #expect(zeroVignette.qingtuPNGData() == sourceImage.qingtuPNGData())
+
+        let middleGrayImage = solidImage(
+            size: canvasSize,
+            color: NSColor(calibratedWhite: 0.4, alpha: 1)
+        )
+        let middleGrayCenter = try #require(
+            middleGrayImage.color(at: CGPoint(x: 24, y: 24))?.usingColorSpace(.deviceRGB)
+        )
+        let lightVignette = try #require(middleGrayImage.filtered(
+            kind: .vignette,
+            intensity: 0,
+            settings: ImageEditorFilterSettings(vignetteAmountPercent: 60)
+        ))
+        let lightCenter = try #require(
+            lightVignette.color(at: CGPoint(x: 24, y: 24))?.usingColorSpace(.deviceRGB)
+        )
+        let lightCorner = try #require(
+            lightVignette.color(at: CGPoint(x: 0, y: 0))?.usingColorSpace(.deviceRGB)
+        )
+        #expect(abs(lightCenter.redComponent - middleGrayCenter.redComponent) < 0.01)
+        #expect(lightCorner.redComponent > 0.60)
+
         let broadCenterVignette = try #require(sourceImage.filtered(
             kind: .vignette,
             intensity: 1,
@@ -3068,7 +3102,8 @@ struct ImageEditorFilterTests {
         let centerBefore = try #require(viewModel.currentImage.color(at: CGPoint(x: 24, y: 24))?.usingColorSpace(.deviceRGB))
 
         viewModel.selectedFilter = .vignette
-        viewModel.filterIntensity = 1
+        viewModel.filterIntensity = 0
+        viewModel.filterVignetteAmountPercent = -70
         viewModel.filterVignetteMidpoint = 0.75
         viewModel.addFilterLayer()
 
@@ -3077,12 +3112,13 @@ struct ImageEditorFilterTests {
         let cornerAfter = try #require(viewModel.currentImage.color(at: CGPoint(x: 0, y: 0))?.usingColorSpace(.deviceRGB))
         #expect(filterLayer.isFilter)
         #expect(filterLayer.filter?.kind == .vignette)
+        #expect(filterLayer.filterSettings.normalized().vignetteAmountPercent == -70)
         #expect(filterLayer.filterSettings.normalized().vignetteMidpoint == 0.75)
         #expect(viewModel.document.layers.first { $0.id == baseLayerID }?.image.qingtuPNGData() == basePixelsBefore)
         #expect(centerBefore.redComponent > 0.72)
         #expect(abs(centerBefore.redComponent - centerBefore.greenComponent) < 0.002)
         #expect(centerAfter.redComponent > 0.74)
-        #expect(cornerAfter.redComponent < 0.18)
+        #expect(cornerAfter.redComponent < 0.28)
         #expect(abs(cornerAfter.redComponent - cornerAfter.greenComponent) < 0.002)
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerFilterNew"))
 
@@ -3091,7 +3127,8 @@ struct ImageEditorFilterTests {
         let smartBasePixelsBefore = try #require(smartViewModel.document.selectedLayer?.image.qingtuPNGData())
         let smartPreviewBefore = try #require(smartViewModel.currentImage.qingtuPNGData())
         smartViewModel.selectedFilter = .vignette
-        smartViewModel.filterIntensity = 1
+        smartViewModel.filterIntensity = 0
+        smartViewModel.filterVignetteAmountPercent = -70
         smartViewModel.filterVignetteMidpoint = 0.75
         smartViewModel.addSmartFilterToSelectedLayer()
 
@@ -3099,15 +3136,16 @@ struct ImageEditorFilterTests {
         let smartFilterID = try #require(smartLayer.smartFilters.first?.id)
         let smartCornerAfter = try #require(smartViewModel.currentImage.color(at: CGPoint(x: 0, y: 0))?.usingColorSpace(.deviceRGB))
         #expect(smartLayer.smartFilters.first?.kind == .vignette)
+        #expect(smartLayer.smartFilters.first?.normalizedSettings.vignetteAmountPercent == -70)
         #expect(smartLayer.smartFilters.first?.normalizedSettings.vignetteMidpoint == 0.75)
         #expect(smartViewModel.smartFilterLabel(try #require(smartLayer.smartFilters.first)) == L10n.format(
             "imageEditor.properties.smartFilterVignetteItem",
             ImageEditorFilter.vignette.title,
-            100,
+            "-70",
             75
         ))
         #expect(smartLayer.image.qingtuPNGData() == smartBasePixelsBefore)
-        #expect(smartCornerAfter.redComponent < 0.18)
+        #expect(smartCornerAfter.redComponent < 0.28)
         #expect(smartViewModel.document.history.last?.title == L10n.text("imageEditor.history.layerSmartFilterAdd"))
 
         smartViewModel.toggleSmartFilterOnSelectedLayer(smartFilterID)
@@ -3117,6 +3155,7 @@ struct ImageEditorFilterTests {
 
         let project = try ImageEditorProjectDocument(document: viewModel.document)
         let restored = try project.restoredDocument()
+        #expect(restored.selectedLayer?.filterSettings.normalized().vignetteAmountPercent == -70)
         #expect(restored.selectedLayer?.filterSettings.normalized().vignetteMidpoint == 0.75)
 
         let root = URL(fileURLWithPath: #filePath)
@@ -3126,7 +3165,9 @@ struct ImageEditorFilterTests {
             contentsOf: root.appendingPathComponent("veilpic/ImageEditorView.swift"),
             encoding: .utf8
         )
+        #expect(viewSource.contains("image-editor-filter-vignette-amount"))
         #expect(viewSource.contains("image-editor-filter-vignette-midpoint"))
+        #expect(viewSource.contains("viewModel.selectedFilter != .vignette"))
     }
 
     @Test func imageEditorLiquifyPushFilterLayerAndSmartFilterAreNonDestructive() async throws {
