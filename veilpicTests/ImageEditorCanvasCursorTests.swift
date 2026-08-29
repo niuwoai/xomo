@@ -2775,6 +2775,51 @@ struct ImageEditorCanvasCursorTests {
         #expect(ImageEditorCanvasCursor.cursor(for: .pen, brushDiameter: 18) !== NSCursor.crosshair)
     }
 
+    @Test func magicWandCursorPreviewsSimilarColorRegionExpansion() {
+        let replace = ImageEditorCanvasCursor.cursor(
+            for: .magicWand,
+            brushDiameter: 18
+        )
+        let add = ImageEditorCanvasCursor.cursor(
+            for: .magicWand,
+            brushDiameter: 18,
+            modifierFlags: [.shift]
+        )
+        let subtract = ImageEditorCanvasCursor.cursor(
+            for: .magicWand,
+            brushDiameter: 18,
+            modifierFlags: [.option]
+        )
+        let intersect = ImageEditorCanvasCursor.cursor(
+            for: .magicWand,
+            brushDiameter: 18,
+            modifierFlags: [.shift, .option]
+        )
+
+        #expect(ImageEditorCanvasCursor.family(for: .magicWand) == .similarColorSelection)
+        #expect(replace.image.size == NSSize(width: 36, height: 36))
+        #expect(replace.hotSpot == NSPoint(x: 10, y: 26))
+        #expect(replace !== NSCursor.crosshair)
+        #expect(replace.image.tiffRepresentation != add.image.tiffRepresentation)
+        #expect(add.image.tiffRepresentation != subtract.image.tiffRepresentation)
+        #expect(subtract.image.tiffRepresentation != intersect.image.tiffRepresentation)
+        #expect(replace.image.tiffRepresentation != ImageEditorCanvasCursor.cursor(
+            for: .lasso,
+            brushDiameter: 18
+        ).image.tiffRepresentation)
+        #expect(ImageEditorCanvasCursor.cursor(
+            for: .components,
+            selectedTool: .magicWand,
+            brushDiameter: 18
+        ) === NSCursor.arrow)
+        #expect(ImageEditorCanvasCursor.cursor(
+            for: .tools,
+            selectedTool: .magicWand,
+            brushDiameter: 18,
+            isPointerOverCanvas: false
+        ) === NSCursor.arrow)
+    }
+
     @Test func redEyeCursorShowsTheRealTreatmentFootprintAndHonorsHigherModes() {
         let small = ImageEditorCanvasCursor.cursor(for: .redEye, brushDiameter: 12)
         let large = ImageEditorCanvasCursor.cursor(for: .redEye, brushDiameter: 48)

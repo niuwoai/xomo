@@ -6768,7 +6768,7 @@ struct veilpicTests {
             (.retouchBrush, [.blur, .sharpen, .smudge]),
             (.selectionMarquee, [.marquee]),
             (.lasso, [.lasso]),
-            (.magicWand, [.magicWand]),
+            (.similarColorSelection, [.magicWand]),
             (.quickSelection, [.quickSelection]),
             (.cloneStamp, [.cloneStamp]),
             (.healingBrush, [.healingBrush]),

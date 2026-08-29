@@ -15443,7 +15443,7 @@ enum ImageEditorCanvasCursorFamily: Equatable {
     case retouchBrush
     case selectionMarquee
     case lasso
-    case magicWand
+    case similarColorSelection
     case quickSelection
     case cloneStamp
     case healingBrush
@@ -16388,7 +16388,7 @@ enum ImageEditorCanvasCursor {
         case .lasso:
             .lasso
         case .magicWand:
-            .magicWand
+            .similarColorSelection
         case .quickSelection:
             .quickSelection
         case .cloneStamp:
@@ -16484,8 +16484,8 @@ enum ImageEditorCanvasCursor {
                 : familiarSelectionCursor(mode: selectionMode, shape: marqueeShape)
         case .lasso:
             return lassoCursor(mode: selectionMode)
-        case .magicWand:
-            return magicWandCursor(mode: selectionMode)
+        case .similarColorSelection:
+            return similarColorSelectionCursor(mode: selectionMode)
         case .quickSelection:
             return quickSelectionCursor(mode: selectionMode)
         case .cloneStamp:
@@ -16996,42 +16996,101 @@ enum ImageEditorCanvasCursor {
         )
     }
 
-    private static func magicWandCursor(mode: ImageEditorSelectionCursorMode) -> NSCursor {
-        let cacheKey = "magic-wand:\(mode.rawValue)"
+    private static func similarColorSelectionCursor(
+        mode: ImageEditorSelectionCursorMode
+    ) -> NSCursor {
+        let cacheKey = "similar-color-selection:\(mode.rawValue)"
         if let cachedCursor = cursorCache[cacheKey] {
             return cachedCursor
         }
-        let side: CGFloat = 34
+        let side: CGFloat = 36
+        let seed = NSPoint(x: 10, y: 10)
         let image = NSImage(size: NSSize(width: side, height: side))
         image.lockFocus()
-        let wand = NSBezierPath()
-        wand.move(to: NSPoint(x: 4, y: 6))
-        wand.line(to: NSPoint(x: 23, y: 25))
+
+        // Preview the contiguous result: an irregular marching-ants boundary
+        // grows from the exact sampled pixel instead of reproducing a wand.
+        let region = NSBezierPath()
+        region.move(to: NSPoint(x: 3, y: 9))
+        region.curve(
+            to: NSPoint(x: 8, y: 3),
+            controlPoint1: NSPoint(x: 3, y: 6),
+            controlPoint2: NSPoint(x: 5, y: 4)
+        )
+        region.curve(
+            to: NSPoint(x: 16, y: 4),
+            controlPoint1: NSPoint(x: 11, y: 2),
+            controlPoint2: NSPoint(x: 14, y: 3)
+        )
+        region.curve(
+            to: NSPoint(x: 20, y: 11),
+            controlPoint1: NSPoint(x: 19, y: 5),
+            controlPoint2: NSPoint(x: 21, y: 8)
+        )
+        region.curve(
+            to: NSPoint(x: 15, y: 18),
+            controlPoint1: NSPoint(x: 20, y: 14),
+            controlPoint2: NSPoint(x: 18, y: 17)
+        )
+        region.curve(
+            to: NSPoint(x: 7, y: 17),
+            controlPoint1: NSPoint(x: 12, y: 19),
+            controlPoint2: NSPoint(x: 9, y: 18)
+        )
+        region.curve(
+            to: NSPoint(x: 3, y: 9),
+            controlPoint1: NSPoint(x: 4, y: 15),
+            controlPoint2: NSPoint(x: 2, y: 12)
+        )
+        region.close()
+        region.setLineDash([2.5, 2], count: 2, phase: 0)
         NSColor.black.withAlphaComponent(0.95).setStroke()
-        wand.lineWidth = 5
-        wand.stroke()
+        region.lineWidth = 3
+        region.stroke()
         NSColor.white.setStroke()
-        wand.lineWidth = 2
-        wand.stroke()
-        let star = NSBezierPath()
-        star.move(to: NSPoint(x: 25, y: 28))
-        star.line(to: NSPoint(x: 25, y: 20))
-        star.move(to: NSPoint(x: 21, y: 24))
-        star.line(to: NSPoint(x: 29, y: 24))
-        star.move(to: NSPoint(x: 29, y: 29))
-        star.line(to: NSPoint(x: 29, y: 23))
-        star.move(to: NSPoint(x: 26, y: 26))
-        star.line(to: NSPoint(x: 32, y: 26))
+        region.lineWidth = 1
+        region.stroke()
+
+        let expansion = NSBezierPath()
+        expansion.move(to: NSPoint(x: 20, y: 11))
+        expansion.line(to: NSPoint(x: 26, y: 11))
+        expansion.move(to: NSPoint(x: 26, y: 11))
+        expansion.line(to: NSPoint(x: 23, y: 8))
+        expansion.move(to: NSPoint(x: 26, y: 11))
+        expansion.line(to: NSPoint(x: 23, y: 14))
+        expansion.move(to: NSPoint(x: 12, y: 19))
+        expansion.line(to: NSPoint(x: 12, y: 25))
+        expansion.move(to: NSPoint(x: 12, y: 25))
+        expansion.line(to: NSPoint(x: 9, y: 22))
+        expansion.move(to: NSPoint(x: 12, y: 25))
+        expansion.line(to: NSPoint(x: 15, y: 22))
         NSColor.black.withAlphaComponent(0.95).setStroke()
-        star.lineWidth = 3
-        star.stroke()
-        NSColor.white.setStroke()
-        star.lineWidth = 1
-        star.stroke()
+        expansion.lineWidth = 3
+        expansion.stroke()
+        NSColor.systemBlue.setStroke()
+        expansion.lineWidth = 1
+        expansion.stroke()
+
+        let seedRing = NSBezierPath(ovalIn: NSRect(
+            x: seed.x - 3,
+            y: seed.y - 3,
+            width: 6,
+            height: 6
+        ))
+        NSColor.black.withAlphaComponent(0.95).setFill()
+        seedRing.fill()
+        let seedPoint = NSBezierPath(ovalIn: NSRect(
+            x: seed.x - 1.5,
+            y: seed.y - 1.5,
+            width: 3,
+            height: 3
+        ))
+        NSColor.systemBlue.setFill()
+        seedPoint.fill()
         drawSelectionModifierBadge(mode, side: side)
         image.unlockFocus()
         return cache(
-            NSCursor(image: image, hotSpot: NSPoint(x: 5, y: side - 6)),
+            NSCursor(image: image, hotSpot: NSPoint(x: seed.x, y: side - seed.y)),
             for: cacheKey
         )
     }
