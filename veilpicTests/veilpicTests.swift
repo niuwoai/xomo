@@ -6769,7 +6769,7 @@ struct veilpicTests {
             (.localSaturationAdjust, [.sponge]),
             (.localDetailSoften, [.blur]),
             (.localDetailSharpen, [.sharpen]),
-            (.retouchBrush, [.smudge]),
+            (.pixelSmear, [.smudge]),
             (.selectionMarquee, [.marquee]),
             (.freeformSelectionPath, [.lasso]),
             (.similarColorSelection, [.magicWand]),

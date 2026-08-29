@@ -15445,7 +15445,6 @@ enum ImageEditorCanvasCursorFamily: Equatable {
     case textInsertion
     case brushTool
     case eraserTool
-    case retouchBrush
     case selectionMarquee
     case freeformSelectionPath
     case similarColorSelection
@@ -15457,6 +15456,7 @@ enum ImageEditorCanvasCursorFamily: Equatable {
     case localSaturationAdjust
     case localDetailSoften
     case localDetailSharpen
+    case pixelSmear
     case crop
     case patch
     case gradient
@@ -16432,7 +16432,7 @@ enum ImageEditorCanvasCursor {
         case .sharpen:
             .localDetailSharpen
         case .smudge:
-            .retouchBrush
+            .pixelSmear
         case .paintBucket:
             .paintBucket
         case .colorSampler:
@@ -16558,10 +16558,10 @@ enum ImageEditorCanvasCursor {
             return modifierFlags.contains(.capsLock)
                 ? .crosshair
                 : localDetailSharpenCursor(diameter: brushDiameter)
-        case .retouchBrush:
+        case .pixelSmear:
             return modifierFlags.contains(.capsLock)
                 ? .crosshair
-                : familiarBrushCursor(diameter: brushDiameter)
+                : pixelSmearCursor(diameter: brushDiameter)
         case .crop:
             if let cropHandle {
                 return cropResizeCursor(for: cropHandle)
@@ -17153,6 +17153,93 @@ enum ImageEditorCanvasCursor {
         NSColor.systemOrange.setStroke()
         contrastGain.lineWidth = 1.2
         contrastGain.stroke()
+
+        image.unlockFocus()
+        return cache(
+            NSCursor(image: image, hotSpot: NSPoint(x: center.x, y: side - center.y)),
+            for: cacheKey
+        )
+    }
+
+    private static func pixelSmearCursor(diameter requestedDiameter: CGFloat) -> NSCursor {
+        let diameter = max(3, min(256, requestedDiameter.rounded()))
+        let cacheKey = "pixel-smear:\(Int(diameter))"
+        if let cachedCursor = cursorCache[cacheKey] {
+            return cachedCursor
+        }
+
+        let side = max(36, diameter + 18)
+        let center = NSPoint(x: side / 2, y: side / 2)
+        let image = NSImage(size: NSSize(width: side, height: side))
+        image.lockFocus()
+
+        let footprint = NSBezierPath(ovalIn: NSRect(
+            x: center.x - diameter / 2,
+            y: center.y - diameter / 2,
+            width: diameter,
+            height: diameter
+        ))
+        NSColor.black.withAlphaComponent(0.95).setStroke()
+        footprint.lineWidth = 3.5
+        footprint.stroke()
+        NSColor.white.withAlphaComponent(0.98).setStroke()
+        footprint.lineWidth = 1.4
+        footprint.stroke()
+
+        // Three sampled colors stretch into converging trails, previewing
+        // directional pixel transport and mixing rather than a finger icon.
+        let sampleDiameter = max(2.4, min(4.6, diameter * 0.15))
+        let travel = max(7, min(13, diameter * 0.34))
+        let startX = center.x - travel * 0.58
+        let endX = center.x + travel * 0.55
+        let offsets: [CGFloat] = [-1, 0, 1]
+        let colors: [NSColor] = [.systemCyan, .systemPink, .systemOrange]
+        for (index, offset) in offsets.enumerated() {
+            let start = NSPoint(
+                x: startX,
+                y: center.y + offset * sampleDiameter * 1.25
+            )
+            let end = NSPoint(
+                x: endX,
+                y: center.y + offset * sampleDiameter * 0.35
+            )
+            let trail = NSBezierPath()
+            trail.move(to: start)
+            trail.curve(
+                to: end,
+                controlPoint1: NSPoint(x: center.x - travel * 0.1, y: start.y),
+                controlPoint2: NSPoint(x: center.x + travel * 0.15, y: end.y)
+            )
+            NSColor.black.withAlphaComponent(0.9).setStroke()
+            trail.lineWidth = 3.2
+            trail.stroke()
+            colors[index].withAlphaComponent(0.9).setStroke()
+            trail.lineWidth = 1.3
+            trail.stroke()
+
+            colors[index].setFill()
+            NSBezierPath(ovalIn: NSRect(
+                x: start.x - sampleDiameter / 2,
+                y: start.y - sampleDiameter / 2,
+                width: sampleDiameter,
+                height: sampleDiameter
+            )).fill()
+        }
+
+        let arrowTip = NSPoint(x: endX + 2.2, y: center.y)
+        let direction = NSBezierPath()
+        direction.move(to: NSPoint(x: endX - 2.5, y: center.y))
+        direction.line(to: arrowTip)
+        direction.move(to: arrowTip)
+        direction.line(to: NSPoint(x: arrowTip.x - 3.6, y: arrowTip.y + 3))
+        direction.move(to: arrowTip)
+        direction.line(to: NSPoint(x: arrowTip.x - 3.6, y: arrowTip.y - 3))
+        NSColor.black.withAlphaComponent(0.95).setStroke()
+        direction.lineWidth = 3.5
+        direction.stroke()
+        NSColor.systemPurple.setStroke()
+        direction.lineWidth = 1.2
+        direction.stroke()
 
         image.unlockFocus()
         return cache(
