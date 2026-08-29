@@ -12,6 +12,63 @@ import Testing
 @MainActor
 @Suite(.serialized)
 struct ImageEditorPatchToolTests {
+    @Test func fractionalPointerMovementSnapsPatchTransferToWholeCanvasPixels() {
+        let start = CGPoint(x: 10.25, y: 20.75)
+        let free = ImageEditorPatchDragConstraint.resolve(
+            start: start,
+            proposedEnd: CGPoint(x: 17.7, y: 16.2),
+            existingAxis: nil,
+            isConstrained: false
+        )
+        #expect(free.axis == nil)
+        #expect(free.endPoint == CGPoint(x: 17.25, y: 15.75))
+        #expect(free.endPoint.x - start.x == 7)
+        #expect(free.endPoint.y - start.y == -5)
+
+        let vertical = ImageEditorPatchDragConstraint.resolve(
+            start: start,
+            proposedEnd: CGPoint(x: 15.15, y: 30.15),
+            existingAxis: nil,
+            isConstrained: true
+        )
+        #expect(vertical.axis == .vertical)
+        #expect(vertical.endPoint == CGPoint(x: 10.25, y: 29.75))
+
+        #expect(ImageEditorPatchPixelGrid.snappedDelta(
+            CGSize(width: -0.49, height: 0.49)
+        ) == .zero)
+    }
+
+    @Test func pixelSnappedEndpointIsSharedByPreviewHUDGuidesAndCommit() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let updateStart = try #require(source.range(of: "private func updatePatchDrag("))
+        let updateTail = source[updateStart.lowerBound...]
+        let updateEnd = try #require(updateTail.range(of: "@discardableResult\n    private func beginPendingCropInteraction"))
+        let updateSource = updateTail[..<updateEnd.lowerBound]
+
+        #expect(updateSource.contains("ImageEditorPatchDragConstraint.resolve("))
+        #expect(updateSource.contains("dragEnd = constrainedEnd.endPoint"))
+        #expect(updateSource.contains("viewModel.updatePointer(constrainedEnd.endPoint)"))
+        #expect(updateSource.contains("to: constrainedEnd.endPoint"))
+        #expect(source.components(separatedBy: "dragEnd.x - dragStart.x").count == 4)
+        #expect(source.components(separatedBy: "dragEnd.y - dragStart.y").count == 4)
+
+        let commitStart = try #require(
+            source.range(of: "case .patchTool:\n                    if isDrawingPatchSelection")
+        )
+        let commitTail = source[commitStart.lowerBound...]
+        let commitEnd = try #require(commitTail.range(of: "case .redEye:"))
+        let commitSource = commitTail[..<commitEnd.lowerBound]
+        #expect(commitSource.contains("ImageEditorPatchDragConstraint.resolve("))
+        #expect(commitSource.contains("to: constrainedEnd.endPoint"))
+    }
+
     @Test func escapeCancellationOnlyOwnsAnActivePatchPointerSequence() {
         #expect(ImageEditorPatchGestureCancellationPolicy.shouldCancel(
             tool: .patchTool,

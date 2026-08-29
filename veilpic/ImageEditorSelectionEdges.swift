@@ -281,12 +281,30 @@ enum ImageEditorPatchDragConstraint {
             translation,
             to: axis
         )
+        let snappedTranslation = ImageEditorPatchPixelGrid.snappedDelta(
+            constrainedTranslation
+        )
         return ImageEditorPatchDragConstraintResult(
             endPoint: CGPoint(
-                x: start.x + constrainedTranslation.width,
-                y: start.y + constrainedTranslation.height
+                x: start.x + snappedTranslation.width,
+                y: start.y + snappedTranslation.height
             ),
             axis: axis
+        )
+    }
+}
+
+/// Patch sampling ultimately addresses raster pixels. Resolve the pointer's
+/// canvas-space displacement onto whole pixels before preview, guides, HUD,
+/// and commit consume it so the displayed transfer never promises a
+/// fractional movement that the pixel compositor must round differently.
+enum ImageEditorPatchPixelGrid {
+    static func snappedDelta(_ delta: CGSize) -> CGSize {
+        let width = delta.width.rounded()
+        let height = delta.height.rounded()
+        return CGSize(
+            width: width == 0 ? 0 : width,
+            height: height == 0 ? 0 : height
         )
     }
 }
