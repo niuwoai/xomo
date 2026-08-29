@@ -2632,15 +2632,40 @@ struct ImageEditorFilterTests {
         let findEdgesStart = try #require(
             panelSource.range(of: "else if viewModel.selectedFilter == .findEdges")
         )
-        let findEdgesEnd = try #require(
-            panelSource[findEdgesStart.upperBound...].range(of: "} else {")
-        )
-        let findEdgesSource = panelSource[findEdgesStart.lowerBound..<findEdgesEnd.lowerBound]
+        let findEdgesSource = panelSource[findEdgesStart.lowerBound...]
 
         #expect(findEdgesSource.contains("imageEditor.filter.noAdjustableParameters"))
         #expect(findEdgesSource.contains("image-editor-filter-quick-no-adjustable-parameters"))
         #expect(!findEdgesSource.contains("Slider("))
         #expect(!findEdgesSource.contains("viewModel.filterIntensity"))
+    }
+
+    @Test func medianQuickPanelOwnsItsStrengthControlWithoutGenericFallback() throws {
+        let root = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let viewSource = try String(
+            contentsOf: root.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let panelStart = try #require(viewSource.range(of: "private var filtersQuickPanel: some View"))
+        let panelEnd = try #require(
+            viewSource[panelStart.upperBound...].range(of: "private func historySnapshotRow")
+        )
+        let panelSource = viewSource[panelStart.lowerBound..<panelEnd.lowerBound]
+        let medianStart = try #require(
+            panelSource.range(of: "else if viewModel.selectedFilter == .median")
+        )
+        let medianEnd = try #require(
+            panelSource[medianStart.upperBound...].range(of: "else if viewModel.selectedFilter == .findEdges")
+        )
+        let medianSource = panelSource[medianStart.lowerBound..<medianEnd.lowerBound]
+
+        #expect(medianSource.contains("viewModel.filterIntensity"))
+        #expect(medianSource.contains("in: 0...1, step: 0.05"))
+        #expect(medianSource.contains("imageEditor.option.strength"))
+        #expect(medianSource.contains("image-editor-filter-quick-median-strength"))
+        #expect(!panelSource.contains("image-editor-filter-intensity"))
     }
 
     @Test func imageEditorMotionBlurFilterLayerAndSmartFilterAreNonDestructive() async throws {

@@ -8011,13 +8011,7 @@ struct ImageEditorView: View {
                                 .frame(width: 62, alignment: .trailing)
                         }
                     }
-                } else if viewModel.selectedFilter == .findEdges {
-                    Text(L10n.text("imageEditor.filter.noAdjustableParameters"))
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .accessibilityIdentifier("image-editor-filter-quick-no-adjustable-parameters")
-                } else {
+                } else if viewModel.selectedFilter == .median {
                     Text("\(Int((viewModel.filterIntensity * 100).rounded()))%")
                         .font(.system(size: 11, weight: .semibold).monospacedDigit())
                         .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
@@ -8025,7 +8019,13 @@ struct ImageEditorView: View {
                     Slider(value: $viewModel.filterIntensity, in: 0...1, step: 0.05)
                         .focusable(false)
                         .accessibilityLabel(L10n.text("imageEditor.option.strength"))
-                        .accessibilityIdentifier("image-editor-filter-intensity")
+                        .accessibilityIdentifier("image-editor-filter-quick-median-strength")
+                } else if viewModel.selectedFilter == .findEdges {
+                    Text(L10n.text("imageEditor.filter.noAdjustableParameters"))
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .accessibilityIdentifier("image-editor-filter-quick-no-adjustable-parameters")
                 }
             }
 
