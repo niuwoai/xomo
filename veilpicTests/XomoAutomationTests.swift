@@ -6015,6 +6015,58 @@ struct XomoAutomationTests {
         #expect(viewModel.document.selectedLayer?.smartFilters.count == 1)
     }
 
+    @Test func registryConfiguresLensCorrectionAmountThroughTheSharedFilterPipeline() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        defer { registry.unregister(viewModel) }
+
+        let response = registry.execute(request(
+            operation: "call",
+            name: "xomo.filter.configure",
+            arguments: [
+                "filter": .string(ImageEditorFilter.lensCorrection.rawValue),
+                "action": .string("addSmartFilter"),
+                "settings": .object([
+                    "intensity": .number(0),
+                    "lensDistortionAmountPercent": .number(160)
+                ])
+            ]
+        ))
+
+        #expect(response.ok)
+        let filter = try #require(viewModel.document.selectedLayer?.smartFilters.last)
+        #expect(filter.kind == .lensCorrection)
+        #expect(filter.normalizedIntensity == 0)
+        #expect(filter.normalizedSettings.lensDistortionAmountPercent == 100)
+
+        let tools = registry.execute(request(operation: "tools"))
+        let configureTool = try #require(
+            automationTool(named: "xomo.filter.configure", in: tools)
+        )
+        let settingsSchema = try #require(
+            configureTool["inputSchema"]?.objectValue?["properties"]?.objectValue?["settings"]?.objectValue
+        )
+        let settingsProperties = try #require(settingsSchema["properties"]?.objectValue)
+        #expect(settingsProperties["lensDistortionAmountPercent"]?.objectValue?["type"] == .string("number"))
+
+        let historyCount = viewModel.document.history.count
+        let invalidResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.filter.configure",
+            arguments: [
+                "filter": .string(ImageEditorFilter.lensCorrection.rawValue),
+                "action": .string("addSmartFilter"),
+                "settings": .object([
+                    "lensDistortionAmountPercent": .string("barrel")
+                ])
+            ]
+        ))
+        #expect(!invalidResponse.ok)
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.document.selectedLayer?.smartFilters.count == 1)
+    }
+
     @Test func registryConfiguresOilPaintControlsThroughTheSharedFilterPipeline() throws {
         let viewModel = makeViewModel()
         let registry = XomoAutomationRegistry.shared

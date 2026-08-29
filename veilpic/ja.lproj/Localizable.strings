@@ -1048,7 +1048,7 @@
 "imageEditor.filter.spherizeAmount" = "量";
 "imageEditor.filter.spherizeAmountValue" = "%d";
 "imageEditor.filter.lensDistortion" = "歪曲補正";
-"imageEditor.filter.lensDistortionValue" = "%d";
+"imageEditor.filter.lensDistortionValue" = "%@%%";
 "imageEditor.shape.rectangle" = "長方形";
 "imageEditor.shape.ellipse" = "楕円";
 "imageEditor.shape.path" = "パス";
@@ -1274,7 +1274,7 @@
 "imageEditor.properties.smartFilterRippleItem" = "%@ %d%% · 量 %d · 周波数 %d";
 "imageEditor.properties.smartFilterPinchItem" = "%@ %d%% · 量 %d";
 "imageEditor.properties.smartFilterSpherizeItem" = "%@ %d%% · 量 %d";
-"imageEditor.properties.smartFilterLensCorrectionItem" = "%@ %d%% · 歪曲 %d";
+"imageEditor.properties.smartFilterLensCorrectionItem" = "%1$@ · 歪曲 %2$@%%";
 "imageEditor.properties.smartFilterDisabled" = "%@（オフ）";
 "imageEditor.properties.smartFilterSeparator" = "・";
 "imageEditor.properties.textPlaceholder" = "追加する文字";

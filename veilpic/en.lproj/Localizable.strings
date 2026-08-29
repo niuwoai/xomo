@@ -1048,7 +1048,7 @@
 "imageEditor.filter.spherizeAmount" = "Amount";
 "imageEditor.filter.spherizeAmountValue" = "%d";
 "imageEditor.filter.lensDistortion" = "Distortion";
-"imageEditor.filter.lensDistortionValue" = "%d";
+"imageEditor.filter.lensDistortionValue" = "%@%%";
 "imageEditor.shape.rectangle" = "Rectangle";
 "imageEditor.shape.ellipse" = "Ellipse";
 "imageEditor.shape.path" = "Path";
@@ -1274,7 +1274,7 @@
 "imageEditor.properties.smartFilterRippleItem" = "%@ %d%% · Amount %d · Freq %d";
 "imageEditor.properties.smartFilterPinchItem" = "%@ %d%% · Amount %d";
 "imageEditor.properties.smartFilterSpherizeItem" = "%@ %d%% · Amount %d";
-"imageEditor.properties.smartFilterLensCorrectionItem" = "%@ %d%% · Distortion %d";
+"imageEditor.properties.smartFilterLensCorrectionItem" = "%1$@ · distortion %2$@%%";
 "imageEditor.properties.smartFilterDisabled" = "%@ (off)";
 "imageEditor.properties.smartFilterSeparator" = " · ";
 "imageEditor.properties.textPlaceholder" = "Text to add";

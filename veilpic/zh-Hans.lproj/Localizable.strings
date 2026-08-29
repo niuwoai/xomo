@@ -1048,7 +1048,7 @@
 "imageEditor.filter.spherizeAmount" = "数量";
 "imageEditor.filter.spherizeAmountValue" = "%d";
 "imageEditor.filter.lensDistortion" = "畸变校正";
-"imageEditor.filter.lensDistortionValue" = "%d";
+"imageEditor.filter.lensDistortionValue" = "%@%%";
 "imageEditor.shape.rectangle" = "矩形";
 "imageEditor.shape.ellipse" = "椭圆";
 "imageEditor.shape.path" = "路径";
@@ -1274,7 +1274,7 @@
 "imageEditor.properties.smartFilterRippleItem" = "%@ %d%% · 数量 %d · 频率 %d";
 "imageEditor.properties.smartFilterPinchItem" = "%@ %d%% · 数量 %d";
 "imageEditor.properties.smartFilterSpherizeItem" = "%@ %d%% · 数量 %d";
-"imageEditor.properties.smartFilterLensCorrectionItem" = "%@ %d%% · 畸变 %d";
+"imageEditor.properties.smartFilterLensCorrectionItem" = "%1$@ · 畸变 %2$@%%";
 "imageEditor.properties.smartFilterDisabled" = "%@（已关闭）";
 "imageEditor.properties.smartFilterSeparator" = " · ";
 "imageEditor.properties.textPlaceholder" = "输入要添加的文字";

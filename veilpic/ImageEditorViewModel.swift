@@ -473,6 +473,7 @@ final class ImageEditorViewModel: ObservableObject {
                 filterSharpenAmountPercent = nil
                 filterAddNoiseAmountPercent = nil
                 filterVignetteAmountPercent = nil
+                filterLensDistortionAmountPercent = nil
                 filterUnsharpAmountPercent = nil
                 filterUnsharpRadiusPixels = nil
                 filterUnsharpThresholdLevels = nil
@@ -549,6 +550,16 @@ final class ImageEditorViewModel: ObservableObject {
         }
     }
 
+    var filterLensDistortionEffectiveAmountPercent: Double {
+        get {
+            filterLensDistortionAmountPercent
+                ?? max(-100, min(100, filterLensDistortion * filterIntensity * 100))
+        }
+        set {
+            filterLensDistortionAmountPercent = max(-100, min(100, newValue))
+        }
+    }
+
     var filterUnsharpEffectiveAmountPercent: Double {
         get {
             filterUnsharpAmountPercent
@@ -591,6 +602,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var filterRippleFrequency: Double = 0.25
     @Published var filterPinchAmount: Double = 0.5
     @Published var filterSpherizeAmount: Double = 0.5
+    @Published var filterLensDistortionAmountPercent: Double?
     @Published var filterLensDistortion: Double = 0.35
     @Published var selectedHistogramSource: ImageEditorHistogramSource = .composite
     @Published var selectedHistogramChannel: ImageEditorHistogramChannel = .rgb
@@ -2899,11 +2911,12 @@ final class ImageEditorViewModel: ObservableObject {
         }
         if filter.kind == .lensCorrection {
             let settings = filter.normalizedSettings
+            let amount = settings.lensDistortionAmountPercent
+                ?? (settings.lensDistortion * filter.normalizedIntensity * 100)
             let title = L10n.format(
                 "imageEditor.properties.smartFilterLensCorrectionItem",
                 filter.kind.title,
-                Int((filter.normalizedIntensity * 100).rounded()),
-                Int((settings.lensDistortion * 100).rounded())
+                String(format: "%+d", Int(amount.rounded()))
             )
             guard !filter.isEnabled else { return title }
             return L10n.format("imageEditor.properties.smartFilterDisabled", title)
@@ -9694,6 +9707,9 @@ final class ImageEditorViewModel: ObservableObject {
             rippleFrequency: filterRippleFrequency,
             pinchAmount: filterPinchAmount,
             spherizeAmount: filterSpherizeAmount,
+            lensDistortionAmountPercent: selectedFilter == .lensCorrection
+                ? filterLensDistortionAmountPercent
+                : nil,
             lensDistortion: filterLensDistortion
         ).normalized()
     }
@@ -11562,6 +11578,7 @@ final class ImageEditorViewModel: ObservableObject {
         filterRippleFrequency = normalized.rippleFrequency
         filterPinchAmount = normalized.pinchAmount
         filterSpherizeAmount = normalized.spherizeAmount
+        filterLensDistortionAmountPercent = normalized.lensDistortionAmountPercent
         filterLensDistortion = normalized.lensDistortion
     }
 

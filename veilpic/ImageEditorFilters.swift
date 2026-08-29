@@ -31,6 +31,9 @@ extension NSImage {
         if kind == .vignette, normalizedSettings.vignetteAmountPercent == 0 {
             return self
         }
+        if kind == .lensCorrection, normalizedSettings.lensDistortionAmountPercent == 0 {
+            return self
+        }
         let hasExplicitFilterAmount = (
             kind == .sharpen
                 && normalizedSettings.sharpenAmountPercent.map { $0 > 0 } == true
@@ -40,6 +43,9 @@ extension NSImage {
         ) || (
             kind == .vignette
                 && normalizedSettings.vignetteAmountPercent.map { $0 != 0 } == true
+        ) || (
+            kind == .lensCorrection
+                && normalizedSettings.lensDistortionAmountPercent.map { $0 != 0 } == true
         )
         guard clamped > 0 || hasExplicitFilterAmount else { return self }
         if kind == .addNoise {
@@ -189,6 +195,9 @@ extension NSImage {
         if kind == .vignette, normalizedSettings.vignetteAmountPercent == 0 {
             return self
         }
+        if kind == .lensCorrection, normalizedSettings.lensDistortionAmountPercent == 0 {
+            return self
+        }
         let hasExplicitFilterAmount = (
             kind == .sharpen
                 && normalizedSettings.sharpenAmountPercent.map { $0 > 0 } == true
@@ -198,6 +207,9 @@ extension NSImage {
         ) || (
             kind == .vignette
                 && normalizedSettings.vignetteAmountPercent.map { $0 != 0 } == true
+        ) || (
+            kind == .lensCorrection
+                && normalizedSettings.lensDistortionAmountPercent.map { $0 != 0 } == true
         )
         guard intensity > 0 || hasExplicitFilterAmount else { return self }
         let normalizedOpacity = max(0, min(1, opacity))
@@ -1379,8 +1391,9 @@ extension NSImage {
 
     private func lensCorrected(intensity: Double, settings: ImageEditorFilterSettings) -> NSImage? {
         let clampedIntensity = max(0, min(1, intensity))
-        guard clampedIntensity > 0 else { return self }
-        let distortion = settings.normalized().lensDistortion * clampedIntensity
+        let normalizedSettings = settings.normalized()
+        let distortion = normalizedSettings.lensDistortionAmountPercent.map { $0 / 100 }
+            ?? (normalizedSettings.lensDistortion * clampedIntensity)
         guard abs(distortion) > 0.000_1 else { return self }
 
         return pixelSampledFromBuffer { x, y, width, height, pixels, bytesPerRow, bytesPerPixel in

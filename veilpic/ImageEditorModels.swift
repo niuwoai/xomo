@@ -2590,6 +2590,8 @@ struct ImageEditorFilterSettings: Equatable, Codable {
     var rippleFrequency: Double = 0.25
     var pinchAmount: Double = 0.5
     var spherizeAmount: Double = 0.5
+    /// Lens distortion amount from -100% to 100%. Nil preserves legacy distortion × intensity.
+    var lensDistortionAmountPercent: Double?
     var lensDistortion: Double = 0.35
 
     init(
@@ -2633,6 +2635,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         rippleFrequency: Double = 0.25,
         pinchAmount: Double = 0.5,
         spherizeAmount: Double = 0.5,
+        lensDistortionAmountPercent: Double? = nil,
         lensDistortion: Double = 0.35
     ) {
         self.gaussianBlurRadius = gaussianBlurRadius
@@ -2675,6 +2678,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         self.rippleFrequency = rippleFrequency
         self.pinchAmount = pinchAmount
         self.spherizeAmount = spherizeAmount
+        self.lensDistortionAmountPercent = lensDistortionAmountPercent
         self.lensDistortion = lensDistortion
     }
 
@@ -2726,6 +2730,10 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         rippleFrequency = try container.decodeIfPresent(Double.self, forKey: .rippleFrequency) ?? 0.25
         pinchAmount = try container.decodeIfPresent(Double.self, forKey: .pinchAmount) ?? 0.5
         spherizeAmount = try container.decodeIfPresent(Double.self, forKey: .spherizeAmount) ?? 0.5
+        lensDistortionAmountPercent = try container.decodeIfPresent(
+            Double.self,
+            forKey: .lensDistortionAmountPercent
+        )
         lensDistortion = try container.decodeIfPresent(Double.self, forKey: .lensDistortion) ?? 0.35
     }
 
@@ -2771,6 +2779,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         try container.encode(rippleFrequency, forKey: .rippleFrequency)
         try container.encode(pinchAmount, forKey: .pinchAmount)
         try container.encode(spherizeAmount, forKey: .spherizeAmount)
+        try container.encodeIfPresent(lensDistortionAmountPercent, forKey: .lensDistortionAmountPercent)
         try container.encode(lensDistortion, forKey: .lensDistortion)
     }
 
@@ -2816,6 +2825,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
             rippleFrequency: max(0, min(1, rippleFrequency)),
             pinchAmount: max(-1, min(1, pinchAmount)),
             spherizeAmount: max(-1, min(1, spherizeAmount)),
+            lensDistortionAmountPercent: lensDistortionAmountPercent.map { max(-100, min(100, $0)) },
             lensDistortion: max(-1, min(1, lensDistortion))
         )
     }
@@ -2861,6 +2871,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         case rippleFrequency
         case pinchAmount
         case spherizeAmount
+        case lensDistortionAmountPercent
         case lensDistortion
     }
 }

@@ -11887,7 +11887,8 @@ struct ImageEditorView: View {
                     && viewModel.selectedFilter != .addNoise
                     && viewModel.selectedFilter != .unsharpMask
                     && viewModel.selectedFilter != .oilPaint
-                    && viewModel.selectedFilter != .vignette {
+                    && viewModel.selectedFilter != .vignette
+                    && viewModel.selectedFilter != .lensCorrection {
                     Slider(value: $viewModel.filterIntensity, in: 0...1, step: 0.05)
                 }
                 if viewModel.selectedFilter == .gaussianBlur {
@@ -12472,12 +12473,23 @@ struct ImageEditorView: View {
                         Text(L10n.text("imageEditor.filter.lensDistortion"))
                             .font(.system(size: 10, weight: .medium))
                             .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
-                        Slider(value: $viewModel.filterLensDistortion, in: -1...1, step: 0.05)
-                        Text(L10n.format("imageEditor.filter.lensDistortionValue", Int((viewModel.filterLensDistortion * 100).rounded())))
+                        Slider(
+                            value: Binding(
+                                get: { viewModel.filterLensDistortionEffectiveAmountPercent },
+                                set: { viewModel.filterLensDistortionEffectiveAmountPercent = $0 }
+                            ),
+                            in: -100...100,
+                            step: 1
+                        )
+                        Text(L10n.format(
+                            "imageEditor.filter.lensDistortionValue",
+                            String(format: "%+d", Int(viewModel.filterLensDistortionEffectiveAmountPercent.rounded()))
+                        ))
                             .font(.system(size: 10, weight: .semibold))
                             .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
-                            .frame(width: 44, alignment: .trailing)
+                            .frame(width: 52, alignment: .trailing)
                     }
+                    .accessibilityIdentifier("image-editor-filter-lens-distortion-amount")
                 }
 
                 })

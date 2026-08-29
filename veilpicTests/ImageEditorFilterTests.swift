@@ -3685,10 +3685,36 @@ struct ImageEditorFilterTests {
         #expect(restoredFilter.normalizedSettings.spherizeAmount == -1)
     }
 
-    @Test func imageEditorLensCorrectionFilterLayerAndSmartFilterCorrectRadialDistortion() async throws {
+    @Test func imageEditorLensCorrectionAmountSupportsLegacyAndSignedRadialDistortion() async throws {
         let canvasSize = NSSize(width: 48, height: 48)
         let sourceImage = radialRampImage(size: canvasSize)
         let samplePoint = CGPoint(x: 34, y: 24)
+        let legacySettings = try JSONDecoder().decode(
+            ImageEditorFilterSettings.self,
+            from: Data("{}".utf8)
+        )
+        #expect(legacySettings.lensDistortionAmountPercent == nil)
+        #expect(legacySettings.lensDistortion == 0.35)
+        let legacyCorrection = try #require(sourceImage.filtered(
+            kind: .lensCorrection,
+            intensity: 1,
+            settings: legacySettings
+        ))
+        let explicitLegacyCorrection = try #require(sourceImage.filtered(
+            kind: .lensCorrection,
+            intensity: 0,
+            settings: ImageEditorFilterSettings(lensDistortionAmountPercent: 35)
+        ))
+        #expect(legacyCorrection.qingtuPNGData() == explicitLegacyCorrection.qingtuPNGData())
+        #expect(ImageEditorFilterSettings(lensDistortionAmountPercent: -200).normalized().lensDistortionAmountPercent == -100)
+        #expect(ImageEditorFilterSettings(lensDistortionAmountPercent: 200).normalized().lensDistortionAmountPercent == 100)
+        let zeroCorrection = try #require(sourceImage.filtered(
+            kind: .lensCorrection,
+            intensity: 1,
+            settings: ImageEditorFilterSettings(lensDistortionAmountPercent: 0)
+        ))
+        #expect(zeroCorrection.qingtuPNGData() == sourceImage.qingtuPNGData())
+
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: sourceImage) { _ in }
         viewModel.replaceSelectedLayerImageForTesting(sourceImage, historyTitle: L10n.text("imageEditor.history.brush"))
         let baseLayerID = try #require(viewModel.document.selectedLayerID)
@@ -3696,15 +3722,15 @@ struct ImageEditorFilterTests {
         let sampleBefore = try #require(viewModel.currentImage.color(at: samplePoint)?.usingColorSpace(.deviceRGB))
 
         viewModel.selectedFilter = .lensCorrection
-        viewModel.filterIntensity = 1
-        viewModel.filterLensDistortion = 2
+        viewModel.filterIntensity = 0
+        viewModel.filterLensDistortionAmountPercent = 100
         viewModel.addFilterLayer()
 
         let filterLayer = try #require(viewModel.document.selectedLayer)
         let sampleAfter = try #require(viewModel.currentImage.color(at: samplePoint)?.usingColorSpace(.deviceRGB))
         #expect(filterLayer.isFilter)
         #expect(filterLayer.filter?.kind == .lensCorrection)
-        #expect(filterLayer.filterSettings.normalized().lensDistortion == 1)
+        #expect(filterLayer.filterSettings.normalized().lensDistortionAmountPercent == 100)
         #expect(viewModel.document.layers.first { $0.id == baseLayerID }?.image.qingtuPNGData() == basePixelsBefore)
         #expect(sampleAfter.redComponent > sampleBefore.redComponent + 0.02)
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerFilterNew"))
@@ -3714,20 +3740,20 @@ struct ImageEditorFilterTests {
         let smartBasePixelsBefore = try #require(smartViewModel.document.selectedLayer?.image.qingtuPNGData())
         let smartSampleBefore = try #require(smartViewModel.currentImage.color(at: samplePoint)?.usingColorSpace(.deviceRGB))
         smartViewModel.selectedFilter = .lensCorrection
-        smartViewModel.filterIntensity = 1
-        smartViewModel.filterLensDistortion = -2
+        smartViewModel.filterIntensity = 0
+        smartViewModel.filterLensDistortionAmountPercent = -100
         smartViewModel.addSmartFilterToSelectedLayer()
 
         let smartLayer = try #require(smartViewModel.document.selectedLayer)
         let smartFilter = try #require(smartLayer.smartFilters.first)
         let smartSampleAfter = try #require(smartViewModel.currentImage.color(at: samplePoint)?.usingColorSpace(.deviceRGB))
         #expect(smartFilter.kind == .lensCorrection)
-        #expect(smartFilter.normalizedSettings.lensDistortion == -1)
+        #expect(smartFilter.normalizedSettings.lensDistortionAmountPercent == -100)
         #expect(smartLayer.image.qingtuPNGData() == smartBasePixelsBefore)
         #expect(smartSampleAfter.redComponent < smartSampleBefore.redComponent - 0.02)
         #expect(
             smartViewModel.smartFilterLabel(smartFilter)
-                == L10n.format("imageEditor.properties.smartFilterLensCorrectionItem", smartFilter.kind.title, 100, -100)
+                == L10n.format("imageEditor.properties.smartFilterLensCorrectionItem", smartFilter.kind.title, "-100")
         )
         #expect(smartViewModel.document.history.last?.title == L10n.text("imageEditor.history.layerSmartFilterAdd"))
 
@@ -3736,7 +3762,17 @@ struct ImageEditorFilterTests {
         let restoredLayer = try #require(restoredDocument.layers.first { $0.id == smartLayer.id })
         let restoredFilter = try #require(restoredLayer.smartFilters.first)
         #expect(restoredFilter.kind == .lensCorrection)
-        #expect(restoredFilter.normalizedSettings.lensDistortion == -1)
+        #expect(restoredFilter.normalizedSettings.lensDistortionAmountPercent == -100)
+
+        let root = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let viewSource = try String(
+            contentsOf: root.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        #expect(viewSource.contains("image-editor-filter-lens-distortion-amount"))
+        #expect(viewSource.contains("viewModel.selectedFilter != .lensCorrection"))
     }
 
     @Test func updatingFigmaBackdropBlurToContentSmartFilterReentersPixelPipeline() throws {
