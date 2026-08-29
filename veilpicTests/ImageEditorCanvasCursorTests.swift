@@ -1991,6 +1991,49 @@ struct ImageEditorCanvasCursorTests {
         ) === NSCursor.arrow)
     }
 
+    @Test func dodgeCursorPreviewsLocalExposureLiftAcrossItsRealFootprint() {
+        let small = ImageEditorCanvasCursor.cursor(
+            for: .dodge,
+            brushDiameter: 12
+        )
+        let large = ImageEditorCanvasCursor.cursor(
+            for: .dodge,
+            brushDiameter: 48
+        )
+        let burn = ImageEditorCanvasCursor.cursor(
+            for: .burn,
+            brushDiameter: 12
+        )
+        let healing = ImageEditorCanvasCursor.cursor(
+            for: .healingBrush,
+            brushDiameter: 12
+        )
+
+        #expect(ImageEditorCanvasCursor.family(for: .dodge) == .localExposureLighten)
+        #expect(small.image.size == NSSize(width: 36, height: 36))
+        #expect(small.hotSpot == NSPoint(x: 18, y: 18))
+        #expect(large.image.size == NSSize(width: 66, height: 66))
+        #expect(large.hotSpot == NSPoint(x: 33, y: 33))
+        #expect(small.image.tiffRepresentation != burn.image.tiffRepresentation)
+        #expect(small.image.tiffRepresentation != healing.image.tiffRepresentation)
+        #expect(ImageEditorCanvasCursor.cursor(
+            for: .dodge,
+            brushDiameter: 12,
+            modifierFlags: [.capsLock]
+        ) === NSCursor.crosshair)
+        #expect(ImageEditorCanvasCursor.cursor(
+            for: .components,
+            selectedTool: .dodge,
+            brushDiameter: 12
+        ) === NSCursor.arrow)
+        #expect(ImageEditorCanvasCursor.cursor(
+            for: .tools,
+            selectedTool: .dodge,
+            brushDiameter: 12,
+            isPointerOverCanvas: false
+        ) === NSCursor.arrow)
+    }
+
     @Test func sampledBrushSourcePolicyKeepsSpotHealingInPaintMode() {
         #expect(ImageEditorSampledBrushCursorPolicy.isPickingSource(
             tool: .cloneStamp,
@@ -2825,7 +2868,7 @@ struct ImageEditorCanvasCursorTests {
         #expect(ImageEditorCanvasCursor.family(for: .eraser) == .eraserTool)
         #expect(ImageEditorCanvasCursor.family(for: .rectangle) == .rectangleOutline)
         #expect(ImageEditorCanvasCursor.family(for: .ellipse) == .ellipseOutline)
-        #expect(ImageEditorCanvasCursor.family(for: .dodge) == .toneBrush)
+        #expect(ImageEditorCanvasCursor.family(for: .dodge) == .localExposureLighten)
         #expect(ImageEditorCanvasCursor.family(for: .burn) == .toneBrush)
         #expect(ImageEditorCanvasCursor.family(for: .sponge) == .toneBrush)
         #expect(ImageEditorCanvasCursor.family(for: .blur) == .retouchBrush)
@@ -2846,15 +2889,25 @@ struct ImageEditorCanvasCursorTests {
             #expect(ImageEditorCanvasCursor.cursor(for: tool, brushDiameter: 18) !== NSCursor.crosshair)
         }
 
-        let brushTools: [ImageEditorTool] = [
-            .brush, .pencil, .eraser, .cloneStamp, .healingBrush,
-            .dodge, .burn, .sponge, .blur, .sharpen, .smudge
+        let standardFootprintTools: [ImageEditorTool] = [
+            .brush, .pencil, .eraser,
+            .burn, .sponge, .blur, .sharpen, .smudge
         ]
-        let brushRepresentations = brushTools.compactMap {
+        let standardRepresentations = standardFootprintTools.compactMap {
             ImageEditorCanvasCursor.cursor(for: $0, brushDiameter: 18).image.tiffRepresentation
         }
-        #expect(brushRepresentations.count == brushTools.count)
-        #expect(Set(brushRepresentations).count == 1)
+        #expect(standardRepresentations.count == standardFootprintTools.count)
+        #expect(Set(standardRepresentations).count == 1)
+
+        let resultPreviewTools: [ImageEditorTool] = [.cloneStamp, .healingBrush, .dodge]
+        let resultPreviewRepresentations = resultPreviewTools.compactMap {
+            ImageEditorCanvasCursor.cursor(for: $0, brushDiameter: 18).image.tiffRepresentation
+        }
+        #expect(resultPreviewRepresentations.count == resultPreviewTools.count)
+        #expect(Set(resultPreviewRepresentations).count == resultPreviewTools.count)
+        #expect(standardRepresentations.first.map {
+            !resultPreviewRepresentations.contains($0)
+        } == true)
 
         #expect(ImageEditorCanvasCursor.cursor(for: .paintBucket, brushDiameter: 18) !== NSCursor.crosshair)
         #expect(ImageEditorCanvasCursor.cursor(for: .eyedropper, brushDiameter: 18) !== NSCursor.crosshair)
