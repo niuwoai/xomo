@@ -168,6 +168,10 @@ struct XomoFigmaLinkImportDraft: Equatable {
         preview != nil
     }
 
+    var canonicalURLForExternalOpen: URL? {
+        XomoFigmaSourceOpenPolicy.canonicalURL(from: preview?.canonicalURL)
+    }
+
     var canUseCanonicalURL: Bool {
         guard let canonicalURL = preview?.canonicalURL.absoluteString else { return false }
         return input != canonicalURL

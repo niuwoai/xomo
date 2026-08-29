@@ -1,5 +1,22 @@
 # Changelog
 
+## 2.12.0-rc1480 - 2026-08-30
+
+### Added
+- Figma 链接预览底部新增“在 Figma 中打开”，Design/Board 与 Community 等仅预览资源都可直接交给浏览器或 Figma 客户端继续处理。
+
+### Security
+- 外部打开动作只使用解析器再次确认并清理后的 `https://www.figma.com` 规范链接；无效、伪造或非 Figma 链接不会启用按钮，也不会交给系统打开。
+
+### Fixed
+- 工程的 Debug/Release 用户脚本沙箱现在明确关闭，使受控的 `Ad-hoc Sign Debug Product` 阶段可以读取并签名刚生成的 `Xomo.app`；统一发布器不再在全量测试启动前被 `codesign deny file-read-data` 中断。
+- Debug 临时签名脚本不再抢先签名尚未组装完成的 UI Test Runner；UI Test target 由 Xcode 自己完成签名，避免全量测试在启动前报告无效 bundle。
+
+### Tests
+- 新增外部打开 URL 清理、无效来源拒绝、导入面板动作接线，以及签名脚本文件访问/UI Test Runner 边界的发布契约回归；rc1480 周期门禁实际完成 2954/2954 项全量测试、694/694 项定向回归、CLI/MCP 2/2、全部静态契约及 Universal Release 归档。
+- 全量门禁同步修正旧的源码形态断言：批量图片导入允许格式化换行，专用滤镜控件不再要求已删除的通用强度 ID，Liquify Push 只检查自己的 X/Y 控件范围，画笔与橡皮擦保持结果语义不同的光标，自动化 schema 纳入 Community 文件资源类型。
+- 已将本地 ad-hoc 重签后的双架构 `Xomo.app` 覆盖安装到 `/Applications`：版本/构建号、Bundle 名称、PNG/JPEG 文档声明、嵌套签名、直接打开 PNG、选中导入层、按钮删除与撤销均通过。由于 Developer ID 私钥在非交互归档时返回 `errSecInternalComponent`，本地产物未公证、未上传、未发布；Computer Use 对该沙盒 App 的键盘注入连 `B`/`⌘Z` 都无法送达，因此 Delete 实体键以全量事件回归覆盖并留待人工冒烟确认。
+
 ## 2.12.0-rc1479 - 2026-08-30
 
 ### Added

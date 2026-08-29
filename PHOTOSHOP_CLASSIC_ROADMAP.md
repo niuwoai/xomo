@@ -1,6 +1,8 @@
 # Xomo 经典 Photoshop 能力路线图
 
-> 最后更新：2026-08-30 ｜ 当前版本：v2.12.0-rc1479 ｜ 目标：以经典 Photoshop 能力作为现代混合编辑器的可靠像素与图层底座
+> 最后更新：2026-08-30 ｜ 当前版本：v2.12.0-rc1480 ｜ 目标：以经典 Photoshop 能力作为现代混合编辑器的可靠像素与图层底座
+
+- `v2.12.0-rc1480`：Figma 链接预览新增“在 Figma 中打开”，只把解析器再次确认并清理后的 `https://www.figma.com` 规范链接交给浏览器或 Figma 客户端；无效、伪造或非 Figma 来源不会启用动作。工程同时关闭阻断受控 Debug 签名阶段的用户脚本沙箱，并把尚未完整组装的 UI Test Runner 留给 Xcode 签名，两个边界均由发布契约锁定。周期门禁完成 2954/2954 项全量测试、694/694 项定向回归、CLI/MCP 2/2、全部静态契约和 Universal Release 归档；本地 ad-hoc 重签版已覆盖 `/Applications/Xomo.app`，PNG 直接打开、导入层选择、按钮删除/撤销和签名完整性通过。Developer ID 私钥不可用，因此本版未公证、上传或公开发布；Delete 实体键仍由自动化事件回归覆盖并留待人工确认。
 
 - `v2.12.0-rc1479`：Figma 链接入口识别官方 Community 文件资源页，安全规范化 `/community/file/<resource-id>/<slug>` 并清除追踪/token 参数；Community、Slides、Sites、Buzz、Make 等 preview-only 资源不再误开放需要真实文件 key 的 API 读取/节点导入控件。标准 Debug 构建、Figma 链接解析专项 11/11、既有导入流程回归 16/16、CLI/MCP 2/2 与静态契约均通过。下一版 rc1480 执行周期完整门禁、安装和真实冒烟。
 

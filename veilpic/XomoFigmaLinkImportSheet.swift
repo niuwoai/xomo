@@ -607,6 +607,14 @@ struct XomoFigmaLinkImportSheet: View {
 
     private var footer: some View {
         HStack {
+            Button(L10n.text("xomo.figma.action.openInFigma")) {
+                openCanonicalURLInFigma()
+            }
+            .buttonStyle(.bordered)
+            .focusable(false)
+            .disabled(draft.canonicalURLForExternalOpen == nil)
+            .accessibilityIdentifier("xomo-figma-open-canonical-link")
+
             Button(L10n.text("xomo.figma.action.copyCanonicalURL")) {
                 copyCanonicalURL()
             }
@@ -666,6 +674,15 @@ struct XomoFigmaLinkImportSheet: View {
         NSPasteboard.general.clearContents()
         NSPasteboard.general.setString(canonicalURL, forType: .string)
         transientMessageKey = "xomo.figma.clipboard.copied"
+    }
+
+    private func openCanonicalURLInFigma() {
+        guard let canonicalURL = draft.canonicalURLForExternalOpen else { return }
+        guard NSWorkspace.shared.open(canonicalURL) else {
+            transientMessageKey = "xomo.figma.message.openFailed"
+            return
+        }
+        transientMessageKey = nil
     }
 
     private func useCanonicalURL() {

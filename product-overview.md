@@ -1,6 +1,8 @@
 # Xomo 产品概览
 
-> 最后更新：2026-08-30 | 当前版本：v2.12.0-rc1479
+> 最后更新：2026-08-30 | 当前版本：v2.12.0-rc1480
+
+v2.12.0-rc1480 在 Figma 链接预览底部新增“在 Figma 中打开”：Design/Board 链接以及 Community、Slides、Sites、Buzz、Make 等仅预览资源，都可以直接交给浏览器或 Figma 客户端继续查看或复制到自己的工作区。外部打开前会再次经过可信 HTTPS 主机、路径与参数规范化策略；无效、伪造或非 Figma 来源不会启用动作，也不会交给系统。工程同时关闭会阻断受控 Debug 签名阶段读取产物的用户脚本沙箱，并避免在 UI Test Runner 尚未完整组装时抢先签名；两个边界均由发布契约锁定。40 版本周期门禁实际完成 2954/2954 项全量测试、694/694 项定向回归、CLI/MCP 2/2、全部静态契约与 Universal Release 归档；本地 ad-hoc 重签版已覆盖 `/Applications/Xomo.app`，版本/名称/双架构/PNG-JPEG 文档声明/嵌套签名、直接打开 PNG、导入层选择、按钮删除与撤销均验证通过。Developer ID 私钥在非交互归档时返回 `errSecInternalComponent`，因此本版没有公证、上传或公开发布；Computer Use 无法向该沙盒 App 注入 `B`、`⌘Z` 等任何键盘事件，Delete 实体键由全量事件回归覆盖并留待人工确认。
 
 v2.12.0-rc1479 扩展 Figma 链接入口到 Community 文件资源页：`/community/file/<resource-id>/<slug>` 会被识别、校验并规范化，分享追踪参数和疑似 token 不会进入预览、剪贴板或持久化状态。社区资源 ID 并不是官方文件 API 所需的 file key，因此 Community、Slides、Sites、Buzz、Make 等 preview-only 类型只提供可信链接预览，不再显示会必然失败或误导用户的元数据/节点导入控件；在 Figma 打开或复制资源后，可继续使用获得真实 file key 的 Design/Board 链接进行节点导入。标准 Debug 构建、Figma 链接解析专项 11/11、既有导入流程回归 16/16、CLI/MCP 2/2 与静态契约均通过。下一版 rc1480 执行周期完整门禁、覆盖 `/Applications/Xomo.app`，并重点冒烟系统/窗口菜单、PNG/JPG 导入、Delete/Undo 与 Figma 链接。
 

@@ -3885,12 +3885,14 @@
 "xomo.figma.value.none" = "None";
 "xomo.figma.value.latest" = "Latest version";
 "xomo.figma.action.paste" = "Paste";
+"xomo.figma.action.openInFigma" = "Open in Figma";
 "xomo.figma.action.copyCanonicalURL" = "Copy Canonical Link";
 "xomo.figma.action.useCanonicalURL" = "Use Canonical Link";
 "xomo.figma.action.done" = "Done";
 "xomo.figma.clipboard.empty" = "The clipboard does not contain a text link.";
 "xomo.figma.clipboard.copied" = "Canonical link copied.";
 "xomo.figma.message.canonicalURLApplied" = "The cleaned canonical link is now used for this import.";
+"xomo.figma.message.openFailed" = "This link could not be opened in a browser or Figma.";
 "xomo.figma.metadata.title" = "Official Figma metadata";
 "xomo.figma.metadata.readOnly" = "Read only";
 "xomo.figma.metadata.scopeNotice" = "Local individual connection: api.figma.com is contacted only after you choose Read. Metadata needs file_metadata:read; the node read below also needs file_content:read. Multi-user OAuth is not connected yet.";

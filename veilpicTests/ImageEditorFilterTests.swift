@@ -2601,7 +2601,7 @@ struct ImageEditorFilterTests {
             panelSource.range(of: "else if viewModel.selectedFilter == .liquifyPush")
         )
         let liquifyPushEnd = try #require(
-            panelSource[liquifyPushStart.upperBound...].range(of: "else if viewModel.selectedFilter == .findEdges")
+            panelSource[liquifyPushStart.upperBound...].range(of: "else if viewModel.selectedFilter == .median")
         )
         let liquifyPushSource = panelSource[liquifyPushStart.lowerBound..<liquifyPushEnd.lowerBound]
 

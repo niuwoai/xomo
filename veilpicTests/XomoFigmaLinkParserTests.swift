@@ -83,6 +83,35 @@ struct XomoFigmaLinkParserTests {
         #expect(source.contains("authorizedNodeImportSection(preview)"))
     }
 
+    @Test func validDraftProvidesOnlyTheSanitizedCanonicalURLForExternalOpen() {
+        let draft = XomoFigmaLinkImportDraft(
+            input: "https://figma.com/community/file/1380235722331273046/simple-design-system?utm_source=share"
+        )
+        let invalidDraft = XomoFigmaLinkImportDraft(input: "https://example.com/community/file/123456/File")
+
+        #expect(
+            draft.canonicalURLForExternalOpen?.absoluteString ==
+                "https://www.figma.com/community/file/1380235722331273046/simple-design-system"
+        )
+        #expect(invalidDraft.canonicalURLForExternalOpen == nil)
+    }
+
+    @Test func importSheetOffersTheSanitizedExternalOpenAction() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent(
+                "veilpic/XomoFigmaLinkImportSheet.swift"
+            ),
+            encoding: .utf8
+        )
+
+        #expect(source.contains("draft.canonicalURLForExternalOpen"))
+        #expect(source.contains("NSWorkspace.shared.open(canonicalURL)"))
+        #expect(source.contains("xomo-figma-open-canonical-link"))
+    }
+
     @Test func parsesPrototypeStartingPointAndNormalizesNestedNodeIDs() throws {
         let preview = try XomoFigmaLinkParser.parse(
             "https://www.figma.com/proto/abc123DEF456/Checkout?node-id=I32-9%3B44-5&starting-point-node-id=0-3"

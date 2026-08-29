@@ -7,6 +7,7 @@ readonly debug_configuration='Debug'
 readonly codesign_binary='/usr/bin/codesign'
 readonly entitlements_path="${SRCROOT}/veilpic/Debug.entitlements"
 readonly product_path="${CODESIGNING_FOLDER_PATH}"
+readonly ui_test_bundle_identifier='im.some.xomoUITests'
 
 resign_containing_test_host() {
   local nested_product_path="$1"
@@ -32,6 +33,13 @@ resign_containing_test_host() {
 }
 
 if [[ "${CONFIGURATION}" != "${debug_configuration}" ]]; then
+  exit 0
+fi
+
+# The UI test runner is assembled outside the .xctest product directory. Its
+# target phase runs before that outer .app is complete, so signing it here can
+# only produce an invalid partial bundle. Xcode owns runner signing.
+if [[ "${PRODUCT_BUNDLE_IDENTIFIER:-}" == "${ui_test_bundle_identifier}" ]]; then
   exit 0
 fi
 

@@ -17,6 +17,7 @@ module XomoReleaseContract
     cli_release = read(root, "scripts/build_xomo_cli_release.sh")
     release = read(root, "scripts/release.sh")
     isolated_tests = read(root, "scripts/run_tests_isolated.rb")
+    adhoc_sign = read(root, "scripts/adhoc_sign_debug_product.sh")
     release_entitlements = read(root, "veilpic/Release.entitlements")
     chinese_info = read(root, "veilpic/zh-Hans.lproj/InfoPlist.strings")
     chinese_strings = read(root, "veilpic/zh-Hans.lproj/Localizable.strings")
@@ -27,6 +28,7 @@ module XomoReleaseContract
     build_versions = project.scan(/CURRENT_PROJECT_VERSION = ([^;]+);/).flatten.map { |value| value.strip.delete('"') }.uniq
     bundle_ids = project.scan(/PRODUCT_BUNDLE_IDENTIFIER = ([^;]+);/).flatten.map { |value| value.strip.delete('"') }.uniq
     deployment_targets = project.scan(/MACOSX_DEPLOYMENT_TARGET = ([^;]+);/).flatten.map { |value| value.strip.delete('"') }.uniq
+    user_script_sandboxing = project.scan(/ENABLE_USER_SCRIPT_SANDBOXING = ([^;]+);/).flatten.map { |value| value.strip.delete('"') }.uniq
     expected_build_version = app_version&.match(/-rc(\d+)\z/)&.[](1)
     app_release_settings = project.scan(/buildSettings = \{\n(.*?)\n\s*\};/m).flatten.find do |settings|
       settings.include?("CODE_SIGN_ENTITLEMENTS = veilpic/Release.entitlements;")
@@ -47,6 +49,10 @@ module XomoReleaseContract
       "cli_release_is_universal" => cli_release.include?("--arch arm64") && cli_release.include?("--arch x86_64"),
       "release_entrypoint_present" => release.include?("xcodebuild") && release.include?("-exportArchive"),
       "isolated_test_entrypoint_present" => isolated_tests.include?("build-for-testing") && isolated_tests.include?("test-without-building"),
+      "signing_script_has_required_file_access" => user_script_sandboxing == ["NO"],
+      "ui_test_runner_signing_is_left_to_xcode" =>
+        adhoc_sign.include?("im.some.xomoUITests") &&
+        adhoc_sign.include?('PRODUCT_BUNDLE_IDENTIFIER:-'),
       "release_signing_requests_secure_timestamp" =>
         !app_release_settings.nil? && app_release_settings.include?('OTHER_CODE_SIGN_FLAGS = "--timestamp";'),
       "release_entitlements_are_hardened" =>
@@ -62,6 +68,7 @@ module XomoReleaseContract
       "build_versions" => build_versions,
       "bundle_ids" => bundle_ids,
       "deployment_targets" => deployment_targets,
+      "user_script_sandboxing" => user_script_sandboxing,
       "checks" => checks,
       "passed" => checks.values.all?
     }

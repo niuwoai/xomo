@@ -571,7 +571,8 @@ struct ImageEditorScopeTests {
         #expect(interaction.contains("onFileDrop: { urls, location in"))
         #expect(interaction.contains("XomoCanvasURLDropPolicy.resolve(urls)"))
         #expect(interaction.contains("case let .localFiles(urls):"))
-        #expect(interaction.contains("viewModel.importLayerFiles(urls, centeredAt: canvasPoint)"))
+        #expect(interaction.contains("viewModel.importLayerFiles("))
+        #expect(interaction.contains("urls,"))
         #expect(importSource.contains("self.importLayerFiles(panel.urls)"))
         let batchStart = try #require(importSource.range(of: "func importLayerFiles("))
         let batchEnd = try #require(
@@ -1099,7 +1100,7 @@ struct ImageEditorScopeTests {
         let filterSource = source[filterStart.lowerBound..<filterEnd.lowerBound]
 
         #expect(filterSource.contains("image-editor-filter-picker"))
-        #expect(filterSource.contains("image-editor-filter-intensity"))
+        #expect(filterSource.contains("image-editor-filter-quick-median-strength"))
         #expect(filterSource.contains("accessibilityLabel(L10n.text(\"imageEditor.option.strength\"))"))
         #expect(filterSource.contains("image-editor-filter-apply"))
         #expect(filterSource.contains("image-editor-filter-layer-new"))

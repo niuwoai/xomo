@@ -3885,12 +3885,14 @@
 "xomo.figma.value.none" = "无";
 "xomo.figma.value.latest" = "当前最新版";
 "xomo.figma.action.paste" = "粘贴";
+"xomo.figma.action.openInFigma" = "在 Figma 中打开";
 "xomo.figma.action.copyCanonicalURL" = "复制规范化链接";
 "xomo.figma.action.useCanonicalURL" = "使用规范化链接";
 "xomo.figma.action.done" = "完成";
 "xomo.figma.clipboard.empty" = "剪贴板中没有文本链接。";
 "xomo.figma.clipboard.copied" = "已复制规范化链接。";
 "xomo.figma.message.canonicalURLApplied" = "本次导入已改用清理后的规范化链接。";
+"xomo.figma.message.openFailed" = "无法在浏览器或 Figma 中打开这个链接。";
 "xomo.figma.metadata.title" = "Figma 官方元数据";
 "xomo.figma.metadata.readOnly" = "只读";
 "xomo.figma.metadata.scopeNotice" = "本机个人连接：仅在点击读取时访问 api.figma.com。元数据读取需要 file_metadata:read；下方节点读取还需要 file_content:read。面向多用户的 OAuth 尚未接入。";

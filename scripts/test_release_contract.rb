@@ -11,11 +11,13 @@ class ReleaseContractTest < Minitest::Test
     result = XomoReleaseContract.collect(File.expand_path("..", __dir__))
 
     assert result["passed"], result.inspect
-    assert_equal "2.12.0-rc1479", result["version"]
-    assert_equal ["2.12.0-rc1479"], result["project_versions"]
-    assert_equal ["1479"], result["build_versions"]
+    assert_equal "2.12.0-rc1480", result["version"]
+    assert_equal ["2.12.0-rc1480"], result["project_versions"]
+    assert_equal ["1480"], result["build_versions"]
     assert result["checks"]["release_signing_requests_secure_timestamp"]
     assert result["checks"]["release_entitlements_are_hardened"]
+    assert result["checks"]["signing_script_has_required_file_access"]
+    assert result["checks"]["ui_test_runner_signing_is_left_to_xcode"]
     assert result["checks"]["chinese_bundle_name_is_xomo"]
     assert result["checks"]["chinese_app_name_is_xomo"]
   end
@@ -75,6 +77,28 @@ class ReleaseContractTest < Minitest::Test
     end
   end
 
+  def test_user_script_sandboxing_that_blocks_signing_fails_the_contract
+    with_fixture do |root|
+      write_fixture(root, user_script_sandboxing: true)
+
+      result = XomoReleaseContract.collect(root)
+
+      refute result["passed"]
+      refute result["checks"]["signing_script_has_required_file_access"]
+    end
+  end
+
+  def test_missing_ui_test_runner_signing_guard_fails_the_contract
+    with_fixture do |root|
+      write_fixture(root, ui_test_runner_guard: false)
+
+      result = XomoReleaseContract.collect(root)
+
+      refute result["passed"]
+      refute result["checks"]["ui_test_runner_signing_is_left_to_xcode"]
+    end
+  end
+
   def test_legacy_chinese_brand_fails_the_contract
     with_fixture do |root|
       write_fixture(root, chinese_brand: "像界")
@@ -101,7 +125,9 @@ class ReleaseContractTest < Minitest::Test
     build_version: version[/-rc(\d+)\z/, 1],
     release_debuggable: false,
     secure_timestamp: true,
-    chinese_brand: "Xomo"
+    chinese_brand: "Xomo",
+    user_script_sandboxing: false,
+    ui_test_runner_guard: true
   )
     FileUtils.mkdir_p(File.join(root, "veilpic.xcodeproj"))
     FileUtils.mkdir_p(File.join(root, "veilpic"))
@@ -115,6 +141,7 @@ class ReleaseContractTest < Minitest::Test
       buildSettings = {
         CODE_SIGN_ENTITLEMENTS = veilpic/Release.entitlements;
         CURRENT_PROJECT_VERSION = #{build_version};
+        ENABLE_USER_SCRIPT_SANDBOXING = #{user_script_sandboxing ? "YES" : "NO"};
         MACOSX_DEPLOYMENT_TARGET = #{deployment_target};
         MARKETING_VERSION = #{version};
         PRODUCT_BUNDLE_IDENTIFIER = im.some.xomo;
@@ -126,6 +153,10 @@ class ReleaseContractTest < Minitest::Test
     File.write(File.join(root, "scripts/build_xomo_cli_release.sh"), "swift build --arch arm64 --arch x86_64\n")
     File.write(File.join(root, "scripts/release.sh"), "xcodebuild archive\nxcodebuild -exportArchive\n")
     File.write(File.join(root, "scripts/run_tests_isolated.rb"), "build-for-testing\ntest-without-building\n")
+    File.write(
+      File.join(root, "scripts/adhoc_sign_debug_product.sh"),
+      ui_test_runner_guard ? '[[ "${PRODUCT_BUNDLE_IDENTIFIER:-}" == "im.some.xomoUITests" ]]' : "codesign product"
+    )
     File.write(
       File.join(root, "veilpic/zh-Hans.lproj/InfoPlist.strings"),
       %Q{"CFBundleDisplayName" = "#{chinese_brand}";\n"CFBundleName" = "#{chinese_brand}";\n}

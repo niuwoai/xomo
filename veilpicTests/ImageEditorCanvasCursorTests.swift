@@ -499,9 +499,10 @@ struct ImageEditorCanvasCursorTests {
 
         #expect(roundBrush === disabledBrush)
         #expect(tiltedBrush !== roundBrush)
-        #expect(tiltedEraser === tiltedBrush)
+        #expect(tiltedEraser !== tiltedBrush)
         #expect(tiltedClone === roundClone)
         #expect(tiltedBrush.image.tiffRepresentation != roundBrush.image.tiffRepresentation)
+        #expect(tiltedEraser.image.tiffRepresentation != tiltedBrush.image.tiffRepresentation)
         #expect(ImageEditorCanvasCursor.cursor(
             for: .brush,
             brushDiameter: 80,
@@ -567,11 +568,12 @@ struct ImageEditorCanvasCursorTests {
         )
 
         #expect(flatBrush !== roundBrush)
-        #expect(flatEraser === flatBrush)
+        #expect(flatEraser !== flatBrush)
         #expect(horizontalFlatBrush !== flatBrush)
         #expect(tiltOverridesManualAngle === horizontalFlatBrush)
         #expect(cloneStamp !== flatBrush)
         #expect(flatBrush.image.tiffRepresentation != roundBrush.image.tiffRepresentation)
+        #expect(flatEraser.image.tiffRepresentation != flatBrush.image.tiffRepresentation)
         #expect(ImageEditorCanvasCursor.cursor(
             for: .components,
             selectedTool: .brush,

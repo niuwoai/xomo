@@ -416,7 +416,8 @@ struct XomoAutomationTests {
         #expect(layerListTool["inputSchema"]?.objectValue?["properties"]?.objectValue?["figmaFileKey"]?.objectValue?["type"] == .string("string"))
         #expect(layerListTool["inputSchema"]?.objectValue?["properties"]?.objectValue?["figmaResourceType"]?.objectValue?["enum"] == .array([
             .string("design"), .string("file"), .string("proto"), .string("board"),
-            .string("slides"), .string("deck"), .string("site"), .string("buzz"), .string("make")
+            .string("slides"), .string("deck"), .string("site"), .string("buzz"), .string("make"),
+            .string("community/file")
         ]))
         #expect(layerListTool["inputSchema"]?.objectValue?["properties"]?.objectValue?["figmaImportScope"]?.objectValue?["enum"] == .array([
             .string("designDocument"), .string("figJamBoard"), .string("previewOnly")
