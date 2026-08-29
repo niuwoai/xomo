@@ -15456,6 +15456,7 @@ enum ImageEditorCanvasCursorFamily: Equatable {
     case localExposureDarken
     case localSaturationAdjust
     case localDetailSoften
+    case localDetailSharpen
     case crop
     case patch
     case gradient
@@ -16428,7 +16429,9 @@ enum ImageEditorCanvasCursor {
             .localSaturationAdjust
         case .blur:
             .localDetailSoften
-        case .sharpen, .smudge:
+        case .sharpen:
+            .localDetailSharpen
+        case .smudge:
             .retouchBrush
         case .paintBucket:
             .paintBucket
@@ -16551,6 +16554,10 @@ enum ImageEditorCanvasCursor {
             return modifierFlags.contains(.capsLock)
                 ? .crosshair
                 : localDetailSoftenCursor(diameter: brushDiameter)
+        case .localDetailSharpen:
+            return modifierFlags.contains(.capsLock)
+                ? .crosshair
+                : localDetailSharpenCursor(diameter: brushDiameter)
         case .retouchBrush:
             return modifierFlags.contains(.capsLock)
                 ? .crosshair
@@ -17049,6 +17056,103 @@ enum ImageEditorCanvasCursor {
         NSColor.systemBlue.setStroke()
         diffusion.lineWidth = 1.2
         diffusion.stroke()
+
+        image.unlockFocus()
+        return cache(
+            NSCursor(image: image, hotSpot: NSPoint(x: center.x, y: side - center.y)),
+            for: cacheKey
+        )
+    }
+
+    private static func localDetailSharpenCursor(diameter requestedDiameter: CGFloat) -> NSCursor {
+        let diameter = max(3, min(256, requestedDiameter.rounded()))
+        let cacheKey = "local-detail-sharpen:\(Int(diameter))"
+        if let cachedCursor = cursorCache[cacheKey] {
+            return cachedCursor
+        }
+
+        let side = max(36, diameter + 18)
+        let center = NSPoint(x: side / 2, y: side / 2)
+        let image = NSImage(size: NSSize(width: side, height: side))
+        image.lockFocus()
+
+        let footprint = NSBezierPath(ovalIn: NSRect(
+            x: center.x - diameter / 2,
+            y: center.y - diameter / 2,
+            width: diameter,
+            height: diameter
+        ))
+        NSColor.black.withAlphaComponent(0.95).setStroke()
+        footprint.lineWidth = 3.5
+        footprint.stroke()
+        NSColor.white.withAlphaComponent(0.98).setStroke()
+        footprint.lineWidth = 1.4
+        footprint.stroke()
+
+        // A low-contrast diffuse sample becomes a crisp two-tone edge,
+        // previewing local contrast gain instead of repeating a star icon.
+        let sampleSize = max(2.5, min(5, diameter * 0.16))
+        let sampleSpacing = max(4, min(8, diameter * 0.27))
+        let diffuseCenter = NSPoint(x: center.x - sampleSpacing, y: center.y)
+        let diffuseScales: [(scale: CGFloat, alpha: CGFloat)] = [
+            (1.7, 0.08), (1.2, 0.16), (0.7, 0.28)
+        ]
+        for layer in diffuseScales {
+            let layerSize = sampleSize * layer.scale
+            NSColor.systemOrange.withAlphaComponent(layer.alpha).setFill()
+            NSBezierPath(ovalIn: NSRect(
+                x: diffuseCenter.x - layerSize / 2,
+                y: diffuseCenter.y - layerSize / 2,
+                width: layerSize,
+                height: layerSize
+            )).fill()
+        }
+
+        let sharpRect = NSRect(
+            x: center.x + sampleSpacing - sampleSize / 2,
+            y: center.y - sampleSize / 2,
+            width: sampleSize,
+            height: sampleSize
+        )
+        NSColor.white.setFill()
+        NSBezierPath(rect: NSRect(
+            x: sharpRect.minX,
+            y: sharpRect.midY,
+            width: sharpRect.width,
+            height: sharpRect.height / 2
+        )).fill()
+        NSColor.black.setFill()
+        NSBezierPath(rect: NSRect(
+            x: sharpRect.minX,
+            y: sharpRect.minY,
+            width: sharpRect.width,
+            height: sharpRect.height / 2
+        )).fill()
+        NSColor.systemOrange.setStroke()
+        let sharpOutline = NSBezierPath(rect: sharpRect)
+        sharpOutline.lineWidth = 1.2
+        sharpOutline.stroke()
+
+        let endpoint = NSPoint(
+            x: center.x + sampleSpacing,
+            y: center.y - sampleSpacing * 0.72
+        )
+        let contrastGain = NSBezierPath()
+        contrastGain.move(to: NSPoint(
+            x: center.x - sampleSpacing,
+            y: center.y - sampleSpacing * 0.72
+        ))
+        contrastGain.line(to: endpoint)
+        contrastGain.move(to: endpoint)
+        contrastGain.line(to: NSPoint(x: endpoint.x - 3.5, y: endpoint.y + 2.8))
+        contrastGain.move(to: endpoint)
+        contrastGain.line(to: NSPoint(x: endpoint.x - 3.5, y: endpoint.y - 2.8))
+        NSColor.black.withAlphaComponent(0.95).setStroke()
+        contrastGain.lineWidth = 3.5
+        contrastGain.stroke()
+        NSColor.systemOrange.setStroke()
+        contrastGain.lineWidth = 1.2
+        contrastGain.stroke()
 
         image.unlockFocus()
         return cache(
