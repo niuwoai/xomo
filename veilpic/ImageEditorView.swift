@@ -421,6 +421,9 @@ struct ImageEditorView: View {
                         NSCursor.arrow.set()
                         return true
                     }
+                    if cancelPatchGestureForCanvasLifecycle() {
+                        return true
+                    }
                     if isMovingPathAnchor {
                         isPathAnchorDragCancelled = true
                         if viewModel.cancelMovingPathAnchor() {
@@ -6606,6 +6609,29 @@ struct ImageEditorView: View {
         )
         viewModel.nudgeCanvas(by: delta)
         lastPanTranslation = translation
+    }
+
+    @discardableResult
+    private func cancelPatchGestureForCanvasLifecycle() -> Bool {
+        guard ImageEditorPatchGestureCancellationPolicy.shouldCancel(
+            tool: canvasInteractionTool,
+            hasDragStart: dragStart != nil,
+            hasDrawnPoints: !dragPoints.isEmpty,
+            isDrawingSelection: isDrawingPatchSelection,
+            hasPreview: patchPreviewImage != nil
+        ) else { return false }
+
+        dragStart = nil
+        dragEnd = nil
+        dragPoints = []
+        patchPreviewImage = nil
+        patchRawDragEnd = nil
+        patchDragConstraintAxis = nil
+        isDrawingPatchSelection = false
+        isPatchGestureBlocked = true
+        lastPatchPreviewUpdateTime = 0
+        NSCursor.arrow.set()
+        return true
     }
 
     private func updatePatchDrag(
@@ -15899,6 +15925,19 @@ enum ImageEditorPatchGestureStartAction: Equatable {
     ) -> Self {
         guard isPointerOverSelection else { return .drawSelection }
         return canEditSelectionPixels ? .dragSelection : .blocked
+    }
+}
+
+enum ImageEditorPatchGestureCancellationPolicy {
+    static func shouldCancel(
+        tool: ImageEditorTool,
+        hasDragStart: Bool,
+        hasDrawnPoints: Bool,
+        isDrawingSelection: Bool,
+        hasPreview: Bool
+    ) -> Bool {
+        guard tool == .patchTool else { return false }
+        return hasDragStart || hasDrawnPoints || isDrawingSelection || hasPreview
     }
 }
 

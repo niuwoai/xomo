@@ -12,6 +12,67 @@ import Testing
 @MainActor
 @Suite(.serialized)
 struct ImageEditorPatchToolTests {
+    @Test func escapeCancellationOnlyOwnsAnActivePatchPointerSequence() {
+        #expect(ImageEditorPatchGestureCancellationPolicy.shouldCancel(
+            tool: .patchTool,
+            hasDragStart: true,
+            hasDrawnPoints: false,
+            isDrawingSelection: false,
+            hasPreview: true
+        ))
+        #expect(ImageEditorPatchGestureCancellationPolicy.shouldCancel(
+            tool: .patchTool,
+            hasDragStart: false,
+            hasDrawnPoints: true,
+            isDrawingSelection: true,
+            hasPreview: false
+        ))
+        #expect(!ImageEditorPatchGestureCancellationPolicy.shouldCancel(
+            tool: .patchTool,
+            hasDragStart: false,
+            hasDrawnPoints: false,
+            isDrawingSelection: false,
+            hasPreview: false
+        ))
+        #expect(!ImageEditorPatchGestureCancellationPolicy.shouldCancel(
+            tool: .move,
+            hasDragStart: true,
+            hasDrawnPoints: true,
+            isDrawingSelection: true,
+            hasPreview: true
+        ))
+    }
+
+    @Test func escapeCancellationWiresTransientResetAndMouseUpLatch() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let functionStart = try #require(
+            source.range(of: "private func cancelPatchGestureForCanvasLifecycle() -> Bool")
+        )
+        let functionTail = source[functionStart.lowerBound...]
+        let functionEnd = try #require(functionTail.range(of: "private func updatePatchDrag("))
+        let functionSource = functionTail[..<functionEnd.lowerBound]
+
+        #expect(source.contains("if cancelPatchGestureForCanvasLifecycle() {"))
+        #expect(functionSource.contains("ImageEditorPatchGestureCancellationPolicy.shouldCancel("))
+        #expect(functionSource.contains("dragStart = nil"))
+        #expect(functionSource.contains("dragEnd = nil"))
+        #expect(functionSource.contains("dragPoints = []"))
+        #expect(functionSource.contains("patchPreviewImage = nil"))
+        #expect(functionSource.contains("patchRawDragEnd = nil"))
+        #expect(functionSource.contains("patchDragConstraintAxis = nil"))
+        #expect(functionSource.contains("isDrawingPatchSelection = false"))
+        #expect(functionSource.contains("isPatchGestureBlocked = true"))
+        #expect(functionSource.contains("lastPatchPreviewUpdateTime = 0"))
+        #expect(source.contains("if dragStart == nil, dragPoints.isEmpty, !isPatchGestureBlocked"))
+        #expect(source.contains("isPatchGestureBlocked = false"))
+    }
+
     @Test func transferHUDShowsFreeDistanceAndShiftConstraintDirection() {
         let frame = CGRect(x: 10, y: 12, width: 20, height: 14)
         #expect(
