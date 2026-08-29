@@ -15444,7 +15444,7 @@ enum ImageEditorCanvasCursorFamily: Equatable {
     case selectionMarquee
     case freeformSelectionPath
     case similarColorSelection
-    case quickSelection
+    case paintedRegionSelection
     case cloneStamp
     case healingBrush
     case crop
@@ -16390,7 +16390,7 @@ enum ImageEditorCanvasCursor {
         case .magicWand:
             .similarColorSelection
         case .quickSelection:
-            .quickSelection
+            .paintedRegionSelection
         case .cloneStamp:
             .cloneStamp
         case .healingBrush:
@@ -16486,8 +16486,8 @@ enum ImageEditorCanvasCursor {
             return freeformSelectionPathCursor(mode: selectionMode)
         case .similarColorSelection:
             return similarColorSelectionCursor(mode: selectionMode)
-        case .quickSelection:
-            return quickSelectionCursor(mode: selectionMode)
+        case .paintedRegionSelection:
+            return paintedRegionSelectionCursor(mode: selectionMode)
         case .cloneStamp:
             return modifierFlags.contains(.capsLock) || isPickingSampledBrushSource
                 ? .crosshair
@@ -17154,46 +17154,118 @@ enum ImageEditorCanvasCursor {
         )
     }
 
-    private static func quickSelectionCursor(mode: ImageEditorSelectionCursorMode) -> NSCursor {
-        let cacheKey = "quick-selection:\(mode.rawValue)"
+    private static func paintedRegionSelectionCursor(
+        mode: ImageEditorSelectionCursorMode
+    ) -> NSCursor {
+        let cacheKey = "painted-region-selection:\(mode.rawValue)"
         if let cachedCursor = cursorCache[cacheKey] {
             return cachedCursor
         }
 
-        let side: CGFloat = 34
+        let side: CGFloat = 38
+        let origin = NSPoint(x: 7, y: 7)
         let image = NSImage(size: NSSize(width: side, height: side))
         image.lockFocus()
 
-        let selectionRing = NSBezierPath(ovalIn: NSRect(x: 3, y: 5, width: 18, height: 18))
-        selectionRing.setLineDash([3, 2], count: 2, phase: 0)
+        // Quick Selection samples several contiguous colour regions along the
+        // drag path and merges them. Preview that transaction instead of
+        // shrinking the toolbox brush-and-plus icon into the pointer.
+        let mergedBoundary = NSBezierPath()
+        mergedBoundary.move(to: NSPoint(x: 4, y: 10))
+        mergedBoundary.curve(
+            to: NSPoint(x: 11, y: 3),
+            controlPoint1: NSPoint(x: 4, y: 6),
+            controlPoint2: NSPoint(x: 7, y: 3)
+        )
+        mergedBoundary.curve(
+            to: NSPoint(x: 20, y: 7),
+            controlPoint1: NSPoint(x: 15, y: 2),
+            controlPoint2: NSPoint(x: 18, y: 4)
+        )
+        mergedBoundary.curve(
+            to: NSPoint(x: 29, y: 12),
+            controlPoint1: NSPoint(x: 24, y: 5),
+            controlPoint2: NSPoint(x: 28, y: 8)
+        )
+        mergedBoundary.curve(
+            to: NSPoint(x: 25, y: 23),
+            controlPoint1: NSPoint(x: 31, y: 17),
+            controlPoint2: NSPoint(x: 29, y: 21)
+        )
+        mergedBoundary.curve(
+            to: NSPoint(x: 14, y: 27),
+            controlPoint1: NSPoint(x: 21, y: 27),
+            controlPoint2: NSPoint(x: 17, y: 28)
+        )
+        mergedBoundary.curve(
+            to: NSPoint(x: 5, y: 20),
+            controlPoint1: NSPoint(x: 9, y: 27),
+            controlPoint2: NSPoint(x: 5, y: 24)
+        )
+        mergedBoundary.curve(
+            to: NSPoint(x: 4, y: 10),
+            controlPoint1: NSPoint(x: 3, y: 16),
+            controlPoint2: NSPoint(x: 3, y: 13)
+        )
+        mergedBoundary.close()
+        mergedBoundary.setLineDash([3, 2], count: 2, phase: 0)
         NSColor.black.withAlphaComponent(0.95).setStroke()
-        selectionRing.lineWidth = 3.5
-        selectionRing.stroke()
+        mergedBoundary.lineWidth = 3.5
+        mergedBoundary.stroke()
         NSColor.white.withAlphaComponent(0.98).setStroke()
-        selectionRing.lineWidth = 1.2
-        selectionRing.stroke()
+        mergedBoundary.lineWidth = 1.2
+        mergedBoundary.stroke()
 
-        let brush = NSBezierPath()
-        brush.move(to: NSPoint(x: 20, y: 26))
-        brush.line(to: NSPoint(x: 29, y: 17))
+        let samplingTrail = NSBezierPath()
+        samplingTrail.move(to: origin)
+        samplingTrail.curve(
+            to: NSPoint(x: 21, y: 18),
+            controlPoint1: NSPoint(x: 11, y: 8),
+            controlPoint2: NSPoint(x: 16, y: 14)
+        )
         NSColor.black.withAlphaComponent(0.95).setStroke()
-        brush.lineWidth = 4
-        brush.stroke()
-        NSColor.white.setStroke()
-        brush.lineWidth = 1.4
-        brush.stroke()
-
-        let plus = NSBezierPath()
-        plus.move(to: NSPoint(x: 25, y: 29)); plus.line(to: NSPoint(x: 25, y: 23))
-        plus.move(to: NSPoint(x: 22, y: 26)); plus.line(to: NSPoint(x: 28, y: 26))
+        samplingTrail.lineWidth = 3.5
+        samplingTrail.stroke()
         NSColor.systemBlue.setStroke()
-        plus.lineWidth = 1.5
-        plus.stroke()
+        samplingTrail.lineWidth = 1.3
+        samplingTrail.stroke()
+
+        for point in [origin, NSPoint(x: 13, y: 11), NSPoint(x: 21, y: 18)] {
+            let ring = NSBezierPath(ovalIn: NSRect(
+                x: point.x - 2.75,
+                y: point.y - 2.75,
+                width: 5.5,
+                height: 5.5
+            ))
+            NSColor.black.withAlphaComponent(0.95).setFill()
+            ring.fill()
+            NSColor.systemBlue.setFill()
+            NSBezierPath(ovalIn: NSRect(
+                x: point.x - 1.25,
+                y: point.y - 1.25,
+                width: 2.5,
+                height: 2.5
+            )).fill()
+        }
+
+        let growth = NSBezierPath()
+        growth.move(to: NSPoint(x: 23, y: 18))
+        growth.line(to: NSPoint(x: 28, y: 18))
+        growth.move(to: NSPoint(x: 28, y: 18))
+        growth.line(to: NSPoint(x: 25.5, y: 15.5))
+        growth.move(to: NSPoint(x: 28, y: 18))
+        growth.line(to: NSPoint(x: 25.5, y: 20.5))
+        NSColor.black.withAlphaComponent(0.95).setStroke()
+        growth.lineWidth = 3
+        growth.stroke()
+        NSColor.systemBlue.setStroke()
+        growth.lineWidth = 1
+        growth.stroke()
         drawSelectionModifierBadge(mode, side: side)
 
         image.unlockFocus()
         return cache(
-            NSCursor(image: image, hotSpot: NSPoint(x: 10, y: side - 10)),
+            NSCursor(image: image, hotSpot: NSPoint(x: origin.x, y: side - origin.y)),
             for: cacheKey
         )
     }

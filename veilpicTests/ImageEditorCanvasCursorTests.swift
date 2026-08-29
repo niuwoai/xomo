@@ -2730,7 +2730,7 @@ struct ImageEditorCanvasCursorTests {
         #expect(ImageEditorCanvasCursor.family(for: .paintBucket) == .paintBucket)
         #expect(ImageEditorCanvasCursor.family(for: .eyedropper) == .eyedropper)
         #expect(ImageEditorCanvasCursor.family(for: .redEye) == .redEye)
-        #expect(ImageEditorCanvasCursor.family(for: .quickSelection) == .quickSelection)
+        #expect(ImageEditorCanvasCursor.family(for: .quickSelection) == .paintedRegionSelection)
         #expect(ImageEditorCanvasCursor.family(for: .cloneStamp) == .cloneStamp)
         #expect(ImageEditorCanvasCursor.family(for: .healingBrush) == .healingBrush)
         #expect(ImageEditorCanvasCursor.family(for: .colorSampler) == .samplingScope)
@@ -2860,6 +2860,51 @@ struct ImageEditorCanvasCursorTests {
         #expect(ImageEditorCanvasCursor.cursor(
             for: .tools,
             selectedTool: .lasso,
+            brushDiameter: 18,
+            isPointerOverCanvas: false
+        ) === NSCursor.arrow)
+    }
+
+    @Test func quickSelectionCursorPreviewsSampledRegionsMergingAlongDrag() {
+        let replace = ImageEditorCanvasCursor.cursor(
+            for: .quickSelection,
+            brushDiameter: 18
+        )
+        let add = ImageEditorCanvasCursor.cursor(
+            for: .quickSelection,
+            brushDiameter: 18,
+            modifierFlags: [.shift]
+        )
+        let subtract = ImageEditorCanvasCursor.cursor(
+            for: .quickSelection,
+            brushDiameter: 18,
+            modifierFlags: [.option]
+        )
+        let intersect = ImageEditorCanvasCursor.cursor(
+            for: .quickSelection,
+            brushDiameter: 18,
+            modifierFlags: [.shift, .option]
+        )
+
+        #expect(ImageEditorCanvasCursor.family(for: .quickSelection) == .paintedRegionSelection)
+        #expect(replace.image.size == NSSize(width: 38, height: 38))
+        #expect(replace.hotSpot == NSPoint(x: 7, y: 31))
+        #expect(replace !== NSCursor.crosshair)
+        #expect(replace.image.tiffRepresentation != add.image.tiffRepresentation)
+        #expect(add.image.tiffRepresentation != subtract.image.tiffRepresentation)
+        #expect(subtract.image.tiffRepresentation != intersect.image.tiffRepresentation)
+        #expect(replace.image.tiffRepresentation != ImageEditorCanvasCursor.cursor(
+            for: .magicWand,
+            brushDiameter: 18
+        ).image.tiffRepresentation)
+        #expect(ImageEditorCanvasCursor.cursor(
+            for: .components,
+            selectedTool: .quickSelection,
+            brushDiameter: 18
+        ) === NSCursor.arrow)
+        #expect(ImageEditorCanvasCursor.cursor(
+            for: .tools,
+            selectedTool: .quickSelection,
             brushDiameter: 18,
             isPointerOverCanvas: false
         ) === NSCursor.arrow)

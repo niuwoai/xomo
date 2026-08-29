@@ -6769,7 +6769,7 @@ struct veilpicTests {
             (.selectionMarquee, [.marquee]),
             (.freeformSelectionPath, [.lasso]),
             (.similarColorSelection, [.magicWand]),
-            (.quickSelection, [.quickSelection]),
+            (.paintedRegionSelection, [.quickSelection]),
             (.cloneStamp, [.cloneStamp]),
             (.healingBrush, [.healingBrush]),
             (.crop, [.crop]),
