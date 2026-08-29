@@ -7909,6 +7909,57 @@ struct ImageEditorView: View {
                         .focusable(false)
                         .accessibilityLabel(L10n.text("imageEditor.filter.waveAmplitude"))
                         .accessibilityIdentifier("image-editor-filter-quick-wave-amplitude")
+                } else if viewModel.selectedFilter == .offset {
+                    VStack(spacing: 6) {
+                        HStack(spacing: 8) {
+                            Text(L10n.text("imageEditor.filter.offsetX"))
+                                .font(.system(size: 10, weight: .medium))
+                                .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                                .frame(width: 58, alignment: .leading)
+                            Slider(
+                                value: Binding(
+                                    get: { viewModel.filterOffsetEffectiveXPixels },
+                                    set: { viewModel.filterOffsetEffectiveXPixels = $0 }
+                                ),
+                                in: -9_999...9_999,
+                                step: 1
+                            )
+                                .focusable(false)
+                                .accessibilityLabel(L10n.text("imageEditor.filter.offsetX"))
+                                .accessibilityIdentifier("image-editor-filter-quick-offset-x-pixels")
+                            Text(L10n.format(
+                                "imageEditor.filter.offsetValue",
+                                String(format: "%+d", Int(viewModel.filterOffsetEffectiveXPixels.rounded()))
+                            ))
+                                .font(.system(size: 10, weight: .semibold).monospacedDigit())
+                                .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                                .frame(width: 62, alignment: .trailing)
+                        }
+                        HStack(spacing: 8) {
+                            Text(L10n.text("imageEditor.filter.offsetY"))
+                                .font(.system(size: 10, weight: .medium))
+                                .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                                .frame(width: 58, alignment: .leading)
+                            Slider(
+                                value: Binding(
+                                    get: { viewModel.filterOffsetEffectiveYPixels },
+                                    set: { viewModel.filterOffsetEffectiveYPixels = $0 }
+                                ),
+                                in: -9_999...9_999,
+                                step: 1
+                            )
+                                .focusable(false)
+                                .accessibilityLabel(L10n.text("imageEditor.filter.offsetY"))
+                                .accessibilityIdentifier("image-editor-filter-quick-offset-y-pixels")
+                            Text(L10n.format(
+                                "imageEditor.filter.offsetValue",
+                                String(format: "%+d", Int(viewModel.filterOffsetEffectiveYPixels.rounded()))
+                            ))
+                                .font(.system(size: 10, weight: .semibold).monospacedDigit())
+                                .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                                .frame(width: 62, alignment: .trailing)
+                        }
+                    }
                 } else if viewModel.selectedFilter == .findEdges {
                     Text(L10n.text("imageEditor.filter.noAdjustableParameters"))
                         .font(.system(size: 11, weight: .medium))

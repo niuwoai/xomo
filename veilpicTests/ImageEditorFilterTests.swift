@@ -2540,7 +2540,7 @@ struct ImageEditorFilterTests {
             panelSource.range(of: "else if viewModel.selectedFilter == .wave")
         )
         let waveEnd = try #require(
-            panelSource[waveStart.upperBound...].range(of: "else if viewModel.selectedFilter == .findEdges")
+            panelSource[waveStart.upperBound...].range(of: "else if viewModel.selectedFilter == .offset")
         )
         let waveSource = panelSource[waveStart.lowerBound..<waveEnd.lowerBound]
 
@@ -2550,6 +2550,38 @@ struct ImageEditorFilterTests {
         #expect(waveSource.contains("imageEditor.filter.waveAmplitude"))
         #expect(waveSource.contains("image-editor-filter-quick-wave-amplitude"))
         #expect(!waveSource.contains("viewModel.filterIntensity"))
+    }
+
+    @Test func offsetQuickPanelUsesTwoPixelAxesInsteadOfLegacyIntensity() throws {
+        let root = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let viewSource = try String(
+            contentsOf: root.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let panelStart = try #require(viewSource.range(of: "private var filtersQuickPanel: some View"))
+        let panelEnd = try #require(
+            viewSource[panelStart.upperBound...].range(of: "private func historySnapshotRow")
+        )
+        let panelSource = viewSource[panelStart.lowerBound..<panelEnd.lowerBound]
+        let offsetStart = try #require(
+            panelSource.range(of: "else if viewModel.selectedFilter == .offset")
+        )
+        let offsetEnd = try #require(
+            panelSource[offsetStart.upperBound...].range(of: "else if viewModel.selectedFilter == .findEdges")
+        )
+        let offsetSource = panelSource[offsetStart.lowerBound..<offsetEnd.lowerBound]
+
+        #expect(offsetSource.contains("viewModel.filterOffsetEffectiveXPixels"))
+        #expect(offsetSource.contains("viewModel.filterOffsetEffectiveYPixels"))
+        #expect(offsetSource.components(separatedBy: "in: -9_999...9_999").count == 3)
+        #expect(offsetSource.components(separatedBy: "step: 1").count == 3)
+        #expect(offsetSource.contains("imageEditor.filter.offsetX"))
+        #expect(offsetSource.contains("imageEditor.filter.offsetY"))
+        #expect(offsetSource.contains("image-editor-filter-quick-offset-x-pixels"))
+        #expect(offsetSource.contains("image-editor-filter-quick-offset-y-pixels"))
+        #expect(!offsetSource.contains("viewModel.filterIntensity"))
     }
 
     @Test func findEdgesQuickPanelDeclaresNoAdjustableParameters() throws {
