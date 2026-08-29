@@ -16520,7 +16520,7 @@ enum ImageEditorCanvasCursor {
                 return .operationNotAllowed
             }
         case .gradient:
-            return .crosshair
+            return gradientCursor(isConstrained: modifierFlags.contains(.shift))
         case .rectangleOutline, .ellipseOutline:
             return .crosshair
         case .paintBucket:
@@ -17381,23 +17381,79 @@ enum ImageEditorCanvasCursor {
         return cache(NSCursor(image: image, hotSpot: NSPoint(x: 8, y: side - 8)), for: cacheKey)
     }
 
-    private static func gradientCursor() -> NSCursor {
-        let cacheKey = "gradient"
+    private static func gradientCursor(isConstrained: Bool) -> NSCursor {
+        let cacheKey = "gradient-axis:\(isConstrained)"
         if let cachedCursor = cursorCache[cacheKey] {
             return cachedCursor
         }
-        let side: CGFloat = 34
+        let side: CGFloat = 36
         let image = NSImage(size: NSSize(width: side, height: side))
         image.lockFocus()
-        let bar = NSRect(x: 3, y: 6, width: 22, height: 8)
-        NSGradient(colors: [.white, .systemBlue, .black])?.draw(in: bar, angle: 0)
-        let barOutline = NSBezierPath(rect: bar)
-        NSColor.black.withAlphaComponent(0.95).setStroke(); barOutline.lineWidth = 3; barOutline.stroke()
-        let arrow = NSBezierPath(); arrow.move(to: NSPoint(x: 8, y: 19)); arrow.line(to: NSPoint(x: 8, y: 29)); arrow.move(to: NSPoint(x: 4, y: 25)); arrow.line(to: NSPoint(x: 8, y: 29)); arrow.line(to: NSPoint(x: 12, y: 25))
-        NSColor.black.withAlphaComponent(0.95).setStroke(); arrow.lineWidth = 3.5; arrow.stroke()
-        NSColor.white.setStroke(); arrow.lineWidth = 1.2; arrow.stroke()
+
+        let origin = NSPoint(x: 8, y: 8)
+        let endpoint = NSPoint(x: 28, y: 28)
+        let axis = NSBezierPath()
+        axis.move(to: NSPoint(x: 11, y: 11))
+        axis.line(to: NSPoint(x: 25, y: 25))
+        axis.setLineDash([3, 2], count: 2, phase: 0)
+        NSColor.black.withAlphaComponent(0.95).setStroke()
+        axis.lineWidth = 4
+        axis.stroke()
+        NSColor.white.setStroke()
+        axis.lineWidth = 1.4
+        axis.stroke()
+
+        let arrowhead = NSBezierPath()
+        arrowhead.move(to: NSPoint(x: 20, y: 27))
+        arrowhead.line(to: endpoint)
+        arrowhead.line(to: NSPoint(x: 27, y: 20))
+        NSColor.black.withAlphaComponent(0.95).setStroke()
+        arrowhead.lineWidth = 4
+        arrowhead.stroke()
+        NSColor.white.setStroke()
+        arrowhead.lineWidth = 1.4
+        arrowhead.stroke()
+
+        let originRing = NSBezierPath(ovalIn: NSRect(x: 3, y: 3, width: 10, height: 10))
+        NSColor.black.withAlphaComponent(0.95).setFill()
+        originRing.fill()
+        NSColor.white.setStroke()
+        originRing.lineWidth = 1.2
+        originRing.stroke()
+        NSColor.systemBlue.setFill()
+        NSBezierPath(ovalIn: NSRect(x: 6, y: 6, width: 4, height: 4)).fill()
+
+        if isConstrained {
+            // Shift snaps the real gesture to angle increments. A compact
+            // angular guide communicates that constraint without turning the
+            // cursor into a miniature gradient-tool icon.
+            let baseline = NSBezierPath()
+            baseline.move(to: NSPoint(x: 14, y: 8))
+            baseline.line(to: NSPoint(x: 22, y: 8))
+            NSColor.black.withAlphaComponent(0.95).setStroke()
+            baseline.lineWidth = 3
+            baseline.stroke()
+            NSColor.white.setStroke()
+            baseline.lineWidth = 1
+            baseline.stroke()
+
+            let angleGuide = NSBezierPath()
+            angleGuide.appendArc(
+                withCenter: origin,
+                radius: 11,
+                startAngle: 0,
+                endAngle: 45
+            )
+            NSColor.systemBlue.setStroke()
+            angleGuide.lineWidth = 2
+            angleGuide.stroke()
+        }
+
         image.unlockFocus()
-        return cache(NSCursor(image: image, hotSpot: NSPoint(x: 8, y: side - 8)), for: cacheKey)
+        return cache(
+            NSCursor(image: image, hotSpot: NSPoint(x: origin.x, y: side - origin.y)),
+            for: cacheKey
+        )
     }
 
     private static func shapeCursor(for tool: ImageEditorTool) -> NSCursor {

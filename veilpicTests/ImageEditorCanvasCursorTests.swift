@@ -2686,7 +2686,7 @@ struct ImageEditorCanvasCursorTests {
         #expect(ImageEditorCanvasCursor.family(for: .smudge) == .retouchBrush)
 
         let precisionTools: [ImageEditorTool] = [
-            .marquee, .crop, .gradient, .rectangle, .ellipse
+            .marquee, .crop, .rectangle, .ellipse
         ]
         for tool in precisionTools {
             #expect(ImageEditorCanvasCursor.cursor(for: tool, brushDiameter: 18) === NSCursor.crosshair)
@@ -2694,7 +2694,7 @@ struct ImageEditorCanvasCursorTests {
 
         let familiarSpecificTools: [ImageEditorTool] = [
             .lasso, .magicWand, .quickSelection, .patchTool, .pen,
-            .paintBucket, .eyedropper, .colorSampler, .zoom
+            .paintBucket, .gradient, .eyedropper, .colorSampler, .zoom
         ]
         for tool in familiarSpecificTools {
             #expect(ImageEditorCanvasCursor.cursor(for: tool, brushDiameter: 18) !== NSCursor.crosshair)
@@ -3082,6 +3082,39 @@ struct ImageEditorCanvasCursorTests {
         #expect(removing !== NSCursor.crosshair)
         #expect(removing !== ImageEditorCanvasCursor.objectMoveCursor())
         #expect(componentLibrary === NSCursor.arrow)
+    }
+
+    @Test func gradientCursorPreviewsItsAxisAndShiftConstraintWithoutEscapingComponentMode() {
+        let freeAxis = ImageEditorCanvasCursor.cursor(
+            for: .tools,
+            selectedTool: .gradient,
+            brushDiameter: 18
+        )
+        let constrainedAxis = ImageEditorCanvasCursor.cursor(
+            for: .tools,
+            selectedTool: .gradient,
+            brushDiameter: 18,
+            modifierFlags: [.shift]
+        )
+
+        #expect(freeAxis !== NSCursor.crosshair)
+        #expect(freeAxis.image.size == NSSize(width: 36, height: 36))
+        #expect(freeAxis.hotSpot == NSPoint(x: 8, y: 28))
+        #expect(constrainedAxis !== NSCursor.crosshair)
+        #expect(constrainedAxis.image.tiffRepresentation != freeAxis.image.tiffRepresentation)
+        #expect(ImageEditorCanvasCursor.cursor(
+            for: .components,
+            selectedTool: .gradient,
+            brushDiameter: 18,
+            modifierFlags: [.shift]
+        ) === NSCursor.arrow)
+        #expect(ImageEditorCanvasCursor.cursor(
+            for: .tools,
+            selectedTool: .gradient,
+            brushDiameter: 18,
+            isPointerOverCanvas: false,
+            modifierFlags: [.shift]
+        ) === NSCursor.arrow)
     }
 
     @Test func pathSelectionUsesABlackPathArrowWithoutLeakingIntoComponentMode() {
