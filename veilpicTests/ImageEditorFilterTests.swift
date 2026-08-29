@@ -2173,7 +2173,7 @@ struct ImageEditorFilterTests {
         )
         let vignetteEnd = try #require(
             panelSource[vignetteStart.upperBound...].range(
-                of: "else if viewModel.selectedFilter == .minimum"
+                of: "else if viewModel.selectedFilter == .oilPaint"
             )
         )
         let vignetteSource = panelSource[vignetteStart.lowerBound..<vignetteEnd.lowerBound]
@@ -2184,6 +2184,37 @@ struct ImageEditorFilterTests {
         #expect(vignetteSource.contains("imageEditor.filter.vignetteAmount"))
         #expect(vignetteSource.contains("image-editor-filter-quick-vignette-amount"))
         #expect(!vignetteSource.contains("viewModel.filterIntensity"))
+    }
+
+    @Test func oilPaintQuickPanelUsesBrushRadiusInsteadOfLegacyIntensity() throws {
+        let root = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let viewSource = try String(
+            contentsOf: root.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let panelStart = try #require(viewSource.range(of: "private var filtersQuickPanel: some View"))
+        let panelEnd = try #require(
+            viewSource[panelStart.upperBound...].range(of: "private func historySnapshotRow")
+        )
+        let panelSource = viewSource[panelStart.lowerBound..<panelEnd.lowerBound]
+        let oilPaintStart = try #require(
+            panelSource.range(of: "else if viewModel.selectedFilter == .oilPaint")
+        )
+        let oilPaintEnd = try #require(
+            panelSource[oilPaintStart.upperBound...].range(
+                of: "else if viewModel.selectedFilter == .minimum"
+            )
+        )
+        let oilPaintSource = panelSource[oilPaintStart.lowerBound..<oilPaintEnd.lowerBound]
+
+        #expect(oilPaintSource.contains("viewModel.filterOilPaintRadius"))
+        #expect(oilPaintSource.contains("in: 1...10"))
+        #expect(oilPaintSource.contains("step: 1"))
+        #expect(oilPaintSource.contains("imageEditor.filter.oilPaintRadius"))
+        #expect(oilPaintSource.contains("image-editor-filter-quick-oil-paint-radius"))
+        #expect(!oilPaintSource.contains("viewModel.filterIntensity"))
     }
 
     @Test func imageEditorMotionBlurFilterLayerAndSmartFilterAreNonDestructive() async throws {

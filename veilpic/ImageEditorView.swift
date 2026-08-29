@@ -7697,6 +7697,18 @@ struct ImageEditorView: View {
                         .focusable(false)
                         .accessibilityLabel(L10n.text("imageEditor.filter.vignetteAmount"))
                         .accessibilityIdentifier("image-editor-filter-quick-vignette-amount")
+                } else if viewModel.selectedFilter == .oilPaint {
+                    Text(L10n.format(
+                        "imageEditor.filter.oilPaintRadiusValue",
+                        Int(viewModel.filterOilPaintRadius.rounded())
+                    ))
+                        .font(.system(size: 11, weight: .semibold).monospacedDigit())
+                        .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                        .frame(width: 52, alignment: .leading)
+                    Slider(value: $viewModel.filterOilPaintRadius, in: 1...10, step: 1)
+                        .focusable(false)
+                        .accessibilityLabel(L10n.text("imageEditor.filter.oilPaintRadius"))
+                        .accessibilityIdentifier("image-editor-filter-quick-oil-paint-radius")
                 } else if viewModel.selectedFilter == .minimum || viewModel.selectedFilter == .maximum {
                     Text("\(Int(viewModel.filterMorphologyRadius.rounded())) px")
                         .font(.system(size: 11, weight: .semibold).monospacedDigit())
