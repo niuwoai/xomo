@@ -16515,7 +16515,7 @@ enum ImageEditorCanvasCursor {
             if let cropHandle {
                 return cropResizeCursor(for: cropHandle)
             }
-            return .crosshair
+            return cropCursor()
         case .patch:
             switch patchPhase {
             case .drawingSelection:
@@ -17351,22 +17351,81 @@ enum ImageEditorCanvasCursor {
     }
 
     private static func cropCursor() -> NSCursor {
-        let cacheKey = "crop"
+        let cacheKey = "crop-creation-boundary"
         if let cachedCursor = cursorCache[cacheKey] {
             return cachedCursor
         }
-        let side: CGFloat = 34
+
+        let side: CGFloat = 36
+        let origin = NSPoint(x: 7, y: 7)
+        let destination = NSPoint(x: 29, y: 27)
         let image = NSImage(size: NSSize(width: side, height: side))
         image.lockFocus()
+
+        // Open corner brackets and a rule-of-thirds grid preview the crop
+        // boundary that a drag will create. This intentionally differs from
+        // the closed vector-shape outline used by rectangle/ellipse tools.
         let corners = NSBezierPath()
-        corners.move(to: NSPoint(x: 5, y: 13)); corners.line(to: NSPoint(x: 5, y: 5)); corners.line(to: NSPoint(x: 13, y: 5))
-        corners.move(to: NSPoint(x: 21, y: 5)); corners.line(to: NSPoint(x: 29, y: 5)); corners.line(to: NSPoint(x: 29, y: 13))
-        corners.move(to: NSPoint(x: 29, y: 21)); corners.line(to: NSPoint(x: 29, y: 29)); corners.line(to: NSPoint(x: 21, y: 29))
-        corners.move(to: NSPoint(x: 13, y: 29)); corners.line(to: NSPoint(x: 5, y: 29)); corners.line(to: NSPoint(x: 5, y: 21))
-        NSColor.black.withAlphaComponent(0.95).setStroke(); corners.lineWidth = 4; corners.stroke()
-        NSColor.white.setStroke(); corners.lineWidth = 1.5; corners.stroke()
+        corners.move(to: NSPoint(x: 7, y: 15))
+        corners.line(to: origin)
+        corners.line(to: NSPoint(x: 15, y: 7))
+        corners.move(to: NSPoint(x: 21, y: 7))
+        corners.line(to: NSPoint(x: 29, y: 7))
+        corners.line(to: NSPoint(x: 29, y: 15))
+        corners.move(to: NSPoint(x: 29, y: 19))
+        corners.line(to: destination)
+        corners.line(to: NSPoint(x: 21, y: 27))
+        corners.move(to: NSPoint(x: 15, y: 27))
+        corners.line(to: NSPoint(x: 7, y: 27))
+        corners.line(to: NSPoint(x: 7, y: 19))
+        NSColor.black.withAlphaComponent(0.95).setStroke()
+        corners.lineWidth = 4
+        corners.stroke()
+        NSColor.white.setStroke()
+        corners.lineWidth = 1.4
+        corners.stroke()
+
+        let thirds = NSBezierPath()
+        thirds.move(to: NSPoint(x: 14.3, y: 9))
+        thirds.line(to: NSPoint(x: 14.3, y: 25))
+        thirds.move(to: NSPoint(x: 21.7, y: 9))
+        thirds.line(to: NSPoint(x: 21.7, y: 25))
+        thirds.move(to: NSPoint(x: 9, y: 13.7))
+        thirds.line(to: NSPoint(x: 27, y: 13.7))
+        thirds.move(to: NSPoint(x: 9, y: 20.3))
+        thirds.line(to: NSPoint(x: 27, y: 20.3))
+        NSColor.black.withAlphaComponent(0.82).setStroke()
+        thirds.lineWidth = 2.5
+        thirds.stroke()
+        NSColor.systemBlue.withAlphaComponent(0.92).setStroke()
+        thirds.lineWidth = 1
+        thirds.stroke()
+
+        let dragGuide = NSBezierPath()
+        dragGuide.move(to: NSPoint(x: 11, y: 11))
+        dragGuide.line(to: NSPoint(x: 26, y: 24))
+        dragGuide.setLineDash([2.5, 2], count: 2, phase: 0)
+        NSColor.black.withAlphaComponent(0.9).setStroke()
+        dragGuide.lineWidth = 3
+        dragGuide.stroke()
+        NSColor.white.setStroke()
+        dragGuide.lineWidth = 1.1
+        dragGuide.stroke()
+
+        let originRing = NSBezierPath(ovalIn: NSRect(x: 2, y: 2, width: 10, height: 10))
+        NSColor.black.withAlphaComponent(0.95).setFill()
+        originRing.fill()
+        NSColor.white.setStroke()
+        originRing.lineWidth = 1.2
+        originRing.stroke()
+        NSColor.systemBlue.setFill()
+        NSBezierPath(ovalIn: NSRect(x: 5, y: 5, width: 4, height: 4)).fill()
+
         image.unlockFocus()
-        return cache(NSCursor(image: image, hotSpot: NSPoint(x: 5, y: side - 5)), for: cacheKey)
+        return cache(
+            NSCursor(image: image, hotSpot: NSPoint(x: origin.x, y: side - origin.y)),
+            for: cacheKey
+        )
     }
 
     private static func patchCursor() -> NSCursor {

@@ -2484,7 +2484,25 @@ struct ImageEditorCanvasCursorTests {
         #expect(diagonalForward !== NSCursor.crosshair)
         #expect(diagonalBackward !== NSCursor.crosshair)
         #expect(diagonalForward.image.tiffRepresentation != diagonalBackward.image.tiffRepresentation)
+        #expect(defaultCrop !== NSCursor.crosshair)
+        #expect(defaultCrop.image.size == NSSize(width: 36, height: 36))
+        #expect(defaultCrop.hotSpot == NSPoint(x: 7, y: 29))
         #expect(defaultCrop.image.tiffRepresentation != diagonalForward.image.tiffRepresentation)
+        #expect(defaultCrop.image.tiffRepresentation != ImageEditorCanvasCursor.cursor(
+            for: .rectangle,
+            brushDiameter: 18
+        ).image.tiffRepresentation)
+        #expect(ImageEditorCanvasCursor.cursor(
+            for: .components,
+            selectedTool: .crop,
+            brushDiameter: 18
+        ) === NSCursor.arrow)
+        #expect(ImageEditorCanvasCursor.cursor(
+            for: .tools,
+            selectedTool: .crop,
+            brushDiameter: 18,
+            isPointerOverCanvas: false
+        ) === NSCursor.arrow)
     }
 
     @Test func layerTransformGeometryFindsTheNearestVisibleControl() {
@@ -2685,13 +2703,13 @@ struct ImageEditorCanvasCursorTests {
         #expect(ImageEditorCanvasCursor.family(for: .sharpen) == .retouchBrush)
         #expect(ImageEditorCanvasCursor.family(for: .smudge) == .retouchBrush)
 
-        let precisionTools: [ImageEditorTool] = [.marquee, .crop]
+        let precisionTools: [ImageEditorTool] = [.marquee]
         for tool in precisionTools {
             #expect(ImageEditorCanvasCursor.cursor(for: tool, brushDiameter: 18) === NSCursor.crosshair)
         }
 
         let familiarSpecificTools: [ImageEditorTool] = [
-            .lasso, .magicWand, .quickSelection, .patchTool, .pen,
+            .lasso, .magicWand, .quickSelection, .crop, .patchTool, .pen,
             .paintBucket, .gradient, .rectangle, .ellipse,
             .eyedropper, .colorSampler, .zoom
         ]
