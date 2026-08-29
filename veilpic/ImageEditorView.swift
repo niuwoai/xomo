@@ -16531,8 +16531,11 @@ enum ImageEditorCanvasCursor {
             // Red-eye correction changes a circular area derived from the
             // current brush diameter. Show that real treatment footprint and
             // its precise center instead of reviving the old oversized eye
-            // pictogram or hiding the radius behind a generic crosshair.
-            return familiarBrushCursor(diameter: brushDiameter)
+            // pictogram. Caps Lock retains Photoshop's familiar temporary
+            // precision mode when the full ring would obscure a small pupil.
+            return modifierFlags.contains(.capsLock)
+                ? .crosshair
+                : familiarBrushCursor(diameter: brushDiameter)
         case .samplingScope:
             return .crosshair
         case .vectorPen:

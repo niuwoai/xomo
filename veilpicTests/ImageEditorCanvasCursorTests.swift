@@ -2736,6 +2736,31 @@ struct ImageEditorCanvasCursorTests {
         ) === NSCursor.arrow)
     }
 
+    @Test func redEyeCapsLockTemporarilyUsesPrecisionWithoutEscapingComponentMode() {
+        let ordinary = ImageEditorCanvasCursor.cursor(for: .redEye, brushDiameter: 72)
+        let precision = ImageEditorCanvasCursor.cursor(
+            for: .redEye,
+            brushDiameter: 72,
+            modifierFlags: [.capsLock]
+        )
+
+        #expect(ordinary !== NSCursor.crosshair)
+        #expect(precision === NSCursor.crosshair)
+        #expect(ImageEditorCanvasCursor.cursor(
+            for: .components,
+            selectedTool: .redEye,
+            brushDiameter: 72,
+            modifierFlags: [.capsLock]
+        ) === NSCursor.arrow)
+        #expect(ImageEditorCanvasCursor.cursor(
+            for: .tools,
+            selectedTool: .redEye,
+            brushDiameter: 72,
+            isCanvasPanGestureActive: true,
+            modifierFlags: [.capsLock]
+        ) === NSCursor.openHand)
+    }
+
     @Test func textCursorDistinguishesCreationFromExistingTextAndComponents() throws {
         #expect(ImageEditorCanvasCursor.family(for: .text) == .textInsertion)
 
