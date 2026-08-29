@@ -8,6 +8,27 @@
 import AppKit
 import UniformTypeIdentifiers
 
+enum ImageEditorFilePanelImportPolicy {
+    static var allowedContentTypes: [UTType] {
+        var contentTypes: [UTType] = [
+            .png,
+            .jpeg,
+            .tiff,
+            .heic,
+            .webP,
+            UTType(filenameExtension: "svg") ?? .xml
+        ]
+        if let webLocation = UTType(filenameExtension: "webloc") {
+            contentTypes.append(webLocation)
+        }
+        return contentTypes
+    }
+
+    static func resolve(_ urls: [URL]) -> XomoCanvasURLDropRoute {
+        XomoCanvasURLDropPolicy.resolve(urls)
+    }
+}
+
 @MainActor
 enum ImageEditorFilePanelKeyboardFocusRestorer {
     typealias DeferredRestoreScheduler = (@escaping @MainActor () -> Void) -> Void
@@ -250,28 +271,34 @@ extension ImageEditorViewModel {
         canPasteClipboardImage
     }
 
-    func chooseImageLayerFile() {
+    func chooseImageLayerFile(
+        onFigmaLink: @escaping @MainActor (String) -> Void
+    ) {
         let originatingWindow = NSApp.keyWindow
         let panel = NSOpenPanel()
-        panel.allowedContentTypes = [
-            .png,
-            .jpeg,
-            .tiff,
-            .heic,
-            .webP,
-            UTType(filenameExtension: "svg") ?? .xml
-        ]
+        panel.allowedContentTypes = ImageEditorFilePanelImportPolicy.allowedContentTypes
         panel.allowsMultipleSelection = true
         panel.canChooseDirectories = false
         panel.canChooseFiles = true
         panel.prompt = L10n.text("imageEditor.action.fileImport")
         panel.begin { [weak self] response in
             Task { @MainActor in
+                var shouldRestoreEditorFocus = true
                 defer {
-                    ImageEditorFilePanelKeyboardFocusRestorer.restore(to: originatingWindow)
+                    if shouldRestoreEditorFocus {
+                        ImageEditorFilePanelKeyboardFocusRestorer.restore(to: originatingWindow)
+                    }
                 }
                 guard let self, response == .OK, !panel.urls.isEmpty else { return }
-                self.importLayerFiles(panel.urls)
+                switch ImageEditorFilePanelImportPolicy.resolve(panel.urls) {
+                case let .localFiles(urls):
+                    self.importLayerFiles(urls)
+                case let .figmaLink(canonicalURL):
+                    shouldRestoreEditorFocus = false
+                    onFigmaLink(canonicalURL)
+                case .unavailable:
+                    self.statusText = L10n.text("imageEditor.status.layerImportFailed")
+                }
             }
         }
     }

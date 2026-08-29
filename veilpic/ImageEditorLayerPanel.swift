@@ -2247,7 +2247,14 @@ extension ImageEditorView {
     private var layerActionToolbar: some View {
         HStack(spacing: 6) {
             layerActionButton(systemImage: "plus", helpKey: "imageEditor.action.layerNew") { viewModel.addLayer() }
-            layerActionButton(systemImage: "photo.badge.plus", helpKey: "imageEditor.action.layerImport") { viewModel.chooseImageLayerFile() }
+            layerActionButton(systemImage: "photo.badge.plus", helpKey: "imageEditor.action.layerImport") {
+                viewModel.chooseImageLayerFile { canonicalURL in
+                    presentFigmaLinkImport(
+                        canonicalURL: canonicalURL,
+                        placementCenter: viewModel.visibleCanvasCenter
+                    )
+                }
+            }
             layerActionButton(systemImage: "folder.badge.plus", helpKey: "imageEditor.action.layerGroupNew") { viewModel.addLayerGroup() }
             layerActionButton(systemImage: "doc.on.doc", helpKey: "imageEditor.action.layerDuplicate") { viewModel.duplicateSelectedLayer() }
                 .disabled(!viewModel.canDuplicateSelectedLayer)

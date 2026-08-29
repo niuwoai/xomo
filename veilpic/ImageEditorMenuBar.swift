@@ -78,7 +78,14 @@ extension ImageEditorView {
                 viewModel.isPSDCompatibilityReportPresented = true
             },
             canShowPSDCompatibilityReport: viewModel.psdCompatibilityReport != nil,
-            importFile: { viewModel.chooseImageLayerFile() },
+            importFile: {
+                viewModel.chooseImageLayerFile { canonicalURL in
+                    presentFigmaLinkImport(
+                        canonicalURL: canonicalURL,
+                        placementCenter: viewModel.visibleCanvasCenter
+                    )
+                }
+            },
             placeEmbeddedSmartObject: { viewModel.chooseEmbeddedSmartObjectFile() },
             importFigmaLink: { performFileCommand(.importFigmaLink) },
             quickExportPNG: { viewModel.quickExportPNG() },

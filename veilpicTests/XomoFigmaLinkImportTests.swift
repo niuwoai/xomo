@@ -1,6 +1,7 @@
 import AppKit
 import Foundation
 import Testing
+import UniformTypeIdentifiers
 @testable import musepic
 
 @MainActor
@@ -553,6 +554,66 @@ struct XomoFigmaLinkImportTests {
                 URL(fileURLWithPath: "/tmp/Poster.png")
             ]) == .unavailable
         )
+    }
+
+    @Test func fileImportPanelRoutesTrustedFigmaWebLocationsIntoTheSharedPreview() throws {
+        let webLocationType = try #require(UTType(filenameExtension: "webloc"))
+        #expect(
+            ImageEditorFilePanelImportPolicy.allowedContentTypes.contains {
+                $0.identifier == webLocationType.identifier
+            }
+        )
+
+        let canonical = "https://www.figma.com/design/abc123DEF456/Checkout?node-id=1-2"
+        let data = try PropertyListSerialization.data(
+            fromPropertyList: [
+                "URL": "https://figma.com/design/abc123DEF456/Checkout?node-id=1-2&utm_source=finder"
+            ],
+            format: .xml,
+            options: 0
+        )
+        let webLocationURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString)
+            .appendingPathExtension("webloc")
+        defer { try? FileManager.default.removeItem(at: webLocationURL) }
+        try data.write(to: webLocationURL, options: .atomic)
+
+        #expect(
+            ImageEditorFilePanelImportPolicy.resolve([webLocationURL]) == .figmaLink(canonical)
+        )
+        let png = URL(fileURLWithPath: "/tmp/Poster.png")
+        let svg = URL(fileURLWithPath: "/tmp/Icon.svg")
+        #expect(
+            ImageEditorFilePanelImportPolicy.resolve([png, svg]) == .localFiles([png, svg])
+        )
+        #expect(
+            ImageEditorFilePanelImportPolicy.resolve([webLocationURL, png]) == .unavailable
+        )
+
+        let root = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let importer = try String(
+            contentsOf: root.appendingPathComponent("veilpic/ImageEditorImport.swift"),
+            encoding: .utf8
+        )
+        let menu = try String(
+            contentsOf: root.appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),
+            encoding: .utf8
+        )
+        let layerPanel = try String(
+            contentsOf: root.appendingPathComponent("veilpic/ImageEditorLayerPanel.swift"),
+            encoding: .utf8
+        )
+        #expect(importer.contains("panel.allowedContentTypes = ImageEditorFilePanelImportPolicy.allowedContentTypes"))
+        #expect(importer.contains("switch ImageEditorFilePanelImportPolicy.resolve(panel.urls)"))
+        #expect(importer.contains("case let .figmaLink(canonicalURL):"))
+        #expect(importer.contains("shouldRestoreEditorFocus = false"))
+        #expect(importer.contains("onFigmaLink(canonicalURL)"))
+        #expect(menu.contains("viewModel.chooseImageLayerFile { canonicalURL in"))
+        #expect(layerPanel.contains("viewModel.chooseImageLayerFile { canonicalURL in"))
+        #expect(menu.contains("placementCenter: viewModel.visibleCanvasCenter"))
+        #expect(layerPanel.contains("placementCenter: viewModel.visibleCanvasCenter"))
     }
 
     @Test func canvasURLDropRejectsAmbiguousOrUntrustedRemoteURLs() throws {

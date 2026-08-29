@@ -3439,7 +3439,7 @@
 "xomo.help.windowTitle" = "Xomo Help";
 "xomo.help.offlineNote" = "This guide works entirely offline and is always available from the Help menu.";
 "xomo.help.guide.open.title" = "Open, Import, and Place";
-"xomo.help.guide.open.body" = "Open File creates a new document. Import Files adds images or SVG as editable layers on the current canvas. Place Embedded preserves a smart object's source and reset capability.";
+"xomo.help.guide.open.body" = "Open File creates a new document. Import Files adds images or SVG as editable layers, or opens a trusted Figma .webloc in the link preview. Place Embedded preserves a smart object's source and reset capability.";
 "xomo.help.guide.components.title" = "Components and Tools";
 "xomo.help.guide.components.body" = "The component library follows Sketch/Figma object workflows: click or drag a component to edit its structure, with the system arrow for ordinary hovering. Tool-specific cursors return only after switching back to Tools.";
 "xomo.help.guide.figma.title" = "Import a Figma Link";

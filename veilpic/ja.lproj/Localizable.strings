@@ -3439,7 +3439,7 @@
 "xomo.help.windowTitle" = "Xomo ヘルプ";
 "xomo.help.offlineNote" = "このガイドは完全にオフラインで利用でき、いつでもヘルプメニューから開けます。";
 "xomo.help.guide.open.title" = "開く・読み込む・配置する";
-"xomo.help.guide.open.body" = "「ファイルを開く」は新規ドキュメントを作成します。「ファイルを読み込む」は画像や SVG を現在のキャンバスへ編集可能なレイヤーとして追加し、「埋め込みを配置」はスマートオブジェクトのソースとリセット機能を保持します。";
+"xomo.help.guide.open.body" = "「ファイルを開く」は新規ドキュメントを作成します。「ファイルを読み込む」は画像や SVG を編集可能なレイヤーとして追加するか、信頼できる Figma の .webloc をリンクプレビューで開きます。「埋め込みを配置」はスマートオブジェクトのソースとリセット機能を保持します。";
 "xomo.help.guide.components.title" = "コンポーネントとツール";
 "xomo.help.guide.components.body" = "コンポーネントライブラリは Sketch/Figma のオブジェクト操作に従います。クリックまたはドラッグして構造を編集し、通常のホバーではシステム矢印を使用します。ツール固有のカーソルはツールへ戻ったときだけ復帰します。";
 "xomo.help.guide.figma.title" = "Figma リンクを読み込む";

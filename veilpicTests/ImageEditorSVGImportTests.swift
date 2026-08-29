@@ -1195,7 +1195,7 @@ struct ImageEditorSVGImportTests {
             contentsOf: root.appendingPathComponent("veilpic/ImageEditorImport.swift"),
             encoding: .utf8
         )
-        let chooserStart = try #require(source.range(of: "func chooseImageLayerFile()"))
+        let chooserStart = try #require(source.range(of: "func chooseImageLayerFile("))
         let chooserEnd = try #require(
             source[chooserStart.upperBound...].range(of: "func importLayerFile")
         )
@@ -1206,16 +1206,20 @@ struct ImageEditorSVGImportTests {
         )
         let sharedImporter = source[sharedImporterStart..<sharedImporterEnd.lowerBound]
 
-        #expect(chooser.contains("UTType(filenameExtension: \"svg\")"))
-        #expect(chooser.contains(".tiff"))
-        #expect(chooser.contains(".heic"))
-        #expect(chooser.contains(".webP"))
+        #expect(chooser.contains("ImageEditorFilePanelImportPolicy.allowedContentTypes"))
         #expect(chooser.contains("panel.allowsMultipleSelection = true"))
         #expect(chooser.contains("let originatingWindow = NSApp.keyWindow"))
+        #expect(chooser.contains("var shouldRestoreEditorFocus = true"))
         #expect(chooser.contains("defer {"))
+        #expect(chooser.contains("if shouldRestoreEditorFocus"))
         #expect(chooser.contains("ImageEditorFilePanelKeyboardFocusRestorer.restore(to: originatingWindow)"))
         #expect(chooser.contains("!panel.urls.isEmpty"))
-        #expect(chooser.contains("self.importLayerFiles(panel.urls)"))
+        #expect(chooser.contains("switch ImageEditorFilePanelImportPolicy.resolve(panel.urls)"))
+        #expect(chooser.contains("case let .localFiles(urls):"))
+        #expect(chooser.contains("self.importLayerFiles(urls)"))
+        #expect(chooser.contains("case let .figmaLink(canonicalURL):"))
+        #expect(chooser.contains("shouldRestoreEditorFocus = false"))
+        #expect(chooser.contains("onFigmaLink(canonicalURL)"))
         #expect(sharedImporter.contains("ImageEditorLayerFileImportPolicy.kind(for: url)"))
         #expect(sharedImporter.contains("case .editableSVG:"))
         #expect(sharedImporter.contains("XomoEditableSVGImporter.parse(data)"))

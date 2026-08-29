@@ -2003,7 +2003,7 @@ struct ImageEditorScopeTests {
         #expect(menuBarSource.contains("viewModel.openExportPanel()"))
         #expect(commandsSource.contains(".keyboardShortcut(\"s\", modifiers: [.command, .shift, .option])"))
         #expect(commandsSource.contains("imageEditor.action.fileImport"))
-        #expect(menuBarSource.contains("viewModel.chooseImageLayerFile()"))
+        #expect(menuBarSource.contains("viewModel.chooseImageLayerFile { canonicalURL in"))
 
         let helperStart = try #require(menuBarSource.range(of: "func performFileCommand("))
         let helperEnd = try #require(
