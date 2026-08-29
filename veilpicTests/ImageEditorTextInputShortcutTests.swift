@@ -191,6 +191,22 @@ struct ImageEditorTextInputShortcutTests {
         ))
     }
 
+    @Test func repeatedLayerPanelSelectionReclaimsDeleteEvenWhenSelectionDoesNotChange() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let panelSource = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorLayerPanel.swift"),
+            encoding: .utf8
+        )
+        let selectionFunction = try #require(
+            panelSource.components(separatedBy: "private func selectLayerFromPanel").dropFirst().first
+        )
+
+        #expect(selectionFunction.contains("viewModel.selectLayer("))
+        #expect(selectionFunction.contains("reclaimEditorKeyboardFocusAfterLayerSelection()"))
+    }
+
     @MainActor
     @Test func filePanelTeardownCannotStealDeleteFromTheImportedObject() throws {
         let window = NSWindow(

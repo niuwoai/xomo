@@ -536,12 +536,8 @@ struct ImageEditorView: View {
             isTransformReferencePointDragCancelled = false
             selectedGradientOverlayStopIndex = nil
             selectedGradientOverlayMidpointIndex = nil
-            ImageEditorLayerSelectionKeyboardFocusRestorer.reclaimIfNeeded(
-                in: NSApp.keyWindow ?? NSApp.mainWindow,
-                hasSelectedLayers: !selectedLayerIDs.isEmpty,
-                isCanvasTextEditing: isCanvasTextEditorFocused,
-                isInlineLayerNameEditing: focusedInlineLayerNameID != nil,
-                isFigmaSizeConstraintEditing: focusedFigmaSizeConstraintField != nil
+            reclaimEditorKeyboardFocusAfterLayerSelection(
+                hasSelectedLayers: !selectedLayerIDs.isEmpty
             )
         }
         .onChange(of: viewModel.selectedLayerFigmaComponentProperties) { _ in
@@ -657,6 +653,22 @@ struct ImageEditorView: View {
         .focusedSceneValue(\.xomoFilterCommandContent, xomoFilterCommandContent)
         .focusedSceneValue(\.xomoViewCommandContent, xomoViewCommandContent)
         .focusedSceneValue(\.xomoWindowCommandContent, xomoWindowCommandContent)
+    }
+
+    /// Panel clicks can select an already-selected layer, so the selection set
+    /// does not always change and the `onChange` recovery above will not run.
+    /// Reusing this entry point lets those clicks release stale search-field
+    /// focus without stealing focus from an intentional text editor.
+    func reclaimEditorKeyboardFocusAfterLayerSelection(
+        hasSelectedLayers: Bool? = nil
+    ) {
+        ImageEditorLayerSelectionKeyboardFocusRestorer.reclaimIfNeeded(
+            in: NSApp.keyWindow ?? NSApp.mainWindow,
+            hasSelectedLayers: hasSelectedLayers ?? !viewModel.document.selectedLayerIDs.isEmpty,
+            isCanvasTextEditing: isCanvasTextEditorFocused,
+            isInlineLayerNameEditing: focusedInlineLayerNameID != nil,
+            isFigmaSizeConstraintEditing: focusedFigmaSizeConstraintField != nil
+        )
     }
 
     @ViewBuilder

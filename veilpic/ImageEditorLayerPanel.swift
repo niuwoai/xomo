@@ -3206,6 +3206,7 @@ extension ImageEditorView {
                 extendingSelection: flags.contains(.command)
             )
         }
+        reclaimEditorKeyboardFocusAfterLayerSelection()
     }
 
     @ViewBuilder
