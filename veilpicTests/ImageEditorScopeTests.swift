@@ -3131,6 +3131,12 @@ struct ImageEditorScopeTests {
 
         #expect(panelSource.contains("imageEditor.export.saveAllSlices"))
         #expect(panelSource.contains("viewModel.runExportAllSlices()"))
+        #expect(panelSource.contains("imageEditor.export.saveSelectedSlicePresets"))
+        #expect(panelSource.contains("viewModel.runExportSelectedSlicePresets()"))
+        #expect(panelSource.contains("!viewModel.canExportSelectedSlicePresets"))
+        #expect(panelSource.contains(
+            ".accessibilityIdentifier(\"image-editor-export-selected-slice-presets\")"
+        ))
         #expect(panelSource.contains(
             ".accessibilityIdentifier(\"image-editor-export-all-slices\")"
         ))
@@ -3164,8 +3170,10 @@ struct ImageEditorScopeTests {
                 encoding: .utf8
             )
             #expect(localization.contains("\"imageEditor.export.saveAllSlices\""))
+            #expect(localization.contains("\"imageEditor.export.saveSelectedSlicePresets\""))
             #expect(localization.contains("\"imageEditor.export.chooseFolder\""))
             #expect(localization.contains("\"imageEditor.status.exportedAllSlices\""))
+            #expect(localization.contains("\"imageEditor.status.exportedSelectedSlicePresets\""))
             #expect(localization.contains("\"imageEditor.status.exportSliceConflicts\""))
             #expect(localization.contains("\"imageEditor.export.sliceConflictPolicy.skipExisting\""))
             #expect(localization.contains("\"imageEditor.status.exportedSlicesSkippingExisting\""))

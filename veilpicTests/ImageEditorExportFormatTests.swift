@@ -2740,6 +2740,95 @@ struct ImageEditorExportFormatTests {
         #expect(try Data(contentsOf: protectedURL) == protectedData)
     }
 
+    @Test func exportingSelectedSlicePresetsExcludesOtherSlicesAndWritesEveryPreset() throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "figma-delivery.png",
+            image: NSImage.rendered(size: CGSize(width: 40, height: 20)) { rect in
+                NSColor.systemIndigo.setFill()
+                rect.fill()
+            }!
+        ) { _ in }
+        let selectedSlice = ImageEditorSlice(
+            name: "Hero",
+            frame: CGRect(x: 0, y: 0, width: 10, height: 10),
+            exportPresets: [
+                ImageEditorSliceExportPreset(
+                    suffix: "@2x",
+                    format: .png,
+                    constraint: .scale,
+                    value: 2
+                ),
+                ImageEditorSliceExportPreset(
+                    suffix: "-wide",
+                    format: .jpeg,
+                    constraint: .width,
+                    value: 30
+                ),
+                ImageEditorSliceExportPreset(
+                    suffix: "-print",
+                    format: .pdf,
+                    constraint: .scale,
+                    value: 1
+                )
+            ]
+        )
+        let otherSlice = ImageEditorSlice(
+            name: "Footer",
+            frame: CGRect(x: 12, y: 0, width: 8, height: 8),
+            exportPresets: [
+                ImageEditorSliceExportPreset(
+                    suffix: "@2x",
+                    format: .png,
+                    constraint: .scale,
+                    value: 2
+                )
+            ]
+        )
+        viewModel.document.slices = [selectedSlice, otherSlice]
+        viewModel.exportSettings.scope = .slice
+        viewModel.exportSettings.sliceID = selectedSlice.id
+        viewModel.exportSettings.format = .pdf
+
+        #expect(viewModel.canExportSelectedSlicePresets)
+        let plan = viewModel.selectedSliceExportPlan(settings: viewModel.exportSettings)
+        #expect(plan.map(\.sliceID) == [selectedSlice.id, selectedSlice.id, selectedSlice.id])
+        #expect(plan.map(\.filename) == ["Hero@2x.png", "Hero-wide.jpg", "Hero-print.pdf"])
+        #expect(plan.map(\.settings.format) == [.png, .jpeg, .pdf])
+        #expect(!plan.contains { $0.sliceID == otherSlice.id })
+
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(
+            "xomo-tests.selected-slice-presets.\(UUID().uuidString)",
+            isDirectory: true
+        )
+        try FileManager.default.createDirectory(
+            at: directory,
+            withIntermediateDirectories: false
+        )
+        defer { try? FileManager.default.removeItem(at: directory) }
+
+        viewModel.isExportSheetPresented = true
+        let exportedCount = viewModel.exportSelectedSlicePresets(
+            settings: viewModel.exportSettings,
+            to: directory
+        )
+        #expect(exportedCount == 3)
+        #expect(!viewModel.isExportSheetPresented)
+        #expect(Set(try FileManager.default.contentsOfDirectory(atPath: directory.path)) == Set(
+            plan.map(\.filename)
+        ))
+        #expect(viewModel.statusText == L10n.format(
+            "imageEditor.status.exportedSelectedSlicePresets",
+            3,
+            directory.lastPathComponent
+        ))
+
+        viewModel.exportSettings.sliceID = otherSlice.id
+        #expect(!viewModel.canExportSelectedSlicePresets)
+        #expect(viewModel.selectedSliceExportPlan(settings: viewModel.exportSettings).map(\.sliceID) == [
+            otherSlice.id
+        ])
+    }
+
     @Test func hotspotHTMLExportEmbedsCanvasAndEscapesImageMapMetadata() throws {
         let image = NSImage.transparent(size: CGSize(width: 80, height: 60))
         let pngData = try #require(image.qingtuPNGData())

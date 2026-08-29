@@ -447,10 +447,36 @@ extension ImageEditorViewModel {
     }
 
     func sliceExportPlan(settings: ImageEditorExportSettings) -> [ImageEditorSliceExportVariant] {
+        sliceExportPlan(settings: settings, slices: availableSlices)
+    }
+
+    func selectedSliceExportPlan(
+        settings: ImageEditorExportSettings
+    ) -> [ImageEditorSliceExportVariant] {
+        guard let sliceID = settings.sliceID,
+              let selectedSlice = slice(with: sliceID)
+        else { return [] }
+        return sliceExportPlan(settings: settings, slices: [selectedSlice])
+    }
+
+    var canExportSelectedSlicePresets: Bool {
+        guard exportSettings.scope == .slice,
+              let sliceID = exportSettings.sliceID,
+              let selectedSlice = slice(with: sliceID)
+        else { return false }
+        return (selectedSlice.exportPresets ?? []).compactMap {
+            $0.resolvedScale(for: selectedSlice.frame)
+        }.count > 1
+    }
+
+    private func sliceExportPlan(
+        settings: ImageEditorExportSettings,
+        slices: [ImageEditorSlice]
+    ) -> [ImageEditorSliceExportVariant] {
         var variants: [ImageEditorSliceExportVariant] = []
         var usedFilenames: Set<String> = []
 
-        for slice in availableSlices {
+        for slice in slices {
             let resolved = resolvedSliceExportSettings(for: slice, defaults: settings)
 
             for variantSettings in resolved.settings {
@@ -584,6 +610,20 @@ extension ImageEditorViewModel {
     func runExportAllSlices() {
         let settings = normalizedExportSettings(exportSettings)
         let plan = sliceExportPlan(settings: settings)
+        runSliceExportPanel(settings: settings, plan: plan, selectedSliceOnly: false)
+    }
+
+    func runExportSelectedSlicePresets() {
+        let settings = normalizedExportSettings(exportSettings)
+        let plan = selectedSliceExportPlan(settings: exportSettings)
+        runSliceExportPanel(settings: settings, plan: plan, selectedSliceOnly: true)
+    }
+
+    private func runSliceExportPanel(
+        settings: ImageEditorExportSettings,
+        plan: [ImageEditorSliceExportVariant],
+        selectedSliceOnly: Bool
+    ) {
         guard !plan.isEmpty else {
             statusText = L10n.text("imageEditor.status.exportFailed")
             return
@@ -604,7 +644,12 @@ extension ImageEditorViewModel {
         panel.begin { [weak self] response in
             Task { @MainActor in
                 guard let self, response == .OK, let directory = panel.url else { return }
-                self.exportAllSlices(settings: settings, to: directory)
+                _ = self.exportSlices(
+                    plan: plan,
+                    settings: settings,
+                    to: directory,
+                    selectedSliceOnly: selectedSliceOnly
+                )
             }
         }
     }
@@ -880,6 +925,33 @@ extension ImageEditorViewModel {
     @discardableResult
     func exportAllSlices(settings: ImageEditorExportSettings, to directory: URL) -> Int {
         let currentPlan = sliceExportPlan(settings: settings)
+        return exportSlices(
+            plan: currentPlan,
+            settings: settings,
+            to: directory,
+            selectedSliceOnly: false
+        )
+    }
+
+    @discardableResult
+    func exportSelectedSlicePresets(
+        settings: ImageEditorExportSettings,
+        to directory: URL
+    ) -> Int {
+        exportSlices(
+            plan: selectedSliceExportPlan(settings: settings),
+            settings: settings,
+            to: directory,
+            selectedSliceOnly: true
+        )
+    }
+
+    private func exportSlices(
+        plan currentPlan: [ImageEditorSliceExportVariant],
+        settings: ImageEditorExportSettings,
+        to directory: URL,
+        selectedSliceOnly: Bool
+    ) -> Int {
         guard !currentPlan.isEmpty else {
             statusText = L10n.text("imageEditor.status.exportFailed")
             return 0
@@ -920,7 +992,9 @@ extension ImageEditorViewModel {
             }
             statusText = resolution.conflictingFilenames.isEmpty
                 ? L10n.format(
-                    "imageEditor.status.exportedAllSlices",
+                    selectedSliceOnly
+                        ? "imageEditor.status.exportedSelectedSlicePresets"
+                        : "imageEditor.status.exportedAllSlices",
                     artifacts.count,
                     directory.lastPathComponent
                 )

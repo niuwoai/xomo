@@ -602,6 +602,7 @@
 "imageEditor.export.qualityValue" = "%d%%";
 "imageEditor.export.outputSize" = "Output Size";
 "imageEditor.export.saveAs" = "Save As";
+"imageEditor.export.saveSelectedSlicePresets" = "Export Current Slice Presets…";
 "imageEditor.export.saveAllSlices" = "Export All Slices…";
 "imageEditor.export.chooseFolder" = "Choose Folder";
 "imageEditor.export.sliceConflictPolicy" = "Existing files";
@@ -2227,6 +2228,7 @@
 "imageEditor.status.exportWebPUnsupported" = "This system cannot write WebP files";
 "imageEditor.status.exportedBatch" = "Exported %ld variants to %@";
 "imageEditor.status.exportedAllSlices" = "Exported %ld slice files to %@";
+"imageEditor.status.exportedSelectedSlicePresets" = "Exported %ld preset files for the current slice to %@";
 "imageEditor.status.exportSliceConflicts" = "%ld slice files already exist; nothing was exported";
 "imageEditor.status.exportedSlicesSkippingExisting" = "Exported %1$ld slice files to %3$@ and skipped %2$ld existing files";
 "imageEditor.status.exportSlicesAllSkipped" = "All %ld slice files already exist; nothing new was exported";

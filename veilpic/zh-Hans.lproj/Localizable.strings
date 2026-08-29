@@ -602,6 +602,7 @@
 "imageEditor.export.qualityValue" = "%d%%";
 "imageEditor.export.outputSize" = "输出尺寸";
 "imageEditor.export.saveAs" = "另存为";
+"imageEditor.export.saveSelectedSlicePresets" = "导出当前切片预设…";
 "imageEditor.export.saveAllSlices" = "导出全部切片…";
 "imageEditor.export.chooseFolder" = "选择文件夹";
 "imageEditor.export.sliceConflictPolicy" = "已有文件";
@@ -2227,6 +2228,7 @@
 "imageEditor.status.exportWebPUnsupported" = "当前系统不支持写入 WebP";
 "imageEditor.status.exportedBatch" = "已向 %@ 导出 %ld 个倍率版本";
 "imageEditor.status.exportedAllSlices" = "已向 %2$@ 导出 %1$ld 个切片文件";
+"imageEditor.status.exportedSelectedSlicePresets" = "已向 %2$@ 导出当前切片的 %1$ld 个预设文件";
 "imageEditor.status.exportSliceConflicts" = "已有 %ld 个同名切片文件，未导出任何内容";
 "imageEditor.status.exportedSlicesSkippingExisting" = "已向 %3$@ 导出 %1$ld 个切片文件，并跳过 %2$ld 个已有文件";
 "imageEditor.status.exportSlicesAllSkipped" = "%ld 个切片文件均已存在，没有导出新文件";
