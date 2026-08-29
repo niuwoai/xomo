@@ -475,6 +475,7 @@ final class ImageEditorViewModel: ObservableObject {
                 filterVignetteAmountPercent = nil
                 filterLensDistortionAmountPercent = nil
                 filterPinchAmountPercent = nil
+                filterSpherizeAmountPercent = nil
                 filterUnsharpAmountPercent = nil
                 filterUnsharpRadiusPixels = nil
                 filterUnsharpThresholdLevels = nil
@@ -571,6 +572,16 @@ final class ImageEditorViewModel: ObservableObject {
         }
     }
 
+    var filterSpherizeEffectiveAmountPercent: Double {
+        get {
+            filterSpherizeAmountPercent
+                ?? max(-100, min(100, filterSpherizeAmount * filterIntensity * 100))
+        }
+        set {
+            filterSpherizeAmountPercent = max(-100, min(100, newValue))
+        }
+    }
+
     var filterUnsharpEffectiveAmountPercent: Double {
         get {
             filterUnsharpAmountPercent
@@ -613,6 +624,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var filterRippleFrequency: Double = 0.25
     @Published var filterPinchAmountPercent: Double?
     @Published var filterPinchAmount: Double = 0.5
+    @Published var filterSpherizeAmountPercent: Double?
     @Published var filterSpherizeAmount: Double = 0.5
     @Published var filterLensDistortionAmountPercent: Double?
     @Published var filterLensDistortion: Double = 0.35
@@ -2913,11 +2925,12 @@ final class ImageEditorViewModel: ObservableObject {
         }
         if filter.kind == .spherize {
             let settings = filter.normalizedSettings
+            let amount = settings.spherizeAmountPercent
+                ?? (settings.spherizeAmount * filter.normalizedIntensity * 100)
             let title = L10n.format(
                 "imageEditor.properties.smartFilterSpherizeItem",
                 filter.kind.title,
-                Int((filter.normalizedIntensity * 100).rounded()),
-                Int((settings.spherizeAmount * 100).rounded())
+                String(format: "%+d", Int(amount.rounded()))
             )
             guard !filter.isEnabled else { return title }
             return L10n.format("imageEditor.properties.smartFilterDisabled", title)
@@ -9720,6 +9733,7 @@ final class ImageEditorViewModel: ObservableObject {
             rippleFrequency: filterRippleFrequency,
             pinchAmountPercent: selectedFilter == .pinch ? filterPinchAmountPercent : nil,
             pinchAmount: filterPinchAmount,
+            spherizeAmountPercent: selectedFilter == .spherize ? filterSpherizeAmountPercent : nil,
             spherizeAmount: filterSpherizeAmount,
             lensDistortionAmountPercent: selectedFilter == .lensCorrection
                 ? filterLensDistortionAmountPercent
@@ -11592,6 +11606,7 @@ final class ImageEditorViewModel: ObservableObject {
         filterRippleFrequency = normalized.rippleFrequency
         filterPinchAmountPercent = normalized.pinchAmountPercent
         filterPinchAmount = normalized.pinchAmount
+        filterSpherizeAmountPercent = normalized.spherizeAmountPercent
         filterSpherizeAmount = normalized.spherizeAmount
         filterLensDistortionAmountPercent = normalized.lensDistortionAmountPercent
         filterLensDistortion = normalized.lensDistortion

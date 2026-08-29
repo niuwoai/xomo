@@ -1046,7 +1046,7 @@
 "imageEditor.filter.pinchAmount" = "数量";
 "imageEditor.filter.pinchAmountValue" = "%@%%";
 "imageEditor.filter.spherizeAmount" = "数量";
-"imageEditor.filter.spherizeAmountValue" = "%d";
+"imageEditor.filter.spherizeAmountValue" = "%@%%";
 "imageEditor.filter.lensDistortion" = "畸变校正";
 "imageEditor.filter.lensDistortionValue" = "%@%%";
 "imageEditor.shape.rectangle" = "矩形";
@@ -1273,7 +1273,7 @@
 "imageEditor.properties.smartFilterOffsetItem" = "%@ %d%% · X %d · Y %d · %@";
 "imageEditor.properties.smartFilterRippleItem" = "%@ %d%% · 数量 %d · 频率 %d";
 "imageEditor.properties.smartFilterPinchItem" = "%1$@ · 数量 %2$@%%";
-"imageEditor.properties.smartFilterSpherizeItem" = "%@ %d%% · 数量 %d";
+"imageEditor.properties.smartFilterSpherizeItem" = "%1$@ · 数量 %2$@%%";
 "imageEditor.properties.smartFilterLensCorrectionItem" = "%1$@ · 畸变 %2$@%%";
 "imageEditor.properties.smartFilterDisabled" = "%@（已关闭）";
 "imageEditor.properties.smartFilterSeparator" = " · ";

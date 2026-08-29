@@ -11889,7 +11889,8 @@ struct ImageEditorView: View {
                     && viewModel.selectedFilter != .oilPaint
                     && viewModel.selectedFilter != .vignette
                     && viewModel.selectedFilter != .lensCorrection
-                    && viewModel.selectedFilter != .pinch {
+                    && viewModel.selectedFilter != .pinch
+                    && viewModel.selectedFilter != .spherize {
                     Slider(value: $viewModel.filterIntensity, in: 0...1, step: 0.05)
                 }
                 if viewModel.selectedFilter == .gaussianBlur {
@@ -12473,12 +12474,23 @@ struct ImageEditorView: View {
                         Text(L10n.text("imageEditor.filter.spherizeAmount"))
                             .font(.system(size: 10, weight: .medium))
                             .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
-                        Slider(value: $viewModel.filterSpherizeAmount, in: -1...1, step: 0.05)
-                        Text(L10n.format("imageEditor.filter.spherizeAmountValue", Int((viewModel.filterSpherizeAmount * 100).rounded())))
+                        Slider(
+                            value: Binding(
+                                get: { viewModel.filterSpherizeEffectiveAmountPercent },
+                                set: { viewModel.filterSpherizeEffectiveAmountPercent = $0 }
+                            ),
+                            in: -100...100,
+                            step: 1
+                        )
+                        Text(L10n.format(
+                            "imageEditor.filter.spherizeAmountValue",
+                            String(format: "%+d", Int(viewModel.filterSpherizeEffectiveAmountPercent.rounded()))
+                        ))
                             .font(.system(size: 10, weight: .semibold))
                             .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
-                            .frame(width: 44, alignment: .trailing)
+                            .frame(width: 52, alignment: .trailing)
                     }
+                    .accessibilityIdentifier("image-editor-filter-spherize-amount")
                 }
                 if viewModel.selectedFilter == .lensCorrection {
                     HStack {

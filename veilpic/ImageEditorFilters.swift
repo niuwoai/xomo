@@ -37,6 +37,9 @@ extension NSImage {
         if kind == .pinch, normalizedSettings.pinchAmountPercent == 0 {
             return self
         }
+        if kind == .spherize, normalizedSettings.spherizeAmountPercent == 0 {
+            return self
+        }
         let hasExplicitFilterAmount = (
             kind == .sharpen
                 && normalizedSettings.sharpenAmountPercent.map { $0 > 0 } == true
@@ -52,6 +55,9 @@ extension NSImage {
         ) || (
             kind == .pinch
                 && normalizedSettings.pinchAmountPercent.map { $0 != 0 } == true
+        ) || (
+            kind == .spherize
+                && normalizedSettings.spherizeAmountPercent.map { $0 != 0 } == true
         )
         guard clamped > 0 || hasExplicitFilterAmount else { return self }
         if kind == .addNoise {
@@ -207,6 +213,9 @@ extension NSImage {
         if kind == .pinch, normalizedSettings.pinchAmountPercent == 0 {
             return self
         }
+        if kind == .spherize, normalizedSettings.spherizeAmountPercent == 0 {
+            return self
+        }
         let hasExplicitFilterAmount = (
             kind == .sharpen
                 && normalizedSettings.sharpenAmountPercent.map { $0 > 0 } == true
@@ -222,6 +231,9 @@ extension NSImage {
         ) || (
             kind == .pinch
                 && normalizedSettings.pinchAmountPercent.map { $0 != 0 } == true
+        ) || (
+            kind == .spherize
+                && normalizedSettings.spherizeAmountPercent.map { $0 != 0 } == true
         )
         guard intensity > 0 || hasExplicitFilterAmount else { return self }
         let normalizedOpacity = max(0, min(1, opacity))
@@ -1350,8 +1362,10 @@ extension NSImage {
 
     private func spherized(intensity: Double, settings: ImageEditorFilterSettings) -> NSImage? {
         let clampedIntensity = max(0, min(1, intensity))
-        guard clampedIntensity > 0 else { return self }
         let normalizedSettings = settings.normalized()
+        let amount = normalizedSettings.spherizeAmountPercent.map { $0 / 100 }
+            ?? (normalizedSettings.spherizeAmount * clampedIntensity)
+        guard abs(amount) > 0.000_1 else { return self }
         return pixelSampledFromBuffer { x, y, width, height, pixels, bytesPerRow, bytesPerPixel in
             let centerX = Double(max(width - 1, 1)) / 2
             let centerY = Double(max(height - 1, 1)) / 2
@@ -1384,7 +1398,6 @@ extension NSImage {
                 )
             }
 
-            let amount = normalizedSettings.spherizeAmount * clampedIntensity
             let sphereDistance = 1 - sqrt(max(0, 1 - normalizedDistance))
             let inverseDistance = sqrt(max(0, 2 * normalizedDistance - normalizedDistance * normalizedDistance))
             let targetDistance = amount >= 0 ? sphereDistance : inverseDistance

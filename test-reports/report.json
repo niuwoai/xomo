@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-29 08:43:48 +0800",
+  "generated_at": "2026-08-29 08:53:04 +0800",
   "total": 1,
   "passed": 1,
   "failed": 0,
@@ -15,7 +15,7 @@
       "file": "LocalizationResourceTests.swift",
       "test_count": 43,
       "passed": true,
-      "duration": 3.889,
+      "duration": 3.904,
       "infrastructure_retries": 0,
       "issues": [],
       "log": "LocalizationResourceTests.log"

@@ -3670,10 +3670,36 @@ struct ImageEditorFilterTests {
         #expect(viewSource.contains("viewModel.selectedFilter != .pinch"))
     }
 
-    @Test func imageEditorSpherizeFilterLayerAndSmartFilterWarpRadialPixels() async throws {
+    @Test func imageEditorSpherizeAmountSupportsLegacyAndSignedRadialWarp() async throws {
         let canvasSize = NSSize(width: 48, height: 48)
         let sourceImage = radialRampImage(size: canvasSize)
         let samplePoint = CGPoint(x: 30, y: 24)
+        let legacySettings = try JSONDecoder().decode(
+            ImageEditorFilterSettings.self,
+            from: Data("{}".utf8)
+        )
+        #expect(legacySettings.spherizeAmountPercent == nil)
+        #expect(legacySettings.spherizeAmount == 0.5)
+        let legacySpherize = try #require(sourceImage.filtered(
+            kind: .spherize,
+            intensity: 1,
+            settings: legacySettings
+        ))
+        let explicitLegacySpherize = try #require(sourceImage.filtered(
+            kind: .spherize,
+            intensity: 0,
+            settings: ImageEditorFilterSettings(spherizeAmountPercent: 50)
+        ))
+        #expect(legacySpherize.qingtuPNGData() == explicitLegacySpherize.qingtuPNGData())
+        #expect(ImageEditorFilterSettings(spherizeAmountPercent: -200).normalized().spherizeAmountPercent == -100)
+        #expect(ImageEditorFilterSettings(spherizeAmountPercent: 200).normalized().spherizeAmountPercent == 100)
+        let zeroSpherize = try #require(sourceImage.filtered(
+            kind: .spherize,
+            intensity: 1,
+            settings: ImageEditorFilterSettings(spherizeAmountPercent: 0)
+        ))
+        #expect(zeroSpherize.qingtuPNGData() == sourceImage.qingtuPNGData())
+
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: sourceImage) { _ in }
         viewModel.replaceSelectedLayerImageForTesting(sourceImage, historyTitle: L10n.text("imageEditor.history.brush"))
         let baseLayerID = try #require(viewModel.document.selectedLayerID)
@@ -3681,15 +3707,15 @@ struct ImageEditorFilterTests {
         let sampleBefore = try #require(viewModel.currentImage.color(at: samplePoint)?.usingColorSpace(.deviceRGB))
 
         viewModel.selectedFilter = .spherize
-        viewModel.filterIntensity = 1
-        viewModel.filterSpherizeAmount = 1
+        viewModel.filterIntensity = 0
+        viewModel.filterSpherizeAmountPercent = 100
         viewModel.addFilterLayer()
 
         let filterLayer = try #require(viewModel.document.selectedLayer)
         let sampleAfter = try #require(viewModel.currentImage.color(at: samplePoint)?.usingColorSpace(.deviceRGB))
         #expect(filterLayer.isFilter)
         #expect(filterLayer.filter?.kind == .spherize)
-        #expect(filterLayer.filterSettings.normalized().spherizeAmount == 1)
+        #expect(filterLayer.filterSettings.normalized().spherizeAmountPercent == 100)
         #expect(viewModel.document.layers.first { $0.id == baseLayerID }?.image.qingtuPNGData() == basePixelsBefore)
         #expect(sampleAfter.redComponent < sampleBefore.redComponent - 0.03)
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerFilterNew"))
@@ -3699,18 +3725,18 @@ struct ImageEditorFilterTests {
         let smartBasePixelsBefore = try #require(smartViewModel.document.selectedLayer?.image.qingtuPNGData())
         let smartSampleBefore = try #require(smartViewModel.currentImage.color(at: samplePoint)?.usingColorSpace(.deviceRGB))
         smartViewModel.selectedFilter = .spherize
-        smartViewModel.filterIntensity = 1
-        smartViewModel.filterSpherizeAmount = -1
+        smartViewModel.filterIntensity = 0
+        smartViewModel.filterSpherizeAmountPercent = -100
         smartViewModel.addSmartFilterToSelectedLayer()
 
         let smartLayer = try #require(smartViewModel.document.selectedLayer)
         let smartFilter = try #require(smartLayer.smartFilters.first)
         let smartSampleAfter = try #require(smartViewModel.currentImage.color(at: samplePoint)?.usingColorSpace(.deviceRGB))
         #expect(smartFilter.kind == .spherize)
-        #expect(smartFilter.normalizedSettings.spherizeAmount == -1)
+        #expect(smartFilter.normalizedSettings.spherizeAmountPercent == -100)
         #expect(smartLayer.image.qingtuPNGData() == smartBasePixelsBefore)
         #expect(smartSampleAfter.redComponent > smartSampleBefore.redComponent + 0.03)
-        #expect(smartViewModel.smartFilterLabel(smartFilter) == L10n.format("imageEditor.properties.smartFilterSpherizeItem", smartFilter.kind.title, 100, -100))
+        #expect(smartViewModel.smartFilterLabel(smartFilter) == L10n.format("imageEditor.properties.smartFilterSpherizeItem", smartFilter.kind.title, "-100"))
         #expect(smartViewModel.document.history.last?.title == L10n.text("imageEditor.history.layerSmartFilterAdd"))
 
         let project = try ImageEditorProjectDocument(document: smartViewModel.document)
@@ -3718,7 +3744,17 @@ struct ImageEditorFilterTests {
         let restoredLayer = try #require(restoredDocument.layers.first { $0.id == smartLayer.id })
         let restoredFilter = try #require(restoredLayer.smartFilters.first)
         #expect(restoredFilter.kind == .spherize)
-        #expect(restoredFilter.normalizedSettings.spherizeAmount == -1)
+        #expect(restoredFilter.normalizedSettings.spherizeAmountPercent == -100)
+
+        let root = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let viewSource = try String(
+            contentsOf: root.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        #expect(viewSource.contains("image-editor-filter-spherize-amount"))
+        #expect(viewSource.contains("viewModel.selectedFilter != .spherize"))
     }
 
     @Test func imageEditorLensCorrectionAmountSupportsLegacyAndSignedRadialDistortion() async throws {
