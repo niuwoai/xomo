@@ -950,12 +950,14 @@
 "imageEditor.filter.pixelate" = "ピクセレート";
 "imageEditor.filter.pixelateCellSize" = "セルサイズ";
 "imageEditor.filter.pixelateCellSizeValue" = "%d px";
+"imageEditor.filter.addNoiseAmount" = "量";
+"imageEditor.filter.addNoiseAmountValue" = "%@%%";
 "imageEditor.filter.addNoiseMonochromatic" = "単色";
 "imageEditor.filter.addNoiseColor" = "カラー";
 "imageEditor.filter.addNoiseDistribution" = "分布";
 "imageEditor.filter.addNoiseDistribution.uniform" = "均等";
 "imageEditor.filter.addNoiseDistribution.gaussian" = "ガウス";
-"imageEditor.properties.smartFilterAddNoiseItem" = "%1$@ · %2$d%% · %3$@ · %4$@";
+"imageEditor.properties.smartFilterAddNoiseItem" = "%1$@ · %2$@%% · %3$@ · %4$@";
 "imageEditor.filter.motionBlur" = "モーションブラー";
 "imageEditor.filter.motionBlurAngle" = "角度";
 "imageEditor.filter.motionBlurAngleValue" = "%d°";

@@ -950,12 +950,14 @@
 "imageEditor.filter.pixelate" = "Pixelate";
 "imageEditor.filter.pixelateCellSize" = "Cell Size";
 "imageEditor.filter.pixelateCellSizeValue" = "%d px";
+"imageEditor.filter.addNoiseAmount" = "Amount";
+"imageEditor.filter.addNoiseAmountValue" = "%@%%";
 "imageEditor.filter.addNoiseMonochromatic" = "Monochromatic";
 "imageEditor.filter.addNoiseColor" = "Color";
 "imageEditor.filter.addNoiseDistribution" = "Distribution";
 "imageEditor.filter.addNoiseDistribution.uniform" = "Uniform";
 "imageEditor.filter.addNoiseDistribution.gaussian" = "Gaussian";
-"imageEditor.properties.smartFilterAddNoiseItem" = "%1$@ · %2$d%% · %3$@ · %4$@";
+"imageEditor.properties.smartFilterAddNoiseItem" = "%1$@ · %2$@%% · %3$@ · %4$@";
 "imageEditor.filter.motionBlur" = "Motion Blur";
 "imageEditor.filter.motionBlurAngle" = "Angle";
 "imageEditor.filter.motionBlurAngleValue" = "%d°";

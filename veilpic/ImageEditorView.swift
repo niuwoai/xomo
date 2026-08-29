@@ -11884,6 +11884,7 @@ struct ImageEditorView: View {
                     && viewModel.selectedFilter != .pixelate
                     && viewModel.selectedFilter != .motionBlur
                     && viewModel.selectedFilter != .emboss
+                    && viewModel.selectedFilter != .addNoise
                     && viewModel.selectedFilter != .unsharpMask
                     && viewModel.selectedFilter != .oilPaint {
                     Slider(value: $viewModel.filterIntensity, in: 0...1, step: 0.05)
@@ -11951,6 +11952,27 @@ struct ImageEditorView: View {
                     .accessibilityIdentifier("image-editor-filter-pixelate-cell-size")
                 }
                 if viewModel.selectedFilter == .addNoise {
+                    HStack {
+                        Text(L10n.text("imageEditor.filter.addNoiseAmount"))
+                            .font(.system(size: 10, weight: .medium))
+                            .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                        Slider(
+                            value: Binding(
+                                get: { viewModel.filterAddNoiseEffectiveAmountPercent },
+                                set: { viewModel.filterAddNoiseEffectiveAmountPercent = $0 }
+                            ),
+                            in: 0.1...400,
+                            step: 0.1
+                        )
+                        Text(L10n.format(
+                            "imageEditor.filter.addNoiseAmountValue",
+                            String(format: "%.1f", viewModel.filterAddNoiseEffectiveAmountPercent)
+                        ))
+                            .font(.system(size: 10, weight: .semibold))
+                            .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
+                            .frame(width: 62, alignment: .trailing)
+                    }
+                    .accessibilityIdentifier("image-editor-filter-add-noise-amount")
                     Picker(
                         L10n.text("imageEditor.filter.addNoiseDistribution"),
                         selection: $viewModel.filterAddNoiseDistribution

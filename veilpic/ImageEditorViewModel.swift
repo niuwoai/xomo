@@ -471,6 +471,7 @@ final class ImageEditorViewModel: ObservableObject {
             if oldValue != selectedFilter {
                 filterGaussianBlurRadius = nil
                 filterSharpenAmountPercent = nil
+                filterAddNoiseAmountPercent = nil
                 filterUnsharpAmountPercent = nil
                 filterUnsharpRadiusPixels = nil
                 filterUnsharpThresholdLevels = nil
@@ -486,6 +487,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var filterHighPassRadius: Double = 6
     @Published var filterMorphologyRadius: Double = 3
     @Published var filterPixelateCellSize: Double = 18
+    @Published var filterAddNoiseAmountPercent: Double?
     @Published var filterAddNoiseMonochromatic = true
     @Published var filterAddNoiseDistribution = ImageEditorAddNoiseDistribution.uniform
     @Published var filterMotionBlurAngleDegrees: Double = 0
@@ -522,6 +524,16 @@ final class ImageEditorViewModel: ObservableObject {
         }
         set {
             filterSharpenAmountPercent = max(0, min(200, newValue))
+        }
+    }
+
+    var filterAddNoiseEffectiveAmountPercent: Double {
+        get {
+            filterAddNoiseAmountPercent
+                ?? max(0.1, min(400, filterIntensity * 100))
+        }
+        set {
+            filterAddNoiseAmountPercent = max(0.1, min(400, newValue))
         }
     }
 
@@ -2671,13 +2683,15 @@ final class ImageEditorViewModel: ObservableObject {
         }
         if filter.kind == .addNoise {
             let settings = filter.normalizedSettings
+            let amountPercent = settings.addNoiseAmountPercent
+                ?? (filter.normalizedIntensity * 100)
             let mode = (settings.addNoiseMonochromatic ?? true)
                 ? L10n.text("imageEditor.filter.addNoiseMonochromatic")
                 : L10n.text("imageEditor.filter.addNoiseColor")
             let title = L10n.format(
                 "imageEditor.properties.smartFilterAddNoiseItem",
                 filter.kind.title,
-                Int((filter.normalizedIntensity * 100).rounded()),
+                String(format: "%.1f", amountPercent),
                 (settings.addNoiseDistribution ?? .uniform).title,
                 mode
             )
@@ -9631,6 +9645,7 @@ final class ImageEditorViewModel: ObservableObject {
                 ? filterMorphologyRadius
                 : nil,
             pixelateCellSize: selectedFilter == .pixelate ? filterPixelateCellSize : nil,
+            addNoiseAmountPercent: selectedFilter == .addNoise ? filterAddNoiseAmountPercent : nil,
             addNoiseMonochromatic: selectedFilter == .addNoise ? filterAddNoiseMonochromatic : nil,
             addNoiseDistribution: selectedFilter == .addNoise ? filterAddNoiseDistribution : nil,
             motionBlurAngleDegrees: selectedFilter == .motionBlur ? filterMotionBlurAngleDegrees : nil,
@@ -11494,6 +11509,7 @@ final class ImageEditorViewModel: ObservableObject {
             ?? max(1, min(256, (1 + filterIntensity * 4).rounded()))
         filterPixelateCellSize = normalized.pixelateCellSize
             ?? max(2, min(200, (2 + filterIntensity * 32).rounded()))
+        filterAddNoiseAmountPercent = normalized.addNoiseAmountPercent
         filterAddNoiseMonochromatic = normalized.addNoiseMonochromatic ?? true
         filterAddNoiseDistribution = normalized.addNoiseDistribution ?? .uniform
         filterMotionBlurAngleDegrees = normalized.motionBlurAngleDegrees ?? 0

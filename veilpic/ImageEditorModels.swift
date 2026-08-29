@@ -2534,6 +2534,8 @@ struct ImageEditorFilterSettings: Equatable, Codable {
     var morphologyRadius: Double?
     /// Explicit Pixelate/Mosaic cell size in pixels. Nil preserves the legacy intensity-derived scale.
     var pixelateCellSize: Double?
+    /// Add Noise amount from 0.1% to 400%. Nil preserves the legacy intensity-derived amount.
+    var addNoiseAmountPercent: Double?
     /// Whether Add Noise uses one shared value for RGB. Nil preserves the legacy monochromatic result.
     var addNoiseMonochromatic: Bool?
     /// Nil preserves the legacy uniform Add Noise distribution.
@@ -2593,6 +2595,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         highPassRadius: Double? = nil,
         morphologyRadius: Double? = nil,
         pixelateCellSize: Double? = nil,
+        addNoiseAmountPercent: Double? = nil,
         addNoiseMonochromatic: Bool? = nil,
         addNoiseDistribution: ImageEditorAddNoiseDistribution? = nil,
         motionBlurAngleDegrees: Double? = nil,
@@ -2633,6 +2636,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         self.highPassRadius = highPassRadius
         self.morphologyRadius = morphologyRadius
         self.pixelateCellSize = pixelateCellSize
+        self.addNoiseAmountPercent = addNoiseAmountPercent
         self.addNoiseMonochromatic = addNoiseMonochromatic
         self.addNoiseDistribution = addNoiseDistribution
         self.motionBlurAngleDegrees = motionBlurAngleDegrees
@@ -2676,6 +2680,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         highPassRadius = try container.decodeIfPresent(Double.self, forKey: .highPassRadius)
         morphologyRadius = try container.decodeIfPresent(Double.self, forKey: .morphologyRadius)
         pixelateCellSize = try container.decodeIfPresent(Double.self, forKey: .pixelateCellSize)
+        addNoiseAmountPercent = try container.decodeIfPresent(Double.self, forKey: .addNoiseAmountPercent)
         addNoiseMonochromatic = try container.decodeIfPresent(Bool.self, forKey: .addNoiseMonochromatic)
         addNoiseDistribution = try container.decodeIfPresent(
             ImageEditorAddNoiseDistribution.self,
@@ -2725,6 +2730,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         try container.encodeIfPresent(highPassRadius, forKey: .highPassRadius)
         try container.encodeIfPresent(morphologyRadius, forKey: .morphologyRadius)
         try container.encodeIfPresent(pixelateCellSize, forKey: .pixelateCellSize)
+        try container.encodeIfPresent(addNoiseAmountPercent, forKey: .addNoiseAmountPercent)
         try container.encodeIfPresent(addNoiseMonochromatic, forKey: .addNoiseMonochromatic)
         try container.encodeIfPresent(addNoiseDistribution, forKey: .addNoiseDistribution)
         try container.encodeIfPresent(motionBlurAngleDegrees, forKey: .motionBlurAngleDegrees)
@@ -2768,6 +2774,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
             highPassRadius: highPassRadius.map { max(1, min(256, $0)) },
             morphologyRadius: morphologyRadius.map { max(1, min(256, $0)) },
             pixelateCellSize: pixelateCellSize.map { max(2, min(200, $0)) },
+            addNoiseAmountPercent: addNoiseAmountPercent.map { max(0.1, min(400, $0)) },
             addNoiseMonochromatic: addNoiseMonochromatic,
             addNoiseDistribution: addNoiseDistribution,
             motionBlurAngleDegrees: motionBlurAngleDegrees.map { max(-180, min(180, $0)) },
@@ -2811,6 +2818,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         case highPassRadius
         case morphologyRadius
         case pixelateCellSize
+        case addNoiseAmountPercent
         case addNoiseMonochromatic
         case addNoiseDistribution
         case motionBlurAngleDegrees

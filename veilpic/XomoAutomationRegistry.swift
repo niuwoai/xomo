@@ -6251,6 +6251,7 @@ final class XomoAutomationRegistry {
             case "highPassRadius": viewModel.filterHighPassRadius = try numericSetting(value, key: key)
             case "morphologyRadius": viewModel.filterMorphologyRadius = try numericSetting(value, key: key)
             case "pixelateCellSize": viewModel.filterPixelateCellSize = try numericSetting(value, key: key)
+            case "addNoiseAmountPercent": viewModel.filterAddNoiseAmountPercent = try numericSetting(value, key: key)
             case "addNoiseMonochromatic": viewModel.filterAddNoiseMonochromatic = try booleanSetting(value, key: key)
             case "addNoiseDistribution":
                 guard
@@ -7995,6 +7996,7 @@ private extension XomoAutomationRegistry {
         "highPassRadius": XomoAutomationSchema.number(description: "High Pass radius in pixels"),
         "morphologyRadius": XomoAutomationSchema.number(description: "Minimum or Maximum radius in pixels"),
         "pixelateCellSize": XomoAutomationSchema.number(description: "Pixelate or Mosaic cell size in pixels"),
+        "addNoiseAmountPercent": XomoAutomationSchema.number(description: "Add Noise amount from 0.1 to 400 percent"),
         "addNoiseMonochromatic": XomoAutomationSchema.boolean(description: "Use one shared Add Noise value for RGB channels"),
         "addNoiseDistribution": XomoAutomationSchema.string(
             description: "Add Noise distribution",

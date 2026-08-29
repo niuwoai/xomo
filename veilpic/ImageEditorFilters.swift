@@ -28,9 +28,14 @@ extension NSImage {
         if kind == .sharpen, normalizedSettings.sharpenAmountPercent == 0 {
             return self
         }
-        let hasExplicitSharpenAmount = kind == .sharpen
-            && normalizedSettings.sharpenAmountPercent.map { $0 > 0 } == true
-        guard clamped > 0 || hasExplicitSharpenAmount else { return self }
+        let hasExplicitFilterAmount = (
+            kind == .sharpen
+                && normalizedSettings.sharpenAmountPercent.map { $0 > 0 } == true
+        ) || (
+            kind == .addNoise
+                && normalizedSettings.addNoiseAmountPercent != nil
+        )
+        guard clamped > 0 || hasExplicitFilterAmount else { return self }
         if kind == .addNoise {
             return addingDeterministicNoise(intensity: clamped, settings: settings)
         }
@@ -175,9 +180,14 @@ extension NSImage {
         if kind == .sharpen, normalizedSettings.sharpenAmountPercent == 0 {
             return self
         }
-        let hasExplicitSharpenAmount = kind == .sharpen
-            && normalizedSettings.sharpenAmountPercent.map { $0 > 0 } == true
-        guard intensity > 0 || hasExplicitSharpenAmount else { return self }
+        let hasExplicitFilterAmount = (
+            kind == .sharpen
+                && normalizedSettings.sharpenAmountPercent.map { $0 > 0 } == true
+        ) || (
+            kind == .addNoise
+                && normalizedSettings.addNoiseAmountPercent != nil
+        )
+        guard intensity > 0 || hasExplicitFilterAmount else { return self }
         let normalizedOpacity = max(0, min(1, opacity))
         guard normalizedOpacity > 0 else { return self }
         guard let filtered = filtered(kind: kind, intensity: intensity, settings: settings) else { return nil }
@@ -370,8 +380,10 @@ extension NSImage {
         intensity: Double,
         settings: ImageEditorFilterSettings
     ) -> NSImage? {
-        let amount = max(0, min(1, intensity)) * 0.45
         let normalized = settings.normalized()
+        let amountPercent = normalized.addNoiseAmountPercent
+            ?? (max(0, min(1, intensity)) * 100)
+        let amount = amountPercent / 100 * 0.45
         let monochromatic = normalized.addNoiseMonochromatic ?? true
         let distribution = normalized.addNoiseDistribution ?? .uniform
         return pixelMappedByCoordinate { x, y, red, green, blue, alpha in

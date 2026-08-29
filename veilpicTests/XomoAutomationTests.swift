@@ -5898,7 +5898,7 @@ struct XomoAutomationTests {
         #expect(viewModel.document.selectedLayer?.smartFilters.count == 1)
     }
 
-    @Test func registryConfiguresAddNoiseModesThroughTheSharedFilterPipeline() throws {
+    @Test func registryConfiguresAddNoiseAmountAndModesThroughTheSharedFilterPipeline() throws {
         let viewModel = makeViewModel()
         let registry = XomoAutomationRegistry.shared
         registry.register(viewModel)
@@ -5911,7 +5911,8 @@ struct XomoAutomationTests {
                 "filter": .string(ImageEditorFilter.addNoise.rawValue),
                 "action": .string("addSmartFilter"),
                 "settings": .object([
-                    "intensity": .number(0.7),
+                    "intensity": .number(0),
+                    "addNoiseAmountPercent": .number(500),
                     "addNoiseMonochromatic": .bool(false),
                     "addNoiseDistribution": .string(ImageEditorAddNoiseDistribution.gaussian.rawValue)
                 ])
@@ -5922,6 +5923,8 @@ struct XomoAutomationTests {
         #expect(response.result?.objectValue?["addedLayerCount"] == .number(1))
         let filter = try #require(viewModel.document.selectedLayer?.smartFilters.last)
         #expect(filter.kind == .addNoise)
+        #expect(filter.normalizedIntensity == 0)
+        #expect(filter.normalizedSettings.addNoiseAmountPercent == 400)
         #expect(filter.normalizedSettings.addNoiseMonochromatic == false)
         #expect(filter.normalizedSettings.addNoiseDistribution == .gaussian)
 
@@ -5933,6 +5936,7 @@ struct XomoAutomationTests {
             configureTool["inputSchema"]?.objectValue?["properties"]?.objectValue?["settings"]?.objectValue
         )
         let settingsProperties = try #require(settingsSchema["properties"]?.objectValue)
+        #expect(settingsProperties["addNoiseAmountPercent"]?.objectValue?["type"] == .string("number"))
         #expect(settingsProperties["addNoiseMonochromatic"]?.objectValue?["type"] == .string("boolean"))
         #expect(
             settingsProperties["addNoiseDistribution"]?.objectValue?["enum"]?.arrayValue
