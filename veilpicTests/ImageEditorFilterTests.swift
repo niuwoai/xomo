@@ -2358,7 +2358,9 @@ struct ImageEditorFilterTests {
             panelSource.range(of: "else if viewModel.selectedFilter == .liquifyTwirl")
         )
         let twirlEnd = try #require(
-            panelSource[twirlStart.upperBound...].range(of: "} else {")
+            panelSource[twirlStart.upperBound...].range(
+                of: "else if viewModel.selectedFilter == .liquifyPuckerBloat"
+            )
         )
         let twirlSource = panelSource[twirlStart.lowerBound..<twirlEnd.lowerBound]
 
@@ -2368,6 +2370,35 @@ struct ImageEditorFilterTests {
         #expect(twirlSource.contains("imageEditor.filter.liquifyTwirlAngle"))
         #expect(twirlSource.contains("image-editor-filter-quick-liquify-twirl-angle"))
         #expect(!twirlSource.contains("viewModel.filterIntensity"))
+    }
+
+    @Test func liquifyPuckerBloatQuickPanelUsesAmountInsteadOfLegacyIntensity() throws {
+        let root = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let viewSource = try String(
+            contentsOf: root.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let panelStart = try #require(viewSource.range(of: "private var filtersQuickPanel: some View"))
+        let panelEnd = try #require(
+            viewSource[panelStart.upperBound...].range(of: "private func historySnapshotRow")
+        )
+        let panelSource = viewSource[panelStart.lowerBound..<panelEnd.lowerBound]
+        let puckerBloatStart = try #require(
+            panelSource.range(of: "else if viewModel.selectedFilter == .liquifyPuckerBloat")
+        )
+        let puckerBloatEnd = try #require(
+            panelSource[puckerBloatStart.upperBound...].range(of: "} else {")
+        )
+        let puckerBloatSource = panelSource[puckerBloatStart.lowerBound..<puckerBloatEnd.lowerBound]
+
+        #expect(puckerBloatSource.contains("viewModel.filterLiquifyBulgeEffectiveAmountPercent"))
+        #expect(puckerBloatSource.contains("in: -100...100"))
+        #expect(puckerBloatSource.contains("step: 1"))
+        #expect(puckerBloatSource.contains("imageEditor.filter.liquifyBulgeAmount"))
+        #expect(puckerBloatSource.contains("image-editor-filter-quick-liquify-bulge-amount"))
+        #expect(!puckerBloatSource.contains("viewModel.filterIntensity"))
     }
 
     @Test func imageEditorMotionBlurFilterLayerAndSmartFilterAreNonDestructive() async throws {
