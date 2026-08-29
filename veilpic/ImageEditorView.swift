@@ -16537,7 +16537,14 @@ enum ImageEditorCanvasCursor {
                 ? .crosshair
                 : familiarBrushCursor(diameter: brushDiameter)
         case .samplingScope:
-            return .crosshair
+            // A Color Sampler click creates a persistent canvas marker rather
+            // than merely reading one transient pixel. Preview that result
+            // with a compact target marker; Caps Lock keeps the familiar
+            // precise crosshair available when the marker would obscure a
+            // very small feature.
+            return modifierFlags.contains(.capsLock)
+                ? .crosshair
+                : samplingScopeCursor()
         case .vectorPen:
             if penConversionIsBlocked || penAdditionIsBlocked || penAnchorDeletionIsBlocked
                 || penContinuationIsBlocked {

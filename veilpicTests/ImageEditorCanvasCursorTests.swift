@@ -2686,7 +2686,7 @@ struct ImageEditorCanvasCursorTests {
         #expect(ImageEditorCanvasCursor.family(for: .smudge) == .retouchBrush)
 
         let precisionTools: [ImageEditorTool] = [
-            .marquee, .crop, .gradient, .rectangle, .ellipse, .colorSampler
+            .marquee, .crop, .gradient, .rectangle, .ellipse
         ]
         for tool in precisionTools {
             #expect(ImageEditorCanvasCursor.cursor(for: tool, brushDiameter: 18) === NSCursor.crosshair)
@@ -2694,7 +2694,7 @@ struct ImageEditorCanvasCursorTests {
 
         let familiarSpecificTools: [ImageEditorTool] = [
             .lasso, .magicWand, .quickSelection, .patchTool, .pen,
-            .paintBucket, .eyedropper, .zoom
+            .paintBucket, .eyedropper, .colorSampler, .zoom
         ]
         for tool in familiarSpecificTools {
             #expect(ImageEditorCanvasCursor.cursor(for: tool, brushDiameter: 18) !== NSCursor.crosshair)
@@ -3060,6 +3060,12 @@ struct ImageEditorCanvasCursorTests {
             isPointerOverColorSamplerPoint: true,
             modifierFlags: [.option]
         )
+        let precisePlacement = ImageEditorCanvasCursor.cursor(
+            for: .tools,
+            selectedTool: .colorSampler,
+            brushDiameter: 18,
+            modifierFlags: [.capsLock]
+        )
         let componentLibrary = ImageEditorCanvasCursor.cursor(
             for: .components,
             selectedTool: .colorSampler,
@@ -3068,7 +3074,9 @@ struct ImageEditorCanvasCursorTests {
             modifierFlags: [.option]
         )
 
-        #expect(placement === NSCursor.crosshair)
+        #expect(placement !== NSCursor.crosshair)
+        #expect(placement.image.size == NSSize(width: 32, height: 32))
+        #expect(precisePlacement === NSCursor.crosshair)
         #expect(pointHover === ImageEditorCanvasCursor.objectMoveCursor())
         #expect(moving === ImageEditorCanvasCursor.objectMoveCursor())
         #expect(removing !== NSCursor.crosshair)
