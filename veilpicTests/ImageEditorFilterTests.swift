@@ -3563,10 +3563,40 @@ struct ImageEditorFilterTests {
         #expect(viewModelSource.contains("filterOffsetUndefinedAreaMode = normalized.offsetUndefinedAreaMode"))
     }
 
-    @Test func imageEditorRippleFilterLayerAndSmartFilterWarpRadialPixels() async throws {
+    @Test func imageEditorRippleAmountSupportsLegacyAndSignedRadialWarp() async throws {
         let canvasSize = NSSize(width: 48, height: 48)
         let sourceImage = radialRampImage(size: canvasSize)
         let samplePoint = CGPoint(x: 29, y: 24)
+        let legacySettings = try JSONDecoder().decode(
+            ImageEditorFilterSettings.self,
+            from: Data("{}".utf8)
+        )
+        #expect(legacySettings.rippleAmountPercent == nil)
+        #expect(legacySettings.rippleAmount == 0.5)
+        #expect(legacySettings.rippleFrequency == 0.25)
+        let legacyRipple = try #require(sourceImage.filtered(
+            kind: .ripple,
+            intensity: 1,
+            settings: legacySettings
+        ))
+        let explicitLegacyRipple = try #require(sourceImage.filtered(
+            kind: .ripple,
+            intensity: 0,
+            settings: ImageEditorFilterSettings(
+                rippleAmountPercent: 50,
+                rippleFrequency: 0.25
+            )
+        ))
+        #expect(legacyRipple.qingtuPNGData() == explicitLegacyRipple.qingtuPNGData())
+        #expect(ImageEditorFilterSettings(rippleAmountPercent: -200).normalized().rippleAmountPercent == -100)
+        #expect(ImageEditorFilterSettings(rippleAmountPercent: 200).normalized().rippleAmountPercent == 100)
+        let zeroRipple = try #require(sourceImage.filtered(
+            kind: .ripple,
+            intensity: 1,
+            settings: ImageEditorFilterSettings(rippleAmountPercent: 0)
+        ))
+        #expect(zeroRipple.qingtuPNGData() == sourceImage.qingtuPNGData())
+
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: sourceImage) { _ in }
         viewModel.replaceSelectedLayerImageForTesting(sourceImage, historyTitle: L10n.text("imageEditor.history.brush"))
         let baseLayerID = try #require(viewModel.document.selectedLayerID)
@@ -3574,8 +3604,8 @@ struct ImageEditorFilterTests {
         let sampleBefore = try #require(viewModel.currentImage.color(at: samplePoint)?.usingColorSpace(.deviceRGB))
 
         viewModel.selectedFilter = .ripple
-        viewModel.filterIntensity = 1
-        viewModel.filterRippleAmount = 1
+        viewModel.filterIntensity = 0
+        viewModel.filterRippleAmountPercent = 100
         viewModel.filterRippleFrequency = 0
         viewModel.addFilterLayer()
 
@@ -3583,7 +3613,7 @@ struct ImageEditorFilterTests {
         let sampleAfter = try #require(viewModel.currentImage.color(at: samplePoint)?.usingColorSpace(.deviceRGB))
         #expect(filterLayer.isFilter)
         #expect(filterLayer.filter?.kind == .ripple)
-        #expect(filterLayer.filterSettings.normalized().rippleAmount == 1)
+        #expect(filterLayer.filterSettings.normalized().rippleAmountPercent == 100)
         #expect(filterLayer.filterSettings.normalized().rippleFrequency == 0)
         #expect(viewModel.document.layers.first { $0.id == baseLayerID }?.image.qingtuPNGData() == basePixelsBefore)
         #expect(sampleAfter.redComponent > sampleBefore.redComponent + 0.03)
@@ -3594,8 +3624,8 @@ struct ImageEditorFilterTests {
         let smartBasePixelsBefore = try #require(smartViewModel.document.selectedLayer?.image.qingtuPNGData())
         let smartSampleBefore = try #require(smartViewModel.currentImage.color(at: samplePoint)?.usingColorSpace(.deviceRGB))
         smartViewModel.selectedFilter = .ripple
-        smartViewModel.filterIntensity = 1
-        smartViewModel.filterRippleAmount = -1
+        smartViewModel.filterIntensity = 0
+        smartViewModel.filterRippleAmountPercent = -100
         smartViewModel.filterRippleFrequency = 0
         smartViewModel.addSmartFilterToSelectedLayer()
 
@@ -3603,11 +3633,11 @@ struct ImageEditorFilterTests {
         let smartFilter = try #require(smartLayer.smartFilters.first)
         let smartSampleAfter = try #require(smartViewModel.currentImage.color(at: samplePoint)?.usingColorSpace(.deviceRGB))
         #expect(smartFilter.kind == .ripple)
-        #expect(smartFilter.normalizedSettings.rippleAmount == -1)
+        #expect(smartFilter.normalizedSettings.rippleAmountPercent == -100)
         #expect(smartFilter.normalizedSettings.rippleFrequency == 0)
         #expect(smartLayer.image.qingtuPNGData() == smartBasePixelsBefore)
         #expect(smartSampleAfter.redComponent < smartSampleBefore.redComponent - 0.03)
-        #expect(smartViewModel.smartFilterLabel(smartFilter) == L10n.format("imageEditor.properties.smartFilterRippleItem", smartFilter.kind.title, 100, -100, 0))
+        #expect(smartViewModel.smartFilterLabel(smartFilter) == L10n.format("imageEditor.properties.smartFilterRippleItem", smartFilter.kind.title, "-100", 0))
         #expect(smartViewModel.document.history.last?.title == L10n.text("imageEditor.history.layerSmartFilterAdd"))
 
         let project = try ImageEditorProjectDocument(document: smartViewModel.document)
@@ -3615,8 +3645,18 @@ struct ImageEditorFilterTests {
         let restoredLayer = try #require(restoredDocument.layers.first { $0.id == smartLayer.id })
         let restoredFilter = try #require(restoredLayer.smartFilters.first)
         #expect(restoredFilter.kind == .ripple)
-        #expect(restoredFilter.normalizedSettings.rippleAmount == -1)
+        #expect(restoredFilter.normalizedSettings.rippleAmountPercent == -100)
         #expect(restoredFilter.normalizedSettings.rippleFrequency == 0)
+
+        let root = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let viewSource = try String(
+            contentsOf: root.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        #expect(viewSource.contains("image-editor-filter-ripple-amount"))
+        #expect(viewSource.contains("viewModel.selectedFilter != .ripple"))
     }
 
     @Test func imageEditorPinchAmountSupportsLegacyAndSignedRadialWarp() async throws {

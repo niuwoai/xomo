@@ -1040,7 +1040,7 @@
 "imageEditor.filter.waveFrequency" = "Frequency";
 "imageEditor.filter.waveFrequencyValue" = "%d";
 "imageEditor.filter.rippleAmount" = "Amount";
-"imageEditor.filter.rippleAmountValue" = "%d";
+"imageEditor.filter.rippleAmountValue" = "%@%%";
 "imageEditor.filter.rippleFrequency" = "Frequency";
 "imageEditor.filter.rippleFrequencyValue" = "%d";
 "imageEditor.filter.pinchAmount" = "Amount";
@@ -1271,7 +1271,7 @@
 "imageEditor.properties.smartFilterLiquifyPuckerBloatItem" = "%@ · Pucker/Bloat %@%%";
 "imageEditor.properties.smartFilterWaveItem" = "%@ %d%% · Amp %d · Freq %d";
 "imageEditor.properties.smartFilterOffsetItem" = "%@ %d%% · X %d · Y %d · %@";
-"imageEditor.properties.smartFilterRippleItem" = "%@ %d%% · Amount %d · Freq %d";
+"imageEditor.properties.smartFilterRippleItem" = "%@ · Amount %@%% · Freq %d";
 "imageEditor.properties.smartFilterPinchItem" = "%1$@ · amount %2$@%%";
 "imageEditor.properties.smartFilterSpherizeItem" = "%1$@ · amount %2$@%%";
 "imageEditor.properties.smartFilterLensCorrectionItem" = "%1$@ · distortion %2$@%%";

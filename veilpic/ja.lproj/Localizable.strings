@@ -1040,7 +1040,7 @@
 "imageEditor.filter.waveFrequency" = "周波数";
 "imageEditor.filter.waveFrequencyValue" = "%d";
 "imageEditor.filter.rippleAmount" = "量";
-"imageEditor.filter.rippleAmountValue" = "%d";
+"imageEditor.filter.rippleAmountValue" = "%@%%";
 "imageEditor.filter.rippleFrequency" = "周波数";
 "imageEditor.filter.rippleFrequencyValue" = "%d";
 "imageEditor.filter.pinchAmount" = "量";
@@ -1271,7 +1271,7 @@
 "imageEditor.properties.smartFilterLiquifyPuckerBloatItem" = "%@ · 収縮/膨張 %@%%";
 "imageEditor.properties.smartFilterWaveItem" = "%@ %d%% · 振幅 %d · 周波数 %d";
 "imageEditor.properties.smartFilterOffsetItem" = "%@ %d%% · X %d · Y %d · %@";
-"imageEditor.properties.smartFilterRippleItem" = "%@ %d%% · 量 %d · 周波数 %d";
+"imageEditor.properties.smartFilterRippleItem" = "%@ · 量 %@%% · 周波数 %d";
 "imageEditor.properties.smartFilterPinchItem" = "%1$@ · 量 %2$@%%";
 "imageEditor.properties.smartFilterSpherizeItem" = "%1$@ · 量 %2$@%%";
 "imageEditor.properties.smartFilterLensCorrectionItem" = "%1$@ · 歪曲 %2$@%%";

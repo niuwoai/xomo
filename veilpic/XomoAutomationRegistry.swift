@@ -6301,6 +6301,7 @@ final class XomoAutomationRegistry {
                 viewModel.filterOffsetUndefinedAreaMode = mode
             case "waveAmplitude": viewModel.filterWaveAmplitude = try numericSetting(value, key: key)
             case "waveFrequency": viewModel.filterWaveFrequency = try numericSetting(value, key: key)
+            case "rippleAmountPercent": viewModel.filterRippleAmountPercent = try numericSetting(value, key: key)
             case "rippleAmount": viewModel.filterRippleAmount = try numericSetting(value, key: key)
             case "rippleFrequency": viewModel.filterRippleFrequency = try numericSetting(value, key: key)
             case "pinchAmountPercent": viewModel.filterPinchAmountPercent = try numericSetting(value, key: key)
@@ -8039,6 +8040,7 @@ private extension XomoAutomationRegistry {
         ),
         "waveAmplitude": XomoAutomationSchema.number(description: "Wave amplitude"),
         "waveFrequency": XomoAutomationSchema.number(description: "Wave frequency"),
+        "rippleAmountPercent": XomoAutomationSchema.number(description: "Ripple amount from -100 to 100 percent"),
         "rippleAmount": XomoAutomationSchema.number(description: "Ripple amount"),
         "rippleFrequency": XomoAutomationSchema.number(description: "Ripple frequency"),
         "pinchAmountPercent": XomoAutomationSchema.number(description: "Pinch amount from -100 to 100 percent"),

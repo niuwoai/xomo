@@ -43,6 +43,9 @@ extension NSImage {
         if kind == .liquifyPuckerBloat, normalizedSettings.liquifyBulgeAmountPercent == 0 {
             return self
         }
+        if kind == .ripple, normalizedSettings.rippleAmountPercent == 0 {
+            return self
+        }
         let hasExplicitFilterAmount = (
             kind == .sharpen
                 && normalizedSettings.sharpenAmountPercent.map { $0 > 0 } == true
@@ -64,6 +67,9 @@ extension NSImage {
         ) || (
             kind == .liquifyPuckerBloat
                 && normalizedSettings.liquifyBulgeAmountPercent.map { $0 != 0 } == true
+        ) || (
+            kind == .ripple
+                && normalizedSettings.rippleAmountPercent.map { $0 != 0 } == true
         )
         guard clamped > 0 || hasExplicitFilterAmount else { return self }
         if kind == .addNoise {
@@ -225,6 +231,9 @@ extension NSImage {
         if kind == .liquifyPuckerBloat, normalizedSettings.liquifyBulgeAmountPercent == 0 {
             return self
         }
+        if kind == .ripple, normalizedSettings.rippleAmountPercent == 0 {
+            return self
+        }
         let hasExplicitFilterAmount = (
             kind == .sharpen
                 && normalizedSettings.sharpenAmountPercent.map { $0 > 0 } == true
@@ -246,6 +255,9 @@ extension NSImage {
         ) || (
             kind == .liquifyPuckerBloat
                 && normalizedSettings.liquifyBulgeAmountPercent.map { $0 != 0 } == true
+        ) || (
+            kind == .ripple
+                && normalizedSettings.rippleAmountPercent.map { $0 != 0 } == true
         )
         guard intensity > 0 || hasExplicitFilterAmount else { return self }
         let normalizedOpacity = max(0, min(1, opacity))
@@ -1290,8 +1302,10 @@ extension NSImage {
 
     private func rippled(intensity: Double, settings: ImageEditorFilterSettings) -> NSImage? {
         let clampedIntensity = max(0, min(1, intensity))
-        guard clampedIntensity > 0 else { return self }
         let normalizedSettings = settings.normalized()
+        let amount = normalizedSettings.rippleAmountPercent.map { $0 / 100 }
+            ?? (normalizedSettings.rippleAmount * clampedIntensity)
+        guard abs(amount) > 0.000_1 else { return self }
         return pixelSampledFromBuffer { x, y, width, height, pixels, bytesPerRow, bytesPerPixel in
             let centerX = Double(max(width - 1, 1)) / 2
             let centerY = Double(max(height - 1, 1)) / 2
@@ -1312,7 +1326,7 @@ extension NSImage {
 
             let radius = max(1, min(Double(width), Double(height)) * 0.5)
             let cycles = 2 + normalizedSettings.rippleFrequency * 6
-            let amplitude = min(Double(width), Double(height)) * 0.12 * normalizedSettings.rippleAmount * clampedIntensity
+            let amplitude = min(Double(width), Double(height)) * 0.12 * amount
             let displacement = sin(distance / radius * cycles * Double.pi * 2) * amplitude
             let sourceDistance = max(0, distance + displacement)
             let sourceX = centerX + dx / distance * sourceDistance

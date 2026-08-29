@@ -477,6 +477,7 @@ final class ImageEditorViewModel: ObservableObject {
                 filterPinchAmountPercent = nil
                 filterSpherizeAmountPercent = nil
                 filterLiquifyBulgeAmountPercent = nil
+                filterRippleAmountPercent = nil
                 filterUnsharpAmountPercent = nil
                 filterUnsharpRadiusPixels = nil
                 filterUnsharpThresholdLevels = nil
@@ -593,6 +594,16 @@ final class ImageEditorViewModel: ObservableObject {
         }
     }
 
+    var filterRippleEffectiveAmountPercent: Double {
+        get {
+            filterRippleAmountPercent
+                ?? max(-100, min(100, filterRippleAmount * filterIntensity * 100))
+        }
+        set {
+            filterRippleAmountPercent = max(-100, min(100, newValue))
+        }
+    }
+
     var filterUnsharpEffectiveAmountPercent: Double {
         get {
             filterUnsharpAmountPercent
@@ -632,6 +643,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var filterOffsetUndefinedAreaMode = ImageEditorOffsetUndefinedAreaMode.wrapAround
     @Published var filterWaveAmplitude: Double = 0.5
     @Published var filterWaveFrequency: Double = 0.25
+    @Published var filterRippleAmountPercent: Double?
     @Published var filterRippleAmount: Double = 0.5
     @Published var filterRippleFrequency: Double = 0.25
     @Published var filterPinchAmountPercent: Double?
@@ -2914,11 +2926,12 @@ final class ImageEditorViewModel: ObservableObject {
         }
         if filter.kind == .ripple {
             let settings = filter.normalizedSettings
+            let amount = settings.rippleAmountPercent
+                ?? (settings.rippleAmount * filter.normalizedIntensity * 100)
             let title = L10n.format(
                 "imageEditor.properties.smartFilterRippleItem",
                 filter.kind.title,
-                Int((filter.normalizedIntensity * 100).rounded()),
-                Int((settings.rippleAmount * 100).rounded()),
+                String(format: "%+d", Int(amount.rounded())),
                 Int((settings.rippleFrequency * 100).rounded())
             )
             guard !filter.isEnabled else { return title }
@@ -9745,6 +9758,7 @@ final class ImageEditorViewModel: ObservableObject {
             offsetUndefinedAreaMode: filterOffsetUndefinedAreaMode,
             waveAmplitude: filterWaveAmplitude,
             waveFrequency: filterWaveFrequency,
+            rippleAmountPercent: selectedFilter == .ripple ? filterRippleAmountPercent : nil,
             rippleAmount: filterRippleAmount,
             rippleFrequency: filterRippleFrequency,
             pinchAmountPercent: selectedFilter == .pinch ? filterPinchAmountPercent : nil,
@@ -11619,6 +11633,7 @@ final class ImageEditorViewModel: ObservableObject {
         filterOffsetUndefinedAreaMode = normalized.offsetUndefinedAreaMode
         filterWaveAmplitude = normalized.waveAmplitude
         filterWaveFrequency = normalized.waveFrequency
+        filterRippleAmountPercent = normalized.rippleAmountPercent
         filterRippleAmount = normalized.rippleAmount
         filterRippleFrequency = normalized.rippleFrequency
         filterPinchAmountPercent = normalized.pinchAmountPercent
