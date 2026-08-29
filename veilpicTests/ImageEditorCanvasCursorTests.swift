@@ -2128,6 +2128,49 @@ struct ImageEditorCanvasCursorTests {
         ) === NSCursor.arrow)
     }
 
+    @Test func blurCursorPreviewsLocalDetailDiffusionAcrossItsRealFootprint() {
+        let small = ImageEditorCanvasCursor.cursor(
+            for: .blur,
+            brushDiameter: 12
+        )
+        let large = ImageEditorCanvasCursor.cursor(
+            for: .blur,
+            brushDiameter: 48
+        )
+        let sharpen = ImageEditorCanvasCursor.cursor(
+            for: .sharpen,
+            brushDiameter: 12
+        )
+        let sponge = ImageEditorCanvasCursor.cursor(
+            for: .sponge,
+            brushDiameter: 12
+        )
+
+        #expect(ImageEditorCanvasCursor.family(for: .blur) == .localDetailSoften)
+        #expect(small.image.size == NSSize(width: 36, height: 36))
+        #expect(small.hotSpot == NSPoint(x: 18, y: 18))
+        #expect(large.image.size == NSSize(width: 66, height: 66))
+        #expect(large.hotSpot == NSPoint(x: 33, y: 33))
+        #expect(small.image.tiffRepresentation != sharpen.image.tiffRepresentation)
+        #expect(small.image.tiffRepresentation != sponge.image.tiffRepresentation)
+        #expect(ImageEditorCanvasCursor.cursor(
+            for: .blur,
+            brushDiameter: 12,
+            modifierFlags: [.capsLock]
+        ) === NSCursor.crosshair)
+        #expect(ImageEditorCanvasCursor.cursor(
+            for: .components,
+            selectedTool: .blur,
+            brushDiameter: 12
+        ) === NSCursor.arrow)
+        #expect(ImageEditorCanvasCursor.cursor(
+            for: .tools,
+            selectedTool: .blur,
+            brushDiameter: 12,
+            isPointerOverCanvas: false
+        ) === NSCursor.arrow)
+    }
+
     @Test func sampledBrushSourcePolicyKeepsSpotHealingInPaintMode() {
         #expect(ImageEditorSampledBrushCursorPolicy.isPickingSource(
             tool: .cloneStamp,
@@ -2965,7 +3008,7 @@ struct ImageEditorCanvasCursorTests {
         #expect(ImageEditorCanvasCursor.family(for: .dodge) == .localExposureLighten)
         #expect(ImageEditorCanvasCursor.family(for: .burn) == .localExposureDarken)
         #expect(ImageEditorCanvasCursor.family(for: .sponge) == .localSaturationAdjust)
-        #expect(ImageEditorCanvasCursor.family(for: .blur) == .retouchBrush)
+        #expect(ImageEditorCanvasCursor.family(for: .blur) == .localDetailSoften)
         #expect(ImageEditorCanvasCursor.family(for: .sharpen) == .retouchBrush)
         #expect(ImageEditorCanvasCursor.family(for: .smudge) == .retouchBrush)
 
@@ -2985,7 +3028,7 @@ struct ImageEditorCanvasCursorTests {
 
         let standardFootprintTools: [ImageEditorTool] = [
             .brush, .pencil, .eraser,
-            .blur, .sharpen, .smudge
+            .sharpen, .smudge
         ]
         let standardRepresentations = standardFootprintTools.compactMap {
             ImageEditorCanvasCursor.cursor(for: $0, brushDiameter: 18).image.tiffRepresentation
@@ -2994,7 +3037,7 @@ struct ImageEditorCanvasCursorTests {
         #expect(Set(standardRepresentations).count == 1)
 
         let resultPreviewTools: [ImageEditorTool] = [
-            .cloneStamp, .healingBrush, .dodge, .burn, .sponge
+            .cloneStamp, .healingBrush, .dodge, .burn, .sponge, .blur
         ]
         let resultPreviewRepresentations = resultPreviewTools.compactMap {
             ImageEditorCanvasCursor.cursor(for: $0, brushDiameter: 18).image.tiffRepresentation
