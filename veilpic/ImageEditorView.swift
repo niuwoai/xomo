@@ -7909,6 +7909,12 @@ struct ImageEditorView: View {
                         .focusable(false)
                         .accessibilityLabel(L10n.text("imageEditor.filter.waveAmplitude"))
                         .accessibilityIdentifier("image-editor-filter-quick-wave-amplitude")
+                } else if viewModel.selectedFilter == .findEdges {
+                    Text(L10n.text("imageEditor.filter.noAdjustableParameters"))
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .accessibilityIdentifier("image-editor-filter-quick-no-adjustable-parameters")
                 } else {
                     Text("\(Int((viewModel.filterIntensity * 100).rounded()))%")
                         .font(.system(size: 11, weight: .semibold).monospacedDigit())

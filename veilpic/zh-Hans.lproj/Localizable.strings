@@ -979,6 +979,7 @@
 "imageEditor.filter.embossAmount" = "数量";
 "imageEditor.filter.embossAmountValue" = "%d%%";
 "imageEditor.filter.findEdges" = "查找边缘";
+"imageEditor.filter.noAdjustableParameters" = "没有可调参数";
 "imageEditor.filter.minimum" = "最小值";
 "imageEditor.filter.maximum" = "最大值";
 "imageEditor.filter.oilPaint" = "油画";

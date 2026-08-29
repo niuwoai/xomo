@@ -979,6 +979,7 @@
 "imageEditor.filter.embossAmount" = "Amount";
 "imageEditor.filter.embossAmountValue" = "%d%%";
 "imageEditor.filter.findEdges" = "Find Edges";
+"imageEditor.filter.noAdjustableParameters" = "No adjustable parameters";
 "imageEditor.filter.minimum" = "Minimum";
 "imageEditor.filter.maximum" = "Maximum";
 "imageEditor.filter.oilPaint" = "Oil Paint";

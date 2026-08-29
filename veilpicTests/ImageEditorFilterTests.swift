@@ -2540,7 +2540,7 @@ struct ImageEditorFilterTests {
             panelSource.range(of: "else if viewModel.selectedFilter == .wave")
         )
         let waveEnd = try #require(
-            panelSource[waveStart.upperBound...].range(of: "} else {")
+            panelSource[waveStart.upperBound...].range(of: "else if viewModel.selectedFilter == .findEdges")
         )
         let waveSource = panelSource[waveStart.lowerBound..<waveEnd.lowerBound]
 
@@ -2550,6 +2550,33 @@ struct ImageEditorFilterTests {
         #expect(waveSource.contains("imageEditor.filter.waveAmplitude"))
         #expect(waveSource.contains("image-editor-filter-quick-wave-amplitude"))
         #expect(!waveSource.contains("viewModel.filterIntensity"))
+    }
+
+    @Test func findEdgesQuickPanelDeclaresNoAdjustableParameters() throws {
+        let root = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let viewSource = try String(
+            contentsOf: root.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let panelStart = try #require(viewSource.range(of: "private var filtersQuickPanel: some View"))
+        let panelEnd = try #require(
+            viewSource[panelStart.upperBound...].range(of: "private func historySnapshotRow")
+        )
+        let panelSource = viewSource[panelStart.lowerBound..<panelEnd.lowerBound]
+        let findEdgesStart = try #require(
+            panelSource.range(of: "else if viewModel.selectedFilter == .findEdges")
+        )
+        let findEdgesEnd = try #require(
+            panelSource[findEdgesStart.upperBound...].range(of: "} else {")
+        )
+        let findEdgesSource = panelSource[findEdgesStart.lowerBound..<findEdgesEnd.lowerBound]
+
+        #expect(findEdgesSource.contains("imageEditor.filter.noAdjustableParameters"))
+        #expect(findEdgesSource.contains("image-editor-filter-quick-no-adjustable-parameters"))
+        #expect(!findEdgesSource.contains("Slider("))
+        #expect(!findEdgesSource.contains("viewModel.filterIntensity"))
     }
 
     @Test func imageEditorMotionBlurFilterLayerAndSmartFilterAreNonDestructive() async throws {
