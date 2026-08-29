@@ -428,6 +428,52 @@ struct XomoFigmaLinkImportTests {
         )
     }
 
+    @Test func canvasRichLinkDropAcceptsOneTrustedTargetAndRejectsConflicts() throws {
+        let figma = "https://figma.com/design/abc123DEF456/Checkout?node-id=1-2&utm_source=mail"
+        let canonical = "https://www.figma.com/design/abc123DEF456/Checkout?node-id=1-2"
+        let htmlData = try #require(
+            "<a href=\"\(figma)\">查看设计</a>".data(using: .utf8)
+        )
+        let attributedString = NSAttributedString(
+            string: "View in Figma",
+            attributes: [.link: figma]
+        )
+        let rtfData = try attributedString.data(
+            from: NSRange(location: 0, length: attributedString.length),
+            documentAttributes: [.documentType: NSAttributedString.DocumentType.rtf]
+        )
+
+        #expect(
+            XomoCanvasRichLinkDropPolicy.resolve(
+                htmlData: htmlData,
+                rtfData: rtfData
+            ) == .figmaLink(canonical)
+        )
+        #expect(XomoCanvasRichLinkDropPolicy.resolve() == .unavailable)
+        let conflictingHTMLData = try #require(
+            "<a href=\"https://www.figma.com/design/otherFile999/Other\">Other</a>"
+                .data(using: .utf8)
+        )
+        #expect(
+            XomoCanvasRichLinkDropPolicy.resolve(
+                htmlData: conflictingHTMLData,
+                rtfData: rtfData
+            ) == .unavailable
+        )
+        let spoofedHTMLData = try #require(
+            "<a href=\"https://www.figma.com.evil.example/design/abc123DEF456/Checkout\">Fake</a>"
+                .data(using: .utf8)
+        )
+        #expect(
+            XomoCanvasRichLinkDropPolicy.resolve(htmlData: spoofedHTMLData) == .unavailable
+        )
+        #expect(
+            XomoCanvasRichLinkDropPolicy.resolve(
+                htmlData: Data("not html".utf8)
+            ) == .unavailable
+        )
+    }
+
     @Test func canvasURLDropKeepsLocalFilesAndAcceptsOneTrustedFigmaLink() throws {
         let png = URL(fileURLWithPath: "/tmp/Poster.PNG")
         let svg = URL(fileURLWithPath: "/tmp/Icon.svg")

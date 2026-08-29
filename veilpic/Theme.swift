@@ -69,6 +69,63 @@ enum AppTheme {
     )
 }
 
+enum XomoCanvasRichLinkDropLoader {
+    nonisolated private final class ProviderBox: @unchecked Sendable {
+        let value: NSItemProvider
+
+        init(_ value: NSItemProvider) {
+            self.value = value
+        }
+    }
+
+    nonisolated static func load(
+        providers: [NSItemProvider],
+        completion: @escaping @MainActor (Data?, Data?) -> Void
+    ) -> Bool {
+        guard providers.count == 1, let provider = providers.first else { return false }
+        let htmlType = NSPasteboard.PasteboardType.html.rawValue
+        let rtfType = NSPasteboard.PasteboardType.rtf.rawValue
+        let typeIdentifiers = [htmlType, rtfType].filter {
+            provider.hasItemConformingToTypeIdentifier($0)
+        }
+        guard !typeIdentifiers.isEmpty else { return false }
+        loadNext(
+            providerBox: ProviderBox(provider),
+            typeIdentifiers: typeIdentifiers,
+            completion: completion
+        )
+        return true
+    }
+
+    nonisolated private static func loadNext(
+        providerBox: ProviderBox,
+        typeIdentifiers: [String],
+        index: Int = 0,
+        htmlData: Data? = nil,
+        rtfData: Data? = nil,
+        completion: @escaping @MainActor (Data?, Data?) -> Void
+    ) {
+        guard index < typeIdentifiers.count else {
+            Task { @MainActor in completion(htmlData, rtfData) }
+            return
+        }
+
+        let typeIdentifier = typeIdentifiers[index]
+        providerBox.value.loadDataRepresentation(forTypeIdentifier: typeIdentifier) { data, _ in
+            let htmlType = NSPasteboard.PasteboardType.html.rawValue
+            let rtfType = NSPasteboard.PasteboardType.rtf.rawValue
+            loadNext(
+                providerBox: providerBox,
+                typeIdentifiers: typeIdentifiers,
+                index: index + 1,
+                htmlData: typeIdentifier == htmlType ? data : htmlData,
+                rtfData: typeIdentifier == rtfType ? data : rtfData,
+                completion: completion
+            )
+        }
+    }
+}
+
 // MARK: - 视图修饰器
 
 extension View {
@@ -123,6 +180,7 @@ extension View {
     func xomoCanvasPlatformInteractions(
         onDrop: @escaping ([String], CGPoint) -> Bool,
         onFileDrop: @escaping ([URL], CGPoint) -> Bool,
+        onRichLinkDrop: @escaping (Data?, Data?, CGPoint) -> Bool,
         onMagnifyChanged: @escaping (CGFloat, CGPoint?) -> Void,
         onMagnifyEnded: @escaping () -> Void,
         onHoverChanged: @escaping (Bool, CGPoint?) -> Void
@@ -130,6 +188,14 @@ extension View {
         if #available(macOS 14.0, *) {
             dropDestination(for: String.self, action: onDrop)
                 .dropDestination(for: URL.self, action: onFileDrop)
+                .onDrop(of: [
+                    NSPasteboard.PasteboardType.html.rawValue,
+                    NSPasteboard.PasteboardType.rtf.rawValue
+                ], isTargeted: nil) { providers, location in
+                    XomoCanvasRichLinkDropLoader.load(providers: providers) { htmlData, rtfData in
+                        _ = onRichLinkDrop(htmlData, rtfData, location)
+                    }
+                }
                 .simultaneousGesture(
                     MagnifyGesture()
                         .onChanged { value in
@@ -148,6 +214,14 @@ extension View {
         } else if #available(macOS 13.0, *) {
             dropDestination(for: String.self, action: onDrop)
                 .dropDestination(for: URL.self, action: onFileDrop)
+                .onDrop(of: [
+                    NSPasteboard.PasteboardType.html.rawValue,
+                    NSPasteboard.PasteboardType.rtf.rawValue
+                ], isTargeted: nil) { providers, location in
+                    XomoCanvasRichLinkDropLoader.load(providers: providers) { htmlData, rtfData in
+                        _ = onRichLinkDrop(htmlData, rtfData, location)
+                    }
+                }
                 .simultaneousGesture(
                     MagnificationGesture()
                         .onChanged { value in onMagnifyChanged(value, nil) }

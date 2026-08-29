@@ -3981,6 +3981,23 @@ struct ImageEditorView: View {
                             return false
                         }
                     },
+                    onRichLinkDrop: { htmlData, rtfData, location in
+                        guard case let .figmaLink(canonicalURL) =
+                            XomoCanvasRichLinkDropPolicy.resolve(
+                                htmlData: htmlData,
+                                rtfData: rtfData
+                            ),
+                            let canvasPoint = imagePoint(
+                                from: location,
+                                in: geometry.size
+                            )
+                        else { return false }
+                        presentFigmaLinkImport(
+                            canonicalURL: canonicalURL,
+                            placementCenter: canvasPoint
+                        )
+                        return true
+                    },
                     onMagnifyChanged: { magnification, location in
                         viewModel.magnifyCanvas(
                             magnification,

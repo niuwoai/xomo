@@ -520,6 +520,30 @@ enum XomoCanvasStringDropPolicy {
     }
 }
 
+enum XomoCanvasRichLinkDropRoute: Equatable {
+    case figmaLink(String)
+    case unavailable
+}
+
+enum XomoCanvasRichLinkDropPolicy {
+    static func resolve(
+        htmlData: Data? = nil,
+        rtfData: Data? = nil
+    ) -> XomoCanvasRichLinkDropRoute {
+        let targets = XomoFigmaRichClipboardLinkExtractor.targets(
+            htmlData: htmlData,
+            rtfData: rtfData
+        )
+        guard !targets.isEmpty,
+              let canonicalURL = XomoFigmaClipboardLinkPolicy.canonicalURL(
+                clipboardText: nil,
+                clipboardRichLinkTargets: targets
+              )
+        else { return .unavailable }
+        return .figmaLink(canonicalURL)
+    }
+}
+
 enum XomoFigmaLinkParser {
     static let maximumInputLength = 4_096
     private static let standardPathComponentCount = 4
