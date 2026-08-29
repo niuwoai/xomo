@@ -6757,7 +6757,7 @@ struct veilpicTests {
     @MainActor
     @Test func imageEditorCanvasCursorFamiliesMatchToolInteractionSemantics() async throws {
         let expectations: [(ImageEditorCanvasCursorFamily, [ImageEditorTool])] = [
-            (.systemArrow, [.pathSelection]),
+            (.pathSelection, [.pathSelection]),
             (.directSelection, [.directSelection]),
             (.moveTool, [.move]),
             (.grab, [.hand]),
@@ -6782,7 +6782,7 @@ struct veilpicTests {
             (.redEye, [.redEye]),
             (.samplingScope, [.colorSampler]),
             (.vectorPen, [.pen]),
-            (.zoomMagnifier, [.zoom]),
+            (.zoomViewportScale, [.zoom]),
         ]
 
         for (family, tools) in expectations {
@@ -6799,21 +6799,22 @@ struct veilpicTests {
     }
 
     @MainActor
-    @Test func precisionToolsShareTheConventionalCrosshair() async throws {
-        let precisionTools: [ImageEditorTool] = [
-            .marquee, .crop, .gradient, .rectangle, .ellipse,
-            .redEye, .colorSampler
-        ]
-        for tool in precisionTools {
-            #expect(ImageEditorCanvasCursor.cursor(for: tool, brushDiameter: 18) === NSCursor.crosshair)
-        }
+    @Test func actionSpecificToolsPreviewResultsInsteadOfSharingOneCrosshair() async throws {
+        #expect(ImageEditorCanvasCursor.cursor(
+            for: .marquee,
+            brushDiameter: 18
+        ) === NSCursor.crosshair)
 
-        let lasso = ImageEditorCanvasCursor.cursor(for: .lasso, brushDiameter: 18)
-        let magicWand = ImageEditorCanvasCursor.cursor(for: .magicWand, brushDiameter: 18)
-        let patch = ImageEditorCanvasCursor.cursor(for: .patchTool, brushDiameter: 18)
-        #expect(lasso !== NSCursor.crosshair)
-        #expect(magicWand !== NSCursor.crosshair)
-        #expect(patch !== NSCursor.crosshair)
+        let resultPreviewTools: [ImageEditorTool] = [
+            .lasso, .magicWand, .patchTool, .crop, .gradient,
+            .rectangle, .ellipse, .redEye, .colorSampler, .zoom
+        ]
+        for tool in resultPreviewTools {
+            #expect(ImageEditorCanvasCursor.cursor(
+                for: tool,
+                brushDiameter: 18
+            ) !== NSCursor.crosshair)
+        }
     }
 
     @MainActor

@@ -15447,7 +15447,7 @@ enum ImageEditorCanvasCursorFamily: Equatable {
     case redEye
     case samplingScope
     case vectorPen
-    case zoomMagnifier
+    case zoomViewportScale
 }
 
 enum ImageEditorCanvasInteractionMode: Equatable {
@@ -16418,7 +16418,7 @@ enum ImageEditorCanvasCursor {
         case .directSelection:
             .directSelection
         case .zoom:
-            .zoomMagnifier
+            .zoomViewportScale
         }
     }
 
@@ -16566,7 +16566,7 @@ enum ImageEditorCanvasCursor {
                 isContinuingPath: penIsContinuingPath,
                 isConstrained: modifierFlags.contains(.shift)
             )
-        case .zoomMagnifier:
+        case .zoomViewportScale:
             return zoomCursor(isZoomingOut: modifierFlags.contains(.option))
         }
     }
@@ -17892,41 +17892,86 @@ enum ImageEditorCanvasCursor {
     }
 
     private static func zoomCursor(isZoomingOut: Bool) -> NSCursor {
-        let cacheKey = "zoom:magnifier:\(isZoomingOut ? "out" : "in")"
+        let cacheKey = "zoom:viewport-scale:\(isZoomingOut ? "out" : "in")"
         if let cachedCursor = cursorCache[cacheKey] {
             return cachedCursor
         }
-        let side: CGFloat = 32
-        let center = NSPoint(x: 10, y: 10)
+
+        let side: CGFloat = 36
+        let center = NSPoint(x: side / 2, y: side / 2)
         let image = NSImage(size: NSSize(width: side, height: side))
         image.lockFocus()
 
-        let lens = NSBezierPath(ovalIn: NSRect(x: 3, y: 3, width: 14, height: 14))
-        let handle = NSBezierPath()
-        handle.move(to: NSPoint(x: 15, y: 15))
-        handle.line(to: NSPoint(x: 25, y: 25))
-        let modeMark = NSBezierPath()
-        modeMark.move(to: NSPoint(x: 7, y: 10))
-        modeMark.line(to: NSPoint(x: 13, y: 10))
-        if !isZoomingOut {
-            modeMark.move(to: NSPoint(x: 10, y: 7))
-            modeMark.line(to: NSPoint(x: 10, y: 13))
+        // The click point is the actual zoom focus. Four directional arrows
+        // preview whether content will expand away from that focus or contract
+        // toward it, instead of reproducing a magnifying-glass toolbox icon.
+        let corners = NSBezierPath()
+        corners.move(to: NSPoint(x: 4, y: 11))
+        corners.line(to: NSPoint(x: 4, y: 4))
+        corners.line(to: NSPoint(x: 11, y: 4))
+        corners.move(to: NSPoint(x: 25, y: 4))
+        corners.line(to: NSPoint(x: 32, y: 4))
+        corners.line(to: NSPoint(x: 32, y: 11))
+        corners.move(to: NSPoint(x: 32, y: 25))
+        corners.line(to: NSPoint(x: 32, y: 32))
+        corners.line(to: NSPoint(x: 25, y: 32))
+        corners.move(to: NSPoint(x: 11, y: 32))
+        corners.line(to: NSPoint(x: 4, y: 32))
+        corners.line(to: NSPoint(x: 4, y: 25))
+        NSColor.black.withAlphaComponent(0.94).setStroke()
+        corners.lineWidth = 4
+        corners.stroke()
+        NSColor.white.setStroke()
+        corners.lineWidth = 1.4
+        corners.stroke()
+
+        func drawScaleArrow(inner: NSPoint, outer: NSPoint) {
+            let start = isZoomingOut ? outer : inner
+            let tip = isZoomingOut ? inner : outer
+            let deltaX = tip.x - start.x
+            let deltaY = tip.y - start.y
+            let length = max(1, hypot(deltaX, deltaY))
+            let unitX = deltaX / length
+            let unitY = deltaY / length
+            let perpendicularX = -unitY
+            let perpendicularY = unitX
+            let arrowLength: CGFloat = 4.5
+            let arrowWidth: CGFloat = 2.2
+
+            let path = NSBezierPath()
+            path.move(to: start)
+            path.line(to: tip)
+            path.move(to: tip)
+            path.line(to: NSPoint(
+                x: tip.x - unitX * arrowLength + perpendicularX * arrowWidth,
+                y: tip.y - unitY * arrowLength + perpendicularY * arrowWidth
+            ))
+            path.move(to: tip)
+            path.line(to: NSPoint(
+                x: tip.x - unitX * arrowLength - perpendicularX * arrowWidth,
+                y: tip.y - unitY * arrowLength - perpendicularY * arrowWidth
+            ))
+            NSColor.black.withAlphaComponent(0.94).setStroke()
+            path.lineWidth = 3.5
+            path.stroke()
+            NSColor.systemBlue.setStroke()
+            path.lineWidth = 1.2
+            path.stroke()
         }
 
-        NSColor.black.withAlphaComponent(0.94).setStroke()
-        lens.lineWidth = 4
-        handle.lineWidth = 5
-        modeMark.lineWidth = 3
-        lens.stroke()
-        handle.stroke()
-        modeMark.stroke()
+        drawScaleArrow(inner: NSPoint(x: 14, y: 14), outer: NSPoint(x: 8, y: 8))
+        drawScaleArrow(inner: NSPoint(x: 22, y: 14), outer: NSPoint(x: 28, y: 8))
+        drawScaleArrow(inner: NSPoint(x: 14, y: 22), outer: NSPoint(x: 8, y: 28))
+        drawScaleArrow(inner: NSPoint(x: 22, y: 22), outer: NSPoint(x: 28, y: 28))
+
+        let focusRing = NSBezierPath(ovalIn: NSRect(x: 13, y: 13, width: 10, height: 10))
+        NSColor.black.withAlphaComponent(0.95).setFill()
+        focusRing.fill()
         NSColor.white.setStroke()
-        lens.lineWidth = 1.8
-        handle.lineWidth = 2
-        modeMark.lineWidth = 1.2
-        lens.stroke()
-        handle.stroke()
-        modeMark.stroke()
+        focusRing.lineWidth = 1.2
+        focusRing.stroke()
+        NSColor.systemBlue.setFill()
+        NSBezierPath(ovalIn: NSRect(x: 16, y: 16, width: 4, height: 4)).fill()
 
         image.unlockFocus()
         return cache(

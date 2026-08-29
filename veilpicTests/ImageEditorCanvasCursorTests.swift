@@ -2404,6 +2404,13 @@ struct ImageEditorCanvasCursorTests {
             modifierFlags: [.option]
         )
 
+        #expect(ImageEditorCanvasCursor.family(for: .zoom) == .zoomViewportScale)
+        #expect(zoomIn !== NSCursor.crosshair)
+        #expect(zoomOut !== NSCursor.crosshair)
+        #expect(zoomIn.image.size == NSSize(width: 36, height: 36))
+        #expect(zoomOut.image.size == NSSize(width: 36, height: 36))
+        #expect(zoomIn.hotSpot == NSPoint(x: 18, y: 18))
+        #expect(zoomOut.hotSpot == NSPoint(x: 18, y: 18))
         #expect(zoomIn.image.tiffRepresentation != zoomOut.image.tiffRepresentation)
         #expect(
             ImageEditorCanvasCursor.cursor(
@@ -2413,6 +2420,18 @@ struct ImageEditorCanvasCursorTests {
                 modifierFlags: [.option]
             ).image.tiffRepresentation == zoomOut.image.tiffRepresentation
         )
+        #expect(ImageEditorCanvasCursor.cursor(
+            for: .components,
+            selectedTool: .zoom,
+            brushDiameter: 18,
+            modifierFlags: [.option]
+        ) === NSCursor.arrow)
+        #expect(ImageEditorCanvasCursor.cursor(
+            for: .tools,
+            selectedTool: .zoom,
+            brushDiameter: 18,
+            isPointerOverCanvas: false
+        ) === NSCursor.arrow)
     }
 
     @Test func componentLibraryUsesClosedHandOnlyDuringCanvasPan() {
