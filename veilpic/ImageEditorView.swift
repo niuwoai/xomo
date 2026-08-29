@@ -15445,7 +15445,7 @@ enum ImageEditorCanvasCursorFamily: Equatable {
     case freeformSelectionPath
     case similarColorSelection
     case paintedRegionSelection
-    case cloneStamp
+    case sampledPixelTransfer
     case sampledRepairBlend
     case crop
     case patch
@@ -16392,7 +16392,7 @@ enum ImageEditorCanvasCursor {
         case .quickSelection:
             .paintedRegionSelection
         case .cloneStamp:
-            .cloneStamp
+            .sampledPixelTransfer
         case .healingBrush:
             .sampledRepairBlend
         case .crop:
@@ -16488,10 +16488,10 @@ enum ImageEditorCanvasCursor {
             return similarColorSelectionCursor(mode: selectionMode)
         case .paintedRegionSelection:
             return paintedRegionSelectionCursor(mode: selectionMode)
-        case .cloneStamp:
+        case .sampledPixelTransfer:
             return modifierFlags.contains(.capsLock) || isPickingSampledBrushSource
                 ? .crosshair
-                : familiarBrushCursor(diameter: brushDiameter)
+                : cloneTransferCursor(diameter: brushDiameter)
         case .sampledRepairBlend:
             return modifierFlags.contains(.capsLock) || isPickingSampledBrushSource
                 ? .crosshair
@@ -17306,55 +17306,85 @@ enum ImageEditorCanvasCursor {
         glyph.stroke()
     }
 
-    private static func cloneStampCursor() -> NSCursor {
-        let cacheKey = "clone-stamp"
+    private static func cloneTransferCursor(diameter requestedDiameter: CGFloat) -> NSCursor {
+        let diameter = max(3, min(256, requestedDiameter.rounded()))
+        let cacheKey = "sampled-pixel-transfer:\(Int(diameter))"
         if let cachedCursor = cursorCache[cacheKey] {
             return cachedCursor
         }
 
-        let side: CGFloat = 36
+        let side = max(36, diameter + 18)
+        let center = NSPoint(x: side / 2, y: side / 2)
         let image = NSImage(size: NSSize(width: side, height: side))
         image.lockFocus()
 
-        let stamp = NSBezierPath(ovalIn: NSRect(x: 3, y: 5, width: 18, height: 18))
+        // The ring is the exact destination footprint. A small pixel matrix
+        // and straight transfer arrow communicate that Clone Stamp copies
+        // sampled pixels unchanged, unlike Healing Brush's blended repair.
+        let footprint = NSBezierPath(ovalIn: NSRect(
+            x: center.x - diameter / 2,
+            y: center.y - diameter / 2,
+            width: diameter,
+            height: diameter
+        ))
         NSColor.black.withAlphaComponent(0.95).setStroke()
-        stamp.lineWidth = 4
-        stamp.stroke()
+        footprint.lineWidth = 3.5
+        footprint.stroke()
         NSColor.white.withAlphaComponent(0.98).setStroke()
-        stamp.lineWidth = 1.4
-        stamp.stroke()
+        footprint.lineWidth = 1.4
+        footprint.stroke()
 
-        let handle = NSBezierPath()
-        handle.move(to: NSPoint(x: 8, y: 8))
-        handle.line(to: NSPoint(x: 17, y: 17))
+        let transferDistance = max(3, min(9, diameter * 0.3))
+        let sourceCenter = NSPoint(
+            x: center.x - transferDistance,
+            y: center.y + transferDistance
+        )
+        let destinationCenter = NSPoint(
+            x: center.x + transferDistance * 0.35,
+            y: center.y - transferDistance * 0.35
+        )
+        let transfer = NSBezierPath()
+        transfer.move(to: sourceCenter)
+        transfer.line(to: destinationCenter)
+        transfer.move(to: destinationCenter)
+        transfer.line(to: NSPoint(
+            x: destinationCenter.x - 4.5,
+            y: destinationCenter.y + 0.5
+        ))
+        transfer.move(to: destinationCenter)
+        transfer.line(to: NSPoint(
+            x: destinationCenter.x - 0.5,
+            y: destinationCenter.y + 4.5
+        ))
+        NSColor.black.withAlphaComponent(0.95).setStroke()
+        transfer.lineWidth = 3.5
+        transfer.stroke()
         NSColor.systemBlue.setStroke()
-        handle.lineWidth = 2
-        handle.stroke()
+        transfer.lineWidth = 1.2
+        transfer.stroke()
 
-        let source = NSBezierPath()
-        source.move(to: NSPoint(x: 26, y: 8)); source.line(to: NSPoint(x: 26, y: 18))
-        source.move(to: NSPoint(x: 21, y: 13)); source.line(to: NSPoint(x: 31, y: 13))
-        NSColor.black.withAlphaComponent(0.95).setStroke()
-        source.lineWidth = 3
-        source.stroke()
-        NSColor.white.setStroke()
-        source.lineWidth = 1
-        source.stroke()
-
-        let arrow = NSBezierPath()
-        arrow.move(to: NSPoint(x: 22, y: 28))
-        arrow.line(to: NSPoint(x: 31, y: 28))
-        arrow.line(to: NSPoint(x: 27, y: 24))
-        NSColor.black.withAlphaComponent(0.95).setStroke()
-        arrow.lineWidth = 3
-        arrow.stroke()
-        NSColor.white.setStroke()
-        arrow.lineWidth = 1
-        arrow.stroke()
+        let cellSide = max(1.5, min(3, diameter * 0.1))
+        for row in 0..<2 {
+            for column in 0..<2 {
+                let isBlue = (row + column).isMultiple(of: 2)
+                let rect = NSRect(
+                    x: sourceCenter.x - cellSide + CGFloat(column) * cellSide,
+                    y: sourceCenter.y - cellSide + CGFloat(row) * cellSide,
+                    width: cellSide,
+                    height: cellSide
+                )
+                (isBlue ? NSColor.systemBlue : NSColor.white).setFill()
+                NSBezierPath(rect: rect).fill()
+                NSColor.black.withAlphaComponent(0.9).setStroke()
+                let cell = NSBezierPath(rect: rect)
+                cell.lineWidth = 0.75
+                cell.stroke()
+            }
+        }
 
         image.unlockFocus()
         return cache(
-            NSCursor(image: image, hotSpot: NSPoint(x: 26, y: side - 13)),
+            NSCursor(image: image, hotSpot: NSPoint(x: center.x, y: side - center.y)),
             for: cacheKey
         )
     }

@@ -6770,7 +6770,7 @@ struct veilpicTests {
             (.freeformSelectionPath, [.lasso]),
             (.similarColorSelection, [.magicWand]),
             (.paintedRegionSelection, [.quickSelection]),
-            (.cloneStamp, [.cloneStamp]),
+            (.sampledPixelTransfer, [.cloneStamp]),
             (.sampledRepairBlend, [.healingBrush]),
             (.crop, [.crop]),
             (.patch, [.patchTool]),
