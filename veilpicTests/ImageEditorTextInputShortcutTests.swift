@@ -49,6 +49,25 @@ struct ImageEditorTextInputShortcutTests {
         ))
     }
 
+    @Test func externalFigmaWebLocationRequestIsWiredToEditorAppearanceAndChanges() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(source.contains("presentExternalFigmaLinkImportIfNeeded()"))
+        #expect(source.contains(
+            ".onChange(of: externalOpenCoordinator.figmaLinkImportRequest?.id)"
+        ))
+        #expect(source.contains("guard !isFigmaLinkImportPresented"))
+        #expect(source.contains(
+            "externalOpenCoordinator.fulfillFigmaLinkImportRequest(request.id)"
+        ))
+    }
+
     @MainActor
     @Test func filePanelFocusRestorerFallsBackSafelyWithoutAKeyboardHost() {
         let window = NSWindow(

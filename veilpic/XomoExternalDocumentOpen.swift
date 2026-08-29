@@ -47,10 +47,20 @@ nonisolated enum XomoExternalDocumentOpenPolicy {
         kind(for: url) != nil
     }
 
+    static func isFigmaWebLocation(_ url: URL) -> Bool {
+        url.isFileURL
+            && url.pathExtension.caseInsensitiveCompare("webloc") == .orderedSame
+    }
+
     static func shouldShowImmediately(fileSize: Int?) -> Bool {
         guard let fileSize else { return false }
         return fileSize >= immediateSplashFileSize
     }
+}
+
+nonisolated struct XomoExternalFigmaLinkImportRequest: Equatable, Identifiable {
+    let id: UUID
+    let canonicalURL: String
 }
 
 @MainActor
@@ -197,6 +207,7 @@ final class XomoExternalDocumentOpenCoordinator: ObservableObject {
 
     @Published private(set) var presentation: XomoDocumentLoadingPresentation?
     @Published private(set) var editorKeyboardFocusRequestID: UUID?
+    @Published private(set) var figmaLinkImportRequest: XomoExternalFigmaLinkImportRequest?
 
     private let replacementRequester: ReplacementRequester
     private let recentDocumentRegistrar: RecentDocumentRegistrar
@@ -244,12 +255,31 @@ final class XomoExternalDocumentOpenCoordinator: ObservableObject {
         editorKeyboardFocusRequestID = nil
     }
 
+    func fulfillFigmaLinkImportRequest(_ requestID: UUID) {
+        guard figmaLinkImportRequest?.id == requestID else { return }
+        figmaLinkImportRequest = nil
+    }
+
     func open(_ urls: [URL]) {
-        guard let url = urls.first(where: XomoExternalDocumentOpenPolicy.supports) else { return }
+        if let documentURL = urls.first(where: XomoExternalDocumentOpenPolicy.supports) {
+            open(documentURL)
+            return
+        }
+        guard urls.count == 1,
+              let url = urls.first,
+              XomoExternalDocumentOpenPolicy.isFigmaWebLocation(url)
+        else { return }
         open(url)
     }
 
     func open(_ url: URL) {
+        if XomoExternalDocumentOpenPolicy.isFigmaWebLocation(url) {
+            guard let canonicalURL = XomoFigmaWebLocationPolicy.canonicalURL(fromFile: url) else {
+                return
+            }
+            requestFigmaLinkImport(canonicalURL: canonicalURL)
+            return
+        }
         guard XomoExternalDocumentOpenPolicy.supports(url) else { return }
 
         guard let viewModel else {
@@ -268,6 +298,7 @@ final class XomoExternalDocumentOpenCoordinator: ObservableObject {
         delayedPresentationTask = nil
         pendingURL = url
         editorKeyboardFocusRequestID = nil
+        figmaLinkImportRequest = nil
         activeRequestID = nil
         activeFileName = url.lastPathComponent
         activeStage = .preparing
@@ -283,6 +314,22 @@ final class XomoExternalDocumentOpenCoordinator: ObservableObject {
         }
 
         startPendingOpenIfPossible()
+    }
+
+    private func requestFigmaLinkImport(canonicalURL: String) {
+        loadTask?.cancel()
+        loadTask = nil
+        delayedPresentationTask?.cancel()
+        delayedPresentationTask = nil
+        pendingURL = nil
+        activeRequestID = nil
+        presentation = nil
+        editorKeyboardFocusRequestID = nil
+        figmaLinkImportRequest = XomoExternalFigmaLinkImportRequest(
+            id: UUID(),
+            canonicalURL: canonicalURL
+        )
+        openedDocumentWindowActivator()
     }
 
     private func startPendingOpenIfPossible() {

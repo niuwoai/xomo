@@ -508,6 +508,7 @@ struct ImageEditorView: View {
             syncFigmaComponentPropertyDrafts()
             syncFigmaSizeConstraintDrafts()
             viewModel.syncSizeControlsFromDocument()
+            presentExternalFigmaLinkImportIfNeeded()
             restoreKeyboardFocusAfterExternalOpenIfNeeded()
             guard !isRightDockMounted else { return }
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) {
@@ -516,6 +517,9 @@ struct ImageEditorView: View {
         }
         .onChange(of: externalOpenCoordinator.editorKeyboardFocusRequestID) { _ in
             restoreKeyboardFocusAfterExternalOpenIfNeeded()
+        }
+        .onChange(of: externalOpenCoordinator.figmaLinkImportRequest?.id) { _ in
+            presentExternalFigmaLinkImportIfNeeded()
         }
         .onChange(of: viewModel.document.selectedLayerIDs) { _ in
             syncLayerNameDraft()
@@ -623,6 +627,7 @@ struct ImageEditorView: View {
         .sheet(isPresented: $isFigmaLinkImportPresented, onDismiss: {
             pendingFigmaLinkImportInput = nil
             pendingFigmaLinkImportPlacementCenter = nil
+            presentExternalFigmaLinkImportIfNeeded()
         }) {
             XomoFigmaLinkImportSheet(
                 viewModel: viewModel,
@@ -3203,6 +3208,17 @@ struct ImageEditorView: View {
             to: NSApp.keyWindow ?? NSApp.mainWindow
         )
         externalOpenCoordinator.fulfillEditorKeyboardFocusRequest(requestID)
+    }
+
+    private func presentExternalFigmaLinkImportIfNeeded() {
+        guard !isFigmaLinkImportPresented,
+              let request = externalOpenCoordinator.figmaLinkImportRequest
+        else { return }
+        presentFigmaLinkImport(
+            canonicalURL: request.canonicalURL,
+            placementCenter: viewModel.visibleCanvasCenter
+        )
+        externalOpenCoordinator.fulfillFigmaLinkImportRequest(request.id)
     }
 
     @discardableResult
