@@ -1890,6 +1890,49 @@ struct ImageEditorCanvasCursorTests {
         #expect(outsideCanvas === NSCursor.arrow)
     }
 
+    @Test func pencilCursorPreviewsAliasedPixelsAcrossItsRealFootprint() {
+        let small = ImageEditorCanvasCursor.cursor(
+            for: .pencil,
+            brushDiameter: 12
+        )
+        let large = ImageEditorCanvasCursor.cursor(
+            for: .pencil,
+            brushDiameter: 48
+        )
+        let brush = ImageEditorCanvasCursor.cursor(
+            for: .brush,
+            brushDiameter: 12
+        )
+        let eraser = ImageEditorCanvasCursor.cursor(
+            for: .eraser,
+            brushDiameter: 12
+        )
+
+        #expect(ImageEditorCanvasCursor.family(for: .pencil) == .pencilTool)
+        #expect(small.image.size == NSSize(width: 36, height: 36))
+        #expect(small.hotSpot == NSPoint(x: 18, y: 18))
+        #expect(large.image.size == NSSize(width: 66, height: 66))
+        #expect(large.hotSpot == NSPoint(x: 33, y: 33))
+        #expect(small.image.tiffRepresentation != brush.image.tiffRepresentation)
+        #expect(small.image.tiffRepresentation != eraser.image.tiffRepresentation)
+        #expect(ImageEditorCanvasCursor.cursor(
+            for: .pencil,
+            brushDiameter: 12,
+            modifierFlags: [.capsLock]
+        ) === NSCursor.crosshair)
+        #expect(ImageEditorCanvasCursor.cursor(
+            for: .components,
+            selectedTool: .pencil,
+            brushDiameter: 12
+        ) === NSCursor.arrow)
+        #expect(ImageEditorCanvasCursor.cursor(
+            for: .tools,
+            selectedTool: .pencil,
+            brushDiameter: 12,
+            isPointerOverCanvas: false
+        ) === NSCursor.arrow)
+    }
+
     @Test func sampledBrushSourcePickingUsesPrecisionCursorWithoutChangingPaintFootprints() {
         let clonePainting = ImageEditorCanvasCursor.cursor(for: .cloneStamp, brushDiameter: 18)
         let healingPainting = ImageEditorCanvasCursor.cursor(for: .healingBrush, brushDiameter: 18)
@@ -3109,7 +3152,7 @@ struct ImageEditorCanvasCursorTests {
         #expect(ImageEditorCanvasCursor.family(for: .healingBrush) == .sampledRepairBlend)
         #expect(ImageEditorCanvasCursor.family(for: .colorSampler) == .samplingScope)
         #expect(ImageEditorCanvasCursor.family(for: .brush) == .brushTool)
-        #expect(ImageEditorCanvasCursor.family(for: .pencil) == .brushTool)
+        #expect(ImageEditorCanvasCursor.family(for: .pencil) == .pencilTool)
         #expect(ImageEditorCanvasCursor.family(for: .eraser) == .eraserTool)
         #expect(ImageEditorCanvasCursor.family(for: .rectangle) == .rectangleOutline)
         #expect(ImageEditorCanvasCursor.family(for: .ellipse) == .ellipseOutline)
@@ -3135,7 +3178,7 @@ struct ImageEditorCanvasCursorTests {
         }
 
         let standardFootprintTools: [ImageEditorTool] = [
-            .brush, .pencil, .historyBrush
+            .brush, .historyBrush
         ]
         let standardRepresentations = standardFootprintTools.compactMap {
             ImageEditorCanvasCursor.cursor(for: $0, brushDiameter: 18).image.tiffRepresentation
@@ -3144,7 +3187,7 @@ struct ImageEditorCanvasCursorTests {
         #expect(Set(standardRepresentations).count == 1)
 
         let resultPreviewTools: [ImageEditorTool] = [
-            .eraser, .cloneStamp, .healingBrush, .dodge, .burn, .sponge, .blur, .sharpen, .smudge
+            .pencil, .eraser, .cloneStamp, .healingBrush, .dodge, .burn, .sponge, .blur, .sharpen, .smudge
         ]
         let resultPreviewRepresentations = resultPreviewTools.compactMap {
             ImageEditorCanvasCursor.cursor(for: $0, brushDiameter: 18).image.tiffRepresentation

@@ -15444,6 +15444,7 @@ enum ImageEditorCanvasCursorFamily: Equatable {
     case grab
     case textInsertion
     case brushTool
+    case pencilTool
     case eraserTool
     case selectionMarquee
     case freeformSelectionPath
@@ -16417,8 +16418,10 @@ enum ImageEditorCanvasCursor {
             .rectangleOutline
         case .ellipse:
             .ellipseOutline
-        case .brush, .pencil, .historyBrush:
+        case .brush, .historyBrush:
             .brushTool
+        case .pencil:
+            .pencilTool
         case .eraser:
             .eraserTool
         case .dodge:
@@ -16527,6 +16530,10 @@ enum ImageEditorCanvasCursor {
                     tipRoundness: brushTipRoundness,
                     tipAngleDegrees: brushTipAngleDegrees
                 )
+        case .pencilTool:
+            return modifierFlags.contains(.capsLock)
+                ? .crosshair
+                : pencilPixelCursor(diameter: brushDiameter)
         case .eraserTool:
             return modifierFlags.contains(.capsLock)
                 ? .crosshair
@@ -16708,6 +16715,60 @@ enum ImageEditorCanvasCursor {
                 )
             )
         }
+        image.unlockFocus()
+        return cache(
+            NSCursor(image: image, hotSpot: NSPoint(x: center.x, y: side - center.y)),
+            for: cacheKey
+        )
+    }
+
+    private static func pencilPixelCursor(diameter requestedDiameter: CGFloat) -> NSCursor {
+        let diameter = max(3, min(256, requestedDiameter.rounded()))
+        let cacheKey = "pencil-pixels:\(Int(diameter))"
+        if let cachedCursor = cursorCache[cacheKey] {
+            return cachedCursor
+        }
+
+        let side = max(36, diameter + 18)
+        let center = NSPoint(x: side / 2, y: side / 2)
+        let image = NSImage(size: NSSize(width: side, height: side))
+        image.lockFocus()
+
+        let footprint = NSBezierPath(ovalIn: NSRect(
+            x: center.x - diameter / 2,
+            y: center.y - diameter / 2,
+            width: diameter,
+            height: diameter
+        ))
+        NSColor.black.withAlphaComponent(0.95).setStroke()
+        footprint.lineWidth = 3.5
+        footprint.stroke()
+        NSColor.white.withAlphaComponent(0.98).setStroke()
+        footprint.lineWidth = 1.4
+        footprint.stroke()
+
+        // Crisp square samples and a stepped diagonal preview the Pencil's
+        // aliased pixel output without shrinking a pencil-shaped toolbox icon.
+        let pixelSize = max(2.2, min(4.5, diameter * 0.15))
+        let step = pixelSize * 0.9
+        let pixelOffsets: [(x: CGFloat, y: CGFloat)] = [
+            (-step, -step), (0, 0), (step, step)
+        ]
+        for (index, offset) in pixelOffsets.enumerated() {
+            let rect = NSRect(
+                x: center.x + offset.x - pixelSize / 2,
+                y: center.y + offset.y - pixelSize / 2,
+                width: pixelSize,
+                height: pixelSize
+            )
+            (index == 1 ? NSColor.systemBlue : NSColor.white).setFill()
+            NSBezierPath(rect: rect).fill()
+            NSColor.black.withAlphaComponent(0.95).setStroke()
+            let outline = NSBezierPath(rect: rect)
+            outline.lineWidth = 0.9
+            outline.stroke()
+        }
+
         image.unlockFocus()
         return cache(
             NSCursor(image: image, hotSpot: NSPoint(x: center.x, y: side - center.y)),
