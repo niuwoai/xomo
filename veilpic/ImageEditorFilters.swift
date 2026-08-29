@@ -52,6 +52,11 @@ extension NSImage {
         if kind == .liquifyTwirl, normalizedSettings.liquifyTwirlAngleDegrees == 0 {
             return self
         }
+        if kind == .offset,
+           normalizedSettings.offsetXPixels == 0,
+           normalizedSettings.offsetYPixels == 0 {
+            return self
+        }
         let hasExplicitFilterAmount = (
             kind == .sharpen
                 && normalizedSettings.sharpenAmountPercent.map { $0 > 0 } == true
@@ -82,6 +87,12 @@ extension NSImage {
         ) || (
             kind == .liquifyTwirl
                 && normalizedSettings.liquifyTwirlAngleDegrees.map { $0 != 0 } == true
+        ) || (
+            kind == .offset
+                && (
+                    normalizedSettings.offsetXPixels.map { $0 != 0 } == true
+                        || normalizedSettings.offsetYPixels.map { $0 != 0 } == true
+                )
         )
         guard clamped > 0 || hasExplicitFilterAmount else { return self }
         if kind == .addNoise {
@@ -252,6 +263,11 @@ extension NSImage {
         if kind == .liquifyTwirl, normalizedSettings.liquifyTwirlAngleDegrees == 0 {
             return self
         }
+        if kind == .offset,
+           normalizedSettings.offsetXPixels == 0,
+           normalizedSettings.offsetYPixels == 0 {
+            return self
+        }
         let hasExplicitFilterAmount = (
             kind == .sharpen
                 && normalizedSettings.sharpenAmountPercent.map { $0 > 0 } == true
@@ -282,6 +298,12 @@ extension NSImage {
         ) || (
             kind == .liquifyTwirl
                 && normalizedSettings.liquifyTwirlAngleDegrees.map { $0 != 0 } == true
+        ) || (
+            kind == .offset
+                && (
+                    normalizedSettings.offsetXPixels.map { $0 != 0 } == true
+                        || normalizedSettings.offsetYPixels.map { $0 != 0 } == true
+                )
         )
         guard intensity > 0 || hasExplicitFilterAmount else { return self }
         let normalizedOpacity = max(0, min(1, opacity))
@@ -1261,11 +1283,23 @@ extension NSImage {
 
     private func offset(intensity: Double, settings: ImageEditorFilterSettings) -> NSImage? {
         let clampedIntensity = max(0, min(1, intensity))
-        guard clampedIntensity > 0 else { return self }
         let normalizedSettings = settings.normalized()
         return pixelSampledFromBuffer { x, y, width, height, pixels, bytesPerRow, bytesPerPixel in
-            let shiftX = normalizedSettings.offsetX * Double(width) * 0.5 * clampedIntensity
-            let shiftY = normalizedSettings.offsetY * Double(height) * 0.5 * clampedIntensity
+            let shiftX = normalizedSettings.offsetXPixels
+                ?? (normalizedSettings.offsetX * Double(width) * 0.5 * clampedIntensity)
+            let shiftY = normalizedSettings.offsetYPixels
+                ?? (normalizedSettings.offsetY * Double(height) * 0.5 * clampedIntensity)
+            guard abs(shiftX) > 0.000_1 || abs(shiftY) > 0.000_1 else {
+                return Self.samplePixel(
+                    x: Double(x),
+                    y: Double(y),
+                    width: width,
+                    height: height,
+                    pixels: pixels,
+                    bytesPerRow: bytesPerRow,
+                    bytesPerPixel: bytesPerPixel
+                )
+            }
             let sourceX = Double(x) - shiftX
             let sourceY = Double(y) - shiftY
             switch normalizedSettings.offsetUndefinedAreaMode {

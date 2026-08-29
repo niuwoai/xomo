@@ -1030,7 +1030,7 @@
 "imageEditor.filter.liquifyBulgeValue" = "%@%%";
 "imageEditor.filter.offsetX" = "水平位移";
 "imageEditor.filter.offsetY" = "垂直位移";
-"imageEditor.filter.offsetValue" = "%d";
+"imageEditor.filter.offsetValue" = "%@ px";
 "imageEditor.filter.offsetUndefinedAreas" = "未定义区域";
 "imageEditor.filter.offsetUndefinedArea.wrapAround" = "循环回绕";
 "imageEditor.filter.offsetUndefinedArea.repeatEdgePixels" = "重复边缘像素";
@@ -1270,7 +1270,7 @@
 "imageEditor.properties.smartFilterLiquifyTwirlItem" = "%@ · 旋转 %@°";
 "imageEditor.properties.smartFilterLiquifyPuckerBloatItem" = "%@ · 收缩/膨胀 %@%%";
 "imageEditor.properties.smartFilterWaveItem" = "%@ · 振幅 %@%% · 频率 %d";
-"imageEditor.properties.smartFilterOffsetItem" = "%@ %d%% · X %d · Y %d · %@";
+"imageEditor.properties.smartFilterOffsetItem" = "%@ · X %@ px · Y %@ px · %@";
 "imageEditor.properties.smartFilterRippleItem" = "%@ · 数量 %@%% · 频率 %d";
 "imageEditor.properties.smartFilterPinchItem" = "%1$@ · 数量 %2$@%%";
 "imageEditor.properties.smartFilterSpherizeItem" = "%1$@ · 数量 %2$@%%";

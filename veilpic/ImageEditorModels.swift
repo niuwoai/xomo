@@ -2585,6 +2585,10 @@ struct ImageEditorFilterSettings: Equatable, Codable {
     /// Pucker/Bloat amount from -100% to 100%. Nil preserves legacy amount × intensity.
     var liquifyBulgeAmountPercent: Double?
     var liquifyBulgeAmount: Double = 0.5
+    /// Explicit horizontal Offset in pixels. Nil preserves legacy normalized X × intensity.
+    var offsetXPixels: Double?
+    /// Explicit vertical Offset in pixels. Nil preserves legacy normalized Y × intensity.
+    var offsetYPixels: Double?
     var offsetX: Double = 0.25
     var offsetY: Double = 0
     var offsetUndefinedAreaMode = ImageEditorOffsetUndefinedAreaMode.wrapAround
@@ -2640,6 +2644,8 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         liquifyTwirlAngle: Double = 0.5,
         liquifyBulgeAmountPercent: Double? = nil,
         liquifyBulgeAmount: Double = 0.5,
+        offsetXPixels: Double? = nil,
+        offsetYPixels: Double? = nil,
         offsetX: Double = 0.25,
         offsetY: Double = 0,
         offsetUndefinedAreaMode: ImageEditorOffsetUndefinedAreaMode = .wrapAround,
@@ -2689,6 +2695,8 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         self.liquifyTwirlAngle = liquifyTwirlAngle
         self.liquifyBulgeAmountPercent = liquifyBulgeAmountPercent
         self.liquifyBulgeAmount = liquifyBulgeAmount
+        self.offsetXPixels = offsetXPixels
+        self.offsetYPixels = offsetYPixels
         self.offsetX = offsetX
         self.offsetY = offsetY
         self.offsetUndefinedAreaMode = offsetUndefinedAreaMode
@@ -2744,6 +2752,8 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         liquifyTwirlAngle = try container.decodeIfPresent(Double.self, forKey: .liquifyTwirlAngle) ?? 0.5
         liquifyBulgeAmountPercent = try container.decodeIfPresent(Double.self, forKey: .liquifyBulgeAmountPercent)
         liquifyBulgeAmount = try container.decodeIfPresent(Double.self, forKey: .liquifyBulgeAmount) ?? 0.5
+        offsetXPixels = try container.decodeIfPresent(Double.self, forKey: .offsetXPixels)
+        offsetYPixels = try container.decodeIfPresent(Double.self, forKey: .offsetYPixels)
         offsetX = try container.decodeIfPresent(Double.self, forKey: .offsetX) ?? 0.25
         offsetY = try container.decodeIfPresent(Double.self, forKey: .offsetY) ?? 0
         offsetUndefinedAreaMode = try container.decodeIfPresent(
@@ -2802,6 +2812,8 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         try container.encode(liquifyTwirlAngle, forKey: .liquifyTwirlAngle)
         try container.encodeIfPresent(liquifyBulgeAmountPercent, forKey: .liquifyBulgeAmountPercent)
         try container.encode(liquifyBulgeAmount, forKey: .liquifyBulgeAmount)
+        try container.encodeIfPresent(offsetXPixels, forKey: .offsetXPixels)
+        try container.encodeIfPresent(offsetYPixels, forKey: .offsetYPixels)
         try container.encode(offsetX, forKey: .offsetX)
         try container.encode(offsetY, forKey: .offsetY)
         try container.encode(offsetUndefinedAreaMode, forKey: .offsetUndefinedAreaMode)
@@ -2854,6 +2866,8 @@ struct ImageEditorFilterSettings: Equatable, Codable {
             liquifyTwirlAngle: max(-1, min(1, liquifyTwirlAngle)),
             liquifyBulgeAmountPercent: liquifyBulgeAmountPercent.map { max(-100, min(100, $0)) },
             liquifyBulgeAmount: max(-1, min(1, liquifyBulgeAmount)),
+            offsetXPixels: offsetXPixels.map { max(-9_999, min(9_999, $0)) },
+            offsetYPixels: offsetYPixels.map { max(-9_999, min(9_999, $0)) },
             offsetX: max(-1, min(1, offsetX)),
             offsetY: max(-1, min(1, offsetY)),
             offsetUndefinedAreaMode: offsetUndefinedAreaMode,
@@ -2906,6 +2920,8 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         case liquifyTwirlAngle
         case liquifyBulgeAmountPercent
         case liquifyBulgeAmount
+        case offsetXPixels
+        case offsetYPixels
         case offsetX
         case offsetY
         case offsetUndefinedAreaMode

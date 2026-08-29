@@ -3511,9 +3511,42 @@ struct ImageEditorFilterTests {
         #expect(viewSource.contains("viewModel.selectedFilter != .wave"))
     }
 
-    @Test func imageEditorOffsetFilterLayerAndSmartFilterWrapPixels() async throws {
+    @Test func imageEditorOffsetPixelsSupportLegacyValuesLayersAndSmartFilters() async throws {
         let canvasSize = NSSize(width: 48, height: 48)
         let sourceImage = splitColorImage(size: canvasSize, left: .systemRed, right: .systemBlue)
+        let legacySettings = try JSONDecoder().decode(
+            ImageEditorFilterSettings.self,
+            from: Data("{}".utf8)
+        )
+        #expect(legacySettings.offsetXPixels == nil)
+        #expect(legacySettings.offsetYPixels == nil)
+        #expect(legacySettings.offsetX == 0.25)
+
+        let legacyOutput = try #require(sourceImage.filtered(
+            kind: .offset,
+            intensity: 1,
+            settings: legacySettings
+        ))
+        let explicitOutput = try #require(sourceImage.filtered(
+            kind: .offset,
+            intensity: 0,
+            settings: ImageEditorFilterSettings(offsetXPixels: 6, offsetYPixels: 0)
+        ))
+        #expect(legacyOutput.qingtuPNGData() == explicitOutput.qingtuPNGData())
+
+        let clampedSettings = ImageEditorFilterSettings(
+            offsetXPixels: 15_000,
+            offsetYPixels: -15_000
+        ).normalized()
+        #expect(clampedSettings.offsetXPixels == 9_999)
+        #expect(clampedSettings.offsetYPixels == -9_999)
+        let bypassed = try #require(sourceImage.filtered(
+            kind: .offset,
+            intensity: 1,
+            settings: ImageEditorFilterSettings(offsetXPixels: 0, offsetYPixels: 0)
+        ))
+        #expect(bypassed.qingtuPNGData() == sourceImage.qingtuPNGData())
+
         let samplePoint = CGPoint(x: 12, y: 24)
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: sourceImage) { _ in }
         viewModel.replaceSelectedLayerImageForTesting(sourceImage, historyTitle: L10n.text("imageEditor.history.brush"))
@@ -3522,17 +3555,17 @@ struct ImageEditorFilterTests {
         let sampleBefore = try #require(viewModel.currentImage.color(at: samplePoint)?.usingColorSpace(.deviceRGB))
 
         viewModel.selectedFilter = .offset
-        viewModel.filterIntensity = 1
-        viewModel.filterOffsetX = 1
-        viewModel.filterOffsetY = 0
+        viewModel.filterIntensity = 0
+        viewModel.filterOffsetXPixels = 24
+        viewModel.filterOffsetYPixels = 0
         viewModel.addFilterLayer()
 
         let filterLayer = try #require(viewModel.document.selectedLayer)
         let sampleAfter = try #require(viewModel.currentImage.color(at: samplePoint)?.usingColorSpace(.deviceRGB))
         #expect(filterLayer.isFilter)
         #expect(filterLayer.filter?.kind == .offset)
-        #expect(filterLayer.filterSettings.normalized().offsetX == 1)
-        #expect(filterLayer.filterSettings.normalized().offsetY == 0)
+        #expect(filterLayer.filterSettings.normalized().offsetXPixels == 24)
+        #expect(filterLayer.filterSettings.normalized().offsetYPixels == 0)
         #expect(filterLayer.filterSettings.normalized().offsetUndefinedAreaMode == .wrapAround)
         #expect(viewModel.document.layers.first { $0.id == baseLayerID }?.image.qingtuPNGData() == basePixelsBefore)
         #expect(sampleBefore.redComponent > sampleBefore.blueComponent + 0.4)
@@ -3552,9 +3585,9 @@ struct ImageEditorFilterTests {
         let smartBasePixelsBefore = try #require(smartViewModel.document.selectedLayer?.image.qingtuPNGData())
         let smartSampleBefore = try #require(smartViewModel.currentImage.color(at: verticalSamplePoint)?.usingColorSpace(.deviceRGB))
         smartViewModel.selectedFilter = .offset
-        smartViewModel.filterIntensity = 1
-        smartViewModel.filterOffsetX = 0
-        smartViewModel.filterOffsetY = 1
+        smartViewModel.filterIntensity = 0
+        smartViewModel.filterOffsetXPixels = 0
+        smartViewModel.filterOffsetYPixels = 24
         smartViewModel.filterOffsetUndefinedAreaMode = .repeatEdgePixels
         smartViewModel.addSmartFilterToSelectedLayer()
 
@@ -3562,8 +3595,8 @@ struct ImageEditorFilterTests {
         let smartFilter = try #require(smartLayer.smartFilters.first)
         let smartSampleAfter = try #require(smartViewModel.currentImage.color(at: verticalSamplePoint)?.usingColorSpace(.deviceRGB))
         #expect(smartFilter.kind == .offset)
-        #expect(smartFilter.normalizedSettings.offsetX == 0)
-        #expect(smartFilter.normalizedSettings.offsetY == 1)
+        #expect(smartFilter.normalizedSettings.offsetXPixels == 0)
+        #expect(smartFilter.normalizedSettings.offsetYPixels == 24)
         #expect(smartFilter.normalizedSettings.offsetUndefinedAreaMode == .repeatEdgePixels)
         #expect(smartLayer.image.qingtuPNGData() == smartBasePixelsBefore)
         #expect(smartSampleBefore.redComponent > smartSampleBefore.greenComponent + 0.4)
@@ -3571,9 +3604,8 @@ struct ImageEditorFilterTests {
         #expect(smartViewModel.smartFilterLabel(smartFilter) == L10n.format(
             "imageEditor.properties.smartFilterOffsetItem",
             smartFilter.kind.title,
-            100,
-            0,
-            100,
+            "+0",
+            "+24",
             ImageEditorOffsetUndefinedAreaMode.repeatEdgePixels.title
         ))
         #expect(smartViewModel.document.history.last?.title == L10n.text("imageEditor.history.layerSmartFilterAdd"))
@@ -3583,9 +3615,20 @@ struct ImageEditorFilterTests {
         let restoredLayer = try #require(restoredDocument.layers.first { $0.id == smartLayer.id })
         let restoredFilter = try #require(restoredLayer.smartFilters.first)
         #expect(restoredFilter.kind == .offset)
-        #expect(restoredFilter.normalizedSettings.offsetX == 0)
-        #expect(restoredFilter.normalizedSettings.offsetY == 1)
+        #expect(restoredFilter.normalizedSettings.offsetXPixels == 0)
+        #expect(restoredFilter.normalizedSettings.offsetYPixels == 24)
         #expect(restoredFilter.normalizedSettings.offsetUndefinedAreaMode == .repeatEdgePixels)
+
+        let root = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let viewSource = try String(
+            contentsOf: root.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        #expect(viewSource.contains("image-editor-filter-offset-x-pixels"))
+        #expect(viewSource.contains("image-editor-filter-offset-y-pixels"))
+        #expect(viewSource.contains("viewModel.selectedFilter != .offset"))
     }
 
     @Test func offsetUndefinedAreaModesRenderDistinctPixelsAndPreserveLegacyProjects() throws {

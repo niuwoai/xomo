@@ -11894,7 +11894,8 @@ struct ImageEditorView: View {
                     && viewModel.selectedFilter != .liquifyPuckerBloat
                     && viewModel.selectedFilter != .ripple
                     && viewModel.selectedFilter != .wave
-                    && viewModel.selectedFilter != .liquifyTwirl {
+                    && viewModel.selectedFilter != .liquifyTwirl
+                    && viewModel.selectedFilter != .offset {
                     Slider(value: $viewModel.filterIntensity, in: 0...1, step: 0.05)
                 }
                 if viewModel.selectedFilter == .gaussianBlur {
@@ -12390,8 +12391,19 @@ struct ImageEditorView: View {
                         Text(L10n.text("imageEditor.filter.offsetX"))
                             .font(.system(size: 10, weight: .medium))
                             .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
-                        Slider(value: $viewModel.filterOffsetX, in: -1...1, step: 0.05)
-                        Text(L10n.format("imageEditor.filter.offsetValue", Int((viewModel.filterOffsetX * 100).rounded())))
+                        Slider(
+                            value: Binding(
+                                get: { viewModel.filterOffsetEffectiveXPixels },
+                                set: { viewModel.filterOffsetEffectiveXPixels = $0 }
+                            ),
+                            in: -9_999...9_999,
+                            step: 1
+                        )
+                        .accessibilityIdentifier("image-editor-filter-offset-x-pixels")
+                        Text(L10n.format(
+                            "imageEditor.filter.offsetValue",
+                            String(format: "%+d", Int(viewModel.filterOffsetEffectiveXPixels.rounded()))
+                        ))
                             .font(.system(size: 10, weight: .semibold))
                             .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
                             .frame(width: 44, alignment: .trailing)
@@ -12400,8 +12412,19 @@ struct ImageEditorView: View {
                         Text(L10n.text("imageEditor.filter.offsetY"))
                             .font(.system(size: 10, weight: .medium))
                             .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
-                        Slider(value: $viewModel.filterOffsetY, in: -1...1, step: 0.05)
-                        Text(L10n.format("imageEditor.filter.offsetValue", Int((viewModel.filterOffsetY * 100).rounded())))
+                        Slider(
+                            value: Binding(
+                                get: { viewModel.filterOffsetEffectiveYPixels },
+                                set: { viewModel.filterOffsetEffectiveYPixels = $0 }
+                            ),
+                            in: -9_999...9_999,
+                            step: 1
+                        )
+                        .accessibilityIdentifier("image-editor-filter-offset-y-pixels")
+                        Text(L10n.format(
+                            "imageEditor.filter.offsetValue",
+                            String(format: "%+d", Int(viewModel.filterOffsetEffectiveYPixels.rounded()))
+                        ))
                             .font(.system(size: 10, weight: .semibold))
                             .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
                             .frame(width: 44, alignment: .trailing)

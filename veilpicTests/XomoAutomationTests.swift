@@ -5787,7 +5787,7 @@ struct XomoAutomationTests {
         #expect(settingsProperties["morphologyRadius"]?.objectValue?["type"] == .string("number"))
     }
 
-    @Test func registryConfiguresOffsetUndefinedAreaModeThroughTheSharedFilterPipeline() throws {
+    @Test func registryConfiguresOffsetPixelsAndUndefinedAreaModeThroughTheSharedFilterPipeline() throws {
         let viewModel = makeViewModel()
         let registry = XomoAutomationRegistry.shared
         registry.register(viewModel)
@@ -5800,8 +5800,9 @@ struct XomoAutomationTests {
                 "filter": .string(ImageEditorFilter.offset.rawValue),
                 "action": .string("addSmartFilter"),
                 "settings": .object([
-                    "intensity": .number(1),
-                    "offsetX": .number(1),
+                    "intensity": .number(0),
+                    "offsetXPixels": .number(20_000),
+                    "offsetYPixels": .number(-20_000),
                     "offsetUndefinedAreaMode": .string(
                         ImageEditorOffsetUndefinedAreaMode.repeatEdgePixels.rawValue
                     )
@@ -5813,7 +5814,8 @@ struct XomoAutomationTests {
         #expect(response.result?.objectValue?["addedLayerCount"] == .number(1))
         let filter = try #require(viewModel.document.selectedLayer?.smartFilters.last)
         #expect(filter.kind == .offset)
-        #expect(filter.normalizedSettings.offsetX == 1)
+        #expect(filter.normalizedSettings.offsetXPixels == 9_999)
+        #expect(filter.normalizedSettings.offsetYPixels == -9_999)
         #expect(filter.normalizedSettings.offsetUndefinedAreaMode == .repeatEdgePixels)
 
         let tools = registry.execute(request(operation: "tools"))
@@ -5824,6 +5826,8 @@ struct XomoAutomationTests {
             configureTool["inputSchema"]?.objectValue?["properties"]?.objectValue?["settings"]?.objectValue
         )
         let settingsProperties = try #require(settingsSchema["properties"]?.objectValue)
+        #expect(settingsProperties["offsetXPixels"]?.objectValue?["type"] == .string("number"))
+        #expect(settingsProperties["offsetYPixels"]?.objectValue?["type"] == .string("number"))
         #expect(
             settingsProperties["offsetUndefinedAreaMode"]?.objectValue?["enum"]?.arrayValue
                 == ImageEditorOffsetUndefinedAreaMode.allCases.map { .string($0.rawValue) }
@@ -5837,7 +5841,8 @@ struct XomoAutomationTests {
                 "filter": .string(ImageEditorFilter.offset.rawValue),
                 "action": .string("addSmartFilter"),
                 "settings": .object([
-                    "offsetUndefinedAreaMode": .string("unknown")
+                    "offsetXPixels": .string("not-a-number"),
+                    "offsetUndefinedAreaMode": .string("transparent")
                 ])
             ]
         ))

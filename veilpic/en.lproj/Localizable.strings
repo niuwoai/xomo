@@ -1030,7 +1030,7 @@
 "imageEditor.filter.liquifyBulgeValue" = "%@%%";
 "imageEditor.filter.offsetX" = "Offset X";
 "imageEditor.filter.offsetY" = "Offset Y";
-"imageEditor.filter.offsetValue" = "%d";
+"imageEditor.filter.offsetValue" = "%@ px";
 "imageEditor.filter.offsetUndefinedAreas" = "Undefined Areas";
 "imageEditor.filter.offsetUndefinedArea.wrapAround" = "Wrap Around";
 "imageEditor.filter.offsetUndefinedArea.repeatEdgePixels" = "Repeat Edge Pixels";
@@ -1270,7 +1270,7 @@
 "imageEditor.properties.smartFilterLiquifyTwirlItem" = "%@ · Twirl %@°";
 "imageEditor.properties.smartFilterLiquifyPuckerBloatItem" = "%@ · Pucker/Bloat %@%%";
 "imageEditor.properties.smartFilterWaveItem" = "%@ · Amp %@%% · Freq %d";
-"imageEditor.properties.smartFilterOffsetItem" = "%@ %d%% · X %d · Y %d · %@";
+"imageEditor.properties.smartFilterOffsetItem" = "%@ · X %@ px · Y %@ px · %@";
 "imageEditor.properties.smartFilterRippleItem" = "%@ · Amount %@%% · Freq %d";
 "imageEditor.properties.smartFilterPinchItem" = "%1$@ · amount %2$@%%";
 "imageEditor.properties.smartFilterSpherizeItem" = "%1$@ · amount %2$@%%";

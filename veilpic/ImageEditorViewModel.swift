@@ -480,6 +480,8 @@ final class ImageEditorViewModel: ObservableObject {
                 filterRippleAmountPercent = nil
                 filterWaveAmplitudePercent = nil
                 filterLiquifyTwirlAngleDegrees = nil
+                filterOffsetXPixels = nil
+                filterOffsetYPixels = nil
                 filterUnsharpAmountPercent = nil
                 filterUnsharpRadiusPixels = nil
                 filterUnsharpThresholdLevels = nil
@@ -626,6 +628,38 @@ final class ImageEditorViewModel: ObservableObject {
         }
     }
 
+    var filterOffsetEffectiveXPixels: Double {
+        get {
+            filterOffsetXPixels
+                ?? max(
+                    -9_999,
+                    min(
+                        9_999,
+                        filterOffsetX * Double(document.canvasSize.width) * 0.5 * filterIntensity
+                    )
+                )
+        }
+        set {
+            filterOffsetXPixels = max(-9_999, min(9_999, newValue))
+        }
+    }
+
+    var filterOffsetEffectiveYPixels: Double {
+        get {
+            filterOffsetYPixels
+                ?? max(
+                    -9_999,
+                    min(
+                        9_999,
+                        filterOffsetY * Double(document.canvasSize.height) * 0.5 * filterIntensity
+                    )
+                )
+        }
+        set {
+            filterOffsetYPixels = max(-9_999, min(9_999, newValue))
+        }
+    }
+
     var filterUnsharpEffectiveAmountPercent: Double {
         get {
             filterUnsharpAmountPercent
@@ -661,6 +695,8 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var filterLiquifyTwirlAngle: Double = 0.5
     @Published var filterLiquifyBulgeAmountPercent: Double?
     @Published var filterLiquifyBulgeAmount: Double = 0.5
+    @Published var filterOffsetXPixels: Double?
+    @Published var filterOffsetYPixels: Double?
     @Published var filterOffsetX: Double = 0.25
     @Published var filterOffsetY: Double = 0
     @Published var filterOffsetUndefinedAreaMode = ImageEditorOffsetUndefinedAreaMode.wrapAround
@@ -2925,12 +2961,15 @@ final class ImageEditorViewModel: ObservableObject {
         }
         if filter.kind == .offset {
             let settings = filter.normalizedSettings
+            let offsetX = settings.offsetXPixels
+                ?? (settings.offsetX * Double(document.canvasSize.width) * 0.5 * filter.normalizedIntensity)
+            let offsetY = settings.offsetYPixels
+                ?? (settings.offsetY * Double(document.canvasSize.height) * 0.5 * filter.normalizedIntensity)
             let title = L10n.format(
                 "imageEditor.properties.smartFilterOffsetItem",
                 filter.kind.title,
-                Int((filter.normalizedIntensity * 100).rounded()),
-                Int((settings.offsetX * 100).rounded()),
-                Int((settings.offsetY * 100).rounded()),
+                String(format: "%+d", Int(offsetX.rounded())),
+                String(format: "%+d", Int(offsetY.rounded())),
                 settings.offsetUndefinedAreaMode.title
             )
             guard !filter.isEnabled else { return title }
@@ -9782,6 +9821,8 @@ final class ImageEditorViewModel: ObservableObject {
                 ? filterLiquifyBulgeAmountPercent
                 : nil,
             liquifyBulgeAmount: filterLiquifyBulgeAmount,
+            offsetXPixels: selectedFilter == .offset ? filterOffsetXPixels : nil,
+            offsetYPixels: selectedFilter == .offset ? filterOffsetYPixels : nil,
             offsetX: filterOffsetX,
             offsetY: filterOffsetY,
             offsetUndefinedAreaMode: filterOffsetUndefinedAreaMode,
@@ -11659,6 +11700,8 @@ final class ImageEditorViewModel: ObservableObject {
         filterLiquifyTwirlAngle = normalized.liquifyTwirlAngle
         filterLiquifyBulgeAmountPercent = normalized.liquifyBulgeAmountPercent
         filterLiquifyBulgeAmount = normalized.liquifyBulgeAmount
+        filterOffsetXPixels = normalized.offsetXPixels
+        filterOffsetYPixels = normalized.offsetYPixels
         filterOffsetX = normalized.offsetX
         filterOffsetY = normalized.offsetY
         filterOffsetUndefinedAreaMode = normalized.offsetUndefinedAreaMode

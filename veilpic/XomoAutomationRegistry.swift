@@ -6288,6 +6288,8 @@ final class XomoAutomationRegistry {
             case "twirlAngle": viewModel.filterLiquifyTwirlAngle = try numericSetting(value, key: key)
             case "liquifyBulgeAmountPercent": viewModel.filterLiquifyBulgeAmountPercent = try numericSetting(value, key: key)
             case "bulgeAmount": viewModel.filterLiquifyBulgeAmount = try numericSetting(value, key: key)
+            case "offsetXPixels": viewModel.filterOffsetXPixels = try numericSetting(value, key: key)
+            case "offsetYPixels": viewModel.filterOffsetYPixels = try numericSetting(value, key: key)
             case "offsetX": viewModel.filterOffsetX = try numericSetting(value, key: key)
             case "offsetY": viewModel.filterOffsetY = try numericSetting(value, key: key)
             case "offsetUndefinedAreaMode":
@@ -8035,6 +8037,8 @@ private extension XomoAutomationRegistry {
         "twirlAngle": XomoAutomationSchema.number(description: "Twirl angle"),
         "liquifyBulgeAmountPercent": XomoAutomationSchema.number(description: "Pucker/Bloat amount from -100 to 100 percent"),
         "bulgeAmount": XomoAutomationSchema.number(description: "Bulge amount"),
+        "offsetXPixels": XomoAutomationSchema.number(description: "Horizontal Offset from -9999 to 9999 pixels"),
+        "offsetYPixels": XomoAutomationSchema.number(description: "Vertical Offset from -9999 to 9999 pixels"),
         "offsetX": XomoAutomationSchema.number(description: "Horizontal offset"),
         "offsetY": XomoAutomationSchema.number(description: "Vertical offset"),
         "offsetUndefinedAreaMode": XomoAutomationSchema.string(
