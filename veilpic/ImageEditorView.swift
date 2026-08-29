@@ -7609,7 +7609,26 @@ struct ImageEditorView: View {
             .accessibilityIdentifier("image-editor-filter-picker")
 
             HStack(spacing: 8) {
-                if viewModel.selectedFilter == .minimum || viewModel.selectedFilter == .maximum {
+                if viewModel.selectedFilter == .gaussianBlur {
+                    Text(L10n.format(
+                        "imageEditor.filter.gaussianBlurRadiusValue",
+                        String(format: "%.1f", viewModel.filterGaussianBlurEffectiveRadius)
+                    ))
+                        .font(.system(size: 11, weight: .semibold).monospacedDigit())
+                        .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                        .frame(width: 64, alignment: .leading)
+                    Slider(
+                        value: Binding(
+                            get: { viewModel.filterGaussianBlurEffectiveRadius },
+                            set: { viewModel.filterGaussianBlurEffectiveRadius = $0 }
+                        ),
+                        in: 0.1...1_000,
+                        step: 0.1
+                    )
+                        .focusable(false)
+                        .accessibilityLabel(L10n.text("imageEditor.filter.gaussianBlurRadius"))
+                        .accessibilityIdentifier("image-editor-filter-quick-gaussian-blur-radius")
+                } else if viewModel.selectedFilter == .minimum || viewModel.selectedFilter == .maximum {
                     Text("\(Int(viewModel.filterMorphologyRadius.rounded())) px")
                         .font(.system(size: 11, weight: .semibold).monospacedDigit())
                         .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))

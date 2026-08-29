@@ -2031,6 +2031,37 @@ struct ImageEditorFilterTests {
         #expect(viewSource.contains("in: 0.1...1_000"))
     }
 
+    @Test func gaussianBlurQuickPanelUsesPhotoshopRadiusInsteadOfLegacyIntensity() throws {
+        let root = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let viewSource = try String(
+            contentsOf: root.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let panelStart = try #require(viewSource.range(of: "private var filtersQuickPanel: some View"))
+        let panelEnd = try #require(
+            viewSource[panelStart.upperBound...].range(of: "private func historySnapshotRow")
+        )
+        let panelSource = viewSource[panelStart.lowerBound..<panelEnd.lowerBound]
+        let gaussianStart = try #require(
+            panelSource.range(of: "if viewModel.selectedFilter == .gaussianBlur")
+        )
+        let gaussianEnd = try #require(
+            panelSource[gaussianStart.upperBound...].range(
+                of: "else if viewModel.selectedFilter == .minimum"
+            )
+        )
+        let gaussianSource = panelSource[gaussianStart.lowerBound..<gaussianEnd.lowerBound]
+
+        #expect(gaussianSource.contains("viewModel.filterGaussianBlurEffectiveRadius"))
+        #expect(gaussianSource.contains("in: 0.1...1_000"))
+        #expect(gaussianSource.contains("step: 0.1"))
+        #expect(gaussianSource.contains("imageEditor.filter.gaussianBlurRadius"))
+        #expect(gaussianSource.contains("image-editor-filter-quick-gaussian-blur-radius"))
+        #expect(!gaussianSource.contains("viewModel.filterIntensity"))
+    }
+
     @Test func imageEditorMotionBlurFilterLayerAndSmartFilterAreNonDestructive() async throws {
         let canvasSize = NSSize(width: 72, height: 48)
         let sourceImage = verticalEdgeImage(size: canvasSize)
