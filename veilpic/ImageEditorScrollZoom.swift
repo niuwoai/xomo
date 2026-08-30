@@ -220,6 +220,7 @@ struct ImageEditorPrimaryPointerSample {
 }
 
 final class ImageEditorCanvasPointerCaptureState: ObservableObject {
+    private var transactionID: UUID?
     var activeKind: ImageEditorPrimaryToolPointerCapture.Kind = .none
     var activeTool: ImageEditorTool?
     var isRangeToolDragging = false
@@ -230,7 +231,19 @@ final class ImageEditorCanvasPointerCaptureState: ObservableObject {
     var isLayerResizing = false
     var lastLayerResizePoint: CGPoint?
 
+    fileprivate func claimTransaction() -> UUID {
+        let id = UUID()
+        transactionID = id
+        return id
+    }
+
+    fileprivate func reset(ifOwnedBy id: UUID) {
+        guard transactionID == id else { return }
+        reset()
+    }
+
     func reset() {
+        transactionID = nil
         activeKind = .none
         activeTool = nil
         isRangeToolDragging = false
@@ -434,14 +447,16 @@ final class ImageEditorCanvasPointerGestureRecognizer: NSGestureRecognizer {
     }
 
     override func mouseUp(with event: NSEvent) {
-        Self.activePointerHandler?(.up, event)
+        let handler = Self.activePointerHandler
         Self.activePointerHandler = nil
         state = .ended
+        handler?(.up, event)
     }
 }
 
 final class ImageEditorActiveCanvasPointerTransaction {
     let kind: ImageEditorPrimaryToolPointerCapture.Kind
+    private let captureID: UUID
     private weak var sourceWindow: NSWindow?
     let captureState: ImageEditorCanvasPointerCaptureState
     var lastPoint: CGPoint
@@ -469,6 +484,7 @@ final class ImageEditorActiveCanvasPointerTransaction {
         self.kind = kind
         sourceWindow = window
         self.captureState = captureState
+        captureID = captureState.claimTransaction()
         lastPoint = point
         lastWindowPoint = windowPoint
         samples = [
@@ -483,6 +499,12 @@ final class ImageEditorActiveCanvasPointerTransaction {
         self.onPrimaryChanged = onPrimaryChanged
         self.onPrimaryEnded = onPrimaryEnded
         self.onCancelled = onCancelled
+    }
+
+    func finishCapture() {
+        // Keep the latched tool through the commit callback, but never clear
+        // a newer stroke or resize created by that callback.
+        captureState.reset(ifOwnedBy: captureID)
     }
 
     /// Window deltas keep the original canvas coordinates across rebuilt view hosts.
@@ -857,7 +879,7 @@ final class ScrollWheelZoomNSView: NSView {
                 }
             case .up:
                 Self.activePointerTransaction = nil
-                defer { transaction.captureState.reset() }
+                defer { transaction.finishCapture() }
                 switch transaction.kind {
                 case .rangeTool:
                     transaction.onRangeEnded?(location)
@@ -1076,7 +1098,7 @@ final class ScrollWheelZoomNSView: NSView {
             if let transaction = Self.activePointerTransaction {
                 Self.activePointerTransaction = nil
                 let location = transaction.advanceLocation(for: event) ?? transaction.lastPoint
-                defer { transaction.captureState.reset() }
+                defer { transaction.finishCapture() }
                 switch transaction.kind {
                 case .rangeTool:
                     transaction.onRangeEnded?(location)
@@ -1350,7 +1372,7 @@ final class ScrollWheelZoomNSView: NSView {
             }
         case .up:
             activePointerTransaction = nil
-            defer { transaction.captureState.reset() }
+            defer { transaction.finishCapture() }
             switch transaction.kind {
             case .rangeTool:
                 transaction.onRangeEnded?(location)
