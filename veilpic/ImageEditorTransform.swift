@@ -254,10 +254,18 @@ extension ImageEditorViewModel {
         height: Double? = nil,
         preservingAspectRatio: Bool = false
     ) {
+        guard movingLayerIDs.isEmpty, resizingLayerIDs.isEmpty, rotatingLayerIDs.isEmpty,
+              [x, y, width, height].compactMap({ $0 }).allSatisfy(\.isFinite)
+        else { return }
         let changesSize = width != nil || height != nil
         guard (changesSize ? canResizeSelectedLayer : canMoveSelectedLayer),
               let currentFrame = selectedLayerTransformFrame
         else { return }
+
+        if !changesSize {
+            setSelectedLayerPosition(x: x, y: y, currentFrame: currentFrame)
+            return
+        }
 
         let currentWidth = max(currentFrame.width, 0.1)
         let currentHeight = max(currentFrame.height, 0.1)
@@ -290,6 +298,19 @@ extension ImageEditorViewModel {
             updateStatus()
             return
         }
+        appendHistory(L10n.text("imageEditor.history.layerTransformInspector"))
+    }
+
+    private func setSelectedLayerPosition(x: Double?, y: Double?, currentFrame: CGRect) {
+        let delta = CGSize(
+            width: CGFloat(x ?? Double(currentFrame.minX)) - currentFrame.minX,
+            height: CGFloat(y ?? Double(currentFrame.minY)) - currentFrame.minY
+        )
+        guard delta.width.isFinite, delta.height.isFinite, delta != .zero else { return }
+        let ids = movingLayerIDsIncludingGroups(for: editableTransformLayerIndices())
+        guard !ids.isEmpty else { return }
+        pushUndo()
+        translateLayers(ids, by: delta)
         appendHistory(L10n.text("imageEditor.history.layerTransformInspector"))
     }
 
@@ -644,7 +665,8 @@ extension ImageEditorViewModel {
         if movingLayerDidChange,
            let originalTransformFrame = movingOriginalTransformFrame,
            let previewFrame = movingObjectPreviewFrame {
-            commitMovingSelectedLayers(
+            translateLayers(
+                movingLayerIDs,
                 by: CGSize(
                     width: previewFrame.minX - originalTransformFrame.minX,
                     height: previewFrame.minY - originalTransformFrame.minY
@@ -701,9 +723,9 @@ extension ImageEditorViewModel {
         return ids
     }
 
-    private func commitMovingSelectedLayers(by delta: CGSize) {
+    private func translateLayers(_ layerIDs: Set<UUID>, by delta: CGSize) {
         var nextDocument = document
-        for index in nextDocument.layers.indices where movingLayerIDs.contains(nextDocument.layers[index].id) {
+        for index in nextDocument.layers.indices where layerIDs.contains(nextDocument.layers[index].id) {
             let originalFrame = nextDocument.layers[index].frame.standardized
             nextDocument.layers[index].frame.origin.x += delta.width
             nextDocument.layers[index].frame.origin.y += delta.height
