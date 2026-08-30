@@ -79,7 +79,9 @@ struct XomoFigmaLinkPreview: Equatable, Codable, Sendable {
     var discardedQueryItemCount: Int
 
     var displayName: String {
-        fileSlug.replacingOccurrences(of: "-", with: " ")
+        fileSlug.isEmpty
+            ? fileKey
+            : fileSlug.replacingOccurrences(of: "-", with: " ")
     }
 
     var plannedImportScope: XomoFigmaPlannedImportScope {
@@ -589,13 +591,20 @@ enum XomoCanvasRichLinkDropPolicy {
 
 enum XomoFigmaLinkParser {
     static let maximumInputLength = 4_096
-    private static let standardPathComponentCount = 4
+    private static let standardPathComponentCounts = 3...4
     private static let branchPathComponentCount = 6
     private static let communityPathComponentCount = 5
     private static let minimumFileKeyLength = 6
     private static let maximumIdentifierLength = 128
     private static let maximumFileSlugLength = 200
-    private static let trustedHosts = ["figma.com", "www.figma.com"]
+    private static let trustedHosts = ["figma.com", "www.figma.com", "embed.figma.com"]
+    private static let embeddableResourceTypes: Set<XomoFigmaResourceType> = [
+        .design,
+        .prototype,
+        .figJam,
+        .slides,
+        .slideDeck
+    ]
     private static let selectorNames = ["node-id", "starting-point-node-id", "version-id"]
 
     static func parse(_ input: String) throws -> XomoFigmaLinkPreview {
@@ -608,6 +617,7 @@ enum XomoFigmaLinkParser {
 
         try validateOrigin(components)
         let identity = try parseIdentity(components.percentEncodedPath)
+        try validateResourceHost(components.host, identity: identity)
         let selectors = try parseSelectors(components.queryItems ?? [])
         let canonicalURL = try makeCanonicalURL(identity: identity, selectors: selectors)
 
@@ -649,7 +659,7 @@ enum XomoFigmaLinkParser {
 
         let resourceType: XomoFigmaResourceType
         let encodedFileKey: Substring
-        let encodedFileSlug: Substring
+        let encodedFileSlug: Substring?
         var mainFileKey: String?
         if encodedSegments.count == communityPathComponentCount,
            encodedSegments[1] == "community",
@@ -668,21 +678,34 @@ enum XomoFigmaLinkParser {
             encodedFileKey = encodedSegments[4]
             encodedFileSlug = encodedSegments[5]
         } else {
-            guard encodedSegments.count == standardPathComponentCount,
+            guard standardPathComponentCounts.contains(encodedSegments.count),
                   let resourcePath = String(encodedSegments[1]).removingPercentEncoding,
                   let standardResourceType = XomoFigmaResourceType(rawValue: resourcePath)
             else { throw XomoFigmaLinkParserError.unsupportedResourceType }
+            if encodedSegments.count == 3,
+               !embeddableResourceTypes.contains(standardResourceType) {
+                throw XomoFigmaLinkParserError.invalidFileName
+            }
             resourceType = standardResourceType
             encodedFileKey = encodedSegments[2]
-            encodedFileSlug = encodedSegments[3]
+            encodedFileSlug = encodedSegments.count == 4 ? encodedSegments[3] : nil
         }
-        guard let fileKey = String(encodedFileKey).removingPercentEncoding,
-              let fileSlug = String(encodedFileSlug).removingPercentEncoding
-        else { throw XomoFigmaLinkParserError.malformedURL }
+        guard let fileKey = String(encodedFileKey).removingPercentEncoding else {
+            throw XomoFigmaLinkParserError.malformedURL
+        }
+        let fileSlug: String
+        if let encodedFileSlug {
+            guard let decodedFileSlug = String(encodedFileSlug).removingPercentEncoding else {
+                throw XomoFigmaLinkParserError.malformedURL
+            }
+            fileSlug = decodedFileSlug
+        } else {
+            fileSlug = ""
+        }
         guard isSafeIdentifier(fileKey, minimumLength: minimumFileKeyLength) else {
             throw XomoFigmaLinkParserError.invalidFileKey
         }
-        guard isSafeFileSlug(fileSlug) else {
+        guard fileSlug.isEmpty || isSafeFileSlug(fileSlug) else {
             throw XomoFigmaLinkParserError.invalidFileName
         }
         return FigmaIdentity(
@@ -691,6 +714,16 @@ enum XomoFigmaLinkParser {
             fileSlug: fileSlug,
             mainFileKey: mainFileKey
         )
+    }
+
+    private static func validateResourceHost(
+        _ host: String?,
+        identity: FigmaIdentity
+    ) throws {
+        guard host?.lowercased() == "embed.figma.com" else { return }
+        guard identity.mainFileKey == nil,
+              embeddableResourceTypes.contains(identity.resourceType)
+        else { throw XomoFigmaLinkParserError.unsupportedResourceType }
     }
 
     private static func parseSelectors(_ queryItems: [URLQueryItem]) throws -> FigmaSelectors {
@@ -747,7 +780,10 @@ enum XomoFigmaLinkParser {
         if let mainFileKey = identity.mainFileKey {
             components.path = "/design/\(mainFileKey)/branch/\(identity.fileKey)/\(identity.fileSlug)"
         } else {
-            components.path = "/\(identity.resourceType.rawValue)/\(identity.fileKey)/\(identity.fileSlug)"
+            components.path = "/\(identity.resourceType.rawValue)/\(identity.fileKey)"
+            if !identity.fileSlug.isEmpty {
+                components.path += "/\(identity.fileSlug)"
+            }
         }
         components.queryItems = canonicalQueryItems(selectors)
         if let percentEncodedQuery = components.percentEncodedQuery {

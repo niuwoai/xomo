@@ -1,5 +1,18 @@
 # Changelog
 
+## 2.12.0-rc1534 - 2026-08-30
+
+### Added
+- Figma 链接导入支持官方 Embed Kit 2.0 的 `embed.figma.com` 链接，并接受 design、prototype、FigJam、Slides 与 Deck 省略文件名的 `{类型}/{fileKey}` 路径。
+- 无文件名预览以 fileKey 作为可读兜底，原始 `fileSlug` 保持为空；规范链接统一切回 `www.figma.com`，节点与版本选择器保留，嵌入展示及跟踪参数被清理。
+
+### Security
+- `embed.figma.com` 只允许 Figma 官方声明的五类嵌入资源；分支、Site、Make、Community 等未声明路径仍会在网络访问前拒绝。
+
+### Tests
+- 新增五类无文件名嵌入链接、规范链接、节点重定向与主机资源白名单回归；Figma 链接解析与导入定向测试 45/45 通过。
+- CLI/MCP 2/2、仓库发布契约 9/9（27 条断言）、隔离测试器契约及共享发布器契约 12/12（94 条断言）均通过；Debug 产物确认为 rc1534/build1534。本版不覆盖 `/Applications`，已安装版保持 rc1520，下一次周期完整门禁为 rc1560。
+
 ## 2.12.0-rc1533 - 2026-08-30
 
 ### Added

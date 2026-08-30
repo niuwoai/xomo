@@ -50,6 +50,56 @@ struct XomoFigmaLinkParserTests {
         }
     }
 
+    @Test func parsesOfficialSluglessEmbedLinksAndCanonicalizesToTheFileHost() throws {
+        let preview = try XomoFigmaLinkParser.parse(
+            "https://embed.figma.com/design/nrPSsILSYjesyc5UHjYYa4?embed-host=xomo&node-id=0-3&footer=false&token=discard-me"
+        )
+
+        #expect(preview.resourceType == .design)
+        #expect(preview.fileKey == "nrPSsILSYjesyc5UHjYYa4")
+        #expect(preview.fileSlug.isEmpty)
+        #expect(preview.displayName == "nrPSsILSYjesyc5UHjYYa4")
+        #expect(preview.nodeID == "0:3")
+        #expect(preview.discardedQueryItemCount == 3)
+        #expect(
+            preview.canonicalURL.absoluteString ==
+                "https://www.figma.com/design/nrPSsILSYjesyc5UHjYYa4?node-id=0-3"
+        )
+    }
+
+    @Test func acceptsOnlyOfficialResourceTypesOnTheEmbedHost() throws {
+        let expectations: [(String, XomoFigmaResourceType)] = [
+            ("design", .design),
+            ("proto", .prototype),
+            ("board", .figJam),
+            ("slides", .slides),
+            ("deck", .slideDeck)
+        ]
+
+        for (path, expectedType) in expectations {
+            let preview = try XomoFigmaLinkParser.parse(
+                "https://embed.figma.com/\(path)/abc123DEF456"
+            )
+            #expect(preview.resourceType == expectedType)
+            #expect(preview.fileSlug.isEmpty)
+            #expect(preview.canonicalURL.host == "www.figma.com")
+        }
+    }
+
+    @Test func sluglessSourceRetargetingKeepsTheCanonicalPathSlugless() throws {
+        let sourceURL = try #require(URL(
+            string: "https://embed.figma.com/proto/abc123DEF456?embed-host=xomo&version-id=42"
+        ))
+
+        #expect(
+            XomoFigmaSourceOpenPolicy.canonicalURL(
+                from: sourceURL,
+                selectingNodeID: "32:9"
+            )?.absoluteString ==
+                "https://www.figma.com/proto/abc123DEF456?node-id=32-9&version-id=42"
+        )
+    }
+
     @Test func recognizesCommunityFileResourcePagesAsSanitizedPreviewOnlyLinks() throws {
         let preview = try XomoFigmaLinkParser.parse(
             "https://figma.com/community/file/1380235722331273046/simple-design-system?utm_source=share&token=discard-me"
@@ -227,11 +277,14 @@ struct XomoFigmaLinkParserTests {
             "https://www.figma.com/community/file/abc123DEF456",
             "https://www.figma.com/community/file/abc123DEF456/File/extra",
             "https://www.figma.com/design/short/File",
-            "https://www.figma.com/design/abc123DEF456",
             "https://www.figma.com/design/abc123DEF456/File/extra",
             "https://www.figma.com/design/short/branch/branchFile456/File",
             "https://www.figma.com/design/mainFile123/branch/short/File",
             "https://www.figma.com/design/mainFile123/branch/branchFile456/File/extra",
+            "https://embed.figma.com/site/abc123DEF456/Website",
+            "https://embed.figma.com/make/abc123DEF456/Prototype",
+            "https://embed.figma.com/design/mainFile123/branch/branchFile456/File",
+            "https://www.figma.com/make/abc123DEF456",
             "not a URL"
         ]
 
