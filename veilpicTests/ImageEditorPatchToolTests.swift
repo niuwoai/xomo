@@ -809,6 +809,42 @@ struct ImageEditorPatchToolTests {
         })
     }
 
+    @Test func quarterDropRepeatOffsetsFourColumnsByQuarterTileSteps() throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "patch-pattern-quarter-drop-repeat.png",
+            image: .transparent(size: CGSize(width: 40, height: 16))
+        ) { _ in }
+        viewModel.selectAll()
+        viewModel.opacity = 1
+        viewModel.patchPatternContent = ImageEditorPatternFillContent(
+            kind: .diagonalStripes,
+            repeatMode: .quarterDrop,
+            red: 1,
+            green: 0,
+            blue: 0,
+            opacity: 1,
+            scale: 8
+        )
+
+        #expect(viewModel.applyPatchPattern())
+        let image = try #require(viewModel.document.selectedLayer?.image)
+        let pixels = try #require(imageEditorRGBABytes(image, width: 40, height: 16))
+        let alpha = stride(from: 3, to: pixels.count, by: 4).map { pixels[$0] }
+
+        for column in 1...3 {
+            let verticalShift = column * 2
+            #expect((0..<8).allSatisfy { x in
+                (0..<8).allSatisfy { y in
+                    let shiftedY = (y + verticalShift) % 8
+                    return abs(
+                        Int(alpha[y * 40 + x])
+                            - Int(alpha[shiftedY * 40 + x + column * 8])
+                    ) <= 2
+                }
+            })
+        }
+    }
+
     @Test func usePatternAngleRotatesTheRenderedCoverage() throws {
         func appliedAlpha(angle: CGFloat) throws -> [UInt8] {
             let viewModel = ImageEditorViewModel(
@@ -914,7 +950,7 @@ struct ImageEditorPatchToolTests {
     @Test func patternTransformPersistenceRoundTripsAndDefaultsOldProjects() throws {
         let content = ImageEditorPatternFillContent(
             kind: .diagonalStripes,
-            repeatMode: .halfDrop,
+            repeatMode: .quarterDrop,
             scaleX: 1.75,
             scaleY: 0.6,
             linksAxisScales: true,
@@ -927,7 +963,7 @@ struct ImageEditorPatchToolTests {
 
         #expect(decoded.flipsHorizontally)
         #expect(decoded.flipsVertically)
-        #expect(decoded.repeatMode == .halfDrop)
+        #expect(decoded.repeatMode == .quarterDrop)
         #expect(decoded.scaleX == 1.75)
         #expect(decoded.scaleY == 0.6)
         #expect(decoded.linksAxisScales)

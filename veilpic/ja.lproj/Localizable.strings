@@ -757,6 +757,7 @@
 "imageEditor.patternRepeat.mirror" = "ミラータイル";
 "imageEditor.patternRepeat.brick" = "レンガ（行）";
 "imageEditor.patternRepeat.halfDrop" = "ハーフドロップ";
+"imageEditor.patternRepeat.quarterDrop" = "クォータードロップ";
 "imageEditor.option.patchPatternInvertCoverage" = "パターン領域を反転";
 "imageEditor.option.patchPatternFlipHorizontal" = "水平方向に反転";
 "imageEditor.option.patchPatternFlipVertical" = "垂直方向に反転";

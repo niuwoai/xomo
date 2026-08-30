@@ -1398,6 +1398,8 @@ struct ImageEditorPatternFillContent: Equatable, Codable {
             return brickTileImage(from: tile)
         case .halfDrop:
             return halfDropTileImage(from: tile)
+        case .quarterDrop:
+            return quarterDropTileImage(from: tile)
         }
     }
 
@@ -1467,6 +1469,21 @@ struct ImageEditorPatternFillContent: Equatable, Codable {
             .composited(over: secondColumnLower)
             .composited(over: tile)
             .cropped(to: CGRect(x: 0, y: 0, width: width * 2, height: height))
+    }
+
+    private func quarterDropTileImage(from tile: CIImage) -> CIImage {
+        let width = tile.extent.width
+        let height = tile.extent.height
+        let columns = (1...3).flatMap { column -> [CIImage] in
+            let offset = -height * CGFloat(column) / 4
+            let x = width * CGFloat(column)
+            return [offset, offset + height].map { y in
+                tile.transformed(by: CGAffineTransform(translationX: x, y: y))
+            }
+        }
+        return columns
+            .reduce(tile) { result, column in column.composited(over: result) }
+            .cropped(to: CGRect(x: 0, y: 0, width: width * 4, height: height))
     }
 
     private static func zeroOne(_ value: Double) -> Double {
@@ -1554,6 +1571,7 @@ enum ImageEditorPatternRepeatMode: String, CaseIterable, Identifiable, Codable {
     case mirror
     case brick
     case halfDrop
+    case quarterDrop
 
     var id: String { rawValue }
 

@@ -757,6 +757,7 @@
 "imageEditor.patternRepeat.mirror" = "Mirror Tile";
 "imageEditor.patternRepeat.brick" = "Brick by Row";
 "imageEditor.patternRepeat.halfDrop" = "Half Drop";
+"imageEditor.patternRepeat.quarterDrop" = "Quarter Drop";
 "imageEditor.option.patchPatternInvertCoverage" = "Invert Pattern Coverage";
 "imageEditor.option.patchPatternFlipHorizontal" = "Flip Horizontally";
 "imageEditor.option.patchPatternFlipVertical" = "Flip Vertically";
