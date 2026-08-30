@@ -1008,7 +1008,8 @@ extension ImageEditorViewModel {
             offsetInCanvas: sampleOffset,
             opacity: opacity,
             feather: feather,
-            extractsTextureTransparently: patchTransparentEnabled
+            extractsTextureTransparently: patchTransparentEnabled,
+            diffusion: patchDiffusion
         ) else { return nil }
         let protectedOutput = document.isEffectivelyTransparencyLocked(layer)
             ? (output.preservingAlpha(from: layer.image) ?? output)
@@ -2028,7 +2029,8 @@ private extension NSImage {
         offsetInCanvas: CGSize,
         opacity: CGFloat,
         feather: CGFloat,
-        extractsTextureTransparently: Bool = false
+        extractsTextureTransparently: Bool = false,
+        diffusion: Int = 1
     ) -> NSImage? {
         guard layerFrame.width > 0,
               layerFrame.height > 0,
@@ -2048,7 +2050,20 @@ private extension NSImage {
 
         let selectedAlpha = mask.alpha
         guard selectedAlpha.contains(where: { $0 > 0 }) else { return nil }
-        let sourcePixels = pixels
+        let normalizedDiffusion = max(1, min(7, diffusion))
+        let diffusionRadius = CGFloat(normalizedDiffusion - 1) * 0.5
+        let sampledImage: NSImage
+        let sourcePixels: [UInt8]
+        if diffusionRadius > 0 {
+            guard let diffusedImage = blurred(radius: diffusionRadius),
+                  let diffusedPixels = diffusedImage.rgbaPixels(width: width, height: height)
+            else { return nil }
+            sampledImage = diffusedImage
+            sourcePixels = diffusedPixels
+        } else {
+            sampledImage = self
+            sourcePixels = pixels
+        }
         let bytesPerPixel = 4
         let bytesPerRow = width * bytesPerPixel
         let sourceDeltaX = Int((offsetInCanvas.width * CGFloat(width) / layerFrame.width).rounded())
@@ -2056,7 +2071,7 @@ private extension NSImage {
         let normalizedOpacity = max(0, min(1, opacity))
         let textureSampler: PatchTransparentTextureSampler?
         if extractsTextureTransparently {
-            guard let localBaselinePixels = blurred(
+            guard let localBaselinePixels = sampledImage.blurred(
                 radius: PatchTransparentTextureSampler.textureRadius
             )?.rgbaPixels(width: width, height: height) else { return nil }
             textureSampler = PatchTransparentTextureSampler(

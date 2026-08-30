@@ -738,6 +738,8 @@
 "imageEditor.patchMode.destination" = "Destination";
 "imageEditor.option.patchTransparent" = "Transparent";
 "imageEditor.option.patchTransparent.help" = "Extract only sampled texture while preserving the target color and transparency.";
+"imageEditor.option.patchDiffusionValue" = "Diffusion %d";
+"imageEditor.option.patchDiffusion.help" = "1 preserves the sharpest detail; higher values progressively smooth sampled texture for flatter backgrounds.";
 "imageEditor.option.brushPreset" = "Brush Presets";
 "imageEditor.help.brushPreset" = "Choose a preset or save the current brush settings";
 "imageEditor.action.brushPresetCreate" = "Create Preset from Current Settings";

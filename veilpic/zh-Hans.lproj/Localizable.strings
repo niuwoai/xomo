@@ -738,6 +738,8 @@
 "imageEditor.patchMode.destination" = "目标";
 "imageEditor.option.patchTransparent" = "透明";
 "imageEditor.option.patchTransparent.help" = "只提取采样区的纹理，保留目标区域的底色和透明度。";
+"imageEditor.option.patchDiffusionValue" = "扩散 %d";
+"imageEditor.option.patchDiffusion.help" = "1 保留最清晰的细节；更高数值会逐级平滑采样纹理，适合平整背景。";
 "imageEditor.option.brushPreset" = "画笔预设";
 "imageEditor.help.brushPreset" = "选择预设，或保存当前画笔设置";
 "imageEditor.action.brushPresetCreate" = "从当前设置新建预设";

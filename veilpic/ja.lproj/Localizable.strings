@@ -738,6 +738,8 @@
 "imageEditor.patchMode.destination" = "適用先";
 "imageEditor.option.patchTransparent" = "透明";
 "imageEditor.option.patchTransparent.help" = "サンプル領域のテクスチャだけを抽出し、適用先の色と透明度を保持します。";
+"imageEditor.option.patchDiffusionValue" = "拡散 %d";
+"imageEditor.option.patchDiffusion.help" = "1 は最も鮮明なディテールを保持し、値を上げるほどサンプルテクスチャを段階的に滑らかにします。";
 "imageEditor.option.brushPreset" = "ブラシプリセット";
 "imageEditor.help.brushPreset" = "プリセットを選択するか、現在のブラシ設定を保存します";
 "imageEditor.action.brushPresetCreate" = "現在の設定からプリセットを作成";

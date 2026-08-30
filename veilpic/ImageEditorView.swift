@@ -927,6 +927,17 @@ struct ImageEditorView: View {
                 .fixedSize()
                 .help(L10n.text("imageEditor.option.patchTransparent.help"))
                 .accessibilityIdentifier("image-editor-patch-transparent")
+                Stepper(value: $viewModel.patchDiffusion, in: 1...7) {
+                    Text(L10n.format(
+                        "imageEditor.option.patchDiffusionValue",
+                        viewModel.patchDiffusion
+                    ))
+                    .foregroundStyle(Color(nsColor: ImageEditorOptionsBarAppearance.foregroundColor))
+                }
+                .focusable(false)
+                .fixedSize()
+                .help(L10n.text("imageEditor.option.patchDiffusion.help"))
+                .accessibilityIdentifier("image-editor-patch-diffusion")
             }
 
             if viewModel.selectedTool == .sponge {
@@ -4632,6 +4643,9 @@ struct ImageEditorView: View {
                     refreshCanvasCursor(in: geometry.size)
                 }
                 .onChange(of: viewModel.patchTransparentEnabled) { _ in
+                    refreshActivePatchPreview()
+                }
+                .onChange(of: viewModel.patchDiffusion) { _ in
                     refreshActivePatchPreview()
                 }
                 .onChange(of: viewModel.selectionMode) { _ in

@@ -347,6 +347,50 @@ struct ImageEditorPatchToolTests {
         #expect(abs(transparentTexture.alphaComponent - targetColor.alphaComponent) < 0.03)
     }
 
+    @Test func diffusionSmoothsSampledDetailInNormalAndTransparentModes() throws {
+        let canvasSize = NSSize(width: 80, height: 60)
+        let sampleRect = CGRect(x: 12, y: 22, width: 16, height: 16)
+        let targetRect = CGRect(x: 32, y: 22, width: 16, height: 16)
+        let textureMark = CGRect(x: 19, y: 29, width: 2, height: 2)
+        let targetColor = NSColor(deviceRed: 0.15, green: 0.25, blue: 0.35, alpha: 1)
+        let image = bitmapImage(
+            size: canvasSize,
+            background: targetColor,
+            fills: [
+                (sampleRect, NSColor(deviceWhite: 0.45, alpha: 1)),
+                (textureMark, NSColor(deviceWhite: 1, alpha: 1))
+            ]
+        )
+
+        func patchedCenter(diffusion: Int, transparent: Bool) throws -> NSColor {
+            let viewModel = ImageEditorViewModel(
+                sourceName: "diffused-patch.png",
+                image: image
+            ) { _ in }
+            #expect(viewModel.patchDiffusion == 1)
+            viewModel.replaceSelectedLayerImageForTesting(
+                image,
+                historyTitle: L10n.text("imageEditor.history.brush")
+            )
+            viewModel.patchDiffusion = diffusion
+            viewModel.patchTransparentEnabled = transparent
+            viewModel.createRectSelection(from: targetRect.origin, to: targetRect.bottomRight)
+            viewModel.patchSelection(from: targetRect.center, to: sampleRect.center)
+            return try color(in: viewModel, at: targetRect.center)
+        }
+
+        let sharpNormal = try patchedCenter(diffusion: 1, transparent: false)
+        let smoothNormal = try patchedCenter(diffusion: 7, transparent: false)
+        #expect(sharpNormal.redComponent > smoothNormal.redComponent + 0.15)
+
+        let sharpTransparent = try patchedCenter(diffusion: 1, transparent: true)
+        let smoothTransparent = try patchedCenter(diffusion: 7, transparent: true)
+        let sharpTextureDelta = sharpTransparent.redComponent - targetColor.redComponent
+        let smoothTextureDelta = smoothTransparent.redComponent - targetColor.redComponent
+        #expect(sharpTextureDelta > smoothTextureDelta + 0.08)
+        #expect(abs(smoothTransparent.alphaComponent - targetColor.alphaComponent) < 0.01)
+    }
+
     @Test func transparentOptionIsWiredToTheOptionsBarAndLivePreview() throws {
         let repositoryRoot = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()
@@ -359,6 +403,8 @@ struct ImageEditorPatchToolTests {
         #expect(source.contains("isOn: $viewModel.patchTransparentEnabled"))
         #expect(source.contains(".accessibilityIdentifier(\"image-editor-patch-transparent\")"))
         #expect(source.contains(".onChange(of: viewModel.patchTransparentEnabled)"))
+        #expect(source.contains("Stepper(value: $viewModel.patchDiffusion, in: 1...7)"))
+        #expect(source.contains(".onChange(of: viewModel.patchDiffusion)"))
         #expect(source.contains("refreshActivePatchPreview()"))
     }
 
