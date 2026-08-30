@@ -1421,6 +1421,17 @@ struct ImageEditorPatchToolTests {
         #expect(commandSource.contains("invertsPatternCoverage: patchPatternInvertsCoverage"))
         #expect(commandSource.contains("imageEditor.option.patchPatternSummary"))
         #expect(commandSource.contains("patchPatternContent.repeatMode.title"))
+        let appearanceSection = try #require(
+            source.range(of: "imageEditor.section.patchPatternAppearance")
+        )
+        let transformSection = try #require(
+            source.range(of: "imageEditor.section.patchPatternTransform")
+        )
+        let applicationSection = try #require(
+            source.range(of: "imageEditor.section.patchPatternApplication")
+        )
+        #expect(appearanceSection.lowerBound < transformSection.lowerBound)
+        #expect(transformSection.lowerBound < applicationSection.lowerBound)
     }
 
     @Test func patchLassoHonorsReplaceAddSubtractAndIntersectSelectionModes() throws {

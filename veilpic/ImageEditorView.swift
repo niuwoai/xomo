@@ -969,176 +969,187 @@ struct ImageEditorView: View {
                 .help(L10n.text("imageEditor.option.patchDiffusion.help"))
                 .accessibilityIdentifier("image-editor-patch-diffusion")
                 Menu {
-                    Picker(
-                        L10n.text("imageEditor.option.patchPattern"),
-                        selection: $viewModel.patchPatternContent.kind
-                    ) {
-                        ForEach(ImageEditorPatternOverlayKind.allCases) { kind in
-                            Text(kind.title).tag(kind)
+                    Section {
+                        Picker(
+                            L10n.text("imageEditor.option.patchPattern"),
+                            selection: $viewModel.patchPatternContent.kind
+                        ) {
+                            ForEach(ImageEditorPatternOverlayKind.allCases) { kind in
+                                Text(kind.title).tag(kind)
+                            }
                         }
-                    }
-                    Picker(
-                        L10n.text("imageEditor.option.patchPatternBlendMode"),
-                        selection: $viewModel.patchPatternBlendMode
-                    ) {
-                        ForEach(ImageEditorBlendMode.smartFilterCases) { mode in
-                            Text(mode.title).tag(mode)
+                        HStack {
+                            Text(L10n.text("imageEditor.option.patchPatternColor"))
+                            Spacer()
+                            ColorPicker(
+                                "",
+                                selection: patchPatternColorBinding,
+                                supportsOpacity: false
+                            )
+                            .labelsHidden()
+                            .focusable(false)
+                            .accessibilityIdentifier("image-editor-patch-pattern-color")
                         }
-                    }
-                    .accessibilityIdentifier("image-editor-patch-pattern-blend-mode")
-                    Picker(
-                        L10n.text("imageEditor.option.patchPatternRepeatMode"),
-                        selection: $viewModel.patchPatternContent.repeatMode
-                    ) {
-                        ForEach(ImageEditorPatternRepeatMode.allCases) { mode in
-                            Text(mode.title).tag(mode)
+                        Stepper(
+                            value: $viewModel.patchPatternContent.opacity,
+                            in: 0.05...1,
+                            step: 0.05
+                        ) {
+                            Text(L10n.format(
+                                "imageEditor.option.patchPatternOpacityValue",
+                                Int((viewModel.patchPatternContent.opacity * 100).rounded())
+                            ))
                         }
+                        .accessibilityIdentifier("image-editor-patch-pattern-opacity")
+                        Picker(
+                            L10n.text("imageEditor.option.patchPatternBlendMode"),
+                            selection: $viewModel.patchPatternBlendMode
+                        ) {
+                            ForEach(ImageEditorBlendMode.smartFilterCases) { mode in
+                                Text(mode.title).tag(mode)
+                            }
+                        }
+                        .accessibilityIdentifier("image-editor-patch-pattern-blend-mode")
+                        Picker(
+                            L10n.text("imageEditor.option.patchPatternRepeatMode"),
+                            selection: $viewModel.patchPatternContent.repeatMode
+                        ) {
+                            ForEach(ImageEditorPatternRepeatMode.allCases) { mode in
+                                Text(mode.title).tag(mode)
+                            }
+                        }
+                        .accessibilityIdentifier("image-editor-patch-pattern-repeat-mode")
+                    } header: {
+                        Text(L10n.text("imageEditor.section.patchPatternAppearance"))
                     }
-                    .accessibilityIdentifier("image-editor-patch-pattern-repeat-mode")
-                    Toggle(
-                        L10n.text("imageEditor.selectionFill.alignPatternWithCanvas"),
-                        isOn: $viewModel.patchPatternAlignsWithCanvas
-                    )
-                    .toggleStyle(.checkbox)
-                    .accessibilityIdentifier("image-editor-patch-pattern-align-canvas")
-                    Toggle(
-                        L10n.text("imageEditor.selectionFill.preserveTransparency"),
-                        isOn: $viewModel.patchPatternPreservesTransparency
-                    )
-                    .toggleStyle(.checkbox)
-                    .accessibilityIdentifier("image-editor-patch-pattern-preserve-transparency")
-                    Toggle(
-                        L10n.text("imageEditor.option.patchPatternInvertCoverage"),
-                        isOn: $viewModel.patchPatternInvertsCoverage
-                    )
-                    .toggleStyle(.checkbox)
-                    .accessibilityIdentifier("image-editor-patch-pattern-invert-coverage")
-                    Toggle(
-                        L10n.text("imageEditor.option.patchPatternFlipHorizontal"),
-                        isOn: $viewModel.patchPatternContent.flipsHorizontally
-                    )
-                    .toggleStyle(.checkbox)
-                    .accessibilityIdentifier("image-editor-patch-pattern-flip-horizontal")
-                    Toggle(
-                        L10n.text("imageEditor.option.patchPatternFlipVertical"),
-                        isOn: $viewModel.patchPatternContent.flipsVertically
-                    )
-                    .toggleStyle(.checkbox)
-                    .accessibilityIdentifier("image-editor-patch-pattern-flip-vertical")
-                    Stepper(
-                        value: $viewModel.patchPatternContent.scale,
-                        in: 6...64,
-                        step: 1
-                    ) {
-                        Text(L10n.format(
-                            "imageEditor.option.patchPatternScaleValue",
-                            Int(viewModel.patchPatternContent.scale.rounded())
-                        ))
-                    }
-                    .accessibilityIdentifier("image-editor-patch-pattern-scale")
-                    Toggle(
-                        L10n.text("imageEditor.option.patchPatternLinkAxisScales"),
-                        isOn: patchPatternScaleAxesLinkedBinding
-                    )
-                    .toggleStyle(.checkbox)
-                    .accessibilityIdentifier("image-editor-patch-pattern-link-axis-scales")
-                    Stepper(
-                        value: patchPatternScaleXBinding,
-                        in: 0.25...4,
-                        step: 0.05
-                    ) {
-                        Text(L10n.format(
-                            "imageEditor.option.patchPatternScaleXValue",
-                            Int((viewModel.patchPatternContent.scaleX * 100).rounded())
-                        ))
-                    }
-                    .accessibilityIdentifier("image-editor-patch-pattern-scale-x")
-                    Stepper(
-                        value: patchPatternScaleYBinding,
-                        in: 0.25...4,
-                        step: 0.05
-                    ) {
-                        Text(L10n.format(
-                            "imageEditor.option.patchPatternScaleYValue",
-                            Int((viewModel.patchPatternContent.scaleY * 100).rounded())
-                        ))
-                    }
-                    .accessibilityIdentifier("image-editor-patch-pattern-scale-y")
-                    Stepper(
-                        value: $viewModel.patchPatternContent.angle,
-                        in: -180...180,
-                        step: 1
-                    ) {
-                        Text(L10n.format(
-                            "imageEditor.patternFill.angleValue",
-                            Int(viewModel.patchPatternContent.angle.rounded())
-                        ))
-                    }
-                    .accessibilityIdentifier("image-editor-patch-pattern-angle")
-                    Stepper(
-                        value: $viewModel.patchPatternContent.opacity,
-                        in: 0.05...1,
-                        step: 0.05
-                    ) {
-                        Text(L10n.format(
-                            "imageEditor.option.patchPatternOpacityValue",
-                            Int((viewModel.patchPatternContent.opacity * 100).rounded())
-                        ))
-                    }
-                    .accessibilityIdentifier("image-editor-patch-pattern-opacity")
-                    Stepper(
-                        value: $viewModel.patchPatternContent.offsetX,
-                        in: -128...128,
-                        step: 1
-                    ) {
-                        Text(L10n.format(
-                            "imageEditor.patternFill.offsetXValue",
-                            Int(viewModel.patchPatternContent.offsetX.rounded())
-                        ))
-                    }
-                    .accessibilityIdentifier("image-editor-patch-pattern-offset-x")
-                    Stepper(
-                        value: $viewModel.patchPatternContent.offsetY,
-                        in: -128...128,
-                        step: 1
-                    ) {
-                        Text(L10n.format(
-                            "imageEditor.patternFill.offsetYValue",
-                            Int(viewModel.patchPatternContent.offsetY.rounded())
-                        ))
-                    }
-                    .accessibilityIdentifier("image-editor-patch-pattern-offset-y")
-                    Button(L10n.text("imageEditor.action.patchPatternResetOffset")) {
-                        viewModel.resetPatchPatternOffset()
-                    }
-                    .disabled(
-                        viewModel.patchPatternContent.offsetX == 0
-                            && viewModel.patchPatternContent.offsetY == 0
-                    )
-                    .accessibilityIdentifier("image-editor-patch-pattern-reset-offset")
-                    Button(L10n.text("imageEditor.action.patchPatternResetTransform")) {
-                        viewModel.resetPatchPatternTransform()
-                    }
-                    .disabled(viewModel.patchPatternTransformIsIdentity)
-                    .accessibilityIdentifier("image-editor-patch-pattern-reset-transform")
-                    HStack {
-                        Text(L10n.text("imageEditor.option.patchPatternColor"))
-                        Spacer()
-                        ColorPicker(
-                            "",
-                            selection: patchPatternColorBinding,
-                            supportsOpacity: false
+                    Section {
+                        Stepper(
+                            value: $viewModel.patchPatternContent.scale,
+                            in: 6...64,
+                            step: 1
+                        ) {
+                            Text(L10n.format(
+                                "imageEditor.option.patchPatternScaleValue",
+                                Int(viewModel.patchPatternContent.scale.rounded())
+                            ))
+                        }
+                        .accessibilityIdentifier("image-editor-patch-pattern-scale")
+                        Toggle(
+                            L10n.text("imageEditor.option.patchPatternLinkAxisScales"),
+                            isOn: patchPatternScaleAxesLinkedBinding
                         )
-                        .labelsHidden()
-                        .focusable(false)
-                        .accessibilityIdentifier("image-editor-patch-pattern-color")
+                        .toggleStyle(.checkbox)
+                        .accessibilityIdentifier("image-editor-patch-pattern-link-axis-scales")
+                        Stepper(
+                            value: patchPatternScaleXBinding,
+                            in: 0.25...4,
+                            step: 0.05
+                        ) {
+                            Text(L10n.format(
+                                "imageEditor.option.patchPatternScaleXValue",
+                                Int((viewModel.patchPatternContent.scaleX * 100).rounded())
+                            ))
+                        }
+                        .accessibilityIdentifier("image-editor-patch-pattern-scale-x")
+                        Stepper(
+                            value: patchPatternScaleYBinding,
+                            in: 0.25...4,
+                            step: 0.05
+                        ) {
+                            Text(L10n.format(
+                                "imageEditor.option.patchPatternScaleYValue",
+                                Int((viewModel.patchPatternContent.scaleY * 100).rounded())
+                            ))
+                        }
+                        .accessibilityIdentifier("image-editor-patch-pattern-scale-y")
+                        Stepper(
+                            value: $viewModel.patchPatternContent.angle,
+                            in: -180...180,
+                            step: 1
+                        ) {
+                            Text(L10n.format(
+                                "imageEditor.patternFill.angleValue",
+                                Int(viewModel.patchPatternContent.angle.rounded())
+                            ))
+                        }
+                        .accessibilityIdentifier("image-editor-patch-pattern-angle")
+                        Toggle(
+                            L10n.text("imageEditor.option.patchPatternFlipHorizontal"),
+                            isOn: $viewModel.patchPatternContent.flipsHorizontally
+                        )
+                        .toggleStyle(.checkbox)
+                        .accessibilityIdentifier("image-editor-patch-pattern-flip-horizontal")
+                        Toggle(
+                            L10n.text("imageEditor.option.patchPatternFlipVertical"),
+                            isOn: $viewModel.patchPatternContent.flipsVertically
+                        )
+                        .toggleStyle(.checkbox)
+                        .accessibilityIdentifier("image-editor-patch-pattern-flip-vertical")
+                        Stepper(
+                            value: $viewModel.patchPatternContent.offsetX,
+                            in: -128...128,
+                            step: 1
+                        ) {
+                            Text(L10n.format(
+                                "imageEditor.patternFill.offsetXValue",
+                                Int(viewModel.patchPatternContent.offsetX.rounded())
+                            ))
+                        }
+                        .accessibilityIdentifier("image-editor-patch-pattern-offset-x")
+                        Stepper(
+                            value: $viewModel.patchPatternContent.offsetY,
+                            in: -128...128,
+                            step: 1
+                        ) {
+                            Text(L10n.format(
+                                "imageEditor.patternFill.offsetYValue",
+                                Int(viewModel.patchPatternContent.offsetY.rounded())
+                            ))
+                        }
+                        .accessibilityIdentifier("image-editor-patch-pattern-offset-y")
+                        Button(L10n.text("imageEditor.action.patchPatternResetOffset")) {
+                            viewModel.resetPatchPatternOffset()
+                        }
+                        .disabled(
+                            viewModel.patchPatternContent.offsetX == 0
+                                && viewModel.patchPatternContent.offsetY == 0
+                        )
+                        .accessibilityIdentifier("image-editor-patch-pattern-reset-offset")
+                        Button(L10n.text("imageEditor.action.patchPatternResetTransform")) {
+                            viewModel.resetPatchPatternTransform()
+                        }
+                        .disabled(viewModel.patchPatternTransformIsIdentity)
+                        .accessibilityIdentifier("image-editor-patch-pattern-reset-transform")
+                    } header: {
+                        Text(L10n.text("imageEditor.section.patchPatternTransform"))
                     }
-                    Divider()
-                    Button(L10n.text("imageEditor.action.patchUsePattern")) {
-                        viewModel.applyPatchPattern()
+                    Section {
+                        Toggle(
+                            L10n.text("imageEditor.selectionFill.alignPatternWithCanvas"),
+                            isOn: $viewModel.patchPatternAlignsWithCanvas
+                        )
+                        .toggleStyle(.checkbox)
+                        .accessibilityIdentifier("image-editor-patch-pattern-align-canvas")
+                        Toggle(
+                            L10n.text("imageEditor.selectionFill.preserveTransparency"),
+                            isOn: $viewModel.patchPatternPreservesTransparency
+                        )
+                        .toggleStyle(.checkbox)
+                        .accessibilityIdentifier("image-editor-patch-pattern-preserve-transparency")
+                        Toggle(
+                            L10n.text("imageEditor.option.patchPatternInvertCoverage"),
+                            isOn: $viewModel.patchPatternInvertsCoverage
+                        )
+                        .toggleStyle(.checkbox)
+                        .accessibilityIdentifier("image-editor-patch-pattern-invert-coverage")
+                        Button(L10n.text("imageEditor.action.patchUsePattern")) {
+                            viewModel.applyPatchPattern()
+                        }
+                        .disabled(!viewModel.canEditSelectionPixels)
+                        .accessibilityIdentifier("image-editor-patch-use-pattern")
+                    } header: {
+                        Text(L10n.text("imageEditor.section.patchPatternApplication"))
                     }
-                    .disabled(!viewModel.canEditSelectionPixels)
-                    .accessibilityIdentifier("image-editor-patch-use-pattern")
                 } label: {
                     Label(
                         viewModel.patchPatternSummary,
