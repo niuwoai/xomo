@@ -175,6 +175,43 @@ struct ImageEditorCanvasGeometryTests {
         #expect(minimum.maxX == crop.minX + 4)
     }
 
+    @Test
+    func cropRuleOfThirdsGuidesDivideThePreviewAndAreWiredToTheCanvas() throws {
+        let guides = ImageEditorCropGeometry.ruleOfThirdsSegments(
+            in: CGRect(x: 12, y: 18, width: 90, height: 60)
+        )
+
+        #expect(guides == [
+            ImageEditorCropGuideSegment(
+                start: CGPoint(x: 42, y: 18),
+                end: CGPoint(x: 42, y: 78)
+            ),
+            ImageEditorCropGuideSegment(
+                start: CGPoint(x: 72, y: 18),
+                end: CGPoint(x: 72, y: 78)
+            ),
+            ImageEditorCropGuideSegment(
+                start: CGPoint(x: 12, y: 38),
+                end: CGPoint(x: 102, y: 38)
+            ),
+            ImageEditorCropGuideSegment(
+                start: CGPoint(x: 12, y: 58),
+                end: CGPoint(x: 102, y: 58)
+            )
+        ])
+        #expect(ImageEditorCropGeometry.ruleOfThirdsSegments(in: .zero).isEmpty)
+
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        #expect(source.contains("ImageEditorCropGeometry.ruleOfThirdsSegments"))
+        #expect(source.contains("for segment in cropGuideSegments"))
+    }
+
     private func assertEqual(
         _ actual: CGRect,
         _ expected: CGRect,

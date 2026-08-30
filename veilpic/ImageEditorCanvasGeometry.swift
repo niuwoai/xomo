@@ -51,7 +51,40 @@ enum ImageEditorCropHandle: String, CaseIterable, Identifiable {
     }
 }
 
+nonisolated struct ImageEditorCropGuideSegment: Equatable {
+    let start: CGPoint
+    let end: CGPoint
+}
+
 enum ImageEditorCropGeometry {
+    static func ruleOfThirdsSegments(in rect: CGRect) -> [ImageEditorCropGuideSegment] {
+        let normalized = rect.standardized
+        guard normalized.width > 0, normalized.height > 0 else { return [] }
+
+        let firstX = normalized.minX + normalized.width / 3
+        let secondX = normalized.minX + normalized.width * 2 / 3
+        let firstY = normalized.minY + normalized.height / 3
+        let secondY = normalized.minY + normalized.height * 2 / 3
+        return [
+            ImageEditorCropGuideSegment(
+                start: CGPoint(x: firstX, y: normalized.minY),
+                end: CGPoint(x: firstX, y: normalized.maxY)
+            ),
+            ImageEditorCropGuideSegment(
+                start: CGPoint(x: secondX, y: normalized.minY),
+                end: CGPoint(x: secondX, y: normalized.maxY)
+            ),
+            ImageEditorCropGuideSegment(
+                start: CGPoint(x: normalized.minX, y: firstY),
+                end: CGPoint(x: normalized.maxX, y: firstY)
+            ),
+            ImageEditorCropGuideSegment(
+                start: CGPoint(x: normalized.minX, y: secondY),
+                end: CGPoint(x: normalized.maxX, y: secondY)
+            )
+        ]
+    }
+
     static func hitHandle(
         at point: CGPoint,
         in rect: CGRect,

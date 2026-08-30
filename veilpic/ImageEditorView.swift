@@ -5415,11 +5415,21 @@ struct ImageEditorView: View {
 
         if let pendingCropRect {
             let rect = viewRect(from: pendingCropRect, in: size)
+            let cropGuideSegments = ImageEditorCropGeometry.ruleOfThirdsSegments(
+                in: CGRect(origin: .zero, size: rect.size)
+            )
             ZStack {
                 Rectangle()
                     .stroke(Color(nsColor: ImageEditorTheme.selected), style: StrokeStyle(lineWidth: 1.5, dash: [6, 4]))
                     .background(Rectangle().fill(Color(nsColor: ImageEditorTheme.selected).opacity(0.10)))
                     .frame(width: rect.width, height: rect.height)
+                Path { path in
+                    for segment in cropGuideSegments {
+                        path.move(to: segment.start)
+                        path.addLine(to: segment.end)
+                    }
+                }
+                .stroke(Color.white.opacity(0.72), lineWidth: 1)
                 ForEach(ImageEditorCropHandle.resizeHandles) { handle in
                     let point = viewPoint(from: handle.point(in: pendingCropRect), in: size)
                     RoundedRectangle(cornerRadius: 1.5, style: .continuous)
