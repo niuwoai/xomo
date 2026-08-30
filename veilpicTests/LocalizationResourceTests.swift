@@ -859,15 +859,16 @@ struct LocalizationResourceTests {
     @Test func patchPatternTransformIsLocalizedInEverySupportedLanguage() throws {
         let paths = try Self.repositoryPaths()
         let expectedValues = [
-            "zh-Hans": ["图案混合模式", "图案重复", "平铺", "镜像平铺", "反转图案覆盖", "水平翻转", "垂直翻转", "水平缩放：%d%%", "垂直缩放：%d%%", "联动水平与垂直缩放", "角度：%d°", "重置图案变换", "%@ · %@ · %d 像素 · %d° · %d%%"],
-            "en": ["Pattern Blending", "Pattern Repeat", "Tile", "Mirror Tile", "Invert Pattern Coverage", "Flip Horizontally", "Flip Vertically", "Horizontal Scale: %d%%", "Vertical Scale: %d%%", "Link Horizontal and Vertical Scale", "Angle: %d°", "Reset Pattern Transform", "%@ · %@ · %d px · %d° · %d%%"],
-            "ja": ["パターン描画モード", "パターンの繰り返し", "タイル", "ミラータイル", "パターン領域を反転", "水平方向に反転", "垂直方向に反転", "水平スケール：%d%%", "垂直スケール：%d%%", "水平・垂直スケールを連動", "角度：%d°", "パターン変形をリセット", "%@ · %@ · %d px · %d° · %d%%"]
+            "zh-Hans": ["图案混合模式", "图案重复", "平铺", "镜像平铺", "半砖平铺", "反转图案覆盖", "水平翻转", "垂直翻转", "水平缩放：%d%%", "垂直缩放：%d%%", "联动水平与垂直缩放", "角度：%d°", "重置图案变换", "%@ · %@ · %d 像素 · %d° · %d%%"],
+            "en": ["Pattern Blending", "Pattern Repeat", "Tile", "Mirror Tile", "Brick by Row", "Invert Pattern Coverage", "Flip Horizontally", "Flip Vertically", "Horizontal Scale: %d%%", "Vertical Scale: %d%%", "Link Horizontal and Vertical Scale", "Angle: %d°", "Reset Pattern Transform", "%@ · %@ · %d px · %d° · %d%%"],
+            "ja": ["パターン描画モード", "パターンの繰り返し", "タイル", "ミラータイル", "レンガ（行）", "パターン領域を反転", "水平方向に反転", "垂直方向に反転", "水平スケール：%d%%", "垂直スケール：%d%%", "水平・垂直スケールを連動", "角度：%d°", "パターン変形をリセット", "%@ · %@ · %d px · %d° · %d%%"]
         ]
         let keys = [
             "imageEditor.option.patchPatternBlendMode",
             "imageEditor.option.patchPatternRepeatMode",
             "imageEditor.patternRepeat.tile",
             "imageEditor.patternRepeat.mirror",
+            "imageEditor.patternRepeat.brick",
             "imageEditor.option.patchPatternInvertCoverage",
             "imageEditor.option.patchPatternFlipHorizontal",
             "imageEditor.option.patchPatternFlipVertical",

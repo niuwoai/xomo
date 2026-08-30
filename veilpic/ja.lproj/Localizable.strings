@@ -755,6 +755,7 @@
 "imageEditor.option.patchPatternRepeatMode" = "パターンの繰り返し";
 "imageEditor.patternRepeat.tile" = "タイル";
 "imageEditor.patternRepeat.mirror" = "ミラータイル";
+"imageEditor.patternRepeat.brick" = "レンガ（行）";
 "imageEditor.option.patchPatternInvertCoverage" = "パターン領域を反転";
 "imageEditor.option.patchPatternFlipHorizontal" = "水平方向に反転";
 "imageEditor.option.patchPatternFlipVertical" = "垂直方向に反転";

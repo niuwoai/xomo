@@ -755,6 +755,7 @@
 "imageEditor.option.patchPatternRepeatMode" = "Pattern Repeat";
 "imageEditor.patternRepeat.tile" = "Tile";
 "imageEditor.patternRepeat.mirror" = "Mirror Tile";
+"imageEditor.patternRepeat.brick" = "Brick by Row";
 "imageEditor.option.patchPatternInvertCoverage" = "Invert Pattern Coverage";
 "imageEditor.option.patchPatternFlipHorizontal" = "Flip Horizontally";
 "imageEditor.option.patchPatternFlipVertical" = "Flip Vertically";

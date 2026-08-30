@@ -19130,7 +19130,8 @@ struct XomoAutomationTests {
         #expect(
             properties["patternRepeatMode"]?.objectValue?["enum"] == .array([
                 .string("tile"),
-                .string("mirror")
+                .string("mirror"),
+                .string("brick")
             ])
         )
 
@@ -19140,7 +19141,7 @@ struct XomoAutomationTests {
             arguments: [
                 "action": .string("patchPattern"),
                 "patternKind": .string("dots"),
-                "patternRepeatMode": .string("mirror"),
+                "patternRepeatMode": .string("brick"),
                 "patternScale": .number(24),
                 "patternScaleXPercent": .number(175),
                 "patternScaleYPercent": .number(60),
@@ -19163,7 +19164,7 @@ struct XomoAutomationTests {
 
         #expect(response.ok)
         #expect(viewModel.patchPatternContent.kind == .dots)
-        #expect(viewModel.patchPatternContent.repeatMode == .mirror)
+        #expect(viewModel.patchPatternContent.repeatMode == .brick)
         #expect(viewModel.patchPatternContent.scale == 24)
         #expect(viewModel.patchPatternContent.scaleX == 1.75)
         #expect(viewModel.patchPatternContent.scaleY == 0.6)
@@ -19365,7 +19366,7 @@ struct XomoAutomationTests {
             name: "xomo.paint.special",
             arguments: [
                 "action": .string("patchPattern"),
-                "patternRepeatMode": .string("brick"),
+                "patternRepeatMode": .string("stretch"),
                 "opacity": .number(0.25)
             ]
         ))

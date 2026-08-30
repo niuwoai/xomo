@@ -1389,7 +1389,17 @@ struct ImageEditorPatternFillContent: Equatable, Codable {
     }
 
     private func repeatedTileImage(from tile: CIImage) -> CIImage {
-        guard repeatMode == .mirror else { return tile }
+        switch repeatMode {
+        case .tile:
+            return tile
+        case .mirror:
+            return mirroredTileImage(from: tile)
+        case .brick:
+            return brickTileImage(from: tile)
+        }
+    }
+
+    private func mirroredTileImage(from tile: CIImage) -> CIImage {
         let width = tile.extent.width
         let height = tile.extent.height
         let horizontal = tile.transformed(by: CGAffineTransform(
@@ -1421,6 +1431,23 @@ struct ImageEditorPatternFillContent: Equatable, Codable {
             .composited(over: horizontal)
             .composited(over: tile)
             .cropped(to: CGRect(x: 0, y: 0, width: width * 2, height: height * 2))
+    }
+
+    private func brickTileImage(from tile: CIImage) -> CIImage {
+        let width = tile.extent.width
+        let height = tile.extent.height
+        let secondRowLeading = tile.transformed(by: CGAffineTransform(
+            translationX: -width / 2,
+            y: height
+        ))
+        let secondRowTrailing = tile.transformed(by: CGAffineTransform(
+            translationX: width / 2,
+            y: height
+        ))
+        return secondRowTrailing
+            .composited(over: secondRowLeading)
+            .composited(over: tile)
+            .cropped(to: CGRect(x: 0, y: 0, width: width, height: height * 2))
     }
 
     private static func zeroOne(_ value: Double) -> Double {
@@ -1506,6 +1533,7 @@ struct ImageEditorPatternFillContent: Equatable, Codable {
 enum ImageEditorPatternRepeatMode: String, CaseIterable, Identifiable, Codable {
     case tile
     case mirror
+    case brick
 
     var id: String { rawValue }
 

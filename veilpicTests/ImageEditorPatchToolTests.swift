@@ -727,6 +727,47 @@ struct ImageEditorPatchToolTests {
         })
     }
 
+    @Test func brickRepeatOffsetsAlternatingRowsByHalfATile() throws {
+        func appliedAlpha(repeatMode: ImageEditorPatternRepeatMode) throws -> [UInt8] {
+            let viewModel = ImageEditorViewModel(
+                sourceName: "patch-pattern-brick-repeat.png",
+                image: .transparent(size: CGSize(width: 24, height: 24))
+            ) { _ in }
+            viewModel.selectAll()
+            viewModel.opacity = 1
+            viewModel.patchPatternContent = ImageEditorPatternFillContent(
+                kind: .diagonalStripes,
+                repeatMode: repeatMode,
+                red: 1,
+                green: 0,
+                blue: 0,
+                opacity: 1,
+                scale: 8
+            )
+
+            #expect(viewModel.applyPatchPattern())
+            let image = try #require(viewModel.document.selectedLayer?.image)
+            let pixels = try #require(imageEditorRGBABytes(image, width: 24, height: 24))
+            return stride(from: 3, to: pixels.count, by: 4).map { pixels[$0] }
+        }
+
+        let tiled = try appliedAlpha(repeatMode: .tile)
+        let brick = try appliedAlpha(repeatMode: .brick)
+
+        #expect(tiled != brick)
+        #expect((0..<8).allSatisfy { y in
+            (0..<8).allSatisfy { x in
+                abs(Int(tiled[y * 24 + x]) - Int(tiled[(y + 8) * 24 + x])) <= 2
+            }
+        })
+        #expect((0..<8).allSatisfy { y in
+            (0..<8).allSatisfy { x in
+                let shiftedX = (x + 4) % 8
+                return abs(Int(brick[y * 24 + x]) - Int(brick[(y + 8) * 24 + shiftedX])) <= 2
+            }
+        })
+    }
+
     @Test func usePatternAngleRotatesTheRenderedCoverage() throws {
         func appliedAlpha(angle: CGFloat) throws -> [UInt8] {
             let viewModel = ImageEditorViewModel(
@@ -832,7 +873,7 @@ struct ImageEditorPatchToolTests {
     @Test func patternTransformPersistenceRoundTripsAndDefaultsOldProjects() throws {
         let content = ImageEditorPatternFillContent(
             kind: .diagonalStripes,
-            repeatMode: .mirror,
+            repeatMode: .brick,
             scaleX: 1.75,
             scaleY: 0.6,
             linksAxisScales: true,
@@ -845,7 +886,7 @@ struct ImageEditorPatchToolTests {
 
         #expect(decoded.flipsHorizontally)
         #expect(decoded.flipsVertically)
-        #expect(decoded.repeatMode == .mirror)
+        #expect(decoded.repeatMode == .brick)
         #expect(decoded.scaleX == 1.75)
         #expect(decoded.scaleY == 0.6)
         #expect(decoded.linksAxisScales)
