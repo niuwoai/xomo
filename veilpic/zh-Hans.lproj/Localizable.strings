@@ -745,6 +745,8 @@
 "imageEditor.option.patchDiffusion.help" = "1 保留最清晰的细节；更高数值会逐级平滑采样纹理，适合平整背景。";
 "imageEditor.option.patchPattern" = "图案";
 "imageEditor.option.patchPattern.help" = "选择内置图案，并通过当前选区应用到活动图层。";
+"imageEditor.option.patchPatternSummary" = "%@ · %d 像素";
+"imageEditor.option.patchPatternScaleValue" = "缩放：%d 像素";
 "imageEditor.action.patchUsePattern" = "使用图案";
 "imageEditor.history.selectionPatchPattern" = "图案修补";
 "imageEditor.status.selectionPatchedPattern" = "已将修补图案应用到选区。";

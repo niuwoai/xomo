@@ -5741,7 +5741,8 @@ final class XomoAutomationRegistry {
             return
         }
         let resolvedPatchPatternKind: ImageEditorPatternOverlayKind?
-        if action == "patchPattern", let rawKind = arguments["patternKind"]?.stringValue {
+        if action == "patchPattern", arguments["patternKind"] != nil {
+            let rawKind = try requiredString("patternKind", in: arguments)
             guard let kind = ImageEditorPatternOverlayKind(rawValue: rawKind) else {
                 throw XomoAutomationCallError.invalidArgument(
                     "Patch patternKind must be checkerboard, diagonalStripes, or dots"
@@ -5750,6 +5751,18 @@ final class XomoAutomationRegistry {
             resolvedPatchPatternKind = kind
         } else {
             resolvedPatchPatternKind = nil
+        }
+        let resolvedPatchPatternScale: CGFloat?
+        if action == "patchPattern", arguments["patternScale"] != nil {
+            let rawScale = try requiredNumber("patternScale", in: arguments)
+            guard rawScale.isFinite, (6.0...64.0).contains(rawScale) else {
+                throw XomoAutomationCallError.invalidArgument(
+                    "Patch patternScale must be from 6 through 64 pixels"
+                )
+            }
+            resolvedPatchPatternScale = CGFloat(rawScale)
+        } else {
+            resolvedPatchPatternScale = nil
         }
         if let size = arguments["size"]?.doubleValue { viewModel.brushSize = size }
         let usesStrength = ["blur", "sharpen", "smudge"].contains(action)
@@ -5802,6 +5815,9 @@ final class XomoAutomationRegistry {
         if action == "patchPattern" {
             if let resolvedPatchPatternKind {
                 viewModel.patchPatternContent.kind = resolvedPatchPatternKind
+            }
+            if let resolvedPatchPatternScale {
+                viewModel.patchPatternContent.scale = resolvedPatchPatternScale
             }
             guard viewModel.applyPatchPattern() else {
                 throw XomoAutomationCallError.operationFailed(
@@ -7595,6 +7611,7 @@ private extension XomoAutomationRegistry {
             "transparent": XomoAutomationSchema.boolean(description: "Transfer sampled texture while preserving patch target color and alpha"),
             "diffusion": XomoAutomationSchema.integer(description: "Patch texture diffusion from 1 for sharp detail through 7 for smooth regions", minimum: 1, maximum: 7),
             "patternKind": XomoAutomationSchema.string(description: "Built-in pattern used by patchPattern", values: ["checkerboard", "diagonalStripes", "dots"]),
+            "patternScale": XomoAutomationSchema.number(description: "Patch pattern tile size from 6 through 64 pixels", minimum: 6, maximum: 64),
             "healingMode": XomoAutomationSchema.string(description: "Healing mode", values: ["source", "spot"]),
             "spongeMode": XomoAutomationSchema.string(description: "Sponge mode", values: ["saturate", "desaturate"]),
             "spongeVibrance": XomoAutomationSchema.boolean(description: "Reduce clipping near fully saturated or desaturated colors"),

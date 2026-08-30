@@ -567,6 +567,42 @@ struct ImageEditorPatchToolTests {
         #expect(viewModel.undoStack.count == undoCount)
     }
 
+    @Test func usePatternScaleChangesTheAppliedTileFrequency() throws {
+        func appliedAlphaRow(scale: CGFloat) throws -> [UInt8] {
+            let viewModel = ImageEditorViewModel(
+                sourceName: "patch-pattern-scale.png",
+                image: .transparent(size: CGSize(width: 24, height: 24))
+            ) { _ in }
+            viewModel.selectAll()
+            viewModel.opacity = 1
+            viewModel.patchPatternContent = ImageEditorPatternFillContent(
+                kind: .checkerboard,
+                red: 1,
+                green: 0,
+                blue: 0,
+                opacity: 1,
+                scale: scale
+            )
+
+            #expect(viewModel.applyPatchPattern())
+            let image = try #require(viewModel.document.selectedLayer?.image)
+            let pixels = try #require(imageEditorRGBABytes(image, width: 24, height: 24))
+            return stride(from: 3, to: 24 * 4, by: 4).map { pixels[$0] }
+        }
+
+        func transitionCount(_ values: [UInt8]) -> Int {
+            zip(values, values.dropFirst()).reduce(into: 0) { count, pair in
+                if pair.0 != pair.1 { count += 1 }
+            }
+        }
+
+        let sixPixelTiles = try appliedAlphaRow(scale: 6)
+        let twelvePixelTiles = try appliedAlphaRow(scale: 12)
+
+        #expect(sixPixelTiles != twelvePixelTiles)
+        #expect(transitionCount(sixPixelTiles) > transitionCount(twelvePixelTiles))
+    }
+
     @Test func transparentOptionIsWiredToTheOptionsBarAndLivePreview() throws {
         let repositoryRoot = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()
@@ -590,8 +626,11 @@ struct ImageEditorPatchToolTests {
         #expect(source.contains("Stepper(value: $viewModel.patchDiffusion, in: 1...7)"))
         #expect(source.contains(".onChange(of: viewModel.patchDiffusion)"))
         #expect(source.contains("selection: $viewModel.patchPatternContent.kind"))
+        #expect(source.contains("value: $viewModel.patchPatternContent.scale"))
+        #expect(source.contains("imageEditor.option.patchPatternSummary"))
         #expect(source.contains("viewModel.applyPatchPattern()"))
         #expect(source.contains("image-editor-patch-pattern-menu"))
+        #expect(source.contains("image-editor-patch-pattern-scale"))
         #expect(source.contains("image-editor-patch-use-pattern"))
         #expect(source.contains("refreshActivePatchPreview()"))
     }

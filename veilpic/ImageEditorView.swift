@@ -977,6 +977,17 @@ struct ImageEditorView: View {
                             Text(kind.title).tag(kind)
                         }
                     }
+                    Stepper(
+                        value: $viewModel.patchPatternContent.scale,
+                        in: 6...64,
+                        step: 1
+                    ) {
+                        Text(L10n.format(
+                            "imageEditor.option.patchPatternScaleValue",
+                            Int(viewModel.patchPatternContent.scale.rounded())
+                        ))
+                    }
+                    .accessibilityIdentifier("image-editor-patch-pattern-scale")
                     Divider()
                     Button(L10n.text("imageEditor.action.patchUsePattern")) {
                         viewModel.applyPatchPattern()
@@ -985,7 +996,11 @@ struct ImageEditorView: View {
                     .accessibilityIdentifier("image-editor-patch-use-pattern")
                 } label: {
                     Label(
-                        L10n.text("imageEditor.option.patchPattern"),
+                        L10n.format(
+                            "imageEditor.option.patchPatternSummary",
+                            viewModel.patchPatternContent.kind.title,
+                            Int(viewModel.patchPatternContent.scale.rounded())
+                        ),
                         systemImage: "square.grid.2x2"
                     )
                     .font(.system(size: 11, weight: .semibold))

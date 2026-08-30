@@ -19116,12 +19116,14 @@ struct XomoAutomationTests {
             arguments: [
                 "action": .string("patchPattern"),
                 "patternKind": .string("dots"),
+                "patternScale": .number(24),
                 "opacity": .number(1)
             ]
         ))
 
         #expect(response.ok)
         #expect(viewModel.patchPatternContent.kind == .dots)
+        #expect(viewModel.patchPatternContent.scale == 24)
         #expect(viewModel.document.history.count == historyCount + 1)
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.selectionPatchPattern"))
     }
@@ -19146,6 +19148,31 @@ struct XomoAutomationTests {
 
         #expect(!response.ok)
         #expect(viewModel.patchPatternContent.kind == .checkerboard)
+        #expect(viewModel.opacity == originalOpacity)
+        #expect(viewModel.document.history.count == historyCount)
+    }
+
+    @Test func registryRejectsInvalidPatchPatternScaleBeforeChangingOpacity() {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        viewModel.selectAll()
+        let originalOpacity = viewModel.opacity
+        let originalScale = viewModel.patchPatternContent.scale
+        let historyCount = viewModel.document.history.count
+
+        let response = registry.execute(request(
+            operation: "call",
+            name: "xomo.paint.special",
+            arguments: [
+                "action": .string("patchPattern"),
+                "patternScale": .number(65),
+                "opacity": .number(0.25)
+            ]
+        ))
+
+        #expect(!response.ok)
+        #expect(viewModel.patchPatternContent.scale == originalScale)
         #expect(viewModel.opacity == originalOpacity)
         #expect(viewModel.document.history.count == historyCount)
     }
