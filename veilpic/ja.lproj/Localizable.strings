@@ -751,6 +751,7 @@
 "imageEditor.option.patchPatternOpacityValue" = "パターンの不透明度：%d%%";
 "imageEditor.action.patchPatternResetOffset" = "パターン位置をリセット";
 "imageEditor.option.patchPatternBlendMode" = "パターン描画モード";
+"imageEditor.option.patchPatternInvertCoverage" = "パターン領域を反転";
 "imageEditor.action.patchUsePattern" = "パターンを使用";
 "imageEditor.history.selectionPatchPattern" = "パターンでパッチ";
 "imageEditor.status.selectionPatchedPattern" = "選択範囲にパッチパターンを適用しました。";

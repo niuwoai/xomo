@@ -19109,6 +19109,7 @@ struct XomoAutomationTests {
         registry.register(viewModel)
         viewModel.selectAll()
         viewModel.patchPatternPreservesTransparency = true
+        viewModel.patchPatternInvertsCoverage = false
         let historyCount = viewModel.document.history.count
 
         let response = registry.execute(request(
@@ -19124,6 +19125,7 @@ struct XomoAutomationTests {
                 "patternBlendMode": .string("multiply"),
                 "patternAlignsWithCanvas": .bool(false),
                 "patternPreservesTransparency": .bool(false),
+                "patternInvertsCoverage": .bool(true),
                 "patternRed": .number(0.2),
                 "patternGreen": .number(0.7),
                 "patternBlue": .number(0.4),
@@ -19140,6 +19142,7 @@ struct XomoAutomationTests {
         #expect(viewModel.patchPatternBlendMode == .multiply)
         #expect(!viewModel.patchPatternAlignsWithCanvas)
         #expect(!viewModel.patchPatternPreservesTransparency)
+        #expect(viewModel.patchPatternInvertsCoverage)
         #expect(viewModel.patchPatternContent.red == 0.2)
         #expect(viewModel.patchPatternContent.green == 0.7)
         #expect(viewModel.patchPatternContent.blue == 0.4)
@@ -19354,6 +19357,34 @@ struct XomoAutomationTests {
         #expect(!response.ok)
         #expect(viewModel.patchPatternContent == originalPatternContent)
         #expect(viewModel.patchPatternPreservesTransparency == originalTransparency)
+        #expect(viewModel.opacity == originalOpacity)
+        #expect(viewModel.document.history.count == historyCount)
+    }
+
+    @Test func registryRejectsInvalidPatchPatternInversionBeforeChangingToolState() {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        viewModel.selectAll()
+        let originalOpacity = viewModel.opacity
+        let originalPatternContent = viewModel.patchPatternContent
+        let originalInversion = viewModel.patchPatternInvertsCoverage
+        let historyCount = viewModel.document.history.count
+
+        let response = registry.execute(request(
+            operation: "call",
+            name: "xomo.paint.special",
+            arguments: [
+                "action": .string("patchPattern"),
+                "patternInvertsCoverage": .string("true"),
+                "patternOffsetY": .number(-18),
+                "opacity": .number(0.25)
+            ]
+        ))
+
+        #expect(!response.ok)
+        #expect(viewModel.patchPatternContent == originalPatternContent)
+        #expect(viewModel.patchPatternInvertsCoverage == originalInversion)
         #expect(viewModel.opacity == originalOpacity)
         #expect(viewModel.document.history.count == historyCount)
     }

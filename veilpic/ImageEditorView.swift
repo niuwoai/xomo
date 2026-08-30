@@ -998,6 +998,12 @@ struct ImageEditorView: View {
                     )
                     .toggleStyle(.checkbox)
                     .accessibilityIdentifier("image-editor-patch-pattern-preserve-transparency")
+                    Toggle(
+                        L10n.text("imageEditor.option.patchPatternInvertCoverage"),
+                        isOn: $viewModel.patchPatternInvertsCoverage
+                    )
+                    .toggleStyle(.checkbox)
+                    .accessibilityIdentifier("image-editor-patch-pattern-invert-coverage")
                     Stepper(
                         value: $viewModel.patchPatternContent.scale,
                         in: 6...64,

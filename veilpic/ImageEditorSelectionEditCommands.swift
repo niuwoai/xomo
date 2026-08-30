@@ -1005,6 +1005,7 @@ extension ImageEditorViewModel {
             canvasSize: document.canvasSize,
             pattern: patchPatternContent,
             alignsWithCanvas: patchPatternAlignsWithCanvas,
+            invertsPatternCoverage: patchPatternInvertsCoverage,
             opacity: opacity,
             blendMode: patchPatternBlendMode,
             feather: feather
@@ -1681,6 +1682,7 @@ private extension NSImage {
         canvasSize: CGSize,
         pattern: ImageEditorPatternFillContent,
         alignsWithCanvas: Bool,
+        invertsPatternCoverage: Bool = false,
         opacity: CGFloat,
         blendMode: ImageEditorBlendMode,
         feather: CGFloat
@@ -1697,7 +1699,10 @@ private extension NSImage {
             layerFrame: layerFrame,
             alignsWithCanvas: alignsWithCanvas
         )
-        let patternImage = localizedPattern.renderedImage(size: size)
+        let patternImage = localizedPattern.renderedImage(
+            size: size,
+            invertsCoverage: invertsPatternCoverage
+        )
         let width = max(1, Int(size.width.rounded()))
         let height = max(1, Int(size.height.rounded()))
         guard let overlayPixels = patternImage.rgbaPixels(width: width, height: height) else {

@@ -611,6 +611,41 @@ struct ImageEditorPatchToolTests {
         #expect(protected[1] == 0)
     }
 
+    @Test func usePatternCanInvertPaintedAndTransparentCoverage() throws {
+        func appliedAlpha(invertsCoverage: Bool) throws -> [UInt8] {
+            let viewModel = ImageEditorViewModel(
+                sourceName: "patch-pattern-invert-coverage.png",
+                image: .transparent(size: CGSize(width: 12, height: 12))
+            ) { _ in }
+            viewModel.selectAll()
+            viewModel.opacity = 1
+            viewModel.patchPatternInvertsCoverage = invertsCoverage
+            viewModel.patchPatternContent = ImageEditorPatternFillContent(
+                kind: .checkerboard,
+                red: 1,
+                green: 0,
+                blue: 0,
+                opacity: 1,
+                scale: 6
+            )
+
+            #expect(viewModel.applyPatchPattern())
+            let image = try #require(viewModel.document.selectedLayer?.image)
+            let pixels = try #require(imageEditorRGBABytes(image, width: 12, height: 12))
+            return stride(from: 3, to: pixels.count, by: 4).map { pixels[$0] }
+        }
+
+        let normal = try appliedAlpha(invertsCoverage: false)
+        let inverted = try appliedAlpha(invertsCoverage: true)
+
+        #expect(normal != inverted)
+        #expect(normal.contains(0) && normal.contains(where: { $0 > 240 }))
+        #expect(inverted.contains(0) && inverted.contains(where: { $0 > 240 }))
+        #expect(zip(normal, inverted).allSatisfy { alpha in
+            abs(Int(alpha.0) + Int(alpha.1) - 255) <= 2
+        })
+    }
+
     @Test func usePatternScaleChangesTheAppliedTileFrequency() throws {
         func appliedAlphaRow(scale: CGFloat) throws -> [UInt8] {
             let viewModel = ImageEditorViewModel(
@@ -758,6 +793,7 @@ struct ImageEditorPatchToolTests {
         viewModel.patchPatternBlendMode = .screen
         viewModel.patchPatternAlignsWithCanvas = false
         viewModel.patchPatternPreservesTransparency = true
+        viewModel.patchPatternInvertsCoverage = true
         let historyCount = viewModel.document.history.count
 
         #expect(viewModel.resetPatchPatternOffset())
@@ -772,6 +808,7 @@ struct ImageEditorPatchToolTests {
         #expect(viewModel.patchPatternBlendMode == .screen)
         #expect(!viewModel.patchPatternAlignsWithCanvas)
         #expect(viewModel.patchPatternPreservesTransparency)
+        #expect(viewModel.patchPatternInvertsCoverage)
         #expect(viewModel.document.history.count == historyCount)
         #expect(!viewModel.resetPatchPatternOffset())
     }
@@ -899,6 +936,8 @@ struct ImageEditorPatchToolTests {
         #expect(source.contains("imageEditor.selectionFill.alignPatternWithCanvas"))
         #expect(source.contains("isOn: $viewModel.patchPatternPreservesTransparency"))
         #expect(source.contains("imageEditor.selectionFill.preserveTransparency"))
+        #expect(source.contains("isOn: $viewModel.patchPatternInvertsCoverage"))
+        #expect(source.contains("imageEditor.option.patchPatternInvertCoverage"))
         #expect(source.contains("value: $viewModel.patchPatternContent.scale"))
         #expect(source.contains("value: $viewModel.patchPatternContent.opacity"))
         #expect(source.contains("value: $viewModel.patchPatternContent.offsetX"))
@@ -917,6 +956,7 @@ struct ImageEditorPatchToolTests {
         #expect(source.contains("image-editor-patch-pattern-blend-mode"))
         #expect(source.contains("image-editor-patch-pattern-align-canvas"))
         #expect(source.contains("image-editor-patch-pattern-preserve-transparency"))
+        #expect(source.contains("image-editor-patch-pattern-invert-coverage"))
         #expect(source.contains("image-editor-patch-pattern-offset-x"))
         #expect(source.contains("image-editor-patch-pattern-offset-y"))
         #expect(source.contains("image-editor-patch-pattern-reset-offset"))
@@ -926,6 +966,7 @@ struct ImageEditorPatchToolTests {
         #expect(commandSource.contains("blendMode: patchPatternBlendMode"))
         #expect(commandSource.contains("alignsWithCanvas: patchPatternAlignsWithCanvas"))
         #expect(commandSource.contains("let preservesTransparency = patchPatternPreservesTransparency"))
+        #expect(commandSource.contains("invertsPatternCoverage: patchPatternInvertsCoverage"))
     }
 
     @Test func patchLassoHonorsReplaceAddSubtractAndIntersectSelectionModes() throws {

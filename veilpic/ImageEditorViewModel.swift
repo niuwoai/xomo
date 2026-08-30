@@ -220,6 +220,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var patchPatternBlendMode: ImageEditorBlendMode = .normal
     @Published var patchPatternAlignsWithCanvas = true
     @Published var patchPatternPreservesTransparency = false
+    @Published var patchPatternInvertsCoverage = false
     var patchSampleAllLayersEnabled: Bool {
         get { patchSampleSource == .allVisible }
         set { patchSampleSource = newValue ? .allVisible : .currentLayer }

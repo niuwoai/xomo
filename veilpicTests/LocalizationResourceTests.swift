@@ -859,12 +859,13 @@ struct LocalizationResourceTests {
     @Test func patchPatternBlendModeIsLocalizedInEverySupportedLanguage() throws {
         let paths = try Self.repositoryPaths()
         let expectedValues = [
-            "zh-Hans": ["图案混合模式", "%@ · %@ · %d 像素 · %d%%"],
-            "en": ["Pattern Blending", "%@ · %@ · %d px · %d%%"],
-            "ja": ["パターン描画モード", "%@ · %@ · %d px · %d%%"]
+            "zh-Hans": ["图案混合模式", "反转图案覆盖", "%@ · %@ · %d 像素 · %d%%"],
+            "en": ["Pattern Blending", "Invert Pattern Coverage", "%@ · %@ · %d px · %d%%"],
+            "ja": ["パターン描画モード", "パターン領域を反転", "%@ · %@ · %d px · %d%%"]
         ]
         let keys = [
             "imageEditor.option.patchPatternBlendMode",
+            "imageEditor.option.patchPatternInvertCoverage",
             "imageEditor.option.patchPatternSummary"
         ]
 

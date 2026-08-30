@@ -1321,7 +1321,7 @@ struct ImageEditorPatternFillContent: Equatable, Codable {
         return NSColor(calibratedRed: content.red, green: content.green, blue: content.blue, alpha: 1)
     }
 
-    func renderedImage(size: CGSize) -> NSImage {
+    func renderedImage(size: CGSize, invertsCoverage: Bool = false) -> NSImage {
         let content = normalized()
         return NSImage.rendered(size: size) { rect in
             let context = NSGraphicsContext.current
@@ -1333,7 +1333,8 @@ struct ImageEditorPatternFillContent: Equatable, Codable {
             NSColor(patternImage: content.kind.tileImage(
                 color: content.color,
                 opacity: CGFloat(content.opacity),
-                scale: content.scale
+                scale: content.scale,
+                invertsCoverage: invertsCoverage
             )).setFill()
             rect.fill()
         } ?? NSImage.transparent(size: size)
@@ -3096,15 +3097,35 @@ enum ImageEditorPatternOverlayKind: String, CaseIterable, Identifiable {
         L10n.text("imageEditor.patternOverlay.\(rawValue)")
     }
 
-    func tileImage(color: NSColor, opacity: CGFloat, scale: CGFloat) -> NSImage {
+    func tileImage(
+        color: NSColor,
+        opacity: CGFloat,
+        scale: CGFloat,
+        invertsCoverage: Bool = false
+    ) -> NSImage {
         let tileSize = max(6, min(64, scale))
         let size = CGSize(width: tileSize, height: tileSize)
         let patternColor = color.withAlphaComponent(max(0.05, min(1, opacity)))
         return NSImage.rendered(size: size) { rect in
             NSColor.clear.setFill()
             rect.fill()
-            patternColor.setFill()
-            patternColor.setStroke()
+            let context = NSGraphicsContext.current
+            let originalOperation = context?.compositingOperation
+            if invertsCoverage {
+                patternColor.setFill()
+                rect.fill()
+                context?.compositingOperation = .destinationOut
+                NSColor.black.setFill()
+                NSColor.black.setStroke()
+            } else {
+                patternColor.setFill()
+                patternColor.setStroke()
+            }
+            defer {
+                if let originalOperation {
+                    context?.compositingOperation = originalOperation
+                }
+            }
             switch self {
             case .checkerboard:
                 let half = tileSize / 2
