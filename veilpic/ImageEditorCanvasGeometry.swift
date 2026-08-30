@@ -167,6 +167,8 @@ nonisolated enum ImageEditorCropSizeDimension {
 nonisolated enum ImageEditorCropAspectPreset: String, CaseIterable, Identifiable {
     case original
     case square
+    case fourFive
+    case fiveSeven
     case fourThree
     case threeTwo
     case sixteenNine
@@ -178,6 +180,8 @@ nonisolated enum ImageEditorCropAspectPreset: String, CaseIterable, Identifiable
         switch self {
         case .original: "imageEditor.cropAspect.original"
         case .square: "imageEditor.cropAspect.square"
+        case .fourFive: "imageEditor.cropAspect.fourFive"
+        case .fiveSeven: "imageEditor.cropAspect.fiveSeven"
         case .fourThree: "imageEditor.cropAspect.fourThree"
         case .threeTwo: "imageEditor.cropAspect.threeTwo"
         case .sixteenNine: "imageEditor.cropAspect.sixteenNine"
@@ -206,6 +210,10 @@ nonisolated enum ImageEditorCropAspectPreset: String, CaseIterable, Identifiable
             )
         case .square:
             return CGSize(width: 1, height: 1)
+        case .fourFive:
+            return CGSize(width: 4, height: 5)
+        case .fiveSeven:
+            return CGSize(width: 5, height: 7)
         case .fourThree:
             return CGSize(width: 4, height: 3)
         case .threeTwo:

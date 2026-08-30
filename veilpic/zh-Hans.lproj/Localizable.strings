@@ -508,6 +508,8 @@
 "imageEditor.cropAspect.help" = "应用裁剪宽高比预设";
 "imageEditor.cropAspect.original" = "原图比例";
 "imageEditor.cropAspect.square" = "1:1 正方形";
+"imageEditor.cropAspect.fourFive" = "4:5 竖向";
+"imageEditor.cropAspect.fiveSeven" = "5:7 竖向";
 "imageEditor.cropAspect.fourThree" = "4:3";
 "imageEditor.cropAspect.threeTwo" = "3:2";
 "imageEditor.cropAspect.sixteenNine" = "16:9";

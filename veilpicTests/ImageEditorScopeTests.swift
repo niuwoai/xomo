@@ -3552,9 +3552,11 @@ struct ImageEditorScopeTests {
         #expect(source.contains("discardPendingSmartFilterChanges: discardPendingSmartFilterChanges"))
         #expect(source.contains("context.coordinator.discardPendingSmartFilterChanges = discardPendingSmartFilterChanges"))
         let escapeStart = try #require(
-            source.range(of: "if event.type == .keyDown,\n               event.keyCode == 53")
+            source.range(of: "if event.type == .keyDown,\n               ImageEditorPendingCropKeyPolicy.matchesCancel(")
         )
         let escapeSource = source[escapeStart.lowerBound...]
+        #expect(escapeSource.contains("modifierFlags: event.modifierFlags"))
+        #expect(escapeSource.contains("!isTextInputActive"))
         #expect(escapeSource.contains("ImageEditorEscapeCancelDispatcher.handle("))
 
         var calls: [String] = []

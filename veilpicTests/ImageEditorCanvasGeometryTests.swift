@@ -366,11 +366,37 @@ struct ImageEditorCanvasGeometryTests {
             #expect(localization.contains("\"imageEditor.cropAspect.help\""))
             #expect(localization.contains("\"imageEditor.cropAspect.original\""))
             #expect(localization.contains("\"imageEditor.cropAspect.square\""))
+            #expect(localization.contains("\"imageEditor.cropAspect.fourFive\""))
+            #expect(localization.contains("\"imageEditor.cropAspect.fiveSeven\""))
             #expect(localization.contains("\"imageEditor.cropAspect.fourThree\""))
             #expect(localization.contains("\"imageEditor.cropAspect.threeTwo\""))
             #expect(localization.contains("\"imageEditor.cropAspect.sixteenNine\""))
             #expect(localization.contains("\"imageEditor.cropAspect.free\""))
         }
+    }
+
+    @Test
+    func cropAspectPresetsIncludeClassicPortraitRatios() throws {
+        #expect(ImageEditorCropAspectPreset.allCases == [
+            .original,
+            .square,
+            .fourFive,
+            .fiveSeven,
+            .fourThree,
+            .threeTwo,
+            .sixteenNine,
+            .free,
+        ])
+        #expect(ImageEditorCropAspectPreset.fourFive.components(
+            canvasSize: CGSize(width: 800, height: 600)
+        ) == CGSize(width: 4, height: 5))
+        #expect(ImageEditorCropAspectPreset.fiveSeven.components(
+            canvasSize: CGSize(width: 800, height: 600)
+        ) == CGSize(width: 5, height: 7))
+        #expect(ImageEditorCropAspectPreset.fourFive.accessibilityIdentifier ==
+            "image-editor-crop-aspect-fourFive")
+        #expect(ImageEditorCropAspectPreset.fiveSeven.accessibilityIdentifier ==
+            "image-editor-crop-aspect-fiveSeven")
     }
 
     @Test

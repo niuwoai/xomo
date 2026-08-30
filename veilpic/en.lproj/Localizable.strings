@@ -508,6 +508,8 @@
 "imageEditor.cropAspect.help" = "Apply a crop aspect ratio preset";
 "imageEditor.cropAspect.original" = "Original Ratio";
 "imageEditor.cropAspect.square" = "1:1 Square";
+"imageEditor.cropAspect.fourFive" = "4:5 Portrait";
+"imageEditor.cropAspect.fiveSeven" = "5:7 Portrait";
 "imageEditor.cropAspect.fourThree" = "4:3";
 "imageEditor.cropAspect.threeTwo" = "3:2";
 "imageEditor.cropAspect.sixteenNine" = "16:9";

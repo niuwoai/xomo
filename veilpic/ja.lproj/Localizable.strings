@@ -508,6 +508,8 @@
 "imageEditor.cropAspect.help" = "切り抜きの縦横比プリセットを適用";
 "imageEditor.cropAspect.original" = "元の縦横比";
 "imageEditor.cropAspect.square" = "1:1 正方形";
+"imageEditor.cropAspect.fourFive" = "4:5 縦向き";
+"imageEditor.cropAspect.fiveSeven" = "5:7 縦向き";
 "imageEditor.cropAspect.fourThree" = "4:3";
 "imageEditor.cropAspect.threeTwo" = "3:2";
 "imageEditor.cropAspect.sixteenNine" = "16:9";
