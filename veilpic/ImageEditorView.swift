@@ -5083,6 +5083,17 @@ struct ImageEditorView: View {
                         canvasSize: viewModel.document.canvasSize
                     )
                     Text(L10n.format(
+                        "imageEditor.cropBounds.origin",
+                        Int(pixelBounds.minX),
+                        Int(pixelBounds.minY)
+                    ))
+                    .font(.system(size: 11, weight: .medium, design: .monospaced))
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .fixedSize(horizontal: true, vertical: false)
+                    .accessibilityIdentifier("image-editor-crop-origin")
+
+                    Text(L10n.format(
                         "imageEditor.cropBounds.size",
                         Int(pixelBounds.width),
                         Int(pixelBounds.height)

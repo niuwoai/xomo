@@ -482,6 +482,7 @@
 "imageEditor.cropGuide.goldenRatio" = "黄金比";
 "imageEditor.cropGuide.none" = "ガイドなし";
 "imageEditor.cropBounds.size" = "幅 %d × 高さ %d px";
+"imageEditor.cropBounds.origin" = "X %d · Y %d";
 "imageEditor.status.cropGuideChanged" = "切り抜きガイド：%@";
 "imageEditor.action.apply" = "プレビューへ適用";
 "imageEditor.action.export" = "書き出し";

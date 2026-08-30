@@ -177,7 +177,7 @@ struct ImageEditorCanvasGeometryTests {
     }
 
     @Test
-    func pendingCropSizeMatchesCommittedOutwardPixelRoundingAndCanvasBounds() throws {
+    func pendingCropMetricsMatchCommittedOutwardPixelRoundingAndCanvasBounds() throws {
         #expect(ImageEditorCropGeometry.committedPixelBounds(
             for: CGRect(x: 10.2, y: 20.7, width: 100.1, height: 80.2),
             canvasSize: CGSize(width: 200, height: 150)
@@ -199,6 +199,7 @@ struct ImageEditorCanvasGeometryTests {
             encoding: .utf8
         )
         #expect(viewSource.contains("ImageEditorCropGeometry.committedPixelBounds"))
+        #expect(viewSource.contains("image-editor-crop-origin"))
         #expect(viewSource.contains("image-editor-crop-size"))
         #expect(commandSource.contains("ImageEditorCropGeometry.committedPixelBounds"))
 
@@ -208,6 +209,7 @@ struct ImageEditorCanvasGeometryTests {
                     .appendingPathComponent("veilpic/\(localizationID).lproj/Localizable.strings"),
                 encoding: .utf8
             )
+            #expect(localization.contains("\"imageEditor.cropBounds.origin\""))
             #expect(localization.contains("\"imageEditor.cropBounds.size\""))
         }
     }
