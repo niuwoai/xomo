@@ -6,6 +6,7 @@
 //
 
 import AppKit
+import CoreImage
 import Foundation
 import simd
 
@@ -1280,6 +1281,7 @@ struct ImageEditorPatternFillContent: Equatable, Codable {
     var blue: Double = 0.95
     var opacity: Double = 0.55
     var scale: CGFloat = 16
+    var angle: CGFloat = 0
     var offsetX: CGFloat = 0
     var offsetY: CGFloat = 0
 
@@ -1290,6 +1292,7 @@ struct ImageEditorPatternFillContent: Equatable, Codable {
         blue: Double = 0.95,
         opacity: Double = 0.55,
         scale: CGFloat = 16,
+        angle: CGFloat = 0,
         offsetX: CGFloat = 0,
         offsetY: CGFloat = 0
     ) {
@@ -1299,6 +1302,7 @@ struct ImageEditorPatternFillContent: Equatable, Codable {
         self.blue = blue
         self.opacity = opacity
         self.scale = scale
+        self.angle = angle
         self.offsetX = offsetX
         self.offsetY = offsetY
     }
@@ -1311,6 +1315,7 @@ struct ImageEditorPatternFillContent: Equatable, Codable {
             blue: Self.zeroOne(blue),
             opacity: max(0.05, min(1, opacity)),
             scale: max(6, min(64, scale)),
+            angle: Self.normalizedAngle(angle),
             offsetX: Self.normalizedOffset(offsetX),
             offsetY: Self.normalizedOffset(offsetY)
         )
@@ -1323,21 +1328,35 @@ struct ImageEditorPatternFillContent: Equatable, Codable {
 
     func renderedImage(size: CGSize, invertsCoverage: Bool = false) -> NSImage {
         let content = normalized()
-        return NSImage.rendered(size: size) { rect in
-            let context = NSGraphicsContext.current
-            let originalPatternPhase = context?.patternPhase ?? .zero
-            context?.patternPhase = CGPoint(x: content.offsetX, y: content.offsetY)
-            defer {
-                context?.patternPhase = originalPatternPhase
-            }
-            NSColor(patternImage: content.kind.tileImage(
-                color: content.color,
-                opacity: CGFloat(content.opacity),
-                scale: content.scale,
-                invertsCoverage: invertsCoverage
-            )).setFill()
-            rect.fill()
-        } ?? NSImage.transparent(size: size)
+        let tileImage = content.kind.tileImage(
+            color: content.color,
+            opacity: CGFloat(content.opacity),
+            scale: content.scale,
+            invertsCoverage: invertsCoverage
+        )
+        guard size.width > 0,
+              size.height > 0,
+              let tileCGImage = tileImage.cgImage(forProposedRect: nil, context: nil, hints: nil)
+        else {
+            return NSImage.transparent(size: size)
+        }
+
+        let radians = content.angle * .pi / 180
+        let affineTransform = NSAffineTransform()
+        affineTransform.translateX(by: content.offsetX, yBy: content.offsetY)
+        affineTransform.rotate(byRadians: radians)
+        let tiled = CIImage(cgImage: tileCGImage).applyingFilter(
+            "CIAffineTile",
+            parameters: [kCIInputTransformKey: affineTransform]
+        )
+        let bounds = CGRect(origin: .zero, size: size)
+        guard let rendered = ImageEditorImageProcessing.ciContext.createCGImage(
+            tiled.cropped(to: bounds),
+            from: bounds
+        ) else {
+            return NSImage.transparent(size: size)
+        }
+        return NSImage(cgImage: rendered, size: size)
     }
 
     private static func zeroOne(_ value: Double) -> Double {
@@ -1349,6 +1368,11 @@ struct ImageEditorPatternFillContent: Equatable, Codable {
         return max(-128, min(128, value))
     }
 
+    private static func normalizedAngle(_ value: CGFloat) -> CGFloat {
+        guard value.isFinite else { return 0 }
+        return max(-180, min(180, value))
+    }
+
     private enum CodingKeys: String, CodingKey {
         case kind
         case red
@@ -1356,6 +1380,7 @@ struct ImageEditorPatternFillContent: Equatable, Codable {
         case blue
         case opacity
         case scale
+        case angle
         case offsetX
         case offsetY
     }
@@ -1368,6 +1393,7 @@ struct ImageEditorPatternFillContent: Equatable, Codable {
         blue = try container.decode(Double.self, forKey: .blue)
         opacity = try container.decode(Double.self, forKey: .opacity)
         scale = try container.decode(CGFloat.self, forKey: .scale)
+        angle = try container.decodeIfPresent(CGFloat.self, forKey: .angle) ?? 0
         offsetX = try container.decodeIfPresent(CGFloat.self, forKey: .offsetX) ?? 0
         offsetY = try container.decodeIfPresent(CGFloat.self, forKey: .offsetY) ?? 0
     }
@@ -1381,6 +1407,7 @@ struct ImageEditorPatternFillContent: Equatable, Codable {
         try container.encode(content.blue, forKey: .blue)
         try container.encode(content.opacity, forKey: .opacity)
         try container.encode(content.scale, forKey: .scale)
+        try container.encode(content.angle, forKey: .angle)
         try container.encode(content.offsetX, forKey: .offsetX)
         try container.encode(content.offsetY, forKey: .offsetY)
     }

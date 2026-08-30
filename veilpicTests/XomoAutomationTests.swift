@@ -19119,6 +19119,7 @@ struct XomoAutomationTests {
                 "action": .string("patchPattern"),
                 "patternKind": .string("dots"),
                 "patternScale": .number(24),
+                "patternAngle": .number(-37),
                 "patternOpacity": .number(0.35),
                 "patternOffsetX": .number(18),
                 "patternOffsetY": .number(-11),
@@ -19136,6 +19137,7 @@ struct XomoAutomationTests {
         #expect(response.ok)
         #expect(viewModel.patchPatternContent.kind == .dots)
         #expect(viewModel.patchPatternContent.scale == 24)
+        #expect(viewModel.patchPatternContent.angle == -37)
         #expect(viewModel.patchPatternContent.opacity == 0.35)
         #expect(viewModel.patchPatternContent.offsetX == 18)
         #expect(viewModel.patchPatternContent.offsetY == -11)
@@ -19266,6 +19268,32 @@ struct XomoAutomationTests {
             arguments: [
                 "action": .string("patchPattern"),
                 "patternOffsetX": .number(129),
+                "patternOffsetY": .number(-11),
+                "opacity": .number(0.25)
+            ]
+        ))
+
+        #expect(!response.ok)
+        #expect(viewModel.patchPatternContent == originalPatternContent)
+        #expect(viewModel.opacity == originalOpacity)
+        #expect(viewModel.document.history.count == historyCount)
+    }
+
+    @Test func registryRejectsInvalidPatchPatternAngleBeforeChangingToolState() {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        viewModel.selectAll()
+        let originalOpacity = viewModel.opacity
+        let originalPatternContent = viewModel.patchPatternContent
+        let historyCount = viewModel.document.history.count
+
+        let response = registry.execute(request(
+            operation: "call",
+            name: "xomo.paint.special",
+            arguments: [
+                "action": .string("patchPattern"),
+                "patternAngle": .number(181),
                 "patternOffsetY": .number(-11),
                 "opacity": .number(0.25)
             ]

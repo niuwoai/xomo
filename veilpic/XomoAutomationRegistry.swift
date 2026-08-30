@@ -5788,6 +5788,18 @@ final class XomoAutomationRegistry {
         }
         let resolvedPatchPatternOffsetX = try validatedPatchPatternOffset("patternOffsetX")
         let resolvedPatchPatternOffsetY = try validatedPatchPatternOffset("patternOffsetY")
+        let resolvedPatchPatternAngle: CGFloat?
+        if action == "patchPattern", arguments["patternAngle"] != nil {
+            let rawAngle = try requiredNumber("patternAngle", in: arguments)
+            guard rawAngle.isFinite, (-180.0...180.0).contains(rawAngle) else {
+                throw XomoAutomationCallError.invalidArgument(
+                    "Patch patternAngle must be from -180 through 180 degrees"
+                )
+            }
+            resolvedPatchPatternAngle = CGFloat(rawAngle)
+        } else {
+            resolvedPatchPatternAngle = nil
+        }
         let resolvedPatchPatternBlendMode: ImageEditorBlendMode?
         if action == "patchPattern", arguments["patternBlendMode"] != nil {
             let rawMode = try requiredString("patternBlendMode", in: arguments)
@@ -5905,6 +5917,9 @@ final class XomoAutomationRegistry {
             }
             if let resolvedPatchPatternOffsetY {
                 viewModel.patchPatternContent.offsetY = resolvedPatchPatternOffsetY
+            }
+            if let resolvedPatchPatternAngle {
+                viewModel.patchPatternContent.angle = resolvedPatchPatternAngle
             }
             if let resolvedPatchPatternBlendMode {
                 viewModel.patchPatternBlendMode = resolvedPatchPatternBlendMode
@@ -7723,6 +7738,7 @@ private extension XomoAutomationRegistry {
             "patternOpacity": XomoAutomationSchema.number(description: "Patch pattern opacity from 0.05 through 1", minimum: 0.05, maximum: 1),
             "patternOffsetX": XomoAutomationSchema.number(description: "Patch pattern horizontal phase offset in pixels", minimum: -128, maximum: 128),
             "patternOffsetY": XomoAutomationSchema.number(description: "Patch pattern vertical phase offset in pixels", minimum: -128, maximum: 128),
+            "patternAngle": XomoAutomationSchema.number(description: "Patch pattern rotation from -180 through 180 degrees", minimum: -180, maximum: 180),
             "patternBlendMode": XomoAutomationSchema.string(description: "Patch pattern blend mode", values: ImageEditorBlendMode.smartFilterCases.map(\.rawValue)),
             "patternAlignsWithCanvas": XomoAutomationSchema.boolean(description: "Align the patch pattern phase with canvas coordinates instead of the active layer"),
             "patternPreservesTransparency": XomoAutomationSchema.boolean(description: "Apply the patch pattern only where the active layer already has alpha"),

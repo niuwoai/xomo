@@ -682,6 +682,38 @@ struct ImageEditorPatchToolTests {
         #expect(transitionCount(sixPixelTiles) > transitionCount(twelvePixelTiles))
     }
 
+    @Test func usePatternAngleRotatesTheRenderedCoverage() throws {
+        func appliedAlpha(angle: CGFloat) throws -> [UInt8] {
+            let viewModel = ImageEditorViewModel(
+                sourceName: "patch-pattern-angle.png",
+                image: .transparent(size: CGSize(width: 24, height: 24))
+            ) { _ in }
+            viewModel.selectAll()
+            viewModel.opacity = 1
+            viewModel.patchPatternContent = ImageEditorPatternFillContent(
+                kind: .diagonalStripes,
+                red: 1,
+                green: 0,
+                blue: 0,
+                opacity: 1,
+                scale: 8,
+                angle: angle
+            )
+
+            #expect(viewModel.applyPatchPattern())
+            let image = try #require(viewModel.document.selectedLayer?.image)
+            let pixels = try #require(imageEditorRGBABytes(image, width: 24, height: 24))
+            return stride(from: 3, to: pixels.count, by: 4).map { pixels[$0] }
+        }
+
+        let original = try appliedAlpha(angle: 0)
+        let quarterTurn = try appliedAlpha(angle: 90)
+
+        #expect(original != quarterTurn)
+        #expect(original.contains(where: { $0 < 32 }) && original.contains(where: { $0 > 224 }))
+        #expect(quarterTurn.contains(where: { $0 < 32 }) && quarterTurn.contains(where: { $0 > 224 }))
+    }
+
     @Test func usePatternColorControlsTheRenderedPatternPixels() throws {
         let viewModel = ImageEditorViewModel(
             sourceName: "patch-pattern-color.png",
@@ -787,6 +819,7 @@ struct ImageEditorPatchToolTests {
             blue: 0.4,
             opacity: 0.35,
             scale: 24,
+            angle: -37,
             offsetX: 18,
             offsetY: -11
         )
@@ -802,6 +835,7 @@ struct ImageEditorPatchToolTests {
         #expect(viewModel.patchPatternContent.kind == .dots)
         #expect(viewModel.patchPatternContent.scale == 24)
         #expect(viewModel.patchPatternContent.opacity == 0.35)
+        #expect(viewModel.patchPatternContent.angle == -37)
         #expect(viewModel.patchPatternContent.red == 0.2)
         #expect(viewModel.patchPatternContent.green == 0.7)
         #expect(viewModel.patchPatternContent.blue == 0.4)
@@ -939,11 +973,13 @@ struct ImageEditorPatchToolTests {
         #expect(source.contains("isOn: $viewModel.patchPatternInvertsCoverage"))
         #expect(source.contains("imageEditor.option.patchPatternInvertCoverage"))
         #expect(source.contains("value: $viewModel.patchPatternContent.scale"))
+        #expect(source.contains("value: $viewModel.patchPatternContent.angle"))
         #expect(source.contains("value: $viewModel.patchPatternContent.opacity"))
         #expect(source.contains("value: $viewModel.patchPatternContent.offsetX"))
         #expect(source.contains("value: $viewModel.patchPatternContent.offsetY"))
         #expect(source.contains("selection: patchPatternColorBinding"))
         #expect(source.contains("imageEditor.option.patchPatternOpacityValue"))
+        #expect(source.contains("imageEditor.patternFill.angleValue"))
         #expect(source.contains("imageEditor.option.patchPatternBlendMode"))
         #expect(source.contains("imageEditor.patternFill.offsetXValue"))
         #expect(source.contains("imageEditor.patternFill.offsetYValue"))
@@ -952,6 +988,7 @@ struct ImageEditorPatchToolTests {
         #expect(source.contains("viewModel.applyPatchPattern()"))
         #expect(source.contains("image-editor-patch-pattern-menu"))
         #expect(source.contains("image-editor-patch-pattern-scale"))
+        #expect(source.contains("image-editor-patch-pattern-angle"))
         #expect(source.contains("image-editor-patch-pattern-opacity"))
         #expect(source.contains("image-editor-patch-pattern-blend-mode"))
         #expect(source.contains("image-editor-patch-pattern-align-canvas"))

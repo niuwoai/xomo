@@ -1016,6 +1016,17 @@ struct ImageEditorView: View {
                     }
                     .accessibilityIdentifier("image-editor-patch-pattern-scale")
                     Stepper(
+                        value: $viewModel.patchPatternContent.angle,
+                        in: -180...180,
+                        step: 1
+                    ) {
+                        Text(L10n.format(
+                            "imageEditor.patternFill.angleValue",
+                            Int(viewModel.patchPatternContent.angle.rounded())
+                        ))
+                    }
+                    .accessibilityIdentifier("image-editor-patch-pattern-angle")
+                    Stepper(
                         value: $viewModel.patchPatternContent.opacity,
                         in: 0.05...1,
                         step: 0.05
@@ -1081,6 +1092,7 @@ struct ImageEditorView: View {
                             viewModel.patchPatternContent.kind.title,
                             viewModel.patchPatternBlendMode.title,
                             Int(viewModel.patchPatternContent.scale.rounded()),
+                            Int(viewModel.patchPatternContent.angle.rounded()),
                             Int((viewModel.patchPatternContent.opacity * 100).rounded())
                         ),
                         systemImage: "square.grid.2x2"

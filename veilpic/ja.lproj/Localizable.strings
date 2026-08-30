@@ -745,7 +745,7 @@
 "imageEditor.option.patchDiffusion.help" = "1 は最も鮮明なディテールを保持し、値を上げるほどサンプルテクスチャを段階的に滑らかにします。";
 "imageEditor.option.patchPattern" = "パターン";
 "imageEditor.option.patchPattern.help" = "組み込みパターンを選び、現在の選択範囲を通してアクティブレイヤーに適用します。";
-"imageEditor.option.patchPatternSummary" = "%@ · %@ · %d px · %d%%";
+"imageEditor.option.patchPatternSummary" = "%@ · %@ · %d px · %d° · %d%%";
 "imageEditor.option.patchPatternScaleValue" = "スケール：%d px";
 "imageEditor.option.patchPatternColor" = "パターンカラー";
 "imageEditor.option.patchPatternOpacityValue" = "パターンの不透明度：%d%%";
@@ -1515,6 +1515,7 @@
 "imageEditor.patternFill.opacityValue" = "%d%%";
 "imageEditor.patternFill.scale" = "スケール";
 "imageEditor.patternFill.scaleValue" = "%d px";
+"imageEditor.patternFill.angleValue" = "角度：%d°";
 "imageEditor.patternFill.offsetX" = "水平オフセット";
 "imageEditor.patternFill.offsetXValue" = "X %d px";
 "imageEditor.patternFill.offsetY" = "垂直オフセット";
