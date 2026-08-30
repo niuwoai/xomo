@@ -516,9 +516,10 @@ struct ImageEditorCanvasGeometryTests {
         assertEqual(golden[0].start, CGPoint(x: 48.196_601_125, y: 20))
         assertEqual(golden[1].end, CGPoint(x: 71.803_398_875, y: 100))
         #expect(ImageEditorCropGeometry.compositionGuideSegments(for: .none, in: rect).isEmpty)
-        #expect(ImageEditorCropGuideKind.allCases == [.ruleOfThirds, .grid, .goldenRatio, .none])
+        #expect(ImageEditorCropGuideKind.allCases == [.ruleOfThirds, .grid, .diagonal, .goldenRatio, .none])
         #expect(ImageEditorCropGuideKind.ruleOfThirds.next == .grid)
-        #expect(ImageEditorCropGuideKind.grid.next == .goldenRatio)
+        #expect(ImageEditorCropGuideKind.grid.next == .diagonal)
+        #expect(ImageEditorCropGuideKind.diagonal.next == .goldenRatio)
         #expect(ImageEditorCropGuideKind.goldenRatio.next == .none)
         #expect(ImageEditorCropGuideKind.none.next == .ruleOfThirds)
 
@@ -574,6 +575,70 @@ struct ImageEditorCanvasGeometryTests {
             #expect(localization.contains("\"imageEditor.cropGuide.help\""))
             #expect(localization.contains("\"imageEditor.status.cropGuideChanged\""))
         }
+    }
+
+    @Test
+    func cropDiagonalGuideBisectsEveryCornerAtFortyFiveDegrees() throws {
+        let landscape = ImageEditorCropGeometry.compositionGuideSegments(
+            for: .diagonal,
+            in: CGRect(x: 10, y: 20, width: 100, height: 80)
+        )
+        #expect(landscape == [
+            ImageEditorCropGuideSegment(
+                start: CGPoint(x: 10, y: 20),
+                end: CGPoint(x: 90, y: 100)
+            ),
+            ImageEditorCropGuideSegment(
+                start: CGPoint(x: 110, y: 20),
+                end: CGPoint(x: 30, y: 100)
+            ),
+            ImageEditorCropGuideSegment(
+                start: CGPoint(x: 110, y: 100),
+                end: CGPoint(x: 30, y: 20)
+            ),
+            ImageEditorCropGuideSegment(
+                start: CGPoint(x: 10, y: 100),
+                end: CGPoint(x: 90, y: 20)
+            ),
+        ])
+
+        let portrait = ImageEditorCropGeometry.compositionGuideSegments(
+            for: .diagonal,
+            in: CGRect(x: 10, y: 20, width: 60, height: 100)
+        )
+        #expect(portrait == [
+            ImageEditorCropGuideSegment(
+                start: CGPoint(x: 10, y: 20),
+                end: CGPoint(x: 70, y: 80)
+            ),
+            ImageEditorCropGuideSegment(
+                start: CGPoint(x: 70, y: 20),
+                end: CGPoint(x: 10, y: 80)
+            ),
+            ImageEditorCropGuideSegment(
+                start: CGPoint(x: 70, y: 120),
+                end: CGPoint(x: 10, y: 60)
+            ),
+            ImageEditorCropGuideSegment(
+                start: CGPoint(x: 10, y: 120),
+                end: CGPoint(x: 70, y: 60)
+            ),
+        ])
+
+        let square = ImageEditorCropGeometry.compositionGuideSegments(
+            for: .diagonal,
+            in: CGRect(x: 10, y: 20, width: 60, height: 60)
+        )
+        #expect(square == [
+            ImageEditorCropGuideSegment(
+                start: CGPoint(x: 10, y: 20),
+                end: CGPoint(x: 70, y: 80)
+            ),
+            ImageEditorCropGuideSegment(
+                start: CGPoint(x: 70, y: 20),
+                end: CGPoint(x: 10, y: 80)
+            ),
+        ])
     }
 
     @Test

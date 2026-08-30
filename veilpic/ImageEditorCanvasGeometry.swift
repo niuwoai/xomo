@@ -77,6 +77,7 @@ nonisolated struct ImageEditorCropGuideSegment: Equatable {
 nonisolated enum ImageEditorCropGuideKind: String, CaseIterable, Identifiable {
     case ruleOfThirds
     case grid
+    case diagonal
     case goldenRatio
     case none
 
@@ -86,6 +87,7 @@ nonisolated enum ImageEditorCropGuideKind: String, CaseIterable, Identifiable {
         switch self {
         case .ruleOfThirds: "imageEditor.cropGuide.ruleOfThirds"
         case .grid: "imageEditor.cropGuide.grid"
+        case .diagonal: "imageEditor.cropGuide.diagonal"
         case .goldenRatio: "imageEditor.cropGuide.goldenRatio"
         case .none: "imageEditor.cropGuide.none"
         }
@@ -477,6 +479,8 @@ enum ImageEditorCropGeometry {
             fractions = [1 / 3, 2 / 3]
         case .grid:
             fractions = [1 / 4, 1 / 2, 3 / 4]
+        case .diagonal:
+            return diagonalGuideSegments(in: normalized)
         case .goldenRatio:
             fractions = [0.381_966_011_25, 0.618_033_988_75]
         case .none:
@@ -498,6 +502,26 @@ enum ImageEditorCropGeometry {
             )
         }
         return vertical + horizontal
+    }
+
+    private static func diagonalGuideSegments(in rect: CGRect) -> [ImageEditorCropGuideSegment] {
+        let squareSide = min(rect.width, rect.height)
+        let cornersAndDirections: [(CGPoint, CGVector)] = [
+            (CGPoint(x: rect.minX, y: rect.minY), CGVector(dx: 1, dy: 1)),
+            (CGPoint(x: rect.maxX, y: rect.minY), CGVector(dx: -1, dy: 1)),
+            (CGPoint(x: rect.maxX, y: rect.maxY), CGVector(dx: -1, dy: -1)),
+            (CGPoint(x: rect.minX, y: rect.maxY), CGVector(dx: 1, dy: -1)),
+        ]
+        let segments = cornersAndDirections.map { corner, direction in
+            ImageEditorCropGuideSegment(
+                start: corner,
+                end: CGPoint(
+                    x: corner.x + direction.dx * squareSide,
+                    y: corner.y + direction.dy * squareSide
+                )
+            )
+        }
+        return rect.width == rect.height ? Array(segments.prefix(2)) : segments
     }
 
     static func hitHandle(

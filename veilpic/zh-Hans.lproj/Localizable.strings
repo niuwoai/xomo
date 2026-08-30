@@ -483,6 +483,7 @@
 "imageEditor.cropGuide.visibility.never" = "从不显示";
 "imageEditor.cropGuide.ruleOfThirds" = "三分法";
 "imageEditor.cropGuide.grid" = "精细网格";
+"imageEditor.cropGuide.diagonal" = "对角线";
 "imageEditor.cropGuide.goldenRatio" = "黄金比例";
 "imageEditor.cropGuide.none" = "无参考线";
 "imageEditor.cropBounds.x" = "X";

@@ -483,6 +483,7 @@
 "imageEditor.cropGuide.visibility.never" = "Never Show";
 "imageEditor.cropGuide.ruleOfThirds" = "Rule of Thirds";
 "imageEditor.cropGuide.grid" = "Fine Grid";
+"imageEditor.cropGuide.diagonal" = "Diagonal";
 "imageEditor.cropGuide.goldenRatio" = "Golden Ratio";
 "imageEditor.cropGuide.none" = "No Guide";
 "imageEditor.cropBounds.x" = "X";
