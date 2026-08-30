@@ -1006,7 +1006,7 @@ extension ImageEditorViewModel {
             pattern: patchPatternContent,
             alignsWithCanvas: true,
             opacity: opacity,
-            blendMode: .normal,
+            blendMode: patchPatternBlendMode,
             feather: feather
         ) else {
             statusText = L10n.text("imageEditor.status.selectionEmpty")

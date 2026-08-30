@@ -856,6 +856,28 @@ struct LocalizationResourceTests {
         }
     }
 
+    @Test func patchPatternBlendModeIsLocalizedInEverySupportedLanguage() throws {
+        let paths = try Self.repositoryPaths()
+        let expectedValues = [
+            "zh-Hans": ["图案混合模式", "%@ · %@ · %d 像素 · %d%%"],
+            "en": ["Pattern Blending", "%@ · %@ · %d px · %d%%"],
+            "ja": ["パターン描画モード", "%@ · %@ · %d px · %d%%"]
+        ]
+        let keys = [
+            "imageEditor.option.patchPatternBlendMode",
+            "imageEditor.option.patchPatternSummary"
+        ]
+
+        for (localizationID, expected) in expectedValues {
+            let strings = try Self.stringTable(
+                tableName: "Localizable",
+                localizationID: localizationID,
+                appDirectory: paths.appDirectory
+            )
+            #expect(keys.compactMap { strings[$0] } == expected)
+        }
+    }
+
     @Test func layerStyleMixedInnerGlowSourceIsLocalizedInEverySupportedLanguage() throws {
         let paths = try Self.repositoryPaths()
         let expectedValues = [

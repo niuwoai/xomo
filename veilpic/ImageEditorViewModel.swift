@@ -217,6 +217,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var patchIgnoresAdjustmentLayers = false
     @Published var patchDiffusion = 1
     @Published var patchPatternContent = ImageEditorPatternFillContent(opacity: 1)
+    @Published var patchPatternBlendMode: ImageEditorBlendMode = .normal
     var patchSampleAllLayersEnabled: Bool {
         get { patchSampleSource == .allVisible }
         set { patchSampleSource = newValue ? .allVisible : .currentLayer }

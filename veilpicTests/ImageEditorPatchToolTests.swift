@@ -711,6 +711,7 @@ struct ImageEditorPatchToolTests {
             offsetX: 18,
             offsetY: -11
         )
+        viewModel.patchPatternBlendMode = .screen
         let historyCount = viewModel.document.history.count
 
         #expect(viewModel.resetPatchPatternOffset())
@@ -722,8 +723,54 @@ struct ImageEditorPatchToolTests {
         #expect(viewModel.patchPatternContent.red == 0.2)
         #expect(viewModel.patchPatternContent.green == 0.7)
         #expect(viewModel.patchPatternContent.blue == 0.4)
+        #expect(viewModel.patchPatternBlendMode == .screen)
         #expect(viewModel.document.history.count == historyCount)
         #expect(!viewModel.resetPatchPatternOffset())
+    }
+
+    @Test func usePatternBlendModeChangesTheRenderedPixels() throws {
+        func appliedPixels(blendMode: ImageEditorBlendMode) throws -> [UInt8] {
+            let source = NSImage.rendered(size: CGSize(width: 12, height: 12)) { rect in
+                NSColor.blue.setFill()
+                rect.fill()
+            } ?? .transparent(size: CGSize(width: 12, height: 12))
+            let viewModel = ImageEditorViewModel(
+                sourceName: "patch-pattern-blend.png",
+                image: source
+            ) { _ in }
+            viewModel.replaceSelectedLayerImageForTesting(
+                source,
+                historyTitle: L10n.text("imageEditor.history.brush")
+            )
+            viewModel.selectAll()
+            viewModel.opacity = 1
+            viewModel.patchPatternBlendMode = blendMode
+            viewModel.patchPatternContent = ImageEditorPatternFillContent(
+                kind: .checkerboard,
+                red: 1,
+                green: 0,
+                blue: 0,
+                opacity: 1,
+                scale: 6
+            )
+
+            #expect(viewModel.applyPatchPattern())
+            let image = try #require(viewModel.document.selectedLayer?.image)
+            return try #require(imageEditorRGBABytes(image, width: 12, height: 12))
+        }
+
+        let normal = try appliedPixels(blendMode: .normal)
+        let multiply = try appliedPixels(blendMode: .multiply)
+        let paintedOffset = try #require(stride(from: 0, to: normal.count, by: 4).first {
+            normal[$0] > 240 && normal[$0 + 2] < 15 && normal[$0 + 3] > 240
+        })
+
+        #expect(multiply[paintedOffset] < 15)
+        #expect(multiply[paintedOffset + 1] < 15)
+        #expect(multiply[paintedOffset + 2] < 15)
+        #expect(multiply[paintedOffset + 3] > 240)
+        #expect(Array(multiply[paintedOffset..<(paintedOffset + 4)])
+            != Array(normal[paintedOffset..<(paintedOffset + 4)]))
     }
 
     @Test func transparentOptionIsWiredToTheOptionsBarAndLivePreview() throws {
@@ -732,6 +779,10 @@ struct ImageEditorPatchToolTests {
             .deletingLastPathComponent()
         let source = try String(
             contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let commandSource = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorSelectionEditCommands.swift"),
             encoding: .utf8
         )
 
@@ -749,12 +800,15 @@ struct ImageEditorPatchToolTests {
         #expect(source.contains("Stepper(value: $viewModel.patchDiffusion, in: 1...7)"))
         #expect(source.contains(".onChange(of: viewModel.patchDiffusion)"))
         #expect(source.contains("selection: $viewModel.patchPatternContent.kind"))
+        #expect(source.contains("selection: $viewModel.patchPatternBlendMode"))
+        #expect(source.contains("ForEach(ImageEditorBlendMode.smartFilterCases)"))
         #expect(source.contains("value: $viewModel.patchPatternContent.scale"))
         #expect(source.contains("value: $viewModel.patchPatternContent.opacity"))
         #expect(source.contains("value: $viewModel.patchPatternContent.offsetX"))
         #expect(source.contains("value: $viewModel.patchPatternContent.offsetY"))
         #expect(source.contains("selection: patchPatternColorBinding"))
         #expect(source.contains("imageEditor.option.patchPatternOpacityValue"))
+        #expect(source.contains("imageEditor.option.patchPatternBlendMode"))
         #expect(source.contains("imageEditor.patternFill.offsetXValue"))
         #expect(source.contains("imageEditor.patternFill.offsetYValue"))
         #expect(source.contains("viewModel.resetPatchPatternOffset()"))
@@ -763,12 +817,14 @@ struct ImageEditorPatchToolTests {
         #expect(source.contains("image-editor-patch-pattern-menu"))
         #expect(source.contains("image-editor-patch-pattern-scale"))
         #expect(source.contains("image-editor-patch-pattern-opacity"))
+        #expect(source.contains("image-editor-patch-pattern-blend-mode"))
         #expect(source.contains("image-editor-patch-pattern-offset-x"))
         #expect(source.contains("image-editor-patch-pattern-offset-y"))
         #expect(source.contains("image-editor-patch-pattern-reset-offset"))
         #expect(source.contains("image-editor-patch-pattern-color"))
         #expect(source.contains("image-editor-patch-use-pattern"))
         #expect(source.contains("refreshActivePatchPreview()"))
+        #expect(commandSource.contains("blendMode: patchPatternBlendMode"))
     }
 
     @Test func patchLassoHonorsReplaceAddSubtractAndIntersectSelectionModes() throws {

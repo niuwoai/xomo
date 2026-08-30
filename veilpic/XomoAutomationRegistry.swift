@@ -5788,6 +5788,20 @@ final class XomoAutomationRegistry {
         }
         let resolvedPatchPatternOffsetX = try validatedPatchPatternOffset("patternOffsetX")
         let resolvedPatchPatternOffsetY = try validatedPatchPatternOffset("patternOffsetY")
+        let resolvedPatchPatternBlendMode: ImageEditorBlendMode?
+        if action == "patchPattern", arguments["patternBlendMode"] != nil {
+            let rawMode = try requiredString("patternBlendMode", in: arguments)
+            guard let mode = ImageEditorBlendMode(rawValue: rawMode),
+                  ImageEditorBlendMode.smartFilterCases.contains(mode)
+            else {
+                throw XomoAutomationCallError.invalidArgument(
+                    "Patch patternBlendMode must be a supported non-pass-through blend mode"
+                )
+            }
+            resolvedPatchPatternBlendMode = mode
+        } else {
+            resolvedPatchPatternBlendMode = nil
+        }
         func validatedPatchPatternChannel(_ key: String) throws -> Double? {
             guard action == "patchPattern", arguments[key] != nil else { return nil }
             let value = try requiredNumber(key, in: arguments)
@@ -5864,6 +5878,9 @@ final class XomoAutomationRegistry {
             }
             if let resolvedPatchPatternOffsetY {
                 viewModel.patchPatternContent.offsetY = resolvedPatchPatternOffsetY
+            }
+            if let resolvedPatchPatternBlendMode {
+                viewModel.patchPatternBlendMode = resolvedPatchPatternBlendMode
             }
             if let resolvedPatchPatternRed {
                 viewModel.patchPatternContent.red = resolvedPatchPatternRed
@@ -7670,6 +7687,7 @@ private extension XomoAutomationRegistry {
             "patternOpacity": XomoAutomationSchema.number(description: "Patch pattern opacity from 0.05 through 1", minimum: 0.05, maximum: 1),
             "patternOffsetX": XomoAutomationSchema.number(description: "Patch pattern horizontal phase offset in pixels", minimum: -128, maximum: 128),
             "patternOffsetY": XomoAutomationSchema.number(description: "Patch pattern vertical phase offset in pixels", minimum: -128, maximum: 128),
+            "patternBlendMode": XomoAutomationSchema.string(description: "Patch pattern blend mode", values: ImageEditorBlendMode.smartFilterCases.map(\.rawValue)),
             "patternRed": XomoAutomationSchema.number(description: "Patch pattern red channel from 0 through 1", minimum: 0, maximum: 1),
             "patternGreen": XomoAutomationSchema.number(description: "Patch pattern green channel from 0 through 1", minimum: 0, maximum: 1),
             "patternBlue": XomoAutomationSchema.number(description: "Patch pattern blue channel from 0 through 1", minimum: 0, maximum: 1),

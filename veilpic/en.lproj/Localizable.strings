@@ -745,11 +745,12 @@
 "imageEditor.option.patchDiffusion.help" = "1 preserves the sharpest detail; higher values progressively smooth sampled texture for flatter backgrounds.";
 "imageEditor.option.patchPattern" = "Pattern";
 "imageEditor.option.patchPattern.help" = "Choose a built-in pattern and apply it through the current selection to the active layer.";
-"imageEditor.option.patchPatternSummary" = "%@ · %d px · %d%%";
+"imageEditor.option.patchPatternSummary" = "%@ · %@ · %d px · %d%%";
 "imageEditor.option.patchPatternScaleValue" = "Scale: %d px";
 "imageEditor.option.patchPatternColor" = "Pattern Color";
 "imageEditor.option.patchPatternOpacityValue" = "Pattern Opacity: %d%%";
 "imageEditor.action.patchPatternResetOffset" = "Reset Pattern Position";
+"imageEditor.option.patchPatternBlendMode" = "Pattern Blending";
 "imageEditor.action.patchUsePattern" = "Use Pattern";
 "imageEditor.history.selectionPatchPattern" = "Patch with Pattern";
 "imageEditor.status.selectionPatchedPattern" = "Applied the patch pattern to the selection.";

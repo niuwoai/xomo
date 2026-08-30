@@ -977,6 +977,15 @@ struct ImageEditorView: View {
                             Text(kind.title).tag(kind)
                         }
                     }
+                    Picker(
+                        L10n.text("imageEditor.option.patchPatternBlendMode"),
+                        selection: $viewModel.patchPatternBlendMode
+                    ) {
+                        ForEach(ImageEditorBlendMode.smartFilterCases) { mode in
+                            Text(mode.title).tag(mode)
+                        }
+                    }
+                    .accessibilityIdentifier("image-editor-patch-pattern-blend-mode")
                     Stepper(
                         value: $viewModel.patchPatternContent.scale,
                         in: 6...64,
@@ -1052,6 +1061,7 @@ struct ImageEditorView: View {
                         L10n.format(
                             "imageEditor.option.patchPatternSummary",
                             viewModel.patchPatternContent.kind.title,
+                            viewModel.patchPatternBlendMode.title,
                             Int(viewModel.patchPatternContent.scale.rounded()),
                             Int((viewModel.patchPatternContent.opacity * 100).rounded())
                         ),
