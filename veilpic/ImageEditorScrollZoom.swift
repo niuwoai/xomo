@@ -564,6 +564,7 @@ final class ScrollWheelZoomNSView: NSView {
     private var lastMiddleMousePoint: CGPoint?
     private var isObjectMoving = false
     private var isObjectMoveActivating = false
+    private var isObjectMovePreparingCandidate = false
     private var isLayerResizing = false
     private var hasObjectMoveCandidate = false
     private var isObjectMoveCaptureRejected = false
@@ -976,18 +977,7 @@ final class ScrollWheelZoomNSView: NSView {
                 pointerCaptureState.lastLayerResizePoint = location
                 return true
             }
-            let flags = event.modifierFlags.intersection([.command, .option, .shift, .control])
-            guard onObjectMoveCandidateBegan?(location, flags, event.clickCount) == true else {
-                return false
-            }
-            hasObjectMoveCandidate = true
-            isObjectMoveCaptureRejected = false
-            objectMoveStartPoint = location
-            objectMoveLastPoint = nil
-            objectMoveCaptureID = UUID()
-            objectMoveCandidateModifierFlags = flags
-            objectMoveCandidateClickCount = event.clickCount
-            return true
+            return beginObjectMoveCandidate(at: location, event: event, window: window)
         case .dragged:
             if let transaction = Self.activePointerTransaction {
                 guard let location = transaction.advanceLocation(for: event) else { return true }
@@ -1049,7 +1039,7 @@ final class ScrollWheelZoomNSView: NSView {
             guard event.window === window else { return hasObjectMoveCandidate }
             let location = convert(event.locationInWindow, from: nil)
             guard hasObjectMoveCandidate, let objectMoveStartPoint else { return false }
-            if isObjectMoveCaptureRejected || isObjectMoveActivating {
+            if isObjectMoveCaptureRejected || isObjectMoveActivating || isObjectMovePreparingCandidate {
                 return true
             }
             if !isObjectMoving {
@@ -1161,6 +1151,10 @@ final class ScrollWheelZoomNSView: NSView {
             // once a drag has started, otherwise the next click is swallowed
             // and the closed-hand cursor can remain stuck indefinitely.
             guard hasObjectMoveCandidate || isObjectMoving else { return false }
+            if isObjectMovePreparingCandidate {
+                clearObjectMoveCapture()
+                return true
+            }
             if isObjectMoveActivating {
                 cancelStaleObjectMoveCapture()
                 return true
@@ -1195,6 +1189,29 @@ final class ScrollWheelZoomNSView: NSView {
         }
     }
 
+    private func beginObjectMoveCandidate(at location: CGPoint, event: NSEvent, window: NSWindow) -> Bool {
+        guard self.window === window else { return false }
+        let flags = event.modifierFlags.intersection([.command, .option, .shift, .control])
+        let captureID = UUID()
+        hasObjectMoveCandidate = true
+        isObjectMovePreparingCandidate = true
+        isObjectMoveCaptureRejected = false
+        objectMoveStartPoint = location
+        objectMoveLastPoint = nil
+        objectMoveCaptureID = captureID
+        objectMoveCandidateModifierFlags = flags
+        objectMoveCandidateClickCount = event.clickCount
+        let accepted = onObjectMoveCandidateBegan?(location, flags, event.clickCount) == true
+        // A nested click, release or teardown already handled the old sequence.
+        // Do not overwrite its replacement or resurrect its cleared capture.
+        guard objectMoveCaptureID == captureID, self.window === window else { return true }
+        isObjectMovePreparingCandidate = false
+        if !accepted {
+            clearObjectMoveCapture()
+        }
+        return accepted
+    }
+
     private func applyFinalObjectMoveLocation(_ event: NSEvent) -> Bool {
         guard isObjectMoving, event.window === window,
               let start = objectMoveStartPoint,
@@ -1226,6 +1243,7 @@ final class ScrollWheelZoomNSView: NSView {
     private func clearObjectMoveCapture() {
         isObjectMoving = false
         isObjectMoveActivating = false
+        isObjectMovePreparingCandidate = false
         hasObjectMoveCandidate = false
         isObjectMoveCaptureRejected = false
         objectMoveStartPoint = nil
