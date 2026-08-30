@@ -584,6 +584,7 @@ final class ScrollWheelZoomNSView: NSView {
     private var ownsCanvasLifecycle = false
     private var isMiddleMousePanning = false
     private var lastMiddleMousePoint: CGPoint?
+    private var middleMousePanID: UUID?
     private var isObjectMoving = false
     private var isObjectMoveActivating = false
     private var isObjectMovePreparingCandidate = false
@@ -1291,6 +1292,7 @@ final class ScrollWheelZoomNSView: NSView {
         // Clear ownership before callbacks, which can detach this view or re-enter.
         isMiddleMousePanning = false
         lastMiddleMousePoint = nil
+        middleMousePanID = nil
         if resetDecision.shouldEndPan {
             onMiddleMousePanEnded?()
         }
@@ -1427,6 +1429,12 @@ final class ScrollWheelZoomNSView: NSView {
         // An owned gesture must finish even if its release no longer has our window.
         if event.type == .otherMouseUp {
             guard isMiddleMousePanning else { return false }
+            let captureID = middleMousePanID
+            if let window, event.window === window {
+                _ = updateMiddleMousePanLocation(to: convert(event.locationInWindow, from: nil))
+            }
+            // The last delta can detach the canvas or start another pan.
+            guard middleMousePanID == captureID, isMiddleMousePanning else { return true }
             cancelStaleMiddleMousePanCapture()
             return true
         }
@@ -1438,24 +1446,36 @@ final class ScrollWheelZoomNSView: NSView {
         switch event.type {
         case .otherMouseDown:
             guard bounds.contains(location) else { return false }
+            if isMiddleMousePanning {
+                cancelStaleMiddleMousePanCapture()
+            }
+            guard self.window === window else { return false }
+            // An end callback may already have started a newer pan.
+            if isMiddleMousePanning { return true }
             isMiddleMousePanning = true
+            middleMousePanID = UUID()
             lastMiddleMousePoint = location
             onMiddleMousePanBegan?()
             return true
         case .otherMouseDragged:
-            guard isMiddleMousePanning, let lastMiddleMousePoint else { return false }
-            let delta = ImageEditorCanvasMiddleMousePanGeometry.delta(
-                from: lastMiddleMousePoint,
-                to: location
-            )
-            self.lastMiddleMousePoint = location
-            if delta != .zero {
-                onMiddleMousePanChanged?(delta)
-            }
-            return true
+            guard isMiddleMousePanning else { return false }
+            return updateMiddleMousePanLocation(to: location)
         default:
             return false
         }
+    }
+
+    private func updateMiddleMousePanLocation(to location: CGPoint) -> Bool {
+        guard let lastMiddleMousePoint else { return false }
+        let delta = ImageEditorCanvasMiddleMousePanGeometry.delta(
+            from: lastMiddleMousePoint,
+            to: location
+        )
+        self.lastMiddleMousePoint = location
+        if delta != .zero {
+            onMiddleMousePanChanged?(delta)
+        }
+        return true
     }
 
     /// 归一化不同输入源的滚动量：触控板（精确增量）与鼠标滚轮（离散行）。

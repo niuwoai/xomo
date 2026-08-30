@@ -70,7 +70,7 @@ struct ImageEditorMiddleMousePanEventTests {
             #expect(host.handleMiddleMousePan(try event(.otherMouseUp, window: nil)))
             #expect(host.handleMiddleMousePan(try event(.otherMouseDown, window: window, point: CGPoint(x: 80, y: 90))))
             #expect(host.handleMiddleMousePan(try event(.otherMouseDragged, window: window, point: CGPoint(x: 85, y: 95))))
-            #expect(host.handleMiddleMousePan(try event(.otherMouseUp, window: window)))
+            #expect(host.handleMiddleMousePan(try event(.otherMouseUp, window: window, point: CGPoint(x: 85, y: 95))))
             #expect(deltas == [CGSize(width: 10, height: -20), CGSize(width: 5, height: -5)])
         }
     }
