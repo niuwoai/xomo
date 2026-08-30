@@ -28,20 +28,24 @@ enum ImageEditorNativePointerTestFixture {
 
     static func event(
         _ type: NSEvent.EventType, window: NSWindow?,
-        point: CGPoint = CGPoint(x: 50, y: 50)
+        point: CGPoint = CGPoint(x: 50, y: 50),
+        modifiers: NSEvent.ModifierFlags = [],
+        clickCount: Int = 1
     ) throws -> NSEvent {
-        var result = try bridgedMouseEvent(type, window: window, point: point)
+        var result = try bridgedMouseEvent(type, window: window, point: point, modifiers: modifiers, clickCount: clickCount)
         if let window {
             // Normalize the synthetic bridge's origin, never the production geometry.
             let actual = result.locationInWindow
             result = try bridgedMouseEvent(type, window: window, point: CGPoint(
                 x: point.x + (point.x - actual.x), y: point.y + (point.y - actual.y)
-            ))
+            ), modifiers: modifiers, clickCount: clickCount)
             try #require(result.window === window)
             try #require(result.locationInWindow == point)
         }
         try #require(result.type == type)
         try #require(result.buttonNumber == buttonNumber(for: type))
+        try #require(result.modifierFlags.intersection(.deviceIndependentFlagsMask) == modifiers)
+        try #require(result.clickCount == clickCount)
         return result
     }
 
@@ -54,15 +58,17 @@ enum ImageEditorNativePointerTestFixture {
     }
 
     private static func bridgedMouseEvent(
-        _ type: NSEvent.EventType, window: NSWindow?, point: CGPoint
+        _ type: NSEvent.EventType, window: NSWindow?, point: CGPoint,
+        modifiers: NSEvent.ModifierFlags, clickCount: Int
     ) throws -> NSEvent {
         let base = try #require(NSEvent.mouseEvent(
-            with: type, location: point, modifierFlags: [], timestamp: 20,
+            with: type, location: point, modifierFlags: modifiers, timestamp: 20,
             windowNumber: window?.windowNumber ?? 0, context: nil,
-            eventNumber: 1, clickCount: 1, pressure: 0
+            eventNumber: 1, clickCount: clickCount, pressure: 0
         ))
         let raw = try #require(base.cgEvent)
         raw.setIntegerValueField(.mouseEventButtonNumber, value: Int64(buttonNumber(for: type)))
+        raw.setIntegerValueField(.mouseEventClickState, value: Int64(clickCount))
         return try #require(NSEvent(cgEvent: raw))
     }
 }

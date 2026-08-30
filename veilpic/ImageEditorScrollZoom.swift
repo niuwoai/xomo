@@ -753,18 +753,7 @@ final class ScrollWheelZoomNSView: NSView {
             NotificationCenter.default.removeObserver(windowResignKeyObserver)
         }
         windowResignKeyObserver = nil
-        let resetDecision = ImageEditorObjectDragEventPolicy.resetDecision(
-            isObjectMoving: isObjectMoving
-        )
-        if resetDecision.shouldCancelMove {
-            onObjectMoveCancelled?()
-        }
-        isObjectMoving = false
-        hasObjectMoveCandidate = false
-        isObjectMoveCaptureRejected = false
-        objectMoveStartPoint = nil
-        objectMoveCandidateModifierFlags = []
-        objectMoveCandidateClickCount = 1
+        cancelStaleObjectMoveCapture()
         cancelStaleMiddleMousePanCapture()
         cancelStalePrimaryPointerCapture()
         if shouldNotifyBridgeDetached {
@@ -1165,23 +1154,23 @@ final class ScrollWheelZoomNSView: NSView {
                 isObjectMoving: isObjectMoving,
                 isObjectMoveCaptureRejected: isObjectMoveCaptureRejected
             )
+            let click = (
+                point: objectMoveStartPoint,
+                modifiers: objectMoveCandidateModifierFlags,
+                count: objectMoveCandidateClickCount
+            )
+            clearObjectMoveCapture()
             if releaseDecision.shouldFinishMove {
                 onObjectMoveEnded?()
             }
             if releaseDecision.shouldCommitClick,
-               let objectMoveStartPoint {
+               let point = click.point {
                 onObjectMoveClicked?(
-                    objectMoveStartPoint,
-                    objectMoveCandidateModifierFlags,
-                    objectMoveCandidateClickCount
+                    point,
+                    click.modifiers,
+                    click.count
                 )
             }
-            isObjectMoving = false
-            hasObjectMoveCandidate = false
-            isObjectMoveCaptureRejected = false
-            objectMoveStartPoint = nil
-            objectMoveCandidateModifierFlags = []
-            objectMoveCandidateClickCount = 1
             return releaseDecision.shouldConsumeEvent
         case .none:
             return false
@@ -1192,9 +1181,13 @@ final class ScrollWheelZoomNSView: NSView {
         let resetDecision = ImageEditorObjectDragEventPolicy.resetDecision(
             isObjectMoving: isObjectMoving
         )
+        clearObjectMoveCapture()
         if resetDecision.shouldCancelMove {
             onObjectMoveCancelled?()
         }
+    }
+
+    private func clearObjectMoveCapture() {
         isObjectMoving = false
         hasObjectMoveCandidate = false
         isObjectMoveCaptureRejected = false

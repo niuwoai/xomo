@@ -94,11 +94,9 @@ struct ImageEditorTextEditingLifecycleTests {
                 "onObjectMoveCandidateBegan?(location, flags, event.clickCount)"
             )
         )
-        #expect(
-            bridgeSource.contains(
-                "objectMoveCandidateModifierFlags,\n                    objectMoveCandidateClickCount"
-            )
-        )
+        // Original click modifiers/count survive capture cleanup; native event
+        // coverage lives in ImageEditorObjectMoveEventTests rather than relying
+        // on the spelling of the bridge's callback arguments.
 
         let candidateStart = try #require(
             viewSource.range(of: "onObjectMoveCandidateBegan: { location, modifierFlags, clickCount in")
