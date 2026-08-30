@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.12.0-rc1565 - 2026-08-31
+
+### Fixed
+- 修饰键 `flagsChanged` 更新 Shift/Option/Caps Lock 光标状态后直接交还 AppKit，不再读取只允许用于 keyDown/keyUp 的字符属性；避免按修饰键时触发 AppKit 异常。
+- Delete 响应器在读取键码和字符前仅接受 keyDown，修饰键变化与 keyUp 不触发对象删除。
+
+### Tests
+- 新增 6 项真实 CGEvent/NSEvent 事件及入口回归，覆盖修饰键按下/释放、字符事件转交、Delete 入口及文本焦点保护；键盘/光标/文本输入定向测试 338/338、CLI/MCP 2/2、仓库发布契约 9/9（27 条断言）、隔离测试器及共享发布器契约 16/16（127 条断言）全部通过。
+- 本版未进行安装版 UI 冒烟，不覆盖 `/Applications`，安装版保持已验证 Delete/Cmd+Z 的 rc1564，下次周期完整门禁为 rc1600。
+
 ## 2.12.0-rc1564 - 2026-08-31
 
 ### Fixed

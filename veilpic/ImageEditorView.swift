@@ -21450,7 +21450,14 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
                       for: window
                   )
             else { return event }
-            setCanvasModifierFlags(event.modifierFlags.intersection([.shift, .option, .capsLock]))
+            return ImageEditorKeyboardEventRouter.route(
+                event,
+                updateCanvasModifiers: setCanvasModifierFlags,
+                handleKeyEvent: handleKeyEvent
+            )
+        }
+
+        private func handleKeyEvent(_ event: NSEvent) -> NSEvent? {
             let relevantFlags = event.modifierFlags.intersection([.command, .option, .shift, .control])
             if event.keyCode == 49, relevantFlags.isEmpty {
                 if event.type == .keyUp, isSpacebarPanning {
@@ -21656,7 +21663,8 @@ enum ImageEditorKeyboardResponderDeleteDispatcher {
         isTextInputActive: Bool,
         deleteSelectedObject: (ImageEditorKeyboardShortcutEventSignature?) -> Bool
     ) -> Bool {
-        performKeyEquivalent(
+        guard event.type == .keyDown else { return false }
+        return performKeyEquivalent(
             keyCode: event.keyCode,
             charactersIgnoringModifiers: event.charactersIgnoringModifiers,
             modifierFlags: event.modifierFlags,
@@ -21688,7 +21696,8 @@ enum ImageEditorKeyboardResponderDeleteDispatcher {
         event: NSEvent,
         deleteSelectedObject: (ImageEditorKeyboardShortcutEventSignature?) -> Bool
     ) -> Bool {
-        perform(
+        guard event.type == .keyDown else { return false }
+        return perform(
             keyCode: event.keyCode,
             charactersIgnoringModifiers: event.charactersIgnoringModifiers,
             modifierFlags: event.modifierFlags,

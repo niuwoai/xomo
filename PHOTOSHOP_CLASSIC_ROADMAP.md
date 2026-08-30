@@ -1,6 +1,8 @@
 # Xomo 经典 Photoshop 能力路线图
 
-> 最后更新：2026-08-31 ｜ 当前版本：v2.12.0-rc1564 ｜ 目标：以经典 Photoshop 能力作为现代混合编辑器的可靠像素与图层底座
+> 最后更新：2026-08-31 ｜ 当前版本：v2.12.0-rc1565 ｜ 目标：以经典 Photoshop 能力作为现代混合编辑器的可靠像素与图层底座
+
+- `v2.12.0-rc1565`：修饰键事件只刷新 Shift/Option/Caps Lock 光标状态并保留 AppKit 事件，不再读取不适用的字符属性；Delete 入口仅处理 keyDown。新增 6 项真实事件及入口回归，定向测试 338/338、CLI/MCP 2/2 和全部发布契约通过；本版未进行安装版 UI 冒烟，不覆盖已安装 rc1564，下次周期完整门禁 rc1600。
 
 - `v2.12.0-rc1564`：修复键盘签名读取鼠标专用 `NSEvent.eventNumber` 触发 AppKit 异常，导致 Delete/Backspace 和方向键中断的问题；以窗口号、时间戳、事件类型和键码保留去重语义，新增真实 NSEvent 回归。rc1561–rc1563 内部候选未通过键盘烟测，菜单绕行尝试已撤回。定向测试 316/316、CLI/MCP 2/2、全部发布契约及 Debug 真实方向键/Delete/Forward Delete/Cmd+Z 验收通过；Universal Release 签名、公证、装订和 Gatekeeper 完成，`/Applications/Xomo.app` 已为 rc1564/build1564，安装版真实 Delete 和 Cmd+Z 复核通过。
 
