@@ -5776,6 +5776,15 @@ final class XomoAutomationRegistry {
         }
         let resolvedPatchPatternScaleX = try validatedPatchPatternAxisScale("patternScaleXPercent")
         let resolvedPatchPatternScaleY = try validatedPatchPatternAxisScale("patternScaleYPercent")
+        let resolvedPatchPatternResetsTransform: Bool
+        if action == "patchPattern", arguments["patternResetTransform"] != nil {
+            resolvedPatchPatternResetsTransform = try requiredBool(
+                "patternResetTransform",
+                in: arguments
+            )
+        } else {
+            resolvedPatchPatternResetsTransform = false
+        }
         let resolvedPatchPatternOpacity: Double?
         if action == "patchPattern", arguments["patternOpacity"] != nil {
             let rawOpacity = try requiredNumber("patternOpacity", in: arguments)
@@ -5933,6 +5942,9 @@ final class XomoAutomationRegistry {
         }
         if let feather = arguments["feather"]?.doubleValue { viewModel.feather = max(0, feather) }
         if action == "patchPattern" {
+            if resolvedPatchPatternResetsTransform {
+                viewModel.resetPatchPatternTransform()
+            }
             if let resolvedPatchPatternKind {
                 viewModel.patchPatternContent.kind = resolvedPatchPatternKind
             }
@@ -7779,6 +7791,7 @@ private extension XomoAutomationRegistry {
             "patternScale": XomoAutomationSchema.number(description: "Patch pattern tile size from 6 through 64 pixels", minimum: 6, maximum: 64),
             "patternScaleXPercent": XomoAutomationSchema.number(description: "Patch pattern horizontal scale from 25 through 400 percent", minimum: 25, maximum: 400),
             "patternScaleYPercent": XomoAutomationSchema.number(description: "Patch pattern vertical scale from 25 through 400 percent", minimum: 25, maximum: 400),
+            "patternResetTransform": XomoAutomationSchema.boolean(description: "Reset patch pattern axis scales, rotation, flips, and phase before applying explicit transform overrides"),
             "patternOpacity": XomoAutomationSchema.number(description: "Patch pattern opacity from 0.05 through 1", minimum: 0.05, maximum: 1),
             "patternOffsetX": XomoAutomationSchema.number(description: "Patch pattern horizontal phase offset in pixels", minimum: -128, maximum: 128),
             "patternOffsetY": XomoAutomationSchema.number(description: "Patch pattern vertical phase offset in pixels", minimum: -128, maximum: 128),

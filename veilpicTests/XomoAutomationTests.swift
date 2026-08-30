@@ -19121,6 +19121,9 @@ struct XomoAutomationTests {
         #expect(properties["patternScaleXPercent"]?.objectValue?["maximum"] == .number(400))
         #expect(properties["patternScaleYPercent"]?.objectValue?["minimum"] == .number(25))
         #expect(properties["patternScaleYPercent"]?.objectValue?["maximum"] == .number(400))
+        #expect(
+            properties["patternResetTransform"]?.objectValue?["type"] == .string("boolean")
+        )
 
         let response = registry.execute(request(
             operation: "call",
@@ -19168,6 +19171,92 @@ struct XomoAutomationTests {
         #expect(viewModel.patchPatternContent.blue == 0.4)
         #expect(viewModel.document.history.count == historyCount + 1)
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.selectionPatchPattern"))
+    }
+
+    @Test func registryResetsPatchPatternTransformBeforeExplicitOverrides() {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        viewModel.selectAll()
+        viewModel.patchPatternContent = ImageEditorPatternFillContent(
+            kind: .dots,
+            red: 0.2,
+            green: 0.7,
+            blue: 0.4,
+            opacity: 0.35,
+            scale: 24,
+            scaleX: 1.75,
+            scaleY: 0.6,
+            angle: -37,
+            flipsHorizontally: true,
+            flipsVertically: true,
+            offsetX: 18,
+            offsetY: -11
+        )
+        viewModel.patchPatternBlendMode = .multiply
+        viewModel.patchPatternAlignsWithCanvas = false
+        viewModel.patchPatternPreservesTransparency = false
+        viewModel.patchPatternInvertsCoverage = true
+        let historyCount = viewModel.document.history.count
+
+        let response = registry.execute(request(
+            operation: "call",
+            name: "xomo.paint.special",
+            arguments: [
+                "action": .string("patchPattern"),
+                "patternResetTransform": .bool(true),
+                "patternScaleXPercent": .number(125),
+                "patternAngle": .number(15),
+                "opacity": .number(1)
+            ]
+        ))
+
+        #expect(response.ok)
+        #expect(viewModel.patchPatternContent.scaleX == 1.25)
+        #expect(viewModel.patchPatternContent.scaleY == 1)
+        #expect(viewModel.patchPatternContent.angle == 15)
+        #expect(!viewModel.patchPatternContent.flipsHorizontally)
+        #expect(!viewModel.patchPatternContent.flipsVertically)
+        #expect(viewModel.patchPatternContent.offsetX == 0)
+        #expect(viewModel.patchPatternContent.offsetY == 0)
+        #expect(viewModel.patchPatternContent.kind == .dots)
+        #expect(viewModel.patchPatternContent.scale == 24)
+        #expect(viewModel.patchPatternContent.opacity == 0.35)
+        #expect(viewModel.patchPatternContent.red == 0.2)
+        #expect(viewModel.patchPatternContent.green == 0.7)
+        #expect(viewModel.patchPatternContent.blue == 0.4)
+        #expect(viewModel.patchPatternBlendMode == .multiply)
+        #expect(!viewModel.patchPatternAlignsWithCanvas)
+        #expect(!viewModel.patchPatternPreservesTransparency)
+        #expect(viewModel.patchPatternInvertsCoverage)
+        #expect(viewModel.document.history.count == historyCount + 1)
+    }
+
+    @Test func registryRejectsInvalidPatchPatternTransformResetBeforeChangingToolState() {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        viewModel.selectAll()
+        viewModel.patchPatternContent.scaleX = 1.75
+        viewModel.patchPatternContent.angle = -37
+        let originalOpacity = viewModel.opacity
+        let originalPatternContent = viewModel.patchPatternContent
+        let historyCount = viewModel.document.history.count
+
+        let response = registry.execute(request(
+            operation: "call",
+            name: "xomo.paint.special",
+            arguments: [
+                "action": .string("patchPattern"),
+                "patternResetTransform": .string("true"),
+                "opacity": .number(0.25)
+            ]
+        ))
+
+        #expect(!response.ok)
+        #expect(viewModel.patchPatternContent == originalPatternContent)
+        #expect(viewModel.opacity == originalOpacity)
+        #expect(viewModel.document.history.count == historyCount)
     }
 
     @Test func registryRejectsInvalidPatchPatternBeforeChangingOpacity() {

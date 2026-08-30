@@ -963,6 +963,56 @@ struct ImageEditorPatchToolTests {
         #expect(!viewModel.resetPatchPatternOffset())
     }
 
+    @Test func resettingPatternTransformIsIdempotentAndPreservesPatternStyle() {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "patch-pattern-transform-reset.png",
+            image: .transparent(size: CGSize(width: 12, height: 12))
+        ) { _ in }
+        viewModel.patchPatternContent = ImageEditorPatternFillContent(
+            kind: .dots,
+            red: 0.2,
+            green: 0.7,
+            blue: 0.4,
+            opacity: 0.35,
+            scale: 24,
+            scaleX: 1.75,
+            scaleY: 0.6,
+            angle: -37,
+            flipsHorizontally: true,
+            flipsVertically: true,
+            offsetX: 18,
+            offsetY: -11
+        )
+        viewModel.patchPatternBlendMode = .screen
+        viewModel.patchPatternAlignsWithCanvas = false
+        viewModel.patchPatternPreservesTransparency = true
+        viewModel.patchPatternInvertsCoverage = true
+        let historyCount = viewModel.document.history.count
+
+        #expect(!viewModel.patchPatternTransformIsIdentity)
+        #expect(viewModel.resetPatchPatternTransform())
+        #expect(viewModel.patchPatternTransformIsIdentity)
+        #expect(viewModel.patchPatternContent.scaleX == 1)
+        #expect(viewModel.patchPatternContent.scaleY == 1)
+        #expect(viewModel.patchPatternContent.angle == 0)
+        #expect(!viewModel.patchPatternContent.flipsHorizontally)
+        #expect(!viewModel.patchPatternContent.flipsVertically)
+        #expect(viewModel.patchPatternContent.offsetX == 0)
+        #expect(viewModel.patchPatternContent.offsetY == 0)
+        #expect(viewModel.patchPatternContent.kind == .dots)
+        #expect(viewModel.patchPatternContent.scale == 24)
+        #expect(viewModel.patchPatternContent.opacity == 0.35)
+        #expect(viewModel.patchPatternContent.red == 0.2)
+        #expect(viewModel.patchPatternContent.green == 0.7)
+        #expect(viewModel.patchPatternContent.blue == 0.4)
+        #expect(viewModel.patchPatternBlendMode == .screen)
+        #expect(!viewModel.patchPatternAlignsWithCanvas)
+        #expect(viewModel.patchPatternPreservesTransparency)
+        #expect(viewModel.patchPatternInvertsCoverage)
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(!viewModel.resetPatchPatternTransform())
+    }
+
     @Test func usePatternBlendModeChangesTheRenderedPixels() throws {
         func appliedPixels(blendMode: ImageEditorBlendMode) throws -> [UInt8] {
             let source = NSImage.rendered(size: CGSize(width: 12, height: 12)) { rect in
@@ -1108,6 +1158,8 @@ struct ImageEditorPatchToolTests {
         #expect(source.contains("imageEditor.patternFill.offsetXValue"))
         #expect(source.contains("imageEditor.patternFill.offsetYValue"))
         #expect(source.contains("viewModel.resetPatchPatternOffset()"))
+        #expect(source.contains("viewModel.resetPatchPatternTransform()"))
+        #expect(source.contains("viewModel.patchPatternTransformIsIdentity"))
         #expect(source.contains("imageEditor.option.patchPatternSummary"))
         #expect(source.contains("viewModel.applyPatchPattern()"))
         #expect(source.contains("image-editor-patch-pattern-menu"))
@@ -1120,6 +1172,7 @@ struct ImageEditorPatchToolTests {
         #expect(source.contains("image-editor-patch-pattern-align-canvas"))
         #expect(source.contains("image-editor-patch-pattern-preserve-transparency"))
         #expect(source.contains("image-editor-patch-pattern-invert-coverage"))
+        #expect(source.contains("image-editor-patch-pattern-reset-transform"))
         #expect(source.contains("image-editor-patch-pattern-flip-horizontal"))
         #expect(source.contains("image-editor-patch-pattern-flip-vertical"))
         #expect(source.contains("image-editor-patch-pattern-offset-x"))

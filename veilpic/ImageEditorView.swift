@@ -1101,6 +1101,11 @@ struct ImageEditorView: View {
                             && viewModel.patchPatternContent.offsetY == 0
                     )
                     .accessibilityIdentifier("image-editor-patch-pattern-reset-offset")
+                    Button(L10n.text("imageEditor.action.patchPatternResetTransform")) {
+                        viewModel.resetPatchPatternTransform()
+                    }
+                    .disabled(viewModel.patchPatternTransformIsIdentity)
+                    .accessibilityIdentifier("image-editor-patch-pattern-reset-transform")
                     HStack {
                         Text(L10n.text("imageEditor.option.patchPatternColor"))
                         Spacer()

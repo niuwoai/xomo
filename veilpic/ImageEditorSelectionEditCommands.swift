@@ -982,6 +982,29 @@ extension ImageEditorViewModel {
         return true
     }
 
+    var patchPatternTransformIsIdentity: Bool {
+        patchPatternContent.scaleX == 1
+            && patchPatternContent.scaleY == 1
+            && patchPatternContent.angle == 0
+            && !patchPatternContent.flipsHorizontally
+            && !patchPatternContent.flipsVertically
+            && patchPatternContent.offsetX == 0
+            && patchPatternContent.offsetY == 0
+    }
+
+    @discardableResult
+    func resetPatchPatternTransform() -> Bool {
+        guard !patchPatternTransformIsIdentity else { return false }
+        patchPatternContent.scaleX = 1
+        patchPatternContent.scaleY = 1
+        patchPatternContent.angle = 0
+        patchPatternContent.flipsHorizontally = false
+        patchPatternContent.flipsVertically = false
+        patchPatternContent.offsetX = 0
+        patchPatternContent.offsetY = 0
+        return true
+    }
+
     @discardableResult
     func applyPatchPattern() -> Bool {
         guard let selection = document.selection else {

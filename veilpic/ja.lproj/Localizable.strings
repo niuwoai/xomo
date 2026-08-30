@@ -750,6 +750,7 @@
 "imageEditor.option.patchPatternColor" = "パターンカラー";
 "imageEditor.option.patchPatternOpacityValue" = "パターンの不透明度：%d%%";
 "imageEditor.action.patchPatternResetOffset" = "パターン位置をリセット";
+"imageEditor.action.patchPatternResetTransform" = "パターン変形をリセット";
 "imageEditor.option.patchPatternBlendMode" = "パターン描画モード";
 "imageEditor.option.patchPatternInvertCoverage" = "パターン領域を反転";
 "imageEditor.option.patchPatternFlipHorizontal" = "水平方向に反転";

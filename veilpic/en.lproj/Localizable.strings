@@ -750,6 +750,7 @@
 "imageEditor.option.patchPatternColor" = "Pattern Color";
 "imageEditor.option.patchPatternOpacityValue" = "Pattern Opacity: %d%%";
 "imageEditor.action.patchPatternResetOffset" = "Reset Pattern Position";
+"imageEditor.action.patchPatternResetTransform" = "Reset Pattern Transform";
 "imageEditor.option.patchPatternBlendMode" = "Pattern Blending";
 "imageEditor.option.patchPatternInvertCoverage" = "Invert Pattern Coverage";
 "imageEditor.option.patchPatternFlipHorizontal" = "Flip Horizontally";
