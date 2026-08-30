@@ -473,8 +473,8 @@
 "imageEditor.action.historyShowPanelVisibility" = "Show History Panel";
 "imageEditor.action.channelsShowPanel" = "Show Channels Panel";
 "imageEditor.action.cancel" = "Cancel";
-"imageEditor.action.cropConfirm" = "Confirm Crop";
-"imageEditor.action.cropCancel" = "Cancel Crop";
+"imageEditor.action.cropConfirm" = "Confirm Crop (Return)";
+"imageEditor.action.cropCancel" = "Cancel Crop (Esc)";
 "imageEditor.cropGuide.title" = "Composition Guide";
 "imageEditor.cropGuide.help" = "Choose a crop composition guide; press O to cycle";
 "imageEditor.cropGuide.ruleOfThirds" = "Rule of Thirds";

@@ -289,6 +289,84 @@ struct ImageEditorCanvasGeometryTests {
     }
 
     @Test
+    func pendingCropUsesClassicConfirmAndCancelKeysBeforeOtherCanvasActions() throws {
+        for keyCode: UInt16 in [36, 76] {
+            #expect(ImageEditorPendingCropKeyPolicy.matchesConfirm(
+                keyCode: keyCode,
+                modifierFlags: []
+            ))
+            #expect(!ImageEditorPendingCropKeyPolicy.matchesConfirm(
+                keyCode: keyCode,
+                modifierFlags: [.command]
+            ))
+        }
+        #expect(ImageEditorPendingCropKeyPolicy.matchesCancel(
+            keyCode: 53,
+            modifierFlags: []
+        ))
+        #expect(!ImageEditorPendingCropKeyPolicy.matchesCancel(
+            keyCode: 53,
+            modifierFlags: [.shift]
+        ))
+        #expect(!ImageEditorPendingCropKeyPolicy.matchesCancel(
+            keyCode: 36,
+            modifierFlags: []
+        ))
+
+        var cropCancelCount = 0
+        var fallbackCancelCount = 0
+        #expect(ImageEditorPendingCropCancelDispatcher.handle(
+            cancelPendingCrop: {
+                cropCancelCount += 1
+                return true
+            },
+            cancelFallback: {
+                fallbackCancelCount += 1
+                return true
+            }
+        ))
+        #expect(cropCancelCount == 1)
+        #expect(fallbackCancelCount == 0)
+        #expect(ImageEditorPendingCropCancelDispatcher.handle(
+            cancelPendingCrop: {
+                cropCancelCount += 1
+                return false
+            },
+            cancelFallback: {
+                fallbackCancelCount += 1
+                return true
+            }
+        ))
+        #expect(cropCancelCount == 2)
+        #expect(fallbackCancelCount == 1)
+
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        #expect(source.contains("confirmPendingCrop: {"))
+        #expect(source.contains("cancelPendingCrop: {"))
+        #expect(source.contains("viewModel.crop(to: pendingCropRect)"))
+        #expect(source.contains("ImageEditorPendingCropCancelDispatcher.handle"))
+        let cropConfirmIndex = try #require(source.range(of: "confirmPendingCrop()"))
+        let penConfirmIndex = try #require(source.range(of: "finishPendingPenPath()"))
+        #expect(cropConfirmIndex.lowerBound < penConfirmIndex.lowerBound)
+
+        for localizationID in ["zh-Hans", "en", "ja"] {
+            let localization = try String(
+                contentsOf: repositoryRoot
+                    .appendingPathComponent("veilpic/\(localizationID).lproj/Localizable.strings"),
+                encoding: .utf8
+            )
+            #expect(localization.contains("\"imageEditor.action.cropConfirm\""))
+            #expect(localization.contains("\"imageEditor.action.cropCancel\""))
+        }
+    }
+
+    @Test
     func cropShieldDimsOnlyTheCanvasAreaOutsideThePreview() throws {
         let canvas = CGRect(x: 10, y: 20, width: 100, height: 80)
         #expect(ImageEditorCropGeometry.shieldRects(

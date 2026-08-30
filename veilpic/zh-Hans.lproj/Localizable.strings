@@ -473,8 +473,8 @@
 "imageEditor.action.historyShowPanelVisibility" = "显示历史记录面板";
 "imageEditor.action.channelsShowPanel" = "显示通道面板";
 "imageEditor.action.cancel" = "取消";
-"imageEditor.action.cropConfirm" = "确认裁剪";
-"imageEditor.action.cropCancel" = "取消裁剪";
+"imageEditor.action.cropConfirm" = "确认裁剪（Return）";
+"imageEditor.action.cropCancel" = "取消裁剪（Esc）";
 "imageEditor.cropGuide.title" = "构图参考线";
 "imageEditor.cropGuide.help" = "选择裁剪预览中的构图参考线；按 O 循环切换";
 "imageEditor.cropGuide.ruleOfThirds" = "三分法";

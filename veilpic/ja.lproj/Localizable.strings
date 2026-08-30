@@ -473,8 +473,8 @@
 "imageEditor.action.historyShowPanelVisibility" = "履歴パネルを表示";
 "imageEditor.action.channelsShowPanel" = "チャンネルパネルを表示";
 "imageEditor.action.cancel" = "キャンセル";
-"imageEditor.action.cropConfirm" = "切り抜きを確定";
-"imageEditor.action.cropCancel" = "切り抜きをキャンセル";
+"imageEditor.action.cropConfirm" = "切り抜きを確定（Return）";
+"imageEditor.action.cropCancel" = "切り抜きをキャンセル（Esc）";
 "imageEditor.cropGuide.title" = "構図ガイド";
 "imageEditor.cropGuide.help" = "切り抜きの構図ガイドを選択します。O キーで切り替えます";
 "imageEditor.cropGuide.ruleOfThirds" = "三分割法";

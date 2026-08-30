@@ -392,6 +392,19 @@ struct ImageEditorView: View {
                 deleteSelectedObject: { event in
                     deleteSelectedObjectFromKeyboard(event: event)
                 },
+                confirmPendingCrop: {
+                    guard let pendingCropRect else { return false }
+                    viewModel.crop(to: pendingCropRect)
+                    self.pendingCropRect = nil
+                    endPendingCropInteraction()
+                    return true
+                },
+                cancelPendingCrop: {
+                    guard pendingCropRect != nil else { return false }
+                    self.pendingCropRect = nil
+                    endPendingCropInteraction()
+                    return true
+                },
                 finishPendingPenPath: {
                     let isUncommittedPenPointerSequence = ImageEditorPendingPenPointerPolicy
                         .ownsUncommittedPoint(
@@ -20830,6 +20843,36 @@ enum ImageEditorEscapeCancelDispatcher {
     }
 }
 
+enum ImageEditorPendingCropKeyPolicy {
+    static func matchesConfirm(
+        keyCode: UInt16,
+        modifierFlags: NSEvent.ModifierFlags
+    ) -> Bool {
+        let relevantFlags = modifierFlags.intersection([.command, .option, .shift, .control])
+        return (keyCode == 36 || keyCode == 76) && relevantFlags.isEmpty
+    }
+
+    static func matchesCancel(
+        keyCode: UInt16,
+        modifierFlags: NSEvent.ModifierFlags
+    ) -> Bool {
+        let relevantFlags = modifierFlags.intersection([.command, .option, .shift, .control])
+        return keyCode == 53 && relevantFlags.isEmpty
+    }
+}
+
+enum ImageEditorPendingCropCancelDispatcher {
+    static func handle(
+        cancelPendingCrop: () -> Bool,
+        cancelFallback: () -> Bool
+    ) -> Bool {
+        if cancelPendingCrop() {
+            return true
+        }
+        return cancelFallback()
+    }
+}
+
 enum ImageEditorPendingPenFinishKeyPolicy {
     static func matches(
         keyCode: UInt16,
@@ -20860,6 +20903,8 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
     let selectNextCanvasHandle: (Bool) -> Bool
     let moveSelectedCanvasHandleToBoundary: (Double) -> Bool
     let deleteSelectedObject: (ImageEditorKeyboardShortcutEventSignature?) -> Bool
+    let confirmPendingCrop: () -> Bool
+    let cancelPendingCrop: () -> Bool
     let finishPendingPenPath: () -> Bool
     let enterSelectedGroup: () -> Bool
     let cancelSelectedObject: () -> Bool
@@ -20879,6 +20924,8 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
             selectNextCanvasHandle: selectNextCanvasHandle,
             moveSelectedCanvasHandleToBoundary: moveSelectedCanvasHandleToBoundary,
             deleteSelectedObject: deleteSelectedObject,
+            confirmPendingCrop: confirmPendingCrop,
+            cancelPendingCrop: cancelPendingCrop,
             finishPendingPenPath: finishPendingPenPath,
             enterSelectedGroup: enterSelectedGroup,
             cancelSelectedObject: cancelSelectedObject,
@@ -20903,6 +20950,8 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
         context.coordinator.selectNextCanvasHandle = selectNextCanvasHandle
         context.coordinator.moveSelectedCanvasHandleToBoundary = moveSelectedCanvasHandleToBoundary
         context.coordinator.deleteSelectedObject = deleteSelectedObject
+        context.coordinator.confirmPendingCrop = confirmPendingCrop
+        context.coordinator.cancelPendingCrop = cancelPendingCrop
         context.coordinator.finishPendingPenPath = finishPendingPenPath
         context.coordinator.enterSelectedGroup = enterSelectedGroup
         context.coordinator.cancelSelectedObject = cancelSelectedObject
@@ -20923,6 +20972,8 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
         var selectNextCanvasHandle: (Bool) -> Bool
         var moveSelectedCanvasHandleToBoundary: (Double) -> Bool
         var deleteSelectedObject: (ImageEditorKeyboardShortcutEventSignature?) -> Bool
+        var confirmPendingCrop: () -> Bool
+        var cancelPendingCrop: () -> Bool
         var finishPendingPenPath: () -> Bool
         var enterSelectedGroup: () -> Bool
         var cancelSelectedObject: () -> Bool
@@ -20945,6 +20996,8 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
             selectNextCanvasHandle: @escaping (Bool) -> Bool,
             moveSelectedCanvasHandleToBoundary: @escaping (Double) -> Bool,
             deleteSelectedObject: @escaping (ImageEditorKeyboardShortcutEventSignature?) -> Bool,
+            confirmPendingCrop: @escaping () -> Bool,
+            cancelPendingCrop: @escaping () -> Bool,
             finishPendingPenPath: @escaping () -> Bool,
             enterSelectedGroup: @escaping () -> Bool,
             cancelSelectedObject: @escaping () -> Bool,
@@ -20962,6 +21015,8 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
             self.selectNextCanvasHandle = selectNextCanvasHandle
             self.moveSelectedCanvasHandleToBoundary = moveSelectedCanvasHandleToBoundary
             self.deleteSelectedObject = deleteSelectedObject
+            self.confirmPendingCrop = confirmPendingCrop
+            self.cancelPendingCrop = cancelPendingCrop
             self.finishPendingPenPath = finishPendingPenPath
             self.enterSelectedGroup = enterSelectedGroup
             self.cancelSelectedObject = cancelSelectedObject
@@ -21068,15 +21123,31 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
                 return nil
             }
             if event.type == .keyDown,
-               event.keyCode == 53,
-               relevantFlags.isEmpty,
+               ImageEditorPendingCropKeyPolicy.matchesCancel(
+                   keyCode: event.keyCode,
+                   modifierFlags: event.modifierFlags
+               ),
                !isTextInputActive {
-                if ImageEditorEscapeCancelDispatcher.handle(
-                    cancelSelectedObject: cancelSelectedObject,
-                    discardPendingSmartFilterChanges: discardPendingSmartFilterChanges
+                if ImageEditorPendingCropCancelDispatcher.handle(
+                    cancelPendingCrop: cancelPendingCrop,
+                    cancelFallback: {
+                        ImageEditorEscapeCancelDispatcher.handle(
+                            cancelSelectedObject: cancelSelectedObject,
+                            discardPendingSmartFilterChanges: discardPendingSmartFilterChanges
+                        )
+                    }
                 ) {
                     return nil
                 }
+            }
+            if event.type == .keyDown,
+               !isTextInputActive,
+               ImageEditorPendingCropKeyPolicy.matchesConfirm(
+                   keyCode: event.keyCode,
+                   modifierFlags: event.modifierFlags
+               ),
+               confirmPendingCrop() {
+                return nil
             }
             if event.type == .keyDown,
                !isTextInputActive,
