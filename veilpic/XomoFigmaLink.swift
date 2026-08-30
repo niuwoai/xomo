@@ -590,6 +590,7 @@ enum XomoCanvasRichLinkDropPolicy {
 enum XomoFigmaLinkParser {
     static let maximumInputLength = 4_096
     private static let standardPathComponentCount = 4
+    private static let branchPathComponentCount = 6
     private static let communityPathComponentCount = 5
     private static let minimumFileKeyLength = 6
     private static let maximumIdentifierLength = 128
@@ -649,12 +650,23 @@ enum XomoFigmaLinkParser {
         let resourceType: XomoFigmaResourceType
         let encodedFileKey: Substring
         let encodedFileSlug: Substring
+        var mainFileKey: String?
         if encodedSegments.count == communityPathComponentCount,
            encodedSegments[1] == "community",
            encodedSegments[2] == "file" {
             resourceType = .communityFile
             encodedFileKey = encodedSegments[3]
             encodedFileSlug = encodedSegments[4]
+        } else if encodedSegments.count == branchPathComponentCount,
+                  encodedSegments[1] == "design",
+                  encodedSegments[3] == "branch" {
+            resourceType = .design
+            guard let decodedMainFileKey = String(encodedSegments[2]).removingPercentEncoding,
+                  isSafeIdentifier(decodedMainFileKey, minimumLength: minimumFileKeyLength)
+            else { throw XomoFigmaLinkParserError.invalidFileKey }
+            mainFileKey = decodedMainFileKey
+            encodedFileKey = encodedSegments[4]
+            encodedFileSlug = encodedSegments[5]
         } else {
             guard encodedSegments.count == standardPathComponentCount,
                   let resourcePath = String(encodedSegments[1]).removingPercentEncoding,
@@ -673,7 +685,12 @@ enum XomoFigmaLinkParser {
         guard isSafeFileSlug(fileSlug) else {
             throw XomoFigmaLinkParserError.invalidFileName
         }
-        return FigmaIdentity(resourceType: resourceType, fileKey: fileKey, fileSlug: fileSlug)
+        return FigmaIdentity(
+            resourceType: resourceType,
+            fileKey: fileKey,
+            fileSlug: fileSlug,
+            mainFileKey: mainFileKey
+        )
     }
 
     private static func parseSelectors(_ queryItems: [URLQueryItem]) throws -> FigmaSelectors {
@@ -727,7 +744,11 @@ enum XomoFigmaLinkParser {
         var components = URLComponents()
         components.scheme = "https"
         components.host = "www.figma.com"
-        components.path = "/\(identity.resourceType.rawValue)/\(identity.fileKey)/\(identity.fileSlug)"
+        if let mainFileKey = identity.mainFileKey {
+            components.path = "/design/\(mainFileKey)/branch/\(identity.fileKey)/\(identity.fileSlug)"
+        } else {
+            components.path = "/\(identity.resourceType.rawValue)/\(identity.fileKey)/\(identity.fileSlug)"
+        }
         components.queryItems = canonicalQueryItems(selectors)
         if let percentEncodedQuery = components.percentEncodedQuery {
             components.percentEncodedQuery = percentEncodedQuery.replacingOccurrences(
@@ -785,6 +806,7 @@ private struct FigmaIdentity {
     var resourceType: XomoFigmaResourceType
     var fileKey: String
     var fileSlug: String
+    var mainFileKey: String?
 }
 
 private struct FigmaSelectors {

@@ -66,6 +66,37 @@ struct XomoFigmaLinkParserTests {
         )
     }
 
+    @Test func parsesBranchLinksWithTheBranchKeyAsTheImportIdentity() throws {
+        let preview = try XomoFigmaLinkParser.parse(
+            "https://figma.com/design/mainFile123/branch/branchFile456/Checkout-iteration?node-id=10-20&m=dev&token=discard-me"
+        )
+
+        #expect(preview.resourceType == .design)
+        #expect(preview.fileKey == "branchFile456")
+        #expect(preview.fileSlug == "Checkout-iteration")
+        #expect(preview.nodeID == "10:20")
+        #expect(preview.plannedImportScope == .designDocument)
+        #expect(preview.discardedQueryItemCount == 2)
+        #expect(
+            preview.canonicalURL.absoluteString ==
+                "https://www.figma.com/design/mainFile123/branch/branchFile456/Checkout-iteration?node-id=10-20"
+        )
+    }
+
+    @Test func branchSourceRetargetingPreservesTheBranchRoute() throws {
+        let sourceURL = try #require(URL(
+            string: "https://www.figma.com/design/mainFile123/branch/branchFile456/Checkout?version-id=42&utm_source=mail"
+        ))
+
+        #expect(
+            XomoFigmaSourceOpenPolicy.canonicalURL(
+                from: sourceURL,
+                selectingNodeID: "32:9"
+            )?.absoluteString ==
+                "https://www.figma.com/design/mainFile123/branch/branchFile456/Checkout?node-id=32-9&version-id=42"
+        )
+    }
+
     @Test func sharedTextExtractsExactlyOneTrustedFigmaLink() throws {
         let preview = try #require(XomoFigmaSharedTextInput.preview(in: """
         请查看登录页设计：https://www.figma.com/design/abc123DEF456/Login?node-id=10-20&utm_source=chat
@@ -198,6 +229,9 @@ struct XomoFigmaLinkParserTests {
             "https://www.figma.com/design/short/File",
             "https://www.figma.com/design/abc123DEF456",
             "https://www.figma.com/design/abc123DEF456/File/extra",
+            "https://www.figma.com/design/short/branch/branchFile456/File",
+            "https://www.figma.com/design/mainFile123/branch/short/File",
+            "https://www.figma.com/design/mainFile123/branch/branchFile456/File/extra",
             "not a URL"
         ]
 
