@@ -1,6 +1,8 @@
 # Xomo 产品概览
 
-> 最后更新：2026-08-31 | 当前版本：v2.12.0-rc1560
+> 最后更新：2026-08-31 | 当前版本：v2.12.0-rc1564
+
+v2.12.0-rc1564 修复导入图片已选中但 Delete/Backspace 和方向键无效的共同根因：键盘去重签名误读鼠标专用 `NSEvent.eventNumber`，在动作执行前触发 AppKit 异常。键盘签名改用窗口号、时间戳、事件类型和键码，鼠标序号固定为零；现有菜单、焦点与删除语义保持不变。rc1561–rc1563 内部候选未通过真实键盘烟测，其菜单绕行尝试已撤回。真实 NSEvent 等定向测试 316/316、CLI/MCP 2/2 与全部发布契约通过；Debug 真实方向键、Delete、Forward Delete、Cmd+Z 验收通过。最终 Universal 签名公证版已安装到 `/Applications/Xomo.app`（rc1564/build1564，x86_64 + arm64），安装版真实 Delete 删除及 Cmd+Z 恢复再次验证通过。
 
 v2.12.0-rc1560 为裁剪构图参考线增加 Photoshop/Lightroom 式对角线模式：横向与竖向裁剪框从四个角绘制精确 45° 角平分线，正方形裁剪框自动消除重叠线段，仅保留两条完整对角线。O 键循环、三种显示时机、Crop Shield、裁剪提交、History、Undo 和项目格式沿用既有语义。裁剪/画布几何与完整本地化资源定向测试 66/66、完整项目测试 3057/3057、CLI/MCP 2/2、仓库发布契约 9/9（27 条断言）、隔离测试器契约及共享发布器契约 16/16（127 条断言）均通过。40 版本周期门禁完成 Whole-Module Universal Release 构建，App 与 DMG 通过签名、公证、装订及 Gatekeeper；`/Applications/Xomo.app` 已覆盖为 rc1560/build1560（x86_64 + arm64）。安装版启动、自动化连接、PNG 导入选中与命令删除冒烟通过；真实 Delete 键码暴露的键盘路由问题转入 rc1561 修复。
 

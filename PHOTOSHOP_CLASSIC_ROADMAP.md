@@ -1,6 +1,8 @@
 # Xomo 经典 Photoshop 能力路线图
 
-> 最后更新：2026-08-31 ｜ 当前版本：v2.12.0-rc1560 ｜ 目标：以经典 Photoshop 能力作为现代混合编辑器的可靠像素与图层底座
+> 最后更新：2026-08-31 ｜ 当前版本：v2.12.0-rc1564 ｜ 目标：以经典 Photoshop 能力作为现代混合编辑器的可靠像素与图层底座
+
+- `v2.12.0-rc1564`：修复键盘签名读取鼠标专用 `NSEvent.eventNumber` 触发 AppKit 异常，导致 Delete/Backspace 和方向键中断的问题；以窗口号、时间戳、事件类型和键码保留去重语义，新增真实 NSEvent 回归。rc1561–rc1563 内部候选未通过键盘烟测，菜单绕行尝试已撤回。定向测试 316/316、CLI/MCP 2/2、全部发布契约及 Debug 真实方向键/Delete/Forward Delete/Cmd+Z 验收通过；Universal Release 签名、公证、装订和 Gatekeeper 完成，`/Applications/Xomo.app` 已为 rc1564/build1564，安装版真实 Delete 和 Cmd+Z 复核通过。
 
 - `v2.12.0-rc1560`：裁剪构图参考线新增 Photoshop/Lightroom 式对角线模式：横向与竖向裁剪框从四角绘制 45° 角平分线，正方形自动合并重叠线段为两条完整对角线；O 键循环依次覆盖三分法、精细网格、对角线、黄金比例和无参考线，并继续服从三种显示时机。裁剪提交、Crop Shield、History、Undo 与项目格式不变。定向测试 66/66、完整项目测试 3057/3057、CLI/MCP 2/2 及全部发布契约通过；40 版本周期 Whole-Module Universal Release、签名、公证、装订、Gatekeeper 与覆盖安装均完成，`/Applications/Xomo.app` 为 rc1560/build1560（x86_64 + arm64）。安装版真实 Delete 键码仍复现键盘路由问题，转入 rc1561 修复。
 

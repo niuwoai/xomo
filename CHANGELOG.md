@@ -1,5 +1,18 @@
 # Changelog
 
+## 2.12.0-rc1564 - 2026-08-31
+
+### Fixed
+- 修复键盘事件签名读取仅适用于鼠标的 `NSEvent.eventNumber` 而触发 AppKit 异常，导致导入图片选中后 Delete/Backspace 和方向键在执行动作前中断的问题。
+
+### Changed
+- 键盘去重继续使用窗口号、时间戳、事件类型和键码，鼠标专用序号固定为零；文本输入、对象/选区删除和 Undo 优先级不变。rc1561–rc1563 为未通过真实键盘烟测的内部候选，菜单绕行尝试已撤回，不作为完成版本发布。
+
+### Tests
+- 新增真实 `NSEvent.keyEvent` 的 keyDown/keyUp 与 Delete、Forward Delete、方向键签名回归，避免仅用手工签名值掩盖 AppKit 属性异常；键盘/菜单范围定向测试 316/316、CLI/MCP 2/2、仓库发布契约 9/9（27 条断言）、隔离测试器及共享发布器契约 16/16（127 条断言）通过。
+- Debug 真实按键验收通过：导入 PNG 后右方向键将 x=96 移为 x=97，Delete 删除图片，Cmd+Z 恢复图片、选中状态与位置，Forward Delete 同样删除成功。
+- Universal Release、App/DMG 签名、公证、装订与 Gatekeeper 全部通过；`/Applications/Xomo.app` 已安装 rc1564/build1564（x86_64 + arm64），安装版真实 Delete 和 Cmd+Z 复核通过，旧安装备份在 `/private/tmp/Xomo-before-rc1564.app`。
+
 ## 2.12.0-rc1560 - 2026-08-31
 
 ### Added

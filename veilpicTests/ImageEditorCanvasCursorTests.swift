@@ -134,6 +134,33 @@ struct ImageEditorCanvasCursorTests {
         #expect(calls == ["newest", "older"])
     }
 
+    @Test func realKeyboardEventSignaturesNeverReadMouseOnlyEventNumber() throws {
+        for type in [NSEvent.EventType.keyDown, .keyUp] {
+            for keyCode: UInt16 in [51, 117, 124] {
+                let event = try #require(NSEvent.keyEvent(
+                    with: type,
+                    location: .zero,
+                    modifierFlags: [],
+                    timestamp: 42.5,
+                    windowNumber: 71,
+                    context: nil,
+                    characters: "\u{7F}",
+                    charactersIgnoringModifiers: "\u{7F}",
+                    isARepeat: false,
+                    keyCode: keyCode
+                ))
+                let signature = ImageEditorKeyboardShortcutEventSignature(event: event)
+                #expect(signature == ImageEditorKeyboardShortcutEventSignature(
+                    windowNumber: 71,
+                    eventNumber: 0,
+                    timestamp: 42.5,
+                    typeRawValue: type.rawValue,
+                    keyCode: keyCode
+                ))
+            }
+        }
+    }
+
     @Test func keyboardResponderOwnsBackwardAndForwardDeleteFallbacks() throws {
         let repositoryRoot = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()

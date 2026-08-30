@@ -20556,7 +20556,9 @@ struct ImageEditorKeyboardShortcutEventSignature: Equatable {
     init(event: NSEvent) {
         self.init(
             windowNumber: event.windowNumber,
-            eventNumber: event.eventNumber,
+            // AppKit raises an Objective-C exception when eventNumber is read
+            // from a keyboard event. Its timestamp/type/keyCode identify it.
+            eventNumber: 0,
             timestamp: event.timestamp,
             typeRawValue: event.type.rawValue,
             keyCode: event.keyCode
