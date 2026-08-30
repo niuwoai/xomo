@@ -273,14 +273,15 @@ enum XomoFigmaNodeMaterializer {
         shape: XomoFigmaPlanMaskShape
     ) -> NSImage? {
         guard canvasSize.width > 0, canvasSize.height > 0 else { return nil }
-        let clippedFrame = frame.intersection(CGRect(origin: .zero, size: canvasSize))
-        guard !clippedFrame.isNull, clippedFrame.width > 0, clippedFrame.height > 0 else { return nil }
+        // Clip the drawing, not its geometry: squeezing an ellipse into its
+        // intersection changes the mask. No overlap still means a transparent
+        // mask, rather than nil (which would leave the content unmasked).
         return NSImage.rendered(size: canvasSize) { _ in
             let appKitFrame = CGRect(
-                x: clippedFrame.minX,
-                y: canvasSize.height - clippedFrame.maxY,
-                width: clippedFrame.width,
-                height: clippedFrame.height
+                x: frame.minX,
+                y: canvasSize.height - frame.maxY,
+                width: frame.width,
+                height: frame.height
             )
             NSColor.white.setFill()
             switch shape {
