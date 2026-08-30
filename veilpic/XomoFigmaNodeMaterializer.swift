@@ -182,7 +182,7 @@ enum XomoFigmaNodeMaterializer {
                     layer.mask = mask
                 }
             }
-            layer.stackLayout = item.stackLayout
+            layer.stackLayout = scaledLayout(item.stackLayout, scale: transform.scale)
         case .text:
             guard let frame = mappedFrame(item.frame, transform: transform),
                   let text = item.text else { return nil }
@@ -232,8 +232,8 @@ enum XomoFigmaNodeMaterializer {
             applyFigmaEffects(item.effects, to: &layer, scale: transform.scale)
         }
         layer.xomoFigmaVariableBindings = item.variableBindings
-        layer.xomoFigmaSizeConstraints = item.sizeConstraints
-        layer.xomoFigmaSizeConstraintDefaults = item.sizeConstraints ?? .empty
+        layer.xomoFigmaSizeConstraints = scaledSizeConstraints(item.sizeConstraints, scale: transform.scale)
+        layer.xomoFigmaSizeConstraintDefaults = layer.xomoFigmaSizeConstraints ?? .empty
         layer.xomoFigmaSourceID = item.sourceID
         layer.xomoFigmaNodeType = item.sourceType
         layer.xomoFigmaComponentRole = item.componentRole
@@ -265,6 +265,35 @@ enum XomoFigmaNodeMaterializer {
         }
         layer.opacity = min(max(item.opacity, 0), 1)
         return layer
+    }
+
+    // These values become editable document lengths, so they must use the
+    // same units as imported frames. Child grow weights remain dimensionless.
+    private static func scaledLayout(
+        _ layout: ImageEditorStackLayout?,
+        scale: CGFloat
+    ) -> ImageEditorStackLayout? {
+        guard var result = layout else { return nil }
+        result.spacing *= scale
+        result.paddingTop *= scale
+        result.paddingRight *= scale
+        result.paddingBottom *= scale
+        result.paddingLeft *= scale
+        result.counterSpacing *= scale
+        return result
+    }
+
+    private static func scaledSizeConstraints(
+        _ constraints: XomoFigmaSizeConstraints?,
+        scale: CGFloat
+    ) -> XomoFigmaSizeConstraints? {
+        guard let constraints else { return nil }
+        return XomoFigmaSizeConstraints(
+            minWidth: constraints.minWidth.map { $0 * Double(scale) },
+            maxWidth: constraints.maxWidth.map { $0 * Double(scale) },
+            minHeight: constraints.minHeight.map { $0 * Double(scale) },
+            maxHeight: constraints.maxHeight.map { $0 * Double(scale) }
+        )
     }
 
     private static func canvasMask(
