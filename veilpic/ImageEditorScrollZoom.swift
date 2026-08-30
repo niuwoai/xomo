@@ -228,6 +228,7 @@ final class ImageEditorCanvasPointerCaptureState: ObservableObject {
     var lastPrimaryToolPoint: CGPoint?
     var primaryToolSamples: [ImageEditorPrimaryPointerSample] = []
     var isLayerResizing = false
+    var lastLayerResizePoint: CGPoint?
 
     func reset() {
         activeKind = .none
@@ -238,6 +239,7 @@ final class ImageEditorCanvasPointerCaptureState: ObservableObject {
         lastPrimaryToolPoint = nil
         primaryToolSamples = []
         isLayerResizing = false
+        lastLayerResizePoint = nil
     }
 }
 
@@ -808,7 +810,7 @@ final class ScrollWheelZoomNSView: NSView {
     /// begins a range tool or hits a movable Xomo object, this monitor owns
     /// that complete pointer sequence so SwiftUI's canvas gesture cannot race
     /// the document transaction. All unrelated events pass through untouched.
-    private func handleCanvasPointerDrag(
+    func handleCanvasPointerDrag(
         _ event: NSEvent,
         phase explicitPhase: ImageEditorCanvasPointerGestureRecognizer.Phase? = nil
     ) -> Bool {
@@ -864,7 +866,7 @@ final class ScrollWheelZoomNSView: NSView {
             return true
         }
 
-        guard let window = event.window ?? self.window else { return false }
+        guard let window = self.window else { return false }
         if explicitPhase == nil, event.buttonNumber != 0 {
             return false
         }
@@ -886,16 +888,16 @@ final class ScrollWheelZoomNSView: NSView {
 
         switch phase {
         case .down:
-            pointerCaptureState.reset()
-            if hasObjectMoveCandidate || isObjectMoving {
-                cancelStaleObjectMoveCapture()
-            }
             guard event.window === window else {
                 return false
             }
             let location = convert(event.locationInWindow, from: nil)
             guard bounds.contains(location) else {
                 return false
+            }
+            pointerCaptureState.reset()
+            if hasObjectMoveCandidate || isObjectMoving {
+                cancelStaleObjectMoveCapture()
             }
             if claimsKeyboardFocusOnPointerDown {
                 ImageEditorFilePanelKeyboardFocusRestorer.claimEditorResponder(in: window)
@@ -956,6 +958,7 @@ final class ScrollWheelZoomNSView: NSView {
             if onLayerResizeBegan?(location) == true {
                 isLayerResizing = true
                 pointerCaptureState.isLayerResizing = true
+                pointerCaptureState.lastLayerResizePoint = location
                 return true
             }
             let flags = event.modifierFlags.intersection([.command, .option, .shift, .control])
@@ -1023,9 +1026,9 @@ final class ScrollWheelZoomNSView: NSView {
                 return true
             }
             if isLayerResizing || pointerCaptureState.isLayerResizing {
-                let location = event.window == nil
-                    ? .zero
-                    : convert(event.locationInWindow, from: nil)
+                guard event.window === window else { return true }
+                let location = convert(event.locationInWindow, from: nil)
+                pointerCaptureState.lastLayerResizePoint = location
                 onLayerResizeChanged?(location)
                 return true
             }
@@ -1119,12 +1122,18 @@ final class ScrollWheelZoomNSView: NSView {
                 return true
             }
             if isLayerResizing || pointerCaptureState.isLayerResizing {
-                let location = event.window == nil
-                    ? .zero
-                    : convert(event.locationInWindow, from: nil)
-                onLayerResizeEnded?(location)
+                let location = event.window === window
+                    ? convert(event.locationInWindow, from: nil)
+                    : pointerCaptureState.lastLayerResizePoint
+                // Finish ownership before callbacks can detach or re-enter the host.
                 isLayerResizing = false
                 pointerCaptureState.isLayerResizing = false
+                pointerCaptureState.lastLayerResizePoint = nil
+                if let location {
+                    onLayerResizeEnded?(location)
+                } else {
+                    onLayerResizeCancelled?()
+                }
                 return true
             }
             // A local monitor may still receive the release after the pointer

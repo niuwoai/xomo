@@ -101,24 +101,11 @@ struct ImageEditorMiddleMousePanEventTests {
     }
 
     private func withHost(_ body: (ScrollWheelZoomNSView, NSWindow) throws -> Void) rethrows {
-        let window = makeWindow()
-        let host = ScrollWheelZoomNSView(frame: CGRect(x: 0, y: 0, width: 320, height: 240))
-        window.contentView?.addSubview(host)
-        defer {
-            host.teardownMonitor()
-            host.removeFromSuperview()
-            window.close()
-        }
-        try body(host, window)
+        try ImageEditorNativePointerTestFixture.withHost(body)
     }
 
     private func makeWindow() -> NSWindow {
-        let window = NSWindow(
-            contentRect: CGRect(x: 0, y: 0, width: 320, height: 240),
-            styleMask: [.borderless], backing: .buffered, defer: false
-        )
-        window.isReleasedWhenClosed = false
-        return window
+        ImageEditorNativePointerTestFixture.makeWindow()
     }
 
     private func event(
@@ -126,31 +113,6 @@ struct ImageEditorMiddleMousePanEventTests {
         window: NSWindow?,
         point: CGPoint = CGPoint(x: 50, y: 50)
     ) throws -> NSEvent {
-        var result = try bridgedMouseEvent(type, window: window, point: point)
-        if let window {
-            // The synthetic NSEvent/CGEvent bridge can shift the window-local origin.
-            // Normalize only the fixture, then verify the actual native event coordinates.
-            let actual = result.locationInWindow
-            result = try bridgedMouseEvent(type, window: window, point: CGPoint(
-                x: point.x + (point.x - actual.x), y: point.y + (point.y - actual.y)
-            ))
-            try #require(result.window === window)
-            try #require(result.locationInWindow == point)
-        }
-        try #require(result.buttonNumber == (type == .rightMouseUp ? 1 : 2))
-        return result
-    }
-
-    private func bridgedMouseEvent(
-        _ type: NSEvent.EventType, window: NSWindow?, point: CGPoint
-    ) throws -> NSEvent {
-        let base = try #require(NSEvent.mouseEvent(
-            with: type, location: point, modifierFlags: [], timestamp: 20,
-            windowNumber: window?.windowNumber ?? 0, context: nil,
-            eventNumber: 1, clickCount: 1, pressure: 0
-        ))
-        let raw = try #require(base.cgEvent)
-        raw.setIntegerValueField(.mouseEventButtonNumber, value: type == .rightMouseUp ? 1 : 2)
-        return try #require(NSEvent(cgEvent: raw))
+        try ImageEditorNativePointerTestFixture.event(type, window: window, point: point)
     }
 }
