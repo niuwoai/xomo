@@ -567,6 +567,8 @@ final class ScrollWheelZoomNSView: NSView {
     private var hasObjectMoveCandidate = false
     private var isObjectMoveCaptureRejected = false
     private var objectMoveStartPoint: CGPoint?
+    private var objectMoveLastPoint: CGPoint?
+    private var objectMoveCaptureID: UUID?
     private var objectMoveCandidateModifierFlags: NSEvent.ModifierFlags = []
     private var objectMoveCandidateClickCount = 1
     private var lastReportedStylusProximity: ImageEditorStylusProximity?
@@ -980,6 +982,8 @@ final class ScrollWheelZoomNSView: NSView {
             hasObjectMoveCandidate = true
             isObjectMoveCaptureRejected = false
             objectMoveStartPoint = location
+            objectMoveLastPoint = nil
+            objectMoveCaptureID = UUID()
             objectMoveCandidateModifierFlags = flags
             objectMoveCandidateClickCount = event.clickCount
             return true
@@ -1064,6 +1068,7 @@ final class ScrollWheelZoomNSView: NSView {
                 }
                 isObjectMoving = true
             }
+            objectMoveLastPoint = location
             onObjectMoveChanged?(CGSize(
                 width: location.x - objectMoveStartPoint.x,
                 height: location.y - objectMoveStartPoint.y
@@ -1148,6 +1153,7 @@ final class ScrollWheelZoomNSView: NSView {
             // once a drag has started, otherwise the next click is swallowed
             // and the closed-hand cursor can remain stuck indefinitely.
             guard hasObjectMoveCandidate || isObjectMoving else { return false }
+            guard applyFinalObjectMoveLocation(event) else { return true }
             let releaseDecision = ImageEditorObjectDragEventPolicy.releaseDecision(
                 eventType: event.type,
                 hasObjectMoveCandidate: hasObjectMoveCandidate,
@@ -1177,6 +1183,24 @@ final class ScrollWheelZoomNSView: NSView {
         }
     }
 
+    private func applyFinalObjectMoveLocation(_ event: NSEvent) -> Bool {
+        guard isObjectMoving, event.window === window,
+              let start = objectMoveStartPoint,
+              let captureID = objectMoveCaptureID else { return true }
+        let location = convert(event.locationInWindow, from: nil)
+        guard location != objectMoveLastPoint else { return true }
+        // Mouse-up can contain a newer position than the last dragged event.
+        // Publish it before committing, but never use a different window's coordinates.
+        objectMoveLastPoint = location
+        onObjectMoveChanged?(CGSize(
+            width: location.x - start.x,
+            height: location.y - start.y
+        ))
+        // Updating the model may detach the view or begin a new sequence. Its
+        // cancellation already owns the old move; do not commit or clear the new one.
+        return objectMoveCaptureID == captureID && isObjectMoving
+    }
+
     private func cancelStaleObjectMoveCapture() {
         let resetDecision = ImageEditorObjectDragEventPolicy.resetDecision(
             isObjectMoving: isObjectMoving
@@ -1192,6 +1216,8 @@ final class ScrollWheelZoomNSView: NSView {
         hasObjectMoveCandidate = false
         isObjectMoveCaptureRejected = false
         objectMoveStartPoint = nil
+        objectMoveLastPoint = nil
+        objectMoveCaptureID = nil
         objectMoveCandidateModifierFlags = []
         objectMoveCandidateClickCount = 1
     }
