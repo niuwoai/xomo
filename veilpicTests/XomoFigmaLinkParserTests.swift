@@ -100,6 +100,57 @@ struct XomoFigmaLinkParserTests {
         )
     }
 
+    @Test func migratesLegacyEmbedKitWrapperAndPreservesItsNodeSelection() throws {
+        let preview = try XomoFigmaLinkParser.parse(
+            "https://www.figma.com/embed?url=https%3A%2F%2Fwww.figma.com%2Fdesign%2FBAZsTPbh6W1r66Bdo&embed_host=legacy-docs&node_id=0-3&embed_origin=https%3A%2F%2Fexample.com"
+        )
+
+        #expect(preview.resourceType == .design)
+        #expect(preview.fileKey == "BAZsTPbh6W1r66Bdo")
+        #expect(preview.fileSlug.isEmpty)
+        #expect(preview.nodeID == "0:3")
+        #expect(preview.discardedQueryItemCount == 2)
+        #expect(
+            preview.canonicalURL.absoluteString ==
+                "https://www.figma.com/design/BAZsTPbh6W1r66Bdo?node-id=0-3"
+        )
+    }
+
+    @Test func legacyEmbedWrapperMergesOnlyEquivalentNestedSelectors() throws {
+        let preview = try XomoFigmaLinkParser.parse(
+            "https://www.figma.com/embed?url=https%3A%2F%2Fwww.figma.com%2Fproto%2Fabc123DEF456%3Fnode-id%3D1-2%26version-id%3D42&node_id=1-2&version_id=42"
+        )
+
+        #expect(preview.nodeID == "1:2")
+        #expect(preview.versionID == "42")
+        #expect(
+            preview.canonicalURL.absoluteString ==
+                "https://www.figma.com/proto/abc123DEF456?node-id=1-2&version-id=42"
+        )
+
+        #expect(throws: XomoFigmaLinkParserError.duplicateSelector) {
+            try XomoFigmaLinkParser.parse(
+                "https://www.figma.com/embed?url=https%3A%2F%2Fwww.figma.com%2Fdesign%2Fabc123DEF456%3Fnode-id%3D1-2&node_id=3-4"
+            )
+        }
+    }
+
+    @Test func legacyEmbedWrapperRejectsUntrustedRecursiveAndAmbiguousTargets() {
+        let invalidURLs = [
+            "https://www.figma.com/embed?url=https%3A%2F%2Fevil.example%2Fdesign%2Fabc123DEF456",
+            "https://www.figma.com/embed?url=https%3A%2F%2Fwww.figma.com%2Fembed%3Furl%3Dhttps%253A%252F%252Fwww.figma.com%252Fdesign%252Fabc123DEF456",
+            "https://www.figma.com/embed?url=https%3A%2F%2Fwww.figma.com%2Fdesign%2Fabc123DEF456&url=https%3A%2F%2Fwww.figma.com%2Fdesign%2FotherFile999",
+            "https://www.figma.com/embed?embed_host=missing-target",
+            "https://figma.com/embed?url=https%3A%2F%2Fwww.figma.com%2Fdesign%2Fabc123DEF456"
+        ]
+
+        for invalidURL in invalidURLs {
+            #expect(throws: XomoFigmaLinkParserError.self) {
+                try XomoFigmaLinkParser.parse(invalidURL)
+            }
+        }
+    }
+
     @Test func recognizesCommunityFileResourcePagesAsSanitizedPreviewOnlyLinks() throws {
         let preview = try XomoFigmaLinkParser.parse(
             "https://figma.com/community/file/1380235722331273046/simple-design-system?utm_source=share&token=discard-me"

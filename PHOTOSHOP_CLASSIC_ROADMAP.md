@@ -1,6 +1,8 @@
 # Xomo 经典 Photoshop 能力路线图
 
-> 最后更新：2026-08-30 ｜ 当前版本：v2.12.0-rc1534 ｜ 目标：以经典 Photoshop 能力作为现代混合编辑器的可靠像素与图层底座
+> 最后更新：2026-08-30 ｜ 当前版本：v2.12.0-rc1535 ｜ 目标：以经典 Photoshop 能力作为现代混合编辑器的可靠像素与图层底座
+
+- `v2.12.0-rc1535`：Figma 链接导入兼容官方旧版 Embed Kit 1.0 的 `www.figma.com/embed?url=…` 包装格式；内层资源继续经过 HTTPS 主机/资源白名单，包装层选择器仅在与内层一致时合并，递归包装、重复目标、不可信域名和冲突选择器均原子拒绝。Figma 链接解析与导入定向测试 48/48、CLI/MCP 2/2、仓库发布契约 9/9（27 条断言）、隔离测试器契约及共享发布器契约 12/12（94 条断言）均通过，Debug 产物为 rc1535/build1535。本版不覆盖 `/Applications`，已安装版保持 rc1520，下一次周期完整门禁为 rc1560。
 
 - `v2.12.0-rc1534`：Figma 链接导入支持官方 Embed Kit 2.0 的 `embed.figma.com`，Design、Prototype、FigJam、Slides 与 Deck 均可省略文件名直接以 fileKey 进入既有预览、粘贴、拖放和授权导入链路；预览名称以 fileKey 兜底，规范链接切回 `www.figma.com` 并只保留安全节点/版本选择器。embed 主机上的分支、Site、Make、Community 等未声明路径仍在网络访问前拒绝。Figma 链接解析与导入定向测试 45/45、CLI/MCP 2/2、仓库发布契约 9/9（27 条断言）、隔离测试器契约及共享发布器契约 12/12（94 条断言）均通过，Debug 产物为 rc1534/build1534。本版不覆盖 `/Applications`，已安装版保持 rc1520，下一次周期完整门禁为 rc1560。
 

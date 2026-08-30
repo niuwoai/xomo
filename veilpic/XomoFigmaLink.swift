@@ -616,6 +616,9 @@ enum XomoFigmaLinkParser {
         else { throw XomoFigmaLinkParserError.malformedURL }
 
         try validateOrigin(components)
+        if isLegacyEmbedWrapper(components) {
+            return try parseLegacyEmbedWrapper(components)
+        }
         let identity = try parseIdentity(components.percentEncodedPath)
         try validateResourceHost(components.host, identity: identity)
         let selectors = try parseSelectors(components.queryItems ?? [])
@@ -631,6 +634,98 @@ enum XomoFigmaLinkParser {
             canonicalURL: canonicalURL,
             discardedQueryItemCount: selectors.discardedCount
         )
+    }
+
+    private static func isLegacyEmbedWrapper(_ components: URLComponents) -> Bool {
+        components.host?.lowercased() == "www.figma.com" &&
+            components.percentEncodedPath == "/embed"
+    }
+
+    private static func parseLegacyEmbedWrapper(
+        _ components: URLComponents
+    ) throws -> XomoFigmaLinkPreview {
+        var nestedURLString: String?
+        var selectorValues: [String: String] = [:]
+        var discardedCount = 0
+
+        for item in components.queryItems ?? [] {
+            if item.name == "url" {
+                guard nestedURLString == nil, let value = item.value, !value.isEmpty else {
+                    throw XomoFigmaLinkParserError.duplicateSelector
+                }
+                nestedURLString = value
+                continue
+            }
+            guard let selectorName = legacySelectorName(item.name) else {
+                discardedCount += 1
+                continue
+            }
+            guard selectorValues[selectorName] == nil else {
+                throw XomoFigmaLinkParserError.duplicateSelector
+            }
+            selectorValues[selectorName] = item.value ?? ""
+        }
+
+        guard let nestedURLString,
+              let nestedComponents = URLComponents(string: nestedURLString),
+              !isLegacyEmbedWrapper(nestedComponents)
+        else { throw XomoFigmaLinkParserError.malformedURL }
+
+        var preview = try parse(nestedURLString)
+        guard embeddableResourceTypes.contains(preview.resourceType) else {
+            throw XomoFigmaLinkParserError.unsupportedResourceType
+        }
+        let wrapperSelectors = FigmaSelectors(
+            nodeID: try normalizedNodeID(selectorValues["node-id"]),
+            startingPointNodeID: try normalizedNodeID(selectorValues["starting-point-node-id"]),
+            versionID: try normalizedVersionID(selectorValues["version-id"]),
+            discardedCount: discardedCount
+        )
+        let selectors = try mergedSelectors(preview: preview, wrapper: wrapperSelectors)
+        preview.nodeID = selectors.nodeID
+        preview.startingPointNodeID = selectors.startingPointNodeID
+        preview.versionID = selectors.versionID
+        preview.canonicalURL = try replacingSelectors(
+            in: preview.canonicalURL,
+            with: selectors
+        )
+        preview.discardedQueryItemCount = selectors.discardedCount
+        return preview
+    }
+
+    private static func legacySelectorName(_ name: String) -> String? {
+        switch name {
+        case "node-id", "node_id":
+            "node-id"
+        case "starting-point-node-id", "starting_point_node_id":
+            "starting-point-node-id"
+        case "version-id", "version_id":
+            "version-id"
+        default:
+            nil
+        }
+    }
+
+    private static func mergedSelectors(
+        preview: XomoFigmaLinkPreview,
+        wrapper: FigmaSelectors
+    ) throws -> FigmaSelectors {
+        FigmaSelectors(
+            nodeID: try mergedSelector(preview.nodeID, wrapper.nodeID),
+            startingPointNodeID: try mergedSelector(
+                preview.startingPointNodeID,
+                wrapper.startingPointNodeID
+            ),
+            versionID: try mergedSelector(preview.versionID, wrapper.versionID),
+            discardedCount: preview.discardedQueryItemCount + wrapper.discardedCount
+        )
+    }
+
+    private static func mergedSelector(_ nested: String?, _ wrapper: String?) throws -> String? {
+        guard let nested else { return wrapper }
+        guard let wrapper else { return nested }
+        guard nested == wrapper else { throw XomoFigmaLinkParserError.duplicateSelector }
+        return nested
     }
 
     private static func validateOrigin(_ components: URLComponents) throws {
@@ -785,6 +880,24 @@ enum XomoFigmaLinkParser {
                 components.path += "/\(identity.fileSlug)"
             }
         }
+        return try canonicalURL(from: components, selectors: selectors)
+    }
+
+    private static func replacingSelectors(
+        in url: URL,
+        with selectors: FigmaSelectors
+    ) throws -> URL {
+        guard let components = URLComponents(url: url, resolvingAgainstBaseURL: false) else {
+            throw XomoFigmaLinkParserError.malformedURL
+        }
+        return try canonicalURL(from: components, selectors: selectors)
+    }
+
+    private static func canonicalURL(
+        from sourceComponents: URLComponents,
+        selectors: FigmaSelectors
+    ) throws -> URL {
+        var components = sourceComponents
         components.queryItems = canonicalQueryItems(selectors)
         if let percentEncodedQuery = components.percentEncodedQuery {
             components.percentEncodedQuery = percentEncodedQuery.replacingOccurrences(

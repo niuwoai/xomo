@@ -1,6 +1,8 @@
 # Xomo 产品概览
 
-> 最后更新：2026-08-30 | 当前版本：v2.12.0-rc1534
+> 最后更新：2026-08-30 | 当前版本：v2.12.0-rc1535
+
+v2.12.0-rc1535 兼容 Figma 官方旧版 Embed Kit 1.0 链接：`www.figma.com/embed?url=…` 会先安全解开，再进入现有 Design、Prototype、FigJam、Slides 与 Deck 导入链路；包装层的下划线/连字符选择器会规范化，且只有与内层值一致时才合并。内层目标仍受 Figma HTTPS 主机和资源白名单约束，递归包装、重复目标、不可信域名及冲突选择器会在网络访问前拒绝。Figma 链接解析与导入定向测试 48/48、CLI/MCP 2/2、仓库发布契约 9/9（27 条断言）、隔离测试器契约及共享发布器契约 12/12（94 条断言）均通过，Debug 产物为 rc1535/build1535。本版不覆盖 `/Applications`，已安装版保持 rc1520，下一次周期完整门禁为 rc1560。
 
 v2.12.0-rc1534 让 Figma 官方 Embed Kit 2.0 链接进入现有安全导入链路：`embed.figma.com` 的 Design、Prototype、FigJam、Slides 与 Deck 链接可带文件名，也可直接使用 `{类型}/{fileKey}`。无文件名预览以 fileKey 兜底，规范链接统一切回 `www.figma.com`，保留节点和版本选择器并清理嵌入展示、跟踪及疑似凭据参数；embed 主机上的分支、Site、Make、Community 等未声明路径继续拒绝。Figma 链接解析与导入定向测试 45/45、CLI/MCP 2/2、仓库发布契约 9/9（27 条断言）、隔离测试器契约及共享发布器契约 12/12（94 条断言）均通过，Debug 产物为 rc1534/build1534。本版不覆盖 `/Applications`，已安装版保持 rc1520，下一次周期完整门禁为 rc1560。
 
