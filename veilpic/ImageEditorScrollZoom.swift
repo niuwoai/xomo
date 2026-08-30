@@ -1189,11 +1189,12 @@ final class ScrollWheelZoomNSView: NSView {
         let resetDecision = ImageEditorMiddleMousePanEventPolicy.resetDecision(
             isPanning: isMiddleMousePanning
         )
+        // Clear ownership before callbacks, which can detach this view or re-enter.
+        isMiddleMousePanning = false
+        lastMiddleMousePoint = nil
         if resetDecision.shouldEndPan {
             onMiddleMousePanEnded?()
         }
-        isMiddleMousePanning = false
-        lastMiddleMousePoint = nil
     }
 
     private func cancelStalePrimaryPointerCapture() {
@@ -1310,8 +1311,19 @@ final class ScrollWheelZoomNSView: NSView {
     /// Middle-button dragging is a familiar canvas-navigation gesture in
     /// Photoshop, Sketch and many graphics tools. It never enters the
     /// document gesture arena, so pixels, selections and History stay intact.
-    private func handleMiddleMousePan(_ event: NSEvent) -> Bool {
-        guard let window, event.window === window, event.buttonNumber == 2 else { return false }
+    func handleMiddleMousePan(_ event: NSEvent) -> Bool {
+        guard [.otherMouseDown, .otherMouseDragged, .otherMouseUp].contains(event.type),
+              event.buttonNumber == 2 else { return false }
+
+        // An owned gesture must finish even if its release no longer has our window.
+        if event.type == .otherMouseUp {
+            guard isMiddleMousePanning else { return false }
+            cancelStaleMiddleMousePanCapture()
+            return true
+        }
+        guard let window, event.window === window else {
+            return isMiddleMousePanning && event.type == .otherMouseDragged
+        }
 
         let location = convert(event.locationInWindow, from: nil)
         switch event.type {
@@ -1331,12 +1343,6 @@ final class ScrollWheelZoomNSView: NSView {
             if delta != .zero {
                 onMiddleMousePanChanged?(delta)
             }
-            return true
-        case .otherMouseUp:
-            guard isMiddleMousePanning else { return false }
-            onMiddleMousePanEnded?()
-            isMiddleMousePanning = false
-            lastMiddleMousePoint = nil
             return true
         default:
             return false
