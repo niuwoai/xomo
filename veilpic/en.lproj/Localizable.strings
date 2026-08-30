@@ -494,6 +494,10 @@
 "imageEditor.cropBounds.resetHelp" = "Reset crop to the full canvas (Delete)";
 "imageEditor.cropBounds.swapHelp" = "Swap crop width and height (X)";
 "imageEditor.cropBounds.croppedAreaHelp" = "Show or hide the cropped-out area (/)";
+"imageEditor.cropShield.opacityHelp" = "Cropped-area shield strength";
+"imageEditor.cropShield.opacity.light" = "Light (25%)";
+"imageEditor.cropShield.opacity.standard" = "Standard (50%)";
+"imageEditor.cropShield.opacity.strong" = "Strong (75%)";
 "imageEditor.cropAspect.help" = "Apply a crop aspect ratio preset";
 "imageEditor.cropAspect.original" = "Original Ratio";
 "imageEditor.cropAspect.square" = "1:1 Square";

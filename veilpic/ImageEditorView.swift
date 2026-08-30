@@ -183,6 +183,7 @@ struct ImageEditorView: View {
     @State private var pendingCropRect: CGRect?
     @State private var cropGuideKind = ImageEditorCropGuideKind.ruleOfThirds
     @State private var showsCroppedArea = true
+    @State private var cropShieldOpacity = ImageEditorCropShieldOpacityPreset.standard.opacity
     @State private var isCropAspectRatioLocked = false
     @State private var activeCropHandle: ImageEditorCropHandle?
     @State private var cropInteractionStartPoint: CGPoint?
@@ -5233,6 +5234,31 @@ struct ImageEditorView: View {
                     .accessibilityLabel(L10n.text("imageEditor.cropBounds.croppedAreaHelp"))
                     .accessibilityIdentifier("image-editor-crop-outside-area-toggle")
 
+                    Menu {
+                        ForEach(ImageEditorCropShieldOpacityPreset.allCases) { preset in
+                            Button {
+                                cropShieldOpacity = preset.opacity
+                            } label: {
+                                HStack {
+                                    Text(L10n.text(preset.titleKey))
+                                    if cropShieldOpacity == preset.opacity {
+                                        Image(systemName: "checkmark")
+                                    }
+                                }
+                            }
+                            .accessibilityIdentifier(preset.accessibilityIdentifier)
+                        }
+                    } label: {
+                        Image(systemName: "circle.lefthalf.filled")
+                            .frame(width: 24, height: 24)
+                    }
+                    .menuStyle(.borderlessButton)
+                    .fixedSize()
+                    .focusable(false)
+                    .disabled(!showsCroppedArea)
+                    .help(L10n.text("imageEditor.cropShield.opacityHelp"))
+                    .accessibilityIdentifier("image-editor-crop-shield-opacity-menu")
+
                     Button {
                         resetPendingCropToCanvas()
                     } label: {
@@ -5675,7 +5701,7 @@ struct ImageEditorView: View {
             }
             .fill(
                 showsCroppedArea
-                    ? Color.black.opacity(0.48)
+                    ? Color.black.opacity(cropShieldOpacity)
                     : Color(nsColor: ImageEditorTheme.window)
             )
             .allowsHitTesting(false)

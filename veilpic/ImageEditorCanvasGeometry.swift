@@ -97,6 +97,30 @@ nonisolated enum ImageEditorCropGuideKind: String, CaseIterable, Identifiable {
     }
 }
 
+nonisolated enum ImageEditorCropShieldOpacityPreset: String, CaseIterable, Identifiable {
+    case light
+    case standard
+    case strong
+
+    var id: String { rawValue }
+
+    var opacity: Double {
+        switch self {
+        case .light: 0.25
+        case .standard: 0.50
+        case .strong: 0.75
+        }
+    }
+
+    var titleKey: String {
+        "imageEditor.cropShield.opacity.\(rawValue)"
+    }
+
+    var accessibilityIdentifier: String {
+        "image-editor-crop-shield-opacity-\(rawValue)"
+    }
+}
+
 nonisolated enum ImageEditorCropSizeDimension {
     case width
     case height

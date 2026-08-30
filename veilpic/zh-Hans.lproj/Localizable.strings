@@ -494,6 +494,10 @@
 "imageEditor.cropBounds.resetHelp" = "将裁剪重置为完整画布（Delete）";
 "imageEditor.cropBounds.swapHelp" = "交换裁剪宽度和高度（X）";
 "imageEditor.cropBounds.croppedAreaHelp" = "显示或隐藏裁剪外区域（/）";
+"imageEditor.cropShield.opacityHelp" = "裁剪外遮罩强度";
+"imageEditor.cropShield.opacity.light" = "轻（25%）";
+"imageEditor.cropShield.opacity.standard" = "标准（50%）";
+"imageEditor.cropShield.opacity.strong" = "强（75%）";
 "imageEditor.cropAspect.help" = "应用裁剪宽高比预设";
 "imageEditor.cropAspect.original" = "原图比例";
 "imageEditor.cropAspect.square" = "1:1 正方形";
