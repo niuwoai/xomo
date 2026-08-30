@@ -986,6 +986,15 @@ struct ImageEditorView: View {
                         }
                     }
                     .accessibilityIdentifier("image-editor-patch-pattern-blend-mode")
+                    Picker(
+                        L10n.text("imageEditor.option.patchPatternRepeatMode"),
+                        selection: $viewModel.patchPatternContent.repeatMode
+                    ) {
+                        ForEach(ImageEditorPatternRepeatMode.allCases) { mode in
+                            Text(mode.title).tag(mode)
+                        }
+                    }
+                    .accessibilityIdentifier("image-editor-patch-pattern-repeat-mode")
                     Toggle(
                         L10n.text("imageEditor.selectionFill.alignPatternWithCanvas"),
                         isOn: $viewModel.patchPatternAlignsWithCanvas

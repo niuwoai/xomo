@@ -19127,6 +19127,12 @@ struct XomoAutomationTests {
         #expect(
             properties["patternScaleLinked"]?.objectValue?["type"] == .string("boolean")
         )
+        #expect(
+            properties["patternRepeatMode"]?.objectValue?["enum"] == .array([
+                .string("tile"),
+                .string("mirror")
+            ])
+        )
 
         let response = registry.execute(request(
             operation: "call",
@@ -19134,6 +19140,7 @@ struct XomoAutomationTests {
             arguments: [
                 "action": .string("patchPattern"),
                 "patternKind": .string("dots"),
+                "patternRepeatMode": .string("mirror"),
                 "patternScale": .number(24),
                 "patternScaleXPercent": .number(175),
                 "patternScaleYPercent": .number(60),
@@ -19156,6 +19163,7 @@ struct XomoAutomationTests {
 
         #expect(response.ok)
         #expect(viewModel.patchPatternContent.kind == .dots)
+        #expect(viewModel.patchPatternContent.repeatMode == .mirror)
         #expect(viewModel.patchPatternContent.scale == 24)
         #expect(viewModel.patchPatternContent.scaleX == 1.75)
         #expect(viewModel.patchPatternContent.scaleY == 0.6)
@@ -19339,6 +19347,31 @@ struct XomoAutomationTests {
 
         #expect(!response.ok)
         #expect(viewModel.patchPatternContent.kind == .checkerboard)
+        #expect(viewModel.opacity == originalOpacity)
+        #expect(viewModel.document.history.count == historyCount)
+    }
+
+    @Test func registryRejectsInvalidPatchPatternRepeatModeAtomically() {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        viewModel.selectAll()
+        let originalOpacity = viewModel.opacity
+        let originalPatternContent = viewModel.patchPatternContent
+        let historyCount = viewModel.document.history.count
+
+        let response = registry.execute(request(
+            operation: "call",
+            name: "xomo.paint.special",
+            arguments: [
+                "action": .string("patchPattern"),
+                "patternRepeatMode": .string("brick"),
+                "opacity": .number(0.25)
+            ]
+        ))
+
+        #expect(!response.ok)
+        #expect(viewModel.patchPatternContent == originalPatternContent)
         #expect(viewModel.opacity == originalOpacity)
         #expect(viewModel.document.history.count == historyCount)
     }

@@ -1276,6 +1276,7 @@ struct ImageEditorSolidColorFillContent: Equatable, Codable {
 
 struct ImageEditorPatternFillContent: Equatable, Codable {
     var kind: ImageEditorPatternOverlayKind = .checkerboard
+    var repeatMode: ImageEditorPatternRepeatMode = .tile
     var red: Double = 0.10
     var green: Double = 0.24
     var blue: Double = 0.95
@@ -1292,6 +1293,7 @@ struct ImageEditorPatternFillContent: Equatable, Codable {
 
     init(
         kind: ImageEditorPatternOverlayKind = .checkerboard,
+        repeatMode: ImageEditorPatternRepeatMode = .tile,
         red: Double = 0.10,
         green: Double = 0.24,
         blue: Double = 0.95,
@@ -1307,6 +1309,7 @@ struct ImageEditorPatternFillContent: Equatable, Codable {
         offsetY: CGFloat = 0
     ) {
         self.kind = kind
+        self.repeatMode = repeatMode
         self.red = red
         self.green = green
         self.blue = blue
@@ -1325,6 +1328,7 @@ struct ImageEditorPatternFillContent: Equatable, Codable {
     func normalized() -> ImageEditorPatternFillContent {
         ImageEditorPatternFillContent(
             kind: kind,
+            repeatMode: repeatMode,
             red: Self.zeroOne(red),
             green: Self.zeroOne(green),
             blue: Self.zeroOne(blue),
@@ -1369,7 +1373,8 @@ struct ImageEditorPatternFillContent: Equatable, Codable {
             by: content.scaleX * (content.flipsHorizontally ? -1 : 1),
             yBy: content.scaleY * (content.flipsVertically ? -1 : 1)
         )
-        let tiled = CIImage(cgImage: tileCGImage).applyingFilter(
+        let repeatedTile = content.repeatedTileImage(from: CIImage(cgImage: tileCGImage))
+        let tiled = repeatedTile.applyingFilter(
             "CIAffineTile",
             parameters: [kCIInputTransformKey: affineTransform]
         )
@@ -1381,6 +1386,41 @@ struct ImageEditorPatternFillContent: Equatable, Codable {
             return NSImage.transparent(size: size)
         }
         return NSImage(cgImage: rendered, size: size)
+    }
+
+    private func repeatedTileImage(from tile: CIImage) -> CIImage {
+        guard repeatMode == .mirror else { return tile }
+        let width = tile.extent.width
+        let height = tile.extent.height
+        let horizontal = tile.transformed(by: CGAffineTransform(
+            a: -1,
+            b: 0,
+            c: 0,
+            d: 1,
+            tx: width * 2,
+            ty: 0
+        ))
+        let vertical = tile.transformed(by: CGAffineTransform(
+            a: 1,
+            b: 0,
+            c: 0,
+            d: -1,
+            tx: 0,
+            ty: height * 2
+        ))
+        let diagonal = tile.transformed(by: CGAffineTransform(
+            a: -1,
+            b: 0,
+            c: 0,
+            d: -1,
+            tx: width * 2,
+            ty: height * 2
+        ))
+        return diagonal
+            .composited(over: vertical)
+            .composited(over: horizontal)
+            .composited(over: tile)
+            .cropped(to: CGRect(x: 0, y: 0, width: width * 2, height: height * 2))
     }
 
     private static func zeroOne(_ value: Double) -> Double {
@@ -1404,6 +1444,7 @@ struct ImageEditorPatternFillContent: Equatable, Codable {
 
     private enum CodingKeys: String, CodingKey {
         case kind
+        case repeatMode
         case red
         case green
         case blue
@@ -1422,6 +1463,10 @@ struct ImageEditorPatternFillContent: Equatable, Codable {
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         kind = try container.decode(ImageEditorPatternOverlayKind.self, forKey: .kind)
+        repeatMode = try container.decodeIfPresent(
+            ImageEditorPatternRepeatMode.self,
+            forKey: .repeatMode
+        ) ?? .tile
         red = try container.decode(Double.self, forKey: .red)
         green = try container.decode(Double.self, forKey: .green)
         blue = try container.decode(Double.self, forKey: .blue)
@@ -1441,6 +1486,7 @@ struct ImageEditorPatternFillContent: Equatable, Codable {
         let content = normalized()
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(content.kind, forKey: .kind)
+        try container.encode(content.repeatMode, forKey: .repeatMode)
         try container.encode(content.red, forKey: .red)
         try container.encode(content.green, forKey: .green)
         try container.encode(content.blue, forKey: .blue)
@@ -1454,6 +1500,17 @@ struct ImageEditorPatternFillContent: Equatable, Codable {
         try container.encode(content.flipsVertically, forKey: .flipsVertically)
         try container.encode(content.offsetX, forKey: .offsetX)
         try container.encode(content.offsetY, forKey: .offsetY)
+    }
+}
+
+enum ImageEditorPatternRepeatMode: String, CaseIterable, Identifiable, Codable {
+    case tile
+    case mirror
+
+    var id: String { rawValue }
+
+    var title: String {
+        L10n.text("imageEditor.patternRepeat.\(rawValue)")
     }
 }
 

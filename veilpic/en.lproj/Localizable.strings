@@ -752,6 +752,9 @@
 "imageEditor.action.patchPatternResetOffset" = "Reset Pattern Position";
 "imageEditor.action.patchPatternResetTransform" = "Reset Pattern Transform";
 "imageEditor.option.patchPatternBlendMode" = "Pattern Blending";
+"imageEditor.option.patchPatternRepeatMode" = "Pattern Repeat";
+"imageEditor.patternRepeat.tile" = "Tile";
+"imageEditor.patternRepeat.mirror" = "Mirror Tile";
 "imageEditor.option.patchPatternInvertCoverage" = "Invert Pattern Coverage";
 "imageEditor.option.patchPatternFlipHorizontal" = "Flip Horizontally";
 "imageEditor.option.patchPatternFlipVertical" = "Flip Vertically";

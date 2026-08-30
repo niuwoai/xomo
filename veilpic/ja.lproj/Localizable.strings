@@ -752,6 +752,9 @@
 "imageEditor.action.patchPatternResetOffset" = "パターン位置をリセット";
 "imageEditor.action.patchPatternResetTransform" = "パターン変形をリセット";
 "imageEditor.option.patchPatternBlendMode" = "パターン描画モード";
+"imageEditor.option.patchPatternRepeatMode" = "パターンの繰り返し";
+"imageEditor.patternRepeat.tile" = "タイル";
+"imageEditor.patternRepeat.mirror" = "ミラータイル";
 "imageEditor.option.patchPatternInvertCoverage" = "パターン領域を反転";
 "imageEditor.option.patchPatternFlipHorizontal" = "水平方向に反転";
 "imageEditor.option.patchPatternFlipVertical" = "垂直方向に反転";

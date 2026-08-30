@@ -682,6 +682,51 @@ struct ImageEditorPatchToolTests {
         #expect(transitionCount(sixPixelTiles) > transitionCount(twelvePixelTiles))
     }
 
+    @Test func mirrorRepeatReflectsAlternatingPatternTiles() throws {
+        func appliedAlpha(repeatMode: ImageEditorPatternRepeatMode) throws -> [UInt8] {
+            let viewModel = ImageEditorViewModel(
+                sourceName: "patch-pattern-repeat.png",
+                image: .transparent(size: CGSize(width: 24, height: 24))
+            ) { _ in }
+            viewModel.selectAll()
+            viewModel.opacity = 1
+            viewModel.patchPatternContent = ImageEditorPatternFillContent(
+                kind: .diagonalStripes,
+                repeatMode: repeatMode,
+                red: 1,
+                green: 0,
+                blue: 0,
+                opacity: 1,
+                scale: 8
+            )
+
+            #expect(viewModel.applyPatchPattern())
+            let image = try #require(viewModel.document.selectedLayer?.image)
+            let pixels = try #require(imageEditorRGBABytes(image, width: 24, height: 24))
+            return stride(from: 3, to: pixels.count, by: 4).map { pixels[$0] }
+        }
+
+        let tiled = try appliedAlpha(repeatMode: .tile)
+        let mirrored = try appliedAlpha(repeatMode: .mirror)
+
+        #expect(tiled != mirrored)
+        #expect((0..<8).allSatisfy { y in
+            (0..<8).allSatisfy { x in
+                abs(Int(tiled[y * 24 + x]) - Int(tiled[y * 24 + x + 8])) <= 2
+            }
+        })
+        #expect((0..<8).allSatisfy { y in
+            (0..<8).allSatisfy { x in
+                abs(Int(mirrored[y * 24 + x]) - Int(mirrored[y * 24 + 15 - x])) <= 2
+            }
+        })
+        #expect((0..<8).allSatisfy { y in
+            (0..<8).allSatisfy { x in
+                abs(Int(mirrored[y * 24 + x]) - Int(mirrored[(15 - y) * 24 + x])) <= 2
+            }
+        })
+    }
+
     @Test func usePatternAngleRotatesTheRenderedCoverage() throws {
         func appliedAlpha(angle: CGFloat) throws -> [UInt8] {
             let viewModel = ImageEditorViewModel(
@@ -787,6 +832,7 @@ struct ImageEditorPatchToolTests {
     @Test func patternTransformPersistenceRoundTripsAndDefaultsOldProjects() throws {
         let content = ImageEditorPatternFillContent(
             kind: .diagonalStripes,
+            repeatMode: .mirror,
             scaleX: 1.75,
             scaleY: 0.6,
             linksAxisScales: true,
@@ -799,6 +845,7 @@ struct ImageEditorPatchToolTests {
 
         #expect(decoded.flipsHorizontally)
         #expect(decoded.flipsVertically)
+        #expect(decoded.repeatMode == .mirror)
         #expect(decoded.scaleX == 1.75)
         #expect(decoded.scaleY == 0.6)
         #expect(decoded.linksAxisScales)
@@ -809,6 +856,7 @@ struct ImageEditorPatchToolTests {
         legacyObject.removeValue(forKey: "scaleX")
         legacyObject.removeValue(forKey: "scaleY")
         legacyObject.removeValue(forKey: "linksAxisScales")
+        legacyObject.removeValue(forKey: "repeatMode")
         legacyObject.removeValue(forKey: "flipsHorizontally")
         legacyObject.removeValue(forKey: "flipsVertically")
         let legacyData = try JSONSerialization.data(withJSONObject: legacyObject)
@@ -819,6 +867,7 @@ struct ImageEditorPatchToolTests {
         #expect(legacy.scaleX == 1)
         #expect(legacy.scaleY == 1)
         #expect(!legacy.linksAxisScales)
+        #expect(legacy.repeatMode == .tile)
         #expect(legacy.angle == -37)
 
         let normalized = ImageEditorPatternFillContent(scaleX: 0.1, scaleY: 5).normalized()
@@ -1164,6 +1213,8 @@ struct ImageEditorPatchToolTests {
         #expect(source.contains("Stepper(value: $viewModel.patchDiffusion, in: 1...7)"))
         #expect(source.contains(".onChange(of: viewModel.patchDiffusion)"))
         #expect(source.contains("selection: $viewModel.patchPatternContent.kind"))
+        #expect(source.contains("selection: $viewModel.patchPatternContent.repeatMode"))
+        #expect(source.contains("ForEach(ImageEditorPatternRepeatMode.allCases)"))
         #expect(source.contains("selection: $viewModel.patchPatternBlendMode"))
         #expect(source.contains("ForEach(ImageEditorBlendMode.smartFilterCases)"))
         #expect(source.contains("isOn: $viewModel.patchPatternAlignsWithCanvas"))
@@ -1208,6 +1259,7 @@ struct ImageEditorPatchToolTests {
         #expect(source.contains("image-editor-patch-pattern-angle"))
         #expect(source.contains("image-editor-patch-pattern-opacity"))
         #expect(source.contains("image-editor-patch-pattern-blend-mode"))
+        #expect(source.contains("image-editor-patch-pattern-repeat-mode"))
         #expect(source.contains("image-editor-patch-pattern-align-canvas"))
         #expect(source.contains("image-editor-patch-pattern-preserve-transparency"))
         #expect(source.contains("image-editor-patch-pattern-invert-coverage"))

@@ -5752,6 +5752,18 @@ final class XomoAutomationRegistry {
         } else {
             resolvedPatchPatternKind = nil
         }
+        let resolvedPatchPatternRepeatMode: ImageEditorPatternRepeatMode?
+        if action == "patchPattern", arguments["patternRepeatMode"] != nil {
+            let rawMode = try requiredString("patternRepeatMode", in: arguments)
+            guard let mode = ImageEditorPatternRepeatMode(rawValue: rawMode) else {
+                throw XomoAutomationCallError.invalidArgument(
+                    "Patch patternRepeatMode must be tile or mirror"
+                )
+            }
+            resolvedPatchPatternRepeatMode = mode
+        } else {
+            resolvedPatchPatternRepeatMode = nil
+        }
         let resolvedPatchPatternScale: CGFloat?
         if action == "patchPattern", arguments["patternScale"] != nil {
             let rawScale = try requiredNumber("patternScale", in: arguments)
@@ -5966,6 +5978,9 @@ final class XomoAutomationRegistry {
             }
             if let resolvedPatchPatternKind {
                 viewModel.patchPatternContent.kind = resolvedPatchPatternKind
+            }
+            if let resolvedPatchPatternRepeatMode {
+                viewModel.patchPatternContent.repeatMode = resolvedPatchPatternRepeatMode
             }
             if let resolvedPatchPatternScale {
                 viewModel.patchPatternContent.scale = resolvedPatchPatternScale
@@ -7810,6 +7825,7 @@ private extension XomoAutomationRegistry {
             "transparent": XomoAutomationSchema.boolean(description: "Transfer sampled texture while preserving patch target color and alpha"),
             "diffusion": XomoAutomationSchema.integer(description: "Patch texture diffusion from 1 for sharp detail through 7 for smooth regions", minimum: 1, maximum: 7),
             "patternKind": XomoAutomationSchema.string(description: "Built-in pattern used by patchPattern", values: ["checkerboard", "diagonalStripes", "dots"]),
+            "patternRepeatMode": XomoAutomationSchema.string(description: "Patch pattern repeat mode", values: ImageEditorPatternRepeatMode.allCases.map(\.rawValue)),
             "patternScale": XomoAutomationSchema.number(description: "Patch pattern tile size from 6 through 64 pixels", minimum: 6, maximum: 64),
             "patternScaleXPercent": XomoAutomationSchema.number(description: "Patch pattern horizontal scale from 25 through 400 percent", minimum: 25, maximum: 400),
             "patternScaleYPercent": XomoAutomationSchema.number(description: "Patch pattern vertical scale from 25 through 400 percent", minimum: 25, maximum: 400),
