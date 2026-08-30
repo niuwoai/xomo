@@ -1282,6 +1282,8 @@ struct ImageEditorPatternFillContent: Equatable, Codable {
     var opacity: Double = 0.55
     var scale: CGFloat = 16
     var angle: CGFloat = 0
+    var flipsHorizontally = false
+    var flipsVertically = false
     var offsetX: CGFloat = 0
     var offsetY: CGFloat = 0
 
@@ -1293,6 +1295,8 @@ struct ImageEditorPatternFillContent: Equatable, Codable {
         opacity: Double = 0.55,
         scale: CGFloat = 16,
         angle: CGFloat = 0,
+        flipsHorizontally: Bool = false,
+        flipsVertically: Bool = false,
         offsetX: CGFloat = 0,
         offsetY: CGFloat = 0
     ) {
@@ -1303,6 +1307,8 @@ struct ImageEditorPatternFillContent: Equatable, Codable {
         self.opacity = opacity
         self.scale = scale
         self.angle = angle
+        self.flipsHorizontally = flipsHorizontally
+        self.flipsVertically = flipsVertically
         self.offsetX = offsetX
         self.offsetY = offsetY
     }
@@ -1316,6 +1322,8 @@ struct ImageEditorPatternFillContent: Equatable, Codable {
             opacity: max(0.05, min(1, opacity)),
             scale: max(6, min(64, scale)),
             angle: Self.normalizedAngle(angle),
+            flipsHorizontally: flipsHorizontally,
+            flipsVertically: flipsVertically,
             offsetX: Self.normalizedOffset(offsetX),
             offsetY: Self.normalizedOffset(offsetY)
         )
@@ -1345,6 +1353,10 @@ struct ImageEditorPatternFillContent: Equatable, Codable {
         let affineTransform = NSAffineTransform()
         affineTransform.translateX(by: content.offsetX, yBy: content.offsetY)
         affineTransform.rotate(byRadians: radians)
+        affineTransform.scaleX(
+            by: content.flipsHorizontally ? -1 : 1,
+            yBy: content.flipsVertically ? -1 : 1
+        )
         let tiled = CIImage(cgImage: tileCGImage).applyingFilter(
             "CIAffineTile",
             parameters: [kCIInputTransformKey: affineTransform]
@@ -1381,6 +1393,8 @@ struct ImageEditorPatternFillContent: Equatable, Codable {
         case opacity
         case scale
         case angle
+        case flipsHorizontally
+        case flipsVertically
         case offsetX
         case offsetY
     }
@@ -1394,6 +1408,8 @@ struct ImageEditorPatternFillContent: Equatable, Codable {
         opacity = try container.decode(Double.self, forKey: .opacity)
         scale = try container.decode(CGFloat.self, forKey: .scale)
         angle = try container.decodeIfPresent(CGFloat.self, forKey: .angle) ?? 0
+        flipsHorizontally = try container.decodeIfPresent(Bool.self, forKey: .flipsHorizontally) ?? false
+        flipsVertically = try container.decodeIfPresent(Bool.self, forKey: .flipsVertically) ?? false
         offsetX = try container.decodeIfPresent(CGFloat.self, forKey: .offsetX) ?? 0
         offsetY = try container.decodeIfPresent(CGFloat.self, forKey: .offsetY) ?? 0
     }
@@ -1408,6 +1424,8 @@ struct ImageEditorPatternFillContent: Equatable, Codable {
         try container.encode(content.opacity, forKey: .opacity)
         try container.encode(content.scale, forKey: .scale)
         try container.encode(content.angle, forKey: .angle)
+        try container.encode(content.flipsHorizontally, forKey: .flipsHorizontally)
+        try container.encode(content.flipsVertically, forKey: .flipsVertically)
         try container.encode(content.offsetX, forKey: .offsetX)
         try container.encode(content.offsetY, forKey: .offsetY)
     }

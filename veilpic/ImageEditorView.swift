@@ -1004,6 +1004,18 @@ struct ImageEditorView: View {
                     )
                     .toggleStyle(.checkbox)
                     .accessibilityIdentifier("image-editor-patch-pattern-invert-coverage")
+                    Toggle(
+                        L10n.text("imageEditor.option.patchPatternFlipHorizontal"),
+                        isOn: $viewModel.patchPatternContent.flipsHorizontally
+                    )
+                    .toggleStyle(.checkbox)
+                    .accessibilityIdentifier("image-editor-patch-pattern-flip-horizontal")
+                    Toggle(
+                        L10n.text("imageEditor.option.patchPatternFlipVertical"),
+                        isOn: $viewModel.patchPatternContent.flipsVertically
+                    )
+                    .toggleStyle(.checkbox)
+                    .accessibilityIdentifier("image-editor-patch-pattern-flip-vertical")
                     Stepper(
                         value: $viewModel.patchPatternContent.scale,
                         in: 6...64,

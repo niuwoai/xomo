@@ -752,6 +752,8 @@
 "imageEditor.action.patchPatternResetOffset" = "Reset Pattern Position";
 "imageEditor.option.patchPatternBlendMode" = "Pattern Blending";
 "imageEditor.option.patchPatternInvertCoverage" = "Invert Pattern Coverage";
+"imageEditor.option.patchPatternFlipHorizontal" = "Flip Horizontally";
+"imageEditor.option.patchPatternFlipVertical" = "Flip Vertically";
 "imageEditor.action.patchUsePattern" = "Use Pattern";
 "imageEditor.history.selectionPatchPattern" = "Patch with Pattern";
 "imageEditor.status.selectionPatchedPattern" = "Applied the patch pattern to the selection.";

@@ -752,6 +752,8 @@
 "imageEditor.action.patchPatternResetOffset" = "パターン位置をリセット";
 "imageEditor.option.patchPatternBlendMode" = "パターン描画モード";
 "imageEditor.option.patchPatternInvertCoverage" = "パターン領域を反転";
+"imageEditor.option.patchPatternFlipHorizontal" = "水平方向に反転";
+"imageEditor.option.patchPatternFlipVertical" = "垂直方向に反転";
 "imageEditor.action.patchUsePattern" = "パターンを使用";
 "imageEditor.history.selectionPatchPattern" = "パターンでパッチ";
 "imageEditor.status.selectionPatchedPattern" = "選択範囲にパッチパターンを適用しました。";

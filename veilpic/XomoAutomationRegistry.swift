@@ -5841,6 +5841,24 @@ final class XomoAutomationRegistry {
         } else {
             resolvedPatchPatternInvertsCoverage = nil
         }
+        let resolvedPatchPatternFlipsHorizontally: Bool?
+        if action == "patchPattern", arguments["patternFlipsHorizontally"] != nil {
+            resolvedPatchPatternFlipsHorizontally = try requiredBool(
+                "patternFlipsHorizontally",
+                in: arguments
+            )
+        } else {
+            resolvedPatchPatternFlipsHorizontally = nil
+        }
+        let resolvedPatchPatternFlipsVertically: Bool?
+        if action == "patchPattern", arguments["patternFlipsVertically"] != nil {
+            resolvedPatchPatternFlipsVertically = try requiredBool(
+                "patternFlipsVertically",
+                in: arguments
+            )
+        } else {
+            resolvedPatchPatternFlipsVertically = nil
+        }
         func validatedPatchPatternChannel(_ key: String) throws -> Double? {
             guard action == "patchPattern", arguments[key] != nil else { return nil }
             let value = try requiredNumber(key, in: arguments)
@@ -5932,6 +5950,12 @@ final class XomoAutomationRegistry {
             }
             if let resolvedPatchPatternInvertsCoverage {
                 viewModel.patchPatternInvertsCoverage = resolvedPatchPatternInvertsCoverage
+            }
+            if let resolvedPatchPatternFlipsHorizontally {
+                viewModel.patchPatternContent.flipsHorizontally = resolvedPatchPatternFlipsHorizontally
+            }
+            if let resolvedPatchPatternFlipsVertically {
+                viewModel.patchPatternContent.flipsVertically = resolvedPatchPatternFlipsVertically
             }
             if let resolvedPatchPatternRed {
                 viewModel.patchPatternContent.red = resolvedPatchPatternRed
@@ -7743,6 +7767,8 @@ private extension XomoAutomationRegistry {
             "patternAlignsWithCanvas": XomoAutomationSchema.boolean(description: "Align the patch pattern phase with canvas coordinates instead of the active layer"),
             "patternPreservesTransparency": XomoAutomationSchema.boolean(description: "Apply the patch pattern only where the active layer already has alpha"),
             "patternInvertsCoverage": XomoAutomationSchema.boolean(description: "Swap the painted and transparent regions of the patch pattern"),
+            "patternFlipsHorizontally": XomoAutomationSchema.boolean(description: "Flip the patch pattern horizontally before rotation"),
+            "patternFlipsVertically": XomoAutomationSchema.boolean(description: "Flip the patch pattern vertically before rotation"),
             "patternRed": XomoAutomationSchema.number(description: "Patch pattern red channel from 0 through 1", minimum: 0, maximum: 1),
             "patternGreen": XomoAutomationSchema.number(description: "Patch pattern green channel from 0 through 1", minimum: 0, maximum: 1),
             "patternBlue": XomoAutomationSchema.number(description: "Patch pattern blue channel from 0 through 1", minimum: 0, maximum: 1),

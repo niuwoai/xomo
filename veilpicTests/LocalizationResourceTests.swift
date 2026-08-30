@@ -856,16 +856,18 @@ struct LocalizationResourceTests {
         }
     }
 
-    @Test func patchPatternBlendModeIsLocalizedInEverySupportedLanguage() throws {
+    @Test func patchPatternTransformIsLocalizedInEverySupportedLanguage() throws {
         let paths = try Self.repositoryPaths()
         let expectedValues = [
-            "zh-Hans": ["图案混合模式", "反转图案覆盖", "角度：%d°", "%@ · %@ · %d 像素 · %d° · %d%%"],
-            "en": ["Pattern Blending", "Invert Pattern Coverage", "Angle: %d°", "%@ · %@ · %d px · %d° · %d%%"],
-            "ja": ["パターン描画モード", "パターン領域を反転", "角度：%d°", "%@ · %@ · %d px · %d° · %d%%"]
+            "zh-Hans": ["图案混合模式", "反转图案覆盖", "水平翻转", "垂直翻转", "角度：%d°", "%@ · %@ · %d 像素 · %d° · %d%%"],
+            "en": ["Pattern Blending", "Invert Pattern Coverage", "Flip Horizontally", "Flip Vertically", "Angle: %d°", "%@ · %@ · %d px · %d° · %d%%"],
+            "ja": ["パターン描画モード", "パターン領域を反転", "水平方向に反転", "垂直方向に反転", "角度：%d°", "%@ · %@ · %d px · %d° · %d%%"]
         ]
         let keys = [
             "imageEditor.option.patchPatternBlendMode",
             "imageEditor.option.patchPatternInvertCoverage",
+            "imageEditor.option.patchPatternFlipHorizontal",
+            "imageEditor.option.patchPatternFlipVertical",
             "imageEditor.patternFill.angleValue",
             "imageEditor.option.patchPatternSummary"
         ]
