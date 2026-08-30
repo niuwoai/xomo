@@ -498,7 +498,7 @@ extension ImageEditorViewModel {
             return false
         }
         pushUndo()
-        movingLayerIDs = Set(indices.map { document.layers[$0].id })
+        movingLayerIDs = movingLayerIDsIncludingGroups(for: indices)
         movingLayerDidChange = false
         movingOriginalTransformFrame = transformFrame
         movingObjectPreviewFrame = transformFrame
@@ -543,7 +543,7 @@ extension ImageEditorViewModel {
             return false
         }
 
-        movingLayerIDs = Set(indices.map { document.layers[$0].id })
+        movingLayerIDs = movingLayerIDsIncludingGroups(for: indices)
         movingLayerWasDuplicated = true
         movingLayerDidChange = false
         movingOriginalTransformFrame = transformFrame
@@ -691,12 +691,26 @@ extension ImageEditorViewModel {
         activeSpacingGuides = []
     }
 
+    private func movingLayerIDsIncludingGroups(for indices: [Int]) -> Set<UUID> {
+        var ids = Set(indices.map { document.layers[$0].id })
+        let expandedIDs = transformLayerIDsExpandingLinkedGroups(startingFrom: document.selectedLayerIDs)
+        for layer in document.layers where layer.isGroup && expandedIDs.contains(layer.id) {
+            guard !document.isEffectivelyPositionLocked(layer) else { continue }
+            ids.insert(layer.id)
+        }
+        return ids
+    }
+
     private func commitMovingSelectedLayers(by delta: CGSize) {
         var nextDocument = document
         for index in nextDocument.layers.indices where movingLayerIDs.contains(nextDocument.layers[index].id) {
             let originalFrame = nextDocument.layers[index].frame.standardized
             nextDocument.layers[index].frame.origin.x += delta.width
             nextDocument.layers[index].frame.origin.y += delta.height
+            if nextDocument.layers[index].isGroup {
+                nextDocument.layers[index].translateLinkedGroupMasks(by: delta)
+                continue
+            }
             guard !nextDocument.layers[index].isMaskLinked else { continue }
 
             if let mask = nextDocument.layers[index].mask,
@@ -1775,6 +1789,24 @@ extension NSImage {
             width: CGFloat(maxX - minX + 1) * scaleX,
             height: CGFloat(maxY - minY + 1) * scaleY
         )
+    }
+}
+
+extension ImageEditorLayer {
+    /// Group masks are canvas-sized, unlike leaf masks in local coordinates.
+    /// Unlinked group masks already stay fixed when the group's frame moves.
+    mutating func translateLinkedGroupMasks(by delta: CGSize) {
+        guard isGroup, isMaskLinked,
+              delta.width.isFinite, delta.height.isFinite,
+              delta != .zero else { return }
+        if let mask,
+           let shiftedMask = mask.offsetMask(by: CGSize(width: delta.width, height: -delta.height)) {
+            // Bitmap drawing is bottom-left; document/path coordinates are top-left.
+            self.mask = shiftedMask
+        }
+        if let vectorMask {
+            self.vectorMask = vectorMask.offsetPath(by: delta)
+        }
     }
 }
 

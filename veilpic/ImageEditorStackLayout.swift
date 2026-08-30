@@ -1191,6 +1191,7 @@ extension ImageEditorViewModel {
                         dx: delta.width,
                         dy: delta.height
                     )
+                    document.layers[index].translateLinkedGroupMasks(by: delta)
                 }
             }
             document.layers[participantIndex].frame = targetFrame
