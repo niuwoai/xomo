@@ -5811,6 +5811,15 @@ final class XomoAutomationRegistry {
         } else {
             resolvedPatchPatternAlignsWithCanvas = nil
         }
+        let resolvedPatchPatternPreservesTransparency: Bool?
+        if action == "patchPattern", arguments["patternPreservesTransparency"] != nil {
+            resolvedPatchPatternPreservesTransparency = try requiredBool(
+                "patternPreservesTransparency",
+                in: arguments
+            )
+        } else {
+            resolvedPatchPatternPreservesTransparency = nil
+        }
         func validatedPatchPatternChannel(_ key: String) throws -> Double? {
             guard action == "patchPattern", arguments[key] != nil else { return nil }
             let value = try requiredNumber(key, in: arguments)
@@ -5893,6 +5902,9 @@ final class XomoAutomationRegistry {
             }
             if let resolvedPatchPatternAlignsWithCanvas {
                 viewModel.patchPatternAlignsWithCanvas = resolvedPatchPatternAlignsWithCanvas
+            }
+            if let resolvedPatchPatternPreservesTransparency {
+                viewModel.patchPatternPreservesTransparency = resolvedPatchPatternPreservesTransparency
             }
             if let resolvedPatchPatternRed {
                 viewModel.patchPatternContent.red = resolvedPatchPatternRed
@@ -7701,6 +7713,7 @@ private extension XomoAutomationRegistry {
             "patternOffsetY": XomoAutomationSchema.number(description: "Patch pattern vertical phase offset in pixels", minimum: -128, maximum: 128),
             "patternBlendMode": XomoAutomationSchema.string(description: "Patch pattern blend mode", values: ImageEditorBlendMode.smartFilterCases.map(\.rawValue)),
             "patternAlignsWithCanvas": XomoAutomationSchema.boolean(description: "Align the patch pattern phase with canvas coordinates instead of the active layer"),
+            "patternPreservesTransparency": XomoAutomationSchema.boolean(description: "Apply the patch pattern only where the active layer already has alpha"),
             "patternRed": XomoAutomationSchema.number(description: "Patch pattern red channel from 0 through 1", minimum: 0, maximum: 1),
             "patternGreen": XomoAutomationSchema.number(description: "Patch pattern green channel from 0 through 1", minimum: 0, maximum: 1),
             "patternBlue": XomoAutomationSchema.number(description: "Patch pattern blue channel from 0 through 1", minimum: 0, maximum: 1),

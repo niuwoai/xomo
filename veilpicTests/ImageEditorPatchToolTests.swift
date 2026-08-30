@@ -567,6 +567,50 @@ struct ImageEditorPatchToolTests {
         #expect(viewModel.undoStack.count == undoCount)
     }
 
+    @Test func usePatternCanPreservePartialAndFullyTransparentPixels() throws {
+        func appliedAlpha(preservesTransparency: Bool) throws -> [UInt8] {
+            let source = NSImage(size: CGSize(width: 2, height: 1), flipped: false) { rect in
+                NSColor.clear.setFill()
+                rect.fill()
+                NSColor(deviceRed: 0.2, green: 0.4, blue: 0.8, alpha: 0.5).setFill()
+                CGRect(x: 0, y: 0, width: 1, height: 1).fill()
+                return true
+            }
+            let viewModel = ImageEditorViewModel(
+                sourceName: "patch-pattern-preserve-alpha.png",
+                image: source
+            ) { _ in }
+            viewModel.replaceSelectedLayerImageForTesting(
+                source,
+                historyTitle: L10n.text("imageEditor.history.brush")
+            )
+            viewModel.selectAll()
+            viewModel.opacity = 1
+            viewModel.patchPatternPreservesTransparency = preservesTransparency
+            viewModel.patchPatternContent = ImageEditorPatternFillContent(
+                kind: .checkerboard,
+                red: 1,
+                green: 0,
+                blue: 0,
+                opacity: 1,
+                scale: 6
+            )
+
+            #expect(viewModel.applyPatchPattern())
+            let image = try #require(viewModel.document.selectedLayer?.image)
+            let pixels = try #require(imageEditorRGBABytes(image, width: 2, height: 1))
+            return stride(from: 3, to: pixels.count, by: 4).map { pixels[$0] }
+        }
+
+        let unprotected = try appliedAlpha(preservesTransparency: false)
+        let protected = try appliedAlpha(preservesTransparency: true)
+
+        #expect(unprotected[0] > 240)
+        #expect(unprotected[1] > 240)
+        #expect(abs(Int(protected[0]) - 128) <= 2)
+        #expect(protected[1] == 0)
+    }
+
     @Test func usePatternScaleChangesTheAppliedTileFrequency() throws {
         func appliedAlphaRow(scale: CGFloat) throws -> [UInt8] {
             let viewModel = ImageEditorViewModel(
@@ -713,6 +757,7 @@ struct ImageEditorPatchToolTests {
         )
         viewModel.patchPatternBlendMode = .screen
         viewModel.patchPatternAlignsWithCanvas = false
+        viewModel.patchPatternPreservesTransparency = true
         let historyCount = viewModel.document.history.count
 
         #expect(viewModel.resetPatchPatternOffset())
@@ -726,6 +771,7 @@ struct ImageEditorPatchToolTests {
         #expect(viewModel.patchPatternContent.blue == 0.4)
         #expect(viewModel.patchPatternBlendMode == .screen)
         #expect(!viewModel.patchPatternAlignsWithCanvas)
+        #expect(viewModel.patchPatternPreservesTransparency)
         #expect(viewModel.document.history.count == historyCount)
         #expect(!viewModel.resetPatchPatternOffset())
     }
@@ -851,6 +897,8 @@ struct ImageEditorPatchToolTests {
         #expect(source.contains("ForEach(ImageEditorBlendMode.smartFilterCases)"))
         #expect(source.contains("isOn: $viewModel.patchPatternAlignsWithCanvas"))
         #expect(source.contains("imageEditor.selectionFill.alignPatternWithCanvas"))
+        #expect(source.contains("isOn: $viewModel.patchPatternPreservesTransparency"))
+        #expect(source.contains("imageEditor.selectionFill.preserveTransparency"))
         #expect(source.contains("value: $viewModel.patchPatternContent.scale"))
         #expect(source.contains("value: $viewModel.patchPatternContent.opacity"))
         #expect(source.contains("value: $viewModel.patchPatternContent.offsetX"))
@@ -868,6 +916,7 @@ struct ImageEditorPatchToolTests {
         #expect(source.contains("image-editor-patch-pattern-opacity"))
         #expect(source.contains("image-editor-patch-pattern-blend-mode"))
         #expect(source.contains("image-editor-patch-pattern-align-canvas"))
+        #expect(source.contains("image-editor-patch-pattern-preserve-transparency"))
         #expect(source.contains("image-editor-patch-pattern-offset-x"))
         #expect(source.contains("image-editor-patch-pattern-offset-y"))
         #expect(source.contains("image-editor-patch-pattern-reset-offset"))
@@ -876,6 +925,7 @@ struct ImageEditorPatchToolTests {
         #expect(source.contains("refreshActivePatchPreview()"))
         #expect(commandSource.contains("blendMode: patchPatternBlendMode"))
         #expect(commandSource.contains("alignsWithCanvas: patchPatternAlignsWithCanvas"))
+        #expect(commandSource.contains("let preservesTransparency = patchPatternPreservesTransparency"))
     }
 
     @Test func patchLassoHonorsReplaceAddSubtractAndIntersectSelectionModes() throws {

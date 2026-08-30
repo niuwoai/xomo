@@ -992,6 +992,12 @@ struct ImageEditorView: View {
                     )
                     .toggleStyle(.checkbox)
                     .accessibilityIdentifier("image-editor-patch-pattern-align-canvas")
+                    Toggle(
+                        L10n.text("imageEditor.selectionFill.preserveTransparency"),
+                        isOn: $viewModel.patchPatternPreservesTransparency
+                    )
+                    .toggleStyle(.checkbox)
+                    .accessibilityIdentifier("image-editor-patch-pattern-preserve-transparency")
                     Stepper(
                         value: $viewModel.patchPatternContent.scale,
                         in: 6...64,

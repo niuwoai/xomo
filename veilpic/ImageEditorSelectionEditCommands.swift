@@ -1012,7 +1012,9 @@ extension ImageEditorViewModel {
             statusText = L10n.text("imageEditor.status.selectionEmpty")
             return false
         }
-        let protectedOutput = document.isEffectivelyTransparencyLocked(layer)
+        let preservesTransparency = patchPatternPreservesTransparency
+            || document.isEffectivelyTransparencyLocked(layer)
+        let protectedOutput = preservesTransparency
             ? (output.preservingAlpha(from: layer.image) ?? output)
             : output
         let normalizedOutput = protectedOutput.normalizedBitmapImage()

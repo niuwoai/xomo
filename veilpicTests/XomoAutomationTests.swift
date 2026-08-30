@@ -19108,6 +19108,7 @@ struct XomoAutomationTests {
         let registry = XomoAutomationRegistry.shared
         registry.register(viewModel)
         viewModel.selectAll()
+        viewModel.patchPatternPreservesTransparency = true
         let historyCount = viewModel.document.history.count
 
         let response = registry.execute(request(
@@ -19122,6 +19123,7 @@ struct XomoAutomationTests {
                 "patternOffsetY": .number(-11),
                 "patternBlendMode": .string("multiply"),
                 "patternAlignsWithCanvas": .bool(false),
+                "patternPreservesTransparency": .bool(false),
                 "patternRed": .number(0.2),
                 "patternGreen": .number(0.7),
                 "patternBlue": .number(0.4),
@@ -19137,6 +19139,7 @@ struct XomoAutomationTests {
         #expect(viewModel.patchPatternContent.offsetY == -11)
         #expect(viewModel.patchPatternBlendMode == .multiply)
         #expect(!viewModel.patchPatternAlignsWithCanvas)
+        #expect(!viewModel.patchPatternPreservesTransparency)
         #expect(viewModel.patchPatternContent.red == 0.2)
         #expect(viewModel.patchPatternContent.green == 0.7)
         #expect(viewModel.patchPatternContent.blue == 0.4)
@@ -19323,6 +19326,34 @@ struct XomoAutomationTests {
         #expect(!response.ok)
         #expect(viewModel.patchPatternContent == originalPatternContent)
         #expect(viewModel.patchPatternAlignsWithCanvas == originalAlignment)
+        #expect(viewModel.opacity == originalOpacity)
+        #expect(viewModel.document.history.count == historyCount)
+    }
+
+    @Test func registryRejectsInvalidPatchPatternTransparencyBeforeChangingToolState() {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        viewModel.selectAll()
+        let originalOpacity = viewModel.opacity
+        let originalPatternContent = viewModel.patchPatternContent
+        let originalTransparency = viewModel.patchPatternPreservesTransparency
+        let historyCount = viewModel.document.history.count
+
+        let response = registry.execute(request(
+            operation: "call",
+            name: "xomo.paint.special",
+            arguments: [
+                "action": .string("patchPattern"),
+                "patternPreservesTransparency": .string("true"),
+                "patternOffsetX": .number(18),
+                "opacity": .number(0.25)
+            ]
+        ))
+
+        #expect(!response.ok)
+        #expect(viewModel.patchPatternContent == originalPatternContent)
+        #expect(viewModel.patchPatternPreservesTransparency == originalTransparency)
         #expect(viewModel.opacity == originalOpacity)
         #expect(viewModel.document.history.count == historyCount)
     }
