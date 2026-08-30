@@ -181,6 +181,7 @@ struct ImageEditorView: View {
     @State private var isPatchGestureBlocked = false
     @State private var lastPatchPreviewUpdateTime: TimeInterval = 0
     @State private var pendingCropRect: CGRect?
+    @State private var cropGuideKind = ImageEditorCropGuideKind.ruleOfThirds
     @State private var activeCropHandle: ImageEditorCropHandle?
     @State private var cropInteractionStartPoint: CGPoint?
     @State private var cropInteractionOriginalRect: CGRect?
@@ -5046,6 +5047,21 @@ struct ImageEditorView: View {
                 .clipShape(RoundedRectangle(cornerRadius: 5, style: .continuous))
             if let pendingCropRect {
                 HStack(spacing: 4) {
+                    Picker(
+                        L10n.text("imageEditor.cropGuide.title"),
+                        selection: $cropGuideKind
+                    ) {
+                        ForEach(ImageEditorCropGuideKind.allCases) { kind in
+                            Text(L10n.text(kind.titleKey)).tag(kind)
+                        }
+                    }
+                    .labelsHidden()
+                    .pickerStyle(.menu)
+                    .frame(width: 126)
+                    .focusable(false)
+                    .help(L10n.text("imageEditor.cropGuide.help"))
+                    .accessibilityIdentifier("image-editor-crop-guide-picker")
+
                     Button {
                         viewModel.crop(to: pendingCropRect)
                         self.pendingCropRect = nil
@@ -5419,7 +5435,8 @@ struct ImageEditorView: View {
                 in: fittedImageRect(in: size),
                 excluding: rect
             )
-            let cropGuideSegments = ImageEditorCropGeometry.ruleOfThirdsSegments(
+            let cropGuideSegments = ImageEditorCropGeometry.compositionGuideSegments(
+                for: cropGuideKind,
                 in: CGRect(origin: .zero, size: rect.size)
             )
             Path { path in

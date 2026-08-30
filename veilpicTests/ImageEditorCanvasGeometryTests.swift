@@ -208,8 +208,50 @@ struct ImageEditorCanvasGeometryTests {
             contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
             encoding: .utf8
         )
-        #expect(source.contains("ImageEditorCropGeometry.ruleOfThirdsSegments"))
+        #expect(source.contains("ImageEditorCropGeometry.compositionGuideSegments"))
         #expect(source.contains("for segment in cropGuideSegments"))
+    }
+
+    @Test
+    func cropCompositionGuideModesProvideUsefulGeometryAndPickerWiring() throws {
+        let rect = CGRect(x: 10, y: 20, width: 100, height: 80)
+        let grid = ImageEditorCropGeometry.compositionGuideSegments(for: .grid, in: rect)
+        #expect(grid.count == 6)
+        assertEqual(grid[0].start, CGPoint(x: 35, y: 20))
+        assertEqual(grid[2].end, CGPoint(x: 85, y: 100))
+        assertEqual(grid[3].start, CGPoint(x: 10, y: 40))
+        assertEqual(grid[5].end, CGPoint(x: 110, y: 80))
+
+        let golden = ImageEditorCropGeometry.compositionGuideSegments(for: .goldenRatio, in: rect)
+        #expect(golden.count == 4)
+        assertEqual(golden[0].start, CGPoint(x: 48.196_601_125, y: 20))
+        assertEqual(golden[1].end, CGPoint(x: 71.803_398_875, y: 100))
+        #expect(ImageEditorCropGeometry.compositionGuideSegments(for: .none, in: rect).isEmpty)
+        #expect(ImageEditorCropGuideKind.allCases == [.ruleOfThirds, .grid, .goldenRatio, .none])
+
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        #expect(source.contains("selection: $cropGuideKind"))
+        #expect(source.contains("ImageEditorCropGuideKind.allCases"))
+        #expect(source.contains("image-editor-crop-guide-picker"))
+
+        for localizationID in ["zh-Hans", "en", "ja"] {
+            let localization = try String(
+                contentsOf: repositoryRoot
+                    .appendingPathComponent("veilpic/\(localizationID).lproj/Localizable.strings"),
+                encoding: .utf8
+            )
+            for kind in ImageEditorCropGuideKind.allCases {
+                #expect(localization.contains("\"\(kind.titleKey)\""))
+            }
+            #expect(localization.contains("\"imageEditor.cropGuide.title\""))
+            #expect(localization.contains("\"imageEditor.cropGuide.help\""))
+        }
     }
 
     @Test

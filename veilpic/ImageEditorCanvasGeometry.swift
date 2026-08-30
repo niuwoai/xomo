@@ -56,6 +56,24 @@ nonisolated struct ImageEditorCropGuideSegment: Equatable {
     let end: CGPoint
 }
 
+nonisolated enum ImageEditorCropGuideKind: String, CaseIterable, Identifiable {
+    case ruleOfThirds
+    case grid
+    case goldenRatio
+    case none
+
+    var id: String { rawValue }
+
+    var titleKey: String {
+        switch self {
+        case .ruleOfThirds: "imageEditor.cropGuide.ruleOfThirds"
+        case .grid: "imageEditor.cropGuide.grid"
+        case .goldenRatio: "imageEditor.cropGuide.goldenRatio"
+        case .none: "imageEditor.cropGuide.none"
+        }
+    }
+}
+
 enum ImageEditorCropGeometry {
     static func shieldRects(
         in canvasBounds: CGRect,
@@ -76,31 +94,43 @@ enum ImageEditorCropGeometry {
     }
 
     static func ruleOfThirdsSegments(in rect: CGRect) -> [ImageEditorCropGuideSegment] {
+        compositionGuideSegments(for: .ruleOfThirds, in: rect)
+    }
+
+    static func compositionGuideSegments(
+        for kind: ImageEditorCropGuideKind,
+        in rect: CGRect
+    ) -> [ImageEditorCropGuideSegment] {
         let normalized = rect.standardized
         guard normalized.width > 0, normalized.height > 0 else { return [] }
 
-        let firstX = normalized.minX + normalized.width / 3
-        let secondX = normalized.minX + normalized.width * 2 / 3
-        let firstY = normalized.minY + normalized.height / 3
-        let secondY = normalized.minY + normalized.height * 2 / 3
-        return [
-            ImageEditorCropGuideSegment(
-                start: CGPoint(x: firstX, y: normalized.minY),
-                end: CGPoint(x: firstX, y: normalized.maxY)
-            ),
-            ImageEditorCropGuideSegment(
-                start: CGPoint(x: secondX, y: normalized.minY),
-                end: CGPoint(x: secondX, y: normalized.maxY)
-            ),
-            ImageEditorCropGuideSegment(
-                start: CGPoint(x: normalized.minX, y: firstY),
-                end: CGPoint(x: normalized.maxX, y: firstY)
-            ),
-            ImageEditorCropGuideSegment(
-                start: CGPoint(x: normalized.minX, y: secondY),
-                end: CGPoint(x: normalized.maxX, y: secondY)
+        let fractions: [CGFloat]
+        switch kind {
+        case .ruleOfThirds:
+            fractions = [1 / 3, 2 / 3]
+        case .grid:
+            fractions = [1 / 4, 1 / 2, 3 / 4]
+        case .goldenRatio:
+            fractions = [0.381_966_011_25, 0.618_033_988_75]
+        case .none:
+            return []
+        }
+
+        let vertical = fractions.map { fraction in
+            let x = normalized.minX + normalized.width * fraction
+            return ImageEditorCropGuideSegment(
+                start: CGPoint(x: x, y: normalized.minY),
+                end: CGPoint(x: x, y: normalized.maxY)
             )
-        ]
+        }
+        let horizontal = fractions.map { fraction in
+            let y = normalized.minY + normalized.height * fraction
+            return ImageEditorCropGuideSegment(
+                start: CGPoint(x: normalized.minX, y: y),
+                end: CGPoint(x: normalized.maxX, y: y)
+            )
+        }
+        return vertical + horizontal
     }
 
     static func hitHandle(
