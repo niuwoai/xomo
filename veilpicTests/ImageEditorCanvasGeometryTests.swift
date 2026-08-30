@@ -367,6 +367,70 @@ struct ImageEditorCanvasGeometryTests {
     }
 
     @Test
+    func pendingCropArrowNudgeMovesInsideCanvasBeforeFallingBackToSelection() throws {
+        let original = CGRect(x: 10, y: 12, width: 40, height: 20)
+        let canvasSize = CGSize(width: 100, height: 80)
+        #expect(ImageEditorCropGeometry.adjustedFrame(
+            from: original,
+            handle: .move,
+            delta: try #require(ImageEditorArrowNudge.delta(
+                for: 123,
+                modifierFlags: [.option]
+            )),
+            canvasSize: canvasSize
+        ) == CGRect(x: 5, y: 12, width: 40, height: 20))
+        #expect(ImageEditorCropGeometry.adjustedFrame(
+            from: original,
+            handle: .move,
+            delta: try #require(ImageEditorArrowNudge.delta(
+                for: 126,
+                modifierFlags: [.shift]
+            )),
+            canvasSize: canvasSize
+        ) == CGRect(x: 10, y: 2, width: 40, height: 20))
+        #expect(ImageEditorCropGeometry.adjustedFrame(
+            from: CGRect(x: 0, y: 0, width: 40, height: 20),
+            handle: .move,
+            delta: CGSize(width: -10, height: -10),
+            canvasSize: canvasSize
+        ) == CGRect(x: 0, y: 0, width: 40, height: 20))
+
+        var cropDeltas: [CGSize] = []
+        var fallbackDeltas: [CGSize] = []
+        ImageEditorPendingCropNudgeDispatcher.perform(
+            delta: CGSize(width: 1, height: 0),
+            nudgePendingCrop: {
+                cropDeltas.append($0)
+                return true
+            },
+            nudgeFallback: { fallbackDeltas.append($0) }
+        )
+        #expect(cropDeltas == [CGSize(width: 1, height: 0)])
+        #expect(fallbackDeltas.isEmpty)
+        ImageEditorPendingCropNudgeDispatcher.perform(
+            delta: CGSize(width: 0, height: 5),
+            nudgePendingCrop: {
+                cropDeltas.append($0)
+                return false
+            },
+            nudgeFallback: { fallbackDeltas.append($0) }
+        )
+        #expect(cropDeltas.last == CGSize(width: 0, height: 5))
+        #expect(fallbackDeltas == [CGSize(width: 0, height: 5)])
+
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        #expect(source.contains("nudgePendingCrop: { delta in"))
+        #expect(source.contains("handle: .move"))
+        #expect(source.contains("ImageEditorPendingCropNudgeDispatcher.perform"))
+    }
+
+    @Test
     func cropShieldDimsOnlyTheCanvasAreaOutsideThePreview() throws {
         let canvas = CGRect(x: 10, y: 20, width: 100, height: 80)
         #expect(ImageEditorCropGeometry.shieldRects(

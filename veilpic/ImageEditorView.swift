@@ -372,6 +372,16 @@ struct ImageEditorView: View {
                 canCycleCropGuide: pendingCropRect != nil,
                 canToggleQuickMaskGrayscalePreview: viewModel.isQuickMaskMode,
                 canToggleLayerMaskRubylith: viewModel.canToggleSelectedLayerMaskRubylithPreview,
+                nudgePendingCrop: { delta in
+                    guard let pendingCropRect else { return false }
+                    self.pendingCropRect = ImageEditorCropGeometry.adjustedFrame(
+                        from: pendingCropRect,
+                        handle: .move,
+                        delta: delta,
+                        canvasSize: viewModel.document.canvasSize
+                    )
+                    return true
+                },
                 nudgeSelected: performNudgeCommand,
                 selectNextCanvasHandle: { movesBackward in
                     if cancelGradientOverlayCanvasHandleDragForLifecycle() {
@@ -20873,6 +20883,18 @@ enum ImageEditorPendingCropCancelDispatcher {
     }
 }
 
+enum ImageEditorPendingCropNudgeDispatcher {
+    static func perform(
+        delta: CGSize,
+        nudgePendingCrop: (CGSize) -> Bool,
+        nudgeFallback: (CGSize) -> Void
+    ) {
+        if !nudgePendingCrop(delta) {
+            nudgeFallback(delta)
+        }
+    }
+}
+
 enum ImageEditorPendingPenFinishKeyPolicy {
     static func matches(
         keyCode: UInt16,
@@ -20899,6 +20921,7 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
     let canCycleCropGuide: Bool
     let canToggleQuickMaskGrayscalePreview: Bool
     let canToggleLayerMaskRubylith: Bool
+    let nudgePendingCrop: (CGSize) -> Bool
     let nudgeSelected: (CGSize) -> Void
     let selectNextCanvasHandle: (Bool) -> Bool
     let moveSelectedCanvasHandleToBoundary: (Double) -> Bool
@@ -20920,6 +20943,7 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
             canCycleCropGuide: canCycleCropGuide,
             canToggleQuickMaskGrayscalePreview: canToggleQuickMaskGrayscalePreview,
             canToggleLayerMaskRubylith: canToggleLayerMaskRubylith,
+            nudgePendingCrop: nudgePendingCrop,
             nudgeSelected: nudgeSelected,
             selectNextCanvasHandle: selectNextCanvasHandle,
             moveSelectedCanvasHandleToBoundary: moveSelectedCanvasHandleToBoundary,
@@ -20946,6 +20970,7 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
         context.coordinator.canCycleCropGuide = canCycleCropGuide
         context.coordinator.canToggleQuickMaskGrayscalePreview = canToggleQuickMaskGrayscalePreview
         context.coordinator.canToggleLayerMaskRubylith = canToggleLayerMaskRubylith
+        context.coordinator.nudgePendingCrop = nudgePendingCrop
         context.coordinator.nudgeSelected = nudgeSelected
         context.coordinator.selectNextCanvasHandle = selectNextCanvasHandle
         context.coordinator.moveSelectedCanvasHandleToBoundary = moveSelectedCanvasHandleToBoundary
@@ -20968,6 +20993,7 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
         var canCycleCropGuide: Bool
         var canToggleQuickMaskGrayscalePreview: Bool
         var canToggleLayerMaskRubylith: Bool
+        var nudgePendingCrop: (CGSize) -> Bool
         var nudgeSelected: (CGSize) -> Void
         var selectNextCanvasHandle: (Bool) -> Bool
         var moveSelectedCanvasHandleToBoundary: (Double) -> Bool
@@ -20992,6 +21018,7 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
             canCycleCropGuide: Bool,
             canToggleQuickMaskGrayscalePreview: Bool,
             canToggleLayerMaskRubylith: Bool,
+            nudgePendingCrop: @escaping (CGSize) -> Bool,
             nudgeSelected: @escaping (CGSize) -> Void,
             selectNextCanvasHandle: @escaping (Bool) -> Bool,
             moveSelectedCanvasHandleToBoundary: @escaping (Double) -> Bool,
@@ -21011,6 +21038,7 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
             self.canCycleCropGuide = canCycleCropGuide
             self.canToggleQuickMaskGrayscalePreview = canToggleQuickMaskGrayscalePreview
             self.canToggleLayerMaskRubylith = canToggleLayerMaskRubylith
+            self.nudgePendingCrop = nudgePendingCrop
             self.nudgeSelected = nudgeSelected
             self.selectNextCanvasHandle = selectNextCanvasHandle
             self.moveSelectedCanvasHandleToBoundary = moveSelectedCanvasHandleToBoundary
@@ -21183,7 +21211,11 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
                    for: event.keyCode,
                    modifierFlags: event.modifierFlags
                ) {
-                nudgeSelected(delta)
+                ImageEditorPendingCropNudgeDispatcher.perform(
+                    delta: delta,
+                    nudgePendingCrop: nudgePendingCrop,
+                    nudgeFallback: nudgeSelected
+                )
                 return nil
             }
 
