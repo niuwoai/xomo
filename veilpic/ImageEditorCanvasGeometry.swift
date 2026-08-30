@@ -84,6 +84,69 @@ nonisolated enum ImageEditorCropSizeDimension {
     case height
 }
 
+nonisolated enum ImageEditorCropAspectPreset: String, CaseIterable, Identifiable {
+    case original
+    case square
+    case fourThree
+    case threeTwo
+    case sixteenNine
+    case free
+
+    var id: String { rawValue }
+
+    var titleKey: String {
+        switch self {
+        case .original: "imageEditor.cropAspect.original"
+        case .square: "imageEditor.cropAspect.square"
+        case .fourThree: "imageEditor.cropAspect.fourThree"
+        case .threeTwo: "imageEditor.cropAspect.threeTwo"
+        case .sixteenNine: "imageEditor.cropAspect.sixteenNine"
+        case .free: "imageEditor.cropAspect.free"
+        }
+    }
+
+    var accessibilityIdentifier: String {
+        "image-editor-crop-aspect-\(rawValue)"
+    }
+
+    func components(canvasSize: CGSize) -> CGSize? {
+        switch self {
+        case .original:
+            guard canvasSize.width.isFinite,
+                  canvasSize.height.isFinite,
+                  canvasSize.width > 0,
+                  canvasSize.height > 0
+            else { return nil }
+            let width = max(1, Int(canvasSize.width.rounded()))
+            let height = max(1, Int(canvasSize.height.rounded()))
+            let divisor = Self.greatestCommonDivisor(width, height)
+            return CGSize(
+                width: CGFloat(width / divisor),
+                height: CGFloat(height / divisor)
+            )
+        case .square:
+            return CGSize(width: 1, height: 1)
+        case .fourThree:
+            return CGSize(width: 4, height: 3)
+        case .threeTwo:
+            return CGSize(width: 3, height: 2)
+        case .sixteenNine:
+            return CGSize(width: 16, height: 9)
+        case .free:
+            return nil
+        }
+    }
+
+    private static func greatestCommonDivisor(_ lhs: Int, _ rhs: Int) -> Int {
+        var a = lhs
+        var b = rhs
+        while b != 0 {
+            (a, b) = (b, a % b)
+        }
+        return max(1, a)
+    }
+}
+
 enum ImageEditorCropGeometry {
     static func fullCanvasFrame(canvasSize: CGSize) -> CGRect {
         CGRect(
@@ -180,6 +243,53 @@ enum ImageEditorCropGeometry {
         return CGRect(
             x: min(max(centeredX, 0), canvasWidth - width),
             y: min(max(centeredY, 0), canvasHeight - height),
+            width: width,
+            height: height
+        )
+    }
+
+    static func frameByApplyingAspectRatio(
+        of cropRect: CGRect,
+        components: CGSize,
+        canvasSize: CGSize
+    ) -> CGRect {
+        let currentBounds = committedPixelBounds(for: cropRect, canvasSize: canvasSize)
+        guard !currentBounds.isNull,
+              currentBounds.width > 0,
+              currentBounds.height > 0,
+              components.width.isFinite,
+              components.height.isFinite,
+              components.width > 0,
+              components.height > 0
+        else { return cropRect }
+
+        let exactScale = floor(min(
+            currentBounds.width / components.width,
+            currentBounds.height / components.height
+        ))
+        let width: CGFloat
+        let height: CGFloat
+        if exactScale >= 1 {
+            width = components.width * exactScale
+            height = components.height * exactScale
+        } else {
+            let aspectRatio = components.width / components.height
+            if currentBounds.width / currentBounds.height > aspectRatio {
+                height = currentBounds.height
+                width = max(1, (height * aspectRatio).rounded(.down))
+            } else {
+                width = currentBounds.width
+                height = max(1, (width / aspectRatio).rounded(.down))
+            }
+        }
+
+        let canvasWidth = max(0, canvasSize.width)
+        let canvasHeight = max(0, canvasSize.height)
+        let centeredX = (currentBounds.midX - width / 2).rounded()
+        let centeredY = (currentBounds.midY - height / 2).rounded()
+        return CGRect(
+            x: min(max(centeredX, 0), max(0, canvasWidth - width)),
+            y: min(max(centeredY, 0), max(0, canvasHeight - height)),
             width: width,
             height: height
         )

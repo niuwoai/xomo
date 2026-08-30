@@ -493,6 +493,13 @@
 "imageEditor.cropBounds.aspectUnlock" = "Unlock crop aspect ratio";
 "imageEditor.cropBounds.resetHelp" = "Reset crop to the full canvas";
 "imageEditor.cropBounds.swapHelp" = "Swap crop width and height";
+"imageEditor.cropAspect.help" = "Apply a crop aspect ratio preset";
+"imageEditor.cropAspect.original" = "Original Ratio";
+"imageEditor.cropAspect.square" = "1:1 Square";
+"imageEditor.cropAspect.fourThree" = "4:3";
+"imageEditor.cropAspect.threeTwo" = "3:2";
+"imageEditor.cropAspect.sixteenNine" = "16:9";
+"imageEditor.cropAspect.free" = "Free Ratio";
 "imageEditor.status.cropGuideChanged" = "Crop guide: %@";
 "imageEditor.action.apply" = "Apply to Preview";
 "imageEditor.action.export" = "Export";

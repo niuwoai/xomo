@@ -5198,6 +5198,25 @@ struct ImageEditorView: View {
                     .help(L10n.text("imageEditor.cropGuide.help"))
                     .accessibilityIdentifier("image-editor-crop-guide-picker")
 
+                    Menu {
+                        ForEach(ImageEditorCropAspectPreset.allCases) { preset in
+                            Button {
+                                applyCropAspectPreset(preset)
+                            } label: {
+                                Text(L10n.text(preset.titleKey))
+                            }
+                            .accessibilityIdentifier(preset.accessibilityIdentifier)
+                        }
+                    } label: {
+                        Image(systemName: "aspectratio")
+                            .frame(width: 24, height: 24)
+                    }
+                    .menuStyle(.borderlessButton)
+                    .fixedSize()
+                    .focusable(false)
+                    .help(L10n.text("imageEditor.cropAspect.help"))
+                    .accessibilityIdentifier("image-editor-crop-aspect-menu")
+
                     Button {
                         self.pendingCropRect = ImageEditorCropGeometry.fullCanvasFrame(
                             canvasSize: viewModel.document.canvasSize
@@ -5318,6 +5337,20 @@ struct ImageEditorView: View {
             canvasSize: viewModel.document.canvasSize,
             preservesAspectRatio: isCropAspectRatioLocked
         )
+    }
+
+    private func applyCropAspectPreset(_ preset: ImageEditorCropAspectPreset) {
+        guard let pendingCropRect else { return }
+        guard let components = preset.components(canvasSize: viewModel.document.canvasSize) else {
+            isCropAspectRatioLocked = false
+            return
+        }
+        self.pendingCropRect = ImageEditorCropGeometry.frameByApplyingAspectRatio(
+            of: pendingCropRect,
+            components: components,
+            canvasSize: viewModel.document.canvasSize
+        )
+        isCropAspectRatioLocked = true
     }
 
     private var zoomSliderBinding: Binding<Double> {

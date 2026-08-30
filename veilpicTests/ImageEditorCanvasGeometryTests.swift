@@ -264,6 +264,31 @@ struct ImageEditorCanvasGeometryTests {
             of: CGRect(x: 20, y: 10, width: 180, height: 40),
             canvasSize: CGSize(width: 200, height: 100)
         ) == CGRect(x: 99, y: 0, width: 22, height: 100))
+        #expect(ImageEditorCropAspectPreset.original.components(
+            canvasSize: CGSize(width: 4032, height: 3024)
+        ) == CGSize(width: 4, height: 3))
+        #expect(ImageEditorCropAspectPreset.original.components(
+            canvasSize: CGSize(width: 0, height: 3024)
+        ) == nil)
+        #expect(ImageEditorCropAspectPreset.free.components(
+            canvasSize: CGSize(width: 200, height: 150)
+        ) == nil)
+        let presetCrop = CGRect(x: 10, y: 20, width: 100, height: 80)
+        #expect(ImageEditorCropGeometry.frameByApplyingAspectRatio(
+            of: presetCrop,
+            components: CGSize(width: 1, height: 1),
+            canvasSize: CGSize(width: 200, height: 150)
+        ) == CGRect(x: 20, y: 20, width: 80, height: 80))
+        #expect(ImageEditorCropGeometry.frameByApplyingAspectRatio(
+            of: presetCrop,
+            components: CGSize(width: 4, height: 3),
+            canvasSize: CGSize(width: 200, height: 150)
+        ) == CGRect(x: 10, y: 23, width: 100, height: 75))
+        #expect(ImageEditorCropGeometry.frameByApplyingAspectRatio(
+            of: presetCrop,
+            components: CGSize(width: 16, height: 9),
+            canvasSize: CGSize(width: 200, height: 150)
+        ) == CGRect(x: 12, y: 33, width: 96, height: 54))
         let ratioCrop = CGRect(x: 10, y: 20, width: 100, height: 50)
         #expect(ImageEditorCropGeometry.frameBySettingCommittedDimension(
             of: ratioCrop,
@@ -317,6 +342,11 @@ struct ImageEditorCanvasGeometryTests {
         #expect(viewSource.contains("frameBySwappingCommittedDimensions"))
         #expect(viewSource.contains(".disabled(pixelBounds.width == pixelBounds.height)"))
         #expect(viewSource.contains("image-editor-crop-swap-dimensions"))
+        #expect(viewSource.contains("ImageEditorCropAspectPreset.allCases"))
+        #expect(viewSource.contains("applyCropAspectPreset(preset)"))
+        #expect(viewSource.contains("isCropAspectRatioLocked = true"))
+        #expect(viewSource.contains("isCropAspectRatioLocked = false"))
+        #expect(viewSource.contains("image-editor-crop-aspect-menu"))
         #expect(commandSource.contains("ImageEditorCropGeometry.committedPixelBounds"))
 
         for localizationID in ["zh-Hans", "en", "ja"] {
@@ -333,6 +363,13 @@ struct ImageEditorCanvasGeometryTests {
             #expect(localization.contains("\"imageEditor.cropBounds.aspectUnlock\""))
             #expect(localization.contains("\"imageEditor.cropBounds.resetHelp\""))
             #expect(localization.contains("\"imageEditor.cropBounds.swapHelp\""))
+            #expect(localization.contains("\"imageEditor.cropAspect.help\""))
+            #expect(localization.contains("\"imageEditor.cropAspect.original\""))
+            #expect(localization.contains("\"imageEditor.cropAspect.square\""))
+            #expect(localization.contains("\"imageEditor.cropAspect.fourThree\""))
+            #expect(localization.contains("\"imageEditor.cropAspect.threeTwo\""))
+            #expect(localization.contains("\"imageEditor.cropAspect.sixteenNine\""))
+            #expect(localization.contains("\"imageEditor.cropAspect.free\""))
         }
     }
 
