@@ -80,6 +80,19 @@ nonisolated enum ImageEditorCropGuideKind: String, CaseIterable, Identifiable {
 }
 
 enum ImageEditorCropGeometry {
+    static func committedPixelBounds(
+        for cropRect: CGRect,
+        canvasSize: CGSize
+    ) -> CGRect {
+        let canvasBounds = CGRect(
+            x: 0,
+            y: 0,
+            width: max(0, canvasSize.width),
+            height: max(0, canvasSize.height)
+        )
+        return cropRect.standardized.intersection(canvasBounds).integral
+    }
+
     static func shieldRects(
         in canvasBounds: CGRect,
         excluding cropRect: CGRect

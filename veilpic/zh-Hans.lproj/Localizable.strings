@@ -481,6 +481,7 @@
 "imageEditor.cropGuide.grid" = "精细网格";
 "imageEditor.cropGuide.goldenRatio" = "黄金比例";
 "imageEditor.cropGuide.none" = "无参考线";
+"imageEditor.cropBounds.size" = "宽 %d × 高 %d 像素";
 "imageEditor.status.cropGuideChanged" = "裁剪参考线：%@";
 "imageEditor.action.apply" = "应用到预览";
 "imageEditor.action.export" = "导出";

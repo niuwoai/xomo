@@ -250,9 +250,10 @@ extension ImageEditorViewModel {
 
     private func crop(to rect: CGRect, historyTitle: String) {
         let originalSize = document.canvasSize
-        let bounded = rect.standardized
-            .intersection(CGRect(origin: .zero, size: originalSize))
-            .integral
+        let bounded = ImageEditorCropGeometry.committedPixelBounds(
+            for: rect,
+            canvasSize: originalSize
+        )
         guard bounded.width >= 8,
               bounded.height >= 8,
               bounded.width < originalSize.width || bounded.height < originalSize.height

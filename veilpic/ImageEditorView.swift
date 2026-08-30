@@ -5078,6 +5078,21 @@ struct ImageEditorView: View {
                 .clipShape(RoundedRectangle(cornerRadius: 5, style: .continuous))
             if let pendingCropRect {
                 HStack(spacing: 4) {
+                    let pixelBounds = ImageEditorCropGeometry.committedPixelBounds(
+                        for: pendingCropRect,
+                        canvasSize: viewModel.document.canvasSize
+                    )
+                    Text(L10n.format(
+                        "imageEditor.cropBounds.size",
+                        Int(pixelBounds.width),
+                        Int(pixelBounds.height)
+                    ))
+                    .font(.system(size: 11, weight: .medium, design: .monospaced))
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .fixedSize(horizontal: true, vertical: false)
+                    .accessibilityIdentifier("image-editor-crop-size")
+
                     Picker(
                         L10n.text("imageEditor.cropGuide.title"),
                         selection: $cropGuideKind

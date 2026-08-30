@@ -481,6 +481,7 @@
 "imageEditor.cropGuide.grid" = "Fine Grid";
 "imageEditor.cropGuide.goldenRatio" = "Golden Ratio";
 "imageEditor.cropGuide.none" = "No Guide";
+"imageEditor.cropBounds.size" = "W %d × H %d px";
 "imageEditor.status.cropGuideChanged" = "Crop guide: %@";
 "imageEditor.action.apply" = "Apply to Preview";
 "imageEditor.action.export" = "Export";

@@ -177,6 +177,42 @@ struct ImageEditorCanvasGeometryTests {
     }
 
     @Test
+    func pendingCropSizeMatchesCommittedOutwardPixelRoundingAndCanvasBounds() throws {
+        #expect(ImageEditorCropGeometry.committedPixelBounds(
+            for: CGRect(x: 10.2, y: 20.7, width: 100.1, height: 80.2),
+            canvasSize: CGSize(width: 200, height: 150)
+        ) == CGRect(x: 10, y: 20, width: 101, height: 81))
+        #expect(ImageEditorCropGeometry.committedPixelBounds(
+            for: CGRect(x: -4.6, y: 145.2, width: 20.1, height: 20.1),
+            canvasSize: CGSize(width: 200, height: 150)
+        ) == CGRect(x: 0, y: 145, width: 16, height: 5))
+
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let viewSource = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let commandSource = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorCanvasCommands.swift"),
+            encoding: .utf8
+        )
+        #expect(viewSource.contains("ImageEditorCropGeometry.committedPixelBounds"))
+        #expect(viewSource.contains("image-editor-crop-size"))
+        #expect(commandSource.contains("ImageEditorCropGeometry.committedPixelBounds"))
+
+        for localizationID in ["zh-Hans", "en", "ja"] {
+            let localization = try String(
+                contentsOf: repositoryRoot
+                    .appendingPathComponent("veilpic/\(localizationID).lproj/Localizable.strings"),
+                encoding: .utf8
+            )
+            #expect(localization.contains("\"imageEditor.cropBounds.size\""))
+        }
+    }
+
+    @Test
     func cropRuleOfThirdsGuidesDivideThePreviewAndAreWiredToTheCanvas() throws {
         let guides = ImageEditorCropGeometry.ruleOfThirdsSegments(
             in: CGRect(x: 12, y: 18, width: 90, height: 60)
