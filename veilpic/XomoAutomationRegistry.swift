@@ -5764,6 +5764,19 @@ final class XomoAutomationRegistry {
         } else {
             resolvedPatchPatternScale = nil
         }
+        func validatedPatchPatternChannel(_ key: String) throws -> Double? {
+            guard action == "patchPattern", arguments[key] != nil else { return nil }
+            let value = try requiredNumber(key, in: arguments)
+            guard value.isFinite, (0.0...1.0).contains(value) else {
+                throw XomoAutomationCallError.invalidArgument(
+                    "Patch \(key) must be from 0 through 1"
+                )
+            }
+            return value
+        }
+        let resolvedPatchPatternRed = try validatedPatchPatternChannel("patternRed")
+        let resolvedPatchPatternGreen = try validatedPatchPatternChannel("patternGreen")
+        let resolvedPatchPatternBlue = try validatedPatchPatternChannel("patternBlue")
         if let size = arguments["size"]?.doubleValue { viewModel.brushSize = size }
         let usesStrength = ["blur", "sharpen", "smudge"].contains(action)
         let usesExposure = ["dodge", "burn"].contains(action)
@@ -5818,6 +5831,15 @@ final class XomoAutomationRegistry {
             }
             if let resolvedPatchPatternScale {
                 viewModel.patchPatternContent.scale = resolvedPatchPatternScale
+            }
+            if let resolvedPatchPatternRed {
+                viewModel.patchPatternContent.red = resolvedPatchPatternRed
+            }
+            if let resolvedPatchPatternGreen {
+                viewModel.patchPatternContent.green = resolvedPatchPatternGreen
+            }
+            if let resolvedPatchPatternBlue {
+                viewModel.patchPatternContent.blue = resolvedPatchPatternBlue
             }
             guard viewModel.applyPatchPattern() else {
                 throw XomoAutomationCallError.operationFailed(
@@ -7612,6 +7634,9 @@ private extension XomoAutomationRegistry {
             "diffusion": XomoAutomationSchema.integer(description: "Patch texture diffusion from 1 for sharp detail through 7 for smooth regions", minimum: 1, maximum: 7),
             "patternKind": XomoAutomationSchema.string(description: "Built-in pattern used by patchPattern", values: ["checkerboard", "diagonalStripes", "dots"]),
             "patternScale": XomoAutomationSchema.number(description: "Patch pattern tile size from 6 through 64 pixels", minimum: 6, maximum: 64),
+            "patternRed": XomoAutomationSchema.number(description: "Patch pattern red channel from 0 through 1", minimum: 0, maximum: 1),
+            "patternGreen": XomoAutomationSchema.number(description: "Patch pattern green channel from 0 through 1", minimum: 0, maximum: 1),
+            "patternBlue": XomoAutomationSchema.number(description: "Patch pattern blue channel from 0 through 1", minimum: 0, maximum: 1),
             "healingMode": XomoAutomationSchema.string(description: "Healing mode", values: ["source", "spot"]),
             "spongeMode": XomoAutomationSchema.string(description: "Sponge mode", values: ["saturate", "desaturate"]),
             "spongeVibrance": XomoAutomationSchema.boolean(description: "Reduce clipping near fully saturated or desaturated colors"),

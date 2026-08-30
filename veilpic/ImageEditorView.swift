@@ -988,6 +988,18 @@ struct ImageEditorView: View {
                         ))
                     }
                     .accessibilityIdentifier("image-editor-patch-pattern-scale")
+                    HStack {
+                        Text(L10n.text("imageEditor.option.patchPatternColor"))
+                        Spacer()
+                        ColorPicker(
+                            "",
+                            selection: patchPatternColorBinding,
+                            supportsOpacity: false
+                        )
+                        .labelsHidden()
+                        .focusable(false)
+                        .accessibilityIdentifier("image-editor-patch-pattern-color")
+                    }
                     Divider()
                     Button(L10n.text("imageEditor.action.patchUsePattern")) {
                         viewModel.applyPatchPattern()
@@ -1629,6 +1641,17 @@ struct ImageEditorView: View {
         .foregroundStyle(Color(nsColor: ImageEditorOptionsBarAppearance.foregroundColor))
         .environment(\.colorScheme, .dark)
         .background(Color(nsColor: ImageEditorTheme.panel))
+    }
+
+    private var patchPatternColorBinding: Binding<Color> {
+        Binding {
+            Color(nsColor: viewModel.patchPatternContent.color)
+        } set: { value in
+            guard let color = NSColor(value).usingColorSpace(.deviceRGB) else { return }
+            viewModel.patchPatternContent.red = Double(color.redComponent)
+            viewModel.patchPatternContent.green = Double(color.greenComponent)
+            viewModel.patchPatternContent.blue = Double(color.blueComponent)
+        }
     }
 
     private var colorSamplingOptionControls: some View {

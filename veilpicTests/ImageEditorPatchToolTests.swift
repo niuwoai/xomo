@@ -603,6 +603,34 @@ struct ImageEditorPatchToolTests {
         #expect(transitionCount(sixPixelTiles) > transitionCount(twelvePixelTiles))
     }
 
+    @Test func usePatternColorControlsTheRenderedPatternPixels() throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "patch-pattern-color.png",
+            image: .transparent(size: CGSize(width: 12, height: 12))
+        ) { _ in }
+        viewModel.selectAll()
+        viewModel.opacity = 1
+        viewModel.patchPatternContent = ImageEditorPatternFillContent(
+            kind: .checkerboard,
+            red: 0,
+            green: 1,
+            blue: 0,
+            opacity: 1,
+            scale: 6
+        )
+
+        #expect(viewModel.applyPatchPattern())
+        let image = try #require(viewModel.document.selectedLayer?.image)
+        let pixels = try #require(imageEditorRGBABytes(image, width: 12, height: 12))
+        let opaqueOffset = try #require(stride(from: 0, to: pixels.count, by: 4).first {
+            pixels[$0 + 3] > 240
+        })
+
+        #expect(pixels[opaqueOffset] < 15)
+        #expect(pixels[opaqueOffset + 1] > 240)
+        #expect(pixels[opaqueOffset + 2] < 15)
+    }
+
     @Test func transparentOptionIsWiredToTheOptionsBarAndLivePreview() throws {
         let repositoryRoot = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()
@@ -627,10 +655,12 @@ struct ImageEditorPatchToolTests {
         #expect(source.contains(".onChange(of: viewModel.patchDiffusion)"))
         #expect(source.contains("selection: $viewModel.patchPatternContent.kind"))
         #expect(source.contains("value: $viewModel.patchPatternContent.scale"))
+        #expect(source.contains("selection: patchPatternColorBinding"))
         #expect(source.contains("imageEditor.option.patchPatternSummary"))
         #expect(source.contains("viewModel.applyPatchPattern()"))
         #expect(source.contains("image-editor-patch-pattern-menu"))
         #expect(source.contains("image-editor-patch-pattern-scale"))
+        #expect(source.contains("image-editor-patch-pattern-color"))
         #expect(source.contains("image-editor-patch-use-pattern"))
         #expect(source.contains("refreshActivePatchPreview()"))
     }

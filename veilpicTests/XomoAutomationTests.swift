@@ -19117,6 +19117,9 @@ struct XomoAutomationTests {
                 "action": .string("patchPattern"),
                 "patternKind": .string("dots"),
                 "patternScale": .number(24),
+                "patternRed": .number(0.2),
+                "patternGreen": .number(0.7),
+                "patternBlue": .number(0.4),
                 "opacity": .number(1)
             ]
         ))
@@ -19124,6 +19127,9 @@ struct XomoAutomationTests {
         #expect(response.ok)
         #expect(viewModel.patchPatternContent.kind == .dots)
         #expect(viewModel.patchPatternContent.scale == 24)
+        #expect(viewModel.patchPatternContent.red == 0.2)
+        #expect(viewModel.patchPatternContent.green == 0.7)
+        #expect(viewModel.patchPatternContent.blue == 0.4)
         #expect(viewModel.document.history.count == historyCount + 1)
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.selectionPatchPattern"))
     }
@@ -19173,6 +19179,33 @@ struct XomoAutomationTests {
 
         #expect(!response.ok)
         #expect(viewModel.patchPatternContent.scale == originalScale)
+        #expect(viewModel.opacity == originalOpacity)
+        #expect(viewModel.document.history.count == historyCount)
+    }
+
+    @Test func registryRejectsInvalidPatchPatternColorBeforeChangingOpacity() {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        viewModel.selectAll()
+        let originalOpacity = viewModel.opacity
+        let originalPatternContent = viewModel.patchPatternContent
+        let historyCount = viewModel.document.history.count
+
+        let response = registry.execute(request(
+            operation: "call",
+            name: "xomo.paint.special",
+            arguments: [
+                "action": .string("patchPattern"),
+                "patternRed": .number(0.4),
+                "patternGreen": .number(1.1),
+                "patternBlue": .number(0.2),
+                "opacity": .number(0.25)
+            ]
+        ))
+
+        #expect(!response.ok)
+        #expect(viewModel.patchPatternContent == originalPatternContent)
         #expect(viewModel.opacity == originalOpacity)
         #expect(viewModel.document.history.count == historyCount)
     }

@@ -747,6 +747,7 @@
 "imageEditor.option.patchPattern.help" = "組み込みパターンを選び、現在の選択範囲を通してアクティブレイヤーに適用します。";
 "imageEditor.option.patchPatternSummary" = "%@ · %d px";
 "imageEditor.option.patchPatternScaleValue" = "スケール：%d px";
+"imageEditor.option.patchPatternColor" = "パターンカラー";
 "imageEditor.action.patchUsePattern" = "パターンを使用";
 "imageEditor.history.selectionPatchPattern" = "パターンでパッチ";
 "imageEditor.status.selectionPatchedPattern" = "選択範囲にパッチパターンを適用しました。";
