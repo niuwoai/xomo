@@ -833,6 +833,29 @@ struct LocalizationResourceTests {
         }
     }
 
+    @Test func patchPatternOffsetsAreLocalizedInEverySupportedLanguage() throws {
+        let paths = try Self.repositoryPaths()
+        let expectedValues = [
+            "zh-Hans": ["X %d px", "Y %d px", "重置图案位置"],
+            "en": ["X %d px", "Y %d px", "Reset Pattern Position"],
+            "ja": ["X %d px", "Y %d px", "パターン位置をリセット"]
+        ]
+        let keys = [
+            "imageEditor.patternFill.offsetXValue",
+            "imageEditor.patternFill.offsetYValue",
+            "imageEditor.action.patchPatternResetOffset"
+        ]
+
+        for (localizationID, expected) in expectedValues {
+            let strings = try Self.stringTable(
+                tableName: "Localizable",
+                localizationID: localizationID,
+                appDirectory: paths.appDirectory
+            )
+            #expect(keys.compactMap { strings[$0] } == expected)
+        }
+    }
+
     @Test func layerStyleMixedInnerGlowSourceIsLocalizedInEverySupportedLanguage() throws {
         let paths = try Self.repositoryPaths()
         let expectedValues = [

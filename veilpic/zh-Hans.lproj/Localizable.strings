@@ -749,6 +749,7 @@
 "imageEditor.option.patchPatternScaleValue" = "缩放：%d 像素";
 "imageEditor.option.patchPatternColor" = "图案颜色";
 "imageEditor.option.patchPatternOpacityValue" = "图案不透明度：%d%%";
+"imageEditor.action.patchPatternResetOffset" = "重置图案位置";
 "imageEditor.action.patchUsePattern" = "使用图案";
 "imageEditor.history.selectionPatchPattern" = "图案修补";
 "imageEditor.status.selectionPatchedPattern" = "已将修补图案应用到选区。";

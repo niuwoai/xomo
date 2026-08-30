@@ -5776,6 +5776,18 @@ final class XomoAutomationRegistry {
         } else {
             resolvedPatchPatternOpacity = nil
         }
+        func validatedPatchPatternOffset(_ key: String) throws -> CGFloat? {
+            guard action == "patchPattern", arguments[key] != nil else { return nil }
+            let value = try requiredNumber(key, in: arguments)
+            guard value.isFinite, (-128.0...128.0).contains(value) else {
+                throw XomoAutomationCallError.invalidArgument(
+                    "Patch \(key) must be from -128 through 128 pixels"
+                )
+            }
+            return CGFloat(value)
+        }
+        let resolvedPatchPatternOffsetX = try validatedPatchPatternOffset("patternOffsetX")
+        let resolvedPatchPatternOffsetY = try validatedPatchPatternOffset("patternOffsetY")
         func validatedPatchPatternChannel(_ key: String) throws -> Double? {
             guard action == "patchPattern", arguments[key] != nil else { return nil }
             let value = try requiredNumber(key, in: arguments)
@@ -5846,6 +5858,12 @@ final class XomoAutomationRegistry {
             }
             if let resolvedPatchPatternOpacity {
                 viewModel.patchPatternContent.opacity = resolvedPatchPatternOpacity
+            }
+            if let resolvedPatchPatternOffsetX {
+                viewModel.patchPatternContent.offsetX = resolvedPatchPatternOffsetX
+            }
+            if let resolvedPatchPatternOffsetY {
+                viewModel.patchPatternContent.offsetY = resolvedPatchPatternOffsetY
             }
             if let resolvedPatchPatternRed {
                 viewModel.patchPatternContent.red = resolvedPatchPatternRed
@@ -7650,6 +7668,8 @@ private extension XomoAutomationRegistry {
             "patternKind": XomoAutomationSchema.string(description: "Built-in pattern used by patchPattern", values: ["checkerboard", "diagonalStripes", "dots"]),
             "patternScale": XomoAutomationSchema.number(description: "Patch pattern tile size from 6 through 64 pixels", minimum: 6, maximum: 64),
             "patternOpacity": XomoAutomationSchema.number(description: "Patch pattern opacity from 0.05 through 1", minimum: 0.05, maximum: 1),
+            "patternOffsetX": XomoAutomationSchema.number(description: "Patch pattern horizontal phase offset in pixels", minimum: -128, maximum: 128),
+            "patternOffsetY": XomoAutomationSchema.number(description: "Patch pattern vertical phase offset in pixels", minimum: -128, maximum: 128),
             "patternRed": XomoAutomationSchema.number(description: "Patch pattern red channel from 0 through 1", minimum: 0, maximum: 1),
             "patternGreen": XomoAutomationSchema.number(description: "Patch pattern green channel from 0 through 1", minimum: 0, maximum: 1),
             "patternBlue": XomoAutomationSchema.number(description: "Patch pattern blue channel from 0 through 1", minimum: 0, maximum: 1),

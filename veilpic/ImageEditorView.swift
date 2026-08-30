@@ -999,6 +999,36 @@ struct ImageEditorView: View {
                         ))
                     }
                     .accessibilityIdentifier("image-editor-patch-pattern-opacity")
+                    Stepper(
+                        value: $viewModel.patchPatternContent.offsetX,
+                        in: -128...128,
+                        step: 1
+                    ) {
+                        Text(L10n.format(
+                            "imageEditor.patternFill.offsetXValue",
+                            Int(viewModel.patchPatternContent.offsetX.rounded())
+                        ))
+                    }
+                    .accessibilityIdentifier("image-editor-patch-pattern-offset-x")
+                    Stepper(
+                        value: $viewModel.patchPatternContent.offsetY,
+                        in: -128...128,
+                        step: 1
+                    ) {
+                        Text(L10n.format(
+                            "imageEditor.patternFill.offsetYValue",
+                            Int(viewModel.patchPatternContent.offsetY.rounded())
+                        ))
+                    }
+                    .accessibilityIdentifier("image-editor-patch-pattern-offset-y")
+                    Button(L10n.text("imageEditor.action.patchPatternResetOffset")) {
+                        viewModel.resetPatchPatternOffset()
+                    }
+                    .disabled(
+                        viewModel.patchPatternContent.offsetX == 0
+                            && viewModel.patchPatternContent.offsetY == 0
+                    )
+                    .accessibilityIdentifier("image-editor-patch-pattern-reset-offset")
                     HStack {
                         Text(L10n.text("imageEditor.option.patchPatternColor"))
                         Spacer()

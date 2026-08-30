@@ -749,6 +749,7 @@
 "imageEditor.option.patchPatternScaleValue" = "スケール：%d px";
 "imageEditor.option.patchPatternColor" = "パターンカラー";
 "imageEditor.option.patchPatternOpacityValue" = "パターンの不透明度：%d%%";
+"imageEditor.action.patchPatternResetOffset" = "パターン位置をリセット";
 "imageEditor.action.patchUsePattern" = "パターンを使用";
 "imageEditor.history.selectionPatchPattern" = "パターンでパッチ";
 "imageEditor.status.selectionPatchedPattern" = "選択範囲にパッチパターンを適用しました。";

@@ -749,6 +749,7 @@
 "imageEditor.option.patchPatternScaleValue" = "Scale: %d px";
 "imageEditor.option.patchPatternColor" = "Pattern Color";
 "imageEditor.option.patchPatternOpacityValue" = "Pattern Opacity: %d%%";
+"imageEditor.action.patchPatternResetOffset" = "Reset Pattern Position";
 "imageEditor.action.patchUsePattern" = "Use Pattern";
 "imageEditor.history.selectionPatchPattern" = "Patch with Pattern";
 "imageEditor.status.selectionPatchedPattern" = "Applied the patch pattern to the selection.";

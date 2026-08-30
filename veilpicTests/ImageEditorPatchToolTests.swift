@@ -657,6 +657,75 @@ struct ImageEditorPatchToolTests {
         #expect((120...136).contains(Int(paintedAlpha)))
     }
 
+    @Test func usePatternOffsetsShiftTheRenderedPatternPhase() throws {
+        func appliedAlpha(offsetX: CGFloat) throws -> [UInt8] {
+            let viewModel = ImageEditorViewModel(
+                sourceName: "patch-pattern-offset.png",
+                image: .transparent(size: CGSize(width: 16, height: 16))
+            ) { _ in }
+            viewModel.selectAll()
+            viewModel.opacity = 1
+            viewModel.patchPatternContent = ImageEditorPatternFillContent(
+                kind: .checkerboard,
+                red: 1,
+                green: 0,
+                blue: 0,
+                opacity: 1,
+                scale: 8,
+                offsetX: offsetX
+            )
+
+            #expect(viewModel.applyPatchPattern())
+            let image = try #require(viewModel.document.selectedLayer?.image)
+            let pixels = try #require(imageEditorRGBABytes(image, width: 16, height: 16))
+            return stride(from: 3, to: pixels.count, by: 4).map { pixels[$0] }
+        }
+
+        let original = try appliedAlpha(offsetX: 0)
+        let shifted = try appliedAlpha(offsetX: 2)
+        func matchesShift(_ delta: Int) -> Bool {
+            (0..<16).allSatisfy { y in
+                (0..<16).allSatisfy { x in
+                    shifted[y * 16 + x] == original[y * 16 + ((x + delta + 16) % 16)]
+                }
+            }
+        }
+
+        #expect(shifted != original)
+        #expect(matchesShift(2) || matchesShift(-2))
+        #expect(shifted.filter { $0 > 240 }.count == original.filter { $0 > 240 }.count)
+    }
+
+    @Test func resettingPatternOffsetIsIdempotentAndPreservesOtherSettings() {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "patch-pattern-reset.png",
+            image: .transparent(size: CGSize(width: 12, height: 12))
+        ) { _ in }
+        viewModel.patchPatternContent = ImageEditorPatternFillContent(
+            kind: .dots,
+            red: 0.2,
+            green: 0.7,
+            blue: 0.4,
+            opacity: 0.35,
+            scale: 24,
+            offsetX: 18,
+            offsetY: -11
+        )
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.resetPatchPatternOffset())
+        #expect(viewModel.patchPatternContent.offsetX == 0)
+        #expect(viewModel.patchPatternContent.offsetY == 0)
+        #expect(viewModel.patchPatternContent.kind == .dots)
+        #expect(viewModel.patchPatternContent.scale == 24)
+        #expect(viewModel.patchPatternContent.opacity == 0.35)
+        #expect(viewModel.patchPatternContent.red == 0.2)
+        #expect(viewModel.patchPatternContent.green == 0.7)
+        #expect(viewModel.patchPatternContent.blue == 0.4)
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(!viewModel.resetPatchPatternOffset())
+    }
+
     @Test func transparentOptionIsWiredToTheOptionsBarAndLivePreview() throws {
         let repositoryRoot = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()
@@ -682,13 +751,21 @@ struct ImageEditorPatchToolTests {
         #expect(source.contains("selection: $viewModel.patchPatternContent.kind"))
         #expect(source.contains("value: $viewModel.patchPatternContent.scale"))
         #expect(source.contains("value: $viewModel.patchPatternContent.opacity"))
+        #expect(source.contains("value: $viewModel.patchPatternContent.offsetX"))
+        #expect(source.contains("value: $viewModel.patchPatternContent.offsetY"))
         #expect(source.contains("selection: patchPatternColorBinding"))
         #expect(source.contains("imageEditor.option.patchPatternOpacityValue"))
+        #expect(source.contains("imageEditor.patternFill.offsetXValue"))
+        #expect(source.contains("imageEditor.patternFill.offsetYValue"))
+        #expect(source.contains("viewModel.resetPatchPatternOffset()"))
         #expect(source.contains("imageEditor.option.patchPatternSummary"))
         #expect(source.contains("viewModel.applyPatchPattern()"))
         #expect(source.contains("image-editor-patch-pattern-menu"))
         #expect(source.contains("image-editor-patch-pattern-scale"))
         #expect(source.contains("image-editor-patch-pattern-opacity"))
+        #expect(source.contains("image-editor-patch-pattern-offset-x"))
+        #expect(source.contains("image-editor-patch-pattern-offset-y"))
+        #expect(source.contains("image-editor-patch-pattern-reset-offset"))
         #expect(source.contains("image-editor-patch-pattern-color"))
         #expect(source.contains("image-editor-patch-use-pattern"))
         #expect(source.contains("refreshActivePatchPreview()"))

@@ -973,6 +973,16 @@ extension ImageEditorViewModel {
     }
 
     @discardableResult
+    func resetPatchPatternOffset() -> Bool {
+        guard patchPatternContent.offsetX != 0 || patchPatternContent.offsetY != 0 else {
+            return false
+        }
+        patchPatternContent.offsetX = 0
+        patchPatternContent.offsetY = 0
+        return true
+    }
+
+    @discardableResult
     func applyPatchPattern() -> Bool {
         guard let selection = document.selection else {
             statusText = L10n.text("imageEditor.status.noSelection")
