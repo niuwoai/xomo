@@ -916,10 +916,8 @@ final class ScrollWheelZoomNSView: NSView {
             guard bounds.contains(location) else {
                 return false
             }
-            pointerCaptureState.reset()
-            if hasObjectMoveCandidate || isObjectMoving {
-                cancelStaleObjectMoveCapture()
-            }
+            prepareForNewPrimaryPointerSequence()
+            guard self.window === window else { return false }
             if claimsKeyboardFocusOnPointerDown {
                 ImageEditorFilePanelKeyboardFocusRestorer.claimEditorResponder(in: window)
             }
@@ -1226,6 +1224,20 @@ final class ScrollWheelZoomNSView: NSView {
         }
     }
 
+    private func prepareForNewPrimaryPointerSequence() {
+        // A fresh accepted mouse-down supersedes a stroke whose mouse-up was lost,
+        // including one owned by a different editor window.
+        if let previous = Self.activePointerTransaction {
+            Self.activePointerTransaction = nil
+            previous.captureState.reset()
+            previous.onCancelled?()
+        }
+        cancelStalePrimaryPointerCapture()
+        if hasObjectMoveCandidate || isObjectMoving {
+            cancelStaleObjectMoveCapture()
+        }
+    }
+
     private func cancelStalePrimaryPointerCapture() {
         let transaction = Self.activePointerTransaction.flatMap {
             $0.captureState === pointerCaptureState ? $0 : nil
@@ -1235,6 +1247,9 @@ final class ScrollWheelZoomNSView: NSView {
             activeKind: pointerCaptureState.activeKind,
             isLayerResizing: isLayerResizing || pointerCaptureState.isLayerResizing
         )
+        // Callbacks may detach the view and re-enter cancellation.
+        isLayerResizing = false
+        pointerCaptureState.reset()
         if decision.shouldCancelActiveTransaction, let transaction {
             Self.activePointerTransaction = nil
             transaction.onCancelled?()
@@ -1248,8 +1263,6 @@ final class ScrollWheelZoomNSView: NSView {
         if decision.shouldCancelLayerResize {
             onLayerResizeCancelled?()
         }
-        isLayerResizing = false
-        pointerCaptureState.reset()
     }
 
     private static func continueActivePointerTransaction(
