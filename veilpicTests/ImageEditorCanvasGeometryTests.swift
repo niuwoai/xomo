@@ -607,6 +607,66 @@ struct ImageEditorCanvasGeometryTests {
     }
 
     @Test
+    func pendingCropSlashTogglesTheCroppedOutsideAreaOnlyInCropContext() throws {
+        for keyCode: UInt16? in [nil, 44] {
+            #expect(ImageEditorKeyboardShortcutAction.resolve(
+                charactersIgnoringModifiers: keyCode == nil ? "/" : nil,
+                modifierFlags: [],
+                keyCode: keyCode,
+                activeTool: .crop,
+                hasPendingCrop: true
+            ) == .toggleCroppedAreaVisibility)
+        }
+        #expect(ImageEditorKeyboardShortcutAction.resolve(
+            charactersIgnoringModifiers: "/",
+            modifierFlags: [],
+            activeTool: .crop,
+            hasPendingCrop: false
+        ) == nil)
+        #expect(ImageEditorKeyboardShortcutAction.resolve(
+            charactersIgnoringModifiers: "/",
+            modifierFlags: [],
+            activeTool: .move,
+            hasPendingCrop: true
+        ) == nil)
+        #expect(ImageEditorKeyboardShortcutAction.resolve(
+            charactersIgnoringModifiers: "/",
+            modifierFlags: [.shift],
+            activeTool: .crop,
+            hasPendingCrop: true
+        ) == nil)
+        #expect(ImageEditorKeyboardShortcutAction.toggleCroppedAreaVisibility.isBlockedByTextInput)
+
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        #expect(source.contains("@State private var showsCroppedArea = true"))
+        #expect(source.contains("case .toggleCroppedAreaVisibility: showsCroppedArea.toggle()"))
+        #expect(source.contains("showsCroppedArea\n                    ? Color.black.opacity(0.48)"))
+        #expect(source.contains(": Color(nsColor: ImageEditorTheme.window)"))
+        #expect(source.contains("image-editor-crop-outside-area-toggle"))
+        #expect(source.contains(".accessibilityLabel(L10n.text(\"imageEditor.cropBounds.croppedAreaHelp\"))"))
+
+        for localizationID in ["zh-Hans", "en", "ja"] {
+            let localization = try String(
+                contentsOf: repositoryRoot
+                    .appendingPathComponent("veilpic/\(localizationID).lproj/Localizable.strings"),
+                encoding: .utf8
+            )
+            let help = try #require(localization.range(
+                of: "\"imageEditor.cropBounds.croppedAreaHelp\""
+            ))
+            let helpLine = localization[help.lowerBound...]
+                .prefix { $0 != "\n" }
+            #expect(helpLine.contains("/"))
+        }
+    }
+
+    @Test
     func pendingCropUsesClassicConfirmAndCancelKeysBeforeOtherCanvasActions() throws {
         for keyCode: UInt16 in [36, 76] {
             #expect(ImageEditorPendingCropKeyPolicy.matchesConfirm(

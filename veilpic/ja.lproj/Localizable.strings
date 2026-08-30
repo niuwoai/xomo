@@ -493,6 +493,7 @@
 "imageEditor.cropBounds.aspectUnlock" = "切り抜きの縦横比固定を解除";
 "imageEditor.cropBounds.resetHelp" = "切り抜きをキャンバス全体に戻す（Delete）";
 "imageEditor.cropBounds.swapHelp" = "切り抜きの幅と高さを入れ替える（X）";
+"imageEditor.cropBounds.croppedAreaHelp" = "切り抜き範囲外を表示または非表示（/）";
 "imageEditor.cropAspect.help" = "切り抜きの縦横比プリセットを適用";
 "imageEditor.cropAspect.original" = "元の縦横比";
 "imageEditor.cropAspect.square" = "1:1 正方形";

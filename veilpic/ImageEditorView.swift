@@ -182,6 +182,7 @@ struct ImageEditorView: View {
     @State private var lastPatchPreviewUpdateTime: TimeInterval = 0
     @State private var pendingCropRect: CGRect?
     @State private var cropGuideKind = ImageEditorCropGuideKind.ruleOfThirds
+    @State private var showsCroppedArea = true
     @State private var isCropAspectRatioLocked = false
     @State private var activeCropHandle: ImageEditorCropHandle?
     @State private var cropInteractionStartPoint: CGPoint?
@@ -3699,6 +3700,7 @@ struct ImageEditorView: View {
         case .toggleGuideSnapping: performCanvasAidCommand(.guideSnapping)
         case .toggleGuidesLocked: performCanvasAidCommand(.guidesLocked)
         case .toggleGrid: performCanvasAidCommand(.grid)
+        case .toggleCroppedAreaVisibility: showsCroppedArea.toggle()
         case .swapCropOrientation: swapPendingCropOrientation()
         case .cycleCropGuide:
             guard pendingCropRect != nil else { return }
@@ -5220,6 +5222,18 @@ struct ImageEditorView: View {
                     .accessibilityIdentifier("image-editor-crop-aspect-menu")
 
                     Button {
+                        showsCroppedArea.toggle()
+                    } label: {
+                        Image(systemName: showsCroppedArea ? "eye" : "eye.slash")
+                            .frame(width: 24, height: 24)
+                    }
+                    .buttonStyle(EditorIconButtonStyle(isSelected: showsCroppedArea))
+                    .focusable(false)
+                    .help(L10n.text("imageEditor.cropBounds.croppedAreaHelp"))
+                    .accessibilityLabel(L10n.text("imageEditor.cropBounds.croppedAreaHelp"))
+                    .accessibilityIdentifier("image-editor-crop-outside-area-toggle")
+
+                    Button {
                         resetPendingCropToCanvas()
                     } label: {
                         Image(systemName: "arrow.counterclockwise")
@@ -5659,7 +5673,11 @@ struct ImageEditorView: View {
                     path.addRect(shieldRect)
                 }
             }
-            .fill(Color.black.opacity(0.48))
+            .fill(
+                showsCroppedArea
+                    ? Color.black.opacity(0.48)
+                    : Color(nsColor: ImageEditorTheme.window)
+            )
             .allowsHitTesting(false)
             ZStack {
                 Rectangle()
@@ -20048,6 +20066,7 @@ enum ImageEditorKeyboardShortcutAction: Equatable {
     case toggleGuideSnapping
     case toggleGuidesLocked
     case toggleGrid
+    case toggleCroppedAreaVisibility
     case swapCropOrientation
     case cycleCropGuide
     case zoomIn
@@ -20101,6 +20120,7 @@ enum ImageEditorKeyboardShortcutAction: Equatable {
              .toggleQuickMask,
              .toggleQuickMaskGrayscalePreview,
              .toggleLayerMaskRubylith,
+             .toggleCroppedAreaVisibility,
              .swapCropOrientation,
              .cycleCropGuide,
              .toneRange,
@@ -20236,6 +20256,12 @@ enum ImageEditorKeyboardShortcutAction: Equatable {
         if key == "i", relevantFlags == [.command, .shift] { return .invertSelection }
         if key == "d", relevantFlags == [.command, .option] { return .featherSelection }
         if key == "q", relevantFlags.isEmpty { return .toggleQuickMask }
+        if (key == "/" || keyCode == 44),
+           relevantFlags.isEmpty,
+           activeTool == .crop,
+           hasPendingCrop {
+            return .toggleCroppedAreaVisibility
+        }
         if key == "x",
            relevantFlags.isEmpty,
            activeTool == .crop,
