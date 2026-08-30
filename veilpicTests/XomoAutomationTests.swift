@@ -19047,6 +19047,62 @@ struct XomoAutomationTests {
         }
     }
 
+    @Test func registryConfiguresCurrentAndBelowPatchSampling() {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        viewModel.createRectSelection(from: CGPoint(x: 10, y: 10), to: CGPoint(x: 30, y: 30))
+
+        let response = registry.execute(request(
+            operation: "call",
+            name: "xomo.paint.special",
+            arguments: [
+                "action": .string("patch"),
+                "sampleSource": .string("currentAndBelow"),
+                "points": .array([
+                    .object(["x": .number(20), "y": .number(20)]),
+                    .object(["x": .number(50), "y": .number(20)])
+                ])
+            ]
+        ))
+
+        #expect(response.ok)
+        #expect(viewModel.patchSampleSource == .currentAndBelow)
+        #expect(!viewModel.patchSampleAllLayersEnabled)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.selectionPatch"))
+    }
+
+    @Test func registryRejectsInvalidPatchSampleSourceBeforeChangingSamplingOptions() {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        viewModel.createRectSelection(from: CGPoint(x: 10, y: 10), to: CGPoint(x: 30, y: 30))
+        let historyCount = viewModel.document.history.count
+
+        let response = registry.execute(request(
+            operation: "call",
+            name: "xomo.paint.special",
+            arguments: [
+                "action": .string("patch"),
+                "transparent": .bool(true),
+                "sampleSource": .string("layersAbove"),
+                "ignoresAdjustmentLayers": .bool(true),
+                "diffusion": .number(6),
+                "points": .array([
+                    .object(["x": .number(20), "y": .number(20)]),
+                    .object(["x": .number(50), "y": .number(20)])
+                ])
+            ]
+        ))
+
+        #expect(!response.ok)
+        #expect(!viewModel.patchTransparentEnabled)
+        #expect(viewModel.patchSampleSource == .currentLayer)
+        #expect(!viewModel.patchIgnoresAdjustmentLayers)
+        #expect(viewModel.patchDiffusion == 1)
+        #expect(viewModel.document.history.count == historyCount)
+    }
+
     @Test func registryConfiguresNoncontiguousPaintBucket() {
         let viewModel = makeViewModel()
         let registry = XomoAutomationRegistry.shared

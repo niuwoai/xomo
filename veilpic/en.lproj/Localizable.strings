@@ -738,7 +738,8 @@
 "imageEditor.patchMode.destination" = "Destination";
 "imageEditor.option.patchTransparent" = "Transparent";
 "imageEditor.option.patchTransparent.help" = "Extract only sampled texture while preserving the target color and transparency.";
-"imageEditor.option.patchSampleAllLayers.help" = "Sample the visible composite while writing the patch only into the active layer.";
+"imageEditor.option.patchSampleSource" = "Patch Sample";
+"imageEditor.option.patchSampleSource.help" = "Choose the active layer, the active layer and those below it, or every visible layer as the patch sample.";
 "imageEditor.option.patchIgnoreAdjustments.help" = "Exclude adjustment layers from the visible composite used by the patch sample.";
 "imageEditor.option.patchDiffusionValue" = "Diffusion %d";
 "imageEditor.option.patchDiffusion.help" = "1 preserves the sharpest detail; higher values progressively smooth sampled texture for flatter backgrounds.";

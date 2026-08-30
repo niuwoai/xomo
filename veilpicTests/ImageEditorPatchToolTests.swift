@@ -437,6 +437,43 @@ struct ImageEditorPatchToolTests {
         #expect(redone.redComponent > redone.blueComponent + 0.6)
     }
 
+    @Test func currentAndBelowSampleSourceExcludesVisibleLayersAboveThePatchTarget() throws {
+        let canvasSize = NSSize(width: 80, height: 60)
+        let sampleRect = CGRect(x: 12, y: 22, width: 16, height: 16)
+        let targetRect = CGRect(x: 42, y: 22, width: 16, height: 16)
+
+        func patchedCenter(source: ImageEditorCloneSampleSource) throws -> NSColor {
+            let bottomImage = bitmapImage(
+                size: canvasSize,
+                background: .clear,
+                fills: [(sampleRect, NSColor(deviceRed: 0.9, green: 0.05, blue: 0.05, alpha: 1))]
+            )
+            var document = ImageEditorDocument(sourceName: "patch-source-range.png", image: bottomImage)
+            let editLayer = ImageEditorLayer.blank(name: "Patch Target", size: canvasSize)
+            let upperImage = bitmapImage(
+                size: canvasSize,
+                background: .clear,
+                fills: [(sampleRect, NSColor(deviceRed: 0.05, green: 0.9, blue: 0.05, alpha: 1))]
+            )
+            var upperLayer = ImageEditorLayer.blank(name: "Upper Annotation", size: canvasSize)
+            upperLayer.image = upperImage
+            document.layers = [document.layers[0], editLayer, upperLayer]
+            document.selectedLayerID = editLayer.id
+            document.selectedLayerIDs = [editLayer.id]
+            let viewModel = ImageEditorViewModel(document: document, onApply: { _ in })
+            #expect(viewModel.patchSampleSource == .currentLayer)
+            viewModel.patchSampleSource = source
+            viewModel.createRectSelection(from: targetRect.origin, to: targetRect.bottomRight)
+            viewModel.patchSelection(from: targetRect.center, to: sampleRect.center)
+            return try color(in: viewModel, at: targetRect.center)
+        }
+
+        let currentAndBelow = try patchedCenter(source: .currentAndBelow)
+        let allVisible = try patchedCenter(source: .allVisible)
+        #expect(currentAndBelow.redComponent > currentAndBelow.greenComponent + 0.6)
+        #expect(allVisible.greenComponent > allVisible.redComponent + 0.6)
+    }
+
     @Test func ignoreAdjustmentsFiltersTheCompositePatchSample() throws {
         let canvasSize = NSSize(width: 80, height: 60)
         let sampleRect = CGRect(x: 12, y: 22, width: 16, height: 16)
@@ -487,11 +524,12 @@ struct ImageEditorPatchToolTests {
         #expect(source.contains("isOn: $viewModel.patchTransparentEnabled"))
         #expect(source.contains(".accessibilityIdentifier(\"image-editor-patch-transparent\")"))
         #expect(source.contains(".onChange(of: viewModel.patchTransparentEnabled)"))
-        #expect(source.contains("isOn: $viewModel.patchSampleAllLayersEnabled"))
-        #expect(source.contains("image-editor-patch-sample-all-layers"))
-        #expect(source.contains(".onChange(of: viewModel.patchSampleAllLayersEnabled)"))
+        #expect(source.contains("selection: $viewModel.patchSampleSource"))
+        #expect(source.contains("ForEach(ImageEditorCloneSampleSource.allCases)"))
+        #expect(source.contains("image-editor-patch-sample-source"))
+        #expect(source.contains(".onChange(of: viewModel.patchSampleSource)"))
         #expect(source.contains("isOn: $viewModel.patchIgnoresAdjustmentLayers"))
-        #expect(source.contains(".disabled(!viewModel.patchSampleAllLayersEnabled)"))
+        #expect(source.contains(".disabled(viewModel.patchSampleSource == .currentLayer)"))
         #expect(source.contains("image-editor-patch-ignore-adjustments"))
         #expect(source.contains(".onChange(of: viewModel.patchIgnoresAdjustmentLayers)"))
         #expect(source.contains("Stepper(value: $viewModel.patchDiffusion, in: 1...7)"))

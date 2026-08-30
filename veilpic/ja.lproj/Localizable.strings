@@ -738,7 +738,8 @@
 "imageEditor.patchMode.destination" = "適用先";
 "imageEditor.option.patchTransparent" = "透明";
 "imageEditor.option.patchTransparent.help" = "サンプル領域のテクスチャだけを抽出し、適用先の色と透明度を保持します。";
-"imageEditor.option.patchSampleAllLayers.help" = "表示中の全レイヤーの合成結果からサンプルし、パッチはアクティブレイヤーだけに書き込みます。";
+"imageEditor.option.patchSampleSource" = "パッチサンプル";
+"imageEditor.option.patchSampleSource.help" = "アクティブレイヤー、現在以下、または表示中の全レイヤーからパッチサンプルを選びます。";
 "imageEditor.option.patchIgnoreAdjustments.help" = "パッチの表示合成サンプルから調整レイヤーを除外します。";
 "imageEditor.option.patchDiffusionValue" = "拡散 %d";
 "imageEditor.option.patchDiffusion.help" = "1 は最も鮮明なディテールを保持し、値を上げるほどサンプルテクスチャを段階的に滑らかにします。";

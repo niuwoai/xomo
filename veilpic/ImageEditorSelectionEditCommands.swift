@@ -1002,11 +1002,11 @@ extension ImageEditorViewModel {
 
         let layer = document.layers[index]
         let samplingImage: NSImage?
-        if patchSampleAllLayersEnabled {
+        if patchSampleSource != .currentLayer {
             guard let sampledInput = sampledBrushInput(
                 for: layer,
                 canvasOffset: .zero,
-                sampleSource: .allVisible,
+                sampleSource: patchSampleSource,
                 ignoringAdjustmentLayers: patchIgnoresAdjustmentLayers
             ) else { return nil }
             samplingImage = sampledInput.image

@@ -927,16 +927,25 @@ struct ImageEditorView: View {
                 .fixedSize()
                 .help(L10n.text("imageEditor.option.patchTransparent.help"))
                 .accessibilityIdentifier("image-editor-patch-transparent")
-                Toggle(
-                    L10n.text("imageEditor.option.sampleAllLayers"),
-                    isOn: $viewModel.patchSampleAllLayersEnabled
-                )
-                .toggleStyle(.checkbox)
+                Picker(
+                    L10n.text("imageEditor.option.patchSampleSource"),
+                    selection: $viewModel.patchSampleSource
+                ) {
+                    ForEach(ImageEditorCloneSampleSource.allCases) { source in
+                        Text(source.title).tag(source)
+                    }
+                }
+                .labelsHidden()
+                .pickerStyle(.menu)
+                .environment(\.colorScheme, .dark)
+                .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
+                .frame(width: 150)
                 .focusable(false)
-                .fixedSize()
-                .help(L10n.text("imageEditor.option.patchSampleAllLayers.help"))
-                .accessibilityHint(L10n.text("imageEditor.option.patchSampleAllLayers.help"))
-                .accessibilityIdentifier("image-editor-patch-sample-all-layers")
+                .xomoFocusEffectDisabled()
+                .help(L10n.text("imageEditor.option.patchSampleSource.help"))
+                .accessibilityLabel(L10n.text("imageEditor.option.patchSampleSource"))
+                .accessibilityHint(L10n.text("imageEditor.option.patchSampleSource.help"))
+                .accessibilityIdentifier("image-editor-patch-sample-source")
                 Toggle(
                     L10n.text("imageEditor.option.colorSamplerIgnoreAdjustments"),
                     isOn: $viewModel.patchIgnoresAdjustmentLayers
@@ -944,7 +953,7 @@ struct ImageEditorView: View {
                 .toggleStyle(.checkbox)
                 .focusable(false)
                 .fixedSize()
-                .disabled(!viewModel.patchSampleAllLayersEnabled)
+                .disabled(viewModel.patchSampleSource == .currentLayer)
                 .help(L10n.text("imageEditor.option.patchIgnoreAdjustments.help"))
                 .accessibilityHint(L10n.text("imageEditor.option.patchIgnoreAdjustments.help"))
                 .accessibilityIdentifier("image-editor-patch-ignore-adjustments")
@@ -4666,7 +4675,7 @@ struct ImageEditorView: View {
                 .onChange(of: viewModel.patchTransparentEnabled) { _ in
                     refreshActivePatchPreview()
                 }
-                .onChange(of: viewModel.patchSampleAllLayersEnabled) { _ in
+                .onChange(of: viewModel.patchSampleSource) { _ in
                     refreshActivePatchPreview()
                 }
                 .onChange(of: viewModel.patchIgnoresAdjustmentLayers) { _ in

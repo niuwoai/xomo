@@ -5803,10 +5803,28 @@ final class XomoAutomationRegistry {
             } else {
                 resolvedDiffusion = nil
             }
+            let resolvedSampleSource: ImageEditorCloneSampleSource?
+            if let rawSource = arguments["sampleSource"]?.stringValue {
+                guard let sampleSource = ImageEditorCloneSampleSource(rawValue: rawSource) else {
+                    throw XomoAutomationCallError.invalidArgument(
+                        "Patch sampleSource must be currentLayer, currentAndBelow, or allVisible"
+                    )
+                }
+                resolvedSampleSource = sampleSource
+            } else {
+                resolvedSampleSource = nil
+            }
+            guard resolvedSampleSource == nil || arguments["sampleAllLayers"] == nil else {
+                throw XomoAutomationCallError.invalidArgument(
+                    "Patch sampleSource cannot be combined with legacy sampleAllLayers"
+                )
+            }
             if let transparent = arguments["transparent"]?.boolValue {
                 viewModel.patchTransparentEnabled = transparent
             }
-            if let sampleAllLayers = arguments["sampleAllLayers"]?.boolValue {
+            if let resolvedSampleSource {
+                viewModel.patchSampleSource = resolvedSampleSource
+            } else if let sampleAllLayers = arguments["sampleAllLayers"]?.boolValue {
                 viewModel.patchSampleAllLayersEnabled = sampleAllLayers
             }
             if let ignoresAdjustmentLayers = arguments["ignoresAdjustmentLayers"]?.boolValue {
@@ -7576,7 +7594,7 @@ private extension XomoAutomationRegistry {
             "overlayOpacityPercent": XomoAutomationSchema.number(description: "Clone source overlay opacity from 0 through 100 percent", minimum: 0, maximum: 100),
             "flipHorizontal": XomoAutomationSchema.boolean(description: "Mirror the active clone source horizontally around its sampling origin"),
             "flipVertical": XomoAutomationSchema.boolean(description: "Mirror the active clone source vertically around its sampling origin"),
-            "sampleSource": XomoAutomationSchema.string(description: "Clone or healing sampling layer range", values: ["currentLayer", "currentAndBelow", "allVisible"]),
+            "sampleSource": XomoAutomationSchema.string(description: "Clone, healing, or patch sampling layer range", values: ["currentLayer", "currentAndBelow", "allVisible"]),
             "ignoresAdjustmentLayers": XomoAutomationSchema.boolean(description: "Exclude adjustment layers from clone, healing, or patch composite sampling")
         ], required: ["action"]),
         tool("xomo.shape.create", "Create an editable rectangle or ellipse and return its final layer ID, geometry, and normalized style.", [

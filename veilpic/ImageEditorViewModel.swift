@@ -213,9 +213,13 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var recentLayerStylePresetIDs: [String] = []
     @Published var patchMode: ImageEditorPatchMode = .source
     @Published var patchTransparentEnabled = false
-    @Published var patchSampleAllLayersEnabled = false
+    @Published var patchSampleSource: ImageEditorCloneSampleSource = .currentLayer
     @Published var patchIgnoresAdjustmentLayers = false
     @Published var patchDiffusion = 1
+    var patchSampleAllLayersEnabled: Bool {
+        get { patchSampleSource == .allVisible }
+        set { patchSampleSource = newValue ? .allVisible : .currentLayer }
+    }
     @Published var feather: CGFloat = 0
     @Published var selectionModifyAmount: CGFloat = 4
     @Published var tolerance: CGFloat = 0.22
