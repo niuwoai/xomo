@@ -1028,6 +1028,28 @@ struct ImageEditorView: View {
                     }
                     .accessibilityIdentifier("image-editor-patch-pattern-scale")
                     Stepper(
+                        value: $viewModel.patchPatternContent.scaleX,
+                        in: 0.25...4,
+                        step: 0.05
+                    ) {
+                        Text(L10n.format(
+                            "imageEditor.option.patchPatternScaleXValue",
+                            Int((viewModel.patchPatternContent.scaleX * 100).rounded())
+                        ))
+                    }
+                    .accessibilityIdentifier("image-editor-patch-pattern-scale-x")
+                    Stepper(
+                        value: $viewModel.patchPatternContent.scaleY,
+                        in: 0.25...4,
+                        step: 0.05
+                    ) {
+                        Text(L10n.format(
+                            "imageEditor.option.patchPatternScaleYValue",
+                            Int((viewModel.patchPatternContent.scaleY * 100).rounded())
+                        ))
+                    }
+                    .accessibilityIdentifier("image-editor-patch-pattern-scale-y")
+                    Stepper(
                         value: $viewModel.patchPatternContent.angle,
                         in: -180...180,
                         step: 1

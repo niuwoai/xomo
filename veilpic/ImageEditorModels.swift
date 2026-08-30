@@ -1281,6 +1281,8 @@ struct ImageEditorPatternFillContent: Equatable, Codable {
     var blue: Double = 0.95
     var opacity: Double = 0.55
     var scale: CGFloat = 16
+    var scaleX: CGFloat = 1
+    var scaleY: CGFloat = 1
     var angle: CGFloat = 0
     var flipsHorizontally = false
     var flipsVertically = false
@@ -1294,6 +1296,8 @@ struct ImageEditorPatternFillContent: Equatable, Codable {
         blue: Double = 0.95,
         opacity: Double = 0.55,
         scale: CGFloat = 16,
+        scaleX: CGFloat = 1,
+        scaleY: CGFloat = 1,
         angle: CGFloat = 0,
         flipsHorizontally: Bool = false,
         flipsVertically: Bool = false,
@@ -1306,6 +1310,8 @@ struct ImageEditorPatternFillContent: Equatable, Codable {
         self.blue = blue
         self.opacity = opacity
         self.scale = scale
+        self.scaleX = scaleX
+        self.scaleY = scaleY
         self.angle = angle
         self.flipsHorizontally = flipsHorizontally
         self.flipsVertically = flipsVertically
@@ -1321,6 +1327,8 @@ struct ImageEditorPatternFillContent: Equatable, Codable {
             blue: Self.zeroOne(blue),
             opacity: max(0.05, min(1, opacity)),
             scale: max(6, min(64, scale)),
+            scaleX: Self.normalizedAxisScale(scaleX),
+            scaleY: Self.normalizedAxisScale(scaleY),
             angle: Self.normalizedAngle(angle),
             flipsHorizontally: flipsHorizontally,
             flipsVertically: flipsVertically,
@@ -1354,8 +1362,8 @@ struct ImageEditorPatternFillContent: Equatable, Codable {
         affineTransform.translateX(by: content.offsetX, yBy: content.offsetY)
         affineTransform.rotate(byRadians: radians)
         affineTransform.scaleX(
-            by: content.flipsHorizontally ? -1 : 1,
-            yBy: content.flipsVertically ? -1 : 1
+            by: content.scaleX * (content.flipsHorizontally ? -1 : 1),
+            yBy: content.scaleY * (content.flipsVertically ? -1 : 1)
         )
         let tiled = CIImage(cgImage: tileCGImage).applyingFilter(
             "CIAffineTile",
@@ -1380,6 +1388,11 @@ struct ImageEditorPatternFillContent: Equatable, Codable {
         return max(-128, min(128, value))
     }
 
+    private static func normalizedAxisScale(_ value: CGFloat) -> CGFloat {
+        guard value.isFinite else { return 1 }
+        return max(0.25, min(4, value))
+    }
+
     private static func normalizedAngle(_ value: CGFloat) -> CGFloat {
         guard value.isFinite else { return 0 }
         return max(-180, min(180, value))
@@ -1392,6 +1405,8 @@ struct ImageEditorPatternFillContent: Equatable, Codable {
         case blue
         case opacity
         case scale
+        case scaleX
+        case scaleY
         case angle
         case flipsHorizontally
         case flipsVertically
@@ -1407,6 +1422,8 @@ struct ImageEditorPatternFillContent: Equatable, Codable {
         blue = try container.decode(Double.self, forKey: .blue)
         opacity = try container.decode(Double.self, forKey: .opacity)
         scale = try container.decode(CGFloat.self, forKey: .scale)
+        scaleX = try container.decodeIfPresent(CGFloat.self, forKey: .scaleX) ?? 1
+        scaleY = try container.decodeIfPresent(CGFloat.self, forKey: .scaleY) ?? 1
         angle = try container.decodeIfPresent(CGFloat.self, forKey: .angle) ?? 0
         flipsHorizontally = try container.decodeIfPresent(Bool.self, forKey: .flipsHorizontally) ?? false
         flipsVertically = try container.decodeIfPresent(Bool.self, forKey: .flipsVertically) ?? false
@@ -1423,6 +1440,8 @@ struct ImageEditorPatternFillContent: Equatable, Codable {
         try container.encode(content.blue, forKey: .blue)
         try container.encode(content.opacity, forKey: .opacity)
         try container.encode(content.scale, forKey: .scale)
+        try container.encode(content.scaleX, forKey: .scaleX)
+        try container.encode(content.scaleY, forKey: .scaleY)
         try container.encode(content.angle, forKey: .angle)
         try container.encode(content.flipsHorizontally, forKey: .flipsHorizontally)
         try container.encode(content.flipsVertically, forKey: .flipsVertically)

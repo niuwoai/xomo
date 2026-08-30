@@ -19103,7 +19103,7 @@ struct XomoAutomationTests {
         #expect(viewModel.document.history.count == historyCount)
     }
 
-    @Test func registryAppliesBuiltInPatchPattern() {
+    @Test func registryAppliesBuiltInPatchPattern() throws {
         let viewModel = makeViewModel()
         let registry = XomoAutomationRegistry.shared
         registry.register(viewModel)
@@ -19112,6 +19112,16 @@ struct XomoAutomationTests {
         viewModel.patchPatternInvertsCoverage = false
         let historyCount = viewModel.document.history.count
 
+        let toolsResponse = registry.execute(request(operation: "tools"))
+        let paintTool = try #require(automationTool(named: "xomo.paint.special", in: toolsResponse))
+        let properties = try #require(
+            paintTool["inputSchema"]?.objectValue?["properties"]?.objectValue
+        )
+        #expect(properties["patternScaleXPercent"]?.objectValue?["minimum"] == .number(25))
+        #expect(properties["patternScaleXPercent"]?.objectValue?["maximum"] == .number(400))
+        #expect(properties["patternScaleYPercent"]?.objectValue?["minimum"] == .number(25))
+        #expect(properties["patternScaleYPercent"]?.objectValue?["maximum"] == .number(400))
+
         let response = registry.execute(request(
             operation: "call",
             name: "xomo.paint.special",
@@ -19119,6 +19129,8 @@ struct XomoAutomationTests {
                 "action": .string("patchPattern"),
                 "patternKind": .string("dots"),
                 "patternScale": .number(24),
+                "patternScaleXPercent": .number(175),
+                "patternScaleYPercent": .number(60),
                 "patternAngle": .number(-37),
                 "patternOpacity": .number(0.35),
                 "patternOffsetX": .number(18),
@@ -19139,6 +19151,8 @@ struct XomoAutomationTests {
         #expect(response.ok)
         #expect(viewModel.patchPatternContent.kind == .dots)
         #expect(viewModel.patchPatternContent.scale == 24)
+        #expect(viewModel.patchPatternContent.scaleX == 1.75)
+        #expect(viewModel.patchPatternContent.scaleY == 0.6)
         #expect(viewModel.patchPatternContent.angle == -37)
         #expect(viewModel.patchPatternContent.opacity == 0.35)
         #expect(viewModel.patchPatternContent.offsetX == 18)
@@ -19222,6 +19236,33 @@ struct XomoAutomationTests {
                 "patternRed": .number(0.4),
                 "patternGreen": .number(1.1),
                 "patternBlue": .number(0.2),
+                "opacity": .number(0.25)
+            ]
+        ))
+
+        #expect(!response.ok)
+        #expect(viewModel.patchPatternContent == originalPatternContent)
+        #expect(viewModel.opacity == originalOpacity)
+        #expect(viewModel.document.history.count == historyCount)
+    }
+
+    @Test func registryRejectsInvalidPatchPatternAxisScaleBeforeChangingToolState() {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        viewModel.selectAll()
+        let originalOpacity = viewModel.opacity
+        let originalPatternContent = viewModel.patchPatternContent
+        let historyCount = viewModel.document.history.count
+
+        let response = registry.execute(request(
+            operation: "call",
+            name: "xomo.paint.special",
+            arguments: [
+                "action": .string("patchPattern"),
+                "patternScaleXPercent": .number(401),
+                "patternScaleYPercent": .number(60),
+                "patternAngle": .number(-37),
                 "opacity": .number(0.25)
             ]
         ))

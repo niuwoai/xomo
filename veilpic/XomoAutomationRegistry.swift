@@ -5764,6 +5764,18 @@ final class XomoAutomationRegistry {
         } else {
             resolvedPatchPatternScale = nil
         }
+        func validatedPatchPatternAxisScale(_ key: String) throws -> CGFloat? {
+            guard action == "patchPattern", arguments[key] != nil else { return nil }
+            let value = try requiredNumber(key, in: arguments)
+            guard value.isFinite, (25.0...400.0).contains(value) else {
+                throw XomoAutomationCallError.invalidArgument(
+                    "Patch \(key) must be from 25 through 400 percent"
+                )
+            }
+            return CGFloat(value / 100)
+        }
+        let resolvedPatchPatternScaleX = try validatedPatchPatternAxisScale("patternScaleXPercent")
+        let resolvedPatchPatternScaleY = try validatedPatchPatternAxisScale("patternScaleYPercent")
         let resolvedPatchPatternOpacity: Double?
         if action == "patchPattern", arguments["patternOpacity"] != nil {
             let rawOpacity = try requiredNumber("patternOpacity", in: arguments)
@@ -5926,6 +5938,12 @@ final class XomoAutomationRegistry {
             }
             if let resolvedPatchPatternScale {
                 viewModel.patchPatternContent.scale = resolvedPatchPatternScale
+            }
+            if let resolvedPatchPatternScaleX {
+                viewModel.patchPatternContent.scaleX = resolvedPatchPatternScaleX
+            }
+            if let resolvedPatchPatternScaleY {
+                viewModel.patchPatternContent.scaleY = resolvedPatchPatternScaleY
             }
             if let resolvedPatchPatternOpacity {
                 viewModel.patchPatternContent.opacity = resolvedPatchPatternOpacity
@@ -7759,6 +7777,8 @@ private extension XomoAutomationRegistry {
             "diffusion": XomoAutomationSchema.integer(description: "Patch texture diffusion from 1 for sharp detail through 7 for smooth regions", minimum: 1, maximum: 7),
             "patternKind": XomoAutomationSchema.string(description: "Built-in pattern used by patchPattern", values: ["checkerboard", "diagonalStripes", "dots"]),
             "patternScale": XomoAutomationSchema.number(description: "Patch pattern tile size from 6 through 64 pixels", minimum: 6, maximum: 64),
+            "patternScaleXPercent": XomoAutomationSchema.number(description: "Patch pattern horizontal scale from 25 through 400 percent", minimum: 25, maximum: 400),
+            "patternScaleYPercent": XomoAutomationSchema.number(description: "Patch pattern vertical scale from 25 through 400 percent", minimum: 25, maximum: 400),
             "patternOpacity": XomoAutomationSchema.number(description: "Patch pattern opacity from 0.05 through 1", minimum: 0.05, maximum: 1),
             "patternOffsetX": XomoAutomationSchema.number(description: "Patch pattern horizontal phase offset in pixels", minimum: -128, maximum: 128),
             "patternOffsetY": XomoAutomationSchema.number(description: "Patch pattern vertical phase offset in pixels", minimum: -128, maximum: 128),
