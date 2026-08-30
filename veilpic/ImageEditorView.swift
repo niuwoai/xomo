@@ -21460,17 +21460,12 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
 
         private func handleKeyEvent(_ event: NSEvent) -> NSEvent? {
             let relevantFlags = event.modifierFlags.intersection([.command, .option, .shift, .control])
-            if event.keyCode == 49, relevantFlags.isEmpty {
-                if event.type == .keyUp, isSpacebarPanning {
-                    resetTransientKeyboardState()
-                    return nil
-                }
-                if event.type == .keyDown, !isTextInputActive {
-                    isSpacebarPanning = true
-                    setSpacebarPanning(true)
-                    return nil
-                }
-            }
+            if ImageEditorSpacebarPanEventRouter.handle(
+                event,
+                isPanning: &isSpacebarPanning,
+                isTextInputActive: isTextInputActive,
+                setPanning: setSpacebarPanning
+            ) { return nil }
             let isDelete = ImageEditorDeleteKeyPolicy.matches(
                 keyCode: event.keyCode,
                 charactersIgnoringModifiers: event.charactersIgnoringModifiers,

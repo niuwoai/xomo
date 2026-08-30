@@ -1248,7 +1248,8 @@ struct ImageEditorCanvasCursorTests {
             encoding: .utf8
         )
 
-        #expect(source.components(separatedBy: "resetTransientKeyboardState()").count == 6)
+        // App/window deactivation and detach clear modifiers; ordinary space-up must not.
+        #expect(source.components(separatedBy: "resetTransientKeyboardState()").count == 5)
         #expect(source.contains("decision.shouldStopSpacebarPanning"))
         #expect(source.contains("decision.shouldClearCanvasModifierFlags"))
         #expect(!source.contains("stopSpacebarPanning()"))
