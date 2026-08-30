@@ -1187,11 +1187,13 @@ extension ImageEditorViewModel {
             if abs(delta.width) >= 0.001 || abs(delta.height) >= 0.001 {
                 let movedLayerIDs = stackMovedLayerIDs(participant)
                 for index in document.layers.indices where movedLayerIDs.contains(document.layers[index].id) {
+                    let originalFrame = document.layers[index].frame.standardized
                     document.layers[index].frame = document.layers[index].frame.offsetBy(
                         dx: delta.width,
                         dy: delta.height
                     )
                     document.layers[index].translateLinkedGroupMasks(by: delta)
+                    document.layers[index].compensateUnlinkedLocalMasks(by: delta, originalFrame: originalFrame)
                 }
             }
             document.layers[participantIndex].frame = targetFrame

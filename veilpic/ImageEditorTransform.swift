@@ -711,21 +711,7 @@ extension ImageEditorViewModel {
                 nextDocument.layers[index].translateLinkedGroupMasks(by: delta)
                 continue
             }
-            guard !nextDocument.layers[index].isMaskLinked else { continue }
-
-            if let mask = nextDocument.layers[index].mask,
-               let shiftedMask = mask.offsetMask(by: CGSize(width: -delta.width, height: -delta.height)) {
-                nextDocument.layers[index].mask = shiftedMask
-            }
-            if let vectorMask = nextDocument.layers[index].vectorMask {
-                let localDelta = CGSize(
-                    width: -delta.width / max(originalFrame.width, 1)
-                        * max(nextDocument.layers[index].image.size.width, 1),
-                    height: -delta.height / max(originalFrame.height, 1)
-                        * max(nextDocument.layers[index].image.size.height, 1)
-                )
-                nextDocument.layers[index].vectorMask = vectorMask.offsetPath(by: localDelta)
-            }
+            nextDocument.layers[index].compensateUnlinkedLocalMasks(by: delta, originalFrame: originalFrame)
         }
         document = nextDocument
     }
@@ -1793,6 +1779,31 @@ extension NSImage {
 }
 
 extension ImageEditorLayer {
+    /// Keep an unlinked leaf mask stationary in canvas coordinates while its
+    /// image moves. Bitmap drawing and vector paths have opposite Y axes.
+    mutating func compensateUnlinkedLocalMasks(by delta: CGSize, originalFrame: CGRect) {
+        guard !isGroup, !isMaskLinked,
+              delta.width.isFinite, delta.height.isFinite,
+              delta != .zero else { return }
+        let normalizedDelta = CGSize(
+            width: delta.width / max(originalFrame.width, 1),
+            height: delta.height / max(originalFrame.height, 1)
+        )
+        if let mask,
+           let shiftedMask = mask.offsetMask(by: CGSize(
+               width: -normalizedDelta.width * mask.size.width,
+               height: normalizedDelta.height * mask.size.height
+           )) {
+            self.mask = shiftedMask
+        }
+        if let vectorMask {
+            self.vectorMask = vectorMask.offsetPath(by: CGSize(
+                width: -normalizedDelta.width * max(image.size.width, 1),
+                height: -normalizedDelta.height * max(image.size.height, 1)
+            ))
+        }
+    }
+
     /// Group masks are canvas-sized, unlike leaf masks in local coordinates.
     /// Unlinked group masks already stay fixed when the group's frame moves.
     mutating func translateLinkedGroupMasks(by delta: CGSize) {
