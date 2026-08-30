@@ -476,11 +476,12 @@
 "imageEditor.action.cropConfirm" = "切り抜きを確定";
 "imageEditor.action.cropCancel" = "切り抜きをキャンセル";
 "imageEditor.cropGuide.title" = "構図ガイド";
-"imageEditor.cropGuide.help" = "切り抜きプレビューの構図ガイドを選択します";
+"imageEditor.cropGuide.help" = "切り抜きの構図ガイドを選択します。O キーで切り替えます";
 "imageEditor.cropGuide.ruleOfThirds" = "三分割法";
 "imageEditor.cropGuide.grid" = "詳細グリッド";
 "imageEditor.cropGuide.goldenRatio" = "黄金比";
 "imageEditor.cropGuide.none" = "ガイドなし";
+"imageEditor.status.cropGuideChanged" = "切り抜きガイド：%@";
 "imageEditor.action.apply" = "プレビューへ適用";
 "imageEditor.action.export" = "書き出し";
 "imageEditor.action.quickExportPNG" = "PNG をクイック書き出し…";

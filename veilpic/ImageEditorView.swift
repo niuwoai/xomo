@@ -369,6 +369,7 @@ struct ImageEditorView: View {
             ImageEditorKeyboardShortcutMonitor(
                 perform: performKeyboardShortcut,
                 activeTool: viewModel.canvasInteractionTool,
+                canCycleCropGuide: pendingCropRect != nil,
                 canToggleQuickMaskGrayscalePreview: viewModel.isQuickMaskMode,
                 canToggleLayerMaskRubylith: viewModel.canToggleSelectedLayerMaskRubylithPreview,
                 nudgeSelected: performNudgeCommand,
@@ -3670,6 +3671,13 @@ struct ImageEditorView: View {
         case .toggleGuideSnapping: performCanvasAidCommand(.guideSnapping)
         case .toggleGuidesLocked: performCanvasAidCommand(.guidesLocked)
         case .toggleGrid: performCanvasAidCommand(.grid)
+        case .cycleCropGuide:
+            guard pendingCropRect != nil else { return }
+            cropGuideKind = cropGuideKind.next
+            viewModel.statusText = L10n.format(
+                "imageEditor.status.cropGuideChanged",
+                L10n.text(cropGuideKind.titleKey)
+            )
         case .zoomIn: performZoomCommand(.zoomIn)
         case .zoomOut: performZoomCommand(.zoomOut)
         case .actualPixels: performZoomCommand(.actualPixels)
@@ -19800,6 +19808,7 @@ enum ImageEditorKeyboardShortcutAction: Equatable {
     case toggleGuideSnapping
     case toggleGuidesLocked
     case toggleGrid
+    case cycleCropGuide
     case zoomIn
     case zoomOut
     case actualPixels
@@ -19851,6 +19860,7 @@ enum ImageEditorKeyboardShortcutAction: Equatable {
              .toggleQuickMask,
              .toggleQuickMaskGrayscalePreview,
              .toggleLayerMaskRubylith,
+             .cycleCropGuide,
              .toneRange,
              .spongeMode:
             true
@@ -19864,6 +19874,7 @@ enum ImageEditorKeyboardShortcutAction: Equatable {
         modifierFlags: NSEvent.ModifierFlags,
         keyCode: UInt16? = nil,
         activeTool: ImageEditorTool? = nil,
+        canCycleCropGuide: Bool = false,
         canToggleQuickMaskGrayscalePreview: Bool = false,
         canToggleLayerMaskRubylith: Bool = false
     ) -> ImageEditorKeyboardShortcutAction? {
@@ -19982,6 +19993,12 @@ enum ImageEditorKeyboardShortcutAction: Equatable {
         if key == "i", relevantFlags == [.command, .shift] { return .invertSelection }
         if key == "d", relevantFlags == [.command, .option] { return .featherSelection }
         if key == "q", relevantFlags.isEmpty { return .toggleQuickMask }
+        if key == "o",
+           relevantFlags.isEmpty,
+           activeTool == .crop,
+           canCycleCropGuide {
+            return .cycleCropGuide
+        }
         if keyCode == 50,
            relevantFlags == [.shift],
            canToggleQuickMaskGrayscalePreview {
@@ -20836,6 +20853,7 @@ enum ImageEditorPendingPenPointerFinishPolicy {
 struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
     let perform: (ImageEditorKeyboardShortcutAction) -> Void
     let activeTool: ImageEditorTool
+    let canCycleCropGuide: Bool
     let canToggleQuickMaskGrayscalePreview: Bool
     let canToggleLayerMaskRubylith: Bool
     let nudgeSelected: (CGSize) -> Void
@@ -20854,6 +20872,7 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
         Coordinator(
             perform: perform,
             activeTool: activeTool,
+            canCycleCropGuide: canCycleCropGuide,
             canToggleQuickMaskGrayscalePreview: canToggleQuickMaskGrayscalePreview,
             canToggleLayerMaskRubylith: canToggleLayerMaskRubylith,
             nudgeSelected: nudgeSelected,
@@ -20877,6 +20896,7 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
     func updateNSView(_ nsView: KeyboardShortcutMonitorNSView, context: Context) {
         context.coordinator.perform = perform
         context.coordinator.activeTool = activeTool
+        context.coordinator.canCycleCropGuide = canCycleCropGuide
         context.coordinator.canToggleQuickMaskGrayscalePreview = canToggleQuickMaskGrayscalePreview
         context.coordinator.canToggleLayerMaskRubylith = canToggleLayerMaskRubylith
         context.coordinator.nudgeSelected = nudgeSelected
@@ -20896,6 +20916,7 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
         private(set) weak var window: NSWindow?
         var perform: (ImageEditorKeyboardShortcutAction) -> Void
         var activeTool: ImageEditorTool
+        var canCycleCropGuide: Bool
         var canToggleQuickMaskGrayscalePreview: Bool
         var canToggleLayerMaskRubylith: Bool
         var nudgeSelected: (CGSize) -> Void
@@ -20917,6 +20938,7 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
         init(
             perform: @escaping (ImageEditorKeyboardShortcutAction) -> Void,
             activeTool: ImageEditorTool,
+            canCycleCropGuide: Bool,
             canToggleQuickMaskGrayscalePreview: Bool,
             canToggleLayerMaskRubylith: Bool,
             nudgeSelected: @escaping (CGSize) -> Void,
@@ -20933,6 +20955,7 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
         ) {
             self.perform = perform
             self.activeTool = activeTool
+            self.canCycleCropGuide = canCycleCropGuide
             self.canToggleQuickMaskGrayscalePreview = canToggleQuickMaskGrayscalePreview
             self.canToggleLayerMaskRubylith = canToggleLayerMaskRubylith
             self.nudgeSelected = nudgeSelected
@@ -21099,6 +21122,7 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
                 modifierFlags: event.modifierFlags,
                 keyCode: event.keyCode,
                 activeTool: activeTool,
+                canCycleCropGuide: canCycleCropGuide,
                 canToggleQuickMaskGrayscalePreview: canToggleQuickMaskGrayscalePreview,
                 canToggleLayerMaskRubylith: canToggleLayerMaskRubylith
             ) {

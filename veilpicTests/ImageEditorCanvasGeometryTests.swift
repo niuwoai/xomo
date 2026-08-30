@@ -5,6 +5,7 @@
 //  Created by Codex on 2026/7/10.
 //
 
+import AppKit
 import CoreGraphics
 import Foundation
 import Testing
@@ -228,6 +229,35 @@ struct ImageEditorCanvasGeometryTests {
         assertEqual(golden[1].end, CGPoint(x: 71.803_398_875, y: 100))
         #expect(ImageEditorCropGeometry.compositionGuideSegments(for: .none, in: rect).isEmpty)
         #expect(ImageEditorCropGuideKind.allCases == [.ruleOfThirds, .grid, .goldenRatio, .none])
+        #expect(ImageEditorCropGuideKind.ruleOfThirds.next == .grid)
+        #expect(ImageEditorCropGuideKind.grid.next == .goldenRatio)
+        #expect(ImageEditorCropGuideKind.goldenRatio.next == .none)
+        #expect(ImageEditorCropGuideKind.none.next == .ruleOfThirds)
+
+        #expect(ImageEditorKeyboardShortcutAction.resolve(
+            charactersIgnoringModifiers: "o",
+            modifierFlags: [],
+            activeTool: .crop,
+            canCycleCropGuide: true
+        ) == .cycleCropGuide)
+        #expect(ImageEditorKeyboardShortcutAction.resolve(
+            charactersIgnoringModifiers: "o",
+            modifierFlags: [],
+            activeTool: .crop
+        ) == nil)
+        #expect(ImageEditorKeyboardShortcutAction.resolve(
+            charactersIgnoringModifiers: "o",
+            modifierFlags: [],
+            activeTool: .move,
+            canCycleCropGuide: true
+        ) == nil)
+        #expect(ImageEditorKeyboardShortcutAction.resolve(
+            charactersIgnoringModifiers: "o",
+            modifierFlags: [.command],
+            activeTool: .crop,
+            canCycleCropGuide: true
+        ) == .openProject)
+        #expect(ImageEditorKeyboardShortcutAction.cycleCropGuide.isBlockedByTextInput)
 
         let repositoryRoot = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()
@@ -239,6 +269,9 @@ struct ImageEditorCanvasGeometryTests {
         #expect(source.contains("selection: $cropGuideKind"))
         #expect(source.contains("ImageEditorCropGuideKind.allCases"))
         #expect(source.contains("image-editor-crop-guide-picker"))
+        #expect(source.contains("canCycleCropGuide: pendingCropRect != nil"))
+        #expect(source.contains("cropGuideKind = cropGuideKind.next"))
+        #expect(source.contains("imageEditor.status.cropGuideChanged"))
 
         for localizationID in ["zh-Hans", "en", "ja"] {
             let localization = try String(
@@ -251,6 +284,7 @@ struct ImageEditorCanvasGeometryTests {
             }
             #expect(localization.contains("\"imageEditor.cropGuide.title\""))
             #expect(localization.contains("\"imageEditor.cropGuide.help\""))
+            #expect(localization.contains("\"imageEditor.status.cropGuideChanged\""))
         }
     }
 

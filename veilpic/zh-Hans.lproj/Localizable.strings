@@ -476,11 +476,12 @@
 "imageEditor.action.cropConfirm" = "确认裁剪";
 "imageEditor.action.cropCancel" = "取消裁剪";
 "imageEditor.cropGuide.title" = "构图参考线";
-"imageEditor.cropGuide.help" = "选择裁剪预览中的构图参考线";
+"imageEditor.cropGuide.help" = "选择裁剪预览中的构图参考线；按 O 循环切换";
 "imageEditor.cropGuide.ruleOfThirds" = "三分法";
 "imageEditor.cropGuide.grid" = "精细网格";
 "imageEditor.cropGuide.goldenRatio" = "黄金比例";
 "imageEditor.cropGuide.none" = "无参考线";
+"imageEditor.status.cropGuideChanged" = "裁剪参考线：%@";
 "imageEditor.action.apply" = "应用到预览";
 "imageEditor.action.export" = "导出";
 "imageEditor.action.quickExportPNG" = "快速导出 PNG…";

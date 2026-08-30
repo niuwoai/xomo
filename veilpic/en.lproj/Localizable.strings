@@ -476,11 +476,12 @@
 "imageEditor.action.cropConfirm" = "Confirm Crop";
 "imageEditor.action.cropCancel" = "Cancel Crop";
 "imageEditor.cropGuide.title" = "Composition Guide";
-"imageEditor.cropGuide.help" = "Choose a composition guide for the crop preview";
+"imageEditor.cropGuide.help" = "Choose a crop composition guide; press O to cycle";
 "imageEditor.cropGuide.ruleOfThirds" = "Rule of Thirds";
 "imageEditor.cropGuide.grid" = "Fine Grid";
 "imageEditor.cropGuide.goldenRatio" = "Golden Ratio";
 "imageEditor.cropGuide.none" = "No Guide";
+"imageEditor.status.cropGuideChanged" = "Crop guide: %@";
 "imageEditor.action.apply" = "Apply to Preview";
 "imageEditor.action.export" = "Export";
 "imageEditor.action.quickExportPNG" = "Quick Export PNG…";

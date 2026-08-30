@@ -72,6 +72,11 @@ nonisolated enum ImageEditorCropGuideKind: String, CaseIterable, Identifiable {
         case .none: "imageEditor.cropGuide.none"
         }
     }
+
+    var next: Self {
+        guard let index = Self.allCases.firstIndex(of: self) else { return .ruleOfThirds }
+        return Self.allCases[(index + 1) % Self.allCases.count]
+    }
 }
 
 enum ImageEditorCropGeometry {
