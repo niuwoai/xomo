@@ -1023,6 +1023,18 @@ extension ImageEditorViewModel {
             && patchPatternContent.offsetY == 0
     }
 
+    var patchPatternSummary: String {
+        L10n.format(
+            "imageEditor.option.patchPatternSummary",
+            patchPatternContent.kind.title,
+            patchPatternBlendMode.title,
+            patchPatternContent.repeatMode.title,
+            Int(patchPatternContent.scale.rounded()),
+            Int(patchPatternContent.angle.rounded()),
+            Int((patchPatternContent.opacity * 100).rounded())
+        )
+    }
+
     @discardableResult
     func resetPatchPatternTransform() -> Bool {
         guard !patchPatternTransformIsIdentity else { return false }

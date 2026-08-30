@@ -1141,14 +1141,7 @@ struct ImageEditorView: View {
                     .accessibilityIdentifier("image-editor-patch-use-pattern")
                 } label: {
                     Label(
-                        L10n.format(
-                            "imageEditor.option.patchPatternSummary",
-                            viewModel.patchPatternContent.kind.title,
-                            viewModel.patchPatternBlendMode.title,
-                            Int(viewModel.patchPatternContent.scale.rounded()),
-                            Int(viewModel.patchPatternContent.angle.rounded()),
-                            Int((viewModel.patchPatternContent.opacity * 100).rounded())
-                        ),
+                        viewModel.patchPatternSummary,
                         systemImage: "square.grid.2x2"
                     )
                     .font(.system(size: 11, weight: .semibold))

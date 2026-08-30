@@ -877,6 +877,31 @@ struct ImageEditorPatchToolTests {
         #expect(quarterTurn.contains(where: { $0 < 32 }) && quarterTurn.contains(where: { $0 > 224 }))
     }
 
+    @Test func patternSummarySurfacesTheCurrentRepeatMode() {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "patch-pattern-summary.png",
+            image: .transparent(size: CGSize(width: 24, height: 24))
+        ) { _ in }
+        viewModel.patchPatternContent.kind = .dots
+        viewModel.patchPatternContent.repeatMode = .quarterDrop
+        viewModel.patchPatternBlendMode = .multiply
+        viewModel.patchPatternContent.scale = 24
+        viewModel.patchPatternContent.angle = 30
+        viewModel.patchPatternContent.opacity = 0.75
+
+        let parts = viewModel.patchPatternSummary.components(separatedBy: " · ")
+
+        #expect(parts.count == 6)
+        #expect(Array(parts.prefix(3)) == [
+            viewModel.patchPatternContent.kind.title,
+            viewModel.patchPatternBlendMode.title,
+            viewModel.patchPatternContent.repeatMode.title
+        ])
+        #expect(parts[3].contains("24"))
+        #expect(parts[4].contains("30"))
+        #expect(parts[5].contains("75"))
+    }
+
     @Test func usePatternFlipsTransformTheRenderedCoverage() throws {
         func appliedAlpha(flipsHorizontally: Bool, flipsVertically: Bool) throws -> [UInt8] {
             let viewModel = ImageEditorViewModel(
@@ -1367,7 +1392,7 @@ struct ImageEditorPatchToolTests {
         #expect(source.contains("viewModel.resetPatchPatternOffset()"))
         #expect(source.contains("viewModel.resetPatchPatternTransform()"))
         #expect(source.contains("viewModel.patchPatternTransformIsIdentity"))
-        #expect(source.contains("imageEditor.option.patchPatternSummary"))
+        #expect(source.contains("viewModel.patchPatternSummary"))
         #expect(source.contains("viewModel.applyPatchPattern()"))
         #expect(source.contains("image-editor-patch-pattern-menu"))
         #expect(source.contains("image-editor-patch-pattern-scale"))
@@ -1394,6 +1419,8 @@ struct ImageEditorPatchToolTests {
         #expect(commandSource.contains("alignsWithCanvas: patchPatternAlignsWithCanvas"))
         #expect(commandSource.contains("let preservesTransparency = patchPatternPreservesTransparency"))
         #expect(commandSource.contains("invertsPatternCoverage: patchPatternInvertsCoverage"))
+        #expect(commandSource.contains("imageEditor.option.patchPatternSummary"))
+        #expect(commandSource.contains("patchPatternContent.repeatMode.title"))
     }
 
     @Test func patchLassoHonorsReplaceAddSubtractAndIntersectSelectionModes() throws {
