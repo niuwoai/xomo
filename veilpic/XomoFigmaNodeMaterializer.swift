@@ -1035,6 +1035,10 @@ extension ImageEditorViewModel {
         _ plan: XomoFigmaNodeImportPlan,
         centeredAt destinationCenter: CGPoint? = nil
     ) -> Bool {
+        guard canImportFigmaNodePlan else {
+            statusText = figmaImportEditingInProgressMessage
+            return false
+        }
         let result = XomoFigmaNodeMaterializer.materialize(
             plan: plan,
             canvasSize: document.canvasSize,

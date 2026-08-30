@@ -527,6 +527,13 @@ struct XomoFigmaLinkImportSheet: View {
                     .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
             }
 
+            if !didImportNodePlan && !viewModel.canImportFigmaNodePlan {
+                Label(viewModel.figmaImportEditingInProgressMessage, systemImage: "pause.circle")
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundStyle(.orange)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
             HStack(spacing: 8) {
                 if didImportNodePlan {
                     Label(
@@ -545,7 +552,7 @@ struct XomoFigmaLinkImportSheet: View {
                 }
                 .buttonStyle(.borderedProminent)
                 .focusable(false)
-                .disabled(didImportNodePlan || plan.mappableCount == 0)
+                .disabled(didImportNodePlan || plan.mappableCount == 0 || !viewModel.canImportFigmaNodePlan)
                 .accessibilityIdentifier("xomo-figma-import-node-plan")
             }
         }
