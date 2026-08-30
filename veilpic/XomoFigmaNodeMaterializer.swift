@@ -40,6 +40,12 @@ enum XomoFigmaNodeMaterializer {
         canvasSize: CGSize,
         destinationCenter: CGPoint? = nil
     ) -> XomoFigmaNodeMaterializationResult {
+        guard XomoFigmaNodeIdentityValidation.error(in: plan.items) == nil else {
+            return XomoFigmaNodeMaterializationResult(
+                layers: [], slices: [], selectedLayerID: nil,
+                importedCount: 0, omittedCount: plan.items.count
+            )
+        }
         let itemByID = Dictionary(uniqueKeysWithValues: plan.items.map { ($0.sourceID, $0) })
         let childrenByParent = Dictionary(grouping: plan.items) { $0.parentSourceID }
         let groupIDs = Dictionary(uniqueKeysWithValues: plan.items.compactMap { item in
@@ -1037,6 +1043,10 @@ extension ImageEditorViewModel {
     ) -> Bool {
         guard canImportFigmaNodePlan else {
             statusText = figmaImportEditingInProgressMessage
+            return false
+        }
+        if let error = XomoFigmaNodeIdentityValidation.error(in: plan.items) {
+            statusText = L10n.text(error.localizationKey)
             return false
         }
         let result = XomoFigmaNodeMaterializer.materialize(

@@ -184,6 +184,7 @@ enum XomoFigmaNodeImportMapper {
         }
 
         let root = envelope.document
+        try XomoFigmaNodeIdentityValidation.validate(root: root)
         let origin = root.absoluteBoundingBox.map { ($0.x, $0.y) } ?? (0, 0)
         var items: [XomoFigmaNodeImportItem] = []
         try append(
