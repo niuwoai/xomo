@@ -116,6 +116,32 @@ enum ImageEditorCropGeometry {
         )
     }
 
+    static func frameBySettingCommittedSize(
+        of cropRect: CGRect,
+        to targetSize: CGSize,
+        canvasSize: CGSize,
+        minimumEdge: CGFloat = 8
+    ) -> CGRect {
+        let currentBounds = committedPixelBounds(for: cropRect, canvasSize: canvasSize)
+        guard !currentBounds.isNull,
+              currentBounds.width > 0,
+              currentBounds.height > 0,
+              targetSize.width.isFinite,
+              targetSize.height.isFinite
+        else { return cropRect }
+
+        let availableWidth = max(1, max(0, canvasSize.width) - currentBounds.minX)
+        let availableHeight = max(1, max(0, canvasSize.height) - currentBounds.minY)
+        let minimumWidth = min(max(1, minimumEdge), availableWidth)
+        let minimumHeight = min(max(1, minimumEdge), availableHeight)
+        return CGRect(
+            x: currentBounds.minX,
+            y: currentBounds.minY,
+            width: min(max(targetSize.width.rounded(), minimumWidth), availableWidth),
+            height: min(max(targetSize.height.rounded(), minimumHeight), availableHeight)
+        )
+    }
+
     static func shieldRects(
         in canvasBounds: CGRect,
         excluding cropRect: CGRect

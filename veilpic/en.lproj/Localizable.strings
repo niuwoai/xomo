@@ -481,11 +481,14 @@
 "imageEditor.cropGuide.grid" = "Fine Grid";
 "imageEditor.cropGuide.goldenRatio" = "Golden Ratio";
 "imageEditor.cropGuide.none" = "No Guide";
-"imageEditor.cropBounds.size" = "W %d × H %d px";
 "imageEditor.cropBounds.x" = "X";
 "imageEditor.cropBounds.y" = "Y";
+"imageEditor.cropBounds.width" = "W";
+"imageEditor.cropBounds.height" = "H";
 "imageEditor.cropBounds.xHelp" = "Crop left-edge X coordinate";
 "imageEditor.cropBounds.yHelp" = "Crop top-edge Y coordinate";
+"imageEditor.cropBounds.widthHelp" = "Crop width in pixels";
+"imageEditor.cropBounds.heightHelp" = "Crop height in pixels";
 "imageEditor.status.cropGuideChanged" = "Crop guide: %@";
 "imageEditor.action.apply" = "Apply to Preview";
 "imageEditor.action.export" = "Export";

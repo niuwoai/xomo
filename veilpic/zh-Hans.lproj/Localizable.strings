@@ -481,11 +481,14 @@
 "imageEditor.cropGuide.grid" = "精细网格";
 "imageEditor.cropGuide.goldenRatio" = "黄金比例";
 "imageEditor.cropGuide.none" = "无参考线";
-"imageEditor.cropBounds.size" = "宽 %d × 高 %d 像素";
 "imageEditor.cropBounds.x" = "X";
 "imageEditor.cropBounds.y" = "Y";
+"imageEditor.cropBounds.width" = "宽";
+"imageEditor.cropBounds.height" = "高";
 "imageEditor.cropBounds.xHelp" = "裁剪左边界 X 坐标";
 "imageEditor.cropBounds.yHelp" = "裁剪上边界 Y 坐标";
+"imageEditor.cropBounds.widthHelp" = "裁剪宽度（像素）";
+"imageEditor.cropBounds.heightHelp" = "裁剪高度（像素）";
 "imageEditor.status.cropGuideChanged" = "裁剪参考线：%@";
 "imageEditor.action.apply" = "应用到预览";
 "imageEditor.action.export" = "导出";

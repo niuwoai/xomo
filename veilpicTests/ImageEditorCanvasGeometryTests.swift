@@ -196,6 +196,16 @@ struct ImageEditorCanvasGeometryTests {
             to: CGPoint(x: 150, y: -20),
             canvasSize: CGSize(width: 200, height: 150)
         ) == CGRect(x: 99, y: 0, width: 101, height: 81))
+        #expect(ImageEditorCropGeometry.frameBySettingCommittedSize(
+            of: CGRect(x: 10.2, y: 20.7, width: 100.1, height: 80.2),
+            to: CGSize(width: 72.4, height: 48.6),
+            canvasSize: CGSize(width: 200, height: 150)
+        ) == CGRect(x: 10, y: 20, width: 72, height: 49))
+        #expect(ImageEditorCropGeometry.frameBySettingCommittedSize(
+            of: CGRect(x: 10.2, y: 20.7, width: 100.1, height: 80.2),
+            to: CGSize(width: 500, height: 2),
+            canvasSize: CGSize(width: 200, height: 150)
+        ) == CGRect(x: 10, y: 20, width: 190, height: 8))
 
         let repositoryRoot = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()
@@ -213,7 +223,10 @@ struct ImageEditorCanvasGeometryTests {
         #expect(viewSource.contains("setPendingCropOrigin(y:"))
         #expect(viewSource.contains("image-editor-crop-origin-x"))
         #expect(viewSource.contains("image-editor-crop-origin-y"))
-        #expect(viewSource.contains("image-editor-crop-size"))
+        #expect(viewSource.contains("setPendingCropSize(width:"))
+        #expect(viewSource.contains("setPendingCropSize(height:"))
+        #expect(viewSource.contains("image-editor-crop-width"))
+        #expect(viewSource.contains("image-editor-crop-height"))
         #expect(commandSource.contains("ImageEditorCropGeometry.committedPixelBounds"))
 
         for localizationID in ["zh-Hans", "en", "ja"] {
@@ -224,7 +237,8 @@ struct ImageEditorCanvasGeometryTests {
             )
             #expect(localization.contains("\"imageEditor.cropBounds.xHelp\""))
             #expect(localization.contains("\"imageEditor.cropBounds.yHelp\""))
-            #expect(localization.contains("\"imageEditor.cropBounds.size\""))
+            #expect(localization.contains("\"imageEditor.cropBounds.widthHelp\""))
+            #expect(localization.contains("\"imageEditor.cropBounds.heightHelp\""))
         }
     }
 
