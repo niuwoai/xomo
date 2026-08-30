@@ -563,6 +563,7 @@ final class ScrollWheelZoomNSView: NSView {
     private var isMiddleMousePanning = false
     private var lastMiddleMousePoint: CGPoint?
     private var isObjectMoving = false
+    private var isObjectMoveActivating = false
     private var isLayerResizing = false
     private var hasObjectMoveCandidate = false
     private var isObjectMoveCaptureRejected = false
@@ -1048,7 +1049,7 @@ final class ScrollWheelZoomNSView: NSView {
             guard event.window === window else { return hasObjectMoveCandidate }
             let location = convert(event.locationInWindow, from: nil)
             guard hasObjectMoveCandidate, let objectMoveStartPoint else { return false }
-            if isObjectMoveCaptureRejected {
+            if isObjectMoveCaptureRejected || isObjectMoveActivating {
                 return true
             }
             if !isObjectMoving {
@@ -1056,10 +1057,17 @@ final class ScrollWheelZoomNSView: NSView {
                     from: objectMoveStartPoint,
                     to: location
                 ) else { return true }
-                guard onObjectMoveActivated?(
+                guard let captureID = objectMoveCaptureID else { return true }
+                isObjectMoveActivating = true
+                let accepted = onObjectMoveActivated?(
                     objectMoveStartPoint,
                     objectMoveCandidateModifierFlags
-                ) == true else {
+                ) == true
+                // Model updates can detach the bridge or begin another candidate.
+                // Never restore flags belonging to the interrupted activation.
+                guard objectMoveCaptureID == captureID, self.window === window else { return true }
+                isObjectMoveActivating = false
+                guard accepted else {
                     // Mouse-down was already consumed. Keep ownership through
                     // mouse-up even if the model rejects activation, otherwise
                     // SwiftUI receives an orphaned release event.
@@ -1153,6 +1161,10 @@ final class ScrollWheelZoomNSView: NSView {
             // once a drag has started, otherwise the next click is swallowed
             // and the closed-hand cursor can remain stuck indefinitely.
             guard hasObjectMoveCandidate || isObjectMoving else { return false }
+            if isObjectMoveActivating {
+                cancelStaleObjectMoveCapture()
+                return true
+            }
             guard applyFinalObjectMoveLocation(event) else { return true }
             let releaseDecision = ImageEditorObjectDragEventPolicy.releaseDecision(
                 eventType: event.type,
@@ -1203,7 +1215,7 @@ final class ScrollWheelZoomNSView: NSView {
 
     private func cancelStaleObjectMoveCapture() {
         let resetDecision = ImageEditorObjectDragEventPolicy.resetDecision(
-            isObjectMoving: isObjectMoving
+            isObjectMoving: isObjectMoving || isObjectMoveActivating
         )
         clearObjectMoveCapture()
         if resetDecision.shouldCancelMove {
@@ -1213,6 +1225,7 @@ final class ScrollWheelZoomNSView: NSView {
 
     private func clearObjectMoveCapture() {
         isObjectMoving = false
+        isObjectMoveActivating = false
         hasObjectMoveCandidate = false
         isObjectMoveCaptureRejected = false
         objectMoveStartPoint = nil
