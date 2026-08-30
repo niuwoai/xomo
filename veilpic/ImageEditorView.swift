@@ -6835,8 +6835,21 @@ struct ImageEditorView: View {
                     ? finishPaintAirbrushStroke(at: endImagePoint)
                     : []
 
-                if activeCropHandle != nil {
+                if let activeCropHandle {
+                    let currentEvent = NSApp.currentEvent
+                    let shouldCommitCrop = ImageEditorCropDoubleClickCommitPolicy.shouldCommit(
+                        activeHandle: activeCropHandle,
+                        clickCount: currentEvent?.clickCount ?? 0,
+                        viewTranslation: value.translation,
+                        hasConflictingModifiers: currentEvent?.modifierFlags
+                            .intersection([.command, .option, .shift, .control])
+                            .isEmpty == false
+                    )
                     endPendingCropInteraction()
+                    if shouldCommitCrop, let pendingCropRect {
+                        viewModel.crop(to: pendingCropRect)
+                        self.pendingCropRect = nil
+                    }
                     dragStart = nil
                     dragEnd = nil
                     resetObjectMoveTracking()

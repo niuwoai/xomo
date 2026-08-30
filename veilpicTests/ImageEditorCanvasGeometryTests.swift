@@ -374,6 +374,71 @@ struct ImageEditorCanvasGeometryTests {
     }
 
     @Test
+    func pendingCropDoubleClickCommitsOnlyAnUnmodifiedInteriorClick() throws {
+        #expect(ImageEditorCropDoubleClickCommitPolicy.shouldCommit(
+            activeHandle: .move,
+            clickCount: 2,
+            viewTranslation: .zero,
+            hasConflictingModifiers: false
+        ))
+        #expect(ImageEditorCropDoubleClickCommitPolicy.shouldCommit(
+            activeHandle: .move,
+            clickCount: 2,
+            viewTranslation: CGSize(width: 2, height: -2),
+            hasConflictingModifiers: false
+        ))
+        #expect(!ImageEditorCropDoubleClickCommitPolicy.shouldCommit(
+            activeHandle: .topLeft,
+            clickCount: 2,
+            viewTranslation: .zero,
+            hasConflictingModifiers: false
+        ))
+        #expect(!ImageEditorCropDoubleClickCommitPolicy.shouldCommit(
+            activeHandle: .move,
+            clickCount: 1,
+            viewTranslation: .zero,
+            hasConflictingModifiers: false
+        ))
+        #expect(!ImageEditorCropDoubleClickCommitPolicy.shouldCommit(
+            activeHandle: .move,
+            clickCount: 2,
+            viewTranslation: CGSize(width: 3, height: 0),
+            hasConflictingModifiers: false
+        ))
+        #expect(!ImageEditorCropDoubleClickCommitPolicy.shouldCommit(
+            activeHandle: .move,
+            clickCount: 2,
+            viewTranslation: .zero,
+            hasConflictingModifiers: true
+        ))
+
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let viewSource = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        #expect(viewSource.contains("ImageEditorCropDoubleClickCommitPolicy.shouldCommit("))
+        #expect(viewSource.contains("clickCount: currentEvent?.clickCount ?? 0"))
+        #expect(viewSource.contains("if shouldCommitCrop, let pendingCropRect"))
+        #expect(viewSource.contains("viewModel.crop(to: pendingCropRect)"))
+
+        for (localizationID, expectedText) in [
+            ("zh-Hans", "框内双击"),
+            ("en", "double-click inside"),
+            ("ja", "ダブルクリック")
+        ] {
+            let localization = try String(
+                contentsOf: repositoryRoot
+                    .appendingPathComponent("veilpic/\(localizationID).lproj/Localizable.strings"),
+                encoding: .utf8
+            )
+            #expect(localization.contains(expectedText))
+        }
+    }
+
+    @Test
     func cropRuleOfThirdsGuidesDivideThePreviewAndAreWiredToTheCanvas() throws {
         let guides = ImageEditorCropGeometry.ruleOfThirdsSegments(
             in: CGRect(x: 12, y: 18, width: 90, height: 60)

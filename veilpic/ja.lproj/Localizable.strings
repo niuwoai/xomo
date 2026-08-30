@@ -473,7 +473,7 @@
 "imageEditor.action.historyShowPanelVisibility" = "履歴パネルを表示";
 "imageEditor.action.channelsShowPanel" = "チャンネルパネルを表示";
 "imageEditor.action.cancel" = "キャンセル";
-"imageEditor.action.cropConfirm" = "切り抜きを確定（Return）";
+"imageEditor.action.cropConfirm" = "切り抜きを確定（Return または枠内をダブルクリック）";
 "imageEditor.action.cropCancel" = "切り抜きをキャンセル（Esc）";
 "imageEditor.cropGuide.title" = "構図ガイド";
 "imageEditor.cropGuide.help" = "構図ガイドは O キーで切り替え、矢印キーで切り抜き範囲を移動します";

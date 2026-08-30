@@ -473,7 +473,7 @@
 "imageEditor.action.historyShowPanelVisibility" = "Show History Panel";
 "imageEditor.action.channelsShowPanel" = "Show Channels Panel";
 "imageEditor.action.cancel" = "Cancel";
-"imageEditor.action.cropConfirm" = "Confirm Crop (Return)";
+"imageEditor.action.cropConfirm" = "Confirm Crop (Return or double-click inside)";
 "imageEditor.action.cropCancel" = "Cancel Crop (Esc)";
 "imageEditor.cropGuide.title" = "Composition Guide";
 "imageEditor.cropGuide.help" = "Choose a crop composition guide; press O to cycle, or use arrow keys to move the crop";

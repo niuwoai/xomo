@@ -8,7 +8,7 @@
 import CoreGraphics
 import Foundation
 
-enum ImageEditorCropHandle: String, CaseIterable, Identifiable {
+nonisolated enum ImageEditorCropHandle: String, CaseIterable, Identifiable {
     case move
     case topLeft
     case top
@@ -48,6 +48,24 @@ enum ImageEditorCropHandle: String, CaseIterable, Identifiable {
         case .left:
             CGPoint(x: rect.minX, y: rect.midY)
         }
+    }
+}
+
+nonisolated enum ImageEditorCropDoubleClickCommitPolicy {
+    private static let clickMovementTolerance: CGFloat = 2
+
+    static func shouldCommit(
+        activeHandle: ImageEditorCropHandle?,
+        clickCount: Int,
+        viewTranslation: CGSize,
+        hasConflictingModifiers: Bool
+    ) -> Bool {
+        guard activeHandle == .move,
+              clickCount == 2,
+              !hasConflictingModifiers
+        else { return false }
+        return abs(viewTranslation.width) <= clickMovementTolerance
+            && abs(viewTranslation.height) <= clickMovementTolerance
     }
 }
 
