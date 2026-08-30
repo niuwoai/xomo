@@ -5764,6 +5764,18 @@ final class XomoAutomationRegistry {
         } else {
             resolvedPatchPatternScale = nil
         }
+        let resolvedPatchPatternOpacity: Double?
+        if action == "patchPattern", arguments["patternOpacity"] != nil {
+            let rawOpacity = try requiredNumber("patternOpacity", in: arguments)
+            guard rawOpacity.isFinite, (0.05...1.0).contains(rawOpacity) else {
+                throw XomoAutomationCallError.invalidArgument(
+                    "Patch patternOpacity must be from 0.05 through 1"
+                )
+            }
+            resolvedPatchPatternOpacity = rawOpacity
+        } else {
+            resolvedPatchPatternOpacity = nil
+        }
         func validatedPatchPatternChannel(_ key: String) throws -> Double? {
             guard action == "patchPattern", arguments[key] != nil else { return nil }
             let value = try requiredNumber(key, in: arguments)
@@ -5831,6 +5843,9 @@ final class XomoAutomationRegistry {
             }
             if let resolvedPatchPatternScale {
                 viewModel.patchPatternContent.scale = resolvedPatchPatternScale
+            }
+            if let resolvedPatchPatternOpacity {
+                viewModel.patchPatternContent.opacity = resolvedPatchPatternOpacity
             }
             if let resolvedPatchPatternRed {
                 viewModel.patchPatternContent.red = resolvedPatchPatternRed
@@ -7634,6 +7649,7 @@ private extension XomoAutomationRegistry {
             "diffusion": XomoAutomationSchema.integer(description: "Patch texture diffusion from 1 for sharp detail through 7 for smooth regions", minimum: 1, maximum: 7),
             "patternKind": XomoAutomationSchema.string(description: "Built-in pattern used by patchPattern", values: ["checkerboard", "diagonalStripes", "dots"]),
             "patternScale": XomoAutomationSchema.number(description: "Patch pattern tile size from 6 through 64 pixels", minimum: 6, maximum: 64),
+            "patternOpacity": XomoAutomationSchema.number(description: "Patch pattern opacity from 0.05 through 1", minimum: 0.05, maximum: 1),
             "patternRed": XomoAutomationSchema.number(description: "Patch pattern red channel from 0 through 1", minimum: 0, maximum: 1),
             "patternGreen": XomoAutomationSchema.number(description: "Patch pattern green channel from 0 through 1", minimum: 0, maximum: 1),
             "patternBlue": XomoAutomationSchema.number(description: "Patch pattern blue channel from 0 through 1", minimum: 0, maximum: 1),

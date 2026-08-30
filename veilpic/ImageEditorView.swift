@@ -988,6 +988,17 @@ struct ImageEditorView: View {
                         ))
                     }
                     .accessibilityIdentifier("image-editor-patch-pattern-scale")
+                    Stepper(
+                        value: $viewModel.patchPatternContent.opacity,
+                        in: 0.05...1,
+                        step: 0.05
+                    ) {
+                        Text(L10n.format(
+                            "imageEditor.option.patchPatternOpacityValue",
+                            Int((viewModel.patchPatternContent.opacity * 100).rounded())
+                        ))
+                    }
+                    .accessibilityIdentifier("image-editor-patch-pattern-opacity")
                     HStack {
                         Text(L10n.text("imageEditor.option.patchPatternColor"))
                         Spacer()
@@ -1011,7 +1022,8 @@ struct ImageEditorView: View {
                         L10n.format(
                             "imageEditor.option.patchPatternSummary",
                             viewModel.patchPatternContent.kind.title,
-                            Int(viewModel.patchPatternContent.scale.rounded())
+                            Int(viewModel.patchPatternContent.scale.rounded()),
+                            Int((viewModel.patchPatternContent.opacity * 100).rounded())
                         ),
                         systemImage: "square.grid.2x2"
                     )
