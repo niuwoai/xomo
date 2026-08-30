@@ -121,6 +121,20 @@ nonisolated enum ImageEditorCropShieldOpacityPreset: String, CaseIterable, Ident
     }
 }
 
+nonisolated enum ImageEditorCropShieldOpacityPolicy {
+    static let editingOpacity = 0.18
+
+    static func effectiveOpacity(
+        selectedOpacity: Double,
+        automaticallyAdjustsWhileEditing: Bool,
+        isEditing: Bool
+    ) -> Double {
+        let clampedOpacity = min(max(selectedOpacity, 0), 1)
+        guard automaticallyAdjustsWhileEditing, isEditing else { return clampedOpacity }
+        return min(clampedOpacity, editingOpacity)
+    }
+}
+
 nonisolated enum ImageEditorCropSizeDimension {
     case width
     case height

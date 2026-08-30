@@ -498,6 +498,7 @@
 "imageEditor.cropShield.opacity.light" = "Light (25%)";
 "imageEditor.cropShield.opacity.standard" = "Standard (50%)";
 "imageEditor.cropShield.opacity.strong" = "Strong (75%)";
+"imageEditor.cropShield.autoAdjustOpacity" = "Reduce While Adjusting";
 "imageEditor.cropAspect.help" = "Apply a crop aspect ratio preset";
 "imageEditor.cropAspect.original" = "Original Ratio";
 "imageEditor.cropAspect.square" = "1:1 Square";

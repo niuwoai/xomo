@@ -498,6 +498,7 @@
 "imageEditor.cropShield.opacity.light" = "轻（25%）";
 "imageEditor.cropShield.opacity.standard" = "标准（50%）";
 "imageEditor.cropShield.opacity.strong" = "强（75%）";
+"imageEditor.cropShield.autoAdjustOpacity" = "调整边界时降低强度";
 "imageEditor.cropAspect.help" = "应用裁剪宽高比预设";
 "imageEditor.cropAspect.original" = "原图比例";
 "imageEditor.cropAspect.square" = "1:1 正方形";

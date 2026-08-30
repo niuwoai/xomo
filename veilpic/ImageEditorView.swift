@@ -184,6 +184,7 @@ struct ImageEditorView: View {
     @State private var cropGuideKind = ImageEditorCropGuideKind.ruleOfThirds
     @State private var showsCroppedArea = true
     @State private var cropShieldOpacity = ImageEditorCropShieldOpacityPreset.standard.opacity
+    @State private var automaticallyAdjustsCropShieldOpacity = true
     @State private var isCropAspectRatioLocked = false
     @State private var activeCropHandle: ImageEditorCropHandle?
     @State private var cropInteractionStartPoint: CGPoint?
@@ -5248,6 +5249,12 @@ struct ImageEditorView: View {
                             }
                             .accessibilityIdentifier(preset.accessibilityIdentifier)
                         }
+                        Divider()
+                        Toggle(
+                            L10n.text("imageEditor.cropShield.autoAdjustOpacity"),
+                            isOn: $automaticallyAdjustsCropShieldOpacity
+                        )
+                        .accessibilityIdentifier("image-editor-crop-shield-auto-adjust-opacity")
                     } label: {
                         Image(systemName: "circle.lefthalf.filled")
                             .frame(width: 24, height: 24)
@@ -5686,6 +5693,11 @@ struct ImageEditorView: View {
 
         if let pendingCropRect {
             let rect = viewRect(from: pendingCropRect, in: size)
+            let effectiveCropShieldOpacity = ImageEditorCropShieldOpacityPolicy.effectiveOpacity(
+                selectedOpacity: cropShieldOpacity,
+                automaticallyAdjustsWhileEditing: automaticallyAdjustsCropShieldOpacity,
+                isEditing: activeCropHandle != nil
+            )
             let cropShieldRects = ImageEditorCropGeometry.shieldRects(
                 in: fittedImageRect(in: size),
                 excluding: rect
@@ -5701,7 +5713,7 @@ struct ImageEditorView: View {
             }
             .fill(
                 showsCroppedArea
-                    ? Color.black.opacity(cropShieldOpacity)
+                    ? Color.black.opacity(effectiveCropShieldOpacity)
                     : Color(nsColor: ImageEditorTheme.window)
             )
             .allowsHitTesting(false)

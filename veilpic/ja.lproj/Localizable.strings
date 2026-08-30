@@ -498,6 +498,7 @@
 "imageEditor.cropShield.opacity.light" = "弱（25%）";
 "imageEditor.cropShield.opacity.standard" = "標準（50%）";
 "imageEditor.cropShield.opacity.strong" = "強（75%）";
+"imageEditor.cropShield.autoAdjustOpacity" = "調整中は濃度を下げる";
 "imageEditor.cropAspect.help" = "切り抜きの縦横比プリセットを適用";
 "imageEditor.cropAspect.original" = "元の縦横比";
 "imageEditor.cropAspect.square" = "1:1 正方形";

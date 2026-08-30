@@ -646,7 +646,7 @@ struct ImageEditorCanvasGeometryTests {
         )
         #expect(source.contains("@State private var showsCroppedArea = true"))
         #expect(source.contains("case .toggleCroppedAreaVisibility: showsCroppedArea.toggle()"))
-        #expect(source.contains("showsCroppedArea\n                    ? Color.black.opacity(cropShieldOpacity)"))
+        #expect(source.contains("showsCroppedArea\n                    ? Color.black.opacity(effectiveCropShieldOpacity)"))
         #expect(source.contains(": Color(nsColor: ImageEditorTheme.window)"))
         #expect(source.contains("image-editor-crop-outside-area-toggle"))
         #expect(source.contains(".accessibilityLabel(L10n.text(\"imageEditor.cropBounds.croppedAreaHelp\"))"))
@@ -687,7 +687,7 @@ struct ImageEditorCanvasGeometryTests {
         #expect(source.contains("@State private var cropShieldOpacity = ImageEditorCropShieldOpacityPreset.standard.opacity"))
         #expect(source.contains("ImageEditorCropShieldOpacityPreset.allCases"))
         #expect(source.contains("cropShieldOpacity = preset.opacity"))
-        #expect(source.contains("Color.black.opacity(cropShieldOpacity)"))
+        #expect(source.contains("Color.black.opacity(effectiveCropShieldOpacity)"))
         #expect(source.contains(".disabled(!showsCroppedArea)"))
         #expect(source.contains("image-editor-crop-shield-opacity-menu"))
 
@@ -701,6 +701,62 @@ struct ImageEditorCanvasGeometryTests {
             for preset in ImageEditorCropShieldOpacityPreset.allCases {
                 #expect(localization.contains("\"\(preset.titleKey)\""))
             }
+        }
+    }
+
+    @Test
+    func cropShieldAutomaticallyReducesOpacityOnlyWhileEditing() throws {
+        for preset in ImageEditorCropShieldOpacityPreset.allCases {
+            #expect(
+                ImageEditorCropShieldOpacityPolicy.effectiveOpacity(
+                    selectedOpacity: preset.opacity,
+                    automaticallyAdjustsWhileEditing: true,
+                    isEditing: true
+                ) == ImageEditorCropShieldOpacityPolicy.editingOpacity
+            )
+            #expect(
+                ImageEditorCropShieldOpacityPolicy.effectiveOpacity(
+                    selectedOpacity: preset.opacity,
+                    automaticallyAdjustsWhileEditing: false,
+                    isEditing: true
+                ) == preset.opacity
+            )
+            #expect(
+                ImageEditorCropShieldOpacityPolicy.effectiveOpacity(
+                    selectedOpacity: preset.opacity,
+                    automaticallyAdjustsWhileEditing: true,
+                    isEditing: false
+                ) == preset.opacity
+            )
+        }
+        #expect(
+            ImageEditorCropShieldOpacityPolicy.effectiveOpacity(
+                selectedOpacity: 0.10,
+                automaticallyAdjustsWhileEditing: true,
+                isEditing: true
+            ) == 0.10
+        )
+
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        #expect(source.contains("@State private var automaticallyAdjustsCropShieldOpacity = true"))
+        #expect(source.contains("automaticallyAdjustsWhileEditing: automaticallyAdjustsCropShieldOpacity"))
+        #expect(source.contains("isEditing: activeCropHandle != nil"))
+        #expect(source.contains("Color.black.opacity(effectiveCropShieldOpacity)"))
+        #expect(source.contains("image-editor-crop-shield-auto-adjust-opacity"))
+
+        for localizationID in ["zh-Hans", "en", "ja"] {
+            let localization = try String(
+                contentsOf: repositoryRoot
+                    .appendingPathComponent("veilpic/\(localizationID).lproj/Localizable.strings"),
+                encoding: .utf8
+            )
+            #expect(localization.contains("\"imageEditor.cropShield.autoAdjustOpacity\""))
         }
     }
 
@@ -915,7 +971,7 @@ struct ImageEditorCanvasGeometryTests {
         )
         #expect(source.contains("ImageEditorCropGeometry.shieldRects"))
         #expect(source.contains("for shieldRect in cropShieldRects"))
-        #expect(source.contains("Color.black.opacity(cropShieldOpacity)"))
+        #expect(source.contains("Color.black.opacity(effectiveCropShieldOpacity)"))
     }
 
     private func assertEqual(
