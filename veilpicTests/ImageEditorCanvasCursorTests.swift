@@ -92,6 +92,48 @@ struct ImageEditorCanvasCursorTests {
         #expect(calls == ["object", "history"])
     }
 
+    @Test func windowDeleteRoutingPrefersNewestEditorAndFallsBackOnlyWhenNeeded() {
+        let event = ImageEditorKeyboardShortcutEventSignature(
+            windowNumber: 71,
+            eventNumber: 2081,
+            timestamp: 208.1,
+            typeRawValue: NSEvent.EventType.keyDown.rawValue,
+            keyCode: 51
+        )
+        var calls: [String] = []
+
+        #expect(ImageEditorKeyboardDeleteWindowDispatcher.perform(
+            event: event,
+            handlersNewestFirst: [
+                { receivedEvent in
+                    calls.append("newest")
+                    return receivedEvent == event
+                },
+                { _ in
+                    calls.append("older")
+                    return true
+                }
+            ]
+        ))
+        #expect(calls == ["newest"])
+
+        calls.removeAll()
+        #expect(ImageEditorKeyboardDeleteWindowDispatcher.perform(
+            event: event,
+            handlersNewestFirst: [
+                { _ in
+                    calls.append("newest")
+                    return false
+                },
+                { receivedEvent in
+                    calls.append("older")
+                    return receivedEvent == event
+                }
+            ]
+        ))
+        #expect(calls == ["newest", "older"])
+    }
+
     @Test func keyboardResponderOwnsBackwardAndForwardDeleteFallbacks() throws {
         let repositoryRoot = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()

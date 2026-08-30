@@ -20228,6 +20228,21 @@ enum ImageEditorKeyboardShortcutWindowRegistry {
         return coordinators.contains { $0.value === coordinator }
     }
 
+    /// AppKit does not guarantee which per-host local monitor receives a key
+    /// first. Contextual Delete therefore uses the newest mounted editor and
+    /// only falls back when that editor cannot handle the event.
+    static func registeredCoordinatorsNewestFirst(for window: AnyObject) -> [AnyObject] {
+        let windowID = ObjectIdentifier(window)
+        guard var coordinators = coordinatorsByWindow[windowID] else { return [] }
+        coordinators.removeAll { $0.value == nil }
+        if coordinators.isEmpty {
+            coordinatorsByWindow.removeValue(forKey: windowID)
+            return []
+        }
+        coordinatorsByWindow[windowID] = coordinators
+        return coordinators.reversed().compactMap(\.value)
+    }
+
     static func reset() {
         coordinatorsByWindow.removeAll()
     }
@@ -21058,6 +21073,26 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
         func performDeleteCommandFromKeyboardResponder(
             event: ImageEditorKeyboardShortcutEventSignature?
         ) -> Bool {
+            guard let window else {
+                return performOwnDeleteCommandFromKeyboardResponder(event: event)
+            }
+            let handlers = ImageEditorKeyboardShortcutWindowRegistry
+                .registeredCoordinatorsNewestFirst(for: window)
+                .compactMap { $0 as? Coordinator }
+                .map { candidate in
+                    { event in
+                        candidate.performOwnDeleteCommandFromKeyboardResponder(event: event)
+                    }
+                }
+            return ImageEditorKeyboardDeleteWindowDispatcher.perform(
+                event: event,
+                handlersNewestFirst: handlers
+            )
+        }
+
+        private func performOwnDeleteCommandFromKeyboardResponder(
+            event: ImageEditorKeyboardShortcutEventSignature?
+        ) -> Bool {
             ImageEditorKeyboardDeleteCommandDispatcher.perform(
                 event: event,
                 deleteSelectedObject: deleteSelectedObject,
@@ -21094,6 +21129,18 @@ enum ImageEditorKeyboardDeleteCommandDispatcher {
             return true
         }
         return deleteSelectedHistory()
+    }
+}
+
+enum ImageEditorKeyboardDeleteWindowDispatcher {
+    static func perform(
+        event: ImageEditorKeyboardShortcutEventSignature?,
+        handlersNewestFirst: [(ImageEditorKeyboardShortcutEventSignature?) -> Bool]
+    ) -> Bool {
+        for handler in handlersNewestFirst where handler(event) {
+            return true
+        }
+        return false
     }
 }
 

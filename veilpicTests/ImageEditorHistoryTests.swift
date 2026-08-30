@@ -1288,6 +1288,11 @@ struct ImageEditorHistoryTests {
             coordinator: latestCoordinator,
             for: window
         ))
+        let newestFirst = ImageEditorKeyboardShortcutWindowRegistry
+            .registeredCoordinatorsNewestFirst(for: window)
+        #expect(newestFirst.count == 2)
+        #expect(newestFirst[0] === latestCoordinator)
+        #expect(newestFirst[1] === firstCoordinator)
 
         ImageEditorKeyboardShortcutWindowRegistry.unregister(
             coordinator: firstCoordinator,
