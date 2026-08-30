@@ -1004,7 +1004,7 @@ extension ImageEditorViewModel {
             layerFrame: layer.frame,
             canvasSize: document.canvasSize,
             pattern: patchPatternContent,
-            alignsWithCanvas: true,
+            alignsWithCanvas: patchPatternAlignsWithCanvas,
             opacity: opacity,
             blendMode: patchPatternBlendMode,
             feather: feather

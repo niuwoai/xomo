@@ -712,6 +712,7 @@ struct ImageEditorPatchToolTests {
             offsetY: -11
         )
         viewModel.patchPatternBlendMode = .screen
+        viewModel.patchPatternAlignsWithCanvas = false
         let historyCount = viewModel.document.history.count
 
         #expect(viewModel.resetPatchPatternOffset())
@@ -724,6 +725,7 @@ struct ImageEditorPatchToolTests {
         #expect(viewModel.patchPatternContent.green == 0.7)
         #expect(viewModel.patchPatternContent.blue == 0.4)
         #expect(viewModel.patchPatternBlendMode == .screen)
+        #expect(!viewModel.patchPatternAlignsWithCanvas)
         #expect(viewModel.document.history.count == historyCount)
         #expect(!viewModel.resetPatchPatternOffset())
     }
@@ -773,6 +775,51 @@ struct ImageEditorPatchToolTests {
             != Array(normal[paintedOffset..<(paintedOffset + 4)]))
     }
 
+    @Test func usePatternCanSwitchBetweenCanvasAndLayerCoordinates() throws {
+        func appliedPixels(alignsWithCanvas: Bool) throws -> [UInt8] {
+            let size = CGSize(width: 24, height: 12)
+            let source = NSImage.transparent(size: size)
+            let viewModel = ImageEditorViewModel(
+                sourceName: "patch-pattern-alignment.png",
+                image: source
+            ) { _ in }
+            viewModel.replaceSelectedLayerImageForTesting(
+                source,
+                historyTitle: L10n.text("imageEditor.history.brush")
+            )
+            let layerIndex = try #require(viewModel.document.selectedLayerIndex)
+            viewModel.document.layers[layerIndex].frame = CGRect(
+                x: 5,
+                y: 0,
+                width: size.width,
+                height: size.height
+            )
+            viewModel.selectAll()
+            viewModel.opacity = 1
+            viewModel.patchPatternAlignsWithCanvas = alignsWithCanvas
+            viewModel.patchPatternContent = ImageEditorPatternFillContent(
+                kind: .checkerboard,
+                red: 1,
+                green: 0,
+                blue: 0,
+                opacity: 1,
+                scale: 12
+            )
+
+            #expect(viewModel.applyPatchPattern())
+            let image = try #require(viewModel.document.selectedLayer?.image)
+            return try #require(imageEditorRGBABytes(image, width: 24, height: 12))
+        }
+
+        let canvasAligned = try appliedPixels(alignsWithCanvas: true)
+        let layerAligned = try appliedPixels(alignsWithCanvas: false)
+
+        #expect(canvasAligned != layerAligned)
+        let canvasAlpha = stride(from: 3, to: canvasAligned.count, by: 4).map { canvasAligned[$0] }
+        let layerAlpha = stride(from: 3, to: layerAligned.count, by: 4).map { layerAligned[$0] }
+        #expect(canvasAlpha != layerAlpha)
+    }
+
     @Test func transparentOptionIsWiredToTheOptionsBarAndLivePreview() throws {
         let repositoryRoot = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()
@@ -802,6 +849,8 @@ struct ImageEditorPatchToolTests {
         #expect(source.contains("selection: $viewModel.patchPatternContent.kind"))
         #expect(source.contains("selection: $viewModel.patchPatternBlendMode"))
         #expect(source.contains("ForEach(ImageEditorBlendMode.smartFilterCases)"))
+        #expect(source.contains("isOn: $viewModel.patchPatternAlignsWithCanvas"))
+        #expect(source.contains("imageEditor.selectionFill.alignPatternWithCanvas"))
         #expect(source.contains("value: $viewModel.patchPatternContent.scale"))
         #expect(source.contains("value: $viewModel.patchPatternContent.opacity"))
         #expect(source.contains("value: $viewModel.patchPatternContent.offsetX"))
@@ -818,6 +867,7 @@ struct ImageEditorPatchToolTests {
         #expect(source.contains("image-editor-patch-pattern-scale"))
         #expect(source.contains("image-editor-patch-pattern-opacity"))
         #expect(source.contains("image-editor-patch-pattern-blend-mode"))
+        #expect(source.contains("image-editor-patch-pattern-align-canvas"))
         #expect(source.contains("image-editor-patch-pattern-offset-x"))
         #expect(source.contains("image-editor-patch-pattern-offset-y"))
         #expect(source.contains("image-editor-patch-pattern-reset-offset"))
@@ -825,6 +875,7 @@ struct ImageEditorPatchToolTests {
         #expect(source.contains("image-editor-patch-use-pattern"))
         #expect(source.contains("refreshActivePatchPreview()"))
         #expect(commandSource.contains("blendMode: patchPatternBlendMode"))
+        #expect(commandSource.contains("alignsWithCanvas: patchPatternAlignsWithCanvas"))
     }
 
     @Test func patchLassoHonorsReplaceAddSubtractAndIntersectSelectionModes() throws {

@@ -986,6 +986,12 @@ struct ImageEditorView: View {
                         }
                     }
                     .accessibilityIdentifier("image-editor-patch-pattern-blend-mode")
+                    Toggle(
+                        L10n.text("imageEditor.selectionFill.alignPatternWithCanvas"),
+                        isOn: $viewModel.patchPatternAlignsWithCanvas
+                    )
+                    .toggleStyle(.checkbox)
+                    .accessibilityIdentifier("image-editor-patch-pattern-align-canvas")
                     Stepper(
                         value: $viewModel.patchPatternContent.scale,
                         in: 6...64,
