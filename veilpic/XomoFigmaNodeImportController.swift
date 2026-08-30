@@ -31,6 +31,7 @@ final class XomoFigmaNodeImportController: ObservableObject {
     }
 
     func fetchPlan(preview: XomoFigmaLinkPreview) async {
+        guard !Task.isCancelled else { return }
         // Every new read supersedes the previous one, including rejected reads.
         let generation = UUID()
         requestGeneration = generation
@@ -53,14 +54,15 @@ final class XomoFigmaNodeImportController: ObservableObject {
         state = .loading
         do {
             let plan = try await fetcher.fetchPlan(for: preview, credential: credential)
+            try Task.checkCancellation()
             guard requestGeneration == generation else { return }
             state = .loaded(plan)
         } catch let knownError as XomoFigmaNodeImportError {
             guard requestGeneration == generation else { return }
-            state = .failed(knownError)
+            state = Task.isCancelled ? .idle : .failed(knownError)
         } catch {
             guard requestGeneration == generation else { return }
-            state = .failed(.transportFailed)
+            state = Task.isCancelled || error is CancellationError ? .idle : .failed(.transportFailed)
         }
     }
 

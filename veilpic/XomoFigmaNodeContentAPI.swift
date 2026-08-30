@@ -42,6 +42,7 @@ struct XomoFigmaNodeContentAPIClient: XomoFigmaNodePlanFetching {
         for preview: XomoFigmaLinkPreview,
         credential: XomoFigmaPersonalAccessToken
     ) async throws -> XomoFigmaNodeImportPlan {
+        try Task.checkCancellation()
         guard let nodeID = preview.nodeID else {
             throw XomoFigmaNodeImportError.nodeSelectionRequired
         }
@@ -50,11 +51,16 @@ struct XomoFigmaNodeContentAPIClient: XomoFigmaNodePlanFetching {
         let response: URLResponse
         do {
             (data, response) = try await transport.data(for: request)
+        } catch is CancellationError {
+            throw CancellationError()
         } catch let knownError as XomoFigmaNodeImportError {
+            try Task.checkCancellation()
             throw knownError
         } catch {
+            try Task.checkCancellation()
             throw XomoFigmaNodeImportError.transportFailed
         }
+        try Task.checkCancellation()
 
         guard let httpResponse = response as? HTTPURLResponse else {
             throw XomoFigmaNodeImportError.invalidResponse
@@ -78,8 +84,12 @@ struct XomoFigmaNodeContentAPIClient: XomoFigmaNodePlanFetching {
                     fileKey: preview.fileKey,
                     credential: credential
                 )
+                try Task.checkCancellation()
                 plan = plan.resolvingVariables(store)
+            } catch is CancellationError {
+                throw CancellationError()
             } catch {
+                try Task.checkCancellation()
                 // Variable values are an optional enhancement; the imported binding IDs remain usable.
             }
         }
@@ -90,8 +100,12 @@ struct XomoFigmaNodeContentAPIClient: XomoFigmaNodePlanFetching {
                 references: plan.requiredImageReferences,
                 credential: credential
             )
+            try Task.checkCancellation()
             return plan.resolvingImageAssets(assets)
+        } catch is CancellationError {
+            throw CancellationError()
         } catch {
+            try Task.checkCancellation()
             return plan.resolvingImageAssets([:])
         }
     }

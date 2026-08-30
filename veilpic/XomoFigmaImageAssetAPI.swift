@@ -41,6 +41,7 @@ struct XomoFigmaImageAssetAPIClient: XomoFigmaImageAssetFetching {
         references: Set<String>,
         credential: XomoFigmaPersonalAccessToken
     ) async throws -> [String: XomoFigmaImageAsset] {
+        try Task.checkCancellation()
         let boundedReferences = references
             .filter(Self.isSafeReference)
             .sorted()
@@ -52,9 +53,13 @@ struct XomoFigmaImageAssetAPIClient: XomoFigmaImageAssetFetching {
         let manifestResponse: URLResponse
         do {
             (manifestData, manifestResponse) = try await transport.data(for: manifestRequest)
+        } catch is CancellationError {
+            throw CancellationError()
         } catch {
+            try Task.checkCancellation()
             throw XomoFigmaNodeImportError.transportFailed
         }
+        try Task.checkCancellation()
         try validateAPIResponse(manifestResponse)
         guard manifestData.count <= Self.maximumManifestBytes else {
             throw XomoFigmaNodeImportError.responseTooLarge
@@ -70,10 +75,11 @@ struct XomoFigmaImageAssetAPIClient: XomoFigmaImageAssetFetching {
         var assets: [String: XomoFigmaImageAsset] = [:]
         var totalBytes = 0
         for reference in boundedReferences {
+            try Task.checkCancellation()
             guard let rawURL = manifest.images[reference] ?? nil,
                   let assetURL = Self.safeAssetURL(rawURL)
             else { continue }
-            guard let asset = await fetchAsset(url: assetURL, remainingByteBudget: Self.maximumTotalAssetBytes - totalBytes)
+            guard let asset = try await fetchAsset(url: assetURL, remainingByteBudget: Self.maximumTotalAssetBytes - totalBytes)
             else { continue }
             totalBytes += asset.data.count
             assets[reference] = asset
@@ -101,7 +107,8 @@ struct XomoFigmaImageAssetAPIClient: XomoFigmaImageAssetFetching {
         return request
     }
 
-    private func fetchAsset(url: URL, remainingByteBudget: Int) async -> XomoFigmaImageAsset? {
+    private func fetchAsset(url: URL, remainingByteBudget: Int) async throws -> XomoFigmaImageAsset? {
+        try Task.checkCancellation()
         guard remainingByteBudget > 0 else { return nil }
         var request = URLRequest(
             url: url,
@@ -114,9 +121,13 @@ struct XomoFigmaImageAssetAPIClient: XomoFigmaImageAssetFetching {
         let response: URLResponse
         do {
             (data, response) = try await transport.data(for: request)
+        } catch is CancellationError {
+            throw CancellationError()
         } catch {
+            try Task.checkCancellation()
             return nil
         }
+        try Task.checkCancellation()
         guard let httpResponse = response as? HTTPURLResponse,
               httpResponse.statusCode == 200,
               data.count <= Self.maximumAssetBytes,

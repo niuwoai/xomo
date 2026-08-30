@@ -43,6 +43,7 @@ final class XomoFigmaAuthorizedMetadataController: ObservableObject {
     }
 
     func connectAndFetch(preview: XomoFigmaLinkPreview) async {
+        guard !Task.isCancelled else { return }
         let generation = UUID()
         requestGeneration = generation
         let credential: XomoFigmaPersonalAccessToken
@@ -66,6 +67,7 @@ final class XomoFigmaAuthorizedMetadataController: ObservableObject {
     }
 
     func fetchMetadata(preview: XomoFigmaLinkPreview) async {
+        guard !Task.isCancelled else { return }
         let generation = UUID()
         requestGeneration = generation
         let credential: XomoFigmaPersonalAccessToken
@@ -110,14 +112,15 @@ final class XomoFigmaAuthorizedMetadataController: ObservableObject {
         state = .loading
         do {
             let metadata = try await fetcher.fetchMetadata(for: preview, credential: credential)
+            try Task.checkCancellation()
             guard requestGeneration == generation else { return }
             state = .loaded(metadata)
         } catch let knownError as XomoFigmaAuthorizedMetadataError {
             guard requestGeneration == generation else { return }
-            state = .failed(knownError)
+            state = Task.isCancelled ? .idle : .failed(knownError)
         } catch {
             guard requestGeneration == generation else { return }
-            state = .failed(.transportFailed)
+            state = Task.isCancelled || error is CancellationError ? .idle : .failed(.transportFailed)
         }
     }
 }

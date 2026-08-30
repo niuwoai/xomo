@@ -9,6 +9,8 @@ struct XomoFigmaLinkImportSheet: View {
     @State private var nodeIDDraft = ""
     @State private var nodeSelectionMessageKey: String?
     @State private var didImportNodePlan = false
+    @State private var metadataTask: Task<Void, Never>?
+    @State private var nodeImportTask: Task<Void, Never>?
     @StateObject private var metadataController = XomoFigmaAuthorizedMetadataController()
     @StateObject private var nodeImportController = XomoFigmaNodeImportController()
     let placementCenter: CGPoint?
@@ -54,6 +56,9 @@ struct XomoFigmaLinkImportSheet: View {
         .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
         .onAppear {
             metadataController.refreshCredentialState()
+        }
+        .onDisappear {
+            cancelRequests()
         }
     }
 
@@ -273,7 +278,8 @@ struct XomoFigmaLinkImportSheet: View {
                     .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
                 Spacer()
                 Button(L10n.text("xomo.figma.metadata.connectAndRead")) {
-                    Task {
+                    metadataTask?.cancel()
+                    metadataTask = Task {
                         await metadataController.connectAndFetch(preview: preview)
                     }
                 }
@@ -295,7 +301,8 @@ struct XomoFigmaLinkImportSheet: View {
             .foregroundStyle(.green)
             Spacer()
             Button(L10n.text("xomo.figma.metadata.read")) {
-                Task {
+                metadataTask?.cancel()
+                metadataTask = Task {
                     await metadataController.fetchMetadata(preview: preview)
                 }
             }
@@ -304,8 +311,8 @@ struct XomoFigmaLinkImportSheet: View {
             .disabled(metadataController.isLoading)
             .accessibilityIdentifier("xomo-figma-read-metadata")
             Button(L10n.text("xomo.figma.metadata.disconnect")) {
+                cancelRequests()
                 metadataController.disconnect()
-                nodeImportController.clear()
                 didImportNodePlan = false
             }
             .buttonStyle(.bordered)
@@ -410,7 +417,8 @@ struct XomoFigmaLinkImportSheet: View {
                 Spacer()
                 Button(L10n.text("xomo.figma.node.readPlan")) {
                     didImportNodePlan = false
-                    Task {
+                    nodeImportTask?.cancel()
+                    nodeImportTask = Task {
                         await nodeImportController.fetchPlan(preview: preview)
                     }
                 }
@@ -645,8 +653,7 @@ struct XomoFigmaLinkImportSheet: View {
             nodeIDDraft = ""
             nodeSelectionMessageKey = nil
             didImportNodePlan = false
-            metadataController.clearMetadata()
-            nodeImportController.clear()
+            cancelRequests()
             draft.updateInput(value)
         }
     }
@@ -676,8 +683,7 @@ struct XomoFigmaLinkImportSheet: View {
         nodeIDDraft = ""
         nodeSelectionMessageKey = nil
         didImportNodePlan = false
-        metadataController.clearMetadata()
-        nodeImportController.clear()
+        cancelRequests()
         draft.updateInput(value)
     }
 
@@ -710,7 +716,18 @@ struct XomoFigmaLinkImportSheet: View {
         nodeSelectionMessageKey = "xomo.figma.node.nodeIDApplied"
         if draft.preview?.nodeID != previousNodeID {
             didImportNodePlan = false
+            nodeImportTask?.cancel()
+            nodeImportTask = nil
             nodeImportController.clear()
         }
+    }
+
+    private func cancelRequests() {
+        metadataTask?.cancel()
+        nodeImportTask?.cancel()
+        metadataTask = nil
+        nodeImportTask = nil
+        metadataController.clearMetadata()
+        nodeImportController.clear()
     }
 }

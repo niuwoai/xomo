@@ -175,6 +175,103 @@ struct XomoFigmaRequestGenerationTests {
         #expect(controller.hasStoredCredential)
     }
 
+    @Test(arguments: [false, true])
+    func cancelledMetadataDoesNotPublishSuccessOrFailure(fails: Bool) async throws {
+        let store = try GenerationCredentialStore()
+        let fetcher = GenerationFetcher()
+        let controller = XomoFigmaAuthorizedMetadataController(store: store, fetcher: fetcher)
+        let preview = try preview()
+        let task = Task { await controller.fetchMetadata(preview: preview) }
+        await fetcher.metadata.waitForCalls(1)
+        task.cancel()
+        fetcher.metadata.resolve(fails ? .failure(XomoFigmaAuthorizedMetadataError.transportFailed) : .success(metadata("cancelled")))
+        await task.value
+        #expect(controller.state == .idle)
+    }
+
+    @Test(arguments: [false, true])
+    func cancelledNodePlanDoesNotPublishSuccessOrFailure(fails: Bool) async throws {
+        let store = try GenerationCredentialStore()
+        let fetcher = GenerationFetcher()
+        let controller = XomoFigmaNodeImportController(store: store, fetcher: fetcher)
+        let preview = try preview()
+        let task = Task { await controller.fetchPlan(preview: preview) }
+        await fetcher.plans.waitForCalls(1)
+        task.cancel()
+        fetcher.plans.resolve(fails ? .failure(XomoFigmaNodeImportError.transportFailed) : .success(plan("cancelled")))
+        await task.value
+        #expect(controller.state == .idle)
+    }
+
+    @Test func alreadyCancelledActionsDoNotAccessCredentialsOrNetwork() async throws {
+        let store = try GenerationCredentialStore()
+        let fetcher = GenerationFetcher()
+        let metadata = XomoFigmaAuthorizedMetadataController(store: store, fetcher: fetcher)
+        let nodes = XomoFigmaNodeImportController(store: store, fetcher: fetcher)
+        let preview = try preview()
+        metadata.tokenDraft = "local-fixture-token"
+        let task = Task {
+            await metadata.connectAndFetch(preview: preview)
+            await metadata.fetchMetadata(preview: preview)
+            await nodes.fetchPlan(preview: preview)
+        }
+        task.cancel()
+        await task.value
+        #expect(store.loadCount == 0)
+        #expect(store.saveCount == 0)
+        #expect(fetcher.metadata.calls == 0)
+        #expect(fetcher.plans.calls == 0)
+        #expect(metadata.state == .idle)
+        #expect(nodes.state == .idle)
+        #expect(metadata.tokenDraft == "local-fixture-token")
+    }
+
+    @Test func cancelledOlderRequestsCannotResetNewerResults() async throws {
+        let store = try GenerationCredentialStore()
+        let fetcher = GenerationFetcher()
+        let metadataController = XomoFigmaAuthorizedMetadataController(store: store, fetcher: fetcher)
+        let nodes = XomoFigmaNodeImportController(store: store, fetcher: fetcher)
+        let preview = try preview()
+        let oldMetadata = Task { await metadataController.fetchMetadata(preview: preview) }
+        let oldPlan = Task { await nodes.fetchPlan(preview: preview) }
+        await fetcher.metadata.waitForCalls(1)
+        await fetcher.plans.waitForCalls(1)
+        oldMetadata.cancel()
+        oldPlan.cancel()
+        let newMetadata = Task { await metadataController.fetchMetadata(preview: preview) }
+        let newPlan = Task { await nodes.fetchPlan(preview: preview) }
+        await fetcher.metadata.waitForCalls(2)
+        await fetcher.plans.waitForCalls(2)
+        fetcher.metadata.resolve(.success(metadata("new")), at: 1)
+        fetcher.plans.resolve(.success(plan("new")), at: 1)
+        await newMetadata.value
+        await newPlan.value
+        fetcher.metadata.resolve(.failure(CancellationError()))
+        fetcher.plans.resolve(.failure(CancellationError()))
+        await oldMetadata.value
+        await oldPlan.value
+        #expect(metadataController.state == .loaded(metadata("new")))
+        #expect(nodes.state == .loaded(plan("new")))
+    }
+
+    @Test func cancellationErrorsReturnControllersToIdle() async throws {
+        let store = try GenerationCredentialStore()
+        let fetcher = GenerationFetcher()
+        let metadata = XomoFigmaAuthorizedMetadataController(store: store, fetcher: fetcher)
+        let nodes = XomoFigmaNodeImportController(store: store, fetcher: fetcher)
+        let preview = try preview()
+        let metadataTask = Task { await metadata.fetchMetadata(preview: preview) }
+        let nodeTask = Task { await nodes.fetchPlan(preview: preview) }
+        await fetcher.metadata.waitForCalls(1)
+        await fetcher.plans.waitForCalls(1)
+        fetcher.metadata.resolve(.failure(CancellationError()))
+        fetcher.plans.resolve(.failure(CancellationError()))
+        await metadataTask.value
+        await nodeTask.value
+        #expect(metadata.state == .idle)
+        #expect(nodes.state == .idle)
+    }
+
     private func preview() throws -> XomoFigmaLinkPreview {
         try XomoFigmaLinkParser.parse("https://www.figma.com/design/abc123DEF456/Fixture?node-id=1-3")
     }
@@ -196,13 +293,17 @@ private final class GenerationCredentialStore: XomoFigmaCredentialStoring {
     var credential: XomoFigmaPersonalAccessToken?
     var loadFails = false
     var saveFails = false
+    private(set) var loadCount = 0
+    private(set) var saveCount = 0
 
     init() throws { credential = try XomoFigmaPersonalAccessToken(validating: "local-fixture-token") }
     func load() throws -> XomoFigmaPersonalAccessToken? {
+        loadCount += 1
         if loadFails { throw GenerationFixtureError.storage }
         return credential
     }
     func save(_ value: XomoFigmaPersonalAccessToken) throws {
+        saveCount += 1
         if saveFails { throw GenerationFixtureError.storage }
         credential = value
     }
