@@ -491,6 +491,7 @@
 "imageEditor.cropBounds.heightHelp" = "切り抜きの高さ（ピクセル）";
 "imageEditor.cropBounds.aspectLock" = "切り抜きの縦横比を固定";
 "imageEditor.cropBounds.aspectUnlock" = "切り抜きの縦横比固定を解除";
+"imageEditor.cropBounds.resetHelp" = "切り抜きをキャンバス全体に戻す";
 "imageEditor.status.cropGuideChanged" = "切り抜きガイド：%@";
 "imageEditor.action.apply" = "プレビューへ適用";
 "imageEditor.action.export" = "書き出し";

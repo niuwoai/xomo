@@ -85,6 +85,15 @@ nonisolated enum ImageEditorCropSizeDimension {
 }
 
 enum ImageEditorCropGeometry {
+    static func fullCanvasFrame(canvasSize: CGSize) -> CGRect {
+        CGRect(
+            x: 0,
+            y: 0,
+            width: max(0, canvasSize.width),
+            height: max(0, canvasSize.height)
+        ).integral
+    }
+
     static func committedPixelBounds(
         for cropRect: CGRect,
         canvasSize: CGSize

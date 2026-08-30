@@ -178,6 +178,12 @@ struct ImageEditorCanvasGeometryTests {
 
     @Test
     func pendingCropMetricsMatchCommittedOutwardPixelRoundingAndCanvasBounds() throws {
+        #expect(ImageEditorCropGeometry.fullCanvasFrame(
+            canvasSize: CGSize(width: 200, height: 150)
+        ) == CGRect(x: 0, y: 0, width: 200, height: 150))
+        #expect(ImageEditorCropGeometry.fullCanvasFrame(
+            canvasSize: CGSize(width: -20, height: 80)
+        ) == CGRect(x: 0, y: 0, width: 0, height: 80))
         #expect(ImageEditorCropGeometry.committedPixelBounds(
             for: CGRect(x: 10.2, y: 20.7, width: 100.1, height: 80.2),
             canvasSize: CGSize(width: 200, height: 150)
@@ -251,6 +257,9 @@ struct ImageEditorCanvasGeometryTests {
         #expect(viewSource.contains("image-editor-crop-height"))
         #expect(viewSource.contains("preservesAspectRatio: isCropAspectRatioLocked"))
         #expect(viewSource.contains("image-editor-crop-aspect-ratio-lock"))
+        #expect(viewSource.contains("ImageEditorCropGeometry.fullCanvasFrame"))
+        #expect(viewSource.contains(".disabled(pixelBounds == ImageEditorCropGeometry.fullCanvasFrame"))
+        #expect(viewSource.contains("image-editor-crop-reset"))
         #expect(commandSource.contains("ImageEditorCropGeometry.committedPixelBounds"))
 
         for localizationID in ["zh-Hans", "en", "ja"] {
@@ -265,6 +274,7 @@ struct ImageEditorCanvasGeometryTests {
             #expect(localization.contains("\"imageEditor.cropBounds.heightHelp\""))
             #expect(localization.contains("\"imageEditor.cropBounds.aspectLock\""))
             #expect(localization.contains("\"imageEditor.cropBounds.aspectUnlock\""))
+            #expect(localization.contains("\"imageEditor.cropBounds.resetHelp\""))
         }
     }
 

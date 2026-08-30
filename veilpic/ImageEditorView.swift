@@ -5183,6 +5183,22 @@ struct ImageEditorView: View {
                     .accessibilityIdentifier("image-editor-crop-guide-picker")
 
                     Button {
+                        self.pendingCropRect = ImageEditorCropGeometry.fullCanvasFrame(
+                            canvasSize: viewModel.document.canvasSize
+                        )
+                    } label: {
+                        Image(systemName: "arrow.counterclockwise")
+                            .frame(width: 24, height: 24)
+                    }
+                    .buttonStyle(EditorIconButtonStyle(isSelected: false))
+                    .focusable(false)
+                    .disabled(pixelBounds == ImageEditorCropGeometry.fullCanvasFrame(
+                        canvasSize: viewModel.document.canvasSize
+                    ))
+                    .help(L10n.text("imageEditor.cropBounds.resetHelp"))
+                    .accessibilityIdentifier("image-editor-crop-reset")
+
+                    Button {
                         viewModel.crop(to: pendingCropRect)
                         self.pendingCropRect = nil
                     } label: {
