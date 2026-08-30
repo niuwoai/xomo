@@ -5757,7 +5757,7 @@ final class XomoAutomationRegistry {
             let rawMode = try requiredString("patternRepeatMode", in: arguments)
             guard let mode = ImageEditorPatternRepeatMode(rawValue: rawMode) else {
                 throw XomoAutomationCallError.invalidArgument(
-                    "Patch patternRepeatMode must be tile, mirror, or brick"
+                    "Patch patternRepeatMode must be tile, mirror, brick, or halfDrop"
                 )
             }
             resolvedPatchPatternRepeatMode = mode

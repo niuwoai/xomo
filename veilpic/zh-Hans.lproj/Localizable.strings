@@ -756,6 +756,7 @@
 "imageEditor.patternRepeat.tile" = "平铺";
 "imageEditor.patternRepeat.mirror" = "镜像平铺";
 "imageEditor.patternRepeat.brick" = "半砖平铺";
+"imageEditor.patternRepeat.halfDrop" = "半落平铺";
 "imageEditor.option.patchPatternInvertCoverage" = "反转图案覆盖";
 "imageEditor.option.patchPatternFlipHorizontal" = "水平翻转";
 "imageEditor.option.patchPatternFlipVertical" = "垂直翻转";

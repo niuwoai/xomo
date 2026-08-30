@@ -19131,7 +19131,8 @@ struct XomoAutomationTests {
             properties["patternRepeatMode"]?.objectValue?["enum"] == .array([
                 .string("tile"),
                 .string("mirror"),
-                .string("brick")
+                .string("brick"),
+                .string("halfDrop")
             ])
         )
 
@@ -19141,7 +19142,7 @@ struct XomoAutomationTests {
             arguments: [
                 "action": .string("patchPattern"),
                 "patternKind": .string("dots"),
-                "patternRepeatMode": .string("brick"),
+                "patternRepeatMode": .string("halfDrop"),
                 "patternScale": .number(24),
                 "patternScaleXPercent": .number(175),
                 "patternScaleYPercent": .number(60),
@@ -19164,7 +19165,7 @@ struct XomoAutomationTests {
 
         #expect(response.ok)
         #expect(viewModel.patchPatternContent.kind == .dots)
-        #expect(viewModel.patchPatternContent.repeatMode == .brick)
+        #expect(viewModel.patchPatternContent.repeatMode == .halfDrop)
         #expect(viewModel.patchPatternContent.scale == 24)
         #expect(viewModel.patchPatternContent.scaleX == 1.75)
         #expect(viewModel.patchPatternContent.scaleY == 0.6)

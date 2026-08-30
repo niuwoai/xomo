@@ -1396,6 +1396,8 @@ struct ImageEditorPatternFillContent: Equatable, Codable {
             return mirroredTileImage(from: tile)
         case .brick:
             return brickTileImage(from: tile)
+        case .halfDrop:
+            return halfDropTileImage(from: tile)
         }
     }
 
@@ -1448,6 +1450,23 @@ struct ImageEditorPatternFillContent: Equatable, Codable {
             .composited(over: secondRowLeading)
             .composited(over: tile)
             .cropped(to: CGRect(x: 0, y: 0, width: width, height: height * 2))
+    }
+
+    private func halfDropTileImage(from tile: CIImage) -> CIImage {
+        let width = tile.extent.width
+        let height = tile.extent.height
+        let secondColumnLower = tile.transformed(by: CGAffineTransform(
+            translationX: width,
+            y: -height / 2
+        ))
+        let secondColumnUpper = tile.transformed(by: CGAffineTransform(
+            translationX: width,
+            y: height / 2
+        ))
+        return secondColumnUpper
+            .composited(over: secondColumnLower)
+            .composited(over: tile)
+            .cropped(to: CGRect(x: 0, y: 0, width: width * 2, height: height))
     }
 
     private static func zeroOne(_ value: Double) -> Double {
@@ -1534,6 +1553,7 @@ enum ImageEditorPatternRepeatMode: String, CaseIterable, Identifiable, Codable {
     case tile
     case mirror
     case brick
+    case halfDrop
 
     var id: String { rawValue }
 
