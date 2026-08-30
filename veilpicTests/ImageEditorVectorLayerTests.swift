@@ -2284,7 +2284,7 @@ struct ImageEditorVectorLayerTests {
         let q2 = interpolate(p2, p3)
         let r0 = interpolate(q0, q1)
         let r1 = interpolate(q1, q2)
-        #expect(anchors.count == 3)
+        try #require(anchors.count == 3)
         #expect(abs(anchors[1].point.x - insertionPoint.x) < 0.02)
         #expect(abs(anchors[1].point.y - insertionPoint.y) < 0.02)
         #expect(distance(anchors[0].outControl, q0) < 0.05)

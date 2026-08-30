@@ -109,7 +109,8 @@ struct XomoRecentDocumentsTests {
         #expect(project.contains("XomoRecentDocumentStore.shared.noteOpened($0)"))
         #expect(project.contains("recentDocumentRegistrar(standardizedURL)"))
         #expect(external.components(separatedBy: "finishSuccessfulOpen(url: url").count - 1 == 3)
-        #expect(external.contains("XomoRecentDocumentStore.shared.noteOpened(url)"))
+        #expect(external.contains("XomoRecentDocumentStore.shared.noteOpened($0)"))
+        #expect(external.contains("recentDocumentRegistrar(url)"))
     }
 
     @Test func recentFileMenuStringsExistInEverySupportedLanguage() throws {
