@@ -5082,16 +5082,39 @@ struct ImageEditorView: View {
                         for: pendingCropRect,
                         canvasSize: viewModel.document.canvasSize
                     )
-                    Text(L10n.format(
-                        "imageEditor.cropBounds.origin",
-                        Int(pixelBounds.minX),
-                        Int(pixelBounds.minY)
-                    ))
-                    .font(.system(size: 11, weight: .medium, design: .monospaced))
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-                    .fixedSize(horizontal: true, vertical: false)
-                    .accessibilityIdentifier("image-editor-crop-origin")
+                    HStack(spacing: 2) {
+                        Text(L10n.text("imageEditor.cropBounds.x"))
+                            .foregroundStyle(.secondary)
+                        TextField(
+                            "",
+                            value: Binding(
+                                get: { Double(pixelBounds.minX) },
+                                set: { setPendingCropOrigin(x: CGFloat($0)) }
+                            ),
+                            format: .number.precision(.fractionLength(0))
+                        )
+                        .textFieldStyle(.roundedBorder)
+                        .font(.system(size: 11, design: .monospaced))
+                        .frame(width: 44)
+                        .accessibilityLabel(L10n.text("imageEditor.cropBounds.xHelp"))
+                        .accessibilityIdentifier("image-editor-crop-origin-x")
+
+                        Text(L10n.text("imageEditor.cropBounds.y"))
+                            .foregroundStyle(.secondary)
+                        TextField(
+                            "",
+                            value: Binding(
+                                get: { Double(pixelBounds.minY) },
+                                set: { setPendingCropOrigin(y: CGFloat($0)) }
+                            ),
+                            format: .number.precision(.fractionLength(0))
+                        )
+                        .textFieldStyle(.roundedBorder)
+                        .font(.system(size: 11, design: .monospaced))
+                        .frame(width: 44)
+                        .accessibilityLabel(L10n.text("imageEditor.cropBounds.yHelp"))
+                        .accessibilityIdentifier("image-editor-crop-origin-y")
+                    }
 
                     Text(L10n.format(
                         "imageEditor.cropBounds.size",
@@ -5193,6 +5216,22 @@ struct ImageEditorView: View {
         .frame(height: imageEditorCanvasToolbarHeight)
         .padding(.horizontal, 12)
         .background(Color(nsColor: ImageEditorTheme.window))
+    }
+
+    private func setPendingCropOrigin(x: CGFloat? = nil, y: CGFloat? = nil) {
+        guard let pendingCropRect else { return }
+        let currentBounds = ImageEditorCropGeometry.committedPixelBounds(
+            for: pendingCropRect,
+            canvasSize: viewModel.document.canvasSize
+        )
+        self.pendingCropRect = ImageEditorCropGeometry.frameBySettingCommittedOrigin(
+            of: pendingCropRect,
+            to: CGPoint(
+                x: x ?? currentBounds.minX,
+                y: y ?? currentBounds.minY
+            ),
+            canvasSize: viewModel.document.canvasSize
+        )
     }
 
     private var zoomSliderBinding: Binding<Double> {

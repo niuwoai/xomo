@@ -93,6 +93,29 @@ enum ImageEditorCropGeometry {
         return cropRect.standardized.intersection(canvasBounds).integral
     }
 
+    static func frameBySettingCommittedOrigin(
+        of cropRect: CGRect,
+        to targetOrigin: CGPoint,
+        canvasSize: CGSize
+    ) -> CGRect {
+        let currentBounds = committedPixelBounds(for: cropRect, canvasSize: canvasSize)
+        guard !currentBounds.isNull,
+              currentBounds.width > 0,
+              currentBounds.height > 0,
+              targetOrigin.x.isFinite,
+              targetOrigin.y.isFinite
+        else { return cropRect }
+
+        let canvasWidth = max(0, canvasSize.width)
+        let canvasHeight = max(0, canvasSize.height)
+        return CGRect(
+            x: min(max(targetOrigin.x.rounded(), 0), max(0, canvasWidth - currentBounds.width)),
+            y: min(max(targetOrigin.y.rounded(), 0), max(0, canvasHeight - currentBounds.height)),
+            width: currentBounds.width,
+            height: currentBounds.height
+        )
+    }
+
     static func shieldRects(
         in canvasBounds: CGRect,
         excluding cropRect: CGRect
