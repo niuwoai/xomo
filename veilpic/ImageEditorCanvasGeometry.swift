@@ -156,6 +156,35 @@ enum ImageEditorCropGeometry {
         )
     }
 
+    static func frameBySwappingCommittedDimensions(
+        of cropRect: CGRect,
+        canvasSize: CGSize
+    ) -> CGRect {
+        let currentBounds = committedPixelBounds(for: cropRect, canvasSize: canvasSize)
+        let canvasWidth = max(0, canvasSize.width)
+        let canvasHeight = max(0, canvasSize.height)
+        guard !currentBounds.isNull,
+              currentBounds.width > 0,
+              currentBounds.height > 0,
+              canvasWidth > 0,
+              canvasHeight > 0
+        else { return cropRect }
+
+        let targetWidth = currentBounds.height
+        let targetHeight = currentBounds.width
+        let fittingScale = min(1, min(canvasWidth / targetWidth, canvasHeight / targetHeight))
+        let width = min(canvasWidth, max(1, (targetWidth * fittingScale).rounded(.down)))
+        let height = min(canvasHeight, max(1, (targetHeight * fittingScale).rounded(.down)))
+        let centeredX = (currentBounds.midX - width / 2).rounded()
+        let centeredY = (currentBounds.midY - height / 2).rounded()
+        return CGRect(
+            x: min(max(centeredX, 0), canvasWidth - width),
+            y: min(max(centeredY, 0), canvasHeight - height),
+            width: width,
+            height: height
+        )
+    }
+
     static func frameBySettingCommittedDimension(
         of cropRect: CGRect,
         dimension: ImageEditorCropSizeDimension,

@@ -492,6 +492,7 @@
 "imageEditor.cropBounds.aspectLock" = "Lock crop aspect ratio";
 "imageEditor.cropBounds.aspectUnlock" = "Unlock crop aspect ratio";
 "imageEditor.cropBounds.resetHelp" = "Reset crop to the full canvas";
+"imageEditor.cropBounds.swapHelp" = "Swap crop width and height";
 "imageEditor.status.cropGuideChanged" = "Crop guide: %@";
 "imageEditor.action.apply" = "Apply to Preview";
 "imageEditor.action.export" = "Export";

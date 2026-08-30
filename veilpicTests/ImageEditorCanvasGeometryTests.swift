@@ -212,6 +212,18 @@ struct ImageEditorCanvasGeometryTests {
             to: CGSize(width: 500, height: 2),
             canvasSize: CGSize(width: 200, height: 150)
         ) == CGRect(x: 10, y: 20, width: 190, height: 8))
+        #expect(ImageEditorCropGeometry.frameBySwappingCommittedDimensions(
+            of: CGRect(x: 50, y: 40, width: 100, height: 50),
+            canvasSize: CGSize(width: 300, height: 250)
+        ) == CGRect(x: 75, y: 15, width: 50, height: 100))
+        #expect(ImageEditorCropGeometry.frameBySwappingCommittedDimensions(
+            of: CGRect(x: 10, y: 20, width: 100, height: 50),
+            canvasSize: CGSize(width: 200, height: 150)
+        ) == CGRect(x: 35, y: 0, width: 50, height: 100))
+        #expect(ImageEditorCropGeometry.frameBySwappingCommittedDimensions(
+            of: CGRect(x: 20, y: 10, width: 180, height: 40),
+            canvasSize: CGSize(width: 200, height: 100)
+        ) == CGRect(x: 99, y: 0, width: 22, height: 100))
         let ratioCrop = CGRect(x: 10, y: 20, width: 100, height: 50)
         #expect(ImageEditorCropGeometry.frameBySettingCommittedDimension(
             of: ratioCrop,
@@ -260,6 +272,9 @@ struct ImageEditorCanvasGeometryTests {
         #expect(viewSource.contains("ImageEditorCropGeometry.fullCanvasFrame"))
         #expect(viewSource.contains(".disabled(pixelBounds == ImageEditorCropGeometry.fullCanvasFrame"))
         #expect(viewSource.contains("image-editor-crop-reset"))
+        #expect(viewSource.contains("frameBySwappingCommittedDimensions"))
+        #expect(viewSource.contains(".disabled(pixelBounds.width == pixelBounds.height)"))
+        #expect(viewSource.contains("image-editor-crop-swap-dimensions"))
         #expect(commandSource.contains("ImageEditorCropGeometry.committedPixelBounds"))
 
         for localizationID in ["zh-Hans", "en", "ja"] {
@@ -275,6 +290,7 @@ struct ImageEditorCanvasGeometryTests {
             #expect(localization.contains("\"imageEditor.cropBounds.aspectLock\""))
             #expect(localization.contains("\"imageEditor.cropBounds.aspectUnlock\""))
             #expect(localization.contains("\"imageEditor.cropBounds.resetHelp\""))
+            #expect(localization.contains("\"imageEditor.cropBounds.swapHelp\""))
         }
     }
 

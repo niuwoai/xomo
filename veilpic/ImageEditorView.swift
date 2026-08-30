@@ -5165,6 +5165,22 @@ struct ImageEditorView: View {
                         .frame(width: 44)
                         .accessibilityLabel(L10n.text("imageEditor.cropBounds.heightHelp"))
                         .accessibilityIdentifier("image-editor-crop-height")
+
+                        Button {
+                            self.pendingCropRect = ImageEditorCropGeometry.frameBySwappingCommittedDimensions(
+                                of: pendingCropRect,
+                                canvasSize: viewModel.document.canvasSize
+                            )
+                        } label: {
+                            Image(systemName: "arrow.left.arrow.right")
+                                .font(.system(size: 10, weight: .semibold))
+                                .frame(width: 18, height: 18)
+                        }
+                        .buttonStyle(EditorIconButtonStyle(isSelected: false))
+                        .focusable(false)
+                        .disabled(pixelBounds.width == pixelBounds.height)
+                        .help(L10n.text("imageEditor.cropBounds.swapHelp"))
+                        .accessibilityIdentifier("image-editor-crop-swap-dimensions")
                     }
 
                     Picker(
