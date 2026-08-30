@@ -489,6 +489,8 @@
 "imageEditor.cropBounds.yHelp" = "裁剪上边界 Y 坐标";
 "imageEditor.cropBounds.widthHelp" = "裁剪宽度（像素）";
 "imageEditor.cropBounds.heightHelp" = "裁剪高度（像素）";
+"imageEditor.cropBounds.aspectLock" = "锁定裁剪宽高比例";
+"imageEditor.cropBounds.aspectUnlock" = "解除裁剪宽高比例锁定";
 "imageEditor.status.cropGuideChanged" = "裁剪参考线：%@";
 "imageEditor.action.apply" = "应用到预览";
 "imageEditor.action.export" = "导出";

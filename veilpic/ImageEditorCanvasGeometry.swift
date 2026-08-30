@@ -79,6 +79,11 @@ nonisolated enum ImageEditorCropGuideKind: String, CaseIterable, Identifiable {
     }
 }
 
+nonisolated enum ImageEditorCropSizeDimension {
+    case width
+    case height
+}
+
 enum ImageEditorCropGeometry {
     static func committedPixelBounds(
         for cropRect: CGRect,
@@ -139,6 +144,65 @@ enum ImageEditorCropGeometry {
             y: currentBounds.minY,
             width: min(max(targetSize.width.rounded(), minimumWidth), availableWidth),
             height: min(max(targetSize.height.rounded(), minimumHeight), availableHeight)
+        )
+    }
+
+    static func frameBySettingCommittedDimension(
+        of cropRect: CGRect,
+        dimension: ImageEditorCropSizeDimension,
+        value: CGFloat,
+        canvasSize: CGSize,
+        preservesAspectRatio: Bool,
+        minimumEdge: CGFloat = 8
+    ) -> CGRect {
+        let currentBounds = committedPixelBounds(for: cropRect, canvasSize: canvasSize)
+        guard !currentBounds.isNull,
+              currentBounds.width > 0,
+              currentBounds.height > 0,
+              value.isFinite
+        else { return cropRect }
+
+        guard preservesAspectRatio else {
+            let targetSize = switch dimension {
+            case .width: CGSize(width: value, height: currentBounds.height)
+            case .height: CGSize(width: currentBounds.width, height: value)
+            }
+            return frameBySettingCommittedSize(
+                of: currentBounds,
+                to: targetSize,
+                canvasSize: canvasSize,
+                minimumEdge: minimumEdge
+            )
+        }
+
+        let availableWidth = max(1, max(0, canvasSize.width) - currentBounds.minX)
+        let availableHeight = max(1, max(0, canvasSize.height) - currentBounds.minY)
+        let minimumWidth = min(max(1, minimumEdge), availableWidth)
+        let minimumHeight = min(max(1, minimumEdge), availableHeight)
+        let aspectRatio = currentBounds.width / currentBounds.height
+        var width: CGFloat
+        var height: CGFloat
+        switch dimension {
+        case .width:
+            width = min(max(value.rounded(), minimumWidth), availableWidth)
+            height = max(minimumHeight, (width / aspectRatio).rounded())
+        case .height:
+            height = min(max(value.rounded(), minimumHeight), availableHeight)
+            width = max(minimumWidth, (height * aspectRatio).rounded())
+        }
+        if height > availableHeight {
+            height = availableHeight
+            width = max(minimumWidth, (height * aspectRatio).rounded())
+        }
+        if width > availableWidth {
+            width = availableWidth
+            height = max(minimumHeight, (width / aspectRatio).rounded())
+        }
+        return CGRect(
+            x: currentBounds.minX,
+            y: currentBounds.minY,
+            width: min(width, availableWidth),
+            height: min(height, availableHeight)
         )
     }
 

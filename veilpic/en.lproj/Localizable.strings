@@ -489,6 +489,8 @@
 "imageEditor.cropBounds.yHelp" = "Crop top-edge Y coordinate";
 "imageEditor.cropBounds.widthHelp" = "Crop width in pixels";
 "imageEditor.cropBounds.heightHelp" = "Crop height in pixels";
+"imageEditor.cropBounds.aspectLock" = "Lock crop aspect ratio";
+"imageEditor.cropBounds.aspectUnlock" = "Unlock crop aspect ratio";
 "imageEditor.status.cropGuideChanged" = "Crop guide: %@";
 "imageEditor.action.apply" = "Apply to Preview";
 "imageEditor.action.export" = "Export";

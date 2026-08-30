@@ -182,6 +182,7 @@ struct ImageEditorView: View {
     @State private var lastPatchPreviewUpdateTime: TimeInterval = 0
     @State private var pendingCropRect: CGRect?
     @State private var cropGuideKind = ImageEditorCropGuideKind.ruleOfThirds
+    @State private var isCropAspectRatioLocked = false
     @State private var activeCropHandle: ImageEditorCropHandle?
     @State private var cropInteractionStartPoint: CGPoint?
     @State private var cropInteractionOriginalRect: CGRect?
@@ -5133,6 +5134,22 @@ struct ImageEditorView: View {
                         .accessibilityLabel(L10n.text("imageEditor.cropBounds.widthHelp"))
                         .accessibilityIdentifier("image-editor-crop-width")
 
+                        Button {
+                            isCropAspectRatioLocked.toggle()
+                        } label: {
+                            Image(systemName: isCropAspectRatioLocked ? "link" : "link.slash")
+                                .font(.system(size: 10, weight: .semibold))
+                                .frame(width: 18, height: 18)
+                        }
+                        .buttonStyle(EditorIconButtonStyle(isSelected: isCropAspectRatioLocked))
+                        .focusable(false)
+                        .help(L10n.text(
+                            isCropAspectRatioLocked
+                                ? "imageEditor.cropBounds.aspectUnlock"
+                                : "imageEditor.cropBounds.aspectLock"
+                        ))
+                        .accessibilityIdentifier("image-editor-crop-aspect-ratio-lock")
+
                         Text(L10n.text("imageEditor.cropBounds.height"))
                             .foregroundStyle(.secondary)
                         TextField(
@@ -5258,18 +5275,16 @@ struct ImageEditorView: View {
     }
 
     private func setPendingCropSize(width: CGFloat? = nil, height: CGFloat? = nil) {
-        guard let pendingCropRect else { return }
-        let currentBounds = ImageEditorCropGeometry.committedPixelBounds(
-            for: pendingCropRect,
-            canvasSize: viewModel.document.canvasSize
-        )
-        self.pendingCropRect = ImageEditorCropGeometry.frameBySettingCommittedSize(
+        guard let pendingCropRect,
+              let dimension = width.map({ (ImageEditorCropSizeDimension.width, $0) })
+                ?? height.map({ (ImageEditorCropSizeDimension.height, $0) })
+        else { return }
+        self.pendingCropRect = ImageEditorCropGeometry.frameBySettingCommittedDimension(
             of: pendingCropRect,
-            to: CGSize(
-                width: width ?? currentBounds.width,
-                height: height ?? currentBounds.height
-            ),
-            canvasSize: viewModel.document.canvasSize
+            dimension: dimension.0,
+            value: dimension.1,
+            canvasSize: viewModel.document.canvasSize,
+            preservesAspectRatio: isCropAspectRatioLocked
         )
     }
 

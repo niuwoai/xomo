@@ -206,6 +206,28 @@ struct ImageEditorCanvasGeometryTests {
             to: CGSize(width: 500, height: 2),
             canvasSize: CGSize(width: 200, height: 150)
         ) == CGRect(x: 10, y: 20, width: 190, height: 8))
+        let ratioCrop = CGRect(x: 10, y: 20, width: 100, height: 50)
+        #expect(ImageEditorCropGeometry.frameBySettingCommittedDimension(
+            of: ratioCrop,
+            dimension: .width,
+            value: 80,
+            canvasSize: CGSize(width: 200, height: 150),
+            preservesAspectRatio: true
+        ) == CGRect(x: 10, y: 20, width: 80, height: 40))
+        #expect(ImageEditorCropGeometry.frameBySettingCommittedDimension(
+            of: ratioCrop,
+            dimension: .height,
+            value: 60,
+            canvasSize: CGSize(width: 200, height: 150),
+            preservesAspectRatio: true
+        ) == CGRect(x: 10, y: 20, width: 120, height: 60))
+        #expect(ImageEditorCropGeometry.frameBySettingCommittedDimension(
+            of: ratioCrop,
+            dimension: .width,
+            value: 500,
+            canvasSize: CGSize(width: 200, height: 150),
+            preservesAspectRatio: true
+        ) == CGRect(x: 10, y: 20, width: 190, height: 95))
 
         let repositoryRoot = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()
@@ -227,6 +249,8 @@ struct ImageEditorCanvasGeometryTests {
         #expect(viewSource.contains("setPendingCropSize(height:"))
         #expect(viewSource.contains("image-editor-crop-width"))
         #expect(viewSource.contains("image-editor-crop-height"))
+        #expect(viewSource.contains("preservesAspectRatio: isCropAspectRatioLocked"))
+        #expect(viewSource.contains("image-editor-crop-aspect-ratio-lock"))
         #expect(commandSource.contains("ImageEditorCropGeometry.committedPixelBounds"))
 
         for localizationID in ["zh-Hans", "en", "ja"] {
@@ -239,6 +263,8 @@ struct ImageEditorCanvasGeometryTests {
             #expect(localization.contains("\"imageEditor.cropBounds.yHelp\""))
             #expect(localization.contains("\"imageEditor.cropBounds.widthHelp\""))
             #expect(localization.contains("\"imageEditor.cropBounds.heightHelp\""))
+            #expect(localization.contains("\"imageEditor.cropBounds.aspectLock\""))
+            #expect(localization.contains("\"imageEditor.cropBounds.aspectUnlock\""))
         }
     }
 
