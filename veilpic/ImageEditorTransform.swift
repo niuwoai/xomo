@@ -273,9 +273,9 @@ extension ImageEditorViewModel {
         var targetHeight = CGFloat(height ?? Double(currentFrame.height))
         if preservingAspectRatio {
             if width != nil, height == nil {
-                targetHeight = targetWidth * currentHeight / currentWidth
+                targetHeight = currentHeight * (targetWidth / currentWidth)
             } else if height != nil, width == nil {
-                targetWidth = targetHeight * currentWidth / currentHeight
+                targetWidth = currentWidth * (targetHeight / currentHeight)
             }
         }
 
@@ -288,17 +288,12 @@ extension ImageEditorViewModel {
         let originalFrames = editableTransformLayerIndices().reduce(into: [:]) { frames, index in
             frames[document.layers[index].id] = document.layers[index].frame.standardized
         }
-        pushUndo()
-        guard applyResizedTransformFrame(
+        commitResizedTransformFrame(
             targetFrame,
             originalTransformFrame: currentFrame,
-            originalFrames: originalFrames
-        ) else {
-            _ = discardLastUndoSnapshot()
-            updateStatus()
-            return
-        }
-        appendHistory(L10n.text("imageEditor.history.layerTransformInspector"))
+            originalFrames: originalFrames,
+            historyTitle: L10n.text("imageEditor.history.layerTransformInspector")
+        )
     }
 
     private func setSelectedLayerPosition(x: Double?, y: Double?, currentFrame: CGRect) {
@@ -966,17 +961,12 @@ extension ImageEditorViewModel {
             height: scaledSize.height
         )
 
-        pushUndo()
-        guard applyResizedTransformFrame(
+        commitResizedTransformFrame(
             scaledFrame,
             originalTransformFrame: transformFrame,
-            originalFrames: originalFrames
-        ) else {
-            _ = discardLastUndoSnapshot()
-            updateStatus()
-            return
-        }
-        appendHistory(L10n.text("imageEditor.history.layerScale"))
+            originalFrames: originalFrames,
+            historyTitle: L10n.text("imageEditor.history.layerScale")
+        )
     }
 
     @discardableResult
@@ -1391,32 +1381,70 @@ extension ImageEditorViewModel {
         originalTransformFrame: CGRect,
         originalFrames: [UUID: CGRect]? = nil
     ) -> Bool {
+        let frames = resizedLayerFrameChanges(
+            targetFrame, originalTransformFrame: originalTransformFrame,
+            originalFrames: originalFrames ?? resizingOriginalFrames
+        )
+        applyResizedLayerFrames(frames)
+        return !frames.isEmpty
+    }
+
+    @discardableResult
+    private func commitResizedTransformFrame(
+        _ targetFrame: CGRect,
+        originalTransformFrame: CGRect,
+        originalFrames: [UUID: CGRect],
+        historyTitle: String
+    ) -> Bool {
+        let frames = resizedLayerFrameChanges(
+            targetFrame, originalTransformFrame: originalTransformFrame, originalFrames: originalFrames
+        )
+        // Do not invalidate redo until there is an actual, fully computed edit.
+        guard !frames.isEmpty else { return false }
+        pushUndo()
+        applyResizedLayerFrames(frames)
+        appendHistory(historyTitle)
+        return true
+    }
+
+    private func applyResizedLayerFrames(_ frames: [UUID: CGRect]) {
+        for index in document.layers.indices {
+            if let frame = frames[document.layers[index].id] {
+                document.layers[index].frame = frame
+            }
+        }
+    }
+
+    private func resizedLayerFrameChanges(
+        _ targetFrame: CGRect,
+        originalTransformFrame: CGRect,
+        originalFrames: [UUID: CGRect]
+    ) -> [UUID: CGRect] {
         guard originalTransformFrame.width > 0.1,
               originalTransformFrame.height > 0.1
-        else { return false }
+        else { return [:] }
         let scaleX = targetFrame.width / originalTransformFrame.width
         let scaleY = targetFrame.height / originalTransformFrame.height
-        let sourceFrames = originalFrames ?? resizingOriginalFrames
-        var changed = false
+        guard scaleX.isFinite, scaleY.isFinite else { return [:] }
+        var frames: [UUID: CGRect] = [:]
 
-        for index in document.layers.indices {
-            let id = document.layers[index].id
-            guard let originalFrame = sourceFrames[id] else { continue }
+        for layer in document.layers {
+            guard let originalFrame = originalFrames[layer.id] else { continue }
             let resizedFrame = CGRect(
                 x: targetFrame.minX + (originalFrame.minX - originalTransformFrame.minX) * scaleX,
                 y: targetFrame.minY + (originalFrame.minY - originalTransformFrame.minY) * scaleY,
                 width: max(1, originalFrame.width * scaleX),
                 height: max(1, originalFrame.height * scaleY)
             )
-            changed = changed
-                || abs(resizedFrame.width - document.layers[index].frame.width) >= 0.1
-                || abs(resizedFrame.height - document.layers[index].frame.height) >= 0.1
-                || abs(resizedFrame.minX - document.layers[index].frame.minX) >= 0.1
-                || abs(resizedFrame.minY - document.layers[index].frame.minY) >= 0.1
-            document.layers[index].frame = resizedFrame
+            guard [resizedFrame.minX, resizedFrame.minY, resizedFrame.maxX, resizedFrame.maxY,
+                   resizedFrame.width, resizedFrame.height].allSatisfy(\.isFinite)
+            else { return [:] }
+            if resizedFrame != layer.frame {
+                frames[layer.id] = resizedFrame
+            }
         }
 
-        return changed
+        return frames
     }
 
     private func flipSelectedLayer(
@@ -1528,18 +1556,15 @@ extension ImageEditorViewModel {
         }
         let targetFrame = fittedTransformFrame(for: transformFrame, in: boundedTarget, mode: mode)
 
-        pushUndo()
-        guard applyResizedTransformFrame(
+        guard commitResizedTransformFrame(
             targetFrame,
             originalTransformFrame: transformFrame,
-            originalFrames: originalFrames
+            originalFrames: originalFrames,
+            historyTitle: historyTitle
         ) else {
-            _ = discardLastUndoSnapshot()
-            updateStatus()
             return false
         }
 
-        appendHistory(historyTitle)
         statusText = status
         return true
     }
