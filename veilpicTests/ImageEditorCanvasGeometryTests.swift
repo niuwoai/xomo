@@ -629,6 +629,48 @@ struct ImageEditorCanvasGeometryTests {
     }
 
     @Test
+    func pendingCropDeleteResetsBeforeSelectedObjectDeletion() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let deleteFunction = try #require(source.range(
+            of: "func deleteSelectedObjectFromKeyboard("
+        ))
+        let cropReset = try #require(source.range(
+            of: "if resetPendingCropToCanvas()",
+            range: deleteFunction.lowerBound..<source.endIndex
+        ))
+        let layerDelete = try #require(source.range(
+            of: "viewModel.deleteSelectedLayerFromKeyboardIfPossible()",
+            range: deleteFunction.lowerBound..<source.endIndex
+        ))
+        #expect(cropReset.lowerBound < layerDelete.lowerBound)
+        #expect(source.contains("return finishDispatch(true)"))
+        #expect(source.contains("private func resetPendingCropToCanvas() -> Bool"))
+        #expect(source.contains("pendingCropRect = ImageEditorCropGeometry.fullCanvasFrame"))
+        #expect(source.contains("endPendingCropInteraction()"))
+        #expect(source.contains("Button {\n                        resetPendingCropToCanvas()"))
+
+        for localizationID in ["zh-Hans", "en", "ja"] {
+            let localization = try String(
+                contentsOf: repositoryRoot
+                    .appendingPathComponent("veilpic/\(localizationID).lproj/Localizable.strings"),
+                encoding: .utf8
+            )
+            let resetHelp = try #require(localization.range(
+                of: "\"imageEditor.cropBounds.resetHelp\""
+            ))
+            let resetHelpLine = localization[resetHelp.lowerBound...]
+                .prefix { $0 != "\n" }
+            #expect(resetHelpLine.contains("Delete"))
+        }
+    }
+
+    @Test
     func pendingCropArrowNudgeMovesInsideCanvasBeforeFallingBackToSelection() throws {
         let original = CGRect(x: 10, y: 12, width: 40, height: 20)
         let canvasSize = CGSize(width: 100, height: 80)

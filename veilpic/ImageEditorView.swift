@@ -3566,6 +3566,9 @@ struct ImageEditorView: View {
             }
             return didHandle
         }
+        if resetPendingCropToCanvas() {
+            return finishDispatch(true)
+        }
         if cancelPathAnchorDragForKeyboardCommand() {
             return finishDispatch(true)
         }
@@ -5218,9 +5221,7 @@ struct ImageEditorView: View {
                     .accessibilityIdentifier("image-editor-crop-aspect-menu")
 
                     Button {
-                        self.pendingCropRect = ImageEditorCropGeometry.fullCanvasFrame(
-                            canvasSize: viewModel.document.canvasSize
-                        )
+                        resetPendingCropToCanvas()
                     } label: {
                         Image(systemName: "arrow.counterclockwise")
                             .frame(width: 24, height: 24)
@@ -7277,6 +7278,16 @@ struct ImageEditorView: View {
         activeCropHandle = nil
         cropInteractionStartPoint = nil
         cropInteractionOriginalRect = nil
+    }
+
+    @discardableResult
+    private func resetPendingCropToCanvas() -> Bool {
+        guard pendingCropRect != nil else { return false }
+        pendingCropRect = ImageEditorCropGeometry.fullCanvasFrame(
+            canvasSize: viewModel.document.canvasSize
+        )
+        endPendingCropInteraction()
+        return true
     }
 
     private func cropHitTolerance(in size: CGSize) -> CGFloat {
