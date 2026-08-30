@@ -1051,6 +1051,13 @@ extension ImageEditorViewModel {
         }
         pushUndo()
         if !result.layers.isEmpty {
+            // Match file/image imports: the new object owns the selection,
+            // while the pre-import pixel selection stays in this undo step.
+            endPixelSelectionForImportedObject()
+            selectedHotspotID = nil
+            if exportSettings.scope == .slice {
+                exportSettings.scope = .selectedLayer
+            }
             let insertionAnchorID = document.selectedLayer.map { selectedLayer in
                 document.ancestorGroups(for: selectedLayer).last?.id ?? selectedLayer.id
             }
@@ -1062,9 +1069,7 @@ extension ImageEditorViewModel {
             )
             document.layers.insert(contentsOf: result.layers, at: insertionIndex)
             if let selectedLayerID = result.selectedLayerID {
-                document.selectedLayerID = selectedLayerID
-                document.selectedLayerIDs = [selectedLayerID]
-                isEditingLayerMask = false
+                selectLayer(selectedLayerID)
             }
         }
         if !importedSlices.isEmpty {
