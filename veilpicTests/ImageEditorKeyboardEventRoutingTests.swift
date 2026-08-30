@@ -4,6 +4,82 @@ import Testing
 
 @MainActor
 struct ImageEditorKeyboardEventRoutingTests {
+    private final class MonitorOwner {}
+
+    @Test func monitorConsumesHandledDeleteWithoutForwardingItAgain() throws {
+        let owner = MonitorOwner()
+        let event = try keyEvent(type: .keyDown)
+        var deletions = 0
+        var downstreamEvents = 0
+        let monitor = ImageEditorKeyboardEventRouter.monitorHandler(for: owner) { _, event in
+            ImageEditorKeyboardEventRouter.route(
+                event,
+                updateCanvasModifiers: { _ in },
+                handleKeyEvent: { event in
+                    let handled = ImageEditorKeyboardResponderDeleteDispatcher.perform(
+                        event: event,
+                        deleteSelectedObject: { _ in deletions += 1; return true }
+                    )
+                    return handled ? nil : event
+                }
+            )
+        }
+        if monitor(event) != nil { downstreamEvents += 1 }
+        #expect(deletions == 1)
+        #expect(downstreamEvents == 0)
+        withExtendedLifetime(owner) {}
+    }
+
+    @Test func monitorPreservesUnhandledAndReplacementEvents() throws {
+        let owner = MonitorOwner()
+        let event = try keyEvent(type: .keyDown)
+        let replacement = try keyEvent(type: .keyUp)
+        let passthrough = ImageEditorKeyboardEventRouter.monitorHandler(for: owner) { _, event in event }
+        let replacing = ImageEditorKeyboardEventRouter.monitorHandler(for: owner) { _, _ in replacement }
+        #expect(passthrough(event) === event)
+        #expect(replacing(event) === replacement)
+        withExtendedLifetime(owner) {}
+    }
+
+    @Test func monitorDoesNotRetainOwnerAndPassesThroughAfterRelease() throws {
+        var owner: MonitorOwner? = MonitorOwner()
+        weak var releasedOwner = owner
+        var calls = 0
+        let monitor = ImageEditorKeyboardEventRouter.monitorHandler(for: try #require(owner)) { _, _ in
+            calls += 1
+            return nil
+        }
+        owner = nil
+        #expect(releasedOwner == nil)
+        let event = try keyEvent(type: .keyDown)
+        #expect(monitor(event) === event)
+        #expect(calls == 0)
+    }
+
+    @Test func monitorKeepsModifierEventsInResponderChain() throws {
+        let owner = MonitorOwner()
+        let event = try modifierEvent(flags: [.maskShift])
+        var flags: NSEvent.ModifierFlags = []
+        let monitor = ImageEditorKeyboardEventRouter.monitorHandler(for: owner) { _, event in
+            ImageEditorKeyboardEventRouter.route(
+                event,
+                updateCanvasModifiers: { flags = $0 },
+                handleKeyEvent: { _ in Issue.record("Modifier event entered keyboard handler"); return nil }
+            )
+        }
+        #expect(monitor(event) === event)
+        #expect(flags == [.shift])
+        withExtendedLifetime(owner) {}
+    }
+
+    @Test func appKitMonitorUsesHandlerWithoutCoalescingConsumedEvents() throws {
+        let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
+        let source = try String(contentsOf: root.appendingPathComponent("veilpic/ImageEditorView.swift"), encoding: .utf8)
+        #expect(source.contains("handler: ImageEditorKeyboardEventRouter.monitorHandler(for: self)"))
+        #expect(source.contains("owner.handle(event)"))
+        #expect(!source.contains("self?.handle(event) ?? event"))
+    }
+
     @Test func modifierEventsUpdateCursorWithoutReadingKeyboardCharacters() throws {
         let event = try modifierEvent(flags: [.maskShift, .maskAlternate, .maskCommand])
         var receivedFlags: NSEvent.ModifierFlags = []

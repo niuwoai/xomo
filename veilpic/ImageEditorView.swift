@@ -21389,10 +21389,11 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
             self.setSpacebarPanning = setSpacebarPanning
             self.setCanvasModifierFlags = setCanvasModifierFlags
             eventMonitor = NSEvent.addLocalMonitorForEvents(
-                matching: [.keyDown, .keyUp, .flagsChanged]
-            ) { [weak self] event in
-                self?.handle(event) ?? event
-            }
+                matching: [.keyDown, .keyUp, .flagsChanged],
+                handler: ImageEditorKeyboardEventRouter.monitorHandler(for: self) { owner, event in
+                    owner.handle(event)
+                }
+            )
             appDeactivateObserver = NotificationCenter.default.addObserver(
                 forName: NSApplication.didResignActiveNotification,
                 object: nil,
