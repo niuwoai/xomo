@@ -551,6 +551,47 @@ struct ImageEditorCanvasGeometryTests {
     }
 
     @Test
+    func cropGuideVisibilitySeparatesGuideChoiceFromDisplayTiming() throws {
+        #expect(ImageEditorCropGuideVisibility.allCases == [.always, .whileAdjusting, .never])
+        #expect(ImageEditorCropGuideVisibility.always.shouldShow(isAdjusting: false))
+        #expect(ImageEditorCropGuideVisibility.always.shouldShow(isAdjusting: true))
+        #expect(!ImageEditorCropGuideVisibility.whileAdjusting.shouldShow(isAdjusting: false))
+        #expect(ImageEditorCropGuideVisibility.whileAdjusting.shouldShow(isAdjusting: true))
+        #expect(!ImageEditorCropGuideVisibility.never.shouldShow(isAdjusting: false))
+        #expect(!ImageEditorCropGuideVisibility.never.shouldShow(isAdjusting: true))
+        #expect(
+            Set(ImageEditorCropGuideVisibility.allCases.map(\.accessibilityIdentifier)).count
+                == ImageEditorCropGuideVisibility.allCases.count
+        )
+
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        #expect(source.contains("@State private var cropGuideVisibility = ImageEditorCropGuideVisibility.always"))
+        #expect(source.contains("ImageEditorCropGuideVisibility.allCases"))
+        #expect(source.contains("cropGuideVisibility = visibility"))
+        #expect(source.contains("isAdjusting: activeCropHandle != nil"))
+        #expect(source.contains("if showsCropGuides"))
+        #expect(source.contains("image-editor-crop-guide-visibility-menu"))
+
+        for localizationID in ["zh-Hans", "en", "ja"] {
+            let localization = try String(
+                contentsOf: repositoryRoot
+                    .appendingPathComponent("veilpic/\(localizationID).lproj/Localizable.strings"),
+                encoding: .utf8
+            )
+            #expect(localization.contains("\"imageEditor.cropGuide.visibilityHelp\""))
+            for visibility in ImageEditorCropGuideVisibility.allCases {
+                #expect(localization.contains("\"\(visibility.titleKey)\""))
+            }
+        }
+    }
+
+    @Test
     func pendingCropXSwapsOrientationWithoutStealingTheColorShortcut() throws {
         #expect(ImageEditorKeyboardShortcutAction.resolve(
             charactersIgnoringModifiers: "x",

@@ -97,6 +97,30 @@ nonisolated enum ImageEditorCropGuideKind: String, CaseIterable, Identifiable {
     }
 }
 
+nonisolated enum ImageEditorCropGuideVisibility: String, CaseIterable, Identifiable {
+    case always
+    case whileAdjusting
+    case never
+
+    var id: String { rawValue }
+
+    var titleKey: String {
+        "imageEditor.cropGuide.visibility.\(rawValue)"
+    }
+
+    var accessibilityIdentifier: String {
+        "image-editor-crop-guide-visibility-\(rawValue)"
+    }
+
+    func shouldShow(isAdjusting: Bool) -> Bool {
+        switch self {
+        case .always: true
+        case .whileAdjusting: isAdjusting
+        case .never: false
+        }
+    }
+}
+
 nonisolated enum ImageEditorCropShieldOpacityPreset: String, CaseIterable, Identifiable {
     case light
     case standard

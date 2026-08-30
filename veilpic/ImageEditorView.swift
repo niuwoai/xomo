@@ -182,6 +182,7 @@ struct ImageEditorView: View {
     @State private var lastPatchPreviewUpdateTime: TimeInterval = 0
     @State private var pendingCropRect: CGRect?
     @State private var cropGuideKind = ImageEditorCropGuideKind.ruleOfThirds
+    @State private var cropGuideVisibility = ImageEditorCropGuideVisibility.always
     @State private var showsCroppedArea = true
     @State private var cropShieldColor = Color.black
     @State private var cropShieldOpacity = ImageEditorCropShieldOpacityPreset.standard.opacity
@@ -5206,6 +5207,30 @@ struct ImageEditorView: View {
                     .accessibilityIdentifier("image-editor-crop-guide-picker")
 
                     Menu {
+                        ForEach(ImageEditorCropGuideVisibility.allCases) { visibility in
+                            Button {
+                                cropGuideVisibility = visibility
+                            } label: {
+                                HStack {
+                                    Text(L10n.text(visibility.titleKey))
+                                    if cropGuideVisibility == visibility {
+                                        Image(systemName: "checkmark")
+                                    }
+                                }
+                            }
+                            .accessibilityIdentifier(visibility.accessibilityIdentifier)
+                        }
+                    } label: {
+                        Image(systemName: "eye.square")
+                            .frame(width: 24, height: 24)
+                    }
+                    .menuStyle(.borderlessButton)
+                    .fixedSize()
+                    .focusable(false)
+                    .help(L10n.text("imageEditor.cropGuide.visibilityHelp"))
+                    .accessibilityIdentifier("image-editor-crop-guide-visibility-menu")
+
+                    Menu {
                         ForEach(ImageEditorCropAspectPreset.allCases) { preset in
                             Button {
                                 applyCropAspectPreset(preset)
@@ -5714,6 +5739,9 @@ struct ImageEditorView: View {
                 for: cropGuideKind,
                 in: CGRect(origin: .zero, size: rect.size)
             )
+            let showsCropGuides = cropGuideVisibility.shouldShow(
+                isAdjusting: activeCropHandle != nil
+            )
             Path { path in
                 for shieldRect in cropShieldRects {
                     path.addRect(shieldRect)
@@ -5730,13 +5758,15 @@ struct ImageEditorView: View {
                     .stroke(Color(nsColor: ImageEditorTheme.selected), style: StrokeStyle(lineWidth: 1.5, dash: [6, 4]))
                     .background(Rectangle().fill(Color(nsColor: ImageEditorTheme.selected).opacity(0.10)))
                     .frame(width: rect.width, height: rect.height)
-                Path { path in
-                    for segment in cropGuideSegments {
-                        path.move(to: segment.start)
-                        path.addLine(to: segment.end)
+                if showsCropGuides {
+                    Path { path in
+                        for segment in cropGuideSegments {
+                            path.move(to: segment.start)
+                            path.addLine(to: segment.end)
+                        }
                     }
+                    .stroke(Color.white.opacity(0.72), lineWidth: 1)
                 }
-                .stroke(Color.white.opacity(0.72), lineWidth: 1)
                 ForEach(ImageEditorCropHandle.resizeHandles) { handle in
                     let point = viewPoint(from: handle.point(in: pendingCropRect), in: size)
                     RoundedRectangle(cornerRadius: 1.5, style: .continuous)

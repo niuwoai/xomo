@@ -477,6 +477,10 @@
 "imageEditor.action.cropCancel" = "Cancel Crop (Esc)";
 "imageEditor.cropGuide.title" = "Composition Guide";
 "imageEditor.cropGuide.help" = "Choose a crop composition guide; press O to cycle, or use arrow keys to move the crop";
+"imageEditor.cropGuide.visibilityHelp" = "Choose when crop composition guides appear";
+"imageEditor.cropGuide.visibility.always" = "Always Show";
+"imageEditor.cropGuide.visibility.whileAdjusting" = "Show While Adjusting";
+"imageEditor.cropGuide.visibility.never" = "Never Show";
 "imageEditor.cropGuide.ruleOfThirds" = "Rule of Thirds";
 "imageEditor.cropGuide.grid" = "Fine Grid";
 "imageEditor.cropGuide.goldenRatio" = "Golden Ratio";

@@ -477,6 +477,10 @@
 "imageEditor.action.cropCancel" = "取消裁剪（Esc）";
 "imageEditor.cropGuide.title" = "构图参考线";
 "imageEditor.cropGuide.help" = "按 O 循环切换构图参考线；使用方向键移动裁剪框";
+"imageEditor.cropGuide.visibilityHelp" = "选择裁剪构图参考线的显示时机";
+"imageEditor.cropGuide.visibility.always" = "始终显示";
+"imageEditor.cropGuide.visibility.whileAdjusting" = "调整时显示";
+"imageEditor.cropGuide.visibility.never" = "从不显示";
 "imageEditor.cropGuide.ruleOfThirds" = "三分法";
 "imageEditor.cropGuide.grid" = "精细网格";
 "imageEditor.cropGuide.goldenRatio" = "黄金比例";

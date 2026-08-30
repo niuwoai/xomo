@@ -477,6 +477,10 @@
 "imageEditor.action.cropCancel" = "切り抜きをキャンセル（Esc）";
 "imageEditor.cropGuide.title" = "構図ガイド";
 "imageEditor.cropGuide.help" = "構図ガイドは O キーで切り替え、矢印キーで切り抜き範囲を移動します";
+"imageEditor.cropGuide.visibilityHelp" = "切り抜き構図ガイドを表示するタイミングを選択";
+"imageEditor.cropGuide.visibility.always" = "常に表示";
+"imageEditor.cropGuide.visibility.whileAdjusting" = "調整中のみ表示";
+"imageEditor.cropGuide.visibility.never" = "表示しない";
 "imageEditor.cropGuide.ruleOfThirds" = "三分割法";
 "imageEditor.cropGuide.grid" = "詳細グリッド";
 "imageEditor.cropGuide.goldenRatio" = "黄金比";
