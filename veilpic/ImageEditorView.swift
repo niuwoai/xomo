@@ -183,6 +183,7 @@ struct ImageEditorView: View {
     @State private var pendingCropRect: CGRect?
     @State private var cropGuideKind = ImageEditorCropGuideKind.ruleOfThirds
     @State private var showsCroppedArea = true
+    @State private var cropShieldColor = Color.black
     @State private var cropShieldOpacity = ImageEditorCropShieldOpacityPreset.standard.opacity
     @State private var automaticallyAdjustsCropShieldOpacity = true
     @State private var isCropAspectRatioLocked = false
@@ -5236,6 +5237,13 @@ struct ImageEditorView: View {
                     .accessibilityIdentifier("image-editor-crop-outside-area-toggle")
 
                     Menu {
+                        ColorPicker(
+                            L10n.text("imageEditor.cropShield.color"),
+                            selection: $cropShieldColor,
+                            supportsOpacity: false
+                        )
+                        .accessibilityIdentifier("image-editor-crop-shield-color")
+                        Divider()
                         ForEach(ImageEditorCropShieldOpacityPreset.allCases) { preset in
                             Button {
                                 cropShieldOpacity = preset.opacity
@@ -5263,7 +5271,7 @@ struct ImageEditorView: View {
                     .fixedSize()
                     .focusable(false)
                     .disabled(!showsCroppedArea)
-                    .help(L10n.text("imageEditor.cropShield.opacityHelp"))
+                    .help(L10n.text("imageEditor.cropShield.settingsHelp"))
                     .accessibilityIdentifier("image-editor-crop-shield-opacity-menu")
 
                     Button {
@@ -5713,7 +5721,7 @@ struct ImageEditorView: View {
             }
             .fill(
                 showsCroppedArea
-                    ? Color.black.opacity(effectiveCropShieldOpacity)
+                    ? cropShieldColor.opacity(effectiveCropShieldOpacity)
                     : Color(nsColor: ImageEditorTheme.window)
             )
             .allowsHitTesting(false)
