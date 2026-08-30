@@ -57,6 +57,24 @@ nonisolated struct ImageEditorCropGuideSegment: Equatable {
 }
 
 enum ImageEditorCropGeometry {
+    static func shieldRects(
+        in canvasBounds: CGRect,
+        excluding cropRect: CGRect
+    ) -> [CGRect] {
+        let canvas = canvasBounds.standardized
+        guard canvas.width > 0, canvas.height > 0 else { return [] }
+
+        let crop = canvas.intersection(cropRect.standardized)
+        guard !crop.isNull, crop.width > 0, crop.height > 0 else { return [canvas] }
+
+        return [
+            CGRect(x: canvas.minX, y: canvas.minY, width: canvas.width, height: crop.minY - canvas.minY),
+            CGRect(x: canvas.minX, y: crop.maxY, width: canvas.width, height: canvas.maxY - crop.maxY),
+            CGRect(x: canvas.minX, y: crop.minY, width: crop.minX - canvas.minX, height: crop.height),
+            CGRect(x: crop.maxX, y: crop.minY, width: canvas.maxX - crop.maxX, height: crop.height)
+        ].filter { $0.width > 0 && $0.height > 0 }
+    }
+
     static func ruleOfThirdsSegments(in rect: CGRect) -> [ImageEditorCropGuideSegment] {
         let normalized = rect.standardized
         guard normalized.width > 0, normalized.height > 0 else { return [] }

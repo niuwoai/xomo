@@ -212,6 +212,36 @@ struct ImageEditorCanvasGeometryTests {
         #expect(source.contains("for segment in cropGuideSegments"))
     }
 
+    @Test
+    func cropShieldDimsOnlyTheCanvasAreaOutsideThePreview() throws {
+        let canvas = CGRect(x: 10, y: 20, width: 100, height: 80)
+        #expect(ImageEditorCropGeometry.shieldRects(
+            in: canvas,
+            excluding: CGRect(x: 30, y: 35, width: 60, height: 50)
+        ) == [
+            CGRect(x: 10, y: 20, width: 100, height: 15),
+            CGRect(x: 10, y: 85, width: 100, height: 15),
+            CGRect(x: 10, y: 35, width: 20, height: 50),
+            CGRect(x: 90, y: 35, width: 20, height: 50)
+        ])
+        #expect(ImageEditorCropGeometry.shieldRects(in: canvas, excluding: canvas).isEmpty)
+        #expect(ImageEditorCropGeometry.shieldRects(
+            in: canvas,
+            excluding: CGRect(x: -200, y: -200, width: 10, height: 10)
+        ) == [canvas])
+
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        #expect(source.contains("ImageEditorCropGeometry.shieldRects"))
+        #expect(source.contains("for shieldRect in cropShieldRects"))
+        #expect(source.contains("Color.black.opacity(0.48)"))
+    }
+
     private func assertEqual(
         _ actual: CGRect,
         _ expected: CGRect,

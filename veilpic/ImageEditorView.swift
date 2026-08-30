@@ -5415,9 +5415,20 @@ struct ImageEditorView: View {
 
         if let pendingCropRect {
             let rect = viewRect(from: pendingCropRect, in: size)
+            let cropShieldRects = ImageEditorCropGeometry.shieldRects(
+                in: fittedImageRect(in: size),
+                excluding: rect
+            )
             let cropGuideSegments = ImageEditorCropGeometry.ruleOfThirdsSegments(
                 in: CGRect(origin: .zero, size: rect.size)
             )
+            Path { path in
+                for shieldRect in cropShieldRects {
+                    path.addRect(shieldRect)
+                }
+            }
+            .fill(Color.black.opacity(0.48))
+            .allowsHitTesting(false)
             ZStack {
                 Rectangle()
                     .stroke(Color(nsColor: ImageEditorTheme.selected), style: StrokeStyle(lineWidth: 1.5, dash: [6, 4]))
