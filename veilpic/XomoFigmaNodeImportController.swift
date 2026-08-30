@@ -31,6 +31,9 @@ final class XomoFigmaNodeImportController: ObservableObject {
     }
 
     func fetchPlan(preview: XomoFigmaLinkPreview) async {
+        // Every new read supersedes the previous one, including rejected reads.
+        let generation = UUID()
+        requestGeneration = generation
         guard preview.nodeID != nil else {
             state = .failed(.nodeSelectionRequired)
             return
@@ -47,8 +50,6 @@ final class XomoFigmaNodeImportController: ObservableObject {
             return
         }
 
-        let generation = UUID()
-        requestGeneration = generation
         state = .loading
         do {
             let plan = try await fetcher.fetchPlan(for: preview, credential: credential)

@@ -36,12 +36,15 @@ final class XomoFigmaAuthorizedMetadataController: ObservableObject {
         do {
             hasStoredCredential = try store.load() != nil
         } catch {
+            requestGeneration = UUID()
             hasStoredCredential = false
             state = .failed(.secureStorageUnavailable)
         }
     }
 
     func connectAndFetch(preview: XomoFigmaLinkPreview) async {
+        let generation = UUID()
+        requestGeneration = generation
         let credential: XomoFigmaPersonalAccessToken
         do {
             credential = try XomoFigmaPersonalAccessToken(validating: tokenDraft)
@@ -59,10 +62,12 @@ final class XomoFigmaAuthorizedMetadataController: ObservableObject {
 
         tokenDraft = ""
         hasStoredCredential = true
-        await performFetch(preview: preview, credential: credential)
+        await performFetch(preview: preview, credential: credential, generation: generation)
     }
 
     func fetchMetadata(preview: XomoFigmaLinkPreview) async {
+        let generation = UUID()
+        requestGeneration = generation
         let credential: XomoFigmaPersonalAccessToken
         do {
             guard let storedCredential = try store.load() else {
@@ -76,7 +81,7 @@ final class XomoFigmaAuthorizedMetadataController: ObservableObject {
             state = .failed(.secureStorageUnavailable)
             return
         }
-        await performFetch(preview: preview, credential: credential)
+        await performFetch(preview: preview, credential: credential, generation: generation)
     }
 
     func clearMetadata() {
@@ -98,10 +103,10 @@ final class XomoFigmaAuthorizedMetadataController: ObservableObject {
 
     private func performFetch(
         preview: XomoFigmaLinkPreview,
-        credential: XomoFigmaPersonalAccessToken
+        credential: XomoFigmaPersonalAccessToken,
+        generation: UUID
     ) async {
-        let generation = UUID()
-        requestGeneration = generation
+        guard requestGeneration == generation else { return }
         state = .loading
         do {
             let metadata = try await fetcher.fetchMetadata(for: preview, credential: credential)
