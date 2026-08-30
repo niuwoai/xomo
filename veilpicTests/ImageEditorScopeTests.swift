@@ -6200,7 +6200,7 @@ struct ImageEditorScopeTests {
         #expect(smudgeSource.contains(".focusable(false)"))
     }
 
-    @Test func sampleAllLayersOptionIsSmudgeOnlyNonFocusableAndAccessible() throws {
+    @Test func smudgeSampleAllLayersOptionIsNonFocusableAndAccessible() throws {
         let source = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
             encoding: .utf8

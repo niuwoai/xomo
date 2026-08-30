@@ -5788,6 +5788,31 @@ final class XomoAutomationRegistry {
             }
         }
         if let feather = arguments["feather"]?.doubleValue { viewModel.feather = max(0, feather) }
+        if action == "patch" {
+            let resolvedDiffusion: Int?
+            if let rawDiffusion = arguments["diffusion"]?.doubleValue {
+                guard rawDiffusion.isFinite,
+                      rawDiffusion.rounded() == rawDiffusion,
+                      (1.0...7.0).contains(rawDiffusion)
+                else {
+                    throw XomoAutomationCallError.invalidArgument(
+                        "Patch diffusion must be an integer from 1 through 7"
+                    )
+                }
+                resolvedDiffusion = Int(rawDiffusion)
+            } else {
+                resolvedDiffusion = nil
+            }
+            if let transparent = arguments["transparent"]?.boolValue {
+                viewModel.patchTransparentEnabled = transparent
+            }
+            if let sampleAllLayers = arguments["sampleAllLayers"]?.boolValue {
+                viewModel.patchSampleAllLayersEnabled = sampleAllLayers
+            }
+            if let resolvedDiffusion {
+                viewModel.patchDiffusion = resolvedDiffusion
+            }
+        }
         if action == "setCloneSource" || action == "cloneStamp" {
             func validatedCloneScale(_ argumentName: String) throws -> CGFloat? {
                 guard let rawPercent = arguments[argumentName]?.doubleValue else { return nil }
@@ -7524,11 +7549,13 @@ private extension XomoAutomationRegistry {
             "contiguous": XomoAutomationSchema.boolean(description: "Restrict paint-bucket fill to the connected region containing the seed"),
             "feather": XomoAutomationSchema.number(description: "Patch selection feather radius"),
             "mode": XomoAutomationSchema.string(description: "Patch mode", values: ["source", "destination"]),
+            "transparent": XomoAutomationSchema.boolean(description: "Transfer sampled texture while preserving patch target color and alpha"),
+            "diffusion": XomoAutomationSchema.integer(description: "Patch texture diffusion from 1 for sharp detail through 7 for smooth regions", minimum: 1, maximum: 7),
             "healingMode": XomoAutomationSchema.string(description: "Healing mode", values: ["source", "spot"]),
             "spongeMode": XomoAutomationSchema.string(description: "Sponge mode", values: ["saturate", "desaturate"]),
             "spongeVibrance": XomoAutomationSchema.boolean(description: "Reduce clipping near fully saturated or desaturated colors"),
             "fingerPainting": XomoAutomationSchema.boolean(description: "Start each Smudge stroke with the current foreground color"),
-            "sampleAllLayers": XomoAutomationSchema.boolean(description: "Smudge from the composite of all visible layers into the active layer"),
+            "sampleAllLayers": XomoAutomationSchema.boolean(description: "Smudge or patch from the composite of all visible layers into the active layer"),
             "pressureSize": XomoAutomationSchema.boolean(description: "Use point pressure to control retouch brush diameter"),
             "pressureSensitivity": XomoAutomationSchema.number(description: "Retouch brush pressure curve sensitivity from 0 to 100"),
             "aligned": XomoAutomationSchema.boolean(description: "Keep the clone or healing source offset aligned across strokes"),

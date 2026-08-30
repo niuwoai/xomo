@@ -1001,6 +1001,17 @@ extension ImageEditorViewModel {
         }
 
         let layer = document.layers[index]
+        let samplingImage: NSImage?
+        if patchSampleAllLayersEnabled {
+            guard let sampledInput = sampledBrushInput(
+                for: layer,
+                canvasOffset: .zero,
+                sampleSource: .allVisible
+            ) else { return nil }
+            samplingImage = sampledInput.image
+        } else {
+            samplingImage = nil
+        }
         guard let output = layer.image.patched(
             selection: targetSelection,
             layerFrame: layer.frame,
@@ -1009,7 +1020,8 @@ extension ImageEditorViewModel {
             opacity: opacity,
             feather: feather,
             extractsTextureTransparently: patchTransparentEnabled,
-            diffusion: patchDiffusion
+            diffusion: patchDiffusion,
+            samplingImage: samplingImage
         ) else { return nil }
         let protectedOutput = document.isEffectivelyTransparencyLocked(layer)
             ? (output.preservingAlpha(from: layer.image) ?? output)
@@ -2030,7 +2042,8 @@ private extension NSImage {
         opacity: CGFloat,
         feather: CGFloat,
         extractsTextureTransparently: Bool = false,
-        diffusion: Int = 1
+        diffusion: Int = 1,
+        samplingImage: NSImage? = nil
     ) -> NSImage? {
         guard layerFrame.width > 0,
               layerFrame.height > 0,
@@ -2050,19 +2063,28 @@ private extension NSImage {
 
         let selectedAlpha = mask.alpha
         guard selectedAlpha.contains(where: { $0 > 0 }) else { return nil }
+        let samplingBaseImage = samplingImage ?? self
+        let samplingBasePixels: [UInt8]
+        if samplingImage == nil {
+            samplingBasePixels = pixels
+        } else {
+            guard let sampledPixels = samplingBaseImage.rgbaPixels(width: width, height: height)
+            else { return nil }
+            samplingBasePixels = sampledPixels
+        }
         let normalizedDiffusion = max(1, min(7, diffusion))
         let diffusionRadius = CGFloat(normalizedDiffusion - 1) * 0.5
         let sampledImage: NSImage
         let sourcePixels: [UInt8]
         if diffusionRadius > 0 {
-            guard let diffusedImage = blurred(radius: diffusionRadius),
+            guard let diffusedImage = samplingBaseImage.blurred(radius: diffusionRadius),
                   let diffusedPixels = diffusedImage.rgbaPixels(width: width, height: height)
             else { return nil }
             sampledImage = diffusedImage
             sourcePixels = diffusedPixels
         } else {
-            sampledImage = self
-            sourcePixels = pixels
+            sampledImage = samplingBaseImage
+            sourcePixels = samplingBasePixels
         }
         let bytesPerPixel = 4
         let bytesPerRow = width * bytesPerPixel

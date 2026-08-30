@@ -391,6 +391,52 @@ struct ImageEditorPatchToolTests {
         #expect(abs(smoothTransparent.alphaComponent - targetColor.alphaComponent) < 0.01)
     }
 
+    @Test func sampleAllLayersUsesVisibleCompositeButWritesOnlyTheActiveLayer() throws {
+        let canvasSize = NSSize(width: 80, height: 60)
+        let sampleRect = CGRect(x: 12, y: 22, width: 16, height: 16)
+        let targetRect = CGRect(x: 42, y: 22, width: 16, height: 16)
+        let bottomImage = bitmapImage(
+            size: canvasSize,
+            background: NSColor(deviceRed: 0.05, green: 0.15, blue: 0.65, alpha: 1),
+            fills: [(sampleRect, NSColor(deviceRed: 0.9, green: 0.1, blue: 0.05, alpha: 1))]
+        )
+        var document = ImageEditorDocument(sourceName: "patch-all-layers.png", image: bottomImage)
+        let editLayer = ImageEditorLayer.blank(name: "Patch Target", size: canvasSize)
+        let hiddenYellow = bitmapImage(
+            size: canvasSize,
+            background: NSColor(deviceRed: 0, green: 0, blue: 0, alpha: 0),
+            fills: [(sampleRect, NSColor(deviceRed: 1, green: 1, blue: 0, alpha: 1))]
+        )
+        var hiddenLayer = ImageEditorLayer.blank(name: "Hidden", size: canvasSize)
+        hiddenLayer.image = hiddenYellow
+        hiddenLayer.isVisible = false
+        document.layers = [document.layers[0], editLayer, hiddenLayer]
+        document.selectedLayerID = editLayer.id
+        document.selectedLayerIDs = [editLayer.id]
+        let viewModel = ImageEditorViewModel(document: document, onApply: { _ in })
+        #expect(!viewModel.patchSampleAllLayersEnabled)
+        viewModel.patchSampleAllLayersEnabled = true
+        viewModel.createRectSelection(from: targetRect.origin, to: targetRect.bottomRight)
+
+        viewModel.patchSelection(from: targetRect.center, to: sampleRect.center)
+
+        let patched = try color(in: viewModel, at: targetRect.center)
+        #expect(patched.redComponent > patched.blueComponent + 0.6)
+        #expect(patched.greenComponent < 0.25)
+        let unchangedBottom = try #require(
+            viewModel.document.layers[0].image.color(at: sampleRect.center)?.usingColorSpace(.deviceRGB)
+        )
+        #expect(unchangedBottom.redComponent > unchangedBottom.blueComponent + 0.6)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.selectionPatch"))
+
+        viewModel.undo()
+        let undone = try color(in: viewModel, at: targetRect.center)
+        #expect(undone.alphaComponent < 0.05)
+        viewModel.redo()
+        let redone = try color(in: viewModel, at: targetRect.center)
+        #expect(redone.redComponent > redone.blueComponent + 0.6)
+    }
+
     @Test func transparentOptionIsWiredToTheOptionsBarAndLivePreview() throws {
         let repositoryRoot = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()
@@ -403,6 +449,9 @@ struct ImageEditorPatchToolTests {
         #expect(source.contains("isOn: $viewModel.patchTransparentEnabled"))
         #expect(source.contains(".accessibilityIdentifier(\"image-editor-patch-transparent\")"))
         #expect(source.contains(".onChange(of: viewModel.patchTransparentEnabled)"))
+        #expect(source.contains("isOn: $viewModel.patchSampleAllLayersEnabled"))
+        #expect(source.contains("image-editor-patch-sample-all-layers"))
+        #expect(source.contains(".onChange(of: viewModel.patchSampleAllLayersEnabled)"))
         #expect(source.contains("Stepper(value: $viewModel.patchDiffusion, in: 1...7)"))
         #expect(source.contains(".onChange(of: viewModel.patchDiffusion)"))
         #expect(source.contains("refreshActivePatchPreview()"))

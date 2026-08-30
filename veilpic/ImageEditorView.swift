@@ -927,6 +927,16 @@ struct ImageEditorView: View {
                 .fixedSize()
                 .help(L10n.text("imageEditor.option.patchTransparent.help"))
                 .accessibilityIdentifier("image-editor-patch-transparent")
+                Toggle(
+                    L10n.text("imageEditor.option.sampleAllLayers"),
+                    isOn: $viewModel.patchSampleAllLayersEnabled
+                )
+                .toggleStyle(.checkbox)
+                .focusable(false)
+                .fixedSize()
+                .help(L10n.text("imageEditor.option.patchSampleAllLayers.help"))
+                .accessibilityHint(L10n.text("imageEditor.option.patchSampleAllLayers.help"))
+                .accessibilityIdentifier("image-editor-patch-sample-all-layers")
                 Stepper(value: $viewModel.patchDiffusion, in: 1...7) {
                     Text(L10n.format(
                         "imageEditor.option.patchDiffusionValue",
@@ -4643,6 +4653,9 @@ struct ImageEditorView: View {
                     refreshCanvasCursor(in: geometry.size)
                 }
                 .onChange(of: viewModel.patchTransparentEnabled) { _ in
+                    refreshActivePatchPreview()
+                }
+                .onChange(of: viewModel.patchSampleAllLayersEnabled) { _ in
                     refreshActivePatchPreview()
                 }
                 .onChange(of: viewModel.patchDiffusion) { _ in
