@@ -757,6 +757,7 @@
 "imageEditor.option.patchPatternFlipVertical" = "Flip Vertically";
 "imageEditor.option.patchPatternScaleXValue" = "Horizontal Scale: %d%%";
 "imageEditor.option.patchPatternScaleYValue" = "Vertical Scale: %d%%";
+"imageEditor.option.patchPatternLinkAxisScales" = "Link Horizontal and Vertical Scale";
 "imageEditor.action.patchUsePattern" = "Use Pattern";
 "imageEditor.history.selectionPatchPattern" = "Patch with Pattern";
 "imageEditor.status.selectionPatchedPattern" = "Applied the patch pattern to the selection.";

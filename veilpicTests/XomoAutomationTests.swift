@@ -19124,6 +19124,9 @@ struct XomoAutomationTests {
         #expect(
             properties["patternResetTransform"]?.objectValue?["type"] == .string("boolean")
         )
+        #expect(
+            properties["patternScaleLinked"]?.objectValue?["type"] == .string("boolean")
+        )
 
         let response = registry.execute(request(
             operation: "call",
@@ -19205,6 +19208,7 @@ struct XomoAutomationTests {
             arguments: [
                 "action": .string("patchPattern"),
                 "patternResetTransform": .bool(true),
+                "patternScaleLinked": .bool(true),
                 "patternScaleXPercent": .number(125),
                 "patternAngle": .number(15),
                 "opacity": .number(1)
@@ -19213,7 +19217,8 @@ struct XomoAutomationTests {
 
         #expect(response.ok)
         #expect(viewModel.patchPatternContent.scaleX == 1.25)
-        #expect(viewModel.patchPatternContent.scaleY == 1)
+        #expect(viewModel.patchPatternContent.scaleY == 1.25)
+        #expect(viewModel.patchPatternContent.linksAxisScales)
         #expect(viewModel.patchPatternContent.angle == 15)
         #expect(!viewModel.patchPatternContent.flipsHorizontally)
         #expect(!viewModel.patchPatternContent.flipsVertically)
@@ -19249,6 +19254,61 @@ struct XomoAutomationTests {
             arguments: [
                 "action": .string("patchPattern"),
                 "patternResetTransform": .string("true"),
+                "opacity": .number(0.25)
+            ]
+        ))
+
+        #expect(!response.ok)
+        #expect(viewModel.patchPatternContent == originalPatternContent)
+        #expect(viewModel.opacity == originalOpacity)
+        #expect(viewModel.document.history.count == historyCount)
+    }
+
+    @Test func registryRejectsConflictingLinkedPatchPatternAxisScalesAtomically() {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        viewModel.selectAll()
+        viewModel.patchPatternContent.scaleX = 1.75
+        viewModel.patchPatternContent.scaleY = 0.6
+        let originalOpacity = viewModel.opacity
+        let originalPatternContent = viewModel.patchPatternContent
+        let historyCount = viewModel.document.history.count
+
+        let response = registry.execute(request(
+            operation: "call",
+            name: "xomo.paint.special",
+            arguments: [
+                "action": .string("patchPattern"),
+                "patternScaleLinked": .bool(true),
+                "patternScaleXPercent": .number(125),
+                "patternScaleYPercent": .number(150),
+                "opacity": .number(0.25)
+            ]
+        ))
+
+        #expect(!response.ok)
+        #expect(viewModel.patchPatternContent == originalPatternContent)
+        #expect(viewModel.opacity == originalOpacity)
+        #expect(viewModel.document.history.count == historyCount)
+    }
+
+    @Test func registryRejectsInvalidPatchPatternScaleLinkTypeAtomically() {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        viewModel.selectAll()
+        viewModel.patchPatternContent.scaleX = 1.75
+        let originalOpacity = viewModel.opacity
+        let originalPatternContent = viewModel.patchPatternContent
+        let historyCount = viewModel.document.history.count
+
+        let response = registry.execute(request(
+            operation: "call",
+            name: "xomo.paint.special",
+            arguments: [
+                "action": .string("patchPattern"),
+                "patternScaleLinked": .string("true"),
                 "opacity": .number(0.25)
             ]
         ))

@@ -859,9 +859,9 @@ struct LocalizationResourceTests {
     @Test func patchPatternTransformIsLocalizedInEverySupportedLanguage() throws {
         let paths = try Self.repositoryPaths()
         let expectedValues = [
-            "zh-Hans": ["图案混合模式", "反转图案覆盖", "水平翻转", "垂直翻转", "水平缩放：%d%%", "垂直缩放：%d%%", "角度：%d°", "重置图案变换", "%@ · %@ · %d 像素 · %d° · %d%%"],
-            "en": ["Pattern Blending", "Invert Pattern Coverage", "Flip Horizontally", "Flip Vertically", "Horizontal Scale: %d%%", "Vertical Scale: %d%%", "Angle: %d°", "Reset Pattern Transform", "%@ · %@ · %d px · %d° · %d%%"],
-            "ja": ["パターン描画モード", "パターン領域を反転", "水平方向に反転", "垂直方向に反転", "水平スケール：%d%%", "垂直スケール：%d%%", "角度：%d°", "パターン変形をリセット", "%@ · %@ · %d px · %d° · %d%%"]
+            "zh-Hans": ["图案混合模式", "反转图案覆盖", "水平翻转", "垂直翻转", "水平缩放：%d%%", "垂直缩放：%d%%", "联动水平与垂直缩放", "角度：%d°", "重置图案变换", "%@ · %@ · %d 像素 · %d° · %d%%"],
+            "en": ["Pattern Blending", "Invert Pattern Coverage", "Flip Horizontally", "Flip Vertically", "Horizontal Scale: %d%%", "Vertical Scale: %d%%", "Link Horizontal and Vertical Scale", "Angle: %d°", "Reset Pattern Transform", "%@ · %@ · %d px · %d° · %d%%"],
+            "ja": ["パターン描画モード", "パターン領域を反転", "水平方向に反転", "垂直方向に反転", "水平スケール：%d%%", "垂直スケール：%d%%", "水平・垂直スケールを連動", "角度：%d°", "パターン変形をリセット", "%@ · %@ · %d px · %d° · %d%%"]
         ]
         let keys = [
             "imageEditor.option.patchPatternBlendMode",
@@ -870,6 +870,7 @@ struct LocalizationResourceTests {
             "imageEditor.option.patchPatternFlipVertical",
             "imageEditor.option.patchPatternScaleXValue",
             "imageEditor.option.patchPatternScaleYValue",
+            "imageEditor.option.patchPatternLinkAxisScales",
             "imageEditor.patternFill.angleValue",
             "imageEditor.action.patchPatternResetTransform",
             "imageEditor.option.patchPatternSummary"

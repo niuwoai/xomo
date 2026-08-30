@@ -1027,8 +1027,14 @@ struct ImageEditorView: View {
                         ))
                     }
                     .accessibilityIdentifier("image-editor-patch-pattern-scale")
+                    Toggle(
+                        L10n.text("imageEditor.option.patchPatternLinkAxisScales"),
+                        isOn: patchPatternScaleAxesLinkedBinding
+                    )
+                    .toggleStyle(.checkbox)
+                    .accessibilityIdentifier("image-editor-patch-pattern-link-axis-scales")
                     Stepper(
-                        value: $viewModel.patchPatternContent.scaleX,
+                        value: patchPatternScaleXBinding,
                         in: 0.25...4,
                         step: 0.05
                     ) {
@@ -1039,7 +1045,7 @@ struct ImageEditorView: View {
                     }
                     .accessibilityIdentifier("image-editor-patch-pattern-scale-x")
                     Stepper(
-                        value: $viewModel.patchPatternContent.scaleY,
+                        value: patchPatternScaleYBinding,
                         in: 0.25...4,
                         step: 0.05
                     ) {
@@ -1772,6 +1778,30 @@ struct ImageEditorView: View {
             viewModel.patchPatternContent.red = Double(color.redComponent)
             viewModel.patchPatternContent.green = Double(color.greenComponent)
             viewModel.patchPatternContent.blue = Double(color.blueComponent)
+        }
+    }
+
+    private var patchPatternScaleAxesLinkedBinding: Binding<Bool> {
+        Binding {
+            viewModel.patchPatternContent.linksAxisScales
+        } set: {
+            viewModel.setPatchPatternScaleAxesLinked($0)
+        }
+    }
+
+    private var patchPatternScaleXBinding: Binding<CGFloat> {
+        Binding {
+            viewModel.patchPatternContent.scaleX
+        } set: {
+            viewModel.setPatchPatternScaleX($0)
+        }
+    }
+
+    private var patchPatternScaleYBinding: Binding<CGFloat> {
+        Binding {
+            viewModel.patchPatternContent.scaleY
+        } set: {
+            viewModel.setPatchPatternScaleY($0)
         }
     }
 

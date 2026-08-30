@@ -789,6 +789,7 @@ struct ImageEditorPatchToolTests {
             kind: .diagonalStripes,
             scaleX: 1.75,
             scaleY: 0.6,
+            linksAxisScales: true,
             angle: -37,
             flipsHorizontally: true,
             flipsVertically: true
@@ -800,12 +801,14 @@ struct ImageEditorPatchToolTests {
         #expect(decoded.flipsVertically)
         #expect(decoded.scaleX == 1.75)
         #expect(decoded.scaleY == 0.6)
+        #expect(decoded.linksAxisScales)
 
         var legacyObject = try #require(
             JSONSerialization.jsonObject(with: encoded) as? [String: Any]
         )
         legacyObject.removeValue(forKey: "scaleX")
         legacyObject.removeValue(forKey: "scaleY")
+        legacyObject.removeValue(forKey: "linksAxisScales")
         legacyObject.removeValue(forKey: "flipsHorizontally")
         legacyObject.removeValue(forKey: "flipsVertically")
         let legacyData = try JSONSerialization.data(withJSONObject: legacyObject)
@@ -815,6 +818,7 @@ struct ImageEditorPatchToolTests {
         #expect(!legacy.flipsVertically)
         #expect(legacy.scaleX == 1)
         #expect(legacy.scaleY == 1)
+        #expect(!legacy.linksAxisScales)
         #expect(legacy.angle == -37)
 
         let normalized = ImageEditorPatternFillContent(scaleX: 0.1, scaleY: 5).normalized()
@@ -961,6 +965,36 @@ struct ImageEditorPatchToolTests {
         #expect(viewModel.patchPatternInvertsCoverage)
         #expect(viewModel.document.history.count == historyCount)
         #expect(!viewModel.resetPatchPatternOffset())
+    }
+
+    @Test func linkingPatternAxisScalesSynchronizesEditsWithoutAddingHistory() {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "patch-pattern-linked-scale.png",
+            image: .transparent(size: CGSize(width: 12, height: 12))
+        ) { _ in }
+        viewModel.patchPatternContent = ImageEditorPatternFillContent(
+            kind: .dots,
+            scaleX: 1.5,
+            scaleY: 0.6
+        )
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.setPatchPatternScaleAxesLinked(true))
+        #expect(viewModel.patchPatternContent.scaleX == 1.5)
+        #expect(viewModel.patchPatternContent.scaleY == 1.5)
+        viewModel.setPatchPatternScaleX(2)
+        #expect(viewModel.patchPatternContent.scaleX == 2)
+        #expect(viewModel.patchPatternContent.scaleY == 2)
+        viewModel.setPatchPatternScaleY(0.75)
+        #expect(viewModel.patchPatternContent.scaleX == 0.75)
+        #expect(viewModel.patchPatternContent.scaleY == 0.75)
+        #expect(!viewModel.setPatchPatternScaleAxesLinked(true))
+        #expect(viewModel.setPatchPatternScaleAxesLinked(false))
+        viewModel.setPatchPatternScaleX(1.25)
+        #expect(viewModel.patchPatternContent.scaleX == 1.25)
+        #expect(viewModel.patchPatternContent.scaleY == 0.75)
+        #expect(viewModel.patchPatternContent.kind == .dots)
+        #expect(viewModel.document.history.count == historyCount)
     }
 
     @Test func resettingPatternTransformIsIdempotentAndPreservesPatternStyle() {
@@ -1143,8 +1177,12 @@ struct ImageEditorPatchToolTests {
         #expect(source.contains("imageEditor.option.patchPatternFlipHorizontal"))
         #expect(source.contains("imageEditor.option.patchPatternFlipVertical"))
         #expect(source.contains("value: $viewModel.patchPatternContent.scale"))
-        #expect(source.contains("value: $viewModel.patchPatternContent.scaleX"))
-        #expect(source.contains("value: $viewModel.patchPatternContent.scaleY"))
+        #expect(source.contains("value: patchPatternScaleXBinding"))
+        #expect(source.contains("value: patchPatternScaleYBinding"))
+        #expect(source.contains("isOn: patchPatternScaleAxesLinkedBinding"))
+        #expect(source.contains("viewModel.setPatchPatternScaleAxesLinked($0)"))
+        #expect(source.contains("viewModel.setPatchPatternScaleX($0)"))
+        #expect(source.contains("viewModel.setPatchPatternScaleY($0)"))
         #expect(source.contains("imageEditor.option.patchPatternScaleXValue"))
         #expect(source.contains("imageEditor.option.patchPatternScaleYValue"))
         #expect(source.contains("value: $viewModel.patchPatternContent.angle"))
@@ -1166,6 +1204,7 @@ struct ImageEditorPatchToolTests {
         #expect(source.contains("image-editor-patch-pattern-scale"))
         #expect(source.contains("image-editor-patch-pattern-scale-x"))
         #expect(source.contains("image-editor-patch-pattern-scale-y"))
+        #expect(source.contains("image-editor-patch-pattern-link-axis-scales"))
         #expect(source.contains("image-editor-patch-pattern-angle"))
         #expect(source.contains("image-editor-patch-pattern-opacity"))
         #expect(source.contains("image-editor-patch-pattern-blend-mode"))

@@ -982,6 +982,37 @@ extension ImageEditorViewModel {
         return true
     }
 
+    @discardableResult
+    func setPatchPatternScaleAxesLinked(_ isLinked: Bool) -> Bool {
+        guard patchPatternContent.linksAxisScales != isLinked else { return false }
+        patchPatternContent.linksAxisScales = isLinked
+        if isLinked {
+            patchPatternContent.scaleY = patchPatternContent.scaleX
+        }
+        return true
+    }
+
+    func setPatchPatternScaleX(_ value: CGFloat) {
+        let scale = normalizedPatchPatternAxisScale(value)
+        patchPatternContent.scaleX = scale
+        if patchPatternContent.linksAxisScales {
+            patchPatternContent.scaleY = scale
+        }
+    }
+
+    func setPatchPatternScaleY(_ value: CGFloat) {
+        let scale = normalizedPatchPatternAxisScale(value)
+        patchPatternContent.scaleY = scale
+        if patchPatternContent.linksAxisScales {
+            patchPatternContent.scaleX = scale
+        }
+    }
+
+    private func normalizedPatchPatternAxisScale(_ value: CGFloat) -> CGFloat {
+        guard value.isFinite else { return 1 }
+        return max(0.25, min(4, value))
+    }
+
     var patchPatternTransformIsIdentity: Bool {
         patchPatternContent.scaleX == 1
             && patchPatternContent.scaleY == 1

@@ -757,6 +757,7 @@
 "imageEditor.option.patchPatternFlipVertical" = "垂直方向に反転";
 "imageEditor.option.patchPatternScaleXValue" = "水平スケール：%d%%";
 "imageEditor.option.patchPatternScaleYValue" = "垂直スケール：%d%%";
+"imageEditor.option.patchPatternLinkAxisScales" = "水平・垂直スケールを連動";
 "imageEditor.action.patchUsePattern" = "パターンを使用";
 "imageEditor.history.selectionPatchPattern" = "パターンでパッチ";
 "imageEditor.status.selectionPatchedPattern" = "選択範囲にパッチパターンを適用しました。";

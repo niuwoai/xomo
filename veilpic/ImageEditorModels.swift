@@ -1283,6 +1283,7 @@ struct ImageEditorPatternFillContent: Equatable, Codable {
     var scale: CGFloat = 16
     var scaleX: CGFloat = 1
     var scaleY: CGFloat = 1
+    var linksAxisScales = false
     var angle: CGFloat = 0
     var flipsHorizontally = false
     var flipsVertically = false
@@ -1298,6 +1299,7 @@ struct ImageEditorPatternFillContent: Equatable, Codable {
         scale: CGFloat = 16,
         scaleX: CGFloat = 1,
         scaleY: CGFloat = 1,
+        linksAxisScales: Bool = false,
         angle: CGFloat = 0,
         flipsHorizontally: Bool = false,
         flipsVertically: Bool = false,
@@ -1312,6 +1314,7 @@ struct ImageEditorPatternFillContent: Equatable, Codable {
         self.scale = scale
         self.scaleX = scaleX
         self.scaleY = scaleY
+        self.linksAxisScales = linksAxisScales
         self.angle = angle
         self.flipsHorizontally = flipsHorizontally
         self.flipsVertically = flipsVertically
@@ -1329,6 +1332,7 @@ struct ImageEditorPatternFillContent: Equatable, Codable {
             scale: max(6, min(64, scale)),
             scaleX: Self.normalizedAxisScale(scaleX),
             scaleY: Self.normalizedAxisScale(scaleY),
+            linksAxisScales: linksAxisScales,
             angle: Self.normalizedAngle(angle),
             flipsHorizontally: flipsHorizontally,
             flipsVertically: flipsVertically,
@@ -1407,6 +1411,7 @@ struct ImageEditorPatternFillContent: Equatable, Codable {
         case scale
         case scaleX
         case scaleY
+        case linksAxisScales
         case angle
         case flipsHorizontally
         case flipsVertically
@@ -1424,6 +1429,7 @@ struct ImageEditorPatternFillContent: Equatable, Codable {
         scale = try container.decode(CGFloat.self, forKey: .scale)
         scaleX = try container.decodeIfPresent(CGFloat.self, forKey: .scaleX) ?? 1
         scaleY = try container.decodeIfPresent(CGFloat.self, forKey: .scaleY) ?? 1
+        linksAxisScales = try container.decodeIfPresent(Bool.self, forKey: .linksAxisScales) ?? false
         angle = try container.decodeIfPresent(CGFloat.self, forKey: .angle) ?? 0
         flipsHorizontally = try container.decodeIfPresent(Bool.self, forKey: .flipsHorizontally) ?? false
         flipsVertically = try container.decodeIfPresent(Bool.self, forKey: .flipsVertically) ?? false
@@ -1442,6 +1448,7 @@ struct ImageEditorPatternFillContent: Equatable, Codable {
         try container.encode(content.scale, forKey: .scale)
         try container.encode(content.scaleX, forKey: .scaleX)
         try container.encode(content.scaleY, forKey: .scaleY)
+        try container.encode(content.linksAxisScales, forKey: .linksAxisScales)
         try container.encode(content.angle, forKey: .angle)
         try container.encode(content.flipsHorizontally, forKey: .flipsHorizontally)
         try container.encode(content.flipsVertically, forKey: .flipsVertically)

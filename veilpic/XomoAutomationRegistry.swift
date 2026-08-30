@@ -5776,6 +5776,25 @@ final class XomoAutomationRegistry {
         }
         let resolvedPatchPatternScaleX = try validatedPatchPatternAxisScale("patternScaleXPercent")
         let resolvedPatchPatternScaleY = try validatedPatchPatternAxisScale("patternScaleYPercent")
+        let resolvedPatchPatternScaleLinked: Bool?
+        if action == "patchPattern", arguments["patternScaleLinked"] != nil {
+            resolvedPatchPatternScaleLinked = try requiredBool(
+                "patternScaleLinked",
+                in: arguments
+            )
+        } else {
+            resolvedPatchPatternScaleLinked = nil
+        }
+        let patchPatternScaleWillBeLinked = resolvedPatchPatternScaleLinked
+            ?? viewModel.patchPatternContent.linksAxisScales
+        if patchPatternScaleWillBeLinked,
+           let resolvedPatchPatternScaleX,
+           let resolvedPatchPatternScaleY,
+           resolvedPatchPatternScaleX != resolvedPatchPatternScaleY {
+            throw XomoAutomationCallError.invalidArgument(
+                "Linked patch pattern axis scales must use the same percentage"
+            )
+        }
         let resolvedPatchPatternResetsTransform: Bool
         if action == "patchPattern", arguments["patternResetTransform"] != nil {
             resolvedPatchPatternResetsTransform = try requiredBool(
@@ -5951,11 +5970,14 @@ final class XomoAutomationRegistry {
             if let resolvedPatchPatternScale {
                 viewModel.patchPatternContent.scale = resolvedPatchPatternScale
             }
+            if let resolvedPatchPatternScaleLinked {
+                viewModel.setPatchPatternScaleAxesLinked(resolvedPatchPatternScaleLinked)
+            }
             if let resolvedPatchPatternScaleX {
-                viewModel.patchPatternContent.scaleX = resolvedPatchPatternScaleX
+                viewModel.setPatchPatternScaleX(resolvedPatchPatternScaleX)
             }
             if let resolvedPatchPatternScaleY {
-                viewModel.patchPatternContent.scaleY = resolvedPatchPatternScaleY
+                viewModel.setPatchPatternScaleY(resolvedPatchPatternScaleY)
             }
             if let resolvedPatchPatternOpacity {
                 viewModel.patchPatternContent.opacity = resolvedPatchPatternOpacity
@@ -7791,6 +7813,7 @@ private extension XomoAutomationRegistry {
             "patternScale": XomoAutomationSchema.number(description: "Patch pattern tile size from 6 through 64 pixels", minimum: 6, maximum: 64),
             "patternScaleXPercent": XomoAutomationSchema.number(description: "Patch pattern horizontal scale from 25 through 400 percent", minimum: 25, maximum: 400),
             "patternScaleYPercent": XomoAutomationSchema.number(description: "Patch pattern vertical scale from 25 through 400 percent", minimum: 25, maximum: 400),
+            "patternScaleLinked": XomoAutomationSchema.boolean(description: "Link patch pattern horizontal and vertical scale changes"),
             "patternResetTransform": XomoAutomationSchema.boolean(description: "Reset patch pattern axis scales, rotation, flips, and phase before applying explicit transform overrides"),
             "patternOpacity": XomoAutomationSchema.number(description: "Patch pattern opacity from 0.05 through 1", minimum: 0.05, maximum: 1),
             "patternOffsetX": XomoAutomationSchema.number(description: "Patch pattern horizontal phase offset in pixels", minimum: -128, maximum: 128),
