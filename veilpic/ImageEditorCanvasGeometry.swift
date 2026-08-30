@@ -346,6 +346,7 @@ enum ImageEditorCropGeometry {
         handle: ImageEditorCropHandle,
         delta: CGSize,
         canvasSize: CGSize,
+        preservesAspectRatio: Bool = false,
         minimumEdge: CGFloat = 4
     ) -> CGRect {
         let canvasWidth = max(0, canvasSize.width)
@@ -388,7 +389,73 @@ enum ImageEditorCropGeometry {
             break
         }
 
-        return CGRect(x: minX, y: minY, width: maxX - minX, height: maxY - minY)
+        let unconstrained = CGRect(x: minX, y: minY, width: maxX - minX, height: maxY - minY)
+        guard preservesAspectRatio else { return unconstrained }
+
+        let aspectRatio = original.width / original.height
+        let minimumScale = max(minimumHeight, minimumWidth / aspectRatio)
+        switch handle {
+        case .topLeft, .topRight, .bottomRight, .bottomLeft:
+            let anchorX = handle == .topLeft || handle == .bottomLeft
+                ? original.maxX
+                : original.minX
+            let anchorY = handle == .topLeft || handle == .topRight
+                ? original.maxY
+                : original.minY
+            let maximumWidth = handle == .topLeft || handle == .bottomLeft
+                ? anchorX
+                : canvasWidth - anchorX
+            let maximumHeight = handle == .topLeft || handle == .topRight
+                ? anchorY
+                : canvasHeight - anchorY
+            let maximumScale = min(maximumWidth / aspectRatio, maximumHeight)
+            let projectedScale = (
+                unconstrained.width * aspectRatio + unconstrained.height
+            ) / (aspectRatio * aspectRatio + 1)
+            let scale = min(max(projectedScale, min(minimumScale, maximumScale)), maximumScale)
+            let width = aspectRatio * scale
+            let height = scale
+            return CGRect(
+                x: handle == .topLeft || handle == .bottomLeft ? anchorX - width : anchorX,
+                y: handle == .topLeft || handle == .topRight ? anchorY - height : anchorY,
+                width: width,
+                height: height
+            )
+        case .left, .right:
+            let anchorX = handle == .left ? original.maxX : original.minX
+            let maximumWidth = handle == .left ? anchorX : canvasWidth - anchorX
+            let maximumHeight = 2 * min(original.midY, canvasHeight - original.midY)
+            let maximumScale = min(maximumWidth / aspectRatio, maximumHeight)
+            let scale = min(
+                max(unconstrained.width / aspectRatio, min(minimumScale, maximumScale)),
+                maximumScale
+            )
+            let width = aspectRatio * scale
+            return CGRect(
+                x: handle == .left ? anchorX - width : anchorX,
+                y: original.midY - scale / 2,
+                width: width,
+                height: scale
+            )
+        case .top, .bottom:
+            let anchorY = handle == .top ? original.maxY : original.minY
+            let maximumWidth = 2 * min(original.midX, canvasWidth - original.midX)
+            let maximumHeight = handle == .top ? anchorY : canvasHeight - anchorY
+            let maximumScale = min(maximumWidth / aspectRatio, maximumHeight)
+            let scale = min(
+                max(unconstrained.height, min(minimumScale, maximumScale)),
+                maximumScale
+            )
+            let width = aspectRatio * scale
+            return CGRect(
+                x: original.midX - width / 2,
+                y: handle == .top ? anchorY - scale : anchorY,
+                width: width,
+                height: scale
+            )
+        case .move:
+            return unconstrained
+        }
     }
 }
 

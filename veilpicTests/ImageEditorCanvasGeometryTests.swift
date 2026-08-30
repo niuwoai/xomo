@@ -174,6 +174,46 @@ struct ImageEditorCanvasGeometryTests {
         )
         #expect(minimum.width == 4)
         #expect(minimum.maxX == crop.minX + 4)
+
+        let ratioCrop = CGRect(x: 20, y: 30, width: 80, height: 40)
+        let lockedCorner = ImageEditorCropGeometry.adjustedFrame(
+            from: ratioCrop,
+            handle: .bottomRight,
+            delta: CGSize(width: 40, height: 10),
+            canvasSize: CGSize(width: 200, height: 150),
+            preservesAspectRatio: true
+        )
+        #expect(lockedCorner == CGRect(x: 20, y: 30, width: 116, height: 58))
+        #expect(lockedCorner.width / lockedCorner.height == 2)
+
+        let lockedRight = ImageEditorCropGeometry.adjustedFrame(
+            from: ratioCrop,
+            handle: .right,
+            delta: CGSize(width: 40, height: 0),
+            canvasSize: CGSize(width: 200, height: 150),
+            preservesAspectRatio: true
+        )
+        #expect(lockedRight == CGRect(x: 20, y: 20, width: 120, height: 60))
+        #expect(lockedRight.midY == ratioCrop.midY)
+
+        let lockedTop = ImageEditorCropGeometry.adjustedFrame(
+            from: ratioCrop,
+            handle: .top,
+            delta: CGSize(width: 0, height: -20),
+            canvasSize: CGSize(width: 200, height: 150),
+            preservesAspectRatio: true
+        )
+        #expect(lockedTop == CGRect(x: 0, y: 10, width: 120, height: 60))
+        #expect(lockedTop.midX == ratioCrop.midX)
+
+        let lockedAtCanvasEdge = ImageEditorCropGeometry.adjustedFrame(
+            from: CGRect(x: 20, y: 5, width: 80, height: 40),
+            handle: .right,
+            delta: CGSize(width: 100, height: 0),
+            canvasSize: CGSize(width: 200, height: 60),
+            preservesAspectRatio: true
+        )
+        #expect(lockedAtCanvasEdge == CGRect(x: 20, y: 0, width: 100, height: 50))
     }
 
     @Test
@@ -267,7 +307,9 @@ struct ImageEditorCanvasGeometryTests {
         #expect(viewSource.contains("setPendingCropSize(height:"))
         #expect(viewSource.contains("image-editor-crop-width"))
         #expect(viewSource.contains("image-editor-crop-height"))
-        #expect(viewSource.contains("preservesAspectRatio: isCropAspectRatioLocked"))
+        #expect(
+            viewSource.components(separatedBy: "preservesAspectRatio: isCropAspectRatioLocked").count == 3
+        )
         #expect(viewSource.contains("image-editor-crop-aspect-ratio-lock"))
         #expect(viewSource.contains("ImageEditorCropGeometry.fullCanvasFrame"))
         #expect(viewSource.contains(".disabled(pixelBounds == ImageEditorCropGeometry.fullCanvasFrame"))

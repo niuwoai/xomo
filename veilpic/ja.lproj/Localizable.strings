@@ -489,7 +489,7 @@
 "imageEditor.cropBounds.yHelp" = "切り抜き上端の Y 座標";
 "imageEditor.cropBounds.widthHelp" = "切り抜きの幅（ピクセル）";
 "imageEditor.cropBounds.heightHelp" = "切り抜きの高さ（ピクセル）";
-"imageEditor.cropBounds.aspectLock" = "切り抜きの縦横比を固定";
+"imageEditor.cropBounds.aspectLock" = "数値入力とハンドルの切り抜き縦横比を固定";
 "imageEditor.cropBounds.aspectUnlock" = "切り抜きの縦横比固定を解除";
 "imageEditor.cropBounds.resetHelp" = "切り抜きをキャンバス全体に戻す";
 "imageEditor.cropBounds.swapHelp" = "切り抜きの幅と高さを入れ替える";

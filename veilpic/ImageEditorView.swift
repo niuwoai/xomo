@@ -7222,7 +7222,8 @@ struct ImageEditorView: View {
             from: originalRect,
             handle: activeCropHandle,
             delta: CGSize(width: point.x - startPoint.x, height: point.y - startPoint.y),
-            canvasSize: viewModel.document.canvasSize
+            canvasSize: viewModel.document.canvasSize,
+            preservesAspectRatio: isCropAspectRatioLocked
         )
     }
 
