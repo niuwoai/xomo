@@ -5809,6 +5809,9 @@ final class XomoAutomationRegistry {
             if let sampleAllLayers = arguments["sampleAllLayers"]?.boolValue {
                 viewModel.patchSampleAllLayersEnabled = sampleAllLayers
             }
+            if let ignoresAdjustmentLayers = arguments["ignoresAdjustmentLayers"]?.boolValue {
+                viewModel.patchIgnoresAdjustmentLayers = ignoresAdjustmentLayers
+            }
             if let resolvedDiffusion {
                 viewModel.patchDiffusion = resolvedDiffusion
             }
@@ -7574,7 +7577,7 @@ private extension XomoAutomationRegistry {
             "flipHorizontal": XomoAutomationSchema.boolean(description: "Mirror the active clone source horizontally around its sampling origin"),
             "flipVertical": XomoAutomationSchema.boolean(description: "Mirror the active clone source vertically around its sampling origin"),
             "sampleSource": XomoAutomationSchema.string(description: "Clone or healing sampling layer range", values: ["currentLayer", "currentAndBelow", "allVisible"]),
-            "ignoresAdjustmentLayers": XomoAutomationSchema.boolean(description: "Exclude adjustment layers from clone or healing composite sampling")
+            "ignoresAdjustmentLayers": XomoAutomationSchema.boolean(description: "Exclude adjustment layers from clone, healing, or patch composite sampling")
         ], required: ["action"]),
         tool("xomo.shape.create", "Create an editable rectangle or ellipse and return its final layer ID, geometry, and normalized style.", [
             "kind": XomoAutomationSchema.string(description: "Shape kind", values: ["rectangle", "ellipse"]),

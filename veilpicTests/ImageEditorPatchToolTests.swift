@@ -437,6 +437,44 @@ struct ImageEditorPatchToolTests {
         #expect(redone.redComponent > redone.blueComponent + 0.6)
     }
 
+    @Test func ignoreAdjustmentsFiltersTheCompositePatchSample() throws {
+        let canvasSize = NSSize(width: 80, height: 60)
+        let sampleRect = CGRect(x: 12, y: 22, width: 16, height: 16)
+        let targetRect = CGRect(x: 42, y: 22, width: 16, height: 16)
+
+        func patchedCenter(ignoresAdjustments: Bool) throws -> NSColor {
+            let black = bitmapImage(size: canvasSize, background: .black, fills: [])
+            var document = ImageEditorDocument(sourceName: "adjusted-patch.png", image: black)
+            let adjustment = ImageEditorLayer.adjustment(
+                name: "Invert",
+                size: canvasSize,
+                kind: .invert,
+                amount: 1
+            )
+            let editLayer = ImageEditorLayer.blank(name: "Patch Target", size: canvasSize)
+            document.layers = [document.layers[0], adjustment, editLayer]
+            document.selectedLayerID = editLayer.id
+            document.selectedLayerIDs = [editLayer.id]
+            let viewModel = ImageEditorViewModel(document: document, onApply: { _ in })
+            #expect(!viewModel.patchIgnoresAdjustmentLayers)
+            viewModel.patchSampleAllLayersEnabled = true
+            viewModel.patchIgnoresAdjustmentLayers = ignoresAdjustments
+            viewModel.createRectSelection(from: targetRect.origin, to: targetRect.bottomRight)
+            viewModel.patchSelection(from: targetRect.center, to: sampleRect.center)
+            return try color(in: viewModel, at: targetRect.center)
+        }
+
+        let adjusted = try patchedCenter(ignoresAdjustments: false)
+        let raw = try patchedCenter(ignoresAdjustments: true)
+        #expect(adjusted.redComponent > 0.9)
+        #expect(adjusted.greenComponent > 0.9)
+        #expect(adjusted.blueComponent > 0.9)
+        #expect(raw.redComponent < 0.1)
+        #expect(raw.greenComponent < 0.1)
+        #expect(raw.blueComponent < 0.1)
+        #expect(raw.alphaComponent > 0.95)
+    }
+
     @Test func transparentOptionIsWiredToTheOptionsBarAndLivePreview() throws {
         let repositoryRoot = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()
@@ -452,6 +490,10 @@ struct ImageEditorPatchToolTests {
         #expect(source.contains("isOn: $viewModel.patchSampleAllLayersEnabled"))
         #expect(source.contains("image-editor-patch-sample-all-layers"))
         #expect(source.contains(".onChange(of: viewModel.patchSampleAllLayersEnabled)"))
+        #expect(source.contains("isOn: $viewModel.patchIgnoresAdjustmentLayers"))
+        #expect(source.contains(".disabled(!viewModel.patchSampleAllLayersEnabled)"))
+        #expect(source.contains("image-editor-patch-ignore-adjustments"))
+        #expect(source.contains(".onChange(of: viewModel.patchIgnoresAdjustmentLayers)"))
         #expect(source.contains("Stepper(value: $viewModel.patchDiffusion, in: 1...7)"))
         #expect(source.contains(".onChange(of: viewModel.patchDiffusion)"))
         #expect(source.contains("refreshActivePatchPreview()"))

@@ -937,6 +937,17 @@ struct ImageEditorView: View {
                 .help(L10n.text("imageEditor.option.patchSampleAllLayers.help"))
                 .accessibilityHint(L10n.text("imageEditor.option.patchSampleAllLayers.help"))
                 .accessibilityIdentifier("image-editor-patch-sample-all-layers")
+                Toggle(
+                    L10n.text("imageEditor.option.colorSamplerIgnoreAdjustments"),
+                    isOn: $viewModel.patchIgnoresAdjustmentLayers
+                )
+                .toggleStyle(.checkbox)
+                .focusable(false)
+                .fixedSize()
+                .disabled(!viewModel.patchSampleAllLayersEnabled)
+                .help(L10n.text("imageEditor.option.patchIgnoreAdjustments.help"))
+                .accessibilityHint(L10n.text("imageEditor.option.patchIgnoreAdjustments.help"))
+                .accessibilityIdentifier("image-editor-patch-ignore-adjustments")
                 Stepper(value: $viewModel.patchDiffusion, in: 1...7) {
                     Text(L10n.format(
                         "imageEditor.option.patchDiffusionValue",
@@ -4656,6 +4667,9 @@ struct ImageEditorView: View {
                     refreshActivePatchPreview()
                 }
                 .onChange(of: viewModel.patchSampleAllLayersEnabled) { _ in
+                    refreshActivePatchPreview()
+                }
+                .onChange(of: viewModel.patchIgnoresAdjustmentLayers) { _ in
                     refreshActivePatchPreview()
                 }
                 .onChange(of: viewModel.patchDiffusion) { _ in

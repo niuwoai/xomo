@@ -18990,6 +18990,7 @@ struct XomoAutomationTests {
                 "opacity": .number(0.75),
                 "transparent": .bool(true),
                 "sampleAllLayers": .bool(true),
+                "ignoresAdjustmentLayers": .bool(true),
                 "diffusion": .number(6),
                 "points": .array([
                     .object(["x": .number(20), "y": .number(20)]),
@@ -19004,6 +19005,7 @@ struct XomoAutomationTests {
         #expect(viewModel.opacity == 0.75)
         #expect(viewModel.patchTransparentEnabled)
         #expect(viewModel.patchSampleAllLayersEnabled)
+        #expect(viewModel.patchIgnoresAdjustmentLayers)
         #expect(viewModel.patchDiffusion == 6)
         #expect(viewModel.document.selection?.bounds == CGRect(x: 40, y: 10, width: 20, height: 20))
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.selectionPatch"))
@@ -19027,6 +19029,7 @@ struct XomoAutomationTests {
                     "action": .string("patch"),
                     "transparent": .bool(true),
                     "sampleAllLayers": .bool(true),
+                    "ignoresAdjustmentLayers": .bool(true),
                     "diffusion": .number(invalidDiffusion),
                     "points": .array([
                         .object(["x": .number(20), "y": .number(20)]),
@@ -19038,6 +19041,7 @@ struct XomoAutomationTests {
             #expect(!response.ok)
             #expect(!viewModel.patchTransparentEnabled)
             #expect(!viewModel.patchSampleAllLayersEnabled)
+            #expect(!viewModel.patchIgnoresAdjustmentLayers)
             #expect(viewModel.patchDiffusion == 1)
             #expect(viewModel.document.history.count == historyCount)
         }

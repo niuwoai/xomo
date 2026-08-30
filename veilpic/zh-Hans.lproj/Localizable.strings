@@ -739,6 +739,7 @@
 "imageEditor.option.patchTransparent" = "透明";
 "imageEditor.option.patchTransparent.help" = "只提取采样区的纹理，保留目标区域的底色和透明度。";
 "imageEditor.option.patchSampleAllLayers.help" = "从所有可见图层的合成结果取样，但只把修补结果写入当前图层。";
+"imageEditor.option.patchIgnoreAdjustments.help" = "修补取样使用可见合成结果时排除调整图层。";
 "imageEditor.option.patchDiffusionValue" = "扩散 %d";
 "imageEditor.option.patchDiffusion.help" = "1 保留最清晰的细节；更高数值会逐级平滑采样纹理，适合平整背景。";
 "imageEditor.option.brushPreset" = "画笔预设";

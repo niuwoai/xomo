@@ -1006,7 +1006,8 @@ extension ImageEditorViewModel {
             guard let sampledInput = sampledBrushInput(
                 for: layer,
                 canvasOffset: .zero,
-                sampleSource: .allVisible
+                sampleSource: .allVisible,
+                ignoringAdjustmentLayers: patchIgnoresAdjustmentLayers
             ) else { return nil }
             samplingImage = sampledInput.image
         } else {

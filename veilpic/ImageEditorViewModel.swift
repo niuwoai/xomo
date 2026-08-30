@@ -214,6 +214,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var patchMode: ImageEditorPatchMode = .source
     @Published var patchTransparentEnabled = false
     @Published var patchSampleAllLayersEnabled = false
+    @Published var patchIgnoresAdjustmentLayers = false
     @Published var patchDiffusion = 1
     @Published var feather: CGFloat = 0
     @Published var selectionModifyAmount: CGFloat = 4
