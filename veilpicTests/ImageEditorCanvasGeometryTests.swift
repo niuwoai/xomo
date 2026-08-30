@@ -551,6 +551,62 @@ struct ImageEditorCanvasGeometryTests {
     }
 
     @Test
+    func pendingCropXSwapsOrientationWithoutStealingTheColorShortcut() throws {
+        #expect(ImageEditorKeyboardShortcutAction.resolve(
+            charactersIgnoringModifiers: "x",
+            modifierFlags: [],
+            activeTool: .crop,
+            hasPendingCrop: true
+        ) == .swapCropOrientation)
+        #expect(ImageEditorKeyboardShortcutAction.resolve(
+            charactersIgnoringModifiers: "x",
+            modifierFlags: [],
+            activeTool: .crop,
+            hasPendingCrop: false
+        ) == nil)
+        #expect(ImageEditorKeyboardShortcutAction.resolve(
+            charactersIgnoringModifiers: "x",
+            modifierFlags: [],
+            activeTool: .move,
+            hasPendingCrop: true
+        ) == nil)
+        #expect(ImageEditorKeyboardShortcutAction.resolve(
+            charactersIgnoringModifiers: "x",
+            modifierFlags: [.command],
+            activeTool: .crop,
+            hasPendingCrop: true
+        ) == .cutSelectionClipboard)
+        #expect(ImageEditorKeyboardShortcutAction.swapCropOrientation.isBlockedByTextInput)
+
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        #expect(source.contains("hasPendingCrop: pendingCropRect != nil"))
+        #expect(source.contains("case .swapCropOrientation: swapPendingCropOrientation()"))
+        #expect(source.contains("private func swapPendingCropOrientation()"))
+        #expect(source.contains("Button {\n                            swapPendingCropOrientation()"))
+        #expect(source.contains("ImageEditorCropGeometry.frameBySwappingCommittedDimensions"))
+
+        for localizationID in ["zh-Hans", "en", "ja"] {
+            let localization = try String(
+                contentsOf: repositoryRoot
+                    .appendingPathComponent("veilpic/\(localizationID).lproj/Localizable.strings"),
+                encoding: .utf8
+            )
+            let swapHelp = try #require(localization.range(
+                of: "\"imageEditor.cropBounds.swapHelp\""
+            ))
+            let swapHelpLine = localization[swapHelp.lowerBound...]
+                .prefix { $0 != "\n" }
+            #expect(swapHelpLine.contains("X"))
+        }
+    }
+
+    @Test
     func pendingCropUsesClassicConfirmAndCancelKeysBeforeOtherCanvasActions() throws {
         for keyCode: UInt16 in [36, 76] {
             #expect(ImageEditorPendingCropKeyPolicy.matchesConfirm(

@@ -370,6 +370,7 @@ struct ImageEditorView: View {
             ImageEditorKeyboardShortcutMonitor(
                 perform: performKeyboardShortcut,
                 activeTool: viewModel.canvasInteractionTool,
+                hasPendingCrop: pendingCropRect != nil,
                 canCycleCropGuide: pendingCropRect != nil,
                 canToggleQuickMaskGrayscalePreview: viewModel.isQuickMaskMode,
                 canToggleLayerMaskRubylith: viewModel.canToggleSelectedLayerMaskRubylithPreview,
@@ -3698,6 +3699,7 @@ struct ImageEditorView: View {
         case .toggleGuideSnapping: performCanvasAidCommand(.guideSnapping)
         case .toggleGuidesLocked: performCanvasAidCommand(.guidesLocked)
         case .toggleGrid: performCanvasAidCommand(.grid)
+        case .swapCropOrientation: swapPendingCropOrientation()
         case .cycleCropGuide:
             guard pendingCropRect != nil else { return }
             cropGuideKind = cropGuideKind.next
@@ -5170,10 +5172,7 @@ struct ImageEditorView: View {
                         .accessibilityIdentifier("image-editor-crop-height")
 
                         Button {
-                            self.pendingCropRect = ImageEditorCropGeometry.frameBySwappingCommittedDimensions(
-                                of: pendingCropRect,
-                                canvasSize: viewModel.document.canvasSize
-                            )
+                            swapPendingCropOrientation()
                         } label: {
                             Image(systemName: "arrow.left.arrow.right")
                                 .font(.system(size: 10, weight: .semibold))
@@ -7278,6 +7277,15 @@ struct ImageEditorView: View {
         activeCropHandle = nil
         cropInteractionStartPoint = nil
         cropInteractionOriginalRect = nil
+    }
+
+    private func swapPendingCropOrientation() {
+        guard let pendingCropRect else { return }
+        self.pendingCropRect = ImageEditorCropGeometry.frameBySwappingCommittedDimensions(
+            of: pendingCropRect,
+            canvasSize: viewModel.document.canvasSize
+        )
+        endPendingCropInteraction()
     }
 
     @discardableResult
@@ -20040,6 +20048,7 @@ enum ImageEditorKeyboardShortcutAction: Equatable {
     case toggleGuideSnapping
     case toggleGuidesLocked
     case toggleGrid
+    case swapCropOrientation
     case cycleCropGuide
     case zoomIn
     case zoomOut
@@ -20092,6 +20101,7 @@ enum ImageEditorKeyboardShortcutAction: Equatable {
              .toggleQuickMask,
              .toggleQuickMaskGrayscalePreview,
              .toggleLayerMaskRubylith,
+             .swapCropOrientation,
              .cycleCropGuide,
              .toneRange,
              .spongeMode:
@@ -20106,6 +20116,7 @@ enum ImageEditorKeyboardShortcutAction: Equatable {
         modifierFlags: NSEvent.ModifierFlags,
         keyCode: UInt16? = nil,
         activeTool: ImageEditorTool? = nil,
+        hasPendingCrop: Bool = false,
         canCycleCropGuide: Bool = false,
         canToggleQuickMaskGrayscalePreview: Bool = false,
         canToggleLayerMaskRubylith: Bool = false
@@ -20225,6 +20236,12 @@ enum ImageEditorKeyboardShortcutAction: Equatable {
         if key == "i", relevantFlags == [.command, .shift] { return .invertSelection }
         if key == "d", relevantFlags == [.command, .option] { return .featherSelection }
         if key == "q", relevantFlags.isEmpty { return .toggleQuickMask }
+        if key == "x",
+           relevantFlags.isEmpty,
+           activeTool == .crop,
+           hasPendingCrop {
+            return .swapCropOrientation
+        }
         if key == "o",
            relevantFlags.isEmpty,
            activeTool == .crop,
@@ -21127,6 +21144,7 @@ enum ImageEditorPendingPenPointerFinishPolicy {
 struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
     let perform: (ImageEditorKeyboardShortcutAction) -> Void
     let activeTool: ImageEditorTool
+    let hasPendingCrop: Bool
     let canCycleCropGuide: Bool
     let canToggleQuickMaskGrayscalePreview: Bool
     let canToggleLayerMaskRubylith: Bool
@@ -21149,6 +21167,7 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
         Coordinator(
             perform: perform,
             activeTool: activeTool,
+            hasPendingCrop: hasPendingCrop,
             canCycleCropGuide: canCycleCropGuide,
             canToggleQuickMaskGrayscalePreview: canToggleQuickMaskGrayscalePreview,
             canToggleLayerMaskRubylith: canToggleLayerMaskRubylith,
@@ -21176,6 +21195,7 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
     func updateNSView(_ nsView: KeyboardShortcutMonitorNSView, context: Context) {
         context.coordinator.perform = perform
         context.coordinator.activeTool = activeTool
+        context.coordinator.hasPendingCrop = hasPendingCrop
         context.coordinator.canCycleCropGuide = canCycleCropGuide
         context.coordinator.canToggleQuickMaskGrayscalePreview = canToggleQuickMaskGrayscalePreview
         context.coordinator.canToggleLayerMaskRubylith = canToggleLayerMaskRubylith
@@ -21199,6 +21219,7 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
         private(set) weak var window: NSWindow?
         var perform: (ImageEditorKeyboardShortcutAction) -> Void
         var activeTool: ImageEditorTool
+        var hasPendingCrop: Bool
         var canCycleCropGuide: Bool
         var canToggleQuickMaskGrayscalePreview: Bool
         var canToggleLayerMaskRubylith: Bool
@@ -21224,6 +21245,7 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
         init(
             perform: @escaping (ImageEditorKeyboardShortcutAction) -> Void,
             activeTool: ImageEditorTool,
+            hasPendingCrop: Bool,
             canCycleCropGuide: Bool,
             canToggleQuickMaskGrayscalePreview: Bool,
             canToggleLayerMaskRubylith: Bool,
@@ -21244,6 +21266,7 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
         ) {
             self.perform = perform
             self.activeTool = activeTool
+            self.hasPendingCrop = hasPendingCrop
             self.canCycleCropGuide = canCycleCropGuide
             self.canToggleQuickMaskGrayscalePreview = canToggleQuickMaskGrayscalePreview
             self.canToggleLayerMaskRubylith = canToggleLayerMaskRubylith
@@ -21434,6 +21457,7 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
                 modifierFlags: event.modifierFlags,
                 keyCode: event.keyCode,
                 activeTool: activeTool,
+                hasPendingCrop: hasPendingCrop,
                 canCycleCropGuide: canCycleCropGuide,
                 canToggleQuickMaskGrayscalePreview: canToggleQuickMaskGrayscalePreview,
                 canToggleLayerMaskRubylith: canToggleLayerMaskRubylith

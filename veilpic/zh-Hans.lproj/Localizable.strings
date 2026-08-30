@@ -492,7 +492,7 @@
 "imageEditor.cropBounds.aspectLock" = "锁定数值输入与拖拽手柄的裁剪宽高比例";
 "imageEditor.cropBounds.aspectUnlock" = "解除裁剪宽高比例锁定";
 "imageEditor.cropBounds.resetHelp" = "将裁剪重置为完整画布（Delete）";
-"imageEditor.cropBounds.swapHelp" = "交换裁剪宽度和高度";
+"imageEditor.cropBounds.swapHelp" = "交换裁剪宽度和高度（X）";
 "imageEditor.cropAspect.help" = "应用裁剪宽高比预设";
 "imageEditor.cropAspect.original" = "原图比例";
 "imageEditor.cropAspect.square" = "1:1 正方形";
