@@ -743,6 +743,11 @@
 "imageEditor.option.patchIgnoreAdjustments.help" = "パッチの表示合成サンプルから調整レイヤーを除外します。";
 "imageEditor.option.patchDiffusionValue" = "拡散 %d";
 "imageEditor.option.patchDiffusion.help" = "1 は最も鮮明なディテールを保持し、値を上げるほどサンプルテクスチャを段階的に滑らかにします。";
+"imageEditor.option.patchPattern" = "パターン";
+"imageEditor.option.patchPattern.help" = "組み込みパターンを選び、現在の選択範囲を通してアクティブレイヤーに適用します。";
+"imageEditor.action.patchUsePattern" = "パターンを使用";
+"imageEditor.history.selectionPatchPattern" = "パターンでパッチ";
+"imageEditor.status.selectionPatchedPattern" = "選択範囲にパッチパターンを適用しました。";
 "imageEditor.option.brushPreset" = "ブラシプリセット";
 "imageEditor.help.brushPreset" = "プリセットを選択するか、現在のブラシ設定を保存します";
 "imageEditor.action.brushPresetCreate" = "現在の設定からプリセットを作成";

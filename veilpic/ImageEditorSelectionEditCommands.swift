@@ -972,6 +972,53 @@ extension ImageEditorViewModel {
         )
     }
 
+    @discardableResult
+    func applyPatchPattern() -> Bool {
+        guard let selection = document.selection else {
+            statusText = L10n.text("imageEditor.status.noSelection")
+            return false
+        }
+        guard canEditSelectionPixels,
+              let index = document.selectedLayerIndex
+        else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return false
+        }
+        let layer = document.layers[index]
+        guard selection.mayAffect(
+            layerFrame: layer.frame,
+            canvasSize: document.canvasSize,
+            expansion: feather
+        ), let output = layer.image.filled(
+            selection: selection,
+            layerFrame: layer.frame,
+            canvasSize: document.canvasSize,
+            pattern: patchPatternContent,
+            alignsWithCanvas: true,
+            opacity: opacity,
+            blendMode: .normal,
+            feather: feather
+        ) else {
+            statusText = L10n.text("imageEditor.status.selectionEmpty")
+            return false
+        }
+        let protectedOutput = document.isEffectivelyTransparencyLocked(layer)
+            ? (output.preservingAlpha(from: layer.image) ?? output)
+            : output
+        let normalizedOutput = protectedOutput.normalizedBitmapImage()
+        guard normalizedOutput.qingtuPNGData() != layer.image.normalizedBitmapImage().qingtuPNGData()
+        else {
+            statusText = L10n.text("imageEditor.status.selectionEmpty")
+            return false
+        }
+
+        pushUndo()
+        document.layers[index].image = normalizedOutput
+        appendHistory(L10n.text("imageEditor.history.selectionPatchPattern"))
+        statusText = L10n.text("imageEditor.status.selectionPatchedPattern")
+        return true
+    }
+
     private func patchEditResult(
         from start: CGPoint?,
         to end: CGPoint?

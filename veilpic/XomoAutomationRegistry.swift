@@ -5740,6 +5740,17 @@ final class XomoAutomationRegistry {
             viewModel.clearActiveCloneSource()
             return
         }
+        let resolvedPatchPatternKind: ImageEditorPatternOverlayKind?
+        if action == "patchPattern", let rawKind = arguments["patternKind"]?.stringValue {
+            guard let kind = ImageEditorPatternOverlayKind(rawValue: rawKind) else {
+                throw XomoAutomationCallError.invalidArgument(
+                    "Patch patternKind must be checkerboard, diagonalStripes, or dots"
+                )
+            }
+            resolvedPatchPatternKind = kind
+        } else {
+            resolvedPatchPatternKind = nil
+        }
         if let size = arguments["size"]?.doubleValue { viewModel.brushSize = size }
         let usesStrength = ["blur", "sharpen", "smudge"].contains(action)
         let usesExposure = ["dodge", "burn"].contains(action)
@@ -5788,6 +5799,17 @@ final class XomoAutomationRegistry {
             }
         }
         if let feather = arguments["feather"]?.doubleValue { viewModel.feather = max(0, feather) }
+        if action == "patchPattern" {
+            if let resolvedPatchPatternKind {
+                viewModel.patchPatternContent.kind = resolvedPatchPatternKind
+            }
+            guard viewModel.applyPatchPattern() else {
+                throw XomoAutomationCallError.operationFailed(
+                    "Patch pattern requires an editable pixel selection that changes the active layer"
+                )
+            }
+            return
+        }
         if action == "patch" {
             let resolvedDiffusion: Int?
             if let rawDiffusion = arguments["diffusion"]?.doubleValue {
@@ -7552,7 +7574,7 @@ private extension XomoAutomationRegistry {
         ], required: ["points"]),
         tool("xomo.paint.gradient", "Paint a gradient between exactly two canvas points.", ["points": pointsSchema], required: ["points"]),
         tool("xomo.paint.special", "Use clone, tone, sponge, blur, sharpen, smudge, healing, red-eye, or paint-bucket tools.", [
-            "action": XomoAutomationSchema.string(description: "Paint action", values: ["setCloneSource", "clearCloneSource", "resetCloneSourceTransform", "cloneStamp", "setHealingSource", "healing", "patch", "dodge", "burn", "sponge", "blur", "sharpen", "smudge", "redEye", "paintBucket"]),
+            "action": XomoAutomationSchema.string(description: "Paint action", values: ["setCloneSource", "clearCloneSource", "resetCloneSourceTransform", "cloneStamp", "setHealingSource", "healing", "patch", "patchPattern", "dodge", "burn", "sponge", "blur", "sharpen", "smudge", "redEye", "paintBucket"]),
             "points": pointsSchema,
             "x": XomoAutomationSchema.number(description: "Canvas x coordinate for point actions"),
             "y": XomoAutomationSchema.number(description: "Canvas y coordinate for point actions"),
@@ -7572,6 +7594,7 @@ private extension XomoAutomationRegistry {
             "mode": XomoAutomationSchema.string(description: "Patch mode", values: ["source", "destination"]),
             "transparent": XomoAutomationSchema.boolean(description: "Transfer sampled texture while preserving patch target color and alpha"),
             "diffusion": XomoAutomationSchema.integer(description: "Patch texture diffusion from 1 for sharp detail through 7 for smooth regions", minimum: 1, maximum: 7),
+            "patternKind": XomoAutomationSchema.string(description: "Built-in pattern used by patchPattern", values: ["checkerboard", "diagonalStripes", "dots"]),
             "healingMode": XomoAutomationSchema.string(description: "Healing mode", values: ["source", "spot"]),
             "spongeMode": XomoAutomationSchema.string(description: "Sponge mode", values: ["saturate", "desaturate"]),
             "spongeVibrance": XomoAutomationSchema.boolean(description: "Reduce clipping near fully saturated or desaturated colors"),

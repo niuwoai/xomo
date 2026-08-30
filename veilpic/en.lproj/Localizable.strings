@@ -743,6 +743,11 @@
 "imageEditor.option.patchIgnoreAdjustments.help" = "Exclude adjustment layers from the visible composite used by the patch sample.";
 "imageEditor.option.patchDiffusionValue" = "Diffusion %d";
 "imageEditor.option.patchDiffusion.help" = "1 preserves the sharpest detail; higher values progressively smooth sampled texture for flatter backgrounds.";
+"imageEditor.option.patchPattern" = "Pattern";
+"imageEditor.option.patchPattern.help" = "Choose a built-in pattern and apply it through the current selection to the active layer.";
+"imageEditor.action.patchUsePattern" = "Use Pattern";
+"imageEditor.history.selectionPatchPattern" = "Patch with Pattern";
+"imageEditor.status.selectionPatchedPattern" = "Applied the patch pattern to the selection.";
 "imageEditor.option.brushPreset" = "Brush Presets";
 "imageEditor.help.brushPreset" = "Choose a preset or save the current brush settings";
 "imageEditor.action.brushPresetCreate" = "Create Preset from Current Settings";

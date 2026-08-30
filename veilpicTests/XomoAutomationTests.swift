@@ -19103,6 +19103,53 @@ struct XomoAutomationTests {
         #expect(viewModel.document.history.count == historyCount)
     }
 
+    @Test func registryAppliesBuiltInPatchPattern() {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        viewModel.selectAll()
+        let historyCount = viewModel.document.history.count
+
+        let response = registry.execute(request(
+            operation: "call",
+            name: "xomo.paint.special",
+            arguments: [
+                "action": .string("patchPattern"),
+                "patternKind": .string("dots"),
+                "opacity": .number(1)
+            ]
+        ))
+
+        #expect(response.ok)
+        #expect(viewModel.patchPatternContent.kind == .dots)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.selectionPatchPattern"))
+    }
+
+    @Test func registryRejectsInvalidPatchPatternBeforeChangingOpacity() {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        viewModel.selectAll()
+        let originalOpacity = viewModel.opacity
+        let historyCount = viewModel.document.history.count
+
+        let response = registry.execute(request(
+            operation: "call",
+            name: "xomo.paint.special",
+            arguments: [
+                "action": .string("patchPattern"),
+                "patternKind": .string("wovenFabric"),
+                "opacity": .number(0.25)
+            ]
+        ))
+
+        #expect(!response.ok)
+        #expect(viewModel.patchPatternContent.kind == .checkerboard)
+        #expect(viewModel.opacity == originalOpacity)
+        #expect(viewModel.document.history.count == historyCount)
+    }
+
     @Test func registryConfiguresNoncontiguousPaintBucket() {
         let viewModel = makeViewModel()
         let registry = XomoAutomationRegistry.shared

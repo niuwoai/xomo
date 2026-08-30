@@ -968,6 +968,33 @@ struct ImageEditorView: View {
                 .fixedSize()
                 .help(L10n.text("imageEditor.option.patchDiffusion.help"))
                 .accessibilityIdentifier("image-editor-patch-diffusion")
+                Menu {
+                    Picker(
+                        L10n.text("imageEditor.option.patchPattern"),
+                        selection: $viewModel.patchPatternContent.kind
+                    ) {
+                        ForEach(ImageEditorPatternOverlayKind.allCases) { kind in
+                            Text(kind.title).tag(kind)
+                        }
+                    }
+                    Divider()
+                    Button(L10n.text("imageEditor.action.patchUsePattern")) {
+                        viewModel.applyPatchPattern()
+                    }
+                    .disabled(!viewModel.canEditSelectionPixels)
+                    .accessibilityIdentifier("image-editor-patch-use-pattern")
+                } label: {
+                    Label(
+                        L10n.text("imageEditor.option.patchPattern"),
+                        systemImage: "square.grid.2x2"
+                    )
+                    .font(.system(size: 11, weight: .semibold))
+                }
+                .menuStyle(.borderlessButton)
+                .fixedSize()
+                .focusable(false)
+                .help(L10n.text("imageEditor.option.patchPattern.help"))
+                .accessibilityIdentifier("image-editor-patch-pattern-menu")
             }
 
             if viewModel.selectedTool == .sponge {

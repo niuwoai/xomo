@@ -512,6 +512,61 @@ struct ImageEditorPatchToolTests {
         #expect(raw.alphaComponent > 0.95)
     }
 
+    @Test func usePatternAppliesOneUndoablePatchTransaction() throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "patch-pattern.png",
+            image: .transparent(size: CGSize(width: 12, height: 12))
+        ) { _ in }
+        viewModel.selectAll()
+        viewModel.opacity = 1
+        viewModel.patchPatternContent = ImageEditorPatternFillContent(
+            kind: .checkerboard,
+            red: 1,
+            green: 0,
+            blue: 0,
+            opacity: 1,
+            scale: 6
+        )
+        let original = try #require(viewModel.document.selectedLayer?.image.qingtuPNGData())
+        let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
+
+        #expect(viewModel.applyPatchPattern())
+
+        let appliedImage = try #require(viewModel.document.selectedLayer?.image)
+        let applied = try #require(appliedImage.qingtuPNGData())
+        let pixels = try #require(imageEditorRGBABytes(appliedImage, width: 12, height: 12))
+        let alpha = stride(from: 3, to: pixels.count, by: 4).map { pixels[$0] }
+        #expect(alpha.contains(0))
+        #expect(alpha.contains(where: { $0 > 240 }))
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.undoStack.count == undoCount + 1)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.selectionPatchPattern"))
+
+        viewModel.undo()
+        #expect(try #require(viewModel.document.selectedLayer?.image.qingtuPNGData()) == original)
+        viewModel.redo()
+        #expect(try #require(viewModel.document.selectedLayer?.image.qingtuPNGData()) == applied)
+    }
+
+    @Test func usePatternHonorsTransparentPixelLockWithoutCreatingHistory() throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "locked-patch-pattern.png",
+            image: .transparent(size: CGSize(width: 12, height: 12))
+        ) { _ in }
+        viewModel.selectAll()
+        let layerIndex = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[layerIndex].locksTransparentPixels = true
+        let original = try #require(viewModel.document.layers[layerIndex].image.qingtuPNGData())
+        let historyCount = viewModel.document.history.count
+        let undoCount = viewModel.undoStack.count
+
+        #expect(!viewModel.applyPatchPattern())
+        #expect(try #require(viewModel.document.layers[layerIndex].image.qingtuPNGData()) == original)
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.undoStack.count == undoCount)
+    }
+
     @Test func transparentOptionIsWiredToTheOptionsBarAndLivePreview() throws {
         let repositoryRoot = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()
@@ -534,6 +589,10 @@ struct ImageEditorPatchToolTests {
         #expect(source.contains(".onChange(of: viewModel.patchIgnoresAdjustmentLayers)"))
         #expect(source.contains("Stepper(value: $viewModel.patchDiffusion, in: 1...7)"))
         #expect(source.contains(".onChange(of: viewModel.patchDiffusion)"))
+        #expect(source.contains("selection: $viewModel.patchPatternContent.kind"))
+        #expect(source.contains("viewModel.applyPatchPattern()"))
+        #expect(source.contains("image-editor-patch-pattern-menu"))
+        #expect(source.contains("image-editor-patch-use-pattern"))
         #expect(source.contains("refreshActivePatchPreview()"))
     }
 
