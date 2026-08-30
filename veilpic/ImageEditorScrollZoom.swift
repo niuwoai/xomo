@@ -442,6 +442,8 @@ final class ImageEditorCanvasPointerGestureRecognizer: NSGestureRecognizer {
 
 final class ImageEditorActiveCanvasPointerTransaction {
     let kind: ImageEditorPrimaryToolPointerCapture.Kind
+    private weak var sourceWindow: NSWindow?
+    let captureState: ImageEditorCanvasPointerCaptureState
     var lastPoint: CGPoint
     var lastWindowPoint: CGPoint
     var samples: [ImageEditorPrimaryPointerSample]
@@ -453,6 +455,8 @@ final class ImageEditorActiveCanvasPointerTransaction {
 
     init(
         kind: ImageEditorPrimaryToolPointerCapture.Kind,
+        window: NSWindow,
+        captureState: ImageEditorCanvasPointerCaptureState,
         point: CGPoint,
         windowPoint: CGPoint,
         stylusInput: ImageEditorStylusEventSample,
@@ -463,6 +467,8 @@ final class ImageEditorActiveCanvasPointerTransaction {
         onCancelled: (() -> Void)? = nil
     ) {
         self.kind = kind
+        sourceWindow = window
+        self.captureState = captureState
         lastPoint = point
         lastWindowPoint = windowPoint
         samples = [
@@ -477,6 +483,19 @@ final class ImageEditorActiveCanvasPointerTransaction {
         self.onPrimaryChanged = onPrimaryChanged
         self.onPrimaryEnded = onPrimaryEnded
         self.onCancelled = onCancelled
+    }
+
+    /// Window deltas keep the original canvas coordinates across rebuilt view hosts.
+    /// Foreign or windowless events must never add drawing samples.
+    func advanceLocation(for event: NSEvent) -> CGPoint? {
+        guard let sourceWindow, event.window === sourceWindow else { return nil }
+        let windowPoint = event.locationInWindow
+        lastPoint = CGPoint(
+            x: lastPoint.x + windowPoint.x - lastWindowPoint.x,
+            y: lastPoint.y - (windowPoint.y - lastWindowPoint.y)
+        )
+        lastWindowPoint = windowPoint
+        return lastPoint
     }
 }
 
@@ -817,7 +836,9 @@ final class ScrollWheelZoomNSView: NSView {
         if let explicitPhase,
            explicitPhase != .down,
            let transaction = Self.activePointerTransaction {
-            let location = convert(event.locationInWindow, from: nil)
+            let nextLocation = transaction.advanceLocation(for: event)
+            if explicitPhase == .dragged, nextLocation == nil { return true }
+            let location = nextLocation ?? transaction.lastPoint
             switch explicitPhase {
             case .dragged:
                 transaction.lastPoint = location
@@ -843,6 +864,7 @@ final class ScrollWheelZoomNSView: NSView {
                 }
             case .up:
                 Self.activePointerTransaction = nil
+                defer { transaction.captureState.reset() }
                 switch transaction.kind {
                 case .rangeTool:
                     transaction.onRangeEnded?(location)
@@ -859,7 +881,6 @@ final class ScrollWheelZoomNSView: NSView {
                 case .none:
                     break
                 }
-                pointerCaptureState.reset()
             case .down:
                 break
             }
@@ -923,6 +944,8 @@ final class ScrollWheelZoomNSView: NSView {
                 ]
                 Self.activePointerTransaction = ImageEditorActiveCanvasPointerTransaction(
                         kind: .primaryTool,
+                        window: window,
+                        captureState: pointerCaptureState,
                         point: location,
                         windowPoint: event.locationInWindow,
                         stylusInput: stylusInput,
@@ -940,6 +963,8 @@ final class ScrollWheelZoomNSView: NSView {
                 pointerCaptureState.lastRangeToolPoint = location
                 Self.activePointerTransaction = ImageEditorActiveCanvasPointerTransaction(
                         kind: .rangeTool,
+                        window: window,
+                        captureState: pointerCaptureState,
                         point: location,
                         windowPoint: event.locationInWindow,
                         stylusInput: ImageEditorStylusEventSample(
@@ -973,10 +998,7 @@ final class ScrollWheelZoomNSView: NSView {
             return true
         case .dragged:
             if let transaction = Self.activePointerTransaction {
-                let location = event.window == nil
-                    ? transaction.lastPoint
-                    : convert(event.locationInWindow, from: nil)
-                transaction.lastPoint = location
+                guard let location = transaction.advanceLocation(for: event) else { return true }
                 switch transaction.kind {
                 case .rangeTool:
                     transaction.onRangeChanged?(location)
@@ -1063,9 +1085,8 @@ final class ScrollWheelZoomNSView: NSView {
         case .up:
             if let transaction = Self.activePointerTransaction {
                 Self.activePointerTransaction = nil
-                let location = event.window == nil
-                    ? transaction.lastPoint
-                    : convert(event.locationInWindow, from: nil)
+                let location = transaction.advanceLocation(for: event) ?? transaction.lastPoint
+                defer { transaction.captureState.reset() }
                 switch transaction.kind {
                 case .rangeTool:
                     transaction.onRangeEnded?(location)
@@ -1082,7 +1103,6 @@ final class ScrollWheelZoomNSView: NSView {
                 case .none:
                     break
                 }
-                pointerCaptureState.reset()
                 return true
             }
             if pointerCaptureState.activeKind == .rangeTool {
@@ -1207,7 +1227,9 @@ final class ScrollWheelZoomNSView: NSView {
     }
 
     private func cancelStalePrimaryPointerCapture() {
-        let transaction = Self.activePointerTransaction
+        let transaction = Self.activePointerTransaction.flatMap {
+            $0.captureState === pointerCaptureState ? $0 : nil
+        }
         let decision = ImageEditorPrimaryPointerResetPolicy.decision(
             hasActiveTransaction: transaction != nil,
             activeKind: pointerCaptureState.activeKind,
@@ -1237,17 +1259,9 @@ final class ScrollWheelZoomNSView: NSView {
         guard phase != .down,
               let transaction = activePointerTransaction
         else { return }
-        let windowPoint = event.locationInWindow
-        let delta = CGPoint(
-            x: windowPoint.x - transaction.lastWindowPoint.x,
-            y: windowPoint.y - transaction.lastWindowPoint.y
-        )
-        let location = CGPoint(
-            x: transaction.lastPoint.x + delta.x,
-            y: transaction.lastPoint.y - delta.y
-        )
-        transaction.lastWindowPoint = windowPoint
-        transaction.lastPoint = location
+        let nextLocation = transaction.advanceLocation(for: event)
+        if phase == .dragged, nextLocation == nil { return }
+        let location = nextLocation ?? transaction.lastPoint
 
         switch phase {
         case .dragged:
@@ -1273,6 +1287,7 @@ final class ScrollWheelZoomNSView: NSView {
             }
         case .up:
             activePointerTransaction = nil
+            defer { transaction.captureState.reset() }
             switch transaction.kind {
             case .rangeTool:
                 transaction.onRangeEnded?(location)
