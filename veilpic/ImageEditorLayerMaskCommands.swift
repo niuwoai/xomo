@@ -768,15 +768,19 @@ extension ImageEditorViewModel {
     }
 
     private func applyMasks(target: ImageEditorMaskApplicationTarget) {
-        let indices = maskApplyIndices(target: target)
-        guard !indices.isEmpty else {
+        let operations = maskApplyIndices(target: target).compactMap { index -> (index: Int, layer: ImageEditorLayer)? in
+            guard let layer = layerByApplyingMask(at: index, target: target) else { return nil }
+            return (index, layer)
+        }
+        guard !operations.isEmpty else {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return
         }
 
+        let indices = operations.map(\.index)
         pushUndo()
-        for index in indices {
-            applyMask(at: index, target: target)
+        for operation in operations {
+            document.layers[operation.index] = operation.layer
         }
         if target == .raster || document.selectedLayer?.mask == nil {
             isEditingLayerMask = false
@@ -1351,38 +1355,46 @@ extension ImageEditorViewModel {
         }
     }
 
-    private func applyMask(at index: Int, target: ImageEditorMaskApplicationTarget) {
-        let layer = document.layers[index]
-        let shouldBakeMask: Bool
+    private func layerByApplyingMask(at index: Int, target: ImageEditorMaskApplicationTarget) -> ImageEditorLayer? {
+        let originalLayer = document.layers[index]
+        let shouldBakeMask = target == .raster ? originalLayer.isMaskEnabled : originalLayer.isVectorMaskEnabled
+        // Applying a mask must preserve the same detail as the preview. Retain
+        // the promoted local coordinates/style for any mask that remains live.
+        var layer = shouldBakeMask
+            ? (originalLayer.highResolutionMaskRenderingLayer()?.layer ?? originalLayer)
+            : originalLayer
         let mask: NSImage?
         switch target {
         case .raster:
-            shouldBakeMask = layer.isMaskEnabled
             mask = layer.effectiveRasterMask
         case .vector:
-            shouldBakeMask = layer.isVectorMaskEnabled
             mask = shouldBakeMask
                 ? layer.vectorMask.flatMap { renderedVectorMask($0, layer: layer) }
                 : nil
         }
 
-        if shouldBakeMask, let mask {
+        if shouldBakeMask {
+            guard let mask else { return nil }
             let sourceImage = layer.contentImage
-            document.layers[index].image = (sourceImage.applyingAlphaMask(mask) ?? sourceImage).normalizedBitmapImage()
-            document.layers[index].kind = .pixel
-            document.layers[index].smartFilters = []
+            guard let bakedImage = sourceImage.applyingAlphaMask(mask) else { return nil }
+            layer.image = bakedImage.normalizedBitmapImage()
+            layer.kind = .pixel
+            layer.smartFilters = []
+            layer.xomoFigmaImageFill = nil
+            layer.xomoFigmaImageFillSourceImage = nil
         }
 
         if target == .raster {
-            document.layers[index].mask = nil
-            document.layers[index].isMaskEnabled = true
-            document.layers[index].maskDensity = 1
-            document.layers[index].maskFeather = 0
+            layer.mask = nil
+            layer.isMaskEnabled = true
+            layer.maskDensity = 1
+            layer.maskFeather = 0
         } else {
-            document.layers[index].vectorMask = nil
-            document.layers[index].isVectorMaskEnabled = true
-            document.layers[index].isVectorMaskInverted = false
+            layer.vectorMask = nil
+            layer.isVectorMaskEnabled = true
+            layer.isVectorMaskInverted = false
         }
+        return layer
     }
 
     private func combineLayerMaskWithSelection(_ combination: ImageEditorLayerMaskSelectionCombination) {
