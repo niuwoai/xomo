@@ -285,9 +285,7 @@ extension ImageEditorViewModel {
             width: max(1, targetWidth),
             height: max(1, targetHeight)
         )
-        let originalFrames = editableTransformLayerIndices().reduce(into: [:]) { frames, index in
-            frames[document.layers[index].id] = document.layers[index].frame.standardized
-        }
+        let originalFrames = transformFramesIncludingGroups(for: editableTransformLayerIndices())
         commitResizedTransformFrame(
             targetFrame,
             originalTransformFrame: currentFrame,
@@ -302,7 +300,7 @@ extension ImageEditorViewModel {
             height: CGFloat(y ?? Double(currentFrame.minY)) - currentFrame.minY
         )
         guard delta.width.isFinite, delta.height.isFinite, delta != .zero else { return }
-        let ids = movingLayerIDsIncludingGroups(for: editableTransformLayerIndices())
+        let ids = selectedTransformLayerIDsIncludingGroups(for: editableTransformLayerIndices())
         guard !ids.isEmpty else { return }
         pushUndo()
         translateLayers(ids, by: delta)
@@ -514,7 +512,7 @@ extension ImageEditorViewModel {
             return false
         }
         pushUndo()
-        movingLayerIDs = movingLayerIDsIncludingGroups(for: indices)
+        movingLayerIDs = selectedTransformLayerIDsIncludingGroups(for: indices)
         movingLayerDidChange = false
         movingOriginalTransformFrame = transformFrame
         movingObjectPreviewFrame = transformFrame
@@ -559,7 +557,7 @@ extension ImageEditorViewModel {
             return false
         }
 
-        movingLayerIDs = movingLayerIDsIncludingGroups(for: indices)
+        movingLayerIDs = selectedTransformLayerIDsIncludingGroups(for: indices)
         movingLayerWasDuplicated = true
         movingLayerDidChange = false
         movingOriginalTransformFrame = transformFrame
@@ -708,7 +706,7 @@ extension ImageEditorViewModel {
         activeSpacingGuides = []
     }
 
-    private func movingLayerIDsIncludingGroups(for indices: [Int]) -> Set<UUID> {
+    private func selectedTransformLayerIDsIncludingGroups(for indices: [Int]) -> Set<UUID> {
         var ids = Set(indices.map { document.layers[$0].id })
         let expandedIDs = transformLayerIDsExpandingLinkedGroups(startingFrom: document.selectedLayerIDs)
         for layer in document.layers where layer.isGroup && expandedIDs.contains(layer.id) {
@@ -716,6 +714,13 @@ extension ImageEditorViewModel {
             ids.insert(layer.id)
         }
         return ids
+    }
+
+    private func transformFramesIncludingGroups(for indices: [Int]) -> [UUID: CGRect] {
+        let ids = selectedTransformLayerIDsIncludingGroups(for: indices)
+        return document.layers.reduce(into: [:]) { frames, layer in
+            if ids.contains(layer.id) { frames[layer.id] = layer.frame.standardized }
+        }
     }
 
     private func translateLayers(_ layerIDs: Set<UUID>, by delta: CGSize) {
@@ -747,12 +752,10 @@ extension ImageEditorViewModel {
         }
         _ = handle
         pushUndo()
-        resizingLayerIDs = Set(indices.map { document.layers[$0].id })
-        resizingOriginalFrames = indices.reduce(into: [:]) { frames, index in
-            frames[document.layers[index].id] = document.layers[index].frame.standardized
-        }
+        resizingOriginalFrames = transformFramesIncludingGroups(for: indices)
+        resizingLayerIDs = Set(resizingOriginalFrames.keys)
         resizingOriginalParagraphTextContents = [:]
-        if indices.count == 1,
+        if resizingLayerIDs.count == 1,
            let index = indices.first,
            let content = document.layers[index].textContent,
            content.layoutMode == .paragraph {
@@ -947,9 +950,7 @@ extension ImageEditorViewModel {
             return
         }
 
-        let originalFrames = indices.reduce(into: [:]) { frames, index in
-            frames[document.layers[index].id] = document.layers[index].frame.standardized
-        }
+        let originalFrames = transformFramesIncludingGroups(for: indices)
         let scaledSize = CGSize(
             width: max(1, transformFrame.width * factor),
             height: max(1, transformFrame.height * factor)
@@ -1385,7 +1386,14 @@ extension ImageEditorViewModel {
             targetFrame, originalTransformFrame: originalTransformFrame,
             originalFrames: originalFrames ?? resizingOriginalFrames
         )
-        applyResizedLayerFrames(frames)
+        // The undo snapshot is also the source used by transform cancellation.
+        // Reuse it for every preview, never resample a previously clipped mask.
+        let originalLayers = originalFrames == nil ? (undoStack.last?.layers ?? []) : document.layers
+        guard let layers = resizedLayerChanges(
+            frames, originalLayers: originalLayers,
+            originalTransformFrame: originalTransformFrame, targetFrame: targetFrame
+        ) else { return false }
+        applyResizedLayers(layers)
         return !frames.isEmpty
     }
 
@@ -1400,19 +1408,26 @@ extension ImageEditorViewModel {
             targetFrame, originalTransformFrame: originalTransformFrame, originalFrames: originalFrames
         )
         // Do not invalidate redo until there is an actual, fully computed edit.
-        guard !frames.isEmpty else { return false }
+        guard !frames.isEmpty,
+              let layers = resizedLayerChanges(
+                  frames, originalLayers: document.layers,
+                  originalTransformFrame: originalTransformFrame, targetFrame: targetFrame
+              ) else { return false }
         pushUndo()
-        applyResizedLayerFrames(frames)
+        applyResizedLayers(layers)
         appendHistory(historyTitle)
         return true
     }
 
-    private func applyResizedLayerFrames(_ frames: [UUID: CGRect]) {
-        for index in document.layers.indices {
-            if let frame = frames[document.layers[index].id] {
-                document.layers[index].frame = frame
+    private func applyResizedLayers(_ layers: [UUID: ImageEditorLayer]) {
+        guard !layers.isEmpty else { return }
+        var nextDocument = document
+        for index in nextDocument.layers.indices {
+            if let layer = layers[nextDocument.layers[index].id] {
+                nextDocument.layers[index] = layer
             }
         }
+        document = nextDocument
     }
 
     private func resizedLayerFrameChanges(
@@ -1551,9 +1566,7 @@ extension ImageEditorViewModel {
             return false
         }
 
-        let originalFrames = indices.reduce(into: [:]) { frames, index in
-            frames[document.layers[index].id] = document.layers[index].frame.standardized
-        }
+        let originalFrames = transformFramesIncludingGroups(for: indices)
         let targetFrame = fittedTransformFrame(for: transformFrame, in: boundedTarget, mode: mode)
 
         guard commitResizedTransformFrame(
