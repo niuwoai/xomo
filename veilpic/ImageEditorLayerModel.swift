@@ -7,11 +7,15 @@ struct ImageEditorLayer: Identifiable {
     var id = UUID()
     var name: String
     var image: NSImage
-    var mask: NSImage?
+    var mask: NSImage? {
+        didSet { if mask == nil { maskFeatherSamplingScale = nil } }
+    }
     var isMaskEnabled = true
     var isMaskLinked = true
     var maskDensity: Double = 1
     var maskFeather: Double = 0
+    /// Additional bitmap samples per original feather unit; nil is legacy 1x.
+    var maskFeatherSamplingScale: Double?
     var vectorMask: ImageEditorShapeContent?
     var isVectorMaskEnabled = true
     var isVectorMaskInverted = false
@@ -456,7 +460,7 @@ struct ImageEditorLayer: Identifiable {
     }
 
     func maskThumbnail(size: CGSize = CGSize(width: 24, height: 24)) -> NSImage? {
-        mask?.processedLayerMask(density: maskDensity, feather: maskFeather)?.thumbnailImage(targetSize: size)
+        mask?.processedLayerMask(density: maskDensity, feather: maskFeather, samplingScale: maskFeatherSamplingScale)?.thumbnailImage(targetSize: size)
     }
 
     func vectorMaskThumbnail(size: CGSize = CGSize(width: 24, height: 24)) -> NSImage? {
@@ -464,7 +468,7 @@ struct ImageEditorLayer: Identifiable {
     }
 
     var effectiveRasterMask: NSImage? {
-        isMaskEnabled ? mask?.processedLayerMask(density: maskDensity, feather: maskFeather) : nil
+        isMaskEnabled ? mask?.processedLayerMask(density: maskDensity, feather: maskFeather, samplingScale: maskFeatherSamplingScale) : nil
     }
 
     var effectiveMask: NSImage? {

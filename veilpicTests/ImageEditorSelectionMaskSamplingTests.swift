@@ -69,15 +69,7 @@ struct ImageEditorSelectionMaskSamplingTests {
             let alpha = try #require(mask.alphaMask(width: 400, height: 300))
             #expect(alpha.alpha == rectangleAlpha(size: CGSize(width: 400, height: 300), rect: rect.offsetBy(dx: -20, dy: -30), inverted: action == "hide"))
         }
-        if highResolution {
-            try verifyFineDetails()
-        } else {
-            // Keep the full-resolution contract visible. Promoting an existing
-            // mask also needs a non-destructive feather-unit migration.
-            withKnownIssue("Existing low-resolution mask edits still downsample fine selections; feather units must be preserved when promoting the grid.") {
-                try verifyFineDetails()
-            }
-        }
+        try verifyFineDetails()
     }
 
     @Test func creationAndCombinationUndoRedoPreserveProjectData() throws {

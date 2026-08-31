@@ -568,6 +568,7 @@ extension ImageEditorViewModel {
             document.layers[operation.index].isMaskLinked = true
             document.layers[operation.index].maskDensity = 1
             document.layers[operation.index].maskFeather = 0
+            document.layers[operation.index].maskFeatherSamplingScale = nil
         }
         isEditingLayerMask = true
 
@@ -622,6 +623,7 @@ extension ImageEditorViewModel {
             document.layers[index].isMaskLinked = true
             document.layers[index].maskDensity = 1
             document.layers[index].maskFeather = 0
+            document.layers[index].maskFeatherSamplingScale = nil
         }
         isEditingLayerMask = true
 
@@ -652,6 +654,7 @@ extension ImageEditorViewModel {
             document.layers[operation.index].isMaskLinked = true
             document.layers[operation.index].maskDensity = 1
             document.layers[operation.index].maskFeather = 0
+            document.layers[operation.index].maskFeatherSamplingScale = nil
         }
         isEditingLayerMask = true
 
@@ -691,6 +694,7 @@ extension ImageEditorViewModel {
             document.layers[index].isMaskLinked = sourceLayer.isMaskLinked
             document.layers[index].maskDensity = sourceLayer.maskDensity
             document.layers[index].maskFeather = sourceLayer.maskFeather
+            document.layers[index].maskFeatherSamplingScale = sourceLayer.maskFeatherSamplingScale
         }
         isEditingLayerMask = false
         appendHistory(L10n.text("imageEditor.history.layerMaskCopy"))
@@ -746,6 +750,7 @@ extension ImageEditorViewModel {
             document.layers[operation.index].isVectorMaskInverted = false
             document.layers[operation.index].maskDensity = 1
             document.layers[operation.index].maskFeather = 0
+            document.layers[operation.index].maskFeatherSamplingScale = nil
         }
         isEditingLayerMask = true
 
@@ -1391,6 +1396,7 @@ extension ImageEditorViewModel {
             layer.isMaskEnabled = true
             layer.maskDensity = 1
             layer.maskFeather = 0
+            layer.maskFeatherSamplingScale = nil
         } else {
             layer.vectorMask = nil
             layer.isVectorMaskEnabled = true
@@ -1422,6 +1428,13 @@ extension ImageEditorViewModel {
 
         pushUndo()
         for operation in changedOperations {
+            if let previous = document.layers[operation.index].mask {
+                let factor = operation.mask.size.width / previous.size.width
+                if abs(factor - 1) > 0.000000001 {
+                    document.layers[operation.index].maskFeatherSamplingScale =
+                        ImageEditorMaskSampling.featherScale(document.layers[operation.index].maskFeatherSamplingScale) * factor
+                }
+            }
             document.layers[operation.index].mask = operation.mask
         }
         isEditingLayerMask = true
@@ -1493,17 +1506,21 @@ extension ImageEditorViewModel {
 
     private func selectionMaskForLayer(_ selection: ImageEditorSelection, layer: ImageEditorLayer) -> NSImage? {
         if layer.isGroup {
-            return canvasSelectionMask(for: selection)
+            guard let canvasMask = canvasSelectionMask(for: selection) else { return nil }
+            guard let mask = layer.mask else { return canvasMask }
+            guard let outputSize = ImageEditorMaskSampling.promotedMaskSize(mask.size, minimum: document.canvasSize) else { return nil }
+            return canvasMask.size == outputSize ? canvasMask : canvasMask.resized(to: outputSize)
         }
 
         guard layer.image.size.width > 0,
               layer.image.size.height > 0,
               layer.frame.width > 0,
               layer.frame.height > 0,
-              let outputSize = ImageEditorMaskSampling.bitmapSize(CGSize(
+              let minimumSize = ImageEditorMaskSampling.bitmapSize(CGSize(
                 width: max(layer.image.size.width, layer.frame.width, layer.mask?.size.width ?? 0),
                 height: max(layer.image.size.height, layer.frame.height, layer.mask?.size.height ?? 0)
               )),
+              let outputSize = layer.mask.map({ ImageEditorMaskSampling.promotedMaskSize($0.size, minimum: minimumSize) }) ?? minimumSize,
               let canvasMask = canvasSelectionMask(for: selection)
         else { return nil }
 
@@ -1662,13 +1679,16 @@ extension ImageEditorViewModel {
         )
         let operations = targetIndices.compactMap { index -> (index: Int, mask: NSImage)? in
             let targetLayer = document.layers[index]
-            let targetSize = maskSize(for: targetLayer)
+            let baseSize = maskSize(for: targetLayer)
+            let scale = ImageEditorMaskSampling.featherScale(sourceLayer.maskFeatherSamplingScale)
+            guard let targetSize = ImageEditorMaskSampling.bitmapSize(CGSize(width: baseSize.width * scale, height: baseSize.height * scale)) else { return nil }
             let targetMask = (sourceMask.resized(to: targetSize) ?? sourceMask).normalizedBitmapImage()
             let isEquivalent = targetLayer.mask?.hasEquivalentAlphaMask(to: targetMask) == true
                 && targetLayer.isMaskEnabled == sourceLayer.isMaskEnabled
                 && targetLayer.isMaskLinked == sourceLayer.isMaskLinked
                 && targetLayer.maskDensity == sourceLayer.maskDensity
                 && targetLayer.maskFeather == sourceLayer.maskFeather
+                && ImageEditorMaskSampling.featherScale(targetLayer.maskFeatherSamplingScale) == scale
             return isEquivalent ? nil : (index, targetMask)
         }
         return (sourceIndex, operations)
@@ -1880,8 +1900,10 @@ extension NSImage {
         with selectionMask: NSImage,
         combination: ImageEditorLayerMaskSelectionCombination
     ) -> NSImage? {
-        let width = max(1, Int(size.width.rounded()))
-        let height = max(1, Int(size.height.rounded()))
+        guard let outputSize = ImageEditorMaskSampling.bitmapSize(CGSize(width: max(size.width, selectionMask.size.width),
+                                                                        height: max(size.height, selectionMask.size.height))) else { return nil }
+        let width = Int(outputSize.width)
+        let height = Int(outputSize.height)
         guard let currentMask = alphaMask(width: width, height: height),
               let selectedMask = selectionMask.alphaMask(width: width, height: height),
               currentMask.alpha.count == selectedMask.alpha.count

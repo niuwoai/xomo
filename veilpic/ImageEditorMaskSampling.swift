@@ -4,6 +4,19 @@ enum ImageEditorMaskSampling {
     // Bound additional mask/render allocations; rejected edits keep the original document.
     static let maximumPixelCount: CGFloat = 64 * 1024 * 1024
 
+    static func featherScale(_ value: Double?) -> Double {
+        guard let value, value.isFinite, value > 0, value <= Double(maximumPixelCount) else { return 1 }
+        return value
+    }
+
+    static func promotedMaskSize(_ original: CGSize, minimum: CGSize) -> CGSize? {
+        guard original.width > 0, original.height > 0 else { return nil }
+        // A uniform grid multiplier preserves the two-axis physical feather
+        // widths, even when the layer has a nonuniform canvas transform.
+        let factor = max(1, ceil(max(minimum.width / original.width, minimum.height / original.height) - 0.000000001))
+        return bitmapSize(CGSize(width: original.width * factor, height: original.height * factor))
+    }
+
     static func bitmapSize(_ proposed: CGSize) -> CGSize? {
         guard proposed.width.isFinite, proposed.height.isFinite,
               proposed.width > 0, proposed.height > 0 else { return nil }
@@ -72,6 +85,7 @@ extension ImageEditorLayer {
         rendering.mask = nil
         guard rendering.compensateUnlinkedLocalMasks(from: vectorSource) else { return nil }
         rendering.mask = mask
+        rendering.maskFeatherSamplingScale = maskFeatherSamplingScale
         rendering.style = style.scaled(by: scale)
         // The copy already meets the requested sampling size, so scale > 1 above
         // prevents recursion without using the user's link state as a sentinel.

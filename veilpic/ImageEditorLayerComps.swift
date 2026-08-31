@@ -381,6 +381,7 @@ enum ImageEditorLayerCompApplication {
             document.layers[index].isMaskEnabled = state.isMaskEnabled
             document.layers[index].maskDensity = max(0, min(1, state.maskDensity))
             document.layers[index].maskFeather = max(0, min(80, state.maskFeather))
+            document.layers[index].maskFeatherSamplingScale = state.maskFeatherSamplingScale
             if state.hasMaskSnapshot {
                 if let maskData = state.maskData {
                     if let mask = NSImage(data: maskData)?.normalizedBitmapImage() {
@@ -505,6 +506,7 @@ enum ImageEditorLayerCompApplication {
               layer.isMaskEnabled == state.isMaskEnabled,
               scalarMatches(layer.maskDensity, max(0, min(1, state.maskDensity))),
               scalarMatches(layer.maskFeather, max(0, min(80, state.maskFeather))),
+              scalarMatches(ImageEditorMaskSampling.featherScale(layer.maskFeatherSamplingScale), ImageEditorMaskSampling.featherScale(state.maskFeatherSamplingScale)),
               maskMatches(layer.mask, state: state),
               layer.isVectorMaskEnabled == state.isVectorMaskEnabled,
               layer.isVectorMaskInverted == state.isVectorMaskInverted

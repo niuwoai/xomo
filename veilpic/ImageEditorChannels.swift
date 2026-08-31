@@ -1157,6 +1157,7 @@ extension ImageEditorViewModel {
         document.layers[layerIndex].isMaskLinked = true
         document.layers[layerIndex].maskDensity = 1
         document.layers[layerIndex].maskFeather = 0
+        document.layers[layerIndex].maskFeatherSamplingScale = nil
         isEditingLayerMask = true
         selectedAlphaChannelID = id
         appendHistory(L10n.text("imageEditor.history.alphaChannelApplyToMask"))

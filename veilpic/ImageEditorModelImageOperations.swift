@@ -357,9 +357,9 @@ extension NSImage {
         }
     }
 
-    func processedLayerMask(density: Double, feather: Double) -> NSImage? {
+    func processedLayerMask(density: Double, feather: Double, samplingScale: Double? = nil) -> NSImage? {
         let normalizedDensity = max(0, min(1, density))
-        let normalizedFeather = max(0, min(80, feather))
+        let normalizedFeather = max(0, min(80, feather)) * ImageEditorMaskSampling.featherScale(samplingScale)
         let featheredMask = normalizedFeather > 0 ? (blurred(radius: normalizedFeather) ?? self) : self
         guard normalizedDensity < 1 else { return featheredMask }
         guard let alpha = featheredMask.alphaPlane() else { return featheredMask }

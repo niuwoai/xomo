@@ -286,6 +286,7 @@ struct ImageEditorProjectLayer: Codable {
     var isMaskLinked: Bool
     var maskDensity: Double
     var maskFeather: Double
+    var maskFeatherSamplingScale: Double?
     var vectorMask: ImageEditorProjectShapeContent?
     var isVectorMaskEnabled: Bool
     var isVectorMaskInverted: Bool?
@@ -356,6 +357,7 @@ struct ImageEditorProjectLayer: Codable {
         isMaskLinked = layer.isMaskLinked
         maskDensity = layer.maskDensity
         maskFeather = layer.maskFeather
+        maskFeatherSamplingScale = layer.maskFeatherSamplingScale
         vectorMask = layer.vectorMask.map(ImageEditorProjectShapeContent.init(content:))
         isVectorMaskEnabled = layer.isVectorMaskEnabled
         isVectorMaskInverted = layer.isVectorMaskInverted
@@ -425,6 +427,7 @@ struct ImageEditorProjectLayer: Codable {
         layer.isMaskLinked = isMaskLinked
         layer.maskDensity = maskDensity
         layer.maskFeather = maskFeather
+        layer.maskFeatherSamplingScale = maskFeatherSamplingScale
         layer.vectorMask = vectorMask?.content
         layer.isVectorMaskEnabled = isVectorMaskEnabled
         layer.isVectorMaskInverted = isVectorMaskInverted ?? false

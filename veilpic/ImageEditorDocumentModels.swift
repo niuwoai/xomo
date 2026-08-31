@@ -210,6 +210,7 @@ struct ImageEditorLayerCompLayerState: Equatable, Codable {
     var isMaskEnabled: Bool
     var maskDensity: Double
     var maskFeather: Double
+    var maskFeatherSamplingScale: Double?
     var hasMaskSnapshot: Bool
     var maskData: Data?
     var isVectorMaskEnabled: Bool
@@ -246,6 +247,7 @@ struct ImageEditorLayerCompLayerState: Equatable, Codable {
         case isMaskEnabled
         case maskDensity
         case maskFeather
+        case maskFeatherSamplingScale
         case hasMaskSnapshot
         case maskData
         case isVectorMaskEnabled
@@ -283,6 +285,7 @@ struct ImageEditorLayerCompLayerState: Equatable, Codable {
         isMaskEnabled: Bool,
         maskDensity: Double,
         maskFeather: Double,
+        maskFeatherSamplingScale: Double? = nil,
         hasMaskSnapshot: Bool = false,
         maskData: Data? = nil,
         isVectorMaskEnabled: Bool,
@@ -318,6 +321,7 @@ struct ImageEditorLayerCompLayerState: Equatable, Codable {
         self.isMaskEnabled = isMaskEnabled
         self.maskDensity = maskDensity
         self.maskFeather = maskFeather
+        self.maskFeatherSamplingScale = maskFeatherSamplingScale
         self.hasMaskSnapshot = hasMaskSnapshot
         self.maskData = maskData
         self.isVectorMaskEnabled = isVectorMaskEnabled
@@ -356,6 +360,7 @@ struct ImageEditorLayerCompLayerState: Equatable, Codable {
         isMaskEnabled = try container.decodeIfPresent(Bool.self, forKey: .isMaskEnabled) ?? true
         maskDensity = try container.decodeIfPresent(Double.self, forKey: .maskDensity) ?? 1
         maskFeather = try container.decodeIfPresent(Double.self, forKey: .maskFeather) ?? 0
+        maskFeatherSamplingScale = try container.decodeIfPresent(Double.self, forKey: .maskFeatherSamplingScale)
         hasMaskSnapshot = try container.decodeIfPresent(Bool.self, forKey: .hasMaskSnapshot) ?? false
         maskData = try container.decodeIfPresent(Data.self, forKey: .maskData)
         isVectorMaskEnabled = try container.decodeIfPresent(Bool.self, forKey: .isVectorMaskEnabled) ?? true
@@ -492,6 +497,7 @@ struct ImageEditorLayerComp: Identifiable, Equatable, Codable {
                     isMaskEnabled: layer.isMaskEnabled,
                     maskDensity: layer.maskDensity,
                     maskFeather: layer.maskFeather,
+                    maskFeatherSamplingScale: layer.maskFeatherSamplingScale,
                     hasMaskSnapshot: true,
                     maskData: layer.mask?.qingtuPNGData(),
                     isVectorMaskEnabled: layer.isVectorMaskEnabled,
