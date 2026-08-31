@@ -38,7 +38,7 @@ extension ImageEditorLayer {
             rotated.vectorMask = vectorMask?.rotatedRasterMask(
                 from: image.size, stretchedSize: sourceSize, outputSize: rotatedImage.size, cosine: cosine, sine: sine
             )
-        } else if !rotated.compensateUnlinkedMasksForRasterRotation(from: self) {
+        } else if !rotated.compensateUnlinkedLocalMasks(from: self) {
             return nil
         }
         return rotated

@@ -20,6 +20,9 @@ extension ImageEditorViewModel {
                       resized.resizeLinkedGroupMasks(
                           from: original, originalBounds: originalTransformFrame, targetBounds: targetFrame
                       ) else { return nil }
+            } else if !layer.isMaskLinked {
+                guard let original = sources[layer.id],
+                      resized.compensateUnlinkedLocalMasks(from: original) else { return nil }
             }
             changes[layer.id] = resized
         }

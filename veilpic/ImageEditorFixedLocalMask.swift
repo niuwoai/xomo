@@ -1,9 +1,15 @@
 import AppKit
 
 extension ImageEditorLayer {
-    /// Keep the original canvas-space mask stationary while the raster's local
-    /// image bounds change. Every preview supplies its original layer snapshot.
-    mutating func compensateUnlinkedMasksForRasterRotation(from source: ImageEditorLayer) -> Bool {
+    /// Keep masks stationary in canvas space when local bounds change through
+    /// scaling or raster rotation. Previews always supply the original snapshot.
+    mutating func compensateUnlinkedLocalMasks(from source: ImageEditorLayer) -> Bool {
+        guard !source.isGroup, !source.isMaskLinked else { return true }
+        if frame == source.frame, image.size == source.image.size {
+            mask = source.mask
+            vectorMask = source.vectorMask
+            return true
+        }
         guard source.mask != nil || source.vectorMask != nil else { return true }
         guard let mapping = ImageEditorFixedMaskMapping(source: source, target: self) else { return false }
         if let mask = source.mask {
