@@ -333,7 +333,15 @@ extension NSImage {
     }
 
     func compositedWithAlphaMask(_ mask: NSImage) -> NSImage? {
-        NSImage.rendered(size: size) { rect in
+        // Both masks occupy the same normalized layer rectangle. Keep the finer
+        // sampling on each axis instead of collapsing the vector mask into the
+        // raster mask's potentially much smaller grid. Density/feather have
+        // already been applied in the raster mask's own coordinate space.
+        let outputSize = ImageEditorMaskSampling.bitmapSize(CGSize(
+            width: max(size.width, mask.size.width),
+            height: max(size.height, mask.size.height)
+        )) ?? size
+        return NSImage.rendered(size: outputSize) { rect in
             draw(
                 in: rect,
                 from: CGRect(origin: .zero, size: size),
