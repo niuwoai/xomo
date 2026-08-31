@@ -723,6 +723,13 @@ extension ImageEditorViewModel {
         }
     }
 
+    private func transformLayersIncludingGroups(for indices: [Int]) -> [UUID: ImageEditorLayer] {
+        let ids = selectedTransformLayerIDsIncludingGroups(for: indices)
+        return document.layers.reduce(into: [:]) { layers, layer in
+            if ids.contains(layer.id) { layers[layer.id] = layer }
+        }
+    }
+
     private func translateLayers(_ layerIDs: Set<UUID>, by delta: CGSize) {
         var nextDocument = document
         for index in nextDocument.layers.indices where layerIDs.contains(nextDocument.layers[index].id) {
@@ -851,10 +858,8 @@ extension ImageEditorViewModel {
             return
         }
         pushUndo()
-        rotatingLayerIDs = Set(indices.map { document.layers[$0].id })
-        rotatingOriginalLayers = indices.reduce(into: [:]) { layers, index in
-            layers[document.layers[index].id] = document.layers[index]
-        }
+        rotatingOriginalLayers = transformLayersIncludingGroups(for: indices)
+        rotatingLayerIDs = Set(rotatingOriginalLayers.keys)
         rotatingOriginalTransformFrame = transformFrame
         rotatingReferenceWasCustom = hasCustomTransformReferencePoint
         rotatingReferencePoint = selectedLayerTransformReferencePoint
@@ -987,9 +992,7 @@ extension ImageEditorViewModel {
 
         pushUndo()
         let shouldPreserveReferencePoint = hasCustomTransformReferencePoint
-        let originalLayers = indices.reduce(into: [:]) { layers, index in
-            layers[document.layers[index].id] = document.layers[index]
-        }
+        let originalLayers = transformLayersIncludingGroups(for: indices)
         let referencePoint = selectedLayerTransformReferencePoint
             ?? CGPoint(x: transformFrame.midX, y: transformFrame.midY)
         guard applyRotation(degrees: degrees, from: originalLayers, around: referencePoint) else {
@@ -1343,6 +1346,14 @@ extension ImageEditorViewModel {
                 rotatedLayers[id] = originalLayer
                 continue
             }
+            if originalLayer.isGroup {
+                guard let rotated = originalLayer.rotatingGroup(degrees: degrees, around: center) else {
+                    statusText = L10n.text("imageEditor.status.operationFailed")
+                    return false
+                }
+                rotatedLayers[id] = rotated
+                continue
+            }
             if originalLayer.kind.isPixel {
                 guard let rotated = originalLayer.rotatingRaster(degrees: degrees, around: center) else {
                     statusText = L10n.text("imageEditor.status.operationFailed")
@@ -1381,12 +1392,7 @@ extension ImageEditorViewModel {
             rotatedLayers[id] = rotatedLayer
         }
 
-        for index in document.layers.indices {
-            let id = document.layers[index].id
-            if let rotatedLayer = rotatedLayers[id] {
-                document.layers[index] = rotatedLayer
-            }
-        }
+        applyTransformedLayers(rotatedLayers)
         return true
     }
 
@@ -1406,7 +1412,7 @@ extension ImageEditorViewModel {
             frames, originalLayers: originalLayers,
             originalTransformFrame: originalTransformFrame, targetFrame: targetFrame
         ) else { return false }
-        applyResizedLayers(layers)
+        applyTransformedLayers(layers)
         return !frames.isEmpty
     }
 
@@ -1427,12 +1433,12 @@ extension ImageEditorViewModel {
                   originalTransformFrame: originalTransformFrame, targetFrame: targetFrame
               ) else { return false }
         pushUndo()
-        applyResizedLayers(layers)
+        applyTransformedLayers(layers)
         appendHistory(historyTitle)
         return true
     }
 
-    private func applyResizedLayers(_ layers: [UUID: ImageEditorLayer]) {
+    private func applyTransformedLayers(_ layers: [UUID: ImageEditorLayer]) {
         guard !layers.isEmpty else { return }
         var nextDocument = document
         for index in nextDocument.layers.indices {
