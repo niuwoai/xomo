@@ -59,7 +59,7 @@ struct ImageEditorUnlinkedMaskResizeTests {
     }
 
     @Test(arguments: ["fit", "fill"])
-    func lowResolutionFitDocumentsMaskSamplingLoss(command: String) throws {
+    func lowResolutionFitPreservesMaskPositionAndOpacity(command: String) throws {
         let model = fixture()
         if command == "fit" { #expect(model.fitSelectedLayerToCanvas()) }
         else { #expect(model.fillSelectedLayerToCanvas()) }
@@ -79,11 +79,9 @@ struct ImageEditorUnlinkedMaskResizeTests {
         }
         #expect(alphaSum > 0)
         let centerAlpha = try alpha(image, x: 84, y: 76)
-        withKnownIssue("80x60 local compositing blurs and shifts an 8x8 stationary mask after canvas fit/fill; preserve canvas resolution in a follow-up") {
-            #expect(abs(weightedX / alphaSum - 84) < 1)
-            #expect(abs(weightedY / alphaSum - 76) < 1)
-            #expect(centerAlpha > 0.9)
-        }
+        #expect(abs(weightedX / alphaSum - 84) < 1)
+        #expect(abs(weightedY / alphaSum - 76) < 1)
+        #expect(centerAlpha > 0.9)
     }
 
     @Test(arguments: [false, true])

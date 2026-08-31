@@ -455,7 +455,7 @@ private extension ImageEditorShapeContent {
     }
 }
 
-private extension ImageEditorLayerStyle {
+extension ImageEditorLayerStyle {
     func scaled(by scale: CGFloat) -> ImageEditorLayerStyle {
         var style = self
         style.strokeWidth *= scale
