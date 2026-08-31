@@ -1,0 +1,62 @@
+import AppKit
+
+extension ImageEditorLayer {
+    /// Keep the original canvas-space mask stationary while the raster's local
+    /// image bounds change. Every preview supplies its original layer snapshot.
+    mutating func compensateUnlinkedMasksForRasterRotation(from source: ImageEditorLayer) -> Bool {
+        guard source.mask != nil || source.vectorMask != nil else { return true }
+        guard let mapping = ImageEditorFixedMaskMapping(source: source, target: self) else { return false }
+        if let mask = source.mask {
+            guard let mapped = NSImage.rendered(size: image.size, actions: { _ in
+                mask.draw(in: mapping.bitmapRect, from: .zero, operation: .copy, fraction: 1)
+            }) else { return false }
+            self.mask = mapped
+        }
+        vectorMask = source.vectorMask?.mappedToFixedCanvasPosition(mapping)
+        return true
+    }
+}
+
+private struct ImageEditorFixedMaskMapping {
+    let sourceSize: CGSize
+    let targetRect: CGRect
+    let bitmapRect: CGRect
+
+    init?(source: ImageEditorLayer, target: ImageEditorLayer) {
+        sourceSize = source.image.size
+        let original = source.frame.standardized
+        let rotated = target.frame.standardized
+        guard sourceSize.width > 0, sourceSize.height > 0,
+              rotated.width > 0, rotated.height > 0 else { return nil }
+        let scaleX = target.image.size.width / rotated.width
+        let scaleY = target.image.size.height / rotated.height
+        targetRect = CGRect(x: (original.minX - rotated.minX) * scaleX,
+                            y: (original.minY - rotated.minY) * scaleY,
+                            width: original.width * scaleX, height: original.height * scaleY)
+        // Paths use top-left coordinates; AppKit bitmap drawing uses bottom-left.
+        bitmapRect = CGRect(x: targetRect.minX, y: target.image.size.height - targetRect.maxY,
+                            width: targetRect.width, height: targetRect.height)
+        guard [targetRect.minX, targetRect.minY, targetRect.maxX, targetRect.maxY,
+               bitmapRect.minY, sourceSize.width, sourceSize.height].allSatisfy(\.isFinite) else { return nil }
+    }
+
+    func point(_ source: CGPoint) -> CGPoint {
+        CGPoint(x: targetRect.minX + source.x / sourceSize.width * targetRect.width,
+                y: targetRect.minY + source.y / sourceSize.height * targetRect.height)
+    }
+}
+
+private extension ImageEditorShapeContent {
+    func mappedToFixedCanvasPosition(_ mapping: ImageEditorFixedMaskMapping) -> Self {
+        func anchor(_ source: ImageEditorPathAnchor) -> ImageEditorPathAnchor {
+            ImageEditorPathAnchor(point: mapping.point(source.point),
+                                  inControl: source.inControl.map(mapping.point),
+                                  outControl: source.outControl.map(mapping.point))
+        }
+        var mapped = self
+        mapped.pathPoints = pathPoints.map(mapping.point)
+        mapped.pathAnchors = pathAnchors.map(anchor)
+        mapped.pathSubpaths = pathSubpaths.map { $0.map(anchor) }
+        return mapped
+    }
+}
