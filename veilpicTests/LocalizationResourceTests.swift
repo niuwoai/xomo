@@ -10,7 +10,8 @@ import Testing
 
 struct LocalizationResourceTests {
     private static let supportedLocalizationIDs: Set<String> = ["zh-Hans", "en", "ja"]
-    private static let supportedStringTables: Set<String> = ["InfoPlist.strings", "Localizable.strings"]
+    private static let supportedStringTableNames: Set<String> = ["InfoPlist", "Localizable", "FigmaImport"]
+    private static let supportedStringTables = Set(supportedStringTableNames.map { "\($0).strings" })
 
     @Test func appShipsOnlyChineseEnglishAndJapaneseLocalizations() throws {
         let paths = try Self.repositoryPaths()
@@ -31,12 +32,13 @@ struct LocalizationResourceTests {
     @Test func supportedLocalizationTablesKeepMatchingKeys() throws {
         let paths = try Self.repositoryPaths()
 
-        for tableName in ["Localizable", "InfoPlist"] {
+        for tableName in Self.supportedStringTableNames.sorted() {
             let referenceKeys = try Self.stringTableKeys(
                 tableName: tableName,
                 localizationID: "en",
                 appDirectory: paths.appDirectory
             )
+            #expect(!referenceKeys.isEmpty)
 
             for localizationID in Self.supportedLocalizationIDs {
                 let localizedKeys = try Self.stringTableKeys(
@@ -46,6 +48,32 @@ struct LocalizationResourceTests {
                 )
 
                 #expect(localizedKeys == referenceKeys)
+            }
+        }
+    }
+
+    @Test func supportedLocalizationTablesShipMatchingBundledValues() throws {
+        let paths = try Self.repositoryPaths()
+
+        for tableName in Self.supportedStringTableNames.sorted() {
+            for localizationID in Self.supportedLocalizationIDs.sorted() {
+                let source = try Self.stringTable(
+                    tableName: tableName,
+                    localizationID: localizationID,
+                    appDirectory: paths.appDirectory
+                )
+                let resource = try #require(Bundle.main.url(
+                    forResource: tableName,
+                    withExtension: "strings",
+                    subdirectory: nil,
+                    localization: localizationID
+                ))
+                let bundled = try #require(PropertyListSerialization.propertyList(
+                    from: Data(contentsOf: resource),
+                    format: nil
+                ) as? [String: String])
+
+                #expect(bundled == source)
             }
         }
     }
