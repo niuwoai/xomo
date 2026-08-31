@@ -1500,13 +1500,21 @@ extension ImageEditorViewModel {
               layer.image.size.height > 0,
               layer.frame.width > 0,
               layer.frame.height > 0,
+              let outputSize = ImageEditorMaskSampling.bitmapSize(CGSize(
+                width: max(layer.image.size.width, layer.frame.width, layer.mask?.size.width ?? 0),
+                height: max(layer.image.size.height, layer.frame.height, layer.mask?.size.height ?? 0)
+              )),
               let canvasMask = canvasSelectionMask(for: selection)
         else { return nil }
 
-        return NSImage.rendered(size: layer.image.size) { _ in
+        // Selection coordinates are top-left canvas pixels. AppKit crops in
+        // bottom-left coordinates; retain canvas detail when the source is small.
+        let sourceRect = CGRect(x: layer.frame.minX, y: document.canvasSize.height - layer.frame.maxY,
+                                width: layer.frame.width, height: layer.frame.height)
+        return NSImage.rendered(size: outputSize) { _ in
             canvasMask.draw(
-                in: CGRect(origin: .zero, size: layer.image.size),
-                from: layer.frame,
+                in: CGRect(origin: .zero, size: outputSize),
+                from: sourceRect,
                 operation: .copy,
                 fraction: 1
             )
@@ -1787,7 +1795,8 @@ extension ImageEditorViewModel {
             NSColor.clear.setFill()
             CGRect(origin: .zero, size: document.canvasSize).fill()
             mask.draw(
-                in: layer.frame,
+                in: CGRect(x: layer.frame.minX, y: document.canvasSize.height - layer.frame.maxY,
+                           width: layer.frame.width, height: layer.frame.height),
                 from: CGRect(origin: .zero, size: mask.size),
                 operation: .copy,
                 fraction: 1
