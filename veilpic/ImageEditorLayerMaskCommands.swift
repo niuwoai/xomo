@@ -742,7 +742,6 @@ extension ImageEditorViewModel {
             document.layers[operation.index].mask = operation.mask
             document.layers[operation.index].vectorMask = nil
             document.layers[operation.index].isMaskEnabled = true
-            document.layers[operation.index].isMaskLinked = true
             document.layers[operation.index].isVectorMaskEnabled = true
             document.layers[operation.index].isVectorMaskInverted = false
             document.layers[operation.index].maskDensity = 1
@@ -1316,11 +1315,14 @@ extension ImageEditorViewModel {
         return document.layers.indices.compactMap { index in
             let layer = document.layers[index]
             guard selectedIDs.contains(layer.id),
-                  canRasterizeVectorMask(layer),
-                  let vectorMask = layer.vectorMask,
-                  let vectorMaskImage = renderedVectorMask(vectorMask, layer: layer)
+                  canRasterizeVectorMask(layer) else { return nil }
+            // Bake at the same sampling density used by the preview, without
+            // replacing source pixels, frame, style or the user's link state.
+            let renderingLayer = layer.highResolutionMaskRenderingLayer()?.layer ?? layer
+            guard let vectorMask = renderingLayer.vectorMask,
+                  let vectorMaskImage = renderedVectorMask(vectorMask, layer: renderingLayer)
             else { return nil }
-            return (index, (layer.effectiveMask ?? vectorMaskImage).normalizedBitmapImage())
+            return (index, (renderingLayer.effectiveMask ?? vectorMaskImage).normalizedBitmapImage())
         }
     }
 
