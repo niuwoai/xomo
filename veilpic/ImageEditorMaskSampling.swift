@@ -34,7 +34,7 @@ extension ImageEditorLayer {
     /// Render a temporary pixel copy at sufficient density. Neither the retained
     /// source pixels nor the editable layer kind/project data are mutated.
     func highResolutionMaskRenderingLayer() -> (layer: ImageEditorLayer, scale: CGFloat)? {
-        guard !isGroup, !isMaskLinked, image.size.width > 0, image.size.height > 0,
+        guard !isGroup, image.size.width > 0, image.size.height > 0,
               (isMaskEnabled && mask != nil) || (isVectorMaskEnabled && vectorMask != nil) else { return nil }
         let bounds = frame.standardized
         let rasterSize = isMaskEnabled ? (mask?.size ?? .zero) : .zero
@@ -66,12 +66,15 @@ extension ImageEditorLayer {
         // the correct normalized rectangle. Only vector-local coordinates scale.
         var vectorSource = self
         vectorSource.mask = nil
+        // This maps local coordinates into a rendering grid, not a document
+        // transform. It is required for both linked and unlinked vector masks.
+        vectorSource.isMaskLinked = false
         rendering.mask = nil
         guard rendering.compensateUnlinkedLocalMasks(from: vectorSource) else { return nil }
         rendering.mask = mask
         rendering.style = style.scaled(by: scale)
-        // This is only a rendering copy. Prevent recursive high-resolution promotion.
-        rendering.isMaskLinked = true
+        // The copy already meets the requested sampling size, so scale > 1 above
+        // prevents recursion without using the user's link state as a sentinel.
         return (rendering, scale)
     }
 }
