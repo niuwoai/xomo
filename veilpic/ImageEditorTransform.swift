@@ -972,7 +972,7 @@ extension ImageEditorViewModel {
 
     @discardableResult
     func rotateSelectedLayer(degrees: CGFloat) -> Bool {
-        guard abs(degrees) > 0.01 else { return false }
+        guard degrees.isFinite, abs(degrees) > 0.01 else { return false }
         guard canRotateSelectedLayer else {
             statusText = L10n.text("imageEditor.status.layerLocked")
             return false
@@ -1332,12 +1332,25 @@ extension ImageEditorViewModel {
         from originalLayers: [UUID: ImageEditorLayer],
         around center: CGPoint
     ) -> Bool {
+        guard degrees.isFinite, center.x.isFinite, center.y.isFinite else { return false }
         let radians = degrees * .pi / 180
         let cosine = cos(radians)
         let sine = sin(radians)
         var rotatedLayers: [UUID: ImageEditorLayer] = [:]
 
         for (id, originalLayer) in originalLayers {
+            if abs(degrees) <= 0.01 {
+                rotatedLayers[id] = originalLayer
+                continue
+            }
+            if originalLayer.kind.isPixel {
+                guard let rotated = originalLayer.rotatingRaster(degrees: degrees, around: center) else {
+                    statusText = L10n.text("imageEditor.status.operationFailed")
+                    return false
+                }
+                rotatedLayers[id] = rotated
+                continue
+            }
             var rotatedLayer = originalLayer
             let originalFrame = originalLayer.frame.standardized
             let originalCenter = CGPoint(x: originalFrame.midX, y: originalFrame.midY)
