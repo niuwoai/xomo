@@ -10,6 +10,7 @@ enum ImageEditorSpacebarPanEventRouter {
         _ event: NSEvent,
         isPanning: inout Bool,
         isTextInputActive: Bool,
+        canBeginPanning: () -> Bool = { true },
         setPanning: (Bool) -> Void
     ) -> Bool {
         guard event.type == .keyDown || event.type == .keyUp,
@@ -21,7 +22,8 @@ enum ImageEditorSpacebarPanEventRouter {
             return true
         }
         guard event.modifierFlags.intersection(shortcutModifiers).isEmpty,
-              !isTextInputActive else { return false }
+              !isTextInputActive,
+              canBeginPanning() else { return false }
         if !isPanning {
             isPanning = true
             setPanning(true)

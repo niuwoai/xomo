@@ -830,7 +830,7 @@ struct ImageEditorCanvasCursorTests {
             brushDiameter: 18,
             isPointerOverMovableContent: false
         )
-        #expect(emptyCanvasMove === NSCursor.openHand)
+        #expect(emptyCanvasMove === NSCursor.arrow)
 
         let boxSelectionMove = ImageEditorCanvasCursor.cursor(
             for: .tools,
@@ -3303,6 +3303,200 @@ struct ImageEditorCanvasCursorTests {
 
         #expect(rotate !== NSCursor.arrow)
         #expect(dragging === ImageEditorCanvasCursor.objectMoveCursor())
+    }
+
+    @Test func idleSpacePanOverridesHoveredTransformControlsAndObjectCandidates() {
+        for target in [
+            ImageEditorLayerTransformCursorTarget.resize(.right),
+            .rotate,
+            .referencePoint
+        ] {
+            #expect(ImageEditorCanvasCursor.cursor(
+                for: .tools,
+                selectedTool: .move,
+                brushDiameter: 18,
+                isPointerOverMovableContent: true,
+                isSpacebarPanning: true,
+                layerTransformTarget: target
+            ) === NSCursor.openHand)
+        }
+
+        #expect(ImageEditorCanvasCursor.cursor(
+            for: .tools,
+            selectedTool: .move,
+            brushDiameter: 18,
+            isPointerOverMovableContent: true,
+            isSpacebarPanning: true
+        ) === NSCursor.openHand)
+    }
+
+    @Test func activeTransformAndObjectTransactionsKeepTheirCursorWhenSpaceArrivesLater() {
+        let activeResize = ImageEditorCanvasCursor.cursor(
+            for: .tools,
+            selectedTool: .move,
+            brushDiameter: 18,
+            isSpacebarPanning: true,
+            layerTransformTarget: .resize(.right),
+            isLayerTransformGestureActive: true
+        )
+        let activeRotate = ImageEditorCanvasCursor.cursor(
+            for: .tools,
+            selectedTool: .move,
+            brushDiameter: 18,
+            isSpacebarPanning: true,
+            layerTransformTarget: .rotate,
+            isLayerTransformGestureActive: true
+        )
+        let activeReferencePoint = ImageEditorCanvasCursor.cursor(
+            for: .tools,
+            selectedTool: .move,
+            brushDiameter: 18,
+            isSpacebarPanning: true,
+            layerTransformTarget: .referencePoint,
+            isLayerTransformGestureActive: true
+        )
+        let activeObjectMove = ImageEditorCanvasCursor.cursor(
+            for: .tools,
+            selectedTool: .move,
+            brushDiameter: 18,
+            isObjectMoveGestureActive: true,
+            isSpacebarPanning: true,
+            layerTransformTarget: .rotate,
+            isLayerTransformGestureActive: true
+        )
+
+        #expect(activeResize === NSCursor.resizeLeftRight)
+        #expect(activeRotate !== NSCursor.openHand)
+        #expect(activeRotate !== NSCursor.arrow)
+        #expect(activeReferencePoint === NSCursor.crosshair)
+        #expect(activeObjectMove === ImageEditorCanvasCursor.objectMoveCursor())
+    }
+
+    @Test func canvasPanPriorityPolicySeparatesIdleClaimFromAnOwnedTransaction() {
+        #expect(ImageEditorCanvasPanPriorityPolicy.allowsContentInteraction(
+            isSpacebarPanning: false,
+            isCanvasPanGestureActive: false,
+            isHandToolActive: false
+        ))
+        for state in [(true, false, false), (false, true, false), (false, false, true)] {
+            #expect(!ImageEditorCanvasPanPriorityPolicy.allowsContentInteraction(
+                isSpacebarPanning: state.0,
+                isCanvasPanGestureActive: state.1,
+                isHandToolActive: state.2
+            ))
+        }
+
+        #expect(ImageEditorCanvasPanPriorityPolicy.shouldPanCanvas(
+            isSpacebarPanning: true,
+            isCanvasPanGestureActive: false,
+            isHandToolActive: false,
+            hasActiveContentTransaction: false
+        ))
+        #expect(!ImageEditorCanvasPanPriorityPolicy.shouldPanCanvas(
+            isSpacebarPanning: true,
+            isCanvasPanGestureActive: false,
+            isHandToolActive: false,
+            hasActiveContentTransaction: true
+        ))
+    }
+
+    @Test func pointerCaptureStateUnifiesNativeSwiftUICandidateAndMiddleOwnership() {
+        let state = ImageEditorCanvasPointerCaptureState()
+        #expect(!state.hasActivePointerOwnership)
+
+        state.activeKind = .primaryTool
+        #expect(state.hasActivePointerOwnership)
+        state.activeKind = .none
+
+        state.isLayerResizing = true
+        #expect(state.hasActivePointerOwnership)
+        state.isLayerResizing = false
+
+        state.isSwiftUICanvasGestureActive = true
+        #expect(state.hasActivePointerOwnership)
+        state.isSwiftUICanvasGestureActive = false
+
+        state.isObjectMoveCandidateActive = true
+        #expect(state.hasActivePointerOwnership)
+        state.isObjectMoveCandidateActive = false
+
+        state.isMiddleMousePanActive = true
+        #expect(state.hasActivePointerOwnership)
+        state.isMiddleMousePanActive = false
+        #expect(!state.hasActivePointerOwnership)
+    }
+
+    @Test func canvasPanPriorityIsWiredThroughAllCursorAndPointerCapturePaths() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let viewSource = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let bridgeSource = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorScrollZoom.swift"),
+            encoding: .utf8
+        )
+
+        #expect(viewSource.components(
+            separatedBy: "isLayerTransformGestureActive: activeResizeHandle != nil"
+        ).count - 1 == 3)
+        #expect(viewSource.contains(
+            "canBeginSpacebarPanning: {\n                    !hasActiveCanvasContentPointerTransaction"
+        ))
+        #expect(viewSource.contains(
+            "canBeginMiddleMousePan: {\n                            !hasActiveCanvasContentPointerTransaction"
+        ))
+        #expect(viewSource.contains(
+            "canBeginPrimaryOrRangeToolCapture: {\n                            ImageEditorCanvasPanPriorityPolicy.allowsContentInteraction("
+        ))
+        #expect(viewSource.contains("viewModel.canvasPointerCaptureState.hasActivePointerOwnership"))
+        #expect(viewSource.contains(
+            "viewModel.canvasPointerCaptureState.isSwiftUICanvasGestureActive = true"
+        ))
+        #expect(bridgeSource.contains("var isSwiftUICanvasGestureActive = false"))
+
+        let appKitResizeStart = try #require(viewSource.range(of: "onLayerResizeBegan: {"))
+        let appKitResizeEnd = try #require(viewSource.range(
+            of: "onLayerResizeChanged:",
+            range: appKitResizeStart.upperBound..<viewSource.endIndex
+        ))
+        #expect(viewSource[appKitResizeStart.lowerBound..<appKitResizeEnd.lowerBound]
+            .contains("ImageEditorCanvasPanPriorityPolicy.allowsContentInteraction("))
+
+        let objectCandidateStart = try #require(viewSource.range(of: "onObjectMoveCandidateBegan: {"))
+        let objectCandidateEnd = try #require(viewSource.range(
+            of: "onObjectMoveActivated:",
+            range: objectCandidateStart.upperBound..<viewSource.endIndex
+        ))
+        #expect(viewSource[objectCandidateStart.lowerBound..<objectCandidateEnd.lowerBound]
+            .contains("ImageEditorCanvasPanPriorityPolicy.allowsContentInteraction("))
+
+        let resizeHandleStart = try #require(viewSource.range(of: "private func resizeHandleView("))
+        let rotateHandleStart = try #require(viewSource.range(of: "private func rotateHandleView("))
+        let referenceHandleStart = try #require(viewSource.range(
+            of: "private func transformReferencePointView("
+        ))
+        let handleSectionEnd = try #require(viewSource.range(
+            of: "private func viewRect(",
+            range: referenceHandleStart.upperBound..<viewSource.endIndex
+        ))
+        #expect(viewSource[resizeHandleStart.lowerBound..<rotateHandleStart.lowerBound]
+            .contains("ImageEditorCanvasPanPriorityPolicy.allowsContentInteraction("))
+        #expect(viewSource[rotateHandleStart.lowerBound..<referenceHandleStart.lowerBound]
+            .contains("ImageEditorCanvasPanPriorityPolicy.allowsContentInteraction("))
+        #expect(viewSource[referenceHandleStart.lowerBound..<handleSectionEnd.lowerBound]
+            .contains("ImageEditorCanvasPanPriorityPolicy.allowsContentInteraction("))
+
+        #expect(bridgeSource.contains("var isObjectMoveCandidateActive = false"))
+        #expect(bridgeSource.contains("var isMiddleMousePanActive = false"))
+        #expect(bridgeSource.contains("var hasActivePointerOwnership: Bool"))
+        #expect(bridgeSource.contains(
+            "if pointerCaptureKind != .none,\n               canBeginPrimaryOrRangeToolCapture?() == false"
+        ))
+        #expect(bridgeSource.contains("guard canBeginMiddleMousePan?() != false else { return false }"))
+        #expect(bridgeSource.contains("pointerCaptureState.isObjectMoveCandidateActive = true"))
     }
 
     @Test func toolCursorsUseFamiliarPrecisionAndBrushConventions() {

@@ -230,6 +230,17 @@ final class ImageEditorCanvasPointerCaptureState: ObservableObject {
     var primaryToolSamples: [ImageEditorPrimaryPointerSample] = []
     var isLayerResizing = false
     var lastLayerResizePoint: CGPoint?
+    var isSwiftUICanvasGestureActive = false
+    var isObjectMoveCandidateActive = false
+    var isMiddleMousePanActive = false
+
+    var hasActivePointerOwnership: Bool {
+        activeKind != .none
+            || isLayerResizing
+            || isSwiftUICanvasGestureActive
+            || isObjectMoveCandidateActive
+            || isMiddleMousePanActive
+    }
 
     fileprivate func claimTransaction() -> UUID {
         let id = UUID()
@@ -289,6 +300,8 @@ struct ScrollWheelZoomView: NSViewRepresentable {
         _ stylusInput: ImageEditorStylusEventSample
     ) -> Void
     let onStylusProximityChanged: (_ proximity: ImageEditorStylusProximity) -> Void
+    let canBeginPrimaryOrRangeToolCapture: () -> Bool
+    let canBeginMiddleMousePan: () -> Bool
     let onMiddleMousePanBegan: () -> Void
     let onMiddleMousePanChanged: (_ delta: CGSize) -> Void
     let onMiddleMousePanEnded: () -> Void
@@ -352,6 +365,8 @@ struct ScrollWheelZoomView: NSViewRepresentable {
         view.onZoom = onZoom
         view.onMouseMoved = onMouseMoved
         view.onStylusProximityChanged = onStylusProximityChanged
+        view.canBeginPrimaryOrRangeToolCapture = canBeginPrimaryOrRangeToolCapture
+        view.canBeginMiddleMousePan = canBeginMiddleMousePan
         view.onMiddleMousePanBegan = onMiddleMousePanBegan
         view.onMiddleMousePanChanged = onMiddleMousePanChanged
         view.onMiddleMousePanEnded = onMiddleMousePanEnded
@@ -389,6 +404,8 @@ struct ScrollWheelZoomView: NSViewRepresentable {
         nsView.onZoom = onZoom
         nsView.onMouseMoved = onMouseMoved
         nsView.onStylusProximityChanged = onStylusProximityChanged
+        nsView.canBeginPrimaryOrRangeToolCapture = canBeginPrimaryOrRangeToolCapture
+        nsView.canBeginMiddleMousePan = canBeginMiddleMousePan
         nsView.onMiddleMousePanBegan = onMiddleMousePanBegan
         nsView.onMiddleMousePanChanged = onMiddleMousePanChanged
         nsView.onMiddleMousePanEnded = onMiddleMousePanEnded
@@ -537,6 +554,8 @@ final class ScrollWheelZoomNSView: NSView {
     var onZoom: ((CGFloat, CGPoint, CGSize) -> Void)?
     var onMouseMoved: ((CGPoint, ImageEditorStylusEventSample) -> Void)?
     var onStylusProximityChanged: ((ImageEditorStylusProximity) -> Void)?
+    var canBeginPrimaryOrRangeToolCapture: (() -> Bool)?
+    var canBeginMiddleMousePan: (() -> Bool)?
     var onMiddleMousePanBegan: (() -> Void)?
     var onMiddleMousePanChanged: ((CGSize) -> Void)?
     var onMiddleMousePanEnded: (() -> Void)?
@@ -932,6 +951,12 @@ final class ScrollWheelZoomNSView: NSView {
             guard bounds.contains(location) else {
                 return false
             }
+            if pointerCaptureKind != .none,
+               canBeginPrimaryOrRangeToolCapture?() == false {
+                // Space/middle-button panning already owns this press. Return
+                // it untouched before lifecycle reset, focus, or tool hooks.
+                return false
+            }
             prepareForNewPrimaryPointerSequence()
             guard self.window === window else { return false }
             if claimsKeyboardFocusOnPointerDown {
@@ -1231,6 +1256,8 @@ final class ScrollWheelZoomNSView: NSView {
         isObjectMovePreparingCandidate = false
         if !accepted {
             clearObjectMoveCapture()
+        } else {
+            pointerCaptureState.isObjectMoveCandidateActive = true
         }
         return accepted
     }
@@ -1274,6 +1301,7 @@ final class ScrollWheelZoomNSView: NSView {
         objectMoveCaptureID = nil
         objectMoveCandidateModifierFlags = []
         objectMoveCandidateClickCount = 1
+        pointerCaptureState.isObjectMoveCandidateActive = false
     }
 
     private func interruptCanvasLifecycle(
@@ -1291,6 +1319,7 @@ final class ScrollWheelZoomNSView: NSView {
         )
         // Clear ownership before callbacks, which can detach this view or re-enter.
         isMiddleMousePanning = false
+        pointerCaptureState.isMiddleMousePanActive = false
         lastMiddleMousePoint = nil
         middleMousePanID = nil
         if resetDecision.shouldEndPan {
@@ -1452,7 +1481,9 @@ final class ScrollWheelZoomNSView: NSView {
             guard self.window === window else { return false }
             // An end callback may already have started a newer pan.
             if isMiddleMousePanning { return true }
+            guard canBeginMiddleMousePan?() != false else { return false }
             isMiddleMousePanning = true
+            pointerCaptureState.isMiddleMousePanActive = true
             middleMousePanID = UUID()
             lastMiddleMousePoint = location
             onMiddleMousePanBegan?()

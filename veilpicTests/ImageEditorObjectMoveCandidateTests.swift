@@ -91,6 +91,21 @@ struct ImageEditorObjectMoveCandidateTests {
         }
     }
 
+    @Test func acceptedCandidateOwnsPointerBeforeActivationThresholdAndReleasesOnClick() throws {
+        try Fixture.withHost { (host: ScrollWheelZoomNSView, window: NSWindow) throws -> Void in
+            host.onObjectMoveCandidateBegan = { _, _, _ in true }
+            host.onObjectMoveClicked = { _, _, _ in }
+
+            #expect(host.handleCanvasPointerDrag(try Fixture.event(.leftMouseDown, window: window)))
+            #expect(host.pointerCaptureState.isObjectMoveCandidateActive)
+            #expect(host.pointerCaptureState.hasActivePointerOwnership)
+
+            #expect(host.handleCanvasPointerDrag(try Fixture.event(.leftMouseUp, window: window)))
+            #expect(!host.pointerCaptureState.isObjectMoveCandidateActive)
+            #expect(!host.pointerCaptureState.hasActivePointerOwnership)
+        }
+    }
+
     @Test func teardownWithoutDetachingStillInvalidatesPreparingCandidate() throws {
         try Fixture.withHost { (host: ScrollWheelZoomNSView, window: NSWindow) throws -> Void in
             host.onObjectMoveCandidateBegan = { [weak host] _, _, _ in

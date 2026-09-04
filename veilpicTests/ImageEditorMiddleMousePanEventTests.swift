@@ -49,6 +49,20 @@ struct ImageEditorMiddleMousePanEventTests {
         }
     }
 
+    @Test func rejectedMiddlePressPassesThroughWithoutClaimingPointerOwnership() throws {
+        try withHost { (host: ScrollWheelZoomNSView, window: NSWindow) throws -> Void in
+            var starts = 0
+            host.canBeginMiddleMousePan = { false }
+            host.onMiddleMousePanBegan = { starts += 1 }
+
+            #expect(!host.handleMiddleMousePan(try event(.otherMouseDown, window: window)))
+            #expect(!host.pointerCaptureState.isMiddleMousePanActive)
+            #expect(!host.pointerCaptureState.hasActivePointerOwnership)
+            #expect(!host.handleMiddleMousePan(try event(.otherMouseDragged, window: window)))
+            #expect(starts == 0)
+        }
+    }
+
     @Test func nonMiddleReleaseDoesNotInterruptPan() throws {
         try withHost { (host: ScrollWheelZoomNSView, window: NSWindow) throws -> Void in
             var ends = 0

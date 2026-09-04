@@ -518,6 +518,9 @@ struct ImageEditorView: View {
                     viewModel.truncateSelectedHistory()
                     return true
                 },
+                canBeginSpacebarPanning: {
+                    !hasActiveCanvasContentPointerTransaction
+                },
                 setSpacebarPanning: { isPressed in
                     isSpacebarPanning = isPressed
                 },
@@ -4023,6 +4026,7 @@ struct ImageEditorView: View {
         // A lost mouse-up must not leave a stale rubber band owning the next
         // pointer sequence. Selection is committed only by the matching end.
         objectSelectionBoxDrag = nil
+        viewModel.canvasPointerCaptureState.isSwiftUICanvasGestureActive = false
         isPenPointerSequenceActive = canvasInteractionTool == .pen
         isDirectPathGestureResolved = false
         isPathSelectionGestureResolved = false
@@ -4428,6 +4432,7 @@ struct ImageEditorView: View {
                             beginCanvasPointerSequence()
                         },
                         onCanvasLifecycleInterrupted: { _ in
+                            viewModel.canvasPointerCaptureState.isSwiftUICanvasGestureActive = false
                             objectSelectionBoxDrag = nil
                             eyedropperSamplingRing = nil
                             cancelPathAnchorDragForCanvasLifecycle()
@@ -4455,6 +4460,17 @@ struct ImageEditorView: View {
                             activeBrushPressure = nil
                             activeBrushTilt = nil
                             refreshCanvasCursor(in: geometry.size)
+                        },
+                        canBeginPrimaryOrRangeToolCapture: {
+                            ImageEditorCanvasPanPriorityPolicy.allowsContentInteraction(
+                                isSpacebarPanning: isSpacebarPanning,
+                                isCanvasPanGestureActive: isCanvasPanGestureActive,
+                                isHandToolActive: canvasInteractionTool == .hand
+                            )
+                        },
+                        canBeginMiddleMousePan: {
+                            !hasActiveCanvasContentPointerTransaction
+                                && !isCanvasPanGestureActive
                         },
                         onMiddleMousePanBegan: {
                             isCanvasPanGestureActive = true
@@ -4670,7 +4686,12 @@ struct ImageEditorView: View {
                             refreshCanvasCursor(in: geometry.size)
                         },
                         onLayerResizeBegan: { location in
-                            guard case let .resize(handle) = layerTransformCursorTarget(
+                            guard ImageEditorCanvasPanPriorityPolicy.allowsContentInteraction(
+                                    isSpacebarPanning: isSpacebarPanning,
+                                    isCanvasPanGestureActive: isCanvasPanGestureActive,
+                                    isHandToolActive: canvasInteractionTool == .hand
+                                  ),
+                                  case let .resize(handle) = layerTransformCursorTarget(
                                 at: location,
                                 in: geometry.size
                             ) else { return false }
@@ -4708,6 +4729,11 @@ struct ImageEditorView: View {
                         },
                         onObjectMoveCandidateBegan: { location, modifierFlags, clickCount in
                             guard canvasInteractionTool == .move,
+                                  ImageEditorCanvasPanPriorityPolicy.allowsContentInteraction(
+                                    isSpacebarPanning: isSpacebarPanning,
+                                    isCanvasPanGestureActive: isCanvasPanGestureActive,
+                                    isHandToolActive: false
+                                  ),
                                   ImageEditorObjectDragEventPolicy.allowsCandidate(
                                     modifierFlags: modifierFlags,
                                     hasTransformTarget: layerTransformCursorTarget(
@@ -4920,7 +4946,10 @@ struct ImageEditorView: View {
                             modifierFlags: canvasModifierFlags,
                             marqueeShape: viewModel.marqueeShape,
                             cropHandle: cropHandle,
-                            layerTransformTarget: layerTransformTarget
+                            layerTransformTarget: layerTransformTarget,
+                            isLayerTransformGestureActive: activeResizeHandle != nil
+                                || isRotatingLayer
+                                || isMovingTransformReferencePoint
                         )
                     )
                     .allowsHitTesting(false)
@@ -6357,12 +6386,18 @@ struct ImageEditorView: View {
                 if isSelectedObjectMoveGestureActive {
                     return
                 }
-                if isCanvasPanGestureActive || canvasInteractionTool == .hand || isSpacebarPanning {
+                if ImageEditorCanvasPanPriorityPolicy.shouldPanCanvas(
+                    isSpacebarPanning: isSpacebarPanning,
+                    isCanvasPanGestureActive: isCanvasPanGestureActive,
+                    isHandToolActive: canvasInteractionTool == .hand,
+                    hasActiveContentTransaction: hasActiveCanvasContentPointerTransaction
+                ) {
                     isCanvasPanGestureActive = true
                     updateCanvasPan(translation: value.translation)
                     NSCursor.closedHand.set()
                     return
                 }
+                viewModel.canvasPointerCaptureState.isSwiftUICanvasGestureActive = true
 
                 let pointerImagePoint = imagePoint(from: value.location, in: size)
                 let stylusInput = ImageEditorStylusInput.sample(from: NSApp.currentEvent)
@@ -6889,6 +6924,9 @@ struct ImageEditorView: View {
                 }
             }
             .onEnded { value in
+                defer {
+                    viewModel.canvasPointerCaptureState.isSwiftUICanvasGestureActive = false
+                }
                 if isSelectedObjectMoveGestureActive {
                     // The component gesture commits the move. Keeping this
                     // recognizer out of the end phase prevents it from
@@ -7704,7 +7742,10 @@ struct ImageEditorView: View {
             modifierFlags: NSEvent.modifierFlags,
             marqueeShape: viewModel.marqueeShape,
             cropHandle: cropInteractionHandle(at: viewPoint, in: size),
-            layerTransformTarget: layerTransformCursorTarget(at: viewPoint, in: size)
+            layerTransformTarget: layerTransformCursorTarget(at: viewPoint, in: size),
+            isLayerTransformGestureActive: activeResizeHandle != nil
+                || isRotatingLayer
+                || isMovingTransformReferencePoint
         ).set()
     }
 
@@ -7758,7 +7799,10 @@ struct ImageEditorView: View {
             modifierFlags: canvasModifierFlags,
             marqueeShape: viewModel.marqueeShape,
             cropHandle: nil,
-            layerTransformTarget: layerTransformCursorTarget(at: nil, in: size)
+            layerTransformTarget: layerTransformCursorTarget(at: nil, in: size),
+            isLayerTransformGestureActive: activeResizeHandle != nil
+                || isRotatingLayer
+                || isMovingTransformReferencePoint
         ).set()
     }
 
@@ -10179,19 +10223,63 @@ struct ImageEditorView: View {
     }
 
     private var hasActiveMoveToolVisualInteraction: Bool {
+        hasActiveCanvasContentPointerTransaction
+            || isSpacebarPanning
+            || isCanvasPanGestureActive
+    }
+
+    /// A Space press may claim an idle canvas, but must never replace a
+    /// transaction that already owns the primary pointer sequence.
+    private var hasActiveCanvasContentPointerTransaction: Bool {
+        viewModel.canvasPointerCaptureState.hasActivePointerOwnership
+            || hasActiveCanvasMovePointerTransaction
+            || hasActiveCanvasTransformPointerTransaction
+            || hasActiveCanvasPathPointerTransaction
+            || hasActiveCanvasGradientPointerTransaction
+            || colorSamplerDrag != nil
+            || isColorSamplerRemovalGestureActive
+    }
+
+    private var hasActiveCanvasMovePointerTransaction: Bool {
         viewModel.hasActiveLayerMoveTransaction
             || isObjectMoveGestureActive
             || isSelectedObjectMoveGestureActive
             || isCanvasCloneGestureActive
             || isCanvasSelectionGestureActive
             || objectSelectionBoxDrag != nil
-            || activeResizeHandle != nil
+            || isDeliveryObjectMoveGestureActive
+    }
+
+    private var hasActiveCanvasTransformPointerTransaction: Bool {
+        activeResizeHandle != nil
             || isRotatingLayer
             || isMovingTransformReferencePoint
-            || isSpacebarPanning
-            || isCanvasPanGestureActive
-            || isDeliveryObjectMoveGestureActive
+            || activeCropHandle != nil
             || activeGuideDrag != nil
+    }
+
+    private var hasActiveCanvasPathPointerTransaction: Bool {
+        viewModel.hasActivePathAnchorMoveTransaction
+            || isMovingPathAnchor
+            || isPenPointerSequenceActive
+            || isPenAnchorConversionGestureActive
+    }
+
+    private var hasActiveCanvasGradientPointerTransaction: Bool {
+        activeShapeGradientHandle != nil
+            || activeShapeRadialGradientHandle != nil
+            || activeShapeGradientStopIndex != nil
+            || activeShapeGradientMidpointIndex != nil
+            || activeShapeGradientTrackStopIndex != nil
+            || activeShapeGradientTrackMidpointIndex != nil
+            || isGradientOverlayCenterDragActive
+            || isGradientOverlayAxisDragActive
+            || activeGradientOverlayStopIndex != nil
+            || activeGradientOverlayMidpointIndex != nil
+            || viewModel.hasActiveGradientOverlayCenterTransaction
+            || viewModel.hasActiveGradientOverlayAxisTransaction
+            || viewModel.hasActiveGradientOverlayStopTransaction
+            || viewModel.hasActiveGradientOverlayMidpointTransaction
     }
 
     @ViewBuilder
@@ -12201,6 +12289,11 @@ struct ImageEditorView: View {
                 )
                     .onChanged { value in
                         if activeResizeHandle == nil {
+                            guard ImageEditorCanvasPanPriorityPolicy.allowsContentInteraction(
+                                isSpacebarPanning: isSpacebarPanning,
+                                isCanvasPanGestureActive: isCanvasPanGestureActive,
+                                isHandToolActive: canvasInteractionTool == .hand
+                            ) else { return }
                             activeResizeHandle = handle
                             viewModel.beginResizingSelectedLayer(handle: handle.transformModelHandle)
                             ImageEditorCanvasCursor.transformCursor(for: .resize(handle)).set()
@@ -12213,6 +12306,7 @@ struct ImageEditorView: View {
                         )
                     }
                     .onEnded { _ in
+                        guard activeResizeHandle != nil else { return }
                         viewModel.finishResizingSelectedLayer()
                         activeResizeHandle = nil
                         refreshCanvasCursor(in: canvasSize)
@@ -12253,6 +12347,11 @@ struct ImageEditorView: View {
                     DragGesture(minimumDistance: 0)
                         .onChanged { value in
                             if !isRotatingLayer {
+                                guard ImageEditorCanvasPanPriorityPolicy.allowsContentInteraction(
+                                    isSpacebarPanning: isSpacebarPanning,
+                                    isCanvasPanGestureActive: isCanvasPanGestureActive,
+                                    isHandToolActive: canvasInteractionTool == .hand
+                                ) else { return }
                                 isRotatingLayer = true
                                 viewModel.beginRotatingSelectedLayer(
                                     from: unboundedImagePoint(from: value.startLocation, in: canvasSize)
@@ -12265,6 +12364,7 @@ struct ImageEditorView: View {
                             )
                         }
                         .onEnded { _ in
+                            guard isRotatingLayer else { return }
                             viewModel.finishRotatingSelectedLayer()
                             isRotatingLayer = false
                             refreshCanvasCursor(in: canvasSize)
@@ -12300,6 +12400,13 @@ struct ImageEditorView: View {
             )
             .onChanged { value in
                 guard !isTransformReferencePointDragCancelled else { return }
+                if !isMovingTransformReferencePoint {
+                    guard ImageEditorCanvasPanPriorityPolicy.allowsContentInteraction(
+                        isSpacebarPanning: isSpacebarPanning,
+                        isCanvasPanGestureActive: isCanvasPanGestureActive,
+                        isHandToolActive: canvasInteractionTool == .hand
+                    ) else { return }
+                }
                 viewModel.beginSelectedLayerTransformReferencePointDrag()
                 isMovingTransformReferencePoint = true
                 viewModel.setSelectedLayerTransformReferencePoint(
@@ -12308,6 +12415,7 @@ struct ImageEditorView: View {
                 NSCursor.crosshair.set()
             }
             .onEnded { value in
+                guard isMovingTransformReferencePoint else { return }
                 if !isTransformReferencePointDragCancelled {
                     viewModel.setSelectedLayerTransformReferencePoint(
                         unboundedImagePoint(from: value.location, in: canvasSize)
@@ -12322,6 +12430,11 @@ struct ImageEditorView: View {
         .simultaneousGesture(
             TapGesture(count: 2)
                 .onEnded {
+                    guard ImageEditorCanvasPanPriorityPolicy.allowsContentInteraction(
+                        isSpacebarPanning: isSpacebarPanning,
+                        isCanvasPanGestureActive: isCanvasPanGestureActive,
+                        isHandToolActive: canvasInteractionTool == .hand
+                    ) else { return }
                     DispatchQueue.main.async {
                         _ = viewModel.resetSelectedLayerTransformReferencePoint()
                         refreshCanvasCursor(in: canvasSize)
@@ -16427,6 +16540,26 @@ enum ImageEditorCanvasInteractionMode: Equatable {
     case pan
 }
 
+enum ImageEditorCanvasPanPriorityPolicy {
+    static func allowsContentInteraction(
+        isSpacebarPanning: Bool,
+        isCanvasPanGestureActive: Bool,
+        isHandToolActive: Bool
+    ) -> Bool {
+        !isSpacebarPanning && !isCanvasPanGestureActive && !isHandToolActive
+    }
+
+    static func shouldPanCanvas(
+        isSpacebarPanning: Bool,
+        isCanvasPanGestureActive: Bool,
+        isHandToolActive: Bool,
+        hasActiveContentTransaction: Bool
+    ) -> Bool {
+        !hasActiveContentTransaction
+            && (isSpacebarPanning || isCanvasPanGestureActive || isHandToolActive)
+    }
+}
+
 enum ImageEditorLayerTransformCursorTarget: Equatable {
     case resize(ImageEditorLayerResizeHandle)
     case rotate
@@ -16746,7 +16879,8 @@ enum ImageEditorCanvasCursor {
         modifierFlags: NSEvent.ModifierFlags = [],
         marqueeShape: ImageEditorMarqueeShape = .rectangle,
         cropHandle: ImageEditorCropHandle? = nil,
-        layerTransformTarget: ImageEditorLayerTransformCursorTarget? = nil
+        layerTransformTarget: ImageEditorLayerTransformCursorTarget? = nil,
+        isLayerTransformGestureActive: Bool = false
     ) -> NSCursor {
         // The dark workspace surrounding the document is not drawable. Keep
         // the native arrow there so a brush/selection cursor never suggests
@@ -16754,22 +16888,33 @@ enum ImageEditorCanvasCursor {
         if isObjectMoveGestureActive {
             return objectMoveCursor(isDuplicating: modifierFlags.contains(.option))
         }
-        // Transform controls sit above the canvas and may extend outside the
-        // drawable document (the rotation handle intentionally does). Their
-        // familiar resize/rotate cursor must therefore win before canvas
-        // bounds and component-library arrow fallbacks are considered.
+        if isLayerTransformGestureActive, let layerTransformTarget {
+            return transformCursor(for: layerTransformTarget)
+        }
+        let resolvedInteractionMode = interactionMode(
+            for: sidebarTab,
+            selectedTool: selectedTool,
+            isSpacebarPanning: isSpacebarPanning,
+            isCanvasPanGestureActive: isCanvasPanGestureActive
+        )
+        if case .pan = resolvedInteractionMode {
+            return cursor(
+                for: .hand,
+                brushDiameter: brushDiameter,
+                handIsDragging: handIsDragging,
+                modifierFlags: modifierFlags
+            )
+        }
+        // An idle transform control may extend outside the drawable document
+        // (the rotation handle intentionally does). It wins over canvas bounds
+        // and component-library fallbacks, but not over an explicit pan mode.
         if let layerTransformTarget {
             return transformCursor(for: layerTransformTarget)
         }
         if !isPointerOverCanvas && !isCanvasPanGestureActive {
             return .arrow
         }
-        switch interactionMode(
-            for: sidebarTab,
-            selectedTool: selectedTool,
-            isSpacebarPanning: isSpacebarPanning,
-            isCanvasPanGestureActive: isCanvasPanGestureActive
-        ) {
+        switch resolvedInteractionMode {
         case .componentLibrary:
             // The component library is a selection/placement mode, not the
             // Move tool. Keep the native arrow regardless of the previous
@@ -16777,12 +16922,7 @@ enum ImageEditorCanvasCursor {
             // explicit canvas panning are resolved before this branch.
             return .arrow
         case .pan:
-            return cursor(
-                for: .hand,
-                brushDiameter: brushDiameter,
-                handIsDragging: handIsDragging,
-                modifierFlags: modifierFlags
-            )
+            return .arrow
         case .tool(let selectedTool):
             if selectedTool == .colorSampler, isColorSamplerMoveGestureActive {
                 return objectMoveCursor()
@@ -16811,7 +16951,7 @@ enum ImageEditorCanvasCursor {
                             modifierFlags: modifierFlags
                         )
                     )
-                    : .openHand
+                    : .arrow
             }
             if selectedTool == .move {
                 if let mode = moveToolHoverSelectionIntent.boxSelectionMode {
@@ -21264,6 +21404,7 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
     let cancelSelectedObject: () -> Bool
     let discardPendingSmartFilterChanges: () -> Bool
     let deleteSelectedHistory: () -> Bool
+    let canBeginSpacebarPanning: () -> Bool
     let setSpacebarPanning: (Bool) -> Void
     let setCanvasModifierFlags: (NSEvent.ModifierFlags) -> Void
 
@@ -21287,6 +21428,7 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
             cancelSelectedObject: cancelSelectedObject,
             discardPendingSmartFilterChanges: discardPendingSmartFilterChanges,
             deleteSelectedHistory: deleteSelectedHistory,
+            canBeginSpacebarPanning: canBeginSpacebarPanning,
             setSpacebarPanning: setSpacebarPanning,
             setCanvasModifierFlags: setCanvasModifierFlags
         )
@@ -21315,6 +21457,7 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
         context.coordinator.cancelSelectedObject = cancelSelectedObject
         context.coordinator.discardPendingSmartFilterChanges = discardPendingSmartFilterChanges
         context.coordinator.deleteSelectedHistory = deleteSelectedHistory
+        context.coordinator.canBeginSpacebarPanning = canBeginSpacebarPanning
         context.coordinator.setSpacebarPanning = setSpacebarPanning
         context.coordinator.setCanvasModifierFlags = setCanvasModifierFlags
     }
@@ -21339,6 +21482,7 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
         var cancelSelectedObject: () -> Bool
         var discardPendingSmartFilterChanges: () -> Bool
         var deleteSelectedHistory: () -> Bool
+        var canBeginSpacebarPanning: () -> Bool
         var setSpacebarPanning: (Bool) -> Void
         var setCanvasModifierFlags: (NSEvent.ModifierFlags) -> Void
         private var eventMonitor: Any?
@@ -21365,6 +21509,7 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
             cancelSelectedObject: @escaping () -> Bool,
             discardPendingSmartFilterChanges: @escaping () -> Bool,
             deleteSelectedHistory: @escaping () -> Bool,
+            canBeginSpacebarPanning: @escaping () -> Bool,
             setSpacebarPanning: @escaping (Bool) -> Void,
             setCanvasModifierFlags: @escaping (NSEvent.ModifierFlags) -> Void
         ) {
@@ -21386,6 +21531,7 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
             self.cancelSelectedObject = cancelSelectedObject
             self.discardPendingSmartFilterChanges = discardPendingSmartFilterChanges
             self.deleteSelectedHistory = deleteSelectedHistory
+            self.canBeginSpacebarPanning = canBeginSpacebarPanning
             self.setSpacebarPanning = setSpacebarPanning
             self.setCanvasModifierFlags = setCanvasModifierFlags
             eventMonitor = NSEvent.addLocalMonitorForEvents(
@@ -21464,6 +21610,7 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
                 event,
                 isPanning: &isSpacebarPanning,
                 isTextInputActive: isTextInputActive,
+                canBeginPanning: canBeginSpacebarPanning,
                 setPanning: setSpacebarPanning
             ) { return nil }
             let isDelete = ImageEditorDeleteKeyPolicy.matches(

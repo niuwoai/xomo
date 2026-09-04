@@ -45,6 +45,29 @@ struct ImageEditorSpacebarPanEventTests {
         }
     }
 
+    @Test func activeContentTransactionRejectsSpaceWithoutLatchingTemporaryPan() throws {
+        var panning = false
+        var transitions: [Bool] = []
+        #expect(!ImageEditorSpacebarPanEventRouter.handle(
+            try event(.keyDown),
+            isPanning: &panning,
+            isTextInputActive: false,
+            canBeginPanning: { false },
+            setPanning: { transitions.append($0) }
+        ))
+        #expect(!panning)
+        #expect(transitions.isEmpty)
+
+        #expect(!ImageEditorSpacebarPanEventRouter.handle(
+            try event(.keyUp),
+            isPanning: &panning,
+            isTextInputActive: false,
+            canBeginPanning: { true },
+            setPanning: { transitions.append($0) }
+        ))
+        #expect(transitions.isEmpty)
+    }
+
     @Test func repeatAndDuplicateReleaseDoNotRepeatStateTransitions() throws {
         var panning = false
         var transitions: [Bool] = []

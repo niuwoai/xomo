@@ -7,6 +7,61 @@ import Testing
 struct ImageEditorStrokeWindowEventTests {
     private typealias Fixture = ImageEditorNativePointerTestFixture
 
+    @Test func latchedSpaceLeavesBrushPrimaryPressUnconsumedAndUnstarted() throws {
+        try Fixture.withHost { (host: ScrollWheelZoomNSView, window: NSWindow) throws -> Void in
+            var isSpacebarPanning = true
+            host.pointerCaptureKind = .primaryTool
+            host.canBeginPrimaryOrRangeToolCapture = { !isSpacebarPanning }
+            host.onCanvasPointerSequenceBegan = {
+                Issue.record("Rejected Space press reset the canvas pointer sequence")
+            }
+            host.onPrimaryToolDragBegan = { _ in
+                Issue.record("Brush primary capture began during Space pan")
+                return true
+            }
+
+            #expect(!host.handleCanvasPointerDrag(try Fixture.event(.leftMouseDown, window: window)))
+            #expect(host.pointerCaptureState.activeKind == .none)
+            isSpacebarPanning = false
+        }
+    }
+
+    @Test func activeMiddlePanLeavesBrushPrimaryPressUnconsumedAndUnstarted() throws {
+        try Fixture.withHost { (host: ScrollWheelZoomNSView, window: NSWindow) throws -> Void in
+            host.pointerCaptureKind = .primaryTool
+            host.canBeginPrimaryOrRangeToolCapture = {
+                !host.pointerCaptureState.isMiddleMousePanActive
+            }
+            host.onPrimaryToolDragBegan = { _ in
+                Issue.record("Brush primary capture began during middle-button pan")
+                return true
+            }
+
+            #expect(host.handleMiddleMousePan(try Fixture.event(.otherMouseDown, window: window)))
+            #expect(!host.handleCanvasPointerDrag(try Fixture.event(.leftMouseDown, window: window)))
+            #expect(host.pointerCaptureState.activeKind == .none)
+            #expect(host.handleMiddleMousePan(try Fixture.event(.otherMouseUp, window: window)))
+        }
+    }
+
+    @Test func latchedSpaceLeavesRangeToolPressUnconsumedAndUnstarted() throws {
+        try Fixture.withHost { (host: ScrollWheelZoomNSView, window: NSWindow) throws -> Void in
+            host.pointerCaptureKind = .rangeTool
+            host.canBeginPrimaryOrRangeToolCapture = { false }
+            host.onPrimaryToolDragBegan = { _ in
+                Issue.record("Primary hook ran before rejected range capture")
+                return false
+            }
+            host.onRangeToolDragBegan = { _ in
+                Issue.record("Range capture began during Space pan")
+                return true
+            }
+
+            #expect(!host.handleCanvasPointerDrag(try Fixture.event(.leftMouseDown, window: window)))
+            #expect(host.pointerCaptureState.activeKind == .none)
+        }
+    }
+
     @Test func primaryStrokeIgnoresForeignDragAndEndsAtLastValidPoint() throws {
         try Fixture.withHost { (host: ScrollWheelZoomNSView, window: NSWindow) throws -> Void in
             let foreign = Fixture.makeWindow()
