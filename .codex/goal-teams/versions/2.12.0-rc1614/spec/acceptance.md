@@ -1,6 +1,6 @@
 # rc1614 Acceptance
 
-状态：代码、测试与动态门禁 PASS；Git 闭环待完成。
+状态：PASS。代码、测试、动态门禁与 Git 闭环完成。
 
 - Reveal target 仍仅由旧画布与可见可合成图层决定；Slice-only 无操作路径完整状态不变。
 - Slice 通过稳定 `map` 在 Undo 前完成源/目标 preset 双校验，非破坏 Reveal 不允许静默删除。

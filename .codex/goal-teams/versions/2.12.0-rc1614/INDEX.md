@@ -4,7 +4,7 @@
 | --- | --- | --- | --- |
 | `plan.md` | Goal Lead | complete | 范围、成员与停止条件 |
 | `tasklist.md` | Goal Lead | complete | 任务认领与验收 |
-| `progress.md` | Goal Lead | in-progress | 执行与验证证据 |
+| `progress.md` | Goal Lead | complete | 执行与验证证据 |
 | `decisions.md` | Goal Lead | complete | Slice Reveal All 语义决策 |
 | `goal-packet.md` | Goal Lead | complete | 团队目标包 |
 | `spec/requirement-spec-card.md` | 需求分析-Slice Reveal All | complete | 用户价值、边界与不变量 |
