@@ -8,4 +8,6 @@
 | 开发-热点图像缩放 | GT-1607-04 | done | 纯热点缩放 helper、Image Size 原子接线及直接/Automation 测试完成 | 独立评审与动态 QA |
 | 评审-热点图像缩放 | GT-1607-04 | done | 非有限与乘法溢出测试补强后最终 PASS | Goal Lead 收口 |
 | 测试-热点图像缩放动态验收 | GT-1607-04 | done | 最终冷构建成功；Canvas/Automation/HTML/项目/cursor 合计 16/16 | Goal Lead 收口 |
-| Goal Lead | GT-1607-05 | running | 发布契约 9/9（27 断言）、运行器/结构契约及 CLI/MCP 2/2 通过 | 提交、标签、main、远端核验 |
+| Goal Lead | GT-1607-05 | done | 实现提交 `6746cdc80`；发布契约 9/9（27 断言）、运行器/结构契约及 CLI/MCP 2/2 通过 | 闭环提交承载标签并同步 main |
+
+rc1607 功能、测试与文档均已冻结；最终动态证据只采用测试拆分后的五组 `*-final` 报告。本版不执行 Release 或 `/Applications` 覆盖，下一次完整门禁保持 rc1640。
