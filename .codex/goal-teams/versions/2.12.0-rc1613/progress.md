@@ -9,3 +9,4 @@
 - 2026-09-05：相邻回归 12/12 组、59/59 通过，所有 filter 均匹配；Canvas Commands 25、Hotspot Crop/Reveal 4、Slice Canvas Size 11、Canvas Automation 1、Image Size 8、Image Automation 1、Figma preset 4、preset boundary 1、selected export 1、project round-trip 1、cursor arrow 1、cursor pan 1。
 - 2026-09-05：动态测试总计 70/70，失败 0、跳过 0；CLI/MCP 2/2，发布契约 9/9（27 条断言）、隔离测试器契约与发布结构校验通过。首次 CLI 尝试仅因沙箱禁止写 Swift 缓存失败，在正常权限环境原命令通过。
 - 2026-09-05：rc1613 非 40 版本门禁，不执行 Release、全量 UI 冒烟或 `/Applications` 覆盖。提交、tag、main 合入和远端精确指针在 Git 闭环后补记。
+- 2026-09-05：实现、测试、版本与 SPEC 已提交为 `6dc00f0c8`（`fix(canvas): move slices with crop and trim`）；本文件的 closeout 提交之后立即执行 tag、功能分支推送、main 快进合入和远端精确指针核验，最终 Git 状态以仓库与远端为权威证据。
