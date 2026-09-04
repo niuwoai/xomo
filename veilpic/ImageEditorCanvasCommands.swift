@@ -74,8 +74,29 @@ extension ImageEditorViewModel {
         }
 
         let originalSize = document.canvasSize
-        let scaleX = targetSize.width / max(originalSize.width, 1)
-        let scaleY = targetSize.height / max(originalSize.height, 1)
+        guard originalSize.width.isFinite,
+              originalSize.height.isFinite,
+              originalSize.width > 0,
+              originalSize.height > 0
+        else {
+            statusText = L10n.text("imageEditor.status.resizeInvalid")
+            return
+        }
+        let scaleX = targetSize.width / originalSize.width
+        let scaleY = targetSize.height / originalSize.height
+        let transformedHotspots: [ImageEditorHotspot]
+        do {
+            transformedHotspots = try document.hotspots.map { hotspot in
+                try hotspot.scaledForImageSize(
+                    scaleX: scaleX,
+                    scaleY: scaleY,
+                    targetCanvasSize: targetSize
+                )
+            }
+        } catch {
+            statusText = L10n.text("imageEditor.status.resizeInvalid")
+            return
+        }
         let transformedLayers = document.layers.map { layer in
             layer.scaledForImageSize(scaleX: scaleX, scaleY: scaleY)
         }
@@ -85,6 +106,7 @@ extension ImageEditorViewModel {
         document.canvasSize = targetSize
         document.layers = transformedLayers
         document.guides = transformedGuides
+        document.hotspots = transformedHotspots
         document.selection = document.selection?.scaled(scaleX: scaleX, scaleY: scaleY, targetSize: targetSize)
         document.savedSelection = document.savedSelection?.scaled(scaleX: scaleX, scaleY: scaleY, targetSize: targetSize)
         document.alphaChannels = document.alphaChannels.map { channel in

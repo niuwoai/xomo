@@ -11,3 +11,4 @@
 | `versions/2.12.0-rc1604/INDEX.md` | 2.12.0-rc1604 | Goal Lead | complete | Sketch 式 Figma 组件覆盖可见性与筛选里程碑文档索引 |
 | `versions/2.12.0-rc1605/INDEX.md` | 2.12.0-rc1605 | Goal Lead | complete | 锁定 Figma 组件属性写入门禁里程碑文档索引 |
 | `versions/2.12.0-rc1606/INDEX.md` | 2.12.0-rc1606 | Goal Lead | complete | Fireworks 风格响应式 HTML 热点坐标里程碑文档索引 |
+| `versions/2.12.0-rc1607/INDEX.md` | 2.12.0-rc1607 | Goal Lead | active | Fireworks 风格热点随 Image Size 缩放里程碑文档索引 |

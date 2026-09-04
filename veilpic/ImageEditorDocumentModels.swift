@@ -703,6 +703,74 @@ struct ImageEditorHotspot: Identifiable, Equatable, Codable {
             url: trimmedURL
         )
     }
+
+    func scaledForImageSize(
+        scaleX: CGFloat,
+        scaleY: CGFloat,
+        targetCanvasSize: CGSize
+    ) throws -> ImageEditorHotspot {
+        guard scaleX.isFinite,
+              scaleY.isFinite,
+              scaleX > 0,
+              scaleY > 0,
+              targetCanvasSize.width.isFinite,
+              targetCanvasSize.height.isFinite,
+              targetCanvasSize.width > 0,
+              targetCanvasSize.height > 0,
+              frame.origin.x.isFinite,
+              frame.origin.y.isFinite,
+              frame.size.width.isFinite,
+              frame.size.height.isFinite
+        else {
+            throw ImageEditorHotspotImageSizeScalingError.invalidGeometry
+        }
+
+        let sourceFrame = frame.standardized
+        guard sourceFrame.width > 0, sourceFrame.height > 0 else {
+            throw ImageEditorHotspotImageSizeScalingError.invalidGeometry
+        }
+
+        let scaledMinX = sourceFrame.minX * scaleX
+        let scaledMaxX = sourceFrame.maxX * scaleX
+        let scaledMinY = sourceFrame.minY * scaleY
+        let scaledMaxY = sourceFrame.maxY * scaleY
+        guard scaledMinX.isFinite,
+              scaledMaxX.isFinite,
+              scaledMinY.isFinite,
+              scaledMaxY.isFinite,
+              scaledMaxX > scaledMinX,
+              scaledMaxY > scaledMinY
+        else {
+            throw ImageEditorHotspotImageSizeScalingError.invalidGeometry
+        }
+
+        let scaledFrame = CGRect(
+            x: scaledMinX,
+            y: scaledMinY,
+            width: scaledMaxX - scaledMinX,
+            height: scaledMaxY - scaledMinY
+        )
+        let targetCanvasBounds = CGRect(origin: .zero, size: targetCanvasSize)
+        let boundedFrame = scaledFrame.standardized.integral.intersection(targetCanvasBounds)
+        guard !boundedFrame.isNull,
+              boundedFrame.origin.x.isFinite,
+              boundedFrame.origin.y.isFinite,
+              boundedFrame.size.width.isFinite,
+              boundedFrame.size.height.isFinite,
+              boundedFrame.width > 0,
+              boundedFrame.height > 0
+        else {
+            throw ImageEditorHotspotImageSizeScalingError.invalidGeometry
+        }
+
+        var scaledHotspot = self
+        scaledHotspot.frame = boundedFrame
+        return scaledHotspot
+    }
+}
+
+private enum ImageEditorHotspotImageSizeScalingError: Error {
+    case invalidGeometry
 }
 
 struct ImageEditorDocument {

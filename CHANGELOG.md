@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.12.0-rc1607 - 2026-09-05
+
+### Fixed
+- Image Size 现在与图层和选区一起按横纵独立比例缩放 Fireworks 风格热点，非等比缩放后点击区域继续覆盖原视觉内容。
+- 热点变换在建立 Undo 前全量预计算，保持数量、顺序、UUID、名称与 URL；任一热点无法形成有效目标矩形时整次操作原子拒绝，不会静默删除元数据或留下半更新。
+- 成功缩放仍只产生一次 Image Resize History 和一次 Undo，热点选择、项目格式、Automation 协议、HTML 响应式导出及组件库 cursor 均保持兼容。
+
+### Tests
+- 新增非等比多热点、贴边取整、完整项目 Undo/Redo、无变化/非法尺寸/非法热点原子性及 Automation 共享入口回归。独立评审通过；最终唯一冷构建成功，Canvas Commands 10/10、Automation 1/1、热点 HTML 3/3、项目往返 1/1、组件库 cursor 1/1，合计 16/16，失败 0、跳过 0、基础设施重试 0。
+- CLI/MCP 2/2、版本与发布契约 9/9（27 条断言）、隔离测试器契约与发布结构校验通过。首次两次构建均在执行测试前发现测试源码的 `CGFloat.nan/infinity` 类型歧义，修正后最终门禁无外部污染；本版不执行 Release 或 `/Applications` 覆盖。
+
 ## 2.12.0-rc1606 - 2026-09-05
 
 ### Fixed

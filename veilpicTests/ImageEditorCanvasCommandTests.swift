@@ -58,6 +58,163 @@ struct ImageEditorCanvasCommandTests {
     }
 
     @Test
+    func imageResizeScalesHotspotsAtomicallyAndPreservesIdentitySelectionAndPanelState() throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "hotspots.png",
+            image: testImage(color: .systemBlue, size: NSSize(width: 100, height: 80))
+        ) { _ in }
+        let firstID = UUID()
+        let edgeID = UUID()
+        let originalHotspots = [
+            ImageEditorHotspot(
+                id: firstID,
+                name: "Primary CTA",
+                frame: CGRect(x: 30.4, y: 27.6, width: -20.2, height: -15.2),
+                url: "https://example.com/primary"
+            ),
+            ImageEditorHotspot(
+                id: edgeID,
+                name: "Edge CTA",
+                frame: CGRect(x: 89.6, y: 69.2, width: 10.4, height: 10.8),
+                url: "https://example.com/edge"
+            )
+        ]
+        viewModel.document.hotspots = originalHotspots
+        viewModel.selectedHotspotID = edgeID
+        viewModel.isHotspotsPanelVisible = true
+
+        // Seed both history directions so a successful resize must replace Redo
+        // with exactly one new document transaction.
+        viewModel.pushUndo()
+        viewModel.document.areGuidesVisible.toggle()
+        viewModel.pushUndo()
+        viewModel.document.areRulersVisible.toggle()
+        viewModel.undo()
+        let beforeResize = try projectData(viewModel.document)
+        let undoCountBefore = viewModel.undoStack.count
+        let historyCountBefore = viewModel.document.history.count
+        #expect(!viewModel.redoStack.isEmpty)
+
+        viewModel.resizeImage(to: CGSize(width: 150, height: 40))
+
+        let resizedHotspots = viewModel.document.hotspots
+        #expect(resizedHotspots.map(\.id) == [firstID, edgeID])
+        #expect(resizedHotspots.map(\.name) == originalHotspots.map(\.name))
+        #expect(resizedHotspots.map(\.url) == originalHotspots.map(\.url))
+        #expect(resizedHotspots[0].frame == CGRect(x: 15, y: 6, width: 31, height: 8))
+        #expect(resizedHotspots[1].frame == CGRect(x: 134, y: 34, width: 16, height: 6))
+        #expect(viewModel.undoStack.count == undoCountBefore + 1)
+        #expect(viewModel.redoStack.isEmpty)
+        #expect(viewModel.document.history.count == historyCountBefore + 1)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.imageResize"))
+        #expect(viewModel.selectedHotspotID == edgeID)
+        #expect(viewModel.isHotspotsPanelVisible)
+
+        let afterResize = try projectData(viewModel.document)
+        viewModel.undo()
+        #expect(try projectData(viewModel.document) == beforeResize)
+        #expect(viewModel.selectedHotspotID == edgeID)
+        #expect(viewModel.isHotspotsPanelVisible)
+
+        viewModel.redo()
+        #expect(try projectData(viewModel.document) == afterResize)
+        #expect(viewModel.selectedHotspotID == edgeID)
+        #expect(viewModel.isHotspotsPanelVisible)
+    }
+
+    @Test
+    func imageResizeRejectsUnchangedInvalidTargetsAndInvalidHotspotsWithoutPartialMutation() throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "atomic-hotspots.png",
+            image: testImage(color: .systemGreen, size: NSSize(width: 100, height: 80))
+        ) { _ in }
+        let hotspotID = UUID()
+        viewModel.document.hotspots = [
+            ImageEditorHotspot(
+                id: hotspotID,
+                name: "Atomic CTA",
+                frame: CGRect(x: 12, y: 10, width: 30, height: 20),
+                url: "https://example.com/atomic"
+            )
+        ]
+        viewModel.selectedHotspotID = hotspotID
+        viewModel.isHotspotsPanelVisible = true
+        viewModel.pushUndo()
+        viewModel.document.areGuidesVisible.toggle()
+        viewModel.pushUndo()
+        viewModel.document.areRulersVisible.toggle()
+        viewModel.undo()
+
+        let validBaseline = try projectTransactionSnapshot(viewModel)
+        for targetSize in [
+            CGSize(width: 100, height: 80),
+            CGSize(width: 7, height: 80),
+            CGSize(width: CGFloat.nan, height: 80)
+        ] {
+            viewModel.resizeImage(to: targetSize)
+            #expect(try projectTransactionSnapshot(viewModel) == validBaseline)
+            #expect(viewModel.statusText == L10n.text("imageEditor.status.resizeInvalid"))
+            #expect(viewModel.selectedHotspotID == hotspotID)
+            #expect(viewModel.isHotspotsPanelVisible)
+        }
+
+        let validHotspot = viewModel.document.hotspots[0]
+        let invalidHotspotCases: [(hotspot: ImageEditorHotspot, targetSize: CGSize)] = [
+            (
+                ImageEditorHotspot(
+                    name: "Invalid zero-area hotspot",
+                    frame: CGRect(x: 60, y: 20, width: 0, height: 12),
+                    url: "https://example.com/invalid-zero"
+                ),
+                CGSize(width: 200, height: 160)
+            ),
+            (
+                ImageEditorHotspot(
+                    name: "Invalid NaN hotspot",
+                    frame: CGRect(x: CGFloat.nan, y: 20, width: 12, height: 12),
+                    url: "https://example.com/invalid-nan"
+                ),
+                CGSize(width: 200, height: 160)
+            ),
+            (
+                ImageEditorHotspot(
+                    name: "Invalid infinity hotspot",
+                    frame: CGRect(x: 60, y: CGFloat.infinity, width: 12, height: 12),
+                    url: "https://example.com/invalid-infinity"
+                ),
+                CGSize(width: 200, height: 160)
+            ),
+            (
+                ImageEditorHotspot(
+                    name: "Finite hotspot that overflows while scaling",
+                    frame: CGRect(
+                        x: CGFloat.greatestFiniteMagnitude / 2,
+                        y: CGFloat.greatestFiniteMagnitude / 2,
+                        width: CGFloat.greatestFiniteMagnitude / 4,
+                        height: CGFloat.greatestFiniteMagnitude / 4
+                    ),
+                    url: "https://example.com/invalid-overflow"
+                ),
+                CGSize(width: 12_000, height: 12_000)
+            )
+        ]
+
+        for invalidCase in invalidHotspotCases {
+            // Replace the invalid item on every pass so an earlier failure
+            // cannot conceal validation of a later numeric domain.
+            viewModel.document.hotspots = [validHotspot, invalidCase.hotspot]
+            let invalidHotspotBaseline = try projectTransactionSnapshot(viewModel)
+
+            viewModel.resizeImage(to: invalidCase.targetSize)
+
+            #expect(try projectTransactionSnapshot(viewModel) == invalidHotspotBaseline)
+            #expect(viewModel.statusText == L10n.text("imageEditor.status.resizeInvalid"))
+            #expect(viewModel.selectedHotspotID == hotspotID)
+            #expect(viewModel.isHotspotsPanelVisible)
+        }
+    }
+
+    @Test
     func canvasResizeOffsetsLayersSelectionsAndChannelsWithoutResamplingLayerPixels() throws {
         let viewModel = ImageEditorViewModel(
             sourceName: "source.png",
@@ -386,5 +543,32 @@ struct ImageEditorCanvasCommandTests {
             }
         }
         return ImageEditorSelectionMask(width: width, height: height, alpha: alpha)
+    }
+
+    private func projectData(_ document: ImageEditorDocument) throws -> Data {
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = .sortedKeys
+        encoder.nonConformingFloatEncodingStrategy = .convertToString(
+            positiveInfinity: "Infinity",
+            negativeInfinity: "-Infinity",
+            nan: "NaN"
+        )
+        return try encoder.encode(ImageEditorProjectDocument(document: document))
+    }
+
+    private func projectTransactionSnapshot(
+        _ viewModel: ImageEditorViewModel
+    ) throws -> ProjectTransactionSnapshot {
+        ProjectTransactionSnapshot(
+            document: try projectData(viewModel.document),
+            undo: try viewModel.undoStack.map { try projectData($0) },
+            redo: try viewModel.redoStack.map { try projectData($0) }
+        )
+    }
+
+    private struct ProjectTransactionSnapshot: Equatable {
+        let document: Data
+        let undo: [Data]
+        let redo: [Data]
     }
 }
