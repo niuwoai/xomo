@@ -1675,6 +1675,14 @@ final class XomoAutomationRegistry {
             }
             viewModel.resetSelectedFigmaComponentProperty(key)
             return result()
+        case "resetAll":
+            guard viewModel.canEditSelectedFigmaComponentProperties else {
+                throw XomoAutomationCallError.operationFailed(
+                    "Selected Figma component properties are locked"
+                )
+            }
+            viewModel.resetAllSelectedFigmaComponentPropertyOverrides()
+            return result()
         default:
             throw XomoAutomationCallError.invalidArgument(
                 "Unknown Figma component property action"
@@ -7383,9 +7391,9 @@ private extension XomoAutomationRegistry {
         tool("xomo.figma.link", "Validate and canonicalize a Figma link without network access or credential storage.", [
             "url": XomoAutomationSchema.string(description: "Figma design, file, prototype, board, or other supported resource URL")
         ], required: ["url"]),
-        tool("xomo.figma.component_properties", "List, locally override, or reset preserved Figma component properties on the selected layer.", [
-            "action": XomoAutomationSchema.string(description: "Component property action", values: ["list", "set", "reset"]),
-            "key": XomoAutomationSchema.string(description: "Figma component property name"),
+        tool("xomo.figma.component_properties", "List, locally override, reset one, or reset all preserved Figma component properties on the selected layer.", [
+            "action": XomoAutomationSchema.string(description: "Component property action", values: ["list", "set", "reset", "resetAll"]),
+            "key": XomoAutomationSchema.string(description: "Figma component property name required by set and reset"),
             "value": XomoAutomationSchema.string(description: "New local property value")
         ], required: ["action"]),
         tool("xomo.figma.size_constraints", "List current and imported Figma min/max size constraints, locally set, clear or reset fields, or explicitly resolve a conflicting axis by using its minimum.", [

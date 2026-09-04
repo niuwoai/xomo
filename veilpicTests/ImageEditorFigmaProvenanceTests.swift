@@ -308,6 +308,7 @@ struct ImageEditorFigmaProvenanceTests {
             viewModel.updateSelectedFigmaComponentBooleanProperty("Enabled", isEnabled: false)
             viewModel.updateSelectedFigmaComponentProperty("Size", value: "Small")
             viewModel.resetSelectedFigmaComponentProperty("Label")
+            viewModel.resetAllSelectedFigmaComponentPropertyOverrides()
 
             #expect(viewModel.selectedLayerFigmaComponentProperties == propertiesBefore)
             #expect(viewModel.selectedLayerFigmaComponentPropertyDefaults == defaultsBefore)
@@ -365,9 +366,13 @@ struct ImageEditorFigmaProvenanceTests {
 
         viewModel.document.layers[layerIndex].locksPixels = false
         #expect(viewModel.canEditSelectedFigmaComponentProperties)
-        viewModel.resetSelectedFigmaComponentProperty("Label")
+        let undoCountBeforeResetAll = viewModel.undoStack.count
+        let historyCountBeforeResetAll = viewModel.document.history.count
+        viewModel.resetAllSelectedFigmaComponentPropertyOverrides()
         #expect(viewModel.selectedLayerFigmaComponentProperties["Label"]?.value == "Continue")
         #expect(viewModel.selectedLayerFigmaComponentPropertyOverrideCount == 0)
+        #expect(viewModel.undoStack.count == undoCountBeforeResetAll + 1)
+        #expect(viewModel.document.history.count == historyCountBeforeResetAll + 1)
 
         viewModel.undo()
         #expect(viewModel.selectedLayerFigmaComponentProperties["Label"]?.value == "Buy now")
@@ -435,6 +440,146 @@ struct ImageEditorFigmaProvenanceTests {
         #expect(restoredViewModel.selectedLayerFigmaComponentPropertyOverrideCount == 2)
     }
 
+    @Test func resettingAllComponentPropertyOverridesIsAtomicAndRestoresImportedObjectsAndText() throws {
+        let image = NSImage.transparent(size: CGSize(width: 320, height: 180))
+        var document = ImageEditorDocument(sourceName: "figma-reset-all.png", image: image)
+        var component = ImageEditorLayer.group(name: "Card", size: image.size)
+        let primaryDefault = XomoFigmaComponentProperty(type: "TEXT", value: "Continue")
+        let secondaryDefault = XomoFigmaComponentProperty(type: "TEXT", value: "Cancel")
+        let variantDefault = XomoFigmaComponentProperty(
+            type: "VARIANT",
+            value: "Compact",
+            preferredValues: [XomoFigmaComponentPreferredValue(key: "compact", name: "Compact")]
+        )
+        component.xomoFigmaComponentProperties = [
+            "Primary": XomoFigmaComponentProperty(type: "TEXT", value: "Buy now"),
+            "Secondary": XomoFigmaComponentProperty(type: "TEXT", value: "Maybe later"),
+            "Variant": XomoFigmaComponentProperty(
+                type: "VARIANT",
+                value: "Roomy",
+                preferredValues: [XomoFigmaComponentPreferredValue(key: "roomy", name: "Roomy")]
+            ),
+            "Custom": XomoFigmaComponentProperty(type: "TEXT", value: "Local only")
+        ]
+        component.xomoFigmaComponentPropertyDefaults = [
+            "Primary": primaryDefault,
+            "Secondary": secondaryDefault,
+            "Variant": variantDefault
+        ]
+        var primary = ImageEditorLayer.text(
+            name: "Buy now",
+            origin: CGPoint(x: 12, y: 12),
+            content: ImageEditorTextContent(
+                text: "Buy now",
+                color: .white,
+                fontSize: 14,
+                point: CGPoint(
+                    x: ImageEditorTextContent.drawingPadding,
+                    y: ImageEditorTextContent.drawingPadding
+                )
+            )
+        )
+        primary.groupID = component.id
+        var secondary = ImageEditorLayer.text(
+            name: "Maybe later",
+            origin: CGPoint(x: 12, y: 48),
+            content: ImageEditorTextContent(
+                text: "Maybe later",
+                color: .white,
+                fontSize: 14,
+                point: CGPoint(
+                    x: ImageEditorTextContent.drawingPadding,
+                    y: ImageEditorTextContent.drawingPadding
+                )
+            )
+        )
+        secondary.groupID = component.id
+        document.layers = [component, primary, secondary]
+        document.selectedLayerID = component.id
+        document.selectedLayerIDs = [component.id]
+
+        let viewModel = ImageEditorViewModel(document: document) { _ in }
+        let propertiesBefore = viewModel.selectedLayerFigmaComponentProperties
+        let undoCountBefore = viewModel.undoStack.count
+        let historyCountBefore = viewModel.document.history.count
+
+        viewModel.resetAllSelectedFigmaComponentPropertyOverrides()
+
+        #expect(viewModel.selectedLayerFigmaComponentProperties["Primary"] == primaryDefault)
+        #expect(viewModel.selectedLayerFigmaComponentProperties["Secondary"] == secondaryDefault)
+        #expect(viewModel.selectedLayerFigmaComponentProperties["Variant"] == variantDefault)
+        #expect(viewModel.selectedLayerFigmaComponentProperties["Custom"] == propertiesBefore["Custom"])
+        #expect(viewModel.document.layers[1].textContent?.text == "Continue")
+        #expect(viewModel.document.layers[2].textContent?.text == "Cancel")
+        #expect(viewModel.selectedLayerFigmaComponentPropertyOverrideCount == 0)
+        #expect(viewModel.undoStack.count == undoCountBefore + 1)
+        #expect(viewModel.document.history.count == historyCountBefore + 1)
+        #expect(
+            viewModel.document.history.last?.title
+                == L10n.text("imageEditor.history.figmaComponentPropertyOverridesResetAll")
+        )
+        #expect(
+            viewModel.statusText
+                == L10n.format("imageEditor.status.figmaComponentPropertyOverridesResetAll", 3)
+        )
+
+        viewModel.undo()
+        #expect(viewModel.selectedLayerFigmaComponentProperties == propertiesBefore)
+        #expect(viewModel.document.layers[1].textContent?.text == "Buy now")
+        #expect(viewModel.document.layers[2].textContent?.text == "Maybe later")
+        viewModel.redo()
+        #expect(viewModel.selectedLayerFigmaComponentProperties["Variant"] == variantDefault)
+        #expect(viewModel.document.layers[1].textContent?.text == "Continue")
+        #expect(viewModel.document.layers[2].textContent?.text == "Cancel")
+    }
+
+    @Test func resettingAllComponentPropertyOverridesUsesSortedTextConsumptionAndNoOpsCleanly() throws {
+        let image = NSImage.transparent(size: CGSize(width: 120, height: 60))
+        var document = ImageEditorDocument(sourceName: "figma-reset-all-order.png", image: image)
+        var component = ImageEditorLayer.group(name: "Button", size: image.size)
+        component.xomoFigmaComponentProperties = [
+            "Z Label": XomoFigmaComponentProperty(type: "TEXT", value: "Shared"),
+            "A Label": XomoFigmaComponentProperty(type: "TEXT", value: "Shared"),
+            "Custom": XomoFigmaComponentProperty(type: "TEXT", value: "Untouched")
+        ]
+        component.xomoFigmaComponentPropertyDefaults = [
+            "Z Label": XomoFigmaComponentProperty(type: "TEXT", value: "Zulu"),
+            "A Label": XomoFigmaComponentProperty(type: "TEXT", value: "Alpha")
+        ]
+        var label = ImageEditorLayer.text(
+            name: "Shared",
+            origin: .zero,
+            content: ImageEditorTextContent(
+                text: "Shared",
+                color: .white,
+                fontSize: 14,
+                point: CGPoint(
+                    x: ImageEditorTextContent.drawingPadding,
+                    y: ImageEditorTextContent.drawingPadding
+                )
+            )
+        )
+        label.groupID = component.id
+        document.layers = [component, label]
+        document.selectedLayerID = component.id
+        document.selectedLayerIDs = [component.id]
+
+        let viewModel = ImageEditorViewModel(document: document) { _ in }
+        viewModel.resetAllSelectedFigmaComponentPropertyOverrides()
+        #expect(viewModel.document.layers[1].textContent?.text == "Alpha")
+        #expect(viewModel.selectedLayerFigmaComponentProperties["Custom"]?.value == "Untouched")
+
+        let statusBefore = viewModel.statusText
+        let historyBefore = viewModel.document.history
+        let undoCountBefore = viewModel.undoStack.count
+        let redoCountBefore = viewModel.redoStack.count
+        viewModel.resetAllSelectedFigmaComponentPropertyOverrides()
+        #expect(viewModel.statusText == statusBefore)
+        #expect(viewModel.document.history == historyBefore)
+        #expect(viewModel.undoStack.count == undoCountBefore)
+        #expect(viewModel.redoStack.count == redoCountBefore)
+    }
+
     @Test func componentPropertyOverrideInspectorExposesLocalizedFilterAndEmptyState() throws {
         let repositoryRoot = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()
@@ -449,9 +594,29 @@ struct ImageEditorFigmaProvenanceTests {
         #expect(source.contains("imageEditor.properties.figmaComponentPropertyOverrideCount"))
         #expect(source.contains("imageEditor.properties.figmaComponentPropertyOverridesOnly"))
         #expect(source.contains("imageEditor.properties.figmaComponentPropertyOverridesEmpty"))
+        #expect(source.contains("imageEditor.properties.figmaComponentPropertyResetAll"))
         #expect(source.contains("image-editor-figma-component-override-summary"))
         #expect(source.contains("image-editor-figma-component-overrides-only"))
         #expect(source.contains("image-editor-figma-component-overrides-empty"))
+        #expect(source.contains("image-editor-figma-component-reset-all"))
+
+        let resetAllStart = try #require(
+            source.range(
+                of: "if viewModel.selectedLayerFigmaComponentPropertyOverrideCount > 0 {"
+            )
+        )
+        let resetAllTail = source[resetAllStart.lowerBound...]
+        let resetAllEnd = try #require(
+            resetAllTail.range(
+                of: "Toggle(\n                                L10n.text(\"imageEditor.properties.figmaComponentPropertyOverridesOnly\")"
+            )
+        )
+        let resetAllSource = String(resetAllTail[..<resetAllEnd.lowerBound])
+        #expect(resetAllSource.contains("imageEditor.properties.figmaComponentPropertyResetAll"))
+        #expect(resetAllSource.contains("viewModel.resetAllSelectedFigmaComponentPropertyOverrides()"))
+        #expect(resetAllSource.contains("image-editor-figma-component-reset-all"))
+        #expect(resetAllSource.contains(".disabled(!viewModel.canEditSelectedFigmaComponentProperties)"))
+        #expect(resetAllSource.contains(".focusable(false)"))
 
         let editorStart = try #require(source.range(of: "private func figmaComponentPropertyEditor("))
         let editorTail = source[editorStart.lowerBound...]
@@ -470,12 +635,6 @@ struct ImageEditorFigmaProvenanceTests {
                 separatedBy: ".disabled(!viewModel.canEditSelectedFigmaComponentProperties)"
             ).count - 1 == 4
         )
-        #expect(
-            source.components(
-                separatedBy: ".disabled(!viewModel.canEditSelectedFigmaComponentProperties)"
-            ).count - 1 == 4
-        )
-
         for localizationDirectory in ["en.lproj", "zh-Hans.lproj", "ja.lproj"] {
             let localization = try String(
                 contentsOf: repositoryRoot
@@ -487,6 +646,9 @@ struct ImageEditorFigmaProvenanceTests {
             #expect(localization.contains("\"imageEditor.properties.figmaComponentPropertyOverrideCount\""))
             #expect(localization.contains("\"imageEditor.properties.figmaComponentPropertyOverridesOnly\""))
             #expect(localization.contains("\"imageEditor.properties.figmaComponentPropertyOverridesEmpty\""))
+            #expect(localization.contains("\"imageEditor.properties.figmaComponentPropertyResetAll\""))
+            #expect(localization.contains("\"imageEditor.history.figmaComponentPropertyOverridesResetAll\""))
+            #expect(localization.contains("\"imageEditor.status.figmaComponentPropertyOverridesResetAll\""))
         }
     }
 

@@ -3913,11 +3913,14 @@
 "imageEditor.properties.figmaComponentPropertyValue" = "Value";
 "imageEditor.properties.figmaComponentPropertyEnabled" = "Enabled";
 "imageEditor.properties.figmaComponentPropertyReset" = "Reset";
+"imageEditor.properties.figmaComponentPropertyResetAll" = "Reset All";
 "imageEditor.properties.figmaComponentPropertyOverrideCount" = "Overridden %d / %d total";
 "imageEditor.properties.figmaComponentPropertyOverridesOnly" = "Show overrides only";
 "imageEditor.properties.figmaComponentPropertyOverridesEmpty" = "No overridden properties";
 "imageEditor.history.figmaComponentPropertyChanged" = "Changed Figma component property: %@";
 "imageEditor.status.figmaComponentPropertyUpdated" = "Updated Figma component property: %@";
+"imageEditor.history.figmaComponentPropertyOverridesResetAll" = "Reset all Figma component property overrides";
+"imageEditor.status.figmaComponentPropertyOverridesResetAll" = "Reset %d Figma component property overrides";
 "xomo.figma.resource.design" = "Figma Design";
 "xomo.figma.resource.legacyFile" = "Figma Design (legacy link)";
 "xomo.figma.resource.prototype" = "Figma Prototype";

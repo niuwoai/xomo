@@ -13081,6 +13081,15 @@ struct ImageEditorView: View {
                             .font(.system(size: 10))
                             .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
                             Spacer(minLength: 4)
+                            if viewModel.selectedLayerFigmaComponentPropertyOverrideCount > 0 {
+                                Button(L10n.text("imageEditor.properties.figmaComponentPropertyResetAll")) {
+                                    viewModel.resetAllSelectedFigmaComponentPropertyOverrides()
+                                }
+                                .buttonStyle(EditorTextButtonStyle())
+                                .focusable(false)
+                                .accessibilityIdentifier("image-editor-figma-component-reset-all")
+                                .disabled(!viewModel.canEditSelectedFigmaComponentProperties)
+                            }
                             Toggle(
                                 L10n.text("imageEditor.properties.figmaComponentPropertyOverridesOnly"),
                                 isOn: $showsOnlyFigmaComponentPropertyOverrides

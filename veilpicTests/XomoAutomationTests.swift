@@ -433,10 +433,19 @@ struct XomoAutomationTests {
             guard case .object(let value) = tool else { return false }
             return value["name"] == .string("xomo.figma.bindings")
         })
-        #expect(tools.contains { tool in
-            guard case .object(let value) = tool else { return false }
-            return value["name"] == .string("xomo.figma.component_properties")
-        })
+        let componentPropertiesTool = try #require(tools.compactMap { tool -> [String: XomoJSONValue]? in
+            guard case .object(let value) = tool else { return nil }
+            return value
+        }.first { $0["name"] == .string("xomo.figma.component_properties") })
+        #expect(
+            componentPropertiesTool["inputSchema"]?.objectValue?["properties"]?
+                .objectValue?["action"]?.objectValue?["enum"] == .array([
+                    .string("list"), .string("set"), .string("reset"), .string("resetAll")
+                ])
+        )
+        #expect(componentPropertiesTool["inputSchema"]?.objectValue?["required"] == .array([
+            .string("action")
+        ]))
         guard let sizeConstraintsTool = tools.compactMap({ tool -> [String: XomoJSONValue]? in
             guard case .object(let value) = tool else { return nil }
             return value
@@ -4493,6 +4502,52 @@ struct XomoAutomationTests {
         #expect(reset.ok)
         #expect(viewModel.document.selectedLayer?.xomoFigmaComponentProperties["Label"]?.value == "Continue")
         #expect(viewModel.document.history.last?.title == L10n.format("imageEditor.history.figmaComponentPropertyChanged", "Label"))
+
+        _ = registry.execute(request(
+            operation: "call",
+            name: "xomo.figma.component_properties",
+            arguments: [
+                "action": .string("set"),
+                "key": .string("Label"),
+                "value": .string("Checkout")
+            ]
+        ))
+        _ = registry.execute(request(
+            operation: "call",
+            name: "xomo.figma.component_properties",
+            arguments: [
+                "action": .string("set"),
+                "key": .string("Enabled"),
+                "value": .string("false")
+            ]
+        ))
+        let undoCountBeforeResetAll = viewModel.undoStack.count
+        let historyCountBeforeResetAll = viewModel.document.history.count
+        let resetAll = registry.execute(request(
+            operation: "call",
+            name: "xomo.figma.component_properties",
+            arguments: ["action": .string("resetAll")]
+        ))
+        #expect(resetAll.ok)
+        #expect(viewModel.document.selectedLayer?.xomoFigmaComponentProperties["Label"]?.value == "Continue")
+        #expect(viewModel.document.selectedLayer?.xomoFigmaComponentProperties["Enabled"]?.value == "true")
+        #expect(viewModel.undoStack.count == undoCountBeforeResetAll + 1)
+        #expect(viewModel.document.history.count == historyCountBeforeResetAll + 1)
+        #expect(
+            viewModel.document.history.last?.title
+                == L10n.text("imageEditor.history.figmaComponentPropertyOverridesResetAll")
+        )
+
+        let noOpUndoCount = viewModel.undoStack.count
+        let noOpHistory = viewModel.document.history
+        let noOpResetAll = registry.execute(request(
+            operation: "call",
+            name: "xomo.figma.component_properties",
+            arguments: ["action": .string("resetAll")]
+        ))
+        #expect(noOpResetAll.ok)
+        #expect(viewModel.undoStack.count == noOpUndoCount)
+        #expect(viewModel.document.history == noOpHistory)
     }
 
     @Test func registryKeepsLockedFigmaComponentPropertiesReadableButRejectsWrites() throws {
@@ -4505,7 +4560,7 @@ struct XomoAutomationTests {
             "No Default": XomoFigmaComponentProperty(type: "TEXT", value: "Local")
         ]
         viewModel.document.layers[layerIndex].xomoFigmaComponentPropertyDefaults = [
-            "Label": XomoFigmaComponentProperty(type: "TEXT", value: "Continue")
+            "Label": XomoFigmaComponentProperty(type: "TEXT", value: "Buy now")
         ]
         viewModel.document.layers[layerIndex].locksPixels = true
         viewModel.pushUndo()
@@ -4582,6 +4637,9 @@ struct XomoAutomationTests {
             [
                 "action": XomoJSONValue.string("reset"),
                 "key": .string("Label")
+            ],
+            [
+                "action": XomoJSONValue.string("resetAll")
             ]
         ] {
             let response = registry.execute(request(

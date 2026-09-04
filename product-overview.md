@@ -1,8 +1,8 @@
 # Xomo 产品概览
 
-> 最后更新：2026-09-05 | 当前版本：v2.12.0-rc1615
+> 最后更新：2026-09-05 | 当前版本：v2.12.0-rc1616
 
-v2.12.0-rc1615 让画布五种 Rotate/Flip 正交变换同步处理 Fireworks 风格 Slice：完整浮点 frame 变换后只在目标端一次整数化并裁边，历史部分越界可用、完全源外或损坏数据在 Undo 前原子拒绝。width/height/scale preset 在源与目标双校验但不自动换轴，Slice 数量、顺序、身份、名称和 Optional preset 形态保持，scope 与主 preset 按最终 frame 协调。独立评审关闭 5 个测试证据 P2 后最终 PASS；唯一冷构建成功，相关动态回归去重 203/203、CLI/MCP 2/2 和发布契约全部通过。本版不执行 Release 或 `/Applications` 覆盖。
+v2.12.0-rc1616 为导入的 Figma 组件增加 Sketch 式“全部还原”覆盖管理：只恢复具有导入默认快照且完整对象发生变化的属性，无默认快照的 Custom 属性保持不变；多项恢复与匹配的文本后代传播在一个 Undo/Redo 事务中完成。Inspector、三语文案与 `xomo.figma.component_properties resetAll` 自动化入口保持一致，组件自身或祖先内容锁会原子阻止写入。本版不执行 Release 或 `/Applications` 覆盖。
 
 v2.12.0-rc1614 让 Reveal All 在非破坏扩画布时同步处理 Fireworks 风格 Slice：全部 Slice 与内容使用同一 offset，历史部分越界区域可在新画布中重新显露；Slice 不参与 bounds，也不能被静默删除。源与目标 frame 双重校验 preset，损坏数据在 Undo 前原子拒绝，元数据、顺序和 Optional 形态保持，Slice scope 与主 preset 随最终尺寸协调。独立评审关闭 3 个测试证据 P2 后最终 PASS；唯一冷构建成功，新增、Slice、Hotspot/Canvas、cursor 动态门禁分别 8/8、63/63、35/35、128/128，CLI/MCP 2/2 和发布契约全部通过。本版不执行 Release 或 `/Applications` 覆盖。
 
