@@ -847,6 +847,118 @@ struct ImageEditorHotspot: Identifiable, Equatable, Codable {
         translatedHotspot.frame = boundedFrame
         return translatedHotspot
     }
+
+    func transformedForOrthogonalCanvas(
+        _ transform: ImageEditorCanvasOrthogonalTransform,
+        sourceCanvasSize: CGSize
+    ) throws -> ImageEditorHotspot {
+        let targetCanvasSize = try transform.targetCanvasSize(for: sourceCanvasSize)
+        guard frame.origin.x.isFinite,
+              frame.origin.y.isFinite,
+              frame.size.width.isFinite,
+              frame.size.height.isFinite
+        else {
+            throw ImageEditorHotspotOrthogonalTransformError.invalidGeometry
+        }
+
+        let sourceFrame = frame.standardized
+        guard sourceFrame.minX.isFinite,
+              sourceFrame.maxX.isFinite,
+              sourceFrame.minY.isFinite,
+              sourceFrame.maxY.isFinite,
+              sourceFrame.width > 0,
+              sourceFrame.height > 0,
+              sourceFrame.minX >= 0,
+              sourceFrame.minY >= 0,
+              sourceFrame.maxX <= sourceCanvasSize.width,
+              sourceFrame.maxY <= sourceCanvasSize.height
+        else {
+            throw ImageEditorHotspotOrthogonalTransformError.invalidGeometry
+        }
+
+        let transformedFrame: CGRect
+        switch transform {
+        case .clockwise90:
+            transformedFrame = CGRect(
+                x: sourceCanvasSize.height - sourceFrame.maxY,
+                y: sourceFrame.minX,
+                width: sourceFrame.height,
+                height: sourceFrame.width
+            )
+        case .counterclockwise90:
+            transformedFrame = CGRect(
+                x: sourceFrame.minY,
+                y: sourceCanvasSize.width - sourceFrame.maxX,
+                width: sourceFrame.height,
+                height: sourceFrame.width
+            )
+        case .rotate180:
+            transformedFrame = CGRect(
+                x: sourceCanvasSize.width - sourceFrame.maxX,
+                y: sourceCanvasSize.height - sourceFrame.maxY,
+                width: sourceFrame.width,
+                height: sourceFrame.height
+            )
+        case .flipHorizontal:
+            transformedFrame = CGRect(
+                x: sourceCanvasSize.width - sourceFrame.maxX,
+                y: sourceFrame.minY,
+                width: sourceFrame.width,
+                height: sourceFrame.height
+            )
+        case .flipVertical:
+            transformedFrame = CGRect(
+                x: sourceFrame.minX,
+                y: sourceCanvasSize.height - sourceFrame.maxY,
+                width: sourceFrame.width,
+                height: sourceFrame.height
+            )
+        }
+
+        let integralFrame = transformedFrame.integral
+        guard integralFrame.origin.x.isFinite,
+              integralFrame.origin.y.isFinite,
+              integralFrame.size.width.isFinite,
+              integralFrame.size.height.isFinite,
+              integralFrame.width > 0,
+              integralFrame.height > 0,
+              integralFrame.minX >= 0,
+              integralFrame.minY >= 0,
+              integralFrame.maxX <= targetCanvasSize.width,
+              integralFrame.maxY <= targetCanvasSize.height
+        else {
+            throw ImageEditorHotspotOrthogonalTransformError.invalidGeometry
+        }
+
+        var transformedHotspot = self
+        transformedHotspot.frame = integralFrame
+        return transformedHotspot
+    }
+}
+
+enum ImageEditorCanvasOrthogonalTransform: CaseIterable {
+    case clockwise90
+    case counterclockwise90
+    case rotate180
+    case flipHorizontal
+    case flipVertical
+
+    func targetCanvasSize(for sourceCanvasSize: CGSize) throws -> CGSize {
+        guard sourceCanvasSize.width.isFinite,
+              sourceCanvasSize.height.isFinite,
+              sourceCanvasSize.width > 0,
+              sourceCanvasSize.height > 0
+        else {
+            throw ImageEditorHotspotOrthogonalTransformError.invalidGeometry
+        }
+
+        switch self {
+        case .clockwise90, .counterclockwise90:
+            return CGSize(width: sourceCanvasSize.height, height: sourceCanvasSize.width)
+        case .rotate180, .flipHorizontal, .flipVertical:
+            return sourceCanvasSize
+        }
+    }
 }
 
 private enum ImageEditorHotspotImageSizeScalingError: Error {
@@ -854,6 +966,10 @@ private enum ImageEditorHotspotImageSizeScalingError: Error {
 }
 
 private enum ImageEditorHotspotCanvasResizeError: Error {
+    case invalidGeometry
+}
+
+private enum ImageEditorHotspotOrthogonalTransformError: Error {
     case invalidGeometry
 }
 

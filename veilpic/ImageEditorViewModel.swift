@@ -4741,10 +4741,14 @@ final class ImageEditorViewModel: ObservableObject {
         let previousThemeState = undoXomoThemeStates.popLast() ?? currentXomoThemeUndoState
         redoStack.append(document)
         redoXomoThemeStates.append(currentXomoThemeUndoState)
+        let canvasSizeBeforeRestore = document.canvasSize
         let slicesBeforeRestore = document.slices
         document = previous
         applyXomoThemeUndoState(previousThemeState)
         syncExportSettingsAfterSliceHistoryChange(from: slicesBeforeRestore)
+        if document.canvasSize != canvasSizeBeforeRestore {
+            syncSizeControlsFromDocument()
+        }
         selectedHistoryEntryID = document.history.last?.id
         ensureSelectedLayer()
         syncAdjustmentControlsFromSelection()
@@ -4774,10 +4778,14 @@ final class ImageEditorViewModel: ObservableObject {
         let nextThemeState = redoXomoThemeStates.popLast() ?? currentXomoThemeUndoState
         undoStack.append(document)
         undoXomoThemeStates.append(currentXomoThemeUndoState)
+        let canvasSizeBeforeRestore = document.canvasSize
         let slicesBeforeRestore = document.slices
         document = next
         applyXomoThemeUndoState(nextThemeState)
         syncExportSettingsAfterSliceHistoryChange(from: slicesBeforeRestore)
+        if document.canvasSize != canvasSizeBeforeRestore {
+            syncSizeControlsFromDocument()
+        }
         selectedHistoryEntryID = document.history.last?.id
         ensureSelectedLayer()
         syncAdjustmentControlsFromSelection()
@@ -7396,7 +7404,10 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     func rotateClockwise() {
-        transformCanvas(historyTitle: L10n.text("imageEditor.history.rotateClockwise")) { layer, canvasSize in
+        transformCanvas(
+            historyTitle: L10n.text("imageEditor.history.rotateClockwise"),
+            orthogonalTransform: .clockwise90
+        ) { layer, canvasSize in
             guard let rotated = layer.image.rotatedClockwise() else { return nil }
             var output = layer
             output.image = rotated
@@ -7410,13 +7421,14 @@ final class ImageEditorViewModel: ObservableObject {
                 output.mask = mask.rotatedClockwise()
             }
             return output
-        } canvasSize: { size in
-            CGSize(width: size.height, height: size.width)
         }
     }
 
     func rotateCounterclockwise() {
-        transformCanvas(historyTitle: L10n.text("imageEditor.history.rotateCounterclockwise")) { layer, canvasSize in
+        transformCanvas(
+            historyTitle: L10n.text("imageEditor.history.rotateCounterclockwise"),
+            orthogonalTransform: .counterclockwise90
+        ) { layer, canvasSize in
             guard let rotated = layer.image.rotated(degrees: -90) else { return nil }
             var output = layer
             output.image = rotated
@@ -7430,13 +7442,14 @@ final class ImageEditorViewModel: ObservableObject {
                 output.mask = mask.rotated(degrees: -90)
             }
             return output
-        } canvasSize: { size in
-            CGSize(width: size.height, height: size.width)
         }
     }
 
     func rotate180() {
-        transformCanvas(historyTitle: L10n.text("imageEditor.history.rotate180")) { layer, canvasSize in
+        transformCanvas(
+            historyTitle: L10n.text("imageEditor.history.rotate180"),
+            orthogonalTransform: .rotate180
+        ) { layer, canvasSize in
             guard let rotated = layer.image.rotated(degrees: 180) else { return nil }
             var output = layer
             output.image = rotated
@@ -7450,11 +7463,14 @@ final class ImageEditorViewModel: ObservableObject {
                 output.mask = mask.rotated(degrees: 180)
             }
             return output
-        } canvasSize: { $0 }
+        }
     }
 
     func flipHorizontal() {
-        transformCanvas(historyTitle: L10n.text("imageEditor.history.flipHorizontal")) { layer, canvasSize in
+        transformCanvas(
+            historyTitle: L10n.text("imageEditor.history.flipHorizontal"),
+            orthogonalTransform: .flipHorizontal
+        ) { layer, canvasSize in
             guard let flipped = layer.image.flipped(horizontal: true) else { return nil }
             var output = layer
             output.image = flipped
@@ -7468,11 +7484,14 @@ final class ImageEditorViewModel: ObservableObject {
                 output.mask = mask.flipped(horizontal: true)
             }
             return output
-        } canvasSize: { $0 }
+        }
     }
 
     func flipVertical() {
-        transformCanvas(historyTitle: L10n.text("imageEditor.history.flipVertical")) { layer, canvasSize in
+        transformCanvas(
+            historyTitle: L10n.text("imageEditor.history.flipVertical"),
+            orthogonalTransform: .flipVertical
+        ) { layer, canvasSize in
             guard let flipped = layer.image.flipped(horizontal: false) else { return nil }
             var output = layer
             output.image = flipped
@@ -7486,7 +7505,7 @@ final class ImageEditorViewModel: ObservableObject {
                 output.mask = mask.flipped(horizontal: false)
             }
             return output
-        } canvasSize: { $0 }
+        }
     }
 
     func addText(at point: CGPoint? = nil) {
@@ -9975,20 +9994,62 @@ final class ImageEditorViewModel: ObservableObject {
 
     private func transformCanvas(
         historyTitle: String,
-        transform: (ImageEditorLayer, CGSize) -> ImageEditorLayer?,
-        canvasSize newCanvasSize: (CGSize) -> CGSize
+        orthogonalTransform: ImageEditorCanvasOrthogonalTransform,
+        transform: (ImageEditorLayer, CGSize) -> ImageEditorLayer?
     ) {
         let originalCanvasSize = document.canvasSize
+        let transformedCanvasSize: CGSize
+        let transformedHotspots: [ImageEditorHotspot]
+        do {
+            transformedCanvasSize = try orthogonalTransform.targetCanvasSize(for: originalCanvasSize)
+            transformedHotspots = try document.hotspots.map { hotspot in
+                try hotspot.transformedForOrthogonalCanvas(
+                    orthogonalTransform,
+                    sourceCanvasSize: originalCanvasSize
+                )
+            }
+        } catch {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return
+        }
+        let transformedSelectedHotspotID: UUID?
+        if let selectedHotspotID {
+            transformedSelectedHotspotID = transformedHotspots.contains { $0.id == selectedHotspotID }
+                ? selectedHotspotID
+                : transformedHotspots.first?.id
+        } else {
+            transformedSelectedHotspotID = nil
+        }
         let transformedLayers = document.layers.compactMap { transform($0, originalCanvasSize) }
-        guard transformedLayers.count == document.layers.count else {
+        guard transformedLayers.count == document.layers.count,
+              document.layers.allSatisfy(hasValidCanvasTransformLayerGeometry),
+              transformedLayers.allSatisfy(hasValidCanvasTransformLayerGeometry)
+        else {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return
         }
 
         pushUndo()
-        document.canvasSize = newCanvasSize(originalCanvasSize)
+        document.canvasSize = transformedCanvasSize
         document.layers = transformedLayers
+        document.hotspots = transformedHotspots
+        selectedHotspotID = transformedSelectedHotspotID
+        syncSizeControlsFromDocument()
         appendHistory(historyTitle)
+    }
+
+    private func hasValidCanvasTransformLayerGeometry(_ layer: ImageEditorLayer) -> Bool {
+        let frame = layer.frame.standardized
+        return layer.frame.origin.x.isFinite
+            && layer.frame.origin.y.isFinite
+            && layer.frame.size.width.isFinite
+            && layer.frame.size.height.isFinite
+            && frame.minX.isFinite
+            && frame.maxX.isFinite
+            && frame.minY.isFinite
+            && frame.maxY.isFinite
+            && frame.width > 0
+            && frame.height > 0
     }
 
     private func replaceSelectedLayerImage(_ image: NSImage, historyTitle: String) {
