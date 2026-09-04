@@ -8,4 +8,6 @@
 | 开发 | GT-1606-04 | done | 响应式重算、安全 href 与 JavaScriptCore 动态脚本测试完成 | Goal Lead 收口 |
 | QA | GT-1606-04 | done | 唯一冷构建成功；导出器/Automation/cursor 合计 5/5，零失败/跳过/重试 | Goal Lead 收口 |
 | 独立评审 | GT-1606-04 | done | 两轮安全与测试强度修正后最终 PASS | Goal Lead 收口 |
-| Goal Lead | GT-1606-05 | running | 发布契约 9/9（27 断言）、运行器/结构契约及 CLI/MCP 2/2 通过 | 提交、标签、main、远端核验 |
+| Goal Lead | GT-1606-05 | done | 实现提交 `1eb219b48`；发布契约 9/9（27 断言）、运行器/结构契约及 CLI/MCP 2/2 通过 | 闭环提交承载标签并同步 main |
+
+rc1606 功能、测试与文档均已冻结；本版不执行 Release 或 `/Applications` 覆盖，下一次完整门禁保持 rc1640。

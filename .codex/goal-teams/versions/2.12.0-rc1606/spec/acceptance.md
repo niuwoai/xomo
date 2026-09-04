@@ -1,6 +1,6 @@
 # 2.12.0-rc1606 验收记录
 
-状态：功能与动态验证通过，Git 收口中
+状态：通过
 
 | 验收项 | Owner | 状态 | 证据 |
 | --- | --- | --- | --- |
@@ -9,4 +9,4 @@
 | 动态回归 | QA | passed | 导出器 3/3、Automation 1/1、组件库 cursor 1/1，合计 5/5 |
 | 独立复审 | 评审 | passed | 控制字符协议混淆与机械测试问题修正后最终 PASS |
 | 发布契约 | Goal Lead | passed | 9/9（27 断言）、隔离运行器、发布结构、CLI/MCP 2/2 均通过 |
-| Git 与远端一致 | Goal Lead | running | 待提交、标签、main 与远端核验 |
+| Git 闭环 | Goal Lead | passed | 实现提交 `1eb219b48`；闭环提交承载 `v2.12.0-rc1606` 并同步 feature/main |
