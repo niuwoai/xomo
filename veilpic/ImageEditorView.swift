@@ -166,6 +166,7 @@ struct ImageEditorView: View {
     @State private var dragPoints: [CGPoint] = []
     @State private var brushStrokeSamples: [ImageEditorBrushStrokeSample] = []
     @State private var isTemporaryEyedropperGestureActive = false
+    @State private var showsOnlyFigmaComponentPropertyOverrides = false
     @State private var eyedropperGestureTarget: ImageEditorColorSampleTarget?
     @State private var eyedropperSamplingRing: ImageEditorEyedropperSamplingRingState?
     @State private var isEraserHistoryGestureActive = false
@@ -13065,7 +13066,41 @@ struct ImageEditorView: View {
                             .accessibilityIdentifier("image-editor-copy-figma-component-properties")
                         }
 
-                        ForEach(viewModel.selectedLayerFigmaComponentProperties.keys.sorted(), id: \.self) { key in
+                        HStack(spacing: 8) {
+                            Text(
+                                L10n.format(
+                                    "imageEditor.properties.figmaComponentPropertyOverrideCount",
+                                    viewModel.selectedLayerFigmaComponentPropertyOverrideCount,
+                                    viewModel.selectedLayerFigmaComponentProperties.count
+                                )
+                            )
+                            .font(.system(size: 10))
+                            .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                            Spacer(minLength: 4)
+                            Toggle(
+                                L10n.text("imageEditor.properties.figmaComponentPropertyOverridesOnly"),
+                                isOn: $showsOnlyFigmaComponentPropertyOverrides
+                            )
+                            .toggleStyle(.switch)
+                            .font(.system(size: 10))
+                            .focusable(false)
+                            .accessibilityIdentifier("image-editor-figma-component-overrides-only")
+                        }
+                        .accessibilityIdentifier("image-editor-figma-component-override-summary")
+
+                        let visibleFigmaComponentPropertyKeys = viewModel
+                            .selectedLayerFigmaComponentPropertyKeys(
+                                onlyOverrides: showsOnlyFigmaComponentPropertyOverrides
+                            )
+                        if visibleFigmaComponentPropertyKeys.isEmpty,
+                           showsOnlyFigmaComponentPropertyOverrides {
+                            Text(L10n.text("imageEditor.properties.figmaComponentPropertyOverridesEmpty"))
+                                .font(.system(size: 10))
+                                .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                                .accessibilityIdentifier("image-editor-figma-component-overrides-empty")
+                        }
+
+                        ForEach(visibleFigmaComponentPropertyKeys, id: \.self) { key in
                             if let property = viewModel.selectedLayerFigmaComponentProperties[key] {
                                 figmaComponentPropertyEditor(key: key, property: property)
                             }

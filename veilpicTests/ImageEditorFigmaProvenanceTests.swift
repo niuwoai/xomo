@@ -228,6 +228,97 @@ struct ImageEditorFigmaProvenanceTests {
         #expect(viewModel.document.layers[0].xomoFigmaComponentProperties["Label"]?.value == "")
     }
 
+    @Test func componentPropertyOverrideSummaryAndFilteringStayDerivedAndSorted() throws {
+        let image = NSImage.transparent(size: CGSize(width: 20, height: 20))
+        var document = ImageEditorDocument(sourceName: "figma-component-overrides.png", image: image)
+        var layer = document.layers[0]
+        layer.xomoFigmaComponentProperties = [
+            "Size": XomoFigmaComponentProperty(type: "VARIANT", value: "Large"),
+            "Label": XomoFigmaComponentProperty(type: "TEXT", value: "Continue"),
+            "Is Enabled": XomoFigmaComponentProperty(type: "BOOLEAN", value: "true"),
+            "Custom": XomoFigmaComponentProperty(type: "TEXT", value: "No snapshot")
+        ]
+        layer.xomoFigmaComponentPropertyDefaults = [
+            "Size": XomoFigmaComponentProperty(type: "VARIANT", value: "Large"),
+            "Label": XomoFigmaComponentProperty(type: "TEXT", value: "Continue"),
+            "Is Enabled": XomoFigmaComponentProperty(type: "BOOLEAN", value: "true")
+        ]
+        document.layers = [layer]
+        document.selectedLayerID = layer.id
+        document.selectedLayerIDs = [layer.id]
+
+        let viewModel = ImageEditorViewModel(document: document) { _ in }
+
+        #expect(viewModel.selectedLayerFigmaComponentPropertyOverrideKeys.isEmpty)
+        #expect(viewModel.selectedLayerFigmaComponentPropertyOverrideCount == 0)
+        #expect(
+            viewModel.selectedLayerFigmaComponentPropertyKeys(onlyOverrides: false)
+                == ["Custom", "Is Enabled", "Label", "Size"]
+        )
+        #expect(viewModel.selectedLayerFigmaComponentPropertyKeys(onlyOverrides: true).isEmpty)
+
+        viewModel.updateSelectedFigmaComponentProperty("Size", value: "Compact")
+        viewModel.updateSelectedFigmaComponentBooleanProperty("Is Enabled", isEnabled: false)
+        viewModel.updateSelectedFigmaComponentProperty("Label", value: "Buy now")
+
+        #expect(viewModel.selectedLayerFigmaComponentPropertyOverrideKeys == ["Is Enabled", "Label", "Size"])
+        #expect(viewModel.selectedLayerFigmaComponentPropertyOverrideCount == 3)
+        #expect(
+            viewModel.selectedLayerFigmaComponentPropertyKeys(onlyOverrides: true)
+                == ["Is Enabled", "Label", "Size"]
+        )
+
+        viewModel.resetSelectedFigmaComponentProperty("Label")
+        #expect(viewModel.selectedLayerFigmaComponentPropertyOverrideKeys == ["Is Enabled", "Size"])
+        #expect(viewModel.selectedLayerFigmaComponentPropertyOverrideCount == 2)
+
+        viewModel.undo()
+        #expect(viewModel.selectedLayerFigmaComponentPropertyOverrideKeys == ["Is Enabled", "Label", "Size"])
+        #expect(viewModel.selectedLayerFigmaComponentPropertyOverrideCount == 3)
+
+        viewModel.redo()
+        #expect(viewModel.selectedLayerFigmaComponentPropertyOverrideKeys == ["Is Enabled", "Size"])
+        #expect(viewModel.selectedLayerFigmaComponentPropertyOverrideCount == 2)
+
+        let project = try ImageEditorProjectDocument(document: viewModel.document)
+        let restored = try project.restoredDocument()
+        let restoredViewModel = ImageEditorViewModel(document: restored) { _ in }
+        #expect(restoredViewModel.selectedLayerFigmaComponentPropertyOverrideKeys == ["Is Enabled", "Size"])
+        #expect(restoredViewModel.selectedLayerFigmaComponentPropertyOverrideCount == 2)
+    }
+
+    @Test func componentPropertyOverrideInspectorExposesLocalizedFilterAndEmptyState() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(source.contains("selectedLayerFigmaComponentPropertyOverrideCount"))
+        #expect(source.contains("selectedLayerFigmaComponentPropertyKeys"))
+        #expect(source.contains("imageEditor.properties.figmaComponentPropertyOverrideCount"))
+        #expect(source.contains("imageEditor.properties.figmaComponentPropertyOverridesOnly"))
+        #expect(source.contains("imageEditor.properties.figmaComponentPropertyOverridesEmpty"))
+        #expect(source.contains("image-editor-figma-component-override-summary"))
+        #expect(source.contains("image-editor-figma-component-overrides-only"))
+        #expect(source.contains("image-editor-figma-component-overrides-empty"))
+
+        for localizationDirectory in ["en.lproj", "zh-Hans.lproj", "ja.lproj"] {
+            let localization = try String(
+                contentsOf: repositoryRoot
+                    .appendingPathComponent("veilpic")
+                    .appendingPathComponent(localizationDirectory)
+                    .appendingPathComponent("Localizable.strings"),
+                encoding: .utf8
+            )
+            #expect(localization.contains("\"imageEditor.properties.figmaComponentPropertyOverrideCount\""))
+            #expect(localization.contains("\"imageEditor.properties.figmaComponentPropertyOverridesOnly\""))
+            #expect(localization.contains("\"imageEditor.properties.figmaComponentPropertyOverridesEmpty\""))
+        }
+    }
+
     @Test func editableFigmaImageFillParametersUseUndoAndRemainProjectCodable() throws {
         let image = NSImage.rendered(size: CGSize(width: 40, height: 20)) { rect in
             NSColor.systemBlue.setFill()

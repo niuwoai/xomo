@@ -3913,6 +3913,9 @@
 "imageEditor.properties.figmaComponentPropertyValue" = "值";
 "imageEditor.properties.figmaComponentPropertyEnabled" = "启用";
 "imageEditor.properties.figmaComponentPropertyReset" = "还原";
+"imageEditor.properties.figmaComponentPropertyOverrideCount" = "已覆盖 %d / 总计 %d";
+"imageEditor.properties.figmaComponentPropertyOverridesOnly" = "仅看已覆盖";
+"imageEditor.properties.figmaComponentPropertyOverridesEmpty" = "没有已覆盖的属性";
 "imageEditor.history.figmaComponentPropertyChanged" = "修改 Figma 组件属性：%@";
 "imageEditor.status.figmaComponentPropertyUpdated" = "已更新 Figma 组件属性：%@";
 "xomo.figma.resource.design" = "Figma Design";

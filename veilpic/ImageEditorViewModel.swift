@@ -2210,6 +2210,26 @@ final class ImageEditorViewModel: ObservableObject {
         !selectedLayerFigmaComponentProperties.isEmpty
     }
 
+    var selectedLayerFigmaComponentPropertyOverrideKeys: [String] {
+        selectedLayerFigmaComponentProperties
+            .filter { key, property in
+                hasSelectedFigmaComponentPropertyOverride(key, property: property)
+            }
+            .map(\.key)
+            .sorted()
+    }
+
+    var selectedLayerFigmaComponentPropertyOverrideCount: Int {
+        selectedLayerFigmaComponentPropertyOverrideKeys.count
+    }
+
+    func selectedLayerFigmaComponentPropertyKeys(onlyOverrides: Bool) -> [String] {
+        if onlyOverrides {
+            return selectedLayerFigmaComponentPropertyOverrideKeys
+        }
+        return selectedLayerFigmaComponentProperties.keys.sorted()
+    }
+
     func hasSelectedFigmaComponentPropertyOverride(
         _ key: String,
         property: XomoFigmaComponentProperty

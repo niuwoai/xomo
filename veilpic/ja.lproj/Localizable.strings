@@ -3913,6 +3913,9 @@
 "imageEditor.properties.figmaComponentPropertyValue" = "値";
 "imageEditor.properties.figmaComponentPropertyEnabled" = "有効";
 "imageEditor.properties.figmaComponentPropertyReset" = "リセット";
+"imageEditor.properties.figmaComponentPropertyOverrideCount" = "上書き済み %d / 合計 %d";
+"imageEditor.properties.figmaComponentPropertyOverridesOnly" = "上書きのみ表示";
+"imageEditor.properties.figmaComponentPropertyOverridesEmpty" = "上書きされたプロパティはありません";
 "imageEditor.history.figmaComponentPropertyChanged" = "Figma コンポーネントプロパティを変更: %@";
 "imageEditor.status.figmaComponentPropertyUpdated" = "Figma コンポーネントプロパティを更新: %@";
 "xomo.figma.resource.design" = "Figma Design";
