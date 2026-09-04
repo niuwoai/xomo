@@ -2210,6 +2210,12 @@ final class ImageEditorViewModel: ObservableObject {
         !selectedLayerFigmaComponentProperties.isEmpty
     }
 
+    var canEditSelectedFigmaComponentProperties: Bool {
+        guard let layer = document.selectedLayer else { return false }
+        return !layer.xomoFigmaComponentProperties.isEmpty
+            && !document.isEffectivelyPixelsLocked(layer)
+    }
+
     var selectedLayerFigmaComponentPropertyOverrideKeys: [String] {
         selectedLayerFigmaComponentProperties
             .filter { key, property in
@@ -2244,6 +2250,10 @@ final class ImageEditorViewModel: ObservableObject {
         guard let index = document.selectedLayerIndex,
               var property = document.layers[index].xomoFigmaComponentProperties[key]
         else { return }
+        guard canEditSelectedFigmaComponentProperties else {
+            statusText = L10n.text("imageEditor.status.layerLocked")
+            return
+        }
         let normalizedValue = value.trimmingCharacters(in: .whitespacesAndNewlines)
         guard (property.type == "TEXT" || !normalizedValue.isEmpty),
               property.value != normalizedValue

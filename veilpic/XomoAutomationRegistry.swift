@@ -1635,6 +1635,7 @@ final class XomoAutomationRegistry {
             }
             return .object([
                 "layerId": .string(currentLayer.id.uuidString),
+                "editable": .bool(viewModel.canEditSelectedFigmaComponentProperties),
                 "properties": .object(properties)
             ])
         }
@@ -1650,6 +1651,11 @@ final class XomoAutomationRegistry {
             guard let value = arguments["value"]?.stringValue else {
                 throw XomoAutomationCallError.invalidArgument("Missing string argument: value")
             }
+            guard viewModel.canEditSelectedFigmaComponentProperties else {
+                throw XomoAutomationCallError.operationFailed(
+                    "Selected Figma component properties are locked"
+                )
+            }
             viewModel.updateSelectedFigmaComponentProperty(key, value: value)
             return result()
         case "reset":
@@ -1660,6 +1666,11 @@ final class XomoAutomationRegistry {
             guard layer.xomoFigmaComponentPropertyDefaults[key] != nil else {
                 throw XomoAutomationCallError.operationFailed(
                     "Figma component property \(key) has no imported default"
+                )
+            }
+            guard viewModel.canEditSelectedFigmaComponentProperties else {
+                throw XomoAutomationCallError.operationFailed(
+                    "Selected Figma component properties are locked"
                 )
             }
             viewModel.resetSelectedFigmaComponentProperty(key)

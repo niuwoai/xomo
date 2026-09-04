@@ -12486,6 +12486,7 @@ struct ImageEditorView: View {
                     .focusable(false)
                     .xomoFocusEffectDisabled()
                     .accessibilityIdentifier("image-editor-figma-property-reset-\(key)")
+                    .disabled(!viewModel.canEditSelectedFigmaComponentProperties)
                 }
             }
 
@@ -12501,6 +12502,7 @@ struct ImageEditorView: View {
                 .font(.system(size: 10))
                 .focusable(false)
                 .accessibilityIdentifier("image-editor-figma-property-boolean-\(key)")
+                .disabled(!viewModel.canEditSelectedFigmaComponentProperties)
             } else if !property.preferredValues.isEmpty {
                 Picker(
                     L10n.text("imageEditor.properties.figmaComponentPropertyValue"),
@@ -12520,6 +12522,7 @@ struct ImageEditorView: View {
                 .pickerStyle(.menu)
                 .focusable(false)
                 .accessibilityIdentifier("image-editor-figma-property-picker-\(key)")
+                .disabled(!viewModel.canEditSelectedFigmaComponentProperties)
             } else {
                 TextField(
                     L10n.text("imageEditor.properties.figmaComponentPropertyValue"),
@@ -12532,6 +12535,7 @@ struct ImageEditorView: View {
                     viewModel.updateSelectedFigmaComponentProperty(key, value: value)
                 }
                 .accessibilityIdentifier("image-editor-figma-property-text-\(key)")
+                .disabled(!viewModel.canEditSelectedFigmaComponentProperties)
             }
         }
     }

@@ -191,6 +191,7 @@ struct ImageEditorFigmaProvenanceTests {
         let image = NSImage.transparent(size: CGSize(width: 20, height: 20))
         var document = ImageEditorDocument(sourceName: "figma-component.png", image: image)
         var layer = document.layers[0]
+        layer.isLocked = false
         layer.xomoFigmaComponentProperties = [
             "Size": XomoFigmaComponentProperty(
                 type: "VARIANT",
@@ -228,10 +229,157 @@ struct ImageEditorFigmaProvenanceTests {
         #expect(viewModel.document.layers[0].xomoFigmaComponentProperties["Label"]?.value == "")
     }
 
+    @Test func componentPropertyEditingRejectsOwnAndAncestorContentLocksWithoutSideEffects() throws {
+        enum LockCase: CaseIterable {
+            case ownFull
+            case ownPixels
+            case ancestorFull
+            case ancestorPixels
+        }
+
+        for lockCase in LockCase.allCases {
+            let image = NSImage.transparent(size: CGSize(width: 320, height: 180))
+            var document = ImageEditorDocument(sourceName: "locked-figma-component.png", image: image)
+            var ancestor = ImageEditorLayer.group(name: "Screen", size: image.size)
+            var component = ImageEditorLayer.group(name: "Button", size: CGSize(width: 140, height: 44))
+            component.groupID = ancestor.id
+            component.xomoFigmaComponentProperties = [
+                "Label": XomoFigmaComponentProperty(type: "TEXT", value: "Continue"),
+                "Enabled": XomoFigmaComponentProperty(type: "BOOLEAN", value: "true"),
+                "Size": XomoFigmaComponentProperty(type: "VARIANT", value: "Large")
+            ]
+            component.xomoFigmaComponentPropertyDefaults = [
+                "Label": XomoFigmaComponentProperty(type: "TEXT", value: "Default"),
+                "Enabled": XomoFigmaComponentProperty(type: "BOOLEAN", value: "false"),
+                "Size": XomoFigmaComponentProperty(type: "VARIANT", value: "Small")
+            ]
+            var label = ImageEditorLayer.text(
+                name: "Continue",
+                origin: CGPoint(x: 24, y: 24),
+                content: ImageEditorTextContent(
+                    text: "Continue",
+                    color: .white,
+                    fontSize: 14,
+                    point: CGPoint(
+                        x: ImageEditorTextContent.drawingPadding,
+                        y: ImageEditorTextContent.drawingPadding
+                    )
+                )
+            )
+            label.groupID = component.id
+            switch lockCase {
+            case .ownFull:
+                component.isLocked = true
+            case .ownPixels:
+                component.locksPixels = true
+            case .ancestorFull:
+                ancestor.isLocked = true
+            case .ancestorPixels:
+                ancestor.locksPixels = true
+            }
+            document.layers = [ancestor, component, label]
+            document.selectedLayerID = component.id
+            document.selectedLayerIDs = [component.id]
+
+            let viewModel = ImageEditorViewModel(document: document) { _ in }
+            viewModel.pushUndo()
+            viewModel.undo()
+            let propertiesBefore = viewModel.selectedLayerFigmaComponentProperties
+            let defaultsBefore = viewModel.selectedLayerFigmaComponentPropertyDefaults
+            let textBefore = viewModel.document.layers[2].textContent?.text
+            let historyBefore = viewModel.document.history
+            let undoCountBefore = viewModel.undoStack.count
+            let redoCountBefore = viewModel.redoStack.count
+            let canRedoBefore = viewModel.canRedo
+            let projectEncoder = JSONEncoder()
+            projectEncoder.outputFormatting = .sortedKeys
+            let projectBefore = try projectEncoder.encode(
+                ImageEditorProjectDocument(document: viewModel.document)
+            )
+            let undoSignaturesBefore = try viewModel.undoStack.map {
+                try projectEncoder.encode(ImageEditorProjectDocument(document: $0))
+            }
+            let redoSignaturesBefore = try viewModel.redoStack.map {
+                try projectEncoder.encode(ImageEditorProjectDocument(document: $0))
+            }
+
+            #expect(!viewModel.canEditSelectedFigmaComponentProperties)
+            viewModel.updateSelectedFigmaComponentProperty("Label", value: "Buy now")
+            viewModel.updateSelectedFigmaComponentBooleanProperty("Enabled", isEnabled: false)
+            viewModel.updateSelectedFigmaComponentProperty("Size", value: "Small")
+            viewModel.resetSelectedFigmaComponentProperty("Label")
+
+            #expect(viewModel.selectedLayerFigmaComponentProperties == propertiesBefore)
+            #expect(viewModel.selectedLayerFigmaComponentPropertyDefaults == defaultsBefore)
+            #expect(viewModel.document.layers[2].textContent?.text == textBefore)
+            #expect(viewModel.document.history == historyBefore)
+            #expect(viewModel.undoStack.count == undoCountBefore)
+            #expect(viewModel.redoStack.count == redoCountBefore)
+            #expect(viewModel.canRedo == canRedoBefore)
+            let undoSignaturesAfter = try viewModel.undoStack.map {
+                try projectEncoder.encode(ImageEditorProjectDocument(document: $0))
+            }
+            let redoSignaturesAfter = try viewModel.redoStack.map {
+                try projectEncoder.encode(ImageEditorProjectDocument(document: $0))
+            }
+            #expect(undoSignaturesAfter == undoSignaturesBefore)
+            #expect(redoSignaturesAfter == redoSignaturesBefore)
+            let projectAfter = try projectEncoder.encode(
+                ImageEditorProjectDocument(document: viewModel.document)
+            )
+            #expect(projectAfter == projectBefore)
+            #expect(viewModel.statusText == L10n.text("imageEditor.status.layerLocked"))
+        }
+    }
+
+    @Test func componentPropertyEditingIgnoresPositionAndTransparencyLocksAndRecoversAfterUnlock() throws {
+        let image = NSImage.transparent(size: CGSize(width: 20, height: 20))
+        var document = ImageEditorDocument(sourceName: "figma-component-lock-scope.png", image: image)
+        var ancestor = ImageEditorLayer.group(name: "Screen", size: image.size)
+        ancestor.locksPosition = true
+        ancestor.locksTransparentPixels = true
+        var layer = document.layers[0]
+        layer.isLocked = false
+        layer.xomoFigmaComponentProperties = [
+            "Label": XomoFigmaComponentProperty(type: "TEXT", value: "Continue")
+        ]
+        layer.xomoFigmaComponentPropertyDefaults = layer.xomoFigmaComponentProperties
+        layer.groupID = ancestor.id
+        layer.locksPosition = true
+        layer.locksTransparentPixels = true
+        document.layers = [ancestor, layer]
+        document.selectedLayerID = layer.id
+        document.selectedLayerIDs = [layer.id]
+
+        let viewModel = ImageEditorViewModel(document: document) { _ in }
+        #expect(viewModel.canEditSelectedFigmaComponentProperties)
+        viewModel.updateSelectedFigmaComponentProperty("Label", value: "Buy now")
+        #expect(viewModel.selectedLayerFigmaComponentProperties["Label"]?.value == "Buy now")
+        #expect(viewModel.selectedLayerFigmaComponentPropertyOverrideCount == 1)
+
+        let layerIndex = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[layerIndex].locksPixels = true
+        #expect(!viewModel.canEditSelectedFigmaComponentProperties)
+        viewModel.resetSelectedFigmaComponentProperty("Label")
+        #expect(viewModel.selectedLayerFigmaComponentProperties["Label"]?.value == "Buy now")
+
+        viewModel.document.layers[layerIndex].locksPixels = false
+        #expect(viewModel.canEditSelectedFigmaComponentProperties)
+        viewModel.resetSelectedFigmaComponentProperty("Label")
+        #expect(viewModel.selectedLayerFigmaComponentProperties["Label"]?.value == "Continue")
+        #expect(viewModel.selectedLayerFigmaComponentPropertyOverrideCount == 0)
+
+        viewModel.undo()
+        #expect(viewModel.selectedLayerFigmaComponentProperties["Label"]?.value == "Buy now")
+        viewModel.redo()
+        #expect(viewModel.selectedLayerFigmaComponentProperties["Label"]?.value == "Continue")
+    }
+
     @Test func componentPropertyOverrideSummaryAndFilteringStayDerivedAndSorted() throws {
         let image = NSImage.transparent(size: CGSize(width: 20, height: 20))
         var document = ImageEditorDocument(sourceName: "figma-component-overrides.png", image: image)
         var layer = document.layers[0]
+        layer.isLocked = false
         layer.xomoFigmaComponentProperties = [
             "Size": XomoFigmaComponentProperty(type: "VARIANT", value: "Large"),
             "Label": XomoFigmaComponentProperty(type: "TEXT", value: "Continue"),
@@ -304,6 +452,29 @@ struct ImageEditorFigmaProvenanceTests {
         #expect(source.contains("image-editor-figma-component-override-summary"))
         #expect(source.contains("image-editor-figma-component-overrides-only"))
         #expect(source.contains("image-editor-figma-component-overrides-empty"))
+
+        let editorStart = try #require(source.range(of: "private func figmaComponentPropertyEditor("))
+        let editorTail = source[editorStart.lowerBound...]
+        let editorEnd = try #require(editorTail.range(of: "private func figmaImageFillRow("))
+        let editorSource = String(editorTail[..<editorEnd.lowerBound])
+        for controlIdentifier in [
+            "image-editor-figma-property-reset-\\(key)",
+            "image-editor-figma-property-boolean-\\(key)",
+            "image-editor-figma-property-picker-\\(key)",
+            "image-editor-figma-property-text-\\(key)"
+        ] {
+            #expect(editorSource.contains(controlIdentifier))
+        }
+        #expect(
+            editorSource.components(
+                separatedBy: ".disabled(!viewModel.canEditSelectedFigmaComponentProperties)"
+            ).count - 1 == 4
+        )
+        #expect(
+            source.components(
+                separatedBy: ".disabled(!viewModel.canEditSelectedFigmaComponentProperties)"
+            ).count - 1 == 4
+        )
 
         for localizationDirectory in ["en.lproj", "zh-Hans.lproj", "ja.lproj"] {
             let localization = try String(

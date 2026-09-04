@@ -4457,6 +4457,7 @@ struct XomoAutomationTests {
         ))
         #expect(listed.ok)
         #expect(listed.result?.objectValue?["layerId"] == .string(layerID.uuidString))
+        #expect(listed.result?.objectValue?["editable"] == .bool(true))
         #expect(listed.result?.objectValue?["properties"]?.objectValue?["Label"]?.objectValue?["overridden"] == .bool(false))
 
         let set = registry.execute(request(
@@ -4492,6 +4493,124 @@ struct XomoAutomationTests {
         #expect(reset.ok)
         #expect(viewModel.document.selectedLayer?.xomoFigmaComponentProperties["Label"]?.value == "Continue")
         #expect(viewModel.document.history.last?.title == L10n.format("imageEditor.history.figmaComponentPropertyChanged", "Label"))
+    }
+
+    @Test func registryKeepsLockedFigmaComponentPropertiesReadableButRejectsWrites() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        let layerIndex = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[layerIndex].xomoFigmaComponentProperties = [
+            "Label": XomoFigmaComponentProperty(type: "TEXT", value: "Buy now"),
+            "No Default": XomoFigmaComponentProperty(type: "TEXT", value: "Local")
+        ]
+        viewModel.document.layers[layerIndex].xomoFigmaComponentPropertyDefaults = [
+            "Label": XomoFigmaComponentProperty(type: "TEXT", value: "Continue")
+        ]
+        viewModel.document.layers[layerIndex].locksPixels = true
+        viewModel.pushUndo()
+        viewModel.undo()
+        let propertiesBefore = viewModel.document.layers[layerIndex].xomoFigmaComponentProperties
+        let defaultsBefore = viewModel.document.layers[layerIndex].xomoFigmaComponentPropertyDefaults
+        let historyBefore = viewModel.document.history
+        let undoCountBefore = viewModel.undoStack.count
+        let redoCountBefore = viewModel.redoStack.count
+        let canRedoBefore = viewModel.canRedo
+        let projectEncoder = JSONEncoder()
+        projectEncoder.outputFormatting = .sortedKeys
+        let projectBefore = try projectEncoder.encode(
+            ImageEditorProjectDocument(document: viewModel.document)
+        )
+        let undoSignaturesBefore = try viewModel.undoStack.map {
+            try projectEncoder.encode(ImageEditorProjectDocument(document: $0))
+        }
+        let redoSignaturesBefore = try viewModel.redoStack.map {
+            try projectEncoder.encode(ImageEditorProjectDocument(document: $0))
+        }
+
+        let listed = registry.execute(request(
+            operation: "call",
+            name: "xomo.figma.component_properties",
+            arguments: ["action": .string("list")]
+        ))
+        #expect(listed.ok)
+        #expect(listed.result?.objectValue?["editable"] == .bool(false))
+        #expect(listed.result?.objectValue?["properties"]?.objectValue?["Label"]?.objectValue?["value"] == .string("Buy now"))
+
+        let missingValue = registry.execute(request(
+            operation: "call",
+            name: "xomo.figma.component_properties",
+            arguments: ["action": .string("set"), "key": .string("Label")]
+        ))
+        #expect(!missingValue.ok)
+        #expect(missingValue.error?.contains("Missing string argument: value") == true)
+
+        let unknownKey = registry.execute(request(
+            operation: "call",
+            name: "xomo.figma.component_properties",
+            arguments: [
+                "action": .string("set"),
+                "key": .string("Unknown"),
+                "value": .string("Ignored")
+            ]
+        ))
+        #expect(!unknownKey.ok)
+        #expect(unknownKey.error?.contains("Not found") == true)
+
+        let unknownResetKey = registry.execute(request(
+            operation: "call",
+            name: "xomo.figma.component_properties",
+            arguments: ["action": .string("reset"), "key": .string("Unknown")]
+        ))
+        #expect(!unknownResetKey.ok)
+        #expect(unknownResetKey.error?.contains("Not found") == true)
+
+        let missingDefault = registry.execute(request(
+            operation: "call",
+            name: "xomo.figma.component_properties",
+            arguments: ["action": .string("reset"), "key": .string("No Default")]
+        ))
+        #expect(!missingDefault.ok)
+        #expect(missingDefault.error?.contains("no imported default") == true)
+
+        for arguments in [
+            [
+                "action": XomoJSONValue.string("set"),
+                "key": .string("Label"),
+                "value": .string("Checkout")
+            ],
+            [
+                "action": XomoJSONValue.string("reset"),
+                "key": .string("Label")
+            ]
+        ] {
+            let response = registry.execute(request(
+                operation: "call",
+                name: "xomo.figma.component_properties",
+                arguments: arguments
+            ))
+            #expect(!response.ok)
+            #expect(response.error?.contains("locked") == true)
+        }
+
+        #expect(viewModel.document.layers[layerIndex].xomoFigmaComponentProperties == propertiesBefore)
+        #expect(viewModel.document.layers[layerIndex].xomoFigmaComponentPropertyDefaults == defaultsBefore)
+        #expect(viewModel.document.history == historyBefore)
+        #expect(viewModel.undoStack.count == undoCountBefore)
+        #expect(viewModel.redoStack.count == redoCountBefore)
+        #expect(viewModel.canRedo == canRedoBefore)
+        let undoSignaturesAfter = try viewModel.undoStack.map {
+            try projectEncoder.encode(ImageEditorProjectDocument(document: $0))
+        }
+        let redoSignaturesAfter = try viewModel.redoStack.map {
+            try projectEncoder.encode(ImageEditorProjectDocument(document: $0))
+        }
+        #expect(undoSignaturesAfter == undoSignaturesBefore)
+        #expect(redoSignaturesAfter == redoSignaturesBefore)
+        let projectAfter = try projectEncoder.encode(
+            ImageEditorProjectDocument(document: viewModel.document)
+        )
+        #expect(projectAfter == projectBefore)
     }
 
     @Test func registryListsEditsAndRestoresFigmaSizeConstraints() throws {
