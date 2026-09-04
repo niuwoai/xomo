@@ -289,8 +289,19 @@ extension ImageEditorViewModel {
 
         let originalSize = document.canvasSize
         let offset = CGSize(width: -revealRect.minX, height: -revealRect.minY)
+        let transformedSlices: [ImageEditorSlice]
         let hotspotTransform: ImageEditorHotspotCanvasTransform
         do {
+            transformedSlices = try document.slices.map { slice in
+                guard let transformed = try slice.offsetForCanvasResize(
+                    offset: offset,
+                    sourceCanvasSize: originalSize,
+                    targetCanvasSize: targetSize
+                ) else {
+                    throw ImageEditorSliceCanvasTransformError.unexpectedRemoval
+                }
+                return transformed
+            }
             hotspotTransform = try transformedHotspotsForCanvasResize(
                 offset: offset,
                 targetCanvasSize: targetSize,
@@ -308,29 +319,34 @@ extension ImageEditorViewModel {
             )
         }
         let transformedGuides = offsetGuides(by: offset, targetCanvasSize: targetSize)
-
-        pushUndo()
-        document.canvasSize = targetSize
-        document.layers = transformedLayers
-        document.guides = transformedGuides
-        document.hotspots = hotspotTransform.hotspots
-        document.selection = document.selection?.offsetForCanvasResize(
+        let transformedSelection = document.selection?.offsetForCanvasResize(
             oldCanvasSize: originalSize,
             newCanvasSize: targetSize,
             offset: offset
         )
-        document.savedSelection = document.savedSelection?.offsetForCanvasResize(
+        let transformedSavedSelection = document.savedSelection?.offsetForCanvasResize(
             oldCanvasSize: originalSize,
             newCanvasSize: targetSize,
             offset: offset
         )
-        document.alphaChannels = document.alphaChannels.map { channel in
+        let transformedAlphaChannels = document.alphaChannels.map { channel in
             ImageEditorAlphaChannel(
                 id: channel.id,
                 name: channel.name,
                 mask: channel.mask.canvasResized(to: targetSize, oldCanvasSize: originalSize, offset: offset)
             )
         }
+
+        pushUndo()
+        document.canvasSize = targetSize
+        document.layers = transformedLayers
+        document.guides = transformedGuides
+        document.slices = transformedSlices
+        document.hotspots = hotspotTransform.hotspots
+        document.selection = transformedSelection
+        document.savedSelection = transformedSavedSelection
+        document.alphaChannels = transformedAlphaChannels
+        syncExportSettingsForCurrentSliceScope()
         selectedHotspotID = hotspotTransform.selectedID
         canvasOffset = .zero
         syncSizeControlsFromDocument()
@@ -487,6 +503,10 @@ private struct ImageEditorHotspotCanvasTransform {
 }
 
 private enum ImageEditorHotspotCanvasTransformError: Error {
+    case unexpectedRemoval
+}
+
+private enum ImageEditorSliceCanvasTransformError: Error {
     case unexpectedRemoval
 }
 

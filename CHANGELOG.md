@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.12.0-rc1614 - 2026-09-05
+
+### Fixed
+- Reveal All 现在把全部 Fireworks 风格 Slice 与图层、Hotspot 一起平移到扩展后的画布；历史上部分越界的 Slice 可重新显露完整交付区域，Slice 不参与新画布 bounds 或命令可用性。
+- Reveal 作为非破坏操作不允许静默删除 Slice；源完全不可见、损坏几何、意外空结果或源/目标 preset 失效均在 Undo 前原子拒绝，存活项数量、顺序、身份、名称和全部 preset 元数据保持。
+- Slice scope 的有效选择与主 preset 按最终 frame 协调，nil/stale/empty/no-preset 与非 Slice scope 延续既有语义；成功仍只有一个 Undo、一条 Reveal All History并清空 Redo。
+
+### Tests
+- 新增多方向扩画布、历史越界重新显露、bounds 隔离、preset 边界与原子失败、scope、Undo/Redo 及 Automation 共享入口测试；独立评审关闭 3 个测试证据 P2 后最终 PASS。
+- 唯一冷测试构建成功；新增核心 7/7、Automation 1/1、Slice 相邻回归 63/63、Hotspot/Canvas 35/35、组件库与真实平移 cursor 128/128 全部通过。CLI/MCP 2/2、发布契约 9/9（27 条断言）通过；本版不执行 Release 或 `/Applications` 覆盖。
+
 ## 2.12.0-rc1613 - 2026-09-05
 
 ### Fixed
