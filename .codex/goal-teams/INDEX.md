@@ -12,4 +12,4 @@
 | `versions/2.12.0-rc1605/INDEX.md` | 2.12.0-rc1605 | Goal Lead | complete | 锁定 Figma 组件属性写入门禁里程碑文档索引 |
 | `versions/2.12.0-rc1606/INDEX.md` | 2.12.0-rc1606 | Goal Lead | complete | Fireworks 风格响应式 HTML 热点坐标里程碑文档索引 |
 | `versions/2.12.0-rc1607/INDEX.md` | 2.12.0-rc1607 | Goal Lead | complete | Fireworks 风格热点随 Image Size 缩放里程碑文档索引 |
-| `versions/2.12.0-rc1608/INDEX.md` | 2.12.0-rc1608 | Goal Lead | in-progress | Fireworks 风格热点随 Canvas Size 锚定平移与裁切里程碑文档索引 |
+| `versions/2.12.0-rc1608/INDEX.md` | 2.12.0-rc1608 | Goal Lead | complete | Fireworks 风格热点随 Canvas Size 锚定平移与裁切里程碑文档索引 |
