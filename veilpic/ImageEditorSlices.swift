@@ -384,6 +384,14 @@ extension ImageEditorViewModel {
         guard previousSlices != document.slices,
               exportSettings.scope == .slice
         else { return }
+        syncExportSettingsForCurrentSliceScope()
+    }
+
+    /// Reconciles Slice export state even when the slice arrays compare equal.
+    /// Image Size uses this to repair stale/nil selections and the empty-slice
+    /// scope as part of the same successful document transaction.
+    func syncExportSettingsForCurrentSliceScope() {
+        guard exportSettings.scope == .slice else { return }
         if let id = exportSettings.sliceID, let selected = slice(with: id) {
             applyPrimaryExportPreset(for: selected)
         } else if let first = document.slices.first {

@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.12.0-rc1611 - 2026-09-05
+
+### Fixed
+- Image Size 现在同步按横纵独立比例缩放 Fireworks 风格 Slice；完整浮点矩形变换后只做一次向外整数化并裁到目标画布，部分越界历史 Slice 保留可见区域，完全越界、空交集、非有限或溢出几何在 Undo 前使整次操作原子失败。
+- Slice 的数量、顺序、UUID、名称以及 `exportPresets` 的 nil/显式空数组和值与顺序保持不变；width、height 与 scale 三类 preset 在源画布整数可见交集和目标最终可见 frame 上均须可解析，否则拒绝 resize，不再静默丢弃或重写交付预设。
+- Slice scope 的有效选择保持，nil 或陈旧选择回退首项，无 Slice 时回退 composited；主 preset 会按缩放后的最终 frame 重新投影到导出设置，非 Slice scope 完全不变。成功路径仍只有一次 Image Resize History 和一次 Undo，Redo 被清空，Undo/Redo 会恢复文档并重新投影选中 Slice。
+
+### Tests
+- 新增直接模型/命令与共享 Automation 入口测试，覆盖非等比与负尺寸、双侧可见交集、三类 preset、Optional 形态、选择修复、导出计划、单事务 Undo/Redo，以及 Slice/preset/源画布损坏输入的完整原子快照。独立评审修正一个恰落在倍率下界的夹具，并补齐部分越界双交集及 8 项非法源画布矩阵，最终复审 PASS。
+- 唯一冷构建成功；新增 9/9、Canvas Commands 25/25、Hotspot Automation 1/1、Guide 1/1、固定文本框 1/1、Slice/Figma preset 8/8、选中 Slice 导出 1/1、项目往返 1/1、组件库 cursor 2/2，合计 49/49，失败 0、跳过 0、基础设施重试 0。CLI/MCP 2/2、发布契约 9/9（27 条断言）、隔离测试器契约与发布结构校验通过；本版不执行 Release 或 `/Applications` 覆盖。
+
 ## 2.12.0-rc1610 - 2026-09-05
 
 ### Fixed

@@ -84,8 +84,17 @@ extension ImageEditorViewModel {
         }
         let scaleX = targetSize.width / originalSize.width
         let scaleY = targetSize.height / originalSize.height
+        let transformedSlices: [ImageEditorSlice]
         let transformedHotspots: [ImageEditorHotspot]
         do {
+            transformedSlices = try document.slices.map { slice in
+                try slice.scaledForImageSize(
+                    scaleX: scaleX,
+                    scaleY: scaleY,
+                    sourceCanvasSize: originalSize,
+                    targetCanvasSize: targetSize
+                )
+            }
             transformedHotspots = try document.hotspots.map { hotspot in
                 try hotspot.scaledForImageSize(
                     scaleX: scaleX,
@@ -101,21 +110,34 @@ extension ImageEditorViewModel {
             layer.scaledForImageSize(scaleX: scaleX, scaleY: scaleY)
         }
         let transformedGuides = scaledGuides(scaleX: scaleX, scaleY: scaleY, targetCanvasSize: targetSize)
-
-        pushUndo()
-        document.canvasSize = targetSize
-        document.layers = transformedLayers
-        document.guides = transformedGuides
-        document.hotspots = transformedHotspots
-        document.selection = document.selection?.scaled(scaleX: scaleX, scaleY: scaleY, targetSize: targetSize)
-        document.savedSelection = document.savedSelection?.scaled(scaleX: scaleX, scaleY: scaleY, targetSize: targetSize)
-        document.alphaChannels = document.alphaChannels.map { channel in
+        let transformedSelection = document.selection?.scaled(
+            scaleX: scaleX,
+            scaleY: scaleY,
+            targetSize: targetSize
+        )
+        let transformedSavedSelection = document.savedSelection?.scaled(
+            scaleX: scaleX,
+            scaleY: scaleY,
+            targetSize: targetSize
+        )
+        let transformedAlphaChannels = document.alphaChannels.map { channel in
             ImageEditorAlphaChannel(
                 id: channel.id,
                 name: channel.name,
                 mask: channel.mask.resizedNearest(to: targetSize)
             )
         }
+
+        pushUndo()
+        document.canvasSize = targetSize
+        document.layers = transformedLayers
+        document.guides = transformedGuides
+        document.slices = transformedSlices
+        document.hotspots = transformedHotspots
+        document.selection = transformedSelection
+        document.savedSelection = transformedSavedSelection
+        document.alphaChannels = transformedAlphaChannels
+        syncExportSettingsForCurrentSliceScope()
         canvasOffset = .zero
         syncSizeControlsFromDocument()
         appendHistory(L10n.text("imageEditor.history.imageResize"))

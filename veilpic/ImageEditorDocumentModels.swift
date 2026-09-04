@@ -668,6 +668,110 @@ struct ImageEditorSlice: Identifiable, Equatable, Codable {
             exportPresets: normalizedPresets
         )
     }
+
+    /// Returns this slice projected through Image Size without rewriting any
+    /// delivery metadata. Historical slices may straddle the old canvas: the
+    /// full floating-point frame drives geometry while its integral visible
+    /// intersection validates source export presets.
+    func scaledForImageSize(
+        scaleX: CGFloat,
+        scaleY: CGFloat,
+        sourceCanvasSize: CGSize,
+        targetCanvasSize: CGSize
+    ) throws -> ImageEditorSlice {
+        guard scaleX.isFinite,
+              scaleY.isFinite,
+              scaleX > 0,
+              scaleY > 0,
+              sourceCanvasSize.width.isFinite,
+              sourceCanvasSize.height.isFinite,
+              sourceCanvasSize.width > 0,
+              sourceCanvasSize.height > 0,
+              targetCanvasSize.width.isFinite,
+              targetCanvasSize.height.isFinite,
+              targetCanvasSize.width > 0,
+              targetCanvasSize.height > 0,
+              frame.origin.x.isFinite,
+              frame.origin.y.isFinite,
+              frame.size.width.isFinite,
+              frame.size.height.isFinite
+        else {
+            throw ImageEditorSliceImageSizeScalingError.invalidGeometry
+        }
+
+        let sourceCanvasBounds = CGRect(origin: .zero, size: sourceCanvasSize)
+        let standardizedFrame = frame.standardized
+        guard standardizedFrame.minX.isFinite,
+              standardizedFrame.maxX.isFinite,
+              standardizedFrame.minY.isFinite,
+              standardizedFrame.maxY.isFinite,
+              standardizedFrame.width > 0,
+              standardizedFrame.height > 0
+        else {
+            throw ImageEditorSliceImageSizeScalingError.invalidGeometry
+        }
+        let sourcePresetFrame = standardizedFrame.integral.intersection(sourceCanvasBounds)
+        guard !sourcePresetFrame.isNull,
+              sourcePresetFrame.origin.x.isFinite,
+              sourcePresetFrame.origin.y.isFinite,
+              sourcePresetFrame.size.width.isFinite,
+              sourcePresetFrame.size.height.isFinite,
+              sourcePresetFrame.width > 0,
+              sourcePresetFrame.height > 0
+        else {
+            throw ImageEditorSliceImageSizeScalingError.invalidGeometry
+        }
+
+        let presets = exportPresets ?? []
+        guard presets.count <= Self.maximumExportPresetCount,
+              presets.allSatisfy({ preset in
+                  preset.format.supportsSliceExportPreset
+                      && preset.value.isFinite
+                      && preset.value > 0
+                      && preset.resolvedScale(for: sourcePresetFrame) != nil
+              })
+        else {
+            throw ImageEditorSliceImageSizeScalingError.invalidExportPreset
+        }
+
+        let scaledMinX = standardizedFrame.minX * scaleX
+        let scaledMaxX = standardizedFrame.maxX * scaleX
+        let scaledMinY = standardizedFrame.minY * scaleY
+        let scaledMaxY = standardizedFrame.maxY * scaleY
+        guard scaledMinX.isFinite,
+              scaledMaxX.isFinite,
+              scaledMinY.isFinite,
+              scaledMaxY.isFinite,
+              scaledMaxX > scaledMinX,
+              scaledMaxY > scaledMinY
+        else {
+            throw ImageEditorSliceImageSizeScalingError.invalidGeometry
+        }
+
+        let scaledFrame = CGRect(
+            x: scaledMinX,
+            y: scaledMinY,
+            width: scaledMaxX - scaledMinX,
+            height: scaledMaxY - scaledMinY
+        ).integral
+        let targetCanvasBounds = CGRect(origin: .zero, size: targetCanvasSize)
+        let targetFrame = scaledFrame.intersection(targetCanvasBounds)
+        guard !targetFrame.isNull,
+              targetFrame.origin.x.isFinite,
+              targetFrame.origin.y.isFinite,
+              targetFrame.size.width.isFinite,
+              targetFrame.size.height.isFinite,
+              targetFrame.width > 0,
+              targetFrame.height > 0,
+              presets.allSatisfy({ $0.resolvedScale(for: targetFrame) != nil })
+        else {
+            throw ImageEditorSliceImageSizeScalingError.invalidGeometry
+        }
+
+        var scaledSlice = self
+        scaledSlice.frame = targetFrame
+        return scaledSlice
+    }
 }
 
 /// A rectangular interactive region inspired by Fireworks hotspots.
@@ -963,6 +1067,11 @@ enum ImageEditorCanvasOrthogonalTransform: CaseIterable {
 
 private enum ImageEditorHotspotImageSizeScalingError: Error {
     case invalidGeometry
+}
+
+private enum ImageEditorSliceImageSizeScalingError: Error {
+    case invalidGeometry
+    case invalidExportPreset
 }
 
 private enum ImageEditorHotspotCanvasResizeError: Error {
