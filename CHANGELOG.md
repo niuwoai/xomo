@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.12.0-rc1615 - 2026-09-05
+
+### Fixed
+- 画布顺/逆 90°、180°及水平/垂直翻转现在同步投影全部 Fireworks 风格 Slice；五种几何与图层、Hotspot 使用相同坐标定义，90° 正确交换宽高。
+- 历史部分越界 Slice 使用完整浮点 frame 变换并在目标端一次整数化、裁边；完全源外或损坏数据在 Undo 前原子拒绝，合法 Slice 不删除、不重排。
+- scale/width/height preset 对源可见 frame 与目标最终 frame 双校验，constraint/value 与 Slice 身份、名称、顺序、全部 preset 字段及 nil/显式空数组形态保持；Slice scope 按最终尺寸协调。
+
+### Tests
+- 新增五种正交几何、部分越界、preset 边界、scope、完整原子快照、Undo/Redo 与 Automation 共享入口测试；独立评审关闭 5 个测试证据 P2 后最终 PASS。
+- 唯一冷测试构建成功；新增 Direct/Automation 6/6、全体 Slice 69/69、Hotspot 正交 6/6、组件库与真实平移 cursor 128/128 全部通过，相关测试去重 203/203。CLI/MCP 2/2、发布契约 9/9（27 条断言）通过；本版不执行 Release 或 `/Applications` 覆盖。
+
 ## 2.12.0-rc1614 - 2026-09-05
 
 ### Fixed

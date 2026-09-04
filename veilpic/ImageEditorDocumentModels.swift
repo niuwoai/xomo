@@ -889,6 +889,133 @@ struct ImageEditorSlice: Identifiable, Equatable, Codable {
         translatedSlice.frame = targetFrame
         return translatedSlice
     }
+
+    /// Projects this slice through a whole-canvas right-angle transform.
+    /// Historical slices may straddle the source canvas, so geometry is
+    /// transformed from the complete floating-point frame while export
+    /// presets are validated against the visible integral intersection.
+    func transformedForOrthogonalCanvas(
+        _ transform: ImageEditorCanvasOrthogonalTransform,
+        sourceCanvasSize: CGSize
+    ) throws -> ImageEditorSlice {
+        let targetCanvasSize = try transform.targetCanvasSize(for: sourceCanvasSize)
+        guard frame.origin.x.isFinite,
+              frame.origin.y.isFinite,
+              frame.size.width.isFinite,
+              frame.size.height.isFinite
+        else {
+            throw ImageEditorSliceOrthogonalTransformError.invalidGeometry
+        }
+
+        let sourceFrame = frame.standardized
+        guard sourceFrame.minX.isFinite,
+              sourceFrame.maxX.isFinite,
+              sourceFrame.minY.isFinite,
+              sourceFrame.maxY.isFinite,
+              sourceFrame.width > 0,
+              sourceFrame.height > 0
+        else {
+            throw ImageEditorSliceOrthogonalTransformError.invalidGeometry
+        }
+
+        let sourceCanvasBounds = CGRect(origin: .zero, size: sourceCanvasSize)
+        let sourcePresetFrame = sourceFrame.integral.intersection(sourceCanvasBounds)
+        guard !sourcePresetFrame.isNull,
+              sourcePresetFrame.origin.x.isFinite,
+              sourcePresetFrame.origin.y.isFinite,
+              sourcePresetFrame.size.width.isFinite,
+              sourcePresetFrame.size.height.isFinite,
+              sourcePresetFrame.width > 0,
+              sourcePresetFrame.height > 0
+        else {
+            throw ImageEditorSliceOrthogonalTransformError.invalidGeometry
+        }
+
+        let presets = exportPresets ?? []
+        guard presets.count <= Self.maximumExportPresetCount,
+              presets.allSatisfy({ preset in
+                  preset.format.supportsSliceExportPreset
+                      && preset.value.isFinite
+                      && preset.value > 0
+                      && preset.resolvedScale(for: sourcePresetFrame) != nil
+              })
+        else {
+            throw ImageEditorSliceOrthogonalTransformError.invalidExportPreset
+        }
+
+        let transformedFrame: CGRect
+        switch transform {
+        case .clockwise90:
+            transformedFrame = CGRect(
+                x: sourceCanvasSize.height - sourceFrame.maxY,
+                y: sourceFrame.minX,
+                width: sourceFrame.height,
+                height: sourceFrame.width
+            )
+        case .counterclockwise90:
+            transformedFrame = CGRect(
+                x: sourceFrame.minY,
+                y: sourceCanvasSize.width - sourceFrame.maxX,
+                width: sourceFrame.height,
+                height: sourceFrame.width
+            )
+        case .rotate180:
+            transformedFrame = CGRect(
+                x: sourceCanvasSize.width - sourceFrame.maxX,
+                y: sourceCanvasSize.height - sourceFrame.maxY,
+                width: sourceFrame.width,
+                height: sourceFrame.height
+            )
+        case .flipHorizontal:
+            transformedFrame = CGRect(
+                x: sourceCanvasSize.width - sourceFrame.maxX,
+                y: sourceFrame.minY,
+                width: sourceFrame.width,
+                height: sourceFrame.height
+            )
+        case .flipVertical:
+            transformedFrame = CGRect(
+                x: sourceFrame.minX,
+                y: sourceCanvasSize.height - sourceFrame.maxY,
+                width: sourceFrame.width,
+                height: sourceFrame.height
+            )
+        }
+
+        guard transformedFrame.origin.x.isFinite,
+              transformedFrame.origin.y.isFinite,
+              transformedFrame.size.width.isFinite,
+              transformedFrame.size.height.isFinite,
+              transformedFrame.minX.isFinite,
+              transformedFrame.maxX.isFinite,
+              transformedFrame.minY.isFinite,
+              transformedFrame.maxY.isFinite,
+              transformedFrame.width > 0,
+              transformedFrame.height > 0
+        else {
+            throw ImageEditorSliceOrthogonalTransformError.invalidGeometry
+        }
+
+        let targetCanvasBounds = CGRect(origin: .zero, size: targetCanvasSize)
+        let targetFrame = transformedFrame.integral.intersection(targetCanvasBounds)
+        guard !targetFrame.isNull,
+              targetFrame.origin.x.isFinite,
+              targetFrame.origin.y.isFinite,
+              targetFrame.size.width.isFinite,
+              targetFrame.size.height.isFinite,
+              targetFrame.width > 0,
+              targetFrame.height > 0
+        else {
+            throw ImageEditorSliceOrthogonalTransformError.invalidGeometry
+        }
+        guard presets.allSatisfy({ $0.resolvedScale(for: targetFrame) != nil }) else {
+            throw ImageEditorSliceOrthogonalTransformError.invalidExportPreset
+        }
+
+        var transformedSlice = self
+        transformedSlice.frame = targetFrame
+        return transformedSlice
+    }
 }
 
 /// A rectangular interactive region inspired by Fireworks hotspots.
@@ -1192,6 +1319,11 @@ private enum ImageEditorSliceImageSizeScalingError: Error {
 }
 
 private enum ImageEditorSliceCanvasResizeError: Error {
+    case invalidGeometry
+    case invalidExportPreset
+}
+
+private enum ImageEditorSliceOrthogonalTransformError: Error {
     case invalidGeometry
     case invalidExportPreset
 }

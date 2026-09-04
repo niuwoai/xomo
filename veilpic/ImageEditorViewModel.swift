@@ -9999,9 +9999,16 @@ final class ImageEditorViewModel: ObservableObject {
     ) {
         let originalCanvasSize = document.canvasSize
         let transformedCanvasSize: CGSize
+        let transformedSlices: [ImageEditorSlice]
         let transformedHotspots: [ImageEditorHotspot]
         do {
             transformedCanvasSize = try orthogonalTransform.targetCanvasSize(for: originalCanvasSize)
+            transformedSlices = try document.slices.map { slice in
+                try slice.transformedForOrthogonalCanvas(
+                    orthogonalTransform,
+                    sourceCanvasSize: originalCanvasSize
+                )
+            }
             transformedHotspots = try document.hotspots.map { hotspot in
                 try hotspot.transformedForOrthogonalCanvas(
                     orthogonalTransform,
@@ -10032,7 +10039,9 @@ final class ImageEditorViewModel: ObservableObject {
         pushUndo()
         document.canvasSize = transformedCanvasSize
         document.layers = transformedLayers
+        document.slices = transformedSlices
         document.hotspots = transformedHotspots
+        syncExportSettingsForCurrentSliceScope()
         selectedHotspotID = transformedSelectedHotspotID
         syncSizeControlsFromDocument()
         appendHistory(historyTitle)
