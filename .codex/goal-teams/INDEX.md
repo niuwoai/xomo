@@ -7,4 +7,4 @@
 | `versions/2.12.0-rc1602/tasklist.md` | 2.12.0-rc1602 | Goal Lead | complete | 任务认领、依赖与验收状态 |
 | `versions/2.12.0-rc1602/progress.md` | 2.12.0-rc1602 | Goal Lead | complete | 分轮进展和独立校验证据 |
 | `versions/2.12.0-rc1602/decisions.md` | 2.12.0-rc1602 | Goal Lead | complete | 用户与团队决策记录 |
-| `versions/2.12.0-rc1603/INDEX.md` | 2.12.0-rc1603 | Goal Lead | active | Figma IMAGE Paint 诊断完整性里程碑文档索引 |
+| `versions/2.12.0-rc1603/INDEX.md` | 2.12.0-rc1603 | Goal Lead | complete | Figma IMAGE Paint 诊断完整性里程碑文档索引 |

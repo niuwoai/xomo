@@ -8,3 +8,5 @@
 | 评审-Figma 语义边界 | GT-1603-04 | done | 规格级 P1 与普通矩形描边误报均已修复，最终复审 PASS | Goal Lead 收口 |
 
 发布契约：版本契约 9/9（27 条断言）、隔离测试器契约、发布结构校验、CLI/MCP 2/2 全部通过。首次错误 frame 预期导致的 8/9 红报告保留，修正后的 9/9 报告与三组相邻报告位于 `test-reports/rc1603-final-*`。
+
+实现提交：`51f636e35`（`fix(figma): preserve image paint diagnostics`）。版本标签与主分支远端一致性由闭环提交完成后核验。
