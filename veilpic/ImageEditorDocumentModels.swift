@@ -767,9 +767,93 @@ struct ImageEditorHotspot: Identifiable, Equatable, Codable {
         scaledHotspot.frame = boundedFrame
         return scaledHotspot
     }
+
+    func offsetForCanvasResize(
+        offset: CGSize,
+        targetCanvasSize: CGSize
+    ) throws -> ImageEditorHotspot? {
+        guard offset.width.isFinite,
+              offset.height.isFinite,
+              targetCanvasSize.width.isFinite,
+              targetCanvasSize.height.isFinite,
+              targetCanvasSize.width > 0,
+              targetCanvasSize.height > 0,
+              frame.origin.x.isFinite,
+              frame.origin.y.isFinite,
+              frame.size.width.isFinite,
+              frame.size.height.isFinite
+        else {
+            throw ImageEditorHotspotCanvasResizeError.invalidGeometry
+        }
+
+        let sourceFrame = frame.standardized
+        guard sourceFrame.minX.isFinite,
+              sourceFrame.maxX.isFinite,
+              sourceFrame.minY.isFinite,
+              sourceFrame.maxY.isFinite,
+              sourceFrame.width > 0,
+              sourceFrame.height > 0
+        else {
+            throw ImageEditorHotspotCanvasResizeError.invalidGeometry
+        }
+
+        let translatedMinX = sourceFrame.minX + offset.width
+        let translatedMaxX = sourceFrame.maxX + offset.width
+        let translatedMinY = sourceFrame.minY + offset.height
+        let translatedMaxY = sourceFrame.maxY + offset.height
+        guard translatedMinX.isFinite,
+              translatedMaxX.isFinite,
+              translatedMinY.isFinite,
+              translatedMaxY.isFinite,
+              translatedMaxX > translatedMinX,
+              translatedMaxY > translatedMinY
+        else {
+            throw ImageEditorHotspotCanvasResizeError.invalidGeometry
+        }
+
+        let translatedFrame = CGRect(
+            x: translatedMinX,
+            y: translatedMinY,
+            width: translatedMaxX - translatedMinX,
+            height: translatedMaxY - translatedMinY
+        ).integral
+        guard translatedFrame.origin.x.isFinite,
+              translatedFrame.origin.y.isFinite,
+              translatedFrame.size.width.isFinite,
+              translatedFrame.size.height.isFinite,
+              translatedFrame.width > 0,
+              translatedFrame.height > 0
+        else {
+            throw ImageEditorHotspotCanvasResizeError.invalidGeometry
+        }
+
+        let canvasBounds = CGRect(origin: .zero, size: targetCanvasSize)
+        let boundedFrame = translatedFrame.intersection(canvasBounds)
+        guard !boundedFrame.isNull,
+              boundedFrame.width > 0,
+              boundedFrame.height > 0
+        else {
+            return nil
+        }
+        guard boundedFrame.origin.x.isFinite,
+              boundedFrame.origin.y.isFinite,
+              boundedFrame.size.width.isFinite,
+              boundedFrame.size.height.isFinite
+        else {
+            throw ImageEditorHotspotCanvasResizeError.invalidGeometry
+        }
+
+        var translatedHotspot = self
+        translatedHotspot.frame = boundedFrame
+        return translatedHotspot
+    }
 }
 
 private enum ImageEditorHotspotImageSizeScalingError: Error {
+    case invalidGeometry
+}
+
+private enum ImageEditorHotspotCanvasResizeError: Error {
     case invalidGeometry
 }
 

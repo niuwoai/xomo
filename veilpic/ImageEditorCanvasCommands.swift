@@ -130,10 +130,30 @@ extension ImageEditorViewModel {
         }
 
         let originalSize = document.canvasSize
+        guard originalSize.width.isFinite,
+              originalSize.height.isFinite,
+              originalSize.width > 0,
+              originalSize.height > 0
+        else {
+            statusText = L10n.text("imageEditor.status.resizeInvalid")
+            return
+        }
         let offset = CGSize(
             width: (targetSize.width - originalSize.width) * anchor.horizontalFactor,
             height: (targetSize.height - originalSize.height) * anchor.verticalFactor
         )
+        let transformedHotspots: [ImageEditorHotspot]
+        do {
+            transformedHotspots = try document.hotspots.compactMap { hotspot in
+                try hotspot.offsetForCanvasResize(
+                    offset: offset,
+                    targetCanvasSize: targetSize
+                )
+            }
+        } catch {
+            statusText = L10n.text("imageEditor.status.resizeInvalid")
+            return
+        }
         let transformedLayers = document.layers.map { layer in
             layer.offsetForCanvasSize(
                 oldCanvasSize: originalSize,
@@ -147,6 +167,7 @@ extension ImageEditorViewModel {
         document.canvasSize = targetSize
         document.layers = transformedLayers
         document.guides = transformedGuides
+        document.hotspots = transformedHotspots
         document.selection = document.selection?.offsetForCanvasResize(
             oldCanvasSize: originalSize,
             newCanvasSize: targetSize,
@@ -163,6 +184,10 @@ extension ImageEditorViewModel {
                 name: channel.name,
                 mask: channel.mask.canvasResized(to: targetSize, oldCanvasSize: originalSize, offset: offset)
             )
+        }
+        if let selectedHotspotID,
+           !transformedHotspots.contains(where: { $0.id == selectedHotspotID }) {
+            self.selectedHotspotID = transformedHotspots.first?.id
         }
         canvasOffset = .zero
         syncSizeControlsFromDocument()

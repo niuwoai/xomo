@@ -245,6 +245,359 @@ struct ImageEditorCanvasCommandTests {
     }
 
     @Test
+    func canvasResizeOffsetsHotspotsForAllNineAnchorsWithoutScalingMetadata() {
+        let hotspotID = UUID()
+        let originalHotspot = ImageEditorHotspot(
+            id: hotspotID,
+            name: "Anchor CTA",
+            frame: CGRect(x: 12, y: 14, width: 18, height: 10),
+            url: "https://example.com/anchor"
+        )
+        let cases: [(anchor: ImageEditorCanvasAnchor, offset: CGSize)] = [
+            (.topLeft, CGSize(width: 0, height: 40)),
+            (.top, CGSize(width: 20, height: 40)),
+            (.topRight, CGSize(width: 40, height: 40)),
+            (.left, CGSize(width: 0, height: 20)),
+            (.center, CGSize(width: 20, height: 20)),
+            (.right, CGSize(width: 40, height: 20)),
+            (.bottomLeft, .zero),
+            (.bottom, CGSize(width: 20, height: 0)),
+            (.bottomRight, CGSize(width: 40, height: 0))
+        ]
+
+        for resizeCase in cases {
+            let viewModel = ImageEditorViewModel(
+                sourceName: "anchor-\(resizeCase.anchor.rawValue).png",
+                image: testImage(color: .systemBlue, size: NSSize(width: 100, height: 80))
+            ) { _ in }
+            viewModel.document.hotspots = [originalHotspot]
+            viewModel.selectedHotspotID = hotspotID
+
+            viewModel.resizeCanvas(
+                to: CGSize(width: 140, height: 120),
+                anchor: resizeCase.anchor
+            )
+
+            let hotspot = viewModel.document.hotspots.first
+            #expect(hotspot?.id == hotspotID)
+            #expect(hotspot?.name == originalHotspot.name)
+            #expect(hotspot?.url == originalHotspot.url)
+            #expect(hotspot?.frame == CGRect(
+                x: originalHotspot.frame.minX + resizeCase.offset.width,
+                y: originalHotspot.frame.minY + resizeCase.offset.height,
+                width: originalHotspot.frame.width,
+                height: originalHotspot.frame.height
+            ))
+            #expect(viewModel.selectedHotspotID == hotspotID)
+        }
+    }
+
+    @Test
+    func canvasResizeHotspotGeometryHelperDistinguishesRemovalFromInvalidGeometry() throws {
+        let hotspotID = UUID()
+        let hotspot = ImageEditorHotspot(
+            id: hotspotID,
+            name: "  Geometry CTA  ",
+            frame: CGRect(x: 30, y: 24, width: -10, height: -8),
+            url: "  https://example.com/geometry  "
+        )
+
+        let translated = try hotspot.offsetForCanvasResize(
+            offset: CGSize(width: 5, height: 4),
+            targetCanvasSize: CGSize(width: 100, height: 80)
+        )
+        #expect(translated?.id == hotspotID)
+        #expect(translated?.name == hotspot.name)
+        #expect(translated?.url == hotspot.url)
+        #expect(translated?.frame == CGRect(x: 25, y: 20, width: 10, height: 8))
+
+        let removed = try hotspot.offsetForCanvasResize(
+            offset: CGSize(width: 80, height: 0),
+            targetCanvasSize: CGSize(width: 100, height: 80)
+        )
+        #expect(removed == nil)
+
+        do {
+            _ = try ImageEditorHotspot(
+                name: "Invalid Geometry",
+                frame: CGRect(x: CGFloat.nan, y: 0, width: 10, height: 10)
+            ).offsetForCanvasResize(offset: .zero, targetCanvasSize: CGSize(width: 100, height: 80))
+            Issue.record("Invalid hotspot geometry should throw")
+        } catch {
+            // Invalid geometry is intentionally distinct from a valid hotspot
+            // that lands fully outside the resized canvas.
+        }
+    }
+
+    @Test
+    func canvasResizeClipsAndRemovesHotspotsAsOneUndoableTransaction() throws {
+        let keptID = UUID()
+        let clippedID = UUID()
+        let removedID = UUID()
+        let trailingID = UUID()
+        let originalHotspots = [
+            ImageEditorHotspot(
+                id: keptID,
+                name: "Kept CTA",
+                frame: CGRect(x: 25, y: 25, width: 20, height: 10),
+                url: "https://example.com/kept"
+            ),
+            ImageEditorHotspot(
+                id: clippedID,
+                name: "Clipped CTA",
+                frame: CGRect(x: 10, y: 10, width: 15, height: 15),
+                url: "https://example.com/clipped"
+            ),
+            ImageEditorHotspot(
+                id: removedID,
+                name: "Removed CTA",
+                frame: CGRect(x: 80, y: 20, width: 10, height: 10),
+                url: "https://example.com/removed"
+            ),
+            ImageEditorHotspot(
+                id: trailingID,
+                name: "Trailing CTA",
+                frame: CGRect(x: 65, y: 45, width: 15, height: 15),
+                url: "https://example.com/trailing"
+            )
+        ]
+        let viewModel = ImageEditorViewModel(
+            sourceName: "canvas-hotspot-transaction.png",
+            image: testImage(color: .systemGreen, size: NSSize(width: 100, height: 80))
+        ) { _ in }
+        viewModel.document.hotspots = originalHotspots
+        viewModel.selectedHotspotID = removedID
+        viewModel.isHotspotsPanelVisible = true
+
+        viewModel.pushUndo()
+        viewModel.document.areGuidesVisible.toggle()
+        viewModel.pushUndo()
+        viewModel.document.areRulersVisible.toggle()
+        viewModel.undo()
+        let beforeResize = try projectData(viewModel.document)
+        let undoCountBefore = viewModel.undoStack.count
+        let historyCountBefore = viewModel.document.history.count
+        #expect(!viewModel.redoStack.isEmpty)
+
+        viewModel.resizeCanvas(to: CGSize(width: 60, height: 40), anchor: .center)
+
+        let resizedHotspots = viewModel.document.hotspots
+        #expect(resizedHotspots.map(\.id) == [keptID, clippedID, trailingID])
+        #expect(resizedHotspots.map(\.name) == ["Kept CTA", "Clipped CTA", "Trailing CTA"])
+        #expect(resizedHotspots.map(\.url) == [
+            "https://example.com/kept",
+            "https://example.com/clipped",
+            "https://example.com/trailing"
+        ])
+        #expect(resizedHotspots.map(\.frame) == [
+            CGRect(x: 5, y: 5, width: 20, height: 10),
+            CGRect(x: 0, y: 0, width: 5, height: 5),
+            CGRect(x: 45, y: 25, width: 15, height: 15)
+        ])
+        #expect(viewModel.selectedHotspotID == keptID)
+        #expect(viewModel.isHotspotsPanelVisible)
+        #expect(viewModel.undoStack.count == undoCountBefore + 1)
+        #expect(viewModel.redoStack.isEmpty)
+        #expect(viewModel.document.history.count == historyCountBefore + 1)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.canvasResize"))
+
+        let afterResize = try projectData(viewModel.document)
+        viewModel.undo()
+        #expect(try projectData(viewModel.document) == beforeResize)
+        #expect(viewModel.selectedHotspotID == keptID)
+        #expect(viewModel.isHotspotsPanelVisible)
+
+        viewModel.redo()
+        #expect(try projectData(viewModel.document) == afterResize)
+        #expect(viewModel.selectedHotspotID == keptID)
+        #expect(viewModel.isHotspotsPanelVisible)
+    }
+
+    @Test
+    func canvasResizeRejectsInvalidTargetsAndHotspotGeometryWithoutPartialMutation() throws {
+        let hotspotID = UUID()
+        let validHotspot = ImageEditorHotspot(
+            id: hotspotID,
+            name: "Atomic Canvas CTA",
+            frame: CGRect(x: 12, y: 10, width: 30, height: 20),
+            url: "https://example.com/atomic-canvas"
+        )
+        let viewModel = ImageEditorViewModel(
+            sourceName: "atomic-canvas-hotspots.png",
+            image: testImage(color: .systemOrange, size: NSSize(width: 100, height: 80))
+        ) { _ in }
+        viewModel.document.hotspots = [validHotspot]
+        viewModel.selectedHotspotID = hotspotID
+        viewModel.isHotspotsPanelVisible = true
+        viewModel.pushUndo()
+        viewModel.document.areGuidesVisible.toggle()
+        viewModel.pushUndo()
+        viewModel.document.areRulersVisible.toggle()
+        viewModel.undo()
+
+        let validBaseline = try projectTransactionSnapshot(viewModel)
+        for targetSize in [
+            CGSize(width: 100, height: 80),
+            CGSize(width: 7, height: 80),
+            CGSize(width: CGFloat.nan, height: 80)
+        ] {
+            viewModel.resizeCanvas(to: targetSize, anchor: .center)
+            #expect(try projectTransactionSnapshot(viewModel) == validBaseline)
+            #expect(viewModel.statusText == L10n.text("imageEditor.status.resizeInvalid"))
+            #expect(viewModel.selectedHotspotID == hotspotID)
+            #expect(viewModel.isHotspotsPanelVisible)
+        }
+
+        let invalidHotspots = [
+            ImageEditorHotspot(
+                name: "Invalid zero-area hotspot",
+                frame: CGRect(x: 60, y: 20, width: 0, height: 12)
+            ),
+            ImageEditorHotspot(
+                name: "Invalid NaN hotspot",
+                frame: CGRect(x: CGFloat.nan, y: 20, width: 12, height: 12)
+            ),
+            ImageEditorHotspot(
+                name: "Invalid infinity hotspot",
+                frame: CGRect(x: 60, y: CGFloat.infinity, width: 12, height: 12)
+            ),
+            ImageEditorHotspot(
+                name: "Finite hotspot with overflowing bounds",
+                frame: CGRect(
+                    x: CGFloat.greatestFiniteMagnitude,
+                    y: CGFloat.greatestFiniteMagnitude,
+                    width: CGFloat.greatestFiniteMagnitude,
+                    height: CGFloat.greatestFiniteMagnitude
+                )
+            )
+        ]
+
+        for invalidHotspot in invalidHotspots {
+            viewModel.document.hotspots = [validHotspot, invalidHotspot]
+            let invalidBaseline = try projectTransactionSnapshot(viewModel)
+
+            viewModel.resizeCanvas(to: CGSize(width: 140, height: 120), anchor: .topRight)
+
+            #expect(try projectTransactionSnapshot(viewModel) == invalidBaseline)
+            #expect(viewModel.statusText == L10n.text("imageEditor.status.resizeInvalid"))
+            #expect(viewModel.selectedHotspotID == hotspotID)
+            #expect(viewModel.isHotspotsPanelVisible)
+        }
+    }
+
+    @Test
+    func canvasResizeRejectsInvalidOriginalCanvasGeometryWithoutPartialMutation() throws {
+        let hotspotID = UUID()
+        let invalidOriginalSizesWithHotspot = [
+            CGSize(width: 0, height: 80),
+            CGSize(width: -100, height: 80)
+        ]
+        for originalSize in invalidOriginalSizesWithHotspot {
+            let viewModel = ImageEditorViewModel(
+                sourceName: "invalid-original-canvas-hotspot.png",
+                image: testImage(color: .systemRed, size: NSSize(width: 100, height: 80))
+            ) { _ in }
+            viewModel.document.canvasSize = originalSize
+            viewModel.document.hotspots = [
+                ImageEditorHotspot(
+                    id: hotspotID,
+                    name: "Atomic CTA",
+                    frame: CGRect(x: 10, y: 10, width: 20, height: 12)
+                )
+            ]
+            viewModel.selectedHotspotID = hotspotID
+            viewModel.isHotspotsPanelVisible = true
+            viewModel.pushUndo()
+            viewModel.document.areGuidesVisible.toggle()
+            viewModel.pushUndo()
+            viewModel.document.areRulersVisible.toggle()
+            viewModel.undo()
+            let baseline = try projectTransactionSnapshot(viewModel)
+
+            viewModel.resizeCanvas(to: CGSize(width: 140, height: 120), anchor: .topRight)
+
+            #expect(try projectTransactionSnapshot(viewModel) == baseline)
+            #expect(viewModel.statusText == L10n.text("imageEditor.status.resizeInvalid"))
+            #expect(viewModel.selectedHotspotID == hotspotID)
+            #expect(viewModel.isHotspotsPanelVisible)
+        }
+
+        let invalidOriginalSizesWithoutHotspots = [
+            CGSize(width: CGFloat.nan, height: 80),
+            CGSize(width: 100, height: CGFloat.infinity)
+        ]
+        for originalSize in invalidOriginalSizesWithoutHotspots {
+            let viewModel = ImageEditorViewModel(
+                sourceName: "invalid-original-canvas-empty.png",
+                image: testImage(color: .systemBlue, size: NSSize(width: 100, height: 80))
+            ) { _ in }
+            viewModel.document.canvasSize = originalSize
+            viewModel.document.hotspots = []
+            let baseline = try projectTransactionSnapshot(viewModel)
+
+            viewModel.resizeCanvas(to: CGSize(width: 140, height: 120), anchor: .center)
+
+            #expect(try projectTransactionSnapshot(viewModel) == baseline)
+            #expect(viewModel.statusText == L10n.text("imageEditor.status.resizeInvalid"))
+        }
+    }
+
+    @Test
+    func canvasResizePreservesNilHotspotSelectionAndRepairsStaleSelection() {
+        let hotspotID = UUID()
+        let staleHotspotID = UUID()
+        let cases: [(selection: UUID?, expected: UUID?)] = [
+            (nil, nil),
+            (staleHotspotID, hotspotID)
+        ]
+
+        for selectionCase in cases {
+            let viewModel = ImageEditorViewModel(
+                sourceName: "canvas-hotspot-selection.png",
+                image: testImage(color: .systemTeal, size: NSSize(width: 100, height: 80))
+            ) { _ in }
+            viewModel.document.hotspots = [
+                ImageEditorHotspot(
+                    id: hotspotID,
+                    name: "Surviving CTA",
+                    frame: CGRect(x: 10, y: 10, width: 20, height: 12)
+                )
+            ]
+            viewModel.selectedHotspotID = selectionCase.selection
+            viewModel.isHotspotsPanelVisible = true
+
+            viewModel.resizeCanvas(to: CGSize(width: 140, height: 120), anchor: .center)
+
+            #expect(viewModel.selectedHotspotID == selectionCase.expected)
+            #expect(viewModel.isHotspotsPanelVisible)
+        }
+    }
+
+    @Test
+    func canvasResizeClearsHotspotSelectionWhenNoHotspotSurvives() {
+        let removedID = UUID()
+        let viewModel = ImageEditorViewModel(
+            sourceName: "canvas-hotspot-empty.png",
+            image: testImage(color: .systemPurple, size: NSSize(width: 100, height: 80))
+        ) { _ in }
+        viewModel.document.hotspots = [
+            ImageEditorHotspot(
+                id: removedID,
+                name: "Removed CTA",
+                frame: CGRect(x: 80, y: 60, width: 10, height: 10)
+            )
+        ]
+        viewModel.selectedHotspotID = removedID
+        viewModel.isHotspotsPanelVisible = true
+
+        viewModel.resizeCanvas(to: CGSize(width: 60, height: 40), anchor: .bottomLeft)
+
+        #expect(viewModel.document.hotspots.isEmpty)
+        #expect(viewModel.selectedHotspotID == nil)
+        #expect(viewModel.isHotspotsPanelVisible)
+    }
+
+    @Test
     func cropOffsetsLayersSelectionsChannelsAndGuidesIntoNewCanvasSpace() throws {
         let viewModel = ImageEditorViewModel(
             sourceName: "source.png",
