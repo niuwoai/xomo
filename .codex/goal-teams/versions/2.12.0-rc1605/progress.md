@@ -6,4 +6,6 @@
 | 开发-锁定门禁 | GT-1605-02 | done | ViewModel/UI/Automation 门禁与直接测试完成 | 独立动态验证 |
 | 测试-锁定门禁 | GT-1605-03 | done | 最终 32/32 PASS；唯一冷构建及夹具修正后的增量构建成功 | Goal Lead 收口 |
 | 评审-锁定语义 | GT-1605-04 | done | 两轮栈内容测试补强后最终复审 PASS | Goal Lead 收口 |
-| Goal Lead | GT-1605-05 | running | 发布契约 9/9（27 断言）、运行器/结构契约及 CLI/MCP 2/2 通过 | 提交、标签、main、远端核验 |
+| Goal Lead | GT-1605-05 | done | 实现提交 `3eda38329`；发布契约 9/9（27 断言）、运行器/结构契约及 CLI/MCP 2/2 通过 | 闭环提交承载标签并同步 main |
+
+rc1605 功能、测试与文档均已冻结；本版不执行 Release 或 `/Applications` 覆盖，下一次完整门禁保持 rc1640。
