@@ -612,6 +612,8 @@ extension ImageEditorViewModel {
 }
 
 enum ImageEditorHotspotHTMLExporter {
+    private static let allowedHrefSchemes = Set(["http", "https", "mailto", "tel"])
+
     static func data(
         canvasSize: CGSize,
         pngData: Data,
@@ -627,9 +629,11 @@ enum ImageEditorHotspotHTMLExporter {
                 Int(frame.maxX.rounded()),
                 Int(frame.maxY.rounded())
             ].map(String.init).joined(separator: ",")
-            let href = hotspot.url.isEmpty ? "#" : hotspot.url
-            return "    <area shape=\"rect\" coords=\"\(coordinates)\" href=\"\(htmlEscaped(href))\" alt=\"\(htmlEscaped(hotspot.name))\" data-hotspot=\"\(htmlEscaped(hotspot.name))\">"
+            let href = safeHref(hotspot.url)
+            return "    <area shape=\"rect\" coords=\"\(coordinates)\" data-original-coords=\"\(coordinates)\" href=\"\(htmlEscaped(href))\" alt=\"\(htmlEscaped(hotspot.name))\" data-hotspot=\"\(htmlEscaped(hotspot.name))\">"
         }.joined(separator: "\n")
+        let originalWidth = Int(canvasSize.width.rounded())
+        let originalHeight = Int(canvasSize.height.rounded())
         let html = """
         <!doctype html>
         <html lang="en">
@@ -640,10 +644,40 @@ enum ImageEditorHotspotHTMLExporter {
           <style>html,body{margin:0;background:#202124}body{display:grid;place-items:center;min-height:100vh}img{max-width:100%;height:auto}</style>
         </head>
         <body>
-          <img src="data:image/png;base64,\(pngData.base64EncodedString())" width="\(Int(canvasSize.width.rounded()))" height="\(Int(canvasSize.height.rounded()))" usemap="#xomo-hotspots" alt="\(htmlEscaped(title))">
+          <img src="data:image/png;base64,\(pngData.base64EncodedString())" width="\(originalWidth)" height="\(originalHeight)" data-original-width="\(originalWidth)" data-original-height="\(originalHeight)" usemap="#xomo-hotspots" alt="\(htmlEscaped(title))">
           <map name="xomo-hotspots">
         \(areas)
           </map>
+          <script>
+          (() => {
+            const image = document.querySelector('img[usemap="#xomo-hotspots"]');
+            const map = document.querySelector('map[name="xomo-hotspots"]');
+            if (!image || !map) return;
+            const originalWidth = Number(image.dataset.originalWidth);
+            const originalHeight = Number(image.dataset.originalHeight);
+            if (!(originalWidth > 0) || !(originalHeight > 0)) return;
+            const updateHotspotCoordinates = () => {
+              const scaleX = image.getBoundingClientRect().width / originalWidth;
+              const scaleY = image.getBoundingClientRect().height / originalHeight;
+              if (!(scaleX > 0) || !(scaleY > 0)) return;
+              map.querySelectorAll("area[data-original-coords]").forEach((area) => {
+                const originalCoordinates = area.dataset.originalCoords
+                  .split(",")
+                  .map(Number);
+                if (originalCoordinates.length !== 4 || originalCoordinates.some(Number.isNaN)) return;
+                area.coords = originalCoordinates
+                  .map((coordinate, index) => Math.round(coordinate * (index % 2 === 0 ? scaleX : scaleY)))
+                  .join(",");
+              });
+            };
+            image.addEventListener("load", updateHotspotCoordinates);
+            window.addEventListener("resize", updateHotspotCoordinates);
+            if ("ResizeObserver" in window) {
+              new ResizeObserver(updateHotspotCoordinates).observe(image);
+            }
+            updateHotspotCoordinates();
+          })();
+          </script>
         </body>
         </html>
         """
@@ -657,5 +691,23 @@ enum ImageEditorHotspotHTMLExporter {
             .replacingOccurrences(of: ">", with: "&gt;")
             .replacingOccurrences(of: "\"", with: "&quot;")
             .replacingOccurrences(of: "'", with: "&#39;")
+    }
+
+    private static func safeHref(_ value: String) -> String {
+        let trimmedValue = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedValue.isEmpty,
+              trimmedValue.rangeOfCharacter(from: .controlCharacters) == nil,
+              let components = URLComponents(string: trimmedValue) else {
+            return "#"
+        }
+        if let scheme = components.scheme {
+            return allowedHrefSchemes.contains(scheme.lowercased()) ? trimmedValue : "#"
+        }
+        guard components.host == nil,
+              !trimmedValue.hasPrefix("//"),
+              !trimmedValue.hasPrefix("\\\\") else {
+            return "#"
+        }
+        return trimmedValue
     }
 }
