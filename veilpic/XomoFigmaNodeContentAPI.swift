@@ -1083,6 +1083,12 @@ enum XomoFigmaNodeImportMapper {
             inspectPaints(node: node, allowsGradientFill: false, issues: &issues)
             return (.text, false)
         case "RECTANGLE":
+            inspectPaints(
+                node: node,
+                allowsGradientFill: true,
+                allowsImageFill: true,
+                issues: &issues
+            )
             if let imagePaint = imagePaint(node: node) {
                 issues.append(.imageAssetPending)
                 let filters = XomoFigmaPlanImageFilters(
@@ -1099,7 +1105,6 @@ enum XomoFigmaNodeImportMapper {
                 }
                 return (.imagePlaceholder, true)
             }
-            inspectPaints(node: node, allowsGradientFill: true, issues: &issues)
             return (.rectangle, false)
         case "ELLIPSE":
             inspectPaints(node: node, allowsGradientFill: true, issues: &issues)
@@ -1124,10 +1129,12 @@ enum XomoFigmaNodeImportMapper {
     private static func inspectPaints(
         node: XomoFigmaNode,
         allowsGradientFill: Bool,
+        allowsImageFill: Bool = false,
         issues: inout [XomoFigmaNodeMappingIssue]
     ) {
         let visiblePaints = (node.fills ?? []).filter { $0.visible ?? true }
         let visibleStrokes = (node.strokes ?? []).filter { $0.visible ?? true }
+        let hasVisibleImageFill = visiblePaints.contains { $0.type == "IMAGE" }
         let hasDisabledPaint = ((node.fills ?? []) + (node.strokes ?? [])).contains {
             $0.visible == false
         }
@@ -1158,6 +1165,9 @@ enum XomoFigmaNodeImportMapper {
         }
         let hasUnsupportedFill = visiblePaints.contains { paint in
             if paint.type == "SOLID" { return false }
+            if paint.type == "IMAGE" {
+                return !allowsImageFill || !isSupportedImagePaint(paint)
+            }
             guard allowsGradientFill else { return true }
             switch paint.type {
             case "GRADIENT_LINEAR":
@@ -1181,6 +1191,7 @@ enum XomoFigmaNodeImportMapper {
             || hasUnsupportedGradientCenter
             || hasUnsupportedGradientScale
             || hasUnsupportedFill
+            || (hasVisibleImageFill && !visibleStrokes.isEmpty)
             || visibleStrokes.count > 1
             || visibleStrokes.contains(where: { $0.type != "SOLID" }) {
             issues.append(.unsupportedPaint)
@@ -1195,6 +1206,57 @@ enum XomoFigmaNodeImportMapper {
 
     private static func isSupportedPaintBlendMode(_ blendMode: String?) -> Bool {
         blendMode == nil || blendMode == "NORMAL"
+    }
+
+    private static func isSupportedImagePaint(_ paint: XomoFigmaPaint) -> Bool {
+        guard paint.type == "IMAGE",
+              let imageReference = paint.imageRef,
+              !imageReference.isEmpty,
+              let opacity = validUnitValue(paint.opacity ?? 1),
+              opacity == 1,
+              supportedImageScaleModes.contains(paint.scaleMode ?? "FILL")
+        else { return false }
+
+        if paint.imageTransform != nil,
+           XomoFigmaPlanTransform(paint.imageTransform) == nil {
+            return false
+        }
+        if let scalingFactor = paint.scalingFactor,
+           !scalingFactor.isFinite || scalingFactor <= 0 {
+            return false
+        }
+        if let rotation = paint.rotation {
+            guard rotation.isFinite else { return false }
+            let quarterTurns = rotation / 90
+            guard abs(quarterTurns - quarterTurns.rounded()) <= 0.000_001 else {
+                return false
+            }
+        }
+        if let filters = paint.filters,
+           !imageFilterValues(filters).allSatisfy({
+               $0.isFinite && (-1...1).contains($0)
+           }) {
+            return false
+        }
+        return paint.color == nil
+            && paint.gradientHandlePositions == nil
+            && paint.gradientStops == nil
+    }
+
+    private static let supportedImageScaleModes: Set<String> = [
+        "FILL", "FIT", "TILE", "STRETCH", "CROP"
+    ]
+
+    private static func imageFilterValues(_ filters: XomoFigmaImageFilters) -> [Double] {
+        [
+            filters.exposure,
+            filters.contrast,
+            filters.saturation,
+            filters.temperature,
+            filters.tint,
+            filters.highlights,
+            filters.shadows
+        ].compactMap { $0 }
     }
 
     private static func hasSupportedGradientColorComponents(_ paint: XomoFigmaPaint) -> Bool {
