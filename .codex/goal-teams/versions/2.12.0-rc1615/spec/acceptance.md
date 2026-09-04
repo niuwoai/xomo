@@ -1,6 +1,6 @@
 # rc1615 Acceptance
 
-状态：代码、测试与动态门禁 PASS；Git 闭环待完成。
+状态：PASS。代码、测试、动态门禁与 Git 闭环完成。
 
 - 五种 Slice 正交几何与图层、Hotspot 同构，90° 正确交换画布宽高。
 - 历史部分越界 Slice 可用；完整源外、触边、损坏几何或源/目标 preset 失效在 Undo 前原子拒绝。
