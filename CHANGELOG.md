@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.12.0-rc1613 - 2026-09-05
+
+### Fixed
+- 普通 Crop、Crop Center、Crop to Selection 与画布级 Trim Transparent 现在通过共同裁切事务同步平移、裁切或合法移除 Fireworks 风格 Slice；Slice 不参与透明像素边界计算，图层级 Trim 仍不改变画布元数据。
+- Slice 复用 Canvas Size 的完整浮点边投影和源/目标 preset 双校验；部分越界保留可见交集，完全越界或边界相切移除，损坏几何或交付 preset 在 Undo 前原子拒绝。
+- 存活 Slice 的身份、名称、顺序、preset 字段和值及 nil/显式空数组形态保持；Slice scope 的有效选择和主 preset 随最终 frame 协调，非 Slice scope 完全不变。
+
+### Tests
+- 新增 Direct/Center/Selection Crop、Canvas Trim、Layer Trim 负向、负尺寸小数、裁切/删除、preset 双校验、选择矩阵、Undo/Redo、原子失败与 Automation 共享入口测试。独立评审发现有效选择恰为首项的假阳性，并补强 `2→4→2→4`、Trim 部分裁切与准确测试命名后最终 PASS。
+- 修正版新增测试 11/11、相邻回归 12 组 59/59，动态合计 70/70，失败 0、跳过 0、所有 filter 均匹配、基础设施重试 0。CLI/MCP 2/2、发布契约 9/9（27 条断言）、隔离测试器契约与发布结构校验通过；本版不执行 Release 或 `/Applications` 覆盖。
+
 ## 2.12.0-rc1612 - 2026-09-05
 
 ### Fixed

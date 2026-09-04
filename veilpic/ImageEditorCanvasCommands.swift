@@ -357,8 +357,16 @@ extension ImageEditorViewModel {
 
         let targetSize = bounded.size
         let offset = CGSize(width: -bounded.minX, height: -bounded.minY)
+        let transformedSlices: [ImageEditorSlice]
         let hotspotTransform: ImageEditorHotspotCanvasTransform
         do {
+            transformedSlices = try document.slices.compactMap { slice in
+                try slice.offsetForCanvasResize(
+                    offset: offset,
+                    sourceCanvasSize: originalSize,
+                    targetCanvasSize: targetSize
+                )
+            }
             hotspotTransform = try transformedHotspotsForCanvasResize(
                 offset: offset,
                 targetCanvasSize: targetSize,
@@ -381,6 +389,7 @@ extension ImageEditorViewModel {
         document.canvasSize = targetSize
         document.layers = transformedLayers
         document.guides = transformedGuides
+        document.slices = transformedSlices
         document.hotspots = hotspotTransform.hotspots
         document.selection = .fullCanvas(size: targetSize)
         document.savedSelection = document.savedSelection?.offsetForCanvasResize(
@@ -395,6 +404,7 @@ extension ImageEditorViewModel {
                 mask: channel.mask.canvasResized(to: targetSize, oldCanvasSize: originalSize, offset: offset)
             )
         }
+        syncExportSettingsForCurrentSliceScope()
         selectedHotspotID = hotspotTransform.selectedID
         canvasOffset = .zero
         syncSizeControlsFromDocument()

@@ -1,6 +1,8 @@
 # Xomo 产品概览
 
-> 最后更新：2026-09-05 | 当前版本：v2.12.0-rc1612
+> 最后更新：2026-09-05 | 当前版本：v2.12.0-rc1613
+
+v2.12.0-rc1613 让 Fireworks 风格 Slice 参与所有缩画布 Crop 与 Canvas Trim 入口：按最终提交的裁剪原点平移，部分越界裁切，完全越界合法移除；源/目标 frame 双重校验全部导出 preset，损坏数据在 Undo 前原子拒绝。存活项的身份、名称、顺序和 Optional preset 形态保持，Slice scope 与主 preset 按最终尺寸协调；Slice 不参与透明像素 bounds，Layer Trim 不改变 Slice。独立评审修正测试假阳性后最终 PASS；修正版新增与相邻动态回归 70/70、CLI/MCP 2/2 和全部发布契约通过，本版不执行 Release 或 `/Applications` 覆盖。
 
 v2.12.0-rc1612 让 Fireworks 风格 Slice 参与 Canvas Size：九宫格锚点与图层、Hotspot 共用 offset，Slice 只平移；部分越界裁切、完全越界或边界相切合法移除，损坏源数据在 Undo 前原子拒绝。源画布整数可见交集与目标最终 frame 双重保证全部 preset 可用，存活项的身份、名称、顺序、preset 字段及 nil/显式空数组保持，Slice scope 选择和主 preset 按最终尺寸协调，非 Slice scope 不变。独立评审关闭两处测试假阳性并最终 PASS；唯一冷构建及定向、相邻动态回归 59/59、CLI/MCP 2/2 和全部发布契约通过，本版不执行 Release 或 `/Applications` 覆盖。
 
