@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.12.0-rc1612 - 2026-09-05
+
+### Fixed
+- Canvas Size 现在让 Fireworks 风格 Slice 使用与图层、Hotspot 相同的九宫格锚点偏移；Slice 只平移而不缩放，完整浮点标准化四边平移后只做一次向外整数化，再裁到目标画布。
+- 部分越界 Slice 保留最终可见交集，完全越界或边界相切 Slice 合法移除；源画布完全不可见、零面积、非有限或溢出几何会在 Undo 前使整次操作原子失败，合法删除与损坏数据不再混淆。
+- 每个输入 Slice 都以源画布整数可见交集校验全部 preset，存活 Slice 还以目标最终 frame 再次校验；固定 width/height 与 scale 的 value、格式、后缀、顺序及 nil/显式空数组形态不被改写，删除也不能绕过损坏源 preset。
+- Slice scope 的存活选择保持，已删除、nil 或陈旧选择回退首个存活 Slice，无 Slice 时回退 composited；主 preset 按裁切后的最终 frame 重新投影，非 Slice scope 完全不变。成功路径仍只有一次 Canvas Resize History 和一次 Undo，并清空 Redo。
+
+### Tests
+- 新增纯 helper、九锚点、半像素与负尺寸、历史越界、裁切/删除、preset 双校验、选择矩阵、Undo/Redo、非法目标/源/Slice/preset 完整原子快照及 Automation 共享入口测试。独立评审发现目标校验和重投影夹具两处假阳性，修为真实源合法/目标非法与倍率 `2→4→2→4` 后补齐源交集、删除边界、无 preset 和 13 项非法目标矩阵，最终复审 PASS。
+- 唯一冷构建成功；新增 12/12、Canvas Commands 25/25、rc1611 Slice Image Size 9/9、Hotspot Canvas Automation 1/1、Slice/Figma preset 8/8、选中 Slice 导出 1/1、项目往返 1/1、组件库 cursor 2/2，合计 59/59，失败 0、跳过 0、基础设施重试 0。CLI/MCP 2/2、发布契约 9/9（27 条断言）、隔离测试器契约与发布结构校验通过；本版不执行 Release 或 `/Applications` 覆盖。
+
 ## 2.12.0-rc1611 - 2026-09-05
 
 ### Fixed

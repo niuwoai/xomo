@@ -16,3 +16,4 @@
 | `versions/2.12.0-rc1609/INDEX.md` | 2.12.0-rc1609 | Goal Lead | complete | Fireworks 风格热点随 Crop、Trim 与 Reveal All 变换里程碑文档索引 |
 | `versions/2.12.0-rc1610/INDEX.md` | 2.12.0-rc1610 | Goal Lead | complete | Fireworks 风格热点随 Rotate 与 Flip 正交变换里程碑文档索引 |
 | `versions/2.12.0-rc1611/INDEX.md` | 2.12.0-rc1611 | Goal Lead | complete | Fireworks 风格 Slice 随 Image Size 缩放里程碑文档索引 |
+| `versions/2.12.0-rc1612/INDEX.md` | 2.12.0-rc1612 | Goal Lead | complete | Fireworks 风格 Slice 随 Canvas Size 锚点平移、裁切与合法移除里程碑文档索引 |
