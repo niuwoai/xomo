@@ -4581,6 +4581,204 @@ struct XomoAutomationTests {
         #expect(viewModel.document.history == noOpHistory)
     }
 
+    @Test func registryAggregatesFigmaComponentPropertyDefaultsAcrossActions() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        let layerID = try #require(viewModel.document.selectedLayerID)
+        let layerIndex = try #require(viewModel.document.selectedLayerIndex)
+        let importedLabel = XomoFigmaComponentProperty(
+            type: "TEXT",
+            value: "Continue",
+            preferredValues: [
+                XomoFigmaComponentPreferredValue(key: "continue", name: "Continue"),
+                XomoFigmaComponentPreferredValue(key: "cancel", name: "Cancel")
+            ]
+        )
+        let metadataOnlyOverride = XomoFigmaComponentProperty(
+            type: "VARIANT",
+            value: "Continue",
+            preferredValues: [
+                XomoFigmaComponentPreferredValue(key: "local", name: "Local choice")
+            ]
+        )
+        let importedEnabled = XomoFigmaComponentProperty(type: "BOOLEAN", value: "true")
+        let customProperty = XomoFigmaComponentProperty(type: "TEXT", value: "Custom value")
+        viewModel.document.layers[layerIndex].xomoFigmaComponentProperties = [
+            "Label": metadataOnlyOverride,
+            "Enabled": importedEnabled,
+            "Custom": customProperty
+        ]
+        viewModel.document.layers[layerIndex].xomoFigmaComponentPropertyDefaults = [
+            "Label": importedLabel,
+            "Enabled": importedEnabled
+        ]
+        let importedDefaults = viewModel.document.layers[layerIndex].xomoFigmaComponentPropertyDefaults
+        let setLabelProperty = XomoFigmaComponentProperty(
+            type: "VARIANT",
+            value: "Buy now",
+            preferredValues: metadataOnlyOverride.preferredValues
+        )
+        let checkoutLabelProperty = XomoFigmaComponentProperty(
+            type: "TEXT",
+            value: "Checkout",
+            preferredValues: importedLabel.preferredValues
+        )
+        let disabledProperty = XomoFigmaComponentProperty(type: "BOOLEAN", value: "false")
+
+        func encodedProperty(_ property: XomoFigmaComponentProperty) -> [String: XomoJSONValue] {
+            [
+                "type": .string(property.type),
+                "value": .string(property.value),
+                "preferredValues": .array(property.preferredValues.map { preferredValue in
+                    .object([
+                        "key": .string(preferredValue.key),
+                        "name": .string(preferredValue.name)
+                    ])
+                })
+            ]
+        }
+
+        func propertySnapshot(
+            current: XomoFigmaComponentProperty,
+            importedDefault: XomoFigmaComponentProperty?,
+            overridden: Bool
+        ) -> XomoJSONValue {
+            var fields = encodedProperty(current)
+            fields["importedDefault"] = importedDefault.map {
+                .object(encodedProperty($0))
+            } ?? .null
+            fields["defaultValue"] = importedDefault.map { .string($0.value) } ?? .null
+            fields["overridden"] = .bool(overridden)
+            return .object(fields)
+        }
+
+        func expectSnapshot(
+            _ response: XomoAutomationWireResponse,
+            label: XomoFigmaComponentProperty,
+            enabled: XomoFigmaComponentProperty,
+            overrideCount: Double
+        ) throws {
+            #expect(response.ok)
+            let root = try #require(response.result?.objectValue)
+            #expect(root["layerId"] == .string(layerID.uuidString))
+            #expect(root["editable"] == .bool(true))
+            #expect(root["propertyCount"] == .number(3))
+            #expect(root["overrideCount"] == .number(overrideCount))
+            #expect(root["properties"] == .object([
+                "Label": propertySnapshot(
+                    current: label,
+                    importedDefault: importedLabel,
+                    overridden: label != importedLabel
+                ),
+                "Enabled": propertySnapshot(
+                    current: enabled,
+                    importedDefault: importedEnabled,
+                    overridden: enabled != importedEnabled
+                ),
+                "Custom": propertySnapshot(
+                    current: customProperty,
+                    importedDefault: nil,
+                    overridden: false
+                )
+            ]))
+        }
+
+        let listed = registry.execute(request(
+            operation: "call",
+            name: "xomo.figma.component_properties",
+            arguments: ["action": .string("list")]
+        ))
+        try expectSnapshot(
+            listed,
+            label: metadataOnlyOverride,
+            enabled: importedEnabled,
+            overrideCount: 1
+        )
+
+        let set = registry.execute(request(
+            operation: "call",
+            name: "xomo.figma.component_properties",
+            arguments: [
+                "action": .string("set"),
+                "key": .string("Label"),
+                "value": .string("Buy now")
+            ]
+        ))
+        try expectSnapshot(
+            set,
+            label: setLabelProperty,
+            enabled: importedEnabled,
+            overrideCount: 1
+        )
+        #expect(viewModel.document.layers[layerIndex].xomoFigmaComponentPropertyDefaults == importedDefaults)
+        #expect(viewModel.document.layers[layerIndex].xomoFigmaComponentProperties["Custom"] == customProperty)
+
+        let reset = registry.execute(request(
+            operation: "call",
+            name: "xomo.figma.component_properties",
+            arguments: ["action": .string("reset"), "key": .string("Label")]
+        ))
+        try expectSnapshot(
+            reset,
+            label: importedLabel,
+            enabled: importedEnabled,
+            overrideCount: 0
+        )
+        #expect(viewModel.document.layers[layerIndex].xomoFigmaComponentProperties["Label"] == importedLabel)
+        #expect(viewModel.document.layers[layerIndex].xomoFigmaComponentProperties["Custom"] == customProperty)
+
+        let setLabelAgain = registry.execute(request(
+            operation: "call",
+            name: "xomo.figma.component_properties",
+            arguments: [
+                "action": .string("set"),
+                "key": .string("Label"),
+                "value": .string("Checkout")
+            ]
+        ))
+        try expectSnapshot(
+            setLabelAgain,
+            label: checkoutLabelProperty,
+            enabled: importedEnabled,
+            overrideCount: 1
+        )
+        #expect(viewModel.document.layers[layerIndex].xomoFigmaComponentPropertyDefaults == importedDefaults)
+
+        let setEnabled = registry.execute(request(
+            operation: "call",
+            name: "xomo.figma.component_properties",
+            arguments: [
+                "action": .string("set"),
+                "key": .string("Enabled"),
+                "value": .string("false")
+            ]
+        ))
+        try expectSnapshot(
+            setEnabled,
+            label: checkoutLabelProperty,
+            enabled: disabledProperty,
+            overrideCount: 2
+        )
+        #expect(viewModel.document.layers[layerIndex].xomoFigmaComponentPropertyDefaults == importedDefaults)
+
+        let resetAll = registry.execute(request(
+            operation: "call",
+            name: "xomo.figma.component_properties",
+            arguments: ["action": .string("resetAll")]
+        ))
+        try expectSnapshot(
+            resetAll,
+            label: importedLabel,
+            enabled: importedEnabled,
+            overrideCount: 0
+        )
+        #expect(viewModel.document.layers[layerIndex].xomoFigmaComponentProperties["Label"] == importedLabel)
+        #expect(viewModel.document.layers[layerIndex].xomoFigmaComponentProperties["Enabled"] == importedEnabled)
+        #expect(viewModel.document.layers[layerIndex].xomoFigmaComponentProperties["Custom"] == customProperty)
+        #expect(viewModel.document.layers[layerIndex].xomoFigmaComponentPropertyDefaults == importedDefaults)
+    }
+
     @Test func registryKeepsLockedFigmaComponentPropertiesReadableButRejectsWrites() throws {
         let viewModel = makeViewModel()
         let registry = XomoAutomationRegistry.shared

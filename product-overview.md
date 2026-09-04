@@ -1,8 +1,8 @@
 # Xomo 产品概览
 
-> 最后更新：2026-09-05 | 当前版本：v2.12.0-rc1617
+> 最后更新：2026-09-05 | 当前版本：v2.12.0-rc1618
 
-v2.12.0-rc1617 修复 Figma 组件属性单项“还原”的幽灵覆盖：覆盖判断本就比较完整属性对象，现在 Reset 也会精确恢复导入的 type、value 与 preferredValues；即使 value 已相同但候选值漂移，操作后条目也会真正退出“仅看覆盖”列表。Inspector 与 Automation `reset` 共用同一 ViewModel 语义，并保留一次 Undo/Redo、匹配文本后代传播、内容锁拒绝及无变化 no-op。本版不执行 Release 或 `/Applications` 覆盖。
+v2.12.0-rc1618 让 `xomo.figma.component_properties` 返回可完整解释的组件属性诊断：每个当前属性同时携带完整 `importedDefault`，无导入基线的 Custom 明确为 null；既有 `defaultValue` 保留兼容。根级 `propertyCount` 与 `overrideCount` 让 list、set、reset、resetAll 的返回值直接对应 Inspector 的总数/覆盖数；type、value 与 preferredValues 可用于定位 value 相同但元数据漂移的覆盖。本版不改变 UI、输入 schema 或项目格式，不执行 Release 或 `/Applications` 覆盖。
 
 v2.12.0-rc1614 让 Reveal All 在非破坏扩画布时同步处理 Fireworks 风格 Slice：全部 Slice 与内容使用同一 offset，历史部分越界区域可在新画布中重新显露；Slice 不参与 bounds，也不能被静默删除。源与目标 frame 双重校验 preset，损坏数据在 Undo 前原子拒绝，元数据、顺序和 Optional 形态保持，Slice scope 与主 preset 随最终尺寸协调。独立评审关闭 3 个测试证据 P2 后最终 PASS；唯一冷构建成功，新增、Slice、Hotspot/Canvas、cursor 动态门禁分别 8/8、63/63、35/35、128/128，CLI/MCP 2/2 和发布契约全部通过。本版不执行 Release 或 `/Applications` 覆盖。
 

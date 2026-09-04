@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.12.0-rc1618 - 2026-09-05
+
+### Added
+- `xomo.figma.component_properties` 的每项结果新增完整 `importedDefault` 对象，并以 `null` 明确表示无导入基线的 Custom 属性。
+- 组件属性 Automation 结果新增 `propertyCount` 与 `overrideCount`，让 list、set、reset、resetAll 直接报告当前覆盖摘要。
+
+### Changed
+- 保留既有 `defaultValue` 兼容字段；当前属性与导入默认均输出原始顺序的 type、value 和 preferredValues，便于诊断元数据覆盖。
+
 ## 2.12.0-rc1617 - 2026-09-05
 
 ### Fixed

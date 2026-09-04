@@ -1603,7 +1603,9 @@ final class XomoAutomationRegistry {
         viewModel: ImageEditorViewModel
     ) throws -> XomoJSONValue {
         let action = try requiredString("action", in: arguments)
-        guard let layer = viewModel.document.selectedLayer,
+        guard let layerIndex = viewModel.document.selectedLayerIndex,
+              let layer = viewModel.document.selectedLayer,
+              viewModel.document.layers.indices.contains(layerIndex),
               !layer.xomoFigmaComponentProperties.isEmpty
         else {
             throw XomoAutomationCallError.invalidArgument(
@@ -1612,30 +1614,44 @@ final class XomoAutomationRegistry {
         }
 
         func result() -> XomoJSONValue {
-            guard let currentLayer = viewModel.document.selectedLayer else {
-                return .object(["properties": .object([:])])
-            }
-            var properties: [String: XomoJSONValue] = [:]
-            for (key, property) in currentLayer.xomoFigmaComponentProperties {
-                let preferredValues: [XomoJSONValue] = property.preferredValues.map { preferredValue in
-                    .object([
-                        "key": .string(preferredValue.key),
-                        "name": .string(preferredValue.name)
-                    ])
-                }
-                properties[key] = .object([
+            let currentLayer = viewModel.document.layers[layerIndex]
+
+            func encodedProperty(
+                _ property: XomoFigmaComponentProperty
+            ) -> [String: XomoJSONValue] {
+                [
                     "type": .string(property.type),
                     "value": .string(property.value),
-                    "preferredValues": .array(preferredValues),
-                    "defaultValue": currentLayer.xomoFigmaComponentPropertyDefaults[key].map {
-                        .string($0.value)
-                    } ?? .null,
-                    "overridden": .bool(viewModel.hasSelectedFigmaComponentPropertyOverride(key, property: property))
-                ])
+                    "preferredValues": .array(property.preferredValues.map { preferredValue in
+                        .object([
+                            "key": .string(preferredValue.key),
+                            "name": .string(preferredValue.name)
+                        ])
+                    })
+                ]
+            }
+
+            var properties: [String: XomoJSONValue] = [:]
+            var overrideCount = 0
+            for (key, property) in currentLayer.xomoFigmaComponentProperties {
+                let importedDefault = currentLayer.xomoFigmaComponentPropertyDefaults[key]
+                let isOverridden = importedDefault.map { $0 != property } ?? false
+                if isOverridden {
+                    overrideCount += 1
+                }
+                var encodedCurrent = encodedProperty(property)
+                encodedCurrent["importedDefault"] = importedDefault.map {
+                    .object(encodedProperty($0))
+                } ?? .null
+                encodedCurrent["defaultValue"] = importedDefault.map { .string($0.value) } ?? .null
+                encodedCurrent["overridden"] = .bool(isOverridden)
+                properties[key] = .object(encodedCurrent)
             }
             return .object([
                 "layerId": .string(currentLayer.id.uuidString),
                 "editable": .bool(viewModel.canEditSelectedFigmaComponentProperties),
+                "propertyCount": .number(Double(properties.count)),
+                "overrideCount": .number(Double(overrideCount)),
                 "properties": .object(properties)
             ])
         }
