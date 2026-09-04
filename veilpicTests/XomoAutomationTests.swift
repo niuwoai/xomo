@@ -4452,8 +4452,15 @@ struct XomoAutomationTests {
         registry.register(viewModel)
         let layerID = try #require(viewModel.document.selectedLayerID)
         let layerIndex = try #require(viewModel.document.selectedLayerIndex)
+        let importedLabel = XomoFigmaComponentProperty(
+            type: "TEXT",
+            value: "Continue",
+            preferredValues: [
+                XomoFigmaComponentPreferredValue(key: "continue", name: "Continue")
+            ]
+        )
         viewModel.document.layers[layerIndex].xomoFigmaComponentProperties = [
-            "Label": XomoFigmaComponentProperty(type: "TEXT", value: "Continue"),
+            "Label": importedLabel,
             "Enabled": XomoFigmaComponentProperty(type: "BOOLEAN", value: "true")
         ]
         viewModel.document.layers[layerIndex].xomoFigmaComponentPropertyDefaults =
@@ -4494,13 +4501,37 @@ struct XomoAutomationTests {
         #expect(cleared.ok)
         #expect(viewModel.document.selectedLayer?.xomoFigmaComponentProperties["Label"]?.value == "")
 
+        viewModel.document.layers[layerIndex].xomoFigmaComponentProperties["Label"] =
+            XomoFigmaComponentProperty(
+                type: "TEXT",
+                value: "Buy now",
+                preferredValues: [
+                    XomoFigmaComponentPreferredValue(key: "buy", name: "Buy now")
+                ]
+            )
+
         let reset = registry.execute(request(
             operation: "call",
             name: "xomo.figma.component_properties",
             arguments: ["action": .string("reset"), "key": .string("Label")]
         ))
         #expect(reset.ok)
-        #expect(viewModel.document.selectedLayer?.xomoFigmaComponentProperties["Label"]?.value == "Continue")
+        #expect(viewModel.document.selectedLayer?.xomoFigmaComponentProperties["Label"] == importedLabel)
+        #expect(
+            reset.result?.objectValue?["properties"]?.objectValue?["Label"]?
+                .objectValue?["preferredValues"]
+                == .array([
+                    .object(["key": .string("continue"), "name": .string("Continue")])
+                ])
+        )
+        #expect(
+            reset.result?.objectValue?["properties"]?.objectValue?["Label"]?
+                .objectValue?["defaultValue"] == .string("Continue")
+        )
+        #expect(
+            reset.result?.objectValue?["properties"]?.objectValue?["Label"]?
+                .objectValue?["overridden"] == .bool(false)
+        )
         #expect(viewModel.document.history.last?.title == L10n.format("imageEditor.history.figmaComponentPropertyChanged", "Label"))
 
         _ = registry.execute(request(

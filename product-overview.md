@@ -1,8 +1,8 @@
 # Xomo 产品概览
 
-> 最后更新：2026-09-05 | 当前版本：v2.12.0-rc1616
+> 最后更新：2026-09-05 | 当前版本：v2.12.0-rc1617
 
-v2.12.0-rc1616 为导入的 Figma 组件增加 Sketch 式“全部还原”覆盖管理：只恢复具有导入默认快照且完整对象发生变化的属性，无默认快照的 Custom 属性保持不变；多项恢复与匹配的文本后代传播在一个 Undo/Redo 事务中完成。Inspector、三语文案与 `xomo.figma.component_properties resetAll` 自动化入口保持一致，组件自身或祖先内容锁会原子阻止写入。本版不执行 Release 或 `/Applications` 覆盖。
+v2.12.0-rc1617 修复 Figma 组件属性单项“还原”的幽灵覆盖：覆盖判断本就比较完整属性对象，现在 Reset 也会精确恢复导入的 type、value 与 preferredValues；即使 value 已相同但候选值漂移，操作后条目也会真正退出“仅看覆盖”列表。Inspector 与 Automation `reset` 共用同一 ViewModel 语义，并保留一次 Undo/Redo、匹配文本后代传播、内容锁拒绝及无变化 no-op。本版不执行 Release 或 `/Applications` 覆盖。
 
 v2.12.0-rc1614 让 Reveal All 在非破坏扩画布时同步处理 Fireworks 风格 Slice：全部 Slice 与内容使用同一 offset，历史部分越界区域可在新画布中重新显露；Slice 不参与 bounds，也不能被静默删除。源与目标 frame 双重校验 preset，损坏数据在 Undo 前原子拒绝，元数据、顺序和 Optional 形态保持，Slice scope 与主 preset 随最终尺寸协调。独立评审关闭 3 个测试证据 P2 后最终 PASS；唯一冷构建成功，新增、Slice、Hotspot/Canvas、cursor 动态门禁分别 8/8、63/63、35/35、128/128，CLI/MCP 2/2 和发布契约全部通过。本版不执行 Release 或 `/Applications` 覆盖。
 

@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.12.0-rc1617 - 2026-09-05
+
+### Fixed
+- Figma 组件属性的单项“还原”现在恢复完整导入默认对象，清除 `type` 或候选值漂移造成的幽灵覆盖，而不再只恢复文本值。
+- Inspector 与 `xomo.figma.component_properties reset` 共用精确还原语义，并保持单次 Undo/Redo、文本后代传播、锁定和无变化 no-op。
+
 ## 2.12.0-rc1616 - 2026-09-05
 
 ### Added

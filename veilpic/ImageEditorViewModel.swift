@@ -2305,8 +2305,55 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     func resetSelectedFigmaComponentProperty(_ key: String) {
-        guard let defaultProperty = selectedLayerFigmaComponentPropertyDefaults[key] else { return }
-        updateSelectedFigmaComponentProperty(key, value: defaultProperty.value)
+        guard let index = document.selectedLayerIndex,
+              let currentProperty = document.layers[index].xomoFigmaComponentProperties[key],
+              let defaultProperty = document.layers[index].xomoFigmaComponentPropertyDefaults[key],
+              currentProperty != defaultProperty
+        else { return }
+        guard canEditSelectedFigmaComponentProperties else {
+            statusText = L10n.text("imageEditor.status.layerLocked")
+            return
+        }
+
+        let textOverrideIndices: [Int]
+        if currentProperty.type == "TEXT", currentProperty.value != defaultProperty.value {
+            let descendantIDs = document.layers[index].isGroup
+                ? groupDescendantIDs(for: document.layers[index].id)
+                : []
+            textOverrideIndices = document.layers.indices.filter { candidateIndex in
+                let candidate = document.layers[candidateIndex]
+                let belongsToSelectedComponent = candidateIndex == index
+                    || descendantIDs.contains(candidate.id)
+                return belongsToSelectedComponent
+                    && candidate.isText
+                    && candidate.textContent?.text == currentProperty.value
+                    && !document.isEffectivelyPixelsLocked(candidate)
+            }
+        } else {
+            textOverrideIndices = []
+        }
+
+        pushUndo()
+        mutateDocumentWithoutInvalidatingRenderedImageCaches { document in
+            document.layers[index].xomoFigmaComponentProperties[key] = defaultProperty
+            for textIndex in textOverrideIndices {
+                guard var content = document.layers[textIndex].textContent else { continue }
+                content.text = defaultProperty.value
+                let layerSize = content.layerSize()
+                if let mask = document.layers[textIndex].mask, mask.size != layerSize {
+                    document.layers[textIndex].mask = mask.resized(to: layerSize)
+                }
+                document.layers[textIndex].image = NSImage.transparent(size: layerSize)
+                document.layers[textIndex].frame.size = layerSize
+                document.layers[textIndex].kind = .text(content)
+                document.layers[textIndex].name = L10n.format(
+                    "imageEditor.layer.textName",
+                    textLayerNameFragment(content.text)
+                )
+            }
+        }
+        appendHistory(L10n.format("imageEditor.history.figmaComponentPropertyChanged", key))
+        statusText = L10n.format("imageEditor.status.figmaComponentPropertyUpdated", key)
     }
 
     func resetAllSelectedFigmaComponentPropertyOverrides() {

@@ -229,6 +229,141 @@ struct ImageEditorFigmaProvenanceTests {
         #expect(viewModel.document.layers[0].xomoFigmaComponentProperties["Label"]?.value == "")
     }
 
+    @Test func resettingSingleComponentPropertyRestoresImportedObjectAtomically() throws {
+        let image = NSImage.transparent(size: CGSize(width: 20, height: 20))
+        var document = ImageEditorDocument(sourceName: "figma-single-reset-metadata.png", image: image)
+        var layer = document.layers[0]
+        layer.isLocked = false
+        let imported = XomoFigmaComponentProperty(
+            type: "VARIANT",
+            value: "Compact",
+            preferredValues: [
+                XomoFigmaComponentPreferredValue(key: "compact", name: "Compact")
+            ]
+        )
+        layer.xomoFigmaComponentProperties = [
+            "Size": XomoFigmaComponentProperty(
+                type: "TEXT",
+                value: "Compact",
+                preferredValues: [
+                    XomoFigmaComponentPreferredValue(key: "local", name: "Local compact")
+                ]
+            ),
+            "Tone": XomoFigmaComponentProperty(type: "VARIANT", value: "Strong"),
+            "Custom": XomoFigmaComponentProperty(type: "TEXT", value: "Local only")
+        ]
+        layer.xomoFigmaComponentPropertyDefaults = [
+            "Size": imported,
+            "Tone": XomoFigmaComponentProperty(type: "VARIANT", value: "Quiet")
+        ]
+        document.layers = [layer]
+        document.selectedLayerID = layer.id
+        document.selectedLayerIDs = [layer.id]
+
+        let viewModel = ImageEditorViewModel(document: document) { _ in }
+        let propertiesBefore = viewModel.selectedLayerFigmaComponentProperties
+        let undoCountBefore = viewModel.undoStack.count
+        let historyCountBefore = viewModel.document.history.count
+
+        viewModel.resetSelectedFigmaComponentProperty("Size")
+
+        #expect(viewModel.selectedLayerFigmaComponentProperties["Size"] == imported)
+        #expect(viewModel.selectedLayerFigmaComponentProperties["Tone"] == propertiesBefore["Tone"])
+        #expect(viewModel.selectedLayerFigmaComponentProperties["Custom"] == propertiesBefore["Custom"])
+        #expect(viewModel.selectedLayerFigmaComponentPropertyOverrideKeys == ["Tone"])
+        #expect(viewModel.undoStack.count == undoCountBefore + 1)
+        #expect(viewModel.document.history.count == historyCountBefore + 1)
+        #expect(
+            viewModel.document.history.last?.title
+                == L10n.format("imageEditor.history.figmaComponentPropertyChanged", "Size")
+        )
+
+        viewModel.undo()
+        #expect(viewModel.selectedLayerFigmaComponentProperties == propertiesBefore)
+        viewModel.redo()
+        #expect(viewModel.selectedLayerFigmaComponentProperties["Size"] == imported)
+
+        let project = try ImageEditorProjectDocument(document: viewModel.document)
+        let restored = try project.restoredDocument()
+        #expect(restored.selectedLayer?.xomoFigmaComponentProperties["Size"] == imported)
+        #expect(restored.selectedLayer?.xomoFigmaComponentProperties["Tone"] == propertiesBefore["Tone"])
+        #expect(restored.selectedLayer?.xomoFigmaComponentProperties["Custom"] == propertiesBefore["Custom"])
+
+        let statusBeforeNoOp = viewModel.statusText
+        let historyBeforeNoOp = viewModel.document.history
+        let undoCountBeforeNoOp = viewModel.undoStack.count
+        let redoCountBeforeNoOp = viewModel.redoStack.count
+        viewModel.resetSelectedFigmaComponentProperty("Size")
+        viewModel.resetSelectedFigmaComponentProperty("Missing Default")
+        #expect(viewModel.statusText == statusBeforeNoOp)
+        #expect(viewModel.document.history == historyBeforeNoOp)
+        #expect(viewModel.undoStack.count == undoCountBeforeNoOp)
+        #expect(viewModel.redoStack.count == redoCountBeforeNoOp)
+    }
+
+    @Test func resettingSingleTextPropertyRestoresMetadataAndOnlyEditableMatchingDescendants() throws {
+        let image = NSImage.transparent(size: CGSize(width: 320, height: 180))
+        var document = ImageEditorDocument(sourceName: "figma-single-reset-text.png", image: image)
+        var component = ImageEditorLayer.group(name: "Button", size: CGSize(width: 140, height: 44))
+        let imported = XomoFigmaComponentProperty(
+            type: "TEXT",
+            value: "Continue",
+            preferredValues: [
+                XomoFigmaComponentPreferredValue(key: "continue", name: "Continue")
+            ]
+        )
+        component.xomoFigmaComponentProperties = [
+            "Label": XomoFigmaComponentProperty(
+                type: "TEXT",
+                value: "Buy now",
+                preferredValues: [
+                    XomoFigmaComponentPreferredValue(key: "buy", name: "Buy now")
+                ]
+            )
+        ]
+        component.xomoFigmaComponentPropertyDefaults = ["Label": imported]
+        var editableLabel = ImageEditorLayer.text(
+            name: "Buy now",
+            origin: CGPoint(x: 12, y: 12),
+            content: ImageEditorTextContent(
+                text: "Buy now",
+                color: .white,
+                fontSize: 14,
+                point: CGPoint(
+                    x: ImageEditorTextContent.drawingPadding,
+                    y: ImageEditorTextContent.drawingPadding
+                )
+            )
+        )
+        editableLabel.groupID = component.id
+        var pixelsLockedLabel = editableLabel
+        pixelsLockedLabel.id = UUID()
+        pixelsLockedLabel.name = "Locked Buy now"
+        pixelsLockedLabel.groupID = component.id
+        pixelsLockedLabel.locksPixels = true
+        document.layers = [component, editableLabel, pixelsLockedLabel]
+        document.selectedLayerID = component.id
+        document.selectedLayerIDs = [component.id]
+
+        let viewModel = ImageEditorViewModel(document: document) { _ in }
+        let undoCountBefore = viewModel.undoStack.count
+        viewModel.resetSelectedFigmaComponentProperty("Label")
+
+        #expect(viewModel.selectedLayerFigmaComponentProperties["Label"] == imported)
+        #expect(viewModel.document.layers[1].textContent?.text == "Continue")
+        #expect(viewModel.document.layers[2].textContent?.text == "Buy now")
+        #expect(viewModel.undoStack.count == undoCountBefore + 1)
+
+        viewModel.undo()
+        #expect(viewModel.selectedLayerFigmaComponentProperties["Label"]?.value == "Buy now")
+        #expect(viewModel.document.layers[1].textContent?.text == "Buy now")
+        #expect(viewModel.document.layers[2].textContent?.text == "Buy now")
+        viewModel.redo()
+        #expect(viewModel.selectedLayerFigmaComponentProperties["Label"] == imported)
+        #expect(viewModel.document.layers[1].textContent?.text == "Continue")
+        #expect(viewModel.document.layers[2].textContent?.text == "Buy now")
+    }
+
     @Test func componentPropertyEditingRejectsOwnAndAncestorContentLocksWithoutSideEffects() throws {
         enum LockCase: CaseIterable {
             case ownFull

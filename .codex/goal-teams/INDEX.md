@@ -20,3 +20,5 @@
 | `versions/2.12.0-rc1613/INDEX.md` | 2.12.0-rc1613 | Goal Lead | complete | Fireworks 风格 Slice 随 Crop 与画布 Trim 平移、裁切和合法移除里程碑文档索引 |
 | `versions/2.12.0-rc1614/INDEX.md` | 2.12.0-rc1614 | Goal Lead | complete | Fireworks 风格 Slice 随 Reveal All 非破坏扩画布平移与重新显露里程碑文档索引 |
 | `versions/2.12.0-rc1615/INDEX.md` | 2.12.0-rc1615 | Goal Lead | complete | Fireworks 风格 Slice 随画布 Rotate 与 Flip 正交变换里程碑文档索引 |
+| `versions/2.12.0-rc1616/INDEX.md` | 2.12.0-rc1616 | Goal Lead | complete | Sketch 式 Figma 组件覆盖批量还原里程碑文档索引 |
+| `versions/2.12.0-rc1617/INDEX.md` | 2.12.0-rc1617 | Goal Lead | complete | Figma 组件属性单项精确还原里程碑文档索引 |
