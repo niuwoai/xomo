@@ -8,6 +8,8 @@ Goal：抓手只表示真实画布平移，并保持既有组件、对象和工�
 | GT-1602-02 | 开发-画布平移鼠标语义 | developer_rc1602 | done | 画布输入、光标及直接测试 | 最小修复 | 光标与动作一致，活动事务稳定 | QA + 评审 | Architecture Design |
 | GT-1602-03 | 测试-版本门禁验收 | qa_rc1602 | done | 独立动态测试 | 测试计划与执行证据 | 定向测试及契约全绿 | 评审 | Test Plan、Acceptance |
 | GT-1602-04 | 评审-鼠标语义与路线复核 | review_rc1602 | passed | 只读 | 独立评审 | 缺口、边界和验收明确 | Goal Lead | Acceptance |
-| GT-1602-05 | Goal Lead | root | running | 版本、文档、Git | rc1602 闭环 | 提交、标签、main、远端一致 | Git + 契约 | 全部状态文档 |
+| GT-1602-05 | Goal Lead | root | done | 版本、文档、Git | rc1602 闭环 | 提交、标签、main、远端一致 | Git + 契约 | 全部状态文档 |
 
 动态门禁已恢复并完成：唯一 `build-for-testing` 成功；新增测试 11/11、相关套件 197/197 通过，合计实际执行 208 项、22 个执行组，失败 0、跳过 0。此前受外部构建污染的中断结果继续作废，不计入通过证据。
+
+实现提交：`3fef26a1e`。交付标签：`v2.12.0-rc1602`；分支以 fast-forward 方式合入 `main` 并推送 GitHub。

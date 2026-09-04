@@ -19,3 +19,10 @@
 | rc1602 测试 | 开发-画布平移鼠标语义 | 评审-鼠标语义与路线复核 | 断言有效性审查 | passed-static | 11 项均能令旧实现失败 |
 | rc1602 动态门禁 | 测试-版本门禁验收 | Goal Lead | 串行 Xcode 测试 | passed | 新增 11/11、套件 197/197；208 项/22 组，失败 0、跳过 0 |
 | 版本与发布契约 | Goal Lead | 测试-版本门禁验收 | Ruby 契约 | passed | 9/9、27 断言；隔离测试器契约与发布结构校验通过 |
+
+## Git 闭环
+
+- 实现提交：`3fef26a1e`。
+- 收口文档提交作为 `v2.12.0-rc1602` 标签目标。
+- `codex/modern-editor-rc1602` 以 fast-forward 合入 `main`，分支、标签和 `main` 推送到 GitHub。
+- rc1602 不属于 40 版本完整门禁；未构建 Release，未覆盖 `/Applications/Xomo.app`。下一门禁为 rc1640。

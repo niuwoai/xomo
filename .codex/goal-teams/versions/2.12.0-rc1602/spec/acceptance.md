@@ -1,6 +1,6 @@
 # 2.12.0-rc1602 验收记录
 
-状态：动态门禁通过，Git 闭环进行中
+状态：完成
 
 | 验收项 | Owner | 状态 | 证据 |
 | --- | --- | --- | --- |
@@ -9,4 +9,6 @@
 | 新增测试有效性 | 测试-版本门禁验收 | passed | 11 项唯一枚举并全部动态通过 |
 | 版本与文档一致 | Goal Lead | passed | 发布契约 9/9、27 断言通过 |
 | 动态定向回归 | 测试-版本门禁验收 | passed | 唯一冷构建；相关套件 197/197，合计 208 项/22 组，失败 0、跳过 0 |
-| Git 分支、标签、main、远端一致 | Goal Lead | running | 待提交、tag、main 与远端核验 |
+| Git 分支、标签、main、远端一致 | Goal Lead | passed | 实现提交 `3fef26a1e`；`v2.12.0-rc1602` 标签与 main fast-forward 推送 |
+
+测试报告位于 `test-reports/rc1602-final2-focused-*` 与 `test-reports/rc1602-final2-suite-*`；报告为本地验证产物，不纳入 Git。安装版 UI 鼠标外观仍留到 rc1640 的真实冒烟门禁验证。
